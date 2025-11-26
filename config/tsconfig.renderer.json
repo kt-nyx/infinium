@@ -12,3 +12,5 @@
   "include": ["src/renderer/**/*", "src/shared/**/*"],
   "exclude": ["src/main"]
 }
+
+
