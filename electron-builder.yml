@@ -1,0 +1,19 @@
+appId: com.skyrim.ai.modlist.reviewer
+productName: SkyrimAIModlistReviewer
+directories:
+  output: release
+  buildResources: resources
+files:
+  - dist/main/**
+  - dist/renderer/**
+  - package.json
+  - node_modules/**
+win:
+  target:
+    - nsis
+extraResources:
+  - from: resources/loot
+    to: loot
+    filter:
+      - "**/*"
+# TODO: configure code signing and include LOOT portable payload.

@@ -1,0 +1,77 @@
+{
+  "name": "skyrim-ai-modlist-reviewer-electron",
+  "version": "0.1.0",
+  "description": "Windows-only Electron app that analyzes Skyrim Mod Organizer 2 profiles with agentic AI assistance.",
+  "type": "module",
+  "main": "dist/main/main.cjs",
+  "author": "Skyrim AI Tools",
+  "license": "MIT",
+  "packageManager": "npm@10.9.0",
+  "scripts": {
+    "dev": "rimraf dist && concurrently \"npm:dev:renderer\" \"npm:watch:main\" \"npm:dev:electron\"",
+    "dev:renderer": "vite",
+    "watch:main": "tsup --config tsup.config.ts --watch",
+    "dev:electron": "wait-on dist/main/main.cjs dist/main/preload.cjs && electron --inspect=9229 --remote-debugging-port=9223 .",
+    "build": "rimraf dist && tsup --config tsup.config.ts && vite build",
+    "start": "electron .",
+    "lint": "eslint \"src/**/*.{ts,tsx}\"",
+    "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
+    "format": "prettier \"src/**/*.{ts,tsx,js,jsx,json,md}\" --write",
+    "typecheck": "tsc -b tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "package": "npm run build && electron-builder",
+    "prepare": "husky"
+  },
+  "keywords": [
+    "skyrim",
+    "electron",
+    "mod organizer 2",
+    "agentic-ai"
+  ],
+  "lint-staged": {
+    "src/**/*.{ts,tsx,js,jsx}": [
+      "eslint --fix"
+    ],
+    "src/**/*.{ts,tsx,js,jsx,json,md}": [
+      "prettier --write"
+    ]
+  },
+  "dependencies": {
+    "@fluentui/react-components": "~9.72.7",
+    "@fluentui/react-icons": "~2.0.315",
+    "@langchain/langgraph": "~1.0.2",
+    "cross-fetch": "~4.1.0",
+    "langchain": "~1.1.1",
+    "react": "~19.2.0",
+    "react-dom": "~19.2.0",
+    "tslib": "~2.8.1",
+    "zod": "~4.1.13"
+  },
+  "devDependencies": {
+    "@types/node": "~24.10.1",
+    "@types/react": "~19.2.7",
+    "@types/react-dom": "~19.2.3",
+    "@typescript-eslint/eslint-plugin": "~8.48.0",
+    "@typescript-eslint/parser": "~8.48.0",
+    "@vitejs/plugin-react": "~5.1.1",
+    "concurrently": "~9.2.1",
+    "electron": "~39.2.3",
+    "electron-builder": "~26.0.12",
+    "eslint": "~9.39.1",
+    "eslint-config-prettier": "~10.1.8",
+    "eslint-plugin-import-x": "~4.16.1",
+    "eslint-plugin-react-hooks": "~7.0.1",
+    "happy-dom": "~20.0.10",
+    "husky": "~9.1.7",
+    "lint-staged": "~16.2.7",
+    "prettier": "~3.6.2",
+    "rimraf": "~6.1.2",
+    "ts-node": "~10.9.2",
+    "tsup": "~8.5.1",
+    "typescript": "~5.9.3",
+    "vite": "~7.2.4",
+    "vitest": "~4.0.14",
+    "wait-on": "~9.0.3"
+  }
+}

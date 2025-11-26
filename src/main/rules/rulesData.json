@@ -1,0 +1,18 @@
+{
+  "legacyMods": [
+    {
+      "pattern": "LE only",
+      "reason": "Marked as LE-only in metadata"
+    },
+    {
+      "pattern": "oldrim",
+      "reason": "Contains Oldrim-specific tag"
+    }
+  ],
+  "aiOverhauls": [
+    ["Immersive Citizens", "AI Overhaul"],
+    ["Immersive Citizens", "Enhanced AI"],
+    ["AI Overhaul", "Enhanced AI"]
+  ],
+  "scriptHeavyMods": ["Civil War Overhaul", "Legacy of the Dragonborn", "Immersive Citizens"]
+}
