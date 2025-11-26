@@ -1,0 +1,29 @@
+# Node artifacts
+node_modules/
+.pnpm-store/
+package-lock.json
+pnpm-lock.yaml
+npm-debug.log*
+yarn.lock
+
+# Build outputs
+out/
+dist/
+build/
+release/
+
+# IDEs
+.vscode/
+.idea/
+*.iml
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Misc
+.DS_Store
+Thumbs.db
+.temp/
+coverage/
