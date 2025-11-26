@@ -9,18 +9,18 @@
   "packageManager": "npm@10.9.0",
   "scripts": {
     "dev": "rimraf dist && concurrently \"npm:dev:renderer\" \"npm:watch:main\" \"npm:dev:electron\"",
-    "dev:renderer": "vite",
-    "watch:main": "tsup --config tsup.config.ts --watch",
+    "dev:renderer": "vite --config config/vite.config.ts",
+    "watch:main": "tsup --config config/tsup.config.ts --watch",
     "dev:electron": "wait-on dist/main/main.cjs dist/main/preload.cjs && electron --inspect=9229 --remote-debugging-port=9223 .",
-    "build": "rimraf dist && tsup --config tsup.config.ts && vite build",
+    "build": "rimraf dist && tsup --config config/tsup.config.ts && vite build --config config/vite.config.ts",
     "start": "electron .",
-    "lint": "eslint \"src/**/*.{ts,tsx}\"",
-    "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
-    "format": "prettier \"src/**/*.{ts,tsx,js,jsx,json,md}\" --write",
+    "lint": "eslint --config config/eslint.config.mjs \"src/**/*.{ts,tsx}\"",
+    "lint:fix": "eslint --config config/eslint.config.mjs \"src/**/*.{ts,tsx}\" --fix",
+    "format": "prettier --config config/prettier.config.cjs \"src/**/*.{ts,tsx,js,jsx,json,md}\" --write",
     "typecheck": "tsc -b tsconfig.json",
-    "test": "vitest run",
-    "test:watch": "vitest watch",
-    "package": "npm run build && electron-builder",
+    "test": "vitest run --config config/vitest.config.ts",
+    "test:watch": "vitest watch --config config/vitest.config.ts",
+    "package": "npm run build && electron-builder -c config/electron-builder.yml",
     "prepare": "husky"
   },
   "keywords": [
@@ -31,10 +31,10 @@
   ],
   "lint-staged": {
     "src/**/*.{ts,tsx,js,jsx}": [
-      "eslint --fix"
+      "eslint --config config/eslint.config.mjs --fix"
     ],
     "src/**/*.{ts,tsx,js,jsx,json,md}": [
-      "prettier --write"
+      "prettier --config config/prettier.config.cjs --write"
     ]
   },
   "dependencies": {

@@ -1,7 +1,6 @@
 # Node artifacts
 node_modules/
 .pnpm-store/
-package-lock.json
 pnpm-lock.yaml
 npm-debug.log*
 yarn.lock
@@ -11,6 +10,10 @@ out/
 dist/
 build/
 release/
+coverage/
+
+# TypeScript
+*.tsbuildinfo
 
 # IDEs
 .vscode/
@@ -22,8 +25,11 @@ logs/
 *.log
 npm-debug.log*
 
+# Environment / local config
+.env
+.env.*.local
+
 # Misc
 .DS_Store
 Thumbs.db
 .temp/
-coverage/
