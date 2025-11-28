@@ -1,5 +1,4 @@
 import { z } from "zod";
-import type { Tool } from "@langchain/core/tools";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import type { ProfileSnapshot, Settings } from "../../../shared/types";
 import { logger } from "../../logging";
@@ -14,11 +13,11 @@ import { createNexusTool } from "./nexusTool";
  * The caller supplies an input schema and an invocation function that can
  * close over any ambient state (profile snapshot, settings, etc.).
  */
-const wrapStructuredTool = <I, O>(
-  base: AgentTool<I, O>,
+const wrapStructuredTool = <I, O, TBaseInput>(
+  base: AgentTool<TBaseInput, O>,
   schema: z.ZodTypeAny,
   func: (input: I) => Promise<O>,
-): Tool =>
+): DynamicStructuredTool =>
   new DynamicStructuredTool({
     name: base.name,
     description: base.description,
@@ -62,13 +61,13 @@ const wrapStructuredTool = <I, O>(
     },
   });
 
-export const createLootLangChainTool = (profile: ProfileSnapshot): Tool =>
+export const createLootLangChainTool = (profile: ProfileSnapshot) =>
   wrapStructuredTool(lootTool, z.object({}), async () => lootTool.invoke(profile));
 
-export const createRulesLangChainTool = (profile: ProfileSnapshot): Tool =>
+export const createRulesLangChainTool = (profile: ProfileSnapshot) =>
   wrapStructuredTool(rulesTool, z.object({}), async () => rulesTool.invoke({ profile }));
 
-export const createDocsLangChainTool = (): Tool =>
+export const createDocsLangChainTool = () =>
   wrapStructuredTool(
     docsTool,
     z.object({
@@ -85,10 +84,10 @@ export const createDocsLangChainTool = (): Tool =>
         .optional()
         .describe("Maximum number of documentation snippets to retrieve."),
     }),
-    async (input) => docsTool.invoke(input),
+    async (input: { query: string; k?: number }) => docsTool.invoke(input),
   );
 
-export const createNexusLangChainTool = (settings: Settings): Tool => {
+export const createNexusLangChainTool = (settings: Settings) => {
   const nexus = createNexusTool(settings);
   return wrapStructuredTool(
     nexus,

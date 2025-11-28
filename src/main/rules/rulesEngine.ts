@@ -1,5 +1,5 @@
 import type { Issue, ProfileSnapshot, Recommendation } from "../../shared/types";
-import rulesData from "./rulesData.json" assert { type: "json" };
+import rulesData from "./rulesData.json";
 import type { LootReport } from "../loot/lootManager";
 
 interface EvaluationResult {

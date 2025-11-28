@@ -146,18 +146,16 @@ export const detectMo2InstancesFromFilesystem = async (): Promise<Mo2InstanceInf
   const walk = async (root: string, depth: number) => {
     if (depth > 4) return; // keep search bounded
 
-    let entries: Awaited<ReturnType<typeof fs.readdir>>;
+    let entries;
     try {
-      entries = await fs.readdir(root, { withFileTypes: true } as unknown as {
-        withFileTypes: true;
-      });
+      entries = await fs.readdir(root, { withFileTypes: true });
     } catch {
       return;
     }
 
     for (const entry of entries) {
       if (!("isDirectory" in entry) || !entry.isDirectory()) continue;
-      const full = path.join(root, entry.name);
+      const full = path.join(root, String(entry.name));
       const key = full.toLowerCase();
       if (visited.has(key)) continue;
       visited.add(key);

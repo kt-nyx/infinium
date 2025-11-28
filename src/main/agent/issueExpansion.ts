@@ -42,9 +42,6 @@ export const expandIssueExplanation = async (input: IssueExpansionInput): Promis
     settings,
     complexity: settings.analysisDefaults.complexity,
     opinionatedness: settings.analysisDefaults.opinionatedness,
-    callOptions: {
-      maxTokens: 600,
-    },
   });
 
   const systemPrompt = [
