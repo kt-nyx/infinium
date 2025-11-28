@@ -52,6 +52,18 @@ const mockAnalysis: AnalysisResult = {
 
 const safeApi = () => window.api;
 
+const defaultIssuePrompt =
+  "Please act as a Skyrim SE/AE modding expert and expand on this issue in depth. " +
+  "Explain in clear, non-jargon language what the problem is, why it matters for stability, performance, or compatibility, " +
+  "which specific mods and plugins are involved, and any risks if it is ignored. " +
+  "Describe how the user can confirm the issue in MO2, LOOT, or in-game, and then give concise, step-by-step instructions " +
+  "to resolve or mitigate it, including any important trade-offs or alternative approaches.";
+
+type IssueChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
 export const useAnalysis = () => {
   const [analysis, setAnalysis] = useState<AnalysisResult>(mockAnalysis);
   const [settings, setSettings] = useState<Settings>(defaultSettings());
@@ -62,6 +74,12 @@ export const useAnalysis = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedIssueId, setSelectedIssueId] = useState<string>("");
+  const [issueChatMessages, setIssueChatMessages] = useState<Record<string, IssueChatMessage[]>>(
+    {},
+  );
+  const [issueChatInput, setIssueChatInput] = useState<string>("");
+  const [issueChatLoading, setIssueChatLoading] = useState(false);
+  const [selectionInitialized, setSelectionInitialized] = useState(false);
 
   const refreshSettings = useCallback(async () => {
     try {
@@ -100,9 +118,44 @@ export const useAnalysis = () => {
   }, []);
 
   useEffect(() => {
-    void refreshSettings();
-    void refreshInstances();
-  }, [refreshInstances, refreshSettings]);
+    if (selectionInitialized) {
+      return;
+    }
+
+    const initialize = async () => {
+      try {
+        const [loadedSettings, detectedInstances, envInstancePath] = await Promise.all([
+          refreshSettings(),
+          refreshInstances(),
+          safeApi()
+            .mo2.getEnvInstance()
+            .catch(() => null),
+        ]);
+
+        setInstances(detectedInstances);
+
+        let nextInstance: string | null = null;
+
+        if (loadedSettings.selectedInstanceId) {
+          nextInstance = loadedSettings.selectedInstanceId;
+        } else if (envInstancePath) {
+          nextInstance = envInstancePath;
+        }
+
+        if (nextInstance) {
+          setSelectedInstance(nextInstance);
+        }
+
+        if (loadedSettings.selectedProfileId) {
+          setSelectedProfile(loadedSettings.selectedProfileId);
+        }
+      } finally {
+        setSelectionInitialized(true);
+      }
+    };
+
+    void initialize();
+  }, [refreshInstances, refreshSettings, selectionInitialized]);
 
   useEffect(() => {
     if (selectedInstance) {
@@ -115,8 +168,8 @@ export const useAnalysis = () => {
   const runOffline = useCallback(
     async (options?: AnalysisRunOptions) => {
       if (!selectedInstance || !selectedProfile) {
-        setAnalysis(mockAnalysis);
-        return mockAnalysis;
+        setError("Select a Mod Organizer 2 instance and profile before running analysis.");
+        return analysis;
       }
 
       setLoading(true);
@@ -129,6 +182,8 @@ export const useAnalysis = () => {
         );
         setAnalysis(result);
         setSelectedIssueId("");
+        setIssueChatMessages({});
+        setIssueChatInput("");
         return result;
       } catch (err) {
         console.warn("Offline analysis failed", err);
@@ -139,13 +194,14 @@ export const useAnalysis = () => {
         setLoading(false);
       }
     },
-    [selectedInstance, selectedProfile],
+    [analysis, selectedInstance, selectedProfile],
   );
 
   const runAgentic = useCallback(
     async (options?: AnalysisRunOptions) => {
       if (!selectedInstance || !selectedProfile) {
-        return runOffline(options);
+        setError("Select a Mod Organizer 2 instance and profile before running analysis.");
+        return analysis;
       }
 
       setLoading(true);
@@ -158,16 +214,22 @@ export const useAnalysis = () => {
         );
         setAnalysis(result);
         setSelectedIssueId("");
+        setIssueChatMessages({});
+        setIssueChatInput("");
         return result;
       } catch (err) {
         console.warn("Agentic analysis failed", err);
-        setError("Agentic analysis failed; falling back to offline result.");
+        const message =
+          err instanceof Error
+            ? err.message
+            : "Agentic analysis failed; falling back to offline result.";
+        setError(message);
         return runOffline(options);
       } finally {
         setLoading(false);
       }
     },
-    [runOffline, selectedInstance, selectedProfile],
+    [analysis, runOffline, selectedInstance, selectedProfile],
   );
 
   const exportReport = useCallback(
@@ -192,6 +254,61 @@ export const useAnalysis = () => {
     [analysis.recommendations, selectedIssueId],
   );
 
+  const chatMessagesForCurrentIssue = useMemo<IssueChatMessage[]>(
+    () => (currentIssue ? (issueChatMessages[currentIssue.id] ?? []) : []),
+    [currentIssue, issueChatMessages],
+  );
+
+  const sendIssueChat = useCallback(
+    async (issue?: Issue) => {
+      const targetIssue = issue ?? currentIssue;
+      if (!targetIssue) {
+        return;
+      }
+
+      const prompt = issueChatInput.trim().length ? issueChatInput.trim() : defaultIssuePrompt;
+
+      const issueId = targetIssue.id;
+      const userMessage: IssueChatMessage = {
+        role: "user",
+        content: prompt,
+      };
+
+      setIssueChatLoading(true);
+      try {
+        const existingMessages = issueChatMessages[issueId] ?? [];
+        const assistantReply = await safeApi().analysis.expandIssue(targetIssue, analysis.profile, [
+          ...existingMessages,
+          userMessage,
+        ]);
+
+        const assistantMessage: IssueChatMessage = {
+          role: "assistant",
+          content: assistantReply,
+        };
+
+        setIssueChatMessages((prev) => {
+          const prevForIssue = prev[issueId] ?? [];
+          return {
+            ...prev,
+            [issueId]: [...prevForIssue, userMessage, assistantMessage],
+          };
+        });
+
+        if (issueChatInput.trim().length) {
+          setIssueChatInput("");
+        }
+      } catch (err) {
+        console.warn("Issue chat failed", err);
+        const message = err instanceof Error ? `AI chat failed: ${err.message}` : "AI chat failed.";
+        setError(message);
+      } finally {
+        setIssueChatLoading(false);
+      }
+    },
+    [analysis.profile, currentIssue, issueChatInput, issueChatMessages],
+  );
+
   return {
     analysis,
     settings,
@@ -213,5 +330,12 @@ export const useAnalysis = () => {
     refreshSettings,
     refreshInstances,
     refreshProfiles,
+    issueChatMessages,
+    chatMessagesForCurrentIssue,
+    issueChatInput,
+    setIssueChatInput,
+    issueChatLoading,
+    sendIssueChat,
+    defaultIssuePrompt,
   };
 };

@@ -1,5 +1,10 @@
 import type { AnalysisRunOptions } from "../../shared/analysis";
-import type { AnalysisResult, Settings } from "../../shared/types";
+import type { AnalysisResult, Issue, ProfileSnapshot, Settings } from "../../shared/types";
+
+type IssueChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
 
 export interface RendererApi {
   settings: {
@@ -9,6 +14,16 @@ export interface RendererApi {
   mo2: {
     detect: () => Promise<{ name: string; path: string }[]>;
     listProfiles: (instancePath: string) => Promise<string[]>;
+    getEnvInstance: () => Promise<string | null>;
+    detectRegistry: () => Promise<{ name: string; path: string }[]>;
+    detectFilesystem: () => Promise<{ name: string; path: string }[]>;
+    getSearchInfo: () => Promise<{
+      envCandidates: string[];
+      commonPaths: string[];
+      registryKeys: string[];
+      filesystemRoots: string[];
+    }>;
+    browse: () => Promise<{ name: string; path: string } | null>;
   };
   analysis: {
     runOffline: (
@@ -26,7 +41,11 @@ export interface RendererApi {
       filePath: string,
       format: "json" | "html",
     ) => Promise<string>;
-    expandIssue: (issueId: string, summary: string) => Promise<string>;
+    expandIssue: (
+      issue: Issue,
+      profile: ProfileSnapshot,
+      messages?: IssueChatMessage[],
+    ) => Promise<string>;
   };
   logs: {
     tail: (limit?: number) => Promise<string[]>;

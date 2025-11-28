@@ -4,6 +4,7 @@
     "module": "CommonJS",
     "target": "ES2020",
     "outDir": "dist/main",
+    "rootDir": "./",
     "types": ["node"],
     "lib": ["ES2021"],
     "allowJs": false,
@@ -14,5 +15,8 @@
   "include": ["src/main/**/*", "src/shared/**/*"],
   "exclude": ["src/renderer"]
 }
+
+
+
 
 

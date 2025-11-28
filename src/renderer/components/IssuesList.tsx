@@ -18,7 +18,7 @@ const severityColors: Record<Severity, { bg: string; fg: string; label: string }
   suggestion: { bg: "#065f46", fg: "#d1fae5", label: "Suggestion" },
 };
 
-const IssuesList = memo(({ issues, selectedId, onSelect }: IssuesListProps) => {
+const IssuesList = memo(function IssuesList({ issues, selectedId, onSelect }: IssuesListProps) {
   const grouped = useMemo(() => {
     const map = new Map<Issue["severity"], Issue[]>();
     issues.forEach((issue) => {

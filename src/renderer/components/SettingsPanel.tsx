@@ -24,11 +24,11 @@ export interface SettingsPanelProps {
   instances: { name: string; path: string }[];
   selectedInstancePath: string | null;
   onInstanceChange: (path: string) => void;
+  onBrowseInstance: () => void;
   profiles: string[];
   selectedProfileId: string | null;
   onProfileChange: (profileId: string) => void;
   onRefreshInstances: () => void;
-  onRefreshProfiles: (instancePath: string) => void;
 }
 
 const SettingsPanel = ({
@@ -39,11 +39,11 @@ const SettingsPanel = ({
   instances,
   selectedInstancePath,
   onInstanceChange,
+  onBrowseInstance,
   profiles,
   selectedProfileId,
   onProfileChange,
   onRefreshInstances,
-  onRefreshProfiles,
 }: SettingsPanelProps) => {
   const [draft, setDraft] = useState<Settings>(settings);
 
@@ -51,7 +51,6 @@ const SettingsPanel = ({
     if (open) {
       // This effect intentionally re-syncs the local draft state with the latest
       // incoming settings whenever the dialog is (re)opened.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDraft(settings);
     }
   }, [open, settings]);
@@ -79,13 +78,20 @@ const SettingsPanel = ({
               <div style={{ display: "flex", gap: 8 }}>
                 <Dropdown
                   placeholder="Select an instance"
-                  selectedOptions={selectedInstancePath ? [selectedInstancePath] : []}
-                  value={selectedInstancePath ?? undefined}
+                  // Keep the selection fully controlled so it doesn't get visually
+                  // reset when other dropdowns change.
+                  value={selectedInstancePath ?? draft.selectedInstanceId ?? undefined}
+                  selectedOptions={
+                    selectedInstancePath
+                      ? [selectedInstancePath]
+                      : draft.selectedInstanceId
+                        ? [draft.selectedInstanceId]
+                        : []
+                  }
                   onOptionSelect={(_, data) => {
                     if (data.optionValue) {
                       const path = String(data.optionValue);
                       onInstanceChange(path);
-                      onRefreshProfiles(path);
                       setDraft({
                         ...draft,
                         selectedInstanceId: path,
@@ -103,13 +109,23 @@ const SettingsPanel = ({
                 <Button appearance="secondary" onClick={onRefreshInstances}>
                   Refresh
                 </Button>
+                <Button appearance="secondary" onClick={onBrowseInstance}>
+                  Browse…
+                </Button>
               </div>
             </Field>
             <Field label="Profile">
               <Dropdown
                 placeholder="Select a profile"
-                selectedOptions={selectedProfileId ? [selectedProfileId] : []}
-                value={selectedProfileId ?? undefined}
+                // Prefer the live app selection, but fall back to the draft settings.
+                value={selectedProfileId ?? draft.selectedProfileId ?? undefined}
+                selectedOptions={
+                  selectedProfileId
+                    ? [selectedProfileId]
+                    : draft.selectedProfileId
+                      ? [draft.selectedProfileId]
+                      : []
+                }
                 disabled={!selectedInstancePath || profiles.length === 0}
                 onOptionSelect={(_, data) => {
                   if (data.optionValue) {
@@ -143,48 +159,82 @@ const SettingsPanel = ({
               />
             </Field>
             <Field label="LOOT Mode">
-              <Dropdown
-                selectedOptions={[draft.lootMode]}
-                onOptionSelect={(_, data) =>
-                  setDraft({ ...draft, lootMode: data.optionValue as Settings["lootMode"] })
-                }
-              >
-                {(["auto", "portable", "installed", "custom"] as Settings["lootMode"][]).map(
-                  (mode) => (
-                    <Option key={mode} value={mode}>
-                      {mode}
-                    </Option>
-                  ),
-                )}
-              </Dropdown>
+              {/*
+                Use a single resolved value for both `value` and `selectedOptions`.
+                This avoids Fluent UI treating the control as partially uncontrolled
+                and dropping the visible selection when other dropdowns update.
+              */}
+              {(() => {
+                const lootMode = draft.lootMode ?? "auto";
+                return (
+                  <Dropdown
+                    placeholder="Select LOOT mode"
+                    value={lootMode}
+                    selectedOptions={[lootMode]}
+                    onOptionSelect={(_, data) =>
+                      setDraft({
+                        ...draft,
+                        lootMode: data.optionValue as Settings["lootMode"],
+                      })
+                    }
+                  >
+                    {(["auto", "portable", "installed", "custom"] as Settings["lootMode"][]).map(
+                      (mode) => (
+                        <Option key={mode} value={mode}>
+                          {mode}
+                        </Option>
+                      ),
+                    )}
+                  </Dropdown>
+                );
+              })()}
             </Field>
             <Field label="Default analysis type">
-              <Dropdown
-                selectedOptions={[draft.analysisMode ?? "offline"]}
-                onOptionSelect={(_, data) =>
-                  setDraft({
-                    ...draft,
-                    analysisMode: (data.optionValue as Settings["analysisMode"]) ?? "offline",
-                  })
-                }
-              >
-                <Option value="offline">Offline only (rules + LOOT)</Option>
-                <Option value="agentic">Full analysis (agentic + tools)</Option>
-              </Dropdown>
+              {(() => {
+                const mode = draft.analysisMode ?? "offline";
+                return (
+                  <Dropdown
+                    placeholder="Select default analysis type"
+                    value={mode}
+                    selectedOptions={[mode]}
+                    onOptionSelect={(_, data) =>
+                      setDraft({
+                        ...draft,
+                        analysisMode: (data.optionValue as Settings["analysisMode"]) ?? "offline",
+                      })
+                    }
+                  >
+                    <Option value="offline">Offline only (rules + LOOT)</Option>
+                    <Option value="agentic">Full analysis (agentic + tools)</Option>
+                  </Dropdown>
+                );
+              })()}
             </Field>
             <Field label="Log Level">
-              <Dropdown
-                selectedOptions={[draft.logLevel]}
-                onOptionSelect={(_, data) =>
-                  setDraft({ ...draft, logLevel: data.optionValue as Settings["logLevel"] })
-                }
-              >
-                {(["error", "warn", "info", "debug"] as Settings["logLevel"][]).map((level) => (
-                  <Option key={level} value={level}>
-                    {level}
-                  </Option>
-                ))}
-              </Dropdown>
+              {(() => {
+                const level = draft.logLevel ?? "info";
+                return (
+                  <Dropdown
+                    placeholder="Select log verbosity"
+                    value={level}
+                    selectedOptions={[level]}
+                    onOptionSelect={(_, data) =>
+                      setDraft({
+                        ...draft,
+                        logLevel: data.optionValue as Settings["logLevel"],
+                      })
+                    }
+                  >
+                    {(["error", "warn", "info", "debug"] as Settings["logLevel"][]).map(
+                      (optLevel) => (
+                        <Option key={optLevel} value={optLevel}>
+                          {optLevel}
+                        </Option>
+                      ),
+                    )}
+                  </Dropdown>
+                );
+              })()}
             </Field>
 
             <div

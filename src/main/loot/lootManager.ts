@@ -46,7 +46,7 @@ export const detectLootPaths = async (settings: Settings): Promise<Settings> => 
   return draft;
 };
 
-export const runLootForProfile = async (snapshot: ProfileSnapshot): Promise<LootReport> => {
+export const runLootForProfile = (snapshot: ProfileSnapshot): Promise<LootReport> => {
   // TODO: Invoke LOOT CLI with the selected executable and parse JSON output.
   const now = new Date().toISOString();
   const mockedMissingMasters = snapshot.pluginLoadOrder.length
@@ -58,7 +58,7 @@ export const runLootForProfile = async (snapshot: ProfileSnapshot): Promise<Loot
       ]
     : [];
 
-  return {
+  return Promise.resolve({
     timestamp: now,
     summary: "Mocked LOOT analysis (real integration pending)",
     missingMasters: mockedMissingMasters,
@@ -69,5 +69,5 @@ export const runLootForProfile = async (snapshot: ProfileSnapshot): Promise<Loot
     metadata: {
       lootModeUsed: snapshot.lootAvailable ? "configured" : "mocked",
     },
-  };
+  });
 };

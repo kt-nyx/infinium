@@ -63,24 +63,40 @@ const ensureDirectory = async (filePath: string): Promise<void> => {
   await fs.mkdir(dir, { recursive: true });
 };
 
+const applyEnvOverrides = (settings: Settings): Settings => {
+  // Allow providing a default Nexus API key via environment variable, without
+  // forcing it to be written to disk. The saved settings take precedence if a
+  // key has already been configured in the UI.
+  const envNexusKey = process.env.SKYRIM_AI_NEXUS_API_KEY ?? process.env.NEXUS_API_KEY;
+
+  if (envNexusKey && !settings.nexusApiKey) {
+    return {
+      ...settings,
+      nexusApiKey: envNexusKey,
+    };
+  }
+
+  return settings;
+};
+
 export const loadSettings = async (): Promise<Settings> => {
   const defaults = defaultSettings();
   const targetPath = resolveSettingsPath();
 
   try {
     const raw = await fs.readFile(targetPath, "utf-8");
-    const parsed = JSON.parse(raw);
+    const parsed: unknown = JSON.parse(raw);
     const merged = settingsSchema.safeParse(parsed);
     if (merged.success) {
-      return { ...defaults, ...merged.data };
+      return applyEnvOverrides({ ...defaults, ...merged.data });
     }
     console.warn("Settings schema mismatch, falling back to defaults", merged.error);
-    return defaults;
+    return applyEnvOverrides(defaults);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
       console.warn("Failed to load settings, returning defaults", error);
     }
-    return defaults;
+    return applyEnvOverrides(defaults);
   }
 };
 

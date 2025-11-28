@@ -1,4 +1,5 @@
 import type { Settings } from "../../shared/types";
+import { logger } from "../logging";
 
 export interface NexusModMetadata {
   nexusId: number;
@@ -31,15 +32,29 @@ export class NexusClient {
   }
 
   async getModMetadata(nexusId: number): Promise<NexusModMetadata> {
-    if (!this.apiKey) {
+    const hasKey = Boolean(this.apiKey);
+    await logger.debug(
+      `[NexusClient] getModMetadata called for nexusId=${nexusId}; apiKeyConfigured=${hasKey}`,
+    );
+
+    if (!hasKey) {
+      await logger.debug(
+        `[NexusClient] No API key configured; returning mocked metadata for nexusId=${nexusId}`,
+      );
       return createMockMetadata(nexusId);
     }
 
     // TODO: Implement authenticated requests to the official Nexus Mods API once API surface is finalized.
+    await logger.debug(
+      `[NexusClient] Nexus API integration pending; returning mocked metadata for nexusId=${nexusId}`,
+    );
     return createMockMetadata(nexusId);
   }
 
   async getModMetadataBatch(nexusIds: number[]): Promise<NexusModMetadata[]> {
+    await logger.debug(
+      `[NexusClient] getModMetadataBatch called for nexusIds=[${nexusIds.join(", ")}]`,
+    );
     return Promise.all(nexusIds.map((id) => this.getModMetadata(id)));
   }
 }

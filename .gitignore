@@ -1,3 +1,6 @@
+src/**/*.js
+src/**/*.d.ts
+src/**/*.js.map
 # Node artifacts
 node_modules/
 .pnpm-store/

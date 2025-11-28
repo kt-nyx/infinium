@@ -2,13 +2,14 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
-    "moduleResolution": "Node",
+    "moduleResolution": "Bundler",
     "esModuleInterop": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
+    // When configs live at the repo root, baseUrl can just be ".".
     "baseUrl": "./",
     "paths": {
       "@shared/*": ["src/shared/*"],
@@ -17,5 +18,7 @@
     }
   }
 }
+
+
 
 

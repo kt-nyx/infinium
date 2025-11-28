@@ -1,6 +1,11 @@
 import { contextBridge, ipcRenderer } from "electron";
 import type { AnalysisRunOptions } from "../shared/analysis";
-import type { AnalysisResult, Settings } from "../shared/types";
+import type { AnalysisResult, Issue, ProfileSnapshot, Settings } from "../shared/types";
+
+type IssueChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
 
 const api = {
   settings: {
@@ -11,6 +16,18 @@ const api = {
     detect: (): Promise<{ name: string; path: string }[]> => ipcRenderer.invoke("mo2:detect"),
     listProfiles: (instancePath: string): Promise<string[]> =>
       ipcRenderer.invoke("mo2:listProfiles", instancePath),
+    getEnvInstance: (): Promise<string | null> => ipcRenderer.invoke("mo2:getEnvInstance"),
+    detectRegistry: (): Promise<{ name: string; path: string }[]> =>
+      ipcRenderer.invoke("mo2:detectRegistry"),
+    detectFilesystem: (): Promise<{ name: string; path: string }[]> =>
+      ipcRenderer.invoke("mo2:detectFilesystem"),
+    getSearchInfo: (): Promise<{
+      envCandidates: string[];
+      commonPaths: string[];
+      registryKeys: string[];
+      filesystemRoots: string[];
+    }> => ipcRenderer.invoke("mo2:getSearchInfo"),
+    browse: (): Promise<{ name: string; path: string } | null> => ipcRenderer.invoke("mo2:browse"),
   },
   analysis: {
     runOffline: (
@@ -30,8 +47,11 @@ const api = {
       filePath: string,
       format: "json" | "html",
     ): Promise<string> => ipcRenderer.invoke("analysis:export", { analysis, filePath, format }),
-    expandIssue: (issueId: string, summary: string): Promise<string> =>
-      ipcRenderer.invoke("analysis:expandIssue", { issueId, summary }),
+    expandIssue: (
+      issue: Issue,
+      profile: ProfileSnapshot,
+      messages?: IssueChatMessage[],
+    ): Promise<string> => ipcRenderer.invoke("analysis:expandIssue", { issue, profile, messages }),
   },
   logs: {
     tail: (limit = 200): Promise<string[]> => ipcRenderer.invoke("logs:tail", limit),

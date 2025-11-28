@@ -24,7 +24,7 @@ const instanceRowStyles: CSSProperties = {
   alignItems: "flex-end",
 };
 
-const ProfileSelector = memo((props: ProfileSelectorProps) => {
+const ProfileSelector = memo(function ProfileSelector(props: ProfileSelectorProps) {
   const {
     instances,
     selectedInstance,

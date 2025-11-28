@@ -23,7 +23,7 @@ const containerStyles: CSSProperties = {
   gap: tokens.spacingHorizontalM,
 };
 
-const AnalysisControls = memo((props: AnalysisControlsProps) => {
+const AnalysisControls = memo(function AnalysisControls(props: AnalysisControlsProps) {
   const { options, onChange, onRunOffline, onRunAgentic, disabled } = props;
 
   const updateOption = <K extends keyof AnalysisControlOptions>(

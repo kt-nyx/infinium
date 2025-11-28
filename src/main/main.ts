@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { app, BrowserWindow } from "electron";
 import path from "node:path";
 import { registerIpcHandlers } from "./ipcHandlers";
@@ -40,14 +41,21 @@ app.on("window-all-closed", () => {
   }
 });
 
-app.whenReady().then(async () => {
-  await logger.info("App ready; registering IPC handlers");
-  registerIpcHandlers();
-  await createWindow();
+const startApp = async (): Promise<void> => {
+  try {
+    await logger.info("App ready; registering IPC handlers");
+    registerIpcHandlers();
+    await createWindow();
 
-  app.on("activate", async () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      await createWindow();
-    }
-  });
-});
+    app.on("activate", () => {
+      if (BrowserWindow.getAllWindows().length === 0) {
+        void createWindow();
+      }
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    await logger.error(`App failed to initialize: ${message}`);
+  }
+};
+
+void app.whenReady().then(startApp);

@@ -46,6 +46,7 @@ export const runAgenticAnalysis = async (
   offlineBaseline: AnalysisResult,
   overrides?: AnalysisRunOptions,
 ): Promise<AnalysisResult> => {
+  setLogLevel(settings.logLevel);
   const options = resolveOptions(settings, overrides);
   await logger.info(`Running agentic analysis for ${snapshot.profileId}`);
 
@@ -65,7 +66,14 @@ export const runAgenticAnalysis = async (
 
   const issueMap = new Map(offlineBaseline.issues.map((issue) => [issue.id, issue]));
   agentOutput.issues.forEach((issue) => {
-    if (!issueMap.has(issue.id)) {
+    const existing = issueMap.get(issue.id);
+    if (existing) {
+      // Prefer the agent-enriched version but preserve any non-conflicting baseline sources.
+      const mergedSources = Array.from(
+        new Set([...(existing.source ?? []), ...(issue.source ?? [])]),
+      );
+      issueMap.set(issue.id, { ...issue, source: mergedSources });
+    } else {
       issueMap.set(issue.id, issue);
     }
   });

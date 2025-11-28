@@ -1,6 +1,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import type { ModInfo, ProfileSnapshot } from "../../shared/types";
+import { logger } from "../logging";
 
 const readLines = async (filePath: string): Promise<string[]> => {
   try {
@@ -18,10 +19,15 @@ export const getProfiles = async (instancePath: string): Promise<string[]> => {
   const profilesDir = path.join(instancePath, "profiles");
   try {
     const entries = await fs.readdir(profilesDir, { withFileTypes: true });
-    return entries
+    const profiles = entries
       .filter((entry) => entry.isDirectory())
       .map((entry) => entry.name)
       .sort();
+    await logger.debug(
+      `[MO2] Discovered ${profiles.length} profiles under instance="${instancePath}": ` +
+        profiles.join(", "),
+    );
+    return profiles;
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       return [];
@@ -35,7 +41,7 @@ const parseModList = async (instancePath: string, profileId: string): Promise<Mo
   const modsDir = path.join(instancePath, "mods");
   const lines = await readLines(modlistPath);
 
-  return lines
+  const mods = lines
     .filter((line) => line && !line.startsWith("#"))
     .map((line) => {
       const enabled = line.startsWith("+");
@@ -51,6 +57,13 @@ const parseModList = async (instancePath: string, profileId: string): Promise<Mo
         },
       } satisfies ModInfo;
     });
+
+  await logger.debug(
+    `[MO2] Parsed modlist for profile="${profileId}" at "${modlistPath}": ` +
+      `totalLines=${lines.length}, mods=${mods.length}`,
+  );
+
+  return mods;
 };
 
 const parsePlugins = async (instancePath: string, profileId: string): Promise<string[]> => {
@@ -61,9 +74,14 @@ const parsePlugins = async (instancePath: string, profileId: string): Promise<st
     const filePath = path.join(profileDir, file);
     const lines = await readLines(filePath);
     if (lines.length > 0) {
-      return lines
+      const plugins = lines
         .filter((line) => line && !line.startsWith("#"))
         .map((line) => line.replace(/^\*+/, ""));
+      await logger.debug(
+        `[MO2] Parsed plugins for profile="${profileId}" from "${filePath}": ` +
+          `totalLines=${lines.length}, plugins=${plugins.length}`,
+      );
+      return plugins;
     }
   }
 
@@ -95,6 +113,11 @@ export const scanProfile = async (
   const mods = await parseModList(instancePath, profileId);
   const pluginLoadOrder = await parsePlugins(instancePath, profileId);
   attachPluginsToMods(mods, pluginLoadOrder);
+
+  await logger.debug(
+    `[MO2] Finished scan for profile="${profileId}" in instance="${instancePath}": ` +
+      `mods=${mods.length}, plugins=${pluginLoadOrder.length}`,
+  );
 
   return {
     profileId,

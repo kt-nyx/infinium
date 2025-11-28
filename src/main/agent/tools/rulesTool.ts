@@ -8,5 +8,5 @@ export const rulesTool: AgentTool<
 > = {
   name: "get_known_issue_rules",
   description: "Evaluates local heuristic rules for the provided profile snapshot.",
-  invoke: async ({ profile }) => evaluate(profile),
+  invoke: ({ profile }) => Promise.resolve(evaluate(profile)),
 };
