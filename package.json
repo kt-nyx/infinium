@@ -1,5 +1,5 @@
 {
-  "name": "skyrim-ai-modlist-reviewer-electron",
+  "name": "infinium",
   "version": "0.1.0",
   "description": "Windows-only Electron app that analyzes Skyrim Mod Organizer 2 profiles with agentic AI assistance.",
   "type": "module",
@@ -8,11 +8,15 @@
   "license": "MIT",
   "packageManager": "npm@10.9.0",
   "scripts": {
+    "build:loot-helper": "node ./scripts/build-loot-helper.mjs",
+    "predev": "npm run build:loot-helper",
     "dev": "rimraf dist && concurrently \"npm:dev:renderer\" \"npm:watch:main\" \"npm:dev:electron\"",
     "dev:renderer": "vite --config vite.config.ts",
     "watch:main": "tsup --config tsup.config.ts --watch",
     "dev:electron": "wait-on dist/main/main.cjs dist/main/preload.cjs && electron --inspect=9229 --remote-debugging-port=9223 .",
+    "prebuild": "npm run build:loot-helper",
     "build": "rimraf dist && tsup --config tsup.config.ts && vite build --config vite.config.ts",
+    "prestart": "npm run build:loot-helper",
     "start": "electron .",
     "lint": "eslint \"src/**/*.{ts,tsx,js,jsx}\" \"test/**/*.{ts,tsx,js,jsx}\"",
     "lint:fix": "eslint \"src/**/*.{ts,tsx,js,jsx}\" \"test/**/*.{ts,tsx,js,jsx}\" --fix",
@@ -20,6 +24,7 @@
     "typecheck": "tsc -b tsconfig.json",
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest watch --config vitest.config.ts",
+    "prepackage": "npm run build:loot-helper",
     "package": "npm run build && electron-builder -c electron-builder.yml",
     "prepare": "husky"
   },
@@ -43,6 +48,7 @@
     "@langchain/core": "^1.0.0",
     "@langchain/langgraph": "^1.0.0",
     "@langchain/openai": "^1.0.0",
+    "extract-zip": "^2.0.1",
     "cross-fetch": "^4.1.0",
     "dotenv": "^16.4.5",
     "langchain": "^1.0.0",

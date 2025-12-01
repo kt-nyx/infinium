@@ -41,7 +41,7 @@ const exportAnalysis = async (
   if (format === "json") {
     await fs.writeFile(filePath, JSON.stringify(analysis, null, 2), "utf-8");
   } else {
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Skyrim AI Report</title></head><body><pre>${JSON.stringify(
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Infinium Report</title></head><body><pre>${JSON.stringify(
       analysis,
       null,
       2,
@@ -60,6 +60,19 @@ export const registerIpcHandlers = (): void => {
   ipcMain.handle("settings:save", async (_event, payload: Settings) => {
     await logger.info("Persisting settings via IPC");
     return persistSettings(payload);
+  });
+
+  ipcMain.handle("game:browseSkyrimSeDataPath", async () => {
+    const result = await dialog.showOpenDialog({
+      title: "Select Skyrim Special Edition Data folder (or game root)",
+      properties: ["openDirectory"],
+    });
+
+    if (result.canceled || result.filePaths.length === 0) {
+      return null;
+    }
+
+    return result.filePaths[0];
   });
 
   ipcMain.handle("mo2:detect", async () => {

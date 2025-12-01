@@ -68,24 +68,81 @@ const parseModList = async (instancePath: string, profileId: string): Promise<Mo
 
 const parsePlugins = async (instancePath: string, profileId: string): Promise<string[]> => {
   const profileDir = path.join(instancePath, "profiles", profileId);
-  const candidates = ["plugins.txt", "loadorder.txt"];
+  const pluginsPath = path.join(profileDir, "plugins.txt");
+  const loadOrderPath = path.join(profileDir, "loadorder.txt");
 
-  for (const file of candidates) {
-    const filePath = path.join(profileDir, file);
-    const lines = await readLines(filePath);
-    if (lines.length > 0) {
-      const plugins = lines
-        .filter((line) => line && !line.startsWith("#"))
-        .map((line) => line.replace(/^\*+/, ""));
-      await logger.debug(
-        `[MO2] Parsed plugins for profile="${profileId}" from "${filePath}": ` +
-          `totalLines=${lines.length}, plugins=${plugins.length}`,
-      );
-      return plugins;
-    }
+  const pluginLines = await readLines(pluginsPath);
+  const loadOrderLines = await readLines(loadOrderPath);
+
+  const parseList = (lines: string[]) => lines.filter((line) => line && !line.startsWith("#"));
+
+  const rawPluginEntries = parseList(pluginLines);
+  // loadorder.txt entries are plain plugin names; only plugins.txt uses a
+  // leading "*" marker. Do not strip anything here.
+  const loadOrderAll = parseList(loadOrderLines);
+
+  // Build a map of explicit MO2-managed plugin states from plugins.txt:
+  // - lines starting with "*" are explicitly active
+  // - lines without "*" are explicitly inactive
+  const explicitState = new Map<string, "active" | "inactive">();
+  rawPluginEntries.forEach((line) => {
+    const isActive = line.startsWith("*");
+    const name = line.replace(/^\*+/, "");
+    if (!name) return;
+    explicitState.set(name.toLowerCase(), isActive ? "active" : "inactive");
+  });
+
+  // If loadorder.txt is missing, fall back to plugins.txt semantics only.
+  if (!loadOrderAll.length) {
+    const fallback = rawPluginEntries
+      .filter((line) => line.startsWith("*"))
+      .map((line) => line.replace(/^\*+/, ""));
+    await logger.debug(
+      `[MO2] loadorder.txt missing for profile="${profileId}", using plugins.txt only: ` +
+        `totalLines=${rawPluginEntries.length}, activePlugins=${fallback.length}`,
+    );
+    return fallback;
   }
 
-  return [];
+  // If plugins.txt has no entries at all, treat everything present in
+  // loadorder.txt as active (MO2/game fallback semantics).
+  if (!rawPluginEntries.length) {
+    await logger.debug(
+      `[MO2] plugins.txt missing or empty; using full loadorder.txt for profile="${profileId}" ` +
+        `with ${loadOrderAll.length} plugins.`,
+    );
+    return loadOrderAll;
+  }
+
+  // Main rule set:
+  // - Any plugin that appears in loadorder.txt but NOT in plugins.txt is
+  //   considered active and kept in the exact order from loadorder.txt.
+  // - Any plugin that appears in both files and is prefixed with "*" in
+  //   plugins.txt is active and kept in the exact order from loadorder.txt.
+  // - Any plugin that appears in both files but is NOT prefixed with "*" in
+  //   plugins.txt is considered inactive and excluded.
+  const pluginsInOrder: string[] = [];
+
+  loadOrderAll.forEach((name) => {
+    const lower = name.toLowerCase();
+    const state = explicitState.get(lower);
+
+    if (state === "inactive") {
+      // Explicitly disabled in plugins.txt; skip.
+      return;
+    }
+
+    // Either explicitly active ("*") or not present in plugins.txt at all
+    // (managed outside MO2) -> treat as active.
+    pluginsInOrder.push(name);
+  });
+
+  await logger.debug(
+    `[MO2] Parsed plugins for profile="${profileId}" from plugins.txt (total=${rawPluginEntries.length}) ` +
+      `and loadorder.txt (total=${loadOrderAll.length}): resultingActivePlugins=${pluginsInOrder.length}`,
+  );
+
+  return pluginsInOrder;
 };
 
 const attachPluginsToMods = (mods: ModInfo[], pluginLoadOrder: string[]): void => {

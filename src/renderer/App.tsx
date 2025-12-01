@@ -445,6 +445,7 @@ const App = () => {
             <IssueDetails
               issue={currentIssue}
               recommendations={recommendationsForIssue}
+              mods={analysis.profile.mods}
               onExpand={(issue) => {
                 void sendIssueChat(issue);
               }}
@@ -485,7 +486,7 @@ const App = () => {
       <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div>
           <Text size={700} weight="semibold">
-            Skyrim AI Modlist Reviewer
+            Infinium
           </Text>
           <Text size={200}>Windows-only Electron prototype • Agentic analysis coming soon</Text>
         </div>

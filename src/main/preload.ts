@@ -12,6 +12,10 @@ const api = {
     get: (): Promise<Settings> => ipcRenderer.invoke("settings:get"),
     save: (payload: Settings): Promise<Settings> => ipcRenderer.invoke("settings:save", payload),
   },
+  game: {
+    browseSkyrimSeDataPath: (): Promise<string | null> =>
+      ipcRenderer.invoke("game:browseSkyrimSeDataPath"),
+  },
   mo2: {
     detect: (): Promise<{ name: string; path: string }[]> => ipcRenderer.invoke("mo2:detect"),
     listProfiles: (instancePath: string): Promise<string[]> =>

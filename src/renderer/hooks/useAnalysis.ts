@@ -3,6 +3,31 @@ import type { AnalysisRunOptions } from "../../shared/analysis";
 import { defaultSettings } from "../../shared/defaults";
 import type { AnalysisResult, Issue, Recommendation, Settings } from "../../shared/types";
 
+// Empty baseline analysis used on first load so the UI starts
+// with no issues until the user runs an analysis.
+const emptyAnalysis: AnalysisResult = {
+  profile: {
+    profileId: "",
+    game: "SkyrimSE",
+    mo2InstancePath: "",
+    mods: [],
+    pluginLoadOrder: [],
+    lootAvailable: false,
+    nexusAvailable: false,
+  },
+  issues: [],
+  recommendations: [],
+  metadata: {
+    offlineOnly: true,
+    complexityLevel: 1,
+    opinionatedness: 1,
+    agentUsed: false,
+    createdAt: new Date().toISOString(),
+  },
+};
+
+// Sample mocked analysis kept only as a fallback if an analysis
+// run fails, so the UI can still demonstrate behavior.
 const mockAnalysis: AnalysisResult = {
   profile: {
     profileId: "MockProfile",
@@ -65,7 +90,7 @@ type IssueChatMessage = {
 };
 
 export const useAnalysis = () => {
-  const [analysis, setAnalysis] = useState<AnalysisResult>(mockAnalysis);
+  const [analysis, setAnalysis] = useState<AnalysisResult>(emptyAnalysis);
   const [settings, setSettings] = useState<Settings>(defaultSettings());
   const [instances, setInstances] = useState<{ name: string; path: string }[]>([]);
   const [profiles, setProfiles] = useState<string[]>([]);
@@ -234,7 +259,7 @@ export const useAnalysis = () => {
 
   const exportReport = useCallback(
     async (format: "json" | "html") => {
-      const fallbackPath = `C:/Temp/skyrim-ai-report.${format}`;
+      const fallbackPath = `C:/Temp/infinium-report.${format}`;
       try {
         await safeApi().analysis.export(analysis, fallbackPath, format);
       } catch (err) {

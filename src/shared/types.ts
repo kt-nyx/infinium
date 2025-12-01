@@ -38,6 +38,21 @@ export interface ProfileSnapshot {
   nexusAvailable: boolean;
 }
 
+export type LootIssueMessageSeverity = "error" | "warning" | "note";
+
+export interface LootMissingMastersDetail {
+  plugin: string;
+  masters: string[];
+}
+
+export interface LootIssuePluginMessage {
+  plugin: string;
+  severity: LootIssueMessageSeverity;
+  text: string;
+  language?: string;
+  condition?: string;
+}
+
 export interface Issue {
   id: string;
   severity: Severity;
@@ -50,6 +65,18 @@ export interface Issue {
   risky: boolean;
   confidence: "high" | "medium" | "low";
   source: Array<"loot" | "rules" | "nexus" | "rag" | "agent">;
+  /**
+   * When present, this issue represents an aggregated view of all missing
+   * masters reported by LOOT. Each entry lists a plugin and its missing
+   * masters, which the UI can render as a nested, expandable list.
+   */
+  lootMissingMasters?: LootMissingMastersDetail[];
+  /**
+   * Optional LOOT-derived messages associated with this issue, typically for
+   * a single plugin. These are used to surface LOOT warnings/errors (and
+   * related notes) in the issue details view.
+   */
+  lootPluginMessages?: LootIssuePluginMessage[];
 }
 
 export interface Recommendation {
@@ -76,6 +103,11 @@ export interface Settings {
   mo2Instances: { name: string; path: string }[];
   selectedInstanceId?: string;
   selectedProfileId?: string;
+  /**
+   * Absolute path to the Skyrim SE/AE Data folder (or game root) used when
+   * constructing libloot requests. Required for LOOT-powered analysis.
+   */
+  skyrimSeDataPath?: string;
   lootPortablePath?: string;
   lootInstalledPath?: string;
   lootMode: "portable" | "installed" | "custom" | "auto";

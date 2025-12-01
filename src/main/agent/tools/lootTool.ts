@@ -5,6 +5,7 @@ import type { AgentTool } from "./types";
 
 export const lootTool: AgentTool<ProfileSnapshot, LootReport> = {
   name: "get_loot_report",
-  description: "Runs LOOT against the supplied profile snapshot and returns the parsed report.",
+  description:
+    "Runs a real LOOT (libloot) analysis for the supplied profile snapshot and returns a structured LootReport, including aggregated missing masters, warnings, sorted load order, and rich per-plugin metadata (LOOT messages, requirements, incompatibilities, tags, stats).",
   invoke: async (snapshot) => runLootForProfile(snapshot),
 };

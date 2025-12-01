@@ -145,6 +145,36 @@ const SettingsPanel = ({
                 ))}
               </Dropdown>
             </Field>
+            <Field label="Skyrim SE Data Path">
+              <div style={{ display: "flex", gap: 8 }}>
+                <Input
+                  value={draft.skyrimSeDataPath ?? ""}
+                  onChange={(_, data) =>
+                    setDraft({
+                      ...draft,
+                      skyrimSeDataPath: data.value || undefined,
+                    })
+                  }
+                  placeholder="C:\Program Files (x86)\Steam\steamapps\common\Skyrim Special Edition\Data"
+                />
+                <Button
+                  appearance="secondary"
+                  onClick={() => {
+                    void (async () => {
+                      const chosen = await window.api.game.browseSkyrimSeDataPath();
+                      if (chosen) {
+                        setDraft({
+                          ...draft,
+                          skyrimSeDataPath: chosen,
+                        });
+                      }
+                    })();
+                  }}
+                >
+                  Browse…
+                </Button>
+              </div>
+            </Field>
             <Field label="Nexus Personal API Key">
               <Input
                 type="password"
@@ -158,37 +188,7 @@ const SettingsPanel = ({
                 onChange={(_, data) => setDraft({ ...draft, ragIndexPath: data.value })}
               />
             </Field>
-            <Field label="LOOT Mode">
-              {/*
-                Use a single resolved value for both `value` and `selectedOptions`.
-                This avoids Fluent UI treating the control as partially uncontrolled
-                and dropping the visible selection when other dropdowns update.
-              */}
-              {(() => {
-                const lootMode = draft.lootMode ?? "auto";
-                return (
-                  <Dropdown
-                    placeholder="Select LOOT mode"
-                    value={lootMode}
-                    selectedOptions={[lootMode]}
-                    onOptionSelect={(_, data) =>
-                      setDraft({
-                        ...draft,
-                        lootMode: data.optionValue as Settings["lootMode"],
-                      })
-                    }
-                  >
-                    {(["auto", "portable", "installed", "custom"] as Settings["lootMode"][]).map(
-                      (mode) => (
-                        <Option key={mode} value={mode}>
-                          {mode}
-                        </Option>
-                      ),
-                    )}
-                  </Dropdown>
-                );
-              })()}
-            </Field>
+            {/* Legacy LOOT.exe mode/path controls have been removed in favour of libloot. */}
             <Field label="Default analysis type">
               {(() => {
                 const mode = draft.analysisMode ?? "offline";

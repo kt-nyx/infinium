@@ -16,6 +16,7 @@ const settingsSchema = z
     ),
     selectedInstanceId: z.string().optional(),
     selectedProfileId: z.string().optional(),
+    skyrimSeDataPath: z.string().optional(),
     lootPortablePath: z.string().optional(),
     lootInstalledPath: z.string().optional(),
     lootMode: z.enum(["portable", "installed", "custom", "auto"]),
@@ -68,15 +69,28 @@ const applyEnvOverrides = (settings: Settings): Settings => {
   // forcing it to be written to disk. The saved settings take precedence if a
   // key has already been configured in the UI.
   const envNexusKey = process.env.SKYRIM_AI_NEXUS_API_KEY ?? process.env.NEXUS_API_KEY;
+  const envSkyrimSePath =
+    process.env.SKYRIM_SE_DATA_PATH ??
+    process.env.SKYRIM_AE_DATA_PATH ??
+    process.env.SKYRIM_DATA_PATH;
 
-  if (envNexusKey && !settings.nexusApiKey) {
-    return {
-      ...settings,
+  let next: Settings = { ...settings };
+
+  if (envNexusKey && !next.nexusApiKey) {
+    next = {
+      ...next,
       nexusApiKey: envNexusKey,
     };
   }
 
-  return settings;
+  if (envSkyrimSePath && !next.skyrimSeDataPath) {
+    next = {
+      ...next,
+      skyrimSeDataPath: envSkyrimSePath,
+    };
+  }
+
+  return next;
 };
 
 export const loadSettings = async (): Promise<Settings> => {

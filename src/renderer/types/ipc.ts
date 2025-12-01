@@ -11,6 +11,9 @@ export interface RendererApi {
     get: () => Promise<Settings>;
     save: (payload: Settings) => Promise<Settings>;
   };
+  game: {
+    browseSkyrimSeDataPath: () => Promise<string | null>;
+  };
   mo2: {
     detect: () => Promise<{ name: string; path: string }[]>;
     listProfiles: (instancePath: string) => Promise<string[]>;

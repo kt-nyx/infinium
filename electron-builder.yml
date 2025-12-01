@@ -1,5 +1,5 @@
-appId: com.skyrim.ai.modlist.reviewer
-productName: SkyrimAIModlistReviewer
+appId: com.infinium.app
+productName: Infinium
 directories:
   output: release
   buildResources: resources
@@ -16,7 +16,11 @@ extraResources:
     to: loot
     filter:
       - "**/*"
-# TODO: configure code signing and include LOOT portable payload.
+  - from: resources/loot-helper
+    to: loot-helper
+    filter:
+      - "**/*"
+# TODO: configure code signing and ensure libloot/loot-helper payloads are bundled correctly.
 
 
 

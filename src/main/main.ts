@@ -23,7 +23,7 @@ const createWindow = async (): Promise<void> => {
     height: 900,
     minWidth: 1200,
     minHeight: 720,
-    title: "Skyrim AI Modlist Reviewer",
+    title: "Infinium",
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,

@@ -12,10 +12,12 @@ import {
 } from "@fluentui/react-components";
 import {
   ArrowMaximize24Regular,
+  ChevronDown16Regular,
+  ChevronRight16Regular,
   Dismiss24Regular,
   QuestionCircle24Regular,
 } from "@fluentui/react-icons";
-import type { Issue, Recommendation, Severity } from "../../shared/types";
+import type { Issue, ModInfo, Recommendation, Severity } from "../../shared/types";
 import { memo, type CSSProperties, useState } from "react";
 
 type IssueChatMessage = {
@@ -26,6 +28,7 @@ type IssueChatMessage = {
 export interface IssueDetailsProps {
   issue?: Issue;
   recommendations: Recommendation[];
+  mods: ModInfo[];
   onExpand: (issue: Issue) => void;
   expanding?: boolean;
   onClose?: () => void;
@@ -52,6 +55,7 @@ const severityColors: Record<Severity, { bg: string; fg: string; label: string }
 const IssueDetails = memo(function IssueDetails({
   issue,
   recommendations,
+  mods,
   onExpand,
   expanding,
   onClose,
@@ -70,6 +74,13 @@ const IssueDetails = memo(function IssueDetails({
   });
   const [isDraggingWindow, setIsDraggingWindow] = useState(false);
   const [isResizingWindow, setIsResizingWindow] = useState(false);
+  const [expandedMissingMasters, setExpandedMissingMasters] = useState<Record<string, boolean>>({});
+  const [showMissingMastersSection, setShowMissingMastersSection] = useState(false);
+  const [showAffectedMods, setShowAffectedMods] = useState(false);
+  const [showAffectedPlugins, setShowAffectedPlugins] = useState(false);
+  const [expandedLootPluginMessages, setExpandedLootPluginMessages] = useState<
+    Record<string, boolean>
+  >({});
 
   const handleChatResizeStart = (event: React.MouseEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -155,6 +166,72 @@ const IssueDetails = memo(function IssueDetails({
   const palette = severityColors[issue.severity];
   const hasCustomPrompt = chatInput.trim().length > 0;
 
+  const missingMasterNames =
+    issue.lootMissingMasters && issue.lootMissingMasters.length > 0
+      ? Array.from(new Set(issue.lootMissingMasters.flatMap((entry) => entry.masters))).sort()
+      : [];
+
+  const isMissingMastersIssue =
+    issue.category === "missing_masters" &&
+    Array.isArray(issue.lootMissingMasters) &&
+    issue.lootMissingMasters.length > 0;
+
+  type MissingMastersModEntry = {
+    modId: string;
+    modName: string;
+    plugins: {
+      pluginName: string;
+      masters: string[];
+    }[];
+  };
+
+  let missingMastersByMod: MissingMastersModEntry[] = [];
+  let totalMissingPluginsForMods = 0;
+
+  if (isMissingMastersIssue) {
+    const lootMissing = issue.lootMissingMasters ?? [];
+    const lootByPlugin = new Map<string, { plugin: string; masters: string[] }>();
+    lootMissing.forEach((entry) => {
+      lootByPlugin.set(entry.plugin.toLowerCase(), {
+        plugin: entry.plugin,
+        masters: entry.masters,
+      });
+    });
+
+    const affectedModIds = new Set(issue.affectedMods ?? []);
+
+    const entries: MissingMastersModEntry[] = [];
+
+    mods.forEach((mod) => {
+      if (!affectedModIds.has(mod.id)) {
+        return;
+      }
+
+      const pluginEntries: MissingMastersModEntry["plugins"] = [];
+
+      (mod.plugins ?? []).forEach((pluginName) => {
+        const match = lootByPlugin.get(pluginName.toLowerCase());
+        if (match) {
+          pluginEntries.push({
+            pluginName: match.plugin,
+            masters: match.masters,
+          });
+        }
+      });
+
+      if (pluginEntries.length > 0) {
+        entries.push({
+          modId: mod.id,
+          modName: mod.name || mod.id,
+          plugins: pluginEntries,
+        });
+      }
+    });
+
+    missingMastersByMod = entries;
+    totalMissingPluginsForMods = entries.reduce((count, entry) => count + entry.plugins.length, 0);
+  }
+
   return (
     <div
       style={{
@@ -216,14 +293,542 @@ const IssueDetails = memo(function IssueDetails({
         <Text style={detailLabel}>Details</Text>
         <Text>{issue.details}</Text>
       </div>
+      {issue.lootMissingMasters && issue.lootMissingMasters.length > 0 && (
+        <div>
+          <button
+            type="button"
+            onClick={() => setShowMissingMastersSection((prev) => !prev)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              width: "100%",
+              padding: 0,
+              margin: 0,
+              border: "none",
+              background: "none",
+              cursor: "pointer",
+              textAlign: "left",
+            }}
+          >
+            {showMissingMastersSection ? <ChevronDown16Regular /> : <ChevronRight16Regular />}
+            <Text style={detailLabel}>Missing Masters</Text>
+            <Text
+              style={{
+                fontSize: 12,
+                color: "#6b7280",
+              }}
+            >
+              ({missingMasterNames.length} plugin
+              {missingMasterNames.length === 1 ? "" : "s"})
+            </Text>
+          </button>
+          {showMissingMastersSection && (
+            <div style={{ marginTop: 4 }}>
+              {missingMasterNames.length ? (
+                <ul style={{ paddingLeft: 18 }}>
+                  {missingMasterNames.map((master) => (
+                    <li key={master}>
+                      <Text>{master}</Text>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <Text>—</Text>
+              )}
+            </div>
+          )}
+        </div>
+      )}
       <div>
-        <Text style={detailLabel}>Affected Mods</Text>
-        <Text>{issue.affectedMods.join(", ") || "—"}</Text>
+        {isMissingMastersIssue ? (
+          <>
+            <button
+              type="button"
+              onClick={() => setShowAffectedMods((prev) => !prev)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                width: "100%",
+                padding: 0,
+                margin: 0,
+                border: "none",
+                background: "none",
+                cursor: missingMastersByMod.length ? "pointer" : "default",
+                textAlign: "left",
+              }}
+            >
+              {missingMastersByMod.length ? (
+                showAffectedMods ? (
+                  <ChevronDown16Regular />
+                ) : (
+                  <ChevronRight16Regular />
+                )
+              ) : null}
+              <Text style={detailLabel}>Affected Mods</Text>
+              {missingMastersByMod.length ? (
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: "#6b7280",
+                  }}
+                >
+                  ({missingMastersByMod.length} mod
+                  {missingMastersByMod.length === 1 ? "" : "s"}, {totalMissingPluginsForMods} plugin
+                  {totalMissingPluginsForMods === 1 ? "" : "s"})
+                </Text>
+              ) : null}
+            </button>
+            {showAffectedMods && (
+              <>
+                {missingMastersByMod.length ? (
+                  <div
+                    style={{
+                      marginTop: 4,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 4,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        gap: 8,
+                        marginBottom: 4,
+                      }}
+                    >
+                      <Button
+                        size="small"
+                        appearance="subtle"
+                        onClick={() => {
+                          const next: Record<string, boolean> = {};
+                          missingMastersByMod.forEach((entry) => {
+                            next[entry.modId] = true;
+                          });
+                          setExpandedMissingMasters(next);
+                        }}
+                      >
+                        Expand all mods
+                      </Button>
+                      <Button
+                        size="small"
+                        appearance="subtle"
+                        onClick={() => {
+                          setExpandedMissingMasters({});
+                        }}
+                      >
+                        Collapse all mods
+                      </Button>
+                    </div>
+                    {missingMastersByMod.map((modEntry) => {
+                      const isModExpanded = expandedMissingMasters[modEntry.modId] ?? false;
+                      const toggleMod = () =>
+                        setExpandedMissingMasters((prev) => ({
+                          ...prev,
+                          [modEntry.modId]: !isModExpanded,
+                        }));
+
+                      return (
+                        <div
+                          key={modEntry.modId}
+                          style={{
+                            padding: 8,
+                            borderRadius: 4,
+                            border: "1px solid #e5e7eb",
+                            backgroundColor: "#ffffff",
+                          }}
+                        >
+                          <button
+                            type="button"
+                            onClick={toggleMod}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 8,
+                              width: "100%",
+                              padding: 0,
+                              margin: 0,
+                              border: "none",
+                              background: "none",
+                              cursor: "pointer",
+                              textAlign: "left",
+                            }}
+                          >
+                            {isModExpanded ? <ChevronDown16Regular /> : <ChevronRight16Regular />}
+                            <Text weight="semibold">{modEntry.modName}</Text>
+                            <Text
+                              style={{
+                                fontSize: 12,
+                                color: "#6b7280",
+                              }}
+                            >
+                              ({modEntry.plugins.length} plugin
+                              {modEntry.plugins.length === 1 ? "" : "s"})
+                            </Text>
+                          </button>
+                          {isModExpanded && (
+                            <div style={{ marginTop: 4 }}>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  justifyContent: "flex-end",
+                                  gap: 8,
+                                  marginBottom: 4,
+                                }}
+                              >
+                                <Button
+                                  size="small"
+                                  appearance="subtle"
+                                  onClick={() => {
+                                    setExpandedMissingMasters((prev) => {
+                                      const next = { ...prev };
+                                      modEntry.plugins.forEach((plugin) => {
+                                        const key = `${modEntry.modId}::${plugin.pluginName}`;
+                                        next[key] = true;
+                                      });
+                                      return next;
+                                    });
+                                  }}
+                                >
+                                  Expand all plugins
+                                </Button>
+                                <Button
+                                  size="small"
+                                  appearance="subtle"
+                                  onClick={() => {
+                                    setExpandedMissingMasters((prev) => {
+                                      const next = { ...prev };
+                                      modEntry.plugins.forEach((plugin) => {
+                                        const key = `${modEntry.modId}::${plugin.pluginName}`;
+                                        delete next[key];
+                                      });
+                                      return next;
+                                    });
+                                  }}
+                                >
+                                  Collapse all plugins
+                                </Button>
+                              </div>
+                              <ul style={{ paddingLeft: 18 }}>
+                                {modEntry.plugins.map((plugin) => {
+                                  const pluginKey = `${modEntry.modId}::${plugin.pluginName}`;
+                                  const isPluginExpanded =
+                                    expandedMissingMasters[pluginKey] ?? false;
+                                  const togglePlugin = () =>
+                                    setExpandedMissingMasters((prev) => ({
+                                      ...prev,
+                                      [pluginKey]: !isPluginExpanded,
+                                    }));
+
+                                  return (
+                                    <li key={plugin.pluginName} style={{ marginBottom: 4 }}>
+                                      <button
+                                        type="button"
+                                        onClick={togglePlugin}
+                                        style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          gap: 8,
+                                          width: "100%",
+                                          padding: 0,
+                                          margin: 0,
+                                          border: "none",
+                                          background: "none",
+                                          cursor: "pointer",
+                                          textAlign: "left",
+                                        }}
+                                      >
+                                        {isPluginExpanded ? (
+                                          <ChevronDown16Regular />
+                                        ) : (
+                                          <ChevronRight16Regular />
+                                        )}
+                                        <Text>{plugin.pluginName}</Text>
+                                        <Text
+                                          style={{
+                                            fontSize: 12,
+                                            color: "#6b7280",
+                                          }}
+                                        >
+                                          ({plugin.masters.length} missing master
+                                          {plugin.masters.length === 1 ? "" : "s"})
+                                        </Text>
+                                      </button>
+                                      {isPluginExpanded && plugin.masters.length > 0 && (
+                                        <ul style={{ marginTop: 2, paddingLeft: 26 }}>
+                                          {plugin.masters.map((master) => (
+                                            <li key={master}>
+                                              <Text>{master}</Text>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      )}
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <Text>—</Text>
+                )}
+              </>
+            )}
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => setShowAffectedMods((prev) => !prev)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                width: "100%",
+                padding: 0,
+                margin: 0,
+                border: "none",
+                background: "none",
+                cursor: issue.affectedMods.length ? "pointer" : "default",
+                textAlign: "left",
+              }}
+            >
+              {issue.affectedMods.length ? (
+                showAffectedMods ? (
+                  <ChevronDown16Regular />
+                ) : (
+                  <ChevronRight16Regular />
+                )
+              ) : null}
+              <Text style={detailLabel}>Affected Mods</Text>
+              {issue.affectedMods.length ? (
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: "#6b7280",
+                  }}
+                >
+                  ({issue.affectedMods.length})
+                </Text>
+              ) : null}
+            </button>
+            {showAffectedMods && issue.affectedMods.length > 0 && (
+              <ul style={{ marginTop: 4, paddingLeft: 18 }}>
+                {issue.affectedMods.map((modId) => (
+                  <li key={modId}>
+                    <Text>{modId}</Text>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {!issue.affectedMods.length && <Text>—</Text>}
+          </>
+        )}
       </div>
       <div>
-        <Text style={detailLabel}>Affected Plugins</Text>
-        <Text>{issue.affectedPlugins.join(", ") || "—"}</Text>
+        {!isMissingMastersIssue && (
+          <>
+            <button
+              type="button"
+              onClick={() => setShowAffectedPlugins((prev) => !prev)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                width: "100%",
+                padding: 0,
+                margin: 0,
+                border: "none",
+                background: "none",
+                cursor: issue.affectedPlugins.length ? "pointer" : "default",
+                textAlign: "left",
+              }}
+            >
+              {issue.affectedPlugins.length ? (
+                showAffectedPlugins ? (
+                  <ChevronDown16Regular />
+                ) : (
+                  <ChevronRight16Regular />
+                )
+              ) : null}
+              <Text style={detailLabel}>Affected Plugins</Text>
+              {issue.affectedPlugins.length ? (
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: "#6b7280",
+                  }}
+                >
+                  ({issue.affectedPlugins.length})
+                </Text>
+              ) : null}
+            </button>
+            {showAffectedPlugins && issue.affectedPlugins.length > 0 && (
+              <ul style={{ marginTop: 4, paddingLeft: 18 }}>
+                {issue.affectedPlugins.map((pluginName) => (
+                  <li key={pluginName}>
+                    <Text>{pluginName}</Text>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {!issue.affectedPlugins.length && <Text>—</Text>}
+          </>
+        )}
       </div>
+      {issue.lootPluginMessages && issue.lootPluginMessages.length > 0 && (
+        <div>
+          <Text style={detailLabel}>LOOT Messages</Text>
+          <div style={{ marginTop: 4 }}>
+            {(() => {
+              const pluginMap = new Map<string, typeof issue.lootPluginMessages>();
+              issue.lootPluginMessages?.forEach((msg) => {
+                const key = msg.plugin || "(Unknown plugin)";
+                const existing = pluginMap.get(key) ?? [];
+                existing.push(msg);
+                pluginMap.set(key, existing);
+              });
+
+              const entries = Array.from(pluginMap.entries()).sort(([a], [b]) =>
+                a.localeCompare(b, undefined, { sensitivity: "base" }),
+              );
+
+              if (!entries.length) {
+                return <Text>—</Text>;
+              }
+
+              return (
+                <>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      gap: 8,
+                      marginBottom: 4,
+                    }}
+                  >
+                    <Button
+                      size="small"
+                      appearance="subtle"
+                      onClick={() => {
+                        const next: Record<string, boolean> = {};
+                        entries.forEach(([pluginName]) => {
+                          next[pluginName] = true;
+                        });
+                        setExpandedLootPluginMessages(next);
+                      }}
+                    >
+                      Expand all
+                    </Button>
+                    <Button
+                      size="small"
+                      appearance="subtle"
+                      onClick={() => {
+                        setExpandedLootPluginMessages({});
+                      }}
+                    >
+                      Collapse all
+                    </Button>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    {entries.map(([pluginName, messages]) => {
+                      const key = pluginName;
+                      const isExpanded = expandedLootPluginMessages[key] ?? false;
+                      const toggle = () =>
+                        setExpandedLootPluginMessages((prev) => ({
+                          ...prev,
+                          [key]: !isExpanded,
+                        }));
+
+                      return (
+                        <div
+                          key={key}
+                          style={{
+                            padding: 8,
+                            borderRadius: 4,
+                            border: "1px solid #e5e7eb",
+                            backgroundColor: "#ffffff",
+                          }}
+                        >
+                          <button
+                            type="button"
+                            onClick={toggle}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 8,
+                              width: "100%",
+                              padding: 0,
+                              margin: 0,
+                              border: "none",
+                              background: "none",
+                              cursor: "pointer",
+                              textAlign: "left",
+                            }}
+                          >
+                            {isExpanded ? <ChevronDown16Regular /> : <ChevronRight16Regular />}
+                            <Text weight="semibold">{pluginName}</Text>
+                            <Text
+                              style={{
+                                fontSize: 12,
+                                color: "#6b7280",
+                              }}
+                            >
+                              ({messages.length} message
+                              {messages.length === 1 ? "" : "s"})
+                            </Text>
+                          </button>
+                          {isExpanded && (
+                            <div style={{ marginTop: 4 }}>
+                              {(["error", "warning", "note"] as const).map((severityKey) => {
+                                const messagesForSeverity = messages.filter(
+                                  (msg) => msg.severity === severityKey,
+                                );
+                                if (!messagesForSeverity.length) {
+                                  return null;
+                                }
+
+                                const label =
+                                  severityKey === "error"
+                                    ? "Errors"
+                                    : severityKey === "warning"
+                                      ? "Warnings"
+                                      : "Notes";
+
+                                return (
+                                  <div key={`${key}-${severityKey}`} style={{ marginBottom: 4 }}>
+                                    <Text weight="semibold">{label}</Text>
+                                    <ul style={{ marginTop: 2, paddingLeft: 18 }}>
+                                      {messagesForSeverity.map((msg, index) => (
+                                        <li key={`${key}-${severityKey}-${index}`}>
+                                          <Text>
+                                            {msg.text}
+                                            {msg.condition ? ` (condition: ${msg.condition})` : ""}
+                                          </Text>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        </div>
+      )}
       <div>
         <Text style={detailLabel}>Recommendations</Text>
         {recommendations.length ? (
