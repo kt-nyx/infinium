@@ -130,24 +130,46 @@ export const evaluate = (profile: ProfileSnapshot, lootReport?: LootReport): Eva
 
   if (lootReport?.warnings?.length) {
     const warnings = lootReport.warnings;
-    const issue = buildIssue({
-      severity: "medium",
-      category: "configuration",
-      subcategory: "loot_general_warnings",
-      summary: "LOOT reported general warnings",
-      details:
-        warnings.length === 1
-          ? warnings[0]
-          : `LOOT reported ${warnings.length} general warnings. Review the summary below and consider re-running LOOT directly for full context:\n\n- ${warnings.join(
-              "\n- ",
-            )}`,
-      affectedMods: [],
-      affectedPlugins: [],
-      risky: false,
-      confidence: "medium",
-      source: ["loot"],
+    // Suppress generic LOOT warnings that only restate conditions that already
+    // have dedicated issues (e.g., missing masters and ambiguous load order),
+    // to avoid duplicate, redundant issues in the UI.
+    const filteredWarnings = warnings.filter((rawText) => {
+      const text = rawText ?? "";
+
+      // Already surfaced via the `missing_masters` issue.
+      if (/missing master/i.test(text)) {
+        return false;
+      }
+
+      // Already surfaced via the `ambiguous_load_order` issue when metadata
+      // explicitly reports it.
+      if (lootReport.metadata?.ambiguousLoadOrder && /ambiguous load order/i.test(text)) {
+        return false;
+      }
+
+      return true;
     });
-    issues.push(issue);
+
+    if (filteredWarnings.length) {
+      const issue = buildIssue({
+        severity: "medium",
+        category: "configuration",
+        subcategory: "loot_general_warnings",
+        summary: "LOOT reported general warnings",
+        details:
+          filteredWarnings.length === 1
+            ? filteredWarnings[0]
+            : `LOOT reported ${filteredWarnings.length} general warnings. Review the summary below and consider re-running LOOT directly for full context:\n\n- ${filteredWarnings.join(
+                "\n- ",
+              )}`,
+        affectedMods: [],
+        affectedPlugins: [],
+        risky: false,
+        confidence: "medium",
+        source: ["loot"],
+      });
+      issues.push(issue);
+    }
   }
 
   if (lootReport?.metadata?.ambiguousLoadOrder) {

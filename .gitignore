@@ -16,6 +16,7 @@ release/
 coverage/
 loot-helper/target/
 bin/
+resources/
 
 # TypeScript
 *.tsbuildinfo

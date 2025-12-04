@@ -163,11 +163,11 @@ fn build_plugin_reports(
     db: &Database,
     sorted_load_order: &[String],
     present_plugins_lower: &HashSet<String>,
-) -> (Vec<PluginReport>, Vec<MissingMaster>, usize, usize) {
+) -> (Vec<PluginReport>, Vec<MissingMaster>, usize, Vec<String>) {
     let mut reports = Vec::new();
     let mut missing_master_entries = Vec::new();
     let mut total_missing_masters = 0usize;
-    let mut total_warning_like_messages = 0usize;
+    let mut warnings = Vec::new();
 
     // Map plugin name (lower-cased) -> original index for additional context.
     let mut original_index: HashMap<String, usize> = HashMap::new();
@@ -228,9 +228,10 @@ fn build_plugin_reports(
                         let condition = msg.condition().map(|s| s.to_owned());
                         let language = Some(content.language().to_owned());
 
-                        if matches!(severity, PluginMessageSeverity::Error | PluginMessageSeverity::Warning) {
-                            total_warning_like_messages += 1;
-                        }
+                if matches!(severity, PluginMessageSeverity::Error | PluginMessageSeverity::Warning)
+                {
+                    warnings.push(format!("{plugin_name}: {text}"));
+                }
 
                         messages_out.push(PluginMessage {
                             plugin: plugin_name.clone(),
@@ -270,7 +271,7 @@ fn build_plugin_reports(
         reports,
         missing_master_entries,
         total_missing_masters,
-        total_warning_like_messages,
+        warnings,
     )
 }
 
@@ -394,7 +395,7 @@ fn analyse_with_libloot(request: LiblootRequest) -> Result<LiblootResponse, Stri
         .map_err(|_| "Failed to acquire write lock on libloot Database".to_string())?;
     let db_ref: &Database = &*db_guard;
 
-    let (plugin_reports, missing_master_entries, total_missing_masters, total_warning_like) =
+    let (plugin_reports, missing_master_entries, total_missing_masters, mut warnings) =
         build_plugin_reports(&game, db_ref, &sorted_load_order, &present_plugins_lower);
 
     let ambiguous_load_order = game
@@ -402,12 +403,19 @@ fn analyse_with_libloot(request: LiblootRequest) -> Result<LiblootResponse, Stri
         .map(Some)
         .unwrap_or(None);
 
+    if let Some(true) = ambiguous_load_order {
+        warnings.push(
+            "LOOT reported an ambiguous load order; review plugin positions carefully."
+                .to_string(),
+        );
+    }
+
     let loot_version = Some(libloot_version().to_owned());
 
     let stats = LiblootStats {
         plugins_analysed: request.profile.plugins.len(),
         missing_master_count: total_missing_masters,
-        warning_count: total_warning_like,
+        warning_count: warnings.len(),
     };
 
     let metadata = LiblootMetadata {
@@ -423,7 +431,7 @@ fn analyse_with_libloot(request: LiblootRequest) -> Result<LiblootResponse, Stri
     Ok(LiblootResponse {
         timestamp: Utc::now().to_rfc3339(),
         missing_masters: missing_master_entries,
-        warnings: Vec::new(),
+        warnings,
         sorted_load_order,
         metadata,
         error: None,
@@ -435,10 +443,11 @@ fn main() {
         Ok(req) => req,
         Err(message) => {
             eprintln!("{message}");
+            let warnings = vec![format!("libloot helper error: {message}")];
             let error_response = LiblootResponse {
                 timestamp: Utc::now().to_rfc3339(),
                 missing_masters: Vec::new(),
-                warnings: Vec::new(),
+                warnings: warnings.clone(),
                 sorted_load_order: Vec::new(),
                 metadata: LiblootMetadata {
                     loot_version: None,
@@ -447,7 +456,7 @@ fn main() {
                     stats: LiblootStats {
                         plugins_analysed: 0,
                         missing_master_count: 0,
-                        warning_count: 0,
+                        warning_count: warnings.len(),
                     },
                     ambiguous_load_order: None,
                     plugins: Vec::new(),
@@ -467,10 +476,11 @@ fn main() {
         Ok(resp) => resp,
         Err(message) => {
             eprintln!("{message}");
+            let warnings = vec![format!("libloot helper error: {message}")];
             let error_response = LiblootResponse {
                 timestamp: Utc::now().to_rfc3339(),
                 missing_masters: Vec::new(),
-                warnings: Vec::new(),
+                warnings: warnings.clone(),
                 sorted_load_order: Vec::new(),
                 metadata: LiblootMetadata {
                     loot_version: None,
@@ -479,7 +489,7 @@ fn main() {
                     stats: LiblootStats {
                         plugins_analysed: 0,
                         missing_master_count: 0,
-                        warning_count: 0,
+                        warning_count: warnings.len(),
                     },
                     ambiguous_load_order: None,
                     plugins: Vec::new(),
