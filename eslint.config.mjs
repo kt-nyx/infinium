@@ -5,18 +5,3 @@ const require = jiti(import.meta.url);
 
 export default require("./eslint.config.ts").default;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
