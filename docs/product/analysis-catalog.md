@@ -1,0 +1,318 @@
+# Analysis catalog
+
+Status: Accepted  
+Last reviewed: 2026-07-25
+
+This is the living inventory of desired analysis capabilities. Nothing in this
+catalog implies that an analyzer currently exists. Initial status for every
+entry is **Not implemented**. The section headings group product capabilities
+for planning; they are not an accepted taxonomy of technical modification
+surfaces, affected game areas, consequences, or effect extent. One analyzer or
+interaction may cross several sections.
+
+Each future analyzer specification must state:
+
+- user problem and likely impact;
+- supported scope and exclusions;
+- inputs and provenance;
+- deterministic and LLM responsibilities;
+- candidate selection;
+- evidence and abstention thresholds;
+- false-positive risks;
+- remediation and validation;
+- offline/online behavior;
+- expected scale, cost, and maturity;
+- linked evaluation cases.
+
+## A. Profile and installation integrity
+
+Desired detections:
+
+- missing or unreadable profile inputs;
+- enabled entries with missing files;
+- duplicate or ambiguous plugin identity;
+- direct/unmanaged files affecting effective state;
+- root-level leftovers and duplicate native loaders;
+- corrupt/unreadable archives;
+- missing localized strings;
+- non-reproducible dependencies on unmanaged state;
+- enabled mods contributing no effective behavior.
+
+Ordinary redundancy is generally a low-severity advisory unless it indicates
+lost expected functionality.
+
+## B. Requirements, masters, identity, and versions
+
+Desired detections:
+
+- missing or disabled masters;
+- missing hard/conditional requirements;
+- incorrect runtime, SKSE, Address Library, or native binary branch;
+- plugin/assets/patch components from different releases;
+- incomplete updates;
+- obsolete optional modules;
+- documentation applied to the wrong version;
+- ambiguous installed-mod identity;
+- missing or incompatible installer options.
+
+FOMOD reconstruction is best-effort: infer likely selections from retained
+archives and installed files and expose ambiguity. Prospective choice recording
+is after M4.
+
+## C. LOOT and deterministic-tool findings
+
+Integrate rather than duplicate:
+
+- curated incompatibilities and requirements;
+- ordering constraints and cycles;
+- plugin metadata and known cleaning information;
+- established error checks exposed by approved tools.
+
+Infinium adds profile correlation, evidence normalization, case grouping, and
+explanation. It does not rebuild LOOT's masterlist or xEdit's mature functions
+without demonstrated need.
+
+## D. Semantic record interactions
+
+Primary goals:
+
+- intentional changes silently lost;
+- scope-incongruent stale-value reversions;
+- partial feature erosion;
+- internally inconsistent record groups;
+- unresolved or missing references;
+- dangerous deletion patterns;
+- later plugins undoing a valid patch;
+- incompatible combinations unsupported by one winning-record view.
+
+Development should prioritize structural and logic impact over cosmetic impact.
+The following candidate semantic families are discovery examples, not a
+definitive taxonomy of Skyrim game areas or mod effects:
+
+- startup/save/global engine-related records;
+- quests, dialogue, scenes, aliases, and conditions;
+- cells, worldspaces, placed references, landscape, and navmesh;
+- NPC behavior, appearance, inventory, factions, and packages;
+- global gameplay systems, perks, spells, effects, and combat;
+- leveled lists, FormLists, outfits, containers, and distribution;
+- items, crafting, enchantments, and keywords;
+- races, skeleton/body relationships, and transformations;
+- weather, lighting, and image spaces;
+- gamesettings and globals.
+
+RQ-036 must establish the broader declared-purpose/intended-feature,
+technical-surface, affected-game-area, consequence, and effect-extent
+taxonomies. RQ-024 separately determines which semantic record families and
+field relationships should receive named analyzer support after the first
+proof. Neither research result may assume that hosting-site mod categories or
+record families map one-to-one to author intent or player-visible game areas.
+
+Generic infrastructure must not encode the first NPC proof case as the whole
+domain.
+
+## E. Cross-record and cross-layer coherence
+
+Analyze coherent feature graphs rather than isolated rows. These are
+illustrative cross-layer graphs, not an exhaustive category list:
+
+- NPC record, facegen, outfit, packages, scripts, and placed references;
+- quest, aliases, dialogue, scenes, conditions, and scripts;
+- location cells, navmesh, landscape, lighting, and placed objects;
+- perk trees, spells, conditions, and globals;
+- item records, meshes, textures, keywords, recipes, and distribution;
+- plugin records, assets, configuration, runtime components, and generated
+  output.
+
+Estimate gameplay blast radius and predicted symptoms.
+
+## F. Asset and archive problems
+
+Raw overwrite enumeration is out of scope because MO2 already supplies it.
+
+Report only meaningful conditions such as:
+
+- plugin/facegen mismatch;
+- missing referenced mesh/texture/interface/script asset;
+- partial incompatible asset variants;
+- script or interface file unexpectedly replaced;
+- plugin and archive activation/naming inconsistency;
+- archives and loose files producing unintended cross-version state;
+- documentation requiring a patch or priority relationship;
+- unsupported assets contributing to a broader case.
+
+Use path indexing before expensive content hashing or extraction.
+
+## G. Patch effectiveness
+
+Core capability:
+
+- required patch missing;
+- present but disabled;
+- wrong load or mod priority;
+- targeted upstream version mismatch;
+- overwritten or superseded;
+- only partially resolves the current interaction;
+- now unnecessary or obsolete;
+- carries unintended values;
+- plugin/assets internally inconsistent.
+
+Presence or a patch-like name is never sufficient proof.
+
+## H. Native runtime and root components
+
+Desired coverage:
+
+- game runtime;
+- SKSE and loaders;
+- Address Library;
+- native SKSE DLLs and dependencies;
+- ENB;
+- ReShade;
+- Engine Fixes and similar root components;
+- duplicate/incompatible loaders;
+- unmanaged root files;
+- documented configuration relationships.
+
+Support only the explicitly pinned Skyrim SE runtime version initially.
+Unsupported variants fail clearly rather than receiving best-effort
+conclusions.
+
+## I. Generated output
+
+Named modules may support:
+
+- Pandora, Nemesis, and FNIS;
+- BodySlide;
+- Synthesis;
+- DynDOLOD, TexGen, and xLODGen;
+- grass cache;
+- other widely used patchers/generators.
+
+Named analyzers should understand tool version, inputs, outputs, manifests, and
+regeneration conditions. Unsupported generators receive generic presence,
+provider, and freshness observations plus explicit coverage gaps.
+
+## J. Configuration
+
+Initially lower priority but potentially high impact:
+
+- effective configuration winner;
+- parse/syntax errors;
+- duplicate keys;
+- known schemas for important frameworks;
+- documentation-required values;
+- recognized cross-mod rules;
+- targeted LLM investigation of unfamiliar relevant configuration.
+
+Do not claim semantic understanding of arbitrary configuration.
+
+## K. Documentation intelligence
+
+Extract cited, versioned claims:
+
+- hard and optional requirements;
+- incompatibilities;
+- required patches;
+- installation choices and priority;
+- runtime restrictions;
+- new-game and upgrade/removal safety;
+- required generation steps;
+- configuration requirements;
+- replaced/superseded mods;
+- known bugs and troubleshooting.
+
+Primary sources:
+
+- mod descriptions and requirements;
+- author-maintained articles and changelogs;
+- sticky/author posts where allowed;
+- LOOT;
+- official repositories and bundled documentation.
+
+Community posts and bug reports are investigative leads unless corroborated.
+Access must follow source API and policy constraints.
+
+## L. Playthrough lifecycle safety
+
+Desired detections:
+
+- new game required;
+- unsafe mid-playthrough installation/removal/update;
+- required upgrade procedure;
+- unsupported downgrade;
+- stale configuration or generated output after update;
+- version-specific save risk;
+- monitoring or validation advice for grounded long-term risks.
+
+Save-to-installation-snapshot association is after M4.
+
+## M. Runtime evidence and symptom diagnosis
+
+Named log adapters plus bounded unfamiliar-log investigation:
+
+- crash logs;
+- SKSE/native plugin logs;
+- generator logs;
+- LOOT/xEdit output;
+- Papyrus logs;
+- ENB/ReShade logs;
+- other recognized reports.
+
+Runtime evidence must be associated with an exact or sufficiently matched
+installation snapshot/test-session provenance and record an application link
+when used by an analysis run/context. Scan-generated tool output retains its
+originating run directly. Case-scoped follow-up may refine evidence. Symptom
+reporting may originate lead-only investigation cases or supported cases when
+the finding threshold is already met.
+
+## N. Performance and stability boundary
+
+In scope only with a concrete mechanism:
+
+- known engine/plugin limit;
+- native incompatibility;
+- invalid frame-rate or physics configuration;
+- documented interaction;
+- memory leak or severe resource pathology with evidence;
+- generated output inconsistent with runtime configuration;
+- performance so poor that the setup is functionally unusable.
+
+Out of scope:
+
+- FPS optimization;
+- hardware grading;
+- generic texture or script heaviness;
+- speculative performance sections;
+- automated benchmarks.
+
+## O. Change impact
+
+Post-foundation capability:
+
+- compare installation snapshots and, where relevant, analysis contexts,
+  including comparison with a user-designated prior/reference snapshot;
+- identify changed winners, records, assets, configuration, runtime components,
+  documentation, patches, and generated outputs;
+- revalidate only dependent findings;
+- preserve unaffected results with explained carryover;
+- reopen affected findings whose prior dispositions no longer apply and revise
+  their cases when relevant evidence changes.
+
+A user-designated reference snapshot is a comparison baseline, not proof that
+the prior setup was correct or safe.
+
+## P. Advisories
+
+Separate from problems:
+
+- mod contributes nothing effective;
+- available update;
+- cleaning or maintenance guidance from authoritative sources;
+- unmanaged output;
+- unusual but not proven-broken configuration;
+- consolidation or reproducibility concern.
+
+Advisories must explain why they matter and must not drown out functional
+findings. They remain visible/countable but do not affect readiness by default;
+an explicit user action-required decision can make a particular advisory
+readiness-relevant.
