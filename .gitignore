@@ -1,41 +1,17 @@
-src/**/*.js
-src/**/*.d.ts
-src/**/*.js.map
-# Node artifacts
-node_modules/
-.pnpm-store/
-pnpm-lock.yaml
-npm-debug.log*
-yarn.lock
+# New project workspace
+.DS_Store
+Thumbs.db
+*.tmp
+*.bak
 
-# Build outputs
-out/
-dist/
-build/
-release/
-coverage/
-loot-helper/target/
-bin/
-resources/
-
-# TypeScript
-*.tsbuildinfo
-
-# IDEs
-.vscode/
-.idea/
-*.iml
-
-# Logs
-logs/
-*.log
-npm-debug.log*
-
-# Environment / local config
+# Local secrets and environment overrides
 .env
 .env.*.local
 
-# Misc
-.DS_Store
-Thumbs.db
-.temp/
+# Research and documentation render artifacts
+docs/.rendered/
+docs/.cache/
+
+# The preserved implementation retains its original ignore rules in
+# legacy/.gitignore. New implementation-specific entries belong here once a
+# replacement project is scaffolded.
