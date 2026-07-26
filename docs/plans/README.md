@@ -7,8 +7,10 @@ The [M0 research-foundation plan](milestones/M0-research-foundation.md) was
 accepted on 2026-07-25 and is the active research plan. No implementation plan
 is active.
 
-The product baseline and foundational ADRs were accepted on 2026-07-25. The M0
-plan:
+The product baseline and ADR-0001 through ADR-0011 were accepted on
+2026-07-25. Wave A is complete and Gate A is met. Wave B's bounded
+investigations and independent integration review are complete and accepted;
+Gate B is met with documented non-blocking gaps. The M0 plan:
 
 1. identify the accepted requirements it serves;
 2. select and sequence research questions with expected investigation

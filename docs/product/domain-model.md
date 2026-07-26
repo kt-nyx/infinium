@@ -27,6 +27,45 @@ snapshot; historical reruns may require the original mod files. The listed
 snapshot components are required state inputs rather than an exhaustive
 taxonomy; their accepted taxonomy mappings depend on RQ-036.
 
+## Snapshot assurance
+
+A versioned statement of which declared snapshot populations were:
+
+- structurally captured;
+- selectively content-sealed with strong hashes;
+- fully byte-sealed;
+- inaccessible, ambiguous, unsupported, or changed during capture.
+
+Structural identity and content identity are separate. Metadata, timestamps,
+sizes, and file IDs can support structural observations or optimizations but do
+not prove byte identity. Each derived artifact declares the smallest complete
+dependency closure and the assurance required for its purpose.
+
+## MO2 saved selection
+
+The `General/selected_profile` value read from the exact resolved MO2
+instance's canonical configuration. It is discovery/suggestion provenance
+only. It is not the current live profile, the last game-launched profile, the
+analysis target, the installation snapshot, or the run binding.
+
+## Local installed entity and source identity mapping
+
+A **local installed entity** identifies the physical mod state represented in
+one installation snapshot. Its identity is not a Nexus mod ID, folder name,
+archive name, or declared version.
+
+A **source identity mapping** is versioned evidence relating one or more local
+installed entities to zero or more external source entities/files/versions.
+Mappings may be zero-to-many or many-to-zero, can contain contradictions or
+ambiguity, and belong to the analysis context rather than rewriting the
+physical snapshot.
+
+MO2 metadata, download sidecars, archive fingerprints, and user corrections
+can support a mapping. Declared/source versions remain distinct from locally
+observed content-derived version evidence. Normal FOMOD choice history,
+merge/reinstall history, and manual-change attribution are explicit gaps
+unless separately retained evidence establishes them.
+
 ## Analysis context
 
 A versioned set of non-physical inputs used alongside an installation snapshot
@@ -124,6 +163,14 @@ immutable. Explicit detachment records a lifecycle transition without
 reclassifying it as independently initiated or rebinding prior calls/cost;
 post-detachment control, progress, duration, and spend are reported separately
 from the parent analysis run.
+
+Permitted source bodies and excerpts are private acquisition artifacts,
+distinct from the claims derived from them. They remain available through the
+configured extraction and consuming deterministic/LLM analysis, case/finding
+synthesis, prose, provenance, and audit work. Source-specific durable
+minimization or user deletion may occur afterward; surviving claims and
+findings retain provenance plus explicit citation, replay, or audit gaps rather
+than implying that the deleted source remains inspectable.
 
 ## Evidence
 

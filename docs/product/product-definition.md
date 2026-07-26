@@ -3,6 +3,20 @@
 Status: Accepted  
 Last reviewed: 2026-07-25
 
+Accepted amendments:
+
+- 2026-07-25 — Wave B and ADR-0008 through ADR-0011 accept version-pinned
+  quiescent MO2 `2.5.2` reconstruction, explicit profile binding, the exact
+  initial Steam `1.6.1170.0` runtime, bounded Mutagen `0.54.2` semantics,
+  dependency-aware snapshot validity, and the conditional libloot `0.29.6`
+  boundary. Named conformance cases and exact supported surfaces remain
+  implementation/release gates.
+- 2026-07-25 — [ADR-0007](../architecture/decisions/ADR-0007-exclude-xedit-from-infinium.md)
+  removes xEdit from Infinium's product, dependency, integration, development,
+  and evaluation boundaries. Mutagen is the accepted programmatic Bethesda
+  semantic dependency under ADR-0009, with independently specified first-party
+  fixture truth required before supported semantic claims.
+
 ## Product thesis
 
 Infinium is an evidence-driven pre-playthrough quality-assurance and diagnostic
@@ -16,6 +30,22 @@ manual review are likely to miss.
 
 Infinium is not an autonomous mod manager and is not another raw conflict
 browser.
+
+## Licensing intent
+
+Infinium is free and open-source software under the GNU General Public License
+version 3 family. Anyone may use, modify, redistribute, or sell it, while
+distributed derivatives must preserve the source access and downstream
+freedoms required by GPLv3. The exact `GPL-3.0-only` versus
+`GPL-3.0-or-later` selector is intentionally deferred until the project needs
+its operative licence file; the accepted GPLv3 product and dependency posture
+is recorded in
+[ADR-0006](../architecture/decisions/ADR-0006-gpl-product-and-tool-dependency-boundary.md).
+
+MO2 and LOOT remain user-installed applications rather than Infinium payloads.
+xEdit is outside the project boundary. GPL-compatible libraries may be shipped
+as internal dependencies only after their technical value, compatibility,
+provenance, and complete distribution obligations are validated.
 
 ## Target user
 
@@ -149,10 +179,11 @@ generated output. Write-capable actions and patch generation are after M4.
 The product becomes trustworthy for a personal playthrough only when:
 
 - profile/provider state agrees with authoritative MO2 behavior;
-- parsed record state agrees with xEdit or another established ground truth
-  where applicable;
-- imported LOOT metadata and diagnostics agree with the invoked LOOT
-  configuration and output;
+- parsed record state agrees with independently specified, hand-audited
+  fixture truth for every supported record/field/shape;
+- when LOOT-backed coverage is in scope, imported metadata and diagnostics
+  agree with the qualified libloot adapter and exact masterlist, prelude,
+  userlist, configuration, and local-state inputs;
 - planted known problems are reliably detected;
 - structurally similar harmless cases are not misclassified;
 - citations are real, applicable, and inspectable;
@@ -171,7 +202,7 @@ The product becomes trustworthy for a personal playthrough only when:
 The product through M4 does not attempt to:
 
 - guarantee a stable playthrough;
-- replace MO2, LOOT, xEdit, or established generators;
+- replace MO2, LOOT, or established generators;
 - list every ordinary file or record conflict;
 - optimize FPS or benchmark hardware;
 - make generic "script-heavy" or texture-performance claims;

@@ -55,6 +55,8 @@ Responsibilities:
 - evidence-acquisition runs and their resolved source inputs;
 - versioned scan configurations;
 - cached evidence and dependencies;
+- permitted private source bodies/excerpts while required by configured
+  extraction, analysis, synthesis, provenance, audit, replay, or refresh;
 - claims and provenance;
 - logical finding/case identities and revisions/lineage;
 - candidates, hypotheses, and recommendations;
@@ -71,11 +73,12 @@ historical auditability with explicit replayability status.
 
 Bounded adapters isolate:
 
-- Mod Organizer 2;
+- user-installed Mod Organizer 2;
 - game/root filesystem;
-- LOOT;
-- Mutagen or another Bethesda semantic layer;
-- xEdit and other external tools;
+- optional user-installed LOOT application/configuration;
+- the accepted bounded Mutagen `0.54.2` Bethesda semantic layer;
+- the accepted conditional libloot `0.29.6` semantic boundary;
+- other explicitly accepted external tools;
 - Nexus and approved documentation sources;
 - LLM providers;
 - generated-output systems;
@@ -117,17 +120,20 @@ Readiness, remediation, validation, and exports
 This candidate is not accepted:
 
 - C#/.NET analysis worker;
-- Mutagen.Bethesda for Bethesda records and archives;
+- the already accepted pinned Mutagen.Bethesda dependency for bounded Bethesda
+  records and low-level archives;
 - SQLite evidence store;
 - React/TypeScript UI;
 - thin, hardened Electron shell;
 - narrow versioned IPC;
-- LOOT and other tools through adapters.
+- user-installed MO2/LOOT discovery plus the already accepted deterministic
+  MO2 reconstruction and conditional libloot semantic boundaries.
 
 Rationale so far:
 
-- C#/.NET is worth investigating because Mutagen.Bethesda appears to cover
-  relevant Bethesda data domains, subject to RQ-004 verification;
+- C#/.NET is worth investigating because the accepted Mutagen.Bethesda
+  dependency is native to that ecosystem, while its exact supported shapes
+  remain qualification-gated;
 - a web frontend offers the desired interaction/design ecosystem;
 - analysis can remain independent of the desktop shell;
 - Electron may avoid adding another implementation language solely for window

@@ -8,6 +8,14 @@ trustworthy only when evidence reconstruction, candidate selection, semantic
 classification, abstention, and user-facing/release presentation are evaluated
 separately against known answers.
 
+ADR-0008 through ADR-0011 accept Wave B's target boundaries and qualification
+obligations, not the full Wave F case specifications or their execution. Until
+the named cases pass, no MO2, Mutagen, snapshot, runtime, or LOOT surface may
+be presented as qualified merely because its research recommendation was
+accepted. ADR-0007 excludes xEdit from both production and evaluation;
+Bethesda expected results must be specified independently of the Mutagen path
+under test.
+
 ## Evaluation layers
 
 ### 1. State reconstruction
@@ -22,8 +30,10 @@ Verify:
 - root/runtime/configuration state.
 
 Ground truth comes from controlled fixtures, agreement with authoritative MO2
-effective-state behavior, and record comparison against xEdit where
-applicable.
+effective-state behavior, and independently specified record expectations
+grounded in hand-audited binary/structure assertions, format invariants, and
+retained adjudication. The Mutagen code path under test may not be the sole
+source of its own expected results.
 
 ### 2. Deterministic analyzer correctness
 
@@ -104,7 +114,10 @@ Evaluate run/input immutability, analysis-versus-acquisition ownership,
 clean/reuse/refresh separation, dependency-aware carryover, pause/cancel/limit
 terminal behavior, cost rollups, retention/deletion effects, export
 immutability, product-write authority isolation, and targeted-run readiness
-boundaries.
+boundaries. Verify in particular that permitted source material is not
+discarded before configured extraction, analysis, case/finding synthesis,
+prose, provenance, and audit consumers complete, and that later minimization
+or deletion produces accurate dependency and gap reporting.
 
 ## Taxonomy-dependent evaluation
 
@@ -123,10 +136,14 @@ taxonomy areas with no or insufficient evaluation coverage.
 2. Small multi-analyzer synthetic profiles
 3. Small controlled real-mod profiles
 4. Medium representative profiles
-5. Creator's large real profile
+5. Creator's large real profile as a private scale/shape reference
 6. Upper-bound stress profiles
 
 Scale testing does not replace correctness testing.
+`Brain Blast Destruction 2024` occupies only rung 5. It is a real, previously
+used profile, but it is not a correctness oracle, gold standard, representative
+corpus, or source of product-specific rules. Atomic synthetic fixtures and
+small controlled real-mod profiles establish behavior first.
 
 ## Core metrics
 
@@ -165,6 +182,8 @@ Exact thresholds are set after a baseline corpus exists.
 - coverage and failure-report correctness;
 - export provenance/source immutability, sharing-class/source-policy
   compliance, and retention-impact correctness;
+- useful-analysis source-retention and post-materialization minimization
+  correctness;
 - product-write authority and protected-setup isolation correctness;
 - manual-initiation and external-tool non-mutation correctness.
 
@@ -212,11 +231,17 @@ resolved source revision/bytes. Live source refresh is a separate operation and
 may legitimately change the resolved evidence; it must not be used as the basis
 for a false cache-equivalence failure.
 
+Retention-policy evaluation must also demonstrate that a source permitted for
+private use survives through every configured dependent evaluation stage that
+requires it. A metadata-only post-materialization state is valid only when the
+remaining artifacts honestly expose any lost clean-extraction, replay,
+citation, or audit capability.
+
 ## Acceptance bar for personal trust
 
 - no fabricated citations or definitive unsupported claims;
-- agreement with MO2 for effective state and with xEdit for applicable record
-  ground truth;
+- agreement with MO2 for effective state and with independently specified
+  fixture truth for every supported record/field/shape;
 - faithful reproduction and provenance of invoked LOOT metadata, userlist
   inputs, and diagnostics;
 - known planted problems reliably detected;
@@ -233,8 +258,9 @@ for a false cache-equivalence failure.
 M3 cannot pass this bar without EVAL-0018 or successor scale cases demonstrating
 OPS-004 at the creator's large profile and an upper-bound stress profile. It
 also cannot pass without EVAL-0051 through EVAL-0053, or reviewed successor
-cases, demonstrating MO2 effective-state agreement, applicable xEdit record
-ground truth, and faithful LOOT integration. EVAL-0055 or a successor must
+cases, demonstrating MO2 effective-state agreement, independently specified
+Bethesda record-semantic correctness, and faithful LOOT integration. EVAL-0055
+or a successor must
 demonstrate the configured full-documentation coverage/accounting contract.
 M2 cannot claim its workflow proof without EVAL-0056 or a reviewed successor.
 At every milestone, each requirement claimed complete must have at least one

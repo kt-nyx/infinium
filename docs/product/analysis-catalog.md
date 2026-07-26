@@ -69,8 +69,10 @@ Integrate rather than duplicate:
 - established error checks exposed by approved tools.
 
 Infinium adds profile correlation, evidence normalization, case grouping, and
-explanation. It does not rebuild LOOT's masterlist or xEdit's mature functions
-without demonstrated need.
+explanation. It does not rebuild LOOT's masterlist without demonstrated need.
+Bethesda record semantics use the accepted bounded Mutagen `0.54.2`
+semantic-library boundary behind an Infinium-owned analyzer contract, subject
+to independent fixture qualification.
 
 ## D. Semantic record interactions
 
@@ -253,7 +255,7 @@ Named log adapters plus bounded unfamiliar-log investigation:
 - crash logs;
 - SKSE/native plugin logs;
 - generator logs;
-- LOOT/xEdit output;
+- LOOT output;
 - Papyrus logs;
 - ENB/ReShade logs;
 - other recognized reports.

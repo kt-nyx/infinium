@@ -1,7 +1,7 @@
 # Data and trust model
 
 Status: Draft  
-Last reviewed: 2026-07-24
+Last reviewed: 2026-07-25
 
 ## Principle
 
@@ -42,6 +42,11 @@ the live filesystem they describe is not presumed immutable.
 LOOT userlist entries remain user-supplied local configuration even when LOOT
 consumes them. They do not inherit the authority of curated LOOT metadata.
 
+Direct read-only libloot results, curated masterlist/prelude claims, private
+userlist inputs, and Infinium-derived interpretations remain separately
+provenanced. The accepted integration boundary does not make every libloot
+result a curated external claim.
+
 ## Required separation
 
 The storage and contracts must not collapse these into one generic issue:
@@ -54,12 +59,29 @@ The storage and contracts must not collapse these into one generic issue:
 - recommendation;
 - coverage gap.
 
+They also must not collapse a physical local installed entity into a Nexus or
+other source identity. A local MO2 mod directory is the authoritative subject
+for enabled state, priority, files, providers, and snapshot membership. Zero,
+one, or several source mappings may describe where its content came from, and
+one source artifact may contribute to several local entities. MO2 metadata,
+retained installer archives, and installed files provide mapping evidence; no
+single field is universal identity proof. Missing exact FOMOD choices or manual
+installation history is an explicit gap rather than a reconstructed fact.
+
 Each transition records the applicable analyzer, ruleset, tool, prompt, model,
 and evidence identities, including explicit absence of LLM involvement.
 
 Reusable external claims retain their evidence-acquisition-run provenance.
 Consuming analysis runs add application links; they do not rewrite the claims
 as locally observed or profile-owned evidence.
+
+Permitted source bodies/excerpts are private acquisition artifacts rather than
+claims or authority-bearing conclusions. They remain available through their
+configured extraction, deterministic/LLM analysis, case/finding synthesis,
+prose, provenance, and audit consumers. Later source-specific minimization or
+deletion preserves explicit provenance and gap state; it never silently
+upgrades the surviving derived claim or implies that its source is still
+inspectable.
 
 ## LLM use
 

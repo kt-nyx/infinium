@@ -3,6 +3,12 @@
 Status: Draft  
 Last reviewed: 2026-07-25
 
+Wave B's target boundaries and fixture/conformance obligations are accepted by
+ADR-0008 through ADR-0011, but full Wave F case specifications and execution
+remain pending. Fixture status must never convert acceptance of a test
+obligation into a passed integration claim. ADR-0007 excludes xEdit from
+fixture construction, required adjudication, and conformance dependencies.
+
 ## Fixture categories
 
 ### Atomic synthetic
@@ -24,6 +30,11 @@ inspectable ground truth.
 
 Large synthetic or personal profiles used for performance, failure isolation,
 and coverage—not as the sole correctness oracle.
+
+The private `Brain Blast Destruction 2024` profile is one such real-used
+shape/scale reference. It is not a representative corpus, correctness oracle,
+gold standard, or source of special-case expectations. The obsolete
+`test profile` is not a fixture and no longer exists.
 
 ## Required fixture metadata
 
@@ -51,7 +62,9 @@ and coverage—not as the sole correctness oracle.
 - Do not redistribute files without permission.
 - Prefer small profiles with one interpretable interaction.
 - Retain author documentation and curated LOOT metadata used for ground truth
-  where policy allows.
+  where policy allows, through ground-truth construction, configured dependent
+  analysis, and evaluation. Apply source-specific durable minimization only
+  after those uses are materialized.
 - Record whether a supplied compatibility patch demonstrates intended outcome.
 - Do not assume an author's patch is perfect; inspect its effect.
 - Keep personal-profile evidence private by default.
@@ -88,11 +101,18 @@ Ground truth may use:
 - fixture construction;
 - authoritative format semantics;
 - MO2 effective-state inspection;
-- xEdit override inspection;
-- curated LOOT metadata and exact invoked output, with userlist provenance kept
-  distinct;
+- hand-audited plugin bytes, structural assertions, and independently specified
+  expected record/field/override/link outcomes;
+- curated LOOT metadata and exact qualified libloot adapter output, with
+  userlist provenance kept distinct;
 - author documentation;
 - known-good patch comparison;
 - targeted in-game observation where static proof is unavailable.
 
 Conflicting ground truth is recorded rather than concealed.
+
+For Bethesda semantic fixtures, the Mutagen code path under test may assist
+inspection but may not be the sole source of expected results. Fixture
+provenance must identify direct byte assertions, manual adjudication, retained
+format invariants, and any separate evidence used. xEdit is not an Infinium
+oracle or fixture dependency.

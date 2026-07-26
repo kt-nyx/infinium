@@ -1,7 +1,7 @@
 # Security and privacy
 
 Status: Draft  
-Last reviewed: 2026-07-24
+Last reviewed: 2026-07-25
 
 ## Security posture
 
@@ -41,6 +41,11 @@ are untrusted data.
 - Treat prompt injection as data contamination, not instruction.
 - Validate every model-emitted identifier and citation.
 
+Nexus acquisition follows ADR-0005: documented supported APIs only, with no
+page-scraping or browser-automation fallback. A negative Nexus response or
+material policy change triggers review and stops the affected acquisition path
+until the decision is superseded.
+
 ## Credentials
 
 - Credential entry shall use the narrowest architecture-supported handoff.
@@ -73,6 +78,12 @@ LLM calls receive only task-relevant data. Common removals include:
 
 The user accepts contextual cloud processing, but public release defaults must
 remain conservative and inspectable.
+
+Context minimization governs what an operation sends to a provider; it does
+not require deleting permitted private source material before the configured
+extraction, analysis, case/finding synthesis, prose, provenance, and audit work
+that depends on it has completed. Durable minimization follows the accepted
+RQ-031 policy and remains distinct from provider-payload minimization.
 
 ## Exports
 
@@ -111,6 +122,22 @@ product- or tool-owned cache/temp effects must be recorded. Approved operations
 must not mutate MO2, mod, profile, game, configuration, generated-output, or
 other user setup state through M4. Tool invocation must not inherit arbitrary
 shell content from mod metadata.
+
+For the accepted Wave B boundaries:
+
+- MO2 profile capture requires an explicitly selected instance/profile and a
+  quiescent supported state; the user's real MO2 process is not launched or
+  used as an execution host, and direct USVFS operation is not authorized;
+- xEdit has no product, development, dependency, fallback, or evaluation
+  surface;
+- Mutagen receives only Infinium-resolved ordered plugin inputs and may emit
+  semantics only for positively qualified shapes;
+- if LOOT coverage is delivered through the accepted libloot boundary, only
+  allowlisted read-only operations are reachable; set/write/apply operations
+  are forbidden;
+- application/library version, immutable data identities, private userlist
+  identity, and every allowed product-owned cache/temp effect are retained in
+  provenance.
 
 ## Open security research
 

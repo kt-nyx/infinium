@@ -3,17 +3,37 @@
 Status: Accepted  
 Last reviewed: 2026-07-25
 
-## 1. Select a profile
+Accepted amendments:
 
-1. Discover configured MO2 instances.
-2. Suggest the current or most recently selected profile if MO2 supports this
-   authoritatively.
-3. Require the user to confirm one profile.
-4. Display detected game/runtime and reject unsupported targets clearly.
-5. Capture or select the current installation snapshot.
-6. Resolve profile-specific assumptions, identity mappings, and claim
+- 2026-07-25 — ADR-0008 through ADR-0011 accept the Wave B profile,
+  runtime/semantic, snapshot, and conditional LOOT boundaries.
+- 2026-07-25 — ADR-0007 removes xEdit from setup, settings, capability, scan,
+  and evaluation workflows.
+
+## 1. Configure tools and select a profile
+
+1. Detect supported user-installed MO2 and LOOT applications.
+2. Let the user confirm or override detected paths and provide missing paths;
+   retain the same controls in application settings.
+3. Validate executable identity, version, accessibility, and supported
+   capability, then disclose missing, unsupported, or misconfigured tools and
+   the analysis coverage they disable.
+4. Discover configured MO2 instances.
+5. Read the exact instance's **MO2 saved selection** and suggest it only when
+   it uniquely resolves to a valid profile.
+6. Require the user to confirm one profile.
+7. Display detected game/runtime and reject unsupported targets clearly.
+8. Require MO2 to be closed, then capture or select the current installation
+   snapshot.
+9. Resolve profile-specific assumptions, identity mappings, and claim
    adjudications into a versioned analysis context; load review history
    separately.
+
+MO2 is required for the initial product. The LOOT application is optional: its
+absence disables only a later explicitly accepted application-dependent
+capability, not qualified functionality delivered solely through the bundled
+libloot/data boundary. Neither application is bundled, downloaded, installed,
+replaced, or updated by Infinium. xEdit has no Infinium setup or workflow role.
 
 ## 2. Configure a scan
 
@@ -195,6 +215,12 @@ Documentation work is independently runnable:
 7. Retain supporting passages and provenance.
 8. Expose conflicts or extraction uncertainty.
 9. Cache reusable results.
+
+Permitted source material remains available through extraction and the
+configured consuming analysis, case/finding synthesis, prose, provenance, and
+audit work. Metadata-first cache minimization applies only after that dependent
+work is materialized; an earlier user deletion explicitly previews the
+resulting completion, citation, replay, and audit gaps.
 
 The operation records an evidence-acquisition run independent of a profile
 analysis. Profile-derived target selection may be recorded without making

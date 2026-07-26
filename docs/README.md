@@ -64,6 +64,9 @@ do not contradict product requirements.
 
 - **Draft:** Incomplete or awaiting review.
 - **Proposed:** Complete enough for a decision but not accepted.
+- **Completed:** The documented work and its independent review are finished.
+  This status does not itself make a recommendation authoritative; authority
+  comes from the recorded accepted disposition.
 - **Accepted:** Authoritative until superseded.
 - **Deferred:** Intentionally postponed.
 - **Rejected:** Considered and not selected.
@@ -79,8 +82,22 @@ Every material document should include a status and last-reviewed date.
   product baseline on 2026-07-25.
 - The detailed [M0 research-foundation plan](plans/milestones/M0-research-foundation.md)
   was accepted on 2026-07-25 and is the active research plan.
-- Research execution and implementation planning have not started.
-- ADR-0001 through ADR-0004 were accepted on 2026-07-25.
+- Wave A research has completed its initial investigations and integration
+  review. Gate A is met with documented non-blocking gaps under ADR-0005;
+  RQ-026 is resolved under ADR-0006 and RQ-031 is answered for M0 with
+  source-specific conditions and measured-storage follow-up.
+- Wave B's eight bounded investigations and independent integration review are
+  complete and accepted. Gate B is met with documented non-blocking gaps for
+  M0 research progression. Reviewed conformance specifications are a
+  prerequisite for the M1 implementation plan; executing them gates M1
+  completion and support claims over the affected surfaces.
+- ADR-0001 through ADR-0011 were accepted on 2026-07-25.
+- Infinium uses GPLv3-family strong copyleft. MO2 and LOOT remain
+  user-installed; ADR-0007 excludes xEdit completely. ADR-0008 through
+  ADR-0011 accept deterministic MO2 2.5.2 reconstruction, the exact initial
+  Steam `1.6.1170.0` runtime, pinned Mutagen `0.54.2`, dependency-aware
+  snapshots, and the conditional libloot `0.29.6` boundary. Their
+  implementation operations and supported surfaces remain qualification-gated.
 - No application stack is accepted yet.
 - The current leading stack candidate is documented as a proposal only.
 - The old codebase, dependencies, local artifacts, and uncommitted work were

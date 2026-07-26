@@ -13,6 +13,10 @@ This glossary supplies short definitions. Normative semantics live in the
   content area in which an effect may manifest, distinct from the technical
   surface modified and the resulting consequence. Exact categories depend on
   RQ-036.
+- **Acquisition permission:** Source-specific decision about whether Infinium
+  may retrieve or inspect material through a particular interface and purpose.
+  It does not imply private retention, provider transmission, or external
+  redistribution permission.
 - **Analysis context:** Versioned non-physical inputs used alongside an
   installation snapshot that can affect semantic interpretation, including
   assumptions, analyzer/ruleset semantics, evidence policy, model/prompt
@@ -61,6 +65,9 @@ This glossary supplies short definitions. Normative semantics live in the
 - **Export artifact:** A versioned rendering of explicitly selected retained
   data that records its source-object selection, filters, generator, omissions,
   and privacy choices without mutating its sources.
+- **External redistribution permission:** Source- and artifact-specific
+  decision about whether material may appear in an externally shareable
+  artifact. It is independent of acquisition and private retention.
 - **External claim:** A statement obtained from documentation or another
   source, distinct from a locally measured fact.
 - **Finding:** A supported conclusion about a problem, risk, advisory, or
@@ -91,18 +98,36 @@ This glossary supplies short definitions. Normative semantics live in the
 - **Installation snapshot:** Logically immutable manifest of one selected MO2
   profile's physical and effective installation state. It excludes mutable
   assumptions and scan configuration.
+- **Local installed entity:** One physical MO2 mod-directory subject whose
+  enabled state, priority, files, providers, and snapshot membership come from
+  local state. It may have zero, one, or several separately evidenced source
+  identity mappings.
 - **Maturity:** Evaluated reliability of an analyzer within declared scope; not
   the confidence of an individual finding.
+- **Metadata-first durable minimization:** Policy of retaining references,
+  fingerprints, derived structures, and explicit gaps instead of unnecessary
+  exact source content after configured dependent work is materialized. It
+  does not require premature deletion during useful analysis.
 - **Needs input:** Investigation/case state indicating that a material user
   answer is required; it is neither a finding disposition nor a paused job.
 - **Observation:** An atomic measured fact.
 - **Profile snapshot:** Informal alias for installation snapshot; normative
   documents should use installation snapshot.
+- **MO2 saved selection:** Per-instance remembered profile hint used to suggest
+  a startup default. It is not authoritative selection for a run; the user
+  explicitly selects or confirms the profile before capture.
+- **Private retention permission:** Source- and purpose-specific decision about
+  which material Infinium may keep in product-owned local storage and for how
+  long. It does not imply provider-transmission or redistribution permission.
 - **Protected setup root:** Any resolved path whose contents can affect the
   selected MO2 instance/profile, installed mods, game/runtime, configuration,
   or generated output. Through M4, Infinium write destinations—including paths
   reached through aliases, links, or reparse points—must not overlap these
   roots.
+- **Provider-transmission permission:** Source- and operation-specific decision
+  about whether minimized material may be sent to a user-selected model or
+  service provider. It is independent of private retention and external
+  redistribution.
 - **Readiness:** Categorical evaluation bound to an analysis run, coverage,
   readiness-policy version, resolved applicable disposition set (including
   unreviewed/default state), and evaluation time; advisories are non-blocking

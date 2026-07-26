@@ -7,10 +7,13 @@ Last reviewed: 2026-07-25
 
 The initial supported target is:
 
-- one explicitly pinned Skyrim Special Edition runtime version, initially the
-  version installed in the creator's reference setup when support is first
-  pinned;
+- Steam Skyrim Special Edition for Windows x64 runtime `1.6.1170.0`, gated by
+  the exact versioned support-manifest identity accepted in ADR-0009;
 - one explicitly selected Mod Organizer 2 profile;
+- user-installed MO2 as a required external application; a user-installed
+  LOOT application may supply configuration/userlist discovery or a later
+  explicitly accepted application capability, while the conditional
+  libloot/data semantic boundary does not require the LOOT executable;
 - manually initiated analysis;
 - Windows desktop;
 - local-first deterministic analysis;
@@ -20,8 +23,8 @@ The initial supported target is:
   reference provider;
 - read-only authority.
 
-An automatically suggested current or last-selected MO2 profile may be offered
-after MO2 semantics are researched, but selection must remain explicit.
+The exact instance's MO2 saved selection may be offered as a validated
+suggestion only; selection must remain explicit.
 
 ## Milestone terminology
 
@@ -94,6 +97,9 @@ The backend proof emits human-readable CLI output and a versioned JSON artifact.
 It must obey every foundational product, authority, evidence, provenance, and
 safety constraint applicable to the behavior it exercises even where broader
 completion of that requirement is targeted at M3.
+If it exercises an external application, its configuration contract shall
+accept an explicitly supplied validated path and report unavailable
+capabilities without silently changing scope.
 
 ## M2: Frontend workflow proof
 
@@ -106,6 +112,8 @@ scale, or reliability required by M3 is already complete.
 
 Expected scope:
 
+- initial tool detection/confirmation and settings-based path overrides;
+- visible external-tool status and resulting capability gaps;
 - profile selection;
 - granular scan configuration;
 - progress, time, and cost;

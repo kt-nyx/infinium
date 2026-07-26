@@ -7,11 +7,48 @@ Last reviewed: 2026-07-25
 Accepted: 2026-07-25  
 Target milestone: M0 — Documentation and research foundation
 
+Accepted amendments:
+
+- 2026-07-25 —
+  [RESEARCH-0013](../../research/investigations/RESEARCH-0013-wave-b-authoritative-local-state-integration.md)
+  and ADR-0008 through ADR-0011 accept Wave B and Gate B as met with
+  documented non-blocking gaps. RQ-001 through RQ-007 and RQ-014 are resolved
+  for M0. The selected architecture boundaries are authoritative, while their
+  named conformance tests, exact supported surfaces, and implementation plans
+  remain unpassed/unaccepted. ADR-0007's complete xEdit exclusion controls
+  every Wave B interpretation.
+- 2026-07-25 —
+  [ADR-0007](../../architecture/decisions/ADR-0007-exclude-xedit-from-infinium.md)
+  resolves RQ-006 by excluding xEdit from Infinium's product, development,
+  dependency, integration, and evaluation boundaries. Mutagen-focused
+  record-semantic qualification now uses independently specified first-party
+  fixture truth. The earlier xEdit investigation remains historical decision
+  provenance, not a pending integration path.
+- 2026-07-25 —
+  [RESEARCH-0003](../../research/investigations/RESEARCH-0003-retention-replay-export-policy.md)
+  answers RQ-031 for M0 with source-specific conditions and later measured
+  storage work. Permitted private source material must remain available long
+  enough for useful extraction, analysis, case/finding synthesis, prose,
+  provenance, and audit. Supported-API Nexus material follows ADR-0005's
+  accepted development-risk decision unless a reversal trigger occurs.
+- 2026-07-25 —
+  [ADR-0006](../../architecture/decisions/ADR-0006-gpl-product-and-tool-dependency-boundary.md)
+  resolves RQ-026 with GPLv3-family licensing; user-installed MO2 and LOOT;
+  the then-leading bundled Mutagen, conditional libloot, and disfavored USVFS
+  candidate postures; and managed versioned LOOT data. Exact mechanisms
+  remained with RQ-001/RQ-002/RQ-004/RQ-005 until ADR-0008 through ADR-0011.
+  ADR-0007 subsequently excludes xEdit and resolves RQ-006.
+- 2026-07-25 — [ADR-0005](../../architecture/decisions/ADR-0005-nexus-supported-api-analysis.md)
+  accepts bounded, user-initiated supported Nexus API retrieval and diagnostic
+  transformation as a non-blocking project-risk decision. Gate A is met with
+  documented non-blocking gaps; Wave B and later dependency-ordered research
+  may proceed within that ADR.
+
 ## Purpose and authority
 
 This plan sequences the research needed to select Infinium's implementation
 architecture and write an acceptable M1 backend semantic proof plan. It consumes
-the accepted product baseline and ADR-0001 through ADR-0004; it does not change
+the accepted product baseline and ADR-0001 through ADR-0011; it does not change
 their requirements or accept any currently unresolved technical mechanism.
 
 Research results are evidence and recommendations. A recommendation becomes an
@@ -84,6 +121,13 @@ being answered speculatively.
 - [ADR-0002 — Installation-snapshot and analysis-context binding](../../architecture/decisions/ADR-0002-snapshot-context-binding.md)
 - [ADR-0003 — Exclude setup-mutation capabilities through M4](../../architecture/decisions/ADR-0003-read-only-authority.md)
 - [ADR-0004 — Avoid premature manager/runtime abstraction](../../architecture/decisions/ADR-0004-initial-target-scope.md)
+- [ADR-0005 — Proceed with supported Nexus API analysis](../../architecture/decisions/ADR-0005-nexus-supported-api-analysis.md)
+- [ADR-0006 — GPL product and tool-dependency boundary](../../architecture/decisions/ADR-0006-gpl-product-and-tool-dependency-boundary.md)
+- [ADR-0007 — Exclude xEdit from Infinium](../../architecture/decisions/ADR-0007-exclude-xedit-from-infinium.md)
+- [ADR-0008 — MO2 profile, effective-state, and local-identity acquisition](../../architecture/decisions/ADR-0008-mo2-profile-effective-state-and-local-identity.md)
+- [ADR-0009 — Skyrim runtime and Bethesda semantic support](../../architecture/decisions/ADR-0009-skyrim-runtime-and-bethesda-semantic-support.md)
+- [ADR-0010 — Snapshot fingerprint and dependency invalidation](../../architecture/decisions/ADR-0010-snapshot-fingerprint-and-dependency-invalidation.md)
+- [ADR-0011 — LOOT semantic and managed-data boundary](../../architecture/decisions/ADR-0011-loot-semantic-and-managed-data-boundary.md)
 
 ### Research and evaluation inputs
 
@@ -164,7 +208,7 @@ implements or validates the complete product requirement.
 ### Already satisfied
 
 - The seven product documents are accepted.
-- ADR-0001 through ADR-0004 are accepted.
+- ADR-0001 through ADR-0011 are accepted.
 - The legacy implementation is isolated and documented.
 - The open-question registry and evaluation catalog exist.
 
@@ -214,26 +258,29 @@ The classes below control the M0 exit:
   reach a sound conclusion without it.
 - **Later evidence:** intentionally remains open until the required
   implementation/evaluation evidence exists.
+- **Resolved:** an accepted disposition satisfies the question for M0. Named
+  residual risks or later measurement/mechanism work remain follow-up rather
+  than an M0 blocker unless a documented reversal trigger reopens the question.
 
 An accepted amendment to this plan may promote a Conditional or Later-evidence
 question. It may not silently remove an Exit-blocking question.
 
 | RQ | M0 class | Planned wave | M0 disposition |
 |---|---|---|---|
-| RQ-001 | Exit-blocking | B | Prove an authoritative selected-profile/effective-VFS acquisition route or stop before M1 |
-| RQ-002 | Conditional | B | Investigate alongside MO2 state; profile suggestion is not required for the backend proof |
-| RQ-003 | Exit-blocking | B | Pin and detect one supported runtime with explicit rejection behavior |
-| RQ-004 | Exit-blocking | B | Verify Bethesda semantic/archive capabilities and gaps against ground truth |
-| RQ-005 | Conditional | B | Select LOOT integration before any M1 LOOT scope; otherwise retain for the first LOOT delivery plan |
-| RQ-006 | Conditional | B | Define xEdit automation only if M1 invokes it; manual/controlled xEdit ground truth remains required where applicable |
-| RQ-007 | Exit-blocking | B | Establish authoritative MO2 metadata/identity and installer-evidence limits |
+| RQ-001 | Resolved | B | ADR-0008 selects version-pinned quiescent MO2 reconstruction; EVAL-0051 remains a support gate |
+| RQ-002 | Resolved | B | ADR-0008 treats MO2 saved selection as suggestion-only and requires explicit target binding |
+| RQ-003 | Resolved | B | ADR-0009 pins the initial exact Steam `1.6.1170.0` runtime manifest |
+| RQ-004 | Resolved | B | ADR-0009 selects Mutagen `0.54.2` with positive supported-shape qualification and explicit archive/string gaps |
+| RQ-005 | Resolved | B | ADR-0011 selects the conditional libloot/data delivery boundary and rejects current LOOT application automation |
+| RQ-006 | Resolved | B | ADR-0007 excludes xEdit from all Infinium boundaries and replaces its proposed oracle role with parser-independent first-party fixture truth |
+| RQ-007 | Resolved | B | ADR-0008 separates physical installed identity, source mapping, and unavailable installer/manual-change history |
 | RQ-008 | Exit-blocking | D | Identify currently supported Nexus interfaces and content/revision coverage |
-| RQ-009 | Exit-blocking | A | Establish policy constraints before Nexus acquisition experiments |
+| RQ-009 | Resolved | A | ADR-0005 accepts bounded, user-initiated analysis through documented supported Nexus APIs under an explicit owner risk decision |
 | RQ-010 | Conditional | D | Approve only sources needed by M1; broader registry expansion may follow |
 | RQ-011 | Exit-blocking | D | Define the minimum provider-neutral claim/investigation contract used by M1 |
 | RQ-012 | Exit-blocking | D | Verify the reference provider and comparison capabilities needed by the M1 contract |
 | RQ-013 | Exit-blocking | E | Select evidence/acquisition persistence and revision relationships needed by M1 |
-| RQ-014 | Exit-blocking | B | Select a snapshot/fingerprint/dependency strategy with measured IO behavior |
+| RQ-014 | Resolved | B | ADR-0010 selects canonical structural manifests, scoped SHA-256, dependency closures, and conservative invalidation |
 | RQ-015 | Exit-blocking | E | Select the durable run/job/checkpoint model and bounded M1 subset |
 | RQ-016 | Exit-blocking | E | Compare desktop/application stacks and select the application/engine direction |
 | RQ-017 | Exit-blocking | E | Select the UI/analysis/process/data-query boundary needed for scale and isolation |
@@ -245,12 +292,12 @@ question. It may not silently remove an Exit-blocking question.
 | RQ-023 | Exit-blocking | C | Establish the asset-format/provider capabilities needed by the initial cross-layer and non-NPC proofs |
 | RQ-024 | Exit-blocking | C | Select the first semantic record/relationship scope and a materially different follow-up scope |
 | RQ-025 | Exit-blocking | C | Produce reproducible real-mod candidates and legal/private handling for EVAL-0016/EVAL-0017 |
-| RQ-026 | Exit-blocking | A | Establish obligations for every helper/tool considered for M1 or architectural distribution |
+| RQ-026 | Resolved | A | ADR-0006 establishes GPLv3-family licensing and the accepted external-application/bundled-library/data posture |
 | RQ-027 | Exit-blocking | C | Establish the benchmark method and preliminary scale evidence needed for architecture/candidate selection; retain full M3 calibration as a measured follow-up |
 | RQ-028 | Later evidence | F | Define the calibration/evidence-collection plan now; set M3/M4 thresholds only after analyzer data exists |
 | RQ-029 | Later evidence | F | Schedule before automatic runtime-log application, no later than its M3 delivery plan |
 | RQ-030 | Later evidence | F | Schedule for M4 packaging/update planning after the application architecture stabilizes |
-| RQ-031 | Exit-blocking | A | Establish retention/replay/export legality and practical boundaries before choosing the evidence store |
+| RQ-031 | Resolved | A | Accepted metadata-first durable minimization, useful-analysis private retention, independent permission/export classes, replay disclosure, and deletion semantics; measured storage remains follow-up work |
 | RQ-032 | Exit-blocking | E | Select concrete content, path, subprocess, navigation, and export controls for M1 surfaces |
 | RQ-033 | Exit-blocking | E | Select finding/case continuity and reconciliation keys without name-based false identity |
 | RQ-034 | Exit-blocking | E | Select enforceable reservation/deadline/reconciliation behavior before concurrent or billable M1 work |
@@ -265,6 +312,11 @@ Every investigation remains separately reviewable.
 
 ### Wave A — Policy and evidence-handling guardrails
 
+Status: Completed on 2026-07-25. Gate A is met through ADR-0005, ADR-0006,
+and the accepted RQ-031 owner disposition. This authorizes the next research
+wave, not any still-unresearched integration operation or implementation
+architecture.
+
 Questions:
 
 - RQ-009 — Nexus access and policy;
@@ -276,7 +328,8 @@ Required outputs:
 - dated policy/source findings based on current primary sources;
 - permitted/prohibited acquisition-operation matrix;
 - private-retention versus redistribution matrix by evidence class;
-- helper/tool licensing and bundling constraints;
+- accepted helper/tool licensing, external-application, bundled-library, and
+  managed-data constraints;
 - updates to the source registry;
 - explicit constraints consumed by later experiments and ADRs.
 
@@ -290,6 +343,11 @@ Gate A:
 
 ### Wave B — Authoritative local state and deterministic ground truth
 
+Status: Completed and accepted on 2026-07-25. Gate B is met with documented
+non-blocking gaps. ADR-0007 excludes xEdit, and ADR-0008 through ADR-0011
+record the accepted Wave B architecture boundaries. Named conformance cases
+remain unexecuted and gate implementation/support claims.
+
 Questions:
 
 - RQ-001 through RQ-007;
@@ -302,7 +360,8 @@ Internal order:
 3. pin runtime detection and unsupported-target behavior;
 4. verify plugin, archive, linking, override-chain, and winner semantics;
 5. determine identity/source/FOMOD metadata actually retained by MO2;
-6. compare LOOT/xEdit integration options without presuming M1 uses them;
+6. compare LOOT integration options and record the researched rejection of
+   xEdit as a project dependency or oracle;
 7. benchmark candidate fingerprint/dependency strategies against realistic
    file/archive populations.
 
@@ -311,10 +370,11 @@ Required outputs:
 - reproducible read-only environment/experiment manifest;
 - synthetic and controlled-real MO2 profiles or private manifests;
 - agreement/disagreement matrix against authoritative MO2 behavior;
-- xEdit-backed record ground-truth procedure;
-- capability/gap matrices for MO2, Mutagen candidates, LOOT, and xEdit;
+- parser-independent Bethesda record ground-truth specification;
+- capability/gap matrices for MO2, the selected Mutagen boundary, and LOOT, plus
+  historical rejection evidence for xEdit;
 - snapshot/fingerprint benchmark results and invalidation examples;
-- proposed integration, semantic-layer, and snapshot ADR inputs;
+- accepted integration, semantic-layer, snapshot, and conditional LOOT ADRs;
 - reviewed specifications or research prerequisites for EVAL-0051,
   EVAL-0052, EVAL-0053 where applicable, EVAL-0054, and EVAL-0046.
 
@@ -326,6 +386,8 @@ Gate B:
 - no chosen external-tool operation is known to mutate protected setup state;
 - snapshot validity is based on declared dependencies and measured behavior,
   not modification time or guessed ownership alone.
+
+Accepted result: **Met with documented non-blocking gaps.**
 
 If authoritative MO2 effective state or applicable record ground truth cannot
 be reconstructed, M0 stops before architecture acceptance and records the
@@ -412,12 +474,15 @@ Internal order:
 
 1. enumerate supported Nexus content, revision identity, authentication, and
    access limits;
-2. register only necessary M1 sources and access methods;
-3. test claim extraction on retained, permitted source samples;
-4. define the smallest provider-neutral extraction/investigation schemas;
-5. compare reference-provider authentication, structured-output, batching,
+2. run bounded authenticated experiments only against documented, supported
+   Nexus operations under ADR-0005; record unsupported content surfaces as
+   coverage gaps rather than using page fallbacks;
+3. register only necessary M1 sources and access methods;
+4. test claim extraction on retained, permitted source samples;
+5. define the smallest provider-neutral extraction/investigation schemas;
+6. compare reference-provider authentication, structured-output, batching,
    model-version, token/cost, rate-limit, quota, and cancellation behavior;
-6. exercise citation, applicability, contradiction, abstention, and hostile
+7. exercise citation, applicability, contradiction, abstention, and hostile
    embedded-instruction cases.
 
 Required outputs:
@@ -450,8 +515,8 @@ Questions:
 
 - RQ-013 and RQ-015 through RQ-018;
 - RQ-032 through RQ-034;
-- architecture conclusions enabled by RQ-001, RQ-004 through RQ-006, RQ-014,
-  RQ-026, RQ-031, and RQ-035.
+- architecture conclusions enabled by RQ-001, RQ-004, RQ-005, RQ-014,
+  RQ-026, RQ-031, RQ-035, and accepted ADR-0007 through ADR-0011.
 
 Required comparison:
 
@@ -482,7 +547,8 @@ Required outputs:
 - proposed ADRs for every durable mechanism selected for M1;
 - storage/schema-evolution direction for immutable runs/evidence and mutable
   review projections;
-- dependency-aware snapshot/cache strategy;
+- persistence mechanisms that implement ADR-0010's accepted
+  dependency-aware snapshot/cache strategy;
 - job/checkpoint and process/data-query topology;
 - application stack and UI/worker boundary;
 - secure credential and allowlisted privileged-operation design;
@@ -498,7 +564,7 @@ Gate E:
 - every durable or cross-cutting M1 mechanism that meets the repository's ADR
   criteria is governed by an accepted ADR, while local implementation details
   remain bounded by the accepted M1 plan;
-- the selected design satisfies ADR-0001 through ADR-0004 without hidden
+- the selected design satisfies ADR-0001 through ADR-0011 without hidden
   authority expansion;
 - no decision relies on mocked production data, guessed effective state,
   plaintext credentials, broad privileged UI access, or legacy architecture
@@ -578,8 +644,12 @@ possible and state what remains unverified.
 - Follow the source registry; do not scrape prohibited content or bypass
   authentication/access controls.
 - Public policy, API, licensing, and technical documentation may be consulted
-  to establish Wave A guardrails; collecting mod-page/source content for
-  product evidence waits until the applicable access method is permitted.
+  to establish Wave A guardrails.
+- Under ADR-0005, bounded user-initiated acquisition and diagnostic analysis of
+  content exposed through documented supported Nexus APIs is permitted for
+  research. Unsupported content surfaces remain coverage gaps; HTML scraping,
+  browser automation, undocumented endpoints, bulk/rehost behavior, model
+  training, and raw public source redistribution remain prohibited.
 - Keep local/deterministic state, source claims, user statements, and model
   interpretations separately attributable.
 - Treat every retrieved document, archive, log, tool output, and model output
@@ -781,7 +851,7 @@ Unless promoted by accepted evidence:
 
 ## Completion record
 
-Completion status: Not started
+Completion status: In progress — Waves A and B complete
 
 To be filled when M0 completes:
 

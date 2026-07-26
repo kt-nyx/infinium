@@ -1,7 +1,7 @@
 # Jobs, caching, and snapshots
 
 Status: Draft  
-Last reviewed: 2026-07-24
+Last reviewed: 2026-07-25
 
 This document records required behavior. Storage technology and scheduling
 implementation remain undecided.
@@ -27,6 +27,20 @@ run configurations. A started run retains its bound versions; an edit creates
 a new version and waits for a later user-initiated run, which may use explicit
 validated reuse edges.
 
+ADR-0010 accepts the initial validity mechanism: a versioned canonical
+structural/provider manifest, scoped content SHA-256 calculated from the same
+opened stream used by a consumer where practical (otherwise using the accepted
+stable-handle and before/after validation), quiescent double capture around
+protected inputs, and typed artifact dependency closures. Metadata and stable
+file IDs may accelerate change detection but do not prove content equality.
+Mandatory filesystem watchers, USN-journal dependence, VSS capture, and eager
+hashing of every byte are outside the initial contract.
+
+The capture is valid only if both structural captures agree and every
+consumer-relevant scoped digest remains associated with that exact manifest.
+An archive or unsupported member-level dependency invalidates conservatively
+until finer-grained behavior is separately qualified.
+
 ## Resolved input manifest
 
 Every run records the actual inputs it resolved, including external-source
@@ -47,6 +61,14 @@ does not depend on replay being possible: missing original mod bytes,
 unavailable tool/model versions, or unretained external content are recorded
 explicitly. Material gaps in the retained audit trail are reported separately
 from replayability.
+
+Permitted source bodies and excerpts remain available until the configured
+dependent extraction, analysis, case/finding synthesis, prose, provenance, and
+audit outputs are materialized. Metadata-first durable minimization may then
+replace unnecessary exact content according to its source-specific policy.
+Any earlier user deletion must preview the resulting completion, reuse,
+replay, citation, and audit gaps rather than being treated as a harmless cache
+clear.
 
 ## Job hierarchy
 
@@ -147,7 +169,10 @@ Cache validity may depend on:
   claim-applicability-adjudication set versions;
 - upstream evidence.
 
-Modification time alone is insufficient where it cannot prove content identity.
+Modification time, size, path, MO2 metadata, and file identity alone are
+insufficient where they cannot prove content identity. The cache key records
+the typed dependency closure used by each artifact rather than treating one
+whole-profile fingerprint as authority for every downstream result.
 
 ## Carryover
 

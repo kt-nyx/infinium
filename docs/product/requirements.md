@@ -3,6 +3,36 @@
 Status: Accepted  
 Last reviewed: 2026-07-25
 
+Accepted amendments:
+
+- 2026-07-25 — Wave B and ADR-0008 through ADR-0011 resolve RQ-001 through
+  RQ-007 and RQ-014 for M0. The initial technical boundary is MO2 `2.5.2`
+  quiescent reconstruction with explicit profile binding; exact Steam
+  `1.6.1170.0`; allowlisted Mutagen `0.54.2`; canonical structural snapshots
+  with scoped SHA-256 dependency validity; and conditional libloot `0.29.6`
+  when a milestone claims LOOT coverage. These decisions do not mark their
+  conformance cases or supported-surface qualification as passed.
+- 2026-07-25 — ADR-0007 removes xEdit from Infinium's product, development,
+  dependency, integration, and evaluation boundaries. TOOL-001 through
+  TOOL-003 now apply to MO2 and LOOT only; Bethesda semantic qualification uses
+  independently specified first-party fixture truth rather than an xEdit
+  oracle.
+- 2026-07-25 — Accepted the RQ-031 retention, replay, deletion, and export
+  policy with an owner clarification that permitted private source material
+  must remain available long enough to complete useful extraction, LLM
+  analysis, claim/case/finding synthesis, prose generation, provenance, and
+  audit. Metadata-first retention shall not cause premature deletion. Nexus
+  material exposed through supported APIs follows the development-risk
+  decision in ADR-0005 unless a reversal trigger occurs.
+- 2026-07-25 — Replaced the briefly adopted permissive-first-party posture in
+  DIST-001 and DIST-002 with the GPLv3-family product and dependency boundary
+  accepted in ADR-0006; added TOOL-001 through TOOL-003 for user-installed
+  MO2/LOOT/xEdit discovery, configuration, and capability disclosure. The
+  xEdit portion was later superseded by ADR-0007.
+- 2026-07-25 — Originally added DIST-001 through DIST-003 with a permissive
+  first-party posture. This historical amendment was superseded later the same
+  day by the GPLv3-family amendment above.
+
 This document converts the product interview into referenceable requirements.
 It was accepted as part of the product baseline on 2026-07-25. Individual
 entries inherit the document status; a proposed material change must return the
@@ -66,11 +96,13 @@ playthrough is safe. Readiness must be qualified by coverage and uncertainty.
 
 Priority: Must
 
-The initial product shall support exactly one explicitly pinned Skyrim Special
-Edition runtime version, initially the version installed in the creator's
-reference setup when support is first pinned. Updating the supported version is
-a deliberate, tested support decision. Other runtimes and editions are
-unsupported targets, not best-effort variants.
+The initial product shall support exactly the Steam Windows x64 Skyrim Special
+Edition `1.6.1170.0` executable identity recorded by ADR-0009: file size
+`37,157,144` bytes and SHA-256
+`C434208894F07F604B852F29B8EDC3A58C4DE63DE783373733E72B2B73F33BE9`.
+Updating or broadening support is a deliberate, tested support decision. Other
+hashes, runtimes, channels, editions, and platforms are unsupported targets,
+not best-effort variants.
 
 ### SCOPE-002 — Mod manager target
 
@@ -82,7 +114,10 @@ The product through M4 shall support Mod Organizer 2 only.
 
 Priority: Must
 
-Every analysis shall target one explicitly selected MO2 profile.
+Every analysis shall target one explicitly selected MO2 profile. MO2's
+per-instance saved selection may seed a startup suggestion, but it is not the
+authoritative run binding and must not start a scan without explicit user
+selection or confirmation.
 
 ### SCOPE-004 — Manual initiation
 
@@ -864,9 +899,12 @@ lower priority than semantic and compatibility analysis.
 
 Priority: Should
 
-Infer FOMOD or installer selections where evidence permits and expose
-ambiguity. The design may accommodate later prospective choice recording, but
-that feature is not required by M3 or M4.
+Infer likely FOMOD or installer selections only where installed files, retained
+archives, metadata, or other qualified evidence permits, and expose ambiguity.
+Do not claim exact historical selections when MO2 did not persist them or when
+manual installation destroyed the needed provenance. The design may
+accommodate later prospective choice recording, but that feature is not
+required by M3 or M4.
 
 ### ANALYSIS-013 — Missing referenced assets
 
@@ -962,10 +1000,13 @@ source/entity/version and extraction dependencies remain equivalent.
 
 Priority: Must
 
-Infer installed-mod identity where possible and provide editable mappings for
-renamed, split, merged, generated, personal, and non-Nexus mods. Mapping edits
-shall create versioned analysis-context input state rather than rewrite the
-mapping used by historical or active runs.
+Represent each physical local MO2 mod directory as an installed entity before
+attempting source identity. Infer zero-to-many source mappings where possible
+and provide editable mappings for renamed, split, merged, generated, personal,
+and non-Nexus mods; one source may also map to multiple local entities. MO2
+metadata and source/file IDs are evidence, not universal identity proof.
+Mapping edits shall create versioned analysis-context input state rather than
+rewrite the mapping used by historical or active runs.
 
 ### DOC-004 — Claim inspection and adjudication
 
@@ -1010,9 +1051,15 @@ Priority: Must
 
 Subject to source policy and explicit retention/deletion choices, retain the
 exact cited passage plus source identity, applicability metadata, revision/date
-where available, and a content fingerprint. Retain full source content only
-when permitted and necessary. If cited content is removed, the affected audit
-view and replayability disclosure shall show the loss. Full user-facing
+where available, and a content fingerprint. Retain permitted private source
+content for at least as long as it is needed to complete useful extraction,
+deterministic and user-authorized LLM analysis, claim/case/finding synthesis,
+prose generation, provenance, audit, replay, refresh, and the applicable
+private diagnostic history. Metadata-first durable storage is a minimization
+default, not authority to discard a source or cited passage before its
+dependent work is complete. Longer full-source retention remains
+source-specific and user-deletable. If cited content is removed, the affected
+audit view and replayability disclosure shall show the loss. Full user-facing
 revision browsing is after M4.
 
 ### DOC-009 — Freshness policy
@@ -1225,6 +1272,94 @@ project credentials, or another billable provider/account. Any future operated
 service, shared credential, or subsidized inference model requires a separate
 product, business, privacy, and security decision.
 
+## External tool environment
+
+### TOOL-001 — User-installed established applications
+
+Priority: Must
+
+Delivery: Staged across M1 and M2
+
+MO2 and the LOOT application shall exist only as applications installed and
+maintained by the user. Infinium shall not bundle, download, install, replace,
+or update those applications. MO2 is required for the initial supported
+product. The current LOOT application is not the structured headless-analysis
+boundary; its presence gates only any later explicitly accepted capability
+that invokes it, not capabilities delivered solely through the accepted
+bundled libloot/data boundary. xEdit is not an Infinium dependency or
+integration.
+
+### TOOL-002 — Detection, validation, and override
+
+Priority: Must
+
+Delivery: M1 configuration contract and M2 setup/settings workflow
+
+Infinium shall attempt to detect supported MO2 and LOOT installations using
+validated sources. The user shall be able to confirm or override every detected
+path during initial setup and later in settings, and to supply a missing path
+manually. Before any executable is used, it shall be validated for identity,
+supported version, accessibility, and an accepted operation-specific contract.
+Detecting a LOOT installation does not authorize invocation or imply that it is
+needed by the libloot semantic boundary.
+
+### TOOL-003 — Tool capability disclosure
+
+Priority: Must
+
+Delivery: M1 human-readable CLI and M2 frontend
+
+Infinium shall report each integrated external application as available, missing,
+unsupported, misconfigured, or not yet validated. Scan configuration and
+pre-run review shall identify every unavailable analyzer or coverage area
+caused by tool state and shall never silently substitute fabricated,
+incomplete, or mutating behavior.
+
+## Distribution and licensing
+
+### DIST-001 — Free and strong-copyleft first-party licensing
+
+Priority: Must
+
+Delivery: Before the M1 implementation plan is accepted
+
+Infinium-owned application and library code intended for distribution shall be
+free and open-source software under the GNU General Public License version 3
+family. Commercial use, modification, forking, and redistribution are allowed;
+distributed derivatives shall preserve the source access and downstream
+freedoms required by GPLv3. The exact `GPL-3.0-only` versus
+`GPL-3.0-or-later` selector shall be chosen before an operative licence file or
+public code distribution requires it and shall not reopen the accepted
+GPLv3-family product posture unless compatibility evidence requires a broader
+decision.
+
+### DIST-002 — GPL-compatible dependency boundary
+
+Priority: Must
+
+Infinium may link, embed, modify, or distribute GPL-compatible libraries when
+an accepted architecture or integration decision establishes their technical
+need and exact boundary. Every selected dependency and transitive dependency
+shall be compatible with the operative Infinium GPLv3 selector, and every
+corresponding-source, notice, installation-information, modification, and
+redistribution obligation shall be satisfied. Licence compatibility does not
+by itself approve a dependency, authorize execution, prove non-mutation, or
+establish adequate analytical coverage.
+
+### DIST-003 — Redistribution compliance
+
+Priority: Must
+
+Delivery: Before the first public packaged build containing third-party
+payloads
+
+Every distributed executable, library, runtime, data seed, and asset shall have
+an exact immutable version, licence classification, payload owner, notices,
+source-availability or corresponding-source mechanism where required,
+trademark treatment, update/recall owner, and SBOM entry. Packaging a helper
+does not establish that its operation is safe, read-only, technically adequate,
+or authorized.
+
 ## Offline, history, exports, and scale
 
 ### OPS-001 — Offline local analysis
@@ -1258,6 +1393,14 @@ contain selected material, including exports, run-owned outputs, and developer
 traces. Deleting a source record shall not silently delete those artifacts, and
 deleting an artifact shall not delete its sources. Every deleted object must be
 explicitly included, directly or through an inspectable confirmed cascade.
+
+This indefinite-history default applies to retained product records and
+derived history; it does not override source-specific permission or
+minimization rules for exact source bodies, excerpts, game/mod bytes, tool
+artifacts, or provider content. Permitted source material remains available
+through its required dependent work under DOC-008, after which an allowed
+metadata-first state may preserve the history with explicit citation,
+replayability, and audit gaps.
 
 ### OPS-003 — Run outputs and exports
 
