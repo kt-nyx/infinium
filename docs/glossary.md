@@ -1,18 +1,18 @@
 # Glossary
 
 Status: Draft  
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-26
 
 This glossary supplies short definitions. Normative semantics live in the
-[domain model](product/domain-model.md).
+[domain model](product/domain-model.md) and accepted
+[Skyrim SE mod-impact taxonomy](product/mod-impact-taxonomy.md).
 
 - **Analyzer:** A bounded module that consumes declared evidence and emits
   typed observations, claims, candidates, hypotheses, findings,
   recommendations, or coverage gaps.
-- **Affected game area:** Provisional classification of the gameplay system or
-  content area in which an effect may manifest, distinct from the technical
-  surface modified and the resulting consequence. Exact categories depend on
-  RQ-036.
+- **Affected game area:** Versioned, multi-label taxonomy classification of
+  the game system or content area in which an effect may manifest, distinct
+  from the technical surface modified and the resulting consequence.
 - **Acquisition permission:** Source-specific decision about whether Infinium
   may retrieve or inspect material through a particular interface and purpose.
   It does not imply private retention, provider transmission, or external
@@ -32,10 +32,15 @@ This glossary supplies short definitions. Normative semantics live in the
 - **Authoritative external claim:** A version-applicable statement from a mod
   author, curated LOOT source, or another approved primary source within that
   source's authority.
-- **Blast radius:** Estimated breadth of a problem's effect, from one optional
-  object to global or save-wide behavior.
+- **Blast radius:** Informal name for the causal-propagation facet of effect
+  extent. Normative records use `extent.propagation.*` assignments rather than
+  one scalar blast-radius value.
 - **Candidate:** An interaction selected for further investigation; not yet a
   finding.
+- **Causal join:** A bounded relationship query that selects candidate
+  interactions from specific shared records, paths, references, dependencies,
+  claims, or other qualified mechanisms. Merely sharing a taxonomy label,
+  location, or mod pair is not a causal join.
 - **Case:** A group of findings, hypotheses, symptoms, and evidence attributed
   to a shared likely cause and usually a shared resolution. A supported case
   has at least one finding; a lead-only investigation case has none and is
@@ -44,20 +49,26 @@ This glossary supplies short definitions. Normative semantics live in the
   case's membership and conclusion, linked to earlier or later revisions.
 - **Confidence:** Strength of support for a conclusion, independent of its
   potential severity.
+- **Consequence type:** Versioned taxonomy classification of what kind of
+  problem may result, kept separate from cause, affected area, technical
+  surface, severity, confidence, symptoms, and effect extent.
 - **Coverage:** Multidimensional account of what completed, failed, was skipped,
   was limited, or is unsupported, reported against labeled populations.
 - **Coverage gap:** Something the tool could not inspect or classify.
 - **Declared mod purpose:** Source-supported description of what a mod is
   intended to add, remove, replace, or alter. It is distinct from a hosting-site
   category, the technical surfaces actually modified, and unintended or
-  predicted affected game areas; exact taxonomy relationships depend on
-  RQ-036.
+  predicted affected game areas. Normative values use the accepted
+  `purpose.*` and `purpose-target.*` taxonomy facets.
 - **Disposition:** Persistent user/review state of a finding, such as resolved,
   accepted-as-is, not-applicable, or false-positive.
 - **Effective installation:** The files, plugins, records, configuration, and
   native components the selected game/profile state will actually expose.
 - **Evidence:** A provenance-bearing input supporting or contradicting a claim
   or finding.
+- **Effect extent:** Versioned, faceted classification of how broadly an
+  effect may manifest across direct subject, spatial, persistence/lifecycle,
+  and causal-propagation dimensions. It is separate from severity.
 - **Evidence acquisition run:** A source/entity-scoped operation that acquires
   or extracts reusable evidence independently of profile analysis. It is
   user-started or a configured child of a user-initiated analysis; local
@@ -91,10 +102,6 @@ This glossary supplies short definitions. Normative semantics live in the
   adjustments cannot occur; both remain explicit variance.
 - **Hypothesis:** A proposed interpretation that has not met the declared
   finding threshold.
-- **Impact class:** Kind of consequence a finding may cause, kept separate from
-  the affected game area, technical modification surface, severity,
-  confidence, gameplay scope, and blast radius. Exact classes depend on
-  RQ-036.
 - **Installation snapshot:** Logically immutable manifest of one selected MO2
   profile's physical and effective installation state. It excludes mutable
   assumptions and scan configuration.
@@ -137,7 +144,7 @@ This glossary supplies short definitions. Normative semantics live in the
   evidence, maturity, severity, disposition, failure, and coverage conditions
   affect readiness. It is not analyzer output or semantic analysis context.
 - **Review priority:** Presentation/routing value derived from severity,
-  confidence, blast radius, intent, reversibility, and maturity without
+  confidence, effect extent, intent, reversibility, and maturity without
   replacing those dimensions.
 - **Recommendation:** Proposed remediation, investigation, or validation step.
 - **Review annotation:** User-authored review history that does not become
@@ -184,10 +191,20 @@ This glossary supplies short definitions. Normative semantics live in the
 - **Source refresh:** Explicit reacquisition of selected live external evidence,
   producing a new acquisition result/source revision when the content or
   retrieval changes; it is separate from clean analytical recomputation.
-- **Technical modification surface:** Provisional classification of how a mod
+- **Technical modification surface:** Versioned taxonomy classification of how
+  a mod
   changes effective state, such as records, assets, scripts, configuration,
-  native components, or generated output. It is not automatically the same as
-  the affected game area or consequence; exact categories depend on RQ-036.
+  native components, or generated output. Normative values use the accepted
+  `surface.*` and `delivery.*` facets and do not imply an affected area or
+  consequence.
+- **Taxonomy assignment:** Versioned classification attached to a specific
+  subject with an axis/facet, optional code, applicability state, role,
+  evidence, conditions, and provenance. Unknown, unsupported, unmapped, and
+  not-applicable are distinct states rather than catch-all codes.
+- **Typed index:** Snapshot-bound lookup structure over one declared local
+  evidence surface, such as path providers, record overrides, FormKey links,
+  script APIs, configuration references, or documentation claims. Its type and
+  qualification boundary determine which causal joins are valid.
 - **Test session:** An installation-snapshot-bound tracking window associated
   with a game/test execution and used to correlate logs and observations with
   the correct physical state. Separately imported evidence references a test

@@ -112,9 +112,12 @@ Quality and anti-bias requirements:
 - Do not generalize from one mod, fixture, provider, tool version, or local
   environment without labeling the limitation.
 - Preserve unknown and unsupported outcomes as results.
-- If this investigation touches the RQ-036 taxonomy, keep declared purpose,
-  technical modification surface, affected game area, consequence, severity,
-  symptom, and effect extent distinct.
+- If this investigation touches taxonomy-bound data, read and use the accepted
+  `infinium.skyrim-se.mod-impact-taxonomy/0.1.0`. Keep declared purpose and
+  intended target, technical modification surface, affected area,
+  consequence, severity, symptom, and effect extent distinct. Treat taxonomy
+  mappings as coverage/routing data rather than causal truth, and propose a
+  versioned taxonomy change instead of inventing local labels.
 - If this investigation touches an integration or external tool, identify all
   observed writes/cache/temp behavior and whether the operation preserves
   AUTH-001 through AUTH-003.

@@ -1,7 +1,7 @@
 # Architecture overview
 
 Status: Draft  
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-26
 
 No implementation architecture, process topology, or application stack is
 accepted. This document maps required responsibilities and records one leading
@@ -57,7 +57,7 @@ Responsibilities:
 - cached evidence and dependencies;
 - permitted private source bodies/excerpts while required by configured
   extraction, analysis, synthesis, provenance, audit, replay, or refresh;
-- claims and provenance;
+- claims, versioned taxonomy assignments, and provenance;
 - logical finding/case identities and revisions/lineage;
 - candidates, hypotheses, and recommendations;
 - assumptions, dispositions, and suppression;
@@ -88,9 +88,10 @@ Unsupported or failed adapters produce coverage records rather than invented
 fallback data.
 
 These responsibilities and adapter boundaries are architectural groupings, not
-categories of mods or affected Skyrim areas. Once the taxonomy resulting from
-RQ-036 is accepted, components and adapters must declare the taxonomy coverage
-they enable without assuming that one adapter owns one game area.
+categories of mods or affected Skyrim areas. Components and adapters must
+declare the coverage they enable under the accepted
+[Skyrim SE mod-impact taxonomy](../product/mod-impact-taxonomy.md) without
+assuming that one adapter owns one affected area.
 
 ## Conceptual flow
 
@@ -101,10 +102,13 @@ Approved sources
                                                     |
 Selected MO2 profile                               |
   -> Installation snapshot + context + config      |
-  -> Deterministic tools and local indexes --------+
+  -> Typed local indexes and causal joins ---------+
+  -> Deterministic mandatory candidates -----------+
                                                     |
                                                     v
-                           Candidate interactions and evidence graph
+             Canonical candidate interactions and typed evidence graph
+                                      |
+                           staged, evidence-bound routing
                                       |
                                       +----> Targeted LLM investigations
                                       |
@@ -148,6 +152,11 @@ accepts the stack.
 The chosen architecture must support:
 
 - exactness before inference;
+- candidate-first analysis without naïve all-pairs model comparison;
+- snapshot-bound typed indexes, causal joins, canonical participant identity,
+  explicit negatives/gaps, and score-independent mandatory lanes;
+- taxonomy-backed routing and coverage without treating taxonomy labels as
+  causal truth;
 - explicit authority boundaries;
 - long-running resumable jobs;
 - high-end profile scale;

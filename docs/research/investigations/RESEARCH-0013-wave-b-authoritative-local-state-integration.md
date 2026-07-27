@@ -3,7 +3,7 @@
 Status: Accepted  
 Date: 2026-07-25  
 Accepted: 2026-07-25  
-Last reviewed: 2026-07-25  
+Last reviewed: 2026-07-26
 Researcher: Codex agent  
 Review type: Independent Wave B integration  
 Primary questions: RQ-001 through RQ-007 and RQ-014  
@@ -350,8 +350,9 @@ accepted by these ADRs.
   needs them.
 - Do not derive mod-purpose, affected-game-area, consequence, severity,
   symptom, or effect-extent categories from MO2 object types, plugin record
-  groups, file extensions, or adapter ownership. RQ-036 remains authoritative
-  for that taxonomy.
+  groups, file extensions, or adapter ownership. The separately accepted
+  [Skyrim SE mod-impact taxonomy](../../product/mod-impact-taxonomy.md) is
+  authoritative for those classifications.
 
 ### Source registry
 

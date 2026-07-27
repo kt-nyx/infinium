@@ -10,14 +10,15 @@ Before research, planning, architecture, or implementation work:
 1. `docs/README.md`
 2. `docs/product/product-definition.md`
 3. `docs/product/requirements.md`
-4. `docs/product/workflows.md`
-5. `docs/product/domain-model.md`
-6. `docs/product/severity-confidence-and-coverage.md`
-7. `docs/product/analysis-catalog.md`
-8. `docs/product/scope-and-milestones.md`
-9. `docs/architecture/overview.md`
-10. `docs/architecture/data-and-trust-model.md`
-11. Relevant accepted ADRs under `docs/architecture/decisions/`
+4. `docs/product/mod-impact-taxonomy.md`
+5. `docs/product/workflows.md`
+6. `docs/product/domain-model.md`
+7. `docs/product/severity-confidence-and-coverage.md`
+8. `docs/product/analysis-catalog.md`
+9. `docs/product/scope-and-milestones.md`
+10. `docs/architecture/overview.md`
+11. `docs/architecture/data-and-trust-model.md`
+12. Relevant accepted ADRs under `docs/architecture/decisions/`
 
 Then read the task-specific material:
 

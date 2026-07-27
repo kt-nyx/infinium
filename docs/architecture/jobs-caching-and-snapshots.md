@@ -1,7 +1,7 @@
 # Jobs, caching, and snapshots
 
 Status: Draft  
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-26
 
 This document records required behavior. Storage technology and scheduling
 implementation remain undecided.
@@ -96,6 +96,21 @@ Every node records:
 - failures and retries;
 - checkpoint;
 - coverage.
+
+## Candidate-work contract
+
+The exact database, process, and scheduler mechanics remain Wave E decisions,
+but Wave C accepted the logical candidate-work boundary. Candidate generation
+uses snapshot-bound typed indexes and causal joins, preserves canonical
+participants and join provenance, records matched negatives and coverage gaps,
+and keeps deterministic/mandatory lanes independent of ranking scores. Scores
+may order eligible work within a lane; they may not remove mandatory work or
+turn taxonomy, labels, filenames, locations, or bare mod pairs into causal
+evidence.
+
+Progress denominators must describe the real populations and joins exercised
+by each analyzer. A candidate count without its eligible population, excluded
+or unsupported population, and lane provenance is not sufficient coverage.
 
 An analysis run is snapshot/context/scan-configuration-bound. An independent
 evidence acquisition run is instead bound to a source/entity/version request,

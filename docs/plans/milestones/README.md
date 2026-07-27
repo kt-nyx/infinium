@@ -1,17 +1,18 @@
 # Milestone plans
 
 Status: Draft  
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-26
 
 The M0 research plan is accepted and active. No implementation milestone plan
 has been accepted.
 
-Wave A is complete and Gate A is met. Wave B's bounded investigations and
-independent integration review are complete and accepted; Gate B is met with
-documented non-blocking gaps. ADR-0008 through ADR-0011 accept the Wave B
-integration boundaries. The application/process/storage implementation
-architecture remains unaccepted, and the named conformance cases remain
-unpassed.
+Waves A through C have completed investigations and accepted integrated
+dispositions. Gates A and B are met. Gate C still requires the exact
+loose-only FaceGen qualification and pinned EVAL-0016/EVAL-0017 real-mod
+cases. ADR-0008 through ADR-0011 accept the Wave B integration boundaries,
+while taxonomy version `0.1.0` records Wave C's normative classification
+result. The application/process/storage implementation architecture remains
+unaccepted, and the named conformance/evaluation cases remain unpassed.
 
 Current plans:
 

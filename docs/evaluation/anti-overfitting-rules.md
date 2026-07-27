@@ -1,7 +1,7 @@
 # Anti-overfitting rules
 
 Status: Proposed  
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-26
 
 The first semantic proof uses an NPC appearance-versus-behavior conflict because
 it exercises many product capabilities. It does not define the product's scope.
@@ -36,9 +36,10 @@ fixture-specific semantic exceptions.
 - Test malformed and unsupported data.
 - Test ambiguous purpose and require abstention or an intent question.
 - Validate at least one materially different non-NPC technical surface or
-  affected game area before declaring the generic mechanism proven. The exact
-  classification follows RQ-036; “non-NPC” is only the current proof-planning
-  shorthand.
+  affected game area before declaring the generic mechanism proven. Exact
+  classification uses the accepted
+  [Skyrim SE mod-impact taxonomy](../product/mod-impact-taxonomy.md);
+  “non-NPC” is only the current proof-planning shorthand.
 
 ## Generic and domain responsibilities
 

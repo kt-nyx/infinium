@@ -1,7 +1,7 @@
 # Data and trust model
 
 Status: Draft  
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-26
 
 ## Principle
 
@@ -67,6 +67,13 @@ one source artifact may contribute to several local entities. MO2 metadata,
 retained installer archives, and installed files provide mapping evidence; no
 single field is universal identity proof. Missing exact FOMOD choices or manual
 installation history is an explicit gap rather than a reconstructed fact.
+
+A taxonomy assignment is a versioned derived classification, not a new
+evidence class or independent assertion of truth. It retains its subject,
+axis/facet, applicability state, classification role, evidence, conditions,
+confidence reference, and derivation provenance. Declared, observed,
+predicted, and established roles remain distinct; taxonomy codes never replace
+causal evidence, severity, confidence, or authority.
 
 Each transition records the applicable analyzer, ruleset, tool, prompt, model,
 and evidence identities, including explicit absence of LLM involvement.

@@ -1,36 +1,36 @@
 # Severity, confidence, maturity, coverage, and readiness
 
 Status: Accepted  
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-26
 
 This document separates concepts that must not be collapsed into one score.
-That separation is normative for product design. Exact category values for
-declared purpose/intended feature area, technical modification surfaces,
-affected game areas, impact classes, and effect extent remain provisional pending
-[RQ-036](../research/open-questions.md), while user-facing/release thresholds
-require evaluation data.
+That separation is normative for product design. Category values for declared
+purpose and intended target, technical modification surface, affected area,
+consequence type, and effect extent are governed by the accepted
+[Skyrim SE mod-impact taxonomy](mod-impact-taxonomy.md), while
+user-facing/release thresholds still require evaluation data.
 
-## Research-dependent classification axes
+## Taxonomy-bound classification axes
 
-Infinium is likely to need several distinct ways to classify an interaction:
+Infinium classifies an interaction through five independent axes:
 
-- the **declared mod purpose or intended feature area** supported by author
+- the **declared purpose kind and intended target** supported by author
   documentation or other applicable intent evidence;
 - the **technical modification surface** through which a mod changes effective
   state, such as records, assets, scripts, configuration, native components,
   or generated output;
 - the **affected game system or content area**, such as progression, actors,
   world content, combat, interface, or presentation;
-- the **consequence or impact class**, describing what could go wrong;
-- the **effect extent**, represented through gameplay scope and blast radius.
+- the **consequence type**, describing what could go wrong;
+- the **effect extent**, split into subject, spatial, persistence, and causal
+  propagation facets.
 
-These are initial conceptual axes, not accepted closed taxonomies. RQ-036 must
-determine whether they remain separate, need further subdivision, or require
-different names and relationships. Hosting-site categories, record types, and
-file formats must not be treated automatically as authoritative mod intent,
-player-visible game areas, or consequences.
+The accepted taxonomy is versioned, multi-label, and open to evidence-backed
+extension. Hosting-site categories, record types, and file formats must not be
+treated automatically as authoritative mod intent, player-visible game areas,
+or consequences.
 
-The resulting versioned classifications will be used for:
+These versioned classifications will be used for:
 
 - analyzer scope, exclusions, capability declarations, and coverage gaps;
 - candidate generation, interaction routing, investigation breadth, and review
@@ -42,25 +42,14 @@ The resulting versioned classifications will be used for:
 - evaluation-corpus stratification, generalization checks, analyzer maturity,
   and roadmap decisions.
 
-## Impact class
+## Consequence type
 
-Impact class is intended to describe what kind of consequence may occur, not
+Consequence type describes what kind of consequence may occur, not
 which record type was edited, which game system was touched, how severe the
-result is, or how broadly it manifests. Product discovery produced these
-candidate examples:
-
-- startup, loading, save-integrity, or engine-level failure;
-- progression or persistent-world-state failure;
-- gameplay-system or behavioral failure;
-- lost content or broken mechanics;
-- localized functional failure;
-- visual or audio inconsistency;
-- cosmetic preference conflict;
-- maintenance, reproducibility, or optimization concern.
-
-This is neither a definitive list nor an ordering. Research may split, merge,
-rename, or reject these candidates. Severity, gameplay scope, blast radius,
-confidence, and user intent remain separate dimensions.
+result is, or how broadly it manifests. The normative values are the
+`consequence.*` codes in the accepted
+[taxonomy](mod-impact-taxonomy.md). Severity, faceted effect extent,
+confidence, symptoms, and user intent remain separate dimensions.
 
 ## Severity
 
@@ -121,7 +110,7 @@ replacing:
 
 - severity;
 - confidence;
-- blast radius;
+- faceted effect extent, including causal propagation;
 - affected user intent;
 - reversibility;
 - analyzer maturity;
@@ -147,10 +136,10 @@ such as:
 - configured generators with a named analyzer;
 - analyzers completed, failed, skipped, limited, or unsupported.
 
-These are operational denominator examples, not a complete list of mod types or
-affected game areas. Once the taxonomy resulting from RQ-036 is accepted,
-coverage reporting must map applicable denominators and unevaluated areas to
-that versioned taxonomy while retaining raw population definitions.
+These are operational denominator examples, not a complete list of mod types
+or affected areas. Coverage reporting must map applicable denominators and
+unevaluated areas to the accepted taxonomy version while retaining raw
+population definitions.
 
 Infinium must not combine unlike dimensions into a single "93% analyzed" or
 "safety coverage" number. It may show several labeled percentages/counts and a
@@ -219,8 +208,8 @@ marked action-required by the user does affect readiness.
 
 Research and evaluation must still define:
 
-- the accepted game-area, technical-surface, impact-class, and effect-extent
-  taxonomies from RQ-036;
+- calibration and evaluation coverage for the accepted technical-surface,
+  affected-area, consequence, and effect-extent codes;
 - exact evidence thresholds by analyzer;
 - which maturity levels can block readiness at M3 and M4;
 - how material coverage gaps affect readiness;

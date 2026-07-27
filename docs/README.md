@@ -1,7 +1,7 @@
 # Infinium documentation
 
 Status: Draft  
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-26
 
 This directory is the authoritative entry point for the rebuilt Infinium
 project. It records product intent, accepted decisions, research, evaluation
@@ -12,15 +12,16 @@ specification.
 
 1. [Product definition](product/product-definition.md)
 2. [Requirements](product/requirements.md)
-3. [Workflows](product/workflows.md)
-4. [Domain model](product/domain-model.md)
-5. [Severity, confidence, maturity, coverage, and readiness](product/severity-confidence-and-coverage.md)
-6. [Analysis catalog](product/analysis-catalog.md)
-7. [Scope and milestones](product/scope-and-milestones.md)
-8. [Architecture overview](architecture/overview.md)
-9. [Architecture decisions](architecture/decisions/README.md)
-10. [Evaluation strategy](evaluation/evaluation-strategy.md)
-11. [Open research questions](research/open-questions.md)
+3. [Skyrim SE mod-impact taxonomy](product/mod-impact-taxonomy.md)
+4. [Workflows](product/workflows.md)
+5. [Domain model](product/domain-model.md)
+6. [Severity, confidence, maturity, coverage, and readiness](product/severity-confidence-and-coverage.md)
+7. [Analysis catalog](product/analysis-catalog.md)
+8. [Scope and milestones](product/scope-and-milestones.md)
+9. [Architecture overview](architecture/overview.md)
+10. [Architecture decisions](architecture/decisions/README.md)
+11. [Evaluation strategy](evaluation/evaluation-strategy.md)
+12. [Open research questions](research/open-questions.md)
 
 ## Supporting document map
 
@@ -78,8 +79,9 @@ Every material document should include a status and last-reviewed date.
 
 ## Current project state
 
-- The seven product documents in `product/` were accepted as the authoritative
-  product baseline on 2026-07-25.
+- The eight accepted documents under `product/`, including the
+  [Skyrim SE mod-impact taxonomy](product/mod-impact-taxonomy.md), form the
+  authoritative product baseline.
 - The detailed [M0 research-foundation plan](plans/milestones/M0-research-foundation.md)
   was accepted on 2026-07-25 and is the active research plan.
 - Wave A research has completed its initial investigations and integration
@@ -91,6 +93,10 @@ Every material document should include a status and last-reviewed date.
   M0 research progression. Reviewed conformance specifications are a
   prerequisite for the M1 implementation plan; executing them gates M1
   completion and support claims over the affected surfaces.
+- Wave C's ten bounded investigations and owner disposition are complete and
+  accepted. Taxonomy version `0.1.0` and the EVAL-0032/EVAL-0086
+  specifications are accepted. Gate C still requires the exact loose-only
+  FaceGen qualification and pinned EVAL-0016/EVAL-0017 real-mod cases.
 - ADR-0001 through ADR-0011 were accepted on 2026-07-25.
 - Infinium uses GPLv3-family strong copyleft. MO2 and LOOT remain
   user-installed; ADR-0007 excludes xEdit completely. ADR-0008 through

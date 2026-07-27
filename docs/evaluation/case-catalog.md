@@ -1,7 +1,7 @@
 # Evaluation case catalog
 
 Status: Draft  
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-26
 
 No executable evaluation fixtures have been created for the rewrite. This
 catalog records planned cases; each requires its own reviewed specification
@@ -16,13 +16,13 @@ the full case specification has not yet received the Wave F evaluation-baseline
 acceptance and no fixture has passed. It is not evidence of implementation
 conformance or supported product coverage.
 
-The `Domain` values below are provisional case-catalog descriptors for planning
-and navigation. They are not an accepted taxonomy of Skyrim game areas,
-technical modification surfaces, or consequences. Case specifications shall
-adopt the accepted versioned taxonomy resulting from RQ-036 without rewriting
-what these historical planning labels meant.
+The `Domain` values below are historical case-catalog descriptors for planning
+and navigation. They are not codes from the accepted
+[Skyrim SE mod-impact taxonomy](../product/mod-impact-taxonomy.md). Case
+specifications shall add versioned taxonomy assignments without rewriting what
+these historical planning labels meant.
 
-| ID | Type | Provisional domain label | Expected purpose | Requirements | Status |
+| ID | Type | Historical planning label | Expected purpose | Requirements | Status |
 |---|---|---|---|---|---|
 | EVAL-0001 | Synthetic positive | NPC/cross-layer | Appearance mod unintentionally reverts behavioral edits | ANALYSIS-004, ANALYSIS-005, FIND-003 | Planned |
 | EVAL-0002 | Synthetic negative | NPC/cross-layer | Structurally similar reversion is documented/intentional | ANALYSIS-003, ANALYSIS-004, EVID-006, INTENT-003 | Planned |
@@ -55,7 +55,7 @@ what these historical planning labels meant.
 | EVAL-0029 | Synthetic positive | Runtime evidence | Test evidence alone mutates nothing; manual reanalysis creates linked finding/case revisions | VALID-001, VALID-002, VALID-003, VALID-005 | Planned |
 | EVAL-0030 | Synthetic boundary | Severity/confidence/maturity | Plausible catastrophic impact retains severity but does not auto-block below evidence/maturity policy; maturity-based presentation never relabels a finding as a lead or a lead as a finding, and review confirmation alone cannot promote an under-threshold lead without additional qualifying typed evidence | FIND-001, FIND-009 | Planned |
 | EVAL-0031 | Synthetic boundary | Freshness | Refresh-vs-reuse choice changes execution configuration; resolved source revisions change run inputs; stale-evidence acceptance changes semantic context | DOC-009, SNAP-001 | Planned |
-| EVAL-0032 | Synthetic scale | Candidate selection | Indexed selection retains planted interactions without naïve all-pairs LLM calls, and every candidate retains its originating analysis run/analyzer, rationale, supporting evidence, scoped population, and validity dependencies | EVID-005, ANALYSIS-017, OPS-004 | Planned |
+| EVAL-0032 | Synthetic scale | Candidate selection | Snapshot-bound typed indexes and causal joins retain planted interactions without naïve all-pairs LLM calls; canonical participants, join/rationale provenance, matched negatives, unsupported/gap populations, and scope dependencies are preserved; score perturbation cannot remove deterministic or mandatory-lane work | EVID-005, ANALYSIS-017, OPS-004 | Specification accepted 2026-07-25; independent execution pending |
 | EVAL-0033 | Synthetic adversarial | Untrusted content | Prompt/HTML/tool-output instructions cannot grant authority or alter analysis policy | SEC-001 | Planned |
 | EVAL-0034 | Synthetic adversarial | Credentials/context minimization | Secrets and unnecessary usernames, absolute paths, and unrelated values are absent from prompts, logs, traces, and exports while required non-secret context remains usable; confirmed credential deletion prevents queued/new/retry or reserved-but-undispatched use, releases unused budget reservation, and leaves uncancellable in-flight work disclosed | SEC-002, SEC-004, AI-003, AI-004 | Planned |
 | EVAL-0035 | Synthetic adversarial | Privileged boundary | Out-of-scope path, URL, command, and tool arguments are rejected | AUTH-002, SEC-003 | Planned |
@@ -109,7 +109,7 @@ what these historical planning labels meant.
 | EVAL-0083 | Synthetic/integration provenance | End-to-end provenance | A material conclusion retains applicable versions/times, identities or fingerprints, supporting and contradicting evidence, and an inspectable processing chain across every exercised local, deterministic-tool, external-claim, and model boundary; deleted or unavailable inputs create honest audit/replay gaps rather than fabricated provenance | EVID-002, SNAP-006, AI-006 | Planned for M1 scope and extended with each new boundary |
 | EVAL-0084 | Synthetic positive/negative | Causal case grouping | Multiple findings with one supported likely cause group into one case, while findings sharing only a mod or record family but having distinct causes remain separate; lead-only investigations remain visibly distinct from supported cases | FIND-002 | Planned for M1 |
 | EVAL-0085 | Synthetic boundary | Coverage/readiness presentation | Different coverage populations retain labeled denominators and states rather than one combined analyzed/safety percentage; no-findings output remains qualified by gaps and uncertainty and never claims the playthrough is safe | PROD-004, COVER-001, COVER-002, COVER-003 | Planned for M1 output and M2 presentation |
-| EVAL-0086 | Synthetic/controlled real | Taxonomy classification | Representative single-area, cross-cutting, multi-surface, and unknown/unsupported interactions use the accepted taxonomy without conflating declared purpose, hosting-site category, technical modification surface, affected game area, consequence, severity, or effect extent; historical outputs retain their taxonomy version | FIND-001, COVER-002, ANALYSIS-016 | Planned after RQ-036 |
+| EVAL-0086 | Synthetic/controlled real | Taxonomy classification | Representative single-area, cross-cutting, multi-surface, and assigned/unknown/unsupported/unmapped/not-applicable interactions use the accepted taxonomy and declared/observed/predicted/established roles without conflating declared purpose, hosting-site category, technical modification surface, affected game area, consequence, severity, confidence, authority, or effect extent; historical outputs retain their taxonomy version | FIND-001, COVER-002, ANALYSIS-016 | Specification accepted 2026-07-25; execution pending |
 
 ## First proof acceptance
 

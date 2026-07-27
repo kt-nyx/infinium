@@ -1,7 +1,7 @@
 # Security and privacy
 
 Status: Draft  
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-26
 
 ## Security posture
 
@@ -40,6 +40,25 @@ are untrusted data.
 - Restrict navigation and external links.
 - Treat prompt injection as data contamination, not instruction.
 - Validate every model-emitted identifier and citation.
+
+## Untrusted local artifacts and parser safety
+
+Installed plugins, archives, NIF/PEX/SWF files, DLLs, configuration, generated
+output, and other mod artifacts are untrusted binary or structured inputs.
+
+- Never load an installed DLL, execute PEX/SWF, or invoke embedded content to
+  discover behavior.
+- Enforce declared file-size, member-count, nesting/depth, allocation, string,
+  and traversal limits appropriate to each format.
+- Normalize and authorize every path; archive members and references cannot
+  escape the resolved snapshot or approved product-controlled temporary area.
+- Parsing must be cancellable or time-bounded and must return explicit
+  malformed, unsupported, or limited states.
+- Native or crash-prone parsers should be isolated behind a bounded worker
+  process when architecture research selects the topology.
+- Wave C selected no production NIF parser dependency. A future choice requires
+  version/licence review, independent malformed-input fixtures, and a positive
+  allowlist of supported shapes before product coverage is claimed.
 
 Nexus acquisition follows ADR-0005: documented supported APIs only, with no
 page-scraping or browser-automation fallback. A negative Nexus response or

@@ -2,7 +2,7 @@
 
 Status: Completed — recommendation accepted by ADR-0009
 Date: 2026-07-25
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-26
 Researcher: Codex agent
 Primary research question: RQ-004
 M0 wave: B — Authoritative local state and deterministic ground truth
@@ -86,7 +86,8 @@ record-family taxonomy, or architecture.
 ### Out of scope
 
 - accepting the proposed Bethesda semantic layer ADR;
-- defining the final RQ-036 modification-surface or game-area taxonomy;
+- defining the separate mod-impact taxonomy, which was later accepted through
+  RQ-036 and remains outside this report's authority;
 - claiming correctness for every generated record type or field merely
   because an API type exists;
 - using `Brain Blast Destruction 2024` as a correctness, performance, or

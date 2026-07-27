@@ -1,7 +1,7 @@
 # Evaluation strategy
 
 Status: Draft  
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-26
 
 Infinium is not trustworthy because it produces plausible reports. It becomes
 trustworthy only when evidence reconstruction, candidate selection, semantic
@@ -58,7 +58,11 @@ all-pairs comparison. Track:
 - candidate volume;
 - irrelevant candidate rate;
 - cost/latency contribution;
-- reason selected.
+- reason selected;
+- canonical participant and causal-join correctness;
+- mandatory-lane membership independent of ranking-score perturbation;
+- explicit matched-negative, unsupported, and gap handling;
+- coverage denominators for every exercised typed index and join.
 
 ### 4. Documentation extraction
 
@@ -80,7 +84,7 @@ Evaluate:
 - matched intentional interaction not misclassified;
 - supporting and contradicting evidence;
 - correct cause grouping;
-- blast radius and symptoms;
+- faceted effect extent, causal propagation, and symptoms;
 - useful remediation or validation;
 - uncertainty.
 
@@ -121,10 +125,11 @@ or deletion produces accurate dependency and gap reporting.
 
 ## Taxonomy-dependent evaluation
 
-After the taxonomy resulting from RQ-036 is accepted, evaluation selection and
-reporting must use its versioned distinctions among declared purpose/intended
-feature area, technical modification surface, affected game system/content
-area, consequence type, and effect extent. The corpus should stratify positive,
+Evaluation selection and reporting must use the accepted
+[Skyrim SE mod-impact taxonomy](../product/mod-impact-taxonomy.md) and its
+versioned distinctions among declared purpose and intended target, technical
+modification surface, affected game system or content area, consequence type,
+and effect extent. The corpus should stratify positive,
 matched-negative, boundary, and unsupported cases across those dimensions
 rather than treating hosting-site categories, record families, or the first
 NPC proof as a complete inventory of game behavior. Metrics must disclose
@@ -159,8 +164,8 @@ Exact thresholds are set after a baseline corpus exists.
 - false-positive and abstention rate;
 - case grouping accuracy;
 - classification accuracy and evaluation coverage across the accepted
-  declared-purpose, technical-surface, affected-game-area, impact-class, and
-  effect-extent taxonomies;
+  declared-purpose, technical-surface, affected-area, consequence, and
+  effect-extent taxonomy axes;
 - cross-run finding/case reconciliation accuracy, including false-merge and
   false-split rates;
 - supported-case versus lead-only classification/count correctness;

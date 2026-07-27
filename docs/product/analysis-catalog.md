@@ -1,14 +1,14 @@
 # Analysis catalog
 
 Status: Accepted  
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-26
 
 This is the living inventory of desired analysis capabilities. Nothing in this
 catalog implies that an analyzer currently exists. Initial status for every
 entry is **Not implemented**. The section headings group product capabilities
-for planning; they are not an accepted taxonomy of technical modification
-surfaces, affected game areas, consequences, or effect extent. One analyzer or
-interaction may cross several sections.
+for planning; they do not replace the accepted
+[Skyrim SE mod-impact taxonomy](mod-impact-taxonomy.md). One analyzer or
+interaction may cross several sections and taxonomy codes.
 
 Each future analyzer specification must state:
 
@@ -88,8 +88,8 @@ Primary goals:
 - incompatible combinations unsupported by one winning-record view.
 
 Development should prioritize structural and logic impact over cosmetic impact.
-The following candidate semantic families are discovery examples, not a
-definitive taxonomy of Skyrim game areas or mod effects:
+The following semantic families are analyzer-roadmap examples, not taxonomy
+codes or a definitive inventory of Skyrim game areas or effects:
 
 - startup/save/global engine-related records;
 - quests, dialogue, scenes, aliases, and conditions;
@@ -102,12 +102,22 @@ definitive taxonomy of Skyrim game areas or mod effects:
 - weather, lighting, and image spaces;
 - gamesettings and globals.
 
-RQ-036 must establish the broader declared-purpose/intended-feature,
-technical-surface, affected-game-area, consequence, and effect-extent
-taxonomies. RQ-024 separately determines which semantic record families and
-field relationships should receive named analyzer support after the first
-proof. Neither research result may assume that hosting-site mod categories or
+The accepted [taxonomy](mod-impact-taxonomy.md) supplies the broader
+declared-purpose, technical-surface, affected-area, consequence, and
+effect-extent vocabulary. The accepted RQ-024 roadmap separately determines
+which semantic record families and field relationships should receive named
+analyzer support after the first proof. Neither hosting-site categories nor
 record families map one-to-one to author intent or player-visible game areas.
+
+The accepted implementation order is:
+
+1. generic override, changed-field, reference-resolution, feature-graph, and
+   stale-value/reversion substrate;
+2. the deliberately narrow NPC proof;
+3. placed-reference (`REFR`) placement, activation, enable-parent, and linked
+   relationships, plus a narrow forced-reference alias relationship; and
+4. broader quest, item/crafting, world, and other semantic families only after
+   the earlier shapes are independently qualified.
 
 Generic infrastructure must not encode the first NPC proof case as the whole
 domain.
@@ -125,7 +135,19 @@ illustrative cross-layer graphs, not an exhaustive category list:
 - plugin records, assets, configuration, runtime components, and generated
   output.
 
-Estimate gameplay blast radius and predicted symptoms.
+Estimate the applicable effect-extent facets—direct-subject breadth, spatial
+breadth, persistence/lifecycle breadth, and causal propagation—and predicted
+symptoms. Do not collapse them into one “blast radius” value.
+
+### Compiled Papyrus boundary
+
+Compiled-script analysis is bounded static analysis. It may parse allowlisted
+PEX structure and VMAD attachments, index defined/imported symbols, script and
+property references, and participate in causal joins when those relationships
+are supported by retained evidence. It must not claim complete source
+reconstruction, dynamic call behavior, runtime ordering, latent-state
+behavior, performance cost, or gameplay outcome from bytecode structure alone.
+PEX, VMAD, SWF, and related artifacts are never executed to analyze them.
 
 ## F. Asset and archive problems
 
@@ -143,6 +165,11 @@ Report only meaningful conditions such as:
 - unsupported assets contributing to a broader case.
 
 Use path indexing before expensive content hashing or extraction.
+The first typed asset slice is NIF reference completeness. Loose-file FaceGen
+coverage additionally requires exact full/light plugin-origin, race/template,
+provider, and shadowing semantics that remain a Gate C qualification item;
+archive FaceGen parity is independently gated. Wave C selected no production
+NIF parser dependency, so parser choice and qualification remain later work.
 
 ## G. Patch effectiveness
 
@@ -179,6 +206,12 @@ Support only the explicitly pinned Skyrim SE runtime version initially.
 Unsupported variants fail clearly rather than receiving best-effort
 conclusions.
 
+Inspection is static and provider-aware. Portable Executable metadata,
+version resources, manifests, imports/exports, and documented component
+relationships may support identity or compatibility evidence, but Infinium
+never loads an installed DLL for inspection. Filename or embedded version alone
+does not prove component identity, compatibility, or that the game will use it.
+
 ## I. Generated output
 
 Named modules may support:
@@ -186,13 +219,23 @@ Named modules may support:
 - Pandora, Nemesis, and FNIS;
 - BodySlide;
 - Synthesis;
-- DynDOLOD, TexGen, and xLODGen;
+- DynDOLOD and TexGen;
 - grass cache;
 - other widely used patchers/generators.
 
 Named analyzers should understand tool version, inputs, outputs, manifests, and
-regeneration conditions. Unsupported generators receive generic presence,
-provider, and freshness observations plus explicit coverage gaps.
+regeneration conditions for an explicitly version-pinned supported subset.
+Wave C found no surveyed generator with one complete, stable, authoritative
+manifest contract covering all relevant inputs and outputs. Unsupported
+generators receive only generic presence, provider, and bounded structural
+observations plus explicit coverage gaps; freshness remains unknown unless a
+separately qualified complete dependency closure proves it.
+
+xLODGen is an xEdit mode and therefore has no named integration, adapter,
+detection, configuration, output-parsing, or capability role under ADR-0007.
+Generic analysis of effective terrain or object-LOD files remains permitted
+when it neither attributes them to xLODGen nor depends on xEdit-specific
+artifacts or behavior.
 
 ## J. Configuration
 
@@ -207,6 +250,12 @@ Initially lower priority but potentially high impact:
 - targeted LLM investigation of unfamiliar relevant configuration.
 
 Do not claim semantic understanding of arbitrary configuration.
+
+The accepted roadmap begins with exact-byte/provider/syntax indexing, then
+adds separate named schemas/analyzers for MCM Helper; SPID, KID, and BOS; and
+OAR. These ecosystems do not share one generic semantic contract. File-format
+validity, winner/provider state, schema validity, condition-language semantics,
+and Skyrim-domain meaning remain separate qualification layers.
 
 ## K. Documentation intelligence
 

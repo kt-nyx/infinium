@@ -1,10 +1,15 @@
 # Product requirements
 
 Status: Accepted  
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-26
 
 Accepted amendments:
 
+- 2026-07-25 — Wave C owner disposition
+  [RESEARCH-0024](../research/investigations/RESEARCH-0024-wave-c-analysis-taxonomy-and-scale-integration.md)
+  accepts taxonomy `0.1.0`, the logical typed-index/causal-join candidate
+  contract, and the bounded root/generated/configuration/PEX/asset/record
+  roadmaps. Exact supported shapes and evaluation execution remain gated.
 - 2026-07-25 — Wave B and ADR-0008 through ADR-0011 resolve RQ-001 through
   RQ-007 and RQ-014 for M0. The initial technical boundary is MO2 `2.5.2`
   quiescent reconstruction with explicit profile binding; exact Steam
@@ -141,7 +146,8 @@ components. Analyzer depth for each domain remains governed by its specific
 requirements; unsupported semantics shall appear as coverage gaps rather than
 being implied by reconstruction alone. These are required state/input surfaces,
 not an exhaustive or mutually exclusive taxonomy of mod types or affected game
-areas. The accepted taxonomy resulting from RQ-036 shall map them without
+areas. The accepted
+[Skyrim SE mod-impact taxonomy](mod-impact-taxonomy.md) maps them without
 weakening this reconstruction scope.
 
 ### SCOPE-006 — Platform target
@@ -194,9 +200,12 @@ Priority: Must
 Delivery: M1 — Backend semantic proof
 
 Retrieved/local documentation, HTML, logs, reports, mod metadata, external-tool
-output, and model output shall be treated as untrusted data. They shall not
-grant authority, execute code, alter instructions, or reach privileged
-rendering/tool surfaces without sanitization and validation.
+output, model output, and installed binary assets or executable-format inputs
+shall be treated as untrusted data. They shall not grant authority, execute
+code, alter instructions, or reach privileged rendering/tool surfaces without
+sanitization and validation. Binary/static analyzers shall use bounded parsing
+and shall not load DLLs, execute PEX or SWF code, or invoke runtime behavior to
+discover dependencies.
 
 ### SEC-002 — Credential handling
 
@@ -518,10 +527,14 @@ suppression state without treating either as an analyzer-produced finding
 field. Originating analyzer maturity shall remain visible in evidence
 provenance rather than being treated as finding confidence. The exact
 distinction and controlled values for technical modification surfaces,
-affected game systems/content areas, impact classes, gameplay scope, and blast
-radius shall be established through RQ-036 rather than inferred from the
-initial examples. Persisted classifications shall identify the taxonomy version
-used so later refinement does not silently reinterpret historical findings.
+affected game systems/content areas, consequence types, and the faceted effect
+extent shall use the accepted
+[Skyrim SE mod-impact taxonomy](mod-impact-taxonomy.md). Persisted
+classifications shall identify the taxonomy version used so later refinement
+does not silently reinterpret historical findings. Each classification shall
+retain its subject, axis/facet, applicability state, declared/observed/
+predicted/established role, supporting evidence, conditions, and provenance.
+Unknown, unsupported, unmapped, and not-applicable shall remain distinct.
 
 ### FIND-002 — Causal case grouping
 
@@ -533,11 +546,12 @@ supported case shall contain at least one finding. A lead-only investigation
 case may group candidates/hypotheses before promotion but shall remain visibly
 distinct.
 
-### FIND-003 — Blast radius and symptoms
+### FIND-003 — Effect extent and symptoms
 
 Priority: Must
 
-Findings shall attempt to estimate gameplay blast radius and likely observable
+Findings shall attempt to estimate the applicable direct-subject, spatial,
+persistence/lifecycle, and causal-propagation facets plus likely observable
 symptoms, with explicit confidence.
 
 ### FIND-004 — Resolution or validation
@@ -687,8 +701,8 @@ status.
 
 Priority: Must
 
-Coverage shall use labeled denominators by domain or population under the
-applicable accepted taxonomy and identify the taxonomy version where
+Coverage shall use labeled denominators by taxonomy facet or source population
+under the applicable accepted taxonomy and identify the taxonomy version where
 classification affects meaning. The product shall not combine unlike
 dimensions into one overall analyzed/safety percentage.
 
@@ -808,7 +822,8 @@ rules. Changed dependencies shall trigger revalidation.
 
 The requirements below describe product capabilities and current delivery
 scope, not a closed taxonomy of mod types, technical modification surfaces, or
-affected game areas. The taxonomy resulting from RQ-036 shall map analyzers and
+affected game areas. The accepted
+[Skyrim SE mod-impact taxonomy](mod-impact-taxonomy.md) maps analyzers and
 their coverage across these capabilities; one interaction or analyzer may span
 several of them.
 
@@ -884,8 +899,11 @@ Priority: Must
 
 Delivery: M3 — Trusted personal preflight
 
-Use named analyzer modules for supported generators and generic presence,
-provenance, and freshness checks for unsupported generators.
+Use named, version-pinned analyzer modules for supported generators. For
+unsupported generators, report only generic presence, provider, and bounded
+structure observations plus explicit gaps; freshness shall remain unknown
+unless a qualified adapter can prove the relevant run, input, configuration,
+and output closure.
 
 ### ANALYSIS-011 — Configuration
 
@@ -941,10 +959,10 @@ Delivery: M1 — Backend semantic proof
 Every analyzer shall declare its supported scope/exclusions, inputs and
 dependencies, evidence and abstention thresholds, coverage semantics,
 offline/network/LLM needs, expected cost/scale, maturity, and linked evaluation
-cases. Once the taxonomy resulting from RQ-036 is accepted, scope and
-exclusions shall identify the applicable technical modification surfaces,
-affected game systems/content areas, consequence classes, and effect extents
-without claiming unsupported taxonomy coverage.
+cases. Scope and exclusions shall identify the applicable technical
+modification surfaces, affected game systems/content areas, consequence types,
+and effect-extent facets from the accepted
+[taxonomy](mod-impact-taxonomy.md) without claiming unsupported coverage.
 
 ### ANALYSIS-017 — Candidate-first LLM escalation
 
@@ -959,6 +977,12 @@ budgets, but shall not default to naïve all-pairs model comparison. Any bounded
 exception must declare its population, cost, rationale, and evaluation. Every
 candidate shall retain its originating analysis run and analyzer, selection
 rationale, supporting evidence, scoped population, and validity dependencies.
+Candidate generation shall use snapshot-bound typed indexes and qualified
+causal or dependency joins; shared taxonomy labels, filenames, locations, or
+mod pairs alone shall not establish an interaction. Canonical participant
+identity, explicit negative/gap outcomes, and lane provenance shall be
+retained. A ranking score may order work already admitted to a lane but shall
+not remove supported deterministic or mandatory work from that lane.
 
 ### ANALYSIS-018 — Inspectable change impact
 

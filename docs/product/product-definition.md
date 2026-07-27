@@ -1,10 +1,15 @@
 # Product definition
 
 Status: Accepted  
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-26
 
 Accepted amendments:
 
+- 2026-07-25 — Wave C owner disposition
+  [RESEARCH-0024](../research/investigations/RESEARCH-0024-wave-c-analysis-taxonomy-and-scale-integration.md)
+  accepts mod-impact taxonomy `0.1.0`, bounded analyzer roadmaps, the
+  synthetic-first corpus policy, and the typed-index/causal-candidate design.
+  Acceptance does not imply implemented analyzers or passed evaluations.
 - 2026-07-25 — Wave B and ADR-0008 through ADR-0011 accept version-pinned
   quiescent MO2 `2.5.2` reconstruction, explicit profile binding, the exact
   initial Steam `1.6.1170.0` runtime, bounded Mutagen `0.54.2` semantics,
@@ -70,11 +75,11 @@ Large Skyrim modlists can contain subtle incompatibilities that:
 - silently remove intended features;
 - surface only after substantial playtime.
 
-The listed mechanisms are examples of how problems can arise, not an exhaustive
-taxonomy of mod types, technical modification surfaces, or affected game areas.
-Those classifications depend on
-[RQ-036](../research/open-questions.md) and its
-[dependency map](../research/taxonomy-dependency-map.md).
+The listed mechanisms are examples of how problems can arise, not a replacement
+for the accepted
+[Skyrim SE mod-impact taxonomy](mod-impact-taxonomy.md). They map to that
+taxonomy's independent technical-surface, affected-area, consequence, and
+effect-extent axes without implying complete analyzer coverage.
 
 Manually reviewing every relevant interaction is impractical. A user needs a
 prioritized, inspectable account of likely problems before committing to a real
@@ -110,7 +115,7 @@ Infinium should:
 
 - find serious and less-serious issues that may matter to the user;
 - distinguish measured facts, external claims, hypotheses, and findings;
-- explain likely impact, blast radius, and symptoms;
+- explain likely consequence, faceted effect extent, and symptoms;
 - propose a resolution where supported;
 - otherwise propose useful validation or further investigation;
 - expose exactly what was and was not analyzed;
@@ -146,9 +151,10 @@ The LLM may:
 - explain findings;
 - propose reversible remediation or validation.
 
-These responsibility lists assign evidence authority and processing boundaries;
-they are not a taxonomy of mod purposes, game areas, or consequences. Analyzer
-and coverage reporting will map them to the accepted result of RQ-036.
+These responsibility lists assign evidence authority and processing
+boundaries; they are not categories of mod purpose, affected area, or
+consequence. Analyzer and coverage reporting maps them to the accepted
+[taxonomy](mod-impact-taxonomy.md).
 
 The LLM must not invent local state, decide winners, replace binary parsers, or
 turn generic overlap into a problem without supporting evidence.

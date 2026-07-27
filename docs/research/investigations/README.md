@@ -1,7 +1,7 @@
 # Research investigations
 
 Status: Draft  
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-26
 
 Place one bounded, dated investigation per file:
 
@@ -53,6 +53,17 @@ proposed disposition enabled by the report.
 | [RESEARCH-0011](RESEARCH-0011-mo2-identity-installer-and-manual-state.md) | Completed; recommendation accepted | RQ-007 resolved for M0 by ADR-0008; bounded FOMOD work remains later |
 | [RESEARCH-0012](RESEARCH-0012-snapshot-fingerprint-and-invalidation.md) | Completed; recommendation accepted | RQ-014 resolved for M0 by ADR-0010; exact schema and conformance pending |
 | [RESEARCH-0013](RESEARCH-0013-wave-b-authoritative-local-state-integration.md) | Accepted | Wave B integrated; Gate B accepted as met with documented non-blocking gaps |
+| [RESEARCH-0014](RESEARCH-0014-root-native-component-surfaces.md) | Completed; recommendation accepted | RQ-019 bounded static inventory/layered-identity roadmap accepted; named analyzer qualification remains conditional |
+| [RESEARCH-0015](RESEARCH-0015-generated-output-tool-surfaces.md) | Completed; recommendation accepted | RQ-020 generic inspection and version-pinned generated-output adapter roadmap accepted |
+| [RESEARCH-0016](RESEARCH-0016-configuration-ecosystem-survey.md) | Completed; recommendation accepted | RQ-021 generic layer plus MCM Helper, SPID/KID/BOS, and OAR ordering accepted |
+| [RESEARCH-0017](RESEARCH-0017-compiled-papyrus-analysis-boundary.md) | Completed; recommendation accepted | RQ-022 bounded static PEX/VMAD contract accepted; generic behavior/performance claims excluded |
+| [RESEARCH-0018](RESEARCH-0018-asset-reference-completeness.md) | Completed; recommendation accepted | RQ-023 NIF-first scope accepted; loose-only FaceGen qualification remains Gate C work |
+| [RESEARCH-0019](RESEARCH-0019-semantic-record-family-roadmap.md) | Completed; recommendation accepted | RQ-024 roadmap resolved for M0; exact record/link shapes remain qualification-gated |
+| [RESEARCH-0020](RESEARCH-0020-evaluation-corpus-and-real-mod-candidates.md) | Completed; recommendation accepted | RQ-025 two-layer corpus strategy accepted; EVAL-0016 incomplete and EVAL-0017 unselected |
+| [RESEARCH-0021](RESEARCH-0021-skyrim-mod-impact-taxonomy.md) | Completed; recommendation accepted | RQ-036 resolved for M0 by accepted taxonomy version `0.1.0` |
+| [RESEARCH-0022](RESEARCH-0022-candidate-index-and-ranking.md) | Completed; recommendation accepted | RQ-035 typed-index/causal-join design accepted; independent EVAL-0032 execution pending |
+| [RESEARCH-0023](RESEARCH-0023-scale-performance-baselines.md) | Completed; recommendation accepted | RQ-027 method and rough feasibility accepted; exact production baseline deferred |
+| [RESEARCH-0024](RESEARCH-0024-wave-c-analysis-taxonomy-and-scale-integration.md) | Accepted | Wave C recommendations integrated; Gate C closeout is limited to RQ-023 and RQ-025 qualification/corpus prerequisites |
 
 Supporting artifact:
 
@@ -66,3 +77,11 @@ runtime/Mutagen, snapshot, and conditional LOOT/libloot boundaries; ADR-0007
 rejects xEdit entirely. This does not accept an application stack, database,
 IPC/process topology, M1 implementation plan, or claim that the named
 evaluation cases passed.
+
+Wave C's ten bounded investigations and integrated owner disposition are
+complete and accepted. The accepted taxonomy is
+[`infinium.skyrim-se.mod-impact-taxonomy/0.1.0`](../../product/mod-impact-taxonomy.md).
+Gate C remains pending only the loose-only FaceGen qualification and exact
+EVAL-0016/EVAL-0017 real-mod case work recorded in RESEARCH-0024. Acceptance
+does not claim that EVAL-0032, EVAL-0086, or any analyzer implementation has
+passed.

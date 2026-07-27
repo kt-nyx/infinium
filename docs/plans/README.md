@@ -1,16 +1,18 @@
 # Plans
 
 Status: Draft  
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-26
 
 The [M0 research-foundation plan](milestones/M0-research-foundation.md) was
 accepted on 2026-07-25 and is the active research plan. No implementation plan
 is active.
 
 The product baseline and ADR-0001 through ADR-0011 were accepted on
-2026-07-25. Wave A is complete and Gate A is met. Wave B's bounded
-investigations and independent integration review are complete and accepted;
-Gate B is met with documented non-blocking gaps. The M0 plan:
+2026-07-25. Waves A through C have completed investigations and accepted
+integrated dispositions. Gates A and B are met. Gate C retains the exact
+loose-only FaceGen qualification and EVAL-0016/EVAL-0017 real-mod case
+prerequisites documented in RESEARCH-0024. Waves D through F remain. The M0
+plan:
 
 1. identify the accepted requirements it serves;
 2. select and sequence research questions with expected investigation

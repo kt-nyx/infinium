@@ -1,7 +1,7 @@
 # Architecture Decision Records
 
 Status: Draft  
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-26
 
 ADRs preserve technical decisions and their rationale. They are append-only:
 accepted records are superseded rather than rewritten to hide prior decisions.
@@ -119,8 +119,8 @@ Research is likely to produce ADRs for:
   boundaries;
 - documentation-source acquisition, provider-transmission, retention, and
   redistribution mechanisms within ADR-0005's accepted Nexus boundary;
-- candidate indexing/interaction-graph mechanics if RQ-035 selects a durable
-  cross-cutting design;
+- storage/query mechanics that implement RQ-035's accepted logical
+  typed-index, causal-join, and interaction-graph design;
 - packaging, signing, updates, and distribution.
 
 ADR-0006 accepts the licensing and high-level tool-dependency boundary.
@@ -135,7 +135,7 @@ cache-validity, dependency, and deletion mechanisms that implement that
 policy; it must not reopen the accepted useful-analysis retention boundary
 without an explicit superseding decision.
 
-RQ-036 produces an accepted product taxonomy rather than an ADR merely because
+RQ-036 produced an accepted product taxonomy rather than an ADR merely because
 it defines classifications. A later storage, schema-evolution, or routing
 mechanism chosen to implement that taxonomy may warrant its own ADR.
 

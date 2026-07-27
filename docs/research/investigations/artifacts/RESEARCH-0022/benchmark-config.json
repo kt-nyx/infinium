@@ -1,0 +1,92 @@
+{
+  "schema": "infinium.rq035.benchmark-config/2",
+  "generatorVersion": "2.0.0",
+  "baseSeed": 1592639710,
+  "repeats": 3,
+  "familyOrder": [
+    "asset-required-target-missing",
+    "record-scope-reversion",
+    "placed-reference-topology-reversion",
+    "script-public-api-regression",
+    "runtime-generated-output-stale",
+    "config-qualified-reference-missing",
+    "native-expected-companion-missing",
+    "patch-overwritten-or-stale"
+  ],
+  "deterministicFamilies": [
+    "asset-required-target-missing",
+    "config-qualified-reference-missing",
+    "native-expected-companion-missing"
+  ],
+  "scaleManifests": [
+    {
+      "id": "atomic",
+      "mods": 200,
+      "plugins": 300,
+      "logicalPaths": 50000,
+      "providerEntries": 75000,
+      "referenceEdges": 40000,
+      "records": 20000,
+      "scriptDefinitions": 2000,
+      "scriptConsumers": 4000,
+      "configs": 2000,
+      "generators": 100,
+      "nativeComponents": 100,
+      "patches": 100,
+      "casesPerFamilyPerOutcome": 4,
+      "investigativeAssetLeads": 30,
+      "investigativeRecordLeads": 30,
+      "investigativeScriptLeads": 20,
+      "investigativePatchLeads": 10,
+      "broadNeighborhoodLeads": 100
+    },
+    {
+      "id": "medium",
+      "mods": 800,
+      "plugins": 1200,
+      "logicalPaths": 500000,
+      "providerEntries": 750000,
+      "referenceEdges": 300000,
+      "records": 150000,
+      "scriptDefinitions": 20000,
+      "scriptConsumers": 40000,
+      "configs": 20000,
+      "generators": 500,
+      "nativeComponents": 500,
+      "patches": 500,
+      "casesPerFamilyPerOutcome": 12,
+      "investigativeAssetLeads": 250,
+      "investigativeRecordLeads": 250,
+      "investigativeScriptLeads": 100,
+      "investigativePatchLeads": 50,
+      "broadNeighborhoodLeads": 1000
+    },
+    {
+      "id": "high",
+      "mods": 2000,
+      "plugins": 2500,
+      "logicalPaths": 2000000,
+      "providerEntries": 3000000,
+      "referenceEdges": 1000000,
+      "records": 500000,
+      "scriptDefinitions": 80000,
+      "scriptConsumers": 160000,
+      "configs": 80000,
+      "generators": 2000,
+      "nativeComponents": 2000,
+      "patches": 2000,
+      "casesPerFamilyPerOutcome": 32,
+      "investigativeAssetLeads": 1000,
+      "investigativeRecordLeads": 1000,
+      "investigativeScriptLeads": 400,
+      "investigativePatchLeads": 200,
+      "broadNeighborhoodLeads": 5000
+    }
+  ],
+  "workloadModel": {
+    "bundlesPerCall": 4,
+    "fixedInputTokensPerCall": 500,
+    "inputTokensPerBundle": 900,
+    "outputCapTokensPerBundle": 300
+  }
+}

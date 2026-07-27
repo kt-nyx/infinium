@@ -1,7 +1,7 @@
 # Scope and milestones
 
 Status: Accepted  
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-26
 
 ## Supported product scope
 
@@ -87,11 +87,10 @@ The mechanism must be generic scope-incongruent reversion, not an NPC-specific
 product rule. Synthetic positive and negative cases come first, followed by
 carefully selected real mods. At least one materially different non-NPC
 technical surface or affected game area must validate the general mechanism
-before it is considered proven. The exact classification follows RQ-036;
-“non-NPC” is only the current proof-planning shorthand.
-M1 may use provisional labels while fixtures are being designed, but it cannot
-be accepted until the taxonomy resulting from RQ-036 is accepted and the
-surfaces/areas exercised by the proof are mapped to it.
+before it is considered proven. Exact classification uses the accepted
+[Skyrim SE mod-impact taxonomy](mod-impact-taxonomy.md); “non-NPC” is only
+proof-planning shorthand. The surfaces and areas exercised by the proof must
+be mapped to that taxonomy.
 
 The backend proof emits human-readable CLI output and a versioned JSON artifact.
 It must obey every foundational product, authority, evidence, provenance, and
@@ -151,8 +150,9 @@ and do not gate the milestone unless explicitly promoted by an accepted
 milestone plan.
 
 The M3 capability list is a delivery inventory, not a taxonomy of mod types or
-affected game areas. The accepted RQ-036 taxonomy and coverage map will define
-how breadth across technical surfaces, game systems/content areas,
+affected game areas. The accepted
+[Skyrim SE mod-impact taxonomy](mod-impact-taxonomy.md) and its coverage map
+define how breadth across technical surfaces, game systems/content areas,
 consequences, and effect extents is measured.
 
 ## M4: Public-facing MVP

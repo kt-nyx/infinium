@@ -1,7 +1,7 @@
 # Domain model
 
 Status: Accepted  
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-26
 
 This is a conceptual model. Storage schemas and wire contracts require later
 architecture decisions.
@@ -25,7 +25,8 @@ Infinium. It records sufficient identity/fingerprints and retained evidence to
 detect change and explain the analysis. New physical state creates a new
 snapshot; historical reruns may require the original mod files. The listed
 snapshot components are required state inputs rather than an exhaustive
-taxonomy; their accepted taxonomy mappings depend on RQ-036.
+taxonomy; they map to the accepted
+[Skyrim SE mod-impact taxonomy](mod-impact-taxonomy.md).
 
 ## Snapshot assurance
 
@@ -245,13 +246,38 @@ shared records, files, dependencies, runtime relationships, generated-output
 relationships, documentation claims, or scope-incongruent changes.
 
 These selection inputs are examples rather than mod/game-area categories.
-Candidate classification and routing use the accepted RQ-036 taxonomy,
+Candidate classification and routing use the accepted
+[Skyrim SE mod-impact taxonomy](mod-impact-taxonomy.md),
 including the distinction between source-supported declared purpose, observed
 modification surface, and predicted affected game area.
 
 A candidate retains its originating analysis run and analyzer, selection
 rationale, supporting evidence, scoped population, and validity dependencies.
 It is not shown as a confirmed problem merely because it was selected.
+
+## Taxonomy assignment
+
+A versioned classification attached to an evidence item, claim, observation,
+candidate, hypothesis, finding, case, coverage record, or other declared
+subject. It records:
+
+- taxonomy ID and exact version;
+- axis and facet;
+- code when the applicability state is `assigned`;
+- applicability state: assigned, unknown, unsupported, unmapped, or
+  not-applicable;
+- classification role: declared, observed, predicted, or established;
+- subject identity and type;
+- evidence and applicability-condition references;
+- separate confidence-assessment reference where applicable;
+- analyzer or adjudicator, reason, creation time, and mapping provenance; and
+- the superseded assignment when a later derived classification replaces it.
+
+An assignment role is not confidence or evidence authority. A finding may have
+an established consequence and a predicted affected area or extent. Promoting
+a hypothesis to a finding does not silently promote each assignment. A
+taxonomy revision creates linked derived assignments while preserving the raw
+source claim, local observation, and historical assignment.
 
 ## Hypothesis
 
@@ -274,7 +300,7 @@ Independent dimensions:
   affected game area, and consequence;
 - severity;
 - confidence;
-- effect extent, provisionally represented by gameplay scope and blast radius;
+- faceted effect extent;
 - evidence;
 - originating installation snapshot, analysis context, and analysis run;
 - validated reuse/application edges to any consuming run;
@@ -282,11 +308,11 @@ Independent dimensions:
 - remediation;
 - validation.
 
-The exact classification axes and controlled values are provisional pending
-RQ-036. A persisted finding identifies the taxonomy version used. Taxonomy
-research may split or rename a provisional axis, but it must preserve the
-separation between what was modified, what part of the game may be affected,
-what consequence may occur, how severe it is, and how broadly it may manifest.
+These classification axes and controlled values are governed by the accepted
+[taxonomy](mod-impact-taxonomy.md). A persisted finding identifies the exact
+taxonomy version used. A later taxonomy revision creates linked derived
+classifications rather than rewriting the source evidence or historical
+finding.
 
 Severity does not absorb confidence. A potentially catastrophic but uncertain
 problem remains high-impact and low-confidence. Analyzer maturity belongs to

@@ -4,7 +4,7 @@ Status: Completed — recommendation accepted by ADR-0008
 
 Date: 2026-07-25
 
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-26
 
 Researcher: Codex agent
 
@@ -742,9 +742,10 @@ The coordinated Wave B acceptance applies this boundary through ADR-0008.
    semantics.
 5. RQ-014/fingerprint work for archive, metadata, mapping, and invalidation
    dependencies.
-6. RQ-036 remains the separate controlling research dependency for game-area,
-   impact, asset, record, behavior, and symptom categories; those categories
-   are not settled by this report.
+6. The separately accepted
+   [Skyrim SE mod-impact taxonomy](../../product/mod-impact-taxonomy.md)
+   controls purpose, technical-surface, affected-area, consequence, and extent
+   classification; none is settled by MO2 identity metadata.
 
 ## 11. Suggested RQ status
 

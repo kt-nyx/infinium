@@ -1,7 +1,7 @@
 # Documentation source registry
 
 Status: Draft
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-26
 
 This document defines the registry model, initial authority classes, and
 reviewed source-level decisions. Exact endpoints, observed capabilities, and
@@ -142,6 +142,47 @@ Reverify the applicable source when a version is selected, its licence or
 package graph changes, an external application becomes a proposed bundled
 payload, the exact Infinium GPLv3 selector is chosen, or a release artifact is
 assembled.
+
+## Registered Wave C technical authorities
+
+These sources define technical-format or exact-version research inputs. They
+do not become mod-author intent evidence, prove a local component's identity,
+or select a production dependency. Their claim-level citations and limitations
+remain in the owning investigation.
+
+| Authority group | Checked identity | Registered use and limit |
+|---|---|---|
+| Microsoft PE/COFF, version-information, DLL-search, and `LoadLibraryEx` documentation | Official Microsoft documentation retrieved 2026-07-25 | Platform-format and loader-boundary authority for [RESEARCH-0014](investigations/RESEARCH-0014-root-native-component-surfaces.md); documentation does not identify local bytes |
+| SKSE | Release `v2.2.6`; commit `9398d04592a7eb9d754f2997701116df1022f1b4` | Exact release/source evidence for supported runtime, root layout, plugin metadata, and loader relationships in RESEARCH-0014 |
+| CommonLibSSE-NG | Commit `b93280e832f263dbef44e44cbe2936622a02f91a` | Exact Address Library format/runtime-selection evidence in RESEARCH-0014; not proof that an arbitrary local plugin uses that implementation |
+| SSE Engine Fixes | Release `7.0.20`; commit `af982b0b57d8d8935686faaf1f8c49508baf0bd1` | Versioned representative companion/preloader relationship evidence in RESEARCH-0014 |
+| ReShade | Commit `f191dc03ce8fb435fb1df2ed59fac1e7f944c90e`, retrieved 2026-07-25 | Moving-branch source evidence for proxy-name and static identity signals in RESEARCH-0014; not a local-build identity claim |
+| ENBSeries Skyrim SE publisher pages | Moving official pages; label `0.504` observed 2026-07-25 | Publisher/version-label evidence in RESEARCH-0014; mutable bytes and absent content hashes make the label insufficient for exact identity |
+| Ultimate ASI Loader | Release `v9.7.2`, retrieved 2026-07-25 | Contrary evidence in RESEARCH-0014 that generic proxy filenames are non-unique |
+
+The remaining Wave C investigations register their exact technical sources
+within their own source tables because those authorities are analyzer-research
+inputs rather than general documentation providers:
+
+- generated-output tools:
+  [RESEARCH-0015](investigations/RESEARCH-0015-generated-output-tool-surfaces.md);
+- configuration ecosystems:
+  [RESEARCH-0016](investigations/RESEARCH-0016-configuration-ecosystem-survey.md);
+- PEX/VMAD:
+  [RESEARCH-0017](investigations/RESEARCH-0017-compiled-papyrus-analysis-boundary.md);
+- asset formats and references:
+  [RESEARCH-0018](investigations/RESEARCH-0018-asset-reference-completeness.md);
+- Bethesda semantic record families:
+  [RESEARCH-0019](investigations/RESEARCH-0019-semantic-record-family-roadmap.md);
+- corpus candidates and source availability:
+  [RESEARCH-0020](investigations/RESEARCH-0020-evaluation-corpus-and-real-mod-candidates.md);
+- taxonomy research:
+  [RESEARCH-0021](investigations/RESEARCH-0021-skyrim-mod-impact-taxonomy.md).
+
+Before any of those sources becomes a production parser, library, bundled
+payload, generated-data feed, or supported adapter, its exact current version,
+licence, data policy, and supported shapes require a separate accepted
+qualification decision.
 
 ## Search behavior
 

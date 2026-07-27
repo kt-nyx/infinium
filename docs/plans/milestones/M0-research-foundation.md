@@ -3,12 +3,21 @@
 Status: Accepted  
 Owner: Project owner  
 Created: 2026-07-25  
-Last reviewed: 2026-07-25  
+Last reviewed: 2026-07-26
 Accepted: 2026-07-25  
 Target milestone: M0 — Documentation and research foundation
 
 Accepted amendments:
 
+- 2026-07-25 —
+  [RESEARCH-0024](../../research/investigations/RESEARCH-0024-wave-c-analysis-taxonomy-and-scale-integration.md)
+  accepts all Wave C research recommendations and
+  `infinium.skyrim-se.mod-impact-taxonomy/0.1.0`. RQ-024, RQ-027, RQ-035, and
+  RQ-036 are resolved for M0; RQ-019 through RQ-022 retain accepted bounded
+  conditional roadmaps. Gate C remains pending only the RQ-023 loose-only
+  FaceGen qualification and RQ-025 exact EVAL-0016/EVAL-0017 real-mod cases.
+  EVAL-0032 and EVAL-0086 specifications are accepted, but neither case has
+  passed execution.
 - 2026-07-25 —
   [RESEARCH-0013](../../research/investigations/RESEARCH-0013-wave-b-authoritative-local-state-integration.md)
   and ADR-0008 through ADR-0011 accept Wave B and Gate B as met with
@@ -67,7 +76,8 @@ Complete enough reviewed research to:
 1. prove that authoritative MO2/effective-installation and Bethesda semantic
    state can be reconstructed for the pinned target;
 2. establish lawful and technically viable evidence-source and LLM boundaries;
-3. propose and validate the versioned product taxonomy required by RQ-036;
+3. produce, validate, and obtain acceptance for the versioned product taxonomy
+   required by RQ-036;
 4. select the storage, snapshot, job, process, application-stack, security,
    provider, and candidate-selection mechanisms needed by M1 without
    over-generalizing for later games or managers;
@@ -180,8 +190,8 @@ implements or validates the complete product requirement.
 - disposable parsers, adapters, probes, benchmarks, and schema experiments;
 - source-policy, retention, licensing, privacy, and security analysis before
   the affected data or operation is used;
-- proposed taxonomy development using primary technical sources and a
-  representative real/synthetic mod corpus;
+- taxonomy research, acceptance, and versioned evolution using primary
+  technical sources and a representative real/synthetic mod corpus;
 - evaluation-fixture discovery and ground-truth design;
 - architecture comparison and proposed ADRs;
 - updating research, evaluation, architecture, and planning documents when an
@@ -285,15 +295,15 @@ question. It may not silently remove an Exit-blocking question.
 | RQ-016 | Exit-blocking | E | Compare desktop/application stacks and select the application/engine direction |
 | RQ-017 | Exit-blocking | E | Select the UI/analysis/process/data-query boundary needed for scale and isolation |
 | RQ-018 | Exit-blocking | E | Select secure credential entry/storage for the chosen architecture before authenticated integration |
-| RQ-019 | Conditional | C | Supply taxonomy/root-surface evidence; block M1 only if native/root analysis enters its scope |
-| RQ-020 | Conditional | C | Supply taxonomy/generated-output evidence; retain named generator selection for its delivery plan |
-| RQ-021 | Conditional | C | Supply taxonomy/configuration evidence; named schemas do not block the first proof |
-| RQ-022 | Conditional | C | Supply taxonomy/script evidence; compiled-Papyrus semantics do not block the first proof unless selected |
-| RQ-023 | Exit-blocking | C | Establish the asset-format/provider capabilities needed by the initial cross-layer and non-NPC proofs |
-| RQ-024 | Exit-blocking | C | Select the first semantic record/relationship scope and a materially different follow-up scope |
-| RQ-025 | Exit-blocking | C | Produce reproducible real-mod candidates and legal/private handling for EVAL-0016/EVAL-0017 |
+| RQ-019 | Conditional | C | Accepted bounded static inventory and layered-identity roadmap; named analyzer work blocks only if selected into M1 |
+| RQ-020 | Conditional | C | Accepted generic inspection plus version-pinned adapter roadmap; named generator delivery remains later |
+| RQ-021 | Conditional | C | Accepted generic/configuration-schema roadmap; named schemas do not block the first proof |
+| RQ-022 | Conditional | C | Accepted bounded static PEX/VMAD contract; compiled-Papyrus analysis blocks only if selected |
+| RQ-023 | Exit-blocking | C | NIF-first scope accepted; exact loose-only FaceGen identity/provider qualification remains pending |
+| RQ-024 | Resolved | C | Accepted generic substrate → NPC proof → REFR/placement/enable-link roadmap and later-family ordering |
+| RQ-025 | Exit-blocking | C | Two-layer corpus strategy accepted; exact EVAL-0016 remains incomplete and EVAL-0017 remains unselected |
 | RQ-026 | Resolved | A | ADR-0006 establishes GPLv3-family licensing and the accepted external-application/bundled-library/data posture |
-| RQ-027 | Exit-blocking | C | Establish the benchmark method and preliminary scale evidence needed for architecture/candidate selection; retain full M3 calibration as a measured follow-up |
+| RQ-027 | Resolved | C | Accepted benchmark/cost method and rough feasibility evidence; exact architecture/production budgets require later remeasurement |
 | RQ-028 | Later evidence | F | Define the calibration/evidence-collection plan now; set M3/M4 thresholds only after analyzer data exists |
 | RQ-029 | Later evidence | F | Schedule before automatic runtime-log application, no later than its M3 delivery plan |
 | RQ-030 | Later evidence | F | Schedule for M4 packaging/update planning after the application architecture stabilizes |
@@ -301,8 +311,8 @@ question. It may not silently remove an Exit-blocking question.
 | RQ-032 | Exit-blocking | E | Select concrete content, path, subprocess, navigation, and export controls for M1 surfaces |
 | RQ-033 | Exit-blocking | E | Select finding/case continuity and reconciliation keys without name-based false identity |
 | RQ-034 | Exit-blocking | E | Select enforceable reservation/deadline/reconciliation behavior before concurrent or billable M1 work |
-| RQ-035 | Exit-blocking | C | Select and benchmark candidate indexing/ranking without naïve all-pairs model work |
-| RQ-036 | Exit-blocking | C | Produce and obtain acceptance for the versioned product taxonomy and coverage map required by M1 |
+| RQ-035 | Resolved | C | Accepted typed-index, causal-join, canonical-participant, and mandatory-lane design; independent production execution remains later |
+| RQ-036 | Resolved | C | Accepted `infinium.skyrim-se.mod-impact-taxonomy/0.1.0` and integrated its consumer documents |
 
 ## Dependency-ordered research waves
 
@@ -353,7 +363,7 @@ Questions:
 - RQ-001 through RQ-007;
 - RQ-014.
 
-Internal order:
+Completed investigation order:
 
 1. inventory the user-confirmed reference environment and exact versions;
 2. establish MO2/profile state and authoritative comparison methods;
@@ -395,6 +405,13 @@ blocking evidence instead of compensating with heuristics or LLM inference.
 
 ### Wave C — Analysis surfaces, taxonomy, corpus, and candidate scale
 
+Status: Investigations completed and recommendations accepted on 2026-07-25.
+The taxonomy and EVAL-0032/EVAL-0086 specifications are accepted. Gate C
+remains pending only the exact loose-only FaceGen qualification required by
+RQ-023 and pinned, independently grounded EVAL-0016/EVAL-0017 real-mod
+candidates required by RQ-025. These are qualification/corpus closeout tasks,
+not invitations to redesign the accepted Wave C roadmaps.
+
 Questions:
 
 - RQ-019 through RQ-025;
@@ -409,25 +426,25 @@ Internal order:
 2. inventory a deliberately varied synthetic and real-mod corpus;
 3. select exact positive, matched-negative, boundary, unsupported, and
    cross-cutting candidates for M1 evaluation;
-4. propose distinct declared-purpose, technical-surface,
-   affected-game-area, consequence, and effect-extent taxonomies;
+4. propose one versioned product taxonomy with distinct declared-purpose,
+   technical-surface, affected-area, consequence, and effect-extent axes;
 5. test multi-label, cross-cutting, unknown, and unsupported classification;
 6. build candidate/index/ranking experiments over the observed structures;
 7. benchmark candidate recall, volume, latency, IO, memory, and estimated LLM
    escalation cost at increasing profile scales;
 8. revise and review the taxonomy and candidate design against failures.
 
-RQ-036 may consume bounded survey evidence from Conditional RQ-019 through
-RQ-022 without pretending that their later named-analyzer roadmaps are complete.
-Those questions remain open where analyzer-depth evidence is still missing.
-They may not independently create incompatible mod-type or game-area
-taxonomies.
+RQ-036 consumed bounded survey evidence from Conditional RQ-019 through RQ-022
+without pretending that their later named-analyzer roadmaps are complete.
+Their bounded M0 recommendations are accepted; named analyzer depth,
+implementation, and qualification remain later work. Future extensions may not
+create incompatible mod-type or game-area taxonomies.
 
 Required outputs:
 
-- proposed versioned product taxonomy specification;
+- accepted versioned product taxonomy specification;
 - completed update to the taxonomy dependency map and every affected
-  provisional inventory identified by it;
+  pre-acceptance inventory identified by it;
 - classification examples and counterexamples across materially different
   surfaces and game areas;
 - M1 positive/negative/boundary fixture designs;
@@ -439,21 +456,26 @@ Required outputs:
 - initial performance/cost measurement method and architecture budgets;
 - reviewed EVAL-0032 and EVAL-0086 specifications or approved successors.
 
-Gate C:
+Gate C conditions already satisfied:
 
-- the product owner accepts the RQ-036 taxonomy as a product specification,
+- the product owner accepted the RQ-036 taxonomy as a product specification,
   not an ADR;
-- every affected accepted product document is revised and re-reviewed through
-  its change discipline when the taxonomy materially changes its normative
+- every affected accepted product document was revised and re-reviewed through
+  its change discipline when the taxonomy materially changed its normative
   language; the new taxonomy specification does not silently override it;
 - the first proof remains generic scope-incongruent reversion rather than an
   NPC-specific rule;
-- the real and synthetic corpus includes matched negatives and at least one
-  materially different non-NPC surface or affected game area under the
-  accepted taxonomy;
 - candidate experiments retain planted interactions without defaulting to
   naïve all-pairs LLM comparison;
 - unevaluated taxonomy regions and unsupported semantics are explicit.
+
+Remaining Gate C conditions:
+
+- RQ-023 must complete the exact loose-only FaceGen identity/provider closure
+  used by the first real cross-layer case; and
+- RQ-025 must supply pinned, independently grounded EVAL-0016 and EVAL-0017
+  candidates, including matched controls and at least one materially different
+  non-NPC surface or affected game area under the accepted taxonomy.
 
 ### Wave D — Documentation acquisition and provider-neutral LLM boundary
 
@@ -467,7 +489,8 @@ Dependencies:
 - Wave A source-policy and retention findings;
 - RQ-009 access-policy conclusions from Wave A;
 - Wave B installed-mod identity findings;
-- Wave C taxonomy proposal for declared-purpose and claimed-area fields;
+- accepted Wave C taxonomy version `0.1.0` for declared-purpose and
+  claimed-area fields;
 - accepted ADR-0001 evidence authority.
 
 Internal order:
@@ -778,10 +801,10 @@ During M0:
   [`../../research/open-questions.md`](../../research/open-questions.md);
 - source capabilities/policies update
   [`../../research/source-registry.md`](../../research/source-registry.md);
-- taxonomy research updates
+- taxonomy research and later revisions update
   [`../../research/taxonomy-dependency-map.md`](../../research/taxonomy-dependency-map.md)
-  and every provisional inventory it identifies, and produces a separately
-  reviewable product-taxonomy specification;
+  and every affected inventory it identifies, and produce a separately
+  reviewable versioned product-taxonomy specification;
 - durable technical selections produce proposed ADRs under
   `docs/architecture/decisions/`;
 - evaluation discoveries update the case catalog and reviewed fixture
@@ -851,7 +874,8 @@ Unless promoted by accepted evidence:
 
 ## Completion record
 
-Completion status: In progress — Waves A and B complete
+Completion status: In progress — Waves A through C research accepted; Gate C
+qualification/corpus closeout plus Waves D through F remain
 
 To be filled when M0 completes:
 

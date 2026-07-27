@@ -1,7 +1,7 @@
 # Fixture guidelines
 
 Status: Draft  
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-26
 
 Wave B's target boundaries and fixture/conformance obligations are accepted by
 ADR-0008 through ADR-0011, but full Wave F case specifications and execution
@@ -47,8 +47,8 @@ gold standard, or source of special-case expectations. The obsolete
 - expected abstentions and gaps;
 - applicable requirements/analyzers;
 - accepted taxonomy version and applicable declared-purpose,
-  technical-surface, affected-game-area, consequence, and effect-extent
-  classifications once the RQ-036 result is accepted;
+  technical-surface, affected-area, consequence, and effect-extent
+  classifications;
 - creation or acquisition provenance;
 - mod/game/tool versions;
 - licensing and redistribution constraints;

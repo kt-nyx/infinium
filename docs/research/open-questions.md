@@ -1,7 +1,7 @@
 # Open research questions
 
 Status: Draft  
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-26
 
 The product baseline was accepted on 2026-07-25. The
 [M0 research-foundation plan](../plans/milestones/M0-research-foundation.md) is
@@ -16,6 +16,11 @@ reviewed, accepted Wave B disposition in
 ADR-0007 through ADR-0011 resolve them for M0. Their named conformance,
 supported-surface, and implementation gates remain open without reopening the
 accepted product-licence or user-installed-application boundary.
+
+Wave C's ten investigations and recommendations were accepted by the project
+owner on 2026-07-25. Acceptance distinguishes a selected roadmap or method from
+an executed support claim: the exact loose-only FaceGen qualification and
+pinned EVAL-0016/EVAL-0017 real-mod cases remain M0 prerequisites.
 
 | ID | Question | Decision enabled | Status |
 |---|---|---|---|
@@ -37,15 +42,15 @@ accepted product-licence or user-installed-application boundary.
 | RQ-016 | Which desktop/application stack best satisfies UI, security, deployment, and analysis-isolation requirements: Electron, Avalonia, Tauri/WebView2, or another design? | Application stack ADR | Not started |
 | RQ-017 | Which process and data-query boundary, including whether IPC is needed, keeps the UI responsive at high-end scale? | Process/data-access ADR | Not started |
 | RQ-018 | Which secure credential-entry and storage mechanisms fit the selected desktop architecture? | Security ADR | Not started |
-| RQ-019 | Which root-level Skyrim components can be identified and version-checked deterministically? | Native/root analyzer catalog | Not started |
-| RQ-020 | Which generated-output tools expose usable manifests or stable formats? | Generator analyzer roadmap | Not started |
-| RQ-021 | Which configuration ecosystems merit named schemas first? | Configuration roadmap | Not started |
-| RQ-022 | How far can compiled Papyrus be analyzed structurally and semantically without unreliable claims? | Script analyzer scope | Not started |
-| RQ-023 | Which asset formats can be checked for referenced-file completeness efficiently? | Asset analyzer scope | Not started |
-| RQ-024 | Which semantic record families and field relationships should follow the first proof? | Analyzer roadmap | Not started |
-| RQ-025 | Which real mod combinations provide stable, redistributable or locally reproducible evaluation cases? | Evaluation corpus | Not started |
+| RQ-019 | Which root-level Skyrim components can be identified and version-checked deterministically? | Native/root analyzer catalog | Researched; bounded static inventory and layered-identity recommendation accepted; named-analyzer qualification remains conditional |
+| RQ-020 | Which generated-output tools expose usable manifests or stable formats? | Generator analyzer roadmap | Researched; generic inspection plus version-pinned adapter roadmap accepted; named generator qualification remains later |
+| RQ-021 | Which configuration ecosystems merit named schemas first? | Configuration roadmap | Researched; generic layer followed by MCM Helper, SPID/KID/BOS, and OAR roadmap accepted |
+| RQ-022 | How far can compiled Papyrus be analyzed structurally and semantically without unreliable claims? | Script analyzer scope | Researched; bounded static PEX/VMAD structural contract accepted; generic behavior and performance claims excluded |
+| RQ-023 | Which asset formats can be checked for referenced-file completeness efficiently? | Asset analyzer scope | Recommendation accepted; NIF-first typed-reference scope selected, but exact loose-only FaceGen identity/provider qualification remains M0-pending |
+| RQ-024 | Which semantic record families and field relationships should follow the first proof? | Analyzer roadmap | Resolved for M0 by accepted generic substrate → NPC proof → REFR/placement/enable-link roadmap; exact shape qualification remains implementation work |
+| RQ-025 | Which real mod combinations provide stable, redistributable or locally reproducible evaluation cases? | Evaluation corpus | Corpus strategy accepted; exact EVAL-0016 remains incomplete and EVAL-0017 remains unselected, so this M0 prerequisite is still open |
 | RQ-026 | What licensing/distribution obligations apply to bundled helpers and external tools? | Packaging/licensing ADR | Resolved for M0 by ADR-0006 |
-| RQ-027 | What high-end time, memory, disk, and cost baselines are realistic on the creator's profile? | Performance budgets/presets | Not started |
+| RQ-027 | What high-end time, memory, disk, and cost baselines are realistic on the creator's profile? | Performance budgets/presets | Answered for M0 at method and rough-feasibility level; exact budgets deferred until authoritative adapters and an architecture prototype exist |
 | RQ-028 | What evidence, analyzer-maturity, false-positive, coverage, targeted-run carryover, and stale-result thresholds govern M3/M4 readiness and user-facing filtering? | Readiness and maturity acceptance policy | Not started |
 | RQ-029 | Which fingerprints and capture workflows can classify imported or tracked logs as exact, matched, likely, unknown, or historical? | Runtime-evidence provenance design | Not started |
 | RQ-030 | Which packaging, signing, update, and distribution mechanisms fit M4 without weakening the local security boundary? | Packaging/update ADR | Not started |
@@ -53,43 +58,25 @@ accepted product-licence or user-installed-application boundary.
 | RQ-032 | Which sanitization, navigation, protected-root/write-destination authorization, subprocess, and export-redaction controls satisfy AUTH-002, SEC-001, SEC-003, and SEC-004 in the selected architecture? | Security-boundary ADR | Not started |
 | RQ-033 | Which causal/dependency continuity keys and reconciliation workflow can link or explicitly supersede logical findings and cases across runs without false merges, false splits, or disposition leakage? | Finding/case identity and lineage design | Not started |
 | RQ-034 | Which deadline-check, atomic reservation, and reconciliation model can enforce concurrent operation/acquisition/analysis hard limits across providers, including elapsed-time deadlines, maximum-call bounds, batching, cancellation, rounding, delayed billing, and adapter capability gaps? | Cost-ledger and budget-enforcement design | Not started |
-| RQ-035 | Which local indexes, interaction-graph representation, candidate-generation rules, and staged ranking strategy can retain meaningful interactions at high-end scale without naïve all-pairs model comparison? | M1 candidate-selection design and performance plan | Not started |
-| RQ-036 | What purposes/intended feature areas do Skyrim SE mods declare; through which technical surfaces can they alter effective state; which game systems/content areas, consequence types, and effect extents can they affect; and which distinct empirically grounded taxonomies should Infinium use without conflating them? | M1 product taxonomy specification plus analyzer, coverage, navigation, and evaluation coverage map | Not started |
+| RQ-035 | Which local indexes, interaction-graph representation, candidate-generation rules, and staged ranking strategy can retain meaningful interactions at high-end scale without naïve all-pairs model comparison? | M1 candidate-selection design and performance plan | Resolved for M0 by accepted typed-index, causal-join, canonical-participant, mandatory-lane design; independent production evaluation remains pending |
+| RQ-036 | What purposes/intended feature areas do Skyrim SE mods declare; through which technical surfaces can they alter effective state; which game systems/content areas, consequence types, and effect extents can they affect; and which distinct empirically grounded taxonomies should Infinium use without conflating them? | M1 product taxonomy specification plus analyzer, coverage, navigation, and evaluation coverage map | Resolved for M0 by accepted `infinium.skyrim-se.mod-impact-taxonomy/0.1.0`; unevaluated regions remain explicit |
 
-## RQ-036 minimum investigation output
+## RQ-036 accepted result and change discipline
 
-The RQ-036 investigation must:
+[RESEARCH-0021](investigations/RESEARCH-0021-skyrim-mod-impact-taxonomy.md)
+produced the accepted
+[Skyrim SE mod-impact taxonomy](../product/mod-impact-taxonomy.md). It keeps
+declared purpose and intended target, observed technical surface, affected
+area, consequence, and faceted extent distinct; supports multi-label,
+cross-cutting, unknown, unsupported, unmapped, and not-applicable assignments;
+and preserves severity, confidence, symptoms, evidence authority, and
+readiness as separate concepts.
 
-- inventory technical modification surfaces using primary technical references
-  and observed mod structures, including but not limited to plugins/records,
-  assets/archives, scripts, configuration, native/runtime components, and
-  generated output;
-- inventory player-visible game systems and content areas using authoritative
-  game/tool documentation plus a representative real-mod corpus rather than
-  deriving a closed list from brainstorming or record names alone;
-- determine how source-supported declared mod purpose or intended feature area
-  relates to—but remains distinguishable from—observed modification surfaces
-  and actual or predicted affected game areas;
-- distinguish declared purpose, modification surface, affected game area,
-  consequence type, severity, symptom, gameplay scope, and blast radius, and
-  identify where a many-to-many relationship is required;
-- recommend whether each classification is hierarchical, faceted, or
-  multi-label, including explicit unknown, unsupported, and cross-cutting
-  handling;
-- map the proposed versioned taxonomy to analyzer declarations, candidate
-  routing, findings/cases, UI navigation, coverage/readiness, change impact,
-  remediation/validation, evaluation, and roadmap planning;
-- validate the proposal against materially different real and synthetic mods
-  and document areas where Skyrim behavior or available tooling does not permit
-  confident classification;
-- update the
-  [taxonomy research dependency map](taxonomy-dependency-map.md) and every
-  affected provisional inventory when a taxonomy recommendation is proposed.
-
-RQ-004 and RQ-019 through RQ-024 investigate particular technical surfaces,
-formats, or analyzer families. Their outputs shall inform and map to RQ-036
-rather than independently defining incompatible game-area or mod-type
-taxonomies.
+RQ-004 and RQ-019 through RQ-024 remain specialized technical-surface,
+format, or analyzer-family questions. Their future extensions must map to the
+accepted versioned taxonomy rather than defining competing mod-type or
+game-area taxonomies. Taxonomy revisions follow the product specification's
+versioning and review rules.
 
 ## Investigation requirements
 

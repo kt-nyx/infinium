@@ -1,10 +1,14 @@
 # Product workflows
 
 Status: Accepted  
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-26
 
 Accepted amendments:
 
+- 2026-07-25 — Wave C owner disposition
+  [RESEARCH-0024](../research/investigations/RESEARCH-0024-wave-c-analysis-taxonomy-and-scale-integration.md)
+  accepts taxonomy-backed summary/filtering and the candidate-first analysis
+  boundary; implementation and evaluation remain pending.
 - 2026-07-25 — ADR-0008 through ADR-0011 accept the Wave B profile,
   runtime/semantic, snapshot, and conditional LOOT boundaries.
 - 2026-07-25 — ADR-0007 removes xEdit from setup, settings, capability, scan,
@@ -85,8 +89,9 @@ The results page presents:
    scope-limited/no-readiness status when the run cannot produce readiness;
 2. brief prose summary;
 3. numerical findings by applicable accepted classification dimensions, such
-   as severity, confidence, affected game area, impact class, technical domain,
-   and disposition, using the versioned taxonomy resulting from RQ-036;
+   as severity, confidence, affected game area, consequence type, technical
+   surface, effect extent, and disposition, using the accepted
+   [taxonomy](mod-impact-taxonomy.md);
 4. separate lead-only investigation count;
 5. coverage and gaps;
 6. scan duration and newly incurred cost, with reused historical work/cost

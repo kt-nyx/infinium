@@ -1,7 +1,7 @@
 # Integration boundaries
 
 Status: Draft  
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-26
 
 ADR-0006 accepts the high-level external-application and bundled-dependency
 posture. ADR-0007 excludes xEdit from every Infinium boundary. ADR-0008 through
@@ -13,8 +13,9 @@ owning plans and qualification gates.
 The integration sections below organize external/system boundaries. They are
 not an exhaustive taxonomy of technical modification surfaces, mod types, or
 affected game areas. Integration capability and coverage must map to the
-accepted taxonomy resulting from RQ-036, including cross-adapter and
-unknown/unsupported areas.
+accepted
+[Skyrim SE mod-impact taxonomy](../product/mod-impact-taxonomy.md), including
+cross-adapter and unknown or unsupported areas.
 
 ## Adapter contract requirements
 
@@ -71,6 +72,12 @@ Required capabilities:
 - index loose and archive providers;
 - read relevant configuration and generated output;
 - detect mid-scan changes.
+
+Root/native inspection is static, provider-aware, and version-pinned. It may
+inspect bounded Portable Executable structure, version resources, manifests,
+imports/exports, and documented component relationships, but must not load an
+installed DLL or infer identity, compatibility, or runtime use from filename
+or embedded version alone.
 
 ## LOOT
 
@@ -145,3 +152,40 @@ explicitly.
 Named adapters should be developed only with known formats and evaluation
 fixtures. Unknown systems receive generic evidence and coverage gaps rather
 than guessed semantics.
+
+Wave C accepted a version-pinned generated-output adapter roadmap, not a claim
+that any surveyed generator exposes one complete stable input/output manifest.
+Each named adapter must declare the supported tool/version, exact input and
+output identities, regeneration rules, and completeness boundary. Unsupported
+generators expose only presence, provider, bounded structure, and explicit
+gaps; they do not emit a freshness conclusion without a qualified complete
+dependency closure.
+
+## Configuration consumers
+
+The accepted order is a generic exact-byte/provider/syntax layer followed by
+separate named qualification for MCM Helper; SPID, KID, and BOS; and OAR.
+Syntax, schema, effective-winner, condition-language, and Skyrim-domain
+semantics are distinct adapter capabilities. A parser that can read a file does
+not thereby understand its conditions or gameplay effect.
+
+## Compiled Papyrus
+
+PEX/VMAD support is bounded static parsing: allowlisted structure, symbols,
+attachments, properties, and supported reference/dependency relationships.
+Infinium does not execute PEX, reconstruct complete source, or infer dynamic
+behavior, runtime ordering, latent-state semantics, performance, or gameplay
+outcomes merely from bytecode structure.
+
+## Asset references
+
+The first accepted typed asset-reference slice is NIF. Loose-file FaceGen
+coverage remains conditional on exact full/light plugin-origin,
+race/template, provider, and shadowing qualification; archive parity is a
+separate later gate. Wave C did not accept a production NIF parser dependency.
+Any future parser or worker boundary requires a version/licence review,
+malformed-input limits, independent fixtures, and explicit supported shapes.
+
+These Wave C recommendations constrain future adapter specifications. They do
+not select process topology, implementation libraries, or claim that any named
+adapter has passed evaluation.
