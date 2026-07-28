@@ -1,0 +1,1560 @@
+{
+  "schema": "infinium-research-tes4-inspection/1",
+  "generatedAt": "2026-07-28T06:08:59.611Z",
+  "plugins": [
+    {
+      "file": "Skyrim.esm",
+      "bytes": 249753412,
+      "masters": [],
+      "records": [
+        {
+          "signature": "NPC_",
+          "offset": 11705358,
+          "dataOffset": 11705382,
+          "dataSize": 580,
+          "flags": "0x00040000",
+          "formId": "0x0001AA63",
+          "compressed": true,
+          "contexts": [
+            {
+              "offset": 9743785,
+              "groupType": 0,
+              "labelHex": "4E50435F",
+              "labelAscii": "NPC_"
+            }
+          ],
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "headerOffset": 11705386,
+              "dataOffset": 11705392,
+              "size": 7,
+              "hex": "4C757262756B00"
+            },
+            {
+              "signature": "ACBS",
+              "headerOffset": 11705543,
+              "dataOffset": 11705549,
+              "size": 24,
+              "hex": "300000000000000004000000000064002300000000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 11705573,
+              "dataOffset": 11705579,
+              "size": 8,
+              "hex": "876F0F0000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 11705587,
+              "dataOffset": 11705593,
+              "size": 8,
+              "hex": "6D81020000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 11705601,
+              "dataOffset": 11705607,
+              "size": 8,
+              "hex": "9343090000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 11705615,
+              "dataOffset": 11705621,
+              "size": 8,
+              "hex": "1435050000000000"
+            },
+            {
+              "signature": "RNAM",
+              "headerOffset": 11705639,
+              "dataOffset": 11705645,
+              "size": 4,
+              "hex": "47370100"
+            },
+            {
+              "signature": "AIDT",
+              "headerOffset": 11705687,
+              "dataOffset": 11705693,
+              "size": 20,
+              "hex": "0002320000010000000000000000000000000000"
+            },
+            {
+              "signature": "PKID",
+              "headerOffset": 11705713,
+              "dataOffset": 11705719,
+              "size": 4,
+              "hex": "08E81000"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 11705807,
+              "dataOffset": 11705813,
+              "size": 4,
+              "hex": "5F550800"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 11705817,
+              "dataOffset": 11705823,
+              "size": 4,
+              "hex": "DC3C0C00"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 11705827,
+              "dataOffset": 11705833,
+              "size": 4,
+              "hex": "9EE70500"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 11705837,
+              "dataOffset": 11705843,
+              "size": 4,
+              "hex": "23710C00"
+            },
+            {
+              "signature": "HCLF",
+              "headerOffset": 11705847,
+              "dataOffset": 11705853,
+              "size": 4,
+              "hex": "37040A00"
+            },
+            {
+              "signature": "NAM9",
+              "headerOffset": 11705943,
+              "dataOffset": 11705949,
+              "size": 76,
+              "hex": "CDCCCC3D3333333F000080BF0000803F000080BF0000803F0000803F0000803F295C8FBE000000BFCDCCCCBD3333333F0000803F000080BF000080BF000080BF000000000AD723BFFFFF7F7F"
+            }
+          ]
+        },
+        {
+          "signature": "NPC_",
+          "offset": 11883884,
+          "dataOffset": 11883908,
+          "dataSize": 658,
+          "flags": "0x00040000",
+          "formId": "0x0001339A",
+          "compressed": true,
+          "contexts": [
+            {
+              "offset": 9743785,
+              "groupType": 0,
+              "labelHex": "4E50435F",
+              "labelAscii": "NPC_"
+            }
+          ],
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "headerOffset": 11883912,
+              "dataOffset": 11883918,
+              "size": 15,
+              "hex": "47686F727A614772614261676F6C00"
+            },
+            {
+              "signature": "ACBS",
+              "headerOffset": 11884091,
+              "dataOffset": 11884097,
+              "size": 24,
+              "hex": "210000000000000006000000000064002300000000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 11884121,
+              "dataOffset": 11884127,
+              "size": 8,
+              "hex": "6C81020000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 11884135,
+              "dataOffset": 11884141,
+              "size": 8,
+              "hex": "61820E0000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 11884149,
+              "dataOffset": 11884155,
+              "size": 8,
+              "hex": "1D090500FF000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 11884163,
+              "dataOffset": 11884169,
+              "size": 8,
+              "hex": "96150500FF000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 11884177,
+              "dataOffset": 11884183,
+              "size": 8,
+              "hex": "493A0E0000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 11884191,
+              "dataOffset": 11884197,
+              "size": 8,
+              "hex": "503A0E0000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 11884205,
+              "dataOffset": 11884211,
+              "size": 8,
+              "hex": "B39A0F0000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 11884219,
+              "dataOffset": 11884225,
+              "size": 8,
+              "hex": "EA180F0000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 11884233,
+              "dataOffset": 11884239,
+              "size": 8,
+              "hex": "EB56060000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 11884247,
+              "dataOffset": 11884253,
+              "size": 8,
+              "hex": "0998010000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 11884261,
+              "dataOffset": 11884267,
+              "size": 8,
+              "hex": "9043090000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 11884275,
+              "dataOffset": 11884281,
+              "size": 8,
+              "hex": "7881020000000000"
+            },
+            {
+              "signature": "RNAM",
+              "headerOffset": 11884299,
+              "dataOffset": 11884305,
+              "size": 4,
+              "hex": "47370100"
+            },
+            {
+              "signature": "AIDT",
+              "headerOffset": 11884347,
+              "dataOffset": 11884353,
+              "size": 20,
+              "hex": "0003320300020000000000000000000000000000"
+            },
+            {
+              "signature": "PKID",
+              "headerOffset": 11884373,
+              "dataOffset": 11884379,
+              "size": 4,
+              "hex": "6DF70A00"
+            },
+            {
+              "signature": "PKID",
+              "headerOffset": 11884383,
+              "dataOffset": 11884389,
+              "size": 4,
+              "hex": "B80A0600"
+            },
+            {
+              "signature": "PKID",
+              "headerOffset": 11884393,
+              "dataOffset": 11884399,
+              "size": 4,
+              "hex": "A2CB1000"
+            },
+            {
+              "signature": "PKID",
+              "headerOffset": 11884403,
+              "dataOffset": 11884409,
+              "size": 4,
+              "hex": "17B20100"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 11884507,
+              "dataOffset": 11884513,
+              "size": 4,
+              "hex": "1F020400"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 11884517,
+              "dataOffset": 11884523,
+              "size": 4,
+              "hex": "A04D0E00"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 11884527,
+              "dataOffset": 11884533,
+              "size": 4,
+              "hex": "E65D0800"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 11884537,
+              "dataOffset": 11884543,
+              "size": 4,
+              "hex": "B2C10E00"
+            },
+            {
+              "signature": "HCLF",
+              "headerOffset": 11884547,
+              "dataOffset": 11884553,
+              "size": 4,
+              "hex": "36040A00"
+            },
+            {
+              "signature": "NAM9",
+              "headerOffset": 11884643,
+              "dataOffset": 11884649,
+              "size": 76,
+              "hex": "CDCC4C3F000080BF333333BFCDCCCC3D00000000CDCC4C3E9A99993E0AD723BD0000003FCDCCCCBD0000003F000000009A9999BE00000000000000BF6666663F000080BF00000000FFFF7F7F"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "unofficial skyrim special edition patch.esp",
+      "bytes": 19589391,
+      "masters": [
+        "Skyrim.esm",
+        "Update.esm",
+        "Dawnguard.esm",
+        "HearthFires.esm",
+        "Dragonborn.esm",
+        "ccbgssse001-fish.esm",
+        "ccqdrsse001-survivalmode.esl",
+        "ccbgssse037-curios.esl",
+        "ccbgssse025-advdsgs.esm",
+        "_ResourcePack.esl"
+      ],
+      "records": [
+        {
+          "signature": "NPC_",
+          "offset": 4272765,
+          "dataOffset": 4272789,
+          "dataSize": 632,
+          "flags": "0x00040000",
+          "formId": "0x0001AA63",
+          "compressed": true,
+          "contexts": [
+            {
+              "offset": 4117273,
+              "groupType": 0,
+              "labelHex": "4E50435F",
+              "labelAscii": "NPC_"
+            }
+          ],
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "headerOffset": 4272793,
+              "dataOffset": 4272799,
+              "size": 7,
+              "hex": "4C757262756B00"
+            },
+            {
+              "signature": "ACBS",
+              "headerOffset": 4273018,
+              "dataOffset": 4273024,
+              "size": 24,
+              "hex": "300000000000000004000000000064002300000000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 4273048,
+              "dataOffset": 4273054,
+              "size": 8,
+              "hex": "6D81020000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 4273062,
+              "dataOffset": 4273068,
+              "size": 8,
+              "hex": "1435050000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 4273076,
+              "dataOffset": 4273082,
+              "size": 8,
+              "hex": "9343090000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 4273090,
+              "dataOffset": 4273096,
+              "size": 8,
+              "hex": "876F0F0000000000"
+            },
+            {
+              "signature": "RNAM",
+              "headerOffset": 4273114,
+              "dataOffset": 4273120,
+              "size": 4,
+              "hex": "47370100"
+            },
+            {
+              "signature": "AIDT",
+              "headerOffset": 4273162,
+              "dataOffset": 4273168,
+              "size": 20,
+              "hex": "0002320000010000000000000000000000000000"
+            },
+            {
+              "signature": "PKID",
+              "headerOffset": 4273188,
+              "dataOffset": 4273194,
+              "size": 4,
+              "hex": "08E81000"
+            },
+            {
+              "signature": "PKID",
+              "headerOffset": 4273198,
+              "dataOffset": 4273204,
+              "size": 4,
+              "hex": "1E22050A"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 4273295,
+              "dataOffset": 4273301,
+              "size": 4,
+              "hex": "9EE70500"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 4273305,
+              "dataOffset": 4273311,
+              "size": 4,
+              "hex": "5F550800"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 4273315,
+              "dataOffset": 4273321,
+              "size": 4,
+              "hex": "DC3C0C00"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 4273325,
+              "dataOffset": 4273331,
+              "size": 4,
+              "hex": "23710C00"
+            },
+            {
+              "signature": "HCLF",
+              "headerOffset": 4273335,
+              "dataOffset": 4273341,
+              "size": 4,
+              "hex": "37040A00"
+            },
+            {
+              "signature": "NAM9",
+              "headerOffset": 4273431,
+              "dataOffset": 4273437,
+              "size": 76,
+              "hex": "CDCCCC3D3333333F000080BF0000803F000080BF0000803F0000803F0000803F295C8FBE000000BFCDCCCCBD3333333F0000803F000080BF000080BF000080BF000000000AD723BFFFFF7F7F"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "AI Overhaul.esp",
+      "bytes": 2183246,
+      "masters": [
+        "Skyrim.esm",
+        "Update.esm",
+        "Dawnguard.esm",
+        "HearthFires.esm",
+        "Dragonborn.esm",
+        "ccBGSSSE001-Fish.esm",
+        "Unofficial Skyrim Special Edition Patch.esp"
+      ],
+      "records": [
+        {
+          "signature": "NPC_",
+          "offset": 59996,
+          "dataOffset": 60020,
+          "dataSize": 688,
+          "flags": "0x00040000",
+          "formId": "0x0001339A",
+          "compressed": true,
+          "contexts": [
+            {
+              "offset": 1983,
+              "groupType": 0,
+              "labelHex": "4E50435F",
+              "labelAscii": "NPC_"
+            }
+          ],
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "headerOffset": 60024,
+              "dataOffset": 60030,
+              "size": 15,
+              "hex": "47686F727A614772614261676F6C00"
+            },
+            {
+              "signature": "ACBS",
+              "headerOffset": 60203,
+              "dataOffset": 60209,
+              "size": 24,
+              "hex": "210000000000000006000000000064002300000000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 60233,
+              "dataOffset": 60239,
+              "size": 8,
+              "hex": "0998010000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 60247,
+              "dataOffset": 60253,
+              "size": 8,
+              "hex": "6C81020000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 60261,
+              "dataOffset": 60267,
+              "size": 8,
+              "hex": "7881020000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 60275,
+              "dataOffset": 60281,
+              "size": 8,
+              "hex": "1D090500FF000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 60289,
+              "dataOffset": 60295,
+              "size": 8,
+              "hex": "96150500FF000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 60303,
+              "dataOffset": 60309,
+              "size": 8,
+              "hex": "EB56060000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 60317,
+              "dataOffset": 60323,
+              "size": 8,
+              "hex": "9043090000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 60331,
+              "dataOffset": 60337,
+              "size": 8,
+              "hex": "493A0E0000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 60345,
+              "dataOffset": 60351,
+              "size": 8,
+              "hex": "503A0E0000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 60359,
+              "dataOffset": 60365,
+              "size": 8,
+              "hex": "61820E0000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 60373,
+              "dataOffset": 60379,
+              "size": 8,
+              "hex": "EA180F0000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 60387,
+              "dataOffset": 60393,
+              "size": 8,
+              "hex": "B39A0F0000000000"
+            },
+            {
+              "signature": "RNAM",
+              "headerOffset": 60411,
+              "dataOffset": 60417,
+              "size": 4,
+              "hex": "47370100"
+            },
+            {
+              "signature": "AIDT",
+              "headerOffset": 60479,
+              "dataOffset": 60485,
+              "size": 20,
+              "hex": "0003320300020020000000000000000000000000"
+            },
+            {
+              "signature": "PKID",
+              "headerOffset": 60505,
+              "dataOffset": 60511,
+              "size": 4,
+              "hex": "6DF70A00"
+            },
+            {
+              "signature": "PKID",
+              "headerOffset": 60515,
+              "dataOffset": 60521,
+              "size": 4,
+              "hex": "A6561007"
+            },
+            {
+              "signature": "PKID",
+              "headerOffset": 60525,
+              "dataOffset": 60531,
+              "size": 4,
+              "hex": "B80A0600"
+            },
+            {
+              "signature": "PKID",
+              "headerOffset": 60535,
+              "dataOffset": 60541,
+              "size": 4,
+              "hex": "A2CB1000"
+            },
+            {
+              "signature": "PKID",
+              "headerOffset": 60545,
+              "dataOffset": 60551,
+              "size": 4,
+              "hex": "17B20100"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 60665,
+              "dataOffset": 60671,
+              "size": 4,
+              "hex": "1F020400"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 60675,
+              "dataOffset": 60681,
+              "size": 4,
+              "hex": "E65D0800"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 60685,
+              "dataOffset": 60691,
+              "size": 4,
+              "hex": "A04D0E00"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 60695,
+              "dataOffset": 60701,
+              "size": 4,
+              "hex": "B2C10E00"
+            },
+            {
+              "signature": "HCLF",
+              "headerOffset": 60705,
+              "dataOffset": 60711,
+              "size": 4,
+              "hex": "36040A00"
+            },
+            {
+              "signature": "NAM9",
+              "headerOffset": 60801,
+              "dataOffset": 60807,
+              "size": 76,
+              "hex": "CDCC4C3F000080BF333333BFCDCCCC3D00000000CDCC4C3E9A99993E0AD723BD0000003FCDCCCCBD0000003F000000009A9999BE00000000000000BF6666663F000080BF00000000FFFF7F7F"
+            }
+          ]
+        },
+        {
+          "signature": "NPC_",
+          "offset": 199750,
+          "dataOffset": 199774,
+          "dataSize": 640,
+          "flags": "0x00040000",
+          "formId": "0x0001AA63",
+          "compressed": true,
+          "contexts": [
+            {
+              "offset": 1983,
+              "groupType": 0,
+              "labelHex": "4E50435F",
+              "labelAscii": "NPC_"
+            }
+          ],
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "headerOffset": 199778,
+              "dataOffset": 199784,
+              "size": 7,
+              "hex": "4C757262756B00"
+            },
+            {
+              "signature": "ACBS",
+              "headerOffset": 200003,
+              "dataOffset": 200009,
+              "size": 24,
+              "hex": "300000000000000004000000000064002300000000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 200033,
+              "dataOffset": 200039,
+              "size": 8,
+              "hex": "6D81020000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 200047,
+              "dataOffset": 200053,
+              "size": 8,
+              "hex": "1435050000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 200061,
+              "dataOffset": 200067,
+              "size": 8,
+              "hex": "9343090000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 200075,
+              "dataOffset": 200081,
+              "size": 8,
+              "hex": "876F0F0000000000"
+            },
+            {
+              "signature": "RNAM",
+              "headerOffset": 200099,
+              "dataOffset": 200105,
+              "size": 4,
+              "hex": "47370100"
+            },
+            {
+              "signature": "AIDT",
+              "headerOffset": 200147,
+              "dataOffset": 200153,
+              "size": 20,
+              "hex": "00023200000100C2000000000000000000000000"
+            },
+            {
+              "signature": "PKID",
+              "headerOffset": 200173,
+              "dataOffset": 200179,
+              "size": 4,
+              "hex": "1AF40A07"
+            },
+            {
+              "signature": "PKID",
+              "headerOffset": 200183,
+              "dataOffset": 200189,
+              "size": 4,
+              "hex": "08E81000"
+            },
+            {
+              "signature": "PKID",
+              "headerOffset": 200193,
+              "dataOffset": 200199,
+              "size": 4,
+              "hex": "1E220506"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 200290,
+              "dataOffset": 200296,
+              "size": 4,
+              "hex": "9EE70500"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 200300,
+              "dataOffset": 200306,
+              "size": 4,
+              "hex": "5F550800"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 200310,
+              "dataOffset": 200316,
+              "size": 4,
+              "hex": "DC3C0C00"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 200320,
+              "dataOffset": 200326,
+              "size": 4,
+              "hex": "23710C00"
+            },
+            {
+              "signature": "HCLF",
+              "headerOffset": 200330,
+              "dataOffset": 200336,
+              "size": 4,
+              "hex": "37040A00"
+            },
+            {
+              "signature": "NAM9",
+              "headerOffset": 200426,
+              "dataOffset": 200432,
+              "size": 76,
+              "hex": "CDCCCC3D3333333F000080BF0000803F000080BF0000803F0000803F0000803F295C8FBE000000BFCDCCCCBD3333333F0000803F000080BF000080BF000080BF000000000AD723BFFFFF7F7F"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "Children of the Pariah.esp",
+      "bytes": 88141,
+      "masters": [
+        "Skyrim.esm",
+        "Update.esm",
+        "Dawnguard.esm",
+        "HearthFires.esm",
+        "Dragonborn.esm"
+      ],
+      "records": [
+        {
+          "signature": "NPC_",
+          "offset": 59102,
+          "dataOffset": 59126,
+          "dataSize": 670,
+          "flags": "0x00040000",
+          "formId": "0x0001339A",
+          "compressed": true,
+          "contexts": [
+            {
+              "offset": 57809,
+              "groupType": 0,
+              "labelHex": "4E50435F",
+              "labelAscii": "NPC_"
+            }
+          ],
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "headerOffset": 59130,
+              "dataOffset": 59136,
+              "size": 15,
+              "hex": "47686F727A614772614261676F6C00"
+            },
+            {
+              "signature": "ACBS",
+              "headerOffset": 59309,
+              "dataOffset": 59315,
+              "size": 24,
+              "hex": "210000000000000006000000000064002300000000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 59339,
+              "dataOffset": 59345,
+              "size": 8,
+              "hex": "0998010000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 59353,
+              "dataOffset": 59359,
+              "size": 8,
+              "hex": "6C81020000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 59367,
+              "dataOffset": 59373,
+              "size": 8,
+              "hex": "7881020000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 59381,
+              "dataOffset": 59387,
+              "size": 8,
+              "hex": "1D090500FF000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 59395,
+              "dataOffset": 59401,
+              "size": 8,
+              "hex": "96150500FF000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 59409,
+              "dataOffset": 59415,
+              "size": 8,
+              "hex": "EB56060000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 59423,
+              "dataOffset": 59429,
+              "size": 8,
+              "hex": "9043090000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 59437,
+              "dataOffset": 59443,
+              "size": 8,
+              "hex": "493A0E0000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 59451,
+              "dataOffset": 59457,
+              "size": 8,
+              "hex": "503A0E0000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 59465,
+              "dataOffset": 59471,
+              "size": 8,
+              "hex": "61820E0000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 59479,
+              "dataOffset": 59485,
+              "size": 8,
+              "hex": "EA180F0000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 59493,
+              "dataOffset": 59499,
+              "size": 8,
+              "hex": "B39A0F0000000000"
+            },
+            {
+              "signature": "RNAM",
+              "headerOffset": 59517,
+              "dataOffset": 59523,
+              "size": 4,
+              "hex": "47370100"
+            },
+            {
+              "signature": "AIDT",
+              "headerOffset": 59565,
+              "dataOffset": 59571,
+              "size": 20,
+              "hex": "0003320300020000000000000000000000000000"
+            },
+            {
+              "signature": "PKID",
+              "headerOffset": 59591,
+              "dataOffset": 59597,
+              "size": 4,
+              "hex": "6DF70A00"
+            },
+            {
+              "signature": "PKID",
+              "headerOffset": 59601,
+              "dataOffset": 59607,
+              "size": 4,
+              "hex": "B80A0600"
+            },
+            {
+              "signature": "PKID",
+              "headerOffset": 59611,
+              "dataOffset": 59617,
+              "size": 4,
+              "hex": "A2CB1000"
+            },
+            {
+              "signature": "PKID",
+              "headerOffset": 59621,
+              "dataOffset": 59627,
+              "size": 4,
+              "hex": "17B20100"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 59741,
+              "dataOffset": 59747,
+              "size": 4,
+              "hex": "304E0E00"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 59751,
+              "dataOffset": 59757,
+              "size": 4,
+              "hex": "02080005"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 59761,
+              "dataOffset": 59767,
+              "size": 4,
+              "hex": "3A080005"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 59771,
+              "dataOffset": 59777,
+              "size": 4,
+              "hex": "4F080005"
+            },
+            {
+              "signature": "HCLF",
+              "headerOffset": 59781,
+              "dataOffset": 59787,
+              "size": 4,
+              "hex": "31040A00"
+            },
+            {
+              "signature": "NAM9",
+              "headerOffset": 59877,
+              "dataOffset": 59883,
+              "size": 76,
+              "hex": "CDCC4C3F000080BF333333BFCDCCCC3D00000000CDCC4C3E9A99993E0AD723BD0000003FCDCCCCBD0000003F000000009A9999BE00000000000000BF6666663F000080BF00000000FFFF7F7F"
+            }
+          ]
+        },
+        {
+          "signature": "NPC_",
+          "offset": 75511,
+          "dataOffset": 75535,
+          "dataSize": 586,
+          "flags": "0x00040000",
+          "formId": "0x0001AA63",
+          "compressed": true,
+          "contexts": [
+            {
+              "offset": 57809,
+              "groupType": 0,
+              "labelHex": "4E50435F",
+              "labelAscii": "NPC_"
+            }
+          ],
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "headerOffset": 75539,
+              "dataOffset": 75545,
+              "size": 7,
+              "hex": "4C757262756B00"
+            },
+            {
+              "signature": "ACBS",
+              "headerOffset": 75696,
+              "dataOffset": 75702,
+              "size": 24,
+              "hex": "300000000000000004000000000064002300000000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 75726,
+              "dataOffset": 75732,
+              "size": 8,
+              "hex": "6D81020000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 75740,
+              "dataOffset": 75746,
+              "size": 8,
+              "hex": "1435050000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 75754,
+              "dataOffset": 75760,
+              "size": 8,
+              "hex": "9343090000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 75768,
+              "dataOffset": 75774,
+              "size": 8,
+              "hex": "876F0F0000000000"
+            },
+            {
+              "signature": "RNAM",
+              "headerOffset": 75792,
+              "dataOffset": 75798,
+              "size": 4,
+              "hex": "47370100"
+            },
+            {
+              "signature": "AIDT",
+              "headerOffset": 75840,
+              "dataOffset": 75846,
+              "size": 20,
+              "hex": "0002320000010000000000000000000000000000"
+            },
+            {
+              "signature": "PKID",
+              "headerOffset": 75866,
+              "dataOffset": 75872,
+              "size": 4,
+              "hex": "08E81000"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 75963,
+              "dataOffset": 75969,
+              "size": 4,
+              "hex": "0B080005"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 75973,
+              "dataOffset": 75979,
+              "size": 4,
+              "hex": "8A080005"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 75983,
+              "dataOffset": 75989,
+              "size": 4,
+              "hex": "8D080005"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 75993,
+              "dataOffset": 75999,
+              "size": 4,
+              "hex": "8F080005"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 76003,
+              "dataOffset": 76009,
+              "size": 4,
+              "hex": "92080005"
+            },
+            {
+              "signature": "HCLF",
+              "headerOffset": 76013,
+              "dataOffset": 76019,
+              "size": 4,
+              "hex": "65750F00"
+            },
+            {
+              "signature": "NAM9",
+              "headerOffset": 76109,
+              "dataOffset": 76115,
+              "size": 76,
+              "hex": "CDCCCC3D3333333F000080BF0000803F000080BF0000803F0000803F0000803F295C8FBE000000BFCDCCCCBD3333333F0000803F000080BF000080BF000080BF000000000AD723BFFFFF7F7F"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "CotP - AIO Patch.esp",
+      "bytes": 30319,
+      "masters": [
+        "Skyrim.esm",
+        "Dawnguard.esm",
+        "Dragonborn.esm",
+        "Unofficial Skyrim Special Edition Patch.esp",
+        "AI Overhaul.esp",
+        "Children of the Pariah.esp"
+      ],
+      "records": [
+        {
+          "signature": "NPC_",
+          "offset": 1615,
+          "dataOffset": 1639,
+          "dataSize": 685,
+          "flags": "0x00040000",
+          "formId": "0x0001339A",
+          "compressed": true,
+          "contexts": [
+            {
+              "offset": 296,
+              "groupType": 0,
+              "labelHex": "4E50435F",
+              "labelAscii": "NPC_"
+            }
+          ],
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "headerOffset": 1643,
+              "dataOffset": 1649,
+              "size": 15,
+              "hex": "47686F727A614772614261676F6C00"
+            },
+            {
+              "signature": "ACBS",
+              "headerOffset": 1822,
+              "dataOffset": 1828,
+              "size": 24,
+              "hex": "210000000000000006000000000064002300000000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 1852,
+              "dataOffset": 1858,
+              "size": 8,
+              "hex": "0998010000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 1866,
+              "dataOffset": 1872,
+              "size": 8,
+              "hex": "6C81020000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 1880,
+              "dataOffset": 1886,
+              "size": 8,
+              "hex": "7881020000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 1894,
+              "dataOffset": 1900,
+              "size": 8,
+              "hex": "1D090500FF000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 1908,
+              "dataOffset": 1914,
+              "size": 8,
+              "hex": "96150500FF000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 1922,
+              "dataOffset": 1928,
+              "size": 8,
+              "hex": "EB56060000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 1936,
+              "dataOffset": 1942,
+              "size": 8,
+              "hex": "9043090000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 1950,
+              "dataOffset": 1956,
+              "size": 8,
+              "hex": "493A0E0000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 1964,
+              "dataOffset": 1970,
+              "size": 8,
+              "hex": "503A0E0000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 1978,
+              "dataOffset": 1984,
+              "size": 8,
+              "hex": "61820E0000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 1992,
+              "dataOffset": 1998,
+              "size": 8,
+              "hex": "EA180F0000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 2006,
+              "dataOffset": 2012,
+              "size": 8,
+              "hex": "B39A0F0000000000"
+            },
+            {
+              "signature": "RNAM",
+              "headerOffset": 2030,
+              "dataOffset": 2036,
+              "size": 4,
+              "hex": "47370100"
+            },
+            {
+              "signature": "AIDT",
+              "headerOffset": 2098,
+              "dataOffset": 2104,
+              "size": 20,
+              "hex": "0003320300020000000000000000000000000000"
+            },
+            {
+              "signature": "PKID",
+              "headerOffset": 2124,
+              "dataOffset": 2130,
+              "size": 4,
+              "hex": "6DF70A00"
+            },
+            {
+              "signature": "PKID",
+              "headerOffset": 2134,
+              "dataOffset": 2140,
+              "size": 4,
+              "hex": "A6561004"
+            },
+            {
+              "signature": "PKID",
+              "headerOffset": 2144,
+              "dataOffset": 2150,
+              "size": 4,
+              "hex": "B80A0600"
+            },
+            {
+              "signature": "PKID",
+              "headerOffset": 2154,
+              "dataOffset": 2160,
+              "size": 4,
+              "hex": "A2CB1000"
+            },
+            {
+              "signature": "PKID",
+              "headerOffset": 2164,
+              "dataOffset": 2170,
+              "size": 4,
+              "hex": "17B20100"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 2284,
+              "dataOffset": 2290,
+              "size": 4,
+              "hex": "304E0E00"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 2294,
+              "dataOffset": 2300,
+              "size": 4,
+              "hex": "02080005"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 2304,
+              "dataOffset": 2310,
+              "size": 4,
+              "hex": "3A080005"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 2314,
+              "dataOffset": 2320,
+              "size": 4,
+              "hex": "4F080005"
+            },
+            {
+              "signature": "HCLF",
+              "headerOffset": 2324,
+              "dataOffset": 2330,
+              "size": 4,
+              "hex": "31040A00"
+            },
+            {
+              "signature": "NAM9",
+              "headerOffset": 2420,
+              "dataOffset": 2426,
+              "size": 76,
+              "hex": "CDCC4C3F000080BF333333BFCDCCCC3D00000000CDCC4C3E9A99993E0AD723BD0000003FCDCCCCBD0000003F000000009A9999BE00000000000000BF6666663F000080BF00000000FFFF7F7F"
+            }
+          ]
+        },
+        {
+          "signature": "NPC_",
+          "offset": 18865,
+          "dataOffset": 18889,
+          "dataSize": 642,
+          "flags": "0x00040000",
+          "formId": "0x0001AA63",
+          "compressed": true,
+          "contexts": [
+            {
+              "offset": 296,
+              "groupType": 0,
+              "labelHex": "4E50435F",
+              "labelAscii": "NPC_"
+            }
+          ],
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "headerOffset": 18893,
+              "dataOffset": 18899,
+              "size": 7,
+              "hex": "4C757262756B00"
+            },
+            {
+              "signature": "ACBS",
+              "headerOffset": 19118,
+              "dataOffset": 19124,
+              "size": 24,
+              "hex": "300000000000000004000000000064002300000000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 19148,
+              "dataOffset": 19154,
+              "size": 8,
+              "hex": "6D81020000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 19162,
+              "dataOffset": 19168,
+              "size": 8,
+              "hex": "1435050000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 19176,
+              "dataOffset": 19182,
+              "size": 8,
+              "hex": "9343090000000000"
+            },
+            {
+              "signature": "SNAM",
+              "headerOffset": 19190,
+              "dataOffset": 19196,
+              "size": 8,
+              "hex": "876F0F0000000000"
+            },
+            {
+              "signature": "RNAM",
+              "headerOffset": 19214,
+              "dataOffset": 19220,
+              "size": 4,
+              "hex": "47370100"
+            },
+            {
+              "signature": "AIDT",
+              "headerOffset": 19262,
+              "dataOffset": 19268,
+              "size": 20,
+              "hex": "0002320000010000000000000000000000000000"
+            },
+            {
+              "signature": "PKID",
+              "headerOffset": 19288,
+              "dataOffset": 19294,
+              "size": 4,
+              "hex": "1AF40A04"
+            },
+            {
+              "signature": "PKID",
+              "headerOffset": 19298,
+              "dataOffset": 19304,
+              "size": 4,
+              "hex": "08E81000"
+            },
+            {
+              "signature": "PKID",
+              "headerOffset": 19308,
+              "dataOffset": 19314,
+              "size": 4,
+              "hex": "1E220503"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 19405,
+              "dataOffset": 19411,
+              "size": 4,
+              "hex": "0B080005"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 19415,
+              "dataOffset": 19421,
+              "size": 4,
+              "hex": "8A080005"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 19425,
+              "dataOffset": 19431,
+              "size": 4,
+              "hex": "8D080005"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 19435,
+              "dataOffset": 19441,
+              "size": 4,
+              "hex": "8F080005"
+            },
+            {
+              "signature": "PNAM",
+              "headerOffset": 19445,
+              "dataOffset": 19451,
+              "size": 4,
+              "hex": "92080005"
+            },
+            {
+              "signature": "HCLF",
+              "headerOffset": 19455,
+              "dataOffset": 19461,
+              "size": 4,
+              "hex": "65750F00"
+            },
+            {
+              "signature": "NAM9",
+              "headerOffset": 19551,
+              "dataOffset": 19557,
+              "size": 76,
+              "hex": "CDCCCC3D3333333F000080BF0000803F000080BF0000803F0000803F0000803F295C8FBE000000BFCDCCCCBD3333333F0000803F000080BF000080BF000080BF000000000AD723BFFFFF7F7F"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

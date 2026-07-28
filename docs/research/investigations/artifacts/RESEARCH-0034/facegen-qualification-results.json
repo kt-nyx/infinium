@@ -1,0 +1,368 @@
+{
+  "schema": "infinium-facegen-qualification-results/1",
+  "generatedAt": "2026-07-28T16:40:08.592Z",
+  "node": "v24.11.1",
+  "inputCaseCount": 20,
+  "passedCaseCount": 20,
+  "failedCaseCount": 0,
+  "failures": [],
+  "results": [
+    {
+      "id": "FG-001-full-origin-shadow-chain",
+      "status": "supported-exact",
+      "mesh": {
+        "key": "meshes/actors/character/facegendata/facegeom/skyrim.esm/0001339a.nif",
+        "state": "present",
+        "winner": "Appearance winner",
+        "winnerOriginalPath": "meshes\\actors\\character\\facegendata\\facegeom\\skyrim.esm\\0001339a.nif",
+        "winnerHash": "2B26F673F2FCDF89F7C60F92AFFDDA1299666371C8EEF603A8000D48D0CB4BEC",
+        "providerCount": 2,
+        "providerChain": [
+          {
+            "source": "Earlier appearance",
+            "priority": 10,
+            "originalPath": "Meshes/Actors/Character/FaceGenData/FaceGeom/Skyrim.esm/0001339A.nif",
+            "comparisonKey": "meshes/actors/character/facegendata/facegeom/skyrim.esm/0001339a.nif",
+            "hash": "F60D5B5C85C17FE601C57B9D451E9417E2EF882FE569C68094AD4AC5DD10DD2C"
+          },
+          {
+            "source": "Appearance winner",
+            "priority": 20,
+            "originalPath": "meshes\\actors\\character\\facegendata\\facegeom\\skyrim.esm\\0001339a.nif",
+            "comparisonKey": "meshes/actors/character/facegendata/facegeom/skyrim.esm/0001339a.nif",
+            "hash": "2B26F673F2FCDF89F7C60F92AFFDDA1299666371C8EEF603A8000D48D0CB4BEC"
+          }
+        ],
+        "structuralState": "not-checked"
+      },
+      "tint": {
+        "key": "textures/actors/character/facegendata/facetint/skyrim.esm/0001339a.dds",
+        "state": "present",
+        "winner": "Appearance winner",
+        "winnerOriginalPath": "Textures\\Actors\\Character\\FaceGenData\\FaceTint\\Skyrim.esm\\0001339a.dds",
+        "winnerHash": "C2960F545B24C9FEAA7F0AEB26586C8212CE0FD5F141AE607BAB7F4A96D8058D",
+        "providerCount": 2,
+        "providerChain": [
+          {
+            "source": "Earlier appearance",
+            "priority": 10,
+            "originalPath": "textures/actors/character/facegendata/facetint/skyrim.esm/0001339A.dds",
+            "comparisonKey": "textures/actors/character/facegendata/facetint/skyrim.esm/0001339a.dds",
+            "hash": "2060C48732CFC09AB96CB708A48B75C9A30728259AB5EB2534237A476022B0E9"
+          },
+          {
+            "source": "Appearance winner",
+            "priority": 20,
+            "originalPath": "Textures\\Actors\\Character\\FaceGenData\\FaceTint\\Skyrim.esm\\0001339a.dds",
+            "comparisonKey": "textures/actors/character/facegendata/facetint/skyrim.esm/0001339a.dds",
+            "hash": "C2960F545B24C9FEAA7F0AEB26586C8212CE0FD5F141AE607BAB7F4A96D8058D"
+          }
+        ],
+        "structuralState": "not-checked"
+      },
+      "completeness": "complete"
+    },
+    {
+      "id": "FG-002-light-esl-origin",
+      "status": "supported-exact",
+      "mesh": {
+        "key": "meshes/actors/character/facegendata/facegeom/tinyfaces.esl/00000abc.nif",
+        "state": "present",
+        "winner": "Tiny faces",
+        "winnerOriginalPath": "meshes/actors/character/facegendata/facegeom/tinyfaces.esl/00000abc.nif",
+        "winnerHash": "266EAA321624503A1FC71613B82EC01CE97779F25C0EB89526A778046B4336B6",
+        "providerCount": 1,
+        "providerChain": [
+          {
+            "source": "Tiny faces",
+            "priority": 1,
+            "originalPath": "meshes/actors/character/facegendata/facegeom/tinyfaces.esl/00000abc.nif",
+            "comparisonKey": "meshes/actors/character/facegendata/facegeom/tinyfaces.esl/00000abc.nif",
+            "hash": "266EAA321624503A1FC71613B82EC01CE97779F25C0EB89526A778046B4336B6"
+          }
+        ],
+        "structuralState": "not-checked"
+      },
+      "tint": {
+        "key": "textures/actors/character/facegendata/facetint/tinyfaces.esl/00000abc.dds",
+        "state": "present",
+        "winner": "Tiny faces",
+        "winnerOriginalPath": "textures/actors/character/facegendata/facetint/tinyfaces.esl/00000abc.dds",
+        "winnerHash": "EA0C9CD398CF1FD4611F410D53E07CC4A20BECF036B00CAD329AEA66EB6F9082",
+        "providerCount": 1,
+        "providerChain": [
+          {
+            "source": "Tiny faces",
+            "priority": 1,
+            "originalPath": "textures/actors/character/facegendata/facetint/tinyfaces.esl/00000abc.dds",
+            "comparisonKey": "textures/actors/character/facegendata/facetint/tinyfaces.esl/00000abc.dds",
+            "hash": "EA0C9CD398CF1FD4611F410D53E07CC4A20BECF036B00CAD329AEA66EB6F9082"
+          }
+        ],
+        "structuralState": "not-checked"
+      },
+      "completeness": "complete"
+    },
+    {
+      "id": "FG-003-light-flagged-esp-origin",
+      "status": "supported-exact",
+      "mesh": {
+        "key": "meshes/actors/character/facegendata/facegeom/tinyfaces.esp/00000123.nif",
+        "state": "present",
+        "winner": "Later assets",
+        "winnerOriginalPath": "meshes/actors/character/facegendata/facegeom/tinyfaces.esp/00000123.nif",
+        "winnerHash": "CF3F22FF75387BE08F81C331570E39CD84FB7F134ADB41BD525C4C9762E092A0",
+        "providerCount": 1,
+        "providerChain": [
+          {
+            "source": "Later assets",
+            "priority": 3,
+            "originalPath": "meshes/actors/character/facegendata/facegeom/tinyfaces.esp/00000123.nif",
+            "comparisonKey": "meshes/actors/character/facegendata/facegeom/tinyfaces.esp/00000123.nif",
+            "hash": "CF3F22FF75387BE08F81C331570E39CD84FB7F134ADB41BD525C4C9762E092A0"
+          }
+        ],
+        "structuralState": "not-checked"
+      },
+      "tint": {
+        "key": "textures/actors/character/facegendata/facetint/tinyfaces.esp/00000123.dds",
+        "state": "present",
+        "winner": "Later assets",
+        "winnerOriginalPath": "textures/actors/character/facegendata/facetint/tinyfaces.esp/00000123.dds",
+        "winnerHash": "A1B2B8BF1339DF1A7B845BF806E2AC5C1F48F0956FCE0A990EABD8D917CD171D",
+        "providerCount": 1,
+        "providerChain": [
+          {
+            "source": "Later assets",
+            "priority": 3,
+            "originalPath": "textures/actors/character/facegendata/facetint/tinyfaces.esp/00000123.dds",
+            "comparisonKey": "textures/actors/character/facegendata/facetint/tinyfaces.esp/00000123.dds",
+            "hash": "A1B2B8BF1339DF1A7B845BF806E2AC5C1F48F0956FCE0A990EABD8D917CD171D"
+          }
+        ],
+        "structuralState": "not-checked"
+      },
+      "completeness": "complete"
+    },
+    {
+      "id": "FG-004-origin-not-winning-plugin-directory",
+      "status": "supported-exact",
+      "mesh": {
+        "key": "meshes/actors/character/facegendata/facegeom/baseactors.esm/00001234.nif",
+        "state": "present",
+        "winner": "Correct provider",
+        "winnerOriginalPath": "meshes/actors/character/facegendata/facegeom/baseactors.esm/00001234.nif",
+        "winnerHash": "8B96FC3E7F66420F96886ECAC841BD8E2217C13B236CE49E3D280FA449C58389",
+        "providerCount": 1,
+        "providerChain": [
+          {
+            "source": "Correct provider",
+            "priority": 10,
+            "originalPath": "meshes/actors/character/facegendata/facegeom/baseactors.esm/00001234.nif",
+            "comparisonKey": "meshes/actors/character/facegendata/facegeom/baseactors.esm/00001234.nif",
+            "hash": "8B96FC3E7F66420F96886ECAC841BD8E2217C13B236CE49E3D280FA449C58389"
+          }
+        ],
+        "structuralState": "not-checked"
+      },
+      "tint": {
+        "key": "textures/actors/character/facegendata/facetint/baseactors.esm/00001234.dds",
+        "state": "present",
+        "winner": "Correct provider",
+        "winnerOriginalPath": "textures/actors/character/facegendata/facetint/baseactors.esm/00001234.dds",
+        "winnerHash": "409E62D69AE8136D608E4F0904160149A55A3785730F8441CDBB8052B98DACB4",
+        "providerCount": 1,
+        "providerChain": [
+          {
+            "source": "Correct provider",
+            "priority": 10,
+            "originalPath": "textures/actors/character/facegendata/facetint/baseactors.esm/00001234.dds",
+            "comparisonKey": "textures/actors/character/facegendata/facetint/baseactors.esm/00001234.dds",
+            "hash": "409E62D69AE8136D608E4F0904160149A55A3785730F8441CDBB8052B98DACB4"
+          }
+        ],
+        "structuralState": "not-checked"
+      },
+      "completeness": "complete"
+    },
+    {
+      "id": "FG-005-exact-loose-absence",
+      "status": "supported-exact",
+      "mesh": {
+        "key": "meshes/actors/character/facegendata/facegeom/baseactors.esm/00001234.nif",
+        "state": "absent",
+        "providerCount": 0
+      },
+      "tint": {
+        "key": "textures/actors/character/facegendata/facetint/baseactors.esm/00001234.dds",
+        "state": "absent",
+        "providerCount": 0
+      },
+      "completeness": "absent"
+    },
+    {
+      "id": "FG-006-archive-not-qualified",
+      "status": "coverage-gap",
+      "mesh": {
+        "key": "meshes/actors/character/facegendata/facegeom/baseactors.esm/00001234.nif",
+        "state": "archive-unqualified",
+        "providerCount": 0
+      },
+      "tint": {
+        "key": "textures/actors/character/facegendata/facetint/baseactors.esm/00001234.dds",
+        "state": "archive-unqualified",
+        "providerCount": 0
+      },
+      "completeness": "gap"
+    },
+    {
+      "id": "FG-007-wrong-shapes-do-not-match",
+      "status": "supported-exact",
+      "mesh": {
+        "key": "meshes/actors/character/facegendata/facegeom/baseactors.esm/00001234.nif",
+        "state": "absent",
+        "providerCount": 0
+      },
+      "tint": {
+        "key": "textures/actors/character/facegendata/facetint/baseactors.esm/00001234.dds",
+        "state": "absent",
+        "providerCount": 0
+      },
+      "completeness": "absent"
+    },
+    {
+      "id": "FG-008-partial-pair",
+      "status": "supported-exact",
+      "mesh": {
+        "key": "meshes/actors/character/facegendata/facegeom/baseactors.esm/00001234.nif",
+        "state": "present",
+        "winner": "Mesh only",
+        "winnerOriginalPath": "meshes/actors/character/facegendata/facegeom/baseactors.esm/00001234.nif",
+        "winnerHash": "38BC592B87F7C116105C4C1614ABD5B6A0E773BA3C8F742209591E5411D81346",
+        "providerCount": 1,
+        "providerChain": [
+          {
+            "source": "Mesh only",
+            "priority": 1,
+            "originalPath": "meshes/actors/character/facegendata/facegeom/baseactors.esm/00001234.nif",
+            "comparisonKey": "meshes/actors/character/facegendata/facegeom/baseactors.esm/00001234.nif",
+            "hash": "38BC592B87F7C116105C4C1614ABD5B6A0E773BA3C8F742209591E5411D81346"
+          }
+        ],
+        "structuralState": "not-checked"
+      },
+      "tint": {
+        "key": "textures/actors/character/facegendata/facetint/baseactors.esm/00001234.dds",
+        "state": "absent",
+        "providerCount": 0
+      },
+      "completeness": "partial"
+    },
+    {
+      "id": "FG-009-race-unresolved",
+      "status": "coverage-gap",
+      "reason": "race-unresolved"
+    },
+    {
+      "id": "FG-010-no-facegen-head",
+      "status": "not-applicable",
+      "reason": "race-does-not-use-facegen-head"
+    },
+    {
+      "id": "FG-011-use-template",
+      "status": "coverage-gap",
+      "reason": "template-source-required"
+    },
+    {
+      "id": "FG-012-template-traits",
+      "status": "coverage-gap",
+      "reason": "template-traits-source-required"
+    },
+    {
+      "id": "FG-013-invalid-plugin-name",
+      "status": "invalid-input",
+      "reason": "invalid-origin-plugin"
+    },
+    {
+      "id": "FG-014-light-id-out-of-range",
+      "status": "invalid-input",
+      "reason": "local-id-out-of-range"
+    },
+    {
+      "id": "FG-015-normalization-collision",
+      "status": "coverage-gap",
+      "reason": "normalization-collision"
+    },
+    {
+      "id": "FG-016-duplicate-priority",
+      "status": "coverage-gap",
+      "reason": "ambiguous-provider-priority"
+    },
+    {
+      "id": "FG-017-changed-during-capture",
+      "status": "invalidated",
+      "reason": "changed-during-capture"
+    },
+    {
+      "id": "FG-018-deleted-winning-record",
+      "status": "coverage-gap",
+      "reason": "deleted-winning-record"
+    },
+    {
+      "id": "FG-019-malformed-present-assets",
+      "status": "supported-exact",
+      "mesh": {
+        "key": "meshes/actors/character/facegendata/facegeom/baseactors.esm/00001234.nif",
+        "state": "present",
+        "winner": "Malformed assets",
+        "winnerOriginalPath": "meshes/actors/character/facegendata/facegeom/baseactors.esm/00001234.nif",
+        "winnerHash": "657804CE1ED75CF66FE31798F5556E2B1768C28610ED2CDC8BF3F8ED4CB11542",
+        "providerCount": 1,
+        "providerChain": [
+          {
+            "source": "Malformed assets",
+            "priority": 1,
+            "originalPath": "meshes/actors/character/facegendata/facegeom/baseactors.esm/00001234.nif",
+            "comparisonKey": "meshes/actors/character/facegendata/facegeom/baseactors.esm/00001234.nif",
+            "hash": "657804CE1ED75CF66FE31798F5556E2B1768C28610ED2CDC8BF3F8ED4CB11542"
+          }
+        ],
+        "structuralState": "malformed"
+      },
+      "tint": {
+        "key": "textures/actors/character/facegendata/facetint/baseactors.esm/00001234.dds",
+        "state": "present",
+        "winner": "Malformed assets",
+        "winnerOriginalPath": "textures/actors/character/facegendata/facetint/baseactors.esm/00001234.dds",
+        "winnerHash": "57D69FA7FEC63F80652D9D6A0B9958DEDDC0CF675E3D257AD4CA0F4EB0116072",
+        "providerCount": 1,
+        "providerChain": [
+          {
+            "source": "Malformed assets",
+            "priority": 1,
+            "originalPath": "textures/actors/character/facegendata/facetint/baseactors.esm/00001234.dds",
+            "comparisonKey": "textures/actors/character/facegendata/facetint/baseactors.esm/00001234.dds",
+            "hash": "57D69FA7FEC63F80652D9D6A0B9958DEDDC0CF675E3D257AD4CA0F4EB0116072"
+          }
+        ],
+        "structuralState": "malformed"
+      },
+      "completeness": "complete"
+    },
+    {
+      "id": "FG-020-archive-provider-visible-but-unsupported",
+      "status": "coverage-gap",
+      "mesh": {
+        "key": "meshes/actors/character/facegendata/facegeom/baseactors.esm/00001234.nif",
+        "state": "archive-unqualified",
+        "providerCount": 1
+      },
+      "tint": {
+        "key": "textures/actors/character/facegendata/facetint/baseactors.esm/00001234.dds",
+        "state": "archive-unqualified",
+        "providerCount": 0
+      },
+      "completeness": "gap"
+    }
+  ]
+}

@@ -1,0 +1,160 @@
+{
+  "schema": "infinium-facegen-qualification-expectations/1",
+  "cases": {
+    "FG-001-full-origin-shadow-chain": {
+      "status": "supported-exact",
+      "mesh": {
+        "key": "meshes/actors/character/facegendata/facegeom/skyrim.esm/0001339a.nif",
+        "state": "present",
+        "winner": "Appearance winner",
+        "providerCount": 2
+      },
+      "tint": {
+        "key": "textures/actors/character/facegendata/facetint/skyrim.esm/0001339a.dds",
+        "state": "present",
+        "winner": "Appearance winner",
+        "providerCount": 2
+      },
+      "completeness": "complete"
+    },
+    "FG-002-light-esl-origin": {
+      "status": "supported-exact",
+      "mesh": {
+        "key": "meshes/actors/character/facegendata/facegeom/tinyfaces.esl/00000abc.nif",
+        "state": "present"
+      },
+      "tint": {
+        "key": "textures/actors/character/facegendata/facetint/tinyfaces.esl/00000abc.dds",
+        "state": "present"
+      },
+      "completeness": "complete"
+    },
+    "FG-003-light-flagged-esp-origin": {
+      "status": "supported-exact",
+      "mesh": {
+        "key": "meshes/actors/character/facegendata/facegeom/tinyfaces.esp/00000123.nif",
+        "state": "present"
+      },
+      "tint": {
+        "key": "textures/actors/character/facegendata/facetint/tinyfaces.esp/00000123.dds",
+        "state": "present"
+      },
+      "completeness": "complete"
+    },
+    "FG-004-origin-not-winning-plugin-directory": {
+      "status": "supported-exact",
+      "mesh": {
+        "key": "meshes/actors/character/facegendata/facegeom/baseactors.esm/00001234.nif",
+        "state": "present",
+        "winner": "Correct provider"
+      },
+      "tint": {
+        "state": "present",
+        "winner": "Correct provider"
+      },
+      "completeness": "complete"
+    },
+    "FG-005-exact-loose-absence": {
+      "status": "supported-exact",
+      "mesh": {
+        "state": "absent"
+      },
+      "tint": {
+        "state": "absent"
+      },
+      "completeness": "absent"
+    },
+    "FG-006-archive-not-qualified": {
+      "status": "coverage-gap",
+      "mesh": {
+        "state": "archive-unqualified"
+      },
+      "tint": {
+        "state": "archive-unqualified"
+      },
+      "completeness": "gap"
+    },
+    "FG-007-wrong-shapes-do-not-match": {
+      "status": "supported-exact",
+      "mesh": {
+        "state": "absent"
+      },
+      "tint": {
+        "state": "absent"
+      },
+      "completeness": "absent"
+    },
+    "FG-008-partial-pair": {
+      "status": "supported-exact",
+      "mesh": {
+        "state": "present"
+      },
+      "tint": {
+        "state": "absent"
+      },
+      "completeness": "partial"
+    },
+    "FG-009-race-unresolved": {
+      "status": "coverage-gap",
+      "reason": "race-unresolved"
+    },
+    "FG-010-no-facegen-head": {
+      "status": "not-applicable",
+      "reason": "race-does-not-use-facegen-head"
+    },
+    "FG-011-use-template": {
+      "status": "coverage-gap",
+      "reason": "template-source-required"
+    },
+    "FG-012-template-traits": {
+      "status": "coverage-gap",
+      "reason": "template-traits-source-required"
+    },
+    "FG-013-invalid-plugin-name": {
+      "status": "invalid-input",
+      "reason": "invalid-origin-plugin"
+    },
+    "FG-014-light-id-out-of-range": {
+      "status": "invalid-input",
+      "reason": "local-id-out-of-range"
+    },
+    "FG-015-normalization-collision": {
+      "status": "coverage-gap",
+      "reason": "normalization-collision"
+    },
+    "FG-016-duplicate-priority": {
+      "status": "coverage-gap",
+      "reason": "ambiguous-provider-priority"
+    },
+    "FG-017-changed-during-capture": {
+      "status": "invalidated",
+      "reason": "changed-during-capture"
+    },
+    "FG-018-deleted-winning-record": {
+      "status": "coverage-gap",
+      "reason": "deleted-winning-record"
+    },
+    "FG-019-malformed-present-assets": {
+      "status": "supported-exact",
+      "mesh": {
+        "state": "present",
+        "structuralState": "malformed"
+      },
+      "tint": {
+        "state": "present",
+        "structuralState": "malformed"
+      },
+      "completeness": "complete"
+    },
+    "FG-020-archive-provider-visible-but-unsupported": {
+      "status": "coverage-gap",
+      "mesh": {
+        "state": "archive-unqualified"
+      },
+      "tint": {
+        "state": "archive-unqualified"
+      },
+      "completeness": "gap"
+    }
+  }
+}

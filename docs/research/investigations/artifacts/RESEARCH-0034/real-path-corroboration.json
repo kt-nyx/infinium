@@ -1,0 +1,41 @@
+{
+  "schema": "infinium-facegen-real-path-corroboration/1",
+  "capturedAt": "2026-07-28",
+  "role": "Private local corroboration only; not a shipped fixture or correctness oracle",
+  "examples": [
+    {
+      "class": "full-origin override with loose assets",
+      "originPlugin": "Skyrim.esm",
+      "rawOverrideFormId": "0x0001339A",
+      "localId": "0x01339A",
+      "meshPath": "meshes/actors/character/facegendata/facegeom/skyrim.esm/0001339a.nif",
+      "meshSha256": "06A16385F2702A23EAB8EAB041AA098BE41B0DA1DB38A34290D54D30D6E3764C",
+      "tintPath": "textures/actors/character/facegendata/facetint/skyrim.esm/0001339a.dds",
+      "tintSha256": "217A41FE5E2ABA2C71E8778C46160908C516FABC51699EBF8CEEB7971388F1B2"
+    },
+    {
+      "class": "light .esl origin",
+      "originPlugin": "SST7000StepsOfSanctum.esl",
+      "pluginSha256": "F6C97F90F2C92D49A6AB3F95367DCE2DDC418C7C01362B7E867B0263B60D7C35",
+      "tes4Flags": "0x00000200",
+      "rawRecordFormId": "0x02000D61",
+      "localId": "0x0D61",
+      "meshPath": "meshes/actors/character/facegendata/facegeom/sst7000stepsofsanctum.esl/00000d61.nif",
+      "meshSha256": "B1EEADDB7521139AC4E64D62BC494049AFE65DD207A9A6C49C2A562BDD98463D",
+      "tintPath": "textures/actors/character/facegendata/facetint/sst7000stepsofsanctum.esl/00000d61.dds",
+      "tintSha256": "4B8287A83BDC0FB30DEA32612FE5B5CB1F35AE58E5A6F07D4AF444CA8BCD47F8"
+    },
+    {
+      "class": "ESL-flagged .esp origin",
+      "originPlugin": "Additional Dremora Faces.esp",
+      "pluginSha256": "6E0B7B11AA782E1974CD42FD1C629A401188FBF79D430E838314BF15424E512A",
+      "tes4Flags": "0x00000200",
+      "rawRecordFormId": "0x0500092C",
+      "localId": "0x092C",
+      "meshPath": "meshes/actors/character/facegendata/facegeom/additional dremora faces.esp/0000092c.nif",
+      "meshSha256": "885A04CE9200A671AC20109CC3A456ED36732D81CB38A2473AD4B66D963DF6B7",
+      "tintPath": "textures/actors/character/facegendata/facetint/additional dremora faces.esp/0000092c.dds",
+      "tintSha256": "2AEEEC2BE71D3886C686C121B0484DDB5C5275825ABA9E4BE6777D88A1E77A3D"
+    }
+  ]
+}

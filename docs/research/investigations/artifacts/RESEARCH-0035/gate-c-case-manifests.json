@@ -1,0 +1,258 @@
+{
+  "schema": "infinium-controlled-real-case-manifests/1",
+  "capturedAt": "2026-07-28",
+  "payloadPolicy": {
+    "trackedPayloads": "Project-authored manifests, byte maps, expectations, hashes, and source links only",
+    "thirdPartyPayloads": "Evaluator-supplied private inputs; not redistributed",
+    "absolutePaths": "Excluded from tracked artifacts"
+  },
+  "cases": [
+    {
+      "caseId": "REAL-NPC-0001",
+      "evaluationId": "EVAL-0016",
+      "state": "qualified-candidate",
+      "category": "actor appearance versus package behavior",
+      "positiveOrder": [
+        "official masters",
+        "unofficial skyrim special edition patch.esp",
+        "AI Overhaul.esp",
+        "Children of the Pariah.esp"
+      ],
+      "matchedControlOrder": [
+        "official masters",
+        "unofficial skyrim special edition patch.esp",
+        "AI Overhaul.esp",
+        "Children of the Pariah.esp",
+        "CotP - AIO Patch.esp"
+      ],
+      "officialMasters": [
+        {
+          "name": "Skyrim.esm",
+          "bytes": 249753412,
+          "sha256": "2BBC77FDEC35A70EF96B710F8C525E50A1DB9E63E11A391A0EB9EE8F56D36107"
+        },
+        {
+          "name": "Update.esm",
+          "bytes": 18429562,
+          "sha256": "5F2985B205EA57428164B47E1A5DF57F9B5A1AC0399D4C8B5CF30FC0A60FB008"
+        },
+        {
+          "name": "Dawnguard.esm",
+          "bytes": 24813534,
+          "sha256": "1208E5153E35366E0ADA1A887720D6D636E2D8592D007FE142B37A57E46B476E"
+        },
+        {
+          "name": "HearthFires.esm",
+          "bytes": 3681749,
+          "sha256": "70E0D5D6DC42224349D33E8C7BCA73DA447463F671CACC9C15FC0273C93E0008"
+        },
+        {
+          "name": "Dragonborn.esm",
+          "bytes": 64259475,
+          "sha256": "3B8BF5EAD27337F829FA4D474F0363324124A9696D33FE1AEE7B01262EFF5BD1"
+        }
+      ],
+      "sources": [
+        {
+          "role": "behavior archive",
+          "nexusModId": 21654,
+          "nexusFileId": 543984,
+          "nexusV3VersionId": "7318624816368",
+          "name": "AI Overhaul 1.8.6 AE-21654-1-8-6-1726786718.zip",
+          "version": "1.8.6",
+          "bytes": 1082060,
+          "sha256": "03525F80AD7B62EFB550F6F451C67F7FA9EF560589F496F837292753D477E75D",
+          "currentApiCategory": "old_version"
+        },
+        {
+          "role": "behavior plugin",
+          "name": "AI Overhaul.esp",
+          "bytes": 2183246,
+          "sha256": "FED6F25FFA2DAC3A7A578ADD18B0FD763E6C48D33732000480BAD9069BEE55D2"
+        },
+        {
+          "role": "appearance and resolution archive",
+          "nexusModId": 97981,
+          "nexusFileId": 571480,
+          "nexusV3VersionId": "7318624843864",
+          "name": "Children of the Pariah-97981-1-2-3-6-1733959242.7z",
+          "version": "1.2.3.6",
+          "bytes": 179418163,
+          "sha256": "EAB2FA2B538E224B92C2E1E32E3DDFC7E509E3F883A5E15822A1A7787C35C014",
+          "currentApiCategory": "old_version",
+          "installerSelection": [
+            "00 - Universal",
+            "01 - Closed Mouths",
+            "CotP - AI Overhaul Patch"
+          ]
+        },
+        {
+          "role": "appearance plugin",
+          "name": "Children of the Pariah.esp",
+          "bytes": 88141,
+          "sha256": "C60DB49682CA14B4651A75C25B7690C8C833EF010412481E7F60C904318434FF"
+        },
+        {
+          "role": "matched-control plugin",
+          "name": "CotP - AIO Patch.esp",
+          "bytes": 30319,
+          "sha256": "16E49FC6337094B88EA60AA2241FE888D194407859BC5405089F785A83485416"
+        },
+        {
+          "role": "USSEP source archive",
+          "nexusModId": 266,
+          "nexusFileId": 551952,
+          "nexusV3VersionId": "7318624824336",
+          "name": "1_Unofficial Skyrim Special Edition Patch-266-4-3-3-1728878067.7z",
+          "version": "4.3.3",
+          "bytes": 135966820,
+          "sha256": "57465E9609359BC047412A7D387FFFAE499263C0BBAC915921D95F23391DDC6F",
+          "currentApiCategory": "archived"
+        },
+        {
+          "role": "USSEP plugin",
+          "name": "unofficial skyrim special edition patch.esp",
+          "bytes": 19589391,
+          "sha256": "C33F42E503E1C3908BFB0F241778D5D7A5114599A07B1B6E0773F0828C6E1876"
+        },
+        {
+          "role": "official Fishing master",
+          "name": "ccBGSSSE001-Fish.esm",
+          "bytes": 1203374,
+          "sha256": "F30A9C18C3E375E002CC26E5DD3CDF72A615D574738581FBA2BFD58215024FE7"
+        }
+      ],
+      "selectedRecords": [
+        {
+          "formKey": "0001339A:Skyrim.esm",
+          "positivePackageDifference": "AI Overhaul adds raw PKID A6561007; the appearance winner omits it",
+          "matchedControl": "CotP - AIO Patch restores the same package as A6561004 after master-index translation",
+          "faceGen": {
+            "meshPath": "meshes/actors/character/facegendata/facegeom/skyrim.esm/0001339a.nif",
+            "meshBytes": 3410436,
+            "meshSha256": "06A16385F2702A23EAB8EAB041AA098BE41B0DA1DB38A34290D54D30D6E3764C",
+            "tintPath": "textures/actors/character/facegendata/facetint/skyrim.esm/0001339a.dds",
+            "tintBytes": 5592580,
+            "tintSha256": "217A41FE5E2ABA2C71E8778C46160908C516FABC51699EBF8CEEB7971388F1B2"
+          }
+        },
+        {
+          "formKey": "0001AA63:Skyrim.esm",
+          "positivePackageDifference": "AI Overhaul adds raw PKIDs 1AF40A07 and 1E220506; the appearance winner omits them",
+          "matchedControl": "CotP - AIO Patch restores those packages as 1AF40A04 and 1E220503 after master-index translation",
+          "faceGen": {
+            "meshPath": "meshes/actors/character/facegendata/facegeom/skyrim.esm/0001aa63.nif",
+            "meshBytes": 5266559,
+            "meshSha256": "7145BB6562FF7737A15BAF92CD9ED8025A7F2EF9E7B6EA26054DE87663A5846E",
+            "tintPath": "textures/actors/character/facegendata/facetint/skyrim.esm/0001aa63.dds",
+            "tintBytes": 5592580,
+            "tintSha256": "8207EFDEC8532B76819D1ED8D1F0C8B17BECCD60183C481ED86417A19A0D88FA"
+          }
+        }
+      ],
+      "claimBoundary": {
+        "supported": "The appearance winner restores selected package relations while supplying different appearance fields and loose FaceGen assets; the author patch is a matched control only for package relations it demonstrably forwards",
+        "notSupported": "The patch is not a universal compatibility oracle and does not forward every AI-data byte changed by AI Overhaul"
+      },
+      "independentTruthArtifact": "eval-0016-independent-byte-map.json"
+    },
+    {
+      "caseId": "REAL-REFR-0001",
+      "evaluationId": "EVAL-0017",
+      "state": "qualified-candidate",
+      "category": "placed-reference linked topology versus spatial presentation",
+      "positiveOrder": [
+        "Skyrim.esm",
+        "Candlehearth.esp",
+        "Nightgate Inn Revived.esp"
+      ],
+      "matchedControlOrder": [
+        "Skyrim.esm",
+        "Candlehearth.esp",
+        "Nightgate Inn Revived.esp",
+        "Nightgate Inn Revived - Candlehearth.esp"
+      ],
+      "officialMasters": [
+        {
+          "name": "Skyrim.esm",
+          "bytes": 249753412,
+          "sha256": "2BBC77FDEC35A70EF96B710F8C525E50A1DB9E63E11A391A0EB9EE8F56D36107"
+        }
+      ],
+      "sources": [
+        {
+          "role": "structural/gameplay archive",
+          "nexusModId": 97542,
+          "nexusFileId": 419795,
+          "nexusV3VersionId": "7318624692179",
+          "name": "Candlehearth - An Inn Overhaul-97542-1-1-1-1692799446.7z",
+          "version": "1.1.1",
+          "bytes": 1217123,
+          "sha256": "CF44C87D487240FE2AC738F24A1F59CCFBC4D3979D9DF48761FF79D43A8DE20C",
+          "currentApiCategory": "main"
+        },
+        {
+          "role": "structural/gameplay plugin",
+          "name": "Candlehearth.esp",
+          "bytes": 34707,
+          "sha256": "18A8275CA579701ABA8F525F839C27BF19549F7EE78265E3855A2BB602A5BF04"
+        },
+        {
+          "role": "spatial/presentation archive",
+          "nexusModId": 121244,
+          "nexusFileId": 516261,
+          "nexusV3VersionId": "7318624788645",
+          "name": "Nightgate Inn Revived - Main File-121244-1-3-1719719366.7z",
+          "version": "1.3",
+          "bytes": 28074581,
+          "sha256": "A7A445BF5291857A484BEC4E7905EA4B0A24D0205A03085C21CE8BB1E2F8D42B",
+          "currentApiCategory": "main"
+        },
+        {
+          "role": "spatial/presentation plugin",
+          "name": "Nightgate Inn Revived.esp",
+          "bytes": 268904,
+          "sha256": "9A34C0E33ED14D9CDBF61C3641C03C4E6C048C8495523C4AEAEABFA1ACD66318"
+        },
+        {
+          "role": "matched-control archive",
+          "nexusModId": 121244,
+          "nexusFileId": 524195,
+          "nexusV3VersionId": "7318624796579",
+          "name": "3_Nightgate Inn Revived - Patches and Addons-121244-1-5-1721756558.7z",
+          "version": "1.5",
+          "bytes": 8160520,
+          "sha256": "F51AA541D15F350389891FF718D3EA7F954060B5870B9CC99AAB068A2A271B3C",
+          "currentApiCategory": "old_version"
+        },
+        {
+          "role": "matched-control plugin",
+          "name": "Nightgate Inn Revived - Candlehearth.esp",
+          "bytes": 838,
+          "sha256": "03811E47BA8614707DC191D9C39C73B6A3A1D4A4DFAC8BAA8037798575397FBD"
+        }
+      ],
+      "selectedRecords": [
+        {
+          "formKey": "00017061:Skyrim.esm",
+          "editorId": "HeljarchenNightGateInnPlayerBedREF",
+          "base": "0003B41E:Skyrim.esm",
+          "vanillaLinkedReferenceRaw": "000000006F8C0300",
+          "candlehearthLinkedReferenceRaw": "000000009B7A0200",
+          "nightgateLinkedReferenceRaw": "000000006F8C0300",
+          "patchLinkedReferenceRaw": "000000009B7A0200",
+          "vanillaPlacementRaw": "4970AC4440B276C400000000000000000000000000000000",
+          "candlehearthPlacementRaw": "0080AC44008076C400000000000000000000000000000000",
+          "nightgatePlacementRaw": "93083AC48BCD61C48069083F000000000000000000000000",
+          "patchPlacementRaw": "93083AC48BCD61C48069083F000000000000000000000000"
+        }
+      ],
+      "claimBoundary": {
+        "supported": "The later visual overhaul moves the bed while reverting Candlehearth's linked-reference relation to the vanilla value; the author patch combines Candlehearth's relation with Nightgate's placement",
+        "likelySymptom": "The moved player bed may lose the structural association used by Candlehearth's inn-rental behavior",
+        "notSupported": "No claim that the exact in-game symptom or quest consequence has been runtime-validated"
+      },
+      "independentTruthArtifact": "eval-0017-independent-byte-map.json"
+    }
+  ]
+}

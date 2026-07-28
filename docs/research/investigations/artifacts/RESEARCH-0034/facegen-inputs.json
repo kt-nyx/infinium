@@ -1,0 +1,500 @@
+{
+  "schema": "infinium-facegen-qualification-inputs/1",
+  "cases": [
+    {
+      "id": "FG-001-full-origin-shadow-chain",
+      "record": {
+        "originPlugin": "Skyrim.esm",
+        "winningPlugin": "AppearanceWinner.esp",
+        "localId": 78746,
+        "pluginClass": "full",
+        "raceResolved": true,
+        "faceGenHead": true,
+        "useTemplate": false,
+        "templateTraits": false,
+        "deleted": false
+      },
+      "archivesExcluded": true,
+      "providers": [
+        {
+          "source": "Earlier appearance",
+          "kind": "loose",
+          "priority": 10,
+          "path": "Meshes/Actors/Character/FaceGenData/FaceGeom/Skyrim.esm/0001339A.nif",
+          "content": "earlier-mesh"
+        },
+        {
+          "source": "Appearance winner",
+          "kind": "loose",
+          "priority": 20,
+          "path": "meshes\\actors\\character\\facegendata\\facegeom\\skyrim.esm\\0001339a.nif",
+          "content": "winning-mesh"
+        },
+        {
+          "source": "Earlier appearance",
+          "kind": "loose",
+          "priority": 10,
+          "path": "textures/actors/character/facegendata/facetint/skyrim.esm/0001339A.dds",
+          "content": "earlier-tint"
+        },
+        {
+          "source": "Appearance winner",
+          "kind": "loose",
+          "priority": 20,
+          "path": "Textures\\Actors\\Character\\FaceGenData\\FaceTint\\Skyrim.esm\\0001339a.dds",
+          "content": "winning-tint"
+        }
+      ]
+    },
+    {
+      "id": "FG-002-light-esl-origin",
+      "record": {
+        "originPlugin": "TinyFaces.esl",
+        "winningPlugin": "TinyFaces.esl",
+        "localId": 2748,
+        "pluginClass": "light",
+        "raceResolved": true,
+        "faceGenHead": true,
+        "useTemplate": false,
+        "templateTraits": false,
+        "deleted": false
+      },
+      "archivesExcluded": true,
+      "providers": [
+        {
+          "source": "Tiny faces",
+          "kind": "loose",
+          "priority": 1,
+          "path": "meshes/actors/character/facegendata/facegeom/tinyfaces.esl/00000abc.nif",
+          "content": "light-esl-mesh"
+        },
+        {
+          "source": "Tiny faces",
+          "kind": "loose",
+          "priority": 1,
+          "path": "textures/actors/character/facegendata/facetint/tinyfaces.esl/00000abc.dds",
+          "content": "light-esl-tint"
+        }
+      ]
+    },
+    {
+      "id": "FG-003-light-flagged-esp-origin",
+      "record": {
+        "originPlugin": "TinyFaces.esp",
+        "winningPlugin": "LaterOverride.esp",
+        "localId": 291,
+        "pluginClass": "light",
+        "raceResolved": true,
+        "faceGenHead": true,
+        "useTemplate": false,
+        "templateTraits": false,
+        "deleted": false
+      },
+      "archivesExcluded": true,
+      "providers": [
+        {
+          "source": "Later assets",
+          "kind": "loose",
+          "priority": 3,
+          "path": "meshes/actors/character/facegendata/facegeom/tinyfaces.esp/00000123.nif",
+          "content": "light-esp-mesh"
+        },
+        {
+          "source": "Later assets",
+          "kind": "loose",
+          "priority": 3,
+          "path": "textures/actors/character/facegendata/facetint/tinyfaces.esp/00000123.dds",
+          "content": "light-esp-tint"
+        }
+      ]
+    },
+    {
+      "id": "FG-004-origin-not-winning-plugin-directory",
+      "record": {
+        "originPlugin": "BaseActors.esm",
+        "winningPlugin": "WinnerPatch.esp",
+        "localId": 4660,
+        "pluginClass": "full",
+        "raceResolved": true,
+        "faceGenHead": true,
+        "useTemplate": false,
+        "templateTraits": false,
+        "deleted": false
+      },
+      "archivesExcluded": true,
+      "providers": [
+        {
+          "source": "Wrong directory",
+          "kind": "loose",
+          "priority": 50,
+          "path": "meshes/actors/character/facegendata/facegeom/winnerpatch.esp/00001234.nif",
+          "content": "wrong-mesh"
+        },
+        {
+          "source": "Correct provider",
+          "kind": "loose",
+          "priority": 10,
+          "path": "meshes/actors/character/facegendata/facegeom/baseactors.esm/00001234.nif",
+          "content": "correct-mesh"
+        },
+        {
+          "source": "Correct provider",
+          "kind": "loose",
+          "priority": 10,
+          "path": "textures/actors/character/facegendata/facetint/baseactors.esm/00001234.dds",
+          "content": "correct-tint"
+        }
+      ]
+    },
+    {
+      "id": "FG-005-exact-loose-absence",
+      "record": {
+        "originPlugin": "BaseActors.esm",
+        "winningPlugin": "BaseActors.esm",
+        "localId": 4660,
+        "pluginClass": "full",
+        "raceResolved": true,
+        "faceGenHead": true,
+        "useTemplate": false,
+        "templateTraits": false,
+        "deleted": false
+      },
+      "archivesExcluded": true,
+      "providers": []
+    },
+    {
+      "id": "FG-006-archive-not-qualified",
+      "record": {
+        "originPlugin": "BaseActors.esm",
+        "winningPlugin": "BaseActors.esm",
+        "localId": 4660,
+        "pluginClass": "full",
+        "raceResolved": true,
+        "faceGenHead": true,
+        "useTemplate": false,
+        "templateTraits": false,
+        "deleted": false
+      },
+      "archivesExcluded": false,
+      "providers": []
+    },
+    {
+      "id": "FG-007-wrong-shapes-do-not-match",
+      "record": {
+        "originPlugin": "BaseActors.esm",
+        "winningPlugin": "BaseActors.esm",
+        "localId": 4660,
+        "pluginClass": "full",
+        "raceResolved": true,
+        "faceGenHead": true,
+        "useTemplate": false,
+        "templateTraits": false,
+        "deleted": false
+      },
+      "archivesExcluded": true,
+      "providers": [
+        {
+          "source": "Wrong plugin",
+          "kind": "loose",
+          "priority": 1,
+          "path": "meshes/actors/character/facegendata/facegeom/other.esm/00001234.nif",
+          "content": "wrong-plugin"
+        },
+        {
+          "source": "Wrong ID",
+          "kind": "loose",
+          "priority": 2,
+          "path": "meshes/actors/character/facegendata/facegeom/baseactors.esm/00001235.nif",
+          "content": "wrong-id"
+        },
+        {
+          "source": "Wrong extension",
+          "kind": "loose",
+          "priority": 3,
+          "path": "meshes/actors/character/facegendata/facegeom/baseactors.esm/00001234.dds",
+          "content": "wrong-extension"
+        }
+      ]
+    },
+    {
+      "id": "FG-008-partial-pair",
+      "record": {
+        "originPlugin": "BaseActors.esm",
+        "winningPlugin": "BaseActors.esm",
+        "localId": 4660,
+        "pluginClass": "full",
+        "raceResolved": true,
+        "faceGenHead": true,
+        "useTemplate": false,
+        "templateTraits": false,
+        "deleted": false
+      },
+      "archivesExcluded": true,
+      "providers": [
+        {
+          "source": "Mesh only",
+          "kind": "loose",
+          "priority": 1,
+          "path": "meshes/actors/character/facegendata/facegeom/baseactors.esm/00001234.nif",
+          "content": "mesh-only"
+        }
+      ]
+    },
+    {
+      "id": "FG-009-race-unresolved",
+      "record": {
+        "originPlugin": "BaseActors.esm",
+        "winningPlugin": "BaseActors.esm",
+        "localId": 4660,
+        "pluginClass": "full",
+        "raceResolved": false,
+        "faceGenHead": null,
+        "useTemplate": false,
+        "templateTraits": false,
+        "deleted": false
+      },
+      "archivesExcluded": true,
+      "providers": []
+    },
+    {
+      "id": "FG-010-no-facegen-head",
+      "record": {
+        "originPlugin": "BaseActors.esm",
+        "winningPlugin": "BaseActors.esm",
+        "localId": 4660,
+        "pluginClass": "full",
+        "raceResolved": true,
+        "faceGenHead": false,
+        "useTemplate": false,
+        "templateTraits": false,
+        "deleted": false
+      },
+      "archivesExcluded": true,
+      "providers": []
+    },
+    {
+      "id": "FG-011-use-template",
+      "record": {
+        "originPlugin": "BaseActors.esm",
+        "winningPlugin": "BaseActors.esm",
+        "localId": 4660,
+        "pluginClass": "full",
+        "raceResolved": true,
+        "faceGenHead": true,
+        "useTemplate": true,
+        "templateTraits": false,
+        "deleted": false
+      },
+      "archivesExcluded": true,
+      "providers": []
+    },
+    {
+      "id": "FG-012-template-traits",
+      "record": {
+        "originPlugin": "BaseActors.esm",
+        "winningPlugin": "BaseActors.esm",
+        "localId": 4660,
+        "pluginClass": "full",
+        "raceResolved": true,
+        "faceGenHead": true,
+        "useTemplate": false,
+        "templateTraits": true,
+        "deleted": false
+      },
+      "archivesExcluded": true,
+      "providers": []
+    },
+    {
+      "id": "FG-013-invalid-plugin-name",
+      "record": {
+        "originPlugin": "../escape.esm",
+        "winningPlugin": "Winner.esp",
+        "localId": 4660,
+        "pluginClass": "full",
+        "raceResolved": true,
+        "faceGenHead": true,
+        "useTemplate": false,
+        "templateTraits": false,
+        "deleted": false
+      },
+      "archivesExcluded": true,
+      "providers": []
+    },
+    {
+      "id": "FG-014-light-id-out-of-range",
+      "record": {
+        "originPlugin": "TinyFaces.esl",
+        "winningPlugin": "TinyFaces.esl",
+        "localId": 4096,
+        "pluginClass": "light",
+        "raceResolved": true,
+        "faceGenHead": true,
+        "useTemplate": false,
+        "templateTraits": false,
+        "deleted": false
+      },
+      "archivesExcluded": true,
+      "providers": []
+    },
+    {
+      "id": "FG-015-normalization-collision",
+      "record": {
+        "originPlugin": "BaseActors.esm",
+        "winningPlugin": "BaseActors.esm",
+        "localId": 4660,
+        "pluginClass": "full",
+        "raceResolved": true,
+        "faceGenHead": true,
+        "useTemplate": false,
+        "templateTraits": false,
+        "deleted": false
+      },
+      "archivesExcluded": true,
+      "providers": [
+        {
+          "source": "Same physical provider",
+          "kind": "loose",
+          "priority": 1,
+          "path": "meshes/actors/character/facegendata/facegeom/baseactors.esm/00001234.nif",
+          "content": "one"
+        },
+        {
+          "source": "Same physical provider",
+          "kind": "loose",
+          "priority": 1,
+          "path": "Meshes\\Actors\\Character\\FaceGenData\\FaceGeom\\BaseActors.esm\\00001234.nif",
+          "content": "two"
+        }
+      ]
+    },
+    {
+      "id": "FG-016-duplicate-priority",
+      "record": {
+        "originPlugin": "BaseActors.esm",
+        "winningPlugin": "BaseActors.esm",
+        "localId": 4660,
+        "pluginClass": "full",
+        "raceResolved": true,
+        "faceGenHead": true,
+        "useTemplate": false,
+        "templateTraits": false,
+        "deleted": false
+      },
+      "archivesExcluded": true,
+      "providers": [
+        {
+          "source": "Provider A",
+          "kind": "loose",
+          "priority": 5,
+          "path": "meshes/actors/character/facegendata/facegeom/baseactors.esm/00001234.nif",
+          "content": "a"
+        },
+        {
+          "source": "Provider B",
+          "kind": "loose",
+          "priority": 5,
+          "path": "meshes/actors/character/facegendata/facegeom/baseactors.esm/00001234.nif",
+          "content": "b"
+        }
+      ]
+    },
+    {
+      "id": "FG-017-changed-during-capture",
+      "record": {
+        "originPlugin": "BaseActors.esm",
+        "winningPlugin": "BaseActors.esm",
+        "localId": 4660,
+        "pluginClass": "full",
+        "raceResolved": true,
+        "faceGenHead": true,
+        "useTemplate": false,
+        "templateTraits": false,
+        "deleted": false
+      },
+      "archivesExcluded": true,
+      "providers": [
+        {
+          "source": "Changing provider",
+          "kind": "loose",
+          "priority": 1,
+          "path": "meshes/actors/character/facegendata/facegeom/baseactors.esm/00001234.nif",
+          "content": "changing",
+          "changedDuringCapture": true
+        }
+      ]
+    },
+    {
+      "id": "FG-018-deleted-winning-record",
+      "record": {
+        "originPlugin": "BaseActors.esm",
+        "winningPlugin": "DeletingPatch.esp",
+        "localId": 4660,
+        "pluginClass": "full",
+        "raceResolved": true,
+        "faceGenHead": true,
+        "useTemplate": false,
+        "templateTraits": false,
+        "deleted": true
+      },
+      "archivesExcluded": true,
+      "providers": []
+    },
+    {
+      "id": "FG-019-malformed-present-assets",
+      "record": {
+        "originPlugin": "BaseActors.esm",
+        "winningPlugin": "BaseActors.esm",
+        "localId": 4660,
+        "pluginClass": "full",
+        "raceResolved": true,
+        "faceGenHead": true,
+        "useTemplate": false,
+        "templateTraits": false,
+        "deleted": false
+      },
+      "archivesExcluded": true,
+      "providers": [
+        {
+          "source": "Malformed assets",
+          "kind": "loose",
+          "priority": 1,
+          "path": "meshes/actors/character/facegendata/facegeom/baseactors.esm/00001234.nif",
+          "content": "not-a-nif",
+          "structuralValid": false
+        },
+        {
+          "source": "Malformed assets",
+          "kind": "loose",
+          "priority": 1,
+          "path": "textures/actors/character/facegendata/facetint/baseactors.esm/00001234.dds",
+          "content": "not-a-dds",
+          "structuralValid": false
+        }
+      ]
+    },
+    {
+      "id": "FG-020-archive-provider-visible-but-unsupported",
+      "record": {
+        "originPlugin": "BaseActors.esm",
+        "winningPlugin": "BaseActors.esm",
+        "localId": 4660,
+        "pluginClass": "full",
+        "raceResolved": true,
+        "faceGenHead": true,
+        "useTemplate": false,
+        "templateTraits": false,
+        "deleted": false
+      },
+      "archivesExcluded": false,
+      "providers": [
+        {
+          "source": "Unqualified archive",
+          "kind": "archive",
+          "priority": 1,
+          "path": "meshes/actors/character/facegendata/facegeom/baseactors.esm/00001234.nif",
+          "content": "archive-mesh"
+        }
+      ]
+    }
+  ]
+}

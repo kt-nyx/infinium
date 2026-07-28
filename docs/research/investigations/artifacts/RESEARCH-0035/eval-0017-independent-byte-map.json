@@ -1,0 +1,381 @@
+{
+  "schema": "infinium-research-tes4-inspection/1",
+  "generatedAt": "2026-07-28T06:09:06.057Z",
+  "plugins": [
+    {
+      "file": "Skyrim.esm",
+      "bytes": 249753412,
+      "masters": [],
+      "records": [
+        {
+          "signature": "REFR",
+          "offset": 43957190,
+          "dataOffset": 43957214,
+          "dataSize": 105,
+          "flags": "0x00000400",
+          "formId": "0x00017061",
+          "compressed": false,
+          "contexts": [
+            {
+              "offset": 16097361,
+              "groupType": 0,
+              "labelHex": "43454C4C",
+              "labelAscii": "CELL"
+            },
+            {
+              "offset": 41107529,
+              "groupType": 2,
+              "labelHex": "07000000",
+              "labelAscii": "\u0007\u0000\u0000\u0000"
+            },
+            {
+              "offset": 43942947,
+              "groupType": 3,
+              "labelHex": "07000000",
+              "labelAscii": "\u0007\u0000\u0000\u0000"
+            },
+            {
+              "offset": 43956510,
+              "groupType": 6,
+              "labelHex": "5D3A0100",
+              "labelAscii": "]:\u0001\u0000"
+            },
+            {
+              "offset": 43956534,
+              "groupType": 8,
+              "labelHex": "5D3A0100",
+              "labelAscii": "]:\u0001\u0000"
+            }
+          ],
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "headerOffset": 43957214,
+              "dataOffset": 43957220,
+              "size": 35,
+              "hex": "48656C6A61726368656E4E6967687447617465496E6E506C6179657242656452454600"
+            },
+            {
+              "signature": "NAME",
+              "headerOffset": 43957255,
+              "dataOffset": 43957261,
+              "size": 4,
+              "hex": "1EB40300"
+            },
+            {
+              "signature": "XLKR",
+              "headerOffset": 43957265,
+              "dataOffset": 43957271,
+              "size": 8,
+              "hex": "000000006F8C0300"
+            },
+            {
+              "signature": "XOWN",
+              "headerOffset": 43957279,
+              "dataOffset": 43957285,
+              "size": 4,
+              "hex": "27360100"
+            },
+            {
+              "signature": "DATA",
+              "headerOffset": 43957289,
+              "dataOffset": 43957295,
+              "size": 24,
+              "hex": "4970AC4440B276C400000000000000000000000000000000"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "Candlehearth.esp",
+      "bytes": 34707,
+      "masters": [
+        "Skyrim.esm",
+        "Update.esm",
+        "Dragonborn.esm"
+      ],
+      "records": [
+        {
+          "signature": "REFR",
+          "offset": 12306,
+          "dataOffset": 12330,
+          "dataSize": 106,
+          "flags": "0x00000400",
+          "formId": "0x00017061",
+          "compressed": false,
+          "contexts": [
+            {
+              "offset": 1249,
+              "groupType": 0,
+              "labelHex": "43454C4C",
+              "labelAscii": "CELL"
+            },
+            {
+              "offset": 11891,
+              "groupType": 2,
+              "labelHex": "07000000",
+              "labelAscii": "\u0007\u0000\u0000\u0000"
+            },
+            {
+              "offset": 11915,
+              "groupType": 3,
+              "labelHex": "07000000",
+              "labelAscii": "\u0007\u0000\u0000\u0000"
+            },
+            {
+              "offset": 12124,
+              "groupType": 6,
+              "labelHex": "5D3A0100",
+              "labelAscii": "]:\u0001\u0000"
+            },
+            {
+              "offset": 12148,
+              "groupType": 8,
+              "labelHex": "5D3A0100",
+              "labelAscii": "]:\u0001\u0000"
+            }
+          ],
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "headerOffset": 12330,
+              "dataOffset": 12336,
+              "size": 26,
+              "hex": "4D41475F506C617965724265644E6967687467617465496E6E00"
+            },
+            {
+              "signature": "NAME",
+              "headerOffset": 12362,
+              "dataOffset": 12368,
+              "size": 4,
+              "hex": "1EB40300"
+            },
+            {
+              "signature": "XOWN",
+              "headerOffset": 12372,
+              "dataOffset": 12378,
+              "size": 4,
+              "hex": "27360100"
+            },
+            {
+              "signature": "XLKR",
+              "headerOffset": 12382,
+              "dataOffset": 12388,
+              "size": 8,
+              "hex": "000000009B7A0200"
+            },
+            {
+              "signature": "XLRL",
+              "headerOffset": 12396,
+              "dataOffset": 12402,
+              "size": 4,
+              "hex": "54000200"
+            },
+            {
+              "signature": "DATA",
+              "headerOffset": 12406,
+              "dataOffset": 12412,
+              "size": 24,
+              "hex": "0080AC44008076C400000000000000000000000000000000"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "Nightgate Inn Revived.esp",
+      "bytes": 268904,
+      "masters": [
+        "Skyrim.esm",
+        "Update.esm",
+        "Dawnguard.esm",
+        "HearthFires.esm",
+        "Dragonborn.esm"
+      ],
+      "records": [
+        {
+          "signature": "REFR",
+          "offset": 78925,
+          "dataOffset": 78949,
+          "dataSize": 115,
+          "flags": "0x00000400",
+          "formId": "0x00017061",
+          "compressed": false,
+          "contexts": [
+            {
+              "offset": 40965,
+              "groupType": 0,
+              "labelHex": "43454C4C",
+              "labelAscii": "CELL"
+            },
+            {
+              "offset": 78128,
+              "groupType": 2,
+              "labelHex": "07000000",
+              "labelAscii": "\u0007\u0000\u0000\u0000"
+            },
+            {
+              "offset": 78152,
+              "groupType": 3,
+              "labelHex": "07000000",
+              "labelAscii": "\u0007\u0000\u0000\u0000"
+            },
+            {
+              "offset": 78363,
+              "groupType": 6,
+              "labelHex": "5D3A0100",
+              "labelAscii": "]:\u0001\u0000"
+            },
+            {
+              "offset": 78387,
+              "groupType": 8,
+              "labelHex": "5D3A0100",
+              "labelAscii": "]:\u0001\u0000"
+            }
+          ],
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "headerOffset": 78949,
+              "dataOffset": 78955,
+              "size": 35,
+              "hex": "48656C6A61726368656E4E6967687447617465496E6E506C6179657242656452454600"
+            },
+            {
+              "signature": "NAME",
+              "headerOffset": 78990,
+              "dataOffset": 78996,
+              "size": 4,
+              "hex": "1EB40300"
+            },
+            {
+              "signature": "XLKR",
+              "headerOffset": 79000,
+              "dataOffset": 79006,
+              "size": 8,
+              "hex": "000000006F8C0300"
+            },
+            {
+              "signature": "XOWN",
+              "headerOffset": 79014,
+              "dataOffset": 79020,
+              "size": 4,
+              "hex": "27360100"
+            },
+            {
+              "signature": "XLRL",
+              "headerOffset": 79024,
+              "dataOffset": 79030,
+              "size": 4,
+              "hex": "54000200"
+            },
+            {
+              "signature": "DATA",
+              "headerOffset": 79034,
+              "dataOffset": 79040,
+              "size": 24,
+              "hex": "93083AC48BCD61C48069083F000000000000000000000000"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "Nightgate Inn Revived - Candlehearth.esp",
+      "bytes": 838,
+      "masters": [
+        "Skyrim.esm",
+        "Candlehearth.esp",
+        "Nightgate Inn Revived.esp"
+      ],
+      "records": [
+        {
+          "signature": "REFR",
+          "offset": 476,
+          "dataOffset": 500,
+          "dataSize": 106,
+          "flags": "0x00000400",
+          "formId": "0x00017061",
+          "compressed": false,
+          "contexts": [
+            {
+              "offset": 169,
+              "groupType": 0,
+              "labelHex": "43454C4C",
+              "labelAscii": "CELL"
+            },
+            {
+              "offset": 193,
+              "groupType": 2,
+              "labelHex": "07000000",
+              "labelAscii": "\u0007\u0000\u0000\u0000"
+            },
+            {
+              "offset": 217,
+              "groupType": 3,
+              "labelHex": "07000000",
+              "labelAscii": "\u0007\u0000\u0000\u0000"
+            },
+            {
+              "offset": 428,
+              "groupType": 6,
+              "labelHex": "5D3A0100",
+              "labelAscii": "]:\u0001\u0000"
+            },
+            {
+              "offset": 452,
+              "groupType": 8,
+              "labelHex": "5D3A0100",
+              "labelAscii": "]:\u0001\u0000"
+            }
+          ],
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "headerOffset": 500,
+              "dataOffset": 506,
+              "size": 26,
+              "hex": "4D41475F506C617965724265644E6967687467617465496E6E00"
+            },
+            {
+              "signature": "NAME",
+              "headerOffset": 532,
+              "dataOffset": 538,
+              "size": 4,
+              "hex": "1EB40300"
+            },
+            {
+              "signature": "XOWN",
+              "headerOffset": 542,
+              "dataOffset": 548,
+              "size": 4,
+              "hex": "27360100"
+            },
+            {
+              "signature": "XLRL",
+              "headerOffset": 552,
+              "dataOffset": 558,
+              "size": 4,
+              "hex": "54000200"
+            },
+            {
+              "signature": "XLKR",
+              "headerOffset": 562,
+              "dataOffset": 568,
+              "size": 8,
+              "hex": "000000009B7A0200"
+            },
+            {
+              "signature": "DATA",
+              "headerOffset": 576,
+              "dataOffset": 582,
+              "size": 24,
+              "hex": "93083AC48BCD61C48069083F000000000000000000000000"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
