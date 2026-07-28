@@ -1,19 +1,24 @@
 # RESEARCH-0020: Evaluation corpus and real-mod candidates
 
-Status: Completed — recommendation accepted by project owner; exact real-mod
-cases remain qualification work  
+Status: Completed — recommendation accepted by project owner; candidate
+qualification subsequently completed by RESEARCH-0035
 Date: 2026-07-25  
-Last reviewed: 2026-07-26  
+Last reviewed: 2026-07-28
 Researcher: Codex agent  
 Primary question: RQ-025  
-Decision enabled: reproducible corpus structure, an incomplete controlled-real
-candidate manifest for EVAL-0016, and replacement requirements for EVAL-0017
+Decision enabled: reproducible corpus structure and the candidate-repair and
+replacement criteria later completed by RESEARCH-0035
 
 Acceptance note: The project owner accepted the corpus strategy and bounded
 candidate disposition on 2026-07-25 through
 [RESEARCH-0024](RESEARCH-0024-wave-c-analysis-taxonomy-and-scale-integration.md).
-Neither exact real-mod case is qualified; RQ-025 remains the corpus portion of
-Gate C.
+RESEARCH-0035 subsequently repaired and qualified the exact EVAL-0016
+candidate and selected a materially different EVAL-0017 candidate, resolving
+RQ-025 for M0. References below to an incomplete EVAL-0016, an unselected
+EVAL-0017, or an open Gate C record the state of this 2026-07-25 investigation
+and are superseded by RESEARCH-0035. The qualified candidates have not yet
+passed execution; their Wave F specifications and manifests were accepted on
+2026-07-28.
 
 ## 1. Question and bounded answer
 
@@ -485,8 +490,9 @@ scope-incongruent stale-value/topology mechanism selected by RESEARCH-0019.
 It therefore is not an EVAL-0017 candidate or matched negative for that
 mechanism. It may later qualify as a distinct documented
 placement-reconciliation case only after a dedicated analyzer contract,
-independent author-source evidence, and controlled symptom validation.
-EVAL-0017 remains unselected and replacement-required.
+independent author-source evidence, and controlled symptom validation. At this
+investigation's completion, EVAL-0017 was still unselected and
+replacement-required; RESEARCH-0035 later selected `REAL-REFR-0001`.
 
 ### 5.4 Independent ground truth
 
@@ -552,13 +558,14 @@ Retire or replace `REAL-PLACEMENT-LEAD-0001` if:
   outside the accepted slice; or
 - the analyzer would need mod-name, FormID, cell, or coordinate exceptions.
 
-The required EVAL-0017 replacement is non-NPC and should exercise the Stage 2
-placed-reference topology selected by RESEARCH-0019: a later visual/spatial
-override that drops an upstream enable-parent or linked-reference relation,
-optionally with a narrow forced quest-alias edge, plus an author-maintained
-patch or independently specified resolution. Until an exact, small, lawfully
-reproducible pair is identified, EVAL-0017 remains unselected; this report does
-not authorize a search or substitute the placement lead.
+The required EVAL-0017 replacement was a materially different category proof
+and, for the accepted Stage 2 roadmap, should exercise the placed-reference
+topology selected by RESEARCH-0019: a later visual/spatial override that drops
+an upstream enable-parent or linked-reference relation, optionally with a
+narrow forced quest-alias edge, plus an author-maintained patch or
+independently specified resolution. This report left EVAL-0017 unselected and
+did not authorize substituting the placement lead; RESEARCH-0035 later
+qualified a different exact candidate.
 
 ## 6. Redistributable synthetic corpus required before the real cases
 
@@ -668,8 +675,8 @@ not relabel existing cases to make the matrix look complete.
 For third-party controlled-real cases:
 
 - a human evaluator may use the ordinary authenticated Nexus download flow;
-- Infinium may later use supported Nexus API endpoints only after explicit
-  user initiation and within ADR-0005;
+- Infinium may later use Nexus-provided read APIs only after explicit user
+  initiation and within ADR-0005 as amended by ADR-0012;
 - public author-maintained GitHub repositories, documentation, and release
   assets may be used under their licenses and site terms; and
 - locally retained files may be analyzed privately under the accepted
@@ -753,12 +760,14 @@ Low confidence until controlled validation:
   and
 - whether current versions preserve the same shapes.
 
-### 11.2 Exit blockers for RQ-025
+### 11.2 Exit blockers recorded at investigation completion
 
-RQ-025 remains **In progress and M0-exit-blocking**. This report supplies a
+At this report's 2026-07-25 completion, RQ-025 remained **In progress and
+M0-exit-blocking**. This report supplied a
 corpus model, one incomplete EVAL-0016 candidate, and one non-gating placement
 lead, but it does not yet supply the two exact reproducible EVAL-0016/EVAL-0017
-candidate manifests required for M0 disposition. It remains open until:
+candidate manifests required for M0 disposition. RESEARCH-0035 later closed
+the following historical requirements:
 
 - supported/manual current file metadata and acquisition are recorded;
 - Fishing and all other dependency bytes are pinned where applicable;
@@ -789,8 +798,9 @@ Accept the following research recommendation:
 4. retain `REAL-PLACEMENT-LEAD-0001` only as optional
    placement-reconciliation discovery evidence, not as EVAL-0017 or its
    matched negative;
-5. keep EVAL-0017 unselected until an exact non-NPC
-   scope-incongruent-reversion/topology replacement is identified;
+5. keep EVAL-0017 unselected until an exact materially different category
+   exercising the same generic scope-incongruent-reversion mechanism is
+   identified;
 6. require independent byte/structure/semantic truth and matched controls
    before either becomes accepted;
 7. keep the private reference profile out of correctness and release gates;

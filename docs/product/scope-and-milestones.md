@@ -1,7 +1,7 @@
 # Scope and milestones
 
 Status: Accepted  
-Last reviewed: 2026-07-26
+Last reviewed: 2026-07-28
 
 ## Supported product scope
 
@@ -17,14 +17,20 @@ The initial supported target is:
 - manually initiated analysis;
 - Windows desktop;
 - local-first deterministic analysis;
-- optional user-selected LLM provider for LLM-backed analyzers and
-  acquisition/extraction operations, using the user's own provider/account
-  when authentication or billing is required, with GPT as the initial
-  reference provider;
+- optional OpenAI-backed analyzers and acquisition/extraction operations using
+  the user's own provider/account when authentication or billing is required;
+  later providers are permitted but no second-provider or feature-parity gate
+  applies through M1;
 - read-only authority.
 
 The exact instance's MO2 saved selection may be offered as a validated
 suggestion only; selection must remain explicit.
+
+Scans, Nexus/general documentation acquisition, broader web search, and LLM
+work remain manually initiated. Configurable nonblocking maintenance of
+accepted LOOT managed data may run on startup/interval under an accepted
+mechanism, but it cannot start analysis or change immutable inputs already
+bound to a run.
 
 ## Milestone terminology
 
@@ -83,14 +89,17 @@ Initial proof scenario:
 - the output forms one inspectable case with impact, symptoms, remediation or
   validation, provenance, and uncertainty.
 
-The mechanism must be generic scope-incongruent reversion, not an NPC-specific
-product rule. Synthetic positive and negative cases come first, followed by
-carefully selected real mods. At least one materially different non-NPC
-technical surface or affected game area must validate the general mechanism
-before it is considered proven. Exact classification uses the accepted
-[Skyrim SE mod-impact taxonomy](mod-impact-taxonomy.md); “non-NPC” is only
-proof-planning shorthand. The surfaces and areas exercised by the proof must
-be mapped to that taxonomy.
+The mechanism must be generic scope-incongruent reversion, not a product rule
+specific to whichever category supplies the first proof. Synthetic positive
+and negative cases come first, followed by carefully selected real mods. Before
+the mechanism is considered generic across categories, its first category
+proof must be followed by at least one materially different category proof.
+The contrast may be along technical surface, affected game area, consequence,
+interaction shape, or another relevant accepted taxonomy axis. The currently
+qualified candidates happen to use actor/AI/FaceGen and placed-reference/link
+semantics; that pair does not permanently define the requirement. Exact
+classification uses the accepted
+[Skyrim SE mod-impact taxonomy](mod-impact-taxonomy.md).
 
 The backend proof emits human-readable CLI output and a versioned JSON artifact.
 It must obey every foundational product, authority, evidence, provenance, and

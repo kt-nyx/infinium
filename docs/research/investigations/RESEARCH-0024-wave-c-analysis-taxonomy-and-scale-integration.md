@@ -2,7 +2,7 @@
 
 Status: Accepted  
 Date: 2026-07-25  
-Last reviewed: 2026-07-26  
+Last reviewed: 2026-07-28
 Researcher: Codex agent  
 Owner disposition: All Wave C research recommendations accepted on 2026-07-25
 
@@ -21,7 +21,7 @@ an executed analyzer-support, corpus, performance, or evaluation claim.
 | RQ-021 | Build a generic exact-byte/provider/syntax layer, then prioritize MCM Helper, separate SPID/KID/BOS schemas, and OAR structural indexing |
 | RQ-022 | Bound compiled Papyrus analysis to qualified static PEX declarations, instructions, VMAD relationships, and explicit gaps; do not make generic behavior or performance claims |
 | RQ-023 | Use NIF typed-reference completeness as the first asset slice and preserve provider/reference provenance; qualify FaceGen identity/provider behavior before relying on it |
-| RQ-024 | Build a generic semantic substrate, prove narrow NPC scope-incongruent reversion, generalize through REFR placement/activation/enable/linked-reference topology and a narrow forced-alias relationship, then expand by risk and qualified semantics |
+| RQ-024 | Build a generic semantic substrate, prove scope-incongruent reversion in one bounded category, then require a materially different category proof before calling the mechanism generic; the current candidates use actor/AI/FaceGen followed by REFR placement/linked-reference topology, but those categories do not define the permanent rule |
 | RQ-025 | Use synthetic-first fixtures plus private, hash-pinned controlled-real candidates; never make the creator's profile or a real mod identity a production rule |
 | RQ-027 | Use the accepted scale, progress, resource, and provider-neutral cost measurement contract; treat current observations as rough feasibility only and remeasure exact budgets against authoritative adapters and candidate architectures |
 | RQ-035 | Use snapshot-bound typed indexes, causal joins, canonical participants, explicit negative/gap handling, and score-independent mandatory lanes instead of naïve all-pairs model comparison |
@@ -54,32 +54,36 @@ taxonomy coverage or analyzer support.
 
 ## 4. Gate C assessment
 
-Wave C investigation and owner-decision work is complete, but Gate C is not yet
-fully met.
+Gate C was met at the M0 research/qualification layer on 2026-07-28.
 
-Satisfied portions:
+Satisfied conditions:
 
 - the product owner accepted taxonomy version `0.1.0` as a product
   specification rather than an ADR;
 - affected product, architecture, and evaluation documents use the accepted
   taxonomy;
-- the first semantic proof remains generic scope-incongruent reversion rather
-  than an NPC-specific production rule;
+- the first semantic proof remains a bounded instance of generic
+  scope-incongruent reversion rather than a production rule tied to its first
+  category;
+- the accepted anti-overfitting rules require a materially different category
+  proof before a cross-category mechanism may be called generic, without
+  permanently defining the contrast as NPC versus non-NPC;
 - the synthetic candidate experiment includes matched negatives, materially
   different surfaces, explicit gaps, canonical participants, and no dense
   all-pairs model comparison;
-- EVAL-0032 and EVAL-0086 have accepted specifications.
+- EVAL-0032 and EVAL-0086 have accepted specifications;
+- RESEARCH-0034 executes and independently checks the RQ-023 loose-only
+  FaceGen full/light, applicability, origin-identity, provider, shadowing,
+  malformed-input, and negative matrix at its declared pre-resolved-input
+  boundary; and
+- RESEARCH-0035 repairs and pins `REAL-NPC-0001` for EVAL-0016 and selects
+  materially different `REAL-REFR-0001` for EVAL-0017, with exact hashes,
+  independent byte-level truth, and matched patch controls.
 
-Remaining Gate C prerequisites:
-
-1. execute and independently review the loose-only FaceGen full/light,
-   applicability, origin-identity, and provider matrix required by RQ-023; and
-2. finish a reproducible, independently grounded EVAL-0016 manifest and select
-   and qualify a materially different EVAL-0017 real-mod case under RQ-025.
-
-AI Overhaul plus Children of the Pariah remains an incomplete EVAL-0016
-candidate. The surveyed Ryn placement combination remains a discovery lead,
-not EVAL-0017. Approval of RESEARCH-0020 explicitly preserves those limits.
+The earlier Ryn placement combination remains discovery evidence only; it was
+not promoted to EVAL-0017. Gate closure qualifies candidates and decision
+boundaries. It does not pass EVAL-0016, EVAL-0017, EVAL-0032, EVAL-0086, or
+any production analyzer.
 
 ## 5. Performance and evaluation limits
 
@@ -109,5 +113,5 @@ progress, checkpoint, resource, cost, and taxonomy persistence contracts. It
 must not select an architecture from RESEARCH-0023's preliminary figures
 alone.
 
-M0 still requires Gate C closeout, Waves D and E, and Wave F integration and M1
-planning before production implementation begins.
+M0 still requires Waves E and F integration and M1 planning before production
+implementation begins.

@@ -34,13 +34,13 @@ This investigation is governed by:
   including effective scripts and explicit coverage gaps;
 - [AUTH-001 through AUTH-003](../../product/requirements.md#authority-and-safety),
   which keep analysis read-only and constrain external operations;
-- [ANALYSIS-005](../../product/requirements.md#analysis-005--cross-layer-analysis),
+- [ANALYSIS-005](../../product/requirements.md#analysis-005--cross-record-and-cross-layer-reasoning),
   [ANALYSIS-008](../../product/requirements.md#analysis-008--version-coherence),
-  [ANALYSIS-013](../../product/requirements.md#analysis-013--referenced-assets-and-components),
-  [ANALYSIS-016](../../product/requirements.md#analysis-016--declared-analyzer-contracts),
+  [ANALYSIS-013](../../product/requirements.md#analysis-013--missing-referenced-assets),
+  [ANALYSIS-016](../../product/requirements.md#analysis-016--declared-analyzer-contract),
   and
-  [ANALYSIS-017](../../product/requirements.md#analysis-017--candidate-first-analysis);
-- [EVID-001 through EVID-004](../../product/requirements.md#evidence-provenance-and-confidence),
+  [ANALYSIS-017](../../product/requirements.md#analysis-017--candidate-first-llm-escalation);
+- [EVID-001 through EVID-004](../../product/requirements.md#evidence-and-trust),
   which require typed evidence, provenance, and abstention;
 - [ADR-0008](../../architecture/decisions/ADR-0008-mo2-profile-effective-state-and-local-identity.md),
   the accepted effective-provider boundary;

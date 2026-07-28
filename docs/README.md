@@ -1,7 +1,7 @@
 # Infinium documentation
 
 Status: Draft  
-Last reviewed: 2026-07-26
+Last reviewed: 2026-07-28
 
 This directory is the authoritative entry point for the rebuilt Infinium
 project. It records product intent, accepted decisions, research, evaluation
@@ -30,13 +30,16 @@ specification.
   [integration boundaries](architecture/integrations.md), and
   [security/privacy](architecture/security-and-privacy.md)
 - Evaluation: [case catalog](evaluation/case-catalog.md),
+  [accepted M1 evaluation baseline](evaluation/m1-evaluation-baseline.md),
   [fixture guidelines](evaluation/fixture-guidelines.md), and
   [anti-overfitting rules](evaluation/anti-overfitting-rules.md)
 - Research: [source registry](research/source-registry.md),
-  [taxonomy research dependency map](research/taxonomy-dependency-map.md), and
+  [taxonomy research dependency map](research/taxonomy-dependency-map.md),
+  [accepted deferred-question and residual-risk register](research/deferred-question-and-residual-risk-register.md), and
   [investigation procedure](research/investigations/README.md)
 - Planning: [plan policy](plans/README.md),
   [milestone-plan index](plans/milestones/README.md), and
+  [accepted M1 backend semantic proof plan](plans/milestones/M1-backend-semantic-proof.md),
   [research-agent handoff template](plans/research-investigation-agent-handoff-template.md)
 - Reference: [glossary](glossary.md),
   [legacy assessment](legacy/implementation-assessment.md), and
@@ -83,7 +86,7 @@ Every material document should include a status and last-reviewed date.
   [Skyrim SE mod-impact taxonomy](product/mod-impact-taxonomy.md), form the
   authoritative product baseline.
 - The detailed [M0 research-foundation plan](plans/milestones/M0-research-foundation.md)
-  was accepted on 2026-07-25 and is the active research plan.
+  was accepted on 2026-07-25 and completed on 2026-07-28.
 - Wave A research has completed its initial investigations and integration
   review. Gate A is met with documented non-blocking gaps under ADR-0005;
   RQ-026 is resolved under ADR-0006 and RQ-031 is answered for M0 with
@@ -95,17 +98,45 @@ Every material document should include a status and last-reviewed date.
   completion and support claims over the affected surfaces.
 - Wave C's ten bounded investigations and owner disposition are complete and
   accepted. Taxonomy version `0.1.0` and the EVAL-0032/EVAL-0086
-  specifications are accepted. Gate C still requires the exact loose-only
-  FaceGen qualification and pinned EVAL-0016/EVAL-0017 real-mod cases.
-- ADR-0001 through ADR-0011 were accepted on 2026-07-25.
+  specifications are accepted. The category-neutral anti-overfitting rules
+  are accepted, and the project owner accepted RESEARCH-0034/0035 as completing
+  the remaining RQ-023/RQ-025 qualification work. Gate C is met at the M0
+  research/qualification layer;
+  no evaluation case or analyzer implementation is thereby claimed to pass.
+- Revised Wave D research RESEARCH-0030 through RESEARCH-0033 is complete.
+  Authenticated Nexus qualification and accepted ADR-0012 remove the former
+  Nexus/GraphQL blockers. The owner accepted the revised Wave D disposition
+  and ADR-0013/ADR-0014 on 2026-07-28; Gate D is met at the M0
+  research/design layer. Production adapter, credential, budget, and
+  evaluation conformance remain later gates.
+- Wave E research is complete through RESEARCH-0046.
+  ADR-0015 through ADR-0023 accept SQLite plus content-addressed payload
+  storage, an application-owned transactional lifecycle, a
+  .NET/React/direct WPF-WebView2 stack, standalone coordinator and bounded
+  workers, named-pipe gRPC, one-shot reusable-secret/provider handling,
+  layered local security controls, conservative finding/case continuity, and
+  atomic budget enforcement. Dapr was rejected without a comparison
+  prototype.
+  Direct, schema-constrained Responses API calls through a user-supplied,
+  usage-priced Platform API key remain the OpenAI path; ADR-0024 rejects the
+  Codex/ChatGPT-plan proposal. Gate E is met at the M0 architecture/design
+  layer. Implementation and evaluation conformance remain pending.
+- ADR-0001 through ADR-0011 were accepted on 2026-07-25. ADR-0012 through
+  ADR-0023 and ADR-0025 were accepted on 2026-07-28; ADR-0024 was rejected.
+- Wave F produced the accepted M1 evaluation baseline, detailed semantic and
+  platform/operational case specifications and fixture manifests, the
+  RQ-028 calibration protocol, exact OpenAI M1 profile research, a
+  deferred-question/residual-risk register, ADR-0025, and the M1 backend
+  semantic proof plan. The package was integrated, independently reviewed, and
+  accepted on 2026-07-28. Gate F is met, M0 is complete, and the M1 plan is
+  active. No M1 fixture has thereby executed and no evaluation or
+  implementation claim has passed.
 - Infinium uses GPLv3-family strong copyleft. MO2 and LOOT remain
   user-installed; ADR-0007 excludes xEdit completely. ADR-0008 through
   ADR-0011 accept deterministic MO2 2.5.2 reconstruction, the exact initial
   Steam `1.6.1170.0` runtime, pinned Mutagen `0.54.2`, dependency-aware
   snapshots, and the conditional libloot `0.29.6` boundary. Their
   implementation operations and supported surfaces remain qualification-gated.
-- No application stack is accepted yet.
-- The current leading stack candidate is documented as a proposal only.
 - The old codebase, dependencies, local artifacts, and uncommitted work were
   moved intact to [`../legacy/`](../legacy/) on 2026-07-24.
 

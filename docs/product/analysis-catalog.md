@@ -1,7 +1,7 @@
 # Analysis catalog
 
 Status: Accepted  
-Last reviewed: 2026-07-26
+Last reviewed: 2026-07-28
 
 This is the living inventory of desired analysis capabilities. Nothing in this
 catalog implies that an analyzer currently exists. Initial status for every
@@ -109,18 +109,20 @@ which semantic record families and field relationships should receive named
 analyzer support after the first proof. Neither hosting-site categories nor
 record families map one-to-one to author intent or player-visible game areas.
 
-The accepted implementation order is:
+The currently accepted bounded proof sequence is:
 
 1. generic override, changed-field, reference-resolution, feature-graph, and
    stale-value/reversion substrate;
-2. the deliberately narrow NPC proof;
-3. placed-reference (`REFR`) placement, activation, enable-parent, and linked
-   relationships, plus a narrow forced-reference alias relationship; and
+2. a deliberately narrow first-category proof, currently actor/AI/FaceGen;
+3. a materially different category proof, currently placed-reference (`REFR`)
+   placement, activation, enable-parent, and linked relationships, plus a
+   narrow forced-reference alias relationship; and
 4. broader quest, item/crafting, world, and other semantic families only after
    the earlier shapes are independently qualified.
 
-Generic infrastructure must not encode the first NPC proof case as the whole
-domain.
+This sequence is a present implementation/evaluation roadmap, not a permanent
+NPC-versus-non-NPC rule. Generic infrastructure must not encode either proof
+category as the whole domain.
 
 ## E. Cross-record and cross-layer coherence
 
@@ -167,9 +169,12 @@ Report only meaningful conditions such as:
 Use path indexing before expensive content hashing or extraction.
 The first typed asset slice is NIF reference completeness. Loose-file FaceGen
 coverage additionally requires exact full/light plugin-origin, race/template,
-provider, and shadowing semantics that remain a Gate C qualification item;
-archive FaceGen parity is independently gated. Wave C selected no production
-NIF parser dependency, so parser choice and qualification remain later work.
+provider, and shadowing semantics. RESEARCH-0034 qualified that loose-only
+decision boundary for pre-resolved record and provider inputs; authoritative
+MO2/provider reconstruction and production-parser conformance remain separate
+evaluation work. Archive FaceGen parity is independently gated. Wave C
+selected no production NIF parser dependency, so parser choice and
+qualification remain later work.
 
 ## G. Patch effectiveness
 

@@ -1,12 +1,19 @@
 # RESEARCH-0001: Nexus access and evidence-handling policy
 
-Status: Completed — operational disposition accepted in ADR-0005
+Status: Completed — operational disposition accepted and amended
 
 Date: 2026-07-25
 
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-28
 
 Researcher: Codex agent
+
+Subsequent disposition: ADR-0012 supersedes ADR-0005's narrower
+documented-supported-interface constraint, accepts Nexus-provided read APIs
+including v2 GraphQL during development, and selects latest-capable
+v3/v2/v1 routing. The bounded purpose, no-page/no-bypass/no-rehost/no-training,
+registration, and reversal constraints derived from this report remain
+operative.
 
 Primary RQ: RQ-009
 
@@ -383,7 +390,7 @@ ADR-0005 define the boundary.
 | Run deterministic extraction/classification over supported Nexus API data | Accepted project interpretation | ADR-0005 treats bounded diagnostic transformation for the user's relevant mods as personal/mod-enhancement and third-party application use. The contrary section 11 reading remains a recorded risk and Nexus confirmation is still requested. |
 | Send minimized supported-API evidence to a user-selected LLM for claim extraction or investigation | Accepted project interpretation with provider controls | ADR-0005 permits inference, not training/fine-tuning/validation. Transmission must be disclosed, minimized, credential-free, and independently governed by the selected provider/source-retention policy. |
 | Train, fine-tune, or validate an AI system/model on Nexus data | Prohibited absent express exemption | S1 section 11. Out of Infinium scope regardless. |
-| Cache exact supported Nexus API responses locally for private provenance/replay and useful dependent analysis | Accepted project interpretation, subject to storage research | ADR-0005 permits necessary local product-owned retention with deletion/refresh controls. The accepted RQ-031 disposition requires permitted material to remain available through useful extraction, analysis, case/finding synthesis, prose, provenance, and audit; RQ-013 still selects the mechanism and measured defaults. This does not permit page-text scraping or public corpus storage. |
+| Cache exact supported Nexus API responses locally for private provenance/replay and useful dependent analysis | Accepted project interpretation, subject to storage research | ADR-0005 permits necessary local product-owned retention with deletion/refresh controls. The accepted RQ-031 disposition requires permitted material to remain available through useful extraction, analysis, case/finding synthesis, prose, provenance, and audit; ADR-0015 selects the storage mechanism, while measured defaults remain implementation work. This does not permit page-text scraping or public corpus storage. |
 | Retain short exact cited passages privately | Accepted project interpretation, subject to minimization | ADR-0005 permits private provenance/audit evidence. Exact passages remain separate from externally shareable content and require source/revision attribution and deletion handling. |
 | Retain source URLs, retrieval timestamps, response status, policy version, and content fingerprints without source body | Conditionally permissible operational metadata | These minimize copied content, but they do not permit deriving the fingerprint through a prohibited acquisition. Record them only for an otherwise allowed request. |
 | Redistribute mod descriptions, articles, changelogs, comments, bug reports, media, or files | Prohibited unless the specific rights and Nexus policy permit it | S1 sections 10, 22, and 24 do not grant Infinium a blanket licence. Shareable exports must omit raw content by default. |

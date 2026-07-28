@@ -1,7 +1,7 @@
 # Legacy reuse disposition
 
 Status: Draft  
-Last reviewed: 2026-07-24
+Last reviewed: 2026-07-28
 
 ## Default disposition
 
@@ -18,7 +18,8 @@ No file is approved for direct transplantation merely because it exists.
 - subprocess JSON-boundary ideas;
 - UI workflow concepts;
 - Nexus identity/enrichment experiments;
-- test-profile scale data;
+- private large-profile shape/scale observations, never as a correctness
+  oracle, representative corpus, or source of special-case rules;
 - external-tool packaging lessons.
 
 ## Rewrite from accepted contracts

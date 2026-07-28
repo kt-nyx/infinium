@@ -3,7 +3,7 @@
 Status: Completed — recommendation accepted as
 `infinium.skyrim-se.mod-impact-taxonomy/0.1.0`  
 Date: 2026-07-25  
-Last reviewed: 2026-07-26  
+Last reviewed: 2026-07-28
 Researcher: Codex agent  
 Primary question: RQ-036  
 M0 wave: C  
@@ -14,9 +14,11 @@ Acceptance note: On 2026-07-25 the project owner adopted this proposal as
 [`infinium.skyrim-se.mod-impact-taxonomy/0.1.0`](../../product/mod-impact-taxonomy.md).
 Proposal-era wording below is retained as research provenance; the linked
 product specification is normative. The dependency-map and affected-document
-integration and the EVAL-0086 specification review are complete. Overall Gate
-C still awaits only the RQ-023 FaceGen qualification and RQ-025 exact
-EVAL-0016/EVAL-0017 cases.
+integration and the EVAL-0086 specification review are complete.
+RESEARCH-0034/0035 subsequently completed the RQ-023/RQ-025 prerequisites and
+closed Gate C at the M0 research/qualification layer. Any later statement in
+this dated proposal that those prerequisites remain open is historical, not
+current status; no evaluation execution is thereby claimed to pass.
 
 ## 1. Question and accepted constraints
 
@@ -32,7 +34,7 @@ It is governed by:
 - [FIND-001](../../product/requirements.md#find-001--independent-dimensions),
   which requires independent, versioned classifications for what was modified,
   what may be affected, what may happen, and how broadly;
-- [FIND-003](../../product/requirements.md#find-003--blast-radius-and-symptoms),
+- [FIND-003](../../product/requirements.md#find-003--effect-extent-and-symptoms),
   which requires blast-radius and symptom estimates with explicit confidence;
 - [COVER-001 through COVER-003](../../product/requirements.md#coverage-and-readiness),
   which require labeled denominators and visible unsupported/gap states rather
@@ -68,7 +70,7 @@ requirements are not the whole Gate C: remaining Wave C work also includes the
 RQ-023 asset/provider boundary, the RQ-024 semantic scope, the RQ-025 real-case
 corpus, RQ-027 measurement/budget evidence, RQ-035 candidate design and
 benchmarks, exact EVAL-0016/EVAL-0017 candidates, reviewed EVAL-0032/EVAL-0086
-specifications, matched negatives, materially different non-NPC coverage,
+specifications, matched negatives, materially different category coverage,
 planted-interaction retention without naive all-pairs LLM work, and explicit
 unsupported/unevaluated regions.
 
@@ -1071,9 +1073,9 @@ qualification, and M1 planning remain pending:
 > updates, and EVAL-0086 specification review are complete.
 
 This resolves RQ-036 without claiming exhaustive taxonomy coverage, analyzer
-support, or evaluation execution. Overall Gate C separately retains the
-RQ-023 loose-only FaceGen qualification and RQ-025 exact
-EVAL-0016/EVAL-0017 case prerequisites.
+support, or evaluation execution. RESEARCH-0034/0035 subsequently completed
+the separate RQ-023/RQ-025 Gate C prerequisites; their candidate qualification
+still does not claim evaluation execution.
 
 ## 15. Requirements-and-evidence traceability
 
@@ -1092,9 +1094,9 @@ EVAL-0016/EVAL-0017 case prerequisites.
 | ADR-0002/ADR-0010 | Immutable evidence, taxonomy-version provenance, linked reclassification | Storage/migration architecture |
 | ADR-0004/ADR-0009 | Skyrim-specific hierarchy; no unsupported cross-target abstraction | Revisit only for a second target |
 | RESEARCH-0014 through 0019 | Empirical native, generated, configuration, script, asset, and record surfaces | Named analyzer qualification remains separate |
-| RESEARCH-0020 | Exact known identities for an incomplete actor/AI candidate and a world/placed-reference discovery lead | Repair NPC provenance/FaceGen closure and select a valid EVAL-0017 replacement |
+| RESEARCH-0020 | Exact known identities for an initially incomplete actor/AI candidate and a world/placed-reference discovery lead | RESEARCH-0035 repaired EVAL-0016 and selected a distinct placed-reference EVAL-0017 replacement |
 | EVAL-0086 | Section 8.3 classification/versioning matrix | Specification accepted; execution pending |
-| Gate C | Distinct proposed taxonomy, real/synthetic examples, cross-cutting states, explicit gaps | Taxonomy version `0.1.0`, affected-document integration, and EVAL-0032/EVAL-0086 specification review are accepted. Overall Gate C still awaits the RQ-023 loose-only FaceGen qualification and RQ-025 exact EVAL-0016/EVAL-0017 cases. |
+| Gate C | Distinct proposed taxonomy, real/synthetic examples, cross-cutting states, explicit gaps | Taxonomy version `0.1.0`, affected-document integration, and EVAL-0032/EVAL-0086 specification review are accepted; RESEARCH-0034/0035 completed the remaining RQ-023/RQ-025 qualification prerequisites. |
 
 ## 16. Conclusion
 

@@ -1,17 +1,27 @@
 # Plans
 
 Status: Draft  
-Last reviewed: 2026-07-26
+Last reviewed: 2026-07-28
 
 The [M0 research-foundation plan](milestones/M0-research-foundation.md) was
-accepted on 2026-07-25 and is the active research plan. No implementation plan
-is active.
+accepted on 2026-07-25 and completed on 2026-07-28. The accepted
+[M1 backend semantic proof plan](milestones/M1-backend-semantic-proof.md) is
+the active implementation plan.
 
 The product baseline and ADR-0001 through ADR-0011 were accepted on
-2026-07-25. Waves A through C have completed investigations and accepted
-integrated dispositions. Gates A and B are met. Gate C retains the exact
-loose-only FaceGen qualification and EVAL-0016/EVAL-0017 real-mod case
-prerequisites documented in RESEARCH-0024. Waves D through F remain. The M0
+2026-07-25. ADR-0012 through ADR-0023 were accepted and ADR-0024 was rejected
+on 2026-07-28. Waves A through D have accepted integrated dispositions. Gates
+A through D are met at their applicable M0 research, design, or qualification
+layers. Gate C was
+closed on 2026-07-28 by the accepted category-neutral anti-overfitting rules
+and RESEARCH-0034/0035. EVAL-0016 and EVAL-0017 are qualified candidates, not
+executed or passed cases. Wave E research is complete through RESEARCH-0046.
+ADR-0015 through ADR-0023 accept the complete Wave E architecture; Dapr and
+ADR-0024's Codex proposal are rejected. Gate E is met at the M0
+architecture/design layer. Wave F's evaluation/research package and M1 plan
+were integrated, independently reviewed, and accepted on 2026-07-28. Gate F is
+met and M0 is complete. This acceptance authorizes only the bounded M1 plan; it
+does not mark an implementation or evaluation case passed. The completed M0
 plan:
 
 1. identify the accepted requirements it serves;

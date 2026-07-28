@@ -1,22 +1,27 @@
 # Security and privacy
 
 Status: Draft  
-Last reviewed: 2026-07-26
+Last reviewed: 2026-07-28
 
 ## Security posture
 
 Infinium reads large amounts of local state, invokes tools, stores API
-credentials, retrieves untrusted content, and may use a privileged desktop
-shell. Security is a product requirement even for a personal-first tool.
+credentials, retrieves untrusted content, and uses a native desktop shell plus
+authority-bearing coordinator, worker, and helper operations. Security is a
+product requirement even for a personal-first tool.
 Normative product constraints are SEC-001 through SEC-004, AUTH-001 through
 AUTH-003, AI-003, AI-007, and the applicable export/history requirements.
 
 ## Authority
 
 - The UI receives a narrow allowlisted API.
-- Privileged filesystem/process/network actions occur in a bounded worker or
-  host.
-- If IPC is selected, all IPC inputs are schema validated.
+- Authority-bearing filesystem, process, and network actions are
+  coordinator-authorized and occur only in the exact coordinator, bounded
+  worker, one-shot helper, or minimal native-host role accepted for that
+  operation.
+- ADR-0018 accepts the standalone coordinator, bounded-worker, and one-shot
+  helper process roles. ADR-0019 accepts schema-validated, role-separated
+  local IPC over current-user-restricted Windows named pipes.
 - Callers/senders are authenticated to the extent supported by the selected
   architecture.
 - Arbitrary paths, commands, URLs, and tool arguments are not accepted without
@@ -55,21 +60,25 @@ output, and other mod artifacts are untrusted binary or structured inputs.
 - Parsing must be cancellable or time-bounded and must return explicit
   malformed, unsupported, or limited states.
 - Native or crash-prone parsers should be isolated behind a bounded worker
-  process when architecture research selects the topology.
+  process. The accepted Wave E design uses Job Objects for lifecycle/resource
+  containment but does not call that boundary a security sandbox.
 - Wave C selected no production NIF parser dependency. A future choice requires
   version/licence review, independent malformed-input fixtures, and a positive
   allowlist of supported shapes before product coverage is claimed.
 
-Nexus acquisition follows ADR-0005: documented supported APIs only, with no
-page-scraping or browser-automation fallback. A negative Nexus response or
-material policy change triggers review and stops the affected acquisition path
-until the decision is superseded.
+Nexus acquisition follows ADR-0005 as amended by ADR-0012. The owner's
+development-risk direction permits Nexus-provided API reads, GraphQL
+introspection, and bounded API testing; it does not permit page scraping,
+browser automation, traffic inspection, access bypass, unrelated bulk
+collection, mutation, downloads, or rehosting. A negative Nexus response or
+material policy change triggers ADR-0012 review and may stop the affected path.
 
 ## Credentials
 
 - Credential entry shall use the narrowest architecture-supported handoff.
   Credentials may exist transiently in a dedicated entry control but shall not
   persist in general renderer/application state.
+- Direct API-key profiles use an OS-backed reusable-secret boundary.
 - Credentials never enter logs, exports, LLM prompts, or ordinary diagnostic
   traces.
 - Use an OS-backed secure store where available.
@@ -82,6 +91,9 @@ until the decision is superseded.
   supplied by the user for that account; a credential-free local provider may
   operate under its declared contract, but no project-funded or shared project
   credential is a fallback.
+- Managed-plan and usage-priced API access are separate profiles. Neither may
+  silently fall back to the other, and plan usage is not described as free or
+  converted into an invented dollar cost.
 - Do not store user keys on a project-operated server in the personal/local
   architecture.
 
@@ -97,6 +109,15 @@ LLM calls receive only task-relevant data. Common removals include:
 
 The user accepts contextual cloud processing, but public release defaults must
 remain conservative and inspectable.
+
+Hosted web-search queries shall prefer public mod/project names, relevant
+versions, one bounded interaction or symptom, and technical terms derived from
+typed evidence. They shall omit credentials, account identifiers, usernames,
+absolute paths, unrelated mods, private notes, and raw logs unless an accepted
+operation proves a specific need. Model-selected search cannot authorize
+landing-page acquisition, choose source authority, or obtain local privileged
+tools. Search results remain discovery/lead data until the host separately
+acquires and validates the source.
 
 Context minimization governs what an operation sends to a provider; it does
 not require deleting permitted private source material before the configured
@@ -158,14 +179,34 @@ For the accepted Wave B boundaries:
   identity, and every allowed product-owned cache/temp effect are retained in
   provenance.
 
-## Open security research
+## Accepted Wave E security mechanisms and remaining gates
 
-- desktop shell isolation and update policy;
-- IPC transport;
-- credential storage;
-- file/path authorization model;
-- safe external-link behavior;
-- documentation sanitization;
-- subprocess restrictions;
-- export redaction;
-- provider data retention.
+RESEARCH-0038 through RESEARCH-0041 support, and ADR-0017 through ADR-0021
+accept:
+
+- a packaged local renderer in a minimal non-elevated WPF/WebView2 host with
+  deny-by-default navigation, content, permission, download, frame, and
+  external-link behavior;
+- role-separated, finite, schema-validated local IPC contracts over
+  current-user-restricted Windows named pipes;
+- Windows Credential Manager generic credentials addressed only by opaque
+  non-secret profile/generation metadata;
+- a coordinator-launched one-shot helper that alone presents credential entry,
+  accesses the exact credential target, and dispatches one authorized provider
+  request;
+- handle-resolved authorization for protected-path writes and rejection of
+  reparses, unexpected hard links, device/alternate-stream syntax, and
+  caller-selected recursive deletion;
+- typed direct process launch without a shell, with explicit executable,
+  arguments, working directory, environment, inherited handles, and Job Object
+  containment; and
+- coordinator validation and adoption of worker-staged outputs before
+  authoritative publication.
+
+Provider-retention conformance, M4 packaging/update policy, later
+shareable-export redaction, and any stronger worker isolation remain follow-up
+work. Job Objects do not
+restrict a
+compromised process's ambient same-user filesystem or network authority; any
+M1 parser or tool whose threat model requires compromise containment must gain
+an accepted stronger boundary or remain excluded.

@@ -6,9 +6,16 @@ Date: 2026-07-25
 
 Accepted: 2026-07-25
 
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-28
 
 Researcher: Codex agent
+
+Subsequent disposition: Accepted ADR-0012 through ADR-0014 and
+RESEARCH-0033 resolve Wave D's Nexus routing, OpenAI capability, governed web
+discovery, and LOOT managed-data refresh decisions while preserving this
+report's accepted retention/replay/export semantics. Exact persistence,
+credential, security, cost, and landing-source adapter mechanisms remain
+Wave E work.
 
 Primary RQ: RQ-031
 

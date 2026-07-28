@@ -1,7 +1,7 @@
 # Evaluation strategy
 
 Status: Draft  
-Last reviewed: 2026-07-26
+Last reviewed: 2026-07-28
 
 Infinium is not trustworthy because it produces plausible reports. It becomes
 trustworthy only when evidence reconstruction, candidate selection, semantic
@@ -15,6 +15,32 @@ be presented as qualified merely because its research recommendation was
 accepted. ADR-0007 excludes xEdit from both production and evaluation;
 Bethesda expected results must be specified independently of the Mutagen path
 under test.
+
+RESEARCH-0034/0035 complete Gate C at the research/qualification layer.
+EVAL-0016 and EVAL-0017 now have qualified controlled-real candidates, but
+neither case has a passing execution. The accepted
+[M1 evaluation baseline](m1-evaluation-baseline.md), accepted
+[semantic specifications](specifications/m1-semantic-and-ground-truth.md),
+and accepted
+[platform/operational specifications](specifications/m1-platform-and-operational.md)
+define the detailed M1 obligations.
+
+Wave E research maps its accepted persistence, lifecycle, stack, process/IPC,
+credential, security, continuity, and budget mechanisms to
+EVAL-0026, EVAL-0033 through EVAL-0035, EVAL-0038 through EVAL-0041,
+EVAL-0044 through EVAL-0046, EVAL-0079 through EVAL-0083, and EVAL-0087
+through EVAL-0089. ADR-0015 through ADR-0023 accept the complete Wave E
+architecture, RESEARCH-0046 records Dapr's rejection without a prototype, and
+ADR-0024 is rejected. Gate E is met at the M0 architecture/design layer.
+None of those cases is passed or fully specified merely because the
+architecture is accepted.
+
+RESEARCH-0047 defines the accepted empirical readiness/maturity calibration
+protocol. M1 retains raw outputs and the measurements needed later; it does not
+invent M3/M4 numerical thresholds. RESEARCH-0048 and accepted ADR-0025 define
+the exact initial live-model profile and the distinction between retained
+result replay and a new live re-execution when no date-pinned model snapshot is
+available.
 
 ## Evaluation layers
 
@@ -123,6 +149,21 @@ discarded before configured extraction, analysis, case/finding synthesis,
 prose, provenance, and audit consumers complete, and that later minimization
 or deletion produces accurate dependency and gap reporting.
 
+## Evaluation partitions and answer isolation
+
+- Classify each case as development, validation, or held-out before its result
+  can influence production behavior.
+- Pre-register expected observations, conclusions, abstentions, and coverage
+  gaps from evidence independent of the implementation under test.
+- Do not provide expected labels, answer-bearing adjudication, or fixture
+  identity shortcuts to the parser, analyzer, ranker, retrieval path, or model
+  being evaluated.
+- If a held-out case changes code, rules, prompts, or ranking, reclassify it as
+  development and replace the lost holdout with materially independent
+  coverage.
+- Correct an expected result only from new independent evidence, with the
+  prior error and review recorded.
+
 ## Taxonomy-dependent evaluation
 
 Evaluation selection and reporting must use the accepted
@@ -132,8 +173,11 @@ modification surface, affected game system or content area, consequence type,
 and effect extent. The corpus should stratify positive,
 matched-negative, boundary, and unsupported cases across those dimensions
 rather than treating hosting-site categories, record families, or the first
-NPC proof as a complete inventory of game behavior. Metrics must disclose
-taxonomy areas with no or insufficient evaluation coverage.
+proof category as a complete inventory of game behavior. A mechanism may be
+called cross-category generic only after a materially different category
+proof; one contrasting proof remains minimum evidence rather than exhaustive
+coverage. Metrics must disclose taxonomy areas with no or insufficient
+evaluation coverage.
 
 ## Profile ladder
 
@@ -247,8 +291,8 @@ citation, or audit capability.
 - no fabricated citations or definitive unsupported claims;
 - agreement with MO2 for effective state and with independently specified
   fixture truth for every supported record/field/shape;
-- faithful reproduction and provenance of invoked LOOT metadata, userlist
-  inputs, and diagnostics;
+- faithful reproduction and provenance of the exact curated LOOT data,
+  userlist/configuration inputs, and qualified read-only libloot diagnostics;
 - known planted problems reliably detected;
 - harmless counterparts not misclassified;
 - failures and coverage gaps always visible;

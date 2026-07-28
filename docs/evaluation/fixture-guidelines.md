@@ -1,13 +1,25 @@
 # Fixture guidelines
 
 Status: Draft  
-Last reviewed: 2026-07-26
+Last reviewed: 2026-07-28
 
 Wave B's target boundaries and fixture/conformance obligations are accepted by
-ADR-0008 through ADR-0011, but full Wave F case specifications and execution
-remain pending. Fixture status must never convert acceptance of a test
+ADR-0008 through ADR-0011, and the M1 Wave F case specifications are accepted;
+execution remains pending. Fixture status must never convert acceptance of a test
 obligation into a passed integration claim. ADR-0007 excludes xEdit from
 fixture construction, required adjudication, and conformance dependencies.
+RESEARCH-0034/0035 qualify the remaining Gate C decision boundary and
+controlled-real candidates; they do not create executable fixtures or passing
+cases.
+
+Wave F produced the accepted
+[common M1 baseline](m1-evaluation-baseline.md), accepted
+[semantic fixture manifests](fixtures/m1-semantic-fixture-manifests.md), and
+accepted
+[platform fixture manifests](fixtures/m1-platform-fixture-manifests.md).
+These pre-register detailed fixture families and obligations. Their acceptance
+approves the designs only; the described fixture packages remain uncreated or
+unexecuted where their manifests say so.
 
 ## Fixture categories
 
@@ -36,9 +48,26 @@ shape/scale reference. It is not a representative corpus, correctness oracle,
 gold standard, or source of special-case expectations. The obsolete
 `test profile` is not a fixture and no longer exists.
 
+## Fixture-use partitions
+
+Every fixture is designated before use as:
+
+- **development** — may guide implementation and prompt/rule changes;
+- **validation** — checks behavior during development but must be reclassified
+  if its result directly drives tuning; or
+- **held-out** — remains unseen by the tuning path until the declared
+  evaluation point.
+
+If a validation or held-out result drives a production change, record the
+transition to development use and add materially independent replacement
+coverage. Real-mod identities and expected answers must never enter production
+logic, retrieval, ranking, or model context merely because they exist in a
+fixture.
+
 ## Required fixture metadata
 
 - fixture ID and version;
+- development, validation, or held-out designation and transition history;
 - purpose;
 - positive/negative/boundary classification;
 - exact expected observations;
@@ -53,6 +82,8 @@ gold standard, or source of special-case expectations. The obsolete
 - mod/game/tool versions;
 - licensing and redistribution constraints;
 - ground-truth method;
+- pre-registration/review provenance for expected results and confirmation
+  that answer-bearing material is isolated from the path under test;
 - retained/external replay dependencies and expected replayability;
 - known limitations.
 
@@ -110,6 +141,11 @@ Ground truth may use:
 - targeted in-game observation where static proof is unavailable.
 
 Conflicting ground truth is recorded rather than concealed.
+
+Expected results are recorded before execution and remain separate from the
+implementation input. A mismatch is evidence to investigate, not permission
+to rewrite the expectation. Expectation changes require new independent
+evidence, an explanation of the prior error, and review.
 
 For Bethesda semantic fixtures, the Mutagen code path under test may assist
 inspection but may not be the sole source of expected results. Fixture

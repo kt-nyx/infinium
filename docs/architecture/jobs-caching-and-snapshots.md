@@ -1,10 +1,14 @@
 # Jobs, caching, and snapshots
 
 Status: Draft  
-Last reviewed: 2026-07-26
+Last reviewed: 2026-07-28
 
-This document records required behavior. Storage technology and scheduling
-implementation remain undecided.
+This document records required behavior. RESEARCH-0036, RESEARCH-0037,
+RESEARCH-0039, RESEARCH-0043, and RESEARCH-0046 define the storage, lifecycle,
+coordinator, and cost-control requirements and dispositions. ADR-0015,
+ADR-0016, ADR-0018, and ADR-0023 accept the persistence, lifecycle,
+coordinator/process, and cost-control architecture. Exact schema, tuning, and
+implementation-plan details remain pending.
 
 ## Immutable installation snapshots
 
@@ -44,9 +48,10 @@ until finer-grained behavior is separately qualified.
 ## Resolved input manifest
 
 Every run records the actual inputs it resolved, including external-source
-revisions, tool/provider/model identities, prompt/schema versions, and retained
-or referenced input evidence and request settings. A configuration expresses
-what to resolve; the resolved input manifest records what was actually used.
+revisions, tool/provider/model identities, AI access-profile mode/generation,
+prompt/schema versions, and retained or referenced input evidence and request
+settings. A configuration expresses what to resolve; the resolved input
+manifest records what was actually used.
 The run record separately retains tool/model calls, outputs, derived evidence,
 and other results.
 
@@ -99,14 +104,17 @@ Every node records:
 
 ## Candidate-work contract
 
-The exact database, process, and scheduler mechanics remain Wave E decisions,
-but Wave C accepted the logical candidate-work boundary. Candidate generation
-uses snapshot-bound typed indexes and causal joins, preserves canonical
-participants and join provenance, records matched negatives and coverage gaps,
-and keeps deterministic/mandatory lanes independent of ranking scores. Scores
-may order eligible work within a lane; they may not remove mandatory work or
-turn taxonomy, labels, filenames, locations, or bare mod pairs into causal
-evidence.
+Wave E accepts SQLite plus coordinator-owned content-addressed payload storage
+and a standalone per-user coordinator as the sole Infinium publication
+authority. ADR-0016 accepts a thin application-owned SQLite lifecycle and
+rejects external workflow authority for M1. Wave C
+already accepted
+the logical candidate-work boundary: candidate generation uses snapshot-bound
+typed indexes and causal joins, preserves canonical participants and join
+provenance, records matched negatives and coverage gaps, and keeps
+deterministic/mandatory lanes independent of ranking scores. Scores may order
+eligible work within a lane; they may not remove mandatory work or turn
+taxonomy, labels, filenames, locations, or bare mod pairs into causal evidence.
 
 Progress denominators must describe the real populations and joins exercised
 by each analyzer. A candidate count without its eligible population, excluded
@@ -131,19 +139,20 @@ not as additional cost of the parent analysis run. Post-detachment progress,
 remaining-time estimates, and duration likewise remain with the acquisition
 run and do not extend the parent.
 
-Before a billable unit starts, the scheduler reserves its adapter-declared
-worst-case usage against every applicable consumptive operation,
+Before a consumptive unit starts, the scheduler reserves its adapter-declared
+worst-case usage against every applicable operation,
 acquisition-run, and analysis-run hard limit in one atomic decision. Every unit
 also passes any applicable hard-deadline check before dispatch. Completion
 reconciles the reservation to the single-owned actual ledger entry. Work whose
 adapter cannot provide a finite bound for a selected consumptive hard-limit
 dimension is not schedulable under that hard-limit configuration.
-Provider-side billing adjustments, uncancellable charges, or uninterruptible
-work completing after a deadline are recorded as actual cost/audit/duration
-variance and never create additional execution authority. A budget reservation
-is not provider authorization: if credentials are revoked or the operation is
-cancelled before dispatch, the work remains blocked and its unused reservation
-is released.
+Provider-side billing adjustments, plan allowance/rate-window changes,
+uncancellable charges, or uninterruptible work completing after a deadline are
+recorded as applicable usage/cost/audit/duration variance and never create
+additional execution authority. A budget reservation is not provider
+authorization: if the access profile is revoked or the operation is cancelled
+before dispatch, the work remains blocked and its unused reservation is
+released.
 
 ## Job states
 
@@ -178,7 +187,8 @@ Cache validity may depend on:
 - analyzer and ruleset versions;
 - external tool version and configuration;
 - documentation source revision;
-- provider, model, prompt, schema, and reasoning settings;
+- provider, AI access-profile mode/generation, model, prompt, schema, and
+  reasoning settings;
 - source/extraction claim-review revisions;
 - analysis-affecting assumption, identity-mapping, and local
   claim-applicability-adjudication set versions;
@@ -218,6 +228,12 @@ Derived-output cleanliness and source freshness are separate dimensions:
   the same explicitly resolved source revision/bytes.
 - **Source refresh** reacquires selected live external evidence through a new
   acquisition operation. It is not implied by clean recomputation.
+- **LOOT managed-data maintenance**, under accepted ADR-0014, is a
+  distinct configured nonblocking maintenance operation. It may prepare a new
+  validated immutable pair for future runs but does not start documentation
+  acquisition/analysis or change a pair already bound to a run.
+- **Hosted web-search rerun** is a new provider invocation and live discovery
+  event. It is not deterministic replay of prior actions, sources, or prose.
 - **Explicit combinations** may refresh source bytes, cleanly re-extract them,
   and/or cleanly recompute consuming analysis. Any refresh may legitimately
   resolve different evidence from a prior run.
@@ -236,7 +252,9 @@ Checkpoint boundaries should favor:
 - resuming after UI restart;
 - preserving valid work at cost-limit exhaustion for a later run.
 
-The exact process-lifetime behavior requires architecture research.
+ADR-0016 accepts durable application-owned SQLite lifecycle behavior, and
+ADR-0018 accepts the exact coordinator/process realization. Implementation and
+fault conformance remain pending.
 
 Pause and resume continue the same non-terminal run and retain its immutable
 bindings. Cancellation makes the execution terminal. Valid outputs/checkpoints

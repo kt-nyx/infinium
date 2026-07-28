@@ -3,19 +3,62 @@
 Status: Accepted  
 Owner: Project owner  
 Created: 2026-07-25  
-Last reviewed: 2026-07-26
+Last reviewed: 2026-07-28
 Accepted: 2026-07-25  
 Target milestone: M0 — Documentation and research foundation
 
 Accepted amendments:
 
+- 2026-07-28 —
+  [RESEARCH-0047 through RESEARCH-0049](../../research/investigations/README.md)
+  complete Wave F. The project owner accepted the RQ-028 calibration protocol,
+  M1 evaluation baseline and case/fixture specifications, deferred-risk
+  register, ADR-0025, and M1 backend semantic proof plan. RQ-038 is resolved
+  for M1, Gate F is met, and M0 is complete. This authorizes only the bounded
+  M1 plan and does not mark any evaluation or implementation passed.
+- 2026-07-28 —
+  [ADR-0015 through ADR-0023](../../architecture/decisions/README.md)
+  are accepted as the complete Wave E architecture set. RQ-013, RQ-015
+  through RQ-018, and RQ-032 through RQ-034 are resolved for M0, and Gate E is
+  met at the architecture/design layer. This acceptance does not claim
+  implementation, qualification, or evaluation conformance.
+- 2026-07-28 —
+  [ADR-0016](../../architecture/decisions/ADR-0016-application-owned-durable-run-and-job-lifecycle.md)
+  accepts the application-owned transactional SQLite lifecycle and bounded
+  scheduler after the owner closed RESEARCH-0046 without a Dapr prototype.
+  [ADR-0018](../../architecture/decisions/ADR-0018-process-and-authority-topology.md)
+  accepts the standalone per-user coordinator, bounded-worker, desktop/CLI
+  client, and one-shot helper process roles without selecting ADR-0017's
+  concrete presentation stack or ADR-0019's IPC/query transport. At that
+  intermediate point RQ-015 was resolved and RQ-017 was partially resolved;
+  the later amendment above accepts the remaining ADRs and closes Gate E.
+- 2026-07-28 —
+  [RESEARCH-0034](../../research/investigations/RESEARCH-0034-loose-facegen-qualification.md)
+  completes the RQ-023 loose-only FaceGen decision matrix, and
+  [RESEARCH-0035](../../research/investigations/RESEARCH-0035-gate-c-real-mod-qualification.md)
+  pins independently grounded EVAL-0016 and materially different EVAL-0017
+  candidates with matched controls. The category-neutral
+  [anti-overfitting rules](../../evaluation/anti-overfitting-rules.md) are
+  accepted. The project owner explicitly accepted RESEARCH-0034 and
+  RESEARCH-0035 on 2026-07-28. Gate C is met at the M0
+  research/qualification layer. Candidate qualification does not mean that
+  EVAL-0016, EVAL-0017, or an analyzer implementation has passed execution.
+- 2026-07-28 —
+  [RESEARCH-0033](../../research/investigations/RESEARCH-0033-wave-d-revision-integration.md)
+  integrates authenticated Nexus, LOOT freshness/source discovery, and
+  OpenAI-first research. Accepted ADR-0012 resolves RQ-008 and removes the
+  former authenticated/GraphQL-policy blockers. The owner has accepted
+  ADR-0013's OpenAI-first/no-parity-ceiling capability boundary, ADR-0014's
+  automatic LOOT freshness mechanism, and RESEARCH-0033's integrated
+  disposition. Gate D is met at the M0 research/design layer; implementation
+  and conformance remain later work.
 - 2026-07-25 —
   [RESEARCH-0024](../../research/investigations/RESEARCH-0024-wave-c-analysis-taxonomy-and-scale-integration.md)
   accepts all Wave C research recommendations and
   `infinium.skyrim-se.mod-impact-taxonomy/0.1.0`. RQ-024, RQ-027, RQ-035, and
   RQ-036 are resolved for M0; RQ-019 through RQ-022 retain accepted bounded
-  conditional roadmaps. Gate C remains pending only the RQ-023 loose-only
-  FaceGen qualification and RQ-025 exact EVAL-0016/EVAL-0017 real-mod cases.
+  conditional roadmaps. This amendment established the remaining RQ-023 and
+  RQ-025 prerequisites later completed by RESEARCH-0034/0035.
   EVAL-0032 and EVAL-0086 specifications are accepted, but neither case has
   passed execution.
 - 2026-07-25 —
@@ -57,8 +100,9 @@ Accepted amendments:
 
 This plan sequences the research needed to select Infinium's implementation
 architecture and write an acceptable M1 backend semantic proof plan. It consumes
-the accepted product baseline and ADR-0001 through ADR-0011; it does not change
-their requirements or accept any currently unresolved technical mechanism.
+the accepted product baseline, ADR-0001 through ADR-0014, and later accepted
+decisions; it does not change their requirements or accept a proposed
+technical mechanism implicitly.
 
 Research results are evidence and recommendations. A recommendation becomes an
 implementation constraint only through the applicable accepted ADR, accepted
@@ -119,6 +163,7 @@ being answered speculatively.
 
 - [Product definition](../../product/product-definition.md)
 - [Requirements](../../product/requirements.md)
+- [Skyrim SE mod-impact taxonomy](../../product/mod-impact-taxonomy.md)
 - [Workflows](../../product/workflows.md)
 - [Domain model](../../product/domain-model.md)
 - [Severity, confidence, maturity, coverage, and readiness](../../product/severity-confidence-and-coverage.md)
@@ -138,6 +183,9 @@ being answered speculatively.
 - [ADR-0009 — Skyrim runtime and Bethesda semantic support](../../architecture/decisions/ADR-0009-skyrim-runtime-and-bethesda-semantic-support.md)
 - [ADR-0010 — Snapshot fingerprint and dependency invalidation](../../architecture/decisions/ADR-0010-snapshot-fingerprint-and-dependency-invalidation.md)
 - [ADR-0011 — LOOT semantic and managed-data boundary](../../architecture/decisions/ADR-0011-loot-semantic-and-managed-data-boundary.md)
+- [ADR-0012 — Nexus latest-capable API routing and development-risk posture](../../architecture/decisions/ADR-0012-nexus-latest-capable-api-routing.md)
+- [ADR-0013 — OpenAI-first LLM capability boundary](../../architecture/decisions/ADR-0013-openai-first-llm-capability-boundary.md)
+- [ADR-0014 — LOOT managed-data freshness and immutable pair activation](../../architecture/decisions/ADR-0014-loot-managed-data-refresh.md)
 
 ### Research and evaluation inputs
 
@@ -210,15 +258,15 @@ implements or validates the complete product requirement.
 - public packaging, signing, update, and support operations;
 - runtime-log diagnosis and test-session implementation;
 - other managers, Skyrim runtimes/editions, games, or write-capable features;
-- hard-coding the first NPC proof, a real mod, or a provisional taxonomy label
-  into a general mechanism.
+- hard-coding the first proof category, a real mod, or a provisional taxonomy
+  label into a general mechanism.
 
 ## Preflight
 
 ### Already satisfied
 
-- The seven product documents are accepted.
-- ADR-0001 through ADR-0011 are accepted.
+- The eight product documents are accepted.
+- ADR-0001 through ADR-0014 are accepted.
 - The legacy implementation is isolated and documented.
 - The open-question registry and evaluation catalog exist.
 
@@ -284,35 +332,37 @@ question. It may not silently remove an Exit-blocking question.
 | RQ-005 | Resolved | B | ADR-0011 selects the conditional libloot/data delivery boundary and rejects current LOOT application automation |
 | RQ-006 | Resolved | B | ADR-0007 excludes xEdit from all Infinium boundaries and replaces its proposed oracle role with parser-independent first-party fixture truth |
 | RQ-007 | Resolved | B | ADR-0008 separates physical installed identity, source mapping, and unavailable installer/manual-change history |
-| RQ-008 | Exit-blocking | D | Identify currently supported Nexus interfaces and content/revision coverage |
-| RQ-009 | Resolved | A | ADR-0005 accepts bounded, user-initiated analysis through documented supported Nexus APIs under an explicit owner risk decision |
-| RQ-010 | Conditional | D | Approve only sources needed by M1; broader registry expansion may follow |
-| RQ-011 | Exit-blocking | D | Define the minimum provider-neutral claim/investigation contract used by M1 |
-| RQ-012 | Exit-blocking | D | Verify the reference provider and comparison capabilities needed by the M1 contract |
-| RQ-013 | Exit-blocking | E | Select evidence/acquisition persistence and revision relationships needed by M1 |
+| RQ-008 | Resolved | D | ADR-0012 accepts authenticated latest-capable v3/v2 GraphQL/v1 routing from RESEARCH-0030; adapter/credential/evaluation conformance remains later |
+| RQ-009 | Resolved | A | ADR-0005 accepts bounded Nexus diagnostic analysis under an explicit owner risk decision; ADR-0012 expands eligible Nexus-provided APIs without weakening the no-page/no-bypass boundary |
+| RQ-010 | Resolved | D | ADR-0013/ADR-0014 and the accepted Wave D source-registry dispositions select local documentation plus LOOT managed data as the minimal core, keep GitHub mod documentation optional/later, and make governed OpenAI web search discovery-only |
+| RQ-011 | Resolved | D | ADR-0013 preserves provider-independent domain truth and two safe semantic operations while allowing governed OpenAI-specific capabilities |
+| RQ-012 | Resolved | D | ADR-0013 accepts OpenAI Responses/search and separate background/Batch/cache qualification; exact model/account/credential/cost conformance remains later architecture and implementation work |
+| RQ-013 | Resolved | E | ADR-0015 accepts SQLite/CAS persistence and versioning |
 | RQ-014 | Resolved | B | ADR-0010 selects canonical structural manifests, scoped SHA-256, dependency closures, and conservative invalidation |
-| RQ-015 | Exit-blocking | E | Select the durable run/job/checkpoint model and bounded M1 subset |
-| RQ-016 | Exit-blocking | E | Compare desktop/application stacks and select the application/engine direction |
-| RQ-017 | Exit-blocking | E | Select the UI/analysis/process/data-query boundary needed for scale and isolation |
-| RQ-018 | Exit-blocking | E | Select secure credential entry/storage for the chosen architecture before authenticated integration |
+| RQ-015 | Resolved | E | Accepted ADR-0016 selects the application-owned transactional SQLite lifecycle and bounded scheduler; implementation/fault conformance pending |
+| RQ-016 | Resolved | E | ADR-0017 accepts the application/engine stack |
+| RQ-017 | Resolved | E | ADR-0018/ADR-0019 accept process authority and the local IPC/query contract |
+| RQ-018 | Resolved | E | ADR-0020 accepts the Credential Manager and one-shot helper boundary |
 | RQ-019 | Conditional | C | Accepted bounded static inventory and layered-identity roadmap; named analyzer work blocks only if selected into M1 |
 | RQ-020 | Conditional | C | Accepted generic inspection plus version-pinned adapter roadmap; named generator delivery remains later |
 | RQ-021 | Conditional | C | Accepted generic/configuration-schema roadmap; named schemas do not block the first proof |
 | RQ-022 | Conditional | C | Accepted bounded static PEX/VMAD contract; compiled-Papyrus analysis blocks only if selected |
-| RQ-023 | Exit-blocking | C | NIF-first scope accepted; exact loose-only FaceGen identity/provider qualification remains pending |
-| RQ-024 | Resolved | C | Accepted generic substrate → NPC proof → REFR/placement/enable-link roadmap and later-family ordering |
-| RQ-025 | Exit-blocking | C | Two-layer corpus strategy accepted; exact EVAL-0016 remains incomplete and EVAL-0017 remains unselected |
+| RQ-023 | Resolved | C | NIF-first scope accepted; RESEARCH-0034 qualifies the exact loose-only FaceGen decision boundary for pre-resolved inputs, while archive-positive and production-adapter conformance remain later work |
+| RQ-024 | Resolved | C | Accepted generic substrate → bounded first-category proof → materially different category proof roadmap; current candidates use actor/AI/FaceGen then REFR/placement/link semantics, without making that pair permanent |
+| RQ-025 | Resolved | C | Two-layer corpus strategy accepted; RESEARCH-0035 pins independently grounded EVAL-0016 and materially different EVAL-0017 controlled-real candidates with matched controls |
 | RQ-026 | Resolved | A | ADR-0006 establishes GPLv3-family licensing and the accepted external-application/bundled-library/data posture |
 | RQ-027 | Resolved | C | Accepted benchmark/cost method and rough feasibility evidence; exact architecture/production budgets require later remeasurement |
 | RQ-028 | Later evidence | F | Define the calibration/evidence-collection plan now; set M3/M4 thresholds only after analyzer data exists |
 | RQ-029 | Later evidence | F | Schedule before automatic runtime-log application, no later than its M3 delivery plan |
 | RQ-030 | Later evidence | F | Schedule for M4 packaging/update planning after the application architecture stabilizes |
 | RQ-031 | Resolved | A | Accepted metadata-first durable minimization, useful-analysis private retention, independent permission/export classes, replay disclosure, and deletion semantics; measured storage remains follow-up work |
-| RQ-032 | Exit-blocking | E | Select concrete content, path, subprocess, navigation, and export controls for M1 surfaces |
-| RQ-033 | Exit-blocking | E | Select finding/case continuity and reconciliation keys without name-based false identity |
-| RQ-034 | Exit-blocking | E | Select enforceable reservation/deadline/reconciliation behavior before concurrent or billable M1 work |
+| RQ-032 | Resolved | E | ADR-0021 accepts concrete local security controls |
+| RQ-033 | Resolved | E | ADR-0022 accepts evidence-bearing continuity/reconciliation |
+| RQ-034 | Resolved | E | ADR-0023 accepts direct-API atomic reservation and reconciliation |
 | RQ-035 | Resolved | C | Accepted typed-index, causal-join, canonical-participant, and mandatory-lane design; independent production execution remains later |
 | RQ-036 | Resolved | C | Accepted `infinium.skyrim-se.mod-impact-taxonomy/0.1.0` and integrated its consumer documents |
+| RQ-037 | Closed; proposal rejected | E | Owner retained direct Responses/API-key access under ADR-0013 and rejected the Codex/ChatGPT-plan proposal in ADR-0024 |
+| RQ-038 | Resolved for M1 | F | Accepted ADR-0025 selects the exact `gpt-5.6-sol` synchronous profile and drift policy; implementation/evaluation conformance remains pending |
 
 ## Dependency-ordered research waves
 
@@ -405,12 +455,13 @@ blocking evidence instead of compensating with heuristics or LLM inference.
 
 ### Wave C — Analysis surfaces, taxonomy, corpus, and candidate scale
 
-Status: Investigations completed and recommendations accepted on 2026-07-25.
-The taxonomy and EVAL-0032/EVAL-0086 specifications are accepted. Gate C
-remains pending only the exact loose-only FaceGen qualification required by
-RQ-023 and pinned, independently grounded EVAL-0016/EVAL-0017 real-mod
-candidates required by RQ-025. These are qualification/corpus closeout tasks,
-not invitations to redesign the accepted Wave C roadmaps.
+Status: Accepted as met at the M0 research/qualification layer on 2026-07-28.
+The taxonomy, category-neutral anti-overfitting rules, and
+EVAL-0032/EVAL-0086 specifications are accepted. RESEARCH-0034 completes the
+exact loose-only FaceGen qualification required by RQ-023, and RESEARCH-0035
+pins the independently grounded EVAL-0016/EVAL-0017 controlled-real candidates
+required by RQ-025. These results close the research/corpus gate without
+claiming that the cases or analyzers have passed execution.
 
 Questions:
 
@@ -456,7 +507,7 @@ Required outputs:
 - initial performance/cost measurement method and architecture budgets;
 - reviewed EVAL-0032 and EVAL-0086 specifications or approved successors.
 
-Gate C conditions already satisfied:
+Gate C conditions satisfied:
 
 - the product owner accepted the RQ-036 taxonomy as a product specification,
   not an ADR;
@@ -464,20 +515,33 @@ Gate C conditions already satisfied:
   its change discipline when the taxonomy materially changed its normative
   language; the new taxonomy specification does not silently override it;
 - the first proof remains generic scope-incongruent reversion rather than an
-  NPC-specific rule;
+  implementation tied to its first proof category;
+- when a mechanism is claimed to generalize beyond a bounded domain analyzer,
+  its first category proof is followed by a materially different category
+  proof rather than a hard-coded requirement for one named category pair;
 - candidate experiments retain planted interactions without defaulting to
   naïve all-pairs LLM comparison;
-- unevaluated taxonomy regions and unsupported semantics are explicit.
+- unevaluated taxonomy regions and unsupported semantics are explicit;
+- RESEARCH-0034 completed the RQ-023 loose-only FaceGen identity/provider
+  closure at its declared pre-resolved-input boundary; and
+- RESEARCH-0035 supplied pinned, independently grounded EVAL-0016 and
+  EVAL-0017 candidates with matched controls in materially different accepted
+  taxonomy regions.
 
-Remaining Gate C conditions:
+Wave F's accepted manifests/specifications define those qualified candidates
+as final M1 case designs. Executable fixture construction and later M1
+execution remain outstanding; neither is a remaining Gate C condition.
 
-- RQ-023 must complete the exact loose-only FaceGen identity/provider closure
-  used by the first real cross-layer case; and
-- RQ-025 must supply pinned, independently grounded EVAL-0016 and EVAL-0017
-  candidates, including matched controls and at least one materially different
-  non-NPC surface or affected game area under the accepted taxonomy.
+### Wave D — Documentation acquisition and OpenAI-first LLM boundary
 
-### Wave D — Documentation acquisition and provider-neutral LLM boundary
+Status: Original reports RESEARCH-0025 through RESEARCH-0029 are retained as
+dated evidence. Revised RESEARCH-0030 through RESEARCH-0033 completed
+authenticated Nexus qualification, LOOT/source-freshness research,
+OpenAI-first capability research, and independent integration on 2026-07-28.
+Gate D is **accepted as met at the M0 research/design layer**. ADR-0012
+resolves Nexus/GraphQL eligibility and routing, ADR-0013 accepts the OpenAI
+capability boundary, and ADR-0014 accepts LOOT managed-data refresh. No
+provider, libloot, credential, budget, or evaluation conformance is implied.
 
 Questions:
 
@@ -495,16 +559,17 @@ Dependencies:
 
 Internal order:
 
-1. enumerate supported Nexus content, revision identity, authentication, and
+1. enumerate Nexus-provided API content, revision identity, authentication, and
    access limits;
-2. run bounded authenticated experiments only against documented, supported
-   Nexus operations under ADR-0005; record unsupported content surfaces as
-   coverage gaps rather than using page fallbacks;
+2. run bounded authenticated experiments under ADR-0005/ADR-0012; record
+   unsupported content surfaces as coverage gaps rather than page fallbacks;
 3. register only necessary M1 sources and access methods;
 4. test claim extraction on retained, permitted source samples;
-5. define the smallest provider-neutral extraction/investigation schemas;
-6. compare reference-provider authentication, structured-output, batching,
-   model-version, token/cost, rate-limit, quota, and cancellation behavior;
+5. define provider-independent extraction/investigation domain schemas without
+   making them a ceiling on provider capabilities;
+6. qualify OpenAI-first authentication, Structured Outputs, hosted search,
+   execution modes, model identity, token/cost, rate, quota, retention, and
+   cancellation behavior; later-provider parity does not gate M1;
 7. exercise citation, applicability, contradiction, abstention, and hostile
    embedded-instruction cases.
 
@@ -512,11 +577,10 @@ Required outputs:
 
 - updated source registry with verified dates and capability gaps;
 - source/entity/version acquisition contract;
-- provider-neutral claim-extraction and investigation contract proposal;
-- GPT reference-adapter capability matrix plus a contract-level portability
-  review against at least one materially different provider's published
-  capabilities; live multi-provider testing is not required for M0 unless the
-  paper comparison exposes a material uncertainty;
+- provider-independent claim-extraction/investigation schemas plus an
+  accepted OpenAI-specific capability-profile contract;
+- OpenAI Responses/Structured Outputs/web-search/background/Batch/cache
+  capability findings and the retained historical portability comparison;
 - prompt/context minimization and untrusted-content experiment results;
 - provider capability gaps that affect estimates, hard limits, replay, or UX;
 - research inputs for EVAL-0010 through EVAL-0012, EVAL-0033, EVAL-0034,
@@ -528,22 +592,32 @@ Gate D:
   versions/conditions or abstains;
 - model output cannot become local-state authority or grant operation
   authority;
-- the contract works without provider-specific concepts in the core domain;
+- authoritative domain truth works without provider-specific concepts, while
+  provider-specific capability/invocation records remain outside that truth;
 - authenticated or billable experimentation has explicit user authorization,
   credential handling, context, cost, and retention boundaries.
 
 ### Wave E — Architecture and security synthesis
 
+Status: Research is complete through
+[RESEARCH-0036 through RESEARCH-0046](../../research/investigations/README.md).
+ADR-0016 accepts the application-owned SQLite lifecycle, and ADR-0018 accepts
+the process and authority topology. ADR-0015, ADR-0017, and ADR-0019 through
+ADR-0023 accept the remaining required mechanisms; ADR-0024 is rejected. Gate
+E is **met at the M0 architecture/design layer**.
+
 Questions:
 
 - RQ-013 and RQ-015 through RQ-018;
 - RQ-032 through RQ-034;
+- RQ-037;
 - architecture conclusions enabled by RQ-001, RQ-004, RQ-005, RQ-014,
-  RQ-026, RQ-031, RQ-035, and accepted ADR-0007 through ADR-0011.
+  RQ-026, RQ-031, RQ-035, and accepted ADR-0007 through ADR-0014.
 
-Required comparison:
+Required comparison (completed by RESEARCH-0038):
 
-- the current C#/.NET worker + React/TypeScript + hardened Electron candidate;
+- the then-current C#/.NET worker + React/TypeScript + hardened Electron
+  candidate;
 - an Avalonia-centered alternative;
 - a Tauri/WebView2 or comparably realistic web-frontend desktop alternative;
 - any materially better design discovered by research.
@@ -573,6 +647,8 @@ Required outputs:
 - persistence mechanisms that implement ADR-0010's accepted
   dependency-aware snapshot/cache strategy;
 - job/checkpoint and process/data-query topology;
+- explicit Dapr Workflow versus thin application-owned SQLite lifecycle
+  disposition, with any unexecuted prototype work disclosed;
 - application stack and UI/worker boundary;
 - secure credential and allowlisted privileged-operation design;
 - candidate-index/interaction representation where sufficiently cross-cutting;
@@ -580,22 +656,52 @@ Required outputs:
 - finding/case continuity and reconciliation design;
 - evaluation feasibility mapping for EVAL-0026, EVAL-0033 through EVAL-0035,
   EVAL-0038 through EVAL-0041, EVAL-0044 through EVAL-0046, EVAL-0079 through
-  EVAL-0083.
+  EVAL-0083, and EVAL-0087 through EVAL-0089.
+
+RESEARCH-0044 found no remaining contradiction among the eight original
+investigations and recommended nine ADRs. RESEARCH-0045 later proposed a tenth
+ADR for distinct OpenAI access modes, but the owner rejected that proposal.
+The owner then closed RESEARCH-0046 without a prototype and accepted the
+application-owned SQLite lifecycle in ADR-0016. The owner subsequently
+accepted the process and authority topology in ADR-0018. The required
+nine-ADR set covers persistence, durable lifecycle,
+application stack,
+process/authority topology, local IPC/query, credentials/provider dispatch,
+local security controls, finding/case continuity, and cost/budget enforcement.
+The accepted design is compatible with ADR-0001 through ADR-0014, subject to
+keeping general workers secret-free, coordinator-only payload admission, and
+Job Objects described as containment rather than a security sandbox.
 
 Gate E:
 
 - every durable or cross-cutting M1 mechanism that meets the repository's ADR
   criteria is governed by an accepted ADR, while local implementation details
   remain bounded by the accepted M1 plan;
-- the selected design satisfies ADR-0001 through ADR-0011 without hidden
-  authority expansion;
+- the selected design satisfies ADR-0001 through ADR-0014 and any later
+  accepted ADRs without hidden authority expansion;
 - no decision relies on mocked production data, guessed effective state,
   plaintext credentials, broad privileged UI access, or legacy architecture
   inertia;
 - any unresolved mechanism is either outside M1 or blocks the M1 plan
   explicitly.
 
+Current Gate E result: **Met at the M0 architecture/design layer.**
+ADR-0015 through ADR-0023 are accepted and reconciled. Rejected ADR-0024 is
+not a gate dependency. Despite design acceptance,
+EVAL-0026, EVAL-0033 through EVAL-0035, EVAL-0038 through EVAL-0041,
+EVAL-0044 through EVAL-0046, and EVAL-0079 through EVAL-0089 remain
+specification/execution or conformance work as applicable.
+
 ### Wave F — Evaluation specifications, deferred-question ledger, and M1 plan
+
+Status: Accepted as met on 2026-07-28. Gate F closes M0 and activates only the
+accepted M1 backend semantic proof plan.
+
+Current state (2026-07-28): the required Wave F research, evaluation
+specifications/manifests, deferred-risk register, ADR-0025, and M1 plan were
+drafted, integrated, independently reviewed, and accepted through
+RESEARCH-0047 through RESEARCH-0049. Gate F is met and M0 is complete. No
+evaluation execution or completed implementation is implied.
 
 Questions:
 
@@ -668,11 +774,12 @@ possible and state what remains unverified.
   authentication/access controls.
 - Public policy, API, licensing, and technical documentation may be consulted
   to establish Wave A guardrails.
-- Under ADR-0005, bounded user-initiated acquisition and diagnostic analysis of
-  content exposed through documented supported Nexus APIs is permitted for
-  research. Unsupported content surfaces remain coverage gaps; HTML scraping,
-  browser automation, undocumented endpoints, bulk/rehost behavior, model
-  training, and raw public source redistribution remain prohibited.
+- Under ADR-0005 and ADR-0012, bounded user-initiated acquisition and
+  diagnostic analysis through Nexus-provided read APIs, including GraphQL, is
+  permitted for development research. Unsupported content surfaces remain
+  coverage gaps; HTML scraping, browser automation, access bypass,
+  bulk/rehost behavior, model training, and raw public source redistribution
+  remain prohibited.
 - Keep local/deterministic state, source claims, user statements, and model
   interpretations separately attributable.
 - Treat every retrieved document, archive, log, tool output, and model output
@@ -719,6 +826,8 @@ specifications for the following cases or approved successors:
   EVAL-0026, EVAL-0032, EVAL-0037;
 - security and non-mutation: EVAL-0033 through EVAL-0035, EVAL-0046,
   EVAL-0080;
+- persistence, process/query, credential lifecycle, and conservative
+  finding/case continuity: EVAL-0079, EVAL-0087 through EVAL-0089;
 - manual initiation, acquisition/application provenance, and run output:
   EVAL-0039, EVAL-0040, EVAL-0045;
 - local ground truth and supported-target rejection: EVAL-0051, EVAL-0052,
@@ -732,8 +841,11 @@ specifications for the following cases or approved successors:
 
 If M1 invokes LOOT, a billable/authenticated provider, concurrent billable
 work, or another optional external boundary, its applicable EVAL-0053,
-EVAL-0076, EVAL-0077, EVAL-0081, and related cases become M1 gates before that
-boundary is implemented.
+EVAL-0076, EVAL-0077, EVAL-0081, EVAL-0089, and related cases become M1 gates
+before that boundary is implemented. The M1 budget/dispatch substrate must
+exercise EVAL-0081's synchronous reservation path even when live billable
+concurrency remains disabled; concurrency/background/Batch/cache extensions
+gate those capabilities before enablement.
 
 Fixture specifications must include exact expected observations, candidates,
 hypotheses/findings, supported-versus-lead-only state, abstentions, gaps,
@@ -853,8 +965,9 @@ the user's modding setup.
   identifiable.
 - This plan may be amended after review when research changes dependencies or
   scope. The amendment must identify affected RQs, gates, and M1 consequences.
-- Production implementation remains unauthorized until the resulting M1 plan
-  is accepted, even if a probe appears usable.
+- Production implementation was unauthorized until the resulting M1 plan was
+  accepted. The accepted plan now authorizes only its bounded slices and
+  gates, even if a broader probe appears usable.
 
 ## Deferred follow-up
 
@@ -874,17 +987,25 @@ Unless promoted by accepted evidence:
 
 ## Completion record
 
-Completion status: In progress — Waves A through C research accepted; Gate C
-qualification/corpus closeout plus Waves D through F remain
+Completion status: Completed — Gate F met and M0 closed on 2026-07-28
 
-To be filled when M0 completes:
-
-- accepted plan revision:
-- completed investigation documents:
+- accepted plan revision: M0 plan with accepted amendments through Wave F;
+- completed investigation documents: RESEARCH-0001 through RESEARCH-0049,
+  with each report's recorded accepted, rejected, conditional, or deferred
+  disposition controlling its use;
 - accepted product-taxonomy version:
-- accepted/superseded ADRs:
-- reviewed M1 evaluation specifications:
+  `infinium.skyrim-se.mod-impact-taxonomy/0.1.0`;
+- accepted/superseded ADRs: ADR-0001 through ADR-0023 and ADR-0025 accepted;
+  ADR-0024 rejected; partial supersessions remain recorded in the ADR index;
+- reviewed M1 evaluation specifications: accepted common M1 baseline,
+  semantic/local-ground-truth specifications and manifests, and
+  platform/operational specifications and manifests;
 - accepted M1 plan:
-- verification commands and results:
-- unresolved gaps and deferred questions:
-- completion date:
+  [M1 backend semantic proof](M1-backend-semantic-proof.md);
+- verification: repository-wide Markdown link, identifier, traceability,
+  conflict-marker, and diff-format review completed on 2026-07-28;
+- unresolved gaps and deferred questions: accepted
+  [deferred-question and residual-risk register](../../research/deferred-question-and-residual-risk-register.md),
+  including empirical RQ-028 thresholds, RQ-029 runtime-log provenance, and
+  RQ-030 packaging/update architecture;
+- completion date: 2026-07-28.

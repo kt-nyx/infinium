@@ -1,10 +1,16 @@
 # Product definition
 
 Status: Accepted  
-Last reviewed: 2026-07-26
+Last reviewed: 2026-07-28
 
 Accepted amendments:
 
+- 2026-07-28 — OpenAI is the initial supported LLM direction and later-provider
+  parity does not limit useful initial capabilities. Provider-specific
+  operations remain outside authoritative local/evidence truth and cannot
+  weaken the deterministic, provenance, or finding-admission boundary. Nexus
+  acquisition follows ADR-0012, the OpenAI capability boundary follows
+  ADR-0013, and LOOT managed-data refresh follows ADR-0014.
 - 2026-07-25 — Wave C owner disposition
   [RESEARCH-0024](../research/investigations/RESEARCH-0024-wave-c-analysis-taxonomy-and-scale-integration.md)
   accepts mod-impact taxonomy `0.1.0`, bounded analyzer roadmaps, the
@@ -32,6 +38,11 @@ deterministic tooling with purpose-built semantic analyzers, and can use an LLM
 as an evidence-bound investigator and explainer. Its primary value is finding
 consequential problems that raw conflict views, deterministic metadata, or
 manual review are likely to miss.
+
+OpenAI is the initial supported LLM direction. Infinium may use
+provider-specific capabilities where they add value, while observations,
+evidence authority, findings, cases, coverage, and readiness remain
+provider-independent and host-validated.
 
 Infinium is not an autonomous mod manager and is not another raw conflict
 browser.

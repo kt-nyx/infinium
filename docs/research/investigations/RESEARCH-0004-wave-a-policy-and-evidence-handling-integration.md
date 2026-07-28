@@ -4,9 +4,16 @@ Status: Completed — Gate disposition amended by ADR-0005, ADR-0006, ADR-0007, 
 
 Date: 2026-07-25
 
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-28
 
 Researcher: Codex review agent
+
+Subsequent disposition: Accepted ADR-0012 through ADR-0014 and
+RESEARCH-0033 resolve the later Wave D questions that this dated Wave A report
+left open. ADR-0012 supersedes the documented-supported-interface-only Nexus
+constraint; ADR-0013 accepts the OpenAI and governed-search boundary; ADR-0014
+accepts LOOT managed-data refresh. This report's retained earlier wording is
+historical where those later decisions apply.
 
 Reviewed wave: A — Policy and evidence-handling guardrails
 

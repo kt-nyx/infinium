@@ -1,10 +1,19 @@
 # Product workflows
 
 Status: Accepted  
-Last reviewed: 2026-07-26
+Last reviewed: 2026-07-28
 
 Accepted amendments:
 
+- 2026-07-28 — The owner rejected the proposed Codex/ChatGPT-plan adapter.
+  Initial LLM operations use schema-constrained direct Responses API calls
+  through a user-supplied, usage-priced OpenAI Platform API key. ChatGPT
+  subscriptions do not fund or authenticate these calls. RESEARCH-0045
+  preserves the investigated alternative, and ADR-0024 records its rejection.
+- 2026-07-28 — ADR-0012 accepts latest-capable Nexus API routing. OpenAI is
+  the initial supported LLM direction without a second-provider gate.
+  ADR-0013 accepts the OpenAI capability boundary, and ADR-0014 accepts the
+  configurable automatic LOOT managed-data schedule and activation mechanism.
 - 2026-07-25 — Wave C owner disposition
   [RESEARCH-0024](../research/investigations/RESEARCH-0024-wave-c-analysis-taxonomy-and-scale-integration.md)
   accepts taxonomy-backed summary/filtering and the candidate-first analysis
@@ -43,16 +52,31 @@ replaced, or updated by Infinium. xEdit has no Infinium setup or workflow role.
 
 1. Choose or load a saved configuration.
 2. Select analyzers and documentation sources.
-3. Configure provider, model routing, candidate breadth, and budgets.
+3. Enable a supported provider/account and choose an explicit access profile
+   when LLM-backed work is selected. Initial OpenAI support uses direct
+   Responses API calls through a user-supplied, usage-priced Platform API key.
+   Configure model routing, candidate breadth, and API-appropriate limits.
+   Never silently fall back between profiles, credentials, accounts, or
+   billing scopes. OpenAI may be the sole initial provider; later providers
+   may expose different capabilities.
 4. Choose validated analytical reuse or clean recomputation.
 5. Separately choose the external-source freshness/refresh policy.
-6. Review estimated time, cost, and coverage.
+6. Review estimated time, coverage, token/tool use, and API cost; show hard
+   spend limits, available rate/quota/credit facts when the provider reports
+   them, and explicit gaps where it does not.
 7. Resolve and retain the semantic analysis context and effective scan
    configuration separately.
 8. Start manually.
 
 Development builds prioritize granular controls. User-facing presets are
 introduced only after empirical calibration.
+
+Accepted LOOT managed-data maintenance is independent of scan initiation. When
+enabled, a nonblocking startup/interval check may
+prepare a newer validated immutable pair for future runs while showing
+last-check, last-success, active-revision, age, failure, and offline state. It
+cannot start a scan, change the pair already bound to a run, or trigger Nexus,
+general documentation, web-search, or LLM acquisition.
 
 ## 3. Run and monitor analysis
 
@@ -62,7 +86,8 @@ The highest level shows:
 - completed and remaining work;
 - supported cases and lead-only investigations found;
 - elapsed and estimated remaining time;
-- current and estimated total cost.
+- current and estimated token, tool, and API-cost consumption, with unavailable
+  provider facts exposed.
 
 The user may drill into stages, analyzers, operations, requests, failures, cache
 hits, and reasons for investigations.
@@ -233,7 +258,10 @@ external claims profile-bound; local/in-archive document inputs retain their
 installation-snapshot provenance. A later analysis records exactly which claim
 revisions it applied.
 
-Broader web search is opt-in and uses a governed source registry.
+Broader web search is opt-in and uses a governed source registry. Search
+results are discovery records and investigative leads. A normal external claim
+requires separate approved landing-source acquisition, revision/fingerprint,
+and exact supporting passages.
 
 ## 10. Validate in game
 

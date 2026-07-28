@@ -138,7 +138,7 @@ pending. That is not evidence that the route has already passed.
 | MO2, Mutagen, and LOOT capability/gap matrices | Complete at research level | Each active boundary distinguishes direct capability, rejected authority, and unsupported state; xEdit is excluded rather than modeled as a capability |
 | Snapshot/fingerprint benchmarks and invalidation examples | Complete for bounded M1 research | Real-shape measurement and synthetic same-time/size, rename, reorder, and container changes are recorded |
 | Integration/semantic/snapshot ADR inputs | Complete and accepted | ADR-0008 through ADR-0011 record the selected boundaries |
-| EVAL-0051, EVAL-0052, applicable EVAL-0053, EVAL-0054, and EVAL-0046 research prerequisites | Complete at the research-input level; full Wave F case specifications and execution remain pending | EVAL-0053 is conditional on M1 including LOOT; every invoked tool operation still needs its own EVAL-0046 pass |
+| EVAL-0051, EVAL-0052, applicable EVAL-0053, EVAL-0054, and EVAL-0046 research prerequisites | Complete at the research-input level; M1-applicable Wave F case specifications are accepted and execution remains pending | EVAL-0053 is conditional on a later milestone including LOOT; every invoked tool operation still needs its own EVAL-0046 pass |
 
 The partial controlled-profile/oracle outputs are non-blocking for starting
 independent Wave C research. They are blocking before accepting an M1

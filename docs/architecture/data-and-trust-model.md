@@ -1,12 +1,18 @@
 # Data and trust model
 
 Status: Draft  
-Last reviewed: 2026-07-26
+Last reviewed: 2026-07-28
 
 ## Principle
 
 Infinium must be able to explain where every conclusion came from and which
 system had authority to assert it.
+
+Wave E accepts durable implementations of this model: SQLite plus
+coordinator-owned content-addressed payload storage (ADR-0015), append-only
+finding/case reconciliation and review-state carryover decisions (ADR-0022),
+and a single-owned atomic cost ledger (ADR-0023). Their implementation and
+evaluation conformance remain pending.
 
 ## Evidence classes and authority
 
@@ -19,7 +25,8 @@ system had authority to assert it.
    - missing dependency;
    - override chain;
    - reference resolution;
-   - tool output, including diagnostics from an invoked LOOT configuration;
+   - tool output, including direct diagnostics from a qualified read-only
+     libloot operation over exact captured inputs;
    - content/version relationship.
 - **Authoritative external claims**
    - applicable mod-author instructions;
@@ -109,6 +116,14 @@ provenance before results become stored claims or findings.
 Untrusted mod-page text, comments, logs, and local documentation are data. They
 cannot grant tools, change authority, or instruct the agent to ignore product
 rules.
+
+Provider-hosted web-search actions, URLs, source lists, inline citations, and
+synthesized prose are discovery provenance and investigative leads. They are
+not acquired source passages or authoritative external claims. Normal source
+authority requires a separately approved host-controlled adapter to acquire
+and fingerprint the landing content, establish source/author/revision identity,
+and extract exact supporting passages. A model-selected source cannot grant
+its own acquisition or authority.
 
 ## Finding threshold
 

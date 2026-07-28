@@ -1,7 +1,7 @@
 # Domain model
 
 Status: Accepted  
-Last reviewed: 2026-07-26
+Last reviewed: 2026-07-28
 
 This is a conceptual model. Storage schemas and wire contracts require later
 architecture decisions.
@@ -88,6 +88,28 @@ An analysis context declares its applicability and may be reused with another
 installation snapshot only when its own dependencies remain valid. The analysis
 run, rather than the context alone, records the exact snapshot/context pairing.
 
+## AI access profile
+
+A versioned, user-selected authorization and consumption contract for
+LLM-backed work. It records:
+
+- provider, execution surface, and access mode; initially direct
+  usage-priced OpenAI Responses API access;
+- non-secret account, organization, project, or billing-scope
+  identity only when verified or explicitly labeled as user-supplied;
+- the credential generation for a reusable-secret mode;
+- capability, model, quota/rate-window, usage-reporting, and pricing/credit
+  facts available in that mode; and
+- lifecycle state, local revocation epoch, verification time, and gaps.
+
+The initial OpenAI profile is direct Responses access through a user-supplied,
+usage-priced Platform API key. It does not use Codex or a ChatGPT
+subscription. An access profile is not a promise that work is free or that a
+scan fits within provider limits. API-billed spend, provider credits, quota,
+and unavailable billing facts remain distinct. A run binds one exact
+access-profile generation for each provider operation; it never silently falls
+back to another mode, credential, account, project, or project-funded key.
+
 ## Scan configuration
 
 A versioned execution/scope configuration for a run:
@@ -119,7 +141,8 @@ configured execution bound to exactly one installation snapshot and one
 analysis context and using exactly one retained scan configuration. It also
 records a resolved input manifest containing the actual external-source
 revisions, tool/provider/model identities, prompt/schema versions, request
-settings, and retained or referenced inputs used by that execution. The run
+settings, access-profile mode/generation, and retained or referenced inputs
+used by that execution. The run
 record owns its directly scoped jobs, tool/model calls and outputs, coverage,
 evidence derivations, candidates, hypotheses, findings, recommendations, case
 revisions, cost ledger entries, and duration. A linked child acquisition run
@@ -164,6 +187,14 @@ immutable. Explicit detachment records a lifecycle transition without
 reclassifying it as independently initiated or rebinding prior calls/cost;
 post-detachment control, progress, duration, and spend are reported separately
 from the parent analysis run.
+
+Configured maintenance of accepted managed reference data is not an evidence
+acquisition run and cannot create claims, findings, cases, or readiness. It is
+a separately provenanced maintenance operation over an allowlisted source that
+may prepare a newer immutable validated input for a future run. LOOT
+masterlist/prelude is the only current accepted instance. A run records
+the exact selected immutable managed-data identity in its resolved input
+manifest; later maintenance never changes that binding.
 
 Permitted source bodies and excerpts are private acquisition artifacts,
 distinct from the claims derived from them. They remain available through the

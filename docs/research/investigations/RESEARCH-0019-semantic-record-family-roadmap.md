@@ -2,7 +2,7 @@
 
 Status: Completed — recommendation accepted by project owner  
 Date: 2026-07-25  
-Last reviewed: 2026-07-26  
+Last reviewed: 2026-07-28
 Researcher: Codex agent  
 Primary question: RQ-024  
 Decision enabled: evidence-backed semantic record/relationship ordering after
@@ -12,6 +12,12 @@ Acceptance note: The project owner accepted this roadmap on 2026-07-25 through
 [RESEARCH-0024](RESEARCH-0024-wave-c-analysis-taxonomy-and-scale-integration.md).
 The ordering is a product/analyzer roadmap, not a claim that any record family
 or link shape is already qualified.
+
+Current qualification note: RESEARCH-0034/0035 subsequently completed the
+RQ-023/RQ-025 Gate C prerequisites. Any later statement in this dated roadmap
+that those prerequisites or Gate C remain pending is retained as historical
+sequencing evidence, not current status. Final case specification and
+implementation execution remain pending.
 
 ## 1. Question and bounded answer
 
@@ -28,7 +34,7 @@ The recommended sequence is:
 2. make the first proof an exact, narrow `NPC_` slice covering appearance
    evidence, actor behavior fields, and the template state that controls
    whether those fields are inherited;
-3. make the first materially different non-NPC generalization a
+3. make the first materially different category proof a
    **placed-reference topology slice**:
    - `REFR.Base`;
    - `REFR.Placement`;
@@ -44,13 +50,14 @@ The recommended sequence is:
 6. broaden to `CELL`, `WRLD`, locations, navigation, dialogue/scenes, scripts,
    and other complex families only through separate exact allowlist increments.
 
-The first non-NPC slice is intentionally about **activation and reference
-topology**, not another cosmetic family. A spatial or visual `REFR` override
-that drops an upstream enable-parent or linked-reference relation exercises a
-different game mechanism from an NPC appearance override that restores stale
-actor behavior. Adding the narrow quest-alias edge directly instantiates the
+The current contrasting-category slice is intentionally about **activation
+and reference topology**, not another cosmetic family. A spatial or visual
+`REFR` override that drops an upstream enable-parent or linked-reference
+relation exercises a different game mechanism from the current actor
+appearance proof. Adding the narrow quest-alias edge directly instantiates the
 planned EVAL-0006/EVAL-0007 cell/quest pair without pretending that all quest,
-cell, or worldspace fields are understood.
+cell, or worldspace fields are understood. This is the selected roadmap pair,
+not a permanent NPC-versus-non-NPC anti-overfitting rule.
 
 This is a research recommendation. It does not select implementation
 architecture, define the RQ-036 taxonomy, qualify Mutagen fields, accept an M1
@@ -106,7 +113,7 @@ The completed Wave C surface reports also constrain the ordering:
 - exact record/field/link slices to qualify first;
 - the exact NPC identity/applicability inputs required to derive first-proof
   FaceGen mesh/tint paths and preserve record/asset provenance;
-- the first materially different non-NPC generalization;
+- the first materially different category proof;
 - relative roadmap ordering after the first proof;
 - why each slice is useful, bounded, and meaningfully distinct;
 - positive, matched-negative, malformed, unsupported, and metamorphic fixture
@@ -165,7 +172,7 @@ Sources were checked on 2026-07-25.
 | [Mutagen Skyrim `Npc.cs`](https://github.com/Mutagen-Modding/Mutagen/blob/282bb99a77b2df7f1b092b06270e8e3c8fb55463/Mutagen.Bethesda.Skyrim/Records/Major%20Records/Npc.cs#L48-L60), [`FormKey.cs`](https://github.com/Mutagen-Modding/Mutagen/blob/282bb99a77b2df7f1b092b06270e8e3c8fb55463/Mutagen.Bethesda.Core/Plugins/FormKey.cs#L11-L58), and [`SeparatedMasterPackage.cs`](https://github.com/Mutagen-Modding/Mutagen/blob/282bb99a77b2df7f1b092b06270e8e3c8fb55463/Mutagen.Bethesda.Core/Plugins/Masters/SeparatedMasterPackage.cs#L295-L365) | Same pinned commit | Exact candidate NPC-to-FaceGen path construction, origin-plugin/local-ID identity, and full/light FormID translation | Mutagen implementation is not independent Skyrim runtime truth |
 | [Creation Kit Wiki `Dark Face Bug` revision `9182`](https://ck.uesp.net/w/index.php?title=Dark_Face_Bug/ja&oldid=9182) | Archived 2012 page, retrieved 2026-07-25 | Independent corroboration of conventional mesh/tint path shapes and eight-hex filenames | Does not qualify current Skyrim SE light-plugin, template, race, or effective-provider behavior |
 | [Mutagen Skyrim `PlacedObject.xml`](https://github.com/Mutagen-Modding/Mutagen/blob/282bb99a77b2df7f1b092b06270e8e3c8fb55463/Mutagen.Bethesda.Skyrim/Records/Major%20Records/PlacedObject.xml) | Same pinned commit | `REFR` base, placement, enable-parent, linked-reference, and other exposed shapes | API presence does not prove grouping, meaning, or correct parsing |
-| [Mutagen `EnableParent.xml`](https://github.com/Mutagen-Modding/Mutagen/blob/282bb99a77b2df7f1b092b06270e8e3c8fb55463/Mutagen.Bethesda.Skyrim/Records/Common%20Subrecords/EnableParent.xml), [`LinkedReferences.xml`](https://github.com/Mutagen-Modding/Mutagen/blob/282bb99a77b2df7f1b092b06270e8e3c8fb55463/Mutagen.Bethesda.Skyrim/Records/Common%20Subrecords/LinkedReferences.xml), and [`Placement.xml`](https://github.com/Mutagen-Modding/Mutagen/blob/282bb99a77b2df7f1b092b06270e8e3c8fb55463/Mutagen.Bethesda.Skyrim/Records/Common%20Subrecords/Placement.xml) | Same pinned commit | Exact typed members proposed for the first non-NPC slice | Still requires independent byte/structure and semantic expectations |
+| [Mutagen `EnableParent.xml`](https://github.com/Mutagen-Modding/Mutagen/blob/282bb99a77b2df7f1b092b06270e8e3c8fb55463/Mutagen.Bethesda.Skyrim/Records/Common%20Subrecords/EnableParent.xml), [`LinkedReferences.xml`](https://github.com/Mutagen-Modding/Mutagen/blob/282bb99a77b2df7f1b092b06270e8e3c8fb55463/Mutagen.Bethesda.Skyrim/Records/Common%20Subrecords/LinkedReferences.xml), and [`Placement.xml`](https://github.com/Mutagen-Modding/Mutagen/blob/282bb99a77b2df7f1b092b06270e8e3c8fb55463/Mutagen.Bethesda.Skyrim/Records/Common%20Subrecords/Placement.xml) | Same pinned commit | Exact typed members proposed for the current contrasting-category slice | Still requires independent byte/structure and semantic expectations |
 | [Mutagen Skyrim `Quest.xml`](https://github.com/Mutagen-Modding/Mutagen/blob/282bb99a77b2df7f1b092b06270e8e3c8fb55463/Mutagen.Bethesda.Skyrim/Records/Major%20Records/Quest.xml) | Same pinned commit | Availability of quest alias IDs, forced-reference links, stages, objectives, conditions, and script fragments | Only alias ID/forced-reference is proposed initially; the rest remains unqualified |
 | [Mutagen Skyrim `Cell.xml`](https://github.com/Mutagen-Modding/Mutagen/blob/282bb99a77b2df7f1b092b06270e8e3c8fb55463/Mutagen.Bethesda.Skyrim/Records/Major%20Records/Cell.xml) | Same pinned commit | Availability of cell fields and persistent/temporary placed-record collections | Does not establish broad `CELL` semantics |
 | [Mutagen issue 597](https://github.com/Mutagen-Modding/Mutagen/issues/597) | Open on 2026-07-25, “XCIM Data not properly loaded in Cell/ICellGetter” | Direct contrary evidence against admitting all exposed `CELL` fields | One issue does not invalidate unrelated fields, but it requires field-level rather than family-level admission |
@@ -251,7 +258,7 @@ selected actor tabs may inherit from an ActorBase. Comparing raw local fields
 without qualifying the relevant template link and flags can misrepresent
 effective behavior.
 
-### F3 — Placed-reference topology is the strongest first non-NPC generalization
+### F3 — Placed-reference topology is the selected contrasting-category proof
 
 `REFR` exposes a compact, high-impact graph:
 
@@ -287,7 +294,7 @@ references can control coordinated state and package behavior. Those examples
 support prioritizing the relationship class; they do not justify any
 fixture-specific rule.
 
-### F4 — The first non-NPC slice can be cell/world/quest-relevant without broad family claims
+### F4 — The contrasting-category slice can be cell/world/quest-relevant without broad family claims
 
 EVAL-0006 describes a visual cell edit that reverts a quest-relevant
 reference. The minimal semantic proof does not need every `CELL`, `WRLD`, or
@@ -438,9 +445,9 @@ accepted evaluation later says otherwise.
 |---|---|---|---|---|
 | Cross-family record identity/override context | Yes | FormKey, plugin origin, ordered override chain, winner, deletion/state, changed-field input | Research route accepted; exact shapes still require EVAL-0052 | Qualify as the substrate before slice findings |
 | `NPC_` | Yes | Narrow appearance, AI data, packages, factions, and template-state slice | No field-level EVAL-0052 pass yet | First proof |
-| `REFR` | Yes | Base, placement, enable parent, linked references | No field/link/group-shape EVAL-0052 pass yet | First non-NPC generalization |
+| `REFR` | Yes | Base, placement, enable parent, linked references | No field/link/group-shape EVAL-0052 pass yet | Current materially different category proof |
 | Containing cell/world identity | API/group traversal exists | Structural parent context and provenance only | Exact interior/exterior/group shapes unqualified | Qualify with `REFR`; do not imply broad `CELL`/`WRLD` support |
-| `QUST` alias forced-reference edge | Yes | Alias ID plus forced placed-reference link only | Unqualified | Add to the first non-NPC proof when quest relevance is asserted |
+| `QUST` alias forced-reference edge | Yes | Alias ID plus forced placed-reference link only | Unqualified | Add to the contrasting-category proof when quest relevance is asserted |
 | Full `QUST` | Yes | Alias fill modes, objectives, stages, conditions | Unqualified and heterogeneous | Next logic-focused research/qualification slice |
 | `COBJ` | Yes | Ingredients, created object/count, workbench keyword; conditions separately | Unqualified | Early follow-up after structural generalization |
 | Item base records and keywords/effects | Yes for many families | Only exact fields needed by selected recipe/item case | Unqualified | Expand with `COBJ`, not as “all items” |
@@ -576,12 +583,12 @@ qualified presence/absence, provider/shadow chains, and exact bytes. It may
 not conclude visual correctness, morph/tint agreement, absence of a dark-face
 symptom, engine use, or runtime behavior.
 
-RQ-023 remains M0-exit-blocking until the independent loose-only full/light,
+RESEARCH-0034 subsequently completed the independent loose-only full/light,
 Race/template, normalization, shadowing, matched-negative, malformed,
-unsupported, and archive-independence matrix in RESEARCH-0018 passes. Active
-archive-provider qualification remains later conditional work and does not
-block the initial loose-only M1 envelope. The Stage 1 semantic allowlist must
-not bypass the loose-only dependency.
+unsupported, and archive-independence matrix required by RQ-023 at the
+pre-resolved-input boundary. Active archive-provider and production-adapter
+qualification remain later conditional work. The Stage 1 semantic allowlist
+must not bypass those remaining boundaries.
 
 #### 1E. Required fixture matrix
 
@@ -621,7 +628,7 @@ The first proof passes only when EVAL-0001 is detected, EVAL-0002 is not
 misclassified, every consumed shape passes EVAL-0052 or an accepted
 successor, and the RQ-023 FaceGen identity/provider prerequisite passes.
 
-### Stage 2 — First non-NPC generalization: placed-reference topology
+### Stage 2 — Materially different category proof: placed-reference topology
 
 #### 2A. Core `REFR` allowlist
 
@@ -722,7 +729,7 @@ The first mechanism is considered generalized only when:
 - EVAL-0006 is detected;
 - EVAL-0007 remains negative;
 - the positive and matched negative survive renaming and unrelated reordering;
-- the case uses no NPC-specific rule;
+- the case uses no rule specific to the first proof category;
 - every consumed `REFR`, group-context, and optional `QUST` shape passes
   EVAL-0052;
 - unsupported semantics remain visible;
@@ -812,7 +819,7 @@ record-count convenience or hosting-site categories.
 
 | Candidate first follow-up | Strength | Why it is not first | Disposition |
 |---|---|---|---|
-| More NPC fields | Low integration cost | Does not prove a materially different non-NPC mechanism | Add only when required; not the generalization |
+| More NPC fields | Low integration cost | Does not prove the mechanism in a materially different category | Add only when required; not the generalization |
 | Another cosmetic base record | Easy stale-value analogy | Broadens appearance coverage without testing structural/logic topology | Defer |
 | `COBJ` plus item keywords | Compact useful graph; EVAL-0008 already planned | Closer to the original presentation-versus-behavior pattern; conditions add scope | Stage 4 |
 | Full `QUST` family | Very high impact | Aliases, indices, stages, conditions, scripts, localization, and runtime state are too heterogeneous for one slice | Narrow forced-reference edge first; deepen at Stage 3 |
@@ -958,9 +965,11 @@ reflect it; exact shape qualification and implementation remain pending:
 Accepted RQ-024 disposition:
 
 > **Resolved for the M0 roadmap; exact qualification and delivery selection
-> pending.** Follow the first narrow NPC proof with a placed-reference
-> activation/link topology slice and only the quest forced-alias edge needed
-> for quest relevance. Deepen quest logic, item/crafting, and broad
+> pending.** For the current M1 roadmap, follow the first narrow actor proof
+> with a materially different placed-reference activation/link topology slice
+> and only the quest forced-alias edge needed for quest relevance. This
+> category pair is replaceable by reviewed successors and is not a universal
+> anti-overfitting rule. Deepen quest logic, item/crafting, and broad
 > cell/world/navigation semantics through later field-level allowlists.
 
 ## 13. Requirements and evidence traceability
@@ -980,25 +989,25 @@ Accepted RQ-024 disposition:
 | ADR-0009 | Pinned Mutagen 0.54.2 positive allowlist | Field/link/shape support is gated independently |
 | ADR-0010 | Snapshot and smallest complete dependency closure | Structural and semantic dependencies remain explicit |
 | EVAL-0001/EVAL-0002 | Exact NPC positive and matched-negative matrix | First proof entry gate |
-| EVAL-0006/EVAL-0007 | Exact `REFR` plus optional forced-alias matrix | First non-NPC generalization gate |
+| EVAL-0006/EVAL-0007 | Exact `REFR` plus optional forced-alias matrix | Materially different category proof for the current first mechanism |
 | EVAL-0008 | Bounded `COBJ`/item graph | Early follow-up, not first generalization |
 | EVAL-0016/EVAL-0017 | Controlled-real cases after synthetic qualification | Real mods do not author production rules |
 | EVAL-0052 | Independent byte/structure/semantic fixture contract | Required for every consumed field/link/override shape |
-| RQ-023, EVAL-0051, M1 record/FaceGen provenance | Stage 1D defines the origin FormKey/path relationship, Race/template applicability, full/light boundary, provider separation, and no-rendering conclusion limit | RQ-023 remains exit-blocking until the loose-only identity/provider and archive-independence matrix passes; archive-positive support remains conditional |
+| RQ-023, EVAL-0051, M1 record/FaceGen provenance | Stage 1D defines the origin FormKey/path relationship, Race/template applicability, full/light boundary, provider separation, and no-rendering conclusion limit | RESEARCH-0034 completed the loose-only matrix at its pre-resolved-input boundary; archive-positive support remains conditional |
 | EVAL-0086/RQ-036 | Record families remain technical surfaces, not the taxonomy | Accepted roadmap creates no automatic classification |
-| Gate C | Materially different non-NPC mechanism, matched negatives, gaps, no all-pairs LLM | This roadmap defines the required mechanism and replacement shape; Gate C remains unmet until RQ-025 selects exact EVAL-0016/EVAL-0017 candidates and RQ-023 completes loose-only FaceGen qualification |
+| Gate C | Materially different category proof, matched negatives, gaps, no all-pairs LLM | RESEARCH-0034/0035 completed the remaining qualifications; candidate qualification does not pass evaluation execution |
 
 ## 14. Conclusion
 
 The roadmap should broaden by **mechanism**, not by record count.
 
-The first NPC proof qualifies a narrow combination of appearance, AI,
-package, faction, and template shapes. The first non-NPC proof should then
-move to placed-reference activation and linked-reference topology, with only a
-narrow quest forced-alias relationship and structural cell/world context. That
-is a genuine structural/logic generalization and provides a disciplined bridge
-to deeper quest, crafting, worldspace, location, navigation, generated-output,
-and cross-layer analysis.
+The current first proof qualifies a narrow combination of actor appearance,
+AI, package, faction, and template shapes. The current materially different
+category proof then moves to placed-reference activation and linked-reference
+topology, with only a narrow quest forced-alias relationship and structural
+cell/world context. That is a genuine structural/logic generalization for this
+mechanism and provides a disciplined bridge to deeper quest, crafting,
+worldspace, location, navigation, generated-output, and cross-layer analysis.
 
 At every stage, “Mutagen exposes this record” remains only an availability
 observation. Supported semantics begin only after exact parser-independent

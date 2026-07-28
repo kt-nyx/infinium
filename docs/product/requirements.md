@@ -1,10 +1,23 @@
 # Product requirements
 
 Status: Accepted  
-Last reviewed: 2026-07-26
+Last reviewed: 2026-07-28
 
 Accepted amendments:
 
+- 2026-07-28 — The owner reaffirmed direct, schema-constrained OpenAI
+  Responses API calls through user-supplied, usage-priced Platform API keys
+  and rejected Codex/ChatGPT-plan access as the core LLM adapter. ADR-0024
+  records the rejected alternative; ADR-0013 remains authoritative.
+- 2026-07-28 — The owner accepted an OpenAI-first initial provider direction
+  without lowest-common-denominator capability parity, while retaining
+  provider-independent authoritative domain/evidence truth. The owner also
+  accepted latest-capable Nexus API routing under
+  [ADR-0012](../architecture/decisions/ADR-0012-nexus-latest-capable-api-routing.md)
+  and a narrow product-intent exception permitting configurable automatic
+  maintenance of accepted LOOT managed data. The exact OpenAI
+  Responses/search capability boundary and LOOT refresh/activation mechanism
+  were subsequently accepted in ADR-0013 and ADR-0014.
 - 2026-07-25 — Wave C owner disposition
   [RESEARCH-0024](../research/investigations/RESEARCH-0024-wave-c-analysis-taxonomy-and-scale-integration.md)
   accepts taxonomy `0.1.0`, the logical typed-index/causal-join candidate
@@ -134,6 +147,15 @@ inside an initiated operation may proceed automatically. Continuous monitoring,
 unsolicited analysis-related paid/network work, and automatic analysis triggers
 are deferred. Bounded change detection during an initiated operation is required
 for snapshot integrity and is not an automatic analysis trigger.
+
+Configured non-billable maintenance of an accepted managed reference-data
+source may run automatically only when an accepted source/integration decision
+defines its exact allowlisted source, schedule, network/retention behavior,
+failure handling, and immutable provenance. Such maintenance shall not start
+analysis, general documentation acquisition, Nexus acquisition, broader web
+search, LLM work, or findings. LOOT masterlist/prelude freshness is the only
+currently accepted instance of this exception; its exact
+mechanism is governed by ADR-0014.
 
 ### SCOPE-005 — Effective installation
 
@@ -268,8 +290,12 @@ exists.
 Priority: Must
 
 Before paid or long-running work, the product shall show estimated time, LLM
-cost, configured limits, expected coverage when estimable, and any provider
-capability that prevents enforcing or promptly reconciling a selected limit.
+cost where the selected access mode is usage-priced, configured limits,
+expected coverage when estimable, and any provider capability that prevents
+enforcing or promptly reconciling a selected limit. For subscription/plan
+work, show planned work/turn shape and provider-reported rate/credit state
+where available; do not invent an API-dollar estimate or promise that current
+headroom guarantees completion.
 
 ### SCAN-004 — Progressive progress
 
@@ -277,7 +303,8 @@ Priority: Must
 
 Progress shall be visible at scan, stage, and analyzer levels and include at
 least state, completed/remaining work, supported cases and lead-only
-investigations found, elapsed/remaining time, and current/estimated cost. A
+investigations found, elapsed/remaining time, and current/estimated
+consumptive usage plus applicable cost. A
 documentation-acquisition operation shall provide equivalent rollups over its
 sources/entities and extraction work rather than reporting inapplicable case
 progress. Usage/cost shall be recorded once at its originating operation and
@@ -1058,8 +1085,9 @@ uncertainty.
 Priority: Must
 
 Author-maintained sources and curated LOOT metadata are primary external
-evidence; diagnostics from the invoked LOOT configuration are deterministic
-local evidence. Community posts and bug reports are investigative leads unless
+evidence. Exact captured LOOT userlist/configuration is local user input, while
+direct results from a qualified read-only libloot operation are deterministic
+tool evidence. Community posts and bug reports are investigative leads unless
 corroborated. Prohibited scraping shall not be used.
 
 ### DOC-007 — Local documentation
@@ -1095,6 +1123,11 @@ freshness. Users shall be able to refresh external evidence explicitly. The
 effective scan configuration shall declare automatic refresh behavior; the
 semantic analysis context shall separately declare when retained evidence is
 acceptable for conclusions despite its age.
+
+Accepted managed reference data may additionally expose a configurable
+automatic maintenance policy under SCOPE-004. A refresh may update only future
+run availability/current-view freshness; it shall never replace the immutable
+source revision already bound to an active or historical run.
 
 ### DOC-010 — Governed broader web search
 
@@ -1210,20 +1243,32 @@ researched and accepted.
 
 ## LLM providers, privacy, and cost
 
-### AI-001 — Provider-neutral contract
+### AI-001 — Provider-independent truth and capability-profiled adapters
 
 Priority: Must
 
-Core analysis contracts shall be provider-neutral. GPT is the initial
-well-supported reference provider.
+Authoritative domain, evidence, finding, case, coverage, and readiness
+contracts shall remain provider-independent. The initial supported LLM
+implementation shall target OpenAI and may expose OpenAI-specific operations,
+tools, execution modes, and invocation provenance when they improve product
+value and satisfy the evidence, safety, privacy, cost, and evaluation
+requirements. Later providers may implement different declared capability
+profiles; lowest-common-denominator feature parity is not required.
 
 ### AI-002 — Provider and model control
 
 Priority: Must
 
 When enabling LLM-backed analyzers or acquisition/extraction operations, users
-shall select the provider. Sensible automatic model routing shall permit
-advanced overrides. Local-only scans shall not require provider configuration.
+shall explicitly enable a supported provider/access/account configuration. A
+sole initial OpenAI provider is valid. Its initial LLM execution surface shall
+be the direct Responses API using a user-supplied, usage-priced Platform API
+key; Codex and ChatGPT-plan access are not core-provider modes. The UI shall
+disclose authentication, models, capabilities, billing, quota, hard-limit
+enforceability, and retention. When several providers or supported access
+modes exist in the future, users shall select among them. Sensible automatic
+model routing shall permit advanced overrides. Local-only scans shall not
+require provider configuration.
 
 ### AI-003 — Context minimization
 
@@ -1266,7 +1311,10 @@ Priority: Should
 Expose historical usage, rate limits, remaining credits, quota, hard-limit
 enforceability, and billing-reconciliation latency only where the provider
 supplies reliable data, with available information visible near provider
-configuration and pre-run review. Missing capabilities must be explicit.
+configuration and pre-run review. Platform API usage-priced billing, provider
+credits, rate/quota data, and locally calculated cost are different facts and
+shall not share a misleading “remaining cost” field. Missing capabilities must
+be explicit.
 
 ### AI-006 — LLM reproducibility
 
@@ -1289,12 +1337,17 @@ no later than M1
 
 Through M4, authenticated or billable LLM-backed work shall use authorization
 supplied by the user for the selected provider/account and shall attribute
-usage and cost to that configuration. A local or otherwise non-billable
-provider may operate without credentials when its declared contract permits
-it. Infinium shall not silently fall back to project-funded inference, shared
-project credentials, or another billable provider/account. Any future operated
-service, shared credential, or subsidized inference model requires a separate
-product, business, privacy, and security decision.
+usage and applicable cost to that exact access configuration. Initial OpenAI
+LLM work uses a user-supplied Platform API key and incurs usage-priced Platform
+API billing; a ChatGPT subscription does not fund or authenticate that API
+usage. Codex and unofficial reuse of ChatGPT credentials are excluded from the
+core model path. A local or otherwise non-billable provider may operate
+without credentials when its declared contract permits it. Infinium shall not
+silently fall back to project-funded inference, shared project credentials,
+or another provider/access/account. Any future supported subscription-backed
+general API, operated service, shared credential, or subsidized inference
+model requires a separate product, business, privacy, security, research, and
+architecture decision.
 
 ## External tool environment
 

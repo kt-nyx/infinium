@@ -1,7 +1,7 @@
 # Architecture Decision Records
 
 Status: Draft  
-Last reviewed: 2026-07-26
+Last reviewed: 2026-07-28
 
 ADRs preserve technical decisions and their rationale. They are append-only:
 accepted records are superseded rather than rewritten to hide prior decisions.
@@ -14,23 +14,47 @@ accepted records are superseded rather than rewritten to hide prior decisions.
 | [ADR-0002](ADR-0002-snapshot-context-binding.md) | Accepted | Separate immutable snapshots, semantic contexts, run configurations, and replay |
 | [ADR-0003](ADR-0003-read-only-authority.md) | Accepted | Exclude setup-mutation capabilities through M4 |
 | [ADR-0004](ADR-0004-initial-target-scope.md) | Accepted | Avoid multi-manager/runtime abstractions initially |
-| [ADR-0005](ADR-0005-nexus-supported-api-analysis.md) | Accepted | Proceed with bounded supported Nexus API analysis under an explicit risk decision |
+| [ADR-0005](ADR-0005-nexus-supported-api-analysis.md) | Accepted; partially superseded | Proceed with bounded Nexus API analysis under an explicit risk decision; interface eligibility superseded by ADR-0012 |
 | [ADR-0006](ADR-0006-gpl-product-and-tool-dependency-boundary.md) | Accepted; partially superseded | Use GPLv3-family licensing with user-installed applications and gated bundled-library candidates; xEdit provisions superseded by ADR-0007 |
 | [ADR-0007](ADR-0007-exclude-xedit-from-infinium.md) | Accepted | Exclude xEdit from product, development, dependency, integration, and evaluation scope |
 | [ADR-0008](ADR-0008-mo2-profile-effective-state-and-local-identity.md) | Accepted | Use a version-pinned, quiescent MO2 2.5.2 reconstruction with explicit profile binding and separate physical/source identity |
 | [ADR-0009](ADR-0009-skyrim-runtime-and-bethesda-semantic-support.md) | Accepted | Pin the initial Steam 1.6.1170 runtime and Mutagen 0.54.2 semantic boundary with independent field qualification |
 | [ADR-0010](ADR-0010-snapshot-fingerprint-and-dependency-invalidation.md) | Accepted | Use canonical structural manifests, scoped SHA-256 identities, and dependency-specific invalidation/reuse |
 | [ADR-0011](ADR-0011-loot-semantic-and-managed-data-boundary.md) | Accepted | Reject current LOOT application automation and use a narrow pinned libloot/data boundary when LOOT coverage is delivered |
+| [ADR-0012](ADR-0012-nexus-latest-capable-api-routing.md) | Accepted | Use latest-capable v3, v2 GraphQL, then v1 routing under the owner's API-wide development-risk direction |
+| [ADR-0013](ADR-0013-openai-first-llm-capability-boundary.md) | Accepted | Use OpenAI Responses first while keeping authoritative domain truth provider-independent |
+| [ADR-0014](ADR-0014-loot-managed-data-refresh.md) | Accepted | Refresh current-compatible LOOT data through immutable validated pair activation |
+| [ADR-0015](ADR-0015-authoritative-evidence-persistence-and-payload-storage.md) | Accepted | Use SQLite as the authoritative relational store with coordinator-owned content-addressed payload storage |
+| [ADR-0016](ADR-0016-application-owned-durable-run-and-job-lifecycle.md) | Accepted | Use an application-owned transactional SQLite lifecycle ledger and bounded local scheduler; reject external workflow authority for M1 |
+| [ADR-0017](ADR-0017-windows-desktop-application-stack.md) | Accepted | Use .NET 10, React/TypeScript, and a minimal WPF/WebView2 Windows desktop host |
+| [ADR-0018](ADR-0018-process-and-authority-topology.md) | Accepted | Use a standalone per-user coordinator with bounded workers and a one-shot provider helper |
+| [ADR-0019](ADR-0019-local-ipc-and-application-query-contract.md) | Accepted | Use role-separated gRPC/HTTP2 over restricted Windows named pipes with bounded application queries |
+| [ADR-0020](ADR-0020-credential-storage-and-provider-dispatch.md) | Accepted | Use Windows Credential Manager and exact-target one-shot provider dispatch |
+| [ADR-0021](ADR-0021-desktop-and-local-operation-security-boundary.md) | Accepted | Use deny-by-default renderer, filesystem, process, staging, and diagnostics controls without claiming worker sandboxing |
+| [ADR-0022](ADR-0022-finding-and-case-continuity-and-reconciliation.md) | Accepted | Separate immutable occurrences from logical identities and use evidence-bearing append-only reconciliation |
+| [ADR-0023](ADR-0023-atomic-cost-ledger-and-hard-budget-enforcement.md) | Accepted | Use atomic multi-scope reservations, single-owned usage, exact price arithmetic, and dispatch fences |
+| [ADR-0024](ADR-0024-openai-user-owned-access-modes.md) | Rejected | Reject Codex/ChatGPT-plan integration for the core LLM pipeline; retain direct Responses/API-key access under ADR-0013 |
+| [ADR-0025](ADR-0025-m1-openai-model-and-synchronous-responses-profile.md) | Accepted | Use one explicit `gpt-5.6-sol` synchronous Structured Outputs profile for M1 with retained-result replay and drift requalification |
 
-No application stack, process topology, database, or IPC mechanism has been
-accepted. ADR-0008 through ADR-0011 accept the Wave B integration and semantic
-boundaries, but their exact implementations and supported surfaces still
-require the named conformance gates.
+ADR-0015 through ADR-0023 are accepted and jointly select the Wave E
+persistence, lifecycle, application-stack, process, IPC, credential, security,
+continuity, and budget architecture. ADR-0024 is rejected. Gate E is met at
+the M0 architecture/design layer; implementation and evaluation conformance
+remain pending. ADR-0025 is accepted as the exact M1 live-model profile.
+ADR-0008 through
+ADR-0011 accept the Wave B integration and semantic
+boundaries, and ADR-0012 accepts the revised Nexus interface/risk boundary,
+but their exact implementations and supported surfaces still require the
+named conformance gates. ADR-0013 and ADR-0014 accept Wave D's OpenAI and
+LOOT-freshness mechanisms without claiming implementation or conformance.
 
 The product baseline was accepted on 2026-07-25 and its requirements are now
-authoritative. ADR-0001 through ADR-0011 were accepted on 2026-07-25 and now
-govern their declared architectural constraints. ADR-0007 supersedes only
-ADR-0006's xEdit-specific provisions.
+authoritative. ADR-0001 through ADR-0011 were accepted on 2026-07-25.
+ADR-0012 through ADR-0023 and ADR-0025 were accepted on 2026-07-28, and
+ADR-0024 was rejected that day. ADR-0007 supersedes only ADR-0006's xEdit-specific
+provisions, ADR-0012 supersedes only ADR-0005's API-interface eligibility and
+selection provisions, and ADR-0014 supersedes only ADR-0011's managed-data
+refresh mechanics.
 
 A constraint ADR derived directly from an accepted product requirement may be
 proposed without external technical research when it selects no implementation
@@ -83,8 +107,10 @@ stage:
 - ADR-0004 covers the initial manager/game/runtime/platform target, manual
   initiation, and avoidance of premature cross-target abstractions.
 - ADR-0005 records the owner's bounded-use interpretation and accepted policy
-  risk for supported Nexus API analysis while continuing to prohibit scraping,
-  bulk/rehost behavior, unsupported interfaces, and model training.
+  risk for Nexus API analysis while continuing to prohibit scraping,
+  bulk/rehost behavior, and model training. ADR-0012 replaces its
+  documented-supported-interface-only constraint with API-wide development
+  eligibility and latest-capable v3/v2 GraphQL/v1 routing.
 - ADR-0006 selects GPLv3-family licensing; keeps MO2 and LOOT user-installed;
   and established the initial gated Mutagen, libloot, USVFS, LOOT-data, and
   first-party-helper candidate posture. ADR-0008 rejects direct USVFS operation
@@ -103,25 +129,53 @@ stage:
   dependency-closure, invalidation, and reuse model.
 - ADR-0011 accepts the rejection of current LOOT application automation and
   the conditional narrow libloot `0.29.6` plus managed-data boundary.
+- ADR-0012 accepts the owner's API-wide Nexus development-risk posture,
+  authenticated GraphQL eligibility, and latest-capable per-content routing.
+- ADR-0013 accepts the OpenAI-first Responses/Structured Outputs capability
+  boundary, governed hosted-web-search role, and provider-independent domain
+  truth without a second-provider parity gate. Rejected ADR-0024 records why
+  Codex/ChatGPT-plan access will not amend that direct API execution surface.
+- ADR-0014 accepts current-compatible LOOT-data discovery, immutable
+  masterlist/prelude pair validation and activation, rollback, freshness
+  disclosure, and active/historical run isolation.
 
 Other accepted decisions currently belong in product, taxonomy, evaluation, or
 milestone documents rather than requiring duplicate ADRs.
 
-## Expected future ADR subjects
+## Wave E ADR coverage
 
-Research is likely to produce ADRs for:
+Wave E research produced ADR-0015 through ADR-0023 for:
 
 - evidence persistence and deletion mechanisms beyond ADR-0010's snapshot,
   dependency, and cache-validity boundary;
 - durable jobs/checkpoints and process/data-query boundaries;
 - application stack, UI/worker separation, and IPC where applicable;
-- LLM provider/authentication, credential, security, and enforceable-cost
-  boundaries;
-- documentation-source acquisition, provider-transmission, retention, and
-  redistribution mechanisms within ADR-0005's accepted Nexus boundary;
+- credential/provider dispatch, local security, and enforceable-cost
+  boundaries after ADR-0013's accepted capability decision;
 - storage/query mechanics that implement RQ-035's accepted logical
-  typed-index, causal-join, and interaction-graph design;
-- packaging, signing, updates, and distribution.
+  typed-index, causal-join, and interaction-graph design; and
+- finding/case continuity and review-state carryover.
+
+RQ-013, RQ-015 through RQ-018, and RQ-032 through RQ-034 are resolved for M0
+by accepted ADR-0015 through ADR-0023. RESEARCH-0046 records the owner's
+decision to close the Dapr comparison without a prototype. The Wave E
+mechanisms are selected architecture, not implemented or qualified behavior.
+ADR-0024 remains in the index as rejected decision provenance.
+
+## Expected future ADR subjects
+
+Future research or implementation qualification may produce ADRs for:
+
+- later OpenAI model routing, lower-cost-tier qualification, and provider
+  capability extensions beyond accepted ADR-0025's M1 baseline;
+- documentation-source acquisition, provider-transmission, retention, and
+  redistribution mechanisms not already governed by the accepted policy
+  semantics and persistence boundary;
+- stronger worker isolation if an M1 or later operation requires compromise
+  containment beyond Job Objects;
+- M4 shareable-export, packaging, signing, update, and distribution
+  mechanisms; and
+- dependency-version advancement or materially expanded native bindings.
 
 ADR-0006 accepts the licensing and high-level tool-dependency boundary.
 ADR-0009 and ADR-0011 now select the initial Mutagen/libloot versions and
@@ -130,10 +184,9 @@ binding/process operations, and future dependency-version advancement remain
 future decisions.
 
 RQ-031 already establishes the accepted retention, replay, deletion, and
-export policy semantics. A future persistence ADR should select the storage,
+export policy semantics. ADR-0015 selects the storage,
 cache-validity, dependency, and deletion mechanisms that implement that
-policy; it must not reopen the accepted useful-analysis retention boundary
-without an explicit superseding decision.
+policy; it does not reopen the accepted useful-analysis retention boundary.
 
 RQ-036 produced an accepted product taxonomy rather than an ADR merely because
 it defines classifications. A later storage, schema-evolution, or routing

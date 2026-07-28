@@ -1,7 +1,7 @@
 # Taxonomy research dependency map
 
 Status: Completed — satisfied by `infinium.skyrim-se.mod-impact-taxonomy/0.1.0`
-Last reviewed: 2026-07-26
+Last reviewed: 2026-07-28
 
 This document inventories where Infinium needs classifications related to how
 mods change Skyrim and what parts of the game they may affect. It began as the
@@ -51,7 +51,7 @@ an analyzer observed.
 | Coverage and readiness gaps | Parsed plugins, indexed providers, supported record families, documentation coverage, named analyzers, and unsupported areas | Report labeled denominators and unevaluated taxonomy areas without manufacturing one overall analyzed/safety percentage |
 | Review priority and investigation depth | Impact, blast radius, symptoms, user intent, candidate breadth, and analyzer maturity | Route attention and optional deeper analysis while leaving severity and confidence independent |
 | Change impact, remediation, and validation | Changed providers/records/assets/configuration/runtime/generated output plus predicted symptoms and test plans | Explain which technical surfaces and game areas may be affected and choose bounded validation steps |
-| Evaluation and anti-overfitting | NPC/non-NPC, cell/quest, item/crafting, asset, runtime, configuration, and other historical planning labels | Stratify positive, negative, boundary, cross-cutting, unknown, and unsupported cases and expose unevaluated taxonomy coverage |
+| Evaluation and anti-overfitting | First-category/contrasting-category proof labels plus cell/quest, item/crafting, asset, runtime, configuration, and other historical planning labels | Map cases to accepted taxonomy axes; require a materially different category proof before a mechanism is called cross-category generic; expose unevaluated coverage |
 | Analyzer roadmap and milestone breadth | Semantic record/system families and named native, asset, script, configuration, generator, and lifecycle analyzers | Select implementation order from product risk and evidence rather than treating the current catalog order as a natural taxonomy |
 | Architecture and integration reporting | MO2, filesystem, Bethesda semantic layer, LOOT, documentation, generators, logs, and LLM adapters | Map component capabilities and gaps to product taxonomy coverage without treating adapter boundaries as game-area boundaries |
 | Historical persistence and exports | Findings, coverage, evaluations, and exported summaries | Retain the taxonomy version so later revisions do not silently reinterpret historical classifications |
@@ -73,7 +73,7 @@ an analyzer observed.
 - [`../product/workflows.md`](../product/workflows.md):
   results aggregation, filtering, case detail, and verification.
 - [`../product/scope-and-milestones.md`](../product/scope-and-milestones.md):
-  NPC/non-NPC proof shorthand and M3 capability breadth.
+  category-neutral proof/generalization rule and M3 capability breadth.
 - [`../architecture/overview.md`](../architecture/overview.md) and
   [`../architecture/integrations.md`](../architecture/integrations.md):
   responsibility and adapter boundaries that must report taxonomy coverage but

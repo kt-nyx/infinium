@@ -4,7 +4,7 @@ Status: Completed — recommendation accepted by project owner
 
 Date: 2026-07-25
 
-Last reviewed: 2026-07-26
+Last reviewed: 2026-07-28
 
 Researcher: Codex agent
 
@@ -21,6 +21,12 @@ specification on 2026-07-25 through
 [RESEARCH-0024](RESEARCH-0024-wave-c-analysis-taxonomy-and-scale-integration.md).
 The retained benchmark remains an author-coupled research probe, not an
 independent product evaluation or architecture selection.
+
+Current corpus note: RESEARCH-0035 subsequently qualified the exact
+EVAL-0016/EVAL-0017 candidates. References below to their earlier incomplete
+or unselected state are historical; EVAL-0032 and the controlled-real cases
+now have accepted Wave F specifications and still require independent M1
+execution.
 
 ## 1. Question and bounded answer
 

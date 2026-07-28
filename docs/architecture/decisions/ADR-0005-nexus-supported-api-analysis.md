@@ -4,9 +4,20 @@ Status: Accepted
 Date: 2026-07-25
 Accepted: 2026-07-25
 Accepted by: Project owner
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-28
 Supersedes: None
-Superseded by: None
+Superseded by: ADR-0012 for API-interface eligibility and selection only
+
+Subsequent decision:
+
+- 2026-07-28 —
+  [ADR-0012](ADR-0012-nexus-latest-capable-api-routing.md) records the owner's
+  API-wide development-risk direction and selects latest-capable v3, v2
+  GraphQL, then v1 per-content routing. Its narrower interface-eligibility
+  decision supersedes the documented-supported-interface-only provisions
+  below. ADR-0005's bounded purpose, no-page/no-bypass/no-rehost/no-training,
+  private-retention, provider-transmission, public-registration, and reversal
+  constraints remain accepted.
 
 ## Context
 

@@ -5,7 +5,7 @@ exact baseline remains deferred
 
 Date: 2026-07-25
 
-Last reviewed: 2026-07-26
+Last reviewed: 2026-07-28
 
 Researcher: Codex agent
 
@@ -22,6 +22,10 @@ disposition on 2026-07-25 through
 [RESEARCH-0024](RESEARCH-0024-wave-c-analysis-taxonomy-and-scale-integration.md).
 Exact production budgets, architecture selection, and evaluation execution
 remain deferred.
+
+Current corpus note: RESEARCH-0035 subsequently qualified the exact
+EVAL-0016/EVAL-0017 candidates. Any table below describing their prior
+incomplete or unselected state is retained only as dated benchmark provenance.
 
 ## 1. Question and bounded answer
 
@@ -179,7 +183,7 @@ production rules.
 | [RESEARCH-0012](RESEARCH-0012-snapshot-fingerprint-and-invalidation.md) | Accepted Wave B structural-pass and scoped-hash measurements |
 | [RESEARCH-0013](RESEARCH-0013-wave-b-authoritative-local-state-integration.md) | Accepted authority/gap integration and non-representative private-profile rule |
 | [RESEARCH-0014](RESEARCH-0014-root-native-component-surfaces.md) through [RESEARCH-0019](RESEARCH-0019-semantic-record-family-roadmap.md) | Proposed surface populations and typed candidate relationships |
-| [RESEARCH-0020](RESEARCH-0020-evaluation-corpus-and-real-mod-candidates.md) | Proposed corpus controls; EVAL-0016 remains incomplete/unselected and EVAL-0017 remains unselected |
+| [RESEARCH-0020](RESEARCH-0020-evaluation-corpus-and-real-mod-candidates.md) | Proposed corpus controls; at this benchmark's capture time EVAL-0016 was incomplete and EVAL-0017 was unselected; RESEARCH-0035 later qualified both candidates |
 | [RESEARCH-0021](RESEARCH-0021-skyrim-mod-impact-taxonomy.md) | Proposed classification/coverage strata only |
 | [RESEARCH-0022](RESEARCH-0022-candidate-index-and-ranking.md) | Final dependency: corrected logical design, durable synthetic generator, truth-separated results, and limitations |
 | [Wave B private manifest](WAVE-B-reference-environment-manifest.md) | Sanitized token mapping and exact profile-control fingerprints |

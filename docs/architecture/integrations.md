@@ -1,14 +1,19 @@
 # Integration boundaries
 
 Status: Draft  
-Last reviewed: 2026-07-26
+Last reviewed: 2026-07-28
 
 ADR-0006 accepts the high-level external-application and bundled-dependency
 posture. ADR-0007 excludes xEdit from every Infinium boundary. ADR-0008 through
 ADR-0011 accept the Wave B MO2, runtime/Mutagen, snapshot, and conditional
-LOOT/libloot semantic boundaries. Exact process topology, binding/IPC,
-implementation operations, and supported surfaces remain subject to their
-owning plans and qualification gates.
+LOOT/libloot semantic boundaries. ADR-0012 through ADR-0014 accept Wave D's
+Nexus routing, OpenAI capability, and LOOT managed-data refresh boundaries.
+Wave E researched the process topology, local IPC, credential dispatch,
+persistence, lifecycle, and hard-budget mechanisms in RESEARCH-0036 through
+RESEARCH-0046. ADR-0015 through ADR-0023 accept the complete Wave E
+architecture; ADR-0024 is rejected. Exact models,
+supported adapter surfaces, native bindings, and implementation operations
+remain subject to their owning plans and qualification gates.
 
 The integration sections below organize external/system boundaries. They are
 not an exhaustive taxonomy of technical modification surfaces, mod types, or
@@ -92,6 +97,12 @@ Masterlist and prelude are managed, versioned data rather than a fixed bundled
 payload by default. Provenance must distinguish curated LOOT metadata and
 diagnostics, exact data revisions, and user-supplied userlist rules.
 
+Accepted ADR-0014 resolves the current compatible branch only as discovery,
+fetches immutable commits, validates masterlist/prelude as one pair, activates
+atomically, retains rollback inputs, and binds a run to one immutable pair.
+The schedule and mechanism are authoritative design constraints; their
+implementation and EVAL-0053 conformance remain pending.
+
 ## Bethesda semantic layer
 
 ADR-0009 selects `Mutagen.Bethesda.Skyrim` `0.54.2` as the initial bounded
@@ -104,9 +115,9 @@ ADR-0007 excludes xEdit. Record-semantic qualification must use independently
 specified first-party fixture expectations and may not accept an expected
 result solely because the Mutagen code path under test produced it.
 
-## Documentation providers
+## Documentation and discovery providers
 
-Provider adapters may cover:
+Adapters may cover:
 
 - Nexus API;
 - official repositories;
@@ -117,19 +128,23 @@ Provider adapters may cover:
 They must follow API and scraping policies, identify source revision/freshness,
 and expose unavailable content as a gap.
 
-The Nexus adapter is additionally constrained by ADR-0005: it may use only
-documented supported API operations, may privately retain permitted source
-material through the useful dependent work defined by the accepted RQ-031
-disposition, and may not substitute page access for an unsupported content
-surface. A negative Nexus response or material policy change stops the affected
-path pending review.
+The Nexus adapter is constrained by ADR-0005 as amended by accepted ADR-0012.
+During development it may use Nexus-provided read APIs, including v2 GraphQL,
+under the owner's explicit risk direction. A new acquisition prefers v3 for
+content it supplies, then v2 GraphQL, then v1 only for otherwise unavailable
+content or disclosed fallback. The resolved route/schema/query is frozen in
+the acquisition run. Articles, mod-linked posts/comments, author or sticky
+posts, and mod-page bug reports remain unsupported API gaps. Page access is
+not a fallback. A negative Nexus response or material policy change triggers
+the ADR-0012 reversal review.
 
 ## LLM providers
 
-Internal contracts are provider-neutral. GPT is the first reference provider.
+Authoritative domain/evidence contracts are provider-independent. OpenAI is
+the initial supported provider direction, and later-provider parity does not
+limit useful initial capabilities.
 Through M4, authenticated or billable calls use authorization supplied by the
-user for the explicitly selected provider/account. Credential-free local
-providers may operate under their declared contracts; adapters expose no
+user for the explicitly enabled provider/account. Adapters expose no
 project-funded or shared-project credential fallback.
 Each provider advertises:
 
@@ -146,6 +161,27 @@ Each provider advertises:
 
 Unsupported quota, enforceable-bound, or billing data must be represented
 explicitly.
+
+Accepted ADR-0013 selects OpenAI Responses and Structured Outputs for the
+initial semantic operations and permits hosted `web_search` only for governed
+discovery/research operations. Search results remain investigative leads until
+an approved host-controlled source adapter acquires and fingerprints the
+landing source and extracts exact passages. OpenAI Response/search/background/
+Batch/cache objects remain invocation provenance rather than findings or
+source authority. Wave E accepts Credential Manager plus a one-shot
+credential/provider helper, SQLite plus coordinator-owned payload storage, and
+an atomic multi-scope cost ledger. ADR-0015, ADR-0020, ADR-0021, and ADR-0023
+accept those mechanisms; exact models and production conformance
+remain pending.
+
+Initial OpenAI execution remains the single surface accepted by ADR-0013:
+schema-constrained direct Responses API calls using a user-supplied,
+usage-priced Platform API key, with catalog-cost estimates and hard local
+limits. ChatGPT credentials are not general Responses API credentials.
+RESEARCH-0045 investigated a Codex/ChatGPT-plan adapter, but the owner rejected
+that proposal in ADR-0024 because its agent-runtime semantics add an
+unnecessary orchestration and security surface to Infinium's bounded
+call-and-response operations.
 
 ## Generators and logs
 
@@ -180,11 +216,14 @@ outcomes merely from bytecode structure.
 ## Asset references
 
 The first accepted typed asset-reference slice is NIF. Loose-file FaceGen
-coverage remains conditional on exact full/light plugin-origin,
-race/template, provider, and shadowing qualification; archive parity is a
-separate later gate. Wave C did not accept a production NIF parser dependency.
-Any future parser or worker boundary requires a version/licence review,
-malformed-input limits, independent fixtures, and explicit supported shapes.
+coverage requires exact full/light plugin-origin, race/template, provider, and
+shadowing semantics. RESEARCH-0034 qualified that decision boundary for
+pre-resolved record/provider inputs; upstream authoritative MO2/provider
+reconstruction and production record parsing remain separately gated. Archive
+parity is a later gate. Wave C did not accept a production NIF parser
+dependency. Any future parser or worker boundary requires a version/licence
+review, malformed-input limits, independent fixtures, and explicit supported
+shapes.
 
 These Wave C recommendations constrain future adapter specifications. They do
 not select process topology, implementation libraries, or claim that any named

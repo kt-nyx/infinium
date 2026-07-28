@@ -2,7 +2,7 @@
 
 Status: Completed — recommendation accepted by project owner
 Date: 2026-07-25
-Last reviewed: 2026-07-26
+Last reviewed: 2026-07-28
 Researcher: Codex agent
 Primary RQ: RQ-023 — Which asset formats can be checked for referenced-file
 completeness efficiently?
@@ -13,8 +13,12 @@ specification input, and candidate/index design input
 Acceptance note: The project owner accepted the NIF-first bounded
 recommendation on 2026-07-25 through
 [RESEARCH-0024](RESEARCH-0024-wave-c-analysis-taxonomy-and-scale-integration.md).
-Exact loose-only FaceGen identity/provider qualification remains a Gate C
-prerequisite; archive parity and parser selection remain later work.
+RESEARCH-0034 subsequently completed the exact loose-only FaceGen
+identity/provider qualification at its declared pre-resolved-input boundary,
+closing this RQ-023 Gate C prerequisite. Archive-positive parity, authoritative
+MO2/provider reconstruction, and production parser selection/conformance
+remain later work. Any “pending” wording below records the state of this
+2026-07-25 investigation and is superseded by RESEARCH-0034.
 
 ## 1. Question and governing boundaries
 
@@ -727,11 +731,11 @@ This report enables the coordinator to propose:
   parser qualification;
 - retaining effective archive resolution as conditional on EVAL-0051 rather
   than expanding ADR-0009 implicitly; and
-- keeping RQ-023 **In progress and M0-exit-blocking** until the independent
-  loose-only full/light NPC-to-FaceGen identity, applicability, normalization,
-  shadowing, and archive-independence matrix in section 6.1 passes; NIF
-  feasibility alone is not enough to mark the RQ answered, while
-  archive-positive support remains conditional later work.
+- requiring the independent loose-only full/light record-to-FaceGen identity,
+  applicability, normalization, shadowing, and archive-independence matrix in
+  section 6.1 before resolving RQ-023. RESEARCH-0034 subsequently passed that
+  matrix at its declared pre-resolved-input boundary; archive-positive support
+  remains conditional later work.
 
 No taxonomy or accepted product-language change is proposed by this
 investigation.
@@ -753,7 +757,7 @@ investigation.
 | EVAL-0051 | Sections 7.2 and 12 include active, inactive, and unqualified archive controls. | Do not claim full effective absence before the archive route passes. |
 | EVAL-0052 | Sections 5 and 14 leave plugin field selection to RQ-024 and the accepted Mutagen allowlist. | Expected plugin edges require independent binary/semantic fixtures. |
 | EVAL-0059 | Section 12 supplies positive, matched-negative, provider, malformed, path, and cache controls. | Coordinator may refine the case specification without changing its product intent. |
-| M1 record/FaceGen provenance proof, RQ-023 | Section 6.1 defines origin FormKey/path identity, effective-provider separation, applicability, light-plugin boundary, and the no-rendering conclusion limit. | Keep exit-blocking until its independent loose-only and archive-independence matrix passes; archive-positive support remains conditional. |
+| M1 record/FaceGen provenance proof, RQ-023 | Section 6.1 defines origin FormKey/path identity, effective-provider separation, applicability, light-plugin boundary, and the no-rendering conclusion limit. | RESEARCH-0034 completed the loose-only matrix at the pre-resolved-input boundary; archive-positive and production-adapter support remain conditional. |
 
 ## 17. Remaining questions
 

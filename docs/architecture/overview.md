@@ -1,16 +1,19 @@
 # Architecture overview
 
 Status: Draft  
-Last reviewed: 2026-07-26
+Last reviewed: 2026-07-28
 
-No implementation architecture, process topology, or application stack is
-accepted. This document maps required responsibilities and records one leading
-candidate decomposition for later research.
+No implementation or evaluation conformance is accepted yet. ADR-0015 through
+ADR-0023 accept the complete Wave E persistence, lifecycle, application-stack,
+process, IPC, credential, security, continuity, and budget architecture. Dapr
+and ADR-0024's Codex proposal are rejected. This document maps the selected
+decomposition.
 
-## Required responsibilities and proposed separation
+## Required responsibilities and selected separation
 
-The responsibilities below follow from product requirements. Their separation
-into processes/components is proposed, not accepted.
+The responsibilities below follow from product requirements and accepted
+ADR-0015 through ADR-0023. Exact implementation details remain bounded by the
+future accepted M1 plan.
 
 ### Presentation
 
@@ -41,9 +44,12 @@ Responsibilities:
 - validation and export generation.
 
 Long-running, CPU-heavy, IO-heavy, crash-prone, or privileged work belongs
-outside the UI rendering/event-loop execution boundary. Whether that boundary
-uses threads, processes, services, or another topology remains a research
-decision.
+outside the UI rendering/event-loop execution boundary. ADR-0018 accepts a
+standalone per-user coordinator, bounded workers, and a one-shot
+credential/provider-helper process role. Initial OpenAI work uses the direct
+Responses adapter under ADR-0013; the rejected Codex proposal adds no provider
+process. ADR-0019 through ADR-0021 accept the applicable transport, credential,
+and security mechanisms.
 
 ### Evidence persistence
 
@@ -119,33 +125,46 @@ Findings and causally grouped cases
 Readiness, remediation, validation, and exports
 ```
 
-## Current leading stack candidate
+## Current accepted Wave E architecture
 
-This candidate is not accepted:
+The following architecture is research-complete and accepted:
 
-- C#/.NET analysis worker;
+- a .NET 10 UI-independent domain engine and human-readable CLI;
 - the already accepted pinned Mutagen.Bethesda dependency for bounded Bethesda
   records and low-level archives;
-- SQLite evidence store;
-- React/TypeScript UI;
-- thin, hardened Electron shell;
-- narrow versioned IPC;
+- SQLite as the authoritative relational store, paired with a
+  coordinator-owned content-addressed payload store and rebuildable
+  projections;
+- a standalone, non-elevated, per-user coordinator as the sole Infinium
+  database, authorization, query, and publication authority;
+- a thin application-owned transactional SQLite lifecycle and bounded local
+  scheduler under accepted ADR-0016, with no external workflow authority;
+- bounded general workers that stage outputs for coordinator validation and
+  adoption, without credentials or direct authoritative-store access;
+- React/TypeScript presentation hosted by a minimal WPF/WebView2 Evergreen
+  desktop shell;
+- gRPC/HTTP2 over current-user-restricted Windows named pipes for
+  application/coordinator and coordinator/worker communication, with distinct
+  endpoints and role-specific contracts;
+- a coordinator-launched one-shot helper that alone performs native credential
+  entry/storage access and an authorized reusable-secret provider request;
+- schema-constrained, usage-priced direct Responses API operation through a
+  user-supplied Platform API key; and
 - user-installed MO2/LOOT discovery plus the already accepted deterministic
   MO2 reconstruction and conditional libloot semantic boundaries.
 
-Rationale so far:
+RESEARCH-0036 through RESEARCH-0046 provide the evidence, rejected alternatives,
+and owner dispositions.
+If the WPF/WebView2 qualification prototype fails, ADR-0017 must be reopened;
+no fallback stack is selected automatically. Prior research identified Electron
+and Avalonia as the principal reconsideration candidates, while Tauri adds an
+unnecessary language/toolchain boundary for the selected engine. The graphical
+shell is replaceable and must not be required for M1 engine or CLI operation.
 
-- C#/.NET is worth investigating because the accepted Mutagen.Bethesda
-  dependency is native to that ecosystem, while its exact supported shapes
-  remain qualification-gated;
-- a web frontend offers the desired interaction/design ecosystem;
-- analysis can remain independent of the desktop shell;
-- Electron may avoid adding another implementation language solely for window
-  hosting;
-- Avalonia is the all-C# comparison candidate.
-
-Research must compare this candidate with realistic alternatives before an ADR
-accepts the stack.
+Gate E is met at the M0 architecture/design layer because every required Wave
+E ADR is accepted. ADR-0024 is not required because it was rejected.
+Acceptance selects a design, not implementation conformance or an evaluation
+pass.
 
 ## Architecture qualities
 
@@ -161,9 +180,10 @@ The chosen architecture must support:
 - long-running resumable jobs;
 - high-end profile scale;
 - validated incremental caching;
-- provider-neutral LLM integration;
 - inspectable provenance;
 - offline local analysis;
 - secure handling of credentials and untrusted documentation;
 - replacement of the UI shell without rewriting the domain engine;
-- modular game-specific analyzers without speculative cross-game abstraction.
+- modular game-specific analyzers without speculative cross-game abstraction;
+- provider-independent domain truth with capability-profiled LLM adapters,
+  initially OpenAI-first without a second-provider parity gate.

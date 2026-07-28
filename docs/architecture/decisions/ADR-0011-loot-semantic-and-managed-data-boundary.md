@@ -3,9 +3,17 @@
 Status: Accepted  
 Date: 2026-07-25  
 Accepted: 2026-07-25  
-Last reviewed: 2026-07-25  
+Last reviewed: 2026-07-28
 Supersedes: None  
-Superseded by: None
+Superseded by: ADR-0014 for managed-data refresh mechanics only
+
+Accepted follow-up:
+
+- 2026-07-28 —
+  [ADR-0014](ADR-0014-loot-managed-data-refresh.md) accepts a configurable
+  nonblocking startup/daily refresh, immutable pair activation, rollback, and
+  run-isolation mechanism. ADR-0011's libloot, authority, read-only, and
+  qualification boundaries remain authoritative.
 
 ## Context
 
