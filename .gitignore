@@ -9,10 +9,13 @@ Thumbs.db
 .env.*.local
 temp.txt
 
+# The abandoned implementation is archived outside this repository. Do not
+# allow a restored copy to re-enter the active working tree accidentally.
+/legacy/
+
 # Research and documentation render artifacts
 docs/.rendered/
 docs/.cache/
 
-# The preserved implementation retains its original ignore rules in
-# legacy/.gitignore. New implementation-specific entries belong here once a
-# replacement project is scaffolded.
+# New implementation-specific entries belong here once the replacement
+# project is scaffolded.

@@ -69,7 +69,8 @@ selecting an implementation architecture.
 Deliverables:
 
 - reviewed product documentation;
-- legacy assessment;
+- historical legacy assessment, subsequently removed from the active tree
+  after external archival;
 - research investigations with dated sources;
 - accepted foundational ADRs;
 - proposed and compared system architectures;

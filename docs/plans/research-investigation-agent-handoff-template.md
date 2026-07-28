@@ -48,8 +48,9 @@ Before doing any research:
 Authority and scope rules:
 
 - Treat accepted product documents and ADRs as authoritative.
-- Treat legacy/ as archaeological context only. Do not use a legacy choice,
-  test, or implementation as evidence that an approach is correct.
+- Do not inspect or restore the external abandoned-implementation archive
+  unless the user explicitly requests archaeological review. A legacy choice,
+  test, or implementation is never evidence that an approach is correct.
 - Research the current real technology, interface, policy, or format. Do not
   answer from memory when a current primary source or local experiment can
   verify it.

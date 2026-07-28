@@ -112,7 +112,8 @@ coverage/capability output where relevant. They cannot be silently absent.
 
 ## Required repository structure
 
-M1 shall create this clean-break structure rather than reviving `legacy/`:
+M1 shall create this clean-break structure without restoring or consulting the
+external abandoned-implementation archive:
 
 ```text
 Infinium.sln
@@ -221,13 +222,15 @@ Deliver:
   selector unless a license file is introduced;
 - dependency licence/provenance manifest;
 - solution/project skeleton and analyzer/style configuration;
-- no reference from production projects to `legacy/`.
+- no reference from production projects to the external
+  abandoned-implementation archive or its historical source.
 
 Verification:
 
 - clean restore/build on the supported Windows environment;
 - dependency graph and licence review;
-- repository search proving no production legacy reference.
+- repository search proving no production reference to the abandoned
+  implementation or external archive.
 
 ### Slice 1 — Versioned domain, wire, output, and evaluation contracts
 
@@ -504,8 +507,9 @@ M1 is complete only when:
 ## Rollback and migration
 
 M1 creates no supported legacy-data migration and reads no authoritative state
-from `legacy/`. Development databases and payload stores are disposable until
-an accepted later plan declares compatibility.
+from the external abandoned-implementation archive or its Git-history copy.
+Development databases and payload stores are disposable until an accepted
+later plan declares compatibility.
 
 Every slice must permit:
 

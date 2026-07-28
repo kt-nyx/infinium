@@ -108,7 +108,8 @@ explicitly deferred to the appropriate M3 analyzer plans.
 - LOOT userlist/config semantics, which remain under ADR-0011.
 - Root/native compatibility, generated-output semantics, script semantics, or
   installer-history reconstruction owned by adjacent research questions.
-- Inspection of `legacy/`.
+- Inspection of the then-present abandoned implementation, now retained only
+  in the external maintainer archive and Git history.
 
 ## 3. Method and prioritization criteria
 

@@ -41,9 +41,7 @@ specification.
   [milestone-plan index](plans/milestones/README.md), and
   [accepted M1 backend semantic proof plan](plans/milestones/M1-backend-semantic-proof.md),
   [research-agent handoff template](plans/research-investigation-agent-handoff-template.md)
-- Reference: [glossary](glossary.md),
-  [legacy assessment](legacy/implementation-assessment.md), and
-  [legacy reuse disposition](legacy/reuse-disposition.md)
+- Reference: [glossary](glossary.md)
 
 ## Document authority
 
@@ -57,8 +55,12 @@ specification.
   must not redefine product behavior.
 - **Evaluation documents** define how claims of correctness, reliability, and
   generalization are demonstrated.
-- **Legacy documents** describe the abandoned implementation and possible reuse.
-  The implementation itself is preserved at [`../legacy/`](../legacy/).
+- **Historical legacy material** is excluded from the active repository. A
+  complete maintainer-local implementation archive exists at sibling path
+  `../infinium-legacy-archive/`, and the tracked implementation and assessment
+  documents remain recoverable from Git history through commit `7dd3da6`.
+  They must not be inspected unless the user explicitly requests
+  archaeological review.
 
 If documents conflict, accepted product requirements take precedence over
 plans and legacy behavior. Accepted ADRs govern implementation only where they
@@ -138,7 +140,10 @@ Every material document should include a status and last-reviewed date.
   snapshots, and the conditional libloot `0.29.6` boundary. Their
   implementation operations and supported surfaces remain qualification-gated.
 - The old codebase, dependencies, local artifacts, and uncommitted work were
-  moved intact to [`../legacy/`](../legacy/) on 2026-07-24.
+  first isolated on 2026-07-24, then removed from the active repository and
+  moved intact to the maintainer-local sibling archive
+  `../infinium-legacy-archive/` on 2026-07-28. Its tracked source remains
+  recoverable from Git history through commit `7dd3da6`.
 
 ## Change discipline
 

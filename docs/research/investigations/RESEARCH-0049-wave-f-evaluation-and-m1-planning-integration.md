@@ -89,7 +89,8 @@ ADR-0025 is accepted.
 
 - [M1 backend semantic proof plan](../../plans/milestones/M1-backend-semantic-proof.md)
 
-The plan creates a clean source tree rather than reviving `legacy/`, remains
+The plan creates a clean source tree without restoring or consulting the
+external abandoned-implementation archive, remains
 CLI-first, uses the accepted .NET/SQLite/coordinator/worker/IPC/security
 architecture, and proves two materially different semantic cases without
 making them the product's permanent taxonomy or inserting fixture-specific

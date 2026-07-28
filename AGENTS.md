@@ -1,7 +1,11 @@
 # Infinium repository guidance
 
 This repository is being rebuilt from a product specification. The abandoned
-implementation is preserved under `legacy/` and is not authoritative.
+implementation is not part of the active working tree and is not
+authoritative. A complete maintainer-local archive exists outside the
+repository at sibling path `../infinium-legacy-archive/`; the tracked portion
+also remains recoverable from Git history through commit `7dd3da6`. Do not
+inspect, restore, or use that archive unless the user explicitly requests it.
 
 ## Required reading order
 
@@ -36,7 +40,8 @@ Then read the task-specific material:
 ## Working rules
 
 - Treat accepted product documents and ADRs as authoritative.
-- Treat `legacy/` as archaeological context only.
+- Treat the external abandoned-implementation archive as out of scope unless
+  the user explicitly requests archaeological review.
 - Do not copy legacy behavior without independent validation against current
   requirements.
 - Put unresolved technical questions in `docs/research/open-questions.md`.

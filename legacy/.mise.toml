@@ -1,5 +1,0 @@
-[tools]
-node = "24.11.1"
-
-[env]
-# TODO: add per-developer overrides (e.g., OPENAI_API_KEY) via `.env` instead

@@ -200,11 +200,12 @@ being answered speculatively.
 
 ### Legacy boundary
 
-The archived implementation under [`../../../legacy/`](../../../legacy/) is
-non-authoritative archaeological context. A research investigation may inspect
-it only after establishing the current requirement and independent ground truth.
-Legacy behavior, tests, dependencies, or chosen technologies are never evidence
-that a rewrite mechanism is correct.
+The abandoned implementation is excluded from the active repository. Its
+maintainer-local sibling archive and Git-history copy are non-authoritative
+archaeological context and must not be inspected or restored unless the user
+explicitly requests that work. Even then, current requirements and independent
+ground truth must be established first. Legacy behavior, tests, dependencies,
+or chosen technologies are never evidence that a rewrite mechanism is correct.
 
 ## Requirements served
 

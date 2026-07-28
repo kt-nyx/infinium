@@ -4,9 +4,15 @@ Infinium is a planned evidence-driven pre-playthrough quality-assurance and
 diagnostic tool for large Skyrim Special Edition modlists managed with Mod
 Organizer 2.
 
-The project is currently in the M0 research-foundation milestone. The
-abandoned implementation has been preserved intact under
-[`legacy/`](legacy/) and is not the specification for the rebuilt product.
+The M0 research foundation is complete. The accepted M1 backend semantic proof
+plan is now the active implementation authority.
+
+The abandoned implementation is not part of this working tree. A complete
+maintainer-local archive is stored outside the repository at sibling path
+`../infinium-legacy-archive/`; its tracked source also remains in Git history
+through commit `7dd3da6`. It is not the specification for the rebuilt product
+and should not be inspected unless archaeological review is explicitly
+requested.
 
 Start with [`docs/README.md`](docs/README.md).
 
@@ -14,24 +20,16 @@ Start with [`docs/README.md`](docs/README.md).
 
 - Product discovery: consolidated into the accepted product baseline
 - Product documentation: accepted baseline plus mod-impact taxonomy `0.1.0`
-- Architecture decisions: ADR-0001 through ADR-0011 accepted on 2026-07-25
-- M0 research plan: accepted and active as of 2026-07-25
-- Research: Waves A through C have accepted integrated dispositions; Gates A
-  and B are met, while Gate C retains the exact FaceGen qualification and
-  EVAL-0016/EVAL-0017 real-mod case prerequisites
-- Wave A decisions: bounded supported Nexus API analysis, useful-analysis
-  private source retention, GPLv3-family licensing, and explicit external-tool
-  dependency boundaries
-- Wave C decisions: accepted Skyrim SE mod-impact taxonomy, bounded
-  root/generated/configuration/PEX/asset/record roadmaps, synthetic-first
-  corpus policy, and typed-index/causal-candidate design without naïve
-  all-pairs model comparison
+- Research: Waves A through F accepted; Gates A through F met
+- M0 research plan: completed on 2026-07-28
+- Architecture: ADR-0001 through ADR-0023 and ADR-0025 accepted; ADR-0024
+  rejected
+- M1 plan: accepted and active
+- M1 implementation and evaluation: not started; no case has passed execution
 - xEdit: historical integration/oracle recommendation rejected; excluded from
   every Infinium boundary
-- Implementation architecture: not accepted
-- New implementation: not started
-- Legacy implementation: preserved for reference only
+- Abandoned implementation: removed from the active tree and retained only in
+  the external local archive and Git history
 
-No implementation work should begin until the blocking technical questions
-have been researched and the relevant architecture decisions and milestone
-plan have been accepted.
+Implementation must proceed slice-by-slice under the accepted
+[M1 backend semantic proof plan](docs/plans/milestones/M1-backend-semantic-proof.md).
