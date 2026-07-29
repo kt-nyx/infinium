@@ -19,18 +19,22 @@ public sealed class Mo2SnapshotCaptureTests
 
         Mo2SnapshotCaptureResult result = capture.Capture(fixture.Request);
 
-        Assert.AreEqual(SnapshotCaptureState.Completed, result.State);
+        Assert.AreEqual(SnapshotCaptureState.CompletedWithGaps, result.State);
         Assert.IsNotNull(result.Snapshot);
         Assert.AreEqual("OtherProfile", result.Snapshot.SavedProfileHint);
         Assert.AreEqual("Chosen", Path.GetFileName(result.Snapshot.ProfileRoot));
         Assert.IsFalse(result.Snapshot.Mo2OrUsvfsLaunched);
         Assert.IsFalse(result.Snapshot.ArchiveMemberPopulationSupported);
+        Assert.IsTrue(result.Gaps.Any(
+            gap => gap.Code == "mo2-game-plugin-inventory-unqualified"));
 
         ModState high = result.Snapshot.Mods.Single(mod => mod.Name == "High");
         ModState low = result.Snapshot.Mods.Single(mod => mod.Name == "Low");
-        Assert.IsTrue(high.Enabled);
-        Assert.IsTrue(low.Enabled);
+        Assert.AreEqual(ModEnablementState.Enabled, high.Enablement);
+        Assert.AreEqual(ModEnablementState.Enabled, low.Enablement);
         Assert.IsTrue(high.Priority > low.Priority);
+        Assert.ThrowsExactly<NotSupportedException>(
+            () => ((IList<ModState>)result.Snapshot.Mods)[0] = low);
 
         LooseProviderChain shared = result.Snapshot.LooseProviderChains.Single(
             chain => chain.NormalizedRelativePath.Equals(
@@ -74,7 +78,7 @@ public sealed class Mo2SnapshotCaptureTests
 
         Mo2SnapshotCaptureResult result = fixture.CreateCapture().Capture(fixture.Request);
 
-        Assert.AreEqual(SnapshotCaptureState.Completed, result.State);
+        Assert.AreEqual(SnapshotCaptureState.CompletedWithGaps, result.State);
         Assert.IsNotNull(result.Snapshot);
         Assert.IsFalse(result.Snapshot.LooseProviderChains.Any(
             chain => chain.NormalizedRelativePath == "disabled.txt"));
@@ -133,14 +137,6 @@ public sealed class Mo2SnapshotCaptureTests
     }
 
     [TestMethod]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Fault")]
-    public void SameSizeControlMutationPassesTheFaultGate()
-    {
-        SameSizeControlMutationInvalidatesCapture();
-    }
-
-    [TestMethod]
     [TestCategory("M1Unit")]
     [TestCategory("M1Fault")]
     [TestProperty("Category", "M1Unit")]
@@ -149,6 +145,9 @@ public sealed class Mo2SnapshotCaptureTests
     {
         using SnapshotFixture fixture = new();
         File.AppendAllText(fixture.ModListPath, "+Missing\n", Encoding.UTF8);
+        string unlisted = Directory.CreateDirectory(
+            Path.Combine(fixture.ModsRoot, "Unlisted")).FullName;
+        File.WriteAllText(Path.Combine(unlisted, "must-not-win.txt"), "unknown", Encoding.UTF8);
         string mapperRoot = Directory.CreateDirectory(
             Path.Combine(fixture.Root, "mapper")).FullName;
         File.WriteAllText(Path.Combine(mapperRoot, "mapped.txt"), "mapped", Encoding.UTF8);
@@ -168,6 +167,11 @@ public sealed class Mo2SnapshotCaptureTests
         Assert.IsNotNull(result.Snapshot);
         Assert.IsTrue(result.Gaps.Any(gap => gap.Code == "listed-mod-missing"));
         Assert.IsTrue(result.Gaps.Any(gap => gap.Code == "unknown-or-unqualified-mapper"));
+        Assert.AreEqual(
+            ModEnablementState.Unresolved,
+            result.Snapshot.Mods.Single(mod => mod.Name == "Unlisted").Enablement);
+        Assert.IsFalse(result.Snapshot.LooseProviderChains.Any(
+            chain => chain.NormalizedRelativePath == "must-not-win.txt"));
         Assert.IsFalse(result.Snapshot.LooseProviderChains.Any(
             chain => chain.NormalizedRelativePath == "mapped.txt"));
     }
@@ -199,7 +203,7 @@ public sealed class Mo2SnapshotCaptureTests
                     StringComparer.OrdinalIgnoreCase))
             .Capture(request);
 
-        Assert.AreEqual(SnapshotCaptureState.Completed, result.State);
+        Assert.AreEqual(SnapshotCaptureState.CompletedWithGaps, result.State);
         Assert.IsNotNull(result.Snapshot);
         LooseProviderChain mapped = result.Snapshot.LooseProviderChains.Single(
             chain => chain.NormalizedRelativePath == "virtual/mapped.txt");
@@ -232,6 +236,164 @@ public sealed class Mo2SnapshotCaptureTests
             "9001",
             after.SourceHints.Single(hint => hint.Key == "general/modid").RawValue);
         Assert.AreEqual("mutable-mo2-meta-ini-hint", after.SourceHints[0].Authority);
+    }
+
+    [TestMethod]
+    [TestCategory("M1Unit")]
+    [TestCategory("M1Fault")]
+    [TestProperty("Category", "M1Unit")]
+    [TestProperty("Category", "M1Fault")]
+    public void SameSizeMetaMutationInvalidatesCapture()
+    {
+        using SnapshotFixture fixture = new();
+        string meta = Path.Combine(fixture.ModsRoot, "High", "meta.ini");
+        DateTime originalWrite = File.GetLastWriteTimeUtc(meta);
+        Action mutate = () =>
+        {
+            string text = File.ReadAllText(meta, Encoding.UTF8);
+            File.WriteAllText(meta, text.Replace("modid=42", "modid=43"), Encoding.UTF8);
+            File.SetLastWriteTimeUtc(meta, originalWrite);
+        };
+
+        Mo2SnapshotCaptureResult result =
+            fixture.CreateCapture(mutation: mutate).Capture(fixture.Request);
+
+        Assert.AreEqual(SnapshotCaptureState.ChangedDuringCapture, result.State);
+        Assert.IsNull(result.Snapshot);
+    }
+
+    [TestMethod]
+    [TestCategory("M1Unit")]
+    [TestCategory("M1Security")]
+    [TestProperty("Category", "M1Unit")]
+    [TestProperty("Category", "M1Security")]
+    public void HiddenDirectoriesAndConfiguredSkipsNeverContribute()
+    {
+        using SnapshotFixture fixture = new();
+        string high = Path.Combine(fixture.ModsRoot, "High");
+        string hiddenDirectory = Directory.CreateDirectory(
+            Path.Combine(high, "secret.mohidden")).FullName;
+        File.WriteAllText(Path.Combine(hiddenDirectory, "escaped.txt"), "hidden", Encoding.UTF8);
+        string customDirectory = Directory.CreateDirectory(
+            Path.Combine(high, ".cache")).FullName;
+        File.WriteAllText(Path.Combine(customDirectory, "cached.txt"), "hidden", Encoding.UTF8);
+        File.WriteAllText(Path.Combine(high, "custom.gone"), "hidden", Encoding.UTF8);
+        File.AppendAllText(
+            fixture.InstanceIniPath,
+            "skip_file_suffixes=.mohidden, .gone\nskip_directories=.git, .cache\n",
+            Encoding.UTF8);
+
+        Mo2SnapshotCaptureResult result = fixture.CreateCapture().Capture(fixture.Request);
+
+        Assert.IsNotNull(result.Snapshot);
+        Assert.IsFalse(result.Snapshot.LooseProviderChains.Any(chain =>
+            chain.NormalizedRelativePath is "secret.mohidden/escaped.txt"
+                or ".cache/cached.txt"
+                or "custom.gone"));
+        Assert.IsTrue(result.Snapshot.PhysicalInventory.Any(entry =>
+            entry.RelativePath == "secret.mohidden"
+            && entry.Disposition == PhysicalEntryDisposition.HiddenBySuffix));
+        Assert.IsTrue(result.Snapshot.PhysicalInventory.Any(entry =>
+            entry.RelativePath == ".cache"
+            && entry.Disposition == PhysicalEntryDisposition.SkippedDirectory));
+    }
+
+    [TestMethod]
+    [TestCategory("M1Unit")]
+    [TestCategory("M1Fault")]
+    [TestProperty("Category", "M1Unit")]
+    [TestProperty("Category", "M1Fault")]
+    public void Mo2StartingDuringCaptureInvalidatesTheAttempt()
+    {
+        using SnapshotFixture fixture = new();
+        Mo2SnapshotCapture capture = fixture.CreateCapture(
+            processProbe: new SequenceProcessProbe(false, true));
+
+        Mo2SnapshotCaptureResult result = capture.Capture(fixture.Request);
+
+        Assert.AreEqual(SnapshotCaptureState.ChangedDuringCapture, result.State);
+        Assert.IsNull(result.Snapshot);
+    }
+
+    [TestMethod]
+    [TestCategory("M1Unit")]
+    [TestCategory("M1Fault")]
+    [TestProperty("Category", "M1Unit")]
+    [TestProperty("Category", "M1Fault")]
+    public void ExecutableIdentityChangingDuringCaptureInvalidatesTheAttempt()
+    {
+        using SnapshotFixture fixture = new();
+        Mo2SnapshotCapture capture = fixture.CreateCapture(
+            admissionService: new ChangingAdmissionService());
+
+        Mo2SnapshotCaptureResult result = capture.Capture(fixture.Request);
+
+        Assert.AreEqual(SnapshotCaptureState.ChangedDuringCapture, result.State);
+        Assert.IsNull(result.Snapshot);
+    }
+
+    [TestMethod]
+    [TestCategory("M1Unit")]
+    [TestCategory("M1Security")]
+    [TestProperty("Category", "M1Unit")]
+    [TestProperty("Category", "M1Security")]
+    public void UnqualifiedMapperRootIsNeverOpened()
+    {
+        using SnapshotFixture fixture = new();
+        string missingRoot = Path.Combine(fixture.Root, "must-not-be-opened");
+        string hash = new('c', 64);
+        Mo2SnapshotCaptureRequest request = fixture.Request with
+        {
+            QualifiedMappings = [new QualifiedMapping("rejected", missingRoot, "", hash)],
+            EnabledMapperSha256s = [hash],
+        };
+
+        Mo2SnapshotCaptureResult result = fixture.CreateCapture().Capture(request);
+
+        Assert.AreEqual(SnapshotCaptureState.CompletedWithGaps, result.State);
+        Assert.IsNotNull(result.Snapshot);
+        Assert.IsTrue(result.Gaps.Any(gap => gap.Code == "unknown-or-unqualified-mapper"));
+    }
+
+    [TestMethod]
+    [TestCategory("M1Unit")]
+    [TestCategory("M1Fault")]
+    [TestProperty("Category", "M1Unit")]
+    [TestProperty("Category", "M1Fault")]
+    public void MissingRequiredProfileControlFailsWithoutSnapshot()
+    {
+        using SnapshotFixture fixture = new();
+        File.Delete(Path.Combine(fixture.ProfilesRoot, "Chosen", "plugins.txt"));
+
+        Mo2SnapshotCaptureResult result = fixture.CreateCapture().Capture(fixture.Request);
+
+        Assert.AreEqual(SnapshotCaptureState.Failed, result.State);
+        Assert.IsNull(result.Snapshot);
+        Assert.IsTrue(result.Gaps.Any(gap => gap.Code == "required-control-file-missing"));
+    }
+
+    [TestMethod]
+    [TestCategory("M1Unit")]
+    [TestCategory("M1Contract")]
+    [TestProperty("Category", "M1Unit")]
+    [TestProperty("Category", "M1Contract")]
+    public void RenamingPhysicalModDirectoryPreservesEntityIdentity()
+    {
+        using SnapshotFixture fixture = new();
+        Mo2SnapshotCaptureResult first = fixture.CreateCapture().Capture(fixture.Request);
+        LocalInstalledEntity before = first.Snapshot!.LocalInstalledEntities.Single(
+            entity => entity.SourceHints.Any(hint => hint.RawValue == "42"));
+        Directory.Move(
+            Path.Combine(fixture.ModsRoot, "High"),
+            Path.Combine(fixture.ModsRoot, "Renamed"));
+        File.WriteAllText(fixture.ModListPath, "+Renamed\n+Low\n", Encoding.UTF8);
+
+        Mo2SnapshotCaptureResult second = fixture.CreateCapture().Capture(fixture.Request);
+        LocalInstalledEntity after = second.Snapshot!.LocalInstalledEntities.Single(
+            entity => entity.SourceHints.Any(hint => hint.RawValue == "42"));
+
+        Assert.AreEqual(before.EntityId, after.EntityId);
+        Assert.AreNotEqual(before.PhysicalPath, after.PhysicalPath);
     }
 
     [TestMethod]
@@ -339,12 +501,14 @@ public sealed class Mo2SnapshotCaptureTests
         internal Mo2SnapshotCapture CreateCapture(
             bool processRunning = false,
             Action? mutation = null,
-            IReadOnlySet<string>? qualifiedMapperHashes = null)
+            IReadOnlySet<string>? qualifiedMapperHashes = null,
+            IMo2ProcessProbe? processProbe = null,
+            IExecutableAdmissionService? admissionService = null)
         {
             _ = Root;
             return new Mo2SnapshotCapture(
-                new AcceptingManifests(),
-                new FixedProcessProbe(processRunning),
+                admissionService ?? new AcceptingManifests(),
+                processProbe ?? new FixedProcessProbe(processRunning),
                 qualifiedMapperHashes
                     ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase),
                 mutation);
@@ -356,19 +520,19 @@ public sealed class Mo2SnapshotCaptureTests
         }
     }
 
-    private sealed class AcceptingManifests : SupportedExecutableManifests
+    private sealed class AcceptingManifests : IExecutableAdmissionService
     {
-        public override ExecutableAdmission AdmitMo2(string path)
+        public ExecutableAdmission AdmitMo2(string path)
         {
-            return Accepted(Mo2ManifestId, Path.GetFileName(path));
+            return Accepted(SupportedExecutableManifests.Mo2ManifestId, Path.GetFileName(path));
         }
 
-        public override ExecutableAdmission AdmitSkyrim(
+        public ExecutableAdmission AdmitSkyrim(
             string path,
             RuntimeTargetContext context)
         {
             Assert.AreEqual(SupportedRuntime(), context);
-            return Accepted(SkyrimManifestId, Path.GetFileName(path));
+            return Accepted(SupportedExecutableManifests.SkyrimManifestId, Path.GetFileName(path));
         }
 
         private static ExecutableAdmission Accepted(string manifestId, string fileName)
@@ -393,5 +557,53 @@ public sealed class Mo2SnapshotCaptureTests
             Assert.IsTrue(Path.IsPathFullyQualified(exactExecutablePath));
             return running;
         }
+    }
+
+    private sealed class SequenceProcessProbe(params bool[] states) : IMo2ProcessProbe
+    {
+        private int index;
+
+        public bool IsRunning(string exactExecutablePath)
+        {
+            Assert.IsTrue(Path.IsPathFullyQualified(exactExecutablePath));
+            return states[Math.Min(index++, states.Length - 1)];
+        }
+    }
+
+    private sealed class ChangingAdmissionService : IExecutableAdmissionService
+    {
+        private int mo2Calls;
+
+        public ExecutableAdmission AdmitMo2(string path)
+        {
+            mo2Calls++;
+            return Accepted(
+                SupportedExecutableManifests.Mo2ManifestId,
+                path,
+                mo2Calls == 1 ? 'a' : 'b');
+        }
+
+        public ExecutableAdmission AdmitSkyrim(
+            string path,
+            RuntimeTargetContext context) =>
+            Accepted(SupportedExecutableManifests.SkyrimManifestId, path, 'c');
+
+        private static ExecutableAdmission Accepted(
+            string manifestId,
+            string path,
+            char hashCharacter) =>
+            new(
+                AdmissionState.Accepted,
+                manifestId,
+                new ExecutableIdentity(
+                    Path.GetFileName(path),
+                    1,
+                    new string(hashCharacter, 64),
+                    "synthetic",
+                    null,
+                    null,
+                    null,
+                    "00000001:0000000000000001"),
+                []);
     }
 }

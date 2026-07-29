@@ -4,11 +4,18 @@ using System.Security.Cryptography;
 
 namespace Infinium.Mo2;
 
-public class SupportedExecutableManifests
+internal interface IExecutableAdmissionService
+{
+    public ExecutableAdmission AdmitMo2(string path);
+
+    public ExecutableAdmission AdmitSkyrim(string path, RuntimeTargetContext context);
+}
+
+public sealed class SupportedExecutableManifests : IExecutableAdmissionService
 {
     public const string Mo2ManifestId = "infinium.mo2-2.5.2-local-research/v1";
     public const string SkyrimManifestId = "infinium.skyrimse-1.6.1170-steam/v1";
-    public const string AdapterId = "infinium.mo2-static-reconstruction/v1";
+    public const string AdapterId = "infinium.mo2-static-reconstruction/v2";
 
     public const string SupportedMo2Sha256 =
         "442B354A8F34754DA0048654C44D27F51628FEBA54CE46C3187CF58D6C43E622";
@@ -17,19 +24,20 @@ public class SupportedExecutableManifests
 
     private const long SupportedSkyrimLength = 37_157_144;
 
-    public virtual ExecutableAdmission AdmitMo2(string path)
+    public ExecutableAdmission AdmitMo2(string path)
     {
         return Admit(
             path,
             "ModOrganizer.exe",
             SupportedMo2Sha256,
             expectedLength: null,
+            maximumLength: 512 * 1024 * 1024,
             expectedVersion: "2.5.2",
             requirePeShape: false,
             Mo2ManifestId);
     }
 
-    public virtual ExecutableAdmission AdmitSkyrim(
+    public ExecutableAdmission AdmitSkyrim(
         string path,
         RuntimeTargetContext context)
     {
@@ -51,6 +59,7 @@ public class SupportedExecutableManifests
             "SkyrimSE.exe",
             SupportedSkyrimSha256,
             SupportedSkyrimLength,
+            SupportedSkyrimLength,
             "1.6.1170.0",
             requirePeShape: true,
             SkyrimManifestId);
@@ -61,6 +70,7 @@ public class SupportedExecutableManifests
         string expectedFileName,
         string expectedSha256,
         long? expectedLength,
+        long maximumLength,
         string expectedVersion,
         bool requirePeShape,
         string manifestId)
@@ -90,9 +100,20 @@ public class SupportedExecutableManifests
             ExecutableIdentity observed;
             using (FileStream stream = OpenStableRead(path))
             {
+                if (stream.Length > maximumLength)
+                {
+                    return new ExecutableAdmission(
+                        AdmissionState.Inconsistent,
+                        manifestId,
+                        null,
+                        ["executable exceeds the admitted byte-length bound"]);
+                }
+
                 string sha256 = Convert.ToHexString(SHA256.HashData(stream));
                 (ushort? machine, ushort? magic, ushort? subsystem) = ReadPeShape(stream);
                 string? version = FileVersionInfo.GetVersionInfo(path).FileVersion;
+                WindowsObjectIdentity objectIdentity =
+                    WindowsReadOnlyObjectIdentity.Read(stream.SafeFileHandle);
                 observed = new ExecutableIdentity(
                     info.Name,
                     stream.Length,
@@ -100,7 +121,8 @@ public class SupportedExecutableManifests
                     version,
                     machine,
                     magic,
-                    subsystem);
+                    subsystem,
+                    objectIdentity.CanonicalValue);
             }
 
             if (!string.Equals(observed.FileName, expectedFileName, StringComparison.OrdinalIgnoreCase))
@@ -161,6 +183,14 @@ public class SupportedExecutableManifests
                 manifestId,
                 null,
                 ["executable access was denied"]);
+        }
+        catch (System.ComponentModel.Win32Exception exception)
+        {
+            return new ExecutableAdmission(
+                AdmissionState.Indeterminate,
+                manifestId,
+                null,
+                [$"executable identity could not be read: {exception.NativeErrorCode}"]);
         }
     }
 

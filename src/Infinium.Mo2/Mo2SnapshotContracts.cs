@@ -40,6 +40,14 @@ public enum PhysicalEntryDisposition
     Mo2ManagementContent,
 }
 
+public enum ModEnablementState
+{
+    Unspecified,
+    Enabled,
+    Disabled,
+    Unresolved,
+}
+
 public sealed record ExecutableIdentity(
     string FileName,
     long ByteLength,
@@ -47,7 +55,8 @@ public sealed record ExecutableIdentity(
     string? ProductVersion,
     ushort? PeMachine,
     ushort? PeOptionalHeaderMagic,
-    ushort? PeSubsystem);
+    ushort? PeSubsystem,
+    string? PhysicalObjectIdentity = null);
 
 public sealed record ExecutableAdmission(
     AdmissionState State,
@@ -82,7 +91,7 @@ public sealed record Mo2SnapshotCaptureRequest(
 
 public sealed record ModState(
     string Name,
-    bool Enabled,
+    ModEnablementState Enablement,
     int Priority,
     bool Listed,
     OpaqueId LocalInstalledEntityId);
@@ -151,7 +160,7 @@ public sealed record Mo2SnapshotCaptureResult(
     Mo2InstallationSnapshot? Snapshot,
     IReadOnlyList<SnapshotGap> Gaps);
 
-public interface IMo2ProcessProbe
+internal interface IMo2ProcessProbe
 {
     public bool IsRunning(string exactExecutablePath);
 }

@@ -32,17 +32,9 @@ public sealed class Mo2ReadOnlyIntegrationTests
         CollectionAssert.AreEqual(
             identitiesBefore.ToArray(),
             authority.ProtectedRootIdentities.ToArray());
-        Assert.AreEqual(SnapshotCaptureState.Completed, result.State);
+        Assert.AreEqual(SnapshotCaptureState.CompletedWithGaps, result.State);
         Assert.IsNotNull(result.Snapshot);
         Assert.IsFalse(result.Snapshot.Mo2OrUsvfsLaunched);
-    }
-
-    [TestMethod]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Security")]
-    public void ProtectedRootReadOnlyCapturePassesTheSecurityGate()
-    {
-        ExplicitCaptureIsReadOnlyAcrossEveryDeclaredProtectedRoot();
     }
 
     [TestMethod]
@@ -63,7 +55,7 @@ public sealed class Mo2ReadOnlyIntegrationTests
 
         Mo2SnapshotCaptureResult result = capture.Capture(fixture.Request);
 
-        Assert.AreEqual(1, fixture.ProcessProbeCallCount);
+        Assert.AreEqual(2, fixture.ProcessProbeCallCount);
         Assert.IsNotNull(result.Snapshot);
         Assert.AreEqual(
             processCountBefore,
@@ -191,19 +183,19 @@ public sealed class Mo2ReadOnlyIntegrationTests
         }
     }
 
-    private sealed class AcceptingManifests : SupportedExecutableManifests
+    private sealed class AcceptingManifests : IExecutableAdmissionService
     {
-        public override ExecutableAdmission AdmitMo2(string path)
+        public ExecutableAdmission AdmitMo2(string path)
         {
-            return Accepted(Mo2ManifestId, path);
+            return Accepted(SupportedExecutableManifests.Mo2ManifestId, path);
         }
 
-        public override ExecutableAdmission AdmitSkyrim(
+        public ExecutableAdmission AdmitSkyrim(
             string path,
             RuntimeTargetContext context)
         {
             Assert.AreEqual("windows-x64", context.Platform);
-            return Accepted(SkyrimManifestId, path);
+            return Accepted(SupportedExecutableManifests.SkyrimManifestId, path);
         }
 
         private static ExecutableAdmission Accepted(string manifestId, string path)
