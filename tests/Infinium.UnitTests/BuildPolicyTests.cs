@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 using System.Xml.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -33,6 +34,7 @@ public sealed class BuildPolicyTests
 
         Assert.AreEqual("net10.0", properties["TargetFramework"]);
         Assert.AreEqual("x64", properties["PlatformTarget"]);
+        Assert.AreEqual("false", properties["AppendPlatformToOutputPath"]);
         Assert.AreEqual("14.0", properties["LangVersion"]);
         Assert.AreEqual("true", properties["Deterministic"]);
         Assert.AreEqual("true", properties["ContinuousIntegrationBuild"]);
@@ -83,6 +85,7 @@ public sealed class BuildPolicyTests
         ];
 
         string[] sourceFiles = Directory.GetFiles(sourceRoot, "*", SearchOption.AllDirectories)
+            .Where(path => !TestRepository.IsGeneratedPath(path))
             .Where(path => Path.GetExtension(path) is ".cs" or ".csproj" or ".props" or ".targets")
             .ToArray();
 
@@ -99,6 +102,30 @@ public sealed class BuildPolicyTests
     }
 
     [TestMethod]
+    [TestCategory("M1Security")]
+    [TestProperty("Category", "M1Security")]
+    public void IgnorePolicyProtectsSecretsWithoutHidingNestedEvidence()
+    {
+        string[] ignoreRules = TestRepository
+            .Read(".gitignore")
+            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(rule => !rule.StartsWith('#'))
+            .ToArray();
+
+        CollectionAssert.Contains(ignoreRules, ".env");
+        CollectionAssert.Contains(ignoreRules, ".env.*");
+        CollectionAssert.Contains(ignoreRules, "!.env.example");
+        CollectionAssert.Contains(ignoreRules, "/artifacts/");
+        CollectionAssert.Contains(ignoreRules, "/.vs/");
+        CollectionAssert.Contains(ignoreRules, "/.packages/");
+        CollectionAssert.DoesNotContain(ignoreRules, "artifacts/");
+        CollectionAssert.DoesNotContain(ignoreRules, ".packages/");
+        Assert.IsTrue(TestRepository.IsGeneratedPath(TestRepository.PathFromRoot("artifacts", "build.log")));
+        Assert.IsFalse(TestRepository.IsGeneratedPath(
+            TestRepository.PathFromRoot("docs", "research", "investigations", "artifacts", "evidence.txt")));
+    }
+
+    [TestMethod]
     [TestCategory("M1Fault")]
     [TestProperty("Category", "M1Fault")]
     public void RestorePolicyRequiresLockFiles()
@@ -109,5 +136,80 @@ public sealed class BuildPolicyTests
 
         Assert.AreEqual("true", lockFileProperty.Value);
         Assert.AreEqual("true", lockedModeProperty.Value);
+    }
+
+    [TestMethod]
+    [TestCategory("M1Fault")]
+    [TestProperty("Category", "M1Fault")]
+    public void LockedRestoreRejectsDependencyDrift()
+    {
+        string temporaryRoot = Path.Combine(
+            Path.GetTempPath(),
+            $"infinium-slice0-lock-drift-{Guid.NewGuid():N}");
+        string projectDirectory = Path.Combine(temporaryRoot, "src", "Infinium.Bethesda");
+        Directory.CreateDirectory(projectDirectory);
+
+        try
+        {
+            foreach (string rootFile in new[]
+            {
+                "Directory.Build.props",
+                "Directory.Packages.props",
+                "NuGet.Config",
+                "global.json",
+            })
+            {
+                File.Copy(TestRepository.PathFromRoot(rootFile), Path.Combine(temporaryRoot, rootFile));
+            }
+
+            File.Copy(
+                TestRepository.PathFromRoot("src", "Infinium.Bethesda", "Infinium.Bethesda.csproj"),
+                Path.Combine(projectDirectory, "Infinium.Bethesda.csproj"));
+            File.Copy(
+                TestRepository.PathFromRoot("src", "Infinium.Bethesda", "packages.lock.json"),
+                Path.Combine(projectDirectory, "packages.lock.json"));
+
+            string centralPackagesPath = Path.Combine(temporaryRoot, "Directory.Packages.props");
+            string centralPackages = File.ReadAllText(centralPackagesPath);
+            string driftedPackages = centralPackages.Replace(
+                "Mutagen.Bethesda.Skyrim\" Version=\"0.54.2",
+                "Mutagen.Bethesda.Skyrim\" Version=\"0.54.1",
+                StringComparison.Ordinal);
+            Assert.AreNotEqual(centralPackages, driftedPackages);
+            File.WriteAllText(centralPackagesPath, driftedPackages);
+
+            ProcessStartInfo startInfo = new()
+            {
+                FileName = "dotnet",
+                WorkingDirectory = temporaryRoot,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+            };
+            startInfo.ArgumentList.Add("restore");
+            startInfo.ArgumentList.Add("src/Infinium.Bethesda/Infinium.Bethesda.csproj");
+            startInfo.ArgumentList.Add("--locked-mode");
+            startInfo.ArgumentList.Add("--no-cache");
+            startInfo.ArgumentList.Add("--nologo");
+            startInfo.ArgumentList.Add("-p:NuGetAudit=false");
+
+            using Process process = Process.Start(startInfo)!;
+            bool exited = process.WaitForExit(milliseconds: 30_000);
+            if (!exited)
+            {
+                process.Kill(entireProcessTree: true);
+                process.WaitForExit();
+            }
+
+            Assert.IsTrue(exited, "Drifted locked restore did not terminate within 30 seconds.");
+            string output = $"{process.StandardOutput.ReadToEnd()}{process.StandardError.ReadToEnd()}";
+            Assert.AreNotEqual(0, process.ExitCode, output);
+            StringAssert.Contains(output, "NU1004");
+        }
+        finally
+        {
+            Directory.Delete(temporaryRoot, recursive: true);
+        }
     }
 }

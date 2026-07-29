@@ -46,7 +46,11 @@ public sealed class DependencyManifestTests
             .Order(StringComparer.Ordinal)
             .ToArray();
 
-        string[] lockPackages = Directory.GetFiles(TestRepository.Root, "packages.lock.json", SearchOption.AllDirectories)
+        string[] lockPackages = TestRepository
+            .EnumerateProjectFiles()
+            .Select(Path.GetDirectoryName)
+            .OfType<string>()
+            .Select(projectDirectory => Path.Combine(projectDirectory, "packages.lock.json"))
             .SelectMany(ReadLockPackages)
             .Distinct(StringComparer.Ordinal)
             .Order(StringComparer.Ordinal)
@@ -73,15 +77,10 @@ public sealed class DependencyManifestTests
             Assert.IsFalse(string.IsNullOrWhiteSpace(package.GetProperty("license").GetString()));
         }
 
-        Dictionary<string, string> versionsById = resolvedPackages.ToDictionary(
-            package => package.GetProperty("id").GetString()!,
-            package => package.GetProperty("version").GetString()!,
-            StringComparer.Ordinal);
         IEnumerable<string> groupedProvenance = root.GetProperty("provenanceGroups")
             .EnumerateArray()
             .SelectMany(group => group.GetProperty("packages").EnumerateArray())
-            .Select(package => package.GetString()!)
-            .Select(packageId => $"{packageId}/{versionsById[packageId]}");
+            .Select(package => package.GetString()!);
         IEnumerable<string> individualProvenance = root.GetProperty("individuallyVerifiedProvenance")
             .EnumerateArray()
             .Select(package => package.GetProperty("package").GetString()!);
@@ -110,6 +109,9 @@ public sealed class DependencyManifestTests
             "LICENSE",
             "LICENSE.md",
             "LICENSE.txt",
+            "LICENCE",
+            "LICENCE.md",
+            "LICENCE.txt",
             "COPYING",
             "COPYING.md",
             "COPYING.txt",
@@ -128,10 +130,18 @@ public sealed class DependencyManifestTests
             .ToArray();
         foreach (string projectMetadataFile in projectMetadataFiles)
         {
-            string content = File.ReadAllText(projectMetadataFile);
-            Assert.IsFalse(
-                content.Contains("<PackageLicenseExpression>", StringComparison.Ordinal),
-                $"Slice 0 must not introduce an operative selector in '{projectMetadataFile}'.");
+            XDocument projectMetadata = XDocument.Load(projectMetadataFile);
+            string[] operativeProperties = projectMetadata
+                .Descendants()
+                .Select(element => element.Name.LocalName)
+                .Where(name =>
+                    name.Equals("PackageLicenseExpression", StringComparison.OrdinalIgnoreCase)
+                    || name.Equals("PackageLicenseFile", StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+            Assert.HasCount(
+                0,
+                operativeProperties,
+                $"Slice 0 must not introduce operative license metadata in '{projectMetadataFile}'.");
         }
 
         string buildProperties = TestRepository.Read("Directory.Build.props");
@@ -140,20 +150,8 @@ public sealed class DependencyManifestTests
 
     private static IEnumerable<string> EnumerateRepositoryFiles()
     {
-        string[] excludedSegments =
-        [
-            ".git",
-            ".packages",
-            "artifacts",
-            "bin",
-            "obj",
-            "TestResults",
-        ];
-
         return Directory.EnumerateFiles(TestRepository.Root, "*", SearchOption.AllDirectories)
-            .Where(path => !path
-                .Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
-                .Any(segment => excludedSegments.Contains(segment, StringComparer.OrdinalIgnoreCase)));
+            .Where(path => !TestRepository.IsGeneratedPath(path));
     }
 
     private static IEnumerable<string> ReadLockPackages(string lockPath)

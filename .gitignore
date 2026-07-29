@@ -6,7 +6,8 @@ Thumbs.db
 
 # Local secrets and environment overrides
 .env
-.env.*.local
+.env.*
+!.env.example
 temp.txt
 
 # The abandoned implementation is archived outside this repository. Do not
@@ -18,10 +19,11 @@ docs/.rendered/
 docs/.cache/
 
 # Replacement implementation build and test artifacts
-artifacts/
+/artifacts/
+/.vs/
 bin/
 obj/
-.packages/
+/.packages/
 TestResults/
 *.user
 *.suo

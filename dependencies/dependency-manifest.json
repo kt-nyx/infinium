@@ -124,22 +124,22 @@
     {
       "repository": "https://github.com/Mutagen-Modding/Mutagen",
       "commit": "282bb99a77b2df7f1b092b06270e8e3c8fb55463",
-      "packages": ["Mutagen.Bethesda.Core", "Mutagen.Bethesda.Kernel", "Mutagen.Bethesda.Skyrim"]
+      "packages": ["Mutagen.Bethesda.Core/0.54.2", "Mutagen.Bethesda.Kernel/0.54.2", "Mutagen.Bethesda.Skyrim/0.54.2"]
     },
     {
       "repository": "https://github.com/erri120/GameFinder",
       "commit": "efa23bd6d02ec07aa9fb1abe1025efafe3190d9f",
-      "packages": ["GameFinder.Common", "GameFinder.RegistryUtils", "GameFinder.StoreHandlers.GOG", "GameFinder.StoreHandlers.Steam", "GameFinder.StoreHandlers.Xbox", "GameFinder.Wine"]
+      "packages": ["GameFinder.Common/4.9.0", "GameFinder.RegistryUtils/4.9.0", "GameFinder.StoreHandlers.GOG/4.9.0", "GameFinder.StoreHandlers.Steam/4.9.0", "GameFinder.StoreHandlers.Xbox/4.9.0", "GameFinder.Wine/4.9.0"]
     },
     {
       "repository": "https://github.com/microsoft/testfx",
       "commit": "c3fdb81b8a5584664d82f4bcec6577f6d918b5fe",
-      "packages": ["Microsoft.Testing.Extensions.Telemetry", "Microsoft.Testing.Extensions.TrxReport.Abstractions", "Microsoft.Testing.Extensions.VSTestBridge", "Microsoft.Testing.Platform", "Microsoft.Testing.Platform.MSBuild", "MSTest.Analyzers", "MSTest.TestAdapter", "MSTest.TestFramework"]
+      "packages": ["Microsoft.Testing.Extensions.Telemetry/2.3.2", "Microsoft.Testing.Extensions.TrxReport.Abstractions/2.3.2", "Microsoft.Testing.Extensions.VSTestBridge/2.3.2", "Microsoft.Testing.Platform/2.3.2", "Microsoft.Testing.Platform.MSBuild/2.3.2", "MSTest.Analyzers/4.3.2", "MSTest.TestAdapter/4.3.2", "MSTest.TestFramework/4.3.2"]
     },
     {
       "repository": "https://github.com/microsoft/vstest",
       "commit": "190d2811e952d2143288aa136b6f6fe31d93a437",
-      "packages": ["Microsoft.CodeCoverage", "Microsoft.NET.Test.Sdk", "Microsoft.TestPlatform.ObjectModel", "Microsoft.TestPlatform.TestHost"]
+      "packages": ["Microsoft.CodeCoverage/18.8.1", "Microsoft.NET.Test.Sdk/18.8.1", "Microsoft.TestPlatform.ObjectModel/18.8.1", "Microsoft.TestPlatform.TestHost/18.8.1"]
     }
   ],
   "individuallyVerifiedProvenance": [
