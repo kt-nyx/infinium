@@ -133,6 +133,14 @@ public sealed class Mo2SnapshotCaptureTests
     }
 
     [TestMethod]
+    [TestCategory("M1Fault")]
+    [TestProperty("Category", "M1Fault")]
+    public void SameSizeControlMutationPassesTheFaultGate()
+    {
+        SameSizeControlMutationInvalidatesCapture();
+    }
+
+    [TestMethod]
     [TestCategory("M1Unit")]
     [TestCategory("M1Fault")]
     [TestProperty("Category", "M1Unit")]

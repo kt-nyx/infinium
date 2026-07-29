@@ -38,6 +38,14 @@ public sealed class Mo2ReadOnlyIntegrationTests
     }
 
     [TestMethod]
+    [TestCategory("M1Security")]
+    [TestProperty("Category", "M1Security")]
+    public void ProtectedRootReadOnlyCapturePassesTheSecurityGate()
+    {
+        ExplicitCaptureIsReadOnlyAcrossEveryDeclaredProtectedRoot();
+    }
+
+    [TestMethod]
     [TestCategory("M1Integration")]
     [TestProperty("Category", "M1Integration")]
     public void NoPassiveEventCreatesASnapshotOrStartsAProcess()
