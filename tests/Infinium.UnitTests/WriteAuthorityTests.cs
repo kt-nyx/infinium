@@ -458,6 +458,96 @@ public sealed class WriteAuthorityTests
         }
     }
 
+    [TestMethod]
+    [TestCategory("M1Unit")]
+    [TestCategory("M1Security")]
+    [TestCategory("M1Fault")]
+    [TestProperty("Category", "M1Unit")]
+    [TestProperty("Category", "M1Security")]
+    [TestProperty("Category", "M1Fault")]
+    public void GuardedSqliteFamilyBlocksReplacementAndPersistsWalSidecars()
+    {
+        string root = Temp();
+        string productRoot = Path.Combine(root, "product");
+        string database = Path.Combine(productRoot, "data", "infinium.sqlite3");
+        string wal = database + "-wal";
+        string sharedMemory = database + "-shm";
+        try
+        {
+            Directory.CreateDirectory(root);
+            using (AuthoritativeStore store = new(new StoragePaths(productRoot)))
+            {
+                store.RecordAuditEvent(
+                    "guard-test",
+                    "sqlite",
+                    "replacement",
+                    DateTimeOffset.UtcNow);
+                Assert.IsTrue(File.Exists(database));
+                Assert.IsTrue(File.Exists(wal));
+                Assert.IsTrue(File.Exists(sharedMemory));
+
+                foreach (string guarded in new[] { database, wal, sharedMemory })
+                {
+                    Assert.ThrowsExactly<IOException>(
+                        () => File.Move(guarded, guarded + ".replaced"));
+                    Assert.ThrowsExactly<IOException>(() => File.Delete(guarded));
+                }
+            }
+
+            Assert.IsTrue(File.Exists(database));
+            Assert.IsTrue(File.Exists(wal));
+            Assert.IsTrue(File.Exists(sharedMemory));
+
+            using AuthoritativeStore reopened = new(new StoragePaths(productRoot));
+            reopened.RecordAuditEvent(
+                "guard-test",
+                "sqlite",
+                "restart",
+                DateTimeOffset.UtcNow);
+        }
+        finally
+        {
+            Delete(root);
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("M1Unit")]
+    [TestCategory("M1Security")]
+    [TestCategory("M1Fault")]
+    [TestProperty("Category", "M1Unit")]
+    [TestProperty("Category", "M1Security")]
+    [TestProperty("Category", "M1Fault")]
+    public void GuardedSqliteMutationRejectsAChangedHardLinkCount()
+    {
+        string root = Temp();
+        string productRoot = Path.Combine(root, "product");
+        string externalRoot = Path.Combine(root, "external");
+        try
+        {
+            Directory.CreateDirectory(externalRoot);
+            using AuthoritativeStore store = new(new StoragePaths(productRoot));
+            string alias = Path.Combine(externalRoot, "database-alias.sqlite3");
+            if (!CreateHardLinkW(alias, store.Paths.Database, 0))
+            {
+                int error = Marshal.GetLastWin32Error();
+                Assert.Inconclusive(
+                    $"Hard links are unavailable (Win32 error {error}).");
+            }
+
+            Assert.ThrowsExactly<InvalidOperationException>(
+                () => store.RecordAuditEvent(
+                    "guard-test",
+                    "sqlite",
+                    "hard-link",
+                    DateTimeOffset.UtcNow));
+        }
+        finally
+        {
+            Delete(root);
+        }
+    }
+
     private const string RuntimeDescriptorFileName = "coordinator.v1.json";
 
     private static void AssertPrivateDirectory(string path)

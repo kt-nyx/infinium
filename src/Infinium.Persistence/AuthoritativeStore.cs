@@ -20,34 +20,69 @@ public sealed class AuthoritativeStore : IDisposable
 
     private readonly Lock gate = new();
     private readonly SqliteConnection connection;
+    private readonly WindowsGuardedSqliteVfs sqliteVfs;
     private bool disposed;
 
     public AuthoritativeStore(StoragePaths paths)
     {
         Paths = paths ?? throw new ArgumentNullException(nameof(paths));
-        Paths.Create();
-        _ = Paths.ResolveProductPath(ProductWriteClass.Data, "infinium.sqlite3");
-        SqliteRuntimeIdentity.InitializeNativeProvider();
-        connection = new SqliteConnection(new SqliteConnectionStringBuilder
-        {
-            DataSource = Paths.Database,
-            Mode = SqliteOpenMode.ReadWriteCreate,
-            Cache = SqliteCacheMode.Private,
-            Pooling = false,
-        }.ToString());
         try
         {
-            connection.Open();
-            BindingIdentity = SqliteRuntimeIdentity.VerifyExactPatchedBinding(connection);
-            ConfigureConnection(connection);
-            ApplyMigrations();
-            ValidateDatabaseIdentityAndIntegrity(connection, BindingIdentity);
-            RecordWriteClassAuthorityBindings(DateTimeOffset.UtcNow);
+            Paths.Create();
+            _ = Paths.ResolveProductPath(ProductWriteClass.Data, "infinium.sqlite3");
+            SqliteRuntimeIdentity.InitializeNativeProvider();
+            sqliteVfs = new WindowsGuardedSqliteVfs(
+                Paths,
+                ProductWriteClass.Data,
+                "infinium.sqlite3");
         }
         catch
         {
-            connection.Dispose();
             Paths.Dispose();
+            throw;
+        }
+
+        try
+        {
+            connection = new SqliteConnection(new SqliteConnectionStringBuilder
+            {
+                DataSource = Paths.Database,
+                Mode = SqliteOpenMode.ReadWriteCreate,
+                Cache = SqliteCacheMode.Private,
+                Pooling = false,
+                Vfs = sqliteVfs.Name,
+            }.ToString());
+            connection.Open();
+            BindingIdentity = SqliteRuntimeIdentity.VerifyExactPatchedBinding(connection);
+            ConfigureConnection(connection);
+            WindowsGuardedSqliteVfs.EnablePersistentWal(connection);
+            ApplyMigrations();
+            ValidateDatabaseIdentityAndIntegrity(connection, BindingIdentity);
+            sqliteVfs.VerifyAllGuards();
+            RecordWriteClassAuthorityBindings(DateTimeOffset.UtcNow);
+        }
+        catch (Exception exception)
+        {
+            connection?.Dispose();
+            Exception? callbackError = sqliteVfs.LastCallbackError;
+            string? callbackDetail = sqliteVfs.LastCallbackDetail;
+            sqliteVfs.Dispose();
+            Paths.Dispose();
+            if (callbackError is not null)
+            {
+                throw new InvalidOperationException(
+                    "The guarded SQLite VFS rejected a database operation.",
+                    callbackError);
+            }
+
+            if (callbackDetail is not null)
+            {
+                throw new InvalidOperationException(
+                    $"The guarded SQLite VFS failed after '{callbackDetail}'.",
+                    exception);
+            }
+
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(exception).Throw();
             throw;
         }
     }
@@ -71,7 +106,7 @@ public sealed class AuthoritativeStore : IDisposable
 
         lock (gate)
         {
-            using SqliteTransaction transaction = connection.BeginTransaction();
+            using SqliteTransaction transaction = BeginTransaction();
             InsertAuditEvent(eventKind, objectKind, objectId, now, transaction);
             transaction.Commit();
         }
@@ -115,7 +150,7 @@ public sealed class AuthoritativeStore : IDisposable
 
         lock (gate)
         {
-            using var transaction = connection.BeginTransaction();
+            using var transaction = BeginTransaction();
             long unexpiredActiveLease = ScalarLong(
                 """
                 SELECT COUNT(*)
@@ -175,7 +210,7 @@ public sealed class AuthoritativeStore : IDisposable
         DateTimeOffset requestedExpiry = now.Add(leaseDuration);
         lock (gate)
         {
-            using var transaction = connection.BeginTransaction();
+            using var transaction = BeginTransaction();
             int updated = Execute(
                 """
                 UPDATE coordinator_leases
@@ -250,7 +285,7 @@ public sealed class AuthoritativeStore : IDisposable
 
         lock (gate)
         {
-            using var transaction = connection.BeginTransaction();
+            using var transaction = BeginTransaction();
             var existingRunId = ScalarStringOrNull(
                 "SELECT run_id FROM durable_commands WHERE command_id = $id;",
                 transaction,
@@ -562,7 +597,7 @@ public sealed class AuthoritativeStore : IDisposable
 
         lock (gate)
         {
-            using var transaction = connection.BeginTransaction();
+            using var transaction = BeginTransaction();
             var existing = ScalarStringOrNull(
                 "SELECT run_id FROM durable_commands WHERE command_id = $id;",
                 transaction,
@@ -716,7 +751,7 @@ public sealed class AuthoritativeStore : IDisposable
 
         lock (gate)
         {
-            using var transaction = connection.BeginTransaction();
+            using var transaction = BeginTransaction();
             EnsureCurrentCoordinatorEpoch(coordinatorFencingEpoch, transaction);
             var run = GetRunCore(runId);
             if (run.State is not (LifecycleState.Running or LifecycleState.Waiting))
@@ -805,7 +840,7 @@ public sealed class AuthoritativeStore : IDisposable
 
         lock (gate)
         {
-            using var transaction = connection.BeginTransaction();
+            using var transaction = BeginTransaction();
             EnsureCurrentCoordinatorEpoch(coordinatorFencingEpoch, transaction);
             RunRecord current = GetRunCore(runId);
             if (current.CoordinatorFencingEpoch > coordinatorFencingEpoch)
@@ -971,7 +1006,7 @@ public sealed class AuthoritativeStore : IDisposable
 
         lock (gate)
         {
-            using var transaction = connection.BeginTransaction();
+            using var transaction = BeginTransaction();
             EnsureCurrentCoordinatorEpoch(coordinatorFencingEpoch, transaction);
             Execute(
                 """
@@ -1021,7 +1056,7 @@ public sealed class AuthoritativeStore : IDisposable
         ValidateBoundedJson(pendingAndGapsJson, nameof(pendingAndGapsJson));
         lock (gate)
         {
-            using var transaction = connection.BeginTransaction();
+            using var transaction = BeginTransaction();
             EnsureCurrentAttempt(attempt, transaction);
             long bindingMatches = ScalarLong(
                 """
@@ -1162,7 +1197,7 @@ public sealed class AuthoritativeStore : IDisposable
 
         lock (gate)
         {
-            using var transaction = connection.BeginTransaction();
+            using var transaction = BeginTransaction();
             EnsureCurrentAttempt(attempt, transaction);
             if (!File.Exists(objectPath))
             {
@@ -1493,7 +1528,7 @@ public sealed class AuthoritativeStore : IDisposable
     {
         lock (gate)
         {
-            using var transaction = connection.BeginTransaction();
+            using var transaction = BeginTransaction();
             Execute("DELETE FROM run_projection;", transaction);
             Execute(
                 """
@@ -1542,6 +1577,7 @@ public sealed class AuthoritativeStore : IDisposable
             }.ToString()))
             {
                 destination.Open();
+                sqliteVfs.VerifyAllGuards();
                 connection.BackupDatabase(destination);
             }
 
@@ -1595,7 +1631,7 @@ public sealed class AuthoritativeStore : IDisposable
                 manifestStream.Write(manifest);
                 manifestStream.Flush(flushToDisk: true);
             }
-            using (SqliteTransaction transaction = connection.BeginTransaction())
+            using (SqliteTransaction transaction = BeginTransaction())
             {
                 InsertAuditEvent(
                     "backup-created",
@@ -1714,6 +1750,7 @@ public sealed class AuthoritativeStore : IDisposable
         if (!disposed)
         {
             connection.Dispose();
+            sqliteVfs.Dispose();
             Paths.Dispose();
             disposed = true;
         }
@@ -2108,7 +2145,7 @@ public sealed class AuthoritativeStore : IDisposable
 
             if (current == 0)
             {
-                using var transaction = connection.BeginTransaction();
+                using var transaction = BeginTransaction();
                 Execute(SchemaV1, transaction);
                 string schemaFingerprint = ComputeSchemaFingerprint(connection, transaction);
                 Execute(
@@ -2236,6 +2273,7 @@ public sealed class AuthoritativeStore : IDisposable
             PRAGMA foreign_keys = ON;
             PRAGMA journal_mode = WAL;
             PRAGMA synchronous = FULL;
+            PRAGMA temp_store = MEMORY;
             PRAGMA trusted_schema = OFF;
             PRAGMA busy_timeout = 5000;
             """;
@@ -2262,6 +2300,12 @@ public sealed class AuthoritativeStore : IDisposable
         }
 
         return command.ExecuteNonQuery();
+    }
+
+    private SqliteTransaction BeginTransaction()
+    {
+        sqliteVfs.VerifyAllGuards();
+        return connection.BeginTransaction();
     }
 
     private long ScalarLong(
@@ -2308,7 +2352,7 @@ public sealed class AuthoritativeStore : IDisposable
     {
         lock (gate)
         {
-            using SqliteTransaction transaction = connection.BeginTransaction();
+            using SqliteTransaction transaction = BeginTransaction();
             foreach (ProductWriteClass writeClass in Enum.GetValues<ProductWriteClass>())
             {
                 InsertAuditEvent(

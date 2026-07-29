@@ -161,6 +161,19 @@ public sealed class StoragePaths : IDisposable
         return result;
     }
 
+    internal WindowsWriteAuthorityRegistry.ClassDirectoryCapability
+        GetBoundWriteClassCapability(ProductWriteClass writeClass)
+    {
+        ObjectDisposedException.ThrowIf(disposed, this);
+        if (writeAuthority is null || productCapability is null)
+        {
+            throw new PlatformNotSupportedException(
+                "Opened-object write authority currently requires Windows.");
+        }
+
+        return writeAuthority.GetCurrentClassCapability(productCapability, writeClass);
+    }
+
     public void Dispose()
     {
         if (disposed)

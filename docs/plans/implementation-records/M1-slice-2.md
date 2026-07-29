@@ -105,15 +105,16 @@ Final commands were run from the repository root on Windows x64:
 | --- | --- |
 | `dotnet restore Infinium.sln --locked-mode --nologo` | Passed; all 15 projects matched committed lock files. |
 | `dotnet build Infinium.sln -c Release --no-restore --nologo` | Passed; 0 warnings and 0 errors. |
-| `dotnet test Infinium.sln -c Release --no-build --nologo` | Passed; 132 checks passed and 1 environment-dependent symbolic-link check skipped: 57 unit passed/1 skipped, 50 contract, 13 integration, and 12 evaluation. |
-| `dotnet test Infinium.sln -c Release --no-build --nologo --filter "Category=M1Unit"` | Passed; 50 applicable checks passed and 1 symbolic-link check skipped. |
+| `dotnet test Infinium.sln -c Release --no-build --nologo` | Passed; 134 checks passed and 1 environment-dependent symbolic-link check skipped: 59 unit passed/1 skipped, 50 contract, 13 integration, and 12 evaluation. |
+| `dotnet test Infinium.sln -c Release --no-build --nologo --filter "Category=M1Unit"` | Passed; 52 applicable checks passed and 1 symbolic-link check skipped. |
+| `dotnet test tests/Infinium.UnitTests/Infinium.UnitTests.csproj -c Release --no-build --nologo --filter "Name~GuardedSqlite"` | Passed; 2 SQLite opened-object, replacement, WAL-persistence, restart, and hard-link checks. |
 | `dotnet test Infinium.sln -c Release --no-build --nologo --filter "Category=M1Contract"` | Passed; 20 applicable checks. |
 | `dotnet test Infinium.sln -c Release --no-build --nologo --filter "Category=M1Integration"` | Passed; 14 applicable checks. |
 | `dotnet test Infinium.sln -c Release --no-build --nologo --filter "Category=M1Evaluation"` | Passed; 14 applicable checks. |
 | `dotnet test Infinium.sln -c Release --no-build --nologo --filter "Category=M1Security"` | Passed; 6 applicable checks. |
 | `dotnet test Infinium.sln -c Release --no-build --nologo --filter "Category=M1Fault"` | Passed; 13 applicable checks. |
-| `dotnet test Infinium.sln -c Release --no-build --nologo --filter "TestCategory=M1Security"` | Passed; 37 cross-category security checks passed and 1 symbolic-link check skipped. |
-| `dotnet test Infinium.sln -c Release --no-build --nologo --filter "TestCategory=M1Fault"` | Passed; 45 cross-category fault checks. |
+| `dotnet test Infinium.sln -c Release --no-build --nologo --filter "TestCategory=M1Security"` | Passed; 39 cross-category security checks passed and 1 symbolic-link check skipped. |
+| `dotnet test Infinium.sln -c Release --no-build --nologo --filter "TestCategory=M1Fault"` | Passed; 47 cross-category fault checks. |
 | `dotnet format Infinium.sln --verify-no-changes --no-restore --verbosity minimal` | Passed. |
 | `powershell -NoProfile -ExecutionPolicy Bypass -File eng/update-dependency-manifest.ps1 -Check` | Passed; the committed dependency manifest matches all locked packages and curated provenance/license inputs. |
 | `git diff --check` | Passed. |
@@ -186,18 +187,29 @@ closure, process cleanup, unsupported behavior, and later-slice exclusions.
 
 ## Known gaps and deferred work
 
-- **Material blocker:** the corrected write-authority layer has closed write
-  classes, private ACLs, retained opened root/class handles, volume/file
-  identities, final-path checks, replacement detection, and typed audit
-  records. Worker output is genuinely handle-relative. Coordinator SQLite,
-  backup, restore, CAS, and runtime-descriptor leaf I/O still ultimately calls
-  pathname APIs beneath the pinned class handles. That does not literally
-  satisfy ADR-0021's handle-relative-descendant requirement or the
-  path-string-only/race failure rule in EVAL-0080, and rejected pre-database
-  authority attempts are not yet durably audit-visible. Closing this requires
-  an accepted design for a handle-relative storage primitive, including the
-  pathname-based SQLite VFS boundary, or an ADR/plan amendment. The review did
-  not introduce a custom SQLite VFS or weaken the accepted ADR implicitly.
+- **Material blocker, narrowed by RESEARCH-0050:** the corrected
+  write-authority layer has closed write classes, private ACLs, retained opened
+  root/class handles, volume/file identities, final-path checks, replacement
+  detection, and typed audit records. Worker output is genuinely
+  handle-relative. The SQLite boundary now has a qualified shim-VFS prototype:
+  it opens/creates the database, WAL, shared-memory, and journal leaves relative
+  to the retained data-class handle, validates opened identity/link count, pins
+  the objects against replacement, delegates byte I/O to the exact `win32` VFS,
+  enables persistent WAL, and revalidates before authoritative transactions.
+  [RESEARCH-0050](../../research/investigations/RESEARCH-0050-sqlite-opened-object-write-authority.md)
+  records the evidence and why this fits ADR-0021's separately qualified
+  equivalent language. The backup SQLite destination, backup
+  manifests/payload copies, restore, content-addressed publication,
+  runtime-descriptor writes, and some directory creation still call pathname
+  APIs beneath pinned handles. Full EVAL-0080 and Slice 2 closeout remain
+  blocked until those writes use the shared opened-object primitive and the
+  complete adversarial matrix passes.
+- The review's earlier pre-database rejection-audit concern was rechecked
+  against EVAL-0080. The accepted case requires an audit record for each
+  product write; an authority rejection before database availability performs
+  no write. It must fail closed and remain diagnostically visible, but a
+  separate durable log of rejected bootstrap attempts would be a new audit
+  contract rather than a current Slice 2 gate.
 - The generic immutable protected-root registry is implemented and exercised
   with synthetic opened objects. Populating it with actual selected
   MO2/game/profile/mod/generated-output identities requires Slice 3's

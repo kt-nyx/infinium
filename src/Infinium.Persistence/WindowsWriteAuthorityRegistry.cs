@@ -321,6 +321,21 @@ public sealed class WindowsWriteAuthorityRegistry : IDisposable
         _ = AuthorizeProductPath(capability, writeClass, candidatePath);
     }
 
+    internal ClassDirectoryCapability GetCurrentClassCapability(
+        ProductRootCapability capability,
+        ProductWriteClass writeClass)
+    {
+        ArgumentNullException.ThrowIfNull(capability);
+        lock (gate)
+        {
+            ThrowIfDisposed();
+            EnsureProtectedRootsCurrent();
+            EnsureAnchorCurrent(capability);
+            _ = EnsureRootCurrent(capability);
+            return EnsureClassDirectoryCurrent(capability, writeClass);
+        }
+    }
+
     public void Dispose()
     {
         lock (gate)

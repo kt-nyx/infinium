@@ -89,6 +89,7 @@ proposed disposition enabled by the report.
 | [RESEARCH-0047](RESEARCH-0047-readiness-maturity-calibration-plan.md) | Completed; recommendation accepted | RQ-028 empirical calibration protocol accepted without inventing numerical M3/M4 thresholds |
 | [RESEARCH-0048](RESEARCH-0048-openai-m1-model-qualification.md) | Completed; recommendation accepted | ADR-0025 accepts the exact `gpt-5.6-sol` synchronous Responses profile and drift policy |
 | [RESEARCH-0049](RESEARCH-0049-wave-f-evaluation-and-m1-planning-integration.md) | Completed; recommendation accepted | Wave F outputs integrated, independently reviewed, and accepted; Gate F is met and M0 is complete |
+| [RESEARCH-0050](RESEARCH-0050-sqlite-opened-object-write-authority.md) | Completed; implementation qualification in progress | The Slice 2 shim-VFS approach qualifies as ADR-0021's separately qualified equivalent for SQLite-family opens; non-SQLite write conversion and full EVAL-0080 remain pending |
 
 Supporting artifact:
 
