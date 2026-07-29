@@ -297,6 +297,12 @@
       "infinium.domain": {
         "type": "Project"
       },
+      "infinium.mo2": {
+        "type": "Project",
+        "dependencies": {
+          "Infinium.Domain": "[1.0.0, )"
+        }
+      },
       "infinium.persistence": {
         "type": "Project",
         "dependencies": {
