@@ -2,4 +2,21 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Infinium.Application\Infinium.Application.csproj" />
+    <ProjectReference Include="..\Infinium.Domain\Infinium.Domain.csproj" />
+    <ProjectReference Include="..\Infinium.Persistence\Infinium.Persistence.csproj" />
+    <ProjectReference Include="..\Infinium.Worker\Infinium.Worker.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Grpc.AspNetCore" />
+  </ItemGroup>
+  <Target Name="CopyManagedWorkerRuntime" AfterTargets="Build">
+    <ItemGroup>
+      <ManagedWorkerRuntimeFile Include="..\Infinium.Worker\bin\$(Configuration)\$(TargetFramework)\**\*"
+                                Exclude="..\Infinium.Worker\bin\$(Configuration)\$(TargetFramework)\*.pdb" />
+    </ItemGroup>
+    <Copy SourceFiles="@(ManagedWorkerRuntimeFile)"
+          DestinationFiles="@(ManagedWorkerRuntimeFile->'$(OutDir)%(RecursiveDir)%(Filename)%(Extension)')" />
+  </Target>
 </Project>

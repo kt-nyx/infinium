@@ -2,4 +2,18 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Infinium.Application\Infinium.Application.csproj" />
+    <ProjectReference Include="..\Infinium.Coordinator\Infinium.Coordinator.csproj"
+                      ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\Infinium.Domain\Infinium.Domain.csproj" />
+  </ItemGroup>
+  <Target Name="CopyCoordinatorRuntime" AfterTargets="Build">
+    <ItemGroup>
+      <CoordinatorRuntimeFile Include="..\Infinium.Coordinator\bin\$(Configuration)\$(TargetFramework)\**\*"
+                              Exclude="..\Infinium.Coordinator\bin\$(Configuration)\$(TargetFramework)\*.pdb" />
+    </ItemGroup>
+    <Copy SourceFiles="@(CoordinatorRuntimeFile)"
+          DestinationFiles="@(CoordinatorRuntimeFile->'$(OutDir)coordinator\%(RecursiveDir)%(Filename)%(Extension)')" />
+  </Target>
 </Project>

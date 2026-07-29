@@ -2,4 +2,8 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Infinium.Application\Infinium.Application.csproj" />
+    <ProjectReference Include="..\Infinium.Domain\Infinium.Domain.csproj" />
+  </ItemGroup>
 </Project>

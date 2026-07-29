@@ -1,5 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Infinium.Application\Infinium.Application.csproj" />
     <ProjectReference Include="..\..\src\Infinium.Domain\Infinium.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Infinium.Persistence\Infinium.Persistence.csproj" />
   </ItemGroup>
 </Project>

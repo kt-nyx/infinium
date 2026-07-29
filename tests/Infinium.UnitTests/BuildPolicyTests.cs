@@ -47,14 +47,21 @@ public sealed class BuildPolicyTests
     [TestMethod]
     [TestCategory("M1Unit")]
     [TestProperty("Category", "M1Unit")]
-    public void CentralPackagePolicyPinsOnlyAcceptedSliceZeroPackages()
+    public void CentralPackagePolicyPinsOnlyAcceptedPackagesThroughSliceTwo()
     {
         Dictionary<string, string> expectedPackages = new(StringComparer.Ordinal)
         {
+            ["Google.Protobuf"] = "3.31.1",
+            ["Grpc.AspNetCore"] = "2.80.0",
+            ["Grpc.Core.Api"] = "2.80.0",
+            ["Grpc.Net.Client"] = "2.80.0",
+            ["Grpc.Tools"] = "2.80.0",
+            ["Microsoft.Data.Sqlite.Core"] = "10.0.10",
             ["Microsoft.NET.Test.Sdk"] = "18.8.1",
             ["MSTest.TestAdapter"] = "4.3.2",
             ["MSTest.TestFramework"] = "4.3.2",
             ["Mutagen.Bethesda.Skyrim"] = "0.54.2",
+            ["SQLitePCLRaw.bundle_e_sqlite3"] = "3.0.5",
         };
         Dictionary<string, string> actualPackages = TestRepository.ReadXml("Directory.Packages.props")
             .Descendants("PackageVersion")

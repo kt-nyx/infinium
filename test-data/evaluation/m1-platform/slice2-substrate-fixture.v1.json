@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "fixturePackageId": "M1-PLAT-SLICE2-SUBSTRATE-v1",
+  "partition": "public-synthetic",
+  "answerIsolation": {
+    "groundTruthEmbeddedInProduction": false,
+    "realModNamesPresent": false,
+    "fixtureSpecificProductionRulesAllowed": false
+  },
+  "families": [
+    {
+      "id": "M1-PLAT-LIFECYCLE-v1",
+      "cases": [
+        "immutable-run-binding",
+        "generation-compare-and-swap",
+        "pause-resume-safe-boundary",
+        "cancel-terminal-closure",
+        "stale-attempt-publication-rejection"
+      ]
+    },
+    {
+      "id": "M1-PLAT-LINEAGE-v1",
+      "scope": "durable-schema-substrate-only",
+      "cases": [
+        "opaque-logical-and-occurrence-identities",
+        "typed-reconciliation-gates",
+        "append-only-successor-lineage"
+      ]
+    },
+    {
+      "id": "M1-PLAT-WRITES-v1",
+      "cases": [
+        "absolute-product-root",
+        "relative-traversal-rejection",
+        "device-and-alternate-stream-rejection",
+        "reparse-point-rejection",
+        "worker-create-new-staging"
+      ]
+    },
+    {
+      "id": "M1-PLAT-PERSIST-v1",
+      "cases": [
+        "exact-sqlite-source-native-and-compile-identity",
+        "strict-foreign-key-schema",
+        "newer-schema-refusal",
+        "hash-verified-cas-admission",
+        "payload-reconciliation",
+        "consistent-backup-restore",
+        "projection-rebuild"
+      ]
+    },
+    {
+      "id": "M1-PLAT-IPC-v1",
+      "cases": [
+        "single-coordinator-authority",
+        "current-user-named-pipe-only",
+        "role-separated-random-pipe-names",
+        "nonce-and-version-negotiation",
+        "finite-message-page-stream-and-output-bounds",
+        "private-handle-worker-bootstrap",
+        "coordinator-only-publication",
+        "cli-start-status-wait-cancel-inspect"
+      ]
+    }
+  ]
+}
