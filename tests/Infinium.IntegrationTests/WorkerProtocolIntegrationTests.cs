@@ -181,6 +181,15 @@ public sealed class WorkerProtocolIntegrationTests
         File.WriteAllText(excludedPath, "excluded");
         try
         {
+            using SafeFileHandle stagingHandle = CreateFileW(
+                stagingPath,
+                FILE_LIST_DIRECTORY | FILE_ADD_FILE | SYNCHRONIZE,
+                FileShare.ReadWrite,
+                0,
+                FileMode.Open,
+                FILE_FLAG_BACKUP_SEMANTICS,
+                0);
+            Assert.IsFalse(stagingHandle.IsInvalid);
             using SafeFileHandle included = File.OpenHandle(
                 includedPath,
                 FileMode.Open,
@@ -218,7 +227,7 @@ public sealed class WorkerProtocolIntegrationTests
                     [workerAssembly, "containment-probe"],
                     AppContext.BaseDirectory,
                     environment,
-                    stagingPath,
+                    stagingHandle,
                     [included.DangerousGetHandle()]);
             byte[] bootstrap = JsonSerializer.SerializeToUtf8Bytes(new
             {
@@ -230,17 +239,17 @@ public sealed class WorkerProtocolIntegrationTests
             await contained.BootstrapInput.WriteAsync(bootstrap).ConfigureAwait(false);
             contained.BootstrapInput.Close();
 
-            Directory.Move(stagingPath, movedStagingPath);
-            Directory.CreateDirectory(stagingPath);
+            Assert.Throws<IOException>(
+                () => Directory.Move(stagingPath, movedStagingPath));
             contained.Resume();
             Task<string> error = contained.StandardError.ReadToEndAsync();
             using CancellationTokenSource timeout = new(TimeSpan.FromSeconds(10));
             await contained.Process.WaitForExitAsync(timeout.Token).ConfigureAwait(false);
             Assert.AreEqual(0, contained.Process.ExitCode, await error.ConfigureAwait(false));
 
-            string movedOutput = Path.Combine(movedStagingPath, "probe.json");
+            string movedOutput = Path.Combine(stagingPath, "probe.json");
             Assert.IsTrue(File.Exists(movedOutput));
-            Assert.IsFalse(File.Exists(Path.Combine(stagingPath, "probe.json")));
+            Assert.IsFalse(Directory.Exists(movedStagingPath));
             using JsonDocument result = JsonDocument.Parse(
                 await File.ReadAllBytesAsync(movedOutput).ConfigureAwait(false));
             Assert.IsTrue(
@@ -604,6 +613,20 @@ public sealed class WorkerProtocolIntegrationTests
                 : Path.GetFullPath(value).TrimEnd(Path.DirectorySeparatorChar);
 
     private const uint HANDLE_FLAG_INHERIT = 0x00000001;
+    private const uint FILE_LIST_DIRECTORY = 0x00000001;
+    private const uint FILE_ADD_FILE = 0x00000002;
+    private const uint SYNCHRONIZE = 0x00100000;
+    private const uint FILE_FLAG_BACKUP_SEMANTICS = 0x02000000;
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern SafeFileHandle CreateFileW(
+        string fileName,
+        uint desiredAccess,
+        FileShare shareMode,
+        nint securityAttributes,
+        FileMode creationDisposition,
+        uint flagsAndAttributes,
+        nint templateFile);
 
     [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]

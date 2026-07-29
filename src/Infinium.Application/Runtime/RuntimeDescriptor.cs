@@ -1,6 +1,4 @@
-using System.Security.AccessControl;
 using System.Security.Cryptography;
-using System.Security.Principal;
 using System.Text.Json;
 
 namespace Infinium.Application.Runtime;
@@ -53,92 +51,39 @@ public sealed record RuntimeDescriptor(
 
     public static RuntimeDescriptor Read(string productRoot)
     {
+        const int MaximumDescriptorBytes = 32_768;
         string path = GetPath(productRoot);
-        byte[] bytes = File.ReadAllBytes(path);
-        if (bytes.Length > 32_768)
+        using FileStream stream = new(
+            path,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.ReadWrite | FileShare.Delete);
+        if (stream.Length > MaximumDescriptorBytes)
         {
             throw new InvalidOperationException("The runtime descriptor exceeds its bound.");
         }
 
-        return JsonSerializer.Deserialize<RuntimeDescriptor>(bytes)
+        byte[] bytes = new byte[MaximumDescriptorBytes + 1];
+        int total = 0;
+        while (total < bytes.Length)
+        {
+            int read = stream.Read(bytes, total, bytes.Length - total);
+            if (read == 0)
+            {
+                break;
+            }
+
+            total += read;
+        }
+
+        if (total > MaximumDescriptorBytes)
+        {
+            throw new InvalidOperationException("The runtime descriptor exceeds its bound.");
+        }
+
+        return JsonSerializer.Deserialize<RuntimeDescriptor>(bytes.AsSpan(0, total))
             ?? throw new InvalidOperationException("The runtime descriptor is malformed.");
     }
 
-    public void WriteRestrictedToAuthorizedPath(string authorizedDescriptorPath)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(authorizedDescriptorPath);
-        if (!Path.IsPathFullyQualified(authorizedDescriptorPath)
-            || !string.Equals(
-                Path.GetFileName(authorizedDescriptorPath),
-                FileName,
-                StringComparison.Ordinal))
-        {
-            throw new InvalidOperationException(
-                "The authorized runtime-descriptor path is invalid.");
-        }
-
-        string path = Path.GetFullPath(authorizedDescriptorPath);
-        string runtime = Path.GetDirectoryName(path)
-            ?? throw new InvalidOperationException(
-                "The authorized runtime-descriptor directory is unavailable.");
-        if (!Directory.Exists(runtime))
-        {
-            throw new InvalidOperationException(
-                "The authorized runtime-descriptor directory does not exist.");
-        }
-
-        if ((File.GetAttributes(runtime) & FileAttributes.ReparsePoint) != 0)
-        {
-            throw new InvalidOperationException("A reparse-point runtime directory is not authorized.");
-        }
-
-        if (File.Exists(path)
-            && (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0)
-        {
-            throw new InvalidOperationException("A reparse-point runtime descriptor is not authorized.");
-        }
-        byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(
-            this,
-            IndentedJson);
-        string temporary = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
-        try
-        {
-            using (FileStream stream = new(
-                temporary,
-                FileMode.CreateNew,
-                FileAccess.Write,
-                FileShare.None))
-            {
-                stream.Write(bytes);
-                stream.Flush(flushToDisk: true);
-            }
-
-            RestrictToCurrentUser(temporary);
-            File.Move(temporary, path, overwrite: true);
-        }
-        finally
-        {
-            File.Delete(temporary);
-        }
-    }
-
-    private static void RestrictToCurrentUser(string path)
-    {
-        if (!OperatingSystem.IsWindows())
-        {
-            return;
-        }
-
-        using WindowsIdentity identity = WindowsIdentity.GetCurrent();
-        SecurityIdentifier sid = identity.User
-            ?? throw new InvalidOperationException("The current Windows identity has no SID.");
-        FileSecurity security = new();
-        security.SetAccessRuleProtection(isProtected: true, preserveInheritance: false);
-        security.AddAccessRule(new FileSystemAccessRule(
-            sid,
-            FileSystemRights.Read | FileSystemRights.Write | FileSystemRights.Delete,
-            AccessControlType.Allow));
-        FileInfo file = new(path);
-        file.SetAccessControl(security);
-    }
+    public byte[] Serialize() => JsonSerializer.SerializeToUtf8Bytes(this, IndentedJson);
 }

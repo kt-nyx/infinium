@@ -111,6 +111,55 @@ public sealed class BuildPolicyTests
     [TestMethod]
     [TestCategory("M1Security")]
     [TestProperty("Category", "M1Security")]
+    public void SliceTwoProductWritersDoNotRegressToPathnameMutation()
+    {
+        Dictionary<string, string[]> forbiddenBySource =
+            new(StringComparer.Ordinal)
+            {
+                ["src/Infinium.Persistence/AuthoritativeStore.cs"] =
+                [
+                    "Directory.CreateDirectory(",
+                    "Directory.Move(",
+                    "Directory.Delete(",
+                    "File.Copy(",
+                    "File.Move(",
+                    "File.Delete(",
+                ],
+                ["src/Infinium.Application/Runtime/RuntimeDescriptor.cs"] =
+                [
+                    "FileStream(",
+                    "File.Move(",
+                    "File.Delete(",
+                    "File.WriteAll",
+                ],
+                ["src/Infinium.Coordinator/ManagedRunExecutor.cs"] =
+                [
+                    "Directory.CreateDirectory(",
+                    "File.Create(",
+                    "File.Move(",
+                ],
+                ["src/Infinium.Coordinator/WindowsContainedWorkerProcess.cs"] =
+                [
+                    "CreateFileW(",
+                ],
+            };
+
+        foreach ((string relativePath, string[] forbiddenTokens) in forbiddenBySource)
+        {
+            string content = TestRepository.Read(
+                relativePath.Split('/'));
+            foreach (string forbiddenToken in forbiddenTokens)
+            {
+                Assert.IsFalse(
+                    content.Contains(forbiddenToken, StringComparison.Ordinal),
+                    $"{relativePath} regressed to pathname mutation through '{forbiddenToken}'.");
+            }
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("M1Security")]
+    [TestProperty("Category", "M1Security")]
     public void IgnorePolicyProtectsSecretsWithoutHidingNestedEvidence()
     {
         string[] ignoreRules = TestRepository

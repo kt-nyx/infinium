@@ -6,6 +6,7 @@ using System.Text.Json;
 using Infinium.Application.Runtime;
 using Infinium.Persistence;
 using Microsoft.Extensions.Logging;
+using Microsoft.Win32.SafeHandles;
 using LifecycleState = Infinium.Domain.Contracts.LifecycleState;
 
 #pragma warning disable CA1848 // Failures are exceptional and retain structured run identity.
@@ -165,10 +166,8 @@ public sealed class ManagedRunExecutor(
                 TimeSpan.FromMinutes(2),
                 DateTimeOffset.UtcNow);
             AttemptRecord attempt = dispatch.Attempt;
-            string stagingDirectory = runtime.Store.Paths.ResolveProductPath(
-                ProductWriteClass.AttemptStaging,
-                attempt.AttemptId);
-            Directory.CreateDirectory(stagingDirectory);
+            using AttemptStagingAuthority staging =
+                runtime.Store.Paths.CreateAttemptStagingDirectory(attempt.AttemptId);
             runtime.Store.RecordAuditEvent(
                 "attempt-staging-created",
                 "attempt",
@@ -193,7 +192,7 @@ public sealed class ManagedRunExecutor(
                 DateTimeOffset.UtcNow.AddMinutes(1));
             ManagedWorkerResult result = await LaunchWorkerAsync(
                 bootstrap,
-                stagingDirectory).ConfigureAwait(false);
+                staging.Handle).ConfigureAwait(false);
             runtime.Store.AdmitStagedPayload(
                 attempt,
                 result.OutputRelativeName,
@@ -247,7 +246,7 @@ public sealed class ManagedRunExecutor(
 
     private async Task<ManagedWorkerResult> LaunchWorkerAsync(
         ManagedWorkerBootstrap bootstrap,
-        string stagingDirectory)
+        SafeFileHandle stagingDirectory)
     {
         string workerAssembly = Path.Combine(AppContext.BaseDirectory, "Infinium.Worker.dll");
         if (!File.Exists(workerAssembly))

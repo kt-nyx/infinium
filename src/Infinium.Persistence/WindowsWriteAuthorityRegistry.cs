@@ -10,6 +10,9 @@ public sealed class WindowsWriteAuthorityRegistry : IDisposable
     private readonly IReadOnlyList<ProtectedRootEntry> protectedRoots;
     private bool disposed;
 
+    internal Action? BeforePublishedTreeValidationForTests { get; set; }
+    internal Action? BeforePublicationSnapshotForTests { get; set; }
+
     public WindowsWriteAuthorityRegistry(IEnumerable<string> protectedRootPaths)
     {
         if (!OperatingSystem.IsWindows())
@@ -107,7 +110,7 @@ public sealed class WindowsWriteAuthorityRegistry : IDisposable
             SafeFileHandle? rootHandle = null;
             try
             {
-                anchorHandle = OpenPinnedDirectory(anchorPath);
+                anchorHandle = OpenAuthorityAnchorDirectory(anchorPath);
                 WindowsObjectIdentity anchor = ReadIdentity(anchorHandle);
                 if (!anchor.IsDirectory)
                 {
@@ -157,7 +160,9 @@ public sealed class WindowsWriteAuthorityRegistry : IDisposable
         }
     }
 
-    internal void BindCreatedProductRoot(ProductRootCapability capability)
+    internal void CreateOrBindProductRoot(
+        ProductRootCapability capability,
+        byte[] securityDescriptor)
     {
         ArgumentNullException.ThrowIfNull(capability);
         lock (gate)
@@ -165,14 +170,22 @@ public sealed class WindowsWriteAuthorityRegistry : IDisposable
             ThrowIfDisposed();
             EnsureProtectedRootsCurrent();
             EnsureAnchorCurrent(capability);
-            RejectExistingReparseAncestors(capability.ProductRoot);
-            if (!Directory.Exists(capability.ProductRoot))
+            if (capability.RootIdentity is not null)
             {
-                throw new InvalidOperationException(
-                    "The product root was not created at its authorized location.");
+                _ = EnsureRootCurrent(capability);
+                return;
             }
 
-            SafeFileHandle rootHandle = OpenPinnedDirectory(capability.ProductRoot);
+            string relative = Path.GetRelativePath(
+                capability.AnchorIdentity.FinalPath,
+                capability.ExpectedFinalPath);
+            SafeFileHandle rootHandle = WindowsHandleRelativeStorage.OpenOrCreateDirectory(
+                capability.AnchorHandle,
+                capability.AnchorIdentity,
+                relative,
+                create: true,
+                securityDescriptor,
+                requireDeleteAccess: true);
             try
             {
                 WindowsObjectIdentity root = ReadIdentity(rootHandle);
@@ -189,6 +202,277 @@ public sealed class WindowsWriteAuthorityRegistry : IDisposable
             {
                 rootHandle?.Dispose();
             }
+        }
+    }
+
+    internal void PublishProductRoot(
+        ProductRootCapability staging,
+        ProductRootCapability target,
+        IReadOnlyList<PublicationFileExpectation> expectedFiles)
+    {
+        ArgumentNullException.ThrowIfNull(staging);
+        ArgumentNullException.ThrowIfNull(target);
+        lock (gate)
+        {
+            ThrowIfDisposed();
+            EnsureProtectedRootsCurrent();
+            EnsureAnchorCurrent(staging);
+            EnsureAnchorCurrent(target);
+            WindowsObjectIdentity stagingIdentity = EnsureRootCurrent(staging);
+            if (!staging.AnchorIdentity.SameObject(target.AnchorIdentity)
+                || stagingIdentity.VolumeSerialNumber
+                    != target.AnchorIdentity.VolumeSerialNumber
+                || target.RootIdentity is not null
+                || Directory.Exists(target.ProductRoot))
+            {
+                throw new InvalidOperationException(
+                    "Restore publication requires an absent sibling target under the same retained parent.");
+            }
+
+            Dictionary<ProductWriteClass, WindowsObjectIdentity> expectedClasses =
+                Enum.GetValues<ProductWriteClass>().ToDictionary(
+                    writeClass => writeClass,
+                    writeClass =>
+                        EnsureClassDirectoryCurrent(staging, writeClass).Identity);
+            BeforePublicationSnapshotForTests?.Invoke();
+            IReadOnlyList<WindowsHandleRelativeStorage.TreeEntryIdentity> expectedTree =
+                WindowsHandleRelativeStorage.CaptureTree(
+                    staging.RootHandle!,
+                    stagingIdentity,
+                    staging.ProductRoot);
+            if (!ExpectedFilesMatchTree(expectedFiles, expectedTree))
+            {
+                throw new InvalidOperationException(
+                    "The staged restore bytes changed after validation.");
+            }
+            staging.DisposeClasses();
+            string targetLeaf = Path.GetFileName(target.ProductRoot);
+            List<ClassDirectoryCapability> publishedClasses = [];
+            SafeFileHandle? publishedRoot = null;
+            WindowsObjectIdentity? publishedIdentity = null;
+            bool renamed = false;
+            try
+            {
+                WindowsHandleRelativeStorage.RenameDirectory(
+                    staging.RootHandle!,
+                    target.AnchorHandle,
+                    targetLeaf);
+                renamed = true;
+                WindowsObjectIdentity published =
+                    WindowsHandleRelativeStorage.ReadIdentity(staging.RootHandle!);
+                publishedIdentity = published;
+                ValidateBoundRoot(
+                    target.ProductRoot,
+                    target.ExpectedFinalPath,
+                    target.AnchorIdentity,
+                    published);
+                BeforePublishedTreeValidationForTests?.Invoke();
+                IReadOnlyList<WindowsHandleRelativeStorage.TreeEntryIdentity>
+                    publishedTree = WindowsHandleRelativeStorage.CaptureTree(
+                        staging.RootHandle!,
+                        published,
+                        target.ProductRoot);
+                if (!SameTree(expectedTree, publishedTree))
+                {
+                    throw new InvalidOperationException(
+                        "The staged product tree changed during restore publication.");
+                }
+
+                foreach ((ProductWriteClass writeClass, WindowsObjectIdentity expected)
+                         in expectedClasses)
+                {
+                    string configuredPath =
+                        GetExpectedClassPath(target.ProductRoot, writeClass);
+                    SafeFileHandle handle =
+                        WindowsHandleRelativeStorage.OpenOrCreateDirectory(
+                            staging.RootHandle!,
+                            published,
+                            Path.GetFileName(configuredPath),
+                            create: false);
+                    WindowsObjectIdentity current =
+                        WindowsHandleRelativeStorage.ReadIdentity(handle);
+                    if (!expected.SameObject(current))
+                    {
+                        handle.Dispose();
+                        throw new InvalidOperationException(
+                            "A staged write-class object changed before restore publication.");
+                    }
+
+                    publishedClasses.Add(
+                        new ClassDirectoryCapability(
+                            writeClass,
+                            configuredPath,
+                            handle,
+                            current));
+                }
+
+                publishedRoot =
+                    WindowsHandleRelativeStorage.Duplicate(staging.RootHandle!);
+                target.BindRoot(publishedRoot, published);
+                publishedRoot = null;
+                foreach (ClassDirectoryCapability capability in publishedClasses)
+                {
+                    target.BindClass(capability.WriteClass, capability);
+                }
+
+                publishedClasses.Clear();
+                renamed = false;
+            }
+            catch (Exception publicationException)
+            {
+                publishedRoot?.Dispose();
+                foreach (ClassDirectoryCapability capability in publishedClasses)
+                {
+                    capability.Dispose();
+                }
+
+                if (renamed)
+                {
+                    try
+                    {
+                        WindowsHandleRelativeStorage.RenameDirectory(
+                            staging.RootHandle!,
+                            staging.AnchorHandle,
+                            Path.GetFileName(staging.ProductRoot));
+                    }
+                    catch (Exception rollbackException)
+                    {
+                        try
+                        {
+                            WindowsHandleRelativeStorage.DeleteDirectoryTree(
+                                staging.RootHandle!,
+                                publishedIdentity
+                                ?? throw new InvalidOperationException(
+                                    "The rejected publication has no retained identity."),
+                                target.ProductRoot);
+                            staging.ForgetDeletedRoot();
+                        }
+                        catch (Exception cleanupException)
+                        {
+                            throw new AggregateException(
+                                "Restore publication, rollback, and deletion of the rejected tree failed.",
+                                publicationException,
+                                rollbackException,
+                                cleanupException);
+                        }
+
+                        throw new AggregateException(
+                            "Restore publication failed; rollback was obstructed, so the rejected tree was deleted.",
+                            publicationException,
+                            rollbackException);
+                    }
+                }
+
+                throw;
+            }
+        }
+    }
+
+    private static bool SameTree(
+        IReadOnlyList<WindowsHandleRelativeStorage.TreeEntryIdentity> expected,
+        IReadOnlyList<WindowsHandleRelativeStorage.TreeEntryIdentity> actual)
+    {
+        if (expected.Count != actual.Count)
+        {
+            return false;
+        }
+
+        Dictionary<string, WindowsHandleRelativeStorage.TreeEntryIdentity> actualByPath =
+            actual.ToDictionary(
+                entry => entry.RelativePath,
+                StringComparer.OrdinalIgnoreCase);
+        return expected.All(entry =>
+            actualByPath.TryGetValue(
+                entry.RelativePath,
+                out WindowsHandleRelativeStorage.TreeEntryIdentity? current)
+            && entry.VolumeSerialNumber == current.VolumeSerialNumber
+            && entry.FileId == current.FileId
+            && entry.NumberOfLinks == current.NumberOfLinks
+            && entry.IsDirectory == current.IsDirectory
+            && entry.ByteLength == current.ByteLength
+            && string.Equals(
+                entry.Sha256,
+                current.Sha256,
+                StringComparison.Ordinal));
+    }
+
+    private static bool ExpectedFilesMatchTree(
+        IReadOnlyList<PublicationFileExpectation> expectedFiles,
+        IReadOnlyList<WindowsHandleRelativeStorage.TreeEntryIdentity> tree)
+    {
+        if (expectedFiles.Count == 0)
+        {
+            return true;
+        }
+
+        Dictionary<string, PublicationFileExpectation> expectedByPath;
+        try
+        {
+            expectedByPath = expectedFiles.ToDictionary(
+                expected => expected.RelativePath,
+                StringComparer.OrdinalIgnoreCase);
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
+
+        Dictionary<string, WindowsHandleRelativeStorage.TreeEntryIdentity> treeByPath =
+            tree.ToDictionary(
+                entry => entry.RelativePath,
+                StringComparer.OrdinalIgnoreCase);
+        WindowsHandleRelativeStorage.TreeEntryIdentity[] actualFiles =
+            tree.Where(entry => !entry.IsDirectory).ToArray();
+        if (actualFiles.Length != expectedByPath.Count
+            || !expectedByPath.Values.All(expected =>
+            treeByPath.TryGetValue(
+                expected.RelativePath,
+                out WindowsHandleRelativeStorage.TreeEntryIdentity? actual)
+            && !actual.IsDirectory
+            && actual.ByteLength == expected.ByteLength
+            && string.Equals(
+                actual.Sha256,
+                expected.Sha256,
+                StringComparison.Ordinal)))
+        {
+            return false;
+        }
+
+        HashSet<string> expectedDirectories = Enum
+            .GetValues<ProductWriteClass>()
+            .Select(writeClass => GetExpectedClassPath(string.Empty, writeClass))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (string expectedPath in expectedByPath.Keys)
+        {
+            string? directory = Path.GetDirectoryName(expectedPath);
+            while (!string.IsNullOrEmpty(directory))
+            {
+                expectedDirectories.Add(directory);
+                directory = Path.GetDirectoryName(directory);
+            }
+        }
+
+        return tree
+            .Where(entry => entry.IsDirectory)
+            .Select(entry => entry.RelativePath)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase)
+            .SetEquals(expectedDirectories);
+    }
+
+    internal void DeleteProductRoot(ProductRootCapability capability)
+    {
+        ArgumentNullException.ThrowIfNull(capability);
+        lock (gate)
+        {
+            ThrowIfDisposed();
+            EnsureProtectedRootsCurrent();
+            EnsureAnchorCurrent(capability);
+            WindowsObjectIdentity identity = EnsureRootCurrent(capability);
+            capability.DisposeClasses();
+            WindowsHandleRelativeStorage.DeleteDirectoryTree(
+                capability.RootHandle!,
+                identity,
+                capability.ProductRoot);
         }
     }
 
@@ -240,10 +524,11 @@ public sealed class WindowsWriteAuthorityRegistry : IDisposable
         }
     }
 
-    internal void BindClassDirectory(
+    internal void CreateOrBindClassDirectory(
         ProductRootCapability capability,
         ProductWriteClass writeClass,
-        string configuredPath)
+        string configuredPath,
+        byte[] securityDescriptor)
     {
         ArgumentNullException.ThrowIfNull(capability);
         lock (gate)
@@ -259,20 +544,19 @@ public sealed class WindowsWriteAuthorityRegistry : IDisposable
                     "The class directory does not match the closed product write-class mapping.");
             }
 
-            RejectExistingReparseAncestors(normalized);
-            if (!Directory.Exists(normalized))
-            {
-                throw new InvalidOperationException(
-                    "The product write-class directory does not exist.");
-            }
-
-            SafeFileHandle handle = OpenPinnedDirectory(normalized);
+            WindowsObjectIdentity root = capability.RootIdentity
+                ?? throw new InvalidOperationException(
+                    "The product-root capability is not bound.");
+            string relative = Path.GetRelativePath(root.FinalPath, normalized);
+            SafeFileHandle handle = WindowsHandleRelativeStorage.OpenOrCreateDirectory(
+                capability.RootHandle!,
+                root,
+                relative,
+                create: true,
+                securityDescriptor);
             try
             {
                 WindowsObjectIdentity identity = ReadIdentity(handle);
-                WindowsObjectIdentity root = capability.RootIdentity
-                    ?? throw new InvalidOperationException(
-                        "The product-root capability is not bound.");
                 if (!identity.IsDirectory
                     || identity.VolumeSerialNumber != root.VolumeSerialNumber
                     || !IsEqualOrDescendant(identity.FinalPath, root.FinalPath))
@@ -621,7 +905,7 @@ public sealed class WindowsWriteAuthorityRegistry : IDisposable
         SafeFileHandle handle = CreateFileW(
             path,
             FILE_READ_ATTRIBUTES,
-            FileShare.ReadWrite | FileShare.Delete,
+            FileShare.ReadWrite,
             0,
             FileMode.Open,
             FILE_FLAG_BACKUP_SEMANTICS,
@@ -653,6 +937,28 @@ public sealed class WindowsWriteAuthorityRegistry : IDisposable
             throw new Win32Exception(
                 error,
                 "The Windows directory capability could not be pinned.");
+        }
+
+        return handle;
+    }
+
+    private static SafeFileHandle OpenAuthorityAnchorDirectory(string path)
+    {
+        SafeFileHandle handle = CreateFileW(
+            path,
+            FILE_READ_ATTRIBUTES | FILE_ADD_SUBDIRECTORY,
+            FileShare.ReadWrite,
+            0,
+            FileMode.Open,
+            FILE_FLAG_BACKUP_SEMANTICS,
+            0);
+        if (handle.IsInvalid)
+        {
+            int error = Marshal.GetLastWin32Error();
+            handle.Dispose();
+            throw new Win32Exception(
+                error,
+                "The Windows product-root anchor capability could not be opened.");
         }
 
         return handle;
@@ -797,6 +1103,26 @@ public sealed class WindowsWriteAuthorityRegistry : IDisposable
             classes.Add(writeClass, capability);
         }
 
+        public void DisposeClasses()
+        {
+            ObjectDisposedException.ThrowIf(disposed, this);
+            foreach (ClassDirectoryCapability capability in classes.Values)
+            {
+                capability.Dispose();
+            }
+
+            classes.Clear();
+        }
+
+        public void ForgetDeletedRoot()
+        {
+            ObjectDisposedException.ThrowIf(disposed, this);
+            DisposeClasses();
+            RootHandle?.Dispose();
+            RootHandle = null;
+            RootIdentity = null;
+        }
+
         public ClassDirectoryCapability GetClass(ProductWriteClass writeClass)
         {
             ObjectDisposedException.ThrowIf(disposed, this);
@@ -871,6 +1197,7 @@ public sealed class WindowsWriteAuthorityRegistry : IDisposable
         WindowsObjectIdentity Identity);
 
     private const uint FILE_READ_ATTRIBUTES = 0x00000080;
+    private const uint FILE_ADD_SUBDIRECTORY = 0x00000004;
     private const uint FILE_FLAG_BACKUP_SEMANTICS = 0x02000000;
     private const uint FILE_ATTRIBUTE_DIRECTORY = 0x00000010;
     private const uint FILE_NAME_NORMALIZED = 0x0;

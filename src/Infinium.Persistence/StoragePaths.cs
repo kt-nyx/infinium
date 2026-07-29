@@ -43,6 +43,13 @@ public sealed class StoragePaths : IDisposable
         ProductRoot = Path.TrimEndingDirectorySeparator(Path.GetFullPath(productRoot));
         RejectProtectedRoot(ProductRoot);
         RejectExistingRootReparse(ProductRoot);
+        if (OperatingSystem.IsWindows() && writeAuthority is null)
+        {
+            throw new ArgumentNullException(
+                nameof(writeAuthority),
+                "Windows product storage requires opened-object write authority.");
+        }
+
         this.writeAuthority = writeAuthority;
         productCapability = writeAuthority?.CaptureProductRoot(ProductRoot);
         AuthorityIdentity = productCapability?.AuthorityIdentity
@@ -65,6 +72,7 @@ public sealed class StoragePaths : IDisposable
     public string Runtime { get; }
     public string RunOutput { get; }
     public string Database { get; }
+    internal bool HasBoundProductRoot => productCapability?.RootIdentity is not null;
 
     public void Create()
     {
@@ -76,31 +84,261 @@ public sealed class StoragePaths : IDisposable
                 "The product-root parent must already exist and be selected explicitly.");
         }
 
-        CreateOrVerifyPrivateDirectory(ProductRoot);
-        writeAuthority?.BindCreatedProductRoot(productCapability!);
-        if (OperatingSystem.IsWindows())
+        if (OperatingSystem.IsWindows() && writeAuthority is not null)
         {
+            byte[] descriptor = BuildPrivateDirectorySecurity()
+                .GetSecurityDescriptorBinaryForm();
+            writeAuthority.CreateOrBindProductRoot(productCapability!, descriptor);
             VerifyPrivateDirectory(ProductRoot);
-        }
-
-        writeAuthority?.VerifyBoundProductRoot(productCapability!);
-        foreach ((ProductWriteClass writeClass, string path) in GetClassDirectories())
-        {
-            CreateOrVerifyPrivateDirectory(path);
-            writeAuthority?.BindClassDirectory(productCapability!, writeClass, path);
-            if (OperatingSystem.IsWindows())
+            writeAuthority.VerifyBoundProductRoot(productCapability!);
+            foreach ((ProductWriteClass writeClass, string path) in GetClassDirectories())
             {
+                writeAuthority.CreateOrBindClassDirectory(
+                    productCapability!,
+                    writeClass,
+                    path,
+                    descriptor);
                 VerifyPrivateDirectory(path);
-            }
-
-            if (writeAuthority is not null)
-            {
                 _ = writeAuthority.AuthorizeProductPath(
                     productCapability!,
                     writeClass,
                     path);
             }
+
+            return;
         }
+
+        CreateOrVerifyPrivateDirectory(ProductRoot);
+        foreach ((_, string path) in GetClassDirectories())
+        {
+            CreateOrVerifyPrivateDirectory(path);
+            if (OperatingSystem.IsWindows())
+            {
+                VerifyPrivateDirectory(path);
+            }
+        }
+    }
+
+    public AttemptStagingAuthority CreateAttemptStagingDirectory(string attemptId)
+    {
+        ValidateOpaqueLeaf(attemptId, nameof(attemptId));
+        WindowsWriteAuthorityRegistry.ClassDirectoryCapability capability =
+            GetBoundWriteClassCapability(ProductWriteClass.AttemptStaging);
+        SafeFileHandle handle = WindowsHandleRelativeStorage.CreateOrOpenDirectory(
+            capability,
+            attemptId);
+        return new AttemptStagingAuthority(handle);
+    }
+
+    public void WriteCoordinatorRuntimeDescriptor(ReadOnlySpan<byte> bytes)
+    {
+        const int MaximumDescriptorBytes = 32 * 1024;
+        if (bytes.Length is 0 or > MaximumDescriptorBytes)
+        {
+            throw new InvalidOperationException(
+                "The runtime descriptor has an invalid serialized size.");
+        }
+
+        WriteAllBytesAtomic(
+            ProductWriteClass.Runtime,
+            "coordinator.v1.json",
+            bytes);
+    }
+
+    internal FileStream CreateNewFile(
+        ProductWriteClass writeClass,
+        string relativePath) =>
+        WindowsHandleRelativeStorage.CreateNewFile(
+            GetBoundWriteClassCapability(writeClass),
+            relativePath);
+
+    internal FileStream OpenReadFile(
+        ProductWriteClass writeClass,
+        string relativePath) =>
+        WindowsHandleRelativeStorage.OpenReadFile(
+            GetBoundWriteClassCapability(writeClass),
+            relativePath);
+
+    internal WindowsHandleRelativeStorage.AdmissionSource OpenAdmissionSource(
+        ProductWriteClass writeClass,
+        string relativePath) =>
+        WindowsHandleRelativeStorage.OpenAdmissionSource(
+            GetBoundWriteClassCapability(writeClass),
+            relativePath);
+
+    internal WindowsHandleRelativeStorage.AdmissionCopyResult PublishAdmissionSource(
+        WindowsHandleRelativeStorage.AdmissionSource source,
+        string destinationRelativePath,
+        string expectedSha256,
+        long expectedLength,
+        long maximumBytes) =>
+        WindowsHandleRelativeStorage.PublishAdmissionSource(
+            source,
+            GetBoundWriteClassCapability(ProductWriteClass.Payload),
+            destinationRelativePath,
+            expectedSha256,
+            expectedLength,
+            maximumBytes);
+
+    internal bool FileExists(ProductWriteClass writeClass, string relativePath) =>
+        WindowsHandleRelativeStorage.FileExists(
+            GetBoundWriteClassCapability(writeClass),
+            relativePath);
+
+    internal void DeleteFile(
+        ProductWriteClass writeClass,
+        string relativePath,
+        bool missingIsSuccess = false) =>
+        WindowsHandleRelativeStorage.DeleteFile(
+            GetBoundWriteClassCapability(writeClass),
+            relativePath,
+            missingIsSuccess);
+
+    internal void CopyFile(
+        ProductWriteClass sourceClass,
+        string sourceRelativePath,
+        ProductWriteClass destinationClass,
+        string destinationRelativePath,
+        long expectedLength,
+        string expectedSha256) =>
+        WindowsHandleRelativeStorage.CopyFile(
+            GetBoundWriteClassCapability(sourceClass),
+            sourceRelativePath,
+            GetBoundWriteClassCapability(destinationClass),
+            destinationRelativePath,
+            expectedLength,
+            expectedSha256);
+
+    internal void DeleteDirectoryTree(
+        ProductWriteClass writeClass,
+        string relativePath,
+        bool missingIsSuccess = false) =>
+        WindowsHandleRelativeStorage.DeleteDirectoryTree(
+            GetBoundWriteClassCapability(writeClass),
+            relativePath,
+            missingIsSuccess);
+
+    internal void CopyExternalFileIntoProduct(
+        ProductWriteClass destinationClass,
+        string destinationRelativePath,
+        string sourcePath,
+        long expectedLength,
+        string expectedSha256)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(expectedLength);
+        ArgumentException.ThrowIfNullOrWhiteSpace(expectedSha256);
+        using FileStream source = new(
+            sourcePath,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read);
+        bool created = false;
+        try
+        {
+            using FileStream destination =
+                CreateNewFile(destinationClass, destinationRelativePath);
+            created = true;
+            using System.Security.Cryptography.IncrementalHash hash =
+                System.Security.Cryptography.IncrementalHash.CreateHash(
+                    System.Security.Cryptography.HashAlgorithmName.SHA256);
+            byte[] buffer = new byte[64 * 1024];
+            long total = 0;
+            while (true)
+            {
+                int read = source.Read(buffer);
+                if (read == 0)
+                {
+                    break;
+                }
+
+                total = checked(total + read);
+                if (total > expectedLength)
+                {
+                    throw new InvalidOperationException(
+                        "A restore source grew beyond its validated byte length.");
+                }
+
+                hash.AppendData(buffer, 0, read);
+                destination.Write(buffer, 0, read);
+            }
+
+            string actualSha256 =
+                Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant();
+            if (total != expectedLength
+                || !string.Equals(
+                    actualSha256,
+                    expectedSha256,
+                    StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException(
+                    "A restore source changed after backup validation.");
+            }
+
+            destination.Flush(flushToDisk: true);
+        }
+        catch
+        {
+            if (created)
+            {
+                DeleteFile(destinationClass, destinationRelativePath, missingIsSuccess: true);
+            }
+
+            throw;
+        }
+    }
+
+    internal void WriteAllBytesAtomic(
+        ProductWriteClass writeClass,
+        string relativePath,
+        ReadOnlySpan<byte> bytes) =>
+        WindowsHandleRelativeStorage.WriteAllBytesAtomic(
+            GetBoundWriteClassCapability(writeClass),
+            relativePath,
+            bytes);
+
+    internal void PublishFrom(
+        StoragePaths staging,
+        IReadOnlyList<PublicationFileExpectation>? expectedFiles = null)
+    {
+        ObjectDisposedException.ThrowIf(disposed, this);
+        ArgumentNullException.ThrowIfNull(staging);
+        if (writeAuthority is null
+            || productCapability is null
+            || !ReferenceEquals(writeAuthority, staging.writeAuthority)
+            || staging.productCapability is null)
+        {
+            throw new InvalidOperationException(
+                "Restore publication requires one shared opened-object authority registry.");
+        }
+
+        writeAuthority.PublishProductRoot(
+            staging.productCapability,
+            productCapability,
+            expectedFiles ?? []);
+    }
+
+    internal StoragePaths CreateRestoreStagingPaths()
+    {
+        ObjectDisposedException.ThrowIf(disposed, this);
+        string parent = Path.GetDirectoryName(ProductRoot)
+            ?? throw new InvalidOperationException(
+                "The restore target must have a parent directory.");
+        string stagingRoot = Path.Combine(
+            parent,
+            $".{Path.GetFileName(ProductRoot)}.restore-{Guid.NewGuid():N}.tmp");
+        return new StoragePaths(stagingRoot, writeAuthority);
+    }
+
+    internal void DeleteProductTree()
+    {
+        ObjectDisposedException.ThrowIf(disposed, this);
+        if (writeAuthority is null || productCapability is null)
+        {
+            throw new InvalidOperationException(
+                "Product-tree deletion requires opened-object authority.");
+        }
+
+        writeAuthority.DeleteProductRoot(productCapability);
     }
 
     public string ResolveProductPath(
@@ -172,6 +410,21 @@ public sealed class StoragePaths : IDisposable
         }
 
         return writeAuthority.GetCurrentClassCapability(productCapability, writeClass);
+    }
+
+    private static void ValidateOpaqueLeaf(string value, string parameterName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(value, parameterName);
+        if (value.Length > 128
+            || value is "." or ".."
+            || value.IndexOfAny(
+                [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar, ':', '\0'])
+                >= 0)
+        {
+            throw new ArgumentException(
+                "The identifier is not a valid single product object name.",
+                parameterName);
+        }
     }
 
     public void Dispose()
@@ -478,5 +731,22 @@ public sealed class StoragePaths : IDisposable
         SafeFileHandle file,
         out BY_HANDLE_FILE_INFORMATION information);
 }
+
+public sealed class AttemptStagingAuthority : IDisposable
+{
+    internal AttemptStagingAuthority(SafeFileHandle handle)
+    {
+        Handle = handle;
+    }
+
+    public SafeFileHandle Handle { get; }
+
+    public void Dispose() => Handle.Dispose();
+}
+
+internal sealed record PublicationFileExpectation(
+    string RelativePath,
+    long ByteLength,
+    string Sha256);
 
 #pragma warning restore IDE0008

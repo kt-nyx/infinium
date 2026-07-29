@@ -1158,63 +1158,32 @@ public sealed class AuthoritativeStore : IDisposable
             throw new InvalidOperationException("The declared staged output exceeds its bound.");
         }
 
-        var stagingPath = Paths.ResolveProductPath(
-            ProductWriteClass.AttemptStaging,
-            Path.Combine(attempt.AttemptId, stagedRelativePath));
-        if (!File.Exists(stagingPath))
-        {
-            throw new FileNotFoundException("The declared staged output does not exist.", stagingPath);
-        }
-
-        var fileInfo = new FileInfo(stagingPath);
-        if (fileInfo.Length > maximumBytes)
-        {
-            throw new InvalidOperationException("The staged output exceeds its declared bound.");
-        }
-
-        if (fileInfo.Length != expectedByteLength)
-        {
-            throw new InvalidOperationException(
-                "The staged output byte length does not match its manifest.");
-        }
-
-        var actualSha = HashFile(stagingPath);
-        if (!string.Equals(actualSha, expectedSha256, StringComparison.Ordinal))
-        {
-            throw new InvalidOperationException("The staged output fingerprint does not match its manifest.");
-        }
-
+        string stagingRelativePath = Path.Combine(
+            attempt.AttemptId,
+            stagedRelativePath);
+        using WindowsHandleRelativeStorage.AdmissionSource staged =
+            Paths.OpenAdmissionSource(
+                ProductWriteClass.AttemptStaging,
+                stagingRelativePath);
         var payloadId = Guid.NewGuid().ToString("N");
         var payloadClassRelativePath = Path.Combine(
-            actualSha[..2],
-            actualSha[2..4],
-            actualSha);
+            expectedSha256[..2],
+            expectedSha256[2..4],
+            expectedSha256);
         var relativeObjectPath = Path.Combine("payloads", payloadClassRelativePath);
-        var objectPath = Paths.ResolveProductPath(
-            ProductWriteClass.Payload,
-            payloadClassRelativePath);
-        Directory.CreateDirectory(Path.GetDirectoryName(objectPath)!);
-
         lock (gate)
         {
             using var transaction = BeginTransaction();
             EnsureCurrentAttempt(attempt, transaction);
-            if (!File.Exists(objectPath))
-            {
-                File.Move(stagingPath, objectPath);
-            }
-            else
-            {
-                var existing = new FileInfo(objectPath);
-                if (existing.Length != fileInfo.Length
-                    || !string.Equals(HashFile(objectPath), actualSha, StringComparison.Ordinal))
-                {
-                    throw new InvalidOperationException(
-                        "A conflicting object already occupies the content-addressed path.");
-                }
-
-                File.Delete(stagingPath);
-            }
+            WindowsHandleRelativeStorage.AdmissionCopyResult copied =
+                Paths.PublishAdmissionSource(
+                    staged,
+                    payloadClassRelativePath,
+                    expectedSha256,
+                    expectedByteLength,
+                    maximumBytes);
+            string actualSha = copied.Sha256;
+            long stagedLength = copied.ByteLength;
 
             var receiptId = Guid.NewGuid().ToString("N");
             Execute(
@@ -1228,7 +1197,7 @@ public sealed class AuthoritativeStore : IDisposable
                 transaction,
                 ("$payload", payloadId),
                 ("$sha", actualSha),
-                ("$length", fileInfo.Length),
+                ("$length", stagedLength),
                 ("$path", relativeObjectPath.Replace('\\', '/')),
                 ("$now", ToText(now)));
             var admittedPayloadId = ScalarString(
@@ -1401,10 +1370,11 @@ public sealed class AuthoritativeStore : IDisposable
             }
 
             transaction.Commit();
+            staged.Delete();
             return new PayloadAdmission(
                 admittedPayloadId,
                 actualSha,
-                fileInfo.Length,
+                stagedLength,
                 relativeObjectPath.Replace('\\', '/'),
                 receiptId,
                 expectedManifestSha256);
@@ -1548,7 +1518,7 @@ public sealed class AuthoritativeStore : IDisposable
     public BackupArtifact CreateBackup(string label, DateTimeOffset now)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(label);
-        var safeLabel = string.Concat(label.Where(char.IsLetterOrDigit));
+        string safeLabel = string.Concat(label.Where(char.IsLetterOrDigit));
         if (safeLabel.Length is 0 or > 48)
         {
             throw new ArgumentException("The backup label must contain 1-48 letters or digits.", nameof(label));
@@ -1556,92 +1526,156 @@ public sealed class AuthoritativeStore : IDisposable
 
         lock (gate)
         {
-            var stamp = now.UtcDateTime.ToString("yyyyMMddTHHmmssfffZ", System.Globalization.CultureInfo.InvariantCulture);
+            string stamp = now.UtcDateTime.ToString(
+                "yyyyMMddTHHmmssfffZ",
+                System.Globalization.CultureInfo.InvariantCulture);
             string backupDatabaseName = $"{stamp}-{safeLabel}.sqlite3";
-            var databasePath = Paths.ResolveProductPath(
+            string databasePath = Paths.ResolveProductPath(
                 ProductWriteClass.Backup,
                 backupDatabaseName);
-            using (FileStream reservation = new(
-                databasePath,
-                FileMode.CreateNew,
-                FileAccess.Write,
-                FileShare.None))
+            bool reservationCreated = false;
+            try
             {
-                reservation.Flush(flushToDisk: true);
-            }
-            using (var destination = new SqliteConnection(new SqliteConnectionStringBuilder
-            {
-                DataSource = databasePath,
-                Mode = SqliteOpenMode.ReadWrite,
-                Pooling = false,
-            }.ToString()))
-            {
-                destination.Open();
-                sqliteVfs.VerifyAllGuards();
-                connection.BackupDatabase(destination);
-            }
-
-            var databaseSha = HashFile(databasePath);
-            var payloads = new List<BackupPayloadManifest>();
-            var payloadBackupRoot = databasePath + ".payloads";
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText =
-                    "SELECT content_sha256, byte_length, object_relative_path FROM payloads ORDER BY content_sha256;";
-                using var reader = command.ExecuteReader();
-                while (reader.Read())
+                using (FileStream reservation = Paths.CreateNewFile(
+                           ProductWriteClass.Backup,
+                           backupDatabaseName))
                 {
-                    var relativePath = reader.GetString(2);
-                    var sourcePath = Paths.ResolveProductPath(
-                        ProductWriteClass.Payload,
-                        relativePath["payloads/".Length..]
-                            .Replace('/', Path.DirectorySeparatorChar));
-                    var backupPayloadPath = Paths.ResolveProductPath(
-                        ProductWriteClass.Backup,
-                        Path.Combine(
-                            backupDatabaseName + ".payloads",
-                            relativePath["payloads/".Length..]
-                                .Replace('/', Path.DirectorySeparatorChar)));
-                    Directory.CreateDirectory(Path.GetDirectoryName(backupPayloadPath)!);
-                    File.Copy(sourcePath, backupPayloadPath, overwrite: false);
-                    payloads.Add(new BackupPayloadManifest(
-                        reader.GetString(0),
-                        reader.GetInt64(1),
-                        relativePath));
+                    reservationCreated = true;
+                    reservation.Flush(flushToDisk: true);
                 }
-            }
 
-            var manifestPath = Paths.ResolveProductPath(
+                using (WindowsGuardedSqliteVfs backupVfs = new(
+                           Paths,
+                           ProductWriteClass.Backup,
+                           backupDatabaseName))
+                {
+                    using SqliteConnection destination = new(
+                        new SqliteConnectionStringBuilder
+                        {
+                            DataSource = databasePath,
+                            Mode = SqliteOpenMode.ReadWrite,
+                            Pooling = false,
+                            Vfs = backupVfs.Name,
+                        }.ToString());
+                    destination.Open();
+                    sqliteVfs.VerifyAllGuards();
+                    connection.BackupDatabase(destination);
+                    backupVfs.VerifyAllGuards();
+                }
+
+                string databaseSha;
+                using (FileStream database = Paths.OpenReadFile(
+                           ProductWriteClass.Backup,
+                           backupDatabaseName))
+                {
+                    databaseSha = HashStream(database);
+                }
+
+                List<BackupPayloadManifest> payloads = [];
+                using (SqliteCommand command = connection.CreateCommand())
+                {
+                    command.CommandText =
+                        "SELECT content_sha256, byte_length, object_relative_path FROM payloads ORDER BY content_sha256;";
+                    using SqliteDataReader reader = command.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        string sha256 = reader.GetString(0);
+                        long byteLength = reader.GetInt64(1);
+                        string relativePath = reader.GetString(2);
+                        string payloadRelative = relativePath["payloads/".Length..]
+                            .Replace('/', Path.DirectorySeparatorChar);
+                        Paths.CopyFile(
+                            ProductWriteClass.Payload,
+                            payloadRelative,
+                            ProductWriteClass.Backup,
+                            Path.Combine(
+                                backupDatabaseName + ".payloads",
+                                payloadRelative),
+                            byteLength,
+                            sha256);
+                        payloads.Add(new BackupPayloadManifest(
+                            sha256,
+                            byteLength,
+                            relativePath));
+                    }
+                }
+
+                string manifestPath = Paths.ResolveProductPath(
+                    ProductWriteClass.Backup,
+                    backupDatabaseName + ".manifest.json");
+                byte[] manifest = JsonSerializer.SerializeToUtf8Bytes(
+                    new BackupManifest(
+                        CurrentSchemaVersion,
+                        BindingIdentity,
+                        databaseSha,
+                        payloads,
+                        now),
+                    new JsonSerializerOptions { WriteIndented = true });
+                if (manifest.Length is 0 or > MaximumBackupManifestBytes)
+                {
+                    throw new InvalidOperationException(
+                        "The backup manifest exceeds its finite bound.");
+                }
+
+                using (FileStream manifestStream = Paths.CreateNewFile(
+                           ProductWriteClass.Backup,
+                           backupDatabaseName + ".manifest.json"))
+                {
+                    manifestStream.Write(manifest);
+                    manifestStream.Flush(flushToDisk: true);
+                }
+
+                BackupArtifact artifact =
+                    new(databasePath, manifestPath, databaseSha);
+                _ = ValidateBackup(artifact);
+                using (SqliteTransaction transaction = BeginTransaction())
+                {
+                    InsertAuditEvent(
+                        "backup-created",
+                        "backup",
+                        Path.GetFileName(databasePath),
+                        now,
+                        transaction);
+                    transaction.Commit();
+                }
+
+                return artifact;
+            }
+            catch (Exception backupException) when (reservationCreated)
+            {
+                try
+                {
+                    CleanupFailedBackup(backupDatabaseName);
+                }
+                catch (Exception cleanupException)
+                {
+                    throw new AggregateException(
+                        "Backup creation failed and its partial bundle could not be removed.",
+                        backupException,
+                        cleanupException);
+                }
+
+                throw;
+            }
+        }
+    }
+
+    private void CleanupFailedBackup(string backupDatabaseName)
+    {
+        Paths.DeleteFile(
+            ProductWriteClass.Backup,
+            backupDatabaseName + ".manifest.json",
+            missingIsSuccess: true);
+        Paths.DeleteDirectoryTree(
+            ProductWriteClass.Backup,
+            backupDatabaseName + ".payloads",
+            missingIsSuccess: true);
+        foreach (string suffix in new[] { "-journal", "-shm", "-wal", string.Empty })
+        {
+            Paths.DeleteFile(
                 ProductWriteClass.Backup,
-                backupDatabaseName + ".manifest.json");
-            var manifest = JsonSerializer.SerializeToUtf8Bytes(
-                new BackupManifest(
-                    CurrentSchemaVersion,
-                    BindingIdentity,
-                    databaseSha,
-                    payloads,
-                    now),
-                new JsonSerializerOptions { WriteIndented = true });
-            using (FileStream manifestStream = new(
-                manifestPath,
-                FileMode.CreateNew,
-                FileAccess.Write,
-                FileShare.None))
-            {
-                manifestStream.Write(manifest);
-                manifestStream.Flush(flushToDisk: true);
-            }
-            using (SqliteTransaction transaction = BeginTransaction())
-            {
-                InsertAuditEvent(
-                    "backup-created",
-                    "backup",
-                    Path.GetFileName(databasePath),
-                    now,
-                    transaction);
-                transaction.Commit();
-            }
-            return new BackupArtifact(databasePath, manifestPath, databaseSha);
+                backupDatabaseName + suffix,
+                missingIsSuccess: true);
         }
     }
 
@@ -1665,55 +1699,90 @@ public sealed class AuthoritativeStore : IDisposable
             throw new InvalidOperationException(
                 "The restore target parent must already exist and be selected explicitly.");
         }
-        string stagingRoot = Path.Combine(
-            targetParent,
-            $".{Path.GetFileName(target.ProductRoot)}.restore-{Guid.NewGuid():N}.tmp");
-        StoragePaths staging = new(stagingRoot);
+        StoragePaths staging = target.CreateRestoreStagingPaths();
         bool published = false;
         try
         {
             staging.Create();
-            File.Copy(backup.DatabasePath, staging.Database, overwrite: false);
+            staging.CopyExternalFileIntoProduct(
+                ProductWriteClass.Data,
+                "infinium.sqlite3",
+                backup.DatabasePath,
+                validated.DatabaseByteLength,
+                validated.Manifest.DatabaseSha256);
             string backupPayloadRoot = backup.DatabasePath + ".payloads";
             foreach (BackupPayloadManifest payload in validated.Manifest.Payloads)
             {
                 string source = PayloadPath(backupPayloadRoot, payload.Sha256);
-                string destination = staging.ResolveProductPath(
+                staging.CopyExternalFileIntoProduct(
                     ProductWriteClass.Payload,
                     payload.RelativePath["payloads/".Length..]
-                        .Replace('/', Path.DirectorySeparatorChar));
-                Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
-                File.Copy(source, destination, overwrite: false);
+                        .Replace('/', Path.DirectorySeparatorChar),
+                    source,
+                    payload.ByteLength,
+                    payload.Sha256);
             }
 
-            if (!string.Equals(
-                    HashFile(staging.Database),
-                    validated.Manifest.DatabaseSha256,
-                    StringComparison.Ordinal))
+            using (FileStream stagedDatabase = staging.OpenReadFile(
+                       ProductWriteClass.Data,
+                       "infinium.sqlite3"))
             {
-                throw new InvalidOperationException(
-                    "The staged restore database fingerprint is invalid.");
+                if (!string.Equals(
+                        HashStream(stagedDatabase),
+                        validated.Manifest.DatabaseSha256,
+                        StringComparison.Ordinal))
+                {
+                    throw new InvalidOperationException(
+                        "The staged restore database fingerprint is invalid.");
+                }
             }
 
-            AppendRestoreAudit(
-                staging.Database,
-                target.AuthorityIdentity,
-                DateTimeOffset.UtcNow);
-            IReadOnlyList<BackupPayloadManifest> stagedPayloads =
-                ValidateDatabaseFile(staging.Database, validated.Manifest.Sqlite);
-            ValidateManifestPayloadSet(validated.Manifest.Payloads, stagedPayloads);
-            ValidatePayloadFiles(staging.Payloads, validated.Manifest.Payloads);
-            staging.Dispose();
-            Directory.Move(stagingRoot, target.ProductRoot);
+            List<PublicationFileExpectation> expectedFiles;
+            using (FileStream stagedDatabase = AppendRestoreAudit(
+                       staging,
+                       target.AuthorityIdentity,
+                       DateTimeOffset.UtcNow))
+            {
+                long stagedDatabaseLength = stagedDatabase.Length;
+                string stagedDatabaseSha256 = HashStream(stagedDatabase);
+                IReadOnlyList<BackupPayloadManifest> stagedPayloads =
+                    ValidateDatabaseFile(
+                        staging.Database,
+                        validated.Manifest.Sqlite);
+                ValidateManifestPayloadSet(
+                    validated.Manifest.Payloads,
+                    stagedPayloads);
+                ValidatePayloadFiles(
+                    staging.Payloads,
+                    validated.Manifest.Payloads);
+
+                expectedFiles =
+                [
+                    new(
+                        Path.Combine("data", "infinium.sqlite3"),
+                        stagedDatabaseLength,
+                        stagedDatabaseSha256),
+                ];
+                expectedFiles.AddRange(validated.Manifest.Payloads.Select(payload =>
+                    new PublicationFileExpectation(
+                        payload.RelativePath.Replace(
+                            '/',
+                            Path.DirectorySeparatorChar),
+                        payload.ByteLength,
+                        payload.Sha256)));
+            }
+
+            target.PublishFrom(staging, expectedFiles);
             published = true;
         }
         finally
         {
-            staging.Dispose();
-            if (!published && Directory.Exists(stagingRoot))
+            if (!published && staging.HasBoundProductRoot)
             {
-                Directory.Delete(stagingRoot, recursive: true);
+                staging.DeleteProductTree();
             }
+
+            staging.Dispose();
         }
     }
 
@@ -1763,17 +1832,14 @@ public sealed class AuthoritativeStore : IDisposable
             throw new InvalidOperationException("The backup database or manifest is missing.");
         }
 
-        long manifestLength = new FileInfo(backup.ManifestPath).Length;
-        if (manifestLength is <= 0 or > MaximumBackupManifestBytes)
-        {
-            throw new InvalidOperationException("The backup manifest exceeds its finite bound.");
-        }
-
         BackupManifest manifest;
         try
         {
             manifest = JsonSerializer.Deserialize<BackupManifest>(
-                File.ReadAllBytes(backup.ManifestPath),
+                ReadBoundedFile(
+                    backup.ManifestPath,
+                    MaximumBackupManifestBytes,
+                    "backup manifest"),
                 new JsonSerializerOptions { MaxDepth = 32 })
                 ?? throw new InvalidOperationException("The backup manifest is empty.");
         }
@@ -1799,7 +1865,18 @@ public sealed class AuthoritativeStore : IDisposable
                 "The backup database fingerprint is not canonically encoded.");
         }
 
-        string actualDatabaseSha = HashFile(backup.DatabasePath);
+        string actualDatabaseSha;
+        long databaseByteLength;
+        using (FileStream database = new(
+                   backup.DatabasePath,
+                   FileMode.Open,
+                   FileAccess.Read,
+                   FileShare.Read))
+        {
+            databaseByteLength = database.Length;
+            actualDatabaseSha = HashStream(database);
+        }
+
         if (!string.Equals(actualDatabaseSha, backup.Sha256, StringComparison.Ordinal)
             || !string.Equals(
                 actualDatabaseSha,
@@ -1813,7 +1890,7 @@ public sealed class AuthoritativeStore : IDisposable
             ValidateDatabaseFile(backup.DatabasePath, manifest.Sqlite);
         ValidateManifestPayloadSet(manifest.Payloads, databasePayloads);
         ValidatePayloadFiles(backup.DatabasePath + ".payloads", manifest.Payloads);
-        return new ValidatedBackup(manifest);
+        return new ValidatedBackup(manifest, databaseByteLength);
     }
 
     private static List<BackupPayloadManifest> ValidateDatabaseFile(
@@ -2083,9 +2160,13 @@ public sealed class AuthoritativeStore : IDisposable
                 throw new InvalidOperationException("A referenced backup payload is missing.");
             }
 
-            FileInfo file = new(path);
+            using FileStream file = new(
+                path,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read);
             if (file.Length != payload.ByteLength
-                || !string.Equals(HashFile(path), payload.Sha256, StringComparison.Ordinal))
+                || !string.Equals(HashStream(file), payload.Sha256, StringComparison.Ordinal))
             {
                 throw new InvalidOperationException(
                     "A referenced backup payload has an invalid length or fingerprint.");
@@ -2389,35 +2470,97 @@ public sealed class AuthoritativeStore : IDisposable
             ("$now", ToText(now)));
     }
 
-    private static void AppendRestoreAudit(
-        string databasePath,
+    private static FileStream AppendRestoreAudit(
+        StoragePaths paths,
         string authorityIdentity,
         DateTimeOffset now)
     {
-        using SqliteConnection restored = new(new SqliteConnectionStringBuilder
+        WindowsGuardedSqliteVfs restoredVfs = new(
+            paths,
+            ProductWriteClass.Data,
+            "infinium.sqlite3");
+        SqliteConnection restored = new(new SqliteConnectionStringBuilder
         {
-            DataSource = databasePath,
+            DataSource = paths.Database,
             Mode = SqliteOpenMode.ReadWrite,
             Cache = SqliteCacheMode.Private,
             Pooling = false,
+            Vfs = restoredVfs.Name,
         }.ToString());
-        restored.Open();
-        ConfigureConnection(restored);
-        using SqliteTransaction transaction = restored.BeginTransaction();
-        using SqliteCommand command = restored.CreateCommand();
-        command.Transaction = transaction;
-        command.CommandText =
-            """
-            INSERT INTO audit_events(
-                audit_event_id, event_kind, object_kind, object_id,
-                detail_payload_id, occurred_at)
-            VALUES ($id, 'restore-completed', 'product-root', $object, NULL, $now);
-            """;
-        command.Parameters.AddWithValue("$id", Guid.NewGuid().ToString("N"));
-        command.Parameters.AddWithValue("$object", authorityIdentity);
-        command.Parameters.AddWithValue("$now", ToText(now));
-        command.ExecuteNonQuery();
-        transaction.Commit();
+        FileStream? pinnedDatabase = null;
+        try
+        {
+            restored.Open();
+            ConfigureConnection(restored);
+            using (SqliteTransaction transaction = restored.BeginTransaction())
+            using (SqliteCommand command = restored.CreateCommand())
+            {
+                command.Transaction = transaction;
+                command.CommandText =
+                    """
+                    INSERT INTO audit_events(
+                        audit_event_id, event_kind, object_kind, object_id,
+                        detail_payload_id, occurred_at)
+                    VALUES ($id, 'restore-completed', 'product-root', $object, NULL, $now);
+                    """;
+                command.Parameters.AddWithValue("$id", Guid.NewGuid().ToString("N"));
+                command.Parameters.AddWithValue("$object", authorityIdentity);
+                command.Parameters.AddWithValue("$now", ToText(now));
+                command.ExecuteNonQuery();
+                transaction.Commit();
+            }
+
+            using (SqliteCommand checkpoint = restored.CreateCommand())
+            {
+                checkpoint.CommandText = "PRAGMA wal_checkpoint(TRUNCATE);";
+                using SqliteDataReader result = checkpoint.ExecuteReader();
+                if (!result.Read() || result.GetInt32(0) != 0)
+                {
+                    throw new InvalidOperationException(
+                        "The restored database WAL could not be checkpointed.");
+                }
+            }
+
+            using (SqliteCommand journalMode = restored.CreateCommand())
+            {
+                journalMode.CommandText = "PRAGMA journal_mode = DELETE;";
+                if (!string.Equals(
+                        Convert.ToString(
+                            journalMode.ExecuteScalar(),
+                            System.Globalization.CultureInfo.InvariantCulture),
+                        "delete",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new InvalidOperationException(
+                        "The restored database could not be normalized to one main file.");
+                }
+            }
+
+            restoredVfs.VerifyAllGuards();
+            restored.Dispose();
+            pinnedDatabase = paths.OpenReadFile(
+                ProductWriteClass.Data,
+                "infinium.sqlite3");
+            restoredVfs.VerifyAllGuards();
+            restoredVfs.Dispose();
+            foreach (string suffix in new[] { "-journal", "-shm", "-wal" })
+            {
+                paths.DeleteFile(
+                    ProductWriteClass.Data,
+                    "infinium.sqlite3" + suffix,
+                    missingIsSuccess: true);
+            }
+
+            FileStream resultStream = pinnedDatabase;
+            pinnedDatabase = null;
+            return resultStream;
+        }
+        finally
+        {
+            pinnedDatabase?.Dispose();
+            restored.Dispose();
+            restoredVfs.Dispose();
+        }
     }
 
     private static void ValidateAuditToken(string value, string parameterName)
@@ -2504,6 +2647,47 @@ public sealed class AuthoritativeStore : IDisposable
         return Convert.ToHexString(SHA256.HashData(stream)).ToLowerInvariant();
     }
 
+    private static string HashStream(Stream stream) =>
+        Convert.ToHexString(SHA256.HashData(stream)).ToLowerInvariant();
+
+    private static byte[] ReadBoundedFile(
+        string path,
+        int maximumBytes,
+        string description)
+    {
+        using FileStream stream = new(
+            path,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read);
+        if (stream.Length is <= 0 || stream.Length > maximumBytes)
+        {
+            throw new InvalidOperationException(
+                $"The {description} exceeds its finite bound.");
+        }
+
+        byte[] buffer = new byte[maximumBytes + 1];
+        int total = 0;
+        while (total < buffer.Length)
+        {
+            int read = stream.Read(buffer, total, buffer.Length - total);
+            if (read == 0)
+            {
+                break;
+            }
+
+            total += read;
+        }
+
+        if (total is 0 || total > maximumBytes)
+        {
+            throw new InvalidOperationException(
+                $"The {description} exceeds its finite bound.");
+        }
+
+        return buffer[..total];
+    }
+
     private sealed record BackupManifest(
         [property: JsonPropertyName("schemaVersion")] int SchemaVersion,
         [property: JsonPropertyName("sqlite")] SqliteBindingIdentity Sqlite,
@@ -2516,7 +2700,9 @@ public sealed class AuthoritativeStore : IDisposable
         [property: JsonPropertyName("byteLength")] long ByteLength,
         [property: JsonPropertyName("relativePath")] string RelativePath);
 
-    private sealed record ValidatedBackup(BackupManifest Manifest);
+    private sealed record ValidatedBackup(
+        BackupManifest Manifest,
+        long DatabaseByteLength);
 
     private static readonly HashSet<string> RequiredSchemaObjects =
     [

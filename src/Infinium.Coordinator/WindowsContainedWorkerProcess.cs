@@ -44,7 +44,7 @@ internal sealed class WindowsContainedWorkerProcess : IDisposable
         IReadOnlyList<string> arguments,
         string workingDirectory,
         IReadOnlyDictionary<string, string> environment,
-        string stagingDirectory,
+        SafeFileHandle stagingDirectory,
         IReadOnlyList<nint>? additionalInheritedHandles = null)
     {
         if (!OperatingSystem.IsWindows())
@@ -57,22 +57,27 @@ internal sealed class WindowsContainedWorkerProcess : IDisposable
         ArgumentNullException.ThrowIfNull(arguments);
         ArgumentException.ThrowIfNullOrWhiteSpace(workingDirectory);
         ArgumentNullException.ThrowIfNull(environment);
-        ArgumentException.ThrowIfNullOrWhiteSpace(stagingDirectory);
+        ArgumentNullException.ThrowIfNull(stagingDirectory);
+        if (additionalInheritedHandles?.Count > 8)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(additionalInheritedHandles),
+                "At most eight additional inherited handles are allowed.");
+        }
 
         SECURITY_ATTRIBUTES inheritable = new()
         {
             Length = Marshal.SizeOf<SECURITY_ATTRIBUTES>(),
             InheritHandle = true,
         };
-        nint stagingHandle = CreateFileW(
-            stagingDirectory,
-            FILE_LIST_DIRECTORY | FILE_ADD_FILE | SYNCHRONIZE,
-            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-            ref inheritable,
-            OPEN_EXISTING,
-            FILE_FLAG_BACKUP_SEMANTICS,
-            0);
-        if (stagingHandle == INVALID_HANDLE_VALUE)
+        if (!DuplicateHandle(
+                GetCurrentProcess(),
+                stagingDirectory.DangerousGetHandle(),
+                GetCurrentProcess(),
+                out nint stagingHandle,
+                0,
+                inheritHandle: true,
+                DUPLICATE_SAME_ACCESS))
         {
             throw new Win32Exception(
                 Marshal.GetLastWin32Error(),
@@ -91,6 +96,7 @@ internal sealed class WindowsContainedWorkerProcess : IDisposable
         nint processHandle = 0;
         nint threadHandle = 0;
         nint jobHandle = 0;
+        Dictionary<nint, uint> originalAdditionalHandleFlags = [];
         try
         {
             CreateDirectedPipe(
@@ -117,6 +123,18 @@ internal sealed class WindowsContainedWorkerProcess : IDisposable
                 stagingHandle,
                 .. additionalInheritedHandles ?? [],
             ];
+            foreach (nint handle in additionalInheritedHandles ?? [])
+            {
+                if (!GetHandleInformation(handle, out uint flags))
+                {
+                    throw new Win32Exception(
+                        Marshal.GetLastWin32Error(),
+                        "An additional inherited handle is invalid.");
+                }
+
+                originalAdditionalHandleFlags.TryAdd(handle, flags);
+            }
+
             foreach (nint handle in handles)
             {
                 if (handle is 0 or -1
@@ -288,6 +306,13 @@ internal sealed class WindowsContainedWorkerProcess : IDisposable
             CloseIfValid(threadHandle);
             CloseIfValid(jobHandle);
             CloseIfValid(stagingHandle);
+            foreach ((nint handle, uint flags) in originalAdditionalHandleFlags)
+            {
+                _ = SetHandleInformation(
+                    handle,
+                    HANDLE_FLAG_INHERIT,
+                    flags & HANDLE_FLAG_INHERIT);
+            }
         }
     }
 
@@ -463,14 +488,7 @@ internal sealed class WindowsContainedWorkerProcess : IDisposable
         }
     }
 
-    private const uint FILE_LIST_DIRECTORY = 0x00000001;
-    private const uint FILE_ADD_FILE = 0x00000002;
-    private const uint SYNCHRONIZE = 0x00100000;
-    private const uint FILE_SHARE_READ = 0x00000001;
-    private const uint FILE_SHARE_WRITE = 0x00000002;
-    private const uint FILE_SHARE_DELETE = 0x00000004;
-    private const uint OPEN_EXISTING = 3;
-    private const uint FILE_FLAG_BACKUP_SEMANTICS = 0x02000000;
+    private const uint DUPLICATE_SAME_ACCESS = 0x00000002;
     private const uint HANDLE_FLAG_INHERIT = 0x00000001;
     private const uint STARTF_USESTDHANDLES = 0x00000100;
     private const uint CREATE_SUSPENDED = 0x00000004;
@@ -482,7 +500,6 @@ internal sealed class WindowsContainedWorkerProcess : IDisposable
     private const uint JOB_OBJECT_LIMIT_ACTIVE_PROCESS = 0x00000008;
     private const uint JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE = 0x00002000;
     private static readonly nint PROC_THREAD_ATTRIBUTE_HANDLE_LIST = new(0x00020002);
-    private static readonly nint INVALID_HANDLE_VALUE = new(-1);
 
     [StructLayout(LayoutKind.Sequential)]
     private struct SECURITY_ATTRIBUTES
@@ -567,15 +584,19 @@ internal sealed class WindowsContainedWorkerProcess : IDisposable
         public nuint PeakJobMemoryUsed;
     }
 
-    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-    private static extern nint CreateFileW(
-        string fileName,
+    [DllImport("kernel32.dll")]
+    private static extern nint GetCurrentProcess();
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool DuplicateHandle(
+        nint sourceProcess,
+        nint sourceHandle,
+        nint targetProcess,
+        out nint targetHandle,
         uint desiredAccess,
-        uint shareMode,
-        ref SECURITY_ATTRIBUTES securityAttributes,
-        uint creationDisposition,
-        uint flagsAndAttributes,
-        nint templateFile);
+        [MarshalAs(UnmanagedType.Bool)] bool inheritHandle,
+        uint options);
 
     [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -588,6 +609,10 @@ internal sealed class WindowsContainedWorkerProcess : IDisposable
     [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool SetHandleInformation(nint handle, uint mask, uint flags);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetHandleInformation(nint handle, out uint flags);
 
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]

@@ -1,13 +1,19 @@
 # M1 Slice 2 implementation record
 
-Status: Review-corrected; one accepted write-authority blocker remains
+Status: Complete after review, correction, and re-review
 Review completed: 2026-07-29
 Plan: [M1 backend semantic proof plan](../milestones/M1-backend-semantic-proof.md),
 accepted revision dated 2026-07-28
 Slice: 2 — Persistence, lifecycle, coordinator, worker, and CLI substrate
 Implementation commit: `20125512901f85ba1235320f9c8a23c4f0f37aee`
-Review correction: follow-up commit with subject
-`fix: address M1 Slice 2 review findings`
+Review corrections:
+
+- `6eafe0b7c8e5d6de10feb75b4e812b5a99ac5ab0`
+  (`fix: address M1 Slice 2 review findings`);
+- `7edcb381b7c59d5f0a7da440389171cf71cdddd1`
+  (`fix: qualify Slice 2 SQLite write authority`); and
+- final closeout follow-up commit with subject
+  `fix: address M1 Slice 2 review findings`.
 
 ## Outcome
 
@@ -60,9 +66,18 @@ issues in the original implementation:
 - dependency provenance and license curation were not reproducibly generated
   from the locked packages.
 
-The corrections are retained in the focused review commit and were subjected
-to a second semantic and diff review. The remaining ADR-0021 blocker is
-recorded below rather than hidden by a weaker capability claim.
+The corrections are retained in focused review commits and were subjected to
+repeated semantic and diff review. The final closeout converted every
+remaining delivered product mutation to retained handle-relative authority,
+bounded inherited worker handles, published the runtime descriptor only after
+the coordinator was listening, made CAS placement bounded and atomic, and
+made backup creation validate or remove its complete bundle. Restore now
+checkpoints away SQLite sidecars, pins the exact post-audit database across
+semantic validation, requires the exact expected file and directory
+inventory, compares identity and bytes across its handle-relative root
+rename, and either rolls back or deletes a rejected tree if the former
+staging name is obstructed. These corrections close the remaining
+ADR-0021/EVAL-0080 blocker without changing the accepted architecture.
 
 ## Retained artifacts and identities
 
@@ -105,16 +120,16 @@ Final commands were run from the repository root on Windows x64:
 | --- | --- |
 | `dotnet restore Infinium.sln --locked-mode --nologo` | Passed; all 15 projects matched committed lock files. |
 | `dotnet build Infinium.sln -c Release --no-restore --nologo` | Passed; 0 warnings and 0 errors. |
-| `dotnet test Infinium.sln -c Release --no-build --nologo` | Passed; 134 checks passed and 1 environment-dependent symbolic-link check skipped: 59 unit passed/1 skipped, 50 contract, 13 integration, and 12 evaluation. |
-| `dotnet test Infinium.sln -c Release --no-build --nologo --filter "Category=M1Unit"` | Passed; 52 applicable checks passed and 1 symbolic-link check skipped. |
+| `dotnet test Infinium.sln -c Release --no-build --nologo` | Passed; 143 checks passed and 1 environment-dependent symbolic-link check skipped: 68 unit passed/1 skipped, 50 contract, 13 integration, and 12 evaluation. |
+| `dotnet test Infinium.sln -c Release --no-build --nologo --filter "Category=M1Unit"` | Passed; 60 applicable checks passed and 1 symbolic-link check skipped. |
 | `dotnet test tests/Infinium.UnitTests/Infinium.UnitTests.csproj -c Release --no-build --nologo --filter "Name~GuardedSqlite"` | Passed; 2 SQLite opened-object, replacement, WAL-persistence, restart, and hard-link checks. |
 | `dotnet test Infinium.sln -c Release --no-build --nologo --filter "Category=M1Contract"` | Passed; 20 applicable checks. |
 | `dotnet test Infinium.sln -c Release --no-build --nologo --filter "Category=M1Integration"` | Passed; 14 applicable checks. |
 | `dotnet test Infinium.sln -c Release --no-build --nologo --filter "Category=M1Evaluation"` | Passed; 14 applicable checks. |
-| `dotnet test Infinium.sln -c Release --no-build --nologo --filter "Category=M1Security"` | Passed; 6 applicable checks. |
+| `dotnet test Infinium.sln -c Release --no-build --nologo --filter "Category=M1Security"` | Passed; 7 applicable checks. |
 | `dotnet test Infinium.sln -c Release --no-build --nologo --filter "Category=M1Fault"` | Passed; 13 applicable checks. |
-| `dotnet test Infinium.sln -c Release --no-build --nologo --filter "TestCategory=M1Security"` | Passed; 39 cross-category security checks passed and 1 symbolic-link check skipped. |
-| `dotnet test Infinium.sln -c Release --no-build --nologo --filter "TestCategory=M1Fault"` | Passed; 47 cross-category fault checks. |
+| `dotnet test Infinium.sln -c Release --no-build --nologo --filter "TestCategory=M1Security"` | Passed; 48 cross-category security checks passed and 1 symbolic-link check skipped. |
+| `dotnet test Infinium.sln -c Release --no-build --nologo --filter "TestCategory=M1Fault"` | Passed; 53 cross-category fault checks. |
 | `dotnet format Infinium.sln --verify-no-changes --no-restore --verbosity minimal` | Passed. |
 | `powershell -NoProfile -ExecutionPolicy Bypass -File eng/update-dependency-manifest.ps1 -Check` | Passed; the committed dependency manifest matches all locked packages and curated provenance/license inputs. |
 | `git diff --check` | Passed. |
@@ -170,10 +185,9 @@ rules, analyzer answers, or controlled-real evidence.
   constructed environments, bounded private channels, and finite
   time/memory/output contracts.
 - Product storage uses six closed write classes, protected current-user/SYSTEM
-  ACLs, retained opened root/class identities, and durable audit events for
-  class binding, runtime descriptor, checkpoint, staging, payload, backup,
-  and restore writes. The remaining handle-relative leaf-I/O qualification is
-  stated explicitly below.
+  ACLs, non-delete-shared retained root/class identities, handle-relative
+  descendant mutation, and durable audit events for class binding, runtime
+  descriptor, checkpoint, staging, payload, backup, and restore writes.
 - Workers cannot access SQLite or the authoritative payload store and cannot
   publish; coordinator validation checks the current run/attempt fences,
   declared slot, canonical manifest digest, bytes, size, and SHA-256.
@@ -187,23 +201,21 @@ closure, process cleanup, unsupported behavior, and later-slice exclusions.
 
 ## Known gaps and deferred work
 
-- **Material blocker, narrowed by RESEARCH-0050:** the corrected
-  write-authority layer has closed write classes, private ACLs, retained opened
-  root/class handles, volume/file identities, final-path checks, replacement
-  detection, and typed audit records. Worker output is genuinely
-  handle-relative. The SQLite boundary now has a qualified shim-VFS prototype:
-  it opens/creates the database, WAL, shared-memory, and journal leaves relative
-  to the retained data-class handle, validates opened identity/link count, pins
-  the objects against replacement, delegates byte I/O to the exact `win32` VFS,
-  enables persistent WAL, and revalidates before authoritative transactions.
+- **Closed Slice 2 gate:** the write-authority layer has closed write classes,
+  private ACLs, non-delete-shared root/class/staging handles, volume/file
+  identities, final-path checks, reparse/hard-link rejection, bounded
+  handle-relative copying and deletion, and typed audit records. The qualified
+SQLite shim opens and pins the database/WAL/SHM/journal family before exact
+`win32` VFS use. CAS admission hashes the exact non-write-shared source bytes
+while copying to a temporary leaf, atomically renames only the completed
+object, retains staging across a late relational failure, and deletes it only
+after commit. Restore revalidates the full staged tree across its
+handle-relative root rename, publishes only its exact validated file and
+directory inventory, and removes a rejected target if rollback is obstructed.
+Runtime metadata and backup/restore non-SQLite writes use the same primitive.
   [RESEARCH-0050](../../research/investigations/RESEARCH-0050-sqlite-opened-object-write-authority.md)
-  records the evidence and why this fits ADR-0021's separately qualified
-  equivalent language. The backup SQLite destination, backup
-  manifests/payload copies, restore, content-addressed publication,
-  runtime-descriptor writes, and some directory creation still call pathname
-  APIs beneath pinned handles. Full EVAL-0080 and Slice 2 closeout remain
-  blocked until those writes use the shared opened-object primitive and the
-  complete adversarial matrix passes.
+  records why the SQLite portion is ADR-0021's separately qualified
+  equivalent. The delivered Slice 2 portion of EVAL-0080 now passes.
 - The review's earlier pre-database rejection-audit concern was rechecked
   against EVAL-0080. The accepted case requires an audit record for each
   product write; an authority rejection before database availability performs

@@ -8,8 +8,8 @@
   replacing the accepted SQLite/WAL architecture?
 - **Decision enabled:** M1 Slice 2 write-authority implementation
 - **Disposition:** The bounded shim-VFS approach is viable on the supported
-  Windows/NTFS baseline; full EVAL-0080 closure still requires integrating the
-  same opened-object discipline across non-SQLite product writes.
+  Windows/NTFS baseline and is now integrated with the same opened-object
+  discipline across all delivered Slice 2 product writes.
 
 ## Executive answer
 
@@ -36,9 +36,11 @@ open/create requirement. It is not path-string-only authorization: the
 path-based Windows VFS call occurs only after an atomically opened,
 identity-validated object is pinned against rename or deletion.
 
-The prototype does not close Slice 2 by itself. Backup manifests and payloads,
-restore staging/publication, CAS publication, runtime descriptors, and some
-directory creation still require the same opened-object conversion.
+The completed Slice 2 integration applies the same retained-capability model
+to backup manifests and payloads, restore staging/publication and cleanup,
+CAS publication, runtime descriptors, worker staging, and product/write-class
+directory creation. No delivered Slice 2 product mutation now relies on
+authorize-then-pathname behavior.
 
 ## Scope and non-scope
 
@@ -61,7 +63,7 @@ directory creation still require the same opened-object conversion.
 - unsupported/network filesystems;
 - resistance to an independently malicious same-user process after a guard
   check; ADR-0021 already excludes that stronger sandbox claim;
-- non-SQLite product-write conversion; and
+- later product-write classes not delivered by Slice 2; and
 - later-slice MO2/game/profile root population.
 
 ## Authoritative constraints
@@ -189,23 +191,16 @@ Not needed by the prototype result and therefore not recommended.
   changed link count is observed.
 - The prototype delegates locking and byte I/O to SQLite's exact `win32` VFS;
   a change in the native VFS name or ABI must fail closed and trigger review.
-- Full EVAL-0080 remains pending until all delivered non-SQLite writes use
-  opened-object operations and the complete adversarial matrix is rerun.
+- The supported production Windows/NTFS matrix remains narrower than a
+  general claim for network, removable, or unsupported filesystems.
 
 ## Recommendation
 
-Retain and harden the shim-VFS implementation. Next, convert the remaining
-Slice 2 product writes to the shared handle-relative primitive:
-
-1. backup database destination, payload copies, and manifest;
-2. restore staging, validation, and publication;
-3. CAS publication and cleanup;
-4. runtime-descriptor temporary creation and atomic replacement; and
-5. product/write-class directory creation.
-
-Then execute the complete EVAL-0080 matrix, the accumulated Slice 2 suite, and
-a final semantic/diff review before changing the implementation record from
-blocked to complete.
+Retain the integrated shim-VFS and shared handle-relative primitive. The final
+Slice 2 closeout reruns EVAL-0080, the accumulated regression suite, direct
+runtime/restore/CAS/worker boundary checks, and semantic/diff review. Any
+future product write class must enter through the same closed capability
+mapping rather than reintroducing pathname mutation.
 
 ## ADR or follow-up enabled
 

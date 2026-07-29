@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -709,6 +710,71 @@ public sealed class PersistenceAndLifecycleTests
 
     [TestMethod]
     [TestCategory("M1Unit")]
+    [TestCategory("M1Security")]
+    [TestCategory("M1Fault")]
+    [TestProperty("Category", "M1Unit")]
+    [TestProperty("Category", "M1Security")]
+    [TestProperty("Category", "M1Fault")]
+    public void BackupRejectsCorruptCasBytesAndRemovesThePartialBundle()
+    {
+        using TemporaryStore temporary = new();
+        using AuthoritativeStore store = temporary.Open();
+        CoordinatorAuthority authority = store.AcquireCoordinatorAuthority(
+            "coordinator-corrupt-backup",
+            DateTimeOffset.UtcNow,
+            TimeSpan.FromMinutes(5));
+        RunRecord queued = store.CreateRun(
+            "command-corrupt-backup",
+            "run-corrupt-backup",
+            Binding("corrupt-backup"),
+            authority.FencingEpoch,
+            DateTimeOffset.UtcNow);
+        _ = store.Transition(
+            "running-corrupt-backup",
+            queued.RunId,
+            queued.Generation,
+            LifecycleState.Running,
+            authority.FencingEpoch,
+            "backup dispatch",
+            DateTimeOffset.UtcNow);
+        AttemptRecord attempt = store.CreateAttempt(
+            queued.RunId,
+            authority.FencingEpoch,
+            TimeSpan.FromMinutes(2),
+            DateTimeOffset.UtcNow);
+        string staging = Path.Combine(store.Paths.Staging, attempt.AttemptId);
+        Directory.CreateDirectory(staging);
+        byte[] original = "synthetic backup payload"u8.ToArray();
+        File.WriteAllBytes(Path.Combine(staging, "result.bin"), original);
+        string sha256 = Convert.ToHexString(SHA256.HashData(original))
+            .ToLowerInvariant();
+        PayloadAdmission admission = store.AdmitStagedPayload(
+            attempt,
+            "result.bin",
+            sha256,
+            original.LongLength,
+            sha256,
+            4096,
+            DateTimeOffset.UtcNow);
+        File.WriteAllBytes(
+            Path.Combine(
+                store.Paths.ProductRoot,
+                admission.RelativePath.Replace(
+                    '/',
+                    Path.DirectorySeparatorChar)),
+            "corrupted backup payload"u8.ToArray());
+
+        Assert.ThrowsExactly<InvalidOperationException>(
+            () => store.CreateBackup("corrupt", DateTimeOffset.UtcNow));
+        Assert.IsEmpty(
+            Directory.GetFileSystemEntries(
+                store.Paths.Backups,
+                "*",
+                SearchOption.AllDirectories));
+    }
+
+    [TestMethod]
+    [TestCategory("M1Unit")]
     [TestCategory("M1Fault")]
     [TestProperty("Category", "M1Unit")]
     [TestProperty("Category", "M1Fault")]
@@ -808,6 +874,22 @@ public sealed class PersistenceAndLifecycleTests
             Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
         string manifestSha256 = new('a', 64);
 
+        using (FileStream activeWriter = new(
+                   Path.Combine(directory, "result.bin"),
+                   FileMode.Open,
+                   FileAccess.Write,
+                   FileShare.ReadWrite | FileShare.Delete))
+        {
+            Assert.Throws<Win32Exception>(() => store.AdmitStagedPayload(
+                attempt,
+                "result.bin",
+                sha256,
+                bytes.LongLength,
+                manifestSha256,
+                4096,
+                DateTimeOffset.UtcNow));
+        }
+
         Assert.ThrowsExactly<InvalidOperationException>(() => store.AdmitStagedPayload(
             attempt,
             "result.bin",
@@ -817,6 +899,25 @@ public sealed class PersistenceAndLifecycleTests
             4096,
             DateTimeOffset.UtcNow));
         Assert.IsFalse(store.HasRecoverablePublication(queued.RunId));
+        Assert.IsTrue(File.Exists(Path.Combine(directory, "result.bin")));
+
+        Assert.Throws<SqliteException>(() => store.AdmitStagedPayload(
+            attempt,
+            "result.bin",
+            sha256,
+            bytes.LongLength,
+            manifestSha256,
+            4096,
+            DateTimeOffset.UtcNow,
+            completionCommandId: "command-a"));
+        Assert.IsTrue(File.Exists(Path.Combine(directory, "result.bin")));
+        string orphanedCasPath = Path.Combine(
+            store.Paths.Payloads,
+            sha256[..2],
+            sha256[2..4],
+            sha256);
+        Assert.IsTrue(File.Exists(orphanedCasPath));
+        CollectionAssert.AreEqual(bytes, File.ReadAllBytes(orphanedCasPath));
 
         PayloadAdmission admitted = store.AdmitStagedPayload(
             attempt,

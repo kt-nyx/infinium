@@ -83,14 +83,6 @@ try
         Environment.ProcessId,
         elevated: false,
         DateTimeOffset.UtcNow);
-    descriptor.WriteRestrictedToAuthorizedPath(
-        paths.ResolveProductPath(ProductWriteClass.Runtime, RuntimeDescriptor.FileName));
-    store.RecordAuditEvent(
-        "runtime-descriptor-written",
-        "runtime-descriptor",
-        RuntimeDescriptor.FileName,
-        DateTimeOffset.UtcNow);
-
     WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
     builder.Logging.ClearProviders();
     if (!args.Contains("--quiet", StringComparer.Ordinal))
@@ -147,6 +139,12 @@ try
     await app.StartAsync().ConfigureAwait(false);
     try
     {
+        paths.WriteCoordinatorRuntimeDescriptor(descriptor.Serialize());
+        store.RecordAuditEvent(
+            "runtime-descriptor-written",
+            "runtime-descriptor",
+            RuntimeDescriptor.FileName,
+            DateTimeOffset.UtcNow);
         app.Services.GetRequiredService<ManagedRunExecutor>().RecoverAtStartup();
         await app.WaitForShutdownAsync().ConfigureAwait(false);
     }

@@ -443,10 +443,8 @@ public sealed class WriteAuthorityTests
             StoragePaths paths = new(productRoot, registry);
             paths.Create();
 
-            Directory.Move(paths.Data, movedData);
-            Directory.CreateDirectory(paths.Data);
-            Assert.ThrowsExactly<InvalidOperationException>(
-                () => paths.ResolveProductPath(ProductWriteClass.Data, "new.bin"));
+            Assert.Throws<IOException>(
+                () => Directory.Move(paths.Data, movedData));
 
             paths.Dispose();
             Directory.Move(productRoot, movedRoot);
@@ -541,6 +539,330 @@ public sealed class WriteAuthorityTests
                     "sqlite",
                     "hard-link",
                     DateTimeOffset.UtcNow));
+        }
+        finally
+        {
+            Delete(root);
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("M1Unit")]
+    [TestCategory("M1Security")]
+    [TestProperty("Category", "M1Unit")]
+    [TestProperty("Category", "M1Security")]
+    public void RuntimeDescriptorPublicationAtomicallyReplacesOnlyItsFixedLeaf()
+    {
+        string root = Temp();
+        try
+        {
+            Directory.CreateDirectory(root);
+            using WindowsWriteAuthorityRegistry registry = new([]);
+            using StoragePaths paths = new(Path.Combine(root, "product"), registry);
+            paths.Create();
+
+            paths.WriteCoordinatorRuntimeDescriptor("""{"instance":"first"}"""u8);
+            paths.WriteCoordinatorRuntimeDescriptor("""{"instance":"second"}"""u8);
+
+            Assert.AreEqual(
+                """{"instance":"second"}""",
+                File.ReadAllText(Path.Combine(paths.Runtime, RuntimeDescriptorFileName)));
+            Assert.HasCount(
+                1,
+                Directory.GetFiles(paths.Runtime, "*", SearchOption.TopDirectoryOnly));
+            string descriptorPath =
+                Path.Combine(paths.Runtime, RuntimeDescriptorFileName);
+            string hardLink = Path.Combine(root, "runtime-descriptor-hard-link.json");
+            Assert.IsTrue(CreateHardLinkW(hardLink, descriptorPath, 0));
+            Assert.ThrowsExactly<InvalidOperationException>(
+                () => paths.WriteCoordinatorRuntimeDescriptor(
+                    """{"instance":"third"}"""u8));
+            Assert.AreEqual(
+                """{"instance":"second"}""",
+                File.ReadAllText(descriptorPath));
+            File.Delete(hardLink);
+            Assert.ThrowsExactly<ArgumentException>(
+                () => paths.CreateAttemptStagingDirectory("CON"));
+        }
+        finally
+        {
+            Delete(root);
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("M1Unit")]
+    [TestCategory("M1Security")]
+    [TestProperty("Category", "M1Unit")]
+    [TestProperty("Category", "M1Security")]
+    public void RestorePublicationRenamesTheRetainedSiblingAndRebindsTargetAuthority()
+    {
+        string root = Temp();
+        try
+        {
+            Directory.CreateDirectory(root);
+            using WindowsWriteAuthorityRegistry registry = new([]);
+            using StoragePaths target =
+                new(Path.Combine(root, "restored"), registry);
+            using StoragePaths staging = target.CreateRestoreStagingPaths();
+            staging.Create();
+            using (FileStream payload = staging.CreateNewFile(
+                       ProductWriteClass.Payload,
+                       Path.Combine("aa", "proof.bin")))
+            {
+                payload.Write("proof"u8);
+                payload.Flush(flushToDisk: true);
+            }
+
+            string stagingRoot = staging.ProductRoot;
+            target.PublishFrom(staging);
+
+            Assert.IsFalse(Directory.Exists(stagingRoot));
+            Assert.AreEqual(
+                "proof",
+                File.ReadAllText(Path.Combine(target.Payloads, "aa", "proof.bin")));
+            using FileStream second = target.CreateNewFile(
+                ProductWriteClass.Runtime,
+                "post-publication.bin");
+            second.WriteByte(1);
+        }
+        finally
+        {
+            Delete(root);
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("M1Unit")]
+    [TestCategory("M1Security")]
+    [TestCategory("M1Fault")]
+    [TestProperty("Category", "M1Unit")]
+    [TestProperty("Category", "M1Security")]
+    [TestProperty("Category", "M1Fault")]
+    public void FailedRestoreCleanupDeletesOnlyTheRetainedStagingTree()
+    {
+        string root = Temp();
+        try
+        {
+            Directory.CreateDirectory(root);
+            using WindowsWriteAuthorityRegistry registry = new([]);
+            using StoragePaths target =
+                new(Path.Combine(root, "restored"), registry);
+            StoragePaths staging = target.CreateRestoreStagingPaths();
+            staging.Create();
+            using (FileStream nested = staging.CreateNewFile(
+                       ProductWriteClass.Payload,
+                       Path.Combine("aa", "bb", "partial.bin")))
+            {
+                nested.Write("partial"u8);
+            }
+
+            string stagingRoot = staging.ProductRoot;
+            staging.DeleteProductTree();
+            staging.Dispose();
+
+            Assert.IsFalse(Directory.Exists(stagingRoot));
+            Assert.IsFalse(Directory.Exists(target.ProductRoot));
+        }
+        finally
+        {
+            Delete(root);
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("M1Unit")]
+    [TestCategory("M1Security")]
+    [TestCategory("M1Fault")]
+    [TestProperty("Category", "M1Unit")]
+    [TestProperty("Category", "M1Security")]
+    [TestProperty("Category", "M1Fault")]
+    public void RestoreStagingWriteClassCannotBeReplacedBeforePublication()
+    {
+        string root = Temp();
+        try
+        {
+            Directory.CreateDirectory(root);
+            using WindowsWriteAuthorityRegistry registry = new([]);
+            using StoragePaths target =
+                new(Path.Combine(root, "restored"), registry);
+            using StoragePaths staging = target.CreateRestoreStagingPaths();
+            staging.Create();
+
+            Assert.Throws<IOException>(() => Directory.Move(
+                staging.Payloads,
+                Path.Combine(staging.ProductRoot, "payloads-original")));
+            target.PublishFrom(staging);
+            Assert.IsTrue(Directory.Exists(target.ProductRoot));
+        }
+        finally
+        {
+            Delete(root);
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("M1Unit")]
+    [TestCategory("M1Security")]
+    [TestCategory("M1Fault")]
+    [TestProperty("Category", "M1Unit")]
+    [TestProperty("Category", "M1Security")]
+    [TestProperty("Category", "M1Fault")]
+    public void RestorePublicationRollsBackAChangedTreeAfterRootRename()
+    {
+        string root = Temp();
+        try
+        {
+            Directory.CreateDirectory(root);
+            using WindowsWriteAuthorityRegistry registry = new([]);
+            using StoragePaths target =
+                new(Path.Combine(root, "restored"), registry);
+            using StoragePaths staging = target.CreateRestoreStagingPaths();
+            staging.Create();
+            using (FileStream proof = staging.CreateNewFile(
+                       ProductWriteClass.Runtime,
+                       "proof.bin"))
+            {
+                proof.Write("before"u8);
+            }
+
+            string stagingRoot = staging.ProductRoot;
+            registry.BeforePublishedTreeValidationForTests = () =>
+            {
+                File.WriteAllBytes(
+                    Path.Combine(target.Runtime, "proof.bin"),
+                    "after!"u8.ToArray());
+            };
+
+            Assert.ThrowsExactly<InvalidOperationException>(
+                () => target.PublishFrom(staging));
+
+            Assert.IsFalse(Directory.Exists(target.ProductRoot));
+            Assert.IsTrue(Directory.Exists(stagingRoot));
+        }
+        finally
+        {
+            Delete(root);
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("M1Unit")]
+    [TestCategory("M1Security")]
+    [TestCategory("M1Fault")]
+    [TestProperty("Category", "M1Unit")]
+    [TestProperty("Category", "M1Security")]
+    [TestProperty("Category", "M1Fault")]
+    public void RestorePublicationRejectsBytesChangedAfterValidation()
+    {
+        string root = Temp();
+        try
+        {
+            Directory.CreateDirectory(root);
+            using WindowsWriteAuthorityRegistry registry = new([]);
+            using StoragePaths target =
+                new(Path.Combine(root, "restored"), registry);
+            using StoragePaths staging = target.CreateRestoreStagingPaths();
+            staging.Create();
+            byte[] expectedBytes = "before"u8.ToArray();
+            using (FileStream proof = staging.CreateNewFile(
+                       ProductWriteClass.Runtime,
+                       "proof.bin"))
+            {
+                proof.Write(expectedBytes);
+            }
+
+            string stagingRoot = staging.ProductRoot;
+            string expectedSha256 = Convert.ToHexString(
+                    System.Security.Cryptography.SHA256.HashData(expectedBytes))
+                .ToLowerInvariant();
+            registry.BeforePublicationSnapshotForTests = () =>
+            {
+                File.WriteAllBytes(
+                    Path.Combine(staging.Runtime, "proof.bin"),
+                    "after!"u8.ToArray());
+            };
+
+            Assert.ThrowsExactly<InvalidOperationException>(
+                () => target.PublishFrom(
+                    staging,
+                    [
+                        new PublicationFileExpectation(
+                            Path.Combine("runtime", "proof.bin"),
+                            expectedBytes.LongLength,
+                            expectedSha256),
+                    ]));
+
+            Assert.IsFalse(Directory.Exists(target.ProductRoot));
+            Assert.IsTrue(Directory.Exists(stagingRoot));
+
+            registry.BeforePublicationSnapshotForTests = null;
+            File.WriteAllBytes(
+                Path.Combine(staging.Runtime, "proof.bin"),
+                expectedBytes);
+            using (FileStream unexpected = staging.CreateNewFile(
+                       ProductWriteClass.Runtime,
+                       "unexpected.bin"))
+            {
+                unexpected.WriteByte(1);
+            }
+
+            Assert.ThrowsExactly<InvalidOperationException>(
+                () => target.PublishFrom(
+                    staging,
+                    [
+                        new PublicationFileExpectation(
+                            Path.Combine("runtime", "proof.bin"),
+                            expectedBytes.LongLength,
+                            expectedSha256),
+                    ]));
+        }
+        finally
+        {
+            Delete(root);
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("M1Unit")]
+    [TestCategory("M1Security")]
+    [TestCategory("M1Fault")]
+    [TestProperty("Category", "M1Unit")]
+    [TestProperty("Category", "M1Security")]
+    [TestProperty("Category", "M1Fault")]
+    public void RestorePublicationDeletesRejectedTreeWhenRollbackNameIsOccupied()
+    {
+        string root = Temp();
+        try
+        {
+            Directory.CreateDirectory(root);
+            using WindowsWriteAuthorityRegistry registry = new([]);
+            using StoragePaths target =
+                new(Path.Combine(root, "restored"), registry);
+            using StoragePaths staging = target.CreateRestoreStagingPaths();
+            staging.Create();
+            using (FileStream proof = staging.CreateNewFile(
+                       ProductWriteClass.Runtime,
+                       "proof.bin"))
+            {
+                proof.Write("before"u8);
+            }
+
+            string stagingRoot = staging.ProductRoot;
+            registry.BeforePublishedTreeValidationForTests = () =>
+            {
+                Directory.CreateDirectory(stagingRoot);
+                File.WriteAllBytes(
+                    Path.Combine(target.Runtime, "proof.bin"),
+                    "after!"u8.ToArray());
+            };
+
+            Assert.ThrowsExactly<AggregateException>(
+                () => target.PublishFrom(staging));
+
+            Assert.IsFalse(Directory.Exists(target.ProductRoot));
+            Assert.IsTrue(Directory.Exists(stagingRoot));
+            Assert.IsFalse(staging.HasBoundProductRoot);
         }
         finally
         {
