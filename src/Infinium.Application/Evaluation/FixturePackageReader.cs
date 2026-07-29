@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using System.Text.Json;
 using Infinium.Domain.Contracts;
 
@@ -57,10 +56,53 @@ public static class FixturePackageReader
         "expected_lead_only_cases",
         "expected_abstentions",
         "expected_invalid_inputs",
-        "expected_taxonomy_assignments",
-        "forbidden_claims",
-        "known_limits",
+        "expected_failures",
+        "expected_coverage_and_gaps",
     ];
+
+    private static readonly Dictionary<string, HashSet<string>> ExpectedCollectionTypes =
+        new Dictionary<string, HashSet<string>>(StringComparer.Ordinal)
+        {
+            ["expected_observations"] = ["observation"],
+            ["expected_deterministic_results"] = ["deterministic-result"],
+            ["expected_external_claims"] = ["external-claim"],
+            ["expected_application_links"] = ["application-link"],
+            ["expected_discovery_leads"] = ["discovery-lead"],
+            ["expected_model_proposals"] = ["model-proposal"],
+            ["expected_proposal_admissions"] = ["proposal-admission"],
+            ["expected_candidates"] = ["candidate"],
+            ["expected_hypotheses"] = ["hypothesis"],
+            ["expected_findings"] = ["finding"],
+            ["expected_recommendations"] = ["recommendation"],
+            ["expected_supported_cases"] = ["supported-case"],
+            ["expected_lead_only_cases"] = ["lead-only-case"],
+            ["expected_abstentions"] = ["abstention"],
+            ["expected_invalid_inputs"] = ["invalid-input"],
+            ["expected_failures"] = ["failure"],
+            ["expected_coverage_and_gaps"] = ["coverage", "coverage-gap", "audit-gap"],
+        };
+
+    private static readonly Dictionary<string, string> ExpectedCollectionStateNames =
+        new(StringComparer.Ordinal)
+        {
+            ["expected_observations"] = "observations",
+            ["expected_deterministic_results"] = "deterministic_results",
+            ["expected_external_claims"] = "external_claims",
+            ["expected_application_links"] = "application_links",
+            ["expected_discovery_leads"] = "discovery_leads",
+            ["expected_model_proposals"] = "model_proposals",
+            ["expected_proposal_admissions"] = "proposal_admissions",
+            ["expected_candidates"] = "candidates",
+            ["expected_hypotheses"] = "hypotheses",
+            ["expected_findings"] = "findings",
+            ["expected_recommendations"] = "recommendations",
+            ["expected_supported_cases"] = "supported_cases",
+            ["expected_lead_only_cases"] = "lead_only_cases",
+            ["expected_abstentions"] = "abstentions",
+            ["expected_invalid_inputs"] = "invalid_inputs",
+            ["expected_failures"] = "failures",
+            ["expected_coverage_and_gaps"] = "coverage_gaps",
+        };
 
     private static readonly HashSet<string> PublicManifestProperties = new(StringComparer.Ordinal)
     {
@@ -128,7 +170,9 @@ public static class FixturePackageReader
         "expected_lead_only_cases",
         "expected_abstentions",
         "expected_invalid_inputs",
+        "expected_failures",
         "expected_coverage_and_gaps",
+        "expected_collection_states",
         "expected_taxonomy_assignments",
         "expected_replayability",
         "forbidden_claims",
@@ -157,8 +201,8 @@ public static class FixturePackageReader
 
     public static ExecutionFixturePackage ReadExecutionInput(string executionInputPath)
     {
-        using JsonDocument document = ReadDocument(executionInputPath);
-        JsonElement root = RequireObject(document.RootElement, ExecutionInputFileName);
+        using BoundedJsonDocumentSnapshot snapshot = ReadDocument(executionInputPath);
+        JsonElement root = RequireObject(snapshot.Document.RootElement, ExecutionInputFileName);
         EmbeddedJsonSchemaValidator.Validate(root, "fixture-execution-input.v1.schema.json");
         EnsureOnlyProperties(root, ExecutionInputProperties, ExecutionInputFileName);
         RejectAnswerBearingProperties(root);
@@ -185,26 +229,31 @@ public static class FixturePackageReader
         string redistributionPath = RequiredFile(fullDirectory, RedistributionFileName);
         string partitionHistoryPath = RequiredFile(fullDirectory, PartitionHistoryFileName);
 
-        using JsonDocument publicDocument = ReadDocument(publicPath);
-        using JsonDocument executionDocument = ReadDocument(executionPath);
-        using JsonDocument oracleDocument = ReadDocument(oraclePath);
-        using JsonDocument provenanceDocument = ReadDocument(provenancePath);
-        using JsonDocument replayDocument = ReadDocument(replayPath);
-        using JsonDocument redistributionDocument = ReadDocument(redistributionPath);
-        using JsonDocument partitionHistoryDocument = ReadDocument(partitionHistoryPath);
+        using BoundedJsonDocumentSnapshot publicDocument = ReadDocument(publicPath);
+        using BoundedJsonDocumentSnapshot executionDocument = ReadDocument(executionPath);
+        using BoundedJsonDocumentSnapshot oracleDocument = ReadDocument(oraclePath);
+        using BoundedJsonDocumentSnapshot provenanceDocument = ReadDocument(provenancePath);
+        using BoundedJsonDocumentSnapshot replayDocument = ReadDocument(replayPath);
+        using BoundedJsonDocumentSnapshot redistributionDocument = ReadDocument(redistributionPath);
+        using BoundedJsonDocumentSnapshot partitionHistoryDocument = ReadDocument(partitionHistoryPath);
 
-        JsonElement publicManifest = RequireObject(publicDocument.RootElement, PublicManifestFileName);
-        JsonElement executionInput = RequireObject(executionDocument.RootElement, ExecutionInputFileName);
-        JsonElement oracle = RequireObject(oracleDocument.RootElement, OracleFileName);
-        JsonElement provenance = RequireObject(provenanceDocument.RootElement, ProvenanceFileName);
-        JsonElement replayDependencies = RequireObject(replayDocument.RootElement, ReplayDependenciesFileName);
-        JsonElement redistribution = RequireObject(redistributionDocument.RootElement, RedistributionFileName);
-        JsonElement partitionHistory = RequireObject(partitionHistoryDocument.RootElement, PartitionHistoryFileName);
+        JsonElement publicManifest = RequireObject(publicDocument.Document.RootElement, PublicManifestFileName);
+        JsonElement executionInput = RequireObject(executionDocument.Document.RootElement, ExecutionInputFileName);
+        JsonElement oracle = RequireObject(oracleDocument.Document.RootElement, OracleFileName);
+        JsonElement provenance = RequireObject(provenanceDocument.Document.RootElement, ProvenanceFileName);
+        JsonElement replayDependencies = RequireObject(replayDocument.Document.RootElement, ReplayDependenciesFileName);
+        JsonElement redistribution = RequireObject(redistributionDocument.Document.RootElement, RedistributionFileName);
+        JsonElement partitionHistory = RequireObject(
+            partitionHistoryDocument.Document.RootElement,
+            PartitionHistoryFileName);
 
         EmbeddedJsonSchemaValidator.Validate(publicManifest, "fixture-public-manifest.v1.schema.json");
         EmbeddedJsonSchemaValidator.Validate(executionInput, "fixture-execution-input.v1.schema.json");
         EmbeddedJsonSchemaValidator.Validate(oracle, "fixture-oracle.v1.schema.json");
+        EmbeddedJsonSchemaValidator.Validate(provenance, "fixture-provenance.v1.schema.json");
         EmbeddedJsonSchemaValidator.Validate(replayDependencies, "replay-dependencies.v1.schema.json");
+        EmbeddedJsonSchemaValidator.Validate(redistribution, "fixture-redistribution.v1.schema.json");
+        EmbeddedJsonSchemaValidator.Validate(partitionHistory, "fixture-partition-history.v1.schema.json");
         EnsureOnlyProperties(publicManifest, PublicManifestProperties, PublicManifestFileName);
         EnsureOnlyProperties(executionInput, ExecutionInputProperties, ExecutionInputFileName);
         EnsureOnlyProperties(oracle, OracleProperties, OracleFileName);
@@ -214,10 +263,10 @@ public static class FixturePackageReader
         FixturePartition partition = ParsePartition(RequireString(publicManifest, "partition"));
 
         ValidateTaxonomy(publicManifest);
-        ValidateFingerprint(publicManifest, "input_package_fingerprint", executionPath);
-        ValidateFingerprint(publicManifest, "oracle_fingerprint", oraclePath);
-        ValidateFingerprint(publicManifest, "provenance_fingerprint", provenancePath);
-        ValidateFingerprint(publicManifest, "replay_dependency_fingerprint", replayPath);
+        ValidateFingerprint(publicManifest, "input_package_fingerprint", executionDocument.Sha256);
+        ValidateFingerprint(publicManifest, "oracle_fingerprint", oracleDocument.Sha256);
+        ValidateFingerprint(publicManifest, "provenance_fingerprint", provenanceDocument.Sha256);
+        ValidateFingerprint(publicManifest, "replay_dependency_fingerprint", replayDocument.Sha256);
         ValidatePartitionHistory(publicManifest, partitionHistory, partition);
         ValidateIdentity(executionInput, fixtureId, fixtureVersion, ExecutionInputFileName);
         ValidateIdentity(oracle, fixtureId, fixtureVersion, OracleFileName);
@@ -225,6 +274,7 @@ public static class FixturePackageReader
         ValidateIdentity(replayDependencies, fixtureId, fixtureVersion, ReplayDependenciesFileName);
         ValidateIdentity(redistribution, fixtureId, fixtureVersion, RedistributionFileName);
         ValidateIdentity(partitionHistory, fixtureId, fixtureVersion, PartitionHistoryFileName);
+        ValidateRedistribution(publicManifest, redistribution);
         ValidateOracle(oracle);
         ValidateReplayDependencies(replayDependencies, RequireString(oracle, "expected_replayability"));
         RejectAnswerBearingProperties(executionInput);
@@ -265,7 +315,7 @@ public static class FixturePackageReader
         }
     }
 
-    private static void ValidateFingerprint(JsonElement manifest, string propertyName, string targetPath)
+    private static void ValidateFingerprint(JsonElement manifest, string propertyName, string actualSha256)
     {
         string expectedText = RequireString(manifest, propertyName);
         Sha256Fingerprint expected = new(expectedText);
@@ -274,11 +324,22 @@ public static class FixturePackageReader
             throw new InvalidDataException($"Manifest fingerprint '{propertyName}' must be lowercase.");
         }
 
-        Sha256Fingerprint actual = new(Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(targetPath))));
+        Sha256Fingerprint actual = new(actualSha256);
         if (expected != actual)
         {
             throw new InvalidDataException(
-                $"Manifest fingerprint '{propertyName}' does not match '{Path.GetFileName(targetPath)}'.");
+                $"Manifest fingerprint '{propertyName}' does not match the validated document snapshot.");
+        }
+    }
+
+    private static void ValidateRedistribution(JsonElement publicManifest, JsonElement redistribution)
+    {
+        if (!StringComparer.Ordinal.Equals(
+                RequireString(publicManifest, "redistribution_class"),
+                RequireString(redistribution, "redistribution_class")))
+        {
+            throw new InvalidDataException(
+                "Public and separately retained redistribution classifications do not match.");
         }
     }
 
@@ -314,6 +375,11 @@ public static class FixturePackageReader
         }
 
         string? priorPartition = null;
+        UtcTimestamp? priorTransitionAt = null;
+        Sha256Fingerprint currentInputFingerprint = new(
+            RequireString(publicManifest, "input_package_fingerprint"));
+        Sha256Fingerprint currentOracleFingerprint = new(
+            RequireString(publicManifest, "oracle_fingerprint"));
         int index = 0;
         foreach (JsonElement transition in separateHistory.EnumerateArray())
         {
@@ -337,15 +403,33 @@ public static class FixturePackageReader
 
             priorPartition = RequireString(transition, "to");
             _ = ParsePartition(priorPartition);
-            _ = UtcTimestamp.Parse(RequireString(transition, "at"));
+            UtcTimestamp transitionAt = UtcTimestamp.Parse(RequireString(transition, "at"));
+            if (priorTransitionAt is not null && transitionAt.Value <= priorTransitionAt.Value)
+            {
+                throw new InvalidDataException("Partition-history timestamps must be strictly increasing.");
+            }
+
+            priorTransitionAt = transitionAt;
             _ = RequireString(transition, "reason");
             bool influencedImplementation = RequireBoolean(
                 transition,
                 "change_influenced_implementation");
-            if (from.ValueKind == JsonValueKind.String
-                && from.GetString() is "validation" or "held-out"
-                && StringComparer.Ordinal.Equals(priorPartition, "development"))
+            if (from.ValueKind == JsonValueKind.String)
             {
+                string fromPartition = from.GetString()!;
+                if (StringComparer.Ordinal.Equals(fromPartition, priorPartition))
+                {
+                    throw new InvalidDataException("Partition history cannot contain a same-state transition.");
+                }
+
+                if (fromPartition == "development"
+                    || (fromPartition == "validation" && priorPartition == "held-out")
+                    || priorPartition != "development")
+                {
+                    throw new InvalidDataException(
+                        $"Fixture partition transition '{fromPartition}' to '{priorPartition}' is forbidden.");
+                }
+
                 if (!influencedImplementation)
                 {
                     throw new InvalidDataException(
@@ -358,12 +442,30 @@ public static class FixturePackageReader
                     throw new InvalidDataException("Replacement fixture must be materially independent by identity.");
                 }
 
+                Sha256Fingerprint replacementInputFingerprint = ParseLowercaseFingerprint(
+                    transition,
+                    "replacement_input_package_fingerprint");
+                Sha256Fingerprint replacementOracleFingerprint = ParseLowercaseFingerprint(
+                    transition,
+                    "replacement_oracle_fingerprint");
+                if (replacementInputFingerprint == currentInputFingerprint
+                    || replacementOracleFingerprint == currentOracleFingerprint)
+                {
+                    throw new InvalidDataException(
+                        "Replacement fixture input and oracle fingerprints must differ from the known fixture.");
+                }
+
                 string replacementPartition = RequireString(transition, "replacement_partition");
                 if (replacementPartition is not ("validation" or "held-out"))
                 {
                     throw new InvalidDataException(
                         "Replacement fixture must restore validation or held-out coverage.");
                 }
+
+                _ = RequireObject(
+                    transition.GetProperty("independence_evidence_reference"),
+                    "independence_evidence_reference");
+                _ = RequireString(transition, "authorized_by");
             }
 
             index++;
@@ -385,15 +487,113 @@ public static class FixturePackageReader
             throw new InvalidDataException("Oracle ground truth requires an independent owner/reviewer and method.");
         }
 
-        foreach (string collection in RequiredExpectedCollections)
+        HashSet<string> methodIds = new(StringComparer.Ordinal);
+        foreach (JsonElement method in methods.EnumerateArray())
         {
-            _ = RequireArray(oracle, collection);
+            string methodId = RequireString(method, "method_id");
+            if (!methodIds.Add(methodId))
+            {
+                throw new InvalidDataException($"Oracle contains duplicate ground-truth method ID '{methodId}'.");
+            }
         }
 
-        _ = RequireArray(oracle, "expected_coverage_and_gaps");
+        HashSet<string> expectedIds = new(StringComparer.Ordinal);
+        JsonElement expectedCollectionStates = RequireObject(
+            oracle.GetProperty("expected_collection_states"),
+            "expected_collection_states");
+        foreach (string collection in RequiredExpectedCollections)
+        {
+            JsonElement expectedItems = RequireArray(oracle, collection);
+            HashSet<string> allowedTypes = ExpectedCollectionTypes[collection];
+            foreach (JsonElement expectedItem in expectedItems.EnumerateArray())
+            {
+                string expectedId = RequireString(expectedItem, "expected_id");
+                if (!expectedIds.Add(expectedId))
+                {
+                    throw new InvalidDataException($"Oracle contains duplicate expected item ID '{expectedId}'.");
+                }
+
+                string expectedType = RequireString(expectedItem, "expected_type");
+                if (!allowedTypes.Contains(expectedType))
+                {
+                    throw new InvalidDataException(
+                        $"Oracle collection '{collection}' cannot contain expected type '{expectedType}'.");
+                }
+
+                foreach (JsonElement methodIdElement in RequireArray(
+                    expectedItem,
+                    "ground_truth_method_ids").EnumerateArray())
+                {
+                    string referencedMethodId = methodIdElement.GetString()
+                        ?? throw new InvalidDataException(
+                            "Oracle ground-truth method references must be strings.");
+                    if (!methodIds.Contains(referencedMethodId))
+                    {
+                        throw new InvalidDataException(
+                            $"Expected item '{expectedId}' references unknown ground-truth method "
+                            + $"'{referencedMethodId}'.");
+                    }
+                }
+            }
+
+            string collectionStateName = ExpectedCollectionStateNames[collection];
+            JsonElement collectionState = RequireObject(
+                expectedCollectionStates.GetProperty(collectionStateName),
+                collectionStateName);
+            int stateBearingItemCount = collection == "expected_coverage_and_gaps"
+                ? expectedItems.EnumerateArray().Count(
+                    item => StringComparer.Ordinal.Equals(
+                        RequireString(item, "expected_type"),
+                        "coverage-gap"))
+                : expectedItems.GetArrayLength();
+            ValidateExpectedCollectionState(
+                collection,
+                stateBearingItemCount,
+                RequireString(collectionState, "state"));
+        }
+
+        JsonElement taxonomyAssignments = RequireArray(oracle, "expected_taxonomy_assignments");
+        HashSet<string> taxonomyAssignmentIds = new(StringComparer.Ordinal);
+        foreach (JsonElement assignment in taxonomyAssignments.EnumerateArray())
+        {
+            string assignmentId = RequireString(assignment, "assignment_id");
+            if (!taxonomyAssignmentIds.Add(assignmentId))
+            {
+                throw new InvalidDataException(
+                    $"Oracle contains duplicate taxonomy-assignment ID '{assignmentId}'.");
+            }
+
+            string subjectId = RequireString(assignment, "subject_id");
+            if (!expectedIds.Contains(subjectId))
+            {
+                throw new InvalidDataException(
+                    $"Taxonomy assignment '{assignmentId}' references unknown expected item '{subjectId}'.");
+            }
+        }
+
+        _ = RequireArray(oracle, "forbidden_claims");
+        _ = RequireArray(oracle, "known_limits");
         _ = RequireString(oracle, "expected_replayability");
         _ = UtcTimestamp.Parse(RequireString(oracle, "pre_registered_at"));
         _ = RequireArray(oracle, "change_history");
+    }
+
+    private static void ValidateExpectedCollectionState(
+        string collection,
+        int expectedItemCount,
+        string state)
+    {
+        bool coherent = state switch
+        {
+            "populated" => expectedItemCount > 0,
+            "empty" or "unsupported" or "not-applicable" or "failed" => expectedItemCount == 0,
+            _ => false,
+        };
+        if (!coherent)
+        {
+            throw new InvalidDataException(
+                $"Oracle collection '{collection}' has state '{state}' with {expectedItemCount} expected items.");
+        }
     }
 
     private static void ValidateReplayDependencies(JsonElement replayDependencies, string oracleReplayability)
@@ -501,30 +701,9 @@ public static class FixturePackageReader
             : throw new FileNotFoundException($"Required fixture document '{fileName}' is missing.", path);
     }
 
-    private static JsonDocument ReadDocument(string path)
+    private static BoundedJsonDocumentSnapshot ReadDocument(string path)
     {
-        try
-        {
-            FileInfo file = new(path);
-            if (file.Length > MaximumFixtureDocumentBytes)
-            {
-                throw new InvalidDataException(
-                    $"'{path}' exceeds the {MaximumFixtureDocumentBytes}-byte fixture document limit.");
-            }
-
-            return JsonDocument.Parse(
-                File.ReadAllBytes(path),
-                new JsonDocumentOptions
-                {
-                    AllowTrailingCommas = false,
-                    CommentHandling = JsonCommentHandling.Disallow,
-                    MaxDepth = 64,
-                });
-        }
-        catch (JsonException exception)
-        {
-            throw new InvalidDataException($"'{path}' is not valid strict JSON.", exception);
-        }
+        return BoundedJsonDocumentReader.Read(path, MaximumFixtureDocumentBytes, maximumDepth: 64);
     }
 
     private static JsonElement RequireObject(JsonElement value, string name)
@@ -569,5 +748,19 @@ public static class FixturePackageReader
         }
 
         return value.GetBoolean();
+    }
+
+    private static Sha256Fingerprint ParseLowercaseFingerprint(
+        JsonElement parent,
+        string propertyName)
+    {
+        string value = RequireString(parent, propertyName);
+        Sha256Fingerprint fingerprint = new(value);
+        if (!StringComparer.Ordinal.Equals(value, fingerprint.Value))
+        {
+            throw new InvalidDataException($"'{propertyName}' must be lowercase.");
+        }
+
+        return fingerprint;
     }
 }

@@ -50,8 +50,13 @@ coordinator may validate, admit, and transactionally publish staged bytes.
 - An unset `oneof`, unknown message variant, unknown privileged method, unknown
   enum value, malformed identifier, incompatible major version, invalid
   nonce, stale fence, or missing finite limit fails closed.
-- Unknown protobuf fields may be retained for compatible forwarding, but they
-  must never grant authority or change a known failure into success.
+- Ordinary non-privileged protobuf messages may retain unknown fields for
+  compatible forwarding, but unknown fields never grant authority or change a
+  known failure into success.
+- A helper private frame, or any nested credential/provider-helper message,
+  fails closed when it contains an unknown field. Privileged helper decoders
+  must reject the frame and must not retain, forward, echo, stage, or log the
+  unknown field bytes.
 - Opaque IDs are bounded, case-sensitive tokens. Consumers must not parse them,
   derive domain meaning from them, synthesize paths from them, or substitute a
   content hash for a logical identity.
@@ -103,9 +108,11 @@ The M1 contract ceilings are:
 
 `ProtocolLimits` carries the negotiated subset relevant to ordinary gRPC.
 `WorkerLimits`, `HelperLimits`, output-slot limits, response bounds, and
-wall-elapsed deadlines further narrow one assignment. Every maximum in those
-messages is mandatory and non-zero. The sender must reject an assignment that
-cannot be represented by a qualified finite limit; there is no unlimited
+wall-elapsed deadlines further narrow one assignment. Every byte, token,
+work-unit, count-capacity, and time maximum is mandatory and non-zero. A
+priced-tool-call or calculated-cost ceiling may be zero to forbid that form of
+consumption; zero never means unlimited. The sender must reject an assignment
+that cannot be represented by a qualified finite limit; there is no unlimited
 sentinel. Inherited-handle slots are also non-zero, assignment-local indexes;
 unknown, duplicate, missing, or wrong-access handle slots reject the
 assignment.
@@ -142,6 +149,11 @@ application/domain/storage compatibility checks.
 - Credential targets and secret bytes never appear in these ordinary contracts
   or helper frames. The helper derives only the exact authorized Credential
   Manager target from opaque profile/generation identity.
+- Provider dispatch assignment and immediate revalidation both bind the exact
+  provider profile/generation/revocation epoch, provider account identity,
+  billing-scope identity, effective configuration, capability snapshot, price
+  snapshot, request digest, reservation, provider, purpose, and closed endpoint.
+  No available profile, account, billing scope, or endpoint may be substituted.
 - Worker and helper bootstrap messages are serialized only to inherited
   private handles. They are forbidden from command lines, environments,
   settings, runtime descriptors, application IPC, logs, diagnostics, and

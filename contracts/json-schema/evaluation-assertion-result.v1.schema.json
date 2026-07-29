@@ -115,8 +115,7 @@
       }
     },
     "evaluated_at": {
-      "type": "string",
-      "format": "date-time"
+      "$ref": "common.v1.schema.json#/$defs/utcTimestamp"
     }
   },
   "allOf": [
@@ -141,6 +140,58 @@
           "required": [
             "status"
           ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "passed"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "oracle_entry_references": {
+            "type": "array",
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "passed"
+          },
+          "assertion_type": {
+            "not": {
+              "enum": [
+                "collection-empty",
+                "absence",
+                "non-mutation",
+                "answer-isolation",
+                "security"
+              ]
+            }
+          }
+        },
+        "required": [
+          "status",
+          "assertion_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "actual_references": {
+            "type": "array",
+            "minItems": 1
+          }
         }
       }
     }

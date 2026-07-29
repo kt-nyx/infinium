@@ -15,6 +15,9 @@ public sealed partial class SchemaCompatibilityTests
         "fixture-public-manifest.v1.schema.json",
         "fixture-execution-input.v1.schema.json",
         "fixture-oracle.v1.schema.json",
+        "fixture-provenance.v1.schema.json",
+        "fixture-redistribution.v1.schema.json",
+        "fixture-partition-history.v1.schema.json",
         "replay-dependencies.v1.schema.json",
         "evaluation-assertion-result.v1.schema.json",
         "analyzer-declaration.v1.schema.json",
@@ -144,6 +147,14 @@ public sealed partial class SchemaCompatibilityTests
             "readiness",
             "replayability",
             "auditability");
+        AssertRequired(
+            cli.RootElement,
+            "typed_counts",
+            "coverage_state_counts",
+            "duration_ms",
+            "cost",
+            "readiness",
+            "no_safety_guarantee");
         Assert.AreEqual(
             ContractConstants.RunOutputSchemaId,
             runOutput.RootElement.GetProperty("properties").GetProperty("schema_id").GetProperty("const").GetString());
@@ -306,10 +317,20 @@ public sealed partial class SchemaCompatibilityTests
             nameof(EffectiveScanConfigurationContract.Resources),
             nameof(EffectiveScanConfigurationContract.SemanticContextOverrides));
         AssertRecordProperties<RunOutputContract>(
+            nameof(RunOutputContract.SchemaId),
+            nameof(RunOutputContract.SchemaVersion),
+            nameof(RunOutputContract.RunId),
+            nameof(RunOutputContract.RunKind),
+            nameof(RunOutputContract.RunState),
+            nameof(RunOutputContract.InstallationSnapshot),
+            nameof(RunOutputContract.AnalysisContext),
+            nameof(RunOutputContract.EffectiveScanConfiguration),
+            nameof(RunOutputContract.ResolvedInputManifest),
+            nameof(RunOutputContract.AnalyzerDeclarations),
             nameof(RunOutputContract.Observations),
             nameof(RunOutputContract.DeterministicResults),
             nameof(RunOutputContract.ExternalClaims),
-            nameof(RunOutputContract.ExternalClaimApplicationLinks),
+            nameof(RunOutputContract.ApplicationLinks),
             nameof(RunOutputContract.DiscoveryLeads),
             nameof(RunOutputContract.ModelProposals),
             nameof(RunOutputContract.ProposalAdmissions),
@@ -323,7 +344,27 @@ public sealed partial class SchemaCompatibilityTests
             nameof(RunOutputContract.InvalidInputs),
             nameof(RunOutputContract.CoverageGaps),
             nameof(RunOutputContract.Failures),
-            nameof(RunOutputContract.CollectionStates));
+            nameof(RunOutputContract.CollectionStates),
+            nameof(RunOutputContract.TaxonomyAssignments),
+            nameof(RunOutputContract.AnalyzerCoverage),
+            nameof(RunOutputContract.ExcludedCapabilities),
+            nameof(RunOutputContract.Readiness),
+            nameof(RunOutputContract.Replayability),
+            nameof(RunOutputContract.Auditability),
+            nameof(RunOutputContract.CliSummaryFingerprint),
+            nameof(RunOutputContract.DiagnosticTraceReferences));
+        AssertRecordProperties<CliSummaryDocumentContract>(
+            nameof(CliSummaryDocumentContract.SchemaId),
+            nameof(CliSummaryDocumentContract.SchemaVersion),
+            nameof(CliSummaryDocumentContract.RunId),
+            nameof(CliSummaryDocumentContract.Outcome),
+            nameof(CliSummaryDocumentContract.ExitCode),
+            nameof(CliSummaryDocumentContract.TypedCounts),
+            nameof(CliSummaryDocumentContract.CoverageStateCounts),
+            nameof(CliSummaryDocumentContract.DurationMs),
+            nameof(CliSummaryDocumentContract.Cost),
+            nameof(CliSummaryDocumentContract.Readiness),
+            nameof(CliSummaryDocumentContract.NoSafetyGuarantee));
     }
 
     [TestMethod]

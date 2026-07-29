@@ -10,6 +10,9 @@ import "infinium/protocol/v1/protocol.proto";
 
 // These envelopes are framed only on coordinator-created inherited private
 // handles. The one-shot helper intentionally exposes no ordinary gRPC service.
+// Decoders MUST reject the entire frame if this envelope or any nested
+// privileged message contains an unknown field. Helper frames are never
+// compatible-forwarding envelopes.
 message HelperPrivateFrame {
   uint64 sequence = 1;
   oneof payload {
@@ -95,6 +98,7 @@ message ProviderDispatchAssignment {
   ProviderKind provider = 6;
   CredentialPurpose purpose = 7;
   ProviderEndpoint endpoint = 8;
+  infinium.domain.v1.ProviderAccountIdentityId provider_account_identity_id = 9;
 
   ProviderRequestPayload request = 10;
   infinium.domain.v1.CapabilitySnapshotId capability_snapshot_id = 11;
@@ -103,6 +107,8 @@ message ProviderDispatchAssignment {
   infinium.common.v1.Instant dispatch_deadline = 14;
   ProviderResponseBounds response_bounds = 15;
   HelperStagingAuthority staging_authority = 16;
+  infinium.domain.v1.BillingScopeIdentityId billing_scope_identity_id = 17;
+  infinium.domain.v1.ScanConfigurationId effective_scan_configuration_id = 18;
 
   reserved 90 to 99;
   reserved "credential_target", "provider_secret", "secret_bytes",
@@ -163,6 +169,18 @@ message DispatchRevalidationRequest {
   infinium.domain.v1.ReservationGroupId reservation_group_id = 7;
   infinium.common.v1.Instant observed_gate_time = 8;
   infinium.common.v1.ContentDigest exact_request = 9;
+  infinium.domain.v1.ProviderAccountIdentityId provider_account_identity_id = 10;
+  infinium.domain.v1.BillingScopeIdentityId billing_scope_identity_id = 11;
+  infinium.domain.v1.ScanConfigurationId effective_scan_configuration_id = 12;
+  infinium.domain.v1.CapabilitySnapshotId capability_snapshot_id = 13;
+  infinium.domain.v1.PriceSnapshotId price_snapshot_id = 14;
+  ProviderKind provider = 15;
+  CredentialPurpose purpose = 16;
+  ProviderEndpoint endpoint = 17;
+
+  reserved 90 to 99;
+  reserved "credential_target", "provider_secret", "secret_bytes",
+      "host", "url", "fallback_profile_id";
 }
 
 message DispatchRevalidationResponse {

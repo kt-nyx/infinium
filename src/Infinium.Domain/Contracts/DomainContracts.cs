@@ -99,6 +99,7 @@ public enum AuditabilityState
 
 public enum ReadinessScope
 {
+    Unspecified,
     None,
     ScopeLimited,
     Full,
@@ -568,14 +569,18 @@ public sealed record LineageEventContract(
 public sealed record CoverageContract(
     OpaqueId CoverageId,
     OpaqueId OriginatingRunId,
-    string Population,
-    string DenominatorDefinition,
+    OpaqueId AnalyzerId,
+    string PopulationId,
+    string DenominatorLabel,
     long Denominator,
     long CompletedCount,
     CoverageState State,
-    string TaxonomyVersion,
+    string TaxonomyId,
+    ContractVersion TaxonomyVersion,
+    IReadOnlyList<OpaqueId> TaxonomyAssignmentIds,
     IReadOnlyList<string> Exclusions,
-    IReadOnlyList<OpaqueId> GapIds);
+    IReadOnlyList<OpaqueId> GapIds,
+    IReadOnlyList<OpaqueId> FailureIds);
 
 public sealed record ReplayabilityAssessmentContract(
     ReplayClass ReplayClass,

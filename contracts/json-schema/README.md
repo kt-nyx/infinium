@@ -18,6 +18,9 @@ network.
 | `fixture-public-manifest.v1.schema.json` | `infinium.evaluation.fixture-public-manifest/v1` |
 | `fixture-execution-input.v1.schema.json` | —; versioned by fixture and schema file |
 | `fixture-oracle.v1.schema.json` | —; versioned by fixture, oracle, and schema file |
+| `fixture-provenance.v1.schema.json` | —; versioned by fixture and schema file |
+| `fixture-redistribution.v1.schema.json` | —; versioned by fixture and schema file |
+| `fixture-partition-history.v1.schema.json` | —; versioned by fixture and schema file |
 | `replay-dependencies.v1.schema.json` | —; versioned by fixture and schema file |
 | `evaluation-assertion-result.v1.schema.json` | `infinium.evaluation.assertion-result/v1` |
 | `analyzer-declaration.v1.schema.json` | `infinium.analyzer.declaration/v1` |
@@ -31,8 +34,9 @@ instance contract.
 
 ## Evaluation-package isolation
 
-The public manifest, executable input, independent oracle, replay dependency
-manifest, and assertion result are separate documents. The executable-input
+The public manifest, executable input, independent oracle, provenance,
+redistribution, partition-history, replay dependency manifest, and assertion
+result are separate documents. Every fixture document has a closed schema. The executable-input
 contract is closed at every object boundary and has no arbitrary extension or
 metadata object. Consequently, expected labels, expected findings, oracle
 paths, answer-bearing adjudication, and fixture-specific notes are rejected
@@ -40,9 +44,10 @@ rather than ignored.
 
 The public manifest requires exact package/oracle/provenance/replay
 fingerprints, partition history, and taxonomy `0.1.0`. The separate oracle
-requires independently reviewed ground-truth methods, an explicit gap
-declaration, and every expected typed collection even when its correct value
-is an empty array. Replay dependencies retain exact byte fingerprints when
+requires independently reviewed ground-truth methods, resolvable method
+references, type-specific expected collections (including failures), an
+explicit gap declaration, and every expected typed collection and collection
+production state even when its correct value is an empty array. Replay dependencies retain exact byte fingerprints when
 applicable and explicit availability, clean-recomputation, boundary-replay,
 audit, deletion, and permission states.
 
@@ -56,7 +61,9 @@ failures in separate required collections. A parallel required
 `collection_states` object distinguishes a correct empty collection from
 unsupported, not-applicable, or failed production. Analyzer coverage uses
 labeled denominators and cannot represent one aggregate safety percentage.
-Readiness is only the M1 placeholder and always carries
+CLI summaries retain nonnegative elapsed duration and keep provider usage,
+locally calculated actual cost, reserved cost, and unresolved holds in
+separate fields. Readiness is only the M1 placeholder and always carries
 `no_safety_guarantee: true`.
 
 Analyzer maturity is fixed to `Experimental` in M1, raw development output is
@@ -71,3 +78,14 @@ material is absent. Schema validation is necessary
 but does not replace secret-canary scanning or semantic consistency checks
 between fingerprints, partition history, collection contents/states, CLI
 output, and the sealed oracle.
+
+The stable run-output and CLI-summary C# document models serialize and
+deserialize through their embedded schemas in both directions. Their richer
+in-memory aggregate models are named separately and cannot be mistaken for the
+wire documents.
+
+Readers consume each document through one bounded, read-only file snapshot,
+reject duplicate object properties recursively, and hash and parse the same
+captured bytes. Every `date-time` value uses the canonical .NET round-trip
+representation with a zero UTC offset, for example
+`1970-01-01T00:00:00.0000000+00:00`.

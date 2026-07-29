@@ -123,7 +123,104 @@ public sealed class AssertionResultReaderTests
         }
     }
 
-    private static string CreateAssertionJson(bool dirtyWorktree, string status)
+    [TestMethod]
+    [TestCategory("M1Evaluation")]
+    [TestCategory("M1Fault")]
+    public void PassingAssertionsRequireEvidenceReferencesByAssertionType()
+    {
+        string path = Path.Combine(Path.GetTempPath(), $"infinium-assertion-{Guid.NewGuid():N}.json");
+        try
+        {
+            File.WriteAllText(
+                path,
+                CreateAssertionJson(
+                    dirtyWorktree: false,
+                    status: "passed",
+                    assertionType: "presence",
+                    actualReferences: [],
+                    oracleReferences: ["oracle-1"]));
+            Assert.ThrowsExactly<InvalidDataException>(() => AssertionResultReader.Read(path));
+
+            File.WriteAllText(
+                path,
+                CreateAssertionJson(
+                    dirtyWorktree: false,
+                    status: "passed",
+                    assertionType: "absence",
+                    actualReferences: [],
+                    oracleReferences: ["oracle-1"]));
+            EvaluationAssertionResult accepted = AssertionResultReader.Read(path);
+            Assert.AreEqual(AssertionStatus.Passed, accepted.Status);
+
+            File.WriteAllText(
+                path,
+                CreateAssertionJson(
+                    dirtyWorktree: false,
+                    status: "passed",
+                    assertionType: "absence",
+                    actualReferences: [],
+                    oracleReferences: []));
+            Assert.ThrowsExactly<InvalidDataException>(() => AssertionResultReader.Read(path));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("M1Security")]
+    [TestCategory("M1Fault")]
+    public void AssertionReaderRejectsDuplicateKeysAndNonCanonicalTime()
+    {
+        string path = Path.Combine(Path.GetTempPath(), $"infinium-assertion-{Guid.NewGuid():N}.json");
+        try
+        {
+            string duplicate = CreateAssertionJson(false, "failed").Replace(
+                "\"run_id\":\"run-1\"",
+                "\"run_id\":\"run-1\",\"run_id\":\"run-2\"",
+                StringComparison.Ordinal);
+            File.WriteAllText(path, duplicate);
+            Assert.ThrowsExactly<InvalidDataException>(() => AssertionResultReader.Read(path));
+
+            File.WriteAllText(
+                path,
+                CreateAssertionJson(
+                    false,
+                    "failed",
+                    evaluatedAt: "1970-01-01T01:00:00.0000000+01:00"));
+            Assert.ThrowsExactly<InvalidDataException>(() => AssertionResultReader.Read(path));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("M1Security")]
+    [TestCategory("M1Fault")]
+    public void AssertionReaderRejectsDocumentBeyondBound()
+    {
+        string path = Path.Combine(Path.GetTempPath(), $"infinium-assertion-{Guid.NewGuid():N}.json");
+        try
+        {
+            File.WriteAllText(path, new string('x', (4 * 1024 * 1024) + 1));
+            Assert.ThrowsExactly<InvalidDataException>(() => AssertionResultReader.Read(path));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    private static string CreateAssertionJson(
+        bool dirtyWorktree,
+        string status,
+        string assertionType = "presence",
+        string[]? actualReferences = null,
+        string[]? oracleReferences = null,
+        string? evaluatedAt = null)
     {
         return JsonSerializer.Serialize(
             new
@@ -142,12 +239,12 @@ public sealed class AssertionResultReaderTests
                 run_id = "run-1",
                 run_output_fingerprint = new string('b', 64),
                 oracle_fingerprint = new string('c', 64),
-                assertion_type = "presence",
+                assertion_type = assertionType,
                 status,
-                actual_references = Array.Empty<string>(),
-                oracle_entry_references = Array.Empty<string>(),
+                actual_references = actualReferences ?? [],
+                oracle_entry_references = oracleReferences ?? [],
                 messages = ContractOnlyMessages,
-                evaluated_at = DateTimeOffset.UnixEpoch.ToString("O"),
+                evaluated_at = evaluatedAt ?? DateTimeOffset.UnixEpoch.ToString("O"),
             });
     }
 }

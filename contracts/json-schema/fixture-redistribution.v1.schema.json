@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/json-schema/fixture-redistribution.v1.schema.json",
+  "title": "Infinium evaluation fixture redistribution v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fixture_id",
+    "fixture_version",
+    "redistribution_class"
+  ],
+  "properties": {
+    "fixture_id": {
+      "$ref": "common.v1.schema.json#/$defs/identifier"
+    },
+    "fixture_version": {
+      "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+    },
+    "redistribution_class": {
+      "enum": [
+        "project-authored",
+        "project-authored-redistributable",
+        "manifest-only",
+        "evaluator-private",
+        "non-redistributable"
+      ]
+    }
+  }
+}

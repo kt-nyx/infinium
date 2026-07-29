@@ -7,6 +7,11 @@
       "type": "string",
       "minLength": 1
     },
+    "utcTimestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{7}\\+00:00$"
+    },
     "identifier": {
       "type": "string",
       "minLength": 1,
@@ -81,8 +86,7 @@
           "$ref": "#/$defs/partition"
         },
         "at": {
-          "type": "string",
-          "format": "date-time"
+          "$ref": "#/$defs/utcTimestamp"
         },
         "reason": {
           "$ref": "#/$defs/nonEmptyString"
@@ -98,6 +102,15 @@
             "validation",
             "held-out"
           ]
+        },
+        "replacement_input_package_fingerprint": {
+          "$ref": "#/$defs/fingerprint"
+        },
+        "replacement_oracle_fingerprint": {
+          "$ref": "#/$defs/fingerprint"
+        },
+        "independence_evidence_reference": {
+          "$ref": "#/$defs/artifactReference"
         },
         "authorized_by": {
           "$ref": "#/$defs/identifier"
@@ -130,9 +143,45 @@
             },
             "required": [
               "replacement_fixture_id",
-              "replacement_partition"
+              "replacement_partition",
+              "replacement_input_package_fingerprint",
+              "replacement_oracle_fingerprint",
+              "independence_evidence_reference",
+              "authorized_by"
             ]
           }
+        },
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "from": {
+                  "type": "null"
+                }
+              },
+              "required": [
+                "from",
+                "to"
+              ]
+            },
+            {
+              "properties": {
+                "from": {
+                  "enum": [
+                    "validation",
+                    "held-out"
+                  ]
+                },
+                "to": {
+                  "const": "development"
+                }
+              },
+              "required": [
+                "from",
+                "to"
+              ]
+            }
+          ]
         }
       ]
     },

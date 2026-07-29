@@ -108,8 +108,7 @@
       ]
     },
     "created_at": {
-      "type": "string",
-      "format": "date-time"
+      "$ref": "common.v1.schema.json#/$defs/utcTimestamp"
     }
   }
 }

@@ -36,8 +36,7 @@
       "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
     },
     "resolved_at": {
-      "type": "string",
-      "format": "date-time"
+      "$ref": "common.v1.schema.json#/$defs/utcTimestamp"
     },
     "saved_configuration_reference": {
       "oneOf": [
@@ -145,8 +144,7 @@
           "minimum": 0
         },
         "dispatch_deadline": {
-          "type": "string",
-          "format": "date-time"
+          "$ref": "common.v1.schema.json#/$defs/utcTimestamp"
         },
         "origin": {
           "$ref": "common.v1.schema.json#/$defs/settingOrigin"

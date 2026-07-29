@@ -34,6 +34,9 @@ message ReservationGroupId { string value = 1; }
 message CapabilitySnapshotId { string value = 1; }
 message PriceSnapshotId { string value = 1; }
 message ProjectionVersion { string value = 1; }
+message ProviderAccountIdentityId { string value = 1; }
+message BillingScopeIdentityId { string value = 1; }
+message RequestIdentityId { string value = 1; }
 
 message OperationOwner {
   oneof owner {
@@ -41,6 +44,14 @@ message OperationOwner {
     EvidenceAcquisitionRunId evidence_acquisition_run_id = 2;
     MaintenanceOperationId maintenance_operation_id = 3;
   }
+}
+
+enum LifecycleTransitionRecordKind {
+  LIFECYCLE_TRANSITION_RECORD_KIND_UNSPECIFIED = 0;
+  LIFECYCLE_TRANSITION_RECORD_KIND_REQUESTED = 1;
+  LIFECYCLE_TRANSITION_RECORD_KIND_OBSERVED = 2;
+  LIFECYCLE_TRANSITION_RECORD_KIND_UNKNOWN = 3;
+  LIFECYCLE_TRANSITION_RECORD_KIND_UNSUPPORTED = 4;
 }
 
 enum LifecycleState {

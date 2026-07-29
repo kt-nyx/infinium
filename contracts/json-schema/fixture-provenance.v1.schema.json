@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/json-schema/fixture-provenance.v1.schema.json",
+  "title": "Infinium evaluation fixture provenance v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fixture_id",
+    "fixture_version",
+    "created_by"
+  ],
+  "properties": {
+    "fixture_id": {
+      "$ref": "common.v1.schema.json#/$defs/identifier"
+    },
+    "fixture_version": {
+      "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+    },
+    "created_by": {
+      "$ref": "common.v1.schema.json#/$defs/identifier"
+    }
+  }
+}

@@ -80,23 +80,11 @@ public static class AssertionResultReader
     public static EvaluationAssertionResult Read(string path)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
-        FileInfo file = new(path);
-        if (file.Length > MaximumAssertionResultBytes)
-        {
-            throw new InvalidDataException(
-                $"Assertion result exceeds the {MaximumAssertionResultBytes}-byte limit.");
-        }
-
-        using JsonDocument document = JsonDocument.Parse(
-            File.ReadAllBytes(path),
-            new JsonDocumentOptions
-            {
-                AllowTrailingCommas = false,
-                CommentHandling = JsonCommentHandling.Disallow,
-                MaxDepth = 32,
-            });
-
-        JsonElement root = document.RootElement;
+        using BoundedJsonDocumentSnapshot snapshot = BoundedJsonDocumentReader.Read(
+            path,
+            MaximumAssertionResultBytes,
+            maximumDepth: 32);
+        JsonElement root = snapshot.Document.RootElement;
         EmbeddedJsonSchemaValidator.Validate(root, "evaluation-assertion-result.v1.schema.json");
         if (root.ValueKind != JsonValueKind.Object)
         {
@@ -139,11 +127,16 @@ public static class AssertionResultReader
 
         bool dirtyWorktree = RequiredBoolean(root, "dirty_worktree");
         AssertionStatus status = ParseStatus(RequiredString(root, "status"));
+        AssertionType assertionType = ParseAssertionType(RequiredString(root, "assertion_type"));
         if (dirtyWorktree && status == AssertionStatus.Passed)
         {
             throw new InvalidDataException(
                 "A dirty implementation cannot emit retained passing evaluation evidence.");
         }
+
+        string[] actualReferences = ReadStringArray(root, "actual_references");
+        string[] oracleEntryReferences = ReadStringArray(root, "oracle_entry_references");
+        ValidatePassingEvidence(status, assertionType, actualReferences, oracleEntryReferences);
 
         return new EvaluationAssertionResult(
             schemaId,
@@ -160,12 +153,42 @@ public static class AssertionResultReader
             new OpaqueId(RequiredString(root, "run_id")),
             ParseFingerprint(root, "run_output_fingerprint"),
             ParseFingerprint(root, "oracle_fingerprint"),
-            ParseAssertionType(RequiredString(root, "assertion_type")),
+            assertionType,
             status,
-            ReadStringArray(root, "actual_references"),
-            ReadStringArray(root, "oracle_entry_references"),
+            actualReferences,
+            oracleEntryReferences,
             ReadStringArray(root, "messages"),
             UtcTimestamp.Parse(RequiredString(root, "evaluated_at")));
+    }
+
+    private static void ValidatePassingEvidence(
+        AssertionStatus status,
+        AssertionType assertionType,
+        string[] actualReferences,
+        string[] oracleEntryReferences)
+    {
+        if (status != AssertionStatus.Passed)
+        {
+            return;
+        }
+
+        if (oracleEntryReferences.Length == 0)
+        {
+            throw new InvalidDataException(
+                "A passing assertion must reference at least one sealed oracle entry.");
+        }
+
+        bool actualMayBeEmpty = assertionType is
+            AssertionType.CollectionEmpty
+            or AssertionType.Absence
+            or AssertionType.NonMutation
+            or AssertionType.AnswerIsolation
+            or AssertionType.Security;
+        if (!actualMayBeEmpty && actualReferences.Length == 0)
+        {
+            throw new InvalidDataException(
+                "This passing assertion type must reference at least one actual result.");
+        }
     }
 
     private static AssertionType ParseAssertionType(string value)

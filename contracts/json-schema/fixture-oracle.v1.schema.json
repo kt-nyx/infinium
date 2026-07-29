@@ -25,7 +25,9 @@
     "expected_lead_only_cases",
     "expected_abstentions",
     "expected_invalid_inputs",
+    "expected_failures",
     "expected_coverage_and_gaps",
+    "expected_collection_states",
     "expected_taxonomy_assignments",
     "expected_replayability",
     "forbidden_claims",
@@ -84,57 +86,78 @@
       }
     },
     "expected_observations": {
-      "$ref": "#/$defs/expectedCollection"
+      "$ref": "#/$defs/expectedObservationCollection"
     },
     "expected_deterministic_results": {
-      "$ref": "#/$defs/expectedCollection"
+      "$ref": "#/$defs/expectedDeterministicResultCollection"
     },
     "expected_external_claims": {
-      "$ref": "#/$defs/expectedCollection"
+      "$ref": "#/$defs/expectedExternalClaimCollection"
     },
     "expected_application_links": {
-      "$ref": "#/$defs/expectedCollection"
+      "$ref": "#/$defs/expectedApplicationLinkCollection"
     },
     "expected_discovery_leads": {
-      "$ref": "#/$defs/expectedCollection"
+      "$ref": "#/$defs/expectedDiscoveryLeadCollection"
     },
     "expected_model_proposals": {
-      "$ref": "#/$defs/expectedCollection"
+      "$ref": "#/$defs/expectedModelProposalCollection"
     },
     "expected_proposal_admissions": {
-      "$ref": "#/$defs/expectedCollection"
+      "$ref": "#/$defs/expectedProposalAdmissionCollection"
     },
     "expected_candidates": {
-      "$ref": "#/$defs/expectedCollection"
+      "$ref": "#/$defs/expectedCandidateCollection"
     },
     "expected_hypotheses": {
-      "$ref": "#/$defs/expectedCollection"
+      "$ref": "#/$defs/expectedHypothesisCollection"
     },
     "expected_findings": {
-      "$ref": "#/$defs/expectedCollection"
+      "$ref": "#/$defs/expectedFindingCollection"
     },
     "expected_recommendations": {
-      "$ref": "#/$defs/expectedCollection"
+      "$ref": "#/$defs/expectedRecommendationCollection"
     },
     "expected_supported_cases": {
-      "$ref": "#/$defs/expectedCollection"
+      "$ref": "#/$defs/expectedSupportedCaseCollection"
     },
     "expected_lead_only_cases": {
-      "$ref": "#/$defs/expectedCollection"
+      "$ref": "#/$defs/expectedLeadOnlyCaseCollection"
     },
     "expected_abstentions": {
-      "$ref": "#/$defs/expectedCollection"
+      "$ref": "#/$defs/expectedAbstentionCollection"
     },
     "expected_invalid_inputs": {
-      "$ref": "#/$defs/expectedCollection"
+      "$ref": "#/$defs/expectedInvalidInputCollection"
+    },
+    "expected_failures": {
+      "$ref": "#/$defs/expectedFailureCollection"
     },
     "expected_coverage_and_gaps": {
-      "$ref": "#/$defs/expectedCollection"
+      "$ref": "#/$defs/expectedCoverageAndGapCollection"
+    },
+    "expected_collection_states": {
+      "$ref": "#/$defs/expectedCollectionStates"
     },
     "expected_taxonomy_assignments": {
       "type": "array",
       "items": {
-        "$ref": "common.v1.schema.json#/$defs/taxonomyAssignment"
+        "allOf": [
+          {
+            "$ref": "common.v1.schema.json#/$defs/taxonomyAssignment"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "taxonomy_id": {
+                "const": "infinium.skyrim-se.mod-impact-taxonomy"
+              },
+              "taxonomy_version": {
+                "const": "0.1.0"
+              }
+            }
+          }
+        ]
       }
     },
     "expected_replayability": {
@@ -175,8 +198,7 @@
       }
     },
     "pre_registered_at": {
-      "type": "string",
-      "format": "date-time"
+      "$ref": "common.v1.schema.json#/$defs/utcTimestamp"
     },
     "change_history": {
       "type": "array",
@@ -195,8 +217,7 @@
             "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
           },
           "changed_at": {
-            "type": "string",
-            "format": "date-time"
+            "$ref": "common.v1.schema.json#/$defs/utcTimestamp"
           },
           "independent_evidence_reference": {
             "$ref": "common.v1.schema.json#/$defs/artifactReference"
@@ -212,10 +233,288 @@
     }
   },
   "$defs": {
-    "expectedCollection": {
+    "expectedObservationCollection": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/expectedItem"
+        "type": "object",
+        "$ref": "#/$defs/expectedItem",
+        "properties": {
+          "expected_type": {
+            "const": "observation"
+          }
+        }
+      }
+    },
+    "expectedDeterministicResultCollection": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "#/$defs/expectedItem",
+        "properties": {
+          "expected_type": {
+            "const": "deterministic-result"
+          }
+        }
+      }
+    },
+    "expectedExternalClaimCollection": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "#/$defs/expectedItem",
+        "properties": {
+          "expected_type": {
+            "const": "external-claim"
+          }
+        }
+      }
+    },
+    "expectedApplicationLinkCollection": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "#/$defs/expectedItem",
+        "properties": {
+          "expected_type": {
+            "const": "application-link"
+          }
+        }
+      }
+    },
+    "expectedDiscoveryLeadCollection": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "#/$defs/expectedItem",
+        "properties": {
+          "expected_type": {
+            "const": "discovery-lead"
+          }
+        }
+      }
+    },
+    "expectedModelProposalCollection": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "#/$defs/expectedItem",
+        "properties": {
+          "expected_type": {
+            "const": "model-proposal"
+          }
+        }
+      }
+    },
+    "expectedProposalAdmissionCollection": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "#/$defs/expectedItem",
+        "properties": {
+          "expected_type": {
+            "const": "proposal-admission"
+          }
+        }
+      }
+    },
+    "expectedCandidateCollection": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "#/$defs/expectedItem",
+        "properties": {
+          "expected_type": {
+            "const": "candidate"
+          }
+        }
+      }
+    },
+    "expectedHypothesisCollection": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "#/$defs/expectedItem",
+        "properties": {
+          "expected_type": {
+            "const": "hypothesis"
+          }
+        }
+      }
+    },
+    "expectedFindingCollection": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "#/$defs/expectedItem",
+        "properties": {
+          "expected_type": {
+            "const": "finding"
+          }
+        }
+      }
+    },
+    "expectedRecommendationCollection": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "#/$defs/expectedItem",
+        "properties": {
+          "expected_type": {
+            "const": "recommendation"
+          }
+        }
+      }
+    },
+    "expectedSupportedCaseCollection": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "#/$defs/expectedItem",
+        "properties": {
+          "expected_type": {
+            "const": "supported-case"
+          }
+        }
+      }
+    },
+    "expectedLeadOnlyCaseCollection": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "#/$defs/expectedItem",
+        "properties": {
+          "expected_type": {
+            "const": "lead-only-case"
+          }
+        }
+      }
+    },
+    "expectedAbstentionCollection": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "#/$defs/expectedItem",
+        "properties": {
+          "expected_type": {
+            "const": "abstention"
+          }
+        }
+      }
+    },
+    "expectedInvalidInputCollection": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "#/$defs/expectedItem",
+        "properties": {
+          "expected_type": {
+            "const": "invalid-input"
+          }
+        }
+      }
+    },
+    "expectedFailureCollection": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "#/$defs/expectedItem",
+        "properties": {
+          "expected_type": {
+            "const": "failure"
+          }
+        }
+      }
+    },
+    "expectedCoverageAndGapCollection": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "#/$defs/expectedItem",
+        "properties": {
+          "expected_type": {
+            "enum": [
+              "coverage",
+              "coverage-gap",
+              "audit-gap"
+            ]
+          }
+        }
+      }
+    },
+    "expectedCollectionStates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observations",
+        "deterministic_results",
+        "external_claims",
+        "application_links",
+        "discovery_leads",
+        "model_proposals",
+        "proposal_admissions",
+        "candidates",
+        "hypotheses",
+        "findings",
+        "recommendations",
+        "supported_cases",
+        "lead_only_cases",
+        "abstentions",
+        "invalid_inputs",
+        "coverage_gaps",
+        "failures"
+      ],
+      "properties": {
+        "observations": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "deterministic_results": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "external_claims": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "application_links": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "discovery_leads": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "model_proposals": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "proposal_admissions": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "candidates": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "hypotheses": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "findings": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "recommendations": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "supported_cases": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "lead_only_cases": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "abstentions": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "invalid_inputs": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "coverage_gaps": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "failures": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        }
       }
     },
     "expectedItem": {
@@ -253,6 +552,7 @@
             "lead-only-case",
             "abstention",
             "invalid-input",
+            "failure",
             "coverage-gap",
             "coverage",
             "audit-gap"

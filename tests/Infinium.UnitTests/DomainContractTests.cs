@@ -62,7 +62,20 @@ public sealed class DomainContractTests
     [TestProperty("Category", "M1Unit")]
     public void AnalyzerDeclarationRequiresAcceptedTaxonomyAndRawExperimentalOutput()
     {
-        AnalyzerDeclarationContract invalid = new(
+        AnalyzerDeclarationContract invalid = CreateAnalyzerDeclaration() with
+        {
+            RawDevelopmentOutput = false,
+        };
+
+        Assert.ThrowsExactly<InvalidOperationException>(() => DomainContractInvariants.Validate(invalid));
+
+        AnalyzerDeclarationContract valid = invalid with { RawDevelopmentOutput = true };
+        DomainContractInvariants.Validate(valid);
+    }
+
+    private static AnalyzerDeclarationContract CreateAnalyzerDeclaration()
+    {
+        return new AnalyzerDeclarationContract(
             ContractConstants.AnalyzerDeclarationSchemaId,
             new ContractVersion(1, 0, 0),
             "scope-incongruent-reversion",
@@ -98,7 +111,7 @@ public sealed class DomainContractTests
             new AnalyzerScaleAndCostContract("bounded M1", AnalyzerCostClass.LocalModerate, false),
             new AnalyzerResourceBoundsContract(100, 100, 1_000),
             AnalyzerMaturity.Experimental,
-            false,
+            true,
             false,
             new LinkedEvaluationCasesContract(
                 ["EVAL-0001"],
@@ -107,11 +120,6 @@ public sealed class DomainContractTests
                 ["EVAL-0017"],
                 ["EVAL-0032"],
                 ["EVAL-0065"]));
-
-        Assert.ThrowsExactly<InvalidOperationException>(() => DomainContractInvariants.Validate(invalid));
-
-        AnalyzerDeclarationContract valid = invalid with { RawDevelopmentOutput = true };
-        DomainContractInvariants.Validate(valid);
     }
 
     [TestMethod]
@@ -135,8 +143,10 @@ public sealed class DomainContractTests
     {
         LifecycleTransitionContract transition = new(
             new OpaqueId("transition-1"),
-            new OpaqueId("run-1"),
+            new AnalysisRunOwnerContract(new OpaqueId("run-1")),
             new OpaqueId("job-1"),
+            LifecycleTransitionRecordKind.Observed,
+            new ContractVersion(1, 0, 0),
             LifecycleState.Cancelled,
             LifecycleState.Running,
             1,
@@ -234,7 +244,7 @@ public sealed class DomainContractTests
     [TestProperty("Category", "M1Security")]
     public void ProposalAdmissionRejectsTypeOrInvocationAuthorityDrift()
     {
-        RunOutputContract valid = CreateProposalAdmissionOutput();
+        RunOutputAggregateContract valid = CreateProposalAdmissionOutput();
         DomainContractInvariants.Validate(valid);
 
         ProposalAdmissionContract wrongType = valid.ProposalAdmissions[0] with
@@ -258,7 +268,122 @@ public sealed class DomainContractTests
             () => DomainContractInvariants.Validate(valid with { ExternalClaims = [wrongInvocation] }));
     }
 
-    private static RunOutputContract CreateProposalAdmissionOutput()
+    [TestMethod]
+    [TestCategory("M1Unit")]
+    [TestCategory("M1Security")]
+    [TestProperty("Category", "M1Unit")]
+    [TestProperty("Category", "M1Security")]
+    public void RunOutputRejectsUnaccountedAdmissionAndAuthorityLaundering()
+    {
+        RunOutputAggregateContract valid = CreateProposalAdmissionOutput();
+
+        Assert.ThrowsExactly<InvalidOperationException>(
+            () => DomainContractInvariants.Validate(valid with { ProposalAdmissions = [] }));
+
+        ExternalClaimContract laundered = valid.ExternalClaims[0] with
+        {
+            Authority = EvidenceAuthority.HeuristicOrLlmInference,
+        };
+        Assert.ThrowsExactly<InvalidOperationException>(
+            () => DomainContractInvariants.Validate(valid with { ExternalClaims = [laundered] }));
+    }
+
+    [TestMethod]
+    [TestCategory("M1Unit")]
+    [TestProperty("Category", "M1Unit")]
+    public void RunOutputRejectsNestedAndCollectionStateDrift()
+    {
+        RunOutputAggregateContract valid = CreateProposalAdmissionOutput();
+        AnalyzerDeclarationContract invalidAnalyzer = valid.AnalyzerDeclarations[0] with
+        {
+            RawDevelopmentOutput = false,
+        };
+        Assert.ThrowsExactly<InvalidOperationException>(
+            () => DomainContractInvariants.Validate(valid with { AnalyzerDeclarations = [invalidAnalyzer] }));
+
+        TypedCollectionStateContract falseEmpty = valid.CollectionStates
+            .Single(value => value.CollectionName == "external_claims") with
+        {
+            State = CollectionProductionState.Empty,
+        };
+        Assert.ThrowsExactly<InvalidOperationException>(
+            () => DomainContractInvariants.Validate(valid with
+            {
+                CollectionStates =
+                [
+                    .. valid.CollectionStates.Where(value => value.CollectionName != "external_claims"),
+                    falseEmpty,
+                ],
+            }));
+    }
+
+    [TestMethod]
+    [TestCategory("M1Unit")]
+    [TestProperty("Category", "M1Unit")]
+    public void CoverageRejectsImpossibleCountsAndDanglingRunReferences()
+    {
+        RunOutputAggregateContract valid = CreateProposalAdmissionOutput();
+        CoverageContract impossible = new(
+            new OpaqueId("coverage-1"),
+            valid.RunId,
+            new OpaqueId(valid.AnalyzerDeclarations[0].AnalyzerId),
+            "eligible-relations",
+            "eligible relations",
+            1,
+            2,
+            CoverageState.Completed,
+            ContractConstants.TaxonomyId,
+            ContractVersion.Parse(ContractConstants.TaxonomyVersion),
+            [],
+            [],
+            [],
+            []);
+        Assert.ThrowsExactly<InvalidOperationException>(
+            () => DomainContractInvariants.Validate(valid with { Coverage = [impossible] }));
+
+        CoverageContract foreignRun = impossible with
+        {
+            OriginatingRunId = new OpaqueId("run-2"),
+            CompletedCount = 1,
+        };
+        Assert.ThrowsExactly<InvalidOperationException>(
+            () => DomainContractInvariants.Validate(valid with { Coverage = [foreignRun] }));
+    }
+
+    [TestMethod]
+    [TestCategory("M1Unit")]
+    [TestProperty("Category", "M1Unit")]
+    public void CliSummaryKeepsDurationUsageCostAndUnresolvedHoldsExplicit()
+    {
+        TypedOutputCountsContract typedCounts = new(
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        CoverageStateCountsContract coverageCounts = new(0, 0, 0, 0, 0, 0);
+        CliSummaryAggregateContract valid = new(
+            ContractConstants.CliSummarySchemaId,
+            new ContractVersion(1, 0, 0),
+            new OpaqueId("run-1"),
+            CliOutcome.Completed,
+            CliExitCode.Success,
+            typedCounts,
+            coverageCounts,
+            1,
+            new CliCostContract(0, 0, 0, 0, 0, 0, 0, false),
+            ReadinessScope.None,
+            true);
+        DomainContractInvariants.Validate(valid);
+
+        Assert.ThrowsExactly<InvalidOperationException>(
+            () => DomainContractInvariants.Validate(valid with
+            {
+                Cost = valid.Cost with
+                {
+                    CalculatedActualNanoUsd = null,
+                    UnresolvedHold = false,
+                },
+            }));
+    }
+
+    private static RunOutputAggregateContract CreateProposalAdmissionOutput()
     {
         ContractVersion version = new(1, 0, 0);
         OpaqueId runId = new("run-1");
@@ -287,7 +412,7 @@ public sealed class DomainContractTests
         ExternalClaimContract claim = new(
             new OpaqueId("claim-1"),
             version,
-            EvidenceAuthority.HeuristicOrLlmInference,
+            EvidenceAuthority.AuthoritativeExternal,
             Provenance("claim-revision-1", LlmInvolvementState.ProposalAdmitted),
             runId,
             new OpaqueId("source-revision-1"),
@@ -334,9 +459,7 @@ public sealed class DomainContractTests
             "failures",
         ];
 
-        return new RunOutputContract(
-            ContractConstants.RunOutputSchemaId,
-            version,
+        return new RunOutputAggregateContract(
             runId,
             new OpaqueId("snapshot-1"),
             new OpaqueId("analysis-context-1"),
@@ -370,7 +493,7 @@ public sealed class DomainContractTests
                 .ToArray(),
             [],
             [],
-            [],
+            [CreateAnalyzerDeclaration()],
             new ReadinessPlaceholderContract(
                 new OpaqueId("readiness-evaluation-1"),
                 runId,
@@ -380,7 +503,7 @@ public sealed class DomainContractTests
                 createdAt,
                 "not evaluated"),
             new ReplayabilityAssessmentContract(ReplayClass.AuditOnly, [], []),
-            new AuditabilityAssessmentContract(AuditabilityState.Partial, []),
+            new AuditabilityAssessmentContract(AuditabilityState.Partial, ["unit-test audit gap"]),
             true,
             []);
     }

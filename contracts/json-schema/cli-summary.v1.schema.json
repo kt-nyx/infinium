@@ -12,6 +12,8 @@
     "exit_code",
     "typed_counts",
     "coverage_state_counts",
+    "duration_ms",
+    "cost",
     "readiness",
     "no_safety_guarantee"
   ],
@@ -146,6 +148,83 @@
         },
         "unsupported": {
           "$ref": "#/$defs/count"
+        }
+      }
+    },
+    "duration_ms": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "cost": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider_input_tokens",
+        "provider_output_tokens",
+        "provider_reasoning_tokens",
+        "dispatch_count",
+        "tool_call_count",
+        "calculated_actual_nano_usd",
+        "reserved_nano_usd",
+        "unresolved_hold"
+      ],
+      "properties": {
+        "provider_input_tokens": {
+          "$ref": "#/$defs/count"
+        },
+        "provider_output_tokens": {
+          "$ref": "#/$defs/count"
+        },
+        "provider_reasoning_tokens": {
+          "$ref": "#/$defs/count"
+        },
+        "dispatch_count": {
+          "$ref": "#/$defs/count"
+        },
+        "tool_call_count": {
+          "$ref": "#/$defs/count"
+        },
+        "calculated_actual_nano_usd": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reserved_nano_usd": {
+          "$ref": "#/$defs/count"
+        },
+        "unresolved_hold": {
+          "type": "boolean"
+        }
+      },
+      "if": {
+        "properties": {
+          "unresolved_hold": {
+            "const": true
+          }
+        },
+        "required": [
+          "unresolved_hold"
+        ]
+      },
+      "then": {
+        "properties": {
+          "calculated_actual_nano_usd": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "calculated_actual_nano_usd": {
+            "type": "integer",
+            "minimum": 0
+          }
         }
       }
     },

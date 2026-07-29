@@ -287,13 +287,9 @@ internal static class EmbeddedJsonSchemaValidator
 
         if (schema.TryGetProperty("format", out JsonElement format)
             && StringComparer.Ordinal.Equals(format.GetString(), "date-time")
-            && !DateTimeOffset.TryParse(
-                value,
-                CultureInfo.InvariantCulture,
-                DateTimeStyles.RoundtripKind,
-                out _))
+            && !IsCanonicalUtcTimestamp(value))
         {
-            Fail(instancePath, "is not a valid date-time");
+            Fail(instancePath, "is not a canonical UTC date-time");
         }
     }
 
@@ -406,9 +402,22 @@ internal static class EmbeddedJsonSchemaValidator
                 using Stream stream = assembly.GetManifestResourceStream($"{ResourcePrefix}{name}")
                     ?? throw new InvalidDataException($"Embedded JSON Schema '{name}' is missing.");
                 JsonDocument document = JsonDocument.Parse(stream);
+                BoundedJsonDocumentReader.RejectDuplicateProperties(document.RootElement, name);
                 EnsureSupportedSchemaVocabulary(document.RootElement, name);
                 return document;
             });
+    }
+
+    private static bool IsCanonicalUtcTimestamp(string value)
+    {
+        return DateTimeOffset.TryParseExact(
+                value,
+                "O",
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.None,
+                out DateTimeOffset parsed)
+            && parsed.Offset == TimeSpan.Zero
+            && StringComparer.Ordinal.Equals(value, parsed.ToString("O", CultureInfo.InvariantCulture));
     }
 
     private static void EnsureSupportedSchemaVocabulary(JsonElement schema, string path)

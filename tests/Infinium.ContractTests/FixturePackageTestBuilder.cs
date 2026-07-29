@@ -64,20 +64,156 @@ internal sealed class FixturePackageTestBuilder : IDisposable
     {
         JsonArray history = new()
         {
-            PartitionTransition(null, "development", "initial registration", false),
-            PartitionTransition("development", "validation", "independent validation admission", false),
-            PartitionTransition("validation", "development", "result influenced implementation", true),
+            PartitionTransition(
+                null,
+                "validation",
+                DateTimeOffset.UnixEpoch,
+                "initial registration",
+                false),
+            PartitionTransition(
+                "validation",
+                "development",
+                DateTimeOffset.UnixEpoch.AddSeconds(1),
+                "result influenced implementation",
+                true),
         };
+        SetPartitionHistory("development", history);
+    }
+
+    internal void AddOracleExpectedItem(
+        string collection,
+        string expectedId,
+        string expectedType,
+        string groundTruthMethodId = "project-authored-method")
+    {
+        MutateObject(
+            FixturePackageReader.OracleFileName,
+            root =>
+            {
+                root[collection]!.AsArray().Add(
+                new JsonObject
+                {
+                    ["expected_id"] = expectedId,
+                    ["subject_id"] = "subject-1",
+                    ["expected_type"] = expectedType,
+                    ["expected_state"] = "present",
+                    ["ground_truth_method_ids"] = new JsonArray(groundTruthMethodId),
+                    ["canonical_value_fingerprint"] = new string('1', 64),
+                });
+                if (collection != "expected_coverage_and_gaps"
+                    || expectedType == "coverage-gap")
+                {
+                    root["expected_collection_states"]!
+                        .AsObject()[ExpectedCollectionStateName(collection)]!
+                        .AsObject()["state"] = "populated";
+                }
+            });
+        RefreshFingerprint("oracle_fingerprint", FixturePackageReader.OracleFileName);
+    }
+
+    internal void SetExpectedCollectionState(string collectionStateName, string state)
+    {
+        MutateObject(
+            FixturePackageReader.OracleFileName,
+            root => root["expected_collection_states"]!
+                .AsObject()[collectionStateName]!
+                .AsObject()["state"] = state);
+        RefreshFingerprint("oracle_fingerprint", FixturePackageReader.OracleFileName);
+    }
+
+    internal void AddTaxonomyAssignment(string assignmentId, string subjectExpectedId)
+    {
+        MutateObject(
+            FixturePackageReader.OracleFileName,
+            root => root["expected_taxonomy_assignments"]!.AsArray().Add(
+                new JsonObject
+                {
+                    ["assignment_id"] = assignmentId,
+                    ["taxonomy_id"] = ContractConstants.TaxonomyId,
+                    ["taxonomy_version"] = ContractConstants.TaxonomyVersion,
+                    ["subject_type"] = "expected-item",
+                    ["subject_id"] = subjectExpectedId,
+                    ["axis"] = "technical-surface",
+                    ["facet"] = "plugin-data",
+                    ["code"] = "surface.plugin-data",
+                    ["applicability_state"] = "assigned",
+                    ["classification_role"] = "established",
+                    ["evidence_references"] = new JsonArray(),
+                    ["applicability_condition_references"] = new JsonArray(),
+                    ["reason"] = "Contract integrity test assignment.",
+                    ["derivation_provenance"] = Provenance(),
+                }));
+        RefreshFingerprint("oracle_fingerprint", FixturePackageReader.OracleFileName);
+    }
+
+    internal void AddDuplicateGroundTruthMethod()
+    {
+        MutateObject(
+            FixturePackageReader.OracleFileName,
+            root => root["ground_truth_methods"]!.AsArray().Add(
+                root["ground_truth_methods"]![0]!.DeepClone()));
+        RefreshFingerprint("oracle_fingerprint", FixturePackageReader.OracleFileName);
+    }
+
+    internal void AddProvenanceProperty(string propertyName, JsonNode value)
+    {
+        MutateObject(FixturePackageReader.ProvenanceFileName, root => root[propertyName] = value);
+        RefreshFingerprint("provenance_fingerprint", FixturePackageReader.ProvenanceFileName);
+    }
+
+    internal void SetRedistributionClass(string redistributionClass)
+    {
+        MutateObject(
+            FixturePackageReader.RedistributionFileName,
+            root => root["redistribution_class"] = redistributionClass);
+    }
+
+    internal void SetPartitionHistory(string currentPartition, JsonArray history)
+    {
         MutateObject(
             FixturePackageReader.PublicManifestFileName,
             root =>
             {
-                root["partition"] = "development";
+                root["partition"] = currentPartition;
                 root["partition_history"] = history.DeepClone();
             });
         MutateObject(
             FixturePackageReader.PartitionHistoryFileName,
             root => root["partition_history"] = history.DeepClone());
+    }
+
+    internal static JsonObject PartitionTransition(
+        string? from,
+        string to,
+        DateTimeOffset at,
+        string reason,
+        bool influencedImplementation,
+        bool includeReplacement = false,
+        string? replacementInputFingerprint = null,
+        string? replacementOracleFingerprint = null)
+    {
+        JsonObject transition = new()
+        {
+            ["from"] = from,
+            ["to"] = to,
+            ["at"] = at.ToString("O"),
+            ["reason"] = reason,
+            ["change_influenced_implementation"] = influencedImplementation,
+        };
+        if (includeReplacement)
+        {
+            transition["replacement_fixture_id"] = "materially-independent-replacement";
+            transition["replacement_partition"] = "held-out";
+            transition["replacement_input_package_fingerprint"] =
+                replacementInputFingerprint ?? new string('2', 64);
+            transition["replacement_oracle_fingerprint"] =
+                replacementOracleFingerprint ?? new string('3', 64);
+            transition["independence_evidence_reference"] =
+                ArtifactReference("replacement-independence-review");
+            transition["authorized_by"] = "evaluation-owner";
+        }
+
+        return transition;
     }
 
     public void Dispose()
@@ -163,7 +299,9 @@ internal sealed class FixturePackageTestBuilder : IDisposable
             ["expected_lead_only_cases"] = new JsonArray(),
             ["expected_abstentions"] = new JsonArray(),
             ["expected_invalid_inputs"] = new JsonArray(),
+            ["expected_failures"] = new JsonArray(),
             ["expected_coverage_and_gaps"] = new JsonArray(),
+            ["expected_collection_states"] = EmptyCollectionStates(),
             ["expected_taxonomy_assignments"] = new JsonArray(),
             ["expected_replayability"] = "complete-clean",
             ["forbidden_claims"] = new JsonArray(),
@@ -253,6 +391,84 @@ internal sealed class FixturePackageTestBuilder : IDisposable
         };
     }
 
+    private static JsonObject EmptyCollectionStates()
+    {
+        JsonObject states = new();
+        string[] collectionNames =
+        [
+            "observations",
+            "deterministic_results",
+            "external_claims",
+            "application_links",
+            "discovery_leads",
+            "model_proposals",
+            "proposal_admissions",
+            "candidates",
+            "hypotheses",
+            "findings",
+            "recommendations",
+            "supported_cases",
+            "lead_only_cases",
+            "abstentions",
+            "invalid_inputs",
+            "coverage_gaps",
+            "failures",
+        ];
+        foreach (string collectionName in collectionNames)
+        {
+            states[collectionName] = new JsonObject
+            {
+                ["state"] = "empty",
+                ["reason"] = "No output is expected from this contract-only fixture.",
+            };
+        }
+
+        return states;
+    }
+
+    private static string ExpectedCollectionStateName(string collection)
+    {
+        return collection switch
+        {
+            "expected_observations" => "observations",
+            "expected_deterministic_results" => "deterministic_results",
+            "expected_external_claims" => "external_claims",
+            "expected_application_links" => "application_links",
+            "expected_discovery_leads" => "discovery_leads",
+            "expected_model_proposals" => "model_proposals",
+            "expected_proposal_admissions" => "proposal_admissions",
+            "expected_candidates" => "candidates",
+            "expected_hypotheses" => "hypotheses",
+            "expected_findings" => "findings",
+            "expected_recommendations" => "recommendations",
+            "expected_supported_cases" => "supported_cases",
+            "expected_lead_only_cases" => "lead_only_cases",
+            "expected_abstentions" => "abstentions",
+            "expected_invalid_inputs" => "invalid_inputs",
+            "expected_failures" => "failures",
+            "expected_coverage_and_gaps" => "coverage_gaps",
+            _ => throw new ArgumentOutOfRangeException(nameof(collection)),
+        };
+    }
+
+    private static JsonObject Provenance()
+    {
+        return new JsonObject
+        {
+            ["producer_id"] = "independent-oracle-author",
+            ["producer_version"] = "1.0.0",
+            ["originating_run_id"] = "oracle-construction-run",
+            ["source_references"] = new JsonArray(),
+            ["supporting_evidence_references"] = new JsonArray(),
+            ["contradicting_evidence_references"] = new JsonArray(),
+            ["llm_involvement"] = new JsonObject
+            {
+                ["state"] = "none",
+                ["operation"] = "none",
+            },
+        };
+    }
+
     private static JsonObject ArtifactReference(string artifactId)
     {
         return new JsonObject
@@ -261,22 +477,6 @@ internal sealed class FixturePackageTestBuilder : IDisposable
             ["artifact_version"] = "1.0.0",
             ["fingerprint"] = new string('0', 64),
             ["availability"] = "retained",
-        };
-    }
-
-    private static JsonObject PartitionTransition(
-        string? from,
-        string to,
-        string reason,
-        bool influencedImplementation)
-    {
-        return new JsonObject
-        {
-            ["from"] = from,
-            ["to"] = to,
-            ["at"] = DateTimeOffset.UnixEpoch.ToString("O"),
-            ["reason"] = reason,
-            ["change_influenced_implementation"] = influencedImplementation,
         };
     }
 

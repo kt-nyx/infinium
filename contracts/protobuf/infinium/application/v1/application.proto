@@ -412,6 +412,8 @@ message LifecycleChanged {
   infinium.domain.v1.LifecycleState current_state = 2;
   uint64 lifecycle_generation = 3;
   infinium.domain.v1.DurableTransitionId transition_id = 4;
+  infinium.domain.v1.LifecycleTransitionRecordKind transition_record_kind = 5;
+  infinium.common.v1.SemanticVersion lifecycle_policy_version = 6;
 }
 
 message ResyncRequired {

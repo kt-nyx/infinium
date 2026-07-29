@@ -18,6 +18,15 @@ public enum LifecycleState
     InvalidatedByChangedInput,
 }
 
+public enum LifecycleTransitionRecordKind
+{
+    Unspecified,
+    Requested,
+    Observed,
+    Unknown,
+    Unsupported,
+}
+
 public enum ProcessRole
 {
     Unspecified,
@@ -39,10 +48,128 @@ public enum SettlementState
     Unresolved,
 }
 
+public enum RetrySafety
+{
+    Unspecified,
+    SafeWithNewAttempt,
+    RequiresReconciliation,
+    NotSafe,
+}
+
+public enum AttemptOutcome
+{
+    Unspecified,
+    Pending,
+    Running,
+    CompletedStaged,
+    CompletedWithGapsStaged,
+    FailedKnown,
+    AbortUnknown,
+    Cancelled,
+    RejectedStale,
+}
+
+public enum ProviderKind
+{
+    Unspecified,
+    OpenAi,
+}
+
+public enum CredentialPurpose
+{
+    Unspecified,
+    OpenAiResponses,
+}
+
+public enum ProviderEndpoint
+{
+    Unspecified,
+    OpenAiResponsesV1,
+}
+
+public enum ProviderProfileLifecycleState
+{
+    Unspecified,
+    Active,
+    Replacing,
+    Revoked,
+    Deleted,
+}
+
+public enum ProviderVerificationState
+{
+    Unspecified,
+    Unverified,
+    Verified,
+    Failed,
+}
+
+public enum BudgetLimitScopeKind
+{
+    Unspecified,
+    Request,
+    Operation,
+    Owner,
+    ProviderProfile,
+    ProviderAccount,
+    BillingScope,
+    Global,
+}
+
+public enum OperationalFactAvailability
+{
+    Unspecified,
+    Available,
+    Unavailable,
+}
+
+public enum UsageReceiptState
+{
+    Unspecified,
+    NotDispatched,
+    Complete,
+    Partial,
+    Unavailable,
+    Unresolved,
+}
+
+public enum StagedArtifactKind
+{
+    Unspecified,
+    TypedResult,
+    Checkpoint,
+    Diagnostic,
+    ApprovedReadOnlyToolOutput,
+    ProviderResponse,
+    NonSecretReceipt,
+}
+
+public abstract record OperationOwnerContract
+{
+    public abstract OpaqueId OwnerId { get; }
+}
+
+public sealed record AnalysisRunOwnerContract(OpaqueId AnalysisRunId) : OperationOwnerContract
+{
+    public override OpaqueId OwnerId => AnalysisRunId;
+}
+
+public sealed record EvidenceAcquisitionRunOwnerContract(OpaqueId EvidenceAcquisitionRunId) : OperationOwnerContract
+{
+    public override OpaqueId OwnerId => EvidenceAcquisitionRunId;
+}
+
+public sealed record MaintenanceOperationOwnerContract(OpaqueId MaintenanceOperationId) : OperationOwnerContract
+{
+    public override OpaqueId OwnerId => MaintenanceOperationId;
+}
+
 public sealed record LifecycleTransitionContract(
     OpaqueId TransitionId,
-    OpaqueId OwnerRunId,
+    OperationOwnerContract Owner,
     OpaqueId JobNodeId,
+    LifecycleTransitionRecordKind RecordKind,
+    ContractVersion PolicyVersion,
     LifecycleState From,
     LifecycleState To,
     long ExpectedGeneration,
@@ -57,24 +184,48 @@ public sealed record CoordinatorLeaseContract(
     UtcTimestamp AcquiredAt,
     UtcTimestamp ExpiresAt);
 
+public sealed record AttemptLeaseContract(
+    long AttemptFencingToken,
+    UtcTimestamp AcquiredAt,
+    UtcTimestamp ExpiresAt);
+
 public sealed record AttemptContract(
     OpaqueId AttemptId,
-    OpaqueId OwnerRunId,
+    OperationOwnerContract Owner,
     OpaqueId JobNodeId,
+    long AttemptGeneration,
     long CoordinatorFencingEpoch,
-    string DispatchIdentity,
-    bool RetrySafe,
+    AttemptLeaseContract Lease,
+    OpaqueId DispatchIdentity,
+    OpaqueId IdempotencyIdentity,
+    RetrySafety RetrySafety,
+    AttemptOutcome Outcome,
     UtcTimestamp CreatedAt);
+
+public sealed record VersionedComponentContract(
+    OpaqueId Identity,
+    ContractVersion Version);
 
 public sealed record CheckpointContract(
     OpaqueId CheckpointId,
-    OpaqueId OwnerRunId,
+    OperationOwnerContract Owner,
     OpaqueId JobNodeId,
     OpaqueId AttemptId,
+    OpaqueId InstallationSnapshotId,
+    OpaqueId AnalysisContextId,
+    OpaqueId EffectiveScanConfigurationId,
+    IReadOnlyList<OpaqueId> SourceRevisionIds,
+    IReadOnlyList<VersionedComponentContract> ToolVersions,
+    IReadOnlyList<VersionedComponentContract> ModelVersions,
+    IReadOnlyList<VersionedComponentContract> AnalyzerVersions,
+    IReadOnlyList<VersionedComponentContract> SchemaVersions,
     OpaqueId DependencyClosureId,
-    Sha256Fingerprint ContentFingerprint,
+    IReadOnlyList<OpaqueId> UpstreamArtifactIds,
     IReadOnlyList<string> CompletedPartitions,
     IReadOnlyList<string> PendingAndGapStates,
+    long ProgressPopulationRevision,
+    IReadOnlyList<OpaqueId> AccountingReferences,
+    Sha256Fingerprint ContentFingerprint,
     UtcTimestamp CreatedAt);
 
 public sealed record PublicationReceiptContract(
@@ -96,47 +247,97 @@ public sealed record PayloadManifestContract(
 public sealed record ProviderAccessProfileContract(
     OpaqueId ProfileId,
     ContractVersion SchemaVersion,
-    string Provider,
-    string Purpose,
+    ProviderKind Provider,
+    CredentialPurpose Purpose,
+    string DisplayLabel,
     long CredentialGeneration,
     long RevocationEpoch,
-    string LifecycleState,
+    OpaqueId ProviderAccountIdentityId,
+    OpaqueId BillingScopeIdentityId,
+    ProviderProfileLifecycleState LifecycleState,
+    ProviderVerificationState VerificationState,
     OpaqueId CapabilitySnapshotId);
+
+public sealed record ProviderResponseBoundsContract(
+    long MaximumResponseBytes,
+    long MaximumInputTokens,
+    long MaximumOutputAndReasoningTokens,
+    long MaximumPricedToolCalls,
+    long MaximumCalculatedNanoUsd);
 
 public sealed record ProviderRequestAssignmentContract(
     OpaqueId AssignmentId,
-    OpaqueId OwnerRunId,
+    OperationOwnerContract Owner,
+    OpaqueId JobNodeId,
     OpaqueId AttemptId,
     OpaqueId ProviderProfileId,
     long CredentialGeneration,
     long RevocationEpoch,
-    string Provider,
-    string Purpose,
-    string EndpointShape,
+    ProviderKind Provider,
+    CredentialPurpose Purpose,
+    ProviderEndpoint Endpoint,
+    OpaqueId ProviderAccountIdentityId,
+    OpaqueId BillingScopeIdentityId,
+    OpaqueId RequestIdentity,
+    Sha256Fingerprint ExactRequestFingerprint,
+    OpaqueId EffectiveScanConfigurationId,
+    OpaqueId CapabilitySnapshotId,
+    OpaqueId PriceSnapshotId,
     OpaqueId BudgetReservationId,
+    ProviderResponseBoundsContract ResponseBounds,
     UtcTimestamp DispatchDeadline,
     OpaqueId StagingIdentity);
 
-public sealed record ConsumptionVectorContract(
+public sealed record ProviderUsageQuantitiesContract(
     long DispatchCount,
     long InputTokens,
-    long OutputAndReasoningTokens,
-    long PricedToolCalls,
-    long NanoUsd);
+    long OutputTokens,
+    long ReasoningTokens,
+    long PricedToolCalls);
+
+public sealed record CalculatedCostContract(long NanoUsd);
+
+public sealed record ProviderBillingFactContract(
+    OperationalFactAvailability Availability,
+    long? BilledNanoUsd);
+
+public sealed record RateLimitFactContract(
+    OperationalFactAvailability Availability,
+    long? RemainingRequests,
+    UtcTimestamp? ResetsAt);
+
+public sealed record ProviderCreditFactContract(
+    OperationalFactAvailability Availability,
+    long? RemainingNanoUsd);
+
+public sealed record BudgetLimitScopeContract(
+    BudgetLimitScopeKind Kind,
+    OpaqueId ScopeId);
 
 public sealed record BudgetReservationContract(
     OpaqueId ReservationId,
+    OperationOwnerContract Owner,
+    OpaqueId JobNodeId,
     OpaqueId AttemptId,
-    ConsumptionVectorContract WorstCase,
-    IReadOnlyList<OpaqueId> ApplicableLimitScopeIds,
-    UtcTimestamp CreatedAt);
+    OpaqueId RequestIdentity,
+    OpaqueId EffectiveScanConfigurationId,
+    OpaqueId CapabilitySnapshotId,
+    OpaqueId PriceSnapshotId,
+    ProviderUsageQuantitiesContract WorstCaseUsage,
+    CalculatedCostContract WorstCaseCalculatedCost,
+    IReadOnlyList<BudgetLimitScopeContract> ApplicableLimitScopes,
+    UtcTimestamp CreatedAt,
+    UtcTimestamp ExpiresAt);
 
 public sealed record DispatchFenceContract(
     OpaqueId DispatchFenceId,
     OpaqueId ReservationId,
+    OperationOwnerContract Owner,
+    OpaqueId JobNodeId,
     OpaqueId AttemptId,
     long CoordinatorFencingEpoch,
     long AttemptGeneration,
+    long AttemptFencingToken,
     long CredentialGeneration,
     long RevocationEpoch,
     UtcTimestamp Deadline,
@@ -146,11 +347,20 @@ public sealed record DispatchFenceContract(
 
 public sealed record UsageLedgerEntryContract(
     OpaqueId EntryId,
+    OperationOwnerContract Owner,
+    OpaqueId JobNodeId,
     OpaqueId AttemptId,
-    ConsumptionVectorContract Actual,
+    OpaqueId RequestIdentity,
+    OpaqueId EffectiveScanConfigurationId,
+    ProviderUsageQuantitiesContract ProviderUsage,
+    UsageReceiptState UsageReceiptState,
+    CalculatedCostContract CalculatedCost,
+    ProviderBillingFactContract ProviderBilling,
+    RateLimitFactContract RateLimit,
+    ProviderCreditFactContract ProviderCredit,
     SettlementState Settlement,
     OpaqueId CapabilitySnapshotId,
-    OpaqueId PriceCatalogId,
+    OpaqueId PriceSnapshotId,
     UtcTimestamp RecordedAt);
 
 public sealed record ProcessBootstrapContract(
@@ -185,17 +395,38 @@ public sealed record EventCursorContract(
     ContractVersion ProjectionVersion,
     string Scope);
 
+public sealed record StagedOutputSlotContract(
+    OpaqueId StagedArtifactId,
+    StagedArtifactKind Kind,
+    string TypedRelativeName,
+    long MaximumBytes,
+    bool Required);
+
 public sealed record WorkerAssignmentContract(
     OpaqueId AssignmentId,
+    OperationOwnerContract Owner,
+    OpaqueId JobNodeId,
     OpaqueId AttemptId,
-    long FencingEpoch,
+    long CoordinatorFencingEpoch,
+    long AttemptFencingToken,
     OpaqueId InputManifestId,
-    string AttemptStagingRelativeName,
-    long MaximumOutputBytes,
+    OpaqueId StagingAreaId,
+    IReadOnlyList<StagedOutputSlotContract> AllowedOutputs,
     UtcTimestamp Deadline);
+
+public sealed record StagedOutputContract(
+    OpaqueId StagedArtifactId,
+    StagedArtifactKind Kind,
+    string TypedRelativeName,
+    Sha256Fingerprint ContentFingerprint,
+    long ByteLength,
+    ContractVersion SchemaVersion);
 
 public sealed record StagedOutputManifestContract(
     OpaqueId AssignmentId,
     OpaqueId AttemptId,
-    IReadOnlyList<PayloadManifestContract> Payloads,
+    OpaqueId StagingAreaId,
+    long CoordinatorFencingEpoch,
+    long AttemptFencingToken,
+    IReadOnlyList<StagedOutputContract> Outputs,
     Sha256Fingerprint ManifestFingerprint);

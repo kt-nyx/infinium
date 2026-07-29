@@ -134,6 +134,61 @@ The final re-review found no real-mod-specific rule, fixture-specific
 production behavior, invented certainty, answer leakage, unbounded helper
 authority, protected-root action, or unclaimed later-slice implementation.
 
+## Comprehensive follow-up review
+
+A second review on 2026-07-29 inspected the committed Slice 1 range
+`a07a098348eeb810e0d3bfbf54c774ac12a627e4..c21760fa5e3b73c42e35fefe524dd28445d8d549`
+against the accepted M1 plan, requirements, evaluation rules, and ADRs. It
+found and corrected material contract gaps that the original compile-and-test
+pass did not expose:
+
+- the C# run-output aggregate and the stable JSON document shared a name but
+  were not wire-compatible; the stable document now has an exact snake-case
+  schema-validated codec and real bidirectional round-trip/fault tests;
+- aggregate validation did not recurse through analyzers, taxonomy,
+  provenance, coverage, collection-state, readiness, replay, and audit
+  boundaries or require bidirectional model-admission and external-claim
+  application records;
+- fixture files were measured and read separately, permitting changed bytes
+  to evade a fingerprint check; readers now parse and hash one bounded,
+  read-locked byte snapshot, reject duplicate properties, and use one
+  canonical UTC representation;
+- provenance, redistribution, and partition-history documents had no closed
+  schema, and partition transitions could promote known-answer data or claim
+  independence without distinct replacement content and evidence;
+- oracle collections did not bind item type, method references, taxonomy
+  subjects, failure expectations, or collection-state truth strongly enough;
+- lifecycle, attempt, checkpoint, worker staging, provider-account,
+  billing-scope, request, reservation, usage, calculated-cost, provider-fact,
+  and price-snapshot identities were underspecified or conflated; and
+- CLI summaries omitted elapsed duration and a distinct bounded
+  usage/calculated-cost/unresolved-hold report.
+
+The correction remains contract-only. It does not implement persistence,
+migrations, process transport, lifecycle execution, provider dispatch,
+credential access, CLI commands, analyzers, or any other later-slice runtime
+capability. Synthetic fault tests inspect explicit rejected proposals,
+unsupported/empty/failed collection states, coverage gaps, failures,
+abstentions, stale fences, unassigned staged output, unavailable provider
+facts, answer-bearing input, malformed/oversized JSON, and partition
+laundering without claiming product evaluation success.
+
+Final follow-up verification on Windows x64 with .NET SDK `10.0.302`:
+
+| Command | Result |
+| --- | --- |
+| `dotnet restore Infinium.sln --locked-mode --nologo` | Passed; all projects were current. |
+| `dotnet restore Infinium.sln --locked-mode --force --no-cache --nologo -p:RestorePackagesPath="<new empty temporary path>"` | Passed; all 15 projects restored into the new package path. |
+| `dotnet build Infinium.sln -c Release --no-restore --nologo` | Passed; 0 warnings and 0 errors. |
+| `dotnet test Infinium.sln -c Release --no-build --nologo` | Passed; 87 of 87 checks: 30 unit, 50 contract, 3 integration, and 4 evaluation. |
+| The six accepted `Category=M1*` filtered test commands | Passed: 24 unit; 20 contract; 4 integration; 6 evaluation; 6 security; and 12 fault checks. |
+| `dotnet format Infinium.sln --verify-no-changes --no-restore --verbosity minimal` | Passed. |
+| AJV CLI `5.0.0` plus `ajv-formats` `3.0.1`, Draft 2020 mode, each schema compiled with `common.v1` registered as a local reference and strict warnings treated as failures | Passed; all 14 schemas compiled. |
+| `grpc_tools_node_protoc` over all six protobuf files with imports and source information | Passed; emitted a 96,936-byte descriptor with SHA-256 `78346c383396b437e3afb2a9eb7b5dd57cec99230aa8a8f361d0b1aef5b90792`. |
+| Two non-incremental Release builds followed by SHA-256 comparison of emitted DLL/PDB files | Passed; all 615 output hashes matched. |
+| `dotnet list Infinium.sln package --include-transitive --no-restore` | Passed; no Slice 1 review dependency was introduced. |
+| Prohibited legacy-reference, secret-pattern, generated-artifact, and staged-diff checks | Passed. |
+
 ## Known gaps and deferred work
 
 - The protobuf contracts have no predecessor baseline because this is their
