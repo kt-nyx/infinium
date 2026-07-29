@@ -3,6 +3,7 @@ using Infinium.Application.Runtime;
 using Infinium.Contracts.Protobuf.Common.V1;
 using Infinium.Contracts.Protobuf.Protocol.V1;
 using Infinium.Contracts.Protobuf.Worker.V1;
+using Microsoft.AspNetCore.Connections.Features;
 
 namespace Infinium.Coordinator;
 
@@ -27,10 +28,29 @@ public sealed class WorkerGrpcService(
             });
         }
 
-        return Task.FromResult(bootstraps.Negotiate(
+        string connectionId = context.GetHttpContext().Connection.Id;
+        HandshakeResponse response = bootstraps.Negotiate(
             request,
-            context.GetHttpContext().Connection.Id,
-            runtime));
+            connectionId,
+            runtime);
+        if (response.Disposition == HandshakeDisposition.Accepted)
+        {
+            if (!runtime.TryAdmitWorkerConnection(connectionId))
+            {
+                response.Disposition = HandshakeDisposition.LimitsRejected;
+                response.Failure = Failure(
+                    FailureCode.LimitExceeded,
+                    "The worker connection admission bound is full.");
+                return Task.FromResult(response);
+            }
+
+            IConnectionLifetimeFeature? lifetime =
+                context.GetHttpContext().Features.Get<IConnectionLifetimeFeature>();
+            lifetime?.ConnectionClosed.Register(
+                () => runtime.ReleaseWorkerConnection(connectionId));
+        }
+
+        return Task.FromResult(response);
     }
 
     public override Task<ReceiveAssignmentResponse> ReceiveAssignment(
@@ -60,46 +80,26 @@ public sealed class WorkerGrpcService(
         WorkerProgress request,
         ServerCallContext context)
     {
-        bool current = bootstraps.IsCurrentAttempt(
-            request.AttemptId?.Value ?? string.Empty,
-            request.CoordinatorFencingEpoch,
-            request.AttemptFencingToken,
+        return Task.FromResult(bootstraps.AcceptProgress(
+            request,
             context.GetHttpContext().Connection.Id,
-            runtime);
-        WorkerProgressReceipt response = new()
-        {
-            Disposition = current
-                ? WorkerReceiptDisposition.AcceptedForStagingOnly
-                : WorkerReceiptDisposition.RejectedStaleFence,
-            AcceptedProgressSequence = current ? request.ProgressSequence : 0,
-        };
-        if (!current)
-        {
-            response.Failure =
-                Failure(FailureCode.StaleFence, "The progress attempt is stale.");
-        }
-
-        return Task.FromResult(response);
+            runtime));
     }
 
     public override Task<PollControlResponse> PollControl(
         PollControlRequest request,
         ServerCallContext context)
     {
-        bool current = bootstraps.IsCurrentAttempt(
-            request.AttemptId?.Value ?? string.Empty,
-            request.CoordinatorFencingEpoch,
-            request.AttemptFencingToken,
+        WorkerControl control = bootstraps.GetControl(
+            request,
             context.GetHttpContext().Connection.Id,
             runtime);
         PollControlResponse response = new()
         {
-            Control = current
-                ? WorkerControl.Continue
-                : WorkerControl.StopStaleAttempt,
+            Control = control,
             ControlSequence = 1,
         };
-        if (!current)
+        if (control == WorkerControl.StopStaleAttempt)
         {
             response.Failure =
                 Failure(FailureCode.StaleFence, "The worker attempt is stale.");
@@ -114,13 +114,13 @@ public sealed class WorkerGrpcService(
     {
         try
         {
-            string receipt = bootstraps.AcceptStagedOutput(
+            StagedOutputAcceptance acceptance = bootstraps.AcceptStagedOutput(
                 request,
                 context.GetHttpContext().Connection.Id);
             return Task.FromResult(new SubmitStagedOutputResponse
             {
-                Disposition = WorkerReceiptDisposition.AcceptedForStagingOnly,
-                StagingReceiptId = receipt,
+                Disposition = acceptance.Disposition,
+                StagingReceiptId = acceptance.ReceiptId,
             });
         }
         catch (InvalidOperationException exception)
@@ -139,12 +139,12 @@ public sealed class WorkerGrpcService(
     {
         try
         {
-            _ = bootstraps.AcceptTerminal(
+            TerminalReceiptAcceptance acceptance = bootstraps.AcceptTerminal(
                 request,
                 context.GetHttpContext().Connection.Id);
             return Task.FromResult(new WorkerTerminalReceiptResponse
             {
-                Disposition = WorkerReceiptDisposition.AcceptedForStagingOnly,
+                Disposition = acceptance.Disposition,
                 QueuedForCoordinatorValidation = true,
             });
         }

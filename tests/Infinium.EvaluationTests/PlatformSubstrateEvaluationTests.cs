@@ -1,5 +1,7 @@
 using System.Security.Cryptography;
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using Infinium.Application.Evaluation;
 using Infinium.Domain.Contracts;
 using Infinium.Persistence;
 using Microsoft.Data.Sqlite;
@@ -22,28 +24,109 @@ public sealed class PlatformSubstrateEvaluationTests
     [TestMethod]
     [TestCategory("M1Evaluation")]
     [TestProperty("Category", "M1Evaluation")]
-    public void SliceTwoFixturePackageDeclaresEveryExercisedPlatformFamilyWithoutAnswers()
+    public void SliceTwoFixturePackageLoadsThroughAcceptedContractWithExplicitCoverageGap()
     {
-        using JsonDocument document = TestRepository.ReadJson(
-            "test-data",
-            "evaluation",
-            "m1-platform",
-            "slice2-substrate-fixture.v1.json");
-        JsonElement root = document.RootElement;
-        Assert.AreEqual(
-            "M1-PLAT-SLICE2-SUBSTRATE-v1",
-            root.GetProperty("fixturePackageId").GetString());
-        JsonElement isolation = root.GetProperty("answerIsolation");
-        Assert.IsFalse(isolation.GetProperty("groundTruthEmbeddedInProduction").GetBoolean());
-        Assert.IsFalse(isolation.GetProperty("realModNamesPresent").GetBoolean());
-        Assert.IsFalse(isolation.GetProperty("fixtureSpecificProductionRulesAllowed").GetBoolean());
-        string[] families = root.GetProperty("families")
+        EvaluationHarnessFixturePackage package = FixturePackageReader.ReadForEvaluationHarness(
+            SliceTwoFixtureDirectory);
+
+        Assert.AreEqual("M1-PLAT-SLICE2-SUBSTRATE-v1", package.FixtureId.Value);
+        Assert.AreEqual(FixturePartition.Development, package.Partition);
+        string[] families = package.ExecutionInput
+            .GetProperty("declared_supported_capabilities")
             .EnumerateArray()
-            .Select(family => family.GetProperty("id").GetString()!)
+            .Select(family => family.GetString()!)
             .ToArray();
-        CollectionAssert.AreEquivalent(
-            PlatformFamilies,
-            families);
+        CollectionAssert.AreEquivalent(PlatformFamilies, families);
+
+        string[] expectedFamilies = package.Oracle
+            .GetProperty("expected_deterministic_results")
+            .EnumerateArray()
+            .Select(expected => expected.GetProperty("subject_id").GetString()!)
+            .ToArray();
+        CollectionAssert.AreEquivalent(PlatformFamilies, expectedFamilies);
+        foreach (JsonElement expected in package.Oracle
+                     .GetProperty("expected_deterministic_results")
+                     .EnumerateArray())
+        {
+            string subject = expected.GetProperty("subject_id").GetString()!;
+            Assert.AreEqual(
+                Fingerprint($"{subject}:plan-declared-slice2-substrate-present"),
+                expected.GetProperty("canonical_value_fingerprint").GetString(),
+                subject);
+        }
+
+        JsonElement planEvidence = package.Oracle
+            .GetProperty("ground_truth_methods")[0]
+            .GetProperty("evidence_references")[0];
+        Assert.AreEqual(
+            FileFingerprint(Path.Combine(
+                TestRepository.Root,
+                "docs",
+                "plans",
+                "milestones",
+                "M1-backend-semantic-proof.md")),
+            planEvidence.GetProperty("fingerprint").GetString());
+        JsonElement gap = package.Oracle
+            .GetProperty("expected_coverage_and_gaps")
+            .EnumerateArray()
+            .Single();
+        Assert.AreEqual("complete-M1-evaluation-case", gap.GetProperty("subject_id").GetString());
+        Assert.AreEqual("coverage-gap", gap.GetProperty("expected_type").GetString());
+        Assert.AreEqual(
+            Fingerprint("complete-M1-evaluation-case:coverage-gap-present"),
+            gap.GetProperty("canonical_value_fingerprint").GetString());
+        Assert.IsTrue(
+            package.Oracle.GetProperty("forbidden_claims")
+                .EnumerateArray()
+                .Any(claim =>
+                    claim.GetProperty("claim_type").GetString()
+                    == "complete-evaluation-case-passed"));
+    }
+
+    [TestMethod]
+    [TestCategory("M1Evaluation")]
+    [TestProperty("Category", "M1Evaluation")]
+    public void SliceTwoFixturePackageRejectsAnswerBearingExecutionMutationAfterFingerprintRefresh()
+    {
+        string directory = CopySliceTwoFixture();
+        try
+        {
+            string executionPath = Path.Combine(directory, FixturePackageReader.ExecutionInputFileName);
+            JsonObject execution = JsonNode.Parse(File.ReadAllText(executionPath))!.AsObject();
+            execution["expected_labels"] = new JsonArray("answer");
+            File.WriteAllText(
+                executionPath,
+                execution.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+            RefreshManifestFingerprint(directory, "input_package_fingerprint", executionPath);
+
+            Assert.ThrowsExactly<InvalidDataException>(
+                () => FixturePackageReader.ReadForEvaluationHarness(directory));
+        }
+        finally
+        {
+            Delete(directory);
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("M1Evaluation")]
+    [TestProperty("Category", "M1Evaluation")]
+    public void SliceTwoFixturePackageRejectsOracleTampering()
+    {
+        string directory = CopySliceTwoFixture();
+        try
+        {
+            File.AppendAllText(
+                Path.Combine(directory, FixturePackageReader.OracleFileName),
+                Environment.NewLine);
+
+            Assert.ThrowsExactly<InvalidDataException>(
+                () => FixturePackageReader.ReadForEvaluationHarness(directory));
+        }
+        finally
+        {
+            Delete(directory);
+        }
     }
 
     [TestMethod]
@@ -93,6 +176,8 @@ public sealed class PlatformSubstrateEvaluationTests
                     attempt,
                     "result.bin",
                     sha,
+                    bytes.LongLength,
+                    new string('1', 64),
                     4096,
                     DateTimeOffset.UtcNow);
                 Assert.AreEqual(sha, admission.Sha256);
@@ -108,7 +193,11 @@ public sealed class PlatformSubstrateEvaluationTests
                 backup = store.CreateBackup("fixture", DateTimeOffset.UtcNow);
             }
 
-            AuthoritativeStore.RestoreBackup(backup, new StoragePaths(restoreRoot));
+            using (StoragePaths restorePaths = new(restoreRoot))
+            {
+                AuthoritativeStore.RestoreBackup(backup, restorePaths);
+            }
+
             using AuthoritativeStore restored = new(new StoragePaths(restoreRoot));
             RunRecord restoredRun = restored.GetRun(completed.RunId);
             Assert.AreEqual(completed.State, restoredRun.State);
@@ -163,17 +252,31 @@ public sealed class PlatformSubstrateEvaluationTests
         Assert.ThrowsExactly<ArgumentException>(() => new StoragePaths("relative-root"));
         Assert.ThrowsExactly<InvalidOperationException>(
             () => new StoragePaths(@"C:\Games\Skyrim Special Edition"));
+        Assert.ThrowsExactly<InvalidOperationException>(
+            () => new StoragePaths(
+                @"C:\Games\Skyrim Special Edition\mods\SomeMod\InfiniumData"));
 
         string root = Temp("writes");
         try
         {
-            StoragePaths paths = new(root);
+            using StoragePaths paths = new(root);
+            using StoragePaths aliasPaths =
+                new(root.ToUpperInvariant() + Path.DirectorySeparatorChar);
+            Assert.AreEqual(
+                paths.AuthorityIdentity,
+                aliasPaths.AuthorityIdentity);
             Assert.ThrowsExactly<InvalidOperationException>(
-                () => paths.ResolveProductRelative(@"payloads\..\..\outside.bin"));
+                () => paths.ResolveProductPath(
+                    ProductWriteClass.Payload,
+                    @"..\..\outside.bin"));
             Assert.ThrowsExactly<InvalidOperationException>(
-                () => paths.ResolveProductRelative(@"\\?\C:\outside.bin"));
+                () => paths.ResolveProductPath(
+                    ProductWriteClass.Payload,
+                    @"\\?\C:\outside.bin"));
             Assert.ThrowsExactly<InvalidOperationException>(
-                () => paths.ResolveProductRelative(@"payloads\file.bin:stream"));
+                () => paths.ResolveProductPath(
+                    ProductWriteClass.Payload,
+                    @"file.bin:stream"));
         }
         finally
         {
@@ -192,7 +295,7 @@ public sealed class PlatformSubstrateEvaluationTests
         string backupRoot = Temp("tampered-backup");
         try
         {
-            StoragePaths newerPaths = new(newerRoot);
+            using StoragePaths newerPaths = new(newerRoot);
             newerPaths.Create();
             SqliteRuntimeIdentity.InitializeNativeProvider();
             using (SqliteConnection connection = new($"Data Source={newerPaths.Database};Pooling=False"))
@@ -221,10 +324,9 @@ public sealed class PlatformSubstrateEvaluationTests
                 stream.WriteByte(0x7f);
             }
 
+            using StoragePaths tamperedTarget = new(Temp("tampered-target"));
             Assert.ThrowsExactly<InvalidOperationException>(
-                () => AuthoritativeStore.RestoreBackup(
-                    backup,
-                    new StoragePaths(Temp("tampered-target"))));
+                () => AuthoritativeStore.RestoreBackup(backup, tamperedTarget));
         }
         finally
         {
@@ -235,6 +337,47 @@ public sealed class PlatformSubstrateEvaluationTests
 
     private static RunBinding Binding(string suffix) =>
         new($"snapshot-{suffix}", $"context-{suffix}", $"config-{suffix}", $"manifest-{suffix}");
+
+    private static string SliceTwoFixtureDirectory =>
+        Path.Combine(
+            TestRepository.Root,
+            "test-data",
+            "evaluation",
+            "m1-platform",
+            "M1-PLAT-SLICE2-SUBSTRATE-v1");
+
+    private static string CopySliceTwoFixture()
+    {
+        string target = Temp("slice2-fixture");
+        Directory.CreateDirectory(target);
+        foreach (string sourcePath in Directory.EnumerateFiles(SliceTwoFixtureDirectory))
+        {
+            File.Copy(sourcePath, Path.Combine(target, Path.GetFileName(sourcePath)));
+        }
+
+        return target;
+    }
+
+    private static void RefreshManifestFingerprint(
+        string directory,
+        string propertyName,
+        string targetPath)
+    {
+        string manifestPath = Path.Combine(directory, FixturePackageReader.PublicManifestFileName);
+        JsonObject manifest = JsonNode.Parse(File.ReadAllText(manifestPath))!.AsObject();
+        manifest[propertyName] = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(targetPath)))
+            .ToLowerInvariant();
+        File.WriteAllText(
+            manifestPath,
+            manifest.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+    }
+
+    private static string Fingerprint(string value) =>
+        Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(value)))
+            .ToLowerInvariant();
+
+    private static string FileFingerprint(string path) =>
+        Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))).ToLowerInvariant();
 
     private static string Temp(string kind) =>
         Path.Combine(Path.GetTempPath(), $"infinium-{kind}-{Guid.NewGuid():N}");

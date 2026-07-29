@@ -1,0 +1,61 @@
+{
+  "fixture_id": "M1-PLAT-SLICE2-SUBSTRATE-v1",
+  "fixture_version": "1.0.0",
+  "installation_snapshot_input": {
+    "state": "empty",
+    "reason": "Slice 2 evaluates the generic platform substrate without a game installation."
+  },
+  "analysis_context_input": {
+    "state": "empty",
+    "reason": "No semantic analysis context is required for platform substrate evaluation."
+  },
+  "effective_scan_configuration": {
+    "artifact_id": "slice2-platform-evaluation-configuration",
+    "artifact_version": "1.0.0",
+    "fingerprint": "0000000000000000000000000000000000000000000000000000000000000000",
+    "availability": "retained"
+  },
+  "runtime_support_input": {
+    "state": "not-applicable",
+    "reason": "Runtime qualification is outside the Slice 2 platform substrate boundary."
+  },
+  "mo2_instance_profile_input": {
+    "state": "not-applicable",
+    "reason": "MO2 reconstruction is outside the Slice 2 platform substrate boundary."
+  },
+  "plugin_order_input": {
+    "state": "not-applicable",
+    "reason": "Plugin order analysis is outside the Slice 2 platform substrate boundary."
+  },
+  "provider_order_input": {
+    "state": "not-applicable",
+    "reason": "Provider order analysis is outside the Slice 2 platform substrate boundary."
+  },
+  "source_claim_inputs": [],
+  "analyzer_declarations": [],
+  "tool_library_versions": [],
+  "declared_archive_state": {
+    "state": "excluded",
+    "reason": "Archive analysis is outside the Slice 2 platform substrate boundary."
+  },
+  "declared_supported_capabilities": [
+    "M1-PLAT-IPC-v1",
+    "M1-PLAT-LIFECYCLE-v1",
+    "M1-PLAT-LINEAGE-v1",
+    "M1-PLAT-PERSIST-v1",
+    "M1-PLAT-WRITES-v1"
+  ],
+  "declared_unsupported_capabilities": [
+    {
+      "capability_id": "complete-M1-evaluation-case",
+      "reason": "Slice 2 exercises only plan-declared substrate portions and does not pass a complete accepted evaluation case."
+    }
+  ],
+  "resource_and_time_limits": {
+    "wall_time_ms": 120000,
+    "memory_bytes": 536870912,
+    "input_bytes": 0,
+    "output_bytes": 16777216
+  },
+  "input_payload_refs": []
+}

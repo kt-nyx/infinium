@@ -1,0 +1,655 @@
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Text;
+using Microsoft.Win32.SafeHandles;
+
+#pragma warning disable CA1838 // CreateProcessW requires a mutable command-line buffer.
+
+namespace Infinium.Coordinator;
+
+internal sealed class WindowsContainedWorkerProcess : IDisposable
+{
+    private readonly nint jobHandle;
+    private readonly nint stagingDirectoryHandle;
+    private nint primaryThreadHandle;
+    private bool resumed;
+
+    private WindowsContainedWorkerProcess(
+        Process process,
+        nint primaryThreadHandle,
+        nint jobHandle,
+        nint stagingDirectoryHandle,
+        FileStream bootstrapInput,
+        StreamReader standardOutput,
+        StreamReader standardError)
+    {
+        Process = process;
+        this.primaryThreadHandle = primaryThreadHandle;
+        this.jobHandle = jobHandle;
+        this.stagingDirectoryHandle = stagingDirectoryHandle;
+        BootstrapInput = bootstrapInput;
+        StandardOutput = standardOutput;
+        StandardError = standardError;
+    }
+
+    public Process Process { get; }
+    public FileStream BootstrapInput { get; }
+    public StreamReader StandardOutput { get; }
+    public StreamReader StandardError { get; }
+    public nint InheritedStagingDirectoryHandle => stagingDirectoryHandle;
+
+    public static WindowsContainedWorkerProcess Create(
+        string executable,
+        IReadOnlyList<string> arguments,
+        string workingDirectory,
+        IReadOnlyDictionary<string, string> environment,
+        string stagingDirectory,
+        IReadOnlyList<nint>? additionalInheritedHandles = null)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            throw new PlatformNotSupportedException(
+                "Contained worker launch currently requires Windows.");
+        }
+
+        ArgumentException.ThrowIfNullOrWhiteSpace(executable);
+        ArgumentNullException.ThrowIfNull(arguments);
+        ArgumentException.ThrowIfNullOrWhiteSpace(workingDirectory);
+        ArgumentNullException.ThrowIfNull(environment);
+        ArgumentException.ThrowIfNullOrWhiteSpace(stagingDirectory);
+
+        SECURITY_ATTRIBUTES inheritable = new()
+        {
+            Length = Marshal.SizeOf<SECURITY_ATTRIBUTES>(),
+            InheritHandle = true,
+        };
+        nint stagingHandle = CreateFileW(
+            stagingDirectory,
+            FILE_LIST_DIRECTORY | FILE_ADD_FILE | SYNCHRONIZE,
+            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+            ref inheritable,
+            OPEN_EXISTING,
+            FILE_FLAG_BACKUP_SEMANTICS,
+            0);
+        if (stagingHandle == INVALID_HANDLE_VALUE)
+        {
+            throw new Win32Exception(
+                Marshal.GetLastWin32Error(),
+                "The staging directory authority could not be opened.");
+        }
+
+        nint parentInput = 0;
+        nint childInput = 0;
+        nint parentOutput = 0;
+        nint childOutput = 0;
+        nint parentError = 0;
+        nint childError = 0;
+        nint attributeList = 0;
+        nint inheritedHandleList = 0;
+        nint environmentBlock = 0;
+        nint processHandle = 0;
+        nint threadHandle = 0;
+        nint jobHandle = 0;
+        try
+        {
+            CreateDirectedPipe(
+                parentReads: false,
+                ref inheritable,
+                out parentInput,
+                out childInput);
+            CreateDirectedPipe(
+                parentReads: true,
+                ref inheritable,
+                out parentOutput,
+                out childOutput);
+            CreateDirectedPipe(
+                parentReads: true,
+                ref inheritable,
+                out parentError,
+                out childError);
+
+            nint[] handles =
+            [
+                childInput,
+                childOutput,
+                childError,
+                stagingHandle,
+                .. additionalInheritedHandles ?? [],
+            ];
+            foreach (nint handle in handles)
+            {
+                if (handle is 0 or -1
+                    || !SetHandleInformation(
+                        handle,
+                        HANDLE_FLAG_INHERIT,
+                        HANDLE_FLAG_INHERIT))
+                {
+                    throw new Win32Exception(
+                        Marshal.GetLastWin32Error(),
+                        "A declared inherited handle is invalid.");
+                }
+            }
+
+            nuint attributeListSize = 0;
+            _ = InitializeProcThreadAttributeList(0, 1, 0, ref attributeListSize);
+            attributeList = Marshal.AllocHGlobal(checked((int)attributeListSize));
+            if (!InitializeProcThreadAttributeList(
+                attributeList,
+                1,
+                0,
+                ref attributeListSize))
+            {
+                throw new Win32Exception(
+                    Marshal.GetLastWin32Error(),
+                    "The worker handle-list attribute could not be initialized.");
+            }
+
+            inheritedHandleList =
+                Marshal.AllocHGlobal(checked(handles.Length * nint.Size));
+            for (int index = 0; index < handles.Length; index++)
+            {
+                Marshal.WriteIntPtr(
+                    inheritedHandleList,
+                    checked(index * nint.Size),
+                    handles[index]);
+            }
+
+            if (!UpdateProcThreadAttribute(
+                attributeList,
+                0,
+                PROC_THREAD_ATTRIBUTE_HANDLE_LIST,
+                inheritedHandleList,
+                checked((nuint)(handles.Length * nint.Size)),
+                0,
+                0))
+            {
+                throw new Win32Exception(
+                    Marshal.GetLastWin32Error(),
+                    "The worker handle-list attribute could not be populated.");
+            }
+
+            STARTUPINFOEX startup = new()
+            {
+                StartupInfo = new STARTUPINFO
+                {
+                    Size = Marshal.SizeOf<STARTUPINFOEX>(),
+                    Flags = STARTF_USESTDHANDLES,
+                    StandardInput = childInput,
+                    StandardOutput = childOutput,
+                    StandardError = childError,
+                },
+                AttributeList = attributeList,
+            };
+            environmentBlock = BuildEnvironmentBlock(environment);
+            string commandLine = string.Join(
+                " ",
+                new[] { executable }.Concat(arguments).Select(QuoteWindowsArgument));
+            bool created = CreateProcessW(
+                executable,
+                new StringBuilder(commandLine),
+                0,
+                0,
+                inheritHandles: true,
+                CREATE_SUSPENDED
+                    | CREATE_NO_WINDOW
+                    | CREATE_UNICODE_ENVIRONMENT
+                    | EXTENDED_STARTUPINFO_PRESENT,
+                environmentBlock,
+                workingDirectory,
+                ref startup,
+                out PROCESS_INFORMATION processInformation);
+            if (!created)
+            {
+                throw new Win32Exception(
+                    Marshal.GetLastWin32Error(),
+                    "The suspended managed worker could not be created.");
+            }
+
+            processHandle = processInformation.Process;
+            threadHandle = processInformation.Thread;
+            jobHandle = CreateConfiguredJob();
+            if (!AssignProcessToJobObject(jobHandle, processHandle))
+            {
+                throw new Win32Exception(
+                    Marshal.GetLastWin32Error(),
+                    "The suspended worker could not be assigned to its Job Object.");
+            }
+
+            CloseHandle(childInput);
+            childInput = 0;
+            CloseHandle(childOutput);
+            childOutput = 0;
+            CloseHandle(childError);
+            childError = 0;
+
+            Process managedProcess =
+                Process.GetProcessById(checked((int)processInformation.ProcessId));
+            CloseHandle(processHandle);
+            processHandle = 0;
+
+            FileStream input = new(
+                new SafeFileHandle(parentInput, ownsHandle: true),
+                FileAccess.Write,
+                bufferSize: 4096,
+                isAsync: false);
+            parentInput = 0;
+            StreamReader output = CreateReader(parentOutput);
+            parentOutput = 0;
+            StreamReader error = CreateReader(parentError);
+            parentError = 0;
+            WindowsContainedWorkerProcess result = new(
+                managedProcess,
+                threadHandle,
+                jobHandle,
+                stagingHandle,
+                input,
+                output,
+                error);
+            threadHandle = 0;
+            jobHandle = 0;
+            stagingHandle = 0;
+            return result;
+        }
+        catch
+        {
+            if (processHandle != 0)
+            {
+                _ = TerminateProcess(processHandle, 1);
+            }
+
+            throw;
+        }
+        finally
+        {
+            if (attributeList != 0)
+            {
+                DeleteProcThreadAttributeList(attributeList);
+                Marshal.FreeHGlobal(attributeList);
+            }
+
+            if (inheritedHandleList != 0)
+            {
+                Marshal.FreeHGlobal(inheritedHandleList);
+            }
+
+            if (environmentBlock != 0)
+            {
+                Marshal.FreeHGlobal(environmentBlock);
+            }
+
+            CloseIfValid(parentInput);
+            CloseIfValid(childInput);
+            CloseIfValid(parentOutput);
+            CloseIfValid(childOutput);
+            CloseIfValid(parentError);
+            CloseIfValid(childError);
+            CloseIfValid(processHandle);
+            CloseIfValid(threadHandle);
+            CloseIfValid(jobHandle);
+            CloseIfValid(stagingHandle);
+        }
+    }
+
+    public void Resume()
+    {
+        if (resumed || primaryThreadHandle == 0)
+        {
+            throw new InvalidOperationException("The managed worker has already been resumed.");
+        }
+
+        if (ResumeThread(primaryThreadHandle) == uint.MaxValue)
+        {
+            throw new Win32Exception(
+                Marshal.GetLastWin32Error(),
+                "The contained worker could not be resumed.");
+        }
+
+        resumed = true;
+        CloseHandle(primaryThreadHandle);
+        primaryThreadHandle = 0;
+    }
+
+    public void Dispose()
+    {
+        BootstrapInput.Dispose();
+        StandardOutput.Dispose();
+        StandardError.Dispose();
+        Process.Dispose();
+        CloseIfValid(primaryThreadHandle);
+        primaryThreadHandle = 0;
+        CloseIfValid(jobHandle);
+        CloseIfValid(stagingDirectoryHandle);
+    }
+
+    private static StreamReader CreateReader(nint handle) =>
+        new(
+            new FileStream(
+                new SafeFileHandle(handle, ownsHandle: true),
+                FileAccess.Read,
+                bufferSize: 4096,
+                isAsync: false),
+            Encoding.UTF8,
+            detectEncodingFromByteOrderMarks: false,
+            bufferSize: 4096,
+            leaveOpen: false);
+
+    private static void CreateDirectedPipe(
+        bool parentReads,
+        ref SECURITY_ATTRIBUTES inheritable,
+        out nint parent,
+        out nint child)
+    {
+        if (!CreatePipe(out nint read, out nint write, ref inheritable, 0))
+        {
+            throw new Win32Exception(
+                Marshal.GetLastWin32Error(),
+                "A private worker pipe could not be created.");
+        }
+
+        parent = parentReads ? read : write;
+        child = parentReads ? write : read;
+        if (!SetHandleInformation(parent, HANDLE_FLAG_INHERIT, 0))
+        {
+            CloseHandle(read);
+            CloseHandle(write);
+            parent = 0;
+            child = 0;
+            throw new Win32Exception(
+                Marshal.GetLastWin32Error(),
+                "A coordinator pipe handle could not be made private.");
+        }
+    }
+
+    private static nint CreateConfiguredJob()
+    {
+        nint job = CreateJobObjectW(0, null);
+        if (job == 0)
+        {
+            throw new Win32Exception(
+                Marshal.GetLastWin32Error(),
+                "A worker Job Object could not be created.");
+        }
+
+        JOBOBJECT_EXTENDED_LIMIT_INFORMATION information = new();
+        information.BasicLimitInformation.LimitFlags =
+            JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+            | JOB_OBJECT_LIMIT_ACTIVE_PROCESS
+            | JOB_OBJECT_LIMIT_PROCESS_MEMORY
+            | JOB_OBJECT_LIMIT_JOB_MEMORY;
+        information.BasicLimitInformation.ActiveProcessLimit = 1;
+        information.ProcessMemoryLimit = 256u * 1024u * 1024u;
+        information.JobMemoryLimit = 256u * 1024u * 1024u;
+        int size = Marshal.SizeOf<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>();
+        nint buffer = Marshal.AllocHGlobal(size);
+        try
+        {
+            Marshal.StructureToPtr(information, buffer, fDeleteOld: false);
+            if (!SetInformationJobObject(job, 9, buffer, checked((uint)size)))
+            {
+                throw new Win32Exception(
+                    Marshal.GetLastWin32Error(),
+                    "The worker Job Object limits could not be configured.");
+            }
+
+            return job;
+        }
+        catch
+        {
+            CloseHandle(job);
+            throw;
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(buffer);
+        }
+    }
+
+    private static nint BuildEnvironmentBlock(IReadOnlyDictionary<string, string> environment)
+    {
+        string block = string.Join(
+            '\0',
+            environment
+                .OrderBy(pair => pair.Key, StringComparer.OrdinalIgnoreCase)
+                .Select(pair => $"{pair.Key}={pair.Value}"))
+            + "\0\0";
+        return Marshal.StringToHGlobalUni(block);
+    }
+
+    private static string QuoteWindowsArgument(string value)
+    {
+        if (value.Length == 0)
+        {
+            return "\"\"";
+        }
+
+        if (!value.Any(character => char.IsWhiteSpace(character) || character == '"'))
+        {
+            return value;
+        }
+
+        StringBuilder result = new("\"");
+        int slashes = 0;
+        foreach (char character in value)
+        {
+            if (character == '\\')
+            {
+                slashes++;
+            }
+            else if (character == '"')
+            {
+                result.Append('\\', checked(slashes * 2 + 1));
+                result.Append('"');
+                slashes = 0;
+            }
+            else
+            {
+                result.Append('\\', slashes);
+                result.Append(character);
+                slashes = 0;
+            }
+        }
+
+        result.Append('\\', checked(slashes * 2));
+        result.Append('"');
+        return result.ToString();
+    }
+
+    private static void CloseIfValid(nint handle)
+    {
+        if (handle is not (0 or -1))
+        {
+            CloseHandle(handle);
+        }
+    }
+
+    private const uint FILE_LIST_DIRECTORY = 0x00000001;
+    private const uint FILE_ADD_FILE = 0x00000002;
+    private const uint SYNCHRONIZE = 0x00100000;
+    private const uint FILE_SHARE_READ = 0x00000001;
+    private const uint FILE_SHARE_WRITE = 0x00000002;
+    private const uint FILE_SHARE_DELETE = 0x00000004;
+    private const uint OPEN_EXISTING = 3;
+    private const uint FILE_FLAG_BACKUP_SEMANTICS = 0x02000000;
+    private const uint HANDLE_FLAG_INHERIT = 0x00000001;
+    private const uint STARTF_USESTDHANDLES = 0x00000100;
+    private const uint CREATE_SUSPENDED = 0x00000004;
+    private const uint CREATE_NO_WINDOW = 0x08000000;
+    private const uint CREATE_UNICODE_ENVIRONMENT = 0x00000400;
+    private const uint EXTENDED_STARTUPINFO_PRESENT = 0x00080000;
+    private const uint JOB_OBJECT_LIMIT_PROCESS_MEMORY = 0x00000100;
+    private const uint JOB_OBJECT_LIMIT_JOB_MEMORY = 0x00000200;
+    private const uint JOB_OBJECT_LIMIT_ACTIVE_PROCESS = 0x00000008;
+    private const uint JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE = 0x00002000;
+    private static readonly nint PROC_THREAD_ATTRIBUTE_HANDLE_LIST = new(0x00020002);
+    private static readonly nint INVALID_HANDLE_VALUE = new(-1);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct SECURITY_ATTRIBUTES
+    {
+        public int Length;
+        public nint SecurityDescriptor;
+        [MarshalAs(UnmanagedType.Bool)]
+        public bool InheritHandle;
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    private struct STARTUPINFO
+    {
+        public int Size;
+        public string? Reserved;
+        public string? Desktop;
+        public string? Title;
+        public uint X;
+        public uint Y;
+        public uint XSize;
+        public uint YSize;
+        public uint XCountChars;
+        public uint YCountChars;
+        public uint FillAttribute;
+        public uint Flags;
+        public ushort ShowWindow;
+        public nint Reserved2;
+        public nint StandardInput;
+        public nint StandardOutput;
+        public nint StandardError;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct STARTUPINFOEX
+    {
+        public STARTUPINFO StartupInfo;
+        public nint AttributeList;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct PROCESS_INFORMATION
+    {
+        public nint Process;
+        public nint Thread;
+        public uint ProcessId;
+        public uint ThreadId;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct JOBOBJECT_BASIC_LIMIT_INFORMATION
+    {
+        public long PerProcessUserTimeLimit;
+        public long PerJobUserTimeLimit;
+        public uint LimitFlags;
+        public nuint MinimumWorkingSetSize;
+        public nuint MaximumWorkingSetSize;
+        public uint ActiveProcessLimit;
+        public nuint Affinity;
+        public uint PriorityClass;
+        public uint SchedulingClass;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct IO_COUNTERS
+    {
+        public ulong ReadOperationCount;
+        public ulong WriteOperationCount;
+        public ulong OtherOperationCount;
+        public ulong ReadTransferCount;
+        public ulong WriteTransferCount;
+        public ulong OtherTransferCount;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct JOBOBJECT_EXTENDED_LIMIT_INFORMATION
+    {
+        public JOBOBJECT_BASIC_LIMIT_INFORMATION BasicLimitInformation;
+        public IO_COUNTERS IoInfo;
+        public nuint ProcessMemoryLimit;
+        public nuint JobMemoryLimit;
+        public nuint PeakProcessMemoryUsed;
+        public nuint PeakJobMemoryUsed;
+    }
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern nint CreateFileW(
+        string fileName,
+        uint desiredAccess,
+        uint shareMode,
+        ref SECURITY_ATTRIBUTES securityAttributes,
+        uint creationDisposition,
+        uint flagsAndAttributes,
+        nint templateFile);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool CreatePipe(
+        out nint readPipe,
+        out nint writePipe,
+        ref SECURITY_ATTRIBUTES pipeAttributes,
+        uint size);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetHandleInformation(nint handle, uint mask, uint flags);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool CreateProcessW(
+        string applicationName,
+        StringBuilder commandLine,
+        nint processAttributes,
+        nint threadAttributes,
+        [MarshalAs(UnmanagedType.Bool)] bool inheritHandles,
+        uint creationFlags,
+        nint environment,
+        string currentDirectory,
+        ref STARTUPINFOEX startupInfo,
+        out PROCESS_INFORMATION processInformation);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool InitializeProcThreadAttributeList(
+        nint attributeList,
+        int attributeCount,
+        int flags,
+        ref nuint size);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool UpdateProcThreadAttribute(
+        nint attributeList,
+        uint flags,
+        nint attribute,
+        nint value,
+        nuint size,
+        nint previousValue,
+        nint returnSize);
+
+    [DllImport("kernel32.dll")]
+    private static extern void DeleteProcThreadAttributeList(nint attributeList);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern nint CreateJobObjectW(nint attributes, string? name);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetInformationJobObject(
+        nint job,
+        int informationClass,
+        nint information,
+        uint informationLength);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool AssignProcessToJobObject(nint job, nint process);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern uint ResumeThread(nint thread);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool TerminateProcess(nint process, uint exitCode);
+
+    [DllImport("kernel32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool CloseHandle(nint handle);
+}
+
+#pragma warning restore CA1838

@@ -64,16 +64,34 @@ public sealed record RuntimeDescriptor(
             ?? throw new InvalidOperationException("The runtime descriptor is malformed.");
     }
 
-    public void WriteRestricted(string productRoot)
+    public void WriteRestrictedToAuthorizedPath(string authorizedDescriptorPath)
     {
-        string runtime = Path.Combine(Path.GetFullPath(productRoot), "runtime");
-        Directory.CreateDirectory(runtime);
+        ArgumentException.ThrowIfNullOrWhiteSpace(authorizedDescriptorPath);
+        if (!Path.IsPathFullyQualified(authorizedDescriptorPath)
+            || !string.Equals(
+                Path.GetFileName(authorizedDescriptorPath),
+                FileName,
+                StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException(
+                "The authorized runtime-descriptor path is invalid.");
+        }
+
+        string path = Path.GetFullPath(authorizedDescriptorPath);
+        string runtime = Path.GetDirectoryName(path)
+            ?? throw new InvalidOperationException(
+                "The authorized runtime-descriptor directory is unavailable.");
+        if (!Directory.Exists(runtime))
+        {
+            throw new InvalidOperationException(
+                "The authorized runtime-descriptor directory does not exist.");
+        }
+
         if ((File.GetAttributes(runtime) & FileAttributes.ReparsePoint) != 0)
         {
             throw new InvalidOperationException("A reparse-point runtime directory is not authorized.");
         }
 
-        string path = GetPath(productRoot);
         if (File.Exists(path)
             && (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0)
         {
@@ -83,9 +101,25 @@ public sealed record RuntimeDescriptor(
             this,
             IndentedJson);
         string temporary = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
-        File.WriteAllBytes(temporary, bytes);
-        RestrictToCurrentUser(temporary);
-        File.Move(temporary, path, overwrite: true);
+        try
+        {
+            using (FileStream stream = new(
+                temporary,
+                FileMode.CreateNew,
+                FileAccess.Write,
+                FileShare.None))
+            {
+                stream.Write(bytes);
+                stream.Flush(flushToDisk: true);
+            }
+
+            RestrictToCurrentUser(temporary);
+            File.Move(temporary, path, overwrite: true);
+        }
+        finally
+        {
+            File.Delete(temporary);
+        }
     }
 
     private static void RestrictToCurrentUser(string path)

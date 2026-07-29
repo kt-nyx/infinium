@@ -1,9 +1,17 @@
+using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
+using System.Security.AccessControl;
+using System.Security.Principal;
+using Microsoft.Win32.SafeHandles;
+
 #pragma warning disable IDE0008 // Path normalization locals are self-describing.
 
 namespace Infinium.Persistence;
 
-public sealed class StoragePaths
+public sealed class StoragePaths : IDisposable
 {
+    private static readonly Lazy<WindowsWriteAuthorityRegistry> DefaultWriteAuthority =
+        new(() => new WindowsWriteAuthorityRegistry([]));
     private static readonly string[] ProtectedLeafNames =
     [
         "Skyrim Special Edition",
@@ -11,7 +19,20 @@ public sealed class StoragePaths
         "Mod Organizer 2",
     ];
 
+    private readonly WindowsWriteAuthorityRegistry? writeAuthority;
+    private readonly WindowsWriteAuthorityRegistry.ProductRootCapability? productCapability;
+    private bool disposed;
+
     public StoragePaths(string productRoot)
+        : this(
+            productRoot,
+            OperatingSystem.IsWindows() ? DefaultWriteAuthority.Value : null)
+    {
+    }
+
+    public StoragePaths(
+        string productRoot,
+        WindowsWriteAuthorityRegistry? writeAuthority)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(productRoot);
         if (!Path.IsPathFullyQualified(productRoot))
@@ -19,8 +40,13 @@ public sealed class StoragePaths
             throw new ArgumentException("The product root must be an absolute path.", nameof(productRoot));
         }
 
-        ProductRoot = Path.GetFullPath(productRoot);
+        ProductRoot = Path.TrimEndingDirectorySeparator(Path.GetFullPath(productRoot));
         RejectProtectedRoot(ProductRoot);
+        RejectExistingRootReparse(ProductRoot);
+        this.writeAuthority = writeAuthority;
+        productCapability = writeAuthority?.CaptureProductRoot(ProductRoot);
+        AuthorityIdentity = productCapability?.AuthorityIdentity
+            ?? GetAuthorityIdentity(ProductRoot);
         Data = Path.Combine(ProductRoot, "data");
         Payloads = Path.Combine(ProductRoot, "payloads");
         Staging = Path.Combine(ProductRoot, "staging");
@@ -31,6 +57,7 @@ public sealed class StoragePaths
     }
 
     public string ProductRoot { get; }
+    public string AuthorityIdentity { get; }
     public string Data { get; }
     public string Payloads { get; }
     public string Staging { get; }
@@ -41,44 +68,334 @@ public sealed class StoragePaths
 
     public void Create()
     {
-        foreach (var path in new[] { ProductRoot, Data, Payloads, Staging, Backups, Runtime, RunOutput })
+        ObjectDisposedException.ThrowIf(disposed, this);
+        string? parent = Path.GetDirectoryName(ProductRoot);
+        if (string.IsNullOrWhiteSpace(parent) || !Directory.Exists(parent))
         {
-            Directory.CreateDirectory(path);
+            throw new InvalidOperationException(
+                "The product-root parent must already exist and be selected explicitly.");
+        }
+
+        CreateOrVerifyPrivateDirectory(ProductRoot);
+        writeAuthority?.BindCreatedProductRoot(productCapability!);
+        if (OperatingSystem.IsWindows())
+        {
+            VerifyPrivateDirectory(ProductRoot);
+        }
+
+        writeAuthority?.VerifyBoundProductRoot(productCapability!);
+        foreach ((ProductWriteClass writeClass, string path) in GetClassDirectories())
+        {
+            CreateOrVerifyPrivateDirectory(path);
+            writeAuthority?.BindClassDirectory(productCapability!, writeClass, path);
+            if (OperatingSystem.IsWindows())
+            {
+                VerifyPrivateDirectory(path);
+            }
+
+            if (writeAuthority is not null)
+            {
+                _ = writeAuthority.AuthorizeProductPath(
+                    productCapability!,
+                    writeClass,
+                    path);
+            }
         }
     }
 
-    public string ResolveProductRelative(string relativePath)
+    public string ResolveProductPath(
+        ProductWriteClass writeClass,
+        string relativeArtifactPath)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(relativePath);
-        if (Path.IsPathFullyQualified(relativePath)
-            || relativePath.Contains(':', StringComparison.Ordinal)
-            || relativePath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+        ObjectDisposedException.ThrowIf(disposed, this);
+        ArgumentNullException.ThrowIfNull(relativeArtifactPath);
+        if (Path.IsPathFullyQualified(relativeArtifactPath)
+            || relativeArtifactPath.Contains(':', StringComparison.Ordinal)
+            || relativeArtifactPath.Contains('\0', StringComparison.Ordinal)
+            || relativeArtifactPath.Split(
+                    Path.DirectorySeparatorChar,
+                    Path.AltDirectorySeparatorChar)
                 .Any(segment => segment is "." or ".."))
         {
-            throw new InvalidOperationException("Only normalized product-relative paths are authorized.");
+            throw new InvalidOperationException(
+                "Only normalized write-class-relative paths are authorized.");
         }
 
-        var result = Path.GetFullPath(Path.Combine(ProductRoot, relativePath));
-        var prefix = ProductRoot.EndsWith(Path.DirectorySeparatorChar)
-            ? ProductRoot
-            : ProductRoot + Path.DirectorySeparatorChar;
-        if (!result.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        string classRoot = GetClassDirectory(writeClass);
+        string result = string.IsNullOrEmpty(relativeArtifactPath)
+            ? classRoot
+            : Path.GetFullPath(Path.Combine(classRoot, relativeArtifactPath));
+        if (!IsEqualOrDescendant(result, classRoot))
         {
-            throw new InvalidOperationException("The resolved path escapes the product root.");
+            throw new InvalidOperationException(
+                "The resolved path escapes its product write class.");
         }
 
         RejectReparseAncestors(result);
+        return writeAuthority?.AuthorizeProductPath(
+                productCapability!,
+                writeClass,
+                result)
+            ?? result;
+    }
+
+    public string ResolveProductPathForDeletion(
+        ProductWriteClass writeClass,
+        string relativeArtifactPath,
+        bool recursive)
+    {
+        ObjectDisposedException.ThrowIf(disposed, this);
+        string result = ResolveProductPath(writeClass, relativeArtifactPath);
+        if (writeAuthority is null)
+        {
+            if (recursive)
+            {
+                throw new InvalidOperationException(
+                    "Generic recursive deletion requests are not authorized.");
+            }
+
+            return result;
+        }
+
+        writeAuthority.AuthorizeDelete(productCapability!, result, recursive);
         return result;
+    }
+
+    public void Dispose()
+    {
+        if (disposed)
+        {
+            return;
+        }
+
+        productCapability?.Dispose();
+        disposed = true;
+        GC.SuppressFinalize(this);
+    }
+
+    ~StoragePaths()
+    {
+        productCapability?.Dispose();
+    }
+
+    private IEnumerable<(ProductWriteClass WriteClass, string Path)> GetClassDirectories()
+    {
+        yield return (ProductWriteClass.Data, Data);
+        yield return (ProductWriteClass.Payload, Payloads);
+        yield return (ProductWriteClass.AttemptStaging, Staging);
+        yield return (ProductWriteClass.Backup, Backups);
+        yield return (ProductWriteClass.Runtime, Runtime);
+        yield return (ProductWriteClass.RunOutput, RunOutput);
+    }
+
+    private string GetClassDirectory(ProductWriteClass writeClass) =>
+        writeClass switch
+        {
+            ProductWriteClass.Data => Data,
+            ProductWriteClass.Payload => Payloads,
+            ProductWriteClass.AttemptStaging => Staging,
+            ProductWriteClass.Backup => Backups,
+            ProductWriteClass.Runtime => Runtime,
+            ProductWriteClass.RunOutput => RunOutput,
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(writeClass),
+                writeClass,
+                "Unknown product write class."),
+        };
+
+    private static bool IsEqualOrDescendant(string candidate, string root)
+    {
+        string normalizedCandidate = Path.TrimEndingDirectorySeparator(candidate);
+        string normalizedRoot = Path.TrimEndingDirectorySeparator(root);
+        return string.Equals(
+                normalizedCandidate,
+                normalizedRoot,
+                StringComparison.OrdinalIgnoreCase)
+            || normalizedCandidate.StartsWith(
+                normalizedRoot + Path.DirectorySeparatorChar,
+                StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static void CreateOrVerifyPrivateDirectory(string path)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            Directory.CreateDirectory(path);
+            return;
+        }
+
+        if (Directory.Exists(path))
+        {
+            VerifyPrivateDirectory(path);
+            return;
+        }
+
+        DirectorySecurity security = BuildPrivateDirectorySecurity();
+        DirectoryInfo directory = new(path);
+        directory.Create(security);
+        VerifyPrivateDirectory(path);
+    }
+
+    [SupportedOSPlatform("windows")]
+    private static DirectorySecurity BuildPrivateDirectorySecurity()
+    {
+        SecurityIdentifier currentUser = GetCurrentUserSid();
+        DirectorySecurity security = new();
+        security.SetOwner(currentUser);
+        security.SetAccessRuleProtection(isProtected: true, preserveInheritance: false);
+        InheritanceFlags inheritance =
+            InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit;
+        security.AddAccessRule(new FileSystemAccessRule(
+            currentUser,
+            FileSystemRights.FullControl,
+            inheritance,
+            PropagationFlags.None,
+            AccessControlType.Allow));
+        security.AddAccessRule(new FileSystemAccessRule(
+            new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null),
+            FileSystemRights.FullControl,
+            inheritance,
+            PropagationFlags.None,
+            AccessControlType.Allow));
+        return security;
+    }
+
+    [SupportedOSPlatform("windows")]
+    private static void VerifyPrivateDirectory(string path)
+    {
+        SecurityIdentifier currentUser = GetCurrentUserSid();
+        SecurityIdentifier localSystem =
+            new(WellKnownSidType.LocalSystemSid, null);
+        DirectorySecurity security = new DirectoryInfo(path).GetAccessControl(
+            AccessControlSections.Owner | AccessControlSections.Access);
+        if (!security.AreAccessRulesProtected)
+        {
+            throw new InvalidOperationException(
+                "The product directory must have a protected private DACL.");
+        }
+
+        SecurityIdentifier owner = security.GetOwner(typeof(SecurityIdentifier))
+            as SecurityIdentifier
+            ?? throw new InvalidOperationException(
+                "The product directory owner identity is unavailable.");
+        if (!owner.Equals(currentUser) && !owner.Equals(localSystem))
+        {
+            throw new InvalidOperationException(
+                "The product directory owner is not an authorized principal.");
+        }
+
+        bool currentUserFullControl = false;
+        bool localSystemFullControl = false;
+        foreach (FileSystemAccessRule rule in security.GetAccessRules(
+                     includeExplicit: true,
+                     includeInherited: true,
+                     typeof(SecurityIdentifier)))
+        {
+            SecurityIdentifier sid = (SecurityIdentifier)rule.IdentityReference;
+            if (rule.IsInherited
+                || (rule.AccessControlType == AccessControlType.Allow
+                    && !sid.Equals(currentUser)
+                    && !sid.Equals(localSystem))
+                || (rule.AccessControlType == AccessControlType.Deny
+                    && (sid.Equals(currentUser) || sid.Equals(localSystem))))
+            {
+                throw new InvalidOperationException(
+                    "The product directory DACL is not private.");
+            }
+
+            bool fullControl =
+                (rule.FileSystemRights & FileSystemRights.FullControl)
+                == FileSystemRights.FullControl;
+            currentUserFullControl |=
+                rule.AccessControlType == AccessControlType.Allow
+                && sid.Equals(currentUser)
+                && fullControl;
+            localSystemFullControl |=
+                rule.AccessControlType == AccessControlType.Allow
+                && sid.Equals(localSystem)
+                && fullControl;
+        }
+
+        if (!currentUserFullControl || !localSystemFullControl)
+        {
+            throw new InvalidOperationException(
+                "The product directory DACL lacks required private authority.");
+        }
+    }
+
+    [SupportedOSPlatform("windows")]
+    private static SecurityIdentifier GetCurrentUserSid()
+    {
+        using WindowsIdentity identity = WindowsIdentity.GetCurrent();
+        return identity.User
+            ?? throw new InvalidOperationException(
+                "The current Windows identity has no SID.");
     }
 
     private static void RejectProtectedRoot(string path)
     {
-        var normalized = path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-        if (ProtectedLeafNames.Any(name =>
-            normalized.EndsWith(Path.DirectorySeparatorChar + name, StringComparison.OrdinalIgnoreCase)))
+        string[] segments = path.Split(
+            Path.DirectorySeparatorChar,
+            Path.AltDirectorySeparatorChar);
+        if (segments.Any(segment => ProtectedLeafNames.Contains(
+            segment,
+            StringComparer.OrdinalIgnoreCase)))
         {
-            throw new InvalidOperationException("A protected game or mod-manager root cannot be a product root.");
+            throw new InvalidOperationException(
+                "A protected game or mod-manager root or descendant cannot be a product root.");
         }
+    }
+
+    private static void RejectExistingRootReparse(string path)
+    {
+        string? current = path;
+        while (!string.IsNullOrWhiteSpace(current))
+        {
+            if (Directory.Exists(current)
+                && (File.GetAttributes(current) & FileAttributes.ReparsePoint) != 0)
+            {
+                throw new InvalidOperationException(
+                    "Reparse-point product roots or ancestors are not authorized.");
+            }
+
+            string? parent = Path.GetDirectoryName(current);
+            if (string.Equals(parent, current, StringComparison.OrdinalIgnoreCase))
+            {
+                break;
+            }
+
+            current = parent;
+        }
+    }
+
+    private static string GetAuthorityIdentity(string path)
+    {
+        string? parent = Path.GetDirectoryName(path);
+        if (!string.IsNullOrWhiteSpace(parent) && Directory.Exists(parent))
+        {
+            using SafeFileHandle handle = CreateFileW(
+                parent,
+                0,
+                FileShare.ReadWrite | FileShare.Delete,
+                0,
+                FileMode.Open,
+                FileFlagsAndAttributes.BackupSemantics,
+                0);
+            if (handle.IsInvalid
+                || !GetFileInformationByHandle(handle, out BY_HANDLE_FILE_INFORMATION information))
+            {
+                throw new InvalidOperationException(
+                    $"The product-root parent identity is unavailable ({Marshal.GetLastWin32Error()}).");
+            }
+
+            string parentIdentity = FormattableString.Invariant(
+                $"winobj:{information.VolumeSerialNumber:x8}:{information.FileIndexHigh:x8}{information.FileIndexLow:x8}");
+            return parentIdentity
+                + ":child:"
+                + Path.GetFileName(path).ToUpperInvariant();
+        }
+
+        return "winpath:" + path.ToUpperInvariant();
     }
 
     private void RejectReparseAncestors(string path)
@@ -103,6 +420,50 @@ public sealed class StoragePaths
             }
         }
     }
+
+    [Flags]
+    private enum FileFlagsAndAttributes : uint
+    {
+        BackupSemantics = 0x02000000,
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct FILETIME
+    {
+        public uint LowDateTime;
+        public uint HighDateTime;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct BY_HANDLE_FILE_INFORMATION
+    {
+        public uint FileAttributes;
+        public FILETIME CreationTime;
+        public FILETIME LastAccessTime;
+        public FILETIME LastWriteTime;
+        public uint VolumeSerialNumber;
+        public uint FileSizeHigh;
+        public uint FileSizeLow;
+        public uint NumberOfLinks;
+        public uint FileIndexHigh;
+        public uint FileIndexLow;
+    }
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern SafeFileHandle CreateFileW(
+        string fileName,
+        uint desiredAccess,
+        FileShare shareMode,
+        nint securityAttributes,
+        FileMode creationDisposition,
+        FileFlagsAndAttributes flagsAndAttributes,
+        nint templateFile);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetFileInformationByHandle(
+        SafeFileHandle file,
+        out BY_HANDLE_FILE_INFORMATION information);
 }
 
 #pragma warning restore IDE0008

@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text.Json;
+using System.Threading.Channels;
 using Google.Protobuf;
 using Grpc.Core;
 using Infinium.Application.Runtime;
@@ -8,6 +9,7 @@ using Infinium.Contracts.Protobuf.Common.V1;
 using Infinium.Contracts.Protobuf.Domain.V1;
 using Infinium.Contracts.Protobuf.Protocol.V1;
 using Infinium.Persistence;
+using Microsoft.AspNetCore.Connections.Features;
 using DomainLifecycleState = Infinium.Domain.Contracts.LifecycleState;
 
 namespace Infinium.Coordinator;
@@ -24,7 +26,20 @@ public sealed class ApplicationGrpcService(
         HandshakeResponse response = BuildHandshake(request, context);
         if (response.Disposition == HandshakeDisposition.Accepted)
         {
-            runtime.AdmitApplicationConnection(context.GetHttpContext().Connection.Id);
+            string connectionId = context.GetHttpContext().Connection.Id;
+            if (!runtime.TryAdmitApplicationConnection(connectionId))
+            {
+                response.Disposition = HandshakeDisposition.LimitsRejected;
+                response.Failure = Failure(
+                    FailureCode.LimitExceeded,
+                    "The application connection admission bound is full.");
+                return Task.FromResult(response);
+            }
+
+            IConnectionLifetimeFeature? lifetime =
+                context.GetHttpContext().Features.Get<IConnectionLifetimeFeature>();
+            lifetime?.ConnectionClosed.Register(
+                () => runtime.ReleaseApplicationConnection(connectionId));
         }
 
         return Task.FromResult(response);
@@ -53,7 +68,9 @@ public sealed class ApplicationGrpcService(
         if (request.RequestedPageSize == 0
             || request.RequestedPageSize > ProtocolConstants.MaximumPageItems
             || request.Sort.Count > ProtocolConstants.MaximumSortTerms
-            || (request.Filter?.LifecycleStates.Count ?? 0) > ProtocolConstants.MaximumFilterTerms)
+            || (request.Filter?.LifecycleStates.Count ?? 0)
+                + (request.Filter?.CoverageStates.Count ?? 0)
+                > ProtocolConstants.MaximumFilterTerms)
         {
             return Task.FromResult(new ListRunsResponse
             {
@@ -129,6 +146,14 @@ public sealed class ApplicationGrpcService(
     public override Task<GetRunResponse> GetRun(GetRunRequest request, ServerCallContext context)
     {
         RequireNegotiated(context);
+        if (!IsCurrentProjection(request.ExpectedProjectionVersion))
+        {
+            return Task.FromResult(new GetRunResponse
+            {
+                ProjectionInvalidated = ProjectionInvalidated(),
+            });
+        }
+
         try
         {
             RunRecord run = runtime.Store.GetRun(Required(request.RunId?.Value, "run ID"));
@@ -148,6 +173,14 @@ public sealed class ApplicationGrpcService(
         ServerCallContext context)
     {
         RequireNegotiated(context);
+        if (!IsCurrentProjection(request.ExpectedProjectionVersion))
+        {
+            return Task.FromResult(new GetProgressResponse
+            {
+                ProjectionInvalidated = ProjectionInvalidated(),
+            });
+        }
+
         try
         {
             RunRecord run = runtime.Store.GetRun(Required(request.RunId?.Value, "run ID"));
@@ -187,6 +220,28 @@ public sealed class ApplicationGrpcService(
             });
         }
 
+        if (!IsCurrentProjection(request.ExpectedProjectionVersion))
+        {
+            return Task.FromResult(new ListFindingsResponse
+            {
+                Failure = Failure(
+                    FailureCode.ResyncRequired,
+                    "The requested projection is no longer current."),
+            });
+        }
+
+        if (request.After?.OpaqueValue.Length > 0
+            || request.SupportStates.Count > 0
+            || request.Sort is not null)
+        {
+            return Task.FromResult(new ListFindingsResponse
+            {
+                Failure = Failure(
+                    FailureCode.Unsupported,
+                    "Slice 2 has no finding producer or supported finding query shape."),
+            });
+        }
+
         return Task.FromResult(new ListFindingsResponse
         {
             Page = new FindingPage
@@ -205,6 +260,18 @@ public sealed class ApplicationGrpcService(
         try
         {
             string commandId = Required(request.IdempotencyKey?.Value, "durable command ID");
+            bool replay = DurableCommandExists(commandId);
+            if (!replay && !runtime.TryAdmitNewDurableCommand(DateTimeOffset.UtcNow))
+            {
+                return Task.FromResult(new SubmitRunCommandResponse
+                {
+                    Disposition = CommandDisposition.Rejected,
+                    Failure = Failure(
+                        FailureCode.LimitExceeded,
+                        "The new durable-command rate bound is full."),
+                });
+            }
+
             RunRecord result = request.CommandCase switch
             {
                 SubmitRunCommandRequest.CommandOneofCase.Start => Start(commandId, request.Start),
@@ -216,12 +283,22 @@ public sealed class ApplicationGrpcService(
                     Cancel(commandId, request.Cancel),
                 _ => throw new InvalidOperationException("A supported command is required."),
             };
-            return Task.FromResult(new SubmitRunCommandResponse
+            DurableCommandRecord durable = runtime.Store.GetDurableCommand(commandId);
+            SubmitRunCommandResponse response = new()
             {
-                Disposition = CommandDisposition.Accepted,
+                Disposition = replay
+                    ? CommandDisposition.AlreadyAccepted
+                    : CommandDisposition.Accepted,
                 DurableCommandId = new DurableCommandId { Value = commandId },
                 RunId = new RunId { Value = result.RunId },
-            });
+            };
+            if (durable.TransitionId is not null)
+            {
+                response.DurableTransitionId =
+                    new DurableTransitionId { Value = durable.TransitionId };
+            }
+
+            return Task.FromResult(response);
         }
         catch (Exception exception) when (
             exception is ArgumentException
@@ -255,11 +332,48 @@ public sealed class ApplicationGrpcService(
                 ResultingLifecycleState = ProtoMapping.ToProto(
                     Enum.Parse<DomainLifecycleState>(command.ResultingState)),
                 ObservedAt = ProtoMapping.ToProto(command.CreatedAt),
+                AcceptedInput = new DurableCommandInputIdentity
+                {
+                    CommandKind = command.CommandKind switch
+                    {
+                        "start" => DurableCommandKind.Start,
+                        "pausing" => DurableCommandKind.Pause,
+                        "queued" => DurableCommandKind.Resume,
+                        "cancelling" => DurableCommandKind.Cancel,
+                        _ => DurableCommandKind.Unknown,
+                    },
+                    ExpectedLifecycleGeneration =
+                        checked((ulong)command.ExpectedGeneration),
+                    InstallationSnapshotId = new InstallationSnapshotId
+                    {
+                        Value = command.RunBinding.InstallationSnapshotId,
+                    },
+                    AnalysisContextId = new AnalysisContextId
+                    {
+                        Value = command.RunBinding.AnalysisContextId,
+                    },
+                    EffectiveScanConfigurationId = new ScanConfigurationId
+                    {
+                        Value = command.RunBinding.EffectiveScanConfigurationId,
+                    },
+                    ResolvedInputManifestId = new ResolvedInputManifestId
+                    {
+                        Value = command.RunBinding.ResolvedInputManifestId,
+                    },
+                },
             };
             if (command.TransitionId is not null)
             {
                 status.DurableTransitionId =
                     new DurableTransitionId { Value = command.TransitionId };
+            }
+            if (command.StartInitiationKind is not null
+                && command.StartDispatchDeadline is not null)
+            {
+                status.AcceptedInput.ManualInitiationKind =
+                    Enum.Parse<ManualInitiationKind>(command.StartInitiationKind);
+                status.AcceptedInput.DispatchDeadline =
+                    ProtoMapping.ToProto(command.StartDispatchDeadline.Value);
             }
 
             return Task.FromResult(new GetDurableCommandResponse { Status = status });
@@ -286,26 +400,132 @@ public sealed class ApplicationGrpcService(
             throw new RpcException(new Status(StatusCode.InvalidArgument, "Invalid bounded subscription."));
         }
 
-        RunRecord run = runtime.Store.GetRun(Required(request.RunScope[0].Value, "run ID"));
-        await responseStream.WriteAsync(new ApplicationEvent
+        if (!runtime.TryAdmitEventSubscription())
         {
-            CoordinatorInstanceId = new CoordinatorInstanceId { Value = runtime.Authority.InstanceId },
-            CoordinatorFencingEpoch = checked((ulong)runtime.Authority.FencingEpoch),
-            SubscriptionId = request.SubscriptionId,
-            DurableEventSequence = checked((ulong)run.DurableSequence),
-            ProjectionVersion = new ProjectionVersion { Value = "1" },
-            Kind = EventKind.Progress,
-            RunScope = new RunId { Value = run.RunId },
-            Progress = new ProgressSnapshot
+            throw new RpcException(
+                new Status(StatusCode.ResourceExhausted, "The event subscription admission bound is full."));
+        }
+
+        try
+        {
+            string runId = Required(request.RunScope[0].Value, "run ID");
+            RunRecord run = runtime.Store.GetRun(runId);
+            if (!IsCurrentProjection(request.ExpectedProjectionVersion))
             {
-                RunId = new RunId { Value = run.RunId },
-                LifecycleState = ProtoMapping.ToProto(run.State),
-                Progress = ProtoMapping.EmptyProgress(run.State),
-                ProjectionVersion = new ProjectionVersion { Value = "1" },
-                DurableEventSequence = checked((ulong)run.DurableSequence),
-                ObservedAt = ProtoMapping.ToProto(DateTimeOffset.UtcNow),
-            },
-        }).ConfigureAwait(false);
+                await WriteResyncAsync(
+                    responseStream,
+                    request,
+                    run,
+                    ResyncReason.ProjectionRebuilt).ConfigureAwait(false);
+                return;
+            }
+
+            EventStreamCursor? cursor = null;
+            if (request.After is not null && request.After.OpaqueValue.Length > 0)
+            {
+                try
+                {
+                    cursor = DecodeEventCursor(request.After.OpaqueValue);
+                }
+                catch (InvalidOperationException)
+                {
+                    await WriteResyncAsync(
+                        responseStream,
+                        request,
+                        run,
+                        IsCursorFromAnotherCoordinator(request.After.OpaqueValue)
+                            ? ResyncReason.CoordinatorRestart
+                            : ResyncReason.CursorInvalid).ConfigureAwait(false);
+                    return;
+                }
+
+                ResyncReason? reason =
+                    cursor.RunId != runId ? ResyncReason.CursorInvalid
+                    : cursor.CoordinatorInstanceId != runtime.Authority.InstanceId
+                        || cursor.CoordinatorFencingEpoch != runtime.Authority.FencingEpoch
+                        ? ResyncReason.CoordinatorRestart
+                    : cursor.ExpiresAt < DateTimeOffset.UtcNow
+                        ? ResyncReason.ReplayWindowExpired
+                    : cursor.ProjectionVersion != "1"
+                        ? ResyncReason.ProjectionRebuilt
+                    : cursor.DurableSequence > run.DurableSequence
+                        ? ResyncReason.SequenceGap
+                    : run.DurableSequence - cursor.DurableSequence > 1
+                        ? ResyncReason.SequenceGap
+                    : null;
+                if (reason is not null)
+                {
+                    await WriteResyncAsync(responseStream, request, run, reason.Value)
+                        .ConfigureAwait(false);
+                    return;
+                }
+            }
+
+            Channel<ApplicationEvent> queue = Channel.CreateBounded<ApplicationEvent>(
+                new BoundedChannelOptions(checked((int)request.RequestedQueueItems))
+                {
+                    FullMode = BoundedChannelFullMode.Wait,
+                    SingleReader = true,
+                    SingleWriter = true,
+                });
+            bool overflow = false;
+            Task producer = Task.Run(async () =>
+            {
+                long lastSequence = cursor?.DurableSequence ?? 0;
+                try
+                {
+                    while (!context.CancellationToken.IsCancellationRequested)
+                    {
+                        RunRecord current = runtime.Store.GetRun(runId);
+                        if (current.DurableSequence > lastSequence)
+                        {
+                            ApplicationEvent item = ProgressEvent(request, current);
+                            if (!queue.Writer.TryWrite(item))
+                            {
+                                overflow = true;
+                                break;
+                            }
+
+                            lastSequence = current.DurableSequence;
+                        }
+
+                        await Task.Delay(50, context.CancellationToken).ConfigureAwait(false);
+                    }
+                }
+                catch (OperationCanceledException) when (context.CancellationToken.IsCancellationRequested)
+                {
+                }
+                finally
+                {
+                    queue.Writer.TryComplete();
+                }
+            }, CancellationToken.None);
+            try
+            {
+                await foreach (ApplicationEvent item in queue.Reader.ReadAllAsync(
+                    context.CancellationToken).ConfigureAwait(false))
+                {
+                    await responseStream.WriteAsync(item).ConfigureAwait(false);
+                }
+
+                if (overflow && !context.CancellationToken.IsCancellationRequested)
+                {
+                    await WriteResyncAsync(
+                        responseStream,
+                        request,
+                        runtime.Store.GetRun(runId),
+                        ResyncReason.QueueOverflow).ConfigureAwait(false);
+                }
+            }
+            finally
+            {
+                await producer.ConfigureAwait(false);
+            }
+        }
+        finally
+        {
+            runtime.ReleaseEventSubscription();
+        }
     }
 
     private RunRecord Start(string commandId, ManualStartCommand command)
@@ -314,8 +534,7 @@ public sealed class ApplicationGrpcService(
             || command.InitiationKind is not (
                 ManualInitiationKind.CliUserAction
                 or ManualInitiationKind.DesktopUserGesture
-                or ManualInitiationKind.EvaluationHarness)
-            || FromProto(command.DispatchDeadline) <= DateTimeOffset.UtcNow)
+                or ManualInitiationKind.EvaluationHarness))
         {
             throw new InvalidOperationException(
                 "A supported initiation kind and future dispatch deadline are required.");
@@ -332,9 +551,24 @@ public sealed class ApplicationGrpcService(
             runId,
             binding,
             runtime.Authority.FencingEpoch,
-            DateTimeOffset.UtcNow);
+            DateTimeOffset.UtcNow,
+            command.InitiationKind.ToString(),
+            FromProto(command.DispatchDeadline));
         executor.Schedule(run.RunId);
         return run;
+    }
+
+    private bool DurableCommandExists(string commandId)
+    {
+        try
+        {
+            _ = runtime.Store.GetDurableCommand(commandId);
+            return true;
+        }
+        catch (KeyNotFoundException)
+        {
+            return false;
+        }
     }
 
     private RunRecord Pause(string commandId, PauseCommand command)
@@ -349,15 +583,12 @@ public sealed class ApplicationGrpcService(
             "pause requested",
             DateTimeOffset.UtcNow,
             Infinium.Domain.Contracts.LifecycleTransitionRecordKind.Requested);
-        runtime.Store.SettleLiveAttempts(runId, "paused-at-safe-boundary");
-        return runtime.Store.Transition(
-            commandId + "-observed",
-            runId,
-            pausing.Generation,
+        return ObserveSafeBoundaryWhenIdle(
+            commandId,
+            pausing,
             DomainLifecycleState.Paused,
-            runtime.Authority.FencingEpoch,
-            "pause observed at a safe boundary",
-            DateTimeOffset.UtcNow);
+            "paused-at-safe-boundary",
+            "pause observed with no dispatched work");
     }
 
     private RunRecord Resume(string commandId, ResumeCommand command)
@@ -387,14 +618,41 @@ public sealed class ApplicationGrpcService(
             "cancellation requested",
             DateTimeOffset.UtcNow,
             Infinium.Domain.Contracts.LifecycleTransitionRecordKind.Requested);
-        runtime.Store.SettleLiveAttempts(runId, "cancelled-at-safe-boundary");
+        return ObserveSafeBoundaryWhenIdle(
+            commandId,
+            cancelling,
+            DomainLifecycleState.Cancelled,
+            "cancelled-at-safe-boundary",
+            "cancellation observed with no dispatched work");
+    }
+
+    private RunRecord ObserveSafeBoundaryWhenIdle(
+        string commandId,
+        RunRecord requested,
+        DomainLifecycleState observedState,
+        string attemptOutcome,
+        string reason)
+    {
+        DomainLifecycleState requestedState = observedState == DomainLifecycleState.Paused
+            ? DomainLifecycleState.Pausing
+            : DomainLifecycleState.Cancelling;
+        if (requested.State != requestedState
+            || runtime.Store.HasLiveAttempts(requested.RunId))
+        {
+            return requested;
+        }
+
+        runtime.Store.SettleLiveAttempts(
+            requested.RunId,
+            attemptOutcome,
+            runtime.Authority.FencingEpoch);
         return runtime.Store.Transition(
             commandId + "-observed",
-            runId,
-            cancelling.Generation,
-            DomainLifecycleState.Cancelled,
+            requested.RunId,
+            requested.Generation,
+            observedState,
             runtime.Authority.FencingEpoch,
-            "cancellation observed at a safe boundary",
+            reason,
             DateTimeOffset.UtcNow);
     }
 
@@ -541,6 +799,134 @@ public sealed class ApplicationGrpcService(
         return ByteString.CopyFrom(value);
     }
 
+    private ApplicationEvent ProgressEvent(
+        SubscribeEventsRequest request,
+        RunRecord run)
+    {
+        EventStreamCursor cursor = new(
+            runtime.Authority.InstanceId,
+            runtime.Authority.FencingEpoch,
+            run.RunId,
+            run.DurableSequence,
+            "1",
+            DateTimeOffset.UtcNow.AddMinutes(5));
+        return new ApplicationEvent
+        {
+            CoordinatorInstanceId = new CoordinatorInstanceId { Value = runtime.Authority.InstanceId },
+            CoordinatorFencingEpoch = checked((ulong)runtime.Authority.FencingEpoch),
+            SubscriptionId = request.SubscriptionId,
+            DurableEventSequence = checked((ulong)run.DurableSequence),
+            ProjectionVersion = new ProjectionVersion { Value = "1" },
+            Kind = EventKind.Progress,
+            RunScope = new RunId { Value = run.RunId },
+            ResumeCursor = new EventCursor { OpaqueValue = EncodeEventCursor(cursor) },
+            Progress = new ProgressSnapshot
+            {
+                RunId = new RunId { Value = run.RunId },
+                LifecycleState = ProtoMapping.ToProto(run.State),
+                Progress = ProtoMapping.EmptyProgress(run.State),
+                ProjectionVersion = new ProjectionVersion { Value = "1" },
+                DurableEventSequence = checked((ulong)run.DurableSequence),
+                ObservedAt = ProtoMapping.ToProto(DateTimeOffset.UtcNow),
+            },
+        };
+    }
+
+    private async Task WriteResyncAsync(
+        IServerStreamWriter<ApplicationEvent> responseStream,
+        SubscribeEventsRequest request,
+        RunRecord run,
+        ResyncReason reason)
+    {
+        await responseStream.WriteAsync(new ApplicationEvent
+        {
+            CoordinatorInstanceId = new CoordinatorInstanceId { Value = runtime.Authority.InstanceId },
+            CoordinatorFencingEpoch = checked((ulong)runtime.Authority.FencingEpoch),
+            SubscriptionId = request.SubscriptionId,
+            DurableEventSequence = checked((ulong)run.DurableSequence),
+            ProjectionVersion = new ProjectionVersion { Value = "1" },
+            Kind = EventKind.ResyncRequired,
+            RunScope = new RunId { Value = run.RunId },
+            ResyncRequired = new ResyncRequired
+            {
+                Reason = reason,
+                CurrentProjectionVersion = new ProjectionVersion { Value = "1" },
+            },
+        }).ConfigureAwait(false);
+    }
+
+    private ByteString EncodeEventCursor(EventStreamCursor cursor) =>
+        EncodeAuthenticated(JsonSerializer.SerializeToUtf8Bytes(cursor));
+
+    private EventStreamCursor DecodeEventCursor(ByteString opaque)
+    {
+        byte[] payload = DecodeAuthenticated(opaque);
+        EventStreamCursor cursor = JsonSerializer.Deserialize<EventStreamCursor>(payload)
+            ?? throw new InvalidOperationException("The event cursor is malformed.");
+        return cursor;
+    }
+
+    private ByteString EncodeAuthenticated(byte[] payload)
+    {
+        byte[] mac = HMACSHA256.HashData(runtime.Descriptor.GetNonce(), payload);
+        byte[] value = new byte[mac.Length + payload.Length];
+        mac.CopyTo(value, 0);
+        payload.CopyTo(value, mac.Length);
+        return ByteString.CopyFrom(value);
+    }
+
+    private byte[] DecodeAuthenticated(ByteString opaque)
+    {
+        if (opaque.Length is <= 32 or > 1024)
+        {
+            throw new InvalidOperationException("The authenticated cursor has an invalid size.");
+        }
+
+        ReadOnlySpan<byte> bytes = opaque.Span;
+        ReadOnlySpan<byte> suppliedMac = bytes[..32];
+        byte[] payload = bytes[32..].ToArray();
+        byte[] expectedMac = HMACSHA256.HashData(runtime.Descriptor.GetNonce(), payload);
+        if (!CryptographicOperations.FixedTimeEquals(suppliedMac, expectedMac))
+        {
+            throw new InvalidOperationException("The cursor authentication failed.");
+        }
+
+        return payload;
+    }
+
+    private bool IsCursorFromAnotherCoordinator(ByteString opaque)
+    {
+        if (opaque.Length is <= 32 or > 1024)
+        {
+            return false;
+        }
+
+        try
+        {
+            EventStreamCursor? untrusted =
+                JsonSerializer.Deserialize<EventStreamCursor>(opaque.Span[32..]);
+            return untrusted is not null
+                && !string.IsNullOrWhiteSpace(untrusted.CoordinatorInstanceId)
+                && !string.Equals(
+                    untrusted.CoordinatorInstanceId,
+                    runtime.Authority.InstanceId,
+                    StringComparison.Ordinal);
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
+    private static bool IsCurrentProjection(ProjectionVersion? expected) =>
+        expected is null || expected.Value is "" or "1";
+
+    private static ProjectionInvalidated ProjectionInvalidated() => new()
+    {
+        CurrentProjectionVersion = new ProjectionVersion { Value = "1" },
+        Reason = ResyncReason.ProjectionRebuilt,
+    };
+
     private RunPageCursor DecodeRunCursor(ByteString opaque)
     {
         if (opaque.Length is <= 32 or > 512)
@@ -601,5 +987,13 @@ public sealed class ApplicationGrpcService(
     private sealed record RunPageCursor(
         DateTimeOffset CreatedAt,
         string RunId,
+        DateTimeOffset ExpiresAt);
+
+    private sealed record EventStreamCursor(
+        string CoordinatorInstanceId,
+        long CoordinatorFencingEpoch,
+        string RunId,
+        long DurableSequence,
+        string ProjectionVersion,
         DateTimeOffset ExpiresAt);
 }

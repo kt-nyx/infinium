@@ -29,12 +29,15 @@ public sealed record AttemptRecord(
     DateTimeOffset LeaseExpiresAt,
     string Outcome);
 
+public sealed record DispatchAdmission(RunRecord Run, AttemptRecord Attempt);
+
 public sealed record PayloadAdmission(
     string PayloadId,
     string Sha256,
     long ByteLength,
     string RelativePath,
-    string PublicationReceiptId);
+    string PublicationReceiptId,
+    string StagedManifestSha256);
 
 public sealed record ReconciliationIssue(string Kind, string Path, string Detail);
 
@@ -46,4 +49,9 @@ public sealed record DurableCommandRecord(
     string RunId,
     string ResultingState,
     string? TransitionId,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    string CommandKind,
+    long ExpectedGeneration,
+    RunBinding RunBinding,
+    string? StartInitiationKind,
+    DateTimeOffset? StartDispatchDeadline);

@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Infinium.Domain.Contracts;
 using Microsoft.Data.Sqlite;
 
@@ -13,6 +14,9 @@ namespace Infinium.Persistence;
 public sealed class AuthoritativeStore : IDisposable
 {
     public const int CurrentSchemaVersion = 1;
+    private const string CurrentStorageContractVersion = "1.0.0";
+    private const int MaximumBackupManifestBytes = 16 * 1024 * 1024;
+    private const int MaximumCheckpointJsonBytes = 64 * 1024;
 
     private readonly Lock gate = new();
     private readonly SqliteConnection connection;
@@ -22,6 +26,7 @@ public sealed class AuthoritativeStore : IDisposable
     {
         Paths = paths ?? throw new ArgumentNullException(nameof(paths));
         Paths.Create();
+        _ = Paths.ResolveProductPath(ProductWriteClass.Data, "infinium.sqlite3");
         SqliteRuntimeIdentity.InitializeNativeProvider();
         connection = new SqliteConnection(new SqliteConnectionStringBuilder
         {
@@ -36,10 +41,13 @@ public sealed class AuthoritativeStore : IDisposable
             BindingIdentity = SqliteRuntimeIdentity.VerifyExactPatchedBinding(connection);
             ConfigureConnection(connection);
             ApplyMigrations();
+            ValidateDatabaseIdentityAndIntegrity(connection, BindingIdentity);
+            RecordWriteClassAuthorityBindings(DateTimeOffset.UtcNow);
         }
         catch
         {
             connection.Dispose();
+            Paths.Dispose();
             throw;
         }
     }
@@ -47,10 +55,57 @@ public sealed class AuthoritativeStore : IDisposable
     public StoragePaths Paths { get; }
     public SqliteBindingIdentity BindingIdentity { get; }
 
+    public void RecordAuditEvent(
+        string eventKind,
+        string objectKind,
+        string objectId,
+        DateTimeOffset now)
+    {
+        ValidateAuditToken(eventKind, nameof(eventKind));
+        ValidateAuditToken(objectKind, nameof(objectKind));
+        ArgumentException.ThrowIfNullOrWhiteSpace(objectId);
+        if (Encoding.UTF8.GetByteCount(objectId) > 512)
+        {
+            throw new ArgumentException("The audit object identity exceeds its bound.", nameof(objectId));
+        }
+
+        lock (gate)
+        {
+            using SqliteTransaction transaction = connection.BeginTransaction();
+            InsertAuditEvent(eventKind, objectKind, objectId, now, transaction);
+            transaction.Commit();
+        }
+    }
+
     public CoordinatorAuthority AcquireCoordinatorAuthority(
         string instanceId,
         DateTimeOffset now,
         TimeSpan leaseDuration)
+    {
+        return AcquireCoordinatorAuthorityCore(
+            instanceId,
+            now,
+            leaseDuration,
+            allowUnexpiredTakeoverAfterProcessExclusion: false);
+    }
+
+    public CoordinatorAuthority AcquireCoordinatorAuthorityAfterProcessExclusion(
+        string instanceId,
+        DateTimeOffset now,
+        TimeSpan leaseDuration)
+    {
+        return AcquireCoordinatorAuthorityCore(
+            instanceId,
+            now,
+            leaseDuration,
+            allowUnexpiredTakeoverAfterProcessExclusion: true);
+    }
+
+    private CoordinatorAuthority AcquireCoordinatorAuthorityCore(
+        string instanceId,
+        DateTimeOffset now,
+        TimeSpan leaseDuration,
+        bool allowUnexpiredTakeoverAfterProcessExclusion)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(instanceId);
         if (leaseDuration <= TimeSpan.Zero)
@@ -61,6 +116,24 @@ public sealed class AuthoritativeStore : IDisposable
         lock (gate)
         {
             using var transaction = connection.BeginTransaction();
+            long unexpiredActiveLease = ScalarLong(
+                """
+                SELECT COUNT(*)
+                FROM coordinator_leases lease
+                JOIN store_metadata metadata
+                  ON metadata.key = 'active_coordinator_epoch'
+                 AND CAST(metadata.value AS INTEGER) = lease.fencing_epoch
+                WHERE lease.expires_at > $now;
+                """,
+                transaction,
+                ("$now", ToText(now)));
+            if (unexpiredActiveLease != 0
+                && !allowUnexpiredTakeoverAfterProcessExclusion)
+            {
+                throw new InvalidOperationException(
+                    "An unexpired coordinator authority already owns the store.");
+            }
+
             var epoch = ScalarLong(
                 "SELECT COALESCE(MAX(fencing_epoch), 0) + 1 FROM coordinator_leases;",
                 transaction);
@@ -88,17 +161,92 @@ public sealed class AuthoritativeStore : IDisposable
         }
     }
 
+    public CoordinatorAuthority RenewCoordinatorAuthority(
+        long currentFencingEpoch,
+        DateTimeOffset now,
+        TimeSpan leaseDuration)
+    {
+        RequirePositive(currentFencingEpoch, nameof(currentFencingEpoch));
+        if (leaseDuration <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(leaseDuration));
+        }
+
+        DateTimeOffset requestedExpiry = now.Add(leaseDuration);
+        lock (gate)
+        {
+            using var transaction = connection.BeginTransaction();
+            int updated = Execute(
+                """
+                UPDATE coordinator_leases
+                SET expires_at = CASE
+                    WHEN expires_at > $expires THEN expires_at
+                    ELSE $expires
+                END
+                WHERE fencing_epoch = $epoch
+                  AND expires_at > $now
+                  AND EXISTS (
+                      SELECT 1
+                      FROM store_metadata
+                      WHERE key = 'active_coordinator_epoch'
+                        AND CAST(value AS INTEGER) = $epoch
+                  );
+                """,
+                transaction,
+                ("$epoch", currentFencingEpoch),
+                ("$now", ToText(now)),
+                ("$expires", ToText(requestedExpiry)));
+            if (updated != 1)
+            {
+                throw new InvalidOperationException(
+                    "Only the current unexpired coordinator authority may renew its lease.");
+            }
+
+            string instanceId = ScalarString(
+                """
+                SELECT coordinator_instance_id
+                FROM coordinator_leases
+                WHERE fencing_epoch = $epoch;
+                """,
+                transaction,
+                ("$epoch", currentFencingEpoch));
+            DateTimeOffset expiresAt = DateTimeOffset.Parse(
+                ScalarString(
+                    """
+                    SELECT expires_at
+                    FROM coordinator_leases
+                    WHERE fencing_epoch = $epoch;
+                    """,
+                    transaction,
+                    ("$epoch", currentFencingEpoch)),
+                System.Globalization.CultureInfo.InvariantCulture);
+            transaction.Commit();
+            return new CoordinatorAuthority(instanceId, currentFencingEpoch, expiresAt);
+        }
+    }
+
     public RunRecord CreateRun(
         string durableCommandId,
         string runId,
         RunBinding binding,
         long coordinatorFencingEpoch,
-        DateTimeOffset now)
+        DateTimeOffset now,
+        string? startInitiationKind = null,
+        DateTimeOffset? startDispatchDeadline = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(durableCommandId);
         ArgumentException.ThrowIfNullOrWhiteSpace(runId);
         ValidateBinding(binding);
         RequirePositive(coordinatorFencingEpoch, nameof(coordinatorFencingEpoch));
+        if ((startInitiationKind is null) != (startDispatchDeadline is null))
+        {
+            throw new ArgumentException(
+                "Start initiation kind and dispatch deadline must be supplied together.");
+        }
+        if (startInitiationKind is not null)
+        {
+            ValidateAuditToken(startInitiationKind, nameof(startInitiationKind));
+        }
 
         lock (gate)
         {
@@ -117,6 +265,13 @@ public sealed class AuthoritativeStore : IDisposable
                             transaction,
                             ("$id", durableCommandId)),
                         "start",
+                        StringComparison.Ordinal)
+                    || !string.Equals(
+                        ScalarStringOrNull(
+                            "SELECT start_initiation_kind FROM durable_commands WHERE command_id = $id;",
+                            transaction,
+                            ("$id", durableCommandId)),
+                        startInitiationKind,
                         StringComparison.Ordinal))
                 {
                     throw new InvalidOperationException(
@@ -127,6 +282,13 @@ public sealed class AuthoritativeStore : IDisposable
                 return existingRun;
             }
 
+            if (startDispatchDeadline is not null && startDispatchDeadline <= now)
+            {
+                throw new InvalidOperationException(
+                    "A new start command requires a future dispatch deadline.");
+            }
+
+            EnsureCurrentCoordinatorEpoch(coordinatorFencingEpoch, transaction);
             Execute(
                 """
                 INSERT INTO runs(
@@ -161,13 +323,20 @@ public sealed class AuthoritativeStore : IDisposable
                 """
                 INSERT INTO durable_commands(
                     command_id, command_kind, run_id, expected_generation, disposition,
-                    resulting_state, created_at)
-                VALUES ($id, 'start', $run, 0, 'accepted', 'Queued', $now);
+                    resulting_state, created_at, start_initiation_kind,
+                    start_dispatch_deadline)
+                VALUES (
+                    $id, 'start', $run, 0, 'accepted', 'Queued', $now,
+                    $initiation, $deadline);
                 """,
                 transaction,
                 ("$id", durableCommandId),
                 ("$run", runId),
-                ("$now", ToText(now)));
+                ("$now", ToText(now)),
+                ("$initiation", startInitiationKind),
+                ("$deadline", startDispatchDeadline is null
+                    ? null
+                    : ToText(startDispatchDeadline.Value)));
             Execute(
                 """
                 INSERT INTO run_projection(
@@ -243,13 +412,21 @@ public sealed class AuthoritativeStore : IDisposable
         }
     }
 
-    public IReadOnlyList<RunRecord> ListNonTerminalRuns()
+    public IReadOnlyList<RunRecord> ListNonTerminalRuns(
+        int maximumCount = 100,
+        DateTimeOffset? afterCreatedAt = null,
+        string? afterRunId = null)
     {
+        if (maximumCount is <= 0 or > 100)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maximumCount));
+        }
+
         lock (gate)
         {
             using var command = connection.CreateCommand();
-            command.CommandText =
-                """
+            command.CommandText = afterCreatedAt is null
+                ? """
                 SELECT run_id, installation_snapshot_id, analysis_context_id,
                        effective_scan_configuration_id, resolved_input_manifest_id,
                        lifecycle_state, lifecycle_generation, coordinator_fencing_epoch,
@@ -257,8 +434,30 @@ public sealed class AuthoritativeStore : IDisposable
                 FROM runs
                 WHERE lifecycle_state IN (
                     'Queued','Running','Waiting','Retrying','Pausing','Paused','Cancelling')
-                ORDER BY created_at, run_id;
+                ORDER BY created_at, run_id
+                LIMIT $limit;
+                """
+                : """
+                SELECT run_id, installation_snapshot_id, analysis_context_id,
+                       effective_scan_configuration_id, resolved_input_manifest_id,
+                       lifecycle_state, lifecycle_generation, coordinator_fencing_epoch,
+                       durable_sequence, created_at, updated_at
+                FROM runs
+                WHERE lifecycle_state IN (
+                    'Queued','Running','Waiting','Retrying','Pausing','Paused','Cancelling')
+                  AND (
+                      created_at > $after_created
+                      OR (created_at = $after_created AND run_id > $after_run)
+                  )
+                ORDER BY created_at, run_id
+                LIMIT $limit;
                 """;
+            command.Parameters.AddWithValue("$limit", maximumCount);
+            if (afterCreatedAt is not null)
+            {
+                command.Parameters.AddWithValue("$after_created", ToText(afterCreatedAt.Value));
+                command.Parameters.AddWithValue("$after_run", afterRunId ?? string.Empty);
+            }
             using var reader = command.ExecuteReader();
             var result = new List<RunRecord>();
             while (reader.Read())
@@ -270,6 +469,27 @@ public sealed class AuthoritativeStore : IDisposable
         }
     }
 
+    public RunRecord? GetNextDispatchableRun()
+    {
+        lock (gate)
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText =
+                """
+                SELECT run_id, installation_snapshot_id, analysis_context_id,
+                       effective_scan_configuration_id, resolved_input_manifest_id,
+                       lifecycle_state, lifecycle_generation, coordinator_fencing_epoch,
+                       durable_sequence, created_at, updated_at
+                FROM runs
+                WHERE lifecycle_state IN ('Queued','Retrying')
+                ORDER BY created_at, run_id
+                LIMIT 1;
+                """;
+            using SqliteDataReader reader = command.ExecuteReader();
+            return reader.Read() ? ReadRun(reader) : null;
+        }
+    }
+
     public DurableCommandRecord GetDurableCommand(string commandId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(commandId);
@@ -278,9 +498,15 @@ public sealed class AuthoritativeStore : IDisposable
             using var command = connection.CreateCommand();
             command.CommandText =
                 """
-                SELECT command_id, disposition, run_id, resulting_state, transition_id, created_at
-                FROM durable_commands
-                WHERE command_id = $id;
+                SELECT command.command_id, command.disposition, command.run_id,
+                       command.resulting_state, command.transition_id, command.created_at,
+                       command.command_kind, command.expected_generation,
+                       run.installation_snapshot_id, run.analysis_context_id,
+                       run.effective_scan_configuration_id, run.resolved_input_manifest_id,
+                       command.start_initiation_kind, command.start_dispatch_deadline
+                FROM durable_commands command
+                JOIN runs run ON run.run_id = command.run_id
+                WHERE command.command_id = $id;
                 """;
             command.Parameters.AddWithValue("$id", commandId);
             using var reader = command.ExecuteReader();
@@ -297,7 +523,20 @@ public sealed class AuthoritativeStore : IDisposable
                 reader.IsDBNull(4) ? null : reader.GetString(4),
                 DateTimeOffset.Parse(
                     reader.GetString(5),
-                    System.Globalization.CultureInfo.InvariantCulture));
+                    System.Globalization.CultureInfo.InvariantCulture),
+                reader.GetString(6),
+                reader.GetInt64(7),
+                new RunBinding(
+                    reader.GetString(8),
+                    reader.GetString(9),
+                    reader.GetString(10),
+                    reader.GetString(11)),
+                reader.IsDBNull(12) ? null : reader.GetString(12),
+                reader.IsDBNull(13)
+                    ? null
+                    : DateTimeOffset.Parse(
+                        reader.GetString(13),
+                        System.Globalization.CultureInfo.InvariantCulture));
         }
     }
 
@@ -356,6 +595,7 @@ public sealed class AuthoritativeStore : IDisposable
             }
 
             var current = GetRunCore(runId);
+            EnsureCurrentCoordinatorEpoch(coordinatorFencingEpoch, transaction);
             if (current.CoordinatorFencingEpoch > coordinatorFencingEpoch)
             {
                 throw new InvalidOperationException("The coordinator fencing epoch is stale.");
@@ -477,10 +717,30 @@ public sealed class AuthoritativeStore : IDisposable
         lock (gate)
         {
             using var transaction = connection.BeginTransaction();
+            EnsureCurrentCoordinatorEpoch(coordinatorFencingEpoch, transaction);
             var run = GetRunCore(runId);
+            if (run.State is not (LifecycleState.Running or LifecycleState.Waiting))
+            {
+                throw new InvalidOperationException(
+                    "An attempt may be created only for dispatched work.");
+            }
+
             if (run.CoordinatorFencingEpoch > coordinatorFencingEpoch)
             {
                 throw new InvalidOperationException("The coordinator fencing epoch is stale.");
+            }
+
+            if (ScalarLong(
+                    """
+                    SELECT COUNT(*)
+                    FROM attempts
+                    WHERE run_id = $run AND outcome = 'running';
+                    """,
+                    transaction,
+                    ("$run", runId)) != 0)
+            {
+                throw new InvalidOperationException(
+                    "A run may have only one live attempt.");
             }
 
             var generation = ScalarLong(
@@ -527,7 +787,180 @@ public sealed class AuthoritativeStore : IDisposable
         }
     }
 
-    public void SettleLiveAttempts(string runId, string outcome)
+    public DispatchAdmission DispatchAttempt(
+        string durableCommandId,
+        string runId,
+        long expectedGeneration,
+        long coordinatorFencingEpoch,
+        TimeSpan leaseDuration,
+        DateTimeOffset now)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(durableCommandId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(runId);
+        RequirePositive(coordinatorFencingEpoch, nameof(coordinatorFencingEpoch));
+        if (leaseDuration <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(leaseDuration));
+        }
+
+        lock (gate)
+        {
+            using var transaction = connection.BeginTransaction();
+            EnsureCurrentCoordinatorEpoch(coordinatorFencingEpoch, transaction);
+            RunRecord current = GetRunCore(runId);
+            if (current.CoordinatorFencingEpoch > coordinatorFencingEpoch)
+            {
+                throw new InvalidOperationException("The coordinator fencing epoch is stale.");
+            }
+
+            if (current.Generation != expectedGeneration)
+            {
+                throw new InvalidOperationException(
+                    $"Lifecycle generation mismatch: expected {expectedGeneration}, actual {current.Generation}.");
+            }
+
+            LifecyclePolicy.EnsureAllowed(current.State, LifecycleState.Running);
+            if (ScalarLong(
+                    "SELECT COUNT(*) FROM attempts WHERE run_id = $run AND outcome = 'running';",
+                    transaction,
+                    ("$run", runId)) != 0)
+            {
+                throw new InvalidOperationException("A run may have only one live attempt.");
+            }
+
+            long nextGeneration = checked(expectedGeneration + 1);
+            long nextSequence = checked(current.DurableSequence + 1);
+            string transitionId = Guid.NewGuid().ToString("N");
+            int changed = Execute(
+                """
+                UPDATE runs
+                SET lifecycle_state = 'Running',
+                    lifecycle_generation = $generation,
+                    coordinator_fencing_epoch = $epoch,
+                    durable_sequence = $sequence,
+                    updated_at = $now
+                WHERE run_id = $run AND lifecycle_generation = $expected;
+                """,
+                transaction,
+                ("$generation", nextGeneration),
+                ("$epoch", coordinatorFencingEpoch),
+                ("$sequence", nextSequence),
+                ("$now", ToText(now)),
+                ("$run", runId),
+                ("$expected", expectedGeneration));
+            if (changed != 1)
+            {
+                throw new InvalidOperationException("The lifecycle compare-and-swap update lost its race.");
+            }
+
+            Execute(
+                """
+                UPDATE job_nodes
+                SET lifecycle_state = 'Running', lifecycle_generation = $generation, updated_at = $now
+                WHERE run_id = $run AND parent_job_node_id IS NULL;
+                """,
+                transaction,
+                ("$generation", nextGeneration),
+                ("$now", ToText(now)),
+                ("$run", runId));
+            Execute(
+                """
+                INSERT INTO lifecycle_events(
+                    transition_id, run_id, job_node_id, record_kind, policy_version,
+                    from_state, to_state, expected_generation, new_generation,
+                    coordinator_fencing_epoch, reason, occurred_at, durable_sequence)
+                VALUES (
+                    $transition, $run, $job, 'observed', $policy, $from, 'Running',
+                    $expected, $new, $epoch, 'managed worker dispatch', $now, $sequence);
+                """,
+                transaction,
+                ("$transition", transitionId),
+                ("$run", runId),
+                ("$job", runId + "-root"),
+                ("$policy", LifecyclePolicy.Version),
+                ("$from", current.State.ToString()),
+                ("$expected", expectedGeneration),
+                ("$new", nextGeneration),
+                ("$epoch", coordinatorFencingEpoch),
+                ("$now", ToText(now)),
+                ("$sequence", nextSequence));
+            Execute(
+                """
+                INSERT INTO durable_commands(
+                    command_id, command_kind, run_id, expected_generation,
+                    disposition, resulting_state, transition_id, created_at)
+                VALUES ($id, 'running', $run, $expected, 'accepted', 'Running', $transition, $now);
+                """,
+                transaction,
+                ("$id", durableCommandId),
+                ("$run", runId),
+                ("$expected", expectedGeneration),
+                ("$transition", transitionId),
+                ("$now", ToText(now)));
+            Execute(
+                """
+                UPDATE run_projection
+                SET lifecycle_state = 'Running', lifecycle_generation = $generation,
+                    durable_sequence = $sequence, updated_at = $now
+                WHERE run_id = $run;
+                """,
+                transaction,
+                ("$generation", nextGeneration),
+                ("$sequence", nextSequence),
+                ("$now", ToText(now)),
+                ("$run", runId));
+
+            long attemptGeneration = ScalarLong(
+                "SELECT COALESCE(MAX(attempt_generation), 0) + 1 FROM attempts WHERE run_id = $run;",
+                transaction,
+                ("$run", runId));
+            long fencingToken = ScalarLong(
+                "SELECT COALESCE(MAX(attempt_fencing_token), 0) + 1 FROM attempts WHERE run_id = $run;",
+                transaction,
+                ("$run", runId));
+            string attemptId = Guid.NewGuid().ToString("N");
+            DateTimeOffset expires = now.Add(leaseDuration);
+            Execute(
+                """
+                INSERT INTO attempts(
+                    attempt_id, run_id, job_node_id, attempt_generation,
+                    coordinator_fencing_epoch, attempt_fencing_token,
+                    lease_acquired_at, lease_expires_at, dispatch_identity,
+                    idempotency_identity, retry_safety, outcome, created_at)
+                VALUES (
+                    $attempt, $run, $job, $generation, $epoch, $token, $now, $expires,
+                    $dispatch, $idempotency, 'safe-with-new-attempt', 'running', $now);
+                """,
+                transaction,
+                ("$attempt", attemptId),
+                ("$run", runId),
+                ("$job", runId + "-root"),
+                ("$generation", attemptGeneration),
+                ("$epoch", coordinatorFencingEpoch),
+                ("$token", fencingToken),
+                ("$now", ToText(now)),
+                ("$expires", ToText(expires)),
+                ("$dispatch", Guid.NewGuid().ToString("N")),
+                ("$idempotency", Guid.NewGuid().ToString("N")));
+            transaction.Commit();
+            RunRecord running = GetRunCore(runId);
+            return new DispatchAdmission(
+                running,
+                new AttemptRecord(
+                    attemptId,
+                    runId,
+                    attemptGeneration,
+                    coordinatorFencingEpoch,
+                    fencingToken,
+                    expires,
+                    "running"));
+        }
+    }
+
+    public void SettleLiveAttempts(
+        string runId,
+        string outcome,
+        long coordinatorFencingEpoch)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(runId);
         ArgumentException.ThrowIfNullOrWhiteSpace(outcome);
@@ -538,15 +971,34 @@ public sealed class AuthoritativeStore : IDisposable
 
         lock (gate)
         {
+            using var transaction = connection.BeginTransaction();
+            EnsureCurrentCoordinatorEpoch(coordinatorFencingEpoch, transaction);
             Execute(
                 """
                 UPDATE attempts
                 SET outcome = $outcome
                 WHERE run_id = $run AND outcome = 'running';
                 """,
-                transaction: null,
+                transaction,
                 ("$outcome", outcome),
                 ("$run", runId));
+            transaction.Commit();
+        }
+    }
+
+    public bool HasLiveAttempts(string runId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(runId);
+        lock (gate)
+        {
+            return ScalarLong(
+                """
+                SELECT COUNT(*)
+                FROM attempts
+                WHERE run_id = $run AND outcome = 'running';
+                """,
+                transaction: null,
+                ("$run", runId)) > 0;
         }
     }
 
@@ -560,12 +1012,39 @@ public sealed class AuthoritativeStore : IDisposable
         string pendingAndGapsJson,
         DateTimeOffset now)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(checkpointId);
+        ArgumentNullException.ThrowIfNull(attempt);
+        ArgumentException.ThrowIfNullOrWhiteSpace(dependencyClosureId);
         ValidateBinding(binding);
         ValidateSha256(contentSha256);
+        ValidateBoundedJson(completedPartitionsJson, nameof(completedPartitionsJson));
+        ValidateBoundedJson(pendingAndGapsJson, nameof(pendingAndGapsJson));
         lock (gate)
         {
             using var transaction = connection.BeginTransaction();
             EnsureCurrentAttempt(attempt, transaction);
+            long bindingMatches = ScalarLong(
+                """
+                SELECT COUNT(*)
+                FROM runs
+                WHERE run_id = $run
+                  AND installation_snapshot_id = $snapshot
+                  AND analysis_context_id = $context
+                  AND effective_scan_configuration_id = $config
+                  AND resolved_input_manifest_id = $manifest;
+                """,
+                transaction,
+                ("$run", attempt.RunId),
+                ("$snapshot", binding.InstallationSnapshotId),
+                ("$context", binding.AnalysisContextId),
+                ("$config", binding.EffectiveScanConfigurationId),
+                ("$manifest", binding.ResolvedInputManifestId));
+            if (bindingMatches != 1)
+            {
+                throw new InvalidOperationException(
+                    "Checkpoint dependencies must equal the immutable run binding.");
+            }
+
             Execute(
                 """
                 INSERT INTO checkpoints(
@@ -591,6 +1070,17 @@ public sealed class AuthoritativeStore : IDisposable
                 ("$completed", completedPartitionsJson),
                 ("$pending", pendingAndGapsJson),
                 ("$now", ToText(now)));
+            Execute(
+                """
+                INSERT INTO audit_events(
+                    audit_event_id, event_kind, object_kind, object_id,
+                    detail_payload_id, occurred_at)
+                VALUES ($id, 'checkpoint-recorded', 'checkpoint', $object, NULL, $now);
+                """,
+                transaction,
+                ("$id", Guid.NewGuid().ToString("N")),
+                ("$object", checkpointId),
+                ("$now", ToText(now)));
             transaction.Commit();
         }
     }
@@ -599,17 +1089,43 @@ public sealed class AuthoritativeStore : IDisposable
         AttemptRecord attempt,
         string stagedRelativePath,
         string expectedSha256,
+        long expectedByteLength,
+        string expectedManifestSha256,
         long maximumBytes,
-        DateTimeOffset now)
+        DateTimeOffset now,
+        string? completionCommandId = null,
+        string? stagedArtifactId = null)
     {
+        if (completionCommandId is not null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(completionCommandId);
+        }
+
+        if (stagedArtifactId is not null)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(stagedArtifactId);
+        }
+
         ValidateSha256(expectedSha256);
+        ValidateSha256(expectedManifestSha256);
+        if (expectedByteLength < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(expectedByteLength));
+        }
+
         if (maximumBytes <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(maximumBytes));
         }
 
-        var stagingPath = Paths.ResolveProductRelative(
-            Path.Combine("staging", attempt.AttemptId, stagedRelativePath));
+        if (expectedByteLength > maximumBytes)
+        {
+            throw new InvalidOperationException("The declared staged output exceeds its bound.");
+        }
+
+        var stagingPath = Paths.ResolveProductPath(
+            ProductWriteClass.AttemptStaging,
+            Path.Combine(attempt.AttemptId, stagedRelativePath));
         if (!File.Exists(stagingPath))
         {
             throw new FileNotFoundException("The declared staged output does not exist.", stagingPath);
@@ -621,6 +1137,12 @@ public sealed class AuthoritativeStore : IDisposable
             throw new InvalidOperationException("The staged output exceeds its declared bound.");
         }
 
+        if (fileInfo.Length != expectedByteLength)
+        {
+            throw new InvalidOperationException(
+                "The staged output byte length does not match its manifest.");
+        }
+
         var actualSha = HashFile(stagingPath);
         if (!string.Equals(actualSha, expectedSha256, StringComparison.Ordinal))
         {
@@ -628,12 +1150,14 @@ public sealed class AuthoritativeStore : IDisposable
         }
 
         var payloadId = Guid.NewGuid().ToString("N");
-        var relativeObjectPath = Path.Combine(
-            "payloads",
+        var payloadClassRelativePath = Path.Combine(
             actualSha[..2],
             actualSha[2..4],
             actualSha);
-        var objectPath = Paths.ResolveProductRelative(relativeObjectPath);
+        var relativeObjectPath = Path.Combine("payloads", payloadClassRelativePath);
+        var objectPath = Paths.ResolveProductPath(
+            ProductWriteClass.Payload,
+            payloadClassRelativePath);
         Directory.CreateDirectory(Path.GetDirectoryName(objectPath)!);
 
         lock (gate)
@@ -697,7 +1221,7 @@ public sealed class AuthoritativeStore : IDisposable
                 ("$attempt", attempt.AttemptId),
                 ("$epoch", attempt.CoordinatorFencingEpoch),
                 ("$token", attempt.AttemptFencingToken),
-                ("$sha", actualSha),
+                ("$sha", expectedManifestSha256),
                 ("$now", ToText(now)));
             Execute(
                 """
@@ -711,13 +1235,195 @@ public sealed class AuthoritativeStore : IDisposable
                 "UPDATE attempts SET outcome = 'completed-staged' WHERE attempt_id = $attempt;",
                 transaction,
                 ("$attempt", attempt.AttemptId));
+            Execute(
+                """
+                INSERT INTO audit_events(
+                    audit_event_id, event_kind, object_kind, object_id,
+                    detail_payload_id, occurred_at)
+                VALUES ($id, 'attempt-staging-accepted', 'attempt', $object, NULL, $now);
+                """,
+                transaction,
+                ("$id", Guid.NewGuid().ToString("N")),
+                ("$object", attempt.AttemptId),
+                ("$now", ToText(now)));
+            if (stagedArtifactId is not null)
+            {
+                Execute(
+                    """
+                    INSERT INTO audit_events(
+                        audit_event_id, event_kind, object_kind, object_id,
+                        detail_payload_id, occurred_at)
+                    VALUES ($id, 'staged-artifact-accepted', 'artifact', $object, NULL, $now);
+                    """,
+                    transaction,
+                    ("$id", Guid.NewGuid().ToString("N")),
+                    ("$object", stagedArtifactId),
+                    ("$now", ToText(now)));
+            }
+
+            Execute(
+                """
+                INSERT INTO audit_events(
+                    audit_event_id, event_kind, object_kind, object_id,
+                    detail_payload_id, occurred_at)
+                VALUES ($id, 'payload-published', 'payload', $object, $payload, $now);
+                """,
+                transaction,
+                ("$id", Guid.NewGuid().ToString("N")),
+                ("$object", admittedPayloadId),
+                ("$payload", admittedPayloadId),
+                ("$now", ToText(now)));
+
+            if (completionCommandId is not null)
+            {
+                RunRecord current = GetRunCore(attempt.RunId);
+                LifecyclePolicy.EnsureAllowed(current.State, LifecycleState.Completed);
+                long nextGeneration = checked(current.Generation + 1);
+                long nextSequence = checked(current.DurableSequence + 1);
+                string transitionId = Guid.NewGuid().ToString("N");
+                int changed = Execute(
+                    """
+                    UPDATE runs
+                    SET lifecycle_state = 'Completed',
+                        lifecycle_generation = $generation,
+                        coordinator_fencing_epoch = $epoch,
+                        durable_sequence = $sequence,
+                        updated_at = $now
+                    WHERE run_id = $run AND lifecycle_generation = $expected;
+                    """,
+                    transaction,
+                    ("$generation", nextGeneration),
+                    ("$epoch", attempt.CoordinatorFencingEpoch),
+                    ("$sequence", nextSequence),
+                    ("$now", ToText(now)),
+                    ("$run", attempt.RunId),
+                    ("$expected", current.Generation));
+                if (changed != 1)
+                {
+                    throw new InvalidOperationException(
+                        "The publication lifecycle compare-and-swap update lost its race.");
+                }
+
+                Execute(
+                    """
+                    UPDATE job_nodes
+                    SET lifecycle_state = 'Completed', lifecycle_generation = $generation, updated_at = $now
+                    WHERE run_id = $run AND parent_job_node_id IS NULL;
+                    """,
+                    transaction,
+                    ("$generation", nextGeneration),
+                    ("$now", ToText(now)),
+                    ("$run", attempt.RunId));
+                Execute(
+                    """
+                    INSERT INTO lifecycle_events(
+                        transition_id, run_id, job_node_id, record_kind, policy_version,
+                        from_state, to_state, expected_generation, new_generation,
+                        coordinator_fencing_epoch, reason, occurred_at, durable_sequence)
+                    VALUES (
+                        $transition, $run, $job, 'observed', $policy, $from, 'Completed',
+                        $expected, $new, $epoch,
+                        'managed worker output admitted and published', $now, $sequence);
+                    """,
+                    transaction,
+                    ("$transition", transitionId),
+                    ("$run", attempt.RunId),
+                    ("$job", attempt.RunId + "-root"),
+                    ("$policy", LifecyclePolicy.Version),
+                    ("$from", current.State.ToString()),
+                    ("$expected", current.Generation),
+                    ("$new", nextGeneration),
+                    ("$epoch", attempt.CoordinatorFencingEpoch),
+                    ("$now", ToText(now)),
+                    ("$sequence", nextSequence));
+                Execute(
+                    """
+                    INSERT INTO durable_commands(
+                        command_id, command_kind, run_id, expected_generation,
+                        disposition, resulting_state, transition_id, created_at)
+                    VALUES (
+                        $id, 'completed', $run, $expected, 'accepted',
+                        'Completed', $transition, $now);
+                    """,
+                    transaction,
+                    ("$id", completionCommandId),
+                    ("$run", attempt.RunId),
+                    ("$expected", current.Generation),
+                    ("$transition", transitionId),
+                    ("$now", ToText(now)));
+                Execute(
+                    """
+                    UPDATE run_projection
+                    SET lifecycle_state = 'Completed', lifecycle_generation = $generation,
+                        durable_sequence = $sequence, updated_at = $now
+                    WHERE run_id = $run;
+                    """,
+                    transaction,
+                    ("$generation", nextGeneration),
+                    ("$sequence", nextSequence),
+                    ("$now", ToText(now)),
+                    ("$run", attempt.RunId));
+            }
+
             transaction.Commit();
             return new PayloadAdmission(
                 admittedPayloadId,
                 actualSha,
                 fileInfo.Length,
                 relativeObjectPath.Replace('\\', '/'),
-                receiptId);
+                receiptId,
+                expectedManifestSha256);
+        }
+    }
+
+    public bool HasRecoverablePublication(string runId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(runId);
+        lock (gate)
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText =
+                """
+                SELECT p.content_sha256, p.byte_length, p.object_relative_path
+                FROM publication_receipts receipt
+                JOIN attempts attempt ON attempt.attempt_id = receipt.attempt_id
+                JOIN publication_receipt_payloads published
+                  ON published.receipt_id = receipt.receipt_id
+                JOIN payloads p ON p.payload_id = published.payload_id
+                WHERE receipt.run_id = $run
+                  AND attempt.outcome = 'completed-staged'
+                ORDER BY receipt.published_at, p.payload_id;
+                """;
+            command.Parameters.AddWithValue("$run", runId);
+            using var reader = command.ExecuteReader();
+            bool found = false;
+            while (reader.Read())
+            {
+                found = true;
+                string expectedSha256 = reader.GetString(0);
+                long expectedByteLength = reader.GetInt64(1);
+                string relativePath = reader.GetString(2);
+                string objectPath = Paths.ResolveProductPath(
+                    ProductWriteClass.Payload,
+                    relativePath["payloads/".Length..]
+                        .Replace('/', Path.DirectorySeparatorChar));
+                if (!File.Exists(objectPath))
+                {
+                    return false;
+                }
+
+                var fileInfo = new FileInfo(objectPath);
+                if (fileInfo.Length != expectedByteLength
+                    || !string.Equals(
+                        HashFile(objectPath),
+                        expectedSha256,
+                        StringComparison.Ordinal))
+                {
+                    return false;
+                }
+            }
+
+            return found;
         }
     }
 
@@ -741,7 +1447,10 @@ public sealed class AuthoritativeStore : IDisposable
 
             foreach (var entry in known)
             {
-                var fullPath = Paths.ResolveProductRelative(entry.Key);
+                var fullPath = Paths.ResolveProductPath(
+                    ProductWriteClass.Payload,
+                    entry.Key["payloads".Length..]
+                        .TrimStart(Path.DirectorySeparatorChar));
                 if (!File.Exists(fullPath))
                 {
                     issues.Add(new ReconciliationIssue("missing-payload", entry.Key, "Registered payload is absent."));
@@ -813,11 +1522,22 @@ public sealed class AuthoritativeStore : IDisposable
         lock (gate)
         {
             var stamp = now.UtcDateTime.ToString("yyyyMMddTHHmmssfffZ", System.Globalization.CultureInfo.InvariantCulture);
-            var databasePath = Path.Combine(Paths.Backups, $"{stamp}-{safeLabel}.sqlite3");
+            string backupDatabaseName = $"{stamp}-{safeLabel}.sqlite3";
+            var databasePath = Paths.ResolveProductPath(
+                ProductWriteClass.Backup,
+                backupDatabaseName);
+            using (FileStream reservation = new(
+                databasePath,
+                FileMode.CreateNew,
+                FileAccess.Write,
+                FileShare.None))
+            {
+                reservation.Flush(flushToDisk: true);
+            }
             using (var destination = new SqliteConnection(new SqliteConnectionStringBuilder
             {
                 DataSource = databasePath,
-                Mode = SqliteOpenMode.ReadWriteCreate,
+                Mode = SqliteOpenMode.ReadWrite,
                 Pooling = false,
             }.ToString()))
             {
@@ -826,7 +1546,7 @@ public sealed class AuthoritativeStore : IDisposable
             }
 
             var databaseSha = HashFile(databasePath);
-            var payloads = new List<object>();
+            var payloads = new List<BackupPayloadManifest>();
             var payloadBackupRoot = databasePath + ".payloads";
             using (var command = connection.CreateCommand())
             {
@@ -836,33 +1556,55 @@ public sealed class AuthoritativeStore : IDisposable
                 while (reader.Read())
                 {
                     var relativePath = reader.GetString(2);
-                    var sourcePath = Paths.ResolveProductRelative(
-                        relativePath.Replace('/', Path.DirectorySeparatorChar));
-                    var backupPayloadPath = Path.Combine(
-                        payloadBackupRoot,
+                    var sourcePath = Paths.ResolveProductPath(
+                        ProductWriteClass.Payload,
                         relativePath["payloads/".Length..]
                             .Replace('/', Path.DirectorySeparatorChar));
+                    var backupPayloadPath = Paths.ResolveProductPath(
+                        ProductWriteClass.Backup,
+                        Path.Combine(
+                            backupDatabaseName + ".payloads",
+                            relativePath["payloads/".Length..]
+                                .Replace('/', Path.DirectorySeparatorChar)));
                     Directory.CreateDirectory(Path.GetDirectoryName(backupPayloadPath)!);
                     File.Copy(sourcePath, backupPayloadPath, overwrite: false);
-                    payloads.Add(new
-                    {
-                        sha256 = reader.GetString(0),
-                        byteLength = reader.GetInt64(1),
-                        relativePath,
-                    });
+                    payloads.Add(new BackupPayloadManifest(
+                        reader.GetString(0),
+                        reader.GetInt64(1),
+                        relativePath));
                 }
             }
 
-            var manifestPath = databasePath + ".manifest.json";
-            var manifest = JsonSerializer.SerializeToUtf8Bytes(new
+            var manifestPath = Paths.ResolveProductPath(
+                ProductWriteClass.Backup,
+                backupDatabaseName + ".manifest.json");
+            var manifest = JsonSerializer.SerializeToUtf8Bytes(
+                new BackupManifest(
+                    CurrentSchemaVersion,
+                    BindingIdentity,
+                    databaseSha,
+                    payloads,
+                    now),
+                new JsonSerializerOptions { WriteIndented = true });
+            using (FileStream manifestStream = new(
+                manifestPath,
+                FileMode.CreateNew,
+                FileAccess.Write,
+                FileShare.None))
             {
-                schemaVersion = CurrentSchemaVersion,
-                sqlite = BindingIdentity,
-                databaseSha256 = databaseSha,
-                payloads,
-                createdAt = now,
-            }, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllBytes(manifestPath, manifest);
+                manifestStream.Write(manifest);
+                manifestStream.Flush(flushToDisk: true);
+            }
+            using (SqliteTransaction transaction = connection.BeginTransaction())
+            {
+                InsertAuditEvent(
+                    "backup-created",
+                    "backup",
+                    Path.GetFileName(databasePath),
+                    now,
+                    transaction);
+                transaction.Commit();
+            }
             return new BackupArtifact(databasePath, manifestPath, databaseSha);
         }
     }
@@ -871,64 +1613,71 @@ public sealed class AuthoritativeStore : IDisposable
     {
         ArgumentNullException.ThrowIfNull(backup);
         ArgumentNullException.ThrowIfNull(target);
-        if (File.Exists(target.Database))
+        if (Directory.Exists(target.ProductRoot) || File.Exists(target.ProductRoot))
         {
-            throw new InvalidOperationException("Restore requires a fresh target store.");
+            throw new InvalidOperationException("Restore requires an absent target product root.");
         }
 
-        if (!string.Equals(HashFile(backup.DatabasePath), backup.Sha256, StringComparison.Ordinal))
+        ValidatedBackup validated = ValidateBackup(backup);
+        string? targetParent = Directory.GetParent(target.ProductRoot)?.FullName;
+        if (string.IsNullOrWhiteSpace(targetParent))
         {
-            throw new InvalidOperationException("The backup database fingerprint is invalid.");
+            throw new InvalidOperationException("The restore target must have a parent directory.");
         }
-
-        target.Create();
-        File.Copy(backup.DatabasePath, target.Database, overwrite: false);
-        using (var manifest = JsonDocument.Parse(File.ReadAllBytes(backup.ManifestPath)))
+        if (!Directory.Exists(targetParent))
         {
-            foreach (var payload in manifest.RootElement.GetProperty("payloads").EnumerateArray())
+            throw new InvalidOperationException(
+                "The restore target parent must already exist and be selected explicitly.");
+        }
+        string stagingRoot = Path.Combine(
+            targetParent,
+            $".{Path.GetFileName(target.ProductRoot)}.restore-{Guid.NewGuid():N}.tmp");
+        StoragePaths staging = new(stagingRoot);
+        bool published = false;
+        try
+        {
+            staging.Create();
+            File.Copy(backup.DatabasePath, staging.Database, overwrite: false);
+            string backupPayloadRoot = backup.DatabasePath + ".payloads";
+            foreach (BackupPayloadManifest payload in validated.Manifest.Payloads)
             {
-                var relative = payload.GetProperty("relativePath").GetString()
-                    ?? throw new InvalidOperationException("A backup payload path is missing.");
-                var expectedSha = payload.GetProperty("sha256").GetString()
-                    ?? throw new InvalidOperationException("A backup payload digest is missing.");
-                var source = Path.Combine(
-                    backup.DatabasePath + ".payloads",
-                    relative["payloads/".Length..].Replace('/', Path.DirectorySeparatorChar));
-                if (!File.Exists(source)
-                    || !string.Equals(HashFile(source), expectedSha, StringComparison.Ordinal))
-                {
-                    throw new InvalidOperationException("A backup payload is missing or corrupt.");
-                }
-
-                var destination = target.ResolveProductRelative(
-                    relative.Replace('/', Path.DirectorySeparatorChar));
+                string source = PayloadPath(backupPayloadRoot, payload.Sha256);
+                string destination = staging.ResolveProductPath(
+                    ProductWriteClass.Payload,
+                    payload.RelativePath["payloads/".Length..]
+                        .Replace('/', Path.DirectorySeparatorChar));
                 Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
                 File.Copy(source, destination, overwrite: false);
             }
-        }
 
-        SqliteRuntimeIdentity.InitializeNativeProvider();
-        using var restored = new SqliteConnection(new SqliteConnectionStringBuilder
+            if (!string.Equals(
+                    HashFile(staging.Database),
+                    validated.Manifest.DatabaseSha256,
+                    StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException(
+                    "The staged restore database fingerprint is invalid.");
+            }
+
+            AppendRestoreAudit(
+                staging.Database,
+                target.AuthorityIdentity,
+                DateTimeOffset.UtcNow);
+            IReadOnlyList<BackupPayloadManifest> stagedPayloads =
+                ValidateDatabaseFile(staging.Database, validated.Manifest.Sqlite);
+            ValidateManifestPayloadSet(validated.Manifest.Payloads, stagedPayloads);
+            ValidatePayloadFiles(staging.Payloads, validated.Manifest.Payloads);
+            staging.Dispose();
+            Directory.Move(stagingRoot, target.ProductRoot);
+            published = true;
+        }
+        finally
         {
-            DataSource = target.Database,
-            Mode = SqliteOpenMode.ReadWrite,
-            Pooling = false,
-        }.ToString());
-        restored.Open();
-        SqliteRuntimeIdentity.VerifyExactPatchedBinding(restored);
-        ConfigureConnection(restored);
-        using var command = restored.CreateCommand();
-        command.CommandText =
-            """
-            SELECT CASE WHEN (SELECT integrity_check FROM pragma_integrity_check LIMIT 1) = 'ok'
-                        AND NOT EXISTS (SELECT 1 FROM pragma_foreign_key_check)
-                        AND (SELECT CAST(value AS INTEGER) FROM store_metadata WHERE key='schema_version') = $version
-                   THEN 1 ELSE 0 END;
-            """;
-        command.Parameters.AddWithValue("$version", CurrentSchemaVersion);
-        if (Convert.ToInt32(command.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
-        {
-            throw new InvalidOperationException("The restored database failed integrity or schema validation.");
+            staging.Dispose();
+            if (!published && Directory.Exists(stagingRoot))
+            {
+                Directory.Delete(stagingRoot, recursive: true);
+            }
         }
     }
 
@@ -965,9 +1714,384 @@ public sealed class AuthoritativeStore : IDisposable
         if (!disposed)
         {
             connection.Dispose();
+            Paths.Dispose();
             disposed = true;
         }
     }
+
+    private static ValidatedBackup ValidateBackup(BackupArtifact backup)
+    {
+        if (!File.Exists(backup.DatabasePath) || !File.Exists(backup.ManifestPath))
+        {
+            throw new InvalidOperationException("The backup database or manifest is missing.");
+        }
+
+        long manifestLength = new FileInfo(backup.ManifestPath).Length;
+        if (manifestLength is <= 0 or > MaximumBackupManifestBytes)
+        {
+            throw new InvalidOperationException("The backup manifest exceeds its finite bound.");
+        }
+
+        BackupManifest manifest;
+        try
+        {
+            manifest = JsonSerializer.Deserialize<BackupManifest>(
+                File.ReadAllBytes(backup.ManifestPath),
+                new JsonSerializerOptions { MaxDepth = 32 })
+                ?? throw new InvalidOperationException("The backup manifest is empty.");
+        }
+        catch (JsonException exception)
+        {
+            throw new InvalidOperationException("The backup manifest is malformed.", exception);
+        }
+
+        if (manifest.SchemaVersion != CurrentSchemaVersion
+            || manifest.Sqlite is null
+            || manifest.Sqlite.CompileOptions is null
+            || manifest.Payloads is null)
+        {
+            throw new InvalidOperationException(
+                "The backup manifest schema or SQLite identity is incompatible.");
+        }
+
+        ValidateManifestBinding(manifest.Sqlite);
+        if (!IsCanonicalSha256(manifest.DatabaseSha256)
+            || !IsCanonicalSha256(backup.Sha256))
+        {
+            throw new InvalidOperationException(
+                "The backup database fingerprint is not canonically encoded.");
+        }
+
+        string actualDatabaseSha = HashFile(backup.DatabasePath);
+        if (!string.Equals(actualDatabaseSha, backup.Sha256, StringComparison.Ordinal)
+            || !string.Equals(
+                actualDatabaseSha,
+                manifest.DatabaseSha256,
+                StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("The backup database fingerprint is invalid.");
+        }
+
+        IReadOnlyList<BackupPayloadManifest> databasePayloads =
+            ValidateDatabaseFile(backup.DatabasePath, manifest.Sqlite);
+        ValidateManifestPayloadSet(manifest.Payloads, databasePayloads);
+        ValidatePayloadFiles(backup.DatabasePath + ".payloads", manifest.Payloads);
+        return new ValidatedBackup(manifest);
+    }
+
+    private static List<BackupPayloadManifest> ValidateDatabaseFile(
+        string databasePath,
+        SqliteBindingIdentity expectedBinding)
+    {
+        SqliteRuntimeIdentity.InitializeNativeProvider();
+        using var database = new SqliteConnection(new SqliteConnectionStringBuilder
+        {
+            DataSource = databasePath,
+            Mode = SqliteOpenMode.ReadOnly,
+            Cache = SqliteCacheMode.Private,
+            Pooling = false,
+        }.ToString());
+        try
+        {
+            database.Open();
+            SqliteBindingIdentity actualBinding =
+                SqliteRuntimeIdentity.VerifyExactPatchedBinding(database);
+            if (!BindingEquals(actualBinding, expectedBinding))
+            {
+                throw new InvalidOperationException(
+                    "The backup SQLite binding identity does not match the current runtime.");
+            }
+
+            ValidateDatabaseIdentityAndIntegrity(database, actualBinding);
+            return ReadDatabasePayloads(database);
+        }
+        catch (SqliteException exception)
+        {
+            throw new InvalidOperationException(
+                "The backup database failed SQLite validation.",
+                exception);
+        }
+    }
+
+    private static void ValidateDatabaseIdentityAndIntegrity(
+        SqliteConnection database,
+        SqliteBindingIdentity binding)
+    {
+        using (var integrity = database.CreateCommand())
+        {
+            integrity.CommandText = "PRAGMA integrity_check;";
+            using SqliteDataReader reader = integrity.ExecuteReader();
+            if (!reader.Read()
+                || !string.Equals(reader.GetString(0), "ok", StringComparison.Ordinal)
+                || reader.Read())
+            {
+                throw new InvalidOperationException("The database failed SQLite integrity validation.");
+            }
+        }
+
+        using (var foreignKeys = database.CreateCommand())
+        {
+            foreignKeys.CommandText = "PRAGMA foreign_key_check;";
+            using SqliteDataReader reader = foreignKeys.ExecuteReader();
+            if (reader.Read())
+            {
+                throw new InvalidOperationException("The database failed foreign-key validation.");
+            }
+        }
+
+        using (var version = database.CreateCommand())
+        {
+            version.CommandText = "PRAGMA user_version;";
+            if (Convert.ToInt32(
+                    version.ExecuteScalar(),
+                    System.Globalization.CultureInfo.InvariantCulture)
+                != CurrentSchemaVersion)
+            {
+                throw new InvalidOperationException(
+                    "The database user-version does not match the supported schema.");
+            }
+        }
+
+        Dictionary<string, string> metadata = new(StringComparer.Ordinal);
+        using (var command = database.CreateCommand())
+        {
+            command.CommandText =
+                """
+                SELECT key, value
+                FROM store_metadata
+                WHERE key IN (
+                    'schema_version',
+                    'schema_fingerprint',
+                    'storage_contract_version',
+                    'sqlite_version',
+                    'sqlite_source_id'
+                );
+                """;
+            using SqliteDataReader reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                metadata.Add(reader.GetString(0), reader.GetString(1));
+            }
+        }
+
+        if (metadata.Count != 5
+            || metadata["schema_version"]
+                != CurrentSchemaVersion.ToString(
+                    System.Globalization.CultureInfo.InvariantCulture)
+            || metadata["storage_contract_version"] != CurrentStorageContractVersion
+            || metadata["sqlite_version"] != binding.Version
+            || metadata["sqlite_source_id"] != binding.SourceId
+            || metadata["schema_fingerprint"] != ComputeSchemaFingerprint(database))
+        {
+            throw new InvalidOperationException(
+                "The database storage contract or SQLite identity metadata is invalid.");
+        }
+
+        using (var migration = database.CreateCommand())
+        {
+            migration.CommandText =
+                """
+                SELECT COUNT(*)
+                FROM migration_history
+                WHERE migration_id = 'M1-S2-0001'
+                  AND from_version = 0
+                  AND to_version = 1
+                  AND sqlite_source_id = $source;
+                """;
+            migration.Parameters.AddWithValue("$source", binding.SourceId);
+            if (Convert.ToInt32(
+                    migration.ExecuteScalar(),
+                    System.Globalization.CultureInfo.InvariantCulture) != 1)
+            {
+                throw new InvalidOperationException(
+                    "The database migration identity is invalid.");
+            }
+        }
+
+        HashSet<string> actualObjects = new(StringComparer.Ordinal);
+        using (var schema = database.CreateCommand())
+        {
+            schema.CommandText =
+                """
+                SELECT type || ':' || name
+                FROM sqlite_schema
+                WHERE name NOT LIKE 'sqlite_%'
+                ORDER BY type, name;
+                """;
+            using SqliteDataReader reader = schema.ExecuteReader();
+            while (reader.Read())
+            {
+                actualObjects.Add(reader.GetString(0));
+            }
+        }
+
+        if (!actualObjects.SetEquals(RequiredSchemaObjects))
+        {
+            throw new InvalidOperationException(
+                "The database schema objects do not match the supported storage contract.");
+        }
+    }
+
+    private static string ComputeSchemaFingerprint(
+        SqliteConnection database,
+        SqliteTransaction? transaction = null)
+    {
+        using SqliteCommand schema = database.CreateCommand();
+        schema.Transaction = transaction;
+        schema.CommandText =
+            """
+            SELECT type, name, tbl_name, COALESCE(sql, '')
+            FROM sqlite_schema
+            WHERE name NOT LIKE 'sqlite_%'
+            ORDER BY type, name;
+            """;
+        var canonical = new StringBuilder();
+        using SqliteDataReader reader = schema.ExecuteReader();
+        while (reader.Read())
+        {
+            canonical
+                .Append(reader.GetString(0)).Append('\u001f')
+                .Append(reader.GetString(1)).Append('\u001f')
+                .Append(reader.GetString(2)).Append('\u001f')
+                .Append(reader.GetString(3)).Append('\n');
+        }
+
+        return Convert.ToHexString(
+            SHA256.HashData(Encoding.UTF8.GetBytes(canonical.ToString())))
+            .ToLowerInvariant();
+    }
+
+    private static List<BackupPayloadManifest> ReadDatabasePayloads(
+        SqliteConnection database)
+    {
+        List<BackupPayloadManifest> payloads = [];
+        using var command = database.CreateCommand();
+        command.CommandText =
+            """
+            SELECT content_sha256, byte_length, object_relative_path
+            FROM payloads
+            ORDER BY content_sha256;
+            """;
+        using SqliteDataReader reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            payloads.Add(new BackupPayloadManifest(
+                reader.GetString(0),
+                reader.GetInt64(1),
+                reader.GetString(2)));
+        }
+
+        return payloads;
+    }
+
+    private static void ValidateManifestPayloadSet(
+        IReadOnlyList<BackupPayloadManifest> manifestPayloads,
+        IReadOnlyList<BackupPayloadManifest> databasePayloads)
+    {
+        Dictionary<string, BackupPayloadManifest> manifestBySha =
+            new(StringComparer.Ordinal);
+        foreach (BackupPayloadManifest payload in manifestPayloads)
+        {
+            if (!IsCanonicalSha256(payload.Sha256)
+                || payload.ByteLength < 0
+                || !string.Equals(
+                    payload.RelativePath,
+                    CanonicalPayloadRelativePath(payload.Sha256),
+                    StringComparison.Ordinal)
+                || !manifestBySha.TryAdd(payload.Sha256, payload))
+            {
+                throw new InvalidOperationException(
+                    "The backup payload manifest contains an invalid or duplicate entry.");
+            }
+        }
+
+        if (manifestBySha.Count != databasePayloads.Count)
+        {
+            throw new InvalidOperationException(
+                "The backup payload manifest is incomplete or contains extra entries.");
+        }
+
+        foreach (BackupPayloadManifest databasePayload in databasePayloads)
+        {
+            if (!IsCanonicalSha256(databasePayload.Sha256)
+                || databasePayload.ByteLength < 0
+                || !string.Equals(
+                    databasePayload.RelativePath,
+                    CanonicalPayloadRelativePath(databasePayload.Sha256),
+                    StringComparison.Ordinal)
+                || !manifestBySha.TryGetValue(
+                    databasePayload.Sha256,
+                    out BackupPayloadManifest? manifestPayload)
+                || manifestPayload.ByteLength != databasePayload.ByteLength
+                || !string.Equals(
+                    manifestPayload.RelativePath,
+                    databasePayload.RelativePath,
+                    StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException(
+                    "The backup payload manifest does not match the database payload registry.");
+            }
+        }
+    }
+
+    private static void ValidatePayloadFiles(
+        string payloadRoot,
+        IReadOnlyList<BackupPayloadManifest> payloads)
+    {
+        foreach (BackupPayloadManifest payload in payloads)
+        {
+            string path = PayloadPath(payloadRoot, payload.Sha256);
+            if (!File.Exists(path))
+            {
+                throw new InvalidOperationException("A referenced backup payload is missing.");
+            }
+
+            FileInfo file = new(path);
+            if (file.Length != payload.ByteLength
+                || !string.Equals(HashFile(path), payload.Sha256, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException(
+                    "A referenced backup payload has an invalid length or fingerprint.");
+            }
+        }
+    }
+
+    private static string PayloadPath(string payloadRoot, string sha256) =>
+        Path.Combine(payloadRoot, sha256[..2], sha256[2..4], sha256);
+
+    private static string CanonicalPayloadRelativePath(string sha256) =>
+        $"payloads/{sha256[..2]}/{sha256[2..4]}/{sha256}";
+
+    private static void ValidateManifestBinding(SqliteBindingIdentity binding)
+    {
+        SqliteBindingIdentity required = new(
+            SqliteRuntimeIdentity.RequiredVersion,
+            SqliteRuntimeIdentity.RequiredSourceId,
+            SqliteRuntimeIdentity.RequiredWinX64NativeSha256,
+            binding.CompileOptions);
+        if (!BindingEquals(binding, required)
+            || !binding.CompileOptions.Contains("THREADSAFE=1", StringComparer.Ordinal)
+            || !binding.CompileOptions.Contains(
+                "DEFAULT_WAL_SYNCHRONOUS=2",
+                StringComparer.Ordinal))
+        {
+            throw new InvalidOperationException(
+                "The backup manifest SQLite identity is incompatible.");
+        }
+    }
+
+    private static bool BindingEquals(
+        SqliteBindingIdentity first,
+        SqliteBindingIdentity second) =>
+        string.Equals(first.Version, second.Version, StringComparison.Ordinal)
+        && string.Equals(first.SourceId, second.SourceId, StringComparison.Ordinal)
+        && string.Equals(first.NativeSha256, second.NativeSha256, StringComparison.Ordinal)
+        && first.CompileOptions.SequenceEqual(second.CompileOptions, StringComparer.Ordinal);
+
+    private static bool IsCanonicalSha256(string value) =>
+        value is not null
+        && value.Length == 64
+        && value.All(ch => ch is >= '0' and <= '9' or >= 'a' and <= 'f');
 
     private void ApplyMigrations()
     {
@@ -986,9 +2110,11 @@ public sealed class AuthoritativeStore : IDisposable
             {
                 using var transaction = connection.BeginTransaction();
                 Execute(SchemaV1, transaction);
+                string schemaFingerprint = ComputeSchemaFingerprint(connection, transaction);
                 Execute(
                     """
                     INSERT INTO store_metadata(key, value) VALUES ('schema_version', '1');
+                    INSERT INTO store_metadata(key, value) VALUES ('schema_fingerprint', $schema_fingerprint);
                     INSERT INTO store_metadata(key, value) VALUES ('storage_contract_version', '1.0.0');
                     INSERT INTO store_metadata(key, value) VALUES ('sqlite_version', $sqlite_version);
                     INSERT INTO store_metadata(key, value) VALUES ('sqlite_source_id', $sqlite_source);
@@ -998,6 +2124,7 @@ public sealed class AuthoritativeStore : IDisposable
                     PRAGMA user_version = 1;
                     """,
                     transaction,
+                    ("$schema_fingerprint", schemaFingerprint),
                     ("$sqlite_version", BindingIdentity.Version),
                     ("$sqlite_source", BindingIdentity.SourceId),
                     ("$now", ToText(DateTimeOffset.UtcNow)));
@@ -1051,8 +2178,16 @@ public sealed class AuthoritativeStore : IDisposable
               AND a.run_id = $run
               AND a.coordinator_fencing_epoch = $epoch
               AND a.attempt_fencing_token = $token
+              AND a.attempt_fencing_token = (
+                  SELECT MAX(newest.attempt_fencing_token)
+                  FROM attempts newest
+                  WHERE newest.run_id = a.run_id)
               AND a.lease_expires_at >= $now
               AND r.coordinator_fencing_epoch <= $epoch
+              AND a.coordinator_fencing_epoch = (
+                  SELECT CAST(value AS INTEGER)
+                  FROM store_metadata
+                  WHERE key = 'active_coordinator_epoch')
               AND r.lifecycle_state IN ('Running','Waiting')
               AND a.outcome = 'running';
             """;
@@ -1064,6 +2199,32 @@ public sealed class AuthoritativeStore : IDisposable
         if (Convert.ToInt32(command.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
         {
             throw new InvalidOperationException("The worker attempt is stale, expired, or already settled.");
+        }
+    }
+
+    private void EnsureCurrentCoordinatorEpoch(
+        long coordinatorFencingEpoch,
+        SqliteTransaction transaction)
+    {
+        long current = ScalarLong(
+            """
+            SELECT CASE WHEN EXISTS (
+                SELECT 1
+                FROM coordinator_leases lease
+                JOIN store_metadata metadata
+                  ON metadata.key = 'active_coordinator_epoch'
+                 AND CAST(metadata.value AS INTEGER) = lease.fencing_epoch
+                WHERE lease.fencing_epoch = $epoch
+                  AND lease.expires_at >= $now
+            ) THEN 1 ELSE 0 END;
+            """,
+            transaction,
+            ("$epoch", coordinatorFencingEpoch),
+            ("$now", ToText(DateTimeOffset.UtcNow)));
+        if (current != 1)
+        {
+            throw new InvalidOperationException(
+                "The coordinator fencing epoch is stale or its lease has expired.");
         }
     }
 
@@ -1143,6 +2304,92 @@ public sealed class AuthoritativeStore : IDisposable
         return value is null or DBNull ? null : Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture);
     }
 
+    private void RecordWriteClassAuthorityBindings(DateTimeOffset now)
+    {
+        lock (gate)
+        {
+            using SqliteTransaction transaction = connection.BeginTransaction();
+            foreach (ProductWriteClass writeClass in Enum.GetValues<ProductWriteClass>())
+            {
+                InsertAuditEvent(
+                    "write-class-authority-bound",
+                    "write-class",
+                    writeClass.ToString(),
+                    now,
+                    transaction);
+            }
+
+            transaction.Commit();
+        }
+    }
+
+    private void InsertAuditEvent(
+        string eventKind,
+        string objectKind,
+        string objectId,
+        DateTimeOffset now,
+        SqliteTransaction transaction)
+    {
+        Execute(
+            """
+            INSERT INTO audit_events(
+                audit_event_id, event_kind, object_kind, object_id,
+                detail_payload_id, occurred_at)
+            VALUES ($id, $event, $kind, $object, NULL, $now);
+            """,
+            transaction,
+            ("$id", Guid.NewGuid().ToString("N")),
+            ("$event", eventKind),
+            ("$kind", objectKind),
+            ("$object", objectId),
+            ("$now", ToText(now)));
+    }
+
+    private static void AppendRestoreAudit(
+        string databasePath,
+        string authorityIdentity,
+        DateTimeOffset now)
+    {
+        using SqliteConnection restored = new(new SqliteConnectionStringBuilder
+        {
+            DataSource = databasePath,
+            Mode = SqliteOpenMode.ReadWrite,
+            Cache = SqliteCacheMode.Private,
+            Pooling = false,
+        }.ToString());
+        restored.Open();
+        ConfigureConnection(restored);
+        using SqliteTransaction transaction = restored.BeginTransaction();
+        using SqliteCommand command = restored.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText =
+            """
+            INSERT INTO audit_events(
+                audit_event_id, event_kind, object_kind, object_id,
+                detail_payload_id, occurred_at)
+            VALUES ($id, 'restore-completed', 'product-root', $object, NULL, $now);
+            """;
+        command.Parameters.AddWithValue("$id", Guid.NewGuid().ToString("N"));
+        command.Parameters.AddWithValue("$object", authorityIdentity);
+        command.Parameters.AddWithValue("$now", ToText(now));
+        command.ExecuteNonQuery();
+        transaction.Commit();
+    }
+
+    private static void ValidateAuditToken(string value, string parameterName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(value, parameterName);
+        if (value.Length > 64
+            || value.Any(character =>
+                !char.IsAsciiLetterOrDigit(character)
+                && character is not '-' and not '_'))
+        {
+            throw new ArgumentException(
+                "Audit tokens must contain 1-64 ASCII letters, digits, hyphens, or underscores.",
+                parameterName);
+        }
+    }
+
     private static void ValidateBinding(RunBinding binding)
     {
         ArgumentNullException.ThrowIfNull(binding);
@@ -1150,6 +2397,37 @@ public sealed class AuthoritativeStore : IDisposable
         ArgumentException.ThrowIfNullOrWhiteSpace(binding.AnalysisContextId);
         ArgumentException.ThrowIfNullOrWhiteSpace(binding.EffectiveScanConfigurationId);
         ArgumentException.ThrowIfNullOrWhiteSpace(binding.ResolvedInputManifestId);
+    }
+
+    private static void ValidateBoundedJson(string value, string parameterName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(value, parameterName);
+        if (Encoding.UTF8.GetByteCount(value) > MaximumCheckpointJsonBytes)
+        {
+            throw new ArgumentException(
+                "Checkpoint JSON exceeds its finite byte bound.",
+                parameterName);
+        }
+
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(
+                value,
+                new JsonDocumentOptions
+                {
+                    AllowTrailingCommas = false,
+                    CommentHandling = JsonCommentHandling.Disallow,
+                    MaxDepth = 32,
+                });
+            _ = document.RootElement.ValueKind;
+        }
+        catch (JsonException exception)
+        {
+            throw new ArgumentException(
+                "Checkpoint JSON must be a finite valid JSON value.",
+                parameterName,
+                exception);
+        }
     }
 
     private static void ValidateSha256(string value)
@@ -1181,6 +2459,72 @@ public sealed class AuthoritativeStore : IDisposable
         using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
         return Convert.ToHexString(SHA256.HashData(stream)).ToLowerInvariant();
     }
+
+    private sealed record BackupManifest(
+        [property: JsonPropertyName("schemaVersion")] int SchemaVersion,
+        [property: JsonPropertyName("sqlite")] SqliteBindingIdentity Sqlite,
+        [property: JsonPropertyName("databaseSha256")] string DatabaseSha256,
+        [property: JsonPropertyName("payloads")] IReadOnlyList<BackupPayloadManifest> Payloads,
+        [property: JsonPropertyName("createdAt")] DateTimeOffset CreatedAt);
+
+    private sealed record BackupPayloadManifest(
+        [property: JsonPropertyName("sha256")] string Sha256,
+        [property: JsonPropertyName("byteLength")] long ByteLength,
+        [property: JsonPropertyName("relativePath")] string RelativePath);
+
+    private sealed record ValidatedBackup(BackupManifest Manifest);
+
+    private static readonly HashSet<string> RequiredSchemaObjects =
+    [
+        "index:idx_attempts_run",
+        "index:idx_attempts_one_live_per_run",
+        "index:idx_events_run_sequence",
+        "index:idx_findings_signature",
+        "index:idx_lineage_successor",
+        "index:idx_reconciliation_successor",
+        "index:idx_runs_created",
+        "index:idx_runs_dispatch",
+        "table:attempts",
+        "table:audit_events",
+        "table:case_occurrences",
+        "table:checkpoints",
+        "table:coordinator_leases",
+        "table:durable_commands",
+        "table:finding_occurrences",
+        "table:job_nodes",
+        "table:lifecycle_events",
+        "table:lineage_events",
+        "table:logical_cases",
+        "table:logical_findings",
+        "table:migration_history",
+        "table:payload_owners",
+        "table:payloads",
+        "table:publication_receipt_payloads",
+        "table:publication_receipts",
+        "table:reconciliation_assessments",
+        "table:run_projection",
+        "table:runs",
+        "table:store_metadata",
+        "trigger:lifecycle_events_append_only_delete",
+        "trigger:lifecycle_events_append_only_update",
+        "trigger:audit_events_append_only_delete",
+        "trigger:audit_events_append_only_update",
+        "trigger:case_occurrences_append_only_delete",
+        "trigger:case_occurrences_append_only_update",
+        "trigger:checkpoints_append_only_delete",
+        "trigger:checkpoints_append_only_update",
+        "trigger:durable_commands_append_only_delete",
+        "trigger:durable_commands_append_only_update",
+        "trigger:finding_occurrences_append_only_delete",
+        "trigger:finding_occurrences_append_only_update",
+        "trigger:lineage_append_only_delete",
+        "trigger:lineage_append_only_update",
+        "trigger:publication_receipts_append_only_delete",
+        "trigger:publication_receipts_append_only_update",
+        "trigger:reconciliation_append_only_delete",
+        "trigger:reconciliation_append_only_update",
+        "trigger:runs_immutable_binding",
+    ];
 
     private const string SchemaV1 =
         """
@@ -1254,7 +2598,19 @@ public sealed class AuthoritativeStore : IDisposable
             disposition TEXT NOT NULL,
             resulting_state TEXT NOT NULL,
             transition_id TEXT REFERENCES lifecycle_events(transition_id) ON DELETE RESTRICT,
-            created_at TEXT NOT NULL
+            created_at TEXT NOT NULL,
+            start_initiation_kind TEXT,
+            start_dispatch_deadline TEXT,
+            CHECK (
+                (command_kind = 'start'
+                 AND ((start_initiation_kind IS NULL AND start_dispatch_deadline IS NULL)
+                      OR (start_initiation_kind IS NOT NULL
+                          AND start_dispatch_deadline IS NOT NULL)))
+                OR
+                (command_kind <> 'start'
+                 AND start_initiation_kind IS NULL
+                 AND start_dispatch_deadline IS NULL)
+            )
         ) STRICT;
         CREATE TABLE attempts(
             attempt_id TEXT PRIMARY KEY,
@@ -1403,9 +2759,36 @@ public sealed class AuthoritativeStore : IDisposable
         BEFORE UPDATE ON lineage_events BEGIN SELECT RAISE(ABORT, 'append-only history'); END;
         CREATE TRIGGER lineage_append_only_delete
         BEFORE DELETE ON lineage_events BEGIN SELECT RAISE(ABORT, 'append-only history'); END;
+        CREATE TRIGGER audit_events_append_only_update
+        BEFORE UPDATE ON audit_events BEGIN SELECT RAISE(ABORT, 'append-only history'); END;
+        CREATE TRIGGER audit_events_append_only_delete
+        BEFORE DELETE ON audit_events BEGIN SELECT RAISE(ABORT, 'append-only history'); END;
+        CREATE TRIGGER durable_commands_append_only_update
+        BEFORE UPDATE ON durable_commands BEGIN SELECT RAISE(ABORT, 'append-only history'); END;
+        CREATE TRIGGER durable_commands_append_only_delete
+        BEFORE DELETE ON durable_commands BEGIN SELECT RAISE(ABORT, 'append-only history'); END;
+        CREATE TRIGGER checkpoints_append_only_update
+        BEFORE UPDATE ON checkpoints BEGIN SELECT RAISE(ABORT, 'append-only history'); END;
+        CREATE TRIGGER checkpoints_append_only_delete
+        BEFORE DELETE ON checkpoints BEGIN SELECT RAISE(ABORT, 'append-only history'); END;
+        CREATE TRIGGER publication_receipts_append_only_update
+        BEFORE UPDATE ON publication_receipts BEGIN SELECT RAISE(ABORT, 'append-only history'); END;
+        CREATE TRIGGER publication_receipts_append_only_delete
+        BEFORE DELETE ON publication_receipts BEGIN SELECT RAISE(ABORT, 'append-only history'); END;
+        CREATE TRIGGER finding_occurrences_append_only_update
+        BEFORE UPDATE ON finding_occurrences BEGIN SELECT RAISE(ABORT, 'append-only history'); END;
+        CREATE TRIGGER finding_occurrences_append_only_delete
+        BEFORE DELETE ON finding_occurrences BEGIN SELECT RAISE(ABORT, 'append-only history'); END;
+        CREATE TRIGGER case_occurrences_append_only_update
+        BEFORE UPDATE ON case_occurrences BEGIN SELECT RAISE(ABORT, 'append-only history'); END;
+        CREATE TRIGGER case_occurrences_append_only_delete
+        BEFORE DELETE ON case_occurrences BEGIN SELECT RAISE(ABORT, 'append-only history'); END;
         CREATE INDEX idx_runs_created ON runs(created_at, run_id);
+        CREATE INDEX idx_runs_dispatch ON runs(lifecycle_state, created_at, run_id);
         CREATE INDEX idx_events_run_sequence ON lifecycle_events(run_id, durable_sequence);
         CREATE INDEX idx_attempts_run ON attempts(run_id, attempt_generation);
+        CREATE UNIQUE INDEX idx_attempts_one_live_per_run
+        ON attempts(run_id) WHERE outcome = 'running';
         CREATE INDEX idx_findings_signature ON finding_occurrences(
             analyzer_family, identity_contract_version, canonical_signature);
         CREATE INDEX idx_reconciliation_successor ON reconciliation_assessments(

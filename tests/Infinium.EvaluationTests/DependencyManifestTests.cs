@@ -74,11 +74,21 @@ public sealed class DependencyManifestTests
         {
             Assert.IsFalse(string.IsNullOrWhiteSpace(package.GetProperty("id").GetString()));
             Assert.IsFalse(string.IsNullOrWhiteSpace(package.GetProperty("version").GetString()));
-            Assert.IsFalse(string.IsNullOrWhiteSpace(package.GetProperty("license").GetString()));
+            string license = package.GetProperty("license").GetString()!;
+            Assert.IsFalse(string.IsNullOrWhiteSpace(license));
+            Assert.AreNotEqual(
+                "Package license file:",
+                license.Trim(),
+                $"{package.GetProperty("id").GetString()} has an empty license-file classification.");
         }
 
-        IEnumerable<string> groupedProvenance = root.GetProperty("provenanceGroups")
+        JsonElement[] provenanceGroups = root.GetProperty("provenanceGroups")
             .EnumerateArray()
+            .ToArray();
+        Assert.IsNotEmpty(
+            provenanceGroups,
+            "Accepted repository-level provenance groups must survive deterministic regeneration.");
+        IEnumerable<string> groupedProvenance = provenanceGroups
             .SelectMany(group => group.GetProperty("packages").EnumerateArray())
             .Select(package => package.GetString()!);
         IEnumerable<string> individualProvenance = root.GetProperty("individuallyVerifiedProvenance")
@@ -90,13 +100,53 @@ public sealed class DependencyManifestTests
         string[] provenanceCoverage = groupedProvenance
             .Concat(individualProvenance)
             .Concat(explicitLimitations)
-            .Distinct(StringComparer.Ordinal)
             .ToArray();
         string[] resolvedIdentities = resolvedPackages
             .Select(package => $"{package.GetProperty("id").GetString()}/{package.GetProperty("version").GetString()}")
             .ToArray();
 
         CollectionAssert.AreEquivalent(resolvedIdentities, provenanceCoverage);
+    }
+
+    [TestMethod]
+    [TestCategory("M1Evaluation")]
+    [TestProperty("Category", "M1Evaluation")]
+    public void DependencyManifestPreservesCuratedLicensesAndActualPackageHashes()
+    {
+        using JsonDocument manifest = TestRepository.ReadJson("dependencies", "dependency-manifest.json");
+        using JsonDocument curation = TestRepository.ReadJson("dependencies", "dependency-curation.json");
+        Dictionary<string, string> manifestLicenses = manifest.RootElement
+            .GetProperty("resolvedPackages")
+            .EnumerateArray()
+            .ToDictionary(
+                package => $"{package.GetProperty("id").GetString()}/{package.GetProperty("version").GetString()}",
+                package => package.GetProperty("license").GetString()!,
+                StringComparer.Ordinal);
+
+        foreach (JsonProperty curatedLicense in curation.RootElement.GetProperty("licenses").EnumerateObject())
+        {
+            Assert.IsTrue(
+                manifestLicenses.TryGetValue(curatedLicense.Name, out string? actualLicense),
+                $"Curated package '{curatedLicense.Name}' is absent from the resolved manifest.");
+            Assert.AreEqual(curatedLicense.Value.GetString(), actualLicense, curatedLicense.Name);
+        }
+
+        foreach (JsonElement package in manifest.RootElement.GetProperty("directPackages").EnumerateArray())
+        {
+            string id = package.GetProperty("id").GetString()!;
+            string version = package.GetProperty("version").GetString()!;
+            string packageDirectory = Path.Combine(
+                TestRepository.Root,
+                ".packages",
+                id.ToLowerInvariant(),
+                version);
+            string shaPath = Directory.EnumerateFiles(packageDirectory, "*.nupkg.sha512").Single();
+            string actualSha512 = File.ReadAllText(shaPath).Trim();
+            Assert.AreEqual(
+                package.GetProperty("nupkgSha512").GetString(),
+                actualSha512,
+                $"{id}/{version}");
+        }
     }
 
     [TestMethod]

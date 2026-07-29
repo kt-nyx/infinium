@@ -1,0 +1,192 @@
+{
+  "fixture_id": "M1-PLAT-SLICE2-SUBSTRATE-v1",
+  "fixture_version": "1.0.0",
+  "oracle_version": "1.0.0",
+  "independent_authors_and_reviewers": [
+    "infinium-evaluation-review"
+  ],
+  "ground_truth_methods": [
+    {
+      "method_id": "accepted-plan-contract-review",
+      "method": "Independent comparison of observable substrate behavior with the accepted M1 plan and accepted architecture contracts.",
+      "evidence_references": [
+        {
+          "artifact_id": "accepted-m1-plan",
+          "artifact_version": "1.0.0",
+          "fingerprint": "65614f8df1000fc75fccdb7075dea8894aa52587120ce40f7d750d0d1ad7a2f3",
+          "availability": "retained"
+        }
+      ],
+      "independent_of_system_under_test": true
+    }
+  ],
+  "expected_observations": [],
+  "expected_deterministic_results": [
+    {
+      "expected_id": "expected-lifecycle-substrate",
+      "subject_id": "M1-PLAT-LIFECYCLE-v1",
+      "expected_type": "deterministic-result",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "accepted-plan-contract-review"
+      ],
+      "canonical_value_fingerprint": "cc351d820bd003e6bd69f437c9983a911f2f1ca62859c6fa371fdde022dfde39"
+    },
+    {
+      "expected_id": "expected-lineage-substrate",
+      "subject_id": "M1-PLAT-LINEAGE-v1",
+      "expected_type": "deterministic-result",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "accepted-plan-contract-review"
+      ],
+      "canonical_value_fingerprint": "db828d74c957ef2e20794f929675a5a59b9fd9a63e8f30876eac9488c0e12bbc"
+    },
+    {
+      "expected_id": "expected-write-boundary-substrate",
+      "subject_id": "M1-PLAT-WRITES-v1",
+      "expected_type": "deterministic-result",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "accepted-plan-contract-review"
+      ],
+      "canonical_value_fingerprint": "08a586d25754b6f3d3914b053acfe285e34602707605eadeac5d99a0f980f704"
+    },
+    {
+      "expected_id": "expected-persistence-substrate",
+      "subject_id": "M1-PLAT-PERSIST-v1",
+      "expected_type": "deterministic-result",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "accepted-plan-contract-review"
+      ],
+      "canonical_value_fingerprint": "0b38b659466bb76c528b9a01e7803562cb40044fd4057fe0f48900394b518038"
+    },
+    {
+      "expected_id": "expected-ipc-substrate",
+      "subject_id": "M1-PLAT-IPC-v1",
+      "expected_type": "deterministic-result",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "accepted-plan-contract-review"
+      ],
+      "canonical_value_fingerprint": "fd8e2747535820315a7637f4bb83a374ac6964d1ec5893a2fbb29e3f6813f0a7"
+    }
+  ],
+  "expected_external_claims": [],
+  "expected_application_links": [],
+  "expected_discovery_leads": [],
+  "expected_model_proposals": [],
+  "expected_proposal_admissions": [],
+  "expected_candidates": [],
+  "expected_hypotheses": [],
+  "expected_findings": [],
+  "expected_recommendations": [],
+  "expected_supported_cases": [],
+  "expected_lead_only_cases": [],
+  "expected_abstentions": [],
+  "expected_invalid_inputs": [],
+  "expected_failures": [],
+  "expected_coverage_and_gaps": [
+    {
+      "expected_id": "expected-complete-case-gap",
+      "subject_id": "complete-M1-evaluation-case",
+      "expected_type": "coverage-gap",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "accepted-plan-contract-review"
+      ],
+      "canonical_value_fingerprint": "110027e4266e17fe85592f442ba49075cd34b9c75c05c13e43ed1c06e7fa3b96"
+    }
+  ],
+  "expected_collection_states": {
+    "observations": {
+      "state": "empty",
+      "reason": "No semantic observations are produced by this substrate fixture."
+    },
+    "deterministic_results": {
+      "state": "populated",
+      "reason": "Each Slice 2 platform family has a preregistered deterministic substrate expectation."
+    },
+    "external_claims": {
+      "state": "empty",
+      "reason": "The fixture makes no external claims."
+    },
+    "application_links": {
+      "state": "empty",
+      "reason": "Application links are outside Slice 2."
+    },
+    "discovery_leads": {
+      "state": "empty",
+      "reason": "Discovery leads are outside Slice 2."
+    },
+    "model_proposals": {
+      "state": "empty",
+      "reason": "No model use is authorized or required."
+    },
+    "proposal_admissions": {
+      "state": "empty",
+      "reason": "No model proposals are produced."
+    },
+    "candidates": {
+      "state": "empty",
+      "reason": "Semantic candidates are outside Slice 2."
+    },
+    "hypotheses": {
+      "state": "empty",
+      "reason": "Semantic hypotheses are outside Slice 2."
+    },
+    "findings": {
+      "state": "empty",
+      "reason": "Semantic findings are outside Slice 2."
+    },
+    "recommendations": {
+      "state": "empty",
+      "reason": "Recommendations are outside Slice 2."
+    },
+    "supported_cases": {
+      "state": "empty",
+      "reason": "No complete accepted evaluation case is claimed."
+    },
+    "lead_only_cases": {
+      "state": "empty",
+      "reason": "Lead-only semantic cases are outside Slice 2."
+    },
+    "abstentions": {
+      "state": "empty",
+      "reason": "No analyzer decision is made by this substrate fixture."
+    },
+    "invalid_inputs": {
+      "state": "empty",
+      "reason": "Malformed inputs are covered by mutation tests rather than the accepted package."
+    },
+    "coverage_gaps": {
+      "state": "populated",
+      "reason": "The fixture explicitly preserves the gap between Slice 2 substrate coverage and complete accepted M1 cases."
+    },
+    "failures": {
+      "state": "empty",
+      "reason": "The accepted package describes successful substrate execution."
+    }
+  },
+  "expected_taxonomy_assignments": [],
+  "expected_replayability": "complete-clean",
+  "forbidden_claims": [
+    {
+      "claim_id": "forbid-complete-case-pass",
+      "claim_type": "complete-evaluation-case-passed",
+      "reason": "Slice 2 implements only plan-declared platform substrate portions."
+    },
+    {
+      "claim_id": "forbid-provider-use",
+      "claim_type": "live-provider-execution",
+      "reason": "The fixture is local, deterministic, and answer-isolated."
+    }
+  ],
+  "known_limits": [
+    "This package evaluates the Slice 2 substrate only and is not evidence that a complete accepted M1 evaluation case passed.",
+    "No real installation, mod, provider, credential, or protected root is used."
+  ],
+  "pre_registered_at": "2026-07-29T00:00:00.0000000+00:00",
+  "change_history": []
+}

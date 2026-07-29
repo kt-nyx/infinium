@@ -61,8 +61,10 @@ internal static class ProtoMapping
                 new DomainProto.ScanConfigurationId { Value = run.Binding.EffectiveScanConfigurationId },
             ResolvedInputManifestId =
                 new DomainProto.ResolvedInputManifestId { Value = run.Binding.ResolvedInputManifestId },
-            ReplayabilityState = DomainProto.ReplayabilityState.AuditOnly,
-            AuditabilityState = DomainProto.AuditabilityState.Complete,
+            // Slice 2 retains lifecycle and publication authority, but not the complete
+            // input/dependency set required to promise a replay.
+            ReplayabilityState = DomainProto.ReplayabilityState.Unavailable,
+            AuditabilityState = DomainProto.AuditabilityState.CompleteWithGaps,
             ProjectionVersion = new DomainProto.ProjectionVersion { Value = "1" },
         };
 
@@ -76,11 +78,19 @@ internal static class ProtoMapping
                 Availability = Common.AvailabilityState.Available,
                 Value = 1,
             },
-            CompletedUnits = state is DomainContracts.LifecycleState.Completed
-                or DomainContracts.LifecycleState.CompletedWithGaps ? 1UL : 0UL,
-            QueuedUnits = state is DomainContracts.LifecycleState.Queued ? 1UL : 0UL,
-            RunningUnits = state is DomainContracts.LifecycleState.Running ? 1UL : 0UL,
+            CompletedUnits = state is DomainContracts.LifecycleState.Completed ? 1UL : 0UL,
+            QueuedUnits = state is DomainContracts.LifecycleState.Queued
+                or DomainContracts.LifecycleState.Waiting
+                or DomainContracts.LifecycleState.Retrying
+                or DomainContracts.LifecycleState.Paused ? 1UL : 0UL,
+            RunningUnits = state is DomainContracts.LifecycleState.Running
+                or DomainContracts.LifecycleState.Pausing
+                or DomainContracts.LifecycleState.Cancelling ? 1UL : 0UL,
             FailedUnits = state is DomainContracts.LifecycleState.Failed ? 1UL : 0UL,
+            SkippedUnits = state is DomainContracts.LifecycleState.Cancelled ? 1UL : 0UL,
+            UnsupportedUnits = state is DomainContracts.LifecycleState.Unspecified ? 1UL : 0UL,
+            LimitedUnits = state is DomainContracts.LifecycleState.LimitReached ? 1UL : 0UL,
+            InvalidatedUnits = state is DomainContracts.LifecycleState.InvalidatedByChangedInput ? 1UL : 0UL,
             GapUnits = state is DomainContracts.LifecycleState.CompletedWithGaps ? 1UL : 0UL,
         };
 

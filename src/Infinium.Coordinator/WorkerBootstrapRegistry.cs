@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Text;
 using Google.Protobuf;
 using Infinium.Application.Runtime;
 using Infinium.Contracts.Protobuf.Common.V1;
@@ -8,6 +9,12 @@ using Infinium.Contracts.Protobuf.Worker.V1;
 using Infinium.Persistence;
 
 namespace Infinium.Coordinator;
+
+public sealed record StagedOutputAcceptance(
+    string ReceiptId,
+    WorkerReceiptDisposition Disposition);
+
+public sealed record TerminalReceiptAcceptance(WorkerReceiptDisposition Disposition);
 
 public sealed class WorkerBootstrapRegistry
 {
@@ -139,7 +146,85 @@ public sealed class WorkerBootstrapRegistry
         return assignment;
     }
 
-    public string AcceptStagedOutput(
+    public WorkerProgressReceipt AcceptProgress(
+        WorkerProgress request,
+        string connectionId,
+        CoordinatorRuntime runtime)
+    {
+        Registration? registration = registrations.Values.SingleOrDefault(candidate =>
+            candidate.Bootstrap.AttemptId == request.AttemptId?.Value);
+        if (registration is null)
+        {
+            return RejectProgress(
+                WorkerReceiptDisposition.RejectedStaleFence,
+                0,
+                FailureCode.StaleFence,
+                "The progress attempt is unknown.");
+        }
+
+        lock (registration.Gate)
+        {
+            if (!IsCurrentAttempt(
+                    registration,
+                    request.CoordinatorFencingEpoch,
+                    request.AttemptFencingToken,
+                    connectionId,
+                    runtime))
+            {
+                return RejectProgress(
+                    WorkerReceiptDisposition.RejectedStaleFence,
+                    registration.LastProgressSequence,
+                    FailureCode.StaleFence,
+                    "The progress attempt is stale.");
+            }
+
+            if (request.ProgressSequence != registration.LastProgressSequence + 1)
+            {
+                return RejectProgress(
+                    WorkerReceiptDisposition.RejectedAssignmentMismatch,
+                    registration.LastProgressSequence,
+                    FailureCode.InvalidArgument,
+                    "Progress sequences must be contiguous and strictly increasing.");
+            }
+
+            int statusByteCount = Encoding.UTF8.GetByteCount(request.InertStatusText);
+            if (registration.ProgressUpdateCount >= 8
+                || request.CompletedWorkUnits > 1
+                || statusByteCount > 4096 - registration.DiagnosticByteCount)
+            {
+                return RejectProgress(
+                    WorkerReceiptDisposition.RejectedLimit,
+                    registration.LastProgressSequence,
+                    FailureCode.LimitExceeded,
+                    "The progress update exceeds an assignment limit.");
+            }
+
+            if (request.TotalWorkUnits is null
+                || request.TotalWorkUnits.Availability != AvailabilityState.Available
+                || request.TotalWorkUnits.Value != 1
+                || request.CompletedWorkUnits > request.TotalWorkUnits.Value
+                || request.CompletedWorkUnits < registration.LastCompletedWorkUnits)
+            {
+                return RejectProgress(
+                    WorkerReceiptDisposition.RejectedAssignmentMismatch,
+                    registration.LastProgressSequence,
+                    FailureCode.InvalidArgument,
+                    "The progress work-unit report does not match the assignment.");
+            }
+
+            registration.LastProgressSequence = request.ProgressSequence;
+            registration.LastCompletedWorkUnits = request.CompletedWorkUnits;
+            registration.ProgressUpdateCount++;
+            registration.DiagnosticByteCount += statusByteCount;
+            return new WorkerProgressReceipt
+            {
+                Disposition = WorkerReceiptDisposition.AcceptedForStagingOnly,
+                AcceptedProgressSequence = request.ProgressSequence,
+            };
+        }
+    }
+
+    public StagedOutputAcceptance AcceptStagedOutput(
         SubmitStagedOutputRequest request,
         string connectionId)
     {
@@ -153,10 +238,6 @@ public sealed class WorkerBootstrapRegistry
             RequireConnection(registration, connectionId);
             ManagedWorkerBootstrap expected = registration.Bootstrap;
             StagedOutputManifest manifest = request.Manifest;
-            if (registration.StagingReceiptId is not null)
-            {
-                return registration.StagingReceiptId;
-            }
 
             if (manifest.StagingAreaId?.Value != expected.StagingAreaId
                 || manifest.CoordinatorFencingEpoch
@@ -173,13 +254,19 @@ public sealed class WorkerBootstrapRegistry
                 || output.Kind != StagedArtifactKind.TypedResult
                 || output.Content?.Algorithm != DigestAlgorithm.Sha256
                 || output.Content.Value.Length != 32
-                || output.Content.SizeBytes > checked((ulong)expected.MaximumOutputBytes))
+                || output.Content.SizeBytes > checked((ulong)expected.MaximumOutputBytes)
+                || output.SchemaVersion?.Value != ManagedWorkerManifest.OutputSchemaVersion)
             {
                 throw new InvalidOperationException("The staged output is malformed or outside its slot.");
             }
 
             string outputSha256 =
                 Convert.ToHexString(output.Content.Value.Span).ToLowerInvariant();
+            byte[] canonicalManifest = ManagedWorkerManifest.GetCanonicalBytes(
+                expected.StagedArtifactId,
+                expected.OutputRelativeName,
+                outputSha256,
+                checked((long)output.Content.SizeBytes));
             byte[] expectedManifestDigest = ManagedWorkerManifest.ComputeDigest(
                 expected.StagedArtifactId,
                 expected.OutputRelativeName,
@@ -188,10 +275,30 @@ public sealed class WorkerBootstrapRegistry
             if (manifest.ManifestDigest?.Algorithm != DigestAlgorithm.Sha256
                 || manifest.ManifestDigest.Value.Length != expectedManifestDigest.Length
                 || manifest.ManifestDigest.SizeBytes
-                    != checked((ulong)expectedManifestDigest.Length)
+                    != checked((ulong)canonicalManifest.LongLength)
                 || !manifest.ManifestDigest.Value.Span.SequenceEqual(expectedManifestDigest))
             {
                 throw new InvalidOperationException("The staged manifest digest is invalid.");
+            }
+
+            if (registration.StagingReceiptId is not null)
+            {
+                if (registration.AcceptedManifest is null
+                    || !registration.AcceptedManifest.Equals(manifest))
+                {
+                    throw new InvalidOperationException(
+                        "A staged receipt may be replayed only with the exact accepted manifest.");
+                }
+
+                return new StagedOutputAcceptance(
+                    registration.StagingReceiptId,
+                    WorkerReceiptDisposition.Duplicate);
+            }
+
+            if (registration.TerminalAccepted)
+            {
+                throw new InvalidOperationException(
+                    "A staged manifest cannot be accepted after a terminal receipt.");
             }
 
             registration.Result = new ManagedWorkerResult(
@@ -202,13 +309,17 @@ public sealed class WorkerBootstrapRegistry
                 expected.AttemptFencingToken,
                 expected.OutputRelativeName,
                 outputSha256,
-                checked((long)output.Content.SizeBytes));
+                checked((long)output.Content.SizeBytes),
+                Convert.ToHexString(expectedManifestDigest).ToLowerInvariant());
+            registration.AcceptedManifest = manifest.Clone();
             registration.StagingReceiptId = Guid.NewGuid().ToString("N");
-            return registration.StagingReceiptId;
+            return new StagedOutputAcceptance(
+                registration.StagingReceiptId,
+                WorkerReceiptDisposition.AcceptedForStagingOnly);
         }
     }
 
-    public ManagedWorkerResult AcceptTerminal(
+    public TerminalReceiptAcceptance AcceptTerminal(
         WorkerTerminalReceipt request,
         string connectionId)
     {
@@ -221,18 +332,38 @@ public sealed class WorkerBootstrapRegistry
         {
             RequireConnection(registration, connectionId);
             ManagedWorkerBootstrap expected = registration.Bootstrap;
+            if (registration.TerminalAccepted)
+            {
+                if (registration.AcceptedTerminal is null
+                    || !registration.AcceptedTerminal.Equals(request))
+                {
+                    throw new InvalidOperationException(
+                        "A terminal receipt may be replayed only with the exact accepted receipt.");
+                }
+
+                return new TerminalReceiptAcceptance(WorkerReceiptDisposition.Duplicate);
+            }
+
+            bool completed = request.Outcome == WorkerTerminalOutcome.CompletedStaged
+                && request.StagingReceiptId == registration.StagingReceiptId
+                && registration.Result is not null;
+            bool cancelled = request.Outcome == WorkerTerminalOutcome.Cancelled
+                && string.IsNullOrEmpty(request.StagingReceiptId)
+                && registration.Result is null;
             if (request.CoordinatorFencingEpoch
                     != checked((ulong)expected.CoordinatorFencingEpoch)
                 || request.AttemptFencingToken != checked((ulong)expected.AttemptFencingToken)
-                || request.Outcome != WorkerTerminalOutcome.CompletedStaged
-                || request.StagingReceiptId != registration.StagingReceiptId
-                || registration.Result is null)
+                || request.Failure is not null
+                || (!completed && !cancelled))
             {
                 throw new InvalidOperationException("The terminal receipt is stale or incomplete.");
             }
 
             registration.TerminalAccepted = true;
-            return registration.Result;
+            registration.TerminalOutcome = request.Outcome;
+            registration.AcceptedTerminal = request.Clone();
+            return new TerminalReceiptAcceptance(
+                WorkerReceiptDisposition.AcceptedForStagingOnly);
         }
     }
 
@@ -245,9 +376,29 @@ public sealed class WorkerBootstrapRegistry
 
         lock (registration.Gate)
         {
-            return registration.TerminalAccepted && registration.Result is not null
+            return registration.TerminalAccepted
+                && registration.TerminalOutcome == WorkerTerminalOutcome.CompletedStaged
+                && registration.Result is not null
                 ? registration.Result
                 : throw new InvalidOperationException("The worker did not complete staged publication.");
+        }
+    }
+
+    public void GetAcceptedCancellation(string bootstrapId)
+    {
+        if (!registrations.TryRemove(bootstrapId, out Registration? registration))
+        {
+            throw new InvalidOperationException("The worker bootstrap is unknown.");
+        }
+
+        lock (registration.Gate)
+        {
+            if (!registration.TerminalAccepted
+                || registration.TerminalOutcome != WorkerTerminalOutcome.Cancelled)
+            {
+                throw new InvalidOperationException(
+                    "The worker did not acknowledge the safe cancellation boundary.");
+            }
         }
     }
 
@@ -263,8 +414,30 @@ public sealed class WorkerBootstrapRegistry
     {
         Registration? registration = registrations.Values.SingleOrDefault(candidate =>
             candidate.Bootstrap.AttemptId == attemptId);
-        if (registration is null
-            || !string.Equals(registration.ConnectionId, connectionId, StringComparison.Ordinal)
+        if (registration is null)
+        {
+            return false;
+        }
+
+        lock (registration.Gate)
+        {
+            return IsCurrentAttempt(
+                registration,
+                coordinatorFencingEpoch,
+                attemptFencingToken,
+                connectionId,
+                runtime);
+        }
+    }
+
+    private static bool IsCurrentAttempt(
+        Registration registration,
+        ulong coordinatorFencingEpoch,
+        ulong attemptFencingToken,
+        string connectionId,
+        CoordinatorRuntime runtime)
+    {
+        if (!string.Equals(registration.ConnectionId, connectionId, StringComparison.Ordinal)
             || registration.Bootstrap.ExpiresAt <= DateTimeOffset.UtcNow
             || coordinatorFencingEpoch
                 != checked((ulong)registration.Bootstrap.CoordinatorFencingEpoch)
@@ -278,6 +451,47 @@ public sealed class WorkerBootstrapRegistry
         return run.State == Infinium.Domain.Contracts.LifecycleState.Running
             && run.CoordinatorFencingEpoch == registration.Bootstrap.CoordinatorFencingEpoch;
     }
+
+    public WorkerControl GetControl(
+        PollControlRequest request,
+        string connectionId,
+        CoordinatorRuntime runtime)
+    {
+        Registration? registration = registrations.Values.SingleOrDefault(candidate =>
+            candidate.Bootstrap.AttemptId == request.AttemptId?.Value);
+        if (registration is null
+            || !string.Equals(registration.ConnectionId, connectionId, StringComparison.Ordinal)
+            || registration.Bootstrap.ExpiresAt <= DateTimeOffset.UtcNow
+            || request.CoordinatorFencingEpoch
+                != checked((ulong)registration.Bootstrap.CoordinatorFencingEpoch)
+            || request.AttemptFencingToken
+                != checked((ulong)registration.Bootstrap.AttemptFencingToken))
+        {
+            return WorkerControl.StopStaleAttempt;
+        }
+
+        RunRecord run = runtime.Store.GetRun(registration.Bootstrap.RunId);
+        return run.State switch
+        {
+            Infinium.Domain.Contracts.LifecycleState.Running => WorkerControl.Continue,
+            Infinium.Domain.Contracts.LifecycleState.Pausing
+                or Infinium.Domain.Contracts.LifecycleState.Cancelling =>
+                WorkerControl.CancelAtSafeBoundary,
+            _ => WorkerControl.StopStaleAttempt,
+        };
+    }
+
+    private static WorkerProgressReceipt RejectProgress(
+        WorkerReceiptDisposition disposition,
+        ulong acceptedProgressSequence,
+        FailureCode code,
+        string detail) =>
+        new()
+        {
+            Disposition = disposition,
+            AcceptedProgressSequence = acceptedProgressSequence,
+            Failure = new Failure { Code = code, Detail = detail },
+        };
 
     private Registration Require(string bootstrapId, string connectionId)
     {
@@ -333,7 +547,14 @@ public sealed class WorkerBootstrapRegistry
         public ManagedWorkerBootstrap Bootstrap { get; } = bootstrap;
         public string? ConnectionId { get; set; }
         public string? StagingReceiptId { get; set; }
+        public StagedOutputManifest? AcceptedManifest { get; set; }
         public ManagedWorkerResult? Result { get; set; }
         public bool TerminalAccepted { get; set; }
+        public WorkerTerminalOutcome TerminalOutcome { get; set; }
+        public WorkerTerminalReceipt? AcceptedTerminal { get; set; }
+        public ulong LastProgressSequence { get; set; }
+        public ulong LastCompletedWorkUnits { get; set; }
+        public uint ProgressUpdateCount { get; set; }
+        public int DiagnosticByteCount { get; set; }
     }
 }

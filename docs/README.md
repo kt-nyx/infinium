@@ -134,9 +134,13 @@ Every material document should include a status and last-reviewed date.
   active. M1 Slice 0 subsequently established the locked toolchain,
   dependency evidence, and required repository skeleton. M1 Slice 1
   subsequently established the versioned domain, wire, output, fixture, and
-  assertion contracts plus answer-isolating readers. No M1 product fixture has
-  executed and no accepted evaluation case has passed; only the plan-declared
-  EVAL-0065, EVAL-0067, and EVAL-0082 contract portions are satisfied.
+  assertion contracts plus answer-isolating readers. M1 Slice 2 subsequently
+  established the local coordinator/worker substrate, authoritative lifecycle
+  and persistence boundaries, protected-root write controls, and platform
+  evaluation package. No complete accepted evaluation case has passed; only
+  the plan-declared Slice 1 contract portions and Slice 2 substrate portions
+  are satisfied, with the remaining coverage gap retained explicitly in the
+  Slice 2 fixture oracle and implementation record.
 - Infinium uses GPLv3-family strong copyleft. MO2 and LOOT remain
   user-installed; ADR-0007 excludes xEdit completely. ADR-0008 through
   ADR-0011 accept deterministic MO2 2.5.2 reconstruction, the exact initial

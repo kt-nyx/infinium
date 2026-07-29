@@ -20,7 +20,8 @@ public static class LifecyclePolicy
                  LifecycleState.Failed, LifecycleState.LimitReached, LifecycleState.InvalidatedByChangedInput],
             [LifecycleState.Waiting] =
                 [LifecycleState.Running, LifecycleState.Retrying, LifecycleState.Pausing,
-                 LifecycleState.Cancelling, LifecycleState.Failed, LifecycleState.LimitReached],
+                 LifecycleState.Cancelling, LifecycleState.Completed,
+                 LifecycleState.CompletedWithGaps, LifecycleState.Failed, LifecycleState.LimitReached],
             [LifecycleState.Retrying] =
                 [LifecycleState.Running, LifecycleState.Waiting, LifecycleState.Pausing,
                  LifecycleState.Cancelling, LifecycleState.Failed, LifecycleState.LimitReached],

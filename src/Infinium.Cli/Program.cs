@@ -5,7 +5,7 @@ using Infinium.Contracts.Protobuf.Application.V1;
 using Infinium.Contracts.Protobuf.Common.V1;
 using Infinium.Contracts.Protobuf.Domain.V1;
 
-string? root = Option(args, "--root");
+string? root = FirstOption(args, "--root");
 string? command = args.FirstOrDefault(argument => !argument.StartsWith("--", StringComparison.Ordinal)
     && !string.Equals(argument, root, StringComparison.Ordinal));
 if (string.IsNullOrWhiteSpace(root)
@@ -19,6 +19,7 @@ if (string.IsNullOrWhiteSpace(root)
 bool json = HasFlag(args, "--json");
 try
 {
+    ValidateCommandArguments(args, command);
     await EnsureCoordinatorAsync(root).ConfigureAwait(false);
     using CancellationTokenSource connectTimeout = new(TimeSpan.FromSeconds(15));
     await using CoordinatorConnection connection = await CoordinatorConnection.ConnectAsync(
@@ -49,9 +50,10 @@ static async Task<int> StartAsync(
     string context = RequiredOption(arguments, "--context");
     string configuration = RequiredOption(arguments, "--configuration");
     string manifest = RequiredOption(arguments, "--manifest");
+    string commandId = BoundedCommandId(arguments);
     SubmitRunCommandRequest request = new()
     {
-        IdempotencyKey = new DurableCommandId { Value = Guid.NewGuid().ToString("N") },
+        IdempotencyKey = new DurableCommandId { Value = commandId },
         Start = new ManualStartCommand
         {
             InstallationSnapshotId = new InstallationSnapshotId { Value = snapshot },
@@ -62,9 +64,8 @@ static async Task<int> StartAsync(
             DispatchDeadline = Instant(DateTimeOffset.UtcNow.AddMinutes(5)),
         },
     };
-    SubmitRunCommandResponse response = await connection.Client.SubmitRunCommandAsync(
-        request,
-        deadline: DateTime.UtcNow.AddSeconds(15)).ResponseAsync.ConfigureAwait(false);
+    SubmitRunCommandResponse response =
+        await SubmitDurableAsync(connection, request).ConfigureAwait(false);
     if (response.Disposition is not (CommandDisposition.Accepted or CommandDisposition.AlreadyAccepted))
     {
         throw new InvalidOperationException($"Start rejected: {response.Failure?.Detail}");
@@ -75,6 +76,7 @@ static async Task<int> StartAsync(
         schemaVersion = 1,
         command = "start",
         disposition = response.Disposition.ToString(),
+        durableCommandId = commandId,
         runId = response.RunId.Value,
         immutableBindings = new
         {
@@ -187,6 +189,43 @@ static async Task<int> CancelAsync(
     bool json)
 {
     string runId = PositionalAfter(arguments, "cancel");
+    string commandId = BoundedCommandId(arguments);
+    if (Option(arguments, "--command-id") is not null)
+    {
+        GetDurableCommandResponse prior = await connection.Client.GetDurableCommandAsync(
+            new GetDurableCommandRequest
+            {
+                DurableCommandId = new DurableCommandId { Value = commandId },
+            },
+            deadline: DateTime.UtcNow.AddSeconds(15)).ResponseAsync.ConfigureAwait(false);
+        if (prior.Status is not null)
+        {
+            if (!string.Equals(prior.Status.RunId?.Value, runId, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException(
+                    $"Durable command '{commandId}' is already bound to another run.");
+            }
+
+            if (prior.Status.Disposition is not (
+                    CommandDisposition.Accepted or CommandDisposition.AlreadyAccepted)
+                || prior.Status.AcceptedInput?.CommandKind != DurableCommandKind.Cancel)
+            {
+                throw new InvalidOperationException(
+                    $"Durable command '{commandId}' is already bound to different command inputs.");
+            }
+
+            Write(json, new
+            {
+                schemaVersion = 1,
+                command = "cancel",
+                runId,
+                durableCommandId = commandId,
+                disposition = CommandDisposition.AlreadyAccepted.ToString(),
+            });
+            return 0;
+        }
+    }
+
     GetRunResponse current = await connection.Client.GetRunAsync(
         new GetRunRequest { RunId = new RunId { Value = runId } },
         deadline: DateTime.UtcNow.AddSeconds(15)).ResponseAsync.ConfigureAwait(false);
@@ -195,18 +234,18 @@ static async Task<int> CancelAsync(
         throw new InvalidOperationException(current.Failure?.Detail ?? "Run lookup failed.");
     }
 
-    SubmitRunCommandResponse response = await connection.Client.SubmitRunCommandAsync(
+    SubmitRunCommandResponse response = await SubmitDurableAsync(
+        connection,
         new SubmitRunCommandRequest
         {
-            IdempotencyKey = new DurableCommandId { Value = Guid.NewGuid().ToString("N") },
+            IdempotencyKey = new DurableCommandId { Value = commandId },
             Cancel = new CancelCommand
             {
                 RunId = new RunId { Value = runId },
                 ExpectedLifecycleGeneration = current.Run.Summary.LifecycleGeneration,
             },
-        },
-        deadline: DateTime.UtcNow.AddSeconds(15)).ResponseAsync.ConfigureAwait(false);
-    if (response.Disposition != CommandDisposition.Accepted)
+        }).ConfigureAwait(false);
+    if (response.Disposition is not (CommandDisposition.Accepted or CommandDisposition.AlreadyAccepted))
     {
         throw new InvalidOperationException($"Cancel rejected: {response.Failure?.Detail}");
     }
@@ -216,9 +255,133 @@ static async Task<int> CancelAsync(
         schemaVersion = 1,
         command = "cancel",
         runId,
+        durableCommandId = commandId,
         disposition = response.Disposition.ToString(),
     });
     return 0;
+}
+
+static async Task<SubmitRunCommandResponse> SubmitDurableAsync(
+    CoordinatorConnection connection,
+    SubmitRunCommandRequest request)
+{
+    string commandId = request.IdempotencyKey.Value;
+    try
+    {
+        return await connection.Client.SubmitRunCommandAsync(
+            request,
+            deadline: DateTime.UtcNow.AddSeconds(15)).ResponseAsync.ConfigureAwait(false);
+    }
+    catch (Grpc.Core.RpcException exception) when (
+        exception.StatusCode is Grpc.Core.StatusCode.DeadlineExceeded
+            or Grpc.Core.StatusCode.Unavailable
+            or Grpc.Core.StatusCode.Cancelled)
+    {
+        try
+        {
+            GetDurableCommandResponse durable =
+                await connection.Client.GetDurableCommandAsync(
+                    new GetDurableCommandRequest
+                    {
+                        DurableCommandId = new DurableCommandId { Value = commandId },
+                    },
+                    deadline: DateTime.UtcNow.AddSeconds(15)).ResponseAsync.ConfigureAwait(false);
+            if (durable.Status is not null
+                && durable.Status.Disposition is (
+                    CommandDisposition.Accepted or CommandDisposition.AlreadyAccepted)
+                && DurableStatusMatchesRequest(durable.Status, request))
+            {
+                return new SubmitRunCommandResponse
+                {
+                    Disposition = CommandDisposition.AlreadyAccepted,
+                    DurableCommandId = durable.Status.DurableCommandId,
+                    DurableTransitionId = durable.Status.DurableTransitionId,
+                    RunId = durable.Status.RunId,
+                };
+            }
+        }
+        catch (Grpc.Core.RpcException)
+        {
+            // Preserve the durable identity in the final indeterminate diagnostic.
+        }
+
+        throw new InvalidOperationException(
+            $"Command '{commandId}' has an indeterminate transport result; retry the identical command with --command-id {commandId}.",
+            exception);
+    }
+}
+
+static bool DurableStatusMatchesRequest(
+    DurableCommandStatus status,
+    SubmitRunCommandRequest request)
+{
+    DurableCommandInputIdentity? accepted = status.AcceptedInput;
+    if (accepted is null)
+    {
+        return false;
+    }
+
+    return request.CommandCase switch
+    {
+        SubmitRunCommandRequest.CommandOneofCase.Start =>
+            accepted.CommandKind == DurableCommandKind.Start
+            && accepted.ExpectedLifecycleGeneration == 0
+            && accepted.InstallationSnapshotId?.Value
+                == request.Start.InstallationSnapshotId?.Value
+            && accepted.AnalysisContextId?.Value
+                == request.Start.AnalysisContextId?.Value
+            && accepted.EffectiveScanConfigurationId?.Value
+                == request.Start.EffectiveScanConfigurationId?.Value
+            && accepted.ResolvedInputManifestId?.Value
+                == request.Start.ResolvedInputManifestId?.Value
+            && accepted.ManualInitiationKind == request.Start.InitiationKind,
+        SubmitRunCommandRequest.CommandOneofCase.Pause =>
+            MatchesTransition(
+                status,
+                accepted,
+                DurableCommandKind.Pause,
+                request.Pause.RunId?.Value,
+                request.Pause.ExpectedLifecycleGeneration),
+        SubmitRunCommandRequest.CommandOneofCase.Resume =>
+            MatchesTransition(
+                status,
+                accepted,
+                DurableCommandKind.Resume,
+                request.Resume.RunId?.Value,
+                request.Resume.ExpectedLifecycleGeneration),
+        SubmitRunCommandRequest.CommandOneofCase.Cancel =>
+            MatchesTransition(
+                status,
+                accepted,
+                DurableCommandKind.Cancel,
+                request.Cancel.RunId?.Value,
+                request.Cancel.ExpectedLifecycleGeneration),
+        _ => false,
+    };
+}
+
+static bool MatchesTransition(
+    DurableCommandStatus status,
+    DurableCommandInputIdentity accepted,
+    DurableCommandKind expectedKind,
+    string? expectedRunId,
+    ulong expectedGeneration) =>
+    accepted.CommandKind == expectedKind
+    && accepted.ExpectedLifecycleGeneration == expectedGeneration
+    && string.Equals(status.RunId?.Value, expectedRunId, StringComparison.Ordinal);
+
+static string BoundedCommandId(string[] arguments)
+{
+    string value = Option(arguments, "--command-id") ?? Guid.NewGuid().ToString("N");
+    if (string.IsNullOrWhiteSpace(value)
+        || value.Length > 128
+        || value.Any(character => !char.IsLetterOrDigit(character) && character is not '-' and not '_'))
+    {
+        throw new ArgumentException(
+            "--command-id must contain 1-128 letters, digits, hyphens, or underscores.");
+    }
+
+    return value;
 }
 
 static async Task EnsureCoordinatorAsync(string productRoot)
@@ -337,6 +500,25 @@ static string RequiredOption(string[] arguments, string name) =>
 
 static string? Option(string[] arguments, string name)
 {
+    string? found = null;
+    for (int index = 0; index < arguments.Length - 1; index++)
+    {
+        if (string.Equals(arguments[index], name, StringComparison.Ordinal))
+        {
+            if (found is not null)
+            {
+                throw new ArgumentException($"Option '{name}' may be supplied only once.");
+            }
+
+            found = arguments[index + 1];
+        }
+    }
+
+    return found;
+}
+
+static string? FirstOption(string[] arguments, string name)
+{
     for (int index = 0; index < arguments.Length - 1; index++)
     {
         if (string.Equals(arguments[index], name, StringComparison.Ordinal))
@@ -353,13 +535,92 @@ static bool HasFlag(string[] arguments, string name) =>
 
 static string Bounded(string value) => value.Length <= 512 ? value : value[..512];
 
+static void ValidateCommandArguments(string[] arguments, string command)
+{
+    HashSet<string> valueOptions = new(StringComparer.Ordinal)
+    {
+        "--root",
+    };
+    int expectedPositionals;
+    switch (command)
+    {
+        case "start":
+            valueOptions.UnionWith(
+                ["--snapshot", "--context", "--configuration", "--manifest", "--command-id"]);
+            expectedPositionals = 0;
+            break;
+        case "wait":
+            valueOptions.Add("--timeout-seconds");
+            expectedPositionals = 1;
+            break;
+        case "cancel":
+            valueOptions.Add("--command-id");
+            expectedPositionals = 1;
+            break;
+        default:
+            expectedPositionals = 1;
+            break;
+    }
+
+    HashSet<string> seen = new(StringComparer.Ordinal);
+    int commandCount = 0;
+    int positionalCount = 0;
+    for (int index = 0; index < arguments.Length; index++)
+    {
+        string argument = arguments[index];
+        if (string.Equals(argument, command, StringComparison.Ordinal))
+        {
+            commandCount++;
+            continue;
+        }
+
+        if (string.Equals(argument, "--json", StringComparison.Ordinal))
+        {
+            if (!seen.Add(argument))
+            {
+                throw new ArgumentException("Flag '--json' may be supplied only once.");
+            }
+
+            continue;
+        }
+
+        if (argument.StartsWith("--", StringComparison.Ordinal))
+        {
+            if (!valueOptions.Contains(argument))
+            {
+                throw new ArgumentException($"Unknown option '{argument}'.");
+            }
+
+            if (!seen.Add(argument))
+            {
+                throw new ArgumentException($"Option '{argument}' may be supplied only once.");
+            }
+
+            if (++index >= arguments.Length
+                || arguments[index].StartsWith("--", StringComparison.Ordinal))
+            {
+                throw new ArgumentException($"Option '{argument}' requires a value.");
+            }
+
+            continue;
+        }
+
+        positionalCount++;
+    }
+
+    if (commandCount != 1 || positionalCount != expectedPositionals)
+    {
+        throw new ArgumentException($"Command '{command}' received an invalid positional argument set.");
+    }
+}
+
 static void Usage() =>
     Console.Error.WriteLine(
         """
         Usage:
-          Infinium.Cli --root <absolute-product-root> start --snapshot <id> --context <id> --configuration <id> --manifest <id> [--json]
+          Infinium.Cli --root <absolute-product-root> start --snapshot <id> --context <id> --configuration <id> --manifest <id> [--command-id <id>] [--json]
           Infinium.Cli --root <absolute-product-root> status <run-id> [--json]
           Infinium.Cli --root <absolute-product-root> wait <run-id> [--timeout-seconds <1..3600>] [--json]
-          Infinium.Cli --root <absolute-product-root> cancel <run-id> [--json]
+          Infinium.Cli --root <absolute-product-root> cancel <run-id> [--command-id <id>] [--json]
           Infinium.Cli --root <absolute-product-root> inspect <run-id> [--json]
         """);

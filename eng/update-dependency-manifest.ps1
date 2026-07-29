@@ -1,11 +1,25 @@
 param(
-    [string]$RepositoryRoot = (Split-Path -Parent $PSScriptRoot)
+    [string]$RepositoryRoot = (Split-Path -Parent $PSScriptRoot),
+    [switch]$Check
 )
 
 $ErrorActionPreference = 'Stop'
 $manifestPath = Join-Path $RepositoryRoot 'dependencies/dependency-manifest.json'
+$curationPath = Join-Path $RepositoryRoot 'dependencies/dependency-curation.json'
 $packagesRoot = Join-Path $RepositoryRoot '.packages'
 $manifest = Get-Content -Raw $manifestPath | ConvertFrom-Json
+$curation = Get-Content -Raw $curationPath | ConvertFrom-Json
+if ($curation.schema -ne 'infinium.dependency-curation/v1') {
+    throw "Unsupported dependency curation schema '$($curation.schema)'."
+}
+
+$curatedLicenses = @{}
+foreach ($property in $curation.licenses.PSObject.Properties) {
+    if ([string]::IsNullOrWhiteSpace([string]$property.Value)) {
+        throw "Curated license classification '$($property.Name)' is empty."
+    }
+    $curatedLicenses[$property.Name] = [string]$property.Value
+}
 
 $central = [xml](Get-Content -Raw (Join-Path $RepositoryRoot 'Directory.Packages.props'))
 $directVersions = @{}
@@ -39,22 +53,33 @@ function Get-PackageMetadata([string]$id, [string]$version) {
 
     $xml = [xml](Get-Content -Raw $nuspec.FullName)
     $metadata = $xml.package.metadata
-    $license = if ($metadata.license -and $metadata.license.type -eq 'expression') {
+    $identity = "$id/$version"
+    $license = if ($curatedLicenses.ContainsKey($identity)) {
+        $curatedLicenses[$identity]
+    }
+    elseif ($metadata.license -and $metadata.license.type -eq 'expression') {
         [string]$metadata.license.'#text'
+    }
+    elseif ($metadata.license -and
+        $metadata.license.type -eq 'file' -and
+        -not [string]::IsNullOrWhiteSpace([string]$metadata.license.'#text')) {
+        "Package license file: $($metadata.license.'#text')"
     }
     elseif ($id -eq 'SQLite') {
         'Public Domain'
     }
     else {
-        "Package license file: $($metadata.license.'#text')"
+        throw "No accepted license classification is available for $identity."
     }
     $repository = if ($metadata.repository) { [string]$metadata.repository.url } else { $null }
     $commit = if ($metadata.repository) { [string]$metadata.repository.commit } else { $null }
-    $metadataFile = Join-Path $folder '.nupkg.metadata'
-    $contentHash = if (Test-Path $metadataFile) {
-        (Get-Content -Raw $metadataFile | ConvertFrom-Json).contentHash
-    } else {
-        $null
+    $shaFile = Get-ChildItem $folder -Filter *.nupkg.sha512 | Select-Object -First 1
+    if (-not $shaFile) {
+        throw "No NuGet package SHA-512 sidecar was found for $identity."
+    }
+    $nupkgSha512 = (Get-Content -Raw $shaFile.FullName).Trim()
+    if ([string]::IsNullOrWhiteSpace($nupkgSha512)) {
+        throw "NuGet package SHA-512 sidecar was empty for $identity."
     }
 
     [pscustomobject]@{
@@ -62,7 +87,7 @@ function Get-PackageMetadata([string]$id, [string]$version) {
         Repository = $repository
         Commit = $commit
         ProjectUrl = [string]$metadata.projectUrl
-        ContentHash = $contentHash
+        NupkgSha512 = $nupkgSha512
     }
 }
 
@@ -86,7 +111,7 @@ $direct = foreach ($id in ($directVersions.Keys | Sort-Object)) {
         license = $metadata.License
         repository = $metadata.Repository
         repositoryCommit = $metadata.Commit
-        nupkgSha512 = $metadata.ContentHash
+        nupkgSha512 = $metadata.NupkgSha512
         use = if ($id -like 'MSTest.*' -or $id -eq 'Microsoft.NET.Test.Sdk') {
             'test-only'
         } elseif ($id -eq 'Grpc.Tools') {
@@ -109,9 +134,24 @@ $resolvedEntries = foreach ($identity in ($resolved.Keys | Sort-Object)) {
 
 $verified = @()
 $limitations = @()
+$groupedIdentities = @{}
+foreach ($group in $curation.provenanceGroups) {
+    foreach ($identity in $group.packages) {
+        if (-not $resolved.ContainsKey([string]$identity)) {
+            throw "Curated provenance identity '$identity' is absent from all lock files."
+        }
+        if ($groupedIdentities.ContainsKey([string]$identity)) {
+            throw "Curated provenance identity '$identity' occurs in more than one group."
+        }
+        $groupedIdentities[[string]$identity] = $true
+    }
+}
 foreach ($identity in ($resolved.Keys | Sort-Object)) {
     $metadata = $metadataByIdentity[$identity]
-    if ($metadata.Repository -and $metadata.Commit) {
+    if ($groupedIdentities.ContainsKey($identity)) {
+        continue
+    }
+    elseif ($metadata.Repository -and $metadata.Commit) {
         $verified += [ordered]@{
             package = $identity
             repository = $metadata.Repository
@@ -139,7 +179,7 @@ $manifest.lockIdentity.productionGraph = 'src/Infinium.Persistence/packages.lock
 $manifest.lockIdentity.emptyProjectLocks = 'Project-local locks without external package dependencies'
 $manifest.directPackages = @($direct)
 $manifest.resolvedPackages = @($resolvedEntries)
-$manifest.provenanceGroups = @()
+$manifest.provenanceGroups = @($curation.provenanceGroups)
 $manifest.individuallyVerifiedProvenance = @($verified)
 $manifest.explicitProvenanceLimitations = @($limitations)
 $manifest.excludedDependencies = @(
@@ -149,7 +189,16 @@ $manifest.excludedDependencies = @(
 )
 
 $json = $manifest | ConvertTo-Json -Depth 20
-[System.IO.File]::WriteAllText(
-    $manifestPath,
-    $json + [Environment]::NewLine,
-    [System.Text.UTF8Encoding]::new($false))
+$generated = $json + [Environment]::NewLine
+if ($Check) {
+    $current = [System.IO.File]::ReadAllText($manifestPath)
+    if ($current -cne $generated) {
+        throw "Dependency manifest is stale. Run eng/update-dependency-manifest.ps1."
+    }
+}
+else {
+    [System.IO.File]::WriteAllText(
+        $manifestPath,
+        $generated,
+        [System.Text.UTF8Encoding]::new($false))
+}

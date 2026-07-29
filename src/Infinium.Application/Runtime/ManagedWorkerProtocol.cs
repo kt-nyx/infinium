@@ -15,7 +15,7 @@ public sealed record ManagedWorkerBootstrap(
     int ExpectedProcessId,
     string StagingAreaId,
     string StagedArtifactId,
-    string StagingDirectory,
+    long InheritedStagingDirectoryHandle,
     string OutputRelativeName,
     long MaximumOutputBytes,
     string OneUseNonceBase64,
@@ -29,11 +29,14 @@ public sealed record ManagedWorkerResult(
     long AttemptFencingToken,
     string OutputRelativeName,
     string Sha256,
-    long ByteLength);
+    long ByteLength,
+    string ManifestSha256);
 
 public static class ManagedWorkerManifest
 {
-    public static byte[] ComputeDigest(
+    public const string OutputSchemaVersion = "1.0.0";
+
+    public static byte[] GetCanonicalBytes(
         string stagedArtifactId,
         string typedRelativeName,
         string contentSha256,
@@ -47,7 +50,18 @@ public static class ManagedWorkerManifest
             "typed-result",
             contentSha256,
             byteLength.ToString(System.Globalization.CultureInfo.InvariantCulture),
-            "1.0.0");
-        return SHA256.HashData(Encoding.UTF8.GetBytes(canonical));
+            OutputSchemaVersion);
+        return Encoding.UTF8.GetBytes(canonical);
     }
+
+    public static byte[] ComputeDigest(
+        string stagedArtifactId,
+        string typedRelativeName,
+        string contentSha256,
+        long byteLength) =>
+        SHA256.HashData(GetCanonicalBytes(
+            stagedArtifactId,
+            typedRelativeName,
+            contentSha256,
+            byteLength));
 }

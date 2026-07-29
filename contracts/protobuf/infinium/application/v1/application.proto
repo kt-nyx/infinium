@@ -367,6 +367,28 @@ message DurableCommandStatus {
   infinium.domain.v1.RunId run_id = 4;
   infinium.domain.v1.LifecycleState resulting_lifecycle_state = 5;
   infinium.common.v1.Instant observed_at = 6;
+  DurableCommandInputIdentity accepted_input = 7;
+}
+
+message DurableCommandInputIdentity {
+  DurableCommandKind command_kind = 1;
+  uint64 expected_lifecycle_generation = 2;
+  infinium.domain.v1.InstallationSnapshotId installation_snapshot_id = 3;
+  infinium.domain.v1.AnalysisContextId analysis_context_id = 4;
+  infinium.domain.v1.ScanConfigurationId effective_scan_configuration_id = 5;
+  infinium.domain.v1.ResolvedInputManifestId resolved_input_manifest_id = 6;
+  ManualInitiationKind manual_initiation_kind = 7;
+  infinium.common.v1.Instant dispatch_deadline = 8;
+}
+
+enum DurableCommandKind {
+  DURABLE_COMMAND_KIND_UNSPECIFIED = 0;
+  DURABLE_COMMAND_KIND_START = 1;
+  DURABLE_COMMAND_KIND_PAUSE = 2;
+  DURABLE_COMMAND_KIND_RESUME = 3;
+  DURABLE_COMMAND_KIND_CANCEL = 4;
+  DURABLE_COMMAND_KIND_UNKNOWN = 5;
+  DURABLE_COMMAND_KIND_UNSUPPORTED = 6;
 }
 
 message EventCursor {
@@ -395,6 +417,8 @@ message ApplicationEvent {
     ProjectionInvalidated projection_invalidated = 12;
     ResyncRequired resync_required = 13;
   }
+  // Authenticated cursor for reconnecting immediately after this event.
+  EventCursor resume_cursor = 14;
 }
 
 enum EventKind {

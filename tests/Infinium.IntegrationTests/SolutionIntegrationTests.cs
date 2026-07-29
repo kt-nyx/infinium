@@ -1,4 +1,7 @@
 using System.Diagnostics;
+using System.IO.Pipes;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using System.Text.Json;
 using Google.Protobuf;
 using Grpc.Core;
@@ -6,8 +9,11 @@ using Grpc.Net.Client;
 using Infinium.Application.Runtime;
 using Infinium.Contracts.Protobuf.Application.V1;
 using Infinium.Contracts.Protobuf.Common.V1;
+using Infinium.Contracts.Protobuf.Domain.V1;
 using Infinium.Contracts.Protobuf.Protocol.V1;
 using Infinium.Contracts.Protobuf.Worker.V1;
+using Infinium.Coordinator;
+using Infinium.Persistence;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Infinium.Tests;
@@ -55,6 +61,43 @@ public sealed class SolutionIntegrationTests
 
     [TestMethod]
     [TestCategory("M1Integration")]
+    [TestCategory("M1Evaluation")]
+    [TestProperty("Category", "M1Integration")]
+    [TestProperty("Category", "M1Evaluation")]
+    public void RunOutputClassifiesEveryLifecycleUnitWithoutUnsupportedAuditClaims()
+    {
+        foreach (Infinium.Domain.Contracts.LifecycleState state
+                 in Enum.GetValues<Infinium.Domain.Contracts.LifecycleState>())
+        {
+            RunRecord run = new(
+                "run-output",
+                new RunBinding("snapshot", "context", "configuration", "manifest"),
+                state,
+                1,
+                1,
+                1,
+                DateTimeOffset.UtcNow,
+                DateTimeOffset.UtcNow);
+            RunDetail detail = ProtoMapping.ToDetail(run);
+            Assert.AreEqual(ReplayabilityState.Unavailable, detail.ReplayabilityState);
+            Assert.AreEqual(AuditabilityState.CompleteWithGaps, detail.AuditabilityState);
+            ProgressSummary progress = detail.Summary.Progress;
+            ulong classified = progress.CompletedUnits
+                + progress.ReusedUnits
+                + progress.QueuedUnits
+                + progress.RunningUnits
+                + progress.FailedUnits
+                + progress.SkippedUnits
+                + progress.UnsupportedUnits
+                + progress.LimitedUnits
+                + progress.InvalidatedUnits
+                + progress.GapUnits;
+            Assert.AreEqual(1UL, classified, state.ToString());
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("M1Integration")]
     [TestCategory("M1Security")]
     [TestProperty("Category", "M1Integration")]
     [TestProperty("Category", "M1Security")]
@@ -63,6 +106,17 @@ public sealed class SolutionIntegrationTests
         ProcessResult cli = Run("Infinium.Cli", []);
         Assert.AreEqual(2, cli.ExitCode);
         StringAssert.Contains(cli.Error, "Usage:");
+        string parserRoot = Path.Combine(Path.GetTempPath(), $"infinium-cli-parser-{Guid.NewGuid():N}");
+        ProcessResult unknownOption = Run(
+            "Infinium.Cli",
+            ["--root", parserRoot, "status", "run-a", "--unknown"]);
+        Assert.AreEqual(1, unknownOption.ExitCode);
+        StringAssert.Contains(unknownOption.Error, "Unknown option");
+        ProcessResult duplicateOption = Run(
+            "Infinium.Cli",
+            ["--root", parserRoot, "status", "run-a", "--root", parserRoot]);
+        Assert.AreEqual(1, duplicateOption.ExitCode);
+        StringAssert.Contains(duplicateOption.Error, "only once");
 
         ProcessResult coordinator = Run("Infinium.Coordinator", []);
         Assert.AreEqual(2, coordinator.ExitCode);
@@ -160,16 +214,54 @@ public sealed class SolutionIntegrationTests
                     "--context", "context-cancel",
                     "--configuration", "configuration-cancel",
                     "--manifest", "manifest-cancel",
+                    "--command-id", "start-cancellable-command",
                     "--json",
                 ]);
             Assert.AreEqual(0, cancellable.ExitCode, cancellable.Error);
             using JsonDocument cancellableJson = JsonDocument.Parse(cancellable.Output);
             string cancellableRunId =
                 cancellableJson.RootElement.GetProperty("runId").GetString()!;
+            await WaitForRunStateAsync(
+                root,
+                cancellableRunId,
+                LifecycleState.Running,
+                TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+            ProcessResult crossKindReplay = Run(
+                "Infinium.Cli",
+                [
+                    "--root", root,
+                    "cancel", cancellableRunId,
+                    "--command-id", "start-cancellable-command",
+                    "--json",
+                ]);
+            Assert.AreNotEqual(0, crossKindReplay.ExitCode);
+            StringAssert.Contains(
+                crossKindReplay.Error,
+                "already bound to different command inputs");
+
             ProcessResult cancel = Run(
                 "Infinium.Cli",
-                ["--root", root, "cancel", cancellableRunId, "--json"]);
+                [
+                    "--root", root,
+                    "cancel", cancellableRunId,
+                    "--command-id", "cancel-cancellable-command",
+                    "--json",
+                ]);
             Assert.AreEqual(0, cancel.ExitCode, cancel.Error);
+            ProcessResult cancellingInspect = Run(
+                "Infinium.Cli",
+                ["--root", root, "inspect", cancellableRunId, "--json"]);
+            using (JsonDocument cancellingJson = JsonDocument.Parse(cancellingInspect.Output))
+            {
+                string? state = cancellingJson.RootElement
+                    .GetProperty("lifecycle")
+                    .GetProperty("state")
+                    .GetString();
+                Assert.IsTrue(
+                    state is "Cancelling" or "Cancelled",
+                    $"Cancellation returned unexpected state '{state}'.");
+            }
+
             await Task.Delay(2_500).ConfigureAwait(false);
             ProcessResult cancelledInspect = Run(
                 "Infinium.Cli",
@@ -181,6 +273,19 @@ public sealed class SolutionIntegrationTests
                     .GetProperty("lifecycle")
                     .GetProperty("state")
                     .GetString());
+            ProcessResult replayedCancel = Run(
+                "Infinium.Cli",
+                [
+                    "--root", root,
+                    "cancel", cancellableRunId,
+                    "--command-id", "cancel-cancellable-command",
+                    "--json",
+                ]);
+            Assert.AreEqual(0, replayedCancel.ExitCode, replayedCancel.Error);
+            using JsonDocument replayedCancelJson = JsonDocument.Parse(replayedCancel.Output);
+            Assert.AreEqual(
+                "AlreadyAccepted",
+                replayedCancelJson.RootElement.GetProperty("disposition").GetString());
 
             await AssertIpcRoleVersionNonceAndBoundariesAsync(root).ConfigureAwait(false);
         }
@@ -255,9 +360,118 @@ public sealed class SolutionIntegrationTests
         }
     }
 
+    [TestMethod]
+    [TestCategory("M1Integration")]
+    [TestCategory("M1Fault")]
+    [TestProperty("Category", "M1Integration")]
+    [TestProperty("Category", "M1Fault")]
+    public async Task CoordinatorRestartObservesPendingCancellationAndSettlesAttempt()
+    {
+        string root = Path.Combine(
+            Path.GetTempPath(),
+            $"infinium-cancel-recovery-{Guid.NewGuid():N}");
+        int coordinatorProcessId = 0;
+        try
+        {
+            ProcessResult start = Run(
+                "Infinium.Cli",
+                [
+                    "--root", root,
+                    "start",
+                    "--snapshot", "snapshot-cancel-recovery",
+                    "--context", "context-cancel-recovery",
+                    "--configuration", "configuration-cancel-recovery",
+                    "--manifest", "manifest-cancel-recovery",
+                    "--json",
+                ],
+                timeoutMilliseconds: 30_000);
+            Assert.AreEqual(0, start.ExitCode, start.Error);
+            using JsonDocument startJson = JsonDocument.Parse(start.Output);
+            string runId = startJson.RootElement.GetProperty("runId").GetString()!;
+            await WaitForRunStateAsync(
+                root,
+                runId,
+                LifecycleState.Running,
+                TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+
+            ProcessResult cancel = Run(
+                "Infinium.Cli",
+                [
+                    "--root", root,
+                    "cancel", runId,
+                    "--command-id", "cancel-before-restart",
+                    "--json",
+                ]);
+            Assert.AreEqual(0, cancel.ExitCode, cancel.Error);
+            RuntimeDescriptor beforeRestart = RuntimeDescriptor.Read(root);
+            coordinatorProcessId = beforeRestart.ProcessId;
+            StopProcess(coordinatorProcessId);
+            coordinatorProcessId = 0;
+
+            ProcessResult inspect = Run(
+                "Infinium.Cli",
+                ["--root", root, "inspect", runId, "--json"],
+                timeoutMilliseconds: 30_000);
+            Assert.AreEqual(0, inspect.ExitCode, inspect.Error);
+            using JsonDocument inspectJson = JsonDocument.Parse(inspect.Output);
+            Assert.AreEqual(
+                "Cancelled",
+                inspectJson.RootElement
+                    .GetProperty("lifecycle")
+                    .GetProperty("state")
+                    .GetString());
+            RuntimeDescriptor afterRestart = RuntimeDescriptor.Read(root);
+            coordinatorProcessId = afterRestart.ProcessId;
+            Assert.IsGreaterThan(beforeRestart.FencingEpoch, afterRestart.FencingEpoch);
+
+            StopCoordinator(root, coordinatorProcessId);
+            coordinatorProcessId = 0;
+            using AuthoritativeStore store = new(new StoragePaths(root));
+            Assert.IsFalse(store.HasLiveAttempts(runId));
+        }
+        finally
+        {
+            StopCoordinator(root, coordinatorProcessId);
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
+    }
+
+#pragma warning disable CA1416 // This integration helper is explicitly Windows-gated above.
     private static async Task AssertIpcRoleVersionNonceAndBoundariesAsync(string root)
     {
+        if (!OperatingSystem.IsWindows())
+        {
+            Assert.Inconclusive("The Slice 2 named-pipe integration contract requires Windows.");
+        }
+
         RuntimeDescriptor descriptor = RuntimeDescriptor.Read(root);
+        using (NamedPipeClientStream securityProbe = new(
+            ".",
+            descriptor.ApplicationPipe,
+            PipeDirection.InOut,
+            PipeOptions.Asynchronous))
+        {
+            await securityProbe.ConnectAsync(5_000).ConfigureAwait(false);
+            PipeSecurity security = securityProbe.GetAccessControl();
+            AuthorizationRuleCollection rules = security.GetAccessRules(
+                includeExplicit: true,
+                includeInherited: false,
+                typeof(SecurityIdentifier));
+            SecurityIdentifier currentUser = WindowsIdentity.GetCurrent().User!;
+            Assert.IsTrue(rules.OfType<PipeAccessRule>().Any(rule =>
+                rule.AccessControlType == AccessControlType.Allow
+                && currentUser.Equals(rule.IdentityReference)
+                && (rule.PipeAccessRights & PipeAccessRights.ReadWrite) != 0));
+            SecurityIdentifier network =
+                new(WellKnownSidType.NetworkSid, domainSid: null);
+            Assert.IsTrue(rules.OfType<PipeAccessRule>().Any(rule =>
+                rule.AccessControlType == AccessControlType.Deny
+                && network.Equals(rule.IdentityReference)));
+        }
+
         using (GrpcChannel unauthenticatedChannel =
             NamedPipeGrpcChannel.Create(descriptor.ApplicationPipe))
         {
@@ -332,6 +546,71 @@ public sealed class SolutionIntegrationTests
                 CursorDisposition.Malformed,
                 rejectedCursor.CursorRejection.Disposition);
 
+            string streamRunId = firstPage.Page.Items[0].RunId.Value;
+            GetRunResponse staleProjection = await application.GetRunAsync(new GetRunRequest
+            {
+                RunId = new RunId { Value = streamRunId },
+                ExpectedProjectionVersion = new ProjectionVersion { Value = "obsolete" },
+            }).ResponseAsync;
+            Assert.AreEqual(
+                GetRunResponse.ResultOneofCase.ProjectionInvalidated,
+                staleProjection.ResultCase);
+
+            EventCursor resume;
+            LifecycleState stateBeforeTransportCancel;
+            using (CancellationTokenSource streamCancellation = new(TimeSpan.FromSeconds(5)))
+            using (AsyncServerStreamingCall<ApplicationEvent> stream =
+                application.SubscribeEvents(
+                    new SubscribeEventsRequest
+                    {
+                        SubscriptionId = new SubscriptionId { Value = Guid.NewGuid().ToString("N") },
+                        RequestedQueueItems = 2,
+                        RunScope = { new RunId { Value = streamRunId } },
+                        ExpectedProjectionVersion = new ProjectionVersion { Value = "1" },
+                    },
+                    cancellationToken: streamCancellation.Token))
+            {
+                Assert.IsTrue(await stream.ResponseStream.MoveNext(streamCancellation.Token));
+                ApplicationEvent firstEvent = stream.ResponseStream.Current;
+                Assert.AreEqual(EventKind.Progress, firstEvent.Kind);
+                Assert.IsTrue(firstEvent.ResumeCursor.OpaqueValue.Length > 32);
+                resume = firstEvent.ResumeCursor.Clone();
+                stateBeforeTransportCancel = firstEvent.Progress.LifecycleState;
+                streamCancellation.Cancel();
+            }
+
+            EventCursor invalidResume = resume.Clone();
+            byte[] invalidResumeBytes = invalidResume.OpaqueValue.ToByteArray();
+            invalidResumeBytes[0] ^= 0xff;
+            invalidResume.OpaqueValue = ByteString.CopyFrom(invalidResumeBytes);
+            using (CancellationTokenSource resyncCancellation = new(TimeSpan.FromSeconds(5)))
+            using (AsyncServerStreamingCall<ApplicationEvent> resync =
+                application.SubscribeEvents(
+                    new SubscribeEventsRequest
+                    {
+                        SubscriptionId = new SubscriptionId { Value = Guid.NewGuid().ToString("N") },
+                        RequestedQueueItems = 2,
+                        RunScope = { new RunId { Value = streamRunId } },
+                        After = invalidResume,
+                        ExpectedProjectionVersion = new ProjectionVersion { Value = "1" },
+                    },
+                    cancellationToken: resyncCancellation.Token))
+            {
+                Assert.IsTrue(await resync.ResponseStream.MoveNext(resyncCancellation.Token));
+                Assert.AreEqual(EventKind.ResyncRequired, resync.ResponseStream.Current.Kind);
+                Assert.AreEqual(
+                    ResyncReason.CursorInvalid,
+                    resync.ResponseStream.Current.ResyncRequired.Reason);
+            }
+
+            GetRunResponse afterTransportCancel = await application.GetRunAsync(new GetRunRequest
+            {
+                RunId = new RunId { Value = streamRunId },
+            }).ResponseAsync;
+            Assert.AreEqual(
+                stateBeforeTransportCancel,
+                afterTransportCancel.Run.Summary.LifecycleState);
+
             WorkerService.WorkerServiceClient wrongRoleWorker = new(applicationChannel);
             HandshakeResponse wrongWorkerEndpoint = await wrongRoleWorker.NegotiateAsync(
                 new WorkerHandshakeRequest
@@ -356,6 +635,37 @@ public sealed class SolutionIntegrationTests
         Assert.AreEqual(
             HandshakeDisposition.WrongEndpoint,
             wrongApplicationEndpoint.Disposition);
+    }
+#pragma warning restore CA1416
+
+    private static async Task WaitForRunStateAsync(
+        string root,
+        string runId,
+        LifecycleState expected,
+        TimeSpan timeout)
+    {
+        RuntimeDescriptor descriptor = RuntimeDescriptor.Read(root);
+        using GrpcChannel channel = NamedPipeGrpcChannel.Create(descriptor.ApplicationPipe);
+        ApplicationService.ApplicationServiceClient application = new(channel);
+        HandshakeResponse accepted =
+            await application.NegotiateAsync(ApplicationHandshake(descriptor)).ResponseAsync;
+        Assert.AreEqual(HandshakeDisposition.Accepted, accepted.Disposition);
+        DateTimeOffset deadline = DateTimeOffset.UtcNow.Add(timeout);
+        while (DateTimeOffset.UtcNow < deadline)
+        {
+            GetRunResponse response = await application.GetRunAsync(new GetRunRequest
+            {
+                RunId = new RunId { Value = runId },
+            }).ResponseAsync;
+            if (response.Run?.Summary?.LifecycleState == expected)
+            {
+                return;
+            }
+
+            await Task.Delay(25).ConfigureAwait(false);
+        }
+
+        Assert.Fail($"Run '{runId}' did not reach {expected} within {timeout}.");
     }
 
     private static ApplicationHandshakeRequest ApplicationHandshake(RuntimeDescriptor descriptor)
