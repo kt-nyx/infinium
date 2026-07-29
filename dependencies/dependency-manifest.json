@@ -1,0 +1,194 @@
+{
+  "schema": "infinium.dependency-license-provenance/v1",
+  "revision": "m1-slice-0/1",
+  "reviewedOn": "2026-07-28",
+  "scope": "NuGet packages and .NET toolchain used by M1 Slice 0",
+  "projectLicensePosture": {
+    "family": "GNU General Public License version 3 family",
+    "operativeSpdxSelector": null,
+    "licenseFileIntroduced": false,
+    "publicDistributionClaim": false
+  },
+  "toolchain": {
+    "id": "Microsoft .NET SDK",
+    "version": "10.0.302",
+    "commit": "35b593bebfcba58f8e78298cef14c2761f5d86c6",
+    "hostRuntimeVersion": "10.0.10",
+    "runtimeIdentifier": "win-x64",
+    "source": "https://github.com/dotnet/sdk",
+    "license": "MIT"
+  },
+  "packageSource": {
+    "name": "nuget.org",
+    "url": "https://api.nuget.org/v3/index.json",
+    "mapping": "*",
+    "additionalSourcesAllowed": false
+  },
+  "lockIdentity": {
+    "formatVersion": 2,
+    "productionGraph": "src/Infinium.Bethesda/packages.lock.json",
+    "testGraphs": [
+      "tests/Infinium.UnitTests/packages.lock.json",
+      "tests/Infinium.ContractTests/packages.lock.json",
+      "tests/Infinium.IntegrationTests/packages.lock.json",
+      "tests/Infinium.EvaluationTests/packages.lock.json"
+    ],
+    "emptyProjectLocks": "Every other project-local packages.lock.json",
+    "resolvedPackageCount": 44
+  },
+  "directPackages": [
+    {
+      "id": "Microsoft.NET.Test.Sdk",
+      "version": "18.8.1",
+      "license": "MIT",
+      "repository": "https://github.com/microsoft/vstest",
+      "repositoryCommit": "190d2811e952d2143288aa136b6f6fe31d93a437",
+      "nupkgSha512": "7ZJBYyRfeaV4hDllSLVb7dtLXQb4SpbAhy+s9Sc+dUV2zwDUTTJtPLYTjanS5kqqm+283NNxIY4271uUY0Pvjw==",
+      "use": "test-only"
+    },
+    {
+      "id": "MSTest.TestAdapter",
+      "version": "4.3.2",
+      "license": "MIT",
+      "repository": "https://github.com/microsoft/testfx",
+      "repositoryCommit": "c3fdb81b8a5584664d82f4bcec6577f6d918b5fe",
+      "nupkgSha512": "F4uhIME81t8xpHcl0oj9FqPU8vIMpYw95VQyV3bjUknfK3gmkwPqTUnD0wVHNGuTIXBBvvDbu4XDf51P9sY1tg==",
+      "use": "test-only"
+    },
+    {
+      "id": "MSTest.TestFramework",
+      "version": "4.3.2",
+      "license": "MIT",
+      "repository": "https://github.com/microsoft/testfx",
+      "repositoryCommit": "c3fdb81b8a5584664d82f4bcec6577f6d918b5fe",
+      "nupkgSha512": "S89HClH7Tx5ya+t0pJ37gaezMdCFxAzQXqV2wQefJ0BKSlcUrbjgepaZQN+FwwsjIyyiUVMkEoz0HT1OACmOsA==",
+      "use": "test-only"
+    },
+    {
+      "id": "Mutagen.Bethesda.Skyrim",
+      "version": "0.54.2",
+      "license": "GPL-3.0-only",
+      "repository": "https://github.com/Mutagen-Modding/Mutagen",
+      "repositoryCommit": "282bb99a77b2df7f1b092b06270e8e3c8fb55463",
+      "nupkgSha512": "i7Oy40FQy/ppU8oj1x9RrDqB9JOBHpJXk5j1nBIm0NK6mAX9HDWkvLzcs9fMlhVO9Ri7TsgS1gslD+n0oxKT9g==",
+      "use": "production semantic dependency selected by ADR-0009"
+    }
+  ],
+  "resolvedPackages": [
+    { "id": "DynamicData", "version": "9.4.31", "license": "MIT" },
+    { "id": "FluentResults", "version": "3.15.2", "license": "MIT" },
+    { "id": "GameFinder.Common", "version": "4.9.0", "license": "GPL-3.0-only" },
+    { "id": "GameFinder.RegistryUtils", "version": "4.9.0", "license": "GPL-3.0-only" },
+    { "id": "GameFinder.StoreHandlers.GOG", "version": "4.9.0", "license": "GPL-3.0-only" },
+    { "id": "GameFinder.StoreHandlers.Steam", "version": "4.9.0", "license": "GPL-3.0-only" },
+    { "id": "GameFinder.StoreHandlers.Xbox", "version": "4.9.0", "license": "GPL-3.0-only" },
+    { "id": "GameFinder.Wine", "version": "4.9.0", "license": "GPL-3.0-only" },
+    { "id": "ini-parser-netstandard", "version": "2.5.3", "license": "MIT" },
+    { "id": "K4os.Compression.LZ4", "version": "1.3.8", "license": "MIT" },
+    { "id": "K4os.Compression.LZ4.Streams", "version": "1.3.8", "license": "MIT" },
+    { "id": "K4os.Hash.xxHash", "version": "1.0.8", "license": "MIT" },
+    { "id": "Loqui", "version": "3.7.0", "license": "GPL-3.0-only" },
+    { "id": "Microsoft.ApplicationInsights", "version": "2.23.0", "license": "MIT" },
+    { "id": "Microsoft.CodeCoverage", "version": "18.8.1", "license": "MIT" },
+    { "id": "Microsoft.Extensions.DependencyInjection.Abstractions", "version": "9.0.4", "license": "MIT" },
+    { "id": "Microsoft.Extensions.Logging.Abstractions", "version": "9.0.4", "license": "MIT" },
+    { "id": "Microsoft.NET.Test.Sdk", "version": "18.8.1", "license": "MIT" },
+    { "id": "Microsoft.Testing.Extensions.Telemetry", "version": "2.3.2", "license": "MIT" },
+    { "id": "Microsoft.Testing.Extensions.TrxReport.Abstractions", "version": "2.3.2", "license": "MIT" },
+    { "id": "Microsoft.Testing.Extensions.VSTestBridge", "version": "2.3.2", "license": "MIT" },
+    { "id": "Microsoft.Testing.Platform", "version": "2.3.2", "license": "MIT" },
+    { "id": "Microsoft.Testing.Platform.MSBuild", "version": "2.3.2", "license": "MIT" },
+    { "id": "Microsoft.TestPlatform.ObjectModel", "version": "18.8.1", "license": "MIT" },
+    { "id": "Microsoft.TestPlatform.TestHost", "version": "18.8.1", "license": "MIT" },
+    { "id": "MSTest.Analyzers", "version": "4.3.2", "license": "MIT" },
+    { "id": "MSTest.TestAdapter", "version": "4.3.2", "license": "MIT" },
+    { "id": "MSTest.TestFramework", "version": "4.3.2", "license": "MIT" },
+    { "id": "Mutagen.Bethesda.Core", "version": "0.54.2", "license": "GPL-3.0-only" },
+    { "id": "Mutagen.Bethesda.Kernel", "version": "0.54.2", "license": "GPL-3.0-only" },
+    { "id": "Mutagen.Bethesda.Skyrim", "version": "0.54.2", "license": "GPL-3.0-only" },
+    { "id": "NexusMods.Paths", "version": "0.19.1", "license": "GPL-3.0-only" },
+    { "id": "Noggog.CSharpExt", "version": "4.3.0", "license": "GPL-3.0-only" },
+    { "id": "OneOf", "version": "3.0.271", "license": "MIT" },
+    { "id": "Reloaded.Memory", "version": "9.4.2", "license": "GPL-3.0-only with bundled MIT component notices" },
+    { "id": "SharpZipLib", "version": "1.4.2", "license": "MIT" },
+    { "id": "StrongInject", "version": "1.4.4", "license": "MIT" },
+    { "id": "System.IO.Abstractions", "version": "22.1.1", "license": "MIT" },
+    { "id": "System.Reactive", "version": "6.1.0", "license": "MIT" },
+    { "id": "TestableIO.System.IO.Abstractions", "version": "22.1.1", "license": "MIT" },
+    { "id": "TestableIO.System.IO.Abstractions.Wrappers", "version": "22.1.1", "license": "MIT" },
+    { "id": "Testably.Abstractions.FileSystem.Interface", "version": "10.1.0", "license": "MIT" },
+    { "id": "TransparentValueObjects.Abstractions", "version": "1.1.0", "license": "MIT" },
+    { "id": "ValveKeyValue", "version": "0.13.1.398", "license": "MIT" }
+  ],
+  "provenanceGroups": [
+    {
+      "repository": "https://github.com/Mutagen-Modding/Mutagen",
+      "commit": "282bb99a77b2df7f1b092b06270e8e3c8fb55463",
+      "packages": ["Mutagen.Bethesda.Core", "Mutagen.Bethesda.Kernel", "Mutagen.Bethesda.Skyrim"]
+    },
+    {
+      "repository": "https://github.com/erri120/GameFinder",
+      "commit": "efa23bd6d02ec07aa9fb1abe1025efafe3190d9f",
+      "packages": ["GameFinder.Common", "GameFinder.RegistryUtils", "GameFinder.StoreHandlers.GOG", "GameFinder.StoreHandlers.Steam", "GameFinder.StoreHandlers.Xbox", "GameFinder.Wine"]
+    },
+    {
+      "repository": "https://github.com/microsoft/testfx",
+      "commit": "c3fdb81b8a5584664d82f4bcec6577f6d918b5fe",
+      "packages": ["Microsoft.Testing.Extensions.Telemetry", "Microsoft.Testing.Extensions.TrxReport.Abstractions", "Microsoft.Testing.Extensions.VSTestBridge", "Microsoft.Testing.Platform", "Microsoft.Testing.Platform.MSBuild", "MSTest.Analyzers", "MSTest.TestAdapter", "MSTest.TestFramework"]
+    },
+    {
+      "repository": "https://github.com/microsoft/vstest",
+      "commit": "190d2811e952d2143288aa136b6f6fe31d93a437",
+      "packages": ["Microsoft.CodeCoverage", "Microsoft.NET.Test.Sdk", "Microsoft.TestPlatform.ObjectModel", "Microsoft.TestPlatform.TestHost"]
+    }
+  ],
+  "individuallyVerifiedProvenance": [
+    { "package": "DynamicData/9.4.31", "repository": "https://github.com/reactiveui/DynamicData", "commit": "8db480674d0971c46e4ea872c74f3973e2496e2b" },
+    { "package": "FluentResults/3.15.2", "repository": "https://github.com/altmann/FluentResults", "commit": "8b675de7e8b6e4c0921e95138c99e15fd52cde40" },
+    { "package": "K4os.Compression.LZ4/1.3.8", "repository": "https://github.com/MiloszKrajewski/K4os.Compression.LZ4", "commit": "f5a25b7d72e2e41550fe20662597169ff11c3b60" },
+    { "package": "K4os.Compression.LZ4.Streams/1.3.8", "repository": "https://github.com/MiloszKrajewski/K4os.Compression.LZ4", "commit": "f5a25b7d72e2e41550fe20662597169ff11c3b60" },
+    { "package": "K4os.Hash.xxHash/1.0.8", "repository": "https://github.com/MiloszKrajewski/K4os.Hash.xxHash", "commit": "c36ef54edbd778c082cab04df7e42cb72a22d887" },
+    { "package": "Loqui/3.7.0", "repository": "https://github.com/Noggog/Loqui", "commit": "da23e9867105c91e855edf791a35386ef038f063" },
+    { "package": "Microsoft.ApplicationInsights/2.23.0", "repository": "https://github.com/Microsoft/ApplicationInsights-dotnet", "commit": "2faa7e8b157a431daa2e71785d68abd5fa817b53" },
+    { "package": "Microsoft.Extensions.DependencyInjection.Abstractions/9.0.4", "repository": "https://github.com/dotnet/runtime", "commit": "f57e6dc747158ab7ade4e62a75a6750d16b771e8" },
+    { "package": "Microsoft.Extensions.Logging.Abstractions/9.0.4", "repository": "https://github.com/dotnet/runtime", "commit": "f57e6dc747158ab7ade4e62a75a6750d16b771e8" },
+    { "package": "NexusMods.Paths/0.19.1", "repository": "https://github.com/Nexus-Mods/NexusMods.Paths", "commit": "99b62efd5af88b83a0bc9eba8b3607afe802bbed" },
+    { "package": "Noggog.CSharpExt/4.3.0", "repository": "https://github.com/Noggog/CSharpExt", "commit": "dc1558f85e7595bdbae20a18a57905c3a07add9d" },
+    { "package": "OneOf/3.0.271", "repository": "https://github.com/mcintyre321/OneOf", "commit": "6e02dbe75d0f20f198c640d4c04190a85c5ac9e6" },
+    { "package": "Reloaded.Memory/9.4.2", "repository": "https://github.com/Reloaded-Project/Reloaded.Memory", "commit": "6bab99d723bf6f783d24ed0d489db28ea5d9e075" },
+    { "package": "SharpZipLib/1.4.2", "repository": "https://github.com/icsharpcode/SharpZipLib", "commit": "33f64eb0f28cdd2b084cb822fcc224c7c5aba553" },
+    { "package": "StrongInject/1.4.4", "repository": "https://github.com/YairHalberstadt/stronginject", "commit": "6f3077c68b1ebd9c56663456efb67ef90886942e" },
+    { "package": "System.IO.Abstractions/22.1.1", "repository": "https://github.com/TestableIO/System.IO.Abstractions", "commit": "a091ac7f9655f61aeaeb28baf452c1a96c546ba8" },
+    { "package": "TestableIO.System.IO.Abstractions/22.1.1", "repository": "https://github.com/TestableIO/System.IO.Abstractions", "commit": "a091ac7f9655f61aeaeb28baf452c1a96c546ba8" },
+    { "package": "TestableIO.System.IO.Abstractions.Wrappers/22.1.1", "repository": "https://github.com/TestableIO/System.IO.Abstractions", "commit": "a091ac7f9655f61aeaeb28baf452c1a96c546ba8" },
+    { "package": "System.Reactive/6.1.0", "repository": "https://github.com/dotnet/reactive", "commit": "f4da16f15a3cde97f178396ea6e3489cc893651f" },
+    { "package": "Testably.Abstractions.FileSystem.Interface/10.1.0", "repository": "https://github.com/Testably/Testably.Abstractions", "commit": "1253c6bd6309cb15623fac09bd841e782bbca626" },
+    { "package": "TransparentValueObjects.Abstractions/1.1.0", "repository": "https://github.com/erri120/TransparentValueObjects", "commit": "ff32127019b0f53480f5e9c1867924b14138999c" },
+    { "package": "ValveKeyValue/0.13.1.398", "repository": "https://github.com/ValveResourceFormat/ValveKeyValue", "commit": "c7d0dcce45a32123e376c30c6fb9a016d6ebf294" }
+  ],
+  "explicitProvenanceLimitations": [
+    {
+      "package": "ini-parser-netstandard/2.5.3",
+      "license": "MIT",
+      "projectUrl": "https://github.com/rickyah/ini-parser",
+      "sourceRevision": null,
+      "control": "Exact NuGet identity and SHA-512 remain locked; immutable source revision is unavailable in package metadata.",
+      "effect": "No Slice 0 blocker; public redistribution/source-compliance closure remains unclaimed."
+    }
+  ],
+  "excludedDependencies": [
+    "Dapr",
+    "Electron",
+    "libloot",
+    "LOOT application payload",
+    "OpenAI SDK",
+    "SQLite binding",
+    "Temporal",
+    "React",
+    "Restate",
+    "USVFS",
+    "WebView2",
+    "WPF package payload",
+    "xEdit"
+  ]
+}

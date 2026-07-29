@@ -17,5 +17,13 @@ temp.txt
 docs/.rendered/
 docs/.cache/
 
-# New implementation-specific entries belong here once the replacement
-# project is scaffolded.
+# Replacement implementation build and test artifacts
+artifacts/
+bin/
+obj/
+.packages/
+TestResults/
+*.user
+*.suo
+*.ncrunch*
+*.DotSettings.user

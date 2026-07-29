@@ -25,7 +25,8 @@ Start with [`docs/README.md`](docs/README.md).
 - Architecture: ADR-0001 through ADR-0023 and ADR-0025 accepted; ADR-0024
   rejected
 - M1 plan: accepted and active
-- M1 implementation and evaluation: not started; no case has passed execution
+- M1 implementation: Slice 0 toolchain, dependency, and project foundation
+  complete; no product evaluation case has passed execution
 - xEdit: historical integration/oracle recommendation rejected; excluded from
   every Infinium boundary
 - Abandoned implementation: removed from the active tree and retained only in

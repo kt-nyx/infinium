@@ -131,8 +131,9 @@ Every material document should include a status and last-reviewed date.
   deferred-question/residual-risk register, ADR-0025, and the M1 backend
   semantic proof plan. The package was integrated, independently reviewed, and
   accepted on 2026-07-28. Gate F is met, M0 is complete, and the M1 plan is
-  active. No M1 fixture has thereby executed and no evaluation or
-  implementation claim has passed.
+  active. M1 Slice 0 subsequently established the locked toolchain,
+  dependency evidence, and required repository skeleton. No M1 product
+  fixture has executed and no accepted evaluation case has passed.
 - Infinium uses GPLv3-family strong copyleft. MO2 and LOOT remain
   user-installed; ADR-0007 excludes xEdit completely. ADR-0008 through
   ADR-0011 accept deterministic MO2 2.5.2 reconstruction, the exact initial

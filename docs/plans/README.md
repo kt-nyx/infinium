@@ -6,7 +6,8 @@ Last reviewed: 2026-07-28
 The [M0 research-foundation plan](milestones/M0-research-foundation.md) was
 accepted on 2026-07-25 and completed on 2026-07-28. The accepted
 [M1 backend semantic proof plan](milestones/M1-backend-semantic-proof.md) is
-the active implementation plan.
+the active implementation plan. Completed-slice evidence is indexed under
+[`implementation-records/`](implementation-records/README.md).
 
 The product baseline and ADR-0001 through ADR-0011 were accepted on
 2026-07-25. ADR-0012 through ADR-0023 were accepted and ADR-0024 was rejected
