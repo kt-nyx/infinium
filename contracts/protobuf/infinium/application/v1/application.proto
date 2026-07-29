@@ -1,0 +1,433 @@
+syntax = "proto3";
+
+package infinium.application.v1;
+
+option csharp_namespace = "Infinium.Contracts.Protobuf.Application.V1";
+
+import "infinium/common/v1/common.proto";
+import "infinium/domain/v1/identities.proto";
+import "infinium/protocol/v1/protocol.proto";
+
+service ApplicationService {
+  rpc Negotiate(infinium.protocol.v1.ApplicationHandshakeRequest)
+      returns (infinium.protocol.v1.HandshakeResponse);
+  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc ListRuns(ListRunsRequest) returns (ListRunsResponse);
+  rpc GetRun(GetRunRequest) returns (GetRunResponse);
+  rpc ListFindings(ListFindingsRequest) returns (ListFindingsResponse);
+  rpc GetProgress(GetProgressRequest) returns (GetProgressResponse);
+  rpc SubmitRunCommand(SubmitRunCommandRequest)
+      returns (SubmitRunCommandResponse);
+  rpc GetDurableCommand(GetDurableCommandRequest)
+      returns (GetDurableCommandResponse);
+  rpc SubscribeEvents(SubscribeEventsRequest)
+      returns (stream ApplicationEvent);
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+  HealthState state = 1;
+  infinium.domain.v1.CoordinatorInstanceId coordinator_instance_id = 2;
+  uint64 coordinator_fencing_epoch = 3;
+  infinium.common.v1.Instant observed_at = 4;
+  infinium.common.v1.Failure failure = 20;
+}
+
+enum HealthState {
+  HEALTH_STATE_UNSPECIFIED = 0;
+  HEALTH_STATE_HEALTHY = 1;
+  HEALTH_STATE_DEGRADED = 2;
+  HEALTH_STATE_UNAVAILABLE = 3;
+  HEALTH_STATE_UNKNOWN = 4;
+  HEALTH_STATE_UNSUPPORTED = 5;
+}
+
+message RunFilter {
+  repeated infinium.domain.v1.LifecycleState lifecycle_states = 1;
+  repeated infinium.domain.v1.CoverageState coverage_states = 2;
+  infinium.common.v1.Instant created_at_or_after = 3;
+  infinium.common.v1.Instant created_before = 4;
+}
+
+message RunSort {
+  RunSortField field = 1;
+  SortDirection direction = 2;
+}
+
+enum RunSortField {
+  RUN_SORT_FIELD_UNSPECIFIED = 0;
+  RUN_SORT_FIELD_CREATED_AT = 1;
+  RUN_SORT_FIELD_UPDATED_AT = 2;
+  RUN_SORT_FIELD_LIFECYCLE_STATE = 3;
+  RUN_SORT_FIELD_OPAQUE_RUN_ID_TIE_BREAKER = 4;
+  RUN_SORT_FIELD_UNKNOWN = 5;
+  RUN_SORT_FIELD_UNSUPPORTED = 6;
+}
+
+enum SortDirection {
+  SORT_DIRECTION_UNSPECIFIED = 0;
+  SORT_DIRECTION_ASCENDING = 1;
+  SORT_DIRECTION_DESCENDING = 2;
+  SORT_DIRECTION_UNKNOWN = 3;
+  SORT_DIRECTION_UNSUPPORTED = 4;
+}
+
+// The cursor is an opaque coordinator-authenticated value bound to query
+// shape, sort, scope, and projection version.
+message PageCursor {
+  bytes opaque_value = 1;
+}
+
+message ListRunsRequest {
+  RunFilter filter = 1;
+  repeated RunSort sort = 2;
+  uint32 requested_page_size = 3;
+  PageCursor after = 4;
+  infinium.domain.v1.ProjectionVersion expected_projection_version = 5;
+
+  reserved 90 to 99;
+  reserved "sql", "path", "url", "object_type", "object_id";
+}
+
+message ListRunsResponse {
+  oneof result {
+    RunPage page = 1;
+    CursorRejection cursor_rejection = 2;
+    infinium.common.v1.Failure failure = 3;
+  }
+}
+
+message RunPage {
+  repeated RunSummary items = 1;
+  PageCursor next = 2;
+  bool has_more = 3;
+  infinium.domain.v1.ProjectionVersion projection_version = 4;
+}
+
+message CursorRejection {
+  CursorDisposition disposition = 1;
+  infinium.domain.v1.ProjectionVersion current_projection_version = 2;
+  infinium.common.v1.Failure failure = 3;
+}
+
+enum CursorDisposition {
+  CURSOR_DISPOSITION_UNSPECIFIED = 0;
+  CURSOR_DISPOSITION_MALFORMED = 1;
+  CURSOR_DISPOSITION_EXPIRED = 2;
+  CURSOR_DISPOSITION_QUERY_MISMATCH = 3;
+  CURSOR_DISPOSITION_SORT_MISMATCH = 4;
+  CURSOR_DISPOSITION_SCOPE_MISMATCH = 5;
+  CURSOR_DISPOSITION_PROJECTION_INVALIDATED = 6;
+  CURSOR_DISPOSITION_UNKNOWN = 7;
+  CURSOR_DISPOSITION_UNSUPPORTED = 8;
+}
+
+message RunSummary {
+  infinium.domain.v1.RunId run_id = 1;
+  infinium.domain.v1.LifecycleState lifecycle_state = 2;
+  uint64 lifecycle_generation = 3;
+  infinium.common.v1.Instant created_at = 4;
+  infinium.common.v1.Instant updated_at = 5;
+  infinium.domain.v1.CoverageState coverage_state = 6;
+  infinium.domain.v1.ReadinessScope readiness_scope = 7;
+  ProgressSummary progress = 10;
+  CostSummary cost = 11;
+}
+
+message ProgressSummary {
+  ProgressDenominatorState denominator_state = 1;
+  uint64 population_revision = 2;
+  infinium.common.v1.OptionalUInt64 total_units = 3;
+  uint64 completed_units = 4;
+  uint64 reused_units = 5;
+  uint64 queued_units = 6;
+  uint64 running_units = 7;
+  uint64 failed_units = 8;
+  uint64 skipped_units = 9;
+  uint64 unsupported_units = 10;
+  uint64 limited_units = 11;
+  uint64 invalidated_units = 12;
+  uint64 gap_units = 13;
+}
+
+enum ProgressDenominatorState {
+  PROGRESS_DENOMINATOR_STATE_UNSPECIFIED = 0;
+  PROGRESS_DENOMINATOR_STATE_KNOWN = 1;
+  PROGRESS_DENOMINATOR_STATE_ENUMERATING = 2;
+  PROGRESS_DENOMINATOR_STATE_UNAVAILABLE = 3;
+  PROGRESS_DENOMINATOR_STATE_UNKNOWN = 4;
+  PROGRESS_DENOMINATOR_STATE_UNSUPPORTED = 5;
+}
+
+message CostSummary {
+  // Locally calculated cost, not an amount charged by the provider.
+  infinium.common.v1.OptionalInt64 reserved_nano_usd = 1;
+  infinium.common.v1.OptionalInt64 calculated_actual_nano_usd = 2;
+  infinium.common.v1.OptionalUInt64 provider_input_tokens = 3;
+  infinium.common.v1.OptionalUInt64 provider_output_tokens = 4;
+  infinium.common.v1.OptionalUInt64 provider_reasoning_tokens = 5;
+  infinium.common.v1.OptionalUInt64 provider_dispatch_count = 6;
+  infinium.common.v1.OptionalUInt64 provider_tool_call_count = 7;
+  bool has_unresolved_hold = 8;
+}
+
+message GetRunRequest {
+  infinium.domain.v1.RunId run_id = 1;
+  infinium.domain.v1.ProjectionVersion expected_projection_version = 2;
+}
+
+message GetRunResponse {
+  oneof result {
+    RunDetail run = 1;
+    ProjectionInvalidated projection_invalidated = 2;
+    infinium.common.v1.Failure failure = 3;
+  }
+}
+
+message RunDetail {
+  RunSummary summary = 1;
+  infinium.domain.v1.InstallationSnapshotId installation_snapshot_id = 2;
+  infinium.domain.v1.AnalysisContextId analysis_context_id = 3;
+  infinium.domain.v1.ScanConfigurationId effective_scan_configuration_id = 4;
+  infinium.domain.v1.ResolvedInputManifestId resolved_input_manifest_id = 5;
+  infinium.domain.v1.ReplayabilityState replayability_state = 6;
+  infinium.domain.v1.AuditabilityState auditability_state = 7;
+  uint64 finding_occurrence_count = 10;
+  uint64 case_occurrence_count = 11;
+  infinium.domain.v1.ProjectionVersion projection_version = 20;
+}
+
+message ProjectionInvalidated {
+  infinium.domain.v1.ProjectionVersion current_projection_version = 1;
+  ResyncReason reason = 2;
+}
+
+message ListFindingsRequest {
+  infinium.domain.v1.RunId run_id = 1;
+  repeated FindingSupportState support_states = 2;
+  FindingSort sort = 3;
+  uint32 requested_page_size = 4;
+  PageCursor after = 5;
+  infinium.domain.v1.ProjectionVersion expected_projection_version = 6;
+
+  reserved 90 to 99;
+  reserved "sql", "path", "url", "object_type", "object_id";
+}
+
+message ListFindingsResponse {
+  oneof result {
+    FindingPage page = 1;
+    CursorRejection cursor_rejection = 2;
+    infinium.common.v1.Failure failure = 3;
+  }
+}
+
+message FindingPage {
+  repeated FindingSummary items = 1;
+  PageCursor next = 2;
+  bool has_more = 3;
+  infinium.domain.v1.ProjectionVersion projection_version = 4;
+}
+
+message FindingSummary {
+  infinium.domain.v1.FindingOccurrenceId occurrence_id = 1;
+  infinium.domain.v1.LogicalFindingId logical_finding_id = 2;
+  infinium.domain.v1.RunId run_id = 3;
+  infinium.domain.v1.CaseOccurrenceId case_occurrence_id = 4;
+  FindingSupportState support_state = 5;
+  string inert_summary = 6;
+  string analyzer_id = 7;
+  infinium.common.v1.SemanticVersion analyzer_version = 8;
+}
+
+enum FindingSupportState {
+  FINDING_SUPPORT_STATE_UNSPECIFIED = 0;
+  FINDING_SUPPORT_STATE_SUPPORTED_FINDING = 1;
+  FINDING_SUPPORT_STATE_LEAD_ONLY = 2;
+  FINDING_SUPPORT_STATE_ABSTAINED = 3;
+  FINDING_SUPPORT_STATE_UNKNOWN = 4;
+  FINDING_SUPPORT_STATE_UNSUPPORTED = 5;
+}
+
+message FindingSort {
+  FindingSortField field = 1;
+  SortDirection direction = 2;
+}
+
+enum FindingSortField {
+  FINDING_SORT_FIELD_UNSPECIFIED = 0;
+  FINDING_SORT_FIELD_OPAQUE_OCCURRENCE_ID = 1;
+  FINDING_SORT_FIELD_OPAQUE_LOGICAL_ID = 2;
+  FINDING_SORT_FIELD_SUPPORT_STATE = 3;
+  FINDING_SORT_FIELD_UNKNOWN = 4;
+  FINDING_SORT_FIELD_UNSUPPORTED = 5;
+}
+
+message GetProgressRequest {
+  infinium.domain.v1.RunId run_id = 1;
+  infinium.domain.v1.ProjectionVersion expected_projection_version = 2;
+}
+
+message GetProgressResponse {
+  oneof result {
+    ProgressSnapshot progress = 1;
+    ProjectionInvalidated projection_invalidated = 2;
+    infinium.common.v1.Failure failure = 3;
+  }
+}
+
+message ProgressSnapshot {
+  infinium.domain.v1.RunId run_id = 1;
+  infinium.domain.v1.LifecycleState lifecycle_state = 2;
+  ProgressSummary progress = 3;
+  CostSummary cost = 4;
+  infinium.domain.v1.ProjectionVersion projection_version = 5;
+  uint64 durable_event_sequence = 6;
+  infinium.common.v1.Instant observed_at = 7;
+}
+
+message SubmitRunCommandRequest {
+  infinium.domain.v1.DurableCommandId idempotency_key = 1;
+  oneof command {
+    ManualStartCommand start = 10;
+    PauseCommand pause = 11;
+    ResumeCommand resume = 12;
+    CancelCommand cancel = 13;
+  }
+
+  reserved 90 to 99;
+  reserved "sql", "path", "url", "command_line", "provider_request";
+}
+
+message ManualStartCommand {
+  infinium.domain.v1.InstallationSnapshotId installation_snapshot_id = 1;
+  infinium.domain.v1.AnalysisContextId analysis_context_id = 2;
+  infinium.domain.v1.ScanConfigurationId effective_scan_configuration_id = 3;
+  infinium.domain.v1.ResolvedInputManifestId resolved_input_manifest_id = 4;
+  infinium.common.v1.Instant dispatch_deadline = 5;
+  ManualInitiationKind initiation_kind = 6;
+}
+
+enum ManualInitiationKind {
+  MANUAL_INITIATION_KIND_UNSPECIFIED = 0;
+  MANUAL_INITIATION_KIND_CLI_USER_ACTION = 1;
+  MANUAL_INITIATION_KIND_DESKTOP_USER_GESTURE = 2;
+  MANUAL_INITIATION_KIND_EVALUATION_HARNESS = 3;
+  MANUAL_INITIATION_KIND_UNKNOWN = 4;
+  MANUAL_INITIATION_KIND_UNSUPPORTED = 5;
+}
+
+message PauseCommand {
+  infinium.domain.v1.RunId run_id = 1;
+  uint64 expected_lifecycle_generation = 2;
+}
+
+message ResumeCommand {
+  infinium.domain.v1.RunId run_id = 1;
+  uint64 expected_lifecycle_generation = 2;
+}
+
+message CancelCommand {
+  infinium.domain.v1.RunId run_id = 1;
+  uint64 expected_lifecycle_generation = 2;
+}
+
+message SubmitRunCommandResponse {
+  CommandDisposition disposition = 1;
+  infinium.domain.v1.DurableCommandId durable_command_id = 2;
+  infinium.domain.v1.DurableTransitionId durable_transition_id = 3;
+  infinium.domain.v1.RunId run_id = 4;
+  infinium.common.v1.Failure failure = 20;
+}
+
+enum CommandDisposition {
+  COMMAND_DISPOSITION_UNSPECIFIED = 0;
+  COMMAND_DISPOSITION_ACCEPTED = 1;
+  COMMAND_DISPOSITION_ALREADY_ACCEPTED = 2;
+  COMMAND_DISPOSITION_REJECTED = 3;
+  COMMAND_DISPOSITION_INDETERMINATE = 4;
+  COMMAND_DISPOSITION_UNKNOWN = 5;
+  COMMAND_DISPOSITION_UNSUPPORTED = 6;
+}
+
+message GetDurableCommandRequest {
+  infinium.domain.v1.DurableCommandId durable_command_id = 1;
+}
+
+message GetDurableCommandResponse {
+  DurableCommandStatus status = 1;
+  infinium.common.v1.Failure failure = 20;
+}
+
+message DurableCommandStatus {
+  infinium.domain.v1.DurableCommandId durable_command_id = 1;
+  CommandDisposition disposition = 2;
+  infinium.domain.v1.DurableTransitionId durable_transition_id = 3;
+  infinium.domain.v1.RunId run_id = 4;
+  infinium.domain.v1.LifecycleState resulting_lifecycle_state = 5;
+  infinium.common.v1.Instant observed_at = 6;
+}
+
+message EventCursor {
+  bytes opaque_value = 1;
+}
+
+message SubscribeEventsRequest {
+  infinium.domain.v1.SubscriptionId subscription_id = 1;
+  repeated infinium.domain.v1.RunId run_scope = 2;
+  EventCursor after = 3;
+  infinium.domain.v1.ProjectionVersion expected_projection_version = 4;
+  uint32 requested_queue_items = 5;
+}
+
+message ApplicationEvent {
+  infinium.domain.v1.CoordinatorInstanceId coordinator_instance_id = 1;
+  uint64 coordinator_fencing_epoch = 2;
+  infinium.domain.v1.SubscriptionId subscription_id = 3;
+  uint64 durable_event_sequence = 4;
+  infinium.domain.v1.ProjectionVersion projection_version = 5;
+  EventKind kind = 6;
+  infinium.domain.v1.RunId run_scope = 7;
+  oneof payload {
+    ProgressSnapshot progress = 10;
+    LifecycleChanged lifecycle_changed = 11;
+    ProjectionInvalidated projection_invalidated = 12;
+    ResyncRequired resync_required = 13;
+  }
+}
+
+enum EventKind {
+  EVENT_KIND_UNSPECIFIED = 0;
+  EVENT_KIND_PROGRESS = 1;
+  EVENT_KIND_LIFECYCLE_CHANGED = 2;
+  EVENT_KIND_PROJECTION_INVALIDATED = 3;
+  EVENT_KIND_RESYNC_REQUIRED = 4;
+  EVENT_KIND_UNKNOWN = 5;
+  EVENT_KIND_UNSUPPORTED = 6;
+}
+
+message LifecycleChanged {
+  infinium.domain.v1.LifecycleState previous_state = 1;
+  infinium.domain.v1.LifecycleState current_state = 2;
+  uint64 lifecycle_generation = 3;
+  infinium.domain.v1.DurableTransitionId transition_id = 4;
+}
+
+message ResyncRequired {
+  ResyncReason reason = 1;
+  infinium.domain.v1.ProjectionVersion current_projection_version = 2;
+}
+
+enum ResyncReason {
+  RESYNC_REASON_UNSPECIFIED = 0;
+  RESYNC_REASON_SLOW_CLIENT = 1;
+  RESYNC_REASON_QUEUE_OVERFLOW = 2;
+  RESYNC_REASON_SEQUENCE_GAP = 3;
+  RESYNC_REASON_COORDINATOR_RESTART = 4;
+  RESYNC_REASON_REPLAY_WINDOW_EXPIRED = 5;
+  RESYNC_REASON_PROJECTION_REBUILT = 6;
+  RESYNC_REASON_CURSOR_INVALID = 7;
+  RESYNC_REASON_UNKNOWN = 8;
+  RESYNC_REASON_UNSUPPORTED = 9;
+}

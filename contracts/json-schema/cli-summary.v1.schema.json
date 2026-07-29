@@ -1,0 +1,288 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/json-schema/cli-summary.v1.schema.json",
+  "title": "Infinium stable CLI exit and summary contract v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "run_id",
+    "outcome",
+    "exit_code",
+    "typed_counts",
+    "coverage_state_counts",
+    "readiness",
+    "no_safety_guarantee"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "infinium.cli-summary/v1"
+    },
+    "schema_version": {
+      "const": "1"
+    },
+    "run_id": {
+      "$ref": "common.v1.schema.json#/$defs/identifier"
+    },
+    "outcome": {
+      "enum": [
+        "completed",
+        "completed-with-gaps",
+        "failed",
+        "cancelled",
+        "limit-reached",
+        "invalid-input",
+        "unsupported"
+      ]
+    },
+    "exit_code": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 6
+    },
+    "typed_counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observations",
+        "deterministic_results",
+        "external_claims",
+        "application_links",
+        "discovery_leads",
+        "model_proposals",
+        "proposal_admissions",
+        "candidates",
+        "hypotheses",
+        "findings",
+        "recommendations",
+        "supported_cases",
+        "lead_only_cases",
+        "abstentions",
+        "invalid_inputs",
+        "coverage_gaps",
+        "failures"
+      ],
+      "properties": {
+        "observations": {
+          "$ref": "#/$defs/count"
+        },
+        "deterministic_results": {
+          "$ref": "#/$defs/count"
+        },
+        "external_claims": {
+          "$ref": "#/$defs/count"
+        },
+        "application_links": {
+          "$ref": "#/$defs/count"
+        },
+        "discovery_leads": {
+          "$ref": "#/$defs/count"
+        },
+        "model_proposals": {
+          "$ref": "#/$defs/count"
+        },
+        "proposal_admissions": {
+          "$ref": "#/$defs/count"
+        },
+        "candidates": {
+          "$ref": "#/$defs/count"
+        },
+        "hypotheses": {
+          "$ref": "#/$defs/count"
+        },
+        "findings": {
+          "$ref": "#/$defs/count"
+        },
+        "recommendations": {
+          "$ref": "#/$defs/count"
+        },
+        "supported_cases": {
+          "$ref": "#/$defs/count"
+        },
+        "lead_only_cases": {
+          "$ref": "#/$defs/count"
+        },
+        "abstentions": {
+          "$ref": "#/$defs/count"
+        },
+        "invalid_inputs": {
+          "$ref": "#/$defs/count"
+        },
+        "coverage_gaps": {
+          "$ref": "#/$defs/count"
+        },
+        "failures": {
+          "$ref": "#/$defs/count"
+        }
+      }
+    },
+    "coverage_state_counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "completed",
+        "completed_with_gaps",
+        "failed",
+        "skipped_by_configuration",
+        "skipped_by_limit",
+        "unsupported"
+      ],
+      "properties": {
+        "completed": {
+          "$ref": "#/$defs/count"
+        },
+        "completed_with_gaps": {
+          "$ref": "#/$defs/count"
+        },
+        "failed": {
+          "$ref": "#/$defs/count"
+        },
+        "skipped_by_configuration": {
+          "$ref": "#/$defs/count"
+        },
+        "skipped_by_limit": {
+          "$ref": "#/$defs/count"
+        },
+        "unsupported": {
+          "$ref": "#/$defs/count"
+        }
+      }
+    },
+    "readiness": {
+      "enum": [
+        "no-readiness-evaluation",
+        "scope-limited",
+        "full"
+      ]
+    },
+    "no_safety_guarantee": {
+      "const": true
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "outcome": {
+            "enum": [
+              "completed",
+              "completed-with-gaps"
+            ]
+          }
+        },
+        "required": [
+          "outcome"
+        ]
+      },
+      "then": {
+        "properties": {
+          "exit_code": {
+            "const": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "outcome": {
+            "const": "invalid-input"
+          }
+        },
+        "required": [
+          "outcome"
+        ]
+      },
+      "then": {
+        "properties": {
+          "exit_code": {
+            "const": 2
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "outcome": {
+            "const": "unsupported"
+          }
+        },
+        "required": [
+          "outcome"
+        ]
+      },
+      "then": {
+        "properties": {
+          "exit_code": {
+            "const": 3
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "outcome": {
+            "const": "failed"
+          }
+        },
+        "required": [
+          "outcome"
+        ]
+      },
+      "then": {
+        "properties": {
+          "exit_code": {
+            "const": 4
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "outcome": {
+            "const": "cancelled"
+          }
+        },
+        "required": [
+          "outcome"
+        ]
+      },
+      "then": {
+        "properties": {
+          "exit_code": {
+            "const": 5
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "outcome": {
+            "const": "limit-reached"
+          }
+        },
+        "required": [
+          "outcome"
+        ]
+      },
+      "then": {
+        "properties": {
+          "exit_code": {
+            "const": 6
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

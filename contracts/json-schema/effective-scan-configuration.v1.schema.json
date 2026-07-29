@@ -1,0 +1,420 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/json-schema/effective-scan-configuration.v1.schema.json",
+  "title": "Infinium immutable effective scan configuration v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "configuration_id",
+    "configuration_version",
+    "resolved_at",
+    "saved_configuration_reference",
+    "analyzers",
+    "sources",
+    "budgets",
+    "cache_policy",
+    "tracing",
+    "candidate_breadth",
+    "thresholds",
+    "provider",
+    "resources",
+    "semantic_context_overrides"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "infinium.scan.effective-configuration/v1"
+    },
+    "schema_version": {
+      "const": "1"
+    },
+    "configuration_id": {
+      "$ref": "common.v1.schema.json#/$defs/identifier"
+    },
+    "configuration_version": {
+      "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "saved_configuration_reference": {
+      "oneOf": [
+        {
+          "$ref": "common.v1.schema.json#/$defs/artifactReference"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "analyzers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "analyzer_id",
+          "analyzer_version",
+          "declaration_fingerprint",
+          "enabled",
+          "origin"
+        ],
+        "properties": {
+          "analyzer_id": {
+            "$ref": "common.v1.schema.json#/$defs/identifier"
+          },
+          "analyzer_version": {
+            "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+          },
+          "declaration_fingerprint": {
+            "$ref": "common.v1.schema.json#/$defs/fingerprint"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "origin": {
+            "$ref": "common.v1.schema.json#/$defs/settingOrigin"
+          }
+        }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source_id",
+          "mode",
+          "enabled",
+          "origin"
+        ],
+        "properties": {
+          "source_id": {
+            "$ref": "common.v1.schema.json#/$defs/identifier"
+          },
+          "mode": {
+            "enum": [
+              "local-fixture",
+              "retained-evidence",
+              "disabled-unsupported"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "origin": {
+            "$ref": "common.v1.schema.json#/$defs/settingOrigin"
+          }
+        }
+      }
+    },
+    "budgets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "max_dispatch_count",
+        "max_input_tokens",
+        "max_output_tokens",
+        "max_hosted_search_calls",
+        "max_nano_usd",
+        "dispatch_deadline",
+        "origin"
+      ],
+      "properties": {
+        "max_dispatch_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_input_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_output_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_hosted_search_calls": {
+          "const": 0
+        },
+        "max_nano_usd": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dispatch_deadline": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "origin": {
+          "$ref": "common.v1.schema.json#/$defs/settingOrigin"
+        }
+      }
+    },
+    "cache_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "analytical_mode",
+        "source_mode",
+        "provider_cache_mode",
+        "origin"
+      ],
+      "properties": {
+        "analytical_mode": {
+          "enum": [
+            "reuse-valid",
+            "force-clean-recomputation"
+          ]
+        },
+        "source_mode": {
+          "enum": [
+            "reuse-resolved-source",
+            "force-clean-extraction"
+          ]
+        },
+        "provider_cache_mode": {
+          "const": "disabled"
+        },
+        "origin": {
+          "$ref": "common.v1.schema.json#/$defs/settingOrigin"
+        }
+      }
+    },
+    "tracing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "level",
+        "sensitivity_label",
+        "origin"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "level": {
+          "enum": [
+            "off",
+            "errors",
+            "operations",
+            "development"
+          ]
+        },
+        "sensitivity_label": {
+          "const": "sensitive-development-diagnostic"
+        },
+        "origin": {
+          "$ref": "common.v1.schema.json#/$defs/settingOrigin"
+        }
+      }
+    },
+    "candidate_breadth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "max_candidates",
+        "all_pairs_llm_comparison",
+        "origin"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "declared-mandatory-and-causal-lanes",
+            "expanded-deterministic-lanes"
+          ]
+        },
+        "max_candidates": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "all_pairs_llm_comparison": {
+          "const": false
+        },
+        "origin": {
+          "$ref": "common.v1.schema.json#/$defs/settingOrigin"
+        }
+      }
+    },
+    "thresholds": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "analyzer_id",
+          "threshold_id",
+          "ruleset_version",
+          "origin"
+        ],
+        "properties": {
+          "analyzer_id": {
+            "$ref": "common.v1.schema.json#/$defs/identifier"
+          },
+          "threshold_id": {
+            "$ref": "common.v1.schema.json#/$defs/identifier"
+          },
+          "ruleset_version": {
+            "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+          },
+          "origin": {
+            "$ref": "common.v1.schema.json#/$defs/settingOrigin"
+          }
+        }
+      }
+    },
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "origin"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "disabled",
+            "openai-direct-synchronous"
+          ]
+        },
+        "model": {
+          "const": "gpt-5.6-sol"
+        },
+        "reasoning_effort": {
+          "const": "medium"
+        },
+        "store": {
+          "const": false
+        },
+        "service_tier": {
+          "const": "default"
+        },
+        "streaming": {
+          "const": false
+        },
+        "max_concurrent_live_dispatches": {
+          "const": 1
+        },
+        "origin": {
+          "$ref": "common.v1.schema.json#/$defs/settingOrigin"
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "mode": {
+              "const": "disabled"
+            }
+          },
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "model"
+                ]
+              },
+              {
+                "required": [
+                  "reasoning_effort"
+                ]
+              },
+              {
+                "required": [
+                  "store"
+                ]
+              },
+              {
+                "required": [
+                  "service_tier"
+                ]
+              },
+              {
+                "required": [
+                  "streaming"
+                ]
+              },
+              {
+                "required": [
+                  "max_concurrent_live_dispatches"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "properties": {
+            "mode": {
+              "const": "openai-direct-synchronous"
+            }
+          },
+          "required": [
+            "model",
+            "reasoning_effort",
+            "store",
+            "service_tier",
+            "streaming",
+            "max_concurrent_live_dispatches"
+          ]
+        }
+      ]
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "max_general_workers",
+        "max_memory_bytes",
+        "max_output_bytes",
+        "origin"
+      ],
+      "properties": {
+        "max_general_workers": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_memory_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_output_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "origin": {
+          "$ref": "common.v1.schema.json#/$defs/settingOrigin"
+        }
+      }
+    },
+    "semantic_context_overrides": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "override_id",
+          "subject_id",
+          "value_artifact",
+          "origin"
+        ],
+        "properties": {
+          "override_id": {
+            "$ref": "common.v1.schema.json#/$defs/identifier"
+          },
+          "subject_id": {
+            "$ref": "common.v1.schema.json#/$defs/identifier"
+          },
+          "value_artifact": {
+            "$ref": "common.v1.schema.json#/$defs/artifactReference"
+          },
+          "origin": {
+            "const": "semantic-context-override"
+          }
+        }
+      }
+    }
+  }
+}

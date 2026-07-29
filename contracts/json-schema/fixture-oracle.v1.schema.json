@@ -1,0 +1,289 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/json-schema/fixture-oracle.v1.schema.json",
+  "title": "Infinium evaluation fixture independent oracle v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fixture_id",
+    "fixture_version",
+    "oracle_version",
+    "independent_authors_and_reviewers",
+    "ground_truth_methods",
+    "expected_observations",
+    "expected_deterministic_results",
+    "expected_external_claims",
+    "expected_application_links",
+    "expected_discovery_leads",
+    "expected_model_proposals",
+    "expected_proposal_admissions",
+    "expected_candidates",
+    "expected_hypotheses",
+    "expected_findings",
+    "expected_recommendations",
+    "expected_supported_cases",
+    "expected_lead_only_cases",
+    "expected_abstentions",
+    "expected_invalid_inputs",
+    "expected_coverage_and_gaps",
+    "expected_taxonomy_assignments",
+    "expected_replayability",
+    "forbidden_claims",
+    "known_limits",
+    "pre_registered_at",
+    "change_history"
+  ],
+  "properties": {
+    "fixture_id": {
+      "$ref": "common.v1.schema.json#/$defs/identifier"
+    },
+    "fixture_version": {
+      "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+    },
+    "oracle_version": {
+      "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+    },
+    "independent_authors_and_reviewers": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "common.v1.schema.json#/$defs/identifier"
+      }
+    },
+    "ground_truth_methods": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "method_id",
+          "method",
+          "evidence_references",
+          "independent_of_system_under_test"
+        ],
+        "properties": {
+          "method_id": {
+            "$ref": "common.v1.schema.json#/$defs/identifier"
+          },
+          "method": {
+            "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+          },
+          "evidence_references": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "common.v1.schema.json#/$defs/artifactReference"
+            }
+          },
+          "independent_of_system_under_test": {
+            "const": true
+          }
+        }
+      }
+    },
+    "expected_observations": {
+      "$ref": "#/$defs/expectedCollection"
+    },
+    "expected_deterministic_results": {
+      "$ref": "#/$defs/expectedCollection"
+    },
+    "expected_external_claims": {
+      "$ref": "#/$defs/expectedCollection"
+    },
+    "expected_application_links": {
+      "$ref": "#/$defs/expectedCollection"
+    },
+    "expected_discovery_leads": {
+      "$ref": "#/$defs/expectedCollection"
+    },
+    "expected_model_proposals": {
+      "$ref": "#/$defs/expectedCollection"
+    },
+    "expected_proposal_admissions": {
+      "$ref": "#/$defs/expectedCollection"
+    },
+    "expected_candidates": {
+      "$ref": "#/$defs/expectedCollection"
+    },
+    "expected_hypotheses": {
+      "$ref": "#/$defs/expectedCollection"
+    },
+    "expected_findings": {
+      "$ref": "#/$defs/expectedCollection"
+    },
+    "expected_recommendations": {
+      "$ref": "#/$defs/expectedCollection"
+    },
+    "expected_supported_cases": {
+      "$ref": "#/$defs/expectedCollection"
+    },
+    "expected_lead_only_cases": {
+      "$ref": "#/$defs/expectedCollection"
+    },
+    "expected_abstentions": {
+      "$ref": "#/$defs/expectedCollection"
+    },
+    "expected_invalid_inputs": {
+      "$ref": "#/$defs/expectedCollection"
+    },
+    "expected_coverage_and_gaps": {
+      "$ref": "#/$defs/expectedCollection"
+    },
+    "expected_taxonomy_assignments": {
+      "type": "array",
+      "items": {
+        "$ref": "common.v1.schema.json#/$defs/taxonomyAssignment"
+      }
+    },
+    "expected_replayability": {
+      "enum": [
+        "complete-clean",
+        "boundary-replay",
+        "audit-only",
+        "unavailable"
+      ]
+    },
+    "forbidden_claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "claim_id",
+          "claim_type",
+          "reason"
+        ],
+        "properties": {
+          "claim_id": {
+            "$ref": "common.v1.schema.json#/$defs/identifier"
+          },
+          "claim_type": {
+            "$ref": "common.v1.schema.json#/$defs/identifier"
+          },
+          "reason": {
+            "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+          }
+        }
+      }
+    },
+    "known_limits": {
+      "type": "array",
+      "items": {
+        "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+      }
+    },
+    "pre_registered_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "change_history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "oracle_version",
+          "changed_at",
+          "independent_evidence_reference",
+          "prior_error_explanation",
+          "reviewer"
+        ],
+        "properties": {
+          "oracle_version": {
+            "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+          },
+          "changed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "independent_evidence_reference": {
+            "$ref": "common.v1.schema.json#/$defs/artifactReference"
+          },
+          "prior_error_explanation": {
+            "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+          },
+          "reviewer": {
+            "$ref": "common.v1.schema.json#/$defs/identifier"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "expectedCollection": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/expectedItem"
+      }
+    },
+    "expectedItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expected_id",
+        "subject_id",
+        "expected_type",
+        "expected_state",
+        "ground_truth_method_ids",
+        "canonical_value_fingerprint"
+      ],
+      "properties": {
+        "expected_id": {
+          "$ref": "common.v1.schema.json#/$defs/identifier"
+        },
+        "subject_id": {
+          "$ref": "common.v1.schema.json#/$defs/identifier"
+        },
+        "expected_type": {
+          "enum": [
+            "observation",
+            "deterministic-result",
+            "external-claim",
+            "application-link",
+            "discovery-lead",
+            "model-proposal",
+            "proposal-admission",
+            "candidate",
+            "hypothesis",
+            "finding",
+            "recommendation",
+            "supported-case",
+            "lead-only-case",
+            "abstention",
+            "invalid-input",
+            "coverage-gap",
+            "coverage",
+            "audit-gap"
+          ]
+        },
+        "expected_state": {
+          "enum": [
+            "present",
+            "absent",
+            "empty",
+            "unsupported",
+            "unknown",
+            "unmapped",
+            "not-applicable",
+            "failed",
+            "skipped-by-configuration",
+            "skipped-by-limit"
+          ]
+        },
+        "ground_truth_method_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common.v1.schema.json#/$defs/identifier"
+          }
+        },
+        "canonical_value_fingerprint": {
+          "$ref": "common.v1.schema.json#/$defs/fingerprint"
+        }
+      }
+    }
+  }
+}

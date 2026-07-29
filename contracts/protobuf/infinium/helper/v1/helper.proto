@@ -1,0 +1,266 @@
+syntax = "proto3";
+
+package infinium.helper.v1;
+
+option csharp_namespace = "Infinium.Contracts.Protobuf.Helper.V1";
+
+import "infinium/common/v1/common.proto";
+import "infinium/domain/v1/identities.proto";
+import "infinium/protocol/v1/protocol.proto";
+
+// These envelopes are framed only on coordinator-created inherited private
+// handles. The one-shot helper intentionally exposes no ordinary gRPC service.
+message HelperPrivateFrame {
+  uint64 sequence = 1;
+  oneof payload {
+    infinium.protocol.v1.HelperPrivateBootstrap bootstrap = 10;
+    HelperAssignment assignment = 11;
+    DispatchRevalidationRequest dispatch_revalidation_request = 12;
+    DispatchRevalidationResponse dispatch_revalidation_response = 13;
+    HelperStatus status = 14;
+  }
+
+  reserved 90 to 99;
+  reserved "credential_target", "provider_secret", "secret_bytes",
+      "database_path", "arbitrary_url";
+}
+
+message HelperAssignment {
+  infinium.domain.v1.OperationId operation_id = 1;
+  infinium.domain.v1.AttemptId attempt_id = 2;
+  uint64 coordinator_fencing_epoch = 3;
+  infinium.common.v1.Instant assignment_expires_at = 4;
+  HelperLimits limits = 5;
+  oneof assignment {
+    CredentialLifecycleAssignment credential_lifecycle = 10;
+    ProviderDispatchAssignment provider_dispatch = 11;
+  }
+}
+
+// Zero is invalid for every maximum and MUST fail assignment admission.
+message HelperLimits {
+  uint64 maximum_request_bytes = 1;
+  uint64 maximum_response_bytes = 2;
+  uint64 maximum_staged_output_bytes = 3;
+  uint32 maximum_status_frames = 4;
+  uint32 maximum_staged_outputs = 5;
+  uint32 maximum_diagnostic_bytes = 6;
+  infinium.common.v1.DurationMillis maximum_duration = 7;
+}
+
+enum ProviderKind {
+  PROVIDER_KIND_UNSPECIFIED = 0;
+  PROVIDER_KIND_OPENAI = 1;
+  PROVIDER_KIND_UNKNOWN = 2;
+  PROVIDER_KIND_UNSUPPORTED = 3;
+}
+
+enum CredentialPurpose {
+  CREDENTIAL_PURPOSE_UNSPECIFIED = 0;
+  CREDENTIAL_PURPOSE_OPENAI_RESPONSES = 1;
+  CREDENTIAL_PURPOSE_UNKNOWN = 2;
+  CREDENTIAL_PURPOSE_UNSUPPORTED = 3;
+}
+
+message CredentialLifecycleAssignment {
+  infinium.domain.v1.ProviderAccessProfileId access_profile_id = 1;
+  infinium.domain.v1.CredentialGenerationId generation_id = 2;
+  uint64 generation_ordinal = 3;
+  uint64 revocation_epoch = 4;
+  ProviderKind provider = 5;
+  CredentialPurpose purpose = 6;
+  CredentialLifecycleAction action = 7;
+  infinium.domain.v1.CredentialGenerationId replaced_generation_id = 8;
+
+  reserved 90 to 99;
+  reserved "credential_target", "provider_secret", "secret_bytes";
+}
+
+enum CredentialLifecycleAction {
+  CREDENTIAL_LIFECYCLE_ACTION_UNSPECIFIED = 0;
+  CREDENTIAL_LIFECYCLE_ACTION_ENROLL_NEW_GENERATION = 1;
+  CREDENTIAL_LIFECYCLE_ACTION_REPLACE_WITH_NEW_GENERATION = 2;
+  CREDENTIAL_LIFECYCLE_ACTION_VERIFY_EXACT_GENERATION = 3;
+  CREDENTIAL_LIFECYCLE_ACTION_DELETE_EXACT_GENERATION = 4;
+  CREDENTIAL_LIFECYCLE_ACTION_UNKNOWN = 5;
+  CREDENTIAL_LIFECYCLE_ACTION_UNSUPPORTED = 6;
+}
+
+message ProviderDispatchAssignment {
+  infinium.domain.v1.OperationOwner owner = 1;
+  infinium.domain.v1.DispatchId dispatch_id = 2;
+  infinium.domain.v1.ProviderAccessProfileId access_profile_id = 3;
+  infinium.domain.v1.CredentialGenerationId generation_id = 4;
+  uint64 revocation_epoch = 5;
+  ProviderKind provider = 6;
+  CredentialPurpose purpose = 7;
+  ProviderEndpoint endpoint = 8;
+
+  ProviderRequestPayload request = 10;
+  infinium.domain.v1.CapabilitySnapshotId capability_snapshot_id = 11;
+  infinium.domain.v1.PriceSnapshotId price_snapshot_id = 12;
+  infinium.domain.v1.ReservationGroupId reservation_group_id = 13;
+  infinium.common.v1.Instant dispatch_deadline = 14;
+  ProviderResponseBounds response_bounds = 15;
+  HelperStagingAuthority staging_authority = 16;
+
+  reserved 90 to 99;
+  reserved "credential_target", "provider_secret", "secret_bytes",
+      "host", "url", "fallback_profile_id";
+}
+
+enum ProviderEndpoint {
+  PROVIDER_ENDPOINT_UNSPECIFIED = 0;
+  PROVIDER_ENDPOINT_OPENAI_RESPONSES_V1 = 1;
+  PROVIDER_ENDPOINT_UNKNOWN = 2;
+  PROVIDER_ENDPOINT_UNSUPPORTED = 3;
+}
+
+message ProviderRequestPayload {
+  bytes exact_request_bytes = 1;
+  infinium.common.v1.ContentDigest content = 2;
+  infinium.common.v1.SemanticVersion request_schema_version = 3;
+  string idempotency_identity = 4;
+}
+
+message ProviderResponseBounds {
+  uint64 maximum_response_bytes = 1;
+  uint64 maximum_input_tokens = 2;
+  uint64 maximum_output_and_reasoning_tokens = 3;
+  uint32 maximum_priced_tool_calls = 4;
+  int64 maximum_calculated_nano_usd = 5;
+}
+
+message HelperStagingAuthority {
+  infinium.domain.v1.StagingAreaId staging_area_id = 1;
+  repeated HelperStagedOutputSlot allowed_outputs = 2;
+  uint32 inherited_staging_handle_slot = 3;
+}
+
+message HelperStagedOutputSlot {
+  infinium.domain.v1.StagedArtifactId staged_artifact_id = 1;
+  string typed_relative_name = 2;
+  HelperArtifactKind kind = 3;
+  uint64 maximum_bytes = 4;
+  bool required = 5;
+}
+
+enum HelperArtifactKind {
+  HELPER_ARTIFACT_KIND_UNSPECIFIED = 0;
+  HELPER_ARTIFACT_KIND_PROVIDER_RESPONSE = 1;
+  HELPER_ARTIFACT_KIND_NON_SECRET_RECEIPT = 2;
+  HELPER_ARTIFACT_KIND_UNKNOWN = 3;
+  HELPER_ARTIFACT_KIND_UNSUPPORTED = 4;
+}
+
+message DispatchRevalidationRequest {
+  infinium.domain.v1.DispatchId dispatch_id = 1;
+  infinium.domain.v1.AttemptId attempt_id = 2;
+  uint64 observed_coordinator_fencing_epoch = 3;
+  infinium.domain.v1.ProviderAccessProfileId access_profile_id = 4;
+  infinium.domain.v1.CredentialGenerationId generation_id = 5;
+  uint64 revocation_epoch = 6;
+  infinium.domain.v1.ReservationGroupId reservation_group_id = 7;
+  infinium.common.v1.Instant observed_gate_time = 8;
+  infinium.common.v1.ContentDigest exact_request = 9;
+}
+
+message DispatchRevalidationResponse {
+  DispatchGateDisposition disposition = 1;
+  uint64 authorization_sequence = 2;
+  infinium.common.v1.Instant authorized_at = 3;
+  infinium.common.v1.Instant authorization_expires_at = 4;
+  infinium.common.v1.Failure failure = 20;
+}
+
+enum DispatchGateDisposition {
+  DISPATCH_GATE_DISPOSITION_UNSPECIFIED = 0;
+  DISPATCH_GATE_DISPOSITION_AUTHORIZED_ONCE = 1;
+  DISPATCH_GATE_DISPOSITION_REJECTED_STALE_FENCE = 2;
+  DISPATCH_GATE_DISPOSITION_REJECTED_INELIGIBLE_RUN = 3;
+  DISPATCH_GATE_DISPOSITION_REJECTED_DEADLINE = 4;
+  DISPATCH_GATE_DISPOSITION_REJECTED_CREDENTIAL_GENERATION = 5;
+  DISPATCH_GATE_DISPOSITION_REJECTED_REVOCATION = 6;
+  DISPATCH_GATE_DISPOSITION_REJECTED_RESERVATION = 7;
+  DISPATCH_GATE_DISPOSITION_REJECTED_DUPLICATE_OR_AMBIGUOUS_START = 8;
+  DISPATCH_GATE_DISPOSITION_REJECTED_PAUSE_CANCEL_DELETE = 9;
+  DISPATCH_GATE_DISPOSITION_UNKNOWN = 10;
+  DISPATCH_GATE_DISPOSITION_UNSUPPORTED = 11;
+}
+
+message HelperStatus {
+  infinium.domain.v1.OperationId operation_id = 1;
+  infinium.domain.v1.AttemptId attempt_id = 2;
+  HelperStage stage = 3;
+  HelperOutcome outcome = 4;
+  bool transport_may_have_started = 5;
+  ProviderUsage usage = 6;
+  HelperStagedOutputManifest staged_output = 7;
+  infinium.common.v1.Failure failure = 20;
+
+  reserved 90 to 99;
+  reserved "credential_target", "provider_secret", "secret_bytes",
+      "authorization_header";
+}
+
+enum HelperStage {
+  HELPER_STAGE_UNSPECIFIED = 0;
+  HELPER_STAGE_ASSIGNMENT_ACCEPTED = 1;
+  HELPER_STAGE_SECURE_STORE_OPERATION = 2;
+  HELPER_STAGE_AWAITING_FINAL_DISPATCH_GATE = 3;
+  HELPER_STAGE_TRANSPORT_STARTED = 4;
+  HELPER_STAGE_RESPONSE_STAGED = 5;
+  HELPER_STAGE_TERMINAL = 6;
+  HELPER_STAGE_UNKNOWN = 7;
+  HELPER_STAGE_UNSUPPORTED = 8;
+}
+
+enum HelperOutcome {
+  HELPER_OUTCOME_UNSPECIFIED = 0;
+  HELPER_OUTCOME_IN_PROGRESS = 1;
+  HELPER_OUTCOME_SUCCEEDED_NON_SECRET = 2;
+  HELPER_OUTCOME_USER_CANCELLED = 3;
+  HELPER_OUTCOME_FAILED_KNOWN_UNDISPATCHED = 4;
+  HELPER_OUTCOME_FAILED_AFTER_KNOWN_DISPATCH = 5;
+  HELPER_OUTCOME_ABORT_UNKNOWN_DISPATCH = 6;
+  HELPER_OUTCOME_LIMIT_REACHED = 7;
+  HELPER_OUTCOME_UNKNOWN = 8;
+  HELPER_OUTCOME_UNSUPPORTED = 9;
+}
+
+message ProviderUsage {
+  infinium.common.v1.OptionalUInt64 input_tokens = 1;
+  infinium.common.v1.OptionalUInt64 output_tokens = 2;
+  infinium.common.v1.OptionalUInt64 reasoning_tokens = 3;
+  infinium.common.v1.OptionalUInt64 priced_tool_calls = 4;
+  infinium.common.v1.OptionalUInt64 provider_dispatch_count = 5;
+  UsageReceiptState receipt_state = 6;
+}
+
+enum UsageReceiptState {
+  USAGE_RECEIPT_STATE_UNSPECIFIED = 0;
+  USAGE_RECEIPT_STATE_NOT_DISPATCHED = 1;
+  USAGE_RECEIPT_STATE_COMPLETE = 2;
+  USAGE_RECEIPT_STATE_PARTIAL = 3;
+  USAGE_RECEIPT_STATE_UNAVAILABLE = 4;
+  USAGE_RECEIPT_STATE_UNRESOLVED = 5;
+  USAGE_RECEIPT_STATE_UNKNOWN = 6;
+  USAGE_RECEIPT_STATE_UNSUPPORTED = 7;
+}
+
+message HelperStagedOutputManifest {
+  infinium.domain.v1.StagingAreaId staging_area_id = 1;
+  repeated HelperStagedOutput outputs = 2;
+  infinium.common.v1.ContentDigest manifest_digest = 3;
+
+  reserved 90 to 99;
+  reserved "authoritative_payload_path", "database_path", "publish";
+}
+
+message HelperStagedOutput {
+  infinium.domain.v1.StagedArtifactId staged_artifact_id = 1;
+  string typed_relative_name = 2;
+  HelperArtifactKind kind = 3;
+  infinium.common.v1.ContentDigest content = 4;
+  infinium.common.v1.SemanticVersion schema_version = 5;
+}

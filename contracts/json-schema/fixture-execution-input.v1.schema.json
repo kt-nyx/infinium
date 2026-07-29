@@ -1,0 +1,226 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/json-schema/fixture-execution-input.v1.schema.json",
+  "title": "Infinium evaluation fixture execution input v1",
+  "description": "Closed, answer-isolated input contract. Oracle paths, expected labels, adjudication notes, and arbitrary extension bags are intentionally impossible.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fixture_id",
+    "fixture_version",
+    "installation_snapshot_input",
+    "analysis_context_input",
+    "effective_scan_configuration",
+    "runtime_support_input",
+    "mo2_instance_profile_input",
+    "plugin_order_input",
+    "provider_order_input",
+    "source_claim_inputs",
+    "analyzer_declarations",
+    "tool_library_versions",
+    "declared_archive_state",
+    "declared_supported_capabilities",
+    "declared_unsupported_capabilities",
+    "resource_and_time_limits",
+    "input_payload_refs"
+  ],
+  "properties": {
+    "fixture_id": {
+      "$ref": "common.v1.schema.json#/$defs/identifier"
+    },
+    "fixture_version": {
+      "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+    },
+    "installation_snapshot_input": {
+      "$ref": "#/$defs/inputComponent"
+    },
+    "analysis_context_input": {
+      "$ref": "#/$defs/inputComponent"
+    },
+    "effective_scan_configuration": {
+      "$ref": "common.v1.schema.json#/$defs/artifactReference"
+    },
+    "runtime_support_input": {
+      "$ref": "#/$defs/inputComponent"
+    },
+    "mo2_instance_profile_input": {
+      "$ref": "#/$defs/inputComponent"
+    },
+    "plugin_order_input": {
+      "$ref": "#/$defs/inputComponent"
+    },
+    "provider_order_input": {
+      "$ref": "#/$defs/inputComponent"
+    },
+    "source_claim_inputs": {
+      "type": "array",
+      "items": {
+        "$ref": "common.v1.schema.json#/$defs/artifactReference"
+      }
+    },
+    "analyzer_declarations": {
+      "type": "array",
+      "items": {
+        "$ref": "common.v1.schema.json#/$defs/artifactReference"
+      }
+    },
+    "tool_library_versions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "component_id",
+          "version",
+          "fingerprint"
+        ],
+        "properties": {
+          "component_id": {
+            "$ref": "common.v1.schema.json#/$defs/identifier"
+          },
+          "version": {
+            "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+          },
+          "fingerprint": {
+            "$ref": "common.v1.schema.json#/$defs/fingerprint"
+          }
+        }
+      }
+    },
+    "declared_archive_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "reason"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "excluded",
+            "supported",
+            "unsupported",
+            "not-applicable"
+          ]
+        },
+        "reason": {
+          "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "declared_supported_capabilities": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "common.v1.schema.json#/$defs/identifier"
+      }
+    },
+    "declared_unsupported_capabilities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "capability_id",
+          "reason"
+        ],
+        "properties": {
+          "capability_id": {
+            "$ref": "common.v1.schema.json#/$defs/identifier"
+          },
+          "reason": {
+            "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+          }
+        }
+      }
+    },
+    "resource_and_time_limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "wall_time_ms",
+        "memory_bytes",
+        "input_bytes",
+        "output_bytes"
+      ],
+      "properties": {
+        "wall_time_ms": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "memory_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "input_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "output_bytes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "input_payload_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common.v1.schema.json#/$defs/artifactReference"
+      }
+    }
+  },
+  "$defs": {
+    "inputComponent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "reason"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "provided",
+            "empty",
+            "unsupported",
+            "not-applicable"
+          ]
+        },
+        "reason": {
+          "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+        },
+        "artifact": {
+          "$ref": "common.v1.schema.json#/$defs/artifactReference"
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "state": {
+              "const": "provided"
+            }
+          },
+          "required": [
+            "artifact"
+          ]
+        },
+        {
+          "properties": {
+            "state": {
+              "enum": [
+                "empty",
+                "unsupported",
+                "not-applicable"
+              ]
+            }
+          },
+          "not": {
+            "required": [
+              "artifact"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

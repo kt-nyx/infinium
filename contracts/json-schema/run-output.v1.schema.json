@@ -1,0 +1,685 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/json-schema/run-output.v1.schema.json",
+  "title": "infinium.run-output/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "run_id",
+    "run_kind",
+    "run_state",
+    "implementation_commit",
+    "started_at",
+    "ended_at",
+    "installation_snapshot",
+    "analysis_context",
+    "effective_scan_configuration",
+    "resolved_input_manifest",
+    "taxonomy_id",
+    "taxonomy_version",
+    "analyzer_declarations",
+    "observations",
+    "deterministic_results",
+    "external_claims",
+    "application_links",
+    "discovery_leads",
+    "model_proposals",
+    "proposal_admissions",
+    "candidates",
+    "hypotheses",
+    "findings",
+    "recommendations",
+    "supported_cases",
+    "lead_only_cases",
+    "abstentions",
+    "invalid_inputs",
+    "coverage_gaps",
+    "failures",
+    "collection_states",
+    "taxonomy_assignments",
+    "analyzer_coverage",
+    "excluded_capabilities",
+    "readiness",
+    "replayability",
+    "auditability",
+    "cli_summary_fingerprint",
+    "diagnostic_trace_references"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "infinium.run-output/v1"
+    },
+    "schema_version": {
+      "const": "1"
+    },
+    "run_id": {
+      "$ref": "common.v1.schema.json#/$defs/identifier"
+    },
+    "run_kind": {
+      "enum": [
+        "analysis",
+        "evidence-acquisition",
+        "evaluation"
+      ]
+    },
+    "run_state": {
+      "enum": [
+        "completed",
+        "completed-with-gaps",
+        "failed",
+        "cancelled",
+        "limit-reached",
+        "invalid-input",
+        "unsupported"
+      ]
+    },
+    "implementation_commit": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ended_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "installation_snapshot": {
+      "$ref": "common.v1.schema.json#/$defs/artifactReference"
+    },
+    "analysis_context": {
+      "$ref": "common.v1.schema.json#/$defs/artifactReference"
+    },
+    "effective_scan_configuration": {
+      "$ref": "common.v1.schema.json#/$defs/artifactReference"
+    },
+    "resolved_input_manifest": {
+      "$ref": "common.v1.schema.json#/$defs/artifactReference"
+    },
+    "taxonomy_id": {
+      "const": "infinium.skyrim-se.mod-impact-taxonomy"
+    },
+    "taxonomy_version": {
+      "const": "0.1.0"
+    },
+    "analyzer_declarations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "common.v1.schema.json#/$defs/artifactReference"
+      }
+    },
+    "observations": {
+      "$ref": "#/$defs/observationCollection"
+    },
+    "deterministic_results": {
+      "$ref": "#/$defs/deterministicResultCollection"
+    },
+    "external_claims": {
+      "$ref": "#/$defs/externalClaimCollection"
+    },
+    "application_links": {
+      "$ref": "#/$defs/applicationLinkCollection"
+    },
+    "discovery_leads": {
+      "$ref": "#/$defs/discoveryLeadCollection"
+    },
+    "model_proposals": {
+      "$ref": "#/$defs/modelProposalCollection"
+    },
+    "proposal_admissions": {
+      "$ref": "#/$defs/proposalAdmissionCollection"
+    },
+    "candidates": {
+      "$ref": "#/$defs/candidateCollection"
+    },
+    "hypotheses": {
+      "$ref": "#/$defs/hypothesisCollection"
+    },
+    "findings": {
+      "$ref": "#/$defs/findingCollection"
+    },
+    "recommendations": {
+      "$ref": "#/$defs/recommendationCollection"
+    },
+    "supported_cases": {
+      "$ref": "#/$defs/supportedCaseCollection"
+    },
+    "lead_only_cases": {
+      "$ref": "#/$defs/leadOnlyCaseCollection"
+    },
+    "abstentions": {
+      "$ref": "#/$defs/abstentionCollection"
+    },
+    "invalid_inputs": {
+      "$ref": "#/$defs/invalidInputCollection"
+    },
+    "coverage_gaps": {
+      "$ref": "#/$defs/coverageGapCollection"
+    },
+    "failures": {
+      "$ref": "#/$defs/failureCollection"
+    },
+    "collection_states": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observations",
+        "deterministic_results",
+        "external_claims",
+        "application_links",
+        "discovery_leads",
+        "model_proposals",
+        "proposal_admissions",
+        "candidates",
+        "hypotheses",
+        "findings",
+        "recommendations",
+        "supported_cases",
+        "lead_only_cases",
+        "abstentions",
+        "invalid_inputs",
+        "coverage_gaps",
+        "failures"
+      ],
+      "properties": {
+        "observations": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "deterministic_results": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "external_claims": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "application_links": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "discovery_leads": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "model_proposals": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "proposal_admissions": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "candidates": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "hypotheses": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "findings": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "recommendations": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "supported_cases": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "lead_only_cases": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "abstentions": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "invalid_inputs": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "coverage_gaps": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "failures": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        }
+      }
+    },
+    "taxonomy_assignments": {
+      "type": "array",
+      "items": {
+        "$ref": "common.v1.schema.json#/$defs/taxonomyAssignment"
+      }
+    },
+    "analyzer_coverage": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "common.v1.schema.json#/$defs/coverageRecord"
+      }
+    },
+    "excluded_capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "capability_id",
+          "state",
+          "reason"
+        ],
+        "properties": {
+          "capability_id": {
+            "$ref": "common.v1.schema.json#/$defs/identifier"
+          },
+          "state": {
+            "enum": [
+              "unsupported",
+              "excluded",
+              "disabled-by-configuration",
+              "not-applicable"
+            ]
+          },
+          "reason": {
+            "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+          }
+        }
+      }
+    },
+    "readiness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "scope",
+        "no_safety_guarantee"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "no-readiness-evaluation",
+            "scope-limited",
+            "full"
+          ]
+        },
+        "scope": {
+          "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+        },
+        "no_safety_guarantee": {
+          "const": true
+        }
+      }
+    },
+    "replayability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "product_state",
+        "exact_class",
+        "dependency_manifest",
+        "gaps"
+      ],
+      "properties": {
+        "product_state": {
+          "enum": [
+            "complete",
+            "partial",
+            "unavailable"
+          ]
+        },
+        "exact_class": {
+          "enum": [
+            "complete-clean",
+            "boundary-replay",
+            "audit-only",
+            "unavailable"
+          ]
+        },
+        "dependency_manifest": {
+          "$ref": "common.v1.schema.json#/$defs/artifactReference"
+        },
+        "gaps": {
+          "type": "array",
+          "items": {
+            "$ref": "common.v1.schema.json#/$defs/typedArtifact"
+          }
+        }
+      }
+    },
+    "auditability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "gaps"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "complete",
+            "complete-with-gaps",
+            "unavailable"
+          ]
+        },
+        "gaps": {
+          "type": "array",
+          "items": {
+            "$ref": "common.v1.schema.json#/$defs/typedArtifact"
+          }
+        }
+      }
+    },
+    "cli_summary_fingerprint": {
+      "$ref": "common.v1.schema.json#/$defs/fingerprint"
+    },
+    "diagnostic_trace_references": {
+      "type": "array",
+      "items": {
+        "$ref": "common.v1.schema.json#/$defs/artifactReference"
+      }
+    }
+  },
+  "$defs": {
+    "observationCollection": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.v1.schema.json#/$defs/typedArtifact"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "artifact_type": {
+                "const": "observation"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "deterministicResultCollection": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.v1.schema.json#/$defs/typedArtifact"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "artifact_type": {
+                "const": "deterministic-result"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "externalClaimCollection": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.v1.schema.json#/$defs/typedArtifact"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "artifact_type": {
+                "const": "external-claim"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "applicationLinkCollection": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.v1.schema.json#/$defs/typedArtifact"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "artifact_type": {
+                "const": "application-link"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "discoveryLeadCollection": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.v1.schema.json#/$defs/typedArtifact"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "artifact_type": {
+                "const": "discovery-lead"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "modelProposalCollection": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.v1.schema.json#/$defs/typedArtifact"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "artifact_type": {
+                "const": "model-proposal"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "proposalAdmissionCollection": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.v1.schema.json#/$defs/typedArtifact"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "artifact_type": {
+                "const": "proposal-admission"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "candidateCollection": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.v1.schema.json#/$defs/typedArtifact"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "artifact_type": {
+                "const": "candidate"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "hypothesisCollection": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.v1.schema.json#/$defs/typedArtifact"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "artifact_type": {
+                "const": "hypothesis"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "findingCollection": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.v1.schema.json#/$defs/typedArtifact"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "artifact_type": {
+                "const": "finding"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "recommendationCollection": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.v1.schema.json#/$defs/typedArtifact"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "artifact_type": {
+                "const": "recommendation"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "supportedCaseCollection": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.v1.schema.json#/$defs/typedArtifact"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "artifact_type": {
+                "const": "supported-case"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "leadOnlyCaseCollection": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.v1.schema.json#/$defs/typedArtifact"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "artifact_type": {
+                "const": "lead-only-case"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "abstentionCollection": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.v1.schema.json#/$defs/typedArtifact"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "artifact_type": {
+                "const": "abstention"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "invalidInputCollection": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.v1.schema.json#/$defs/typedArtifact"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "artifact_type": {
+                "const": "invalid-input"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "coverageGapCollection": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.v1.schema.json#/$defs/typedArtifact"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "artifact_type": {
+                "const": "coverage-gap"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "failureCollection": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "common.v1.schema.json#/$defs/typedArtifact"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "artifact_type": {
+                "const": "failure"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

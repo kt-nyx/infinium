@@ -40,12 +40,22 @@ public sealed class RepositoryStructureTests
     [TestMethod]
     [TestCategory("M1Contract")]
     [TestProperty("Category", "M1Contract")]
-    public void LaterSliceDirectoriesArePresentButExplicitlyReserved()
+    public void SliceOneContractDirectoriesAreImplementedWhileLaterToolingRemainsReserved()
     {
-        string[] reservedReadmes =
+        string[] implementedReadmes =
         [
             "contracts/protobuf/README.md",
             "contracts/json-schema/README.md",
+        ];
+        foreach (string readme in implementedReadmes)
+        {
+            string content = TestRepository.Read(readme.Split('/'));
+            StringAssert.Contains(content, "M1 Slice 1");
+            StringAssert.Contains(content, "contract");
+        }
+
+        string[] reservedReadmes =
+        [
             "test-data/synthetic/README.md",
             "test-data/manifests/README.md",
             "tools/evaluation/README.md",

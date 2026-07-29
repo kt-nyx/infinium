@@ -1,0 +1,111 @@
+syntax = "proto3";
+
+package infinium.common.v1;
+
+option csharp_namespace = "Infinium.Contracts.Protobuf.Common.V1";
+
+// A UTC instant. Receivers MUST reject nanoseconds outside 0..999,999,999.
+message Instant {
+  int64 unix_seconds = 1;
+  int32 nanoseconds = 2;
+}
+
+// A finite non-negative duration expressed without floating-point arithmetic.
+message DurationMillis {
+  uint64 value = 1;
+}
+
+// A content identity. M1 supports SHA-256 only; other algorithms fail closed.
+message ContentDigest {
+  DigestAlgorithm algorithm = 1;
+  bytes value = 2;
+  uint64 size_bytes = 3;
+}
+
+enum DigestAlgorithm {
+  DIGEST_ALGORITHM_UNSPECIFIED = 0;
+  DIGEST_ALGORITHM_SHA256 = 1;
+  DIGEST_ALGORITHM_UNSUPPORTED = 2;
+  DIGEST_ALGORITHM_UNKNOWN = 3;
+}
+
+// A semantic version is carried as validated text because prerelease/build
+// components are part of compatibility provenance.
+message SemanticVersion {
+  string value = 1;
+}
+
+message ProtocolVersion {
+  uint32 major = 1;
+  uint32 minor = 2;
+  bytes schema_fingerprint_sha256 = 3;
+}
+
+message ProtocolVersionRange {
+  uint32 major = 1;
+  uint32 minimum_minor = 2;
+  uint32 maximum_minor = 3;
+}
+
+// All limits are mandatory, finite ceilings. Zero means "invalid contract",
+// never unlimited.
+message ProtocolLimits {
+  uint32 maximum_message_bytes = 1;
+  uint32 maximum_page_items = 2;
+  uint32 maximum_chunk_bytes = 3;
+  uint32 maximum_stream_queue_items = 4;
+  uint32 maximum_filter_terms = 5;
+  uint32 maximum_sort_terms = 6;
+  uint32 maximum_capability_flags = 7;
+  uint32 maximum_staged_outputs = 8;
+  uint32 maximum_diagnostic_bytes = 9;
+  DurationMillis default_unary_deadline = 10;
+  DurationMillis maximum_unary_deadline = 11;
+}
+
+// Free-form strings are intentionally not used for authority-bearing errors.
+// detail is inert, bounded display text and MUST NOT be interpreted as an
+// operation, path, URL, command, role, or successful state.
+message Failure {
+  FailureCode code = 1;
+  string detail = 2;
+  bool retry_may_be_safe = 3;
+}
+
+enum FailureCode {
+  FAILURE_CODE_UNSPECIFIED = 0;
+  FAILURE_CODE_INVALID_ARGUMENT = 1;
+  FAILURE_CODE_UNAUTHENTICATED = 2;
+  FAILURE_CODE_UNAUTHORIZED = 3;
+  FAILURE_CODE_NOT_FOUND = 4;
+  FAILURE_CODE_CONFLICT = 5;
+  FAILURE_CODE_INCOMPATIBLE_VERSION = 6;
+  FAILURE_CODE_UNSUPPORTED = 7;
+  FAILURE_CODE_LIMIT_EXCEEDED = 8;
+  FAILURE_CODE_DEADLINE_EXPIRED = 9;
+  FAILURE_CODE_STALE_FENCE = 10;
+  FAILURE_CODE_RESYNC_REQUIRED = 11;
+  FAILURE_CODE_INDETERMINATE = 12;
+  FAILURE_CODE_INTERNAL = 13;
+  FAILURE_CODE_UNKNOWN = 14;
+}
+
+enum AvailabilityState {
+  AVAILABILITY_STATE_UNSPECIFIED = 0;
+  AVAILABILITY_STATE_AVAILABLE = 1;
+  AVAILABILITY_STATE_UNAVAILABLE = 2;
+  AVAILABILITY_STATE_UNSUPPORTED = 3;
+  AVAILABILITY_STATE_UNKNOWN = 4;
+}
+
+// Explicit scalar availability avoids interpreting an absent provider fact as
+// zero, unlimited, or success.
+message OptionalUInt64 {
+  AvailabilityState availability = 1;
+  uint64 value = 2;
+}
+
+message OptionalInt64 {
+  AvailabilityState availability = 1;
+  int64 value = 2;
+}

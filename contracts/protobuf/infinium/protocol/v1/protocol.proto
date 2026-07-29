@@ -1,0 +1,134 @@
+syntax = "proto3";
+
+package infinium.protocol.v1;
+
+option csharp_namespace = "Infinium.Contracts.Protobuf.Protocol.V1";
+
+import "infinium/common/v1/common.proto";
+import "infinium/domain/v1/identities.proto";
+
+enum EndpointRole {
+  ENDPOINT_ROLE_UNSPECIFIED = 0;
+  ENDPOINT_ROLE_APPLICATION_CLIENT = 1;
+  ENDPOINT_ROLE_GENERAL_WORKER = 2;
+  ENDPOINT_ROLE_PRIVATE_HELPER_CHANNEL = 3;
+  ENDPOINT_ROLE_UNKNOWN = 4;
+  ENDPOINT_ROLE_UNSUPPORTED = 5;
+}
+
+enum ApplicationClientKind {
+  APPLICATION_CLIENT_KIND_UNSPECIFIED = 0;
+  APPLICATION_CLIENT_KIND_CLI = 1;
+  APPLICATION_CLIENT_KIND_DESKTOP_HOST = 2;
+  APPLICATION_CLIENT_KIND_TEST_HARNESS = 3;
+  APPLICATION_CLIENT_KIND_UNKNOWN = 4;
+  APPLICATION_CLIENT_KIND_UNSUPPORTED = 5;
+}
+
+enum Capability {
+  CAPABILITY_UNSPECIFIED = 0;
+  CAPABILITY_APPLICATION_QUERY = 1;
+  CAPABILITY_DURABLE_COMMAND = 2;
+  CAPABILITY_EVENT_STREAM = 3;
+  CAPABILITY_KEYSET_CURSOR = 4;
+  CAPABILITY_WORKER_ASSIGNMENT = 10;
+  CAPABILITY_WORKER_STAGING = 11;
+  CAPABILITY_HELPER_CREDENTIAL_LIFECYCLE = 20;
+  CAPABILITY_HELPER_PROVIDER_DISPATCH = 21;
+  CAPABILITY_UNKNOWN = 30;
+  CAPABILITY_UNSUPPORTED = 31;
+}
+
+message ContractCompatibility {
+  infinium.common.v1.SemanticVersion application_contract = 1;
+  infinium.common.v1.SemanticVersion domain_contract = 2;
+  infinium.common.v1.SemanticVersion storage_contract = 3;
+}
+
+// The raw instance nonce is published only through the restrictive runtime
+// descriptor. It authenticates connection context, not operation authority.
+message ApplicationHandshakeRequest {
+  infinium.common.v1.ProtocolVersionRange supported_protocol = 1;
+  ContractCompatibility compatibility = 2;
+  ApplicationClientKind client_kind = 3;
+  bytes coordinator_instance_nonce = 4;
+  repeated Capability requested_capabilities = 5;
+
+  reserved 90 to 99;
+  reserved "claimed_endpoint_role", "credential_target", "secret";
+}
+
+message HandshakeResponse {
+  HandshakeDisposition disposition = 1;
+  infinium.common.v1.ProtocolVersion negotiated_protocol = 2;
+  ContractCompatibility compatibility = 3;
+  infinium.domain.v1.CoordinatorInstanceId coordinator_instance_id = 4;
+  uint64 coordinator_fencing_epoch = 5;
+  EndpointRole bound_endpoint_role = 6;
+  repeated Capability granted_capabilities = 7;
+  infinium.common.v1.ProtocolLimits limits = 8;
+  infinium.common.v1.Failure failure = 20;
+}
+
+enum HandshakeDisposition {
+  HANDSHAKE_DISPOSITION_UNSPECIFIED = 0;
+  HANDSHAKE_DISPOSITION_ACCEPTED = 1;
+  HANDSHAKE_DISPOSITION_INCOMPATIBLE_MAJOR = 2;
+  HANDSHAKE_DISPOSITION_INCOMPATIBLE_MINOR = 3;
+  HANDSHAKE_DISPOSITION_INCOMPATIBLE_APPLICATION_CONTRACT = 4;
+  HANDSHAKE_DISPOSITION_INCOMPATIBLE_DOMAIN_CONTRACT = 5;
+  HANDSHAKE_DISPOSITION_INCOMPATIBLE_STORAGE_CONTRACT = 6;
+  HANDSHAKE_DISPOSITION_INVALID_NONCE = 7;
+  HANDSHAKE_DISPOSITION_WRONG_ENDPOINT = 8;
+  HANDSHAKE_DISPOSITION_LAUNCH_BINDING_FAILED = 9;
+  HANDSHAKE_DISPOSITION_UNSUPPORTED_CAPABILITY = 10;
+  HANDSHAKE_DISPOSITION_MALFORMED = 11;
+  HANDSHAKE_DISPOSITION_LIMITS_REJECTED = 12;
+  HANDSHAKE_DISPOSITION_UNKNOWN = 20;
+  HANDSHAKE_DISPOSITION_UNSUPPORTED = 21;
+}
+
+// Serialized only to a coordinator-created inherited private handle. It MUST
+// NOT appear in command lines, environment variables, settings, descriptors,
+// application IPC, logs, or durable state.
+message WorkerPrivateBootstrap {
+  string bootstrap_id = 1;
+  infinium.domain.v1.CoordinatorInstanceId coordinator_instance_id = 2;
+  uint64 coordinator_fencing_epoch = 3;
+  infinium.domain.v1.AttemptId expected_attempt_id = 4;
+  bytes one_use_nonce = 5;
+  infinium.common.v1.Instant expires_at = 6;
+  infinium.common.v1.ProtocolVersionRange supported_protocol = 7;
+  uint32 expected_process_id = 8;
+
+  reserved 90 to 99;
+  reserved "credential_target", "provider_secret", "database_path";
+}
+
+message WorkerHandshakeRequest {
+  string bootstrap_id = 1;
+  bytes one_use_nonce = 2;
+  infinium.domain.v1.AttemptId expected_attempt_id = 3;
+  infinium.common.v1.ProtocolVersionRange supported_protocol = 4;
+  ContractCompatibility compatibility = 5;
+  uint64 observed_coordinator_fencing_epoch = 6;
+  uint32 process_id = 7;
+
+  reserved 90 to 99;
+  reserved "claimed_role", "credential_target", "provider_secret";
+}
+
+// Serialized only to the coordinator/helper inherited private channel.
+message HelperPrivateBootstrap {
+  string bootstrap_id = 1;
+  infinium.domain.v1.CoordinatorInstanceId coordinator_instance_id = 2;
+  uint64 coordinator_fencing_epoch = 3;
+  infinium.domain.v1.OperationId expected_operation_id = 4;
+  bytes one_use_nonce = 5;
+  infinium.common.v1.Instant expires_at = 6;
+  infinium.common.v1.ProtocolVersion protocol = 7;
+  uint32 expected_process_id = 8;
+
+  reserved 90 to 99;
+  reserved "credential_target", "provider_secret", "database_path";
+}

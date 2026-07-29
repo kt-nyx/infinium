@@ -100,6 +100,9 @@
         "type": "Transitive",
         "resolved": "4.3.2",
         "contentHash": "GNvrVI6/Y5pNoKnK1/VELBls3XiHNZaj+zh14LtwlCqFI8zXTW3vuBe0Jv2qEr9wxHlOAQQBTJPRoNRjneGrKQ=="
+      },
+      "infinium.domain": {
+        "type": "Project"
       }
     }
   }

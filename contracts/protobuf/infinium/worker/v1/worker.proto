@@ -1,0 +1,246 @@
+syntax = "proto3";
+
+package infinium.worker.v1;
+
+option csharp_namespace = "Infinium.Contracts.Protobuf.Worker.V1";
+
+import "infinium/common/v1/common.proto";
+import "infinium/domain/v1/identities.proto";
+import "infinium/protocol/v1/protocol.proto";
+
+service WorkerService {
+  rpc Negotiate(infinium.protocol.v1.WorkerHandshakeRequest)
+      returns (infinium.protocol.v1.HandshakeResponse);
+  rpc ReceiveAssignment(ReceiveAssignmentRequest)
+      returns (ReceiveAssignmentResponse);
+  rpc ReportProgress(WorkerProgress) returns (WorkerProgressReceipt);
+  rpc PollControl(PollControlRequest) returns (PollControlResponse);
+  rpc SubmitStagedOutput(SubmitStagedOutputRequest)
+      returns (SubmitStagedOutputResponse);
+  rpc SubmitTerminalReceipt(WorkerTerminalReceipt)
+      returns (WorkerTerminalReceiptResponse);
+}
+
+message ReceiveAssignmentRequest {
+  string bootstrap_id = 1;
+  infinium.domain.v1.AttemptId expected_attempt_id = 2;
+  uint64 observed_coordinator_fencing_epoch = 3;
+}
+
+message ReceiveAssignmentResponse {
+  oneof result {
+    WorkerAssignment assignment = 1;
+    infinium.common.v1.Failure failure = 2;
+  }
+}
+
+message WorkerAssignment {
+  infinium.domain.v1.OperationOwner owner = 1;
+  infinium.domain.v1.OperationId operation_id = 2;
+  infinium.domain.v1.JobNodeId job_node_id = 3;
+  infinium.domain.v1.AttemptId attempt_id = 4;
+  infinium.domain.v1.DispatchId dispatch_id = 5;
+  uint64 coordinator_fencing_epoch = 6;
+  uint64 attempt_fencing_token = 7;
+
+  WorkerOperation operation = 10;
+  infinium.domain.v1.ResolvedInputManifestId resolved_input_manifest_id = 11;
+  repeated WorkerInput inputs = 12;
+  StagingAuthority staging_authority = 13;
+  WorkerLimits limits = 14;
+  infinium.common.v1.Instant deadline = 15;
+  RetrySafety retry_safety = 16;
+
+  reserved 90 to 99;
+  reserved "database_path", "payload_store_path", "credential_target",
+      "provider_secret", "shell_command", "arbitrary_url";
+}
+
+message WorkerOperation {
+  WorkerOperationKind kind = 1;
+  string adapter_or_analyzer_id = 2;
+  infinium.common.v1.SemanticVersion adapter_or_analyzer_version = 3;
+  infinium.common.v1.SemanticVersion assignment_schema_version = 4;
+}
+
+enum WorkerOperationKind {
+  WORKER_OPERATION_KIND_UNSPECIFIED = 0;
+  WORKER_OPERATION_KIND_PARSE_SUPPORTED_ARTIFACT = 1;
+  WORKER_OPERATION_KIND_BUILD_TYPED_INDEX = 2;
+  WORKER_OPERATION_KIND_RUN_DECLARED_ANALYZER = 3;
+  WORKER_OPERATION_KIND_VALIDATE_STAGED_ARTIFACT = 4;
+  WORKER_OPERATION_KIND_APPROVED_READ_ONLY_TOOL_ADAPTER = 5;
+  WORKER_OPERATION_KIND_UNKNOWN = 6;
+  WORKER_OPERATION_KIND_UNSUPPORTED = 7;
+}
+
+message WorkerInput {
+  infinium.domain.v1.PayloadId payload_id = 1;
+  infinium.common.v1.ContentDigest content = 2;
+  WorkerInputKind kind = 3;
+  string logical_name = 4;
+  uint32 inherited_read_handle_slot = 5;
+}
+
+enum WorkerInputKind {
+  WORKER_INPUT_KIND_UNSPECIFIED = 0;
+  WORKER_INPUT_KIND_IMMUTABLE_PAYLOAD = 1;
+  WORKER_INPUT_KIND_RESOLVED_MANIFEST = 2;
+  WORKER_INPUT_KIND_DECLARATION = 3;
+  WORKER_INPUT_KIND_CONFIGURATION = 4;
+  WORKER_INPUT_KIND_UNKNOWN = 5;
+  WORKER_INPUT_KIND_UNSUPPORTED = 6;
+}
+
+message StagingAuthority {
+  infinium.domain.v1.StagingAreaId staging_area_id = 1;
+  repeated StagedOutputSlot allowed_outputs = 2;
+  uint32 inherited_staging_handle_slot = 3;
+}
+
+message StagedOutputSlot {
+  infinium.domain.v1.StagedArtifactId staged_artifact_id = 1;
+  string typed_relative_name = 2;
+  StagedArtifactKind kind = 3;
+  uint64 maximum_bytes = 4;
+  bool required = 5;
+}
+
+enum StagedArtifactKind {
+  STAGED_ARTIFACT_KIND_UNSPECIFIED = 0;
+  STAGED_ARTIFACT_KIND_TYPED_RESULT = 1;
+  STAGED_ARTIFACT_KIND_CHECKPOINT = 2;
+  STAGED_ARTIFACT_KIND_DIAGNOSTIC = 3;
+  STAGED_ARTIFACT_KIND_APPROVED_READ_ONLY_TOOL_OUTPUT = 4;
+  STAGED_ARTIFACT_KIND_UNKNOWN = 5;
+  STAGED_ARTIFACT_KIND_UNSUPPORTED = 6;
+}
+
+// Zero is invalid for every maximum and MUST fail assignment admission.
+message WorkerLimits {
+  uint64 maximum_total_input_bytes = 1;
+  uint64 maximum_total_output_bytes = 2;
+  uint64 maximum_single_output_bytes = 3;
+  uint64 maximum_work_units = 4;
+  uint32 maximum_progress_updates = 5;
+  uint32 maximum_staged_outputs = 6;
+  uint32 maximum_diagnostic_bytes = 7;
+  infinium.common.v1.DurationMillis maximum_duration = 8;
+}
+
+enum RetrySafety {
+  RETRY_SAFETY_UNSPECIFIED = 0;
+  RETRY_SAFETY_SAFE_WITH_NEW_ATTEMPT = 1;
+  RETRY_SAFETY_REQUIRES_RECONCILIATION = 2;
+  RETRY_SAFETY_NOT_SAFE = 3;
+  RETRY_SAFETY_UNKNOWN = 4;
+  RETRY_SAFETY_UNSUPPORTED = 5;
+}
+
+message WorkerProgress {
+  infinium.domain.v1.AttemptId attempt_id = 1;
+  uint64 coordinator_fencing_epoch = 2;
+  uint64 attempt_fencing_token = 3;
+  uint64 progress_sequence = 4;
+  uint64 completed_work_units = 5;
+  infinium.common.v1.OptionalUInt64 total_work_units = 6;
+  string inert_status_text = 7;
+}
+
+message WorkerProgressReceipt {
+  WorkerReceiptDisposition disposition = 1;
+  uint64 accepted_progress_sequence = 2;
+  infinium.common.v1.Failure failure = 20;
+}
+
+message PollControlRequest {
+  infinium.domain.v1.AttemptId attempt_id = 1;
+  uint64 coordinator_fencing_epoch = 2;
+  uint64 attempt_fencing_token = 3;
+}
+
+message PollControlResponse {
+  WorkerControl control = 1;
+  uint64 control_sequence = 2;
+  infinium.common.v1.Failure failure = 20;
+}
+
+enum WorkerControl {
+  WORKER_CONTROL_UNSPECIFIED = 0;
+  WORKER_CONTROL_CONTINUE = 1;
+  WORKER_CONTROL_CANCEL_AT_SAFE_BOUNDARY = 2;
+  WORKER_CONTROL_STOP_STALE_ATTEMPT = 3;
+  WORKER_CONTROL_UNKNOWN = 4;
+  WORKER_CONTROL_UNSUPPORTED = 5;
+}
+
+message StagedOutputManifest {
+  infinium.domain.v1.StagingAreaId staging_area_id = 1;
+  infinium.domain.v1.AttemptId attempt_id = 2;
+  uint64 coordinator_fencing_epoch = 3;
+  uint64 attempt_fencing_token = 4;
+  repeated StagedOutput outputs = 10;
+  infinium.common.v1.ContentDigest manifest_digest = 11;
+
+  reserved 90 to 99;
+  reserved "authoritative_payload_path", "database_path", "publish";
+}
+
+message StagedOutput {
+  infinium.domain.v1.StagedArtifactId staged_artifact_id = 1;
+  StagedArtifactKind kind = 2;
+  string typed_relative_name = 3;
+  infinium.common.v1.ContentDigest content = 4;
+  infinium.common.v1.SemanticVersion schema_version = 5;
+}
+
+message SubmitStagedOutputRequest {
+  StagedOutputManifest manifest = 1;
+}
+
+message SubmitStagedOutputResponse {
+  WorkerReceiptDisposition disposition = 1;
+  // Acceptance acknowledges staging only. It is never publication authority.
+  string staging_receipt_id = 2;
+  infinium.common.v1.Failure failure = 20;
+}
+
+message WorkerTerminalReceipt {
+  infinium.domain.v1.AttemptId attempt_id = 1;
+  uint64 coordinator_fencing_epoch = 2;
+  uint64 attempt_fencing_token = 3;
+  WorkerTerminalOutcome outcome = 4;
+  string staging_receipt_id = 5;
+  infinium.common.v1.Failure failure = 20;
+}
+
+enum WorkerTerminalOutcome {
+  WORKER_TERMINAL_OUTCOME_UNSPECIFIED = 0;
+  WORKER_TERMINAL_OUTCOME_COMPLETED_STAGED = 1;
+  WORKER_TERMINAL_OUTCOME_COMPLETED_WITH_GAPS_STAGED = 2;
+  WORKER_TERMINAL_OUTCOME_FAILED = 3;
+  WORKER_TERMINAL_OUTCOME_CANCELLED = 4;
+  WORKER_TERMINAL_OUTCOME_LIMIT_REACHED = 5;
+  WORKER_TERMINAL_OUTCOME_UNKNOWN = 6;
+  WORKER_TERMINAL_OUTCOME_UNSUPPORTED = 7;
+}
+
+message WorkerTerminalReceiptResponse {
+  WorkerReceiptDisposition disposition = 1;
+  // The coordinator still performs validation/admission in a later
+  // authoritative transaction; this response does not indicate publication.
+  bool queued_for_coordinator_validation = 2;
+  infinium.common.v1.Failure failure = 20;
+}
+
+enum WorkerReceiptDisposition {
+  WORKER_RECEIPT_DISPOSITION_UNSPECIFIED = 0;
+  WORKER_RECEIPT_DISPOSITION_ACCEPTED_FOR_STAGING_ONLY = 1;
+  WORKER_RECEIPT_DISPOSITION_DUPLICATE = 2;
+  WORKER_RECEIPT_DISPOSITION_REJECTED_STALE_FENCE = 3;
+  WORKER_RECEIPT_DISPOSITION_REJECTED_ASSIGNMENT_MISMATCH = 4;
+  WORKER_RECEIPT_DISPOSITION_REJECTED_LIMIT = 5;
+  WORKER_RECEIPT_DISPOSITION_REJECTED_MALFORMED = 6;
+  WORKER_RECEIPT_DISPOSITION_UNKNOWN = 7;
+  WORKER_RECEIPT_DISPOSITION_UNSUPPORTED = 8;
+}

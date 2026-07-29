@@ -1,4 +1,163 @@
 # Protobuf contracts
 
-Versioned protobuf contracts are not implemented by Slice 0. This directory is
-reserved for the accepted Slice 1 contract work.
+Status: M1 Slice 1 contract
+Protocol generation: `v1`
+
+These proto3 schemas define Infinium's versioned local process contracts. They
+do not implement gRPC hosting, named pipes, process launch, IPC authorization,
+credential access, provider dispatch, persistence, or runtime behavior.
+
+## Package map
+
+| Package | File | Purpose |
+| --- | --- | --- |
+| `infinium.common.v1` | `infinium/common/v1/common.proto` | Versions, finite limits, timestamps, digests, explicit availability, and typed failures |
+| `infinium.domain.v1` | `infinium/domain/v1/identities.proto` | Opaque wire identities and the small set of lifecycle/coverage states required by IPC |
+| `infinium.protocol.v1` | `infinium/protocol/v1/protocol.proto` | Endpoint roles, capability negotiation, application handshake, and private worker/helper bootstrap envelopes |
+| `infinium.application.v1` | `infinium/application/v1/application.proto` | Allowlisted application queries, keyset cursors, durable run commands, progress snapshots, and bounded events |
+| `infinium.worker.v1` | `infinium/worker/v1/worker.proto` | One immutable general-worker assignment, progress/control, staged output, and terminal receipt |
+| `infinium.helper.v1` | `infinium/helper/v1/helper.proto` | Private-handle-only one-shot credential/provider-helper assignment, final dispatch revalidation, non-secret status/usage, and staging |
+
+Imports are rooted at `contracts/protobuf`. Generated C# namespaces are
+`Infinium.Contracts.Protobuf.<Area>.V1`.
+
+## Authority and transport boundaries
+
+The schemas intentionally expose three non-interchangeable surfaces:
+
+| Surface | Permitted | Structurally absent |
+| --- | --- | --- |
+| Application named-pipe gRPC endpoint | Handshake/health, bounded run/finding/progress queries, explicit start/pause/resume/cancel commands, bounded event stream | SQL, paths, URLs, shell/tool/provider operations, payload-store access, worker methods, credentials |
+| Worker named-pipe gRPC endpoint | One launch-bound assignment, bounded progress, cancellation polling, attempt-local staging manifest, terminal receipt | Application queries, durable commands, database/payload publication, credentials, provider dispatch, generic process/network operations |
+| Helper inherited private handles | One credential-lifecycle or exact provider-dispatch assignment, final gate, non-secret status/usage, staged response manifest | Ordinary gRPC service, database/application query, credential target names, secret bytes, arbitrary URLs, publication authority |
+
+Caller role is established by endpoint and coordinator launch relationship.
+No caller-supplied role string can grant authority. Application instance
+nonces and launch-bound one-use bootstrap nonces establish connection context;
+they do not authorize an operation. The coordinator must separately validate
+every method, identity, current fencing epoch, lifecycle generation, immutable
+assignment, deadline, credential generation/revocation epoch, and reservation.
+
+A worker/helper staging acknowledgement is never publication. Only the current
+coordinator may validate, admit, and transactionally publish staged bytes.
+
+## Deny-by-default interpretation
+
+- Every enum uses zero as `UNSPECIFIED`; zero is invalid and never success.
+- Authority-bearing enums also include explicit `UNKNOWN` and `UNSUPPORTED`
+  values. Neither may be interpreted as success, compatibility, availability,
+  permission, terminal completion, or a zero-valued fact.
+- An unset `oneof`, unknown message variant, unknown privileged method, unknown
+  enum value, malformed identifier, incompatible major version, invalid
+  nonce, stale fence, or missing finite limit fails closed.
+- Unknown protobuf fields may be retained for compatible forwarding, but they
+  must never grant authority or change a known failure into success.
+- Opaque IDs are bounded, case-sensitive tokens. Consumers must not parse them,
+  derive domain meaning from them, synthesize paths from them, or substitute a
+  content hash for a logical identity.
+- Provider usage, locally calculated nano-USD, provider billing, rate
+  headroom, spend limits, credit, and local hard limits remain distinct.
+  Unavailable facts use `AvailabilityState`; absence is not zero or unlimited.
+- Transport cancellation ends only the current call/stream. It never acts as
+  durable run cancellation. Run control requires an explicit idempotent
+  command and reconciliation through `GetDurableCommand`.
+
+Fields `90..99` and selected forbidden names are reserved in privileged
+messages so later changes cannot accidentally add secrets, generic paths,
+database access, arbitrary URLs/commands, or publication claims to those
+surfaces.
+
+## M1 finite ceilings
+
+Proto3 does not enforce collection, byte, or numeric limits. Producers and
+consumers must validate before allocation/use and reject a zero, larger,
+negative-where-prohibited, inconsistent, or overflowed value. Negotiation may
+select a lower value, never a higher one.
+
+The M1 contract ceilings are:
+
+| Item | Ceiling |
+| --- | ---: |
+| Application/worker serialized gRPC message | 1,048,576 bytes |
+| Private helper frame | 2,097,152 bytes |
+| Page items | 100 |
+| Inert body chunk | 262,144 bytes |
+| Pending stream queue | 256 events |
+| Filter terms | 8 |
+| Sort terms | 4 |
+| Capability flags | 32 |
+| Application event run scope | 32 run IDs |
+| Staged outputs per assignment | 16 |
+| Worker inputs per assignment | 128 |
+| Finding support-state filters | 8 |
+| Inert status/detail/summary UTF-8 text | 4,096 bytes |
+| Opaque ID or idempotency token | 128 UTF-8 bytes |
+| Semantic-version text | 128 UTF-8 bytes |
+| Adapter/analyzer/logical artifact name | 256 UTF-8 bytes |
+| Opaque page/event cursor | 4,096 bytes |
+| Instance/bootstrap nonce | exactly 32 bytes |
+| SHA-256 digest | exactly 32 bytes |
+| Diagnostic text per IPC message | 65,536 bytes |
+| Default unary deadline | 10,000 ms |
+| Maximum unary deadline | 60,000 ms |
+
+`ProtocolLimits` carries the negotiated subset relevant to ordinary gRPC.
+`WorkerLimits`, `HelperLimits`, output-slot limits, response bounds, and
+wall-elapsed deadlines further narrow one assignment. Every maximum in those
+messages is mandatory and non-zero. The sender must reject an assignment that
+cannot be represented by a qualified finite limit; there is no unlimited
+sentinel. Inherited-handle slots are also non-zero, assignment-local indexes;
+unknown, duplicate, missing, or wrong-access handle slots reject the
+assignment.
+
+Lists and details that can grow with history use server-side filters and
+keyset pagination. Cursors are opaque and bound to query shape, stable sort,
+scope, and projection version. A malformed, expired, reordered, mismatched, or
+invalidated cursor yields `CursorRejection`/`resync-required`; the receiver
+must not infer a continuation position.
+
+## Compatibility and field evolution
+
+The package suffix is the protocol major. Within `v1`:
+
+- compatible additive fields, enum values, and methods advance the negotiated
+  minor version and capability set;
+- existing field numbers, meanings, wire types, oneof membership, and success
+  semantics never change;
+- a removed field reserves both its number and name;
+- field numbers are grouped with gaps for additive evolution: `1..9` identity
+  and authority, `10..19` operation/payload, and `20..29` typed failure or
+  terminal detail;
+- an incompatible semantic change creates a new major package such as `v2`;
+- the handshake rejects incompatible protocol, application, domain, or storage
+  contracts before exposing privileged operations; and
+- additive-minor peers may use only explicitly negotiated capabilities.
+
+The schema fingerprint in `ProtocolVersion` identifies the exact generated
+contract set. It supplements, but does not replace, major/minor and
+application/domain/storage compatibility checks.
+
+## Security invariants
+
+- Credential targets and secret bytes never appear in these ordinary contracts
+  or helper frames. The helper derives only the exact authorized Credential
+  Manager target from opaque profile/generation identity.
+- Worker and helper bootstrap messages are serialized only to inherited
+  private handles. They are forbidden from command lines, environments,
+  settings, runtime descriptors, application IPC, logs, diagnostics, and
+  durable records.
+- Provider endpoints are closed enums. No contract carries a caller-selected
+  host or URL.
+- Provider dispatch requires a second, immediate
+  `DispatchRevalidationRequest`/`Response`; a prior reservation or assignment
+  is not transport authority.
+- Raw display/detail/status strings are inert bounded text. They cannot be
+  interpreted as instructions or privileged primitives.
+- No schema contains `google.protobuf.Any`, `Struct`, a generic object lookup,
+  arbitrary metadata map, raw database query, or generic command envelope.
+
+These schemas establish contract shape only. ADR-0019's restrictive named-pipe
+DACLs, current-user/elevation checks, remote rejection, finite transport
+buffers/rate limits, process supervision, private-handle inheritance, staging
+authorization, and coordinator-side admission remain runtime obligations for
+later slices.

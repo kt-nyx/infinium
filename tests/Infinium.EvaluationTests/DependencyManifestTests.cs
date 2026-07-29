@@ -163,8 +163,11 @@ public sealed class DependencyManifestTests
         {
             foreach (JsonProperty package in framework.Value.EnumerateObject())
             {
-                string version = package.Value.GetProperty("resolved").GetString()!;
-                yield return $"{package.Name}/{version}";
+                if (package.Value.TryGetProperty("resolved", out JsonElement resolved))
+                {
+                    string version = resolved.GetString()!;
+                    yield return $"{package.Name}/{version}";
+                }
             }
         }
     }

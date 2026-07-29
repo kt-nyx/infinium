@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/json-schema/replay-dependencies.v1.schema.json",
+  "title": "Infinium evaluation replay dependency manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fixture_id",
+    "fixture_version",
+    "expected_replay_state",
+    "dependencies"
+  ],
+  "properties": {
+    "fixture_id": {
+      "$ref": "common.v1.schema.json#/$defs/identifier"
+    },
+    "fixture_version": {
+      "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+    },
+    "expected_replay_state": {
+      "enum": [
+        "complete-clean",
+        "boundary-replay",
+        "audit-only",
+        "unavailable"
+      ]
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/replayDependency"
+      }
+    }
+  },
+  "$defs": {
+    "replayDependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dependency_id",
+        "kind",
+        "identity_or_version",
+        "retention_location_class",
+        "availability",
+        "required_for",
+        "permission_and_redistribution",
+        "deletion_effect"
+      ],
+      "properties": {
+        "dependency_id": {
+          "$ref": "common.v1.schema.json#/$defs/identifier"
+        },
+        "kind": {
+          "$ref": "common.v1.schema.json#/$defs/identifier"
+        },
+        "identity_or_version": {
+          "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+        },
+        "sha256": {
+          "$ref": "common.v1.schema.json#/$defs/sha256"
+        },
+        "byte_length": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "retention_location_class": {
+          "enum": [
+            "product-cas",
+            "tracked-repository",
+            "evaluator-private",
+            "external-authoritative-source",
+            "not-retained"
+          ]
+        },
+        "availability": {
+          "enum": [
+            "retained",
+            "externally-reacquirable",
+            "evaluator-private",
+            "unavailable"
+          ]
+        },
+        "required_for": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "clean-recomputation",
+              "boundary-replay",
+              "audit"
+            ]
+          }
+        },
+        "permission_and_redistribution": {
+          "enum": [
+            "project-authored-redistributable",
+            "private-retention-only",
+            "manifest-only",
+            "external-reacquisition-only",
+            "unavailable"
+          ]
+        },
+        "deletion_effect": {
+          "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+        }
+      }
+    }
+  }
+}

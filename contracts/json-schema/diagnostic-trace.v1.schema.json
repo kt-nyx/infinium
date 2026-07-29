@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/json-schema/diagnostic-trace.v1.schema.json",
+  "title": "Infinium sensitive diagnostic trace v1",
+  "description": "Run-owned developer diagnostic. It is sensitive, secret-free after redaction, and is not an externally shareable export.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "trace_id",
+    "run_id",
+    "sensitivity_label",
+    "sharing_class",
+    "credential_material_present",
+    "redaction_state",
+    "created_at",
+    "events"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "infinium.diagnostic.trace/v1"
+    },
+    "schema_version": {
+      "const": "1"
+    },
+    "trace_id": {
+      "$ref": "common.v1.schema.json#/$defs/identifier"
+    },
+    "run_id": {
+      "$ref": "common.v1.schema.json#/$defs/identifier"
+    },
+    "sensitivity_label": {
+      "const": "sensitive-development-diagnostic"
+    },
+    "sharing_class": {
+      "const": "PrivateDiagnostic"
+    },
+    "credential_material_present": {
+      "const": false
+    },
+    "redaction_state": {
+      "enum": [
+        "verified-secret-free",
+        "redacted-and-verified"
+      ]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sequence",
+          "timestamp",
+          "severity",
+          "component_id",
+          "event_code",
+          "message",
+          "fields",
+          "payload_references"
+        ],
+        "properties": {
+          "sequence": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "severity": {
+            "enum": [
+              "trace",
+              "debug",
+              "information",
+              "warning",
+              "error",
+              "critical"
+            ]
+          },
+          "component_id": {
+            "$ref": "common.v1.schema.json#/$defs/identifier"
+          },
+          "event_code": {
+            "$ref": "common.v1.schema.json#/$defs/identifier"
+          },
+          "message": {
+            "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "data_class",
+                "redaction",
+                "value"
+              ],
+              "properties": {
+                "name": {
+                  "$ref": "common.v1.schema.json#/$defs/identifier"
+                },
+                "data_class": {
+                  "enum": [
+                    "operational",
+                    "identifier",
+                    "path",
+                    "fingerprint",
+                    "usage",
+                    "cost",
+                    "error"
+                  ]
+                },
+                "redaction": {
+                  "enum": [
+                    "not-sensitive",
+                    "redacted",
+                    "hashed"
+                  ]
+                },
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "payload_references": {
+            "type": "array",
+            "items": {
+              "$ref": "common.v1.schema.json#/$defs/artifactReference"
+            }
+          }
+        }
+      }
+    }
+  }
+}

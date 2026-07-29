@@ -1,0 +1,103 @@
+syntax = "proto3";
+
+package infinium.domain.v1;
+
+option csharp_namespace = "Infinium.Contracts.Protobuf.Domain.V1";
+
+// IDs are opaque, case-sensitive, bounded strings. Their representation has
+// no domain meaning and MUST NOT be parsed, synthesized, or used as a path.
+message CoordinatorInstanceId { string value = 1; }
+message RunId { string value = 1; }
+message EvidenceAcquisitionRunId { string value = 1; }
+message MaintenanceOperationId { string value = 1; }
+message OperationId { string value = 1; }
+message JobNodeId { string value = 1; }
+message AttemptId { string value = 1; }
+message DispatchId { string value = 1; }
+message DurableCommandId { string value = 1; }
+message DurableTransitionId { string value = 1; }
+message SubscriptionId { string value = 1; }
+message InstallationSnapshotId { string value = 1; }
+message AnalysisContextId { string value = 1; }
+message ScanConfigurationId { string value = 1; }
+message ResolvedInputManifestId { string value = 1; }
+message FindingOccurrenceId { string value = 1; }
+message CaseOccurrenceId { string value = 1; }
+message LogicalFindingId { string value = 1; }
+message LogicalCaseId { string value = 1; }
+message PayloadId { string value = 1; }
+message StagingAreaId { string value = 1; }
+message StagedArtifactId { string value = 1; }
+message ProviderAccessProfileId { string value = 1; }
+message CredentialGenerationId { string value = 1; }
+message ReservationGroupId { string value = 1; }
+message CapabilitySnapshotId { string value = 1; }
+message PriceSnapshotId { string value = 1; }
+message ProjectionVersion { string value = 1; }
+
+message OperationOwner {
+  oneof owner {
+    RunId analysis_run_id = 1;
+    EvidenceAcquisitionRunId evidence_acquisition_run_id = 2;
+    MaintenanceOperationId maintenance_operation_id = 3;
+  }
+}
+
+enum LifecycleState {
+  LIFECYCLE_STATE_UNSPECIFIED = 0;
+  LIFECYCLE_STATE_QUEUED = 1;
+  LIFECYCLE_STATE_RUNNING = 2;
+  LIFECYCLE_STATE_WAITING = 3;
+  LIFECYCLE_STATE_RETRYING = 4;
+  LIFECYCLE_STATE_PAUSING = 5;
+  LIFECYCLE_STATE_PAUSED = 6;
+  LIFECYCLE_STATE_CANCELLING = 7;
+  LIFECYCLE_STATE_CANCELLED = 20;
+  LIFECYCLE_STATE_COMPLETED = 21;
+  LIFECYCLE_STATE_COMPLETED_WITH_GAPS = 22;
+  LIFECYCLE_STATE_FAILED = 23;
+  LIFECYCLE_STATE_LIMIT_REACHED = 24;
+  LIFECYCLE_STATE_INVALIDATED_BY_CHANGED_INPUT = 25;
+  LIFECYCLE_STATE_UNKNOWN = 30;
+  LIFECYCLE_STATE_UNSUPPORTED = 31;
+}
+
+enum CoverageState {
+  COVERAGE_STATE_UNSPECIFIED = 0;
+  COVERAGE_STATE_COMPLETED = 1;
+  COVERAGE_STATE_COMPLETED_WITH_GAPS = 2;
+  COVERAGE_STATE_FAILED = 3;
+  COVERAGE_STATE_SKIPPED_BY_CONFIGURATION = 4;
+  COVERAGE_STATE_SKIPPED_BY_LIMIT = 5;
+  COVERAGE_STATE_UNSUPPORTED = 6;
+  COVERAGE_STATE_UNKNOWN = 7;
+}
+
+enum ReadinessScope {
+  READINESS_SCOPE_UNSPECIFIED = 0;
+  READINESS_SCOPE_NONE = 1;
+  READINESS_SCOPE_FULL = 2;
+  READINESS_SCOPE_LIMITED = 3;
+  READINESS_SCOPE_UNKNOWN = 4;
+  READINESS_SCOPE_UNSUPPORTED = 5;
+}
+
+enum ReplayabilityState {
+  REPLAYABILITY_STATE_UNSPECIFIED = 0;
+  REPLAYABILITY_STATE_COMPLETE_RETAINED_REPLAY = 1;
+  REPLAYABILITY_STATE_CLEAN_RECOMPUTATION = 2;
+  REPLAYABILITY_STATE_BOUNDARY_REPLAY = 3;
+  REPLAYABILITY_STATE_AUDIT_ONLY = 4;
+  REPLAYABILITY_STATE_UNAVAILABLE = 5;
+  REPLAYABILITY_STATE_UNKNOWN = 6;
+  REPLAYABILITY_STATE_UNSUPPORTED = 7;
+}
+
+enum AuditabilityState {
+  AUDITABILITY_STATE_UNSPECIFIED = 0;
+  AUDITABILITY_STATE_COMPLETE = 1;
+  AUDITABILITY_STATE_COMPLETE_WITH_GAPS = 2;
+  AUDITABILITY_STATE_UNAVAILABLE = 3;
+  AUDITABILITY_STATE_UNKNOWN = 4;
+  AUDITABILITY_STATE_UNSUPPORTED = 5;
+}

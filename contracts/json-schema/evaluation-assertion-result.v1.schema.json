@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/json-schema/evaluation-assertion-result.v1.schema.json",
+  "title": "Infinium evaluation assertion result v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "assertion_result_id",
+    "assertion_id",
+    "evaluation_id",
+    "specification_revision",
+    "fixture_id",
+    "fixture_version",
+    "partition",
+    "implementation_commit",
+    "dirty_worktree",
+    "run_id",
+    "run_output_fingerprint",
+    "oracle_fingerprint",
+    "assertion_type",
+    "status",
+    "actual_references",
+    "oracle_entry_references",
+    "messages",
+    "evaluated_at"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "infinium.evaluation.assertion-result/v1"
+    },
+    "schema_version": {
+      "const": "1"
+    },
+    "assertion_result_id": {
+      "$ref": "common.v1.schema.json#/$defs/identifier"
+    },
+    "assertion_id": {
+      "$ref": "common.v1.schema.json#/$defs/identifier"
+    },
+    "evaluation_id": {
+      "type": "string",
+      "pattern": "^EVAL-[0-9]{4}$"
+    },
+    "specification_revision": {
+      "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+    },
+    "fixture_id": {
+      "$ref": "common.v1.schema.json#/$defs/identifier"
+    },
+    "fixture_version": {
+      "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+    },
+    "partition": {
+      "$ref": "common.v1.schema.json#/$defs/partition"
+    },
+    "implementation_commit": {
+      "type": "string",
+      "pattern": "^[a-fA-F0-9]{40}$"
+    },
+    "dirty_worktree": {
+      "type": "boolean"
+    },
+    "run_id": {
+      "$ref": "common.v1.schema.json#/$defs/identifier"
+    },
+    "run_output_fingerprint": {
+      "$ref": "common.v1.schema.json#/$defs/fingerprint"
+    },
+    "oracle_fingerprint": {
+      "$ref": "common.v1.schema.json#/$defs/fingerprint"
+    },
+    "assertion_type": {
+      "enum": [
+        "typed-equality",
+        "presence",
+        "absence",
+        "collection-empty",
+        "coverage",
+        "taxonomy",
+        "provenance",
+        "replayability",
+        "answer-isolation",
+        "non-mutation",
+        "security"
+      ]
+    },
+    "status": {
+      "enum": [
+        "passed",
+        "failed",
+        "not-applicable",
+        "blocked"
+      ]
+    },
+    "actual_references": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "common.v1.schema.json#/$defs/identifier"
+      }
+    },
+    "oracle_entry_references": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "common.v1.schema.json#/$defs/identifier"
+      }
+    },
+    "messages": {
+      "type": "array",
+      "items": {
+        "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+      }
+    },
+    "evaluated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "dirty_worktree": {
+            "const": true
+          }
+        },
+        "required": [
+          "dirty_worktree"
+        ]
+      },
+      "then": {
+        "not": {
+          "properties": {
+            "status": {
+              "const": "passed"
+            }
+          },
+          "required": [
+            "status"
+          ]
+        }
+      }
+    }
+  ]
+}

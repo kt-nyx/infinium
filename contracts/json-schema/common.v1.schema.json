@@ -1,0 +1,535 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/json-schema/common.v1.schema.json",
+  "title": "Infinium JSON contract common definitions v1",
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "fingerprint": {
+      "$ref": "#/$defs/sha256"
+    },
+    "artifactReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_id",
+        "artifact_version",
+        "fingerprint",
+        "availability"
+      ],
+      "properties": {
+        "artifact_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "artifact_version": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "fingerprint": {
+          "$ref": "#/$defs/fingerprint"
+        },
+        "availability": {
+          "enum": [
+            "retained",
+            "externally-reacquirable",
+            "evaluator-private",
+            "unavailable"
+          ]
+        }
+      }
+    },
+    "partition": {
+      "enum": [
+        "development",
+        "validation",
+        "held-out"
+      ]
+    },
+    "partitionHistoryEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to",
+        "at",
+        "reason",
+        "change_influenced_implementation"
+      ],
+      "properties": {
+        "from": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/partition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "to": {
+          "$ref": "#/$defs/partition"
+        },
+        "at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "reason": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "change_influenced_implementation": {
+          "type": "boolean"
+        },
+        "replacement_fixture_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "replacement_partition": {
+          "enum": [
+            "validation",
+            "held-out"
+          ]
+        },
+        "authorized_by": {
+          "$ref": "#/$defs/identifier"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "from": {
+                "enum": [
+                  "validation",
+                  "held-out"
+                ]
+              },
+              "to": {
+                "const": "development"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ]
+          },
+          "then": {
+            "properties": {
+              "change_influenced_implementation": {
+                "const": true
+              }
+            },
+            "required": [
+              "replacement_fixture_id",
+              "replacement_partition"
+            ]
+          }
+        }
+      ]
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "producer_id",
+        "producer_version",
+        "originating_run_id",
+        "source_references",
+        "supporting_evidence_references",
+        "contradicting_evidence_references",
+        "llm_involvement"
+      ],
+      "properties": {
+        "producer_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "producer_version": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "originating_run_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "source_references": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artifactReference"
+          }
+        },
+        "supporting_evidence_references": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "contradicting_evidence_references": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "llm_involvement": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "state",
+            "operation"
+          ],
+          "properties": {
+            "state": {
+              "enum": [
+                "none",
+                "proposal-retained",
+                "proposal-rejected",
+                "proposal-admitted"
+              ]
+            },
+            "operation": {
+              "enum": [
+                "none",
+                "source-claim-extraction",
+                "candidate-investigation"
+              ]
+            },
+            "invocation_id": {
+              "$ref": "#/$defs/identifier"
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "state": {
+                    "const": "none"
+                  }
+                },
+                "required": [
+                  "state"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "operation": {
+                    "const": "none"
+                  }
+                },
+                "not": {
+                  "required": [
+                    "invocation_id"
+                  ]
+                }
+              },
+              "else": {
+                "required": [
+                  "invocation_id"
+                ],
+                "properties": {
+                  "operation": {
+                    "enum": [
+                      "source-claim-extraction",
+                      "candidate-investigation"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "typedArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_id",
+        "artifact_revision",
+        "artifact_type",
+        "state",
+        "payload",
+        "provenance"
+      ],
+      "properties": {
+        "artifact_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "artifact_revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "artifact_type": {
+          "enum": [
+            "observation",
+            "deterministic-result",
+            "external-claim",
+            "application-link",
+            "discovery-lead",
+            "model-proposal",
+            "proposal-admission",
+            "candidate",
+            "hypothesis",
+            "finding",
+            "recommendation",
+            "supported-case",
+            "lead-only-case",
+            "abstention",
+            "invalid-input",
+            "coverage-gap",
+            "failure"
+          ]
+        },
+        "state": {
+          "enum": [
+            "present",
+            "rejected",
+            "unsupported",
+            "unknown",
+            "unmapped",
+            "not-applicable",
+            "failed"
+          ]
+        },
+        "payload": {
+          "$ref": "#/$defs/artifactReference"
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance"
+        }
+      }
+    },
+    "taxonomyAssignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assignment_id",
+        "taxonomy_id",
+        "taxonomy_version",
+        "subject_type",
+        "subject_id",
+        "axis",
+        "facet",
+        "applicability_state",
+        "classification_role",
+        "evidence_references",
+        "applicability_condition_references",
+        "reason",
+        "derivation_provenance"
+      ],
+      "properties": {
+        "assignment_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "taxonomy_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "taxonomy_version": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "subject_type": {
+          "$ref": "#/$defs/identifier"
+        },
+        "subject_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "axis": {
+          "$ref": "#/$defs/identifier"
+        },
+        "facet": {
+          "$ref": "#/$defs/identifier"
+        },
+        "code": {
+          "$ref": "#/$defs/identifier"
+        },
+        "applicability_state": {
+          "enum": [
+            "assigned",
+            "unknown",
+            "unsupported",
+            "unmapped",
+            "not-applicable"
+          ]
+        },
+        "classification_role": {
+          "enum": [
+            "declared",
+            "observed",
+            "predicted",
+            "established"
+          ]
+        },
+        "evidence_references": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "applicability_condition_references": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "uniqueItems": true
+        },
+        "confidence_assessment_reference": {
+          "$ref": "#/$defs/identifier"
+        },
+        "reason": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "derivation_provenance": {
+          "$ref": "#/$defs/provenance"
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "applicability_state": {
+              "const": "assigned"
+            }
+          },
+          "required": [
+            "code"
+          ]
+        },
+        {
+          "properties": {
+            "applicability_state": {
+              "enum": [
+                "unknown",
+                "unsupported",
+                "unmapped",
+                "not-applicable"
+              ]
+            }
+          },
+          "not": {
+            "required": [
+              "code"
+            ]
+          }
+        }
+      ]
+    },
+    "coverageRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "coverage_id",
+        "analyzer_id",
+        "population_id",
+        "denominator_label",
+        "denominator",
+        "completed_count",
+        "status",
+        "taxonomy_id",
+        "taxonomy_version",
+        "taxonomy_assignments",
+        "gaps",
+        "exclusions",
+        "failures"
+      ],
+      "properties": {
+        "coverage_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "analyzer_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "population_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "denominator_label": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "denominator": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "completed_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "status": {
+          "enum": [
+            "completed",
+            "completed-with-gaps",
+            "failed",
+            "skipped-by-configuration",
+            "skipped-by-limit",
+            "unsupported"
+          ]
+        },
+        "taxonomy_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "taxonomy_version": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "taxonomy_assignments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/taxonomyAssignment"
+          }
+        },
+        "gaps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/typedArtifact"
+          }
+        },
+        "exclusions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/nonEmptyString"
+          }
+        },
+        "failures": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/typedArtifact"
+          }
+        }
+      }
+    },
+    "collectionState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "reason"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "populated",
+            "empty",
+            "unsupported",
+            "not-applicable",
+            "failed"
+          ]
+        },
+        "reason": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "settingOrigin": {
+      "enum": [
+        "default",
+        "saved-configuration",
+        "command-line-override",
+        "semantic-context-override"
+      ]
+    }
+  }
+}
