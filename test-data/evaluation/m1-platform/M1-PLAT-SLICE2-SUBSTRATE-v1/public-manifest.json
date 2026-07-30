@@ -26,7 +26,7 @@
   "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
   "taxonomy_version": "0.1.0",
   "input_package_fingerprint": "7d3392f374e4fd8e2f1f923c83e8850756f2e95a990dfcb27f288745833b387b",
-  "oracle_fingerprint": "34d3f365fa732505a38f3d7bf1b83c9ca596c20a484c1110d8aef81fb72accf5",
+  "oracle_fingerprint": "e58678f934776db55f5d49fa8be5081882faa15f94cbe315356e5f8685262a56",
   "provenance_fingerprint": "37bb5b544bc81124b6e9faf18988868bdf5ec12de17207307509af83891168a0",
   "replay_dependency_fingerprint": "9beb94b89d2b10270996133327d6e71cef9637fba22b1cf4896779050416bb4c",
   "redistribution_class": "project-authored",

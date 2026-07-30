@@ -11,7 +11,9 @@ the active implementation plan. Completed-slice evidence is indexed under
 
 Slices 0 through 3 are complete. The next authorized step is Slice 3.5,
 independent Bethesda fixture and oracle qualification, before Slice 4
-production semantics and typed-index implementation.
+production semantics and typed-index implementation. Its accepted
+[fresh-agent execution plan](slices/M1-slice-3.5-bethesda-fixture-qualification.md)
+is indexed under [`slices/`](slices/README.md).
 
 The product baseline and ADR-0001 through ADR-0011 were accepted on
 2026-07-25. ADR-0012 through ADR-0023 were accepted and ADR-0024 was rejected

@@ -1019,7 +1019,11 @@ hand-audited raw-offset semantic oracle, light/malformed/unsupported matrix, or
 sealed holdout. Its official broad plugins and arbitrary final-byte mutation
 cannot serve as `BETH-*` correctness fixtures and must not be relabeled as
 such. Slice 3.5 constructs and independently accepts the required packages
-without deriving expectations from this MO2 fixture or from Mutagen.
+without deriving expectations from this MO2 fixture or from Mutagen. The
+accepted
+[Slice 3.5 execution plan](../../plans/slices/M1-slice-3.5-bethesda-fixture-qualification.md)
+defines the construction, role-isolation, snapshot-integration, verification,
+and acceptance workflow.
 
 ## 17. Preconditions before executable fixture-package acceptance or execution
 

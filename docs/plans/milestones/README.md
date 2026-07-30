@@ -1,11 +1,17 @@
 # Milestone plans
 
 Status: Draft  
-Last reviewed: 2026-07-28
+Last reviewed: 2026-07-30
 
 The M0 research plan completed on 2026-07-28. The accepted
 [M1 backend semantic proof plan](M1-backend-semantic-proof.md) is the active
 implementation milestone plan.
+
+Slices 0 through 3 are complete. The active plan's next authorized work is
+Slice 3.5, whose accepted
+[execution plan](../slices/M1-slice-3.5-bethesda-fixture-qualification.md)
+qualifies the Bethesda and applicable taxonomy fixtures before Slice 4
+production parsing begins.
 
 Waves A through D have completed investigations and accepted integrated
 dispositions. Gates A through D are met at their applicable M0 research,

@@ -308,6 +308,13 @@ Gates:
 
 ### Slice 3.5 — Independent Bethesda fixture and oracle qualification
 
+Execute this slice using the accepted
+[Slice 3.5 execution plan](../slices/M1-slice-3.5-bethesda-fixture-qualification.md).
+That subordinate plan supplies the fresh-agent reading order, role and answer
+isolation, package layouts, construction sequence, exact matrix, snapshot
+integration boundary, verification, acceptance, and completion-record
+requirements without expanding the milestone scope.
+
 Deliver:
 
 - assigned binary-fixture author, independent binary/oracle reviewer,

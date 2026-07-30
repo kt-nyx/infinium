@@ -1,7 +1,7 @@
 {
   "fixture_id": "M1-PLAT-SLICE2-SUBSTRATE-v1",
   "fixture_version": "1.0.0",
-  "oracle_version": "1.0.1",
+  "oracle_version": "1.0.2",
   "independent_authors_and_reviewers": [
     "infinium-evaluation-review"
   ],
@@ -13,7 +13,7 @@
         {
           "artifact_id": "accepted-m1-plan",
           "artifact_version": "1.0.0",
-          "fingerprint": "26d4dc251cb732cf88ca039f7577630e332d7a30080256d152f8cee5ac397a6d",
+          "fingerprint": "9d3eeaf32b078e19340c6a08ae65413339fcb1e2f58f1b84f4f71e56b4d88bd4",
           "availability": "retained"
         }
       ],
@@ -189,6 +189,18 @@
   ],
   "pre_registered_at": "2026-07-29T00:00:00.0000000+00:00",
   "change_history": [
+    {
+      "oracle_version": "1.0.2",
+      "changed_at": "2026-07-30T15:21:21.7790812+00:00",
+      "independent_evidence_reference": {
+        "artifact_id": "accepted-m1-plan",
+        "artifact_version": "2026-07-30-slice-3.5-execution-plan",
+        "fingerprint": "9d3eeaf32b078e19340c6a08ae65413339fcb1e2f58f1b84f4f71e56b4d88bd4",
+        "availability": "retained"
+      },
+      "prior_error_explanation": "No semantic expectation changed. The accepted-plan dependency fingerprint changed when the owner added the authoritative Slice 3.5 fresh-agent execution-plan link.",
+      "reviewer": "project-owner"
+    },
     {
       "oracle_version": "1.0.1",
       "changed_at": "2026-07-30T14:58:15.4420835+00:00",
