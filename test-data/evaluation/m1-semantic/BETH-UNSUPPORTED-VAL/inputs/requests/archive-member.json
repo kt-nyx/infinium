@@ -1,0 +1,8 @@
+{
+  "schema": "infinium.fixture.unsupported-request",
+  "schema_version": 1,
+  "operation": "read_archive_member",
+  "archive_kind": "project-authored-placeholder",
+  "archive_path": "absent/FixtureArchive.bsa",
+  "member_path": "meshes/fixture.nif"
+}

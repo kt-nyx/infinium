@@ -1,0 +1,10 @@
+{
+  "schema": "infinium.fixture.unsupported-request",
+  "schema_version": 1,
+  "operation": "automatic_environment_discovery",
+  "requested_sources": [
+    "installed_game",
+    "mod_manager",
+    "registry"
+  ]
+}

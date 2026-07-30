@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>Infinium.BethesdaFixtures.Generator</AssemblyName>
+    <RootNamespace>Infinium.BethesdaFixtures.Generator</RootNamespace>
+    <NoWarn>$(NoWarn);IDE0008;CA1859;CA1861</NoWarn>
+  </PropertyGroup>
+</Project>

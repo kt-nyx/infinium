@@ -1,0 +1,8 @@
+{
+  "schema": "infinium.fixture.unsupported-request",
+  "schema_version": 1,
+  "operation": "resolve_localized_string",
+  "plugin": "plugins/LocalizedDependency.esp",
+  "strings": "plugins/LocalizedDependency_English.strings",
+  "string_id": 1
+}

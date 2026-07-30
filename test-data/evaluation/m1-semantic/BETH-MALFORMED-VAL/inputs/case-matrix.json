@@ -1,0 +1,161 @@
+{
+  "schema": "infinium.bethesda-fixture-case-matrix",
+  "schema_version": 1,
+  "partition": "validation",
+  "classification": "malformed",
+  "fixed_seed": "3520260730",
+  "cases": [
+    {
+      "case_id": "malformed-control",
+      "operation": "scan",
+      "input_paths": [
+        "plugins/MinimalValid.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "malformed-truncated-record-header",
+      "operation": "scan",
+      "input_paths": [
+        "mutations/TruncatedRecordHeader.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "malformed-truncated-record-payload",
+      "operation": "scan",
+      "input_paths": [
+        "mutations/TruncatedRecordPayload.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "malformed-record-size-overflow",
+      "operation": "scan",
+      "input_paths": [
+        "mutations/RecordSizeOverflow.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "malformed-group-size-too-small",
+      "operation": "scan",
+      "input_paths": [
+        "mutations/GroupSizeTooSmall.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "malformed-group-size-past-end",
+      "operation": "scan",
+      "input_paths": [
+        "mutations/GroupSizePastEnd.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "malformed-group-size-overflow",
+      "operation": "scan",
+      "input_paths": [
+        "mutations/GroupSizeOverflow.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "malformed-compressed-missing-length",
+      "operation": "scan",
+      "input_paths": [
+        "mutations/CompressedMissingLength.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "malformed-compressed-invalid-zlib",
+      "operation": "scan",
+      "input_paths": [
+        "mutations/CompressedInvalidZlib.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "malformed-compressed-size-mismatch",
+      "operation": "scan",
+      "input_paths": [
+        "mutations/CompressedSizeMismatch.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "malformed-compressed-declared-size-over-limit",
+      "operation": "scan",
+      "input_paths": [
+        "mutations/CompressedDeclaredSizeOverLimit.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "malformed-nested-groups-over-limit",
+      "operation": "scan",
+      "input_paths": [
+        "mutations/NestedGroupsOverLimit.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "malformed-record-count-over-limit",
+      "operation": "scan",
+      "input_paths": [
+        "mutations/RecordCountOverLimit.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "malformed-subrecord-count-over-limit",
+      "operation": "scan",
+      "input_paths": [
+        "mutations/SubrecordCountOverLimit.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "malformed-record-master-index",
+      "operation": "scan",
+      "input_paths": [
+        "mutations/InvalidRecordMasterIndex.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "malformed-link-master-index",
+      "operation": "scan",
+      "input_paths": [
+        "mutations/InvalidLinkMasterIndex.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "malformed-unpaired-master",
+      "operation": "scan",
+      "input_paths": [
+        "mutations/MasterMissingDataPair.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "malformed-changed-during-read",
+      "operation": "orchestrated-read",
+      "input_paths": [
+        "requests/changed-during-read-plan.json"
+      ],
+      "denominator": null
+    }
+  ],
+  "notes": {
+    "resource_limits": {
+      "maximum_group_depth": 64,
+      "maximum_records": 4096,
+      "maximum_subrecords_per_record": 4096,
+      "maximum_declared_decompressed_bytes": 67108864
+    }
+  }
+}

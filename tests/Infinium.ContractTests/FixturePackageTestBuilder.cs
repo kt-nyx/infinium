@@ -155,6 +155,41 @@ internal sealed class FixturePackageTestBuilder : IDisposable
         RefreshFingerprint("oracle_fingerprint", FixturePackageReader.OracleFileName);
     }
 
+    internal void AddRetainedInputArtifact(string relativePath, byte[] bytes)
+    {
+        WriteRetainedArtifact(relativePath, bytes);
+        MutateObject(
+            FixturePackageReader.ExecutionInputFileName,
+            root => root["input_payload_refs"]!.AsArray().Add(
+                ArtifactReference(relativePath, Fingerprint(relativePath))));
+        RefreshFingerprint("input_package_fingerprint", FixturePackageReader.ExecutionInputFileName);
+    }
+
+    internal void AddRetainedOracleArtifact(string relativePath, byte[] bytes)
+    {
+        WriteRetainedArtifact(relativePath, bytes);
+        MutateObject(
+            FixturePackageReader.OracleFileName,
+            root => root["ground_truth_methods"]![0]!["evidence_references"]!
+                .AsArray()
+                .Add(ArtifactReference(relativePath, Fingerprint(relativePath))));
+        RefreshFingerprint("oracle_fingerprint", FixturePackageReader.OracleFileName);
+    }
+
+    internal void AddRetainedInputReference(string relativePath, string fingerprint)
+    {
+        MutateObject(
+            FixturePackageReader.ExecutionInputFileName,
+            root => root["input_payload_refs"]!.AsArray().Add(
+                ArtifactReference(relativePath, fingerprint)));
+        RefreshFingerprint("input_package_fingerprint", FixturePackageReader.ExecutionInputFileName);
+    }
+
+    internal void MutateRetainedArtifact(string relativePath, byte[] bytes)
+    {
+        WriteRetainedArtifact(relativePath, bytes);
+    }
+
     internal void AddProvenanceProperty(string propertyName, JsonNode value)
     {
         MutateObject(FixturePackageReader.ProvenanceFileName, root => root[propertyName] = value);
@@ -469,13 +504,15 @@ internal sealed class FixturePackageTestBuilder : IDisposable
         };
     }
 
-    private static JsonObject ArtifactReference(string artifactId)
+    private static JsonObject ArtifactReference(
+        string artifactId,
+        string? fingerprint = null)
     {
         return new JsonObject
         {
             ["artifact_id"] = artifactId,
             ["artifact_version"] = "1.0.0",
-            ["fingerprint"] = new string('0', 64),
+            ["fingerprint"] = fingerprint ?? new string('0', 64),
             ["availability"] = "retained",
         };
     }
@@ -499,6 +536,13 @@ internal sealed class FixturePackageTestBuilder : IDisposable
         File.WriteAllText(
             FilePath(fileName),
             node.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+    }
+
+    private void WriteRetainedArtifact(string relativePath, byte[] bytes)
+    {
+        string path = FilePath(relativePath.Replace('/', Path.DirectorySeparatorChar));
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllBytes(path, bytes);
     }
 
     private string Fingerprint(string fileName)

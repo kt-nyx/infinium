@@ -1,0 +1,125 @@
+{
+  "schema": "infinium.bethesda-fixture-construction",
+  "schema_version": 1,
+  "package_id": "BETH-UNSUPPORTED-VAL",
+  "generator": "Infinium.BethesdaFixtures.Generator",
+  "generator_version": 1,
+  "fixed_seed": "3520260730",
+  "dependencies": ".NET/BCL only",
+  "input_prohibitions": [
+    "No game or mod bytes consumed.",
+    "No Mutagen or xEdit input consumed.",
+    "No network input consumed.",
+    "No production parser input consumed.",
+    "No oracle, taxonomy answer, held-out content, or snapshot capture input consumed."
+  ],
+  "files": [
+    {
+      "path": "case-matrix.json",
+      "sha256": "7d871401159f097cc882b5176d893c8727f00af73fe901c6e228f07aa67dfe96",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-request-or-matrix-metadata",
+          "length": 1687
+        }
+      ],
+      "byte_length": 1687
+    },
+    {
+      "path": "plugins/LocalizedDependency.esp",
+      "sha256": "43115de64ffaa9853f8823525877ac7c0eaa93e28f7d02c22a20521b0c9eb605",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 206
+        }
+      ],
+      "byte_length": 206
+    },
+    {
+      "path": "plugins/LocalizedDependency_English.strings",
+      "sha256": "5119dacdfa9be32a443106dd645e743cac50237f1808575e9b0e3aff9c4e97d4",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-strings-table-bytes",
+          "length": 56
+        }
+      ],
+      "byte_length": 56
+    },
+    {
+      "path": "plugins/UnsupportedFamily.esp",
+      "sha256": "28a3f77b1c46ef8088d57987f3e43fa7e39a778fc8718f3b5d2bf567c96965ba",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 192
+        }
+      ],
+      "byte_length": 192
+    },
+    {
+      "path": "plugins/UnsupportedNpcField.esp",
+      "sha256": "498515791b9196341c286ca4b65c6565ab9d7b07c59e8eb42365a1a85fce44d2",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 236
+        }
+      ],
+      "byte_length": 236
+    },
+    {
+      "path": "requests/archive-member.json",
+      "sha256": "7070a1672b8e748d518f2892fe03694fa8ec7fb5094a820e3d0a6d5edb45f983",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-request-or-matrix-metadata",
+          "length": 259
+        }
+      ],
+      "byte_length": 259
+    },
+    {
+      "path": "requests/automatic-environment-discovery.json",
+      "sha256": "3b8cb4a505882eef0663bf737c7d2c3aed610777c9d6323834d56f4203ff156e",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-request-or-matrix-metadata",
+          "length": 223
+        }
+      ],
+      "byte_length": 223
+    },
+    {
+      "path": "requests/localized-string-resolution.json",
+      "sha256": "64f05e8be637ee6782062b77ddd0b6d1bc5ceefbe98ca2c80a355135113202f5",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-request-or-matrix-metadata",
+          "length": 253
+        }
+      ],
+      "byte_length": 253
+    },
+    {
+      "path": "construction-manifest.json",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-construction-metadata",
+          "length": 3532
+        }
+      ],
+      "byte_length": 3532
+    }
+  ]
+}

@@ -1,0 +1,173 @@
+{
+  "schema": "infinium.bethesda-fixture-construction",
+  "schema_version": 1,
+  "package_id": "BETH-LIGHT-VAL",
+  "generator": "Infinium.BethesdaFixtures.Generator",
+  "generator_version": 1,
+  "fixed_seed": "3520260730",
+  "dependencies": ".NET/BCL only",
+  "input_prohibitions": [
+    "No game or mod bytes consumed.",
+    "No Mutagen or xEdit input consumed.",
+    "No network input consumed.",
+    "No production parser input consumed.",
+    "No oracle, taxonomy answer, held-out content, or snapshot capture input consumed."
+  ],
+  "files": [
+    {
+      "path": "case-matrix.json",
+      "sha256": "3be80104b22587ca35527df525548c7e53607b075881a542a2f2384f466f1d64",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-request-or-matrix-metadata",
+          "length": 2984
+        }
+      ],
+      "byte_length": 2984
+    },
+    {
+      "path": "mutations/Consumer-LightReferenceOutOfRange.esp",
+      "sha256": "866d41c756b546a95d8195bf28e67be944e61e5b2d07ac4c1077d09f63f02f70",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 258
+        }
+      ],
+      "byte_length": 258
+    },
+    {
+      "path": "mutations/FlaggedEsp-AboveLightMaximum.esp",
+      "sha256": "3b517170f45521c8f7bed82347a077db939799d764c55860c39f59b6751d2140",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 227
+        }
+      ],
+      "byte_length": 227
+    },
+    {
+      "path": "mutations/FlaggedEsp-BelowObjectRange.esp",
+      "sha256": "e67567fd8b8789314817db69585e2caf55bfbca0341e1943defbadc313027070",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 226
+        }
+      ],
+      "byte_length": 226
+    },
+    {
+      "path": "mutations/Native-AboveLightMaximum.esl",
+      "sha256": "fe8e35888609636451e8462e9bc7cc2659433c84620f9c25abafc1fa2dc79394",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 223
+        }
+      ],
+      "byte_length": 223
+    },
+    {
+      "path": "mutations/Native-BelowObjectRange.esl",
+      "sha256": "06cc4e3b1021c0213229669ea57444a4e0db438f74e17228233b1fb67dedfca0",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 222
+        }
+      ],
+      "byte_length": 222
+    },
+    {
+      "path": "mutations/Native-HeaderFlagRemoved.esl",
+      "sha256": "687d6d7fd35b8c7ffbe4f28dc178fe0fcb36c4a54777bcccb93611a165227182",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 236
+        }
+      ],
+      "byte_length": 236
+    },
+    {
+      "path": "plugins/00-Pad.esm",
+      "sha256": "7ee03b2ef46c82525644553259b32260c0defc87b61ae986519acab32496fd89",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 109
+        }
+      ],
+      "byte_length": 109
+    },
+    {
+      "path": "plugins/01-Native.esl",
+      "sha256": "8bd7537ada2bc83c61ef399b1145bb63c0ef68aef90cba49be0565053cf44b98",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 265
+        }
+      ],
+      "byte_length": 265
+    },
+    {
+      "path": "plugins/02-Flagged.esp",
+      "sha256": "e60f667e43a62a8b24d8702cbcb9f6242017c84cf138bc74d2cb84e5ae649609",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 268
+        }
+      ],
+      "byte_length": 268
+    },
+    {
+      "path": "plugins/03-Consumer.esp",
+      "sha256": "bd24624a01fe07e701fa858a38d5b20b1ecdf22c2842875826b0f83fd312d47e",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 335
+        }
+      ],
+      "byte_length": 335
+    },
+    {
+      "path": "plugins/04-Winner.esp",
+      "sha256": "3b75c15391d47da2327107e61cce602003a757a12afba41382807760b8cbeeda",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 227
+        }
+      ],
+      "byte_length": 227
+    },
+    {
+      "path": "construction-manifest.json",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-construction-metadata",
+          "length": 4755
+        }
+      ],
+      "byte_length": 4755
+    }
+  ]
+}

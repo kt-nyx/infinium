@@ -1,0 +1,102 @@
+{
+  "schema_id": "infinium.evaluation.taxonomy-projections/v1",
+  "schema_version": "1",
+  "fixture_id": "BETH-REFR-DEV",
+  "fixture_version": "1.0.0",
+  "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
+  "taxonomy_version": "0.1.0",
+  "reviewer_id": "taxonomy-reviewer",
+  "reviewed_at": "2026-07-30T00:00:00.0000000+00:00",
+  "source_artifacts": [
+    {
+      "artifact_id": "oracle/independent-byte-facts.json",
+      "artifact_version": "1.0.0",
+      "fingerprint": "94d02c206325fa920ecbb30d342fd080f1f5fc88f5d188b8f7cd30cca8d956d3",
+      "availability": "retained"
+    }
+  ],
+  "subjects": [
+    {
+      "subject_id": "TAX-03B",
+      "canonical_value": {
+        "subject_type": "taxonomy-fixture-subject",
+        "subject_id": "TAX-03B",
+        "source_package_id": "BETH-REFR-DEV",
+        "source_evidence_references": [
+          "beth.beth-refr-dev.fact-00163",
+          "beth.beth-refr-dev.fact-00165",
+          "beth.beth-refr-dev.fact-00166",
+          "beth.beth-refr-dev.fact-00168",
+          "beth.beth-refr-dev.fact-00269",
+          "beth.beth-refr-dev.fact-00271",
+          "beth.beth-refr-dev.fact-00272"
+        ],
+        "independent_semantic_evidence_references": [
+          "beth.beth-refr-dev.fact-00165",
+          "beth.beth-refr-dev.fact-00166",
+          "beth.beth-refr-dev.fact-00168",
+          "beth.beth-refr-dev.fact-00269",
+          "beth.beth-refr-dev.fact-00271",
+          "beth.beth-refr-dev.fact-00272"
+        ],
+        "expected_assignments": [
+          {
+            "axis": "technical-modification-surface",
+            "facet": "semantic-mechanism",
+            "code": "surface.plugin-data",
+            "applicability_state": "assigned",
+            "classification_role": "observed",
+            "evidence_references": [
+              "beth.beth-refr-dev.fact-00163"
+            ],
+            "reason": "The frozen major-record fact establishes plugin-carried record data."
+          },
+          {
+            "axis": "affected-game-system-or-content-area",
+            "facet": "affected-area",
+            "code": "area.world.placed-objects-activation",
+            "applicability_state": "assigned",
+            "classification_role": "established",
+            "evidence_references": [
+              "beth.beth-refr-dev.fact-00165",
+              "beth.beth-refr-dev.fact-00166",
+              "beth.beth-refr-dev.fact-00168",
+              "beth.beth-refr-dev.fact-00269",
+              "beth.beth-refr-dev.fact-00271",
+              "beth.beth-refr-dev.fact-00272"
+            ],
+            "reason": "Separate frozen placement, linked-reference, location, and resolved-link facts establish the placed-object area; the REFR signature does not."
+          }
+        ],
+        "forbidden_assignments": [
+          {
+            "axis": "affected-game-system-or-content-area",
+            "code": "area.actors.ai-packages",
+            "reason": "Shared plugin-data surface cannot copy TAX-03A's independently evidenced area."
+          },
+          {
+            "axis": "declared-purpose-and-intended-feature-area",
+            "reason": "No author-purpose evidence is present."
+          },
+          {
+            "axis": "consequence-type",
+            "reason": "The frozen facts establish no consequence."
+          },
+          {
+            "axis": "effect-extent",
+            "reason": "The frozen facts establish no effect extent."
+          }
+        ]
+      },
+      "canonical_value_fingerprint": "f660a7c57740eb16a8a749b4374168813cfe2a653b54e7524e60087c1bcfd6bb"
+    }
+  ],
+  "review_assertions": [
+    "Canonical taxonomy subject IDs are independent from fixture IDs, filenames, signatures, and FormKeys.",
+    "Technical surfaces are observed only from frozen local byte facts.",
+    "Affected areas are established only from separate field/link evidence.",
+    "Shared technical surface does not copy an affected area between TAX-03A and TAX-03B.",
+    "No production Slice 4 output, Mutagen answer, xEdit answer, generator answer table, or held-out answer was used.",
+    "These projections prepare EVAL-0086 inputs and do not claim that EVAL-0086 passes."
+  ]
+}

@@ -1,0 +1,207 @@
+{
+  "fixture_id": "BETH-REFR-DEV",
+  "fixture_version": "1.0.0",
+  "installation_snapshot_input": {
+    "state": "provided",
+    "reason": "Retained Slice 3 accepted-order receipt binds the disposable synthetic snapshot input.",
+    "artifact": {
+      "artifact_id": "inputs/snapshot/accepted-order.json",
+      "artifact_version": "1.0.0",
+      "fingerprint": "370a60e30c572947116172b8d18cab8b052012ddbdcef3dde10f48079b9c3e97",
+      "availability": "retained"
+    }
+  },
+  "analysis_context_input": {
+    "state": "empty",
+    "reason": "Slice 3.5 qualifies inputs and independent truth; production semantic analysis remains pending Slice 4."
+  },
+  "effective_scan_configuration": {
+    "artifact_id": "inputs/case-matrix.json",
+    "artifact_version": "1.0.0",
+    "fingerprint": "9ad8d123a5189a2cb08e81dab85f62762f71d5d7f716bc45bb23370e18897df3",
+    "availability": "retained"
+  },
+  "runtime_support_input": {
+    "state": "not-applicable",
+    "reason": "Runtime execution is outside the Bethesda byte-input qualification boundary."
+  },
+  "mo2_instance_profile_input": {
+    "state": "provided",
+    "reason": "Retained synthetic profile receipt records the selected profile and accepted adapter identity.",
+    "artifact": {
+      "artifact_id": "inputs/snapshot/accepted-order.json",
+      "artifact_version": "1.0.0",
+      "fingerprint": "370a60e30c572947116172b8d18cab8b052012ddbdcef3dde10f48079b9c3e97",
+      "availability": "retained"
+    }
+  },
+  "plugin_order_input": {
+    "state": "provided",
+    "reason": "Retained synthetic profile receipt records exact plugin order and fingerprints.",
+    "artifact": {
+      "artifact_id": "inputs/snapshot/accepted-order.json",
+      "artifact_version": "1.0.0",
+      "fingerprint": "370a60e30c572947116172b8d18cab8b052012ddbdcef3dde10f48079b9c3e97",
+      "availability": "retained"
+    }
+  },
+  "provider_order_input": {
+    "state": "provided",
+    "reason": "Retained synthetic profile receipt records exact provider order and fingerprints.",
+    "artifact": {
+      "artifact_id": "inputs/snapshot/accepted-order.json",
+      "artifact_version": "1.0.0",
+      "fingerprint": "370a60e30c572947116172b8d18cab8b052012ddbdcef3dde10f48079b9c3e97",
+      "availability": "retained"
+    }
+  },
+  "source_claim_inputs": [],
+  "analyzer_declarations": [],
+  "tool_library_versions": [
+    {
+      "component_id": "Infinium.BethesdaFixtures.Generator",
+      "version": "1",
+      "fingerprint": "ab71a0485005d544c5792499c645a7975641f55d8dd3c4fced7c04b0fd2cd5f1"
+    }
+  ],
+  "declared_archive_state": {
+    "state": "excluded",
+    "reason": "Archive-member semantics are outside this retained plugin-byte package."
+  },
+  "declared_supported_capabilities": [
+    "bethesda-project-authored-fixture-input-v1",
+    "slice3-accepted-order-receipt-v1"
+  ],
+  "declared_unsupported_capabilities": [
+    {
+      "capability_id": "production-bethesda-semantic-analysis",
+      "reason": "Slice 3.5 prepares inputs and independent truth only; production analysis remains pending Slice 4."
+    },
+    {
+      "capability_id": "complete-eval-0052-or-eval-0086-pass",
+      "reason": "Package acceptance does not execute or pass either evaluation case."
+    }
+  ],
+  "resource_and_time_limits": {
+    "wall_time_ms": 120000,
+    "memory_bytes": 536870912,
+    "input_bytes": 19977,
+    "output_bytes": 16777216
+  },
+  "input_payload_refs": [
+    {
+      "artifact_id": "inputs/case-matrix.json",
+      "artifact_version": "1.0.0",
+      "fingerprint": "9ad8d123a5189a2cb08e81dab85f62762f71d5d7f716bc45bb23370e18897df3",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/construction-manifest.json",
+      "artifact_version": "1.0.0",
+      "fingerprint": "fd1396d36fb1cd161fd93dd84470265c0fc481bea4edbe80b5cad7b802367ad8",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/mutations/Boundaries-RepeatedXLKROrder.esp",
+      "artifact_version": "1.0.0",
+      "fingerprint": "d3f0fac31ab2844d8ecbffdd830a7c35ba0816f7cfef4697d9c7bf66ac05f282",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/mutations/Refr-DanglingExtendedSize.esp",
+      "artifact_version": "1.0.0",
+      "fingerprint": "4ac76284622ea49e64bcf07ea0582205d7facb4edc24997ba965f0c45b5074a8",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/mutations/Refr-SubrecordBodyOverrun.esp",
+      "artifact_version": "1.0.0",
+      "fingerprint": "db677ca5bd03d91194b4fb5cc51bd5f8d9a99ef120eee21954b10478bd96e1e3",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/mutations/Refr-SubrecordHeaderTruncated.esp",
+      "artifact_version": "1.0.0",
+      "fingerprint": "9c0f8236477a739b7477971e582752c735e2486c81e78c19567c44b06fd40123",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/mutations/compression/03-Placement.esp",
+      "artifact_version": "1.0.0",
+      "fingerprint": "e4c762847bb52a702ea57d154522469bec53c9d5dec0f7295a5c42b1b2e3c2a3",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/mutations/master-order-reindexed/03-Placement.esp",
+      "artifact_version": "1.0.0",
+      "fingerprint": "4db8323678d4a0021a405b829a40e340cae344b66aa0684383c16a44494f79da",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/mutations/master-order-unreindexed/03-Placement.esp",
+      "artifact_version": "1.0.0",
+      "fingerprint": "d133ba2bcf225391b061b08c794504b3326dd7ae2700d513c39450ed521eb2f4",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/mutations/one-byte-data/03-Placement.esp",
+      "artifact_version": "1.0.0",
+      "fingerprint": "8beab7402bd7623c9e7589a7078eabdccc05695ef1f698edccc7b170f9ca1009",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/mutations/record-order/01-World.esm",
+      "artifact_version": "1.0.0",
+      "fingerprint": "3d6a44a9246038b5677ecf0795094c434a37802e970090c69fef5856f5467575",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/plugins/00-Pad.esm",
+      "artifact_version": "1.0.0",
+      "fingerprint": "7ee03b2ef46c82525644553259b32260c0defc87b61ae986519acab32496fd89",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/plugins/01-World.esm",
+      "artifact_version": "1.0.0",
+      "fingerprint": "a8397a132896e7d1e276f4174d820effceccf220cac9afec95bf387d7211a4b4",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/plugins/02-Relations.esp",
+      "artifact_version": "1.0.0",
+      "fingerprint": "d021053e099d6cf01498f5c803ae57d3dd68291b27d66f3cf31dd8650b02a23d",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/plugins/03-Placement.esp",
+      "artifact_version": "1.0.0",
+      "fingerprint": "0d43a4de7fee7bf13ac76edc43630dc4f464fe4cd6a7e931731222ce7aa03497",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/plugins/04-MergedWinner.esp",
+      "artifact_version": "1.0.0",
+      "fingerprint": "4874fba88d1b88776a791d280c05ae1b3d9fab157d8d1c9f2f730345fe1ab412",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/plugins/05-DeletedWinner.esp",
+      "artifact_version": "1.0.0",
+      "fingerprint": "4c51f3ff1dfa74430327207b9eb814f4213a6316a50c87a75c1bc98216ac1934",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/plugins/06-Boundaries.esp",
+      "artifact_version": "1.0.0",
+      "fingerprint": "cd967f3b2a9b8984bbbd1003b48a892d4dedb419de92fd47eeee2ed6f0ea4579",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/snapshot/accepted-order.json",
+      "artifact_version": "1.0.0",
+      "fingerprint": "370a60e30c572947116172b8d18cab8b052012ddbdcef3dde10f48079b9c3e97",
+      "availability": "retained"
+    }
+  ]
+}

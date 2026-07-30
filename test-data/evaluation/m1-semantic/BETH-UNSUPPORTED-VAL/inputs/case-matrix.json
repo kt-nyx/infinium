@@ -1,0 +1,68 @@
+{
+  "schema": "infinium.bethesda-fixture-case-matrix",
+  "schema_version": 1,
+  "partition": "validation",
+  "classification": "unsupported",
+  "fixed_seed": "3520260730",
+  "cases": [
+    {
+      "case_id": "unsupported-record-family",
+      "operation": "scan",
+      "input_paths": [
+        "plugins/UnsupportedFamily.esp"
+      ],
+      "denominator": "record_family"
+    },
+    {
+      "case_id": "unsupported-npc-field",
+      "operation": "scan",
+      "input_paths": [
+        "plugins/UnsupportedNpcField.esp"
+      ],
+      "denominator": "record_field"
+    },
+    {
+      "case_id": "unsupported-localized-string",
+      "operation": "request",
+      "input_paths": [
+        "requests/localized-string-resolution.json"
+      ],
+      "denominator": "localized_string_resolution"
+    },
+    {
+      "case_id": "unsupported-archive-member",
+      "operation": "request",
+      "input_paths": [
+        "requests/archive-member.json"
+      ],
+      "denominator": "archive_member_read"
+    },
+    {
+      "case_id": "unsupported-environment-discovery",
+      "operation": "request",
+      "input_paths": [
+        "requests/automatic-environment-discovery.json"
+      ],
+      "denominator": "automatic_environment_discovery"
+    }
+  ],
+  "notes": {
+    "denominators": {
+      "record_family": {
+        "case_count": 1
+      },
+      "record_field": {
+        "case_count": 1
+      },
+      "localized_string_resolution": {
+        "case_count": 1
+      },
+      "archive_member_read": {
+        "case_count": 1
+      },
+      "automatic_environment_discovery": {
+        "case_count": 1
+      }
+    }
+  }
+}

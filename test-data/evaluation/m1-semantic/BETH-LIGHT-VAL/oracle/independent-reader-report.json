@@ -1,0 +1,2327 @@
+{
+  "method_id": "independent-bounded-raw-reader-v1",
+  "package_id": "BETH-LIGHT-VAL",
+  "limits": {
+    "maximum_input_bytes": 67108864,
+    "maximum_records": 4096,
+    "maximum_subrecords_per_record": 4096,
+    "maximum_group_depth": 64,
+    "maximum_decompressed_bytes": 67108864
+  },
+  "files": [
+    {
+      "path": "mutations/Consumer-LightReferenceOutOfRange.esp",
+      "byte_length": 258,
+      "sha256": "866d41c756b546a95d8195bf28e67be944e61e5b2d07ac4c1077d09f63f02f70",
+      "spans": [
+        {
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 38,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 136,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 142,
+          "length": 14,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 156,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 162,
+          "length": 8,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 170,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 194,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 218,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 224,
+          "length": 4,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 228,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 234,
+          "length": 24,
+          "classification": "subrecord-data"
+        }
+      ],
+      "records": [
+        {
+          "signature": "TES4",
+          "offset": 0,
+          "length": 170,
+          "data_length": 146,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "00000000",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "HEDR",
+              "header_offset": 24,
+              "data_offset": 30,
+              "length": 12,
+              "raw_hex": "9A99D93F0100000000080000"
+            },
+            {
+              "signature": "CNAM",
+              "header_offset": 42,
+              "data_offset": 48,
+              "length": 44,
+              "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+            },
+            {
+              "signature": "SNAM",
+              "header_offset": 92,
+              "data_offset": 98,
+              "length": 38,
+              "raw_hex": "436F6E73756D65722D4C696768745265666572656E63654F75744F6652616E67652E65737000"
+            },
+            {
+              "signature": "MAST",
+              "header_offset": 136,
+              "data_offset": 142,
+              "length": 14,
+              "raw_hex": "30312D4E61746976652E65736C00"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 156,
+              "data_offset": 162,
+              "length": 8,
+              "raw_hex": "0000000000000000"
+            }
+          ],
+          "logical_spans": []
+        },
+        {
+          "signature": "REFR",
+          "offset": 194,
+          "length": 64,
+          "data_length": 40,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "01000800",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "NAME",
+              "header_offset": 218,
+              "data_offset": 224,
+              "length": 4,
+              "raw_hex": "00100000"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 228,
+              "data_offset": 234,
+              "length": 24,
+              "raw_hex": "000000000000000000000000000000000000000000000000"
+            }
+          ],
+          "logical_spans": [],
+          "allowlisted_payload": {
+            "NAME": [
+              "00100000"
+            ],
+            "DATA": [
+              "000000000000000000000000000000000000000000000000"
+            ],
+            "float32_bit_patterns": [
+              "00000000",
+              "00000000",
+              "00000000",
+              "00000000",
+              "00000000",
+              "00000000"
+            ]
+          },
+          "identity": {
+            "form_id_hex": "01000800",
+            "resolution_state": "resolved",
+            "form_key": "00000800:Consumer-LightReferenceOutOfRange.esp",
+            "origin_plugin": "Consumer-LightReferenceOutOfRange.esp",
+            "origin_kind": "full",
+            "local_id_hex": "00000800"
+          },
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "form_id_hex": "00001000",
+              "resolution_state": "invalid",
+              "reason": "light local ID 001000 outside 000800..000FFF",
+              "form_key": null,
+              "origin_plugin": "01-Native.esl",
+              "origin_kind": "invalid",
+              "local_id_hex": "001000"
+            }
+          ]
+        }
+      ],
+      "malformed": null,
+      "tes4": {
+        "flags_hex": "00000000",
+        "esl_flag": false,
+        "masters": [
+          "01-Native.esl"
+        ]
+      },
+      "groups": [
+        {
+          "offset": 170,
+          "length": 88,
+          "label_hex": "52454652",
+          "group_type": 0
+        }
+      ],
+      "extension_header_mismatch": false
+    },
+    {
+      "path": "mutations/FlaggedEsp-AboveLightMaximum.esp",
+      "byte_length": 227,
+      "sha256": "3b517170f45521c8f7bed82347a077db939799d764c55860c39f59b6751d2140",
+      "spans": [
+        {
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 33,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 131,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 137,
+          "length": 11,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 148,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 154,
+          "length": 8,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 162,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 186,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 210,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 216,
+          "length": 11,
+          "classification": "subrecord-data"
+        }
+      ],
+      "records": [
+        {
+          "signature": "TES4",
+          "offset": 0,
+          "length": 162,
+          "data_length": 138,
+          "flags_hex": "00000200",
+          "raw_form_id_hex": "00000000",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "HEDR",
+              "header_offset": 24,
+              "data_offset": 30,
+              "length": 12,
+              "raw_hex": "9A99D93F0100000000080000"
+            },
+            {
+              "signature": "CNAM",
+              "header_offset": 42,
+              "data_offset": 48,
+              "length": 44,
+              "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+            },
+            {
+              "signature": "SNAM",
+              "header_offset": 92,
+              "data_offset": 98,
+              "length": 33,
+              "raw_hex": "466C61676765644573702D41626F76654C696768744D6178696D756D2E65737000"
+            },
+            {
+              "signature": "MAST",
+              "header_offset": 131,
+              "data_offset": 137,
+              "length": 11,
+              "raw_hex": "30302D5061642E65736D00"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 148,
+              "data_offset": 154,
+              "length": 8,
+              "raw_hex": "0000000000000000"
+            }
+          ],
+          "logical_spans": []
+        },
+        {
+          "signature": "STAT",
+          "offset": 186,
+          "length": 41,
+          "data_length": 17,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "01001000",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "header_offset": 210,
+              "data_offset": 216,
+              "length": 11,
+              "raw_hex": "41626F766552616E676500"
+            }
+          ],
+          "logical_spans": [],
+          "identity": {
+            "form_id_hex": "01001000",
+            "resolution_state": "invalid",
+            "reason": "light local ID 001000 outside 000800..000FFF",
+            "form_key": null,
+            "origin_plugin": "FlaggedEsp-AboveLightMaximum.esp",
+            "origin_kind": "invalid",
+            "local_id_hex": "001000"
+          }
+        }
+      ],
+      "malformed": null,
+      "tes4": {
+        "flags_hex": "00000200",
+        "esl_flag": true,
+        "masters": [
+          "00-Pad.esm"
+        ]
+      },
+      "groups": [
+        {
+          "offset": 162,
+          "length": 65,
+          "label_hex": "53544154",
+          "group_type": 0
+        }
+      ],
+      "extension_header_mismatch": false
+    },
+    {
+      "path": "mutations/FlaggedEsp-BelowObjectRange.esp",
+      "byte_length": 226,
+      "sha256": "e67567fd8b8789314817db69585e2caf55bfbca0341e1943defbadc313027070",
+      "spans": [
+        {
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 32,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 130,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 136,
+          "length": 11,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 147,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 153,
+          "length": 8,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 161,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 185,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 209,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 215,
+          "length": 11,
+          "classification": "subrecord-data"
+        }
+      ],
+      "records": [
+        {
+          "signature": "TES4",
+          "offset": 0,
+          "length": 161,
+          "data_length": 137,
+          "flags_hex": "00000200",
+          "raw_form_id_hex": "00000000",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "HEDR",
+              "header_offset": 24,
+              "data_offset": 30,
+              "length": 12,
+              "raw_hex": "9A99D93F0100000000080000"
+            },
+            {
+              "signature": "CNAM",
+              "header_offset": 42,
+              "data_offset": 48,
+              "length": 44,
+              "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+            },
+            {
+              "signature": "SNAM",
+              "header_offset": 92,
+              "data_offset": 98,
+              "length": 32,
+              "raw_hex": "466C61676765644573702D42656C6F774F626A65637452616E67652E65737000"
+            },
+            {
+              "signature": "MAST",
+              "header_offset": 130,
+              "data_offset": 136,
+              "length": 11,
+              "raw_hex": "30302D5061642E65736D00"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 147,
+              "data_offset": 153,
+              "length": 8,
+              "raw_hex": "0000000000000000"
+            }
+          ],
+          "logical_spans": []
+        },
+        {
+          "signature": "STAT",
+          "offset": 185,
+          "length": 41,
+          "data_length": 17,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "010007FF",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "header_offset": 209,
+              "data_offset": 215,
+              "length": 11,
+              "raw_hex": "42656C6F7752616E676500"
+            }
+          ],
+          "logical_spans": [],
+          "identity": {
+            "form_id_hex": "010007FF",
+            "resolution_state": "invalid",
+            "reason": "light local ID 0007FF outside 000800..000FFF",
+            "form_key": null,
+            "origin_plugin": "FlaggedEsp-BelowObjectRange.esp",
+            "origin_kind": "invalid",
+            "local_id_hex": "0007FF"
+          }
+        }
+      ],
+      "malformed": null,
+      "tes4": {
+        "flags_hex": "00000200",
+        "esl_flag": true,
+        "masters": [
+          "00-Pad.esm"
+        ]
+      },
+      "groups": [
+        {
+          "offset": 161,
+          "length": 65,
+          "label_hex": "53544154",
+          "group_type": 0
+        }
+      ],
+      "extension_header_mismatch": false
+    },
+    {
+      "path": "mutations/Native-AboveLightMaximum.esl",
+      "byte_length": 223,
+      "sha256": "fe8e35888609636451e8462e9bc7cc2659433c84620f9c25abafc1fa2dc79394",
+      "spans": [
+        {
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 29,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 127,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 133,
+          "length": 11,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 144,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 150,
+          "length": 8,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 158,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 182,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 206,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 212,
+          "length": 11,
+          "classification": "subrecord-data"
+        }
+      ],
+      "records": [
+        {
+          "signature": "TES4",
+          "offset": 0,
+          "length": 158,
+          "data_length": 134,
+          "flags_hex": "00000200",
+          "raw_form_id_hex": "00000000",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "HEDR",
+              "header_offset": 24,
+              "data_offset": 30,
+              "length": 12,
+              "raw_hex": "9A99D93F0100000000080000"
+            },
+            {
+              "signature": "CNAM",
+              "header_offset": 42,
+              "data_offset": 48,
+              "length": 44,
+              "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+            },
+            {
+              "signature": "SNAM",
+              "header_offset": 92,
+              "data_offset": 98,
+              "length": 29,
+              "raw_hex": "4E61746976652D41626F76654C696768744D6178696D756D2E65736C00"
+            },
+            {
+              "signature": "MAST",
+              "header_offset": 127,
+              "data_offset": 133,
+              "length": 11,
+              "raw_hex": "30302D5061642E65736D00"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 144,
+              "data_offset": 150,
+              "length": 8,
+              "raw_hex": "0000000000000000"
+            }
+          ],
+          "logical_spans": []
+        },
+        {
+          "signature": "STAT",
+          "offset": 182,
+          "length": 41,
+          "data_length": 17,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "01001000",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "header_offset": 206,
+              "data_offset": 212,
+              "length": 11,
+              "raw_hex": "41626F766552616E676500"
+            }
+          ],
+          "logical_spans": [],
+          "identity": {
+            "form_id_hex": "01001000",
+            "resolution_state": "invalid",
+            "reason": "light local ID 001000 outside 000800..000FFF",
+            "form_key": null,
+            "origin_plugin": "Native-AboveLightMaximum.esl",
+            "origin_kind": "invalid",
+            "local_id_hex": "001000"
+          }
+        }
+      ],
+      "malformed": null,
+      "tes4": {
+        "flags_hex": "00000200",
+        "esl_flag": true,
+        "masters": [
+          "00-Pad.esm"
+        ]
+      },
+      "groups": [
+        {
+          "offset": 158,
+          "length": 65,
+          "label_hex": "53544154",
+          "group_type": 0
+        }
+      ],
+      "extension_header_mismatch": false
+    },
+    {
+      "path": "mutations/Native-BelowObjectRange.esl",
+      "byte_length": 222,
+      "sha256": "06cc4e3b1021c0213229669ea57444a4e0db438f74e17228233b1fb67dedfca0",
+      "spans": [
+        {
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 28,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 126,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 132,
+          "length": 11,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 143,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 149,
+          "length": 8,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 157,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 181,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 205,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 211,
+          "length": 11,
+          "classification": "subrecord-data"
+        }
+      ],
+      "records": [
+        {
+          "signature": "TES4",
+          "offset": 0,
+          "length": 157,
+          "data_length": 133,
+          "flags_hex": "00000200",
+          "raw_form_id_hex": "00000000",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "HEDR",
+              "header_offset": 24,
+              "data_offset": 30,
+              "length": 12,
+              "raw_hex": "9A99D93F0100000000080000"
+            },
+            {
+              "signature": "CNAM",
+              "header_offset": 42,
+              "data_offset": 48,
+              "length": 44,
+              "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+            },
+            {
+              "signature": "SNAM",
+              "header_offset": 92,
+              "data_offset": 98,
+              "length": 28,
+              "raw_hex": "4E61746976652D42656C6F774F626A65637452616E67652E65736C00"
+            },
+            {
+              "signature": "MAST",
+              "header_offset": 126,
+              "data_offset": 132,
+              "length": 11,
+              "raw_hex": "30302D5061642E65736D00"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 143,
+              "data_offset": 149,
+              "length": 8,
+              "raw_hex": "0000000000000000"
+            }
+          ],
+          "logical_spans": []
+        },
+        {
+          "signature": "STAT",
+          "offset": 181,
+          "length": 41,
+          "data_length": 17,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "010007FF",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "header_offset": 205,
+              "data_offset": 211,
+              "length": 11,
+              "raw_hex": "42656C6F7752616E676500"
+            }
+          ],
+          "logical_spans": [],
+          "identity": {
+            "form_id_hex": "010007FF",
+            "resolution_state": "invalid",
+            "reason": "light local ID 0007FF outside 000800..000FFF",
+            "form_key": null,
+            "origin_plugin": "Native-BelowObjectRange.esl",
+            "origin_kind": "invalid",
+            "local_id_hex": "0007FF"
+          }
+        }
+      ],
+      "malformed": null,
+      "tes4": {
+        "flags_hex": "00000200",
+        "esl_flag": true,
+        "masters": [
+          "00-Pad.esm"
+        ]
+      },
+      "groups": [
+        {
+          "offset": 157,
+          "length": 65,
+          "label_hex": "53544154",
+          "group_type": 0
+        }
+      ],
+      "extension_header_mismatch": false
+    },
+    {
+      "path": "mutations/Native-HeaderFlagRemoved.esl",
+      "byte_length": 236,
+      "sha256": "687d6d7fd35b8c7ffbe4f28dc178fe0fcb36c4a54777bcccb93611a165227182",
+      "spans": [
+        {
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 29,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 127,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 133,
+          "length": 11,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 144,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 150,
+          "length": 8,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 158,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 182,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 206,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 212,
+          "length": 24,
+          "classification": "subrecord-data"
+        }
+      ],
+      "records": [
+        {
+          "signature": "TES4",
+          "offset": 0,
+          "length": 158,
+          "data_length": 134,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "00000000",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "HEDR",
+              "header_offset": 24,
+              "data_offset": 30,
+              "length": 12,
+              "raw_hex": "9A99D93F0100000000080000"
+            },
+            {
+              "signature": "CNAM",
+              "header_offset": 42,
+              "data_offset": 48,
+              "length": 44,
+              "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+            },
+            {
+              "signature": "SNAM",
+              "header_offset": 92,
+              "data_offset": 98,
+              "length": 29,
+              "raw_hex": "4E61746976652D486561646572466C616752656D6F7665642E65736C00"
+            },
+            {
+              "signature": "MAST",
+              "header_offset": 127,
+              "data_offset": 133,
+              "length": 11,
+              "raw_hex": "30302D5061642E65736D00"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 144,
+              "data_offset": 150,
+              "length": 8,
+              "raw_hex": "0000000000000000"
+            }
+          ],
+          "logical_spans": []
+        },
+        {
+          "signature": "STAT",
+          "offset": 182,
+          "length": 54,
+          "data_length": 30,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "01000800",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "header_offset": 206,
+              "data_offset": 212,
+              "length": 24,
+              "raw_hex": "457874656E73696F6E4865616465724D69736D6174636800"
+            }
+          ],
+          "logical_spans": [],
+          "identity": {
+            "form_id_hex": "01000800",
+            "resolution_state": "invalid",
+            "form_key": null,
+            "origin_plugin": "Native-HeaderFlagRemoved.esl",
+            "origin_kind": "invalid",
+            "local_id_hex": null,
+            "reason": "native .esl extension/header light-flag mismatch"
+          }
+        }
+      ],
+      "malformed": null,
+      "tes4": {
+        "flags_hex": "00000000",
+        "esl_flag": false,
+        "masters": [
+          "00-Pad.esm"
+        ]
+      },
+      "groups": [
+        {
+          "offset": 158,
+          "length": 78,
+          "label_hex": "53544154",
+          "group_type": 0
+        }
+      ],
+      "extension_header_mismatch": true
+    },
+    {
+      "path": "plugins/00-Pad.esm",
+      "byte_length": 109,
+      "sha256": "7ee03b2ef46c82525644553259b32260c0defc87b61ae986519acab32496fd89",
+      "spans": [
+        {
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 11,
+          "classification": "subrecord-data"
+        }
+      ],
+      "records": [
+        {
+          "signature": "TES4",
+          "offset": 0,
+          "length": 109,
+          "data_length": 85,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "00000000",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "HEDR",
+              "header_offset": 24,
+              "data_offset": 30,
+              "length": 12,
+              "raw_hex": "9A99D93F0000000000080000"
+            },
+            {
+              "signature": "CNAM",
+              "header_offset": 42,
+              "data_offset": 48,
+              "length": 44,
+              "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+            },
+            {
+              "signature": "SNAM",
+              "header_offset": 92,
+              "data_offset": 98,
+              "length": 11,
+              "raw_hex": "30302D5061642E65736D00"
+            }
+          ],
+          "logical_spans": []
+        }
+      ],
+      "malformed": null,
+      "tes4": {
+        "flags_hex": "00000000",
+        "esl_flag": false,
+        "masters": []
+      },
+      "groups": [],
+      "extension_header_mismatch": false
+    },
+    {
+      "path": "plugins/01-Native.esl",
+      "byte_length": 265,
+      "sha256": "8bd7537ada2bc83c61ef399b1145bb63c0ef68aef90cba49be0565053cf44b98",
+      "spans": [
+        {
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 14,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 112,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 118,
+          "length": 11,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 129,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 135,
+          "length": 8,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 143,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 167,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 191,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 197,
+          "length": 19,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 216,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 240,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 246,
+          "length": 19,
+          "classification": "subrecord-data"
+        }
+      ],
+      "records": [
+        {
+          "signature": "TES4",
+          "offset": 0,
+          "length": 143,
+          "data_length": 119,
+          "flags_hex": "00000200",
+          "raw_form_id_hex": "00000000",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "HEDR",
+              "header_offset": 24,
+              "data_offset": 30,
+              "length": 12,
+              "raw_hex": "9A99D93F0200000000080000"
+            },
+            {
+              "signature": "CNAM",
+              "header_offset": 42,
+              "data_offset": 48,
+              "length": 44,
+              "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+            },
+            {
+              "signature": "SNAM",
+              "header_offset": 92,
+              "data_offset": 98,
+              "length": 14,
+              "raw_hex": "30312D4E61746976652E65736C00"
+            },
+            {
+              "signature": "MAST",
+              "header_offset": 112,
+              "data_offset": 118,
+              "length": 11,
+              "raw_hex": "30302D5061642E65736D00"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 129,
+              "data_offset": 135,
+              "length": 8,
+              "raw_hex": "0000000000000000"
+            }
+          ],
+          "logical_spans": []
+        },
+        {
+          "signature": "STAT",
+          "offset": 167,
+          "length": 49,
+          "data_length": 25,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "01000800",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "header_offset": 191,
+              "data_offset": 197,
+              "length": 19,
+              "raw_hex": "4E61746976654C696768744D696E696D756D00"
+            }
+          ],
+          "logical_spans": [],
+          "identity": {
+            "form_id_hex": "01000800",
+            "resolution_state": "resolved",
+            "form_key": "00000800:01-Native.esl",
+            "origin_plugin": "01-Native.esl",
+            "origin_kind": "light",
+            "local_id_hex": "00000800"
+          }
+        },
+        {
+          "signature": "STAT",
+          "offset": 216,
+          "length": 49,
+          "data_length": 25,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "01000FFF",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "header_offset": 240,
+              "data_offset": 246,
+              "length": 19,
+              "raw_hex": "4E61746976654C696768744D6178696D756D00"
+            }
+          ],
+          "logical_spans": [],
+          "identity": {
+            "form_id_hex": "01000FFF",
+            "resolution_state": "resolved",
+            "form_key": "00000FFF:01-Native.esl",
+            "origin_plugin": "01-Native.esl",
+            "origin_kind": "light",
+            "local_id_hex": "00000FFF"
+          }
+        }
+      ],
+      "malformed": null,
+      "tes4": {
+        "flags_hex": "00000200",
+        "esl_flag": true,
+        "masters": [
+          "00-Pad.esm"
+        ]
+      },
+      "groups": [
+        {
+          "offset": 143,
+          "length": 122,
+          "label_hex": "53544154",
+          "group_type": 0
+        }
+      ],
+      "extension_header_mismatch": false
+    },
+    {
+      "path": "plugins/02-Flagged.esp",
+      "byte_length": 268,
+      "sha256": "e60f667e43a62a8b24d8702cbcb9f6242017c84cf138bc74d2cb84e5ae649609",
+      "spans": [
+        {
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 15,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 113,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 119,
+          "length": 11,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 130,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 136,
+          "length": 8,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 144,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 168,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 192,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 198,
+          "length": 20,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 218,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 242,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 248,
+          "length": 20,
+          "classification": "subrecord-data"
+        }
+      ],
+      "records": [
+        {
+          "signature": "TES4",
+          "offset": 0,
+          "length": 144,
+          "data_length": 120,
+          "flags_hex": "00000200",
+          "raw_form_id_hex": "00000000",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "HEDR",
+              "header_offset": 24,
+              "data_offset": 30,
+              "length": 12,
+              "raw_hex": "9A99D93F0200000000080000"
+            },
+            {
+              "signature": "CNAM",
+              "header_offset": 42,
+              "data_offset": 48,
+              "length": 44,
+              "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+            },
+            {
+              "signature": "SNAM",
+              "header_offset": 92,
+              "data_offset": 98,
+              "length": 15,
+              "raw_hex": "30322D466C61676765642E65737000"
+            },
+            {
+              "signature": "MAST",
+              "header_offset": 113,
+              "data_offset": 119,
+              "length": 11,
+              "raw_hex": "30302D5061642E65736D00"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 130,
+              "data_offset": 136,
+              "length": 8,
+              "raw_hex": "0000000000000000"
+            }
+          ],
+          "logical_spans": []
+        },
+        {
+          "signature": "STAT",
+          "offset": 168,
+          "length": 50,
+          "data_length": 26,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "01000800",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "header_offset": 192,
+              "data_offset": 198,
+              "length": 20,
+              "raw_hex": "466C61676765644C696768744D696E696D756D00"
+            }
+          ],
+          "logical_spans": [],
+          "identity": {
+            "form_id_hex": "01000800",
+            "resolution_state": "resolved",
+            "form_key": "00000800:02-Flagged.esp",
+            "origin_plugin": "02-Flagged.esp",
+            "origin_kind": "light",
+            "local_id_hex": "00000800"
+          }
+        },
+        {
+          "signature": "STAT",
+          "offset": 218,
+          "length": 50,
+          "data_length": 26,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "01000FFF",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "header_offset": 242,
+              "data_offset": 248,
+              "length": 20,
+              "raw_hex": "466C61676765644C696768744D6178696D756D00"
+            }
+          ],
+          "logical_spans": [],
+          "identity": {
+            "form_id_hex": "01000FFF",
+            "resolution_state": "resolved",
+            "form_key": "00000FFF:02-Flagged.esp",
+            "origin_plugin": "02-Flagged.esp",
+            "origin_kind": "light",
+            "local_id_hex": "00000FFF"
+          }
+        }
+      ],
+      "malformed": null,
+      "tes4": {
+        "flags_hex": "00000200",
+        "esl_flag": true,
+        "masters": [
+          "00-Pad.esm"
+        ]
+      },
+      "groups": [
+        {
+          "offset": 144,
+          "length": 124,
+          "label_hex": "53544154",
+          "group_type": 0
+        }
+      ],
+      "extension_header_mismatch": false
+    },
+    {
+      "path": "plugins/03-Consumer.esp",
+      "byte_length": 335,
+      "sha256": "bd24624a01fe07e701fa858a38d5b20b1ecdf22c2842875826b0f83fd312d47e",
+      "spans": [
+        {
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 16,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 114,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 120,
+          "length": 14,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 134,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 140,
+          "length": 8,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 148,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 154,
+          "length": 15,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 169,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 175,
+          "length": 8,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 183,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 207,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 231,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 237,
+          "length": 4,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 241,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 247,
+          "length": 24,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 271,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 295,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 301,
+          "length": 4,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 305,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 311,
+          "length": 24,
+          "classification": "subrecord-data"
+        }
+      ],
+      "records": [
+        {
+          "signature": "TES4",
+          "offset": 0,
+          "length": 183,
+          "data_length": 159,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "00000000",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "HEDR",
+              "header_offset": 24,
+              "data_offset": 30,
+              "length": 12,
+              "raw_hex": "9A99D93F0200000000080000"
+            },
+            {
+              "signature": "CNAM",
+              "header_offset": 42,
+              "data_offset": 48,
+              "length": 44,
+              "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+            },
+            {
+              "signature": "SNAM",
+              "header_offset": 92,
+              "data_offset": 98,
+              "length": 16,
+              "raw_hex": "30332D436F6E73756D65722E65737000"
+            },
+            {
+              "signature": "MAST",
+              "header_offset": 114,
+              "data_offset": 120,
+              "length": 14,
+              "raw_hex": "30312D4E61746976652E65736C00"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 134,
+              "data_offset": 140,
+              "length": 8,
+              "raw_hex": "0000000000000000"
+            },
+            {
+              "signature": "MAST",
+              "header_offset": 148,
+              "data_offset": 154,
+              "length": 15,
+              "raw_hex": "30322D466C61676765642E65737000"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 169,
+              "data_offset": 175,
+              "length": 8,
+              "raw_hex": "0000000000000000"
+            }
+          ],
+          "logical_spans": []
+        },
+        {
+          "signature": "REFR",
+          "offset": 207,
+          "length": 64,
+          "data_length": 40,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "02000800",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "NAME",
+              "header_offset": 231,
+              "data_offset": 237,
+              "length": 4,
+              "raw_hex": "00080000"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 241,
+              "data_offset": 247,
+              "length": 24,
+              "raw_hex": "000000000000000000000000000000000000000000000000"
+            }
+          ],
+          "logical_spans": [],
+          "allowlisted_payload": {
+            "NAME": [
+              "00080000"
+            ],
+            "DATA": [
+              "000000000000000000000000000000000000000000000000"
+            ],
+            "float32_bit_patterns": [
+              "00000000",
+              "00000000",
+              "00000000",
+              "00000000",
+              "00000000",
+              "00000000"
+            ]
+          },
+          "identity": {
+            "form_id_hex": "02000800",
+            "resolution_state": "resolved",
+            "form_key": "00000800:03-Consumer.esp",
+            "origin_plugin": "03-Consumer.esp",
+            "origin_kind": "full",
+            "local_id_hex": "00000800"
+          },
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "form_id_hex": "00000800",
+              "resolution_state": "resolved",
+              "form_key": "00000800:01-Native.esl",
+              "origin_plugin": "01-Native.esl",
+              "origin_kind": "light",
+              "local_id_hex": "00000800"
+            }
+          ]
+        },
+        {
+          "signature": "REFR",
+          "offset": 271,
+          "length": 64,
+          "data_length": 40,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "02000801",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "NAME",
+              "header_offset": 295,
+              "data_offset": 301,
+              "length": 4,
+              "raw_hex": "FF0F0001"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 305,
+              "data_offset": 311,
+              "length": 24,
+              "raw_hex": "0000803F0000803F0000803F000000000000000000000000"
+            }
+          ],
+          "logical_spans": [],
+          "allowlisted_payload": {
+            "NAME": [
+              "FF0F0001"
+            ],
+            "DATA": [
+              "0000803F0000803F0000803F000000000000000000000000"
+            ],
+            "float32_bit_patterns": [
+              "0000803F",
+              "0000803F",
+              "0000803F",
+              "00000000",
+              "00000000",
+              "00000000"
+            ]
+          },
+          "identity": {
+            "form_id_hex": "02000801",
+            "resolution_state": "resolved",
+            "form_key": "00000801:03-Consumer.esp",
+            "origin_plugin": "03-Consumer.esp",
+            "origin_kind": "full",
+            "local_id_hex": "00000801"
+          },
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "form_id_hex": "01000FFF",
+              "resolution_state": "resolved",
+              "form_key": "00000FFF:02-Flagged.esp",
+              "origin_plugin": "02-Flagged.esp",
+              "origin_kind": "light",
+              "local_id_hex": "00000FFF"
+            }
+          ]
+        }
+      ],
+      "malformed": null,
+      "tes4": {
+        "flags_hex": "00000000",
+        "esl_flag": false,
+        "masters": [
+          "01-Native.esl",
+          "02-Flagged.esp"
+        ]
+      },
+      "groups": [
+        {
+          "offset": 183,
+          "length": 152,
+          "label_hex": "52454652",
+          "group_type": 0
+        }
+      ],
+      "extension_header_mismatch": false
+    },
+    {
+      "path": "plugins/04-Winner.esp",
+      "byte_length": 227,
+      "sha256": "3b75c15391d47da2327107e61cce602003a757a12afba41382807760b8cbeeda",
+      "spans": [
+        {
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 14,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 112,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 118,
+          "length": 14,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 132,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 138,
+          "length": 8,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 146,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 170,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 194,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 200,
+          "length": 27,
+          "classification": "subrecord-data"
+        }
+      ],
+      "records": [
+        {
+          "signature": "TES4",
+          "offset": 0,
+          "length": 146,
+          "data_length": 122,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "00000000",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "HEDR",
+              "header_offset": 24,
+              "data_offset": 30,
+              "length": 12,
+              "raw_hex": "9A99D93F0100000000080000"
+            },
+            {
+              "signature": "CNAM",
+              "header_offset": 42,
+              "data_offset": 48,
+              "length": 44,
+              "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+            },
+            {
+              "signature": "SNAM",
+              "header_offset": 92,
+              "data_offset": 98,
+              "length": 14,
+              "raw_hex": "30342D57696E6E65722E65737000"
+            },
+            {
+              "signature": "MAST",
+              "header_offset": 112,
+              "data_offset": 118,
+              "length": 14,
+              "raw_hex": "30312D4E61746976652E65736C00"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 132,
+              "data_offset": 138,
+              "length": 8,
+              "raw_hex": "0000000000000000"
+            }
+          ],
+          "logical_spans": []
+        },
+        {
+          "signature": "STAT",
+          "offset": 170,
+          "length": 57,
+          "data_length": 33,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "00000800",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "header_offset": 194,
+              "data_offset": 200,
+              "length": 27,
+              "raw_hex": "4E61746976654C696768744D696E696D756D4F7665727269646500"
+            }
+          ],
+          "logical_spans": [],
+          "identity": {
+            "form_id_hex": "00000800",
+            "resolution_state": "resolved",
+            "form_key": "00000800:01-Native.esl",
+            "origin_plugin": "01-Native.esl",
+            "origin_kind": "light",
+            "local_id_hex": "00000800"
+          }
+        }
+      ],
+      "malformed": null,
+      "tes4": {
+        "flags_hex": "00000000",
+        "esl_flag": false,
+        "masters": [
+          "01-Native.esl"
+        ]
+      },
+      "groups": [
+        {
+          "offset": 146,
+          "length": 81,
+          "label_hex": "53544154",
+          "group_type": 0
+        }
+      ],
+      "extension_header_mismatch": false
+    }
+  ],
+  "supplemental_inputs": []
+}

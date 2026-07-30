@@ -10,3 +10,7 @@
 *.zip binary
 *.7z binary
 *.nupkg binary
+
+# Evaluation fixtures are byte-exact retained artifacts whose SHA-256 values
+# are transitively bound by package manifests. Never rewrite or text-merge them.
+test-data/evaluation/m1-semantic/** binary

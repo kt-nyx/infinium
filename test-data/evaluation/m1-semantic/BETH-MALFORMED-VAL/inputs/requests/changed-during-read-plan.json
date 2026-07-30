@@ -1,0 +1,11 @@
+{
+  "schema": "infinium.fixture.changed-during-read-plan",
+  "schema_version": 1,
+  "operation": "replace_between_identity_and_content_reads",
+  "initial_path": "mutations/ChangedDuringRead-A.esp",
+  "replacement_path": "mutations/ChangedDuringRead-B.esp",
+  "resource_limits": {
+    "replacement_count": 1,
+    "maximum_file_bytes": 4096
+  }
+}

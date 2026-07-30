@@ -1,0 +1,233 @@
+{
+  "schema": "infinium.bethesda-fixture-construction",
+  "schema_version": 1,
+  "package_id": "BETH-REFR-DEV",
+  "generator": "Infinium.BethesdaFixtures.Generator",
+  "generator_version": 1,
+  "fixed_seed": "3520260730",
+  "dependencies": ".NET/BCL only",
+  "input_prohibitions": [
+    "No game or mod bytes consumed.",
+    "No Mutagen or xEdit input consumed.",
+    "No network input consumed.",
+    "No production parser input consumed.",
+    "No oracle, taxonomy answer, held-out content, or snapshot capture input consumed."
+  ],
+  "files": [
+    {
+      "path": "case-matrix.json",
+      "sha256": "9ad8d123a5189a2cb08e81dab85f62762f71d5d7f716bc45bb23370e18897df3",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-request-or-matrix-metadata",
+          "length": 2830
+        }
+      ],
+      "byte_length": 2830
+    },
+    {
+      "path": "mutations/Boundaries-RepeatedXLKROrder.esp",
+      "sha256": "d3f0fac31ab2844d8ecbffdd830a7c35ba0816f7cfef4697d9c7bf66ac05f282",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 294
+        }
+      ],
+      "byte_length": 294
+    },
+    {
+      "path": "mutations/Refr-DanglingExtendedSize.esp",
+      "sha256": "4ac76284622ea49e64bcf07ea0582205d7facb4edc24997ba965f0c45b5074a8",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 219
+        }
+      ],
+      "byte_length": 219
+    },
+    {
+      "path": "mutations/Refr-SubrecordBodyOverrun.esp",
+      "sha256": "db677ca5bd03d91194b4fb5cc51bd5f8d9a99ef120eee21954b10478bd96e1e3",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 219
+        }
+      ],
+      "byte_length": 219
+    },
+    {
+      "path": "mutations/Refr-SubrecordHeaderTruncated.esp",
+      "sha256": "9c0f8236477a739b7477971e582752c735e2486c81e78c19567c44b06fd40123",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 215
+        }
+      ],
+      "byte_length": 215
+    },
+    {
+      "path": "mutations/compression/03-Placement.esp",
+      "sha256": "e4c762847bb52a702ea57d154522469bec53c9d5dec0f7295a5c42b1b2e3c2a3",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 333
+        }
+      ],
+      "byte_length": 333
+    },
+    {
+      "path": "mutations/master-order-reindexed/03-Placement.esp",
+      "sha256": "4db8323678d4a0021a405b829a40e340cae344b66aa0684383c16a44494f79da",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 283
+        }
+      ],
+      "byte_length": 283
+    },
+    {
+      "path": "mutations/master-order-unreindexed/03-Placement.esp",
+      "sha256": "d133ba2bcf225391b061b08c794504b3326dd7ae2700d513c39450ed521eb2f4",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 283
+        }
+      ],
+      "byte_length": 283
+    },
+    {
+      "path": "mutations/one-byte-data/03-Placement.esp",
+      "sha256": "8beab7402bd7623c9e7589a7078eabdccc05695ef1f698edccc7b170f9ca1009",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 330
+        }
+      ],
+      "byte_length": 330
+    },
+    {
+      "path": "mutations/record-order/01-World.esm",
+      "sha256": "3d6a44a9246038b5677ecf0795094c434a37802e970090c69fef5856f5467575",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 559
+        }
+      ],
+      "byte_length": 559
+    },
+    {
+      "path": "plugins/00-Pad.esm",
+      "sha256": "7ee03b2ef46c82525644553259b32260c0defc87b61ae986519acab32496fd89",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 109
+        }
+      ],
+      "byte_length": 109
+    },
+    {
+      "path": "plugins/01-World.esm",
+      "sha256": "a8397a132896e7d1e276f4174d820effceccf220cac9afec95bf387d7211a4b4",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 559
+        }
+      ],
+      "byte_length": 559
+    },
+    {
+      "path": "plugins/02-Relations.esp",
+      "sha256": "d021053e099d6cf01498f5c803ae57d3dd68291b27d66f3cf31dd8650b02a23d",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 307
+        }
+      ],
+      "byte_length": 307
+    },
+    {
+      "path": "plugins/03-Placement.esp",
+      "sha256": "0d43a4de7fee7bf13ac76edc43630dc4f464fe4cd6a7e931731222ce7aa03497",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 330
+        }
+      ],
+      "byte_length": 330
+    },
+    {
+      "path": "plugins/04-MergedWinner.esp",
+      "sha256": "4874fba88d1b88776a791d280c05ae1b3d9fab157d8d1c9f2f730345fe1ab412",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 296
+        }
+      ],
+      "byte_length": 296
+    },
+    {
+      "path": "plugins/05-DeletedWinner.esp",
+      "sha256": "4c51f3ff1dfa74430327207b9eb814f4213a6316a50c87a75c1bc98216ac1934",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 223
+        }
+      ],
+      "byte_length": 223
+    },
+    {
+      "path": "plugins/06-Boundaries.esp",
+      "sha256": "cd967f3b2a9b8984bbbd1003b48a892d4dedb419de92fd47eeee2ed6f0ea4579",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 376
+        }
+      ],
+      "byte_length": 376
+    },
+    {
+      "path": "construction-manifest.json",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-construction-metadata",
+          "length": 6428
+        }
+      ],
+      "byte_length": 6428
+    }
+  ]
+}

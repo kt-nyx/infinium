@@ -1,0 +1,556 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/json-schema/bethesda-byte-oracle.v1.schema.json",
+  "title": "Infinium independent Bethesda byte oracle v1",
+  "description": "Supplemental, answer-bearing evidence retained separately from fixture execution input. Expected-oracle items bind fact records by matching fact_id and canonical_value_fingerprint.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "fixture_id",
+    "fixture_version",
+    "oracle_artifact_version",
+    "canonicalization",
+    "independent_authors_and_reviewers",
+    "ground_truth_method_ids",
+    "format_evidence",
+    "files",
+    "facts",
+    "mutation_expectations",
+    "limits",
+    "review_state"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "infinium.evaluation.bethesda-byte-oracle/v1"
+    },
+    "schema_version": {
+      "const": "1"
+    },
+    "fixture_id": {
+      "$ref": "common.v1.schema.json#/$defs/identifier"
+    },
+    "fixture_version": {
+      "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+    },
+    "oracle_artifact_version": {
+      "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+    },
+    "canonicalization": {
+      "const": "infinium-canonical-json-sha256/v1"
+    },
+    "independent_authors_and_reviewers": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "common.v1.schema.json#/$defs/identifier"
+      }
+    },
+    "ground_truth_method_ids": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "common.v1.schema.json#/$defs/identifier"
+      }
+    },
+    "format_evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "common.v1.schema.json#/$defs/artifactReference"
+      }
+    },
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/fileEvidence"
+      }
+    },
+    "facts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/fact"
+      }
+    },
+    "mutation_expectations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/mutationExpectation"
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximum_input_bytes",
+        "maximum_records",
+        "maximum_subrecords_per_record",
+        "maximum_group_depth",
+        "maximum_decompressed_bytes"
+      ],
+      "properties": {
+        "maximum_input_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximum_records": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximum_subrecords_per_record": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximum_group_depth": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximum_decompressed_bytes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "review_state": {
+      "enum": [
+        "reviewed",
+        "accepted"
+      ]
+    }
+  },
+  "$defs": {
+    "fileEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_id",
+        "byte_length",
+        "sha256",
+        "provider_id",
+        "scenario_memberships",
+        "masters_state",
+        "masters",
+        "esl_flag_state",
+        "esl_flag",
+        "byte_coverage"
+      ],
+      "properties": {
+        "artifact_id": {
+          "$ref": "common.v1.schema.json#/$defs/identifier"
+        },
+        "byte_length": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sha256": {
+          "$ref": "common.v1.schema.json#/$defs/sha256"
+        },
+        "provider_id": {
+          "$ref": "common.v1.schema.json#/$defs/identifier"
+        },
+        "scenario_memberships": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/scenarioMembership"
+          }
+        },
+        "masters_state": {
+          "enum": [
+            "observed",
+            "unknown"
+          ]
+        },
+        "masters": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "common.v1.schema.json#/$defs/identifier"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "esl_flag_state": {
+          "enum": [
+            "observed",
+            "unknown"
+          ]
+        },
+        "esl_flag": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "byte_coverage": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/byteSpan"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "masters_state": {
+                "const": "observed"
+              }
+            },
+            "required": [
+              "masters_state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "masters": {
+                "type": "array"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "masters": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "esl_flag_state": {
+                "const": "observed"
+              }
+            },
+            "required": [
+              "esl_flag_state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "esl_flag": {
+                "type": "boolean"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "esl_flag": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "scenarioMembership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scenario_id",
+        "plugin_order"
+      ],
+      "properties": {
+        "scenario_id": {
+          "$ref": "common.v1.schema.json#/$defs/identifier"
+        },
+        "plugin_order": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "byteSpan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "span_id",
+        "offset_space",
+        "offset",
+        "length",
+        "classification"
+      ],
+      "properties": {
+        "span_id": {
+          "$ref": "common.v1.schema.json#/$defs/identifier"
+        },
+        "offset_space": {
+          "enum": [
+            "physical-file",
+            "decompressed-record"
+          ]
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "classification": {
+          "enum": [
+            "record-header",
+            "group-header",
+            "subrecord-header",
+            "subrecord-data",
+            "compressed-container",
+            "opaque",
+            "padding"
+          ]
+        }
+      }
+    },
+    "fact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fact_id",
+        "subject_id",
+        "fact_kind",
+        "ground_truth_method_ids",
+        "canonical_value",
+        "canonical_value_fingerprint"
+      ],
+      "properties": {
+        "fact_id": {
+          "$ref": "common.v1.schema.json#/$defs/identifier"
+        },
+        "subject_id": {
+          "$ref": "common.v1.schema.json#/$defs/identifier"
+        },
+        "fact_kind": {
+          "enum": [
+            "file",
+            "record",
+            "group",
+            "subrecord",
+            "master-order",
+            "form-key",
+            "link",
+            "override-chain",
+            "winner",
+            "malformed",
+            "unsupported",
+            "coverage-gap",
+            "snapshot"
+          ]
+        },
+        "ground_truth_method_ids": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common.v1.schema.json#/$defs/identifier"
+          }
+        },
+        "canonical_value": {
+          "$ref": "#/$defs/canonicalValue"
+        },
+        "canonical_value_fingerprint": {
+          "$ref": "common.v1.schema.json#/$defs/fingerprint"
+        }
+      }
+    },
+    "canonicalValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "$ref": "common.v1.schema.json#/$defs/identifier"
+        },
+        "artifact_id": {
+          "$ref": "common.v1.schema.json#/$defs/identifier"
+        },
+        "offset_space": {
+          "enum": [
+            "physical-file",
+            "decompressed-record",
+            "not-applicable"
+          ]
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "signature": {
+          "type": "string",
+          "pattern": "^[ -~]{4}$"
+        },
+        "raw_hex": {
+          "type": "string",
+          "pattern": "^[0-9A-F]*$"
+        },
+        "unsigned_value": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "signed_value": {
+          "type": "integer"
+        },
+        "float32_bit_patterns": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[0-9A-F]{8}$"
+          }
+        },
+        "text_value": {
+          "type": "string"
+        },
+        "boolean_value": {
+          "type": "boolean"
+        },
+        "form_id_hex": {
+          "type": "string",
+          "pattern": "^[0-9A-F]{8}$"
+        },
+        "form_key": {
+          "$ref": "common.v1.schema.json#/$defs/identifier"
+        },
+        "origin_plugin": {
+          "$ref": "common.v1.schema.json#/$defs/identifier"
+        },
+        "origin_kind": {
+          "enum": [
+            "full",
+            "light",
+            "invalid",
+            "unknown"
+          ]
+        },
+        "local_id_hex": {
+          "type": "string",
+          "pattern": "^[0-9A-F]{3,6}$"
+        },
+        "target_form_key": {
+          "$ref": "common.v1.schema.json#/$defs/identifier"
+        },
+        "resolution_state": {
+          "enum": [
+            "resolved",
+            "unresolved",
+            "null",
+            "invalid",
+            "unsupported",
+            "unknown",
+            "not-applicable"
+          ]
+        },
+        "master_order": {
+          "type": "array",
+          "items": {
+            "$ref": "common.v1.schema.json#/$defs/identifier"
+          }
+        },
+        "record_flags_hex": {
+          "type": "string",
+          "pattern": "^[0-9A-F]{8}$"
+        },
+        "record_state": {
+          "enum": [
+            "present",
+            "deleted",
+            "templated",
+            "malformed",
+            "unsupported",
+            "unknown"
+          ]
+        },
+        "ordered_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "common.v1.schema.json#/$defs/identifier"
+          }
+        },
+        "winner_id": {
+          "$ref": "common.v1.schema.json#/$defs/identifier"
+        },
+        "classification": {
+          "$ref": "common.v1.schema.json#/$defs/identifier"
+        },
+        "reason": {
+          "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+        },
+        "eligible_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "completed_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "gap_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "mutationExpectation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation_id",
+        "mutation_kind",
+        "target_artifact_id",
+        "changed_fact_ids",
+        "unchanged_fact_ids"
+      ],
+      "properties": {
+        "mutation_id": {
+          "$ref": "common.v1.schema.json#/$defs/identifier"
+        },
+        "mutation_kind": {
+          "enum": [
+            "one-byte",
+            "master-order",
+            "record-order",
+            "compression",
+            "repeated-field",
+            "local-id",
+            "same-size-time",
+            "changed-during-read"
+          ]
+        },
+        "target_artifact_id": {
+          "$ref": "common.v1.schema.json#/$defs/identifier"
+        },
+        "changed_fact_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common.v1.schema.json#/$defs/identifier"
+          }
+        },
+        "unchanged_fact_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common.v1.schema.json#/$defs/identifier"
+          }
+        }
+      }
+    }
+  }
+}

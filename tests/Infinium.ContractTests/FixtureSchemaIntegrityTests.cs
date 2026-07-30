@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Infinium.Application.Evaluation;
@@ -60,6 +61,96 @@ public sealed class FixtureSchemaIntegrityTests
             Assert.ThrowsExactly<InvalidDataException>(
                 () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
         }
+    }
+
+    [TestMethod]
+    [TestCategory("M1Contract")]
+    [TestCategory("M1Security")]
+    [TestProperty("Category", "M1Contract")]
+    [TestProperty("Category", "M1Security")]
+    public void HarnessBindsRetainedInputAndOracleArtifactsTransitively()
+    {
+        using FixturePackageTestBuilder fixture = new();
+        fixture.AddRetainedInputArtifact(
+            "inputs/project-authored.esp",
+            [0x54, 0x45, 0x53, 0x34]);
+        fixture.AddRetainedOracleArtifact(
+            "oracle/independent-review-evidence.json",
+            "{}"u8.ToArray());
+
+        EvaluationHarnessFixturePackage package =
+            FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath);
+
+        Assert.AreEqual("fixture-development-1", package.FixtureId.Value);
+    }
+
+    [TestMethod]
+    [TestCategory("M1Security")]
+    [TestCategory("M1Fault")]
+    [TestProperty("Category", "M1Security")]
+    [TestProperty("Category", "M1Fault")]
+    public void HarnessRejectsRetainedArtifactMutationMissingFilesAndTraversal()
+    {
+        using (FixturePackageTestBuilder fixture = new())
+        {
+            fixture.AddRetainedInputArtifact(
+                "inputs/project-authored.esp",
+                [0x54, 0x45, 0x53, 0x34]);
+            fixture.MutateRetainedArtifact(
+                "inputs/project-authored.esp",
+                [0x54, 0x45, 0x53, 0x35]);
+
+            Assert.ThrowsExactly<InvalidDataException>(
+                () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+        }
+
+        using (FixturePackageTestBuilder fixture = new())
+        {
+            fixture.AddRetainedInputReference(
+                "inputs/missing.esp",
+                new string('1', 64));
+
+            Assert.ThrowsExactly<InvalidDataException>(
+                () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+        }
+
+        using (FixturePackageTestBuilder fixture = new())
+        {
+            fixture.AddRetainedInputReference(
+                "inputs/../escaped.esp",
+                new string('1', 64));
+
+            Assert.ThrowsExactly<InvalidDataException>(
+                () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("M1Security")]
+    [TestCategory("M1Fault")]
+    [TestProperty("Category", "M1Security")]
+    [TestProperty("Category", "M1Fault")]
+    public void HarnessRejectsHardLinkedRetainedArtifactsOnWindows()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using FixturePackageTestBuilder fixture = new();
+        fixture.AddRetainedInputArtifact(
+            "inputs/project-authored.esp",
+            [0x54, 0x45, 0x53, 0x34]);
+        string retained = Path.Combine(
+            fixture.DirectoryPath,
+            "inputs",
+            "project-authored.esp");
+        string source = retained + ".source";
+        File.Move(retained, source);
+        Assert.IsTrue(CreateHardLinkW(retained, source, 0));
+
+        Assert.ThrowsExactly<InvalidDataException>(
+            () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
     }
 
     [TestMethod]
@@ -451,4 +542,11 @@ public sealed class FixtureSchemaIntegrityTests
             ["no_safety_guarantee"] = true,
         };
     }
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool CreateHardLinkW(
+        string fileName,
+        string existingFileName,
+        nint securityAttributes);
 }

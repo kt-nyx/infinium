@@ -1,0 +1,31 @@
+{
+  "schema_id": "infinium.evaluation.fixture-public-manifest/v1",
+  "schema_version": "1",
+  "fixture_id": "BETH-MALFORMED-VAL",
+  "fixture_version": "1.0.0",
+  "evaluation_ids": [
+    "EVAL-0052"
+  ],
+  "purpose": "Qualify project-authored malformed Bethesda byte boundaries and bounded failure expectations for later Slice 4 evaluation.",
+  "classification": "malformed",
+  "partition": "validation",
+  "partition_history": [
+    {
+      "from": null,
+      "to": "validation",
+      "at": "2026-07-30T18:00:00.0000000+00:00",
+      "reason": "Initial registration of an independently reviewed project-authored validation fixture.",
+      "change_influenced_implementation": false
+    }
+  ],
+  "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
+  "taxonomy_version": "0.1.0",
+  "input_package_fingerprint": "8a4e24068b57efdc9ffd18f329b3afb3558633624d996f0f1c93073497c2b7c9",
+  "oracle_fingerprint": "faa13b6249f4f3ab8f492a8f68213924406e17d5a040900f2e3e34070ebd2162",
+  "provenance_fingerprint": "17ccd8acef77dc9b517e9387f564a8bbd70a4c83e55e89f36abd665163405254",
+  "replay_dependency_fingerprint": "6127fe87cfdece4996a575815774c30dd0208be26372e12cf31c26175ac049be",
+  "redistribution_class": "project-authored-redistributable",
+  "owner": "infinium-evaluation",
+  "review_state": "accepted",
+  "created_at": "2026-07-30T18:00:00.0000000+00:00"
+}

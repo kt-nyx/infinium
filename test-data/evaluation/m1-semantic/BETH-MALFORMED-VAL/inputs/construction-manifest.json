@@ -1,0 +1,281 @@
+{
+  "schema": "infinium.bethesda-fixture-construction",
+  "schema_version": 1,
+  "package_id": "BETH-MALFORMED-VAL",
+  "generator": "Infinium.BethesdaFixtures.Generator",
+  "generator_version": 1,
+  "fixed_seed": "3520260730",
+  "dependencies": ".NET/BCL only",
+  "input_prohibitions": [
+    "No game or mod bytes consumed.",
+    "No Mutagen or xEdit input consumed.",
+    "No network input consumed.",
+    "No production parser input consumed.",
+    "No oracle, taxonomy answer, held-out content, or snapshot capture input consumed."
+  ],
+  "files": [
+    {
+      "path": "case-matrix.json",
+      "sha256": "d1a47e555bbfd466b770a75eed87b1f4aea3a247180cbc37379d272ea96f66ee",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-request-or-matrix-metadata",
+          "length": 4100
+        }
+      ],
+      "byte_length": 4100
+    },
+    {
+      "path": "mutations/ChangedDuringRead-A.esp",
+      "sha256": "031fbd75c5308f768bf019f0f8eeece31ee13a5807f096d837ccf2ff648fb382",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 195
+        }
+      ],
+      "byte_length": 195
+    },
+    {
+      "path": "mutations/ChangedDuringRead-B.esp",
+      "sha256": "2f2a531fb151103dd5fa4d4ea09bda627bcc036c66a5a9f2b3b6cbb95a0e5682",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 195
+        }
+      ],
+      "byte_length": 195
+    },
+    {
+      "path": "mutations/CompressedDeclaredSizeOverLimit.esp",
+      "sha256": "14c88c5fdc978eb8e86c67d22e58ebdbcddd8354eea03c679c07e3b99bc3ceac",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 218
+        }
+      ],
+      "byte_length": 218
+    },
+    {
+      "path": "mutations/CompressedInvalidZlib.esp",
+      "sha256": "3f049937732519afcdb5b262e0736b490af09c497fb5ddd1e2b3740734f62cb0",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 179
+        }
+      ],
+      "byte_length": 179
+    },
+    {
+      "path": "mutations/CompressedMissingLength.esp",
+      "sha256": "f9cff9c2ebc63affd5428f132f1f05e2180763d0bb51d64f8d0b95cab3a98bf3",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 176
+        }
+      ],
+      "byte_length": 176
+    },
+    {
+      "path": "mutations/CompressedSizeMismatch.esp",
+      "sha256": "e03e9eda355ea841f8b70a76c6108eb45d329119715d21509aebc9ebbb461b06",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 200
+        }
+      ],
+      "byte_length": 200
+    },
+    {
+      "path": "mutations/GroupSizeOverflow.esp",
+      "sha256": "5c9210bcbda9319820909e0985eb614991a6e964d7b3009b22214236f8c3133c",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 192
+        }
+      ],
+      "byte_length": 192
+    },
+    {
+      "path": "mutations/GroupSizePastEnd.esp",
+      "sha256": "5acfedf3235c9ed94c04467712633d47b56db2a8f2eda622bba7f5622ff48bfb",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 192
+        }
+      ],
+      "byte_length": 192
+    },
+    {
+      "path": "mutations/GroupSizeTooSmall.esp",
+      "sha256": "088f8254c1d89ff0d4460cd2b09de23de2913d22d0a2ed8398039fbfe979617e",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 192
+        }
+      ],
+      "byte_length": 192
+    },
+    {
+      "path": "mutations/InvalidLinkMasterIndex.esp",
+      "sha256": "6df0405e2be94250826c62b959261a9968612ac8fcc65bfb65ca5ff866b8b781",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 250
+        }
+      ],
+      "byte_length": 250
+    },
+    {
+      "path": "mutations/InvalidRecordMasterIndex.esp",
+      "sha256": "0ac5d15a5655791dc45eb3972d95a0d95a5b95eb19f02d2ab7bd6804d6656b52",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 243
+        }
+      ],
+      "byte_length": 243
+    },
+    {
+      "path": "mutations/MasterMissingDataPair.esp",
+      "sha256": "45c63369cdcede68077a0acde19f53350442862a49700ded1bdacda2e9b2fdf1",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 147
+        }
+      ],
+      "byte_length": 147
+    },
+    {
+      "path": "mutations/NestedGroupsOverLimit.esp",
+      "sha256": "5ce416f7764bebb47e56003a6c1a761ed5768953d100f0b49a4309b40cd6472a",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 1841
+        }
+      ],
+      "byte_length": 1841
+    },
+    {
+      "path": "mutations/RecordCountOverLimit.esp",
+      "sha256": "2e327eb2853bde587819a93777e1c90dcbc949bab5df1a08632cb19e9d9024ca",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 147639
+        }
+      ],
+      "byte_length": 147639
+    },
+    {
+      "path": "mutations/RecordSizeOverflow.esp",
+      "sha256": "bae71380b2369e497332893645d27fdb8b2abc491afefb38db63a0010f3fdb7f",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 192
+        }
+      ],
+      "byte_length": 192
+    },
+    {
+      "path": "mutations/SubrecordCountOverLimit.esp",
+      "sha256": "b57e87c0030ecc438a1009a151737ea3df3272ee5c66db9ec38c70d8061ae7e2",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 24756
+        }
+      ],
+      "byte_length": 24756
+    },
+    {
+      "path": "mutations/TruncatedRecordHeader.esp",
+      "sha256": "30a8fe7ea38c41855b2933cb3966ec07218956689eea94a8cb744d6e8c8fdc64",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 10
+        }
+      ],
+      "byte_length": 10
+    },
+    {
+      "path": "mutations/TruncatedRecordPayload.esp",
+      "sha256": "13ac01a8c3f97735ab4f0ac37c8ca1cc0b3f13466b4eb0be712e6ddffbfbf614",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 189
+        }
+      ],
+      "byte_length": 189
+    },
+    {
+      "path": "plugins/MinimalValid.esp",
+      "sha256": "d12230139a9f3ae2c5116b3076a14a65fb39532ec1ea18e0e42183ba6c98acda",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 192
+        }
+      ],
+      "byte_length": 192
+    },
+    {
+      "path": "requests/changed-during-read-plan.json",
+      "sha256": "c59bcd05587e09243a2d703cd6a9ce9c79dfcf87bacef8d0a0d239890852d0d2",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-request-or-matrix-metadata",
+          "length": 355
+        }
+      ],
+      "byte_length": 355
+    },
+    {
+      "path": "construction-manifest.json",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-construction-metadata",
+          "length": 7792
+        }
+      ],
+      "byte_length": 7792
+    }
+  ]
+}

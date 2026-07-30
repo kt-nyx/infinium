@@ -1,0 +1,177 @@
+{
+  "fixture_id": "BETH-LIGHT-VAL",
+  "fixture_version": "1.0.0",
+  "installation_snapshot_input": {
+    "state": "provided",
+    "reason": "Retained Slice 3 accepted-order receipt binds the disposable synthetic snapshot input.",
+    "artifact": {
+      "artifact_id": "inputs/snapshot/accepted-order.json",
+      "artifact_version": "1.0.0",
+      "fingerprint": "2fc7eb094e1efe1f45cb8366d3e559df6f899991a5ae1e9784655b0f79288f6d",
+      "availability": "retained"
+    }
+  },
+  "analysis_context_input": {
+    "state": "empty",
+    "reason": "Slice 3.5 qualifies inputs and independent truth; production semantic analysis remains pending Slice 4."
+  },
+  "effective_scan_configuration": {
+    "artifact_id": "inputs/case-matrix.json",
+    "artifact_version": "1.0.0",
+    "fingerprint": "3be80104b22587ca35527df525548c7e53607b075881a542a2f2384f466f1d64",
+    "availability": "retained"
+  },
+  "runtime_support_input": {
+    "state": "not-applicable",
+    "reason": "Runtime execution is outside the Bethesda byte-input qualification boundary."
+  },
+  "mo2_instance_profile_input": {
+    "state": "provided",
+    "reason": "Retained synthetic profile receipt records the selected profile and accepted adapter identity.",
+    "artifact": {
+      "artifact_id": "inputs/snapshot/accepted-order.json",
+      "artifact_version": "1.0.0",
+      "fingerprint": "2fc7eb094e1efe1f45cb8366d3e559df6f899991a5ae1e9784655b0f79288f6d",
+      "availability": "retained"
+    }
+  },
+  "plugin_order_input": {
+    "state": "provided",
+    "reason": "Retained synthetic profile receipt records exact plugin order and fingerprints.",
+    "artifact": {
+      "artifact_id": "inputs/snapshot/accepted-order.json",
+      "artifact_version": "1.0.0",
+      "fingerprint": "2fc7eb094e1efe1f45cb8366d3e559df6f899991a5ae1e9784655b0f79288f6d",
+      "availability": "retained"
+    }
+  },
+  "provider_order_input": {
+    "state": "provided",
+    "reason": "Retained synthetic profile receipt records exact provider order and fingerprints.",
+    "artifact": {
+      "artifact_id": "inputs/snapshot/accepted-order.json",
+      "artifact_version": "1.0.0",
+      "fingerprint": "2fc7eb094e1efe1f45cb8366d3e559df6f899991a5ae1e9784655b0f79288f6d",
+      "availability": "retained"
+    }
+  },
+  "source_claim_inputs": [],
+  "analyzer_declarations": [],
+  "tool_library_versions": [
+    {
+      "component_id": "Infinium.BethesdaFixtures.Generator",
+      "version": "1",
+      "fingerprint": "ab71a0485005d544c5792499c645a7975641f55d8dd3c4fced7c04b0fd2cd5f1"
+    }
+  ],
+  "declared_archive_state": {
+    "state": "excluded",
+    "reason": "Archive-member semantics are outside this retained plugin-byte package."
+  },
+  "declared_supported_capabilities": [
+    "bethesda-project-authored-fixture-input-v1",
+    "slice3-accepted-order-receipt-v1"
+  ],
+  "declared_unsupported_capabilities": [
+    {
+      "capability_id": "production-bethesda-semantic-analysis",
+      "reason": "Slice 3.5 prepares inputs and independent truth only; production analysis remains pending Slice 4."
+    },
+    {
+      "capability_id": "complete-eval-0052-or-eval-0086-pass",
+      "reason": "Package acceptance does not execute or pass either evaluation case."
+    }
+  ],
+  "resource_and_time_limits": {
+    "wall_time_ms": 120000,
+    "memory_bytes": 536870912,
+    "input_bytes": 14573,
+    "output_bytes": 16777216
+  },
+  "input_payload_refs": [
+    {
+      "artifact_id": "inputs/case-matrix.json",
+      "artifact_version": "1.0.0",
+      "fingerprint": "3be80104b22587ca35527df525548c7e53607b075881a542a2f2384f466f1d64",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/construction-manifest.json",
+      "artifact_version": "1.0.0",
+      "fingerprint": "87fe85c62449405115fd64a001613397d51b5c94f05685c5158a52a0105ec462",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/mutations/Consumer-LightReferenceOutOfRange.esp",
+      "artifact_version": "1.0.0",
+      "fingerprint": "866d41c756b546a95d8195bf28e67be944e61e5b2d07ac4c1077d09f63f02f70",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/mutations/FlaggedEsp-AboveLightMaximum.esp",
+      "artifact_version": "1.0.0",
+      "fingerprint": "3b517170f45521c8f7bed82347a077db939799d764c55860c39f59b6751d2140",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/mutations/FlaggedEsp-BelowObjectRange.esp",
+      "artifact_version": "1.0.0",
+      "fingerprint": "e67567fd8b8789314817db69585e2caf55bfbca0341e1943defbadc313027070",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/mutations/Native-AboveLightMaximum.esl",
+      "artifact_version": "1.0.0",
+      "fingerprint": "fe8e35888609636451e8462e9bc7cc2659433c84620f9c25abafc1fa2dc79394",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/mutations/Native-BelowObjectRange.esl",
+      "artifact_version": "1.0.0",
+      "fingerprint": "06cc4e3b1021c0213229669ea57444a4e0db438f74e17228233b1fb67dedfca0",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/mutations/Native-HeaderFlagRemoved.esl",
+      "artifact_version": "1.0.0",
+      "fingerprint": "687d6d7fd35b8c7ffbe4f28dc178fe0fcb36c4a54777bcccb93611a165227182",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/plugins/00-Pad.esm",
+      "artifact_version": "1.0.0",
+      "fingerprint": "7ee03b2ef46c82525644553259b32260c0defc87b61ae986519acab32496fd89",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/plugins/01-Native.esl",
+      "artifact_version": "1.0.0",
+      "fingerprint": "8bd7537ada2bc83c61ef399b1145bb63c0ef68aef90cba49be0565053cf44b98",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/plugins/02-Flagged.esp",
+      "artifact_version": "1.0.0",
+      "fingerprint": "e60f667e43a62a8b24d8702cbcb9f6242017c84cf138bc74d2cb84e5ae649609",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/plugins/03-Consumer.esp",
+      "artifact_version": "1.0.0",
+      "fingerprint": "bd24624a01fe07e701fa858a38d5b20b1ecdf22c2842875826b0f83fd312d47e",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/plugins/04-Winner.esp",
+      "artifact_version": "1.0.0",
+      "fingerprint": "3b75c15391d47da2327107e61cce602003a757a12afba41382807760b8cbeeda",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/snapshot/accepted-order.json",
+      "artifact_version": "1.0.0",
+      "fingerprint": "2fc7eb094e1efe1f45cb8366d3e559df6f899991a5ae1e9784655b0f79288f6d",
+      "availability": "retained"
+    }
+  ]
+}

@@ -1,0 +1,144 @@
+{
+  "schema_id": "infinium.evaluation.taxonomy-projections/v1",
+  "schema_version": "1",
+  "fixture_id": "BETH-UNSUPPORTED-VAL",
+  "fixture_version": "1.0.0",
+  "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
+  "taxonomy_version": "0.1.0",
+  "reviewer_id": "taxonomy-reviewer",
+  "reviewed_at": "2026-07-30T00:00:00.0000000+00:00",
+  "source_artifacts": [
+    {
+      "artifact_id": "oracle/independent-byte-facts.json",
+      "artifact_version": "1.0.0",
+      "fingerprint": "83e90d2f04bef3306f46026ab1ed922eac8a65e268d8047afb5023683e8416ce",
+      "availability": "retained"
+    }
+  ],
+  "subjects": [
+    {
+      "subject_id": "TAX-06",
+      "canonical_value": {
+        "subject_type": "taxonomy-fixture-subject",
+        "subject_id": "TAX-06",
+        "source_package_id": "BETH-UNSUPPORTED-VAL",
+        "source_evidence_references": [
+          "beth.beth-unsupported-val.fact-00007",
+          "beth.beth-unsupported-val.fact-00012",
+          "beth.beth-unsupported-val.fact-00020"
+        ],
+        "independent_semantic_evidence_references": [
+          "beth.beth-unsupported-val.fact-00020"
+        ],
+        "expected_assignments": [
+          {
+            "axis": "technical-modification-surface",
+            "facet": "semantic-mechanism",
+            "code": "surface.plugin-data",
+            "applicability_state": "assigned",
+            "classification_role": "observed",
+            "evidence_references": [
+              "beth.beth-unsupported-val.fact-00012"
+            ],
+            "reason": "The frozen major-record fact establishes plugin-carried record data even though its family semantics are unsupported."
+          },
+          {
+            "axis": "technical-modification-surface",
+            "facet": "realization-and-delivery",
+            "code": "delivery.plugin-container",
+            "applicability_state": "assigned",
+            "classification_role": "observed",
+            "evidence_references": [
+              "beth.beth-unsupported-val.fact-00007",
+              "beth.beth-unsupported-val.fact-00012"
+            ],
+            "reason": "The frozen file and record facts establish delivery inside a plugin container."
+          },
+          {
+            "axis": "affected-game-system-or-content-area",
+            "facet": "affected-area",
+            "applicability_state": "unsupported",
+            "classification_role": "established",
+            "evidence_references": [
+              "beth.beth-unsupported-val.fact-00020"
+            ],
+            "reason": "The frozen allowlist gap establishes that Slice 4 cannot determine affected-area semantics for this record family."
+          },
+          {
+            "axis": "consequence-type",
+            "facet": "consequence-type",
+            "applicability_state": "unknown",
+            "classification_role": "predicted",
+            "evidence_references": [
+              "beth.beth-unsupported-val.fact-00020"
+            ],
+            "reason": "The surface is present, but unsupported semantics leave any consequence unknown."
+          },
+          {
+            "axis": "effect-extent",
+            "facet": "direct-subject-breadth",
+            "applicability_state": "not-applicable",
+            "classification_role": "established",
+            "evidence_references": [
+              "beth.beth-unsupported-val.fact-00020"
+            ],
+            "reason": "No effect is established, so direct-subject breadth is not applicable."
+          },
+          {
+            "axis": "effect-extent",
+            "facet": "spatial-breadth",
+            "applicability_state": "not-applicable",
+            "classification_role": "established",
+            "evidence_references": [
+              "beth.beth-unsupported-val.fact-00020"
+            ],
+            "reason": "No effect is established, so spatial breadth is not applicable."
+          },
+          {
+            "axis": "effect-extent",
+            "facet": "persistence-and-lifecycle-breadth",
+            "applicability_state": "not-applicable",
+            "classification_role": "established",
+            "evidence_references": [
+              "beth.beth-unsupported-val.fact-00020"
+            ],
+            "reason": "No effect is established, so persistence breadth is not applicable."
+          },
+          {
+            "axis": "effect-extent",
+            "facet": "causal-propagation-or-blast-radius",
+            "applicability_state": "not-applicable",
+            "classification_role": "established",
+            "evidence_references": [
+              "beth.beth-unsupported-val.fact-00020"
+            ],
+            "reason": "No effect is established, so propagation breadth is not applicable."
+          }
+        ],
+        "forbidden_assignments": [
+          {
+            "axis": "declared-purpose-and-intended-feature-area",
+            "reason": "No author-purpose evidence is present."
+          },
+          {
+            "axis": "affected-game-system-or-content-area",
+            "reason": "Unsupported record-family semantics cannot be guessed from the signature or filename."
+          },
+          {
+            "axis": "consequence-type",
+            "code": "consequence.incorrect-functional-behavior",
+            "reason": "A present unsupported surface does not establish breakage."
+          }
+        ]
+      },
+      "canonical_value_fingerprint": "824b5232a04068710b2af0d400c233c2e0a75921350cf0153105d4b8fe67a10d"
+    }
+  ],
+  "review_assertions": [
+    "Supported technical surface and delivery do not imply supported semantic area.",
+    "Unsupported, unknown, and not-applicable remain distinct states.",
+    "No area, purpose, consequence, or extent is copied from record family, filename, or another axis.",
+    "No production Slice 4 output, Mutagen answer, xEdit answer, generator answer table, or held-out answer was used.",
+    "These projections prepare EVAL-0086 inputs and do not claim that EVAL-0086 passes."
+  ]
+}

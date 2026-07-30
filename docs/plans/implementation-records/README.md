@@ -12,3 +12,4 @@ evaluation cases as passed.
 - [M1 Slice 1 — Versioned domain, wire, output, and evaluation contracts](M1-slice-1.md)
 - [M1 Slice 2 — Local execution substrate, persistence, and platform boundaries](M1-slice-2.md)
 - [M1 Slice 3 — Supported-target admission and MO2 snapshot reconstruction](M1-slice-3.md)
+- [M1 Slice 3.5 — Bethesda binary fixture qualification](M1-slice-3.5.md)

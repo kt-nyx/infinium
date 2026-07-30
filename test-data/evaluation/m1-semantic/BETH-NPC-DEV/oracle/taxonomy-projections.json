@@ -1,0 +1,323 @@
+{
+  "schema_id": "infinium.evaluation.taxonomy-projections/v1",
+  "schema_version": "1",
+  "fixture_id": "BETH-NPC-DEV",
+  "fixture_version": "1.0.0",
+  "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
+  "taxonomy_version": "0.1.0",
+  "reviewer_id": "taxonomy-reviewer",
+  "reviewed_at": "2026-07-30T00:00:00.0000000+00:00",
+  "source_artifacts": [
+    {
+      "artifact_id": "oracle/independent-byte-facts.json",
+      "artifact_version": "1.0.0",
+      "fingerprint": "448a9d867468bc0a570f3b70515530261902c25f8705d7074b046429decc6844",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/snapshot/accepted-order.json",
+      "artifact_version": "3.0.0",
+      "fingerprint": "1b17ea09a33adfaf542a179fa197b60993df5bbb3ce4c3dc0990392ba46256ef",
+      "availability": "retained"
+    }
+  ],
+  "subjects": [
+    {
+      "subject_id": "TAX-03A",
+      "canonical_value": {
+        "subject_type": "taxonomy-fixture-subject",
+        "subject_id": "TAX-03A",
+        "source_package_id": "BETH-NPC-DEV",
+        "source_evidence_references": [
+          "beth.beth-npc-dev.fact-00211",
+          "beth.beth-npc-dev.fact-00214",
+          "beth.beth-npc-dev.fact-00215",
+          "beth.beth-npc-dev.fact-00216",
+          "beth.beth-npc-dev.fact-00353",
+          "beth.beth-npc-dev.fact-00354"
+        ],
+        "independent_semantic_evidence_references": [
+          "beth.beth-npc-dev.fact-00214",
+          "beth.beth-npc-dev.fact-00215",
+          "beth.beth-npc-dev.fact-00216",
+          "beth.beth-npc-dev.fact-00353",
+          "beth.beth-npc-dev.fact-00354"
+        ],
+        "expected_assignments": [
+          {
+            "axis": "technical-modification-surface",
+            "facet": "semantic-mechanism",
+            "code": "surface.plugin-data",
+            "applicability_state": "assigned",
+            "classification_role": "observed",
+            "evidence_references": [
+              "beth.beth-npc-dev.fact-00211"
+            ],
+            "reason": "The frozen major-record fact establishes plugin-carried record data."
+          },
+          {
+            "axis": "affected-game-system-or-content-area",
+            "facet": "affected-area",
+            "code": "area.actors.ai-packages",
+            "applicability_state": "assigned",
+            "classification_role": "established",
+            "evidence_references": [
+              "beth.beth-npc-dev.fact-00214",
+              "beth.beth-npc-dev.fact-00215",
+              "beth.beth-npc-dev.fact-00216",
+              "beth.beth-npc-dev.fact-00353",
+              "beth.beth-npc-dev.fact-00354"
+            ],
+            "reason": "Separate frozen AIDT and resolved PKID facts establish the AI-package area; the NPC_ signature does not."
+          }
+        ],
+        "forbidden_assignments": [
+          {
+            "axis": "affected-game-system-or-content-area",
+            "code": "area.world.placed-objects-activation",
+            "reason": "Shared plugin-data surface cannot copy TAX-03B's independently evidenced area."
+          },
+          {
+            "axis": "declared-purpose-and-intended-feature-area",
+            "reason": "No author-purpose evidence is present."
+          },
+          {
+            "axis": "consequence-type",
+            "reason": "The frozen facts establish no consequence."
+          },
+          {
+            "axis": "effect-extent",
+            "reason": "The frozen facts establish no effect extent."
+          }
+        ]
+      },
+      "canonical_value_fingerprint": "3c0942a5ed86770c11f2671ba8056d68e7981969c09b71b5b912c122dcfd630b"
+    },
+    {
+      "subject_id": "TAX-08",
+      "canonical_value": {
+        "subject_type": "taxonomy-fixture-subject",
+        "subject_id": "TAX-08",
+        "source_package_id": "BETH-NPC-DEV",
+        "source_evidence_references": [
+          "inputs/snapshot/accepted-order.json",
+          "beth-npc-dev-provider-02",
+          "beth-npc-dev-provider-03"
+        ],
+        "independent_semantic_evidence_references": [],
+        "expected_assignments": [
+          {
+            "axis": "declared-purpose-and-intended-feature-area",
+            "facet": "purpose-kind",
+            "applicability_state": "not-applicable",
+            "classification_role": "established",
+            "evidence_references": [
+              "inputs/snapshot/accepted-order.json",
+              "beth-npc-dev-provider-02",
+              "beth-npc-dev-provider-03"
+            ],
+            "reason": "Provider ordering is topology, not declared purpose."
+          },
+          {
+            "axis": "affected-game-system-or-content-area",
+            "facet": "affected-area",
+            "applicability_state": "not-applicable",
+            "classification_role": "established",
+            "evidence_references": [
+              "inputs/snapshot/accepted-order.json",
+              "beth-npc-dev-provider-02",
+              "beth-npc-dev-provider-03"
+            ],
+            "reason": "Provider ordering alone does not describe an affected game area."
+          },
+          {
+            "axis": "consequence-type",
+            "facet": "consequence-type",
+            "applicability_state": "not-applicable",
+            "classification_role": "established",
+            "evidence_references": [
+              "inputs/snapshot/accepted-order.json",
+              "beth-npc-dev-provider-02",
+              "beth-npc-dev-provider-03"
+            ],
+            "reason": "Provider ordering alone establishes no consequence."
+          },
+          {
+            "axis": "effect-extent",
+            "facet": "direct-subject-breadth",
+            "applicability_state": "not-applicable",
+            "classification_role": "established",
+            "evidence_references": [
+              "inputs/snapshot/accepted-order.json",
+              "beth-npc-dev-provider-02",
+              "beth-npc-dev-provider-03"
+            ],
+            "reason": "Provider ordering alone establishes no direct-subject effect."
+          },
+          {
+            "axis": "effect-extent",
+            "facet": "spatial-breadth",
+            "applicability_state": "not-applicable",
+            "classification_role": "established",
+            "evidence_references": [
+              "inputs/snapshot/accepted-order.json",
+              "beth-npc-dev-provider-02",
+              "beth-npc-dev-provider-03"
+            ],
+            "reason": "Provider ordering alone establishes no spatial effect."
+          },
+          {
+            "axis": "effect-extent",
+            "facet": "persistence-and-lifecycle-breadth",
+            "applicability_state": "not-applicable",
+            "classification_role": "established",
+            "evidence_references": [
+              "inputs/snapshot/accepted-order.json",
+              "beth-npc-dev-provider-02",
+              "beth-npc-dev-provider-03"
+            ],
+            "reason": "Provider ordering alone establishes no persistence effect."
+          },
+          {
+            "axis": "effect-extent",
+            "facet": "causal-propagation-or-blast-radius",
+            "applicability_state": "not-applicable",
+            "classification_role": "established",
+            "evidence_references": [
+              "inputs/snapshot/accepted-order.json",
+              "beth-npc-dev-provider-02",
+              "beth-npc-dev-provider-03"
+            ],
+            "reason": "Provider ordering alone establishes no propagation effect."
+          }
+        ],
+        "forbidden_assignments": [
+          {
+            "axis": "technical-modification-surface",
+            "reason": "Provider and winner topology cannot establish a semantic surface or delivery code without separate content evidence."
+          }
+        ]
+      },
+      "canonical_value_fingerprint": "8df078fecef5e5d9ae5ef15ee81d58be4ef178ee43ca356ef76062f16302a874"
+    },
+    {
+      "subject_id": "TAX-12A",
+      "canonical_value": {
+        "subject_type": "taxonomy-fixture-subject",
+        "subject_id": "TAX-12A",
+        "source_package_id": "BETH-NPC-DEV",
+        "source_evidence_references": [
+          "beth.beth-npc-dev.fact-00186",
+          "beth.beth-npc-dev.fact-00188",
+          "beth.beth-npc-dev.fact-00307"
+        ],
+        "independent_semantic_evidence_references": [
+          "beth.beth-npc-dev.fact-00188",
+          "beth.beth-npc-dev.fact-00307"
+        ],
+        "expected_assignments": [
+          {
+            "axis": "technical-modification-surface",
+            "facet": "semantic-mechanism",
+            "code": "surface.plugin-data",
+            "applicability_state": "assigned",
+            "classification_role": "observed",
+            "evidence_references": [
+              "beth.beth-npc-dev.fact-00186"
+            ],
+            "reason": "The frozen major-record fact establishes plugin-carried record data."
+          },
+          {
+            "axis": "affected-game-system-or-content-area",
+            "facet": "affected-area",
+            "code": "area.actors.appearance-identity",
+            "applicability_state": "assigned",
+            "classification_role": "established",
+            "evidence_references": [
+              "beth.beth-npc-dev.fact-00188",
+              "beth.beth-npc-dev.fact-00307"
+            ],
+            "reason": "Separate frozen RNAM and resolved RACE-link facts establish appearance and identity semantics; the NPC_ signature does not."
+          }
+        ],
+        "forbidden_assignments": [
+          {
+            "axis": "affected-game-system-or-content-area",
+            "code": "area.actors.ai-packages",
+            "reason": "Record-family equality cannot copy TAX-12B's independently evidenced area."
+          }
+        ]
+      },
+      "canonical_value_fingerprint": "db0494a644898e3d8102e04a73b57b0f2229bb8d35045f2ca35de58ec6fdf5a8"
+    },
+    {
+      "subject_id": "TAX-12B",
+      "canonical_value": {
+        "subject_type": "taxonomy-fixture-subject",
+        "subject_id": "TAX-12B",
+        "source_package_id": "BETH-NPC-DEV",
+        "source_evidence_references": [
+          "beth.beth-npc-dev.fact-00189",
+          "beth.beth-npc-dev.fact-00192",
+          "beth.beth-npc-dev.fact-00193",
+          "beth.beth-npc-dev.fact-00194",
+          "beth.beth-npc-dev.fact-00313",
+          "beth.beth-npc-dev.fact-00314"
+        ],
+        "independent_semantic_evidence_references": [
+          "beth.beth-npc-dev.fact-00192",
+          "beth.beth-npc-dev.fact-00193",
+          "beth.beth-npc-dev.fact-00194",
+          "beth.beth-npc-dev.fact-00313",
+          "beth.beth-npc-dev.fact-00314"
+        ],
+        "expected_assignments": [
+          {
+            "axis": "technical-modification-surface",
+            "facet": "semantic-mechanism",
+            "code": "surface.plugin-data",
+            "applicability_state": "assigned",
+            "classification_role": "observed",
+            "evidence_references": [
+              "beth.beth-npc-dev.fact-00189"
+            ],
+            "reason": "The frozen major-record fact establishes plugin-carried record data."
+          },
+          {
+            "axis": "affected-game-system-or-content-area",
+            "facet": "affected-area",
+            "code": "area.actors.ai-packages",
+            "applicability_state": "assigned",
+            "classification_role": "established",
+            "evidence_references": [
+              "beth.beth-npc-dev.fact-00192",
+              "beth.beth-npc-dev.fact-00193",
+              "beth.beth-npc-dev.fact-00194",
+              "beth.beth-npc-dev.fact-00313",
+              "beth.beth-npc-dev.fact-00314"
+            ],
+            "reason": "Separate frozen AIDT and resolved PKID facts establish AI-package semantics; the NPC_ signature does not."
+          }
+        ],
+        "forbidden_assignments": [
+          {
+            "axis": "affected-game-system-or-content-area",
+            "code": "area.actors.appearance-identity",
+            "reason": "Record-family equality cannot copy TAX-12A's independently evidenced area."
+          }
+        ]
+      },
+      "canonical_value_fingerprint": "aec63f57356782b4a7cabb8f425f30b6ab8f215bb304cb1811331256aaad43c8"
+    }
+  ],
+  "review_assertions": [
+    "Canonical taxonomy subject IDs are independent from fixture IDs, filenames, signatures, and FormKeys.",
+    "Technical surfaces are observed only from frozen local byte facts.",
+    "Affected areas are established only from separate field/link evidence.",
+    "Provider and winner topology is not converted into a taxonomy code.",
+    "Purpose, consequence, and effect extent are not inferred where evidence does not establish them.",
+    "Severity, confidence, authority, maturity, and readiness are not taxonomy assignments.",
+    "No production Slice 4 output, Mutagen answer, xEdit answer, generator answer table, or held-out answer was used.",
+    "These projections prepare EVAL-0086 inputs and do not claim that EVAL-0086 passes."
+  ]
+}

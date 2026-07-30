@@ -1,0 +1,116 @@
+{
+  "schema": "infinium.bethesda-fixture-case-matrix",
+  "schema_version": 1,
+  "partition": "validation",
+  "classification": "boundary",
+  "fixed_seed": "3520260730",
+  "cases": [
+    {
+      "case_id": "light-native-minimum",
+      "operation": "scan",
+      "input_paths": [
+        "plugins/01-Native.esl"
+      ],
+      "denominator": "native_esl_object_id"
+    },
+    {
+      "case_id": "light-native-maximum",
+      "operation": "scan",
+      "input_paths": [
+        "plugins/01-Native.esl"
+      ],
+      "denominator": "native_esl_object_id"
+    },
+    {
+      "case_id": "light-flagged-esp-minimum",
+      "operation": "scan",
+      "input_paths": [
+        "plugins/02-Flagged.esp"
+      ],
+      "denominator": "esl_flagged_esp_object_id"
+    },
+    {
+      "case_id": "light-flagged-esp-maximum",
+      "operation": "scan",
+      "input_paths": [
+        "plugins/02-Flagged.esp"
+      ],
+      "denominator": "esl_flagged_esp_object_id"
+    },
+    {
+      "case_id": "light-native-below-range",
+      "operation": "scan",
+      "input_paths": [
+        "mutations/Native-BelowObjectRange.esl"
+      ],
+      "denominator": "native_esl_object_id"
+    },
+    {
+      "case_id": "light-native-above-range",
+      "operation": "scan",
+      "input_paths": [
+        "mutations/Native-AboveLightMaximum.esl"
+      ],
+      "denominator": "native_esl_object_id"
+    },
+    {
+      "case_id": "light-flagged-below-range",
+      "operation": "scan",
+      "input_paths": [
+        "mutations/FlaggedEsp-BelowObjectRange.esp"
+      ],
+      "denominator": "esl_flagged_esp_object_id"
+    },
+    {
+      "case_id": "light-flagged-above-range",
+      "operation": "scan",
+      "input_paths": [
+        "mutations/FlaggedEsp-AboveLightMaximum.esp"
+      ],
+      "denominator": "esl_flagged_esp_object_id"
+    },
+    {
+      "case_id": "light-extension-header-mismatch",
+      "operation": "scan",
+      "input_paths": [
+        "mutations/Native-HeaderFlagRemoved.esl"
+      ],
+      "denominator": "light_plugin_classification"
+    },
+    {
+      "case_id": "light-reference-out-of-range",
+      "operation": "scan",
+      "input_paths": [
+        "mutations/Consumer-LightReferenceOutOfRange.esp"
+      ],
+      "denominator": "light_master_reference"
+    },
+    {
+      "case_id": "light-consumer-and-winner",
+      "operation": "scan",
+      "input_paths": [
+        "plugins/01-Native.esl",
+        "plugins/02-Flagged.esp",
+        "plugins/03-Consumer.esp",
+        "plugins/04-Winner.esp"
+      ],
+      "denominator": null
+    }
+  ],
+  "notes": {
+    "denominators": {
+      "native_esl_object_id": {
+        "case_count": 4
+      },
+      "esl_flagged_esp_object_id": {
+        "case_count": 4
+      },
+      "light_plugin_classification": {
+        "case_count": 1
+      },
+      "light_master_reference": {
+        "case_count": 1
+      }
+    }
+  }
+}

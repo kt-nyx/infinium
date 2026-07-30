@@ -1,0 +1,108 @@
+{
+  "schema": "infinium.bethesda-fixture-case-matrix",
+  "schema_version": 1,
+  "partition": "development",
+  "classification": "boundary",
+  "fixed_seed": "3520260730",
+  "cases": [
+    {
+      "case_id": "npc-layered-winner",
+      "operation": "scan",
+      "input_paths": [
+        "plugins/00-Pad.esm",
+        "plugins/01-Actors.esm",
+        "plugins/02-Behavior.esp",
+        "plugins/03-Appearance.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "npc-deleted-winner",
+      "operation": "scan",
+      "input_paths": [
+        "plugins/01-Actors.esm",
+        "plugins/06-DeletedWinner.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "npc-light-plugin",
+      "operation": "scan",
+      "input_paths": [
+        "plugins/01-Actors.esm",
+        "plugins/04-LightActors.esl",
+        "plugins/05-LightWinner.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "npc-compression-equivalence",
+      "operation": "compare",
+      "input_paths": [
+        "plugins/03-Appearance.esp",
+        "mutations/uncompressed/03-Appearance.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "npc-one-byte-field-change",
+      "operation": "compare",
+      "input_paths": [
+        "plugins/02-Behavior.esp",
+        "mutations/one-byte-aidt/02-Behavior.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "npc-master-reindexing",
+      "operation": "compare",
+      "input_paths": [
+        "mutations/master-order-reindexed/03-Appearance.esp",
+        "mutations/master-order-unreindexed/03-Appearance.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "npc-record-order",
+      "operation": "compare",
+      "input_paths": [
+        "plugins/01-Actors.esm",
+        "mutations/record-order/01-Actors.esm"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "npc-repeated-pkid-order",
+      "operation": "scan",
+      "input_paths": [
+        "mutations/Behavior-RepeatedPKIDOrder.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "npc-repeated-pnam-order",
+      "operation": "scan",
+      "input_paths": [
+        "mutations/Appearance-RepeatedPNAMOrder.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "npc-local-id-change",
+      "operation": "compare",
+      "input_paths": [
+        "plugins/01-Actors.esm",
+        "mutations/local-id/01-Actors.esm"
+      ],
+      "denominator": null
+    }
+  ],
+  "notes": {
+    "project_authored_race_data_format": "32-bit little-endian flags",
+    "project_authored_face_gen_head_construction_bit": "0x00000002",
+    "construction_note": "Positive and negative applicability inputs are authored here; interpretation is independently reviewed.",
+    "omitted_subrecords": [
+      "XESP"
+    ]
+  }
+}

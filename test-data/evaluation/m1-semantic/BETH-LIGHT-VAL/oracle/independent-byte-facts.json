@@ -1,0 +1,4262 @@
+{
+  "schema_id": "infinium.evaluation.bethesda-byte-oracle/v1",
+  "schema_version": "1",
+  "fixture_id": "BETH-LIGHT-VAL",
+  "fixture_version": "1.0.0",
+  "oracle_artifact_version": "1.0.0",
+  "canonicalization": "infinium-canonical-json-sha256/v1",
+  "independent_authors_and_reviewers": [
+    "oracle-reviewer"
+  ],
+  "ground_truth_method_ids": [
+    "manual-annotated-hex-worksheet-v1",
+    "independent-bounded-raw-reader-v1"
+  ],
+  "format_evidence": [
+    {
+      "artifact_id": "docs/evaluation/fixtures/bethesda-byte-format-evidence-v1.md",
+      "artifact_version": "1",
+      "fingerprint": "3b912ec5690b27f9f6022528d7bff920c2f58fb770a5a9db223d69ccd0e736e0",
+      "availability": "retained"
+    }
+  ],
+  "files": [
+    {
+      "artifact_id": "inputs/mutations/Consumer-LightReferenceOutOfRange.esp",
+      "byte_length": 258,
+      "sha256": "866d41c756b546a95d8195bf28e67be944e61e5b2d07ac4c1077d09f63f02f70",
+      "provider_id": "project-authored:beth-light-val",
+      "scenario_memberships": [
+        {
+          "scenario_id": "light-reference-out-of-range",
+          "plugin_order": 0
+        }
+      ],
+      "masters_state": "observed",
+      "masters": [
+        "01-Native.esl"
+      ],
+      "esl_flag_state": "observed",
+      "esl_flag": false,
+      "byte_coverage": [
+        {
+          "span_id": "f000.span-00001",
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "span_id": "f000.span-00002",
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f000.span-00003",
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f000.span-00004",
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f000.span-00005",
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f000.span-00006",
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f000.span-00007",
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 38,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f000.span-00008",
+          "offset_space": "physical-file",
+          "offset": 136,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f000.span-00009",
+          "offset_space": "physical-file",
+          "offset": 142,
+          "length": 14,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f000.span-00010",
+          "offset_space": "physical-file",
+          "offset": 156,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f000.span-00011",
+          "offset_space": "physical-file",
+          "offset": 162,
+          "length": 8,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f000.span-00012",
+          "offset_space": "physical-file",
+          "offset": 170,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "span_id": "f000.span-00013",
+          "offset_space": "physical-file",
+          "offset": 194,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "span_id": "f000.span-00014",
+          "offset_space": "physical-file",
+          "offset": 218,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f000.span-00015",
+          "offset_space": "physical-file",
+          "offset": 224,
+          "length": 4,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f000.span-00016",
+          "offset_space": "physical-file",
+          "offset": 228,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f000.span-00017",
+          "offset_space": "physical-file",
+          "offset": 234,
+          "length": 24,
+          "classification": "subrecord-data"
+        }
+      ]
+    },
+    {
+      "artifact_id": "inputs/mutations/FlaggedEsp-AboveLightMaximum.esp",
+      "byte_length": 227,
+      "sha256": "3b517170f45521c8f7bed82347a077db939799d764c55860c39f59b6751d2140",
+      "provider_id": "project-authored:beth-light-val",
+      "scenario_memberships": [
+        {
+          "scenario_id": "light-flagged-above-range",
+          "plugin_order": 0
+        }
+      ],
+      "masters_state": "observed",
+      "masters": [
+        "00-Pad.esm"
+      ],
+      "esl_flag_state": "observed",
+      "esl_flag": true,
+      "byte_coverage": [
+        {
+          "span_id": "f001.span-00001",
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "span_id": "f001.span-00002",
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f001.span-00003",
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f001.span-00004",
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f001.span-00005",
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f001.span-00006",
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f001.span-00007",
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 33,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f001.span-00008",
+          "offset_space": "physical-file",
+          "offset": 131,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f001.span-00009",
+          "offset_space": "physical-file",
+          "offset": 137,
+          "length": 11,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f001.span-00010",
+          "offset_space": "physical-file",
+          "offset": 148,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f001.span-00011",
+          "offset_space": "physical-file",
+          "offset": 154,
+          "length": 8,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f001.span-00012",
+          "offset_space": "physical-file",
+          "offset": 162,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "span_id": "f001.span-00013",
+          "offset_space": "physical-file",
+          "offset": 186,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "span_id": "f001.span-00014",
+          "offset_space": "physical-file",
+          "offset": 210,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f001.span-00015",
+          "offset_space": "physical-file",
+          "offset": 216,
+          "length": 11,
+          "classification": "subrecord-data"
+        }
+      ]
+    },
+    {
+      "artifact_id": "inputs/mutations/FlaggedEsp-BelowObjectRange.esp",
+      "byte_length": 226,
+      "sha256": "e67567fd8b8789314817db69585e2caf55bfbca0341e1943defbadc313027070",
+      "provider_id": "project-authored:beth-light-val",
+      "scenario_memberships": [
+        {
+          "scenario_id": "light-flagged-below-range",
+          "plugin_order": 0
+        }
+      ],
+      "masters_state": "observed",
+      "masters": [
+        "00-Pad.esm"
+      ],
+      "esl_flag_state": "observed",
+      "esl_flag": true,
+      "byte_coverage": [
+        {
+          "span_id": "f002.span-00001",
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "span_id": "f002.span-00002",
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f002.span-00003",
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f002.span-00004",
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f002.span-00005",
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f002.span-00006",
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f002.span-00007",
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 32,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f002.span-00008",
+          "offset_space": "physical-file",
+          "offset": 130,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f002.span-00009",
+          "offset_space": "physical-file",
+          "offset": 136,
+          "length": 11,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f002.span-00010",
+          "offset_space": "physical-file",
+          "offset": 147,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f002.span-00011",
+          "offset_space": "physical-file",
+          "offset": 153,
+          "length": 8,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f002.span-00012",
+          "offset_space": "physical-file",
+          "offset": 161,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "span_id": "f002.span-00013",
+          "offset_space": "physical-file",
+          "offset": 185,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "span_id": "f002.span-00014",
+          "offset_space": "physical-file",
+          "offset": 209,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f002.span-00015",
+          "offset_space": "physical-file",
+          "offset": 215,
+          "length": 11,
+          "classification": "subrecord-data"
+        }
+      ]
+    },
+    {
+      "artifact_id": "inputs/mutations/Native-AboveLightMaximum.esl",
+      "byte_length": 223,
+      "sha256": "fe8e35888609636451e8462e9bc7cc2659433c84620f9c25abafc1fa2dc79394",
+      "provider_id": "project-authored:beth-light-val",
+      "scenario_memberships": [
+        {
+          "scenario_id": "light-native-above-range",
+          "plugin_order": 0
+        }
+      ],
+      "masters_state": "observed",
+      "masters": [
+        "00-Pad.esm"
+      ],
+      "esl_flag_state": "observed",
+      "esl_flag": true,
+      "byte_coverage": [
+        {
+          "span_id": "f003.span-00001",
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "span_id": "f003.span-00002",
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f003.span-00003",
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f003.span-00004",
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f003.span-00005",
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f003.span-00006",
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f003.span-00007",
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 29,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f003.span-00008",
+          "offset_space": "physical-file",
+          "offset": 127,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f003.span-00009",
+          "offset_space": "physical-file",
+          "offset": 133,
+          "length": 11,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f003.span-00010",
+          "offset_space": "physical-file",
+          "offset": 144,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f003.span-00011",
+          "offset_space": "physical-file",
+          "offset": 150,
+          "length": 8,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f003.span-00012",
+          "offset_space": "physical-file",
+          "offset": 158,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "span_id": "f003.span-00013",
+          "offset_space": "physical-file",
+          "offset": 182,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "span_id": "f003.span-00014",
+          "offset_space": "physical-file",
+          "offset": 206,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f003.span-00015",
+          "offset_space": "physical-file",
+          "offset": 212,
+          "length": 11,
+          "classification": "subrecord-data"
+        }
+      ]
+    },
+    {
+      "artifact_id": "inputs/mutations/Native-BelowObjectRange.esl",
+      "byte_length": 222,
+      "sha256": "06cc4e3b1021c0213229669ea57444a4e0db438f74e17228233b1fb67dedfca0",
+      "provider_id": "project-authored:beth-light-val",
+      "scenario_memberships": [
+        {
+          "scenario_id": "light-native-below-range",
+          "plugin_order": 0
+        }
+      ],
+      "masters_state": "observed",
+      "masters": [
+        "00-Pad.esm"
+      ],
+      "esl_flag_state": "observed",
+      "esl_flag": true,
+      "byte_coverage": [
+        {
+          "span_id": "f004.span-00001",
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "span_id": "f004.span-00002",
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f004.span-00003",
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f004.span-00004",
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f004.span-00005",
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f004.span-00006",
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f004.span-00007",
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 28,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f004.span-00008",
+          "offset_space": "physical-file",
+          "offset": 126,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f004.span-00009",
+          "offset_space": "physical-file",
+          "offset": 132,
+          "length": 11,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f004.span-00010",
+          "offset_space": "physical-file",
+          "offset": 143,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f004.span-00011",
+          "offset_space": "physical-file",
+          "offset": 149,
+          "length": 8,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f004.span-00012",
+          "offset_space": "physical-file",
+          "offset": 157,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "span_id": "f004.span-00013",
+          "offset_space": "physical-file",
+          "offset": 181,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "span_id": "f004.span-00014",
+          "offset_space": "physical-file",
+          "offset": 205,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f004.span-00015",
+          "offset_space": "physical-file",
+          "offset": 211,
+          "length": 11,
+          "classification": "subrecord-data"
+        }
+      ]
+    },
+    {
+      "artifact_id": "inputs/mutations/Native-HeaderFlagRemoved.esl",
+      "byte_length": 236,
+      "sha256": "687d6d7fd35b8c7ffbe4f28dc178fe0fcb36c4a54777bcccb93611a165227182",
+      "provider_id": "project-authored:beth-light-val",
+      "scenario_memberships": [
+        {
+          "scenario_id": "light-extension-header-mismatch",
+          "plugin_order": 0
+        }
+      ],
+      "masters_state": "observed",
+      "masters": [
+        "00-Pad.esm"
+      ],
+      "esl_flag_state": "observed",
+      "esl_flag": false,
+      "byte_coverage": [
+        {
+          "span_id": "f005.span-00001",
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "span_id": "f005.span-00002",
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f005.span-00003",
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f005.span-00004",
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f005.span-00005",
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f005.span-00006",
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f005.span-00007",
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 29,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f005.span-00008",
+          "offset_space": "physical-file",
+          "offset": 127,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f005.span-00009",
+          "offset_space": "physical-file",
+          "offset": 133,
+          "length": 11,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f005.span-00010",
+          "offset_space": "physical-file",
+          "offset": 144,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f005.span-00011",
+          "offset_space": "physical-file",
+          "offset": 150,
+          "length": 8,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f005.span-00012",
+          "offset_space": "physical-file",
+          "offset": 158,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "span_id": "f005.span-00013",
+          "offset_space": "physical-file",
+          "offset": 182,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "span_id": "f005.span-00014",
+          "offset_space": "physical-file",
+          "offset": 206,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f005.span-00015",
+          "offset_space": "physical-file",
+          "offset": 212,
+          "length": 24,
+          "classification": "subrecord-data"
+        }
+      ]
+    },
+    {
+      "artifact_id": "inputs/plugins/00-Pad.esm",
+      "byte_length": 109,
+      "sha256": "7ee03b2ef46c82525644553259b32260c0defc87b61ae986519acab32496fd89",
+      "provider_id": "project-authored:beth-light-val",
+      "scenario_memberships": [
+        {
+          "scenario_id": "fixture-payload-binding.000",
+          "plugin_order": 0
+        }
+      ],
+      "masters_state": "observed",
+      "masters": [],
+      "esl_flag_state": "observed",
+      "esl_flag": false,
+      "byte_coverage": [
+        {
+          "span_id": "f006.span-00001",
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "span_id": "f006.span-00002",
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f006.span-00003",
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f006.span-00004",
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f006.span-00005",
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f006.span-00006",
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f006.span-00007",
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 11,
+          "classification": "subrecord-data"
+        }
+      ]
+    },
+    {
+      "artifact_id": "inputs/plugins/01-Native.esl",
+      "byte_length": 265,
+      "sha256": "8bd7537ada2bc83c61ef399b1145bb63c0ef68aef90cba49be0565053cf44b98",
+      "provider_id": "project-authored:beth-light-val",
+      "scenario_memberships": [
+        {
+          "scenario_id": "light-native-minimum",
+          "plugin_order": 0
+        },
+        {
+          "scenario_id": "light-native-maximum",
+          "plugin_order": 0
+        },
+        {
+          "scenario_id": "light-consumer-and-winner",
+          "plugin_order": 0
+        }
+      ],
+      "masters_state": "observed",
+      "masters": [
+        "00-Pad.esm"
+      ],
+      "esl_flag_state": "observed",
+      "esl_flag": true,
+      "byte_coverage": [
+        {
+          "span_id": "f007.span-00001",
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "span_id": "f007.span-00002",
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f007.span-00003",
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f007.span-00004",
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f007.span-00005",
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f007.span-00006",
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f007.span-00007",
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 14,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f007.span-00008",
+          "offset_space": "physical-file",
+          "offset": 112,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f007.span-00009",
+          "offset_space": "physical-file",
+          "offset": 118,
+          "length": 11,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f007.span-00010",
+          "offset_space": "physical-file",
+          "offset": 129,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f007.span-00011",
+          "offset_space": "physical-file",
+          "offset": 135,
+          "length": 8,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f007.span-00012",
+          "offset_space": "physical-file",
+          "offset": 143,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "span_id": "f007.span-00013",
+          "offset_space": "physical-file",
+          "offset": 167,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "span_id": "f007.span-00014",
+          "offset_space": "physical-file",
+          "offset": 191,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f007.span-00015",
+          "offset_space": "physical-file",
+          "offset": 197,
+          "length": 19,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f007.span-00016",
+          "offset_space": "physical-file",
+          "offset": 216,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "span_id": "f007.span-00017",
+          "offset_space": "physical-file",
+          "offset": 240,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f007.span-00018",
+          "offset_space": "physical-file",
+          "offset": 246,
+          "length": 19,
+          "classification": "subrecord-data"
+        }
+      ]
+    },
+    {
+      "artifact_id": "inputs/plugins/02-Flagged.esp",
+      "byte_length": 268,
+      "sha256": "e60f667e43a62a8b24d8702cbcb9f6242017c84cf138bc74d2cb84e5ae649609",
+      "provider_id": "project-authored:beth-light-val",
+      "scenario_memberships": [
+        {
+          "scenario_id": "light-flagged-esp-minimum",
+          "plugin_order": 0
+        },
+        {
+          "scenario_id": "light-flagged-esp-maximum",
+          "plugin_order": 0
+        },
+        {
+          "scenario_id": "light-consumer-and-winner",
+          "plugin_order": 1
+        }
+      ],
+      "masters_state": "observed",
+      "masters": [
+        "00-Pad.esm"
+      ],
+      "esl_flag_state": "observed",
+      "esl_flag": true,
+      "byte_coverage": [
+        {
+          "span_id": "f008.span-00001",
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "span_id": "f008.span-00002",
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f008.span-00003",
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f008.span-00004",
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f008.span-00005",
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f008.span-00006",
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f008.span-00007",
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 15,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f008.span-00008",
+          "offset_space": "physical-file",
+          "offset": 113,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f008.span-00009",
+          "offset_space": "physical-file",
+          "offset": 119,
+          "length": 11,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f008.span-00010",
+          "offset_space": "physical-file",
+          "offset": 130,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f008.span-00011",
+          "offset_space": "physical-file",
+          "offset": 136,
+          "length": 8,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f008.span-00012",
+          "offset_space": "physical-file",
+          "offset": 144,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "span_id": "f008.span-00013",
+          "offset_space": "physical-file",
+          "offset": 168,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "span_id": "f008.span-00014",
+          "offset_space": "physical-file",
+          "offset": 192,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f008.span-00015",
+          "offset_space": "physical-file",
+          "offset": 198,
+          "length": 20,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f008.span-00016",
+          "offset_space": "physical-file",
+          "offset": 218,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "span_id": "f008.span-00017",
+          "offset_space": "physical-file",
+          "offset": 242,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f008.span-00018",
+          "offset_space": "physical-file",
+          "offset": 248,
+          "length": 20,
+          "classification": "subrecord-data"
+        }
+      ]
+    },
+    {
+      "artifact_id": "inputs/plugins/03-Consumer.esp",
+      "byte_length": 335,
+      "sha256": "bd24624a01fe07e701fa858a38d5b20b1ecdf22c2842875826b0f83fd312d47e",
+      "provider_id": "project-authored:beth-light-val",
+      "scenario_memberships": [
+        {
+          "scenario_id": "light-consumer-and-winner",
+          "plugin_order": 2
+        }
+      ],
+      "masters_state": "observed",
+      "masters": [
+        "01-Native.esl",
+        "02-Flagged.esp"
+      ],
+      "esl_flag_state": "observed",
+      "esl_flag": false,
+      "byte_coverage": [
+        {
+          "span_id": "f009.span-00001",
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "span_id": "f009.span-00002",
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f009.span-00003",
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f009.span-00004",
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f009.span-00005",
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f009.span-00006",
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f009.span-00007",
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 16,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f009.span-00008",
+          "offset_space": "physical-file",
+          "offset": 114,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f009.span-00009",
+          "offset_space": "physical-file",
+          "offset": 120,
+          "length": 14,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f009.span-00010",
+          "offset_space": "physical-file",
+          "offset": 134,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f009.span-00011",
+          "offset_space": "physical-file",
+          "offset": 140,
+          "length": 8,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f009.span-00012",
+          "offset_space": "physical-file",
+          "offset": 148,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f009.span-00013",
+          "offset_space": "physical-file",
+          "offset": 154,
+          "length": 15,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f009.span-00014",
+          "offset_space": "physical-file",
+          "offset": 169,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f009.span-00015",
+          "offset_space": "physical-file",
+          "offset": 175,
+          "length": 8,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f009.span-00016",
+          "offset_space": "physical-file",
+          "offset": 183,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "span_id": "f009.span-00017",
+          "offset_space": "physical-file",
+          "offset": 207,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "span_id": "f009.span-00018",
+          "offset_space": "physical-file",
+          "offset": 231,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f009.span-00019",
+          "offset_space": "physical-file",
+          "offset": 237,
+          "length": 4,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f009.span-00020",
+          "offset_space": "physical-file",
+          "offset": 241,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f009.span-00021",
+          "offset_space": "physical-file",
+          "offset": 247,
+          "length": 24,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f009.span-00022",
+          "offset_space": "physical-file",
+          "offset": 271,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "span_id": "f009.span-00023",
+          "offset_space": "physical-file",
+          "offset": 295,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f009.span-00024",
+          "offset_space": "physical-file",
+          "offset": 301,
+          "length": 4,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f009.span-00025",
+          "offset_space": "physical-file",
+          "offset": 305,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f009.span-00026",
+          "offset_space": "physical-file",
+          "offset": 311,
+          "length": 24,
+          "classification": "subrecord-data"
+        }
+      ]
+    },
+    {
+      "artifact_id": "inputs/plugins/04-Winner.esp",
+      "byte_length": 227,
+      "sha256": "3b75c15391d47da2327107e61cce602003a757a12afba41382807760b8cbeeda",
+      "provider_id": "project-authored:beth-light-val",
+      "scenario_memberships": [
+        {
+          "scenario_id": "light-consumer-and-winner",
+          "plugin_order": 3
+        }
+      ],
+      "masters_state": "observed",
+      "masters": [
+        "01-Native.esl"
+      ],
+      "esl_flag_state": "observed",
+      "esl_flag": false,
+      "byte_coverage": [
+        {
+          "span_id": "f010.span-00001",
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "span_id": "f010.span-00002",
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f010.span-00003",
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f010.span-00004",
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f010.span-00005",
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f010.span-00006",
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f010.span-00007",
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 14,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f010.span-00008",
+          "offset_space": "physical-file",
+          "offset": 112,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f010.span-00009",
+          "offset_space": "physical-file",
+          "offset": 118,
+          "length": 14,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f010.span-00010",
+          "offset_space": "physical-file",
+          "offset": 132,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f010.span-00011",
+          "offset_space": "physical-file",
+          "offset": 138,
+          "length": 8,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f010.span-00012",
+          "offset_space": "physical-file",
+          "offset": 146,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "span_id": "f010.span-00013",
+          "offset_space": "physical-file",
+          "offset": 170,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "span_id": "f010.span-00014",
+          "offset_space": "physical-file",
+          "offset": 194,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f010.span-00015",
+          "offset_space": "physical-file",
+          "offset": 200,
+          "length": 27,
+          "classification": "subrecord-data"
+        }
+      ]
+    }
+  ],
+  "facts": [
+    {
+      "fact_id": "beth.beth-light-val.fact-00001",
+      "subject_id": "beth-light-val.file-000.identity",
+      "fact_kind": "file",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "file-identity",
+        "artifact_id": "inputs/mutations/Consumer-LightReferenceOutOfRange.esp",
+        "length": 258,
+        "text_value": "866d41c756b546a95d8195bf28e67be944e61e5b2d07ac4c1077d09f63f02f70"
+      },
+      "canonical_value_fingerprint": "b0739fe560264cf176c6315559678d271f347a42a771a420f53fe6617fc36dd4"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00002",
+      "subject_id": "beth-light-val.file-000.masters",
+      "fact_kind": "master-order",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "tes4-master-order",
+        "artifact_id": "inputs/mutations/Consumer-LightReferenceOutOfRange.esp",
+        "master_order": [
+          "01-Native.esl"
+        ]
+      },
+      "canonical_value_fingerprint": "97d3e75393df60063347c370a5dc2b4b65dc816a24a89b332082c83850b66f86"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00003",
+      "subject_id": "beth-light-val.file-000.esl-flag",
+      "fact_kind": "file",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "tes4-esl-flag",
+        "artifact_id": "inputs/mutations/Consumer-LightReferenceOutOfRange.esp",
+        "boolean_value": false
+      },
+      "canonical_value_fingerprint": "71e0766c51a145f7a3e6eacb4d921902d3005401eecfac136629989cdeb63030"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00004",
+      "subject_id": "beth-light-val.file-000.group-0000",
+      "fact_kind": "group",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "group-header",
+        "artifact_id": "inputs/mutations/Consumer-LightReferenceOutOfRange.esp",
+        "offset_space": "physical-file",
+        "offset": 170,
+        "length": 88,
+        "signature": "GRUP",
+        "raw_hex": "52454652",
+        "unsigned_value": 0
+      },
+      "canonical_value_fingerprint": "60a9800161a3b98a792325f78e7404e9dd5fb4e0bca3c3baf8b801c701365375"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00005",
+      "subject_id": "beth-light-val.file-000.record-0000",
+      "fact_kind": "record",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "major-record",
+        "artifact_id": "inputs/mutations/Consumer-LightReferenceOutOfRange.esp",
+        "offset_space": "physical-file",
+        "offset": 0,
+        "length": 170,
+        "signature": "TES4",
+        "form_id_hex": "00000000",
+        "record_flags_hex": "00000000",
+        "record_state": "present",
+        "boolean_value": false
+      },
+      "canonical_value_fingerprint": "7e9d1041649ac7bfa8f12a348b6f7f5dc5ed38c55703739f0c2a834bf2f4b096"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00006",
+      "subject_id": "beth-light-val.file-000.record-0000.sub-0003",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "allowlisted-subrecord",
+        "artifact_id": "inputs/mutations/Consumer-LightReferenceOutOfRange.esp",
+        "offset_space": "physical-file",
+        "offset": 142,
+        "length": 14,
+        "signature": "MAST",
+        "raw_hex": "30312D4E61746976652E65736C00"
+      },
+      "canonical_value_fingerprint": "aca5d1edd36d53c6f4d009b49bc5f6e08c2d2eb641319c1d579901de27531f6d"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00007",
+      "subject_id": "beth-light-val.file-000.record-0000.sub-0004",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "allowlisted-subrecord",
+        "artifact_id": "inputs/mutations/Consumer-LightReferenceOutOfRange.esp",
+        "offset_space": "physical-file",
+        "offset": 162,
+        "length": 8,
+        "signature": "DATA",
+        "raw_hex": "0000000000000000"
+      },
+      "canonical_value_fingerprint": "c99c64664b827febd053197708c49774fd24a8f98c1c55d454a6fadcf950e6da"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00008",
+      "subject_id": "beth-light-val.file-000.record-0001",
+      "fact_kind": "record",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "major-record",
+        "artifact_id": "inputs/mutations/Consumer-LightReferenceOutOfRange.esp",
+        "offset_space": "physical-file",
+        "offset": 194,
+        "length": 64,
+        "signature": "REFR",
+        "form_id_hex": "01000800",
+        "record_flags_hex": "00000000",
+        "record_state": "present",
+        "boolean_value": false,
+        "resolution_state": "resolved",
+        "form_key": "00000800:Consumer-LightReferenceOutOfRange.esp",
+        "origin_plugin": "Consumer-LightReferenceOutOfRange.esp",
+        "origin_kind": "full",
+        "local_id_hex": "000800"
+      },
+      "canonical_value_fingerprint": "3afb9ab7b1837563515156ae1798f9a37b5bea45dedb4b7c79eb87273be67f15"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00009",
+      "subject_id": "beth-light-val.file-000.record-0001.sub-0000",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "allowlisted-subrecord",
+        "artifact_id": "inputs/mutations/Consumer-LightReferenceOutOfRange.esp",
+        "offset_space": "physical-file",
+        "offset": 224,
+        "length": 4,
+        "signature": "NAME",
+        "raw_hex": "00100000"
+      },
+      "canonical_value_fingerprint": "9ec15a04b5d3f575adb8f2692e2d3be3ee25eff7aef3aff43f9e90f02707e380"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00010",
+      "subject_id": "beth-light-val.file-000.record-0001.sub-0001",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "allowlisted-subrecord",
+        "artifact_id": "inputs/mutations/Consumer-LightReferenceOutOfRange.esp",
+        "offset_space": "physical-file",
+        "offset": 234,
+        "length": 24,
+        "signature": "DATA",
+        "raw_hex": "000000000000000000000000000000000000000000000000"
+      },
+      "canonical_value_fingerprint": "0aa6c27d39a77aff57e7377912c324e3b370ee0fb42751eba381b7930cb832ab"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00011",
+      "subject_id": "beth-light-val.file-001.identity",
+      "fact_kind": "file",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "file-identity",
+        "artifact_id": "inputs/mutations/FlaggedEsp-AboveLightMaximum.esp",
+        "length": 227,
+        "text_value": "3b517170f45521c8f7bed82347a077db939799d764c55860c39f59b6751d2140"
+      },
+      "canonical_value_fingerprint": "1948a8d972c24508cc8395f72699fa1cf2514843cef83727cc5deea2d40c525b"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00012",
+      "subject_id": "beth-light-val.file-001.masters",
+      "fact_kind": "master-order",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "tes4-master-order",
+        "artifact_id": "inputs/mutations/FlaggedEsp-AboveLightMaximum.esp",
+        "master_order": [
+          "00-Pad.esm"
+        ]
+      },
+      "canonical_value_fingerprint": "0c5815afeba9c473277d323ac92b70b051f431dbc47d0143a14982bb4fd877de"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00013",
+      "subject_id": "beth-light-val.file-001.esl-flag",
+      "fact_kind": "file",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "tes4-esl-flag",
+        "artifact_id": "inputs/mutations/FlaggedEsp-AboveLightMaximum.esp",
+        "boolean_value": true
+      },
+      "canonical_value_fingerprint": "9e739b07425c8755cd4a91684b39a04a301b844bed641aa6c4fb1d10ae8b0e7d"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00014",
+      "subject_id": "beth-light-val.file-001.group-0000",
+      "fact_kind": "group",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "group-header",
+        "artifact_id": "inputs/mutations/FlaggedEsp-AboveLightMaximum.esp",
+        "offset_space": "physical-file",
+        "offset": 162,
+        "length": 65,
+        "signature": "GRUP",
+        "raw_hex": "53544154",
+        "unsigned_value": 0
+      },
+      "canonical_value_fingerprint": "14c9fe1159c91679e8600f8049eae72bfb53c30baddcb9fff7a5ce3fe012271a"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00015",
+      "subject_id": "beth-light-val.file-001.record-0000",
+      "fact_kind": "record",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "major-record",
+        "artifact_id": "inputs/mutations/FlaggedEsp-AboveLightMaximum.esp",
+        "offset_space": "physical-file",
+        "offset": 0,
+        "length": 162,
+        "signature": "TES4",
+        "form_id_hex": "00000000",
+        "record_flags_hex": "00000200",
+        "record_state": "present",
+        "boolean_value": false
+      },
+      "canonical_value_fingerprint": "e27bf3d37e0f3bdb96e80387568d24301eb5d87d6f77a9dc59241a93e0b9d10c"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00016",
+      "subject_id": "beth-light-val.file-001.record-0000.sub-0003",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "allowlisted-subrecord",
+        "artifact_id": "inputs/mutations/FlaggedEsp-AboveLightMaximum.esp",
+        "offset_space": "physical-file",
+        "offset": 137,
+        "length": 11,
+        "signature": "MAST",
+        "raw_hex": "30302D5061642E65736D00"
+      },
+      "canonical_value_fingerprint": "9f384a8400f6cf32321a18949b27a0364df13b0c2e13e521d01dd1b9c862722a"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00017",
+      "subject_id": "beth-light-val.file-001.record-0000.sub-0004",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "allowlisted-subrecord",
+        "artifact_id": "inputs/mutations/FlaggedEsp-AboveLightMaximum.esp",
+        "offset_space": "physical-file",
+        "offset": 154,
+        "length": 8,
+        "signature": "DATA",
+        "raw_hex": "0000000000000000"
+      },
+      "canonical_value_fingerprint": "db846fc1d3c15ad14d1396d39f5232d997c1496f24613e92f0dbf89ea206a9d4"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00018",
+      "subject_id": "beth-light-val.file-001.record-0001",
+      "fact_kind": "record",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "major-record",
+        "artifact_id": "inputs/mutations/FlaggedEsp-AboveLightMaximum.esp",
+        "offset_space": "physical-file",
+        "offset": 186,
+        "length": 41,
+        "signature": "STAT",
+        "form_id_hex": "01001000",
+        "record_flags_hex": "00000000",
+        "record_state": "present",
+        "boolean_value": false,
+        "resolution_state": "invalid"
+      },
+      "canonical_value_fingerprint": "0967a80931023da9f106eb84d8298c70d60df95fced02acf418f48b3075739d8"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00019",
+      "subject_id": "beth-light-val.file-002.identity",
+      "fact_kind": "file",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "file-identity",
+        "artifact_id": "inputs/mutations/FlaggedEsp-BelowObjectRange.esp",
+        "length": 226,
+        "text_value": "e67567fd8b8789314817db69585e2caf55bfbca0341e1943defbadc313027070"
+      },
+      "canonical_value_fingerprint": "76d927899478e8a99f0646b27ce7dd85e688441ec7f0caa1138050b9b2ff3822"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00020",
+      "subject_id": "beth-light-val.file-002.masters",
+      "fact_kind": "master-order",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "tes4-master-order",
+        "artifact_id": "inputs/mutations/FlaggedEsp-BelowObjectRange.esp",
+        "master_order": [
+          "00-Pad.esm"
+        ]
+      },
+      "canonical_value_fingerprint": "5e4a5571bc12fa5de21e649f994059f8160d464e3a6fb90d071a1964e992894d"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00021",
+      "subject_id": "beth-light-val.file-002.esl-flag",
+      "fact_kind": "file",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "tes4-esl-flag",
+        "artifact_id": "inputs/mutations/FlaggedEsp-BelowObjectRange.esp",
+        "boolean_value": true
+      },
+      "canonical_value_fingerprint": "1640c5816d5607977b6c1054c283914f3fc1e4a9323c33366b9fe98758ab9dde"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00022",
+      "subject_id": "beth-light-val.file-002.group-0000",
+      "fact_kind": "group",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "group-header",
+        "artifact_id": "inputs/mutations/FlaggedEsp-BelowObjectRange.esp",
+        "offset_space": "physical-file",
+        "offset": 161,
+        "length": 65,
+        "signature": "GRUP",
+        "raw_hex": "53544154",
+        "unsigned_value": 0
+      },
+      "canonical_value_fingerprint": "4727016eb648956087a21b535a7dc4d1ec128f357e02e3d89aa443c79e99beda"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00023",
+      "subject_id": "beth-light-val.file-002.record-0000",
+      "fact_kind": "record",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "major-record",
+        "artifact_id": "inputs/mutations/FlaggedEsp-BelowObjectRange.esp",
+        "offset_space": "physical-file",
+        "offset": 0,
+        "length": 161,
+        "signature": "TES4",
+        "form_id_hex": "00000000",
+        "record_flags_hex": "00000200",
+        "record_state": "present",
+        "boolean_value": false
+      },
+      "canonical_value_fingerprint": "dc4ae9511e13cee582116590033f2f2d9abc34d3b9d5af9194e3b7b61b3d3e69"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00024",
+      "subject_id": "beth-light-val.file-002.record-0000.sub-0003",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "allowlisted-subrecord",
+        "artifact_id": "inputs/mutations/FlaggedEsp-BelowObjectRange.esp",
+        "offset_space": "physical-file",
+        "offset": 136,
+        "length": 11,
+        "signature": "MAST",
+        "raw_hex": "30302D5061642E65736D00"
+      },
+      "canonical_value_fingerprint": "dc49a96d8f7420b04b5d5f092cd7ebf6d4b765e4338ad116d6fe7e05316c89ca"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00025",
+      "subject_id": "beth-light-val.file-002.record-0000.sub-0004",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "allowlisted-subrecord",
+        "artifact_id": "inputs/mutations/FlaggedEsp-BelowObjectRange.esp",
+        "offset_space": "physical-file",
+        "offset": 153,
+        "length": 8,
+        "signature": "DATA",
+        "raw_hex": "0000000000000000"
+      },
+      "canonical_value_fingerprint": "049815d0aef3768f46111f4ebbe6be77b99e52127138ca09119a153f5fa438d5"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00026",
+      "subject_id": "beth-light-val.file-002.record-0001",
+      "fact_kind": "record",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "major-record",
+        "artifact_id": "inputs/mutations/FlaggedEsp-BelowObjectRange.esp",
+        "offset_space": "physical-file",
+        "offset": 185,
+        "length": 41,
+        "signature": "STAT",
+        "form_id_hex": "010007FF",
+        "record_flags_hex": "00000000",
+        "record_state": "present",
+        "boolean_value": false,
+        "resolution_state": "invalid"
+      },
+      "canonical_value_fingerprint": "9cfc689540091f7f82b644657d5b26354b9e2c73942e7c72cc4010aeebd3c44c"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00027",
+      "subject_id": "beth-light-val.file-003.identity",
+      "fact_kind": "file",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "file-identity",
+        "artifact_id": "inputs/mutations/Native-AboveLightMaximum.esl",
+        "length": 223,
+        "text_value": "fe8e35888609636451e8462e9bc7cc2659433c84620f9c25abafc1fa2dc79394"
+      },
+      "canonical_value_fingerprint": "360b2ce48396a09b2466eafbabf02f7e77d945bca087a13ca7aa9e659341d028"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00028",
+      "subject_id": "beth-light-val.file-003.masters",
+      "fact_kind": "master-order",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "tes4-master-order",
+        "artifact_id": "inputs/mutations/Native-AboveLightMaximum.esl",
+        "master_order": [
+          "00-Pad.esm"
+        ]
+      },
+      "canonical_value_fingerprint": "4e5f74d775bb8c551f7ec1d01bc65791666d11cde34a2cc4c6b3eca0132b4707"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00029",
+      "subject_id": "beth-light-val.file-003.esl-flag",
+      "fact_kind": "file",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "tes4-esl-flag",
+        "artifact_id": "inputs/mutations/Native-AboveLightMaximum.esl",
+        "boolean_value": true
+      },
+      "canonical_value_fingerprint": "d13165545e4c18500f7440f81924290a68e0ba7d9677e657a4e1befa8fc919b9"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00030",
+      "subject_id": "beth-light-val.file-003.group-0000",
+      "fact_kind": "group",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "group-header",
+        "artifact_id": "inputs/mutations/Native-AboveLightMaximum.esl",
+        "offset_space": "physical-file",
+        "offset": 158,
+        "length": 65,
+        "signature": "GRUP",
+        "raw_hex": "53544154",
+        "unsigned_value": 0
+      },
+      "canonical_value_fingerprint": "8f50ba7e3df0effbe73ca625b25277a0bc35d6f68b401b720587728eaafe3f20"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00031",
+      "subject_id": "beth-light-val.file-003.record-0000",
+      "fact_kind": "record",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "major-record",
+        "artifact_id": "inputs/mutations/Native-AboveLightMaximum.esl",
+        "offset_space": "physical-file",
+        "offset": 0,
+        "length": 158,
+        "signature": "TES4",
+        "form_id_hex": "00000000",
+        "record_flags_hex": "00000200",
+        "record_state": "present",
+        "boolean_value": false
+      },
+      "canonical_value_fingerprint": "a143d14a5b8ba891139b63f5957ee23b1081454e775fa21c869f94f7492781cc"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00032",
+      "subject_id": "beth-light-val.file-003.record-0000.sub-0003",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "allowlisted-subrecord",
+        "artifact_id": "inputs/mutations/Native-AboveLightMaximum.esl",
+        "offset_space": "physical-file",
+        "offset": 133,
+        "length": 11,
+        "signature": "MAST",
+        "raw_hex": "30302D5061642E65736D00"
+      },
+      "canonical_value_fingerprint": "204947ddc3dcf5374fa54c5c2898bcea67ad359b1e58d6d493178125c103b248"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00033",
+      "subject_id": "beth-light-val.file-003.record-0000.sub-0004",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "allowlisted-subrecord",
+        "artifact_id": "inputs/mutations/Native-AboveLightMaximum.esl",
+        "offset_space": "physical-file",
+        "offset": 150,
+        "length": 8,
+        "signature": "DATA",
+        "raw_hex": "0000000000000000"
+      },
+      "canonical_value_fingerprint": "0c0203449c91f05fd9a2deb8ae7c35e88c1b4afc8e7556e986c146e97e79614b"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00034",
+      "subject_id": "beth-light-val.file-003.record-0001",
+      "fact_kind": "record",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "major-record",
+        "artifact_id": "inputs/mutations/Native-AboveLightMaximum.esl",
+        "offset_space": "physical-file",
+        "offset": 182,
+        "length": 41,
+        "signature": "STAT",
+        "form_id_hex": "01001000",
+        "record_flags_hex": "00000000",
+        "record_state": "present",
+        "boolean_value": false,
+        "resolution_state": "invalid"
+      },
+      "canonical_value_fingerprint": "12372d0e4083b352be4fa577978c42370b783832f76ef0241ab51f0d7d1e1a9d"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00035",
+      "subject_id": "beth-light-val.file-004.identity",
+      "fact_kind": "file",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "file-identity",
+        "artifact_id": "inputs/mutations/Native-BelowObjectRange.esl",
+        "length": 222,
+        "text_value": "06cc4e3b1021c0213229669ea57444a4e0db438f74e17228233b1fb67dedfca0"
+      },
+      "canonical_value_fingerprint": "56fdf4875ccda294df32d4dbce94447f811cb2a6f2dad4eaac1ca5ee898c3dd0"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00036",
+      "subject_id": "beth-light-val.file-004.masters",
+      "fact_kind": "master-order",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "tes4-master-order",
+        "artifact_id": "inputs/mutations/Native-BelowObjectRange.esl",
+        "master_order": [
+          "00-Pad.esm"
+        ]
+      },
+      "canonical_value_fingerprint": "fb16829d4d9fb2b4bc9879443ca37d6178b35cd683091292f8b29608b7475e8e"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00037",
+      "subject_id": "beth-light-val.file-004.esl-flag",
+      "fact_kind": "file",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "tes4-esl-flag",
+        "artifact_id": "inputs/mutations/Native-BelowObjectRange.esl",
+        "boolean_value": true
+      },
+      "canonical_value_fingerprint": "dd501ac0221ed9ff0d15cb58c616de2619978ea7e4079750c532eaa8bb493dce"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00038",
+      "subject_id": "beth-light-val.file-004.group-0000",
+      "fact_kind": "group",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "group-header",
+        "artifact_id": "inputs/mutations/Native-BelowObjectRange.esl",
+        "offset_space": "physical-file",
+        "offset": 157,
+        "length": 65,
+        "signature": "GRUP",
+        "raw_hex": "53544154",
+        "unsigned_value": 0
+      },
+      "canonical_value_fingerprint": "0b525f131b28f16608b7d03f478aa8f6bc6cad1d2295603bf1ec420ecd905d16"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00039",
+      "subject_id": "beth-light-val.file-004.record-0000",
+      "fact_kind": "record",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "major-record",
+        "artifact_id": "inputs/mutations/Native-BelowObjectRange.esl",
+        "offset_space": "physical-file",
+        "offset": 0,
+        "length": 157,
+        "signature": "TES4",
+        "form_id_hex": "00000000",
+        "record_flags_hex": "00000200",
+        "record_state": "present",
+        "boolean_value": false
+      },
+      "canonical_value_fingerprint": "b5c6e953d47b493fccdf14c100bac64106c39e458f35177f9802191adf4736bf"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00040",
+      "subject_id": "beth-light-val.file-004.record-0000.sub-0003",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "allowlisted-subrecord",
+        "artifact_id": "inputs/mutations/Native-BelowObjectRange.esl",
+        "offset_space": "physical-file",
+        "offset": 132,
+        "length": 11,
+        "signature": "MAST",
+        "raw_hex": "30302D5061642E65736D00"
+      },
+      "canonical_value_fingerprint": "5c8e6c8b59741f873be4021955d6beed4a1f5d8d6697903603e7a20629c6f136"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00041",
+      "subject_id": "beth-light-val.file-004.record-0000.sub-0004",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "allowlisted-subrecord",
+        "artifact_id": "inputs/mutations/Native-BelowObjectRange.esl",
+        "offset_space": "physical-file",
+        "offset": 149,
+        "length": 8,
+        "signature": "DATA",
+        "raw_hex": "0000000000000000"
+      },
+      "canonical_value_fingerprint": "f3c001ba12e350a3a9aa2c2bf549cc754d29c8d6825e2ad3450fd20d9eefd819"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00042",
+      "subject_id": "beth-light-val.file-004.record-0001",
+      "fact_kind": "record",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "major-record",
+        "artifact_id": "inputs/mutations/Native-BelowObjectRange.esl",
+        "offset_space": "physical-file",
+        "offset": 181,
+        "length": 41,
+        "signature": "STAT",
+        "form_id_hex": "010007FF",
+        "record_flags_hex": "00000000",
+        "record_state": "present",
+        "boolean_value": false,
+        "resolution_state": "invalid"
+      },
+      "canonical_value_fingerprint": "ee7f5244317e923612f33fd4e7acf7240c4bb0153042b99de5a45c41673e3479"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00043",
+      "subject_id": "beth-light-val.file-005.identity",
+      "fact_kind": "file",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "file-identity",
+        "artifact_id": "inputs/mutations/Native-HeaderFlagRemoved.esl",
+        "length": 236,
+        "text_value": "687d6d7fd35b8c7ffbe4f28dc178fe0fcb36c4a54777bcccb93611a165227182"
+      },
+      "canonical_value_fingerprint": "57f84eaef37f95e5abe8bf0cfc9197112e15a24cf455732be4bdba9bb1a9981f"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00044",
+      "subject_id": "beth-light-val.file-005.masters",
+      "fact_kind": "master-order",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "tes4-master-order",
+        "artifact_id": "inputs/mutations/Native-HeaderFlagRemoved.esl",
+        "master_order": [
+          "00-Pad.esm"
+        ]
+      },
+      "canonical_value_fingerprint": "0f27f666e8b40373d54e71f10df5e6467a0a05d749ca1126b6c9778b725b7533"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00045",
+      "subject_id": "beth-light-val.file-005.esl-flag",
+      "fact_kind": "file",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "tes4-esl-flag",
+        "artifact_id": "inputs/mutations/Native-HeaderFlagRemoved.esl",
+        "boolean_value": false
+      },
+      "canonical_value_fingerprint": "cba4223972e4da848cf452803b0e701d50f430b15427d8b254ca9211033b12ec"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00046",
+      "subject_id": "beth-light-val.file-005.group-0000",
+      "fact_kind": "group",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "group-header",
+        "artifact_id": "inputs/mutations/Native-HeaderFlagRemoved.esl",
+        "offset_space": "physical-file",
+        "offset": 158,
+        "length": 78,
+        "signature": "GRUP",
+        "raw_hex": "53544154",
+        "unsigned_value": 0
+      },
+      "canonical_value_fingerprint": "52bf20713c8ae8a74f291f9923861f130494d236052b330e5dc53a823072209d"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00047",
+      "subject_id": "beth-light-val.file-005.record-0000",
+      "fact_kind": "record",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "major-record",
+        "artifact_id": "inputs/mutations/Native-HeaderFlagRemoved.esl",
+        "offset_space": "physical-file",
+        "offset": 0,
+        "length": 158,
+        "signature": "TES4",
+        "form_id_hex": "00000000",
+        "record_flags_hex": "00000000",
+        "record_state": "present",
+        "boolean_value": false
+      },
+      "canonical_value_fingerprint": "fad0dae5846d11bec0c487d583f01bae4eb055d6399a67fdc3d4d7f496b0c76d"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00048",
+      "subject_id": "beth-light-val.file-005.record-0000.sub-0003",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "allowlisted-subrecord",
+        "artifact_id": "inputs/mutations/Native-HeaderFlagRemoved.esl",
+        "offset_space": "physical-file",
+        "offset": 133,
+        "length": 11,
+        "signature": "MAST",
+        "raw_hex": "30302D5061642E65736D00"
+      },
+      "canonical_value_fingerprint": "e3b235db51fd8ad6199fa3970b1e8cf3251b1ade47529d58b4585262d91a5f6c"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00049",
+      "subject_id": "beth-light-val.file-005.record-0000.sub-0004",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "allowlisted-subrecord",
+        "artifact_id": "inputs/mutations/Native-HeaderFlagRemoved.esl",
+        "offset_space": "physical-file",
+        "offset": 150,
+        "length": 8,
+        "signature": "DATA",
+        "raw_hex": "0000000000000000"
+      },
+      "canonical_value_fingerprint": "a35faa2903eb830378a582d8d2ab16711439732ef72230d4bd95e32d543135c2"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00050",
+      "subject_id": "beth-light-val.file-005.record-0001",
+      "fact_kind": "record",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "major-record",
+        "artifact_id": "inputs/mutations/Native-HeaderFlagRemoved.esl",
+        "offset_space": "physical-file",
+        "offset": 182,
+        "length": 54,
+        "signature": "STAT",
+        "form_id_hex": "01000800",
+        "record_flags_hex": "00000000",
+        "record_state": "present",
+        "boolean_value": false,
+        "resolution_state": "invalid"
+      },
+      "canonical_value_fingerprint": "41dd2fe9b444cc64e88ec41c76ba0aa2e24f5ff4a99c4a02aaf9572e30606289"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00051",
+      "subject_id": "beth-light-val.file-006.identity",
+      "fact_kind": "file",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "file-identity",
+        "artifact_id": "inputs/plugins/00-Pad.esm",
+        "length": 109,
+        "text_value": "7ee03b2ef46c82525644553259b32260c0defc87b61ae986519acab32496fd89"
+      },
+      "canonical_value_fingerprint": "d56488e15d5684c82727d90b53a08969a9b31816372208f6a48a2a38b368b1c3"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00052",
+      "subject_id": "beth-light-val.file-006.masters",
+      "fact_kind": "master-order",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "tes4-master-order",
+        "artifact_id": "inputs/plugins/00-Pad.esm",
+        "master_order": []
+      },
+      "canonical_value_fingerprint": "ca3d06d315f652644f9dfc1aa9a5bc722c1b71085b67e97de0f873e791ad3a64"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00053",
+      "subject_id": "beth-light-val.file-006.esl-flag",
+      "fact_kind": "file",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "tes4-esl-flag",
+        "artifact_id": "inputs/plugins/00-Pad.esm",
+        "boolean_value": false
+      },
+      "canonical_value_fingerprint": "c4341bae5abce3fe6714d6e9ce0778287ac9dc29f507c4738a22506062b16c08"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00054",
+      "subject_id": "beth-light-val.file-006.record-0000",
+      "fact_kind": "record",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "major-record",
+        "artifact_id": "inputs/plugins/00-Pad.esm",
+        "offset_space": "physical-file",
+        "offset": 0,
+        "length": 109,
+        "signature": "TES4",
+        "form_id_hex": "00000000",
+        "record_flags_hex": "00000000",
+        "record_state": "present",
+        "boolean_value": false
+      },
+      "canonical_value_fingerprint": "804180c356c5ea5ca24f350c322f811382144b7074d1f9b35acf638449839e35"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00055",
+      "subject_id": "beth-light-val.file-007.identity",
+      "fact_kind": "file",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "file-identity",
+        "artifact_id": "inputs/plugins/01-Native.esl",
+        "length": 265,
+        "text_value": "8bd7537ada2bc83c61ef399b1145bb63c0ef68aef90cba49be0565053cf44b98"
+      },
+      "canonical_value_fingerprint": "df924f75cb43eccc6a116857eb5d6dd75f19c15a8f14a24cbe5a675b64ffa4e7"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00056",
+      "subject_id": "beth-light-val.file-007.masters",
+      "fact_kind": "master-order",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "tes4-master-order",
+        "artifact_id": "inputs/plugins/01-Native.esl",
+        "master_order": [
+          "00-Pad.esm"
+        ]
+      },
+      "canonical_value_fingerprint": "2952d2a7e7e30ede35fe2be539cb836f2035b37c1f904c313f4c036bdab50450"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00057",
+      "subject_id": "beth-light-val.file-007.esl-flag",
+      "fact_kind": "file",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "tes4-esl-flag",
+        "artifact_id": "inputs/plugins/01-Native.esl",
+        "boolean_value": true
+      },
+      "canonical_value_fingerprint": "42ba0e555af3bd2066896f5f67499525984d9ef0601aaa831cecac3c964d1dd9"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00058",
+      "subject_id": "beth-light-val.file-007.group-0000",
+      "fact_kind": "group",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "group-header",
+        "artifact_id": "inputs/plugins/01-Native.esl",
+        "offset_space": "physical-file",
+        "offset": 143,
+        "length": 122,
+        "signature": "GRUP",
+        "raw_hex": "53544154",
+        "unsigned_value": 0
+      },
+      "canonical_value_fingerprint": "01ed0141dc790f8ac1b86e3219c5d5093a223f193101104e8d85bc3eba6075ef"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00059",
+      "subject_id": "beth-light-val.file-007.record-0000",
+      "fact_kind": "record",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "major-record",
+        "artifact_id": "inputs/plugins/01-Native.esl",
+        "offset_space": "physical-file",
+        "offset": 0,
+        "length": 143,
+        "signature": "TES4",
+        "form_id_hex": "00000000",
+        "record_flags_hex": "00000200",
+        "record_state": "present",
+        "boolean_value": false
+      },
+      "canonical_value_fingerprint": "daaaf32da15ed5f029278bd74c3d130ae303d13c1496ef89342497e14cb1d50a"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00060",
+      "subject_id": "beth-light-val.file-007.record-0000.sub-0003",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "allowlisted-subrecord",
+        "artifact_id": "inputs/plugins/01-Native.esl",
+        "offset_space": "physical-file",
+        "offset": 118,
+        "length": 11,
+        "signature": "MAST",
+        "raw_hex": "30302D5061642E65736D00"
+      },
+      "canonical_value_fingerprint": "36ed4ae673c24eb2dc44aa3ffef5593f8d1aebc62658da159359e7da9c68f5e6"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00061",
+      "subject_id": "beth-light-val.file-007.record-0000.sub-0004",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "allowlisted-subrecord",
+        "artifact_id": "inputs/plugins/01-Native.esl",
+        "offset_space": "physical-file",
+        "offset": 135,
+        "length": 8,
+        "signature": "DATA",
+        "raw_hex": "0000000000000000"
+      },
+      "canonical_value_fingerprint": "181204de66f605960849f0a1a6579c5a75d1000c4231a863688ab8ff2a23afc2"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00062",
+      "subject_id": "beth-light-val.file-007.record-0001",
+      "fact_kind": "record",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "major-record",
+        "artifact_id": "inputs/plugins/01-Native.esl",
+        "offset_space": "physical-file",
+        "offset": 167,
+        "length": 49,
+        "signature": "STAT",
+        "form_id_hex": "01000800",
+        "record_flags_hex": "00000000",
+        "record_state": "present",
+        "boolean_value": false,
+        "resolution_state": "resolved",
+        "form_key": "00000800:01-Native.esl",
+        "origin_plugin": "01-Native.esl",
+        "origin_kind": "light",
+        "local_id_hex": "800"
+      },
+      "canonical_value_fingerprint": "e94f2fd15ba54989aea4e503b63c2ce69af1d6a9880f01e9e2a735c980b29701"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00063",
+      "subject_id": "beth-light-val.file-007.record-0002",
+      "fact_kind": "record",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "major-record",
+        "artifact_id": "inputs/plugins/01-Native.esl",
+        "offset_space": "physical-file",
+        "offset": 216,
+        "length": 49,
+        "signature": "STAT",
+        "form_id_hex": "01000FFF",
+        "record_flags_hex": "00000000",
+        "record_state": "present",
+        "boolean_value": false,
+        "resolution_state": "resolved",
+        "form_key": "00000FFF:01-Native.esl",
+        "origin_plugin": "01-Native.esl",
+        "origin_kind": "light",
+        "local_id_hex": "FFF"
+      },
+      "canonical_value_fingerprint": "855243adb5ee44a114b056c1c82ccedacebbc49bf02d8017997f049347885247"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00064",
+      "subject_id": "beth-light-val.file-008.identity",
+      "fact_kind": "file",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "file-identity",
+        "artifact_id": "inputs/plugins/02-Flagged.esp",
+        "length": 268,
+        "text_value": "e60f667e43a62a8b24d8702cbcb9f6242017c84cf138bc74d2cb84e5ae649609"
+      },
+      "canonical_value_fingerprint": "ef7e260048713efaf9407661bae1fda2b4fd230262a97f8501dec2ff1ff726f4"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00065",
+      "subject_id": "beth-light-val.file-008.masters",
+      "fact_kind": "master-order",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "tes4-master-order",
+        "artifact_id": "inputs/plugins/02-Flagged.esp",
+        "master_order": [
+          "00-Pad.esm"
+        ]
+      },
+      "canonical_value_fingerprint": "fe6186cc2efd7d658d2aa963fdbdb0b38d9506fb2dde47a352d507df12da4145"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00066",
+      "subject_id": "beth-light-val.file-008.esl-flag",
+      "fact_kind": "file",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "tes4-esl-flag",
+        "artifact_id": "inputs/plugins/02-Flagged.esp",
+        "boolean_value": true
+      },
+      "canonical_value_fingerprint": "2d2f711d4be92187ad48fee7ce9af7ad3d8d0e86e8fcbdc72d06364ead420ee9"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00067",
+      "subject_id": "beth-light-val.file-008.group-0000",
+      "fact_kind": "group",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "group-header",
+        "artifact_id": "inputs/plugins/02-Flagged.esp",
+        "offset_space": "physical-file",
+        "offset": 144,
+        "length": 124,
+        "signature": "GRUP",
+        "raw_hex": "53544154",
+        "unsigned_value": 0
+      },
+      "canonical_value_fingerprint": "db4a2ae7ee185258464fb68a849b2c7b5ae4de66b0b35bd178fda09104a100b7"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00068",
+      "subject_id": "beth-light-val.file-008.record-0000",
+      "fact_kind": "record",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "major-record",
+        "artifact_id": "inputs/plugins/02-Flagged.esp",
+        "offset_space": "physical-file",
+        "offset": 0,
+        "length": 144,
+        "signature": "TES4",
+        "form_id_hex": "00000000",
+        "record_flags_hex": "00000200",
+        "record_state": "present",
+        "boolean_value": false
+      },
+      "canonical_value_fingerprint": "4343aece8a50ae64c7089d5216755b42e92739c28180bf167f166b71056a6c54"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00069",
+      "subject_id": "beth-light-val.file-008.record-0000.sub-0003",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "allowlisted-subrecord",
+        "artifact_id": "inputs/plugins/02-Flagged.esp",
+        "offset_space": "physical-file",
+        "offset": 119,
+        "length": 11,
+        "signature": "MAST",
+        "raw_hex": "30302D5061642E65736D00"
+      },
+      "canonical_value_fingerprint": "8c65e5d33e516d986af1cf617fed61503889674ca8b6e68d6b1aae7a3d1f4ada"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00070",
+      "subject_id": "beth-light-val.file-008.record-0000.sub-0004",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "allowlisted-subrecord",
+        "artifact_id": "inputs/plugins/02-Flagged.esp",
+        "offset_space": "physical-file",
+        "offset": 136,
+        "length": 8,
+        "signature": "DATA",
+        "raw_hex": "0000000000000000"
+      },
+      "canonical_value_fingerprint": "91b28b0b22eaefa8a95e391d6a1368c643fb7e559164600cc39bd82ceea5d657"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00071",
+      "subject_id": "beth-light-val.file-008.record-0001",
+      "fact_kind": "record",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "major-record",
+        "artifact_id": "inputs/plugins/02-Flagged.esp",
+        "offset_space": "physical-file",
+        "offset": 168,
+        "length": 50,
+        "signature": "STAT",
+        "form_id_hex": "01000800",
+        "record_flags_hex": "00000000",
+        "record_state": "present",
+        "boolean_value": false,
+        "resolution_state": "resolved",
+        "form_key": "00000800:02-Flagged.esp",
+        "origin_plugin": "02-Flagged.esp",
+        "origin_kind": "light",
+        "local_id_hex": "800"
+      },
+      "canonical_value_fingerprint": "2707b41a1acb8bad3a11b46eaa2a56fd7b482fc15d92cd4061b58e38e88ffcca"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00072",
+      "subject_id": "beth-light-val.file-008.record-0002",
+      "fact_kind": "record",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "major-record",
+        "artifact_id": "inputs/plugins/02-Flagged.esp",
+        "offset_space": "physical-file",
+        "offset": 218,
+        "length": 50,
+        "signature": "STAT",
+        "form_id_hex": "01000FFF",
+        "record_flags_hex": "00000000",
+        "record_state": "present",
+        "boolean_value": false,
+        "resolution_state": "resolved",
+        "form_key": "00000FFF:02-Flagged.esp",
+        "origin_plugin": "02-Flagged.esp",
+        "origin_kind": "light",
+        "local_id_hex": "FFF"
+      },
+      "canonical_value_fingerprint": "7b76c5686e4a09b90edd2067d79f8d4ac6ee842181a8716dbb93c02f1cd31a91"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00073",
+      "subject_id": "beth-light-val.file-009.identity",
+      "fact_kind": "file",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "file-identity",
+        "artifact_id": "inputs/plugins/03-Consumer.esp",
+        "length": 335,
+        "text_value": "bd24624a01fe07e701fa858a38d5b20b1ecdf22c2842875826b0f83fd312d47e"
+      },
+      "canonical_value_fingerprint": "2ce5d386cb18eb4271a3cbd803e6ca556026a27339b7f3fbe33ec5e5a43b237d"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00074",
+      "subject_id": "beth-light-val.file-009.masters",
+      "fact_kind": "master-order",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "tes4-master-order",
+        "artifact_id": "inputs/plugins/03-Consumer.esp",
+        "master_order": [
+          "01-Native.esl",
+          "02-Flagged.esp"
+        ]
+      },
+      "canonical_value_fingerprint": "72abe567fe26c4b2c1ec3c5918e8a7e6cbabb3b1691369816e99d68d6c9bfd4e"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00075",
+      "subject_id": "beth-light-val.file-009.esl-flag",
+      "fact_kind": "file",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "tes4-esl-flag",
+        "artifact_id": "inputs/plugins/03-Consumer.esp",
+        "boolean_value": false
+      },
+      "canonical_value_fingerprint": "3e56598ad4bc8c5404149869ca78ae4a1d69996f9f3ffd2471463b08435218d7"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00076",
+      "subject_id": "beth-light-val.file-009.group-0000",
+      "fact_kind": "group",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "group-header",
+        "artifact_id": "inputs/plugins/03-Consumer.esp",
+        "offset_space": "physical-file",
+        "offset": 183,
+        "length": 152,
+        "signature": "GRUP",
+        "raw_hex": "52454652",
+        "unsigned_value": 0
+      },
+      "canonical_value_fingerprint": "858b8afa561e10c58df1a8870524b5f243805f272afecb8791c29f0bcada20cb"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00077",
+      "subject_id": "beth-light-val.file-009.record-0000",
+      "fact_kind": "record",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "major-record",
+        "artifact_id": "inputs/plugins/03-Consumer.esp",
+        "offset_space": "physical-file",
+        "offset": 0,
+        "length": 183,
+        "signature": "TES4",
+        "form_id_hex": "00000000",
+        "record_flags_hex": "00000000",
+        "record_state": "present",
+        "boolean_value": false
+      },
+      "canonical_value_fingerprint": "e934876f6f5a3c5d7102a249aa77155e3b3af0c4b6112b8f2d7295876d9f6f44"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00078",
+      "subject_id": "beth-light-val.file-009.record-0000.sub-0003",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "allowlisted-subrecord",
+        "artifact_id": "inputs/plugins/03-Consumer.esp",
+        "offset_space": "physical-file",
+        "offset": 120,
+        "length": 14,
+        "signature": "MAST",
+        "raw_hex": "30312D4E61746976652E65736C00"
+      },
+      "canonical_value_fingerprint": "010d8405de2412b84dac9b17ad6f74f6b9e2e42cbc25a7fcf3a24828b20c1bb5"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00079",
+      "subject_id": "beth-light-val.file-009.record-0000.sub-0004",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "allowlisted-subrecord",
+        "artifact_id": "inputs/plugins/03-Consumer.esp",
+        "offset_space": "physical-file",
+        "offset": 140,
+        "length": 8,
+        "signature": "DATA",
+        "raw_hex": "0000000000000000"
+      },
+      "canonical_value_fingerprint": "f7edd47b3b5389f76e3740c5939689574dff64153a19ce9b0dfbb4857fe5664e"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00080",
+      "subject_id": "beth-light-val.file-009.record-0000.sub-0005",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "allowlisted-subrecord",
+        "artifact_id": "inputs/plugins/03-Consumer.esp",
+        "offset_space": "physical-file",
+        "offset": 154,
+        "length": 15,
+        "signature": "MAST",
+        "raw_hex": "30322D466C61676765642E65737000"
+      },
+      "canonical_value_fingerprint": "2f5fec93b314be0c36669be5cf3535cefd0d0c3a48d9520be765c6022566a8f6"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00081",
+      "subject_id": "beth-light-val.file-009.record-0000.sub-0006",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "allowlisted-subrecord",
+        "artifact_id": "inputs/plugins/03-Consumer.esp",
+        "offset_space": "physical-file",
+        "offset": 175,
+        "length": 8,
+        "signature": "DATA",
+        "raw_hex": "0000000000000000"
+      },
+      "canonical_value_fingerprint": "1e4fcfa8be29469a42876e319229dd0972a9ca492ab4ebecdeb32e62a7f0ead2"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00082",
+      "subject_id": "beth-light-val.file-009.record-0000.MAST.order",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "repeated-field-order",
+        "artifact_id": "inputs/plugins/03-Consumer.esp",
+        "signature": "MAST",
+        "ordered_ids": [
+          "beth.beth-light-val.fact-00078",
+          "beth.beth-light-val.fact-00080"
+        ]
+      },
+      "canonical_value_fingerprint": "be5752a1251e36eb9c0d2758ac7532af898737c79bd6004d02f9bad648816c7d"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00083",
+      "subject_id": "beth-light-val.file-009.record-0000.DATA.order",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "repeated-field-order",
+        "artifact_id": "inputs/plugins/03-Consumer.esp",
+        "signature": "DATA",
+        "ordered_ids": [
+          "beth.beth-light-val.fact-00079",
+          "beth.beth-light-val.fact-00081"
+        ]
+      },
+      "canonical_value_fingerprint": "937f0b6299f3e6c1e6c1c20ead7a17c7a13d5ba458ad096d1a21be2a9f3040cc"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00084",
+      "subject_id": "beth-light-val.file-009.record-0001",
+      "fact_kind": "record",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "major-record",
+        "artifact_id": "inputs/plugins/03-Consumer.esp",
+        "offset_space": "physical-file",
+        "offset": 207,
+        "length": 64,
+        "signature": "REFR",
+        "form_id_hex": "02000800",
+        "record_flags_hex": "00000000",
+        "record_state": "present",
+        "boolean_value": false,
+        "resolution_state": "resolved",
+        "form_key": "00000800:03-Consumer.esp",
+        "origin_plugin": "03-Consumer.esp",
+        "origin_kind": "full",
+        "local_id_hex": "000800"
+      },
+      "canonical_value_fingerprint": "8df4233fb3904243664f45f6fde1635808debaf57ab65e2e091d08253dbbb83c"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00085",
+      "subject_id": "beth-light-val.file-009.record-0001.sub-0000",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "allowlisted-subrecord",
+        "artifact_id": "inputs/plugins/03-Consumer.esp",
+        "offset_space": "physical-file",
+        "offset": 237,
+        "length": 4,
+        "signature": "NAME",
+        "raw_hex": "00080000"
+      },
+      "canonical_value_fingerprint": "16c459a534d4dd683b856afd7a66096949030659d0764fcbd94424326385c0eb"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00086",
+      "subject_id": "beth-light-val.file-009.record-0001.sub-0001",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "allowlisted-subrecord",
+        "artifact_id": "inputs/plugins/03-Consumer.esp",
+        "offset_space": "physical-file",
+        "offset": 247,
+        "length": 24,
+        "signature": "DATA",
+        "raw_hex": "000000000000000000000000000000000000000000000000"
+      },
+      "canonical_value_fingerprint": "ad81443a28ffbecc4eae54fd7986a0f918cf2162fd40ee1692f0e8038f2b910d"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00087",
+      "subject_id": "beth-light-val.file-009.record-0002",
+      "fact_kind": "record",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "major-record",
+        "artifact_id": "inputs/plugins/03-Consumer.esp",
+        "offset_space": "physical-file",
+        "offset": 271,
+        "length": 64,
+        "signature": "REFR",
+        "form_id_hex": "02000801",
+        "record_flags_hex": "00000000",
+        "record_state": "present",
+        "boolean_value": false,
+        "resolution_state": "resolved",
+        "form_key": "00000801:03-Consumer.esp",
+        "origin_plugin": "03-Consumer.esp",
+        "origin_kind": "full",
+        "local_id_hex": "000801"
+      },
+      "canonical_value_fingerprint": "f261b30d05294880c9bd28ca00b04d9d0ca1146c09baee05f39ba656398dead9"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00088",
+      "subject_id": "beth-light-val.file-009.record-0002.sub-0000",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "allowlisted-subrecord",
+        "artifact_id": "inputs/plugins/03-Consumer.esp",
+        "offset_space": "physical-file",
+        "offset": 301,
+        "length": 4,
+        "signature": "NAME",
+        "raw_hex": "FF0F0001"
+      },
+      "canonical_value_fingerprint": "07e18d2239d7ad667676ea8af416a45ff701cc2150e2bcce3f45346d1a474811"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00089",
+      "subject_id": "beth-light-val.file-009.record-0002.sub-0001",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "allowlisted-subrecord",
+        "artifact_id": "inputs/plugins/03-Consumer.esp",
+        "offset_space": "physical-file",
+        "offset": 311,
+        "length": 24,
+        "signature": "DATA",
+        "raw_hex": "0000803F0000803F0000803F000000000000000000000000"
+      },
+      "canonical_value_fingerprint": "d83d32bf8b2cffa4ecdde22919e542413adeded2325ecbd0e9a38fc5b5fb9b62"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00090",
+      "subject_id": "beth-light-val.file-010.identity",
+      "fact_kind": "file",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "file-identity",
+        "artifact_id": "inputs/plugins/04-Winner.esp",
+        "length": 227,
+        "text_value": "3b75c15391d47da2327107e61cce602003a757a12afba41382807760b8cbeeda"
+      },
+      "canonical_value_fingerprint": "60213ca6defba08c1c8bfd5d3a845297d3b9e8669c0a37700d541c90669c881e"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00091",
+      "subject_id": "beth-light-val.file-010.masters",
+      "fact_kind": "master-order",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "tes4-master-order",
+        "artifact_id": "inputs/plugins/04-Winner.esp",
+        "master_order": [
+          "01-Native.esl"
+        ]
+      },
+      "canonical_value_fingerprint": "a0dd5b6153559aedd0854955c8922b12c1fd9cddafe963027756dbf6ad8e1f44"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00092",
+      "subject_id": "beth-light-val.file-010.esl-flag",
+      "fact_kind": "file",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "tes4-esl-flag",
+        "artifact_id": "inputs/plugins/04-Winner.esp",
+        "boolean_value": false
+      },
+      "canonical_value_fingerprint": "6d30c522624ffa907977d18eb92e619c188c3f61c44728403f073dd4f0446483"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00093",
+      "subject_id": "beth-light-val.file-010.group-0000",
+      "fact_kind": "group",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "group-header",
+        "artifact_id": "inputs/plugins/04-Winner.esp",
+        "offset_space": "physical-file",
+        "offset": 146,
+        "length": 81,
+        "signature": "GRUP",
+        "raw_hex": "53544154",
+        "unsigned_value": 0
+      },
+      "canonical_value_fingerprint": "967548ae3f1070a145b9b6ddd194d43ba7fe7438f2e1d08b0c552e89b229a81b"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00094",
+      "subject_id": "beth-light-val.file-010.record-0000",
+      "fact_kind": "record",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "major-record",
+        "artifact_id": "inputs/plugins/04-Winner.esp",
+        "offset_space": "physical-file",
+        "offset": 0,
+        "length": 146,
+        "signature": "TES4",
+        "form_id_hex": "00000000",
+        "record_flags_hex": "00000000",
+        "record_state": "present",
+        "boolean_value": false
+      },
+      "canonical_value_fingerprint": "35bbf74d7d4cb75f3ce73e6f8677a367647debb486c5c0ad1c9a538b1ada35f5"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00095",
+      "subject_id": "beth-light-val.file-010.record-0000.sub-0003",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "allowlisted-subrecord",
+        "artifact_id": "inputs/plugins/04-Winner.esp",
+        "offset_space": "physical-file",
+        "offset": 118,
+        "length": 14,
+        "signature": "MAST",
+        "raw_hex": "30312D4E61746976652E65736C00"
+      },
+      "canonical_value_fingerprint": "15cb2cc1e258a9f161c15b4c5b70e48b10e6ca5fb618a076d31706fe843d6785"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00096",
+      "subject_id": "beth-light-val.file-010.record-0000.sub-0004",
+      "fact_kind": "subrecord",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "allowlisted-subrecord",
+        "artifact_id": "inputs/plugins/04-Winner.esp",
+        "offset_space": "physical-file",
+        "offset": 138,
+        "length": 8,
+        "signature": "DATA",
+        "raw_hex": "0000000000000000"
+      },
+      "canonical_value_fingerprint": "79d104fbc998831d110381e3a80251c76c61ab1a0830433a65c9cb10fb4e9a1c"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00097",
+      "subject_id": "beth-light-val.file-010.record-0001",
+      "fact_kind": "record",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "major-record",
+        "artifact_id": "inputs/plugins/04-Winner.esp",
+        "offset_space": "physical-file",
+        "offset": 170,
+        "length": 57,
+        "signature": "STAT",
+        "form_id_hex": "00000800",
+        "record_flags_hex": "00000000",
+        "record_state": "present",
+        "boolean_value": false,
+        "resolution_state": "resolved",
+        "form_key": "00000800:01-Native.esl",
+        "origin_plugin": "01-Native.esl",
+        "origin_kind": "light",
+        "local_id_hex": "800"
+      },
+      "canonical_value_fingerprint": "61e66b85d8eb3f8665f26339889bf52118fc87e369633ccf861afcedabda0fde"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00098",
+      "subject_id": "beth-light-val.file-000.record-0001.link-0000.light-reference-out-of-range",
+      "fact_kind": "link",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "canonical-link",
+        "artifact_id": "inputs/mutations/Consumer-LightReferenceOutOfRange.esp",
+        "form_id_hex": "00001000",
+        "resolution_state": "invalid",
+        "classification": "NAME-value"
+      },
+      "canonical_value_fingerprint": "fff78e1821460455ff059ab3cd87edda4c8033019a16b7d5f29696807fc4f161"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00099",
+      "subject_id": "beth-light-val.file-009.record-0001.link-0000.light-consumer-and-winner",
+      "fact_kind": "link",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "canonical-link",
+        "artifact_id": "inputs/plugins/03-Consumer.esp",
+        "form_id_hex": "00000800",
+        "resolution_state": "resolved",
+        "classification": "NAME-value",
+        "target_form_key": "00000800:01-Native.esl"
+      },
+      "canonical_value_fingerprint": "e6a74e314fb4f630cb7e9d3f97516eafac5331343fc077fa96a9b881af5fa80e"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00100",
+      "subject_id": "beth-light-val.file-009.record-0002.link-0000.light-consumer-and-winner",
+      "fact_kind": "link",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "canonical-link",
+        "artifact_id": "inputs/plugins/03-Consumer.esp",
+        "form_id_hex": "01000FFF",
+        "resolution_state": "resolved",
+        "classification": "NAME-value",
+        "target_form_key": "00000FFF:02-Flagged.esp"
+      },
+      "canonical_value_fingerprint": "32c6550fef36075a59c7149e962370aa2c985d5934685a86ef48eff1c78ef4a8"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00101",
+      "subject_id": "beth-light-val.light-consumer-and-winner.00000800:01-Native.esl.chain",
+      "fact_kind": "override-chain",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "override-chain",
+        "form_key": "00000800:01-Native.esl",
+        "ordered_ids": [
+          "beth.beth-light-val.fact-00062",
+          "beth.beth-light-val.fact-00097"
+        ],
+        "winner_id": "beth.beth-light-val.fact-00097"
+      },
+      "canonical_value_fingerprint": "f067d528c568eb1170f3a7f7ae8c2a3e61d37a7b82363c7f782ca5245b3219b1"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00102",
+      "subject_id": "beth-light-val.light-consumer-and-winner.00000800:01-Native.esl.winner",
+      "fact_kind": "winner",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "winning-record",
+        "form_key": "00000800:01-Native.esl",
+        "winner_id": "beth.beth-light-val.fact-00097",
+        "ordered_ids": [
+          "beth.beth-light-val.fact-00101"
+        ]
+      },
+      "canonical_value_fingerprint": "5b5811da887bfa3189158171ae25d9fdcf175e7070aee6ccdb8ec55a829a1e10"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00103",
+      "subject_id": "beth-light-val.light-native-below-range",
+      "fact_kind": "malformed",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "invalid-light-boundary",
+        "classification": "native_esl_object_id",
+        "reason": "light-native-below-range is an explicit invalid full/light boundary.",
+        "record_state": "malformed"
+      },
+      "canonical_value_fingerprint": "f4bee27645a741f5be0e333ae8c22da3a013cdef9eeee7453c774840c4a141ef"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00104",
+      "subject_id": "beth-light-val.light-native-above-range",
+      "fact_kind": "malformed",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "invalid-light-boundary",
+        "classification": "native_esl_object_id",
+        "reason": "light-native-above-range is an explicit invalid full/light boundary.",
+        "record_state": "malformed"
+      },
+      "canonical_value_fingerprint": "9c29a0a0ffefbe2bfc59a2d506e4d047764002afa085f8d60fefd2792e664dba"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00105",
+      "subject_id": "beth-light-val.light-flagged-below-range",
+      "fact_kind": "malformed",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "invalid-light-boundary",
+        "classification": "esl_flagged_esp_object_id",
+        "reason": "light-flagged-below-range is an explicit invalid full/light boundary.",
+        "record_state": "malformed"
+      },
+      "canonical_value_fingerprint": "fce25d88ac63f4fee92c25494562577bddc88f4c8f3c07fc8bf3b51ac4d0fce8"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00106",
+      "subject_id": "beth-light-val.light-flagged-above-range",
+      "fact_kind": "malformed",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "invalid-light-boundary",
+        "classification": "esl_flagged_esp_object_id",
+        "reason": "light-flagged-above-range is an explicit invalid full/light boundary.",
+        "record_state": "malformed"
+      },
+      "canonical_value_fingerprint": "5434fae966eac2fb5807dc41a86880c31a0adb05894822c02f6f3a2e719b559d"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00107",
+      "subject_id": "beth-light-val.light-extension-header-mismatch",
+      "fact_kind": "malformed",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "invalid-light-boundary",
+        "classification": "light_plugin_classification",
+        "reason": "light-extension-header-mismatch is an explicit invalid full/light boundary.",
+        "record_state": "malformed"
+      },
+      "canonical_value_fingerprint": "2d53b5d4493cf0508a5b6c56cb82b4bdaaae5d2ab8280b1e22d996fa9c7c2b86"
+    },
+    {
+      "fact_id": "beth.beth-light-val.fact-00108",
+      "subject_id": "beth-light-val.light-reference-out-of-range",
+      "fact_kind": "malformed",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "invalid-light-boundary",
+        "classification": "light_master_reference",
+        "reason": "light-reference-out-of-range is an explicit invalid full/light boundary.",
+        "record_state": "malformed"
+      },
+      "canonical_value_fingerprint": "b31b1856523ba1f21adfb0a4f51fe47a0158eccec8b055128af4c90ebd9b805b"
+    }
+  ],
+  "mutation_expectations": [
+    {
+      "mutation_id": "mutation.light-native-below-range",
+      "mutation_kind": "local-id",
+      "target_artifact_id": "inputs/mutations/Native-BelowObjectRange.esl",
+      "changed_fact_ids": [
+        "beth.beth-light-val.fact-00035",
+        "beth.beth-light-val.fact-00036",
+        "beth.beth-light-val.fact-00037",
+        "beth.beth-light-val.fact-00038",
+        "beth.beth-light-val.fact-00039",
+        "beth.beth-light-val.fact-00040",
+        "beth.beth-light-val.fact-00041",
+        "beth.beth-light-val.fact-00042",
+        "beth.beth-light-val.fact-00103"
+      ],
+      "unchanged_fact_ids": [
+        "beth.beth-light-val.fact-00001",
+        "beth.beth-light-val.fact-00002",
+        "beth.beth-light-val.fact-00003",
+        "beth.beth-light-val.fact-00004",
+        "beth.beth-light-val.fact-00005",
+        "beth.beth-light-val.fact-00006",
+        "beth.beth-light-val.fact-00007",
+        "beth.beth-light-val.fact-00008",
+        "beth.beth-light-val.fact-00009",
+        "beth.beth-light-val.fact-00010",
+        "beth.beth-light-val.fact-00011",
+        "beth.beth-light-val.fact-00012",
+        "beth.beth-light-val.fact-00013",
+        "beth.beth-light-val.fact-00014",
+        "beth.beth-light-val.fact-00015",
+        "beth.beth-light-val.fact-00016",
+        "beth.beth-light-val.fact-00017",
+        "beth.beth-light-val.fact-00018",
+        "beth.beth-light-val.fact-00019",
+        "beth.beth-light-val.fact-00020",
+        "beth.beth-light-val.fact-00021",
+        "beth.beth-light-val.fact-00022",
+        "beth.beth-light-val.fact-00023",
+        "beth.beth-light-val.fact-00024",
+        "beth.beth-light-val.fact-00025",
+        "beth.beth-light-val.fact-00026",
+        "beth.beth-light-val.fact-00027",
+        "beth.beth-light-val.fact-00028",
+        "beth.beth-light-val.fact-00029",
+        "beth.beth-light-val.fact-00030",
+        "beth.beth-light-val.fact-00031",
+        "beth.beth-light-val.fact-00032",
+        "beth.beth-light-val.fact-00033",
+        "beth.beth-light-val.fact-00034",
+        "beth.beth-light-val.fact-00043",
+        "beth.beth-light-val.fact-00044",
+        "beth.beth-light-val.fact-00045",
+        "beth.beth-light-val.fact-00046",
+        "beth.beth-light-val.fact-00047",
+        "beth.beth-light-val.fact-00048",
+        "beth.beth-light-val.fact-00049",
+        "beth.beth-light-val.fact-00050",
+        "beth.beth-light-val.fact-00051",
+        "beth.beth-light-val.fact-00052",
+        "beth.beth-light-val.fact-00053",
+        "beth.beth-light-val.fact-00054",
+        "beth.beth-light-val.fact-00055",
+        "beth.beth-light-val.fact-00056",
+        "beth.beth-light-val.fact-00057",
+        "beth.beth-light-val.fact-00058",
+        "beth.beth-light-val.fact-00059",
+        "beth.beth-light-val.fact-00060",
+        "beth.beth-light-val.fact-00061",
+        "beth.beth-light-val.fact-00062",
+        "beth.beth-light-val.fact-00063",
+        "beth.beth-light-val.fact-00064",
+        "beth.beth-light-val.fact-00065",
+        "beth.beth-light-val.fact-00066",
+        "beth.beth-light-val.fact-00067",
+        "beth.beth-light-val.fact-00068",
+        "beth.beth-light-val.fact-00069",
+        "beth.beth-light-val.fact-00070",
+        "beth.beth-light-val.fact-00071",
+        "beth.beth-light-val.fact-00072",
+        "beth.beth-light-val.fact-00073",
+        "beth.beth-light-val.fact-00074",
+        "beth.beth-light-val.fact-00075",
+        "beth.beth-light-val.fact-00076",
+        "beth.beth-light-val.fact-00077",
+        "beth.beth-light-val.fact-00078",
+        "beth.beth-light-val.fact-00079",
+        "beth.beth-light-val.fact-00080",
+        "beth.beth-light-val.fact-00081",
+        "beth.beth-light-val.fact-00082",
+        "beth.beth-light-val.fact-00083",
+        "beth.beth-light-val.fact-00084",
+        "beth.beth-light-val.fact-00085",
+        "beth.beth-light-val.fact-00086",
+        "beth.beth-light-val.fact-00087",
+        "beth.beth-light-val.fact-00088",
+        "beth.beth-light-val.fact-00089",
+        "beth.beth-light-val.fact-00090",
+        "beth.beth-light-val.fact-00091",
+        "beth.beth-light-val.fact-00092",
+        "beth.beth-light-val.fact-00093",
+        "beth.beth-light-val.fact-00094",
+        "beth.beth-light-val.fact-00095",
+        "beth.beth-light-val.fact-00096",
+        "beth.beth-light-val.fact-00097",
+        "beth.beth-light-val.fact-00098",
+        "beth.beth-light-val.fact-00099",
+        "beth.beth-light-val.fact-00100",
+        "beth.beth-light-val.fact-00101",
+        "beth.beth-light-val.fact-00102",
+        "beth.beth-light-val.fact-00104",
+        "beth.beth-light-val.fact-00105",
+        "beth.beth-light-val.fact-00106",
+        "beth.beth-light-val.fact-00107",
+        "beth.beth-light-val.fact-00108"
+      ]
+    },
+    {
+      "mutation_id": "mutation.light-native-above-range",
+      "mutation_kind": "local-id",
+      "target_artifact_id": "inputs/mutations/Native-AboveLightMaximum.esl",
+      "changed_fact_ids": [
+        "beth.beth-light-val.fact-00027",
+        "beth.beth-light-val.fact-00028",
+        "beth.beth-light-val.fact-00029",
+        "beth.beth-light-val.fact-00030",
+        "beth.beth-light-val.fact-00031",
+        "beth.beth-light-val.fact-00032",
+        "beth.beth-light-val.fact-00033",
+        "beth.beth-light-val.fact-00034",
+        "beth.beth-light-val.fact-00104"
+      ],
+      "unchanged_fact_ids": [
+        "beth.beth-light-val.fact-00001",
+        "beth.beth-light-val.fact-00002",
+        "beth.beth-light-val.fact-00003",
+        "beth.beth-light-val.fact-00004",
+        "beth.beth-light-val.fact-00005",
+        "beth.beth-light-val.fact-00006",
+        "beth.beth-light-val.fact-00007",
+        "beth.beth-light-val.fact-00008",
+        "beth.beth-light-val.fact-00009",
+        "beth.beth-light-val.fact-00010",
+        "beth.beth-light-val.fact-00011",
+        "beth.beth-light-val.fact-00012",
+        "beth.beth-light-val.fact-00013",
+        "beth.beth-light-val.fact-00014",
+        "beth.beth-light-val.fact-00015",
+        "beth.beth-light-val.fact-00016",
+        "beth.beth-light-val.fact-00017",
+        "beth.beth-light-val.fact-00018",
+        "beth.beth-light-val.fact-00019",
+        "beth.beth-light-val.fact-00020",
+        "beth.beth-light-val.fact-00021",
+        "beth.beth-light-val.fact-00022",
+        "beth.beth-light-val.fact-00023",
+        "beth.beth-light-val.fact-00024",
+        "beth.beth-light-val.fact-00025",
+        "beth.beth-light-val.fact-00026",
+        "beth.beth-light-val.fact-00035",
+        "beth.beth-light-val.fact-00036",
+        "beth.beth-light-val.fact-00037",
+        "beth.beth-light-val.fact-00038",
+        "beth.beth-light-val.fact-00039",
+        "beth.beth-light-val.fact-00040",
+        "beth.beth-light-val.fact-00041",
+        "beth.beth-light-val.fact-00042",
+        "beth.beth-light-val.fact-00043",
+        "beth.beth-light-val.fact-00044",
+        "beth.beth-light-val.fact-00045",
+        "beth.beth-light-val.fact-00046",
+        "beth.beth-light-val.fact-00047",
+        "beth.beth-light-val.fact-00048",
+        "beth.beth-light-val.fact-00049",
+        "beth.beth-light-val.fact-00050",
+        "beth.beth-light-val.fact-00051",
+        "beth.beth-light-val.fact-00052",
+        "beth.beth-light-val.fact-00053",
+        "beth.beth-light-val.fact-00054",
+        "beth.beth-light-val.fact-00055",
+        "beth.beth-light-val.fact-00056",
+        "beth.beth-light-val.fact-00057",
+        "beth.beth-light-val.fact-00058",
+        "beth.beth-light-val.fact-00059",
+        "beth.beth-light-val.fact-00060",
+        "beth.beth-light-val.fact-00061",
+        "beth.beth-light-val.fact-00062",
+        "beth.beth-light-val.fact-00063",
+        "beth.beth-light-val.fact-00064",
+        "beth.beth-light-val.fact-00065",
+        "beth.beth-light-val.fact-00066",
+        "beth.beth-light-val.fact-00067",
+        "beth.beth-light-val.fact-00068",
+        "beth.beth-light-val.fact-00069",
+        "beth.beth-light-val.fact-00070",
+        "beth.beth-light-val.fact-00071",
+        "beth.beth-light-val.fact-00072",
+        "beth.beth-light-val.fact-00073",
+        "beth.beth-light-val.fact-00074",
+        "beth.beth-light-val.fact-00075",
+        "beth.beth-light-val.fact-00076",
+        "beth.beth-light-val.fact-00077",
+        "beth.beth-light-val.fact-00078",
+        "beth.beth-light-val.fact-00079",
+        "beth.beth-light-val.fact-00080",
+        "beth.beth-light-val.fact-00081",
+        "beth.beth-light-val.fact-00082",
+        "beth.beth-light-val.fact-00083",
+        "beth.beth-light-val.fact-00084",
+        "beth.beth-light-val.fact-00085",
+        "beth.beth-light-val.fact-00086",
+        "beth.beth-light-val.fact-00087",
+        "beth.beth-light-val.fact-00088",
+        "beth.beth-light-val.fact-00089",
+        "beth.beth-light-val.fact-00090",
+        "beth.beth-light-val.fact-00091",
+        "beth.beth-light-val.fact-00092",
+        "beth.beth-light-val.fact-00093",
+        "beth.beth-light-val.fact-00094",
+        "beth.beth-light-val.fact-00095",
+        "beth.beth-light-val.fact-00096",
+        "beth.beth-light-val.fact-00097",
+        "beth.beth-light-val.fact-00098",
+        "beth.beth-light-val.fact-00099",
+        "beth.beth-light-val.fact-00100",
+        "beth.beth-light-val.fact-00101",
+        "beth.beth-light-val.fact-00102",
+        "beth.beth-light-val.fact-00103",
+        "beth.beth-light-val.fact-00105",
+        "beth.beth-light-val.fact-00106",
+        "beth.beth-light-val.fact-00107",
+        "beth.beth-light-val.fact-00108"
+      ]
+    },
+    {
+      "mutation_id": "mutation.light-flagged-below-range",
+      "mutation_kind": "local-id",
+      "target_artifact_id": "inputs/mutations/FlaggedEsp-BelowObjectRange.esp",
+      "changed_fact_ids": [
+        "beth.beth-light-val.fact-00019",
+        "beth.beth-light-val.fact-00020",
+        "beth.beth-light-val.fact-00021",
+        "beth.beth-light-val.fact-00022",
+        "beth.beth-light-val.fact-00023",
+        "beth.beth-light-val.fact-00024",
+        "beth.beth-light-val.fact-00025",
+        "beth.beth-light-val.fact-00026",
+        "beth.beth-light-val.fact-00105"
+      ],
+      "unchanged_fact_ids": [
+        "beth.beth-light-val.fact-00001",
+        "beth.beth-light-val.fact-00002",
+        "beth.beth-light-val.fact-00003",
+        "beth.beth-light-val.fact-00004",
+        "beth.beth-light-val.fact-00005",
+        "beth.beth-light-val.fact-00006",
+        "beth.beth-light-val.fact-00007",
+        "beth.beth-light-val.fact-00008",
+        "beth.beth-light-val.fact-00009",
+        "beth.beth-light-val.fact-00010",
+        "beth.beth-light-val.fact-00011",
+        "beth.beth-light-val.fact-00012",
+        "beth.beth-light-val.fact-00013",
+        "beth.beth-light-val.fact-00014",
+        "beth.beth-light-val.fact-00015",
+        "beth.beth-light-val.fact-00016",
+        "beth.beth-light-val.fact-00017",
+        "beth.beth-light-val.fact-00018",
+        "beth.beth-light-val.fact-00027",
+        "beth.beth-light-val.fact-00028",
+        "beth.beth-light-val.fact-00029",
+        "beth.beth-light-val.fact-00030",
+        "beth.beth-light-val.fact-00031",
+        "beth.beth-light-val.fact-00032",
+        "beth.beth-light-val.fact-00033",
+        "beth.beth-light-val.fact-00034",
+        "beth.beth-light-val.fact-00035",
+        "beth.beth-light-val.fact-00036",
+        "beth.beth-light-val.fact-00037",
+        "beth.beth-light-val.fact-00038",
+        "beth.beth-light-val.fact-00039",
+        "beth.beth-light-val.fact-00040",
+        "beth.beth-light-val.fact-00041",
+        "beth.beth-light-val.fact-00042",
+        "beth.beth-light-val.fact-00043",
+        "beth.beth-light-val.fact-00044",
+        "beth.beth-light-val.fact-00045",
+        "beth.beth-light-val.fact-00046",
+        "beth.beth-light-val.fact-00047",
+        "beth.beth-light-val.fact-00048",
+        "beth.beth-light-val.fact-00049",
+        "beth.beth-light-val.fact-00050",
+        "beth.beth-light-val.fact-00051",
+        "beth.beth-light-val.fact-00052",
+        "beth.beth-light-val.fact-00053",
+        "beth.beth-light-val.fact-00054",
+        "beth.beth-light-val.fact-00055",
+        "beth.beth-light-val.fact-00056",
+        "beth.beth-light-val.fact-00057",
+        "beth.beth-light-val.fact-00058",
+        "beth.beth-light-val.fact-00059",
+        "beth.beth-light-val.fact-00060",
+        "beth.beth-light-val.fact-00061",
+        "beth.beth-light-val.fact-00062",
+        "beth.beth-light-val.fact-00063",
+        "beth.beth-light-val.fact-00064",
+        "beth.beth-light-val.fact-00065",
+        "beth.beth-light-val.fact-00066",
+        "beth.beth-light-val.fact-00067",
+        "beth.beth-light-val.fact-00068",
+        "beth.beth-light-val.fact-00069",
+        "beth.beth-light-val.fact-00070",
+        "beth.beth-light-val.fact-00071",
+        "beth.beth-light-val.fact-00072",
+        "beth.beth-light-val.fact-00073",
+        "beth.beth-light-val.fact-00074",
+        "beth.beth-light-val.fact-00075",
+        "beth.beth-light-val.fact-00076",
+        "beth.beth-light-val.fact-00077",
+        "beth.beth-light-val.fact-00078",
+        "beth.beth-light-val.fact-00079",
+        "beth.beth-light-val.fact-00080",
+        "beth.beth-light-val.fact-00081",
+        "beth.beth-light-val.fact-00082",
+        "beth.beth-light-val.fact-00083",
+        "beth.beth-light-val.fact-00084",
+        "beth.beth-light-val.fact-00085",
+        "beth.beth-light-val.fact-00086",
+        "beth.beth-light-val.fact-00087",
+        "beth.beth-light-val.fact-00088",
+        "beth.beth-light-val.fact-00089",
+        "beth.beth-light-val.fact-00090",
+        "beth.beth-light-val.fact-00091",
+        "beth.beth-light-val.fact-00092",
+        "beth.beth-light-val.fact-00093",
+        "beth.beth-light-val.fact-00094",
+        "beth.beth-light-val.fact-00095",
+        "beth.beth-light-val.fact-00096",
+        "beth.beth-light-val.fact-00097",
+        "beth.beth-light-val.fact-00098",
+        "beth.beth-light-val.fact-00099",
+        "beth.beth-light-val.fact-00100",
+        "beth.beth-light-val.fact-00101",
+        "beth.beth-light-val.fact-00102",
+        "beth.beth-light-val.fact-00103",
+        "beth.beth-light-val.fact-00104",
+        "beth.beth-light-val.fact-00106",
+        "beth.beth-light-val.fact-00107",
+        "beth.beth-light-val.fact-00108"
+      ]
+    },
+    {
+      "mutation_id": "mutation.light-flagged-above-range",
+      "mutation_kind": "local-id",
+      "target_artifact_id": "inputs/mutations/FlaggedEsp-AboveLightMaximum.esp",
+      "changed_fact_ids": [
+        "beth.beth-light-val.fact-00011",
+        "beth.beth-light-val.fact-00012",
+        "beth.beth-light-val.fact-00013",
+        "beth.beth-light-val.fact-00014",
+        "beth.beth-light-val.fact-00015",
+        "beth.beth-light-val.fact-00016",
+        "beth.beth-light-val.fact-00017",
+        "beth.beth-light-val.fact-00018",
+        "beth.beth-light-val.fact-00106"
+      ],
+      "unchanged_fact_ids": [
+        "beth.beth-light-val.fact-00001",
+        "beth.beth-light-val.fact-00002",
+        "beth.beth-light-val.fact-00003",
+        "beth.beth-light-val.fact-00004",
+        "beth.beth-light-val.fact-00005",
+        "beth.beth-light-val.fact-00006",
+        "beth.beth-light-val.fact-00007",
+        "beth.beth-light-val.fact-00008",
+        "beth.beth-light-val.fact-00009",
+        "beth.beth-light-val.fact-00010",
+        "beth.beth-light-val.fact-00019",
+        "beth.beth-light-val.fact-00020",
+        "beth.beth-light-val.fact-00021",
+        "beth.beth-light-val.fact-00022",
+        "beth.beth-light-val.fact-00023",
+        "beth.beth-light-val.fact-00024",
+        "beth.beth-light-val.fact-00025",
+        "beth.beth-light-val.fact-00026",
+        "beth.beth-light-val.fact-00027",
+        "beth.beth-light-val.fact-00028",
+        "beth.beth-light-val.fact-00029",
+        "beth.beth-light-val.fact-00030",
+        "beth.beth-light-val.fact-00031",
+        "beth.beth-light-val.fact-00032",
+        "beth.beth-light-val.fact-00033",
+        "beth.beth-light-val.fact-00034",
+        "beth.beth-light-val.fact-00035",
+        "beth.beth-light-val.fact-00036",
+        "beth.beth-light-val.fact-00037",
+        "beth.beth-light-val.fact-00038",
+        "beth.beth-light-val.fact-00039",
+        "beth.beth-light-val.fact-00040",
+        "beth.beth-light-val.fact-00041",
+        "beth.beth-light-val.fact-00042",
+        "beth.beth-light-val.fact-00043",
+        "beth.beth-light-val.fact-00044",
+        "beth.beth-light-val.fact-00045",
+        "beth.beth-light-val.fact-00046",
+        "beth.beth-light-val.fact-00047",
+        "beth.beth-light-val.fact-00048",
+        "beth.beth-light-val.fact-00049",
+        "beth.beth-light-val.fact-00050",
+        "beth.beth-light-val.fact-00051",
+        "beth.beth-light-val.fact-00052",
+        "beth.beth-light-val.fact-00053",
+        "beth.beth-light-val.fact-00054",
+        "beth.beth-light-val.fact-00055",
+        "beth.beth-light-val.fact-00056",
+        "beth.beth-light-val.fact-00057",
+        "beth.beth-light-val.fact-00058",
+        "beth.beth-light-val.fact-00059",
+        "beth.beth-light-val.fact-00060",
+        "beth.beth-light-val.fact-00061",
+        "beth.beth-light-val.fact-00062",
+        "beth.beth-light-val.fact-00063",
+        "beth.beth-light-val.fact-00064",
+        "beth.beth-light-val.fact-00065",
+        "beth.beth-light-val.fact-00066",
+        "beth.beth-light-val.fact-00067",
+        "beth.beth-light-val.fact-00068",
+        "beth.beth-light-val.fact-00069",
+        "beth.beth-light-val.fact-00070",
+        "beth.beth-light-val.fact-00071",
+        "beth.beth-light-val.fact-00072",
+        "beth.beth-light-val.fact-00073",
+        "beth.beth-light-val.fact-00074",
+        "beth.beth-light-val.fact-00075",
+        "beth.beth-light-val.fact-00076",
+        "beth.beth-light-val.fact-00077",
+        "beth.beth-light-val.fact-00078",
+        "beth.beth-light-val.fact-00079",
+        "beth.beth-light-val.fact-00080",
+        "beth.beth-light-val.fact-00081",
+        "beth.beth-light-val.fact-00082",
+        "beth.beth-light-val.fact-00083",
+        "beth.beth-light-val.fact-00084",
+        "beth.beth-light-val.fact-00085",
+        "beth.beth-light-val.fact-00086",
+        "beth.beth-light-val.fact-00087",
+        "beth.beth-light-val.fact-00088",
+        "beth.beth-light-val.fact-00089",
+        "beth.beth-light-val.fact-00090",
+        "beth.beth-light-val.fact-00091",
+        "beth.beth-light-val.fact-00092",
+        "beth.beth-light-val.fact-00093",
+        "beth.beth-light-val.fact-00094",
+        "beth.beth-light-val.fact-00095",
+        "beth.beth-light-val.fact-00096",
+        "beth.beth-light-val.fact-00097",
+        "beth.beth-light-val.fact-00098",
+        "beth.beth-light-val.fact-00099",
+        "beth.beth-light-val.fact-00100",
+        "beth.beth-light-val.fact-00101",
+        "beth.beth-light-val.fact-00102",
+        "beth.beth-light-val.fact-00103",
+        "beth.beth-light-val.fact-00104",
+        "beth.beth-light-val.fact-00105",
+        "beth.beth-light-val.fact-00107",
+        "beth.beth-light-val.fact-00108"
+      ]
+    },
+    {
+      "mutation_id": "mutation.light-extension-header-mismatch",
+      "mutation_kind": "one-byte",
+      "target_artifact_id": "inputs/mutations/Native-HeaderFlagRemoved.esl",
+      "changed_fact_ids": [
+        "beth.beth-light-val.fact-00043",
+        "beth.beth-light-val.fact-00044",
+        "beth.beth-light-val.fact-00045",
+        "beth.beth-light-val.fact-00046",
+        "beth.beth-light-val.fact-00047",
+        "beth.beth-light-val.fact-00048",
+        "beth.beth-light-val.fact-00049",
+        "beth.beth-light-val.fact-00050",
+        "beth.beth-light-val.fact-00107"
+      ],
+      "unchanged_fact_ids": [
+        "beth.beth-light-val.fact-00001",
+        "beth.beth-light-val.fact-00002",
+        "beth.beth-light-val.fact-00003",
+        "beth.beth-light-val.fact-00004",
+        "beth.beth-light-val.fact-00005",
+        "beth.beth-light-val.fact-00006",
+        "beth.beth-light-val.fact-00007",
+        "beth.beth-light-val.fact-00008",
+        "beth.beth-light-val.fact-00009",
+        "beth.beth-light-val.fact-00010",
+        "beth.beth-light-val.fact-00011",
+        "beth.beth-light-val.fact-00012",
+        "beth.beth-light-val.fact-00013",
+        "beth.beth-light-val.fact-00014",
+        "beth.beth-light-val.fact-00015",
+        "beth.beth-light-val.fact-00016",
+        "beth.beth-light-val.fact-00017",
+        "beth.beth-light-val.fact-00018",
+        "beth.beth-light-val.fact-00019",
+        "beth.beth-light-val.fact-00020",
+        "beth.beth-light-val.fact-00021",
+        "beth.beth-light-val.fact-00022",
+        "beth.beth-light-val.fact-00023",
+        "beth.beth-light-val.fact-00024",
+        "beth.beth-light-val.fact-00025",
+        "beth.beth-light-val.fact-00026",
+        "beth.beth-light-val.fact-00027",
+        "beth.beth-light-val.fact-00028",
+        "beth.beth-light-val.fact-00029",
+        "beth.beth-light-val.fact-00030",
+        "beth.beth-light-val.fact-00031",
+        "beth.beth-light-val.fact-00032",
+        "beth.beth-light-val.fact-00033",
+        "beth.beth-light-val.fact-00034",
+        "beth.beth-light-val.fact-00035",
+        "beth.beth-light-val.fact-00036",
+        "beth.beth-light-val.fact-00037",
+        "beth.beth-light-val.fact-00038",
+        "beth.beth-light-val.fact-00039",
+        "beth.beth-light-val.fact-00040",
+        "beth.beth-light-val.fact-00041",
+        "beth.beth-light-val.fact-00042",
+        "beth.beth-light-val.fact-00051",
+        "beth.beth-light-val.fact-00052",
+        "beth.beth-light-val.fact-00053",
+        "beth.beth-light-val.fact-00054",
+        "beth.beth-light-val.fact-00055",
+        "beth.beth-light-val.fact-00056",
+        "beth.beth-light-val.fact-00057",
+        "beth.beth-light-val.fact-00058",
+        "beth.beth-light-val.fact-00059",
+        "beth.beth-light-val.fact-00060",
+        "beth.beth-light-val.fact-00061",
+        "beth.beth-light-val.fact-00062",
+        "beth.beth-light-val.fact-00063",
+        "beth.beth-light-val.fact-00064",
+        "beth.beth-light-val.fact-00065",
+        "beth.beth-light-val.fact-00066",
+        "beth.beth-light-val.fact-00067",
+        "beth.beth-light-val.fact-00068",
+        "beth.beth-light-val.fact-00069",
+        "beth.beth-light-val.fact-00070",
+        "beth.beth-light-val.fact-00071",
+        "beth.beth-light-val.fact-00072",
+        "beth.beth-light-val.fact-00073",
+        "beth.beth-light-val.fact-00074",
+        "beth.beth-light-val.fact-00075",
+        "beth.beth-light-val.fact-00076",
+        "beth.beth-light-val.fact-00077",
+        "beth.beth-light-val.fact-00078",
+        "beth.beth-light-val.fact-00079",
+        "beth.beth-light-val.fact-00080",
+        "beth.beth-light-val.fact-00081",
+        "beth.beth-light-val.fact-00082",
+        "beth.beth-light-val.fact-00083",
+        "beth.beth-light-val.fact-00084",
+        "beth.beth-light-val.fact-00085",
+        "beth.beth-light-val.fact-00086",
+        "beth.beth-light-val.fact-00087",
+        "beth.beth-light-val.fact-00088",
+        "beth.beth-light-val.fact-00089",
+        "beth.beth-light-val.fact-00090",
+        "beth.beth-light-val.fact-00091",
+        "beth.beth-light-val.fact-00092",
+        "beth.beth-light-val.fact-00093",
+        "beth.beth-light-val.fact-00094",
+        "beth.beth-light-val.fact-00095",
+        "beth.beth-light-val.fact-00096",
+        "beth.beth-light-val.fact-00097",
+        "beth.beth-light-val.fact-00098",
+        "beth.beth-light-val.fact-00099",
+        "beth.beth-light-val.fact-00100",
+        "beth.beth-light-val.fact-00101",
+        "beth.beth-light-val.fact-00102",
+        "beth.beth-light-val.fact-00103",
+        "beth.beth-light-val.fact-00104",
+        "beth.beth-light-val.fact-00105",
+        "beth.beth-light-val.fact-00106",
+        "beth.beth-light-val.fact-00108"
+      ]
+    },
+    {
+      "mutation_id": "mutation.light-reference-out-of-range",
+      "mutation_kind": "local-id",
+      "target_artifact_id": "inputs/mutations/Consumer-LightReferenceOutOfRange.esp",
+      "changed_fact_ids": [
+        "beth.beth-light-val.fact-00001",
+        "beth.beth-light-val.fact-00002",
+        "beth.beth-light-val.fact-00003",
+        "beth.beth-light-val.fact-00004",
+        "beth.beth-light-val.fact-00005",
+        "beth.beth-light-val.fact-00006",
+        "beth.beth-light-val.fact-00007",
+        "beth.beth-light-val.fact-00008",
+        "beth.beth-light-val.fact-00009",
+        "beth.beth-light-val.fact-00010",
+        "beth.beth-light-val.fact-00098",
+        "beth.beth-light-val.fact-00108"
+      ],
+      "unchanged_fact_ids": [
+        "beth.beth-light-val.fact-00011",
+        "beth.beth-light-val.fact-00012",
+        "beth.beth-light-val.fact-00013",
+        "beth.beth-light-val.fact-00014",
+        "beth.beth-light-val.fact-00015",
+        "beth.beth-light-val.fact-00016",
+        "beth.beth-light-val.fact-00017",
+        "beth.beth-light-val.fact-00018",
+        "beth.beth-light-val.fact-00019",
+        "beth.beth-light-val.fact-00020",
+        "beth.beth-light-val.fact-00021",
+        "beth.beth-light-val.fact-00022",
+        "beth.beth-light-val.fact-00023",
+        "beth.beth-light-val.fact-00024",
+        "beth.beth-light-val.fact-00025",
+        "beth.beth-light-val.fact-00026",
+        "beth.beth-light-val.fact-00027",
+        "beth.beth-light-val.fact-00028",
+        "beth.beth-light-val.fact-00029",
+        "beth.beth-light-val.fact-00030",
+        "beth.beth-light-val.fact-00031",
+        "beth.beth-light-val.fact-00032",
+        "beth.beth-light-val.fact-00033",
+        "beth.beth-light-val.fact-00034",
+        "beth.beth-light-val.fact-00035",
+        "beth.beth-light-val.fact-00036",
+        "beth.beth-light-val.fact-00037",
+        "beth.beth-light-val.fact-00038",
+        "beth.beth-light-val.fact-00039",
+        "beth.beth-light-val.fact-00040",
+        "beth.beth-light-val.fact-00041",
+        "beth.beth-light-val.fact-00042",
+        "beth.beth-light-val.fact-00043",
+        "beth.beth-light-val.fact-00044",
+        "beth.beth-light-val.fact-00045",
+        "beth.beth-light-val.fact-00046",
+        "beth.beth-light-val.fact-00047",
+        "beth.beth-light-val.fact-00048",
+        "beth.beth-light-val.fact-00049",
+        "beth.beth-light-val.fact-00050",
+        "beth.beth-light-val.fact-00051",
+        "beth.beth-light-val.fact-00052",
+        "beth.beth-light-val.fact-00053",
+        "beth.beth-light-val.fact-00054",
+        "beth.beth-light-val.fact-00055",
+        "beth.beth-light-val.fact-00056",
+        "beth.beth-light-val.fact-00057",
+        "beth.beth-light-val.fact-00058",
+        "beth.beth-light-val.fact-00059",
+        "beth.beth-light-val.fact-00060",
+        "beth.beth-light-val.fact-00061",
+        "beth.beth-light-val.fact-00062",
+        "beth.beth-light-val.fact-00063",
+        "beth.beth-light-val.fact-00064",
+        "beth.beth-light-val.fact-00065",
+        "beth.beth-light-val.fact-00066",
+        "beth.beth-light-val.fact-00067",
+        "beth.beth-light-val.fact-00068",
+        "beth.beth-light-val.fact-00069",
+        "beth.beth-light-val.fact-00070",
+        "beth.beth-light-val.fact-00071",
+        "beth.beth-light-val.fact-00072",
+        "beth.beth-light-val.fact-00073",
+        "beth.beth-light-val.fact-00074",
+        "beth.beth-light-val.fact-00075",
+        "beth.beth-light-val.fact-00076",
+        "beth.beth-light-val.fact-00077",
+        "beth.beth-light-val.fact-00078",
+        "beth.beth-light-val.fact-00079",
+        "beth.beth-light-val.fact-00080",
+        "beth.beth-light-val.fact-00081",
+        "beth.beth-light-val.fact-00082",
+        "beth.beth-light-val.fact-00083",
+        "beth.beth-light-val.fact-00084",
+        "beth.beth-light-val.fact-00085",
+        "beth.beth-light-val.fact-00086",
+        "beth.beth-light-val.fact-00087",
+        "beth.beth-light-val.fact-00088",
+        "beth.beth-light-val.fact-00089",
+        "beth.beth-light-val.fact-00090",
+        "beth.beth-light-val.fact-00091",
+        "beth.beth-light-val.fact-00092",
+        "beth.beth-light-val.fact-00093",
+        "beth.beth-light-val.fact-00094",
+        "beth.beth-light-val.fact-00095",
+        "beth.beth-light-val.fact-00096",
+        "beth.beth-light-val.fact-00097",
+        "beth.beth-light-val.fact-00099",
+        "beth.beth-light-val.fact-00100",
+        "beth.beth-light-val.fact-00101",
+        "beth.beth-light-val.fact-00102",
+        "beth.beth-light-val.fact-00103",
+        "beth.beth-light-val.fact-00104",
+        "beth.beth-light-val.fact-00105",
+        "beth.beth-light-val.fact-00106",
+        "beth.beth-light-val.fact-00107"
+      ]
+    }
+  ],
+  "limits": {
+    "maximum_input_bytes": 67108864,
+    "maximum_records": 4096,
+    "maximum_subrecords_per_record": 4096,
+    "maximum_group_depth": 64,
+    "maximum_decompressed_bytes": 67108864
+  },
+  "review_state": "reviewed"
+}

@@ -1,0 +1,50 @@
+{
+  "fixture_id": "BETH-LIGHT-VAL",
+  "fixture_version": "1.0.0",
+  "expected_replay_state": "complete-clean",
+  "dependencies": [
+    {
+      "dependency_id": "bethesda-fixture-generator-v1",
+      "kind": "tracked-source",
+      "identity_or_version": "ab71a0485005d544c5792499c645a7975641f55d8dd3c4fced7c04b0fd2cd5f1",
+      "sha256": "ab71a0485005d544c5792499c645a7975641f55d8dd3c4fced7c04b0fd2cd5f1",
+      "byte_length": 63453,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Retained bytes remain auditable, but deterministic clean reconstruction is lost."
+    },
+    {
+      "dependency_id": "bethesda-fixture-generator-project-v1",
+      "kind": "tracked-project",
+      "identity_or_version": "f360a93248ae4a6a92176c50f85eba13e630c3f64af23ad970b395cb0028b04e",
+      "sha256": "f360a93248ae4a6a92176c50f85eba13e630c3f64af23ad970b395cb0028b04e",
+      "byte_length": 308,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Retained bytes remain auditable, but the exact generator project contract required for deterministic reconstruction is lost."
+    },
+    {
+      "dependency_id": "dotnet-sdk-10.0.302",
+      "kind": "toolchain",
+      "identity_or_version": "10.0.302",
+      "byte_length": null,
+      "retention_location_class": "external-authoritative-source",
+      "availability": "externally-reacquirable",
+      "required_for": [
+        "clean-recomputation"
+      ],
+      "permission_and_redistribution": "external-reacquisition-only",
+      "deletion_effect": "Retained bytes remain executable and auditable, but clean generator reconstruction requires SDK reacquisition."
+    }
+  ]
+}

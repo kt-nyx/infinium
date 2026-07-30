@@ -1,0 +1,1514 @@
+{
+  "method_id": "manual-annotated-hex-worksheet-v1",
+  "package_id": "BETH-LIGHT-VAL",
+  "files": [
+    {
+      "path": "mutations/Consumer-LightReferenceOutOfRange.esp",
+      "byte_length": 258,
+      "sha256": "866d41c756b546a95d8195bf28e67be944e61e5b2d07ac4c1077d09f63f02f70",
+      "record_count_before_failure": 2,
+      "malformed": null,
+      "rows": [
+        {
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "kind": "record-header",
+          "signature": "TES4",
+          "raw_hex": "54455334920000000000000000000000000000002C000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "HEDR",
+          "raw_hex": "484544520C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "kind": "subrecord-data",
+          "signature": "HEDR",
+          "raw_hex": "9A99D93F0100000000080000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "CNAM",
+          "raw_hex": "434E414D2C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "kind": "subrecord-data",
+          "signature": "CNAM",
+          "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "SNAM",
+          "raw_hex": "534E414D2600"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 38,
+          "kind": "subrecord-data",
+          "signature": "SNAM",
+          "raw_hex": "436F6E73756D65722D4C696768745265666572656E63654F75744F6652616E67652E65737000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 136,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "MAST",
+          "raw_hex": "4D4153540E00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 142,
+          "length": 14,
+          "kind": "subrecord-data",
+          "signature": "MAST",
+          "raw_hex": "30312D4E61746976652E65736C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 156,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "DATA",
+          "raw_hex": "444154410800"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 162,
+          "length": 8,
+          "kind": "subrecord-data",
+          "signature": "DATA",
+          "raw_hex": "0000000000000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 170,
+          "length": 24,
+          "kind": "group-header",
+          "signature": "GRUP",
+          "raw_hex": "475255505800000052454652000000000000000000000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 194,
+          "length": 24,
+          "kind": "record-header",
+          "signature": "REFR",
+          "raw_hex": "52454652280000000000000000080001000000002C000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 218,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "NAME",
+          "raw_hex": "4E414D450400"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 224,
+          "length": 4,
+          "kind": "subrecord-data",
+          "signature": "NAME",
+          "raw_hex": "00100000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 228,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "DATA",
+          "raw_hex": "444154411800"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 234,
+          "length": 24,
+          "kind": "subrecord-data",
+          "signature": "DATA",
+          "raw_hex": "000000000000000000000000000000000000000000000000"
+        }
+      ]
+    },
+    {
+      "path": "mutations/FlaggedEsp-AboveLightMaximum.esp",
+      "byte_length": 227,
+      "sha256": "3b517170f45521c8f7bed82347a077db939799d764c55860c39f59b6751d2140",
+      "record_count_before_failure": 2,
+      "malformed": null,
+      "rows": [
+        {
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "kind": "record-header",
+          "signature": "TES4",
+          "raw_hex": "544553348A0000000002000000000000000000002C000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "HEDR",
+          "raw_hex": "484544520C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "kind": "subrecord-data",
+          "signature": "HEDR",
+          "raw_hex": "9A99D93F0100000000080000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "CNAM",
+          "raw_hex": "434E414D2C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "kind": "subrecord-data",
+          "signature": "CNAM",
+          "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "SNAM",
+          "raw_hex": "534E414D2100"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 33,
+          "kind": "subrecord-data",
+          "signature": "SNAM",
+          "raw_hex": "466C61676765644573702D41626F76654C696768744D6178696D756D2E65737000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 131,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "MAST",
+          "raw_hex": "4D4153540B00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 137,
+          "length": 11,
+          "kind": "subrecord-data",
+          "signature": "MAST",
+          "raw_hex": "30302D5061642E65736D00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 148,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "DATA",
+          "raw_hex": "444154410800"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 154,
+          "length": 8,
+          "kind": "subrecord-data",
+          "signature": "DATA",
+          "raw_hex": "0000000000000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 162,
+          "length": 24,
+          "kind": "group-header",
+          "signature": "GRUP",
+          "raw_hex": "475255504100000053544154000000000000000000000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 186,
+          "length": 24,
+          "kind": "record-header",
+          "signature": "STAT",
+          "raw_hex": "53544154110000000000000000100001000000002C000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 210,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "EDID",
+          "raw_hex": "454449440B00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 216,
+          "length": 11,
+          "kind": "subrecord-data",
+          "signature": "EDID",
+          "raw_hex": "41626F766552616E676500"
+        }
+      ]
+    },
+    {
+      "path": "mutations/FlaggedEsp-BelowObjectRange.esp",
+      "byte_length": 226,
+      "sha256": "e67567fd8b8789314817db69585e2caf55bfbca0341e1943defbadc313027070",
+      "record_count_before_failure": 2,
+      "malformed": null,
+      "rows": [
+        {
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "kind": "record-header",
+          "signature": "TES4",
+          "raw_hex": "54455334890000000002000000000000000000002C000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "HEDR",
+          "raw_hex": "484544520C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "kind": "subrecord-data",
+          "signature": "HEDR",
+          "raw_hex": "9A99D93F0100000000080000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "CNAM",
+          "raw_hex": "434E414D2C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "kind": "subrecord-data",
+          "signature": "CNAM",
+          "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "SNAM",
+          "raw_hex": "534E414D2000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 32,
+          "kind": "subrecord-data",
+          "signature": "SNAM",
+          "raw_hex": "466C61676765644573702D42656C6F774F626A65637452616E67652E65737000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 130,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "MAST",
+          "raw_hex": "4D4153540B00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 136,
+          "length": 11,
+          "kind": "subrecord-data",
+          "signature": "MAST",
+          "raw_hex": "30302D5061642E65736D00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 147,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "DATA",
+          "raw_hex": "444154410800"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 153,
+          "length": 8,
+          "kind": "subrecord-data",
+          "signature": "DATA",
+          "raw_hex": "0000000000000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 161,
+          "length": 24,
+          "kind": "group-header",
+          "signature": "GRUP",
+          "raw_hex": "475255504100000053544154000000000000000000000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 185,
+          "length": 24,
+          "kind": "record-header",
+          "signature": "STAT",
+          "raw_hex": "535441541100000000000000FF070001000000002C000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 209,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "EDID",
+          "raw_hex": "454449440B00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 215,
+          "length": 11,
+          "kind": "subrecord-data",
+          "signature": "EDID",
+          "raw_hex": "42656C6F7752616E676500"
+        }
+      ]
+    },
+    {
+      "path": "mutations/Native-AboveLightMaximum.esl",
+      "byte_length": 223,
+      "sha256": "fe8e35888609636451e8462e9bc7cc2659433c84620f9c25abafc1fa2dc79394",
+      "record_count_before_failure": 2,
+      "malformed": null,
+      "rows": [
+        {
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "kind": "record-header",
+          "signature": "TES4",
+          "raw_hex": "54455334860000000002000000000000000000002C000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "HEDR",
+          "raw_hex": "484544520C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "kind": "subrecord-data",
+          "signature": "HEDR",
+          "raw_hex": "9A99D93F0100000000080000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "CNAM",
+          "raw_hex": "434E414D2C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "kind": "subrecord-data",
+          "signature": "CNAM",
+          "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "SNAM",
+          "raw_hex": "534E414D1D00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 29,
+          "kind": "subrecord-data",
+          "signature": "SNAM",
+          "raw_hex": "4E61746976652D41626F76654C696768744D6178696D756D2E65736C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 127,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "MAST",
+          "raw_hex": "4D4153540B00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 133,
+          "length": 11,
+          "kind": "subrecord-data",
+          "signature": "MAST",
+          "raw_hex": "30302D5061642E65736D00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 144,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "DATA",
+          "raw_hex": "444154410800"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 150,
+          "length": 8,
+          "kind": "subrecord-data",
+          "signature": "DATA",
+          "raw_hex": "0000000000000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 158,
+          "length": 24,
+          "kind": "group-header",
+          "signature": "GRUP",
+          "raw_hex": "475255504100000053544154000000000000000000000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 182,
+          "length": 24,
+          "kind": "record-header",
+          "signature": "STAT",
+          "raw_hex": "53544154110000000000000000100001000000002C000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 206,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "EDID",
+          "raw_hex": "454449440B00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 212,
+          "length": 11,
+          "kind": "subrecord-data",
+          "signature": "EDID",
+          "raw_hex": "41626F766552616E676500"
+        }
+      ]
+    },
+    {
+      "path": "mutations/Native-BelowObjectRange.esl",
+      "byte_length": 222,
+      "sha256": "06cc4e3b1021c0213229669ea57444a4e0db438f74e17228233b1fb67dedfca0",
+      "record_count_before_failure": 2,
+      "malformed": null,
+      "rows": [
+        {
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "kind": "record-header",
+          "signature": "TES4",
+          "raw_hex": "54455334850000000002000000000000000000002C000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "HEDR",
+          "raw_hex": "484544520C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "kind": "subrecord-data",
+          "signature": "HEDR",
+          "raw_hex": "9A99D93F0100000000080000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "CNAM",
+          "raw_hex": "434E414D2C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "kind": "subrecord-data",
+          "signature": "CNAM",
+          "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "SNAM",
+          "raw_hex": "534E414D1C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 28,
+          "kind": "subrecord-data",
+          "signature": "SNAM",
+          "raw_hex": "4E61746976652D42656C6F774F626A65637452616E67652E65736C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 126,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "MAST",
+          "raw_hex": "4D4153540B00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 132,
+          "length": 11,
+          "kind": "subrecord-data",
+          "signature": "MAST",
+          "raw_hex": "30302D5061642E65736D00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 143,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "DATA",
+          "raw_hex": "444154410800"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 149,
+          "length": 8,
+          "kind": "subrecord-data",
+          "signature": "DATA",
+          "raw_hex": "0000000000000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 157,
+          "length": 24,
+          "kind": "group-header",
+          "signature": "GRUP",
+          "raw_hex": "475255504100000053544154000000000000000000000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 181,
+          "length": 24,
+          "kind": "record-header",
+          "signature": "STAT",
+          "raw_hex": "535441541100000000000000FF070001000000002C000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 205,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "EDID",
+          "raw_hex": "454449440B00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 211,
+          "length": 11,
+          "kind": "subrecord-data",
+          "signature": "EDID",
+          "raw_hex": "42656C6F7752616E676500"
+        }
+      ]
+    },
+    {
+      "path": "mutations/Native-HeaderFlagRemoved.esl",
+      "byte_length": 236,
+      "sha256": "687d6d7fd35b8c7ffbe4f28dc178fe0fcb36c4a54777bcccb93611a165227182",
+      "record_count_before_failure": 2,
+      "malformed": null,
+      "rows": [
+        {
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "kind": "record-header",
+          "signature": "TES4",
+          "raw_hex": "54455334860000000000000000000000000000002C000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "HEDR",
+          "raw_hex": "484544520C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "kind": "subrecord-data",
+          "signature": "HEDR",
+          "raw_hex": "9A99D93F0100000000080000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "CNAM",
+          "raw_hex": "434E414D2C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "kind": "subrecord-data",
+          "signature": "CNAM",
+          "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "SNAM",
+          "raw_hex": "534E414D1D00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 29,
+          "kind": "subrecord-data",
+          "signature": "SNAM",
+          "raw_hex": "4E61746976652D486561646572466C616752656D6F7665642E65736C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 127,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "MAST",
+          "raw_hex": "4D4153540B00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 133,
+          "length": 11,
+          "kind": "subrecord-data",
+          "signature": "MAST",
+          "raw_hex": "30302D5061642E65736D00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 144,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "DATA",
+          "raw_hex": "444154410800"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 150,
+          "length": 8,
+          "kind": "subrecord-data",
+          "signature": "DATA",
+          "raw_hex": "0000000000000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 158,
+          "length": 24,
+          "kind": "group-header",
+          "signature": "GRUP",
+          "raw_hex": "475255504E00000053544154000000000000000000000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 182,
+          "length": 24,
+          "kind": "record-header",
+          "signature": "STAT",
+          "raw_hex": "535441541E0000000000000000080001000000002C000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 206,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "EDID",
+          "raw_hex": "454449441800"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 212,
+          "length": 24,
+          "kind": "subrecord-data",
+          "signature": "EDID",
+          "raw_hex": "457874656E73696F6E4865616465724D69736D6174636800"
+        }
+      ]
+    },
+    {
+      "path": "plugins/00-Pad.esm",
+      "byte_length": 109,
+      "sha256": "7ee03b2ef46c82525644553259b32260c0defc87b61ae986519acab32496fd89",
+      "record_count_before_failure": 1,
+      "malformed": null,
+      "rows": [
+        {
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "kind": "record-header",
+          "signature": "TES4",
+          "raw_hex": "54455334550000000000000000000000000000002C000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "HEDR",
+          "raw_hex": "484544520C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "kind": "subrecord-data",
+          "signature": "HEDR",
+          "raw_hex": "9A99D93F0000000000080000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "CNAM",
+          "raw_hex": "434E414D2C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "kind": "subrecord-data",
+          "signature": "CNAM",
+          "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "SNAM",
+          "raw_hex": "534E414D0B00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 11,
+          "kind": "subrecord-data",
+          "signature": "SNAM",
+          "raw_hex": "30302D5061642E65736D00"
+        }
+      ]
+    },
+    {
+      "path": "plugins/01-Native.esl",
+      "byte_length": 265,
+      "sha256": "8bd7537ada2bc83c61ef399b1145bb63c0ef68aef90cba49be0565053cf44b98",
+      "record_count_before_failure": 3,
+      "malformed": null,
+      "rows": [
+        {
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "kind": "record-header",
+          "signature": "TES4",
+          "raw_hex": "54455334770000000002000000000000000000002C000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "HEDR",
+          "raw_hex": "484544520C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "kind": "subrecord-data",
+          "signature": "HEDR",
+          "raw_hex": "9A99D93F0200000000080000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "CNAM",
+          "raw_hex": "434E414D2C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "kind": "subrecord-data",
+          "signature": "CNAM",
+          "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "SNAM",
+          "raw_hex": "534E414D0E00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 14,
+          "kind": "subrecord-data",
+          "signature": "SNAM",
+          "raw_hex": "30312D4E61746976652E65736C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 112,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "MAST",
+          "raw_hex": "4D4153540B00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 118,
+          "length": 11,
+          "kind": "subrecord-data",
+          "signature": "MAST",
+          "raw_hex": "30302D5061642E65736D00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 129,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "DATA",
+          "raw_hex": "444154410800"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 135,
+          "length": 8,
+          "kind": "subrecord-data",
+          "signature": "DATA",
+          "raw_hex": "0000000000000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 143,
+          "length": 24,
+          "kind": "group-header",
+          "signature": "GRUP",
+          "raw_hex": "475255507A00000053544154000000000000000000000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 167,
+          "length": 24,
+          "kind": "record-header",
+          "signature": "STAT",
+          "raw_hex": "53544154190000000000000000080001000000002C000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 191,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "EDID",
+          "raw_hex": "454449441300"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 197,
+          "length": 19,
+          "kind": "subrecord-data",
+          "signature": "EDID",
+          "raw_hex": "4E61746976654C696768744D696E696D756D00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 216,
+          "length": 24,
+          "kind": "record-header",
+          "signature": "STAT",
+          "raw_hex": "535441541900000000000000FF0F0001000000002C000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 240,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "EDID",
+          "raw_hex": "454449441300"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 246,
+          "length": 19,
+          "kind": "subrecord-data",
+          "signature": "EDID",
+          "raw_hex": "4E61746976654C696768744D6178696D756D00"
+        }
+      ]
+    },
+    {
+      "path": "plugins/02-Flagged.esp",
+      "byte_length": 268,
+      "sha256": "e60f667e43a62a8b24d8702cbcb9f6242017c84cf138bc74d2cb84e5ae649609",
+      "record_count_before_failure": 3,
+      "malformed": null,
+      "rows": [
+        {
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "kind": "record-header",
+          "signature": "TES4",
+          "raw_hex": "54455334780000000002000000000000000000002C000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "HEDR",
+          "raw_hex": "484544520C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "kind": "subrecord-data",
+          "signature": "HEDR",
+          "raw_hex": "9A99D93F0200000000080000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "CNAM",
+          "raw_hex": "434E414D2C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "kind": "subrecord-data",
+          "signature": "CNAM",
+          "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "SNAM",
+          "raw_hex": "534E414D0F00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 15,
+          "kind": "subrecord-data",
+          "signature": "SNAM",
+          "raw_hex": "30322D466C61676765642E65737000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 113,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "MAST",
+          "raw_hex": "4D4153540B00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 119,
+          "length": 11,
+          "kind": "subrecord-data",
+          "signature": "MAST",
+          "raw_hex": "30302D5061642E65736D00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 130,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "DATA",
+          "raw_hex": "444154410800"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 136,
+          "length": 8,
+          "kind": "subrecord-data",
+          "signature": "DATA",
+          "raw_hex": "0000000000000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 144,
+          "length": 24,
+          "kind": "group-header",
+          "signature": "GRUP",
+          "raw_hex": "475255507C00000053544154000000000000000000000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 168,
+          "length": 24,
+          "kind": "record-header",
+          "signature": "STAT",
+          "raw_hex": "535441541A0000000000000000080001000000002C000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 192,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "EDID",
+          "raw_hex": "454449441400"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 198,
+          "length": 20,
+          "kind": "subrecord-data",
+          "signature": "EDID",
+          "raw_hex": "466C61676765644C696768744D696E696D756D00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 218,
+          "length": 24,
+          "kind": "record-header",
+          "signature": "STAT",
+          "raw_hex": "535441541A00000000000000FF0F0001000000002C000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 242,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "EDID",
+          "raw_hex": "454449441400"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 248,
+          "length": 20,
+          "kind": "subrecord-data",
+          "signature": "EDID",
+          "raw_hex": "466C61676765644C696768744D6178696D756D00"
+        }
+      ]
+    },
+    {
+      "path": "plugins/03-Consumer.esp",
+      "byte_length": 335,
+      "sha256": "bd24624a01fe07e701fa858a38d5b20b1ecdf22c2842875826b0f83fd312d47e",
+      "record_count_before_failure": 3,
+      "malformed": null,
+      "rows": [
+        {
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "kind": "record-header",
+          "signature": "TES4",
+          "raw_hex": "544553349F0000000000000000000000000000002C000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "HEDR",
+          "raw_hex": "484544520C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "kind": "subrecord-data",
+          "signature": "HEDR",
+          "raw_hex": "9A99D93F0200000000080000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "CNAM",
+          "raw_hex": "434E414D2C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "kind": "subrecord-data",
+          "signature": "CNAM",
+          "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "SNAM",
+          "raw_hex": "534E414D1000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 16,
+          "kind": "subrecord-data",
+          "signature": "SNAM",
+          "raw_hex": "30332D436F6E73756D65722E65737000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 114,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "MAST",
+          "raw_hex": "4D4153540E00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 120,
+          "length": 14,
+          "kind": "subrecord-data",
+          "signature": "MAST",
+          "raw_hex": "30312D4E61746976652E65736C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 134,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "DATA",
+          "raw_hex": "444154410800"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 140,
+          "length": 8,
+          "kind": "subrecord-data",
+          "signature": "DATA",
+          "raw_hex": "0000000000000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 148,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "MAST",
+          "raw_hex": "4D4153540F00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 154,
+          "length": 15,
+          "kind": "subrecord-data",
+          "signature": "MAST",
+          "raw_hex": "30322D466C61676765642E65737000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 169,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "DATA",
+          "raw_hex": "444154410800"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 175,
+          "length": 8,
+          "kind": "subrecord-data",
+          "signature": "DATA",
+          "raw_hex": "0000000000000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 183,
+          "length": 24,
+          "kind": "group-header",
+          "signature": "GRUP",
+          "raw_hex": "475255509800000052454652000000000000000000000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 207,
+          "length": 24,
+          "kind": "record-header",
+          "signature": "REFR",
+          "raw_hex": "52454652280000000000000000080002000000002C000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 231,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "NAME",
+          "raw_hex": "4E414D450400"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 237,
+          "length": 4,
+          "kind": "subrecord-data",
+          "signature": "NAME",
+          "raw_hex": "00080000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 241,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "DATA",
+          "raw_hex": "444154411800"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 247,
+          "length": 24,
+          "kind": "subrecord-data",
+          "signature": "DATA",
+          "raw_hex": "000000000000000000000000000000000000000000000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 271,
+          "length": 24,
+          "kind": "record-header",
+          "signature": "REFR",
+          "raw_hex": "52454652280000000000000001080002000000002C000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 295,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "NAME",
+          "raw_hex": "4E414D450400"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 301,
+          "length": 4,
+          "kind": "subrecord-data",
+          "signature": "NAME",
+          "raw_hex": "FF0F0001"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 305,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "DATA",
+          "raw_hex": "444154411800"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 311,
+          "length": 24,
+          "kind": "subrecord-data",
+          "signature": "DATA",
+          "raw_hex": "0000803F0000803F0000803F000000000000000000000000"
+        }
+      ]
+    },
+    {
+      "path": "plugins/04-Winner.esp",
+      "byte_length": 227,
+      "sha256": "3b75c15391d47da2327107e61cce602003a757a12afba41382807760b8cbeeda",
+      "record_count_before_failure": 2,
+      "malformed": null,
+      "rows": [
+        {
+          "offset_space": "physical-file",
+          "offset": 0,
+          "length": 24,
+          "kind": "record-header",
+          "signature": "TES4",
+          "raw_hex": "544553347A0000000000000000000000000000002C000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 24,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "HEDR",
+          "raw_hex": "484544520C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 30,
+          "length": 12,
+          "kind": "subrecord-data",
+          "signature": "HEDR",
+          "raw_hex": "9A99D93F0100000000080000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 42,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "CNAM",
+          "raw_hex": "434E414D2C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 48,
+          "length": 44,
+          "kind": "subrecord-data",
+          "signature": "CNAM",
+          "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 92,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "SNAM",
+          "raw_hex": "534E414D0E00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 98,
+          "length": 14,
+          "kind": "subrecord-data",
+          "signature": "SNAM",
+          "raw_hex": "30342D57696E6E65722E65737000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 112,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "MAST",
+          "raw_hex": "4D4153540E00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 118,
+          "length": 14,
+          "kind": "subrecord-data",
+          "signature": "MAST",
+          "raw_hex": "30312D4E61746976652E65736C00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 132,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "DATA",
+          "raw_hex": "444154410800"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 138,
+          "length": 8,
+          "kind": "subrecord-data",
+          "signature": "DATA",
+          "raw_hex": "0000000000000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 146,
+          "length": 24,
+          "kind": "group-header",
+          "signature": "GRUP",
+          "raw_hex": "475255505100000053544154000000000000000000000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 170,
+          "length": 24,
+          "kind": "record-header",
+          "signature": "STAT",
+          "raw_hex": "53544154210000000000000000080000000000002C000000"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 194,
+          "length": 6,
+          "kind": "subrecord-header",
+          "signature": "EDID",
+          "raw_hex": "454449441B00"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 200,
+          "length": 27,
+          "kind": "subrecord-data",
+          "signature": "EDID",
+          "raw_hex": "4E61746976654C696768744D696E696D756D4F7665727269646500"
+        }
+      ]
+    }
+  ],
+  "supplemental_inputs": []
+}

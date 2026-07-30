@@ -1,0 +1,3542 @@
+{
+  "fixture_id": "BETH-REFR-DEV",
+  "fixture_version": "1.0.0",
+  "oracle_version": "1.0.0",
+  "independent_authors_and_reviewers": [
+    "oracle-reviewer",
+    "taxonomy-reviewer"
+  ],
+  "ground_truth_methods": [
+    {
+      "method_id": "manual-annotated-hex-worksheet-v1",
+      "method": "Manual annotated hexadecimal offset worksheet over frozen bytes.",
+      "evidence_references": [
+        {
+          "artifact_id": "oracle/manual-hex-worksheet.json",
+          "artifact_version": "1",
+          "fingerprint": "c190a5b4f933ecc589cc654631a31244359da4587f875b51604358d67117f0c5",
+          "availability": "retained"
+        }
+      ],
+      "independent_of_system_under_test": true
+    },
+    {
+      "method_id": "independent-bounded-raw-reader-v1",
+      "method": "Separately implemented bounded raw TES4 byte reader.",
+      "evidence_references": [
+        {
+          "artifact_id": "oracle/independent-reader-report.json",
+          "artifact_version": "1",
+          "fingerprint": "a46e01541e2fe59ddbddfc7c506cafdca72c6bab343a99c04e22fe02ca7ea354",
+          "availability": "retained"
+        },
+        {
+          "artifact_id": "oracle/independent-byte-facts.json",
+          "artifact_version": "1.0.0",
+          "fingerprint": "94d02c206325fa920ecbb30d342fd080f1f5fc88f5d188b8f7cd30cca8d956d3",
+          "availability": "retained"
+        }
+      ],
+      "independent_of_system_under_test": true
+    },
+    {
+      "method_id": "independent-taxonomy-projection-review-v1",
+      "method": "Independent taxonomy 0.1.0 review over frozen raw facts, with axis separation and forbidden-inference review.",
+      "evidence_references": [
+        {
+          "artifact_id": "oracle/taxonomy-projections.json",
+          "artifact_version": "1.0.0",
+          "fingerprint": "ceca3c10143e814c15c07dfb109f1ff94661d1c1f379fa99cb7595077db5e90f",
+          "availability": "retained"
+        }
+      ],
+      "independent_of_system_under_test": true
+    }
+  ],
+  "expected_observations": [
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00001",
+      "subject_id": "beth-refr-dev.file-000.identity",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "a453b99e1a712e54ecc8b894155d9409b2a8fe31c5f0e2efbbc73358863bd1f5"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00002",
+      "subject_id": "beth-refr-dev.file-000.masters",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "cd482fa1c0ad3c5abac531826e51d3fd511cd677925bb234c90a157ee155b977"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00003",
+      "subject_id": "beth-refr-dev.file-000.esl-flag",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "c08cf669d5f29de10cd367ee9c4935bffc05ee3691c2ec568de2460bba613aa0"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00004",
+      "subject_id": "beth-refr-dev.file-000.group-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "5a23242bd9d47c9c8bd80e25d99a1d16d7c24ce9db2b9ee64f9379d0a6424c93"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00005",
+      "subject_id": "beth-refr-dev.file-000.record-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "c554a8a847d8f43dea7fa69ff552be73fcaa2346ee483b24d2feb40a6e778343"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00006",
+      "subject_id": "beth-refr-dev.file-000.record-0000.sub-0003",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "859e79dba8649a3736fd40743337874f8da113342843d75eb32e25a362f83a7d"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00007",
+      "subject_id": "beth-refr-dev.file-000.record-0000.sub-0004",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "02cda634e74d23241894725178ad198651c1842a60a60d6270f7870c5f7a2c40"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00008",
+      "subject_id": "beth-refr-dev.file-000.record-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "77088658ae45d12675018852e2093f9c33ba8d6719fe8e968724202eca589cce"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00009",
+      "subject_id": "beth-refr-dev.file-000.record-0001.sub-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "526f34012161b11d549ec606eaef57eefeff862c94eb563f5c83078d6a120d3b"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00010",
+      "subject_id": "beth-refr-dev.file-000.record-0001.sub-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "dbabf7716d846ebf1a8e8a457955f411c925880c2198642317b81a4fd3f48884"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00011",
+      "subject_id": "beth-refr-dev.file-000.record-0001.sub-0002",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "ad53ed7d2b95dfdd7323d652ac04bef7393d5edd0e328608bdb2337d5732073e"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00012",
+      "subject_id": "beth-refr-dev.file-000.record-0001.sub-0003",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "3bd94a08fd37c261bc1582c7f400bf4102a2285438131a056653ccee4272af9b"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00013",
+      "subject_id": "beth-refr-dev.file-000.record-0001.sub-0004",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "59e1f982bd2e0c5a3f81b2a598b7affd9f261baca87209e931798a1b6776ad82"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00014",
+      "subject_id": "beth-refr-dev.file-000.record-0001.XLKR.order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "404b17c2ef59e9f89da6289b4e5059cac0099d690b46829d6c6de825bbedf346"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00015",
+      "subject_id": "beth-refr-dev.file-001.identity",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "1712996eaebdb4054e9cd6d2db2659eff9e6eff59aae8c1732188f12c3cc5454"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00016",
+      "subject_id": "beth-refr-dev.file-001.masters",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "6ce80e43edb2dc2797d5e53d84800278760ba8546051db6d5414fbd6ae8b9be2"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00017",
+      "subject_id": "beth-refr-dev.file-001.esl-flag",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "8335dca1f7b51709bb0b7820ad561d2d1415db3ab49bf6af3fa828e72d303cc8"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00019",
+      "subject_id": "beth-refr-dev.file-002.identity",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "6826d087bcda69640a412d16041ce32327ba0b8a857444478fe85c63f2ef0934"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00020",
+      "subject_id": "beth-refr-dev.file-002.masters",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "6e1d792017c9975576d36a29acf7dcf316ba79da94214fd73ed084e908c58b06"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00021",
+      "subject_id": "beth-refr-dev.file-002.esl-flag",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "5ebba7c272e5bb273ad75ec6beac73c072d3462008ecc81fd22526a6c466737e"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00023",
+      "subject_id": "beth-refr-dev.file-003.identity",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "ace77597f529b630139b2f33ad7b0e179123567beb5554f7a99d4639fbdcc6e3"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00024",
+      "subject_id": "beth-refr-dev.file-003.masters",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "2df0e1f3ee177d30324b7c3fed4b41e60840bd59eaf833d28a1417d96b08f4fc"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00025",
+      "subject_id": "beth-refr-dev.file-003.esl-flag",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "f8877ecff8edf98d3360bfa44f704e329368c187c0177c28fabc5510e04cf65c"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00027",
+      "subject_id": "beth-refr-dev.file-004.identity",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "09e8c8aa2bf9ae66850dd11bfef0305f87491089465cf87665c41448d62ef812"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00028",
+      "subject_id": "beth-refr-dev.file-004.masters",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "23936f093e999ae08b6bd79b753f9f3de037dd4b5169ab48e69028992fc66ecc"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00029",
+      "subject_id": "beth-refr-dev.file-004.esl-flag",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "2a01c05171495adcf38461e2e07752caa5eafcbd02c74354084d6d14618abe13"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00030",
+      "subject_id": "beth-refr-dev.file-004.group-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "bc9ce42256dd7233208d3791c8a56dac5e7f12714fc862971e22d322c1b8f9a3"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00031",
+      "subject_id": "beth-refr-dev.file-004.record-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "44d516eaa85abc7008c94c6aaf85781e69bfb1371a6e49e81e4f8178fcfb2dd3"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00032",
+      "subject_id": "beth-refr-dev.file-004.record-0000.sub-0003",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "ace491d984b22b10d2a8fa47247e5062d84f0592899f2d71d0a9368517ceb8ab"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00033",
+      "subject_id": "beth-refr-dev.file-004.record-0000.sub-0004",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "0ad3a2e772c465b4fb45d310bde04308461eedf9ff4353b47a1059bdeb8172e7"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00034",
+      "subject_id": "beth-refr-dev.file-004.record-0000.sub-0005",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "26aec7f50a349ef13b38c4ab49b5e834779344ac3e3d3e305c9e06b4780d84e8"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00035",
+      "subject_id": "beth-refr-dev.file-004.record-0000.sub-0006",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "96b304e33449a3bb23af3527fdf0e25eb5c6b6c050007ba71cf836a4eec17afd"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00036",
+      "subject_id": "beth-refr-dev.file-004.record-0000.MAST.order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "f66471b46f16ccdca4e76296cce28b98fd83ddf899dce04bd497117c1cc1b168"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00037",
+      "subject_id": "beth-refr-dev.file-004.record-0000.DATA.order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "bf697d3ebc34f4eacc9bf34bd264502e5ec5ee2e7fbbb3a9cf81a747885e28df"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00038",
+      "subject_id": "beth-refr-dev.file-004.record-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "92bc3e29014da5b1a7ae04c78804d4a51e59484e1b2366cd0a075c067403b10c"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00039",
+      "subject_id": "beth-refr-dev.file-004.record-0001.sub-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "46eb71b116ae68c45970579b70efcca97c24ef483a662d0014eb507d5896fc6f"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00040",
+      "subject_id": "beth-refr-dev.file-004.record-0001.sub-0002",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "0e2ce45db139304a57b2e516b419778f9cfb124d88f8c9e0eb169382bececee9"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00041",
+      "subject_id": "beth-refr-dev.file-004.record-0001.sub-0003",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "47f6238293caf03fabc4b523e515018a4a60a1062712040f6573d7c922b9046c"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00042",
+      "subject_id": "beth-refr-dev.file-004.record-0001.sub-0004",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "c501073399dfe33fa0602d1e1f27e4be8308653822fe78a3c0543d3436d728e3"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00043",
+      "subject_id": "beth-refr-dev.file-004.record-0001.sub-0005",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "81005944c58e51f88746a8549c29cc9f21ebaa9f0d80b8375ac187ac81194b28"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00044",
+      "subject_id": "beth-refr-dev.file-005.identity",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "1cf68f37debf989fd2ee194ee5d10382f0314ff122b7b1fecf2ba943d4df3cd3"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00045",
+      "subject_id": "beth-refr-dev.file-005.masters",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "aa46729a060118301e30c9c592b68a336a92255438cb7f99fd8315b2141db71e"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00046",
+      "subject_id": "beth-refr-dev.file-005.esl-flag",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "cc841928c7face271e25d9bec416d1bd02a50872e506fe9eb29a11697012de0d"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00047",
+      "subject_id": "beth-refr-dev.file-005.group-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "330f33e8b1eca4a5564cc01f290c155e8cab8f6fdb24666f48d2bf6efdad109c"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00048",
+      "subject_id": "beth-refr-dev.file-005.record-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "a800d2dda40c7d6ef1c5d6a887f358846b7ca4053a5d4fe1395d6e936ceced4a"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00049",
+      "subject_id": "beth-refr-dev.file-005.record-0000.sub-0003",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "3beb28519ea66b8a098b7fd1cd9693030ce6b662054f75c7e54da012589a7de2"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00050",
+      "subject_id": "beth-refr-dev.file-005.record-0000.sub-0004",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "0420b656e81c28a615a83058db00cf9c9ebed3563212e107c693589513f861d7"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00051",
+      "subject_id": "beth-refr-dev.file-005.record-0000.sub-0005",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "c305e50c0fee1e7772c0d7c8859c198f46da5bef1858a23d7a61d414b42a4d45"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00052",
+      "subject_id": "beth-refr-dev.file-005.record-0000.sub-0006",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "012faa6e6f09300fc3ae6987710918eb7af353aec9d1efe4482538954bbe9d8c"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00053",
+      "subject_id": "beth-refr-dev.file-005.record-0000.MAST.order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "32b04d83a88ef51fa5002068fcac4af58dcaa0b93f188c85f91313a06eaf0a1c"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00054",
+      "subject_id": "beth-refr-dev.file-005.record-0000.DATA.order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "82af127b43d6aadf5fdbc1375661981a23debadf5b5f00171149e6967f3893b5"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00055",
+      "subject_id": "beth-refr-dev.file-005.record-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "ae58118cb56e1733e5583632c3275bba22aa6151dbf63563786d7da68cc818e2"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00056",
+      "subject_id": "beth-refr-dev.file-005.record-0001.sub-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "527670f84677951cf6a38b01d93bc32cf66c54279a5743029c7e6dba1daafb84"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00057",
+      "subject_id": "beth-refr-dev.file-005.record-0001.sub-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "d5e0a247a4ff03e54181391982e4b34f61b9df38c74ecab2b6080722523f70b1"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00058",
+      "subject_id": "beth-refr-dev.file-005.record-0001.sub-0002",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "8f393ef1347b4509c30c0952eff263d4d9d74ad3fbf9ef4327772f0c14f6a2fa"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00059",
+      "subject_id": "beth-refr-dev.file-006.identity",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "19fd00436ba393172a37cc30b89602825b746d0748dca0d05fdbeade5e30e11a"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00060",
+      "subject_id": "beth-refr-dev.file-006.masters",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "a2a50ca09ceca2a18587492c32db951fb19da899128d81ea802817c1fa5b8230"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00061",
+      "subject_id": "beth-refr-dev.file-006.esl-flag",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "8c55c9c0bf39b118a01429a374570175f6fb71f51c89e01982da80336eaffeb6"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00062",
+      "subject_id": "beth-refr-dev.file-006.group-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "b816dca46c7496b7485f8b8c86667fbb40491e2464764b5481662732d59eb8c9"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00063",
+      "subject_id": "beth-refr-dev.file-006.record-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "c8dbe4d73be2cc85af9b006d307c92f58a7a6988b44bc5529b8f25751cbe2626"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00064",
+      "subject_id": "beth-refr-dev.file-006.record-0000.sub-0003",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "58348624de974f795d98518729960d981c82223ae3a0ecf6c9dc56f7e8c4b59a"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00065",
+      "subject_id": "beth-refr-dev.file-006.record-0000.sub-0004",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "ab4ac548af9d1fbc09cb32dd0f57fa4567485ee9c9e5024070b5077a3eb861a2"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00066",
+      "subject_id": "beth-refr-dev.file-006.record-0000.sub-0005",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "34ef730d6f5aa0e21b93d6bc79d9a06cb20baeb791a8ff95f9cd15f42a06f330"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00067",
+      "subject_id": "beth-refr-dev.file-006.record-0000.sub-0006",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "2ff60167a84a064ee49116ae6a77fac7f05886edaee02f4b6fb2834e89173037"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00068",
+      "subject_id": "beth-refr-dev.file-006.record-0000.MAST.order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "476e056b46ef4b2763b02e3a1b5cf37da0dbcef70f30ec7dc9c9e9d3bec8e4ab"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00069",
+      "subject_id": "beth-refr-dev.file-006.record-0000.DATA.order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "3fd54cadec1efd62da40e6453a5b8cdf9401c5b80e68d8accbb4c27da2186952"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00070",
+      "subject_id": "beth-refr-dev.file-006.record-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "88fde50861418adcd7034f3a219afa605c5298fb00a027beaab25a6406a2ec56"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00071",
+      "subject_id": "beth-refr-dev.file-006.record-0001.sub-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "1807ae55873a99afaa5f5029f8368bd186795aa051bd27a677c7bf3b38716b89"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00072",
+      "subject_id": "beth-refr-dev.file-006.record-0001.sub-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "c303d00df7f58554a5493e42af5923ab1064e8d1d33a1ec44abf6617df7695b0"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00073",
+      "subject_id": "beth-refr-dev.file-006.record-0001.sub-0002",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "667362d02a16c4b23df2c6393838d2f7f2bd354a16f056be7eb06acb575c6841"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00074",
+      "subject_id": "beth-refr-dev.file-007.identity",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "984a69d153bd859f45cb4fa0a37e3156f535d384ccb59a696ccec6046d5cad2c"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00075",
+      "subject_id": "beth-refr-dev.file-007.masters",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "7c78f10342d8d8d478a42000bacac7ce7cb12d8c1584e76e1ac3766b488450be"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00076",
+      "subject_id": "beth-refr-dev.file-007.esl-flag",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "d02ae675926bb2ac230751045f25fc049448ccdcccf968f6af5321f6ec22f604"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00077",
+      "subject_id": "beth-refr-dev.file-007.group-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "85a8b5002d7fa67287e609ac37dee7d03cc580cc7eabf69f78e1291abc216c21"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00078",
+      "subject_id": "beth-refr-dev.file-007.record-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "c6c3bf5f00180416204c818d12acbe0a6120f444c1c7c7ab8a15d8d3dafe6097"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00079",
+      "subject_id": "beth-refr-dev.file-007.record-0000.sub-0003",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "c72a99ba5f2fe1fe2123d6491c0ccddf60dbc9cbd3326b053089013ad35f1d8d"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00080",
+      "subject_id": "beth-refr-dev.file-007.record-0000.sub-0004",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "0b0c68b27cda5268afd0781a895de37ab5cf499df13084cdc04b0c5c7c3a0324"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00081",
+      "subject_id": "beth-refr-dev.file-007.record-0000.sub-0005",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "091f0c071b7e70a359c557740b669ae6d50490e51197ebf8859ce7e899b3246d"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00082",
+      "subject_id": "beth-refr-dev.file-007.record-0000.sub-0006",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "dd99e0f4ed3ff3023d60ee2a618c296c1e402d2bc4a02a31a66418ff9cc38b0c"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00083",
+      "subject_id": "beth-refr-dev.file-007.record-0000.MAST.order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "99bed34dccefe392d83e136e5d23edf2b2f5522d3e046c6a6c325eb55835573f"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00084",
+      "subject_id": "beth-refr-dev.file-007.record-0000.DATA.order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "e18d5a2c8bf07b4f29f7033e079a246dc37ef78ff3ba07de714c1fded0275832"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00085",
+      "subject_id": "beth-refr-dev.file-007.record-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "d7a5afaf7c0911805a43825ed984d2c3abc030a641ce7c90f1e6060d78f802c5"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00086",
+      "subject_id": "beth-refr-dev.file-007.record-0001.sub-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "c3655602a43121ba7c5dc240dabc72950606334023760e2d33710f5b3fcec8e9"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00087",
+      "subject_id": "beth-refr-dev.file-007.record-0001.sub-0002",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "cf2f4e34a9091aa87446f70983e04db9d2943bc492bad77c47f95826f13a8ed7"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00088",
+      "subject_id": "beth-refr-dev.file-007.record-0001.sub-0003",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "714e985198a955aab0b0921ead8942abafa1209d24d61fc31b9cbe7b34725fdd"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00089",
+      "subject_id": "beth-refr-dev.file-007.record-0001.sub-0004",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "0a45ad64b5997298e25b46792dc475da5496c09a4b519e300906ae4a0d6c4e95"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00090",
+      "subject_id": "beth-refr-dev.file-007.record-0001.sub-0005",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "a83e46fc8e306c713431e9f254d6fcedd46302bc887ff66369cd62afabf534c9"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00091",
+      "subject_id": "beth-refr-dev.file-008.identity",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "ec356ba7eb23f068f98ff082c3e9283c12f6ea21b9deb01901cffeb8222b2c07"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00092",
+      "subject_id": "beth-refr-dev.file-008.masters",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "a9bf2a91039ffed01e1a096d844ab97b8a43570d9d80efdedd0af58d4035c959"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00093",
+      "subject_id": "beth-refr-dev.file-008.esl-flag",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "adbf4141bd7284d7004edf40c751944c3d6ed629136432ba73eec66647d2ff26"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00094",
+      "subject_id": "beth-refr-dev.file-008.group-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "0afde5d257cdd28d4b1e00fa21e5d867f1bc72bda5d532c010e45d8a8241896d"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00095",
+      "subject_id": "beth-refr-dev.file-008.group-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "a7bbd236f15c8315c49f6261f0dd7bdc7efbd988814e32ae2f0772c74bf018de"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00096",
+      "subject_id": "beth-refr-dev.file-008.group-0002",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "bafffb30f2ab1f0f71cb3126b85e2f39b8befee88d51d7dd1b97f8e8bed2601e"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00097",
+      "subject_id": "beth-refr-dev.file-008.group-0003",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "26058dbf39e0956ba7acdfb06a0f7c7beb0929b25aad8982636d12db08be678b"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00098",
+      "subject_id": "beth-refr-dev.file-008.group-0004",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "b1c851016b7766b3ccb211139022b207e8cd8a02d01d8cd02851179e55629107"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00099",
+      "subject_id": "beth-refr-dev.file-008.record-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "cd958c36e18872289926f5e942b718b8229727da152d0c4596edf7ec337b2f4e"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00100",
+      "subject_id": "beth-refr-dev.file-008.record-0000.sub-0003",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "902a7e69cdd79acedadd476e1c35fd3da4d9c2dc899b18dc3c72b73578caec3a"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00101",
+      "subject_id": "beth-refr-dev.file-008.record-0000.sub-0004",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "2a6b6e9dad832a79056cefb8a0193535d077f320ee5a57d247998368719a47cc"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00102",
+      "subject_id": "beth-refr-dev.file-008.record-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "bdee1ae739bc8fb31d75b411f0d55b047a2698894229f8581ce88c8a060e41a0"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00103",
+      "subject_id": "beth-refr-dev.file-008.record-0001.sub-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "a94d8cd0900e6a53235754ae3ee9871cd7a630111bb64f89c697857ed7b8e67d"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00104",
+      "subject_id": "beth-refr-dev.file-008.record-0001.sub-0002",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "b78d3e1ab33e1f7f4bc5f32720d84d59e11db5cbae5c0d7112db08901194ae20"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00105",
+      "subject_id": "beth-refr-dev.file-008.record-0001.sub-0003",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "191a7d3df91f2cfe1c7456b401e7d4b39d0f39fa4c8ffa2efcef567040e6481e"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00106",
+      "subject_id": "beth-refr-dev.file-008.record-0001.sub-0004",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "1ee18c1cc051867506af55490de55ce751b8850b219e98ba55c693ed75d403e0"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00107",
+      "subject_id": "beth-refr-dev.file-008.record-0001.sub-0005",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "606f603f77fbdfe67b093ed01f2868f285b384fefeaf736c8501279894a50255"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00108",
+      "subject_id": "beth-refr-dev.file-008.record-0002",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "63ec06539d2595fc57b45e2140ad5134063e1ffb9d0e247ba1e0db0bb763a04a"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00109",
+      "subject_id": "beth-refr-dev.file-008.record-0003",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "963975763f2b7da97b5d1bbc36ffe9475403db28943d8653cf460acd9c45a436"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00110",
+      "subject_id": "beth-refr-dev.file-008.record-0004",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "eee89bd416314c9f351102efe9290242e3dd850140c29fc2852cc96daff807d6"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00111",
+      "subject_id": "beth-refr-dev.file-008.record-0005",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "2d03ed38ef40bffc26f43319ffd07305c0948d895ade41c4f65189e8d5742126"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00112",
+      "subject_id": "beth-refr-dev.file-009.identity",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "d56488e15d5684c82727d90b53a08969a9b31816372208f6a48a2a38b368b1c3"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00113",
+      "subject_id": "beth-refr-dev.file-009.masters",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "ca3d06d315f652644f9dfc1aa9a5bc722c1b71085b67e97de0f873e791ad3a64"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00114",
+      "subject_id": "beth-refr-dev.file-009.esl-flag",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "c4341bae5abce3fe6714d6e9ce0778287ac9dc29f507c4738a22506062b16c08"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00115",
+      "subject_id": "beth-refr-dev.file-009.record-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "804180c356c5ea5ca24f350c322f811382144b7074d1f9b35acf638449839e35"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00116",
+      "subject_id": "beth-refr-dev.file-010.identity",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "d217864134864445f06aea28f438514d2e03d066ce38477d4d17ccc50f5d9f5f"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00117",
+      "subject_id": "beth-refr-dev.file-010.masters",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "676f8387848e1796930efe3cb867c4e72ac26053689683a059b31c5959b7f8c0"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00118",
+      "subject_id": "beth-refr-dev.file-010.esl-flag",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "af3879fc8aad8745e57cf07cb63c7c31969f96d6608e8c71acc180ece158fa2b"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00119",
+      "subject_id": "beth-refr-dev.file-010.group-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "7d330475ae141430f330af86d837eb6b398f13fc7dac7d02fbc37275651a4663"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00120",
+      "subject_id": "beth-refr-dev.file-010.group-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "d4a0f40c03cbcf3798de77e6bce76720893492093f47f238b1b9c2b274d74c01"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00121",
+      "subject_id": "beth-refr-dev.file-010.group-0002",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "032b9d006733073c859ffac305703e3a3bf5d3cf40071c41eaee0b172922e9ec"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00122",
+      "subject_id": "beth-refr-dev.file-010.group-0003",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "23d65817c183167529cd6066295c8293d0c63906a2039c620bf6ad84153a5fb3"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00123",
+      "subject_id": "beth-refr-dev.file-010.group-0004",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "c48bf3c7808d4bc0e5423cb8ee0a94bb7b5fbc787932dbaea1d59c9f1c7d9909"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00124",
+      "subject_id": "beth-refr-dev.file-010.record-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "f7324b9b778dbbc1e0974b4599de424d11d4f168ec585ef05bb8b20978a29305"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00125",
+      "subject_id": "beth-refr-dev.file-010.record-0000.sub-0003",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "697540a30fb16eabb692faa4ba322061573d67d08d2d892cab4fbcec84c1b9fc"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00126",
+      "subject_id": "beth-refr-dev.file-010.record-0000.sub-0004",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "0edc8fbef2e05b910d8217dccddd8f092f9e494c4ab63adfdffb5e711c8388c4"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00127",
+      "subject_id": "beth-refr-dev.file-010.record-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "9eea6d19fbd1b29043db158550d3fc1af11b41d7e133e80dedf498b641012825"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00128",
+      "subject_id": "beth-refr-dev.file-010.record-0002",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "de73d0c1815f8ebf01e19f1c35f20043ba6c0ac54f3c411a954e1a94874cd49b"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00129",
+      "subject_id": "beth-refr-dev.file-010.record-0003",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "3544303cf93a5efdd44cd96a550ae3ab2e346a35e62ee9a1edadf1f6934f3788"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00130",
+      "subject_id": "beth-refr-dev.file-010.record-0004",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "e197fe02a3e4cf6a2623be7d0e29a4c943b0c7b1c93f46f75a0552918b7e0a88"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00131",
+      "subject_id": "beth-refr-dev.file-010.record-0005",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "14840c9054f9426e97340d5944880ba37904c750e242d3d21d0a4d4046339e09"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00132",
+      "subject_id": "beth-refr-dev.file-010.record-0005.sub-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "59ad4104f60142617fce5fc56097bbf1e1495c19ba2491f070cdb432c5f783a1"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00133",
+      "subject_id": "beth-refr-dev.file-010.record-0005.sub-0002",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "b22e86bd7580bd9b6bb4b07bd10b926482dceaf5f374754bc61a024635de0b90"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00134",
+      "subject_id": "beth-refr-dev.file-010.record-0005.sub-0003",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "ffbf20d7b48aceb141f6a5510e1a2307c46f0e3d98fe6bcc677e51b2613f4d49"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00135",
+      "subject_id": "beth-refr-dev.file-010.record-0005.sub-0004",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "59f030e01a235cb0560baef1f97232f4bf2fab54655bad444b971a5c2c4a87c4"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00136",
+      "subject_id": "beth-refr-dev.file-010.record-0005.sub-0005",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "a29e2f1b4f7c1912f4e6112de52148dcf81eb287b2825e30805a8bb9b55bcc74"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00137",
+      "subject_id": "beth-refr-dev.file-011.identity",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "41ceadd03d95bd4b4823285cf068ce7f681605a68beee124061889ebb870494b"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00138",
+      "subject_id": "beth-refr-dev.file-011.masters",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "3b48e140996baeb02aa25ad41cd47b2d47f9c7f916bb580437df818b74d118c5"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00139",
+      "subject_id": "beth-refr-dev.file-011.esl-flag",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "286b3a046c44daf59b4c67d4f3b2b979da2b883e4800dc79419335bbac9431a4"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00140",
+      "subject_id": "beth-refr-dev.file-011.group-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "ca783bd4d6370941cfcae58c12f5207d002d22aefc141b864611e711a47884b5"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00141",
+      "subject_id": "beth-refr-dev.file-011.record-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "c87ce9cccda2fdd2e5adf1c8992aa13116131653fc78c0a85ce2472810c13130"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00142",
+      "subject_id": "beth-refr-dev.file-011.record-0000.sub-0003",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "f2f171a6a523c90ad9b83ccae0ccbeac19d92d7b21b821ed5baef9c6a9b50d80"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00143",
+      "subject_id": "beth-refr-dev.file-011.record-0000.sub-0004",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "d3d9445942b9d8729a28e8a3cd3f42e7ab94be8135f6a7655e3974daa2f6de35"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00144",
+      "subject_id": "beth-refr-dev.file-011.record-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "cea668d392537ac71b85775d40b4e35929baffcb8b4f023a3b73b4550fe4c53a"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00145",
+      "subject_id": "beth-refr-dev.file-011.record-0001.sub-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "a08ada7a1b9f6509ad8413e5e2fba197423fa130c86c2436e9f0abda1275dccc"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00146",
+      "subject_id": "beth-refr-dev.file-011.record-0001.sub-0002",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "3e520bb0a06a17984ac49c7382534628ceb5a24d81a9c2837f451a42f503a237"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00147",
+      "subject_id": "beth-refr-dev.file-011.record-0001.sub-0003",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "77d9a49b129a2cb221e8b0b77e76b9526b79a2c2094e2a4a064a3910b4edfba9"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00148",
+      "subject_id": "beth-refr-dev.file-011.record-0001.sub-0004",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "c78ee968ccd77fcfaf9b723adab4d234275b555b97a51fc3f304445cd94aaefa"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00149",
+      "subject_id": "beth-refr-dev.file-011.record-0001.sub-0005",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "78fe92b184427f8d2e8de02a27cf25bd854138ccebc555f07d0268e213f31d89"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00150",
+      "subject_id": "beth-refr-dev.file-011.record-0001.sub-0006",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "ec3a09aba313f6c29446526395e1376d656c9a7fa87bf62b3c1b33fb6f5c70b4"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00151",
+      "subject_id": "beth-refr-dev.file-011.record-0001.XLKR.order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "ba36f831fe5f6f1f089778329958302842992b18637e0eefd4ace224c444f6c1"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00152",
+      "subject_id": "beth-refr-dev.file-012.identity",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "f5261b551eb357a2f30e3e5e476beabc773c173fc4d01e1cc5a04cc0708a075b"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00153",
+      "subject_id": "beth-refr-dev.file-012.masters",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "e470cdbadd449f156f425dd60f7c2adbb21c6bd3988336bd81db223250730ffb"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00154",
+      "subject_id": "beth-refr-dev.file-012.esl-flag",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "011259c64765b0c6fb9fd7501228b0ecade05538a8f5323ef5aa71eff845f607"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00155",
+      "subject_id": "beth-refr-dev.file-012.group-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "73ba1ef59141600fa9c94374a9045b7602f68a3382022de92b6f98425b5c72a7"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00156",
+      "subject_id": "beth-refr-dev.file-012.record-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "4bce8b15b60258c184b88f0bc4f93483bda8b778a7d6f018c538d6ae49c8107e"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00157",
+      "subject_id": "beth-refr-dev.file-012.record-0000.sub-0003",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "5288950d243a7907fb46898fb09ef19504f28e5f8a77b9379ec38b7989a0499f"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00158",
+      "subject_id": "beth-refr-dev.file-012.record-0000.sub-0004",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "7985bba1786bd393792eff05109d470203c7e048e80f020d36abdc5eb5ed7606"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00159",
+      "subject_id": "beth-refr-dev.file-012.record-0000.sub-0005",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "510b31a0a611f1c778ac87ba3f7f330a5d79a093cee7b799ab1dd01a9188d1c1"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00160",
+      "subject_id": "beth-refr-dev.file-012.record-0000.sub-0006",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "dbbcc0de0b02ae31c8e4ba46f69777b12f86b89eb8951a5d391557870f3409ed"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00161",
+      "subject_id": "beth-refr-dev.file-012.record-0000.MAST.order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "a92bcda1b95a0ca951aed6a5afda95d88de1baa9e91e09a158dda692825a743e"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00162",
+      "subject_id": "beth-refr-dev.file-012.record-0000.DATA.order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "e29e5bd6da0209282d7a2561239cc356135341f2277cf84be33aa3f9512ac24d"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00163",
+      "subject_id": "beth-refr-dev.file-012.record-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "b0060aa8acbecdaaf7fae8a6c9116b3a8f0b7e6249d2090cda97b670a5ac0d6d"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00164",
+      "subject_id": "beth-refr-dev.file-012.record-0001.sub-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "e37978abdb9d9def495a962030346720393ea5dc4dd4fb9f6e3bfb15bd3a9e70"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00165",
+      "subject_id": "beth-refr-dev.file-012.record-0001.sub-0002",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "6a96bbc1f663d92eed8163a51a24c7c2b34c6af63c0858a8d579436beeb0dfef"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00166",
+      "subject_id": "beth-refr-dev.file-012.record-0001.sub-0003",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "d5533a24650023e61ecfab9f79970b4068dcee09d404b46f6fdaaa60b5972fd7"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00167",
+      "subject_id": "beth-refr-dev.file-012.record-0001.sub-0004",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "9d38875e6b17ad34bc7f5e9f9c50560ddcf527dd8ae7a45c038c49ad850df054"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00168",
+      "subject_id": "beth-refr-dev.file-012.record-0001.sub-0005",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "0c854e63244f66794dab7f6cc0ed5ed8c55bf9e8e9e225df3f9123c76e9ae016"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00169",
+      "subject_id": "beth-refr-dev.file-013.identity",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "3b323093766ce2a878f701fe6b84c6a94d8a030696b9400cf39b96eb7e46742a"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00170",
+      "subject_id": "beth-refr-dev.file-013.masters",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "d96ab8a8dc06ae33e5d0fcaa8b162f1096c51f81e738c7ce803395d8485fc0db"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00171",
+      "subject_id": "beth-refr-dev.file-013.esl-flag",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "7e05f0201b88577b39feb4f9e49b41132ac645af5d76e2548ff0dffdc6e7113a"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00172",
+      "subject_id": "beth-refr-dev.file-013.group-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "cd6f73bbc874795419ccb222be6867db453f9e6456014bc607bd8bd9b69894fd"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00173",
+      "subject_id": "beth-refr-dev.file-013.record-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "343d1afc9934152aa73526c6acac28dc26158638015072a3ab8dc3f6b17bacd3"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00174",
+      "subject_id": "beth-refr-dev.file-013.record-0000.sub-0003",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "0df04a52dc50ead75a25ccf634fb9c5a100394942e3e43140d8333a3725f9dda"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00175",
+      "subject_id": "beth-refr-dev.file-013.record-0000.sub-0004",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "189a14390d06c84d96cd3a59b30227b8bf07f18e35fc64a961fae88956f747e3"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00176",
+      "subject_id": "beth-refr-dev.file-013.record-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "109874757dea2af05d9d5a48e945786166bec560b42033636870c981a05ec30e"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00177",
+      "subject_id": "beth-refr-dev.file-013.record-0001.sub-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "131c0ca060339ecc74903a0830b48d3b6c78fbaa33fdf50ed0c32e5e52b273b1"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00178",
+      "subject_id": "beth-refr-dev.file-013.record-0001.sub-0002",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "66a80fa5b0289b60cee11e98f8b97abbcd7ffa2d7d084f062665f44c6f0471e9"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00179",
+      "subject_id": "beth-refr-dev.file-013.record-0001.sub-0003",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "5eecd6bad36fbe76c84d2bf563c57bf14b336065ce03a0b12387b55550ab64f5"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00180",
+      "subject_id": "beth-refr-dev.file-013.record-0001.sub-0004",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "bd027d59acf3619d8a99821260173dcedd7ac067af65bdb0b485e0a58319a00b"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00181",
+      "subject_id": "beth-refr-dev.file-013.record-0001.sub-0005",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "2132a5abae09c2532e9c696a210bc278a74573499710502823fbfa97931dbf56"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00182",
+      "subject_id": "beth-refr-dev.file-014.identity",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "85fe870222ce64fb58f313de36d5ebb6ed39e2f5c037d21cbf5f8a59b54dce8c"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00183",
+      "subject_id": "beth-refr-dev.file-014.masters",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "c3f09eef7233bc9a626e048815b9c07f52fa53d8aeac34f548d65e5bd748e729"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00184",
+      "subject_id": "beth-refr-dev.file-014.esl-flag",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "970e01c61bb8c5c48aba3dd6c551914a9719fec6501a2164d1a9666468dbed9c"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00185",
+      "subject_id": "beth-refr-dev.file-014.group-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "d54ab5a6ca6747413ebbd39b9e32087c76c43b052e85b8c771d71ce44060a593"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00186",
+      "subject_id": "beth-refr-dev.file-014.record-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "d5b7136ed2dfa0743348e150425438ec09b661a2dc9472269057d1ed4db7a122"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00187",
+      "subject_id": "beth-refr-dev.file-014.record-0000.sub-0003",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "7c40fd501be1588bff60304a0476210c9855f201a0930331464a5b89f0b1c041"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00188",
+      "subject_id": "beth-refr-dev.file-014.record-0000.sub-0004",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "115a74ca5cb289d3c98f9dbd64793dc94e190f2e3de2bff4aecb247535b0048b"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00189",
+      "subject_id": "beth-refr-dev.file-014.record-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "9f06fae1f8a63f3df7b952f5c7fcefb6ae2313f64a75654b905ae1016dbca5ec"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00190",
+      "subject_id": "beth-refr-dev.file-015.identity",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "14071a430f0fe7420629f065c252d3f03d6b4d4b3df6513d337599b71e66bee8"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00191",
+      "subject_id": "beth-refr-dev.file-015.masters",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "278480c5b223c2b418f2df710dd27f193b337ea16d5389f62e1f3ecbb7827399"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00192",
+      "subject_id": "beth-refr-dev.file-015.esl-flag",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "4b852906ca8404ad6137f7288f98131ba9598a45dbec5d0ebebd0fa5ce47948b"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00193",
+      "subject_id": "beth-refr-dev.file-015.group-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "fe408a64c76ed6d991c6e2531b1f0b5bb5d3fcd2a6b6831376a5c4448f49eca1"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00194",
+      "subject_id": "beth-refr-dev.file-015.record-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "ed1ba6d2e27521d373a0c017ec65c9c49de2e35d4a5b26bdd8aa966071fa6144"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00195",
+      "subject_id": "beth-refr-dev.file-015.record-0000.sub-0003",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "859f60004759c52f6f46366cfccccdff6c2d2df84c936debca84391aa0f438c8"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00196",
+      "subject_id": "beth-refr-dev.file-015.record-0000.sub-0004",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "97278ea1c8f0b99261395547ae8d1ada34973f332386e7b6875fcc9a6d93b7c1"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00197",
+      "subject_id": "beth-refr-dev.file-015.record-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "92e7beda3a69e32fc3dddbd527011d603ac18aa01707e3c4d6e54731daf8e837"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00198",
+      "subject_id": "beth-refr-dev.file-015.record-0001.sub-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "3881f41e02b587990c0e6421dbe113e4a276bc6bd54c5c917fe299ed69d8a489"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00199",
+      "subject_id": "beth-refr-dev.file-015.record-0001.sub-0002",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "9553538fa257223c771fa1a54133aa7cee10cba36a904214d4e845457440707e"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00200",
+      "subject_id": "beth-refr-dev.file-015.record-0002",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "a36bf2ffca876772a173b26457b6a1b6da22a91755b63f1bba28484d3fccdae3"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00201",
+      "subject_id": "beth-refr-dev.file-015.record-0002.sub-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "a978ebf58c2a2f15a56e83db7c36f3935741b60e0d75a5386e534fc538878fc8"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00202",
+      "subject_id": "beth-refr-dev.file-015.record-0002.sub-0002",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "a219ebac3b962ae24d879a3ad97346bc4257791032ad64c2b2056ae9c3b12bcc"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00203",
+      "subject_id": "beth-refr-dev.file-015.record-0002.sub-0003",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "5093e151d5dc65c8e6ce97b620d6094da1d5f823c5eee956cd56f9bc63cfc5e7"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00204",
+      "subject_id": "beth-refr-dev.file-015.record-0002.sub-0004",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "61b2404f22cdb3b3836bbe34c31b851e924629e501ffd90c8a5df4d51c75e6c3"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00205",
+      "subject_id": "beth-refr-dev.file-015.record-0002.sub-0005",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "a7c90d8d24043b7f4706486d066ccd9463464b8bc11b19246b5d713c920e97ed"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00206",
+      "subject_id": "beth-refr-dev.file-000.record-0001.link-0000.refr-repeated-xlkr-order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "5bef9e979ce2bc331d355dbae5d387d0f93506a05058997ac094a940a5197d48"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00207",
+      "subject_id": "beth-refr-dev.file-000.record-0001.link-0001.refr-repeated-xlkr-order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "11f4b51a389a6e49ce4a460a62ef7821600be885bd7e0000fbc72c161490a24a"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00208",
+      "subject_id": "beth-refr-dev.file-000.record-0001.link-0002.refr-repeated-xlkr-order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "e4aa07888dda051af1cb45c1c0e29e87558e5bb7cef5265d5f2eb02e432452fd"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00209",
+      "subject_id": "beth-refr-dev.file-000.record-0001.link-0003.refr-repeated-xlkr-order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "11f4b51a389a6e49ce4a460a62ef7821600be885bd7e0000fbc72c161490a24a"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00210",
+      "subject_id": "beth-refr-dev.file-000.record-0001.link-0004.refr-repeated-xlkr-order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "c1039cb7cfb2ca2bf26d5fa8627b27c6c370fa781eb15a061a8f1cc09a819e82"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00211",
+      "subject_id": "beth-refr-dev.file-000.record-0001.link-0005.refr-repeated-xlkr-order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "02061f09664abcfa51b5b6958ebe465359006bd6e60474f74879095451c36a2d"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00212",
+      "subject_id": "beth-refr-dev.file-000.record-0001.link-0006.refr-repeated-xlkr-order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "e4aa07888dda051af1cb45c1c0e29e87558e5bb7cef5265d5f2eb02e432452fd"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00213",
+      "subject_id": "beth-refr-dev.file-000.record-0001.XLKR.refr-repeated-xlkr-order.order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "fe483af1b85c6244690522364f89857f6c4b141381421e0f08adac5e76b44254"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00214",
+      "subject_id": "beth-refr-dev.file-004.record-0001.link-0000.refr-compression-equivalence.variant-1",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "cacf0a01304e252cf722b1a3a607553917998dced28acaa3fe74b639144b2043"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00215",
+      "subject_id": "beth-refr-dev.file-004.record-0001.link-0001.refr-compression-equivalence.variant-1",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "7f240e98ed34e607b1dd05cbdfb954147ca491044d2ae228dd5cd3b05f3f1593"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00216",
+      "subject_id": "beth-refr-dev.file-004.record-0001.link-0002.refr-compression-equivalence.variant-1",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "4d4caa2ec2437151310e5d1a5ff2b02d528650d6f229cab1cc044701294d4da3"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00217",
+      "subject_id": "beth-refr-dev.file-004.record-0001.link-0003.refr-compression-equivalence.variant-1",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "99f8a06daf12472a548532ff0533b40e779999f899d251b09eff18d99d2278e7"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00218",
+      "subject_id": "beth-refr-dev.file-004.record-0001.link-0004.refr-compression-equivalence.variant-1",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "e97698cde083cd7c7f5959fcb7d545abc61fe5919a5918e355c6812dc92950fb"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00219",
+      "subject_id": "beth-refr-dev.file-004.record-0001.XLKR.refr-compression-equivalence.variant-1.order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "c9a5ce9e6636539c4de394a8c215d3f41dd7e8ffeda779399303c687ef03eea1"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00220",
+      "subject_id": "beth-refr-dev.file-005.record-0001.link-0000.refr-master-reindexing.variant-0",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "7c3a7544e940c354e6c372008c2aeccdd9efe52b3b4c8c2c0b752600d9f8f1be"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00221",
+      "subject_id": "beth-refr-dev.file-005.record-0001.link-0001.refr-master-reindexing.variant-0",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "52d79e7cb40fb597bf347cc1de2fc11699bf196488f1df871dd13138088f2bc0"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00222",
+      "subject_id": "beth-refr-dev.file-006.record-0001.link-0000.refr-master-reindexing.variant-1",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "de9eee3f22422bfed3e21c7f135813f64eba2313a31d48303d2e8daf81d4ea81"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00223",
+      "subject_id": "beth-refr-dev.file-006.record-0001.link-0001.refr-master-reindexing.variant-1",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "00d3fffd957f87ca5eeae9b3a4136c89e8ded5bf8bbf66ebdfb28727a0f176ac"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00224",
+      "subject_id": "beth-refr-dev.file-007.record-0001.link-0000.refr-one-byte-data-change.variant-1",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "50d490657cb6b03da5247d85fce28a92f0f78c5d45c465bb51ff74e01fcdb3e7"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00225",
+      "subject_id": "beth-refr-dev.file-007.record-0001.link-0001.refr-one-byte-data-change.variant-1",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "1b9e612c6b484a38cfd48e62bb2e1e6de2bea9ca3c4ca190e243ac55e4cc92bb"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00226",
+      "subject_id": "beth-refr-dev.file-007.record-0001.link-0002.refr-one-byte-data-change.variant-1",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "f041472d1adc376d95d513eb23c20061ffa5cfb39de694172813ca8a35a3c8ec"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00227",
+      "subject_id": "beth-refr-dev.file-007.record-0001.link-0003.refr-one-byte-data-change.variant-1",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "243d7f2b5675b66753e5c19bf883a81d42937aa6c2f224dd91426a36e0993a67"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00228",
+      "subject_id": "beth-refr-dev.file-007.record-0001.link-0004.refr-one-byte-data-change.variant-1",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "00de5e45207b94305e803ad7399c76e2573d7a49bac77a6d7d5d4c0a00339758"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00229",
+      "subject_id": "beth-refr-dev.file-007.record-0001.XLKR.refr-one-byte-data-change.variant-1.order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "4e5a1bda81d5de71ecb5d54754435de3f7bbd3f9abbfd3933f197c2a2232e8ac"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00230",
+      "subject_id": "beth-refr-dev.file-008.record-0001.link-0000.refr-record-order.variant-1",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "3626e1b8bd0b7629abe750ba4303dc512021fd2cc7c5b9d1882ab3eeda5453bd"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00231",
+      "subject_id": "beth-refr-dev.file-008.record-0001.link-0001.refr-record-order.variant-1",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "ae2028bcc6675e942d12d80067b33b8ddf9303e75befe2cfe3f8cfdb39a23374"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00232",
+      "subject_id": "beth-refr-dev.file-008.record-0001.link-0002.refr-record-order.variant-1",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "ffc72a876154d2149ef6a6d822e43e281cbbbec2e43680930af571bdf16b9bd5"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00233",
+      "subject_id": "beth-refr-dev.file-008.record-0001.link-0003.refr-record-order.variant-1",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "67376f810ebca8c184c3f9f0dc3db0b6b41bbae9c647b3ba227ecf1316fb51c4"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00234",
+      "subject_id": "beth-refr-dev.file-008.record-0001.link-0004.refr-record-order.variant-1",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "7e8295cc7ac0b2c08f1b023f7efbf9445ae38266a5f52b2056383e3cb8586efb"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00235",
+      "subject_id": "beth-refr-dev.file-008.record-0001.XLKR.refr-record-order.variant-1.order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "b7e0da6b134acd84f845517bcb837b789e2cd7c1024bbe83675af6897d147025"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00236",
+      "subject_id": "beth-refr-dev.file-010.record-0005.link-0000.refr-layered-winner",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "775fa1736fbf2a62e7433f69146b09f71c4ada878a7f4c0c9258d6091d587f2c"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00237",
+      "subject_id": "beth-refr-dev.file-010.record-0005.link-0001.refr-layered-winner",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "b2c10b295ed8aa1a231ea1134f1fe8700154cac7df4965f0b4292de6bde3c99f"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00238",
+      "subject_id": "beth-refr-dev.file-010.record-0005.link-0002.refr-layered-winner",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "1641957ea9a8f5255b3e2c45b44855dd4f886c9532dcfb37e843075d5497b298"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00239",
+      "subject_id": "beth-refr-dev.file-010.record-0005.link-0003.refr-layered-winner",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "c8fea29597bbc6760e81561716b03493aecbe80a71164b8666b5a043a3a88f65"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00240",
+      "subject_id": "beth-refr-dev.file-010.record-0005.link-0004.refr-layered-winner",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "d2b148e67a124f7d978e427ed96656b44ec43d762861a0389aa3f1d9451c70f1"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00241",
+      "subject_id": "beth-refr-dev.file-010.record-0005.link-0000.refr-deleted-winner",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "775fa1736fbf2a62e7433f69146b09f71c4ada878a7f4c0c9258d6091d587f2c"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00242",
+      "subject_id": "beth-refr-dev.file-010.record-0005.link-0001.refr-deleted-winner",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "b2c10b295ed8aa1a231ea1134f1fe8700154cac7df4965f0b4292de6bde3c99f"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00243",
+      "subject_id": "beth-refr-dev.file-010.record-0005.link-0002.refr-deleted-winner",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "1641957ea9a8f5255b3e2c45b44855dd4f886c9532dcfb37e843075d5497b298"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00244",
+      "subject_id": "beth-refr-dev.file-010.record-0005.link-0003.refr-deleted-winner",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "c8fea29597bbc6760e81561716b03493aecbe80a71164b8666b5a043a3a88f65"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00245",
+      "subject_id": "beth-refr-dev.file-010.record-0005.link-0004.refr-deleted-winner",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "d2b148e67a124f7d978e427ed96656b44ec43d762861a0389aa3f1d9451c70f1"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00246",
+      "subject_id": "beth-refr-dev.file-010.record-0005.link-0000.refr-boundaries",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "775fa1736fbf2a62e7433f69146b09f71c4ada878a7f4c0c9258d6091d587f2c"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00247",
+      "subject_id": "beth-refr-dev.file-010.record-0005.link-0001.refr-boundaries",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "b2c10b295ed8aa1a231ea1134f1fe8700154cac7df4965f0b4292de6bde3c99f"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00248",
+      "subject_id": "beth-refr-dev.file-010.record-0005.link-0002.refr-boundaries",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "1641957ea9a8f5255b3e2c45b44855dd4f886c9532dcfb37e843075d5497b298"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00249",
+      "subject_id": "beth-refr-dev.file-010.record-0005.link-0003.refr-boundaries",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "c8fea29597bbc6760e81561716b03493aecbe80a71164b8666b5a043a3a88f65"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00250",
+      "subject_id": "beth-refr-dev.file-010.record-0005.link-0004.refr-boundaries",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "d2b148e67a124f7d978e427ed96656b44ec43d762861a0389aa3f1d9451c70f1"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00251",
+      "subject_id": "beth-refr-dev.file-010.record-0005.link-0000.refr-record-order.variant-0",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "775fa1736fbf2a62e7433f69146b09f71c4ada878a7f4c0c9258d6091d587f2c"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00252",
+      "subject_id": "beth-refr-dev.file-010.record-0005.link-0001.refr-record-order.variant-0",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "b2c10b295ed8aa1a231ea1134f1fe8700154cac7df4965f0b4292de6bde3c99f"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00253",
+      "subject_id": "beth-refr-dev.file-010.record-0005.link-0002.refr-record-order.variant-0",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "1641957ea9a8f5255b3e2c45b44855dd4f886c9532dcfb37e843075d5497b298"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00254",
+      "subject_id": "beth-refr-dev.file-010.record-0005.link-0003.refr-record-order.variant-0",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "c8fea29597bbc6760e81561716b03493aecbe80a71164b8666b5a043a3a88f65"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00255",
+      "subject_id": "beth-refr-dev.file-010.record-0005.link-0004.refr-record-order.variant-0",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "d2b148e67a124f7d978e427ed96656b44ec43d762861a0389aa3f1d9451c70f1"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00256",
+      "subject_id": "beth-refr-dev.file-010.record-0005.XLKR.refr-layered-winner.order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "be913f2a74c167b1f067ab54ac5967b1765b7f38a89ebcd1226c3dec0216968c"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00257",
+      "subject_id": "beth-refr-dev.file-010.record-0005.XLKR.refr-deleted-winner.order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "b3d94e8f27d209b8ce77da8036e79e5b06e3a7750a3910650cf4cc7928b975d6"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00258",
+      "subject_id": "beth-refr-dev.file-010.record-0005.XLKR.refr-boundaries.order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "c84c44163673b732ccdad4713e1db4ba98336c130f14923b3ec4c5430cac0af0"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00259",
+      "subject_id": "beth-refr-dev.file-010.record-0005.XLKR.refr-record-order.variant-0.order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "a65d753c48a6cb89c6f9acee9a0c9ddd761e514470334f4c594b93f51980e44b"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00260",
+      "subject_id": "beth-refr-dev.file-011.record-0001.link-0000.refr-layered-winner",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "3bb42a8111013e11ba1ab1fbb1f4e842da17b8236080c0e8519f9fe51bbf479b"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00261",
+      "subject_id": "beth-refr-dev.file-011.record-0001.link-0001.refr-layered-winner",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "f1ed2dc679ae44422170dc8bb68844d957df57f63f4ce638c1b5ccad40a58ad4"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00262",
+      "subject_id": "beth-refr-dev.file-011.record-0001.link-0002.refr-layered-winner",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "eb694a0e5242a9e4ba2c3c11c7eb81cbf2c5cac90fc4f70dc991f4e29fe7b137"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00263",
+      "subject_id": "beth-refr-dev.file-011.record-0001.link-0003.refr-layered-winner",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "c511c5a3360efb10873b1d0ed691beaafca639cea1a615e20bda3bc3f3bb0882"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00264",
+      "subject_id": "beth-refr-dev.file-011.record-0001.link-0004.refr-layered-winner",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "f2aa4a502936200629ecb3c90f8fa85af39238471d39f363e3c7d71672d1462a"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00265",
+      "subject_id": "beth-refr-dev.file-011.record-0001.link-0005.refr-layered-winner",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "c511c5a3360efb10873b1d0ed691beaafca639cea1a615e20bda3bc3f3bb0882"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00266",
+      "subject_id": "beth-refr-dev.file-011.record-0001.link-0006.refr-layered-winner",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "48d4f8031b83fbaee3ad7c8e36624f449501824cd4c18f8478f4d1bd69d107a8"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00267",
+      "subject_id": "beth-refr-dev.file-011.record-0001.XLKR.refr-layered-winner.order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "2e502ef8c952bd3b56877645e9001c532db81bad5c8881c08ebe7cf56e7c3a2b"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00268",
+      "subject_id": "beth-refr-dev.file-012.record-0001.link-0000.refr-layered-winner",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "e2dadbf46f6c3d65faa22bc90c667c7f9c035bdd52cde2949b21bbd755e247be"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00269",
+      "subject_id": "beth-refr-dev.file-012.record-0001.link-0001.refr-layered-winner",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "3a24a6c884641dcad419c2bcf1570aa91cf190436780c1c40784b14ae8d41820"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00270",
+      "subject_id": "beth-refr-dev.file-012.record-0001.link-0002.refr-layered-winner",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "03a3c85fc1008b0027b5c0196a992ce866162dbef267abe5a22cd10d4cbf8a86"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00271",
+      "subject_id": "beth-refr-dev.file-012.record-0001.link-0003.refr-layered-winner",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "0bf361419a38796d11a45773f20417f7a56e38d2a6067b133db003d60a8a26ea"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00272",
+      "subject_id": "beth-refr-dev.file-012.record-0001.link-0004.refr-layered-winner",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "b70dca24efd49a0df77ed94a8c0128fa32329f51f0a0fb1502051b2012dbe955"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00273",
+      "subject_id": "beth-refr-dev.file-012.record-0001.link-0000.refr-compression-equivalence.variant-0",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "33393bff6b3ddeb8c73796033cdf059ae877d445856a9a79cf231a474391bba3"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00274",
+      "subject_id": "beth-refr-dev.file-012.record-0001.link-0001.refr-compression-equivalence.variant-0",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "61a52097ccad53afb30464f633ba7c46f64a4c9a196d398134a5a88e6d733e5d"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00275",
+      "subject_id": "beth-refr-dev.file-012.record-0001.link-0002.refr-compression-equivalence.variant-0",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "3c0703b2bf46f719b9c933569e1a3b0c31b7b070a673d0a91ae52fcf00032d86"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00276",
+      "subject_id": "beth-refr-dev.file-012.record-0001.link-0003.refr-compression-equivalence.variant-0",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "c663b6877d58183f1875d867dcd64aca28f760ead84ade3d5844a1c556a602f8"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00277",
+      "subject_id": "beth-refr-dev.file-012.record-0001.link-0004.refr-compression-equivalence.variant-0",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "b70dca24efd49a0df77ed94a8c0128fa32329f51f0a0fb1502051b2012dbe955"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00278",
+      "subject_id": "beth-refr-dev.file-012.record-0001.link-0000.refr-one-byte-data-change.variant-0",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "33393bff6b3ddeb8c73796033cdf059ae877d445856a9a79cf231a474391bba3"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00279",
+      "subject_id": "beth-refr-dev.file-012.record-0001.link-0001.refr-one-byte-data-change.variant-0",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "61a52097ccad53afb30464f633ba7c46f64a4c9a196d398134a5a88e6d733e5d"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00280",
+      "subject_id": "beth-refr-dev.file-012.record-0001.link-0002.refr-one-byte-data-change.variant-0",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "3c0703b2bf46f719b9c933569e1a3b0c31b7b070a673d0a91ae52fcf00032d86"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00281",
+      "subject_id": "beth-refr-dev.file-012.record-0001.link-0003.refr-one-byte-data-change.variant-0",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "c663b6877d58183f1875d867dcd64aca28f760ead84ade3d5844a1c556a602f8"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00282",
+      "subject_id": "beth-refr-dev.file-012.record-0001.link-0004.refr-one-byte-data-change.variant-0",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "b70dca24efd49a0df77ed94a8c0128fa32329f51f0a0fb1502051b2012dbe955"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00283",
+      "subject_id": "beth-refr-dev.file-012.record-0001.XLKR.refr-layered-winner.order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "0e110905d1ea028148f6c3bffb7e2d2c6f05bba9458067bfbc189a0a407e720f"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00284",
+      "subject_id": "beth-refr-dev.file-012.record-0001.XLKR.refr-compression-equivalence.variant-0.order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "e224b1da068e68e3af7084457975283e13f2dcf76924d130beaad4d3b0d05e8d"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00285",
+      "subject_id": "beth-refr-dev.file-012.record-0001.XLKR.refr-one-byte-data-change.variant-0.order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "7353c620fc4e73f963d81ccf5264667282f33597ab3aa0132807a41bada9d398"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00286",
+      "subject_id": "beth-refr-dev.file-013.record-0001.link-0000.refr-layered-winner",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "45dc7f89edc13470513e660e3e37a41d0f3ec0b6e7b92d4cdad3d28e3711ce4c"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00287",
+      "subject_id": "beth-refr-dev.file-013.record-0001.link-0001.refr-layered-winner",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "cbc326c033fef67f77e2bbedffb0e9061f3b603bf9af79653fa3075d27d19d87"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00288",
+      "subject_id": "beth-refr-dev.file-013.record-0001.link-0002.refr-layered-winner",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "bb30076909757bb36559707573b8197f7491391a6eab4554278295b9df679880"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00289",
+      "subject_id": "beth-refr-dev.file-013.record-0001.link-0003.refr-layered-winner",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "9a781633d15cca5ba9281ab11d8506b77ea8d925c494f947823137df8ea99e48"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00290",
+      "subject_id": "beth-refr-dev.file-013.record-0001.link-0004.refr-layered-winner",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "687eab419c0e178a0d738924e80fa6ac44426e1325e86d1ec2edf40379281d94"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00291",
+      "subject_id": "beth-refr-dev.file-013.record-0001.XLKR.refr-layered-winner.order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "6a6ac9257ac9675a60113f3758938397b235e5588dd7cb3f02efc27dce632dfd"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00292",
+      "subject_id": "beth-refr-dev.file-015.record-0001.link-0000.refr-boundaries",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "1e7395e98fed7cb6710472cc1cd11b2927012dfd7059a905633784f243befcaf"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00293",
+      "subject_id": "beth-refr-dev.file-015.record-0002.link-0000.refr-boundaries",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "c4124dc0582c728e264c5226165474859a3f5cb9cdb3e84208b0e0c6e78bdbeb"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00294",
+      "subject_id": "beth-refr-dev.file-015.record-0002.link-0001.refr-boundaries",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "5ec9e582dfb3e941674725c8646f9049eb7663ec67a4506fc278e947c29c9484"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00295",
+      "subject_id": "beth-refr-dev.file-015.record-0002.link-0002.refr-boundaries",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "606637f0d32e47f6635fb1b74f7ff2441f7806b46b72f983e95506d196870dbd"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00296",
+      "subject_id": "beth-refr-dev.file-015.record-0002.link-0003.refr-boundaries",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "14a013356c8a2a32893a49eba217617d04f54956d8dd5c4f6d783c28acd77150"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00297",
+      "subject_id": "beth-refr-dev.file-015.record-0002.link-0004.refr-boundaries",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "06c18e53a7af1639025330299b72ec883277e4db2783b5e8c0ff4ebf47dc814e"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00298",
+      "subject_id": "beth-refr-dev.file-015.record-0002.XLKR.refr-boundaries.order",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "f887a607e0c336461fcb968d35a09040b20876e489b6aeea5b1f421ec2f6db6c"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00299",
+      "subject_id": "beth-refr-dev.refr-deleted-winner.00000840:01-World.esm.chain",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "f7829ce845f117d11f894affaf92c2d00a240dcc76783f725dd24c4922f03c10"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00300",
+      "subject_id": "beth-refr-dev.refr-deleted-winner.00000840:01-World.esm.winner",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "6fbdb32b34de2f3b5ad52094f6486f6295ef47b7fa5a3789a7215c89f6bb07a7"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00301",
+      "subject_id": "beth-refr-dev.refr-layered-winner.00000840:01-World.esm.chain",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "dfdacb67381258db449c801c169228cfad396ed9a313dfedddd5b4f92e2d8239"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00302",
+      "subject_id": "beth-refr-dev.refr-layered-winner.00000840:01-World.esm.winner",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "1386b3e7c3dd127f5df101c4f62a3944bfc9c4ca7cc3fdc3d61b232d7b386532"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00303",
+      "subject_id": "beth-refr-dev.malformed-denominator",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "c4744c8ff31541ee9293590f8c0849363b8d204ab1b8425e687fdfae04a853b3"
+    },
+    {
+      "expected_id": "TAX-03B",
+      "subject_id": "TAX-03B",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "independent-taxonomy-projection-review-v1"
+      ],
+      "canonical_value_fingerprint": "f660a7c57740eb16a8a749b4374168813cfe2a653b54e7524e60087c1bcfd6bb"
+    }
+  ],
+  "expected_deterministic_results": [],
+  "expected_external_claims": [],
+  "expected_application_links": [],
+  "expected_discovery_leads": [],
+  "expected_model_proposals": [],
+  "expected_proposal_admissions": [],
+  "expected_candidates": [],
+  "expected_hypotheses": [],
+  "expected_findings": [],
+  "expected_recommendations": [],
+  "expected_supported_cases": [],
+  "expected_lead_only_cases": [],
+  "expected_abstentions": [],
+  "expected_failures": [],
+  "expected_invalid_inputs": [
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00018",
+      "subject_id": "beth-refr-dev.file-001.malformed",
+      "expected_type": "invalid-input",
+      "expected_state": "failed",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "eb0159ea09224ba463296d177e8e4269e58370908d0fc845ab98f133a816dc23"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00022",
+      "subject_id": "beth-refr-dev.file-002.malformed",
+      "expected_type": "invalid-input",
+      "expected_state": "failed",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "df6e674fbe482d3bc2fb4887719e801583048118b2f0a8295d67ea948cba7eba"
+    },
+    {
+      "expected_id": "beth.beth-refr-dev.fact-00026",
+      "subject_id": "beth-refr-dev.file-003.malformed",
+      "expected_type": "invalid-input",
+      "expected_state": "failed",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "8013e1ea5ee277c7856448e1b328c25d69307569c32841a86edabff5e28de5f5"
+    }
+  ],
+  "expected_coverage_and_gaps": [],
+  "expected_collection_states": {
+    "observations": {
+      "state": "populated",
+      "reason": "Pre-registered independent byte expectations are present."
+    },
+    "deterministic_results": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    },
+    "external_claims": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    },
+    "application_links": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    },
+    "discovery_leads": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    },
+    "model_proposals": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    },
+    "proposal_admissions": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    },
+    "candidates": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    },
+    "hypotheses": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    },
+    "findings": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    },
+    "recommendations": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    },
+    "supported_cases": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    },
+    "lead_only_cases": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    },
+    "abstentions": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    },
+    "invalid_inputs": {
+      "state": "populated",
+      "reason": "Pre-registered independent byte expectations are present."
+    },
+    "coverage_gaps": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    },
+    "failures": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    }
+  },
+  "expected_taxonomy_assignments": [
+    {"assignment_id":"tax-03b.surface.plugin-data","taxonomy_id":"infinium.skyrim-se.mod-impact-taxonomy","taxonomy_version":"0.1.0","subject_type":"taxonomy-fixture-subject","subject_id":"TAX-03B","axis":"technical-modification-surface","facet":"semantic-mechanism","code":"surface.plugin-data","applicability_state":"assigned","classification_role":"observed","evidence_references":["beth.beth-refr-dev.fact-00163"],"applicability_condition_references":[],"reason":"The frozen major-record fact establishes plugin-carried record data.","derivation_provenance":{"producer_id":"taxonomy-reviewer","producer_version":"1.0.0","originating_run_id":"m1-slice-3.5-taxonomy-review-20260730","source_references":[{"artifact_id":"oracle/independent-byte-facts.json","artifact_version":"1.0.0","fingerprint":"94d02c206325fa920ecbb30d342fd080f1f5fc88f5d188b8f7cd30cca8d956d3","availability":"retained"}],"supporting_evidence_references":["beth.beth-refr-dev.fact-00163"],"contradicting_evidence_references":[],"llm_involvement":{"state":"none","operation":"none"}}},
+    {"assignment_id":"tax-03b.area.world.placed-objects-activation","taxonomy_id":"infinium.skyrim-se.mod-impact-taxonomy","taxonomy_version":"0.1.0","subject_type":"taxonomy-fixture-subject","subject_id":"TAX-03B","axis":"affected-game-system-or-content-area","facet":"affected-area","code":"area.world.placed-objects-activation","applicability_state":"assigned","classification_role":"established","evidence_references":["beth.beth-refr-dev.fact-00165","beth.beth-refr-dev.fact-00166","beth.beth-refr-dev.fact-00168","beth.beth-refr-dev.fact-00269","beth.beth-refr-dev.fact-00271","beth.beth-refr-dev.fact-00272"],"applicability_condition_references":[],"reason":"Separate frozen placement, linked-reference, location, and resolved-link facts establish the placed-object area; the REFR signature does not.","derivation_provenance":{"producer_id":"taxonomy-reviewer","producer_version":"1.0.0","originating_run_id":"m1-slice-3.5-taxonomy-review-20260730","source_references":[{"artifact_id":"oracle/independent-byte-facts.json","artifact_version":"1.0.0","fingerprint":"94d02c206325fa920ecbb30d342fd080f1f5fc88f5d188b8f7cd30cca8d956d3","availability":"retained"}],"supporting_evidence_references":["beth.beth-refr-dev.fact-00165","beth.beth-refr-dev.fact-00166","beth.beth-refr-dev.fact-00168","beth.beth-refr-dev.fact-00269","beth.beth-refr-dev.fact-00271","beth.beth-refr-dev.fact-00272"],"contradicting_evidence_references":[],"llm_involvement":{"state":"none","operation":"none"}}}
+  ],
+  "expected_replayability": "complete-clean",
+  "forbidden_claims": [
+    {
+      "claim_id": "forbidden-01",
+      "claim_type": "raw-formid-is-formkey",
+      "reason": "File-local indices are not canonical identity."
+    },
+    {
+      "claim_id": "forbidden-02",
+      "claim_type": "extension-proves-light",
+      "reason": "Only the TES4 light flag establishes light origin."
+    },
+    {
+      "claim_id": "forbidden-03",
+      "claim_type": "template-inheritance",
+      "reason": "Template inheritance is outside the frozen allowlist."
+    },
+    {
+      "claim_id": "forbidden-04",
+      "claim_type": "record-family-proves-meaning",
+      "reason": "Record family does not prove purpose or gameplay meaning."
+    },
+    {
+      "claim_id": "forbidden-05",
+      "claim_type": "conflict-is-finding",
+      "reason": "A structural conflict alone is not a finding."
+    },
+    {
+      "claim_id": "forbidden-06",
+      "claim_type": "xesp-enable-parent",
+      "reason": "XESP is outside the EVAL-0052 positive allowlist."
+    },
+    {
+      "claim_id": "forbidden-07",
+      "claim_type": "archive-or-string-resolution",
+      "reason": "Archive and localized-string resolution are unsupported."
+    },
+    {
+      "claim_id": "forbidden-08",
+      "claim_type": "environment-discovery",
+      "reason": "Automatic environment discovery is unsupported."
+    }
+  ],
+  "known_limits": [
+    "The oracle covers only the frozen EVAL-0052 positive allowlist.",
+    "Decompressed logical offsets are distinct from physical file offsets.",
+    "No production parser, Mutagen, xEdit, held-out input, or taxonomy answer authored these values."
+  ],
+  "pre_registered_at": "2026-07-30T00:00:00.0000000+00:00",
+  "change_history": []
+}

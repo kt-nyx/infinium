@@ -1,0 +1,31 @@
+{
+  "schema_id": "infinium.evaluation.fixture-public-manifest/v1",
+  "schema_version": "1",
+  "fixture_id": "BETH-LIGHT-VAL",
+  "fixture_version": "1.0.0",
+  "evaluation_ids": [
+    "EVAL-0052"
+  ],
+  "purpose": "Qualify project-authored full, light, ESL-flagged, maximum, and invalid local-identity boundaries for later Slice 4 evaluation.",
+  "classification": "boundary",
+  "partition": "validation",
+  "partition_history": [
+    {
+      "from": null,
+      "to": "validation",
+      "at": "2026-07-30T18:00:00.0000000+00:00",
+      "reason": "Initial registration of an independently reviewed project-authored validation fixture.",
+      "change_influenced_implementation": false
+    }
+  ],
+  "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
+  "taxonomy_version": "0.1.0",
+  "input_package_fingerprint": "72454b3073f15ab512782b82a0fb84e3fd81da51b40356807a2135f3611f2de5",
+  "oracle_fingerprint": "d0031fc83ec1e934fbd001e6794883af5d6999015a764afcfdc1564b921164dd",
+  "provenance_fingerprint": "9c721db215bf80b929590cabb97abf42355eeb26b36188a97f106c2a5ca2c5ea",
+  "replay_dependency_fingerprint": "be498d2604adb06937fe0976ef3f2d8e66a4f1145731dbfd22c901479f55dc23",
+  "redistribution_class": "project-authored-redistributable",
+  "owner": "infinium-evaluation",
+  "review_state": "accepted",
+  "created_at": "2026-07-30T18:00:00.0000000+00:00"
+}

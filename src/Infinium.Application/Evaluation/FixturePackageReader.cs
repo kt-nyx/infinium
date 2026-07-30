@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text.Json;
 using Infinium.Domain.Contracts;
 
@@ -31,6 +32,9 @@ public sealed record EvaluationHarnessFixturePackage(
 public static class FixturePackageReader
 {
     private const long MaximumFixtureDocumentBytes = 16 * 1024 * 1024;
+    private const long MaximumRetainedArtifactBytes = 64 * 1024 * 1024;
+    private const string InputArtifactPrefix = "inputs/";
+    private const string OracleArtifactPrefix = "oracle/";
     public const string PublicManifestFileName = "public-manifest.json";
     public const string ExecutionInputFileName = "execution-input.json";
     public const string OracleFileName = "expected-oracle.json";
@@ -278,6 +282,22 @@ public static class FixturePackageReader
         ValidateOracle(oracle);
         ValidateReplayDependencies(replayDependencies, RequireString(oracle, "expected_replayability"));
         RejectAnswerBearingProperties(executionInput);
+        ValidateRetainedArtifactReferences(
+            executionInput,
+            fullDirectory,
+            InputArtifactPrefix,
+            ExecutionInputFileName);
+        ValidateRetainedArtifactReferences(
+            oracle,
+            fullDirectory,
+            OracleArtifactPrefix,
+            OracleFileName);
+        BethesdaByteOracleValidator.Validate(
+            fullDirectory,
+            executionInput,
+            oracle,
+            fixtureId,
+            fixtureVersion);
 
         return new EvaluationHarnessFixturePackage(
             fixtureId,
@@ -679,6 +699,153 @@ public static class FixturePackageReader
                 }
 
                 break;
+        }
+    }
+
+    private static void ValidateRetainedArtifactReferences(
+        JsonElement element,
+        string fixtureDirectory,
+        string requiredPrefix,
+        string documentName)
+    {
+        switch (element.ValueKind)
+        {
+            case JsonValueKind.Object:
+                if (element.TryGetProperty("artifact_id", out JsonElement artifactIdElement)
+                    && artifactIdElement.ValueKind == JsonValueKind.String
+                    && artifactIdElement.GetString() is string artifactId
+                    && artifactId.StartsWith(requiredPrefix, StringComparison.Ordinal))
+                {
+                    ValidateRetainedArtifactReference(
+                        element,
+                        fixtureDirectory,
+                        artifactId,
+                        requiredPrefix,
+                        documentName);
+                }
+
+                foreach (JsonProperty property in element.EnumerateObject())
+                {
+                    ValidateRetainedArtifactReferences(
+                        property.Value,
+                        fixtureDirectory,
+                        requiredPrefix,
+                        documentName);
+                }
+
+                break;
+            case JsonValueKind.Array:
+                foreach (JsonElement item in element.EnumerateArray())
+                {
+                    ValidateRetainedArtifactReferences(
+                        item,
+                        fixtureDirectory,
+                        requiredPrefix,
+                        documentName);
+                }
+
+                break;
+        }
+    }
+
+    private static void ValidateRetainedArtifactReference(
+        JsonElement artifactReference,
+        string fixtureDirectory,
+        string artifactId,
+        string requiredPrefix,
+        string documentName)
+    {
+        if (!StringComparer.Ordinal.Equals(
+                RequireString(artifactReference, "availability"),
+                "retained"))
+        {
+            throw new InvalidDataException(
+                $"Package-relative artifact '{artifactId}' in '{documentName}' must be retained.");
+        }
+
+        if (artifactId.Contains('\\', StringComparison.Ordinal)
+            || artifactId.Split('/', StringSplitOptions.None).Any(
+                segment => segment is "" or "." or ".."))
+        {
+            throw new InvalidDataException(
+                $"Package-relative artifact '{artifactId}' in '{documentName}' is unsafe.");
+        }
+
+        string fullDirectory = Path.GetFullPath(fixtureDirectory);
+        string scopedRoot = Path.GetFullPath(
+            Path.Combine(fullDirectory, requiredPrefix.TrimEnd('/')));
+        string artifactPath = Path.GetFullPath(
+            Path.Combine(fullDirectory, artifactId.Replace('/', Path.DirectorySeparatorChar)));
+        string scopedRootPrefix = scopedRoot + Path.DirectorySeparatorChar;
+        if (!artifactPath.StartsWith(scopedRootPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidDataException(
+                $"Package-relative artifact '{artifactId}' escapes its retained package scope.");
+        }
+
+        EnsureNoReparsePoint(scopedRoot, artifactPath, artifactId);
+        if (!File.Exists(artifactPath))
+        {
+            throw new InvalidDataException(
+                $"Retained package artifact '{artifactId}' is missing.");
+        }
+
+        using FileStream stream = new(
+            artifactPath,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            bufferSize: 64 * 1024,
+            FileOptions.SequentialScan);
+        WindowsRetainedArtifactIdentity.RequireSingleLink(stream.SafeFileHandle, artifactId);
+        if (stream.Length > MaximumRetainedArtifactBytes)
+        {
+            throw new InvalidDataException(
+                $"Retained package artifact '{artifactId}' exceeds the byte bound.");
+        }
+
+        string actualFingerprint = Convert.ToHexStringLower(SHA256.HashData(stream));
+        string expectedFingerprint = RequireString(artifactReference, "fingerprint");
+        if (!StringComparer.Ordinal.Equals(expectedFingerprint, actualFingerprint))
+        {
+            throw new InvalidDataException(
+                $"Retained package artifact '{artifactId}' does not match its fingerprint.");
+        }
+    }
+
+    private static void EnsureNoReparsePoint(
+        string scopedRoot,
+        string artifactPath,
+        string artifactId)
+    {
+        string? current = scopedRoot;
+        while (current is not null)
+        {
+            if (File.Exists(current) || Directory.Exists(current))
+            {
+                FileAttributes attributes = File.GetAttributes(current);
+                if ((attributes & FileAttributes.ReparsePoint) != 0)
+                {
+                    throw new InvalidDataException(
+                        $"Retained package artifact '{artifactId}' crosses a reparse point.");
+                }
+            }
+
+            if (StringComparer.OrdinalIgnoreCase.Equals(current, artifactPath))
+            {
+                break;
+            }
+
+            string relative = Path.GetRelativePath(current, artifactPath);
+            string? nextSegment = relative.Split(
+                Path.DirectorySeparatorChar,
+                StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+            if (nextSegment is null)
+            {
+                break;
+            }
+
+            current = Path.Combine(current, nextSegment);
         }
     }
 

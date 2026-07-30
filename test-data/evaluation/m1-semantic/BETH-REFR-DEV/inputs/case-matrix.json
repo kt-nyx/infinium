@@ -1,0 +1,112 @@
+{
+  "schema": "infinium.bethesda-fixture-case-matrix",
+  "schema_version": 1,
+  "partition": "development",
+  "classification": "boundary",
+  "fixed_seed": "3520260730",
+  "cases": [
+    {
+      "case_id": "refr-layered-winner",
+      "operation": "scan",
+      "input_paths": [
+        "plugins/00-Pad.esm",
+        "plugins/01-World.esm",
+        "plugins/02-Relations.esp",
+        "plugins/03-Placement.esp",
+        "plugins/04-MergedWinner.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "refr-deleted-winner",
+      "operation": "scan",
+      "input_paths": [
+        "plugins/01-World.esm",
+        "plugins/05-DeletedWinner.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "refr-boundaries",
+      "operation": "scan",
+      "input_paths": [
+        "plugins/01-World.esm",
+        "plugins/06-Boundaries.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "refr-compression-equivalence",
+      "operation": "compare",
+      "input_paths": [
+        "plugins/03-Placement.esp",
+        "mutations/compression/03-Placement.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "refr-one-byte-data-change",
+      "operation": "compare",
+      "input_paths": [
+        "plugins/03-Placement.esp",
+        "mutations/one-byte-data/03-Placement.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "refr-master-reindexing",
+      "operation": "compare",
+      "input_paths": [
+        "mutations/master-order-reindexed/03-Placement.esp",
+        "mutations/master-order-unreindexed/03-Placement.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "refr-record-order",
+      "operation": "compare",
+      "input_paths": [
+        "plugins/01-World.esm",
+        "mutations/record-order/01-World.esm"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "refr-repeated-xlkr-order",
+      "operation": "scan",
+      "input_paths": [
+        "mutations/Boundaries-RepeatedXLKROrder.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "refr-truncated-subrecord-header",
+      "operation": "scan",
+      "input_paths": [
+        "mutations/Refr-SubrecordHeaderTruncated.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "refr-subrecord-body-overrun",
+      "operation": "scan",
+      "input_paths": [
+        "mutations/Refr-SubrecordBodyOverrun.esp"
+      ],
+      "denominator": null
+    },
+    {
+      "case_id": "refr-dangling-extended-size",
+      "operation": "scan",
+      "input_paths": [
+        "mutations/Refr-DanglingExtendedSize.esp"
+      ],
+      "denominator": null
+    }
+  ],
+  "notes": {
+    "omitted_subrecords": [
+      "XESP"
+    ]
+  }
+}
