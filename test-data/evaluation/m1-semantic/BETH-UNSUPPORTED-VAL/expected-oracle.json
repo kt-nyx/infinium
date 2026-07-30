@@ -1,10 +1,9 @@
 {
   "fixture_id": "BETH-UNSUPPORTED-VAL",
   "fixture_version": "1.0.0",
-  "oracle_version": "1.0.0",
+  "oracle_version": "1.0.1",
   "independent_authors_and_reviewers": [
-    "oracle-reviewer",
-    "taxonomy-reviewer"
+    "oracle-reviewer"
   ],
   "ground_truth_methods": [
     {
@@ -14,7 +13,7 @@
         {
           "artifact_id": "oracle/manual-hex-worksheet.json",
           "artifact_version": "1",
-          "fingerprint": "b331160b6707d1202ef829c8f04a0cd36b901c4b7d41dca716eda1ee01e790de",
+          "fingerprint": "731d24b0eeaa4e2a98f7bde22edfb1879d922723d3a1c0db4ddefd719960d18f",
           "availability": "retained"
         }
       ],
@@ -27,26 +26,13 @@
         {
           "artifact_id": "oracle/independent-reader-report.json",
           "artifact_version": "1",
-          "fingerprint": "bf515dc3b174b4fcc6c0d3293b30d3f6d1b9719689c8646e2bd405b178ab0f5e",
+          "fingerprint": "490d2d1f59ac30a27d1495d4e28b6acc140cc3a1f2974f4d6dcb9042538867e4",
           "availability": "retained"
         },
         {
           "artifact_id": "oracle/independent-byte-facts.json",
           "artifact_version": "1.0.0",
-          "fingerprint": "83e90d2f04bef3306f46026ab1ed922eac8a65e268d8047afb5023683e8416ce",
-          "availability": "retained"
-        }
-      ],
-      "independent_of_system_under_test": true
-    },
-    {
-      "method_id": "independent-taxonomy-projection-review-v1",
-      "method": "Independent taxonomy 0.1.0 review over frozen raw facts, with exact unsupported, unknown, and not-applicable state separation.",
-      "evidence_references": [
-        {
-          "artifact_id": "oracle/taxonomy-projections.json",
-          "artifact_version": "1.0.0",
-          "fingerprint": "948ba7662516debd6a62af7f4f31162dc111cab3881b965efac47ce7659d63fd",
+          "fingerprint": "fe91213c44bd07cf11d9e156073f612c12d1f219af379bb402f3c262f0f92536",
           "availability": "retained"
         }
       ],
@@ -262,16 +248,6 @@
         "independent-bounded-raw-reader-v1"
       ],
       "canonical_value_fingerprint": "9e49fbde8bef88053007abc821a1ae1829792f7950f08e05fa5964d0fdb3c54f"
-    },
-    {
-      "expected_id": "TAX-06",
-      "subject_id": "TAX-06",
-      "expected_type": "observation",
-      "expected_state": "present",
-      "ground_truth_method_ids": [
-        "independent-taxonomy-projection-review-v1"
-      ],
-      "canonical_value_fingerprint": "824b5232a04068710b2af0d400c233c2e0a75921350cf0153105d4b8fe67a10d"
     }
   ],
   "expected_deterministic_results": [],
@@ -416,16 +392,7 @@
       "reason": "No Slice 3.5 expectation is assigned to this collection."
     }
   },
-  "expected_taxonomy_assignments": [
-    {"assignment_id":"tax-06.surface.plugin-data","taxonomy_id":"infinium.skyrim-se.mod-impact-taxonomy","taxonomy_version":"0.1.0","subject_type":"taxonomy-fixture-subject","subject_id":"TAX-06","axis":"technical-modification-surface","facet":"semantic-mechanism","code":"surface.plugin-data","applicability_state":"assigned","classification_role":"observed","evidence_references":["beth.beth-unsupported-val.fact-00012"],"applicability_condition_references":[],"reason":"The frozen major-record fact establishes plugin-carried record data even though its family semantics are unsupported.","derivation_provenance":{"producer_id":"taxonomy-reviewer","producer_version":"1.0.0","originating_run_id":"m1-slice-3.5-taxonomy-review-20260730","source_references":[{"artifact_id":"oracle/independent-byte-facts.json","artifact_version":"1.0.0","fingerprint":"83e90d2f04bef3306f46026ab1ed922eac8a65e268d8047afb5023683e8416ce","availability":"retained"}],"supporting_evidence_references":["beth.beth-unsupported-val.fact-00012"],"contradicting_evidence_references":[],"llm_involvement":{"state":"none","operation":"none"}}},
-    {"assignment_id":"tax-06.delivery.plugin-container","taxonomy_id":"infinium.skyrim-se.mod-impact-taxonomy","taxonomy_version":"0.1.0","subject_type":"taxonomy-fixture-subject","subject_id":"TAX-06","axis":"technical-modification-surface","facet":"realization-and-delivery","code":"delivery.plugin-container","applicability_state":"assigned","classification_role":"observed","evidence_references":["beth.beth-unsupported-val.fact-00007","beth.beth-unsupported-val.fact-00012"],"applicability_condition_references":[],"reason":"The frozen file and record facts establish delivery inside a plugin container.","derivation_provenance":{"producer_id":"taxonomy-reviewer","producer_version":"1.0.0","originating_run_id":"m1-slice-3.5-taxonomy-review-20260730","source_references":[{"artifact_id":"oracle/independent-byte-facts.json","artifact_version":"1.0.0","fingerprint":"83e90d2f04bef3306f46026ab1ed922eac8a65e268d8047afb5023683e8416ce","availability":"retained"}],"supporting_evidence_references":["beth.beth-unsupported-val.fact-00007","beth.beth-unsupported-val.fact-00012"],"contradicting_evidence_references":[],"llm_involvement":{"state":"none","operation":"none"}}},
-    {"assignment_id":"tax-06.affected-game-system-or-content-area.affected-area.unsupported","taxonomy_id":"infinium.skyrim-se.mod-impact-taxonomy","taxonomy_version":"0.1.0","subject_type":"taxonomy-fixture-subject","subject_id":"TAX-06","axis":"affected-game-system-or-content-area","facet":"affected-area","applicability_state":"unsupported","classification_role":"established","evidence_references":["beth.beth-unsupported-val.fact-00020"],"applicability_condition_references":[],"reason":"The frozen allowlist gap establishes that Slice 4 cannot determine affected-area semantics for this record family.","derivation_provenance":{"producer_id":"taxonomy-reviewer","producer_version":"1.0.0","originating_run_id":"m1-slice-3.5-taxonomy-review-20260730","source_references":[{"artifact_id":"oracle/independent-byte-facts.json","artifact_version":"1.0.0","fingerprint":"83e90d2f04bef3306f46026ab1ed922eac8a65e268d8047afb5023683e8416ce","availability":"retained"}],"supporting_evidence_references":["beth.beth-unsupported-val.fact-00020"],"contradicting_evidence_references":[],"llm_involvement":{"state":"none","operation":"none"}}},
-    {"assignment_id":"tax-06.consequence-type.consequence-type.unknown","taxonomy_id":"infinium.skyrim-se.mod-impact-taxonomy","taxonomy_version":"0.1.0","subject_type":"taxonomy-fixture-subject","subject_id":"TAX-06","axis":"consequence-type","facet":"consequence-type","applicability_state":"unknown","classification_role":"predicted","evidence_references":["beth.beth-unsupported-val.fact-00020"],"applicability_condition_references":[],"reason":"The surface is present, but unsupported semantics leave any consequence unknown.","derivation_provenance":{"producer_id":"taxonomy-reviewer","producer_version":"1.0.0","originating_run_id":"m1-slice-3.5-taxonomy-review-20260730","source_references":[{"artifact_id":"oracle/independent-byte-facts.json","artifact_version":"1.0.0","fingerprint":"83e90d2f04bef3306f46026ab1ed922eac8a65e268d8047afb5023683e8416ce","availability":"retained"}],"supporting_evidence_references":["beth.beth-unsupported-val.fact-00020"],"contradicting_evidence_references":[],"llm_involvement":{"state":"none","operation":"none"}}},
-    {"assignment_id":"tax-06.effect-extent.direct-subject-breadth.not-applicable","taxonomy_id":"infinium.skyrim-se.mod-impact-taxonomy","taxonomy_version":"0.1.0","subject_type":"taxonomy-fixture-subject","subject_id":"TAX-06","axis":"effect-extent","facet":"direct-subject-breadth","applicability_state":"not-applicable","classification_role":"established","evidence_references":["beth.beth-unsupported-val.fact-00020"],"applicability_condition_references":[],"reason":"No effect is established, so direct-subject breadth is not applicable.","derivation_provenance":{"producer_id":"taxonomy-reviewer","producer_version":"1.0.0","originating_run_id":"m1-slice-3.5-taxonomy-review-20260730","source_references":[{"artifact_id":"oracle/independent-byte-facts.json","artifact_version":"1.0.0","fingerprint":"83e90d2f04bef3306f46026ab1ed922eac8a65e268d8047afb5023683e8416ce","availability":"retained"}],"supporting_evidence_references":["beth.beth-unsupported-val.fact-00020"],"contradicting_evidence_references":[],"llm_involvement":{"state":"none","operation":"none"}}},
-    {"assignment_id":"tax-06.effect-extent.spatial-breadth.not-applicable","taxonomy_id":"infinium.skyrim-se.mod-impact-taxonomy","taxonomy_version":"0.1.0","subject_type":"taxonomy-fixture-subject","subject_id":"TAX-06","axis":"effect-extent","facet":"spatial-breadth","applicability_state":"not-applicable","classification_role":"established","evidence_references":["beth.beth-unsupported-val.fact-00020"],"applicability_condition_references":[],"reason":"No effect is established, so spatial breadth is not applicable.","derivation_provenance":{"producer_id":"taxonomy-reviewer","producer_version":"1.0.0","originating_run_id":"m1-slice-3.5-taxonomy-review-20260730","source_references":[{"artifact_id":"oracle/independent-byte-facts.json","artifact_version":"1.0.0","fingerprint":"83e90d2f04bef3306f46026ab1ed922eac8a65e268d8047afb5023683e8416ce","availability":"retained"}],"supporting_evidence_references":["beth.beth-unsupported-val.fact-00020"],"contradicting_evidence_references":[],"llm_involvement":{"state":"none","operation":"none"}}},
-    {"assignment_id":"tax-06.effect-extent.persistence-and-lifecycle-breadth.not-applicable","taxonomy_id":"infinium.skyrim-se.mod-impact-taxonomy","taxonomy_version":"0.1.0","subject_type":"taxonomy-fixture-subject","subject_id":"TAX-06","axis":"effect-extent","facet":"persistence-and-lifecycle-breadth","applicability_state":"not-applicable","classification_role":"established","evidence_references":["beth.beth-unsupported-val.fact-00020"],"applicability_condition_references":[],"reason":"No effect is established, so persistence breadth is not applicable.","derivation_provenance":{"producer_id":"taxonomy-reviewer","producer_version":"1.0.0","originating_run_id":"m1-slice-3.5-taxonomy-review-20260730","source_references":[{"artifact_id":"oracle/independent-byte-facts.json","artifact_version":"1.0.0","fingerprint":"83e90d2f04bef3306f46026ab1ed922eac8a65e268d8047afb5023683e8416ce","availability":"retained"}],"supporting_evidence_references":["beth.beth-unsupported-val.fact-00020"],"contradicting_evidence_references":[],"llm_involvement":{"state":"none","operation":"none"}}},
-    {"assignment_id":"tax-06.effect-extent.causal-propagation-or-blast-radius.not-applicable","taxonomy_id":"infinium.skyrim-se.mod-impact-taxonomy","taxonomy_version":"0.1.0","subject_type":"taxonomy-fixture-subject","subject_id":"TAX-06","axis":"effect-extent","facet":"causal-propagation-or-blast-radius","applicability_state":"not-applicable","classification_role":"established","evidence_references":["beth.beth-unsupported-val.fact-00020"],"applicability_condition_references":[],"reason":"No effect is established, so propagation breadth is not applicable.","derivation_provenance":{"producer_id":"taxonomy-reviewer","producer_version":"1.0.0","originating_run_id":"m1-slice-3.5-taxonomy-review-20260730","source_references":[{"artifact_id":"oracle/independent-byte-facts.json","artifact_version":"1.0.0","fingerprint":"83e90d2f04bef3306f46026ab1ed922eac8a65e268d8047afb5023683e8416ce","availability":"retained"}],"supporting_evidence_references":["beth.beth-unsupported-val.fact-00020"],"contradicting_evidence_references":[],"llm_involvement":{"state":"none","operation":"none"}}}
-  ],
+  "expected_taxonomy_assignments": [],
   "expected_replayability": "complete-clean",
   "forbidden_claims": [
     {
@@ -475,5 +442,18 @@
     "No production parser, Mutagen, xEdit, held-out input, or taxonomy answer authored these values."
   ],
   "pre_registered_at": "2026-07-30T00:00:00.0000000+00:00",
-  "change_history": []
+  "change_history": [
+    {
+      "oracle_version": "1.0.1",
+      "changed_at": "2026-07-30T23:00:00.0000000+00:00",
+      "independent_evidence_reference": {
+        "artifact_id": "oracle/manual-hex-worksheet.json",
+        "artifact_version": "1",
+        "fingerprint": "731d24b0eeaa4e2a98f7bde22edfb1879d922723d3a1c0db4ddefd719960d18f",
+        "availability": "retained"
+      },
+      "prior_error_explanation": "Version 1.0.0 attributed the manual method without comparing its decoded semantic answers and classified mutation changes from artifact dependencies instead of logical baseline deltas.",
+      "reviewer": "oracle-reviewer"
+    }
+  ]
 }

@@ -136,7 +136,8 @@
       "sha256": "535793c1763183f076bd8790d267806111902f47a685b0af8af8e6993dc97e1a"
     }
   ],
-  "dependency_fingerprint": "747db16460b50a2ddb170cf0ad5aad605ea2b4da15de8facd0ee47b263e77c06",
+  "capture_binding_algorithm": "infinium.fixture-snapshot-capture-binding/v1",
+  "expected_capture_binding_fingerprint": "747db16460b50a2ddb170cf0ad5aad605ea2b4da15de8facd0ee47b263e77c06",
   "capture_policy": {
     "manager_launch": "forbidden",
     "usvfs_launch": "forbidden",

@@ -2323,5 +2323,263 @@
       "extension_header_mismatch": false
     }
   ],
-  "supplemental_inputs": []
+  "supplemental_inputs": [],
+  "scenario_semantics": [
+    {
+      "scenario_id": "light-native-minimum",
+      "plugin_paths": [
+        "plugins/01-Native.esl"
+      ],
+      "records": [
+        {
+          "locator": "plugins/01-Native.esl#1",
+          "plugin_order": 0,
+          "form_key": "00000800:01-Native.esl",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Native.esl#2",
+          "plugin_order": 0,
+          "form_key": "00000FFF:01-Native.esl",
+          "deleted": false,
+          "links": []
+        }
+      ],
+      "chains": [],
+      "denominator": "native_esl_object_id"
+    },
+    {
+      "scenario_id": "light-native-maximum",
+      "plugin_paths": [
+        "plugins/01-Native.esl"
+      ],
+      "records": [
+        {
+          "locator": "plugins/01-Native.esl#1",
+          "plugin_order": 0,
+          "form_key": "00000800:01-Native.esl",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Native.esl#2",
+          "plugin_order": 0,
+          "form_key": "00000FFF:01-Native.esl",
+          "deleted": false,
+          "links": []
+        }
+      ],
+      "chains": [],
+      "denominator": "native_esl_object_id"
+    },
+    {
+      "scenario_id": "light-flagged-esp-minimum",
+      "plugin_paths": [
+        "plugins/02-Flagged.esp"
+      ],
+      "records": [
+        {
+          "locator": "plugins/02-Flagged.esp#1",
+          "plugin_order": 0,
+          "form_key": "00000800:02-Flagged.esp",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/02-Flagged.esp#2",
+          "plugin_order": 0,
+          "form_key": "00000FFF:02-Flagged.esp",
+          "deleted": false,
+          "links": []
+        }
+      ],
+      "chains": [],
+      "denominator": "esl_flagged_esp_object_id"
+    },
+    {
+      "scenario_id": "light-flagged-esp-maximum",
+      "plugin_paths": [
+        "plugins/02-Flagged.esp"
+      ],
+      "records": [
+        {
+          "locator": "plugins/02-Flagged.esp#1",
+          "plugin_order": 0,
+          "form_key": "00000800:02-Flagged.esp",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/02-Flagged.esp#2",
+          "plugin_order": 0,
+          "form_key": "00000FFF:02-Flagged.esp",
+          "deleted": false,
+          "links": []
+        }
+      ],
+      "chains": [],
+      "denominator": "esl_flagged_esp_object_id"
+    },
+    {
+      "scenario_id": "light-native-below-range",
+      "plugin_paths": [
+        "mutations/Native-BelowObjectRange.esl"
+      ],
+      "records": [],
+      "chains": [],
+      "denominator": "native_esl_object_id"
+    },
+    {
+      "scenario_id": "light-native-above-range",
+      "plugin_paths": [
+        "mutations/Native-AboveLightMaximum.esl"
+      ],
+      "records": [],
+      "chains": [],
+      "denominator": "native_esl_object_id"
+    },
+    {
+      "scenario_id": "light-flagged-below-range",
+      "plugin_paths": [
+        "mutations/FlaggedEsp-BelowObjectRange.esp"
+      ],
+      "records": [],
+      "chains": [],
+      "denominator": "esl_flagged_esp_object_id"
+    },
+    {
+      "scenario_id": "light-flagged-above-range",
+      "plugin_paths": [
+        "mutations/FlaggedEsp-AboveLightMaximum.esp"
+      ],
+      "records": [],
+      "chains": [],
+      "denominator": "esl_flagged_esp_object_id"
+    },
+    {
+      "scenario_id": "light-extension-header-mismatch",
+      "plugin_paths": [
+        "mutations/Native-HeaderFlagRemoved.esl"
+      ],
+      "records": [],
+      "chains": [],
+      "denominator": "light_plugin_classification"
+    },
+    {
+      "scenario_id": "light-reference-out-of-range",
+      "plugin_paths": [
+        "mutations/Consumer-LightReferenceOutOfRange.esp"
+      ],
+      "records": [
+        {
+          "locator": "mutations/Consumer-LightReferenceOutOfRange.esp#1",
+          "plugin_order": 0,
+          "form_key": "00000800:Consumer-LightReferenceOutOfRange.esp",
+          "deleted": false,
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00001000",
+              "form_key": null,
+              "resolution_state": "invalid"
+            }
+          ]
+        }
+      ],
+      "chains": [],
+      "denominator": "light_master_reference"
+    },
+    {
+      "scenario_id": "light-consumer-and-winner",
+      "plugin_paths": [
+        "plugins/01-Native.esl",
+        "plugins/02-Flagged.esp",
+        "plugins/03-Consumer.esp",
+        "plugins/04-Winner.esp"
+      ],
+      "records": [
+        {
+          "locator": "plugins/01-Native.esl#1",
+          "plugin_order": 0,
+          "form_key": "00000800:01-Native.esl",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Native.esl#2",
+          "plugin_order": 0,
+          "form_key": "00000FFF:01-Native.esl",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/02-Flagged.esp#1",
+          "plugin_order": 1,
+          "form_key": "00000800:02-Flagged.esp",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/02-Flagged.esp#2",
+          "plugin_order": 1,
+          "form_key": "00000FFF:02-Flagged.esp",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/03-Consumer.esp#1",
+          "plugin_order": 2,
+          "form_key": "00000800:03-Consumer.esp",
+          "deleted": false,
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000800",
+              "form_key": "00000800:01-Native.esl",
+              "resolution_state": "resolved"
+            }
+          ]
+        },
+        {
+          "locator": "plugins/03-Consumer.esp#2",
+          "plugin_order": 2,
+          "form_key": "00000801:03-Consumer.esp",
+          "deleted": false,
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000FFF",
+              "form_key": "00000FFF:02-Flagged.esp",
+              "resolution_state": "resolved"
+            }
+          ]
+        },
+        {
+          "locator": "plugins/04-Winner.esp#1",
+          "plugin_order": 3,
+          "form_key": "00000800:01-Native.esl",
+          "deleted": false,
+          "links": []
+        }
+      ],
+      "chains": [
+        {
+          "form_key": "00000800:01-Native.esl",
+          "ordered_locators": [
+            "plugins/01-Native.esl#1",
+            "plugins/04-Winner.esp#1"
+          ],
+          "winner_locator": "plugins/04-Winner.esp#1"
+        }
+      ],
+      "denominator": null
+    }
+  ]
 }

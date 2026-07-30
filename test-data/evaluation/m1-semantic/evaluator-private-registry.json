@@ -1,0 +1,76 @@
+{
+  "schema_id": "infinium.evaluation.evaluator-private-fixture-registry/v1",
+  "schema_version": "1",
+  "fixtures": [
+    {
+      "fixture_id": "BETH-MALFORMED-VAL-002",
+      "fixture_version": "1.0.0-private-input-freeze",
+      "partition": "validation",
+      "evaluation_ids": [
+        "EVAL-0052"
+      ],
+      "purpose": "Evaluator-private project-authored malformed Bethesda validation inputs covering bounded framing, size arithmetic, decompression, structural complexity, master references, and changed-during-read.",
+      "classification": "malformed",
+      "owner": "isolated-oracle-reviewer/replacement-malformed-v3",
+      "review_state": "sealed",
+      "reviewed_at": "2026-07-30T00:00:00.0000000+00:00",
+      "complete_package_retention": "evaluator-private",
+      "input_package_fingerprint": "ed7464c7fb4b6c852abab0e86eb1015a60370e3821f613ac882b6bf8fc6ff31f",
+      "retained_input_set_fingerprint": "3c51511d6db4b77848dcf2a855c9a66c8bbb3ad356599132c6c83b2d35d5a6e5",
+      "oracle_fingerprint": "9fc07fde7c50b6891acb760581b16048f6f6a18618a40d8a9d957ec7f0f92612",
+      "documents": {
+        "public_manifest": {
+          "byte_length": 1478,
+          "sha256": "7bde293a946c1a52a550ae307f228d7aabf3d78b52b80795cdaf33d73d299dca"
+        },
+        "execution_input": {
+          "byte_length": 6583,
+          "sha256": "ed7464c7fb4b6c852abab0e86eb1015a60370e3821f613ac882b6bf8fc6ff31f"
+        },
+        "expected_oracle": {
+          "byte_length": 34749,
+          "sha256": "9fc07fde7c50b6891acb760581b16048f6f6a18618a40d8a9d957ec7f0f92612"
+        },
+        "provenance": {
+          "byte_length": 159,
+          "sha256": "37e8568811e45159aeee8cf8e542fc4d412039e939af77b8bbd9b5618ac383d2"
+        },
+        "replay_dependencies": {
+          "byte_length": 2810,
+          "sha256": "fe48bb5283d3abb2eca3fdceba2d273a0246c1892fac432eb54af0067ad54a64"
+        },
+        "redistribution": {
+          "byte_length": 143,
+          "sha256": "9c5f7570b94eae80a03716b8eb464635f8a5ddc5a826419676eed425b9ca459e"
+        },
+        "partition_history": {
+          "byte_length": 398,
+          "sha256": "766b7f548e2287d3dedb68b27e7732c1257d0a71e6287903124de91490c321dc"
+        }
+      },
+      "independence_evidence": {
+        "artifact_id": "oracle/replacement-malformed-v3-independence-evidence",
+        "artifact_version": "3.0.0-independent-raw-byte",
+        "fingerprint": "32b502cf7b1ee56a07cc1e00843c032f32dd7d8248a82e1801e8d7cfeb5f7f49",
+        "availability": "evaluator-private"
+      },
+      "corrective_authority_id": "project-owner/user-directed-replacement-review-20260730",
+      "custodian_attestation": {
+        "two_independent_raw_byte_methods_agreed": true,
+        "two_clean_constructions_byte_identical": true,
+        "seven_root_documents_schema_valid": true,
+        "supplemental_oracle_schema_valid": true,
+        "cross_document_fingerprints_valid": true,
+        "execution_input_isolation_passed": true,
+        "predecessor_package_accessed": false,
+        "prior_reviewer_output_accessed": false,
+        "production_parser_or_output_accessed": false,
+        "mutagen_or_xedit_used": false,
+        "third_party_payload_consumed": false,
+        "protected_root_accessed": false,
+        "network_or_billable_provider_used": false,
+        "evaluation_case_pass_claimed": false
+      }
+    }
+  ]
+}

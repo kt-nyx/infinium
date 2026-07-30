@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text.Json;
 using Infinium.Domain.Contracts;
+using Microsoft.Win32.SafeHandles;
 
 namespace Infinium.Application.Evaluation;
 
@@ -29,10 +30,28 @@ public sealed record EvaluationHarnessFixturePackage(
     JsonElement Redistribution,
     JsonElement PartitionHistory);
 
+internal sealed record RetainedArtifactSnapshot(
+    string ArtifactId,
+    ReadOnlyMemory<byte> Bytes,
+    string Sha256)
+{
+    internal long ByteLength => Bytes.Length;
+}
+
+internal sealed record RetainedArtifactValidationTestOptions(
+    int? MaximumReferenceCount = null,
+    long? MaximumAggregateBytes = null,
+    long? MaximumArtifactBytes = null,
+    Action<string>? BeforeScopePin = null,
+    Action<string>? BeforeArtifactOpen = null,
+    Action? AfterArtifactsSnapshotted = null);
+
 public static class FixturePackageReader
 {
     private const long MaximumFixtureDocumentBytes = 16 * 1024 * 1024;
     private const long MaximumRetainedArtifactBytes = 64 * 1024 * 1024;
+    private const long MaximumRetainedAggregateBytes = 64 * 1024 * 1024;
+    private const int MaximumRetainedArtifactReferences = 4_096;
     private const string InputArtifactPrefix = "inputs/";
     private const string OracleArtifactPrefix = "oracle/";
     public const string PublicManifestFileName = "public-manifest.json";
@@ -42,6 +61,17 @@ public static class FixturePackageReader
     public const string ReplayDependenciesFileName = "replay-dependencies.json";
     public const string RedistributionFileName = "redistribution.json";
     public const string PartitionHistoryFileName = "partition-history.json";
+
+    private static readonly HashSet<string> RequiredRootDocumentNames = new(StringComparer.Ordinal)
+    {
+        PublicManifestFileName,
+        ExecutionInputFileName,
+        OracleFileName,
+        ProvenanceFileName,
+        ReplayDependenciesFileName,
+        RedistributionFileName,
+        PartitionHistoryFileName,
+    };
 
     private static readonly string[] RequiredExpectedCollections =
     [
@@ -216,7 +246,12 @@ public static class FixturePackageReader
         return new ExecutionFixturePackage(fixtureId, fixtureVersion, root.Clone());
     }
 
-    internal static EvaluationHarnessFixturePackage ReadForEvaluationHarness(string fixtureDirectory)
+    internal static EvaluationHarnessFixturePackage ReadForEvaluationHarness(string fixtureDirectory) =>
+        ReadForEvaluationHarness(fixtureDirectory, testOptions: null);
+
+    internal static EvaluationHarnessFixturePackage ReadForEvaluationHarness(
+        string fixtureDirectory,
+        RetainedArtifactValidationTestOptions? testOptions)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(fixtureDirectory);
         string fullDirectory = Path.GetFullPath(fixtureDirectory);
@@ -282,22 +317,39 @@ public static class FixturePackageReader
         ValidateOracle(oracle);
         ValidateReplayDependencies(replayDependencies, RequireString(oracle, "expected_replayability"));
         RejectAnswerBearingProperties(executionInput);
-        ValidateRetainedArtifactReferences(
-            executionInput,
-            fullDirectory,
-            InputArtifactPrefix,
-            ExecutionInputFileName);
-        ValidateRetainedArtifactReferences(
-            oracle,
-            fullDirectory,
-            OracleArtifactPrefix,
-            OracleFileName);
+        RetainedArtifactBudget retainedArtifactBudget = new(
+            testOptions?.MaximumReferenceCount ?? MaximumRetainedArtifactReferences,
+            testOptions?.MaximumAggregateBytes ?? MaximumRetainedAggregateBytes);
+        IReadOnlyDictionary<string, RetainedArtifactSnapshot> inputSnapshots =
+            ValidateRetainedArtifactReferences(
+                executionInput,
+                fullDirectory,
+                InputArtifactPrefix,
+                ExecutionInputFileName,
+                retainedArtifactBudget,
+                testOptions);
+        Dictionary<string, RetainedArtifactSnapshot> oracleSnapshots =
+            ValidateRetainedArtifactReferences(
+                oracle,
+                fullDirectory,
+                OracleArtifactPrefix,
+                OracleFileName,
+                retainedArtifactBudget,
+                testOptions);
+        if (oracleSnapshots.ContainsKey(BethesdaByteOracleValidator.ArtifactId))
+        {
+            ValidateRootDocumentClosure(fullDirectory);
+            ValidateInputByteBudget(executionInput, inputSnapshots);
+        }
+
+        testOptions?.AfterArtifactsSnapshotted?.Invoke();
         BethesdaByteOracleValidator.Validate(
-            fullDirectory,
             executionInput,
             oracle,
             fixtureId,
-            fixtureVersion);
+            fixtureVersion,
+            inputSnapshots,
+            oracleSnapshots);
 
         return new EvaluationHarnessFixturePackage(
             fixtureId,
@@ -688,6 +740,13 @@ public static class FixturePackageReader
                             $"Execution input contains answer-bearing property '{property.Name}'.");
                     }
 
+                    if (property.NameEquals("artifact_id")
+                        && property.Value.ValueKind == JsonValueKind.String
+                        && property.Value.GetString() is string artifactId)
+                    {
+                        RejectAnswerBearingArtifactId(artifactId);
+                    }
+
                     RejectAnswerBearingProperties(property.Value);
                 }
 
@@ -702,11 +761,75 @@ public static class FixturePackageReader
         }
     }
 
-    private static void ValidateRetainedArtifactReferences(
+    private static void RejectAnswerBearingArtifactId(string artifactId)
+    {
+        string normalized = artifactId.Replace('\\', '/');
+        if (normalized.StartsWith('/')
+            || normalized.StartsWith("file:", StringComparison.OrdinalIgnoreCase)
+            || (normalized.Length >= 2
+                && char.IsAsciiLetter(normalized[0])
+                && normalized[1] == ':'))
+        {
+            throw new InvalidDataException(
+                $"Execution input contains private filesystem artifact locator '{artifactId}'.");
+        }
+
+        if (normalized.StartsWith(OracleArtifactPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidDataException(
+                $"Execution input contains oracle artifact ID '{artifactId}'.");
+        }
+
+        foreach (string segment in normalized.Split('/', StringSplitOptions.RemoveEmptyEntries))
+        {
+            string[] tokens = segment.Split(
+                ['.', '-', '_', ' '],
+                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (tokens.Any(
+                    token => token.Equals("answer", StringComparison.OrdinalIgnoreCase)
+                        || token.Equals("answers", StringComparison.OrdinalIgnoreCase)
+                        || token.Equals("oracle", StringComparison.OrdinalIgnoreCase)
+                        || token.Equals("expected", StringComparison.OrdinalIgnoreCase))
+                || segment.Contains("answer-bearing", StringComparison.OrdinalIgnoreCase)
+                || segment.Contains("ground-truth", StringComparison.OrdinalIgnoreCase)
+                || segment.Contains("ground_truth", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidDataException(
+                    $"Execution input contains answer-bearing artifact ID '{artifactId}'.");
+            }
+        }
+    }
+
+    private static Dictionary<string, RetainedArtifactSnapshot>
+        ValidateRetainedArtifactReferences(
         JsonElement element,
         string fixtureDirectory,
         string requiredPrefix,
-        string documentName)
+        string documentName,
+        RetainedArtifactBudget budget,
+        RetainedArtifactValidationTestOptions? testOptions)
+    {
+        Dictionary<string, RetainedArtifactSnapshot> snapshots =
+            new(StringComparer.OrdinalIgnoreCase);
+        CollectRetainedArtifactReferences(
+            element,
+            fixtureDirectory,
+            requiredPrefix,
+            documentName,
+            budget,
+            testOptions,
+            snapshots);
+        return snapshots;
+    }
+
+    private static void CollectRetainedArtifactReferences(
+        JsonElement element,
+        string fixtureDirectory,
+        string requiredPrefix,
+        string documentName,
+        RetainedArtifactBudget budget,
+        RetainedArtifactValidationTestOptions? testOptions,
+        Dictionary<string, RetainedArtifactSnapshot> snapshots)
     {
         switch (element.ValueKind)
         {
@@ -714,46 +837,107 @@ public static class FixturePackageReader
                 if (element.TryGetProperty("artifact_id", out JsonElement artifactIdElement)
                     && artifactIdElement.ValueKind == JsonValueKind.String
                     && artifactIdElement.GetString() is string artifactId
-                    && artifactId.StartsWith(requiredPrefix, StringComparison.Ordinal))
+                    && artifactId.StartsWith(requiredPrefix, StringComparison.OrdinalIgnoreCase))
                 {
-                    ValidateRetainedArtifactReference(
-                        element,
-                        fixtureDirectory,
-                        artifactId,
-                        requiredPrefix,
-                        documentName);
+                    if (!artifactId.StartsWith(requiredPrefix, StringComparison.Ordinal))
+                    {
+                        throw new InvalidDataException(
+                            $"Package-relative artifact '{artifactId}' in '{documentName}' "
+                            + "must use the canonical scoped prefix.");
+                    }
+
+                    if (StringComparer.OrdinalIgnoreCase.Equals(
+                            artifactId,
+                            BethesdaByteOracleValidator.ArtifactId)
+                        && !StringComparer.Ordinal.Equals(
+                            artifactId,
+                            BethesdaByteOracleValidator.ArtifactId))
+                    {
+                        throw new InvalidDataException(
+                            "The supplemental Bethesda oracle artifact ID must use "
+                            + "its canonical casing.");
+                    }
+
+                    budget.AddReference(artifactId);
+                    if (snapshots.TryGetValue(artifactId, out RetainedArtifactSnapshot? existingSnapshot))
+                    {
+                        ValidateRepeatedRetainedArtifactReference(
+                            element,
+                            artifactId,
+                            documentName,
+                            existingSnapshot);
+                    }
+                    else
+                    {
+                        RetainedArtifactSnapshot snapshot = ValidateRetainedArtifactReference(
+                            element,
+                            fixtureDirectory,
+                            artifactId,
+                            requiredPrefix,
+                            documentName,
+                            budget,
+                            testOptions);
+                        snapshots.Add(artifactId, snapshot);
+                    }
                 }
 
                 foreach (JsonProperty property in element.EnumerateObject())
                 {
-                    ValidateRetainedArtifactReferences(
+                    CollectRetainedArtifactReferences(
                         property.Value,
                         fixtureDirectory,
                         requiredPrefix,
-                        documentName);
+                        documentName,
+                        budget,
+                        testOptions,
+                        snapshots);
                 }
 
                 break;
             case JsonValueKind.Array:
                 foreach (JsonElement item in element.EnumerateArray())
                 {
-                    ValidateRetainedArtifactReferences(
+                    CollectRetainedArtifactReferences(
                         item,
                         fixtureDirectory,
                         requiredPrefix,
-                        documentName);
+                        documentName,
+                        budget,
+                        testOptions,
+                        snapshots);
                 }
 
                 break;
         }
     }
 
-    private static void ValidateRetainedArtifactReference(
+    private static void ValidateRepeatedRetainedArtifactReference(
+        JsonElement artifactReference,
+        string artifactId,
+        string documentName,
+        RetainedArtifactSnapshot snapshot)
+    {
+        if (!StringComparer.Ordinal.Equals(
+                RequireString(artifactReference, "availability"),
+                "retained")
+            || !StringComparer.Ordinal.Equals(
+                RequireString(artifactReference, "fingerprint"),
+                snapshot.Sha256))
+        {
+            throw new InvalidDataException(
+                $"Repeated retained artifact reference '{artifactId}' in '{documentName}' "
+                + "does not match its validated snapshot.");
+        }
+    }
+
+    private static RetainedArtifactSnapshot ValidateRetainedArtifactReference(
         JsonElement artifactReference,
         string fixtureDirectory,
         string artifactId,
         string requiredPrefix,
-        string documentName)
+        string documentName,
+        RetainedArtifactBudget budget,
+        RetainedArtifactValidationTestOptions? testOptions)
     {
         if (!StringComparer.Ordinal.Equals(
                 RequireString(artifactReference, "availability"),
@@ -763,9 +947,11 @@ public static class FixturePackageReader
                 $"Package-relative artifact '{artifactId}' in '{documentName}' must be retained.");
         }
 
+        string[] segments = artifactId.Split('/', StringSplitOptions.None);
         if (artifactId.Contains('\\', StringComparison.Ordinal)
-            || artifactId.Split('/', StringSplitOptions.None).Any(
-                segment => segment is "" or "." or ".."))
+            || artifactId.Contains(':', StringComparison.Ordinal)
+            || artifactId.StartsWith('/')
+            || segments.Any(IsUnsafeArtifactPathSegment))
         {
             throw new InvalidDataException(
                 $"Package-relative artifact '{artifactId}' in '{documentName}' is unsafe.");
@@ -790,6 +976,10 @@ public static class FixturePackageReader
                 $"Retained package artifact '{artifactId}' is missing.");
         }
 
+        testOptions?.BeforeScopePin?.Invoke(artifactId);
+        using SafeFileHandle? scopedRootHandle =
+            WindowsRetainedArtifactIdentity.OpenPinnedDirectory(scopedRoot, artifactId);
+        testOptions?.BeforeArtifactOpen?.Invoke(artifactId);
         using FileStream stream = new(
             artifactPath,
             FileMode.Open,
@@ -797,19 +987,113 @@ public static class FixturePackageReader
             FileShare.Read,
             bufferSize: 64 * 1024,
             FileOptions.SequentialScan);
-        WindowsRetainedArtifactIdentity.RequireSingleLink(stream.SafeFileHandle, artifactId);
-        if (stream.Length > MaximumRetainedArtifactBytes)
+        WindowsRetainedArtifactIdentitySnapshot initialIdentity =
+            WindowsRetainedArtifactIdentity.RequireContainedSingleLink(
+                stream.SafeFileHandle,
+                scopedRootHandle,
+                artifactId);
+        long maximumArtifactBytes =
+            testOptions?.MaximumArtifactBytes ?? MaximumRetainedArtifactBytes;
+        if (stream.Length > maximumArtifactBytes)
         {
             throw new InvalidDataException(
                 $"Retained package artifact '{artifactId}' exceeds the byte bound.");
         }
 
-        string actualFingerprint = Convert.ToHexStringLower(SHA256.HashData(stream));
+        long maximumReadableBytes = Math.Min(maximumArtifactBytes, budget.RemainingBytes);
+        if (stream.Length > maximumReadableBytes)
+        {
+            throw new InvalidDataException(
+                $"Retained package artifact '{artifactId}' exceeds the aggregate byte bound.");
+        }
+
+        byte[] bytes = ReadBoundedRetainedArtifact(stream, artifactId, maximumReadableBytes);
+        WindowsRetainedArtifactIdentity.RequireUnchanged(
+            stream.SafeFileHandle,
+            initialIdentity,
+            artifactId);
+        budget.AddBytes(bytes.LongLength, artifactId);
+        string actualFingerprint = Convert.ToHexStringLower(SHA256.HashData(bytes));
         string expectedFingerprint = RequireString(artifactReference, "fingerprint");
         if (!StringComparer.Ordinal.Equals(expectedFingerprint, actualFingerprint))
         {
             throw new InvalidDataException(
                 $"Retained package artifact '{artifactId}' does not match its fingerprint.");
+        }
+
+        return new RetainedArtifactSnapshot(artifactId, bytes, actualFingerprint);
+    }
+
+    private static bool IsUnsafeArtifactPathSegment(string segment)
+    {
+        if (segment is "" or "." or ".."
+            || segment.EndsWith(' ')
+            || segment.EndsWith('.')
+            || segment.Contains('*', StringComparison.Ordinal)
+            || segment.Contains('?', StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        string deviceName = segment.Split('.', 2)[0];
+        return deviceName.Equals("CON", StringComparison.OrdinalIgnoreCase)
+            || deviceName.Equals("PRN", StringComparison.OrdinalIgnoreCase)
+            || deviceName.Equals("AUX", StringComparison.OrdinalIgnoreCase)
+            || deviceName.Equals("NUL", StringComparison.OrdinalIgnoreCase)
+            || deviceName.Equals("CONIN$", StringComparison.OrdinalIgnoreCase)
+            || deviceName.Equals("CONOUT$", StringComparison.OrdinalIgnoreCase)
+            || (deviceName.Length == 4
+                && (deviceName.StartsWith("COM", StringComparison.OrdinalIgnoreCase)
+                    || deviceName.StartsWith("LPT", StringComparison.OrdinalIgnoreCase))
+                && deviceName[3] is >= '1' and <= '9');
+    }
+
+    private static byte[] ReadBoundedRetainedArtifact(
+        FileStream stream,
+        string artifactId,
+        long maximumBytes)
+    {
+        using MemoryStream buffer = new(
+            checked((int)Math.Min(stream.Length, 1024 * 1024)));
+        byte[] block = new byte[64 * 1024];
+        long total = 0;
+        while (true)
+        {
+            int read = stream.Read(block);
+            if (read == 0)
+            {
+                break;
+            }
+
+            total = checked(total + read);
+            if (total > maximumBytes)
+            {
+                throw new InvalidDataException(
+                    $"Retained package artifact '{artifactId}' exceeds the byte bound while being read.");
+            }
+
+            buffer.Write(block, 0, read);
+        }
+
+        return buffer.ToArray();
+    }
+
+    private static void ValidateInputByteBudget(
+        JsonElement executionInput,
+        IReadOnlyDictionary<string, RetainedArtifactSnapshot> inputSnapshots)
+    {
+        long declaredInputBytes = executionInput
+            .GetProperty("resource_and_time_limits")
+            .GetProperty("input_bytes")
+            .GetInt64();
+        long retainedInputBytes = inputSnapshots.Values.Aggregate(
+            0L,
+            static (total, snapshot) => checked(total + snapshot.ByteLength));
+        if (declaredInputBytes != retainedInputBytes)
+        {
+            throw new InvalidDataException(
+                "Execution input resource_and_time_limits.input_bytes must exactly equal "
+                + "the retained input payload byte total.");
         }
     }
 
@@ -866,6 +1150,49 @@ public static class FixturePackageReader
         return File.Exists(path)
             ? path
             : throw new FileNotFoundException($"Required fixture document '{fileName}' is missing.", path);
+    }
+
+    private static void ValidateRootDocumentClosure(string directory)
+    {
+        string[] rootDocuments = Directory
+            .EnumerateFiles(directory, "*", SearchOption.TopDirectoryOnly)
+            .Select(Path.GetFileName)
+            .OfType<string>()
+            .ToArray();
+        if (rootDocuments.Length != RequiredRootDocumentNames.Count
+            || rootDocuments.Any(name => !RequiredRootDocumentNames.Contains(name)))
+        {
+            throw new InvalidDataException(
+                "Fixture root must contain exactly the seven required fixture documents.");
+        }
+    }
+
+    private sealed class RetainedArtifactBudget(int maximumReferences, long maximumBytes)
+    {
+        private int references;
+        private long bytes;
+
+        internal long RemainingBytes => maximumBytes - bytes;
+
+        internal void AddReference(string artifactId)
+        {
+            references = checked(references + 1);
+            if (references > maximumReferences)
+            {
+                throw new InvalidDataException(
+                    $"Retained package artifact '{artifactId}' exceeds the reference-count bound.");
+            }
+        }
+
+        internal void AddBytes(long byteCount, string artifactId)
+        {
+            bytes = checked(bytes + byteCount);
+            if (bytes > maximumBytes)
+            {
+                throw new InvalidDataException(
+                    $"Retained package artifact '{artifactId}' exceeds the aggregate byte bound.");
+            }
+        }
     }
 
     private static BoundedJsonDocumentSnapshot ReadDocument(string path)

@@ -14,12 +14,14 @@ EVAL-0001, EVAL-0002, EVAL-0016, EVAL-0017, EVAL-0032, EVAL-0051,
 EVAL-0052, EVAL-0054, EVAL-0065, EVAL-0067, and EVAL-0083 through
 EVAL-0086.
 
-It is a specification, not an executable corpus. Except for the research
-qualification artifacts explicitly referenced below:
+It is a specification and inventory, not one monolithic executable corpus.
+Except for the research qualification artifacts and the Slice 3.5 Bethesda
+packages explicitly identified below:
 
-- fixture payloads and oracle manifests have not been created;
-- held-out slots have not been independently authored or sealed;
-- no executable fixture package or oracle manifest has been accepted as
+- many fixture payloads and oracle manifests have not been created;
+- held-out slots other than the sealed `BETH-HO-001` entry have not been
+  independently authored or sealed;
+- no unlisted fixture package or oracle manifest is accepted as
   execution-ready;
 - no fixture has been executed; and
 - no evaluation case has passed.
@@ -172,9 +174,10 @@ unavailable replayability must remain explicit.
 | `MO2-ATOMIC-DEV` | Development | EVAL-0051 | Constructed and exercised through the independent Slice 3 evaluator package | MO2 fixture operator |
 | `MO2-INTEGRATION-VAL` / `MO2-NEGATIVE-VAL` | Validation | EVAL-0051 | Constructed, independently observed, and passed for the exact admitted target | Independent MO2 observer |
 | `MO2-HO-001` | Held-out | EVAL-0051 | Required before general conformance claim; not authored/sealed | Independent holdout custodian |
-| `BETH-NPC-DEV` / `BETH-REFR-DEV` | Development | EVAL-0052 | Required; not created | Binary-fixture author |
-| `BETH-LIGHT-VAL` / `BETH-MALFORMED-VAL` / `BETH-UNSUPPORTED-VAL` | Validation | EVAL-0052 | Required; not created | Independent binary reviewer |
-| `BETH-HO-001` | Held-out | EVAL-0052 | Required before supported-shape conformance; not authored/sealed | Independent holdout custodian |
+| `BETH-NPC-DEV` / `BETH-REFR-DEV` / `BETH-MALFORMED-VAL` | Development | EVAL-0052 | Constructed and independently accepted as Slice 4 inputs; malformed package reclassified after its cases influenced generator corrections; production comparison remains pending | Binary-fixture author |
+| `BETH-LIGHT-VAL` / `BETH-UNSUPPORTED-VAL` | Validation | EVAL-0052 | Constructed and independently reviewed; public-answer publication authority is not recorded, so Slice 3.5 closeout remains blocked | Independent binary reviewer |
+| `BETH-MALFORMED-VAL-002` | Validation | EVAL-0052 | Sealed evaluator-private materially independent replacement; public fingerprints and attestations retained; EVAL-0052 remains unexecuted | Isolated replacement oracle reviewer |
+| `BETH-HO-001` | Held-out | EVAL-0052 | Sealed evaluator-private; public fingerprints retained; supported-shape conformance remains pending | Independent holdout custodian |
 | `TARGET-1170-PRIVATE-VAL` and target-negative package | Validation | EVAL-0054 | Exact private fingerprint known; executable manifest not created | Runtime-gate reviewer |
 | `ANALYZER-CONTRACT-DEV` and boundary variants | Development/validation | EVAL-0065 | Required; not created | Contract reviewer |
 | `EVID-TYPES-DEV` / `EVID-LLM-VAL` / `EVID-NO-LLM-VAL` / `EVID-HOSTILE-VAL` | Development/validation | EVAL-0067 | Required; not created | Evidence-model reviewer |
@@ -188,7 +191,7 @@ unavailable replayability must remain explicit.
 | `CASE-HO-001` | Held-out | EVAL-0084 | Required before broad grouping claim; not authored/sealed | Independent holdout custodian |
 | `COVER-MATRIX-DEV` / `COVER-ZERO-FINDING-VAL` / `COVER-PARTIAL-VAL` / `COVER-TARGETED-VAL` | Development/validation | EVAL-0085 | Required; not created | Coverage/readiness reviewer |
 | `COVER-HO-001` | Held-out | EVAL-0085 | Required before broad presentation claim; not authored/sealed | Independent holdout custodian |
-| `TAX-AXES-DEV` / `TAX-COUNTEREXAMPLE-VAL` / `TAX-STATE-VAL` / `TAX-HISTORY-VAL` | Development/validation | EVAL-0086 | Required; not created | Taxonomy reviewer |
+| `TAX-AXES-DEV` / `TAX-COUNTEREXAMPLE-VAL` / `TAX-STATE-VAL` / `TAX-HISTORY-VAL` | Development/validation | EVAL-0086 | Slice 4-applicable BETH-linked projections accepted; broader packages and history mechanics remain required | Taxonomy reviewer |
 | `TAX-HO-001` | Held-out | EVAL-0086 | Required before broad classification claim; not authored/sealed | Independent holdout custodian |
 
 The known-answer real candidates cannot be promoted to held-out by changing a

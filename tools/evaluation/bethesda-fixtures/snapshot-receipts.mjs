@@ -47,8 +47,8 @@ for (const fixtureId of fixtureIds) {
     sha256: plugin.sha256,
     provider_id: providers[index].provider_id,
   }));
-  const dependencyValue = canonicalJson({ providers, plugin_order: pluginOrder });
-  const dependencyFingerprint = sha256(Buffer.from(dependencyValue, "utf8"));
+  const captureBindingValue = canonicalJson({ providers, plugin_order: pluginOrder });
+  const captureBindingFingerprint = sha256(Buffer.from(captureBindingValue, "utf8"));
   const receipt = {
     schema_id: "infinium.evaluation.bethesda-snapshot-input/v1",
     schema_version: "1",
@@ -64,7 +64,8 @@ for (const fixtureId of fixtureIds) {
       artifact_id: `inputs/${mutation.path}`,
       sha256: mutation.sha256,
     })),
-    dependency_fingerprint: dependencyFingerprint,
+    capture_binding_algorithm: "infinium.fixture-snapshot-capture-binding/v1",
+    expected_capture_binding_fingerprint: captureBindingFingerprint,
     capture_policy: {
       manager_launch: "forbidden",
       usvfs_launch: "forbidden",
@@ -81,7 +82,7 @@ for (const fixtureId of fixtureIds) {
   const output = await readFile(outputPath);
   const outputStats = await stat(outputPath);
   process.stdout.write(
-    `${fixtureId} ${outputStats.size} ${sha256(output)} ${dependencyFingerprint}\n`,
+    `${fixtureId} ${outputStats.size} ${sha256(output)} ${captureBindingFingerprint}\n`,
   );
 }
 

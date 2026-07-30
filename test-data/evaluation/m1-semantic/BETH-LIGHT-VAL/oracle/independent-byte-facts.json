@@ -3,7 +3,7 @@
   "schema_version": "1",
   "fixture_id": "BETH-LIGHT-VAL",
   "fixture_version": "1.0.0",
-  "oracle_artifact_version": "1.0.0",
+  "oracle_artifact_version": "1.0.1",
   "canonicalization": "infinium-canonical-json-sha256/v1",
   "independent_authors_and_reviewers": [
     "oracle-reviewer"
@@ -3554,8 +3554,6 @@
       "target_artifact_id": "inputs/mutations/Native-BelowObjectRange.esl",
       "changed_fact_ids": [
         "beth.beth-light-val.fact-00035",
-        "beth.beth-light-val.fact-00036",
-        "beth.beth-light-val.fact-00037",
         "beth.beth-light-val.fact-00038",
         "beth.beth-light-val.fact-00039",
         "beth.beth-light-val.fact-00040",
@@ -3598,6 +3596,8 @@
         "beth.beth-light-val.fact-00032",
         "beth.beth-light-val.fact-00033",
         "beth.beth-light-val.fact-00034",
+        "beth.beth-light-val.fact-00036",
+        "beth.beth-light-val.fact-00037",
         "beth.beth-light-val.fact-00043",
         "beth.beth-light-val.fact-00044",
         "beth.beth-light-val.fact-00045",
@@ -3671,8 +3671,6 @@
       "target_artifact_id": "inputs/mutations/Native-AboveLightMaximum.esl",
       "changed_fact_ids": [
         "beth.beth-light-val.fact-00027",
-        "beth.beth-light-val.fact-00028",
-        "beth.beth-light-val.fact-00029",
         "beth.beth-light-val.fact-00030",
         "beth.beth-light-val.fact-00031",
         "beth.beth-light-val.fact-00032",
@@ -3707,6 +3705,8 @@
         "beth.beth-light-val.fact-00024",
         "beth.beth-light-val.fact-00025",
         "beth.beth-light-val.fact-00026",
+        "beth.beth-light-val.fact-00028",
+        "beth.beth-light-val.fact-00029",
         "beth.beth-light-val.fact-00035",
         "beth.beth-light-val.fact-00036",
         "beth.beth-light-val.fact-00037",
@@ -3788,8 +3788,6 @@
       "target_artifact_id": "inputs/mutations/FlaggedEsp-BelowObjectRange.esp",
       "changed_fact_ids": [
         "beth.beth-light-val.fact-00019",
-        "beth.beth-light-val.fact-00020",
-        "beth.beth-light-val.fact-00021",
         "beth.beth-light-val.fact-00022",
         "beth.beth-light-val.fact-00023",
         "beth.beth-light-val.fact-00024",
@@ -3816,6 +3814,8 @@
         "beth.beth-light-val.fact-00016",
         "beth.beth-light-val.fact-00017",
         "beth.beth-light-val.fact-00018",
+        "beth.beth-light-val.fact-00020",
+        "beth.beth-light-val.fact-00021",
         "beth.beth-light-val.fact-00027",
         "beth.beth-light-val.fact-00028",
         "beth.beth-light-val.fact-00029",
@@ -3905,8 +3905,6 @@
       "target_artifact_id": "inputs/mutations/FlaggedEsp-AboveLightMaximum.esp",
       "changed_fact_ids": [
         "beth.beth-light-val.fact-00011",
-        "beth.beth-light-val.fact-00012",
-        "beth.beth-light-val.fact-00013",
         "beth.beth-light-val.fact-00014",
         "beth.beth-light-val.fact-00015",
         "beth.beth-light-val.fact-00016",
@@ -3925,6 +3923,8 @@
         "beth.beth-light-val.fact-00008",
         "beth.beth-light-val.fact-00009",
         "beth.beth-light-val.fact-00010",
+        "beth.beth-light-val.fact-00012",
+        "beth.beth-light-val.fact-00013",
         "beth.beth-light-val.fact-00019",
         "beth.beth-light-val.fact-00020",
         "beth.beth-light-val.fact-00021",
@@ -4022,7 +4022,6 @@
       "target_artifact_id": "inputs/mutations/Native-HeaderFlagRemoved.esl",
       "changed_fact_ids": [
         "beth.beth-light-val.fact-00043",
-        "beth.beth-light-val.fact-00044",
         "beth.beth-light-val.fact-00045",
         "beth.beth-light-val.fact-00046",
         "beth.beth-light-val.fact-00047",
@@ -4074,6 +4073,7 @@
         "beth.beth-light-val.fact-00040",
         "beth.beth-light-val.fact-00041",
         "beth.beth-light-val.fact-00042",
+        "beth.beth-light-val.fact-00044",
         "beth.beth-light-val.fact-00051",
         "beth.beth-light-val.fact-00052",
         "beth.beth-light-val.fact-00053",
@@ -4140,7 +4140,6 @@
       "changed_fact_ids": [
         "beth.beth-light-val.fact-00001",
         "beth.beth-light-val.fact-00002",
-        "beth.beth-light-val.fact-00003",
         "beth.beth-light-val.fact-00004",
         "beth.beth-light-val.fact-00005",
         "beth.beth-light-val.fact-00006",
@@ -4152,6 +4151,7 @@
         "beth.beth-light-val.fact-00108"
       ],
       "unchanged_fact_ids": [
+        "beth.beth-light-val.fact-00003",
         "beth.beth-light-val.fact-00011",
         "beth.beth-light-val.fact-00012",
         "beth.beth-light-val.fact-00013",

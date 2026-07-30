@@ -8,6 +8,8 @@ namespace Infinium.Tests;
 
 internal sealed class FixturePackageTestBuilder : IDisposable
 {
+    private static readonly JsonSerializerOptions IndentedJsonOptions =
+        new() { WriteIndented = true };
     private readonly string directory;
 
     internal FixturePackageTestBuilder()
@@ -160,8 +162,14 @@ internal sealed class FixturePackageTestBuilder : IDisposable
         WriteRetainedArtifact(relativePath, bytes);
         MutateObject(
             FixturePackageReader.ExecutionInputFileName,
-            root => root["input_payload_refs"]!.AsArray().Add(
-                ArtifactReference(relativePath, Fingerprint(relativePath))));
+            root =>
+            {
+                root["input_payload_refs"]!.AsArray().Add(
+                    ArtifactReference(relativePath, Fingerprint(relativePath)));
+                JsonObject limits = root["resource_and_time_limits"]!.AsObject();
+                limits["input_bytes"] =
+                    limits["input_bytes"]!.GetValue<long>() + bytes.LongLength;
+            });
         RefreshFingerprint("input_package_fingerprint", FixturePackageReader.ExecutionInputFileName);
     }
 
@@ -176,12 +184,154 @@ internal sealed class FixturePackageTestBuilder : IDisposable
         RefreshFingerprint("oracle_fingerprint", FixturePackageReader.OracleFileName);
     }
 
+    internal byte[] AddSupplementalBethesdaOracle(string inputArtifactId, byte[] inputBytes)
+    {
+        AddRetainedInputArtifact(inputArtifactId, inputBytes);
+        MutateObject(
+            FixturePackageReader.OracleFileName,
+            root => root["ground_truth_methods"]!.AsArray().Add(
+                new JsonObject
+                {
+                    ["method_id"] = "independent-byte-review",
+                    ["method"] = "Second independent byte-level review.",
+                    ["evidence_references"] = new JsonArray
+                    {
+                        ArtifactReference("public-format-reference"),
+                    },
+                    ["independent_of_system_under_test"] = true,
+                }));
+
+        JsonObject supplemental = new()
+        {
+            ["schema_id"] = "infinium.evaluation.bethesda-byte-oracle/v1",
+            ["schema_version"] = "1",
+            ["fixture_id"] = "fixture-development-1",
+            ["fixture_version"] = "1.0.0",
+            ["oracle_artifact_version"] = "1.0.0",
+            ["canonicalization"] = "infinium-canonical-json-sha256/v1",
+            ["independent_authors_and_reviewers"] = new JsonArray("independent-reviewer"),
+            ["ground_truth_method_ids"] =
+                new JsonArray("project-authored-method", "independent-byte-review"),
+            ["format_evidence"] = new JsonArray
+            {
+                ArtifactReference("public-format-reference"),
+            },
+            ["files"] = new JsonArray
+            {
+                new JsonObject
+                {
+                    ["artifact_id"] = inputArtifactId,
+                    ["byte_length"] = inputBytes.LongLength,
+                    ["sha256"] = Convert.ToHexStringLower(SHA256.HashData(inputBytes)),
+                    ["provider_id"] = "test-provider",
+                    ["scenario_memberships"] = new JsonArray
+                    {
+                        new JsonObject
+                        {
+                            ["scenario_id"] = "test-scenario",
+                            ["plugin_order"] = 0,
+                        },
+                    },
+                    ["masters_state"] = "observed",
+                    ["masters"] = new JsonArray(),
+                    ["esl_flag_state"] = "observed",
+                    ["esl_flag"] = false,
+                    ["byte_coverage"] = new JsonArray
+                    {
+                        new JsonObject
+                        {
+                            ["span_id"] = "entire-file",
+                            ["offset_space"] = "physical-file",
+                            ["offset"] = 0,
+                            ["length"] = inputBytes.LongLength,
+                            ["classification"] = "opaque",
+                        },
+                    },
+                },
+            },
+            ["facts"] = new JsonArray(),
+            ["mutation_expectations"] = new JsonArray(),
+            ["limits"] = new JsonObject
+            {
+                ["maximum_input_bytes"] = inputBytes.LongLength,
+                ["maximum_records"] = 1,
+                ["maximum_subrecords_per_record"] = 1,
+                ["maximum_group_depth"] = 1,
+                ["maximum_decompressed_bytes"] = inputBytes.LongLength,
+            },
+            ["review_state"] = "accepted",
+        };
+        byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(
+            supplemental,
+            IndentedJsonOptions);
+        AddRetainedOracleArtifact(BethesdaByteOracleValidator.ArtifactId, bytes);
+        return bytes;
+    }
+
     internal void AddRetainedInputReference(string relativePath, string fingerprint)
     {
         MutateObject(
             FixturePackageReader.ExecutionInputFileName,
             root => root["input_payload_refs"]!.AsArray().Add(
                 ArtifactReference(relativePath, fingerprint)));
+        RefreshFingerprint("input_package_fingerprint", FixturePackageReader.ExecutionInputFileName);
+    }
+
+    internal void ReplaceRetainedOracleArtifactAndRefreshReference(
+        string relativePath,
+        byte[] bytes)
+    {
+        WriteRetainedArtifact(relativePath, bytes);
+        string fingerprint = Fingerprint(relativePath);
+        MutateObject(
+            FixturePackageReader.OracleFileName,
+            root =>
+            {
+                foreach (JsonNode? method in root["ground_truth_methods"]!.AsArray())
+                {
+                    foreach (JsonNode? reference in
+                             method!["evidence_references"]!.AsArray())
+                    {
+                        if (StringComparer.Ordinal.Equals(
+                                reference!["artifact_id"]!.GetValue<string>(),
+                                relativePath))
+                        {
+                            reference["fingerprint"] = fingerprint;
+                        }
+                    }
+                }
+            });
+        RefreshFingerprint("oracle_fingerprint", FixturePackageReader.OracleFileName);
+    }
+
+    internal void RenameRetainedOracleReference(string fromArtifactId, string toArtifactId)
+    {
+        MutateObject(
+            FixturePackageReader.OracleFileName,
+            root =>
+            {
+                foreach (JsonNode? method in root["ground_truth_methods"]!.AsArray())
+                {
+                    foreach (JsonNode? reference in
+                             method!["evidence_references"]!.AsArray())
+                    {
+                        if (StringComparer.Ordinal.Equals(
+                                reference!["artifact_id"]!.GetValue<string>(),
+                                fromArtifactId))
+                        {
+                            reference["artifact_id"] = toArtifactId;
+                        }
+                    }
+                }
+            });
+        RefreshFingerprint("oracle_fingerprint", FixturePackageReader.OracleFileName);
+    }
+
+    internal void SetDeclaredInputBytes(long inputBytes)
+    {
+        MutateObject(
+            FixturePackageReader.ExecutionInputFileName,
+            root => root["resource_and_time_limits"]!["input_bytes"] = inputBytes);
         RefreshFingerprint("input_package_fingerprint", FixturePackageReader.ExecutionInputFileName);
     }
 
@@ -535,7 +685,7 @@ internal sealed class FixturePackageTestBuilder : IDisposable
     {
         File.WriteAllText(
             FilePath(fileName),
-            node.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+            node.ToJsonString(IndentedJsonOptions));
     }
 
     private void WriteRetainedArtifact(string relativePath, byte[] bytes)

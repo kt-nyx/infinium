@@ -5247,5 +5247,1095 @@
       "extension_header_mismatch": false
     }
   ],
-  "supplemental_inputs": []
+  "supplemental_inputs": [],
+  "scenario_semantics": [
+    {
+      "scenario_id": "refr-layered-winner",
+      "plugin_paths": [
+        "plugins/00-Pad.esm",
+        "plugins/01-World.esm",
+        "plugins/02-Relations.esp",
+        "plugins/03-Placement.esp",
+        "plugins/04-MergedWinner.esp"
+      ],
+      "records": [
+        {
+          "locator": "plugins/01-World.esm#1",
+          "plugin_order": 1,
+          "form_key": "00000800:01-World.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-World.esm#2",
+          "plugin_order": 1,
+          "form_key": "00000810:01-World.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-World.esm#3",
+          "plugin_order": 1,
+          "form_key": "00000820:01-World.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-World.esm#4",
+          "plugin_order": 1,
+          "form_key": "00000830:01-World.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-World.esm#5",
+          "plugin_order": 1,
+          "form_key": "00000840:01-World.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000800",
+              "form_key": "00000800:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XLRL",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000820",
+              "form_key": "00000820:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XOWN",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000810",
+              "form_key": "00000810:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 0,
+              "component": "keyword",
+              "form_id_hex": "01000830",
+              "form_key": "00000830:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 0,
+              "component": "linked-reference",
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-World.esm",
+              "resolution_state": "resolved"
+            }
+          ]
+        },
+        {
+          "locator": "plugins/02-Relations.esp#1",
+          "plugin_order": 2,
+          "form_key": "00000840:01-World.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000800",
+              "form_key": "00000800:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XLRL",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000000",
+              "form_key": null,
+              "resolution_state": "null"
+            },
+            {
+              "field": "XOWN",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000810",
+              "form_key": "00000810:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 0,
+              "component": "keyword",
+              "form_id_hex": "00000830",
+              "form_key": "00000830:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 0,
+              "component": "linked-reference",
+              "form_id_hex": "00000000",
+              "form_key": null,
+              "resolution_state": "null"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 1,
+              "component": "keyword",
+              "form_id_hex": "00000830",
+              "form_key": "00000830:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 1,
+              "component": "linked-reference",
+              "form_id_hex": "00000840",
+              "form_key": "00000840:01-World.esm",
+              "resolution_state": "resolved"
+            }
+          ]
+        },
+        {
+          "locator": "plugins/03-Placement.esp#1",
+          "plugin_order": 3,
+          "form_key": "00000840:01-World.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000800",
+              "form_key": "00000800:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XLRL",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000820",
+              "form_key": "00000820:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XOWN",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000810",
+              "form_key": "00000810:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 0,
+              "component": "keyword",
+              "form_id_hex": "00000830",
+              "form_key": "00000830:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 0,
+              "component": "linked-reference",
+              "form_id_hex": "00000840",
+              "form_key": "00000840:01-World.esm",
+              "resolution_state": "resolved"
+            }
+          ]
+        },
+        {
+          "locator": "plugins/04-MergedWinner.esp#1",
+          "plugin_order": 4,
+          "form_key": "00000840:01-World.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000800",
+              "form_key": "00000800:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XLRL",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000820",
+              "form_key": "00000820:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XOWN",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000000",
+              "form_key": null,
+              "resolution_state": "null"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 0,
+              "component": "keyword",
+              "form_id_hex": "00000830",
+              "form_key": "00000830:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 0,
+              "component": "linked-reference",
+              "form_id_hex": "00000000",
+              "form_key": null,
+              "resolution_state": "null"
+            }
+          ]
+        }
+      ],
+      "chains": [
+        {
+          "form_key": "00000840:01-World.esm",
+          "ordered_locators": [
+            "plugins/01-World.esm#5",
+            "plugins/02-Relations.esp#1",
+            "plugins/03-Placement.esp#1",
+            "plugins/04-MergedWinner.esp#1"
+          ],
+          "winner_locator": "plugins/04-MergedWinner.esp#1"
+        }
+      ],
+      "denominator": null
+    },
+    {
+      "scenario_id": "refr-deleted-winner",
+      "plugin_paths": [
+        "plugins/01-World.esm",
+        "plugins/05-DeletedWinner.esp"
+      ],
+      "records": [
+        {
+          "locator": "plugins/01-World.esm#1",
+          "plugin_order": 0,
+          "form_key": "00000800:01-World.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-World.esm#2",
+          "plugin_order": 0,
+          "form_key": "00000810:01-World.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-World.esm#3",
+          "plugin_order": 0,
+          "form_key": "00000820:01-World.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-World.esm#4",
+          "plugin_order": 0,
+          "form_key": "00000830:01-World.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-World.esm#5",
+          "plugin_order": 0,
+          "form_key": "00000840:01-World.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000800",
+              "form_key": "00000800:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XLRL",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000820",
+              "form_key": "00000820:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XOWN",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000810",
+              "form_key": "00000810:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 0,
+              "component": "keyword",
+              "form_id_hex": "01000830",
+              "form_key": "00000830:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 0,
+              "component": "linked-reference",
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-World.esm",
+              "resolution_state": "resolved"
+            }
+          ]
+        },
+        {
+          "locator": "plugins/05-DeletedWinner.esp#1",
+          "plugin_order": 1,
+          "form_key": "00000840:01-World.esm",
+          "deleted": true,
+          "links": []
+        }
+      ],
+      "chains": [
+        {
+          "form_key": "00000840:01-World.esm",
+          "ordered_locators": [
+            "plugins/01-World.esm#5",
+            "plugins/05-DeletedWinner.esp#1"
+          ],
+          "winner_locator": "plugins/05-DeletedWinner.esp#1"
+        }
+      ],
+      "denominator": null
+    },
+    {
+      "scenario_id": "refr-boundaries",
+      "plugin_paths": [
+        "plugins/01-World.esm",
+        "plugins/06-Boundaries.esp"
+      ],
+      "records": [
+        {
+          "locator": "plugins/01-World.esm#1",
+          "plugin_order": 0,
+          "form_key": "00000800:01-World.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-World.esm#2",
+          "plugin_order": 0,
+          "form_key": "00000810:01-World.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-World.esm#3",
+          "plugin_order": 0,
+          "form_key": "00000820:01-World.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-World.esm#4",
+          "plugin_order": 0,
+          "form_key": "00000830:01-World.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-World.esm#5",
+          "plugin_order": 0,
+          "form_key": "00000840:01-World.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000800",
+              "form_key": "00000800:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XLRL",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000820",
+              "form_key": "00000820:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XOWN",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000810",
+              "form_key": "00000810:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 0,
+              "component": "keyword",
+              "form_id_hex": "01000830",
+              "form_key": "00000830:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 0,
+              "component": "linked-reference",
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-World.esm",
+              "resolution_state": "resolved"
+            }
+          ]
+        },
+        {
+          "locator": "plugins/06-Boundaries.esp#1",
+          "plugin_order": 1,
+          "form_key": "00000800:06-Boundaries.esp",
+          "deleted": false,
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000000",
+              "form_key": null,
+              "resolution_state": "null"
+            }
+          ]
+        },
+        {
+          "locator": "plugins/06-Boundaries.esp#2",
+          "plugin_order": 1,
+          "form_key": "00000801:06-Boundaries.esp",
+          "deleted": false,
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00FFFFFF",
+              "form_key": "00FFFFFF:01-World.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "XLRL",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00FFFFFC",
+              "form_key": "00FFFFFC:01-World.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "XOWN",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00FFFFFB",
+              "form_key": "00FFFFFB:01-World.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 0,
+              "component": "keyword",
+              "form_id_hex": "00FFFFFE",
+              "form_key": "00FFFFFE:01-World.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 0,
+              "component": "linked-reference",
+              "form_id_hex": "00FFFFFD",
+              "form_key": "00FFFFFD:01-World.esm",
+              "resolution_state": "unresolved"
+            }
+          ]
+        }
+      ],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "refr-compression-equivalence.variant-0",
+      "plugin_paths": [
+        "plugins/03-Placement.esp"
+      ],
+      "records": [
+        {
+          "locator": "plugins/03-Placement.esp#1",
+          "plugin_order": 0,
+          "form_key": "00000840:01-World.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000800",
+              "form_key": "00000800:01-World.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "XLRL",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000820",
+              "form_key": "00000820:01-World.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "XOWN",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000810",
+              "form_key": "00000810:01-World.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 0,
+              "component": "keyword",
+              "form_id_hex": "00000830",
+              "form_key": "00000830:01-World.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 0,
+              "component": "linked-reference",
+              "form_id_hex": "00000840",
+              "form_key": "00000840:01-World.esm",
+              "resolution_state": "resolved"
+            }
+          ]
+        }
+      ],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "refr-compression-equivalence.variant-1",
+      "plugin_paths": [
+        "mutations/compression/03-Placement.esp"
+      ],
+      "records": [
+        {
+          "locator": "mutations/compression/03-Placement.esp#1",
+          "plugin_order": 0,
+          "form_key": "00000840:01-World.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000800",
+              "form_key": "00000800:01-World.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "XLRL",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000820",
+              "form_key": "00000820:01-World.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "XOWN",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000810",
+              "form_key": "00000810:01-World.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 0,
+              "component": "keyword",
+              "form_id_hex": "00000830",
+              "form_key": "00000830:01-World.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 0,
+              "component": "linked-reference",
+              "form_id_hex": "00000840",
+              "form_key": "00000840:01-World.esm",
+              "resolution_state": "resolved"
+            }
+          ]
+        }
+      ],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "refr-one-byte-data-change.variant-0",
+      "plugin_paths": [
+        "plugins/03-Placement.esp"
+      ],
+      "records": [
+        {
+          "locator": "plugins/03-Placement.esp#1",
+          "plugin_order": 0,
+          "form_key": "00000840:01-World.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000800",
+              "form_key": "00000800:01-World.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "XLRL",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000820",
+              "form_key": "00000820:01-World.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "XOWN",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000810",
+              "form_key": "00000810:01-World.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 0,
+              "component": "keyword",
+              "form_id_hex": "00000830",
+              "form_key": "00000830:01-World.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 0,
+              "component": "linked-reference",
+              "form_id_hex": "00000840",
+              "form_key": "00000840:01-World.esm",
+              "resolution_state": "resolved"
+            }
+          ]
+        }
+      ],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "refr-one-byte-data-change.variant-1",
+      "plugin_paths": [
+        "mutations/one-byte-data/03-Placement.esp"
+      ],
+      "records": [
+        {
+          "locator": "mutations/one-byte-data/03-Placement.esp#1",
+          "plugin_order": 0,
+          "form_key": "00000840:01-World.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000800",
+              "form_key": "00000800:01-World.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "XLRL",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000820",
+              "form_key": "00000820:01-World.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "XOWN",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000810",
+              "form_key": "00000810:01-World.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 0,
+              "component": "keyword",
+              "form_id_hex": "00000830",
+              "form_key": "00000830:01-World.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 0,
+              "component": "linked-reference",
+              "form_id_hex": "00000840",
+              "form_key": "00000840:01-World.esm",
+              "resolution_state": "resolved"
+            }
+          ]
+        }
+      ],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "refr-master-reindexing.variant-0",
+      "plugin_paths": [
+        "mutations/master-order-reindexed/03-Placement.esp"
+      ],
+      "records": [
+        {
+          "locator": "mutations/master-order-reindexed/03-Placement.esp#1",
+          "plugin_order": 0,
+          "form_key": "00000840:01-World.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000800",
+              "form_key": "00000800:01-World.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "XOWN",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000810",
+              "form_key": "00000810:01-World.esm",
+              "resolution_state": "unresolved"
+            }
+          ]
+        }
+      ],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "refr-master-reindexing.variant-1",
+      "plugin_paths": [
+        "mutations/master-order-unreindexed/03-Placement.esp"
+      ],
+      "records": [
+        {
+          "locator": "mutations/master-order-unreindexed/03-Placement.esp#1",
+          "plugin_order": 0,
+          "form_key": "00000840:02-Relations.esp",
+          "deleted": false,
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000800",
+              "form_key": "00000800:02-Relations.esp",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "XOWN",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000810",
+              "form_key": "00000810:02-Relations.esp",
+              "resolution_state": "unresolved"
+            }
+          ]
+        }
+      ],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "refr-record-order.variant-0",
+      "plugin_paths": [
+        "plugins/01-World.esm"
+      ],
+      "records": [
+        {
+          "locator": "plugins/01-World.esm#1",
+          "plugin_order": 0,
+          "form_key": "00000800:01-World.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-World.esm#2",
+          "plugin_order": 0,
+          "form_key": "00000810:01-World.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-World.esm#3",
+          "plugin_order": 0,
+          "form_key": "00000820:01-World.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-World.esm#4",
+          "plugin_order": 0,
+          "form_key": "00000830:01-World.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-World.esm#5",
+          "plugin_order": 0,
+          "form_key": "00000840:01-World.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000800",
+              "form_key": "00000800:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XLRL",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000820",
+              "form_key": "00000820:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XOWN",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000810",
+              "form_key": "00000810:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 0,
+              "component": "keyword",
+              "form_id_hex": "01000830",
+              "form_key": "00000830:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 0,
+              "component": "linked-reference",
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-World.esm",
+              "resolution_state": "resolved"
+            }
+          ]
+        }
+      ],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "refr-record-order.variant-1",
+      "plugin_paths": [
+        "mutations/record-order/01-World.esm"
+      ],
+      "records": [
+        {
+          "locator": "mutations/record-order/01-World.esm#1",
+          "plugin_order": 0,
+          "form_key": "00000840:01-World.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000800",
+              "form_key": "00000800:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XLRL",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000820",
+              "form_key": "00000820:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XOWN",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000810",
+              "form_key": "00000810:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 0,
+              "component": "keyword",
+              "form_id_hex": "01000830",
+              "form_key": "00000830:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 0,
+              "component": "linked-reference",
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-World.esm",
+              "resolution_state": "resolved"
+            }
+          ]
+        },
+        {
+          "locator": "mutations/record-order/01-World.esm#2",
+          "plugin_order": 0,
+          "form_key": "00000830:01-World.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "mutations/record-order/01-World.esm#3",
+          "plugin_order": 0,
+          "form_key": "00000820:01-World.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "mutations/record-order/01-World.esm#4",
+          "plugin_order": 0,
+          "form_key": "00000810:01-World.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "mutations/record-order/01-World.esm#5",
+          "plugin_order": 0,
+          "form_key": "00000800:01-World.esm",
+          "deleted": false,
+          "links": []
+        }
+      ],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "refr-repeated-xlkr-order",
+      "plugin_paths": [
+        "mutations/Boundaries-RepeatedXLKROrder.esp"
+      ],
+      "records": [
+        {
+          "locator": "mutations/Boundaries-RepeatedXLKROrder.esp#1",
+          "plugin_order": 0,
+          "form_key": "00000840:01-World.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000800",
+              "form_key": "00000800:01-World.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 0,
+              "component": "keyword",
+              "form_id_hex": "00000830",
+              "form_key": "00000830:01-World.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 0,
+              "component": "linked-reference",
+              "form_id_hex": "00000840",
+              "form_key": "00000840:01-World.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 1,
+              "component": "keyword",
+              "form_id_hex": "00000830",
+              "form_key": "00000830:01-World.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 1,
+              "component": "linked-reference",
+              "form_id_hex": "00000000",
+              "form_key": null,
+              "resolution_state": "null"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 2,
+              "component": "keyword",
+              "form_id_hex": "00000000",
+              "form_key": null,
+              "resolution_state": "null"
+            },
+            {
+              "field": "XLKR",
+              "occurrence": 2,
+              "component": "linked-reference",
+              "form_id_hex": "00000840",
+              "form_key": "00000840:01-World.esm",
+              "resolution_state": "resolved"
+            }
+          ]
+        }
+      ],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "refr-truncated-subrecord-header",
+      "plugin_paths": [
+        "mutations/Refr-SubrecordHeaderTruncated.esp"
+      ],
+      "records": [],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "refr-subrecord-body-overrun",
+      "plugin_paths": [
+        "mutations/Refr-SubrecordBodyOverrun.esp"
+      ],
+      "records": [],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "refr-dangling-extended-size",
+      "plugin_paths": [
+        "mutations/Refr-DanglingExtendedSize.esp"
+      ],
+      "records": [],
+      "chains": [],
+      "denominator": null
+    }
+  ]
 }

@@ -11,11 +11,12 @@ internal static class BethesdaByteOracleValidator
     private const long MaximumOracleBytes = 16 * 1024 * 1024;
 
     internal static void Validate(
-        string fixtureDirectory,
         JsonElement executionInput,
         JsonElement expectedOracle,
         OpaqueId fixtureId,
-        ContractVersion fixtureVersion)
+        ContractVersion fixtureVersion,
+        IReadOnlyDictionary<string, RetainedArtifactSnapshot> inputSnapshots,
+        IReadOnlyDictionary<string, RetainedArtifactSnapshot> oracleSnapshots)
     {
         JsonElement? oracleReference = FindArtifactReference(expectedOracle, ArtifactId);
         if (oracleReference is null)
@@ -23,12 +24,21 @@ internal static class BethesdaByteOracleValidator
             return;
         }
 
-        string path = Path.Combine(
-            fixtureDirectory,
-            ArtifactId.Replace('/', Path.DirectorySeparatorChar));
-        using BoundedJsonDocumentSnapshot snapshot =
-            BoundedJsonDocumentReader.Read(path, MaximumOracleBytes, maximumDepth: 96);
-        JsonElement root = snapshot.Document.RootElement;
+        if (!oracleSnapshots.TryGetValue(ArtifactId, out RetainedArtifactSnapshot? snapshot))
+        {
+            throw new InvalidDataException(
+                "Supplemental Bethesda byte oracle was not captured as a validated retained artifact.");
+        }
+
+        if (snapshot.ByteLength > MaximumOracleBytes)
+        {
+            throw new InvalidDataException(
+                "Supplemental Bethesda byte oracle exceeds the byte bound.");
+        }
+
+        using JsonDocument document = ParseOracleSnapshot(snapshot);
+        BoundedJsonDocumentReader.RejectDuplicateProperties(document.RootElement, "$");
+        JsonElement root = document.RootElement;
         EmbeddedJsonSchemaValidator.Validate(root, "bethesda-byte-oracle.v1.schema.json");
 
         if (!StringComparer.Ordinal.Equals(
@@ -72,7 +82,13 @@ internal static class BethesdaByteOracleValidator
                     $"Oracle file '{artifactId}' is not bound to the matching execution payload.");
             }
 
-            long actualByteLength = ReadRetainedArtifactLength(fixtureDirectory, artifactId);
+            if (!inputSnapshots.TryGetValue(artifactId, out RetainedArtifactSnapshot? inputSnapshot))
+            {
+                throw new InvalidDataException(
+                    $"Oracle file '{artifactId}' is not bound to a validated retained payload snapshot.");
+            }
+
+            long actualByteLength = inputSnapshot.ByteLength;
             if (file.GetProperty("byte_length").GetInt64() != actualByteLength)
             {
                 throw new InvalidDataException(
@@ -239,6 +255,27 @@ internal static class BethesdaByteOracleValidator
         }
     }
 
+    private static JsonDocument ParseOracleSnapshot(RetainedArtifactSnapshot snapshot)
+    {
+        try
+        {
+            return JsonDocument.Parse(
+                snapshot.Bytes,
+                new JsonDocumentOptions
+                {
+                    AllowTrailingCommas = false,
+                    CommentHandling = JsonCommentHandling.Disallow,
+                    MaxDepth = 96,
+                });
+        }
+        catch (JsonException exception)
+        {
+            throw new InvalidDataException(
+                "Supplemental Bethesda byte oracle is not valid strict JSON.",
+                exception);
+        }
+    }
+
     internal static string ComputeCanonicalFingerprint(JsonElement value)
     {
         using MemoryStream stream = new();
@@ -371,22 +408,6 @@ internal static class BethesdaByteOracleValidator
             throw new InvalidDataException(
                 $"Oracle file '{artifactId}' has inconsistent {valueProperty} observation state.");
         }
-    }
-
-    private static long ReadRetainedArtifactLength(string fixtureDirectory, string artifactId)
-    {
-        string path = Path.Combine(
-            fixtureDirectory,
-            artifactId.Replace('/', Path.DirectorySeparatorChar));
-        using FileStream stream = new(
-            path,
-            FileMode.Open,
-            FileAccess.Read,
-            FileShare.Read,
-            bufferSize: 1,
-            FileOptions.SequentialScan);
-        WindowsRetainedArtifactIdentity.RequireSingleLink(stream.SafeFileHandle, artifactId);
-        return stream.Length;
     }
 
     private static bool IsPluginArtifact(string artifactId)

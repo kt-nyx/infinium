@@ -125154,5 +125154,219 @@
         }
       }
     }
+  ],
+  "scenario_semantics": [
+    {
+      "scenario_id": "malformed-control",
+      "plugin_paths": [
+        "plugins/MinimalValid.esp"
+      ],
+      "records": [
+        {
+          "locator": "plugins/MinimalValid.esp#1",
+          "plugin_order": 0,
+          "form_key": "00000800:MinimalValid.esp",
+          "deleted": false,
+          "links": []
+        }
+      ],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "malformed-truncated-record-header",
+      "plugin_paths": [
+        "mutations/TruncatedRecordHeader.esp"
+      ],
+      "records": [],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "malformed-truncated-record-payload",
+      "plugin_paths": [
+        "mutations/TruncatedRecordPayload.esp"
+      ],
+      "records": [],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "malformed-record-size-overflow",
+      "plugin_paths": [
+        "mutations/RecordSizeOverflow.esp"
+      ],
+      "records": [],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "malformed-group-size-too-small",
+      "plugin_paths": [
+        "mutations/GroupSizeTooSmall.esp"
+      ],
+      "records": [],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "malformed-group-size-past-end",
+      "plugin_paths": [
+        "mutations/GroupSizePastEnd.esp"
+      ],
+      "records": [],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "malformed-group-size-overflow",
+      "plugin_paths": [
+        "mutations/GroupSizeOverflow.esp"
+      ],
+      "records": [],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "malformed-compressed-missing-length",
+      "plugin_paths": [
+        "mutations/CompressedMissingLength.esp"
+      ],
+      "records": [],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "malformed-compressed-invalid-zlib",
+      "plugin_paths": [
+        "mutations/CompressedInvalidZlib.esp"
+      ],
+      "records": [],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "malformed-compressed-size-mismatch",
+      "plugin_paths": [
+        "mutations/CompressedSizeMismatch.esp"
+      ],
+      "records": [],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "malformed-compressed-declared-size-over-limit",
+      "plugin_paths": [
+        "mutations/CompressedDeclaredSizeOverLimit.esp"
+      ],
+      "records": [],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "malformed-nested-groups-over-limit",
+      "plugin_paths": [
+        "mutations/NestedGroupsOverLimit.esp"
+      ],
+      "records": [],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "malformed-record-count-over-limit",
+      "plugin_paths": [
+        "mutations/RecordCountOverLimit.esp"
+      ],
+      "records": [],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "malformed-subrecord-count-over-limit",
+      "plugin_paths": [
+        "mutations/SubrecordCountOverLimit.esp"
+      ],
+      "records": [],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "malformed-record-master-index",
+      "plugin_paths": [
+        "mutations/InvalidRecordMasterIndex.esp"
+      ],
+      "records": [],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "malformed-link-master-index",
+      "plugin_paths": [
+        "mutations/InvalidLinkMasterIndex.esp"
+      ],
+      "records": [
+        {
+          "locator": "mutations/InvalidLinkMasterIndex.esp#1",
+          "plugin_order": 0,
+          "form_key": "00000800:MinimalValid.esp",
+          "deleted": false,
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "03000800",
+              "form_key": null,
+              "resolution_state": "invalid"
+            }
+          ]
+        }
+      ],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "malformed-unpaired-master",
+      "plugin_paths": [
+        "mutations/MasterMissingDataPair.esp"
+      ],
+      "records": [],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "malformed-changed-during-read.initial",
+      "plugin_paths": [
+        "mutations/ChangedDuringRead-A.esp"
+      ],
+      "records": [
+        {
+          "locator": "mutations/ChangedDuringRead-A.esp#1",
+          "plugin_order": 0,
+          "form_key": "00000800:ChangedDuringRead-A.esp",
+          "deleted": false,
+          "links": []
+        }
+      ],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "malformed-changed-during-read.replacement",
+      "plugin_paths": [
+        "mutations/ChangedDuringRead-B.esp"
+      ],
+      "records": [
+        {
+          "locator": "mutations/ChangedDuringRead-B.esp#1",
+          "plugin_order": 0,
+          "form_key": "00000800:ChangedDuringRead-B.esp",
+          "deleted": false,
+          "links": []
+        }
+      ],
+      "chains": [],
+      "denominator": null
+    }
   ]
 }

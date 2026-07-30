@@ -43,11 +43,44 @@ const fixtures = [
   },
   {
     fixtureId: "BETH-MALFORMED-VAL",
-    partition: "validation",
+    partition: "development",
     classification: "malformed",
     evaluationIds: ["EVAL-0052"],
     purpose:
       "Qualify project-authored malformed Bethesda byte boundaries and bounded failure expectations for later Slice 4 evaluation.",
+    partitionHistory: [
+      {
+        from: null,
+        to: "validation",
+        at: createdAt,
+        reason:
+          "Initial registration before review discovered that validation cases had already influenced fixture-generator corrections.",
+        change_influenced_implementation: false,
+      },
+      {
+        from: "validation",
+        to: "development",
+        at: "2026-07-30T18:00:00.0000001+00:00",
+        reason:
+          "Review correction: malformed cases guided generator fixes, so they cannot remain validation evidence.",
+        change_influenced_implementation: true,
+        replacement_fixture_id: "BETH-MALFORMED-VAL-002",
+        replacement_partition: "validation",
+        replacement_input_package_fingerprint:
+          "ed7464c7fb4b6c852abab0e86eb1015a60370e3821f613ac882b6bf8fc6ff31f",
+        replacement_oracle_fingerprint:
+          "9fc07fde7c50b6891acb760581b16048f6f6a18618a40d8a9d957ec7f0f92612",
+        independence_evidence_reference: {
+          artifact_id: "oracle/replacement-malformed-v3-independence-evidence",
+          artifact_version: "3.0.0-independent-raw-byte",
+          fingerprint:
+            "32b502cf7b1ee56a07cc1e00843c032f32dd7d8248a82e1801e8d7cfeb5f7f49",
+          availability: "evaluator-private",
+        },
+        authorized_by:
+          "project-owner/user-directed-replacement-review-20260730",
+      },
+    ],
   },
   {
     fixtureId: "BETH-UNSUPPORTED-VAL",
@@ -264,20 +297,22 @@ for (const fixture of fixtures) {
     redistribution,
   );
 
-  const partitionEntry = {
-    from: null,
-    to: fixture.partition,
-    at: createdAt,
-    reason:
-      fixture.partition === "development"
-        ? "Initial registration of an independently reviewed project-authored development fixture."
-        : "Initial registration of an independently reviewed project-authored validation fixture.",
-    change_influenced_implementation: false,
-  };
+  const partitionHistory = fixture.partitionHistory ?? [
+    {
+      from: null,
+      to: fixture.partition,
+      at: createdAt,
+      reason:
+        fixture.partition === "development"
+          ? "Initial registration of an independently reviewed project-authored development fixture."
+          : "Initial registration of an independently reviewed project-authored validation fixture.",
+      change_influenced_implementation: false,
+    },
+  ];
   await writeJson(path.join(fixtureRoot, "partition-history.json"), {
     fixture_id: fixture.fixtureId,
     fixture_version: fixtureVersion,
-    partition_history: [partitionEntry],
+    partition_history: partitionHistory,
   });
 
   const expectedOracleBytes = await readFile(
@@ -301,7 +336,7 @@ for (const fixture of fixtures) {
     purpose: fixture.purpose,
     classification: fixture.classification,
     partition: fixture.partition,
-    partition_history: [partitionEntry],
+    partition_history: partitionHistory,
     taxonomy_id: "infinium.skyrim-se.mod-impact-taxonomy",
     taxonomy_version: "0.1.0",
     input_package_fingerprint: sha256(executionInputBytes),

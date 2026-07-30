@@ -8,20 +8,38 @@
   ],
   "purpose": "Qualify project-authored malformed Bethesda byte boundaries and bounded failure expectations for later Slice 4 evaluation.",
   "classification": "malformed",
-  "partition": "validation",
+  "partition": "development",
   "partition_history": [
     {
       "from": null,
       "to": "validation",
       "at": "2026-07-30T18:00:00.0000000+00:00",
-      "reason": "Initial registration of an independently reviewed project-authored validation fixture.",
+      "reason": "Initial registration before review discovered that validation cases had already influenced fixture-generator corrections.",
       "change_influenced_implementation": false
+    },
+    {
+      "from": "validation",
+      "to": "development",
+      "at": "2026-07-30T18:00:00.0000001+00:00",
+      "reason": "Review correction: malformed cases guided generator fixes, so they cannot remain validation evidence.",
+      "change_influenced_implementation": true,
+      "replacement_fixture_id": "BETH-MALFORMED-VAL-002",
+      "replacement_partition": "validation",
+      "replacement_input_package_fingerprint": "ed7464c7fb4b6c852abab0e86eb1015a60370e3821f613ac882b6bf8fc6ff31f",
+      "replacement_oracle_fingerprint": "9fc07fde7c50b6891acb760581b16048f6f6a18618a40d8a9d957ec7f0f92612",
+      "independence_evidence_reference": {
+        "artifact_id": "oracle/replacement-malformed-v3-independence-evidence",
+        "artifact_version": "3.0.0-independent-raw-byte",
+        "fingerprint": "32b502cf7b1ee56a07cc1e00843c032f32dd7d8248a82e1801e8d7cfeb5f7f49",
+        "availability": "evaluator-private"
+      },
+      "authorized_by": "project-owner/user-directed-replacement-review-20260730"
     }
   ],
   "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
   "taxonomy_version": "0.1.0",
-  "input_package_fingerprint": "8a4e24068b57efdc9ffd18f329b3afb3558633624d996f0f1c93073497c2b7c9",
-  "oracle_fingerprint": "faa13b6249f4f3ab8f492a8f68213924406e17d5a040900f2e3e34070ebd2162",
+  "input_package_fingerprint": "b5a8541ef8b371f5fed34d217abb762f640998c53e877c1e8086e9da6673e0c0",
+  "oracle_fingerprint": "193885bb79dbb4aba04173ecdeb46b4808a643c3053b655fd67ada2b04644768",
   "provenance_fingerprint": "17ccd8acef77dc9b517e9387f564a8bbd70a4c83e55e89f36abd665163405254",
   "replay_dependency_fingerprint": "6127fe87cfdece4996a575815774c30dd0208be26372e12cf31c26175ac049be",
   "redistribution_class": "project-authored-redistributable",

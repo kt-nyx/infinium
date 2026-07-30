@@ -7,7 +7,7 @@ import argparse
 import hashlib
 import json
 import re
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
 
@@ -15,6 +15,8 @@ METHODS = [
     "manual-annotated-hex-worksheet-v1",
     "independent-bounded-raw-reader-v1",
 ]
+ORACLE_VERSION = "1.0.1"
+ORACLE_CHANGED_AT = "2026-07-30T23:00:00.0000000+00:00"
 PLUGIN_SUFFIXES = {".esm", ".esp", ".esl"}
 SUPPORTED = {
     "TES4": {"MAST", "DATA"},
@@ -61,6 +63,19 @@ def safe(value: str) -> str:
     return value[:100] or "item"
 
 
+SCAN_MUTATION_BASELINES = {
+    "npc-repeated-pkid-order": "plugins/02-Behavior.esp",
+    "npc-repeated-pnam-order": "plugins/03-Appearance.esp",
+    "refr-repeated-xlkr-order": "plugins/06-Boundaries.esp",
+    "light-native-below-range": "plugins/01-Native.esl",
+    "light-native-above-range": "plugins/01-Native.esl",
+    "light-flagged-below-range": "plugins/02-Flagged.esp",
+    "light-flagged-above-range": "plugins/02-Flagged.esp",
+    "light-extension-header-mismatch": "plugins/01-Native.esl",
+    "light-reference-out-of-range": "plugins/03-Consumer.esp",
+}
+
+
 def scenario_map(package: Path, matrix: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
     memberships: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for case in matrix["cases"]:
@@ -91,7 +106,162 @@ def scenario_map(package: Path, matrix: dict[str, Any]) -> dict[str, list[dict[s
     return memberships
 
 
-def manual_agreement(reader: dict[str, Any], manual: dict[str, Any]) -> None:
+def malformed_key(value: dict[str, Any] | str | None) -> tuple[str, int] | None:
+    if value is None:
+        return None
+    if isinstance(value, str):
+        code, raw_offset = value.split("@", 1)
+        return code, int(raw_offset)
+    return value["code"], int(value["offset"])
+
+
+def record_semantics(record: dict[str, Any]) -> dict[str, Any]:
+    result: dict[str, Any] = {
+        "signature": record["signature"],
+        "offset": record["offset"],
+        "length": record["length"],
+        "data_length": record["data_length"],
+        "flags_hex": record["flags_hex"],
+        "raw_form_id_hex": record["raw_form_id_hex"],
+        "compressed": record["compressed"],
+        "subrecords": [
+            {
+                "signature": item["signature"],
+                "header_offset": item["header_offset"],
+                "data_offset": item["data_offset"],
+                "length": item["length"],
+                "raw_hex": item["raw_hex"],
+            }
+            for item in record["subrecords"]
+        ],
+    }
+    if "allowlisted_payload" in record:
+        result["allowlisted_payload"] = record["allowlisted_payload"]
+    if "identity" in record:
+        result["identity"] = record["identity"]
+    if "links" in record:
+        result["links"] = record["links"]
+    return result
+
+
+def file_semantics(file: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "tes4": file.get("tes4"),
+        "extension_header_mismatch": file.get("extension_header_mismatch", False),
+        "groups": [
+            {
+                "offset": group["offset"],
+                "length": group["length"],
+                "label_hex": group["label_hex"],
+                "group_type": group["group_type"],
+            }
+            for group in file.get("groups", [])
+        ],
+        "records": [record_semantics(record) for record in file.get("records", [])],
+        "malformed": malformed_key(file.get("malformed")),
+    }
+
+
+def reader_scenario_semantics(
+    reader: dict[str, Any], matrix: dict[str, Any]
+) -> list[dict[str, Any]]:
+    files = {item["path"]: item for item in reader["files"]}
+    scenarios: list[dict[str, Any]] = []
+    for case in matrix["cases"]:
+        plugin_paths = [
+            path
+            for path in case["input_paths"]
+            if Path(path).suffix.lower() in PLUGIN_SUFFIXES
+        ]
+        definitions: list[tuple[str, list[str]]] = []
+        if case["operation"] == "scan" and plugin_paths:
+            definitions.append((case["case_id"], plugin_paths))
+        elif case["operation"] == "compare":
+            definitions.extend(
+                (f"{case['case_id']}.variant-{index}", [path])
+                for index, path in enumerate(plugin_paths)
+            )
+        elif case["operation"] == "orchestrated-read":
+            requests = {
+                item["path"]: item.get("json_value")
+                for item in reader.get("supplemental_inputs", [])
+            }
+            request = requests[case["input_paths"][0]]
+            definitions.extend(
+                [
+                    (f"{case['case_id']}.initial", [request["initial_path"]]),
+                    (
+                        f"{case['case_id']}.replacement",
+                        [request["replacement_path"]],
+                    ),
+                ]
+            )
+        for scenario_id, paths in definitions:
+            population: dict[str, list[str]] = defaultdict(list)
+            records: list[dict[str, Any]] = []
+            for plugin_order, path in enumerate(paths):
+                file = files[path]
+                for record_index, record in enumerate(file.get("records", [])):
+                    identity = record.get("identity")
+                    if not identity or not identity.get("form_key"):
+                        continue
+                    locator = f"{path}#{record_index}"
+                    population[identity["form_key"]].append(locator)
+                    records.append(
+                        {
+                            "locator": locator,
+                            "plugin_order": plugin_order,
+                            "form_key": identity["form_key"],
+                            "deleted": (int(record["flags_hex"], 16) & 0x20) != 0,
+                            "links": [
+                                {
+                                    "field": link["field"],
+                                    "occurrence": link["occurrence"],
+                                    "component": link.get("component"),
+                                    "form_id_hex": link["form_id_hex"],
+                                    "form_key": link.get("form_key"),
+                                    "resolution_state": (
+                                        "unresolved"
+                                        if link["resolution_state"] == "resolved"
+                                        and link.get("form_key") not in population
+                                        else link["resolution_state"]
+                                    ),
+                                }
+                                for link in record.get("links", [])
+                            ],
+                        }
+                    )
+            population_keys = set(population)
+            for record in records:
+                for link in record["links"]:
+                    if (
+                        link["resolution_state"] == "unresolved"
+                        and link["form_key"] in population_keys
+                    ):
+                        link["resolution_state"] = "resolved"
+            scenarios.append(
+                {
+                    "scenario_id": scenario_id,
+                    "plugin_paths": paths,
+                    "records": records,
+                    "chains": [
+                        {
+                            "form_key": form_key,
+                            "ordered_locators": ordered,
+                            "winner_locator": ordered[-1],
+                        }
+                        for form_key, ordered in sorted(population.items())
+                        if len(ordered) >= 2
+                    ],
+                    "denominator": case.get("denominator"),
+                }
+            )
+    return scenarios
+
+
+def manual_agreement(
+    reader: dict[str, Any], manual: dict[str, Any], matrix: dict[str, Any]
+) -> None:
     manual_files = {item["path"]: item for item in manual["files"]}
     if set(manual_files) != {item["path"] for item in reader["files"]}:
         raise ValueError("Independent methods saw different TES4 file sets.")
@@ -102,30 +272,63 @@ def manual_agreement(reader: dict[str, Any], manual: dict[str, Any]) -> None:
             other["sha256"],
         ):
             raise ValueError(f"Independent identity disagreement: {item['path']}")
-        reader_error = item["malformed"]["code"] if item["malformed"] else None
-        manual_error = other["malformed"].split("@", 1)[0] if other["malformed"] else None
-        if reader_error != manual_error and reader_error != "master-missing-data-pair":
+        if malformed_key(item.get("malformed")) != malformed_key(other.get("malformed")):
             raise ValueError(
                 f"Independent structural disagreement for {item['path']}: "
-                f"{reader_error!r} != {manual_error!r}"
+                f"{malformed_key(item.get('malformed'))!r} != "
+                f"{malformed_key(other.get('malformed'))!r}"
             )
+        reader_semantics = file_semantics(item)
+        manual_semantics = file_semantics(other)
+        if item.get("malformed") is not None and not item.get("records"):
+            if item.get("groups"):
+                raise ValueError(
+                    f"Independent reader published partial groups after a framing "
+                    f"failure: {item['path']}"
+                )
+            # The reader deliberately publishes no partial group/record objects after
+            # a structural framing failure, and the oracle builder correspondingly
+            # attributes no group/record facts for that file. The manual audit keeps
+            # its raw traversal rows as evidence, so compare only answer-bearing
+            # semantics that can reach the published oracle in this malformed case.
+            reader_semantics.pop("groups")
+            reader_semantics.pop("records")
+            manual_semantics.pop("groups")
+            manual_semantics.pop("records")
+        if reader_semantics != manual_semantics:
+            raise ValueError(f"Independent semantic disagreement: {item['path']}")
     reader_other = {
-        item["path"]: (item["byte_length"], item["sha256"], item["raw_hex"])
+        item["path"]: (
+            item["byte_length"],
+            item["sha256"],
+            item["raw_hex"],
+            item.get("json_value"),
+        )
         for item in reader.get("supplemental_inputs", [])
     }
     manual_other = {
-        item["path"]: (item["byte_length"], item["sha256"], item["raw_hex"])
+        item["path"]: (
+            item["byte_length"],
+            item["sha256"],
+            item["raw_hex"],
+            item.get("json_value"),
+        )
         for item in manual.get("supplemental_inputs", [])
     }
     if reader_other != manual_other:
         raise ValueError("Independent methods disagree on supplemental request/string bytes.")
+    expected_scenarios = reader_scenario_semantics(reader, matrix)
+    if reader.get("scenario_semantics") != expected_scenarios:
+        raise ValueError("Bounded reader scenario semantics are internally inconsistent.")
+    if manual.get("scenario_semantics") != reader.get("scenario_semantics"):
+        raise ValueError("Independent methods disagree on scenario chains, winners, or links.")
 
 
 def build(package: Path, reader_path: Path, manual_path: Path) -> None:
     reader = read_json(reader_path)
     manual = read_json(manual_path)
-    manual_agreement(reader, manual)
     matrix = read_json(package / "inputs" / "case-matrix.json")
+    manual_agreement(reader, manual, matrix)
     memberships = scenario_map(package, matrix)
     files_by_path = {item["path"]: item for item in reader["files"]}
     missing = set(files_by_path) - set(memberships)
@@ -176,6 +379,7 @@ def build(package: Path, reader_path: Path, manual_path: Path) -> None:
         return fact_id
 
     file_entries = []
+    file_keys_by_path: dict[str, str] = {}
     record_ids: dict[tuple[str, int], str] = {}
     scenario_records: dict[str, dict[str, list[str]]] = defaultdict(
         lambda: defaultdict(list)
@@ -184,6 +388,7 @@ def build(package: Path, reader_path: Path, manual_path: Path) -> None:
         relative = file["path"]
         artifact_id = f"inputs/{relative}"
         file_key = f"{package.name.lower()}.file-{file_index:03d}"
+        file_keys_by_path[relative] = file_key
         file_deps = {artifact_id}
         add_fact(
             f"{file_key}.identity",
@@ -616,6 +821,81 @@ def build(package: Path, reader_path: Path, manual_path: Path) -> None:
         "header-mismatch": "one-byte",
     }
     fact_ids = {fact["fact_id"] for fact in facts}
+    facts_by_id = {fact["fact_id"]: fact for fact in facts}
+    logical_value_cache: dict[str, Any] = {}
+
+    def normalize_logical_value(value: Any) -> Any:
+        if isinstance(value, dict):
+            return {
+                key: normalize_logical_value(item)
+                for key, item in sorted(value.items())
+                if key != "artifact_id"
+            }
+        if isinstance(value, list):
+            return [normalize_logical_value(item) for item in value]
+        if isinstance(value, str) and value in facts_by_id:
+            if value not in logical_value_cache:
+                logical_value_cache[value] = normalize_logical_value(
+                    facts_by_id[value]["canonical_value"]
+                )
+            return {"referenced_fact": logical_value_cache[value]}
+        return value
+
+    def logical_signature(fact_id: str) -> str:
+        fact = facts_by_id[fact_id]
+        return json.dumps(
+            {
+                "fact_kind": fact["fact_kind"],
+                "canonical_value": normalize_logical_value(fact["canonical_value"]),
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=True,
+        )
+
+    def file_fact_ids(relative: str) -> set[str]:
+        prefix = f"{safe(file_keys_by_path[relative])}."
+        return {
+            fact["fact_id"]
+            for fact in facts
+            if fact["subject_id"].startswith(prefix)
+        }
+
+    def scenario_fact_ids(prefix: str) -> set[str]:
+        return {
+            fact_id
+            for fact_id, deps in dependencies.items()
+            if any(dep.startswith(f"scenario:{prefix}") for dep in deps)
+            and not any(
+                facts_by_id[fact_id]["subject_id"].startswith(
+                    f"{safe(file_key)}."
+                )
+                for file_key in file_keys_by_path.values()
+            )
+        }
+
+    def changed_by_logical_comparison(
+        baseline_path: str,
+        target_path: str,
+        baseline_scenario: str | None,
+        target_scenario: str | None,
+    ) -> set[str]:
+        baseline_ids = file_fact_ids(baseline_path)
+        target_ids = file_fact_ids(target_path)
+        if baseline_scenario:
+            baseline_ids |= scenario_fact_ids(baseline_scenario)
+        if target_scenario:
+            target_ids |= scenario_fact_ids(target_scenario)
+        available = Counter(logical_signature(fact_id) for fact_id in baseline_ids)
+        changed_ids: set[str] = set()
+        for fact_id in sorted(target_ids):
+            signature = logical_signature(fact_id)
+            if available[signature] > 0:
+                available[signature] -= 1
+            else:
+                changed_ids.add(fact_id)
+        return changed_ids
+
     for case in matrix["cases"]:
         kind = next(
             (value for needle, value in mutation_kinds.items() if needle in case["case_id"]),
@@ -626,25 +906,40 @@ def build(package: Path, reader_path: Path, manual_path: Path) -> None:
         tes4_paths = [
             path for path in case["input_paths"] if Path(path).suffix.lower() in PLUGIN_SUFFIXES
         ]
-        if tes4_paths:
-            target = f"inputs/{tes4_paths[-1]}"
-            scenario_prefix = safe(case["case_id"])
-            changed = {
-                fact_id
-                for fact_id, deps in dependencies.items()
-                if target in deps
-                or any(
-                    dep.startswith(f"scenario:{scenario_prefix}") for dep in deps
-                )
-            }
+        case_id = case["case_id"]
+        if case["operation"] == "compare":
+            baseline_path, target_path = tes4_paths[0], tes4_paths[-1]
+            changed = changed_by_logical_comparison(
+                baseline_path,
+                target_path,
+                safe(f"{case_id}.variant-0"),
+                safe(f"{case_id}.variant-{len(tes4_paths) - 1}"),
+            )
+        elif case["operation"] == "scan":
+            baseline_path = SCAN_MUTATION_BASELINES[case_id]
+            target_path = tes4_paths[-1]
+            changed = changed_by_logical_comparison(
+                baseline_path,
+                target_path,
+                None,
+                safe(case_id),
+            )
         else:
             request = read_json(package / "inputs" / case["input_paths"][0])
-            target = f"inputs/{request['replacement_path']}"
-            changed = {
+            baseline_path = request["initial_path"]
+            target_path = request["replacement_path"]
+            changed = changed_by_logical_comparison(
+                baseline_path,
+                target_path,
+                safe(f"{case_id}.initial"),
+                safe(f"{case_id}.replacement"),
+            )
+            changed |= {
                 fact_id
                 for fact_id, deps in dependencies.items()
-                if target in deps or "changed-during-read" in " ".join(deps)
+                if any("changed-during-read" in dep for dep in deps)
             }
+        target = f"inputs/{target_path}"
         mutation_expectations.append(
             {
                 "mutation_id": safe(f"mutation.{case['case_id']}"),
@@ -668,7 +963,7 @@ def build(package: Path, reader_path: Path, manual_path: Path) -> None:
         "schema_version": "1",
         "fixture_id": package.name,
         "fixture_version": "1.0.0",
-        "oracle_artifact_version": "1.0.0",
+        "oracle_artifact_version": ORACLE_VERSION,
         "canonicalization": "infinium-canonical-json-sha256/v1",
         "independent_authors_and_reviewers": ["oracle-reviewer"],
         "ground_truth_method_ids": METHODS,
@@ -764,7 +1059,7 @@ def build(package: Path, reader_path: Path, manual_path: Path) -> None:
     expected = {
         "fixture_id": package.name,
         "fixture_version": "1.0.0",
-        "oracle_version": "1.0.0",
+        "oracle_version": ORACLE_VERSION,
         "independent_authors_and_reviewers": ["oracle-reviewer"],
         "ground_truth_methods": [
             {
@@ -813,7 +1108,19 @@ def build(package: Path, reader_path: Path, manual_path: Path) -> None:
             "No production parser, Mutagen, xEdit, held-out input, or taxonomy answer authored these values.",
         ],
         "pre_registered_at": "2026-07-30T00:00:00.0000000+00:00",
-        "change_history": [],
+        "change_history": [
+            {
+                "oracle_version": ORACLE_VERSION,
+                "changed_at": ORACLE_CHANGED_AT,
+                "independent_evidence_reference": refs["manual"],
+                "prior_error_explanation": (
+                    "Version 1.0.0 attributed the manual method without comparing "
+                    "its decoded semantic answers and classified mutation changes "
+                    "from artifact dependencies instead of logical baseline deltas."
+                ),
+                "reviewer": "oracle-reviewer",
+            }
+        ],
     }
     (package / "expected-oracle.json").write_text(
         json.dumps(expected, indent=2, ensure_ascii=True) + "\n", encoding="utf-8"

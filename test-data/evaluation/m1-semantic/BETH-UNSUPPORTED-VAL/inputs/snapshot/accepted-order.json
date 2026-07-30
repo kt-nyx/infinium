@@ -51,7 +51,8 @@
     }
   ],
   "isolated_capture_variants": [],
-  "dependency_fingerprint": "0a6cd91f5e445860a0c2d98a330e201825aa8ca768a0766d536c18cf92b9945d",
+  "capture_binding_algorithm": "infinium.fixture-snapshot-capture-binding/v1",
+  "expected_capture_binding_fingerprint": "0a6cd91f5e445860a0c2d98a330e201825aa8ca768a0766d536c18cf92b9945d",
   "capture_policy": {
     "manager_launch": "forbidden",
     "usvfs_launch": "forbidden",

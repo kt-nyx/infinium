@@ -25,17 +25,24 @@ The generator owns only `inputs/`. It does not create fixture package metadata,
 oracles, taxonomy answers, held-out content, snapshot captures, or parser code.
 
 After promoting a reviewed input freeze, refresh the non-answer-bearing Slice 3
-order receipts:
+capture-binding receipts:
 
 ```powershell
 node tools/evaluation/bethesda-fixtures/snapshot-receipts.mjs
 ```
 
+Each receipt preregisters the exact provider/plugin order and content hashes.
+The evaluation test independently reconstructs that projection from an actual
+`Mo2SnapshotCapture` result and hashes the captured winner bytes. The receipt
+is not itself represented as a captured MO2 snapshot.
+
 The independent reviewer uses `independent-review/bounded_raw_reader.py` and
 `independent-review/manual_hex_audit.ps1` against the same frozen bytes, then
 builds the supplemental and seven-document oracle content with
 `independent-review/build_oracles.py`. These tools do not import generator
-answer tables or production parser code.
+answer tables or production parser code. The PowerShell technique independently
+decodes the answer-bearing semantic projection; oracle construction stops if
+that projection disagrees with the Python reader.
 
 After independent byte and taxonomy review is complete, bind all retained
 inputs and oracle evidence into the five complete fixture packages:

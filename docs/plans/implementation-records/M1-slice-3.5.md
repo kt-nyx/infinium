@@ -1,11 +1,13 @@
 # M1 Slice 3.5 implementation record
 
-Status: **Complete.** This record was created before project-authored Bethesda
-fixture construction began and closed after the final review/fix/re-review.
+Status: **Blocked pending owner authority.** The implementation and
+review/fix/re-review corrections are complete, but the accepted plan requires
+explicit owner approval before validation answers may be public. No such
+approval is recorded for `BETH-LIGHT-VAL` or `BETH-UNSUPPORTED-VAL`.
 
 Opened: 2026-07-30
 
-Closed: 2026-07-30
+Review correction completed: 2026-07-30
 
 Plan: [M1 backend semantic proof plan](../milestones/M1-backend-semantic-proof.md),
 accepted repository revision at implementation start, SHA-256
@@ -31,9 +33,13 @@ constructed:
 - binary fixture author: `/root/binary_fixture_author`;
 - independent oracle author/reviewer: `/root/oracle_reviewer`;
 - sealed held-out custodian: `/root/holdout_custodian`.
+- materially independent malformed replacement input author:
+  `/root/replacement_malformed_author`;
+- materially independent malformed replacement oracle reviewer:
+  `/root/replacement_malformed_oracle`.
 
-A separate taxonomy reviewer will be assigned after the binary-author slot is
-released. The binary author may construct deterministic bytes and
+The taxonomy reviewer was `/root/taxonomy_reviewer`. The binary author may
+construct deterministic bytes and
 non-answer-bearing construction metadata, but may not author the independent
 oracle. The oracle reviewer may inspect only frozen bytes and public
 construction boundaries, not generator answer tables or production parser
@@ -78,7 +84,7 @@ required.
 
 The binary author first produced deterministic matrices and stopped editing
 before the oracle reviewer inspected bytes. Independent raw-byte review found
-three construction defects before acceptance:
+seven construction and contract defects before acceptance:
 
 1. two malformed members had enclosing group sizes that made their intended
    inner truncated-record/subrecord failures unreachable;
@@ -122,11 +128,11 @@ was covered by a construction region.
 
 | Package | Partition | Construction manifest SHA-256 | Input package fingerprint | Oracle fingerprint | Snapshot receipt SHA-256 |
 |---|---|---|---|---|---|
-| `BETH-NPC-DEV` | development | `ebe1b80fec4726bae4b9a2c35eb5b4a85d0e62d8df2668506fe94e91fdc149ec` | `b5523b8397f523f0812ed8b32cc4a08a9f5940b6e1010ca0ad11a2484ddba043` | `dae6507a391769d3ee59cdd75b019a489a535a16bf2b997033835e18cb2b2365` | `1b17ea09a33adfaf542a179fa197b60993df5bbb3ce4c3dc0990392ba46256ef` |
-| `BETH-REFR-DEV` | development | `fd1396d36fb1cd161fd93dd84470265c0fc481bea4edbe80b5cad7b802367ad8` | `35db59142d784fe16a2d235697a7604c041897abbe3d649c26c00a73d31a88b5` | `22cd9fa3c124c9ef15de6c26c5406320a2eb8925c329119b0b77f74fbf2cec0b` | `370a60e30c572947116172b8d18cab8b052012ddbdcef3dde10f48079b9c3e97` |
-| `BETH-LIGHT-VAL` | validation | `87fe85c62449405115fd64a001613397d51b5c94f05685c5158a52a0105ec462` | `72454b3073f15ab512782b82a0fb84e3fd81da51b40356807a2135f3611f2de5` | `d0031fc83ec1e934fbd001e6794883af5d6999015a764afcfdc1564b921164dd` | `2fc7eb094e1efe1f45cb8366d3e559df6f899991a5ae1e9784655b0f79288f6d` |
-| `BETH-MALFORMED-VAL` | validation | `7489505a7c3648d65f920158d5bbed9a8fb1751772197778c11d0ac670cebbb5` | `8a4e24068b57efdc9ffd18f329b3afb3558633624d996f0f1c93073497c2b7c9` | `faa13b6249f4f3ab8f492a8f68213924406e17d5a040900f2e3e34070ebd2162` | `80534154b6f9c4d098a08558635aa5086b3e894a4db35c55efc49496fd6a40db` |
-| `BETH-UNSUPPORTED-VAL` | validation | `00255c0e246bbb79d958a3eb45b2cbc13ca03949bfc882d4295e65a9f6a5143c` | `5947faf795fbacb39bd8a318084a2ce5f3c557524b6b3ed93190504a9a0680bd` | `1f3f2aa10e6c2d8281a4d8428abdf2af8d640dc9e414f9c51e1badb2aefa4a5f` | `bb0a50603f9e90e651e13524995c111112f1551e4f46c1f5c703273cf24cf1d0` |
+| `BETH-NPC-DEV` | development | `ebe1b80fec4726bae4b9a2c35eb5b4a85d0e62d8df2668506fe94e91fdc149ec` | `ded1d9da71a50e63cfb90fcaaf5f280a573f355af110d18040ebab22ff5c005e` | `b3037693dea1151590d057bb96551f077d0c0fda1eb2a7417f8cf9d7f964fbdf` | `b45cb0e3c5d321aa2eb22a39dea05dedb33ca4cc19efdc276d64d4d12a3d2e9a` |
+| `BETH-REFR-DEV` | development | `fd1396d36fb1cd161fd93dd84470265c0fc481bea4edbe80b5cad7b802367ad8` | `72b478377bc55875daa055e1c2f7b6ea9d1340f4ddcaad6b2f24dc7a21f0bf33` | `e7266d7294dfa9a28dbc440c5ce24cd2ba48b7a97ba5dff0bd3cf55a4db5d578` | `9cf89bde1e53e723500f84c36b8c623c11c7200ff4faf6a90ff33943a0ad1b48` |
+| `BETH-LIGHT-VAL` | validation | `87fe85c62449405115fd64a001613397d51b5c94f05685c5158a52a0105ec462` | `1f24b89829da01f393e68a4f63c6d8dfc34a1739c9e07a4d9f9db6f3ffd76b89` | `d6bb10a7c6437fca8757c58737569fec52609edfc0164d536de3c4f0632a7a21` | `b04f365b381622ff9ddba199b5a16216604b56598c77e06ea1c6554ca2817bf5` |
+| `BETH-MALFORMED-VAL` | development (reclassified) | `7489505a7c3648d65f920158d5bbed9a8fb1751772197778c11d0ac670cebbb5` | `b5a8541ef8b371f5fed34d217abb762f640998c53e877c1e8086e9da6673e0c0` | `193885bb79dbb4aba04173ecdeb46b4808a643c3053b655fd67ada2b04644768` | `b5f3d9e7b5523ac758d346b459053eb12119144bd1d2610c8ef93a5c96c6e24b` |
+| `BETH-UNSUPPORTED-VAL` | validation | `00255c0e246bbb79d958a3eb45b2cbc13ca03949bfc882d4295e65a9f6a5143c` | `eca5c4decd7584c25b1aecffffd1a4286dc8777954925dc7d7da9fcd82c738b7` | `7d84beb04ab5d7549ea96557cc7310e45d21e944ff76a930c80242ef4cca4045` | `f661aea998ea76a65116c2ddc2733e9cb95387e31319e7ad5c975a1581a4b959` |
 
 Every tracked package contains the required seven root documents plus retained
 inputs and independent oracle evidence. The real `FixturePackageReader`
@@ -144,13 +150,29 @@ two-method agreement, schema validity, answer isolation, and absence of
 development/production/third-party access. No partial held-out directory,
 private locator, input, or answer is tracked.
 
+The materially independent evaluator-private replacement
+`BETH-MALFORMED-VAL-002` is sealed under the ignored evaluator store. Its
+tracked public-only registry binds root execution input
+`ed7464c7fb4b6c852abab0e86eb1015a60370e3821f613ac882b6bf8fc6ff31f`,
+oracle
+`9fc07fde7c50b6891acb760581b16048f6f6a18618a40d8a9d957ec7f0f92612`,
+and independent-method agreement
+`32b502cf7b1ee56a07cc1e00843c032f32dd7d8248a82e1801e8d7cfeb5f7f49`.
+Its 14 project-authored frozen inputs total 507,645 bytes and retain separate
+set fingerprint
+`3c51511d6db4b77848dcf2a855c9a66c8bbb3ad356599132c6c83b2d35d5a6e5`.
+The accepted v3 reviewer used independent PowerShell and Node raw-byte methods,
+validated all applicable schemas and cross-document hashes, and did not inspect
+the predecessor fixture, rejected reviewer outputs, production code, provider
+state, protected roots, or external payloads.
+
 ## Independent oracle and taxonomy results
 
 The independent raw reader and separately implemented PowerShell hexadecimal
-worksheet reproduced byte-identical reports for all five packages. An
-isolated-copy oracle rebuild then reproduced every supplemental byte oracle
-and pre-taxonomy expected oracle byte-for-byte. Final independently reviewed
-fact counts are:
+worksheet produced intentionally different evidence reports. Their normalized
+structural observations agreed for all five packages; an isolated-copy oracle
+rebuild then reproduced every supplemental byte oracle and pre-taxonomy
+expected oracle byte-for-byte. Final independently reviewed fact counts are:
 
 - NPC: 15 files, 376 facts, 7 complete mutation partitions;
 - REFR: 16 files, 303 facts, 5 complete mutation partitions and 3/3
@@ -206,8 +228,9 @@ Final review/fix/re-review results:
 - deterministic generator verification — passed two-run byte identity,
   construction-region coverage, controlled byte-diff/record-order/origin
   basename invariants, 21 earliest-failure checks, and 4/4 templated variants.
-- independent raw-reader/manual comparison — all five reports byte-identical;
-  isolated oracle rebuild reproduced all five outputs.
+- independent raw-reader/manual comparison — the distinct reports agreed on
+  the normalized observations checked by the original builder; isolated
+  oracle rebuild reproduced all five outputs.
 - tracked package qualification and snapshot tests — 4/4 passed.
 - retained-artifact contract tests — 16/16 passed, including hardlink
   rejection.
@@ -223,15 +246,147 @@ closed schema registry. The first staging audit found line-ending conversion
 would invalidate package hashes. Both issues were fixed, the applicable checks
 were rerun, and the full matrix above is the post-fix result.
 
+## Follow-up comprehensive review
+
+The review of implementation commit
+`5f1fc199c51e9a0125ccf7400b1064b8c17ed4ef` found the following material
+in-scope issues:
+
+1. The manual hexadecimal worksheet did not independently decode every
+   answer-bearing semantic projection, while the oracle builder attributed
+   accepted facts to both methods. Mutation partitions also classified changes
+   from artifact dependency rather than logical baseline deltas. The worksheet
+   now performs independent semantic decoding, the builder requires exact
+   agreement for every published fact, malformed partial traversal is
+   explicitly non-attributed, and mutation partitions use semantic deltas.
+   Corruption and exact AIDT/DATA changed-set tests cover the failure.
+2. Retained artifacts were validated through separate path opens and only
+   lexical pre-open containment, permitting path races and phase drift. The
+   reader now pins the Windows scope, rejects reparse/hard-link/ADS/device and
+   case-alias boundaries, reads each unique artifact once with bounded count
+   and aggregate bytes, verifies final handle identity and unchanged metadata,
+   and passes the exact validated snapshot to Bethesda parsing. Tests cover
+   junction swaps, growth, replacement between phases, malformed supplemental
+   JSON, canonical IDs, repeated-reference consistency, and resource bounds.
+3. The snapshot receipt was derived from construction metadata rather than
+   independently bound to the actual Slice 3 capture result. The test now
+   computes the binding from the actual capture order and captured winner-byte
+   hashes. A same-size/same-time payload mutation preserves structural capture
+   but invalidates the content binding.
+4. Bethesda package closure, retained input-byte accounting, and public-only
+   held-out metadata had coverage gaps. Bethesda packages now require exactly
+   seven root documents, exact unique retained input-byte totals, and strict
+   public registry fields. These Bethesda-only rules were initially applied too
+   broadly during the correction and broke the accepted Slice 3 evaluator
+   package; the accumulated suite caught that regression, the rules were
+   narrowed to packages declaring the supplemental Bethesda oracle, and a
+   cross-slice regression test now passes.
+5. `BETH-MALFORMED-VAL` had influenced generator corrections but claimed
+   otherwise. Its immutable identity is retained, its partition history now
+   records a validation-to-development transition, and a materially independent
+   evaluator-private `BETH-MALFORMED-VAL-002` replacement was separately
+   authored and reviewed. Only sanitized fingerprints and attestations are
+   public.
+6. The implementation record overstated byte-identical independent reports and
+   omitted exact closeout traceability. The reports are intentionally distinct;
+   the corrected claim is exact agreement on independently decoded accepted
+   semantics, with byte-identical isolated oracle reconstruction.
+7. The accepted plan permits tracked validation answers only with explicit
+   owner approval. No such approval is recorded for `BETH-LIGHT-VAL` or
+   `BETH-UNSUPPORTED-VAL`. Their existing public answer exposure cannot be
+   repaired by silently relabeling them or by deleting current files after they
+   entered Git history. This is an owner-authority blocker, not an engineering
+   workaround opportunity.
+8. The first replacement oracle reviewer completed and sealed private evidence,
+   then disclosed that a final repository-wide text search had exposed generic
+   tracked fixture paths and disclaimer lines. A second fresh reviewer stopped
+   after a package-root enumeration exposed names in the rejected reviewer
+   directory. Neither exposure revealed case answers, but both violated the
+   preregistered isolation rule, so neither attestation was accepted. Their
+   ignored artifacts are retained as rejected audit evidence; a third reviewer
+   was given a literal file-level allowlist and a separate private output root.
+   The third reviewer completed two byte-identical 30-file constructions and
+   passed strict schema, cross-hash, method-replay, answer-isolation, and
+   locator-sanitization checks. Review then caught an input-set fingerprint
+   incorrectly occupying the root execution-input fingerprint field; the
+   reviewer separated those identities, rebuilt twice, and revalidated before
+   the replacement was accepted.
+
+The review did not find Slice 3.5 persistence, migration, credential, provider,
+cost-control, or cancellation behavior to implement: those surfaces are absent
+from this fixture-qualification slice. No production parser, live analyzer,
+provider call, protected-root access, or later-slice capability was added.
+
+### Follow-up verification
+
+Final commands and results after every correction:
+
+- `dotnet restore Infinium.sln --locked-mode --nologo` — passed; all projects
+  up to date.
+- `dotnet build Infinium.sln -c Release --no-restore --nologo` — passed with
+  0 warnings and 0 errors.
+- `dotnet test Infinium.sln -c Release --no-build --nologo` — passed:
+  200 passed, 9 skipped private/platform-conditional tests, 0 failed.
+- `--filter "Category=M1Contract"` — 24 passed, 0 failed.
+- `--filter "Category=M1Integration"` — 22 passed, 0 failed.
+- `--filter "Category=M1Evaluation"` — 26 passed, 8 skipped, 0 failed.
+- `--filter "Category=M1Security"` — 9 passed, 0 failed.
+- `--filter "Category=M1Fault"` — 13 passed, 0 failed.
+- `--filter "TestCategory=M1Security"` — 74 passed, 3 skipped, 0 failed.
+- `--filter "TestCategory=M1Fault"` — 82 passed, 3 skipped, 0 failed.
+- `dotnet format Infinium.sln --verify-no-changes --no-restore --verbosity
+  minimal` — passed.
+- `powershell -NoProfile -ExecutionPolicy Bypass -File
+  eng/update-dependency-manifest.ps1 -Check` — passed.
+- `dotnet run --project
+  tools/evaluation/bethesda-fixtures/Infinium.BethesdaFixtures.Generator.csproj
+  -- verify --seed 3520260730` — passed two-run byte identity, complete
+  construction-region coverage, and controlled mutation/order/origin
+  invariants.
+- `python
+  tools/evaluation/bethesda-fixtures/independent-review/self_test.py` — passed
+  deliberate FormKey/link/chain/manual-evidence corruption rejection and exact
+  AIDT/DATA logical mutation partitions.
+- The independent Python reader, PowerShell worksheet, and oracle builder were
+  rerun against isolated copies of all five tracked packages. Each pair of
+  reports remained intentionally distinct, exact semantic agreement passed,
+  and both `independent-byte-facts.json` and `expected-oracle.json` rebuilt
+  byte-for-byte.
+- `node tools/evaluation/bethesda-fixtures/snapshot-receipts.mjs` and
+  `node tools/evaluation/bethesda-fixtures/finalize-packages.mjs` — passed
+  deterministic receipt/package regeneration.
+- Focused retained-artifact contract tests — 26 passed; focused Bethesda,
+  snapshot, evaluator-private registry, and prior Slice 3 regression tests —
+  7 passed.
+- Accepted private replacement v3 — two corrected 30-file constructions were
+  byte-identical; both raw methods agreed on 14/14 inputs; eight applicable
+  schemas, canonical facts, expected-item bindings, cross-hashes,
+  answer isolation, locator sanitization, and changed-during-read replay
+  passed. Final sealed-tree fingerprint:
+  `ca5cc6b07afb227dc3e537feb647dcdc45bc5b79441773934dc43a2b7b5a05fb`.
+- Tracked-diff path/credential scan, prohibited production-path scan,
+  protected-process audit, `git diff --check`, and final semantic/diff review —
+  clean.
+
+Intermediate correction evidence is retained in this record: the first build
+found nullable/analyzer errors in new tests, the first combined focused run
+found repeated snapshot references and incorrect held-out boolean
+expectations, and the first accumulated suite found the Bethesda-only root and
+byte-accounting rules had been applied globally. Each cause was fixed, covered
+by regression tests, and included in the final green matrix above.
+
 ## Intentional behavior changes and limits
 
 `FixturePackageReader` now transitively validates package-relative retained
-artifacts under `inputs/` and `oracle/`, including scope/traversal, reparse
-point, single-link, size, existence, and SHA-256 checks. When the independent
-Bethesda supplemental oracle is declared, the reader also enforces exact input
-file coverage, physical byte coverage, canonical fact hashes, ground-truth
-method agreement, scenario order, mutation partitions, and explicit
-observed/unknown TES4 metadata state.
+artifacts under `inputs/` and `oracle/`, including canonical IDs,
+scope/traversal, pinned Windows final-path containment, reparse point,
+single-link, count and byte bounds, unchanged handle identity, existence, and
+SHA-256 checks. Repeated logical references reuse one validated snapshot.
+When the independent Bethesda supplemental oracle is declared, the reader
+also enforces exact seven-document root closure, exact retained input-byte
+accounting, input file coverage, physical byte coverage, canonical fact
+hashes, ground-truth method agreement, scenario order, mutation partitions,
+and explicit observed/unknown TES4 metadata state.
 
 This slice adds no production Bethesda parser, Mutagen integration, typed
 index, analyzer, candidate/finding logic, model/provider call, UI, QUST/alias
@@ -239,14 +394,22 @@ semantics, archive-member semantics, localized-string resolution, or automatic
 environment discovery. Production comparison remains pending Slice 4.
 `EVAL-0052`, `EVAL-0086`, and M1 are **not** reported as passed.
 
-Five verified ignored disposable roots remain under `artifacts/` because the
-host command policy rejected the approved recursive cleanup commands. They are
-not staged, do not affect the Git worktree, and include the selective private
-verification cache; removal remains a local hygiene follow-up.
+The five original ignored Slice 3.5 construction/review scratch roots and the
+generated Python cache were removed after final verification. The evaluator
+store intentionally retains `BETH-MALFORMED-VAL-002`, including the accepted
+v3 sealed package and the two rejected-review incident records, under ignored
+`artifacts/evaluator-private/` for audit and replay. The final repository scan
+found no tracked private locator, answer-bearing replacement payload, secret,
+or generated cache.
 
 ## Commit
 
-Implementation commit: this focused commit; its exact SHA is recorded in the
-handoff because a commit cannot self-contain its own object ID.
+Implementation commit:
+`5f1fc199c51e9a0125ccf7400b1064b8c17ed4ef`
+(`test: qualify M1 Slice 3.5 Bethesda fixtures`).
+
+Follow-up review commit message:
+`fix: address M1 Slice 3.5 review findings`. Its exact SHA is reported in the
+handoff because a commit cannot contain its own identity.
 
 Push state: no push authorized or performed.

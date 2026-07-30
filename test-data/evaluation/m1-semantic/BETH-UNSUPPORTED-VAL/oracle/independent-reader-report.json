@@ -576,5 +576,41 @@
         "string_id": 1
       }
     }
+  ],
+  "scenario_semantics": [
+    {
+      "scenario_id": "unsupported-record-family",
+      "plugin_paths": [
+        "plugins/UnsupportedFamily.esp"
+      ],
+      "records": [
+        {
+          "locator": "plugins/UnsupportedFamily.esp#1",
+          "plugin_order": 0,
+          "form_key": "00000800:UnsupportedFamily.esp",
+          "deleted": false,
+          "links": []
+        }
+      ],
+      "chains": [],
+      "denominator": "record_family"
+    },
+    {
+      "scenario_id": "unsupported-npc-field",
+      "plugin_paths": [
+        "plugins/UnsupportedNpcField.esp"
+      ],
+      "records": [
+        {
+          "locator": "plugins/UnsupportedNpcField.esp#1",
+          "plugin_order": 0,
+          "form_key": "00000800:UnsupportedNpcField.esp",
+          "deleted": false,
+          "links": []
+        }
+      ],
+      "chains": [],
+      "denominator": "record_field"
+    }
   ]
 }

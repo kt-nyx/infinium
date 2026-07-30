@@ -3,7 +3,7 @@
   "schema_version": "1",
   "fixture_id": "BETH-MALFORMED-VAL",
   "fixture_version": "1.0.0",
-  "oracle_artifact_version": "1.0.0",
+  "oracle_artifact_version": "1.0.1",
   "canonicalization": "infinium-canonical-json-sha256/v1",
   "independent_authors_and_reviewers": [
     "oracle-reviewer"
@@ -118443,10 +118443,6 @@
       "target_artifact_id": "inputs/mutations/ChangedDuringRead-B.esp",
       "changed_fact_ids": [
         "beth.beth-malformed-val.fact-00007",
-        "beth.beth-malformed-val.fact-00008",
-        "beth.beth-malformed-val.fact-00009",
-        "beth.beth-malformed-val.fact-00010",
-        "beth.beth-malformed-val.fact-00011",
         "beth.beth-malformed-val.fact-00012",
         "beth.beth-malformed-val.fact-00096",
         "beth.beth-malformed-val.fact-00097"
@@ -118458,6 +118454,10 @@
         "beth.beth-malformed-val.fact-00004",
         "beth.beth-malformed-val.fact-00005",
         "beth.beth-malformed-val.fact-00006",
+        "beth.beth-malformed-val.fact-00008",
+        "beth.beth-malformed-val.fact-00009",
+        "beth.beth-malformed-val.fact-00010",
+        "beth.beth-malformed-val.fact-00011",
         "beth.beth-malformed-val.fact-00013",
         "beth.beth-malformed-val.fact-00014",
         "beth.beth-malformed-val.fact-00015",

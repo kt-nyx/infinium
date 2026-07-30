@@ -145,7 +145,133 @@
           "signature": "DATA",
           "raw_hex": "000000000000000000000000000000000000000000000000"
         }
-      ]
+      ],
+      "tes4": {
+        "flags_hex": "00000000",
+        "esl_flag": false,
+        "masters": [
+          "01-Native.esl"
+        ]
+      },
+      "groups": [
+        {
+          "offset": 170,
+          "length": 88,
+          "label_hex": "52454652",
+          "group_type": 0
+        }
+      ],
+      "records": [
+        {
+          "signature": "TES4",
+          "offset": 0,
+          "length": 170,
+          "data_length": 146,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "00000000",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "HEDR",
+              "header_offset": 24,
+              "data_offset": 30,
+              "length": 12,
+              "raw_hex": "9A99D93F0100000000080000"
+            },
+            {
+              "signature": "CNAM",
+              "header_offset": 42,
+              "data_offset": 48,
+              "length": 44,
+              "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+            },
+            {
+              "signature": "SNAM",
+              "header_offset": 92,
+              "data_offset": 98,
+              "length": 38,
+              "raw_hex": "436F6E73756D65722D4C696768745265666572656E63654F75744F6652616E67652E65737000"
+            },
+            {
+              "signature": "MAST",
+              "header_offset": 136,
+              "data_offset": 142,
+              "length": 14,
+              "raw_hex": "30312D4E61746976652E65736C00"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 156,
+              "data_offset": 162,
+              "length": 8,
+              "raw_hex": "0000000000000000"
+            }
+          ]
+        },
+        {
+          "signature": "REFR",
+          "offset": 194,
+          "length": 64,
+          "data_length": 40,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "01000800",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "NAME",
+              "header_offset": 218,
+              "data_offset": 224,
+              "length": 4,
+              "raw_hex": "00100000"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 228,
+              "data_offset": 234,
+              "length": 24,
+              "raw_hex": "000000000000000000000000000000000000000000000000"
+            }
+          ],
+          "identity": {
+            "form_id_hex": "01000800",
+            "resolution_state": "resolved",
+            "form_key": "00000800:Consumer-LightReferenceOutOfRange.esp",
+            "origin_plugin": "Consumer-LightReferenceOutOfRange.esp",
+            "origin_kind": "full",
+            "local_id_hex": "00000800"
+          },
+          "allowlisted_payload": {
+            "NAME": [
+              "00100000"
+            ],
+            "DATA": [
+              "000000000000000000000000000000000000000000000000"
+            ],
+            "float32_bit_patterns": [
+              "00000000",
+              "00000000",
+              "00000000",
+              "00000000",
+              "00000000",
+              "00000000"
+            ]
+          },
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "form_id_hex": "00001000",
+              "resolution_state": "invalid",
+              "reason": "light local ID 001000 outside 000800..000FFF",
+              "form_key": null,
+              "origin_plugin": "01-Native.esl",
+              "origin_kind": "invalid",
+              "local_id_hex": "001000"
+            }
+          ]
+        }
+      ],
+      "extension_header_mismatch": false
     },
     {
       "path": "mutations/FlaggedEsp-AboveLightMaximum.esp",
@@ -274,7 +400,98 @@
           "signature": "EDID",
           "raw_hex": "41626F766552616E676500"
         }
-      ]
+      ],
+      "tes4": {
+        "flags_hex": "00000200",
+        "esl_flag": true,
+        "masters": [
+          "00-Pad.esm"
+        ]
+      },
+      "groups": [
+        {
+          "offset": 162,
+          "length": 65,
+          "label_hex": "53544154",
+          "group_type": 0
+        }
+      ],
+      "records": [
+        {
+          "signature": "TES4",
+          "offset": 0,
+          "length": 162,
+          "data_length": 138,
+          "flags_hex": "00000200",
+          "raw_form_id_hex": "00000000",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "HEDR",
+              "header_offset": 24,
+              "data_offset": 30,
+              "length": 12,
+              "raw_hex": "9A99D93F0100000000080000"
+            },
+            {
+              "signature": "CNAM",
+              "header_offset": 42,
+              "data_offset": 48,
+              "length": 44,
+              "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+            },
+            {
+              "signature": "SNAM",
+              "header_offset": 92,
+              "data_offset": 98,
+              "length": 33,
+              "raw_hex": "466C61676765644573702D41626F76654C696768744D6178696D756D2E65737000"
+            },
+            {
+              "signature": "MAST",
+              "header_offset": 131,
+              "data_offset": 137,
+              "length": 11,
+              "raw_hex": "30302D5061642E65736D00"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 148,
+              "data_offset": 154,
+              "length": 8,
+              "raw_hex": "0000000000000000"
+            }
+          ]
+        },
+        {
+          "signature": "STAT",
+          "offset": 186,
+          "length": 41,
+          "data_length": 17,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "01001000",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "header_offset": 210,
+              "data_offset": 216,
+              "length": 11,
+              "raw_hex": "41626F766552616E676500"
+            }
+          ],
+          "identity": {
+            "form_id_hex": "01001000",
+            "resolution_state": "invalid",
+            "reason": "light local ID 001000 outside 000800..000FFF",
+            "form_key": null,
+            "origin_plugin": "FlaggedEsp-AboveLightMaximum.esp",
+            "origin_kind": "invalid",
+            "local_id_hex": "001000"
+          }
+        }
+      ],
+      "extension_header_mismatch": false
     },
     {
       "path": "mutations/FlaggedEsp-BelowObjectRange.esp",
@@ -403,7 +620,98 @@
           "signature": "EDID",
           "raw_hex": "42656C6F7752616E676500"
         }
-      ]
+      ],
+      "tes4": {
+        "flags_hex": "00000200",
+        "esl_flag": true,
+        "masters": [
+          "00-Pad.esm"
+        ]
+      },
+      "groups": [
+        {
+          "offset": 161,
+          "length": 65,
+          "label_hex": "53544154",
+          "group_type": 0
+        }
+      ],
+      "records": [
+        {
+          "signature": "TES4",
+          "offset": 0,
+          "length": 161,
+          "data_length": 137,
+          "flags_hex": "00000200",
+          "raw_form_id_hex": "00000000",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "HEDR",
+              "header_offset": 24,
+              "data_offset": 30,
+              "length": 12,
+              "raw_hex": "9A99D93F0100000000080000"
+            },
+            {
+              "signature": "CNAM",
+              "header_offset": 42,
+              "data_offset": 48,
+              "length": 44,
+              "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+            },
+            {
+              "signature": "SNAM",
+              "header_offset": 92,
+              "data_offset": 98,
+              "length": 32,
+              "raw_hex": "466C61676765644573702D42656C6F774F626A65637452616E67652E65737000"
+            },
+            {
+              "signature": "MAST",
+              "header_offset": 130,
+              "data_offset": 136,
+              "length": 11,
+              "raw_hex": "30302D5061642E65736D00"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 147,
+              "data_offset": 153,
+              "length": 8,
+              "raw_hex": "0000000000000000"
+            }
+          ]
+        },
+        {
+          "signature": "STAT",
+          "offset": 185,
+          "length": 41,
+          "data_length": 17,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "010007FF",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "header_offset": 209,
+              "data_offset": 215,
+              "length": 11,
+              "raw_hex": "42656C6F7752616E676500"
+            }
+          ],
+          "identity": {
+            "form_id_hex": "010007FF",
+            "resolution_state": "invalid",
+            "reason": "light local ID 0007FF outside 000800..000FFF",
+            "form_key": null,
+            "origin_plugin": "FlaggedEsp-BelowObjectRange.esp",
+            "origin_kind": "invalid",
+            "local_id_hex": "0007FF"
+          }
+        }
+      ],
+      "extension_header_mismatch": false
     },
     {
       "path": "mutations/Native-AboveLightMaximum.esl",
@@ -532,7 +840,98 @@
           "signature": "EDID",
           "raw_hex": "41626F766552616E676500"
         }
-      ]
+      ],
+      "tes4": {
+        "flags_hex": "00000200",
+        "esl_flag": true,
+        "masters": [
+          "00-Pad.esm"
+        ]
+      },
+      "groups": [
+        {
+          "offset": 158,
+          "length": 65,
+          "label_hex": "53544154",
+          "group_type": 0
+        }
+      ],
+      "records": [
+        {
+          "signature": "TES4",
+          "offset": 0,
+          "length": 158,
+          "data_length": 134,
+          "flags_hex": "00000200",
+          "raw_form_id_hex": "00000000",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "HEDR",
+              "header_offset": 24,
+              "data_offset": 30,
+              "length": 12,
+              "raw_hex": "9A99D93F0100000000080000"
+            },
+            {
+              "signature": "CNAM",
+              "header_offset": 42,
+              "data_offset": 48,
+              "length": 44,
+              "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+            },
+            {
+              "signature": "SNAM",
+              "header_offset": 92,
+              "data_offset": 98,
+              "length": 29,
+              "raw_hex": "4E61746976652D41626F76654C696768744D6178696D756D2E65736C00"
+            },
+            {
+              "signature": "MAST",
+              "header_offset": 127,
+              "data_offset": 133,
+              "length": 11,
+              "raw_hex": "30302D5061642E65736D00"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 144,
+              "data_offset": 150,
+              "length": 8,
+              "raw_hex": "0000000000000000"
+            }
+          ]
+        },
+        {
+          "signature": "STAT",
+          "offset": 182,
+          "length": 41,
+          "data_length": 17,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "01001000",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "header_offset": 206,
+              "data_offset": 212,
+              "length": 11,
+              "raw_hex": "41626F766552616E676500"
+            }
+          ],
+          "identity": {
+            "form_id_hex": "01001000",
+            "resolution_state": "invalid",
+            "reason": "light local ID 001000 outside 000800..000FFF",
+            "form_key": null,
+            "origin_plugin": "Native-AboveLightMaximum.esl",
+            "origin_kind": "invalid",
+            "local_id_hex": "001000"
+          }
+        }
+      ],
+      "extension_header_mismatch": false
     },
     {
       "path": "mutations/Native-BelowObjectRange.esl",
@@ -661,7 +1060,98 @@
           "signature": "EDID",
           "raw_hex": "42656C6F7752616E676500"
         }
-      ]
+      ],
+      "tes4": {
+        "flags_hex": "00000200",
+        "esl_flag": true,
+        "masters": [
+          "00-Pad.esm"
+        ]
+      },
+      "groups": [
+        {
+          "offset": 157,
+          "length": 65,
+          "label_hex": "53544154",
+          "group_type": 0
+        }
+      ],
+      "records": [
+        {
+          "signature": "TES4",
+          "offset": 0,
+          "length": 157,
+          "data_length": 133,
+          "flags_hex": "00000200",
+          "raw_form_id_hex": "00000000",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "HEDR",
+              "header_offset": 24,
+              "data_offset": 30,
+              "length": 12,
+              "raw_hex": "9A99D93F0100000000080000"
+            },
+            {
+              "signature": "CNAM",
+              "header_offset": 42,
+              "data_offset": 48,
+              "length": 44,
+              "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+            },
+            {
+              "signature": "SNAM",
+              "header_offset": 92,
+              "data_offset": 98,
+              "length": 28,
+              "raw_hex": "4E61746976652D42656C6F774F626A65637452616E67652E65736C00"
+            },
+            {
+              "signature": "MAST",
+              "header_offset": 126,
+              "data_offset": 132,
+              "length": 11,
+              "raw_hex": "30302D5061642E65736D00"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 143,
+              "data_offset": 149,
+              "length": 8,
+              "raw_hex": "0000000000000000"
+            }
+          ]
+        },
+        {
+          "signature": "STAT",
+          "offset": 181,
+          "length": 41,
+          "data_length": 17,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "010007FF",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "header_offset": 205,
+              "data_offset": 211,
+              "length": 11,
+              "raw_hex": "42656C6F7752616E676500"
+            }
+          ],
+          "identity": {
+            "form_id_hex": "010007FF",
+            "resolution_state": "invalid",
+            "reason": "light local ID 0007FF outside 000800..000FFF",
+            "form_key": null,
+            "origin_plugin": "Native-BelowObjectRange.esl",
+            "origin_kind": "invalid",
+            "local_id_hex": "0007FF"
+          }
+        }
+      ],
+      "extension_header_mismatch": false
     },
     {
       "path": "mutations/Native-HeaderFlagRemoved.esl",
@@ -790,7 +1280,98 @@
           "signature": "EDID",
           "raw_hex": "457874656E73696F6E4865616465724D69736D6174636800"
         }
-      ]
+      ],
+      "tes4": {
+        "flags_hex": "00000000",
+        "esl_flag": false,
+        "masters": [
+          "00-Pad.esm"
+        ]
+      },
+      "groups": [
+        {
+          "offset": 158,
+          "length": 78,
+          "label_hex": "53544154",
+          "group_type": 0
+        }
+      ],
+      "records": [
+        {
+          "signature": "TES4",
+          "offset": 0,
+          "length": 158,
+          "data_length": 134,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "00000000",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "HEDR",
+              "header_offset": 24,
+              "data_offset": 30,
+              "length": 12,
+              "raw_hex": "9A99D93F0100000000080000"
+            },
+            {
+              "signature": "CNAM",
+              "header_offset": 42,
+              "data_offset": 48,
+              "length": 44,
+              "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+            },
+            {
+              "signature": "SNAM",
+              "header_offset": 92,
+              "data_offset": 98,
+              "length": 29,
+              "raw_hex": "4E61746976652D486561646572466C616752656D6F7665642E65736C00"
+            },
+            {
+              "signature": "MAST",
+              "header_offset": 127,
+              "data_offset": 133,
+              "length": 11,
+              "raw_hex": "30302D5061642E65736D00"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 144,
+              "data_offset": 150,
+              "length": 8,
+              "raw_hex": "0000000000000000"
+            }
+          ]
+        },
+        {
+          "signature": "STAT",
+          "offset": 182,
+          "length": 54,
+          "data_length": 30,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "01000800",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "header_offset": 206,
+              "data_offset": 212,
+              "length": 24,
+              "raw_hex": "457874656E73696F6E4865616465724D69736D6174636800"
+            }
+          ],
+          "identity": {
+            "form_id_hex": "01000800",
+            "resolution_state": "invalid",
+            "form_key": null,
+            "origin_plugin": "Native-HeaderFlagRemoved.esl",
+            "origin_kind": "invalid",
+            "local_id_hex": null,
+            "reason": "native .esl extension/header light-flag mismatch"
+          }
+        }
+      ],
+      "extension_header_mismatch": true
     },
     {
       "path": "plugins/00-Pad.esm",
@@ -855,7 +1436,48 @@
           "signature": "SNAM",
           "raw_hex": "30302D5061642E65736D00"
         }
-      ]
+      ],
+      "tes4": {
+        "flags_hex": "00000000",
+        "esl_flag": false,
+        "masters": []
+      },
+      "groups": [],
+      "records": [
+        {
+          "signature": "TES4",
+          "offset": 0,
+          "length": 109,
+          "data_length": 85,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "00000000",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "HEDR",
+              "header_offset": 24,
+              "data_offset": 30,
+              "length": 12,
+              "raw_hex": "9A99D93F0000000000080000"
+            },
+            {
+              "signature": "CNAM",
+              "header_offset": 42,
+              "data_offset": 48,
+              "length": 44,
+              "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+            },
+            {
+              "signature": "SNAM",
+              "header_offset": 92,
+              "data_offset": 98,
+              "length": 11,
+              "raw_hex": "30302D5061642E65736D00"
+            }
+          ]
+        }
+      ],
+      "extension_header_mismatch": false
     },
     {
       "path": "plugins/01-Native.esl",
@@ -1008,7 +1630,123 @@
           "signature": "EDID",
           "raw_hex": "4E61746976654C696768744D6178696D756D00"
         }
-      ]
+      ],
+      "tes4": {
+        "flags_hex": "00000200",
+        "esl_flag": true,
+        "masters": [
+          "00-Pad.esm"
+        ]
+      },
+      "groups": [
+        {
+          "offset": 143,
+          "length": 122,
+          "label_hex": "53544154",
+          "group_type": 0
+        }
+      ],
+      "records": [
+        {
+          "signature": "TES4",
+          "offset": 0,
+          "length": 143,
+          "data_length": 119,
+          "flags_hex": "00000200",
+          "raw_form_id_hex": "00000000",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "HEDR",
+              "header_offset": 24,
+              "data_offset": 30,
+              "length": 12,
+              "raw_hex": "9A99D93F0200000000080000"
+            },
+            {
+              "signature": "CNAM",
+              "header_offset": 42,
+              "data_offset": 48,
+              "length": 44,
+              "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+            },
+            {
+              "signature": "SNAM",
+              "header_offset": 92,
+              "data_offset": 98,
+              "length": 14,
+              "raw_hex": "30312D4E61746976652E65736C00"
+            },
+            {
+              "signature": "MAST",
+              "header_offset": 112,
+              "data_offset": 118,
+              "length": 11,
+              "raw_hex": "30302D5061642E65736D00"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 129,
+              "data_offset": 135,
+              "length": 8,
+              "raw_hex": "0000000000000000"
+            }
+          ]
+        },
+        {
+          "signature": "STAT",
+          "offset": 167,
+          "length": 49,
+          "data_length": 25,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "01000800",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "header_offset": 191,
+              "data_offset": 197,
+              "length": 19,
+              "raw_hex": "4E61746976654C696768744D696E696D756D00"
+            }
+          ],
+          "identity": {
+            "form_id_hex": "01000800",
+            "resolution_state": "resolved",
+            "form_key": "00000800:01-Native.esl",
+            "origin_plugin": "01-Native.esl",
+            "origin_kind": "light",
+            "local_id_hex": "00000800"
+          }
+        },
+        {
+          "signature": "STAT",
+          "offset": 216,
+          "length": 49,
+          "data_length": 25,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "01000FFF",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "header_offset": 240,
+              "data_offset": 246,
+              "length": 19,
+              "raw_hex": "4E61746976654C696768744D6178696D756D00"
+            }
+          ],
+          "identity": {
+            "form_id_hex": "01000FFF",
+            "resolution_state": "resolved",
+            "form_key": "00000FFF:01-Native.esl",
+            "origin_plugin": "01-Native.esl",
+            "origin_kind": "light",
+            "local_id_hex": "00000FFF"
+          }
+        }
+      ],
+      "extension_header_mismatch": false
     },
     {
       "path": "plugins/02-Flagged.esp",
@@ -1161,7 +1899,123 @@
           "signature": "EDID",
           "raw_hex": "466C61676765644C696768744D6178696D756D00"
         }
-      ]
+      ],
+      "tes4": {
+        "flags_hex": "00000200",
+        "esl_flag": true,
+        "masters": [
+          "00-Pad.esm"
+        ]
+      },
+      "groups": [
+        {
+          "offset": 144,
+          "length": 124,
+          "label_hex": "53544154",
+          "group_type": 0
+        }
+      ],
+      "records": [
+        {
+          "signature": "TES4",
+          "offset": 0,
+          "length": 144,
+          "data_length": 120,
+          "flags_hex": "00000200",
+          "raw_form_id_hex": "00000000",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "HEDR",
+              "header_offset": 24,
+              "data_offset": 30,
+              "length": 12,
+              "raw_hex": "9A99D93F0200000000080000"
+            },
+            {
+              "signature": "CNAM",
+              "header_offset": 42,
+              "data_offset": 48,
+              "length": 44,
+              "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+            },
+            {
+              "signature": "SNAM",
+              "header_offset": 92,
+              "data_offset": 98,
+              "length": 15,
+              "raw_hex": "30322D466C61676765642E65737000"
+            },
+            {
+              "signature": "MAST",
+              "header_offset": 113,
+              "data_offset": 119,
+              "length": 11,
+              "raw_hex": "30302D5061642E65736D00"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 130,
+              "data_offset": 136,
+              "length": 8,
+              "raw_hex": "0000000000000000"
+            }
+          ]
+        },
+        {
+          "signature": "STAT",
+          "offset": 168,
+          "length": 50,
+          "data_length": 26,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "01000800",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "header_offset": 192,
+              "data_offset": 198,
+              "length": 20,
+              "raw_hex": "466C61676765644C696768744D696E696D756D00"
+            }
+          ],
+          "identity": {
+            "form_id_hex": "01000800",
+            "resolution_state": "resolved",
+            "form_key": "00000800:02-Flagged.esp",
+            "origin_plugin": "02-Flagged.esp",
+            "origin_kind": "light",
+            "local_id_hex": "00000800"
+          }
+        },
+        {
+          "signature": "STAT",
+          "offset": 218,
+          "length": 50,
+          "data_length": 26,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "01000FFF",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "header_offset": 242,
+              "data_offset": 248,
+              "length": 20,
+              "raw_hex": "466C61676765644C696768744D6178696D756D00"
+            }
+          ],
+          "identity": {
+            "form_id_hex": "01000FFF",
+            "resolution_state": "resolved",
+            "form_key": "00000FFF:02-Flagged.esp",
+            "origin_plugin": "02-Flagged.esp",
+            "origin_kind": "light",
+            "local_id_hex": "00000FFF"
+          }
+        }
+      ],
+      "extension_header_mismatch": false
     },
     {
       "path": "plugins/03-Consumer.esp",
@@ -1378,7 +2232,208 @@
           "signature": "DATA",
           "raw_hex": "0000803F0000803F0000803F000000000000000000000000"
         }
-      ]
+      ],
+      "tes4": {
+        "flags_hex": "00000000",
+        "esl_flag": false,
+        "masters": [
+          "01-Native.esl",
+          "02-Flagged.esp"
+        ]
+      },
+      "groups": [
+        {
+          "offset": 183,
+          "length": 152,
+          "label_hex": "52454652",
+          "group_type": 0
+        }
+      ],
+      "records": [
+        {
+          "signature": "TES4",
+          "offset": 0,
+          "length": 183,
+          "data_length": 159,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "00000000",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "HEDR",
+              "header_offset": 24,
+              "data_offset": 30,
+              "length": 12,
+              "raw_hex": "9A99D93F0200000000080000"
+            },
+            {
+              "signature": "CNAM",
+              "header_offset": 42,
+              "data_offset": 48,
+              "length": 44,
+              "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+            },
+            {
+              "signature": "SNAM",
+              "header_offset": 92,
+              "data_offset": 98,
+              "length": 16,
+              "raw_hex": "30332D436F6E73756D65722E65737000"
+            },
+            {
+              "signature": "MAST",
+              "header_offset": 114,
+              "data_offset": 120,
+              "length": 14,
+              "raw_hex": "30312D4E61746976652E65736C00"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 134,
+              "data_offset": 140,
+              "length": 8,
+              "raw_hex": "0000000000000000"
+            },
+            {
+              "signature": "MAST",
+              "header_offset": 148,
+              "data_offset": 154,
+              "length": 15,
+              "raw_hex": "30322D466C61676765642E65737000"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 169,
+              "data_offset": 175,
+              "length": 8,
+              "raw_hex": "0000000000000000"
+            }
+          ]
+        },
+        {
+          "signature": "REFR",
+          "offset": 207,
+          "length": 64,
+          "data_length": 40,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "02000800",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "NAME",
+              "header_offset": 231,
+              "data_offset": 237,
+              "length": 4,
+              "raw_hex": "00080000"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 241,
+              "data_offset": 247,
+              "length": 24,
+              "raw_hex": "000000000000000000000000000000000000000000000000"
+            }
+          ],
+          "identity": {
+            "form_id_hex": "02000800",
+            "resolution_state": "resolved",
+            "form_key": "00000800:03-Consumer.esp",
+            "origin_plugin": "03-Consumer.esp",
+            "origin_kind": "full",
+            "local_id_hex": "00000800"
+          },
+          "allowlisted_payload": {
+            "NAME": [
+              "00080000"
+            ],
+            "DATA": [
+              "000000000000000000000000000000000000000000000000"
+            ],
+            "float32_bit_patterns": [
+              "00000000",
+              "00000000",
+              "00000000",
+              "00000000",
+              "00000000",
+              "00000000"
+            ]
+          },
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "form_id_hex": "00000800",
+              "resolution_state": "resolved",
+              "form_key": "00000800:01-Native.esl",
+              "origin_plugin": "01-Native.esl",
+              "origin_kind": "light",
+              "local_id_hex": "00000800"
+            }
+          ]
+        },
+        {
+          "signature": "REFR",
+          "offset": 271,
+          "length": 64,
+          "data_length": 40,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "02000801",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "NAME",
+              "header_offset": 295,
+              "data_offset": 301,
+              "length": 4,
+              "raw_hex": "FF0F0001"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 305,
+              "data_offset": 311,
+              "length": 24,
+              "raw_hex": "0000803F0000803F0000803F000000000000000000000000"
+            }
+          ],
+          "identity": {
+            "form_id_hex": "02000801",
+            "resolution_state": "resolved",
+            "form_key": "00000801:03-Consumer.esp",
+            "origin_plugin": "03-Consumer.esp",
+            "origin_kind": "full",
+            "local_id_hex": "00000801"
+          },
+          "allowlisted_payload": {
+            "NAME": [
+              "FF0F0001"
+            ],
+            "DATA": [
+              "0000803F0000803F0000803F000000000000000000000000"
+            ],
+            "float32_bit_patterns": [
+              "0000803F",
+              "0000803F",
+              "0000803F",
+              "00000000",
+              "00000000",
+              "00000000"
+            ]
+          },
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "form_id_hex": "01000FFF",
+              "resolution_state": "resolved",
+              "form_key": "00000FFF:02-Flagged.esp",
+              "origin_plugin": "02-Flagged.esp",
+              "origin_kind": "light",
+              "local_id_hex": "00000FFF"
+            }
+          ]
+        }
+      ],
+      "extension_header_mismatch": false
     },
     {
       "path": "plugins/04-Winner.esp",
@@ -1507,8 +2562,356 @@
           "signature": "EDID",
           "raw_hex": "4E61746976654C696768744D696E696D756D4F7665727269646500"
         }
-      ]
+      ],
+      "tes4": {
+        "flags_hex": "00000000",
+        "esl_flag": false,
+        "masters": [
+          "01-Native.esl"
+        ]
+      },
+      "groups": [
+        {
+          "offset": 146,
+          "length": 81,
+          "label_hex": "53544154",
+          "group_type": 0
+        }
+      ],
+      "records": [
+        {
+          "signature": "TES4",
+          "offset": 0,
+          "length": 146,
+          "data_length": 122,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "00000000",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "HEDR",
+              "header_offset": 24,
+              "data_offset": 30,
+              "length": 12,
+              "raw_hex": "9A99D93F0100000000080000"
+            },
+            {
+              "signature": "CNAM",
+              "header_offset": 42,
+              "data_offset": 48,
+              "length": 44,
+              "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+            },
+            {
+              "signature": "SNAM",
+              "header_offset": 92,
+              "data_offset": 98,
+              "length": 14,
+              "raw_hex": "30342D57696E6E65722E65737000"
+            },
+            {
+              "signature": "MAST",
+              "header_offset": 112,
+              "data_offset": 118,
+              "length": 14,
+              "raw_hex": "30312D4E61746976652E65736C00"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 132,
+              "data_offset": 138,
+              "length": 8,
+              "raw_hex": "0000000000000000"
+            }
+          ]
+        },
+        {
+          "signature": "STAT",
+          "offset": 170,
+          "length": 57,
+          "data_length": 33,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "00000800",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "header_offset": 194,
+              "data_offset": 200,
+              "length": 27,
+              "raw_hex": "4E61746976654C696768744D696E696D756D4F7665727269646500"
+            }
+          ],
+          "identity": {
+            "form_id_hex": "00000800",
+            "resolution_state": "resolved",
+            "form_key": "00000800:01-Native.esl",
+            "origin_plugin": "01-Native.esl",
+            "origin_kind": "light",
+            "local_id_hex": "00000800"
+          }
+        }
+      ],
+      "extension_header_mismatch": false
     }
   ],
-  "supplemental_inputs": []
+  "supplemental_inputs": [],
+  "scenario_semantics": [
+    {
+      "scenario_id": "light-native-minimum",
+      "plugin_paths": [
+        "plugins/01-Native.esl"
+      ],
+      "records": [
+        {
+          "locator": "plugins/01-Native.esl#1",
+          "plugin_order": 0,
+          "form_key": "00000800:01-Native.esl",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Native.esl#2",
+          "plugin_order": 0,
+          "form_key": "00000FFF:01-Native.esl",
+          "deleted": false,
+          "links": []
+        }
+      ],
+      "chains": [],
+      "denominator": "native_esl_object_id"
+    },
+    {
+      "scenario_id": "light-native-maximum",
+      "plugin_paths": [
+        "plugins/01-Native.esl"
+      ],
+      "records": [
+        {
+          "locator": "plugins/01-Native.esl#1",
+          "plugin_order": 0,
+          "form_key": "00000800:01-Native.esl",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Native.esl#2",
+          "plugin_order": 0,
+          "form_key": "00000FFF:01-Native.esl",
+          "deleted": false,
+          "links": []
+        }
+      ],
+      "chains": [],
+      "denominator": "native_esl_object_id"
+    },
+    {
+      "scenario_id": "light-flagged-esp-minimum",
+      "plugin_paths": [
+        "plugins/02-Flagged.esp"
+      ],
+      "records": [
+        {
+          "locator": "plugins/02-Flagged.esp#1",
+          "plugin_order": 0,
+          "form_key": "00000800:02-Flagged.esp",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/02-Flagged.esp#2",
+          "plugin_order": 0,
+          "form_key": "00000FFF:02-Flagged.esp",
+          "deleted": false,
+          "links": []
+        }
+      ],
+      "chains": [],
+      "denominator": "esl_flagged_esp_object_id"
+    },
+    {
+      "scenario_id": "light-flagged-esp-maximum",
+      "plugin_paths": [
+        "plugins/02-Flagged.esp"
+      ],
+      "records": [
+        {
+          "locator": "plugins/02-Flagged.esp#1",
+          "plugin_order": 0,
+          "form_key": "00000800:02-Flagged.esp",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/02-Flagged.esp#2",
+          "plugin_order": 0,
+          "form_key": "00000FFF:02-Flagged.esp",
+          "deleted": false,
+          "links": []
+        }
+      ],
+      "chains": [],
+      "denominator": "esl_flagged_esp_object_id"
+    },
+    {
+      "scenario_id": "light-native-below-range",
+      "plugin_paths": [
+        "mutations/Native-BelowObjectRange.esl"
+      ],
+      "records": [],
+      "chains": [],
+      "denominator": "native_esl_object_id"
+    },
+    {
+      "scenario_id": "light-native-above-range",
+      "plugin_paths": [
+        "mutations/Native-AboveLightMaximum.esl"
+      ],
+      "records": [],
+      "chains": [],
+      "denominator": "native_esl_object_id"
+    },
+    {
+      "scenario_id": "light-flagged-below-range",
+      "plugin_paths": [
+        "mutations/FlaggedEsp-BelowObjectRange.esp"
+      ],
+      "records": [],
+      "chains": [],
+      "denominator": "esl_flagged_esp_object_id"
+    },
+    {
+      "scenario_id": "light-flagged-above-range",
+      "plugin_paths": [
+        "mutations/FlaggedEsp-AboveLightMaximum.esp"
+      ],
+      "records": [],
+      "chains": [],
+      "denominator": "esl_flagged_esp_object_id"
+    },
+    {
+      "scenario_id": "light-extension-header-mismatch",
+      "plugin_paths": [
+        "mutations/Native-HeaderFlagRemoved.esl"
+      ],
+      "records": [],
+      "chains": [],
+      "denominator": "light_plugin_classification"
+    },
+    {
+      "scenario_id": "light-reference-out-of-range",
+      "plugin_paths": [
+        "mutations/Consumer-LightReferenceOutOfRange.esp"
+      ],
+      "records": [
+        {
+          "locator": "mutations/Consumer-LightReferenceOutOfRange.esp#1",
+          "plugin_order": 0,
+          "form_key": "00000800:Consumer-LightReferenceOutOfRange.esp",
+          "deleted": false,
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00001000",
+              "form_key": null,
+              "resolution_state": "invalid"
+            }
+          ]
+        }
+      ],
+      "chains": [],
+      "denominator": "light_master_reference"
+    },
+    {
+      "scenario_id": "light-consumer-and-winner",
+      "plugin_paths": [
+        "plugins/01-Native.esl",
+        "plugins/02-Flagged.esp",
+        "plugins/03-Consumer.esp",
+        "plugins/04-Winner.esp"
+      ],
+      "records": [
+        {
+          "locator": "plugins/01-Native.esl#1",
+          "plugin_order": 0,
+          "form_key": "00000800:01-Native.esl",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Native.esl#2",
+          "plugin_order": 0,
+          "form_key": "00000FFF:01-Native.esl",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/02-Flagged.esp#1",
+          "plugin_order": 1,
+          "form_key": "00000800:02-Flagged.esp",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/02-Flagged.esp#2",
+          "plugin_order": 1,
+          "form_key": "00000FFF:02-Flagged.esp",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/03-Consumer.esp#1",
+          "plugin_order": 2,
+          "form_key": "00000800:03-Consumer.esp",
+          "deleted": false,
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000800",
+              "form_key": "00000800:01-Native.esl",
+              "resolution_state": "resolved"
+            }
+          ]
+        },
+        {
+          "locator": "plugins/03-Consumer.esp#2",
+          "plugin_order": 2,
+          "form_key": "00000801:03-Consumer.esp",
+          "deleted": false,
+          "links": [
+            {
+              "field": "NAME",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000FFF",
+              "form_key": "00000FFF:02-Flagged.esp",
+              "resolution_state": "resolved"
+            }
+          ]
+        },
+        {
+          "locator": "plugins/04-Winner.esp#1",
+          "plugin_order": 3,
+          "form_key": "00000800:01-Native.esl",
+          "deleted": false,
+          "links": []
+        }
+      ],
+      "chains": [
+        {
+          "form_key": "00000800:01-Native.esl",
+          "ordered_locators": [
+            "plugins/01-Native.esl#1",
+            "plugins/04-Winner.esp#1"
+          ],
+          "winner_locator": "plugins/04-Winner.esp#1"
+        }
+      ],
+      "denominator": null
+    }
+  ]
 }

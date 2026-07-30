@@ -1,7 +1,7 @@
 {
   "fixture_id": "BETH-LIGHT-VAL",
   "fixture_version": "1.0.0",
-  "oracle_version": "1.0.0",
+  "oracle_version": "1.0.1",
   "independent_authors_and_reviewers": [
     "oracle-reviewer"
   ],
@@ -13,7 +13,7 @@
         {
           "artifact_id": "oracle/manual-hex-worksheet.json",
           "artifact_version": "1",
-          "fingerprint": "dad3efa7a5578927c8b71ad60279b06f7fcba53fcbdfbd779102df665eda4e40",
+          "fingerprint": "0ec82c62b36a93cfd3ac87ced59e11a383a4744343cef2a7b29e20df4da81eec",
           "availability": "retained"
         }
       ],
@@ -26,13 +26,13 @@
         {
           "artifact_id": "oracle/independent-reader-report.json",
           "artifact_version": "1",
-          "fingerprint": "7e56791fce0db7596e58c8cc4bf52fda3124a2f5624a84d3b60a0041d2c397ce",
+          "fingerprint": "cd3965c55d56a6e361f440f7531c29df0c56bbb6671a7598cf9b2106b8a32867",
           "availability": "retained"
         },
         {
           "artifact_id": "oracle/independent-byte-facts.json",
           "artifact_version": "1.0.0",
-          "fingerprint": "c865d196a2cad9f60bff5334df093b764c0cbfbeda16e7a9a4369b2783794980",
+          "fingerprint": "97fb0d195161beb267c16b3cc5cfff6d9da04ff6b7acc363fdc84c77a117e50e",
           "availability": "retained"
         }
       ],
@@ -1366,5 +1366,18 @@
     "No production parser, Mutagen, xEdit, held-out input, or taxonomy answer authored these values."
   ],
   "pre_registered_at": "2026-07-30T00:00:00.0000000+00:00",
-  "change_history": []
+  "change_history": [
+    {
+      "oracle_version": "1.0.1",
+      "changed_at": "2026-07-30T23:00:00.0000000+00:00",
+      "independent_evidence_reference": {
+        "artifact_id": "oracle/manual-hex-worksheet.json",
+        "artifact_version": "1",
+        "fingerprint": "0ec82c62b36a93cfd3ac87ced59e11a383a4744343cef2a7b29e20df4da81eec",
+        "availability": "retained"
+      },
+      "prior_error_explanation": "Version 1.0.0 attributed the manual method without comparing its decoded semantic answers and classified mutation changes from artifact dependencies instead of logical baseline deltas.",
+      "reviewer": "oracle-reviewer"
+    }
+  ]
 }

@@ -6485,5 +6485,1356 @@
       "extension_header_mismatch": false
     }
   ],
-  "supplemental_inputs": []
+  "supplemental_inputs": [],
+  "scenario_semantics": [
+    {
+      "scenario_id": "npc-layered-winner",
+      "plugin_paths": [
+        "plugins/00-Pad.esm",
+        "plugins/01-Actors.esm",
+        "plugins/02-Behavior.esp",
+        "plugins/03-Appearance.esp"
+      ],
+      "records": [
+        {
+          "locator": "plugins/01-Actors.esm#1",
+          "plugin_order": 1,
+          "form_key": "00000810:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#2",
+          "plugin_order": 1,
+          "form_key": "00000811:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#3",
+          "plugin_order": 1,
+          "form_key": "00000820:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#4",
+          "plugin_order": 1,
+          "form_key": "00000830:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#5",
+          "plugin_order": 1,
+          "form_key": "00000831:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#6",
+          "plugin_order": 1,
+          "form_key": "00000840:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#7",
+          "plugin_order": 1,
+          "form_key": "00000850:01-Actors.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "RNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000810",
+              "form_key": "00000810:01-Actors.esm",
+              "resolution_state": "resolved"
+            }
+          ]
+        },
+        {
+          "locator": "plugins/01-Actors.esm#8",
+          "plugin_order": 1,
+          "form_key": "00000800:01-Actors.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "RNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000810",
+              "form_key": "00000810:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PKID",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000830",
+              "form_key": "00000830:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PKID",
+              "occurrence": 1,
+              "component": null,
+              "form_id_hex": "01000831",
+              "form_key": "00000831:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PNAM",
+              "occurrence": 1,
+              "component": null,
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "HCLF",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-Actors.esm",
+              "resolution_state": "resolved"
+            }
+          ]
+        },
+        {
+          "locator": "plugins/02-Behavior.esp#1",
+          "plugin_order": 2,
+          "form_key": "00000800:01-Actors.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "RNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000810",
+              "form_key": "00000810:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PKID",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000831",
+              "form_key": "00000831:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PKID",
+              "occurrence": 1,
+              "component": null,
+              "form_id_hex": "01000830",
+              "form_key": "00000830:01-Actors.esm",
+              "resolution_state": "resolved"
+            }
+          ]
+        },
+        {
+          "locator": "plugins/03-Appearance.esp#1",
+          "plugin_order": 3,
+          "form_key": "00000800:01-Actors.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "TPLT",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000850",
+              "form_key": "00000850:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "RNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000811",
+              "form_key": "00000811:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "HCLF",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-Actors.esm",
+              "resolution_state": "resolved"
+            }
+          ]
+        }
+      ],
+      "chains": [
+        {
+          "form_key": "00000800:01-Actors.esm",
+          "ordered_locators": [
+            "plugins/01-Actors.esm#8",
+            "plugins/02-Behavior.esp#1",
+            "plugins/03-Appearance.esp#1"
+          ],
+          "winner_locator": "plugins/03-Appearance.esp#1"
+        }
+      ],
+      "denominator": null
+    },
+    {
+      "scenario_id": "npc-deleted-winner",
+      "plugin_paths": [
+        "plugins/01-Actors.esm",
+        "plugins/06-DeletedWinner.esp"
+      ],
+      "records": [
+        {
+          "locator": "plugins/01-Actors.esm#1",
+          "plugin_order": 0,
+          "form_key": "00000810:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#2",
+          "plugin_order": 0,
+          "form_key": "00000811:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#3",
+          "plugin_order": 0,
+          "form_key": "00000820:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#4",
+          "plugin_order": 0,
+          "form_key": "00000830:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#5",
+          "plugin_order": 0,
+          "form_key": "00000831:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#6",
+          "plugin_order": 0,
+          "form_key": "00000840:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#7",
+          "plugin_order": 0,
+          "form_key": "00000850:01-Actors.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "RNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000810",
+              "form_key": "00000810:01-Actors.esm",
+              "resolution_state": "resolved"
+            }
+          ]
+        },
+        {
+          "locator": "plugins/01-Actors.esm#8",
+          "plugin_order": 0,
+          "form_key": "00000800:01-Actors.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "RNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000810",
+              "form_key": "00000810:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PKID",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000830",
+              "form_key": "00000830:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PKID",
+              "occurrence": 1,
+              "component": null,
+              "form_id_hex": "01000831",
+              "form_key": "00000831:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PNAM",
+              "occurrence": 1,
+              "component": null,
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "HCLF",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-Actors.esm",
+              "resolution_state": "resolved"
+            }
+          ]
+        },
+        {
+          "locator": "plugins/06-DeletedWinner.esp#1",
+          "plugin_order": 1,
+          "form_key": "00000800:01-Actors.esm",
+          "deleted": true,
+          "links": []
+        }
+      ],
+      "chains": [
+        {
+          "form_key": "00000800:01-Actors.esm",
+          "ordered_locators": [
+            "plugins/01-Actors.esm#8",
+            "plugins/06-DeletedWinner.esp#1"
+          ],
+          "winner_locator": "plugins/06-DeletedWinner.esp#1"
+        }
+      ],
+      "denominator": null
+    },
+    {
+      "scenario_id": "npc-light-plugin",
+      "plugin_paths": [
+        "plugins/01-Actors.esm",
+        "plugins/04-LightActors.esl",
+        "plugins/05-LightWinner.esp"
+      ],
+      "records": [
+        {
+          "locator": "plugins/01-Actors.esm#1",
+          "plugin_order": 0,
+          "form_key": "00000810:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#2",
+          "plugin_order": 0,
+          "form_key": "00000811:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#3",
+          "plugin_order": 0,
+          "form_key": "00000820:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#4",
+          "plugin_order": 0,
+          "form_key": "00000830:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#5",
+          "plugin_order": 0,
+          "form_key": "00000831:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#6",
+          "plugin_order": 0,
+          "form_key": "00000840:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#7",
+          "plugin_order": 0,
+          "form_key": "00000850:01-Actors.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "RNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000810",
+              "form_key": "00000810:01-Actors.esm",
+              "resolution_state": "resolved"
+            }
+          ]
+        },
+        {
+          "locator": "plugins/01-Actors.esm#8",
+          "plugin_order": 0,
+          "form_key": "00000800:01-Actors.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "RNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000810",
+              "form_key": "00000810:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PKID",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000830",
+              "form_key": "00000830:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PKID",
+              "occurrence": 1,
+              "component": null,
+              "form_id_hex": "01000831",
+              "form_key": "00000831:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PNAM",
+              "occurrence": 1,
+              "component": null,
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "HCLF",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-Actors.esm",
+              "resolution_state": "resolved"
+            }
+          ]
+        },
+        {
+          "locator": "plugins/04-LightActors.esl#1",
+          "plugin_order": 1,
+          "form_key": "00000800:04-LightActors.esl",
+          "deleted": false,
+          "links": [
+            {
+              "field": "RNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000810",
+              "form_key": "00000810:01-Actors.esm",
+              "resolution_state": "resolved"
+            }
+          ]
+        },
+        {
+          "locator": "plugins/05-LightWinner.esp#1",
+          "plugin_order": 2,
+          "form_key": "00000800:04-LightActors.esl",
+          "deleted": false,
+          "links": [
+            {
+              "field": "RNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000810",
+              "form_key": "00000810:04-LightActors.esl",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "HCLF",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000000",
+              "form_key": null,
+              "resolution_state": "null"
+            }
+          ]
+        }
+      ],
+      "chains": [
+        {
+          "form_key": "00000800:04-LightActors.esl",
+          "ordered_locators": [
+            "plugins/04-LightActors.esl#1",
+            "plugins/05-LightWinner.esp#1"
+          ],
+          "winner_locator": "plugins/05-LightWinner.esp#1"
+        }
+      ],
+      "denominator": null
+    },
+    {
+      "scenario_id": "npc-compression-equivalence.variant-0",
+      "plugin_paths": [
+        "plugins/03-Appearance.esp"
+      ],
+      "records": [
+        {
+          "locator": "plugins/03-Appearance.esp#1",
+          "plugin_order": 0,
+          "form_key": "00000800:01-Actors.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "TPLT",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000850",
+              "form_key": "00000850:01-Actors.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "RNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000811",
+              "form_key": "00000811:01-Actors.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "PNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-Actors.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "HCLF",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-Actors.esm",
+              "resolution_state": "unresolved"
+            }
+          ]
+        }
+      ],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "npc-compression-equivalence.variant-1",
+      "plugin_paths": [
+        "mutations/uncompressed/03-Appearance.esp"
+      ],
+      "records": [
+        {
+          "locator": "mutations/uncompressed/03-Appearance.esp#1",
+          "plugin_order": 0,
+          "form_key": "00000800:01-Actors.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "TPLT",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000850",
+              "form_key": "00000850:01-Actors.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "RNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000811",
+              "form_key": "00000811:01-Actors.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "PNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-Actors.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "HCLF",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-Actors.esm",
+              "resolution_state": "unresolved"
+            }
+          ]
+        }
+      ],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "npc-one-byte-field-change.variant-0",
+      "plugin_paths": [
+        "plugins/02-Behavior.esp"
+      ],
+      "records": [
+        {
+          "locator": "plugins/02-Behavior.esp#1",
+          "plugin_order": 0,
+          "form_key": "00000800:01-Actors.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "RNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000810",
+              "form_key": "00000810:01-Actors.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "PKID",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000831",
+              "form_key": "00000831:01-Actors.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "PKID",
+              "occurrence": 1,
+              "component": null,
+              "form_id_hex": "01000830",
+              "form_key": "00000830:01-Actors.esm",
+              "resolution_state": "unresolved"
+            }
+          ]
+        }
+      ],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "npc-one-byte-field-change.variant-1",
+      "plugin_paths": [
+        "mutations/one-byte-aidt/02-Behavior.esp"
+      ],
+      "records": [
+        {
+          "locator": "mutations/one-byte-aidt/02-Behavior.esp#1",
+          "plugin_order": 0,
+          "form_key": "00000800:01-Actors.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "RNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000810",
+              "form_key": "00000810:01-Actors.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "PKID",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000831",
+              "form_key": "00000831:01-Actors.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "PKID",
+              "occurrence": 1,
+              "component": null,
+              "form_id_hex": "01000830",
+              "form_key": "00000830:01-Actors.esm",
+              "resolution_state": "unresolved"
+            }
+          ]
+        }
+      ],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "npc-master-reindexing.variant-0",
+      "plugin_paths": [
+        "mutations/master-order-reindexed/03-Appearance.esp"
+      ],
+      "records": [
+        {
+          "locator": "mutations/master-order-reindexed/03-Appearance.esp#1",
+          "plugin_order": 0,
+          "form_key": "00000800:01-Actors.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "TPLT",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000850",
+              "form_key": "00000850:01-Actors.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "RNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000810",
+              "form_key": "00000810:01-Actors.esm",
+              "resolution_state": "unresolved"
+            }
+          ]
+        }
+      ],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "npc-master-reindexing.variant-1",
+      "plugin_paths": [
+        "mutations/master-order-unreindexed/03-Appearance.esp"
+      ],
+      "records": [
+        {
+          "locator": "mutations/master-order-unreindexed/03-Appearance.esp#1",
+          "plugin_order": 0,
+          "form_key": "00000800:01-Actors.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "TPLT",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "02000850",
+              "form_key": "00000850:00-Pad.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "RNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "02000810",
+              "form_key": "00000810:00-Pad.esm",
+              "resolution_state": "unresolved"
+            }
+          ]
+        }
+      ],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "npc-record-order.variant-0",
+      "plugin_paths": [
+        "plugins/01-Actors.esm"
+      ],
+      "records": [
+        {
+          "locator": "plugins/01-Actors.esm#1",
+          "plugin_order": 0,
+          "form_key": "00000810:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#2",
+          "plugin_order": 0,
+          "form_key": "00000811:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#3",
+          "plugin_order": 0,
+          "form_key": "00000820:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#4",
+          "plugin_order": 0,
+          "form_key": "00000830:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#5",
+          "plugin_order": 0,
+          "form_key": "00000831:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#6",
+          "plugin_order": 0,
+          "form_key": "00000840:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#7",
+          "plugin_order": 0,
+          "form_key": "00000850:01-Actors.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "RNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000810",
+              "form_key": "00000810:01-Actors.esm",
+              "resolution_state": "resolved"
+            }
+          ]
+        },
+        {
+          "locator": "plugins/01-Actors.esm#8",
+          "plugin_order": 0,
+          "form_key": "00000800:01-Actors.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "RNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000810",
+              "form_key": "00000810:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PKID",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000830",
+              "form_key": "00000830:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PKID",
+              "occurrence": 1,
+              "component": null,
+              "form_id_hex": "01000831",
+              "form_key": "00000831:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PNAM",
+              "occurrence": 1,
+              "component": null,
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "HCLF",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-Actors.esm",
+              "resolution_state": "resolved"
+            }
+          ]
+        }
+      ],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "npc-record-order.variant-1",
+      "plugin_paths": [
+        "mutations/record-order/01-Actors.esm"
+      ],
+      "records": [
+        {
+          "locator": "mutations/record-order/01-Actors.esm#1",
+          "plugin_order": 0,
+          "form_key": "00000800:01-Actors.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "RNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000810",
+              "form_key": "00000810:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PKID",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000830",
+              "form_key": "00000830:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PKID",
+              "occurrence": 1,
+              "component": null,
+              "form_id_hex": "01000831",
+              "form_key": "00000831:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PNAM",
+              "occurrence": 1,
+              "component": null,
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "HCLF",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-Actors.esm",
+              "resolution_state": "resolved"
+            }
+          ]
+        },
+        {
+          "locator": "mutations/record-order/01-Actors.esm#2",
+          "plugin_order": 0,
+          "form_key": "00000850:01-Actors.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "RNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000810",
+              "form_key": "00000810:01-Actors.esm",
+              "resolution_state": "resolved"
+            }
+          ]
+        },
+        {
+          "locator": "mutations/record-order/01-Actors.esm#3",
+          "plugin_order": 0,
+          "form_key": "00000840:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "mutations/record-order/01-Actors.esm#4",
+          "plugin_order": 0,
+          "form_key": "00000831:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "mutations/record-order/01-Actors.esm#5",
+          "plugin_order": 0,
+          "form_key": "00000830:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "mutations/record-order/01-Actors.esm#6",
+          "plugin_order": 0,
+          "form_key": "00000820:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "mutations/record-order/01-Actors.esm#7",
+          "plugin_order": 0,
+          "form_key": "00000811:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "mutations/record-order/01-Actors.esm#8",
+          "plugin_order": 0,
+          "form_key": "00000810:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        }
+      ],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "npc-repeated-pkid-order",
+      "plugin_paths": [
+        "mutations/Behavior-RepeatedPKIDOrder.esp"
+      ],
+      "records": [
+        {
+          "locator": "mutations/Behavior-RepeatedPKIDOrder.esp#1",
+          "plugin_order": 0,
+          "form_key": "00000800:01-Actors.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "PKID",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000831",
+              "form_key": "00000831:01-Actors.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "PKID",
+              "occurrence": 1,
+              "component": null,
+              "form_id_hex": "00000830",
+              "form_key": "00000830:01-Actors.esm",
+              "resolution_state": "unresolved"
+            }
+          ]
+        }
+      ],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "npc-repeated-pnam-order",
+      "plugin_paths": [
+        "mutations/Appearance-RepeatedPNAMOrder.esp"
+      ],
+      "records": [
+        {
+          "locator": "mutations/Appearance-RepeatedPNAMOrder.esp#1",
+          "plugin_order": 0,
+          "form_key": "00000800:01-Actors.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "PNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "00000840",
+              "form_key": "00000840:01-Actors.esm",
+              "resolution_state": "unresolved"
+            },
+            {
+              "field": "PNAM",
+              "occurrence": 1,
+              "component": null,
+              "form_id_hex": "00000000",
+              "form_key": null,
+              "resolution_state": "null"
+            },
+            {
+              "field": "PNAM",
+              "occurrence": 2,
+              "component": null,
+              "form_id_hex": "00000840",
+              "form_key": "00000840:01-Actors.esm",
+              "resolution_state": "unresolved"
+            }
+          ]
+        }
+      ],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "npc-local-id-change.variant-0",
+      "plugin_paths": [
+        "plugins/01-Actors.esm"
+      ],
+      "records": [
+        {
+          "locator": "plugins/01-Actors.esm#1",
+          "plugin_order": 0,
+          "form_key": "00000810:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#2",
+          "plugin_order": 0,
+          "form_key": "00000811:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#3",
+          "plugin_order": 0,
+          "form_key": "00000820:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#4",
+          "plugin_order": 0,
+          "form_key": "00000830:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#5",
+          "plugin_order": 0,
+          "form_key": "00000831:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#6",
+          "plugin_order": 0,
+          "form_key": "00000840:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/01-Actors.esm#7",
+          "plugin_order": 0,
+          "form_key": "00000850:01-Actors.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "RNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000810",
+              "form_key": "00000810:01-Actors.esm",
+              "resolution_state": "resolved"
+            }
+          ]
+        },
+        {
+          "locator": "plugins/01-Actors.esm#8",
+          "plugin_order": 0,
+          "form_key": "00000800:01-Actors.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "RNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000810",
+              "form_key": "00000810:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PKID",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000830",
+              "form_key": "00000830:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PKID",
+              "occurrence": 1,
+              "component": null,
+              "form_id_hex": "01000831",
+              "form_key": "00000831:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PNAM",
+              "occurrence": 1,
+              "component": null,
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "HCLF",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-Actors.esm",
+              "resolution_state": "resolved"
+            }
+          ]
+        }
+      ],
+      "chains": [],
+      "denominator": null
+    },
+    {
+      "scenario_id": "npc-local-id-change.variant-1",
+      "plugin_paths": [
+        "mutations/local-id/01-Actors.esm"
+      ],
+      "records": [
+        {
+          "locator": "mutations/local-id/01-Actors.esm#1",
+          "plugin_order": 0,
+          "form_key": "00000810:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "mutations/local-id/01-Actors.esm#2",
+          "plugin_order": 0,
+          "form_key": "00000811:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "mutations/local-id/01-Actors.esm#3",
+          "plugin_order": 0,
+          "form_key": "00000820:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "mutations/local-id/01-Actors.esm#4",
+          "plugin_order": 0,
+          "form_key": "00000830:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "mutations/local-id/01-Actors.esm#5",
+          "plugin_order": 0,
+          "form_key": "00000831:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "mutations/local-id/01-Actors.esm#6",
+          "plugin_order": 0,
+          "form_key": "00000840:01-Actors.esm",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "mutations/local-id/01-Actors.esm#7",
+          "plugin_order": 0,
+          "form_key": "00000850:01-Actors.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "RNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000810",
+              "form_key": "00000810:01-Actors.esm",
+              "resolution_state": "resolved"
+            }
+          ]
+        },
+        {
+          "locator": "mutations/local-id/01-Actors.esm#8",
+          "plugin_order": 0,
+          "form_key": "00000860:01-Actors.esm",
+          "deleted": false,
+          "links": [
+            {
+              "field": "RNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000810",
+              "form_key": "00000810:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PKID",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000830",
+              "form_key": "00000830:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PKID",
+              "occurrence": 1,
+              "component": null,
+              "form_id_hex": "01000831",
+              "form_key": "00000831:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PNAM",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "PNAM",
+              "occurrence": 1,
+              "component": null,
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-Actors.esm",
+              "resolution_state": "resolved"
+            },
+            {
+              "field": "HCLF",
+              "occurrence": 0,
+              "component": null,
+              "form_id_hex": "01000840",
+              "form_key": "00000840:01-Actors.esm",
+              "resolution_state": "resolved"
+            }
+          ]
+        }
+      ],
+      "chains": [],
+      "denominator": null
+    }
+  ]
 }

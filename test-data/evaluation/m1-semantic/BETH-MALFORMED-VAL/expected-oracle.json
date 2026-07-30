@@ -1,7 +1,7 @@
 {
   "fixture_id": "BETH-MALFORMED-VAL",
   "fixture_version": "1.0.0",
-  "oracle_version": "1.0.0",
+  "oracle_version": "1.0.1",
   "independent_authors_and_reviewers": [
     "oracle-reviewer"
   ],
@@ -13,7 +13,7 @@
         {
           "artifact_id": "oracle/manual-hex-worksheet.json",
           "artifact_version": "1",
-          "fingerprint": "b0908c6b72494f35bf3a791e8044fcb246326e65de2c95fc120231a9d084cca1",
+          "fingerprint": "c79028911dcbdeb2f095f0ad5f1ad7885096928b056ccffdc402b09832025ed8",
           "availability": "retained"
         }
       ],
@@ -26,13 +26,13 @@
         {
           "artifact_id": "oracle/independent-reader-report.json",
           "artifact_version": "1",
-          "fingerprint": "d566def564894fdee954efe113e51d75ff55a847bd036729e6da2e95ee174341",
+          "fingerprint": "04ce9a7f34a25305b0b1ba5e903eb8001e59de9eb69d043d7b20883343cd7159",
           "availability": "retained"
         },
         {
           "artifact_id": "oracle/independent-byte-facts.json",
           "artifact_version": "1.0.0",
-          "fingerprint": "3b6069683089eda615c5da90f04023c749fdc57178c654f90afedb584fe36d6a",
+          "fingerprint": "50d7b0fb80d4b0ee8b887fb4c8af0223573348175896c2ef12beab55b3462483",
           "availability": "retained"
         }
       ],
@@ -1245,5 +1245,18 @@
     "No production parser, Mutagen, xEdit, held-out input, or taxonomy answer authored these values."
   ],
   "pre_registered_at": "2026-07-30T00:00:00.0000000+00:00",
-  "change_history": []
+  "change_history": [
+    {
+      "oracle_version": "1.0.1",
+      "changed_at": "2026-07-30T23:00:00.0000000+00:00",
+      "independent_evidence_reference": {
+        "artifact_id": "oracle/manual-hex-worksheet.json",
+        "artifact_version": "1",
+        "fingerprint": "c79028911dcbdeb2f095f0ad5f1ad7885096928b056ccffdc402b09832025ed8",
+        "availability": "retained"
+      },
+      "prior_error_explanation": "Version 1.0.0 attributed the manual method without comparing its decoded semantic answers and classified mutation changes from artifact dependencies instead of logical baseline deltas.",
+      "reviewer": "oracle-reviewer"
+    }
+  ]
 }

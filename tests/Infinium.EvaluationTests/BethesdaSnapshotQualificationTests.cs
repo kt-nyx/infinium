@@ -1,6 +1,8 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using Infinium.Application.Evaluation;
 using Infinium.Mo2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -46,6 +48,10 @@ public sealed class BethesdaSnapshotQualificationTests
                 result.Snapshot.AdapterId,
                 fixtureId);
             Assert.IsFalse(result.Snapshot.Mo2OrUsvfsLaunched, fixtureId);
+            Assert.AreEqual(
+                fixture.ExpectedCaptureBindingFingerprint,
+                fixture.ComputeCaptureBindingFingerprint(result.Snapshot),
+                fixtureId);
             CollectionAssert.AreEqual(
                 fixture.ExpectedPluginNames,
                 result.Snapshot.Plugins
@@ -109,6 +115,9 @@ public sealed class BethesdaSnapshotQualificationTests
 
         Assert.AreEqual(SnapshotCaptureState.Completed, result.State);
         Assert.IsNotNull(result.Snapshot);
+        Assert.AreNotEqual(
+            fixture.ExpectedCaptureBindingFingerprint,
+            fixture.ComputeCaptureBindingFingerprint(result.Snapshot));
         Assert.IsFalse(fixture.RetainedPluginBytesMatchReceipt());
     }
 
@@ -156,6 +165,7 @@ public sealed class BethesdaSnapshotQualificationTests
     {
         private readonly string root;
         private readonly string[] sourcePluginPaths;
+        private readonly string[] sourceArtifactIds;
         private readonly string[] expectedPluginSha256;
 
         internal SnapshotFixture(string fixtureId)
@@ -195,6 +205,13 @@ public sealed class BethesdaSnapshotQualificationTests
                 receipt.GetProperty("provider_order").EnumerateArray().ToArray();
             JsonElement[] plugins =
                 receipt.GetProperty("plugin_order").EnumerateArray().ToArray();
+            Assert.AreEqual(
+                "infinium.fixture-snapshot-capture-binding/v1",
+                receipt.GetProperty("capture_binding_algorithm").GetString(),
+                fixtureId);
+            ExpectedCaptureBindingFingerprint = receipt
+                .GetProperty("expected_capture_binding_fingerprint")
+                .GetString()!;
 
             string instanceRoot = Directory.CreateDirectory(
                 Path.Combine(root, "instance")).FullName;
@@ -235,6 +252,9 @@ public sealed class BethesdaSnapshotQualificationTests
                             .. artifactParts,
                         ]);
                 })
+                .ToArray();
+            sourceArtifactIds = plugins
+                .Select(plugin => plugin.GetProperty("artifact_id").GetString()!)
                 .ToArray();
             expectedPluginSha256 = plugins
                 .Select(plugin => plugin.GetProperty("sha256").GetString()!)
@@ -311,6 +331,8 @@ public sealed class BethesdaSnapshotQualificationTests
 
         internal string[] CapturedPluginPaths { get; }
 
+        internal string ExpectedCaptureBindingFingerprint { get; }
+
         internal Mo2SnapshotCaptureRequest Request { get; }
 
         internal Mo2SnapshotCapture CreateCapture(
@@ -343,6 +365,72 @@ public sealed class BethesdaSnapshotQualificationTests
                     expectedPluginSha256[index],
                     StringComparison.Ordinal))
                 .All(matches => matches);
+        }
+
+        internal string ComputeCaptureBindingFingerprint(Mo2InstallationSnapshot snapshot)
+        {
+            JsonArray pluginOrder = [];
+            foreach (PluginState plugin in snapshot.Plugins
+                         .Where(plugin => plugin.Enabled)
+                         .OrderBy(plugin => plugin.LoadOrder))
+            {
+                int index = Array.FindIndex(
+                    ExpectedPluginNames,
+                    expected => string.Equals(
+                        expected,
+                        plugin.Name,
+                        StringComparison.Ordinal));
+                Assert.IsTrue(index >= 0, plugin.Name);
+                LooseProviderChain chain = snapshot.LooseProviderChains.Single(
+                    candidate => string.Equals(
+                        candidate.NormalizedRelativePath,
+                        plugin.Name,
+                        StringComparison.OrdinalIgnoreCase));
+                string providerDirectory = Path.GetDirectoryName(chain.Winner.PhysicalPath)
+                    ?? throw new InvalidDataException(
+                        "Captured plugin winner does not have a provider directory.");
+                string providerId = Path.GetFileName(providerDirectory);
+                pluginOrder.Add(new JsonObject
+                {
+                    ["load_order"] = plugin.LoadOrder,
+                    ["file_name"] = plugin.Name,
+                    ["artifact_id"] = sourceArtifactIds[index],
+                    ["sha256"] = Convert.ToHexStringLower(
+                        SHA256.HashData(File.ReadAllBytes(chain.Winner.PhysicalPath))),
+                    ["provider_id"] = providerId,
+                });
+            }
+
+            JsonArray providers = [];
+            foreach (ModState provider in snapshot.Mods
+                         .Where(mod => mod.Listed)
+                         .OrderBy(mod => mod.Priority))
+            {
+                int index = Array.FindIndex(
+                    ExpectedProviderNames,
+                    expected => string.Equals(
+                        expected,
+                        provider.Name,
+                        StringComparison.Ordinal));
+                Assert.IsTrue(index >= 0, provider.Name);
+                providers.Add(new JsonObject
+                {
+                    ["provider_id"] = provider.Name,
+                    ["priority"] = provider.Priority,
+                    ["source_artifact_id"] = sourceArtifactIds[index],
+                    ["source_sha256"] = Convert.ToHexStringLower(
+                        SHA256.HashData(File.ReadAllBytes(CapturedPluginPaths[index]))),
+                });
+            }
+
+            JsonObject binding = new()
+            {
+                ["providers"] = providers,
+                ["plugin_order"] = pluginOrder,
+            };
+            using JsonDocument document = JsonDocument.Parse(binding.ToJsonString());
+            return BethesdaByteOracleValidator.ComputeCanonicalFingerprint(
+                document.RootElement);
         }
 
         public void Dispose()

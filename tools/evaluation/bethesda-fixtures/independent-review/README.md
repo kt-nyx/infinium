@@ -9,11 +9,15 @@ Mutagen, xEdit, held-out content, or taxonomy answers.
   decompression limits, rejects malformed framing, and derives only the
   allowlisted byte facts.
 - `manual_hex_audit.ps1` is the separately implemented annotated hexadecimal
-  worksheet technique. Its traversal and decompression implementation do not
-  call the Python reader.
-- `build_oracles.py` first requires agreement between the two retained reports,
-  then mechanically emits `oracle/independent-byte-facts.json` and
-  `expected-oracle.json`.
+  worksheet technique. Its traversal, decompression, master/FormKey, field,
+  link, chain, winner, and boundary decoding do not call the Python reader.
+- `build_oracles.py` first requires exact structural and semantic agreement
+  between the two retained reports, then mechanically emits
+  `oracle/independent-byte-facts.json` and `expected-oracle.json`. Mutation
+  partitions compare logical baseline and variant facts; artifact dependency
+  alone never classifies a fact as changed.
+- `self_test.py` corrupts reader FormKey/link/chain output, empties manual
+  semantic output, and verifies the AIDT/DATA one-byte mutation partitions.
 
 Run the two evidence techniques and builder only after an explicit frozen-byte
 receipt:
@@ -33,6 +37,8 @@ python tools/evaluation/bethesda-fixtures/independent-review/build_oracles.py `
   $package `
   "$scratch/BETH-NPC-DEV-reader.json" `
   "$scratch/BETH-NPC-DEV-manual.json"
+
+python tools/evaluation/bethesda-fixtures/independent-review/self_test.py
 ```
 
 Any mismatch between techniques, earliest malformed boundary, declared

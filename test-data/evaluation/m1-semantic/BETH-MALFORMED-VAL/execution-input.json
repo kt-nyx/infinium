@@ -7,7 +7,7 @@
     "artifact": {
       "artifact_id": "inputs/snapshot/accepted-order.json",
       "artifact_version": "1.0.0",
-      "fingerprint": "80534154b6f9c4d098a08558635aa5086b3e894a4db35c55efc49496fd6a40db",
+      "fingerprint": "b5f3d9e7b5523ac758d346b459053eb12119144bd1d2610c8ef93a5c96c6e24b",
       "availability": "retained"
     }
   },
@@ -31,7 +31,7 @@
     "artifact": {
       "artifact_id": "inputs/snapshot/accepted-order.json",
       "artifact_version": "1.0.0",
-      "fingerprint": "80534154b6f9c4d098a08558635aa5086b3e894a4db35c55efc49496fd6a40db",
+      "fingerprint": "b5f3d9e7b5523ac758d346b459053eb12119144bd1d2610c8ef93a5c96c6e24b",
       "availability": "retained"
     }
   },
@@ -41,7 +41,7 @@
     "artifact": {
       "artifact_id": "inputs/snapshot/accepted-order.json",
       "artifact_version": "1.0.0",
-      "fingerprint": "80534154b6f9c4d098a08558635aa5086b3e894a4db35c55efc49496fd6a40db",
+      "fingerprint": "b5f3d9e7b5523ac758d346b459053eb12119144bd1d2610c8ef93a5c96c6e24b",
       "availability": "retained"
     }
   },
@@ -51,7 +51,7 @@
     "artifact": {
       "artifact_id": "inputs/snapshot/accepted-order.json",
       "artifact_version": "1.0.0",
-      "fingerprint": "80534154b6f9c4d098a08558635aa5086b3e894a4db35c55efc49496fd6a40db",
+      "fingerprint": "b5f3d9e7b5523ac758d346b459053eb12119144bd1d2610c8ef93a5c96c6e24b",
       "availability": "retained"
     }
   },
@@ -85,7 +85,7 @@
   "resource_and_time_limits": {
     "wall_time_ms": 120000,
     "memory_bytes": 536870912,
-    "input_bytes": 193654,
+    "input_bytes": 193747,
     "output_bytes": 16777216
   },
   "input_payload_refs": [
@@ -224,7 +224,7 @@
     {
       "artifact_id": "inputs/snapshot/accepted-order.json",
       "artifact_version": "1.0.0",
-      "fingerprint": "80534154b6f9c4d098a08558635aa5086b3e894a4db35c55efc49496fd6a40db",
+      "fingerprint": "b5f3d9e7b5523ac758d346b459053eb12119144bd1d2610c8ef93a5c96c6e24b",
       "availability": "retained"
     }
   ]

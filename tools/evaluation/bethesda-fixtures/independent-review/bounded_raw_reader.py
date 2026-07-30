@@ -719,6 +719,99 @@ def annotate_identities(files: list[dict[str, Any]]) -> None:
             record["links"] = links
 
 
+def scenario_semantics(
+    files: list[dict[str, Any]],
+    matrix: dict[str, Any],
+    supplemental_inputs: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    files_by_path = {item["path"]: item for item in files}
+    requests = {
+        item["path"]: item.get("json_value") for item in supplemental_inputs
+    }
+    scenarios: list[dict[str, Any]] = []
+    for case in matrix["cases"]:
+        plugin_paths = [
+            path
+            for path in case["input_paths"]
+            if Path(path).suffix.lower() in PLUGIN_SUFFIXES
+        ]
+        definitions: list[tuple[str, list[str]]] = []
+        if case["operation"] == "scan" and plugin_paths:
+            definitions.append((case["case_id"], plugin_paths))
+        elif case["operation"] == "compare":
+            definitions.extend(
+                (f"{case['case_id']}.variant-{index}", [path])
+                for index, path in enumerate(plugin_paths)
+            )
+        elif case["operation"] == "orchestrated-read":
+            request = requests[case["input_paths"][0]]
+            definitions.extend(
+                [
+                    (f"{case['case_id']}.initial", [request["initial_path"]]),
+                    (
+                        f"{case['case_id']}.replacement",
+                        [request["replacement_path"]],
+                    ),
+                ]
+            )
+        for scenario_id, paths in definitions:
+            population: dict[str, list[str]] = {}
+            records: list[dict[str, Any]] = []
+            for plugin_order, path in enumerate(paths):
+                file = files_by_path[path]
+                for record_index, record in enumerate(file.get("records", [])):
+                    identity = record.get("identity")
+                    if not identity or not identity.get("form_key"):
+                        continue
+                    locator = f"{path}#{record_index}"
+                    population.setdefault(identity["form_key"], []).append(locator)
+                    records.append(
+                        {
+                            "locator": locator,
+                            "plugin_order": plugin_order,
+                            "form_key": identity["form_key"],
+                            "deleted": (int(record["flags_hex"], 16) & 0x20) != 0,
+                            "links": [
+                                {
+                                    "field": link["field"],
+                                    "occurrence": link["occurrence"],
+                                    "component": link.get("component"),
+                                    "form_id_hex": link["form_id_hex"],
+                                    "form_key": link.get("form_key"),
+                                    "resolution_state": link["resolution_state"],
+                                }
+                                for link in record.get("links", [])
+                            ],
+                        }
+                    )
+            population_keys = set(population)
+            for record in records:
+                for link in record["links"]:
+                    if (
+                        link["resolution_state"] == "resolved"
+                        and link["form_key"] not in population_keys
+                    ):
+                        link["resolution_state"] = "unresolved"
+            scenarios.append(
+                {
+                    "scenario_id": scenario_id,
+                    "plugin_paths": paths,
+                    "records": records,
+                    "chains": [
+                        {
+                            "form_key": form_key,
+                            "ordered_locators": ordered,
+                            "winner_locator": ordered[-1],
+                        }
+                        for form_key, ordered in sorted(population.items())
+                        if len(ordered) >= 2
+                    ],
+                    "denominator": case.get("denominator"),
+                }
+            )
+    return scenarios
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("package", type=Path)
@@ -773,6 +866,11 @@ def main() -> int:
         },
         "files": parsed_files,
         "supplemental_inputs": supplemental_inputs,
+        "scenario_semantics": scenario_semantics(
+            parsed_files,
+            json.loads((inputs / "case-matrix.json").read_text(encoding="utf-8")),
+            supplemental_inputs,
+        ),
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(

@@ -113,7 +113,88 @@
           "signature": "FULL",
           "raw_hex": "01000000"
         }
-      ]
+      ],
+      "tes4": {
+        "flags_hex": "00000080",
+        "esl_flag": false,
+        "masters": []
+      },
+      "groups": [
+        {
+          "offset": 122,
+          "length": 84,
+          "label_hex": "53544154",
+          "group_type": 0
+        }
+      ],
+      "records": [
+        {
+          "signature": "TES4",
+          "offset": 0,
+          "length": 122,
+          "data_length": 98,
+          "flags_hex": "00000080",
+          "raw_form_id_hex": "00000000",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "HEDR",
+              "header_offset": 24,
+              "data_offset": 30,
+              "length": 12,
+              "raw_hex": "9A99D93F0100000000080000"
+            },
+            {
+              "signature": "CNAM",
+              "header_offset": 42,
+              "data_offset": 48,
+              "length": 44,
+              "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+            },
+            {
+              "signature": "SNAM",
+              "header_offset": 92,
+              "data_offset": 98,
+              "length": 24,
+              "raw_hex": "4C6F63616C697A6564446570656E64656E63792E65737000"
+            }
+          ]
+        },
+        {
+          "signature": "STAT",
+          "offset": 146,
+          "length": 60,
+          "data_length": 36,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "00000800",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "header_offset": 170,
+              "data_offset": 176,
+              "length": 20,
+              "raw_hex": "4C6F63616C697A6564446570656E64656E637900"
+            },
+            {
+              "signature": "FULL",
+              "header_offset": 196,
+              "data_offset": 202,
+              "length": 4,
+              "raw_hex": "01000000"
+            }
+          ],
+          "identity": {
+            "form_id_hex": "00000800",
+            "resolution_state": "resolved",
+            "form_key": "00000800:LocalizedDependency.esp",
+            "origin_plugin": "LocalizedDependency.esp",
+            "origin_kind": "full",
+            "local_id_hex": "00000800"
+          }
+        }
+      ],
+      "extension_header_mismatch": false
     },
     {
       "path": "plugins/UnsupportedFamily.esp",
@@ -210,7 +291,81 @@
           "signature": "EDID",
           "raw_hex": "556E737570706F7274656446616D696C7900"
         }
-      ]
+      ],
+      "tes4": {
+        "flags_hex": "00000000",
+        "esl_flag": false,
+        "masters": []
+      },
+      "groups": [
+        {
+          "offset": 120,
+          "length": 72,
+          "label_hex": "57454150",
+          "group_type": 0
+        }
+      ],
+      "records": [
+        {
+          "signature": "TES4",
+          "offset": 0,
+          "length": 120,
+          "data_length": 96,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "00000000",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "HEDR",
+              "header_offset": 24,
+              "data_offset": 30,
+              "length": 12,
+              "raw_hex": "9A99D93F0100000000080000"
+            },
+            {
+              "signature": "CNAM",
+              "header_offset": 42,
+              "data_offset": 48,
+              "length": 44,
+              "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+            },
+            {
+              "signature": "SNAM",
+              "header_offset": 92,
+              "data_offset": 98,
+              "length": 22,
+              "raw_hex": "556E737570706F7274656446616D696C792E65737000"
+            }
+          ]
+        },
+        {
+          "signature": "WEAP",
+          "offset": 144,
+          "length": 48,
+          "data_length": 24,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "00000800",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "header_offset": 168,
+              "data_offset": 174,
+              "length": 18,
+              "raw_hex": "556E737570706F7274656446616D696C7900"
+            }
+          ],
+          "identity": {
+            "form_id_hex": "00000800",
+            "resolution_state": "resolved",
+            "form_key": "00000800:UnsupportedFamily.esp",
+            "origin_plugin": "UnsupportedFamily.esp",
+            "origin_kind": "full",
+            "local_id_hex": "00000800"
+          }
+        }
+      ],
+      "extension_header_mismatch": false
     },
     {
       "path": "plugins/UnsupportedNpcField.esp",
@@ -339,7 +494,103 @@
           "signature": "DOFT",
           "raw_hex": "00000000"
         }
-      ]
+      ],
+      "tes4": {
+        "flags_hex": "00000000",
+        "esl_flag": false,
+        "masters": []
+      },
+      "groups": [
+        {
+          "offset": 122,
+          "length": 114,
+          "label_hex": "4E50435F",
+          "group_type": 0
+        }
+      ],
+      "records": [
+        {
+          "signature": "TES4",
+          "offset": 0,
+          "length": 122,
+          "data_length": 98,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "00000000",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "HEDR",
+              "header_offset": 24,
+              "data_offset": 30,
+              "length": 12,
+              "raw_hex": "9A99D93F0100000000080000"
+            },
+            {
+              "signature": "CNAM",
+              "header_offset": 42,
+              "data_offset": 48,
+              "length": 44,
+              "raw_hex": "496E66696E69756D2070726F6A6563742D617574686F72656420666978747572652067656E657261746F7200"
+            },
+            {
+              "signature": "SNAM",
+              "header_offset": 92,
+              "data_offset": 98,
+              "length": 24,
+              "raw_hex": "556E737570706F727465644E70634669656C642E65737000"
+            }
+          ]
+        },
+        {
+          "signature": "NPC_",
+          "offset": 146,
+          "length": 90,
+          "data_length": 66,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "00000800",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "header_offset": 170,
+              "data_offset": 176,
+              "length": 20,
+              "raw_hex": "556E737570706F727465644E70634669656C6400"
+            },
+            {
+              "signature": "ACBS",
+              "header_offset": 196,
+              "data_offset": 202,
+              "length": 24,
+              "raw_hex": "000000000000000001000100000000000000000000000000"
+            },
+            {
+              "signature": "DOFT",
+              "header_offset": 226,
+              "data_offset": 232,
+              "length": 4,
+              "raw_hex": "00000000"
+            }
+          ],
+          "identity": {
+            "form_id_hex": "00000800",
+            "resolution_state": "resolved",
+            "form_key": "00000800:UnsupportedNpcField.esp",
+            "origin_plugin": "UnsupportedNpcField.esp",
+            "origin_kind": "full",
+            "local_id_hex": "00000800"
+          },
+          "allowlisted_payload": {
+            "ACBS": [
+              "000000000000000001000100000000000000000000000000"
+            ],
+            "configuration_flags_hex": "00000000",
+            "template_flags_hex": "0000"
+          },
+          "links": []
+        }
+      ],
+      "extension_header_mismatch": false
     }
   ],
   "supplemental_inputs": [
@@ -347,25 +598,88 @@
       "path": "plugins/LocalizedDependency_English.strings",
       "byte_length": 56,
       "sha256": "5119dacdfa9be32a443106dd645e743cac50237f1808575e9b0e3aff9c4e97d4",
-      "raw_hex": "0100000028000000010000000000000050726F6A6563742D617574686F726564206C6F63616C697A65642066697874757265207465787400"
+      "raw_hex": "0100000028000000010000000000000050726F6A6563742D617574686F726564206C6F63616C697A65642066697874757265207465787400",
+      "json_value": null
     },
     {
       "path": "requests/archive-member.json",
       "byte_length": 259,
       "sha256": "7070a1672b8e748d518f2892fe03694fa8ec7fb5094a820e3d0a6d5edb45f983",
-      "raw_hex": "7B0D0A202022736368656D61223A2022696E66696E69756D2E666978747572652E756E737570706F727465642D72657175657374222C0D0A202022736368656D615F76657273696F6E223A20312C0D0A2020226F7065726174696F6E223A2022726561645F617263686976655F6D656D626572222C0D0A202022617263686976655F6B696E64223A202270726F6A6563742D617574686F7265642D706C616365686F6C646572222C0D0A202022617263686976655F70617468223A2022616273656E742F46697874757265417263686976652E627361222C0D0A2020226D656D6265725F70617468223A20226D65736865732F666978747572652E6E6966220D0A7D0A"
+      "raw_hex": "7B0D0A202022736368656D61223A2022696E66696E69756D2E666978747572652E756E737570706F727465642D72657175657374222C0D0A202022736368656D615F76657273696F6E223A20312C0D0A2020226F7065726174696F6E223A2022726561645F617263686976655F6D656D626572222C0D0A202022617263686976655F6B696E64223A202270726F6A6563742D617574686F7265642D706C616365686F6C646572222C0D0A202022617263686976655F70617468223A2022616273656E742F46697874757265417263686976652E627361222C0D0A2020226D656D6265725F70617468223A20226D65736865732F666978747572652E6E6966220D0A7D0A",
+      "json_value": {
+        "schema": "infinium.fixture.unsupported-request",
+        "schema_version": 1,
+        "operation": "read_archive_member",
+        "archive_kind": "project-authored-placeholder",
+        "archive_path": "absent/FixtureArchive.bsa",
+        "member_path": "meshes/fixture.nif"
+      }
     },
     {
       "path": "requests/automatic-environment-discovery.json",
       "byte_length": 223,
       "sha256": "3b8cb4a505882eef0663bf737c7d2c3aed610777c9d6323834d56f4203ff156e",
-      "raw_hex": "7B0D0A202022736368656D61223A2022696E66696E69756D2E666978747572652E756E737570706F727465642D72657175657374222C0D0A202022736368656D615F76657273696F6E223A20312C0D0A2020226F7065726174696F6E223A20226175746F6D617469635F656E7669726F6E6D656E745F646973636F76657279222C0D0A2020227265717565737465645F736F7572636573223A205B0D0A2020202022696E7374616C6C65645F67616D65222C0D0A20202020226D6F645F6D616E61676572222C0D0A20202020227265676973747279220D0A20205D0D0A7D0A"
+      "raw_hex": "7B0D0A202022736368656D61223A2022696E66696E69756D2E666978747572652E756E737570706F727465642D72657175657374222C0D0A202022736368656D615F76657273696F6E223A20312C0D0A2020226F7065726174696F6E223A20226175746F6D617469635F656E7669726F6E6D656E745F646973636F76657279222C0D0A2020227265717565737465645F736F7572636573223A205B0D0A2020202022696E7374616C6C65645F67616D65222C0D0A20202020226D6F645F6D616E61676572222C0D0A20202020227265676973747279220D0A20205D0D0A7D0A",
+      "json_value": {
+        "schema": "infinium.fixture.unsupported-request",
+        "schema_version": 1,
+        "operation": "automatic_environment_discovery",
+        "requested_sources": [
+          "installed_game",
+          "mod_manager",
+          "registry"
+        ]
+      }
     },
     {
       "path": "requests/localized-string-resolution.json",
       "byte_length": 253,
       "sha256": "64f05e8be637ee6782062b77ddd0b6d1bc5ceefbe98ca2c80a355135113202f5",
-      "raw_hex": "7B0D0A202022736368656D61223A2022696E66696E69756D2E666978747572652E756E737570706F727465642D72657175657374222C0D0A202022736368656D615F76657273696F6E223A20312C0D0A2020226F7065726174696F6E223A20227265736F6C76655F6C6F63616C697A65645F737472696E67222C0D0A202022706C7567696E223A2022706C7567696E732F4C6F63616C697A6564446570656E64656E63792E657370222C0D0A202022737472696E6773223A2022706C7567696E732F4C6F63616C697A6564446570656E64656E63795F456E676C6973682E737472696E6773222C0D0A202022737472696E675F6964223A20310D0A7D0A"
+      "raw_hex": "7B0D0A202022736368656D61223A2022696E66696E69756D2E666978747572652E756E737570706F727465642D72657175657374222C0D0A202022736368656D615F76657273696F6E223A20312C0D0A2020226F7065726174696F6E223A20227265736F6C76655F6C6F63616C697A65645F737472696E67222C0D0A202022706C7567696E223A2022706C7567696E732F4C6F63616C697A6564446570656E64656E63792E657370222C0D0A202022737472696E6773223A2022706C7567696E732F4C6F63616C697A6564446570656E64656E63795F456E676C6973682E737472696E6773222C0D0A202022737472696E675F6964223A20310D0A7D0A",
+      "json_value": {
+        "schema": "infinium.fixture.unsupported-request",
+        "schema_version": 1,
+        "operation": "resolve_localized_string",
+        "plugin": "plugins/LocalizedDependency.esp",
+        "strings": "plugins/LocalizedDependency_English.strings",
+        "string_id": 1
+      }
+    }
+  ],
+  "scenario_semantics": [
+    {
+      "scenario_id": "unsupported-record-family",
+      "plugin_paths": [
+        "plugins/UnsupportedFamily.esp"
+      ],
+      "records": [
+        {
+          "locator": "plugins/UnsupportedFamily.esp#1",
+          "plugin_order": 0,
+          "form_key": "00000800:UnsupportedFamily.esp",
+          "deleted": false,
+          "links": []
+        }
+      ],
+      "chains": [],
+      "denominator": "record_family"
+    },
+    {
+      "scenario_id": "unsupported-npc-field",
+      "plugin_paths": [
+        "plugins/UnsupportedNpcField.esp"
+      ],
+      "records": [
+        {
+          "locator": "plugins/UnsupportedNpcField.esp#1",
+          "plugin_order": 0,
+          "form_key": "00000800:UnsupportedNpcField.esp",
+          "deleted": false,
+          "links": []
+        }
+      ],
+      "chains": [],
+      "denominator": "record_field"
     }
   ]
 }

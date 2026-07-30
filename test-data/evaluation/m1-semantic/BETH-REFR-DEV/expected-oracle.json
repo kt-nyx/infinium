@@ -1,10 +1,9 @@
 {
   "fixture_id": "BETH-REFR-DEV",
   "fixture_version": "1.0.0",
-  "oracle_version": "1.0.0",
+  "oracle_version": "1.0.1",
   "independent_authors_and_reviewers": [
-    "oracle-reviewer",
-    "taxonomy-reviewer"
+    "oracle-reviewer"
   ],
   "ground_truth_methods": [
     {
@@ -14,7 +13,7 @@
         {
           "artifact_id": "oracle/manual-hex-worksheet.json",
           "artifact_version": "1",
-          "fingerprint": "c190a5b4f933ecc589cc654631a31244359da4587f875b51604358d67117f0c5",
+          "fingerprint": "5cba46b8009136b3961b5bd60782cc4c870ae5d0b419ae3bc0f1117fec7d787b",
           "availability": "retained"
         }
       ],
@@ -27,26 +26,13 @@
         {
           "artifact_id": "oracle/independent-reader-report.json",
           "artifact_version": "1",
-          "fingerprint": "a46e01541e2fe59ddbddfc7c506cafdca72c6bab343a99c04e22fe02ca7ea354",
+          "fingerprint": "4344e1efa75648db9e7e0d093c7eca9498c3517237fedcfaf718e8bf68c53100",
           "availability": "retained"
         },
         {
           "artifact_id": "oracle/independent-byte-facts.json",
           "artifact_version": "1.0.0",
-          "fingerprint": "94d02c206325fa920ecbb30d342fd080f1f5fc88f5d188b8f7cd30cca8d956d3",
-          "availability": "retained"
-        }
-      ],
-      "independent_of_system_under_test": true
-    },
-    {
-      "method_id": "independent-taxonomy-projection-review-v1",
-      "method": "Independent taxonomy 0.1.0 review over frozen raw facts, with axis separation and forbidden-inference review.",
-      "evidence_references": [
-        {
-          "artifact_id": "oracle/taxonomy-projections.json",
-          "artifact_version": "1.0.0",
-          "fingerprint": "ceca3c10143e814c15c07dfb109f1ff94661d1c1f379fa99cb7595077db5e90f",
+          "fingerprint": "4ace697b60a99eccc0ddaad5109bc0c91ec6258ad01db1e129e63ca57e64a3ba",
           "availability": "retained"
         }
       ],
@@ -3353,16 +3339,6 @@
         "independent-bounded-raw-reader-v1"
       ],
       "canonical_value_fingerprint": "c4744c8ff31541ee9293590f8c0849363b8d204ab1b8425e687fdfae04a853b3"
-    },
-    {
-      "expected_id": "TAX-03B",
-      "subject_id": "TAX-03B",
-      "expected_type": "observation",
-      "expected_state": "present",
-      "ground_truth_method_ids": [
-        "independent-taxonomy-projection-review-v1"
-      ],
-      "canonical_value_fingerprint": "f660a7c57740eb16a8a749b4374168813cfe2a653b54e7524e60087c1bcfd6bb"
     }
   ],
   "expected_deterministic_results": [],
@@ -3485,10 +3461,7 @@
       "reason": "No Slice 3.5 expectation is assigned to this collection."
     }
   },
-  "expected_taxonomy_assignments": [
-    {"assignment_id":"tax-03b.surface.plugin-data","taxonomy_id":"infinium.skyrim-se.mod-impact-taxonomy","taxonomy_version":"0.1.0","subject_type":"taxonomy-fixture-subject","subject_id":"TAX-03B","axis":"technical-modification-surface","facet":"semantic-mechanism","code":"surface.plugin-data","applicability_state":"assigned","classification_role":"observed","evidence_references":["beth.beth-refr-dev.fact-00163"],"applicability_condition_references":[],"reason":"The frozen major-record fact establishes plugin-carried record data.","derivation_provenance":{"producer_id":"taxonomy-reviewer","producer_version":"1.0.0","originating_run_id":"m1-slice-3.5-taxonomy-review-20260730","source_references":[{"artifact_id":"oracle/independent-byte-facts.json","artifact_version":"1.0.0","fingerprint":"94d02c206325fa920ecbb30d342fd080f1f5fc88f5d188b8f7cd30cca8d956d3","availability":"retained"}],"supporting_evidence_references":["beth.beth-refr-dev.fact-00163"],"contradicting_evidence_references":[],"llm_involvement":{"state":"none","operation":"none"}}},
-    {"assignment_id":"tax-03b.area.world.placed-objects-activation","taxonomy_id":"infinium.skyrim-se.mod-impact-taxonomy","taxonomy_version":"0.1.0","subject_type":"taxonomy-fixture-subject","subject_id":"TAX-03B","axis":"affected-game-system-or-content-area","facet":"affected-area","code":"area.world.placed-objects-activation","applicability_state":"assigned","classification_role":"established","evidence_references":["beth.beth-refr-dev.fact-00165","beth.beth-refr-dev.fact-00166","beth.beth-refr-dev.fact-00168","beth.beth-refr-dev.fact-00269","beth.beth-refr-dev.fact-00271","beth.beth-refr-dev.fact-00272"],"applicability_condition_references":[],"reason":"Separate frozen placement, linked-reference, location, and resolved-link facts establish the placed-object area; the REFR signature does not.","derivation_provenance":{"producer_id":"taxonomy-reviewer","producer_version":"1.0.0","originating_run_id":"m1-slice-3.5-taxonomy-review-20260730","source_references":[{"artifact_id":"oracle/independent-byte-facts.json","artifact_version":"1.0.0","fingerprint":"94d02c206325fa920ecbb30d342fd080f1f5fc88f5d188b8f7cd30cca8d956d3","availability":"retained"}],"supporting_evidence_references":["beth.beth-refr-dev.fact-00165","beth.beth-refr-dev.fact-00166","beth.beth-refr-dev.fact-00168","beth.beth-refr-dev.fact-00269","beth.beth-refr-dev.fact-00271","beth.beth-refr-dev.fact-00272"],"contradicting_evidence_references":[],"llm_involvement":{"state":"none","operation":"none"}}}
-  ],
+  "expected_taxonomy_assignments": [],
   "expected_replayability": "complete-clean",
   "forbidden_claims": [
     {
@@ -3538,5 +3511,18 @@
     "No production parser, Mutagen, xEdit, held-out input, or taxonomy answer authored these values."
   ],
   "pre_registered_at": "2026-07-30T00:00:00.0000000+00:00",
-  "change_history": []
+  "change_history": [
+    {
+      "oracle_version": "1.0.1",
+      "changed_at": "2026-07-30T23:00:00.0000000+00:00",
+      "independent_evidence_reference": {
+        "artifact_id": "oracle/manual-hex-worksheet.json",
+        "artifact_version": "1",
+        "fingerprint": "5cba46b8009136b3961b5bd60782cc4c870ae5d0b419ae3bc0f1117fec7d787b",
+        "availability": "retained"
+      },
+      "prior_error_explanation": "Version 1.0.0 attributed the manual method without comparing its decoded semantic answers and classified mutation changes from artifact dependencies instead of logical baseline deltas.",
+      "reviewer": "oracle-reviewer"
+    }
+  ]
 }
