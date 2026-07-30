@@ -143,7 +143,11 @@ Every material document should include a status and last-reviewed date.
   exact-target evaluator package. EVAL-0045, EVAL-0046 for the delivered
   capture operation, EVAL-0051, and EVAL-0054 pass for that admitted boundary;
   broader MO2 versions, additional mappers, archive members, and later semantic
-  slices remain unsupported or pending.
+  slices remain unsupported or pending. The owner subsequently inserted Slice
+  3.5 to construct and independently qualify the Bethesda and applicable
+  taxonomy fixtures before Slice 4. M1 explicitly defers `QUST` forced-alias
+  semantics and retains EVAL-0017's REFR linked-reference/placement proof as
+  the materially different category.
 - Infinium uses GPLv3-family strong copyleft. MO2 and LOOT remain
   user-installed; ADR-0007 excludes xEdit completely. ADR-0008 through
   ADR-0011 accept deterministic MO2 2.5.2 reconstruction, the exact initial

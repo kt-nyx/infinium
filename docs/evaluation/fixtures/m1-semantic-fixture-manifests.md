@@ -606,6 +606,11 @@ changed-during-read input.
 unallowlisted field/shape, localized-string dependency, archive member, and
 typical-environment discovery request.
 
+The current M1 Bethesda matrix does not contain `QUST`, quest-alias,
+forced-reference/`ALFR`, or other quest-logic shapes. Those shapes belong to a
+future reviewed EVAL-0006/EVAL-0007 package if that planned pair is promoted
+beyond M1.
+
 ### 8.2 Oracle construction
 
 For each project-authored plugin:
@@ -998,6 +1003,24 @@ This record was subsequently executed and reviewed. Its current gate state is:
   evaluation output, or the abandoned implementation archive while authoring
   the oracle.
 
+### 16.2 Slice 3 package non-reuse for Bethesda truth
+
+The retained disposable Slice 3 instance was inspected read-only on
+2026-07-30. Its enabled `FixturePlugin.esm` population exists only to exercise
+MO2 plugin order and provider precedence:
+
+- the lower-priority copy is exact official `Update.esm` bytes;
+- the winning copy is the same official file with only its final byte XORed by
+  `0x01`; and
+- the disabled `FixtureDisabled.esm` is exact official `Dawnguard.esm` bytes.
+
+That instance contains no project-authored bounded Bethesda binary generator,
+hand-audited raw-offset semantic oracle, light/malformed/unsupported matrix, or
+sealed holdout. Its official broad plugins and arbitrary final-byte mutation
+cannot serve as `BETH-*` correctness fixtures and must not be relabeled as
+such. Slice 3.5 constructs and independently accepts the required packages
+without deriving expectations from this MO2 fixture or from Mutagen.
+
 ## 17. Preconditions before executable fixture-package acceptance or execution
 
 The owner may accept this manifest specification as the M1 fixture design
@@ -1009,11 +1032,15 @@ as an executable fixture or executed as an M1 gate:
 3. seal held-out package and oracle fingerprints before use;
 4. verify all controlled-real private dependencies against the RESEARCH-0035
    manifest without committing payloads;
-5. reconcile the EVAL-0051/0052 allowlists with the accepted M1 plan;
+5. verify the recorded plan/specification reconciliation: EVAL-0051 uses the
+   accepted exact-target additional-mapper inventory, while M1 EVAL-0052
+   excludes `QUST`/forced-alias semantics and follows the NPC/RACE/REFR
+   allowlist;
 6. record exact taxonomy assignments and independent evidence;
 7. validate privacy, license, retention, and redistribution fields;
 8. validate all relative links and unique fixture/EVAL identifiers; and
-9. record that execution remains pending.
+9. record that production comparison remains pending until the applicable
+   implementation slice.
 
 Acceptance of this manifest specification approves the test design only. It
 does not declare any package executable, accept an implementation, qualify a

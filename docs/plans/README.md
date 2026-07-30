@@ -1,13 +1,17 @@
 # Plans
 
 Status: Draft  
-Last reviewed: 2026-07-28
+Last reviewed: 2026-07-30
 
 The [M0 research-foundation plan](milestones/M0-research-foundation.md) was
 accepted on 2026-07-25 and completed on 2026-07-28. The accepted
 [M1 backend semantic proof plan](milestones/M1-backend-semantic-proof.md) is
 the active implementation plan. Completed-slice evidence is indexed under
 [`implementation-records/`](implementation-records/README.md).
+
+Slices 0 through 3 are complete. The next authorized step is Slice 3.5,
+independent Bethesda fixture and oracle qualification, before Slice 4
+production semantics and typed-index implementation.
 
 The product baseline and ADR-0001 through ADR-0011 were accepted on
 2026-07-25. ADR-0012 through ADR-0023 were accepted and ADR-0024 was rejected

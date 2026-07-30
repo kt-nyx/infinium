@@ -4,7 +4,7 @@ Status: Accepted
 Owner: Project owner  
 Prepared: 2026-07-28  
 Accepted: 2026-07-28  
-Last reviewed: 2026-07-28  
+Last reviewed: 2026-07-30
 Target milestone: M1 — Backend semantic proof
 
 ## Purpose
@@ -226,6 +226,10 @@ The following accepted specifications and passing executions gate M1:
   taxonomy: EVAL-0080 through EVAL-0086; and
 - persistence, process/IPC, and credential lifecycle: EVAL-0087 through
   EVAL-0089.
+
+EVAL-0006 and EVAL-0007 remain planned post-M1 cell/quest cases. Their optional
+`QUST` forced-reference alias edge is not part of the M1 required case set and
+must not be admitted through EVAL-0052 or inferred from EVAL-0017.
 
 The non-live/pre-dispatch portions of EVAL-0034, EVAL-0076, EVAL-0077,
 EVAL-0081, and EVAL-0089 apply before the deliberately tiny live provider

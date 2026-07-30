@@ -4,7 +4,7 @@ Status: Accepted
 Owner: Project owner  
 Prepared: 2026-07-28  
 Accepted: 2026-07-28  
-Last reviewed: 2026-07-28  
+Last reviewed: 2026-07-30
 Applies to: completed M0 Wave F and accepted M1 backend semantic proof
 
 ## Purpose
@@ -119,6 +119,12 @@ ongoing change-control rule. Implementation preflight must still verify the
 actual dependency locks, fixture availability appropriate to the first slice,
 clean worktree, and security/runtime assumptions; document acceptance does not
 manufacture those execution facts.
+
+On 2026-07-30, the owner reconciled the placed-reference/quest traceability
+surface without broadening M1: EVAL-0017 remains the materially different REFR
+proof, while planned EVAL-0006/EVAL-0007 and `QUST` forced-reference alias
+semantics are deferred beyond M1. EVAL-0052 therefore excludes those quest
+shapes, and the accepted plan no longer requires them from Slice 4.
 
 ## M1 completion blockers
 

@@ -2,7 +2,7 @@
 
 Status: Completed — recommendation accepted by project owner  
 Date: 2026-07-25  
-Last reviewed: 2026-07-28
+Last reviewed: 2026-07-30
 Researcher: Codex agent  
 Primary question: RQ-024  
 Decision enabled: evidence-backed semantic record/relationship ordering after
@@ -18,6 +18,14 @@ RQ-023/RQ-025 Gate C prerequisites. Any later statement in this dated roadmap
 that those prerequisites or Gate C remain pending is retained as historical
 sequencing evidence, not current status. Final case specification and
 implementation execution remain pending.
+
+Current M1 disposition: On 2026-07-30, the project owner deferred this
+roadmap's optional `QUST` alias-ID/forced-reference edge and planned
+EVAL-0006/EVAL-0007 pair beyond M1. The accepted M1 materially different proof
+is EVAL-0017's REFR linked-reference/placement mechanism, which makes no quest
+claim. The historical analysis below remains the roadmap for a future narrow
+quest qualification; it is not authorization to add `QUST` or `ALFR` to the M1
+allowlist.
 
 ## 1. Question and bounded answer
 

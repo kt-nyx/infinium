@@ -1,7 +1,7 @@
 # Analysis catalog
 
 Status: Accepted  
-Last reviewed: 2026-07-28
+Last reviewed: 2026-07-30
 
 This is the living inventory of desired analysis capabilities. Nothing in this
 catalog implies that an analyzer currently exists. Initial status for every
@@ -115,14 +115,19 @@ The currently accepted bounded proof sequence is:
    stale-value/reversion substrate;
 2. a deliberately narrow first-category proof, currently actor/AI/FaceGen;
 3. a materially different category proof, currently placed-reference (`REFR`)
-   placement, activation, enable-parent, and linked relationships, plus a
-   narrow forced-reference alias relationship; and
-4. broader quest, item/crafting, world, and other semantic families only after
-   the earlier shapes are independently qualified.
+   placement, activation, enable-parent, and linked relationships; and
+4. quest semantics beginning with a separately qualified narrow alias edge,
+   followed by item/crafting, world, and other semantic families only after the
+   earlier shapes are independently qualified.
 
 This sequence is a present implementation/evaluation roadmap, not a permanent
 NPC-versus-non-NPC rule. Generic infrastructure must not encode either proof
 category as the whole domain.
+
+For M1 specifically, the second proof is the accepted EVAL-0017 REFR
+linked-reference/placement case. `QUST`, quest-alias, and forced-reference
+semantics remain outside the M1 allowlist; the planned EVAL-0006/EVAL-0007
+quest-relevance pair is later roadmap work.
 
 ## E. Cross-record and cross-layer coherence
 

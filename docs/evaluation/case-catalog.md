@@ -49,8 +49,8 @@ these historical planning labels meant.
 | EVAL-0003 | Synthetic positive | Patch | Correct patch preserves appearance and behavior | ANALYSIS-007 | Planned |
 | EVAL-0004 | Synthetic positive | Patch | Patch exists but is later overwritten | ANALYSIS-007 | Planned |
 | EVAL-0005 | Synthetic positive | Patch/version | Patch targets an older upstream version | ANALYSIS-007, ANALYSIS-008 | Planned |
-| EVAL-0006 | Synthetic positive | Cell/quest | Visual cell edit reverts a quest-relevant reference | ANALYSIS-004, ANALYSIS-005, FIND-003 | Planned |
-| EVAL-0007 | Synthetic negative | Cell | Intentional cell override with no lost required behavior | ANALYSIS-003, EVID-006 | Planned |
+| EVAL-0006 | Synthetic positive | Cell/quest | Visual cell edit reverts a quest-relevant reference | ANALYSIS-004, ANALYSIS-005, FIND-003 | Planned after M1; requires separate narrow `QUST` qualification |
+| EVAL-0007 | Synthetic negative | Cell | Intentional cell override with no lost required behavior | ANALYSIS-003, EVID-006 | Planned after M1; not part of the M1 required case set |
 | EVAL-0008 | Synthetic positive | Item/crafting | Visual item change loses keywords or recipe behavior | ANALYSIS-004, ANALYSIS-005 | Planned |
 | EVAL-0009 | Synthetic negative | Asset | Ordinary texture/mesh overwrite is not a finding | ANALYSIS-006, UX-004 | Planned |
 | EVAL-0010 | Synthetic positive | Documentation | A schema-bound claim proposal resolves only to host-supplied exact spans and the acquired source revision, then matches applicable local versions/options | DOC-003, EVID-002, ANALYSIS-001 | Planned |

@@ -1,7 +1,7 @@
 {
   "fixture_id": "M1-PLAT-SLICE2-SUBSTRATE-v1",
   "fixture_version": "1.0.0",
-  "oracle_version": "1.0.0",
+  "oracle_version": "1.0.1",
   "independent_authors_and_reviewers": [
     "infinium-evaluation-review"
   ],
@@ -13,7 +13,7 @@
         {
           "artifact_id": "accepted-m1-plan",
           "artifact_version": "1.0.0",
-          "fingerprint": "50a53a6e5c5add4cf88bf15e185bede54c38822ca4726d330cd23eceeaf59ebe",
+          "fingerprint": "26d4dc251cb732cf88ca039f7577630e332d7a30080256d152f8cee5ac397a6d",
           "availability": "retained"
         }
       ],
@@ -188,5 +188,18 @@
     "No real installation, mod, provider, credential, or protected root is used."
   ],
   "pre_registered_at": "2026-07-29T00:00:00.0000000+00:00",
-  "change_history": []
+  "change_history": [
+    {
+      "oracle_version": "1.0.1",
+      "changed_at": "2026-07-30T14:58:15.4420835+00:00",
+      "independent_evidence_reference": {
+        "artifact_id": "accepted-m1-plan",
+        "artifact_version": "2026-07-30-slice-3.5-amendment",
+        "fingerprint": "26d4dc251cb732cf88ca039f7577630e332d7a30080256d152f8cee5ac397a6d",
+        "availability": "retained"
+      },
+      "prior_error_explanation": "No semantic expectation changed. The accepted-plan dependency fingerprint changed when the owner deferred M1 QUST alias semantics and inserted Slice 3.5.",
+      "reviewer": "project-owner"
+    }
+  ]
 }

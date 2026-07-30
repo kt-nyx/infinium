@@ -23,6 +23,14 @@ Skyrim SE target's independently researched additional inventory is empty, so
 an explicit empty inventory plus generic registry mechanics and unknown-mapper
 fail-closed coverage satisfies that matrix position.
 
+On 2026-07-30, the owner also resolved the M1 placed-reference/quest traceability
+drift. M1 does not qualify `QUST`, alias, or `ALFR` semantics. The materially
+different M1 proof is the accepted REFR linked-reference/placement mechanism in
+EVAL-0017. The planned EVAL-0006/EVAL-0007 quest-relevance pair and its narrow
+forced-reference alias edge remain post-M1 roadmap work. Slice 3.5 below
+prepares and independently accepts the Bethesda and applicable taxonomy
+fixture packages before production Bethesda parsing begins.
+
 The plan consumes:
 
 - the accepted product baseline;
@@ -76,7 +84,6 @@ can:
     fields;
   - loose FaceGen origin/provider presence for the qualified boundary;
   - REFR placement, enable-parent/linked-reference relations;
-  - the narrow forced-reference alias relation required by the second proof;
   - override chains, winners, FormKeys, links, record states, and selected
     field values used by accepted fixtures.
 - Local/fixture documentation acquisition and claim extraction.
@@ -108,6 +115,8 @@ can:
   model aliases/routing, ChatGPT/Codex-plan access, or another provider;
 - archive-positive FaceGen, general BSA semantic parity, localized-string
   support, or a production NIF parser;
+- `QUST`, quest-alias, forced-reference/`ALFR`, objective, stage, condition,
+  dialogue, script-fragment, or other quest-logic semantics;
 - PEX/VMAD, root/native, generated-output, named configuration, performance,
   playthrough-lifecycle, and runtime-log analyzers;
 - M3 maturity/readiness thresholds, calibrated presets, high-end scale, or
@@ -297,6 +306,46 @@ Gates:
 - EVAL-0045, EVAL-0046 for every read/library operation, EVAL-0051, and
   EVAL-0054.
 
+### Slice 3.5 — Independent Bethesda fixture and oracle qualification
+
+Deliver:
+
+- assigned binary-fixture author, independent binary/oracle reviewer,
+  holdout-custodian, and applicable taxonomy-review roles with recorded answer
+  isolation;
+- project-authored `BETH-NPC-DEV`, `BETH-REFR-DEV`, `BETH-LIGHT-VAL`,
+  `BETH-MALFORMED-VAL`, and `BETH-UNSUPPORTED-VAL` binary packages with
+  retained generators/source descriptions and exact emitted bytes;
+- independently authored raw-byte/offset, master/FormKey, field, link,
+  override-chain, winner, malformed, unsupported, and gap expectations that
+  are not derived from Mutagen or xEdit;
+- independently authored and sealed `BETH-HO-001` inputs/oracle plus the
+  applicable Slice 4 EVAL-0086 taxonomy packages;
+- accepted public manifests, execution inputs, provenance, partition history,
+  replay dependencies, redistribution/license decisions, fingerprints, and
+  reviewer records for every package;
+- a Slice 3.5 implementation/acceptance record containing exact construction
+  and review commands, package and oracle fingerprints, role separation,
+  retained artifact locations, and unresolved gaps;
+- verification of the evaluator-private RESEARCH-0035 dependencies against
+  their retained manifests without committing third-party payloads.
+
+Gates:
+
+- the Bethesda and Slice 4-applicable taxonomy packages satisfy Section 17 of
+  the accepted fixture-manifest specification and are accepted as executable;
+- held-out input and oracle fingerprints are sealed before production parser
+  or typed-index implementation begins, and held-out oracle answers remain
+  inaccessible to the implementation and system under test;
+- construction and oracle review use no production parser output, Mutagen
+  expectation generation, xEdit, real-mod-specific production rule, or
+  protected setup write.
+
+Slice 3.5 prepares evaluation inputs and independent truth only. It does not
+implement Bethesda parsing, typed indexes, candidates, findings, or any later
+slice behavior, and it does not claim EVAL-0052 or EVAL-0086 has passed before
+the Slice 4 implementation is exercised.
+
 ### Slice 4 — Positively qualified Bethesda semantics and typed indexes
 
 Deliver:
@@ -305,7 +354,7 @@ Deliver:
 - explicit Mutagen `0.54.2` shape/field allowlist;
 - master/FormKey translation, override chains, winner and link resolution;
 - selected NPC/package/appearance, loose FaceGen presence, REFR relation and
-  placement, and forced-reference alias facts;
+  placement facts;
 - explicit unsupported/gap results outside the allowlist;
 - canonical participant identities and typed indexes used by M1 analyzers.
 

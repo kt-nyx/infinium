@@ -27,7 +27,9 @@ Start with [`docs/README.md`](docs/README.md).
 - M1 plan: accepted and active
 - M1 implementation: Slices 0 through 3 complete; Slice 3's exact-target,
   headless non-mutation, explicit initiation, and MO2 effective-state gates
-  EVAL-0045, EVAL-0046, EVAL-0051, and EVAL-0054 pass for the admitted boundary
+  EVAL-0045, EVAL-0046, EVAL-0051, and EVAL-0054 pass for the admitted
+  boundary; Slice 3.5 next constructs and independently qualifies the Bethesda
+  and applicable taxonomy fixtures required before Slice 4
 - xEdit: historical integration/oracle recommendation rejected; excluded from
   every Infinium boundary
 - Abandoned implementation: removed from the active tree and retained only in

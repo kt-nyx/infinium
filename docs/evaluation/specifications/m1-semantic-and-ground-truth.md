@@ -662,9 +662,12 @@ ADR-0007, ADR-0009, and ADR-0010.
 **Scope.** Exact supplied plugin order, record identity, override/winner, field,
 link, state, and full/light semantics for the positive M1 allowlist below.
 
-**Non-scope.** Every record/field/shape not named below; automatic environment
-or load-order discovery; standard localized-string resolution; archive
-activation/member precedence; and runtime behavior.
+**Non-scope.** Every record/field/shape not named below, including `QUST`,
+quest aliases, forced-reference/`ALFR`, objective, stage, condition, and other
+quest-logic semantics; automatic environment or load-order discovery; standard
+localized-string resolution; archive activation/member precedence; and runtime
+behavior. The planned EVAL-0006/EVAL-0007 quest-relevance pair is not an M1
+case.
 
 **Positive M1 allowlist.**
 
@@ -679,9 +682,10 @@ activation/member precedence; and runtime behavior.
 - link resolution and local-ID/origin-plugin relationships consumed by
   EVAL-0001/EVAL-0002/EVAL-0016/EVAL-0017 and RESEARCH-0034.
 
-All other record families/fields, standard localized-string lookup, automatic
-load order, typical-environment discovery, and archive applicability are
-unsupported until added to a later reviewed matrix.
+All other record families/fields, including `QUST` and alias shapes, standard
+localized-string lookup, automatic load order, typical-environment discovery,
+and archive applicability are unsupported until added to a later reviewed
+matrix.
 
 **Fixture partition and input.** `BETH-NPC-DEV`, `BETH-REFR-DEV`,
 `BETH-LIGHT-VAL`, `BETH-MALFORMED-VAL`, `BETH-UNSUPPORTED-VAL`, controlled-real

@@ -3,7 +3,7 @@
 Status: Completed — recommendation accepted by project owner; candidate
 qualification subsequently completed by RESEARCH-0035
 Date: 2026-07-25  
-Last reviewed: 2026-07-28
+Last reviewed: 2026-07-30
 Researcher: Codex agent  
 Primary question: RQ-025  
 Decision enabled: reproducible corpus structure and the candidate-repair and
@@ -19,6 +19,12 @@ EVAL-0017, or an open Gate C record the state of this 2026-07-25 investigation
 and are superseded by RESEARCH-0035. The qualified candidates have not yet
 passed execution; their Wave F specifications and manifests were accepted on
 2026-07-28.
+
+Current M1 disposition: The owner deferred the optional forced quest-alias edge
+and planned EVAL-0006/EVAL-0007 pair beyond M1 on 2026-07-30. EVAL-0017 uses
+the qualified REFR linked-reference/placement candidate and makes no quest
+claim. Historical optional-alias language below remains a future corpus
+roadmap, not an M1 fixture requirement.
 
 ## 1. Question and bounded answer
 
@@ -561,11 +567,11 @@ Retire or replace `REAL-PLACEMENT-LEAD-0001` if:
 The required EVAL-0017 replacement was a materially different category proof
 and, for the accepted Stage 2 roadmap, should exercise the placed-reference
 topology selected by RESEARCH-0019: a later visual/spatial override that drops
-an upstream enable-parent or linked-reference relation, optionally with a
-narrow forced quest-alias edge, plus an author-maintained patch or
-independently specified resolution. This report left EVAL-0017 unselected and
-did not authorize substituting the placement lead; RESEARCH-0035 later
-qualified a different exact candidate.
+an upstream enable-parent or linked-reference relation, historically with an
+optional narrow forced quest-alias edge, plus an author-maintained patch or
+independently specified resolution. The alias option is now post-M1. This
+report left EVAL-0017 unselected and did not authorize substituting the
+placement lead; RESEARCH-0035 later qualified a different exact candidate.
 
 ## 6. Redistributable synthetic corpus required before the real cases
 
@@ -585,7 +591,7 @@ that these rows are final product categories.
 | NIF references | Typed required texture/reference whose provider is absent | Same source with qualified provider present | Optional empty slot, unsupported NIF version, malformed native-parser input, unqualified archive |
 | Plugin-to-asset | Qualified NPC/other record field to derived asset path and loose provider | Same exact record with complete loose providers | Light-ID/path rule not qualified, archive-dependent provider, or asset surface intentionally omitted outside an EVAL-0016/M1 gate |
 | NPC scope reversion | Appearance versus package/AI/faction reversion | Patch or intentional combined ownership | Template-controlled inheritance, unsupported field, malformed record |
-| `REFR` topology | Dropped enable parent or linked reference; optional forced quest alias | Patch preserves topology; unrelated visual edit | Unsupported placed subtype, broad quest logic, malformed group/link |
+| `REFR` topology | Dropped enable parent or linked reference; forced quest alias only in a future separately qualified post-M1 package | Patch preserves topology; unrelated visual edit | Unsupported placed subtype, broad quest logic, malformed group/link |
 | `REFR` placement | Independently planted incompatibility with bounded symptom | Resolved position | Mere proximity, coordinate change without consequence evidence, navmesh/landscape inference |
 
 Every row requires:
