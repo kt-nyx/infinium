@@ -1,10 +1,10 @@
 # RESEARCH-0051: Skyrim SE secondary-root and mapper inventory
 
-Status: Completed; plan/specification disposition pending
+Status: Completed; recommendation accepted and integrated
 Date: 2026-07-29
-Last reviewed: 2026-07-29
+Last reviewed: 2026-07-30
 Researcher: Codex
-Acceptance: Research complete; recommendation not yet owner-accepted
+Acceptance: Recommendation accepted by the project owner on 2026-07-30
 
 ## Question and requirements
 
@@ -152,8 +152,10 @@ changes rather than a reproducible-build match. This is sufficient to reject
 invented Data authority; it is not a general qualification of every function
 in the plugin.
 
-No independent MO2 UI/VFS oracle observation was completed by this
-investigation. That separate EVAL-0051 blocker remains.
+The investigation itself did not launch MO2. A subsequent independently
+recorded disposable-copy MO2 UI/VFS observation completed the separate
+EVAL-0051 oracle on 2026-07-30. That observation does not change the
+source/binary mapper conclusion above.
 
 ## Recommendation
 
@@ -162,16 +164,18 @@ secondary Data-root inventory as empty and its two fixed profile-control
 mappings as known non-Data mappings already covered by direct sealed control
 inputs.
 
-Submit a reviewed M1 plan/EVAL-0051/fixture-manifest amendment making the
-positive supported mapper case conditional rather than mandatory for this
-exact target. Do not mark EVAL-0051 passed until the remaining independent
-explicit-profile MO2 UI/VFS comparison is complete.
+The owner accepted the reviewed M1 plan/EVAL-0051/fixture-manifest amendment:
+the positive supported mapper case is conditional rather than mandatory for
+an exact target whose independently researched additional-mapper inventory is
+empty. The ordinary MO2 physical Data/mod/overwrite overlay remains required
+and supported; this amendment concerns only additional secondary-Data or
+plugin-defined Data-mapper contributions.
 
 ## ADR or follow-up enabled
 
 No ADR is required to retain the current empty mapper allowlist and exact
-target boundary. The recommendation requires a reviewed amendment to the M1
-plan, EVAL-0051 specification, and fixture-manifest matrix.
+target boundary. The accepted amendment is recorded in the M1 plan,
+EVAL-0051 specification, and fixture-manifest matrix.
 
 Choosing a third-party mapper instead requires a new bounded investigation and
 may require a new/superseding ADR under ADR-0008 item 10.

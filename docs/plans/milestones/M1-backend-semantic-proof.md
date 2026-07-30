@@ -4,7 +4,7 @@ Status: Accepted
 Owner: Project owner  
 Prepared: 2026-07-28  
 Accepted: 2026-07-28  
-Last reviewed: 2026-07-28  
+Last reviewed: 2026-07-30
 Target milestone: M1 — Backend semantic proof
 
 ## Authority and start condition
@@ -13,6 +13,15 @@ The project owner accepted this plan on 2026-07-28. It is the active
 implementation authorization for the bounded M1 scope below. It does not
 authorize excluded capabilities or imply that any implementation or evaluation
 already passes.
+
+On 2026-07-30, the owner accepted RESEARCH-0051's exact-target amendment.
+For EVAL-0051, ordinary MO2 physical Data/mod/overwrite overlay reconstruction
+remains mandatory. A positive real additional secondary-Data or
+plugin-defined Data-mapper case is required only when the exact supported
+target inventory contains a deliberately qualified contributor. The admitted
+Skyrim SE target's independently researched additional inventory is empty, so
+an explicit empty inventory plus generic registry mechanics and unknown-mapper
+fail-closed coverage satisfies that matrix position.
 
 The plan consumes:
 
@@ -276,6 +285,8 @@ Deliver:
 - quiescence checks and double structural capture;
 - enabled mod/plugin order and qualified loose provider/hidden/deleted/
   unmanaged reconstruction;
+- explicit exact game-plugin/secondary-Data/additional-mapper inventory,
+  including an independently justified empty inventory;
 - physical installed entity separated from source identity;
 - exact game-runtime manifest admission;
 - snapshot assurance and mid-capture change failure;

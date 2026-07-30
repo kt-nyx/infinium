@@ -1,6 +1,6 @@
 # Independent M1 Slice 3 evaluator package
 
-Status: EVAL-0054 passed; EVAL-0051 executed with documented blocking gaps
+Status: EVAL-0051 and EVAL-0054 passed for the exact admitted target
 Evaluator role: separately isolated oracle author
 Specification set: `infinium.eval.m1.semantic-and-ground-truth/1`
 Cases: EVAL-0051 and EVAL-0054
@@ -29,27 +29,32 @@ are never added to this repository.
 - Protected-root before/after comparison: produced by
   `scripts/New-ProtectedRootManifest.ps1` and
   `scripts/Compare-ProtectedRootManifests.ps1`.
-- Copied-MO2 accessibility observation: partially complete for the saved
-  suggestion, visible mod rows, and plugin rows. Explicit-target Data/conflict
-  observation remains incomplete because continuing would have required
-  taking over the user's foreground window.
+- Copied-MO2 observation: complete for explicit selection of `Explicit Target`,
+  visible mod/plugin order, shared loose-file winner/loser views,
+  case-normalized precedence, overwrite, `.mohidden`, `.git`, and distinct
+  local mod rows. Screenshots and the typed observation record are retained.
 - Production-adapter execution: exact MO2, game plugin, and Skyrim identities
   passed; the adapter captured `Explicit Target` headlessly without launch.
 - Product protected-root result: the exact headless capture passed EVAL-0046
   with complete byte, physical-identity, metadata, ACL, reparse, ADS, process,
   side-effect-root, and retained-handle canaries. It launched no process.
-- Historical UI-oracle result: the copied MO2 registered itself in the live
-  `nxmhandler.ini`. The temporary handler was removed and the original
-  132-byte content restored, but original filesystem timestamps are
-  unrecoverable. That UI-oracle attempt is not non-mutating and is not used as
-  the product EVAL-0046 operation.
+- UI-oracle side effects: copied MO2 registered its temporary executable in
+  live `nxmhandler.ini`; an initial launcher misresolution also briefly opened
+  the live MO2 executable and caused MO2 to rewrite one line ending in live
+  `ModOrganizer.ini`. The copied handler was removed. Both INI files were
+  restored to their exact pre-run lengths and SHA-256 values, but their
+  creation/last-write metadata cannot be restored. Live MO2 instance roots and
+  the live game root remained structurally unchanged. These UI-oracle effects
+  are not reclassified as the non-mutating product operation gated by
+  EVAL-0046.
 
-EVAL-0051 remains blocked by incomplete explicit-target UI/VFS evidence and
-the accepted matrix's mandatory positive secondary-root/mapper case.
-RESEARCH-0051 established that the exact admitted Skyrim SE game plugin has an
-empty secondary-Data inventory and only two non-Data profile-control mappings;
-the recommended conditional-positive plan/specification disposition remains
-pending. EVAL-0054's exact target and full preregistered negative matrix passed.
+EVAL-0051 passed after the explicit-target UI/VFS observation and the owner's
+acceptance of RESEARCH-0051. The exact admitted Skyrim SE game plugin has an
+empty additional secondary-Data inventory and only two non-Data
+profile-control mappings. The ordinary Data/mod/overwrite overlay remains
+required; only a real *additional* mapper case is conditional on future
+deliberate qualification. EVAL-0054's exact target and full preregistered
+negative matrix also passed.
 
 ## Disposable root used for this construction
 
@@ -155,8 +160,7 @@ unavailable.
 
 ## Gate coverage
 
-`gate-coverage.json` distinguishes complete direct evidence, pending
-authoritative UI observations, expected unsupported populations, and
-production-comparison work outside this oracle-authoring task. Missing UI
-evidence is a blocker, not permission to infer a winner from the fixture
-layout.
+`gate-coverage.json` distinguishes complete direct and authoritative UI
+evidence, the accepted empty additional-mapper inventory, expected unsupported
+archive population, and the separately recorded UI-oracle side effects.
+Production output was not used to manufacture the UI oracle.

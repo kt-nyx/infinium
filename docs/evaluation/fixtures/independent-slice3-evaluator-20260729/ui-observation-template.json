@@ -3,14 +3,31 @@
   "schema_version": 1,
   "fixture_id": "SLICE3-INDEPENDENT-VAL-20260729",
   "copied_executable_sha256": "442B354A8F34754DA0048654C44D27F51628FEBA54CE46C3187CF58D6C43E622",
-  "observation_status": "partial-accessibility-observation",
-  "observer": "codex-computer-use-accessibility-tree",
-  "observed_at": "2026-07-29T23:58:00.0000000+00:00",
-  "screenshots": [],
+  "observation_status": "complete-explicit-target-ui-vfs-observation",
+  "observer": "codex-computer-use-window-scoped",
+  "observed_at": "2026-07-30T04:26:21.0000000+00:00",
+  "screenshots": [
+    {
+      "relative_path": "evidence/eval-0051-shared-winner.jpg",
+      "sha256": "6A39F5D221D41FB46C1E9DE2F7D5766EC2F0A3AA758244D5B45A486BA2D7012E"
+    },
+    {
+      "relative_path": "evidence/eval-0051-alpha-conflicts.jpg",
+      "sha256": "C3B8C34385A4B3983EF4ABEFE09B7D2F51F9C41C7AB35E52CED9984A85EB5B8B"
+    },
+    {
+      "relative_path": "evidence/eval-0051-beta-conflicts.jpg",
+      "sha256": "25667EA5371C890571CD2B07050FC1CE7403DDA788EB3468E03A3FA60C18633E"
+    },
+    {
+      "relative_path": "evidence/eval-0051-git-directory-visible.jpg",
+      "sha256": "220523CE29FD32BD542E0ED003C23DC0528F24D5F522D13334F2961FDD61606A"
+    }
+  ],
   "copied_mo2_version": "2.5.2",
   "resolved_instance": "<EVALUATOR_ROOT>/mo2-app portable configuration with evaluator-owned base directory",
   "initial_saved_selection": "Saved Suggestion",
-  "explicit_selected_profile": null,
+  "explicit_selected_profile": "Explicit Target",
   "mod_rows": [
     { "name": "01 Physical Alpha", "enabled": true, "displayed_priority": 3 },
     { "name": "03 Disabled Provider", "enabled": false, "displayed_priority": 4 },
@@ -25,8 +42,49 @@
     { "name": "Dragonborn.esm", "enabled": true, "displayed_order": "04" },
     { "name": "FixturePlugin.esm", "enabled": true, "displayed_order": "05" }
   ],
-  "data_path_observations": [],
-  "source_mapping_observations": [],
+  "data_path_observations": [
+    {
+      "path": "meshes/oracle/shared.txt",
+      "ui_winner": "Overwrite",
+      "conflict_evidence": [
+        "01 Physical Alpha reports Overwrite as the final providing mod",
+        "02 Physical Beta Renamed reports Overwrite as the final providing mod"
+      ]
+    },
+    {
+      "path": "meshes/Case/File.TXT",
+      "ui_winner": "02 Physical Beta Renamed",
+      "overwritten_mods": [
+        "01 Physical Alpha"
+      ],
+      "behavior": "Windows-equivalent case-normalized collision"
+    },
+    {
+      "path": "meshes/oracle/hidden-only.txt.mohidden",
+      "ui_provider": "02 Physical Beta Renamed",
+      "behavior": "shown crossed out as a MOHIDDEN file; not an active virtual filename"
+    },
+    {
+      "path": ".git/ignored-by-directory.txt",
+      "ui_provider": "02 Physical Beta Renamed",
+      "behavior": "visible in MO2 Data; Infinium excludes it through explicit product skip-directory policy"
+    },
+    {
+      "path": "<GAME_DATA_ROOT>/Skyrim.esm and DLC plugin files",
+      "ui_provider": "unmanaged physical Data",
+      "behavior": "visible as base-game/DLC Data population"
+    }
+  ],
+  "source_mapping_observations": [
+    {
+      "local_entities": [
+        "01 Physical Alpha",
+        "02 Physical Beta Renamed",
+        "04 Duplicate Source Mapping"
+      ],
+      "behavior": "three distinct local rows remain visible; shared or changed source metadata does not collapse physical installed identities"
+    }
+  ],
   "unsupported_populations": [
     {
       "population": "archive-members",
@@ -34,22 +92,30 @@
     },
     {
       "population": "supported-secondary-root-mapper",
-      "expected_state": "not-qualified"
+      "expected_state": "exact-additional-inventory-empty"
     }
   ],
   "copied_mo2_write_effects": [
     {
       "effect": "registered copied executable in live nxmhandler.ini",
       "live_path_token": "<LIVE_MO2_APPLICATION_ROOT>/nxmhandler.ini",
-      "content_recovery": "temporary handler removed and original 132-byte single-live-handler content restored",
-      "metadata_recovery": "original creation and last-write timestamps were overwritten and are unrecoverable"
+      "content_recovery": "temporary handler removed; exact original 132-byte SHA-256 AE13FC63DF89516615FE3111B47C8A9A70F7D16FAD5F2E8A32C385A329E168FA restored",
+      "metadata_recovery": "creation and last-write timestamps changed and are unrecoverable"
+    },
+    {
+      "effect": "initial launcher misresolution briefly opened the live MO2 executable and rewrote one line ending in live ModOrganizer.ini",
+      "live_path_token": "<LIVE_MO2_APPLICATION_ROOT>/ModOrganizer.ini",
+      "content_recovery": "the single inserted carriage return was identified against the retained pre-run hash and removed; exact original 21,291-byte SHA-256 5C5DDD77F83C45E986AAEB17CE08ADB69C3A70760357C293D0F1CFBCFFA7E27F restored",
+      "metadata_recovery": "creation and last-write timestamps changed and are unrecoverable"
     }
   ],
   "live_protected_root_effects": "content-restored-but-metadata-changed",
   "notes": [
-    "Observation used the accessibility tree only after the user requested no overlay or screen capture.",
-    "A user-input guard prevented switching from Saved Suggestion to Explicit Target without taking over the foreground window, so explicit-target UI, Data, and conflict observations remain incomplete.",
-    "Production capture independently selected Explicit Target headlessly and passed its exact-binary evaluation, but production output was not used as UI oracle evidence.",
+    "Computer Use was bound to the copied ModOrganizer.exe window and did not cover or capture unrelated user windows.",
+    "The explicit target, Data tree, and mod conflict modal supplied the authoritative UI evidence; production output was not used as UI oracle evidence.",
+    "MO2 displays .mohidden and .git entries differently from Infinium's active-provider policy, so the observation records the display facts and the product policy separately.",
+    "The ordinary Data/mod/overwrite overlay was observed; RESEARCH-0051 concerns only the empty additional secondary-Data/plugin-mapper inventory.",
+    "No copied or live MO2 process remains.",
     "Skyrim was never launched."
   ]
 }

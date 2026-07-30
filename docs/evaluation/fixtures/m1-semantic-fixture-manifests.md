@@ -3,7 +3,7 @@
 Status: Accepted  
 Accepted: 2026-07-28  
 Accepted by: Project owner  
-Last reviewed: 2026-07-28  
+Last reviewed: 2026-07-30
 Companion specification:
 [M1 semantic and local-ground-truth evaluation specifications](../specifications/m1-semantic-and-ground-truth.md)
 
@@ -169,8 +169,8 @@ unavailable replayability must remain explicit.
 | `CAND-INTEGRATION-VAL` | Validation | EVAL-0032 | Required; not created | Evaluation owner |
 | `CAND-SCALE-VAL` / `CAND-STRESS-VAL` | Validation | EVAL-0032 | Required; not created | Benchmark/evaluation owner |
 | `CAND-HO-001` | Held-out | EVAL-0032 | Required before held-out recall claim; not authored/sealed | Independent holdout custodian |
-| `MO2-ATOMIC-DEV` | Development | EVAL-0051 | Required; not created | MO2 fixture operator |
-| `MO2-INTEGRATION-VAL` / `MO2-NEGATIVE-VAL` | Validation | EVAL-0051 | Required; not created | Independent MO2 observer |
+| `MO2-ATOMIC-DEV` | Development | EVAL-0051 | Constructed and exercised through the independent Slice 3 evaluator package | MO2 fixture operator |
+| `MO2-INTEGRATION-VAL` / `MO2-NEGATIVE-VAL` | Validation | EVAL-0051 | Constructed, independently observed, and passed for the exact admitted target | Independent MO2 observer |
 | `MO2-HO-001` | Held-out | EVAL-0051 | Required before general conformance claim; not authored/sealed | Independent holdout custodian |
 | `BETH-NPC-DEV` / `BETH-REFR-DEV` | Development | EVAL-0052 | Required; not created | Binary-fixture author |
 | `BETH-LIGHT-VAL` / `BETH-MALFORMED-VAL` / `BETH-UNSUPPORTED-VAL` | Validation | EVAL-0052 | Required; not created | Independent binary reviewer |
@@ -537,7 +537,10 @@ and pinned to MO2 `2.5.2`. The manifest records:
 7. hidden/deleted/skipped contribution;
 8. duplicate/case-normalization collision;
 9. renamed mod with unchanged bytes and separate source mapping;
-10. supported secondary-root/mapper contribution;
+10. exact secondary-Data/additional-mapper inventory; include a positive real
+    contribution only when the supported target inventory contains a
+    deliberately qualified mapper, otherwise retain the independently
+    researched empty inventory;
 11. unknown mapper;
 12. inaccessible object;
 13. changed-during-capture;
@@ -984,13 +987,13 @@ provenance/replay/redistribution records, target-negative matrix construction
 scripts, and protected-root evidence tooling. Exact MO2 and Skyrim bytes remain
 evaluator-private.
 
-This record does not accept or pass either case. Its current gate state is:
+This record was subsequently executed and reviewed. Its current gate state is:
 
-- EVAL-0054 exact and negative target inputs are constructed and independently
-  fingerprinted; production comparison remains pending.
-- EVAL-0051 direct physical inputs are constructed; authoritative MO2 UI/VFS
-  observations and a qualified supported-secondary-root mapper remain
-  blocking.
+- EVAL-0054 exact and complete preregistered negative target inputs passed.
+- EVAL-0051 direct physical inputs and the explicit-target MO2 UI/VFS oracle
+  are retained and passed. RESEARCH-0051 established and the owner accepted an
+  empty exact-target additional-mapper inventory, so no invented positive
+  mapper is required.
 - the evaluator did not inspect production source, tests, adapter output, prior
   evaluation output, or the abandoned implementation archive while authoring
   the oracle.

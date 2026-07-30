@@ -1,13 +1,13 @@
 # Evaluation case catalog
 
 Status: Draft  
-Last reviewed: 2026-07-28
+Last reviewed: 2026-07-30
 
-No executable evaluation fixtures have been created for the rewrite. This
-catalog records planned cases; each requires its own reviewed specification
-before implementation. The Requirements column provides baseline traceability;
-a case specification may refine those links but shall not silently drop a
-requirement it is used to validate.
+Executable evaluation fixtures now exist for completed early M1 slices; most
+later cases remain planned. This catalog records both executed status and
+planned cases. The Requirements column provides baseline traceability; a case
+specification may refine those links but shall not silently drop a requirement
+it is used to validate.
 
 ADR-0008 through ADR-0011 accept the Wave B qualification obligations relevant
 to EVAL-0046 and EVAL-0051 through EVAL-0054. “ADR gate accepted; case
@@ -94,7 +94,7 @@ these historical planning labels meant.
 | EVAL-0048 | Synthetic boundary | Advisory readiness | Unreviewed advisory stays visible/countable without changing readiness; explicit action-required disposition does change it | FIND-013 | Planned |
 | EVAL-0049 | Synthetic boundary | Remediation/validation | A supported remediation states risks, reversibility, and meaningful verification; an unsupported resolution instead produces a snapshot/case-scoped, bounded validation or missing-evidence plan with save/test risks and inconclusive outcomes, and neither makes a global-safety claim | PROD-004, FIND-004, VALID-001 | Planned |
 | EVAL-0050 | Synthetic boundary | Resolution state | User-resolved disposition is visibly unverified until new evidence validates it; verification creates new evidence/review history and only the analytical finding/case revisions actually produced by reanalysis, without rewriting the decision or prior finding | FIND-005, FIND-006 | Planned |
-| EVAL-0051 | Integration ground truth | MO2 effective state | For pinned MO2 `2.5.2` disposable instances, explicit profile selection, enabled state/order, plugin state/order, qualified loose providers, hidden/deleted/unmanaged state, mapper effects, and physical-local/source identity separation agree with authoritative MO2 behavior; archive-provider behavior is tested only when separately qualified and otherwise becomes a gap, the saved selection is only a startup suggestion, drift fails closed, and the private reference profile is not an oracle | SCOPE-003, SCOPE-005, SNAP-001 | ADR gate accepted; Wave F specification accepted; execution pending |
+| EVAL-0051 | Integration ground truth | MO2 effective state | For pinned MO2 `2.5.2` disposable instances, explicit profile selection, enabled state/order, plugin state/order, qualified loose providers, hidden/deleted/unmanaged state, mapper effects, and physical-local/source identity separation agree with authoritative MO2 behavior; archive-provider behavior is tested only when separately qualified and otherwise becomes a gap, the saved selection is only a startup suggestion, drift fails closed, and the private reference profile is not an oracle | SCOPE-003, SCOPE-005, SNAP-001 | Passed 2026-07-30 for the exact admitted MO2/Skyrim target and accepted empty additional-mapper inventory; broader MO2 versions, mappers, and archive members remain unsupported |
 | EVAL-0052 | Integration ground truth | Bethesda records | For positively allowlisted `Mutagen.Bethesda.Skyrim` `0.54.2` shapes, supported plugin order, records, override chains, winners, FormKeys, links, states, and field values agree with independently specified hand-audited binary/semantic fixture expectations; the Mutagen path under test is not the sole source of expected results, and unsupported archive/string/record semantics become explicit gaps | SCOPE-005, ANALYSIS-003, COVER-001 | ADR gate accepted; Wave F specification accepted; execution pending |
 | EVAL-0053 | Integration fidelity | LOOT | When LOOT coverage is claimed, the pinned libloot `0.29.6` read-only adapter reproduces the exact selected immutable masterlist/prelude pair, private userlist, configuration, and allowlisted diagnostics; refresh tests cover 200/304, corrupt/partial/pair-invalid updates, atomic activation/rollback, offline/stale state, unsupported compatibility lines, run-binding races, and historical replay; authorities remain distinct and no set/write/apply operation is reachable | AUTH-003, EVID-003, ANALYSIS-002 | ADR-0011 and ADR-0014 gates accepted; specification/execution pending |
 | EVAL-0054 | Synthetic boundary | Supported target | Only the exact initial Steam Windows x64 Skyrim SE `1.6.1170.0` executable identity accepted by ADR-0009 enters semantic analysis; unknown hashes, other channels/runtimes, unsupported managers/platforms, malformed inputs, and mid-capture changes fail clearly without best-effort conclusions or fabricated coverage | SCOPE-001, SCOPE-002, SCOPE-006 | Passed 2026-07-29 against the evaluator-private exact target and complete preregistered negative matrix |

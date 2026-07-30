@@ -1,7 +1,7 @@
 # Open research questions
 
 Status: Draft  
-Last reviewed: 2026-07-28
+Last reviewed: 2026-07-30
 
 The product baseline was accepted on 2026-07-25. The
 [M0 research-foundation plan](../plans/milestones/M0-research-foundation.md) is
@@ -92,7 +92,7 @@ accepted ADR-0025.
 | RQ-036 | What purposes/intended feature areas do Skyrim SE mods declare; through which technical surfaces can they alter effective state; which game systems/content areas, consequence types, and effect extents can they affect; and which distinct empirically grounded taxonomies should Infinium use without conflating them? | M1 product taxonomy specification plus analyzer, coverage, navigation, and evaluation coverage map | Resolved for M0 by accepted `infinium.skyrim-se.mod-impact-taxonomy/0.1.0`; unevaluated regions remain explicit |
 | RQ-037 | Which OpenAI user-owned access modes can Infinium support—direct Platform API usage, ChatGPT/Codex subscription access, or both—and how must authentication, execution, billing, usage visibility, security, provenance, and hard-limit capabilities differ? | OpenAI access-mode ADR and credential/cost amendments | Closed by owner disposition: use user-supplied, usage-priced Platform API keys with direct Responses; reject Codex/ChatGPT-plan core integration in ADR-0024 |
 | RQ-038 | Which exact OpenAI model identity and synchronous Responses profile should M1 qualify for its two semantic operations, and how must capability drift be handled when no immutable snapshot exists? | Exact M1 provider-profile ADR | Resolved for M1 by accepted ADR-0025 from RESEARCH-0048; implementation/evaluation conformance pending |
-| RQ-039 | Does the exact admitted Skyrim SE game plugin provide a secondary Data root or Data-contributing mapper, and how should EVAL-0051 treat an empty exact-target inventory? | Slice 3 mapper inventory and EVAL-0051 plan/specification disposition | Researched by RESEARCH-0051; exact inventory is empty and the recommended conditional-positive plan/specification amendment awaits owner review |
+| RQ-039 | Does the exact admitted Skyrim SE game plugin provide a secondary Data root or Data-contributing mapper, and how should EVAL-0051 treat an empty exact-target inventory? | Slice 3 mapper inventory and EVAL-0051 plan/specification disposition | Resolved by accepted RESEARCH-0051: the exact additional-mapper inventory is empty, the production allowlist remains empty, and a positive real additional-mapper case is conditional on future deliberate qualification |
 
 ## RQ-036 accepted result and change discipline
 

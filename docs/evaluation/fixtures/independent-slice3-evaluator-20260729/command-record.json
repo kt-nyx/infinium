@@ -1,7 +1,7 @@
 {
   "schema_id": "infinium.eval.slice3.command-record",
   "schema_version": 1,
-  "generated_at": "2026-07-29T22:43:19.1242509+00:00",
+  "generated_at": "2026-07-30T04:34:00.0000000+00:00",
   "commands": [
     "Get-FileHash -Algorithm SHA256 <LIVE_MO2_ROOT>\\ModOrganizer.exe",
     "Get-FileHash -Algorithm SHA256 <LIVE_GAME_ROOT>\\SkyrimSE.exe",
@@ -9,7 +9,7 @@
     "& scripts\\New-ProtectedRootManifest.ps1 -OutputPath <EVALUATOR_ROOT>\\evidence\\protected-before.json -LiveMo2Root <LIVE_MO2_ROOT> -LiveGameRoot <LIVE_GAME_ROOT>",
     "& scripts\\Initialize-Slice3Oracle.ps1 -EvaluatorRoot <EVALUATOR_ROOT> -CopiedMo2Root <EVALUATOR_ROOT>\\mo2-app -PublicPackageRoot <PACKAGE_ROOT> -LiveGameRoot <LIVE_GAME_ROOT>",
     "& scripts\\New-EvaluatorRootManifest.ps1 -EvaluatorRoot <EVALUATOR_ROOT> -OutputPath <EVALUATOR_ROOT>\\evidence\\evaluator-before-ui.json",
-    "<MANDATORY COMPUTER-USE UI OBSERVATION AGAINST COPIED EXECUTABLE ONLY>",
+    "<COMPUTER-USE: select Explicit Target; inspect Data shared winner; inspect Alpha/Beta conflict modal; inspect .mohidden and .git behavior; close copied MO2; do not start Skyrim>",
     "& scripts\\New-EvaluatorRootManifest.ps1 -EvaluatorRoot <EVALUATOR_ROOT> -OutputPath <EVALUATOR_ROOT>\\evidence\\evaluator-after-ui.json",
     "& scripts\\New-ProtectedRootManifest.ps1 -OutputPath <EVALUATOR_ROOT>\\evidence\\protected-after.json -LiveMo2Root <LIVE_MO2_ROOT> -LiveGameRoot <LIVE_GAME_ROOT>",
     "& scripts\\Compare-ProtectedRootManifests.ps1 -BeforePath ... -AfterPath ... -OutputPath ..."
@@ -19,6 +19,10 @@
     "All mutation targets are disposable copies.",
     "The copied ModOrganizer.ini contains only evaluator-root paths before launch; Settings/base_directory owns the disposable instance.",
     "UI observation remains a separate authority surface from direct physical facts.",
-    "The copied MO2 registered itself in the live nxmhandler configuration; the temporary handler was removed and original content restored, but original file timestamps are unrecoverable."
+    "The initial Computer Use launcher resolved to the live MO2 executable rather than the copied path; that exact process was immediately terminated before any profile interaction.",
+    "The copied MO2 registered itself in the live nxmhandler configuration. The temporary handler was removed and the exact pre-run 132-byte SHA-256 was restored.",
+    "The brief live MO2 launch rewrote one line ending in live ModOrganizer.ini. The exact pre-run 21,291-byte SHA-256 was restored from the retained hash by removing the single inserted carriage return.",
+    "Both live INI files have changed filesystem metadata that cannot be restored; live instance roots and the live game root were structurally unchanged.",
+    "Skyrim was never launched."
   ]
 }

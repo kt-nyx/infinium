@@ -3,7 +3,7 @@
 Status: Accepted  
 Accepted: 2026-07-28  
 Accepted by: Project owner  
-Last reviewed: 2026-07-28  
+Last reviewed: 2026-07-30
 Target milestone: M1 — Backend semantic proof
 
 ## 1. Purpose and authority
@@ -584,10 +584,12 @@ ADR-0010.
 
 **Scope.** Explicit instance/profile binding; saved-selection suggestion;
 enabled mods/order; enabled plugins/order inputs; physical Data/unmanaged,
-enabled-mod, secondary-root, overwrite, hidden/skipped, and supported mapping
-contributions; complete loose provider chains/winners; local installed entity
-versus source mapping; and capture drift. Archive provider behavior is excluded
-until separately qualified.
+enabled-mod, overwrite, hidden/skipped, and qualified loose contributions;
+the exact game-plugin/secondary-Data/additional-mapper inventory; complete loose
+provider chains/winners; local installed entity versus source mapping; and
+capture drift. A positive real additional mapper is conditional on that exact
+supported inventory containing a deliberately qualified contributor. Archive
+provider behavior is excluded until separately qualified.
 
 **Non-scope.** Live USVFS operation, MO2 launch/plugin, historical FOMOD/merge
 reconstruction, arbitrary mappers, archive precedence, or the private creator
@@ -607,8 +609,11 @@ into the oracle. Saved selection is tested separately from explicit target.
 **Expected typed result.**
 
 - Exact selected profile, enabled/order states, loose provider chains/winners,
-  hidden/deleted/unmanaged/overwrite/secondary-root facts, physical local
-  identities, and source-mapping evidence.
+  hidden/deleted/unmanaged/overwrite facts, the explicit additional-mapper
+  inventory, physical local identities, and source-mapping evidence.
+- When the exact supported additional-mapper inventory is empty, the expected
+  result is an explicit empty inventory plus generic registry-mechanics and
+  unknown/unqualified fail-closed evidence, not an invented positive provider.
 - Saved selection is suggestion provenance only and cannot start/bind a run.
 - Unknown mapper, ambiguity, inaccessible input, normalization collision, and
   drift fail closed or become explicit gaps.
@@ -631,6 +636,8 @@ capture unless a later analyzer derives them.
 4. Same-size/time byte drift cannot preserve a byte-dependent snapshot under
    ADR-0010.
 5. Capture performs no protected setup write and requires MO2 to be closed.
+6. A real positive additional-mapper case is mandatory only after that mapper
+   is deliberately selected and qualified for the exact supported target.
 
 **Failure interpretation.** Any wrong supported state is an authoritative
 reconstruction failure. An explicit unsupported/gap outcome is correct only

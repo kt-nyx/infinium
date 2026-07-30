@@ -48,6 +48,20 @@
       ],
       "permission_and_redistribution": "project-authored-redistributable",
       "deletion_effect": "Synthetic fixture regeneration and construction audit become unavailable."
+    },
+    {
+      "dependency_id": "slice3-mo2-ui-screenshots",
+      "kind": "sanitized-ui-evidence",
+      "identity_or_version": "2026-07-30-explicit-target",
+      "byte_length": 414936,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "boundary-replay",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Typed observations and fingerprints remain, but visual audit becomes unavailable."
     }
   ]
 }

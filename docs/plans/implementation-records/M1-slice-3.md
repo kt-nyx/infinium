@@ -1,18 +1,19 @@
 # M1 Slice 3 implementation record
 
-Status: Autonomous review, correction, and re-review completed. Slice 3 is
-**not yet gate-accepted or implementation-complete**. EVAL-0045, EVAL-0046 for
-the delivered exact headless capture operation, and EVAL-0054 now pass.
-Accepted closure remains blocked only by EVAL-0051: the independent
-explicit-target MO2 UI/VFS comparison is incomplete, and RESEARCH-0051's
-correction to the impossible mandatory positive mapper case requires reviewed
-owner disposition.
+Status: **Gate-accepted and implementation-complete.** The owner accepted
+RESEARCH-0051's conditional-positive additional-mapper amendment on
+2026-07-30, the independent explicit-target MO2 UI/VFS oracle is retained, and
+EVAL-0045, EVAL-0046 for the delivered exact headless capture operation,
+EVAL-0051, and EVAL-0054 pass.
 
-Review completed: 2026-07-29
+Review completed: 2026-07-30
 
 Plan: [M1 backend semantic proof plan](../milestones/M1-backend-semantic-proof.md),
-accepted revision dated 2026-07-28, SHA-256
+original accepted revision dated 2026-07-28, SHA-256
 `65614F8DF1000FC75FCCDB7075DEA8894AA52587120CE40F7D750D0D1AD7A2F3`
+
+Owner-accepted RESEARCH-0051 amendment dated 2026-07-30, SHA-256
+`50A53A6E5C5ADD4CF88BF15E185BEDE54C38822CA4726D330CD23ECEEAF59EBE`
 
 Slice: 3 — Supported-target and MO2 snapshot reconstruction
 
@@ -35,6 +36,81 @@ Authority/evaluator review correction:
 Admission/non-mutation closeout correction:
 `a1aa2030cd3aa129117260479ee761426df3ff02`
 (`test: close Slice 3 admission and nonmutation gates`)
+
+Research/closeout documentation:
+`eefea80` (`docs: normalize Slice 3 research metadata`; exact implementation
+remains the commits above)
+
+## 2026-07-30 owner acceptance and explicit-target oracle closeout
+
+This section supersedes every stale blocked/pending statement in the
+historical sections below.
+
+The owner accepted RESEARCH-0051's finding and recommendation. The exact
+supported Skyrim SE game plugin has one normal primary Data root, no
+game-plugin-provided secondary Data root, and no additional Data-contributing
+mapper. Its two known mappings redirect selected-profile `plugins.txt` and
+`loadorder.txt` to non-Data LocalAppData control locations already captured
+under sealed control-file authority. `QualifiedMapperSha256s` therefore remains
+empty. The ordinary physical Data/mod/overwrite overlay is still mandatory;
+only a positive real *additional* mapper case is conditional on a future
+mapper being deliberately selected and qualified.
+
+The independent evaluator then opened only the disposable copied MO2 `2.5.2`
+workspace for profile interaction and selected `Explicit Target`. It retained:
+
+- the explicit profile, three enabled and one disabled local mod rows, their
+  displayed priorities, and six enabled plugins in order;
+- `meshes/oracle/shared.txt` with `Overwrite` as the Data-tree winner;
+- Alpha and Beta conflict modals showing `Overwrite` as the final provider,
+  while Beta wins the Windows-equivalent case-normalized path over Alpha;
+- `.mohidden` displayed crossed out as inactive and `.git` content displayed
+  by MO2, preserving the distinction between MO2 display behavior and
+  Infinium's explicit skip policies;
+- unmanaged base/DLC Data population and three distinct physical local rows
+  despite shared or changed source metadata; and
+- archive members remaining unsupported.
+
+The UI oracle launched no Skyrim/game process. A launcher-path misresolution
+briefly started the live MO2 executable before profile interaction; it was
+immediately stopped. MO2 also registered the copied executable in live
+`nxmhandler.ini`. The temporary handler was removed, and both affected live
+INI files were restored to their exact retained pre-run byte lengths and
+SHA-256 values:
+
+- `nxmhandler.ini`: 132 bytes,
+  `AE13FC63DF89516615FE3111B47C8A9A70F7D16FAD5F2E8A32C385A329E168FA`;
+- `ModOrganizer.ini`: 21,291 bytes,
+  `5C5DDD77F83C45E986AAEB17CE08ADB69C3A70760357C293D0F1CFBCFFA7E27F`.
+
+Their creation/last-write metadata changed and cannot be restored. Live MO2
+Skyrim/Morrowind instance roots and the live Skyrim game root remained
+structurally unchanged. These UI-oracle effects remain explicit and are not
+reclassified as the delivered headless product operation, whose separate
+EVAL-0046 canary passed.
+
+### Final verification
+
+| Command | Result |
+| --- | --- |
+| `dotnet test tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj -c Release --no-build` | Passed; 21 passed and 8 evaluator-private exact-binary checks skipped because their process-local variables were not supplied. |
+| `dotnet test Infinium.sln -c Release --no-build` | Passed; 181 passed and 9 skipped: 89 unit/1 environment-dependent symbolic-link skip, 50 contract, 21 integration, and 21 evaluation/8 evaluator-private skips. |
+| `powershell -NoProfile -ExecutionPolicy Bypass -File eng/update-dependency-manifest.ps1 -Check` | Passed. |
+| `git diff --check` | Passed. |
+| Final process/configuration audit | No MO2 or Skyrim process remains. Live `nxmhandler.ini` and `ModOrganizer.ini` match their exact retained pre-run lengths and SHA-256 values; changed filesystem metadata remains disclosed. |
+
+### Final gate disposition
+
+- **EVAL-0045: passed for Slice 3.**
+- **EVAL-0046: passed for the delivered exact headless capture operation;**
+  the metadata-changing independent UI-oracle launch is separately recorded.
+- **EVAL-0051: passed** for the exact admitted MO2/Skyrim target, the retained
+  explicit-target UI/VFS oracle, and the owner-accepted empty additional-mapper
+  inventory.
+- **EVAL-0054: passed** for the exact private positive and complete
+  preregistered negative matrix.
+
+No later-slice implementation was included. Nothing was pushed.
 
 ## 2026-07-30 authority/evaluator correction and re-review
 

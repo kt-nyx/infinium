@@ -22,11 +22,11 @@
   "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
   "taxonomy_version": "0.1.0",
   "input_package_fingerprint": "03e6a3ae577b0bd88aaba77a852c86515c9cb467d3c1227600f7d2f1d819bae7",
-  "oracle_fingerprint": "a7dabfc12eb67d5bbc9b7dd53036bdb243d7ceddadcf20da3d726578390a3116",
+  "oracle_fingerprint": "b7ecb6fcf7ae4a7bfd45bcb4d91c6dd4b9a29d3cff3df73cf0dbbe836e23fe10",
   "provenance_fingerprint": "084abcd9acacdc1015432a544c3382ae08d55827988a1fd12a8512d08a48e2d5",
-  "replay_dependency_fingerprint": "efe741111d1e6b66b1a7e38b6e5173178c9fc3bdf1d5d1eae7a7f6107f8dc72b",
-  "redistribution_class": "manifest-only",
+  "replay_dependency_fingerprint": "7fed01889067fa48dac6f0d4f3ac74b3caa3d2c5df0db1b3d13c5dbb58d566ec",
+  "redistribution_class": "project-authored-redistributable",
   "owner": "independent-slice3-evaluator",
-  "review_state": "draft",
+  "review_state": "accepted",
   "created_at": "2026-07-29T00:00:00.0000000+00:00"
 }

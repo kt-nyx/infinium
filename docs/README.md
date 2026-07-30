@@ -1,7 +1,7 @@
 # Infinium documentation
 
 Status: Draft  
-Last reviewed: 2026-07-28
+Last reviewed: 2026-07-30
 
 This directory is the authoritative entry point for the rebuilt Infinium
 project. It records product intent, accepted decisions, research, evaluation
@@ -137,10 +137,13 @@ Every material document should include a status and last-reviewed date.
   assertion contracts plus answer-isolating readers. M1 Slice 2 subsequently
   established the local coordinator/worker substrate, authoritative lifecycle
   and persistence boundaries, protected-root write controls, and platform
-  evaluation package. No complete accepted evaluation case has passed; only
-  the plan-declared Slice 1 contract portions and Slice 2 substrate portions
-  are satisfied, with the remaining coverage gap retained explicitly in the
-  Slice 2 fixture oracle and implementation record.
+  evaluation package. M1 Slice 3 subsequently established exact MO2/Skyrim
+  admission, explicit-profile effective-state reconstruction, the durable
+  headless capture path, retained snapshot authority, and the independent
+  exact-target evaluator package. EVAL-0045, EVAL-0046 for the delivered
+  capture operation, EVAL-0051, and EVAL-0054 pass for that admitted boundary;
+  broader MO2 versions, additional mappers, archive members, and later semantic
+  slices remain unsupported or pending.
 - Infinium uses GPLv3-family strong copyleft. MO2 and LOOT remain
   user-installed; ADR-0007 excludes xEdit completely. ADR-0008 through
   ADR-0011 accept deterministic MO2 2.5.2 reconstruction, the exact initial
