@@ -1,12 +1,13 @@
 # M1 Slice 3 implementation record
 
-Status: Comprehensive review correction completed; Slice 3 is **not
-gate-accepted or implementation-complete**. The corrected adapter passes the
-available accumulated regression suite, but accepted closure remains blocked
-by the independent fixture/oracle packages, the complete EVAL-0045/EVAL-0046
-coordinator/worker and protected-root canary paths, the complete EVAL-0054
-negative matrix, and the positively qualified game-plugin/secondary-root
-inventory described below.
+Status: Comprehensive review, correction, and re-review completed. Slice 3 is
+**not gate-accepted or implementation-complete**. The durable coordinator /
+bounded-worker authority path and independently loadable evaluator package now
+exist and all available gates pass, including the evaluator-private exact
+binary/profile run. Accepted closure remains blocked by incomplete
+explicit-target UI/VFS oracle evidence, no qualified supported secondary-root
+mapper, the incomplete EVAL-0054 preregistered negative matrix, and failed
+EVAL-0046 protected-root non-mutation evidence described below.
 
 Review completed: 2026-07-29
 
@@ -27,6 +28,91 @@ Review correction:
 Comprehensive review correction:
 `2927aff361cff3fc0de955ff34db69be973fb6e1`
 (`fix: correct M1 Slice 3 snapshot consistency`)
+
+Authority/evaluator review correction:
+`b2fea7030385558b757c4cf45509c8a42f6ac225`
+(`fix: complete M1 Slice 3 authority review`)
+
+## 2026-07-30 authority/evaluator correction and re-review
+
+This section supersedes stale status statements in the historical sections
+below.
+
+The correction added the durable, idempotent snapshot-capture operation,
+bounded worker protocol, attempt fencing, coordinator-only staged admission
+and publication, interruption failure records, exact executable re-admission
+by the coordinator, raw control/dependency retention, and semantic graph
+validation. Expired queued operations now terminalize without starving later
+work, and an expired attempt may be failed but cannot read or publish staged
+output.
+
+The snapshot contract and adapter are now `3.0.0` /
+`infinium.mo2-static-reconstruction/v3`. Canonical identity includes exact
+executable identities, explicit profile/runtime bindings, enabled and
+qualified mapper inventories, mapper admission state, physical root/control
+identities, and the retained structural manifest. Identical state recaptures
+retain the same structural fingerprint but receive distinct occurrence IDs.
+Unlisted/unresolved mods have no guessed priority. Control replacement and an
+MO2 hard-link/process alias are detected through Windows physical identity.
+Malformed or truncated runtime PE input is `Indeterminate`, matching the
+accepted EVAL-0054 oracle.
+
+The independent evaluator package at
+`docs/evaluation/fixtures/independent-slice3-evaluator-20260729` now passes the
+strict repository fixture reader. Its execution input is answer-isolated and
+does not reference the oracle or target matrix. Tracked scripts take explicit
+live-root parameters and contain no private absolute live/evaluator paths.
+
+The copied MO2 `2.5.2` accessibility observation verified the saved
+`Saved Suggestion` profile, visible enabled/disabled mod rows, and six enabled
+plugins in order. The user requested that Computer Use not cover or capture
+their foreground desktop; an input guard prevented switching to
+`Explicit Target` without violating that boundary. The explicit-target Data /
+conflicts UI oracle therefore remains incomplete. A headless production
+capture did independently select `Explicit Target` and passed without
+launching Skyrim, but production output was not substituted for the missing
+UI oracle.
+
+Launching the copied MO2 registered its temporary executable in the live
+MO2 application root's `nxmhandler.ini`. The temporary handler was removed
+and the exact pre-run 132-byte single-live-handler content shape was restored.
+The final manifest has the original file count and total bytes, and all scoped
+MO2 executable/INI and Skyrim executable content fingerprints are unchanged.
+MO2 overwrote the file's creation/last-write metadata, however, and the
+original timestamps are unrecoverable. EVAL-0046 is therefore failed, not
+passed.
+
+### Fresh verification
+
+| Command | Result |
+| --- | --- |
+| `dotnet restore Infinium.sln --locked-mode` | Passed; all projects up to date. |
+| `dotnet build Infinium.sln --no-restore --configuration Debug` | Passed; 0 warnings, 0 errors. |
+| Exact plan filters `Category=M1Unit`, `M1Contract`, `M1Integration`, `M1Evaluation`, `M1Security`, `M1Fault` | Passed. Counts: Unit 81/1 skipped; Contract 20; Integration 21; Evaluation 18/5 private skipped; Security 7; Fault 13. |
+| Supplementary filters `TestCategory=M1Unit`, `M1Contract`, `M1Integration`, `M1Evaluation`, `M1Security`, `M1Fault` | Passed. This included the multi-category tests omitted by the plan's `Category` property filter: Security 55 passed/2 skipped across projects and Fault 66 passed/1 skipped. |
+| Evaluator-private `SupportedExecutableAdmissionEvaluationTests` with the exact copied MO2/game/plugin and `Explicit Target` variables | Passed; 9/9, including strict package loading, exact identities, explicit-profile capture, missing, unsupported-channel, malformed, and one-byte mutation cases. |
+| `dotnet format Infinium.sln --verify-no-changes --no-restore --verbosity minimal` | Passed. |
+| `powershell -NoProfile -ExecutionPolicy Bypass -File eng/update-dependency-manifest.ps1 -Check` | Passed. |
+| `git diff --check` | Passed before the implementation commit. |
+
+### Current gate disposition
+
+- **EVAL-0045:** regression path implemented and passing for explicit durable
+  submission, idempotency, worker dispatch, staged admission, fencing, restart
+  failure records, and publication authority.
+- **EVAL-0046:** **failed** because copied MO2 changed live
+  `nxmhandler.ini` metadata. Content was restored, but full non-mutation cannot
+  be claimed.
+- **EVAL-0051:** **blocked/not passed**. Exact headless explicit-profile
+  capture passed, and a partial saved-profile accessibility observation is
+  retained, but the explicit-target Data/conflicts oracle and a qualified
+  supported secondary-root mapper remain absent.
+- **EVAL-0054:** **partial/not passed**. All nine executed package/positive/
+  negative checks passed, but unreadable, inconsistent-metadata, full
+  manager/platform/architecture, and deterministic capture-race variants from
+  the preregistered matrix are not all retained as executed gate evidence.
+
+No later-slice implementation was included, and nothing was pushed.
 
 ## Outcome
 
