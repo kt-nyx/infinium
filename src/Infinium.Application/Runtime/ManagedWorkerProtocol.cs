@@ -19,7 +19,38 @@ public sealed record ManagedWorkerBootstrap(
     string OutputRelativeName,
     long MaximumOutputBytes,
     string OneUseNonceBase64,
-    DateTimeOffset ExpiresAt);
+    DateTimeOffset ExpiresAt,
+    ManagedWorkerOperationKind OperationKind = ManagedWorkerOperationKind.SubstrateValidation,
+    string OutputSchemaVersion = ManagedWorkerManifest.OutputSchemaVersion,
+    ManagedMo2SnapshotCaptureAssignment? Mo2SnapshotCapture = null);
+
+public enum ManagedWorkerOperationKind
+{
+    SubstrateValidation,
+    Mo2SnapshotCapture,
+}
+
+public sealed record ManagedMo2SnapshotCaptureAssignment(
+    string Mo2ExecutablePath,
+    string InstanceRoot,
+    string InstanceIniPath,
+    string ProfilesRoot,
+    string ModsRoot,
+    string OverwriteRoot,
+    string GameDataRoot,
+    string SkyrimExecutablePath,
+    string SelectedProfileName,
+    string Platform,
+    string DistributionChannel,
+    string ApplicationId,
+    IReadOnlyList<ManagedQualifiedMappingAssignment> QualifiedMappings,
+    IReadOnlyList<string> EnabledMapperSha256s);
+
+public sealed record ManagedQualifiedMappingAssignment(
+    string MappingId,
+    string SourceRoot,
+    string VirtualPrefix,
+    string MapperSha256);
 
 public sealed record ManagedWorkerResult(
     int SchemaVersion,
@@ -40,7 +71,8 @@ public static class ManagedWorkerManifest
         string stagedArtifactId,
         string typedRelativeName,
         string contentSha256,
-        long byteLength)
+        long byteLength,
+        string outputSchemaVersion = OutputSchemaVersion)
     {
         string canonical = string.Join(
             '\n',
@@ -50,7 +82,7 @@ public static class ManagedWorkerManifest
             "typed-result",
             contentSha256,
             byteLength.ToString(System.Globalization.CultureInfo.InvariantCulture),
-            OutputSchemaVersion);
+            outputSchemaVersion);
         return Encoding.UTF8.GetBytes(canonical);
     }
 
@@ -58,10 +90,12 @@ public static class ManagedWorkerManifest
         string stagedArtifactId,
         string typedRelativeName,
         string contentSha256,
-        long byteLength) =>
+        long byteLength,
+        string outputSchemaVersion = OutputSchemaVersion) =>
         SHA256.HashData(GetCanonicalBytes(
             stagedArtifactId,
             typedRelativeName,
             contentSha256,
-            byteLength));
+            byteLength,
+            outputSchemaVersion));
 }

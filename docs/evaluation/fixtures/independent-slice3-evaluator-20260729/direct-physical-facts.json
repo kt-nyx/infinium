@@ -1,0 +1,343 @@
+{
+  "schema_id": "infinium.eval.slice3.direct-physical-facts",
+  "schema_version": 1,
+  "observed_at": "<RECORDED-IN-PRIVATE-EVIDENCE>",
+  "evaluator_root_token": "<EVALUATOR_ROOT>",
+  "copied_mo2": {
+    "relative_path": "mo2-app/ModOrganizer.exe",
+    "byte_length": 5028352,
+    "sha256": "442B354A8F34754DA0048654C44D27F51628FEBA54CE46C3187CF58D6C43E622",
+    "file_version": "2.5.2"
+  },
+  "disposable_game": {
+    "relative_path": "game-root/SkyrimSE.exe",
+    "byte_length": 37157144,
+    "sha256": "C434208894F07F604B852F29B8EDC3A58C4DE63DE783373733E72B2B73F33BE9",
+    "file_version": "1.6.1170.0"
+  },
+  "explicit_profile": "Explicit Target",
+  "saved_selection": "Saved Suggestion",
+  "file_facts": [
+    {
+      "relative_path": "mods/01 Physical Alpha/FixturePlugin.esm",
+      "byte_length": 18429562,
+      "sha256": "5F2985B205EA57428164B47E1A5DF57F9B5A1AC0399D4C8B5CF30FC0A60FB008",
+      "attributes": "Archive",
+      "last_write_utc": "2024-08-21T03:30:40.8028825Z"
+    },
+    {
+      "relative_path": "mods/01 Physical Alpha/meshes/Case/File.TXT",
+      "byte_length": 20,
+      "sha256": "012106860866A6D850301C5DFFE53244D02915903109A39C378669AD338F218A",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:17.2055551Z"
+    },
+    {
+      "relative_path": "mods/01 Physical Alpha/meshes/oracle/alpha-only.txt",
+      "byte_length": 11,
+      "sha256": "D8C29B8027E99AD7B758289BB1923A0FDEB5D2533BA5D42B3E9DD4B6F00FC86F",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:17.2040118Z"
+    },
+    {
+      "relative_path": "mods/01 Physical Alpha/meshes/oracle/shared.txt",
+      "byte_length": 15,
+      "sha256": "F8059302925F3BF32B461D646C2FB7B0FDFC3821F117A0BE0A397D05733FE5F2",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:17.2025035Z"
+    },
+    {
+      "relative_path": "mods/01 Physical Alpha/meta.ini",
+      "byte_length": 168,
+      "sha256": "BD73FA508CF5EC38345C2A0EF6937C01AE724F61BB8FB143E8D293EA6DCB6F7B",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:17.2136391Z"
+    },
+    {
+      "relative_path": "mods/02 Physical Beta Renamed/.git/ignored-by-directory.txt",
+      "byte_length": 37,
+      "sha256": "5716175A1D298B4B521F0161033877FADECDA1FF5CD982B945B484FB4B274EE3",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:17.2222834Z"
+    },
+    {
+      "relative_path": "mods/02 Physical Beta Renamed/FixturePlugin.esm",
+      "byte_length": 18429562,
+      "sha256": "95200CBEAE7C0A5566F75FF242C32BA4637B483084D5C626EEE004C22849B4FE",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:17.2428712Z"
+    },
+    {
+      "relative_path": "mods/02 Physical Beta Renamed/meshes/case/file.txt",
+      "byte_length": 19,
+      "sha256": "1335867D739712F5252B169F7737CA09428672997780A2D1065F1F870E980B7C",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:17.2186769Z"
+    },
+    {
+      "relative_path": "mods/02 Physical Beta Renamed/meshes/oracle/beta-only.txt",
+      "byte_length": 10,
+      "sha256": "9C90960264D93CEE32AB4BE748BCB6E33E90ED1BDDC47432C9A40F5CEC93C903",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:17.2171734Z"
+    },
+    {
+      "relative_path": "mods/02 Physical Beta Renamed/meshes/oracle/hidden-only.txt.mohidden",
+      "byte_length": 26,
+      "sha256": "4D468A3E1F1F61EFCC446FD5728DA1D1675B24176462E37E541873F41B9BEF7B",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:17.2207758Z"
+    },
+    {
+      "relative_path": "mods/02 Physical Beta Renamed/meshes/oracle/shared.txt",
+      "byte_length": 14,
+      "sha256": "ED3DD23DDA6D26199E883D1AD5DC11B941DF73CCEF11A93369522B3F088A7081",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:17.2156661Z"
+    },
+    {
+      "relative_path": "mods/02 Physical Beta Renamed/meta.ini",
+      "byte_length": 167,
+      "sha256": "26966E83084CBEE3148C6465E16E9A4A826BFEA024326B0E3FA897D2D6510F5E",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:17.2607052Z"
+    },
+    {
+      "relative_path": "mods/03 Disabled Provider/FixtureDisabled.esm",
+      "byte_length": 24813534,
+      "sha256": "1208E5153E35366E0ADA1A887720D6D636E2D8592D007FE142B37A57E46B476E",
+      "attributes": "Archive",
+      "last_write_utc": "2024-08-21T03:42:04.9044295Z"
+    },
+    {
+      "relative_path": "mods/03 Disabled Provider/meshes/oracle/disabled-only.txt",
+      "byte_length": 14,
+      "sha256": "534F72BFE2758518E025BF86BB6E4E77511EA02DE3D5C020C7CF685B086EB180",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:17.2642294Z"
+    },
+    {
+      "relative_path": "mods/03 Disabled Provider/meshes/oracle/shared.txt",
+      "byte_length": 18,
+      "sha256": "830E82570539537CBB9810347110909EDE7C9906E79077B842B18D4D5E07EFA0",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:17.2627251Z"
+    },
+    {
+      "relative_path": "mods/03 Disabled Provider/meta.ini",
+      "byte_length": 83,
+      "sha256": "1A24F102D2586D000F3F57AFF1DD5CDE29F18C1D6D56D1CF463FBE4B8C0DB10A",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:17.2743597Z"
+    },
+    {
+      "relative_path": "mods/04 Duplicate Source Mapping/meshes/oracle/duplicate-source-only.txt",
+      "byte_length": 30,
+      "sha256": "E25F0B8BCAD3D38A61EDFB1FD7E630BF490FFCC77201C1BB6DC526A851A4F137",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:17.2759074Z"
+    },
+    {
+      "relative_path": "mods/04 Duplicate Source Mapping/meta.ini",
+      "byte_length": 168,
+      "sha256": "BD73FA508CF5EC38345C2A0EF6937C01AE724F61BB8FB143E8D293EA6DCB6F7B",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:17.2776418Z"
+    },
+    {
+      "relative_path": "overwrite/meshes/oracle/overwrite-only.txt",
+      "byte_length": 15,
+      "sha256": "097E94AB065AB41D73BEA3D5DD884154C2F3774551561AE4A0347300AABF287E",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:17.2802009Z"
+    },
+    {
+      "relative_path": "overwrite/meshes/oracle/shared.txt",
+      "byte_length": 19,
+      "sha256": "407099BF2A8CEE26C5642E6F455F1CCAAA859584A1498EDC9CB423382E94AB50",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:17.2786534Z"
+    },
+    {
+      "relative_path": "profiles/Explicit Target/archives.txt",
+      "byte_length": 19,
+      "sha256": "2B25365E2F8A4D2729B818117A3E1BE13482F1D95EA6CF59EA1722BEF97C23C3",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:17.2859673Z"
+    },
+    {
+      "relative_path": "profiles/Explicit Target/loadorder.txt",
+      "byte_length": 178,
+      "sha256": "BB9001CA6FAF3BD4622468A8370DF78B2C191DD05793205915CEEF5169938E4E",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:17.2849549Z"
+    },
+    {
+      "relative_path": "profiles/Explicit Target/modlist.txt",
+      "byte_length": 169,
+      "sha256": "A3199D3794FF1E1C13D05B334BC14D784065BEBA93E1EBFC86292F3E72F3599C",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:17.2819251Z"
+    },
+    {
+      "relative_path": "profiles/Explicit Target/plugins.txt",
+      "byte_length": 184,
+      "sha256": "88FB5AB1BF3DAE554DBD90FAFDC4B50D3D9A3F7D35B5B03D7CC18BF8DB59E47A",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:17.2833296Z"
+    },
+    {
+      "relative_path": "profiles/Saved Suggestion/archives.txt",
+      "byte_length": 19,
+      "sha256": "2B25365E2F8A4D2729B818117A3E1BE13482F1D95EA6CF59EA1722BEF97C23C3",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:17.2921409Z"
+    },
+    {
+      "relative_path": "profiles/Saved Suggestion/loadorder.txt",
+      "byte_length": 178,
+      "sha256": "BB9001CA6FAF3BD4622468A8370DF78B2C191DD05793205915CEEF5169938E4E",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:17.2905715Z"
+    },
+    {
+      "relative_path": "profiles/Saved Suggestion/modlist.txt",
+      "byte_length": 169,
+      "sha256": "A3199D3794FF1E1C13D05B334BC14D784065BEBA93E1EBFC86292F3E72F3599C",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:17.2879864Z"
+    },
+    {
+      "relative_path": "profiles/Saved Suggestion/plugins.txt",
+      "byte_length": 184,
+      "sha256": "88FB5AB1BF3DAE554DBD90FAFDC4B50D3D9A3F7D35B5B03D7CC18BF8DB59E47A",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:17.2894992Z"
+    }
+  ],
+  "game_fixture_facts": [
+    {
+      "relative_path": "archives/oracle-archive.bsa",
+      "byte_length": 66,
+      "sha256": "573588A10DE36706FB5B3923ACF4803C2A933F5BD5714D26E055B7111523B14F",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:17.2009864Z"
+    },
+    {
+      "relative_path": "Dawnguard.esm",
+      "byte_length": 24813534,
+      "sha256": "1208E5153E35366E0ADA1A887720D6D636E2D8592D007FE142B37A57E46B476E",
+      "attributes": "Archive",
+      "last_write_utc": "2024-08-21T03:42:04.9044295Z"
+    },
+    {
+      "relative_path": "Dragonborn.esm",
+      "byte_length": 64259475,
+      "sha256": "3B8BF5EAD27337F829FA4D474F0363324124A9696D33FE1AEE7B01262EFF5BD1",
+      "attributes": "Archive",
+      "last_write_utc": "2024-08-21T03:53:07.8496651Z"
+    },
+    {
+      "relative_path": "HearthFires.esm",
+      "byte_length": 3681749,
+      "sha256": "70E0D5D6DC42224349D33E8C7BCA73DA447463F671CACC9C15FC0273C93E0008",
+      "attributes": "Archive",
+      "last_write_utc": "2024-08-21T03:52:27.9727970Z"
+    },
+    {
+      "relative_path": "meshes/oracle/shared.txt",
+      "byte_length": 15,
+      "sha256": "4C0F2CC21CBED3B62A5A4A4F0D6934A649833E38042609703092A1F9E83BA27B",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:17.1984517Z"
+    },
+    {
+      "relative_path": "meshes/oracle/unmanaged-only.txt",
+      "byte_length": 15,
+      "sha256": "9E90410EB1A52731B0CF0EA8E6598ACDBFB7F3B4FB7A6F255C365C8CD25A6420",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:17.1999801Z"
+    },
+    {
+      "relative_path": "Skyrim.esm",
+      "byte_length": 249753412,
+      "sha256": "2BBC77FDEC35A70EF96B710F8C525E50A1DB9E63E11A391A0EB9EE8F56D36107",
+      "attributes": "Archive",
+      "last_write_utc": "2024-08-19T02:37:12.4139051Z"
+    },
+    {
+      "relative_path": "Update.esm",
+      "byte_length": 18429562,
+      "sha256": "5F2985B205EA57428164B47E1A5DF57F9B5A1AC0399D4C8B5CF30FC0A60FB008",
+      "attributes": "Archive",
+      "last_write_utc": "2024-08-21T03:30:40.8028825Z"
+    }
+  ],
+  "target_negative_facts": [
+    {
+      "relative_path": "access-denied/SkyrimSE.exe",
+      "byte_length": 37157144,
+      "sha256": "C434208894F07F604B852F29B8EDC3A58C4DE63DE783373733E72B2B73F33BE9",
+      "attributes": "Archive",
+      "last_write_utc": "2024-08-19T02:37:12.4144073Z"
+    },
+    {
+      "relative_path": "capture-race/SkyrimSE.exe",
+      "byte_length": 37157144,
+      "sha256": "C434208894F07F604B852F29B8EDC3A58C4DE63DE783373733E72B2B73F33BE9",
+      "attributes": "Archive",
+      "last_write_utc": "2024-08-19T02:37:12.4144073Z"
+    },
+    {
+      "relative_path": "exact/SkyrimSE.exe",
+      "byte_length": 37157144,
+      "sha256": "C434208894F07F604B852F29B8EDC3A58C4DE63DE783373733E72B2B73F33BE9",
+      "attributes": "Archive",
+      "last_write_utc": "2024-08-19T02:37:12.4144073Z"
+    },
+    {
+      "relative_path": "inconsistent-metadata-hash/SkyrimSE.exe",
+      "byte_length": 37157144,
+      "sha256": "C434208894F07F604B852F29B8EDC3A58C4DE63DE783373733E72B2B73F33BE9",
+      "attributes": "Archive",
+      "last_write_utc": "2024-08-19T02:37:12.4144073Z"
+    },
+    {
+      "relative_path": "malformed-pe/SkyrimSE.exe",
+      "byte_length": 64,
+      "sha256": "88B28DD6AB16C5AEC598DCBCECDFDD3AB89E2E9343C1A0951D9470CD05C95E14",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:18.0189936Z"
+    },
+    {
+      "relative_path": "matrix.json",
+      "byte_length": 2917,
+      "sha256": "10D63006AF76DD8FA3040778729BE1ED915363DCAD48C2586CC872C97E88FD74",
+      "attributes": "Archive",
+      "last_write_utc": "2026-07-29T22:43:18.3534696Z"
+    },
+    {
+      "relative_path": "one-byte-mutation/SkyrimSE.exe",
+      "byte_length": 37157144,
+      "sha256": "0BF7E411174B7D7BCAD23A1ADDECE6D2835F3F52A72AA7EE3617B0A15CD61D5E",
+      "attributes": "Archive",
+      "last_write_utc": "2024-08-19T02:37:12.4144073Z"
+    },
+    {
+      "relative_path": "same-version-unknown-hash/SkyrimSE.exe",
+      "byte_length": 37157144,
+      "sha256": "2491331CFD3BD9156516B3F2BD5A78C4E8E97F82BBDE5C244F54162ED5949408",
+      "attributes": "Archive",
+      "last_write_utc": "2024-08-19T02:37:12.4144073Z"
+    }
+  ],
+  "expected_absent_paths": [
+    "instance/mods/02 Physical Beta Renamed/meshes/oracle/deleted-currently-absent.txt",
+    "target-matrix/missing/SkyrimSE.exe"
+  ],
+  "direct_fact_limits": [
+    "Direct physical facts do not establish MO2 UI/VFS winners.",
+    "Source metadata is mutable mapping evidence and does not collapse local entities.",
+    "Archive bytes are a declared unsupported population for this package."
+  ]
+}

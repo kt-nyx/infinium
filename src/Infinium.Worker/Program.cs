@@ -7,6 +7,7 @@ using Infinium.Contracts.Protobuf.Common.V1;
 using Infinium.Contracts.Protobuf.Domain.V1;
 using Infinium.Contracts.Protobuf.Protocol.V1;
 using Infinium.Contracts.Protobuf.Worker.V1;
+using Infinium.Mo2;
 
 if (args.Length == 1
     && string.Equals(args[0], "containment-probe", StringComparison.Ordinal))
@@ -159,15 +160,71 @@ try
         throw new InvalidOperationException("The coordinator withdrew the worker authority.");
     }
 
-    byte[] payload = JsonSerializer.SerializeToUtf8Bytes(new
+    Mo2SnapshotCaptureResult? snapshotResult = null;
+    byte[] payload;
+    if (assignment.Operation.Kind == WorkerOperationKind.CaptureMo2Snapshot)
     {
-        schemaVersion = 1,
-        kind = "m1-slice2-substrate",
-        bootstrap.RunId,
-        bootstrap.AttemptId,
-        coordinatorFencingEpoch = bootstrap.CoordinatorFencingEpoch,
-        attemptFencingToken = bootstrap.AttemptFencingToken,
-    });
+        Mo2SnapshotCaptureAssignment capture = assignment.Operation.Mo2SnapshotCapture
+            ?? throw new InvalidOperationException(
+                "The typed MO2 snapshot assignment is missing.");
+        Mo2SnapshotCaptureRequest captureRequest = new(
+            capture.Mo2ExecutablePath,
+            capture.InstanceRoot,
+            capture.InstanceIniPath,
+            capture.ProfilesRoot,
+            capture.ModsRoot,
+            capture.OverwriteRoot,
+            capture.GameDataRoot,
+            capture.SkyrimExecutablePath,
+            capture.SelectedProfileName,
+            new RuntimeTargetContext(
+                capture.Platform,
+                capture.DistributionChannel,
+                capture.ApplicationId),
+            capture.QualifiedMappings.Select(mapping => new QualifiedMapping(
+                mapping.MappingId,
+                mapping.SourceRoot,
+                mapping.VirtualPrefix,
+                mapping.MapperSha256)).ToArray(),
+            capture.EnabledMapperSha256.ToArray());
+        TimeSpan remaining = bootstrap.ExpiresAt - DateTimeOffset.UtcNow;
+        if (remaining <= TimeSpan.Zero)
+        {
+            throw new InvalidOperationException(
+                "The snapshot capture assignment expired before execution.");
+        }
+
+        using CancellationTokenSource captureDeadline = new(remaining);
+        snapshotResult = new Mo2SnapshotCapture().Capture(
+            captureRequest,
+            captureDeadline.Token);
+        if (snapshotResult.State is not (
+                SnapshotCaptureState.Completed
+                or SnapshotCaptureState.CompletedWithGaps)
+            || snapshotResult.Snapshot is null)
+        {
+            throw new InvalidOperationException(
+                "The MO2 snapshot capture did not produce a publishable snapshot.");
+        }
+
+        payload = JsonSerializer.SerializeToUtf8Bytes(snapshotResult);
+    }
+    else if (assignment.Operation.Kind == WorkerOperationKind.ValidateStagedArtifact)
+    {
+        payload = JsonSerializer.SerializeToUtf8Bytes(new
+        {
+            schemaVersion = 1,
+            kind = "m1-slice2-substrate",
+            bootstrap.RunId,
+            bootstrap.AttemptId,
+            coordinatorFencingEpoch = bootstrap.CoordinatorFencingEpoch,
+            attemptFencingToken = bootstrap.AttemptFencingToken,
+        });
+    }
+    else
+    {
+        throw new InvalidOperationException("The worker operation is unsupported.");
+    }
     if (payload.LongLength > bootstrap.MaximumOutputBytes)
     {
         throw new InvalidOperationException("The staged payload exceeds its authority.");
@@ -185,14 +242,16 @@ try
     ByteString manifestDigest = ByteString.CopyFrom(
         ManagedWorkerManifest.ComputeDigest(
             bootstrap.StagedArtifactId,
-            bootstrap.OutputRelativeName,
-            sha,
-            payload.LongLength));
+        bootstrap.OutputRelativeName,
+        sha,
+        payload.LongLength,
+        bootstrap.OutputSchemaVersion));
     int canonicalManifestByteLength = ManagedWorkerManifest.GetCanonicalBytes(
         bootstrap.StagedArtifactId,
         bootstrap.OutputRelativeName,
         sha,
-        payload.LongLength).Length;
+        payload.LongLength,
+        bootstrap.OutputSchemaVersion).Length;
     StagedOutputManifest manifest = new()
     {
         StagingAreaId = new StagingAreaId { Value = bootstrap.StagingAreaId },
@@ -219,7 +278,7 @@ try
         },
         SchemaVersion = new SemanticVersion
         {
-            Value = ManagedWorkerManifest.OutputSchemaVersion,
+            Value = bootstrap.OutputSchemaVersion,
         },
     });
     SubmitStagedOutputResponse staged = await client.SubmitStagedOutputAsync(
@@ -240,7 +299,9 @@ try
             CoordinatorFencingEpoch =
                 checked((ulong)bootstrap.CoordinatorFencingEpoch),
             AttemptFencingToken = checked((ulong)bootstrap.AttemptFencingToken),
-            Outcome = WorkerTerminalOutcome.CompletedStaged,
+            Outcome = snapshotResult?.State == SnapshotCaptureState.CompletedWithGaps
+                ? WorkerTerminalOutcome.CompletedWithGapsStaged
+                : WorkerTerminalOutcome.CompletedStaged,
             StagingReceiptId = staged.StagingReceiptId,
         }).ResponseAsync.ConfigureAwait(false);
     if (terminal.Disposition is not (
@@ -289,7 +350,11 @@ static void Validate(ManagedWorkerBootstrap bootstrap)
         || bootstrap.OutputRelativeName.Contains(':', StringComparison.Ordinal)
         || bootstrap.OutputRelativeName.Contains(Path.DirectorySeparatorChar)
         || bootstrap.OutputRelativeName.Contains(Path.AltDirectorySeparatorChar)
-        || bootstrap.MaximumOutputBytes is <= 0 or > 65_536
+        || bootstrap.MaximumOutputBytes is <= 0 or > 64 * 1024 * 1024
+        || (bootstrap.OperationKind == ManagedWorkerOperationKind.Mo2SnapshotCapture
+            && bootstrap.Mo2SnapshotCapture is null)
+        || (bootstrap.OperationKind != ManagedWorkerOperationKind.Mo2SnapshotCapture
+            && bootstrap.Mo2SnapshotCapture is not null)
         || bootstrap.ExpiresAt <= DateTimeOffset.UtcNow
         || Convert.FromBase64String(bootstrap.OneUseNonceBase64).Length != 32)
     {
@@ -318,7 +383,15 @@ static void ValidateAssignment(
         || slot?.StagedArtifactId?.Value != bootstrap.StagedArtifactId
         || slot.TypedRelativeName != bootstrap.OutputRelativeName
         || slot.MaximumBytes != checked((ulong)bootstrap.MaximumOutputBytes)
-        || slot.Kind != StagedArtifactKind.TypedResult)
+        || slot.Kind != StagedArtifactKind.TypedResult
+        || (bootstrap.OperationKind == ManagedWorkerOperationKind.Mo2SnapshotCapture
+            && (assignment.Operation?.Kind != WorkerOperationKind.CaptureMo2Snapshot
+                || assignment.Operation.Mo2SnapshotCapture is null
+                || assignment.Operation.AdapterOrAnalyzerId
+                    != "infinium.mo2-static-reconstruction"
+                || assignment.Operation.AdapterOrAnalyzerVersion?.Value != "3.0.0"))
+        || (bootstrap.OperationKind == ManagedWorkerOperationKind.SubstrateValidation
+            && assignment.Operation?.Kind != WorkerOperationKind.ValidateStagedArtifact))
     {
         throw new InvalidOperationException("The worker assignment exceeds its launch authority.");
     }

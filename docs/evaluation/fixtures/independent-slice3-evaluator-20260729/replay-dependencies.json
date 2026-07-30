@@ -1,0 +1,53 @@
+{
+  "fixture_id": "SLICE3-INDEPENDENT-VAL-20260729",
+  "fixture_version": "1.0.0",
+  "expected_replay_state": "boundary-replay",
+  "dependencies": [
+    {
+      "dependency_id": "mo2-2.5.2-application",
+      "kind": "user-installed-application",
+      "identity_or_version": "2.5.2",
+      "sha256": "442b354a8f34754da0048654c44d27f51628feba54ce46c3187cf58d6c43e622",
+      "byte_length": 5028352,
+      "retention_location_class": "evaluator-private",
+      "availability": "evaluator-private",
+      "required_for": [
+        "clean-recomputation",
+        "boundary-replay",
+        "audit"
+      ],
+      "permission_and_redistribution": "private-retention-only",
+      "deletion_effect": "EVAL-0051 clean UI and VFS recomputation becomes unavailable."
+    },
+    {
+      "dependency_id": "skyrimse-1.6.1170-executable",
+      "kind": "official-game-executable",
+      "identity_or_version": "Steam Windows x64 1.6.1170.0",
+      "sha256": "c434208894f07f604b852f29b8edc3a58c4de63de783373733e72b2b73f33be9",
+      "byte_length": 37157144,
+      "retention_location_class": "evaluator-private",
+      "availability": "evaluator-private",
+      "required_for": [
+        "clean-recomputation",
+        "boundary-replay",
+        "audit"
+      ],
+      "permission_and_redistribution": "private-retention-only",
+      "deletion_effect": "Exact-target recomputation becomes unavailable while fingerprint audit remains."
+    },
+    {
+      "dependency_id": "slice3-construction-scripts",
+      "kind": "fixture-construction-scripts",
+      "identity_or_version": "1",
+      "byte_length": null,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Synthetic fixture regeneration and construction audit become unavailable."
+    }
+  ]
+}

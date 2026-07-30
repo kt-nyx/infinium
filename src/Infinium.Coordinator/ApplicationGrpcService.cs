@@ -16,7 +16,8 @@ namespace Infinium.Coordinator;
 
 public sealed class ApplicationGrpcService(
     CoordinatorRuntime runtime,
-    ManagedRunExecutor executor)
+    ManagedRunExecutor executor,
+    SnapshotCaptureExecutor snapshotExecutor)
     : ApplicationService.ApplicationServiceBase
 {
     public override Task<HandshakeResponse> Negotiate(
@@ -387,6 +388,163 @@ public sealed class ApplicationGrpcService(
         }
     }
 
+    public override Task<SubmitSnapshotCaptureResponse> SubmitSnapshotCapture(
+        SubmitSnapshotCaptureRequest request,
+        ServerCallContext context)
+    {
+        RequireNegotiated(context);
+        try
+        {
+            string commandId = Required(
+                request.IdempotencyKey?.Value,
+                "durable command ID");
+            SnapshotCaptureOperationRecord? replay =
+                runtime.Store.FindSnapshotCaptureByCommand(commandId);
+            if (replay is null
+                && !runtime.TryAdmitNewDurableCommand(DateTimeOffset.UtcNow))
+            {
+                return Task.FromResult(new SubmitSnapshotCaptureResponse
+                {
+                    Disposition = CommandDisposition.Rejected,
+                    Failure = Failure(
+                        FailureCode.LimitExceeded,
+                        "The new durable-command rate bound is full."),
+                });
+            }
+
+            ManagedMo2SnapshotCaptureAssignment selection =
+                ValidateSnapshotSelection(request.Selection);
+            string requestJson = JsonSerializer.Serialize(selection);
+            string requestSha256 = Convert.ToHexString(
+                SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(requestJson)))
+                .ToLowerInvariant();
+            if (request.InitiationKind is not (
+                    ManualInitiationKind.CliUserAction
+                    or ManualInitiationKind.DesktopUserGesture
+                    or ManualInitiationKind.EvaluationHarness))
+            {
+                throw new InvalidOperationException(
+                    "A supported explicit initiation kind is required.");
+            }
+
+            string operationId = Guid.NewGuid().ToString("N");
+            SnapshotCaptureOperationRecord operation =
+                runtime.Store.CreateSnapshotCaptureOperation(
+                    commandId,
+                    operationId,
+                    requestJson,
+                    requestSha256,
+                    request.InitiationKind.ToString(),
+                    FromProto(request.DispatchDeadline),
+                    runtime.Authority.FencingEpoch,
+                    DateTimeOffset.UtcNow);
+            snapshotExecutor.Schedule(operation.OperationId);
+            return Task.FromResult(new SubmitSnapshotCaptureResponse
+            {
+                Disposition = replay is null
+                    ? CommandDisposition.Accepted
+                    : CommandDisposition.AlreadyAccepted,
+                DurableCommandId = new DurableCommandId { Value = commandId },
+                OperationId = new SnapshotCaptureOperationId
+                {
+                    Value = operation.OperationId,
+                },
+            });
+        }
+        catch (Exception exception) when (
+            exception is ArgumentException
+                or InvalidOperationException
+                or KeyNotFoundException)
+        {
+            return Task.FromResult(new SubmitSnapshotCaptureResponse
+            {
+                Disposition = CommandDisposition.Rejected,
+                Failure = Failure(FailureCode.Conflict, Bounded(exception.Message)),
+            });
+        }
+    }
+
+    public override Task<GetSnapshotCaptureResponse> GetSnapshotCapture(
+        GetSnapshotCaptureRequest request,
+        ServerCallContext context)
+    {
+        RequireNegotiated(context);
+        try
+        {
+            SnapshotCaptureOperationRecord operation =
+                request.IdentityCase switch
+                {
+                    GetSnapshotCaptureRequest.IdentityOneofCase.OperationId =>
+                        runtime.Store.GetSnapshotCaptureOperation(
+                            Required(
+                                request.OperationId?.Value,
+                                "snapshot capture operation ID")),
+                    GetSnapshotCaptureRequest.IdentityOneofCase.DurableCommandId =>
+                        runtime.Store.FindSnapshotCaptureByCommand(
+                            Required(
+                                request.DurableCommandId?.Value,
+                                "durable command ID"))
+                        ?? throw new KeyNotFoundException(),
+                    _ => throw new ArgumentException(
+                        "A snapshot capture operation or durable command identity is required."),
+                };
+            SnapshotCaptureStatus status = new()
+            {
+                OperationId = new SnapshotCaptureOperationId
+                {
+                    Value = operation.OperationId,
+                },
+                DurableCommandId = new DurableCommandId
+                {
+                    Value = operation.DurableCommandId,
+                },
+                LifecycleState = operation.State switch
+                {
+                    "Queued" => SnapshotCaptureLifecycleState.Queued,
+                    "Running" => SnapshotCaptureLifecycleState.Running,
+                    "Completed" => SnapshotCaptureLifecycleState.Completed,
+                    "Failed" => SnapshotCaptureLifecycleState.Failed,
+                    _ => SnapshotCaptureLifecycleState.Unknown,
+                },
+                LifecycleGeneration = checked((ulong)operation.Generation),
+                RequestSha256 = operation.RequestSha256,
+                CreatedAt = ProtoMapping.ToProto(operation.CreatedAt),
+                UpdatedAt = ProtoMapping.ToProto(operation.UpdatedAt),
+            };
+            if (operation.InstallationSnapshotId is not null)
+            {
+                status.InstallationSnapshotId = new InstallationSnapshotId
+                {
+                    Value = operation.InstallationSnapshotId,
+                };
+            }
+            if (operation.PayloadId is not null)
+            {
+                status.PayloadId = new PayloadId { Value = operation.PayloadId };
+            }
+
+            return Task.FromResult(new GetSnapshotCaptureResponse { Status = status });
+        }
+        catch (KeyNotFoundException)
+        {
+            return Task.FromResult(new GetSnapshotCaptureResponse
+            {
+                Failure = Failure(
+                    FailureCode.NotFound,
+                    "The snapshot capture operation does not exist."),
+            });
+        }
+        catch (ArgumentException exception)
+        {
+            return Task.FromResult(new GetSnapshotCaptureResponse
+            {
+                Failure = Failure(
+                    FailureCode.InvalidArgument,
+                    Bounded(exception.Message)),
+            });
+        }
+    }
+
     public override async Task SubscribeEvents(
         SubscribeEventsRequest request,
         IServerStreamWriter<ApplicationEvent> responseStream,
@@ -556,6 +714,91 @@ public sealed class ApplicationGrpcService(
             FromProto(command.DispatchDeadline));
         executor.Schedule(run.RunId);
         return run;
+    }
+
+    private static ManagedMo2SnapshotCaptureAssignment ValidateSnapshotSelection(
+        Mo2SnapshotCaptureSelection? selection)
+    {
+        if (selection is null
+            || selection.QualifiedMappings.Count > 32
+            || selection.EnabledMapperSha256.Count > 32)
+        {
+            throw new InvalidOperationException(
+                "A bounded MO2 snapshot selection is required.");
+        }
+
+        string profileName = Required(selection.SelectedProfileName, "selected profile name");
+        if (profileName is "." or ".."
+            || profileName.IndexOfAny(
+                [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar, ':']) >= 0)
+        {
+            throw new InvalidOperationException(
+                "The selected profile name is not a single safe component.");
+        }
+
+        ManagedQualifiedMappingAssignment[] mappings =
+            selection.QualifiedMappings.Select(mapping =>
+                new ManagedQualifiedMappingAssignment(
+                    Required(mapping.MappingId, "mapping ID"),
+                    RequiredAbsolutePath(mapping.SourceRoot, "mapping source root"),
+                    Required(mapping.VirtualPrefix, "mapping virtual prefix"),
+                    RequiredSha256(mapping.MapperSha256, "mapper SHA-256")))
+            .ToArray();
+        string[] enabledMappers = selection.EnabledMapperSha256
+            .Select(value => RequiredSha256(value, "enabled mapper SHA-256"))
+            .ToArray();
+        if (mappings.Select(mapping => mapping.MappingId)
+                .Distinct(StringComparer.Ordinal).Count() != mappings.Length
+            || enabledMappers.Distinct(StringComparer.Ordinal).Count()
+                != enabledMappers.Length)
+        {
+            throw new InvalidOperationException(
+                "Snapshot mapping identities must be unique.");
+        }
+
+        return new ManagedMo2SnapshotCaptureAssignment(
+            RequiredAbsolutePath(selection.Mo2ExecutablePath, "MO2 executable path"),
+            RequiredAbsolutePath(selection.InstanceRoot, "MO2 instance root"),
+            RequiredAbsolutePath(selection.InstanceIniPath, "MO2 instance INI path"),
+            RequiredAbsolutePath(selection.ProfilesRoot, "MO2 profiles root"),
+            RequiredAbsolutePath(selection.ModsRoot, "MO2 mods root"),
+            RequiredAbsolutePath(selection.OverwriteRoot, "MO2 overwrite root"),
+            RequiredAbsolutePath(selection.GameDataRoot, "game Data root"),
+            RequiredAbsolutePath(selection.SkyrimExecutablePath, "Skyrim executable path"),
+            profileName,
+            Required(selection.Platform, "runtime platform"),
+            Required(selection.DistributionChannel, "runtime distribution channel"),
+            Required(selection.ApplicationId, "runtime application ID"),
+            mappings,
+            enabledMappers);
+    }
+
+    private static string RequiredAbsolutePath(string? value, string field)
+    {
+        if (string.IsNullOrWhiteSpace(value)
+            || value.Length > 32_767
+            || !Path.IsPathFullyQualified(value)
+            || value.Contains('\0', StringComparison.Ordinal))
+        {
+            throw new ArgumentException($"A bounded absolute {field} is required.");
+        }
+
+        return Path.GetFullPath(value);
+    }
+
+    private static string RequiredSha256(string? value, string field)
+    {
+        if (value is null
+            || value.Length != 64
+            || value.Any(ch => ch is not (
+                >= '0' and <= '9'
+                or >= 'a' and <= 'f'
+                or >= 'A' and <= 'F')))
+        {
+            throw new ArgumentException($"A canonical {field} is required.");
+        }
+
+        return value.ToLowerInvariant();
     }
 
     private bool DurableCommandExists(string commandId)

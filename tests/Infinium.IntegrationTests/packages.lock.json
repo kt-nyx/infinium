@@ -290,6 +290,7 @@
           "Grpc.AspNetCore": "[2.80.0, )",
           "Infinium.Application": "[1.0.0, )",
           "Infinium.Domain": "[1.0.0, )",
+          "Infinium.Mo2": "[1.0.0, )",
           "Infinium.Persistence": "[1.0.0, )",
           "Infinium.Worker": "[1.0.0, )"
         }
@@ -315,7 +316,8 @@
         "type": "Project",
         "dependencies": {
           "Infinium.Application": "[1.0.0, )",
-          "Infinium.Domain": "[1.0.0, )"
+          "Infinium.Domain": "[1.0.0, )",
+          "Infinium.Mo2": "[1.0.0, )"
         }
       },
       "Google.Protobuf": {

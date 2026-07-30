@@ -95,6 +95,7 @@ try
     builder.Services.AddSingleton<CoordinatorRuntime>();
     builder.Services.AddSingleton<WorkerBootstrapRegistry>();
     builder.Services.AddSingleton<ManagedRunExecutor>();
+    builder.Services.AddSingleton<SnapshotCaptureExecutor>();
     builder.Services.AddHostedService<CoordinatorLeaseRenewalService>();
     builder.Services.AddGrpc(options =>
     {
@@ -146,6 +147,7 @@ try
             RuntimeDescriptor.FileName,
             DateTimeOffset.UtcNow);
         app.Services.GetRequiredService<ManagedRunExecutor>().RecoverAtStartup();
+        app.Services.GetRequiredService<SnapshotCaptureExecutor>().RecoverAtStartup();
         await app.WaitForShutdownAsync().ConfigureAwait(false);
     }
     finally

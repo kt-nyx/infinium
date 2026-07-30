@@ -94,28 +94,35 @@ public sealed class WorkerBootstrapRegistry
             throw new InvalidOperationException("The assignment request is stale or mismatched.");
         }
 
-        RunBinding binding = runtime.Store.GetRun(bootstrap.RunId).Binding;
         WorkerAssignment assignment = new()
         {
-            Owner = new OperationOwner
+            Owner = bootstrap.OperationKind == ManagedWorkerOperationKind.Mo2SnapshotCapture
+                ? new OperationOwner
+                {
+                    SnapshotCaptureOperationId =
+                        new SnapshotCaptureOperationId { Value = bootstrap.RunId },
+                }
+                : new OperationOwner
+                {
+                    AnalysisRunId = new RunId { Value = bootstrap.RunId },
+                },
+            OperationId = new OperationId
             {
-                AnalysisRunId = new RunId { Value = bootstrap.RunId },
+                Value = bootstrap.OperationKind == ManagedWorkerOperationKind.Mo2SnapshotCapture
+                    ? bootstrap.RunId
+                    : bootstrap.RunId + "-slice2-substrate",
             },
-            OperationId = new OperationId { Value = bootstrap.RunId + "-slice2-substrate" },
-            JobNodeId = new JobNodeId { Value = bootstrap.RunId + "-root" },
+            JobNodeId = new JobNodeId
+            {
+                Value = bootstrap.OperationKind == ManagedWorkerOperationKind.Mo2SnapshotCapture
+                    ? bootstrap.RunId + "-capture"
+                    : bootstrap.RunId + "-root",
+            },
             AttemptId = new AttemptId { Value = bootstrap.AttemptId },
             DispatchId = new DispatchId { Value = bootstrap.BootstrapId },
             CoordinatorFencingEpoch = checked((ulong)bootstrap.CoordinatorFencingEpoch),
             AttemptFencingToken = checked((ulong)bootstrap.AttemptFencingToken),
-            Operation = new WorkerOperation
-            {
-                Kind = WorkerOperationKind.ValidateStagedArtifact,
-                AdapterOrAnalyzerId = "infinium.m1.slice2.substrate",
-                AdapterOrAnalyzerVersion = new SemanticVersion { Value = "1.0.0" },
-                AssignmentSchemaVersion = new SemanticVersion { Value = "1.0.0" },
-            },
-            ResolvedInputManifestId =
-                new ResolvedInputManifestId { Value = binding.ResolvedInputManifestId },
+            Operation = BuildOperation(bootstrap),
             StagingAuthority = new StagingAuthority
             {
                 StagingAreaId = new StagingAreaId { Value = bootstrap.StagingAreaId },
@@ -144,6 +151,56 @@ public sealed class WorkerBootstrapRegistry
             Required = true,
         });
         return assignment;
+    }
+
+    private static WorkerOperation BuildOperation(ManagedWorkerBootstrap bootstrap)
+    {
+        if (bootstrap.OperationKind != ManagedWorkerOperationKind.Mo2SnapshotCapture)
+        {
+            return new WorkerOperation
+            {
+                Kind = WorkerOperationKind.ValidateStagedArtifact,
+                AdapterOrAnalyzerId = "infinium.m1.slice2.substrate",
+                AdapterOrAnalyzerVersion = new SemanticVersion { Value = "1.0.0" },
+                AssignmentSchemaVersion = new SemanticVersion { Value = "1.0.0" },
+            };
+        }
+
+        ManagedMo2SnapshotCaptureAssignment source = bootstrap.Mo2SnapshotCapture
+            ?? throw new InvalidOperationException(
+                "The MO2 snapshot assignment is absent.");
+        Mo2SnapshotCaptureAssignment capture = new()
+        {
+            Mo2ExecutablePath = source.Mo2ExecutablePath,
+            InstanceRoot = source.InstanceRoot,
+            InstanceIniPath = source.InstanceIniPath,
+            ProfilesRoot = source.ProfilesRoot,
+            ModsRoot = source.ModsRoot,
+            OverwriteRoot = source.OverwriteRoot,
+            GameDataRoot = source.GameDataRoot,
+            SkyrimExecutablePath = source.SkyrimExecutablePath,
+            SelectedProfileName = source.SelectedProfileName,
+            Platform = source.Platform,
+            DistributionChannel = source.DistributionChannel,
+            ApplicationId = source.ApplicationId,
+        };
+        capture.QualifiedMappings.Add(source.QualifiedMappings.Select(mapping =>
+            new QualifiedMappingAssignment
+            {
+                MappingId = mapping.MappingId,
+                SourceRoot = mapping.SourceRoot,
+                VirtualPrefix = mapping.VirtualPrefix,
+                MapperSha256 = mapping.MapperSha256,
+            }));
+        capture.EnabledMapperSha256.Add(source.EnabledMapperSha256s);
+        return new WorkerOperation
+        {
+            Kind = WorkerOperationKind.CaptureMo2Snapshot,
+            AdapterOrAnalyzerId = "infinium.mo2-static-reconstruction",
+            AdapterOrAnalyzerVersion = new SemanticVersion { Value = "3.0.0" },
+            AssignmentSchemaVersion = new SemanticVersion { Value = "1.0.0" },
+            Mo2SnapshotCapture = capture,
+        };
     }
 
     public WorkerProgressReceipt AcceptProgress(
@@ -255,7 +312,7 @@ public sealed class WorkerBootstrapRegistry
                 || output.Content?.Algorithm != DigestAlgorithm.Sha256
                 || output.Content.Value.Length != 32
                 || output.Content.SizeBytes > checked((ulong)expected.MaximumOutputBytes)
-                || output.SchemaVersion?.Value != ManagedWorkerManifest.OutputSchemaVersion)
+                || output.SchemaVersion?.Value != expected.OutputSchemaVersion)
             {
                 throw new InvalidOperationException("The staged output is malformed or outside its slot.");
             }
@@ -266,12 +323,14 @@ public sealed class WorkerBootstrapRegistry
                 expected.StagedArtifactId,
                 expected.OutputRelativeName,
                 outputSha256,
-                checked((long)output.Content.SizeBytes));
+                checked((long)output.Content.SizeBytes),
+                expected.OutputSchemaVersion);
             byte[] expectedManifestDigest = ManagedWorkerManifest.ComputeDigest(
                 expected.StagedArtifactId,
                 expected.OutputRelativeName,
                 outputSha256,
-                checked((long)output.Content.SizeBytes));
+                checked((long)output.Content.SizeBytes),
+                expected.OutputSchemaVersion);
             if (manifest.ManifestDigest?.Algorithm != DigestAlgorithm.Sha256
                 || manifest.ManifestDigest.Value.Length != expectedManifestDigest.Length
                 || manifest.ManifestDigest.SizeBytes
@@ -344,7 +403,9 @@ public sealed class WorkerBootstrapRegistry
                 return new TerminalReceiptAcceptance(WorkerReceiptDisposition.Duplicate);
             }
 
-            bool completed = request.Outcome == WorkerTerminalOutcome.CompletedStaged
+            bool completed = request.Outcome is (
+                    WorkerTerminalOutcome.CompletedStaged
+                    or WorkerTerminalOutcome.CompletedWithGapsStaged)
                 && request.StagingReceiptId == registration.StagingReceiptId
                 && registration.Result is not null;
             bool cancelled = request.Outcome == WorkerTerminalOutcome.Cancelled
@@ -377,7 +438,9 @@ public sealed class WorkerBootstrapRegistry
         lock (registration.Gate)
         {
             return registration.TerminalAccepted
-                && registration.TerminalOutcome == WorkerTerminalOutcome.CompletedStaged
+                && registration.TerminalOutcome is (
+                    WorkerTerminalOutcome.CompletedStaged
+                    or WorkerTerminalOutcome.CompletedWithGapsStaged)
                 && registration.Result is not null
                 ? registration.Result
                 : throw new InvalidOperationException("The worker did not complete staged publication.");
@@ -447,6 +510,16 @@ public sealed class WorkerBootstrapRegistry
             return false;
         }
 
+        if (registration.Bootstrap.OperationKind
+            == ManagedWorkerOperationKind.Mo2SnapshotCapture)
+        {
+            SnapshotCaptureOperationRecord operation =
+                runtime.Store.GetSnapshotCaptureOperation(registration.Bootstrap.RunId);
+            return operation.State == "Running"
+                && operation.CoordinatorFencingEpoch
+                    == registration.Bootstrap.CoordinatorFencingEpoch;
+        }
+
         RunRecord run = runtime.Store.GetRun(registration.Bootstrap.RunId);
         return run.State == Infinium.Domain.Contracts.LifecycleState.Running
             && run.CoordinatorFencingEpoch == registration.Bootstrap.CoordinatorFencingEpoch;
@@ -468,6 +541,16 @@ public sealed class WorkerBootstrapRegistry
                 != checked((ulong)registration.Bootstrap.AttemptFencingToken))
         {
             return WorkerControl.StopStaleAttempt;
+        }
+
+        if (registration.Bootstrap.OperationKind
+            == ManagedWorkerOperationKind.Mo2SnapshotCapture)
+        {
+            SnapshotCaptureOperationRecord operation =
+                runtime.Store.GetSnapshotCaptureOperation(registration.Bootstrap.RunId);
+            return operation.State == "Running"
+                ? WorkerControl.Continue
+                : WorkerControl.StopStaleAttempt;
         }
 
         RunRecord run = runtime.Store.GetRun(registration.Bootstrap.RunId);

@@ -975,6 +975,26 @@ matrix and do not make those two regions the product taxonomy.
 | Live semantic provider operations | Exact retained-result replay; a new live request is not replay | Exact request/response, accepted model/profile, capability/price snapshots, authorization, usage/settlement, prompt/schema/source/candidate dependencies | Audit-only if the retained response or a required semantic input is unavailable; material provider drift requires requalification |
 | Post-deletion provenance | Intentionally not clean-replayable across deleted boundary | Retained downstream output, fingerprint, deletion receipt | Exact declared audit/replay gap |
 
+### 16.1 Independent Slice 3 construction record
+
+`docs/evaluation/fixtures/independent-slice3-evaluator-20260729/` is the
+separately isolated validation-package construction record for EVAL-0051 and
+EVAL-0054. It contains a public execution-input manifest, oracle,
+provenance/replay/redistribution records, target-negative matrix construction
+scripts, and protected-root evidence tooling. Exact MO2 and Skyrim bytes remain
+evaluator-private.
+
+This record does not accept or pass either case. Its current gate state is:
+
+- EVAL-0054 exact and negative target inputs are constructed and independently
+  fingerprinted; production comparison remains pending.
+- EVAL-0051 direct physical inputs are constructed; authoritative MO2 UI/VFS
+  observations and a qualified supported-secondary-root mapper remain
+  blocking.
+- the evaluator did not inspect production source, tests, adapter output, prior
+  evaluation output, or the abandoned implementation archive while authoring
+  the oracle.
+
 ## 17. Preconditions before executable fixture-package acceptance or execution
 
 The owner may accept this manifest specification as the M1 fixture design

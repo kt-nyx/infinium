@@ -199,6 +199,12 @@
       "infinium.domain": {
         "type": "Project"
       },
+      "infinium.mo2": {
+        "type": "Project",
+        "dependencies": {
+          "Infinium.Domain": "[1.0.0, )"
+        }
+      },
       "infinium.persistence": {
         "type": "Project",
         "dependencies": {
@@ -211,7 +217,8 @@
         "type": "Project",
         "dependencies": {
           "Infinium.Application": "[1.0.0, )",
-          "Infinium.Domain": "[1.0.0, )"
+          "Infinium.Domain": "[1.0.0, )",
+          "Infinium.Mo2": "[1.0.0, )"
         }
       },
       "Google.Protobuf": {

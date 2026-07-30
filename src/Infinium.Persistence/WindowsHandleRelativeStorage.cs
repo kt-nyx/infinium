@@ -1144,7 +1144,7 @@ internal static class WindowsHandleRelativeStorage
         }
 
         public AdmissionCopyResult CopyToAndHash(
-            FileStream destination,
+            Stream destination,
             long maximumBytes)
         {
             ArgumentNullException.ThrowIfNull(destination);

@@ -4,9 +4,11 @@ using System.Security.Cryptography;
 
 namespace Infinium.Mo2;
 
-internal interface IExecutableAdmissionService
+public interface IExecutableAdmissionService
 {
     public ExecutableAdmission AdmitMo2(string path);
+
+    public ExecutableAdmission AdmitSkyrimGamePlugin(string path);
 
     public ExecutableAdmission AdmitSkyrim(string path, RuntimeTargetContext context);
 }
@@ -14,14 +16,21 @@ internal interface IExecutableAdmissionService
 public sealed class SupportedExecutableManifests : IExecutableAdmissionService
 {
     public const string Mo2ManifestId = "infinium.mo2-2.5.2-local-research/v1";
+    public const string SkyrimGamePluginManifestId =
+        "infinium.mo2-game-skyrimse-2.5.2-local-research/v1";
     public const string SkyrimManifestId = "infinium.skyrimse-1.6.1170-steam/v1";
-    public const string AdapterId = "infinium.mo2-static-reconstruction/v2";
+    public const string AdapterId = "infinium.mo2-static-reconstruction/v3";
+    public static IReadOnlySet<string> QualifiedMapperSha256s { get; } =
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
     public const string SupportedMo2Sha256 =
         "442B354A8F34754DA0048654C44D27F51628FEBA54CE46C3187CF58D6C43E622";
+    public const string SupportedSkyrimGamePluginSha256 =
+        "5EAACE8EC5E3F1E6DC6E85FFE22ABDD30C99DFA414807E2D7E2EF242CC90A429";
     public const string SupportedSkyrimSha256 =
         "C434208894F07F604B852F29B8EDC3A58C4DE63DE783373733E72B2B73F33BE9";
 
+    private const long SupportedSkyrimGamePluginLength = 440_320;
     private const long SupportedSkyrimLength = 37_157_144;
 
     public ExecutableAdmission AdmitMo2(string path)
@@ -35,6 +44,19 @@ public sealed class SupportedExecutableManifests : IExecutableAdmissionService
             expectedVersion: "2.5.2",
             requirePeShape: false,
             Mo2ManifestId);
+    }
+
+    public ExecutableAdmission AdmitSkyrimGamePlugin(string path)
+    {
+        return Admit(
+            path,
+            "game_skyrimse.dll",
+            SupportedSkyrimGamePluginSha256,
+            SupportedSkyrimGamePluginLength,
+            SupportedSkyrimGamePluginLength,
+            expectedVersion: null,
+            requirePeShape: false,
+            SkyrimGamePluginManifestId);
     }
 
     public ExecutableAdmission AdmitSkyrim(
@@ -71,7 +93,7 @@ public sealed class SupportedExecutableManifests : IExecutableAdmissionService
         string expectedSha256,
         long? expectedLength,
         long maximumLength,
-        string expectedVersion,
+        string? expectedVersion,
         bool requirePeShape,
         string manifestId)
     {
@@ -125,6 +147,18 @@ public sealed class SupportedExecutableManifests : IExecutableAdmissionService
                     objectIdentity.CanonicalValue);
             }
 
+            if (requirePeShape
+                && (observed.PeMachine is null
+                    || observed.PeOptionalHeaderMagic is null
+                    || observed.PeSubsystem is null))
+            {
+                return new ExecutableAdmission(
+                    AdmissionState.Indeterminate,
+                    manifestId,
+                    observed,
+                    ["executable PE headers are malformed or truncated"]);
+            }
+
             if (!string.Equals(observed.FileName, expectedFileName, StringComparison.OrdinalIgnoreCase))
             {
                 reasons.Add("unexpected executable file name");
@@ -135,7 +169,11 @@ public sealed class SupportedExecutableManifests : IExecutableAdmissionService
                 reasons.Add("unexpected executable byte length");
             }
 
-            if (!string.Equals(observed.ProductVersion, expectedVersion, StringComparison.Ordinal))
+            if (expectedVersion is not null
+                && !string.Equals(
+                    observed.ProductVersion,
+                    expectedVersion,
+                    StringComparison.Ordinal))
             {
                 reasons.Add("unexpected executable file version");
             }

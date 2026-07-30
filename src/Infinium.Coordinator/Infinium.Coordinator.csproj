@@ -6,6 +6,7 @@
     <ProjectReference Include="..\Infinium.Application\Infinium.Application.csproj" />
     <ProjectReference Include="..\Infinium.Domain\Infinium.Domain.csproj" />
     <ProjectReference Include="..\Infinium.Persistence\Infinium.Persistence.csproj" />
+    <ProjectReference Include="..\Infinium.Mo2\Infinium.Mo2.csproj" />
     <ProjectReference Include="..\Infinium.Worker\Infinium.Worker.csproj" />
   </ItemGroup>
   <ItemGroup>

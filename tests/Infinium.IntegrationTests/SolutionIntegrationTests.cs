@@ -618,8 +618,8 @@ public sealed class SolutionIntegrationTests
                     SupportedProtocol = new ProtocolVersionRange
                     {
                         Major = ProtocolConstants.Major,
-                        MinimumMinor = 0,
-                        MaximumMinor = 0,
+                        MinimumMinor = ProtocolConstants.Minor,
+                        MaximumMinor = ProtocolConstants.Minor,
                     },
                 }).ResponseAsync;
             Assert.AreEqual(

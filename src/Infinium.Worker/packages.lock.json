@@ -35,6 +35,12 @@
       "infinium.domain": {
         "type": "Project"
       },
+      "infinium.mo2": {
+        "type": "Project",
+        "dependencies": {
+          "Infinium.Domain": "[1.0.0, )"
+        }
+      },
       "Google.Protobuf": {
         "type": "CentralTransitive",
         "requested": "[3.31.1, )",

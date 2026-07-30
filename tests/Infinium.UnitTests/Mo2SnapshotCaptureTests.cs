@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using System.Text;
+using Infinium.Domain.Contracts;
 using Infinium.Mo2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -19,13 +21,13 @@ public sealed class Mo2SnapshotCaptureTests
 
         Mo2SnapshotCaptureResult result = capture.Capture(fixture.Request);
 
-        Assert.AreEqual(SnapshotCaptureState.CompletedWithGaps, result.State);
+        Assert.AreEqual(SnapshotCaptureState.Completed, result.State);
         Assert.IsNotNull(result.Snapshot);
         Assert.AreEqual("OtherProfile", result.Snapshot.SavedProfileHint);
         Assert.AreEqual("Chosen", Path.GetFileName(result.Snapshot.ProfileRoot));
         Assert.IsFalse(result.Snapshot.Mo2OrUsvfsLaunched);
         Assert.IsFalse(result.Snapshot.ArchiveMemberPopulationSupported);
-        Assert.IsTrue(result.Gaps.Any(
+        Assert.IsFalse(result.Gaps.Any(
             gap => gap.Code == "mo2-game-plugin-inventory-unqualified"));
 
         ModState high = result.Snapshot.Mods.Single(mod => mod.Name == "High");
@@ -63,6 +65,137 @@ public sealed class Mo2SnapshotCaptureTests
 
     [TestMethod]
     [TestCategory("M1Unit")]
+    [TestCategory("M1Contract")]
+    [TestProperty("Category", "M1Unit")]
+    [TestProperty("Category", "M1Contract")]
+    public void SnapshotRetainsRawControlsAndCanonicalStructuralDependencies()
+    {
+        using SnapshotFixture fixture = new();
+
+        Mo2SnapshotCaptureResult result = fixture.CreateCapture().Capture(fixture.Request);
+
+        Assert.IsNotNull(result.Snapshot);
+        Mo2SnapshotDependencyManifest dependencies = result.Snapshot.Dependencies;
+        Assert.AreEqual(new ContractVersion(1, 0, 0), dependencies.SchemaVersion);
+        Assert.AreEqual(
+            result.Snapshot.Contract.StructuralManifestFingerprint,
+            dependencies.CanonicalFingerprint);
+        Assert.AreEqual("mod-organizer-2", dependencies.ManagerId);
+        Assert.AreEqual("Chosen", dependencies.ExplicitSelectedProfileName);
+        SnapshotControlObservation modList = dependencies.ControlObservations.Single(
+            observation => observation.Role == "modlist");
+        CollectionAssert.AreEqual(
+            File.ReadAllBytes(fixture.ModListPath),
+            Convert.FromBase64String(modList.Base64Bytes));
+        Assert.IsTrue(string.Equals(
+            Convert.ToHexString(
+                System.Security.Cryptography.SHA256.HashData(
+                    Convert.FromBase64String(modList.Base64Bytes))),
+            modList.Fingerprint.Value,
+            StringComparison.OrdinalIgnoreCase));
+        Assert.IsFalse(string.IsNullOrWhiteSpace(modList.PhysicalObjectIdentity));
+        Assert.IsTrue(dependencies.ControlObservations.Any(
+            observation => observation.Role.StartsWith(
+                "mod-meta:",
+                StringComparison.Ordinal)));
+        Assert.IsTrue(dependencies.RootObservations.Any(
+            observation => observation.Role == "game-data"));
+        Assert.IsTrue(dependencies.StructuralObservations.Any(
+            observation => observation.RootRole == "mods"
+                           && observation.RelativePath == "Low/Sample.esp"));
+        Assert.ThrowsExactly<NotSupportedException>(() =>
+            ((IList<SnapshotControlObservation>)dependencies.ControlObservations)
+                .RemoveAt(0));
+        Assert.ThrowsExactly<NotSupportedException>(() =>
+            ((IList<SnapshotStructuralObservation>)dependencies.StructuralObservations)
+                .RemoveAt(0));
+    }
+
+    [TestMethod]
+    [TestCategory("M1Unit")]
+    [TestCategory("M1Contract")]
+    [TestProperty("Category", "M1Unit")]
+    [TestProperty("Category", "M1Contract")]
+    public void IdenticalRecapturesHaveDistinctOccurrenceIdsAndStableFingerprints()
+    {
+        using SnapshotFixture fixture = new();
+        Mo2SnapshotCapture capture = fixture.CreateCapture();
+
+        Mo2SnapshotCaptureResult first = capture.Capture(fixture.Request);
+        Mo2SnapshotCaptureResult second = capture.Capture(fixture.Request);
+
+        Assert.IsNotNull(first.Snapshot);
+        Assert.IsNotNull(second.Snapshot);
+        Assert.AreEqual(
+            first.Snapshot.Contract.StructuralManifestFingerprint,
+            second.Snapshot.Contract.StructuralManifestFingerprint);
+        Assert.AreNotEqual(
+            first.Snapshot.Contract.SnapshotId,
+            second.Snapshot.Contract.SnapshotId);
+    }
+
+    [TestMethod]
+    [TestCategory("M1Unit")]
+    [TestCategory("M1Contract")]
+    [TestProperty("Category", "M1Unit")]
+    [TestProperty("Category", "M1Contract")]
+    public void ExactGamePluginForcesCoreOrderAndClassifiesForeignData()
+    {
+        using SnapshotFixture fixture = new();
+        string gameRoot = Directory.GetParent(fixture.GameDataRoot)!.FullName;
+        foreach (string core in new[] { "Skyrim.esm", "Update.esm", "ccExample.esl" })
+        {
+            File.WriteAllText(
+                Path.Combine(fixture.GameDataRoot, core),
+                core,
+                Encoding.UTF8);
+        }
+
+        File.WriteAllText(
+            Path.Combine(fixture.GameDataRoot, "Foreign.esp"),
+            "foreign",
+            Encoding.UTF8);
+        File.WriteAllText(
+            Path.Combine(gameRoot, "Skyrim.ccc"),
+            "ccExample.esl\n",
+            Encoding.UTF8);
+        string profile = Path.Combine(fixture.ProfilesRoot, "Chosen");
+        File.AppendAllText(
+            Path.Combine(profile, "plugins.txt"),
+            "*Foreign.esp\n",
+            Encoding.UTF8);
+        File.WriteAllText(
+            Path.Combine(profile, "loadorder.txt"),
+            "Skyrim.esm\nSample.esp\nForeign.esp\n",
+            Encoding.UTF8);
+
+        Mo2SnapshotCaptureResult result = fixture.CreateCapture().Capture(fixture.Request);
+
+        Assert.IsNotNull(result.Snapshot);
+        PluginState skyrim = result.Snapshot.Plugins.Single(
+            plugin => plugin.Name.Equals("Skyrim.esm", StringComparison.OrdinalIgnoreCase));
+        PluginState update = result.Snapshot.Plugins.Single(
+            plugin => plugin.Name.Equals("Update.esm", StringComparison.OrdinalIgnoreCase));
+        PluginState creation = result.Snapshot.Plugins.Single(
+            plugin => plugin.Name.Equals("ccExample.esl", StringComparison.OrdinalIgnoreCase));
+        PluginState foreign = result.Snapshot.Plugins.Single(
+            plugin => plugin.Name.Equals("Foreign.esp", StringComparison.OrdinalIgnoreCase));
+        Assert.AreEqual(
+            PluginEnablementState.ForcedEnabledByGamePlugin,
+            skyrim.Enablement);
+        Assert.AreEqual(PluginClassification.PrimaryGame, skyrim.Classification);
+        Assert.AreEqual(0, skyrim.LoadOrder);
+        Assert.AreEqual(1, update.LoadOrder);
+        Assert.AreEqual(PluginClassification.CreationClubGame, creation.Classification);
+        Assert.AreEqual(2, creation.LoadOrder);
+        Assert.AreEqual(PluginClassification.ForeignGameData, foreign.Classification);
+        Assert.AreEqual(PluginEnablementState.EnabledByProfile, foreign.Enablement);
+        Assert.IsTrue(foreign.LoadOrder > creation.LoadOrder);
+        Assert.IsFalse(result.Gaps.Any(gap => gap.Code == "duplicate-loadorder-entry"));
+    }
+
+    [TestMethod]
+    [TestCategory("M1Unit")]
     [TestCategory("M1Security")]
     [TestProperty("Category", "M1Unit")]
     [TestProperty("Category", "M1Security")]
@@ -78,7 +211,7 @@ public sealed class Mo2SnapshotCaptureTests
 
         Mo2SnapshotCaptureResult result = fixture.CreateCapture().Capture(fixture.Request);
 
-        Assert.AreEqual(SnapshotCaptureState.CompletedWithGaps, result.State);
+        Assert.AreEqual(SnapshotCaptureState.Completed, result.State);
         Assert.IsNotNull(result.Snapshot);
         Assert.IsFalse(result.Snapshot.LooseProviderChains.Any(
             chain => chain.NormalizedRelativePath == "disabled.txt"));
@@ -167,9 +300,10 @@ public sealed class Mo2SnapshotCaptureTests
         Assert.IsNotNull(result.Snapshot);
         Assert.IsTrue(result.Gaps.Any(gap => gap.Code == "listed-mod-missing"));
         Assert.IsTrue(result.Gaps.Any(gap => gap.Code == "unknown-or-unqualified-mapper"));
-        Assert.AreEqual(
-            ModEnablementState.Unresolved,
-            result.Snapshot.Mods.Single(mod => mod.Name == "Unlisted").Enablement);
+        ModState unresolved =
+            result.Snapshot.Mods.Single(mod => mod.Name == "Unlisted");
+        Assert.AreEqual(ModEnablementState.Unresolved, unresolved.Enablement);
+        Assert.IsNull(unresolved.Priority);
         Assert.IsFalse(result.Snapshot.LooseProviderChains.Any(
             chain => chain.NormalizedRelativePath == "must-not-win.txt"));
         Assert.IsFalse(result.Snapshot.LooseProviderChains.Any(
@@ -203,7 +337,7 @@ public sealed class Mo2SnapshotCaptureTests
                     StringComparer.OrdinalIgnoreCase))
             .Capture(request);
 
-        Assert.AreEqual(SnapshotCaptureState.CompletedWithGaps, result.State);
+        Assert.AreEqual(SnapshotCaptureState.Completed, result.State);
         Assert.IsNotNull(result.Snapshot);
         LooseProviderChain mapped = result.Snapshot.LooseProviderChains.Single(
             chain => chain.NormalizedRelativePath == "virtual/mapped.txt");
@@ -296,6 +430,109 @@ public sealed class Mo2SnapshotCaptureTests
         Assert.IsTrue(result.Snapshot.PhysicalInventory.Any(entry =>
             entry.RelativePath == ".cache"
             && entry.Disposition == PhysicalEntryDisposition.SkippedDirectory));
+    }
+
+    [TestMethod]
+    [TestCategory("M1Unit")]
+    [TestCategory("M1Security")]
+    [TestProperty("Category", "M1Unit")]
+    [TestProperty("Category", "M1Security")]
+    public void NestedJunctionIsRecordedAsAGapAndNeverTraversed()
+    {
+        using SnapshotFixture fixture = new();
+        string protectedRoot = Path.Combine(
+            Path.GetTempPath(),
+            $"Infinium-Slice3-Protected-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(protectedRoot);
+        string canary = Path.Combine(protectedRoot, "must-not-enter-snapshot.txt");
+        File.WriteAllText(canary, "protected", Encoding.UTF8);
+        string junction = Path.Combine(fixture.ModsRoot, "High", "nested-junction");
+        try
+        {
+            CreateJunctionOrInconclusive(junction, protectedRoot);
+
+            Mo2SnapshotCaptureResult result =
+                fixture.CreateCapture().Capture(fixture.Request);
+
+            Assert.IsNotNull(result.Snapshot);
+            Assert.IsTrue(result.Gaps.Any(gap =>
+                gap.Code == "reparse-point-unsupported"
+                && gap.Reason.Contains("nested-junction", StringComparison.Ordinal)));
+            Assert.IsFalse(result.Snapshot.PhysicalInventory.Any(entry =>
+                entry.RelativePath.Contains(
+                    "must-not-enter-snapshot.txt",
+                    StringComparison.Ordinal)));
+            Assert.IsFalse(result.Snapshot.LooseProviderChains.Any(chain =>
+                chain.NormalizedRelativePath.Contains(
+                    "must-not-enter-snapshot.txt",
+                    StringComparison.Ordinal)));
+            Assert.AreEqual("protected", File.ReadAllText(canary, Encoding.UTF8));
+        }
+        finally
+        {
+            DeleteJunction(junction);
+            Directory.Delete(protectedRoot, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("M1Unit")]
+    [TestCategory("M1Security")]
+    [TestCategory("M1Fault")]
+    [TestProperty("Category", "M1Unit")]
+    [TestProperty("Category", "M1Security")]
+    [TestProperty("Category", "M1Fault")]
+    public void NestedDirectoryReplacementWithJunctionCannotRedirectTraversal()
+    {
+        using SnapshotFixture fixture = new();
+        string nested = Directory.CreateDirectory(
+            Path.Combine(fixture.ModsRoot, "High", "nested-race")).FullName;
+        File.WriteAllText(Path.Combine(nested, "safe.txt"), "safe", Encoding.UTF8);
+        string protectedRoot = Path.Combine(
+            Path.GetTempPath(),
+            $"Infinium-Slice3-Race-Protected-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(protectedRoot);
+        string canary = Path.Combine(protectedRoot, "race-canary.txt");
+        File.WriteAllText(canary, "protected", Encoding.UTF8);
+        string displaced = $"{nested}-displaced";
+        int replaced = 0;
+        Action<string, string> replace = (rootName, relativePath) =>
+        {
+            if (rootName != "mods"
+                || relativePath != "High/nested-race"
+                || Interlocked.Exchange(ref replaced, 1) != 0)
+            {
+                return;
+            }
+
+            Directory.Move(nested, displaced);
+            CreateJunctionOrInconclusive(nested, protectedRoot);
+        };
+
+        try
+        {
+            Mo2SnapshotCaptureResult result = fixture
+                .CreateCapture(beforeEntryOpen: replace)
+                .Capture(fixture.Request);
+
+            Assert.AreEqual(1, replaced);
+            Assert.AreEqual(SnapshotCaptureState.ChangedDuringCapture, result.State);
+            Assert.IsNull(result.Snapshot);
+            Assert.IsTrue(result.Gaps.Any(gap =>
+                gap.Code == "reparse-point-unsupported"
+                && gap.Reason.Contains("nested-race", StringComparison.Ordinal)));
+            Assert.AreEqual("protected", File.ReadAllText(canary, Encoding.UTF8));
+        }
+        finally
+        {
+            DeleteJunction(nested);
+            if (Directory.Exists(displaced))
+            {
+                Directory.Move(displaced, nested);
+            }
+
+            Directory.Delete(protectedRoot, recursive: true);
+        }
     }
 
     [TestMethod]
@@ -411,6 +648,27 @@ public sealed class Mo2SnapshotCaptureTests
         Assert.AreEqual(SupportedExecutableManifests.SkyrimManifestId, missing.ManifestId);
     }
 
+    [TestMethod]
+    [TestCategory("M1Unit")]
+    [TestCategory("M1Fault")]
+    [TestProperty("Category", "M1Unit")]
+    [TestProperty("Category", "M1Fault")]
+    public void UnsupportedManagerFailsBeforeAnyPathResolution()
+    {
+        using SnapshotFixture fixture = new();
+        Mo2SnapshotCaptureRequest request = fixture.Request with
+        {
+            Mo2ExecutablePath = Path.Combine(fixture.Root, "missing-manager.exe"),
+            ManagerId = "vortex",
+        };
+
+        Mo2SnapshotCaptureResult result = fixture.CreateCapture().Capture(request);
+
+        Assert.AreEqual(SnapshotCaptureState.Failed, result.State);
+        Assert.IsNull(result.Snapshot);
+        Assert.AreEqual("unsupported-manager", result.Gaps.Single().Code);
+    }
+
     private sealed class SnapshotFixture : IDisposable
     {
         internal SnapshotFixture()
@@ -443,6 +701,12 @@ public sealed class Mo2SnapshotCaptureTests
 
             Mo2ExecutablePath = Path.Combine(Root, "ModOrganizer.exe");
             SkyrimExecutablePath = Path.Combine(Root, "game", "SkyrimSE.exe");
+            string gamePluginDirectory =
+                Directory.CreateDirectory(Path.Combine(Root, "plugins")).FullName;
+            File.WriteAllText(
+                Path.Combine(gamePluginDirectory, "game_skyrimse.dll"),
+                "synthetic game plugin",
+                Encoding.UTF8);
             InstanceIniPath = Path.Combine(InstanceRoot, "ModOrganizer.ini");
             File.WriteAllText(
                 InstanceIniPath,
@@ -503,7 +767,8 @@ public sealed class Mo2SnapshotCaptureTests
             Action? mutation = null,
             IReadOnlySet<string>? qualifiedMapperHashes = null,
             IMo2ProcessProbe? processProbe = null,
-            IExecutableAdmissionService? admissionService = null)
+            IExecutableAdmissionService? admissionService = null,
+            Action<string, string>? beforeEntryOpen = null)
         {
             _ = Root;
             return new Mo2SnapshotCapture(
@@ -511,7 +776,8 @@ public sealed class Mo2SnapshotCaptureTests
                 processProbe ?? new FixedProcessProbe(processRunning),
                 qualifiedMapperHashes
                     ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase),
-                mutation);
+                mutation,
+                beforeEntryOpen);
         }
 
         public void Dispose()
@@ -525,6 +791,13 @@ public sealed class Mo2SnapshotCaptureTests
         public ExecutableAdmission AdmitMo2(string path)
         {
             return Accepted(SupportedExecutableManifests.Mo2ManifestId, Path.GetFileName(path));
+        }
+
+        public ExecutableAdmission AdmitSkyrimGamePlugin(string path)
+        {
+            return Accepted(
+                SupportedExecutableManifests.SkyrimGamePluginManifestId,
+                Path.GetFileName(path));
         }
 
         public ExecutableAdmission AdmitSkyrim(
@@ -583,6 +856,12 @@ public sealed class Mo2SnapshotCaptureTests
                 mo2Calls == 1 ? 'a' : 'b');
         }
 
+        public ExecutableAdmission AdmitSkyrimGamePlugin(string path) =>
+            Accepted(
+                SupportedExecutableManifests.SkyrimGamePluginManifestId,
+                path,
+                'd');
+
         public ExecutableAdmission AdmitSkyrim(
             string path,
             RuntimeTargetContext context) =>
@@ -605,5 +884,43 @@ public sealed class Mo2SnapshotCaptureTests
                     null,
                     "00000001:0000000000000001"),
                 []);
+    }
+
+    private static void CreateJunctionOrInconclusive(string link, string target)
+    {
+        using Process process = Process.Start(new ProcessStartInfo
+        {
+            FileName = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.System),
+                "cmd.exe"),
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            ArgumentList =
+            {
+                "/d",
+                "/c",
+                "mklink",
+                "/J",
+                link,
+                target,
+            },
+        }) ?? throw new InvalidOperationException("Could not start the junction helper.");
+        process.WaitForExit();
+        if (process.ExitCode != 0)
+        {
+            Assert.Inconclusive(
+                $"Junction creation is unavailable: {process.StandardError.ReadToEnd()}");
+        }
+    }
+
+    private static void DeleteJunction(string path)
+    {
+        if (Directory.Exists(path)
+            && (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0)
+        {
+            Directory.Delete(path);
+        }
     }
 }

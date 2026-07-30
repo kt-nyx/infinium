@@ -1,0 +1,32 @@
+{
+  "schema_id": "infinium.evaluation.fixture-public-manifest/v1",
+  "schema_version": "1",
+  "fixture_id": "SLICE3-INDEPENDENT-VAL-20260729",
+  "fixture_version": "1.0.0",
+  "evaluation_ids": [
+    "EVAL-0051",
+    "EVAL-0054"
+  ],
+  "purpose": "Independent MO2 2.5.2 effective-state boundary oracle and exact supported-target negative coverage for M1 Slice 3.",
+  "classification": "boundary",
+  "partition": "validation",
+  "partition_history": [
+    {
+      "from": null,
+      "to": "validation",
+      "at": "2026-07-29T00:00:00.0000000+00:00",
+      "reason": "Separately isolated EVAL-0051 and EVAL-0054 oracle construction.",
+      "change_influenced_implementation": false
+    }
+  ],
+  "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
+  "taxonomy_version": "0.1.0",
+  "input_package_fingerprint": "03e6a3ae577b0bd88aaba77a852c86515c9cb467d3c1227600f7d2f1d819bae7",
+  "oracle_fingerprint": "a7dabfc12eb67d5bbc9b7dd53036bdb243d7ceddadcf20da3d726578390a3116",
+  "provenance_fingerprint": "084abcd9acacdc1015432a544c3382ae08d55827988a1fd12a8512d08a48e2d5",
+  "replay_dependency_fingerprint": "efe741111d1e6b66b1a7e38b6e5173178c9fc3bdf1d5d1eae7a7f6107f8dc72b",
+  "redistribution_class": "manifest-only",
+  "owner": "independent-slice3-evaluator",
+  "review_state": "draft",
+  "created_at": "2026-07-29T00:00:00.0000000+00:00"
+}

@@ -244,7 +244,7 @@ public sealed class ManagedRunExecutor(
         }
     }
 
-    private async Task<ManagedWorkerResult> LaunchWorkerAsync(
+    internal async Task<ManagedWorkerResult> LaunchWorkerAsync(
         ManagedWorkerBootstrap bootstrap,
         SafeFileHandle stagingDirectory)
     {
@@ -295,7 +295,11 @@ public sealed class ManagedRunExecutor(
                 contained.StandardError,
                 4_096,
                 "worker diagnostics");
-            using CancellationTokenSource timeout = new(TimeSpan.FromSeconds(30));
+            TimeSpan workerTimeout =
+                boundBootstrap.OperationKind == ManagedWorkerOperationKind.Mo2SnapshotCapture
+                    ? TimeSpan.FromMinutes(2)
+                    : TimeSpan.FromSeconds(30);
+            using CancellationTokenSource timeout = new(workerTimeout);
             Task waitTask = process.WaitForExitAsync(timeout.Token);
             List<Task> pending = [waitTask, outputTask, errorTask];
             while (!waitTask.IsCompleted)

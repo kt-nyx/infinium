@@ -19,12 +19,14 @@ public sealed class Mo2SnapshotCapture
     private readonly IMo2ProcessProbe processProbe;
     private readonly IReadOnlySet<string> qualifiedMapperHashes;
     private readonly Action? betweenStructuralCaptures;
+    private readonly Action<string, string>? beforeHandleRelativeEntryOpen;
 
     public Mo2SnapshotCapture()
         : this(
             new SupportedExecutableManifests(),
             new WindowsMo2ProcessProbe(),
-            new HashSet<string>(StringComparer.OrdinalIgnoreCase),
+            SupportedExecutableManifests.QualifiedMapperSha256s,
+            null,
             null)
     {
     }
@@ -33,12 +35,14 @@ public sealed class Mo2SnapshotCapture
         IExecutableAdmissionService manifests,
         IMo2ProcessProbe processProbe,
         IReadOnlySet<string> qualifiedMapperHashes,
-        Action? betweenStructuralCaptures)
+        Action? betweenStructuralCaptures,
+        Action<string, string>? beforeHandleRelativeEntryOpen = null)
     {
         this.manifests = manifests;
         this.processProbe = processProbe;
         this.qualifiedMapperHashes = qualifiedMapperHashes;
         this.betweenStructuralCaptures = betweenStructuralCaptures;
+        this.beforeHandleRelativeEntryOpen = beforeHandleRelativeEntryOpen;
     }
 
     public Mo2SnapshotCaptureResult Capture(
@@ -50,6 +54,20 @@ public sealed class Mo2SnapshotCapture
         ArgumentNullException.ThrowIfNull(request.QualifiedMappings);
         ArgumentNullException.ThrowIfNull(request.EnabledMapperSha256s);
         List<SnapshotGap> gaps = [];
+        if (!string.Equals(
+                request.ManagerId,
+                "mod-organizer-2",
+                StringComparison.Ordinal))
+        {
+            gaps.Add(new SnapshotGap(
+                "unsupported-manager",
+                "manager-target",
+                $"The declared manager '{request.ManagerId}' is outside the supported target."));
+            return new Mo2SnapshotCaptureResult(
+                SnapshotCaptureState.Failed,
+                null,
+                Freeze(gaps));
+        }
 
         ValidatedPaths? paths;
         try
@@ -72,13 +90,17 @@ public sealed class Mo2SnapshotCapture
         }
 
         ExecutableAdmission mo2Admission = manifests.AdmitMo2(paths.Mo2Executable);
+        ExecutableAdmission gamePluginAdmission =
+            manifests.AdmitSkyrimGamePlugin(paths.SkyrimGamePlugin);
         ExecutableAdmission runtimeAdmission = manifests.AdmitSkyrim(
             paths.SkyrimExecutable,
             request.RuntimeTarget);
         if (mo2Admission.State != AdmissionState.Accepted
+            || gamePluginAdmission.State != AdmissionState.Accepted
             || runtimeAdmission.State != AdmissionState.Accepted)
         {
             AddAdmissionGaps(gaps, "mo2-identity", mo2Admission);
+            AddAdmissionGaps(gaps, "mo2-game-plugin-identity", gamePluginAdmission);
             AddAdmissionGaps(gaps, "runtime-identity", runtimeAdmission);
             return new Mo2SnapshotCaptureResult(
                 SnapshotCaptureState.Failed,
@@ -131,21 +153,40 @@ public sealed class Mo2SnapshotCapture
 
             SkipPolicy skipPolicy =
                 ValidateInstanceConfiguration(paths, controls["instance-ini"].Bytes);
-            gaps.Add(new SnapshotGap(
-                "mo2-game-plugin-inventory-unqualified",
-                "mo2-game-plugin-and-secondary-data",
-                "The exact Skyrim game-plugin automatic/foreign/secondary-root inventory has not completed EVAL-0051 qualification."));
             string savedProfileHint = ReadSavedProfileHint(controls["instance-ini"].Bytes);
 
             betweenStructuralCaptures?.Invoke();
             cancellationToken.ThrowIfCancellationRequested();
-            StructuralCapture second = CaptureStructure(
-                paths,
-                admittedMappings,
-                [],
-                cancellationToken);
+            StructuralCapture second;
+            try
+            {
+                second = CaptureStructure(
+                    paths,
+                    admittedMappings,
+                    [],
+                    cancellationToken);
+            }
+            catch (Exception exception) when (
+                exception is IOException
+                    or UnauthorizedAccessException
+                    or InvalidDataException
+                    or ArgumentException
+                    or Win32Exception)
+            {
+                gaps.Add(new SnapshotGap(
+                    "changed-during-capture",
+                    "snapshot",
+                    $"Structural revalidation failed after the initial capture: {exception.GetType().Name}."));
+                return new Mo2SnapshotCaptureResult(
+                    SnapshotCaptureState.ChangedDuringCapture,
+                    null,
+                    Freeze(gaps));
+            }
+
             ExecutableAdmission finalMo2Admission =
                 manifests.AdmitMo2(paths.Mo2Executable);
+            ExecutableAdmission finalGamePluginAdmission =
+                manifests.AdmitSkyrimGamePlugin(paths.SkyrimGamePlugin);
             ExecutableAdmission finalRuntimeAdmission = manifests.AdmitSkyrim(
                 paths.SkyrimExecutable,
                 request.RuntimeTarget);
@@ -155,6 +196,7 @@ public sealed class Mo2SnapshotCapture
                     StringComparison.OrdinalIgnoreCase)
                 || !ControlsRemainCurrent(controls)
                 || !SameAdmission(mo2Admission, finalMo2Admission)
+                || !SameAdmission(gamePluginAdmission, finalGamePluginAdmission)
                 || !SameAdmission(runtimeAdmission, finalRuntimeAdmission)
                 || processProbe.IsRunning(paths.Mo2Executable))
             {
@@ -185,16 +227,30 @@ public sealed class Mo2SnapshotCapture
             OpaqueId profileId = StableId(
                 "mo2-profile",
                 $"{instanceId.Value}|{first.RootIdentities["profile"]}");
-            string captureFingerprint = FingerprintCapture(
-                first.Fingerprint,
-                controls,
+            Mo2SnapshotDependencyManifest dependencies = BuildDependencyManifest(
+                new string('0', 64),
+                paths,
                 request,
+                first,
+                controls,
+                admittedMappings,
+                qualifiedMapperHashes,
                 mo2Admission,
-                runtimeAdmission,
-                instanceId,
-                profileId);
-            Sha256Fingerprint structuralFingerprint = new(captureFingerprint);
-            OpaqueId snapshotId = new($"snapshot-{captureFingerprint[..24].ToLowerInvariant()}");
+                gamePluginAdmission,
+                runtimeAdmission);
+            Sha256Fingerprint structuralFingerprint =
+                Mo2SnapshotCanonicalization.Compute(
+                    dependencies,
+                    instanceId,
+                    profileId);
+            dependencies = dependencies with
+            {
+                CanonicalFingerprint = structuralFingerprint,
+            };
+            UtcTimestamp capturedAt = new(DateTimeOffset.UtcNow);
+            OpaqueId snapshotId = Mo2SnapshotCanonicalization.ComputeSnapshotId(
+                structuralFingerprint,
+                capturedAt);
             IReadOnlyList<SnapshotPopulationAssurance> assurance =
             Freeze<SnapshotPopulationAssurance>(
             [
@@ -207,8 +263,8 @@ public sealed class Mo2SnapshotCapture
                 new(
                     "loose-provider-structure",
                     SnapshotAssuranceState.Structural,
-                    first.Entries.Count,
-                    first.Entries.Count,
+                    model.PhysicalEntries.Count,
+                    model.PhysicalEntries.Count,
                     gaps
                         .Where(gap => gap.Population is "loose-providers" or "filesystem")
                         .Select(gap => gap.Code)
@@ -223,13 +279,13 @@ public sealed class Mo2SnapshotCapture
             ]);
             InstallationSnapshotContract contract = new(
                 snapshotId,
-                new ContractVersion(2, 0, 0),
+                new ContractVersion(3, 0, 0),
                 instanceId,
                 profileId,
                 structuralFingerprint,
                 assurance,
                 Freeze(model.Entities.Select(entity => entity.EntityId)),
-                new UtcTimestamp(DateTimeOffset.UtcNow));
+                capturedAt);
             Mo2InstallationSnapshot snapshot = new(
                 contract,
                 SupportedExecutableManifests.AdapterId,
@@ -237,7 +293,9 @@ public sealed class Mo2SnapshotCapture
                 paths.ProfileRoot,
                 savedProfileHint,
                 mo2Admission,
+                gamePluginAdmission,
                 runtimeAdmission,
+                dependencies,
                 Freeze(model.Mods),
                 Freeze(model.Plugins),
                 Freeze(model.Entities),
@@ -281,6 +339,13 @@ public sealed class Mo2SnapshotCapture
         }
 
         string mo2Executable = ExistingFile(request.Mo2ExecutablePath);
+        string mo2ApplicationRoot = Path.GetDirectoryName(mo2Executable)
+            ?? throw new InvalidDataException(
+                "The selected MO2 executable has no application directory.");
+        string skyrimGamePlugin = ExistingFile(Path.Combine(
+            mo2ApplicationRoot,
+            "plugins",
+            "game_skyrimse.dll"));
         string instanceRoot = ExistingDirectory(request.InstanceRoot);
         string instanceIni = ExistingFile(request.InstanceIniPath);
         string profilesRoot = ExistingDirectory(request.ProfilesRoot);
@@ -308,6 +373,7 @@ public sealed class Mo2SnapshotCapture
         foreach (string path in new string[]
                  {
                      mo2Executable,
+                     skyrimGamePlugin,
                      instanceRoot,
                      instanceIni,
                      profilesRoot,
@@ -323,6 +389,7 @@ public sealed class Mo2SnapshotCapture
 
         return new ValidatedPaths(
             mo2Executable,
+            skyrimGamePlugin,
             instanceRoot,
             instanceIni,
             profilesRoot,
@@ -333,7 +400,7 @@ public sealed class Mo2SnapshotCapture
             skyrimExecutable);
     }
 
-    private static StructuralCapture CaptureStructure(
+    private StructuralCapture CaptureStructure(
         ValidatedPaths paths,
         IReadOnlyList<AdmittedMapping> admittedMappings,
         ICollection<SnapshotGap> gaps,
@@ -377,82 +444,135 @@ public sealed class Mo2SnapshotCapture
             List<StructuralEntry> destination)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            WindowsObjectIdentity rootIdentity =
-                WindowsReadOnlyObjectIdentity.Open(root, directory: true);
-            ValidateOpenedPath(rootIdentity, root);
-            if ((rootIdentity.Attributes & FileAttributes.ReparsePoint) != 0)
+            WindowsReadOnlyObjectHandle rootHandle =
+                WindowsReadOnlyObjectIdentity.OpenHandle(root, directory: true);
+            ValidateOpenedPath(rootHandle.Identity, root);
+            if ((rootHandle.Identity.Attributes & FileAttributes.ReparsePoint) != 0)
             {
+                rootHandle.Dispose();
                 throw new InvalidDataException(
                     $"Reparse points are not qualified capture roots: {root}");
             }
 
-            rootIdentities[rootName] = rootIdentity.CanonicalValue;
-            Stack<string> directories = new();
-            directories.Push(root);
-            while (directories.Count > 0)
+            rootIdentities[rootName] = rootHandle.Identity.CanonicalValue;
+            uint rootVolume = rootHandle.Identity.VolumeSerialNumber;
+            Stack<(WindowsReadOnlyObjectHandle Handle, string RelativePath)> directories = new();
+            directories.Push((rootHandle, string.Empty));
+            try
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                string directory = directories.Pop();
-                foreach (string child in Directory.EnumerateFileSystemEntries(directory))
+                while (directories.Count > 0)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    FileAttributes attributes = File.GetAttributes(child);
-                    bool isDirectory = (attributes & FileAttributes.Directory) != 0;
-                    string relative = NormalizeRelativePath(Path.GetRelativePath(root, child));
-                    if ((attributes & FileAttributes.ReparsePoint) != 0)
+                    (WindowsReadOnlyObjectHandle directory, string parentRelative) =
+                        directories.Pop();
+                    using (directory)
                     {
-                        destination.Add(new StructuralEntry(
-                            rootName,
-                            relative,
-                            isDirectory,
-                            0,
-                            0,
-                            attributes,
-                            "reparse-point"));
-                        gaps.Add(new SnapshotGap(
-                            "reparse-point-unsupported",
-                            "filesystem",
-                            $"Reparse point is outside the qualified capture surface: {child}"));
-                        continue;
-                    }
+                        string expectedDirectory = string.IsNullOrEmpty(parentRelative)
+                            ? root
+                            : Path.Combine(
+                                root,
+                                parentRelative.Replace('/', Path.DirectorySeparatorChar));
+                        WindowsReadOnlyObjectIdentity.ValidateContainedObject(
+                            directory.Identity,
+                            expectedDirectory,
+                            rootVolume);
+                        foreach (WindowsReadOnlyDirectoryEntry listed
+                                 in WindowsReadOnlyObjectIdentity.EnumerateChildren(directory))
+                        {
+                            cancellationToken.ThrowIfCancellationRequested();
+                            string relative = string.IsNullOrEmpty(parentRelative)
+                                ? NormalizeRelativePath(listed.Name)
+                                : $"{parentRelative}/{NormalizeRelativePath(listed.Name)}";
+                            beforeHandleRelativeEntryOpen?.Invoke(rootName, relative);
+                            WindowsReadOnlyObjectHandle child =
+                                WindowsReadOnlyObjectIdentity.OpenRelative(
+                                    directory,
+                                    listed.Name,
+                                    listed.IsDirectory);
+                            WindowsObjectIdentity identity = child.Identity;
+                            FileAttributes attributes = identity.Attributes;
+                            bool isDirectory =
+                                (attributes & FileAttributes.Directory) != 0;
+                            string expectedChild = Path.Combine(
+                                directory.Identity.FinalPath,
+                                listed.Name);
+                            if ((attributes & FileAttributes.ReparsePoint) != 0)
+                            {
+                                if (identity.VolumeSerialNumber
+                                        != directory.Identity.VolumeSerialNumber
+                                    || !PathComparer.Equals(
+                                        identity.FinalPath,
+                                        Path.GetFullPath(expectedChild)))
+                                {
+                                    child.Dispose();
+                                    throw new InvalidDataException(
+                                        "A reparse object escaped its opened snapshot parent.");
+                                }
 
-                    FileSystemInfo info = isDirectory
-                        ? new DirectoryInfo(child)
-                        : new FileInfo(child);
-                    string? objectIdentity = rootName == "mods"
-                                             && isDirectory
-                                             && !relative.Contains('/')
-                        ? ReadValidatedObjectIdentity(child, directory: true)
-                        : null;
-                    destination.Add(new StructuralEntry(
-                        rootName,
-                        relative,
-                        isDirectory,
-                        isDirectory ? 0 : ((FileInfo)info).Length,
-                        info.LastWriteTimeUtc.Ticks,
-                        attributes,
-                        objectIdentity));
-                    if (destination.Count > MaximumEntries)
-                    {
-                        throw new InvalidDataException(
-                            $"Snapshot contains more than {MaximumEntries} structural entries.");
-                    }
+                                child.Dispose();
+                                destination.Add(new StructuralEntry(
+                                    rootName,
+                                    relative,
+                                    isDirectory,
+                                    0,
+                                    identity.LastWriteUtcTicks,
+                                    attributes,
+                                    identity.CanonicalValue));
+                                gaps.Add(new SnapshotGap(
+                                    "reparse-point-unsupported",
+                                    "filesystem",
+                                    $"Reparse point is outside the qualified capture surface: {expectedChild}"));
+                                continue;
+                            }
 
-                    if (isDirectory)
-                    {
-                        directories.Push(child);
+                            try
+                            {
+                                WindowsReadOnlyObjectIdentity.ValidateContainedObject(
+                                    identity,
+                                    expectedChild,
+                                    directory.Identity.VolumeSerialNumber);
+                            }
+                            catch
+                            {
+                                child.Dispose();
+                                throw;
+                            }
+
+                            destination.Add(new StructuralEntry(
+                                rootName,
+                                relative,
+                                isDirectory,
+                                identity.ByteLength,
+                                identity.LastWriteUtcTicks,
+                                attributes,
+                                identity.CanonicalValue));
+                            if (destination.Count > MaximumEntries)
+                            {
+                                child.Dispose();
+                                throw new InvalidDataException(
+                                    $"Snapshot contains more than {MaximumEntries} structural entries.");
+                            }
+
+                            if (isDirectory)
+                            {
+                                directories.Push((child, relative));
+                            }
+                            else
+                            {
+                                child.Dispose();
+                            }
+                        }
                     }
                 }
             }
+            finally
+            {
+                while (directories.Count > 0)
+                {
+                    directories.Pop().Handle.Dispose();
+                }
+            }
         }
-    }
-
-    private static string ReadValidatedObjectIdentity(string path, bool directory)
-    {
-        WindowsObjectIdentity identity =
-            WindowsReadOnlyObjectIdentity.Open(path, directory);
-        ValidateOpenedPath(identity, path);
-        return identity.CanonicalValue;
     }
 
     private static void ValidateOpenedPath(WindowsObjectIdentity identity, string expectedPath)
@@ -467,13 +587,19 @@ public sealed class Mo2SnapshotCapture
 
     private static Dictionary<string, ControlFile> ReadControls(ValidatedPaths paths)
     {
+        string gameRoot = Path.GetDirectoryName(paths.GameDataRoot)
+            ?? throw new InvalidDataException(
+                "The admitted game Data root has no parent game directory.");
         Dictionary<string, ControlFile> controls = new(StringComparer.Ordinal)
         {
-            ["instance-ini"] = ReadControl(paths.InstanceIni),
-            ["modlist"] = ReadOptionalControl(Path.Combine(paths.ProfileRoot, "modlist.txt")),
-            ["plugins"] = ReadOptionalControl(Path.Combine(paths.ProfileRoot, "plugins.txt")),
-            ["loadorder"] = ReadOptionalControl(Path.Combine(paths.ProfileRoot, "loadorder.txt")),
-            ["archives"] = ReadOptionalControl(Path.Combine(paths.ProfileRoot, "archives.txt")),
+            ["instance-ini"] = ReadControl(
+                paths.InstanceRoot,
+                Path.GetRelativePath(paths.InstanceRoot, paths.InstanceIni)),
+            ["modlist"] = ReadOptionalControl(paths.ProfileRoot, "modlist.txt"),
+            ["plugins"] = ReadOptionalControl(paths.ProfileRoot, "plugins.txt"),
+            ["loadorder"] = ReadOptionalControl(paths.ProfileRoot, "loadorder.txt"),
+            ["archives"] = ReadOptionalControl(paths.ProfileRoot, "archives.txt"),
+            ["skyrim-ccc"] = ReadOptionalControl(gameRoot, "Skyrim.ccc"),
         };
         return controls;
     }
@@ -485,7 +611,6 @@ public sealed class Mo2SnapshotCapture
     {
         foreach ((string name, string root) in DiscoverModDirectories(paths, structure))
         {
-            string path = Path.Combine(root, "meta.ini");
             string relative = $"{NormalizeRelativePath(name)}/meta.ini";
             if (structure.Entries.Any(entry =>
                     entry.Root == "mods"
@@ -495,7 +620,9 @@ public sealed class Mo2SnapshotCapture
                         relative,
                         StringComparison.OrdinalIgnoreCase)))
             {
-                controls.Add($"mod-meta:{name}", ReadControl(path));
+                controls.Add(
+                    $"mod-meta:{name}",
+                    ReadControl(paths.ModsRoot, relative));
             }
         }
     }
@@ -570,7 +697,7 @@ public sealed class Mo2SnapshotCapture
             mods.Add(new ModState(
                 item.Name,
                 item.Enablement,
-                index,
+                item.Listed ? index : null,
                 item.Listed,
                 entityId));
         }
@@ -597,10 +724,15 @@ public sealed class Mo2SnapshotCapture
         }
 
         IReadOnlyList<LooseProviderChain> chains = BuildProviderChains(providers, gaps);
+        GamePluginInventory gamePluginInventory = ReadGamePluginInventory(
+            controls["instance-ini"].Bytes,
+            controls["skyrim-ccc"].Bytes,
+            gaps);
         IReadOnlyList<PluginState> plugins = BuildPlugins(
             controls["plugins"].Bytes,
             controls["loadorder"].Bytes,
             chains,
+            gamePluginInventory,
             gaps);
         return new CaptureModel(
             mods,
@@ -844,22 +976,11 @@ public sealed class Mo2SnapshotCapture
         byte[] pluginsBytes,
         byte[] loadOrderBytes,
         IReadOnlyList<LooseProviderChain> chains,
+        GamePluginInventory gamePluginInventory,
         ICollection<SnapshotGap> gaps)
     {
         IReadOnlyList<PluginLine> pluginLines = ParsePlugins(pluginsBytes, gaps);
         IReadOnlyList<string> loadOrder = ParseSimpleList(loadOrderBytes, "loadorder", gaps);
-        Dictionary<string, int> order = new(PathComparer);
-        for (int index = 0; index < loadOrder.Count; index++)
-        {
-            if (!order.TryAdd(loadOrder[index], index))
-            {
-                gaps.Add(new SnapshotGap(
-                    "duplicate-loadorder-entry",
-                    "plugins",
-                    $"Duplicate loadorder entry: {loadOrder[index]}"));
-            }
-        }
-
         Dictionary<string, LooseProviderChain> pluginProviders = new(PathComparer);
         HashSet<string> ambiguousProviders = new(PathComparer);
         foreach (LooseProviderChain chain in chains.Where(
@@ -877,29 +998,100 @@ public sealed class Mo2SnapshotCapture
             }
         }
 
-        List<PluginState> result = [];
-        HashSet<string> seen = new(PathComparer);
+        Dictionary<string, PluginLine> listedPlugins = new(PathComparer);
         foreach (PluginLine plugin in pluginLines)
         {
-            if (!seen.Add(plugin.Name))
+            if (!listedPlugins.TryAdd(plugin.Name, plugin))
             {
                 gaps.Add(new SnapshotGap(
                     "duplicate-plugin-entry",
                     "plugins",
                     $"Duplicate plugin entry: {plugin.Name}"));
+            }
+        }
+
+        List<string> effectiveOrder = [];
+        HashSet<string> ordered = new(PathComparer);
+        if (gamePluginInventory.ForceEnableCoreFiles)
+        {
+            foreach (string primary in gamePluginInventory.PrimaryPlugins.Where(
+                         pluginProviders.ContainsKey))
+            {
+                if (ordered.Add(primary))
+                {
+                    effectiveOrder.Add(primary);
+                }
+            }
+        }
+
+        HashSet<string> loadOrderSeen = new(PathComparer);
+        foreach (string name in loadOrder)
+        {
+            if (!loadOrderSeen.Add(name))
+            {
+                gaps.Add(new SnapshotGap(
+                    "duplicate-loadorder-entry",
+                    "plugins",
+                    $"Duplicate loadorder entry: {name}"));
                 continue;
             }
 
-            pluginProviders.TryGetValue(plugin.Name, out LooseProviderChain? chain);
-            if (ambiguousProviders.Contains(plugin.Name))
+            if (ordered.Add(name))
+            {
+                effectiveOrder.Add(name);
+            }
+        }
+
+        Dictionary<string, int> order = effectiveOrder
+            .Select((name, index) => (name, index))
+            .ToDictionary(pair => pair.name, pair => pair.index, PathComparer);
+        HashSet<string> names = new(listedPlugins.Keys, PathComparer);
+        names.UnionWith(pluginProviders.Keys);
+        names.UnionWith(loadOrder);
+        List<PluginState> result = [];
+        foreach (string name in names
+                     .OrderBy(value => order.TryGetValue(value, out int position)
+                         ? position
+                         : int.MaxValue)
+                     .ThenBy(value => value, PathComparer)
+                     .ThenBy(value => value, StringComparer.Ordinal))
+        {
+            listedPlugins.TryGetValue(name, out PluginLine? listed);
+            pluginProviders.TryGetValue(name, out LooseProviderChain? chain);
+            bool ambiguous = ambiguousProviders.Contains(name);
+            if (ambiguous)
             {
                 chain = null;
             }
 
-            order.TryGetValue(plugin.Name, out int loadPosition);
-            bool hasOrder = order.ContainsKey(plugin.Name);
+            bool primary = gamePluginInventory.PrimaryPluginSet.Contains(name);
+            bool creationClub = gamePluginInventory.CreationClubPluginSet.Contains(name);
+            PluginClassification classification = primary
+                ? creationClub
+                    ? PluginClassification.CreationClubGame
+                    : PluginClassification.PrimaryGame
+                : chain?.Winner.Kind == LooseProviderKind.PhysicalData
+                    ? PluginClassification.ForeignGameData
+                    : PluginClassification.Regular;
+            PluginEnablementState enablement =
+                primary && gamePluginInventory.ForceEnableCoreFiles && chain is not null
+                    ? PluginEnablementState.ForcedEnabledByGamePlugin
+                    : listed is not null
+                        ? listed.Enabled
+                            ? PluginEnablementState.EnabledByProfile
+                            : PluginEnablementState.DisabledByProfile
+                        : PluginEnablementState.Unresolved;
+            if (enablement == PluginEnablementState.Unresolved && chain is not null)
+            {
+                gaps.Add(new SnapshotGap(
+                    "unlisted-plugin-enablement-unresolved",
+                    "plugins",
+                    $"Available plugin is absent from plugins.txt: {name}"));
+            }
+
+            bool hasOrder = order.TryGetValue(name, out int loadPosition);
             string correlation = chain is null
-                ? ambiguousProviders.Contains(plugin.Name)
+                ? ambiguous
                     ? "ambiguous-winning-provider"
                     : "missing-winning-provider"
                 : hasOrder
@@ -910,23 +1102,16 @@ public sealed class Mo2SnapshotCapture
                 gaps.Add(new SnapshotGap(
                     "plugin-correlation-gap",
                     "plugins",
-                    $"{plugin.Name}: {correlation}"));
+                    $"{name}: {correlation}"));
             }
 
             result.Add(new PluginState(
-                plugin.Name,
-                plugin.Enabled,
+                name,
+                enablement,
+                classification,
                 hasOrder ? loadPosition : null,
                 chain?.Winner.LocalInstalledEntityId,
                 correlation));
-        }
-
-        foreach (string loadName in loadOrder.Where(name => !seen.Contains(name)))
-        {
-            gaps.Add(new SnapshotGap(
-                "loadorder-plugin-not-listed",
-                "plugins",
-                $"Loadorder entry is absent from plugins.txt: {loadName}"));
         }
 
         return result;
@@ -1004,6 +1189,85 @@ public sealed class Mo2SnapshotCapture
         }
 
         return result;
+    }
+
+    private static GamePluginInventory ReadGamePluginInventory(
+        byte[] instanceIniBytes,
+        byte[] creationClubBytes,
+        ICollection<SnapshotGap> gaps)
+    {
+        Dictionary<string, string> values = ParseIni(instanceIniBytes);
+        bool forceEnableCoreFiles = true;
+        if (values.TryGetValue(
+                "settings/force_enable_core_files",
+                out string? configured))
+        {
+            if (configured.Equals("true", StringComparison.OrdinalIgnoreCase)
+                || configured.Equals("yes", StringComparison.OrdinalIgnoreCase)
+                || configured == "1")
+            {
+                forceEnableCoreFiles = true;
+            }
+            else if (configured.Equals("false", StringComparison.OrdinalIgnoreCase)
+                     || configured.Equals("no", StringComparison.OrdinalIgnoreCase)
+                     || configured == "0")
+            {
+                forceEnableCoreFiles = false;
+            }
+            else
+            {
+                throw new InvalidDataException(
+                    "Settings/force_enable_core_files is not a supported Boolean value.");
+            }
+        }
+
+        string[] basePrimary =
+        [
+            "Skyrim.esm",
+            "Update.esm",
+            "Dawnguard.esm",
+            "HearthFires.esm",
+            "Dragonborn.esm",
+        ];
+        List<string> creationClub = [];
+        HashSet<string> seen = new(basePrimary, PathComparer);
+        foreach (string rawLine in DecodeLines(creationClubBytes))
+        {
+            string name = rawLine.Trim();
+            if (name.Length == 0 || name[0] is '#' or ';')
+            {
+                continue;
+            }
+
+            if (!IsPluginFile(name)
+                || name.Contains(Path.DirectorySeparatorChar)
+                || name.Contains(Path.AltDirectorySeparatorChar))
+            {
+                gaps.Add(new SnapshotGap(
+                    "malformed-skyrim-ccc-entry",
+                    "mo2-game-plugin",
+                    $"Unsupported Skyrim.ccc entry: {name}"));
+                continue;
+            }
+
+            if (!seen.Add(name))
+            {
+                gaps.Add(new SnapshotGap(
+                    "duplicate-skyrim-ccc-entry",
+                    "mo2-game-plugin",
+                    $"Duplicate Windows-equivalent Skyrim.ccc entry: {name}"));
+                continue;
+            }
+
+            creationClub.Add(name);
+        }
+
+        List<string> primary = [.. basePrimary, .. creationClub];
+        return new GamePluginInventory(
+            forceEnableCoreFiles,
+            Freeze(primary),
+            new HashSet<string>(primary, PathComparer),
+            new HashSet<string>(creationClub, PathComparer));
     }
 
     private static IReadOnlyList<string> ParseSimpleList(
@@ -1299,9 +1563,18 @@ public sealed class Mo2SnapshotCapture
         }
     }
 
-    private static ControlFile ReadControl(string path)
+    private static ControlFile ReadControl(string rootPath, string relativePath)
     {
-        using FileStream stream = SupportedExecutableManifests.OpenStableRead(path);
+        string normalizedRelative = NormalizeRelativePath(relativePath);
+        string path = Path.Combine(
+            rootPath,
+            normalizedRelative.Replace('/', Path.DirectorySeparatorChar));
+        using FileStream stream =
+            WindowsReadOnlyObjectIdentity.OpenStableRelativeRead(
+                rootPath,
+                normalizedRelative);
+        string physicalObjectIdentity =
+            WindowsReadOnlyObjectIdentity.Read(stream.SafeFileHandle).CanonicalValue;
         if (stream.Length > MaximumControlBytes)
         {
             throw new InvalidDataException(
@@ -1312,20 +1585,35 @@ public sealed class Mo2SnapshotCapture
         stream.ReadExactly(bytes);
         return new ControlFile(
             path,
+            rootPath,
+            normalizedRelative,
             bytes,
             Convert.ToHexString(SHA256.HashData(bytes)),
-            Exists: true);
+            Exists: true,
+            physicalObjectIdentity);
     }
 
-    private static ControlFile ReadOptionalControl(string path)
+    private static ControlFile ReadOptionalControl(string rootPath, string relativePath)
     {
-        return File.Exists(path)
-            ? ReadControl(path)
-            : new ControlFile(
-                path,
+        try
+        {
+            return ReadControl(rootPath, relativePath);
+        }
+        catch (Win32Exception exception) when (
+            exception.NativeErrorCode is 2 or 3)
+        {
+            string normalizedRelative = NormalizeRelativePath(relativePath);
+            return new ControlFile(
+                Path.Combine(
+                    rootPath,
+                    normalizedRelative.Replace('/', Path.DirectorySeparatorChar)),
+                rootPath,
+                normalizedRelative,
                 [],
                 Convert.ToHexString(SHA256.HashData([])),
-                Exists: false);
+                Exists: false,
+                PhysicalObjectIdentity: null);
+        }
     }
 
     private static bool ControlsRemainCurrent(
@@ -1333,23 +1621,29 @@ public sealed class Mo2SnapshotCapture
     {
         foreach (ControlFile control in controls.Values)
         {
-            if (!File.Exists(control.Path))
+            ControlFile current;
+            try
             {
-                if (!control.Exists)
-                {
-                    continue;
-                }
-
+                current = ReadOptionalControl(control.RootPath, control.RelativePath);
+            }
+            catch (Exception exception) when (
+                exception is IOException
+                    or UnauthorizedAccessException
+                    or InvalidDataException
+                    or Win32Exception)
+            {
                 return false;
             }
 
-            if (!control.Exists)
-            {
-                return false;
-            }
-
-            ControlFile current = ReadControl(control.Path);
-            if (!string.Equals(current.Sha256, control.Sha256, StringComparison.OrdinalIgnoreCase))
+            if (current.Exists != control.Exists
+                || !string.Equals(
+                    current.Sha256,
+                    control.Sha256,
+                    StringComparison.OrdinalIgnoreCase)
+                || !string.Equals(
+                    current.PhysicalObjectIdentity,
+                    control.PhysicalObjectIdentity,
+                    StringComparison.Ordinal))
             {
                 return false;
             }
@@ -1671,53 +1965,106 @@ public sealed class Mo2SnapshotCapture
                     $"{entry.RelativePath}|{entry.IsDirectory}|{entry.Length}|{entry.LastWriteUtcTicks}|{entry.Attributes}"))));
     }
 
-    private static string FingerprintCapture(
-        string structuralFingerprint,
-        IReadOnlyDictionary<string, ControlFile> controls,
+    private static Mo2SnapshotDependencyManifest BuildDependencyManifest(
+        string canonicalFingerprint,
+        ValidatedPaths paths,
         Mo2SnapshotCaptureRequest request,
+        StructuralCapture structure,
+        IReadOnlyDictionary<string, ControlFile> controls,
+        IReadOnlyList<AdmittedMapping> admittedMappings,
+        IReadOnlySet<string> qualifiedMapperHashes,
         ExecutableAdmission mo2Admission,
-        ExecutableAdmission runtimeAdmission,
-        OpaqueId instanceId,
-        OpaqueId profileId)
+        ExecutableAdmission gamePluginAdmission,
+        ExecutableAdmission runtimeAdmission)
     {
-        StringBuilder canonical = new();
-        canonical.AppendLine(SupportedExecutableManifests.AdapterId)
-            .AppendLine(structuralFingerprint)
-            .AppendLine(instanceId.Value)
-            .AppendLine(profileId.Value)
-            .AppendLine(request.SelectedProfileName)
-            .Append(request.RuntimeTarget.Platform)
-            .Append('|')
-            .Append(request.RuntimeTarget.DistributionChannel)
-            .Append('|')
-            .AppendLine(request.RuntimeTarget.ApplicationId)
-            .AppendLine(mo2Admission.ObservedIdentity!.Sha256)
-            .AppendLine(runtimeAdmission.ObservedIdentity!.Sha256);
-        foreach ((string name, ControlFile control) in controls.OrderBy(
-                     pair => pair.Key,
-                     StringComparer.Ordinal))
-        {
-            canonical.Append(name)
-                .Append('|')
-                .Append(control.Exists)
-                .Append('|')
-                .AppendLine(control.Sha256);
-        }
+        HashSet<string> admittedMappingIds = new(
+            admittedMappings.Select(mapping => mapping.Mapping.MappingId),
+            StringComparer.Ordinal);
+        IReadOnlyList<SnapshotControlObservation> controlObservations =
+            Freeze(controls
+                .OrderBy(pair => pair.Key, StringComparer.Ordinal)
+                .Select(pair => new SnapshotControlObservation(
+                    pair.Key,
+                    pair.Value.Path,
+                    pair.Value.Exists,
+                    pair.Value.Bytes.LongLength,
+                    new Sha256Fingerprint(pair.Value.Sha256),
+                    Convert.ToBase64String(pair.Value.Bytes),
+                    pair.Value.PhysicalObjectIdentity)));
+        IReadOnlyList<SnapshotRootObservation> rootObservations =
+            Freeze(structure.RootIdentities
+                .OrderBy(pair => pair.Key, StringComparer.Ordinal)
+                .Select(pair => new SnapshotRootObservation(
+                    pair.Key,
+                    ResolveStructuralRootPath(pair.Key, paths, admittedMappings),
+                    pair.Value)));
+        IReadOnlyList<SnapshotStructuralObservation> structuralObservations =
+            Freeze(structure.Entries
+                .OrderBy(entry => entry.Root, StringComparer.Ordinal)
+                .ThenBy(entry => entry.RelativePath, PathComparer)
+                .ThenBy(entry => entry.RelativePath, StringComparer.Ordinal)
+                .Select(entry => new SnapshotStructuralObservation(
+                    entry.Root,
+                    entry.RelativePath,
+                    entry.IsDirectory,
+                    entry.Length,
+                    entry.LastWriteUtcTicks,
+                    entry.Attributes,
+                    entry.ObjectIdentity)));
+        IReadOnlyList<SnapshotMappingDependency> mappingDependencies =
+            Freeze(request.QualifiedMappings
+                .OrderBy(mapping => mapping.MappingId, StringComparer.Ordinal)
+                .Select(mapping => new SnapshotMappingDependency(
+                    mapping.MappingId,
+                    Path.GetFullPath(mapping.SourceRoot),
+                    NormalizeVirtualPrefix(mapping.VirtualPrefix),
+                    new Sha256Fingerprint(mapping.MapperSha256),
+                    admittedMappingIds.Contains(mapping.MappingId))));
+        return new Mo2SnapshotDependencyManifest(
+            new ContractVersion(1, 0, 0),
+            new Sha256Fingerprint(canonicalFingerprint),
+            SupportedExecutableManifests.AdapterId,
+            request.ManagerId,
+            request.SelectedProfileName,
+            request.RuntimeTarget,
+            mo2Admission.ObservedIdentity!,
+            gamePluginAdmission.ObservedIdentity!,
+            runtimeAdmission.ObservedIdentity!,
+            Freeze(request.EnabledMapperSha256s
+                .Select(NormalizeSha256)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(value => value, StringComparer.Ordinal)),
+            Freeze(qualifiedMapperHashes
+                .Select(NormalizeSha256)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(value => value, StringComparer.Ordinal)),
+            controlObservations,
+            rootObservations,
+            structuralObservations,
+            mappingDependencies);
+    }
 
-        foreach (QualifiedMapping mapping in request.QualifiedMappings.OrderBy(
-                     value => value.MappingId,
-                     StringComparer.Ordinal))
+    private static string ResolveStructuralRootPath(
+        string role,
+        ValidatedPaths paths,
+        IReadOnlyList<AdmittedMapping> admittedMappings)
+    {
+        return role switch
         {
-            canonical.Append(mapping.MappingId)
-                .Append('|')
-                .Append(Path.GetFullPath(mapping.SourceRoot))
-                .Append('|')
-                .Append(mapping.VirtualPrefix)
-                .Append('|')
-                .AppendLine(mapping.MapperSha256);
-        }
-
-        return HashUtf8(canonical.ToString());
+            "instance" => paths.InstanceRoot,
+            "profile" => paths.ProfileRoot,
+            "mods" => paths.ModsRoot,
+            "overwrite" => paths.OverwriteRoot,
+            "game-data" => paths.GameDataRoot,
+            _ when role.StartsWith("mapping:", StringComparison.Ordinal) =>
+                admittedMappings.Single(mapping =>
+                    string.Equals(
+                        mapping.Mapping.MappingId,
+                        role["mapping:".Length..],
+                        StringComparison.Ordinal)).SourceRoot,
+            _ => throw new InvalidDataException(
+                $"Unknown structural root role '{role}'."),
+        };
     }
 
     private static string HashUtf8(string value)
@@ -1752,6 +2099,7 @@ public sealed class Mo2SnapshotCapture
 
     private sealed record ValidatedPaths(
         string Mo2Executable,
+        string SkyrimGamePlugin,
         string InstanceRoot,
         string InstanceIni,
         string ProfilesRoot,
@@ -1775,7 +2123,14 @@ public sealed class Mo2SnapshotCapture
         IReadOnlyList<StructuralEntry> Entries,
         IReadOnlyDictionary<string, string> RootIdentities);
 
-    private sealed record ControlFile(string Path, byte[] Bytes, string Sha256, bool Exists);
+    private sealed record ControlFile(
+        string Path,
+        string RootPath,
+        string RelativePath,
+        byte[] Bytes,
+        string Sha256,
+        bool Exists,
+        string? PhysicalObjectIdentity);
 
     private sealed record ModListLine(
         string Name,
@@ -1783,6 +2138,12 @@ public sealed class Mo2SnapshotCapture
         bool Listed);
 
     private sealed record PluginLine(string Name, bool Enabled);
+
+    private sealed record GamePluginInventory(
+        bool ForceEnableCoreFiles,
+        IReadOnlyList<string> PrimaryPlugins,
+        IReadOnlySet<string> PrimaryPluginSet,
+        IReadOnlySet<string> CreationClubPluginSet);
 
     private sealed record ProviderInventory(
         OpaqueId EntityId,
@@ -1815,15 +2176,15 @@ internal sealed class WindowsMo2ProcessProbe : IMo2ProcessProbe
         WindowsObjectIdentity expectedIdentity =
             WindowsReadOnlyObjectIdentity.Open(expected, directory: false);
         string processName = Path.GetFileNameWithoutExtension(expected);
-        foreach (Process process in Process.GetProcessesByName(processName))
+        foreach (Process process in Process.GetProcesses())
         {
             using (process)
             {
                 try
                 {
                     string? path = process.MainModule?.FileName;
-                    if (path is null
-                        || WindowsReadOnlyObjectIdentity.Open(path, directory: false)
+                    if (path is not null
+                        && WindowsReadOnlyObjectIdentity.Open(path, directory: false)
                             .CanonicalValue == expectedIdentity.CanonicalValue)
                     {
                         return true;
@@ -1834,7 +2195,13 @@ internal sealed class WindowsMo2ProcessProbe : IMo2ProcessProbe
                         or InvalidOperationException
                         or NotSupportedException)
                 {
-                    return true;
+                    if (string.Equals(
+                            process.ProcessName,
+                            processName,
+                            StringComparison.OrdinalIgnoreCase))
+                    {
+                        return true;
+                    }
                 }
             }
         }

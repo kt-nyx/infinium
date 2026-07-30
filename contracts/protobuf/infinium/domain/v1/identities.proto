@@ -18,6 +18,7 @@ message DurableCommandId { string value = 1; }
 message DurableTransitionId { string value = 1; }
 message SubscriptionId { string value = 1; }
 message InstallationSnapshotId { string value = 1; }
+message SnapshotCaptureOperationId { string value = 1; }
 message AnalysisContextId { string value = 1; }
 message ScanConfigurationId { string value = 1; }
 message ResolvedInputManifestId { string value = 1; }
@@ -43,6 +44,7 @@ message OperationOwner {
     RunId analysis_run_id = 1;
     EvidenceAcquisitionRunId evidence_acquisition_run_id = 2;
     MaintenanceOperationId maintenance_operation_id = 3;
+    SnapshotCaptureOperationId snapshot_capture_operation_id = 4;
   }
 }
 

@@ -15,6 +15,7 @@ public sealed partial class ProtoAuthorityContractTests
         "infinium/helper/v1/helper.proto:HelperStatus",
         "infinium/helper/v1/helper.proto:HelperStagedOutputManifest",
         "infinium/worker/v1/worker.proto:WorkerAssignment",
+        "infinium/worker/v1/worker.proto:Mo2SnapshotCaptureAssignment",
         "infinium/worker/v1/worker.proto:StagedOutputManifest",
         "infinium/protocol/v1/protocol.proto:ApplicationHandshakeRequest",
         "infinium/protocol/v1/protocol.proto:WorkerPrivateBootstrap",
@@ -35,6 +36,9 @@ public sealed partial class ProtoAuthorityContractTests
         StringAssert.Contains(owner, "RunId analysis_run_id = 1;");
         StringAssert.Contains(owner, "EvidenceAcquisitionRunId evidence_acquisition_run_id = 2;");
         StringAssert.Contains(owner, "MaintenanceOperationId maintenance_operation_id = 3;");
+        StringAssert.Contains(
+            owner,
+            "SnapshotCaptureOperationId snapshot_capture_operation_id = 4;");
 
         string application = ReadProto("infinium/application/v1/application.proto");
         string lifecycleChanged = ExtractMessageBody(application, "LifecycleChanged");
@@ -104,10 +108,27 @@ public sealed partial class ProtoAuthorityContractTests
             [
                 "bootstrap_id",
                 "adapter_or_analyzer_id",
+                "application_id",
+                "distribution_channel",
+                "enabled_mapper_sha256",
+                "game_data_root",
+                "instance_ini_path",
+                "instance_root",
                 "logical_name",
+                "mapper_sha256",
+                "mapping_id",
+                "mo2_executable_path",
+                "mods_root",
+                "overwrite_root",
+                "platform",
+                "profiles_root",
+                "selected_profile_name",
+                "skyrim_executable_path",
+                "source_root",
                 "typed_relative_name",
                 "inert_status_text",
                 "staging_receipt_id",
+                "virtual_prefix",
             ]);
         AssertStringFieldAllowlist(
             "infinium/protocol/v1/protocol.proto",

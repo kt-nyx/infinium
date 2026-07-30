@@ -48,6 +48,24 @@ public enum ModEnablementState
     Unresolved,
 }
 
+public enum PluginEnablementState
+{
+    Unspecified,
+    EnabledByProfile,
+    DisabledByProfile,
+    ForcedEnabledByGamePlugin,
+    Unresolved,
+}
+
+public enum PluginClassification
+{
+    Unspecified,
+    Regular,
+    PrimaryGame,
+    CreationClubGame,
+    ForeignGameData,
+}
+
 public sealed record ExecutableIdentity(
     string FileName,
     long ByteLength,
@@ -87,21 +105,28 @@ public sealed record Mo2SnapshotCaptureRequest(
     string SelectedProfileName,
     RuntimeTargetContext RuntimeTarget,
     IReadOnlyList<QualifiedMapping> QualifiedMappings,
-    IReadOnlyList<string> EnabledMapperSha256s);
+    IReadOnlyList<string> EnabledMapperSha256s,
+    string ManagerId = "mod-organizer-2");
 
 public sealed record ModState(
     string Name,
     ModEnablementState Enablement,
-    int Priority,
+    int? Priority,
     bool Listed,
     OpaqueId LocalInstalledEntityId);
 
 public sealed record PluginState(
     string Name,
-    bool Enabled,
+    PluginEnablementState Enablement,
+    PluginClassification Classification,
     int? LoadOrder,
     OpaqueId? WinningLocalInstalledEntityId,
-    string CorrelationState);
+    string CorrelationState)
+{
+    public bool Enabled =>
+        Enablement is PluginEnablementState.EnabledByProfile
+            or PluginEnablementState.ForcedEnabledByGamePlugin;
+}
 
 public sealed record LocalSourceHint(
     string Key,
@@ -144,7 +169,9 @@ public sealed record Mo2InstallationSnapshot(
     string ProfileRoot,
     string SavedProfileHint,
     ExecutableAdmission Mo2Admission,
+    ExecutableAdmission SkyrimGamePluginAdmission,
     ExecutableAdmission RuntimeAdmission,
+    Mo2SnapshotDependencyManifest Dependencies,
     IReadOnlyList<ModState> Mods,
     IReadOnlyList<PluginState> Plugins,
     IReadOnlyList<LocalInstalledEntity> LocalInstalledEntities,

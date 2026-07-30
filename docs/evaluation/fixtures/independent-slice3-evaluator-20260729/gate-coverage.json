@@ -1,0 +1,63 @@
+{
+  "schema_id": "infinium.eval.slice3.gate-coverage",
+  "schema_version": 1,
+  "cases": [
+    {
+      "evaluation_id": "EVAL-0051",
+      "specification_revision": "infinium.eval.m1.semantic-and-ground-truth/1",
+      "fixture_packages": [
+        "MO2-ATOMIC-DEV",
+        "MO2-INTEGRATION-VAL",
+        "MO2-NEGATIVE-VAL"
+      ],
+      "direct_physical_facts": "constructed",
+      "mo2_ui_vfs_oracle": "partial-accessibility-observation-explicit-target-data-view-pending",
+      "explicit_profile_vs_saved_selection": "saved-suggestion-observed-explicit-target-production-capture-passed-ui-pending",
+      "enabled_disabled_mod_order": "saved-suggestion-observed",
+      "plugin_order_input": "saved-suggestion-observed",
+      "loose_provider_chains": "constructed-pending-ui-vfs-observation",
+      "unmanaged_data": "constructed-pending-ui-vfs-observation",
+      "overwrite": "constructed-pending-ui-vfs-observation",
+      "hidden_skipped": "constructed-pending-ui-vfs-observation",
+      "normalization_collision": "constructed-pending-ui-vfs-observation",
+      "renamed_local_entity": "constructed",
+      "physical_source_identity_separation": "constructed-pending-ui-observation",
+      "supported_secondary_root_mapper": "not-qualified-blocking-full-eval0051",
+      "unknown_mapper": "descriptor-required-before-production-comparison",
+      "inaccessible_object": "target-side-disposable-acl-helper-authored",
+      "changed_during_capture": "mutation-helper-authored",
+      "same_size_time_mutation": "target-negative-bytes-constructed",
+      "archive_population": "expected-unsupported",
+      "protected_root_nonmutation": "failed-live-nxmhandler-content-restored-metadata-unrecoverable",
+      "execution_state": "production-exact-profile-capture-passed-ui-oracle-partial",
+      "passing_claim": false
+    },
+    {
+      "evaluation_id": "EVAL-0054",
+      "specification_revision": "infinium.eval.m1.semantic-and-ground-truth/1",
+      "exact_private_target": "constructed-and-fingerprint-verified",
+      "one_byte_mutation_same_apparent_version": "constructed",
+      "same_version_unknown_hash": "constructed",
+      "known_unsupported_channel_runtime": "descriptor-constructed",
+      "malformed_truncated_pe": "constructed",
+      "missing_input": "constructed-by-absence",
+      "unreadable_input": "disposable-acl-helper-authored",
+      "inconsistent_metadata_hash": "descriptor-constructed",
+      "changed_during_capture": "mutation-helper-authored",
+      "unsupported_manager": "descriptor-constructed",
+      "unsupported_platform": "descriptor-constructed",
+      "unsupported_architecture": "descriptor-constructed",
+      "protected_root_nonmutation": "failed-live-nxmhandler-content-restored-metadata-unrecoverable",
+      "production_detector_comparison": "exact-mutation-unsupported-channel-malformed-missing-executed",
+      "execution_state": "partial-matrix-executed-not-full-pass",
+      "passing_claim": false
+    }
+  ],
+  "cross_case_gates": {
+    "EVAL-0046": "protected-root before/after and copied-MO2 write-effect evidence required",
+    "EVAL-0080": "product-write authority comparison outside independent oracle authoring",
+    "answer_isolation": "oracle package separate from execution input and production path",
+    "legacy_archive": "not inspected",
+    "production_source_tests_outputs": "not inspected"
+  }
+}

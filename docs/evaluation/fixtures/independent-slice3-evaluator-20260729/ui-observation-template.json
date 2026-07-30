@@ -1,0 +1,55 @@
+{
+  "schema_id": "infinium.eval.slice3.mo2-authoritative-observation",
+  "schema_version": 1,
+  "fixture_id": "SLICE3-INDEPENDENT-VAL-20260729",
+  "copied_executable_sha256": "442B354A8F34754DA0048654C44D27F51628FEBA54CE46C3187CF58D6C43E622",
+  "observation_status": "partial-accessibility-observation",
+  "observer": "codex-computer-use-accessibility-tree",
+  "observed_at": "2026-07-29T23:58:00.0000000+00:00",
+  "screenshots": [],
+  "copied_mo2_version": "2.5.2",
+  "resolved_instance": "<EVALUATOR_ROOT>/mo2-app portable configuration with evaluator-owned base directory",
+  "initial_saved_selection": "Saved Suggestion",
+  "explicit_selected_profile": null,
+  "mod_rows": [
+    { "name": "01 Physical Alpha", "enabled": true, "displayed_priority": 3 },
+    { "name": "03 Disabled Provider", "enabled": false, "displayed_priority": 4 },
+    { "name": "02 Physical Beta Renamed", "enabled": true, "displayed_priority": 5 },
+    { "name": "04 Duplicate Source Mapping", "enabled": true, "displayed_priority": 6 }
+  ],
+  "plugin_rows": [
+    { "name": "Skyrim.esm", "enabled": true, "displayed_order": "00" },
+    { "name": "Update.esm", "enabled": true, "displayed_order": "01" },
+    { "name": "Dawnguard.esm", "enabled": true, "displayed_order": "02" },
+    { "name": "HearthFires.esm", "enabled": true, "displayed_order": "03" },
+    { "name": "Dragonborn.esm", "enabled": true, "displayed_order": "04" },
+    { "name": "FixturePlugin.esm", "enabled": true, "displayed_order": "05" }
+  ],
+  "data_path_observations": [],
+  "source_mapping_observations": [],
+  "unsupported_populations": [
+    {
+      "population": "archive-members",
+      "expected_state": "unsupported"
+    },
+    {
+      "population": "supported-secondary-root-mapper",
+      "expected_state": "not-qualified"
+    }
+  ],
+  "copied_mo2_write_effects": [
+    {
+      "effect": "registered copied executable in live nxmhandler.ini",
+      "live_path_token": "<LIVE_MO2_APPLICATION_ROOT>/nxmhandler.ini",
+      "content_recovery": "temporary handler removed and original 132-byte single-live-handler content restored",
+      "metadata_recovery": "original creation and last-write timestamps were overwritten and are unrecoverable"
+    }
+  ],
+  "live_protected_root_effects": "content-restored-but-metadata-changed",
+  "notes": [
+    "Observation used the accessibility tree only after the user requested no overlay or screen capture.",
+    "A user-input guard prevented switching from Saved Suggestion to Explicit Target without taking over the foreground window, so explicit-target UI, Data, and conflict observations remain incomplete.",
+    "Production capture independently selected Explicit Target headlessly and passed its exact-binary evaluation, but production output was not used as UI oracle evidence.",
+    "Skyrim was never launched."
+  ]
+}

@@ -14,7 +14,7 @@ credential access, provider dispatch, persistence, or runtime behavior.
 | `infinium.common.v1` | `infinium/common/v1/common.proto` | Versions, finite limits, timestamps, digests, explicit availability, and typed failures |
 | `infinium.domain.v1` | `infinium/domain/v1/identities.proto` | Opaque wire identities and the small set of lifecycle/coverage states required by IPC |
 | `infinium.protocol.v1` | `infinium/protocol/v1/protocol.proto` | Endpoint roles, capability negotiation, application handshake, and private worker/helper bootstrap envelopes |
-| `infinium.application.v1` | `infinium/application/v1/application.proto` | Allowlisted application queries, keyset cursors, durable run commands, progress snapshots, and bounded events |
+| `infinium.application.v1` | `infinium/application/v1/application.proto` | Allowlisted application queries, keyset cursors, durable run and snapshot-capture commands, progress snapshots, and bounded events |
 | `infinium.worker.v1` | `infinium/worker/v1/worker.proto` | One immutable general-worker assignment, progress/control, staged output, and terminal receipt |
 | `infinium.helper.v1` | `infinium/helper/v1/helper.proto` | Private-handle-only one-shot credential/provider-helper assignment, final dispatch revalidation, non-secret status/usage, and staging |
 
@@ -27,8 +27,8 @@ The schemas intentionally expose three non-interchangeable surfaces:
 
 | Surface | Permitted | Structurally absent |
 | --- | --- | --- |
-| Application named-pipe gRPC endpoint | Handshake/health, bounded run/finding/progress queries, explicit start/pause/resume/cancel commands, bounded event stream | SQL, paths, URLs, shell/tool/provider operations, payload-store access, worker methods, credentials |
-| Worker named-pipe gRPC endpoint | One launch-bound assignment, bounded progress, cancellation polling, attempt-local staging manifest, terminal receipt | Application queries, durable commands, database/payload publication, credentials, provider dispatch, generic process/network operations |
+| Application named-pipe gRPC endpoint | Handshake/health, bounded run/finding/progress queries, explicit start/pause/resume/cancel commands, an explicit typed MO2 snapshot selection, bounded event stream | SQL, generic paths, URLs, shell/tool/provider operations, payload-store access, worker methods, credentials |
+| Worker named-pipe gRPC endpoint | One launch-bound assignment, including the exact typed read-only MO2 snapshot operation, bounded progress, cancellation polling, attempt-local staging manifest, terminal receipt | Application queries, durable commands, generic paths or commands, database/payload publication, credentials, provider dispatch, generic process/network operations |
 | Helper inherited private handles | One credential-lifecycle or exact provider-dispatch assignment, final gate, non-secret status/usage, staged response manifest | Ordinary gRPC service, database/application query, credential target names, secret bytes, arbitrary URLs, publication authority |
 
 Caller role is established by endpoint and coordinator launch relationship.
@@ -143,6 +143,9 @@ The package suffix is the protocol major. Within `v1`:
 The schema fingerprint in `ProtocolVersion` identifies the exact generated
 contract set. It supplements, but does not replace, major/minor and
 application/domain/storage compatibility checks.
+It is the SHA-256 of the UTF-8 concatenation of each repository-relative
+`.proto` path, one LF, and that file's exact text, with files ordered by
+ordinal repository-relative path.
 
 ## Security invariants
 

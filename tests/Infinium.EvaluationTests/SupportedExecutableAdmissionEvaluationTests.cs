@@ -1,3 +1,5 @@
+using Infinium.Application.Evaluation;
+using Infinium.Domain.Contracts;
 using Infinium.Mo2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -7,6 +9,35 @@ namespace Infinium.Tests;
 public sealed class SupportedExecutableAdmissionEvaluationTests
 {
     public TestContext TestContext { get; set; } = null!;
+
+    [TestMethod]
+    [TestCategory("M1Evaluation")]
+    [TestCategory("M1Contract")]
+    [TestProperty("Category", "M1Evaluation")]
+    [TestProperty("Category", "M1Contract")]
+    public void IndependentSlice3EvaluatorPackagePassesStrictFixtureContracts()
+    {
+        string package = Path.GetFullPath(
+            Path.Combine(
+                AppContext.BaseDirectory,
+                "..",
+                "..",
+                "..",
+                "..",
+                "..",
+                "docs",
+                "evaluation",
+                "fixtures",
+                "independent-slice3-evaluator-20260729"));
+
+        EvaluationHarnessFixturePackage loaded =
+            FixturePackageReader.ReadForEvaluationHarness(package);
+
+        Assert.AreEqual(
+            new OpaqueId("SLICE3-INDEPENDENT-VAL-20260729"),
+            loaded.FixtureId);
+        Assert.AreEqual(FixturePartition.Validation, loaded.Partition);
+    }
 
     [TestMethod]
     [TestCategory("M1Evaluation")]
@@ -55,6 +86,29 @@ public sealed class SupportedExecutableAdmissionEvaluationTests
         Assert.AreEqual(
             SupportedExecutableManifests.SupportedMo2Sha256,
             admission.ObservedIdentity.Sha256);
+    }
+
+    [TestMethod]
+    [TestCategory("M1Evaluation")]
+    [TestProperty("Category", "M1Evaluation")]
+    [TestProperty("EvaluationCase", "EVAL-0051")]
+    public void PrivateExactSkyrimGamePluginIsAdmitted()
+    {
+        string mo2 = GetPrivateVariable("INFINIUM_M1_MO2_252_PATH");
+        string path = Path.Combine(
+            Path.GetDirectoryName(mo2)!,
+            "plugins",
+            "game_skyrimse.dll");
+
+        ExecutableAdmission admission =
+            new SupportedExecutableManifests().AdmitSkyrimGamePlugin(path);
+
+        Assert.AreEqual(AdmissionState.Accepted, admission.State);
+        Assert.IsNotNull(admission.ObservedIdentity);
+        Assert.AreEqual(
+            SupportedExecutableManifests.SupportedSkyrimGamePluginSha256,
+            admission.ObservedIdentity.Sha256);
+        Assert.AreEqual(440_320, admission.ObservedIdentity.ByteLength);
     }
 
     [TestMethod]
@@ -147,6 +201,39 @@ public sealed class SupportedExecutableAdmissionEvaluationTests
 
         Assert.AreEqual(AdmissionState.Unsupported, admission.State);
         Assert.IsNull(admission.ObservedIdentity);
+    }
+
+    [TestMethod]
+    [TestCategory("M1Evaluation")]
+    [TestCategory("M1Fault")]
+    [TestProperty("Category", "M1Evaluation")]
+    [TestProperty("Category", "M1Fault")]
+    [TestProperty("EvaluationCase", "EVAL-0054")]
+    public void ProjectAuthoredMalformedExecutableIsIndeterminate()
+    {
+        string directory = Path.Combine(
+            Path.GetTempPath(),
+            $"Infinium-EVAL-0054-malformed-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        string path = Path.Combine(directory, "SkyrimSE.exe");
+        try
+        {
+            File.WriteAllBytes(path, "not-a-portable-executable"u8.ToArray());
+
+            ExecutableAdmission admission = new SupportedExecutableManifests().AdmitSkyrim(
+                path,
+                SupportedRuntime());
+
+            Assert.AreEqual(AdmissionState.Indeterminate, admission.State);
+            CollectionAssert.Contains(
+                admission.Reasons.ToArray(),
+                "executable PE headers are malformed or truncated");
+            Assert.IsNotNull(admission.ObservedIdentity);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
     }
 
     [TestMethod]

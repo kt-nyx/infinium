@@ -61,6 +61,35 @@ message WorkerOperation {
   string adapter_or_analyzer_id = 2;
   infinium.common.v1.SemanticVersion adapter_or_analyzer_version = 3;
   infinium.common.v1.SemanticVersion assignment_schema_version = 4;
+  Mo2SnapshotCaptureAssignment mo2_snapshot_capture = 10;
+}
+
+message Mo2SnapshotCaptureAssignment {
+  string mo2_executable_path = 1;
+  string instance_root = 2;
+  string instance_ini_path = 3;
+  string profiles_root = 4;
+  string mods_root = 5;
+  string overwrite_root = 6;
+  string game_data_root = 7;
+  string skyrim_executable_path = 8;
+  string selected_profile_name = 9;
+  string platform = 10;
+  string distribution_channel = 11;
+  string application_id = 12;
+  repeated QualifiedMappingAssignment qualified_mappings = 13;
+  repeated string enabled_mapper_sha256 = 14;
+
+  reserved 90 to 99;
+  reserved "shell_command", "command_line", "database_path", "publish",
+      "credential_target", "provider_secret";
+}
+
+message QualifiedMappingAssignment {
+  string mapping_id = 1;
+  string source_root = 2;
+  string virtual_prefix = 3;
+  string mapper_sha256 = 4;
 }
 
 enum WorkerOperationKind {
@@ -72,6 +101,7 @@ enum WorkerOperationKind {
   WORKER_OPERATION_KIND_APPROVED_READ_ONLY_TOOL_ADAPTER = 5;
   WORKER_OPERATION_KIND_UNKNOWN = 6;
   WORKER_OPERATION_KIND_UNSUPPORTED = 7;
+  WORKER_OPERATION_KIND_CAPTURE_MO2_SNAPSHOT = 8;
 }
 
 message WorkerInput {

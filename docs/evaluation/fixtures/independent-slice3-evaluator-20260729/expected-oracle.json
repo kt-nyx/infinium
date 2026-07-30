@@ -1,0 +1,246 @@
+{
+  "fixture_id": "SLICE3-INDEPENDENT-VAL-20260729",
+  "fixture_version": "1.0.0",
+  "oracle_version": "1.0.0",
+  "independent_authors_and_reviewers": [
+    "independent-slice3-evaluator"
+  ],
+  "ground_truth_methods": [
+    {
+      "method_id": "direct-byte-and-physical-construction",
+      "method": "Direct byte identity and physical construction of evaluator-private disposable inputs.",
+      "evidence_references": [
+        {
+          "artifact_id": "slice3-direct-physical-facts",
+          "artifact_version": "1",
+          "fingerprint": "8613b5b6b4fd7da6b209ff9e62e274f55e6ec5a91a26c4264b389d96768c1627",
+          "availability": "retained"
+        }
+      ],
+      "independent_of_system_under_test": true
+    },
+    {
+      "method_id": "accepted-support-manifest",
+      "method": "Accepted exact runtime and MO2 support manifests compared with independently measured bytes.",
+      "evidence_references": [
+        {
+          "artifact_id": "slice3-private-runtime-identity",
+          "artifact_version": "1",
+          "fingerprint": "c434208894f07f604b852f29b8edc3a58c4de63de783373733e72b2b73f33be9",
+          "availability": "evaluator-private"
+        }
+      ],
+      "independent_of_system_under_test": true
+    },
+    {
+      "method_id": "copied-mo2-accessibility-observation",
+      "method": "Accessibility-tree observation of the copied MO2 application and disposable saved profile without launching the game.",
+      "evidence_references": [
+        {
+          "artifact_id": "slice3-mo2-accessibility-observation",
+          "artifact_version": "1",
+          "fingerprint": "442b354a8f34754da0048654c44d27f51628feba54ce46c3187cf58d6c43e622",
+          "availability": "evaluator-private"
+        }
+      ],
+      "independent_of_system_under_test": true
+    }
+  ],
+  "expected_observations": [
+    {
+      "expected_id": "eval-0051-mo2-exact-identity",
+      "subject_id": "mo2-2.5.2-executable",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "direct-byte-and-physical-construction"
+      ],
+      "canonical_value_fingerprint": "442b354a8f34754da0048654c44d27f51628feba54ce46c3187cf58d6c43e622"
+    },
+    {
+      "expected_id": "eval-0051-saved-suggestion-visible",
+      "subject_id": "saved-suggestion-profile",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "copied-mo2-accessibility-observation"
+      ],
+      "canonical_value_fingerprint": "a3199d3794ff1e1c13d05b334bc14d784065beba93e1ebfc86292f3e72f3599c"
+    },
+    {
+      "expected_id": "eval-0054-runtime-exact-identity",
+      "subject_id": "skyrimse-1.6.1170-steam-windows-x64",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "accepted-support-manifest"
+      ],
+      "canonical_value_fingerprint": "c434208894f07f604b852f29b8edc3a58c4de63de783373733e72b2b73f33be9"
+    }
+  ],
+  "expected_deterministic_results": [],
+  "expected_external_claims": [],
+  "expected_application_links": [],
+  "expected_discovery_leads": [],
+  "expected_model_proposals": [],
+  "expected_proposal_admissions": [],
+  "expected_candidates": [],
+  "expected_hypotheses": [],
+  "expected_findings": [],
+  "expected_recommendations": [],
+  "expected_supported_cases": [],
+  "expected_lead_only_cases": [],
+  "expected_abstentions": [
+    {
+      "expected_id": "eval-0051-archive-members-unsupported",
+      "subject_id": "archive-member-population",
+      "expected_type": "abstention",
+      "expected_state": "unsupported",
+      "ground_truth_method_ids": [
+        "direct-byte-and-physical-construction"
+      ],
+      "canonical_value_fingerprint": "573588a10de36706fb5b3923acf4803c2a933f5bd5714d26e055b7111523b14f"
+    },
+    {
+      "expected_id": "eval-0051-secondary-mapper-unqualified",
+      "subject_id": "supported-secondary-root-mapper",
+      "expected_type": "abstention",
+      "expected_state": "unsupported",
+      "ground_truth_method_ids": [
+        "direct-byte-and-physical-construction"
+      ],
+      "canonical_value_fingerprint": "26f718dc9b36126321b447853b7cccdda9e2ccfb4476822d27724ca8f067e49d"
+    }
+  ],
+  "expected_invalid_inputs": [
+    {
+      "expected_id": "eval-0054-malformed-pe",
+      "subject_id": "malformed-pe",
+      "expected_type": "invalid-input",
+      "expected_state": "unknown",
+      "ground_truth_method_ids": [
+        "direct-byte-and-physical-construction"
+      ],
+      "canonical_value_fingerprint": "88b28dd6ab16c5aec598dcbcecdfdd3ab89e2e9343c1a0951d9470cd05c95e14"
+    }
+  ],
+  "expected_failures": [],
+  "expected_coverage_and_gaps": [
+    {
+      "expected_id": "eval-0051-ui-vfs-oracle-incomplete",
+      "subject_id": "authoritative-explicit-target-ui-vfs-observation",
+      "expected_type": "coverage-gap",
+      "expected_state": "unknown",
+      "ground_truth_method_ids": [
+        "copied-mo2-accessibility-observation"
+      ],
+      "canonical_value_fingerprint": "202866bc0feddc4dc3d406ea9818b69df13962c1c55fb2af763e23ed133b6d65"
+    },
+    {
+      "expected_id": "eval-0046-live-nxm-registration-side-effect",
+      "subject_id": "live-mo2-nxmhandler-metadata",
+      "expected_type": "audit-gap",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "copied-mo2-accessibility-observation"
+      ],
+      "canonical_value_fingerprint": "442b354a8f34754da0048654c44d27f51628feba54ce46c3187cf58d6c43e622"
+    }
+  ],
+  "expected_collection_states": {
+    "observations": {
+      "state": "populated",
+      "reason": "Exact MO2, saved-profile, and runtime observations are retained."
+    },
+    "deterministic_results": {
+      "state": "empty",
+      "reason": "No independent deterministic result payload is retained."
+    },
+    "external_claims": {
+      "state": "empty",
+      "reason": "No external claims are used."
+    },
+    "application_links": {
+      "state": "empty",
+      "reason": "No application links are evaluated."
+    },
+    "discovery_leads": {
+      "state": "empty",
+      "reason": "No discovery leads are evaluated."
+    },
+    "model_proposals": {
+      "state": "empty",
+      "reason": "No model proposals are evaluated."
+    },
+    "proposal_admissions": {
+      "state": "empty",
+      "reason": "No proposal admissions are evaluated."
+    },
+    "candidates": {
+      "state": "empty",
+      "reason": "No candidates are evaluated."
+    },
+    "hypotheses": {
+      "state": "empty",
+      "reason": "No hypotheses are evaluated."
+    },
+    "findings": {
+      "state": "empty",
+      "reason": "Slice 3 capture does not produce analyzer findings."
+    },
+    "recommendations": {
+      "state": "empty",
+      "reason": "Slice 3 capture does not produce recommendations."
+    },
+    "supported_cases": {
+      "state": "empty",
+      "reason": "Support is represented by runtime observations."
+    },
+    "lead_only_cases": {
+      "state": "empty",
+      "reason": "No lead-only cases are evaluated."
+    },
+    "abstentions": {
+      "state": "populated",
+      "reason": "Archive members and unqualified secondary-root mappers require abstention."
+    },
+    "invalid_inputs": {
+      "state": "populated",
+      "reason": "Malformed runtime bytes are an explicit invalid input."
+    },
+    "coverage_gaps": {
+      "state": "populated",
+      "reason": "The UI VFS oracle and clean protected-root proof remain incomplete."
+    },
+    "failures": {
+      "state": "empty",
+      "reason": "No expected product failure payload is retained."
+    }
+  },
+  "expected_taxonomy_assignments": [],
+  "expected_replayability": "boundary-replay",
+  "forbidden_claims": [
+    {
+      "claim_id": "saved-selection-authoritative",
+      "claim_type": "authority-overstatement",
+      "reason": "The saved selection is only a suggestion; the requested profile is explicit."
+    },
+    {
+      "claim_id": "unknown-hash-supported",
+      "claim_type": "support-overstatement",
+      "reason": "A matching version string cannot admit an unknown executable hash."
+    },
+    {
+      "claim_id": "slice3-evaluation-passed-by-existence",
+      "claim_type": "gate-overstatement",
+      "reason": "Package existence is not a passing EVAL-0051 or EVAL-0054 result."
+    }
+  ],
+  "known_limits": [
+    "The explicit-target Data and conflicts UI observation is incomplete.",
+    "No supported secondary-root mapper is qualified, blocking full EVAL-0051.",
+    "Copied MO2 rewrote live nxmhandler metadata; content was restored but original timestamps are unrecoverable."
+  ],
+  "pre_registered_at": "2026-07-29T00:00:00.0000000+00:00",
+  "change_history": []
+}

@@ -39,6 +39,30 @@ public sealed record PayloadAdmission(
     string PublicationReceiptId,
     string StagedManifestSha256);
 
+public sealed record SnapshotCaptureOperationRecord(
+    string OperationId,
+    string DurableCommandId,
+    string RequestJson,
+    string RequestSha256,
+    string InitiationKind,
+    DateTimeOffset DispatchDeadline,
+    string State,
+    long Generation,
+    long CoordinatorFencingEpoch,
+    string? InstallationSnapshotId,
+    string? PayloadId,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);
+
+public sealed record SnapshotCaptureAttemptRecord(
+    string AttemptId,
+    string OperationId,
+    long AttemptGeneration,
+    long CoordinatorFencingEpoch,
+    long AttemptFencingToken,
+    DateTimeOffset LeaseExpiresAt,
+    string Outcome);
+
 public sealed record ReconciliationIssue(string Kind, string Path, string Detail);
 
 public sealed record BackupArtifact(string DatabasePath, string ManifestPath, string Sha256);

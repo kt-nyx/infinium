@@ -22,6 +22,85 @@ service ApplicationService {
       returns (GetDurableCommandResponse);
   rpc SubscribeEvents(SubscribeEventsRequest)
       returns (stream ApplicationEvent);
+  rpc SubmitSnapshotCapture(SubmitSnapshotCaptureRequest)
+      returns (SubmitSnapshotCaptureResponse);
+  rpc GetSnapshotCapture(GetSnapshotCaptureRequest)
+      returns (GetSnapshotCaptureResponse);
+}
+
+message SubmitSnapshotCaptureRequest {
+  infinium.domain.v1.DurableCommandId idempotency_key = 1;
+  ManualInitiationKind initiation_kind = 2;
+  infinium.common.v1.Instant dispatch_deadline = 3;
+  Mo2SnapshotCaptureSelection selection = 4;
+
+  reserved 90 to 99;
+  reserved "shell_command", "command_line", "sql", "url", "provider_request";
+}
+
+message Mo2SnapshotCaptureSelection {
+  string mo2_executable_path = 1;
+  string instance_root = 2;
+  string instance_ini_path = 3;
+  string profiles_root = 4;
+  string mods_root = 5;
+  string overwrite_root = 6;
+  string game_data_root = 7;
+  string skyrim_executable_path = 8;
+  string selected_profile_name = 9;
+  string platform = 10;
+  string distribution_channel = 11;
+  string application_id = 12;
+  repeated QualifiedMappingSelection qualified_mappings = 13;
+  repeated string enabled_mapper_sha256 = 14;
+}
+
+message QualifiedMappingSelection {
+  string mapping_id = 1;
+  string source_root = 2;
+  string virtual_prefix = 3;
+  string mapper_sha256 = 4;
+}
+
+message SubmitSnapshotCaptureResponse {
+  CommandDisposition disposition = 1;
+  infinium.domain.v1.DurableCommandId durable_command_id = 2;
+  infinium.domain.v1.SnapshotCaptureOperationId operation_id = 3;
+  infinium.common.v1.Failure failure = 20;
+}
+
+message GetSnapshotCaptureRequest {
+  oneof identity {
+    infinium.domain.v1.SnapshotCaptureOperationId operation_id = 1;
+    infinium.domain.v1.DurableCommandId durable_command_id = 2;
+  }
+}
+
+message GetSnapshotCaptureResponse {
+  SnapshotCaptureStatus status = 1;
+  infinium.common.v1.Failure failure = 20;
+}
+
+message SnapshotCaptureStatus {
+  infinium.domain.v1.SnapshotCaptureOperationId operation_id = 1;
+  infinium.domain.v1.DurableCommandId durable_command_id = 2;
+  SnapshotCaptureLifecycleState lifecycle_state = 3;
+  uint64 lifecycle_generation = 4;
+  string request_sha256 = 5;
+  infinium.domain.v1.InstallationSnapshotId installation_snapshot_id = 6;
+  infinium.domain.v1.PayloadId payload_id = 7;
+  infinium.common.v1.Instant created_at = 8;
+  infinium.common.v1.Instant updated_at = 9;
+}
+
+enum SnapshotCaptureLifecycleState {
+  SNAPSHOT_CAPTURE_LIFECYCLE_STATE_UNSPECIFIED = 0;
+  SNAPSHOT_CAPTURE_LIFECYCLE_STATE_QUEUED = 1;
+  SNAPSHOT_CAPTURE_LIFECYCLE_STATE_RUNNING = 2;
+  SNAPSHOT_CAPTURE_LIFECYCLE_STATE_COMPLETED = 3;
+  SNAPSHOT_CAPTURE_LIFECYCLE_STATE_FAILED = 4;
+  SNAPSHOT_CAPTURE_LIFECYCLE_STATE_UNKNOWN = 5;
+  SNAPSHOT_CAPTURE_LIFECYCLE_STATE_UNSUPPORTED = 6;
 }
 
 message HealthRequest {}
