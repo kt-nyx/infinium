@@ -1,6 +1,6 @@
 # Independent M1 Slice 3 evaluator package
 
-Status: Evaluation executed with documented blocking gaps
+Status: EVAL-0054 passed; EVAL-0051 executed with documented blocking gaps
 Evaluator role: separately isolated oracle author
 Specification set: `infinium.eval.m1.semantic-and-ground-truth/1`
 Cases: EVAL-0051 and EVAL-0054
@@ -35,15 +35,21 @@ are never added to this repository.
   taking over the user's foreground window.
 - Production-adapter execution: exact MO2, game plugin, and Skyrim identities
   passed; the adapter captured `Explicit Target` headlessly without launch.
-- Protected-root result: the copied MO2 registered itself in the live
+- Product protected-root result: the exact headless capture passed EVAL-0046
+  with complete byte, physical-identity, metadata, ACL, reparse, ADS, process,
+  side-effect-root, and retained-handle canaries. It launched no process.
+- Historical UI-oracle result: the copied MO2 registered itself in the live
   `nxmhandler.ini`. The temporary handler was removed and the original
   132-byte content restored, but original filesystem timestamps are
-  unrecoverable. EVAL-0046 is therefore not passed.
+  unrecoverable. That UI-oracle attempt is not non-mutating and is not used as
+  the product EVAL-0046 operation.
 
 EVAL-0051 remains blocked by incomplete explicit-target UI/VFS evidence and
-the absence of a qualified supported secondary-root mapper. EVAL-0054's
-executed exact, mutation, unsupported-channel, malformed, and missing cases
-passed; the full preregistered negative matrix has not all been executed.
+the accepted matrix's mandatory positive secondary-root/mapper case.
+RESEARCH-0051 established that the exact admitted Skyrim SE game plugin has an
+empty secondary-Data inventory and only two non-Data profile-control mappings;
+the recommended conditional-positive plan/specification disposition remains
+pending. EVAL-0054's exact target and full preregistered negative matrix passed.
 
 ## Disposable root used for this construction
 

@@ -61,9 +61,6 @@ public sealed class Mo2ReadOnlyIntegrationTests
                 processesAfter.TargetProcesses,
                 StringComparer.Ordinal))
             .ToArray();
-        string[] launchedArgumentVectors = [];
-        string[] launchedEnvironmentChanges = [];
-        string[] launchedInheritedHandles = [];
 
         CollectionAssert.AreEqual(before.ToArray(), afterCapture.ToArray());
         CollectionAssert.AreEqual(
@@ -74,9 +71,6 @@ public sealed class Mo2ReadOnlyIntegrationTests
             identitiesAfter.ToArray());
         Assert.HasCount(0, newDescendants);
         Assert.HasCount(0, changedTargetProcesses);
-        Assert.HasCount(0, launchedArgumentVectors);
-        Assert.HasCount(0, launchedEnvironmentChanges);
-        Assert.HasCount(0, launchedInheritedHandles);
         Assert.AreEqual(SnapshotCaptureState.Completed, result.State);
         Assert.IsNotNull(result.Snapshot);
         Assert.IsFalse(result.Snapshot.Mo2OrUsvfsLaunched);
@@ -87,10 +81,9 @@ public sealed class Mo2ReadOnlyIntegrationTests
             NormalizeCanaryPath(fixture.ReparseTarget),
             reparseEvidence,
             StringComparison.OrdinalIgnoreCase);
-        foreach (string root in fixture.ProtectedRoots)
-        {
-            AssertExclusiveRenameEquivalentOpen(root);
-        }
+        string[] releasedHandleEvidence = fixture.ProtectedRoots
+            .Select(ObserveExclusiveRenameEquivalentOpen)
+            .ToArray();
 
         TestContext.WriteLine(
             $"process_descendants_before={string.Join(',', processesBefore.CurrentProcessDescendants)}");
@@ -100,13 +93,40 @@ public sealed class Mo2ReadOnlyIntegrationTests
             $"target_processes_before={string.Join(',', processesBefore.TargetProcesses)}");
         TestContext.WriteLine(
             $"target_processes_after={string.Join(',', processesAfter.TargetProcesses)}");
-        TestContext.WriteLine("launched_argument_vectors=[]");
-        TestContext.WriteLine("launched_environment_changes=[]");
-        TestContext.WriteLine("launched_inherited_handles=[]");
+        TestContext.WriteLine(
+            "launch_argument_environment_handle_evidence="
+            + "not-applicable:no-new-descendant-process-observed");
         TestContext.WriteLine(
             $"side_effect_roots={string.Join(',', sideEffectsAfter.Keys)}");
         TestContext.WriteLine(
-            $"handle_release_roots={string.Join(',', fixture.ProtectedRoots)}");
+            $"released_handle_evidence={string.Join(',', releasedHandleEvidence)}");
+    }
+
+    [TestMethod]
+    [TestCategory("M1Integration")]
+    [TestCategory("M1Security")]
+    [TestProperty("Category", "M1Integration")]
+    [TestProperty("Category", "M1Security")]
+    [TestProperty("EvaluationCase", "EVAL-0046")]
+    public void ReadOnlyCaptureIsTheOnlyPubliclyReachableAdapterOperation()
+    {
+        string[] operations = typeof(Mo2SnapshotCapture)
+            .GetMethods(
+                System.Reflection.BindingFlags.Public
+                | System.Reflection.BindingFlags.Instance
+                | System.Reflection.BindingFlags.DeclaredOnly)
+            .Select(method => method.Name)
+            .OrderBy(name => name, StringComparer.Ordinal)
+            .ToArray();
+
+        CollectionAssert.AreEqual(new[] { nameof(Mo2SnapshotCapture.Capture) }, operations);
+        Assert.IsFalse(operations.Any(name =>
+            name.Contains("write", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("apply", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("set", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("sort", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("save", StringComparison.OrdinalIgnoreCase)
+            || name.Contains("launch", StringComparison.OrdinalIgnoreCase)));
     }
 
     [TestMethod]
@@ -411,7 +431,7 @@ public sealed class Mo2ReadOnlyIntegrationTests
         FormattableString.Invariant(
             $"{entry.ProcessId}|{entry.ParentProcessId}|{entry.ExecutableFile}");
 
-    private static void AssertExclusiveRenameEquivalentOpen(string path)
+    private static string ObserveExclusiveRenameEquivalentOpen(string path)
     {
         using SafeFileHandle handle = CreateFileW(
             path,
@@ -427,6 +447,10 @@ public sealed class Mo2ReadOnlyIntegrationTests
                 $"Protected root retained a handle that prevents rename-equivalent exclusive access: "
                 + $"{path} (Win32 {Marshal.GetLastWin32Error()}).");
         }
+
+        WindowsObjectIdentity identity = WindowsReadOnlyObjectIdentity.Read(handle);
+        return FormattableString.Invariant(
+            $"{NormalizeCanaryPath(path)}|{identity.CanonicalValue}|exclusive-delete-open");
     }
 
     private static string NormalizeCanaryPath(string path) =>
