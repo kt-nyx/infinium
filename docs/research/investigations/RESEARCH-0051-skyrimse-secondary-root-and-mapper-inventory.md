@@ -1,9 +1,9 @@
 # RESEARCH-0051: Skyrim SE secondary-root and mapper inventory
 
-Status: Completed; plan/specification disposition pending  
-Date: 2026-07-29  
-Last reviewed: 2026-07-29  
-Researcher: Codex  
+Status: Completed; plan/specification disposition pending
+Date: 2026-07-29
+Last reviewed: 2026-07-29
+Researcher: Codex
 Acceptance: Research complete; recommendation not yet owner-accepted
 
 ## Question and requirements
