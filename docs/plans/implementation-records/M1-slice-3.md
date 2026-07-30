@@ -1,13 +1,12 @@
 # M1 Slice 3 implementation record
 
-Status: Comprehensive review, correction, and re-review completed. Slice 3 is
-**not gate-accepted or implementation-complete**. The durable coordinator /
-bounded-worker authority path and independently loadable evaluator package now
-exist and all available gates pass, including the evaluator-private exact
-binary/profile run. Accepted closure remains blocked by incomplete
-explicit-target UI/VFS oracle evidence, no qualified supported secondary-root
-mapper, the incomplete EVAL-0054 preregistered negative matrix, and failed
-EVAL-0046 protected-root non-mutation evidence described below.
+Status: Autonomous review, correction, and re-review completed. Slice 3 is
+**not yet gate-accepted or implementation-complete**. EVAL-0045, EVAL-0046 for
+the delivered exact headless capture operation, and EVAL-0054 now pass.
+Accepted closure remains blocked only by EVAL-0051: the independent
+explicit-target MO2 UI/VFS comparison is incomplete, and RESEARCH-0051's
+correction to the impossible mandatory positive mapper case requires reviewed
+owner disposition.
 
 Review completed: 2026-07-29
 
@@ -32,6 +31,10 @@ Comprehensive review correction:
 Authority/evaluator review correction:
 `b2fea7030385558b757c4cf45509c8a42f6ac225`
 (`fix: complete M1 Slice 3 authority review`)
+
+Admission/non-mutation closeout correction:
+`a1aa2030cd3aa129117260479ee761426df3ff02`
+(`test: close Slice 3 admission and nonmutation gates`)
 
 ## 2026-07-30 authority/evaluator correction and re-review
 
@@ -113,6 +116,88 @@ passed.
   the preregistered matrix are not all retained as executed gate evidence.
 
 No later-slice implementation was included, and nothing was pushed.
+
+## 2026-07-29 autonomous closeout follow-up
+
+This section supersedes the gate status and verification counts in the dated
+authority/evaluator section and all historical sections below.
+
+Commit `a1aa2030cd3aa129117260479ee761426df3ff02` completed the full
+EVAL-0054 negative matrix and the delivered-operation EVAL-0046 canary.
+EVAL-0054 now exercises the exact target, a known unsupported GOG channel,
+unsupported platform/architecture/application, same-version unknown hash,
+malformed input, missing input, a sharing-denied unreadable input,
+inconsistent byte length with retained metadata, unsupported manager, and a
+deterministic executable-identity capture race. Every negative fails before
+snapshot/semantic output.
+
+EVAL-0046 now executes both:
+
+- a project-authored disposable protected-root matrix covering bytes,
+  structural membership, Windows physical identity and hard-link count,
+  creation/last-write metadata, ACL SDDL, reparse tag/target, alternate data
+  streams, isolated cache/temp roots, process-tree/target-process deltas, and
+  exclusive post-capture root-handle release; and
+- the exact evaluator-private MO2/game/profile capture with the same complete
+  protected-root canary, process-state comparison, and retained-handle check.
+
+The public adapter surface is reflectively constrained to `Capture`; no
+write/apply/set/sort/save/launch operation is reachable. No new descendant or
+target process was observed, so child argument/environment/inherited-handle
+evidence is explicitly `not-applicable`, not represented by fabricated empty
+arrays.
+
+The earlier copied-MO2 UI-oracle attempt remains historical evidence: it
+changed live `nxmhandler.ini` metadata. That separately recorded evaluator
+side effect is not reclassified as non-mutating. It is also not the delivered
+headless product operation gated by EVAL-0046.
+
+RESEARCH-0051 inspected the exact admitted `game_skyrimse.dll` and its
+first-party source. The supported Skyrim SE game plugin has an empty secondary
+Data-root inventory. Its only `IPluginFileMapper` contributions map
+profile `plugins.txt` and `loadorder.txt` to their non-Data LocalAppData
+targets, which Slice 3 already captures through sealed control-file authority.
+Adding the game-plugin hash to the generic loose-mapper allowlist would
+incorrectly authorize caller-supplied arbitrary roots. The empty production
+mapper allowlist therefore remains the correct fail-closed implementation.
+The accepted EVAL-0051/fixture requirement for an unconditional positive real
+secondary-root/mapper contribution needs a reviewed conditional-positive
+amendment rather than fixture-specific production behavior.
+
+### Fresh autonomous verification
+
+Commands were run from repository root on Windows x64 with the exact
+evaluator-private MO2, game plugin, Skyrim executable, instance, and
+`Explicit Target` profile variables.
+
+| Command | Result |
+| --- | --- |
+| `dotnet restore Infinium.sln --locked-mode` | Passed; all projects up to date. |
+| `dotnet build Infinium.sln -c Release --no-restore` | Passed; 0 warnings, 0 errors. |
+| Literal plan filters `Category=M1Unit`, `M1Contract`, `M1Integration`, `M1Evaluation`, `M1Security`, `M1Fault` | Passed. Counts across projects: Unit 81/1 skipped; Contract 20; Integration 22; Evaluation 31; Security 7; Fault 13. |
+| Supplementary filters `TestCategory=M1Unit`, `M1Contract`, `M1Integration`, `M1Evaluation`, `M1Security`, `M1Fault` | Passed. Counts across projects: Unit 82/1 skipped; Contract 32; Integration 22; Evaluation 46; Security 58/1 skipped; Fault 71. |
+| `dotnet test Infinium.sln -c Release --no-build` | Passed; 189 passed and 1 environment-dependent symbolic-link check skipped: 89 unit/1 skipped, 50 contract, 21 integration, and 29 evaluation. |
+| `dotnet format Infinium.sln --verify-no-changes --no-restore --verbosity minimal` | Passed. |
+| `powershell -NoProfile -ExecutionPolicy Bypass -File eng/update-dependency-manifest.ps1 -Check` | Passed. |
+| `git diff --check` | Passed before the closeout-record commit. |
+
+### Current gate disposition
+
+- **EVAL-0045: passed for Slice 3.** Explicit durable initiation,
+  idempotency, bounded worker dispatch, staging, fencing, restart handling,
+  coordinator validation, and publication authority pass.
+- **EVAL-0046: passed for the delivered Slice 3 operation.** The exact
+  headless capture is non-mutating and process/handle clean. The conditional
+  gate must be repeated for future external operations or versions.
+- **EVAL-0051: blocked/not passed.** Exact headless explicit-profile capture
+  passes, and direct physical/oracle construction plus a partial saved-profile
+  accessibility observation are retained. Closure still needs the independent
+  explicit-target Data/conflicts UI/VFS observation and reviewed disposition
+  of RESEARCH-0051's conditional-positive mapper amendment.
+- **EVAL-0054: passed.** The exact private positive and complete preregistered
+  negative matrix pass without best-effort semantic output.
+
+No later-slice implementation was included. Nothing was pushed.
 
 ## Outcome
 
@@ -380,7 +465,7 @@ ADR-0015, ADR-0016, ADR-0018, ADR-0019, and ADR-0021, EVAL-0045, EVAL-0046,
 EVAL-0051, EVAL-0054, fixture/oracle isolation, anti-overfitting rules,
 population assurance, gap truth, and later-slice exclusions.
 
-## Known gaps and deferred work
+## Historical gaps before the authority/evaluator and autonomous closeout corrections
 
 - Capture remains a direct library call and is not yet wired through the
   coordinator's immutable assignment, bounded worker, staged manifest,
