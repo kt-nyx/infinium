@@ -692,3 +692,61 @@ prerequisites to beginning it. Later M1 evaluation packages, milestone-wide
 `evaluate`/`verify-evaluation`, live-provider work, broader MO2/Skyrim
 surfaces, and excluded archive/string semantics remain later or unsupported
 work and do not reopen Slice 3.5.
+
+## 2026-08-01 Option A fixture-conformance correction
+
+The project owner selected RESEARCH-0053 Option A after the first Slice 4
+attempt proved that public fixture version `1.0.0` used two noncanonical
+Bethesda structures. Correction commit
+`c371259198ab232a8b7e3f719ae4496a12039d4b` preserves ADR-0009 and pinned
+Mutagen `0.54.2`, replaces the public suite with immutable version `1.0.1`,
+and retains the original semantic truth:
+
+- Skyrim `RACE/DATA` now uses the full 128-byte shape with flags at offset
+  `0x20`;
+- format-valid `REFR` records now use interior CELL block, sub-block, child,
+  and persistent-child containment; and
+- malformed controls were repaired so their declared framing or link defect
+  is the first and only relevant defect.
+
+The public package bindings are:
+
+| Fixture | Input package SHA-256 | Oracle SHA-256 |
+|---|---|---|
+| `BETH-NPC-DEV/1.0.1` | `bdb977812329e0440cc18f22f00deb129fd43d5e3e1f6a89a78dd0085ff9e2fe` | `c59eeba5236703f1d51f2cc2834c2df49d8cf8a77a7d5f4775203988cd02e137` |
+| `BETH-REFR-DEV/1.0.1` | `ed6c4e7f4477219da1aa9ee49036c5d29ac57c942938d61daad40ab24c7bfdc1` | `2be4e699f32a90387c030ffb160ab5bb855826101e3c54f02d05917cbb7228e4` |
+| `BETH-LIGHT-VAL/1.0.1` | `096e3420705af5e97216e1483aa010bcd2c2ad58734b12ce1bfc410cba934fc9` | `5b8740018a0f54497dbf2c4c3398bd385bd6902453551b01b9d7a8656e483857` |
+| `BETH-MALFORMED-VAL/1.0.1` | `d0cf9179c352feab4550bebc3661f8f3988b3dc3fae1511d1e02a5bfa420219c` | `7e2ac9c97870c0e51511dc44a9242fcee1e22db82c7b504f5fe1d7cb4e9b9093` |
+| `BETH-UNSUPPORTED-VAL/1.0.1` | `01e284f5c1edeab436c46761f5f321077d025291f3b94f6309c8030b1ed63eec` | `2452943ee592b22838ea7cad3851ce16c65b88e6fd2ee07bab21ffc51f7157d4` |
+
+Under ADR-0026, a fresh-context private custodian audited all four active
+private packages. Three had an analogous structural defect and were replaced
+by immutable `1.1.0` successors: `BETH-HO-002`,
+`BETH-MALFORMED-VAL-002`, and `BETH-UNSUPPORTED-VAL-002`.
+`BETH-LIGHT-VAL-002/1.0.0` was unaffected and remains the control. The private
+correction is commit `1530a55c6b30db45356fd54700c2d4ebb497c1c6`; its sanitized result reports
+unchanged semantic truth, clean contamination state, 5/5 held-out plugins
+parseable, 14/14 malformed targets preserved with two-method agreement, both
+20,480-record complexity controls fully visible, and the unsupported plugin
+and placed record visible. No private locator or answer payload was published.
+
+Final correction verification:
+
+- locked restore and Release build passed with 0 warnings and 0 errors;
+- full Release suite: 204 passed, 9 expected skips, 0 failed;
+- `Category=M1Unit`: 81 passed, 1 expected skip;
+- `Category=M1Contract`: 24 passed;
+- `Category=M1Integration`: 22 passed;
+- `Category=M1Evaluation`: 30 passed, 8 expected private skips;
+- `Category=M1Security`: 9 passed;
+- `Category=M1Fault`: 13 passed;
+- focused Bethesda package and Mutagen conformance tests: 7 passed;
+- deterministic generator verification, independent-reader self-tests,
+  receipt regeneration, and package finalization passed;
+- `dotnet format --verify-no-changes`, dependency-manifest validation, and
+  `git diff --check` passed.
+
+The correction clears the fixture prerequisite for a fresh Slice 4 attempt.
+It does not implement Slice 4, claim EVAL-0052 or EVAL-0086, authorize a
+first-party parser, or broaden the accepted dependency/runtime surface.
+Neither repository was pushed.
