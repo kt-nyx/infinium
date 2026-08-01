@@ -1,9 +1,13 @@
 # M1 Slice 4 — Bethesda semantic extraction and typed indexes
 
-Status: Blocked before production implementation  
-Plan: `infinium.plan.m1.backend-semantic-proof/2`  
-Attempted: 2026-08-01  
-Baseline commit: `e4e83963d7292f1c688f74970400d70a2acf84e6`  
+Status: Blocked before production implementation
+
+Plan: `infinium.plan.m1.backend-semantic-proof/2`
+
+Attempted: 2026-08-01
+
+Baseline commit: `e4e83963d7292f1c688f74970400d70a2acf84e6`
+
 Implementation commit: none — no production implementation was retained
 
 ## Intended slice boundary
@@ -133,5 +137,45 @@ push, or remote mutation occurred.
 
 Slice 4 is blocked, not complete. EVAL-0052 and applicable EVAL-0086 are not
 claimed passed. The repository remains at the accepted pre-Slice-4 production
-baseline plus this blocker record. A later closeout amendment records the
-blocker-record commit and final clean-baseline checks.
+baseline plus this blocker record. The closeout below records the blocker-record
+commit and final clean-baseline checks.
+
+## Blocked-attempt closeout
+
+Blocker-record commit:
+`5655bcad116f7515e8aa34d829e67bc4b5e4b3c9`
+
+Final checks on the restored pre-Slice-4 production baseline plus documentation:
+
+```text
+dotnet restore Infinium.sln --locked-mode
+  passed; all projects up to date
+
+dotnet build Infinium.sln -c Release --no-restore
+  passed; 0 warnings, 0 errors
+
+Category=M1Unit
+  81 passed, 1 expected platform-dependent skip
+
+Category=M1Contract
+  24 passed
+
+Category=M1Integration
+  22 passed
+
+Category=M1Evaluation
+  27 passed, 8 expected evaluator-private skips
+
+Category=M1Security
+  9 passed
+
+Category=M1Fault
+  13 passed
+
+git diff --check
+  passed after closeout formatting correction
+```
+
+The independent re-review found no remaining material issue after RQ-004 was
+reopened, RESEARCH-0053 was registered, and the provisional implementation was
+removed. No push occurred.
