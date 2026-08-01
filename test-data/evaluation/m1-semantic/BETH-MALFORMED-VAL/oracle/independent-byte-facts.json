@@ -2,8 +2,8 @@
   "schema_id": "infinium.evaluation.bethesda-byte-oracle/v1",
   "schema_version": "1",
   "fixture_id": "BETH-MALFORMED-VAL",
-  "fixture_version": "1.0.0",
-  "oracle_artifact_version": "1.0.1",
+  "fixture_version": "1.0.1",
+  "oracle_artifact_version": "1.0.2",
   "canonicalization": "infinium-canonical-json-sha256/v1",
   "independent_authors_and_reviewers": [
     "oracle-reviewer"
@@ -787,8 +787,8 @@
     },
     {
       "artifact_id": "inputs/mutations/InvalidLinkMasterIndex.esp",
-      "byte_length": 250,
-      "sha256": "6df0405e2be94250826c62b959261a9968612ac8fcc65bfb65ca5ff866b8b781",
+      "byte_length": 412,
+      "sha256": "63f649f2a9a5fa75d7ce2098202942bfcb5f08465753c916a1ec5e61758179f7",
       "provider_id": "project-authored:beth-malformed-val",
       "scenario_memberships": [
         {
@@ -892,33 +892,96 @@
           "offset_space": "physical-file",
           "offset": 186,
           "length": 24,
-          "classification": "record-header"
+          "classification": "group-header"
         },
         {
           "span_id": "f009.span-00014",
           "offset_space": "physical-file",
           "offset": 210,
-          "length": 6,
-          "classification": "subrecord-header"
+          "length": 24,
+          "classification": "group-header"
         },
         {
           "span_id": "f009.span-00015",
           "offset_space": "physical-file",
-          "offset": 216,
-          "length": 4,
-          "classification": "subrecord-data"
+          "offset": 234,
+          "length": 24,
+          "classification": "record-header"
         },
         {
           "span_id": "f009.span-00016",
           "offset_space": "physical-file",
-          "offset": 220,
+          "offset": 258,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f009.span-00017",
           "offset_space": "physical-file",
-          "offset": 226,
+          "offset": 264,
+          "length": 28,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f009.span-00018",
+          "offset_space": "physical-file",
+          "offset": 292,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f009.span-00019",
+          "offset_space": "physical-file",
+          "offset": 298,
+          "length": 2,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f009.span-00020",
+          "offset_space": "physical-file",
+          "offset": 300,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "span_id": "f009.span-00021",
+          "offset_space": "physical-file",
+          "offset": 324,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "span_id": "f009.span-00022",
+          "offset_space": "physical-file",
+          "offset": 348,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "span_id": "f009.span-00023",
+          "offset_space": "physical-file",
+          "offset": 372,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f009.span-00024",
+          "offset_space": "physical-file",
+          "offset": 378,
+          "length": 4,
+          "classification": "subrecord-data"
+        },
+        {
+          "span_id": "f009.span-00025",
+          "offset_space": "physical-file",
+          "offset": 382,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "span_id": "f009.span-00026",
+          "offset_space": "physical-file",
+          "offset": 388,
           "length": 24,
           "classification": "subrecord-data"
         }
@@ -117440,10 +117503,10 @@
       "canonical_value": {
         "kind": "file-identity",
         "artifact_id": "inputs/mutations/InvalidLinkMasterIndex.esp",
-        "length": 250,
-        "text_value": "6df0405e2be94250826c62b959261a9968612ac8fcc65bfb65ca5ff866b8b781"
+        "length": 412,
+        "text_value": "63f649f2a9a5fa75d7ce2098202942bfcb5f08465753c916a1ec5e61758179f7"
       },
-      "canonical_value_fingerprint": "935d7b11aface123c097ac8670973b36c2d29b45ed12dd51bd6b0a1bf54db855"
+      "canonical_value_fingerprint": "32be95d95567ae4d62e3ccd012906eca364773b07c6e85e85ffb09774e475e45"
     },
     {
       "fact_id": "beth.beth-malformed-val.fact-00042",
@@ -117490,15 +117553,95 @@
         "artifact_id": "inputs/mutations/InvalidLinkMasterIndex.esp",
         "offset_space": "physical-file",
         "offset": 162,
-        "length": 88,
+        "length": 250,
         "signature": "GRUP",
-        "raw_hex": "52454652",
+        "raw_hex": "43454C4C",
         "unsigned_value": 0
       },
-      "canonical_value_fingerprint": "d75a634395c5eb51fa8246911a8322ffeabb11fafd3266ff09cd2f2ca05d4ba5"
+      "canonical_value_fingerprint": "9dbba555b1a8dbfcb2e1d5b39a1bf9d5d21a9a8661c1dd4a9604f1baa256148f"
     },
     {
       "fact_id": "beth.beth-malformed-val.fact-00045",
+      "subject_id": "beth-malformed-val.file-009.group-0001",
+      "fact_kind": "group",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "group-header",
+        "artifact_id": "inputs/mutations/InvalidLinkMasterIndex.esp",
+        "offset_space": "physical-file",
+        "offset": 186,
+        "length": 226,
+        "signature": "GRUP",
+        "raw_hex": "00000000",
+        "unsigned_value": 2
+      },
+      "canonical_value_fingerprint": "2547c6e6839e982e999bf9d47fc3d88c05b80a18905ca3a89612abf92a14a8a3"
+    },
+    {
+      "fact_id": "beth.beth-malformed-val.fact-00046",
+      "subject_id": "beth-malformed-val.file-009.group-0002",
+      "fact_kind": "group",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "group-header",
+        "artifact_id": "inputs/mutations/InvalidLinkMasterIndex.esp",
+        "offset_space": "physical-file",
+        "offset": 210,
+        "length": 202,
+        "signature": "GRUP",
+        "raw_hex": "00000000",
+        "unsigned_value": 3
+      },
+      "canonical_value_fingerprint": "619a3f2ca017e68c90cd73a1fd8e9a05933a80aba9d3b12f57bea1263082899a"
+    },
+    {
+      "fact_id": "beth.beth-malformed-val.fact-00047",
+      "subject_id": "beth-malformed-val.file-009.group-0003",
+      "fact_kind": "group",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "group-header",
+        "artifact_id": "inputs/mutations/InvalidLinkMasterIndex.esp",
+        "offset_space": "physical-file",
+        "offset": 300,
+        "length": 112,
+        "signature": "GRUP",
+        "raw_hex": "00090001",
+        "unsigned_value": 6
+      },
+      "canonical_value_fingerprint": "6d6754ca6ffffc59a2b12027bead2471821283a686ef33b696790d5c470b9df3"
+    },
+    {
+      "fact_id": "beth.beth-malformed-val.fact-00048",
+      "subject_id": "beth-malformed-val.file-009.group-0004",
+      "fact_kind": "group",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "group-header",
+        "artifact_id": "inputs/mutations/InvalidLinkMasterIndex.esp",
+        "offset_space": "physical-file",
+        "offset": 324,
+        "length": 88,
+        "signature": "GRUP",
+        "raw_hex": "00090001",
+        "unsigned_value": 8
+      },
+      "canonical_value_fingerprint": "30fc08930a16b6ed4155af56988b7f73aae18873955c58d5677e7604e982f095"
+    },
+    {
+      "fact_id": "beth.beth-malformed-val.fact-00049",
       "subject_id": "beth-malformed-val.file-009.record-0000",
       "fact_kind": "record",
       "ground_truth_method_ids": [
@@ -117520,7 +117663,7 @@
       "canonical_value_fingerprint": "e3837f862c39fcfe96363a42d01189a011c954912612e188554db289a7926474"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00046",
+      "fact_id": "beth.beth-malformed-val.fact-00050",
       "subject_id": "beth-malformed-val.file-009.record-0000.sub-0003",
       "fact_kind": "subrecord",
       "ground_truth_method_ids": [
@@ -117539,7 +117682,7 @@
       "canonical_value_fingerprint": "93f845688047ba524ffa1bb746ae824fdca8975735560e524af615e5950948d4"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00047",
+      "fact_id": "beth.beth-malformed-val.fact-00051",
       "subject_id": "beth-malformed-val.file-009.record-0000.sub-0004",
       "fact_kind": "subrecord",
       "ground_truth_method_ids": [
@@ -117558,7 +117701,7 @@
       "canonical_value_fingerprint": "195798be10610bc03a79bfbb6792fa462233ee88f048ef7d885fa675e0647243"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00048",
+      "fact_id": "beth.beth-malformed-val.fact-00052",
       "subject_id": "beth-malformed-val.file-009.record-0001",
       "fact_kind": "record",
       "ground_truth_method_ids": [
@@ -117569,24 +117712,51 @@
         "kind": "major-record",
         "artifact_id": "inputs/mutations/InvalidLinkMasterIndex.esp",
         "offset_space": "physical-file",
-        "offset": 186,
-        "length": 64,
-        "signature": "REFR",
-        "form_id_hex": "00000800",
+        "offset": 234,
+        "length": 66,
+        "signature": "CELL",
+        "form_id_hex": "01000900",
         "record_flags_hex": "00000000",
         "record_state": "present",
         "boolean_value": false,
         "resolution_state": "resolved",
-        "form_key": "00000800:MinimalValid.esp",
-        "origin_plugin": "MinimalValid.esp",
+        "form_key": "00000900:InvalidLinkMasterIndex.esp",
+        "origin_plugin": "InvalidLinkMasterIndex.esp",
+        "origin_kind": "full",
+        "local_id_hex": "000900"
+      },
+      "canonical_value_fingerprint": "7e1d8d5e9c46922f00a3d8ed1b22b15c99de47f50feac0e9a8da6cf40785f53d"
+    },
+    {
+      "fact_id": "beth.beth-malformed-val.fact-00053",
+      "subject_id": "beth-malformed-val.file-009.record-0002",
+      "fact_kind": "record",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value": {
+        "kind": "major-record",
+        "artifact_id": "inputs/mutations/InvalidLinkMasterIndex.esp",
+        "offset_space": "physical-file",
+        "offset": 348,
+        "length": 64,
+        "signature": "REFR",
+        "form_id_hex": "01000800",
+        "record_flags_hex": "00000000",
+        "record_state": "present",
+        "boolean_value": false,
+        "resolution_state": "resolved",
+        "form_key": "00000800:InvalidLinkMasterIndex.esp",
+        "origin_plugin": "InvalidLinkMasterIndex.esp",
         "origin_kind": "full",
         "local_id_hex": "000800"
       },
-      "canonical_value_fingerprint": "6168a9fb3200bd717c04b6f6950bf07604a5f33590b23b0b73c66468348f2e56"
+      "canonical_value_fingerprint": "1b2d1a44151de1b265b1a5194e3f08dda25dc5c85daff8a719eb2138010bbf2d"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00049",
-      "subject_id": "beth-malformed-val.file-009.record-0001.sub-0000",
+      "fact_id": "beth.beth-malformed-val.fact-00054",
+      "subject_id": "beth-malformed-val.file-009.record-0002.sub-0000",
       "fact_kind": "subrecord",
       "ground_truth_method_ids": [
         "manual-annotated-hex-worksheet-v1",
@@ -117596,16 +117766,16 @@
         "kind": "allowlisted-subrecord",
         "artifact_id": "inputs/mutations/InvalidLinkMasterIndex.esp",
         "offset_space": "physical-file",
-        "offset": 216,
+        "offset": 378,
         "length": 4,
         "signature": "NAME",
         "raw_hex": "00080003"
       },
-      "canonical_value_fingerprint": "51ceed6a7bc934ba6d0b07d46f5203a587994a7bf3b193295f08d4347c6c9c4f"
+      "canonical_value_fingerprint": "46e2f2f09fbc6b9166ebe5253b08a9df0eb10e6abc96a329a6f63ddd176066ae"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00050",
-      "subject_id": "beth-malformed-val.file-009.record-0001.sub-0001",
+      "fact_id": "beth.beth-malformed-val.fact-00055",
+      "subject_id": "beth-malformed-val.file-009.record-0002.sub-0001",
       "fact_kind": "subrecord",
       "ground_truth_method_ids": [
         "manual-annotated-hex-worksheet-v1",
@@ -117615,15 +117785,15 @@
         "kind": "allowlisted-subrecord",
         "artifact_id": "inputs/mutations/InvalidLinkMasterIndex.esp",
         "offset_space": "physical-file",
-        "offset": 226,
+        "offset": 388,
         "length": 24,
         "signature": "DATA",
         "raw_hex": "000000000000000000000000000000000000000000000000"
       },
-      "canonical_value_fingerprint": "6b75ec5ecf34702b538f5213b7119352af6bf4eb8b73b5690ad6332ab8c04238"
+      "canonical_value_fingerprint": "ce1ddd9525d68824a58b54d7188ccea07d4db3068aedafbac1180f6a3169a259"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00051",
+      "fact_id": "beth.beth-malformed-val.fact-00056",
       "subject_id": "beth-malformed-val.file-010.identity",
       "fact_kind": "file",
       "ground_truth_method_ids": [
@@ -117639,7 +117809,7 @@
       "canonical_value_fingerprint": "b0de3dc77194f641aba14ff02cfab18fe8a70207e57479a8269bbef9bf0e3703"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00052",
+      "fact_id": "beth.beth-malformed-val.fact-00057",
       "subject_id": "beth-malformed-val.file-010.masters",
       "fact_kind": "master-order",
       "ground_truth_method_ids": [
@@ -117656,7 +117826,7 @@
       "canonical_value_fingerprint": "b5294e5a350a037406ffc229ed564269559bbe7e502912f63a68497c5f37d167"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00053",
+      "fact_id": "beth.beth-malformed-val.fact-00058",
       "subject_id": "beth-malformed-val.file-010.esl-flag",
       "fact_kind": "file",
       "ground_truth_method_ids": [
@@ -117671,7 +117841,7 @@
       "canonical_value_fingerprint": "f7ec5af110da5005a70c6babcb1a63bb6da5f4b1e2bc33b7c13011d3fe5ce909"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00054",
+      "fact_id": "beth.beth-malformed-val.fact-00059",
       "subject_id": "beth-malformed-val.file-010.group-0000",
       "fact_kind": "group",
       "ground_truth_method_ids": [
@@ -117691,7 +117861,7 @@
       "canonical_value_fingerprint": "550819bf4eff7db551f1bbf868242ee0e5708ce30439d1a4eca47bdbaecee9dc"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00055",
+      "fact_id": "beth.beth-malformed-val.fact-00060",
       "subject_id": "beth-malformed-val.file-010.record-0000",
       "fact_kind": "record",
       "ground_truth_method_ids": [
@@ -117713,7 +117883,7 @@
       "canonical_value_fingerprint": "28b86837ee5a66b3b831934290dfbd2664cc3598ef2190f5335c0e2fcb33d8a9"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00056",
+      "fact_id": "beth.beth-malformed-val.fact-00061",
       "subject_id": "beth-malformed-val.file-010.record-0000.sub-0003",
       "fact_kind": "subrecord",
       "ground_truth_method_ids": [
@@ -117732,7 +117902,7 @@
       "canonical_value_fingerprint": "8664e36ead8a5fcd4d3e4a64c840064f11b9c0be2c3e6a252ebe64fd09edcdf9"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00057",
+      "fact_id": "beth.beth-malformed-val.fact-00062",
       "subject_id": "beth-malformed-val.file-010.record-0000.sub-0004",
       "fact_kind": "subrecord",
       "ground_truth_method_ids": [
@@ -117751,7 +117921,7 @@
       "canonical_value_fingerprint": "a2259e4b7bc448751ad198f86e794e06a277285065048cd6982823439133ca60"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00058",
+      "fact_id": "beth.beth-malformed-val.fact-00063",
       "subject_id": "beth-malformed-val.file-010.record-0001",
       "fact_kind": "record",
       "ground_truth_method_ids": [
@@ -117774,7 +117944,7 @@
       "canonical_value_fingerprint": "67382672f05c7c281401813fa3930fbb11b0dbcd4a5736bc6ba915b3a0633fdc"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00059",
+      "fact_id": "beth.beth-malformed-val.fact-00064",
       "subject_id": "beth-malformed-val.file-011.identity",
       "fact_kind": "file",
       "ground_truth_method_ids": [
@@ -117790,7 +117960,7 @@
       "canonical_value_fingerprint": "0b6a8557e48c77e95e38a3a462e57d228e27653f318af0d3560397d26b614196"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00060",
+      "fact_id": "beth.beth-malformed-val.fact-00065",
       "subject_id": "beth-malformed-val.file-011.masters",
       "fact_kind": "master-order",
       "ground_truth_method_ids": [
@@ -117806,7 +117976,7 @@
       "canonical_value_fingerprint": "b813256395630419e3d90a614c8698c26914aba68484a6b0b59a35a6987fe3af"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00061",
+      "fact_id": "beth.beth-malformed-val.fact-00066",
       "subject_id": "beth-malformed-val.file-011.esl-flag",
       "fact_kind": "file",
       "ground_truth_method_ids": [
@@ -117821,7 +117991,7 @@
       "canonical_value_fingerprint": "19de579c8e7c90fd8d07ac51cd454d33ad7f5d9acd677b153a13417f1f8edfb9"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00062",
+      "fact_id": "beth.beth-malformed-val.fact-00067",
       "subject_id": "beth-malformed-val.file-011.malformed",
       "fact_kind": "malformed",
       "ground_truth_method_ids": [
@@ -117840,7 +118010,7 @@
       "canonical_value_fingerprint": "b13b0e3261846b66152b2e33c192fa8212ce216ec34e962c157b88f481ee722b"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00063",
+      "fact_id": "beth.beth-malformed-val.fact-00068",
       "subject_id": "beth-malformed-val.file-012.identity",
       "fact_kind": "file",
       "ground_truth_method_ids": [
@@ -117856,7 +118026,7 @@
       "canonical_value_fingerprint": "617d79903b475410fa31aca58ace176ef4abd4da74383fbd4a62de2749b5f38a"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00064",
+      "fact_id": "beth.beth-malformed-val.fact-00069",
       "subject_id": "beth-malformed-val.file-012.masters",
       "fact_kind": "master-order",
       "ground_truth_method_ids": [
@@ -117871,7 +118041,7 @@
       "canonical_value_fingerprint": "6417d8ebcf30d6c695890ff2c49c5a62f71ea5055b8888ed5b4bac52446a6ed0"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00065",
+      "fact_id": "beth.beth-malformed-val.fact-00070",
       "subject_id": "beth-malformed-val.file-012.esl-flag",
       "fact_kind": "file",
       "ground_truth_method_ids": [
@@ -117886,7 +118056,7 @@
       "canonical_value_fingerprint": "ec75b3df6bafe597036249f7f3d0963d8a112903a94ba7cf4db25290713703a0"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00066",
+      "fact_id": "beth.beth-malformed-val.fact-00071",
       "subject_id": "beth-malformed-val.file-012.malformed",
       "fact_kind": "malformed",
       "ground_truth_method_ids": [
@@ -117905,7 +118075,7 @@
       "canonical_value_fingerprint": "3fbb24444c68af7e601a00954bbc1a53c939a8e23b6df18e2fed425365b8f814"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00067",
+      "fact_id": "beth.beth-malformed-val.fact-00072",
       "subject_id": "beth-malformed-val.file-013.identity",
       "fact_kind": "file",
       "ground_truth_method_ids": [
@@ -117921,7 +118091,7 @@
       "canonical_value_fingerprint": "a1202ad5e9b57fa0d2117f093e9cf27d69e2bb678727c10fdc3526acff476e36"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00068",
+      "fact_id": "beth.beth-malformed-val.fact-00073",
       "subject_id": "beth-malformed-val.file-013.masters",
       "fact_kind": "master-order",
       "ground_truth_method_ids": [
@@ -117936,7 +118106,7 @@
       "canonical_value_fingerprint": "ea985feb371512df7c99f53880da556759602fa82b94780137d5121c9db8eb90"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00069",
+      "fact_id": "beth.beth-malformed-val.fact-00074",
       "subject_id": "beth-malformed-val.file-013.esl-flag",
       "fact_kind": "file",
       "ground_truth_method_ids": [
@@ -117951,7 +118121,7 @@
       "canonical_value_fingerprint": "03ab2d9dbcee961f26918549f56bbceb5c5b9f613e3ed6b84712beff2bf1bbac"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00070",
+      "fact_id": "beth.beth-malformed-val.fact-00075",
       "subject_id": "beth-malformed-val.file-013.malformed",
       "fact_kind": "malformed",
       "ground_truth_method_ids": [
@@ -117970,7 +118140,7 @@
       "canonical_value_fingerprint": "59a68f6bd70efc9bd9daf0bc984735db1397f8d8c497e43bc9173d9c1d3374ba"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00071",
+      "fact_id": "beth.beth-malformed-val.fact-00076",
       "subject_id": "beth-malformed-val.file-014.identity",
       "fact_kind": "file",
       "ground_truth_method_ids": [
@@ -117986,7 +118156,7 @@
       "canonical_value_fingerprint": "9e2ea7616630e387a5d364681b3bc2f0eb156649ef67b8710144bd0f58f8b21c"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00072",
+      "fact_id": "beth.beth-malformed-val.fact-00077",
       "subject_id": "beth-malformed-val.file-014.masters",
       "fact_kind": "master-order",
       "ground_truth_method_ids": [
@@ -118002,7 +118172,7 @@
       "canonical_value_fingerprint": "3eef5b92adbc3817b0db1acb9e8626cb9e08ef8ab5df4d9129cf3fa2298c6b9a"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00073",
+      "fact_id": "beth.beth-malformed-val.fact-00078",
       "subject_id": "beth-malformed-val.file-014.esl-flag",
       "fact_kind": "file",
       "ground_truth_method_ids": [
@@ -118017,7 +118187,7 @@
       "canonical_value_fingerprint": "ca1ccd7e845a3389c20419f92c49efcd212f140ae8f29b24130005ed6222343f"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00074",
+      "fact_id": "beth.beth-malformed-val.fact-00079",
       "subject_id": "beth-malformed-val.file-014.malformed",
       "fact_kind": "malformed",
       "ground_truth_method_ids": [
@@ -118036,7 +118206,7 @@
       "canonical_value_fingerprint": "70dd98bb178bb3d565af0b0e476daa8a7e6a007fe3b243eef49a854256eb8d27"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00075",
+      "fact_id": "beth.beth-malformed-val.fact-00080",
       "subject_id": "beth-malformed-val.file-015.identity",
       "fact_kind": "file",
       "ground_truth_method_ids": [
@@ -118052,7 +118222,7 @@
       "canonical_value_fingerprint": "eda0391bd9c86275e523b96b4e8597624095d52c67d420ad5cd816e74e283dc9"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00076",
+      "fact_id": "beth.beth-malformed-val.fact-00081",
       "subject_id": "beth-malformed-val.file-015.masters",
       "fact_kind": "master-order",
       "ground_truth_method_ids": [
@@ -118067,7 +118237,7 @@
       "canonical_value_fingerprint": "ea47111718869e9aef589a42948ca95eee944497c1ae2961e7cc0db11ddddc1e"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00077",
+      "fact_id": "beth.beth-malformed-val.fact-00082",
       "subject_id": "beth-malformed-val.file-015.esl-flag",
       "fact_kind": "file",
       "ground_truth_method_ids": [
@@ -118082,7 +118252,7 @@
       "canonical_value_fingerprint": "eac18c5b685bbff4f22d52b4978c539abc356cff4368a8330cff690ac964d866"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00078",
+      "fact_id": "beth.beth-malformed-val.fact-00083",
       "subject_id": "beth-malformed-val.file-015.malformed",
       "fact_kind": "malformed",
       "ground_truth_method_ids": [
@@ -118101,7 +118271,7 @@
       "canonical_value_fingerprint": "6c8e9a5a5b55e62a5ab1d19e0011a0365cf088575021634c07992917f6a40e6e"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00079",
+      "fact_id": "beth.beth-malformed-val.fact-00084",
       "subject_id": "beth-malformed-val.file-016.identity",
       "fact_kind": "file",
       "ground_truth_method_ids": [
@@ -118117,7 +118287,7 @@
       "canonical_value_fingerprint": "4bbea68915e976149781efee2cf8e84c76279b5f709e8d7857bf3e37d31a7eb8"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00080",
+      "fact_id": "beth.beth-malformed-val.fact-00085",
       "subject_id": "beth-malformed-val.file-016.masters",
       "fact_kind": "master-order",
       "ground_truth_method_ids": [
@@ -118133,7 +118303,7 @@
       "canonical_value_fingerprint": "6e7c0649208a9294c991679bf15025bb1f34efd9afca1597ea3c50bd7564fcf0"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00081",
+      "fact_id": "beth.beth-malformed-val.fact-00086",
       "subject_id": "beth-malformed-val.file-016.esl-flag",
       "fact_kind": "file",
       "ground_truth_method_ids": [
@@ -118149,7 +118319,7 @@
       "canonical_value_fingerprint": "eda1b26763afa32c0c329c84f2b470554089406a48fd026a7fc954499e376062"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00082",
+      "fact_id": "beth.beth-malformed-val.fact-00087",
       "subject_id": "beth-malformed-val.file-016.malformed",
       "fact_kind": "malformed",
       "ground_truth_method_ids": [
@@ -118168,7 +118338,7 @@
       "canonical_value_fingerprint": "26ed53cc4f786465c10a3eeae5fd7bb2f58a61fbcd8b6e8bfcbd695a4555ff6f"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00083",
+      "fact_id": "beth.beth-malformed-val.fact-00088",
       "subject_id": "beth-malformed-val.file-017.identity",
       "fact_kind": "file",
       "ground_truth_method_ids": [
@@ -118184,7 +118354,7 @@
       "canonical_value_fingerprint": "663f7d0c37141a1b237cd2935fafccf3eee5496ef99f12a099ea8d6a1fa6f0b9"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00084",
+      "fact_id": "beth.beth-malformed-val.fact-00089",
       "subject_id": "beth-malformed-val.file-017.masters",
       "fact_kind": "master-order",
       "ground_truth_method_ids": [
@@ -118199,7 +118369,7 @@
       "canonical_value_fingerprint": "5d183ee401ad38dbb8af6a9eb048403117681b1aab81f741d886efc2126a1a59"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00085",
+      "fact_id": "beth.beth-malformed-val.fact-00090",
       "subject_id": "beth-malformed-val.file-017.esl-flag",
       "fact_kind": "file",
       "ground_truth_method_ids": [
@@ -118214,7 +118384,7 @@
       "canonical_value_fingerprint": "496730543a62391c96771ec2f5d19d92dc25f74f044529e899e09b4de881e187"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00086",
+      "fact_id": "beth.beth-malformed-val.fact-00091",
       "subject_id": "beth-malformed-val.file-017.malformed",
       "fact_kind": "malformed",
       "ground_truth_method_ids": [
@@ -118233,7 +118403,7 @@
       "canonical_value_fingerprint": "94a33cd385e23be472036e4f4234a09857f27a02f1590a48615ee64fd7435860"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00087",
+      "fact_id": "beth.beth-malformed-val.fact-00092",
       "subject_id": "beth-malformed-val.file-018.identity",
       "fact_kind": "file",
       "ground_truth_method_ids": [
@@ -118249,7 +118419,7 @@
       "canonical_value_fingerprint": "0815ad5aa769ea6204d05ad8146fd6f29f2cd72debb3aa0ba976babe5db5738f"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00088",
+      "fact_id": "beth.beth-malformed-val.fact-00093",
       "subject_id": "beth-malformed-val.file-018.masters",
       "fact_kind": "master-order",
       "ground_truth_method_ids": [
@@ -118264,7 +118434,7 @@
       "canonical_value_fingerprint": "dfd086536b4f4e5468248352e6f2771d5cf7c8d544db400b86c8615432ab0d65"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00089",
+      "fact_id": "beth.beth-malformed-val.fact-00094",
       "subject_id": "beth-malformed-val.file-018.esl-flag",
       "fact_kind": "file",
       "ground_truth_method_ids": [
@@ -118279,7 +118449,7 @@
       "canonical_value_fingerprint": "46c6f5457337ed0d9bfc9d35bd09233f494a5c4843ee51526edcf7a853315cc6"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00090",
+      "fact_id": "beth.beth-malformed-val.fact-00095",
       "subject_id": "beth-malformed-val.file-018.group-0000",
       "fact_kind": "group",
       "ground_truth_method_ids": [
@@ -118299,7 +118469,7 @@
       "canonical_value_fingerprint": "37505c70944b83a976055df653d530f62d698ed7cdc37ab16d7418ac4785de94"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00091",
+      "fact_id": "beth.beth-malformed-val.fact-00096",
       "subject_id": "beth-malformed-val.file-018.record-0000",
       "fact_kind": "record",
       "ground_truth_method_ids": [
@@ -118321,7 +118491,7 @@
       "canonical_value_fingerprint": "bae3eef43bda43ca1b7ae135c8d566ae0dbb0935acf4c967bcf635c1554f3a22"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00092",
+      "fact_id": "beth.beth-malformed-val.fact-00097",
       "subject_id": "beth-malformed-val.file-018.record-0001",
       "fact_kind": "record",
       "ground_truth_method_ids": [
@@ -118348,8 +118518,8 @@
       "canonical_value_fingerprint": "bf5da614c99dd84e59a95a96a933e88ca6379c81490a254f74327d13ae91a646"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00093",
-      "subject_id": "beth-malformed-val.file-009.record-0001.link-0000.malformed-link-master-index",
+      "fact_id": "beth.beth-malformed-val.fact-00098",
+      "subject_id": "beth-malformed-val.file-009.record-0002.link-0000.malformed-link-master-index",
       "fact_kind": "link",
       "ground_truth_method_ids": [
         "manual-annotated-hex-worksheet-v1",
@@ -118365,7 +118535,7 @@
       "canonical_value_fingerprint": "4a58ac926371a1c6aabaac02fbd351fac569fcc8a708362baedeee42e3a9ec2c"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00094",
+      "fact_id": "beth.beth-malformed-val.fact-00099",
       "subject_id": "beth-malformed-val.semantic-invalid-9",
       "fact_kind": "malformed",
       "ground_truth_method_ids": [
@@ -118383,7 +118553,7 @@
       "canonical_value_fingerprint": "fdbd0197725578da4fb2c0de9bc05ec2468e7b0c826a45e39b02c10ccd88c422"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00095",
+      "fact_id": "beth.beth-malformed-val.fact-00100",
       "subject_id": "beth-malformed-val.semantic-invalid-10",
       "fact_kind": "malformed",
       "ground_truth_method_ids": [
@@ -118401,7 +118571,7 @@
       "canonical_value_fingerprint": "d4f3cf365c14de19f629b2f6eec55e210a0b53298164cb98dae3f5fb0e2dd52d"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00096",
+      "fact_id": "beth.beth-malformed-val.fact-00101",
       "subject_id": "beth-malformed-val.malformed-changed-during-read",
       "fact_kind": "malformed",
       "ground_truth_method_ids": [
@@ -118417,7 +118587,7 @@
       "canonical_value_fingerprint": "88f9b303a348558fc78201027f50da781b7c60ac7f8549cfdac25599a0627a91"
     },
     {
-      "fact_id": "beth.beth-malformed-val.fact-00097",
+      "fact_id": "beth.beth-malformed-val.fact-00102",
       "subject_id": "beth-malformed-val.malformed-denominator",
       "fact_kind": "snapshot",
       "ground_truth_method_ids": [
@@ -118444,8 +118614,8 @@
       "changed_fact_ids": [
         "beth.beth-malformed-val.fact-00007",
         "beth.beth-malformed-val.fact-00012",
-        "beth.beth-malformed-val.fact-00096",
-        "beth.beth-malformed-val.fact-00097"
+        "beth.beth-malformed-val.fact-00101",
+        "beth.beth-malformed-val.fact-00102"
       ],
       "unchanged_fact_ids": [
         "beth.beth-malformed-val.fact-00001",
@@ -118540,7 +118710,12 @@
         "beth.beth-malformed-val.fact-00092",
         "beth.beth-malformed-val.fact-00093",
         "beth.beth-malformed-val.fact-00094",
-        "beth.beth-malformed-val.fact-00095"
+        "beth.beth-malformed-val.fact-00095",
+        "beth.beth-malformed-val.fact-00096",
+        "beth.beth-malformed-val.fact-00097",
+        "beth.beth-malformed-val.fact-00098",
+        "beth.beth-malformed-val.fact-00099",
+        "beth.beth-malformed-val.fact-00100"
       ]
     }
   ],

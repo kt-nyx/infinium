@@ -89,70 +89,70 @@
     },
     {
       "fixture_id": "BETH-MALFORMED-VAL-002",
-      "fixture_version": "1.0.0-private-input-freeze",
+      "fixture_version": "1.1.0",
       "partition": "validation",
       "evaluation_ids": [
         "EVAL-0052"
       ],
-      "purpose": "Evaluator-private project-authored malformed Bethesda validation inputs covering bounded framing, unsigned sizes, decompression, nesting/count limits, invalid master references, and changed-during-read identity.",
+      "purpose": "Evaluator-private project-authored malformed Bethesda validation inputs covering bounded framing, size arithmetic, decompression, structural complexity, master references, and changed-during-read.",
       "classification": "malformed",
-      "owner": "evaluator-private/replacement-malformed-custodian",
+      "owner": "isolated-oracle-reviewer/replacement-malformed-v3",
       "review_state": "sealed",
-      "reviewed_at": "2026-07-30T18:09:31.3260000+00:00",
+      "reviewed_at": "2026-08-01T23:35:00.0000000+00:00",
       "complete_package_retention": "separate-private-git",
       "private_store": {
         "store_id": "infinium-evaluator-fixtures",
         "relationship": "separate-git-history",
-        "revision": "d929f7c91e0f36cc2e57240bda63c6371c7528ee",
+        "revision": "1530a55c6b30db45356fd54700c2d4ebb497c1c6",
         "governance_version": "2026-08-01"
       },
       "disclosure_class": "sanitized-result",
       "contamination_state": "clean",
       "governance_id": "adr-0026/evaluator-private-fixture-governance/2026-08-01",
-      "declared_manifest_input_package_fingerprint": "3c51511d6db4b77848dcf2a855c9a66c8bbb3ad356599132c6c83b2d35d5a6e5",
-      "execution_input_document_sha256": "d7b37ed05a5e8713343352747309cf6108f1406468a6862a884d07e54d1dd4ac",
-      "retained_input_set_fingerprint": "3c51511d6db4b77848dcf2a855c9a66c8bbb3ad356599132c6c83b2d35d5a6e5",
-      "oracle_fingerprint": "6d14e1dc4da3a201d72632d4768da6caa56564f01fa0f8b1ee3c19e90ae83ce4",
-      "supplemental_oracle_fingerprint": "fba2ab7ea81c80baf337d5bdcd1ae116d5f089a497046e9ae6cef29c41c671f0",
-      "package_fingerprint": "064b5639a73b7f8657b64381f8b6f401918bfbc8c83b6c585e847785eab68a07",
-      "package_fingerprint_scope": "complete-version-tree-relative-name-length-sha256-line-v1",
+      "declared_manifest_input_package_fingerprint": "9c8dd5621c714626d566abf81f4b94173d926d12c9ae367e63c649123376a915",
+      "execution_input_document_sha256": "9c8dd5621c714626d566abf81f4b94173d926d12c9ae367e63c649123376a915",
+      "retained_input_set_fingerprint": "b37a15f1bba165dedb2f116a44477cf37e595cfa5e10a4fdadf1c49148fb5303",
+      "oracle_fingerprint": "82acea697b56dae14741c033a72f922354252ae4c57d5cbf74da6218298976e8",
+      "supplemental_oracle_fingerprint": "dcded590469cbde5947d7713b18b87906686f1ac6a40124a689ff22edd3cf94e",
+      "package_fingerprint": "c0959900a54431689f5f5b6ccd71ad3c486b461440582bc3e5bed8ca82ed238a",
+      "package_fingerprint_scope": "complete-successor-tree-relative-name-length-sha256-v1",
       "documents": {
         "public_manifest": {
-          "byte_length": 1540,
-          "sha256": "ec00c8b32ee990dc846bdb906c22f5e5e69ed19e2b5e5df79e6b6a520d6bd570"
+          "byte_length": 1313,
+          "sha256": "83069c68215633f8dd898eb14702f7deace10144ce7fe0ed2536125e69cee929"
         },
         "execution_input": {
-          "byte_length": 6860,
-          "sha256": "d7b37ed05a5e8713343352747309cf6108f1406468a6862a884d07e54d1dd4ac"
+          "byte_length": 5201,
+          "sha256": "9c8dd5621c714626d566abf81f4b94173d926d12c9ae367e63c649123376a915"
         },
         "expected_oracle": {
-          "byte_length": 18649,
-          "sha256": "6d14e1dc4da3a201d72632d4768da6caa56564f01fa0f8b1ee3c19e90ae83ce4"
+          "byte_length": 27962,
+          "sha256": "82acea697b56dae14741c033a72f922354252ae4c57d5cbf74da6218298976e8"
         },
         "provenance": {
-          "byte_length": 167,
-          "sha256": "56f58670a66c1606d77b32147b3ba8f8039d603fd225e443d620de1b2b3fae42"
+          "byte_length": 125,
+          "sha256": "8774bc76af109fa555d3db4d41828417b232d9c40af2fd24f3563aaf2ed04ce1"
         },
         "replay_dependencies": {
-          "byte_length": 2678,
-          "sha256": "efd222ae939e9b3986a6f3acae22c630ee9e4011cd706adb2739ae25ad429302"
+          "byte_length": 2300,
+          "sha256": "c1882eb74bbdea3d561249054ac78a8a8d2756621f4c2cec0f39557c2be0f2dd"
         },
         "redistribution": {
-          "byte_length": 143,
-          "sha256": "9c5f7570b94eae80a03716b8eb464635f8a5ddc5a826419676eed425b9ca459e"
+          "byte_length": 109,
+          "sha256": "0160d9e709e4a6459e9f1ec7da70f391776785c8c3270140330c60b83347ef2c"
         },
         "partition_history": {
-          "byte_length": 445,
-          "sha256": "ff85a2df6021cc27c9d39c0886a2bca485ff59c321cbd2ecf28e6b344a9dbe29"
+          "byte_length": 303,
+          "sha256": "aa175f3cd32c863fea39ca56182d778692323144d1c2da7206020a6d1c22704b"
         }
       },
       "independence_evidence": {
-        "artifact_id": "BETH-MALFORMED-VAL-002.oracle-independence-attestation",
-        "artifact_version": "1.0.0",
-        "fingerprint": "183888a1734edc9884b5be18fab5e293c8bd8e591653a9112f63349f0e26a495",
+        "artifact_id": "BETH-MALFORMED-VAL-002.structure-correction-independence-attestation",
+        "artifact_version": "1.1.0",
+        "fingerprint": "934b542e6072951453cd732e5ad8a99ef7dc654d3cde479bba01504591dd0fb6",
         "availability": "evaluator-private"
       },
-      "corrective_authority_id": "project-owner/user-directed-replacement-review-20260730",
+      "corrective_authority_id": "project-owner/user-directed-slice4-fixture-conformance-correction-20260801",
       "custodian_attestation": {
         "two_independent_raw_byte_methods_agreed": true,
         "two_clean_constructions_byte_identical": true,
@@ -162,10 +162,10 @@
         "execution_input_isolation_passed": true,
         "deterministic_reconstruction_verified": true,
         "evidence_replay_verified": true,
-        "predecessor_package_accessed": false,
-        "prior_reviewer_output_accessed": false,
+        "predecessor_package_accessed": true,
+        "prior_reviewer_output_accessed": true,
         "production_parser_or_output_accessed": false,
-        "mutagen_or_xedit_used": false,
+        "mutagen_or_xedit_used": true,
         "third_party_payload_consumed": false,
         "protected_root_accessed": false,
         "network_or_billable_provider_used": false,
@@ -174,7 +174,7 @@
     },
     {
       "fixture_id": "BETH-UNSUPPORTED-VAL-002",
-      "fixture_version": "1.0.0",
+      "fixture_version": "1.1.0",
       "partition": "validation",
       "evaluation_ids": [
         "EVAL-0052"
@@ -183,61 +183,61 @@
       "classification": "unsupported",
       "owner": "evaluator-private-custodian",
       "review_state": "sealed",
-      "reviewed_at": "2026-08-01T18:54:26.2786183+00:00",
+      "reviewed_at": "2026-08-01T23:35:00.0000000+00:00",
       "complete_package_retention": "separate-private-git",
       "private_store": {
         "store_id": "infinium-evaluator-fixtures",
         "relationship": "separate-git-history",
-        "revision": "d929f7c91e0f36cc2e57240bda63c6371c7528ee",
+        "revision": "1530a55c6b30db45356fd54700c2d4ebb497c1c6",
         "governance_version": "2026-08-01"
       },
       "disclosure_class": "sanitized-result",
       "contamination_state": "clean",
       "governance_id": "adr-0026/evaluator-private-fixture-governance/2026-08-01",
-      "declared_manifest_input_package_fingerprint": "3f4b34b1f77ca0b70e2b431ae991075f032b29beed825ebf980de9ab4b9221d9",
-      "execution_input_document_sha256": "ec09a40bb8ee57c7da36ef9fd9e613741475f09e948d3cdebaaa6cdaf5e008b7",
-      "retained_input_set_fingerprint": "74f4ba7a7bb5cb024bc8d719e5c4875dceb916670893ec928744c06fcab1ea14",
-      "oracle_fingerprint": "9f47bf6e2deecd61015487e5e4f8b6959279f9b37ffd3d2c11d0b7119452f525",
-      "supplemental_oracle_fingerprint": "31f624e9c388daf3b9342ddd25090da8442ab1a4c1a1860cd07bc0be7a9be7da",
-      "package_fingerprint": "0f609cc259605bf47ecce58465c043b2e7cca6e074a6b133a5729a19c106130e",
+      "declared_manifest_input_package_fingerprint": "8baf21151d962852c4791a35d6f1133c8b17ae3edc8aab628b25efbf539fa1f2",
+      "execution_input_document_sha256": "0d57fdb7334b807c0b434c0eb908166143484ea307462457c88af4c897107977",
+      "retained_input_set_fingerprint": "0f00e7586e1957345c56562ca21808f810ef2c36267bd6672c0dea6c325ac4b4",
+      "oracle_fingerprint": "3f3c5ea19cc06c141d7095fb8811bb5a157123cc7309c285348df694b240885d",
+      "supplemental_oracle_fingerprint": "371fda920e22967437ac7f82dbaf0680524610c47f5cad07cc98fdedead2410f",
+      "package_fingerprint": "88693b320fa28835e957eedffc456941d33d01b6476e8cbd1e358c12f0e6789e",
       "package_fingerprint_scope": "canonical-seal-scope-v1",
       "documents": {
         "public_manifest": {
           "byte_length": 1189,
-          "sha256": "e214d2be4ca276384700327f1874eb448bbc6f572d6ebfd550566b4c5543652b"
+          "sha256": "3d970e962b1061ceda0aae3c9f9a3aac67faa44bcb84d51ab1411fd01a01e2c4"
         },
         "execution_input": {
           "byte_length": 4652,
-          "sha256": "ec09a40bb8ee57c7da36ef9fd9e613741475f09e948d3cdebaaa6cdaf5e008b7"
+          "sha256": "0d57fdb7334b807c0b434c0eb908166143484ea307462457c88af4c897107977"
         },
         "expected_oracle": {
           "byte_length": 10773,
-          "sha256": "9f47bf6e2deecd61015487e5e4f8b6959279f9b37ffd3d2c11d0b7119452f525"
+          "sha256": "3f3c5ea19cc06c141d7095fb8811bb5a157123cc7309c285348df694b240885d"
         },
         "provenance": {
           "byte_length": 126,
-          "sha256": "9a6f2f5998c603026e1dacb45e58e3709674b456938af8989d081c0adb64dba4"
+          "sha256": "7e860a1450e147fb8daf3c45468c9c84d0c1081afafe91bb21df8a2c03202b73"
         },
         "replay_dependencies": {
-          "byte_length": 1478,
-          "sha256": "159c2f91c1b8def921ff4337ec6a0adf25c974cc5823a417588912ab13bc9839"
+          "byte_length": 1477,
+          "sha256": "c94ca02a701d3896e85af7bf25265491845f8ebf390825ec8c224f6ffe7f1846"
         },
         "redistribution": {
           "byte_length": 111,
-          "sha256": "163d3fcdbdfb89538e3d582a6cc715fe9a408ff208ac15fe5e33078146297716"
+          "sha256": "f685a40887e488ad3a5a6c398f61c3b5039f70b6a5d10c7c8b79402b724ebbe9"
         },
         "partition_history": {
           "byte_length": 286,
-          "sha256": "174f3332557b658b486968b98877ab01a211168d63545d9d28f5bc436a4671d3"
+          "sha256": "a7b72488d7799c4b6264079926a0e90d0a0237d887170167fdda4d65fdc12ea6"
         }
       },
       "independence_evidence": {
         "artifact_id": "beth-unsupported-val-002-independence-evidence",
-        "artifact_version": "1.0.0",
-        "fingerprint": "cd448118bbf05f2b972dae2ecefe1245326c69796a4e8329a7578af002f9920a",
+        "artifact_version": "1.1.0",
+        "fingerprint": "75f06caab220c2500cf6fd8f35671ba5baaefe99c0962e7d7c825efee4fca4f2",
         "availability": "evaluator-private"
       },
-      "corrective_authority_id": "project-owner/user-directed-adr-0026-private-store-migration",
+      "corrective_authority_id": "project-owner/user-directed-slice4-fixture-conformance-correction-20260801",
       "custodian_attestation": {
         "two_independent_raw_byte_methods_agreed": true,
         "two_clean_constructions_byte_identical": true,
@@ -247,10 +247,10 @@
         "execution_input_isolation_passed": true,
         "deterministic_reconstruction_verified": true,
         "evidence_replay_verified": true,
-        "predecessor_package_accessed": false,
-        "prior_reviewer_output_accessed": false,
+        "predecessor_package_accessed": true,
+        "prior_reviewer_output_accessed": true,
         "production_parser_or_output_accessed": false,
-        "mutagen_or_xedit_used": false,
+        "mutagen_or_xedit_used": true,
         "third_party_payload_consumed": false,
         "protected_root_accessed": false,
         "network_or_billable_provider_used": false,

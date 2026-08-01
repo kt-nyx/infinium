@@ -2,11 +2,11 @@
   "schema_id": "infinium.evaluation.bethesda-snapshot-input/v1",
   "schema_version": "1",
   "fixture_id": "BETH-MALFORMED-VAL",
-  "fixture_version": "1.0.0",
+  "fixture_version": "1.0.1",
   "snapshot_contract_version": "3.0.0",
   "adapter_id": "infinium.mo2-static-reconstruction/v3",
   "selected_profile_name": "BETH-MALFORMED-VAL",
-  "construction_manifest_fingerprint": "e1876cf888c065740d59a711fa2f597f1551cbaaf09ccf45f40cc40ec4ba761c",
+  "construction_manifest_fingerprint": "db32f685a270fd44ab9529333ec220008a846bba8444f93d413566b50b644c46",
   "provider_order": [
     {
       "provider_id": "beth-malformed-val-provider-00",
@@ -63,7 +63,7 @@
     },
     {
       "artifact_id": "inputs/mutations/InvalidLinkMasterIndex.esp",
-      "sha256": "6df0405e2be94250826c62b959261a9968612ac8fcc65bfb65ca5ff866b8b781"
+      "sha256": "63f649f2a9a5fa75d7ce2098202942bfcb5f08465753c916a1ec5e61758179f7"
     },
     {
       "artifact_id": "inputs/mutations/InvalidRecordMasterIndex.esp",

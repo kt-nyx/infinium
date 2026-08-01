@@ -1,7 +1,7 @@
 {
   "fixture_id": "BETH-UNSUPPORTED-VAL",
-  "fixture_version": "1.0.0",
-  "oracle_version": "1.0.1",
+  "fixture_version": "1.0.1",
+  "oracle_version": "1.0.2",
   "independent_authors_and_reviewers": [
     "oracle-reviewer"
   ],
@@ -31,8 +31,8 @@
         },
         {
           "artifact_id": "oracle/independent-byte-facts.json",
-          "artifact_version": "1.0.0",
-          "fingerprint": "fe91213c44bd07cf11d9e156073f612c12d1f219af379bb402f3c262f0f92536",
+          "artifact_version": "1.0.2",
+          "fingerprint": "34cd5ddf4259a516298ba627e849c49db5824fddd18a68213c15f240ce83dee0",
           "availability": "retained"
         }
       ],
@@ -453,6 +453,18 @@
         "availability": "retained"
       },
       "prior_error_explanation": "Version 1.0.0 attributed the manual method without comparing its decoded semantic answers and classified mutation changes from artifact dependencies instead of logical baseline deltas.",
+      "reviewer": "oracle-reviewer"
+    },
+    {
+      "oracle_version": "1.0.2",
+      "changed_at": "2026-08-01T22:00:00.0000000+00:00",
+      "independent_evidence_reference": {
+        "artifact_id": "oracle/manual-hex-worksheet.json",
+        "artifact_version": "1",
+        "fingerprint": "731d24b0eeaa4e2a98f7bde22edfb1879d922723d3a1c0db4ddefd719960d18f",
+        "availability": "retained"
+      },
+      "prior_error_explanation": "Fixture version 1.0.0 encoded RACE flags at the wrong DATA offset and placed REFR records outside canonical CELL children.",
       "reviewer": "oracle-reviewer"
     }
   ]

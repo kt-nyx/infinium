@@ -15,8 +15,9 @@ METHODS = [
     "manual-annotated-hex-worksheet-v1",
     "independent-bounded-raw-reader-v1",
 ]
-ORACLE_VERSION = "1.0.1"
-ORACLE_CHANGED_AT = "2026-07-30T23:00:00.0000000+00:00"
+FIXTURE_VERSION = "1.0.1"
+ORACLE_VERSION = "1.0.2"
+ORACLE_CHANGED_AT = "2026-08-01T22:00:00.0000000+00:00"
 PLUGIN_SUFFIXES = {".esm", ".esp", ".esl"}
 SUPPORTED = {
     "TES4": {"MAST", "DATA"},
@@ -962,7 +963,7 @@ def build(package: Path, reader_path: Path, manual_path: Path) -> None:
         "schema_id": "infinium.evaluation.bethesda-byte-oracle/v1",
         "schema_version": "1",
         "fixture_id": package.name,
-        "fixture_version": "1.0.0",
+        "fixture_version": FIXTURE_VERSION,
         "oracle_artifact_version": ORACLE_VERSION,
         "canonicalization": "infinium-canonical-json-sha256/v1",
         "independent_authors_and_reviewers": ["oracle-reviewer"],
@@ -1028,7 +1029,7 @@ def build(package: Path, reader_path: Path, manual_path: Path) -> None:
         },
         "supplemental": {
             "artifact_id": "oracle/independent-byte-facts.json",
-            "artifact_version": "1.0.0",
+            "artifact_version": ORACLE_VERSION,
             "fingerprint": sha(supplemental_path),
             "availability": "retained",
         },
@@ -1058,7 +1059,7 @@ def build(package: Path, reader_path: Path, manual_path: Path) -> None:
     }
     expected = {
         "fixture_id": package.name,
-        "fixture_version": "1.0.0",
+        "fixture_version": FIXTURE_VERSION,
         "oracle_version": ORACLE_VERSION,
         "independent_authors_and_reviewers": ["oracle-reviewer"],
         "ground_truth_methods": [
@@ -1110,8 +1111,8 @@ def build(package: Path, reader_path: Path, manual_path: Path) -> None:
         "pre_registered_at": "2026-07-30T00:00:00.0000000+00:00",
         "change_history": [
             {
-                "oracle_version": ORACLE_VERSION,
-                "changed_at": ORACLE_CHANGED_AT,
+                "oracle_version": "1.0.1",
+                "changed_at": "2026-07-30T23:00:00.0000000+00:00",
                 "independent_evidence_reference": refs["manual"],
                 "prior_error_explanation": (
                     "Version 1.0.0 attributed the manual method without comparing "
@@ -1119,7 +1120,17 @@ def build(package: Path, reader_path: Path, manual_path: Path) -> None:
                     "from artifact dependencies instead of logical baseline deltas."
                 ),
                 "reviewer": "oracle-reviewer",
-            }
+            },
+            {
+                "oracle_version": ORACLE_VERSION,
+                "changed_at": ORACLE_CHANGED_AT,
+                "independent_evidence_reference": refs["manual"],
+                "prior_error_explanation": (
+                    "Fixture version 1.0.0 encoded RACE flags at the wrong DATA "
+                    "offset and placed REFR records outside canonical CELL children."
+                ),
+                "reviewer": "oracle-reviewer",
+            },
         ],
     }
     (package / "expected-oracle.json").write_text(

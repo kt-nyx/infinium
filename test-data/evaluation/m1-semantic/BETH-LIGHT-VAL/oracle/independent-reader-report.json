@@ -11,8 +11,8 @@
   "files": [
     {
       "path": "mutations/Consumer-LightReferenceOutOfRange.esp",
-      "byte_length": 258,
-      "sha256": "866d41c756b546a95d8195bf28e67be944e61e5b2d07ac4c1077d09f63f02f70",
+      "byte_length": 420,
+      "sha256": "938de42aa562dcf02b7678a71dd22ed13451c36a389a7e75dccf7ef1bc33a913",
       "spans": [
         {
           "offset_space": "physical-file",
@@ -90,29 +90,83 @@
           "offset_space": "physical-file",
           "offset": 194,
           "length": 24,
-          "classification": "record-header"
+          "classification": "group-header"
         },
         {
           "offset_space": "physical-file",
           "offset": 218,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 242,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 266,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "offset_space": "physical-file",
-          "offset": 224,
+          "offset": 272,
+          "length": 28,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 300,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 306,
+          "length": 2,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 308,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 332,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 356,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 380,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 386,
           "length": 4,
           "classification": "subrecord-data"
         },
         {
           "offset_space": "physical-file",
-          "offset": 228,
+          "offset": 390,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "offset_space": "physical-file",
-          "offset": 234,
+          "offset": 396,
           "length": 24,
           "classification": "subrecord-data"
         }
@@ -132,7 +186,7 @@
               "header_offset": 24,
               "data_offset": 30,
               "length": 12,
-              "raw_hex": "9A99D93F0100000000080000"
+              "raw_hex": "9A99D93F0200000000080000"
             },
             {
               "signature": "CNAM",
@@ -166,8 +220,42 @@
           "logical_spans": []
         },
         {
+          "signature": "CELL",
+          "offset": 242,
+          "length": 66,
+          "data_length": 42,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "01000900",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "header_offset": 266,
+              "data_offset": 272,
+              "length": 28,
+              "raw_hex": "496E66696E69756D4669787475726543656C6C303130303039303000"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 300,
+              "data_offset": 306,
+              "length": 2,
+              "raw_hex": "0100"
+            }
+          ],
+          "logical_spans": [],
+          "identity": {
+            "form_id_hex": "01000900",
+            "resolution_state": "resolved",
+            "form_key": "00000900:Consumer-LightReferenceOutOfRange.esp",
+            "origin_plugin": "Consumer-LightReferenceOutOfRange.esp",
+            "origin_kind": "full",
+            "local_id_hex": "00000900"
+          }
+        },
+        {
           "signature": "REFR",
-          "offset": 194,
+          "offset": 356,
           "length": 64,
           "data_length": 40,
           "flags_hex": "00000000",
@@ -176,15 +264,15 @@
           "subrecords": [
             {
               "signature": "NAME",
-              "header_offset": 218,
-              "data_offset": 224,
+              "header_offset": 380,
+              "data_offset": 386,
               "length": 4,
               "raw_hex": "00100000"
             },
             {
               "signature": "DATA",
-              "header_offset": 228,
-              "data_offset": 234,
+              "header_offset": 390,
+              "data_offset": 396,
               "length": 24,
               "raw_hex": "000000000000000000000000000000000000000000000000"
             }
@@ -240,9 +328,33 @@
       "groups": [
         {
           "offset": 170,
-          "length": 88,
-          "label_hex": "52454652",
+          "length": 250,
+          "label_hex": "43454C4C",
           "group_type": 0
+        },
+        {
+          "offset": 194,
+          "length": 226,
+          "label_hex": "00000000",
+          "group_type": 2
+        },
+        {
+          "offset": 218,
+          "length": 202,
+          "label_hex": "00000000",
+          "group_type": 3
+        },
+        {
+          "offset": 308,
+          "length": 112,
+          "label_hex": "00090001",
+          "group_type": 6
+        },
+        {
+          "offset": 332,
+          "length": 88,
+          "label_hex": "00090001",
+          "group_type": 8
         }
       ],
       "extension_header_mismatch": false
@@ -1766,8 +1878,8 @@
     },
     {
       "path": "plugins/03-Consumer.esp",
-      "byte_length": 335,
-      "sha256": "bd24624a01fe07e701fa858a38d5b20b1ecdf22c2842875826b0f83fd312d47e",
+      "byte_length": 497,
+      "sha256": "9c13f801a9f9464568b1b8e9f517cf03d1013960e9a5130c9dd02ec18d0b080c",
       "spans": [
         {
           "offset_space": "physical-file",
@@ -1869,59 +1981,113 @@
           "offset_space": "physical-file",
           "offset": 207,
           "length": 24,
-          "classification": "record-header"
+          "classification": "group-header"
         },
         {
           "offset_space": "physical-file",
           "offset": 231,
-          "length": 6,
-          "classification": "subrecord-header"
-        },
-        {
-          "offset_space": "physical-file",
-          "offset": 237,
-          "length": 4,
-          "classification": "subrecord-data"
-        },
-        {
-          "offset_space": "physical-file",
-          "offset": 241,
-          "length": 6,
-          "classification": "subrecord-header"
-        },
-        {
-          "offset_space": "physical-file",
-          "offset": 247,
           "length": 24,
-          "classification": "subrecord-data"
+          "classification": "group-header"
         },
         {
           "offset_space": "physical-file",
-          "offset": 271,
+          "offset": 255,
           "length": 24,
           "classification": "record-header"
         },
         {
           "offset_space": "physical-file",
-          "offset": 295,
+          "offset": 279,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "offset_space": "physical-file",
-          "offset": 301,
+          "offset": 285,
+          "length": 28,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 313,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 319,
+          "length": 2,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 321,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 345,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 369,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 393,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 399,
           "length": 4,
           "classification": "subrecord-data"
         },
         {
           "offset_space": "physical-file",
-          "offset": 305,
+          "offset": 403,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "offset_space": "physical-file",
-          "offset": 311,
+          "offset": 409,
+          "length": 24,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 433,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 457,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 463,
+          "length": 4,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 467,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 473,
           "length": 24,
           "classification": "subrecord-data"
         }
@@ -1941,7 +2107,7 @@
               "header_offset": 24,
               "data_offset": 30,
               "length": 12,
-              "raw_hex": "9A99D93F0200000000080000"
+              "raw_hex": "9A99D93F0300000000080000"
             },
             {
               "signature": "CNAM",
@@ -1989,8 +2155,42 @@
           "logical_spans": []
         },
         {
+          "signature": "CELL",
+          "offset": 255,
+          "length": 66,
+          "data_length": 42,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "02000900",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "header_offset": 279,
+              "data_offset": 285,
+              "length": 28,
+              "raw_hex": "496E66696E69756D4669787475726543656C6C303230303039303000"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 313,
+              "data_offset": 319,
+              "length": 2,
+              "raw_hex": "0100"
+            }
+          ],
+          "logical_spans": [],
+          "identity": {
+            "form_id_hex": "02000900",
+            "resolution_state": "resolved",
+            "form_key": "00000900:03-Consumer.esp",
+            "origin_plugin": "03-Consumer.esp",
+            "origin_kind": "full",
+            "local_id_hex": "00000900"
+          }
+        },
+        {
           "signature": "REFR",
-          "offset": 207,
+          "offset": 369,
           "length": 64,
           "data_length": 40,
           "flags_hex": "00000000",
@@ -1999,15 +2199,15 @@
           "subrecords": [
             {
               "signature": "NAME",
-              "header_offset": 231,
-              "data_offset": 237,
+              "header_offset": 393,
+              "data_offset": 399,
               "length": 4,
               "raw_hex": "00080000"
             },
             {
               "signature": "DATA",
-              "header_offset": 241,
-              "data_offset": 247,
+              "header_offset": 403,
+              "data_offset": 409,
               "length": 24,
               "raw_hex": "000000000000000000000000000000000000000000000000"
             }
@@ -2052,7 +2252,7 @@
         },
         {
           "signature": "REFR",
-          "offset": 271,
+          "offset": 433,
           "length": 64,
           "data_length": 40,
           "flags_hex": "00000000",
@@ -2061,15 +2261,15 @@
           "subrecords": [
             {
               "signature": "NAME",
-              "header_offset": 295,
-              "data_offset": 301,
+              "header_offset": 457,
+              "data_offset": 463,
               "length": 4,
               "raw_hex": "FF0F0001"
             },
             {
               "signature": "DATA",
-              "header_offset": 305,
-              "data_offset": 311,
+              "header_offset": 467,
+              "data_offset": 473,
               "length": 24,
               "raw_hex": "0000803F0000803F0000803F000000000000000000000000"
             }
@@ -2125,9 +2325,33 @@
       "groups": [
         {
           "offset": 183,
-          "length": 152,
-          "label_hex": "52454652",
+          "length": 314,
+          "label_hex": "43454C4C",
           "group_type": 0
+        },
+        {
+          "offset": 207,
+          "length": 290,
+          "label_hex": "00000000",
+          "group_type": 2
+        },
+        {
+          "offset": 231,
+          "length": 266,
+          "label_hex": "00000000",
+          "group_type": 3
+        },
+        {
+          "offset": 321,
+          "length": 176,
+          "label_hex": "00090002",
+          "group_type": 6
+        },
+        {
+          "offset": 345,
+          "length": 152,
+          "label_hex": "00090002",
+          "group_type": 8
         }
       ],
       "extension_header_mismatch": false
@@ -2475,6 +2699,13 @@
         {
           "locator": "mutations/Consumer-LightReferenceOutOfRange.esp#1",
           "plugin_order": 0,
+          "form_key": "00000900:Consumer-LightReferenceOutOfRange.esp",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "mutations/Consumer-LightReferenceOutOfRange.esp#2",
+          "plugin_order": 0,
           "form_key": "00000800:Consumer-LightReferenceOutOfRange.esp",
           "deleted": false,
           "links": [
@@ -2532,6 +2763,13 @@
         {
           "locator": "plugins/03-Consumer.esp#1",
           "plugin_order": 2,
+          "form_key": "00000900:03-Consumer.esp",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "plugins/03-Consumer.esp#2",
+          "plugin_order": 2,
           "form_key": "00000800:03-Consumer.esp",
           "deleted": false,
           "links": [
@@ -2546,7 +2784,7 @@
           ]
         },
         {
-          "locator": "plugins/03-Consumer.esp#2",
+          "locator": "plugins/03-Consumer.esp#3",
           "plugin_order": 2,
           "form_key": "00000801:03-Consumer.esp",
           "deleted": false,

@@ -1,6 +1,6 @@
 {
   "fixture_id": "BETH-UNSUPPORTED-VAL",
-  "fixture_version": "1.0.0",
+  "fixture_version": "1.0.1",
   "partition_history": [
     {
       "from": null,
@@ -17,15 +17,15 @@
       "change_influenced_implementation": true,
       "replacement_fixture_id": "BETH-UNSUPPORTED-VAL-002",
       "replacement_partition": "validation",
-      "replacement_input_package_fingerprint": "3f4b34b1f77ca0b70e2b431ae991075f032b29beed825ebf980de9ab4b9221d9",
-      "replacement_oracle_fingerprint": "9f47bf6e2deecd61015487e5e4f8b6959279f9b37ffd3d2c11d0b7119452f525",
+      "replacement_input_package_fingerprint": "8baf21151d962852c4791a35d6f1133c8b17ae3edc8aab628b25efbf539fa1f2",
+      "replacement_oracle_fingerprint": "3f3c5ea19cc06c141d7095fb8811bb5a157123cc7309c285348df694b240885d",
       "independence_evidence_reference": {
         "artifact_id": "beth-unsupported-val-002-independence-evidence",
-        "artifact_version": "1.0.0",
-        "fingerprint": "cd448118bbf05f2b972dae2ecefe1245326c69796a4e8329a7578af002f9920a",
+        "artifact_version": "1.1.0",
+        "fingerprint": "75f06caab220c2500cf6fd8f35671ba5baaefe99c0962e7d7c825efee4fca4f2",
         "availability": "evaluator-private"
       },
-      "authorized_by": "project-owner/user-directed-adr-0026-private-store-migration"
+      "authorized_by": "project-owner/user-directed-slice4-fixture-conformance-correction-20260801"
     }
   ]
 }

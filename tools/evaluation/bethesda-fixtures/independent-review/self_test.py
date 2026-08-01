@@ -182,6 +182,30 @@ def assert_one_byte_partition(
         raise AssertionError(f"{mutation_id} partitions overlap")
 
 
+def assert_malformed_classification(
+    report: dict[str, Any], artifact_id: str, expected: str
+) -> None:
+    report_path = artifact_id.removeprefix("inputs/")
+    file = next(item for item in report["files"] if item["path"] == report_path)
+    malformed = file.get("malformed")
+    if malformed is None or malformed.get("code") != expected:
+        actual = None if malformed is None else malformed.get("code")
+        raise AssertionError(
+            f"{artifact_id} classified as {actual!r}, expected {expected!r}"
+        )
+
+
+def assert_invalid_link_is_the_only_semantic_defect(
+    report: dict[str, Any], scenario_id: str
+) -> None:
+    scenario = next(
+        item for item in report["scenario_semantics"] if item["scenario_id"] == scenario_id
+    )
+    links = [link for record in scenario["records"] for link in record["links"]]
+    if len(links) != 1 or links[0]["resolution_state"] != "invalid":
+        raise AssertionError(f"{scenario_id} does not isolate one invalid link")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -200,7 +224,11 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="infinium-bethesda-oracle-self-test-") as raw:
         temporary = Path(raw)
         reports: dict[str, tuple[Path, Path]] = {}
-        for fixture_id in ("BETH-NPC-DEV", "BETH-REFR-DEV"):
+        for fixture_id in (
+            "BETH-NPC-DEV",
+            "BETH-REFR-DEV",
+            "BETH-MALFORMED-VAL",
+        ):
             source = fixture_root / fixture_id
             reports[fixture_id] = generate_reports(
                 repository, source, temporary / "reports"
@@ -213,6 +241,18 @@ def main() -> int:
         )
         assert_independent_rejections(
             builder, npc_reader, npc_manual, npc_matrix
+        )
+
+        refr_reader = read_json(reports["BETH-REFR-DEV"][0])
+        assert_malformed_classification(
+            refr_reader,
+            "inputs/mutations/Refr-SubrecordHeaderTruncated.esp",
+            "truncated-subrecord-header",
+        )
+        malformed_reader = read_json(reports["BETH-MALFORMED-VAL"][0])
+        assert_invalid_link_is_the_only_semantic_defect(
+            malformed_reader,
+            "malformed-link-master-index",
         )
 
         for fixture_id, mutation_id, signature in (
@@ -236,7 +276,7 @@ def main() -> int:
 
     print(
         "PASS: independent FormKey/link/chain/manual corruption rejection; "
-        "AIDT/DATA logical mutation partitions"
+        "AIDT/DATA logical mutation partitions; isolated malformed boundary"
     )
     return 0
 

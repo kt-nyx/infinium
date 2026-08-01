@@ -356,10 +356,10 @@ function Get-AllowlistedPayload([object]$Record) {
         if ($values.Count -eq 0) { return $fields }
         $fields.DATA = $values
         $raw = [Convert]::FromHexString([string]$values[0])
-        if ($raw.Length -lt 4) {
+        if ($raw.Length -ne 0x80) {
             throw "invalid-race-data-length@$($Record.offset)"
         }
-        $fields.face_gen_head = (((Read-U32 $raw 0) -band 0x2) -ne 0)
+        $fields.face_gen_head = (((Read-U32 $raw 0x20) -band 0x2) -ne 0)
         return $fields
     }
     return $null

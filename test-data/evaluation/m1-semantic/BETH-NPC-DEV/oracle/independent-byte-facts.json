@@ -2,8 +2,8 @@
   "schema_id": "infinium.evaluation.bethesda-byte-oracle/v1",
   "schema_version": "1",
   "fixture_id": "BETH-NPC-DEV",
-  "fixture_version": "1.0.0",
-  "oracle_artifact_version": "1.0.1",
+  "fixture_version": "1.0.1",
+  "oracle_artifact_version": "1.0.2",
   "canonicalization": "infinium-canonical-json-sha256/v1",
   "independent_authors_and_reviewers": [
     "oracle-reviewer"
@@ -371,8 +371,8 @@
     },
     {
       "artifact_id": "inputs/mutations/local-id/01-Actors.esm",
-      "byte_length": 808,
-      "sha256": "d415b31c3c57cb39eae4ba005d4d9be11f7749e35ad018d7801ba83bc2d752f5",
+      "byte_length": 1056,
+      "sha256": "8c1b43a017f8086d8ea7771c9f8e6aeb0ae92e6127145d9a2e01be53f3969781",
       "provider_id": "project-authored:beth-npc-dev",
       "scenario_memberships": [
         {
@@ -503,335 +503,335 @@
           "span_id": "f002.span-00017",
           "offset_space": "physical-file",
           "offset": 222,
-          "length": 4,
+          "length": 128,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f002.span-00018",
           "offset_space": "physical-file",
-          "offset": 226,
+          "offset": 350,
           "length": 24,
           "classification": "record-header"
         },
         {
           "span_id": "f002.span-00019",
           "offset_space": "physical-file",
-          "offset": 250,
+          "offset": 374,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f002.span-00020",
           "offset_space": "physical-file",
-          "offset": 256,
+          "offset": 380,
           "length": 21,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f002.span-00021",
           "offset_space": "physical-file",
-          "offset": 277,
+          "offset": 401,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f002.span-00022",
           "offset_space": "physical-file",
-          "offset": 283,
-          "length": 4,
+          "offset": 407,
+          "length": 128,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f002.span-00023",
           "offset_space": "physical-file",
-          "offset": 287,
+          "offset": 535,
           "length": 24,
           "classification": "group-header"
         },
         {
           "span_id": "f002.span-00024",
           "offset_space": "physical-file",
-          "offset": 311,
+          "offset": 559,
           "length": 24,
           "classification": "record-header"
         },
         {
           "span_id": "f002.span-00025",
           "offset_space": "physical-file",
-          "offset": 335,
+          "offset": 583,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f002.span-00026",
           "offset_space": "physical-file",
-          "offset": 341,
+          "offset": 589,
           "length": 13,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f002.span-00027",
           "offset_space": "physical-file",
-          "offset": 354,
+          "offset": 602,
           "length": 24,
           "classification": "group-header"
         },
         {
           "span_id": "f002.span-00028",
           "offset_space": "physical-file",
-          "offset": 378,
+          "offset": 626,
           "length": 24,
           "classification": "record-header"
         },
         {
           "span_id": "f002.span-00029",
           "offset_space": "physical-file",
-          "offset": 402,
+          "offset": 650,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f002.span-00030",
           "offset_space": "physical-file",
-          "offset": 408,
+          "offset": 656,
           "length": 16,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f002.span-00031",
           "offset_space": "physical-file",
-          "offset": 424,
+          "offset": 672,
           "length": 24,
           "classification": "record-header"
         },
         {
           "span_id": "f002.span-00032",
           "offset_space": "physical-file",
-          "offset": 448,
+          "offset": 696,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f002.span-00033",
           "offset_space": "physical-file",
-          "offset": 454,
+          "offset": 702,
           "length": 16,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f002.span-00034",
           "offset_space": "physical-file",
-          "offset": 470,
+          "offset": 718,
           "length": 24,
           "classification": "group-header"
         },
         {
           "span_id": "f002.span-00035",
           "offset_space": "physical-file",
-          "offset": 494,
+          "offset": 742,
           "length": 24,
           "classification": "record-header"
         },
         {
           "span_id": "f002.span-00036",
           "offset_space": "physical-file",
-          "offset": 518,
+          "offset": 766,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f002.span-00037",
           "offset_space": "physical-file",
-          "offset": 524,
+          "offset": 772,
           "length": 17,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f002.span-00038",
           "offset_space": "physical-file",
-          "offset": 541,
+          "offset": 789,
           "length": 24,
           "classification": "group-header"
         },
         {
           "span_id": "f002.span-00039",
           "offset_space": "physical-file",
-          "offset": 565,
+          "offset": 813,
           "length": 24,
           "classification": "record-header"
         },
         {
           "span_id": "f002.span-00040",
           "offset_space": "physical-file",
-          "offset": 589,
+          "offset": 837,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f002.span-00041",
           "offset_space": "physical-file",
-          "offset": 595,
+          "offset": 843,
           "length": 16,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f002.span-00042",
           "offset_space": "physical-file",
-          "offset": 611,
+          "offset": 859,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f002.span-00043",
           "offset_space": "physical-file",
-          "offset": 617,
+          "offset": 865,
           "length": 24,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f002.span-00044",
           "offset_space": "physical-file",
-          "offset": 641,
+          "offset": 889,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f002.span-00045",
           "offset_space": "physical-file",
-          "offset": 647,
+          "offset": 895,
           "length": 4,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f002.span-00046",
           "offset_space": "physical-file",
-          "offset": 651,
+          "offset": 899,
           "length": 24,
           "classification": "record-header"
         },
         {
           "span_id": "f002.span-00047",
           "offset_space": "physical-file",
-          "offset": 675,
+          "offset": 923,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f002.span-00048",
           "offset_space": "physical-file",
-          "offset": 681,
+          "offset": 929,
           "length": 11,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f002.span-00049",
           "offset_space": "physical-file",
-          "offset": 692,
+          "offset": 940,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f002.span-00050",
           "offset_space": "physical-file",
-          "offset": 698,
+          "offset": 946,
           "length": 24,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f002.span-00051",
           "offset_space": "physical-file",
-          "offset": 722,
+          "offset": 970,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f002.span-00052",
           "offset_space": "physical-file",
-          "offset": 728,
+          "offset": 976,
           "length": 4,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f002.span-00053",
           "offset_space": "physical-file",
-          "offset": 732,
+          "offset": 980,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f002.span-00054",
           "offset_space": "physical-file",
-          "offset": 738,
+          "offset": 986,
           "length": 20,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f002.span-00055",
           "offset_space": "physical-file",
-          "offset": 758,
+          "offset": 1006,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f002.span-00056",
           "offset_space": "physical-file",
-          "offset": 764,
+          "offset": 1012,
           "length": 4,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f002.span-00057",
           "offset_space": "physical-file",
-          "offset": 768,
+          "offset": 1016,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f002.span-00058",
           "offset_space": "physical-file",
-          "offset": 774,
+          "offset": 1022,
           "length": 4,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f002.span-00059",
           "offset_space": "physical-file",
-          "offset": 778,
+          "offset": 1026,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f002.span-00060",
           "offset_space": "physical-file",
-          "offset": 784,
+          "offset": 1032,
           "length": 4,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f002.span-00061",
           "offset_space": "physical-file",
-          "offset": 788,
+          "offset": 1036,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f002.span-00062",
           "offset_space": "physical-file",
-          "offset": 794,
+          "offset": 1042,
           "length": 4,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f002.span-00063",
           "offset_space": "physical-file",
-          "offset": 798,
+          "offset": 1046,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f002.span-00064",
           "offset_space": "physical-file",
-          "offset": 804,
+          "offset": 1052,
           "length": 4,
           "classification": "subrecord-data"
         }
@@ -1513,8 +1513,8 @@
     },
     {
       "artifact_id": "inputs/mutations/record-order/01-Actors.esm",
-      "byte_length": 808,
-      "sha256": "73402c80b2a8c69b6195a4921e28699752b66b89b068c9187806b28c464194b4",
+      "byte_length": 1056,
+      "sha256": "1911fb74f8b8b987540388183cf01d693af8c11140a0dcc0516291e294ea2934",
       "provider_id": "project-authored:beth-npc-dev",
       "scenario_memberships": [
         {
@@ -1939,42 +1939,42 @@
           "span_id": "f006.span-00059",
           "offset_space": "physical-file",
           "offset": 745,
-          "length": 4,
+          "length": 128,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f006.span-00060",
           "offset_space": "physical-file",
-          "offset": 749,
+          "offset": 873,
           "length": 24,
           "classification": "record-header"
         },
         {
           "span_id": "f006.span-00061",
           "offset_space": "physical-file",
-          "offset": 773,
+          "offset": 897,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f006.span-00062",
           "offset_space": "physical-file",
-          "offset": 779,
+          "offset": 903,
           "length": 19,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f006.span-00063",
           "offset_space": "physical-file",
-          "offset": 798,
+          "offset": 922,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f006.span-00064",
           "offset_space": "physical-file",
-          "offset": 804,
-          "length": 4,
+          "offset": 928,
+          "length": 128,
           "classification": "subrecord-data"
         }
       ]
@@ -2301,8 +2301,8 @@
     },
     {
       "artifact_id": "inputs/plugins/01-Actors.esm",
-      "byte_length": 808,
-      "sha256": "5ef83d9a0b7f94dd43f45724e0ad1c16982767466d56e9de11db9c36db7c86f0",
+      "byte_length": 1056,
+      "sha256": "51009a32d022089dbee64de0c690e8bb339557c4b4fc5cb925d92c0edc6bccc0",
       "provider_id": "project-authored:beth-npc-dev",
       "scenario_memberships": [
         {
@@ -2449,335 +2449,335 @@
           "span_id": "f009.span-00017",
           "offset_space": "physical-file",
           "offset": 222,
-          "length": 4,
+          "length": 128,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f009.span-00018",
           "offset_space": "physical-file",
-          "offset": 226,
+          "offset": 350,
           "length": 24,
           "classification": "record-header"
         },
         {
           "span_id": "f009.span-00019",
           "offset_space": "physical-file",
-          "offset": 250,
+          "offset": 374,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f009.span-00020",
           "offset_space": "physical-file",
-          "offset": 256,
+          "offset": 380,
           "length": 21,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f009.span-00021",
           "offset_space": "physical-file",
-          "offset": 277,
+          "offset": 401,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f009.span-00022",
           "offset_space": "physical-file",
-          "offset": 283,
-          "length": 4,
+          "offset": 407,
+          "length": 128,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f009.span-00023",
           "offset_space": "physical-file",
-          "offset": 287,
+          "offset": 535,
           "length": 24,
           "classification": "group-header"
         },
         {
           "span_id": "f009.span-00024",
           "offset_space": "physical-file",
-          "offset": 311,
+          "offset": 559,
           "length": 24,
           "classification": "record-header"
         },
         {
           "span_id": "f009.span-00025",
           "offset_space": "physical-file",
-          "offset": 335,
+          "offset": 583,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f009.span-00026",
           "offset_space": "physical-file",
-          "offset": 341,
+          "offset": 589,
           "length": 13,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f009.span-00027",
           "offset_space": "physical-file",
-          "offset": 354,
+          "offset": 602,
           "length": 24,
           "classification": "group-header"
         },
         {
           "span_id": "f009.span-00028",
           "offset_space": "physical-file",
-          "offset": 378,
+          "offset": 626,
           "length": 24,
           "classification": "record-header"
         },
         {
           "span_id": "f009.span-00029",
           "offset_space": "physical-file",
-          "offset": 402,
+          "offset": 650,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f009.span-00030",
           "offset_space": "physical-file",
-          "offset": 408,
+          "offset": 656,
           "length": 16,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f009.span-00031",
           "offset_space": "physical-file",
-          "offset": 424,
+          "offset": 672,
           "length": 24,
           "classification": "record-header"
         },
         {
           "span_id": "f009.span-00032",
           "offset_space": "physical-file",
-          "offset": 448,
+          "offset": 696,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f009.span-00033",
           "offset_space": "physical-file",
-          "offset": 454,
+          "offset": 702,
           "length": 16,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f009.span-00034",
           "offset_space": "physical-file",
-          "offset": 470,
+          "offset": 718,
           "length": 24,
           "classification": "group-header"
         },
         {
           "span_id": "f009.span-00035",
           "offset_space": "physical-file",
-          "offset": 494,
+          "offset": 742,
           "length": 24,
           "classification": "record-header"
         },
         {
           "span_id": "f009.span-00036",
           "offset_space": "physical-file",
-          "offset": 518,
+          "offset": 766,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f009.span-00037",
           "offset_space": "physical-file",
-          "offset": 524,
+          "offset": 772,
           "length": 17,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f009.span-00038",
           "offset_space": "physical-file",
-          "offset": 541,
+          "offset": 789,
           "length": 24,
           "classification": "group-header"
         },
         {
           "span_id": "f009.span-00039",
           "offset_space": "physical-file",
-          "offset": 565,
+          "offset": 813,
           "length": 24,
           "classification": "record-header"
         },
         {
           "span_id": "f009.span-00040",
           "offset_space": "physical-file",
-          "offset": 589,
+          "offset": 837,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f009.span-00041",
           "offset_space": "physical-file",
-          "offset": 595,
+          "offset": 843,
           "length": 16,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f009.span-00042",
           "offset_space": "physical-file",
-          "offset": 611,
+          "offset": 859,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f009.span-00043",
           "offset_space": "physical-file",
-          "offset": 617,
+          "offset": 865,
           "length": 24,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f009.span-00044",
           "offset_space": "physical-file",
-          "offset": 641,
+          "offset": 889,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f009.span-00045",
           "offset_space": "physical-file",
-          "offset": 647,
+          "offset": 895,
           "length": 4,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f009.span-00046",
           "offset_space": "physical-file",
-          "offset": 651,
+          "offset": 899,
           "length": 24,
           "classification": "record-header"
         },
         {
           "span_id": "f009.span-00047",
           "offset_space": "physical-file",
-          "offset": 675,
+          "offset": 923,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f009.span-00048",
           "offset_space": "physical-file",
-          "offset": 681,
+          "offset": 929,
           "length": 11,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f009.span-00049",
           "offset_space": "physical-file",
-          "offset": 692,
+          "offset": 940,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f009.span-00050",
           "offset_space": "physical-file",
-          "offset": 698,
+          "offset": 946,
           "length": 24,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f009.span-00051",
           "offset_space": "physical-file",
-          "offset": 722,
+          "offset": 970,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f009.span-00052",
           "offset_space": "physical-file",
-          "offset": 728,
+          "offset": 976,
           "length": 4,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f009.span-00053",
           "offset_space": "physical-file",
-          "offset": 732,
+          "offset": 980,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f009.span-00054",
           "offset_space": "physical-file",
-          "offset": 738,
+          "offset": 986,
           "length": 20,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f009.span-00055",
           "offset_space": "physical-file",
-          "offset": 758,
+          "offset": 1006,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f009.span-00056",
           "offset_space": "physical-file",
-          "offset": 764,
+          "offset": 1012,
           "length": 4,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f009.span-00057",
           "offset_space": "physical-file",
-          "offset": 768,
+          "offset": 1016,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f009.span-00058",
           "offset_space": "physical-file",
-          "offset": 774,
+          "offset": 1022,
           "length": 4,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f009.span-00059",
           "offset_space": "physical-file",
-          "offset": 778,
+          "offset": 1026,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f009.span-00060",
           "offset_space": "physical-file",
-          "offset": 784,
+          "offset": 1032,
           "length": 4,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f009.span-00061",
           "offset_space": "physical-file",
-          "offset": 788,
+          "offset": 1036,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f009.span-00062",
           "offset_space": "physical-file",
-          "offset": 794,
+          "offset": 1042,
           "length": 4,
           "classification": "subrecord-data"
         },
         {
           "span_id": "f009.span-00063",
           "offset_space": "physical-file",
-          "offset": 798,
+          "offset": 1046,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "span_id": "f009.span-00064",
           "offset_space": "physical-file",
-          "offset": 804,
+          "offset": 1052,
           "length": 4,
           "classification": "subrecord-data"
         }
@@ -4244,10 +4244,10 @@
       "canonical_value": {
         "kind": "file-identity",
         "artifact_id": "inputs/mutations/local-id/01-Actors.esm",
-        "length": 808,
-        "text_value": "d415b31c3c57cb39eae4ba005d4d9be11f7749e35ad018d7801ba83bc2d752f5"
+        "length": 1056,
+        "text_value": "8c1b43a017f8086d8ea7771c9f8e6aeb0ae92e6127145d9a2e01be53f3969781"
       },
-      "canonical_value_fingerprint": "e15cd1aa187d2adc9a2a9e8d47fff3e27ff0971e56aa0b624f33d56f697f0513"
+      "canonical_value_fingerprint": "383389508d2dc0789af896e0b3ce04537bad9028bda2d9450232769b55f9ce1f"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00027",
@@ -4294,12 +4294,12 @@
         "artifact_id": "inputs/mutations/local-id/01-Actors.esm",
         "offset_space": "physical-file",
         "offset": 143,
-        "length": 144,
+        "length": 392,
         "signature": "GRUP",
         "raw_hex": "52414345",
         "unsigned_value": 0
       },
-      "canonical_value_fingerprint": "dee4397cdf88aac5e98ed224d040c4f82fd9f52236acd3478627b00a1ee4d90f"
+      "canonical_value_fingerprint": "e5055f9604ec05cf1a993396720f95643d9d8e9b2fbcd82d7323dae2cb568389"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00030",
@@ -4313,13 +4313,13 @@
         "kind": "group-header",
         "artifact_id": "inputs/mutations/local-id/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 287,
+        "offset": 535,
         "length": 67,
         "signature": "GRUP",
         "raw_hex": "434C4153",
         "unsigned_value": 0
       },
-      "canonical_value_fingerprint": "6be1aa7ee8f4e5e479c35da25685b93ea19c3193574f6f91267c3fd8f93c7afe"
+      "canonical_value_fingerprint": "f1dfd82c3f3f706b53826ffea3eb80159602b27dc29966ac05698c98469bc4da"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00031",
@@ -4333,13 +4333,13 @@
         "kind": "group-header",
         "artifact_id": "inputs/mutations/local-id/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 354,
+        "offset": 602,
         "length": 116,
         "signature": "GRUP",
         "raw_hex": "5041434B",
         "unsigned_value": 0
       },
-      "canonical_value_fingerprint": "dc33e4999714017ae2216c90e0b3688261c0b3cb43939eb2cf97a90e0a5f198b"
+      "canonical_value_fingerprint": "d8c3b9627d274a74375ac18bba79a20d899f4c1407ac968fb62f4c1ae617794b"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00032",
@@ -4353,13 +4353,13 @@
         "kind": "group-header",
         "artifact_id": "inputs/mutations/local-id/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 470,
+        "offset": 718,
         "length": 71,
         "signature": "GRUP",
         "raw_hex": "434C464D",
         "unsigned_value": 0
       },
-      "canonical_value_fingerprint": "61c34865781d22ef275cc6014714f7269f0932b09385b5051fc058cfbe7d1a38"
+      "canonical_value_fingerprint": "0d473efd29e96520153fe969227e5b6c202ff3d0fa294604a80a8281867a5759"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00033",
@@ -4373,13 +4373,13 @@
         "kind": "group-header",
         "artifact_id": "inputs/mutations/local-id/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 541,
+        "offset": 789,
         "length": 267,
         "signature": "GRUP",
         "raw_hex": "4E50435F",
         "unsigned_value": 0
       },
-      "canonical_value_fingerprint": "acf094a001ccc020f8dcb120471d8f7c468a6db747684a8f41ce290506f4a08c"
+      "canonical_value_fingerprint": "b310ba2e24662e89d3893e4cf85853ef845f4fa8cdd4c08912285b833c89663f"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00034",
@@ -4454,7 +4454,7 @@
         "artifact_id": "inputs/mutations/local-id/01-Actors.esm",
         "offset_space": "physical-file",
         "offset": 167,
-        "length": 59,
+        "length": 183,
         "signature": "RACE",
         "form_id_hex": "01000810",
         "record_flags_hex": "00000000",
@@ -4466,7 +4466,7 @@
         "origin_kind": "full",
         "local_id_hex": "000810"
       },
-      "canonical_value_fingerprint": "318541c6482953a0b03d1f4f6eebce1be5a926f936053d206eb74652e12458b9"
+      "canonical_value_fingerprint": "266c723ac4b168e2718abed2d3ee2e9c49332fd7c5176bc1cf216170092340e6"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00038",
@@ -4481,11 +4481,11 @@
         "artifact_id": "inputs/mutations/local-id/01-Actors.esm",
         "offset_space": "physical-file",
         "offset": 222,
-        "length": 4,
+        "length": 128,
         "signature": "DATA",
-        "raw_hex": "02000000"
+        "raw_hex": "0000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
       },
-      "canonical_value_fingerprint": "a284e9be39165ef4d64cb01ce9cc82baeca183d6cbdc7654bb02daf76b82499f"
+      "canonical_value_fingerprint": "a8020b0e92bc20a597a7df22acbab0bdc5a0695fc503c4f76fa011e23f2cdd83"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00039",
@@ -4499,8 +4499,8 @@
         "kind": "major-record",
         "artifact_id": "inputs/mutations/local-id/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 226,
-        "length": 61,
+        "offset": 350,
+        "length": 185,
         "signature": "RACE",
         "form_id_hex": "01000811",
         "record_flags_hex": "00000000",
@@ -4512,7 +4512,7 @@
         "origin_kind": "full",
         "local_id_hex": "000811"
       },
-      "canonical_value_fingerprint": "94648af3aeb08fa3f4d52da083f3f5a6c2e9ff3fede4c9644d43a17eb89f7db9"
+      "canonical_value_fingerprint": "9af84a9cee0ad852df75d512c387ef287ef10ceba38c46a8561993f5461fcc0c"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00040",
@@ -4526,12 +4526,12 @@
         "kind": "allowlisted-subrecord",
         "artifact_id": "inputs/mutations/local-id/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 283,
-        "length": 4,
+        "offset": 407,
+        "length": 128,
         "signature": "DATA",
-        "raw_hex": "00000000"
+        "raw_hex": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
       },
-      "canonical_value_fingerprint": "5b47cc8f45f923fc24deabfd73476fe697d9399faf1451ab61757999b16e0a89"
+      "canonical_value_fingerprint": "1f24ff2f588e8fa6dea79cc4f3af326a3a4da54bc416fac13aa737bb1e0e5c63"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00041",
@@ -4545,7 +4545,7 @@
         "kind": "major-record",
         "artifact_id": "inputs/mutations/local-id/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 311,
+        "offset": 559,
         "length": 43,
         "signature": "CLAS",
         "form_id_hex": "01000820",
@@ -4558,7 +4558,7 @@
         "origin_kind": "full",
         "local_id_hex": "000820"
       },
-      "canonical_value_fingerprint": "f71656dea4ccacf1b844e4aa2d5e5e015d1a8f33c691b918147a1b94e7ccde44"
+      "canonical_value_fingerprint": "6cc56e73bb6a7d93d86534e9a066753df7f1901049096523111eeb0c88a748ec"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00042",
@@ -4572,7 +4572,7 @@
         "kind": "major-record",
         "artifact_id": "inputs/mutations/local-id/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 378,
+        "offset": 626,
         "length": 46,
         "signature": "PACK",
         "form_id_hex": "01000830",
@@ -4585,7 +4585,7 @@
         "origin_kind": "full",
         "local_id_hex": "000830"
       },
-      "canonical_value_fingerprint": "8c78f199dfce9e6633f5112891bb806853d9c28e602b234555ef153cefd49d65"
+      "canonical_value_fingerprint": "c303e7711ce5eb91c4ed1cbfe2b5674d9fe4d3c428909ebb1be89a6ad63eff98"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00043",
@@ -4599,7 +4599,7 @@
         "kind": "major-record",
         "artifact_id": "inputs/mutations/local-id/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 424,
+        "offset": 672,
         "length": 46,
         "signature": "PACK",
         "form_id_hex": "01000831",
@@ -4612,7 +4612,7 @@
         "origin_kind": "full",
         "local_id_hex": "000831"
       },
-      "canonical_value_fingerprint": "10cad9b09bf2460256e1bea533b99b889a18fcc32ce0d4bed185d6df08a7ad3f"
+      "canonical_value_fingerprint": "94382e6baa14f2445d3320e8d242ebdf09edeb71d50d7c711a6a3ff831563892"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00044",
@@ -4626,7 +4626,7 @@
         "kind": "major-record",
         "artifact_id": "inputs/mutations/local-id/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 494,
+        "offset": 742,
         "length": 47,
         "signature": "CLFM",
         "form_id_hex": "01000840",
@@ -4639,7 +4639,7 @@
         "origin_kind": "full",
         "local_id_hex": "000840"
       },
-      "canonical_value_fingerprint": "57bc77b65d641dab55dd1b1b43a4b096ec9ab07d5e10a5489461c8b759b12d67"
+      "canonical_value_fingerprint": "723424d3c930cbc51f72836c114131fc0667cfdbe24cdc6e9611c98cda973948"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00045",
@@ -4653,7 +4653,7 @@
         "kind": "major-record",
         "artifact_id": "inputs/mutations/local-id/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 565,
+        "offset": 813,
         "length": 86,
         "signature": "NPC_",
         "form_id_hex": "01000850",
@@ -4666,7 +4666,7 @@
         "origin_kind": "full",
         "local_id_hex": "000850"
       },
-      "canonical_value_fingerprint": "47c62bf467d8c691c313683ccbd0c047e9bda62055c429413de243200fe3ae73"
+      "canonical_value_fingerprint": "14632702a8eca3a72d08247ad6fcc4fb38deb4e39dc6e2a646f9b95206d9538f"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00046",
@@ -4680,12 +4680,12 @@
         "kind": "allowlisted-subrecord",
         "artifact_id": "inputs/mutations/local-id/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 617,
+        "offset": 865,
         "length": 24,
         "signature": "ACBS",
         "raw_hex": "100000000000000001000100000000000000000000000000"
       },
-      "canonical_value_fingerprint": "d78e6bf4e54040828a6a8893ea15fb6e82c0b4dfeecf773a37f450a90d454a05"
+      "canonical_value_fingerprint": "149ae03d9e0de511fa58169878888582a5d5c196b5418aafd08a50b13fb88e48"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00047",
@@ -4699,12 +4699,12 @@
         "kind": "allowlisted-subrecord",
         "artifact_id": "inputs/mutations/local-id/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 647,
+        "offset": 895,
         "length": 4,
         "signature": "RNAM",
         "raw_hex": "10080001"
       },
-      "canonical_value_fingerprint": "57cdf08f40f2eb1d1f5e7952f7cd0694057d7cb7b5c60bb7c1058a99b55d105d"
+      "canonical_value_fingerprint": "58b7a4ce986840df0dc1664f31f10e9bc0b88fe6c9b6eb82abd03b7680468aa2"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00048",
@@ -4718,7 +4718,7 @@
         "kind": "major-record",
         "artifact_id": "inputs/mutations/local-id/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 651,
+        "offset": 899,
         "length": 157,
         "signature": "NPC_",
         "form_id_hex": "01000860",
@@ -4731,7 +4731,7 @@
         "origin_kind": "full",
         "local_id_hex": "000860"
       },
-      "canonical_value_fingerprint": "25fdb358883f13215edbb74b40bf1e46d775276302a2686e53e86c663093d7be"
+      "canonical_value_fingerprint": "ea3d387eff94cd221c14e4c6c01bf141e55f921f32e3d77aab7d7de1c3b23e50"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00049",
@@ -4745,12 +4745,12 @@
         "kind": "allowlisted-subrecord",
         "artifact_id": "inputs/mutations/local-id/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 698,
+        "offset": 946,
         "length": 24,
         "signature": "ACBS",
         "raw_hex": "000000000000000001000100000000000000000000000000"
       },
-      "canonical_value_fingerprint": "cc53514cbc3cd4d89a46dfb4fded0ad0ad95251df7e04be55543d3938053fc44"
+      "canonical_value_fingerprint": "8687316717f2a65b3baedc8179e5d22020bd0a9f823b38016a37a24408d4cf4c"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00050",
@@ -4764,12 +4764,12 @@
         "kind": "allowlisted-subrecord",
         "artifact_id": "inputs/mutations/local-id/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 728,
+        "offset": 976,
         "length": 4,
         "signature": "RNAM",
         "raw_hex": "10080001"
       },
-      "canonical_value_fingerprint": "1af8c988f941fa016d038cb251fef40f7176f6a07260449481f97478c249671a"
+      "canonical_value_fingerprint": "3f653bcccd089a85424b5885f3914604a8fdc8b97c83653d1b228f3e0f89f866"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00051",
@@ -4783,12 +4783,12 @@
         "kind": "allowlisted-subrecord",
         "artifact_id": "inputs/mutations/local-id/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 738,
+        "offset": 986,
         "length": 20,
         "signature": "AIDT",
         "raw_hex": "2E8CDB506212269E8D544028AE4B8930246CB89F"
       },
-      "canonical_value_fingerprint": "3027430755731299ead3c51518fa5e4bb97beca1ad1d22de7d86936deef58209"
+      "canonical_value_fingerprint": "9629cb9f485c80aeef92a0379a2dd76df520d08dc643fdb0d3c1ba787986b9b5"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00052",
@@ -4802,12 +4802,12 @@
         "kind": "allowlisted-subrecord",
         "artifact_id": "inputs/mutations/local-id/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 764,
+        "offset": 1012,
         "length": 4,
         "signature": "PKID",
         "raw_hex": "30080001"
       },
-      "canonical_value_fingerprint": "5f85a41b7344bbb14f9166ba7e1f53ecb2c4192140c4cb616fe2c0a7f27fa827"
+      "canonical_value_fingerprint": "179e2d239e9573d8cfda468a74ed7fb1faa602388489a6e3be763bd774035693"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00053",
@@ -4821,12 +4821,12 @@
         "kind": "allowlisted-subrecord",
         "artifact_id": "inputs/mutations/local-id/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 774,
+        "offset": 1022,
         "length": 4,
         "signature": "PKID",
         "raw_hex": "31080001"
       },
-      "canonical_value_fingerprint": "99ed2b565f1beea7d4ff46ac88ed2e97c6de6aaf49c0ad8ae6bb882fb9f4aeb9"
+      "canonical_value_fingerprint": "77c733516be19187dceb9e44ca5e467fbf4b9904c6964171500635323bc529ff"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00054",
@@ -4840,12 +4840,12 @@
         "kind": "allowlisted-subrecord",
         "artifact_id": "inputs/mutations/local-id/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 784,
+        "offset": 1032,
         "length": 4,
         "signature": "PNAM",
         "raw_hex": "40080001"
       },
-      "canonical_value_fingerprint": "551c0ca2ce02566d3c9d732b8d28988f998c5d87ae4d6fcd5e93e8833a779aba"
+      "canonical_value_fingerprint": "98f4fc01335d32ca89092b136957e083df6134c54d8368f102d84b1c6486624c"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00055",
@@ -4859,12 +4859,12 @@
         "kind": "allowlisted-subrecord",
         "artifact_id": "inputs/mutations/local-id/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 794,
+        "offset": 1042,
         "length": 4,
         "signature": "PNAM",
         "raw_hex": "40080001"
       },
-      "canonical_value_fingerprint": "c341bfcd3e2b9a902a7c30241fc122ab743ec456db79d57f9d78941907db8db8"
+      "canonical_value_fingerprint": "9599b2f64bf2e914d122051de6d0b323684a7a11049c17eecaa1c1e6c42716b5"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00056",
@@ -4878,12 +4878,12 @@
         "kind": "allowlisted-subrecord",
         "artifact_id": "inputs/mutations/local-id/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 804,
+        "offset": 1052,
         "length": 4,
         "signature": "HCLF",
         "raw_hex": "40080001"
       },
-      "canonical_value_fingerprint": "2bb832be53720062d0f585ee4292c155995eccae9f91365d473ba4e61d056e44"
+      "canonical_value_fingerprint": "106d495e6df647f41f0026fb316e5a831cc6c621905b53cb6acb4be5bfe43384"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00057",
@@ -5940,10 +5940,10 @@
       "canonical_value": {
         "kind": "file-identity",
         "artifact_id": "inputs/mutations/record-order/01-Actors.esm",
-        "length": 808,
-        "text_value": "73402c80b2a8c69b6195a4921e28699752b66b89b068c9187806b28c464194b4"
+        "length": 1056,
+        "text_value": "1911fb74f8b8b987540388183cf01d693af8c11140a0dcc0516291e294ea2934"
       },
-      "canonical_value_fingerprint": "21933de0b15adb6d3e55e1415ef1a59ff2fb8cbc7f8b348ba51420c49deb2c51"
+      "canonical_value_fingerprint": "ba5559168343c0b7987ef7a510041d3ce2afac804f6b8a4ddeb24af8da793b1f"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00112",
@@ -6070,12 +6070,12 @@
         "artifact_id": "inputs/mutations/record-order/01-Actors.esm",
         "offset_space": "physical-file",
         "offset": 664,
-        "length": 144,
+        "length": 392,
         "signature": "GRUP",
         "raw_hex": "52414345",
         "unsigned_value": 0
       },
-      "canonical_value_fingerprint": "da06f36203789ea70bdc314c3c81c30edc2f28fde0ca67923d0d0875de102214"
+      "canonical_value_fingerprint": "a744fd88502ac161e4e509ade744a8927710bf4a55f047305b552062bca2ebf4"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00119",
@@ -6540,7 +6540,7 @@
         "artifact_id": "inputs/mutations/record-order/01-Actors.esm",
         "offset_space": "physical-file",
         "offset": 688,
-        "length": 61,
+        "length": 185,
         "signature": "RACE",
         "form_id_hex": "01000811",
         "record_flags_hex": "00000000",
@@ -6552,7 +6552,7 @@
         "origin_kind": "full",
         "local_id_hex": "000811"
       },
-      "canonical_value_fingerprint": "42486941262f9775d6a984926f3594887c405cec322dd172127e191425897b23"
+      "canonical_value_fingerprint": "9c9688186555e1115a264f1f0269e43958396e1f80e2878f667a50a98df8fe71"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00141",
@@ -6567,11 +6567,11 @@
         "artifact_id": "inputs/mutations/record-order/01-Actors.esm",
         "offset_space": "physical-file",
         "offset": 745,
-        "length": 4,
+        "length": 128,
         "signature": "DATA",
-        "raw_hex": "00000000"
+        "raw_hex": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
       },
-      "canonical_value_fingerprint": "fda6700664c4079be7be62799b8b0854d43dad089c3b8a724f2a17f1cd718746"
+      "canonical_value_fingerprint": "0126dc31b865c7f2b546c78fb305cf0751d22b34edae58574ae675bc145dd8a4"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00142",
@@ -6585,8 +6585,8 @@
         "kind": "major-record",
         "artifact_id": "inputs/mutations/record-order/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 749,
-        "length": 59,
+        "offset": 873,
+        "length": 183,
         "signature": "RACE",
         "form_id_hex": "01000810",
         "record_flags_hex": "00000000",
@@ -6598,7 +6598,7 @@
         "origin_kind": "full",
         "local_id_hex": "000810"
       },
-      "canonical_value_fingerprint": "16fe102b09023b5a33d0be303d2902d076ef53b861ecb3849f4f27030b371b88"
+      "canonical_value_fingerprint": "fb2d13e39b3d478898d5041fbb23b104cefc285d5c988285db715cccb054c51e"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00143",
@@ -6612,12 +6612,12 @@
         "kind": "allowlisted-subrecord",
         "artifact_id": "inputs/mutations/record-order/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 804,
-        "length": 4,
+        "offset": 928,
+        "length": 128,
         "signature": "DATA",
-        "raw_hex": "02000000"
+        "raw_hex": "0000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
       },
-      "canonical_value_fingerprint": "fc2609e6d0ecfece792b5a383d7c593a9fe8cad4a04053a405268d505154f507"
+      "canonical_value_fingerprint": "794c78c812c6d36502a3c6bba2087708e7f1aae6b9b4ac33f6c5af550bf87484"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00144",
@@ -7066,10 +7066,10 @@
       "canonical_value": {
         "kind": "file-identity",
         "artifact_id": "inputs/plugins/01-Actors.esm",
-        "length": 808,
-        "text_value": "5ef83d9a0b7f94dd43f45724e0ad1c16982767466d56e9de11db9c36db7c86f0"
+        "length": 1056,
+        "text_value": "51009a32d022089dbee64de0c690e8bb339557c4b4fc5cb925d92c0edc6bccc0"
       },
-      "canonical_value_fingerprint": "24db8998ffe290434146c02340029b3ac1545062def87876480ca5991802b165"
+      "canonical_value_fingerprint": "8a621435b1ee13397d834f15095263942e587f282bb97e0c4fad9d4d626269f1"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00168",
@@ -7116,12 +7116,12 @@
         "artifact_id": "inputs/plugins/01-Actors.esm",
         "offset_space": "physical-file",
         "offset": 143,
-        "length": 144,
+        "length": 392,
         "signature": "GRUP",
         "raw_hex": "52414345",
         "unsigned_value": 0
       },
-      "canonical_value_fingerprint": "43cf80c269133a5ae318351c7d2d6d9d7814acf7b9203788ff403ba534adc3d5"
+      "canonical_value_fingerprint": "d16d3cec8a73c113e1878e41aa1f44d61462e51905b927bbf0ad768bba1430db"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00171",
@@ -7135,13 +7135,13 @@
         "kind": "group-header",
         "artifact_id": "inputs/plugins/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 287,
+        "offset": 535,
         "length": 67,
         "signature": "GRUP",
         "raw_hex": "434C4153",
         "unsigned_value": 0
       },
-      "canonical_value_fingerprint": "404c5e277b06dd82b17d3a89e3c783480b91c658e78e5a191db47e637ca74305"
+      "canonical_value_fingerprint": "e39f80eeed22befeddd9b43fed8eb086e55d2ed5ea6351ed9a0c9624c65725cf"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00172",
@@ -7155,13 +7155,13 @@
         "kind": "group-header",
         "artifact_id": "inputs/plugins/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 354,
+        "offset": 602,
         "length": 116,
         "signature": "GRUP",
         "raw_hex": "5041434B",
         "unsigned_value": 0
       },
-      "canonical_value_fingerprint": "1ba87d13ed7667a31ea77a463a59d803d93beff65381833ecb7cbd18a72dd868"
+      "canonical_value_fingerprint": "4a9203fbbb24840076d58a224ddce400a27e0726615eb14d1516aa9c0eedc611"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00173",
@@ -7175,13 +7175,13 @@
         "kind": "group-header",
         "artifact_id": "inputs/plugins/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 470,
+        "offset": 718,
         "length": 71,
         "signature": "GRUP",
         "raw_hex": "434C464D",
         "unsigned_value": 0
       },
-      "canonical_value_fingerprint": "ea38c18f5c8b9c7475246ccc502928f663ab49cde154da9bf58b5ca03c3b0e87"
+      "canonical_value_fingerprint": "42798047a0a6f2ff7805ce54a8e0be10e92860db157eeae3b63feeff6f9f220d"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00174",
@@ -7195,13 +7195,13 @@
         "kind": "group-header",
         "artifact_id": "inputs/plugins/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 541,
+        "offset": 789,
         "length": 267,
         "signature": "GRUP",
         "raw_hex": "4E50435F",
         "unsigned_value": 0
       },
-      "canonical_value_fingerprint": "a2c763655588d30247c7ca5f3c43ace4965b7b162f37a323de78482290c4e841"
+      "canonical_value_fingerprint": "a4232ffb6eab434c7fd1c8441e9094cee3fa6f3d4ed3f1bbaae4f91363470c44"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00175",
@@ -7276,7 +7276,7 @@
         "artifact_id": "inputs/plugins/01-Actors.esm",
         "offset_space": "physical-file",
         "offset": 167,
-        "length": 59,
+        "length": 183,
         "signature": "RACE",
         "form_id_hex": "01000810",
         "record_flags_hex": "00000000",
@@ -7288,7 +7288,7 @@
         "origin_kind": "full",
         "local_id_hex": "000810"
       },
-      "canonical_value_fingerprint": "4db8253224dee32244a19458a2e156f220df0c9bb30dfe6af4f7afcc24da1979"
+      "canonical_value_fingerprint": "06765d03adcb2060fe31919da05d9fee7e9a3758de94f90f0fbfc724d52f2b14"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00179",
@@ -7303,11 +7303,11 @@
         "artifact_id": "inputs/plugins/01-Actors.esm",
         "offset_space": "physical-file",
         "offset": 222,
-        "length": 4,
+        "length": 128,
         "signature": "DATA",
-        "raw_hex": "02000000"
+        "raw_hex": "0000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
       },
-      "canonical_value_fingerprint": "130086add626c57792065ab2fcbb74b9c75c3b2b72684bffa7c58e5257645aff"
+      "canonical_value_fingerprint": "9addbe7213c69df678c2aa7b539e3ca7291105d2c0abcdd679a9977f5da3d5cb"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00180",
@@ -7321,8 +7321,8 @@
         "kind": "major-record",
         "artifact_id": "inputs/plugins/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 226,
-        "length": 61,
+        "offset": 350,
+        "length": 185,
         "signature": "RACE",
         "form_id_hex": "01000811",
         "record_flags_hex": "00000000",
@@ -7334,7 +7334,7 @@
         "origin_kind": "full",
         "local_id_hex": "000811"
       },
-      "canonical_value_fingerprint": "4097992fcc895a3f5c6a24800ac77518945412b974aecafecc893dc960892ec4"
+      "canonical_value_fingerprint": "4e0f05b6fdc73cb6abe12ba30006f3c61fe99611597ef44e7df0d8c97b87de8c"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00181",
@@ -7348,12 +7348,12 @@
         "kind": "allowlisted-subrecord",
         "artifact_id": "inputs/plugins/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 283,
-        "length": 4,
+        "offset": 407,
+        "length": 128,
         "signature": "DATA",
-        "raw_hex": "00000000"
+        "raw_hex": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
       },
-      "canonical_value_fingerprint": "7076e3385a01cd0e9f8d90c01e7a0befa8bc79b565721edd683764e699948c20"
+      "canonical_value_fingerprint": "a158a7f2cd41c7ff430c6f23c1e17d5bd3c1c9928bda595280de15363bc0f736"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00182",
@@ -7367,7 +7367,7 @@
         "kind": "major-record",
         "artifact_id": "inputs/plugins/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 311,
+        "offset": 559,
         "length": 43,
         "signature": "CLAS",
         "form_id_hex": "01000820",
@@ -7380,7 +7380,7 @@
         "origin_kind": "full",
         "local_id_hex": "000820"
       },
-      "canonical_value_fingerprint": "2b698a28ee87ec04f07c40b45e72cf6aa97dbc87890cbd6514f69ba337e83179"
+      "canonical_value_fingerprint": "f937e744c5900b657eb13f7236f1689da380a6dbf7202151d148c4a7a773ea04"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00183",
@@ -7394,7 +7394,7 @@
         "kind": "major-record",
         "artifact_id": "inputs/plugins/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 378,
+        "offset": 626,
         "length": 46,
         "signature": "PACK",
         "form_id_hex": "01000830",
@@ -7407,7 +7407,7 @@
         "origin_kind": "full",
         "local_id_hex": "000830"
       },
-      "canonical_value_fingerprint": "68a86c3f68f7e604abb1ec441783870b31ceef1d7d2d3502f5c2422c4453cd1e"
+      "canonical_value_fingerprint": "4b627c800b00a33e78ec8e275ed6c271402e9902334a7f5a9a1fe11da97fcdd2"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00184",
@@ -7421,7 +7421,7 @@
         "kind": "major-record",
         "artifact_id": "inputs/plugins/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 424,
+        "offset": 672,
         "length": 46,
         "signature": "PACK",
         "form_id_hex": "01000831",
@@ -7434,7 +7434,7 @@
         "origin_kind": "full",
         "local_id_hex": "000831"
       },
-      "canonical_value_fingerprint": "92e18d15c7e870720e95a5e8b69e10200745a8db877463cd5e444de12ec7586a"
+      "canonical_value_fingerprint": "618cb9fed3f7cc51d41dc8031138fe94b5b501ae9ca991b0a561edf2f7b68822"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00185",
@@ -7448,7 +7448,7 @@
         "kind": "major-record",
         "artifact_id": "inputs/plugins/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 494,
+        "offset": 742,
         "length": 47,
         "signature": "CLFM",
         "form_id_hex": "01000840",
@@ -7461,7 +7461,7 @@
         "origin_kind": "full",
         "local_id_hex": "000840"
       },
-      "canonical_value_fingerprint": "f011dd34d107214a00c078075a83a4cf9310351e761c3d117b7b146ed9cc1464"
+      "canonical_value_fingerprint": "ee02411b688b4d5e4ba6123930abee4ef4abdfb086ba8bc71dab99596990d8bb"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00186",
@@ -7475,7 +7475,7 @@
         "kind": "major-record",
         "artifact_id": "inputs/plugins/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 565,
+        "offset": 813,
         "length": 86,
         "signature": "NPC_",
         "form_id_hex": "01000850",
@@ -7488,7 +7488,7 @@
         "origin_kind": "full",
         "local_id_hex": "000850"
       },
-      "canonical_value_fingerprint": "fac5e94cb1925b749ab021da67d1ac60517594c06200407cf40dde4c2584b642"
+      "canonical_value_fingerprint": "fd6aa5e06abd1fe8690b9fa629ab88da0bb2d49d660aba63410f4f5d11dc0fb1"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00187",
@@ -7502,12 +7502,12 @@
         "kind": "allowlisted-subrecord",
         "artifact_id": "inputs/plugins/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 617,
+        "offset": 865,
         "length": 24,
         "signature": "ACBS",
         "raw_hex": "100000000000000001000100000000000000000000000000"
       },
-      "canonical_value_fingerprint": "89086dad6f4c6276a63ac00e03a5eea75968749c440540b9fba1ad900acf2e25"
+      "canonical_value_fingerprint": "aa4d65a01afc281237b919455edafd990afff24e82f64bce879c486b798174c3"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00188",
@@ -7521,12 +7521,12 @@
         "kind": "allowlisted-subrecord",
         "artifact_id": "inputs/plugins/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 647,
+        "offset": 895,
         "length": 4,
         "signature": "RNAM",
         "raw_hex": "10080001"
       },
-      "canonical_value_fingerprint": "105c12efa2c3a177dd56e0e7458ff70ef2ab5b7c3bc757b6695edbaf4c42949b"
+      "canonical_value_fingerprint": "47f6e18e3a92604ab623892972c5367480003565af2439ec94964d0635deb9f6"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00189",
@@ -7540,7 +7540,7 @@
         "kind": "major-record",
         "artifact_id": "inputs/plugins/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 651,
+        "offset": 899,
         "length": 157,
         "signature": "NPC_",
         "form_id_hex": "01000800",
@@ -7553,7 +7553,7 @@
         "origin_kind": "full",
         "local_id_hex": "000800"
       },
-      "canonical_value_fingerprint": "3700c9cafc736fb79aa3504932b8e9c32441c774d9eb374e92162fed2ba82e17"
+      "canonical_value_fingerprint": "e56d3eb26593bbc948a66f0f2ad5d7bbfd8fd03d8b19b45c1ea2c132d22c812f"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00190",
@@ -7567,12 +7567,12 @@
         "kind": "allowlisted-subrecord",
         "artifact_id": "inputs/plugins/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 698,
+        "offset": 946,
         "length": 24,
         "signature": "ACBS",
         "raw_hex": "000000000000000001000100000000000000000000000000"
       },
-      "canonical_value_fingerprint": "e375d06e0ac689fafb44fd6920c7aee3690aaaa3aa89b3d4bc54d09b7c49385a"
+      "canonical_value_fingerprint": "d13c7fe112e6b92114c32de99396e9e9c6103fc9d0a415e5e4e348cca7980f97"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00191",
@@ -7586,12 +7586,12 @@
         "kind": "allowlisted-subrecord",
         "artifact_id": "inputs/plugins/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 728,
+        "offset": 976,
         "length": 4,
         "signature": "RNAM",
         "raw_hex": "10080001"
       },
-      "canonical_value_fingerprint": "a1969ca5158b2c75f97a6cc3532856b583f5f3949b15608431c993e9fd6e068f"
+      "canonical_value_fingerprint": "69c73a974b84921993b52c33445ad6ec6e7e288c573f2673f73c3e6c573aee57"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00192",
@@ -7605,12 +7605,12 @@
         "kind": "allowlisted-subrecord",
         "artifact_id": "inputs/plugins/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 738,
+        "offset": 986,
         "length": 20,
         "signature": "AIDT",
         "raw_hex": "2E8CDB506212269E8D544028AE4B8930246CB89F"
       },
-      "canonical_value_fingerprint": "243b2d9c517c5f50f596a15795a2307c335360cf7e01b66cb26da295ab5f6d77"
+      "canonical_value_fingerprint": "4072572b467212cb769452066bdad4faf1aea1f7a52683a71998b976703d8aaa"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00193",
@@ -7624,12 +7624,12 @@
         "kind": "allowlisted-subrecord",
         "artifact_id": "inputs/plugins/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 764,
+        "offset": 1012,
         "length": 4,
         "signature": "PKID",
         "raw_hex": "30080001"
       },
-      "canonical_value_fingerprint": "3d9e3e8dfe73904381bf8f0d65001971e45c6e947de46c034f973845277c758d"
+      "canonical_value_fingerprint": "9e0e15af22c56fc226ad656a51e04341314ac782b051ef7ab91fe4075ce193c9"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00194",
@@ -7643,12 +7643,12 @@
         "kind": "allowlisted-subrecord",
         "artifact_id": "inputs/plugins/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 774,
+        "offset": 1022,
         "length": 4,
         "signature": "PKID",
         "raw_hex": "31080001"
       },
-      "canonical_value_fingerprint": "9b502eae10f1776192cf65a7cc784aba2975d186d962c679f656585e1c606783"
+      "canonical_value_fingerprint": "11b29a93344e910f1cc45b54bd58f4c8f42d6ce00f49402dcb3b654d44327431"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00195",
@@ -7662,12 +7662,12 @@
         "kind": "allowlisted-subrecord",
         "artifact_id": "inputs/plugins/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 784,
+        "offset": 1032,
         "length": 4,
         "signature": "PNAM",
         "raw_hex": "40080001"
       },
-      "canonical_value_fingerprint": "b5bde6459cf7dbc42d6e8c92750dbb153a7eea0a256d066dee634f66e426d1de"
+      "canonical_value_fingerprint": "fe932a0b046aff20e4473c8d823f2815d6862475e90a99cf485e088df74b5368"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00196",
@@ -7681,12 +7681,12 @@
         "kind": "allowlisted-subrecord",
         "artifact_id": "inputs/plugins/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 794,
+        "offset": 1042,
         "length": 4,
         "signature": "PNAM",
         "raw_hex": "40080001"
       },
-      "canonical_value_fingerprint": "ffa495fc1f060dbd44fec98798554833af8a37435fb64ca0a0ffc07933f993c4"
+      "canonical_value_fingerprint": "3bacbc336f68583f2efbb807371d14c849e52eb01ba5674fc0dcae6323cd36a6"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00197",
@@ -7700,12 +7700,12 @@
         "kind": "allowlisted-subrecord",
         "artifact_id": "inputs/plugins/01-Actors.esm",
         "offset_space": "physical-file",
-        "offset": 804,
+        "offset": 1052,
         "length": 4,
         "signature": "HCLF",
         "raw_hex": "40080001"
       },
-      "canonical_value_fingerprint": "ef744327d0b7aa8c23aa0e9a1af72ec403051d49c9b7285a374fe3a8f1831c87"
+      "canonical_value_fingerprint": "6b40f4afbaed48ca59067241adb149dbf4556eda30eb74171997c030c276bdf5"
     },
     {
       "fact_id": "beth.beth-npc-dev.fact-00198",

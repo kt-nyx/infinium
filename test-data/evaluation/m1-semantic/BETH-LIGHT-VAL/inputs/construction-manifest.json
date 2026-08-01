@@ -28,15 +28,15 @@
     },
     {
       "path": "mutations/Consumer-LightReferenceOutOfRange.esp",
-      "sha256": "866d41c756b546a95d8195bf28e67be944e61e5b2d07ac4c1077d09f63f02f70",
+      "sha256": "938de42aa562dcf02b7678a71dd22ed13451c36a389a7e75dccf7ef1bc33a913",
       "regions": [
         {
           "offset": 0,
           "kind": "project-authored-tes4-bytes",
-          "length": 258
+          "length": 420
         }
       ],
-      "byte_length": 258
+      "byte_length": 420
     },
     {
       "path": "mutations/FlaggedEsp-AboveLightMaximum.esp",
@@ -136,15 +136,15 @@
     },
     {
       "path": "plugins/03-Consumer.esp",
-      "sha256": "bd24624a01fe07e701fa858a38d5b20b1ecdf22c2842875826b0f83fd312d47e",
+      "sha256": "9c13f801a9f9464568b1b8e9f517cf03d1013960e9a5130c9dd02ec18d0b080c",
       "regions": [
         {
           "offset": 0,
           "kind": "project-authored-tes4-bytes",
-          "length": 335
+          "length": 497
         }
       ],
-      "byte_length": 335
+      "byte_length": 497
     },
     {
       "path": "plugins/04-Winner.esp",

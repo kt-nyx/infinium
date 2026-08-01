@@ -195,6 +195,7 @@ internal static class FixtureGenerator
     private const uint DeletedRecord = 0x0000_0020;
     private const uint LightPlugin = 0x0000_0200;
     private const uint FaceGenHead = 0x0000_0002;
+    private const uint FixtureCellLocalId = 0x00000900;
 
     public static void GenerateAll(string root, ulong seed)
     {
@@ -258,8 +259,8 @@ internal static class FixtureGenerator
         const uint templateLocal = 0x00000850;
         var actorsRecords = new[]
         {
-            Record("RACE", FormId(1, racePositive), Sub("EDID", Z("FixtureRaceFaceGen")), Sub("DATA", U32(FaceGenHead))),
-            Record("RACE", FormId(1, raceNegative), Sub("EDID", Z("FixtureRaceNoFaceGen")), Sub("DATA", U32(0))),
+            Record("RACE", FormId(1, racePositive), Sub("EDID", Z("FixtureRaceFaceGen")), Sub("DATA", RaceData(FaceGenHead))),
+            Record("RACE", FormId(1, raceNegative), Sub("EDID", Z("FixtureRaceNoFaceGen")), Sub("DATA", RaceData(0))),
             Record("CLAS", FormId(1, classLocal), Sub("EDID", Z("FixtureClass"))),
             Record("PACK", FormId(1, packageA), Sub("EDID", Z("FixturePackageA"))),
             Record("PACK", FormId(1, packageB), Sub("EDID", Z("FixturePackageB"))),
@@ -410,7 +411,7 @@ internal static class FixtureGenerator
         ],
         new Dictionary<string, object?>
         {
-            ["project_authored_race_data_format"] = "32-bit little-endian flags",
+            ["project_authored_race_data_format"] = "128-byte Skyrim RACE DATA with 32-bit little-endian flags at byte offset 32",
             ["project_authored_face_gen_head_construction_bit"] = "0x00000002",
             ["construction_note"] = "Positive and negative applicability inputs are authored here; interpretation is independently reviewed.",
             ["omitted_subrecords"] = new[] { "XESP" },
@@ -440,11 +441,12 @@ internal static class FixtureGenerator
                 Sub("XOWN", U32(FormId(1, ownerLocal))),
                 Sub("DATA", Placement(1, 2, 3, 0, 0.5f, 1))),
         };
-        var worldPlugin = Plugin("01-World.esm", ["00-Pad.esm"], worldRecords);
+        var worldPlugin = PluginWithInteriorCell(
+            "01-World.esm", ["00-Pad.esm"], worldRecords, FormId(1, FixtureCellLocalId));
 
         output.Plugin("plugins/00-Pad.esm", Plugin("00-Pad.esm", [], []));
         output.Plugin("plugins/01-World.esm", worldPlugin);
-        output.Plugin("plugins/02-Relations.esp", Plugin(
+        output.Plugin("plugins/02-Relations.esp", PluginWithInteriorCell(
             "02-Relations.esp",
             ["01-World.esm"],
             [
@@ -456,7 +458,7 @@ internal static class FixtureGenerator
                     Sub("XLRL", U32(0)),
                     Sub("XOWN", U32(FormId(0, ownerLocal))),
                     Sub("DATA", Placement(-1, -2, -3, 1, 2, 3))),
-            ]));
+            ], FormId(0, FixtureCellLocalId)));
         var placementBody = Subs(
             Sub("EDID", Z("FixtureReference")),
             Sub("NAME", U32(FormId(0, baseLocal))),
@@ -464,12 +466,13 @@ internal static class FixtureGenerator
             Sub("XLRL", U32(FormId(0, locationLocal))),
             Sub("XOWN", U32(FormId(0, ownerLocal))),
             Sub("DATA", Placement(10, 20, 30, 0.1f, 0.2f, 0.3f)));
-        var placementPlugin = Plugin(
+        var placementPlugin = PluginWithInteriorCell(
             "03-Placement.esp",
             ["01-World.esm", "02-Relations.esp"],
-            [RecordRaw("REFR", FormId(0, referenceLocal), placementBody, 0)]);
+            [RecordRaw("REFR", FormId(0, referenceLocal), placementBody, 0)],
+            FormId(0, FixtureCellLocalId));
         output.Plugin("plugins/03-Placement.esp", placementPlugin);
-        output.Plugin("plugins/04-MergedWinner.esp", Plugin(
+        output.Plugin("plugins/04-MergedWinner.esp", PluginWithInteriorCell(
             "04-MergedWinner.esp",
             ["01-World.esm"],
             [
@@ -480,12 +483,13 @@ internal static class FixtureGenerator
                     Sub("XLRL", U32(FormId(0, locationLocal))),
                     Sub("XOWN", U32(0)),
                     Sub("DATA", Placement(11, 21, 31, 0, 0, 0))),
-            ]));
-        output.Plugin("plugins/05-DeletedWinner.esp", Plugin(
+            ], FormId(0, FixtureCellLocalId)));
+        output.Plugin("plugins/05-DeletedWinner.esp", PluginWithInteriorCell(
             "05-DeletedWinner.esp",
             ["01-World.esm"],
-            [Record("REFR", FormId(0, referenceLocal), DeletedRecord, Sub("EDID", Z("FixtureReference")))]));
-        output.Plugin("plugins/06-Boundaries.esp", Plugin(
+            [Record("REFR", FormId(0, referenceLocal), DeletedRecord, Sub("EDID", Z("FixtureReference")))],
+            FormId(0, FixtureCellLocalId)));
+        output.Plugin("plugins/06-Boundaries.esp", PluginWithInteriorCell(
             "06-Boundaries.esp",
             ["01-World.esm"],
             [
@@ -500,27 +504,32 @@ internal static class FixtureGenerator
                     Sub("XLRL", U32(0x00FF_FFFC)),
                     Sub("XOWN", U32(0x00FF_FFFB)),
                     Sub("DATA", Pattern(24, seed, 0x44))),
-            ]));
+            ], FormId(0, FixtureCellLocalId)));
 
-        output.Plugin("mutations/Refr-SubrecordHeaderTruncated.esp", TruncateInsideLastRecord(Plugin(
+        output.Plugin("mutations/Refr-SubrecordHeaderTruncated.esp", TruncateInsideLastRecord(PluginWithInteriorCell(
             "Refr-SubrecordHeaderTruncated.esp", ["01-World.esm"],
-            [Record("REFR", FormId(0, referenceLocal), Sub("NAME", U32(FormId(0, baseLocal))))]), "REFR", 8));
-        output.Plugin("mutations/Refr-SubrecordBodyOverrun.esp", MutateLastSubrecordSize(Plugin(
+            [Record("REFR", FormId(0, referenceLocal), Sub("NAME", U32(FormId(0, baseLocal))))],
+            FormId(0, FixtureCellLocalId)), "REFR", 8));
+        output.Plugin("mutations/Refr-SubrecordBodyOverrun.esp", MutateLastSubrecordSize(PluginWithInteriorCell(
             "Refr-SubrecordBodyOverrun.esp", ["01-World.esm"],
-            [Record("REFR", FormId(0, referenceLocal), Sub("NAME", U32(FormId(0, baseLocal))))]), 0x7FFF));
-        output.Plugin("mutations/Refr-DanglingExtendedSize.esp", Plugin(
+            [Record("REFR", FormId(0, referenceLocal), Sub("NAME", U32(FormId(0, baseLocal))))],
+            FormId(0, FixtureCellLocalId)), 0x7FFF));
+        output.Plugin("mutations/Refr-DanglingExtendedSize.esp", PluginWithInteriorCell(
             "Refr-DanglingExtendedSize.esp", ["01-World.esm"],
-            [RecordRaw("REFR", FormId(0, referenceLocal), Subs(Sub("XXXX", U32(0x10000))), 0)]));
+            [RecordRaw("REFR", FormId(0, referenceLocal), Subs(Sub("XXXX", U32(0x10000))), 0)],
+            FormId(0, FixtureCellLocalId)));
         output.Plugin(
             "mutations/one-byte-data/03-Placement.esp",
             MutateLastSubrecordByte(placementPlugin, "DATA", 23, 0x01));
-        output.Plugin("mutations/master-order-reindexed/03-Placement.esp", Plugin(
+        output.Plugin("mutations/master-order-reindexed/03-Placement.esp", PluginWithInteriorCell(
             "03-Placement.esp", ["02-Relations.esp", "01-World.esm"],
-            [Record("REFR", FormId(1, referenceLocal), Sub("NAME", U32(FormId(1, baseLocal))), Sub("XOWN", U32(FormId(1, ownerLocal))), Sub("DATA", Placement(10, 20, 30, 0, 0, 0)))]));
-        output.Plugin("mutations/master-order-unreindexed/03-Placement.esp", Plugin(
+            [Record("REFR", FormId(1, referenceLocal), Sub("NAME", U32(FormId(1, baseLocal))), Sub("XOWN", U32(FormId(1, ownerLocal))), Sub("DATA", Placement(10, 20, 30, 0, 0, 0)))],
+            FormId(1, FixtureCellLocalId)));
+        output.Plugin("mutations/master-order-unreindexed/03-Placement.esp", PluginWithInteriorCell(
             "03-Placement.esp", ["02-Relations.esp", "01-World.esm"],
-            [Record("REFR", FormId(0, referenceLocal), Sub("NAME", U32(FormId(0, baseLocal))), Sub("XOWN", U32(FormId(0, ownerLocal))), Sub("DATA", Placement(10, 20, 30, 0, 0, 0)))]));
-        output.Plugin("mutations/record-order/01-World.esm", Plugin(
+            [Record("REFR", FormId(0, referenceLocal), Sub("NAME", U32(FormId(0, baseLocal))), Sub("XOWN", U32(FormId(0, ownerLocal))), Sub("DATA", Placement(10, 20, 30, 0, 0, 0)))],
+            FormId(0, FixtureCellLocalId)));
+        output.Plugin("mutations/record-order/01-World.esm", PluginWithInteriorCell(
             "01-World.esm", ["00-Pad.esm"],
             [
                 worldRecords[4],
@@ -528,11 +537,12 @@ internal static class FixtureGenerator
                 worldRecords[2],
                 worldRecords[1],
                 worldRecords[0],
-            ]));
-        output.Plugin("mutations/compression/03-Placement.esp", Plugin(
+            ], FormId(1, FixtureCellLocalId)));
+        output.Plugin("mutations/compression/03-Placement.esp", PluginWithInteriorCell(
             "03-Placement.esp", ["01-World.esm", "02-Relations.esp"],
-            [RecordRaw("REFR", FormId(0, referenceLocal), placementBody, CompressedRecord)]));
-        output.Plugin("mutations/Boundaries-RepeatedXLKROrder.esp", Plugin(
+            [RecordRaw("REFR", FormId(0, referenceLocal), placementBody, CompressedRecord)],
+            FormId(0, FixtureCellLocalId)));
+        output.Plugin("mutations/Boundaries-RepeatedXLKROrder.esp", PluginWithInteriorCell(
             "Boundaries-RepeatedXLKROrder.esp", ["01-World.esm"],
             [
                 Record("REFR", FormId(0, referenceLocal),
@@ -541,7 +551,7 @@ internal static class FixtureGenerator
                     Sub("XLKR", Pair(FormId(0, keywordLocal), 0)),
                     Sub("XLKR", Pair(0, FormId(0, referenceLocal))),
                     Sub("DATA", Placement(0, 0, 0, 0, 0, 0))),
-            ]));
+            ], FormId(0, FixtureCellLocalId)));
 
         output.CaseMatrix("development", "boundary", seed,
         [
@@ -580,12 +590,12 @@ internal static class FixtureGenerator
                 Record("STAT", FormId(1, 0x00000FFF), Sub("EDID", Z("FlaggedLightMaximum"))),
             ],
             LightPlugin));
-        output.Plugin("plugins/03-Consumer.esp", Plugin(
+        output.Plugin("plugins/03-Consumer.esp", PluginWithInteriorCell(
             "03-Consumer.esp", ["01-Native.esl", "02-Flagged.esp"],
             [
                 Record("REFR", FormId(2, 0x00000800), Sub("NAME", U32(FormId(0, 0x800))), Sub("DATA", Placement(0, 0, 0, 0, 0, 0))),
                 Record("REFR", FormId(2, 0x00000801), Sub("NAME", U32(FormId(1, 0xFFF))), Sub("DATA", Placement(1, 1, 1, 0, 0, 0))),
-            ]));
+            ], FormId(2, FixtureCellLocalId)));
         output.Plugin("plugins/04-Winner.esp", Plugin(
             "04-Winner.esp", ["01-Native.esl"],
             [Record("STAT", FormId(0, 0x800), Sub("EDID", Z("NativeLightMinimumOverride")))]));
@@ -600,9 +610,10 @@ internal static class FixtureGenerator
             "FlaggedEsp-AboveLightMaximum.esp", ["00-Pad.esm"], [Record("STAT", FormId(1, 0x00001000), Sub("EDID", Z("AboveRange")))], LightPlugin));
         output.Plugin("mutations/Native-HeaderFlagRemoved.esl", Plugin(
             "Native-HeaderFlagRemoved.esl", ["00-Pad.esm"], [Record("STAT", FormId(1, 0x00000800), Sub("EDID", Z("ExtensionHeaderMismatch")))]));
-        output.Plugin("mutations/Consumer-LightReferenceOutOfRange.esp", Plugin(
+        output.Plugin("mutations/Consumer-LightReferenceOutOfRange.esp", PluginWithInteriorCell(
             "Consumer-LightReferenceOutOfRange.esp", ["01-Native.esl"],
-            [Record("REFR", FormId(1, 0x00000800), Sub("NAME", U32(FormId(0, 0x1000))), Sub("DATA", Placement(0, 0, 0, 0, 0, 0)))]));
+            [Record("REFR", FormId(1, 0x00000800), Sub("NAME", U32(FormId(0, 0x1000))), Sub("DATA", Placement(0, 0, 0, 0, 0, 0)))],
+            FormId(1, FixtureCellLocalId)));
 
         output.CaseMatrix("development", "boundary", seed,
         [
@@ -658,8 +669,10 @@ internal static class FixtureGenerator
             "SubrecordCountOverLimit.esp", [], [RecordRaw("STAT", 0x800, RepeatSubrecord(Sub("DATA", []), 4_097), 0)]));
         output.Plugin("mutations/InvalidRecordMasterIndex.esp", Plugin(
             "InvalidRecordMasterIndex.esp", ["MinimalValid.esp"], [Record("STAT", FormId(3, 0x800), Sub("EDID", Z("InvalidRecordMasterIndex")))]));
-        output.Plugin("mutations/InvalidLinkMasterIndex.esp", Plugin(
-            "InvalidLinkMasterIndex.esp", ["MinimalValid.esp"], [Record("REFR", 0x800, Sub("NAME", U32(FormId(3, 0x800))), Sub("DATA", Placement(0, 0, 0, 0, 0, 0)))]));
+        output.Plugin("mutations/InvalidLinkMasterIndex.esp", PluginWithInteriorCell(
+            "InvalidLinkMasterIndex.esp", ["MinimalValid.esp"],
+            [Record("REFR", FormId(1, 0x800), Sub("NAME", U32(FormId(3, 0x800))), Sub("DATA", Placement(0, 0, 0, 0, 0, 0)))],
+            FormId(1, FixtureCellLocalId)));
         output.Plugin("mutations/MasterMissingDataPair.esp", PluginWithUnpairedMaster());
         output.Plugin("mutations/ChangedDuringRead-A.esp", Plugin(
             "ChangedDuringRead-A.esp", [], [Record("STAT", 0x800, Sub("EDID", Z("ChangedDuringReadA")))]));
@@ -845,9 +858,66 @@ internal static class FixtureGenerator
         IReadOnlyList<byte[]> records,
         uint headerFlags = 0)
     {
+        if (records.Any(record => record.AsSpan(0, 4).SequenceEqual(Sig("REFR"))))
+        {
+            throw new InvalidDataException(
+                $"{name} contains a REFR outside an explicit CELL child topology.");
+        }
+
+        var groups = records
+            .GroupBy(record => Encoding.ASCII.GetString(record, 0, 4), StringComparer.Ordinal)
+            .Select(group => Group(group.Key, Concat(group)))
+            .ToArray();
+        return BuildPlugin(name, masters, groups, records.Count, headerFlags);
+    }
+
+    private static byte[] PluginWithInteriorCell(
+        string name,
+        IReadOnlyList<string> masters,
+        IReadOnlyList<byte[]> records,
+        uint cellFormId,
+        uint headerFlags = 0)
+    {
+        var references = records
+            .Where(record => record.AsSpan(0, 4).SequenceEqual(Sig("REFR")))
+            .ToArray();
+        if (references.Length == 0)
+        {
+            throw new InvalidDataException($"{name} requested a CELL topology without any REFR records.");
+        }
+
+        var ordinaryRecords = records
+            .Where(record => !record.AsSpan(0, 4).SequenceEqual(Sig("REFR")))
+            .ToArray();
+        var ordinaryGroups = ordinaryRecords
+            .GroupBy(record => Encoding.ASCII.GetString(record, 0, 4), StringComparer.Ordinal)
+            .Select(group => Group(group.Key, Concat(group)))
+            .ToList();
+
+        var cell = Record(
+            "CELL",
+            cellFormId,
+            Sub("EDID", Z($"InfiniumFixtureCell{cellFormId:X8}")),
+            Sub("DATA", U16(0x0001)));
+        var persistentChildren = Group(cellFormId, Concat(references), groupType: 8);
+        var cellChildren = Group(cellFormId, persistentChildren, groupType: 6);
+        var cellSubBlock = Group(0, Concat(cell, cellChildren), groupType: 3);
+        var cellBlock = Group(0, cellSubBlock, groupType: 2);
+        ordinaryGroups.Add(Group("CELL", cellBlock));
+
+        return BuildPlugin(name, masters, ordinaryGroups, records.Count + 1, headerFlags);
+    }
+
+    private static byte[] BuildPlugin(
+        string name,
+        IReadOnlyList<string> masters,
+        IReadOnlyList<byte[]> topLevelGroups,
+        int recordCount,
+        uint headerFlags)
+    {
         var headerSubs = new List<byte[]>
         {
-            Sub("HEDR", Concat(F32(1.7f), U32((uint)records.Count), U32(0x800))),
+            Sub("HEDR", Concat(F32(1.7f), U32((uint)recordCount), U32(0x800))),
             Sub("CNAM", Z("Infinium project-authored fixture generator")),
             Sub("SNAM", Z(name)),
         };
@@ -858,16 +928,12 @@ internal static class FixtureGenerator
         }
 
         var header = RecordRaw("TES4", 0, Concat(headerSubs), headerFlags);
-        if (records.Count == 0)
+        if (topLevelGroups.Count == 0)
         {
             return header;
         }
 
-        var groups = records
-            .GroupBy(record => Encoding.ASCII.GetString(record, 0, 4), StringComparer.Ordinal)
-            .Select(group => Group(group.Key, Concat(group)))
-            .ToArray();
-        return Concat(header, Concat(groups));
+        return Concat(header, Concat(topLevelGroups));
     }
 
     private static byte[] PluginWithNestedGroups(int depth)
@@ -951,6 +1017,9 @@ internal static class FixtureGenerator
     private static byte[] Group(string signature, byte[] body, int groupType = 0)
         => Concat(Sig("GRUP"), U32((uint)(24 + body.Length)), Sig(signature), I32(groupType), U16(0), U16(0), U16(0), U16(0), body);
 
+    private static byte[] Group(uint labelFormId, byte[] body, int groupType)
+        => Concat(Sig("GRUP"), U32((uint)(24 + body.Length)), U32(labelFormId), I32(groupType), U16(0), U16(0), U16(0), U16(0), body);
+
     private static byte[] Sub(string signature, byte[] body)
     {
         if (body.Length > ushort.MaxValue)
@@ -990,6 +1059,13 @@ internal static class FixtureGenerator
 
     private static byte[] Placement(float x, float y, float z, float rx, float ry, float rz)
         => Concat(F32(x), F32(y), F32(z), F32(rx), F32(ry), F32(rz));
+
+    private static byte[] RaceData(uint flags)
+    {
+        var data = new byte[0x80];
+        BinaryPrimitives.WriteUInt32LittleEndian(data.AsSpan(0x20, 4), flags);
+        return data;
+    }
 
     private static byte[] Pair(uint first, uint second) => Concat(U32(first), U32(second));
 
@@ -1158,31 +1234,48 @@ internal static class FixtureGenerator
     {
         var blocks = new List<byte[]>();
         var position = checked(24 + (int)BinaryPrimitives.ReadUInt32LittleEndian(plugin.AsSpan(4, 4)));
-        while (position < plugin.Length)
+        ReadCompleteRecordBlocks(plugin, position, plugin.Length, blocks);
+        return blocks;
+    }
+
+    private static void ReadCompleteRecordBlocks(
+        byte[] plugin,
+        int start,
+        int end,
+        List<byte[]> blocks)
+    {
+        var position = start;
+        while (position < end)
         {
-            if (!plugin.AsSpan(position, 4).SequenceEqual(Sig("GRUP")))
+            if (plugin.AsSpan(position, 4).SequenceEqual(Sig("GRUP")))
             {
-                throw new InvalidDataException($"Expected GRUP at byte {position}.");
+                var groupSize = checked((int)BinaryPrimitives.ReadUInt32LittleEndian(plugin.AsSpan(position + 4, 4)));
+                var groupEnd = checked(position + groupSize);
+                if (groupEnd > end)
+                {
+                    throw new InvalidDataException("Group crosses its containing boundary.");
+                }
+
+                ReadCompleteRecordBlocks(plugin, position + 24, groupEnd, blocks);
+                position = groupEnd;
+                continue;
             }
 
-            var groupSize = checked((int)BinaryPrimitives.ReadUInt32LittleEndian(plugin.AsSpan(position + 4, 4)));
-            var groupEnd = checked(position + groupSize);
-            position += 24;
-            while (position < groupEnd)
+            var recordSize = checked(
+                24 + (int)BinaryPrimitives.ReadUInt32LittleEndian(plugin.AsSpan(position + 4, 4)));
+            if (position + recordSize > end)
             {
-                var recordSize = checked(
-                    24 + (int)BinaryPrimitives.ReadUInt32LittleEndian(plugin.AsSpan(position + 4, 4)));
-                blocks.Add(plugin.AsSpan(position, recordSize).ToArray());
-                position += recordSize;
+                throw new InvalidDataException("Record crosses its containing boundary.");
             }
 
-            if (position != groupEnd)
-            {
-                throw new InvalidDataException("Record block crosses its group boundary.");
-            }
+            blocks.Add(plugin.AsSpan(position, recordSize).ToArray());
+            position += recordSize;
         }
 
-        return blocks;
+        if (position != end)
+        {
+            throw new InvalidDataException("Element block crosses its containing boundary.");
+        }
     }
 
     private static byte[] MutateLastRecordFormId(byte[] source, string signature, uint formId)
@@ -1230,16 +1323,70 @@ internal static class FixtureGenerator
             throw new ArgumentOutOfRangeException(nameof(count));
         }
 
-        var groupOffset = FindLastSignature(source, "GRUP");
-        var groupSize = BinaryPrimitives.ReadUInt32LittleEndian(source.AsSpan(groupOffset + 4, 4));
-        if (groupSize < 24 + count)
+        var terminalGroupOffsets = new List<int>();
+        var firstElementOffset = checked(
+            24 + (int)BinaryPrimitives.ReadUInt32LittleEndian(source.AsSpan(4, 4)));
+        CollectTerminalGroupOffsets(
+            source,
+            firstElementOffset,
+            source.Length,
+            source.Length,
+            terminalGroupOffsets);
+        if (terminalGroupOffsets.Count == 0)
         {
-            throw new InvalidDataException("Cannot truncate beyond the enclosing group body.");
+            throw new InvalidDataException("No terminal enclosing group was found.");
         }
 
         var result = source[..^count];
-        BinaryPrimitives.WriteUInt32LittleEndian(result.AsSpan(groupOffset + 4, 4), groupSize - (uint)count);
+        foreach (var groupOffset in terminalGroupOffsets)
+        {
+            var groupSize = BinaryPrimitives.ReadUInt32LittleEndian(source.AsSpan(groupOffset + 4, 4));
+            if (groupSize < 24 + count)
+            {
+                throw new InvalidDataException("Cannot truncate beyond the enclosing group body.");
+            }
+
+            BinaryPrimitives.WriteUInt32LittleEndian(
+                result.AsSpan(groupOffset + 4, 4),
+                groupSize - (uint)count);
+        }
+
         return result;
+    }
+
+    private static void CollectTerminalGroupOffsets(
+        byte[] source,
+        int start,
+        int end,
+        int terminalEnd,
+        List<int> offsets)
+    {
+        var position = start;
+        while (position < end)
+        {
+            var bodySize = checked(
+                (int)BinaryPrimitives.ReadUInt32LittleEndian(source.AsSpan(position + 4, 4)));
+            if (source.AsSpan(position, 4).SequenceEqual(Sig("GRUP")))
+            {
+                var groupEnd = checked(position + bodySize);
+                if (groupEnd == terminalEnd)
+                {
+                    offsets.Add(position);
+                }
+
+                CollectTerminalGroupOffsets(source, position + 24, groupEnd, terminalEnd, offsets);
+                position = groupEnd;
+            }
+            else
+            {
+                position = checked(position + 24 + bodySize);
+            }
+        }
+
+        if (position != end)
+        {
+            throw new InvalidDataException("Element crosses its containing boundary.");
+        }
     }
 
     private static byte[] TruncateInsideLastRecord(byte[] source, string recordSignature, int count)

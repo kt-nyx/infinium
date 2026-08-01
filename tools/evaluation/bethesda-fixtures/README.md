@@ -24,6 +24,11 @@ dotnet run --project tools/evaluation/bethesda-fixtures/Infinium.BethesdaFixture
 The generator owns only `inputs/`. It does not create fixture package metadata,
 oracles, taxonomy answers, held-out content, snapshot captures, or parser code.
 
+Bethesda fixture version `1.0.1` emits full 128-byte Skyrim `RACE/DATA`
+records and nests format-valid `REFR` records beneath interior CELL block,
+sub-block, child, and persistent-child groups. `verify` also retains the
+declared one-byte and record-order mutation invariants after that nesting.
+
 After promoting a reviewed input freeze, refresh the non-answer-bearing Slice 3
 capture-binding receipts:
 

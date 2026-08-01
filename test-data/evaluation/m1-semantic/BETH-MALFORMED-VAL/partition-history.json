@@ -1,6 +1,6 @@
 {
   "fixture_id": "BETH-MALFORMED-VAL",
-  "fixture_version": "1.0.0",
+  "fixture_version": "1.0.1",
   "partition_history": [
     {
       "from": null,
@@ -17,15 +17,15 @@
       "change_influenced_implementation": true,
       "replacement_fixture_id": "BETH-MALFORMED-VAL-002",
       "replacement_partition": "validation",
-      "replacement_input_package_fingerprint": "3c51511d6db4b77848dcf2a855c9a66c8bbb3ad356599132c6c83b2d35d5a6e5",
-      "replacement_oracle_fingerprint": "6d14e1dc4da3a201d72632d4768da6caa56564f01fa0f8b1ee3c19e90ae83ce4",
+      "replacement_input_package_fingerprint": "9c8dd5621c714626d566abf81f4b94173d926d12c9ae367e63c649123376a915",
+      "replacement_oracle_fingerprint": "82acea697b56dae14741c033a72f922354252ae4c57d5cbf74da6218298976e8",
       "independence_evidence_reference": {
-        "artifact_id": "BETH-MALFORMED-VAL-002.oracle-independence-attestation",
-        "artifact_version": "1.0.0",
-        "fingerprint": "183888a1734edc9884b5be18fab5e293c8bd8e591653a9112f63349f0e26a495",
+        "artifact_id": "BETH-MALFORMED-VAL-002.structure-correction-independence-attestation",
+        "artifact_version": "1.1.0",
+        "fingerprint": "934b542e6072951453cd732e5ad8a99ef7dc654d3cde479bba01504591dd0fb6",
         "availability": "evaluator-private"
       },
-      "authorized_by": "project-owner/user-directed-replacement-review-20260730"
+      "authorized_by": "project-owner/user-directed-slice4-fixture-conformance-correction-20260801"
     }
   ]
 }

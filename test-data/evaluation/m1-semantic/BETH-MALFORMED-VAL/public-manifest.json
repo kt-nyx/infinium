@@ -2,7 +2,7 @@
   "schema_id": "infinium.evaluation.fixture-public-manifest/v1",
   "schema_version": "1",
   "fixture_id": "BETH-MALFORMED-VAL",
-  "fixture_version": "1.0.0",
+  "fixture_version": "1.0.1",
   "evaluation_ids": [
     "EVAL-0052"
   ],
@@ -25,25 +25,25 @@
       "change_influenced_implementation": true,
       "replacement_fixture_id": "BETH-MALFORMED-VAL-002",
       "replacement_partition": "validation",
-      "replacement_input_package_fingerprint": "3c51511d6db4b77848dcf2a855c9a66c8bbb3ad356599132c6c83b2d35d5a6e5",
-      "replacement_oracle_fingerprint": "6d14e1dc4da3a201d72632d4768da6caa56564f01fa0f8b1ee3c19e90ae83ce4",
+      "replacement_input_package_fingerprint": "9c8dd5621c714626d566abf81f4b94173d926d12c9ae367e63c649123376a915",
+      "replacement_oracle_fingerprint": "82acea697b56dae14741c033a72f922354252ae4c57d5cbf74da6218298976e8",
       "independence_evidence_reference": {
-        "artifact_id": "BETH-MALFORMED-VAL-002.oracle-independence-attestation",
-        "artifact_version": "1.0.0",
-        "fingerprint": "183888a1734edc9884b5be18fab5e293c8bd8e591653a9112f63349f0e26a495",
+        "artifact_id": "BETH-MALFORMED-VAL-002.structure-correction-independence-attestation",
+        "artifact_version": "1.1.0",
+        "fingerprint": "934b542e6072951453cd732e5ad8a99ef7dc654d3cde479bba01504591dd0fb6",
         "availability": "evaluator-private"
       },
-      "authorized_by": "project-owner/user-directed-replacement-review-20260730"
+      "authorized_by": "project-owner/user-directed-slice4-fixture-conformance-correction-20260801"
     }
   ],
   "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
   "taxonomy_version": "0.1.0",
-  "input_package_fingerprint": "3efe7be2d117f30b607ec53323fa990fecde4b194d4945d82149f9b99a617b54",
-  "oracle_fingerprint": "193885bb79dbb4aba04173ecdeb46b4808a643c3053b655fd67ada2b04644768",
-  "provenance_fingerprint": "17ccd8acef77dc9b517e9387f564a8bbd70a4c83e55e89f36abd665163405254",
-  "replay_dependency_fingerprint": "ca738521d0861c5024c56f4b662b767980896b3bbbc4e72f8cfcec339d36330e",
+  "input_package_fingerprint": "d0cf9179c352feab4550bebc3661f8f3988b3dc3fae1511d1e02a5bfa420219c",
+  "oracle_fingerprint": "7e2ac9c97870c0e51511dc44a9242fcee1e22db82c7b504f5fe1d7cb4e9b9093",
+  "provenance_fingerprint": "b258861cb89b0b08d1537468110cf25de598a06c19d69af38ab6eb3cd84a6272",
+  "replay_dependency_fingerprint": "8b0d3205c41f2c5f9c08a7270c6df5821216ed3e1956c0124cf2d260b010f51a",
   "redistribution_class": "project-authored-redistributable",
   "owner": "infinium-evaluation",
   "review_state": "accepted",
-  "created_at": "2026-07-30T18:00:00.0000000+00:00"
+  "created_at": "2026-08-01T22:00:00.0000000+00:00"
 }

@@ -19,6 +19,7 @@ const fixtureIds = [
   "BETH-UNSUPPORTED-VAL",
 ];
 const pluginExtensions = new Set([".esm", ".esp", ".esl"]);
+const fixtureVersion = "1.0.1";
 
 for (const fixtureId of fixtureIds) {
   const inputRoot = path.join(fixtureRoot, fixtureId, "inputs");
@@ -53,7 +54,7 @@ for (const fixtureId of fixtureIds) {
     schema_id: "infinium.evaluation.bethesda-snapshot-input/v1",
     schema_version: "1",
     fixture_id: fixtureId,
-    fixture_version: "1.0.0",
+    fixture_version: fixtureVersion,
     snapshot_contract_version: "3.0.0",
     adapter_id: "infinium.mo2-static-reconstruction/v3",
     selected_profile_name: fixtureId,

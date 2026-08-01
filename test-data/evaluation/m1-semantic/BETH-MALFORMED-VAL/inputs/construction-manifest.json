@@ -136,15 +136,15 @@
     },
     {
       "path": "mutations/InvalidLinkMasterIndex.esp",
-      "sha256": "6df0405e2be94250826c62b959261a9968612ac8fcc65bfb65ca5ff866b8b781",
+      "sha256": "63f649f2a9a5fa75d7ce2098202942bfcb5f08465753c916a1ec5e61758179f7",
       "regions": [
         {
           "offset": 0,
           "kind": "project-authored-tes4-bytes",
-          "length": 250
+          "length": 412
         }
       ],
-      "byte_length": 250
+      "byte_length": 412
     },
     {
       "path": "mutations/InvalidRecordMasterIndex.esp",

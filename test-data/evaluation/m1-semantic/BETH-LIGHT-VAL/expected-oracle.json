@@ -1,7 +1,7 @@
 {
   "fixture_id": "BETH-LIGHT-VAL",
-  "fixture_version": "1.0.0",
-  "oracle_version": "1.0.1",
+  "fixture_version": "1.0.1",
+  "oracle_version": "1.0.2",
   "independent_authors_and_reviewers": [
     "oracle-reviewer"
   ],
@@ -13,7 +13,7 @@
         {
           "artifact_id": "oracle/manual-hex-worksheet.json",
           "artifact_version": "1",
-          "fingerprint": "0ec82c62b36a93cfd3ac87ced59e11a383a4744343cef2a7b29e20df4da81eec",
+          "fingerprint": "5a49033669345c972976fed57e1bd786d64bbcee9f0790c63a4f503d0a482059",
           "availability": "retained"
         }
       ],
@@ -26,13 +26,13 @@
         {
           "artifact_id": "oracle/independent-reader-report.json",
           "artifact_version": "1",
-          "fingerprint": "cd3965c55d56a6e361f440f7531c29df0c56bbb6671a7598cf9b2106b8a32867",
+          "fingerprint": "da347435b330d6766f4b442979a48d0e8880b95f9e2438b4bb1d507f95b803ca",
           "availability": "retained"
         },
         {
           "artifact_id": "oracle/independent-byte-facts.json",
-          "artifact_version": "1.0.0",
-          "fingerprint": "97fb0d195161beb267c16b3cc5cfff6d9da04ff6b7acc363fdc84c77a117e50e",
+          "artifact_version": "1.0.2",
+          "fingerprint": "2a24df927a0af7447565eaae51fc116cd368814bedb145dde02753711b78c744",
           "availability": "retained"
         }
       ],
@@ -49,7 +49,7 @@
         "manual-annotated-hex-worksheet-v1",
         "independent-bounded-raw-reader-v1"
       ],
-      "canonical_value_fingerprint": "b0739fe560264cf176c6315559678d271f347a42a771a420f53fe6617fc36dd4"
+      "canonical_value_fingerprint": "c82defac406c111c363af8b419d4bc7322a93662d415aae672c3c717412109c6"
     },
     {
       "expected_id": "beth.beth-light-val.fact-00002",
@@ -82,10 +82,54 @@
         "manual-annotated-hex-worksheet-v1",
         "independent-bounded-raw-reader-v1"
       ],
-      "canonical_value_fingerprint": "60a9800161a3b98a792325f78e7404e9dd5fb4e0bca3c3baf8b801c701365375"
+      "canonical_value_fingerprint": "f3273e3a8669d7b7f7ab5caf08537c3ff9d63d1a2e37e20eb3232f21fcf29918"
     },
     {
       "expected_id": "beth.beth-light-val.fact-00005",
+      "subject_id": "beth-light-val.file-000.group-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "4006907e7e69c369c9765aa1991c7f9771ce251dda44f8827b989bdc0cb7e2b5"
+    },
+    {
+      "expected_id": "beth.beth-light-val.fact-00006",
+      "subject_id": "beth-light-val.file-000.group-0002",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "562baa871cff4f8c6b9533d76abb583a959b128412d77f5c9e068f9d6e329d76"
+    },
+    {
+      "expected_id": "beth.beth-light-val.fact-00007",
+      "subject_id": "beth-light-val.file-000.group-0003",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "21753e582404fcabf9ae1f8219a3886580343315a6f48d9d76281c145eec5f71"
+    },
+    {
+      "expected_id": "beth.beth-light-val.fact-00008",
+      "subject_id": "beth-light-val.file-000.group-0004",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "2ca9bd846b1842a2455191cb1e144595f53b7e80a4a47eeb773447be3c93b60e"
+    },
+    {
+      "expected_id": "beth.beth-light-val.fact-00009",
       "subject_id": "beth-light-val.file-000.record-0000",
       "expected_type": "observation",
       "expected_state": "present",
@@ -96,7 +140,7 @@
       "canonical_value_fingerprint": "7e9d1041649ac7bfa8f12a348b6f7f5dc5ed38c55703739f0c2a834bf2f4b096"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00006",
+      "expected_id": "beth.beth-light-val.fact-00010",
       "subject_id": "beth-light-val.file-000.record-0000.sub-0003",
       "expected_type": "observation",
       "expected_state": "present",
@@ -107,7 +151,7 @@
       "canonical_value_fingerprint": "aca5d1edd36d53c6f4d009b49bc5f6e08c2d2eb641319c1d579901de27531f6d"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00007",
+      "expected_id": "beth.beth-light-val.fact-00011",
       "subject_id": "beth-light-val.file-000.record-0000.sub-0004",
       "expected_type": "observation",
       "expected_state": "present",
@@ -118,7 +162,7 @@
       "canonical_value_fingerprint": "c99c64664b827febd053197708c49774fd24a8f98c1c55d454a6fadcf950e6da"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00008",
+      "expected_id": "beth.beth-light-val.fact-00012",
       "subject_id": "beth-light-val.file-000.record-0001",
       "expected_type": "observation",
       "expected_state": "present",
@@ -126,32 +170,43 @@
         "manual-annotated-hex-worksheet-v1",
         "independent-bounded-raw-reader-v1"
       ],
-      "canonical_value_fingerprint": "3afb9ab7b1837563515156ae1798f9a37b5bea45dedb4b7c79eb87273be67f15"
+      "canonical_value_fingerprint": "88b93703e2feeb985fba981f6319bbee5e7b44746e39fa7e4a21a3de7cdad57f"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00009",
-      "subject_id": "beth-light-val.file-000.record-0001.sub-0000",
+      "expected_id": "beth.beth-light-val.fact-00013",
+      "subject_id": "beth-light-val.file-000.record-0002",
       "expected_type": "observation",
       "expected_state": "present",
       "ground_truth_method_ids": [
         "manual-annotated-hex-worksheet-v1",
         "independent-bounded-raw-reader-v1"
       ],
-      "canonical_value_fingerprint": "9ec15a04b5d3f575adb8f2692e2d3be3ee25eff7aef3aff43f9e90f02707e380"
+      "canonical_value_fingerprint": "37b084283c67e37cc598d3ac8dce0ccdfd100c7dd20fe3ff0dbd9ea04942a37d"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00010",
-      "subject_id": "beth-light-val.file-000.record-0001.sub-0001",
+      "expected_id": "beth.beth-light-val.fact-00014",
+      "subject_id": "beth-light-val.file-000.record-0002.sub-0000",
       "expected_type": "observation",
       "expected_state": "present",
       "ground_truth_method_ids": [
         "manual-annotated-hex-worksheet-v1",
         "independent-bounded-raw-reader-v1"
       ],
-      "canonical_value_fingerprint": "0aa6c27d39a77aff57e7377912c324e3b370ee0fb42751eba381b7930cb832ab"
+      "canonical_value_fingerprint": "bb1390d1d65854ace35dbf33b3f8017febf3aa91bf00a1b67523079b9cf2b3db"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00011",
+      "expected_id": "beth.beth-light-val.fact-00015",
+      "subject_id": "beth-light-val.file-000.record-0002.sub-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "999096d103f61d014cb14e738dd0086520bc50ec3c68d99f22e8bdd3b9540b22"
+    },
+    {
+      "expected_id": "beth.beth-light-val.fact-00016",
       "subject_id": "beth-light-val.file-001.identity",
       "expected_type": "observation",
       "expected_state": "present",
@@ -162,7 +217,7 @@
       "canonical_value_fingerprint": "1948a8d972c24508cc8395f72699fa1cf2514843cef83727cc5deea2d40c525b"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00012",
+      "expected_id": "beth.beth-light-val.fact-00017",
       "subject_id": "beth-light-val.file-001.masters",
       "expected_type": "observation",
       "expected_state": "present",
@@ -173,7 +228,7 @@
       "canonical_value_fingerprint": "0c5815afeba9c473277d323ac92b70b051f431dbc47d0143a14982bb4fd877de"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00013",
+      "expected_id": "beth.beth-light-val.fact-00018",
       "subject_id": "beth-light-val.file-001.esl-flag",
       "expected_type": "observation",
       "expected_state": "present",
@@ -184,7 +239,7 @@
       "canonical_value_fingerprint": "9e739b07425c8755cd4a91684b39a04a301b844bed641aa6c4fb1d10ae8b0e7d"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00014",
+      "expected_id": "beth.beth-light-val.fact-00019",
       "subject_id": "beth-light-val.file-001.group-0000",
       "expected_type": "observation",
       "expected_state": "present",
@@ -195,7 +250,7 @@
       "canonical_value_fingerprint": "14c9fe1159c91679e8600f8049eae72bfb53c30baddcb9fff7a5ce3fe012271a"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00015",
+      "expected_id": "beth.beth-light-val.fact-00020",
       "subject_id": "beth-light-val.file-001.record-0000",
       "expected_type": "observation",
       "expected_state": "present",
@@ -206,7 +261,7 @@
       "canonical_value_fingerprint": "e27bf3d37e0f3bdb96e80387568d24301eb5d87d6f77a9dc59241a93e0b9d10c"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00016",
+      "expected_id": "beth.beth-light-val.fact-00021",
       "subject_id": "beth-light-val.file-001.record-0000.sub-0003",
       "expected_type": "observation",
       "expected_state": "present",
@@ -217,7 +272,7 @@
       "canonical_value_fingerprint": "9f384a8400f6cf32321a18949b27a0364df13b0c2e13e521d01dd1b9c862722a"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00017",
+      "expected_id": "beth.beth-light-val.fact-00022",
       "subject_id": "beth-light-val.file-001.record-0000.sub-0004",
       "expected_type": "observation",
       "expected_state": "present",
@@ -228,7 +283,7 @@
       "canonical_value_fingerprint": "db846fc1d3c15ad14d1396d39f5232d997c1496f24613e92f0dbf89ea206a9d4"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00018",
+      "expected_id": "beth.beth-light-val.fact-00023",
       "subject_id": "beth-light-val.file-001.record-0001",
       "expected_type": "observation",
       "expected_state": "present",
@@ -239,7 +294,7 @@
       "canonical_value_fingerprint": "0967a80931023da9f106eb84d8298c70d60df95fced02acf418f48b3075739d8"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00019",
+      "expected_id": "beth.beth-light-val.fact-00024",
       "subject_id": "beth-light-val.file-002.identity",
       "expected_type": "observation",
       "expected_state": "present",
@@ -250,7 +305,7 @@
       "canonical_value_fingerprint": "76d927899478e8a99f0646b27ce7dd85e688441ec7f0caa1138050b9b2ff3822"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00020",
+      "expected_id": "beth.beth-light-val.fact-00025",
       "subject_id": "beth-light-val.file-002.masters",
       "expected_type": "observation",
       "expected_state": "present",
@@ -261,7 +316,7 @@
       "canonical_value_fingerprint": "5e4a5571bc12fa5de21e649f994059f8160d464e3a6fb90d071a1964e992894d"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00021",
+      "expected_id": "beth.beth-light-val.fact-00026",
       "subject_id": "beth-light-val.file-002.esl-flag",
       "expected_type": "observation",
       "expected_state": "present",
@@ -272,7 +327,7 @@
       "canonical_value_fingerprint": "1640c5816d5607977b6c1054c283914f3fc1e4a9323c33366b9fe98758ab9dde"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00022",
+      "expected_id": "beth.beth-light-val.fact-00027",
       "subject_id": "beth-light-val.file-002.group-0000",
       "expected_type": "observation",
       "expected_state": "present",
@@ -283,7 +338,7 @@
       "canonical_value_fingerprint": "4727016eb648956087a21b535a7dc4d1ec128f357e02e3d89aa443c79e99beda"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00023",
+      "expected_id": "beth.beth-light-val.fact-00028",
       "subject_id": "beth-light-val.file-002.record-0000",
       "expected_type": "observation",
       "expected_state": "present",
@@ -294,7 +349,7 @@
       "canonical_value_fingerprint": "dc4ae9511e13cee582116590033f2f2d9abc34d3b9d5af9194e3b7b61b3d3e69"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00024",
+      "expected_id": "beth.beth-light-val.fact-00029",
       "subject_id": "beth-light-val.file-002.record-0000.sub-0003",
       "expected_type": "observation",
       "expected_state": "present",
@@ -305,7 +360,7 @@
       "canonical_value_fingerprint": "dc49a96d8f7420b04b5d5f092cd7ebf6d4b765e4338ad116d6fe7e05316c89ca"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00025",
+      "expected_id": "beth.beth-light-val.fact-00030",
       "subject_id": "beth-light-val.file-002.record-0000.sub-0004",
       "expected_type": "observation",
       "expected_state": "present",
@@ -316,7 +371,7 @@
       "canonical_value_fingerprint": "049815d0aef3768f46111f4ebbe6be77b99e52127138ca09119a153f5fa438d5"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00026",
+      "expected_id": "beth.beth-light-val.fact-00031",
       "subject_id": "beth-light-val.file-002.record-0001",
       "expected_type": "observation",
       "expected_state": "present",
@@ -327,7 +382,7 @@
       "canonical_value_fingerprint": "9cfc689540091f7f82b644657d5b26354b9e2c73942e7c72cc4010aeebd3c44c"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00027",
+      "expected_id": "beth.beth-light-val.fact-00032",
       "subject_id": "beth-light-val.file-003.identity",
       "expected_type": "observation",
       "expected_state": "present",
@@ -338,7 +393,7 @@
       "canonical_value_fingerprint": "360b2ce48396a09b2466eafbabf02f7e77d945bca087a13ca7aa9e659341d028"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00028",
+      "expected_id": "beth.beth-light-val.fact-00033",
       "subject_id": "beth-light-val.file-003.masters",
       "expected_type": "observation",
       "expected_state": "present",
@@ -349,7 +404,7 @@
       "canonical_value_fingerprint": "4e5f74d775bb8c551f7ec1d01bc65791666d11cde34a2cc4c6b3eca0132b4707"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00029",
+      "expected_id": "beth.beth-light-val.fact-00034",
       "subject_id": "beth-light-val.file-003.esl-flag",
       "expected_type": "observation",
       "expected_state": "present",
@@ -360,7 +415,7 @@
       "canonical_value_fingerprint": "d13165545e4c18500f7440f81924290a68e0ba7d9677e657a4e1befa8fc919b9"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00030",
+      "expected_id": "beth.beth-light-val.fact-00035",
       "subject_id": "beth-light-val.file-003.group-0000",
       "expected_type": "observation",
       "expected_state": "present",
@@ -371,7 +426,7 @@
       "canonical_value_fingerprint": "8f50ba7e3df0effbe73ca625b25277a0bc35d6f68b401b720587728eaafe3f20"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00031",
+      "expected_id": "beth.beth-light-val.fact-00036",
       "subject_id": "beth-light-val.file-003.record-0000",
       "expected_type": "observation",
       "expected_state": "present",
@@ -382,7 +437,7 @@
       "canonical_value_fingerprint": "a143d14a5b8ba891139b63f5957ee23b1081454e775fa21c869f94f7492781cc"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00032",
+      "expected_id": "beth.beth-light-val.fact-00037",
       "subject_id": "beth-light-val.file-003.record-0000.sub-0003",
       "expected_type": "observation",
       "expected_state": "present",
@@ -393,7 +448,7 @@
       "canonical_value_fingerprint": "204947ddc3dcf5374fa54c5c2898bcea67ad359b1e58d6d493178125c103b248"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00033",
+      "expected_id": "beth.beth-light-val.fact-00038",
       "subject_id": "beth-light-val.file-003.record-0000.sub-0004",
       "expected_type": "observation",
       "expected_state": "present",
@@ -404,7 +459,7 @@
       "canonical_value_fingerprint": "0c0203449c91f05fd9a2deb8ae7c35e88c1b4afc8e7556e986c146e97e79614b"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00034",
+      "expected_id": "beth.beth-light-val.fact-00039",
       "subject_id": "beth-light-val.file-003.record-0001",
       "expected_type": "observation",
       "expected_state": "present",
@@ -415,7 +470,7 @@
       "canonical_value_fingerprint": "12372d0e4083b352be4fa577978c42370b783832f76ef0241ab51f0d7d1e1a9d"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00035",
+      "expected_id": "beth.beth-light-val.fact-00040",
       "subject_id": "beth-light-val.file-004.identity",
       "expected_type": "observation",
       "expected_state": "present",
@@ -426,7 +481,7 @@
       "canonical_value_fingerprint": "56fdf4875ccda294df32d4dbce94447f811cb2a6f2dad4eaac1ca5ee898c3dd0"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00036",
+      "expected_id": "beth.beth-light-val.fact-00041",
       "subject_id": "beth-light-val.file-004.masters",
       "expected_type": "observation",
       "expected_state": "present",
@@ -437,7 +492,7 @@
       "canonical_value_fingerprint": "fb16829d4d9fb2b4bc9879443ca37d6178b35cd683091292f8b29608b7475e8e"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00037",
+      "expected_id": "beth.beth-light-val.fact-00042",
       "subject_id": "beth-light-val.file-004.esl-flag",
       "expected_type": "observation",
       "expected_state": "present",
@@ -448,7 +503,7 @@
       "canonical_value_fingerprint": "dd501ac0221ed9ff0d15cb58c616de2619978ea7e4079750c532eaa8bb493dce"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00038",
+      "expected_id": "beth.beth-light-val.fact-00043",
       "subject_id": "beth-light-val.file-004.group-0000",
       "expected_type": "observation",
       "expected_state": "present",
@@ -459,7 +514,7 @@
       "canonical_value_fingerprint": "0b525f131b28f16608b7d03f478aa8f6bc6cad1d2295603bf1ec420ecd905d16"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00039",
+      "expected_id": "beth.beth-light-val.fact-00044",
       "subject_id": "beth-light-val.file-004.record-0000",
       "expected_type": "observation",
       "expected_state": "present",
@@ -470,7 +525,7 @@
       "canonical_value_fingerprint": "b5c6e953d47b493fccdf14c100bac64106c39e458f35177f9802191adf4736bf"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00040",
+      "expected_id": "beth.beth-light-val.fact-00045",
       "subject_id": "beth-light-val.file-004.record-0000.sub-0003",
       "expected_type": "observation",
       "expected_state": "present",
@@ -481,7 +536,7 @@
       "canonical_value_fingerprint": "5c8e6c8b59741f873be4021955d6beed4a1f5d8d6697903603e7a20629c6f136"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00041",
+      "expected_id": "beth.beth-light-val.fact-00046",
       "subject_id": "beth-light-val.file-004.record-0000.sub-0004",
       "expected_type": "observation",
       "expected_state": "present",
@@ -492,7 +547,7 @@
       "canonical_value_fingerprint": "f3c001ba12e350a3a9aa2c2bf549cc754d29c8d6825e2ad3450fd20d9eefd819"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00042",
+      "expected_id": "beth.beth-light-val.fact-00047",
       "subject_id": "beth-light-val.file-004.record-0001",
       "expected_type": "observation",
       "expected_state": "present",
@@ -503,7 +558,7 @@
       "canonical_value_fingerprint": "ee7f5244317e923612f33fd4e7acf7240c4bb0153042b99de5a45c41673e3479"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00043",
+      "expected_id": "beth.beth-light-val.fact-00048",
       "subject_id": "beth-light-val.file-005.identity",
       "expected_type": "observation",
       "expected_state": "present",
@@ -514,7 +569,7 @@
       "canonical_value_fingerprint": "57f84eaef37f95e5abe8bf0cfc9197112e15a24cf455732be4bdba9bb1a9981f"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00044",
+      "expected_id": "beth.beth-light-val.fact-00049",
       "subject_id": "beth-light-val.file-005.masters",
       "expected_type": "observation",
       "expected_state": "present",
@@ -525,7 +580,7 @@
       "canonical_value_fingerprint": "0f27f666e8b40373d54e71f10df5e6467a0a05d749ca1126b6c9778b725b7533"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00045",
+      "expected_id": "beth.beth-light-val.fact-00050",
       "subject_id": "beth-light-val.file-005.esl-flag",
       "expected_type": "observation",
       "expected_state": "present",
@@ -536,7 +591,7 @@
       "canonical_value_fingerprint": "cba4223972e4da848cf452803b0e701d50f430b15427d8b254ca9211033b12ec"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00046",
+      "expected_id": "beth.beth-light-val.fact-00051",
       "subject_id": "beth-light-val.file-005.group-0000",
       "expected_type": "observation",
       "expected_state": "present",
@@ -547,7 +602,7 @@
       "canonical_value_fingerprint": "52bf20713c8ae8a74f291f9923861f130494d236052b330e5dc53a823072209d"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00047",
+      "expected_id": "beth.beth-light-val.fact-00052",
       "subject_id": "beth-light-val.file-005.record-0000",
       "expected_type": "observation",
       "expected_state": "present",
@@ -558,7 +613,7 @@
       "canonical_value_fingerprint": "fad0dae5846d11bec0c487d583f01bae4eb055d6399a67fdc3d4d7f496b0c76d"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00048",
+      "expected_id": "beth.beth-light-val.fact-00053",
       "subject_id": "beth-light-val.file-005.record-0000.sub-0003",
       "expected_type": "observation",
       "expected_state": "present",
@@ -569,7 +624,7 @@
       "canonical_value_fingerprint": "e3b235db51fd8ad6199fa3970b1e8cf3251b1ade47529d58b4585262d91a5f6c"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00049",
+      "expected_id": "beth.beth-light-val.fact-00054",
       "subject_id": "beth-light-val.file-005.record-0000.sub-0004",
       "expected_type": "observation",
       "expected_state": "present",
@@ -580,7 +635,7 @@
       "canonical_value_fingerprint": "a35faa2903eb830378a582d8d2ab16711439732ef72230d4bd95e32d543135c2"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00050",
+      "expected_id": "beth.beth-light-val.fact-00055",
       "subject_id": "beth-light-val.file-005.record-0001",
       "expected_type": "observation",
       "expected_state": "present",
@@ -591,7 +646,7 @@
       "canonical_value_fingerprint": "41dd2fe9b444cc64e88ec41c76ba0aa2e24f5ff4a99c4a02aaf9572e30606289"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00051",
+      "expected_id": "beth.beth-light-val.fact-00056",
       "subject_id": "beth-light-val.file-006.identity",
       "expected_type": "observation",
       "expected_state": "present",
@@ -602,7 +657,7 @@
       "canonical_value_fingerprint": "d56488e15d5684c82727d90b53a08969a9b31816372208f6a48a2a38b368b1c3"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00052",
+      "expected_id": "beth.beth-light-val.fact-00057",
       "subject_id": "beth-light-val.file-006.masters",
       "expected_type": "observation",
       "expected_state": "present",
@@ -613,7 +668,7 @@
       "canonical_value_fingerprint": "ca3d06d315f652644f9dfc1aa9a5bc722c1b71085b67e97de0f873e791ad3a64"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00053",
+      "expected_id": "beth.beth-light-val.fact-00058",
       "subject_id": "beth-light-val.file-006.esl-flag",
       "expected_type": "observation",
       "expected_state": "present",
@@ -624,7 +679,7 @@
       "canonical_value_fingerprint": "c4341bae5abce3fe6714d6e9ce0778287ac9dc29f507c4738a22506062b16c08"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00054",
+      "expected_id": "beth.beth-light-val.fact-00059",
       "subject_id": "beth-light-val.file-006.record-0000",
       "expected_type": "observation",
       "expected_state": "present",
@@ -635,7 +690,7 @@
       "canonical_value_fingerprint": "804180c356c5ea5ca24f350c322f811382144b7074d1f9b35acf638449839e35"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00055",
+      "expected_id": "beth.beth-light-val.fact-00060",
       "subject_id": "beth-light-val.file-007.identity",
       "expected_type": "observation",
       "expected_state": "present",
@@ -646,7 +701,7 @@
       "canonical_value_fingerprint": "df924f75cb43eccc6a116857eb5d6dd75f19c15a8f14a24cbe5a675b64ffa4e7"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00056",
+      "expected_id": "beth.beth-light-val.fact-00061",
       "subject_id": "beth-light-val.file-007.masters",
       "expected_type": "observation",
       "expected_state": "present",
@@ -657,7 +712,7 @@
       "canonical_value_fingerprint": "2952d2a7e7e30ede35fe2be539cb836f2035b37c1f904c313f4c036bdab50450"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00057",
+      "expected_id": "beth.beth-light-val.fact-00062",
       "subject_id": "beth-light-val.file-007.esl-flag",
       "expected_type": "observation",
       "expected_state": "present",
@@ -668,7 +723,7 @@
       "canonical_value_fingerprint": "42ba0e555af3bd2066896f5f67499525984d9ef0601aaa831cecac3c964d1dd9"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00058",
+      "expected_id": "beth.beth-light-val.fact-00063",
       "subject_id": "beth-light-val.file-007.group-0000",
       "expected_type": "observation",
       "expected_state": "present",
@@ -679,7 +734,7 @@
       "canonical_value_fingerprint": "01ed0141dc790f8ac1b86e3219c5d5093a223f193101104e8d85bc3eba6075ef"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00059",
+      "expected_id": "beth.beth-light-val.fact-00064",
       "subject_id": "beth-light-val.file-007.record-0000",
       "expected_type": "observation",
       "expected_state": "present",
@@ -690,7 +745,7 @@
       "canonical_value_fingerprint": "daaaf32da15ed5f029278bd74c3d130ae303d13c1496ef89342497e14cb1d50a"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00060",
+      "expected_id": "beth.beth-light-val.fact-00065",
       "subject_id": "beth-light-val.file-007.record-0000.sub-0003",
       "expected_type": "observation",
       "expected_state": "present",
@@ -701,7 +756,7 @@
       "canonical_value_fingerprint": "36ed4ae673c24eb2dc44aa3ffef5593f8d1aebc62658da159359e7da9c68f5e6"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00061",
+      "expected_id": "beth.beth-light-val.fact-00066",
       "subject_id": "beth-light-val.file-007.record-0000.sub-0004",
       "expected_type": "observation",
       "expected_state": "present",
@@ -712,7 +767,7 @@
       "canonical_value_fingerprint": "181204de66f605960849f0a1a6579c5a75d1000c4231a863688ab8ff2a23afc2"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00062",
+      "expected_id": "beth.beth-light-val.fact-00067",
       "subject_id": "beth-light-val.file-007.record-0001",
       "expected_type": "observation",
       "expected_state": "present",
@@ -723,7 +778,7 @@
       "canonical_value_fingerprint": "e94f2fd15ba54989aea4e503b63c2ce69af1d6a9880f01e9e2a735c980b29701"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00063",
+      "expected_id": "beth.beth-light-val.fact-00068",
       "subject_id": "beth-light-val.file-007.record-0002",
       "expected_type": "observation",
       "expected_state": "present",
@@ -734,7 +789,7 @@
       "canonical_value_fingerprint": "855243adb5ee44a114b056c1c82ccedacebbc49bf02d8017997f049347885247"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00064",
+      "expected_id": "beth.beth-light-val.fact-00069",
       "subject_id": "beth-light-val.file-008.identity",
       "expected_type": "observation",
       "expected_state": "present",
@@ -745,7 +800,7 @@
       "canonical_value_fingerprint": "ef7e260048713efaf9407661bae1fda2b4fd230262a97f8501dec2ff1ff726f4"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00065",
+      "expected_id": "beth.beth-light-val.fact-00070",
       "subject_id": "beth-light-val.file-008.masters",
       "expected_type": "observation",
       "expected_state": "present",
@@ -756,7 +811,7 @@
       "canonical_value_fingerprint": "fe6186cc2efd7d658d2aa963fdbdb0b38d9506fb2dde47a352d507df12da4145"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00066",
+      "expected_id": "beth.beth-light-val.fact-00071",
       "subject_id": "beth-light-val.file-008.esl-flag",
       "expected_type": "observation",
       "expected_state": "present",
@@ -767,7 +822,7 @@
       "canonical_value_fingerprint": "2d2f711d4be92187ad48fee7ce9af7ad3d8d0e86e8fcbdc72d06364ead420ee9"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00067",
+      "expected_id": "beth.beth-light-val.fact-00072",
       "subject_id": "beth-light-val.file-008.group-0000",
       "expected_type": "observation",
       "expected_state": "present",
@@ -778,7 +833,7 @@
       "canonical_value_fingerprint": "db4a2ae7ee185258464fb68a849b2c7b5ae4de66b0b35bd178fda09104a100b7"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00068",
+      "expected_id": "beth.beth-light-val.fact-00073",
       "subject_id": "beth-light-val.file-008.record-0000",
       "expected_type": "observation",
       "expected_state": "present",
@@ -789,7 +844,7 @@
       "canonical_value_fingerprint": "4343aece8a50ae64c7089d5216755b42e92739c28180bf167f166b71056a6c54"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00069",
+      "expected_id": "beth.beth-light-val.fact-00074",
       "subject_id": "beth-light-val.file-008.record-0000.sub-0003",
       "expected_type": "observation",
       "expected_state": "present",
@@ -800,7 +855,7 @@
       "canonical_value_fingerprint": "8c65e5d33e516d986af1cf617fed61503889674ca8b6e68d6b1aae7a3d1f4ada"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00070",
+      "expected_id": "beth.beth-light-val.fact-00075",
       "subject_id": "beth-light-val.file-008.record-0000.sub-0004",
       "expected_type": "observation",
       "expected_state": "present",
@@ -811,7 +866,7 @@
       "canonical_value_fingerprint": "91b28b0b22eaefa8a95e391d6a1368c643fb7e559164600cc39bd82ceea5d657"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00071",
+      "expected_id": "beth.beth-light-val.fact-00076",
       "subject_id": "beth-light-val.file-008.record-0001",
       "expected_type": "observation",
       "expected_state": "present",
@@ -822,7 +877,7 @@
       "canonical_value_fingerprint": "2707b41a1acb8bad3a11b46eaa2a56fd7b482fc15d92cd4061b58e38e88ffcca"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00072",
+      "expected_id": "beth.beth-light-val.fact-00077",
       "subject_id": "beth-light-val.file-008.record-0002",
       "expected_type": "observation",
       "expected_state": "present",
@@ -833,7 +888,7 @@
       "canonical_value_fingerprint": "7b76c5686e4a09b90edd2067d79f8d4ac6ee842181a8716dbb93c02f1cd31a91"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00073",
+      "expected_id": "beth.beth-light-val.fact-00078",
       "subject_id": "beth-light-val.file-009.identity",
       "expected_type": "observation",
       "expected_state": "present",
@@ -841,10 +896,10 @@
         "manual-annotated-hex-worksheet-v1",
         "independent-bounded-raw-reader-v1"
       ],
-      "canonical_value_fingerprint": "2ce5d386cb18eb4271a3cbd803e6ca556026a27339b7f3fbe33ec5e5a43b237d"
+      "canonical_value_fingerprint": "77eeb509ab8b56021de64f4c65a14e5ac8014b77fa7a6302b9b878df1559eb48"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00074",
+      "expected_id": "beth.beth-light-val.fact-00079",
       "subject_id": "beth-light-val.file-009.masters",
       "expected_type": "observation",
       "expected_state": "present",
@@ -855,7 +910,7 @@
       "canonical_value_fingerprint": "72abe567fe26c4b2c1ec3c5918e8a7e6cbabb3b1691369816e99d68d6c9bfd4e"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00075",
+      "expected_id": "beth.beth-light-val.fact-00080",
       "subject_id": "beth-light-val.file-009.esl-flag",
       "expected_type": "observation",
       "expected_state": "present",
@@ -866,7 +921,7 @@
       "canonical_value_fingerprint": "3e56598ad4bc8c5404149869ca78ae4a1d69996f9f3ffd2471463b08435218d7"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00076",
+      "expected_id": "beth.beth-light-val.fact-00081",
       "subject_id": "beth-light-val.file-009.group-0000",
       "expected_type": "observation",
       "expected_state": "present",
@@ -874,10 +929,54 @@
         "manual-annotated-hex-worksheet-v1",
         "independent-bounded-raw-reader-v1"
       ],
-      "canonical_value_fingerprint": "858b8afa561e10c58df1a8870524b5f243805f272afecb8791c29f0bcada20cb"
+      "canonical_value_fingerprint": "c90145cc76f7b2b2ade1e85709d74352341de1df2223f1e59069f9dabbc1d66e"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00077",
+      "expected_id": "beth.beth-light-val.fact-00082",
+      "subject_id": "beth-light-val.file-009.group-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "12329fc95f5e24ae6a4e3330b80be6520337247a8995397e12caeae120aebdef"
+    },
+    {
+      "expected_id": "beth.beth-light-val.fact-00083",
+      "subject_id": "beth-light-val.file-009.group-0002",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "08f5e6c6125a3bf26c880654eabe00e22e8216eb23d1c4e847696adf914ba7bb"
+    },
+    {
+      "expected_id": "beth.beth-light-val.fact-00084",
+      "subject_id": "beth-light-val.file-009.group-0003",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "515da71110b9dcb337c4f99ad93ed7f378755e14254e83914142a198652b1ac1"
+    },
+    {
+      "expected_id": "beth.beth-light-val.fact-00085",
+      "subject_id": "beth-light-val.file-009.group-0004",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "beddeea46ee91cdaf32bd079be239f27b9167f735c7344ec2a2030629aad6248"
+    },
+    {
+      "expected_id": "beth.beth-light-val.fact-00086",
       "subject_id": "beth-light-val.file-009.record-0000",
       "expected_type": "observation",
       "expected_state": "present",
@@ -888,7 +987,7 @@
       "canonical_value_fingerprint": "e934876f6f5a3c5d7102a249aa77155e3b3af0c4b6112b8f2d7295876d9f6f44"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00078",
+      "expected_id": "beth.beth-light-val.fact-00087",
       "subject_id": "beth-light-val.file-009.record-0000.sub-0003",
       "expected_type": "observation",
       "expected_state": "present",
@@ -899,7 +998,7 @@
       "canonical_value_fingerprint": "010d8405de2412b84dac9b17ad6f74f6b9e2e42cbc25a7fcf3a24828b20c1bb5"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00079",
+      "expected_id": "beth.beth-light-val.fact-00088",
       "subject_id": "beth-light-val.file-009.record-0000.sub-0004",
       "expected_type": "observation",
       "expected_state": "present",
@@ -910,7 +1009,7 @@
       "canonical_value_fingerprint": "f7edd47b3b5389f76e3740c5939689574dff64153a19ce9b0dfbb4857fe5664e"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00080",
+      "expected_id": "beth.beth-light-val.fact-00089",
       "subject_id": "beth-light-val.file-009.record-0000.sub-0005",
       "expected_type": "observation",
       "expected_state": "present",
@@ -921,7 +1020,7 @@
       "canonical_value_fingerprint": "2f5fec93b314be0c36669be5cf3535cefd0d0c3a48d9520be765c6022566a8f6"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00081",
+      "expected_id": "beth.beth-light-val.fact-00090",
       "subject_id": "beth-light-val.file-009.record-0000.sub-0006",
       "expected_type": "observation",
       "expected_state": "present",
@@ -932,7 +1031,7 @@
       "canonical_value_fingerprint": "1e4fcfa8be29469a42876e319229dd0972a9ca492ab4ebecdeb32e62a7f0ead2"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00082",
+      "expected_id": "beth.beth-light-val.fact-00091",
       "subject_id": "beth-light-val.file-009.record-0000.MAST.order",
       "expected_type": "observation",
       "expected_state": "present",
@@ -940,10 +1039,10 @@
         "manual-annotated-hex-worksheet-v1",
         "independent-bounded-raw-reader-v1"
       ],
-      "canonical_value_fingerprint": "be5752a1251e36eb9c0d2758ac7532af898737c79bd6004d02f9bad648816c7d"
+      "canonical_value_fingerprint": "f181fa8c78688751c6c0e9c8f5b2f66d25ef6293347f599165b4753958ba1c84"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00083",
+      "expected_id": "beth.beth-light-val.fact-00092",
       "subject_id": "beth-light-val.file-009.record-0000.DATA.order",
       "expected_type": "observation",
       "expected_state": "present",
@@ -951,10 +1050,10 @@
         "manual-annotated-hex-worksheet-v1",
         "independent-bounded-raw-reader-v1"
       ],
-      "canonical_value_fingerprint": "937f0b6299f3e6c1e6c1c20ead7a17c7a13d5ba458ad096d1a21be2a9f3040cc"
+      "canonical_value_fingerprint": "73253ab4bae61441eb6aca67c5e39124e8263f337a3438e44b52d0c002ae7670"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00084",
+      "expected_id": "beth.beth-light-val.fact-00093",
       "subject_id": "beth-light-val.file-009.record-0001",
       "expected_type": "observation",
       "expected_state": "present",
@@ -962,32 +1061,10 @@
         "manual-annotated-hex-worksheet-v1",
         "independent-bounded-raw-reader-v1"
       ],
-      "canonical_value_fingerprint": "8df4233fb3904243664f45f6fde1635808debaf57ab65e2e091d08253dbbb83c"
+      "canonical_value_fingerprint": "967dafaa6c4c0e49820dbf446b54ed24c47a609d70d875719b1448c62aec3d26"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00085",
-      "subject_id": "beth-light-val.file-009.record-0001.sub-0000",
-      "expected_type": "observation",
-      "expected_state": "present",
-      "ground_truth_method_ids": [
-        "manual-annotated-hex-worksheet-v1",
-        "independent-bounded-raw-reader-v1"
-      ],
-      "canonical_value_fingerprint": "16c459a534d4dd683b856afd7a66096949030659d0764fcbd94424326385c0eb"
-    },
-    {
-      "expected_id": "beth.beth-light-val.fact-00086",
-      "subject_id": "beth-light-val.file-009.record-0001.sub-0001",
-      "expected_type": "observation",
-      "expected_state": "present",
-      "ground_truth_method_ids": [
-        "manual-annotated-hex-worksheet-v1",
-        "independent-bounded-raw-reader-v1"
-      ],
-      "canonical_value_fingerprint": "ad81443a28ffbecc4eae54fd7986a0f918cf2162fd40ee1692f0e8038f2b910d"
-    },
-    {
-      "expected_id": "beth.beth-light-val.fact-00087",
+      "expected_id": "beth.beth-light-val.fact-00094",
       "subject_id": "beth-light-val.file-009.record-0002",
       "expected_type": "observation",
       "expected_state": "present",
@@ -995,10 +1072,10 @@
         "manual-annotated-hex-worksheet-v1",
         "independent-bounded-raw-reader-v1"
       ],
-      "canonical_value_fingerprint": "f261b30d05294880c9bd28ca00b04d9d0ca1146c09baee05f39ba656398dead9"
+      "canonical_value_fingerprint": "2910ce8c0cf48f536dd32806c9c36c54c2139076786fe98b8d6c6b2c59054dc4"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00088",
+      "expected_id": "beth.beth-light-val.fact-00095",
       "subject_id": "beth-light-val.file-009.record-0002.sub-0000",
       "expected_type": "observation",
       "expected_state": "present",
@@ -1006,10 +1083,10 @@
         "manual-annotated-hex-worksheet-v1",
         "independent-bounded-raw-reader-v1"
       ],
-      "canonical_value_fingerprint": "07e18d2239d7ad667676ea8af416a45ff701cc2150e2bcce3f45346d1a474811"
+      "canonical_value_fingerprint": "a05858d66a2f38aa9cfad9592b036b9572e8bcd3f093c48f45f7f9d13da29b3b"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00089",
+      "expected_id": "beth.beth-light-val.fact-00096",
       "subject_id": "beth-light-val.file-009.record-0002.sub-0001",
       "expected_type": "observation",
       "expected_state": "present",
@@ -1017,10 +1094,43 @@
         "manual-annotated-hex-worksheet-v1",
         "independent-bounded-raw-reader-v1"
       ],
-      "canonical_value_fingerprint": "d83d32bf8b2cffa4ecdde22919e542413adeded2325ecbd0e9a38fc5b5fb9b62"
+      "canonical_value_fingerprint": "bdcc55e4aeb986272b239b13735b46d585bda23147a736e59bf92a8937b4463b"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00090",
+      "expected_id": "beth.beth-light-val.fact-00097",
+      "subject_id": "beth-light-val.file-009.record-0003",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "e4a12fde2d28aeb87ff58c674d3243df81e654dc37d858d770b861533485c7d0"
+    },
+    {
+      "expected_id": "beth.beth-light-val.fact-00098",
+      "subject_id": "beth-light-val.file-009.record-0003.sub-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "201d323fe39751ff5617ff6cbdd1df738416bd2d52a4a9e9a19dae7687a819bd"
+    },
+    {
+      "expected_id": "beth.beth-light-val.fact-00099",
+      "subject_id": "beth-light-val.file-009.record-0003.sub-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "ae8efa01958e7e9bf87422cd9255e58241fc324c7599c7f7fd63d71ad9c43f94"
+    },
+    {
+      "expected_id": "beth.beth-light-val.fact-00100",
       "subject_id": "beth-light-val.file-010.identity",
       "expected_type": "observation",
       "expected_state": "present",
@@ -1031,7 +1141,7 @@
       "canonical_value_fingerprint": "60213ca6defba08c1c8bfd5d3a845297d3b9e8669c0a37700d541c90669c881e"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00091",
+      "expected_id": "beth.beth-light-val.fact-00101",
       "subject_id": "beth-light-val.file-010.masters",
       "expected_type": "observation",
       "expected_state": "present",
@@ -1042,7 +1152,7 @@
       "canonical_value_fingerprint": "a0dd5b6153559aedd0854955c8922b12c1fd9cddafe963027756dbf6ad8e1f44"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00092",
+      "expected_id": "beth.beth-light-val.fact-00102",
       "subject_id": "beth-light-val.file-010.esl-flag",
       "expected_type": "observation",
       "expected_state": "present",
@@ -1053,7 +1163,7 @@
       "canonical_value_fingerprint": "6d30c522624ffa907977d18eb92e619c188c3f61c44728403f073dd4f0446483"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00093",
+      "expected_id": "beth.beth-light-val.fact-00103",
       "subject_id": "beth-light-val.file-010.group-0000",
       "expected_type": "observation",
       "expected_state": "present",
@@ -1064,7 +1174,7 @@
       "canonical_value_fingerprint": "967548ae3f1070a145b9b6ddd194d43ba7fe7438f2e1d08b0c552e89b229a81b"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00094",
+      "expected_id": "beth.beth-light-val.fact-00104",
       "subject_id": "beth-light-val.file-010.record-0000",
       "expected_type": "observation",
       "expected_state": "present",
@@ -1075,7 +1185,7 @@
       "canonical_value_fingerprint": "35bbf74d7d4cb75f3ce73e6f8677a367647debb486c5c0ad1c9a538b1ada35f5"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00095",
+      "expected_id": "beth.beth-light-val.fact-00105",
       "subject_id": "beth-light-val.file-010.record-0000.sub-0003",
       "expected_type": "observation",
       "expected_state": "present",
@@ -1086,7 +1196,7 @@
       "canonical_value_fingerprint": "15cb2cc1e258a9f161c15b4c5b70e48b10e6ca5fb618a076d31706fe843d6785"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00096",
+      "expected_id": "beth.beth-light-val.fact-00106",
       "subject_id": "beth-light-val.file-010.record-0000.sub-0004",
       "expected_type": "observation",
       "expected_state": "present",
@@ -1097,7 +1207,7 @@
       "canonical_value_fingerprint": "79d104fbc998831d110381e3a80251c76c61ab1a0830433a65c9cb10fb4e9a1c"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00097",
+      "expected_id": "beth.beth-light-val.fact-00107",
       "subject_id": "beth-light-val.file-010.record-0001",
       "expected_type": "observation",
       "expected_state": "present",
@@ -1108,8 +1218,8 @@
       "canonical_value_fingerprint": "61e66b85d8eb3f8665f26339889bf52118fc87e369633ccf861afcedabda0fde"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00098",
-      "subject_id": "beth-light-val.file-000.record-0001.link-0000.light-reference-out-of-range",
+      "expected_id": "beth.beth-light-val.fact-00108",
+      "subject_id": "beth-light-val.file-000.record-0002.link-0000.light-reference-out-of-range",
       "expected_type": "observation",
       "expected_state": "present",
       "ground_truth_method_ids": [
@@ -1119,8 +1229,8 @@
       "canonical_value_fingerprint": "fff78e1821460455ff059ab3cd87edda4c8033019a16b7d5f29696807fc4f161"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00099",
-      "subject_id": "beth-light-val.file-009.record-0001.link-0000.light-consumer-and-winner",
+      "expected_id": "beth.beth-light-val.fact-00109",
+      "subject_id": "beth-light-val.file-009.record-0002.link-0000.light-consumer-and-winner",
       "expected_type": "observation",
       "expected_state": "present",
       "ground_truth_method_ids": [
@@ -1130,8 +1240,8 @@
       "canonical_value_fingerprint": "e6a74e314fb4f630cb7e9d3f97516eafac5331343fc077fa96a9b881af5fa80e"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00100",
-      "subject_id": "beth-light-val.file-009.record-0002.link-0000.light-consumer-and-winner",
+      "expected_id": "beth.beth-light-val.fact-00110",
+      "subject_id": "beth-light-val.file-009.record-0003.link-0000.light-consumer-and-winner",
       "expected_type": "observation",
       "expected_state": "present",
       "ground_truth_method_ids": [
@@ -1141,7 +1251,7 @@
       "canonical_value_fingerprint": "32c6550fef36075a59c7149e962370aa2c985d5934685a86ef48eff1c78ef4a8"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00101",
+      "expected_id": "beth.beth-light-val.fact-00111",
       "subject_id": "beth-light-val.light-consumer-and-winner.00000800:01-Native.esl.chain",
       "expected_type": "observation",
       "expected_state": "present",
@@ -1149,10 +1259,10 @@
         "manual-annotated-hex-worksheet-v1",
         "independent-bounded-raw-reader-v1"
       ],
-      "canonical_value_fingerprint": "f067d528c568eb1170f3a7f7ae8c2a3e61d37a7b82363c7f782ca5245b3219b1"
+      "canonical_value_fingerprint": "9e5b7472e7f8ffba5aadd1e2c6eb11ee8013e626a7743c65d9b3054633b0b0d7"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00102",
+      "expected_id": "beth.beth-light-val.fact-00112",
       "subject_id": "beth-light-val.light-consumer-and-winner.00000800:01-Native.esl.winner",
       "expected_type": "observation",
       "expected_state": "present",
@@ -1160,7 +1270,7 @@
         "manual-annotated-hex-worksheet-v1",
         "independent-bounded-raw-reader-v1"
       ],
-      "canonical_value_fingerprint": "5b5811da887bfa3189158171ae25d9fdcf175e7070aee6ccdb8ec55a829a1e10"
+      "canonical_value_fingerprint": "d28f38744338c4c80ff4aed68ef9d11e98beb8d9f12869ce844aba96c104ef2f"
     }
   ],
   "expected_deterministic_results": [],
@@ -1179,7 +1289,7 @@
   "expected_failures": [],
   "expected_invalid_inputs": [
     {
-      "expected_id": "beth.beth-light-val.fact-00103",
+      "expected_id": "beth.beth-light-val.fact-00113",
       "subject_id": "beth-light-val.light-native-below-range",
       "expected_type": "invalid-input",
       "expected_state": "failed",
@@ -1190,7 +1300,7 @@
       "canonical_value_fingerprint": "f4bee27645a741f5be0e333ae8c22da3a013cdef9eeee7453c774840c4a141ef"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00104",
+      "expected_id": "beth.beth-light-val.fact-00114",
       "subject_id": "beth-light-val.light-native-above-range",
       "expected_type": "invalid-input",
       "expected_state": "failed",
@@ -1201,7 +1311,7 @@
       "canonical_value_fingerprint": "9c29a0a0ffefbe2bfc59a2d506e4d047764002afa085f8d60fefd2792e664dba"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00105",
+      "expected_id": "beth.beth-light-val.fact-00115",
       "subject_id": "beth-light-val.light-flagged-below-range",
       "expected_type": "invalid-input",
       "expected_state": "failed",
@@ -1212,7 +1322,7 @@
       "canonical_value_fingerprint": "fce25d88ac63f4fee92c25494562577bddc88f4c8f3c07fc8bf3b51ac4d0fce8"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00106",
+      "expected_id": "beth.beth-light-val.fact-00116",
       "subject_id": "beth-light-val.light-flagged-above-range",
       "expected_type": "invalid-input",
       "expected_state": "failed",
@@ -1223,7 +1333,7 @@
       "canonical_value_fingerprint": "5434fae966eac2fb5807dc41a86880c31a0adb05894822c02f6f3a2e719b559d"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00107",
+      "expected_id": "beth.beth-light-val.fact-00117",
       "subject_id": "beth-light-val.light-extension-header-mismatch",
       "expected_type": "invalid-input",
       "expected_state": "failed",
@@ -1234,7 +1344,7 @@
       "canonical_value_fingerprint": "2d53b5d4493cf0508a5b6c56cb82b4bdaaae5d2ab8280b1e22d996fa9c7c2b86"
     },
     {
-      "expected_id": "beth.beth-light-val.fact-00108",
+      "expected_id": "beth.beth-light-val.fact-00118",
       "subject_id": "beth-light-val.light-reference-out-of-range",
       "expected_type": "invalid-input",
       "expected_state": "failed",
@@ -1373,10 +1483,22 @@
       "independent_evidence_reference": {
         "artifact_id": "oracle/manual-hex-worksheet.json",
         "artifact_version": "1",
-        "fingerprint": "0ec82c62b36a93cfd3ac87ced59e11a383a4744343cef2a7b29e20df4da81eec",
+        "fingerprint": "5a49033669345c972976fed57e1bd786d64bbcee9f0790c63a4f503d0a482059",
         "availability": "retained"
       },
       "prior_error_explanation": "Version 1.0.0 attributed the manual method without comparing its decoded semantic answers and classified mutation changes from artifact dependencies instead of logical baseline deltas.",
+      "reviewer": "oracle-reviewer"
+    },
+    {
+      "oracle_version": "1.0.2",
+      "changed_at": "2026-08-01T22:00:00.0000000+00:00",
+      "independent_evidence_reference": {
+        "artifact_id": "oracle/manual-hex-worksheet.json",
+        "artifact_version": "1",
+        "fingerprint": "5a49033669345c972976fed57e1bd786d64bbcee9f0790c63a4f503d0a482059",
+        "availability": "retained"
+      },
+      "prior_error_explanation": "Fixture version 1.0.0 encoded RACE flags at the wrong DATA offset and placed REFR records outside canonical CELL children.",
       "reviewer": "oracle-reviewer"
     }
   ]

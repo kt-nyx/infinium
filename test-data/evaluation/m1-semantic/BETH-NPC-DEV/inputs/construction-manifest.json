@@ -16,15 +16,15 @@
   "files": [
     {
       "path": "case-matrix.json",
-      "sha256": "977fac431b669555a9d9585db334d52b82846b9b1f03e80facd09bfab7b233af",
+      "sha256": "6d319a4cabc4c7a5b49ae32bc6f487fb2ea15e503433f7233b6ae09a6d87c264",
       "regions": [
         {
           "offset": 0,
           "kind": "project-authored-request-or-matrix-metadata",
-          "length": 2915
+          "length": 2964
         }
       ],
-      "byte_length": 2915
+      "byte_length": 2964
     },
     {
       "path": "mutations/Appearance-RepeatedPNAMOrder.esp",
@@ -52,15 +52,15 @@
     },
     {
       "path": "mutations/local-id/01-Actors.esm",
-      "sha256": "d415b31c3c57cb39eae4ba005d4d9be11f7749e35ad018d7801ba83bc2d752f5",
+      "sha256": "8c1b43a017f8086d8ea7771c9f8e6aeb0ae92e6127145d9a2e01be53f3969781",
       "regions": [
         {
           "offset": 0,
           "kind": "project-authored-tes4-bytes",
-          "length": 808
+          "length": 1056
         }
       ],
-      "byte_length": 808
+      "byte_length": 1056
     },
     {
       "path": "mutations/master-order-reindexed/03-Appearance.esp",
@@ -100,15 +100,15 @@
     },
     {
       "path": "mutations/record-order/01-Actors.esm",
-      "sha256": "73402c80b2a8c69b6195a4921e28699752b66b89b068c9187806b28c464194b4",
+      "sha256": "1911fb74f8b8b987540388183cf01d693af8c11140a0dcc0516291e294ea2934",
       "regions": [
         {
           "offset": 0,
           "kind": "project-authored-tes4-bytes",
-          "length": 808
+          "length": 1056
         }
       ],
-      "byte_length": 808
+      "byte_length": 1056
     },
     {
       "path": "mutations/uncompressed/03-Appearance.esp",
@@ -136,15 +136,15 @@
     },
     {
       "path": "plugins/01-Actors.esm",
-      "sha256": "5ef83d9a0b7f94dd43f45724e0ad1c16982767466d56e9de11db9c36db7c86f0",
+      "sha256": "51009a32d022089dbee64de0c690e8bb339557c4b4fc5cb925d92c0edc6bccc0",
       "regions": [
         {
           "offset": 0,
           "kind": "project-authored-tes4-bytes",
-          "length": 808
+          "length": 1056
         }
       ],
-      "byte_length": 808
+      "byte_length": 1056
     },
     {
       "path": "plugins/02-Behavior.esp",
@@ -212,10 +212,10 @@
         {
           "offset": 0,
           "kind": "project-authored-construction-metadata",
-          "length": 6087
+          "length": 6093
         }
       ],
-      "byte_length": 6087
+      "byte_length": 6093
     }
   ]
 }

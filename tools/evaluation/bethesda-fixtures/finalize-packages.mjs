@@ -3,11 +3,12 @@ import { readdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 
-const fixtureVersion = "1.0.0";
-const createdAt = "2026-07-30T18:00:00.0000000+00:00";
+const fixtureVersion = "1.0.1";
+const createdAt = "2026-08-01T22:00:00.0000000+00:00";
+const partitionHistoryInitialAt = "2026-07-30T18:00:00.0000000+00:00";
 const privateReplacementAt = "2026-08-01T18:00:00.0000000+00:00";
 const generatorSha256 =
-  "606021f9bfb45b6724850d4f543b76c09cef8b58c637a3d7791c12bcffae9ab3";
+  "6ffc864936944642742024c96590c8d9fec5e2cd151d982a6cf4172ddaecc4a5";
 const generatorProjectSha256 =
   "f360a93248ae4a6a92176c50f85eba13e630c3f64af23ad970b395cb0028b04e";
 const root = path.resolve(
@@ -248,7 +249,7 @@ for (const fixture of fixtures) {
         kind: "tracked-source",
         identity_or_version: generatorSha256,
         sha256: generatorSha256,
-        byte_length: 63456,
+        byte_length: 69137,
         retention_location_class: "tracked-repository",
         availability: "retained",
         required_for: ["clean-recomputation", "audit"],
@@ -319,7 +320,7 @@ for (const fixture of fixtures) {
       {
         from: null,
         to: "validation",
-        at: createdAt,
+        at: partitionHistoryInitialAt,
         reason:
           fixture.initialRegistrationReason ??
           "Initial registration before the answer-bearing package entered ordinary implementation context.",
@@ -347,8 +348,8 @@ for (const fixture of fixtures) {
         to: fixture.partition,
         at: createdAt,
         reason:
-          "Initial registration of an independently reviewed project-authored development fixture.",
-        change_influenced_implementation: false,
+          "Corrected successor to fixture version 1.0.0 after the Slice 4 Mutagen conformance probe exposed a fixture-structure error.",
+        change_influenced_implementation: true,
       },
     ];
   }

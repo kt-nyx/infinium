@@ -1,6 +1,6 @@
 # M1 Slice 4 — Bethesda semantic extraction and typed indexes
 
-Status: Blocked before production implementation
+Status: Blocked attempt closed; fixture prerequisite corrected for a fresh attempt
 
 Plan: `infinium.plan.m1.backend-semantic-proof/2`
 
@@ -179,3 +179,16 @@ git diff --check
 The independent re-review found no remaining material issue after RQ-004 was
 reopened, RESEARCH-0053 was registered, and the provisional implementation was
 removed. No push occurred.
+
+## Post-closeout fixture disposition
+
+On 2026-08-01 the project owner selected Option A from RESEARCH-0053. The
+fixture-maintenance follow-up superseded public Bethesda fixture version
+`1.0.0` with independently resealed `1.0.1`, corrected analogous public and
+evaluator-private structures, and retained Mutagen `0.54.2` conformance tests.
+ADR-0009 is unchanged.
+
+The original blocked attempt and its no-implementation conclusion remain
+historically accurate. The prerequisite blocker is now cleared for a fresh
+Slice 4 attempt; no production implementation, EVAL-0052 pass, EVAL-0086 pass,
+or later-slice authorization is claimed by the fixture correction itself.

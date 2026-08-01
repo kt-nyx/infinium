@@ -828,8 +828,8 @@
     },
     {
       "path": "mutations/InvalidLinkMasterIndex.esp",
-      "byte_length": 250,
-      "sha256": "6df0405e2be94250826c62b959261a9968612ac8fcc65bfb65ca5ff866b8b781",
+      "byte_length": 412,
+      "sha256": "63f649f2a9a5fa75d7ce2098202942bfcb5f08465753c916a1ec5e61758179f7",
       "spans": [
         {
           "offset_space": "physical-file",
@@ -907,29 +907,83 @@
           "offset_space": "physical-file",
           "offset": 186,
           "length": 24,
-          "classification": "record-header"
+          "classification": "group-header"
         },
         {
           "offset_space": "physical-file",
           "offset": 210,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 234,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 258,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "offset_space": "physical-file",
-          "offset": 216,
+          "offset": 264,
+          "length": 28,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 292,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 298,
+          "length": 2,
+          "classification": "subrecord-data"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 300,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 324,
+          "length": 24,
+          "classification": "group-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 348,
+          "length": 24,
+          "classification": "record-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 372,
+          "length": 6,
+          "classification": "subrecord-header"
+        },
+        {
+          "offset_space": "physical-file",
+          "offset": 378,
           "length": 4,
           "classification": "subrecord-data"
         },
         {
           "offset_space": "physical-file",
-          "offset": 220,
+          "offset": 382,
           "length": 6,
           "classification": "subrecord-header"
         },
         {
           "offset_space": "physical-file",
-          "offset": 226,
+          "offset": 388,
           "length": 24,
           "classification": "subrecord-data"
         }
@@ -949,7 +1003,7 @@
               "header_offset": 24,
               "data_offset": 30,
               "length": 12,
-              "raw_hex": "9A99D93F0100000000080000"
+              "raw_hex": "9A99D93F0200000000080000"
             },
             {
               "signature": "CNAM",
@@ -983,25 +1037,59 @@
           "logical_spans": []
         },
         {
+          "signature": "CELL",
+          "offset": 234,
+          "length": 66,
+          "data_length": 42,
+          "flags_hex": "00000000",
+          "raw_form_id_hex": "01000900",
+          "compressed": false,
+          "subrecords": [
+            {
+              "signature": "EDID",
+              "header_offset": 258,
+              "data_offset": 264,
+              "length": 28,
+              "raw_hex": "496E66696E69756D4669787475726543656C6C303130303039303000"
+            },
+            {
+              "signature": "DATA",
+              "header_offset": 292,
+              "data_offset": 298,
+              "length": 2,
+              "raw_hex": "0100"
+            }
+          ],
+          "logical_spans": [],
+          "identity": {
+            "form_id_hex": "01000900",
+            "resolution_state": "resolved",
+            "form_key": "00000900:InvalidLinkMasterIndex.esp",
+            "origin_plugin": "InvalidLinkMasterIndex.esp",
+            "origin_kind": "full",
+            "local_id_hex": "00000900"
+          }
+        },
+        {
           "signature": "REFR",
-          "offset": 186,
+          "offset": 348,
           "length": 64,
           "data_length": 40,
           "flags_hex": "00000000",
-          "raw_form_id_hex": "00000800",
+          "raw_form_id_hex": "01000800",
           "compressed": false,
           "subrecords": [
             {
               "signature": "NAME",
-              "header_offset": 210,
-              "data_offset": 216,
+              "header_offset": 372,
+              "data_offset": 378,
               "length": 4,
               "raw_hex": "00080003"
             },
             {
               "signature": "DATA",
-              "header_offset": 220,
-              "data_offset": 226,
+              "header_offset": 382,
+              "data_offset": 388,
               "length": 24,
               "raw_hex": "000000000000000000000000000000000000000000000000"
             }
@@ -1024,10 +1112,10 @@
             ]
           },
           "identity": {
-            "form_id_hex": "00000800",
+            "form_id_hex": "01000800",
             "resolution_state": "resolved",
-            "form_key": "00000800:MinimalValid.esp",
-            "origin_plugin": "MinimalValid.esp",
+            "form_key": "00000800:InvalidLinkMasterIndex.esp",
+            "origin_plugin": "InvalidLinkMasterIndex.esp",
             "origin_kind": "full",
             "local_id_hex": "00000800"
           },
@@ -1057,9 +1145,33 @@
       "groups": [
         {
           "offset": 162,
-          "length": 88,
-          "label_hex": "52454652",
+          "length": 250,
+          "label_hex": "43454C4C",
           "group_type": 0
+        },
+        {
+          "offset": 186,
+          "length": 226,
+          "label_hex": "00000000",
+          "group_type": 2
+        },
+        {
+          "offset": 210,
+          "length": 202,
+          "label_hex": "00000000",
+          "group_type": 3
+        },
+        {
+          "offset": 300,
+          "length": 112,
+          "label_hex": "00090001",
+          "group_type": 6
+        },
+        {
+          "offset": 324,
+          "length": 88,
+          "label_hex": "00090001",
+          "group_type": 8
         }
       ],
       "extension_header_mismatch": false
@@ -125308,7 +125420,14 @@
         {
           "locator": "mutations/InvalidLinkMasterIndex.esp#1",
           "plugin_order": 0,
-          "form_key": "00000800:MinimalValid.esp",
+          "form_key": "00000900:InvalidLinkMasterIndex.esp",
+          "deleted": false,
+          "links": []
+        },
+        {
+          "locator": "mutations/InvalidLinkMasterIndex.esp#2",
+          "plugin_order": 0,
+          "form_key": "00000800:InvalidLinkMasterIndex.esp",
           "deleted": false,
           "links": [
             {

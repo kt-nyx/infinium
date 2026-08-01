@@ -2,11 +2,11 @@
   "schema_id": "infinium.evaluation.bethesda-snapshot-input/v1",
   "schema_version": "1",
   "fixture_id": "BETH-LIGHT-VAL",
-  "fixture_version": "1.0.0",
+  "fixture_version": "1.0.1",
   "snapshot_contract_version": "3.0.0",
   "adapter_id": "infinium.mo2-static-reconstruction/v3",
   "selected_profile_name": "BETH-LIGHT-VAL",
-  "construction_manifest_fingerprint": "19ae9c6c38b9cabb8d9821e53f02fd139016a8aa014f652442179e893e099904",
+  "construction_manifest_fingerprint": "f13afa4f89d62fb7bbc41abf564d10aa88b27858150329c9a631dd0fa6ecc024",
   "provider_order": [
     {
       "provider_id": "beth-light-val-provider-00",
@@ -30,7 +30,7 @@
       "provider_id": "beth-light-val-provider-03",
       "priority": 3,
       "source_artifact_id": "inputs/plugins/03-Consumer.esp",
-      "source_sha256": "bd24624a01fe07e701fa858a38d5b20b1ecdf22c2842875826b0f83fd312d47e"
+      "source_sha256": "9c13f801a9f9464568b1b8e9f517cf03d1013960e9a5130c9dd02ec18d0b080c"
     },
     {
       "provider_id": "beth-light-val-provider-04",
@@ -65,7 +65,7 @@
       "load_order": 3,
       "file_name": "03-Consumer.esp",
       "artifact_id": "inputs/plugins/03-Consumer.esp",
-      "sha256": "bd24624a01fe07e701fa858a38d5b20b1ecdf22c2842875826b0f83fd312d47e",
+      "sha256": "9c13f801a9f9464568b1b8e9f517cf03d1013960e9a5130c9dd02ec18d0b080c",
       "provider_id": "beth-light-val-provider-03"
     },
     {
@@ -79,7 +79,7 @@
   "isolated_capture_variants": [
     {
       "artifact_id": "inputs/mutations/Consumer-LightReferenceOutOfRange.esp",
-      "sha256": "866d41c756b546a95d8195bf28e67be944e61e5b2d07ac4c1077d09f63f02f70"
+      "sha256": "938de42aa562dcf02b7678a71dd22ed13451c36a389a7e75dccf7ef1bc33a913"
     },
     {
       "artifact_id": "inputs/mutations/FlaggedEsp-AboveLightMaximum.esp",
@@ -103,7 +103,7 @@
     }
   ],
   "capture_binding_algorithm": "infinium.fixture-snapshot-capture-binding/v1",
-  "expected_capture_binding_fingerprint": "6e6198c0465b6a376624e05661d0f6dbff03570cf7949c67c7a2e60af1fc3aa5",
+  "expected_capture_binding_fingerprint": "2c8a848950949c145d9177db6b934658ef55c087f187adb538a889aa61e398c1",
   "capture_policy": {
     "manager_launch": "forbidden",
     "usvfs_launch": "forbidden",

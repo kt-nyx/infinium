@@ -2,11 +2,11 @@
   "schema_id": "infinium.evaluation.bethesda-snapshot-input/v1",
   "schema_version": "1",
   "fixture_id": "BETH-NPC-DEV",
-  "fixture_version": "1.0.0",
+  "fixture_version": "1.0.1",
   "snapshot_contract_version": "3.0.0",
   "adapter_id": "infinium.mo2-static-reconstruction/v3",
   "selected_profile_name": "BETH-NPC-DEV",
-  "construction_manifest_fingerprint": "ebe1b80fec4726bae4b9a2c35eb5b4a85d0e62d8df2668506fe94e91fdc149ec",
+  "construction_manifest_fingerprint": "2c7958991a719b0724f02febed359eeada6493af5dab6fe304e139f67f7a97d8",
   "provider_order": [
     {
       "provider_id": "beth-npc-dev-provider-00",
@@ -18,7 +18,7 @@
       "provider_id": "beth-npc-dev-provider-01",
       "priority": 1,
       "source_artifact_id": "inputs/plugins/01-Actors.esm",
-      "source_sha256": "5ef83d9a0b7f94dd43f45724e0ad1c16982767466d56e9de11db9c36db7c86f0"
+      "source_sha256": "51009a32d022089dbee64de0c690e8bb339557c4b4fc5cb925d92c0edc6bccc0"
     },
     {
       "provider_id": "beth-npc-dev-provider-02",
@@ -63,7 +63,7 @@
       "load_order": 1,
       "file_name": "01-Actors.esm",
       "artifact_id": "inputs/plugins/01-Actors.esm",
-      "sha256": "5ef83d9a0b7f94dd43f45724e0ad1c16982767466d56e9de11db9c36db7c86f0",
+      "sha256": "51009a32d022089dbee64de0c690e8bb339557c4b4fc5cb925d92c0edc6bccc0",
       "provider_id": "beth-npc-dev-provider-01"
     },
     {
@@ -113,7 +113,7 @@
     },
     {
       "artifact_id": "inputs/mutations/local-id/01-Actors.esm",
-      "sha256": "d415b31c3c57cb39eae4ba005d4d9be11f7749e35ad018d7801ba83bc2d752f5"
+      "sha256": "8c1b43a017f8086d8ea7771c9f8e6aeb0ae92e6127145d9a2e01be53f3969781"
     },
     {
       "artifact_id": "inputs/mutations/master-order-reindexed/03-Appearance.esp",
@@ -129,7 +129,7 @@
     },
     {
       "artifact_id": "inputs/mutations/record-order/01-Actors.esm",
-      "sha256": "73402c80b2a8c69b6195a4921e28699752b66b89b068c9187806b28c464194b4"
+      "sha256": "1911fb74f8b8b987540388183cf01d693af8c11140a0dcc0516291e294ea2934"
     },
     {
       "artifact_id": "inputs/mutations/uncompressed/03-Appearance.esp",
@@ -137,7 +137,7 @@
     }
   ],
   "capture_binding_algorithm": "infinium.fixture-snapshot-capture-binding/v1",
-  "expected_capture_binding_fingerprint": "747db16460b50a2ddb170cf0ad5aad605ea2b4da15de8facd0ee47b263e77c06",
+  "expected_capture_binding_fingerprint": "822bea471b2672daae46bcffe15982d426811458f4656cdb9d38ee80d0ec6c84",
   "capture_policy": {
     "manager_launch": "forbidden",
     "usvfs_launch": "forbidden",

@@ -1,13 +1,13 @@
 {
   "fixture_id": "BETH-NPC-DEV",
-  "fixture_version": "1.0.0",
+  "fixture_version": "1.0.1",
   "partition_history": [
     {
       "from": null,
       "to": "development",
-      "at": "2026-07-30T18:00:00.0000000+00:00",
-      "reason": "Initial registration of an independently reviewed project-authored development fixture.",
-      "change_influenced_implementation": false
+      "at": "2026-08-01T22:00:00.0000000+00:00",
+      "reason": "Corrected successor to fixture version 1.0.0 after the Slice 4 Mutagen conformance probe exposed a fixture-structure error.",
+      "change_influenced_implementation": true
     }
   ]
 }

@@ -2,7 +2,7 @@
   "schema_id": "infinium.evaluation.fixture-public-manifest/v1",
   "schema_version": "1",
   "fixture_id": "BETH-REFR-DEV",
-  "fixture_version": "1.0.0",
+  "fixture_version": "1.0.1",
   "evaluation_ids": [
     "EVAL-0052",
     "EVAL-0086"
@@ -14,19 +14,19 @@
     {
       "from": null,
       "to": "development",
-      "at": "2026-07-30T18:00:00.0000000+00:00",
-      "reason": "Initial registration of an independently reviewed project-authored development fixture.",
-      "change_influenced_implementation": false
+      "at": "2026-08-01T22:00:00.0000000+00:00",
+      "reason": "Corrected successor to fixture version 1.0.0 after the Slice 4 Mutagen conformance probe exposed a fixture-structure error.",
+      "change_influenced_implementation": true
     }
   ],
   "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
   "taxonomy_version": "0.1.0",
-  "input_package_fingerprint": "6a46834cf0bd23122c8db0a32625f5dd5448d4df38bbe6ae9bd5ccdcf0b85d5e",
-  "oracle_fingerprint": "e7266d7294dfa9a28dbc440c5ce24cd2ba48b7a97ba5dff0bd3cf55a4db5d578",
-  "provenance_fingerprint": "f98a432a34bbcecae2ed07e420dca2a342a620e3ba3dfded77b08455ab31e629",
-  "replay_dependency_fingerprint": "c094ce7f8e9f18f5cb698c70686c1e89e347369c1cf39c79d5253b70a276fb07",
+  "input_package_fingerprint": "ed6c4e7f4477219da1aa9ee49036c5d29ac57c942938d61daad40ab24c7bfdc1",
+  "oracle_fingerprint": "2be4e699f32a90387c030ffb160ab5bb855826101e3c54f02d05917cbb7228e4",
+  "provenance_fingerprint": "eec33ca385774c16330ad56649cfca850306e9b6c37740448b2b44096503cfc6",
+  "replay_dependency_fingerprint": "c09b76443f2de5a1e2bc2c0cc972724a0bfbf8202a845d0aa2863631e8e82b0a",
   "redistribution_class": "project-authored-redistributable",
   "owner": "infinium-evaluation",
   "review_state": "accepted",
-  "created_at": "2026-07-30T18:00:00.0000000+00:00"
+  "created_at": "2026-08-01T22:00:00.0000000+00:00"
 }

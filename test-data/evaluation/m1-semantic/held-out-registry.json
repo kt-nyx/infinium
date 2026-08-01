@@ -17,12 +17,28 @@
       "predecessor_answers_inspected": false,
       "production_material_inspected": false,
       "contamination_state": "clean"
+    },
+    {
+      "fixture_id": "BETH-HO-002",
+      "fixture_version": "1.0.0",
+      "invalidated_state": "sealed-structurally-invalid",
+      "reason": "Structural correction replaced a noncanonical binary shape while preserving preregistered semantic truth.",
+      "successor_fixture_id": "BETH-HO-002",
+      "successor_fixture_version": "1.1.0",
+      "authority_id": "project-owner/user-directed-slice4-fixture-conformance-correction-20260801",
+      "public_v1_registry": {
+        "byte_length": 2287,
+        "sha256": "178ed7a029f753f970f82a6867464735c83ce615af0f4fd24c0fd1c018837b37"
+      },
+      "predecessor_answers_inspected": true,
+      "production_material_inspected": false,
+      "contamination_state": "clean"
     }
   ],
   "fixtures": [
     {
       "fixture_id": "BETH-HO-002",
-      "fixture_version": "1.0.0",
+      "fixture_version": "1.1.0",
       "partition": "held-out",
       "evaluation_ids": [
         "EVAL-0052"
@@ -32,61 +48,61 @@
       "redistribution_class": "project-authored-redistributable",
       "owner": "evaluator-private-custodian",
       "review_state": "sealed",
-      "reviewed_at": "2026-08-01T15:45:00-04:00",
+      "reviewed_at": "2026-08-01T23:15:00.0000000+00:00",
       "complete_package_retention": "separate-private-git",
       "private_store": {
         "store_id": "infinium-evaluator-fixtures",
         "relationship": "separate-git-history",
-        "revision": "d929f7c91e0f36cc2e57240bda63c6371c7528ee",
+        "revision": "1530a55c6b30db45356fd54700c2d4ebb497c1c6",
         "governance_version": "2026-08-01"
       },
       "disclosure_class": "sanitized-result",
       "contamination_state": "clean",
       "governance_id": "adr-0026/evaluator-private-fixture-governance/2026-08-01",
-      "declared_manifest_input_package_fingerprint": "ac85caeecba3a91d01f062510f62b5dded65b78e732e8c9b21e97ae0a5f21f25",
-      "execution_input_document_sha256": "59bec14a7f84bf8d02bc324ba54a895ef9d33ebdb35fea80f2a8d7bf1091f4fc",
-      "retained_input_set_fingerprint": "3f9c360c8e473929a1bf42403cec1fe537de4b8f5121e4116359c09f71e41146",
-      "oracle_fingerprint": "b14fefe688d942b7e888c4e8b26df74311731560743492c11b0030f7c70eb33a",
-      "supplemental_oracle_fingerprint": "fbd307dfd4a331ed5614c5c8855b78138bc70731551547a81a98feb925b6ffdd",
-      "package_fingerprint": "b1974b093d2622285a1ce3c5de024adfd0016c80e63fe5a1a96bd31cd94697bb",
+      "declared_manifest_input_package_fingerprint": "fad323bb3932529c92f32d207de824c002aa008bb53241ac2d8e29d6c758af6e",
+      "execution_input_document_sha256": "70d1f851973f727c92ec948d9c5207caca13736e7173098966c29ad56f7ddef6",
+      "retained_input_set_fingerprint": "0207108c3c3a213a71245374df9e43477dc73d45cc3ff129bed9f8b1f3c2161e",
+      "oracle_fingerprint": "382d8ab02c1e88adfadea75ae83b8ca1c15ebb710972bbb8c8c282170bc0bc15",
+      "supplemental_oracle_fingerprint": "dacb8a647b67ec9b84262029e758e9426a5a66accc452af112d71968dc3dcbc4",
+      "package_fingerprint": "87630b91225fa4bf1817845878290d6800237231c5413ebc3f9f3753a81d48fc",
       "package_fingerprint_scope": "sealed-documents-inputs-evidence-tools-access-contract-aggregate-v1",
       "documents": {
         "public_manifest": {
-          "byte_length": 1166,
-          "sha256": "acd3e7d74b83817252e960c272134e20ad34b01b87e0b148c11153eb90d6053f"
+          "byte_length": 1220,
+          "sha256": "e3895c1f257638f366f467a4dbd4116b86b66e6be75e09fe8e6367d90465134a"
         },
         "execution_input": {
           "byte_length": 5174,
-          "sha256": "59bec14a7f84bf8d02bc324ba54a895ef9d33ebdb35fea80f2a8d7bf1091f4fc"
+          "sha256": "70d1f851973f727c92ec948d9c5207caca13736e7173098966c29ad56f7ddef6"
         },
         "expected_oracle": {
-          "byte_length": 106130,
-          "sha256": "b14fefe688d942b7e888c4e8b26df74311731560743492c11b0030f7c70eb33a"
+          "byte_length": 113702,
+          "sha256": "382d8ab02c1e88adfadea75ae83b8ca1c15ebb710972bbb8c8c282170bc0bc15"
         },
         "provenance": {
-          "byte_length": 121,
-          "sha256": "fcf7901e903f099e9e028a57694e29a7338e57bb13b337abaff7eae184a3ba35"
+          "byte_length": 117,
+          "sha256": "c8bfd3f8caf9ce94324351c7488ce91b499b515b799c5e6a2c57335679d2d0a1"
         },
         "replay_dependencies": {
           "byte_length": 1553,
-          "sha256": "9f251c903842e478d57a67a990e6999bf9e2fe06eddfa60228537a3bbe5b9fde"
+          "sha256": "19dae1a8e6594703e3550848b9b87bd1c77e356439a42b896663a469c08a0468"
         },
         "redistribution": {
           "byte_length": 113,
-          "sha256": "afc0f320f8bb9e6b1946e35c68c3b729e84973fa3568688c88aa002a43f70a7d"
+          "sha256": "d010bc97d9cf9ec97dabfa1b38446b057a2ab28da9c20b0541572c2a1cd12064"
         },
         "partition_history": {
-          "byte_length": 269,
-          "sha256": "806a77dd23a22d2c2ecd1822b62780702df8d07c74f7bb5f7f9d07dd191f5724"
+          "byte_length": 323,
+          "sha256": "052b90c5f0fcc362c580ad2c642371568a0dff6a62b1b88bd08770b7b829b5c6"
         }
       },
       "independence_evidence": {
         "artifact_id": "BETH-HO-002.oracle-independence-attestation",
-        "artifact_version": "1",
-        "fingerprint": "72552464b3ed005331f67b35f75d0f9b3e0ff0c174f8bde2312aa4841cac2ed7",
+        "artifact_version": "1.1.0",
+        "fingerprint": "e66db761496e04bf07b355604ad4649ca95eb11213b87da0e3e5c05c1a6f63fd",
         "availability": "evaluator-private"
       },
-      "supersession_authority_id": "project-owner/user-directed-adr-0026-private-store-migration",
+      "supersession_authority_id": "project-owner/user-directed-slice4-fixture-conformance-correction-20260801",
       "custodian_attestation": {
         "construction_runs_byte_identical": true,
         "manual_and_independent_reader_agreed": true,
@@ -97,7 +113,7 @@
         "deterministic_reconstruction_verified": true,
         "evidence_replay_verified": true,
         "manifest_fingerprints_match_disclosed_documents": true,
-        "predecessor_package_accessed": false,
+        "predecessor_package_accessed": true,
         "production_parser_or_output_accessed": false,
         "third_party_payload_consumed": false,
         "protected_root_accessed": false,

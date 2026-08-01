@@ -1,14 +1,14 @@
 {
   "fixture_id": "BETH-NPC-DEV",
-  "fixture_version": "1.0.0",
+  "fixture_version": "1.0.1",
   "expected_replay_state": "complete-clean",
   "dependencies": [
     {
       "dependency_id": "bethesda-fixture-generator-v1",
       "kind": "tracked-source",
-      "identity_or_version": "606021f9bfb45b6724850d4f543b76c09cef8b58c637a3d7791c12bcffae9ab3",
-      "sha256": "606021f9bfb45b6724850d4f543b76c09cef8b58c637a3d7791c12bcffae9ab3",
-      "byte_length": 63456,
+      "identity_or_version": "6ffc864936944642742024c96590c8d9fec5e2cd151d982a6cf4172ddaecc4a5",
+      "sha256": "6ffc864936944642742024c96590c8d9fec5e2cd151d982a6cf4172ddaecc4a5",
+      "byte_length": 69137,
       "retention_location_class": "tracked-repository",
       "availability": "retained",
       "required_for": [

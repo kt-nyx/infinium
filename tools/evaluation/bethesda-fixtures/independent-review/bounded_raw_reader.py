@@ -430,9 +430,9 @@ def analyze_payload(record: dict[str, Any]) -> dict[str, Any] | None:
         values = subrecord_values(record, "DATA")
         if values:
             fields["DATA"] = [hx(value) for value in values]
-            if len(values[0]) < 4:
+            if len(values[0]) != 0x80:
                 raise Malformed("invalid-race-data-length", record["offset"], str(len(values[0])))
-            fields["face_gen_head"] = (u32(values[0], 0) & 0x2) != 0
+            fields["face_gen_head"] = (u32(values[0], 0x20) & 0x2) != 0
     else:
         return None
     return fields

@@ -194,7 +194,7 @@ public sealed class BethesdaFixturePackageQualificationTests
                 FixturePackageReader.ReadForEvaluationHarness(directory);
 
             Assert.AreEqual(fixtureId, package.FixtureId.Value);
-            Assert.AreEqual("1.0.0", package.FixtureVersion.ToString());
+            Assert.AreEqual("1.0.1", package.FixtureVersion.ToString());
             Assert.AreEqual(partition, package.Partition);
             Assert.AreEqual(
                 "accepted",
@@ -233,9 +233,12 @@ public sealed class BethesdaFixturePackageQualificationTests
             root.GetProperty("schema_id").GetString());
         Assert.AreEqual("2", root.GetProperty("schema_version").GetString());
 
-        JsonElement supersession = root.GetProperty("supersessions")
+        JsonElement[] supersessions = root.GetProperty("supersessions")
             .EnumerateArray()
-            .Single();
+            .ToArray();
+        Assert.AreEqual(2, supersessions.Length);
+        JsonElement supersession = supersessions.Single(item =>
+            item.GetProperty("fixture_id").GetString() == "BETH-HO-001");
         CollectionAssert.AreEquivalent(
             HeldOutSupersessionProperties,
             supersession.EnumerateObject().Select(property => property.Name).ToArray());
@@ -250,6 +253,29 @@ public sealed class BethesdaFixturePackageQualificationTests
         Assert.IsFalse(supersession.GetProperty("predecessor_answers_inspected").GetBoolean());
         Assert.IsFalse(supersession.GetProperty("production_material_inspected").GetBoolean());
         Assert.AreEqual("clean", supersession.GetProperty("contamination_state").GetString());
+
+        JsonElement structureCorrection = supersessions.Single(item =>
+            item.GetProperty("fixture_id").GetString() == "BETH-HO-002");
+        CollectionAssert.AreEquivalent(
+            HeldOutSupersessionProperties,
+            structureCorrection.EnumerateObject().Select(property => property.Name).ToArray());
+        Assert.AreEqual("1.0.0", structureCorrection.GetProperty("fixture_version").GetString());
+        Assert.AreEqual(
+            "sealed-structurally-invalid",
+            structureCorrection.GetProperty("invalidated_state").GetString());
+        Assert.AreEqual(
+            "BETH-HO-002",
+            structureCorrection.GetProperty("successor_fixture_id").GetString());
+        Assert.AreEqual(
+            "1.1.0",
+            structureCorrection.GetProperty("successor_fixture_version").GetString());
+        Assert.IsTrue(
+            structureCorrection.GetProperty("predecessor_answers_inspected").GetBoolean());
+        Assert.IsFalse(
+            structureCorrection.GetProperty("production_material_inspected").GetBoolean());
+        Assert.AreEqual(
+            "clean",
+            structureCorrection.GetProperty("contamination_state").GetString());
 
         string v1RegistryPath = Path.Combine(semanticRoot, "held-out-registry-v1.json");
         byte[] v1RegistryBytes = File.ReadAllBytes(v1RegistryPath);
@@ -275,6 +301,7 @@ public sealed class BethesdaFixturePackageQualificationTests
             HeldOutFixtureProperties,
             fixture.EnumerateObject().Select(property => property.Name).ToArray());
         Assert.AreEqual("BETH-HO-002", fixture.GetProperty("fixture_id").GetString());
+        Assert.AreEqual("1.1.0", fixture.GetProperty("fixture_version").GetString());
         Assert.AreEqual("held-out", fixture.GetProperty("partition").GetString());
         Assert.AreEqual("sealed", fixture.GetProperty("review_state").GetString());
         Assert.AreEqual(
@@ -342,7 +369,8 @@ public sealed class BethesdaFixturePackageQualificationTests
                 or "answer_bearing_execution_mutations_rejected"
                 or "deterministic_reconstruction_verified"
                 or "evidence_replay_verified"
-                or "manifest_fingerprints_match_disclosed_documents";
+                or "manifest_fingerprints_match_disclosed_documents"
+                or "predecessor_package_accessed";
             Assert.AreEqual(expected, property.Value.GetBoolean(), property.Name);
         }
 
@@ -541,6 +569,8 @@ public sealed class BethesdaFixturePackageQualificationTests
                 attestation.EnumerateObject().Select(property => property.Name).ToArray());
             foreach (JsonProperty property in attestation.EnumerateObject())
             {
+                bool correctedFixture = fixtureId is
+                    "BETH-MALFORMED-VAL-002" or "BETH-UNSUPPORTED-VAL-002";
                 bool expected = property.Name is
                     "two_independent_raw_byte_methods_agreed"
                     or "two_clean_constructions_byte_identical"
@@ -549,7 +579,11 @@ public sealed class BethesdaFixturePackageQualificationTests
                     or "cross_document_fingerprints_valid"
                     or "execution_input_isolation_passed"
                     or "deterministic_reconstruction_verified"
-                    or "evidence_replay_verified";
+                    or "evidence_replay_verified"
+                    || correctedFixture && property.Name is
+                        "predecessor_package_accessed"
+                        or "prior_reviewer_output_accessed"
+                        or "mutagen_or_xedit_used";
                 Assert.AreEqual(expected, property.Value.GetBoolean(), property.Name);
             }
 

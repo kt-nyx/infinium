@@ -1,13 +1,13 @@
 {
   "fixture_id": "BETH-UNSUPPORTED-VAL",
-  "fixture_version": "1.0.0",
+  "fixture_version": "1.0.1",
   "installation_snapshot_input": {
     "state": "provided",
     "reason": "Retained Slice 3 accepted-order receipt binds the disposable synthetic snapshot input.",
     "artifact": {
       "artifact_id": "inputs/snapshot/accepted-order.json",
-      "artifact_version": "1.0.0",
-      "fingerprint": "232981443d6c5258a79018b4c34680cf4d0f67283523b4e748eac4ea4ef160ab",
+      "artifact_version": "1.0.1",
+      "fingerprint": "ab404ca984fc2f7f9bd4f0cfc9c73e62f013756f0e35d8fd350a9fb6e9a853b3",
       "availability": "retained"
     }
   },
@@ -17,7 +17,7 @@
   },
   "effective_scan_configuration": {
     "artifact_id": "inputs/case-matrix.json",
-    "artifact_version": "1.0.0",
+    "artifact_version": "1.0.1",
     "fingerprint": "219f8da641cfd21a376dbd944e132878b3944653d8c81a5a8d9a65c63d4afa35",
     "availability": "retained"
   },
@@ -30,8 +30,8 @@
     "reason": "Retained synthetic profile receipt records the selected profile and accepted adapter identity.",
     "artifact": {
       "artifact_id": "inputs/snapshot/accepted-order.json",
-      "artifact_version": "1.0.0",
-      "fingerprint": "232981443d6c5258a79018b4c34680cf4d0f67283523b4e748eac4ea4ef160ab",
+      "artifact_version": "1.0.1",
+      "fingerprint": "ab404ca984fc2f7f9bd4f0cfc9c73e62f013756f0e35d8fd350a9fb6e9a853b3",
       "availability": "retained"
     }
   },
@@ -40,8 +40,8 @@
     "reason": "Retained synthetic profile receipt records exact plugin order and fingerprints.",
     "artifact": {
       "artifact_id": "inputs/snapshot/accepted-order.json",
-      "artifact_version": "1.0.0",
-      "fingerprint": "232981443d6c5258a79018b4c34680cf4d0f67283523b4e748eac4ea4ef160ab",
+      "artifact_version": "1.0.1",
+      "fingerprint": "ab404ca984fc2f7f9bd4f0cfc9c73e62f013756f0e35d8fd350a9fb6e9a853b3",
       "availability": "retained"
     }
   },
@@ -50,8 +50,8 @@
     "reason": "Retained synthetic profile receipt records exact provider order and fingerprints.",
     "artifact": {
       "artifact_id": "inputs/snapshot/accepted-order.json",
-      "artifact_version": "1.0.0",
-      "fingerprint": "232981443d6c5258a79018b4c34680cf4d0f67283523b4e748eac4ea4ef160ab",
+      "artifact_version": "1.0.1",
+      "fingerprint": "ab404ca984fc2f7f9bd4f0cfc9c73e62f013756f0e35d8fd350a9fb6e9a853b3",
       "availability": "retained"
     }
   },
@@ -61,7 +61,7 @@
     {
       "component_id": "Infinium.BethesdaFixtures.Generator",
       "version": "1",
-      "fingerprint": "606021f9bfb45b6724850d4f543b76c09cef8b58c637a3d7791c12bcffae9ab3"
+      "fingerprint": "6ffc864936944642742024c96590c8d9fec5e2cd151d982a6cf4172ddaecc4a5"
     }
   ],
   "declared_archive_state": {
@@ -91,62 +91,62 @@
   "input_payload_refs": [
     {
       "artifact_id": "inputs/case-matrix.json",
-      "artifact_version": "1.0.0",
+      "artifact_version": "1.0.1",
       "fingerprint": "219f8da641cfd21a376dbd944e132878b3944653d8c81a5a8d9a65c63d4afa35",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/construction-manifest.json",
-      "artifact_version": "1.0.0",
+      "artifact_version": "1.0.1",
       "fingerprint": "d44bec01403d1bc12e22990fba7087d521e45e7ef09f57cd589ac7a63d16f93e",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/plugins/LocalizedDependency.esp",
-      "artifact_version": "1.0.0",
+      "artifact_version": "1.0.1",
       "fingerprint": "43115de64ffaa9853f8823525877ac7c0eaa93e28f7d02c22a20521b0c9eb605",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/plugins/LocalizedDependency_English.strings",
-      "artifact_version": "1.0.0",
+      "artifact_version": "1.0.1",
       "fingerprint": "5119dacdfa9be32a443106dd645e743cac50237f1808575e9b0e3aff9c4e97d4",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/plugins/UnsupportedFamily.esp",
-      "artifact_version": "1.0.0",
+      "artifact_version": "1.0.1",
       "fingerprint": "28a3f77b1c46ef8088d57987f3e43fa7e39a778fc8718f3b5d2bf567c96965ba",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/plugins/UnsupportedNpcField.esp",
-      "artifact_version": "1.0.0",
+      "artifact_version": "1.0.1",
       "fingerprint": "498515791b9196341c286ca4b65c6565ab9d7b07c59e8eb42365a1a85fce44d2",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/requests/archive-member.json",
-      "artifact_version": "1.0.0",
+      "artifact_version": "1.0.1",
       "fingerprint": "7070a1672b8e748d518f2892fe03694fa8ec7fb5094a820e3d0a6d5edb45f983",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/requests/automatic-environment-discovery.json",
-      "artifact_version": "1.0.0",
+      "artifact_version": "1.0.1",
       "fingerprint": "3b8cb4a505882eef0663bf737c7d2c3aed610777c9d6323834d56f4203ff156e",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/requests/localized-string-resolution.json",
-      "artifact_version": "1.0.0",
+      "artifact_version": "1.0.1",
       "fingerprint": "64f05e8be637ee6782062b77ddd0b6d1bc5ceefbe98ca2c80a355135113202f5",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/snapshot/accepted-order.json",
-      "artifact_version": "1.0.0",
-      "fingerprint": "232981443d6c5258a79018b4c34680cf4d0f67283523b4e748eac4ea4ef160ab",
+      "artifact_version": "1.0.1",
+      "fingerprint": "ab404ca984fc2f7f9bd4f0cfc9c73e62f013756f0e35d8fd350a9fb6e9a853b3",
       "availability": "retained"
     }
   ]

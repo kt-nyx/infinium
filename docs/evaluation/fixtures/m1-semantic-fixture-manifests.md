@@ -623,6 +623,27 @@ typical-environment discovery request. Its public answers make it development
 coverage; `BETH-UNSUPPORTED-VAL-002` supplies independent private validation
 with independently constructed representatives and controls.
 
+### 8.1.1 Bethesda fixture `1.0.1` correction record
+
+The owner-selected RESEARCH-0053 Option A disposition supersedes public
+Bethesda fixture version `1.0.0` with `1.0.1`. The prior version remains
+recoverable from Git history and must not support a Slice 4 acceptance claim.
+
+| Fixture | `1.0.0` error or reseal reason | `1.0.1` disposition |
+|---|---|---|
+| `BETH-NPC-DEV` | `RACE/DATA` placed flags at byte zero in a four-byte pseudo-shape | Uses the full 128-byte Skyrim shape and flags offset `0x20` |
+| `BETH-REFR-DEV` | Format-valid `REFR` records were emitted in a top-level record-type group | Uses canonical interior CELL block/sub-block/child/persistent topology; malformed members retain only their declared defect |
+| `BETH-LIGHT-VAL` | Its consumer `REFR` controls had the same containment defect | Uses canonical CELL containment and remains public development evidence |
+| `BETH-MALFORMED-VAL` | The invalid-link member also had noncanonical containment and an unintended record-origin defect | Isolates the invalid link as the semantic defect |
+| `BETH-UNSUPPORTED-VAL` | No input-byte defect; suite-wide generator/oracle replay bindings changed | Resealed with the corrected suite and oracle-tool versions |
+
+Both independent byte techniques were rerun after the new input freeze. The
+public expected oracle is version `1.0.2`; taxonomy projections were rebound
+to the new oracle fingerprints without changing their accepted assignments.
+The separate evaluator-private repository retains immutable successor versions
+and correction/access records; this public repository retains only sanitized
+registry bindings permitted by ADR-0026.
+
 The current M1 Bethesda matrix does not contain `QUST`, quest-alias,
 forced-reference/`ALFR`, or other quest-logic shapes. Those shapes belong to a
 future reviewed EVAL-0006/EVAL-0007 package if that planned pair is promoted

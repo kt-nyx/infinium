@@ -98,7 +98,7 @@
     }
   ],
   "notes": {
-    "project_authored_race_data_format": "32-bit little-endian flags",
+    "project_authored_race_data_format": "128-byte Skyrim RACE DATA with 32-bit little-endian flags at byte offset 32",
     "project_authored_face_gen_head_construction_bit": "0x00000002",
     "construction_note": "Positive and negative applicability inputs are authored here; interpretation is independently reviewed.",
     "omitted_subrecords": [
