@@ -6,7 +6,7 @@
   "snapshot_contract_version": "3.0.0",
   "adapter_id": "infinium.mo2-static-reconstruction/v3",
   "selected_profile_name": "BETH-LIGHT-VAL",
-  "construction_manifest_fingerprint": "87fe85c62449405115fd64a001613397d51b5c94f05685c5158a52a0105ec462",
+  "construction_manifest_fingerprint": "19ae9c6c38b9cabb8d9821e53f02fd139016a8aa014f652442179e893e099904",
   "provider_order": [
     {
       "provider_id": "beth-light-val-provider-00",

@@ -1,17 +1,19 @@
 # Plans
 
 Status: Draft  
-Last reviewed: 2026-07-30
+Last reviewed: 2026-08-01
 
 The [M0 research-foundation plan](milestones/M0-research-foundation.md) was
 accepted on 2026-07-25 and completed on 2026-07-28. The accepted
 [M1 backend semantic proof plan](milestones/M1-backend-semantic-proof.md) is
-the active implementation plan. Completed-slice evidence is indexed under
+the active implementation plan together with its accepted
+[revision 2 amendment](milestones/M1-backend-semantic-proof-adr0026-amendment.md).
+Completed-slice evidence is indexed under
 [`implementation-records/`](implementation-records/README.md).
 
-Slices 0 through 3 are complete. The next authorized step is Slice 3.5,
-independent Bethesda fixture and oracle qualification, before Slice 4
-production semantics and typed-index implementation. Its accepted
+Slices 0 through 3.5 are complete. Slice 3.5 independently qualified Bethesda
+fixtures/oracles under ADR-0026's private-store amendment. Slice 4 production
+semantics and typed-index implementation has not started. The accepted
 [fresh-agent execution plan](slices/M1-slice-3.5-bethesda-fixture-qualification.md)
 is indexed under [`slices/`](slices/README.md).
 

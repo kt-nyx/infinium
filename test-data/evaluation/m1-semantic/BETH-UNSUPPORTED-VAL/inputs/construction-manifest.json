@@ -16,15 +16,15 @@
   "files": [
     {
       "path": "case-matrix.json",
-      "sha256": "7d871401159f097cc882b5176d893c8727f00af73fe901c6e228f07aa67dfe96",
+      "sha256": "219f8da641cfd21a376dbd944e132878b3944653d8c81a5a8d9a65c63d4afa35",
       "regions": [
         {
           "offset": 0,
           "kind": "project-authored-request-or-matrix-metadata",
-          "length": 1687
+          "length": 1688
         }
       ],
-      "byte_length": 1687
+      "byte_length": 1688
     },
     {
       "path": "plugins/LocalizedDependency.esp",

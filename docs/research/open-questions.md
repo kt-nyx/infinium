@@ -1,7 +1,7 @@
 # Open research questions
 
 Status: Draft  
-Last reviewed: 2026-07-30
+Last reviewed: 2026-08-01
 
 The product baseline was accepted on 2026-07-25. The
 [M0 research-foundation plan](../plans/milestones/M0-research-foundation.md) is
@@ -93,6 +93,7 @@ accepted ADR-0025.
 | RQ-037 | Which OpenAI user-owned access modes can Infinium support—direct Platform API usage, ChatGPT/Codex subscription access, or both—and how must authentication, execution, billing, usage visibility, security, provenance, and hard-limit capabilities differ? | OpenAI access-mode ADR and credential/cost amendments | Closed by owner disposition: use user-supplied, usage-priced Platform API keys with direct Responses; reject Codex/ChatGPT-plan core integration in ADR-0024 |
 | RQ-038 | Which exact OpenAI model identity and synchronous Responses profile should M1 qualify for its two semantic operations, and how must capability drift be handled when no immutable snapshot exists? | Exact M1 provider-profile ADR | Resolved for M1 by accepted ADR-0025 from RESEARCH-0048; implementation/evaluation conformance pending |
 | RQ-039 | Does the exact admitted Skyrim SE game plugin provide a secondary Data root or Data-contributing mapper, and how should EVAL-0051 treat an empty exact-target inventory? | Slice 3 mapper inventory and EVAL-0051 plan/specification disposition | Resolved by accepted RESEARCH-0051: the exact additional-mapper inventory is empty, the production allowlist remains empty, and a positive real additional-mapper case is conditional on future deliberate qualification |
+| RQ-040 | How should evaluator-private validation and held-out fixtures remain versioned and autonomously maintainable without exposing answers to ordinary implementation agents? | Evaluator-private repository and delegated agent-access ADR | Resolved by accepted RESEARCH-0052 and ADR-0026: separate private sibling Git history, sanitized public bindings, purpose-bound fresh-context delegates, access records, and explicit contamination/replacement transitions |
 
 ## RQ-036 accepted result and change discipline
 

@@ -1,7 +1,7 @@
 {
   "schema": "infinium.bethesda-fixture-case-matrix",
   "schema_version": 1,
-  "partition": "validation",
+  "partition": "development",
   "classification": "malformed",
   "fixed_seed": "3520260730",
   "cases": [

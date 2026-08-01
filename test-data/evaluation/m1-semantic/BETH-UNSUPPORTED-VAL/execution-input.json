@@ -7,7 +7,7 @@
     "artifact": {
       "artifact_id": "inputs/snapshot/accepted-order.json",
       "artifact_version": "1.0.0",
-      "fingerprint": "f661aea998ea76a65116c2ddc2733e9cb95387e31319e7ad5c975a1581a4b959",
+      "fingerprint": "232981443d6c5258a79018b4c34680cf4d0f67283523b4e748eac4ea4ef160ab",
       "availability": "retained"
     }
   },
@@ -18,7 +18,7 @@
   "effective_scan_configuration": {
     "artifact_id": "inputs/case-matrix.json",
     "artifact_version": "1.0.0",
-    "fingerprint": "7d871401159f097cc882b5176d893c8727f00af73fe901c6e228f07aa67dfe96",
+    "fingerprint": "219f8da641cfd21a376dbd944e132878b3944653d8c81a5a8d9a65c63d4afa35",
     "availability": "retained"
   },
   "runtime_support_input": {
@@ -31,7 +31,7 @@
     "artifact": {
       "artifact_id": "inputs/snapshot/accepted-order.json",
       "artifact_version": "1.0.0",
-      "fingerprint": "f661aea998ea76a65116c2ddc2733e9cb95387e31319e7ad5c975a1581a4b959",
+      "fingerprint": "232981443d6c5258a79018b4c34680cf4d0f67283523b4e748eac4ea4ef160ab",
       "availability": "retained"
     }
   },
@@ -41,7 +41,7 @@
     "artifact": {
       "artifact_id": "inputs/snapshot/accepted-order.json",
       "artifact_version": "1.0.0",
-      "fingerprint": "f661aea998ea76a65116c2ddc2733e9cb95387e31319e7ad5c975a1581a4b959",
+      "fingerprint": "232981443d6c5258a79018b4c34680cf4d0f67283523b4e748eac4ea4ef160ab",
       "availability": "retained"
     }
   },
@@ -51,7 +51,7 @@
     "artifact": {
       "artifact_id": "inputs/snapshot/accepted-order.json",
       "artifact_version": "1.0.0",
-      "fingerprint": "f661aea998ea76a65116c2ddc2733e9cb95387e31319e7ad5c975a1581a4b959",
+      "fingerprint": "232981443d6c5258a79018b4c34680cf4d0f67283523b4e748eac4ea4ef160ab",
       "availability": "retained"
     }
   },
@@ -61,7 +61,7 @@
     {
       "component_id": "Infinium.BethesdaFixtures.Generator",
       "version": "1",
-      "fingerprint": "ab71a0485005d544c5792499c645a7975641f55d8dd3c4fced7c04b0fd2cd5f1"
+      "fingerprint": "606021f9bfb45b6724850d4f543b76c09cef8b58c637a3d7791c12bcffae9ab3"
     }
   ],
   "declared_archive_state": {
@@ -85,20 +85,20 @@
   "resource_and_time_limits": {
     "wall_time_ms": 120000,
     "memory_bytes": 536870912,
-    "input_bytes": 9106,
+    "input_bytes": 9107,
     "output_bytes": 16777216
   },
   "input_payload_refs": [
     {
       "artifact_id": "inputs/case-matrix.json",
       "artifact_version": "1.0.0",
-      "fingerprint": "7d871401159f097cc882b5176d893c8727f00af73fe901c6e228f07aa67dfe96",
+      "fingerprint": "219f8da641cfd21a376dbd944e132878b3944653d8c81a5a8d9a65c63d4afa35",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/construction-manifest.json",
       "artifact_version": "1.0.0",
-      "fingerprint": "00255c0e246bbb79d958a3eb45b2cbc13ca03949bfc882d4295e65a9f6a5143c",
+      "fingerprint": "d44bec01403d1bc12e22990fba7087d521e45e7ef09f57cd589ac7a63d16f93e",
       "availability": "retained"
     },
     {
@@ -146,7 +146,7 @@
     {
       "artifact_id": "inputs/snapshot/accepted-order.json",
       "artifact_version": "1.0.0",
-      "fingerprint": "f661aea998ea76a65116c2ddc2733e9cb95387e31319e7ad5c975a1581a4b959",
+      "fingerprint": "232981443d6c5258a79018b4c34680cf4d0f67283523b4e748eac4ea4ef160ab",
       "availability": "retained"
     }
   ]

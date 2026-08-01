@@ -1,7 +1,7 @@
 # Security and privacy
 
 Status: Draft  
-Last reviewed: 2026-07-28
+Last reviewed: 2026-08-01
 
 ## Security posture
 
@@ -33,6 +33,10 @@ AUTH-003, AI-003, AI-007, and the applicable export/history requirements.
   retention/deletion is limited to explicitly selected retained objects within
   those authorized locations. None may target protected setup roots.
 - The product through M4 does not edit the modding setup.
+- Evaluator-private fixture inputs and answers use ADR-0026's separate Git
+  history and purpose-bound delegated access. This is a context and process
+  boundary, not an OS sandbox; final held-out acceptance may require a separate
+  worker, identity, VM, or private CI broker.
 
 ## Untrusted content
 

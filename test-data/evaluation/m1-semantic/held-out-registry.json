@@ -1,55 +1,103 @@
 {
-  "schema_id": "infinium.evaluation.held-out-fixture-registry/v1",
-  "schema_version": "1",
-  "fixtures": [
+  "schema_id": "infinium.evaluation.held-out-fixture-registry/v2",
+  "schema_version": "2",
+  "supersessions": [
     {
       "fixture_id": "BETH-HO-001",
+      "fixture_version": "1.0.0",
+      "invalidated_state": "invalidated-unavailable",
+      "reason": "No complete retained evaluator-private package was available for migration or replay.",
+      "successor_fixture_id": "BETH-HO-002",
+      "successor_fixture_version": "1.0.0",
+      "authority_id": "project-owner/user-directed-adr-0026-private-store-migration",
+      "public_v1_registry": {
+        "byte_length": 2287,
+        "sha256": "178ed7a029f753f970f82a6867464735c83ce615af0f4fd24c0fd1c018837b37"
+      },
+      "predecessor_answers_inspected": false,
+      "production_material_inspected": false,
+      "contamination_state": "clean"
+    }
+  ],
+  "fixtures": [
+    {
+      "fixture_id": "BETH-HO-002",
       "fixture_version": "1.0.0",
       "partition": "held-out",
       "evaluation_ids": [
         "EVAL-0052"
       ],
-      "purpose": "Materially independent held-out qualification of the bounded positive Bethesda semantic envelope.",
-      "redistribution_class": "evaluator-private",
-      "owner": "agent-root-holdout-custodian",
+      "purpose": "Independent positive held-out Bethesda byte input for the bounded M1 record-semantic allowlist.",
+      "classification": "positive",
+      "redistribution_class": "project-authored-redistributable",
+      "owner": "evaluator-private-custodian",
       "review_state": "sealed",
-      "created_at": "2026-07-30T18:00:00.0000000+00:00",
-      "complete_package_retention": "evaluator-private",
-      "public_manifest": {
-        "byte_length": 1440,
-        "sha256": "0d4a74c96ce5b0d18567703a92d2d65171f6adb28b93b108fc84bf8ae069dd60"
+      "reviewed_at": "2026-08-01T15:45:00-04:00",
+      "complete_package_retention": "separate-private-git",
+      "private_store": {
+        "store_id": "infinium-evaluator-fixtures",
+        "relationship": "separate-git-history",
+        "revision": "d929f7c91e0f36cc2e57240bda63c6371c7528ee",
+        "governance_version": "2026-08-01"
       },
-      "input_package": {
-        "byte_length": 4368,
-        "sha256": "f4eafbf876ce1a44f8deb5eff488162de786d9bcb8bd79cb3e7afd52437104bf"
+      "disclosure_class": "sanitized-result",
+      "contamination_state": "clean",
+      "governance_id": "adr-0026/evaluator-private-fixture-governance/2026-08-01",
+      "declared_manifest_input_package_fingerprint": "ac85caeecba3a91d01f062510f62b5dded65b78e732e8c9b21e97ae0a5f21f25",
+      "execution_input_document_sha256": "59bec14a7f84bf8d02bc324ba54a895ef9d33ebdb35fea80f2a8d7bf1091f4fc",
+      "retained_input_set_fingerprint": "3f9c360c8e473929a1bf42403cec1fe537de4b8f5121e4116359c09f71e41146",
+      "oracle_fingerprint": "b14fefe688d942b7e888c4e8b26df74311731560743492c11b0030f7c70eb33a",
+      "supplemental_oracle_fingerprint": "fbd307dfd4a331ed5614c5c8855b78138bc70731551547a81a98feb925b6ffdd",
+      "package_fingerprint": "b1974b093d2622285a1ce3c5de024adfd0016c80e63fe5a1a96bd31cd94697bb",
+      "package_fingerprint_scope": "sealed-documents-inputs-evidence-tools-access-contract-aggregate-v1",
+      "documents": {
+        "public_manifest": {
+          "byte_length": 1166,
+          "sha256": "acd3e7d74b83817252e960c272134e20ad34b01b87e0b148c11153eb90d6053f"
+        },
+        "execution_input": {
+          "byte_length": 5174,
+          "sha256": "59bec14a7f84bf8d02bc324ba54a895ef9d33ebdb35fea80f2a8d7bf1091f4fc"
+        },
+        "expected_oracle": {
+          "byte_length": 106130,
+          "sha256": "b14fefe688d942b7e888c4e8b26df74311731560743492c11b0030f7c70eb33a"
+        },
+        "provenance": {
+          "byte_length": 121,
+          "sha256": "fcf7901e903f099e9e028a57694e29a7338e57bb13b337abaff7eae184a3ba35"
+        },
+        "replay_dependencies": {
+          "byte_length": 1553,
+          "sha256": "9f251c903842e478d57a67a990e6999bf9e2fe06eddfa60228537a3bbe5b9fde"
+        },
+        "redistribution": {
+          "byte_length": 113,
+          "sha256": "afc0f320f8bb9e6b1946e35c68c3b729e84973fa3568688c88aa002a43f70a7d"
+        },
+        "partition_history": {
+          "byte_length": 269,
+          "sha256": "806a77dd23a22d2c2ecd1822b62780702df8d07c74f7bb5f7f9d07dd191f5724"
+        }
       },
-      "oracle": {
-        "byte_length": 8902,
-        "sha256": "c9f251f988f5a197423eab744b97623b00b4a6164e338c457e9d8958eab23796"
+      "independence_evidence": {
+        "artifact_id": "BETH-HO-002.oracle-independence-attestation",
+        "artifact_version": "1",
+        "fingerprint": "72552464b3ed005331f67b35f75d0f9b3e0ff0c174f8bde2312aa4841cac2ed7",
+        "availability": "evaluator-private"
       },
-      "provenance": {
-        "byte_length": 112,
-        "sha256": "67d001e19b86c73e4408dc64ed117da93c1e2b6fddfd547e12b985c590a11e5f"
-      },
-      "replay_dependencies": {
-        "byte_length": 3775,
-        "sha256": "109bafdd3a239a17af46d46b4c2fcb794d4e5c6c1bf04a7d372536b46970f18e"
-      },
-      "redistribution": {
-        "byte_length": 111,
-        "sha256": "d82fa6511888f09a96977702b5b01bc933fd89a40050e06de987b0d9473cc72a"
-      },
-      "partition_history": {
-        "byte_length": 379,
-        "sha256": "df2a4abf76dbc39fc8fe81e766303c854c10c0a7a4bff05c7253fa7f4c3a37d0"
-      },
+      "supersession_authority_id": "project-owner/user-directed-adr-0026-private-store-migration",
       "custodian_attestation": {
         "construction_runs_byte_identical": true,
         "manual_and_independent_reader_agreed": true,
         "seven_documents_schema_valid": true,
+        "supplemental_oracle_schema_valid": true,
+        "cross_document_fingerprints_valid": true,
         "answer_bearing_execution_mutations_rejected": true,
+        "deterministic_reconstruction_verified": true,
+        "evidence_replay_verified": true,
         "manifest_fingerprints_match_disclosed_documents": true,
-        "development_fixture_accessed": false,
+        "predecessor_package_accessed": false,
         "production_parser_or_output_accessed": false,
         "third_party_payload_consumed": false,
         "protected_root_accessed": false,

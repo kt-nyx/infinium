@@ -6,7 +6,7 @@
   "snapshot_contract_version": "3.0.0",
   "adapter_id": "infinium.mo2-static-reconstruction/v3",
   "selected_profile_name": "BETH-UNSUPPORTED-VAL",
-  "construction_manifest_fingerprint": "00255c0e246bbb79d958a3eb45b2cbc13ca03949bfc882d4295e65a9f6a5143c",
+  "construction_manifest_fingerprint": "d44bec01403d1bc12e22990fba7087d521e45e7ef09f57cd589ac7a63d16f93e",
   "provider_order": [
     {
       "provider_id": "beth-unsupported-val-provider-00",

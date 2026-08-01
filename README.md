@@ -22,18 +22,21 @@ Start with [`docs/README.md`](docs/README.md).
 - Product documentation: accepted baseline plus mod-impact taxonomy `0.1.0`
 - Research: Waves A through F accepted; Gates A through F met
 - M0 research plan: completed on 2026-07-28
-- Architecture: ADR-0001 through ADR-0023 and ADR-0025 accepted; ADR-0024
-  rejected
+- Architecture: ADR-0001 through ADR-0023, ADR-0025, and ADR-0026 accepted;
+  ADR-0024 rejected
 - M1 plan: accepted and active
-- M1 implementation: Slices 0 through 3 complete; Slice 3's exact-target,
+- M1 implementation: Slices 0 through 3.5 complete; Slice 3's exact-target,
   headless non-mutation, explicit initiation, and MO2 effective-state gates
   EVAL-0045, EVAL-0046, EVAL-0051, and EVAL-0054 pass for the admitted
-  boundary; Slice 3.5 next constructs and independently qualifies the Bethesda
-  and applicable taxonomy fixtures required before Slice 4
+  boundary; Slice 3.5 independently qualifies the Bethesda and applicable
+  taxonomy fixtures required before Slice 4, including the ADR-0026 private
+  validation boundary; Slice 4 has not started
 - xEdit: historical integration/oracle recommendation rejected; excluded from
   every Infinium boundary
 - Abandoned implementation: removed from the active tree and retained only in
   the external local archive and Git history
 
 Implementation must proceed slice-by-slice under the accepted
-[M1 backend semantic proof plan](docs/plans/milestones/M1-backend-semantic-proof.md).
+[M1 backend semantic proof plan](docs/plans/milestones/M1-backend-semantic-proof.md)
+and its accepted
+[revision 2 amendment](docs/plans/milestones/M1-backend-semantic-proof-adr0026-amendment.md).

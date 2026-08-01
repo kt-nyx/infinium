@@ -1,7 +1,7 @@
 # Evaluation strategy
 
 Status: Draft  
-Last reviewed: 2026-07-28
+Last reviewed: 2026-08-01
 
 Infinium is not trustworthy because it produces plausible reports. It becomes
 trustworthy only when evidence reconstruction, candidate selection, semantic
@@ -20,7 +20,9 @@ RESEARCH-0034/0035 complete Gate C at the research/qualification layer.
 EVAL-0016 and EVAL-0017 now have qualified controlled-real candidates, but
 neither case has a passing execution. The accepted
 [M1 evaluation baseline](m1-evaluation-baseline.md), accepted
-[semantic specifications](specifications/m1-semantic-and-ground-truth.md),
+[semantic specifications](specifications/m1-semantic-and-ground-truth.md) with
+the accepted
+[revision 2 amendment](specifications/m1-semantic-and-ground-truth-v2-amendment.md),
 and accepted
 [platform/operational specifications](specifications/m1-platform-and-operational.md)
 define the detailed M1 obligations.
@@ -151,6 +153,11 @@ or deletion produces accurate dependency and gap reporting.
 
 ## Evaluation partitions and answer isolation
 
+The storage, delegated-access, disclosure, correction, and contamination
+protocol is defined by the accepted
+[evaluator-private fixture governance](evaluator-private-fixture-governance.md)
+and [ADR-0026](../architecture/decisions/ADR-0026-evaluator-private-fixture-repository-and-delegated-access.md).
+
 - Classify each case as development, validation, or held-out before its result
   can influence production behavior.
 - Pre-register expected observations, conclusions, abstentions, and coverage
@@ -163,6 +170,11 @@ or deletion produces accurate dependency and gap reporting.
   coverage.
 - Correct an expected result only from new independent evidence, with the
   prior error and review recorded.
+- Keep complete private validation and held-out packages in the separate
+  evaluator-private Git history. Ordinary implementation agents may
+  autonomously delegate scoring or maintenance to a fresh-context evaluator,
+  but receive only sanitized results unless an explicit reveal triggers
+  development reclassification and replacement.
 
 ## Taxonomy-dependent evaluation
 

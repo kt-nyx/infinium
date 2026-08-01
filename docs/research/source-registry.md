@@ -1,7 +1,7 @@
 # Documentation source registry
 
 Status: Draft
-Last reviewed: 2026-07-28
+Last reviewed: 2026-08-01
 
 This document defines the registry model, initial authority classes, and
 reviewed source-level decisions. Exact endpoints, observed capabilities, and
@@ -247,6 +247,18 @@ Before any of those sources becomes a production parser, library, bundled
 payload, generated-data feed, or supported adapter, its exact current version,
 licence, data policy, and supported shapes require a separate accepted
 qualification decision.
+
+## Evaluator-private repository authorities
+
+These sources support RESEARCH-0052 and ADR-0026's development/evaluation
+repository boundary. They do not authorize public disclosure of private
+fixtures or grant ordinary workflows access to the private store.
+
+| Authority | Checked identity | Registered use |
+|---|---|---|
+| Git project, [Git Tools - Submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) | Retrieved 2026-08-01 | Primary documentation for separate histories, recorded submodule URLs/commit pointers, and recursive acquisition behavior used in the submodule rejection |
+| GitHub Docs, [Repository roles for an organization](https://docs.github.com/en/organizations/managing-user-access-to-your-organizations-repositories/managing-repository-roles/repository-roles-for-an-organization) | Retrieved 2026-08-01 | Private-repository role and future multi-maintainer access-control evidence |
+| GitHub Docs, [Sharing actions and workflows from your private repository](https://docs.github.com/en/actions/how-tos/reuse-automations/share-across-private-repositories) | Retrieved 2026-08-01 | Cross-repository workflow token/log exposure warning supporting private-runner isolation |
 
 ## Search behavior
 

@@ -1,7 +1,7 @@
 # Fixture guidelines
 
 Status: Draft  
-Last reviewed: 2026-07-28
+Last reviewed: 2026-08-01
 
 Wave B's target boundaries and fixture/conformance obligations are accepted by
 ADR-0008 through ADR-0011, and the M1 Wave F case specifications are accepted;
@@ -50,6 +50,11 @@ gold standard, or source of special-case expectations. The obsolete
 
 ## Fixture-use partitions
 
+Complete access-controlled packages, repository bindings, delegated agent
+roles, sanitized disclosures, access records, and contamination transitions are
+governed canonically by
+[evaluator-private fixture governance](evaluator-private-fixture-governance.md).
+
 Every fixture is designated before use as:
 
 - **development** — may guide implementation and prompt/rule changes;
@@ -63,6 +68,13 @@ transition to development use and add materially independent replacement
 coverage. Real-mod identities and expected answers must never enter production
 logic, retrieval, ranking, or model context merely because they exist in a
 fixture.
+
+Tracked development packages remain in Infinium. Complete private validation
+and held-out packages live in the separate evaluator-private Git repository,
+not under ignored `artifacts/`, a submodule, or a nested product directory.
+Infinium retains only sanitized registry bindings and attestations. Ordinary
+implementation agents access private material only through purpose-bound
+fresh-context delegates and receive no raw answer-bearing return.
 
 ## Required fixture metadata
 

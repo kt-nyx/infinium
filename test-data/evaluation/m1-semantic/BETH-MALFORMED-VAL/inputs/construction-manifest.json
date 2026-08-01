@@ -16,15 +16,15 @@
   "files": [
     {
       "path": "case-matrix.json",
-      "sha256": "d1a47e555bbfd466b770a75eed87b1f4aea3a247180cbc37379d272ea96f66ee",
+      "sha256": "04b9688a55bafc2a0cf40749777f9bf6e072c7841a20cebefe549f4c3c225a8a",
       "regions": [
         {
           "offset": 0,
           "kind": "project-authored-request-or-matrix-metadata",
-          "length": 4100
+          "length": 4101
         }
       ],
-      "byte_length": 4100
+      "byte_length": 4101
     },
     {
       "path": "mutations/ChangedDuringRead-A.esp",

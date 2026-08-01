@@ -6,8 +6,26 @@
       "from": null,
       "to": "validation",
       "at": "2026-07-30T18:00:00.0000000+00:00",
-      "reason": "Initial registration of an independently reviewed project-authored validation fixture.",
+      "reason": "Initial registration before the answer-bearing package entered ordinary implementation context.",
       "change_influenced_implementation": false
+    },
+    {
+      "from": "validation",
+      "to": "development",
+      "at": "2026-08-01T18:00:00.0000000+00:00",
+      "reason": "Owner-approved correction: public answer exposure makes this package development evidence under ADR-0026.",
+      "change_influenced_implementation": true,
+      "replacement_fixture_id": "BETH-LIGHT-VAL-002",
+      "replacement_partition": "validation",
+      "replacement_input_package_fingerprint": "b0f756bb402d0305401ef3ee90017cbbe24e56fc34f7343bbd74e0c49ac1e69d",
+      "replacement_oracle_fingerprint": "e704d9f587985f8e10d83428521023736e679f211ecb1daae51793913c64f705",
+      "independence_evidence_reference": {
+        "artifact_id": "beth-light-val-002-independence-evidence",
+        "artifact_version": "1.0.0",
+        "fingerprint": "56e8c202f1ce9fcee560935219e6eb10af9842c70f278af7bf0b0de1c8928cbb",
+        "availability": "evaluator-private"
+      },
+      "authorized_by": "project-owner/user-directed-adr-0026-private-store-migration"
     }
   ]
 }

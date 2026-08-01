@@ -3,6 +3,8 @@
 Thumbs.db
 *.tmp
 *.bak
+__pycache__/
+*.pyc
 
 # Local secrets and environment overrides
 .env

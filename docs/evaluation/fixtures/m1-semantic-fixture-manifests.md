@@ -3,9 +3,11 @@
 Status: Accepted  
 Accepted: 2026-07-28  
 Accepted by: Project owner  
-Last reviewed: 2026-07-30
+Last reviewed: 2026-08-01
 Companion specification:
 [M1 semantic and local-ground-truth evaluation specifications](../specifications/m1-semantic-and-ground-truth.md)
+with the accepted
+[revision 2 amendment](../specifications/m1-semantic-and-ground-truth-v2-amendment.md)
 
 ## 1. Purpose and current state
 
@@ -19,11 +21,12 @@ Except for the research qualification artifacts and the Slice 3.5 Bethesda
 packages explicitly identified below:
 
 - many fixture payloads and oracle manifests have not been created;
-- held-out slots other than the sealed `BETH-HO-001` entry have not been
+- held-out slots other than the sealed `BETH-HO-002` entry have not been
   independently authored or sealed;
 - no unlisted fixture package or oracle manifest is accepted as
   execution-ready;
-- no fixture has been executed; and
+- no Bethesda semantic fixture has been executed against Slice 4 production
+  behavior; and
 - no evaluation case has passed.
 
 The terms `development`, `validation`, and `held-out` have the meanings in the
@@ -103,6 +106,11 @@ Execution inputs may state the declared capability being exercised but must not
 contain expected candidate/finding/case labels, oracle paths, answer-bearing
 comments, or fixture-specific shortcuts.
 
+Complete private validation and held-out packages, autonomous delegated access,
+sanitized publication, and contamination transitions follow
+[evaluator-private fixture governance](../evaluator-private-fixture-governance.md)
+and ADR-0026.
+
 ### 2.3 Oracle fields
 
 ```text
@@ -175,9 +183,9 @@ unavailable replayability must remain explicit.
 | `MO2-INTEGRATION-VAL` / `MO2-NEGATIVE-VAL` | Validation | EVAL-0051 | Constructed, independently observed, and passed for the exact admitted target | Independent MO2 observer |
 | `MO2-HO-001` | Held-out | EVAL-0051 | Required before general conformance claim; not authored/sealed | Independent holdout custodian |
 | `BETH-NPC-DEV` / `BETH-REFR-DEV` / `BETH-MALFORMED-VAL` | Development | EVAL-0052 | Constructed and independently accepted as Slice 4 inputs; malformed package reclassified after its cases influenced generator corrections; production comparison remains pending | Binary-fixture author |
-| `BETH-LIGHT-VAL` / `BETH-UNSUPPORTED-VAL` | Validation | EVAL-0052 | Constructed and independently reviewed; public-answer publication authority is not recorded, so Slice 3.5 closeout remains blocked | Independent binary reviewer |
-| `BETH-MALFORMED-VAL-002` | Validation | EVAL-0052 | Sealed evaluator-private materially independent replacement; public fingerprints and attestations retained; EVAL-0052 remains unexecuted | Isolated replacement oracle reviewer |
-| `BETH-HO-001` | Held-out | EVAL-0052 | Sealed evaluator-private; public fingerprints retained; supported-shape conformance remains pending | Independent holdout custodian |
+| `BETH-LIGHT-VAL` / `BETH-UNSUPPORTED-VAL` | Development | EVAL-0052 | Constructed and independently reviewed; public answer exposure makes them regression/development evidence rather than independent validation | Independent binary reviewer |
+| `BETH-LIGHT-VAL-002` / `BETH-MALFORMED-VAL-002` / `BETH-UNSUPPORTED-VAL-002` | Validation | EVAL-0052 | Materially independent sealed packages in the separate evaluator-private Git store; public revision/fingerprints and attestations retained; EVAL-0052 remains unexecuted | Isolated private input/oracle roles |
+| `BETH-HO-002` | Held-out | EVAL-0052 | Sealed evaluator-private successor after `BETH-HO-001` retention was unavailable; historical v1 metadata is preserved and invalidated; supported-shape conformance remains pending | Independent holdout custodian |
 | `TARGET-1170-PRIVATE-VAL` and target-negative package | Validation | EVAL-0054 | Exact private fingerprint known; executable manifest not created | Runtime-gate reviewer |
 | `ANALYZER-CONTRACT-DEV` and boundary variants | Development/validation | EVAL-0065 | Required; not created | Contract reviewer |
 | `EVID-TYPES-DEV` / `EVID-LLM-VAL` / `EVID-NO-LLM-VAL` / `EVID-HOSTILE-VAL` | Development/validation | EVAL-0067 | Required; not created | Evidence-model reviewer |
@@ -599,7 +607,9 @@ correctness oracle.
 - absent/repeated/malformed subrecord boundaries where format-valid.
 
 `BETH-LIGHT-VAL` covers `.esl` and ESL-flagged `.esp` origin/local-ID
-boundaries, including valid maximum and out-of-range/invalid fixtures.
+boundaries, including valid maximum and out-of-range/invalid fixtures. Its
+public answers make it development coverage; `BETH-LIGHT-VAL-002` supplies the
+materially independent private validation replacement.
 
 `BETH-MALFORMED-VAL` covers truncated records, invalid sizes, decompression
 limits, pathological nesting/counts, invalid master references, and
@@ -607,7 +617,9 @@ changed-during-read input.
 
 `BETH-UNSUPPORTED-VAL` includes at least one unallowlisted record family,
 unallowlisted field/shape, localized-string dependency, archive member, and
-typical-environment discovery request.
+typical-environment discovery request. Its public answers make it development
+coverage; `BETH-UNSUPPORTED-VAL-002` supplies independent private validation
+with independently constructed representatives and controls.
 
 The current M1 Bethesda matrix does not contain `QUST`, quest-alias,
 forced-reference/`ALFR`, or other quest-logic shapes. Those shapes belong to a
@@ -626,7 +638,7 @@ For each project-authored plugin:
 - prohibit Mutagen and xEdit from creating or approving the expected values.
 
 The controlled-real raw maps from RESEARCH-0035 are validation projections,
-not redistributed plugin fixtures. `BETH-HO-001` must be independently authored
+not redistributed plugin fixtures. `BETH-HO-002` must be independently authored
 and sealed after the positive allowlist is fixed.
 
 ### 8.3 Replay/distribution
@@ -962,8 +974,8 @@ matrix and do not make those two regions the product taxonomy.
 
 | Material | Private retention | Repository tracking | External redistribution |
 |---|---|---|---|
-| Project-authored synthetic bytes/text/generators | Yes | Yes after license review | Yes under selected project-compatible terms |
-| Oracle manifests | Yes | Development/validation oracles may be access-controlled; held-out answers remain sealed | Not in ordinary product/export artifacts |
+| Project-authored synthetic bytes/text/generators | Yes | Development material in Infinium; private validation/held-out material only in the separate private Git store | Yes under selected project-compatible terms when disclosure does not invalidate evaluation |
+| Oracle manifests | Yes | Development oracles in Infinium; validation/held-out oracles only in the separate private Git store | Not in ordinary product/export artifacts |
 | Third-party mod archives/plugins/assets | Evaluator-private when permitted | Hashes/manifests only | No without affirmative permission |
 | Official Skyrim files/executable | Evaluator-private | Hashes/manifests only | No |
 | MO2 application binaries | User-installed dependency | Version/fingerprint/instructions only | Not bundled by Infinium |

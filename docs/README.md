@@ -1,7 +1,7 @@
 # Infinium documentation
 
 Status: Draft  
-Last reviewed: 2026-07-30
+Last reviewed: 2026-08-01
 
 This directory is the authoritative entry point for the rebuilt Infinium
 project. It records product intent, accepted decisions, research, evaluation
@@ -32,14 +32,19 @@ specification.
 - Evaluation: [case catalog](evaluation/case-catalog.md),
   [accepted M1 evaluation baseline](evaluation/m1-evaluation-baseline.md),
   [fixture guidelines](evaluation/fixture-guidelines.md), and
-  [anti-overfitting rules](evaluation/anti-overfitting-rules.md)
+  [anti-overfitting rules](evaluation/anti-overfitting-rules.md), with the
+  cross-repository and delegated-access boundary in
+  [evaluator-private fixture governance](evaluation/evaluator-private-fixture-governance.md)
 - Research: [source registry](research/source-registry.md),
   [taxonomy research dependency map](research/taxonomy-dependency-map.md),
   [accepted deferred-question and residual-risk register](research/deferred-question-and-residual-risk-register.md), and
   [investigation procedure](research/investigations/README.md)
 - Planning: [plan policy](plans/README.md),
-  [milestone-plan index](plans/milestones/README.md), and
+  [milestone-plan index](plans/milestones/README.md),
   [accepted M1 backend semantic proof plan](plans/milestones/M1-backend-semantic-proof.md),
+  with its accepted
+  [revision 2 amendment](plans/milestones/M1-backend-semantic-proof-adr0026-amendment.md),
+  and the
   [research-agent handoff template](plans/research-investigation-agent-handoff-template.md)
 - Reference: [glossary](glossary.md)
 
@@ -125,6 +130,8 @@ Every material document should include a status and last-reviewed date.
   layer. Implementation and evaluation conformance remain pending.
 - ADR-0001 through ADR-0011 were accepted on 2026-07-25. ADR-0012 through
   ADR-0023 and ADR-0025 were accepted on 2026-07-28; ADR-0024 was rejected.
+  ADR-0026's evaluator-private repository and delegated-access boundary was
+  accepted on 2026-08-01.
 - Wave F produced the accepted M1 evaluation baseline, detailed semantic and
   platform/operational case specifications and fixture manifests, the
   RQ-028 calibration protocol, exact OpenAI M1 profile research, a
@@ -143,9 +150,10 @@ Every material document should include a status and last-reviewed date.
   exact-target evaluator package. EVAL-0045, EVAL-0046 for the delivered
   capture operation, EVAL-0051, and EVAL-0054 pass for that admitted boundary;
   broader MO2 versions, additional mappers, archive members, and later semantic
-  slices remain unsupported or pending. The owner subsequently inserted Slice
-  3.5 to construct and independently qualify the Bethesda and applicable
-  taxonomy fixtures before Slice 4. M1 explicitly defers `QUST` forced-alias
+  slices remain unsupported or pending. Slice 3.5 subsequently constructed and
+  independently qualified the Bethesda and applicable taxonomy fixtures under
+  ADR-0026's separate evaluator-private store boundary. Slice 4 has not
+  started. M1 explicitly defers `QUST` forced-alias
   semantics and retains EVAL-0017's REFR linked-reference/placement proof as
   the materially different category.
 - Infinium uses GPLv3-family strong copyleft. MO2 and LOOT remain

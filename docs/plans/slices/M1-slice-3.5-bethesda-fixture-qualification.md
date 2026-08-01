@@ -4,9 +4,21 @@ Status: Accepted
 Owner: Project owner
 Prepared: 2026-07-30
 Accepted: 2026-07-30
-Last reviewed: 2026-07-30
+Last reviewed: 2026-08-01
 Parent plan: [M1 backend semantic proof](../milestones/M1-backend-semantic-proof.md)
+and accepted [revision 2 amendment](../milestones/M1-backend-semantic-proof-adr0026-amendment.md)
 Target: Slice 3.5, between completed Slice 3 and production Slice 4
+
+Accepted amendment: On 2026-08-01 the project owner selected ADR-0026's
+separate private Git repository and fresh-context delegated-access model. The
+public answer-bearing `BETH-LIGHT-VAL` and `BETH-UNSUPPORTED-VAL` versions are
+development/regression fixtures and receive materially independent sealed
+`BETH-LIGHT-VAL-002` and `BETH-UNSUPPORTED-VAL-002` replacements. Complete
+private packages no longer remain under ignored Infinium `artifacts/` storage.
+Migration inventory also found that the registered `BETH-HO-001` complete
+package was unavailable. Its registry v1 is retained byte-for-byte as
+historical evidence, invalidated for current use, and replaced by independently
+authored and reviewed `BETH-HO-002`.
 
 ## Authority and precedence
 
@@ -56,22 +68,28 @@ Before editing, read in full and in the repository order required by
 `AGENTS.md`:
 
 - `AGENTS.md`;
-- `docs/product/README.md` and the product documents it requires;
-- `docs/architecture/README.md` and applicable ADRs, especially ADR-0001,
+- `docs/README.md` and the product documents required by `AGENTS.md`;
+- `docs/architecture/overview.md`, `docs/architecture/data-and-trust-model.md`,
+  `docs/architecture/decisions/README.md`, and applicable ADRs, especially ADR-0001,
   ADR-0004, ADR-0007 through ADR-0010, ADR-0015, ADR-0018, ADR-0021, and
-  ADR-0022;
-- `docs/evaluation/README.md`;
+  ADR-0022, plus ADR-0026;
+- `docs/evaluation/evaluation-strategy.md` and
+  `docs/evaluation/case-catalog.md`;
 - `docs/evaluation/m1-evaluation-baseline.md`;
 - `docs/evaluation/fixture-guidelines.md`;
 - `docs/evaluation/anti-overfitting-rules.md`;
+- `docs/evaluation/evaluator-private-fixture-governance.md`;
 - `docs/evaluation/specifications/m1-semantic-and-ground-truth.md`, especially
   EVAL-0052 and EVAL-0086;
+- `docs/evaluation/specifications/m1-semantic-and-ground-truth-v2-amendment.md`;
 - `docs/evaluation/fixtures/m1-semantic-fixture-manifests.md`, especially
   Sections 2, 8, 14, 15, 16, and 17;
 - `docs/research/investigations/RESEARCH-0034-gate-c-synthetic-qualification.md`;
 - `docs/research/investigations/RESEARCH-0035-gate-c-real-mod-qualification.md`
   and its retained manifests/raw maps;
-- the parent M1 plan and completed Slice 3 implementation record; and
+- `docs/research/investigations/RESEARCH-0052-evaluator-private-fixture-repository-and-agent-access.md`;
+- the parent M1 plan, its accepted revision 2 amendment, and completed Slice 3
+  implementation record; and
 - this plan.
 
 Then:
@@ -101,15 +119,16 @@ third-party payload redistribution, or M1 scope expansion.
 
 At closeout, a new agent starting Slice 4 must have:
 
-- tracked development and validation Bethesda bytes with deterministic
-  construction;
+- tracked deterministic development Bethesda bytes plus sanitized bindings to
+  complete, deterministic private validation packages in the separate store;
 - independently authored structural and semantic expectations;
 - a sealed, materially independent held-out Bethesda package;
 - accepted Slice 4-applicable taxonomy expectations;
 - one or more accepted Slice 3 snapshot inputs containing the synthetic plugin
   order/provider facts that Slice 4 is allowed to consume;
 - verified private controlled-real dependency manifests for later validation;
-- complete package contracts, provenance, redistribution, and replay data; and
+- complete package contracts, provenance, redistribution, replay data, and
+  review/access records in the store appropriate to each partition; and
 - an exact acceptance record proving role separation and answer isolation.
 
 ## Scope
@@ -119,10 +138,12 @@ At closeout, a new agent starting Slice 4 must have:
 - Project-authored deterministic TES4-format plugin construction for:
   - `BETH-NPC-DEV`;
   - `BETH-REFR-DEV`;
-  - `BETH-LIGHT-VAL`;
+  - `BETH-LIGHT-VAL` development predecessor and evaluator-private
+    `BETH-LIGHT-VAL-002` replacement;
   - `BETH-MALFORMED-VAL`; and
-  - `BETH-UNSUPPORTED-VAL`.
-- An independently authored and sealed `BETH-HO-001`.
+  - `BETH-UNSUPPORTED-VAL` development predecessor and evaluator-private
+    `BETH-UNSUPPORTED-VAL-002` replacement.
+- An independently authored and sealed `BETH-HO-002` successor.
 - Independent raw-byte, offset, length, flag, master, raw FormID, canonical
   FormKey, field, link, override-chain, winner, malformed, unsupported, and gap
   expectations.
@@ -160,10 +181,10 @@ the following answer-bearing duties may not be collapsed.
 
 | Role | May inspect | Must produce | Must not inspect/use |
 |---|---|---|---|
-| Slice integrator | Accepted plans, public manifests, development/validation inputs after oracle freeze, tooling, tests | Package integration, schema validation, snapshot wiring, closeout record | Held-out oracle; production Slice 4 output |
-| Binary-fixture author | Format research, accepted allowlist, generator source, public package requirements | Deterministic development/validation generator and exact emitted bytes | Production parser output; Mutagen/xEdit-derived expected values; held-out input/oracle |
+| Slice integrator | Accepted plans, public manifests/registries, development inputs, tooling, tests, sanitized private results | Package integration, schema validation, snapshot wiring, closeout record | Raw private validation/held-out inputs or oracle; production Slice 4 output |
+| Binary-fixture author | Pinned public-only contract bundle, format research, accepted allowlist, its own generator source | Deterministic development/private-validation generator and exact emitted bytes | Production parser source/output; Mutagen/xEdit-derived expected values; predecessor private/public validation inputs, generators, or answers; held-out input/oracle |
 | Independent oracle reviewer | Frozen emitted bytes, format evidence, accepted allowlist, independent audit tooling | Expected offsets/lengths/fields/FormKeys/links/chains/winners/gaps and attributed review record | Generator's expected-value tables; production parser/tests/output; Mutagen/xEdit answers |
-| Holdout custodian | Public scope and package contract | Materially independent `BETH-HO-001` input, oracle, sealed hashes, private replay instructions | Production code/output; development answers as a template for byte layout |
+| Holdout custodian | Public scope and package contract | Materially independent `BETH-HO-002` input, oracle, sealed hashes, private replay instructions | Production code/output; development answers as a template for byte layout |
 | Taxonomy reviewer | Frozen raw facts, taxonomy `0.1.0`, Slice 4 taxonomy scope | Exact assignments/non-assignments, roles, evidence, reasons, counterexample acceptance | Hosting/name/record-family shortcuts; production classifier output |
 
 The independent oracle may use a small purpose-built raw reader or manual byte
@@ -179,6 +200,12 @@ code or generator correction, reclassify it to development in
 `partition-history.json` and replace the lost validation coverage with a new
 independent case. Held-out answers never enter ordinary source, test input,
 logs, prompts, or implementation context.
+
+Private access follows
+[evaluator-private fixture governance](../../evaluation/evaluator-private-fixture-governance.md).
+The integrator may autonomously launch a fresh-context delegated private role
+for an allowed operation, but receives only sanitized metadata/outcome unless a
+recorded reveal reclassifies and replaces the fixture.
 
 ## Required package set
 
@@ -200,16 +227,18 @@ documents plus its project-authored payloads:
     <exact project-authored plugin bytes and controls>
 ```
 
-Tracked development packages and any validation package explicitly approved
-for public answers belong under
-`test-data/evaluation/m1-semantic/<fixture-id>/`. An access-controlled
-validation or held-out package instead remains complete in the evaluator store;
-the repository retains its non-answer-bearing public manifest/fingerprint
-registry entry, not a partial directory presented as executable. A package is
-executable only from the complete seven-document directory.
+Tracked development packages belong under
+`test-data/evaluation/m1-semantic/<fixture-id>/`. Complete validation and
+held-out packages remain in the separate private Git store selected by
+ADR-0026; Infinium retains a non-answer-bearing public registry entry, not a
+partial directory presented as executable. A package is executable only from
+the complete seven-document directory. Public-answer publication is no longer
+the default validation topology; a deliberately public answer-bearing package
+is development coverage.
 
-Generators and independent audit tools belong under a purpose-specific
-`tools/evaluation/bethesda-fixtures/` tree, not production `src/`. Retain a
+Development generators and audit tools belong under a purpose-specific
+`tools/evaluation/bethesda-fixtures/` tree, not production `src/`. Private
+generators/audit tools remain in the private store. Retain a
 machine-readable construction manifest mapping generator revision, command,
 seed, file length, and SHA-256 to every emitted file. Generation must be
 deterministic from tracked source and fixed inputs; timestamps, temporary
@@ -254,6 +283,10 @@ Cover `.esl` and ESL-flagged `.esp` origin/local-ID translation, including
 valid boundaries, valid maximum values, and invalid/out-of-range cases. Keep
 the valid and invalid denominators explicit.
 
+The committed `1.0.0` package is development/regression coverage after public
+answer exposure. `BETH-LIGHT-VAL-002` provides the same abstract validation
+obligation through independently authored private bytes and oracle evidence.
+
 #### `BETH-MALFORMED-VAL`
 
 Cover truncated records, inconsistent or overflowing sizes, bounded
@@ -269,9 +302,14 @@ localized-string dependency, archive-member request, and automatic
 environment-discovery request. The oracle expects explicit unsupported/gap
 states, not guessed values or silent omission.
 
+The committed `1.0.0` package is development/regression coverage after public
+answer exposure. `BETH-UNSUPPORTED-VAL-002` provides materially independent
+private validation coverage with independently constructed representatives and
+boundary controls.
+
 ### Held-out package
 
-`BETH-HO-001` must be materially independent, not a renamed or trivially
+`BETH-HO-002` must be materially independent, not a renamed or trivially
 mutated development fixture. Before Slice 4 begins, the custodian freezes:
 
 - public fixture ID/version, partition, purpose, applicable EVAL IDs, and
@@ -280,10 +318,11 @@ mutated development fixture. Before Slice 4 begins, the custodian freezes:
 - a private dependency/payload inventory and reconstruction procedure; and
 - a custodian acceptance record.
 
-Only non-answer-bearing public metadata and sealed hashes may enter the
-ordinary repository. Private input locators and all oracle contents stay in
-the evaluator-controlled store. The Slice 4 implementer receives neither the
-input bytes nor answers except through the later evaluation boundary.
+Only non-answer-bearing public metadata, private-store revision identities, and
+sealed hashes may enter the ordinary repository. Private input locators and all
+oracle contents stay in the separate evaluator-private Git store. The Slice 4
+implementer receives neither the input bytes nor answers; scoring and
+maintenance use the delegated boundary in ADR-0026.
 
 ### Controlled-real validation projections
 
@@ -405,7 +444,7 @@ raw record family merely to complete those packages early.
 6. **Prepare snapshot inputs.** Feed tracked synthetic plugins through the
    Slice 3 boundary and retain the accepted snapshot dependencies/order.
 7. **Seal heldout.** The custodian authors, reviews, and seals
-   `BETH-HO-001`; disclose only approved public metadata/fingerprints.
+   `BETH-HO-002`; disclose only approved public metadata/fingerprints.
 8. **Review taxonomy projections.** Freeze the Slice 4-applicable EVAL-0086
    assignments and negative counterexamples.
 9. **Verify controlled-real dependencies.** Recompute private
@@ -526,15 +565,16 @@ Slice 3.5 is complete only when all are true:
 
 1. Every required role and access boundary is recorded and independently
    evidenced.
-2. All five required Bethesda development/validation packages exist in their
-   approved public or evaluator-controlled stores, are replayable,
+2. All required Bethesda development packages and their private validation
+   replacements exist in their approved public or separate private Git stores,
+   are replayable,
    schema-valid, fingerprint-valid, and accepted, with non-answer-bearing
    public metadata retained for each.
 3. Required matrix coverage is explicit; unsupported and malformed populations
    have denominators and expected gap/failure states.
 4. Independent oracle review covers exact frozen bytes and every answer-bearing
    field required by EVAL-0052.
-5. `BETH-HO-001` has materially independent sealed input/oracle fingerprints
+5. `BETH-HO-002` has materially independent sealed input/oracle fingerprints
    and remains inaccessible to implementation.
 6. Slice 4-applicable EVAL-0086 projections are accepted without pulling
    later taxonomy work forward.
@@ -594,19 +634,24 @@ not implement Slice 4 production parsing or typed indexes.
 
 Before editing, read AGENTS.md and its complete required reading order, then:
 docs/plans/milestones/M1-backend-semantic-proof.md
+docs/plans/milestones/M1-backend-semantic-proof-adr0026-amendment.md
 docs/plans/slices/M1-slice-3.5-bethesda-fixture-qualification.md
 docs/plans/implementation-records/M1-slice-3.md
 docs/evaluation/m1-evaluation-baseline.md
 docs/evaluation/fixture-guidelines.md
 docs/evaluation/anti-overfitting-rules.md
+docs/evaluation/evaluator-private-fixture-governance.md
 docs/evaluation/specifications/m1-semantic-and-ground-truth.md
+docs/evaluation/specifications/m1-semantic-and-ground-truth-v2-amendment.md
 docs/evaluation/fixtures/m1-semantic-fixture-manifests.md
 docs/research/investigations/RESEARCH-0034-gate-c-synthetic-qualification.md
 docs/research/investigations/RESEARCH-0035-gate-c-real-mod-qualification.md
+docs/research/investigations/RESEARCH-0052-evaluator-private-fixture-repository-and-agent-access.md
 
 Inspect git status and preserve unrelated work. Execute the entire accepted
-Slice 3.5 plan, including role/answer isolation, deterministic public
-BETH-* construction, independent oracle review, sealed BETH-HO-001,
+Slice 3.5 plan, including role/answer isolation, deterministic development and
+separately versioned private BETH-* construction, fresh-context delegated
+independent oracle review, sealed BETH-HO-002,
 Slice-4-applicable taxonomy projections, accepted Slice 3 snapshot
 integration, private RESEARCH-0035 fingerprint verification, schema and
 anti-leakage tests, protected-root evidence, review/fix/rerun/re-review, and

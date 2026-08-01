@@ -1,7 +1,7 @@
 # Research investigations
 
 Status: Draft  
-Last reviewed: 2026-07-30
+Last reviewed: 2026-08-01
 
 Place one bounded, dated investigation per file:
 
@@ -91,6 +91,7 @@ proposed disposition enabled by the report.
 | [RESEARCH-0049](RESEARCH-0049-wave-f-evaluation-and-m1-planning-integration.md) | Completed; recommendation accepted | Wave F outputs integrated, independently reviewed, and accepted; Gate F is met and M0 is complete |
 | [RESEARCH-0050](RESEARCH-0050-sqlite-opened-object-write-authority.md) | Completed; integrated | The Slice 2 shim-VFS qualifies as ADR-0021's separately qualified equivalent for SQLite-family opens; all delivered non-SQLite Slice 2 product mutations now use the shared opened-object discipline |
 | [RESEARCH-0051](RESEARCH-0051-skyrimse-secondary-root-and-mapper-inventory.md) | Completed; recommendation accepted | The exact Skyrim SE game plugin has no secondary Data root and only maps profile plugin/load-order controls outside Data; the owner accepted the empty mapper allowlist and conditional-positive EVAL-0051 amendment |
+| [RESEARCH-0052](RESEARCH-0052-evaluator-private-fixture-repository-and-agent-access.md) | Completed; recommendation accepted | ADR-0026 accepts a separate private Git history plus purpose-bound fresh-context delegated agent access and sanitized disclosure |
 
 Supporting artifact:
 

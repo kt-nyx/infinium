@@ -4,7 +4,7 @@ Status: Accepted
 Owner: Project owner  
 Prepared: 2026-07-28  
 Accepted: 2026-07-28  
-Last reviewed: 2026-07-30
+Last reviewed: 2026-08-01
 Target milestone: M1 — Backend semantic proof
 
 ## Purpose
@@ -13,7 +13,8 @@ This document defines the common acceptance contract for every evaluation used
 to claim M1 completion. The case specifications supply case-specific inputs and
 assertions:
 
-- [semantic and local-ground-truth specifications](specifications/m1-semantic-and-ground-truth.md);
+- [semantic and local-ground-truth specifications](specifications/m1-semantic-and-ground-truth.md)
+  with the accepted [revision 2 amendment](specifications/m1-semantic-and-ground-truth-v2-amendment.md);
 - [semantic fixture manifests](fixtures/m1-semantic-fixture-manifests.md);
 - [platform and operational specifications](specifications/m1-platform-and-operational.md);
 - [platform fixture manifests](fixtures/m1-platform-fixture-manifests.md).
@@ -31,6 +32,8 @@ This baseline consumes:
 - accepted ADR-0001 through ADR-0023, with ADR-0024 rejected;
 - accepted ADR-0025, which defines the implementation-authoritative live M1
   profile;
+- accepted ADR-0026, which defines evaluator-private repository and delegated
+  access boundaries;
 - the accepted [anti-overfitting rules](anti-overfitting-rules.md);
 - the [fixture guidelines](fixture-guidelines.md); and
 - the accepted M0 research dispositions.
@@ -89,6 +92,13 @@ boundary creates a new specification revision and invalidates incomparable
 prior execution.
 
 ## Fixture partitions and answer isolation
+
+Repository placement and agent access follow
+[evaluator-private fixture governance](evaluator-private-fixture-governance.md)
+and ADR-0026. Complete private validation and held-out packages use a separate
+Git history; ordinary implementation agents receive only sanitized delegated
+results unless a recorded reveal causes development reclassification and
+replacement.
 
 Before any execution, every fixture is registered as development, validation,
 or held-out. The registry records partition history.

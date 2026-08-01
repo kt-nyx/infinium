@@ -34,7 +34,8 @@ Then read the task-specific material:
   security/privacy documents;
 - evaluation or analyzer work: `docs/evaluation/evaluation-strategy.md`,
   `docs/evaluation/case-catalog.md`, `docs/evaluation/fixture-guidelines.md`,
-  and `docs/evaluation/anti-overfitting-rules.md`;
+  `docs/evaluation/anti-overfitting-rules.md`, and
+  `docs/evaluation/evaluator-private-fixture-governance.md`;
 - implementation: the active accepted milestone plan, if one exists.
 
 ## Working rules
@@ -56,3 +57,19 @@ Then read the task-specific material:
   analysis.
 - Preserve full provenance and expose coverage gaps rather than inventing
   certainty.
+
+## Evaluator-private fixtures
+
+The separately versioned evaluator-private fixture repository is default-deny
+for ordinary Infinium work. Do not read its files directly while implementing,
+debugging, tuning, or reviewing production behavior.
+
+When scoring, fixture integrity, oracle audit, independent replacement work, or
+corruption recovery genuinely requires private access, autonomously delegate a
+bounded fresh-context evaluator role under
+`docs/evaluation/evaluator-private-fixture-governance.md`. The delegate may use
+the separate repository and its pinned public contract bundle; the primary
+implementation agent receives only the allowed sanitized result. If raw private
+information is deliberately returned to guide production, record
+contamination, reclassify that fixture version to development, and require a
+materially independent replacement.

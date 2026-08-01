@@ -1,7 +1,92 @@
 {
-  "schema_id": "infinium.evaluation.evaluator-private-fixture-registry/v1",
-  "schema_version": "1",
+  "schema_id": "infinium.evaluation.evaluator-private-fixture-registry/v2",
+  "schema_version": "2",
   "fixtures": [
+    {
+      "fixture_id": "BETH-LIGHT-VAL-002",
+      "fixture_version": "1.0.0",
+      "partition": "validation",
+      "evaluation_ids": [
+        "EVAL-0052"
+      ],
+      "purpose": "Independent validation of supplied full/light origin translation and declared light-ID boundaries.",
+      "classification": "boundary",
+      "owner": "evaluator-private-custodian",
+      "review_state": "sealed",
+      "reviewed_at": "2026-08-01T18:54:26.2786183+00:00",
+      "complete_package_retention": "separate-private-git",
+      "private_store": {
+        "store_id": "infinium-evaluator-fixtures",
+        "relationship": "separate-git-history",
+        "revision": "d929f7c91e0f36cc2e57240bda63c6371c7528ee",
+        "governance_version": "2026-08-01"
+      },
+      "disclosure_class": "sanitized-result",
+      "contamination_state": "clean",
+      "governance_id": "adr-0026/evaluator-private-fixture-governance/2026-08-01",
+      "declared_manifest_input_package_fingerprint": "b0f756bb402d0305401ef3ee90017cbbe24e56fc34f7343bbd74e0c49ac1e69d",
+      "execution_input_document_sha256": "5878b647ecb9493ed6b153d0c523b52c7448f8d4ff84cd5ed4342b5081529c23",
+      "retained_input_set_fingerprint": "a8d32590d417de20977da700e8d905b5158bfa5dd84655988533235a0a21d79a",
+      "oracle_fingerprint": "e704d9f587985f8e10d83428521023736e679f211ecb1daae51793913c64f705",
+      "supplemental_oracle_fingerprint": "5b1d7ff2076fcde4f9d64ffda7955f3443e9a4815e207d49fc792cea1cebff55",
+      "package_fingerprint": "3c5cc30657cbcdc04e49b02ff2de45a39cb4a7155b65a2c1996d62a18c28cece",
+      "package_fingerprint_scope": "canonical-seal-scope-v1",
+      "documents": {
+        "public_manifest": {
+          "byte_length": 1169,
+          "sha256": "50cca75706ea6e0aaf2aaff22ba339dc80df0e4c3491dc47a8acb0b4faf9067b"
+        },
+        "execution_input": {
+          "byte_length": 5883,
+          "sha256": "5878b647ecb9493ed6b153d0c523b52c7448f8d4ff84cd5ed4342b5081529c23"
+        },
+        "expected_oracle": {
+          "byte_length": 29832,
+          "sha256": "e704d9f587985f8e10d83428521023736e679f211ecb1daae51793913c64f705"
+        },
+        "provenance": {
+          "byte_length": 120,
+          "sha256": "6dbe93055698c766cc108f89f7359f69247e85287605778a355848690ffdfa1a"
+        },
+        "replay_dependencies": {
+          "byte_length": 1472,
+          "sha256": "288633394e5b8f32be89fe5b1ec115bc7b32860c857ff73076e27e493bde2d7e"
+        },
+        "redistribution": {
+          "byte_length": 105,
+          "sha256": "f60b410c450ba2d9ffa6f592cf129e92b60b63f7da5b2cd329663e091bb4ae5e"
+        },
+        "partition_history": {
+          "byte_length": 280,
+          "sha256": "057c29aeb062873654d0b7f6336562c86a48183f949088647f4c2a2972c2bb66"
+        }
+      },
+      "independence_evidence": {
+        "artifact_id": "beth-light-val-002-independence-evidence",
+        "artifact_version": "1.0.0",
+        "fingerprint": "56e8c202f1ce9fcee560935219e6eb10af9842c70f278af7bf0b0de1c8928cbb",
+        "availability": "evaluator-private"
+      },
+      "corrective_authority_id": "project-owner/user-directed-adr-0026-private-store-migration",
+      "custodian_attestation": {
+        "two_independent_raw_byte_methods_agreed": true,
+        "two_clean_constructions_byte_identical": true,
+        "seven_root_documents_schema_valid": true,
+        "supplemental_oracle_schema_valid": true,
+        "cross_document_fingerprints_valid": true,
+        "execution_input_isolation_passed": true,
+        "deterministic_reconstruction_verified": true,
+        "evidence_replay_verified": true,
+        "predecessor_package_accessed": false,
+        "prior_reviewer_output_accessed": false,
+        "production_parser_or_output_accessed": false,
+        "mutagen_or_xedit_used": false,
+        "third_party_payload_consumed": false,
+        "protected_root_accessed": false,
+        "network_or_billable_provider_used": false,
+        "evaluation_case_pass_claimed": false
+      }
+    },
     {
       "fixture_id": "BETH-MALFORMED-VAL-002",
       "fixture_version": "1.0.0-private-input-freeze",
@@ -9,49 +94,62 @@
       "evaluation_ids": [
         "EVAL-0052"
       ],
-      "purpose": "Evaluator-private project-authored malformed Bethesda validation inputs covering bounded framing, size arithmetic, decompression, structural complexity, master references, and changed-during-read.",
+      "purpose": "Evaluator-private project-authored malformed Bethesda validation inputs covering bounded framing, unsigned sizes, decompression, nesting/count limits, invalid master references, and changed-during-read identity.",
       "classification": "malformed",
-      "owner": "isolated-oracle-reviewer/replacement-malformed-v3",
+      "owner": "evaluator-private/replacement-malformed-custodian",
       "review_state": "sealed",
-      "reviewed_at": "2026-07-30T00:00:00.0000000+00:00",
-      "complete_package_retention": "evaluator-private",
-      "input_package_fingerprint": "ed7464c7fb4b6c852abab0e86eb1015a60370e3821f613ac882b6bf8fc6ff31f",
+      "reviewed_at": "2026-07-30T18:09:31.3260000+00:00",
+      "complete_package_retention": "separate-private-git",
+      "private_store": {
+        "store_id": "infinium-evaluator-fixtures",
+        "relationship": "separate-git-history",
+        "revision": "d929f7c91e0f36cc2e57240bda63c6371c7528ee",
+        "governance_version": "2026-08-01"
+      },
+      "disclosure_class": "sanitized-result",
+      "contamination_state": "clean",
+      "governance_id": "adr-0026/evaluator-private-fixture-governance/2026-08-01",
+      "declared_manifest_input_package_fingerprint": "3c51511d6db4b77848dcf2a855c9a66c8bbb3ad356599132c6c83b2d35d5a6e5",
+      "execution_input_document_sha256": "d7b37ed05a5e8713343352747309cf6108f1406468a6862a884d07e54d1dd4ac",
       "retained_input_set_fingerprint": "3c51511d6db4b77848dcf2a855c9a66c8bbb3ad356599132c6c83b2d35d5a6e5",
-      "oracle_fingerprint": "9fc07fde7c50b6891acb760581b16048f6f6a18618a40d8a9d957ec7f0f92612",
+      "oracle_fingerprint": "6d14e1dc4da3a201d72632d4768da6caa56564f01fa0f8b1ee3c19e90ae83ce4",
+      "supplemental_oracle_fingerprint": "fba2ab7ea81c80baf337d5bdcd1ae116d5f089a497046e9ae6cef29c41c671f0",
+      "package_fingerprint": "064b5639a73b7f8657b64381f8b6f401918bfbc8c83b6c585e847785eab68a07",
+      "package_fingerprint_scope": "complete-version-tree-relative-name-length-sha256-line-v1",
       "documents": {
         "public_manifest": {
-          "byte_length": 1478,
-          "sha256": "7bde293a946c1a52a550ae307f228d7aabf3d78b52b80795cdaf33d73d299dca"
+          "byte_length": 1540,
+          "sha256": "ec00c8b32ee990dc846bdb906c22f5e5e69ed19e2b5e5df79e6b6a520d6bd570"
         },
         "execution_input": {
-          "byte_length": 6583,
-          "sha256": "ed7464c7fb4b6c852abab0e86eb1015a60370e3821f613ac882b6bf8fc6ff31f"
+          "byte_length": 6860,
+          "sha256": "d7b37ed05a5e8713343352747309cf6108f1406468a6862a884d07e54d1dd4ac"
         },
         "expected_oracle": {
-          "byte_length": 34749,
-          "sha256": "9fc07fde7c50b6891acb760581b16048f6f6a18618a40d8a9d957ec7f0f92612"
+          "byte_length": 18649,
+          "sha256": "6d14e1dc4da3a201d72632d4768da6caa56564f01fa0f8b1ee3c19e90ae83ce4"
         },
         "provenance": {
-          "byte_length": 159,
-          "sha256": "37e8568811e45159aeee8cf8e542fc4d412039e939af77b8bbd9b5618ac383d2"
+          "byte_length": 167,
+          "sha256": "56f58670a66c1606d77b32147b3ba8f8039d603fd225e443d620de1b2b3fae42"
         },
         "replay_dependencies": {
-          "byte_length": 2810,
-          "sha256": "fe48bb5283d3abb2eca3fdceba2d273a0246c1892fac432eb54af0067ad54a64"
+          "byte_length": 2678,
+          "sha256": "efd222ae939e9b3986a6f3acae22c630ee9e4011cd706adb2739ae25ad429302"
         },
         "redistribution": {
           "byte_length": 143,
           "sha256": "9c5f7570b94eae80a03716b8eb464635f8a5ddc5a826419676eed425b9ca459e"
         },
         "partition_history": {
-          "byte_length": 398,
-          "sha256": "766b7f548e2287d3dedb68b27e7732c1257d0a71e6287903124de91490c321dc"
+          "byte_length": 445,
+          "sha256": "ff85a2df6021cc27c9d39c0886a2bca485ff59c321cbd2ecf28e6b344a9dbe29"
         }
       },
       "independence_evidence": {
-        "artifact_id": "oracle/replacement-malformed-v3-independence-evidence",
-        "artifact_version": "3.0.0-independent-raw-byte",
-        "fingerprint": "32b502cf7b1ee56a07cc1e00843c032f32dd7d8248a82e1801e8d7cfeb5f7f49",
+        "artifact_id": "BETH-MALFORMED-VAL-002.oracle-independence-attestation",
+        "artifact_version": "1.0.0",
+        "fingerprint": "183888a1734edc9884b5be18fab5e293c8bd8e591653a9112f63349f0e26a495",
         "availability": "evaluator-private"
       },
       "corrective_authority_id": "project-owner/user-directed-replacement-review-20260730",
@@ -62,6 +160,93 @@
         "supplemental_oracle_schema_valid": true,
         "cross_document_fingerprints_valid": true,
         "execution_input_isolation_passed": true,
+        "deterministic_reconstruction_verified": true,
+        "evidence_replay_verified": true,
+        "predecessor_package_accessed": false,
+        "prior_reviewer_output_accessed": false,
+        "production_parser_or_output_accessed": false,
+        "mutagen_or_xedit_used": false,
+        "third_party_payload_consumed": false,
+        "protected_root_accessed": false,
+        "network_or_billable_provider_used": false,
+        "evaluation_case_pass_claimed": false
+      }
+    },
+    {
+      "fixture_id": "BETH-UNSUPPORTED-VAL-002",
+      "fixture_version": "1.0.0",
+      "partition": "validation",
+      "evaluation_ids": [
+        "EVAL-0052"
+      ],
+      "purpose": "Independent validation of explicit unsupported and coverage-gap handling across five bounded request classes.",
+      "classification": "unsupported",
+      "owner": "evaluator-private-custodian",
+      "review_state": "sealed",
+      "reviewed_at": "2026-08-01T18:54:26.2786183+00:00",
+      "complete_package_retention": "separate-private-git",
+      "private_store": {
+        "store_id": "infinium-evaluator-fixtures",
+        "relationship": "separate-git-history",
+        "revision": "d929f7c91e0f36cc2e57240bda63c6371c7528ee",
+        "governance_version": "2026-08-01"
+      },
+      "disclosure_class": "sanitized-result",
+      "contamination_state": "clean",
+      "governance_id": "adr-0026/evaluator-private-fixture-governance/2026-08-01",
+      "declared_manifest_input_package_fingerprint": "3f4b34b1f77ca0b70e2b431ae991075f032b29beed825ebf980de9ab4b9221d9",
+      "execution_input_document_sha256": "ec09a40bb8ee57c7da36ef9fd9e613741475f09e948d3cdebaaa6cdaf5e008b7",
+      "retained_input_set_fingerprint": "74f4ba7a7bb5cb024bc8d719e5c4875dceb916670893ec928744c06fcab1ea14",
+      "oracle_fingerprint": "9f47bf6e2deecd61015487e5e4f8b6959279f9b37ffd3d2c11d0b7119452f525",
+      "supplemental_oracle_fingerprint": "31f624e9c388daf3b9342ddd25090da8442ab1a4c1a1860cd07bc0be7a9be7da",
+      "package_fingerprint": "0f609cc259605bf47ecce58465c043b2e7cca6e074a6b133a5729a19c106130e",
+      "package_fingerprint_scope": "canonical-seal-scope-v1",
+      "documents": {
+        "public_manifest": {
+          "byte_length": 1189,
+          "sha256": "e214d2be4ca276384700327f1874eb448bbc6f572d6ebfd550566b4c5543652b"
+        },
+        "execution_input": {
+          "byte_length": 4652,
+          "sha256": "ec09a40bb8ee57c7da36ef9fd9e613741475f09e948d3cdebaaa6cdaf5e008b7"
+        },
+        "expected_oracle": {
+          "byte_length": 10773,
+          "sha256": "9f47bf6e2deecd61015487e5e4f8b6959279f9b37ffd3d2c11d0b7119452f525"
+        },
+        "provenance": {
+          "byte_length": 126,
+          "sha256": "9a6f2f5998c603026e1dacb45e58e3709674b456938af8989d081c0adb64dba4"
+        },
+        "replay_dependencies": {
+          "byte_length": 1478,
+          "sha256": "159c2f91c1b8def921ff4337ec6a0adf25c974cc5823a417588912ab13bc9839"
+        },
+        "redistribution": {
+          "byte_length": 111,
+          "sha256": "163d3fcdbdfb89538e3d582a6cc715fe9a408ff208ac15fe5e33078146297716"
+        },
+        "partition_history": {
+          "byte_length": 286,
+          "sha256": "174f3332557b658b486968b98877ab01a211168d63545d9d28f5bc436a4671d3"
+        }
+      },
+      "independence_evidence": {
+        "artifact_id": "beth-unsupported-val-002-independence-evidence",
+        "artifact_version": "1.0.0",
+        "fingerprint": "cd448118bbf05f2b972dae2ecefe1245326c69796a4e8329a7578af002f9920a",
+        "availability": "evaluator-private"
+      },
+      "corrective_authority_id": "project-owner/user-directed-adr-0026-private-store-migration",
+      "custodian_attestation": {
+        "two_independent_raw_byte_methods_agreed": true,
+        "two_clean_constructions_byte_identical": true,
+        "seven_root_documents_schema_valid": true,
+        "supplemental_oracle_schema_valid": true,
+        "cross_document_fingerprints_valid": true,
+        "execution_input_isolation_passed": true,
+        "deterministic_reconstruction_verified": true,
+        "evidence_replay_verified": true,
         "predecessor_package_accessed": false,
         "prior_reviewer_output_accessed": false,
         "production_parser_or_output_accessed": false,

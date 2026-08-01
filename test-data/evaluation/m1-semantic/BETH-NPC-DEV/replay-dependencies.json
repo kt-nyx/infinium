@@ -6,9 +6,9 @@
     {
       "dependency_id": "bethesda-fixture-generator-v1",
       "kind": "tracked-source",
-      "identity_or_version": "ab71a0485005d544c5792499c645a7975641f55d8dd3c4fced7c04b0fd2cd5f1",
-      "sha256": "ab71a0485005d544c5792499c645a7975641f55d8dd3c4fced7c04b0fd2cd5f1",
-      "byte_length": 63453,
+      "identity_or_version": "606021f9bfb45b6724850d4f543b76c09cef8b58c637a3d7791c12bcffae9ab3",
+      "sha256": "606021f9bfb45b6724850d4f543b76c09cef8b58c637a3d7791c12bcffae9ab3",
+      "byte_length": 63456,
       "retention_location_class": "tracked-repository",
       "availability": "retained",
       "required_for": [

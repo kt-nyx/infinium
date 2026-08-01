@@ -17,12 +17,12 @@
       "change_influenced_implementation": true,
       "replacement_fixture_id": "BETH-MALFORMED-VAL-002",
       "replacement_partition": "validation",
-      "replacement_input_package_fingerprint": "ed7464c7fb4b6c852abab0e86eb1015a60370e3821f613ac882b6bf8fc6ff31f",
-      "replacement_oracle_fingerprint": "9fc07fde7c50b6891acb760581b16048f6f6a18618a40d8a9d957ec7f0f92612",
+      "replacement_input_package_fingerprint": "3c51511d6db4b77848dcf2a855c9a66c8bbb3ad356599132c6c83b2d35d5a6e5",
+      "replacement_oracle_fingerprint": "6d14e1dc4da3a201d72632d4768da6caa56564f01fa0f8b1ee3c19e90ae83ce4",
       "independence_evidence_reference": {
-        "artifact_id": "oracle/replacement-malformed-v3-independence-evidence",
-        "artifact_version": "3.0.0-independent-raw-byte",
-        "fingerprint": "32b502cf7b1ee56a07cc1e00843c032f32dd7d8248a82e1801e8d7cfeb5f7f49",
+        "artifact_id": "BETH-MALFORMED-VAL-002.oracle-independence-attestation",
+        "artifact_version": "1.0.0",
+        "fingerprint": "183888a1734edc9884b5be18fab5e293c8bd8e591653a9112f63349f0e26a495",
         "availability": "evaluator-private"
       },
       "authorized_by": "project-owner/user-directed-replacement-review-20260730"

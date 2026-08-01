@@ -6,7 +6,7 @@
   "snapshot_contract_version": "3.0.0",
   "adapter_id": "infinium.mo2-static-reconstruction/v3",
   "selected_profile_name": "BETH-MALFORMED-VAL",
-  "construction_manifest_fingerprint": "7489505a7c3648d65f920158d5bbed9a8fb1751772197778c11d0ac670cebbb5",
+  "construction_manifest_fingerprint": "e1876cf888c065740d59a711fa2f597f1551cbaaf09ccf45f40cc40ec4ba761c",
   "provider_order": [
     {
       "provider_id": "beth-malformed-val-provider-00",

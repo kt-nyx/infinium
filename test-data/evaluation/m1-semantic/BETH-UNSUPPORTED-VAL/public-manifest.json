@@ -9,22 +9,40 @@
   ],
   "purpose": "Qualify explicit unsupported and gap states for unallowlisted, localized, archive-member, discovery, and bounded taxonomy inputs.",
   "classification": "unsupported",
-  "partition": "validation",
+  "partition": "development",
   "partition_history": [
     {
       "from": null,
       "to": "validation",
       "at": "2026-07-30T18:00:00.0000000+00:00",
-      "reason": "Initial registration of an independently reviewed project-authored validation fixture.",
+      "reason": "Initial registration before the answer-bearing package entered ordinary implementation context.",
       "change_influenced_implementation": false
+    },
+    {
+      "from": "validation",
+      "to": "development",
+      "at": "2026-08-01T18:00:00.0000000+00:00",
+      "reason": "Owner-approved correction: public answer exposure makes this package development evidence under ADR-0026.",
+      "change_influenced_implementation": true,
+      "replacement_fixture_id": "BETH-UNSUPPORTED-VAL-002",
+      "replacement_partition": "validation",
+      "replacement_input_package_fingerprint": "3f4b34b1f77ca0b70e2b431ae991075f032b29beed825ebf980de9ab4b9221d9",
+      "replacement_oracle_fingerprint": "9f47bf6e2deecd61015487e5e4f8b6959279f9b37ffd3d2c11d0b7119452f525",
+      "independence_evidence_reference": {
+        "artifact_id": "beth-unsupported-val-002-independence-evidence",
+        "artifact_version": "1.0.0",
+        "fingerprint": "cd448118bbf05f2b972dae2ecefe1245326c69796a4e8329a7578af002f9920a",
+        "availability": "evaluator-private"
+      },
+      "authorized_by": "project-owner/user-directed-adr-0026-private-store-migration"
     }
   ],
   "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
   "taxonomy_version": "0.1.0",
-  "input_package_fingerprint": "eca5c4decd7584c25b1aecffffd1a4286dc8777954925dc7d7da9fcd82c738b7",
+  "input_package_fingerprint": "2dfd228013cfce9813307d5d8c0403b69b8eb900754a4bd4df054dcbd5ae51e6",
   "oracle_fingerprint": "7d84beb04ab5d7549ea96557cc7310e45d21e944ff76a930c80242ef4cca4045",
   "provenance_fingerprint": "67d4bdbba071d1e0189f339fbdf0c8f33d487959e8a5ebba61cf4279b2942420",
-  "replay_dependency_fingerprint": "d976a80a2243b515bbc40da41322093d6a85bd1fc65b68ec159231164bbb1d08",
+  "replay_dependency_fingerprint": "f97ac336a67b1befd7964caaea53529d789a3f299c20913274352e8a49aeccd1",
   "redistribution_class": "project-authored-redistributable",
   "owner": "infinium-evaluation",
   "review_state": "accepted",

@@ -604,7 +604,7 @@ internal static class FixtureGenerator
             "Consumer-LightReferenceOutOfRange.esp", ["01-Native.esl"],
             [Record("REFR", FormId(1, 0x00000800), Sub("NAME", U32(FormId(0, 0x1000))), Sub("DATA", Placement(0, 0, 0, 0, 0, 0)))]));
 
-        output.CaseMatrix("validation", "boundary", seed,
+        output.CaseMatrix("development", "boundary", seed,
         [
             Case("light-native-minimum", "scan", ["plugins/01-Native.esl"], denominator: "native_esl_object_id"),
             Case("light-native-maximum", "scan", ["plugins/01-Native.esl"], denominator: "native_esl_object_id"),
@@ -675,7 +675,7 @@ internal static class FixtureGenerator
             replacement_path = "mutations/ChangedDuringRead-B.esp",
             resource_limits = new { replacement_count = 1, maximum_file_bytes = 4096 },
         });
-        output.CaseMatrix("validation", "malformed", seed,
+        output.CaseMatrix("development", "malformed", seed,
         [
             Case("malformed-control", "scan", ["plugins/MinimalValid.esp"]),
             Case("malformed-truncated-record-header", "scan", ["mutations/TruncatedRecordHeader.esp"]),
@@ -754,7 +754,7 @@ internal static class FixtureGenerator
             operation = "automatic_environment_discovery",
             requested_sources = new[] { "installed_game", "mod_manager", "registry" },
         });
-        output.CaseMatrix("validation", "unsupported", seed,
+        output.CaseMatrix("development", "unsupported", seed,
         [
             Case("unsupported-record-family", "scan", ["plugins/UnsupportedFamily.esp"], denominator: "record_family"),
             Case("unsupported-npc-field", "scan", ["plugins/UnsupportedNpcField.esp"], denominator: "record_field"),

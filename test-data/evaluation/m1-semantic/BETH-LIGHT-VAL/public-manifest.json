@@ -8,22 +8,40 @@
   ],
   "purpose": "Qualify project-authored full, light, ESL-flagged, maximum, and invalid local-identity boundaries for later Slice 4 evaluation.",
   "classification": "boundary",
-  "partition": "validation",
+  "partition": "development",
   "partition_history": [
     {
       "from": null,
       "to": "validation",
       "at": "2026-07-30T18:00:00.0000000+00:00",
-      "reason": "Initial registration of an independently reviewed project-authored validation fixture.",
+      "reason": "Initial registration before the answer-bearing package entered ordinary implementation context.",
       "change_influenced_implementation": false
+    },
+    {
+      "from": "validation",
+      "to": "development",
+      "at": "2026-08-01T18:00:00.0000000+00:00",
+      "reason": "Owner-approved correction: public answer exposure makes this package development evidence under ADR-0026.",
+      "change_influenced_implementation": true,
+      "replacement_fixture_id": "BETH-LIGHT-VAL-002",
+      "replacement_partition": "validation",
+      "replacement_input_package_fingerprint": "b0f756bb402d0305401ef3ee90017cbbe24e56fc34f7343bbd74e0c49ac1e69d",
+      "replacement_oracle_fingerprint": "e704d9f587985f8e10d83428521023736e679f211ecb1daae51793913c64f705",
+      "independence_evidence_reference": {
+        "artifact_id": "beth-light-val-002-independence-evidence",
+        "artifact_version": "1.0.0",
+        "fingerprint": "56e8c202f1ce9fcee560935219e6eb10af9842c70f278af7bf0b0de1c8928cbb",
+        "availability": "evaluator-private"
+      },
+      "authorized_by": "project-owner/user-directed-adr-0026-private-store-migration"
     }
   ],
   "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
   "taxonomy_version": "0.1.0",
-  "input_package_fingerprint": "1f24b89829da01f393e68a4f63c6d8dfc34a1739c9e07a4d9f9db6f3ffd76b89",
+  "input_package_fingerprint": "f836b993d6b6fb501b062d1b188ac5a852e522c0bd4288e8bbe29a156de6a3f9",
   "oracle_fingerprint": "d6bb10a7c6437fca8757c58737569fec52609edfc0164d536de3c4f0632a7a21",
   "provenance_fingerprint": "9c721db215bf80b929590cabb97abf42355eeb26b36188a97f106c2a5ca2c5ea",
-  "replay_dependency_fingerprint": "be498d2604adb06937fe0976ef3f2d8e66a4f1145731dbfd22c901479f55dc23",
+  "replay_dependency_fingerprint": "55fe4062f45c9e40755cfe0239deb004a4638333137b4183e963fb967b78e421",
   "redistribution_class": "project-authored-redistributable",
   "owner": "infinium-evaluation",
   "review_state": "accepted",
