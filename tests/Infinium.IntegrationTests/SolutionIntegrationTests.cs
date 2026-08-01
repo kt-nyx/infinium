@@ -294,7 +294,7 @@ public sealed class SolutionIntegrationTests
             StopCoordinator(root, coordinatorProcessId);
             if (Directory.Exists(root))
             {
-                Directory.Delete(root, recursive: true);
+                DeleteDirectoryAfterWorkerRelease(root);
             }
         }
     }
@@ -355,7 +355,7 @@ public sealed class SolutionIntegrationTests
             StopCoordinator(root, recoveredCoordinatorProcessId);
             if (Directory.Exists(root))
             {
-                Directory.Delete(root, recursive: true);
+                DeleteDirectoryAfterWorkerRelease(root);
             }
         }
     }
@@ -434,7 +434,7 @@ public sealed class SolutionIntegrationTests
             StopCoordinator(root, coordinatorProcessId);
             if (Directory.Exists(root))
             {
-                Directory.Delete(root, recursive: true);
+                DeleteDirectoryAfterWorkerRelease(root);
             }
         }
     }
@@ -764,6 +764,34 @@ public sealed class SolutionIntegrationTests
         }
 
         StopProcess(processId);
+    }
+
+    private static void DeleteDirectoryAfterWorkerRelease(string root)
+    {
+        Stopwatch timeout = Stopwatch.StartNew();
+        Exception? lastFailure = null;
+        while (timeout.Elapsed < TimeSpan.FromSeconds(10))
+        {
+            try
+            {
+                Directory.Delete(root, recursive: true);
+                return;
+            }
+            catch (IOException exception)
+            {
+                lastFailure = exception;
+            }
+            catch (UnauthorizedAccessException exception)
+            {
+                lastFailure = exception;
+            }
+
+            Thread.Sleep(100);
+        }
+
+        throw new IOException(
+            $"The temporary integration root remained in use after {timeout.Elapsed}.",
+            lastFailure);
     }
 
     private sealed record ProcessResult(int ExitCode, string Output, string Error);

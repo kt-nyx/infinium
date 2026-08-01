@@ -4,7 +4,7 @@ Status: Accepted
 Owner: Project owner  
 Prepared: 2026-07-28  
 Accepted: 2026-07-28  
-Last reviewed: 2026-07-30
+Last reviewed: 2026-08-01
 Applies to: completed M0 Wave F and accepted M1 backend semantic proof
 
 ## Purpose
@@ -45,17 +45,17 @@ of the requirement before its stated delivery milestone.
 
 | Risk | Current evidence | M1 control/gate | Residual after M1 |
 |---|---|---|---|
-| SQLite/CAS crash consistency and native-version drift | ADR-0015 selects the mechanism; no implementation exists | EVAL-0087 plus exact loaded SQLite identity and fault injection | Longer-duration corruption/scale evidence remains M3 |
-| Custom lifecycle correctness | ADR-0016 defines semantics; Dapr was rejected without prototype | State-machine/property tests, crash/fence tests, EVAL-0038/EVAL-0088 where exercised | Tuning and multi-hour behavior remain M3 |
-| Same-user worker compromise | Job Objects contain lifetime/resources but are not a sandbox | Keep M1 parsers managed and positively allowlisted; exclude any operation needing compromise containment | Stronger isolation requires new research/ADR |
+| SQLite/CAS crash consistency and native-version drift | Slice 2 implements the exact loaded SQLite identity, guarded VFS, authoritative schema, CAS, backup/restore, and bounded fault tests | EVAL-0087 remains the milestone-wide retained execution gate | Longer-duration corruption/scale evidence remains M3 |
+| Custom lifecycle correctness | Slice 2 implements the accepted state machine, fencing, recovery, coordinator/worker boundary, and fault tests; the pre-Slice-4 audit added finite worker RPC deadlines after reproducing an orphaned crash-recovery worker | State-machine/property tests, crash/fence tests, EVAL-0038/EVAL-0088 where exercised | Tuning and multi-hour behavior remain M3 |
+| Same-user worker compromise | Per-worker Job Objects contain lifetime/resources and finite RPC deadlines bound coordinator-loss recovery, but neither mechanism is a sandbox | Keep M1 parsers managed and positively allowlisted; exclude any operation needing compromise containment | Stronger isolation requires new research/ADR |
 | Named-pipe caller/role confusion | ADR-0019 specifies restricted role-separated contracts | EVAL-0088 malformed/race/reconnect/nonce/limit suite | Public hostile-local-user hardening remains bounded by Windows same-user model |
 | Credential half-commit or revocation race | ADR-0020 defines generation/intents/helper | EVAL-0089 and secret-canary review before live call | Same-user malware/admin/debugger protection is not claimed |
 | Provider cost/billing ambiguity | ADR-0023 defines conservative reservation/holds | EVAL-0081 synchronous path; the qualification and each semantic call are separately authorized/reserved/settled; unresolved usage retains its hold | Background/Batch/cache/concurrent modes remain disabled |
 | LLM semantic variability | Accepted schema-bound OpenAI path is not deterministic | Exact retained request/response, typed semantic assertions, matched negatives, held-out replacement discipline | No general model reliability claim beyond evaluated prompts/model |
 | Non-date-pinned OpenAI model drift | OpenAI currently lists only the moving `gpt-5.6-sol` snapshot identity | Accepted ADR-0025 requires retained-result replay, returned-model/capability fingerprints, and invalidation/requalification on material drift | Identical live re-execution cannot be promised; only the retained original result is exactly replayable |
-| Controlled-real fixture availability | Exact private source identities exist but redistribution is not permitted | Hash/pin verification and private acquisition manifest; synthetic equivalents remain primary | Public one-command corpus unavailable |
-| Mutagen defects/circular truth | Mutagen is selected; xEdit excluded | Independent byte/structure expectations and EVAL-0052 | Support remains only for positively qualified shapes |
-| MO2 reconstruction drift | Version-pinned research exists; no adapter | Disposable MO2 `2.5.2` fixtures and EVAL-0051 | Other versions/managers remain unsupported |
+| Controlled-real fixture availability | Exact private source identities remain non-redistributable; Slice 3.5 reverified every required private dependency against its retained manifest | Hash/pin verification and private acquisition manifest; synthetic equivalents remain primary | Public one-command corpus unavailable |
+| Mutagen defects/circular truth | Mutagen is selected and xEdit excluded; Slice 3.5 sealed independent byte/structure expectations before production parsing | Slice 4 production comparison through EVAL-0052 | Support remains only for positively qualified shapes |
+| MO2 reconstruction drift | Slice 3 implements the exact version-pinned adapter and EVAL-0051 passed for MO2 `2.5.2` with the accepted empty additional-mapper inventory | Conditional repeat for every new version/operation | Other versions/managers remain unsupported |
 | WPF/WebView2 architecture | Accepted but not needed by CLI-first M1 | No M1 graphical claim | M2 qualification may reopen ADR-0017 |
 
 ## Unsupported M1 capability register

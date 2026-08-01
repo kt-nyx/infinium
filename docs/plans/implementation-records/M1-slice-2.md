@@ -242,3 +242,36 @@ Runtime metadata and backup/restore non-SQLite writes use the same primitive.
 No analyzer, MO2 snapshot, Bethesda parsing, source acquisition, provider,
 credential, UI, evaluation-harness, or other later-slice implementation was
 included. Nothing was pushed.
+
+## 2026-08-01 pre-Slice-4 reliability correction
+
+The accumulated pre-Slice-4 verification reproduced a previously documented
+"temporary-directory cleanup race" in
+`CoordinatorRestartFencesInterruptedWorkerAndRecoversDurableRun`. Inspection
+showed that this was not merely filesystem latency: after an abrupt
+coordinator termination, an orphaned `Infinium.Worker` remained alive holding
+its attempt-staging directory because its named-pipe gRPC calls had no finite
+deadline. Fencing prevented stale publication, but process/resource recovery
+was incomplete and therefore remained a real Slice 2 readiness defect.
+
+Every worker gRPC call now has a five-second local deadline capped by the
+immutable bootstrap expiry. Loss of the coordinator therefore terminates a
+blocked handshake, assignment, progress, control, staging, or terminal call
+within a finite bound. Integration cleanup now retries the exact randomized
+temporary root for at most ten seconds, both tolerating ordinary Windows
+handle-release latency and failing if a worker does not actually release its
+authority.
+
+Post-correction evidence:
+
+- the crash/restart/fence/recovery test passed ten consecutive isolated runs;
+- every iteration left zero Infinium worker processes and zero recovery roots;
+- the accumulated Release suite passed with 201 passed, 9 expected
+  private/platform-conditional skips, and 0 failed;
+- the complete M1 integration subset passed with 22 applicable checks; and
+- post-suite process/root inspection found zero Infinium workers,
+  coordinators, or recovery directories.
+
+This correction changes no lifecycle state, publication authority, schema,
+wire contract, or later-slice behavior. It makes the already accepted bounded
+worker lifetime and coordinator-loss recovery contract enforceably finite.

@@ -44,10 +44,10 @@ proposed disposition enabled by the report.
 | [RESEARCH-0002](RESEARCH-0002-helper-tool-licensing.md) | Completed | RQ-026 resolved by accepted ADR-0006 |
 | [RESEARCH-0003](RESEARCH-0003-retention-replay-export-policy.md) | Completed | RQ-031 answered for M0 by accepted owner disposition; measured-storage follow-up remains |
 | [RESEARCH-0004](RESEARCH-0004-wave-a-policy-and-evidence-handling-integration.md) | Completed | Wave A integrated; Gate A met |
-| [RESEARCH-0005](RESEARCH-0005-mo2-effective-state-acquisition.md) | Completed; recommendation accepted | RQ-001 resolved for M0 by ADR-0008; EVAL-0051 and implementation conformance pending |
+| [RESEARCH-0005](RESEARCH-0005-mo2-effective-state-acquisition.md) | Completed; recommendation accepted | RQ-001 resolved for M0 by ADR-0008; Slice 3 implementation and EVAL-0051 passed for the exact admitted target, with broader target breadth unsupported |
 | [RESEARCH-0006](RESEARCH-0006-mo2-profile-selection-semantics.md) | Completed; recommendation accepted | RQ-002 resolved for M0 by ADR-0008; saved selection is suggestion-only |
-| [RESEARCH-0007](RESEARCH-0007-skyrim-runtime-support-contract.md) | Completed; recommendation accepted | RQ-003 resolved for M0 by ADR-0009; EVAL-0054 and release breadth pending |
-| [RESEARCH-0008](RESEARCH-0008-mutagen-bethesda-semantic-capability.md) | Completed; recommendation accepted | RQ-004 resolved for M0 by ADR-0009; supported-shape/archive/string qualification pending |
+| [RESEARCH-0007](RESEARCH-0007-skyrim-runtime-support-contract.md) | Completed; recommendation accepted | RQ-003 resolved for M0 by ADR-0009; Slice 3 implementation and EVAL-0054 passed for the exact admitted target, while release breadth remains pending |
+| [RESEARCH-0008](RESEARCH-0008-mutagen-bethesda-semantic-capability.md) | Completed; recommendation accepted | RQ-004 resolved for M0 by ADR-0009; Slice 3.5 independently qualified the bounded Slice 4 input/oracle shapes, Slice 4 production conformance remains pending, and archive/string breadth remains excluded |
 | [RESEARCH-0009](RESEARCH-0009-loot-integration-and-data-contract.md) | Completed; recommendation accepted | RQ-005 resolved for M0 by ADR-0011; LOOT delivery remains milestone-conditional and qualification-gated |
 | [RESEARCH-0010](RESEARCH-0010-xedit-ground-truth-and-invocation.md) | Completed; recommendation rejected | Historical RQ-006 evidence retained; ADR-0007 excludes xEdit and replaces the proposed oracle with parser-independent first-party fixture truth |
 | [RESEARCH-0011](RESEARCH-0011-mo2-identity-installer-and-manual-state.md) | Completed; recommendation accepted | RQ-007 resolved for M0 by ADR-0008; bounded FOMOD work remains later |

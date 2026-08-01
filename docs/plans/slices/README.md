@@ -13,8 +13,8 @@ until it is reconciled.
 Current execution plans:
 
 - [M1 Slice 3.5 — Independent Bethesda fixture and oracle qualification](M1-slice-3.5-bethesda-fixture-qualification.md)
-  — Accepted 2026-07-30, amended and completed 2026-08-01; Slice 4 has not
-  started.
+  — Accepted 2026-07-30, amended and completed 2026-08-01; the pre-Slice-4
+  readiness audit found no remaining start blocker; Slice 4 has not started.
 
 Completed slices retain their exact implementation and verification evidence
 under [`../implementation-records/`](../implementation-records/README.md).

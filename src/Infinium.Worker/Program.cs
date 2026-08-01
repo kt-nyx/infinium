@@ -87,7 +87,7 @@ try
         ObservedCoordinatorFencingEpoch =
             checked((ulong)bootstrap.CoordinatorFencingEpoch),
         ProcessId = checked((uint)Environment.ProcessId),
-    }).ResponseAsync.ConfigureAwait(false);
+    }, deadline: GetRpcDeadline(bootstrap)).ResponseAsync.ConfigureAwait(false);
     if (handshake.Disposition != HandshakeDisposition.Accepted
         || handshake.BoundEndpointRole != EndpointRole.GeneralWorker)
     {
@@ -101,7 +101,7 @@ try
             ExpectedAttemptId = new AttemptId { Value = bootstrap.AttemptId },
             ObservedCoordinatorFencingEpoch =
                 checked((ulong)bootstrap.CoordinatorFencingEpoch),
-        }).ResponseAsync.ConfigureAwait(false);
+        }, deadline: GetRpcDeadline(bootstrap)).ResponseAsync.ConfigureAwait(false);
     WorkerAssignment assignment = assignmentResponse.Assignment
         ?? throw new InvalidOperationException("The coordinator did not issue an assignment.");
     ValidateAssignment(bootstrap, assignment);
@@ -119,7 +119,7 @@ try
             Value = 1,
         },
         InertStatusText = "Executing bounded substrate fixture.",
-    }).ResponseAsync.ConfigureAwait(false);
+    }, deadline: GetRpcDeadline(bootstrap)).ResponseAsync.ConfigureAwait(false);
     if (progress.Disposition != WorkerReceiptDisposition.AcceptedForStagingOnly)
     {
         throw new InvalidOperationException("The coordinator rejected worker progress.");
@@ -131,7 +131,7 @@ try
         AttemptId = new AttemptId { Value = bootstrap.AttemptId },
         CoordinatorFencingEpoch = checked((ulong)bootstrap.CoordinatorFencingEpoch),
         AttemptFencingToken = checked((ulong)bootstrap.AttemptFencingToken),
-    }).ResponseAsync.ConfigureAwait(false);
+    }, deadline: GetRpcDeadline(bootstrap)).ResponseAsync.ConfigureAwait(false);
     if (control.Control == WorkerControl.CancelAtSafeBoundary)
     {
         WorkerTerminalReceiptResponse cancelled =
@@ -142,7 +142,7 @@ try
                     checked((ulong)bootstrap.CoordinatorFencingEpoch),
                 AttemptFencingToken = checked((ulong)bootstrap.AttemptFencingToken),
                 Outcome = WorkerTerminalOutcome.Cancelled,
-            }).ResponseAsync.ConfigureAwait(false);
+            }, deadline: GetRpcDeadline(bootstrap)).ResponseAsync.ConfigureAwait(false);
         if (cancelled.Disposition is not (
                 WorkerReceiptDisposition.AcceptedForStagingOnly
                 or WorkerReceiptDisposition.Duplicate)
@@ -282,7 +282,8 @@ try
         },
     });
     SubmitStagedOutputResponse staged = await client.SubmitStagedOutputAsync(
-        new SubmitStagedOutputRequest { Manifest = manifest })
+        new SubmitStagedOutputRequest { Manifest = manifest },
+        deadline: GetRpcDeadline(bootstrap))
         .ResponseAsync.ConfigureAwait(false);
     if (staged.Disposition is not (
             WorkerReceiptDisposition.AcceptedForStagingOnly
@@ -303,7 +304,7 @@ try
                 ? WorkerTerminalOutcome.CompletedWithGapsStaged
                 : WorkerTerminalOutcome.CompletedStaged,
             StagingReceiptId = staged.StagingReceiptId,
-        }).ResponseAsync.ConfigureAwait(false);
+        }, deadline: GetRpcDeadline(bootstrap)).ResponseAsync.ConfigureAwait(false);
     if (terminal.Disposition is not (
             WorkerReceiptDisposition.AcceptedForStagingOnly
             or WorkerReceiptDisposition.Duplicate)
@@ -361,6 +362,13 @@ static void Validate(ManagedWorkerBootstrap bootstrap)
         throw new InvalidOperationException("The private bootstrap is invalid or expired.");
     }
 
+}
+
+static DateTime GetRpcDeadline(ManagedWorkerBootstrap bootstrap)
+{
+    DateTime localBound = DateTime.UtcNow.AddSeconds(5);
+    DateTime bootstrapBound = bootstrap.ExpiresAt.UtcDateTime;
+    return localBound < bootstrapBound ? localBound : bootstrapBound;
 }
 
 static void ValidateAssignment(

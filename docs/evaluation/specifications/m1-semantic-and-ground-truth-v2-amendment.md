@@ -56,3 +56,18 @@ The byte-identical public v1 held-out registry is retained as a historical
 artifact. Revision `/2` does not accept its former complete-retention claim as
 evidence; only the independently authored and reviewed successor may supply the
 held-out obligation.
+
+## Section 17 readiness interpretation
+
+The predecessor specification's Section 17 readiness conditions apply to each
+fixture package before that package is accepted or executed, and to the later
+retained M1 run before M1 completion. They are not a requirement to construct
+every later-slice fixture before beginning Slice 4.
+
+The accepted Slice 3 and Slice 3.5 implementation records establish that the
+EVAL-0051/EVAL-0054 packages and all Bethesda/EVAL-0086 projections required
+as Slice 4 inputs satisfy their applicable Section 17 conditions. Packages for
+Slices 5 through 9 remain later dependencies and do not reopen or block the
+accepted Slice 4 start boundary. EVAL-0052 and the applicable EVAL-0086
+assertions remain Slice 4 execution gates, not prerequisites to starting the
+implementation under test.

@@ -30,7 +30,8 @@ Start with [`docs/README.md`](docs/README.md).
   EVAL-0045, EVAL-0046, EVAL-0051, and EVAL-0054 pass for the admitted
   boundary; Slice 3.5 independently qualifies the Bethesda and applicable
   taxonomy fixtures required before Slice 4, including the ADR-0026 private
-  validation boundary; Slice 4 has not started
+  validation boundary; the 2026-08-01 pre-Slice-4 readiness audit found no
+  remaining start blocker; Slice 4 has not started
 - xEdit: historical integration/oracle recommendation rejected; excluded from
   every Infinium boundary
 - Abandoned implementation: removed from the active tree and retained only in

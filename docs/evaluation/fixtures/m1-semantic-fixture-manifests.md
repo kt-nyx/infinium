@@ -27,7 +27,9 @@ packages explicitly identified below:
   execution-ready;
 - no Bethesda semantic fixture has been executed against Slice 4 production
   behavior; and
-- no evaluation case has passed.
+- fixture acceptance alone passes no evaluation case; EVAL-0051 and EVAL-0054
+  separately passed through the retained Slice 3 execution identified in
+  Section 16.1, while Slice 4 and later cases remain unexecuted.
 
 The terms `development`, `validation`, and `held-out` have the meanings in the
 [fixture guidelines](../fixture-guidelines.md). A slot marked `required before
@@ -186,7 +188,7 @@ unavailable replayability must remain explicit.
 | `BETH-LIGHT-VAL` / `BETH-UNSUPPORTED-VAL` | Development | EVAL-0052 | Constructed and independently reviewed; public answer exposure makes them regression/development evidence rather than independent validation | Independent binary reviewer |
 | `BETH-LIGHT-VAL-002` / `BETH-MALFORMED-VAL-002` / `BETH-UNSUPPORTED-VAL-002` | Validation | EVAL-0052 | Materially independent sealed packages in the separate evaluator-private Git store; public revision/fingerprints and attestations retained; EVAL-0052 remains unexecuted | Isolated private input/oracle roles |
 | `BETH-HO-002` | Held-out | EVAL-0052 | Sealed evaluator-private successor after `BETH-HO-001` retention was unavailable; historical v1 metadata is preserved and invalidated; supported-shape conformance remains pending | Independent holdout custodian |
-| `TARGET-1170-PRIVATE-VAL` and target-negative package | Validation | EVAL-0054 | Exact private fingerprint known; executable manifest not created | Runtime-gate reviewer |
+| `TARGET-1170-PRIVATE-VAL` and target-negative package | Validation | EVAL-0054 | Constructed in the independent Slice 3 evaluator package and passed against the exact admitted target and complete preregistered negative matrix | Runtime-gate reviewer |
 | `ANALYZER-CONTRACT-DEV` and boundary variants | Development/validation | EVAL-0065 | Required; not created | Contract reviewer |
 | `EVID-TYPES-DEV` / `EVID-LLM-VAL` / `EVID-NO-LLM-VAL` / `EVID-HOSTILE-VAL` | Development/validation | EVAL-0067 | Required; not created | Evidence-model reviewer |
 | `LLM-CLAIM-LIVE-VAL` | Validation | EVAL-0067/EVAL-0083 plus live-provider gates | Required for the M1 live semantic proof; not created | Source-claim and provider reviewers |

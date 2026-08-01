@@ -1,7 +1,7 @@
 # Evaluation case catalog
 
 Status: Draft  
-Last reviewed: 2026-07-30
+Last reviewed: 2026-08-01
 
 Executable evaluation fixtures now exist for completed early M1 slices; most
 later cases remain planned. This catalog records both executed status and
@@ -88,7 +88,7 @@ these historical planning labels meant.
 | EVAL-0042 | Synthetic boundary | Symptom report | Initial diagnostic submission explicitly starts one bounded run; later report/clarification revisions remain user-statement evidence and create no run unless analytical follow-up is explicitly initiated; consuming runs/revisions never rewrite earlier history | SCOPE-004, SNAP-001, VALID-005 | Planned |
 | EVAL-0043 | Synthetic boundary | Assumption lifecycle | Inferred/user-provided origin remains distinct from confirmation; create/edit/delete makes new context state without rewriting history | INTENT-004, INTENT-005 | Planned |
 | EVAL-0044 | Synthetic boundary | Cost accounting | Attached child acquisition is included once in every applicable parent/child limit and rollup without duplicated ownership; reused historical cost remains separate; detachment freezes the parent contribution and later acquisition spend is separately authorized/attributed | SCAN-004, SCAN-005, AI-004 | Planned |
-| EVAL-0045 | Synthetic boundary | Manual initiation | Profile/source changes do not trigger analysis or paid/network work; configured children run only under a user-initiated parent | SCOPE-004 | Wave F specification accepted; execution pending |
+| EVAL-0045 | Synthetic boundary | Manual initiation | Profile/source changes do not trigger analysis or paid/network work; configured children run only under a user-initiated parent | SCOPE-004 | Passed for M1 Slice 3 on 2026-07-30: explicit durable submission, idempotency, bounded worker dispatch, staging, fencing, restart handling, coordinator validation, and publication authority passed without implicit work |
 | EVAL-0046 | Integration safety | External tools | Every allowed application/library operation is exercised against disposable protected roots; it leaves MO2, mods, game, profile, configuration, and generated output unchanged, records every allowed product/tool cache or temp effect, and proves that no forbidden write/apply API or command path was reachable | AUTH-001, AUTH-003 | Passed for the delivered M1 Slice 3 exact headless capture operation on 2026-07-29; conditional repeat remains required for every future external operation/version |
 | EVAL-0047 | Synthetic boundary | Suppression lifecycle | Equivalent finding carries suppression with provenance; materially changed revision remains visible and retains old suppression only as history | FIND-005, FIND-006 | Planned |
 | EVAL-0048 | Synthetic boundary | Advisory readiness | Unreviewed advisory stays visible/countable without changing readiness; explicit action-required disposition does change it | FIND-013 | Planned |

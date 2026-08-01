@@ -637,3 +637,58 @@ Corrective main-repository commit: `fix: address M1 Slice 3.5 review findings`
 rather than recursively embedded in itself). Private-store commit:
 `d929f7c91e0f36cc2e57240bda63c6371c7528ee`. Neither repository was pushed.
 Slice 4 was not started.
+
+## 2026-08-01 pre-Slice-4 readiness audit
+
+Slice 3.5 was already marked complete in this record and every top-level plan
+and status index. A fresh audit checked the accepted M1 plan and revision `/2`,
+all Slice 0 through 3.5 implementation records, the evaluation catalog and
+specifications, fixture manifests, research/deferred-risk indexes, public
+registries, private-store sanitized metadata, current source boundaries, and
+the accumulated Release verification set.
+
+The audit corrected these remaining contradictions and defects:
+
+1. EVAL-0045, EVAL-0051, and EVAL-0054 retained passing evidence but still
+   appeared pending on isolated catalog/research surfaces. Those surfaces now
+   agree with the accepted Slice 3 record.
+2. The semantic fixture inventory still said no evaluation had passed and
+   described the EVAL-0054 package as uncreated despite its own retained Slice
+   3 evidence. It now distinguishes fixture acceptance from the separately
+   passed Slice 3 cases.
+3. Specification `/1` could be misread as requiring every later M1 package
+   before Slice 4. Revision `/2` now clarifies that Section 17 applies
+   package-by-package: the accepted Slice 3/3.5 inputs close the Slice 4 start
+   boundary, while later packages remain dependencies of their own slices.
+4. The first accumulated suite run reproduced an orphaned worker after an
+   abrupt coordinator crash. The Slice 2 record above contains the cause,
+   bounded-RPC correction, strengthened recovery cleanup, and ten-run
+   regression evidence.
+
+Final current results:
+
+- locked restore and Release build passed with 0 warnings and 0 errors;
+- full Release suite: 201 passed, 9 expected skips, 0 failed;
+- `Category=M1Unit`: 81 passed, 1 expected skip;
+- `Category=M1Contract`: 24 passed;
+- `Category=M1Integration`: 22 passed;
+- `Category=M1Evaluation`: 27 passed, 8 expected private skips;
+- `Category=M1Security`: 9 passed;
+- `Category=M1Fault`: 13 passed;
+- `TestCategory=M1Security`: 75 passed, 3 expected skips;
+- `TestCategory=M1Fault`: 82 passed, 3 expected skips;
+- Bethesda package qualification: 4 passed;
+- deterministic Bethesda generation, independent corruption self-tests,
+  snapshot receipt regeneration, package finalization, Windows PowerShell 5.1
+  private-store bootstrap, and sanitized private-store revision/tag/integrity
+  checks passed; and
+- no production Mutagen parser, typed index, EVAL-0052/EVAL-0086 execution,
+  provider call, protected-root access, or Slice 4 behavior exists in the
+  current diff.
+
+No pre-Slice-4 blocker remains. EVAL-0052 and the applicable EVAL-0086
+assertions are correctly retained as Slice 4 execution gates rather than
+prerequisites to beginning it. Later M1 evaluation packages, milestone-wide
+`evaluate`/`verify-evaluation`, live-provider work, broader MO2/Skyrim
+surfaces, and excluded archive/string semantics remain later or unsupported
+work and do not reopen Slice 3.5.
