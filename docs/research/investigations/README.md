@@ -92,6 +92,7 @@ proposed disposition enabled by the report.
 | [RESEARCH-0050](RESEARCH-0050-sqlite-opened-object-write-authority.md) | Completed; integrated | The Slice 2 shim-VFS qualifies as ADR-0021's separately qualified equivalent for SQLite-family opens; all delivered non-SQLite Slice 2 product mutations now use the shared opened-object discipline |
 | [RESEARCH-0051](RESEARCH-0051-skyrimse-secondary-root-and-mapper-inventory.md) | Completed; recommendation accepted | The exact Skyrim SE game plugin has no secondary Data root and only maps profile plugin/load-order controls outside Data; the owner accepted the empty mapper allowlist and conditional-positive EVAL-0051 amendment |
 | [RESEARCH-0052](RESEARCH-0052-evaluator-private-fixture-repository-and-agent-access.md) | Completed; recommendation accepted | ADR-0026 accepts a separate private Git history plus purpose-bound fresh-context delegated agent access and sanitized disclosure |
+| [RESEARCH-0053](RESEARCH-0053-mutagen-slice4-fixture-conformance.md) | Completed investigation; disposition pending | RQ-004 reopened because required public Slice 4 RACE and REFR controls are not consumable through the pinned Mutagen `0.54.2` semantic APIs; Slice 4 is blocked pending a reconciled fixture or architecture decision |
 
 Supporting artifact:
 
