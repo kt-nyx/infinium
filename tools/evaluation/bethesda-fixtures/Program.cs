@@ -1455,7 +1455,7 @@ internal static class FixtureGenerator
                 schema_id = "infinium.evaluation.bethesda-case-matrix/v1",
                 schema_version = "1",
                 fixture_id = fixtureId,
-                fixture_version = "1.2.0",
+                fixture_version = "1.3.0",
                 source_basis = "accepted-slice-3.5-plan-and-retained-execution-inputs",
                 cases = scenarios,
             });
@@ -1468,7 +1468,7 @@ internal static class FixtureGenerator
                 schema_id = "infinium.scan.effective-configuration/v1",
                 schema_version = "1",
                 configuration_id = $"{fixtureId.ToLowerInvariant()}.slice4-fixture",
-                configuration_version = "1.2.0",
+                configuration_version = "1.3.0",
                 resolved_at = "2026-08-02T16:00:00.0000000+00:00",
                 saved_configuration_reference = JsonDocument.Parse("null").RootElement.Clone(),
                 analyzers = new[]

@@ -746,6 +746,75 @@ Final correction verification:
 - `dotnet format --verify-no-changes`, dependency-manifest validation, and
   `git diff --check` passed.
 
+## 2026-08-02 accepted-order construction-role maintenance amendment
+
+The project owner authorized a third bounded Slice 3.5 correction after the
+sealed scorer audit showed that public fixture version `1.2.0` retained the
+accepted-order construction receipt without a dedicated execution-input role.
+Public version `1.3.0` adds required
+`accepted_order_construction_input` to the pinned execution schema. The five
+canonical Bethesda identities must provide exactly one role reference to
+`inputs/snapshot/accepted-order.json`; declaration downgrade, unresolved or
+swapped controls, neighboring installation/runtime-order substitutions,
+duplicate payload references, stale metadata, wrong receipt schema,
+fixture/version drift, and source-basis drift fail closed.
+
+The receipt is now closed under
+`infinium.evaluation.bethesda-accepted-order-construction-input/v1` and the
+fixed `accepted-slice-3.5-construction-manifest-and-retained-input-seals`
+source basis. It is the authoritative accepted provider/plugin-order
+projection-construction receipt, not an installation snapshot or runtime
+plugin-order input. Those two neighboring roles are explicitly
+`not-applicable` in all five static project-authored packages. Taxonomy
+projections must carry an accepted-order source entry exactly equal to the
+normalized execution-role reference as well as the resolved retained bytes.
+Reader and finalizer validation also require the declared construction-manifest
+fingerprint, canonical ordered provider/plugin bijection and provider IDs,
+selected-versus-isolated construction sets, every internal retained SHA-256
+seal, and the recomputed canonical capture-binding fingerprint to agree
+exactly. Fully resealed internal-seal drift and installation/runtime-role
+overclaims therefore fail before scoring.
+
+The public package bindings are:
+
+| Fixture | Input package SHA-256 | Oracle SHA-256 |
+|---|---|---|
+| `BETH-NPC-DEV/1.3.0` | `a0bccc6c081acc0fed4fe50291e9002121a1545fae61f258a3d3ac10033ec001` | `b6af9058f047d9afd10c908b1151d24120f69d2ccaabe623c22b873d9b16d25a` |
+| `BETH-REFR-DEV/1.3.0` | `a8410d5bd8616f26034746cf5911930c7ab289bd38ec48fe3f45bde46395d58e` | `d9f3f634faf4725d6feaa260931584f4ecebf00973570ae19b90a096cbcd91bb` |
+| `BETH-LIGHT-VAL/1.3.0` | `e75a1719fc24b21feac80a9f42846400700d6356a2057815cdbb9e055709844f` | `c05efacf5ed4953c0a7b7492521234fdc0f296b7899e998122050956a6bc2937` |
+| `BETH-MALFORMED-VAL/1.3.0` | `239b5d4b7bad864e6ab52c4c650c89b757d7d262775c899f573c42e3dc1856c9` | `dcf9af9ffd16e3ebdce0b5ee2d9491920790bfb3014bef3f3be4f732bfb51568` |
+| `BETH-UNSUPPORTED-VAL/1.3.0` | `59e5d868a7eb403b229b5fbf9e1bb9836ef4e02300962c610d098606e3364273` | `abc78e718a9ab68095e68e5032138ce2dd425993fa985c6e73f784bf01789429` |
+
+Public verification for this correction:
+
+- fixed-seed generator verification passed; a staged SHA-256 comparison
+  proved every generated `.esm`, `.esp`, `.esl`, and mutation byte unchanged;
+- all five independent raw-reader and manual-hex reports were rebuilt and
+  reconciled, with exhaustive taxonomy counts preserved at 17/14/3;
+- independent self-test and exact two-source taxonomy replay passed;
+- package finalization passed twice with stable seals; each package has exact
+  physical/reference input closure and exact one-time byte accounting
+  (`20/26629`, `21/27583`, `15/16663`, `24/195822`, `12/11694`);
+- locked restore and Release build passed with 0 warnings and 0 errors;
+- full Release suite: 248 passed, 9 expected skips, 0 failed;
+- `Category=M1Unit`: 88 passed, 1 expected skip;
+- `Category=M1Contract`: 29 passed;
+- `Category=M1Integration`: 32 passed;
+- `Category=M1Evaluation`: 41 passed, 8 expected private skips;
+- `Category=M1Security`: 9 passed;
+- `Category=M1Fault`: 13 passed;
+- all 73 contract tests and all 50 evaluation tests passed, with only the 8
+  expected evaluator-private skips; and
+- `dotnet format --verify-no-changes`, Windows-PowerShell dependency-manifest
+  validation, and `git diff --check` passed.
+
+This public maintenance pass accessed no evaluator-private fixture repository,
+did not score Slice 4, did not change accepted semantic truth or production
+analyzer behavior, and did not commit or push. Private supersession,
+independent resealing/requalification, scorer audit, exact implementation
+commit scoring, and Slice 4 closeout remain with their separately governed
+roles.
+
 The correction clears the fixture prerequisite for a fresh Slice 4 attempt.
 It does not implement Slice 4, claim EVAL-0052 or EVAL-0086, authorize a
 first-party parser, or broaden the accepted dependency/runtime surface.

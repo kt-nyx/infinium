@@ -23,7 +23,9 @@ Mutagen, xEdit, held-out content, or taxonomy answers.
   dependencies are the two source artifacts declared in its output:
   `oracle/independent-byte-facts.json` and
   `inputs/snapshot/accepted-order.json`; it does not reopen plugin bytes or an
-  independent-reader report.
+  independent-reader report. It validates the accepted-order receipt's closed
+  schema identity, fixture/version identity, and fixed source basis before it
+  constructs any projection.
 - `self_test.py` corrupts reader FormKey/link/chain output, empties manual
   semantic output, and verifies the AIDT/DATA one-byte mutation partitions.
 

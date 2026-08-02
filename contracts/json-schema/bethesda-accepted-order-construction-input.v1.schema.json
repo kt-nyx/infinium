@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/json-schema/bethesda-accepted-order-construction-input.v1.schema.json",
+  "title": "Infinium Bethesda accepted-order construction input v1",
+  "description": "Closed answer-free receipt for constructing the accepted provider/plugin-order projection. It is not an installation snapshot or a runtime plugin-order input.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "fixture_id",
+    "fixture_version",
+    "source_basis",
+    "snapshot_contract_version",
+    "adapter_id",
+    "selected_profile_name",
+    "construction_manifest_fingerprint",
+    "provider_order",
+    "plugin_order",
+    "isolated_capture_variants",
+    "capture_binding_algorithm",
+    "expected_capture_binding_fingerprint",
+    "capture_policy"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "infinium.evaluation.bethesda-accepted-order-construction-input/v1"
+    },
+    "schema_version": {
+      "const": "1"
+    },
+    "fixture_id": {
+      "$ref": "common.v1.schema.json#/$defs/identifier"
+    },
+    "fixture_version": {
+      "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+    },
+    "source_basis": {
+      "const": "accepted-slice-3.5-construction-manifest-and-retained-input-seals"
+    },
+    "snapshot_contract_version": {
+      "const": "3.0.0"
+    },
+    "adapter_id": {
+      "const": "infinium.mo2-static-reconstruction/v3"
+    },
+    "selected_profile_name": {
+      "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+    },
+    "construction_manifest_fingerprint": {
+      "$ref": "common.v1.schema.json#/$defs/fingerprint"
+    },
+    "provider_order": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/provider"
+      }
+    },
+    "plugin_order": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/plugin"
+      }
+    },
+    "isolated_capture_variants": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/sealedArtifact"
+      }
+    },
+    "capture_binding_algorithm": {
+      "const": "infinium.fixture-snapshot-capture-binding/v1"
+    },
+    "expected_capture_binding_fingerprint": {
+      "$ref": "common.v1.schema.json#/$defs/fingerprint"
+    },
+    "capture_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manager_launch",
+        "usvfs_launch",
+        "protected_root_write",
+        "supplied_order_only"
+      ],
+      "properties": {
+        "manager_launch": {
+          "const": "forbidden"
+        },
+        "usvfs_launch": {
+          "const": "forbidden"
+        },
+        "protected_root_write": {
+          "const": "forbidden"
+        },
+        "supplied_order_only": {
+          "const": true
+        }
+      }
+    }
+  },
+  "$defs": {
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider_id",
+        "priority",
+        "source_artifact_id",
+        "source_sha256"
+      ],
+      "properties": {
+        "provider_id": {
+          "$ref": "common.v1.schema.json#/$defs/identifier"
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source_artifact_id": {
+          "$ref": "common.v1.schema.json#/$defs/identifier"
+        },
+        "source_sha256": {
+          "$ref": "common.v1.schema.json#/$defs/fingerprint"
+        }
+      }
+    },
+    "plugin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "load_order",
+        "file_name",
+        "artifact_id",
+        "sha256",
+        "provider_id"
+      ],
+      "properties": {
+        "load_order": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "file_name": {
+          "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+        },
+        "artifact_id": {
+          "$ref": "common.v1.schema.json#/$defs/identifier"
+        },
+        "sha256": {
+          "$ref": "common.v1.schema.json#/$defs/fingerprint"
+        },
+        "provider_id": {
+          "$ref": "common.v1.schema.json#/$defs/identifier"
+        }
+      }
+    },
+    "sealedArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_id",
+        "sha256"
+      ],
+      "properties": {
+        "artifact_id": {
+          "$ref": "common.v1.schema.json#/$defs/identifier"
+        },
+        "sha256": {
+          "$ref": "common.v1.schema.json#/$defs/fingerprint"
+        }
+      }
+    }
+  }
+}

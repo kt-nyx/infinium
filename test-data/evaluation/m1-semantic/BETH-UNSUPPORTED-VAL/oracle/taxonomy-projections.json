@@ -2,7 +2,7 @@
   "schema_id": "infinium.evaluation.taxonomy-projections/v1",
   "schema_version": "1",
   "fixture_id": "BETH-UNSUPPORTED-VAL",
-  "fixture_version": "1.2.0",
+  "fixture_version": "1.3.0",
   "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
   "taxonomy_version": "0.1.0",
   "reviewer_id": "taxonomy-reviewer",
@@ -10,14 +10,14 @@
   "source_artifacts": [
     {
       "artifact_id": "oracle/independent-byte-facts.json",
-      "artifact_version": "1.2.0",
-      "fingerprint": "e70d9a4e357abacf9bf80fcd4579af64f0d05f8499676cd09c52e7379d887701",
+      "artifact_version": "1.3.0",
+      "fingerprint": "1e6f2d17e62a112165f0f1e0fa74e3b14e6d36cb60a3623c34ce65e0ca9323a5",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/snapshot/accepted-order.json",
-      "artifact_version": "1.2.0",
-      "fingerprint": "43c26bcf6fa887ac39d24740e71f3a296524e392a71cf862e323f3778ff50e93",
+      "artifact_version": "1.3.0",
+      "fingerprint": "5a00e7679deef30fd01058eba4c774a85cb8db282f966ab6f8602120aeb2f63c",
       "availability": "retained"
     }
   ],

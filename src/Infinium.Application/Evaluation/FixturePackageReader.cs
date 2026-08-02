@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Infinium.Domain.Contracts;
@@ -61,6 +62,8 @@ public static class FixturePackageReader
     private const string TaxonomyProjectionArtifactId = "oracle/taxonomy-projections.json";
     private const string TaxonomySubjectBindingsArtifactId = "inputs/taxonomy-subject-bindings.json";
     private const string TaxonomyAcceptedOrderArtifactId = "inputs/snapshot/accepted-order.json";
+    private const string BethesdaConstructionManifestArtifactId =
+        "inputs/construction-manifest.json";
     private const string BethesdaCaseMatrixArtifactId = "inputs/case-matrix.json";
     private const string BethesdaEffectiveScanConfigurationArtifactId =
         "inputs/effective-scan-configuration.json";
@@ -186,6 +189,7 @@ public static class FixturePackageReader
         "fixture_id",
         "fixture_version",
         "installation_snapshot_input",
+        "accepted_order_construction_input",
         "analysis_context_input",
         "effective_scan_configuration",
         "case_matrix_input",
@@ -360,6 +364,7 @@ public static class FixturePackageReader
         ValidateOracleArtifactClosure(fullDirectory, oracleSnapshots.Keys);
         bool hasBethesdaByteOracle = oracleSnapshots.ContainsKey(
             BethesdaByteOracleValidator.ArtifactId);
+        JsonElement? acceptedOrderConstructionReference = null;
         if (AcceptedBethesdaFixtureProfiles.TryGetValue(
                 fixtureId.Value,
                 out bool requiresTaxonomyArtifacts))
@@ -368,7 +373,7 @@ public static class FixturePackageReader
                 requiresTaxonomyArtifacts,
                 inputSnapshots,
                 oracleSnapshots);
-            ValidateBethesdaExecutionControls(
+            acceptedOrderConstructionReference = ValidateBethesdaExecutionControls(
                 fixtureId,
                 fixtureVersion,
                 executionInput,
@@ -379,7 +384,8 @@ public static class FixturePackageReader
             fixtureId,
             fixtureVersion,
             inputSnapshots,
-            oracleSnapshots);
+            oracleSnapshots,
+            acceptedOrderConstructionReference);
         if (hasBethesdaByteOracle)
         {
             ValidateRootDocumentClosure(fullDirectory);
@@ -1204,12 +1210,33 @@ public static class FixturePackageReader
         return buffer.ToArray();
     }
 
-    private static void ValidateBethesdaExecutionControls(
+    private static JsonElement ValidateBethesdaExecutionControls(
         OpaqueId fixtureId,
         ContractVersion fixtureVersion,
         JsonElement executionInput,
         IReadOnlyDictionary<string, RetainedArtifactSnapshot> inputSnapshots)
     {
+        ValidateNotApplicableExecutionRole(executionInput, "installation_snapshot_input");
+        ValidateNotApplicableExecutionRole(executionInput, "plugin_order_input");
+
+        JsonElement acceptedOrderComponent = RequireObject(
+            executionInput.GetProperty("accepted_order_construction_input"),
+            "accepted_order_construction_input");
+        if (!StringComparer.Ordinal.Equals(
+                RequireString(acceptedOrderComponent, "state"),
+                "provided")
+            || !acceptedOrderComponent.TryGetProperty(
+                "artifact",
+                out JsonElement acceptedOrderReference))
+        {
+            throw new InvalidDataException(
+                "Bethesda execution input must provide the accepted-order construction receipt.");
+        }
+        ValidateRequiredControlReference(
+            acceptedOrderReference,
+            TaxonomyAcceptedOrderArtifactId,
+            inputSnapshots);
+
         JsonElement scanConfigurationReference = RequireObject(
             executionInput.GetProperty("effective_scan_configuration"),
             "effective_scan_configuration");
@@ -1233,6 +1260,35 @@ public static class FixturePackageReader
             caseMatrixReference,
             BethesdaCaseMatrixArtifactId,
             inputSnapshots);
+
+        RetainedArtifactSnapshot acceptedOrderSnapshot =
+            inputSnapshots[TaxonomyAcceptedOrderArtifactId];
+        using BoundedJsonDocumentSnapshot acceptedOrder = BoundedJsonDocumentReader.Parse(
+            acceptedOrderSnapshot.Bytes,
+            TaxonomyAcceptedOrderArtifactId,
+            maximumDepth: 32);
+        JsonElement acceptedOrderRoot = RequireObject(
+            acceptedOrder.Document.RootElement,
+            TaxonomyAcceptedOrderArtifactId);
+        EmbeddedJsonSchemaValidator.Validate(
+            acceptedOrderRoot,
+            "bethesda-accepted-order-construction-input.v1.schema.json");
+        ValidateIdentity(
+            acceptedOrderRoot,
+            fixtureId,
+            fixtureVersion,
+            TaxonomyAcceptedOrderArtifactId);
+        if (!StringComparer.Ordinal.Equals(
+                RequireString(acceptedOrderRoot, "source_basis"),
+                "accepted-slice-3.5-construction-manifest-and-retained-input-seals")
+            || !StringComparer.Ordinal.Equals(
+                RequireString(acceptedOrderRoot, "selected_profile_name"),
+                fixtureId.Value))
+        {
+            throw new InvalidDataException(
+                "Bethesda accepted-order construction receipt has an unsupported source basis or profile identity.");
+        }
+        ValidateAcceptedOrderReceiptContents(acceptedOrderRoot, inputSnapshots);
 
         RetainedArtifactSnapshot configurationSnapshot =
             inputSnapshots[BethesdaEffectiveScanConfigurationArtifactId];
@@ -1335,6 +1391,283 @@ public static class FixturePackageReader
             throw new InvalidDataException(
                 "Execution input payload references must exactly cover every retained input once.");
         }
+
+        return acceptedOrderReference.Clone();
+    }
+
+    private static void ValidateNotApplicableExecutionRole(
+        JsonElement executionInput,
+        string roleName)
+    {
+        JsonElement role = RequireObject(executionInput.GetProperty(roleName), roleName);
+        if (!StringComparer.Ordinal.Equals(RequireString(role, "state"), "not-applicable")
+            || role.TryGetProperty("artifact", out _))
+        {
+            throw new InvalidDataException(
+                $"Canonical Bethesda execution role '{roleName}' must be explicitly not applicable.");
+        }
+    }
+
+    private static void ValidateAcceptedOrderReceiptContents(
+        JsonElement receipt,
+        IReadOnlyDictionary<string, RetainedArtifactSnapshot> inputSnapshots)
+    {
+        if (!inputSnapshots.TryGetValue(
+                BethesdaConstructionManifestArtifactId,
+                out RetainedArtifactSnapshot? constructionManifest)
+            || !StringComparer.Ordinal.Equals(
+                RequireString(receipt, "construction_manifest_fingerprint"),
+                constructionManifest.Sha256))
+        {
+            throw new InvalidDataException(
+                "Bethesda accepted-order receipt does not match the retained construction manifest.");
+        }
+
+        using BoundedJsonDocumentSnapshot construction = BoundedJsonDocumentReader.Parse(
+            constructionManifest.Bytes,
+            BethesdaConstructionManifestArtifactId,
+            maximumDepth: 64);
+        JsonElement constructionRoot = RequireObject(
+            construction.Document.RootElement,
+            BethesdaConstructionManifestArtifactId);
+        if (!StringComparer.Ordinal.Equals(
+                RequireString(constructionRoot, "schema"),
+                "infinium.bethesda-fixture-construction")
+            || constructionRoot.GetProperty("schema_version").GetInt32() != 1
+            || !StringComparer.Ordinal.Equals(
+                RequireString(constructionRoot, "package_id"),
+                RequireString(receipt, "fixture_id")))
+        {
+            throw new InvalidDataException(
+                "Bethesda retained construction manifest identity is invalid.");
+        }
+        Dictionary<string, string> constructedPlugins = new(StringComparer.Ordinal);
+        Dictionary<string, string> constructedIsolated = new(StringComparer.Ordinal);
+        List<string> constructedPluginOrder = [];
+        List<string> constructedIsolatedOrder = [];
+        HashSet<string> constructionAliases = new(StringComparer.OrdinalIgnoreCase);
+        foreach (JsonElement file in RequireArray(constructionRoot, "files").EnumerateArray())
+        {
+            string relativePath = RequireString(file, "path");
+            string artifactId = $"inputs/{relativePath}";
+            if (!IsBethesdaPluginArtifact(artifactId)
+                || (!relativePath.StartsWith("plugins/", StringComparison.Ordinal)
+                    && !relativePath.StartsWith("mutations/", StringComparison.Ordinal)))
+            {
+                continue;
+            }
+            if (!constructionAliases.Add(artifactId))
+            {
+                throw new InvalidDataException(
+                    "Bethesda construction manifest contains duplicate plugin artifacts.");
+            }
+            Dictionary<string, string> destination = relativePath.StartsWith(
+                "plugins/",
+                StringComparison.Ordinal)
+                ? constructedPlugins
+                : constructedIsolated;
+            destination.Add(artifactId, RequireString(file, "sha256"));
+            (ReferenceEquals(destination, constructedPlugins)
+                ? constructedPluginOrder
+                : constructedIsolatedOrder).Add(artifactId);
+        }
+        StringComparer constructionOrderComparer = StringComparer.Create(
+            CultureInfo.GetCultureInfo("en"),
+            ignoreCase: false);
+        constructedPluginOrder.Sort(constructionOrderComparer);
+        constructedIsolatedOrder.Sort(constructionOrderComparer);
+
+        JsonElement providerOrder = RequireArray(receipt, "provider_order");
+        JsonElement pluginOrder = RequireArray(receipt, "plugin_order");
+        if (providerOrder.GetArrayLength() == 0
+            || providerOrder.GetArrayLength() != pluginOrder.GetArrayLength())
+        {
+            throw new InvalidDataException(
+                "Bethesda accepted-order receipt provider/plugin cardinality is invalid.");
+        }
+
+        Dictionary<string, JsonElement> providers = new(StringComparer.Ordinal);
+        HashSet<string> providerAliases = new(StringComparer.OrdinalIgnoreCase);
+        HashSet<int> priorities = [];
+        HashSet<string> providerArtifacts = new(StringComparer.Ordinal);
+        HashSet<string> providerArtifactAliases = new(StringComparer.OrdinalIgnoreCase);
+        int expectedPriority = 0;
+        string providerIdPrefix = RequireString(receipt, "fixture_id").ToLowerInvariant();
+        foreach (JsonElement provider in providerOrder.EnumerateArray())
+        {
+            string providerId = RequireString(provider, "provider_id");
+            int priority = provider.GetProperty("priority").GetInt32();
+            string artifactId = RequireString(provider, "source_artifact_id");
+            string expectedProviderId = $"{providerIdPrefix}-provider-{expectedPriority:D2}";
+            if (!StringComparer.Ordinal.Equals(providerId, expectedProviderId)
+                || !providerAliases.Add(providerId)
+                || !providers.TryAdd(providerId, provider)
+                || !priorities.Add(priority)
+                || priority != expectedPriority++
+                || priority >= constructedPluginOrder.Count
+                || !StringComparer.Ordinal.Equals(
+                    artifactId,
+                    constructedPluginOrder[priority])
+                || !providerArtifactAliases.Add(artifactId)
+                || !providerArtifacts.Add(artifactId))
+            {
+                throw new InvalidDataException(
+                    "Bethesda accepted-order receipt contains duplicate provider identity or order.");
+            }
+            ValidateAcceptedOrderArtifactSeal(
+                artifactId,
+                RequireString(provider, "source_sha256"),
+                inputSnapshots,
+                constructedPlugins,
+                "provider");
+        }
+        if (!priorities.SetEquals(Enumerable.Range(0, priorities.Count)))
+        {
+            throw new InvalidDataException(
+                "Bethesda accepted-order provider priorities must be contiguous from zero.");
+        }
+
+        HashSet<string> pluginArtifacts = new(StringComparer.Ordinal);
+        HashSet<string> pluginArtifactAliases = new(StringComparer.OrdinalIgnoreCase);
+        HashSet<string> pluginNames = new(StringComparer.OrdinalIgnoreCase);
+        HashSet<string> usedProviderIds = new(StringComparer.Ordinal);
+        HashSet<int> loadOrders = [];
+        int expectedLoadOrder = 0;
+        foreach (JsonElement plugin in pluginOrder.EnumerateArray())
+        {
+            int loadOrder = plugin.GetProperty("load_order").GetInt32();
+            string fileName = RequireString(plugin, "file_name");
+            string artifactId = RequireString(plugin, "artifact_id");
+            string providerId = RequireString(plugin, "provider_id");
+            string pluginSha256 = RequireString(plugin, "sha256");
+            string artifactFileName = artifactId[(artifactId.LastIndexOf('/') + 1)..];
+            if (!loadOrders.Add(loadOrder)
+                || loadOrder != expectedLoadOrder++
+                || loadOrder >= constructedPluginOrder.Count
+                || !StringComparer.Ordinal.Equals(
+                    artifactId,
+                    constructedPluginOrder[loadOrder])
+                || !pluginNames.Add(fileName)
+                || !pluginArtifactAliases.Add(artifactId)
+                || !pluginArtifacts.Add(artifactId)
+                || !usedProviderIds.Add(providerId)
+                || !StringComparer.Ordinal.Equals(fileName, artifactFileName)
+                || !providers.TryGetValue(providerId, out JsonElement provider)
+                || provider.GetProperty("priority").GetInt32() != loadOrder
+                || !StringComparer.Ordinal.Equals(
+                    RequireString(provider, "source_artifact_id"),
+                    artifactId)
+                || !StringComparer.Ordinal.Equals(
+                    RequireString(provider, "source_sha256"),
+                    pluginSha256))
+            {
+                throw new InvalidDataException(
+                    "Bethesda accepted-order plugin/provider cross-reference is invalid.");
+            }
+            ValidateAcceptedOrderArtifactSeal(
+                artifactId,
+                pluginSha256,
+                inputSnapshots,
+                constructedPlugins,
+                "plugin");
+        }
+        if (!loadOrders.SetEquals(Enumerable.Range(0, loadOrders.Count))
+            || !providerArtifacts.SetEquals(pluginArtifacts)
+            || !providers.Keys.ToHashSet(StringComparer.Ordinal).SetEquals(usedProviderIds))
+        {
+            throw new InvalidDataException(
+                "Bethesda accepted-order provider/plugin order is not an exact contiguous bijection.");
+        }
+
+        HashSet<string> isolatedArtifacts = new(StringComparer.Ordinal);
+        HashSet<string> isolatedAliases = new(StringComparer.OrdinalIgnoreCase);
+        int isolatedIndex = 0;
+        foreach (JsonElement isolated in RequireArray(
+                     receipt,
+                     "isolated_capture_variants").EnumerateArray())
+        {
+            string artifactId = RequireString(isolated, "artifact_id");
+            if (!isolatedAliases.Add(artifactId)
+                || !isolatedArtifacts.Add(artifactId)
+                || pluginArtifacts.Contains(artifactId)
+                || isolatedIndex >= constructedIsolatedOrder.Count
+                || !StringComparer.Ordinal.Equals(
+                    artifactId,
+                    constructedIsolatedOrder[isolatedIndex++]))
+            {
+                throw new InvalidDataException(
+                    "Bethesda accepted-order receipt contains duplicate or selected isolated input.");
+            }
+            ValidateAcceptedOrderArtifactSeal(
+                artifactId,
+                RequireString(isolated, "sha256"),
+                inputSnapshots,
+                constructedIsolated,
+                "isolated capture");
+        }
+        HashSet<string> expectedIsolatedArtifacts = inputSnapshots.Keys
+            .Where(IsBethesdaPluginArtifact)
+            .Except(pluginArtifacts, StringComparer.Ordinal)
+            .ToHashSet(StringComparer.Ordinal);
+        if (!isolatedArtifacts.SetEquals(expectedIsolatedArtifacts))
+        {
+            throw new InvalidDataException(
+                "Bethesda accepted-order isolated inputs do not exactly cover unselected plugin payloads.");
+        }
+        if (!pluginArtifacts.SetEquals(constructedPlugins.Keys)
+            || !isolatedArtifacts.SetEquals(constructedIsolated.Keys))
+        {
+            throw new InvalidDataException(
+                "Bethesda accepted-order selected and isolated inputs do not match the construction manifest.");
+        }
+
+        JsonElement captureBinding = JsonSerializer.SerializeToElement(
+            new Dictionary<string, JsonElement>(StringComparer.Ordinal)
+            {
+                ["providers"] = providerOrder.Clone(),
+                ["plugin_order"] = pluginOrder.Clone(),
+            });
+        string actualCaptureBinding = BethesdaByteOracleValidator.ComputeCanonicalFingerprint(
+            captureBinding);
+        if (!StringComparer.Ordinal.Equals(
+                RequireString(receipt, "expected_capture_binding_fingerprint"),
+                actualCaptureBinding))
+        {
+            throw new InvalidDataException(
+                "Bethesda accepted-order capture-binding fingerprint is stale.");
+        }
+    }
+
+    private static void ValidateAcceptedOrderArtifactSeal(
+        string artifactId,
+        string declaredSha256,
+        IReadOnlyDictionary<string, RetainedArtifactSnapshot> inputSnapshots,
+        Dictionary<string, string> constructionSeals,
+        string role)
+    {
+        if (!IsBethesdaPluginArtifact(artifactId)
+            || !inputSnapshots.TryGetValue(artifactId, out RetainedArtifactSnapshot? snapshot)
+            || !constructionSeals.TryGetValue(artifactId, out string? constructionSha256)
+            || !StringComparer.Ordinal.Equals(snapshot.ArtifactId, artifactId)
+            || !StringComparer.Ordinal.Equals(snapshot.Sha256, declaredSha256)
+            || !StringComparer.Ordinal.Equals(constructionSha256, declaredSha256))
+        {
+            throw new InvalidDataException(
+                $"Bethesda accepted-order {role} artifact '{artifactId}' is not exactly retained and sealed.");
+        }
+    }
+
+    private static bool IsBethesdaPluginArtifact(string artifactId)
+    {
+        if (!artifactId.StartsWith(InputArtifactPrefix, StringComparison.Ordinal))
+        {
+            return false;
+        }
+        string fileName = artifactId[(artifactId.LastIndexOf('/') + 1)..];
+        string extension = Path.GetExtension(fileName);
+        return extension.Equals(".esm", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".esp", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".esl", StringComparison.OrdinalIgnoreCase);
     }
 
     private static void ValidateRequiredControlReference(
@@ -1564,7 +1897,8 @@ public static class FixturePackageReader
         OpaqueId fixtureId,
         ContractVersion fixtureVersion,
         IReadOnlyDictionary<string, RetainedArtifactSnapshot> inputSnapshots,
-        Dictionary<string, RetainedArtifactSnapshot> oracleSnapshots)
+        Dictionary<string, RetainedArtifactSnapshot> oracleSnapshots,
+        JsonElement? acceptedOrderConstructionReference)
     {
         bool hasProjections = oracleSnapshots.TryGetValue(
             TaxonomyProjectionArtifactId,
@@ -1603,7 +1937,11 @@ public static class FixturePackageReader
         ValidateIdentity(bindingRoot, fixtureId, fixtureVersion, TaxonomySubjectBindingsArtifactId);
         ValidateTaxonomyDocumentIdentity(projectionRoot, TaxonomyProjectionArtifactId);
         ValidateTaxonomyDocumentIdentity(bindingRoot, TaxonomySubjectBindingsArtifactId);
-        ValidateTaxonomySourceArtifacts(projectionRoot, inputSnapshots, oracleSnapshots);
+        ValidateTaxonomySourceArtifacts(
+            projectionRoot,
+            inputSnapshots,
+            oracleSnapshots,
+            acceptedOrderConstructionReference);
 
         HashSet<string> sealedSubjectIds = new(StringComparer.Ordinal);
         foreach (JsonElement subject in RequireArray(projectionRoot, "subjects").EnumerateArray())
@@ -1674,7 +2012,8 @@ public static class FixturePackageReader
     private static void ValidateTaxonomySourceArtifacts(
         JsonElement projectionRoot,
         IReadOnlyDictionary<string, RetainedArtifactSnapshot> inputSnapshots,
-        Dictionary<string, RetainedArtifactSnapshot> oracleSnapshots)
+        Dictionary<string, RetainedArtifactSnapshot> oracleSnapshots,
+        JsonElement? acceptedOrderConstructionReference)
     {
         HashSet<string> expectedSourceIds = new(StringComparer.Ordinal)
         {
@@ -1715,6 +2054,18 @@ public static class FixturePackageReader
                 TaxonomyProjectionArtifactId,
                 snapshot,
                 "does not exactly match its retained source snapshot.");
+            if (StringComparer.Ordinal.Equals(artifactId, TaxonomyAcceptedOrderArtifactId))
+            {
+                if (acceptedOrderConstructionReference is not JsonElement roleReference)
+                {
+                    throw new InvalidDataException(
+                        "Taxonomy projections require an explicit accepted-order construction input role.");
+                }
+                ValidateExactArtifactReference(
+                    source,
+                    roleReference,
+                    "Taxonomy accepted-order source must exactly equal the normalized execution role reference.");
+            }
         }
 
         if (!actualSourceIds.SetEquals(expectedSourceIds))
@@ -1722,6 +2073,37 @@ public static class FixturePackageReader
             throw new InvalidDataException(
                 "Taxonomy projection source artifacts must be exactly the accepted-order receipt "
                 + "and independent byte facts.");
+        }
+    }
+
+    private static void ValidateExactArtifactReference(
+        JsonElement actual,
+        JsonElement expected,
+        string mismatchReason)
+    {
+        string[] requiredProperties =
+        [
+            "artifact_id",
+            "artifact_version",
+            "fingerprint",
+            "availability",
+        ];
+        foreach (string property in requiredProperties)
+        {
+            if (!StringComparer.Ordinal.Equals(
+                    RequireString(actual, property),
+                    RequireString(expected, property)))
+            {
+                throw new InvalidDataException(mismatchReason);
+            }
+        }
+
+        bool actualHasByteLength = actual.TryGetProperty("byte_length", out JsonElement actualBytes);
+        bool expectedHasByteLength = expected.TryGetProperty("byte_length", out JsonElement expectedBytes);
+        if (actualHasByteLength != expectedHasByteLength
+            || (actualHasByteLength && actualBytes.GetInt64() != expectedBytes.GetInt64()))
+        {
+            throw new InvalidDataException(mismatchReason);
         }
     }
 

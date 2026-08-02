@@ -16,7 +16,7 @@
   "files": [
     {
       "path": "case-matrix.json",
-      "sha256": "70e8803fa6992ca7f99d73d9f1ab52267e8d29032ce8eb67812c44d0f8989180",
+      "sha256": "89dd485945dd06f1f990a10a55daf4728a1269d75498f7f2023ff5c006807331",
       "regions": [
         {
           "offset": 0,
@@ -28,7 +28,7 @@
     },
     {
       "path": "effective-scan-configuration.json",
-      "sha256": "83a273c4f4bfa1ff2746ef5cbea2e5cdcd73cde350755a8c365be9c19c0348f4",
+      "sha256": "2e001584238c3d761a493e7f5fc87c898198aee953dad3c5f3484f7f481c0fda",
       "regions": [
         {
           "offset": 0,

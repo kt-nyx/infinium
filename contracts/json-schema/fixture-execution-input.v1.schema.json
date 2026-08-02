@@ -9,6 +9,7 @@
     "fixture_id",
     "fixture_version",
     "installation_snapshot_input",
+    "accepted_order_construction_input",
     "analysis_context_input",
     "effective_scan_configuration",
     "case_matrix_input",
@@ -33,6 +34,9 @@
       "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
     },
     "installation_snapshot_input": {
+      "$ref": "#/$defs/inputComponent"
+    },
+    "accepted_order_construction_input": {
       "$ref": "#/$defs/inputComponent"
     },
     "analysis_context_input": {

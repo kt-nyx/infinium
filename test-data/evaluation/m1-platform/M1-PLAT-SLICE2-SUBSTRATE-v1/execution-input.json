@@ -5,6 +5,10 @@
     "state": "empty",
     "reason": "Slice 2 evaluates the generic platform substrate without a game installation."
   },
+  "accepted_order_construction_input": {
+    "state": "not-applicable",
+    "reason": "The platform substrate package has no accepted-order projection construction receipt."
+  },
   "analysis_context_input": {
     "state": "empty",
     "reason": "No semantic analysis context is required for platform substrate evaluation."

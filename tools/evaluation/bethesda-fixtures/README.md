@@ -24,7 +24,7 @@ dotnet run --project tools/evaluation/bethesda-fixtures/Infinium.BethesdaFixture
 The generator owns only `inputs/`. It does not create fixture package metadata,
 oracles, taxonomy answers, held-out content, snapshot captures, or parser code.
 
-Bethesda fixture version `1.2.0` retains the `1.0.1` full 128-byte Skyrim `RACE/DATA`
+Bethesda fixture version `1.3.0` retains the `1.0.1` full 128-byte Skyrim `RACE/DATA`
 records and nests format-valid `REFR` records beneath interior CELL block,
 sub-block, child, and persistent-child groups. `verify` also retains the
 declared one-byte and record-order mutation invariants after that nesting.
@@ -47,7 +47,10 @@ node tools/evaluation/bethesda-fixtures/snapshot-receipts.mjs
 Each receipt preregisters the exact provider/plugin order and content hashes.
 The evaluation test independently reconstructs that projection from an actual
 `Mo2SnapshotCapture` result and hashes the captured winner bytes. The receipt
-is not itself represented as a captured MO2 snapshot.
+is not itself represented as a captured MO2 snapshot or runtime plugin-order
+input. Canonical Bethesda execution packages bind it through the dedicated
+required `accepted_order_construction_input` role; installation-snapshot and
+runtime plugin-order roles are not inferred from it.
 
 The independent reviewer uses `independent-review/bounded_raw_reader.py` and
 `independent-review/manual_hex_audit.ps1` against the same frozen bytes, then

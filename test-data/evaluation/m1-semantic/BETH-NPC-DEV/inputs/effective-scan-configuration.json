@@ -2,7 +2,7 @@
   "schema_id": "infinium.scan.effective-configuration/v1",
   "schema_version": "1",
   "configuration_id": "beth-npc-dev.slice4-fixture",
-  "configuration_version": "1.2.0",
+  "configuration_version": "1.3.0",
   "resolved_at": "2026-08-02T16:00:00.0000000\u002B00:00",
   "saved_configuration_reference": null,
   "analyzers": [

@@ -11,6 +11,10 @@
       "availability": "evaluator-private"
     }
   },
+  "accepted_order_construction_input": {
+    "state": "not-applicable",
+    "reason": "This Slice 3 runtime reconstruction package does not construct a Bethesda evaluation taxonomy projection."
+  },
   "analysis_context_input": {
     "state": "empty",
     "reason": "Slice 3 evaluates deterministic capture and runtime admission only."

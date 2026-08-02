@@ -15,8 +15,8 @@ from pathlib import Path
 from typing import Any
 
 
-FIXTURE_VERSION = "1.2.0"
-ORACLE_ARTIFACT_VERSION = "1.2.0"
+FIXTURE_VERSION = "1.3.0"
+ORACLE_ARTIFACT_VERSION = "1.3.0"
 REVIEWED_AT = "2026-08-02T12:00:00.0000000+00:00"
 TAXONOMY_ID = "infinium.skyrim-se.mod-impact-taxonomy"
 TAXONOMY_VERSION = "0.1.0"
@@ -121,6 +121,18 @@ def build(package: Path) -> None:
     byte_oracle = read_json(byte_oracle_path)
     receipt_path = package / "inputs" / "snapshot" / "accepted-order.json"
     receipt = read_json(receipt_path)
+    if (
+        receipt.get("schema_id")
+        != "infinium.evaluation.bethesda-accepted-order-construction-input/v1"
+        or receipt.get("schema_version") != "1"
+        or receipt.get("fixture_id") != fixture_id
+        or receipt.get("fixture_version") != FIXTURE_VERSION
+        or receipt.get("source_basis")
+        != "accepted-slice-3.5-construction-manifest-and-retained-input-seals"
+    ):
+        raise ValueError(
+            f"{fixture_id}: accepted-order construction receipt identity or source basis drifted"
+        )
     ordered_plugins = sorted(receipt["plugin_order"], key=lambda item: item["load_order"])
     selected_artifacts = {item["artifact_id"]: item for item in ordered_plugins}
     facts = byte_oracle["facts"]

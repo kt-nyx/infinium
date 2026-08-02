@@ -84,6 +84,159 @@ public sealed class FixtureSchemaIntegrityTests
     [TestCategory("M1Contract")]
     [TestCategory("M1Fault")]
     [TestCategory("M1Security")]
+    public void BethesdaAcceptedOrderConstructionRoleRejectsDowngradeSubstitutionAndReceiptDrift()
+    {
+        AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
+        {
+            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            execution.Remove("accepted_order_construction_input");
+            WriteExecutionAndResealManifest(root, execution);
+        });
+        AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
+        {
+            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            execution["accepted_order_construction_input"] = new JsonObject
+            {
+                ["state"] = "not-applicable",
+                ["reason"] = "Declaration-downgrade probe.",
+            };
+            WriteExecutionAndResealManifest(root, execution);
+        });
+        AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
+        {
+            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            execution["accepted_order_construction_input"] =
+                execution["installation_snapshot_input"]!.DeepClone();
+            WriteExecutionAndResealManifest(root, execution);
+        });
+        AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
+        {
+            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            execution["accepted_order_construction_input"] =
+                execution["plugin_order_input"]!.DeepClone();
+            WriteExecutionAndResealManifest(root, execution);
+        });
+        AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
+        {
+            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            execution["installation_snapshot_input"] =
+                execution["accepted_order_construction_input"]!.DeepClone();
+            WriteExecutionAndResealManifest(root, execution);
+        });
+        AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
+        {
+            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            execution["plugin_order_input"] =
+                execution["accepted_order_construction_input"]!.DeepClone();
+            WriteExecutionAndResealManifest(root, execution);
+        });
+        AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
+        {
+            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            execution["accepted_order_construction_input"]!["artifact"] =
+                execution["case_matrix_input"]!["artifact"]!.DeepClone();
+            WriteExecutionAndResealManifest(root, execution);
+        });
+        AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
+        {
+            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            execution["accepted_order_construction_input"]!["artifact"] = new JsonObject
+            {
+                ["artifact_id"] = "inputs/snapshot/unsealed.json",
+                ["artifact_version"] = "1.3.0",
+                ["fingerprint"] = new string('0', 64),
+                ["availability"] = "retained",
+            };
+            WriteExecutionAndResealManifest(root, execution);
+        });
+        AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
+        {
+            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            JsonObject acceptedReference = execution["accepted_order_construction_input"]!
+                ["artifact"]!.AsObject();
+            acceptedReference["fingerprint"] = new string('0', 64);
+            WriteExecutionAndResealManifest(root, execution);
+        });
+        AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
+        {
+            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            JsonObject acceptedPayloadReference = execution["input_payload_refs"]!.AsArray()
+                .Select(item => item!.AsObject())
+                .Single(item => item["artifact_id"]!.GetValue<string>()
+                    == "inputs/snapshot/accepted-order.json");
+            execution["input_payload_refs"]!.AsArray().Add(acceptedPayloadReference.DeepClone());
+            WriteExecutionAndResealManifest(root, execution);
+        });
+        AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
+        {
+            string executionPath = Path.Combine(
+                root,
+                FixturePackageReader.ExecutionInputFileName);
+            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            string duplicateValue = execution["accepted_order_construction_input"]!
+                .ToJsonString();
+            string executionJson = execution.ToJsonString();
+            executionJson = executionJson.Replace(
+                "\"accepted_order_construction_input\":",
+                $"\"accepted_order_construction_input\":{duplicateValue},"
+                    + "\"accepted_order_construction_input\":",
+                StringComparison.Ordinal);
+            File.WriteAllText(executionPath, executionJson);
+            JsonObject manifest = ReadObject(
+                root,
+                FixturePackageReader.PublicManifestFileName);
+            manifest["input_package_fingerprint"] = Sha256(executionPath);
+            WriteJson(
+                Path.Combine(root, FixturePackageReader.PublicManifestFileName),
+                manifest);
+        });
+
+        AssertAcceptedOrderReceiptMutationRejected(receipt =>
+            receipt["schema_id"] = "infinium.evaluation.wrong-accepted-order-input/v1");
+        AssertAcceptedOrderReceiptMutationRejected(receipt =>
+            receipt["fixture_id"] = "BETH-WRONG-DEV");
+        AssertAcceptedOrderReceiptMutationRejected(receipt =>
+            receipt["fixture_version"] = "1.2.0");
+        AssertAcceptedOrderReceiptMutationRejected(receipt =>
+            receipt["source_basis"] = "installation-snapshot");
+        AssertAcceptedOrderReceiptMutationRejected(receipt =>
+            receipt["construction_manifest_fingerprint"] = new string('0', 64));
+        AssertAcceptedOrderReceiptMutationRejected(receipt =>
+            receipt["provider_order"]!.AsArray()[0]!["source_sha256"] = new string('0', 64));
+        AssertAcceptedOrderReceiptMutationRejected(receipt =>
+        {
+            JsonArray providers = receipt["provider_order"]!.AsArray();
+            providers[0]!["provider_id"] = "changed-provider";
+            receipt["plugin_order"]!.AsArray()[0]!["provider_id"] = "changed-provider";
+            RefreshAcceptedOrderCaptureFingerprint(receipt);
+        });
+        AssertAcceptedOrderReceiptMutationRejected(receipt =>
+        {
+            receipt["plugin_order"] = new JsonArray(receipt["plugin_order"]!.AsArray()
+                .Reverse()
+                .Select(item => item!.DeepClone())
+                .ToArray());
+            receipt["provider_order"] = new JsonArray(receipt["provider_order"]!.AsArray()
+                .Reverse()
+                .Select(item => item!.DeepClone())
+                .ToArray());
+            RefreshAcceptedOrderCaptureFingerprint(receipt);
+        });
+        AssertAcceptedOrderReceiptMutationRejected(receipt =>
+            receipt["plugin_order"]!.AsArray()[0]!["sha256"] = new string('0', 64));
+        AssertAcceptedOrderReceiptMutationRejected(receipt =>
+            receipt["isolated_capture_variants"]!.AsArray()[0]!["sha256"] =
+                new string('0', 64));
+        AssertAcceptedOrderReceiptMutationRejected(receipt =>
+            receipt["isolated_capture_variants"]!.AsArray().RemoveAt(0));
+        AssertAcceptedOrderReceiptMutationRejected(receipt =>
+            receipt["expected_capture_binding_fingerprint"] = new string('0', 64));
+    }
+
+    [TestMethod]
+    [TestCategory("M1Contract")]
+    [TestCategory("M1Fault")]
+    [TestCategory("M1Security")]
     public void AcceptedBethesdaIdentityRejectsFullyResealedProtectedArtifactDowngrades()
     {
         AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
@@ -1326,6 +1479,29 @@ public sealed class FixtureSchemaIntegrityTests
             mutate(matrix);
             WriteAndResealExecutionControl(root, artifactId, matrix);
         });
+    }
+
+    private static void AssertAcceptedOrderReceiptMutationRejected(Action<JsonObject> mutate)
+    {
+        AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
+        {
+            const string artifactId = "inputs/snapshot/accepted-order.json";
+            JsonObject receipt = ReadObject(root, artifactId);
+            mutate(receipt);
+            WriteAndResealExecutionControl(root, artifactId, receipt);
+        });
+    }
+
+    private static void RefreshAcceptedOrderCaptureFingerprint(JsonObject receipt)
+    {
+        JsonElement binding = JsonSerializer.SerializeToElement(
+            new Dictionary<string, JsonNode?>(StringComparer.Ordinal)
+            {
+                ["providers"] = receipt["provider_order"]!.DeepClone(),
+                ["plugin_order"] = receipt["plugin_order"]!.DeepClone(),
+            });
+        receipt["expected_capture_binding_fingerprint"] =
+            BethesdaByteOracleValidator.ComputeCanonicalFingerprint(binding);
     }
 
     private static void WriteAndResealExecutionControl(

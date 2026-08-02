@@ -19,7 +19,7 @@ const fixtureIds = [
   "BETH-UNSUPPORTED-VAL",
 ];
 const pluginExtensions = new Set([".esm", ".esp", ".esl"]);
-const fixtureVersion = "1.2.0";
+const fixtureVersion = "1.3.0";
 
 for (const fixtureId of fixtureIds) {
   const inputRoot = path.join(fixtureRoot, fixtureId, "inputs");
@@ -51,10 +51,13 @@ for (const fixtureId of fixtureIds) {
   const captureBindingValue = canonicalJson({ providers, plugin_order: pluginOrder });
   const captureBindingFingerprint = sha256(Buffer.from(captureBindingValue, "utf8"));
   const receipt = {
-    schema_id: "infinium.evaluation.bethesda-snapshot-input/v1",
+    schema_id:
+      "infinium.evaluation.bethesda-accepted-order-construction-input/v1",
     schema_version: "1",
     fixture_id: fixtureId,
     fixture_version: fixtureVersion,
+    source_basis:
+      "accepted-slice-3.5-construction-manifest-and-retained-input-seals",
     snapshot_contract_version: "3.0.0",
     adapter_id: "infinium.mo2-static-reconstruction/v3",
     selected_profile_name: fixtureId,

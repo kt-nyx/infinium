@@ -15,9 +15,9 @@ METHODS = [
     "manual-annotated-hex-worksheet-v1",
     "independent-bounded-raw-reader-v1",
 ]
-FIXTURE_VERSION = "1.2.0"
-ORACLE_VERSION = "1.2.0"
-ORACLE_CHANGED_AT = "2026-08-02T16:00:00.0000000+00:00"
+FIXTURE_VERSION = "1.3.0"
+ORACLE_VERSION = "1.3.0"
+ORACLE_CHANGED_AT = "2026-08-02T20:00:00.0000000+00:00"
 PLUGIN_SUFFIXES = {".esm", ".esp", ".esl"}
 SUPPORTED = {
     "TES4": {"MAST", "DATA"},
@@ -1067,7 +1067,7 @@ def build(package: Path, reader_path: Path, manual_path: Path) -> None:
     if taxonomy_path.exists():
         refs["taxonomy"] = {
             "artifact_id": "oracle/taxonomy-projections.json",
-            "artifact_version": "1.2.0",
+            "artifact_version": ORACLE_VERSION,
             "fingerprint": sha(taxonomy_path),
             "availability": "retained",
             "byte_length": taxonomy_path.stat().st_size,
@@ -1205,13 +1205,24 @@ def build(package: Path, reader_path: Path, manual_path: Path) -> None:
                 "reviewer": "oracle-reviewer",
             },
             {
-                "oracle_version": ORACLE_VERSION,
-                "changed_at": ORACLE_CHANGED_AT,
+                "oracle_version": "1.2.0",
+                "changed_at": "2026-08-02T16:00:00.0000000+00:00",
                 "independent_evidence_reference": refs["manual"],
                 "prior_error_explanation": (
                     "Fixture version 1.1.0 assigned its answer-free execution "
                     "scenario inventory to the effective scan-configuration role "
                     "instead of sealing distinct scan-configuration and case-matrix inputs."
+                ),
+                "reviewer": "oracle-reviewer",
+            },
+            {
+                "oracle_version": ORACLE_VERSION,
+                "changed_at": ORACLE_CHANGED_AT,
+                "independent_evidence_reference": refs["manual"],
+                "prior_error_explanation": (
+                    "Fixture version 1.2.0 did not declare the accepted-order "
+                    "construction receipt as its own mandatory execution-input role, "
+                    "distinct from installation-snapshot and runtime plugin-order inputs."
                 ),
                 "reviewer": "oracle-reviewer",
             },

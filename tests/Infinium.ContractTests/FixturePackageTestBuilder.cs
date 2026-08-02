@@ -416,6 +416,7 @@ internal sealed class FixturePackageTestBuilder : IDisposable
             ["fixture_id"] = "fixture-development-1",
             ["fixture_version"] = "1.0.0",
             ["installation_snapshot_input"] = EmptyInputComponent(),
+            ["accepted_order_construction_input"] = EmptyInputComponent(),
             ["analysis_context_input"] = EmptyInputComponent(),
             ["effective_scan_configuration"] = ArtifactReference("effective-configuration"),
             ["case_matrix_input"] = EmptyInputComponent(),

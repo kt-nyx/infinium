@@ -39,6 +39,21 @@ and exact retained-input membership without oracle values. Public and
 evaluator-private packages must be superseded, independently resealed, and
 requalified before scoring resumes.
 
+Accepted accepted-order-role maintenance amendment: On 2026-08-02 the project
+owner authorized a third bounded Slice 3.5 correction after scorer audit found
+that the retained accepted-order construction receipt had no dedicated
+execution-input role. Every package must declare
+`accepted_order_construction_input`; each canonical Bethesda package must
+provide exactly one sealed reference to the retained accepted-order receipt,
+independent of `installation_snapshot_input` and runtime
+`plugin_order_input`. The receipt must have a closed schema and exact
+fixture/version/source-basis identity. Taxonomy provenance must bind the exact
+normalized role reference. A declaration downgrade, neighboring-role
+substitution, unresolved reference, stale seal, or receipt identity drift is
+invalid even when the package is otherwise resealed. Affected public and
+evaluator-private packages must be superseded, independently resealed, and
+requalified before scoring resumes.
+
 ## Authority and precedence
 
 This plan is the executable handoff for M1 Slice 3.5. It refines, but does not

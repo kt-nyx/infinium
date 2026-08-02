@@ -3,13 +3,13 @@ import { readdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 
-const fixtureVersion = "1.2.0";
-const createdAt = "2026-08-02T16:00:00.0000000+00:00";
+const fixtureVersion = "1.3.0";
+const createdAt = "2026-08-02T20:00:00.0000000+00:00";
 const correctedStructureAt = "2026-08-01T22:00:00.0000000+00:00";
 const partitionHistoryInitialAt = "2026-07-30T18:00:00.0000000+00:00";
 const privateReplacementAt = "2026-08-01T18:00:00.0000000+00:00";
 const generatorSha256 =
-  "4dcb7c1c74a9cb55f6a861d4293f80a58d49b3badfad297968b720246ce990a0";
+  "494f741fa2035609317f36079104e61b12ccd0f1f3779244b234596426e25141";
 const generatorProjectSha256 =
   "f360a93248ae4a6a92176c50f85eba13e630c3f64af23ad970b395cb0028b04e";
 const root = path.resolve(
@@ -97,6 +97,17 @@ const fixtures = [
 
 function sha256(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
+}
+
+function canonicalJson(value) {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
+  if (value !== null && typeof value === "object") {
+    return `{${Object.keys(value)
+      .sort()
+      .map((key) => `${JSON.stringify(key)}:${canonicalJson(value[key])}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(value);
 }
 
 async function writeJson(filePath, value) {
@@ -239,6 +250,200 @@ async function validateTaxonomyAndOracleClosure(fixtureRoot, fixture) {
 }
 
 async function validateExecutionControls(fixtureRoot, fixture, byId) {
+  const acceptedOrder = JSON.parse(
+    await readFile(
+      path.join(fixtureRoot, "inputs", "snapshot", "accepted-order.json"),
+      "utf8",
+    ),
+  );
+  if (
+    acceptedOrder.schema_id !==
+      "infinium.evaluation.bethesda-accepted-order-construction-input/v1" ||
+    acceptedOrder.schema_version !== "1" ||
+    acceptedOrder.fixture_id !== fixture.fixtureId ||
+    acceptedOrder.fixture_version !== fixtureVersion ||
+    acceptedOrder.source_basis !==
+      "accepted-slice-3.5-construction-manifest-and-retained-input-seals" ||
+    acceptedOrder.selected_profile_name !== fixture.fixtureId
+  ) {
+    throw new Error(
+      `${fixture.fixtureId} has an invalid accepted-order construction receipt.`,
+    );
+  }
+  const constructionReference = byId.get("inputs/construction-manifest.json");
+  const construction = JSON.parse(
+    await readFile(
+      path.join(fixtureRoot, "inputs", "construction-manifest.json"),
+      "utf8",
+    ),
+  );
+  if (
+    !constructionReference ||
+    acceptedOrder.construction_manifest_fingerprint !==
+      constructionReference.fingerprint ||
+    !Array.isArray(acceptedOrder.provider_order) ||
+    !Array.isArray(acceptedOrder.plugin_order) ||
+    acceptedOrder.provider_order.length === 0 ||
+    acceptedOrder.provider_order.length !== acceptedOrder.plugin_order.length ||
+    !Array.isArray(acceptedOrder.isolated_capture_variants)
+  ) {
+    throw new Error(`${fixture.fixtureId} has invalid accepted-order seals.`);
+  }
+  if (
+    construction.schema !== "infinium.bethesda-fixture-construction" ||
+    construction.schema_version !== 1 ||
+    construction.package_id !== fixture.fixtureId ||
+    !Array.isArray(construction.files)
+  ) {
+    throw new Error(`${fixture.fixtureId} has an invalid construction manifest.`);
+  }
+  const constructionPlugins = new Map();
+  const constructionIsolated = new Map();
+  const constructionPluginOrder = [];
+  const constructionIsolatedOrder = [];
+  for (const file of construction.files) {
+    const extension = path.posix.extname(file.path ?? "").toLowerCase();
+    if (![".esm", ".esp", ".esl"].includes(extension)) continue;
+    const destination = file.path.startsWith("plugins/")
+      ? constructionPlugins
+      : file.path.startsWith("mutations/")
+        ? constructionIsolated
+        : null;
+    if (!destination) continue;
+    const artifactId = `inputs/${file.path}`;
+    if (destination.has(artifactId)) {
+      throw new Error(`${fixture.fixtureId} construction plugin IDs are duplicated.`);
+    }
+    destination.set(artifactId, file.sha256);
+    (destination === constructionPlugins
+      ? constructionPluginOrder
+      : constructionIsolatedOrder).push(artifactId);
+  }
+  constructionPluginOrder.sort((left, right) => left.localeCompare(right, "en"));
+  constructionIsolatedOrder.sort((left, right) => left.localeCompare(right, "en"));
+  const providers = new Map();
+  const providerArtifacts = new Set();
+  const priorities = new Set();
+  for (const [providerIndex, provider] of acceptedOrder.provider_order.entries()) {
+    const retained = byId.get(provider.source_artifact_id);
+    const expectedProviderId = `${fixture.fixtureId.toLowerCase()}-provider-${String(
+      providerIndex,
+    ).padStart(2, "0")}`;
+    if (
+      typeof provider.provider_id !== "string" ||
+      provider.provider_id !== expectedProviderId ||
+      providers.has(provider.provider_id) ||
+      providers.has(provider.provider_id.toLowerCase()) ||
+      !Number.isInteger(provider.priority) ||
+      provider.priority !== providerIndex ||
+      provider.source_artifact_id !== constructionPluginOrder[providerIndex] ||
+      priorities.has(provider.priority) ||
+      providerArtifacts.has(provider.source_artifact_id) ||
+      !retained ||
+      retained.fingerprint !== provider.source_sha256 ||
+      constructionPlugins.get(provider.source_artifact_id) !== provider.source_sha256
+    ) {
+      throw new Error(`${fixture.fixtureId} has invalid accepted provider order.`);
+    }
+    providers.set(provider.provider_id, provider);
+    providers.set(provider.provider_id.toLowerCase(), provider);
+    priorities.add(provider.priority);
+    providerArtifacts.add(provider.source_artifact_id);
+  }
+  if (
+    [...priorities].sort((a, b) => a - b).some((value, index) => value !== index)
+  ) {
+    throw new Error(`${fixture.fixtureId} has non-contiguous provider order.`);
+  }
+  const pluginArtifacts = new Set();
+  const pluginAliases = new Set();
+  const pluginNames = new Set();
+  const usedProviders = new Set();
+  const loadOrders = new Set();
+  for (const [pluginIndex, plugin] of acceptedOrder.plugin_order.entries()) {
+    const retained = byId.get(plugin.artifact_id);
+    const provider = providers.get(plugin.provider_id);
+    const alias = plugin.artifact_id?.toLowerCase();
+    const nameAlias = plugin.file_name?.toLowerCase();
+    if (
+      !Number.isInteger(plugin.load_order) ||
+      plugin.load_order !== pluginIndex ||
+      plugin.artifact_id !== constructionPluginOrder[pluginIndex] ||
+      loadOrders.has(plugin.load_order) ||
+      pluginAliases.has(alias) ||
+      pluginNames.has(nameAlias) ||
+      usedProviders.has(plugin.provider_id) ||
+      path.posix.basename(plugin.artifact_id ?? "") !== plugin.file_name ||
+      !provider ||
+      provider.provider_id !== plugin.provider_id ||
+      provider.priority !== plugin.load_order ||
+      provider.source_artifact_id !== plugin.artifact_id ||
+      provider.source_sha256 !== plugin.sha256 ||
+      !retained ||
+      retained.fingerprint !== plugin.sha256 ||
+      constructionPlugins.get(plugin.artifact_id) !== plugin.sha256
+    ) {
+      throw new Error(`${fixture.fixtureId} has invalid accepted plugin order.`);
+    }
+    loadOrders.add(plugin.load_order);
+    pluginAliases.add(alias);
+    pluginNames.add(nameAlias);
+    pluginArtifacts.add(plugin.artifact_id);
+    usedProviders.add(plugin.provider_id);
+  }
+  if (
+    [...loadOrders].sort((a, b) => a - b).some((value, index) => value !== index) ||
+    providerArtifacts.size !== pluginArtifacts.size ||
+    [...providerArtifacts].some((artifactId) => !pluginArtifacts.has(artifactId)) ||
+    usedProviders.size !== acceptedOrder.provider_order.length
+  ) {
+    throw new Error(`${fixture.fixtureId} provider/plugin order is not bijective.`);
+  }
+  const isolated = new Set();
+  for (const [isolatedIndex, artifact] of acceptedOrder.isolated_capture_variants.entries()) {
+    const alias = artifact.artifact_id?.toLowerCase();
+    const retained = byId.get(artifact.artifact_id);
+    if (
+      isolated.has(alias) ||
+      artifact.artifact_id !== constructionIsolatedOrder[isolatedIndex] ||
+      pluginArtifacts.has(artifact.artifact_id) ||
+      !retained ||
+      retained.fingerprint !== artifact.sha256 ||
+      constructionIsolated.get(artifact.artifact_id) !== artifact.sha256
+    ) {
+      throw new Error(`${fixture.fixtureId} has invalid isolated capture seals.`);
+    }
+    isolated.add(alias);
+  }
+  const executableInputIds = [...byId.keys()].filter((artifactId) =>
+    [".esm", ".esp", ".esl"].includes(path.posix.extname(artifactId).toLowerCase()),
+  );
+  const expectedIsolated = executableInputIds.filter(
+    (artifactId) => !pluginArtifacts.has(artifactId),
+  );
+  if (
+    isolated.size !== expectedIsolated.length ||
+    expectedIsolated.some((artifactId) => !isolated.has(artifactId.toLowerCase())) ||
+    pluginArtifacts.size !== constructionPlugins.size ||
+    [...pluginArtifacts].some((artifactId) => !constructionPlugins.has(artifactId)) ||
+    isolated.size !== constructionIsolated.size ||
+    [...constructionIsolated.keys()].some(
+      (artifactId) => !isolated.has(artifactId.toLowerCase()),
+    )
+  ) {
+    throw new Error(`${fixture.fixtureId} isolated capture closure is not exact.`);
+  }
+  const captureBinding = canonicalJson({
+    providers: acceptedOrder.provider_order,
+    plugin_order: acceptedOrder.plugin_order,
+  });
+  if (
+    acceptedOrder.expected_capture_binding_fingerprint !==
+    sha256(Buffer.from(captureBinding, "utf8"))
+  ) {
+    throw new Error(`${fixture.fixtureId} capture-binding fingerprint is stale.`);
+  }
+
   const matrix = JSON.parse(
     await readFile(path.join(fixtureRoot, "inputs", "case-matrix.json"), "utf8"),
   );
@@ -331,7 +536,7 @@ for (const fixture of fixtures) {
     throw new Error(`${fixture.fixtureId} lacks required retained controls.`);
   }
 
-  const inputComponent = (reason) => ({
+  const acceptedOrderComponent = (reason) => ({
     state: "provided",
     reason,
     artifact: snapshotReference,
@@ -339,8 +544,13 @@ for (const fixture of fixtures) {
   const executionInput = {
     fixture_id: fixture.fixtureId,
     fixture_version: fixtureVersion,
-    installation_snapshot_input: inputComponent(
-      "Retained Slice 3 accepted-order receipt binds the disposable synthetic snapshot input.",
+    installation_snapshot_input: {
+      state: "not-applicable",
+      reason:
+        "No installation snapshot is retained; the project-authored package uses an answer-free construction receipt.",
+    },
+    accepted_order_construction_input: acceptedOrderComponent(
+      "Retained Slice 3.5 receipt authoritatively binds construction of the accepted provider/plugin-order projection.",
     ),
     analysis_context_input: {
       state: "empty",
@@ -359,13 +569,15 @@ for (const fixture of fixtures) {
       reason:
         "Runtime execution is outside the Bethesda byte-input qualification boundary.",
     },
-    mo2_instance_profile_input: inputComponent(
+    mo2_instance_profile_input: acceptedOrderComponent(
       "Retained synthetic profile receipt records the selected profile and accepted adapter identity.",
     ),
-    plugin_order_input: inputComponent(
-      "Retained synthetic profile receipt records exact plugin order and fingerprints.",
-    ),
-    provider_order_input: inputComponent(
+    plugin_order_input: {
+      state: "not-applicable",
+      reason:
+        "No runtime plugin-order input is retained; accepted-order projection construction is declared separately.",
+    },
+    provider_order_input: acceptedOrderComponent(
       "Retained synthetic profile receipt records exact provider order and fingerprints.",
     ),
     source_claim_inputs: [],
@@ -389,7 +601,7 @@ for (const fixture of fixtures) {
     },
     declared_supported_capabilities: [
       "bethesda-project-authored-fixture-input-v1",
-      "slice3-accepted-order-receipt-v1",
+      "slice3.5-accepted-order-construction-input-v1",
     ],
     declared_unsupported_capabilities: [
       {

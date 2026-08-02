@@ -1,7 +1,7 @@
 {
   "fixture_id": "BETH-LIGHT-VAL",
-  "fixture_version": "1.2.0",
-  "oracle_version": "1.2.0",
+  "fixture_version": "1.3.0",
+  "oracle_version": "1.3.0",
   "independent_authors_and_reviewers": [
     "oracle-reviewer"
   ],
@@ -31,8 +31,8 @@
         },
         {
           "artifact_id": "oracle/independent-byte-facts.json",
-          "artifact_version": "1.2.0",
-          "fingerprint": "8c2dd9494ec32f614c6f04adb63978e1afb1a8724a8e82957d316e9e3dd4f160",
+          "artifact_version": "1.3.0",
+          "fingerprint": "b7e6440256296084fa85164fb9740b9ba60903ac1d965a1d05d0b2a28b10a637",
           "availability": "retained"
         }
       ],
@@ -1523,6 +1523,18 @@
         "availability": "retained"
       },
       "prior_error_explanation": "Fixture version 1.1.0 assigned its answer-free execution scenario inventory to the effective scan-configuration role instead of sealing distinct scan-configuration and case-matrix inputs.",
+      "reviewer": "oracle-reviewer"
+    },
+    {
+      "oracle_version": "1.3.0",
+      "changed_at": "2026-08-02T20:00:00.0000000+00:00",
+      "independent_evidence_reference": {
+        "artifact_id": "oracle/manual-hex-worksheet.json",
+        "artifact_version": "1",
+        "fingerprint": "0b664ceaf985a636275c08170e09f58cc9ad7a78bc50e6e8567cba814a38d227",
+        "availability": "retained"
+      },
+      "prior_error_explanation": "Fixture version 1.2.0 did not declare the accepted-order construction receipt as its own mandatory execution-input role, distinct from installation-snapshot and runtime plugin-order inputs.",
       "reviewer": "oracle-reviewer"
     }
   ]

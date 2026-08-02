@@ -88,6 +88,7 @@ does not reveal the answer to the execution path.
 fixture_id
 fixture_version
 installation_snapshot_input
+accepted_order_construction_input
 analysis_context_input
 effective_scan_configuration
 case_matrix_input
@@ -119,6 +120,15 @@ artifact IDs. `compare` has exactly two inputs; `request` and
 `orchestrated-read` exactly one; `scan` one or more. Expected values,
 classifications, denominators, oracle references, and adjudication remain
 outside the execution matrix.
+
+`accepted_order_construction_input` is a separate execution component. Every
+package declares it; canonical Bethesda packages must set it to `provided` and
+bind exactly one retained `inputs/snapshot/accepted-order.json` reference.
+That closed, answer-free receipt authoritatively constructs the accepted
+provider/plugin-order projection. It is not an installation snapshot and is
+not the runtime `plugin_order_input`. Its schema seals fixture/version
+identity, a fixed construction-manifest/retained-seal source basis, the
+accepted orders, and the no-launch/no-write capture policy.
 
 Complete private validation and held-out packages, autonomous delegated access,
 sanitized publication, and contamination transitions follow
@@ -720,6 +730,43 @@ Version `1.2.0` makes no Bethesda-byte or expected-semantic correction. It:
 The five packages share `1.2.0` because execution-input role separation and
 input closure are suite reader contracts. This supersession does not score any
 private package or change the Slice 4 implementation.
+
+### 8.1.4 Bethesda fixture `1.3.0` accepted-order role correction
+
+The third owner-authorized Slice 3.5 maintenance amendment supersedes all five
+public Bethesda `1.2.0` packages uniformly with `1.3.0`. Version `1.2.0`
+retained the accepted-order construction receipt but exposed it only through
+roles that can mean an installation snapshot or runtime plugin order. That
+left projection construction implicit and allowed a scorer to infer an
+essential input from a semantically different declaration.
+
+Version `1.3.0` makes no Bethesda-byte or expected-semantic correction. It:
+
+- adds the required `accepted_order_construction_input` execution component;
+- requires canonical Bethesda packages to keep it `provided` and bind exactly
+  `inputs/snapshot/accepted-order.json`, regardless of attempted declaration
+  downgrade;
+- validates the retained receipt under the closed
+  `infinium.evaluation.bethesda-accepted-order-construction-input/v1` schema,
+  including exact fixture/version identity and the fixed
+  construction-manifest/retained-input-seal source basis;
+- binds the receipt's construction-manifest fingerprint, canonical ordered
+  provider/plugin bijection, deterministic provider IDs, selected and isolated
+  artifact sets, every internal SHA-256 seal, and capture-binding fingerprint
+  to the exact retained input snapshots;
+- records `installation_snapshot_input` and runtime `plugin_order_input` as
+  not applicable for these project-authored static packages instead of
+  aliasing the construction receipt into those roles; and
+- requires a taxonomy projection's accepted-order source entry to equal the
+  normalized execution-role reference exactly, including optional byte-length
+  presence and value.
+
+The five packages share `1.3.0` because the required field and canonical
+Bethesda non-downgrade rule are suite reader contracts. Generic packages may
+declare the role `empty`, `unsupported`, or `not-applicable`; they cannot be
+mistaken for a canonical Bethesda package. This supersession changes neither
+the Slice 4 implementation nor any evaluator-private material in the public
+repository.
 
 The current M1 Bethesda matrix does not contain `QUST`, quest-alias,
 forced-reference/`ALFR`, or other quest-logic shapes. Those shapes belong to a

@@ -1,7 +1,7 @@
 {
   "fixture_id": "BETH-REFR-DEV",
-  "fixture_version": "1.2.0",
-  "oracle_version": "1.2.0",
+  "fixture_version": "1.3.0",
+  "oracle_version": "1.3.0",
   "independent_authors_and_reviewers": [
     "oracle-reviewer"
   ],
@@ -31,8 +31,8 @@
         },
         {
           "artifact_id": "oracle/independent-byte-facts.json",
-          "artifact_version": "1.2.0",
-          "fingerprint": "bab19c79fd3da1c74a41e3e1b4b32bae436a8c4a2691237252bb623fff1014ff",
+          "artifact_version": "1.3.0",
+          "fingerprint": "98062ffa0614eb7a745d3452fde01c52c9790ccdaa3f40a6d3f40808d1d6f209",
           "availability": "retained"
         }
       ],
@@ -44,8 +44,8 @@
       "evidence_references": [
         {
           "artifact_id": "oracle/taxonomy-projections.json",
-          "artifact_version": "1.2.0",
-          "fingerprint": "89991b008be668c438972486d11f045426349b78199bafadc3b7d33af4b28442",
+          "artifact_version": "1.3.0",
+          "fingerprint": "cf59288ff8208e1ba51443337ad328747842959a52df229a934fa42ac8481656",
           "availability": "retained",
           "byte_length": 41740
         }
@@ -4281,8 +4281,8 @@
       "changed_at": "2026-08-02T12:00:00.0000000+00:00",
       "independent_evidence_reference": {
         "artifact_id": "oracle/taxonomy-projections.json",
-        "artifact_version": "1.2.0",
-        "fingerprint": "89991b008be668c438972486d11f045426349b78199bafadc3b7d33af4b28442",
+        "artifact_version": "1.3.0",
+        "fingerprint": "cf59288ff8208e1ba51443337ad328747842959a52df229a934fa42ac8481656",
         "availability": "retained",
         "byte_length": 41740
       },
@@ -4299,6 +4299,18 @@
         "availability": "retained"
       },
       "prior_error_explanation": "Fixture version 1.1.0 assigned its answer-free execution scenario inventory to the effective scan-configuration role instead of sealing distinct scan-configuration and case-matrix inputs.",
+      "reviewer": "oracle-reviewer"
+    },
+    {
+      "oracle_version": "1.3.0",
+      "changed_at": "2026-08-02T20:00:00.0000000+00:00",
+      "independent_evidence_reference": {
+        "artifact_id": "oracle/manual-hex-worksheet.json",
+        "artifact_version": "1",
+        "fingerprint": "cf50961b11dfd073ee5a2869b3efe17181ca8913d3ee049d44ecf5d1ed944674",
+        "availability": "retained"
+      },
+      "prior_error_explanation": "Fixture version 1.2.0 did not declare the accepted-order construction receipt as its own mandatory execution-input role, distinct from installation-snapshot and runtime plugin-order inputs.",
       "reviewer": "oracle-reviewer"
     }
   ]

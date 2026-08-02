@@ -97,8 +97,13 @@ literal production subject participant ID; duplicate, missing, unexpected, or
 reused targets are invalid. The projection and binding documents carry exact
 fixture and taxonomy identities. A projection's source set is exactly its
 retained accepted-order receipt and independent byte facts, with every source
-reference matching the already snapshotted metadata. Every retained oracle
-file must be owned by the expected oracle's exact reference closure.
+reference matching both the already snapshotted metadata and the normalized
+`accepted_order_construction_input` execution-role reference. The receipt is
+validated by the closed
+`bethesda-accepted-order-construction-input.v1.schema.json` contract and is
+distinct from installation-snapshot and runtime plugin-order declarations.
+Every retained oracle file must be owned by the expected oracle's exact
+reference closure.
 
 Readers consume each document through one bounded, read-only file snapshot,
 reject duplicate object properties recursively, and hash and parse the same
