@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using Google.Protobuf;
 using Infinium.Application.Runtime;
+using Infinium.Bethesda;
 using Infinium.Contracts.Protobuf.Common.V1;
 using Infinium.Contracts.Protobuf.Domain.V1;
 using Infinium.Contracts.Protobuf.Protocol.V1;
@@ -62,7 +63,7 @@ if (args.Length != 1 || !string.Equals(args[0], "execute", StringComparison.Ordi
 
 try
 {
-    byte[] bootstrapBytes = await ReadBoundedAsync(Console.OpenStandardInput(), 16_384)
+    byte[] bootstrapBytes = await ReadBoundedAsync(Console.OpenStandardInput(), 16 * 1024 * 1024)
         .ConfigureAwait(false);
     ManagedWorkerBootstrap bootstrap = JsonSerializer.Deserialize<ManagedWorkerBootstrap>(bootstrapBytes)
         ?? throw new InvalidOperationException("The private bootstrap is malformed.");
@@ -161,6 +162,7 @@ try
     }
 
     Mo2SnapshotCaptureResult? snapshotResult = null;
+    BethesdaSemanticExtractionResult? bethesdaResult = null;
     byte[] payload;
     if (assignment.Operation.Kind == WorkerOperationKind.CaptureMo2Snapshot)
     {
@@ -208,6 +210,35 @@ try
         }
 
         payload = JsonSerializer.SerializeToUtf8Bytes(snapshotResult);
+    }
+    else if (assignment.Operation.Kind == WorkerOperationKind.BuildTypedIndex)
+    {
+        ManagedBethesdaSemanticAssignment semantic = bootstrap.BethesdaSemanticExtraction
+            ?? throw new InvalidOperationException(
+                "The typed Bethesda semantic assignment is missing.");
+        TimeSpan remaining = bootstrap.ExpiresAt - DateTimeOffset.UtcNow;
+        if (remaining <= TimeSpan.Zero)
+        {
+            throw new InvalidOperationException(
+                "The Bethesda semantic assignment expired before execution.");
+        }
+
+        using CancellationTokenSource semanticDeadline = new(remaining);
+        bethesdaResult = new BethesdaSemanticExtractor().Extract(
+            new BethesdaSemanticRequest(
+                semantic.AcceptedSnapshot,
+                semantic.RequestedUnsupportedCapabilities),
+            semanticDeadline.Token);
+        if (bethesdaResult.State is not (
+                BethesdaExtractionState.Completed
+                or BethesdaExtractionState.CompletedWithGaps)
+            || bethesdaResult.Snapshot is null)
+        {
+            throw new InvalidOperationException(
+                "Bethesda semantic extraction did not produce a publishable staged result.");
+        }
+
+        payload = JsonSerializer.SerializeToUtf8Bytes(bethesdaResult);
     }
     else if (assignment.Operation.Kind == WorkerOperationKind.ValidateStagedArtifact)
     {
@@ -301,6 +332,7 @@ try
                 checked((ulong)bootstrap.CoordinatorFencingEpoch),
             AttemptFencingToken = checked((ulong)bootstrap.AttemptFencingToken),
             Outcome = snapshotResult?.State == SnapshotCaptureState.CompletedWithGaps
+                || bethesdaResult?.State == BethesdaExtractionState.CompletedWithGaps
                 ? WorkerTerminalOutcome.CompletedWithGapsStaged
                 : WorkerTerminalOutcome.CompletedStaged,
             StagingReceiptId = staged.StagingReceiptId,
@@ -354,8 +386,12 @@ static void Validate(ManagedWorkerBootstrap bootstrap)
         || bootstrap.MaximumOutputBytes is <= 0 or > 64 * 1024 * 1024
         || (bootstrap.OperationKind == ManagedWorkerOperationKind.Mo2SnapshotCapture
             && bootstrap.Mo2SnapshotCapture is null)
+        || (bootstrap.OperationKind == ManagedWorkerOperationKind.BethesdaSemanticExtraction
+            && bootstrap.BethesdaSemanticExtraction is null)
         || (bootstrap.OperationKind != ManagedWorkerOperationKind.Mo2SnapshotCapture
             && bootstrap.Mo2SnapshotCapture is not null)
+        || (bootstrap.OperationKind != ManagedWorkerOperationKind.BethesdaSemanticExtraction
+            && bootstrap.BethesdaSemanticExtraction is not null)
         || bootstrap.ExpiresAt <= DateTimeOffset.UtcNow
         || Convert.FromBase64String(bootstrap.OneUseNonceBase64).Length != 32)
     {
@@ -399,7 +435,15 @@ static void ValidateAssignment(
                     != "infinium.mo2-static-reconstruction"
                 || assignment.Operation.AdapterOrAnalyzerVersion?.Value != "3.0.0"))
         || (bootstrap.OperationKind == ManagedWorkerOperationKind.SubstrateValidation
-            && assignment.Operation?.Kind != WorkerOperationKind.ValidateStagedArtifact))
+            && assignment.Operation?.Kind != WorkerOperationKind.ValidateStagedArtifact)
+        || (bootstrap.OperationKind == ManagedWorkerOperationKind.BethesdaSemanticExtraction
+            && (assignment.Operation?.Kind != WorkerOperationKind.BuildTypedIndex
+                || assignment.Operation.AdapterOrAnalyzerId
+                    != BethesdaSemanticExtractor.ProducerId
+                || assignment.Operation.AdapterOrAnalyzerVersion?.Value
+                    != BethesdaSemanticExtractor.ProducerVersion
+                || assignment.Limits?.MaximumTotalInputBytes != 64UL * 1024 * 1024
+                || assignment.Limits.MaximumDuration?.Value != 120_000)))
     {
         throw new InvalidOperationException("The worker assignment exceeds its launch authority.");
     }

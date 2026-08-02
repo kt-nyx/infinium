@@ -1,6 +1,6 @@
 # M1 Slice 4 — Bethesda semantic extraction and typed indexes
 
-Status: Blocked attempt closed; fixture prerequisite corrected for a fresh attempt
+Status: Complete; original blocked-attempt history retained below
 
 Plan: `infinium.plan.m1.backend-semantic-proof/2`
 
@@ -192,3 +192,131 @@ The original blocked attempt and its no-implementation conclusion remain
 historically accurate. The prerequisite blocker is now cleared for a fresh
 Slice 4 attempt; no production implementation, EVAL-0052 pass, EVAL-0086 pass,
 or later-slice authorization is claimed by the fixture correction itself.
+
+## Fresh implementation closeout
+
+Implemented: 2026-08-01
+
+Accepted plan revision: `infinium.plan.m1.backend-semantic-proof/2`
+
+Accepted plan SHA-256:
+`9d3eeaf32b078e19340c6a08ae65413339fcb1e2f58f1b84f4f71e56b4d88bd4`
+
+Fresh-attempt baseline:
+`a63f5a1b1d55127a9fc89a3788a74b291850cca7`
+
+Implementation commit: recorded by the follow-up closeout commit after the
+reviewed implementation is committed.
+
+### Delivered contract
+
+- added a Mutagen `0.54.2`-only Bethesda semantic extractor for the accepted
+  snapshot's ordered plugin winners, with structural bounds, stable read seals,
+  declared/cumulative decompression limits, and no environment discovery;
+- added canonical plugin/record identities, master and light-master FormKey
+  translation, contributions, override chains, winners, typed links, reverse
+  indexes, and explicit unsupported/coverage-gap results;
+- added the qualified NPC AI/package/template/appearance, RACE, REFR
+  relation/ownership/placement, and loose FaceGen facts, including closed
+  FaceGen applicability precedence and snapshot-authoritative loose-provider
+  chains;
+- added subject-specific taxonomy projections that keep AI, appearance,
+  placed-reference, provider-topology, and unsupported surfaces distinct;
+- added durable immutable run-operation intent, accepted-snapshot resolution,
+  plugin byte seals, contained-worker execution/recovery, strict staged-result
+  validation, and CAS publication through the coordinator boundary;
+- made worker Job Object membership atomic at process creation so a coordinator
+  crash cannot orphan a suspended worker holding staging authority; and
+- added unit, contract, integration, evaluation, security, and fault coverage
+  for supported, malformed, unsupported, compressed, light-master, worker,
+  recovery, tamper, bound, non-mutation, and taxonomy behavior.
+
+No first-party Bethesda semantic parser was introduced. First-party code only
+performs bounded framing/preflight and independently sealed test-oracle work;
+Mutagen remains the sole production semantic interpreter for supported records.
+
+### Evaluation evidence
+
+EVAL-0052 passed against every scenario in the qualified public
+`BETH-NPC-DEV`, `BETH-REFR-DEV`, and `BETH-LIGHT-VAL` packages, plus the
+`BETH-MALFORMED-VAL` and `BETH-UNSUPPORTED-VAL` negative families. Exact checks
+cover participant admission, record state, allowlisted field presence/count,
+AI data, template/configuration links, RACE flags, REFR placement and links,
+master/light FormKeys, chains, winners, receipts, hashes, lengths, malformed
+failure, and explicit unsupported gaps. The contained-worker publication path
+was also exercised end to end from an authoritative published snapshot.
+
+The Slice-4-applicable EVAL-0086 path passed using independently derived byte
+facts, expected taxonomy assignments, subject-specific forbidden assignments,
+accepted reason codes, provenance, and retained taxonomy version. No
+fixture-, mod-, NPC-, race-, zone-, or title-specific rule exists in production.
+
+The six closed FaceGen applicability branches, loose provider order/winner,
+partial and missing pairs, exact archive absence, full-plugin origin, and
+light-master origin under a flagged ESP winner were exercised. Archive-positive
+FaceGen remains outside the qualified Slice 4 surface.
+
+The evaluation artifacts are the versioned fixture manifests/oracles and the
+test results above. No `artifacts/m1-evaluation` run identifier was produced:
+the milestone-level `evaluate` and `verify-evaluation` CLI entry points remain
+owned by the later evaluation-harness work and were confirmed unavailable at
+this slice boundary. This is not treated as an EVAL-0052 or EVAL-0086 bypass;
+their Slice 4 assertions run directly in the retained evaluation test project.
+
+### Verification
+
+Final post-correction commands from repository root:
+
+| Command | Result |
+| --- | --- |
+| `dotnet restore Infinium.sln --locked-mode --nologo` | Passed; all projects up to date. |
+| `dotnet build Infinium.sln -c Release --no-restore --nologo` | Passed; 0 warnings, 0 errors. |
+| `dotnet test Infinium.sln -c Release --no-build --nologo --filter "Category=M1Unit"` | Passed; 88 passed, 1 expected platform-dependent skip. |
+| `dotnet test Infinium.sln -c Release --no-build --nologo --filter "Category=M1Contract"` | Passed; 25 passed. |
+| `dotnet test Infinium.sln -c Release --no-build --nologo --filter "Category=M1Integration"` | Passed; 32 passed. |
+| `dotnet test Infinium.sln -c Release --no-build --nologo --filter "Category=M1Evaluation"` | Passed; 41 passed, 8 expected evaluator-private Slice 3/3.5 skips. |
+| `dotnet test Infinium.sln -c Release --no-build --nologo --filter "Category=M1Security"` | Passed; 9 passed. |
+| `dotnet test Infinium.sln -c Release --no-build --nologo --filter "Category=M1Fault"` | Passed; 13 passed. |
+| `dotnet test Infinium.sln -c Release --no-build --nologo --filter "TestCategory=M1Unit"` | Passed; 95 passed, 1 expected platform-dependent skip. |
+| `dotnet test Infinium.sln -c Release --no-build --nologo --filter "TestCategory=M1Contract"` | Passed; 39 passed. |
+| `dotnet test Infinium.sln -c Release --no-build --nologo --filter "TestCategory=M1Integration"` | Passed; 33 passed. |
+| `dotnet test Infinium.sln -c Release --no-build --nologo --filter "TestCategory=M1Evaluation"` | Passed; 59 passed, 8 expected evaluator-private Slice 3/3.5 skips. |
+| `dotnet test Infinium.sln -c Release --no-build --nologo --filter "TestCategory=M1Security"` | Passed; 86 passed, 3 expected skips. |
+| `dotnet test Infinium.sln -c Release --no-build --nologo --filter "TestCategory=M1Fault"` | Passed; 86 passed, 3 expected skips. |
+| `dotnet test Infinium.sln -c Release --no-build --nologo` | Passed; 239 passed, 9 expected skips. |
+| `dotnet run --project src/Infinium.Cli -c Release --no-build -- evaluate --manifest test-data/manifests/m1-suite.json --output artifacts/m1-evaluation` | Confirmed unavailable at this slice boundary; usage output, exit 2, no artifact produced. |
+| `dotnet run --project src/Infinium.Cli -c Release --no-build -- verify-evaluation --input artifacts/m1-evaluation` | Confirmed unavailable at this slice boundary; usage output, exit 2. |
+| `dotnet format Infinium.sln --verify-no-changes --no-restore --verbosity minimal` | Passed. |
+| `powershell -NoProfile -ExecutionPolicy Bypass -File eng/update-dependency-manifest.ps1 -Check` | Passed. |
+| `git diff --check` | Passed. |
+
+Focused post-fix stress evidence: the coordinator crash/recovery integration
+test passed five consecutive iterations with zero remaining contained-worker
+processes; the CLI named-pipe lifecycle flow passed three consecutive
+iterations after its independent replay/cancellation checks were ordered around
+the actual `Running` boundary.
+
+### Review, corrections, and final disposition
+
+Independent semantic and boundary reviewers examined the implementation and
+tests against the accepted plan, ADRs, evaluation cases, fixture contracts,
+anti-overfitting rules, security, and non-mutation requirements. Review found
+and corrected field-presence default leakage, compressed-input bound handling,
+FaceGen precedence/coverage, taxonomy cross-area projection leakage, durable
+recovery and aggregate input sealing, exact oracle coverage, an atomic Job
+Object containment race, its error-path handle cleanup, and two nondeterministic
+accumulated lifecycle tests. Affected checks were rerun after each correction.
+Both independent reviewers returned PASS on the final diff.
+
+No evaluator-private fixture was read by the implementation/review agent. The
+eight expected private skips belong to already completed Slice 3/3.5
+environment qualification; Slice 4 uses the qualified public Bethesda matrix
+and independent public oracles. The legacy archive was not accessed.
+
+Known explicit gaps are archive-positive/BSA semantics, localized strings,
+NIF/PEX/native/generated/configuration analysis, non-allowlisted record or
+field semantics, and environment discovery. They remain unsupported or
+coverage gaps rather than inferred facts. No candidate, finding, documentation
+claim import, provider call, credential, UI, recommendation, or other Slice 5+
+work was started. No protected setup root or external state was mutated, no
+push occurred, and no billable call was made.

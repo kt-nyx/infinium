@@ -1,5 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <ProjectReference Include="..\Infinium.Domain\Infinium.Domain.csproj" />
+    <ProjectReference Include="..\Infinium.Mo2\Infinium.Mo2.csproj" />
     <PackageReference Include="Mutagen.Bethesda.Skyrim" />
   </ItemGroup>
 </Project>

@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Text;
 using Google.Protobuf;
 using Infinium.Application.Runtime;
+using Infinium.Bethesda;
 using Infinium.Contracts.Protobuf.Common.V1;
 using Infinium.Contracts.Protobuf.Domain.V1;
 using Infinium.Contracts.Protobuf.Protocol.V1;
@@ -110,13 +111,17 @@ public sealed class WorkerBootstrapRegistry
             {
                 Value = bootstrap.OperationKind == ManagedWorkerOperationKind.Mo2SnapshotCapture
                     ? bootstrap.RunId
-                    : bootstrap.RunId + "-slice2-substrate",
+                    : bootstrap.OperationKind == ManagedWorkerOperationKind.BethesdaSemanticExtraction
+                        ? bootstrap.RunId + "-bethesda-semantic"
+                        : bootstrap.RunId + "-slice2-substrate",
             },
             JobNodeId = new JobNodeId
             {
                 Value = bootstrap.OperationKind == ManagedWorkerOperationKind.Mo2SnapshotCapture
                     ? bootstrap.RunId + "-capture"
-                    : bootstrap.RunId + "-root",
+                    : bootstrap.OperationKind == ManagedWorkerOperationKind.BethesdaSemanticExtraction
+                        ? bootstrap.RunId + "-bethesda-index"
+                        : bootstrap.RunId + "-root",
             },
             AttemptId = new AttemptId { Value = bootstrap.AttemptId },
             DispatchId = new DispatchId { Value = bootstrap.BootstrapId },
@@ -130,14 +135,27 @@ public sealed class WorkerBootstrapRegistry
             },
             Limits = new WorkerLimits
             {
-                MaximumTotalInputBytes = 1,
+                MaximumTotalInputBytes = bootstrap.OperationKind
+                    == ManagedWorkerOperationKind.BethesdaSemanticExtraction
+                        ? 64UL * 1024 * 1024
+                        : 1,
                 MaximumTotalOutputBytes = checked((ulong)bootstrap.MaximumOutputBytes),
                 MaximumSingleOutputBytes = checked((ulong)bootstrap.MaximumOutputBytes),
-                MaximumWorkUnits = 1,
+                MaximumWorkUnits = bootstrap.OperationKind
+                    == ManagedWorkerOperationKind.BethesdaSemanticExtraction
+                        ? checked((ulong)(bootstrap.BethesdaSemanticExtraction?
+                            .AcceptedSnapshot.Snapshot?.Plugins.Count(plugin => plugin.Enabled) ?? 1))
+                        : 1,
                 MaximumProgressUpdates = 8,
                 MaximumStagedOutputs = 1,
                 MaximumDiagnosticBytes = 4096,
-                MaximumDuration = new DurationMillis { Value = 30_000 },
+                MaximumDuration = new DurationMillis
+                {
+                    Value = bootstrap.OperationKind
+                        == ManagedWorkerOperationKind.BethesdaSemanticExtraction
+                            ? 120_000UL
+                            : 30_000UL,
+                },
             },
             Deadline = ProtoMapping.ToProto(bootstrap.ExpiresAt),
             RetrySafety = RetrySafety.SafeWithNewAttempt,
@@ -155,6 +173,23 @@ public sealed class WorkerBootstrapRegistry
 
     private static WorkerOperation BuildOperation(ManagedWorkerBootstrap bootstrap)
     {
+        if (bootstrap.OperationKind == ManagedWorkerOperationKind.BethesdaSemanticExtraction)
+        {
+            _ = bootstrap.BethesdaSemanticExtraction
+                ?? throw new InvalidOperationException(
+                    "The Bethesda semantic assignment is absent.");
+            return new WorkerOperation
+            {
+                Kind = WorkerOperationKind.BuildTypedIndex,
+                AdapterOrAnalyzerId = BethesdaSemanticExtractor.ProducerId,
+                AdapterOrAnalyzerVersion = new SemanticVersion
+                {
+                    Value = BethesdaSemanticExtractor.ProducerVersion,
+                },
+                AssignmentSchemaVersion = new SemanticVersion { Value = "1.0.0" },
+            };
+        }
+
         if (bootstrap.OperationKind != ManagedWorkerOperationKind.Mo2SnapshotCapture)
         {
             return new WorkerOperation

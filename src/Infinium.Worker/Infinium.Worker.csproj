@@ -4,6 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Infinium.Application\Infinium.Application.csproj" />
+    <ProjectReference Include="..\Infinium.Bethesda\Infinium.Bethesda.csproj" />
     <ProjectReference Include="..\Infinium.Domain\Infinium.Domain.csproj" />
     <ProjectReference Include="..\Infinium.Mo2\Infinium.Mo2.csproj" />
   </ItemGroup>

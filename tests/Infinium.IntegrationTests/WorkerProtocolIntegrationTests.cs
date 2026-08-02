@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using Google.Protobuf;
 using Infinium.Application.Runtime;
+using Infinium.Bethesda;
 using Infinium.Contracts.Protobuf.Common.V1;
 using Infinium.Contracts.Protobuf.Domain.V1;
 using Infinium.Contracts.Protobuf.Protocol.V1;
@@ -21,6 +22,69 @@ namespace Infinium.Tests;
 [TestClass]
 public sealed class WorkerProtocolIntegrationTests
 {
+    [TestMethod]
+    [TestCategory("M1Integration")]
+    [TestCategory("M1Security")]
+    [TestProperty("Category", "M1Integration")]
+    [TestProperty("Category", "M1Security")]
+    public void BethesdaBootstrapProducesOnlyTheClosedTypedIndexAssignment()
+    {
+        using WorkerContext context = new();
+        BethesdaSemanticRequest request = BethesdaSemanticTestSnapshot.Create("BETH-LIGHT-VAL");
+        ManagedBethesdaSemanticAssignment semantic = new(request.AcceptedSnapshot, []);
+        ManagedWorkerBootstrap bootstrap = context.Bootstrap with
+        {
+            BootstrapId = "bethesda-bootstrap",
+            StagingAreaId = "bethesda-staging",
+            StagedArtifactId = "bethesda-artifact",
+            OutputRelativeName = "bethesda-semantic.v1.json",
+            MaximumOutputBytes = 16 * 1024 * 1024,
+            OneUseNonceBase64 = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)),
+            OperationKind = ManagedWorkerOperationKind.BethesdaSemanticExtraction,
+            OutputSchemaVersion = "1.0.0",
+            BethesdaSemanticExtraction = semantic,
+        };
+        WorkerBootstrapRegistry registry = new();
+        registry.Register(bootstrap);
+        const string connection = "bethesda-worker-connection";
+        HandshakeResponse handshake = registry.Negotiate(
+            new WorkerHandshakeRequest
+            {
+                BootstrapId = bootstrap.BootstrapId,
+                ProcessId = checked((uint)bootstrap.ExpectedProcessId),
+                ExpectedAttemptId = new AttemptId { Value = bootstrap.AttemptId },
+                ObservedCoordinatorFencingEpoch = checked((ulong)bootstrap.CoordinatorFencingEpoch),
+                SupportedProtocol = new ProtocolVersionRange
+                {
+                    Major = ProtocolConstants.Major,
+                    MinimumMinor = ProtocolConstants.Minor,
+                    MaximumMinor = ProtocolConstants.Minor,
+                },
+                Compatibility = ProtocolConstants.Compatibility,
+                OneUseNonce = ByteString.CopyFrom(Convert.FromBase64String(bootstrap.OneUseNonceBase64)),
+            },
+            connection,
+            context.Runtime);
+        Assert.AreEqual(HandshakeDisposition.Accepted, handshake.Disposition);
+
+        WorkerAssignment assignment = registry.GetAssignment(
+            new ReceiveAssignmentRequest
+            {
+                BootstrapId = bootstrap.BootstrapId,
+                ExpectedAttemptId = new AttemptId { Value = bootstrap.AttemptId },
+                ObservedCoordinatorFencingEpoch = checked((ulong)bootstrap.CoordinatorFencingEpoch),
+            },
+            connection,
+            context.Runtime);
+
+        Assert.AreEqual(WorkerOperationKind.BuildTypedIndex, assignment.Operation.Kind);
+        Assert.AreEqual(BethesdaSemanticExtractor.ProducerId, assignment.Operation.AdapterOrAnalyzerId);
+        Assert.AreEqual(BethesdaSemanticExtractor.ProducerVersion, assignment.Operation.AdapterOrAnalyzerVersion.Value);
+        Assert.AreEqual(0, assignment.Inputs.Count);
+        Assert.AreEqual(StagedArtifactKind.TypedResult, assignment.StagingAuthority.AllowedOutputs.Single().Kind);
+        Assert.IsNull(assignment.Operation.Mo2SnapshotCapture);
+    }
+
     [TestMethod]
     [TestCategory("M1Integration")]
     [TestCategory("M1Fault")]

@@ -34,7 +34,7 @@
                                             "tests/Infinium.EvaluationTests/packages.lock.json"
                                         ],
                          "emptyProjectLocks":  "Project-local locks without external package dependencies",
-                         "resolvedPackageCount":  72
+                         "resolvedPackageCount":  70
                      },
     "directPackages":  [
                            {
@@ -280,11 +280,6 @@
                              },
                              {
                                  "id":  "Microsoft.Extensions.DependencyInjection.Abstractions",
-                                 "version":  "8.0.0",
-                                 "license":  "MIT"
-                             },
-                             {
-                                 "id":  "Microsoft.Extensions.DependencyInjection.Abstractions",
                                  "version":  "9.0.4",
                                  "license":  "MIT"
                              },
@@ -305,11 +300,6 @@
                              },
                              {
                                  "id":  "Microsoft.Extensions.Http",
-                                 "version":  "8.0.0",
-                                 "license":  "MIT"
-                             },
-                             {
-                                 "id":  "Microsoft.Extensions.Logging.Abstractions",
                                  "version":  "8.0.0",
                                  "license":  "MIT"
                              },
@@ -633,11 +623,6 @@
                                                "commit":  "5535e31a712343a63f5d7d796cd874e563e5ac14"
                                            },
                                            {
-                                               "package":  "Microsoft.Extensions.DependencyInjection.Abstractions/8.0.0",
-                                               "repository":  "https://github.com/dotnet/runtime",
-                                               "commit":  "5535e31a712343a63f5d7d796cd874e563e5ac14"
-                                           },
-                                           {
                                                "package":  "Microsoft.Extensions.DependencyInjection.Abstractions/9.0.4",
                                                "repository":  "https://github.com/dotnet/runtime",
                                                "commit":  "f57e6dc747158ab7ade4e62a75a6750d16b771e8"
@@ -659,11 +644,6 @@
                                            },
                                            {
                                                "package":  "Microsoft.Extensions.Http/8.0.0",
-                                               "repository":  "https://github.com/dotnet/runtime",
-                                               "commit":  "5535e31a712343a63f5d7d796cd874e563e5ac14"
-                                           },
-                                           {
-                                               "package":  "Microsoft.Extensions.Logging.Abstractions/8.0.0",
                                                "repository":  "https://github.com/dotnet/runtime",
                                                "commit":  "5535e31a712343a63f5d7d796cd874e563e5ac14"
                                            },

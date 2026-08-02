@@ -3,7 +3,10 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Infinium.Application.Runtime;
+using Infinium.Bethesda;
+using Infinium.Mo2;
 using Infinium.Persistence;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32.SafeHandles;
@@ -18,6 +21,11 @@ public sealed class ManagedRunExecutor(
     WorkerBootstrapRegistry workerBootstraps,
     ILogger<ManagedRunExecutor> logger)
 {
+    private const string BethesdaSemanticOperation = "bethesda-semantic-v1";
+    private static readonly JsonSerializerOptions StrictJson = new()
+    {
+        UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
+    };
     private readonly Lock gate = new();
     private bool pumpRunning;
 
@@ -32,6 +40,21 @@ public sealed class ManagedRunExecutor(
                 _ = Task.Run(DrainAsync);
             }
         }
+    }
+
+    public Task ExecuteBethesdaSemanticAsync(
+        string runId,
+        IReadOnlyList<BethesdaUnsupportedCapability> requestedUnsupportedCapabilities)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(runId);
+        ArgumentNullException.ThrowIfNull(requestedUnsupportedCapabilities);
+        ManagedBethesdaSemanticIntent intent = new(requestedUnsupportedCapabilities);
+        _ = runtime.Store.RegisterRunOperation(
+            runId,
+            BethesdaSemanticOperation,
+            JsonSerializer.Serialize(intent),
+            DateTimeOffset.UtcNow);
+        return ExecuteCoreAsync(runId);
     }
 
     public void RecoverAtStartup()
@@ -158,6 +181,9 @@ public sealed class ManagedRunExecutor(
                 return;
             }
 
+            ManagedBethesdaSemanticAssignment? bethesdaAssignment =
+                ResolveBethesdaAssignment(queued);
+
             DispatchAdmission dispatch = runtime.Store.DispatchAttempt(
                 Guid.NewGuid().ToString("N"),
                 runId,
@@ -173,6 +199,7 @@ public sealed class ManagedRunExecutor(
                 "attempt",
                 attempt.AttemptId,
                 DateTimeOffset.UtcNow);
+            bool isBethesda = bethesdaAssignment is not null;
             ManagedWorkerBootstrap bootstrap = new(
                 1,
                 Guid.NewGuid().ToString("N"),
@@ -186,13 +213,32 @@ public sealed class ManagedRunExecutor(
                 Guid.NewGuid().ToString("N"),
                 Guid.NewGuid().ToString("N"),
                 0,
-                "slice2-substrate.v1.json",
-                65_536,
+                isBethesda ? "bethesda-semantic.v1.json" : "slice2-substrate.v1.json",
+                isBethesda ? 64L * 1024 * 1024 : 65_536,
                 Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)),
-                DateTimeOffset.UtcNow.AddMinutes(1));
+                DateTimeOffset.UtcNow.AddMinutes(isBethesda ? 2 : 1),
+                isBethesda
+                    ? ManagedWorkerOperationKind.BethesdaSemanticExtraction
+                    : ManagedWorkerOperationKind.SubstrateValidation,
+                "1.0.0",
+                null,
+                bethesdaAssignment);
             ManagedWorkerResult result = await LaunchWorkerAsync(
                 bootstrap,
                 staging.Handle).ConfigureAwait(false);
+            if (bethesdaAssignment is not null)
+            {
+                byte[] stagedBytes = runtime.Store.ReadRunStagedPayload(
+                    attempt,
+                    result.OutputRelativeName,
+                    result.Sha256,
+                    result.ByteLength,
+                    bootstrap.MaximumOutputBytes);
+                _ = BethesdaSemanticPublicationValidator.DeserializeAndValidate(
+                    stagedBytes,
+                    bethesdaAssignment,
+                    bootstrap.MaximumOutputBytes);
+            }
             runtime.Store.AdmitStagedPayload(
                 attempt,
                 result.OutputRelativeName,
@@ -296,7 +342,8 @@ public sealed class ManagedRunExecutor(
                 4_096,
                 "worker diagnostics");
             TimeSpan workerTimeout =
-                boundBootstrap.OperationKind == ManagedWorkerOperationKind.Mo2SnapshotCapture
+                boundBootstrap.OperationKind is ManagedWorkerOperationKind.Mo2SnapshotCapture
+                    or ManagedWorkerOperationKind.BethesdaSemanticExtraction
                     ? TimeSpan.FromMinutes(2)
                     : TimeSpan.FromSeconds(30);
             using CancellationTokenSource timeout = new(workerTimeout);
@@ -348,6 +395,102 @@ public sealed class ManagedRunExecutor(
             workerBootstraps.Abandon(boundBootstrap.BootstrapId);
             throw;
         }
+    }
+
+    private ManagedBethesdaSemanticAssignment? ResolveBethesdaAssignment(RunRecord run)
+    {
+        RunOperationRecord? operation = runtime.Store.GetRunOperation(run.RunId);
+        if (operation is null)
+        {
+            return null;
+        }
+
+        if (!string.Equals(operation.OperationKind, BethesdaSemanticOperation, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException(
+                "The durable run operation kind is unsupported by this executor.");
+        }
+
+        string actualRequestSha256 = Convert.ToHexStringLower(
+            SHA256.HashData(Encoding.UTF8.GetBytes(operation.RequestJson)));
+        if (!string.Equals(actualRequestSha256, operation.RequestSha256, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException(
+                "The durable Bethesda operation request failed identity validation.");
+        }
+
+        ManagedBethesdaSemanticIntent intent =
+            JsonSerializer.Deserialize<ManagedBethesdaSemanticIntent>(operation.RequestJson, StrictJson)
+            ?? throw new InvalidOperationException(
+                "The durable Bethesda operation request is malformed.");
+        byte[] snapshotBytes = runtime.Store.ReadPublishedSnapshotPayload(
+            run.Binding.InstallationSnapshotId,
+            64 * 1024 * 1024);
+        Mo2SnapshotCaptureResult accepted =
+            JsonSerializer.Deserialize<Mo2SnapshotCaptureResult>(snapshotBytes, StrictJson)
+            ?? throw new InvalidOperationException(
+                "The authoritative installation snapshot payload is malformed.");
+        if (accepted.State is not (
+                SnapshotCaptureState.Completed
+                or SnapshotCaptureState.CompletedWithGaps)
+            || accepted.Snapshot?.Contract.SnapshotId.Value != run.Binding.InstallationSnapshotId)
+        {
+            throw new InvalidOperationException(
+                "The authoritative installation snapshot does not match the run binding.");
+        }
+
+        return SealBethesdaAssignment(new ManagedBethesdaSemanticAssignment(
+            accepted,
+            intent.RequestedUnsupportedCapabilities));
+    }
+
+    private static ManagedBethesdaSemanticAssignment SealBethesdaAssignment(
+        ManagedBethesdaSemanticAssignment assignment)
+    {
+        Mo2InstallationSnapshot snapshot = assignment.AcceptedSnapshot.Snapshot
+            ?? throw new InvalidOperationException("The accepted snapshot is absent.");
+        List<ManagedBethesdaPluginSeal> seals = [];
+        long totalBytes = 0;
+        foreach (PluginState plugin in snapshot.Plugins
+                     .Where(plugin => plugin.Enabled)
+                     .OrderBy(plugin => plugin.LoadOrder))
+        {
+            LooseProviderChain chain = snapshot.LooseProviderChains.Single(candidate =>
+                string.Equals(
+                    candidate.NormalizedRelativePath,
+                    plugin.Name,
+                    StringComparison.OrdinalIgnoreCase));
+            string path = Path.GetFullPath(chain.Winner.PhysicalPath);
+            long byteLength;
+            string sha256;
+            using (FileStream stream = new(
+                       path,
+                       FileMode.Open,
+                       FileAccess.Read,
+                       FileShare.Read,
+                       64 * 1024,
+                       FileOptions.SequentialScan))
+            {
+                byteLength = stream.Length;
+                totalBytes = checked(totalBytes + byteLength);
+                if (byteLength <= 0 || totalBytes > 64L * 1024 * 1024)
+                {
+                    throw new InvalidOperationException(
+                        "The aggregate coordinator-sealed Bethesda input exceeds its authority.");
+                }
+
+                sha256 = Convert.ToHexStringLower(SHA256.HashData(stream));
+            }
+
+            seals.Add(new ManagedBethesdaPluginSeal(
+                plugin.Name,
+                plugin.LoadOrder!.Value,
+                path,
+                byteLength,
+                sha256));
+        }
+
+        return assignment with { PluginSeals = seals };
     }
 
     private static string Bounded(string value) => value.Length <= 512 ? value : value[..512];

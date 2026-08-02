@@ -20,6 +20,13 @@ public sealed record RunRecord(
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
 
+public sealed record RunOperationRecord(
+    string RunId,
+    string OperationKind,
+    string RequestJson,
+    string RequestSha256,
+    DateTimeOffset CreatedAt);
+
 public sealed record AttemptRecord(
     string AttemptId,
     string RunId,

@@ -13,5 +13,6 @@
 
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)TestRepository.cs" Link="TestRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)BethesdaSemanticTestSnapshot.cs" Link="BethesdaSemanticTestSnapshot.cs" />
   </ItemGroup>
 </Project>

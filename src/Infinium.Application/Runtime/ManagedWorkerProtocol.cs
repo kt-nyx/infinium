@@ -1,5 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
+using Infinium.Bethesda;
+using Infinium.Mo2;
 
 namespace Infinium.Application.Runtime;
 
@@ -22,13 +24,30 @@ public sealed record ManagedWorkerBootstrap(
     DateTimeOffset ExpiresAt,
     ManagedWorkerOperationKind OperationKind = ManagedWorkerOperationKind.SubstrateValidation,
     string OutputSchemaVersion = ManagedWorkerManifest.OutputSchemaVersion,
-    ManagedMo2SnapshotCaptureAssignment? Mo2SnapshotCapture = null);
+    ManagedMo2SnapshotCaptureAssignment? Mo2SnapshotCapture = null,
+    ManagedBethesdaSemanticAssignment? BethesdaSemanticExtraction = null);
 
 public enum ManagedWorkerOperationKind
 {
     SubstrateValidation,
     Mo2SnapshotCapture,
+    BethesdaSemanticExtraction,
 }
+
+public sealed record ManagedBethesdaSemanticAssignment(
+    Mo2SnapshotCaptureResult AcceptedSnapshot,
+    IReadOnlyList<BethesdaUnsupportedCapability> RequestedUnsupportedCapabilities,
+    IReadOnlyList<ManagedBethesdaPluginSeal>? PluginSeals = null);
+
+public sealed record ManagedBethesdaSemanticIntent(
+    IReadOnlyList<BethesdaUnsupportedCapability> RequestedUnsupportedCapabilities);
+
+public sealed record ManagedBethesdaPluginSeal(
+    string PluginName,
+    int LoadOrder,
+    string SnapshotAuthorizedPath,
+    long ByteLength,
+    string Sha256);
 
 public sealed record ManagedMo2SnapshotCaptureAssignment(
     string Mo2ExecutablePath,

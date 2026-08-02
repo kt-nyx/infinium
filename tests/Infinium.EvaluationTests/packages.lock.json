@@ -367,12 +367,16 @@
           "Google.Protobuf": "[3.31.1, )",
           "Grpc.Core.Api": "[2.80.0, )",
           "Grpc.Net.Client": "[2.80.0, )",
-          "Infinium.Domain": "[1.0.0, )"
+          "Infinium.Bethesda": "[1.0.0, )",
+          "Infinium.Domain": "[1.0.0, )",
+          "Infinium.Mo2": "[1.0.0, )"
         }
       },
       "infinium.bethesda": {
         "type": "Project",
         "dependencies": {
+          "Infinium.Domain": "[1.0.0, )",
+          "Infinium.Mo2": "[1.0.0, )",
           "Mutagen.Bethesda.Skyrim": "[0.54.2, )"
         }
       },

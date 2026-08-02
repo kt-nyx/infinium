@@ -92,6 +92,7 @@ internal sealed class WindowsContainedWorkerProcess : IDisposable
         nint childError = 0;
         nint attributeList = 0;
         nint inheritedHandleList = 0;
+        nint jobHandleList = 0;
         nint environmentBlock = 0;
         nint processHandle = 0;
         nint threadHandle = 0;
@@ -99,6 +100,7 @@ internal sealed class WindowsContainedWorkerProcess : IDisposable
         Dictionary<nint, uint> originalAdditionalHandleFlags = [];
         try
         {
+            jobHandle = CreateConfiguredJob();
             CreateDirectedPipe(
                 parentReads: false,
                 ref inheritable,
@@ -150,11 +152,11 @@ internal sealed class WindowsContainedWorkerProcess : IDisposable
             }
 
             nuint attributeListSize = 0;
-            _ = InitializeProcThreadAttributeList(0, 1, 0, ref attributeListSize);
+            _ = InitializeProcThreadAttributeList(0, 2, 0, ref attributeListSize);
             attributeList = Marshal.AllocHGlobal(checked((int)attributeListSize));
             if (!InitializeProcThreadAttributeList(
                 attributeList,
-                1,
+                2,
                 0,
                 ref attributeListSize))
             {
@@ -185,6 +187,22 @@ internal sealed class WindowsContainedWorkerProcess : IDisposable
                 throw new Win32Exception(
                     Marshal.GetLastWin32Error(),
                     "The worker handle-list attribute could not be populated.");
+            }
+
+            jobHandleList = Marshal.AllocHGlobal(nint.Size);
+            Marshal.WriteIntPtr(jobHandleList, jobHandle);
+            if (!UpdateProcThreadAttribute(
+                    attributeList,
+                    0,
+                    PROC_THREAD_ATTRIBUTE_JOB_LIST,
+                    jobHandleList,
+                    checked((nuint)nint.Size),
+                    0,
+                    0))
+            {
+                throw new Win32Exception(
+                    Marshal.GetLastWin32Error(),
+                    "The worker Job Object attribute could not be populated.");
             }
 
             STARTUPINFOEX startup = new()
@@ -226,13 +244,6 @@ internal sealed class WindowsContainedWorkerProcess : IDisposable
 
             processHandle = processInformation.Process;
             threadHandle = processInformation.Thread;
-            jobHandle = CreateConfiguredJob();
-            if (!AssignProcessToJobObject(jobHandle, processHandle))
-            {
-                throw new Win32Exception(
-                    Marshal.GetLastWin32Error(),
-                    "The suspended worker could not be assigned to its Job Object.");
-            }
 
             CloseHandle(childInput);
             childInput = 0;
@@ -289,6 +300,11 @@ internal sealed class WindowsContainedWorkerProcess : IDisposable
             if (inheritedHandleList != 0)
             {
                 Marshal.FreeHGlobal(inheritedHandleList);
+            }
+
+            if (jobHandleList != 0)
+            {
+                Marshal.FreeHGlobal(jobHandleList);
             }
 
             if (environmentBlock != 0)
@@ -500,6 +516,7 @@ internal sealed class WindowsContainedWorkerProcess : IDisposable
     private const uint JOB_OBJECT_LIMIT_ACTIVE_PROCESS = 0x00000008;
     private const uint JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE = 0x00002000;
     private static readonly nint PROC_THREAD_ATTRIBUTE_HANDLE_LIST = new(0x00020002);
+    private static readonly nint PROC_THREAD_ATTRIBUTE_JOB_LIST = new(0x0002000D);
 
     [StructLayout(LayoutKind.Sequential)]
     private struct SECURITY_ATTRIBUTES
@@ -660,10 +677,6 @@ internal sealed class WindowsContainedWorkerProcess : IDisposable
         int informationClass,
         nint information,
         uint informationLength);
-
-    [DllImport("kernel32.dll", SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool AssignProcessToJobObject(nint job, nint process);
 
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern uint ResumeThread(nint thread);

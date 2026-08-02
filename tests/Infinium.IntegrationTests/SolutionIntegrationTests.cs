@@ -221,11 +221,6 @@ public sealed class SolutionIntegrationTests
             using JsonDocument cancellableJson = JsonDocument.Parse(cancellable.Output);
             string cancellableRunId =
                 cancellableJson.RootElement.GetProperty("runId").GetString()!;
-            await WaitForRunStateAsync(
-                root,
-                cancellableRunId,
-                LifecycleState.Running,
-                TimeSpan.FromSeconds(5)).ConfigureAwait(false);
             ProcessResult crossKindReplay = Run(
                 "Infinium.Cli",
                 [
@@ -238,6 +233,12 @@ public sealed class SolutionIntegrationTests
             StringAssert.Contains(
                 crossKindReplay.Error,
                 "already bound to different command inputs");
+
+            await WaitForRunStateAsync(
+                root,
+                cancellableRunId,
+                LifecycleState.Running,
+                TimeSpan.FromSeconds(5)).ConfigureAwait(false);
 
             ProcessResult cancel = Run(
                 "Infinium.Cli",
@@ -304,7 +305,7 @@ public sealed class SolutionIntegrationTests
     [TestCategory("M1Fault")]
     [TestProperty("Category", "M1Integration")]
     [TestProperty("Category", "M1Fault")]
-    public void CoordinatorRestartFencesInterruptedWorkerAndRecoversDurableRun()
+    public async Task CoordinatorRestartFencesInterruptedWorkerAndRecoversDurableRun()
     {
         string root = Path.Combine(
             Path.GetTempPath(),
@@ -328,6 +329,12 @@ public sealed class SolutionIntegrationTests
             Assert.AreEqual(0, start.ExitCode, start.Error);
             using JsonDocument startJson = JsonDocument.Parse(start.Output);
             string runId = startJson.RootElement.GetProperty("runId").GetString()!;
+
+            await WaitForRunStateAsync(
+                root,
+                runId,
+                LifecycleState.Running,
+                TimeSpan.FromSeconds(5)).ConfigureAwait(false);
 
             RuntimeDescriptor first = RuntimeDescriptor.Read(root);
             firstCoordinatorProcessId = first.ProcessId;

@@ -13,8 +13,8 @@ namespace Infinium.Persistence;
 
 public sealed class AuthoritativeStore : IDisposable
 {
-    public const int CurrentSchemaVersion = 2;
-    private const string CurrentStorageContractVersion = "1.1.0";
+    public const int CurrentSchemaVersion = 3;
+    private const string CurrentStorageContractVersion = "1.2.0";
     private const int MaximumBackupManifestBytes = 16 * 1024 * 1024;
     private const int MaximumCheckpointJsonBytes = 64 * 1024;
 
@@ -384,6 +384,96 @@ public sealed class AuthoritativeStore : IDisposable
                 ("$now", ToText(now)));
             transaction.Commit();
             return GetRunCore(runId);
+        }
+    }
+
+    public RunOperationRecord RegisterRunOperation(
+        string runId,
+        string operationKind,
+        string requestJson,
+        DateTimeOffset now)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(runId);
+        ValidateAuditToken(operationKind, nameof(operationKind));
+        ArgumentException.ThrowIfNullOrWhiteSpace(requestJson);
+        if (Encoding.UTF8.GetByteCount(requestJson) > MaximumCheckpointJsonBytes)
+        {
+            throw new InvalidOperationException("The durable run operation request exceeds its bound.");
+        }
+
+        string requestSha256 = Convert.ToHexStringLower(
+            SHA256.HashData(Encoding.UTF8.GetBytes(requestJson)));
+        lock (gate)
+        {
+            using SqliteTransaction transaction = BeginTransaction();
+            RunRecord run = GetRunCore(runId);
+            if (run.State is not (LifecycleState.Queued or LifecycleState.Retrying))
+            {
+                throw new InvalidOperationException(
+                    "A durable run operation can be registered only before dispatch.");
+            }
+
+            using SqliteCommand existing = connection.CreateCommand();
+            existing.Transaction = transaction;
+            existing.CommandText =
+                "SELECT operation_kind, request_json, request_sha256, created_at FROM run_operations WHERE run_id = $run;";
+            existing.Parameters.AddWithValue("$run", runId);
+            using SqliteDataReader reader = existing.ExecuteReader();
+            if (reader.Read())
+            {
+                RunOperationRecord record = new(
+                    runId,
+                    reader.GetString(0),
+                    reader.GetString(1),
+                    reader.GetString(2),
+                    DateTimeOffset.Parse(reader.GetString(3), System.Globalization.CultureInfo.InvariantCulture));
+                if (!string.Equals(record.OperationKind, operationKind, StringComparison.Ordinal)
+                    || !string.Equals(record.RequestJson, requestJson, StringComparison.Ordinal)
+                    || !string.Equals(record.RequestSha256, requestSha256, StringComparison.Ordinal))
+                {
+                    throw new InvalidOperationException(
+                        "A run operation cannot be rebound to different inputs.");
+                }
+
+                transaction.Commit();
+                return record;
+            }
+
+            reader.Close();
+            Execute(
+                """
+                INSERT INTO run_operations(run_id, operation_kind, request_json, request_sha256, created_at)
+                VALUES ($run, $kind, $request, $sha, $now);
+                """,
+                transaction,
+                ("$run", runId),
+                ("$kind", operationKind),
+                ("$request", requestJson),
+                ("$sha", requestSha256),
+                ("$now", ToText(now)));
+            transaction.Commit();
+            return new RunOperationRecord(runId, operationKind, requestJson, requestSha256, now);
+        }
+    }
+
+    public RunOperationRecord? GetRunOperation(string runId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(runId);
+        lock (gate)
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText =
+                "SELECT operation_kind, request_json, request_sha256, created_at FROM run_operations WHERE run_id = $run;";
+            command.Parameters.AddWithValue("$run", runId);
+            using SqliteDataReader reader = command.ExecuteReader();
+            return !reader.Read()
+                ? null
+                : new RunOperationRecord(
+                    runId,
+                    reader.GetString(0),
+                    reader.GetString(1),
+                    reader.GetString(2),
+                    DateTimeOffset.Parse(reader.GetString(3), System.Globalization.CultureInfo.InvariantCulture));
         }
     }
 
@@ -907,6 +997,104 @@ public sealed class AuthoritativeStore : IDisposable
         {
             throw new InvalidOperationException(
                 "The staged snapshot bytes do not match the worker manifest.");
+        }
+
+        return buffer.ToArray();
+    }
+
+    public byte[] ReadPublishedSnapshotPayload(
+        string installationSnapshotId,
+        int maximumBytes)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(installationSnapshotId);
+        if (maximumBytes <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maximumBytes));
+        }
+
+        lock (gate)
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText =
+                """
+                SELECT payload.content_sha256, payload.byte_length, payload.object_relative_path
+                FROM snapshot_capture_publications publication
+                JOIN payloads payload ON payload.payload_id = publication.payload_id
+                WHERE publication.installation_snapshot_id = $snapshot;
+                """;
+            command.Parameters.AddWithValue("$snapshot", installationSnapshotId);
+            using SqliteDataReader reader = command.ExecuteReader();
+            if (!reader.Read())
+            {
+                throw new InvalidOperationException(
+                    "The run-bound installation snapshot has no authoritative publication.");
+            }
+
+            string expectedSha256 = reader.GetString(0);
+            long expectedLength = reader.GetInt64(1);
+            string relativePath = reader.GetString(2);
+            if (reader.Read() || expectedLength > maximumBytes)
+            {
+                throw new InvalidOperationException(
+                    "The run-bound installation snapshot publication is outside its authority.");
+            }
+
+            string objectPath = Paths.ResolveProductPath(
+                ProductWriteClass.Payload,
+                relativePath["payloads/".Length..].Replace('/', Path.DirectorySeparatorChar));
+            byte[] bytes = ReadBoundedFile(objectPath, maximumBytes, "published installation snapshot");
+            if (bytes.LongLength != expectedLength
+                || !string.Equals(
+                    Convert.ToHexStringLower(SHA256.HashData(bytes)),
+                    expectedSha256,
+                    StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException(
+                    "The run-bound installation snapshot payload failed identity validation.");
+            }
+
+            return bytes;
+        }
+    }
+
+    public byte[] ReadRunStagedPayload(
+        AttemptRecord attempt,
+        string stagedRelativePath,
+        string expectedSha256,
+        long expectedByteLength,
+        long maximumBytes)
+    {
+        ValidateSha256(expectedSha256);
+        if (expectedByteLength < 0
+            || maximumBytes <= 0
+            || expectedByteLength > maximumBytes
+            || maximumBytes > 64L * 1024 * 1024)
+        {
+            throw new InvalidOperationException("The staged run payload read exceeds its bound.");
+        }
+
+        lock (gate)
+        {
+            using SqliteTransaction transaction = BeginTransaction();
+            EnsureCurrentCoordinatorEpoch(
+                attempt.CoordinatorFencingEpoch,
+                transaction);
+            EnsureCurrentAttempt(attempt, transaction);
+            transaction.Commit();
+        }
+
+        using WindowsHandleRelativeStorage.AdmissionSource source =
+            Paths.OpenAdmissionSource(
+                ProductWriteClass.AttemptStaging,
+                Path.Combine(attempt.AttemptId, stagedRelativePath));
+        using MemoryStream buffer = new(checked((int)expectedByteLength));
+        WindowsHandleRelativeStorage.AdmissionCopyResult observed =
+            source.CopyToAndHash(buffer, maximumBytes);
+        if (observed.ByteLength != expectedByteLength
+            || !string.Equals(observed.Sha256, expectedSha256, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException(
+                "The staged run bytes do not match the worker manifest.");
         }
 
         return buffer.ToArray();
@@ -2568,6 +2756,27 @@ public sealed class AuthoritativeStore : IDisposable
             }
         }
 
+        using (var migration = database.CreateCommand())
+        {
+            migration.CommandText =
+                """
+                SELECT COUNT(*)
+                FROM migration_history
+                WHERE migration_id = 'M1-S4-0003'
+                  AND from_version = 2
+                  AND to_version = 3
+                  AND sqlite_source_id = $source;
+                """;
+            migration.Parameters.AddWithValue("$source", binding.SourceId);
+            if (Convert.ToInt32(
+                    migration.ExecuteScalar(),
+                    System.Globalization.CultureInfo.InvariantCulture) != 1)
+            {
+                throw new InvalidOperationException(
+                    "The durable run-operation storage migration identity is invalid.");
+            }
+        }
+
         HashSet<string> actualObjects = new(StringComparer.Ordinal);
         using (var schema = database.CreateCommand())
         {
@@ -2811,6 +3020,30 @@ public sealed class AuthoritativeStore : IDisposable
                         migration_id, from_version, to_version, applied_at, sqlite_source_id)
                     VALUES ('M1-S3-0002', 1, 2, $now, $sqlite_source);
                     PRAGMA user_version = 2;
+                    """,
+                    transaction,
+                    ("$schema_fingerprint", schemaFingerprint),
+                    ("$sqlite_source", BindingIdentity.SourceId),
+                    ("$now", ToText(DateTimeOffset.UtcNow)));
+                transaction.Commit();
+            }
+
+            if (current <= 2)
+            {
+                using var transaction = BeginTransaction();
+                Execute(SchemaV3, transaction);
+                string schemaFingerprint = ComputeSchemaFingerprint(connection, transaction);
+                Execute(
+                    """
+                    UPDATE store_metadata SET value = '3' WHERE key = 'schema_version';
+                    UPDATE store_metadata SET value = '1.2.0'
+                    WHERE key = 'storage_contract_version';
+                    UPDATE store_metadata SET value = $schema_fingerprint
+                    WHERE key = 'schema_fingerprint';
+                    INSERT INTO migration_history(
+                        migration_id, from_version, to_version, applied_at, sqlite_source_id)
+                    VALUES ('M1-S4-0003', 2, 3, $now, $sqlite_source);
+                    PRAGMA user_version = 3;
                     """,
                     transaction,
                     ("$schema_fingerprint", schemaFingerprint),
@@ -3391,6 +3624,7 @@ public sealed class AuthoritativeStore : IDisposable
         "table:publication_receipts",
         "table:reconciliation_assessments",
         "table:run_projection",
+        "table:run_operations",
         "table:runs",
         "table:store_metadata",
         "table:snapshot_capture_attempts",
@@ -3415,10 +3649,25 @@ public sealed class AuthoritativeStore : IDisposable
         "trigger:reconciliation_append_only_delete",
         "trigger:reconciliation_append_only_update",
         "trigger:runs_immutable_binding",
+        "trigger:run_operations_immutable",
         "trigger:snapshot_capture_request_immutable",
         "trigger:snapshot_capture_publications_append_only_delete",
         "trigger:snapshot_capture_publications_append_only_update",
     ];
+
+    private const string SchemaV3 =
+        """
+        CREATE TABLE run_operations(
+            run_id TEXT PRIMARY KEY REFERENCES runs(run_id) ON DELETE RESTRICT,
+            operation_kind TEXT NOT NULL,
+            request_json TEXT NOT NULL,
+            request_sha256 TEXT NOT NULL CHECK(length(request_sha256) = 64),
+            created_at TEXT NOT NULL
+        ) STRICT;
+        CREATE TRIGGER run_operations_immutable
+        BEFORE UPDATE ON run_operations
+        BEGIN SELECT RAISE(ABORT, 'run operations are immutable'); END;
+        """;
 
     private const string SchemaV2 =
         """
