@@ -1,6 +1,6 @@
 # M1 Slice 4 — Bethesda semantic extraction and typed indexes
 
-Status: Complete; original blocked-attempt history retained below
+Status: Implemented with passing public gates; held-out acceptance blocked
 
 Plan: `infinium.plan.m1.backend-semantic-proof/2`
 
@@ -205,8 +205,8 @@ Accepted plan SHA-256:
 Fresh-attempt baseline:
 `a63f5a1b1d55127a9fc89a3788a74b291850cca7`
 
-Implementation commit: recorded by the follow-up closeout commit after the
-reviewed implementation is committed.
+Implementation commit:
+`98fe8a5a173116427bf78077673fd10e8d018103`
 
 ### Delivered contract
 
@@ -312,6 +312,41 @@ No evaluator-private fixture was read by the implementation/review agent. The
 eight expected private skips belong to already completed Slice 3/3.5
 environment qualification; Slice 4 uses the qualified public Bethesda matrix
 and independent public oracles. The legacy archive was not accessed.
+
+### Sanitized held-out disposition
+
+A fresh-context evaluator was delegated under ADR-0026 and
+`evaluator-private-fixture-governance.md` after the implementation commit. It
+returned this sanitized attestation:
+
+- product commit:
+  `98fe8a5a173116427bf78077673fd10e8d018103`;
+- built `Infinium.Bethesda.dll`: 157,696 bytes, SHA-256
+  `dc8ae44627fa40ca3937e4022c8e7914468e4d7a4cf1c40797a22ef2abec3655`;
+- sealed held-out fixture: `BETH-HO-002/1.1.0`;
+- private-store revision:
+  `1530a55c6b30db45356fd54700c2d4ebb497c1c6`;
+- package fingerprint:
+  `87630b91225fa4bf1817845878290d6800237231c5413ebc3f9f3753a81d48fc`;
+- oracle fingerprint:
+  `382d8ab02c1e88adfadea75ae83b8ca1c15ebb710972bbb8c8c282170bc0bc15`;
+- outcome: **blocked / unscored**; zero held-out assertions executed;
+- contamination state: clean; raw answer disclosure: none.
+
+The blocker is an absent documented scorer entry point in the sealed store,
+combined with the not-yet-implemented milestone `evaluate` and
+`verify-evaluation` CLI workflow. The evaluator correctly did not invent a
+substitute harness. The public repository was unchanged by evaluation; no push
+or external mutation occurred. The evaluator-private access record is retained
+only in that store.
+
+Consequently, the implementation and public Slice 4 gates are complete, but
+Slice 4 is not administratively accepted. Acceptance requires a separately
+authorized fixture-maintenance/evaluator action to add or identify a documented
+sealed scorer, followed by scoring this exact implementation commit (or a
+reviewed successor) and retaining its sanitized pass attestation. This blocker
+must not be worked around by exposing held-out inputs or answers to production
+agents.
 
 Known explicit gaps are archive-positive/BSA semantics, localized strings,
 NIF/PEX/native/generated/configuration analysis, non-allowlisted record or

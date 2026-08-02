@@ -8,12 +8,13 @@ The M0 research plan completed on 2026-07-28. The accepted
 implementation milestone plan together with its accepted
 [revision 2 amendment](M1-backend-semantic-proof-adr0026-amendment.md).
 
-Slices 0 through 4 are complete. The accepted
+Slices 0 through 3.5 are complete. The accepted
 [execution plan](../slices/M1-slice-3.5-bethesda-fixture-qualification.md)
 qualified the Bethesda and applicable taxonomy fixtures before Slice 4.
 The 2026-08-01 pre-Slice-4 readiness audit found no remaining start blocker,
 and the positively qualified Bethesda semantic and typed-index path is now
-implemented and gate-accepted.
+implemented with passing public gates. Final Slice 4 acceptance is blocked by
+the sealed evaluator store's missing documented held-out scorer entry point.
 
 Waves A through D have completed investigations and accepted integrated
 dispositions. Gates A through D are met at their applicable M0 research,

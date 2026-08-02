@@ -11,9 +11,11 @@ the active implementation plan together with its accepted
 Completed-slice evidence is indexed under
 [`implementation-records/`](implementation-records/README.md).
 
-Slices 0 through 4 are complete. Slice 3.5 independently qualified Bethesda
-fixtures/oracles under ADR-0026's private-store amendment, and Slice 4 now
-delivers the positively qualified Mutagen semantic and typed-index boundary.
+Slices 0 through 3.5 are complete. Slice 3.5 independently qualified Bethesda
+fixtures/oracles under ADR-0026's private-store amendment. Slice 4's Mutagen
+semantic and typed-index boundary is implemented and its public gates pass,
+but final held-out acceptance is blocked because the sealed evaluator store
+has no documented scorer entry point.
 The accepted
 [fresh-agent execution plan](slices/M1-slice-3.5-bethesda-fixture-qualification.md)
 is indexed under [`slices/`](slices/README.md).
