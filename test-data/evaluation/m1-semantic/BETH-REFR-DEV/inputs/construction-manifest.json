@@ -16,15 +16,27 @@
   "files": [
     {
       "path": "case-matrix.json",
-      "sha256": "9ad8d123a5189a2cb08e81dab85f62762f71d5d7f716bc45bb23370e18897df3",
+      "sha256": "70e8803fa6992ca7f99d73d9f1ab52267e8d29032ce8eb67812c44d0f8989180",
       "regions": [
         {
           "offset": 0,
           "kind": "project-authored-request-or-matrix-metadata",
-          "length": 2830
+          "length": 2777
         }
       ],
-      "byte_length": 2830
+      "byte_length": 2777
+    },
+    {
+      "path": "effective-scan-configuration.json",
+      "sha256": "83a273c4f4bfa1ff2746ef5cbea2e5cdcd73cde350755a8c365be9c19c0348f4",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-request-or-matrix-metadata",
+          "length": 1793
+        }
+      ],
+      "byte_length": 1793
     },
     {
       "path": "mutations/Boundaries-RepeatedXLKROrder.esp",
@@ -224,10 +236,10 @@
         {
           "offset": 0,
           "kind": "project-authored-construction-metadata",
-          "length": 6428
+          "length": 6775
         }
       ],
-      "byte_length": 6428
+      "byte_length": 6775
     }
   ]
 }

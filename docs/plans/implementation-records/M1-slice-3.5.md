@@ -793,3 +793,66 @@ truth. Public deterministic regeneration, mutation coverage, scorer-facing
 agreement tests, full verification, and the separately governed private
 reseal/audit/score results are recorded in the Slice 4 closeout. Neither
 repository is pushed by this amendment.
+
+## 2026-08-02 case-matrix role maintenance amendment
+
+The project owner authorized a second bounded correction after scorer audit
+showed that public fixture version `1.1.0` conflated the answer-free execution
+case matrix with `effective_scan_configuration`. Public version `1.2.0`
+separates those roles without changing any Bethesda plugin byte or expected
+semantic truth. The effective scan configuration is a retained
+`infinium.scan.effective-configuration/v1` document with no case inventory;
+the required `case_matrix_input` instead binds the retained closed
+`infinium.evaluation.bethesda-case-matrix/v1` document.
+
+The matrix derives only from the accepted Slice 3.5 scenario inventory and
+retained project-authored execution inputs. It contains fixture/version
+identity, unique scenario IDs, `scan`/`compare`/`request`/
+`orchestrated-read` operation shape, and canonical retained input IDs. It does
+not contain expected values, denominator classifications, oracle references,
+or production output. Reader and finalizer checks require operation arity,
+input population membership, exact `inputs/` physical/reference closure,
+unique payload references, repeated-reference metadata agreement, and one-time
+aggregate input-byte accounting.
+
+The public package bindings are:
+
+| Fixture | Input package SHA-256 | Oracle SHA-256 |
+|---|---|---|
+| `BETH-NPC-DEV/1.2.0` | `49bbd70d7588cc9936f4074f386afd83a87d6a343cde32b290d3a8ebd8740d6e` | `44806bb737753962a90961bb03d346fa1fb1b66cacbecf407a43397aa692c6ec` |
+| `BETH-REFR-DEV/1.2.0` | `b37b334df1cebc0fc4c394c4d93968ea07cc10a6a99fd111c20568808a94dda1` | `c10cd6da61cbfe8842b47e4c601cdd058b02af662a68432501242183cb0b521d` |
+| `BETH-LIGHT-VAL/1.2.0` | `bb559cae1bff2ba55639f405e950401048c55f76ee95b4dcd58a20a2a0645383` | `ec9951f42552ef2f291820329c4dd0bee3c10e36565c74110a20a551c02fbd1c` |
+| `BETH-MALFORMED-VAL/1.2.0` | `78d3c81da2c368258039cd5523251284041ecf758e2700dcb400a7e59a909e62` | `51dbcd9363da440222dc25efc6a1fbaa5232f5458b88fec33d97ac76f54592e8` |
+| `BETH-UNSUPPORTED-VAL/1.2.0` | `de3e48ba89128e34a6e5bd5f9674d5e10645689790789d2f274f6e9cff3cae09` | `174baf61cccde417e4f0ab140c682bae533240f48f89a739f9c35d18c1a08524` |
+
+Adversarial contract coverage rejects missing/swapped role bindings, duplicate
+or omitted payload references, unsealed scenario inputs, stale metadata, wrong
+matrix schema, non-list `cases`, duplicate scenario IDs, unsupported
+operations, and each operation's arity violations. The reader recognizes the
+five accepted public Bethesda identities from a canonical exact registry, so a
+fully resealed removal of the byte oracle, package-required taxonomy artifacts,
+case matrix, or scan configuration cannot downgrade a protected package into
+generic fixture handling. Public verification and the separately governed
+private supersession/requalification/scoring results are recorded in the Slice
+4 closeout. Neither repository is pushed by this amendment.
+
+Public verification for this correction:
+
+- locked restore and Release build passed with 0 warnings and 0 errors;
+- full Release suite: 247 passed, 9 expected skips, 0 failed;
+- `Category=M1Unit`: 88 passed, 1 expected skip;
+- `Category=M1Contract`: 29 passed;
+- `Category=M1Integration`: 32 passed;
+- `Category=M1Evaluation`: 41 passed, 8 expected private skips;
+- `Category=M1Security`: 9 passed;
+- `Category=M1Fault`: 13 passed;
+- all 72 contract tests and all 50 evaluation tests passed, with only the 8
+  expected evaluator-private skips;
+- fixed-seed generator verification, byte-for-byte generated-input comparison,
+  independent-reader self-tests, five-package oracle regeneration, taxonomy
+  replay, and package finalization passed;
+- every package's payload-reference count equals its physical retained-input
+  file count and its declared input-byte total equals the physical byte total;
+  no `.esm`, `.esp`, `.esl`, or `.strings` fixture byte changed; and
+- `dotnet format --verify-no-changes`, dependency-manifest validation, and
+  `git diff --check` passed.

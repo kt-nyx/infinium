@@ -2,11 +2,11 @@
   "schema_id": "infinium.evaluation.bethesda-snapshot-input/v1",
   "schema_version": "1",
   "fixture_id": "BETH-REFR-DEV",
-  "fixture_version": "1.1.0",
+  "fixture_version": "1.2.0",
   "snapshot_contract_version": "3.0.0",
   "adapter_id": "infinium.mo2-static-reconstruction/v3",
   "selected_profile_name": "BETH-REFR-DEV",
-  "construction_manifest_fingerprint": "729dec41f817be1fd7197439e6dfff425060be21392a56840152d8cb2faeed63",
+  "construction_manifest_fingerprint": "296bf91c9d9552bf12daa8a2abba0ee46cfb14085bac82f9722adf9f64c03d80",
   "provider_order": [
     {
       "provider_id": "beth-refr-dev-provider-00",

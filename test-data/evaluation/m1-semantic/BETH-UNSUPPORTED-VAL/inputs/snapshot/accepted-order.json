@@ -2,11 +2,11 @@
   "schema_id": "infinium.evaluation.bethesda-snapshot-input/v1",
   "schema_version": "1",
   "fixture_id": "BETH-UNSUPPORTED-VAL",
-  "fixture_version": "1.1.0",
+  "fixture_version": "1.2.0",
   "snapshot_contract_version": "3.0.0",
   "adapter_id": "infinium.mo2-static-reconstruction/v3",
   "selected_profile_name": "BETH-UNSUPPORTED-VAL",
-  "construction_manifest_fingerprint": "d44bec01403d1bc12e22990fba7087d521e45e7ef09f57cd589ac7a63d16f93e",
+  "construction_manifest_fingerprint": "1fd86d7e2ed9c9427e3802e98aeea80c27072fcd68b246689a1d6a7b329bce18",
   "provider_order": [
     {
       "provider_id": "beth-unsupported-val-provider-00",

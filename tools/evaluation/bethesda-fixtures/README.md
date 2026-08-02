@@ -24,10 +24,18 @@ dotnet run --project tools/evaluation/bethesda-fixtures/Infinium.BethesdaFixture
 The generator owns only `inputs/`. It does not create fixture package metadata,
 oracles, taxonomy answers, held-out content, snapshot captures, or parser code.
 
-Bethesda fixture version `1.1.0` retains the `1.0.1` full 128-byte Skyrim `RACE/DATA`
+Bethesda fixture version `1.2.0` retains the `1.0.1` full 128-byte Skyrim `RACE/DATA`
 records and nests format-valid `REFR` records beneath interior CELL block,
 sub-block, child, and persistent-child groups. `verify` also retains the
 declared one-byte and record-order mutation invariants after that nesting.
+
+The generator emits two distinct answer-free execution controls. The effective
+scan configuration is valid under `infinium.scan.effective-configuration/v1`
+and intentionally has no `cases` property. The separate
+`infinium.evaluation.bethesda-case-matrix/v1` artifact is sourced only from the
+accepted Slice 3.5 scenario inventory and retained project-authored execution
+inputs. It declares scenario identity, operation, and exact input membership;
+oracle expectations and denominator classifications are not generator inputs.
 
 After promoting a reviewed input freeze, refresh the non-answer-bearing Slice 3
 capture-binding receipts:

@@ -16,15 +16,27 @@
   "files": [
     {
       "path": "case-matrix.json",
-      "sha256": "285a355ee90c87f3d3a5f0faf8c834e2f508e46e2323141e66096a125306f2d3",
+      "sha256": "eb9e0f903577f99a0281f5740d7b1d739ea8658af94951c3c80dbefe34b163ff",
       "regions": [
         {
           "offset": 0,
           "kind": "project-authored-request-or-matrix-metadata",
-          "length": 2985
+          "length": 2410
         }
       ],
-      "byte_length": 2985
+      "byte_length": 2410
+    },
+    {
+      "path": "effective-scan-configuration.json",
+      "sha256": "716a5c4801d9f738fc9cfb2db364a4913ba8463c52909b3457c6f05ee6d068ef",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-request-or-matrix-metadata",
+          "length": 1794
+        }
+      ],
+      "byte_length": 1794
     },
     {
       "path": "mutations/Consumer-LightReferenceOutOfRange.esp",
@@ -164,10 +176,10 @@
         {
           "offset": 0,
           "kind": "project-authored-construction-metadata",
-          "length": 4755
+          "length": 5102
         }
       ],
-      "byte_length": 4755
+      "byte_length": 5102
     }
   ]
 }

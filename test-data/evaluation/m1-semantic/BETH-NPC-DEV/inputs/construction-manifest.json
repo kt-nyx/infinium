@@ -16,15 +16,27 @@
   "files": [
     {
       "path": "case-matrix.json",
-      "sha256": "6d319a4cabc4c7a5b49ae32bc6f487fb2ea15e503433f7233b6ae09a6d87c264",
+      "sha256": "dc8cdff2dc4386d2f46759c6720802f8f29e21cd251734bcd0d6f091938aa9bd",
       "regions": [
         {
           "offset": 0,
           "kind": "project-authored-request-or-matrix-metadata",
-          "length": 2964
+          "length": 2603
         }
       ],
-      "byte_length": 2964
+      "byte_length": 2603
+    },
+    {
+      "path": "effective-scan-configuration.json",
+      "sha256": "d8c02609f9bf396fbf6af8731c4c6d72b23986274fa2133dd3027a2aa83afc10",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-request-or-matrix-metadata",
+          "length": 1792
+        }
+      ],
+      "byte_length": 1792
     },
     {
       "path": "mutations/Appearance-RepeatedPNAMOrder.esp",
@@ -212,10 +224,10 @@
         {
           "offset": 0,
           "kind": "project-authored-construction-metadata",
-          "length": 6093
+          "length": 6440
         }
       ],
-      "byte_length": 6093
+      "byte_length": 6440
     }
   ]
 }

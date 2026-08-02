@@ -2570,8 +2570,7 @@
           "links": []
         }
       ],
-      "chains": [],
-      "denominator": "native_esl_object_id"
+      "chains": []
     },
     {
       "scenario_id": "light-native-maximum",
@@ -2594,8 +2593,7 @@
           "links": []
         }
       ],
-      "chains": [],
-      "denominator": "native_esl_object_id"
+      "chains": []
     },
     {
       "scenario_id": "light-flagged-esp-minimum",
@@ -2618,8 +2616,7 @@
           "links": []
         }
       ],
-      "chains": [],
-      "denominator": "esl_flagged_esp_object_id"
+      "chains": []
     },
     {
       "scenario_id": "light-flagged-esp-maximum",
@@ -2642,8 +2639,7 @@
           "links": []
         }
       ],
-      "chains": [],
-      "denominator": "esl_flagged_esp_object_id"
+      "chains": []
     },
     {
       "scenario_id": "light-native-below-range",
@@ -2651,8 +2647,7 @@
         "mutations/Native-BelowObjectRange.esl"
       ],
       "records": [],
-      "chains": [],
-      "denominator": "native_esl_object_id"
+      "chains": []
     },
     {
       "scenario_id": "light-native-above-range",
@@ -2660,8 +2655,7 @@
         "mutations/Native-AboveLightMaximum.esl"
       ],
       "records": [],
-      "chains": [],
-      "denominator": "native_esl_object_id"
+      "chains": []
     },
     {
       "scenario_id": "light-flagged-below-range",
@@ -2669,8 +2663,7 @@
         "mutations/FlaggedEsp-BelowObjectRange.esp"
       ],
       "records": [],
-      "chains": [],
-      "denominator": "esl_flagged_esp_object_id"
+      "chains": []
     },
     {
       "scenario_id": "light-flagged-above-range",
@@ -2678,8 +2671,7 @@
         "mutations/FlaggedEsp-AboveLightMaximum.esp"
       ],
       "records": [],
-      "chains": [],
-      "denominator": "esl_flagged_esp_object_id"
+      "chains": []
     },
     {
       "scenario_id": "light-extension-header-mismatch",
@@ -2687,8 +2679,7 @@
         "mutations/Native-HeaderFlagRemoved.esl"
       ],
       "records": [],
-      "chains": [],
-      "denominator": "light_plugin_classification"
+      "chains": []
     },
     {
       "scenario_id": "light-reference-out-of-range",
@@ -2720,8 +2711,7 @@
           ]
         }
       ],
-      "chains": [],
-      "denominator": "light_master_reference"
+      "chains": []
     },
     {
       "scenario_id": "light-consumer-and-winner",
@@ -2816,8 +2806,7 @@
           ],
           "winner_locator": "plugins/04-Winner.esp#1"
         }
-      ],
-      "denominator": null
+      ]
     }
   ]
 }

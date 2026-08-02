@@ -542,34 +542,37 @@ function Get-ScenarioSemantics(
     foreach ($file in $Audit) { $filesByPath[[string]$file.path] = $file }
     $scenarios = [System.Collections.Generic.List[object]]::new()
     foreach ($case in $matrix.cases) {
+        $inputPaths = @($case.input_artifact_ids | ForEach-Object {
+            ([string]$_).Substring('inputs/'.Length)
+        })
         $pluginPaths = @(
-            $case.input_paths |
+            $inputPaths |
                 Where-Object { [IO.Path]::GetExtension([string]$_).ToLowerInvariant() -in @('.esm', '.esp', '.esl') }
         )
         $definitions = [System.Collections.Generic.List[object]]::new()
         if ($case.operation -eq 'scan' -and $pluginPaths.Count -gt 0) {
             $definitions.Add([ordered]@{
-                scenario_id = [string]$case.case_id
+                scenario_id = [string]$case.scenario_id
                 plugin_paths = $pluginPaths
             })
         }
         elseif ($case.operation -eq 'compare') {
             for ($index = 0; $index -lt $pluginPaths.Count; $index++) {
                 $definitions.Add([ordered]@{
-                    scenario_id = "$($case.case_id).variant-$index"
+                    scenario_id = "$($case.scenario_id).variant-$index"
                     plugin_paths = @([string]$pluginPaths[$index])
                 })
             }
         }
         elseif ($case.operation -eq 'orchestrated-read') {
-            $request = Get-Content -Raw -LiteralPath (Join-Path $Inputs ([string]$case.input_paths[0])) |
+            $request = Get-Content -Raw -LiteralPath (Join-Path $Inputs ([string]$inputPaths[0])) |
                 ConvertFrom-Json -AsHashtable
             $definitions.Add([ordered]@{
-                scenario_id = "$($case.case_id).initial"
+                scenario_id = "$($case.scenario_id).initial"
                 plugin_paths = @([string]$request.initial_path)
             })
             $definitions.Add([ordered]@{
-                scenario_id = "$($case.case_id).replacement"
+                scenario_id = "$($case.scenario_id).replacement"
                 plugin_paths = @([string]$request.replacement_path)
             })
         }
@@ -648,7 +651,6 @@ function Get-ScenarioSemantics(
             plugin_paths = $paths
             records = $records
             chains = $chains
-            denominator = $case.denominator
         })
         }
     }

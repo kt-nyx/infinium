@@ -12,6 +12,180 @@ namespace Infinium.Tests;
 public sealed class FixtureSchemaIntegrityTests
 {
     [TestMethod]
+    [TestCategory("M1Contract")]
+    [TestCategory("M1Evaluation")]
+    [TestCategory("M1Security")]
+    public void BethesdaCaseMatrixAndScanConfigurationHaveDistinctAcceptedRoles()
+    {
+        string root = TestRepository.PathFromRoot(
+            "test-data", "evaluation", "m1-semantic", "BETH-UNSUPPORTED-VAL");
+        _ = FixturePackageReader.ReadForEvaluationHarness(root);
+
+        JsonObject configuration = ReadObject(
+            root,
+            "inputs/effective-scan-configuration.json");
+        Assert.IsFalse(configuration.ContainsKey("cases"));
+        Assert.IsFalse(configuration.ContainsKey("scenarios"));
+
+        JsonObject matrix = ReadObject(root, "inputs/case-matrix.json");
+        Assert.AreEqual(
+            "infinium.evaluation.bethesda-case-matrix/v1",
+            matrix["schema_id"]!.GetValue<string>());
+        Assert.IsGreaterThan(0, matrix["cases"]!.AsArray().Count);
+    }
+
+    [TestMethod]
+    [TestCategory("M1Contract")]
+    [TestCategory("M1Fault")]
+    [TestCategory("M1Security")]
+    public void BethesdaExecutionControlsRejectMissingSwappedDuplicateUnsealedAndStaleBindings()
+    {
+        AssertTaxonomyPackageMutationRejected(root =>
+        {
+            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            execution.Remove("case_matrix_input");
+            WriteExecutionAndResealManifest(root, execution);
+        });
+        AssertTaxonomyPackageMutationRejected(root =>
+        {
+            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            JsonNode? configuration = execution["effective_scan_configuration"];
+            execution["effective_scan_configuration"] =
+                execution["case_matrix_input"]!["artifact"]!.DeepClone();
+            execution["case_matrix_input"]!["artifact"] = configuration!.DeepClone();
+            WriteExecutionAndResealManifest(root, execution);
+        });
+        AssertTaxonomyPackageMutationRejected(root =>
+        {
+            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            JsonNode duplicate = execution["input_payload_refs"]!.AsArray()[0]!.DeepClone();
+            execution["input_payload_refs"]!.AsArray().Add(duplicate);
+            WriteExecutionAndResealManifest(root, execution);
+        });
+        AssertCaseMatrixMutationRejected(matrix =>
+            matrix["cases"]!.AsArray()[0]!["input_artifact_ids"]!.AsArray()
+                .Add("inputs/unsealed.esp"));
+        AssertTaxonomyPackageMutationRejected(root =>
+        {
+            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            execution["case_matrix_input"]!["artifact"]!["fingerprint"] =
+                new string('0', 64);
+            WriteExecutionAndResealManifest(root, execution);
+        });
+        AssertTaxonomyPackageMutationRejected(root =>
+        {
+            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            execution["input_payload_refs"]!.AsArray().RemoveAt(0);
+            WriteExecutionAndResealManifest(root, execution);
+        });
+    }
+
+    [TestMethod]
+    [TestCategory("M1Contract")]
+    [TestCategory("M1Fault")]
+    [TestCategory("M1Security")]
+    public void AcceptedBethesdaIdentityRejectsFullyResealedProtectedArtifactDowngrades()
+    {
+        AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
+        {
+            const string artifactId = "oracle/independent-byte-facts.json";
+            JsonObject oracle = ReadObject(root, FixturePackageReader.OracleFileName);
+            RemoveArtifactReferences(oracle, artifactId);
+            File.Delete(Path.Combine(root, artifactId.Replace('/', Path.DirectorySeparatorChar)));
+            WriteRootOracleAndResealManifest(root, oracle);
+
+            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            JsonObject constructionReference = execution["input_payload_refs"]!.AsArray()
+                .Select(item => item!.AsObject())
+                .Single(item => item["artifact_id"]!.GetValue<string>()
+                    == "inputs/construction-manifest.json");
+            execution["effective_scan_configuration"] = constructionReference.DeepClone();
+            execution["case_matrix_input"] = new JsonObject
+            {
+                ["state"] = "not-applicable",
+                ["reason"] = "Resealed downgrade probe.",
+            };
+            WriteExecutionAndResealManifest(root, execution);
+        });
+
+        AssertBethesdaPackageMutationRejected("BETH-UNSUPPORTED-VAL", root =>
+        {
+            RemoveRetainedInputAndReseal(root, "inputs/taxonomy-subject-bindings.json");
+            const string artifactId = "oracle/taxonomy-projections.json";
+            JsonObject oracle = ReadObject(root, FixturePackageReader.OracleFileName);
+            RemoveArtifactReferences(oracle, artifactId);
+            File.Delete(Path.Combine(root, artifactId.Replace('/', Path.DirectorySeparatorChar)));
+            WriteRootOracleAndResealManifest(root, oracle);
+        });
+
+        AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
+        {
+            RemoveRetainedInputAndReseal(root, "inputs/case-matrix.json");
+            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            execution["case_matrix_input"] = new JsonObject
+            {
+                ["state"] = "not-applicable",
+                ["reason"] = "Resealed downgrade probe.",
+            };
+            WriteExecutionAndResealManifest(root, execution);
+        });
+
+        AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
+        {
+            RemoveRetainedInputAndReseal(
+                root,
+                "inputs/effective-scan-configuration.json");
+            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            JsonObject constructionReference = execution["input_payload_refs"]!.AsArray()
+                .Select(item => item!.AsObject())
+                .Single(item => item["artifact_id"]!.GetValue<string>()
+                    == "inputs/construction-manifest.json");
+            execution["effective_scan_configuration"] = constructionReference.DeepClone();
+            WriteExecutionAndResealManifest(root, execution);
+        });
+    }
+
+    [TestMethod]
+    [TestCategory("M1Contract")]
+    [TestCategory("M1Fault")]
+    public void BethesdaCaseMatrixRejectsWrongSchemaNonListCasesDuplicateIdsUnsupportedOperationsAndArityErrors()
+    {
+        AssertCaseMatrixMutationRejected(matrix =>
+            matrix["schema_id"] = "infinium.evaluation.wrong-case-matrix/v1");
+        AssertCaseMatrixMutationRejected(matrix =>
+            matrix["cases"] = new JsonObject());
+        AssertCaseMatrixMutationRejected(matrix =>
+        {
+            JsonArray cases = matrix["cases"]!.AsArray();
+            cases[1]!["scenario_id"] = cases[0]!["scenario_id"]!.GetValue<string>();
+        });
+        AssertCaseMatrixMutationRejected(matrix =>
+            matrix["cases"]!.AsArray()[0]!["operation"] = "score");
+        AssertCaseMatrixMutationRejected(matrix =>
+        {
+            JsonObject scenario = matrix["cases"]!.AsArray()[0]!.AsObject();
+            scenario["operation"] = "compare";
+            scenario["input_artifact_ids"]!.AsArray().RemoveAt(0);
+        });
+        AssertCaseMatrixMutationRejected(matrix =>
+        {
+            JsonObject scenario = matrix["cases"]!.AsArray()[0]!.AsObject();
+            scenario["operation"] = "request";
+            scenario["input_artifact_ids"]!.AsArray()
+                .Add("inputs/plugins/UnsupportedNpcField.esp");
+        });
+        AssertCaseMatrixMutationRejected(matrix =>
+            matrix["cases"]!.AsArray()[0]!["input_artifact_ids"] = new JsonArray());
+        AssertCaseMatrixMutationRejected(matrix =>
+        {
+            JsonObject scenario = matrix["cases"]!.AsArray()[0]!.AsObject();
+            scenario["operation"] = "request";
+            scenario["input_artifact_ids"] =
+                new JsonArray("inputs/plugins/UnsupportedFamily.esp");
+        });
+    }
+
+    [TestMethod]
     [TestCategory("M1Security")]
     [TestCategory("M1Fault")]
     public void ExecutionReaderRejectsRecursiveDuplicateProperties()
@@ -1074,6 +1248,11 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     private static void AssertTaxonomyPackageMutationRejected(Action<string> mutate)
+        => AssertBethesdaPackageMutationRejected("BETH-UNSUPPORTED-VAL", mutate);
+
+    private static void AssertBethesdaPackageMutationRejected(
+        string fixtureId,
+        Action<string> mutate)
     {
         string root = Path.Combine(
             Path.GetTempPath(),
@@ -1082,7 +1261,7 @@ public sealed class FixtureSchemaIntegrityTests
         {
             CopyDirectory(
                 TestRepository.PathFromRoot(
-                    "test-data", "evaluation", "m1-semantic", "BETH-UNSUPPORTED-VAL"),
+                    "test-data", "evaluation", "m1-semantic", fixtureId),
                 root);
             mutate(root);
             Assert.ThrowsExactly<InvalidDataException>(
@@ -1095,6 +1274,98 @@ public sealed class FixtureSchemaIntegrityTests
                 Directory.Delete(root, recursive: true);
             }
         }
+    }
+
+    private static void RemoveRetainedInputAndReseal(string root, string artifactId)
+    {
+        string artifactPath = Path.Combine(
+            root,
+            artifactId.Replace('/', Path.DirectorySeparatorChar));
+        File.Delete(artifactPath);
+        JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+        RemoveArtifactReferences(execution["input_payload_refs"], artifactId);
+        execution["resource_and_time_limits"]!["input_bytes"] = Directory
+            .EnumerateFiles(Path.Combine(root, "inputs"), "*", SearchOption.AllDirectories)
+            .Sum(path => new FileInfo(path).Length);
+        WriteExecutionAndResealManifest(root, execution);
+    }
+
+    private static void RemoveArtifactReferences(JsonNode? node, string artifactId)
+    {
+        if (node is JsonArray array)
+        {
+            for (int index = array.Count - 1; index >= 0; index--)
+            {
+                JsonNode? child = array[index];
+                if (child is JsonObject reference
+                    && reference["artifact_id"]?.GetValue<string>() == artifactId)
+                {
+                    array.RemoveAt(index);
+                }
+                else
+                {
+                    RemoveArtifactReferences(child, artifactId);
+                }
+            }
+        }
+        else if (node is JsonObject value)
+        {
+            foreach ((_, JsonNode? child) in value.ToArray())
+            {
+                RemoveArtifactReferences(child, artifactId);
+            }
+        }
+    }
+
+    private static void AssertCaseMatrixMutationRejected(Action<JsonObject> mutate)
+    {
+        AssertTaxonomyPackageMutationRejected(root =>
+        {
+            const string artifactId = "inputs/case-matrix.json";
+            JsonObject matrix = ReadObject(root, artifactId);
+            mutate(matrix);
+            WriteAndResealExecutionControl(root, artifactId, matrix);
+        });
+    }
+
+    private static void WriteAndResealExecutionControl(
+        string root,
+        string artifactId,
+        JsonObject value)
+    {
+        string artifactPath = Path.Combine(
+            root,
+            artifactId.Replace('/', Path.DirectorySeparatorChar));
+        WriteJson(artifactPath, value);
+        JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+        JsonObject[] references = ArtifactReferences(execution, artifactId).ToArray();
+        Assert.IsTrue(references.Length >= 2);
+        string fingerprint = Sha256(artifactPath);
+        long byteLength = new FileInfo(artifactPath).Length;
+        foreach (JsonObject reference in references)
+        {
+            reference["fingerprint"] = fingerprint;
+            if (reference.ContainsKey("byte_length"))
+            {
+                reference["byte_length"] = byteLength;
+            }
+        }
+
+        execution["resource_and_time_limits"]!["input_bytes"] = Directory
+            .EnumerateFiles(Path.Combine(root, "inputs"), "*", SearchOption.AllDirectories)
+            .Sum(path => new FileInfo(path).Length);
+        WriteExecutionAndResealManifest(root, execution);
+    }
+
+    private static void WriteExecutionAndResealManifest(
+        string root,
+        JsonObject execution)
+    {
+        string executionPath = Path.Combine(root, FixturePackageReader.ExecutionInputFileName);
+        WriteJson(executionPath, execution);
+        JsonObject manifest = ReadObject(root, FixturePackageReader.PublicManifestFileName);
+        manifest["input_package_fingerprint"] = Sha256(executionPath);
+        WriteJson(Path.Combine(root, FixturePackageReader.PublicManifestFileName), manifest);
     }
 
     private static void CopyDirectory(string source, string destination)

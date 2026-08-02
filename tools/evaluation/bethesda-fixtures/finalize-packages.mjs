@@ -3,13 +3,13 @@ import { readdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 
-const fixtureVersion = "1.1.0";
-const createdAt = "2026-08-02T12:00:00.0000000+00:00";
+const fixtureVersion = "1.2.0";
+const createdAt = "2026-08-02T16:00:00.0000000+00:00";
 const correctedStructureAt = "2026-08-01T22:00:00.0000000+00:00";
 const partitionHistoryInitialAt = "2026-07-30T18:00:00.0000000+00:00";
 const privateReplacementAt = "2026-08-01T18:00:00.0000000+00:00";
 const generatorSha256 =
-  "6ffc864936944642742024c96590c8d9fec5e2cd151d982a6cf4172ddaecc4a5";
+  "4dcb7c1c74a9cb55f6a861d4293f80a58d49b3badfad297968b720246ce990a0";
 const generatorProjectSha256 =
   "f360a93248ae4a6a92176c50f85eba13e630c3f64af23ad970b395cb0028b04e";
 const root = path.resolve(
@@ -238,6 +238,73 @@ async function validateTaxonomyAndOracleClosure(fixtureRoot, fixture) {
   }
 }
 
+async function validateExecutionControls(fixtureRoot, fixture, byId) {
+  const matrix = JSON.parse(
+    await readFile(path.join(fixtureRoot, "inputs", "case-matrix.json"), "utf8"),
+  );
+  if (
+    matrix.schema_id !== "infinium.evaluation.bethesda-case-matrix/v1" ||
+    matrix.schema_version !== "1" ||
+    matrix.fixture_id !== fixture.fixtureId ||
+    matrix.fixture_version !== fixtureVersion ||
+    matrix.source_basis !==
+      "accepted-slice-3.5-plan-and-retained-execution-inputs" ||
+    !Array.isArray(matrix.cases) ||
+    matrix.cases.length === 0
+  ) {
+    throw new Error(`${fixture.fixtureId} has an invalid answer-free case matrix.`);
+  }
+  const scenarioIds = new Set();
+  const expectedArities = new Map([
+    ["compare", [2, 2]],
+    ["request", [1, 1]],
+    ["orchestrated-read", [1, 1]],
+    ["scan", [1, Number.MAX_SAFE_INTEGER]],
+  ]);
+  for (const scenario of matrix.cases) {
+    const arity = expectedArities.get(scenario.operation);
+    const expectedShape =
+      scenario.operation === "request" || scenario.operation === "orchestrated-read"
+        ? /^inputs\/requests\/[^/]+\.json$/
+        : /^inputs\/.+\.(?:esm|esp|esl)$/;
+    if (
+      typeof scenario.scenario_id !== "string" ||
+      scenarioIds.has(scenario.scenario_id) ||
+      !arity ||
+      !Array.isArray(scenario.input_artifact_ids) ||
+      scenario.input_artifact_ids.length < arity[0] ||
+      scenario.input_artifact_ids.length > arity[1] ||
+      new Set(scenario.input_artifact_ids).size !==
+        scenario.input_artifact_ids.length ||
+      scenario.input_artifact_ids.some(
+        (artifactId) =>
+          !expectedShape.test(artifactId) ||
+          !byId.has(artifactId) ||
+          artifactId === "inputs/case-matrix.json" ||
+          artifactId === "inputs/effective-scan-configuration.json",
+      )
+    ) {
+      throw new Error(`${fixture.fixtureId} has an invalid execution scenario.`);
+    }
+    scenarioIds.add(scenario.scenario_id);
+  }
+
+  const configuration = JSON.parse(
+    await readFile(
+      path.join(fixtureRoot, "inputs", "effective-scan-configuration.json"),
+      "utf8",
+    ),
+  );
+  if (
+    configuration.schema_id !== "infinium.scan.effective-configuration/v1" ||
+    configuration.schema_version !== "1" ||
+    Object.hasOwn(configuration, "cases") ||
+    Object.hasOwn(configuration, "scenarios")
+  ) {
+    throw new Error(`${fixture.fixtureId} has an invalid effective scan configuration.`);
+  }
+}
+
 for (const fixture of fixtures) {
   const fixtureRoot = path.join(root, fixture.fixtureId);
   await validateTaxonomyAndOracleClosure(fixtureRoot, fixture);
@@ -254,9 +321,13 @@ for (const fixture of fixtures) {
   const byId = new Map(
     inputReferences.map((reference) => [reference.artifact_id, reference]),
   );
+  await validateExecutionControls(fixtureRoot, fixture, byId);
   const snapshotReference = byId.get("inputs/snapshot/accepted-order.json");
   const caseMatrixReference = byId.get("inputs/case-matrix.json");
-  if (!snapshotReference || !caseMatrixReference) {
+  const scanConfigurationReference = byId.get(
+    "inputs/effective-scan-configuration.json",
+  );
+  if (!snapshotReference || !caseMatrixReference || !scanConfigurationReference) {
     throw new Error(`${fixture.fixtureId} lacks required retained controls.`);
   }
 
@@ -276,7 +347,13 @@ for (const fixture of fixtures) {
       reason:
         "Slice 3.5 qualifies inputs and independent truth; production semantic analysis remains pending Slice 4.",
     },
-    effective_scan_configuration: caseMatrixReference,
+    effective_scan_configuration: scanConfigurationReference,
+    case_matrix_input: {
+      state: "provided",
+      reason:
+        "Retained answer-free scenarios bind exact operations and input membership independently of scan configuration and oracle answers.",
+      artifact: caseMatrixReference,
+    },
     runtime_support_input: {
       state: "not-applicable",
       reason:
@@ -353,7 +430,7 @@ for (const fixture of fixtures) {
         kind: "tracked-source",
         identity_or_version: generatorSha256,
         sha256: generatorSha256,
-        byte_length: 69137,
+        byte_length: 69707,
         retention_location_class: "tracked-repository",
         availability: "retained",
         required_for: ["clean-recomputation", "audit"],

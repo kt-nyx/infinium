@@ -1,14 +1,14 @@
 {
   "fixture_id": "BETH-REFR-DEV",
-  "fixture_version": "1.1.0",
+  "fixture_version": "1.2.0",
   "expected_replay_state": "complete-clean",
   "dependencies": [
     {
       "dependency_id": "bethesda-fixture-generator-v1",
       "kind": "tracked-source",
-      "identity_or_version": "6ffc864936944642742024c96590c8d9fec5e2cd151d982a6cf4172ddaecc4a5",
-      "sha256": "6ffc864936944642742024c96590c8d9fec5e2cd151d982a6cf4172ddaecc4a5",
-      "byte_length": 69137,
+      "identity_or_version": "4dcb7c1c74a9cb55f6a861d4293f80a58d49b3badfad297968b720246ce990a0",
+      "sha256": "4dcb7c1c74a9cb55f6a861d4293f80a58d49b3badfad297968b720246ce990a0",
+      "byte_length": 69707,
       "retention_location_class": "tracked-repository",
       "availability": "retained",
       "required_for": [

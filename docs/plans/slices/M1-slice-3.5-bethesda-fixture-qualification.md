@@ -28,6 +28,17 @@ subject closure, and every retained oracle file must be owned by
 Affected public and evaluator-private packages must be independently resealed
 and requalified before the exact Slice 4 implementation commit is scored.
 
+Accepted case-matrix maintenance amendment: On 2026-08-02 the project owner
+authorized a second bounded Slice 3.5 correction after scorer audit found that
+the answer-free Bethesda execution-scenario inventory had been assigned to the
+effective scan-configuration role. The valid scan configuration must remain a
+separate role-bound retained input and must not acquire a `cases` property.
+Every affected package instead carries an explicit answer-free case-matrix
+input whose closed schema identifies the fixture, scenarios, operation shape,
+and exact retained-input membership without oracle values. Public and
+evaluator-private packages must be superseded, independently resealed, and
+requalified before scoring resumes.
+
 ## Authority and precedence
 
 This plan is the executable handoff for M1 Slice 3.5. It refines, but does not

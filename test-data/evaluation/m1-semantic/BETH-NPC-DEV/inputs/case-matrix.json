@@ -1,108 +1,90 @@
 {
-  "schema": "infinium.bethesda-fixture-case-matrix",
-  "schema_version": 1,
-  "partition": "development",
-  "classification": "boundary",
-  "fixed_seed": "3520260730",
+  "schema_id": "infinium.evaluation.bethesda-case-matrix/v1",
+  "schema_version": "1",
+  "fixture_id": "BETH-NPC-DEV",
+  "fixture_version": "1.2.0",
+  "source_basis": "accepted-slice-3.5-plan-and-retained-execution-inputs",
   "cases": [
     {
-      "case_id": "npc-layered-winner",
+      "scenario_id": "npc-layered-winner",
       "operation": "scan",
-      "input_paths": [
-        "plugins/00-Pad.esm",
-        "plugins/01-Actors.esm",
-        "plugins/02-Behavior.esp",
-        "plugins/03-Appearance.esp"
-      ],
-      "denominator": null
+      "input_artifact_ids": [
+        "inputs/plugins/00-Pad.esm",
+        "inputs/plugins/01-Actors.esm",
+        "inputs/plugins/02-Behavior.esp",
+        "inputs/plugins/03-Appearance.esp"
+      ]
     },
     {
-      "case_id": "npc-deleted-winner",
+      "scenario_id": "npc-deleted-winner",
       "operation": "scan",
-      "input_paths": [
-        "plugins/01-Actors.esm",
-        "plugins/06-DeletedWinner.esp"
-      ],
-      "denominator": null
+      "input_artifact_ids": [
+        "inputs/plugins/01-Actors.esm",
+        "inputs/plugins/06-DeletedWinner.esp"
+      ]
     },
     {
-      "case_id": "npc-light-plugin",
+      "scenario_id": "npc-light-plugin",
       "operation": "scan",
-      "input_paths": [
-        "plugins/01-Actors.esm",
-        "plugins/04-LightActors.esl",
-        "plugins/05-LightWinner.esp"
-      ],
-      "denominator": null
+      "input_artifact_ids": [
+        "inputs/plugins/01-Actors.esm",
+        "inputs/plugins/04-LightActors.esl",
+        "inputs/plugins/05-LightWinner.esp"
+      ]
     },
     {
-      "case_id": "npc-compression-equivalence",
+      "scenario_id": "npc-compression-equivalence",
       "operation": "compare",
-      "input_paths": [
-        "plugins/03-Appearance.esp",
-        "mutations/uncompressed/03-Appearance.esp"
-      ],
-      "denominator": null
+      "input_artifact_ids": [
+        "inputs/plugins/03-Appearance.esp",
+        "inputs/mutations/uncompressed/03-Appearance.esp"
+      ]
     },
     {
-      "case_id": "npc-one-byte-field-change",
+      "scenario_id": "npc-one-byte-field-change",
       "operation": "compare",
-      "input_paths": [
-        "plugins/02-Behavior.esp",
-        "mutations/one-byte-aidt/02-Behavior.esp"
-      ],
-      "denominator": null
+      "input_artifact_ids": [
+        "inputs/plugins/02-Behavior.esp",
+        "inputs/mutations/one-byte-aidt/02-Behavior.esp"
+      ]
     },
     {
-      "case_id": "npc-master-reindexing",
+      "scenario_id": "npc-master-reindexing",
       "operation": "compare",
-      "input_paths": [
-        "mutations/master-order-reindexed/03-Appearance.esp",
-        "mutations/master-order-unreindexed/03-Appearance.esp"
-      ],
-      "denominator": null
+      "input_artifact_ids": [
+        "inputs/mutations/master-order-reindexed/03-Appearance.esp",
+        "inputs/mutations/master-order-unreindexed/03-Appearance.esp"
+      ]
     },
     {
-      "case_id": "npc-record-order",
+      "scenario_id": "npc-record-order",
       "operation": "compare",
-      "input_paths": [
-        "plugins/01-Actors.esm",
-        "mutations/record-order/01-Actors.esm"
-      ],
-      "denominator": null
+      "input_artifact_ids": [
+        "inputs/plugins/01-Actors.esm",
+        "inputs/mutations/record-order/01-Actors.esm"
+      ]
     },
     {
-      "case_id": "npc-repeated-pkid-order",
+      "scenario_id": "npc-repeated-pkid-order",
       "operation": "scan",
-      "input_paths": [
-        "mutations/Behavior-RepeatedPKIDOrder.esp"
-      ],
-      "denominator": null
+      "input_artifact_ids": [
+        "inputs/mutations/Behavior-RepeatedPKIDOrder.esp"
+      ]
     },
     {
-      "case_id": "npc-repeated-pnam-order",
+      "scenario_id": "npc-repeated-pnam-order",
       "operation": "scan",
-      "input_paths": [
-        "mutations/Appearance-RepeatedPNAMOrder.esp"
-      ],
-      "denominator": null
+      "input_artifact_ids": [
+        "inputs/mutations/Appearance-RepeatedPNAMOrder.esp"
+      ]
     },
     {
-      "case_id": "npc-local-id-change",
+      "scenario_id": "npc-local-id-change",
       "operation": "compare",
-      "input_paths": [
-        "plugins/01-Actors.esm",
-        "mutations/local-id/01-Actors.esm"
-      ],
-      "denominator": null
+      "input_artifact_ids": [
+        "inputs/plugins/01-Actors.esm",
+        "inputs/mutations/local-id/01-Actors.esm"
+      ]
     }
-  ],
-  "notes": {
-    "project_authored_race_data_format": "128-byte Skyrim RACE DATA with 32-bit little-endian flags at byte offset 32",
-    "project_authored_face_gen_head_construction_bit": "0x00000002",
-    "construction_note": "Positive and negative applicability inputs are authored here; interpretation is independently reviewed.",
-    "omitted_subrecords": [
-      "XESP"
-    ]
-  }
+  ]
 }

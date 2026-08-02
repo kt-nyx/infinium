@@ -16,15 +16,27 @@
   "files": [
     {
       "path": "case-matrix.json",
-      "sha256": "219f8da641cfd21a376dbd944e132878b3944653d8c81a5a8d9a65c63d4afa35",
+      "sha256": "59f2ef8cbd1823eb118d02157e0fb42a3350bb92502377024648d28ad437801a",
       "regions": [
         {
           "offset": 0,
           "kind": "project-authored-request-or-matrix-metadata",
-          "length": 1688
+          "length": 1216
         }
       ],
-      "byte_length": 1688
+      "byte_length": 1216
+    },
+    {
+      "path": "effective-scan-configuration.json",
+      "sha256": "332a6ba5dcef1ca8a53d49fd0ee023b38adfd8596be5dd24bcfeb95170610c67",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-request-or-matrix-metadata",
+          "length": 1800
+        }
+      ],
+      "byte_length": 1800
     },
     {
       "path": "plugins/LocalizedDependency.esp",
@@ -116,10 +128,10 @@
         {
           "offset": 0,
           "kind": "project-authored-construction-metadata",
-          "length": 3532
+          "length": 3879
         }
       ],
-      "byte_length": 3532
+      "byte_length": 3879
     }
   ]
 }

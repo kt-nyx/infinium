@@ -1,68 +1,44 @@
 {
-  "schema": "infinium.bethesda-fixture-case-matrix",
-  "schema_version": 1,
-  "partition": "development",
-  "classification": "unsupported",
-  "fixed_seed": "3520260730",
+  "schema_id": "infinium.evaluation.bethesda-case-matrix/v1",
+  "schema_version": "1",
+  "fixture_id": "BETH-UNSUPPORTED-VAL",
+  "fixture_version": "1.2.0",
+  "source_basis": "accepted-slice-3.5-plan-and-retained-execution-inputs",
   "cases": [
     {
-      "case_id": "unsupported-record-family",
+      "scenario_id": "unsupported-record-family",
       "operation": "scan",
-      "input_paths": [
-        "plugins/UnsupportedFamily.esp"
-      ],
-      "denominator": "record_family"
+      "input_artifact_ids": [
+        "inputs/plugins/UnsupportedFamily.esp"
+      ]
     },
     {
-      "case_id": "unsupported-npc-field",
+      "scenario_id": "unsupported-npc-field",
       "operation": "scan",
-      "input_paths": [
-        "plugins/UnsupportedNpcField.esp"
-      ],
-      "denominator": "record_field"
+      "input_artifact_ids": [
+        "inputs/plugins/UnsupportedNpcField.esp"
+      ]
     },
     {
-      "case_id": "unsupported-localized-string",
+      "scenario_id": "unsupported-localized-string",
       "operation": "request",
-      "input_paths": [
-        "requests/localized-string-resolution.json"
-      ],
-      "denominator": "localized_string_resolution"
+      "input_artifact_ids": [
+        "inputs/requests/localized-string-resolution.json"
+      ]
     },
     {
-      "case_id": "unsupported-archive-member",
+      "scenario_id": "unsupported-archive-member",
       "operation": "request",
-      "input_paths": [
-        "requests/archive-member.json"
-      ],
-      "denominator": "archive_member_read"
+      "input_artifact_ids": [
+        "inputs/requests/archive-member.json"
+      ]
     },
     {
-      "case_id": "unsupported-environment-discovery",
+      "scenario_id": "unsupported-environment-discovery",
       "operation": "request",
-      "input_paths": [
-        "requests/automatic-environment-discovery.json"
-      ],
-      "denominator": "automatic_environment_discovery"
+      "input_artifact_ids": [
+        "inputs/requests/automatic-environment-discovery.json"
+      ]
     }
-  ],
-  "notes": {
-    "denominators": {
-      "record_family": {
-        "case_count": 1
-      },
-      "record_field": {
-        "case_count": 1
-      },
-      "localized_string_resolution": {
-        "case_count": 1
-      },
-      "archive_member_read": {
-        "case_count": 1
-      },
-      "automatic_environment_discovery": {
-        "case_count": 1
-      }
-    }
-  }
+  ]
 }

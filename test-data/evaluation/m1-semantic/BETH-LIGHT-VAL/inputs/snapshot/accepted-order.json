@@ -2,11 +2,11 @@
   "schema_id": "infinium.evaluation.bethesda-snapshot-input/v1",
   "schema_version": "1",
   "fixture_id": "BETH-LIGHT-VAL",
-  "fixture_version": "1.1.0",
+  "fixture_version": "1.2.0",
   "snapshot_contract_version": "3.0.0",
   "adapter_id": "infinium.mo2-static-reconstruction/v3",
   "selected_profile_name": "BETH-LIGHT-VAL",
-  "construction_manifest_fingerprint": "f13afa4f89d62fb7bbc41abf564d10aa88b27858150329c9a631dd0fa6ecc024",
+  "construction_manifest_fingerprint": "15ca81a4a7ccfc161c006e12ccaed65c459527ebc3b3b0c3699031080e4b99af",
   "provider_order": [
     {
       "provider_id": "beth-light-val-provider-00",

@@ -8437,8 +8437,7 @@
           ],
           "winner_locator": "plugins/04-MergedWinner.esp#1"
         }
-      ],
-      "denominator": null
+      ]
     },
     {
       "scenario_id": "refr-deleted-winner",
@@ -8562,8 +8561,7 @@
           ],
           "winner_locator": "plugins/05-DeletedWinner.esp#1"
         }
-      ],
-      "denominator": null
+      ]
     },
     {
       "scenario_id": "refr-boundaries",
@@ -8736,8 +8734,7 @@
           ],
           "winner_locator": "plugins/06-Boundaries.esp#1"
         }
-      ],
-      "denominator": null
+      ]
     },
     {
       "scenario_id": "refr-compression-equivalence.variant-0",
@@ -8801,8 +8798,7 @@
           ]
         }
       ],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "refr-compression-equivalence.variant-1",
@@ -8866,8 +8862,7 @@
           ]
         }
       ],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "refr-one-byte-data-change.variant-0",
@@ -8931,8 +8926,7 @@
           ]
         }
       ],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "refr-one-byte-data-change.variant-1",
@@ -8996,8 +8990,7 @@
           ]
         }
       ],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "refr-master-reindexing.variant-0",
@@ -9037,8 +9030,7 @@
           ]
         }
       ],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "refr-master-reindexing.variant-1",
@@ -9078,8 +9070,7 @@
           ]
         }
       ],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "refr-record-order.variant-0",
@@ -9171,8 +9162,7 @@
           ]
         }
       ],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "refr-record-order.variant-1",
@@ -9264,8 +9254,7 @@
           ]
         }
       ],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "refr-repeated-xlkr-order",
@@ -9345,8 +9334,7 @@
           ]
         }
       ],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "refr-truncated-subrecord-header",
@@ -9354,8 +9342,7 @@
         "mutations/Refr-SubrecordHeaderTruncated.esp"
       ],
       "records": [],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "refr-subrecord-body-overrun",
@@ -9363,8 +9350,7 @@
         "mutations/Refr-SubrecordBodyOverrun.esp"
       ],
       "records": [],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "refr-dangling-extended-size",
@@ -9372,8 +9358,7 @@
         "mutations/Refr-DanglingExtendedSize.esp"
       ],
       "records": [],
-      "chains": [],
-      "denominator": null
+      "chains": []
     }
   ]
 }

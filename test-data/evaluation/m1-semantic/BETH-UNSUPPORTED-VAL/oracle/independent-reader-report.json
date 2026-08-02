@@ -592,8 +592,7 @@
           "links": []
         }
       ],
-      "chains": [],
-      "denominator": "record_family"
+      "chains": []
     },
     {
       "scenario_id": "unsupported-npc-field",
@@ -609,8 +608,7 @@
           "links": []
         }
       ],
-      "chains": [],
-      "denominator": "record_field"
+      "chains": []
     }
   ]
 }

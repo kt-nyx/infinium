@@ -1,7 +1,7 @@
 {
   "fixture_id": "BETH-LIGHT-VAL",
-  "fixture_version": "1.1.0",
-  "oracle_version": "1.1.0",
+  "fixture_version": "1.2.0",
+  "oracle_version": "1.2.0",
   "independent_authors_and_reviewers": [
     "oracle-reviewer"
   ],
@@ -13,7 +13,7 @@
         {
           "artifact_id": "oracle/manual-hex-worksheet.json",
           "artifact_version": "1",
-          "fingerprint": "5a49033669345c972976fed57e1bd786d64bbcee9f0790c63a4f503d0a482059",
+          "fingerprint": "0b664ceaf985a636275c08170e09f58cc9ad7a78bc50e6e8567cba814a38d227",
           "availability": "retained"
         }
       ],
@@ -26,13 +26,13 @@
         {
           "artifact_id": "oracle/independent-reader-report.json",
           "artifact_version": "1",
-          "fingerprint": "da347435b330d6766f4b442979a48d0e8880b95f9e2438b4bb1d507f95b803ca",
+          "fingerprint": "5b9aecdbb92bf23a11d6597500dc36a888b217caf31f527b025c0a6be5b99ea0",
           "availability": "retained"
         },
         {
           "artifact_id": "oracle/independent-byte-facts.json",
-          "artifact_version": "1.1.0",
-          "fingerprint": "54af3fb56812c0ebf716150362772ee22b542f80e1ddd2e371ded1745d4f6c3a",
+          "artifact_version": "1.2.0",
+          "fingerprint": "8c2dd9494ec32f614c6f04adb63978e1afb1a8724a8e82957d316e9e3dd4f160",
           "availability": "retained"
         }
       ],
@@ -1483,7 +1483,7 @@
       "independent_evidence_reference": {
         "artifact_id": "oracle/manual-hex-worksheet.json",
         "artifact_version": "1",
-        "fingerprint": "5a49033669345c972976fed57e1bd786d64bbcee9f0790c63a4f503d0a482059",
+        "fingerprint": "0b664ceaf985a636275c08170e09f58cc9ad7a78bc50e6e8567cba814a38d227",
         "availability": "retained"
       },
       "prior_error_explanation": "Version 1.0.0 attributed the manual method without comparing its decoded semantic answers and classified mutation changes from artifact dependencies instead of logical baseline deltas.",
@@ -1495,7 +1495,7 @@
       "independent_evidence_reference": {
         "artifact_id": "oracle/manual-hex-worksheet.json",
         "artifact_version": "1",
-        "fingerprint": "5a49033669345c972976fed57e1bd786d64bbcee9f0790c63a4f503d0a482059",
+        "fingerprint": "0b664ceaf985a636275c08170e09f58cc9ad7a78bc50e6e8567cba814a38d227",
         "availability": "retained"
       },
       "prior_error_explanation": "Fixture version 1.0.0 encoded RACE flags at the wrong DATA offset and placed REFR records outside canonical CELL children.",
@@ -1507,10 +1507,22 @@
       "independent_evidence_reference": {
         "artifact_id": "oracle/manual-hex-worksheet.json",
         "artifact_version": "1",
-        "fingerprint": "5a49033669345c972976fed57e1bd786d64bbcee9f0790c63a4f503d0a482059",
+        "fingerprint": "0b664ceaf985a636275c08170e09f58cc9ad7a78bc50e6e8567cba814a38d227",
         "availability": "retained"
       },
       "prior_error_explanation": "Fixture version 1.0.1 was uniformly resealed so the public Bethesda suite shares one versioned exact-reference-closure reader contract; this package had no taxonomy or physical oracle-closure defect.",
+      "reviewer": "oracle-reviewer"
+    },
+    {
+      "oracle_version": "1.2.0",
+      "changed_at": "2026-08-02T16:00:00.0000000+00:00",
+      "independent_evidence_reference": {
+        "artifact_id": "oracle/manual-hex-worksheet.json",
+        "artifact_version": "1",
+        "fingerprint": "0b664ceaf985a636275c08170e09f58cc9ad7a78bc50e6e8567cba814a38d227",
+        "availability": "retained"
+      },
+      "prior_error_explanation": "Fixture version 1.1.0 assigned its answer-free execution scenario inventory to the effective scan-configuration role instead of sealing distinct scan-configuration and case-matrix inputs.",
       "reviewer": "oracle-reviewer"
     }
   ]

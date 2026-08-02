@@ -1,13 +1,13 @@
 {
   "fixture_id": "BETH-NPC-DEV",
-  "fixture_version": "1.1.0",
+  "fixture_version": "1.2.0",
   "installation_snapshot_input": {
     "state": "provided",
     "reason": "Retained Slice 3 accepted-order receipt binds the disposable synthetic snapshot input.",
     "artifact": {
       "artifact_id": "inputs/snapshot/accepted-order.json",
-      "artifact_version": "1.1.0",
-      "fingerprint": "f8db8ec80d59274d8ae789d835737bd4afb2e395f2695cd44bea20dd4f1c31f2",
+      "artifact_version": "1.2.0",
+      "fingerprint": "55c9636e1f1ce93a9b308bf5e878da744ac369ac6e8f360f65f87c224a847692",
       "availability": "retained"
     }
   },
@@ -16,10 +16,20 @@
     "reason": "Slice 3.5 qualifies inputs and independent truth; production semantic analysis remains pending Slice 4."
   },
   "effective_scan_configuration": {
-    "artifact_id": "inputs/case-matrix.json",
-    "artifact_version": "1.1.0",
-    "fingerprint": "6d319a4cabc4c7a5b49ae32bc6f487fb2ea15e503433f7233b6ae09a6d87c264",
+    "artifact_id": "inputs/effective-scan-configuration.json",
+    "artifact_version": "1.2.0",
+    "fingerprint": "d8c02609f9bf396fbf6af8731c4c6d72b23986274fa2133dd3027a2aa83afc10",
     "availability": "retained"
+  },
+  "case_matrix_input": {
+    "state": "provided",
+    "reason": "Retained answer-free scenarios bind exact operations and input membership independently of scan configuration and oracle answers.",
+    "artifact": {
+      "artifact_id": "inputs/case-matrix.json",
+      "artifact_version": "1.2.0",
+      "fingerprint": "dc8cdff2dc4386d2f46759c6720802f8f29e21cd251734bcd0d6f091938aa9bd",
+      "availability": "retained"
+    }
   },
   "runtime_support_input": {
     "state": "not-applicable",
@@ -30,8 +40,8 @@
     "reason": "Retained synthetic profile receipt records the selected profile and accepted adapter identity.",
     "artifact": {
       "artifact_id": "inputs/snapshot/accepted-order.json",
-      "artifact_version": "1.1.0",
-      "fingerprint": "f8db8ec80d59274d8ae789d835737bd4afb2e395f2695cd44bea20dd4f1c31f2",
+      "artifact_version": "1.2.0",
+      "fingerprint": "55c9636e1f1ce93a9b308bf5e878da744ac369ac6e8f360f65f87c224a847692",
       "availability": "retained"
     }
   },
@@ -40,8 +50,8 @@
     "reason": "Retained synthetic profile receipt records exact plugin order and fingerprints.",
     "artifact": {
       "artifact_id": "inputs/snapshot/accepted-order.json",
-      "artifact_version": "1.1.0",
-      "fingerprint": "f8db8ec80d59274d8ae789d835737bd4afb2e395f2695cd44bea20dd4f1c31f2",
+      "artifact_version": "1.2.0",
+      "fingerprint": "55c9636e1f1ce93a9b308bf5e878da744ac369ac6e8f360f65f87c224a847692",
       "availability": "retained"
     }
   },
@@ -50,8 +60,8 @@
     "reason": "Retained synthetic profile receipt records exact provider order and fingerprints.",
     "artifact": {
       "artifact_id": "inputs/snapshot/accepted-order.json",
-      "artifact_version": "1.1.0",
-      "fingerprint": "f8db8ec80d59274d8ae789d835737bd4afb2e395f2695cd44bea20dd4f1c31f2",
+      "artifact_version": "1.2.0",
+      "fingerprint": "55c9636e1f1ce93a9b308bf5e878da744ac369ac6e8f360f65f87c224a847692",
       "availability": "retained"
     }
   },
@@ -61,7 +71,7 @@
     {
       "component_id": "Infinium.BethesdaFixtures.Generator",
       "version": "1",
-      "fingerprint": "6ffc864936944642742024c96590c8d9fec5e2cd151d982a6cf4172ddaecc4a5"
+      "fingerprint": "4dcb7c1c74a9cb55f6a861d4293f80a58d49b3badfad297968b720246ce990a0"
     }
   ],
   "declared_archive_state": {
@@ -85,122 +95,128 @@
   "resource_and_time_limits": {
     "wall_time_ms": 120000,
     "memory_bytes": 536870912,
-    "input_bytes": 24745,
+    "input_bytes": 26523,
     "output_bytes": 16777216
   },
   "input_payload_refs": [
     {
       "artifact_id": "inputs/case-matrix.json",
-      "artifact_version": "1.1.0",
-      "fingerprint": "6d319a4cabc4c7a5b49ae32bc6f487fb2ea15e503433f7233b6ae09a6d87c264",
+      "artifact_version": "1.2.0",
+      "fingerprint": "dc8cdff2dc4386d2f46759c6720802f8f29e21cd251734bcd0d6f091938aa9bd",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/construction-manifest.json",
-      "artifact_version": "1.1.0",
-      "fingerprint": "2c7958991a719b0724f02febed359eeada6493af5dab6fe304e139f67f7a97d8",
+      "artifact_version": "1.2.0",
+      "fingerprint": "ad7217536d6730312aff325250c8c7965604d41980fd4acd92504d5063a068cf",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/effective-scan-configuration.json",
+      "artifact_version": "1.2.0",
+      "fingerprint": "d8c02609f9bf396fbf6af8731c4c6d72b23986274fa2133dd3027a2aa83afc10",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/Appearance-RepeatedPNAMOrder.esp",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "602a582d7982e48fba9b9540cd54814723a6499031947206cdc2ef0ea5351e82",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/Behavior-RepeatedPKIDOrder.esp",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "66fadbaba695c0465664bc446debbc32551ecc137001c7e4657b5114375652a3",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/local-id/01-Actors.esm",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "8c1b43a017f8086d8ea7771c9f8e6aeb0ae92e6127145d9a2e01be53f3969781",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/master-order-reindexed/03-Appearance.esp",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "630245108c39580f13b3c120a0aadeab00bb98d247bf79eff68a63482dd58082",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/master-order-unreindexed/03-Appearance.esp",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "65614271553c48e953ad6c3e9983459f9d43fea3efdd86da21bddf31a9983e48",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/one-byte-aidt/02-Behavior.esp",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "9103daeff9372eafe341df18008345dab16ab0bf5d1a90ea4f6debedb32e5f8a",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/record-order/01-Actors.esm",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "1911fb74f8b8b987540388183cf01d693af8c11140a0dcc0516291e294ea2934",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/uncompressed/03-Appearance.esp",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "535793c1763183f076bd8790d267806111902f47a685b0af8af8e6993dc97e1a",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/plugins/00-Pad.esm",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "7ee03b2ef46c82525644553259b32260c0defc87b61ae986519acab32496fd89",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/plugins/01-Actors.esm",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "51009a32d022089dbee64de0c690e8bb339557c4b4fc5cb925d92c0edc6bccc0",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/plugins/02-Behavior.esp",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "112c5db091640838b0997fbdc8b8e7e6ad29c8c84ccbf5c7dc256207c20b457f",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/plugins/03-Appearance.esp",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "59c45094cf5bfc18a7b30b45c1061bf573971cf969ac3a1fd04e24d6d85d0597",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/plugins/04-LightActors.esl",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "61156b1d27dc0ac056afbc21cd880a41ce6c6a463c3831a3caf10ab43b05fa42",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/plugins/05-LightWinner.esp",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "3f02c54d6fb01eba5e3416a1a01abd8d3235dfc083ab4ef4655cd59f39d5990b",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/plugins/06-DeletedWinner.esp",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "295811fc839deb951eea1e0cfce5dbaafd9dfeec6a67a95d601e680608f6ab0c",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/snapshot/accepted-order.json",
-      "artifact_version": "1.1.0",
-      "fingerprint": "f8db8ec80d59274d8ae789d835737bd4afb2e395f2695cd44bea20dd4f1c31f2",
+      "artifact_version": "1.2.0",
+      "fingerprint": "55c9636e1f1ce93a9b308bf5e878da744ac369ac6e8f360f65f87c224a847692",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/taxonomy-subject-bindings.json",
-      "artifact_version": "1.1.0",
-      "fingerprint": "8565046b21a92b42a6d58ff0d807e5e00af3401a3a5121b013d0f139df67d517",
+      "artifact_version": "1.2.0",
+      "fingerprint": "aa9a58950798d6340915fe67610f1d28ed799164422a1cbd7c1ce7bb74630835",
       "availability": "retained"
     }
   ]

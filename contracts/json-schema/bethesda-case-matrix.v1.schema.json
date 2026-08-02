@@ -1,0 +1,172 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/json-schema/bethesda-case-matrix.v1.schema.json",
+  "title": "Infinium answer-free Bethesda evaluation case matrix v1",
+  "description": "Closed execution-scenario inventory. It identifies operations and retained inputs without expected values, classifications, oracle references, or adjudication.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "fixture_id",
+    "fixture_version",
+    "source_basis",
+    "cases"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "infinium.evaluation.bethesda-case-matrix/v1"
+    },
+    "schema_version": {
+      "const": "1"
+    },
+    "fixture_id": {
+      "$ref": "common.v1.schema.json#/$defs/identifier"
+    },
+    "fixture_version": {
+      "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+    },
+    "source_basis": {
+      "const": "accepted-slice-3.5-plan-and-retained-execution-inputs"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/scanScenario"
+          },
+          {
+            "$ref": "#/$defs/compareScenario"
+          },
+          {
+            "$ref": "#/$defs/singleRequestScenario"
+          },
+          {
+            "$ref": "#/$defs/orchestratedReadScenario"
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "baseScenarioProperties": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scenario_id",
+        "operation",
+        "input_artifact_ids"
+      ],
+      "properties": {
+        "scenario_id": {
+          "$ref": "common.v1.schema.json#/$defs/identifier"
+        },
+        "operation": {
+          "enum": [
+            "scan",
+            "compare",
+            "request",
+            "orchestrated-read"
+          ]
+        },
+        "input_artifact_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^inputs/(?!.*(?:^|/)\\.\\.?/)(?!.*\\\\)[^:]+$"
+          }
+        }
+      }
+    },
+    "scanScenario": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/baseScenarioProperties"
+        },
+        {
+          "properties": {
+            "operation": {
+              "const": "scan"
+            },
+            "input_artifact_ids": {
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "pattern": "^inputs/.+\\.(?:esm|esp|esl)$"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "compareScenario": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/baseScenarioProperties"
+        },
+        {
+          "properties": {
+            "operation": {
+              "const": "compare"
+            },
+            "input_artifact_ids": {
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "pattern": "^inputs/.+\\.(?:esm|esp|esl)$"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "singleRequestScenario": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/baseScenarioProperties"
+        },
+        {
+          "properties": {
+            "operation": {
+              "const": "request"
+            },
+            "input_artifact_ids": {
+              "minItems": 1,
+              "maxItems": 1,
+              "items": {
+                "type": "string",
+                "pattern": "^inputs/requests/[^/]+\\.json$"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "orchestratedReadScenario": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/baseScenarioProperties"
+        },
+        {
+          "properties": {
+            "operation": {
+              "const": "orchestrated-read"
+            },
+            "input_artifact_ids": {
+              "minItems": 1,
+              "maxItems": 1,
+              "items": {
+                "type": "string",
+                "pattern": "^inputs/requests/[^/]+\\.json$"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

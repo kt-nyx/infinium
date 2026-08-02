@@ -15,6 +15,10 @@
     "fingerprint": "0000000000000000000000000000000000000000000000000000000000000000",
     "availability": "retained"
   },
+  "case_matrix_input": {
+    "state": "not-applicable",
+    "reason": "The platform substrate package has no Bethesda semantic execution scenarios."
+  },
   "runtime_support_input": {
     "state": "not-applicable",
     "reason": "Runtime qualification is outside the Slice 2 platform substrate boundary."

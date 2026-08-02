@@ -11,6 +11,7 @@
     "installation_snapshot_input",
     "analysis_context_input",
     "effective_scan_configuration",
+    "case_matrix_input",
     "runtime_support_input",
     "mo2_instance_profile_input",
     "plugin_order_input",
@@ -39,6 +40,9 @@
     },
     "effective_scan_configuration": {
       "$ref": "common.v1.schema.json#/$defs/artifactReference"
+    },
+    "case_matrix_input": {
+      "$ref": "#/$defs/inputComponent"
     },
     "runtime_support_input": {
       "$ref": "#/$defs/inputComponent"

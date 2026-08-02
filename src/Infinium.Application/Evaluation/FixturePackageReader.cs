@@ -61,6 +61,9 @@ public static class FixturePackageReader
     private const string TaxonomyProjectionArtifactId = "oracle/taxonomy-projections.json";
     private const string TaxonomySubjectBindingsArtifactId = "inputs/taxonomy-subject-bindings.json";
     private const string TaxonomyAcceptedOrderArtifactId = "inputs/snapshot/accepted-order.json";
+    private const string BethesdaCaseMatrixArtifactId = "inputs/case-matrix.json";
+    private const string BethesdaEffectiveScanConfigurationArtifactId =
+        "inputs/effective-scan-configuration.json";
     public const string PublicManifestFileName = "public-manifest.json";
     public const string ExecutionInputFileName = "execution-input.json";
     public const string OracleFileName = "expected-oracle.json";
@@ -79,6 +82,16 @@ public static class FixturePackageReader
         RedistributionFileName,
         PartitionHistoryFileName,
     };
+
+    private static readonly Dictionary<string, bool> AcceptedBethesdaFixtureProfiles =
+        new Dictionary<string, bool>(StringComparer.Ordinal)
+        {
+            ["BETH-NPC-DEV"] = true,
+            ["BETH-REFR-DEV"] = true,
+            ["BETH-LIGHT-VAL"] = false,
+            ["BETH-MALFORMED-VAL"] = false,
+            ["BETH-UNSUPPORTED-VAL"] = true,
+        };
 
     private static readonly string[] RequiredExpectedCollections =
     [
@@ -175,6 +188,7 @@ public static class FixturePackageReader
         "installation_snapshot_input",
         "analysis_context_input",
         "effective_scan_configuration",
+        "case_matrix_input",
         "runtime_support_input",
         "mo2_instance_profile_input",
         "plugin_order_input",
@@ -344,12 +358,29 @@ public static class FixturePackageReader
                 retainedArtifactBudget,
                 testOptions);
         ValidateOracleArtifactClosure(fullDirectory, oracleSnapshots.Keys);
+        bool hasBethesdaByteOracle = oracleSnapshots.ContainsKey(
+            BethesdaByteOracleValidator.ArtifactId);
+        if (AcceptedBethesdaFixtureProfiles.TryGetValue(
+                fixtureId.Value,
+                out bool requiresTaxonomyArtifacts))
+        {
+            ValidateRequiredBethesdaArtifacts(
+                requiresTaxonomyArtifacts,
+                inputSnapshots,
+                oracleSnapshots);
+            ValidateBethesdaExecutionControls(
+                fixtureId,
+                fixtureVersion,
+                executionInput,
+                inputSnapshots);
+            ValidateInputArtifactClosure(fullDirectory, inputSnapshots.Keys);
+        }
         ValidateTaxonomySubjectContract(
             fixtureId,
             fixtureVersion,
             inputSnapshots,
             oracleSnapshots);
-        if (oracleSnapshots.ContainsKey(BethesdaByteOracleValidator.ArtifactId))
+        if (hasBethesdaByteOracle)
         {
             ValidateRootDocumentClosure(fullDirectory);
             ValidateInputByteBudget(executionInput, inputSnapshots);
@@ -375,6 +406,27 @@ public static class FixturePackageReader
             replayDependencies.Clone(),
             redistribution.Clone(),
             partitionHistory.Clone());
+    }
+
+    private static void ValidateRequiredBethesdaArtifacts(
+        bool requiresTaxonomyArtifacts,
+        IReadOnlyDictionary<string, RetainedArtifactSnapshot> inputSnapshots,
+        Dictionary<string, RetainedArtifactSnapshot> oracleSnapshots)
+    {
+        if (!oracleSnapshots.ContainsKey(BethesdaByteOracleValidator.ArtifactId))
+        {
+            throw new InvalidDataException(
+                "Accepted Bethesda fixture packages must retain the independent byte oracle.");
+        }
+
+        bool hasTaxonomyProjection = oracleSnapshots.ContainsKey(TaxonomyProjectionArtifactId);
+        bool hasTaxonomyBindings = inputSnapshots.ContainsKey(TaxonomySubjectBindingsArtifactId);
+        if (hasTaxonomyProjection != requiresTaxonomyArtifacts
+            || hasTaxonomyBindings != requiresTaxonomyArtifacts)
+        {
+            throw new InvalidDataException(
+                "Accepted Bethesda fixture package taxonomy artifacts do not match its registry profile.");
+        }
     }
 
     private static void ValidatePublicManifestSchema(JsonElement publicManifest)
@@ -1150,6 +1202,213 @@ public static class FixturePackageReader
         }
 
         return buffer.ToArray();
+    }
+
+    private static void ValidateBethesdaExecutionControls(
+        OpaqueId fixtureId,
+        ContractVersion fixtureVersion,
+        JsonElement executionInput,
+        IReadOnlyDictionary<string, RetainedArtifactSnapshot> inputSnapshots)
+    {
+        JsonElement scanConfigurationReference = RequireObject(
+            executionInput.GetProperty("effective_scan_configuration"),
+            "effective_scan_configuration");
+        ValidateRequiredControlReference(
+            scanConfigurationReference,
+            BethesdaEffectiveScanConfigurationArtifactId,
+            inputSnapshots);
+
+        JsonElement caseMatrixComponent = RequireObject(
+            executionInput.GetProperty("case_matrix_input"),
+            "case_matrix_input");
+        if (!StringComparer.Ordinal.Equals(
+                RequireString(caseMatrixComponent, "state"),
+                "provided")
+            || !caseMatrixComponent.TryGetProperty("artifact", out JsonElement caseMatrixReference))
+        {
+            throw new InvalidDataException(
+                "Bethesda execution input must provide an explicit retained case matrix.");
+        }
+        ValidateRequiredControlReference(
+            caseMatrixReference,
+            BethesdaCaseMatrixArtifactId,
+            inputSnapshots);
+
+        RetainedArtifactSnapshot configurationSnapshot =
+            inputSnapshots[BethesdaEffectiveScanConfigurationArtifactId];
+        using BoundedJsonDocumentSnapshot configuration = BoundedJsonDocumentReader.Parse(
+            configurationSnapshot.Bytes,
+            BethesdaEffectiveScanConfigurationArtifactId,
+            maximumDepth: 64);
+        JsonElement configurationRoot = RequireObject(
+            configuration.Document.RootElement,
+            BethesdaEffectiveScanConfigurationArtifactId);
+        EmbeddedJsonSchemaValidator.Validate(
+            configurationRoot,
+            "effective-scan-configuration.v1.schema.json");
+        if (configurationRoot.TryGetProperty("cases", out _)
+            || configurationRoot.TryGetProperty("scenarios", out _))
+        {
+            throw new InvalidDataException(
+                "Effective scan configuration cannot carry evaluation cases or scenarios.");
+        }
+
+        RetainedArtifactSnapshot matrixSnapshot = inputSnapshots[BethesdaCaseMatrixArtifactId];
+        using BoundedJsonDocumentSnapshot matrix = BoundedJsonDocumentReader.Parse(
+            matrixSnapshot.Bytes,
+            BethesdaCaseMatrixArtifactId,
+            maximumDepth: 32);
+        JsonElement matrixRoot = RequireObject(
+            matrix.Document.RootElement,
+            BethesdaCaseMatrixArtifactId);
+        EmbeddedJsonSchemaValidator.Validate(
+            matrixRoot,
+            "bethesda-case-matrix.v1.schema.json");
+        ValidateIdentity(matrixRoot, fixtureId, fixtureVersion, BethesdaCaseMatrixArtifactId);
+
+        HashSet<string> scenarioIds = new(StringComparer.Ordinal);
+        foreach (JsonElement scenario in RequireArray(matrixRoot, "cases").EnumerateArray())
+        {
+            string scenarioId = RequireString(scenario, "scenario_id");
+            if (!scenarioIds.Add(scenarioId))
+            {
+                throw new InvalidDataException(
+                    $"Bethesda case matrix contains duplicate scenario '{scenarioId}'.");
+            }
+
+            foreach (JsonElement artifactIdElement in RequireArray(
+                         scenario,
+                         "input_artifact_ids").EnumerateArray())
+            {
+                string artifactId = artifactIdElement.GetString()
+                    ?? throw new InvalidDataException(
+                        $"Bethesda scenario '{scenarioId}' has a non-string input artifact ID.");
+                if (!inputSnapshots.TryGetValue(
+                        artifactId,
+                        out RetainedArtifactSnapshot? scenarioInput)
+                    || !StringComparer.Ordinal.Equals(
+                        artifactId,
+                        scenarioInput.ArtifactId))
+                {
+                    throw new InvalidDataException(
+                        $"Bethesda scenario '{scenarioId}' references unsealed input '{artifactId}'.");
+                }
+                if (StringComparer.Ordinal.Equals(artifactId, BethesdaCaseMatrixArtifactId)
+                    || StringComparer.Ordinal.Equals(
+                        artifactId,
+                        BethesdaEffectiveScanConfigurationArtifactId))
+                {
+                    throw new InvalidDataException(
+                        $"Bethesda scenario '{scenarioId}' cannot execute a control document.");
+                }
+            }
+        }
+
+        JsonElement payloadReferences = RequireArray(executionInput, "input_payload_refs");
+        HashSet<string> payloadIds = new(StringComparer.Ordinal);
+        HashSet<string> payloadAliases = new(StringComparer.OrdinalIgnoreCase);
+        foreach (JsonElement reference in payloadReferences.EnumerateArray())
+        {
+            string artifactId = RequireString(reference, "artifact_id");
+            if (!payloadAliases.Add(artifactId) || !payloadIds.Add(artifactId))
+            {
+                throw new InvalidDataException(
+                    $"Execution input payload contains duplicate artifact '{artifactId}'.");
+            }
+            if (!inputSnapshots.TryGetValue(
+                    artifactId,
+                    out RetainedArtifactSnapshot? snapshot))
+            {
+                throw new InvalidDataException(
+                    $"Execution input payload contains unresolved artifact '{artifactId}'.");
+            }
+            ValidateRetainedArtifactReferenceMetadata(
+                reference,
+                artifactId,
+                ExecutionInputFileName,
+                snapshot,
+                "does not exactly match its retained input snapshot.");
+        }
+
+        if (!payloadIds.SetEquals(inputSnapshots.Keys))
+        {
+            throw new InvalidDataException(
+                "Execution input payload references must exactly cover every retained input once.");
+        }
+    }
+
+    private static void ValidateRequiredControlReference(
+        JsonElement reference,
+        string requiredArtifactId,
+        IReadOnlyDictionary<string, RetainedArtifactSnapshot> inputSnapshots)
+    {
+        string artifactId = RequireString(reference, "artifact_id");
+        if (!StringComparer.Ordinal.Equals(artifactId, requiredArtifactId)
+            || !inputSnapshots.TryGetValue(
+                requiredArtifactId,
+                out RetainedArtifactSnapshot? snapshot))
+        {
+            throw new InvalidDataException(
+                $"Bethesda execution control must reference '{requiredArtifactId}'.");
+        }
+        ValidateRetainedArtifactReferenceMetadata(
+            reference,
+            requiredArtifactId,
+            ExecutionInputFileName,
+            snapshot,
+            "does not exactly match its retained control snapshot.");
+    }
+
+    private static void ValidateInputArtifactClosure(
+        string fixtureDirectory,
+        IEnumerable<string> referencedArtifactIds)
+    {
+        string inputRoot = Path.GetFullPath(Path.Combine(fixtureDirectory, "inputs"));
+        if (!Directory.Exists(inputRoot)
+            || (File.GetAttributes(inputRoot) & FileAttributes.ReparsePoint) != 0)
+        {
+            throw new InvalidDataException(
+                "Fixture input root must be a retained non-reparse directory.");
+        }
+
+        HashSet<string> referenced = referencedArtifactIds.ToHashSet(StringComparer.Ordinal);
+        HashSet<string> physical = new(StringComparer.Ordinal);
+        Stack<string> pending = new();
+        pending.Push(inputRoot);
+        while (pending.Count > 0)
+        {
+            string directory = pending.Pop();
+            foreach (string entry in Directory.EnumerateFileSystemEntries(directory))
+            {
+                FileAttributes attributes = File.GetAttributes(entry);
+                if ((attributes & FileAttributes.ReparsePoint) != 0)
+                {
+                    throw new InvalidDataException(
+                        "Fixture input closure cannot contain reparse points.");
+                }
+                if ((attributes & FileAttributes.Directory) != 0)
+                {
+                    if (!Directory.EnumerateFileSystemEntries(entry).Any())
+                    {
+                        throw new InvalidDataException(
+                            "Fixture input closure cannot contain empty directories.");
+                    }
+                    pending.Push(entry);
+                    continue;
+                }
+
+                physical.Add(Path.GetRelativePath(fixtureDirectory, entry)
+                    .Replace(Path.DirectorySeparatorChar, '/'));
+            }
+        }
+
+        if (!physical.SetEquals(referenced))
+        {
+            string missing = string.Join(", ", referenced.Except(physical, StringComparer.Ordinal));
+            string extra = string.Join(", ", physical.Except(referenced, StringComparer.Ordinal));
+            throw new InvalidDataException(
+                $"Fixture input reference closure is not exact. Missing: [{missing}]. Unreferenced: [{extra}].");
+        }
     }
 
     private static void ValidateInputByteBudget(

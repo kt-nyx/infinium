@@ -1,161 +1,135 @@
 {
-  "schema": "infinium.bethesda-fixture-case-matrix",
-  "schema_version": 1,
-  "partition": "development",
-  "classification": "malformed",
-  "fixed_seed": "3520260730",
+  "schema_id": "infinium.evaluation.bethesda-case-matrix/v1",
+  "schema_version": "1",
+  "fixture_id": "BETH-MALFORMED-VAL",
+  "fixture_version": "1.2.0",
+  "source_basis": "accepted-slice-3.5-plan-and-retained-execution-inputs",
   "cases": [
     {
-      "case_id": "malformed-control",
+      "scenario_id": "malformed-control",
       "operation": "scan",
-      "input_paths": [
-        "plugins/MinimalValid.esp"
-      ],
-      "denominator": null
+      "input_artifact_ids": [
+        "inputs/plugins/MinimalValid.esp"
+      ]
     },
     {
-      "case_id": "malformed-truncated-record-header",
+      "scenario_id": "malformed-truncated-record-header",
       "operation": "scan",
-      "input_paths": [
-        "mutations/TruncatedRecordHeader.esp"
-      ],
-      "denominator": null
+      "input_artifact_ids": [
+        "inputs/mutations/TruncatedRecordHeader.esp"
+      ]
     },
     {
-      "case_id": "malformed-truncated-record-payload",
+      "scenario_id": "malformed-truncated-record-payload",
       "operation": "scan",
-      "input_paths": [
-        "mutations/TruncatedRecordPayload.esp"
-      ],
-      "denominator": null
+      "input_artifact_ids": [
+        "inputs/mutations/TruncatedRecordPayload.esp"
+      ]
     },
     {
-      "case_id": "malformed-record-size-overflow",
+      "scenario_id": "malformed-record-size-overflow",
       "operation": "scan",
-      "input_paths": [
-        "mutations/RecordSizeOverflow.esp"
-      ],
-      "denominator": null
+      "input_artifact_ids": [
+        "inputs/mutations/RecordSizeOverflow.esp"
+      ]
     },
     {
-      "case_id": "malformed-group-size-too-small",
+      "scenario_id": "malformed-group-size-too-small",
       "operation": "scan",
-      "input_paths": [
-        "mutations/GroupSizeTooSmall.esp"
-      ],
-      "denominator": null
+      "input_artifact_ids": [
+        "inputs/mutations/GroupSizeTooSmall.esp"
+      ]
     },
     {
-      "case_id": "malformed-group-size-past-end",
+      "scenario_id": "malformed-group-size-past-end",
       "operation": "scan",
-      "input_paths": [
-        "mutations/GroupSizePastEnd.esp"
-      ],
-      "denominator": null
+      "input_artifact_ids": [
+        "inputs/mutations/GroupSizePastEnd.esp"
+      ]
     },
     {
-      "case_id": "malformed-group-size-overflow",
+      "scenario_id": "malformed-group-size-overflow",
       "operation": "scan",
-      "input_paths": [
-        "mutations/GroupSizeOverflow.esp"
-      ],
-      "denominator": null
+      "input_artifact_ids": [
+        "inputs/mutations/GroupSizeOverflow.esp"
+      ]
     },
     {
-      "case_id": "malformed-compressed-missing-length",
+      "scenario_id": "malformed-compressed-missing-length",
       "operation": "scan",
-      "input_paths": [
-        "mutations/CompressedMissingLength.esp"
-      ],
-      "denominator": null
+      "input_artifact_ids": [
+        "inputs/mutations/CompressedMissingLength.esp"
+      ]
     },
     {
-      "case_id": "malformed-compressed-invalid-zlib",
+      "scenario_id": "malformed-compressed-invalid-zlib",
       "operation": "scan",
-      "input_paths": [
-        "mutations/CompressedInvalidZlib.esp"
-      ],
-      "denominator": null
+      "input_artifact_ids": [
+        "inputs/mutations/CompressedInvalidZlib.esp"
+      ]
     },
     {
-      "case_id": "malformed-compressed-size-mismatch",
+      "scenario_id": "malformed-compressed-size-mismatch",
       "operation": "scan",
-      "input_paths": [
-        "mutations/CompressedSizeMismatch.esp"
-      ],
-      "denominator": null
+      "input_artifact_ids": [
+        "inputs/mutations/CompressedSizeMismatch.esp"
+      ]
     },
     {
-      "case_id": "malformed-compressed-declared-size-over-limit",
+      "scenario_id": "malformed-compressed-declared-size-over-limit",
       "operation": "scan",
-      "input_paths": [
-        "mutations/CompressedDeclaredSizeOverLimit.esp"
-      ],
-      "denominator": null
+      "input_artifact_ids": [
+        "inputs/mutations/CompressedDeclaredSizeOverLimit.esp"
+      ]
     },
     {
-      "case_id": "malformed-nested-groups-over-limit",
+      "scenario_id": "malformed-nested-groups-over-limit",
       "operation": "scan",
-      "input_paths": [
-        "mutations/NestedGroupsOverLimit.esp"
-      ],
-      "denominator": null
+      "input_artifact_ids": [
+        "inputs/mutations/NestedGroupsOverLimit.esp"
+      ]
     },
     {
-      "case_id": "malformed-record-count-over-limit",
+      "scenario_id": "malformed-record-count-over-limit",
       "operation": "scan",
-      "input_paths": [
-        "mutations/RecordCountOverLimit.esp"
-      ],
-      "denominator": null
+      "input_artifact_ids": [
+        "inputs/mutations/RecordCountOverLimit.esp"
+      ]
     },
     {
-      "case_id": "malformed-subrecord-count-over-limit",
+      "scenario_id": "malformed-subrecord-count-over-limit",
       "operation": "scan",
-      "input_paths": [
-        "mutations/SubrecordCountOverLimit.esp"
-      ],
-      "denominator": null
+      "input_artifact_ids": [
+        "inputs/mutations/SubrecordCountOverLimit.esp"
+      ]
     },
     {
-      "case_id": "malformed-record-master-index",
+      "scenario_id": "malformed-record-master-index",
       "operation": "scan",
-      "input_paths": [
-        "mutations/InvalidRecordMasterIndex.esp"
-      ],
-      "denominator": null
+      "input_artifact_ids": [
+        "inputs/mutations/InvalidRecordMasterIndex.esp"
+      ]
     },
     {
-      "case_id": "malformed-link-master-index",
+      "scenario_id": "malformed-link-master-index",
       "operation": "scan",
-      "input_paths": [
-        "mutations/InvalidLinkMasterIndex.esp"
-      ],
-      "denominator": null
+      "input_artifact_ids": [
+        "inputs/mutations/InvalidLinkMasterIndex.esp"
+      ]
     },
     {
-      "case_id": "malformed-unpaired-master",
+      "scenario_id": "malformed-unpaired-master",
       "operation": "scan",
-      "input_paths": [
-        "mutations/MasterMissingDataPair.esp"
-      ],
-      "denominator": null
+      "input_artifact_ids": [
+        "inputs/mutations/MasterMissingDataPair.esp"
+      ]
     },
     {
-      "case_id": "malformed-changed-during-read",
+      "scenario_id": "malformed-changed-during-read",
       "operation": "orchestrated-read",
-      "input_paths": [
-        "requests/changed-during-read-plan.json"
-      ],
-      "denominator": null
+      "input_artifact_ids": [
+        "inputs/requests/changed-during-read-plan.json"
+      ]
     }
-  ],
-  "notes": {
-    "resource_limits": {
-      "maximum_group_depth": 64,
-      "maximum_records": 4096,
-      "maximum_subrecords_per_record": 4096,
-      "maximum_declared_decompressed_bytes": 67108864
-    }
-  }
+  ]
 }

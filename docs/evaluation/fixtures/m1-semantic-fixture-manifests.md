@@ -90,6 +90,7 @@ fixture_version
 installation_snapshot_input
 analysis_context_input
 effective_scan_configuration
+case_matrix_input
 runtime_support_input
 mo2_instance_profile_input
 plugin_order_input
@@ -107,6 +108,17 @@ input_payload_refs[]
 Execution inputs may state the declared capability being exercised but must not
 contain expected candidate/finding/case labels, oracle paths, answer-bearing
 comments, or fixture-specific shortcuts.
+
+For Bethesda packages, `effective_scan_configuration` references a retained
+document valid under `infinium.scan.effective-configuration/v1` and contains no
+case or scenario inventory. `case_matrix_input` separately references the
+answer-free `infinium.evaluation.bethesda-case-matrix/v1` document. That matrix
+contains only fixture identity, its accepted-plan/retained-input source basis,
+unique scenario identities, the allowed operation, and exact retained input
+artifact IDs. `compare` has exactly two inputs; `request` and
+`orchestrated-read` exactly one; `scan` one or more. Expected values,
+classifications, denominators, oracle references, and adjudication remain
+outside the execution matrix.
 
 Complete private validation and held-out packages, autonomous delegated access,
 sanitized publication, and contamination transitions follow
@@ -679,6 +691,35 @@ rule is a suite reader contract. `BETH-LIGHT-VAL` and
 `BETH-MALFORMED-VAL` have no taxonomy projection/binding document and preserve
 their existing semantic payloads. The supersession does not itself score the
 evaluator-private fixtures or pass a later milestone gate.
+
+### 8.1.3 Bethesda fixture `1.2.0` case-matrix contract correction
+
+The second owner-authorized Slice 3.5 maintenance amendment supersedes all five
+public Bethesda `1.1.0` packages uniformly with `1.2.0`. Version `1.1.0`
+incorrectly assigned `inputs/case-matrix.json` to
+`effective_scan_configuration`. The scenario inventory was answer-free, but it
+was not a scan configuration and therefore gave a sealed scorer no explicit,
+role-correct way to discover the package's exact execution cases.
+
+Version `1.2.0` makes no Bethesda-byte or expected-semantic correction. It:
+
+- retains a schema-valid `inputs/effective-scan-configuration.json` with no
+  `cases` or `scenarios` property;
+- adds the explicit `case_matrix_input` execution component, bound to
+  `inputs/case-matrix.json`;
+- closes that matrix to fixture/version identity, the fixed
+  accepted-plan-and-retained-input source basis, unique scenario IDs, the four
+  allowed operations, operation-specific arity, and canonical retained input
+  artifact IDs;
+- excludes denominator classifications, expected values, oracle references,
+  and production output from the matrix; and
+- requires `input_payload_refs` and the physical `inputs/` tree to have exact
+  one-reference closure, with `resource_and_time_limits.input_bytes` equal to
+  the unique retained byte total exactly once.
+
+The five packages share `1.2.0` because execution-input role separation and
+input closure are suite reader contracts. This supersession does not score any
+private package or change the Slice 4 implementation.
 
 The current M1 Bethesda matrix does not contain `QUST`, quest-alias,
 forced-reference/`ALFR`, or other quest-logic shapes. Those shapes belong to a

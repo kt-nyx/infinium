@@ -21,6 +21,10 @@
     "fingerprint": "a3199d3794ff1e1c13d05b334bc14d784065beba93e1ebfc86292f3e72f3599c",
     "availability": "evaluator-private"
   },
+  "case_matrix_input": {
+    "state": "not-applicable",
+    "reason": "This Slice 3 state-reconstruction package has no Bethesda semantic execution case matrix."
+  },
   "runtime_support_input": {
     "state": "provided",
     "reason": "Evaluator-private exact Skyrim 1.6.1170.0 executable.",

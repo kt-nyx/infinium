@@ -1,13 +1,13 @@
 {
   "fixture_id": "BETH-REFR-DEV",
-  "fixture_version": "1.1.0",
+  "fixture_version": "1.2.0",
   "installation_snapshot_input": {
     "state": "provided",
     "reason": "Retained Slice 3 accepted-order receipt binds the disposable synthetic snapshot input.",
     "artifact": {
       "artifact_id": "inputs/snapshot/accepted-order.json",
-      "artifact_version": "1.1.0",
-      "fingerprint": "31d506c3b4c9f3b56e8c9bd9dc93cc4f1ebc802dc3e40957bb37eb2dd4184144",
+      "artifact_version": "1.2.0",
+      "fingerprint": "5f000f85fa87efb64073f37d4e23232504efe2f40661cd18633e80143025df29",
       "availability": "retained"
     }
   },
@@ -16,10 +16,20 @@
     "reason": "Slice 3.5 qualifies inputs and independent truth; production semantic analysis remains pending Slice 4."
   },
   "effective_scan_configuration": {
-    "artifact_id": "inputs/case-matrix.json",
-    "artifact_version": "1.1.0",
-    "fingerprint": "9ad8d123a5189a2cb08e81dab85f62762f71d5d7f716bc45bb23370e18897df3",
+    "artifact_id": "inputs/effective-scan-configuration.json",
+    "artifact_version": "1.2.0",
+    "fingerprint": "83a273c4f4bfa1ff2746ef5cbea2e5cdcd73cde350755a8c365be9c19c0348f4",
     "availability": "retained"
+  },
+  "case_matrix_input": {
+    "state": "provided",
+    "reason": "Retained answer-free scenarios bind exact operations and input membership independently of scan configuration and oracle answers.",
+    "artifact": {
+      "artifact_id": "inputs/case-matrix.json",
+      "artifact_version": "1.2.0",
+      "fingerprint": "70e8803fa6992ca7f99d73d9f1ab52267e8d29032ce8eb67812c44d0f8989180",
+      "availability": "retained"
+    }
   },
   "runtime_support_input": {
     "state": "not-applicable",
@@ -30,8 +40,8 @@
     "reason": "Retained synthetic profile receipt records the selected profile and accepted adapter identity.",
     "artifact": {
       "artifact_id": "inputs/snapshot/accepted-order.json",
-      "artifact_version": "1.1.0",
-      "fingerprint": "31d506c3b4c9f3b56e8c9bd9dc93cc4f1ebc802dc3e40957bb37eb2dd4184144",
+      "artifact_version": "1.2.0",
+      "fingerprint": "5f000f85fa87efb64073f37d4e23232504efe2f40661cd18633e80143025df29",
       "availability": "retained"
     }
   },
@@ -40,8 +50,8 @@
     "reason": "Retained synthetic profile receipt records exact plugin order and fingerprints.",
     "artifact": {
       "artifact_id": "inputs/snapshot/accepted-order.json",
-      "artifact_version": "1.1.0",
-      "fingerprint": "31d506c3b4c9f3b56e8c9bd9dc93cc4f1ebc802dc3e40957bb37eb2dd4184144",
+      "artifact_version": "1.2.0",
+      "fingerprint": "5f000f85fa87efb64073f37d4e23232504efe2f40661cd18633e80143025df29",
       "availability": "retained"
     }
   },
@@ -50,8 +60,8 @@
     "reason": "Retained synthetic profile receipt records exact provider order and fingerprints.",
     "artifact": {
       "artifact_id": "inputs/snapshot/accepted-order.json",
-      "artifact_version": "1.1.0",
-      "fingerprint": "31d506c3b4c9f3b56e8c9bd9dc93cc4f1ebc802dc3e40957bb37eb2dd4184144",
+      "artifact_version": "1.2.0",
+      "fingerprint": "5f000f85fa87efb64073f37d4e23232504efe2f40661cd18633e80143025df29",
       "availability": "retained"
     }
   },
@@ -61,7 +71,7 @@
     {
       "component_id": "Infinium.BethesdaFixtures.Generator",
       "version": "1",
-      "fingerprint": "6ffc864936944642742024c96590c8d9fec5e2cd151d982a6cf4172ddaecc4a5"
+      "fingerprint": "4dcb7c1c74a9cb55f6a861d4293f80a58d49b3badfad297968b720246ce990a0"
     }
   ],
   "declared_archive_state": {
@@ -85,128 +95,134 @@
   "resource_and_time_limits": {
     "wall_time_ms": 120000,
     "memory_bytes": 536870912,
-    "input_bytes": 25390,
+    "input_bytes": 27477,
     "output_bytes": 16777216
   },
   "input_payload_refs": [
     {
       "artifact_id": "inputs/case-matrix.json",
-      "artifact_version": "1.1.0",
-      "fingerprint": "9ad8d123a5189a2cb08e81dab85f62762f71d5d7f716bc45bb23370e18897df3",
+      "artifact_version": "1.2.0",
+      "fingerprint": "70e8803fa6992ca7f99d73d9f1ab52267e8d29032ce8eb67812c44d0f8989180",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/construction-manifest.json",
-      "artifact_version": "1.1.0",
-      "fingerprint": "729dec41f817be1fd7197439e6dfff425060be21392a56840152d8cb2faeed63",
+      "artifact_version": "1.2.0",
+      "fingerprint": "296bf91c9d9552bf12daa8a2abba0ee46cfb14085bac82f9722adf9f64c03d80",
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "inputs/effective-scan-configuration.json",
+      "artifact_version": "1.2.0",
+      "fingerprint": "83a273c4f4bfa1ff2746ef5cbea2e5cdcd73cde350755a8c365be9c19c0348f4",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/Boundaries-RepeatedXLKROrder.esp",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "5381f8c3634bbdc043e70a47ad34e3eabf17c53d0e0c44b2b3abe7bfaf811afa",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/Refr-DanglingExtendedSize.esp",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "66c26b524cc61d4cae8aed2c72e54fe0497b995a39afcfa5605f34c40aecfe5e",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/Refr-SubrecordBodyOverrun.esp",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "44ca93eecdb9cc4126414457dbb3e1896e0e024c40a846f7f717452de4bf5e6c",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/Refr-SubrecordHeaderTruncated.esp",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "f6b55d04a89acdf3cd308b04cea181fb3432c350f09256271f234fba8449e6af",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/compression/03-Placement.esp",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "5120f0801c0b346ca48c96a0e8481a1e5c51a5d687920eae8644886d2d44ffe7",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/master-order-reindexed/03-Placement.esp",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "e7cc933670d5ae1d7cac00d4719219febb6b9dd45d998256a9f7648c52898c6b",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/master-order-unreindexed/03-Placement.esp",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "a66a4fac0c2869bbbd804ea2a3c7a3278c5338c41eb406a9596542dde3a9099f",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/one-byte-data/03-Placement.esp",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "7c19bf6201683c1dbcbffd826c28939db4851031866bc44537952635b19e5f48",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/record-order/01-World.esm",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "e548fc0c04a2d33f6845fdd396778f843dc3e9e60455bf3a775d1f22907aac5c",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/plugins/00-Pad.esm",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "7ee03b2ef46c82525644553259b32260c0defc87b61ae986519acab32496fd89",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/plugins/01-World.esm",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "2deb9af830987c664bafcc4ee8625c1eebafb8b7eeea2b9f360f1d4f571fbe31",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/plugins/02-Relations.esp",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "fe518c78e5f4b03cfb446719d527d199131b3afcb01331afee658ccb479c516d",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/plugins/03-Placement.esp",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "3374f636e1d20b5a407f66235c8eadc972ceed4c7b8286267b34ab411aa1804f",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/plugins/04-MergedWinner.esp",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "b21eb31e835bb61a7d8af28fe7ee5206cfa4776e2ed6d588eb597b310eade85b",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/plugins/05-DeletedWinner.esp",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "964a8724d83d9cc5f184bd2f03c7e9b6597d1af791265f2fe3ca0adbe0e83cb5",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/plugins/06-Boundaries.esp",
-      "artifact_version": "1.1.0",
+      "artifact_version": "1.2.0",
       "fingerprint": "bd9fc7eaefb681ebc2885ae4c6bd4904aae6cc25a0e8f20ad4b6d347a8adef6e",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/snapshot/accepted-order.json",
-      "artifact_version": "1.1.0",
-      "fingerprint": "31d506c3b4c9f3b56e8c9bd9dc93cc4f1ebc802dc3e40957bb37eb2dd4184144",
+      "artifact_version": "1.2.0",
+      "fingerprint": "5f000f85fa87efb64073f37d4e23232504efe2f40661cd18633e80143025df29",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/taxonomy-subject-bindings.json",
-      "artifact_version": "1.1.0",
-      "fingerprint": "74db5933f8302763cb56beb97c3056ae2a4502004f7210d9512cd1f4a51501c6",
+      "artifact_version": "1.2.0",
+      "fingerprint": "c8174c87aefe64ab1a350467ef51207baf1b1155407463f01b749a2839768ea7",
       "availability": "retained"
     }
   ]

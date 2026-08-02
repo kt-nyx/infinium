@@ -418,6 +418,7 @@ internal sealed class FixturePackageTestBuilder : IDisposable
             ["installation_snapshot_input"] = EmptyInputComponent(),
             ["analysis_context_input"] = EmptyInputComponent(),
             ["effective_scan_configuration"] = ArtifactReference("effective-configuration"),
+            ["case_matrix_input"] = EmptyInputComponent(),
             ["runtime_support_input"] = EmptyInputComponent(),
             ["mo2_instance_profile_input"] = EmptyInputComponent(),
             ["plugin_order_input"] = EmptyInputComponent(),

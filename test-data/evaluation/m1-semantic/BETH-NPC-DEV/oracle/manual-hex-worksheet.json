@@ -7620,8 +7620,7 @@
           ],
           "winner_locator": "plugins/03-Appearance.esp#1"
         }
-      ],
-      "denominator": null
+      ]
     },
     {
       "scenario_id": "npc-deleted-winner",
@@ -7761,8 +7760,7 @@
           ],
           "winner_locator": "plugins/06-DeletedWinner.esp#1"
         }
-      ],
-      "denominator": null
+      ]
     },
     {
       "scenario_id": "npc-light-plugin",
@@ -7936,8 +7934,7 @@
           ],
           "winner_locator": "plugins/05-LightWinner.esp#1"
         }
-      ],
-      "denominator": null
+      ]
     },
     {
       "scenario_id": "npc-compression-equivalence.variant-0",
@@ -7986,8 +7983,7 @@
           ]
         }
       ],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "npc-compression-equivalence.variant-1",
@@ -8036,8 +8032,7 @@
           ]
         }
       ],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "npc-one-byte-field-change.variant-0",
@@ -8078,8 +8073,7 @@
           ]
         }
       ],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "npc-one-byte-field-change.variant-1",
@@ -8120,8 +8114,7 @@
           ]
         }
       ],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "npc-master-reindexing.variant-0",
@@ -8154,8 +8147,7 @@
           ]
         }
       ],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "npc-master-reindexing.variant-1",
@@ -8188,8 +8180,7 @@
           ]
         }
       ],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "npc-record-order.variant-0",
@@ -8312,8 +8303,7 @@
           ]
         }
       ],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "npc-record-order.variant-1",
@@ -8436,8 +8426,7 @@
           "links": []
         }
       ],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "npc-repeated-pkid-order",
@@ -8470,8 +8459,7 @@
           ]
         }
       ],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "npc-repeated-pnam-order",
@@ -8512,8 +8500,7 @@
           ]
         }
       ],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "npc-local-id-change.variant-0",
@@ -8636,8 +8623,7 @@
           ]
         }
       ],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "npc-local-id-change.variant-1",
@@ -8760,8 +8746,7 @@
           ]
         }
       ],
-      "chains": [],
-      "denominator": null
+      "chains": []
     }
   ]
 }

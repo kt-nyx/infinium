@@ -396,7 +396,7 @@ internal static class FixtureGenerator
             ]));
         output.Plugin("mutations/local-id/01-Actors.esm", MutateLastRecordFormId(actorsPlugin, "NPC_", FormId(1, 0x00000860)));
 
-        output.CaseMatrix("development", "boundary", seed,
+        output.CaseMatrix("BETH-NPC-DEV",
         [
             Case("npc-layered-winner", "scan", ["plugins/00-Pad.esm", "plugins/01-Actors.esm", "plugins/02-Behavior.esp", "plugins/03-Appearance.esp"]),
             Case("npc-deleted-winner", "scan", ["plugins/01-Actors.esm", "plugins/06-DeletedWinner.esp"]),
@@ -408,14 +408,7 @@ internal static class FixtureGenerator
             Case("npc-repeated-pkid-order", "scan", ["mutations/Behavior-RepeatedPKIDOrder.esp"]),
             Case("npc-repeated-pnam-order", "scan", ["mutations/Appearance-RepeatedPNAMOrder.esp"]),
             Case("npc-local-id-change", "compare", ["plugins/01-Actors.esm", "mutations/local-id/01-Actors.esm"]),
-        ],
-        new Dictionary<string, object?>
-        {
-            ["project_authored_race_data_format"] = "128-byte Skyrim RACE DATA with 32-bit little-endian flags at byte offset 32",
-            ["project_authored_face_gen_head_construction_bit"] = "0x00000002",
-            ["construction_note"] = "Positive and negative applicability inputs are authored here; interpretation is independently reviewed.",
-            ["omitted_subrecords"] = new[] { "XESP" },
-        });
+        ]);
         return output;
     }
 
@@ -553,7 +546,7 @@ internal static class FixtureGenerator
                     Sub("DATA", Placement(0, 0, 0, 0, 0, 0))),
             ], FormId(0, FixtureCellLocalId)));
 
-        output.CaseMatrix("development", "boundary", seed,
+        output.CaseMatrix("BETH-REFR-DEV",
         [
             Case("refr-layered-winner", "scan", ["plugins/00-Pad.esm", "plugins/01-World.esm", "plugins/02-Relations.esp", "plugins/03-Placement.esp", "plugins/04-MergedWinner.esp"]),
             Case("refr-deleted-winner", "scan", ["plugins/01-World.esm", "plugins/05-DeletedWinner.esp"]),
@@ -566,8 +559,7 @@ internal static class FixtureGenerator
             Case("refr-truncated-subrecord-header", "scan", ["mutations/Refr-SubrecordHeaderTruncated.esp"]),
             Case("refr-subrecord-body-overrun", "scan", ["mutations/Refr-SubrecordBodyOverrun.esp"]),
             Case("refr-dangling-extended-size", "scan", ["mutations/Refr-DanglingExtendedSize.esp"]),
-        ],
-        new Dictionary<string, object?> { ["omitted_subrecords"] = new[] { "XESP" } });
+        ]);
         return output;
     }
 
@@ -615,30 +607,20 @@ internal static class FixtureGenerator
             [Record("REFR", FormId(1, 0x00000800), Sub("NAME", U32(FormId(0, 0x1000))), Sub("DATA", Placement(0, 0, 0, 0, 0, 0)))],
             FormId(1, FixtureCellLocalId)));
 
-        output.CaseMatrix("development", "boundary", seed,
+        output.CaseMatrix("BETH-LIGHT-VAL",
         [
-            Case("light-native-minimum", "scan", ["plugins/01-Native.esl"], denominator: "native_esl_object_id"),
-            Case("light-native-maximum", "scan", ["plugins/01-Native.esl"], denominator: "native_esl_object_id"),
-            Case("light-flagged-esp-minimum", "scan", ["plugins/02-Flagged.esp"], denominator: "esl_flagged_esp_object_id"),
-            Case("light-flagged-esp-maximum", "scan", ["plugins/02-Flagged.esp"], denominator: "esl_flagged_esp_object_id"),
-            Case("light-native-below-range", "scan", ["mutations/Native-BelowObjectRange.esl"], denominator: "native_esl_object_id"),
-            Case("light-native-above-range", "scan", ["mutations/Native-AboveLightMaximum.esl"], denominator: "native_esl_object_id"),
-            Case("light-flagged-below-range", "scan", ["mutations/FlaggedEsp-BelowObjectRange.esp"], denominator: "esl_flagged_esp_object_id"),
-            Case("light-flagged-above-range", "scan", ["mutations/FlaggedEsp-AboveLightMaximum.esp"], denominator: "esl_flagged_esp_object_id"),
-            Case("light-extension-header-mismatch", "scan", ["mutations/Native-HeaderFlagRemoved.esl"], denominator: "light_plugin_classification"),
-            Case("light-reference-out-of-range", "scan", ["mutations/Consumer-LightReferenceOutOfRange.esp"], denominator: "light_master_reference"),
+            Case("light-native-minimum", "scan", ["plugins/01-Native.esl"]),
+            Case("light-native-maximum", "scan", ["plugins/01-Native.esl"]),
+            Case("light-flagged-esp-minimum", "scan", ["plugins/02-Flagged.esp"]),
+            Case("light-flagged-esp-maximum", "scan", ["plugins/02-Flagged.esp"]),
+            Case("light-native-below-range", "scan", ["mutations/Native-BelowObjectRange.esl"]),
+            Case("light-native-above-range", "scan", ["mutations/Native-AboveLightMaximum.esl"]),
+            Case("light-flagged-below-range", "scan", ["mutations/FlaggedEsp-BelowObjectRange.esp"]),
+            Case("light-flagged-above-range", "scan", ["mutations/FlaggedEsp-AboveLightMaximum.esp"]),
+            Case("light-extension-header-mismatch", "scan", ["mutations/Native-HeaderFlagRemoved.esl"]),
+            Case("light-reference-out-of-range", "scan", ["mutations/Consumer-LightReferenceOutOfRange.esp"]),
             Case("light-consumer-and-winner", "scan", ["plugins/01-Native.esl", "plugins/02-Flagged.esp", "plugins/03-Consumer.esp", "plugins/04-Winner.esp"]),
-        ],
-        new Dictionary<string, object?>
-        {
-            ["denominators"] = new Dictionary<string, object?>
-            {
-                ["native_esl_object_id"] = new { case_count = 4 },
-                ["esl_flagged_esp_object_id"] = new { case_count = 4 },
-                ["light_plugin_classification"] = new { case_count = 1 },
-                ["light_master_reference"] = new { case_count = 1 },
-            },
-        });
+        ]);
         return output;
     }
 
@@ -688,7 +670,7 @@ internal static class FixtureGenerator
             replacement_path = "mutations/ChangedDuringRead-B.esp",
             resource_limits = new { replacement_count = 1, maximum_file_bytes = 4096 },
         });
-        output.CaseMatrix("development", "malformed", seed,
+        output.CaseMatrix("BETH-MALFORMED-VAL",
         [
             Case("malformed-control", "scan", ["plugins/MinimalValid.esp"]),
             Case("malformed-truncated-record-header", "scan", ["mutations/TruncatedRecordHeader.esp"]),
@@ -708,17 +690,7 @@ internal static class FixtureGenerator
             Case("malformed-link-master-index", "scan", ["mutations/InvalidLinkMasterIndex.esp"]),
             Case("malformed-unpaired-master", "scan", ["mutations/MasterMissingDataPair.esp"]),
             Case("malformed-changed-during-read", "orchestrated-read", ["requests/changed-during-read-plan.json"]),
-        ],
-        new Dictionary<string, object?>
-        {
-            ["resource_limits"] = new
-            {
-                maximum_group_depth = 64,
-                maximum_records = 4096,
-                maximum_subrecords_per_record = 4096,
-                maximum_declared_decompressed_bytes = 67_108_864,
-            },
-        });
+        ]);
         return output;
     }
 
@@ -767,25 +739,14 @@ internal static class FixtureGenerator
             operation = "automatic_environment_discovery",
             requested_sources = new[] { "installed_game", "mod_manager", "registry" },
         });
-        output.CaseMatrix("development", "unsupported", seed,
+        output.CaseMatrix("BETH-UNSUPPORTED-VAL",
         [
-            Case("unsupported-record-family", "scan", ["plugins/UnsupportedFamily.esp"], denominator: "record_family"),
-            Case("unsupported-npc-field", "scan", ["plugins/UnsupportedNpcField.esp"], denominator: "record_field"),
-            Case("unsupported-localized-string", "request", ["requests/localized-string-resolution.json"], denominator: "localized_string_resolution"),
-            Case("unsupported-archive-member", "request", ["requests/archive-member.json"], denominator: "archive_member_read"),
-            Case("unsupported-environment-discovery", "request", ["requests/automatic-environment-discovery.json"], denominator: "automatic_environment_discovery"),
-        ],
-        new Dictionary<string, object?>
-        {
-            ["denominators"] = new Dictionary<string, object?>
-            {
-                ["record_family"] = new { case_count = 1 },
-                ["record_field"] = new { case_count = 1 },
-                ["localized_string_resolution"] = new { case_count = 1 },
-                ["archive_member_read"] = new { case_count = 1 },
-                ["automatic_environment_discovery"] = new { case_count = 1 },
-            },
-        });
+            Case("unsupported-record-family", "scan", ["plugins/UnsupportedFamily.esp"]),
+            Case("unsupported-npc-field", "scan", ["plugins/UnsupportedNpcField.esp"]),
+            Case("unsupported-localized-string", "request", ["requests/localized-string-resolution.json"]),
+            Case("unsupported-archive-member", "request", ["requests/archive-member.json"]),
+            Case("unsupported-environment-discovery", "request", ["requests/automatic-environment-discovery.json"]),
+        ]);
         return output;
     }
 
@@ -1469,14 +1430,12 @@ internal static class FixtureGenerator
     private static Dictionary<string, object?> Case(
         string id,
         string operation,
-        string[] paths,
-        string? denominator = null)
+        string[] paths)
         => new(StringComparer.Ordinal)
         {
-            ["case_id"] = id,
+            ["scenario_id"] = id,
             ["operation"] = operation,
-            ["input_paths"] = paths,
-            ["denominator"] = denominator,
+            ["input_artifact_ids"] = paths.Select(path => $"inputs/{path}").ToArray(),
         };
 
     private sealed class PackageOutput
@@ -1488,21 +1447,97 @@ internal static class FixtureGenerator
         public void Json<T>(string path, T value) => Files.Add(path, JsonBytes(value));
 
         public void CaseMatrix(
-            string partition,
-            string classification,
-            ulong seed,
-            IReadOnlyList<Dictionary<string, object?>> cases,
-            Dictionary<string, object?>? notes = null)
-            => Json("case-matrix.json", new
+            string fixtureId,
+            IReadOnlyList<Dictionary<string, object?>> scenarios)
+        {
+            Json("case-matrix.json", new
             {
-                schema = "infinium.bethesda-fixture-case-matrix",
-                schema_version = 1,
-                partition,
-                classification,
-                fixed_seed = seed.ToString(CultureInfo.InvariantCulture),
-                cases,
-                notes,
+                schema_id = "infinium.evaluation.bethesda-case-matrix/v1",
+                schema_version = "1",
+                fixture_id = fixtureId,
+                fixture_version = "1.2.0",
+                source_basis = "accepted-slice-3.5-plan-and-retained-execution-inputs",
+                cases = scenarios,
             });
+            Json("effective-scan-configuration.json", EffectiveScanConfiguration(fixtureId));
+        }
+
+        private static object EffectiveScanConfiguration(string fixtureId)
+            => new
+            {
+                schema_id = "infinium.scan.effective-configuration/v1",
+                schema_version = "1",
+                configuration_id = $"{fixtureId.ToLowerInvariant()}.slice4-fixture",
+                configuration_version = "1.2.0",
+                resolved_at = "2026-08-02T16:00:00.0000000+00:00",
+                saved_configuration_reference = JsonDocument.Parse("null").RootElement.Clone(),
+                analyzers = new[]
+                {
+                    new
+                    {
+                        analyzer_id = "bethesda-semantic-slice4",
+                        analyzer_version = "1",
+                        declaration_fingerprint = new string('0', 64),
+                        enabled = true,
+                        origin = "default",
+                    },
+                },
+                sources = new[]
+                {
+                    new
+                    {
+                        source_id = "retained-bethesda-fixture-inputs",
+                        mode = "local-fixture",
+                        enabled = true,
+                        origin = "default",
+                    },
+                },
+                budgets = new
+                {
+                    max_dispatch_count = 0,
+                    max_input_tokens = 0,
+                    max_output_tokens = 0,
+                    max_hosted_search_calls = 0,
+                    max_nano_usd = 0,
+                    dispatch_deadline = "2026-08-02T16:02:00.0000000+00:00",
+                    origin = "default",
+                },
+                cache_policy = new
+                {
+                    analytical_mode = "force-clean-recomputation",
+                    source_mode = "reuse-resolved-source",
+                    provider_cache_mode = "disabled",
+                    origin = "default",
+                },
+                tracing = new
+                {
+                    enabled = false,
+                    level = "off",
+                    sensitivity_label = "sensitive-development-diagnostic",
+                    origin = "default",
+                },
+                candidate_breadth = new
+                {
+                    mode = "declared-mandatory-and-causal-lanes",
+                    max_candidates = 1,
+                    all_pairs_llm_comparison = false,
+                    origin = "default",
+                },
+                thresholds = Array.Empty<object>(),
+                provider = new
+                {
+                    mode = "disabled",
+                    origin = "default",
+                },
+                resources = new
+                {
+                    max_general_workers = 1,
+                    max_memory_bytes = 536870912,
+                    max_output_bytes = 16777216,
+                    origin = "default",
+                },
+                semantic_context_overrides = Array.Empty<object>(),
+            };
     }
 }
 

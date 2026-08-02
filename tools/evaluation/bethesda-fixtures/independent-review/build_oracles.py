@@ -15,9 +15,9 @@ METHODS = [
     "manual-annotated-hex-worksheet-v1",
     "independent-bounded-raw-reader-v1",
 ]
-FIXTURE_VERSION = "1.1.0"
-ORACLE_VERSION = "1.1.0"
-ORACLE_CHANGED_AT = "2026-08-02T12:00:00.0000000+00:00"
+FIXTURE_VERSION = "1.2.0"
+ORACLE_VERSION = "1.2.0"
+ORACLE_CHANGED_AT = "2026-08-02T16:00:00.0000000+00:00"
 PLUGIN_SUFFIXES = {".esm", ".esp", ".esl"}
 SUPPORTED = {
     "TES4": {"MAST", "DATA"},
@@ -45,6 +45,35 @@ EMPTY_COLLECTIONS = [
 
 def read_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8-sig"))
+
+
+def scenario_input_paths(scenario: dict[str, Any]) -> list[str]:
+    return [
+        artifact_id.removeprefix("inputs/")
+        for artifact_id in scenario["input_artifact_ids"]
+    ]
+
+
+def oracle_denominator(package_id: str, scenario_id: str) -> str | None:
+    if package_id == "BETH-UNSUPPORTED-VAL":
+        return {
+            "unsupported-record-family": "record_family",
+            "unsupported-npc-field": "record_field",
+            "unsupported-localized-string": "localized_string_resolution",
+            "unsupported-archive-member": "archive_member_read",
+            "unsupported-environment-discovery": "automatic_environment_discovery",
+        }[scenario_id]
+    if package_id == "BETH-LIGHT-VAL":
+        if scenario_id.startswith("light-native-"):
+            return "native_esl_object_id"
+        if scenario_id.startswith("light-flagged-"):
+            return "esl_flagged_esp_object_id"
+        return {
+            "light-extension-header-mismatch": "light_plugin_classification",
+            "light-reference-out-of-range": "light_master_reference",
+            "light-consumer-and-winner": None,
+        }[scenario_id]
+    return None
 
 
 def sha(path: Path) -> str:
@@ -80,9 +109,9 @@ SCAN_MUTATION_BASELINES = {
 def scenario_map(package: Path, matrix: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
     memberships: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for case in matrix["cases"]:
-        case_id = safe(case["case_id"])
+        case_id = safe(case["scenario_id"])
         paths = [
-            item for item in case["input_paths"] if Path(item).suffix.lower() in PLUGIN_SUFFIXES
+            item for item in scenario_input_paths(case) if Path(item).suffix.lower() in PLUGIN_SUFFIXES
         ]
         if case["operation"] == "scan":
             for order, path in enumerate(paths):
@@ -93,13 +122,13 @@ def scenario_map(package: Path, matrix: dict[str, Any]) -> dict[str, list[dict[s
                     {"scenario_id": f"{case_id}.variant-{index}", "plugin_order": 0}
                 )
         elif case["operation"] == "orchestrated-read":
-            request = read_json(package / "inputs" / case["input_paths"][0])
+            request = read_json(package / "inputs" / scenario_input_paths(case)[0])
             for role, key in (("initial", "initial_path"), ("replacement", "replacement_path")):
                 memberships[request[key]].append(
                     {"scenario_id": f"{case_id}.{role}", "plugin_order": 0}
                 )
         elif case["operation"] == "request":
-            request = read_json(package / "inputs" / case["input_paths"][0])
+            request = read_json(package / "inputs" / scenario_input_paths(case)[0])
             plugin = request.get("plugin")
             if plugin:
                 path = plugin.removeprefix("inputs/")
@@ -169,17 +198,18 @@ def reader_scenario_semantics(
     files = {item["path"]: item for item in reader["files"]}
     scenarios: list[dict[str, Any]] = []
     for case in matrix["cases"]:
+        input_paths = scenario_input_paths(case)
         plugin_paths = [
             path
-            for path in case["input_paths"]
+            for path in input_paths
             if Path(path).suffix.lower() in PLUGIN_SUFFIXES
         ]
         definitions: list[tuple[str, list[str]]] = []
         if case["operation"] == "scan" and plugin_paths:
-            definitions.append((case["case_id"], plugin_paths))
+            definitions.append((case["scenario_id"], plugin_paths))
         elif case["operation"] == "compare":
             definitions.extend(
-                (f"{case['case_id']}.variant-{index}", [path])
+                (f"{case['scenario_id']}.variant-{index}", [path])
                 for index, path in enumerate(plugin_paths)
             )
         elif case["operation"] == "orchestrated-read":
@@ -187,12 +217,12 @@ def reader_scenario_semantics(
                 item["path"]: item.get("json_value")
                 for item in reader.get("supplemental_inputs", [])
             }
-            request = requests[case["input_paths"][0]]
+            request = requests[input_paths[0]]
             definitions.extend(
                 [
-                    (f"{case['case_id']}.initial", [request["initial_path"]]),
+                    (f"{case['scenario_id']}.initial", [request["initial_path"]]),
                     (
-                        f"{case['case_id']}.replacement",
+                        f"{case['scenario_id']}.replacement",
                         [request["replacement_path"]],
                     ),
                 ]
@@ -254,7 +284,6 @@ def reader_scenario_semantics(
                         for form_key, ordered in sorted(population.items())
                         if len(ordered) >= 2
                     ],
-                    "denominator": case.get("denominator"),
                 }
             )
     return scenarios
@@ -731,8 +760,8 @@ def build(package: Path, reader_path: Path, manual_path: Path) -> None:
 
     # Case-level invalid/unsupported denominators.
     for case in matrix["cases"]:
-        case_id = safe(case["case_id"])
-        denominator = case.get("denominator")
+        case_id = safe(case["scenario_id"])
+        denominator = oracle_denominator(package.name, case["scenario_id"])
         if package.name == "BETH-UNSUPPORTED-VAL":
             add_fact(
                 f"{package.name.lower()}.{case_id}",
@@ -777,16 +806,16 @@ def build(package: Path, reader_path: Path, manual_path: Path) -> None:
             )
 
     malformed_case_ids = [
-        safe(case["case_id"])
+        safe(case["scenario_id"])
         for case in matrix["cases"]
         if (
             package.name == "BETH-MALFORMED-VAL"
-            and case["case_id"] != "malformed-control"
+            and case["scenario_id"] != "malformed-control"
         )
         or (
             package.name == "BETH-REFR-DEV"
             and any(
-                token in case["case_id"]
+                token in case["scenario_id"]
                 for token in ("truncated-subrecord", "body-overrun", "dangling-extended")
             )
         )
@@ -899,15 +928,15 @@ def build(package: Path, reader_path: Path, manual_path: Path) -> None:
 
     for case in matrix["cases"]:
         kind = next(
-            (value for needle, value in mutation_kinds.items() if needle in case["case_id"]),
+            (value for needle, value in mutation_kinds.items() if needle in case["scenario_id"]),
             None,
         )
         if kind is None:
             continue
         tes4_paths = [
-            path for path in case["input_paths"] if Path(path).suffix.lower() in PLUGIN_SUFFIXES
+            path for path in scenario_input_paths(case) if Path(path).suffix.lower() in PLUGIN_SUFFIXES
         ]
-        case_id = case["case_id"]
+        case_id = case["scenario_id"]
         if case["operation"] == "compare":
             baseline_path, target_path = tes4_paths[0], tes4_paths[-1]
             changed = changed_by_logical_comparison(
@@ -926,7 +955,7 @@ def build(package: Path, reader_path: Path, manual_path: Path) -> None:
                 safe(case_id),
             )
         else:
-            request = read_json(package / "inputs" / case["input_paths"][0])
+            request = read_json(package / "inputs" / scenario_input_paths(case)[0])
             baseline_path = request["initial_path"]
             target_path = request["replacement_path"]
             changed = changed_by_logical_comparison(
@@ -943,7 +972,7 @@ def build(package: Path, reader_path: Path, manual_path: Path) -> None:
         target = f"inputs/{target_path}"
         mutation_expectations.append(
             {
-                "mutation_id": safe(f"mutation.{case['case_id']}"),
+                "mutation_id": safe(f"mutation.{case['scenario_id']}"),
                 "mutation_kind": kind,
                 "target_artifact_id": target,
                 "changed_fact_ids": sorted(changed),
@@ -1038,7 +1067,7 @@ def build(package: Path, reader_path: Path, manual_path: Path) -> None:
     if taxonomy_path.exists():
         refs["taxonomy"] = {
             "artifact_id": "oracle/taxonomy-projections.json",
-            "artifact_version": "1.1.0",
+            "artifact_version": "1.2.0",
             "fingerprint": sha(taxonomy_path),
             "availability": "retained",
             "byte_length": taxonomy_path.stat().st_size,
@@ -1156,8 +1185,8 @@ def build(package: Path, reader_path: Path, manual_path: Path) -> None:
                 "reviewer": "oracle-reviewer",
             },
             {
-                "oracle_version": ORACLE_VERSION,
-                "changed_at": ORACLE_CHANGED_AT,
+                "oracle_version": "1.1.0",
+                "changed_at": "2026-08-02T12:00:00.0000000+00:00",
                 "independent_evidence_reference": refs.get("taxonomy", refs["manual"]),
                 "prior_error_explanation": (
                     (
@@ -1172,6 +1201,17 @@ def build(package: Path, reader_path: Path, manual_path: Path) -> None:
                         "reader contract; this package had no taxonomy or physical "
                         "oracle-closure defect."
                     )
+                ),
+                "reviewer": "oracle-reviewer",
+            },
+            {
+                "oracle_version": ORACLE_VERSION,
+                "changed_at": ORACLE_CHANGED_AT,
+                "independent_evidence_reference": refs["manual"],
+                "prior_error_explanation": (
+                    "Fixture version 1.1.0 assigned its answer-free execution "
+                    "scenario inventory to the effective scan-configuration role "
+                    "instead of sealing distinct scan-configuration and case-matrix inputs."
                 ),
                 "reviewer": "oracle-reviewer",
             },

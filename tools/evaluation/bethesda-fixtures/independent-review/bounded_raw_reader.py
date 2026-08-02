@@ -730,26 +730,30 @@ def scenario_semantics(
     }
     scenarios: list[dict[str, Any]] = []
     for case in matrix["cases"]:
+        input_paths = [
+            artifact_id.removeprefix("inputs/")
+            for artifact_id in case["input_artifact_ids"]
+        ]
         plugin_paths = [
             path
-            for path in case["input_paths"]
+            for path in input_paths
             if Path(path).suffix.lower() in PLUGIN_SUFFIXES
         ]
         definitions: list[tuple[str, list[str]]] = []
         if case["operation"] == "scan" and plugin_paths:
-            definitions.append((case["case_id"], plugin_paths))
+            definitions.append((case["scenario_id"], plugin_paths))
         elif case["operation"] == "compare":
             definitions.extend(
-                (f"{case['case_id']}.variant-{index}", [path])
+                (f"{case['scenario_id']}.variant-{index}", [path])
                 for index, path in enumerate(plugin_paths)
             )
         elif case["operation"] == "orchestrated-read":
-            request = requests[case["input_paths"][0]]
+            request = requests[input_paths[0]]
             definitions.extend(
                 [
-                    (f"{case['case_id']}.initial", [request["initial_path"]]),
+                    (f"{case['scenario_id']}.initial", [request["initial_path"]]),
                     (
-                        f"{case['case_id']}.replacement",
+                        f"{case['scenario_id']}.replacement",
                         [request["replacement_path"]],
                     ),
                 ]
@@ -806,7 +810,6 @@ def scenario_semantics(
                         for form_key, ordered in sorted(population.items())
                         if len(ordered) >= 2
                     ],
-                    "denominator": case.get("denominator"),
                 }
             )
     return scenarios

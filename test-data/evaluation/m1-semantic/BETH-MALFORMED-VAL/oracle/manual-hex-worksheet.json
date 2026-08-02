@@ -302663,8 +302663,7 @@
           "links": []
         }
       ],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "malformed-truncated-record-header",
@@ -302672,8 +302671,7 @@
         "mutations/TruncatedRecordHeader.esp"
       ],
       "records": [],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "malformed-truncated-record-payload",
@@ -302681,8 +302679,7 @@
         "mutations/TruncatedRecordPayload.esp"
       ],
       "records": [],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "malformed-record-size-overflow",
@@ -302690,8 +302687,7 @@
         "mutations/RecordSizeOverflow.esp"
       ],
       "records": [],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "malformed-group-size-too-small",
@@ -302699,8 +302695,7 @@
         "mutations/GroupSizeTooSmall.esp"
       ],
       "records": [],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "malformed-group-size-past-end",
@@ -302708,8 +302703,7 @@
         "mutations/GroupSizePastEnd.esp"
       ],
       "records": [],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "malformed-group-size-overflow",
@@ -302717,8 +302711,7 @@
         "mutations/GroupSizeOverflow.esp"
       ],
       "records": [],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "malformed-compressed-missing-length",
@@ -302726,8 +302719,7 @@
         "mutations/CompressedMissingLength.esp"
       ],
       "records": [],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "malformed-compressed-invalid-zlib",
@@ -302735,8 +302727,7 @@
         "mutations/CompressedInvalidZlib.esp"
       ],
       "records": [],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "malformed-compressed-size-mismatch",
@@ -302744,8 +302735,7 @@
         "mutations/CompressedSizeMismatch.esp"
       ],
       "records": [],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "malformed-compressed-declared-size-over-limit",
@@ -302753,8 +302743,7 @@
         "mutations/CompressedDeclaredSizeOverLimit.esp"
       ],
       "records": [],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "malformed-nested-groups-over-limit",
@@ -302762,8 +302751,7 @@
         "mutations/NestedGroupsOverLimit.esp"
       ],
       "records": [],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "malformed-record-count-over-limit",
@@ -302771,8 +302759,7 @@
         "mutations/RecordCountOverLimit.esp"
       ],
       "records": [],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "malformed-subrecord-count-over-limit",
@@ -302780,8 +302767,7 @@
         "mutations/SubrecordCountOverLimit.esp"
       ],
       "records": [],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "malformed-record-master-index",
@@ -302789,8 +302775,7 @@
         "mutations/InvalidRecordMasterIndex.esp"
       ],
       "records": [],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "malformed-link-master-index",
@@ -302822,8 +302807,7 @@
           ]
         }
       ],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "malformed-unpaired-master",
@@ -302831,8 +302815,7 @@
         "mutations/MasterMissingDataPair.esp"
       ],
       "records": [],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "malformed-changed-during-read.initial",
@@ -302848,8 +302831,7 @@
           "links": []
         }
       ],
-      "chains": [],
-      "denominator": null
+      "chains": []
     },
     {
       "scenario_id": "malformed-changed-during-read.replacement",
@@ -302865,8 +302847,7 @@
           "links": []
         }
       ],
-      "chains": [],
-      "denominator": null
+      "chains": []
     }
   ]
 }
