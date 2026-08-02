@@ -4,7 +4,7 @@ Status: Accepted
 Owner: Project owner
 Prepared: 2026-07-30
 Accepted: 2026-07-30
-Last reviewed: 2026-08-01
+Last reviewed: 2026-08-02
 Parent plan: [M1 backend semantic proof](../milestones/M1-backend-semantic-proof.md)
 and accepted [revision 2 amendment](../milestones/M1-backend-semantic-proof-adr0026-amendment.md)
 Target: Slice 3.5, between completed Slice 3 and production Slice 4
@@ -19,6 +19,14 @@ Migration inventory also found that the registered `BETH-HO-001` complete
 package was unavailable. Its registry v1 is retained byte-for-byte as
 historical evidence, invalidated for current use, and replaced by independently
 authored and reviewed `BETH-HO-002`.
+
+Accepted maintenance amendment: On 2026-08-02 the project owner authorized a
+bounded Slice 3.5 correction for the sealed scorer contract. Every taxonomy
+projection must have one answer-free literal subject-binding input with exact
+subject closure, and every retained oracle file must be owned by
+`expected-oracle.json` with exact path, fingerprint, and optional byte length.
+Affected public and evaluator-private packages must be independently resealed
+and requalified before the exact Slice 4 implementation commit is scored.
 
 ## Authority and precedence
 

@@ -70,6 +70,14 @@ internal static class BoundedJsonDocumentReader
             throw new InvalidDataException($"Unable to read stable JSON snapshot '{path}'.", exception);
         }
 
+        return Parse(bytes, path, maximumDepth);
+    }
+
+    internal static BoundedJsonDocumentSnapshot Parse(
+        ReadOnlyMemory<byte> bytes,
+        string description,
+        int maximumDepth)
+    {
         try
         {
             JsonDocument document = JsonDocument.Parse(
@@ -83,7 +91,7 @@ internal static class BoundedJsonDocumentReader
             try
             {
                 RejectDuplicateProperties(document.RootElement, "$");
-                string sha256 = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
+                string sha256 = Convert.ToHexString(SHA256.HashData(bytes.Span)).ToLowerInvariant();
                 return new BoundedJsonDocumentSnapshot(document, sha256);
             }
             catch
@@ -94,7 +102,7 @@ internal static class BoundedJsonDocumentReader
         }
         catch (JsonException exception)
         {
-            throw new InvalidDataException($"'{path}' is not valid strict JSON.", exception);
+            throw new InvalidDataException($"'{description}' is not valid strict JSON.", exception);
         }
     }
 

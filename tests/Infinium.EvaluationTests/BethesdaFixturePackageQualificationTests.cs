@@ -194,7 +194,7 @@ public sealed class BethesdaFixturePackageQualificationTests
                 FixturePackageReader.ReadForEvaluationHarness(directory);
 
             Assert.AreEqual(fixtureId, package.FixtureId.Value);
-            Assert.AreEqual("1.0.1", package.FixtureVersion.ToString());
+            Assert.AreEqual("1.1.0", package.FixtureVersion.ToString());
             Assert.AreEqual(partition, package.Partition);
             Assert.AreEqual(
                 "accepted",

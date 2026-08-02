@@ -87,6 +87,189 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
+    [TestCategory("M1Contract")]
+    [TestCategory("M1Security")]
+    [TestProperty("Category", "M1Contract")]
+    [TestProperty("Category", "M1Security")]
+    public void TaxonomyBindingClosureRejectsMissingDuplicateUnexpectedAndUnreferencedMaterial()
+    {
+        AssertTaxonomyPackageMutationRejected(root =>
+        {
+            JsonObject bindings = ReadObject(root, "inputs/taxonomy-subject-bindings.json");
+            bindings["bindings"]!.AsArray().RemoveAt(0);
+            WriteAndResealInput(root, "inputs/taxonomy-subject-bindings.json", bindings);
+        });
+
+        AssertTaxonomyPackageMutationRejected(root =>
+        {
+            JsonObject bindings = ReadObject(root, "inputs/taxonomy-subject-bindings.json");
+            JsonArray items = bindings["bindings"]!.AsArray();
+            items[1]!["sealed_subject_id"] = items[0]!["sealed_subject_id"]!.GetValue<string>();
+            WriteAndResealInput(root, "inputs/taxonomy-subject-bindings.json", bindings);
+        });
+
+        AssertTaxonomyPackageMutationRejected(root =>
+        {
+            JsonObject bindings = ReadObject(root, "inputs/taxonomy-subject-bindings.json");
+            JsonArray items = bindings["bindings"]!.AsArray();
+            items[1]!["production_subject_participant_id"] =
+                items[0]!["production_subject_participant_id"]!.GetValue<string>();
+            WriteAndResealInput(root, "inputs/taxonomy-subject-bindings.json", bindings);
+        });
+
+        AssertTaxonomyPackageMutationRejected(root =>
+        {
+            JsonObject bindings = ReadObject(root, "inputs/taxonomy-subject-bindings.json");
+            bindings["bindings"]!.AsArray()[0]!["sealed_subject_id"] = "TAX-UNEXPECTED";
+            WriteAndResealInput(root, "inputs/taxonomy-subject-bindings.json", bindings);
+        });
+
+        AssertTaxonomyPackageMutationRejected(root =>
+        {
+            File.WriteAllText(
+                Path.Combine(root, "oracle", "unreferenced-answer.json"),
+                "{}\n");
+        });
+    }
+
+    [TestMethod]
+    [TestCategory("M1Contract")]
+    [TestCategory("M1Fault")]
+    [TestProperty("Category", "M1Contract")]
+    [TestProperty("Category", "M1Fault")]
+    public void TaxonomyBindingClosureRejectsStaleCanonicalAndLengthSeals()
+    {
+        AssertTaxonomyPackageMutationRejected(root =>
+        {
+            JsonObject projections = ReadObject(root, "oracle/taxonomy-projections.json");
+            projections["subjects"]!.AsArray()[0]!["canonical_value_fingerprint"] = new string('0', 64);
+            WriteAndResealOracle(root, "oracle/taxonomy-projections.json", projections);
+        });
+
+        AssertTaxonomyPackageMutationRejected(root =>
+        {
+            JsonObject oracle = ReadObject(root, FixturePackageReader.OracleFileName);
+            JsonObject reference = oracle["ground_truth_methods"]!.AsArray()
+                .SelectMany(method => method!["evidence_references"]!.AsArray())
+                .Select(item => item!.AsObject())
+                .Single(item => item["artifact_id"]!.GetValue<string>() == "oracle/taxonomy-projections.json");
+            reference["byte_length"] = reference["byte_length"]!.GetValue<long>() + 1;
+            WriteRootOracleAndResealManifest(root, oracle);
+        });
+    }
+
+    [TestMethod]
+    [TestCategory("M1Contract")]
+    [TestCategory("M1Fault")]
+    [TestProperty("Category", "M1Contract")]
+    [TestProperty("Category", "M1Fault")]
+    public void RepeatedTaxonomyReferenceRequiresExactFirstReferenceMetadata()
+    {
+        AssertTaxonomyPackageMutationRejected(root =>
+        {
+            JsonObject oracle = ReadObject(root, FixturePackageReader.OracleFileName);
+            JsonObject[] references = TaxonomyProjectionReferences(oracle);
+            references[1]["artifact_id"] = "oracle/Taxonomy-projections.json";
+            WriteRootOracleAndResealManifest(root, oracle);
+        });
+
+        AssertTaxonomyPackageMutationRejected(root =>
+        {
+            JsonObject oracle = ReadObject(root, FixturePackageReader.OracleFileName);
+            JsonObject[] references = TaxonomyProjectionReferences(oracle);
+            references[1]["artifact_version"] = "1.1.1";
+            WriteRootOracleAndResealManifest(root, oracle);
+        });
+
+        AssertTaxonomyPackageMutationRejected(root =>
+        {
+            JsonObject oracle = ReadObject(root, FixturePackageReader.OracleFileName);
+            JsonObject[] references = TaxonomyProjectionReferences(oracle);
+            references[1]["fingerprint"] = new string('0', 64);
+            WriteRootOracleAndResealManifest(root, oracle);
+        });
+
+        AssertTaxonomyPackageMutationRejected(root =>
+        {
+            JsonObject oracle = ReadObject(root, FixturePackageReader.OracleFileName);
+            JsonObject[] references = TaxonomyProjectionReferences(oracle);
+            references[1]["availability"] = "externally-reacquirable";
+            WriteRootOracleAndResealManifest(root, oracle);
+        });
+
+        AssertTaxonomyPackageMutationRejected(root =>
+        {
+            JsonObject oracle = ReadObject(root, FixturePackageReader.OracleFileName);
+            JsonObject[] references = TaxonomyProjectionReferences(oracle);
+            references[1]["byte_length"] = references[1]["byte_length"]!.GetValue<long>() + 1;
+            WriteRootOracleAndResealManifest(root, oracle);
+        });
+
+        AssertTaxonomyPackageMutationRejected(root =>
+        {
+            JsonObject oracle = ReadObject(root, FixturePackageReader.OracleFileName);
+            JsonObject[] references = TaxonomyProjectionReferences(oracle);
+            _ = references[0].Remove("byte_length");
+            WriteRootOracleAndResealManifest(root, oracle);
+        });
+
+        AssertTaxonomyPackageMutationRejected(root =>
+        {
+            JsonObject oracle = ReadObject(root, FixturePackageReader.OracleFileName);
+            JsonObject[] references = TaxonomyProjectionReferences(oracle);
+            _ = references[1].Remove("byte_length");
+            WriteRootOracleAndResealManifest(root, oracle);
+        });
+    }
+
+    [TestMethod]
+    [TestCategory("M1Contract")]
+    [TestCategory("M1Fault")]
+    [TestProperty("Category", "M1Contract")]
+    [TestProperty("Category", "M1Fault")]
+    public void TaxonomyProjectionSourcesRequireExactResolvedRetainedSet()
+    {
+        AssertTaxonomySourceMutationRejected((_, source, _) =>
+            source["fingerprint"] = new string('0', 64));
+
+        AssertTaxonomySourceMutationRejected((_, source, _) =>
+            source["artifact_version"] = "1.1.1");
+
+        AssertTaxonomySourceMutationRejected((_, source, _) =>
+            source["availability"] = "externally-reacquirable");
+
+        AssertTaxonomySourceMutationRejected((root, source, _) =>
+        {
+            string artifactId = source["artifact_id"]!.GetValue<string>();
+            string artifactPath = Path.Combine(
+                root,
+                artifactId.Replace('/', Path.DirectorySeparatorChar));
+            source["byte_length"] = new FileInfo(artifactPath).Length + 1;
+        });
+
+        AssertTaxonomySourceMutationRejected((_, source, sources) =>
+            sources.Add(source.DeepClone()));
+
+        AssertTaxonomySourceMutationRejected((_, _, sources) =>
+            sources.RemoveAt(0));
+
+        AssertTaxonomySourceMutationRejected((root, _, sources) =>
+        {
+            JsonObject oracle = ReadObject(root, FixturePackageReader.OracleFileName);
+            JsonObject unexpected = ArtifactReferences(
+                    oracle,
+                    "oracle/manual-hex-worksheet.json")
+                .First()
+                .DeepClone()
+                .AsObject();
+            sources[0] = unexpected;
+        });
+
+        AssertTaxonomySourceMutationRejected((_, source, _) =>
+            source["artifact_id"] = "oracle/unresolved-source.json");
+    }
+
+    [TestMethod]
     [TestCategory("M1Security")]
     [TestCategory("M1Fault")]
     [TestProperty("Category", "M1Security")]
@@ -889,6 +1072,180 @@ public sealed class FixtureSchemaIntegrityTests
             ["no_safety_guarantee"] = true,
         };
     }
+
+    private static void AssertTaxonomyPackageMutationRejected(Action<string> mutate)
+    {
+        string root = Path.Combine(
+            Path.GetTempPath(),
+            $"infinium-taxonomy-contract-{Guid.NewGuid():N}");
+        try
+        {
+            CopyDirectory(
+                TestRepository.PathFromRoot(
+                    "test-data", "evaluation", "m1-semantic", "BETH-UNSUPPORTED-VAL"),
+                root);
+            mutate(root);
+            Assert.ThrowsExactly<InvalidDataException>(
+                () => FixturePackageReader.ReadForEvaluationHarness(root));
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
+    }
+
+    private static void CopyDirectory(string source, string destination)
+    {
+        Directory.CreateDirectory(destination);
+        foreach (string directory in Directory.EnumerateDirectories(
+                     source,
+                     "*",
+                     SearchOption.AllDirectories))
+        {
+            Directory.CreateDirectory(Path.Combine(
+                destination,
+                Path.GetRelativePath(source, directory)));
+        }
+
+        foreach (string file in Directory.EnumerateFiles(
+                     source,
+                     "*",
+                     SearchOption.AllDirectories))
+        {
+            string target = Path.Combine(destination, Path.GetRelativePath(source, file));
+            File.Copy(file, target);
+        }
+    }
+
+    private static JsonObject ReadObject(string root, string relativePath) =>
+        JsonNode.Parse(File.ReadAllText(Path.Combine(
+            root,
+            relativePath.Replace('/', Path.DirectorySeparatorChar))))!.AsObject();
+
+    private static void WriteAndResealInput(
+        string root,
+        string artifactId,
+        JsonObject value)
+    {
+        string artifactPath = Path.Combine(
+            root,
+            artifactId.Replace('/', Path.DirectorySeparatorChar));
+        WriteJson(artifactPath, value);
+        JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+        JsonObject reference = execution["input_payload_refs"]!.AsArray()
+            .Select(item => item!.AsObject())
+            .Single(item => item["artifact_id"]!.GetValue<string>() == artifactId);
+        reference["fingerprint"] = Sha256(artifactPath);
+        if (reference.ContainsKey("byte_length"))
+        {
+            reference["byte_length"] = new FileInfo(artifactPath).Length;
+        }
+
+        string executionPath = Path.Combine(root, FixturePackageReader.ExecutionInputFileName);
+        WriteJson(executionPath, execution);
+        JsonObject manifest = ReadObject(root, FixturePackageReader.PublicManifestFileName);
+        manifest["input_package_fingerprint"] = Sha256(executionPath);
+        WriteJson(Path.Combine(root, FixturePackageReader.PublicManifestFileName), manifest);
+    }
+
+    private static void WriteAndResealOracle(
+        string root,
+        string artifactId,
+        JsonObject value)
+    {
+        string artifactPath = Path.Combine(
+            root,
+            artifactId.Replace('/', Path.DirectorySeparatorChar));
+        WriteJson(artifactPath, value);
+        JsonObject oracle = ReadObject(root, FixturePackageReader.OracleFileName);
+        JsonObject[] references = ArtifactReferences(oracle, artifactId).ToArray();
+        Assert.IsNotEmpty(references);
+        foreach (JsonObject reference in references)
+        {
+            reference["fingerprint"] = Sha256(artifactPath);
+            if (reference.ContainsKey("byte_length"))
+            {
+                reference["byte_length"] = new FileInfo(artifactPath).Length;
+            }
+        }
+
+        WriteRootOracleAndResealManifest(root, oracle);
+    }
+
+    private static void WriteRootOracleAndResealManifest(string root, JsonObject oracle)
+    {
+        string oraclePath = Path.Combine(root, FixturePackageReader.OracleFileName);
+        WriteJson(oraclePath, oracle);
+        JsonObject manifest = ReadObject(root, FixturePackageReader.PublicManifestFileName);
+        manifest["oracle_fingerprint"] = Sha256(oraclePath);
+        WriteJson(Path.Combine(root, FixturePackageReader.PublicManifestFileName), manifest);
+    }
+
+    private static JsonObject[] TaxonomyProjectionReferences(JsonObject oracle)
+    {
+        JsonObject[] references = ArtifactReferences(
+            oracle,
+            "oracle/taxonomy-projections.json").ToArray();
+        Assert.HasCount(2, references);
+        return references;
+    }
+
+    private static IEnumerable<JsonObject> ArtifactReferences(
+        JsonNode? node,
+        string artifactId)
+    {
+        if (node is JsonObject value)
+        {
+            if (value["artifact_id"]?.GetValue<string>() == artifactId)
+            {
+                yield return value;
+            }
+
+            foreach ((_, JsonNode? child) in value)
+            {
+                foreach (JsonObject reference in ArtifactReferences(child, artifactId))
+                {
+                    yield return reference;
+                }
+            }
+        }
+        else if (node is JsonArray array)
+        {
+            foreach (JsonNode? child in array)
+            {
+                foreach (JsonObject reference in ArtifactReferences(child, artifactId))
+                {
+                    yield return reference;
+                }
+            }
+        }
+    }
+
+    private static void AssertTaxonomySourceMutationRejected(
+        Action<string, JsonObject, JsonArray> mutate)
+    {
+        AssertTaxonomyPackageMutationRejected(root =>
+        {
+            const string artifactId = "oracle/taxonomy-projections.json";
+            JsonObject projection = ReadObject(root, artifactId);
+            JsonArray sources = projection["source_artifacts"]!.AsArray();
+            mutate(root, sources[0]!.AsObject(), sources);
+            WriteAndResealOracle(root, artifactId, projection);
+        });
+    }
+
+    private static void WriteJson(string path, JsonNode value)
+    {
+        File.WriteAllText(
+            path,
+            value.ToJsonString(new JsonSerializerOptions { WriteIndented = true }) + "\n");
+    }
+
+    private static string Sha256(string path) =>
+        Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(path)));
 
     private static void CreateJunctionOrInconclusive(string link, string target)
     {

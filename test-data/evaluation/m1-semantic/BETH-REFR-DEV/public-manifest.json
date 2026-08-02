@@ -2,7 +2,7 @@
   "schema_id": "infinium.evaluation.fixture-public-manifest/v1",
   "schema_version": "1",
   "fixture_id": "BETH-REFR-DEV",
-  "fixture_version": "1.0.1",
+  "fixture_version": "1.1.0",
   "evaluation_ids": [
     "EVAL-0052",
     "EVAL-0086"
@@ -21,12 +21,12 @@
   ],
   "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
   "taxonomy_version": "0.1.0",
-  "input_package_fingerprint": "ed6c4e7f4477219da1aa9ee49036c5d29ac57c942938d61daad40ab24c7bfdc1",
-  "oracle_fingerprint": "2be4e699f32a90387c030ffb160ab5bb855826101e3c54f02d05917cbb7228e4",
-  "provenance_fingerprint": "eec33ca385774c16330ad56649cfca850306e9b6c37740448b2b44096503cfc6",
-  "replay_dependency_fingerprint": "c09b76443f2de5a1e2bc2c0cc972724a0bfbf8202a845d0aa2863631e8e82b0a",
+  "input_package_fingerprint": "3730c93525278d8b9538b0f395f9ba3f99ec7dc231b5617459c1015f832a0d7d",
+  "oracle_fingerprint": "4394f3346d8e33cea1f482eb50b3a2420b79d11e9eab3c689948eed88c48ffd2",
+  "provenance_fingerprint": "bd6c0130bf5e54d2717fd3620796f94f274d25f9a7682c80f3287711c128bda3",
+  "replay_dependency_fingerprint": "52222021b17b526b8f910484a7c5a49135f37d64dbecee7d338c87baec8d9e88",
   "redistribution_class": "project-authored-redistributable",
   "owner": "infinium-evaluation",
   "review_state": "accepted",
-  "created_at": "2026-08-01T22:00:00.0000000+00:00"
+  "created_at": "2026-08-02T12:00:00.0000000+00:00"
 }

@@ -24,7 +24,7 @@ dotnet run --project tools/evaluation/bethesda-fixtures/Infinium.BethesdaFixture
 The generator owns only `inputs/`. It does not create fixture package metadata,
 oracles, taxonomy answers, held-out content, snapshot captures, or parser code.
 
-Bethesda fixture version `1.0.1` emits full 128-byte Skyrim `RACE/DATA`
+Bethesda fixture version `1.1.0` retains the `1.0.1` full 128-byte Skyrim `RACE/DATA`
 records and nests format-valid `REFR` records beneath interior CELL block,
 sub-block, child, and persistent-child groups. `verify` also retains the
 declared one-byte and record-order mutation invariants after that nesting.
@@ -48,6 +48,25 @@ builds the supplemental and seven-document oracle content with
 answer tables or production parser code. The PowerShell technique independently
 decodes the answer-bearing semantic projection; oracle construction stops if
 that projection disagrees with the Python reader.
+
+For the three EVAL-0086 packages, build the exhaustive sealed taxonomy
+projection and literal subject-binding document after the byte oracle, then run
+`build_oracles.py` once more so `expected-oracle.json` owns the final taxonomy
+payload in its exact oracle closure:
+
+```powershell
+python tools/evaluation/bethesda-fixtures/independent-review/build_taxonomy_projections.py `
+  test-data/evaluation/m1-semantic/BETH-NPC-DEV `
+  test-data/evaluation/m1-semantic/BETH-REFR-DEV `
+  test-data/evaluation/m1-semantic/BETH-UNSUPPORTED-VAL
+```
+
+The taxonomy tool reads only accepted-order receipts and independent byte
+facts. It does not reopen plugin bytes or independent-reader reports and does
+not load Infinium production assemblies or output. Finalization rejects
+incomplete binding bijections, any taxonomy source outside that exact sealed
+two-artifact set, and any retained oracle file absent from the expected
+oracle's exact reference closure.
 
 After independent byte and taxonomy review is complete, bind all retained
 inputs and oracle evidence into the five complete fixture packages:

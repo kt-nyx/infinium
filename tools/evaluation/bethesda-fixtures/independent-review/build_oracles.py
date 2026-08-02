@@ -15,9 +15,9 @@ METHODS = [
     "manual-annotated-hex-worksheet-v1",
     "independent-bounded-raw-reader-v1",
 ]
-FIXTURE_VERSION = "1.0.1"
-ORACLE_VERSION = "1.0.2"
-ORACLE_CHANGED_AT = "2026-08-01T22:00:00.0000000+00:00"
+FIXTURE_VERSION = "1.1.0"
+ORACLE_VERSION = "1.1.0"
+ORACLE_CHANGED_AT = "2026-08-02T12:00:00.0000000+00:00"
 PLUGIN_SUFFIXES = {".esm", ".esp", ".esl"}
 SUPPORTED = {
     "TES4": {"MAST", "DATA"},
@@ -1034,6 +1034,15 @@ def build(package: Path, reader_path: Path, manual_path: Path) -> None:
             "availability": "retained",
         },
     }
+    taxonomy_path = oracle_dir / "taxonomy-projections.json"
+    if taxonomy_path.exists():
+        refs["taxonomy"] = {
+            "artifact_id": "oracle/taxonomy-projections.json",
+            "artifact_version": "1.1.0",
+            "fingerprint": sha(taxonomy_path),
+            "availability": "retained",
+            "byte_length": taxonomy_path.stat().st_size,
+        }
     state_names = [
         "observations", "deterministic_results", "external_claims", "application_links",
         "discovery_leads", "model_proposals", "proposal_admissions", "candidates",
@@ -1075,6 +1084,21 @@ def build(package: Path, reader_path: Path, manual_path: Path) -> None:
                 "evidence_references": [refs["reader"], refs["supplemental"]],
                 "independent_of_system_under_test": True,
             },
+            *(
+                [
+                    {
+                        "method_id": "independent-taxonomy-projection-review-v1",
+                        "method": (
+                            "Exhaustive taxonomy projection and literal subject-binding review "
+                            "from frozen byte facts and the accepted public subject-ID contract."
+                        ),
+                        "evidence_references": [refs["taxonomy"]],
+                        "independent_of_system_under_test": True,
+                    }
+                ]
+                if "taxonomy" in refs
+                else []
+            ),
         ],
         "expected_observations": observations,
         **{name: [] for name in EMPTY_COLLECTIONS},
@@ -1122,12 +1146,32 @@ def build(package: Path, reader_path: Path, manual_path: Path) -> None:
                 "reviewer": "oracle-reviewer",
             },
             {
-                "oracle_version": ORACLE_VERSION,
-                "changed_at": ORACLE_CHANGED_AT,
+                "oracle_version": "1.0.2",
+                "changed_at": "2026-08-01T22:00:00.0000000+00:00",
                 "independent_evidence_reference": refs["manual"],
                 "prior_error_explanation": (
                     "Fixture version 1.0.0 encoded RACE flags at the wrong DATA "
                     "offset and placed REFR records outside canonical CELL children."
+                ),
+                "reviewer": "oracle-reviewer",
+            },
+            {
+                "oracle_version": ORACLE_VERSION,
+                "changed_at": ORACLE_CHANGED_AT,
+                "independent_evidence_reference": refs.get("taxonomy", refs["manual"]),
+                "prior_error_explanation": (
+                    (
+                        "Fixture version 1.0.1 did not seal exhaustive literal taxonomy "
+                        "subject bindings or retain the taxonomy projection inside the "
+                        "expected oracle's exact reference closure."
+                    )
+                    if "taxonomy" in refs
+                    else (
+                        "Fixture version 1.0.1 was uniformly resealed so the public "
+                        "Bethesda suite shares one versioned exact-reference-closure "
+                        "reader contract; this package had no taxonomy or physical "
+                        "oracle-closure defect."
+                    )
                 ),
                 "reviewer": "oracle-reviewer",
             },

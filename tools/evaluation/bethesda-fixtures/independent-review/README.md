@@ -16,6 +16,14 @@ Mutagen, xEdit, held-out content, or taxonomy answers.
   `oracle/independent-byte-facts.json` and `expected-oracle.json`. Mutation
   partitions compare logical baseline and variant facts; artifact dependency
   alone never classifies a fact as changed.
+- `build_taxonomy_projections.py` independently expands the accepted byte facts
+  into the exhaustive EVAL-0086 subject set and emits both the sealed taxonomy
+  projection and its answer-free literal production-subject binding. It does
+  not import or inspect production analyzer code or output. Its only read
+  dependencies are the two source artifacts declared in its output:
+  `oracle/independent-byte-facts.json` and
+  `inputs/snapshot/accepted-order.json`; it does not reopen plugin bytes or an
+  independent-reader report.
 - `self_test.py` corrupts reader FormKey/link/chain output, empties manual
   semantic output, and verifies the AIDT/DATA one-byte mutation partitions.
 
@@ -37,6 +45,15 @@ python tools/evaluation/bethesda-fixtures/independent-review/build_oracles.py `
   $package `
   "$scratch/BETH-NPC-DEV-reader.json" `
   "$scratch/BETH-NPC-DEV-manual.json"
+
+# After all five byte oracles exist, build the three EVAL-0086 projections.
+python tools/evaluation/bethesda-fixtures/independent-review/build_taxonomy_projections.py `
+  test-data/evaluation/m1-semantic/BETH-NPC-DEV `
+  test-data/evaluation/m1-semantic/BETH-REFR-DEV `
+  test-data/evaluation/m1-semantic/BETH-UNSUPPORTED-VAL
+
+# Re-run build_oracles.py for those three packages so expected-oracle.json
+# owns the finished taxonomy projection in its exact reference closure.
 
 python tools/evaluation/bethesda-fixtures/independent-review/self_test.py
 ```

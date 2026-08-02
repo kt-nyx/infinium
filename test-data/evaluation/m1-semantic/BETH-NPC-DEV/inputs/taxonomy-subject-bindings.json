@@ -1,0 +1,78 @@
+{
+  "schema_id": "infinium.evaluation.taxonomy-subject-bindings/v1",
+  "schema_version": "1",
+  "fixture_id": "BETH-NPC-DEV",
+  "fixture_version": "1.1.0",
+  "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
+  "taxonomy_version": "0.1.0",
+  "bindings": [
+    {
+      "sealed_subject_id": "TAX-CLOSURE-0001",
+      "production_subject_participant_id": "contribution:0001:01-actors.esm:00000800:01-actors.esm"
+    },
+    {
+      "sealed_subject_id": "TAX-12B",
+      "production_subject_participant_id": "contribution:0001:01-actors.esm:00000800:01-actors.esm:semantic:area.actors.ai-packages"
+    },
+    {
+      "sealed_subject_id": "TAX-CLOSURE-0002",
+      "production_subject_participant_id": "contribution:0001:01-actors.esm:00000800:01-actors.esm:semantic:area.actors.appearance-identity"
+    },
+    {
+      "sealed_subject_id": "TAX-CLOSURE-0003",
+      "production_subject_participant_id": "contribution:0001:01-actors.esm:00000810:01-actors.esm"
+    },
+    {
+      "sealed_subject_id": "TAX-CLOSURE-0004",
+      "production_subject_participant_id": "contribution:0001:01-actors.esm:00000811:01-actors.esm"
+    },
+    {
+      "sealed_subject_id": "TAX-CLOSURE-0005",
+      "production_subject_participant_id": "contribution:0001:01-actors.esm:00000850:01-actors.esm"
+    },
+    {
+      "sealed_subject_id": "TAX-12A",
+      "production_subject_participant_id": "contribution:0001:01-actors.esm:00000850:01-actors.esm:semantic:area.actors.appearance-identity"
+    },
+    {
+      "sealed_subject_id": "TAX-CLOSURE-0006",
+      "production_subject_participant_id": "contribution:0002:02-behavior.esp:00000800:01-actors.esm"
+    },
+    {
+      "sealed_subject_id": "TAX-03A",
+      "production_subject_participant_id": "contribution:0002:02-behavior.esp:00000800:01-actors.esm:semantic:area.actors.ai-packages"
+    },
+    {
+      "sealed_subject_id": "TAX-CLOSURE-0007",
+      "production_subject_participant_id": "contribution:0002:02-behavior.esp:00000800:01-actors.esm:semantic:area.actors.appearance-identity"
+    },
+    {
+      "sealed_subject_id": "TAX-CLOSURE-0008",
+      "production_subject_participant_id": "contribution:0003:03-appearance.esp:00000800:01-actors.esm"
+    },
+    {
+      "sealed_subject_id": "TAX-CLOSURE-0009",
+      "production_subject_participant_id": "contribution:0003:03-appearance.esp:00000800:01-actors.esm:semantic:area.actors.appearance-identity"
+    },
+    {
+      "sealed_subject_id": "TAX-CLOSURE-0010",
+      "production_subject_participant_id": "contribution:0004:04-lightactors.esl:00000800:04-lightactors.esl"
+    },
+    {
+      "sealed_subject_id": "TAX-CLOSURE-0011",
+      "production_subject_participant_id": "contribution:0004:04-lightactors.esl:00000800:04-lightactors.esl:semantic:area.actors.appearance-identity"
+    },
+    {
+      "sealed_subject_id": "TAX-CLOSURE-0012",
+      "production_subject_participant_id": "contribution:0005:05-lightwinner.esp:00000800:04-lightactors.esl"
+    },
+    {
+      "sealed_subject_id": "TAX-CLOSURE-0013",
+      "production_subject_participant_id": "contribution:0006:06-deletedwinner.esp:00000800:01-actors.esm"
+    },
+    {
+      "sealed_subject_id": "TAX-08",
+      "production_subject_participant_id": "provider-topology:snapshot-67877e0d898accf58f1f2415"
+    }
+  ]
+}

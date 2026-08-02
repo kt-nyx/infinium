@@ -343,26 +343,29 @@ public sealed class BethesdaOracleAgreementEvaluationTests
             using JsonDocument oracle = TestRepository.ReadJson(
                 "test-data", "evaluation", "m1-semantic", fixture,
                 "oracle", "taxonomy-projections.json");
-            using JsonDocument facts = TestRepository.ReadJson(
+            using JsonDocument bindings = TestRepository.ReadJson(
                 "test-data", "evaluation", "m1-semantic", fixture,
-                "oracle", "independent-byte-facts.json");
-            Dictionary<string, HashSet<string>> acceptedReasons = oracle.RootElement.GetProperty("subjects")
+                "inputs", "taxonomy-subject-bindings.json");
+            Dictionary<string, string> productionSubjects = bindings.RootElement.GetProperty("bindings")
                 .EnumerateArray()
-                .SelectMany(item => item.GetProperty("canonical_value").GetProperty("expected_assignments").EnumerateArray())
-                .GroupBy(TaxonomyTuple, StringComparer.Ordinal)
                 .ToDictionary(
-                    group => group.Key,
-                    group => group.Select(item => item.GetProperty("reason").GetString()!).ToHashSet(StringComparer.Ordinal),
+                    item => item.GetProperty("sealed_subject_id").GetString()!,
+                    item => item.GetProperty("production_subject_participant_id").GetString()!,
                     StringComparer.Ordinal);
+            CollectionAssert.AreEquivalent(
+                productionSubjects.Values.Order(StringComparer.Ordinal).ToArray(),
+                snapshot.Taxonomy.Select(item => item.SubjectParticipantId).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray(),
+                $"{fixture}: exhaustive taxonomy subject closure drifted");
             foreach (JsonElement subject in oracle.RootElement.GetProperty("subjects").EnumerateArray())
             {
                 JsonElement canonical = subject.GetProperty("canonical_value");
-                string productionSubject = ProductionTaxonomySubject(snapshot, canonical, facts.RootElement);
+                string sealedSubjectId = subject.GetProperty("subject_id").GetString()!;
+                string productionSubject = productionSubjects[sealedSubjectId];
                 BethesdaTaxonomyProjection[] actual = snapshot.Taxonomy
                     .Where(item => item.SubjectParticipantId == productionSubject)
                     .ToArray();
                 JsonElement[] expected = canonical.GetProperty("expected_assignments").EnumerateArray().ToArray();
-                CollectionAssert.IsSubsetOf(
+                CollectionAssert.AreEquivalent(
                     expected.Select(TaxonomyTuple).ToArray(),
                     actual.Select(TaxonomyTuple).ToArray(),
                     $"{fixture}: {subject.GetProperty("subject_id").GetString()}; expected={string.Join(',', expected.Select(TaxonomyTuple))}; actual={string.Join(',', actual.Select(TaxonomyTuple))}");
@@ -370,7 +373,7 @@ public sealed class BethesdaOracleAgreementEvaluationTests
                 {
                     string tuple = TaxonomyTuple(assignment);
                     BethesdaTaxonomyProjection projection = actual.Single(item => TaxonomyTuple(item) == tuple);
-                    Assert.IsTrue(acceptedReasons[tuple].Contains(projection.Reason), $"{fixture}: unaccepted oracle reason for {tuple}: {projection.Reason}");
+                    Assert.AreEqual(assignment.GetProperty("reason").GetString(), projection.Reason, $"{fixture}: unaccepted oracle reason for {tuple}: {projection.Reason}");
                     Assert.IsNotEmpty(projection.EvidenceFields, $"{fixture}: {tuple} lacks evidence provenance");
                     Assert.IsTrue(projection.EvidenceFields.All(evidence =>
                         evidence.StartsWith("evidence:", StringComparison.Ordinal)
@@ -545,42 +548,4 @@ public sealed class BethesdaOracleAgreementEvaluationTests
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
     }
 
-    private static string ProductionTaxonomySubject(
-        BethesdaSemanticSnapshot snapshot,
-        JsonElement oracleSubject,
-        JsonElement independentFacts)
-    {
-        Dictionary<string, JsonElement> facts = independentFacts.GetProperty("facts")
-            .EnumerateArray()
-            .ToDictionary(item => item.GetProperty("fact_id").GetString()!, StringComparer.Ordinal);
-        string? expectedAreaCode = oracleSubject.GetProperty("expected_assignments")
-            .EnumerateArray()
-            .Where(item => item.GetProperty("axis").GetString() == "affected-game-system-or-content-area")
-            .Select(item => item.TryGetProperty("code", out JsonElement code) ? code.GetString() : null)
-            .SingleOrDefault(code => code is not null);
-        JsonElement? recordFact = oracleSubject.GetProperty("source_evidence_references")
-            .EnumerateArray()
-            .Select(reference => facts.GetValueOrDefault(reference.GetString()!))
-            .FirstOrDefault(fact => fact.ValueKind == JsonValueKind.Object
-                && fact.GetProperty("fact_kind").GetString() == "record"
-                && (expectedAreaCode is null
-                    || fact.GetProperty("canonical_value").GetProperty("signature").GetString()
-                    == (expectedAreaCode.StartsWith("area.actors.", StringComparison.Ordinal) ? "NPC_" : "REFR")));
-        if (recordFact is null || recordFact.Value.ValueKind == JsonValueKind.Undefined)
-        {
-            return $"provider-topology:{snapshot.SourceSnapshotId.Value}";
-        }
-
-        JsonElement value = recordFact.Value.GetProperty("canonical_value");
-        string plugin = Path.GetFileName(value.GetProperty("artifact_id").GetString()!);
-        string formKey = value.GetProperty("form_key").GetString()!;
-        string signature = value.GetProperty("signature").GetString()!;
-        BethesdaRecordContribution? contribution = FindContribution(snapshot, plugin, formKey);
-        if (contribution is null)
-        {
-            return $"unsupported-record:{plugin.ToLowerInvariant()}:{signature.ToLowerInvariant()}:{formKey.ToLowerInvariant()}";
-        }
-
-        return $"{contribution.ContributionId}:semantic:{expectedAreaCode}";
-    }
 }

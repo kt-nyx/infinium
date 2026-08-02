@@ -206,6 +206,40 @@ def assert_invalid_link_is_the_only_semantic_defect(
         raise AssertionError(f"{scenario_id} does not isolate one invalid link")
 
 
+def assert_taxonomy_builder_dependency_closed(
+    taxonomy_builder: Any,
+    fixture_root: Path,
+    temporary: Path,
+) -> None:
+    for fixture_id in (
+        "BETH-NPC-DEV",
+        "BETH-REFR-DEV",
+        "BETH-UNSUPPORTED-VAL",
+    ):
+        source = fixture_root / fixture_id
+        package = temporary / "taxonomy-two-source" / fixture_id
+        (package / "oracle").mkdir(parents=True)
+        (package / "inputs/snapshot").mkdir(parents=True)
+        shutil.copy2(
+            source / "oracle/independent-byte-facts.json",
+            package / "oracle/independent-byte-facts.json",
+        )
+        shutil.copy2(
+            source / "inputs/snapshot/accepted-order.json",
+            package / "inputs/snapshot/accepted-order.json",
+        )
+
+        taxonomy_builder.build(package)
+        for relative in (
+            "oracle/taxonomy-projections.json",
+            "inputs/taxonomy-subject-bindings.json",
+        ):
+            if (package.joinpath(relative).read_bytes() != source.joinpath(relative).read_bytes()):
+                raise AssertionError(
+                    f"{fixture_id} taxonomy output changed in declared two-source replay: {relative}"
+                )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -219,6 +253,7 @@ def main() -> int:
         repository / "tools/evaluation/bethesda-fixtures/independent-review"
     )
     builder = load_builder(tool_root / "build_oracles.py")
+    taxonomy_builder = load_builder(tool_root / "build_taxonomy_projections.py")
     fixture_root = repository / "test-data/evaluation/m1-semantic"
 
     with tempfile.TemporaryDirectory(prefix="infinium-bethesda-oracle-self-test-") as raw:
@@ -274,9 +309,16 @@ def main() -> int:
             oracle = read_json(package / "oracle/independent-byte-facts.json")
             assert_one_byte_partition(oracle, mutation_id, signature)
 
+        assert_taxonomy_builder_dependency_closed(
+            taxonomy_builder,
+            fixture_root,
+            temporary,
+        )
+
     print(
         "PASS: independent FormKey/link/chain/manual corruption rejection; "
-        "AIDT/DATA logical mutation partitions; isolated malformed boundary"
+        "AIDT/DATA logical mutation partitions; isolated malformed boundary; "
+        "taxonomy builder exact two-source replay"
     )
     return 0
 

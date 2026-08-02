@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/json-schema/taxonomy-subject-bindings.v1.schema.json",
+  "title": "Infinium sealed taxonomy subject bindings v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "fixture_id",
+    "fixture_version",
+    "taxonomy_id",
+    "taxonomy_version",
+    "bindings"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "infinium.evaluation.taxonomy-subject-bindings/v1"
+    },
+    "schema_version": {
+      "const": "1"
+    },
+    "fixture_id": {
+      "$ref": "common.v1.schema.json#/$defs/identifier"
+    },
+    "fixture_version": {
+      "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+    },
+    "taxonomy_id": {
+      "const": "infinium.skyrim-se.mod-impact-taxonomy"
+    },
+    "taxonomy_version": {
+      "const": "0.1.0"
+    },
+    "bindings": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sealed_subject_id",
+          "production_subject_participant_id"
+        ],
+        "properties": {
+          "sealed_subject_id": {
+            "$ref": "common.v1.schema.json#/$defs/identifier"
+          },
+          "production_subject_participant_id": {
+            "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
+          }
+        }
+      }
+    }
+  }
+}

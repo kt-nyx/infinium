@@ -32,6 +32,10 @@ public sealed record EvaluationHarnessFixturePackage(
 
 internal sealed record RetainedArtifactSnapshot(
     string ArtifactId,
+    string ArtifactVersion,
+    string Availability,
+    bool HasDeclaredByteLength,
+    long? DeclaredByteLength,
     ReadOnlyMemory<byte> Bytes,
     string Sha256)
 {
@@ -54,6 +58,9 @@ public static class FixturePackageReader
     private const int MaximumRetainedArtifactReferences = 4_096;
     private const string InputArtifactPrefix = "inputs/";
     private const string OracleArtifactPrefix = "oracle/";
+    private const string TaxonomyProjectionArtifactId = "oracle/taxonomy-projections.json";
+    private const string TaxonomySubjectBindingsArtifactId = "inputs/taxonomy-subject-bindings.json";
+    private const string TaxonomyAcceptedOrderArtifactId = "inputs/snapshot/accepted-order.json";
     public const string PublicManifestFileName = "public-manifest.json";
     public const string ExecutionInputFileName = "execution-input.json";
     public const string OracleFileName = "expected-oracle.json";
@@ -336,6 +343,12 @@ public static class FixturePackageReader
                 OracleFileName,
                 retainedArtifactBudget,
                 testOptions);
+        ValidateOracleArtifactClosure(fullDirectory, oracleSnapshots.Keys);
+        ValidateTaxonomySubjectContract(
+            fixtureId,
+            fixtureVersion,
+            inputSnapshots,
+            oracleSnapshots);
         if (oracleSnapshots.ContainsKey(BethesdaByteOracleValidator.ArtifactId))
         {
             ValidateRootDocumentClosure(fullDirectory);
@@ -917,16 +930,52 @@ public static class FixturePackageReader
         string documentName,
         RetainedArtifactSnapshot snapshot)
     {
-        if (!StringComparer.Ordinal.Equals(
-                RequireString(artifactReference, "availability"),
-                "retained")
-            || !StringComparer.Ordinal.Equals(
-                RequireString(artifactReference, "fingerprint"),
-                snapshot.Sha256))
+        ValidateRetainedArtifactReferenceMetadata(
+            artifactReference,
+            artifactId,
+            documentName,
+            snapshot,
+            "does not exactly match its first retained reference.");
+    }
+
+    private static void ValidateRetainedArtifactReferenceMetadata(
+        JsonElement artifactReference,
+        string artifactId,
+        string documentName,
+        RetainedArtifactSnapshot snapshot,
+        string mismatchReason)
+    {
+        string artifactVersion = RequireString(artifactReference, "artifact_version");
+        string availability = RequireString(artifactReference, "availability");
+        string fingerprint = RequireString(artifactReference, "fingerprint");
+        bool hasDeclaredByteLength = artifactReference.TryGetProperty(
+            "byte_length",
+            out JsonElement byteLengthElement);
+        long? declaredByteLength = null;
+        long parsedByteLength = 0;
+        if (hasDeclaredByteLength
+            && (byteLengthElement.ValueKind != JsonValueKind.Number
+                || !byteLengthElement.TryGetInt64(out parsedByteLength)))
         {
             throw new InvalidDataException(
-                $"Repeated retained artifact reference '{artifactId}' in '{documentName}' "
-                + "does not match its validated snapshot.");
+                $"Retained artifact reference '{artifactId}' in '{documentName}' "
+                + "has an invalid declared byte length.");
+        }
+        else if (hasDeclaredByteLength)
+        {
+            declaredByteLength = parsedByteLength;
+        }
+
+        if (!StringComparer.Ordinal.Equals(artifactId, snapshot.ArtifactId)
+            || !StringComparer.Ordinal.Equals(artifactVersion, snapshot.ArtifactVersion)
+            || !StringComparer.Ordinal.Equals(availability, snapshot.Availability)
+            || !StringComparer.Ordinal.Equals(fingerprint, snapshot.Sha256)
+            || hasDeclaredByteLength != snapshot.HasDeclaredByteLength
+            || declaredByteLength != snapshot.DeclaredByteLength)
+        {
+            throw new InvalidDataException(
+                $"Retained artifact reference '{artifactId}' in '{documentName}' "
+                + mismatchReason);
         }
     }
 
@@ -939,9 +988,9 @@ public static class FixturePackageReader
         RetainedArtifactBudget budget,
         RetainedArtifactValidationTestOptions? testOptions)
     {
-        if (!StringComparer.Ordinal.Equals(
-                RequireString(artifactReference, "availability"),
-                "retained"))
+        string artifactVersion = RequireString(artifactReference, "artifact_version");
+        string availability = RequireString(artifactReference, "availability");
+        if (!StringComparer.Ordinal.Equals(availability, "retained"))
         {
             throw new InvalidDataException(
                 $"Package-relative artifact '{artifactId}' in '{documentName}' must be retained.");
@@ -1021,7 +1070,32 @@ public static class FixturePackageReader
                 $"Retained package artifact '{artifactId}' does not match its fingerprint.");
         }
 
-        return new RetainedArtifactSnapshot(artifactId, bytes, actualFingerprint);
+        bool hasDeclaredByteLength = artifactReference.TryGetProperty(
+            "byte_length",
+            out JsonElement byteLengthElement);
+        long? declaredByteLength = null;
+        long parsedByteLength = 0;
+        if (hasDeclaredByteLength
+            && (byteLengthElement.ValueKind != JsonValueKind.Number
+                || !byteLengthElement.TryGetInt64(out parsedByteLength)
+                || parsedByteLength != bytes.LongLength))
+        {
+            throw new InvalidDataException(
+                $"Retained package artifact '{artifactId}' does not match its declared byte length.");
+        }
+        else if (hasDeclaredByteLength)
+        {
+            declaredByteLength = parsedByteLength;
+        }
+
+        return new RetainedArtifactSnapshot(
+            artifactId,
+            artifactVersion,
+            availability,
+            hasDeclaredByteLength,
+            declaredByteLength,
+            bytes,
+            actualFingerprint);
     }
 
     private static bool IsUnsafeArtifactPathSegment(string segment)
@@ -1164,6 +1238,245 @@ public static class FixturePackageReader
         {
             throw new InvalidDataException(
                 "Fixture root must contain exactly the seven required fixture documents.");
+        }
+    }
+
+    private static void ValidateOracleArtifactClosure(
+        string fixtureDirectory,
+        IEnumerable<string> referencedArtifactIds)
+    {
+        string oracleRoot = Path.GetFullPath(Path.Combine(fixtureDirectory, "oracle"));
+        if (!Directory.Exists(oracleRoot))
+        {
+            if (referencedArtifactIds.Any())
+            {
+                throw new InvalidDataException("Fixture oracle directory is missing.");
+            }
+
+            return;
+        }
+        if ((File.GetAttributes(oracleRoot) & FileAttributes.ReparsePoint) != 0)
+        {
+            throw new InvalidDataException("Fixture oracle root cannot be a reparse point.");
+        }
+
+        HashSet<string> referenced = referencedArtifactIds.ToHashSet(StringComparer.Ordinal);
+        HashSet<string> physical = new(StringComparer.Ordinal);
+        Stack<string> pending = new();
+        pending.Push(oracleRoot);
+        while (pending.Count > 0)
+        {
+            string directory = pending.Pop();
+            foreach (string entry in Directory.EnumerateFileSystemEntries(directory))
+            {
+                FileAttributes attributes = File.GetAttributes(entry);
+                if ((attributes & FileAttributes.ReparsePoint) != 0)
+                {
+                    throw new InvalidDataException("Fixture oracle closure cannot contain reparse points.");
+                }
+
+                if ((attributes & FileAttributes.Directory) != 0)
+                {
+                    if (!Directory.EnumerateFileSystemEntries(entry).Any())
+                    {
+                        throw new InvalidDataException("Fixture oracle closure cannot contain empty directories.");
+                    }
+
+                    pending.Push(entry);
+                    continue;
+                }
+
+                string relative = Path.GetRelativePath(fixtureDirectory, entry)
+                    .Replace(Path.DirectorySeparatorChar, '/');
+                physical.Add(relative);
+            }
+        }
+
+        if (!physical.SetEquals(referenced))
+        {
+            string missing = string.Join(", ", referenced.Except(physical, StringComparer.Ordinal));
+            string extra = string.Join(", ", physical.Except(referenced, StringComparer.Ordinal));
+            throw new InvalidDataException(
+                $"Fixture oracle reference closure is not exact. Missing: [{missing}]. Unreferenced: [{extra}].");
+        }
+    }
+
+    private static void ValidateTaxonomySubjectContract(
+        OpaqueId fixtureId,
+        ContractVersion fixtureVersion,
+        IReadOnlyDictionary<string, RetainedArtifactSnapshot> inputSnapshots,
+        Dictionary<string, RetainedArtifactSnapshot> oracleSnapshots)
+    {
+        bool hasProjections = oracleSnapshots.TryGetValue(
+            TaxonomyProjectionArtifactId,
+            out RetainedArtifactSnapshot? projectionSnapshot);
+        bool hasBindings = inputSnapshots.TryGetValue(
+            TaxonomySubjectBindingsArtifactId,
+            out RetainedArtifactSnapshot? bindingSnapshot);
+        if (hasProjections != hasBindings)
+        {
+            throw new InvalidDataException(
+                "Taxonomy projections and exact subject bindings must be retained together.");
+        }
+
+        if (!hasProjections)
+        {
+            return;
+        }
+
+        using BoundedJsonDocumentSnapshot projections = BoundedJsonDocumentReader.Parse(
+            projectionSnapshot!.Bytes,
+            TaxonomyProjectionArtifactId,
+            maximumDepth: 64);
+        using BoundedJsonDocumentSnapshot bindings = BoundedJsonDocumentReader.Parse(
+            bindingSnapshot!.Bytes,
+            TaxonomySubjectBindingsArtifactId,
+            maximumDepth: 64);
+        JsonElement projectionRoot = RequireObject(
+            projections.Document.RootElement,
+            TaxonomyProjectionArtifactId);
+        JsonElement bindingRoot = RequireObject(
+            bindings.Document.RootElement,
+            TaxonomySubjectBindingsArtifactId);
+        EmbeddedJsonSchemaValidator.Validate(projectionRoot, "taxonomy-projections.v1.schema.json");
+        EmbeddedJsonSchemaValidator.Validate(bindingRoot, "taxonomy-subject-bindings.v1.schema.json");
+        ValidateIdentity(projectionRoot, fixtureId, fixtureVersion, TaxonomyProjectionArtifactId);
+        ValidateIdentity(bindingRoot, fixtureId, fixtureVersion, TaxonomySubjectBindingsArtifactId);
+        ValidateTaxonomyDocumentIdentity(projectionRoot, TaxonomyProjectionArtifactId);
+        ValidateTaxonomyDocumentIdentity(bindingRoot, TaxonomySubjectBindingsArtifactId);
+        ValidateTaxonomySourceArtifacts(projectionRoot, inputSnapshots, oracleSnapshots);
+
+        HashSet<string> sealedSubjectIds = new(StringComparer.Ordinal);
+        foreach (JsonElement subject in RequireArray(projectionRoot, "subjects").EnumerateArray())
+        {
+            string subjectId = RequireString(subject, "subject_id");
+            if (!sealedSubjectIds.Add(subjectId))
+            {
+                throw new InvalidDataException($"Duplicate sealed taxonomy subject '{subjectId}'.");
+            }
+
+            JsonElement canonicalValue = RequireObject(
+                subject.GetProperty("canonical_value"),
+                "canonical_value");
+            if (!StringComparer.Ordinal.Equals(
+                    subjectId,
+                    RequireString(canonicalValue, "subject_id")))
+            {
+                throw new InvalidDataException(
+                    $"Sealed taxonomy subject '{subjectId}' has a mismatched canonical subject ID.");
+            }
+
+            if (!StringComparer.Ordinal.Equals(
+                    fixtureId.Value,
+                    RequireString(canonicalValue, "source_package_id")))
+            {
+                throw new InvalidDataException(
+                    $"Sealed taxonomy subject '{subjectId}' has a mismatched source package.");
+            }
+
+            string declaredFingerprint = RequireString(subject, "canonical_value_fingerprint");
+            string actualFingerprint = BethesdaByteOracleValidator.ComputeCanonicalFingerprint(
+                canonicalValue);
+            if (!StringComparer.Ordinal.Equals(declaredFingerprint, actualFingerprint))
+            {
+                throw new InvalidDataException(
+                    $"Sealed taxonomy subject '{subjectId}' has a stale canonical fingerprint.");
+            }
+        }
+
+        HashSet<string> boundSubjectIds = new(StringComparer.Ordinal);
+        HashSet<string> productionSubjectIds = new(StringComparer.Ordinal);
+        foreach (JsonElement binding in RequireArray(bindingRoot, "bindings").EnumerateArray())
+        {
+            string sealedSubjectId = RequireString(binding, "sealed_subject_id");
+            string productionSubjectId = RequireString(
+                binding,
+                "production_subject_participant_id");
+            if (!boundSubjectIds.Add(sealedSubjectId))
+            {
+                throw new InvalidDataException(
+                    $"Duplicate taxonomy binding for sealed subject '{sealedSubjectId}'.");
+            }
+
+            if (!productionSubjectIds.Add(productionSubjectId))
+            {
+                throw new InvalidDataException(
+                    $"Duplicate taxonomy binding target '{productionSubjectId}'.");
+            }
+        }
+
+        if (!sealedSubjectIds.SetEquals(boundSubjectIds))
+        {
+            throw new InvalidDataException(
+                "Taxonomy bindings must map every sealed subject exactly once and no unexpected subject.");
+        }
+    }
+
+    private static void ValidateTaxonomySourceArtifacts(
+        JsonElement projectionRoot,
+        IReadOnlyDictionary<string, RetainedArtifactSnapshot> inputSnapshots,
+        Dictionary<string, RetainedArtifactSnapshot> oracleSnapshots)
+    {
+        HashSet<string> expectedSourceIds = new(StringComparer.Ordinal)
+        {
+            TaxonomyAcceptedOrderArtifactId,
+            BethesdaByteOracleValidator.ArtifactId,
+        };
+        HashSet<string> actualSourceIds = new(StringComparer.Ordinal);
+        HashSet<string> sourceAliases = new(StringComparer.OrdinalIgnoreCase);
+        foreach (JsonElement source in RequireArray(
+                     projectionRoot,
+                     "source_artifacts").EnumerateArray())
+        {
+            string artifactId = RequireString(source, "artifact_id");
+            if (!sourceAliases.Add(artifactId))
+            {
+                throw new InvalidDataException(
+                    $"Taxonomy projection contains duplicate source artifact '{artifactId}'.");
+            }
+
+            _ = actualSourceIds.Add(artifactId);
+            RetainedArtifactSnapshot snapshot = artifactId.StartsWith(
+                InputArtifactPrefix,
+                StringComparison.OrdinalIgnoreCase)
+                ? inputSnapshots.TryGetValue(artifactId, out RetainedArtifactSnapshot? input)
+                    ? input
+                    : throw new InvalidDataException(
+                        $"Taxonomy projection source artifact '{artifactId}' is not retained input.")
+                : artifactId.StartsWith(OracleArtifactPrefix, StringComparison.OrdinalIgnoreCase)
+                    ? oracleSnapshots.TryGetValue(artifactId, out RetainedArtifactSnapshot? oracle)
+                        ? oracle
+                        : throw new InvalidDataException(
+                            $"Taxonomy projection source artifact '{artifactId}' is not retained oracle evidence.")
+                    : throw new InvalidDataException(
+                        $"Taxonomy projection source artifact '{artifactId}' is outside retained package scope.");
+            ValidateRetainedArtifactReferenceMetadata(
+                source,
+                artifactId,
+                TaxonomyProjectionArtifactId,
+                snapshot,
+                "does not exactly match its retained source snapshot.");
+        }
+
+        if (!actualSourceIds.SetEquals(expectedSourceIds))
+        {
+            throw new InvalidDataException(
+                "Taxonomy projection source artifacts must be exactly the accepted-order receipt "
+                + "and independent byte facts.");
+        }
+    }
+
+    private static void ValidateTaxonomyDocumentIdentity(JsonElement document, string documentName)
+    {
+        if (!StringComparer.Ordinal.Equals(
+                RequireString(document, "taxonomy_id"),
+                ContractConstants.TaxonomyId)
+            || !StringComparer.Ordinal.Equals(
+                RequireString(document, "taxonomy_version"),
+                ContractConstants.TaxonomyVersion))
+        {
+            throw new InvalidDataException(
+                $"'{documentName}' has an unsupported taxonomy identity.");
         }
     }
 

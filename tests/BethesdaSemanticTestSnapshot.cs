@@ -94,8 +94,14 @@ internal static class BethesdaSemanticTestSnapshot
     {
         const string digest = "0000000000000000000000000000000000000000000000000000000000000000";
         DateTimeOffset capturedAt = new(2026, 7, 30, 0, 0, 0, TimeSpan.Zero);
+        string structuralMaterial = string.Join('|', plugins.Select(item => string.Join(
+            '|',
+            item.Name,
+            item.Order,
+            item.Entity.Value,
+            Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(item.Path))))));
         Sha256Fingerprint structural = new(Convert.ToHexStringLower(SHA256.HashData(
-            System.Text.Encoding.UTF8.GetBytes(string.Join('|', plugins.Select(item => item.Path))))));
+            System.Text.Encoding.UTF8.GetBytes(structuralMaterial))));
         InstallationSnapshotContract contract = new(
             Mo2SnapshotCanonicalization.ComputeSnapshotId(structural, new UtcTimestamp(capturedAt)),
             new ContractVersion(3, 0, 0),

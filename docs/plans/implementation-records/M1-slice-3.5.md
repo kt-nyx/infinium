@@ -750,3 +750,46 @@ The correction clears the fixture prerequisite for a fresh Slice 4 attempt.
 It does not implement Slice 4, claim EVAL-0052 or EVAL-0086, authorize a
 first-party parser, or broaden the accepted dependency/runtime surface.
 Neither repository was pushed.
+
+## 2026-08-02 sealed-scorer contract maintenance amendment
+
+The project owner authorized a bounded Slice 3.5 maintenance amendment after
+the first sealed-scoring handoff exposed two package-contract omissions:
+taxonomy projections did not literally bind every sealed subject to its exact
+Slice 4 production subject participant, and the expected oracle did not own
+the complete physical oracle directory through an exact retained-reference
+closure. The public fixture reader, schemas, qualification tests, independent
+review tooling, and all five public Bethesda packages now enforce that
+contract as immutable version `1.1.0`.
+
+The three EVAL-0086 packages now carry an answer-free
+`inputs/taxonomy-subject-bindings.json` and exhaustive independently authored
+projection closure: 17 `BETH-NPC-DEV` subjects, 14 `BETH-REFR-DEV` subjects,
+and 3 `BETH-UNSUPPORTED-VAL` subjects. Bindings are a bijection between sealed
+subject IDs and literal production participant IDs; no heuristic or derived
+matching remains in the public agreement test. All five packages reject
+unreferenced oracle files, missing retained oracle files, empty oracle
+directories, reparse points, stale fingerprints, and stale declared byte
+lengths. Repeated retained references must also match their first occurrence
+exactly in canonical artifact-ID spelling, artifact version, fingerprint,
+availability, and optional byte-length presence and value.
+The taxonomy projection's declared source set is exactly the retained
+accepted-order receipt and independent byte facts, with unique, fully matching
+reference metadata. Its builder replays from only those two sealed files and
+does not reopen plugin bytes or independent-reader reports.
+
+The public package bindings are:
+
+| Fixture | Input package SHA-256 | Oracle SHA-256 |
+|---|---|---|
+| `BETH-NPC-DEV/1.1.0` | `732de2f73ee117be46c505fbf3beec374c6a6b4f468b79887aff336e427da380` | `74e71c731ddefd6f1950061f7f95ef30424161230ab8724354ebeec2a6053eb4` |
+| `BETH-REFR-DEV/1.1.0` | `3730c93525278d8b9538b0f395f9ba3f99ec7dc231b5617459c1015f832a0d7d` | `4394f3346d8e33cea1f482eb50b3a2420b79d11e9eab3c689948eed88c48ffd2` |
+| `BETH-LIGHT-VAL/1.1.0` | `56cf558bdc831b7e995a087accadc2527fb33be5473a3b7da2ce21d1b7d026e1` | `7d9785b2f1ec155b9f01f962f0882d7cd7c17bd8c26d819aea4c8ea80427da1c` |
+| `BETH-MALFORMED-VAL/1.1.0` | `f0d120c7bde0d3c52b6564fe3ecd615c838645a3e949d835bbc86b93a45c5820` | `6866ace85810006e4b60be0f5146a766e6b69b099f921c80709105bd34852802` |
+| `BETH-UNSUPPORTED-VAL/1.1.0` | `896bb2d672e4c8995068919ce21e5a03e0f3a674216043b3ef00dc01eeb051e8` | `5b943d680effa2db2b4f917c548ad9648df347ce4220998094658a733cd5473e` |
+
+The public correction changes no Bethesda plugin bytes or accepted semantic
+truth. Public deterministic regeneration, mutation coverage, scorer-facing
+agreement tests, full verification, and the separately governed private
+reseal/audit/score results are recorded in the Slice 4 closeout. Neither
+repository is pushed by this amendment.

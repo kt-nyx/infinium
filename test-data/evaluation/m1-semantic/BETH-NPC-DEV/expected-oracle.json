@@ -1,7 +1,7 @@
 {
   "fixture_id": "BETH-NPC-DEV",
-  "fixture_version": "1.0.1",
-  "oracle_version": "1.0.2",
+  "fixture_version": "1.1.0",
+  "oracle_version": "1.1.0",
   "independent_authors_and_reviewers": [
     "oracle-reviewer"
   ],
@@ -31,9 +31,23 @@
         },
         {
           "artifact_id": "oracle/independent-byte-facts.json",
-          "artifact_version": "1.0.2",
-          "fingerprint": "bf11f60ad78f0ca46e71def18b0460c0893cb7bf946f5ffd8638f5baaae36312",
+          "artifact_version": "1.1.0",
+          "fingerprint": "0d94642f6a424f633972a5f42f0fbcd249031f1f5d305a6024f554dc3805126c",
           "availability": "retained"
+        }
+      ],
+      "independent_of_system_under_test": true
+    },
+    {
+      "method_id": "independent-taxonomy-projection-review-v1",
+      "method": "Exhaustive taxonomy projection and literal subject-binding review from frozen byte facts and the accepted public subject-ID contract.",
+      "evidence_references": [
+        {
+          "artifact_id": "oracle/taxonomy-projections.json",
+          "artifact_version": "1.1.0",
+          "fingerprint": "7e31d9662bcbb36d08265e93e43b5c98e9b256c26d9f7a7d4305d5097b0f8469",
+          "availability": "retained",
+          "byte_length": 48553
         }
       ],
       "independent_of_system_under_test": true
@@ -4336,6 +4350,19 @@
         "availability": "retained"
       },
       "prior_error_explanation": "Fixture version 1.0.0 encoded RACE flags at the wrong DATA offset and placed REFR records outside canonical CELL children.",
+      "reviewer": "oracle-reviewer"
+    },
+    {
+      "oracle_version": "1.1.0",
+      "changed_at": "2026-08-02T12:00:00.0000000+00:00",
+      "independent_evidence_reference": {
+        "artifact_id": "oracle/taxonomy-projections.json",
+        "artifact_version": "1.1.0",
+        "fingerprint": "7e31d9662bcbb36d08265e93e43b5c98e9b256c26d9f7a7d4305d5097b0f8469",
+        "availability": "retained",
+        "byte_length": 48553
+      },
+      "prior_error_explanation": "Fixture version 1.0.1 did not seal exhaustive literal taxonomy subject bindings or retain the taxonomy projection inside the expected oracle's exact reference closure.",
       "reviewer": "oracle-reviewer"
     }
   ]

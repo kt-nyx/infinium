@@ -1,13 +1,13 @@
 {
   "fixture_id": "BETH-MALFORMED-VAL",
-  "fixture_version": "1.0.1",
+  "fixture_version": "1.1.0",
   "installation_snapshot_input": {
     "state": "provided",
     "reason": "Retained Slice 3 accepted-order receipt binds the disposable synthetic snapshot input.",
     "artifact": {
       "artifact_id": "inputs/snapshot/accepted-order.json",
-      "artifact_version": "1.0.1",
-      "fingerprint": "5c048aef508596755ec60f923cca2a59323da665c8ac821daf7134ed2c0d1f2e",
+      "artifact_version": "1.1.0",
+      "fingerprint": "123e6e33f1a4dddd13c659ef7d9cd862cface58428d9ba79d304f1e4b32e7e04",
       "availability": "retained"
     }
   },
@@ -17,7 +17,7 @@
   },
   "effective_scan_configuration": {
     "artifact_id": "inputs/case-matrix.json",
-    "artifact_version": "1.0.1",
+    "artifact_version": "1.1.0",
     "fingerprint": "04b9688a55bafc2a0cf40749777f9bf6e072c7841a20cebefe549f4c3c225a8a",
     "availability": "retained"
   },
@@ -30,8 +30,8 @@
     "reason": "Retained synthetic profile receipt records the selected profile and accepted adapter identity.",
     "artifact": {
       "artifact_id": "inputs/snapshot/accepted-order.json",
-      "artifact_version": "1.0.1",
-      "fingerprint": "5c048aef508596755ec60f923cca2a59323da665c8ac821daf7134ed2c0d1f2e",
+      "artifact_version": "1.1.0",
+      "fingerprint": "123e6e33f1a4dddd13c659ef7d9cd862cface58428d9ba79d304f1e4b32e7e04",
       "availability": "retained"
     }
   },
@@ -40,8 +40,8 @@
     "reason": "Retained synthetic profile receipt records exact plugin order and fingerprints.",
     "artifact": {
       "artifact_id": "inputs/snapshot/accepted-order.json",
-      "artifact_version": "1.0.1",
-      "fingerprint": "5c048aef508596755ec60f923cca2a59323da665c8ac821daf7134ed2c0d1f2e",
+      "artifact_version": "1.1.0",
+      "fingerprint": "123e6e33f1a4dddd13c659ef7d9cd862cface58428d9ba79d304f1e4b32e7e04",
       "availability": "retained"
     }
   },
@@ -50,8 +50,8 @@
     "reason": "Retained synthetic profile receipt records exact provider order and fingerprints.",
     "artifact": {
       "artifact_id": "inputs/snapshot/accepted-order.json",
-      "artifact_version": "1.0.1",
-      "fingerprint": "5c048aef508596755ec60f923cca2a59323da665c8ac821daf7134ed2c0d1f2e",
+      "artifact_version": "1.1.0",
+      "fingerprint": "123e6e33f1a4dddd13c659ef7d9cd862cface58428d9ba79d304f1e4b32e7e04",
       "availability": "retained"
     }
   },
@@ -91,140 +91,140 @@
   "input_payload_refs": [
     {
       "artifact_id": "inputs/case-matrix.json",
-      "artifact_version": "1.0.1",
+      "artifact_version": "1.1.0",
       "fingerprint": "04b9688a55bafc2a0cf40749777f9bf6e072c7841a20cebefe549f4c3c225a8a",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/construction-manifest.json",
-      "artifact_version": "1.0.1",
+      "artifact_version": "1.1.0",
       "fingerprint": "db32f685a270fd44ab9529333ec220008a846bba8444f93d413566b50b644c46",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/ChangedDuringRead-A.esp",
-      "artifact_version": "1.0.1",
+      "artifact_version": "1.1.0",
       "fingerprint": "031fbd75c5308f768bf019f0f8eeece31ee13a5807f096d837ccf2ff648fb382",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/ChangedDuringRead-B.esp",
-      "artifact_version": "1.0.1",
+      "artifact_version": "1.1.0",
       "fingerprint": "2f2a531fb151103dd5fa4d4ea09bda627bcc036c66a5a9f2b3b6cbb95a0e5682",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/CompressedDeclaredSizeOverLimit.esp",
-      "artifact_version": "1.0.1",
+      "artifact_version": "1.1.0",
       "fingerprint": "14c88c5fdc978eb8e86c67d22e58ebdbcddd8354eea03c679c07e3b99bc3ceac",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/CompressedInvalidZlib.esp",
-      "artifact_version": "1.0.1",
+      "artifact_version": "1.1.0",
       "fingerprint": "3f049937732519afcdb5b262e0736b490af09c497fb5ddd1e2b3740734f62cb0",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/CompressedMissingLength.esp",
-      "artifact_version": "1.0.1",
+      "artifact_version": "1.1.0",
       "fingerprint": "f9cff9c2ebc63affd5428f132f1f05e2180763d0bb51d64f8d0b95cab3a98bf3",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/CompressedSizeMismatch.esp",
-      "artifact_version": "1.0.1",
+      "artifact_version": "1.1.0",
       "fingerprint": "e03e9eda355ea841f8b70a76c6108eb45d329119715d21509aebc9ebbb461b06",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/GroupSizeOverflow.esp",
-      "artifact_version": "1.0.1",
+      "artifact_version": "1.1.0",
       "fingerprint": "5c9210bcbda9319820909e0985eb614991a6e964d7b3009b22214236f8c3133c",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/GroupSizePastEnd.esp",
-      "artifact_version": "1.0.1",
+      "artifact_version": "1.1.0",
       "fingerprint": "5acfedf3235c9ed94c04467712633d47b56db2a8f2eda622bba7f5622ff48bfb",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/GroupSizeTooSmall.esp",
-      "artifact_version": "1.0.1",
+      "artifact_version": "1.1.0",
       "fingerprint": "088f8254c1d89ff0d4460cd2b09de23de2913d22d0a2ed8398039fbfe979617e",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/InvalidLinkMasterIndex.esp",
-      "artifact_version": "1.0.1",
+      "artifact_version": "1.1.0",
       "fingerprint": "63f649f2a9a5fa75d7ce2098202942bfcb5f08465753c916a1ec5e61758179f7",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/InvalidRecordMasterIndex.esp",
-      "artifact_version": "1.0.1",
+      "artifact_version": "1.1.0",
       "fingerprint": "0ac5d15a5655791dc45eb3972d95a0d95a5b95eb19f02d2ab7bd6804d6656b52",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/MasterMissingDataPair.esp",
-      "artifact_version": "1.0.1",
+      "artifact_version": "1.1.0",
       "fingerprint": "45c63369cdcede68077a0acde19f53350442862a49700ded1bdacda2e9b2fdf1",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/NestedGroupsOverLimit.esp",
-      "artifact_version": "1.0.1",
+      "artifact_version": "1.1.0",
       "fingerprint": "5ce416f7764bebb47e56003a6c1a761ed5768953d100f0b49a4309b40cd6472a",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/RecordCountOverLimit.esp",
-      "artifact_version": "1.0.1",
+      "artifact_version": "1.1.0",
       "fingerprint": "2e327eb2853bde587819a93777e1c90dcbc949bab5df1a08632cb19e9d9024ca",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/RecordSizeOverflow.esp",
-      "artifact_version": "1.0.1",
+      "artifact_version": "1.1.0",
       "fingerprint": "bae71380b2369e497332893645d27fdb8b2abc491afefb38db63a0010f3fdb7f",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/SubrecordCountOverLimit.esp",
-      "artifact_version": "1.0.1",
+      "artifact_version": "1.1.0",
       "fingerprint": "b57e87c0030ecc438a1009a151737ea3df3272ee5c66db9ec38c70d8061ae7e2",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/TruncatedRecordHeader.esp",
-      "artifact_version": "1.0.1",
+      "artifact_version": "1.1.0",
       "fingerprint": "30a8fe7ea38c41855b2933cb3966ec07218956689eea94a8cb744d6e8c8fdc64",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/mutations/TruncatedRecordPayload.esp",
-      "artifact_version": "1.0.1",
+      "artifact_version": "1.1.0",
       "fingerprint": "13ac01a8c3f97735ab4f0ac37c8ca1cc0b3f13466b4eb0be712e6ddffbfbf614",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/plugins/MinimalValid.esp",
-      "artifact_version": "1.0.1",
+      "artifact_version": "1.1.0",
       "fingerprint": "d12230139a9f3ae2c5116b3076a14a65fb39532ec1ea18e0e42183ba6c98acda",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/requests/changed-during-read-plan.json",
-      "artifact_version": "1.0.1",
+      "artifact_version": "1.1.0",
       "fingerprint": "c59bcd05587e09243a2d703cd6a9ce9c79dfcf87bacef8d0a0d239890852d0d2",
       "availability": "retained"
     },
     {
       "artifact_id": "inputs/snapshot/accepted-order.json",
-      "artifact_version": "1.0.1",
-      "fingerprint": "5c048aef508596755ec60f923cca2a59323da665c8ac821daf7134ed2c0d1f2e",
+      "artifact_version": "1.1.0",
+      "fingerprint": "123e6e33f1a4dddd13c659ef7d9cd862cface58428d9ba79d304f1e4b32e7e04",
       "availability": "retained"
     }
   ]

@@ -22,6 +22,8 @@ network.
 | `fixture-redistribution.v1.schema.json` | —; versioned by fixture and schema file |
 | `fixture-partition-history.v1.schema.json` | —; versioned by fixture and schema file |
 | `replay-dependencies.v1.schema.json` | —; versioned by fixture and schema file |
+| `taxonomy-projections.v1.schema.json` | `infinium.evaluation.taxonomy-projections/v1` |
+| `taxonomy-subject-bindings.v1.schema.json` | `infinium.evaluation.taxonomy-subject-bindings/v1` |
 | `evaluation-assertion-result.v1.schema.json` | `infinium.evaluation.assertion-result/v1` |
 | `analyzer-declaration.v1.schema.json` | `infinium.analyzer.declaration/v1` |
 | `effective-scan-configuration.v1.schema.json` | `infinium.scan.effective-configuration/v1` |
@@ -50,6 +52,11 @@ explicit gap declaration, and every expected typed collection and collection
 production state even when its correct value is an empty array. Replay dependencies retain exact byte fingerprints when
 applicable and explicit availability, clean-recomputation, boundary-replay,
 audit, deletion, and permission states.
+
+When one retained package artifact is referenced more than once within an
+input or oracle document, every occurrence must repeat exactly the first
+reference's canonical artifact ID spelling, artifact version, fingerprint,
+availability, and optional byte-length presence and value.
 
 ## Output invariants
 
@@ -83,6 +90,15 @@ The stable run-output and CLI-summary C# document models serialize and
 deserialize through their embedded schemas in both directions. Their richer
 in-memory aggregate models are named separately and cannot be mistaken for the
 wire documents.
+
+Taxonomy-bearing packages retain a closed projection document and a separate
+answer-free binding document. Each sealed taxonomy subject maps to exactly one
+literal production subject participant ID; duplicate, missing, unexpected, or
+reused targets are invalid. The projection and binding documents carry exact
+fixture and taxonomy identities. A projection's source set is exactly its
+retained accepted-order receipt and independent byte facts, with every source
+reference matching the already snapshotted metadata. Every retained oracle
+file must be owned by the expected oracle's exact reference closure.
 
 Readers consume each document through one bounded, read-only file snapshot,
 reject duplicate object properties recursively, and hash and parse the same

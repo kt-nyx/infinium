@@ -1,7 +1,7 @@
 {
   "fixture_id": "BETH-MALFORMED-VAL",
-  "fixture_version": "1.0.1",
-  "oracle_version": "1.0.2",
+  "fixture_version": "1.1.0",
+  "oracle_version": "1.1.0",
   "independent_authors_and_reviewers": [
     "oracle-reviewer"
   ],
@@ -31,8 +31,8 @@
         },
         {
           "artifact_id": "oracle/independent-byte-facts.json",
-          "artifact_version": "1.0.2",
-          "fingerprint": "473d61436abb82a242d2f89691287724432cc9a7913a235b1220c57120308396",
+          "artifact_version": "1.1.0",
+          "fingerprint": "250dc1c8eeecf9ca09e376572b4a1fa923e31585a9a8d4be384049f2cf826624",
           "availability": "retained"
         }
       ],
@@ -1323,6 +1323,18 @@
         "availability": "retained"
       },
       "prior_error_explanation": "Fixture version 1.0.0 encoded RACE flags at the wrong DATA offset and placed REFR records outside canonical CELL children.",
+      "reviewer": "oracle-reviewer"
+    },
+    {
+      "oracle_version": "1.1.0",
+      "changed_at": "2026-08-02T12:00:00.0000000+00:00",
+      "independent_evidence_reference": {
+        "artifact_id": "oracle/manual-hex-worksheet.json",
+        "artifact_version": "1",
+        "fingerprint": "4292229c703f622e5cf7ddcaf3b2641d6a84dbfa08822caf0882ed8720ec481e",
+        "availability": "retained"
+      },
+      "prior_error_explanation": "Fixture version 1.0.1 was uniformly resealed so the public Bethesda suite shares one versioned exact-reference-closure reader contract; this package had no taxonomy or physical oracle-closure defect.",
       "reviewer": "oracle-reviewer"
     }
   ]

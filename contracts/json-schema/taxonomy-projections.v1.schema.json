@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/json-schema/taxonomy-projections.v1.schema.json",
+  "title": "Infinium sealed taxonomy projections v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "fixture_id",
+    "fixture_version",
+    "taxonomy_id",
+    "taxonomy_version",
+    "reviewer_id",
+    "reviewed_at",
+    "source_artifacts",
+    "subjects",
+    "review_assertions"
+  ],
+  "properties": {
+    "schema_id": { "const": "infinium.evaluation.taxonomy-projections/v1" },
+    "schema_version": { "const": "1" },
+    "fixture_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "fixture_version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+    "taxonomy_id": { "const": "infinium.skyrim-se.mod-impact-taxonomy" },
+    "taxonomy_version": { "const": "0.1.0" },
+    "reviewer_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "reviewed_at": { "$ref": "common.v1.schema.json#/$defs/utcTimestamp" },
+    "source_artifacts": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": { "$ref": "common.v1.schema.json#/$defs/artifactReference" }
+    },
+    "subjects": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["subject_id", "canonical_value", "canonical_value_fingerprint"],
+        "properties": {
+          "subject_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+          "canonical_value": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "subject_type",
+              "subject_id",
+              "source_package_id",
+              "source_evidence_references",
+              "independent_semantic_evidence_references",
+              "expected_assignments",
+              "forbidden_assignments"
+            ],
+            "properties": {
+              "subject_type": {
+                "enum": [
+                  "record-contribution",
+                  "record-semantic-subject",
+                  "provider-topology",
+                  "unsupported-record"
+                ]
+              },
+              "subject_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+              "source_package_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+              "source_evidence_references": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }
+              },
+              "independent_semantic_evidence_references": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }
+              },
+              "expected_assignments": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "$ref": "#/$defs/expectedAssignment" }
+              },
+              "forbidden_assignments": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "$ref": "#/$defs/forbiddenAssignment" }
+              }
+            }
+          },
+          "canonical_value_fingerprint": { "$ref": "common.v1.schema.json#/$defs/fingerprint" }
+        }
+      }
+    },
+    "review_assertions": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }
+    }
+  },
+  "$defs": {
+    "expectedAssignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "axis",
+        "facet",
+        "applicability_state",
+        "classification_role",
+        "evidence_references",
+        "reason"
+      ],
+      "properties": {
+        "axis": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+        "facet": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+        "code": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+        "applicability_state": {
+          "enum": ["assigned", "unknown", "unsupported", "unmapped", "not-applicable"]
+        },
+        "classification_role": {
+          "enum": ["declared", "observed", "predicted", "established"]
+        },
+        "evidence_references": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }
+        },
+        "reason": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }
+      }
+    },
+    "forbiddenAssignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["axis", "reason"],
+      "properties": {
+        "axis": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+        "code": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+        "reason": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }
+      }
+    }
+  }
+}

@@ -644,6 +644,42 @@ The separate evaluator-private repository retains immutable successor versions
 and correction/access records; this public repository retains only sanitized
 registry bindings permitted by ADR-0026.
 
+### 8.1.2 Bethesda fixture `1.1.0` scorer-contract correction
+
+The owner-authorized Slice 3.5 maintenance amendment supersedes the five
+public Bethesda `1.0.1` packages with `1.1.0`. Version `1.0.1` remains
+recoverable from Git history and retains its historical public-gate result, but
+it is not eligible for the sealed scorer because it did not bind every
+taxonomy oracle subject to one literal production subject and did not place
+`oracle/taxonomy-projections.json` inside the expected oracle's exact retained
+reference closure.
+
+Version `1.1.0` makes no Bethesda-byte or semantic-truth correction. It:
+
+- adds the closed
+  `infinium.evaluation.taxonomy-subject-bindings/v1` answer-free input
+  document;
+- expands the three EVAL-0086 projection payloads to exhaustive subject
+  closure: 17 `BETH-NPC-DEV`, 14 `BETH-REFR-DEV`, and 3
+  `BETH-UNSUPPORTED-VAL` subjects;
+- maps each sealed subject ID bijectively to one literal exact Slice 4
+  production subject participant ID, including generic record contributions,
+  each independently evidenced semantic-area subject, provider topology, and
+  unsupported records;
+- derives those mappings and expected/forbidden assignments only from the
+  accepted-order receipt, independent byte facts, taxonomy `0.1.0`, and the
+  accepted public semantic subject-ID contract, without consulting production
+  output, reopening plugin bytes, or reading an independent-reader report; and
+- requires every physical retained oracle payload—and no unreferenced extra,
+  empty directory, or reparse point—to be owned by the expected oracle's
+  fingerprinted reference closure.
+
+All five packages were resealed uniformly because the exact oracle-closure
+rule is a suite reader contract. `BETH-LIGHT-VAL` and
+`BETH-MALFORMED-VAL` have no taxonomy projection/binding document and preserve
+their existing semantic payloads. The supersession does not itself score the
+evaluator-private fixtures or pass a later milestone gate.
+
 The current M1 Bethesda matrix does not contain `QUST`, quest-alias,
 forced-reference/`ALFR`, or other quest-logic shapes. Those shapes belong to a
 future reviewed EVAL-0006/EVAL-0007 package if that planned pair is promoted

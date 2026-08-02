@@ -3,8 +3,9 @@ import { readdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 
-const fixtureVersion = "1.0.1";
-const createdAt = "2026-08-01T22:00:00.0000000+00:00";
+const fixtureVersion = "1.1.0";
+const createdAt = "2026-08-02T12:00:00.0000000+00:00";
+const correctedStructureAt = "2026-08-01T22:00:00.0000000+00:00";
 const partitionHistoryInitialAt = "2026-07-30T18:00:00.0000000+00:00";
 const privateReplacementAt = "2026-08-01T18:00:00.0000000+00:00";
 const generatorSha256 =
@@ -135,8 +136,111 @@ async function artifactReference(fixtureRoot, artifactId) {
   };
 }
 
+function collectArtifactIds(value, prefix, result = new Set()) {
+  if (Array.isArray(value)) {
+    for (const item of value) collectArtifactIds(item, prefix, result);
+  } else if (value && typeof value === "object") {
+    if (
+      typeof value.artifact_id === "string" &&
+      value.artifact_id.startsWith(prefix)
+    ) {
+      result.add(value.artifact_id);
+    }
+    for (const nested of Object.values(value)) {
+      collectArtifactIds(nested, prefix, result);
+    }
+  }
+  return result;
+}
+
+async function validateTaxonomyAndOracleClosure(fixtureRoot, fixture) {
+  const oracle = JSON.parse(
+    await readFile(path.join(fixtureRoot, "expected-oracle.json"), "utf8"),
+  );
+  const physicalOracleFiles = (await enumerateFiles(path.join(fixtureRoot, "oracle")))
+    .map((relative) => `oracle/${relative}`);
+  const referencedOracleFiles = [...collectArtifactIds(oracle, "oracle/")];
+  if (
+    physicalOracleFiles.length !== referencedOracleFiles.length ||
+    physicalOracleFiles.some((item) => !referencedOracleFiles.includes(item))
+  ) {
+    throw new Error(`${fixture.fixtureId} does not have exact oracle reference closure.`);
+  }
+
+  const expectsTaxonomy = fixture.evaluationIds.includes("EVAL-0086");
+  const taxonomyPath = path.join(fixtureRoot, "oracle", "taxonomy-projections.json");
+  const bindingsPath = path.join(fixtureRoot, "inputs", "taxonomy-subject-bindings.json");
+  const hasTaxonomy = physicalOracleFiles.includes("oracle/taxonomy-projections.json");
+  let hasBindings = true;
+  try {
+    await stat(bindingsPath);
+  } catch {
+    hasBindings = false;
+  }
+  if (hasTaxonomy !== expectsTaxonomy || hasBindings !== expectsTaxonomy) {
+    throw new Error(`${fixture.fixtureId} taxonomy projections and bindings are incomplete.`);
+  }
+  if (!expectsTaxonomy) return;
+
+  const taxonomy = JSON.parse(await readFile(taxonomyPath, "utf8"));
+  const bindings = JSON.parse(await readFile(bindingsPath, "utf8"));
+  for (const document of [taxonomy, bindings]) {
+    if (
+      document.fixture_id !== fixture.fixtureId ||
+      document.fixture_version !== fixtureVersion ||
+      document.taxonomy_id !== "infinium.skyrim-se.mod-impact-taxonomy" ||
+      document.taxonomy_version !== "0.1.0"
+    ) {
+      throw new Error(`${fixture.fixtureId} taxonomy identity drifted.`);
+    }
+  }
+  const expectedTaxonomySources = new Set([
+    "oracle/independent-byte-facts.json",
+    "inputs/snapshot/accepted-order.json",
+  ]);
+  const taxonomySourceIds = taxonomy.source_artifacts.map(
+    (reference) => reference.artifact_id,
+  );
+  if (
+    taxonomySourceIds.length !== expectedTaxonomySources.size ||
+    new Set(taxonomySourceIds).size !== taxonomySourceIds.length ||
+    taxonomySourceIds.some((artifactId) => !expectedTaxonomySources.has(artifactId))
+  ) {
+    throw new Error(`${fixture.fixtureId} taxonomy source closure is not exact.`);
+  }
+  for (const reference of taxonomy.source_artifacts) {
+    const sourcePath = path.join(fixtureRoot, ...reference.artifact_id.split("/"));
+    const sourceBytes = await readFile(sourcePath);
+    const sourceStats = await stat(sourcePath);
+    if (
+      reference.artifact_version !== fixtureVersion ||
+      reference.fingerprint !== sha256(sourceBytes) ||
+      reference.availability !== "retained" ||
+      (Object.hasOwn(reference, "byte_length") &&
+        reference.byte_length !== sourceStats.size)
+    ) {
+      throw new Error(`${fixture.fixtureId} taxonomy source metadata drifted.`);
+    }
+  }
+  const sealedIds = taxonomy.subjects.map((subject) => subject.subject_id);
+  const boundIds = bindings.bindings.map((binding) => binding.sealed_subject_id);
+  const targets = bindings.bindings.map(
+    (binding) => binding.production_subject_participant_id,
+  );
+  if (
+    new Set(sealedIds).size !== sealedIds.length ||
+    new Set(boundIds).size !== boundIds.length ||
+    new Set(targets).size !== targets.length ||
+    sealedIds.length !== boundIds.length ||
+    sealedIds.some((id) => !boundIds.includes(id))
+  ) {
+    throw new Error(`${fixture.fixtureId} taxonomy subject bindings are not bijective.`);
+  }
+}
+
 for (const fixture of fixtures) {
   const fixtureRoot = path.join(root, fixture.fixtureId);
+  await validateTaxonomyAndOracleClosure(fixtureRoot, fixture);
   const inputPaths = await enumerateFiles(path.join(fixtureRoot, "inputs"));
   const inputReferences = [];
   let inputBytes = 0;
@@ -346,7 +450,7 @@ for (const fixture of fixtures) {
       {
         from: null,
         to: fixture.partition,
-        at: createdAt,
+        at: correctedStructureAt,
         reason:
           "Corrected successor to fixture version 1.0.0 after the Slice 4 Mutagen conformance probe exposed a fixture-structure error.",
         change_influenced_implementation: true,

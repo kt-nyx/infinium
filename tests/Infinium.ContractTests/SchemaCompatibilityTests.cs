@@ -19,6 +19,8 @@ public sealed partial class SchemaCompatibilityTests
         "fixture-redistribution.v1.schema.json",
         "fixture-partition-history.v1.schema.json",
         "bethesda-byte-oracle.v1.schema.json",
+        "taxonomy-projections.v1.schema.json",
+        "taxonomy-subject-bindings.v1.schema.json",
         "replay-dependencies.v1.schema.json",
         "evaluation-assertion-result.v1.schema.json",
         "analyzer-declaration.v1.schema.json",

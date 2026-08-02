@@ -51,6 +51,10 @@
             "evaluator-private",
             "unavailable"
           ]
+        },
+        "byte_length": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
