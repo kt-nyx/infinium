@@ -25,7 +25,6 @@ internal static class EvaluatorProtocol
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         PropertyNameCaseInsensitive = false,
         UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         WriteIndented = true,
     };
 
@@ -89,7 +88,12 @@ internal static class EvaluatorProtocol
 }
 
 internal sealed record ArtifactIdentity(long ByteLength, string Sha256);
-internal sealed record CandidateIdentity(string Commit, string AssemblyPath, ArtifactIdentity Artifact);
+internal sealed record CandidateIdentity(
+    string Commit,
+    string AssemblyPath,
+    ArtifactIdentity Artifact,
+    string Root,
+    IReadOnlyList<EvaluatorFileIdentity> Files);
 internal sealed record EvaluatorFileIdentity(string RelativePath, long ByteLength, string Sha256);
 internal sealed record EvaluatorIdentity(
     string Commit,
@@ -100,7 +104,12 @@ internal sealed record EvaluatorIdentity(
     string AdapterVersion,
     string Root,
     IReadOnlyList<EvaluatorFileIdentity> Files);
-internal sealed record CorpusIdentity(string CorpusId, string Version, string Sha256);
+internal sealed record CorpusIdentity(
+    string CorpusId,
+    string Version,
+    string Sha256,
+    string QualificationState,
+    string ContaminationState);
 internal sealed record PluginExecutionInput(
     string PluginName,
     int LoadOrder,
@@ -131,7 +140,6 @@ internal sealed record ExpectedSemanticOutput(
     string ProtocolId,
     string CorpusId,
     string CorpusVersion,
-    string CorpusSha256,
     string State,
     IReadOnlyList<SemanticFact> Facts);
 internal sealed record TypedAssertion(

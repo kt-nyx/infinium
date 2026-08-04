@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Infinium.Application.Evaluation;
-using Infinium.EvaluatorV2.LegacyV1;
 using Infinium.Domain.Contracts;
+using Infinium.EvaluatorV2.LegacyV1;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Infinium.Tests;

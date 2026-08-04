@@ -1,6 +1,6 @@
 using System.Text.Json;
-using Infinium.Domain.Contracts;
 using Infinium.Application.Evaluation;
+using Infinium.Domain.Contracts;
 
 namespace Infinium.EvaluatorV2.LegacyV1;
 

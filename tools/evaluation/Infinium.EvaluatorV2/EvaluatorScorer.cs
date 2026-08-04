@@ -5,7 +5,7 @@ namespace Infinium.EvaluatorV2;
 
 internal static class EvaluatorScorer
 {
-    private static readonly string[] RequiredEvaluatorFiles =
+    internal static readonly string[] RequiredEvaluatorFiles =
     [
         "Infinium.Application.dll",
         "Infinium.EvaluatorV2.dll",
@@ -20,6 +20,14 @@ internal static class EvaluatorScorer
     ];
 
     internal static ScoreOutcome Score(string manifestPath, string oraclePath)
+    {
+        return Score(manifestPath, oraclePath, ReflectionCandidateAdapter.Execute);
+    }
+
+    internal static ScoreOutcome Score(
+        string manifestPath,
+        string oraclePath,
+        Func<ExecutionManifest, CandidateSemanticOutput> adapter)
     {
         ExecutionManifest? manifest = null;
         try
@@ -46,11 +54,11 @@ internal static class EvaluatorScorer
         CandidateSemanticOutput candidate;
         try
         {
-            candidate = ReflectionCandidateAdapter.Execute(manifest);
+            candidate = adapter(manifest);
         }
         catch (CandidateOutputException)
         {
-            return ProductFailure(manifest, "candidate_output", "candidate_schema");
+            return Error(manifest, "candidate_output");
         }
         catch (Exception exception) when (IsEvaluatorInputFailure(exception))
         {
@@ -64,7 +72,7 @@ internal static class EvaluatorScorer
         }
         catch (CandidateOutputException)
         {
-            return ProductFailure(manifest, "candidate_output", "candidate_schema");
+            return Error(manifest, "candidate_output");
         }
         catch (Exception exception) when (IsEvaluatorInputFailure(exception))
         {
@@ -157,21 +165,15 @@ internal static class EvaluatorScorer
 
     internal static void WriteResults(string resultDirectory, ScoreOutcome outcome)
     {
-        string root = ConfinedResultRoot(resultDirectory);
-        string[] outputs = outcome.Assertions is null
-            ? ["sanitized-result.json"]
-            : ["assertions.json", "sanitized-result.json"];
-        if (outputs.Any(fileName => File.Exists(Path.Combine(root, fileName))))
-        {
-            throw new IOException("The result directory already contains an evaluator output file.");
-        }
-
-        if (outcome.Assertions is not null)
-        {
-            WriteNew(root, "assertions.json", EvaluatorProtocol.Serialize(outcome.Assertions));
-        }
-
-        WriteNew(root, "sanitized-result.json", EvaluatorProtocol.Serialize(outcome.Result));
+        string sanitized = ValidatedJson(outcome.Result, "sanitized-result.v1.schema.json");
+        string? assertions = outcome.Assertions is null
+            ? null
+            : ValidatedJson(outcome.Assertions, "assertion-results.v1.schema.json");
+        WriteAtomically(
+            resultDirectory,
+            assertions is null
+                ? [("sanitized-result.json", sanitized)]
+                : [("sanitized-result.json", sanitized), ("assertions.json", assertions)]);
     }
 
     internal static ExecutionManifest ReadAndValidateManifest(string manifestPath)
@@ -183,39 +185,75 @@ internal static class EvaluatorScorer
         return manifest;
     }
 
-    internal static string ConfinedResultRoot(string resultDirectory)
+    internal static void WriteSingleResult<T>(
+        string resultDirectory,
+        string fileName,
+        T value,
+        string schemaFileName)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(resultDirectory);
-        string root = Path.GetFullPath(resultDirectory);
-        Directory.CreateDirectory(root);
-        DirectoryInfo info = new(root);
-        if ((info.Attributes & FileAttributes.ReparsePoint) != 0 || info.LinkTarget is not null)
-        {
-            throw new InvalidDataException("The result directory cannot be a symbolic link or reparse point.");
-        }
-
-        return root;
+        WriteAtomically(resultDirectory, [(fileName, ValidatedJson(value, schemaFileName))]);
     }
 
-    internal static void WriteNew(string root, string fileName, string content)
+    private static string ValidatedJson<T>(T value, string schemaFileName)
     {
-        if (!string.Equals(Path.GetFileName(fileName), fileName, StringComparison.Ordinal)
-            || fileName.IndexOfAny([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar]) >= 0)
-        {
-            throw new InvalidDataException("Evaluator output names must be single file names.");
-        }
+        string json = EvaluatorProtocol.Serialize(value);
+        using Infinium.Application.Evaluation.BoundedJsonDocumentSnapshot snapshot =
+            Infinium.Application.Evaluation.BoundedJsonDocumentReader.Parse(
+                Encoding.UTF8.GetBytes(json),
+                schemaFileName,
+                96);
+        Infinium.Application.Evaluation.EmbeddedJsonSchemaValidator.Validate(
+            snapshot.Document.RootElement,
+            schemaFileName);
+        return json;
+    }
 
-        string path = Path.GetFullPath(Path.Combine(root, fileName));
-        string relative = Path.GetRelativePath(root, path);
-        if (relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative))
+    private static void WriteAtomically(
+        string resultDirectory,
+        IReadOnlyList<(string FileName, string Content)> outputs)
+    {
+        ResultDirectoryAuthority? authority = null;
+        List<(string Temporary, string Final)> paths = [];
+        try
         {
-            throw new InvalidDataException("Evaluator output escaped the designated result directory.");
-        }
+            authority = ResultDirectoryAuthority.Create(resultDirectory);
+            foreach ((string fileName, string content) in outputs)
+            {
+                string temporary = $".{fileName}.{Guid.NewGuid():N}.tmp";
+                using FileStream stream = authority.OpenNew(temporary);
+                byte[] bytes = new UTF8Encoding(false).GetBytes(content);
+                stream.Write(bytes);
+                stream.Flush(true);
+                paths.Add((Path.Combine(authority.Root, temporary), Path.Combine(authority.Root, fileName)));
+            }
 
-        byte[] bytes = new UTF8Encoding(false).GetBytes(content);
-        using FileStream stream = new(path, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-        stream.Write(bytes);
-        stream.Flush(true);
+            foreach ((string temporary, string final) in paths)
+            {
+                File.Move(temporary, final);
+            }
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidDataException)
+        {
+            foreach ((string temporary, string final) in paths)
+            {
+                ResultDirectoryAuthority.TryDelete(temporary);
+                ResultDirectoryAuthority.TryDelete(final);
+            }
+
+            if (authority is not null)
+            {
+                string root = authority.Root;
+                authority.Dispose();
+                authority = null;
+                ResultDirectoryAuthority.TryDelete(root);
+            }
+
+            throw new ResultWriteException("Evaluator result publication failed at result_write.", exception);
+        }
+        finally
+        {
+            authority?.Dispose();
+        }
     }
 
     private static void ValidateManifestIdentity(ExecutionManifest manifest)
@@ -231,34 +269,31 @@ internal static class EvaluatorScorer
             throw new InvalidDataException("The execution manifest identifies a different evaluator protocol.");
         }
 
-        ArtifactIdentity candidate = EvaluatorProtocol.Identity(manifest.Candidate.AssemblyPath);
-        RequireIdentity("candidate", manifest.Candidate.Artifact, candidate);
-        string evaluatorRoot = Path.GetFullPath(manifest.Evaluator.Root);
-        HashSet<string> declaredEvaluatorFiles = new(StringComparer.Ordinal);
-        foreach (EvaluatorFileIdentity file in manifest.Evaluator.Files)
+        if (manifest.Corpus.QualificationState != "frozen"
+            || manifest.Corpus.ContaminationState != "clean")
         {
-            if (Path.IsPathRooted(file.RelativePath))
-            {
-                throw new InvalidDataException("Evaluator file identities must use relative paths.");
-            }
-
-            string path = Path.GetFullPath(Path.Combine(evaluatorRoot, file.RelativePath));
-            string relative = Path.GetRelativePath(evaluatorRoot, path);
-            if (relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative))
-            {
-                throw new InvalidDataException("An evaluator file identity escapes its declared root.");
-            }
-
-            string canonicalRelative = relative.Replace('\\', '/');
-            if (!string.Equals(canonicalRelative, file.RelativePath.Replace('\\', '/'), StringComparison.Ordinal)
-                || !declaredEvaluatorFiles.Add(canonicalRelative))
-            {
-                throw new InvalidDataException("Evaluator file identities must be unique canonical relative paths.");
-            }
-
-            RequireIdentity(file.RelativePath, new ArtifactIdentity(file.ByteLength, file.Sha256), EvaluatorProtocol.Identity(path));
+            throw new InvalidDataException("Only a qualified, frozen, uncontaminated corpus may be scored.");
         }
 
+        ArtifactIdentity candidate = EvaluatorProtocol.Identity(manifest.Candidate.AssemblyPath);
+        RequireIdentity("candidate", manifest.Candidate.Artifact, candidate);
+        HashSet<string> candidateFiles = ValidateFileInventory(
+            manifest.Candidate.Root,
+            manifest.Candidate.Files,
+            "candidate");
+        string candidateRelative = CanonicalRelativePath(
+            manifest.Candidate.Root,
+            manifest.Candidate.AssemblyPath);
+        if (!candidateFiles.Contains(candidateRelative))
+        {
+            throw new InvalidDataException("The candidate assembly is absent from its dependency inventory.");
+        }
+
+        string evaluatorRoot = Path.GetFullPath(manifest.Evaluator.Root);
+        HashSet<string> declaredEvaluatorFiles = ValidateFileInventory(
+            evaluatorRoot,
+            manifest.Evaluator.Files,
+            "evaluator");
 
         if (RequiredEvaluatorFiles.Except(declaredEvaluatorFiles, StringComparer.Ordinal).Any())
         {
@@ -289,10 +324,14 @@ internal static class EvaluatorScorer
         if (oracle.SchemaId != EvaluatorProtocol.ExpectedSchema
             || oracle.ProtocolId != EvaluatorProtocol.ProtocolId
             || oracle.CorpusId != manifest.Corpus.CorpusId
-            || oracle.CorpusVersion != manifest.Corpus.Version
-            || oracle.CorpusSha256 != manifest.Corpus.Sha256)
+            || oracle.CorpusVersion != manifest.Corpus.Version)
         {
             throw new InvalidDataException("The oracle identity does not match the answer-free manifest.");
+        }
+
+        if (!string.Equals(CorpusFingerprint(manifest, oraclePath), manifest.Corpus.Sha256, StringComparison.Ordinal))
+        {
+            throw new InvalidDataException("The oracle and retained inputs do not match the frozen corpus identity.");
         }
 
         _ = UniqueFacts(oracle.Facts, "oracle");
@@ -392,13 +431,40 @@ internal static class EvaluatorScorer
         _ => assertion.FactType,
     };
 
-    private static ScoreOutcome ProductFailure(ExecutionManifest manifest, string stage, string category)
+    internal static string CorpusFingerprint(ExecutionManifest manifest, string oraclePath)
     {
-        TypedAssertion assertion = new("candidate_schema", "candidate_schema", "FAIL", category);
-        AssertionResults assertions = new(EvaluatorProtocol.AssertionsSchema, EvaluatorProtocol.ProtocolId, [assertion]);
-        return new ScoreOutcome(
-            Result(manifest, "FAIL", stage, new AssertionCounts(1, 0, 1), [category]),
-            assertions);
+        ArtifactIdentity oracle = EvaluatorProtocol.Identity(oraclePath);
+        StringBuilder material = new("infinium.evaluator-v2.corpus/1\n");
+        material.Append(manifest.Corpus.CorpusId)
+            .Append('|')
+            .Append(manifest.Corpus.Version)
+            .Append('\n');
+        foreach (PluginExecutionInput plugin in manifest.Execution.Plugins.OrderBy(plugin => plugin.LoadOrder))
+        {
+            material.Append(plugin.LoadOrder)
+                .Append('|')
+                .Append(plugin.PluginName)
+                .Append('|')
+                .Append(plugin.LocalInstalledEntityId)
+                .Append('|')
+                .Append(plugin.ByteLength)
+                .Append('|')
+                .Append(plugin.Sha256)
+                .Append('\n');
+        }
+
+        foreach (string capability in manifest.Execution.UnsupportedCapabilities.Order(StringComparer.Ordinal))
+        {
+            material.Append("unsupported|").Append(capability).Append('\n');
+        }
+
+        material.Append("oracle|")
+            .Append(oracle.ByteLength)
+            .Append('|')
+            .Append(oracle.Sha256)
+            .Append('\n');
+        return Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(
+            Encoding.UTF8.GetBytes(material.ToString())));
     }
 
     private static ScoreOutcome Error(ExecutionManifest? manifest, string stage)
@@ -424,7 +490,7 @@ internal static class EvaluatorScorer
             stage,
             new AssertionCounts(0, 0, 0),
             [stage],
-            "clean");
+            manifest?.Corpus.ContaminationState ?? "clean");
         return new ScoreOutcome(result, null);
     }
 
@@ -452,7 +518,51 @@ internal static class EvaluatorScorer
             stage,
             counts,
             categories,
-            "clean");
+            manifest.Corpus.ContaminationState);
+
+    private static HashSet<string> ValidateFileInventory(
+        string rootPath,
+        IReadOnlyList<EvaluatorFileIdentity> files,
+        string label)
+    {
+        string root = Path.GetFullPath(rootPath);
+        HashSet<string> declared = new(StringComparer.Ordinal);
+        foreach (EvaluatorFileIdentity file in files)
+        {
+            if (Path.IsPathRooted(file.RelativePath))
+            {
+                throw new InvalidDataException($"{label} file identities must use relative paths.");
+            }
+
+            string path = Path.GetFullPath(Path.Combine(root, file.RelativePath));
+            string relative = CanonicalRelativePath(root, path);
+            if (!string.Equals(relative, file.RelativePath.Replace('\\', '/'), StringComparison.Ordinal)
+                || !declared.Add(relative))
+            {
+                throw new InvalidDataException($"{label} file identities must be unique canonical relative paths.");
+            }
+
+            RequireIdentity(
+                file.RelativePath,
+                new ArtifactIdentity(file.ByteLength, file.Sha256),
+                EvaluatorProtocol.Identity(path));
+        }
+
+        return declared;
+    }
+
+    private static string CanonicalRelativePath(string rootPath, string path)
+    {
+        string root = Path.GetFullPath(rootPath);
+        string fullPath = Path.GetFullPath(path);
+        string relative = Path.GetRelativePath(root, fullPath);
+        if (relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative))
+        {
+            throw new InvalidDataException("A retained file identity escapes its declared root.");
+        }
+
+        return relative.Replace('\\', '/');
+    }
 
     private static string EvaluatorFilesFingerprint(IReadOnlyList<EvaluatorFileIdentity> files)
     {
@@ -474,4 +584,7 @@ internal static class EvaluatorScorer
 }
 
 internal sealed class CandidateOutputException(string message, Exception? innerException = null)
+    : Exception(message, innerException);
+
+internal sealed class ResultWriteException(string message, Exception? innerException = null)
     : Exception(message, innerException);

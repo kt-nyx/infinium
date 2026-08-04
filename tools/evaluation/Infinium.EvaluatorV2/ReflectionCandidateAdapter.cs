@@ -10,11 +10,12 @@ namespace Infinium.EvaluatorV2;
 internal static class ReflectionCandidateAdapter
 {
     private static readonly JsonSerializerOptions ForeignJsonOptions = CreateForeignJsonOptions();
+    private static readonly HashSet<string> FrameworkAssemblies = CreateFrameworkAssemblySet();
 
     internal static CandidateSemanticOutput Execute(ExecutionManifest manifest)
     {
         string assemblyPath = Path.GetFullPath(manifest.Candidate.AssemblyPath);
-        CandidateLoadContext context = new(Path.GetDirectoryName(assemblyPath)!);
+        CandidateLoadContext context = new(manifest.Candidate);
         try
         {
             Assembly bethesda = context.LoadFromAssemblyPath(assemblyPath);
@@ -233,6 +234,16 @@ internal static class ReflectionCandidateAdapter
         return options;
     }
 
+    private static HashSet<string> CreateFrameworkAssemblySet()
+    {
+        string trusted = AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string ?? string.Empty;
+        string runtimeRoot = Path.GetFullPath(System.Runtime.InteropServices.RuntimeEnvironment.GetRuntimeDirectory());
+        return trusted.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries)
+            .Where(path => Path.GetFullPath(path).StartsWith(runtimeRoot, StringComparison.OrdinalIgnoreCase))
+            .Select(path => Path.GetFileNameWithoutExtension(path)!)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    }
+
     private static object New(Type type, params object?[] arguments) =>
         Activator.CreateInstance(type, arguments)
         ?? throw new InvalidDataException($"Could not construct '{type.FullName}'.");
@@ -258,12 +269,38 @@ internal static class ReflectionCandidateAdapter
     private static object EnumValue(Assembly assembly, string typeName, string value) =>
         Enum.Parse(RequiredType(assembly, typeName), value);
 
-    private sealed class CandidateLoadContext(string directory) : AssemblyLoadContext(isCollectible: true)
+    private sealed class CandidateLoadContext : AssemblyLoadContext
     {
+        private readonly Dictionary<string, string> declaredAssemblies;
+
+        internal CandidateLoadContext(CandidateIdentity candidate)
+            : base(isCollectible: true)
+        {
+            string root = Path.GetFullPath(candidate.Root);
+            declaredAssemblies = candidate.Files
+                .Where(file => string.Equals(Path.GetExtension(file.RelativePath), ".dll", StringComparison.OrdinalIgnoreCase)
+                               && string.IsNullOrEmpty(Path.GetDirectoryName(file.RelativePath)))
+                .ToDictionary(
+                    file => Path.GetFileNameWithoutExtension(file.RelativePath),
+                    file => Path.GetFullPath(Path.Combine(root, file.RelativePath)),
+                    StringComparer.OrdinalIgnoreCase);
+        }
+
         protected override Assembly? Load(AssemblyName assemblyName)
         {
-            string path = Path.Combine(directory, $"{assemblyName.Name}.dll");
-            return File.Exists(path) ? LoadFromAssemblyPath(path) : null;
+            if (assemblyName.Name is not null
+                && declaredAssemblies.TryGetValue(assemblyName.Name, out string? path))
+            {
+                return LoadFromAssemblyPath(path);
+            }
+
+            if (assemblyName.Name is not null && FrameworkAssemblies.Contains(assemblyName.Name))
+            {
+                return null;
+            }
+
+            throw new FileNotFoundException(
+                $"Candidate dependency '{assemblyName.Name}' is absent from the retained inventory.");
         }
     }
 }

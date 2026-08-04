@@ -40,6 +40,13 @@
     ],
     "rule": "the answer-free manifest binds the public commit and byte identity of every required executable and protocol file"
   },
+  "candidate_identity": {
+    "rule": "the manifest inventories and hashes the candidate assembly and every non-framework managed dependency; undeclared non-framework assembly fallback is rejected"
+  },
+  "corpus_identity": {
+    "qualification": "only qualification_state=frozen and contamination_state=clean is admitted",
+    "hash_rule": "sha256 of UTF-8: protocol domain newline; corpus_id|version newline; each accepted plugin in load order as load_order|plugin_name|local_installed_entity_id|byte_length|sha256 newline; each unsupported capability in ordinal order as unsupported|capability newline; then oracle|byte_length|sha256(oracle bytes) newline"
+  },
   "canonicalization": {
     "object_properties": "ordinal property-name order",
     "fact_order": "ordinal fact_id order",
@@ -57,5 +64,6 @@
     "numbers": "integers remain integers; non-integers use invariant JSON number text",
     "strings": "ordinal, case-sensitive except where the producing public contract already canonicalizes"
   },
-  "aggregation": "PASS only when every admitted assertion passes; any product mismatch is FAIL; any pre-comparison evaluator or oracle defect is EVALUATOR_ERROR"
+  "aggregation": "PASS only when every admitted assertion passes; any product mismatch after valid comparison admission is FAIL; malformed candidate output and every other pre-comparison identity, schema, evaluator, corpus, or oracle defect is EVALUATOR_ERROR",
+  "result_publication": "all serialized outputs are schema-validated before a new result directory is created; path ancestors are reparse-free and pinned against rename on Windows; temporary files publish only after every write is durable; publication failure returns EVALUATOR_ERROR at result_write"
 }

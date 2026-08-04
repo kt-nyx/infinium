@@ -126,7 +126,7 @@ corpus is a new invocation and must be described as such.
 
 Normal return is a sanitized attestation containing only approved identities,
 hashes, terminal result, failure stage/category when allowed, assertion counts,
-time, and contamination state. It contains no private locator/path, input,
+and contamination state. It contains no private locator/path, input,
 answer, raw output, or answer-bearing member identity.
 
 If a private case is revealed or its result directly drives production code,

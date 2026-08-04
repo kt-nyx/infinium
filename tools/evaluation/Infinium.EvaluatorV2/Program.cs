@@ -15,6 +15,12 @@ internal static class Program
                 _ => Usage(),
             };
         }
+        catch (ResultWriteException exception)
+        {
+            Console.Error.WriteLine($"EVALUATOR_ERROR result_write: {exception.Message}");
+            Console.WriteLine("EVALUATOR_ERROR");
+            return 2;
+        }
         catch (Exception exception) when (exception is
             IOException or
             UnauthorizedAccessException or
@@ -47,8 +53,11 @@ internal static class Program
         }
 
         CalibrationResults results = CalibrationSuite.Run();
-        string root = EvaluatorScorer.ConfinedResultRoot(resultDirectory);
-        EvaluatorScorer.WriteNew(root, "calibration-results.json", EvaluatorProtocol.Serialize(results));
+        EvaluatorScorer.WriteSingleResult(
+            resultDirectory,
+            "calibration-results.json",
+            results,
+            "calibration-results.v1.schema.json");
         Console.WriteLine(results.Passed ? "PASS" : "FAIL");
         return results.Passed ? 0 : 1;
     }
@@ -64,8 +73,11 @@ internal static class Program
 
         ExecutionManifest manifest = EvaluatorScorer.ReadAndValidateManifest(manifestPath);
         CandidateSemanticOutput output = ReflectionCandidateAdapter.Execute(manifest);
-        string root = EvaluatorScorer.ConfinedResultRoot(resultDirectory);
-        EvaluatorScorer.WriteNew(root, "candidate-output.json", EvaluatorProtocol.Serialize(output));
+        EvaluatorScorer.WriteSingleResult(
+            resultDirectory,
+            "candidate-output.json",
+            output,
+            "candidate-semantic-output.v1.schema.json");
         Console.WriteLine("PASS");
         return 0;
     }

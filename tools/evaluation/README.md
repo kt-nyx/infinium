@@ -7,8 +7,9 @@ not stored here.
 
 The tool never discovers a candidate, evaluator, corpus, oracle, or output
 location. A caller supplies an answer-free manifest, an oracle path available
-only to the scoring role, and a new result directory. Existing result files are
-not overwritten.
+only to the scoring role, and a result-directory path whose parent exists but
+which does not yet exist. Candidate non-framework dependencies are fully
+inventoried. Existing result files are never overwritten.
 
 ## Commands
 
