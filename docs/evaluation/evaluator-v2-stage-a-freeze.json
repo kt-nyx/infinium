@@ -1,0 +1,51 @@
+{
+  "schema_id": "infinium.evaluator-v2.stage-a-freeze/v1",
+  "schema_version": "1.0.0",
+  "status": "qualified-and-frozen",
+  "frozen_candidate_commit": "98fe8a5a173116427bf78077673fd10e8d018103",
+  "frozen_public_evaluator_commit": "72616fb6fbb3db7021e8100adc12a251c427f8d1",
+  "retired_public_evaluator_commit": "8023cdf776a25210bcc80e7574c1aaecde278b6b",
+  "retired_evaluator_result": "no-held-out-product-verdict",
+  "identities": {
+    "protocol_id": "infinium.evaluator-v2/2",
+    "protocol_version": "2.0.0",
+    "scorer_id": "infinium.evaluator-v2.scorer",
+    "scorer_version": "2.0.0",
+    "adapter_id": "infinium.evaluator-v2.slice4-reflection-adapter",
+    "adapter_version": "2.0.0",
+    "projection_id": "infinium.evaluator-v2.slice4-semantic-projection",
+    "projection_version": "2.0.0"
+  },
+  "public_calibration": {
+    "suite_id": "infinium.evaluator-v2.public-calibration/2",
+    "case_count": 23,
+    "terminal_result": "PASS",
+    "result_sha256": "35322d5b289160e646a57cfcdeeffc422d55cd5e1dc7c0862e1bf157c4893260",
+    "byte_deterministic": true
+  },
+  "required_public_files": [
+    { "relative_path": "src/Infinium.Application/Evaluation/EmbeddedJsonSchemaValidator.cs", "byte_length": 17398, "sha256": "6d2b65c602c1a23159efaf96262503f84efefae12945c9972356b3cf61cb5d54" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/Infinium.EvaluatorV2.csproj", "byte_length": 905, "sha256": "6b5c328193f66fcb225777effd9436b78301db106ab655139cc7ee73ef8916bb" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/CalibrationSuite.cs", "byte_length": 18535, "sha256": "373f4a8fd7fae7c4ea319deef2fc37c764c84adafec96326348466ca8f8c033c" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/EvaluatorProtocol.cs", "byte_length": 8598, "sha256": "33243842ce92bb14ccbd6a240ed35a00283cdc35cc90cdce69b8317dff293af3" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/EvaluatorScorer.cs", "byte_length": 38570, "sha256": "d1084e2d462527d7543d3cdecc9fc3ac2bcd77f4b90f7d1d81a5b303897f9ea1" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/Program.cs", "byte_length": 5470, "sha256": "291807487bd11663b95a603407b65ef24ff00ef4ef0c53e430ea7141bc42f80f" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/ReflectionCandidateAdapter.cs", "byte_length": 17547, "sha256": "38d455e7eb36becbc4d1da1e9cc23db434fd8ad5cdead97e74f84cd279436697" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/ResultDirectoryAuthority.cs", "byte_length": 5180, "sha256": "745e63534aa7c17a508556a6f8ceaf108aaba290672297d03da75aa0e9b4a56c" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/SemanticCanonicalizer.cs", "byte_length": 22543, "sha256": "1b6749d6a3de2042eba5a72e6744272d981273ce0af430cf508bfabb295d04d8" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/Properties/AssemblyInfo.cs", "byte_length": 156, "sha256": "b4a35a560ceacabdcbacbbab8b38717b1e4c622e0d96e56a3e6a99dd0f49d944" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/protocol/assertion-results.v2.schema.json", "byte_length": 1171, "sha256": "89c240db31ce2dd4838c7d173156954aab582812e46d1ea93c4de122e873686d" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/protocol/calibration-results.v2.schema.json", "byte_length": 1268, "sha256": "81a9eec1187d5f83424436d0b730d086264d6cce5ccc8548df158cc1fb911ca2" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/protocol/candidate-semantic-output.v2.schema.json", "byte_length": 1031, "sha256": "f223cd167e4c8b0358ec8a824b90fe8f330dbfba6f09a66eb1534314f8856427" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/protocol/corpus-execution-manifest.v2.schema.json", "byte_length": 1136, "sha256": "886e8c240692f0010a35b6f30ba73e4fc926a2baee385512ac7b39d32fded104" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/protocol/evaluator-v2-common.v2.schema.json", "byte_length": 6079, "sha256": "e0cbde47d4de84337087db9d6bbb229fe0a159700d799e629798fc07d4ecfdce" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/protocol/execution-manifest.v2.schema.json", "byte_length": 771, "sha256": "6f1577ab969837bfccc3685d37256332403e956693997ba8fe30b25344c33858" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/protocol/expected-semantic-output.v2.schema.json", "byte_length": 979, "sha256": "514b2908034279f957e86072b9e6a14e545409594aa09f3e9ccb3571e1f30ff8" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/protocol/prepared-comparison-manifest.v2.schema.json", "byte_length": 994, "sha256": "d009274b60d8f75ae1c2da9894931d8424b24deb0260a5b0eb9bd2cca9eeb22b" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/protocol/protocol.json", "byte_length": 4344, "sha256": "5db427567a052ce2f9e004e794a945c037db996eada60833fdd63b6ed02383c7" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/protocol/sanitized-result.v2.schema.json", "byte_length": 2971, "sha256": "4f3631b4d1fc0d2b9185f230924f8e601b9ad1be69a9f57690ec249ba5cf10b8" }
+  ],
+  "private_corpus_qualification": "not-run",
+  "held_out_scoring": "not-run",
+  "stage_b_state": "unblocked"
+}

@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Held-out evaluation v2
 
-Status: Accepted; Stage A public evaluator complete, private stages pending
+Status: Accepted; Stage A corrective qualification complete, private stages pending
 Owner: Project owner
 Prepared: 2026-08-04
 Accepted: 2026-08-04
@@ -227,3 +227,26 @@ with exact Stage A branch/commit, candidate/evaluator identities, moved files,
 protocol/schema IDs, calibration and full-check results, review/corrections,
 private corpus freeze identity when available, held-out invocation identity,
 sanitized terminal result, contamination state, gaps, and push state.
+
+## Stage A successor freeze
+
+The owner-authorized corrective pass retired public evaluator commit
+`8023cdf776a25210bcc80e7574c1aaecde278b6b` before private qualification; it
+produced no held-out product verdict. The unique successor is discoverable in
+[`../../evaluation/evaluator-v2-stage-a-freeze.json`](../../evaluation/evaluator-v2-stage-a-freeze.json).
+
+Stage B qualifies prepared expected outputs and deliberate mutations with:
+
+```text
+compare-prepared --manifest <prepared-comparison-manifest.json> --candidate-output <prepared-candidate-output.json> --oracle <expected-output.json> --result-dir <new-directory>
+```
+
+Stage C performs the single top-level held-out invocation, for a one- or
+multi-member corpus, with:
+
+```text
+score-corpus --manifest <corpus-execution-manifest.json> --result-dir <new-directory>
+```
+
+Stage B and Stage C remain separate, owner-authorized fresh tasks. This Stage A
+session does not access or orchestrate either private stage.
