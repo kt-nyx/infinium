@@ -19,12 +19,17 @@ internal static class CalibrationSuite
                 ScoreCase("semantic-number-equivalent-token-shapes", "PASS", null, context,
                     Replace(correct, "/placement/integral", fact => fact with { Value = JsonValue("10.0") })),
                 ScoreCase("semantic-number-non-integral", "PASS", null, context, correct),
+                ScoreCase("semantic-integer-decimal-token", "PASS", null, context,
+                    Replace(correct, "/integer/exact", fact => fact with { Value = JsonValue("10.0") })),
+                ScoreCase("semantic-integer-exponent-token", "PASS", null, context,
+                    Replace(correct, "/integer/exact", fact => fact with { Value = JsonValue("1e1") })),
                 ScoreCase("semantic-integer-non-integral-rejected", "FAIL", "candidate_output_contract", context,
-                    Replace(correct, "/placement/integral", fact => fact with
+                    Replace(correct, "/integer/exact", fact => fact with
                     {
-                        ValueType = "integer",
                         Value = JsonValue("10.5"),
                     })),
+                ScoreCase("semantic-integer-out-of-range-rejected", "FAIL", "candidate_output_contract", context,
+                    Replace(correct, "/integer/exact", fact => fact with { Value = JsonValue("9223372036854775808") })),
                 ScoreCase("semantic-number-string-rejected", "FAIL", "candidate_output_contract", context,
                     Replace(correct, "/placement/integral", fact => fact with { Value = EvaluatorProtocol.Primitive("10") })),
                 ScoreCase("semantic-number-boolean-rejected", "FAIL", "candidate_output_contract", context,
@@ -56,6 +61,7 @@ internal static class CalibrationSuite
                 MalformedOracleCase(context, correct),
                 TamperedOracleCase(context, correct),
             ];
+            cases.AddRange(IntegerOracleCases(context, correct));
             cases.AddRange(PreparedCases(context, correct));
             cases.AddRange(AggregateCases(context, correct));
             cases.Add(EvaluatorRootDriftCase(context, correct));
@@ -266,6 +272,47 @@ internal static class CalibrationSuite
         ];
     }
 
+    private static IReadOnlyList<CalibrationCaseResult> IntegerOracleCases(
+        CalibrationContext context,
+        CandidateSemanticOutput correct)
+    {
+        return
+        [
+            IntegerOracleCase("oracle-semantic-integer-decimal-token", "10.0", context, correct),
+            IntegerOracleCase("oracle-semantic-integer-exponent-token", "1e1", context, correct),
+        ];
+    }
+
+    private static CalibrationCaseResult IntegerOracleCase(
+        string id,
+        string jsonValue,
+        CalibrationContext context,
+        CandidateSemanticOutput correct)
+    {
+        string root = Path.Combine(Path.GetDirectoryName(context.ManifestPath)!, id);
+        Directory.CreateDirectory(root);
+        ExpectedSemanticOutput oracle = context.Oracle with
+        {
+            Facts = context.Oracle.Facts.Select(fact => fact.FactId == "/integer/exact"
+                ? fact with { Value = JsonValue(jsonValue) }
+                : fact).ToArray(),
+        };
+        string oraclePath = Path.Combine(root, "oracle.json");
+        File.WriteAllText(oraclePath, EvaluatorProtocol.Serialize(oracle), new System.Text.UTF8Encoding(false));
+        ExecutionManifest manifest = context.Manifest with
+        {
+            Corpus = context.Manifest.Corpus with { Sha256 = new('0', 64) },
+        };
+        manifest = manifest with
+        {
+            Corpus = manifest.Corpus with { Sha256 = EvaluatorScorer.CorpusFingerprint(manifest, oraclePath) },
+        };
+        string manifestPath = Path.Combine(root, "manifest.json");
+        File.WriteAllText(manifestPath, EvaluatorProtocol.Serialize(manifest), new System.Text.UTF8Encoding(false));
+        ScoreOutcome outcome = EvaluatorScorer.Score(manifestPath, oraclePath, _ => correct);
+        return CaseResult(id, "PASS", null, outcome);
+    }
+
     private static IReadOnlyList<CalibrationCaseResult> AggregateCases(
         CalibrationContext context,
         CandidateSemanticOutput correct)
@@ -335,6 +382,7 @@ internal static class CalibrationSuite
             Fact("/chain/contributions/0", "override_chain", "First.esm"),
             Fact("/chain/contributions/1", "override_chain", "Second.esp"),
             Fact("/gaps/{gap_id=archive}/denominator", "gap", 2L),
+            Fact("/integer/exact", "field", 10L),
             Fact("/links/base", "link", "00000042:base.esm"),
             Fact("/links/owner", "ownership", "00000042:base.esm"),
             NumberFact("/placement/fractional", "placement", 0.25),

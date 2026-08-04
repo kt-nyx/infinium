@@ -73,4 +73,3 @@ The product's 64 MiB limit remains unchanged.
 - Successor private-corpus construction and held-out scoring have not run.
 - Any later scoring is a new tuple and invocation, not a retry.
 - Stage D has not started.
-

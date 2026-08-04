@@ -36,6 +36,10 @@ public sealed class EvaluatorV2PublicProtocolTests
             "integral-token-semantic-number-boundary",
             "semantic-number-equivalent-token-shapes",
             "semantic-number-non-integral",
+            "semantic-integer-decimal-token",
+            "semantic-integer-exponent-token",
+            "oracle-semantic-integer-decimal-token",
+            "oracle-semantic-integer-exponent-token",
             "prepared-integral-token-semantic-number",
         ];
         Assert.IsTrue(passing.All(id => result.Cases.Single(item => item.CaseId == id).ActualTerminal == "PASS"));
@@ -43,6 +47,7 @@ public sealed class EvaluatorV2PublicProtocolTests
         string[] contractFailures =
         [
             "semantic-integer-non-integral-rejected",
+            "semantic-integer-out-of-range-rejected",
             "semantic-number-string-rejected",
             "semantic-number-boolean-rejected",
             "semantic-number-null-rejected",
@@ -482,6 +487,17 @@ public sealed class EvaluatorV2PublicProtocolTests
             CorpusScoreOutcome oneOutcome = EvaluatorScorer.ScoreCorpus(onePath);
             Assert.AreEqual("PASS", oneOutcome.Result.TerminalResult);
             Assert.AreEqual(1, oneOutcome.Result.MemberCounts.Total);
+
+            CorpusExecutionManifest renamed = one with
+            {
+                Members = [new CorpusExecutionMember("private-member-renamed", source.Execution, passOracle)],
+            };
+            string renamedPath = Path.Combine(root, "renamed.json");
+            File.WriteAllText(renamedPath, EvaluatorProtocol.Serialize(renamed), new System.Text.UTF8Encoding(false));
+            CorpusScoreOutcome renamedOutcome = EvaluatorScorer.ScoreCorpus(renamedPath);
+            Assert.AreEqual("EVALUATOR_ERROR", renamedOutcome.Result.TerminalResult);
+            Assert.HasCount(1, renamedOutcome.Result.FailureCategories!);
+            Assert.AreEqual("oracle", renamedOutcome.Result.FailureCategories![0]);
 
             CorpusExecutionManifest multiple = one with
             {

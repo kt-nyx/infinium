@@ -30,10 +30,15 @@ indexes. Duplicate identities are invalid. FormKeys are canonicalized from the
 Slice 4 ID-first representation to `xxxxxxxx:plugin.ext`. Explicit null and a
 missing fact differ. Missing and extra facts are product mismatches. Typed-fact
 validation follows the declared semantic `value_type`: `integer` requires an
-exactly representable signed integer, while `number` accepts any finite JSON
+exactly representable signed Int64 JSON number (including integral decimal or
+exponent notation), while `number` accepts any finite JSON
 number, including an integral-valued token. Semantic numbers compare
 numerically, so `10` and `10.0` are equal when both declare `number`; semantic
 integers remain exact and type-distinct.
+
+Aggregate corpus fingerprints bind each canonical member ID in declared order,
+along with its execution inputs and oracle identity. Renaming a member without
+refreezing the corpus is an admission error.
 
 ## Commands
 

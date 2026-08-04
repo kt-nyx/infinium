@@ -563,7 +563,7 @@ internal static class EvaluatorScorer
     private static bool ValueMatchesDeclaredType(string declaredType, JsonElement value) => declaredType switch
     {
         "string" => value.ValueKind == JsonValueKind.String,
-        "integer" => value.ValueKind == JsonValueKind.Number && value.TryGetInt64(out _),
+        "integer" => TryGetSemanticInteger(value, out _),
         "number" => value.ValueKind == JsonValueKind.Number
             && value.TryGetDouble(out double number)
             && double.IsFinite(number),
@@ -574,10 +574,41 @@ internal static class EvaluatorScorer
 
     private static bool SemanticValuesEqual(string valueType, JsonElement expected, JsonElement actual) => valueType switch
     {
-        "integer" => expected.GetInt64() == actual.GetInt64(),
+        "integer" => TryGetSemanticInteger(expected, out long expectedInteger)
+            && TryGetSemanticInteger(actual, out long actualInteger)
+            && expectedInteger == actualInteger,
         "number" => expected.GetDouble().Equals(actual.GetDouble()),
         _ => JsonElement.DeepEquals(expected, actual),
     };
+
+    private static bool TryGetSemanticInteger(JsonElement value, out long integer)
+    {
+        integer = default;
+        if (value.ValueKind != JsonValueKind.Number)
+        {
+            return false;
+        }
+
+        if (value.TryGetInt64(out integer))
+        {
+            return true;
+        }
+
+        if (!decimal.TryParse(
+                value.GetRawText(),
+                System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out decimal number)
+            || decimal.Truncate(number) != number
+            || number < long.MinValue
+            || number > long.MaxValue)
+        {
+            return false;
+        }
+
+        integer = decimal.ToInt64(number);
+        return true;
+    }
 
     private static void AddAssertion(List<TypedAssertion> assertions, string id, string kind, string factType,
         string? factId, JsonElement? expected, JsonElement? actual, bool passed) =>
@@ -592,27 +623,29 @@ internal static class EvaluatorScorer
     };
 
     internal static string CorpusFingerprint(ExecutionManifest manifest, string oraclePath) =>
-        FingerprintCorpus(manifest.Corpus, [(manifest.Execution, oraclePath)]);
+        FingerprintCorpus(manifest.Corpus, [("single", manifest.Execution, oraclePath)]);
 
     internal static string CorpusFingerprint(CorpusExecutionManifest manifest) =>
-        FingerprintCorpus(manifest.Corpus, manifest.Members.Select(item => (item.Execution, item.OraclePath)));
+        FingerprintCorpus(manifest.Corpus, manifest.Members.Select(item => (item.MemberId, item.Execution, item.OraclePath)));
 
     internal static string PreparedCorpusFingerprint(PreparedComparisonManifest manifest, string candidateOutputPath, string oraclePath)
     {
         ArtifactIdentity candidate = EvaluatorProtocol.Identity(candidateOutputPath);
         ArtifactIdentity oracle = EvaluatorProtocol.Identity(oraclePath);
-        string material = $"infinium.evaluator-v2.prepared-corpus/2\n{manifest.Corpus.CorpusId}|{manifest.Corpus.Version}\nqualification|{manifest.Candidate.QualificationId}|{candidate.ByteLength}|{candidate.Sha256}\noracle|{oracle.ByteLength}|{oracle.Sha256}\n";
+        string material = $"infinium.evaluator-v2.prepared-corpus/3\n{manifest.Corpus.CorpusId}|{manifest.Corpus.Version}\nqualification|{manifest.Candidate.QualificationId}|{candidate.ByteLength}|{candidate.Sha256}\noracle|{oracle.ByteLength}|{oracle.Sha256}\n";
         return Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(material)));
     }
 
-    private static string FingerprintCorpus(CorpusIdentity corpus, IEnumerable<(ExecutionInput Execution, string OraclePath)> members)
+    private static string FingerprintCorpus(
+        CorpusIdentity corpus,
+        IEnumerable<(string MemberId, ExecutionInput Execution, string OraclePath)> members)
     {
-        StringBuilder material = new("infinium.evaluator-v2.corpus/2\n");
+        StringBuilder material = new("infinium.evaluator-v2.corpus/3\n");
         material.Append(corpus.CorpusId).Append('|').Append(corpus.Version).Append('\n');
         int index = 0;
-        foreach ((ExecutionInput execution, string oraclePath) in members)
+        foreach ((string memberId, ExecutionInput execution, string oraclePath) in members)
         {
-            material.Append("member|").Append(index++).Append('\n');
+            material.Append("member|").Append(index++).Append('|').Append(memberId).Append('\n');
             foreach (PluginExecutionInput plugin in execution.Plugins.OrderBy(item => item.LoadOrder))
             {
                 material.Append("plugin|").Append(plugin.LoadOrder).Append('|').Append(plugin.PluginName.ToLowerInvariant()).Append('|')

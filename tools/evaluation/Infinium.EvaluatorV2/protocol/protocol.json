@@ -29,7 +29,7 @@
     "sets": "plugins are ordered by accepted load order; override contributions, masters, providers, and links with ordinals are ordered sequences; maps and semantic sets are sorted by their named stable identity",
     "duplicates": "duplicate fact IDs, map identities, plugin names, load orders, member IDs, provider-chain paths, and provider IDs are invalid at their owning contract boundary",
     "form_keys": "eight lowercase hexadecimal local-ID digits, colon, lowercase plugin filename with esm, esp, or esl extension",
-    "typed_values": "validation follows declared value_type: integer requires a JSON number exactly representable as signed Int64; number accepts every finite JSON number including an integral-valued token; string, boolean, and null require their matching JSON kinds; objects and arrays are invalid",
+    "typed_values": "validation follows declared value_type: integer requires a JSON number exactly representable as signed Int64, including integral decimal or exponent notation; number accepts every finite JSON number including an integral-valued token; string, boolean, and null require their matching JSON kinds; objects and arrays are invalid",
     "numbers": "semantic integer facts compare as exact signed Int64 values; semantic number facts compare as finite IEEE-754 values, so 10 and 10.0 are equal when both declare value_type number; negative zero compares equal to zero",
     "null_missing": "a projected null is an explicit typed null fact; a missing projected fact is a missing_fact product mismatch; an unexpected projected fact is an extra_fact mismatch",
     "included": "named Slice 4 state, plugin, record/contribution, override/winner, NPC, RACE, REFR, link, field-presence, participant, FaceGen/provider topology, taxonomy, coverage, gap, and stable failure-code fields",
@@ -42,6 +42,7 @@
   },
   "identity": {
     "evaluator_files_fingerprint": "SHA-256 of canonical relative_path|byte_length|sha256 lines in ordinal relative-path order",
+    "corpus_fingerprint": "SHA-256 binds corpus ID/version plus each canonical member ID in declared order, execution inputs, and oracle identity; member identity drift requires a new freeze",
     "executing_binary": "the actual executing Infinium.EvaluatorV2.dll must be the declared file under the declared evaluator root; the deps graph and every required public schema/protocol file must be declared and byte-matched",
     "candidate": "candidate assembly and every declared non-framework dependency are byte-matched before invocation; candidate load context permits no undeclared non-framework fallback"
   },
