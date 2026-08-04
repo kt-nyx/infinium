@@ -35,9 +35,10 @@ Start with [`docs/README.md`](docs/README.md).
   rerun. The historical evaluator-v2 `/2` Stage C `FAIL` remains immutable,
   but its product verdict was invalidated by Stage C.5 adjudication: no product
   correction is indicated, `/2` is retired for the diagnosed numeric
-  typed-fact surface, and both a public evaluator successor and materially
-  independent private successor corpus are required. Slice 4.5 remains active
-  and blocked; Stage D has not started. See the
+  typed-fact surface, and a public `/3` successor is now qualified and frozen
+  at `34ed0c8`. A materially independent private successor corpus remains
+  required; successor Stage B is unblocked but has not run. Slice 4.5 remains
+  active and blocked; Stage D has not started. See the
   [sanitized incident record](docs/evaluation/evaluator-v2-stage-c5-adjudication-incident.md).
   Slice 5 remains blocked and M1 remains active
 - xEdit: historical integration/oracle recommendation rejected; excluded from

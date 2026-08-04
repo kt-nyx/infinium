@@ -85,3 +85,10 @@ historical `/2` `FAIL` remains immutable, but its product verdict is invalidated
 No product correction is indicated. Evaluator `/2` is retired for the diagnosed
 numeric typed-fact surface, the historical private corpus requires complete
 replacement, and any later scoring is a new successor tuple and invocation.
+
+Public successor protocol `infinium.evaluator-v2/3` is qualified and frozen at
+`34ed0c84165e9a49f44a88ecd87cac967132ebd7`. Its exact source/protocol inventory
+and calibration identity are recorded in the
+[successor Stage A freeze](evaluator-v2-stage-a-successor-freeze.json). Successor
+Stage B is unblocked. Private successor-corpus work and held-out scoring have
+not run, and Stage D has not started.

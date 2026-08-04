@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Held-out evaluation v2
 
-Status: Accepted; successor public-evaluator maintenance active after Stage C.5 adjudication
+Status: Accepted; successor public evaluator frozen, successor Stage B unblocked
 Owner: Project owner
 Prepared: 2026-08-04
 Accepted: 2026-08-04
@@ -260,8 +260,9 @@ was invalidated. No product correction is indicated. Evaluator `/2` is retired
 for the diagnosed numeric typed-fact surface, and the historical private corpus
 requires complete replacement.
 
-The authorized successor public task creates a new protocol/scorer identity,
-qualifies it using only public calibration and development fixtures, and freezes
-it before any successor private work. Later successor corpus construction and
-scoring are new fresh tasks and a new invocation, not a retry. Slice 4.5 remains
-active and blocked; Stage D has not started.
+The authorized public task froze successor protocol `infinium.evaluator-v2/3`
+at `34ed0c84165e9a49f44a88ecd87cac967132ebd7`. Its machine-readable inventory is
+[`evaluator-v2-stage-a-successor-freeze.json`](../../evaluation/evaluator-v2-stage-a-successor-freeze.json).
+Later successor corpus construction and scoring are new fresh tasks and a new
+invocation, not a retry. Successor Stage B is unblocked but has not run. Slice
+4.5 remains active and blocked; Stage D has not started.

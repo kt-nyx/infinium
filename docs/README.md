@@ -162,8 +162,10 @@ Every material document should include a status and last-reviewed date.
   passing retained public gates and a successful current detached baseline
   rerun. The historical evaluator-v2 `/2` Stage C `FAIL` remains immutable,
   but the owner-supplied Stage C.5 adjudication invalidated its product verdict
-  and requires a public evaluator successor plus materially independent private
-  corpus replacement; no product correction is indicated. The detailed
+  and required a public evaluator successor plus materially independent private
+  corpus replacement; no product correction is indicated. Protocol `/3` is now
+  publicly qualified and frozen at `34ed0c8`; successor Stage B is unblocked
+  but no private successor work has run. The detailed
   sanitized history is recorded in the
   [Stage C.5 incident](evaluation/evaluator-v2-stage-c5-adjudication-incident.md).
   Slice 4.5 remains active and blocked, Stage D has not started, Slice 5 remains

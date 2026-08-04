@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Held-out evaluation v2 implementation record
 
-Status: Public evaluator successor maintenance active after invalidated Stage C product verdict
+Status: Public evaluator successor frozen; successor Stage B unblocked
 Opened: 2026-08-04
 Plan: `infinium.plan.m1.backend-semantic-proof/3`
 Execution plan: [M1 Slice 4.5](../slices/M1-slice-4.5-held-out-evaluation-v2.md)
@@ -245,8 +245,74 @@ tracked freeze handoff. Branch publication target:
   materially independent corpus replacement required.
 - Detailed public history:
   [Stage C.5 incident](../../evaluation/evaluator-v2-stage-c5-adjudication-incident.md).
-- Successor public evaluator qualification: active.
+- Successor public evaluator qualification: complete and frozen at
+  `34ed0c84165e9a49f44a88ecd87cac967132ebd7`.
 - Successor private corpus qualification: not run.
 - Successor held-out scoring: not run.
 - Stage D: not started.
 - Slice 4.5 overall completion: pending later stages.
+
+## Public evaluator `/3` successor closeout
+
+Branch: `codex/m1-slice-4.5-evaluator-v2-successor`.
+
+Focused commits:
+
+- `eb455b9c2bd65fafca7bf06f906869720b45481d`: sanitized Stage C.5 incident
+  and public successor disposition;
+- `e36acbb015140a806cb6d19b99b8bcce6f57521f`: protocol `/3`, scorer and
+  adapter `3.0.0`, schemas, calibration, and regression tests; and
+- `34ed0c84165e9a49f44a88ecd87cac967132ebd7`: the one public review's single
+  focused correction pass and exact executable freeze.
+
+Protocol `infinium.evaluator-v2/3`, scorer `3.0.0`, and adapter `3.0.0` are
+frozen. The adapter version changed because its manifest/schema binding changed.
+Projection `infinium.evaluator-v2.slice4-semantic-projection` remains `2.0.0`
+because its source and semantic fact selection did not change. The predecessor
+`/2` freeze remains byte-unchanged and retired for the diagnosed surface.
+
+Declared `value_type` now controls validation and comparison. Semantic
+`number` accepts any finite JSON number and compares numeric token shapes such
+as `10` and `10.0` equally. Semantic `integer` accepts exactly representable
+signed Int64 JSON numbers, including integral decimal/exponent notation, and
+compares exact Int64 values. Aggregate corpus fingerprints also bind canonical
+member IDs, so identity drift cannot reuse a freeze.
+
+The sole fresh public-only reviewer found three material issues: aggregate
+fingerprints omitted member IDs, exact semantic integers rejected integral
+decimal/exponent notation, and the incident document had an extra EOF blank
+line. The single correction pass fixed all three and added candidate/oracle
+integer regressions plus aggregate member-identity drift coverage. No second
+review or correction cycle was used.
+
+Exact-freeze verification:
+
+- locked restore and Release build: passed, 0 warnings/errors;
+- focused evaluator tests: 9 passed, 1 expected symlink-capability skip;
+- `M1Unit`: 88 passed, 1 expected platform skip;
+- `M1Contract`: 29 total passed;
+- `M1Integration`: 32 total passed;
+- `M1Evaluation`: 50 total passed, 9 expected platform/private skips;
+- `M1Security`: 9 total passed;
+- `M1Fault`: 13 total passed;
+- full suite: 257 passed, 10 expected platform/private skips, 0 failed;
+- public calibration: 39 of 39 passed twice with byte-identical output,
+  SHA-256 `685ea06b4dc2327280a5db1b5411f9ea9b4528f067dcece311cdeb2a7634d640`;
+- detached-candidate `BETH-REFR-DEV` CLI adapter/scorer smoke: PASS, 1,370
+  projected facts and 1,371 of 1,371 assertions passed;
+- prepared CLI smoke with semantic-number `10` versus `10.0`: PASS, 1,371 of
+  1,371 assertions passed;
+- format, dependency-manifest, and `git diff --check`: passed;
+- candidate artifact: 157,696 bytes, SHA-256
+  `dc8ae44627fa40ca3937e4022c8e7914468e4d7a4cf1c40797a22ef2abec3655`;
+- required Slice 4 runtime roots have an empty diff against `98fe8a5`; and
+- historical `/2` freeze SHA-256 remains
+  `e39f740a9afbcc541032de3b3ce261e7169c029f965b82b6f2b03587999d8b8d`.
+
+The exact 21-file public source/protocol/test inventory is in
+[`../../evaluation/evaluator-v2-stage-a-successor-freeze.json`](../../evaluation/evaluator-v2-stage-a-successor-freeze.json).
+No private fixture content or legacy archive content was accessed. Private
+successor-corpus qualification and held-out scoring are not run. Successor
+Stage B is unblocked; Stage D has not started. This documentation-only closeout
+does not modify the frozen evaluator code, schemas, tests, calibration, adapter,
+or projection. No push was performed.
