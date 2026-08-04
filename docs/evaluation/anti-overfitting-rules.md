@@ -1,7 +1,7 @@
 # Anti-overfitting rules
 
 Status: Accepted
-Last reviewed: 2026-08-01
+Last reviewed: 2026-08-04
 
 The first semantic proof may use one category, technical surface, affected game
 area, or interaction shape because it exercises useful product capabilities.
@@ -64,11 +64,12 @@ fixture-specific semantic exceptions.
 ## Evaluation partition and answer isolation
 
 Repository placement and autonomous agent access follow the accepted
-[evaluator-private fixture governance](evaluator-private-fixture-governance.md).
-An implementation agent may request a fresh-context private delegate for an
-allowed scoring or maintenance purpose, but must not receive raw private inputs
-or answers unless the fixture is explicitly contaminated, reclassified to
-development, and independently replaced.
+[evaluator-private fixture governance v2](evaluator-private-fixture-governance-v2.md).
+Evaluator rules, adapter, scorer, and calibration remain public. Private corpus
+maintenance and scoring are separate fresh tasks; product implementation does
+not repair or retry either and receives no raw private inputs or answers unless
+the fixture is explicitly contaminated, reclassified to development, and
+independently replaced.
 
 - Classify fixtures as development, validation, or held-out before using their
   results to change production behavior.

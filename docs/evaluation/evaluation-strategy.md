@@ -1,7 +1,7 @@
 # Evaluation strategy
 
 Status: Draft  
-Last reviewed: 2026-08-01
+Last reviewed: 2026-08-04
 
 Infinium is not trustworthy because it produces plausible reports. It becomes
 trustworthy only when evidence reconstruction, candidate selection, semantic
@@ -153,10 +153,14 @@ or deletion produces accurate dependency and gap reporting.
 
 ## Evaluation partitions and answer isolation
 
-The storage, delegated-access, disclosure, correction, and contamination
-protocol is defined by the accepted
-[evaluator-private fixture governance](evaluator-private-fixture-governance.md)
-and [ADR-0026](../architecture/decisions/ADR-0026-evaluator-private-fixture-repository-and-delegated-access.md).
+Evaluator v1 is retired after producing no valid held-out product verdict. Its
+history remains governed by the predecessor policy. Evaluator v2 follows the
+accepted
+[evaluator-private fixture governance v2](evaluator-private-fixture-governance-v2.md)
+and [ADR-0027](../architecture/decisions/ADR-0027-public-evaluation-protocol-private-held-out-corpus.md):
+rules, schemas, canonicalization, adapter, scorer, calibration, and terminal
+vocabulary are public; only hidden input data, expected typed outputs, shallow
+identity/hash pins, qualification evidence, and run records remain private.
 
 - Classify each case as development, validation, or held-out before its result
   can influence production behavior.
@@ -170,11 +174,11 @@ and [ADR-0026](../architecture/decisions/ADR-0026-evaluator-private-fixture-repo
   coverage.
 - Correct an expected result only from new independent evidence, with the
   prior error and review recorded.
-- Keep complete private validation and held-out packages in the separate
-  evaluator-private Git history. Ordinary implementation agents may
-  autonomously delegate scoring or maintenance to a fresh-context evaluator,
-  but receive only sanitized results unless an explicit reveal triggers
-  development reclassification and replacement.
+- Qualify and freeze the public evaluator before private corpus use. Keep
+  complete private validation and held-out data in the separate evaluator-
+  private Git history, bind one exact candidate/evaluator/corpus tuple, and
+  separate evaluator maintenance, scoring, and public closeout. A scorer never
+  repairs or retries. `EVALUATOR_ERROR` blocks without a product verdict.
 
 ## Taxonomy-dependent evaluation
 

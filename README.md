@@ -22,16 +22,21 @@ Start with [`docs/README.md`](docs/README.md).
 - Product documentation: accepted baseline plus mod-impact taxonomy `0.1.0`
 - Research: Waves A through F accepted; Gates A through F met
 - M0 research plan: completed on 2026-07-28
-- Architecture: ADR-0001 through ADR-0023, ADR-0025, and ADR-0026 accepted;
+- Architecture: ADR-0001 through ADR-0023 and ADR-0025 through ADR-0027 accepted;
   ADR-0024 rejected
-- M1 plan: accepted and active
-- M1 implementation: Slices 0 through 3.5 complete; Slice 3's exact-target,
+- M1 plan: revision `/3` accepted and active
+- M1 implementation: Slices 0 through 4 implementation-complete; Slice 3's exact-target,
   headless non-mutation, explicit initiation, and MO2 effective-state gates
   EVAL-0045, EVAL-0046, EVAL-0051, and EVAL-0054 pass for the admitted
   boundary; Slice 3.5 independently qualifies the Bethesda and applicable
-  taxonomy fixtures required before Slice 4, including the ADR-0026 private
-  validation boundary; the 2026-08-01 pre-Slice-4 readiness audit found no
-  remaining start blocker; Slice 4 has not started
+  taxonomy fixtures required before Slice 4; Slice 4 delivered the bounded
+  Bethesda semantic and typed-index implementation at commit `98fe8a5`, with
+  passing retained public verification and a successful current baseline
+  rerun. Evaluator-v1 attempts produced no valid held-out product verdict and
+  remain blocked evaluator-error history. Slice 4.5 is active under M1 plan
+  revision `/3` to qualify evaluator v2 and obtain independent held-out
+  EVAL-0052 and applicable EVAL-0086 acceptance. Slice 5 remains blocked and
+  M1 remains active
 - xEdit: historical integration/oracle recommendation rejected; excluded from
   every Infinium boundary
 - Abandoned implementation: removed from the active tree and retained only in
@@ -40,4 +45,4 @@ Start with [`docs/README.md`](docs/README.md).
 Implementation must proceed slice-by-slice under the accepted
 [M1 backend semantic proof plan](docs/plans/milestones/M1-backend-semantic-proof.md)
 and its accepted
-[revision 2 amendment](docs/plans/milestones/M1-backend-semantic-proof-adr0026-amendment.md).
+[revision 3 amendment](docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md).

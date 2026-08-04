@@ -1,7 +1,7 @@
 # Architecture Decision Records
 
 Status: Draft  
-Last reviewed: 2026-08-01
+Last reviewed: 2026-08-04
 
 ADRs preserve technical decisions and their rationale. They are append-only:
 accepted records are superseded rather than rewritten to hide prior decisions.
@@ -35,7 +35,8 @@ accepted records are superseded rather than rewritten to hide prior decisions.
 | [ADR-0023](ADR-0023-atomic-cost-ledger-and-hard-budget-enforcement.md) | Accepted | Use atomic multi-scope reservations, single-owned usage, exact price arithmetic, and dispatch fences |
 | [ADR-0024](ADR-0024-openai-user-owned-access-modes.md) | Rejected | Reject Codex/ChatGPT-plan integration for the core LLM pipeline; retain direct Responses/API-key access under ADR-0013 |
 | [ADR-0025](ADR-0025-m1-openai-model-and-synchronous-responses-profile.md) | Accepted | Use one explicit `gpt-5.6-sol` synchronous Structured Outputs profile for M1 with retained-result replay and drift requalification |
-| [ADR-0026](ADR-0026-evaluator-private-fixture-repository-and-delegated-access.md) | Accepted | Store private fixtures in a separate Git repository and permit only purpose-bound fresh-context delegated access with sanitized returns |
+| [ADR-0026](ADR-0026-evaluator-private-fixture-repository-and-delegated-access.md) | Accepted; partially superseded | Store private fixtures in a separate Git repository; evaluator-v1 copied-contract/scorer ownership is superseded by ADR-0027 |
+| [ADR-0027](ADR-0027-public-evaluation-protocol-private-held-out-corpus.md) | Accepted | Keep evaluation rules, schemas, adapter, scorer, and calibration public while private data and independent lifecycle evidence remain separate |
 
 ADR-0015 through ADR-0023 are accepted and jointly select the Wave E
 persistence, lifecycle, application-stack, process, IPC, credential, security,
@@ -45,6 +46,10 @@ remain pending. ADR-0025 is accepted as the exact M1 live-model profile.
 ADR-0026 accepts the cross-repository evaluator-private storage and delegated
 agent-access boundary without claiming hostile-process sandboxing or completed
 private evaluation.
+ADR-0027 preserves that repository and answer-isolation boundary while
+superseding evaluator v1's private protocol/scorer ownership with public rules,
+thin read-only scoring, terminal `PASS`/`FAIL`/`EVALUATOR_ERROR`, and separate
+authoring, scoring, and public-closeout tasks.
 ADR-0008 through
 ADR-0011 accept the Wave B integration and semantic
 boundaries, and ADR-0012 accepts the revised Nexus interface/risk boundary,
@@ -55,7 +60,8 @@ LOOT-freshness mechanisms without claiming implementation or conformance.
 The product baseline was accepted on 2026-07-25 and its requirements are now
 authoritative. ADR-0001 through ADR-0011 were accepted on 2026-07-25.
 ADR-0012 through ADR-0023 and ADR-0025 were accepted on 2026-07-28, and
-ADR-0024 was rejected that day. ADR-0026 was accepted on 2026-08-01. ADR-0007
+ADR-0024 was rejected that day. ADR-0026 was accepted on 2026-08-01, and
+ADR-0027 was accepted on 2026-08-04. ADR-0007
 supersedes only ADR-0006's xEdit-specific
 provisions, ADR-0012 supersedes only ADR-0005's API-interface eligibility and
 selection provisions, and ADR-0014 supersedes only ADR-0011's managed-data

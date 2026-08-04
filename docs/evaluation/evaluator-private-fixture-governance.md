@@ -1,15 +1,18 @@
 # Evaluator-private fixture governance
 
-Status: Accepted
+Status: Superseded for evaluator v2; retained as historical evaluator-v1 governance
 Last reviewed: 2026-08-01
 Authority: [ADR-0026](../architecture/decisions/ADR-0026-evaluator-private-fixture-repository-and-delegated-access.md)
 
+Successor: [Evaluator-private fixture governance v2](evaluator-private-fixture-governance-v2.md)
+
 ## Purpose
 
-This is the canonical operational policy for versioned validation and held-out
+This was the canonical evaluator-v1 operational policy for versioned validation and held-out
 fixtures whose inputs or answers must remain outside ordinary implementation
-context. Other documents link here rather than redefining repository or agent
-access rules.
+context. Evaluator-v2 work follows the successor governance document and
+ADR-0027. This file remains authoritative only for interpreting retained
+evaluator-v1 history.
 
 ## Repository boundary
 

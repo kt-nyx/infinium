@@ -132,8 +132,9 @@ accepted orders, and the no-launch/no-write capture policy.
 
 Complete private validation and held-out packages, autonomous delegated access,
 sanitized publication, and contamination transitions follow
-[evaluator-private fixture governance](../evaluator-private-fixture-governance.md)
-and ADR-0026.
+[evaluator-private fixture governance v2](../evaluator-private-fixture-governance-v2.md)
+and ADR-0027 for evaluator v2. The predecessor governance and ADR-0026 remain
+the authority for interpreting retained evaluator-v1 history.
 
 ### 2.3 Oracle fields
 

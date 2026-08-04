@@ -1,23 +1,25 @@
 # Plans
 
 Status: Draft  
-Last reviewed: 2026-08-01
+Last reviewed: 2026-08-04
 
 The [M0 research-foundation plan](milestones/M0-research-foundation.md) was
 accepted on 2026-07-25 and completed on 2026-07-28. The accepted
 [M1 backend semantic proof plan](milestones/M1-backend-semantic-proof.md) is
 the active implementation plan together with its accepted
-[revision 2 amendment](milestones/M1-backend-semantic-proof-adr0026-amendment.md).
+[revision 3 amendment](milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md).
 Completed-slice evidence is indexed under
 [`implementation-records/`](implementation-records/README.md).
 
-Slices 0 through 3.5 are complete. Slice 3.5 independently qualified Bethesda
-fixtures/oracles under ADR-0026's private-store amendment. Slice 4's Mutagen
-semantic and typed-index boundary is implemented and its public gates pass,
-but final held-out acceptance is blocked because the sealed evaluator store
-has no documented scorer entry point.
+Slices 0 through 4 are implementation-complete. Slice 4's Mutagen semantic and
+typed-index boundary is frozen at `98fe8a5` and its retained public gates pass.
+Evaluator-v1 attempts produced no valid held-out product verdict. Active
+[Slice 4.5](slices/M1-slice-4.5-held-out-evaluation-v2.md) replaces that
+workflow with a public qualified evaluator v2 and a separately qualified
+private corpus. Evaluator-v2 held-out scoring has not run; Slice 5 remains
+blocked and M1 remains active.
 The accepted
-[fresh-agent execution plan](slices/M1-slice-3.5-bethesda-fixture-qualification.md)
+[Slice 3.5 execution plan](slices/M1-slice-3.5-bethesda-fixture-qualification.md)
 is indexed under [`slices/`](slices/README.md).
 
 The product baseline and ADR-0001 through ADR-0011 were accepted on

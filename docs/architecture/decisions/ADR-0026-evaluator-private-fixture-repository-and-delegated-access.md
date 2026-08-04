@@ -1,12 +1,18 @@
 # ADR-0026: Evaluator-private fixture repository and delegated access
 
-Status: Accepted
+Status: Accepted; partially superseded by ADR-0027
 Date: 2026-08-01
 Accepted: 2026-08-01
 Accepted by: Project owner
 Last reviewed: 2026-08-01
 Supersedes: None
-Superseded by: None
+Superseded by: ADR-0027 (public evaluator protocol, scorer, and ownership model)
+
+> Supersession note: ADR-0027 preserves this decision's separate private Git
+> repository, answer isolation, sanitized disclosure, and contamination rules.
+> It supersedes evaluator v1's private copied-contract, scorer, repair, and
+> delegated scoring architecture by making evaluator rules public and limiting
+> the private repository to hidden data and lifecycle evidence.
 
 ## Context
 

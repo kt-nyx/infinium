@@ -4,7 +4,7 @@ Status: Accepted
 Owner: Project owner  
 Prepared: 2026-07-28  
 Accepted: 2026-07-28  
-Last reviewed: 2026-08-01
+Last reviewed: 2026-08-04
 Target milestone: M1 — Backend semantic proof
 
 ## Purpose
@@ -34,6 +34,10 @@ This baseline consumes:
   profile;
 - accepted ADR-0026, which defines evaluator-private repository and delegated
   access boundaries;
+- accepted ADR-0027 and the
+  [evaluator-v2 baseline amendment](m1-evaluation-baseline-evaluator-v2-amendment.md),
+  which supersede evaluator-v1 protocol/scorer ownership while preserving the
+  separate private data repository;
 - the accepted [anti-overfitting rules](anti-overfitting-rules.md);
 - the [fixture guidelines](fixture-guidelines.md); and
 - the accepted M0 research dispositions.
@@ -93,12 +97,12 @@ prior execution.
 
 ## Fixture partitions and answer isolation
 
-Repository placement and agent access follow
-[evaluator-private fixture governance](evaluator-private-fixture-governance.md)
-and ADR-0026. Complete private validation and held-out packages use a separate
-Git history; ordinary implementation agents receive only sanitized delegated
-results unless a recorded reveal causes development reclassification and
-replacement.
+Evaluator-v1 history follows the predecessor governance document. New
+evaluator-v2 qualification and scoring follow
+[evaluator-private fixture governance v2](evaluator-private-fixture-governance-v2.md),
+ADR-0027, and the evaluator-v2 baseline amendment. Rules and scoring are
+public; complete private validation and held-out data use a separate Git
+history and public closeout receives only sanitized attestations.
 
 Before any execution, every fixture is registered as development, validation,
 or held-out. The registry records partition history.

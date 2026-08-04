@@ -1,6 +1,6 @@
 # M1 Slice 4 — Bethesda semantic extraction and typed indexes
 
-Status: Implemented with passing public gates; held-out acceptance blocked
+Status: Implementation complete with passing public gates; held-out acceptance transferred to Slice 4.5
 
 Plan: `infinium.plan.m1.backend-semantic-proof/2`
 
@@ -355,3 +355,16 @@ coverage gaps rather than inferred facts. No candidate, finding, documentation
 claim import, provider call, credential, UI, recommendation, or other Slice 5+
 work was started. No protected setup root or external state was mutated, no
 push occurred, and no billable call was made.
+
+## 2026-08-04 evaluator-v2 plan correction
+
+M1 plan revision `/3` records Slice 4 complete at implementation commit
+`98fe8a5a173116427bf78077673fd10e8d018103` after the current detached
+locked-build and full-suite rerun passed and the post-candidate core-runtime
+diff was confirmed empty. Evaluator-v1's blocked/unscored attempts produced no
+product verdict and are retired under the incident record and ADR-0027.
+
+Held-out EVAL-0052 and applicable EVAL-0086 gate ownership is transferred to
+Slice 4.5. This transfer is not a waiver: Slice 5 remains blocked until a
+qualified/frozen evaluator v2 and private corpus produce one valid held-out
+`PASS` for the exact frozen tuple.

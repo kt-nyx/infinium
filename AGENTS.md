@@ -67,9 +67,15 @@ debugging, tuning, or reviewing production behavior.
 When scoring, fixture integrity, oracle audit, independent replacement work, or
 corruption recovery genuinely requires private access, autonomously delegate a
 bounded fresh-context evaluator role under
-`docs/evaluation/evaluator-private-fixture-governance.md`. The delegate may use
+`docs/evaluation/evaluator-private-fixture-governance-v2.md`. The delegate may use
 the separate repository and its pinned public contract bundle; the primary
 implementation agent receives only the allowed sanitized result. If raw private
 information is deliberately returned to guide production, record
 contamination, reclassify that fixture version to development, and require a
 materially independent replacement.
+
+Evaluator v2 keeps protocol, schemas, canonicalization, scorer, adapter, and
+calibration public under ADR-0027. Ordinary product implementation must not
+repair or retry private evaluation. Private access is reserved for later
+fresh-context corpus qualification or scoring tasks and returns only the
+sanitized result permitted by governance v2.

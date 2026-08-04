@@ -1,9 +1,10 @@
 # M1 Slice 3.5 implementation record
 
-Status: **Complete.** The 2026-07-30 implementation and review record below is
+Status: **Complete.** Slice 4 later completed at `98fe8a5`; the 2026-07-30 implementation and review record below is
 preserved as historical evidence. Its public-answer blocker and ignored-store
 topology were resolved by the owner-approved 2026-08-01 ADR-0026 amendment
-recorded at the end of this document. Slice 4 has not started.
+recorded at the end of this document. Statements below that Slice 4 had not
+started describe the historical point at which they were written.
 
 Supersession note: References below to `BETH-LIGHT-VAL` or
 `BETH-UNSUPPORTED-VAL` as validation, and to an ignored evaluator store, state

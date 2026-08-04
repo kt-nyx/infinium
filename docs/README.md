@@ -1,7 +1,7 @@
 # Infinium documentation
 
 Status: Draft  
-Last reviewed: 2026-08-01
+Last reviewed: 2026-08-04
 
 This directory is the authoritative entry point for the rebuilt Infinium
 project. It records product intent, accepted decisions, research, evaluation
@@ -33,8 +33,10 @@ specification.
   [accepted M1 evaluation baseline](evaluation/m1-evaluation-baseline.md),
   [fixture guidelines](evaluation/fixture-guidelines.md), and
   [anti-overfitting rules](evaluation/anti-overfitting-rules.md), with the
-  cross-repository and delegated-access boundary in
+  historical evaluator-v1 boundary in
   [evaluator-private fixture governance](evaluation/evaluator-private-fixture-governance.md)
+  and current public-rule/private-data boundary in
+  [evaluator-private fixture governance v2](evaluation/evaluator-private-fixture-governance-v2.md)
 - Research: [source registry](research/source-registry.md),
   [taxonomy research dependency map](research/taxonomy-dependency-map.md),
   [accepted deferred-question and residual-risk register](research/deferred-question-and-residual-risk-register.md), and
@@ -43,7 +45,9 @@ specification.
   [milestone-plan index](plans/milestones/README.md),
   [accepted M1 backend semantic proof plan](plans/milestones/M1-backend-semantic-proof.md),
   with its accepted
-  [revision 2 amendment](plans/milestones/M1-backend-semantic-proof-adr0026-amendment.md),
+  [revision 3 amendment](plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md),
+  the active
+  [Slice 4.5 evaluator-v2 plan](plans/slices/M1-slice-4.5-held-out-evaluation-v2.md),
   and the
   [research-agent handoff template](plans/research-investigation-agent-handoff-template.md)
 - Reference: [glossary](glossary.md)
@@ -131,7 +135,8 @@ Every material document should include a status and last-reviewed date.
 - ADR-0001 through ADR-0011 were accepted on 2026-07-25. ADR-0012 through
   ADR-0023 and ADR-0025 were accepted on 2026-07-28; ADR-0024 was rejected.
   ADR-0026's evaluator-private repository and delegated-access boundary was
-  accepted on 2026-08-01.
+  accepted on 2026-08-01. ADR-0027's public-rule/private-data evaluator-v2
+  architecture was accepted on 2026-08-04 and partially supersedes ADR-0026.
 - Wave F produced the accepted M1 evaluation baseline, detailed semantic and
   platform/operational case specifications and fixture manifests, the
   RQ-028 calibration protocol, exact OpenAI M1 profile research, a
@@ -152,8 +157,14 @@ Every material document should include a status and last-reviewed date.
   broader MO2 versions, additional mappers, archive members, and later semantic
   slices remain unsupported or pending. Slice 3.5 subsequently constructed and
   independently qualified the Bethesda and applicable taxonomy fixtures under
-  ADR-0026's separate evaluator-private store boundary. Slice 4 has not
-  started. M1 explicitly defers `QUST` forced-alias
+  ADR-0026's separate evaluator-private store boundary. Slice 4 delivered the
+  bounded Bethesda semantic and typed-index implementation at `98fe8a5`, with
+  passing retained public gates and a successful current detached baseline
+  rerun. Evaluator-v1 attempts produced no valid held-out product verdict and
+  remain blocked evaluator-error history. Slice 4.5 is active under accepted
+  plan revision `/3` to qualify evaluator v2 and obtain held-out EVAL-0052 and
+  applicable EVAL-0086 acceptance. Slice 5 remains blocked and M1 remains
+  active. M1 explicitly defers `QUST` forced-alias
   semantics and retains EVAL-0017's REFR linked-reference/placement proof as
   the materially different category.
 - Infinium uses GPLv3-family strong copyleft. MO2 and LOOT remain

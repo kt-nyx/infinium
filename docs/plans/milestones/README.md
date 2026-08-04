@@ -1,20 +1,21 @@
 # Milestone plans
 
 Status: Draft  
-Last reviewed: 2026-08-01
+Last reviewed: 2026-08-04
 
 The M0 research plan completed on 2026-07-28. The accepted
 [M1 backend semantic proof plan](M1-backend-semantic-proof.md) is the active
 implementation milestone plan together with its accepted
-[revision 2 amendment](M1-backend-semantic-proof-adr0026-amendment.md).
+[revision 3 amendment](M1-backend-semantic-proof-evaluator-v2-amendment.md).
 
 Slices 0 through 3.5 are complete. The accepted
 [execution plan](../slices/M1-slice-3.5-bethesda-fixture-qualification.md)
 qualified the Bethesda and applicable taxonomy fixtures before Slice 4.
-The 2026-08-01 pre-Slice-4 readiness audit found no remaining start blocker,
-and the positively qualified Bethesda semantic and typed-index path is now
-implemented with passing public gates. Final Slice 4 acceptance is blocked by
-the sealed evaluator store's missing documented held-out scorer entry point.
+The positively qualified Bethesda semantic and typed-index path is implemented
+at `98fe8a5` with passing retained public gates. Evaluator-v1 issued no valid
+held-out product verdict and is retired. Slice 4.5 is active under revision
+`/3`; it must qualify evaluator v2 and obtain one valid held-out pass before
+Slice 5 can begin.
 
 Waves A through D have completed investigations and accepted integrated
 dispositions. Gates A through D are met at their applicable M0 research,
@@ -37,6 +38,8 @@ Current plans:
   completed 2026-07-28.
 - [M1 backend semantic proof](M1-backend-semantic-proof.md) — Accepted
   2026-07-28; active.
+- [M1 backend semantic proof revision 3](M1-backend-semantic-proof-evaluator-v2-amendment.md)
+  — Accepted 2026-08-04; active evaluator-v2 sequencing and gate ownership.
 
 Expected future plans:
 
