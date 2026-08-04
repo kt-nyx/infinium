@@ -32,11 +32,14 @@ Start with [`docs/README.md`](docs/README.md).
   taxonomy fixtures required before Slice 4; Slice 4 delivered the bounded
   Bethesda semantic and typed-index implementation at commit `98fe8a5`, with
   passing retained public verification and a successful current baseline
-  rerun. Evaluator-v1 attempts produced no valid held-out product verdict and
-  remain blocked evaluator-error history. Slice 4.5 is active under M1 plan
-  revision `/3` to qualify evaluator v2 and obtain independent held-out
-  EVAL-0052 and applicable EVAL-0086 acceptance. Slice 5 remains blocked and
-  M1 remains active
+  rerun. The historical evaluator-v2 `/2` Stage C `FAIL` remains immutable,
+  but its product verdict was invalidated by Stage C.5 adjudication: no product
+  correction is indicated, `/2` is retired for the diagnosed numeric
+  typed-fact surface, and both a public evaluator successor and materially
+  independent private successor corpus are required. Slice 4.5 remains active
+  and blocked; Stage D has not started. See the
+  [sanitized incident record](docs/evaluation/evaluator-v2-stage-c5-adjudication-incident.md).
+  Slice 5 remains blocked and M1 remains active
 - xEdit: historical integration/oracle recommendation rejected; excluded from
   every Infinium boundary
 - Abandoned implementation: removed from the active tree and retained only in

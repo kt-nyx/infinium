@@ -76,3 +76,12 @@ Overall M1 gate: pending Slice 4.5 until both applicable partitions pass
 Passing public evidence alone does not complete held-out EVAL-0052 or
 applicable EVAL-0086. M1 remains pending until the valid held-out partition
 passes and later required slices/cases complete.
+
+## Historical `/2` adjudication and successor
+
+The owner-supplied Stage C.5 adjudication is recorded in the
+[sanitized incident](evaluator-v2-stage-c5-adjudication-incident.md). The
+historical `/2` `FAIL` remains immutable, but its product verdict is invalidated.
+No product correction is indicated. Evaluator `/2` is retired for the diagnosed
+numeric typed-fact surface, the historical private corpus requires complete
+replacement, and any later scoring is a new successor tuple and invocation.

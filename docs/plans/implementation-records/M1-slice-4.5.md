@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Held-out evaluation v2 implementation record
 
-Status: Stage A corrective pass complete; successor evaluator frozen; private qualification and scoring not run
+Status: Public evaluator successor maintenance active after invalidated Stage C product verdict
 Opened: 2026-08-04
 Plan: `infinium.plan.m1.backend-semantic-proof/3`
 Execution plan: [M1 Slice 4.5](../slices/M1-slice-4.5-held-out-evaluation-v2.md)
@@ -236,7 +236,17 @@ tracked freeze handoff. Branch publication target:
 
 ## Later stages
 
-- Stage B private corpus qualification: not run.
-- Stage C held-out scoring: not run.
-- Evaluator-v2 held-out result: not run.
+- Historical Stage C result commit:
+  `30185b478904d08f073576d652000f06b76986db`, immutable `FAIL`, invocation
+  count `1`.
+- Sanitized Stage C.5 adjudication:
+  `7a4842b91eca79d7f7623dc414d6e42f3fcf54e2`; product verdict invalidated,
+  product correction not required, evaluator successor required, and complete
+  materially independent corpus replacement required.
+- Detailed public history:
+  [Stage C.5 incident](../../evaluation/evaluator-v2-stage-c5-adjudication-incident.md).
+- Successor public evaluator qualification: active.
+- Successor private corpus qualification: not run.
+- Successor held-out scoring: not run.
+- Stage D: not started.
 - Slice 4.5 overall completion: pending later stages.

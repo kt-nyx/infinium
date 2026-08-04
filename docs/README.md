@@ -160,11 +160,14 @@ Every material document should include a status and last-reviewed date.
   ADR-0026's separate evaluator-private store boundary. Slice 4 delivered the
   bounded Bethesda semantic and typed-index implementation at `98fe8a5`, with
   passing retained public gates and a successful current detached baseline
-  rerun. Evaluator-v1 attempts produced no valid held-out product verdict and
-  remain blocked evaluator-error history. Slice 4.5 is active under accepted
-  plan revision `/3` to qualify evaluator v2 and obtain held-out EVAL-0052 and
-  applicable EVAL-0086 acceptance. Slice 5 remains blocked and M1 remains
-  active. M1 explicitly defers `QUST` forced-alias
+  rerun. The historical evaluator-v2 `/2` Stage C `FAIL` remains immutable,
+  but the owner-supplied Stage C.5 adjudication invalidated its product verdict
+  and requires a public evaluator successor plus materially independent private
+  corpus replacement; no product correction is indicated. The detailed
+  sanitized history is recorded in the
+  [Stage C.5 incident](evaluation/evaluator-v2-stage-c5-adjudication-incident.md).
+  Slice 4.5 remains active and blocked, Stage D has not started, Slice 5 remains
+  blocked, and M1 remains active. M1 explicitly defers `QUST` forced-alias
   semantics and retains EVAL-0017's REFR linked-reference/placement proof as
   the materially different category.
 - Infinium uses GPLv3-family strong copyleft. MO2 and LOOT remain

@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Held-out evaluation v2
 
-Status: Accepted; Stage A corrective qualification complete, private stages pending
+Status: Accepted; successor public-evaluator maintenance active after Stage C.5 adjudication
 Owner: Project owner
 Prepared: 2026-08-04
 Accepted: 2026-08-04
@@ -250,3 +250,18 @@ score-corpus --manifest <corpus-execution-manifest.json> --result-dir <new-direc
 
 Stage B and Stage C remain separate, owner-authorized fresh tasks. This Stage A
 session does not access or orchestrate either private stage.
+
+## Stage C.5 adjudication and successor disposition
+
+The owner-supplied sanitized adjudication is recorded in the
+[Stage C.5 incident](../../evaluation/evaluator-v2-stage-c5-adjudication-incident.md).
+The historical `/2` Stage C `FAIL` remains immutable, but its product verdict
+was invalidated. No product correction is indicated. Evaluator `/2` is retired
+for the diagnosed numeric typed-fact surface, and the historical private corpus
+requires complete replacement.
+
+The authorized successor public task creates a new protocol/scorer identity,
+qualifies it using only public calibration and development fixtures, and freezes
+it before any successor private work. Later successor corpus construction and
+scoring are new fresh tasks and a new invocation, not a retry. Slice 4.5 remains
+active and blocked; Stage D has not started.
