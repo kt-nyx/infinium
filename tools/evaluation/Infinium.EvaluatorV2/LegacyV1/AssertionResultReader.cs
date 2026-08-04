@@ -1,7 +1,8 @@
 using System.Text.Json;
 using Infinium.Domain.Contracts;
+using Infinium.Application.Evaluation;
 
-namespace Infinium.Application.Evaluation;
+namespace Infinium.EvaluatorV2.LegacyV1;
 
 public enum AssertionStatus
 {

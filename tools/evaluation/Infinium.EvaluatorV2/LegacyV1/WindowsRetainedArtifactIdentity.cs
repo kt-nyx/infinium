@@ -1,8 +1,9 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using Infinium.Application.Evaluation;
 using Microsoft.Win32.SafeHandles;
 
-namespace Infinium.Application.Evaluation;
+namespace Infinium.EvaluatorV2.LegacyV1;
 
 internal readonly record struct WindowsRetainedArtifactIdentitySnapshot(
     uint VolumeSerialNumber,

@@ -1,5 +1,6 @@
 using System.Runtime.Versioning;
 using Infinium.Application.Evaluation;
+using Infinium.EvaluatorV2.LegacyV1;
 using Infinium.Domain.Contracts;
 using Infinium.Mo2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

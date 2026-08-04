@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "infinium.evaluator-v2.calibration-results/v1",
+  "title": "Infinium evaluator-v2 public calibration results",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "protocol_id", "suite_id", "cases", "passed"],
+  "properties": {
+    "schema_id": { "const": "infinium.evaluator-v2.calibration-results/v1" },
+    "protocol_id": { "const": "infinium.evaluator-v2/1" },
+    "suite_id": { "const": "infinium.evaluator-v2.public-calibration/1" },
+    "cases": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["case_id", "expected_terminal", "actual_terminal", "intended_failure_category", "passed"],
+        "properties": {
+          "case_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+          "expected_terminal": { "type": "string", "enum": ["PASS", "FAIL", "EVALUATOR_ERROR"] },
+          "actual_terminal": { "type": "string", "enum": ["PASS", "FAIL", "EVALUATOR_ERROR"] },
+          "intended_failure_category": { "type": ["string", "null"], "maxLength": 64 },
+          "observed_failure_categories": {
+            "type": "array",
+            "maxItems": 32,
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1, "maxLength": 64 }
+          },
+          "passed": { "type": "boolean" }
+        }
+      }
+    },
+    "passed": { "type": "boolean" }
+  }
+}

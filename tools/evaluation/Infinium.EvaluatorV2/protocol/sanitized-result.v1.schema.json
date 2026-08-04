@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "infinium.evaluator-v2.sanitized-result/v1",
+  "title": "Infinium evaluator-v2 sanitized terminal result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "protocol_id", "candidate_commit", "candidate_artifact_sha256", "evaluator_commit", "corpus_id", "corpus_version", "corpus_sha256", "terminal_result", "failure_stage", "assertion_counts", "contamination_state"],
+  "properties": {
+    "schema_id": { "const": "infinium.evaluator-v2.sanitized-result/v1" },
+    "protocol_id": { "const": "infinium.evaluator-v2/1" },
+    "candidate_commit": { "$ref": "evaluator-v2-common.v1.schema.json#/$defs/commit" },
+    "candidate_artifact_sha256": { "$ref": "evaluator-v2-common.v1.schema.json#/$defs/sha256" },
+    "evaluator_commit": { "$ref": "evaluator-v2-common.v1.schema.json#/$defs/commit" },
+    "corpus_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "corpus_version": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "corpus_sha256": { "$ref": "evaluator-v2-common.v1.schema.json#/$defs/sha256" },
+    "terminal_result": { "type": "string", "enum": ["PASS", "FAIL", "EVALUATOR_ERROR"] },
+    "failure_stage": { "type": ["string", "null"], "enum": [null, "identity", "manifest", "candidate_execution", "candidate_output", "oracle", "comparison", "result_write"] },
+    "assertion_counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "passed", "failed"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "passed": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "failure_categories": {
+      "type": "array",
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 64 }
+    },
+    "contamination_state": { "const": "clean" }
+  }
+}

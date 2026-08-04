@@ -1,13 +1,37 @@
-# Evaluation tools
+# Public evaluation tooling
 
-The evaluation harness is not implemented by Slice 0. This directory is
-reserved for the accepted later-slice evaluation tooling.
+`Infinium.EvaluatorV2` is the sole active held-out evaluation protocol. Its
+rules, schemas, canonicalization, reflection adapter, scorer, and answer-known
+calibration suite are public. Hidden inputs and expected semantic values are
+not stored here.
 
-Evaluator-private payloads and oracles do not belong here. They are retained in
-the separate private Git store selected by ADR-0026. Tools placed here may
-define answer-free invocation, sanitized registry verification, and a narrow
-local-config bootstrap that supplies a locator to a fresh-context delegate.
-Ordinary Infinium tooling must not enumerate or read private fixture content,
-and the bootstrap locator must not enter tracked files, registry data, or
-ordinary logs. Private scoring and maintenance occur through the delegated protocol in
-`docs/evaluation/evaluator-private-fixture-governance.md`.
+The tool never discovers a candidate, evaluator, corpus, oracle, or output
+location. A caller supplies an answer-free manifest, an oracle path available
+only to the scoring role, and a new result directory. Existing result files are
+not overwritten.
+
+## Commands
+
+```powershell
+dotnet run --project tools/evaluation/Infinium.EvaluatorV2 -c Release -- protocol
+dotnet run --project tools/evaluation/Infinium.EvaluatorV2 -c Release -- calibrate --result-dir <new-directory>
+dotnet run --project tools/evaluation/Infinium.EvaluatorV2 -c Release -- adapt --manifest <manifest.json> --result-dir <new-directory>
+dotnet run --project tools/evaluation/Infinium.EvaluatorV2 -c Release -- score --manifest <manifest.json> --oracle <expected-output.json> --result-dir <new-directory>
+```
+
+`adapt` is a public diagnostic for the exact black-box boundary. `score` is the
+one-shot scoring command. Exit code `0` is `PASS`, `1` is product `FAIL` after
+a valid comparison, and `2` is `EVALUATOR_ERROR` or invalid invocation.
+
+The authoritative protocol identifier is `infinium.evaluator-v2/1`. Schemas
+under `Infinium.EvaluatorV2/protocol/` define the answer-free manifest,
+candidate output, expected output, raw assertions, sanitized result, and
+calibration result. `protocol.json` defines ordering, set/sequence,
+canonicalization, aggregation, and failure-stage rules.
+
+## Evaluator-v1 compatibility
+
+`Infinium.EvaluatorV2/LegacyV1/` contains readers retained only so public
+regression fixtures and historical contract tests remain usable. No command in
+the evaluator-v2 executable invokes them. They are not an active held-out
+protocol and must not be extended into another v1 package version.

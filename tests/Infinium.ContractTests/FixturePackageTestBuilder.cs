@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Infinium.Application.Evaluation;
+using Infinium.EvaluatorV2.LegacyV1;
 using Infinium.Domain.Contracts;
 
 namespace Infinium.Tests;

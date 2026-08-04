@@ -1,0 +1,61 @@
+{
+  "protocol_id": "infinium.evaluator-v2/1",
+  "version": "1.0.0",
+  "scorer": {
+    "id": "infinium.evaluator-v2.scorer",
+    "version": "1.0.0"
+  },
+  "adapter": {
+    "id": "infinium.evaluator-v2.slice4-reflection-adapter",
+    "version": "1.0.0"
+  },
+  "schemas": [
+    "infinium.evaluator-v2.execution-manifest/v1",
+    "infinium.evaluator-v2.candidate-semantic-output/v1",
+    "infinium.evaluator-v2.expected-semantic-output/v1",
+    "infinium.evaluator-v2.assertion-results/v1",
+    "infinium.evaluator-v2.sanitized-result/v1",
+    "infinium.evaluator-v2.calibration-results/v1"
+  ],
+  "terminal_results": [
+    "PASS",
+    "FAIL",
+    "EVALUATOR_ERROR"
+  ],
+  "failure_stages": [
+    "identity",
+    "manifest",
+    "candidate_execution",
+    "candidate_output",
+    "oracle",
+    "comparison",
+    "result_write"
+  ],
+  "evaluator_identity": {
+    "required_files": [
+      "Infinium.Application.dll",
+      "Infinium.EvaluatorV2.dll",
+      "protocol/protocol.json",
+      "all seven versioned evaluator-v2 schemas"
+    ],
+    "rule": "the answer-free manifest binds the public commit and byte identity of every required executable and protocol file"
+  },
+  "canonicalization": {
+    "object_properties": "ordinal property-name order",
+    "fact_order": "ordinal fact_id order",
+    "fact_identity": "unique canonical JSON pointer",
+    "sequences": [
+      "/snapshot/plugins",
+      "*/contributions",
+      "*/masters"
+    ],
+    "sets": "arrays with a stable public identity are keyed by that identity and sorted ordinally",
+    "unidentified_arrays": "preserve sequence index",
+    "form_keys": "lowercase plugin filename, colon, eight lowercase hexadecimal local-id digits",
+    "missing_and_extra": "both are product mismatches after valid comparison admission",
+    "unsupported_and_gaps": "compare as ordinary typed facts; omission is a mismatch",
+    "numbers": "integers remain integers; non-integers use invariant JSON number text",
+    "strings": "ordinal, case-sensitive except where the producing public contract already canonicalizes"
+  },
+  "aggregation": "PASS only when every admitted assertion passes; any product mismatch is FAIL; any pre-comparison evaluator or oracle defect is EVALUATOR_ERROR"
+}

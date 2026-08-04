@@ -1,9 +1,10 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Infinium.Application.Evaluation;
 using Infinium.Domain.Contracts;
 
-namespace Infinium.Application.Evaluation;
+namespace Infinium.EvaluatorV2.LegacyV1;
 
 internal static class BethesdaByteOracleValidator
 {

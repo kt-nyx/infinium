@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "infinium.evaluator-v2.assertion-results/v1",
+  "title": "Infinium evaluator-v2 raw typed assertion results",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "protocol_id", "assertions"],
+  "properties": {
+    "schema_id": { "const": "infinium.evaluator-v2.assertion-results/v1" },
+    "protocol_id": { "const": "infinium.evaluator-v2/1" },
+    "assertions": {
+      "type": "array",
+      "maxItems": 400001,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["assertion_id", "kind", "outcome", "fact_type"],
+        "properties": {
+          "assertion_id": { "type": "string", "minLength": 1, "maxLength": 256 },
+          "kind": { "type": "string", "enum": ["state", "value", "missing", "extra", "candidate_schema"] },
+          "outcome": { "type": "string", "enum": ["PASS", "FAIL"] },
+          "fact_type": { "type": "string", "minLength": 1, "maxLength": 64 },
+          "fact_id": { "type": ["string", "null"], "maxLength": 2048 },
+          "expected": { "$ref": "evaluator-v2-common.v1.schema.json#/$defs/fact_value" },
+          "actual": { "$ref": "evaluator-v2-common.v1.schema.json#/$defs/fact_value" }
+        }
+      }
+    }
+  }
+}

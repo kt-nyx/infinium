@@ -1,10 +1,11 @@
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text.Json;
+using Infinium.Application.Evaluation;
 using Infinium.Domain.Contracts;
 using Microsoft.Win32.SafeHandles;
 
-namespace Infinium.Application.Evaluation;
+namespace Infinium.EvaluatorV2.LegacyV1;
 
 public enum FixturePartition
 {

@@ -69,9 +69,9 @@ internal static class EmbeddedJsonSchemaValidator
         }
 
         if (schema.TryGetProperty("type", out JsonElement type)
-            && !MatchesType(instance, type.GetString()!))
+            && !MatchesType(instance, type))
         {
-            Fail(instancePath, $"expected type '{type.GetString()}'");
+            Fail(instancePath, $"expected type '{type.GetRawText()}'");
         }
 
         if (schema.TryGetProperty("const", out JsonElement constant)
@@ -313,6 +313,16 @@ internal static class EmbeddedJsonSchemaValidator
         }
     }
 
+    private static bool MatchesType(JsonElement instance, JsonElement type)
+    {
+        return type.ValueKind switch
+        {
+            JsonValueKind.String => MatchesType(instance, type.GetString()!),
+            JsonValueKind.Array => type.EnumerateArray().Any(item => MatchesType(instance, item.GetString()!)),
+            _ => false,
+        };
+    }
+
     private static bool MatchesType(JsonElement instance, string type)
     {
         return type switch
@@ -398,8 +408,18 @@ internal static class EmbeddedJsonSchemaValidator
             fileName,
             static name =>
             {
+                string resourceName = $"{ResourcePrefix}{name}";
                 Assembly assembly = typeof(EmbeddedJsonSchemaValidator).Assembly;
-                using Stream stream = assembly.GetManifestResourceStream($"{ResourcePrefix}{name}")
+                Stream? resource = assembly.GetManifestResourceStream(resourceName);
+                if (resource is null)
+                {
+                    resource = AppDomain.CurrentDomain.GetAssemblies()
+                        .OrderBy(candidate => candidate.FullName, StringComparer.Ordinal)
+                        .Select(candidate => candidate.GetManifestResourceStream(resourceName))
+                        .FirstOrDefault(candidate => candidate is not null);
+                }
+
+                using Stream stream = resource
                     ?? throw new InvalidDataException($"Embedded JSON Schema '{name}' is missing.");
                 JsonDocument document = JsonDocument.Parse(stream);
                 BoundedJsonDocumentReader.RejectDuplicateProperties(document.RootElement, name);
