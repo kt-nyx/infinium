@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "infinium.evaluator-v2.execution-manifest/v2",
+  "type": "object", "additionalProperties": false, "required": ["schema_id", "protocol_id", "candidate", "evaluator", "corpus", "execution"],
+  "properties": {
+    "schema_id": { "const": "infinium.evaluator-v2.execution-manifest/v2" }, "protocol_id": { "const": "infinium.evaluator-v2/2" },
+    "candidate": { "$ref": "evaluator-v2-common.v2.schema.json#/$defs/candidate_identity" },
+    "evaluator": { "$ref": "evaluator-v2-common.v2.schema.json#/$defs/evaluator_identity" },
+    "corpus": { "$ref": "evaluator-v2-common.v2.schema.json#/$defs/corpus_identity" },
+    "execution": { "$ref": "evaluator-v2-common.v2.schema.json#/$defs/execution" }
+  }
+}

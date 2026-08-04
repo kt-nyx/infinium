@@ -1,69 +1,48 @@
 {
-  "protocol_id": "infinium.evaluator-v2/1",
-  "version": "1.0.0",
-  "scorer": {
-    "id": "infinium.evaluator-v2.scorer",
-    "version": "1.0.0"
+  "protocol_id": "infinium.evaluator-v2/2",
+  "version": "2.0.0",
+  "retired_predecessor": {
+    "protocol_id": "infinium.evaluator-v2/1",
+    "version": "1.0.0",
+    "evaluator_commit": "8023cdf776a25210bcc80e7574c1aaecde278b6b",
+    "status": "retired-before-private-corpus-qualification-no-held-out-product-verdict"
   },
-  "adapter": {
-    "id": "infinium.evaluator-v2.slice4-reflection-adapter",
-    "version": "1.0.0"
-  },
+  "scorer": { "id": "infinium.evaluator-v2.scorer", "version": "2.0.0" },
+  "adapter": { "id": "infinium.evaluator-v2.slice4-reflection-adapter", "version": "2.0.0" },
+  "projection": { "id": "infinium.evaluator-v2.slice4-semantic-projection", "version": "2.0.0" },
   "schemas": [
-    "infinium.evaluator-v2.execution-manifest/v1",
-    "infinium.evaluator-v2.candidate-semantic-output/v1",
-    "infinium.evaluator-v2.expected-semantic-output/v1",
-    "infinium.evaluator-v2.assertion-results/v1",
-    "infinium.evaluator-v2.sanitized-result/v1",
-    "infinium.evaluator-v2.calibration-results/v1"
+    "infinium.evaluator-v2.execution-manifest/v2",
+    "infinium.evaluator-v2.prepared-comparison-manifest/v2",
+    "infinium.evaluator-v2.corpus-execution-manifest/v2",
+    "infinium.evaluator-v2.candidate-semantic-output/v2",
+    "infinium.evaluator-v2.expected-semantic-output/v2",
+    "infinium.evaluator-v2.assertion-results/v2",
+    "infinium.evaluator-v2.sanitized-result/v2",
+    "infinium.evaluator-v2.calibration-results/v2"
   ],
-  "terminal_results": [
-    "PASS",
-    "FAIL",
-    "EVALUATOR_ERROR"
-  ],
-  "failure_stages": [
-    "identity",
-    "manifest",
-    "candidate_execution",
-    "candidate_output",
-    "oracle",
-    "comparison",
-    "result_write"
-  ],
-  "evaluator_identity": {
-    "required_files": [
-      "Infinium.Application.dll",
-      "Infinium.EvaluatorV2.dll",
-      "protocol/protocol.json",
-      "all seven versioned evaluator-v2 schemas"
-    ],
-    "rule": "the answer-free manifest binds the public commit and byte identity of every required executable and protocol file"
+  "commands": {
+    "stage_b_prepared_qualification": "compare-prepared --manifest <prepared-comparison-manifest.json> --candidate-output <prepared-candidate-output.json> --oracle <expected-output.json> --result-dir <new-directory>",
+    "stage_c_single_invocation": "score-corpus --manifest <corpus-execution-manifest.json> --result-dir <new-directory>"
   },
-  "candidate_identity": {
-    "rule": "the manifest inventories and hashes the candidate assembly and every non-framework managed dependency; undeclared non-framework assembly fallback is rejected"
+  "projection_rules": {
+    "fact_id": "slash-delimited public collection and field names; stable set identities are RFC3986-escaped path segments; ordered sequences use zero-padded ordinal indexes",
+    "sets": "plugins are ordered by accepted load order; override contributions, masters, providers, and links with ordinals are ordered sequences; maps and semantic sets are sorted by their named stable identity",
+    "duplicates": "duplicate fact IDs, map identities, plugin names, load orders, member IDs, provider-chain paths, and provider IDs are invalid at their owning contract boundary",
+    "form_keys": "eight lowercase hexadecimal local-ID digits, colon, lowercase plugin filename with esm, esp, or esl extension",
+    "numbers": "integers compare as exact signed JSON integers; placement floats compare as finite IEEE-754 values serialized with invariant round-trip formatting; negative zero canonicalizes as JSON numeric zero",
+    "null_missing": "a projected null is an explicit typed null fact; a missing projected fact is a missing_fact product mismatch; an unexpected projected fact is an extra_fact mismatch",
+    "included": "named Slice 4 state, plugin, record/contribution, override/winner, NPC, RACE, REFR, link, field-presence, participant, FaceGen/provider topology, taxonomy, coverage, gap, and stable failure-code fields",
+    "excluded": "physical paths, SnapshotAuthorizedPath, source snapshot IDs, dependency fingerprints, producer/build metadata outside tuple identity, timestamps, exception messages, Reason or Message prose, display text, redundant manifest hashes and lengths, and incidental serialization fields"
   },
-  "corpus_identity": {
-    "qualification": "only qualification_state=frozen and contamination_state=clean is admitted",
-    "hash_rule": "sha256 of UTF-8: protocol domain newline; corpus_id|version newline; each accepted plugin in load order as load_order|plugin_name|local_installed_entity_id|byte_length|sha256 newline; each unsupported capability in ordinal order as unsupported|capability newline; then oracle|byte_length|sha256(oracle bytes) newline"
+  "terminal_rules": {
+    "PASS": "every validly admitted corpus member and assertion passes",
+    "FAIL": "all members are validly admitted and at least one candidate execution, candidate-output contract, state, fact, or value assertion fails",
+    "EVALUATOR_ERROR": "manifest, tuple, retained bytes, evaluator identity/dependency, oracle admission, result publication, or other evaluator infrastructure is invalid; no aggregate product verdict"
   },
-  "canonicalization": {
-    "object_properties": "ordinal property-name order",
-    "fact_order": "ordinal fact_id order",
-    "fact_identity": "unique canonical JSON pointer",
-    "sequences": [
-      "/snapshot/plugins",
-      "*/contributions",
-      "*/masters"
-    ],
-    "sets": "arrays with a stable public identity are keyed by that identity and sorted ordinally",
-    "unidentified_arrays": "preserve sequence index",
-    "form_keys": "lowercase plugin filename, colon, eight lowercase hexadecimal local-id digits",
-    "missing_and_extra": "both are product mismatches after valid comparison admission",
-    "unsupported_and_gaps": "compare as ordinary typed facts; omission is a mismatch",
-    "numbers": "integers remain integers; non-integers use invariant JSON number text",
-    "strings": "ordinal, case-sensitive except where the producing public contract already canonicalizes"
+  "identity": {
+    "evaluator_files_fingerprint": "SHA-256 of canonical relative_path|byte_length|sha256 lines in ordinal relative-path order",
+    "executing_binary": "the actual executing Infinium.EvaluatorV2.dll must be the declared file under the declared evaluator root; the deps graph and every required public schema/protocol file must be declared and byte-matched",
+    "candidate": "candidate assembly and every declared non-framework dependency are byte-matched before invocation; candidate load context permits no undeclared non-framework fallback"
   },
-  "aggregation": "PASS only when every admitted assertion passes; any product mismatch after valid comparison admission is FAIL; malformed candidate output and every other pre-comparison identity, schema, evaluator, corpus, or oracle defect is EVALUATOR_ERROR",
-  "result_publication": "all serialized outputs are schema-validated before a new result directory is created; path ancestors are reparse-free and pinned against rename on Windows; temporary files publish only after every write is durable; publication failure returns EVALUATOR_ERROR at result_write"
+  "privacy": "member identities, local paths, raw candidate outputs, oracles, and assertions remain private; sanitized aggregate output exposes only tuple identities, aggregate member/assertion counts, public failure categories, and the permitted terminal stage"
 }

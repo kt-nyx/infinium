@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "infinium.evaluator-v2.prepared-comparison-manifest/v2",
+  "type": "object", "additionalProperties": false, "required": ["schema_id", "protocol_id", "candidate", "evaluator", "corpus"],
+  "properties": {
+    "schema_id": { "const": "infinium.evaluator-v2.prepared-comparison-manifest/v2" }, "protocol_id": { "const": "infinium.evaluator-v2/2" },
+    "candidate": {
+      "type": "object", "additionalProperties": false, "required": ["commit", "artifact", "qualification_id"],
+      "properties": { "commit": { "$ref": "evaluator-v2-common.v2.schema.json#/$defs/commit" }, "artifact": { "$ref": "evaluator-v2-common.v2.schema.json#/$defs/artifact_identity" }, "qualification_id": { "type": "string", "minLength": 1, "maxLength": 128 } }
+    },
+    "evaluator": { "$ref": "evaluator-v2-common.v2.schema.json#/$defs/evaluator_identity" }, "corpus": { "$ref": "evaluator-v2-common.v2.schema.json#/$defs/corpus_identity" }
+  }
+}

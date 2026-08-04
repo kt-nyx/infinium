@@ -295,21 +295,21 @@ internal static class EmbeddedJsonSchemaValidator
 
     private static void ValidateNumber(JsonElement instance, JsonElement schema, string instancePath)
     {
-        if (!instance.TryGetDecimal(out decimal value))
+        if (!instance.TryGetDouble(out double value) || !double.IsFinite(value))
         {
             Fail(instancePath, "is outside the supported numeric contract range");
         }
 
         if (schema.TryGetProperty("minimum", out JsonElement minimum)
-            && value < minimum.GetDecimal())
+            && value < minimum.GetDouble())
         {
-            Fail(instancePath, $"must be at least {minimum.GetDecimal()}");
+            Fail(instancePath, $"must be at least {minimum.GetDouble()}");
         }
 
         if (schema.TryGetProperty("maximum", out JsonElement maximum)
-            && value > maximum.GetDecimal())
+            && value > maximum.GetDouble())
         {
-            Fail(instancePath, $"must be at most {maximum.GetDecimal()}");
+            Fail(instancePath, $"must be at most {maximum.GetDouble()}");
         }
     }
 

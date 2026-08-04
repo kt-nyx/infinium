@@ -84,6 +84,13 @@ Receives only the sanitized attestation. It checks public identity bindings
 and updates status; it does not inspect raw private inputs, oracles, paths, or
 results.
 
+Ordinary product work stops on any private evaluator or corpus failure. It
+does not create or manage Stage B authoring, Stage C scoring, audit,
+replacement, repair, or retry as recursive subtasks. Stage B authoring or
+maintenance, Stage C scoring, and successor maintenance require separate
+owner-authorized fresh tasks. Corpus/evaluator maintenance has no authority to
+score a product, and the scorer has no authority to maintain any tuple member.
+
 ## Corpus qualification and freeze
 
 1. Pin the accepted public protocol and evaluator commit plus every required
@@ -114,10 +121,12 @@ candidate and expected output, canonicalizes both under public rules, compares
 typed values and identities, and emits exactly one of:
 
 - `PASS`: every valid applicable assertion matched;
-- `FAIL`: a valid comparison found one or more product mismatches; or
-- `EVALUATOR_ERROR`: identity, execution, manifest, schema, oracle,
-  infrastructure, or comparison admission was invalid. This is not a product
-  verdict.
+- `FAIL`: after candidate and input admission, a candidate invocation threw,
+  its projected output violated the public candidate-output contract, or a
+  valid comparison found one or more product mismatches; or
+- `EVALUATOR_ERROR`: evaluator/corpus manifest, tuple identity, retained input,
+  evaluator binary/dependency, oracle, publication, or other evaluator
+  infrastructure/admission was invalid. This is not a product verdict.
 
 No same-task repair or retry is permitted. A changed candidate, evaluator, or
 corpus is a new invocation and must be described as such.

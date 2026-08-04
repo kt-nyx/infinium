@@ -16,26 +16,29 @@ internal static class CalibrationSuite
                 ScoreCase("wrong-winner", "FAIL", "winner", context, Mutate(correct, "/winner/plugin", "Wrong.esp")),
                 ScoreCase("reversed-override-chain", "FAIL", "override_chain", context,
                     Mutate(Mutate(correct, "/chain/contributions/0", "Second.esp"), "/chain/contributions/1", "First.esm")),
-                ScoreCase("wrong-regular-form-key", "FAIL", "form_key", context, Mutate(correct, "/records/regular/form_key", "base.esm:00000043")),
-                ScoreCase("wrong-light-form-key", "FAIL", "form_key", context, Mutate(correct, "/records/light/form_key", "light.esl:00fe0002")),
+                ScoreCase("wrong-regular-form-key", "FAIL", "form_key", context, Mutate(correct, "/records/regular/form_key", "00000043:base.esm")),
+                ScoreCase("wrong-light-form-key", "FAIL", "form_key", context, Mutate(correct, "/records/light/form_key", "00000802:light.esl")),
                 ScoreCase("missing-fact", "FAIL", "missing_fact", context, Remove(correct, "/links/owner")),
                 ScoreCase("extra-fact", "FAIL", "extra_fact", context, Add(correct, Fact("/records/extra", "semantic", "unexpected"))),
-                ScoreCase("wrong-link", "FAIL", "link", context, Mutate(correct, "/links/base", "base.esm:00000099")),
-                ScoreCase("wrong-ownership", "FAIL", "ownership", context, Mutate(correct, "/links/owner", "base.esm:00000099")),
+                ScoreCase("wrong-link", "FAIL", "link", context, Mutate(correct, "/links/base", "00000099:base.esm")),
+                ScoreCase("wrong-ownership", "FAIL", "ownership", context, Mutate(correct, "/links/owner", "00000099:base.esm")),
                 ScoreCase("wrong-placement", "FAIL", "placement", context, Mutate(correct, "/placement/x", 999L)),
                 ScoreCase("wrong-gap", "FAIL", "gap", context, Mutate(correct, "/gaps/{gap_id=archive}/denominator", 3L)),
-                ScoreCase("malformed-candidate-output", "EVALUATOR_ERROR", "candidate_output", context,
+                ScoreCase("candidate-output-contract", "FAIL", "candidate_output_contract", context,
                     correct with { ProtocolId = "wrong-protocol" }),
                 ExecutionFailureCase(context),
                 BrokenManifestCase(context, correct),
                 MalformedOracleCase(context, correct),
                 TamperedOracleCase(context, correct),
-                CandidateDependencyDriftCase(context, correct),
             ];
+            cases.AddRange(PreparedCases(context, correct));
+            cases.AddRange(AggregateCases(context, correct));
+            cases.Add(EvaluatorRootDriftCase(context, correct));
+            cases.Add(CandidateDependencyDriftCase(context, correct));
             return new CalibrationResults(
                 EvaluatorProtocol.CalibrationSchema,
                 EvaluatorProtocol.ProtocolId,
-                "infinium.evaluator-v2.public-calibration/1",
+                "infinium.evaluator-v2.public-calibration/2",
                 cases,
                 cases.All(item => item.Passed));
         }
@@ -86,11 +89,15 @@ internal static class CalibrationSuite
                 EvaluatorProtocol.ScorerVersion,
                 EvaluatorProtocol.AdapterId,
                 EvaluatorProtocol.AdapterVersion,
+                EvaluatorProtocol.ProjectionId,
+                EvaluatorProtocol.ProjectionVersion,
                 evaluatorRoot,
                 evaluatorFiles),
             new CorpusIdentity("public-calibration", "1.0.0", new string('0', 64), "frozen", "clean"),
             new ExecutionInput(
                 [new PluginExecutionInput("Calibration.esm", 0, "calibration-provider", pluginPath, pluginArtifact.ByteLength, pluginArtifact.Sha256)],
+                [],
+                false,
                 []));
         manifest = manifest with
         {
@@ -120,8 +127,8 @@ internal static class CalibrationSuite
         ScoreOutcome outcome = EvaluatorScorer.Score(
             context.ManifestPath,
             context.OraclePath,
-            _ => throw new InvalidDataException("calibrated execution failure"));
-        return CaseResult("candidate-execution-error", "EVALUATOR_ERROR", "candidate_execution", outcome);
+            _ => throw new CandidateExecutionException("calibrated execution failure"));
+        return CaseResult("candidate-execution-failure", "FAIL", "candidate_execution", outcome);
     }
 
     private static CalibrationCaseResult BrokenManifestCase(
@@ -169,6 +176,99 @@ internal static class CalibrationSuite
         return CaseResult("candidate-dependency-drift", "EVALUATOR_ERROR", "manifest", outcome);
     }
 
+    private static IReadOnlyList<CalibrationCaseResult> PreparedCases(
+        CalibrationContext context,
+        CandidateSemanticOutput correct)
+    {
+        string root = Path.Combine(Path.GetDirectoryName(context.ManifestPath)!, "prepared");
+        Directory.CreateDirectory(root);
+        ExpectedSemanticOutput oracle = context.Oracle with { CorpusId = "public-prepared-calibration" };
+        string oraclePath = Path.Combine(root, "oracle.json");
+        string candidatePath = Path.Combine(root, "candidate.json");
+        File.WriteAllText(oraclePath, EvaluatorProtocol.Serialize(oracle), new System.Text.UTF8Encoding(false));
+        File.WriteAllText(candidatePath, EvaluatorProtocol.Serialize(correct), new System.Text.UTF8Encoding(false));
+        PreparedComparisonManifest manifest = new(
+            EvaluatorProtocol.PreparedManifestSchema,
+            EvaluatorProtocol.ProtocolId,
+            new PreparedCandidateIdentity(correct.CandidateCommit, correct.CandidateArtifact, "answer-known-non-product-calibration"),
+            context.Manifest.Evaluator,
+            new CorpusIdentity("public-prepared-calibration", "1.0.0", new('0', 64), "frozen", "clean"));
+        manifest = manifest with
+        {
+            Corpus = manifest.Corpus with
+            {
+                Sha256 = EvaluatorScorer.PreparedCorpusFingerprint(manifest, candidatePath, oraclePath),
+            },
+        };
+        string manifestPath = Path.Combine(root, "manifest.json");
+        File.WriteAllText(manifestPath, EvaluatorProtocol.Serialize(manifest), new System.Text.UTF8Encoding(false));
+        ScoreOutcome pass = EvaluatorScorer.ComparePrepared(manifestPath, candidatePath, oraclePath);
+
+        CandidateSemanticOutput mutation = Mutate(correct, "/winner/plugin", "Wrong.esp");
+        string mutationPath = Path.Combine(root, "mutation.json");
+        File.WriteAllText(mutationPath, EvaluatorProtocol.Serialize(mutation), new System.Text.UTF8Encoding(false));
+        PreparedComparisonManifest mutationManifest = manifest with { Corpus = manifest.Corpus with { Sha256 = new('0', 64) } };
+        mutationManifest = mutationManifest with
+        {
+            Corpus = mutationManifest.Corpus with
+            {
+                Sha256 = EvaluatorScorer.PreparedCorpusFingerprint(mutationManifest, mutationPath, oraclePath),
+            },
+        };
+        string mutationManifestPath = Path.Combine(root, "mutation-manifest.json");
+        File.WriteAllText(mutationManifestPath, EvaluatorProtocol.Serialize(mutationManifest), new System.Text.UTF8Encoding(false));
+        ScoreOutcome fail = EvaluatorScorer.ComparePrepared(mutationManifestPath, mutationPath, oraclePath);
+        return
+        [
+            CaseResult("prepared-known-correct", "PASS", null, pass),
+            CaseResult("prepared-targeted-mutation", "FAIL", "winner", fail),
+        ];
+    }
+
+    private static IReadOnlyList<CalibrationCaseResult> AggregateCases(
+        CalibrationContext context,
+        CandidateSemanticOutput correct)
+    {
+        ScoreOutcome pass = EvaluatorScorer.Score(context.ManifestPath, context.OraclePath, _ => correct);
+        ScoreOutcome fail = EvaluatorScorer.Score(
+            context.ManifestPath,
+            context.OraclePath,
+            _ => Mutate(correct, "/winner/plugin", "Wrong.esp"));
+        SanitizedResult one = EvaluatorScorer.AggregateForCalibration(context.Manifest, [pass]);
+        SanitizedResult multiple = EvaluatorScorer.AggregateForCalibration(context.Manifest, [pass, pass]);
+        SanitizedResult mismatch = EvaluatorScorer.AggregateForCalibration(context.Manifest, [pass, fail]);
+        return
+        [
+            DirectCase("aggregate-one-member", "PASS", null, one),
+            DirectCase("aggregate-multi-member", "PASS", null, multiple),
+            DirectCase("aggregate-member-mismatch", "FAIL", "winner", mismatch),
+        ];
+    }
+
+    private static CalibrationCaseResult EvaluatorRootDriftCase(
+        CalibrationContext context,
+        CandidateSemanticOutput correct)
+    {
+        ExecutionManifest drift = context.Manifest with
+        {
+            Evaluator = context.Manifest.Evaluator with { Root = Path.GetDirectoryName(context.ManifestPath)! },
+        };
+        string path = Path.Combine(Path.GetDirectoryName(context.ManifestPath)!, "wrong-evaluator-root.json");
+        File.WriteAllText(path, EvaluatorProtocol.Serialize(drift), new System.Text.UTF8Encoding(false));
+        ScoreOutcome outcome = EvaluatorScorer.Score(path, context.OraclePath, _ => correct);
+        return CaseResult("executing-evaluator-root-drift", "EVALUATOR_ERROR", "manifest", outcome);
+    }
+
+    private static CalibrationCaseResult DirectCase(
+        string id,
+        string expectedTerminal,
+        string? category,
+        SanitizedResult result) => CaseResult(
+            id,
+            expectedTerminal,
+            category,
+            new ScoreOutcome(result, null));
+
     private static CalibrationCaseResult CaseResult(
         string id,
         string expectedTerminal,
@@ -194,16 +294,18 @@ internal static class CalibrationSuite
             Fact("/chain/contributions/0", "override_chain", "First.esm"),
             Fact("/chain/contributions/1", "override_chain", "Second.esp"),
             Fact("/gaps/{gap_id=archive}/denominator", "gap", 2L),
-            Fact("/links/base", "link", "base.esm:00000042"),
-            Fact("/links/owner", "ownership", "base.esm:00000042"),
+            Fact("/links/base", "link", "00000042:base.esm"),
+            Fact("/links/owner", "ownership", "00000042:base.esm"),
             Fact("/placement/x", "placement", 1L),
-            Fact("/records/light/form_key", "form_key", "light.esl:00fe0001"),
-            Fact("/records/regular/form_key", "form_key", "base.esm:00000042"),
+            Fact("/records/light/form_key", "form_key", "00000801:light.esl"),
+            Fact("/records/regular/form_key", "form_key", "00000042:base.esm"),
             Fact("/winner/plugin", "winner", "Second.esp"),
         ];
         return new ExpectedSemanticOutput(
             EvaluatorProtocol.ExpectedSchema,
             EvaluatorProtocol.ProtocolId,
+            EvaluatorProtocol.ProjectionId,
+            EvaluatorProtocol.ProjectionVersion,
             "public-calibration",
             "1.0.0",
             "completed_with_gaps",
@@ -213,6 +315,8 @@ internal static class CalibrationSuite
     private static CandidateSemanticOutput Candidate(ExpectedSemanticOutput oracle) => new(
         EvaluatorProtocol.CandidateSchema,
         EvaluatorProtocol.ProtocolId,
+        EvaluatorProtocol.ProjectionId,
+        EvaluatorProtocol.ProjectionVersion,
         new('a', 40),
         new ArtifactIdentity(3, Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData([0x43, 0x41, 0x4c]))),
         oracle.State,

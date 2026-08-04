@@ -1,5 +1,5 @@
+using System.Globalization;
 using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Infinium.Application.Evaluation;
@@ -8,17 +8,22 @@ namespace Infinium.EvaluatorV2;
 
 internal static class EvaluatorProtocol
 {
-    internal const string ProtocolId = "infinium.evaluator-v2/1";
+    internal const string ProtocolId = "infinium.evaluator-v2/2";
+    internal const string ProtocolVersion = "2.0.0";
     internal const string ScorerId = "infinium.evaluator-v2.scorer";
-    internal const string ScorerVersion = "1.0.0";
+    internal const string ScorerVersion = "2.0.0";
     internal const string AdapterId = "infinium.evaluator-v2.slice4-reflection-adapter";
-    internal const string AdapterVersion = "1.0.0";
-    internal const string CandidateSchema = "infinium.evaluator-v2.candidate-semantic-output/v1";
-    internal const string ExpectedSchema = "infinium.evaluator-v2.expected-semantic-output/v1";
-    internal const string ManifestSchema = "infinium.evaluator-v2.execution-manifest/v1";
-    internal const string AssertionsSchema = "infinium.evaluator-v2.assertion-results/v1";
-    internal const string SanitizedSchema = "infinium.evaluator-v2.sanitized-result/v1";
-    internal const string CalibrationSchema = "infinium.evaluator-v2.calibration-results/v1";
+    internal const string AdapterVersion = "2.0.0";
+    internal const string ProjectionId = "infinium.evaluator-v2.slice4-semantic-projection";
+    internal const string ProjectionVersion = "2.0.0";
+    internal const string CandidateSchema = "infinium.evaluator-v2.candidate-semantic-output/v2";
+    internal const string ExpectedSchema = "infinium.evaluator-v2.expected-semantic-output/v2";
+    internal const string ManifestSchema = "infinium.evaluator-v2.execution-manifest/v2";
+    internal const string PreparedManifestSchema = "infinium.evaluator-v2.prepared-comparison-manifest/v2";
+    internal const string CorpusManifestSchema = "infinium.evaluator-v2.corpus-execution-manifest/v2";
+    internal const string AssertionsSchema = "infinium.evaluator-v2.assertion-results/v2";
+    internal const string SanitizedSchema = "infinium.evaluator-v2.sanitized-result/v2";
+    internal const string CalibrationSchema = "infinium.evaluator-v2.calibration-results/v2";
 
     internal static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -52,37 +57,16 @@ internal static class EvaluatorProtocol
         return new ArtifactIdentity(info.Length, hash);
     }
 
-    internal static string JsonValueText(JsonElement value) => value.ValueKind switch
-    {
-        JsonValueKind.String => value.GetString()!,
-        JsonValueKind.Number => value.GetRawText(),
-        JsonValueKind.True => "true",
-        JsonValueKind.False => "false",
-        JsonValueKind.Null => "null",
-        _ => throw new InvalidDataException("A semantic fact value must be a JSON primitive."),
-    };
+    internal static JsonElement Primitive(string value) => ParsePrimitive(JsonSerializer.Serialize(value));
+    internal static JsonElement Primitive(long value) => ParsePrimitive(value.ToString(CultureInfo.InvariantCulture));
+    internal static JsonElement Primitive(double value) => ParsePrimitive(
+        value == 0d ? "0" : value.ToString("R", CultureInfo.InvariantCulture));
+    internal static JsonElement Primitive(bool value) => ParsePrimitive(value ? "true" : "false");
+    internal static JsonElement Null() => ParsePrimitive("null");
 
-    internal static JsonElement Primitive(string value)
+    private static JsonElement ParsePrimitive(string json)
     {
-        using JsonDocument document = JsonDocument.Parse(JsonSerializer.Serialize(value));
-        return document.RootElement.Clone();
-    }
-
-    internal static JsonElement Primitive(long value)
-    {
-        using JsonDocument document = JsonDocument.Parse(value.ToString(System.Globalization.CultureInfo.InvariantCulture));
-        return document.RootElement.Clone();
-    }
-
-    internal static JsonElement Primitive(bool value)
-    {
-        using JsonDocument document = JsonDocument.Parse(value ? "true" : "false");
-        return document.RootElement.Clone();
-    }
-
-    internal static JsonElement Null()
-    {
-        using JsonDocument document = JsonDocument.Parse("null");
+        using JsonDocument document = JsonDocument.Parse(json);
         return document.RootElement.Clone();
     }
 }
@@ -94,6 +78,7 @@ internal sealed record CandidateIdentity(
     ArtifactIdentity Artifact,
     string Root,
     IReadOnlyList<EvaluatorFileIdentity> Files);
+internal sealed record PreparedCandidateIdentity(string Commit, ArtifactIdentity Artifact, string QualificationId);
 internal sealed record EvaluatorFileIdentity(string RelativePath, long ByteLength, string Sha256);
 internal sealed record EvaluatorIdentity(
     string Commit,
@@ -102,6 +87,8 @@ internal sealed record EvaluatorIdentity(
     string ScorerVersion,
     string AdapterId,
     string AdapterVersion,
+    string ProjectionId,
+    string ProjectionVersion,
     string Root,
     IReadOnlyList<EvaluatorFileIdentity> Files);
 internal sealed record CorpusIdentity(
@@ -117,8 +104,21 @@ internal sealed record PluginExecutionInput(
     string Path,
     long ByteLength,
     string Sha256);
+internal sealed record LooseProviderExecutionInput(
+    string LocalInstalledEntityId,
+    string ProviderKind,
+    int Priority,
+    string? Path,
+    long? ByteLength,
+    string? Sha256);
+internal sealed record LooseProviderChainExecutionInput(
+    string NormalizedRelativePath,
+    IReadOnlyList<LooseProviderExecutionInput> Providers,
+    string WinnerLocalInstalledEntityId);
 internal sealed record ExecutionInput(
     IReadOnlyList<PluginExecutionInput> Plugins,
+    IReadOnlyList<LooseProviderChainExecutionInput> LooseProviderChains,
+    bool ArchiveMemberPopulationSupported,
     IReadOnlyList<string> UnsupportedCapabilities);
 internal sealed record ExecutionManifest(
     string SchemaId,
@@ -127,10 +127,26 @@ internal sealed record ExecutionManifest(
     EvaluatorIdentity Evaluator,
     CorpusIdentity Corpus,
     ExecutionInput Execution);
+internal sealed record PreparedComparisonManifest(
+    string SchemaId,
+    string ProtocolId,
+    PreparedCandidateIdentity Candidate,
+    EvaluatorIdentity Evaluator,
+    CorpusIdentity Corpus);
+internal sealed record CorpusExecutionMember(string MemberId, ExecutionInput Execution, string OraclePath);
+internal sealed record CorpusExecutionManifest(
+    string SchemaId,
+    string ProtocolId,
+    CandidateIdentity Candidate,
+    EvaluatorIdentity Evaluator,
+    CorpusIdentity Corpus,
+    IReadOnlyList<CorpusExecutionMember> Members);
 internal sealed record SemanticFact(string FactId, string FactType, string ValueType, JsonElement Value);
 internal sealed record CandidateSemanticOutput(
     string SchemaId,
     string ProtocolId,
+    string ProjectionId,
+    string ProjectionVersion,
     string CandidateCommit,
     ArtifactIdentity CandidateArtifact,
     string State,
@@ -138,6 +154,8 @@ internal sealed record CandidateSemanticOutput(
 internal sealed record ExpectedSemanticOutput(
     string SchemaId,
     string ProtocolId,
+    string ProjectionId,
+    string ProjectionVersion,
     string CorpusId,
     string CorpusVersion,
     string State,
@@ -152,9 +170,12 @@ internal sealed record TypedAssertion(
     JsonElement? Actual = null);
 internal sealed record AssertionResults(string SchemaId, string ProtocolId, IReadOnlyList<TypedAssertion> Assertions);
 internal sealed record AssertionCounts(int Total, int Passed, int Failed);
+internal sealed record MemberCounts(int Total, int Passed, int Failed, int EvaluatorErrors);
 internal sealed record SanitizedResult(
     string SchemaId,
     string ProtocolId,
+    string ProjectionId,
+    string ProjectionVersion,
     string CandidateCommit,
     long CandidateArtifactByteLength,
     string CandidateArtifactSha256,
@@ -170,9 +191,11 @@ internal sealed record SanitizedResult(
     string TerminalResult,
     string? FailureStage,
     AssertionCounts AssertionCounts,
+    MemberCounts MemberCounts,
     IReadOnlyList<string>? FailureCategories,
     string ContaminationState);
 internal sealed record ScoreOutcome(SanitizedResult Result, AssertionResults? Assertions);
+internal sealed record CorpusScoreOutcome(SanitizedResult Result, IReadOnlyList<AssertionResults> MemberAssertions);
 internal sealed record CalibrationCaseResult(
     string CaseId,
     string ExpectedTerminal,

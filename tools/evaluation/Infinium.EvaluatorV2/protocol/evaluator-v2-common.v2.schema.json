@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "infinium.evaluator-v2.common/v2",
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "artifact_identity": {
+      "type": "object", "additionalProperties": false, "required": ["byte_length", "sha256"],
+      "properties": { "byte_length": { "type": "integer", "minimum": 1 }, "sha256": { "$ref": "#/$defs/sha256" } }
+    },
+    "file_identity": {
+      "type": "object", "additionalProperties": false, "required": ["relative_path", "byte_length", "sha256"],
+      "properties": {
+        "relative_path": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "byte_length": { "type": "integer", "minimum": 1 }, "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "evaluator_identity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["commit", "protocol_id", "scorer_id", "scorer_version", "adapter_id", "adapter_version", "projection_id", "projection_version", "root", "files"],
+      "properties": {
+        "commit": { "$ref": "#/$defs/commit" }, "protocol_id": { "const": "infinium.evaluator-v2/2" },
+        "scorer_id": { "const": "infinium.evaluator-v2.scorer" }, "scorer_version": { "const": "2.0.0" },
+        "adapter_id": { "const": "infinium.evaluator-v2.slice4-reflection-adapter" }, "adapter_version": { "const": "2.0.0" },
+        "projection_id": { "const": "infinium.evaluator-v2.slice4-semantic-projection" }, "projection_version": { "const": "2.0.0" },
+        "root": { "type": "string", "minLength": 1, "maxLength": 32767 },
+        "files": { "type": "array", "minItems": 1, "maxItems": 128, "items": { "$ref": "#/$defs/file_identity" } }
+      }
+    },
+    "candidate_identity": {
+      "type": "object", "additionalProperties": false, "required": ["commit", "assembly_path", "artifact", "root", "files"],
+      "properties": {
+        "commit": { "$ref": "#/$defs/commit" }, "assembly_path": { "type": "string", "minLength": 1, "maxLength": 32767 },
+        "artifact": { "$ref": "#/$defs/artifact_identity" }, "root": { "type": "string", "minLength": 1, "maxLength": 32767 },
+        "files": { "type": "array", "minItems": 1, "maxItems": 512, "items": { "$ref": "#/$defs/file_identity" } }
+      }
+    },
+    "corpus_identity": {
+      "type": "object", "additionalProperties": false, "required": ["corpus_id", "version", "sha256", "qualification_state", "contamination_state"],
+      "properties": {
+        "corpus_id": { "type": "string", "minLength": 1, "maxLength": 128 }, "version": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "sha256": { "$ref": "#/$defs/sha256" }, "qualification_state": { "const": "frozen" }, "contamination_state": { "const": "clean" }
+      }
+    },
+    "execution": {
+      "type": "object", "additionalProperties": false,
+      "required": ["plugins", "loose_provider_chains", "archive_member_population_supported", "unsupported_capabilities"],
+      "properties": {
+        "plugins": { "type": "array", "minItems": 1, "maxItems": 512, "items": { "$ref": "#/$defs/plugin" } },
+        "loose_provider_chains": { "type": "array", "maxItems": 4096, "items": { "$ref": "#/$defs/loose_chain" } },
+        "archive_member_population_supported": { "type": "boolean" },
+        "unsupported_capabilities": { "type": "array", "maxItems": 3, "uniqueItems": true, "items": { "enum": ["archive_member_read", "localized_string_resolution", "automatic_environment_discovery"] } }
+      }
+    },
+    "plugin": {
+      "type": "object", "additionalProperties": false, "required": ["plugin_name", "load_order", "local_installed_entity_id", "path", "byte_length", "sha256"],
+      "properties": {
+        "plugin_name": { "type": "string", "pattern": "^[^/\\\\]+\\.(esm|esp|esl)$" }, "load_order": { "type": "integer", "minimum": 0, "maximum": 4095 },
+        "local_installed_entity_id": { "type": "string", "minLength": 1, "maxLength": 128 }, "path": { "type": "string", "minLength": 1, "maxLength": 32767 },
+        "byte_length": { "type": "integer", "minimum": 1 }, "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "loose_chain": {
+      "type": "object", "additionalProperties": false, "required": ["normalized_relative_path", "providers", "winner_local_installed_entity_id"],
+      "properties": {
+        "normalized_relative_path": { "type": "string", "minLength": 1, "maxLength": 1024 },
+        "providers": { "type": "array", "minItems": 1, "maxItems": 128, "items": { "$ref": "#/$defs/loose_provider" } },
+        "winner_local_installed_entity_id": { "type": "string", "minLength": 1, "maxLength": 128 }
+      }
+    },
+    "loose_provider": {
+      "type": "object", "additionalProperties": false, "required": ["local_installed_entity_id", "provider_kind", "priority", "path", "byte_length", "sha256"],
+      "properties": {
+        "local_installed_entity_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "provider_kind": { "enum": ["regular_mod", "separator", "overwrite", "unmanaged"] }, "priority": { "type": "integer" },
+        "path": { "type": ["string", "null"], "maxLength": 32767 }, "byte_length": { "type": ["integer", "null"], "minimum": 1 },
+        "sha256": { "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] }
+      }
+    },
+    "fact_value": { "type": ["string", "integer", "number", "boolean", "null"] },
+    "fact": {
+      "type": "object", "additionalProperties": false, "required": ["fact_id", "fact_type", "value_type", "value"],
+      "properties": {
+        "fact_id": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "fact_type": { "enum": ["state", "plugin", "winner", "override_chain", "contribution", "record_identity", "form_key", "link", "ownership", "placement", "field", "npc", "race", "reference", "face_gen", "taxonomy", "coverage", "gap", "failure"] },
+        "value_type": { "enum": ["string", "integer", "number", "boolean", "null"] }, "value": { "$ref": "#/$defs/fact_value" }
+      }
+    }
+  }
+}

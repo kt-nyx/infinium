@@ -35,19 +35,19 @@ internal static class ReflectionCandidateAdapter
             }
             catch (TargetInvocationException exception) when (exception.InnerException is not null)
             {
-                throw new InvalidDataException("Candidate execution threw an exception.", exception.InnerException);
+                throw new CandidateExecutionException("Candidate execution threw an exception.", exception.InnerException);
             }
 
             using JsonDocument document = JsonDocument.Parse(JsonSerializer.Serialize(result, result.GetType(), ForeignJsonOptions));
             JsonElement root = document.RootElement;
             string state = root.GetProperty("state").GetString()
                 ?? throw new CandidateOutputException("Candidate state is absent.");
-            List<SemanticFact> facts = SemanticCanonicalizer.Flatten(root)
-                .OrderBy(fact => fact.FactId, StringComparer.Ordinal)
-                .ToList();
+            IReadOnlyList<SemanticFact> facts = SemanticCanonicalizer.Project(root);
             CandidateSemanticOutput output = new(
                 EvaluatorProtocol.CandidateSchema,
                 EvaluatorProtocol.ProtocolId,
+                EvaluatorProtocol.ProjectionId,
+                EvaluatorProtocol.ProjectionVersion,
                 manifest.Candidate.Commit,
                 manifest.Candidate.Artifact,
                 state,
@@ -57,7 +57,7 @@ internal static class ReflectionCandidateAdapter
             using JsonDocument strict = JsonDocument.Parse(serialized);
             Infinium.Application.Evaluation.EmbeddedJsonSchemaValidator.Validate(
                 strict.RootElement,
-                "candidate-semantic-output.v1.schema.json");
+                "candidate-semantic-output.v2.schema.json");
             return output;
         }
         catch (CandidateOutputException)
@@ -103,7 +103,11 @@ internal static class ReflectionCandidateAdapter
 
         string material = string.Join('|', manifest.Execution.Plugins
             .OrderBy(plugin => plugin.LoadOrder)
-            .Select(plugin => $"{plugin.PluginName}|{plugin.LoadOrder}|{plugin.LocalInstalledEntityId}|{plugin.Sha256}"));
+            .Select(plugin => $"{plugin.PluginName}|{plugin.LoadOrder}|{plugin.LocalInstalledEntityId}|{plugin.Sha256}"))
+            + "|" + string.Join('|', manifest.Execution.LooseProviderChains
+                .OrderBy(chain => chain.NormalizedRelativePath, StringComparer.Ordinal)
+                .Select(chain => $"{chain.NormalizedRelativePath}|{chain.WinnerLocalInstalledEntityId}|{string.Join(',', chain.Providers.Select(provider => $"{provider.LocalInstalledEntityId}:{provider.Priority}:{provider.Sha256}"))}"))
+            + $"|archive:{manifest.Execution.ArchiveMemberPopulationSupported}";
         string structuralHash = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(material)));
         object structural = New(fingerprintType, structuralHash);
         object version = New(versionType, 3u, 0u, 0u);
@@ -114,6 +118,10 @@ internal static class ReflectionCandidateAdapter
         object[] entityIds = manifest.Execution.Plugins
             .OrderBy(plugin => plugin.LoadOrder)
             .Select(plugin => New(opaqueIdType, plugin.LocalInstalledEntityId))
+            .Concat(manifest.Execution.LooseProviderChains
+                .SelectMany(chain => chain.Providers)
+                .Select(provider => New(opaqueIdType, provider.LocalInstalledEntityId)))
+            .DistinctBy(value => value.ToString(), StringComparer.Ordinal)
             .ToArray();
         object contract = New(
             contractType,
@@ -156,6 +164,7 @@ internal static class ReflectionCandidateAdapter
         List<object> pluginStates = [];
         List<object> entities = [];
         List<object> chains = [];
+        string firstRoot = Path.GetDirectoryName(Path.GetFullPath(manifest.Execution.Plugins[0].Path))!;
         foreach (PluginExecutionInput plugin in manifest.Execution.Plugins.OrderBy(plugin => plugin.LoadOrder))
         {
             object entityId = New(opaqueIdType, plugin.LocalInstalledEntityId);
@@ -183,7 +192,42 @@ internal static class ReflectionCandidateAdapter
             chains.Add(New(chainType, plugin.PluginName, ArrayOf(providerType, [provider]), provider));
         }
 
-        string firstRoot = Path.GetDirectoryName(Path.GetFullPath(manifest.Execution.Plugins[0].Path))!;
+        Dictionary<string, object> looseEntities = new(StringComparer.Ordinal);
+        foreach (LooseProviderChainExecutionInput declaredChain in manifest.Execution.LooseProviderChains)
+        {
+            List<object> providers = [];
+            foreach (LooseProviderExecutionInput declaredProvider in declaredChain.Providers)
+            {
+                object entityId = New(opaqueIdType, declaredProvider.LocalInstalledEntityId);
+                object kind = EnumValue(mo2, "Infinium.Mo2.LooseProviderKind", ProviderKind(declaredProvider.ProviderKind));
+                string physicalPath = declaredProvider.Path is null
+                    ? firstRoot
+                    : Path.GetFullPath(declaredProvider.Path);
+                if (!looseEntities.ContainsKey(declaredProvider.LocalInstalledEntityId))
+                {
+                    object entity = New(
+                        entityType,
+                        entityId,
+                        declaredProvider.Path is null ? firstRoot : Path.GetDirectoryName(physicalPath)!,
+                        kind,
+                        structural,
+                        ArrayOf(sourceHintType, []));
+                    looseEntities.Add(declaredProvider.LocalInstalledEntityId, entity);
+                    entities.Add(entity);
+                }
+
+                providers.Add(New(providerType, entityId, kind, physicalPath, declaredProvider.Priority));
+            }
+
+            object winner = providers[declaredChain.Providers.Select(item => item.LocalInstalledEntityId)
+                .ToList().FindIndex(id => string.Equals(id, declaredChain.WinnerLocalInstalledEntityId, StringComparison.Ordinal))];
+            chains.Add(New(
+                chainType,
+                declaredChain.NormalizedRelativePath.Replace('\\', '/').ToLowerInvariant(),
+                ArrayOf(providerType, providers),
+                winner));
+        }
+
         object snapshot = New(
             snapshotType,
             contract,
@@ -202,7 +246,7 @@ internal static class ReflectionCandidateAdapter
             ArrayOf(inventoryType, []),
             Array.Empty<string>(),
             ArrayOf(gapType, []),
-            false,
+            manifest.Execution.ArchiveMemberPopulationSupported,
             false);
         object capture = New(
             captureType,
@@ -268,6 +312,15 @@ internal static class ReflectionCandidateAdapter
 
     private static object EnumValue(Assembly assembly, string typeName, string value) =>
         Enum.Parse(RequiredType(assembly, typeName), value);
+
+    private static string ProviderKind(string value) => value switch
+    {
+        "regular_mod" => "RegularMod",
+        "separator" => "Separator",
+        "overwrite" => "Overwrite",
+        "unmanaged" => "Unmanaged",
+        _ => throw new InvalidDataException($"Unknown loose-provider kind '{value}'."),
+    };
 
     private sealed class CandidateLoadContext : AssemblyLoadContext
     {

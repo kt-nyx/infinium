@@ -41,9 +41,18 @@ prohibited.
 - evaluator-v2 `EVALUATOR_ERROR` maps to `blocked` and carries no product
   verdict.
 
-Manifest, identity, candidate-execution, schema, oracle, corpus,
-infrastructure, and comparison-admission failures are `EVALUATOR_ERROR`, not
-product `FAIL`.
+Manifest, tuple identity, retained-input, evaluator binary/dependency, oracle,
+corpus, publication, infrastructure, and comparison-admission failures are
+`EVALUATOR_ERROR`, not product `FAIL`. After exact admission, a resolved
+candidate invocation that throws is product `FAIL` with category
+`candidate_execution`; candidate projection/output-contract violations are
+product `FAIL` with category `candidate_output_contract`.
+
+One Stage C `score-corpus` command may admit one or more private members and
+emits one aggregate terminal. Every member must be validly admitted; any
+admission or evaluator failure makes the aggregate `EVALUATOR_ERROR` with no
+product verdict. Otherwise any member mismatch makes the aggregate `FAIL` and
+all-member agreement makes it `PASS`.
 
 ## Disclosure and contamination
 

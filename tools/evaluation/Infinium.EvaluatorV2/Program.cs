@@ -12,6 +12,8 @@ internal static class Program
                 "adapt" => Adapt(args),
                 "calibrate" => Calibrate(args),
                 "score" => Score(args),
+                "compare-prepared" => ComparePrepared(args),
+                "score-corpus" => ScoreCorpus(args),
                 _ => Usage(),
             };
         }
@@ -57,7 +59,7 @@ internal static class Program
             resultDirectory,
             "calibration-results.json",
             results,
-            "calibration-results.v1.schema.json");
+            "calibration-results.v2.schema.json");
         Console.WriteLine(results.Passed ? "PASS" : "FAIL");
         return results.Passed ? 0 : 1;
     }
@@ -77,7 +79,7 @@ internal static class Program
             resultDirectory,
             "candidate-output.json",
             output,
-            "candidate-semantic-output.v1.schema.json");
+            "candidate-semantic-output.v2.schema.json");
         Console.WriteLine("PASS");
         return 0;
     }
@@ -103,6 +105,45 @@ internal static class Program
         };
     }
 
+    private static int ComparePrepared(string[] args)
+    {
+        string manifest = RequiredOption(args, "--manifest");
+        string candidateOutput = RequiredOption(args, "--candidate-output");
+        string oracle = RequiredOption(args, "--oracle");
+        string resultDirectory = RequiredOption(args, "--result-dir");
+        if (args.Length != 9)
+        {
+            return Usage();
+        }
+
+        ScoreOutcome outcome = EvaluatorScorer.ComparePrepared(manifest, candidateOutput, oracle);
+        EvaluatorScorer.WriteResults(resultDirectory, outcome);
+        Console.WriteLine(outcome.Result.TerminalResult);
+        return ExitCode(outcome.Result.TerminalResult);
+    }
+
+    private static int ScoreCorpus(string[] args)
+    {
+        string manifest = RequiredOption(args, "--manifest");
+        string resultDirectory = RequiredOption(args, "--result-dir");
+        if (args.Length != 5)
+        {
+            return Usage();
+        }
+
+        CorpusScoreOutcome outcome = EvaluatorScorer.ScoreCorpus(manifest);
+        EvaluatorScorer.WriteCorpusResults(resultDirectory, outcome);
+        Console.WriteLine(outcome.Result.TerminalResult);
+        return ExitCode(outcome.Result.TerminalResult);
+    }
+
+    private static int ExitCode(string terminal) => terminal switch
+    {
+        "PASS" => 0,
+        "FAIL" => 1,
+        _ => 2,
+    };
+
     private static string RequiredOption(string[] args, string name)
     {
         int index = Array.IndexOf(args, name);
@@ -116,7 +157,7 @@ internal static class Program
 
     private static int Usage()
     {
-        Console.Error.WriteLine("Usage: Infinium.EvaluatorV2 protocol | adapt --manifest <file> --result-dir <dir> | calibrate --result-dir <dir> | score --manifest <file> --oracle <file> --result-dir <dir>");
+        Console.Error.WriteLine("Usage: Infinium.EvaluatorV2 protocol | adapt --manifest <file> --result-dir <dir> | calibrate --result-dir <dir> | score --manifest <file> --oracle <file> --result-dir <dir> | compare-prepared --manifest <file> --candidate-output <file> --oracle <file> --result-dir <dir> | score-corpus --manifest <file> --result-dir <dir>");
         return 2;
     }
 }
