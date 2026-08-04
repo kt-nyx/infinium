@@ -58,7 +58,6 @@ public sealed class RepositoryStructureTests
         [
             "test-data/synthetic/README.md",
             "test-data/manifests/README.md",
-            "tools/evaluation/README.md",
         ];
 
         foreach (string readme in reservedReadmes)
@@ -66,5 +65,9 @@ public sealed class RepositoryStructureTests
             string content = TestRepository.Read(readme.Split('/'));
             StringAssert.Contains(content, "not implemented by Slice 0");
         }
+
+        string evaluator = TestRepository.Read("tools", "evaluation", "README.md");
+        StringAssert.Contains(evaluator, "Infinium.EvaluatorV2");
+        StringAssert.Contains(evaluator, "sole active held-out evaluation protocol");
     }
 }

@@ -409,8 +409,14 @@ internal static class EvaluatorScorer
             EvaluatorProtocol.SanitizedSchema,
             EvaluatorProtocol.ProtocolId,
             manifest?.Candidate.Commit ?? zeroCommit,
+            manifest?.Candidate.Artifact.ByteLength ?? 1,
             manifest?.Candidate.Artifact.Sha256 ?? zeroHash,
             manifest?.Evaluator.Commit ?? zeroCommit,
+            manifest is null ? zeroHash : EvaluatorFilesFingerprint(manifest.Evaluator.Files),
+            EvaluatorProtocol.ScorerId,
+            EvaluatorProtocol.ScorerVersion,
+            EvaluatorProtocol.AdapterId,
+            EvaluatorProtocol.AdapterVersion,
             manifest?.Corpus.CorpusId ?? "unavailable",
             manifest?.Corpus.Version ?? "unavailable",
             manifest?.Corpus.Sha256 ?? zeroHash,
@@ -431,8 +437,14 @@ internal static class EvaluatorScorer
             EvaluatorProtocol.SanitizedSchema,
             EvaluatorProtocol.ProtocolId,
             manifest.Candidate.Commit,
+            manifest.Candidate.Artifact.ByteLength,
             manifest.Candidate.Artifact.Sha256,
             manifest.Evaluator.Commit,
+            EvaluatorFilesFingerprint(manifest.Evaluator.Files),
+            EvaluatorProtocol.ScorerId,
+            EvaluatorProtocol.ScorerVersion,
+            EvaluatorProtocol.AdapterId,
+            EvaluatorProtocol.AdapterVersion,
             manifest.Corpus.CorpusId,
             manifest.Corpus.Version,
             manifest.Corpus.Sha256,
@@ -441,6 +453,15 @@ internal static class EvaluatorScorer
             counts,
             categories,
             "clean");
+
+    private static string EvaluatorFilesFingerprint(IReadOnlyList<EvaluatorFileIdentity> files)
+    {
+        string material = string.Join(
+            '\n',
+            files.OrderBy(file => file.RelativePath, StringComparer.Ordinal)
+                .Select(file => $"{file.RelativePath.Replace('\\', '/')}|{file.ByteLength}|{file.Sha256}"));
+        return Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(material)));
+    }
 
     private static bool IsEvaluatorInputFailure(Exception exception) => exception is
         IOException or

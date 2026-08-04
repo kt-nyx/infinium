@@ -6,6 +6,7 @@ namespace Infinium.Tests;
 
 [TestClass]
 [TestCategory("M1Evaluation")]
+[TestProperty("Category", "M1Evaluation")]
 public sealed class EvaluatorV2PublicProtocolTests
 {
     [TestMethod]
