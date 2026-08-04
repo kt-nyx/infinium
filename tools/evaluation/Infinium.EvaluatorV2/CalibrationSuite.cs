@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace Infinium.EvaluatorV2;
 
 internal static class CalibrationSuite
@@ -13,6 +15,28 @@ internal static class CalibrationSuite
             List<CalibrationCaseResult> cases =
             [
                 ScoreCase("known-correct", "PASS", null, context, correct),
+                ScoreCase("integral-token-semantic-number-boundary", "PASS", null, context, correct),
+                ScoreCase("semantic-number-equivalent-token-shapes", "PASS", null, context,
+                    Replace(correct, "/placement/integral", fact => fact with { Value = JsonValue("10.0") })),
+                ScoreCase("semantic-number-non-integral", "PASS", null, context, correct),
+                ScoreCase("semantic-integer-non-integral-rejected", "FAIL", "candidate_output_contract", context,
+                    Replace(correct, "/placement/integral", fact => fact with
+                    {
+                        ValueType = "integer",
+                        Value = JsonValue("10.5"),
+                    })),
+                ScoreCase("semantic-number-string-rejected", "FAIL", "candidate_output_contract", context,
+                    Replace(correct, "/placement/integral", fact => fact with { Value = EvaluatorProtocol.Primitive("10") })),
+                ScoreCase("semantic-number-boolean-rejected", "FAIL", "candidate_output_contract", context,
+                    Replace(correct, "/placement/integral", fact => fact with { Value = EvaluatorProtocol.Primitive(true) })),
+                ScoreCase("semantic-number-null-rejected", "FAIL", "candidate_output_contract", context,
+                    Replace(correct, "/placement/integral", fact => fact with { Value = EvaluatorProtocol.Null() })),
+                ScoreCase("semantic-number-object-rejected", "FAIL", "candidate_output_contract", context,
+                    Replace(correct, "/placement/integral", fact => fact with { Value = JsonValue("{}") })),
+                ScoreCase("semantic-number-array-rejected", "FAIL", "candidate_output_contract", context,
+                    Replace(correct, "/placement/integral", fact => fact with { Value = JsonValue("[]") })),
+                ScoreCase("semantic-type-mismatch-not-equal", "FAIL", "placement", context,
+                    Replace(correct, "/placement/integral", fact => fact with { ValueType = "integer" })),
                 ScoreCase("wrong-winner", "FAIL", "winner", context, Mutate(correct, "/winner/plugin", "Wrong.esp")),
                 ScoreCase("reversed-override-chain", "FAIL", "override_chain", context,
                     Mutate(Mutate(correct, "/chain/contributions/0", "Second.esp"), "/chain/contributions/1", "First.esm")),
@@ -22,7 +46,8 @@ internal static class CalibrationSuite
                 ScoreCase("extra-fact", "FAIL", "extra_fact", context, Add(correct, Fact("/records/extra", "semantic", "unexpected"))),
                 ScoreCase("wrong-link", "FAIL", "link", context, Mutate(correct, "/links/base", "00000099:base.esm")),
                 ScoreCase("wrong-ownership", "FAIL", "ownership", context, Mutate(correct, "/links/owner", "00000099:base.esm")),
-                ScoreCase("wrong-placement", "FAIL", "placement", context, Mutate(correct, "/placement/x", 999L)),
+                ScoreCase("wrong-placement", "FAIL", "placement", context,
+                    Replace(correct, "/placement/integral", fact => fact with { Value = EvaluatorProtocol.Primitive(999d) })),
                 ScoreCase("wrong-gap", "FAIL", "gap", context, Mutate(correct, "/gaps/{gap_id=archive}/denominator", 3L)),
                 ScoreCase("candidate-output-contract", "FAIL", "candidate_output_contract", context,
                     correct with { ProtocolId = "wrong-protocol" }),
@@ -38,7 +63,7 @@ internal static class CalibrationSuite
             return new CalibrationResults(
                 EvaluatorProtocol.CalibrationSchema,
                 EvaluatorProtocol.ProtocolId,
-                "infinium.evaluator-v2.public-calibration/2",
+                "infinium.evaluator-v2.public-calibration/3",
                 cases,
                 cases.All(item => item.Passed));
         }
@@ -218,10 +243,26 @@ internal static class CalibrationSuite
         string mutationManifestPath = Path.Combine(root, "mutation-manifest.json");
         File.WriteAllText(mutationManifestPath, EvaluatorProtocol.Serialize(mutationManifest), new System.Text.UTF8Encoding(false));
         ScoreOutcome fail = EvaluatorScorer.ComparePrepared(mutationManifestPath, mutationPath, oraclePath);
+        CandidateSemanticOutput numericEquivalent = Replace(correct, "/placement/integral",
+            fact => fact with { Value = JsonValue("10.0") });
+        string numericPath = Path.Combine(root, "numeric-equivalent.json");
+        File.WriteAllText(numericPath, EvaluatorProtocol.Serialize(numericEquivalent), new System.Text.UTF8Encoding(false));
+        PreparedComparisonManifest numericManifest = manifest with { Corpus = manifest.Corpus with { Sha256 = new('0', 64) } };
+        numericManifest = numericManifest with
+        {
+            Corpus = numericManifest.Corpus with
+            {
+                Sha256 = EvaluatorScorer.PreparedCorpusFingerprint(numericManifest, numericPath, oraclePath),
+            },
+        };
+        string numericManifestPath = Path.Combine(root, "numeric-equivalent-manifest.json");
+        File.WriteAllText(numericManifestPath, EvaluatorProtocol.Serialize(numericManifest), new System.Text.UTF8Encoding(false));
+        ScoreOutcome numericPass = EvaluatorScorer.ComparePrepared(numericManifestPath, numericPath, oraclePath);
         return
         [
             CaseResult("prepared-known-correct", "PASS", null, pass),
             CaseResult("prepared-targeted-mutation", "FAIL", "winner", fail),
+            CaseResult("prepared-integral-token-semantic-number", "PASS", null, numericPass),
         ];
     }
 
@@ -296,7 +337,8 @@ internal static class CalibrationSuite
             Fact("/gaps/{gap_id=archive}/denominator", "gap", 2L),
             Fact("/links/base", "link", "00000042:base.esm"),
             Fact("/links/owner", "ownership", "00000042:base.esm"),
-            Fact("/placement/x", "placement", 1L),
+            NumberFact("/placement/fractional", "placement", 0.25),
+            NumberFact("/placement/integral", "placement", 10),
             Fact("/records/light/form_key", "form_key", "00000801:light.esl"),
             Fact("/records/regular/form_key", "form_key", "00000042:base.esm"),
             Fact("/winner/plugin", "winner", "Second.esp"),
@@ -351,6 +393,15 @@ internal static class CalibrationSuite
 
     private static SemanticFact Fact(string id, string type, long value) =>
         new(id, type, "integer", EvaluatorProtocol.Primitive(value));
+
+    private static SemanticFact NumberFact(string id, string type, double value) =>
+        new(id, type, "number", EvaluatorProtocol.Primitive(value));
+
+    private static JsonElement JsonValue(string json)
+    {
+        using JsonDocument document = JsonDocument.Parse(json);
+        return document.RootElement.Clone();
+    }
 
     private sealed record CalibrationContext(
         ExecutionManifest Manifest,

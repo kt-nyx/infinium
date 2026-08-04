@@ -1,24 +1,24 @@
 {
-  "protocol_id": "infinium.evaluator-v2/2",
-  "version": "2.0.0",
+  "protocol_id": "infinium.evaluator-v2/3",
+  "version": "3.0.0",
   "retired_predecessor": {
-    "protocol_id": "infinium.evaluator-v2/1",
-    "version": "1.0.0",
-    "evaluator_commit": "8023cdf776a25210bcc80e7574c1aaecde278b6b",
-    "status": "retired-before-private-corpus-qualification-no-held-out-product-verdict"
+    "protocol_id": "infinium.evaluator-v2/2",
+    "version": "2.0.0",
+    "evaluator_commit": "72616fb6fbb3db7021e8100adc12a251c427f8d1",
+    "status": "retired-after-stage-c5-invalidated-product-verdict-numeric-typed-fact-defect"
   },
-  "scorer": { "id": "infinium.evaluator-v2.scorer", "version": "2.0.0" },
-  "adapter": { "id": "infinium.evaluator-v2.slice4-reflection-adapter", "version": "2.0.0" },
+  "scorer": { "id": "infinium.evaluator-v2.scorer", "version": "3.0.0" },
+  "adapter": { "id": "infinium.evaluator-v2.slice4-reflection-adapter", "version": "3.0.0" },
   "projection": { "id": "infinium.evaluator-v2.slice4-semantic-projection", "version": "2.0.0" },
   "schemas": [
-    "infinium.evaluator-v2.execution-manifest/v2",
-    "infinium.evaluator-v2.prepared-comparison-manifest/v2",
-    "infinium.evaluator-v2.corpus-execution-manifest/v2",
-    "infinium.evaluator-v2.candidate-semantic-output/v2",
-    "infinium.evaluator-v2.expected-semantic-output/v2",
-    "infinium.evaluator-v2.assertion-results/v2",
-    "infinium.evaluator-v2.sanitized-result/v2",
-    "infinium.evaluator-v2.calibration-results/v2"
+    "infinium.evaluator-v2.execution-manifest/v3",
+    "infinium.evaluator-v2.prepared-comparison-manifest/v3",
+    "infinium.evaluator-v2.corpus-execution-manifest/v3",
+    "infinium.evaluator-v2.candidate-semantic-output/v3",
+    "infinium.evaluator-v2.expected-semantic-output/v3",
+    "infinium.evaluator-v2.assertion-results/v3",
+    "infinium.evaluator-v2.sanitized-result/v3",
+    "infinium.evaluator-v2.calibration-results/v3"
   ],
   "commands": {
     "stage_b_prepared_qualification": "compare-prepared --manifest <prepared-comparison-manifest.json> --candidate-output <prepared-candidate-output.json> --oracle <expected-output.json> --result-dir <new-directory>",
@@ -29,7 +29,8 @@
     "sets": "plugins are ordered by accepted load order; override contributions, masters, providers, and links with ordinals are ordered sequences; maps and semantic sets are sorted by their named stable identity",
     "duplicates": "duplicate fact IDs, map identities, plugin names, load orders, member IDs, provider-chain paths, and provider IDs are invalid at their owning contract boundary",
     "form_keys": "eight lowercase hexadecimal local-ID digits, colon, lowercase plugin filename with esm, esp, or esl extension",
-    "numbers": "integers compare as exact signed JSON integers; placement floats compare as finite IEEE-754 values serialized with invariant round-trip formatting; negative zero canonicalizes as JSON numeric zero",
+    "typed_values": "validation follows declared value_type: integer requires a JSON number exactly representable as signed Int64; number accepts every finite JSON number including an integral-valued token; string, boolean, and null require their matching JSON kinds; objects and arrays are invalid",
+    "numbers": "semantic integer facts compare as exact signed Int64 values; semantic number facts compare as finite IEEE-754 values, so 10 and 10.0 are equal when both declare value_type number; negative zero compares equal to zero",
     "null_missing": "a projected null is an explicit typed null fact; a missing projected fact is a missing_fact product mismatch; an unexpected projected fact is an extra_fact mismatch",
     "included": "named Slice 4 state, plugin, record/contribution, override/winner, NPC, RACE, REFR, link, field-presence, participant, FaceGen/provider topology, taxonomy, coverage, gap, and stable failure-code fields",
     "excluded": "physical paths, SnapshotAuthorizedPath, source snapshot IDs, dependency fingerprints, producer/build metadata outside tuple identity, timestamps, exception messages, Reason or Message prose, display text, redundant manifest hashes and lengths, and incidental serialization fields"

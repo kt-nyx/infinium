@@ -57,7 +57,7 @@ internal static class ReflectionCandidateAdapter
             using JsonDocument strict = JsonDocument.Parse(serialized);
             Infinium.Application.Evaluation.EmbeddedJsonSchemaValidator.Validate(
                 strict.RootElement,
-                "candidate-semantic-output.v2.schema.json");
+                "candidate-semantic-output.v3.schema.json");
             return output;
         }
         catch (CandidateOutputException)

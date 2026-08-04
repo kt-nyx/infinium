@@ -10,16 +10,16 @@ internal static class EvaluatorScorer
     [
         "Infinium.EvaluatorV2.deps.json",
         "Infinium.EvaluatorV2.runtimeconfig.json",
-        "protocol/assertion-results.v2.schema.json",
-        "protocol/calibration-results.v2.schema.json",
-        "protocol/candidate-semantic-output.v2.schema.json",
-        "protocol/corpus-execution-manifest.v2.schema.json",
-        "protocol/evaluator-v2-common.v2.schema.json",
-        "protocol/execution-manifest.v2.schema.json",
-        "protocol/expected-semantic-output.v2.schema.json",
-        "protocol/prepared-comparison-manifest.v2.schema.json",
+        "protocol/assertion-results.v3.schema.json",
+        "protocol/calibration-results.v3.schema.json",
+        "protocol/candidate-semantic-output.v3.schema.json",
+        "protocol/corpus-execution-manifest.v3.schema.json",
+        "protocol/evaluator-v2-common.v3.schema.json",
+        "protocol/execution-manifest.v3.schema.json",
+        "protocol/expected-semantic-output.v3.schema.json",
+        "protocol/prepared-comparison-manifest.v3.schema.json",
         "protocol/protocol.json",
-        "protocol/sanitized-result.v2.schema.json",
+        "protocol/sanitized-result.v3.schema.json",
     ];
 
     internal static readonly string[] RequiredEvaluatorFiles = BuildRequiredEvaluatorFiles();
@@ -35,7 +35,7 @@ internal static class EvaluatorScorer
         ExecutionManifest? manifest = null;
         try
         {
-            manifest = EvaluatorProtocol.Read<ExecutionManifest>(manifestPath, "execution-manifest.v2.schema.json");
+            manifest = EvaluatorProtocol.Read<ExecutionManifest>(manifestPath, "execution-manifest.v3.schema.json");
             ValidateManifestIdentity(manifest);
         }
         catch (Exception exception) when (IsEvaluatorInputFailure(exception))
@@ -46,7 +46,7 @@ internal static class EvaluatorScorer
         ExpectedSemanticOutput oracle;
         try
         {
-            oracle = EvaluatorProtocol.Read<ExpectedSemanticOutput>(oraclePath, "expected-semantic-output.v2.schema.json");
+            oracle = EvaluatorProtocol.Read<ExpectedSemanticOutput>(oraclePath, "expected-semantic-output.v3.schema.json");
             ValidateOracleIdentity(manifest, oracle, CorpusFingerprint(manifest, oraclePath));
         }
         catch (Exception exception) when (IsEvaluatorInputFailure(exception))
@@ -95,7 +95,7 @@ internal static class EvaluatorScorer
         PreparedComparisonManifest? manifest = null;
         try
         {
-            manifest = EvaluatorProtocol.Read<PreparedComparisonManifest>(manifestPath, "prepared-comparison-manifest.v2.schema.json");
+            manifest = EvaluatorProtocol.Read<PreparedComparisonManifest>(manifestPath, "prepared-comparison-manifest.v3.schema.json");
             ValidatePreparedManifest(manifest);
         }
         catch (Exception exception) when (IsEvaluatorInputFailure(exception))
@@ -106,7 +106,7 @@ internal static class EvaluatorScorer
         ExpectedSemanticOutput oracle;
         try
         {
-            oracle = EvaluatorProtocol.Read<ExpectedSemanticOutput>(oraclePath, "expected-semantic-output.v2.schema.json");
+            oracle = EvaluatorProtocol.Read<ExpectedSemanticOutput>(oraclePath, "expected-semantic-output.v3.schema.json");
             ValidateOracleIdentity(manifest, oracle, PreparedCorpusFingerprint(manifest, candidateOutputPath, oraclePath));
         }
         catch (Exception exception) when (IsEvaluatorInputFailure(exception))
@@ -117,7 +117,7 @@ internal static class EvaluatorScorer
         CandidateSemanticOutput candidate;
         try
         {
-            candidate = EvaluatorProtocol.Read<CandidateSemanticOutput>(candidateOutputPath, "candidate-semantic-output.v2.schema.json");
+            candidate = EvaluatorProtocol.Read<CandidateSemanticOutput>(candidateOutputPath, "candidate-semantic-output.v3.schema.json");
             ValidateCandidateIdentity(Identity(manifest), candidate);
         }
         catch (Exception exception) when (exception is CandidateOutputException || IsEvaluatorInputFailure(exception))
@@ -133,7 +133,7 @@ internal static class EvaluatorScorer
         CorpusExecutionManifest? suite = null;
         try
         {
-            suite = EvaluatorProtocol.Read<CorpusExecutionManifest>(manifestPath, "corpus-execution-manifest.v2.schema.json");
+            suite = EvaluatorProtocol.Read<CorpusExecutionManifest>(manifestPath, "corpus-execution-manifest.v3.schema.json");
             ValidateCorpusManifest(suite);
         }
         catch (Exception exception) when (IsEvaluatorInputFailure(exception))
@@ -163,7 +163,7 @@ internal static class EvaluatorScorer
                     suite.Corpus,
                     member.Execution);
                 ValidateExecutionInput(member.Execution);
-                ExpectedSemanticOutput oracle = EvaluatorProtocol.Read<ExpectedSemanticOutput>(member.OraclePath, "expected-semantic-output.v2.schema.json");
+                ExpectedSemanticOutput oracle = EvaluatorProtocol.Read<ExpectedSemanticOutput>(member.OraclePath, "expected-semantic-output.v3.schema.json");
                 ValidateOracleIdentity(suite, oracle, suiteFingerprint, requireFingerprint: false);
 
                 ScoreOutcome outcome;
@@ -264,7 +264,7 @@ internal static class EvaluatorScorer
             {
                 bool equal = string.Equals(expectedFact!.FactType, actualFact!.FactType, StringComparison.Ordinal)
                     && string.Equals(expectedFact.ValueType, actualFact.ValueType, StringComparison.Ordinal)
-                    && JsonElement.DeepEquals(expectedFact.Value, actualFact.Value);
+                    && SemanticValuesEqual(expectedFact.ValueType, expectedFact.Value, actualFact.Value);
                 AddAssertion(assertions, $"value:{factId}", "value", expectedFact.FactType, factId, expectedFact.Value, actualFact.Value, equal);
             }
         }
@@ -282,10 +282,10 @@ internal static class EvaluatorScorer
 
     internal static void WriteResults(string resultDirectory, ScoreOutcome outcome)
     {
-        List<(string FileName, string Content)> outputs = [("sanitized-result.json", ValidatedJson(outcome.Result, "sanitized-result.v2.schema.json"))];
+        List<(string FileName, string Content)> outputs = [("sanitized-result.json", ValidatedJson(outcome.Result, "sanitized-result.v3.schema.json"))];
         if (outcome.Assertions is not null)
         {
-            outputs.Add(("assertions.json", ValidatedJson(outcome.Assertions, "assertion-results.v2.schema.json")));
+            outputs.Add(("assertions.json", ValidatedJson(outcome.Assertions, "assertion-results.v3.schema.json")));
         }
 
         WriteAtomically(resultDirectory, outputs);
@@ -293,10 +293,10 @@ internal static class EvaluatorScorer
 
     internal static void WriteCorpusResults(string resultDirectory, CorpusScoreOutcome outcome)
     {
-        List<(string FileName, string Content)> outputs = [("sanitized-result.json", ValidatedJson(outcome.Result, "sanitized-result.v2.schema.json"))];
+        List<(string FileName, string Content)> outputs = [("sanitized-result.json", ValidatedJson(outcome.Result, "sanitized-result.v3.schema.json"))];
         for (int index = 0; index < outcome.MemberAssertions.Count; index++)
         {
-            outputs.Add(($"member-{index + 1:D4}-assertions.json", ValidatedJson(outcome.MemberAssertions[index], "assertion-results.v2.schema.json")));
+            outputs.Add(($"member-{index + 1:D4}-assertions.json", ValidatedJson(outcome.MemberAssertions[index], "assertion-results.v3.schema.json")));
         }
 
         WriteAtomically(resultDirectory, outputs);
@@ -304,7 +304,7 @@ internal static class EvaluatorScorer
 
     internal static ExecutionManifest ReadAndValidateManifest(string manifestPath)
     {
-        ExecutionManifest manifest = EvaluatorProtocol.Read<ExecutionManifest>(manifestPath, "execution-manifest.v2.schema.json");
+        ExecutionManifest manifest = EvaluatorProtocol.Read<ExecutionManifest>(manifestPath, "execution-manifest.v3.schema.json");
         ValidateManifestIdentity(manifest);
         return manifest;
     }
@@ -547,18 +547,9 @@ internal static class EvaluatorScorer
         string? previous = null;
         foreach (SemanticFact fact in facts)
         {
-            string actualValueType = fact.Value.ValueKind switch
-            {
-                JsonValueKind.String => "string",
-                JsonValueKind.Number when fact.Value.TryGetInt64(out _) => "integer",
-                JsonValueKind.Number => "number",
-                JsonValueKind.True or JsonValueKind.False => "boolean",
-                JsonValueKind.Null => "null",
-                _ => throw (source == "candidate"
-                    ? new CandidateOutputException("Candidate fact values must be JSON primitives.")
-                    : new InvalidDataException("Oracle fact values must be JSON primitives.")),
-            };
-            if (actualValueType != fact.ValueType || previous is not null && string.CompareOrdinal(previous, fact.FactId) >= 0 || !result.TryAdd(fact.FactId, fact))
+            if (!ValueMatchesDeclaredType(fact.ValueType, fact.Value)
+                || previous is not null && string.CompareOrdinal(previous, fact.FactId) >= 0
+                || !result.TryAdd(fact.FactId, fact))
             {
                 throw source == "candidate" ? new CandidateOutputException("Candidate facts must be typed, unique, and ordinally sorted.") : new InvalidDataException("Oracle facts must be typed, unique, and ordinally sorted.");
             }
@@ -568,6 +559,25 @@ internal static class EvaluatorScorer
 
         return result;
     }
+
+    private static bool ValueMatchesDeclaredType(string declaredType, JsonElement value) => declaredType switch
+    {
+        "string" => value.ValueKind == JsonValueKind.String,
+        "integer" => value.ValueKind == JsonValueKind.Number && value.TryGetInt64(out _),
+        "number" => value.ValueKind == JsonValueKind.Number
+            && value.TryGetDouble(out double number)
+            && double.IsFinite(number),
+        "boolean" => value.ValueKind is JsonValueKind.True or JsonValueKind.False,
+        "null" => value.ValueKind == JsonValueKind.Null,
+        _ => false,
+    };
+
+    private static bool SemanticValuesEqual(string valueType, JsonElement expected, JsonElement actual) => valueType switch
+    {
+        "integer" => expected.GetInt64() == actual.GetInt64(),
+        "number" => expected.GetDouble().Equals(actual.GetDouble()),
+        _ => JsonElement.DeepEquals(expected, actual),
+    };
 
     private static void AddAssertion(List<TypedAssertion> assertions, string id, string kind, string factType,
         string? factId, JsonElement? expected, JsonElement? actual, bool passed) =>

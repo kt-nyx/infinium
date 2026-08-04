@@ -59,7 +59,7 @@ internal static class Program
             resultDirectory,
             "calibration-results.json",
             results,
-            "calibration-results.v2.schema.json");
+            "calibration-results.v3.schema.json");
         Console.WriteLine(results.Passed ? "PASS" : "FAIL");
         return results.Passed ? 0 : 1;
     }
@@ -79,7 +79,7 @@ internal static class Program
             resultDirectory,
             "candidate-output.json",
             output,
-            "candidate-semantic-output.v2.schema.json");
+            "candidate-semantic-output.v3.schema.json");
         Console.WriteLine("PASS");
         return 0;
     }

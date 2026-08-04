@@ -28,6 +28,41 @@ public sealed class EvaluatorV2PublicProtocolTests
     }
 
     [TestMethod]
+    public void TypedFactValidationFollowsDeclaredSemanticTypeThroughTheScorer()
+    {
+        CalibrationResults result = CalibrationSuite.Run();
+        string[] passing =
+        [
+            "integral-token-semantic-number-boundary",
+            "semantic-number-equivalent-token-shapes",
+            "semantic-number-non-integral",
+            "prepared-integral-token-semantic-number",
+        ];
+        Assert.IsTrue(passing.All(id => result.Cases.Single(item => item.CaseId == id).ActualTerminal == "PASS"));
+
+        string[] contractFailures =
+        [
+            "semantic-integer-non-integral-rejected",
+            "semantic-number-string-rejected",
+            "semantic-number-boolean-rejected",
+            "semantic-number-null-rejected",
+            "semantic-number-object-rejected",
+            "semantic-number-array-rejected",
+        ];
+        Assert.IsTrue(contractFailures.All(id =>
+        {
+            CalibrationCaseResult item = result.Cases.Single(candidate => candidate.CaseId == id);
+            return item.ActualTerminal == "FAIL"
+                && item.ObservedFailureCategories!.SequenceEqual(["candidate_output_contract"], StringComparer.Ordinal);
+        }));
+
+        CalibrationCaseResult semanticMismatch = result.Cases.Single(item => item.CaseId == "semantic-type-mismatch-not-equal");
+        Assert.AreEqual("FAIL", semanticMismatch.ActualTerminal);
+        Assert.HasCount(1, semanticMismatch.ObservedFailureCategories!);
+        Assert.AreEqual("placement", semanticMismatch.ObservedFailureCategories![0]);
+    }
+
+    [TestMethod]
     public void CanonicalizerUsesIdFirstFormKeysAndNormalizesEmbeddedIdentities()
     {
         Assert.AreEqual("00000042:base.esm", SemanticCanonicalizer.CanonicalFormKey("00000042:Base.esm"));
@@ -47,18 +82,18 @@ public sealed class EvaluatorV2PublicProtocolTests
                 root,
                 "../escape.json",
                 result,
-                "calibration-results.v2.schema.json"));
+                "calibration-results.v3.schema.json"));
             Assert.IsFalse(Directory.Exists(root));
             EvaluatorScorer.WriteSingleResult(
                 root,
                 "result.json",
                 result,
-                "calibration-results.v2.schema.json");
+                "calibration-results.v3.schema.json");
             Assert.ThrowsExactly<ResultWriteException>(() => EvaluatorScorer.WriteSingleResult(
                 root,
                 "result.json",
                 result,
-                "calibration-results.v2.schema.json"));
+                "calibration-results.v3.schema.json"));
         }
         finally
         {
@@ -94,7 +129,7 @@ public sealed class EvaluatorV2PublicProtocolTests
                 Path.Combine(alias, "result"),
                 "result.json",
                 result,
-                "calibration-results.v2.schema.json"));
+                "calibration-results.v3.schema.json"));
         }
         finally
         {
@@ -144,7 +179,7 @@ public sealed class EvaluatorV2PublicProtocolTests
                 root,
                 "sanitized-result.json",
                 result,
-                "sanitized-result.v2.schema.json");
+                "sanitized-result.v3.schema.json");
 
             string json = File.ReadAllText(Path.Combine(root, "sanitized-result.json"));
             StringAssert.Contains(json, "\"failure_stage\": null", StringComparison.Ordinal);
@@ -352,6 +387,7 @@ public sealed class EvaluatorV2PublicProtocolTests
             "placement", "number", "0.1");
         Assert.IsFalse(output.Facts.Any(fact => fact.FactId.Contains("reason", StringComparison.OrdinalIgnoreCase)
                                                || fact.FactId.Contains("message", StringComparison.OrdinalIgnoreCase)));
+        AssertAggregateScoring(CreatePublicManifest("BETH-REFR-DEV"), output);
     }
 
     private static void AssertFact(CandidateSemanticOutput output, string id, string type, string valueType, string value)
@@ -416,7 +452,11 @@ public sealed class EvaluatorV2PublicProtocolTests
                 "public-aggregate",
                 "1.0.0",
                 candidate.State,
-                candidate.Facts);
+                candidate.Facts.Select(fact => fact.ValueType == "number"
+                    && fact.Value.ValueKind == JsonValueKind.Number
+                    && fact.Value.TryGetInt64(out long integral)
+                        ? fact with { Value = JsonValue($"{integral}.0") }
+                        : fact).ToArray());
             string passOracle = Path.Combine(root, "pass-oracle.json");
             File.WriteAllText(passOracle, EvaluatorProtocol.Serialize(expected), new System.Text.UTF8Encoding(false));
             ExpectedSemanticOutput mutation = expected with
@@ -466,5 +506,11 @@ public sealed class EvaluatorV2PublicProtocolTests
         {
             Directory.Delete(root, recursive: true);
         }
+    }
+
+    private static JsonElement JsonValue(string json)
+    {
+        using JsonDocument document = JsonDocument.Parse(json);
+        return document.RootElement.Clone();
     }
 }

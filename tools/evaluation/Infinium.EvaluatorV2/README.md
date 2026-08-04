@@ -1,10 +1,10 @@
 # Infinium public evaluator v2 successor
 
-This standalone public tool implements protocol `infinium.evaluator-v2/2`,
-scorer and adapter `2.0.0`, and Slice 4 projection
-`infinium.evaluator-v2.slice4-semantic-projection` `2.0.0`. Protocol `/1` and
-evaluator commit `8023cdf776a25210bcc80e7574c1aaecde278b6b` are retired before
-private corpus qualification and produced no held-out product verdict.
+This standalone public tool implements protocol `infinium.evaluator-v2/3`,
+scorer and adapter `3.0.0`, and Slice 4 projection
+`infinium.evaluator-v2.slice4-semantic-projection` `2.0.0`. Protocol `/2` and
+evaluator commit `72616fb6fbb3db7021e8100adc12a251c427f8d1` remain immutable
+historical evidence after Stage C.5 invalidated its product verdict.
 
 ## Projection contract
 
@@ -28,9 +28,12 @@ are percent-escaped path segments sorted ordinally. Ordered plugin, master,
 contribution, link-ordinal, and provider sequences use zero-padded ordinal
 indexes. Duplicate identities are invalid. FormKeys are canonicalized from the
 Slice 4 ID-first representation to `xxxxxxxx:plugin.ext`. Explicit null and a
-missing fact differ. Missing and extra facts are product mismatches. Integers
-compare exactly; placement floats use invariant round-trip JSON numbers and
-negative zero canonicalizes to zero.
+missing fact differ. Missing and extra facts are product mismatches. Typed-fact
+validation follows the declared semantic `value_type`: `integer` requires an
+exactly representable signed integer, while `number` accepts any finite JSON
+number, including an integral-valued token. Semantic numbers compare
+numerically, so `10` and `10.0` are equal when both declare `number`; semantic
+integers remain exact and type-distinct.
 
 ## Commands
 
