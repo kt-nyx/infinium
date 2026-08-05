@@ -1,7 +1,7 @@
 # Milestone plans
 
 Status: Draft  
-Last reviewed: 2026-08-04
+Last reviewed: 2026-08-05
 
 The M0 research plan completed on 2026-07-28. The accepted
 [M1 backend semantic proof plan](M1-backend-semantic-proof.md) is the active
@@ -16,11 +16,14 @@ at `98fe8a5` with passing retained public gates. Evaluator-v1 issued no valid
 held-out product verdict and is retired. The historical evaluator-v2 `/2`
 Stage C invocation ran once, but Stage C.5 invalidated its product verdict; no
 valid successor held-out verdict exists. The unchanged Slice 4 candidate
-remains publicly verified. Slice 4.5 is active under plan revision `/3`, with
+retains its historical public verification but does not yet conform to
+ADR-0028. Slice 4.5 is active under plan revision `/3`, with
 final protocol `/4` qualified and frozen at
 `3693d19563c636cd2879804633ca4ce52448d2c1`. The B2 input bytes already exist
 and passed independent byte review, but B2 oracle qualification under `/4` has
-not run. C2 has not run, Stage D has not started, and Slice 5 remains blocked.
+not run. The owner semantic disposition is accepted; public implementation,
+requalification, and a new candidate freeze are required before B2. C2 has not
+run, Stage D has not started, and Slice 5 remains blocked.
 
 Waves A through D have completed investigations and accepted integrated
 dispositions. Gates A through D are met at their applicable M0 research,

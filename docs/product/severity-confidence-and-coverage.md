@@ -1,7 +1,7 @@
 # Severity, confidence, maturity, coverage, and readiness
 
 Status: Accepted  
-Last reviewed: 2026-07-26
+Last reviewed: 2026-08-05
 
 This document separates concepts that must not be collapsed into one score.
 That separation is normative for product design. Category values for declared
@@ -144,6 +144,14 @@ population definitions.
 Infinium must not combine unlike dimensions into a single "93% analyzed" or
 "safety coverage" number. It may show several labeled percentages/counts and a
 coverage matrix.
+
+For the bounded M1 Bethesda contract, backend, persistence, export, and test
+surfaces retain the complete fixed registry defined by ADR-0028: plugins, NPC
+records, race records, placed-reference records, unsupported records, FaceGen
+loose assets, FaceGen archive assets, localized strings, automatic environment
+discovery, and taxonomy subjects. Rows with a zero denominator are retained and
+completed. A user-facing summary may omit those zero rows for clarity only when
+the complete detail remains accessible.
 
 ## Readiness
 

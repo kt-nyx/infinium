@@ -4,7 +4,11 @@ Status: Accepted
 Taxonomy ID: `infinium.skyrim-se.mod-impact-taxonomy`  
 Version: `0.1.0`  
 Accepted: 2026-07-25  
-Last reviewed: 2026-07-26
+Last reviewed: 2026-08-05
+
+Accepted clarification: ADR-0028 binds the canonical persisted identifiers used
+by the bounded M1 projection and the hybrid-emission rule below. It does not
+change taxonomy version `0.1.0` or any existing code meaning.
 
 ## Purpose
 
@@ -267,6 +271,36 @@ endpoints are comparable.
 
 Unknown applies independently to each facet. Applicability predicates accompany
 the estimate and are not taxonomy codes.
+
+## Canonical bounded-M1 persisted axis and facet identifiers
+
+The bounded M1 Bethesda projection uses these stable pairs:
+
+| Axis | Facet |
+|---|---|
+| `declared-purpose-and-intended-feature-area` | `purpose-kind` |
+| `technical-modification-surface` | `semantic-mechanism` |
+| `technical-modification-surface` | `realization-and-delivery` |
+| `affected-game-system-or-content-area` | `affected-area` |
+| `consequence-type` | `consequence-type` |
+| `effect-extent` | `direct-subject-breadth` |
+| `effect-extent` | `spatial-breadth` |
+| `effect-extent` | `persistence-and-lifecycle-breadth` |
+| `effect-extent` | `causal-propagation-or-blast-radius` |
+
+The bounded M1 Bethesda analyzer uses hybrid emission. Every plugin-record
+contribution emits its required technical `surface.plugin-data` and
+`delivery.plugin-container` assignments. It adds area, consequence, extent,
+purpose, or delivery
+assignments only where decoded semantic or provider evidence supports them.
+It does not emit a mandatory null tuple for every pair. Explicit `unknown`,
+`unsupported`, `unmapped`, or `not-applicable` tuples are retained when they
+communicate a real required conclusion rather than filling a matrix.
+
+Every declared FaceGen loose-provider chain is a taxonomy subject, including a
+single-provider chain; an enabled-plugin list alone is not a generic provider
+subject. Record signatures, names, and `EDID` values are insufficient by
+themselves to establish purpose, affected area, or consequence.
 
 ## Persistence contract
 

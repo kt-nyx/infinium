@@ -1,7 +1,7 @@
 # Domain model
 
 Status: Accepted  
-Last reviewed: 2026-07-28
+Last reviewed: 2026-08-05
 
 This is a conceptual model. Storage schemas and wire contracts require later
 architecture decisions.
@@ -239,6 +239,21 @@ Examples:
 - File path Y is provided by Mod C.
 - Required master Z is disabled.
 - DLL file Q reports version N.
+
+### Asset availability observation
+
+When the product reports whether a bounded asset path exists, the semantic
+state is exactly one of:
+
+- `present`: an effective provider is established;
+- `absent`: exhaustive authority establishes that no provider exists; or
+- `unknown`: available evidence cannot establish either conclusion.
+
+The state is a single typed `availability` value. A provider is required only
+for `present`. Transport schemas may encode the state into separate fields when
+the mapping is lossless and rejects an invalid fourth combination.
+Loose-provider availability and archive-member support are separate
+observations and coverage capabilities.
 
 ## External claim
 

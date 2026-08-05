@@ -26,7 +26,10 @@ paths; `SnapshotAuthorizedPath`; dependency fingerprints; separately bound
 producer/candidate metadata; timestamps; exception text; `Reason` or `Message`
 prose; display text; manifest-redundant byte hashes/lengths; and incidental
 serialization fields. The normative family-by-family authority is
-`docs/evaluation/m1-slice4-heldout-oracle-authority-matrix.md`.
+`docs/evaluation/m1-slice4-heldout-oracle-authority-matrix.md`. The accepted
+semantic choices inside that unchanged projection are in
+`docs/evaluation/m1-slice4-semantic-authority-owner-disposition.md` and
+ADR-0028. They require no protocol, schema, canonicalizer, or scorer change.
 
 Fact IDs use slash-delimited public collection/field names. Set/map identities
 are percent-escaped path segments sorted ordinally. Ordered plugin, master,
@@ -92,6 +95,9 @@ candidate projection is `FAIL/candidate_output_contract`; semantic mismatches
 are `FAIL/comparison`. A valid typed failed state compares normally.
 
 After closeout, the tracked public freeze handoff at
-`docs/evaluation/evaluator-v2-stage-a-final-bounded-freeze.json` is the sole
-Stage B.2 autodiscovery authority. Stage B.2 must not substitute a SHA supplied
-out of band, and no further successor iteration is authorized.
+`docs/evaluation/evaluator-v2-stage-a-final-bounded-freeze.json` remains the
+sole evaluator autodiscovery authority. It is not sufficient by itself to
+resume B2: the ADR-0028 product/specification realignment must first be
+implemented, requalified, and bound to a newly frozen candidate identity.
+Stage B2 must not substitute a SHA supplied out of band, and no evaluator
+successor iteration is authorized.

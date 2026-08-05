@@ -1,7 +1,11 @@
 # Analysis catalog
 
 Status: Accepted  
-Last reviewed: 2026-07-30
+Last reviewed: 2026-08-05
+
+Accepted bounded-M1 clarification: ADR-0028 governs the `EDID`, FaceGen,
+asset-availability, coverage, gap, and taxonomy semantics used by the first
+Bethesda proof.
 
 This is the living inventory of desired analysis capabilities. Nothing in this
 catalog implies that an analyzer currently exists. Initial status for every
@@ -129,6 +133,10 @@ linked-reference/placement case. `QUST`, quest-alias, and forced-reference
 semantics remain outside the M1 allowlist; the planned EVAL-0006/EVAL-0007
 quest-relevance pair is later roadmap work.
 
+Within this bounded proof, `EDID` is admitted identifying metadata for `NPC_`,
+`RACE`, and `REFR`, but the identifier value is not semantic evidence of
+purpose, affected area, consequence, or intent.
+
 ## E. Cross-record and cross-layer coherence
 
 Analyze coherent feature graphs rather than isolated rows. These are
@@ -180,6 +188,12 @@ MO2/provider reconstruction and production-parser conformance remain separate
 evaluation work. Archive FaceGen parity is independently gated. Wave C
 selected no production NIF parser dependency, so parser choice and
 qualification remain later work.
+
+For the bounded M1 FaceGen proof, applicability is decided in the accepted
+deleted, template-decision, definite trait-template, race-decision,
+race-without-FaceGen, applicable order. Non-trait template use does not suppress
+the NPC's own FaceGen check. Asset availability is reported as `present`,
+`absent`, or `unknown`; archive support is a separate capability gap.
 
 ## G. Patch effectiveness
 

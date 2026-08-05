@@ -1,7 +1,7 @@
 # Architecture Decision Records
 
 Status: Draft  
-Last reviewed: 2026-08-04
+Last reviewed: 2026-08-05
 
 ADRs preserve technical decisions and their rationale. They are append-only:
 accepted records are superseded rather than rewritten to hide prior decisions.
@@ -37,6 +37,7 @@ accepted records are superseded rather than rewritten to hide prior decisions.
 | [ADR-0025](ADR-0025-m1-openai-model-and-synchronous-responses-profile.md) | Accepted | Use one explicit `gpt-5.6-sol` synchronous Structured Outputs profile for M1 with retained-result replay and drift requalification |
 | [ADR-0026](ADR-0026-evaluator-private-fixture-repository-and-delegated-access.md) | Accepted; partially superseded | Store private fixtures in a separate Git repository; evaluator-v1 copied-contract/scorer ownership is superseded by ADR-0027 |
 | [ADR-0027](ADR-0027-public-evaluation-protocol-private-held-out-corpus.md) | Accepted | Keep evaluation rules, schemas, adapter, scorer, and calibration public while private data and independent lifecycle evidence remain separate |
+| [ADR-0028](ADR-0028-m1-bethesda-semantic-reporting-and-oracle-authority.md) | Accepted | Bind M1 EDID, FaceGen, asset-state, coverage, gap, and taxonomy semantics for product and oracle authority |
 
 ADR-0015 through ADR-0023 are accepted and jointly select the Wave E
 persistence, lifecycle, application-stack, process, IPC, credential, security,
@@ -50,6 +51,10 @@ ADR-0027 preserves that repository and answer-isolation boundary while
 superseding evaluator v1's private protocol/scorer ownership with public rules,
 thin read-only scoring, terminal `PASS`/`FAIL`/`EVALUATOR_ERROR`, and separate
 authoring, scoring, and public-closeout tasks.
+ADR-0028 resolves the six public semantic-authority questions found during
+Slice 4.5 authority completion without changing protocol `/4`; it makes the
+tri-state asset model, fixed backend coverage registry, layered gap vocabulary,
+and hybrid taxonomy emission authoritative.
 ADR-0008 through
 ADR-0011 accept the Wave B integration and semantic
 boundaries, and ADR-0012 accepts the revised Nexus interface/risk boundary,
@@ -61,7 +66,8 @@ The product baseline was accepted on 2026-07-25 and its requirements are now
 authoritative. ADR-0001 through ADR-0011 were accepted on 2026-07-25.
 ADR-0012 through ADR-0023 and ADR-0025 were accepted on 2026-07-28, and
 ADR-0024 was rejected that day. ADR-0026 was accepted on 2026-08-01, and
-ADR-0027 was accepted on 2026-08-04. ADR-0007
+ADR-0027 was accepted on 2026-08-04, and ADR-0028 was accepted on 2026-08-05.
+ADR-0007
 supersedes only ADR-0006's xEdit-specific
 provisions, ADR-0012 supersedes only ADR-0005's API-interface eligibility and
 selection provisions, and ADR-0014 supersedes only ADR-0011's managed-data
@@ -149,6 +155,9 @@ stage:
 - ADR-0014 accepts current-compatible LOOT-data discovery, immutable
   masterlist/prelude pair validation and activation, rollback, freshness
   disclosure, and active/historical run isolation.
+- ADR-0028 binds the bounded M1 Bethesda semantic-reporting contract and the
+  corresponding independently authorable oracle rules while preserving the
+  ADR-0027 public-rule/private-data boundary.
 
 Other accepted decisions currently belong in product, taxonomy, evaluation, or
 milestone documents rather than requiring duplicate ADRs.

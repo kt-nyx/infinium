@@ -1,7 +1,7 @@
 # Plans
 
 Status: Draft  
-Last reviewed: 2026-08-04
+Last reviewed: 2026-08-05
 
 The [M0 research-foundation plan](milestones/M0-research-foundation.md) was
 accepted on 2026-07-25 and completed on 2026-07-28. The accepted
@@ -11,17 +11,21 @@ the active implementation plan together with its accepted
 Completed-slice evidence is indexed under
 [`implementation-records/`](implementation-records/README.md).
 
-Slices 0 through 4 are implementation-complete. Slice 4's unchanged Mutagen
-semantic and typed-index candidate is frozen at `98fe8a5` and remains publicly
-verified. Evaluator-v1 attempts produced no valid held-out product verdict.
+Slices 0 through 4 are historically implementation-complete. Slice 4's
+unchanged Mutagen semantic and typed-index candidate is frozen at `98fe8a5` and
+retains its historical public verification, but it does not yet conform to the
+later owner-accepted ADR-0028 contract. Evaluator-v1 attempts produced no valid
+held-out product verdict.
 The historical evaluator-v2 `/2` Stage C invocation ran once, but Stage C.5
 invalidated its product verdict, so no valid successor held-out verdict exists.
 Active [Slice 4.5](slices/M1-slice-4.5-held-out-evaluation-v2.md) has qualified
 and frozen final protocol `/4` at
 `3693d19563c636cd2879804633ca4ce52448d2c1`. The B2 input bytes already exist
 and passed independent byte review, but B2 oracle qualification under `/4` has
-not run. C2 has not run, Stage D has not started, Slice 5 remains blocked, and
-M1 remains active.
+not run. The six semantic questions are resolved; public implementation,
+requalification, and a newly frozen candidate are now required before B2. C2
+has not run, Stage D has not started, Slice 5 remains blocked, and M1 remains
+active.
 The accepted
 [Slice 3.5 execution plan](slices/M1-slice-3.5-bethesda-fixture-qualification.md)
 is indexed under [`slices/`](slices/README.md).
@@ -81,8 +85,10 @@ Every milestone plan should include:
 The initial milestone sequence is described in
 [`../product/scope-and-milestones.md`](../product/scope-and-milestones.md).
 
-The M1 Slice 4.5 Stage A public evaluator is frozen at final protocol `/4`. Its
-[freeze handoff](../evaluation/evaluator-v2-stage-a-final-bounded-freeze.json)
-is the only authority for the one permitted fresh-reviewer B2 resume. Another
-oracle-authority gap does not authorize `/5`, evaluator expansion, or product
-output as oracle truth; it must be recorded for owner milestone disposition.
+The M1 Slice 4.5 Stage A public evaluator is frozen at final protocol `/4`.
+ADR-0028 and the accepted semantic-authority owner disposition resolve the
+later public mismatch, but do not by themselves authorize B2. Public product
+realignment, requalification, and a newly frozen candidate must precede the
+one permitted fresh-reviewer B2 resume. Another oracle-authority gap does not
+authorize `/5`, evaluator expansion, or product output as oracle truth; it must
+be recorded for owner milestone disposition.

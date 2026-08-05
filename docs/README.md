@@ -1,7 +1,7 @@
 # Infinium documentation
 
 Status: Draft  
-Last reviewed: 2026-08-04
+Last reviewed: 2026-08-05
 
 This directory is the authoritative entry point for the rebuilt Infinium
 project. It records product intent, accepted decisions, research, evaluation
@@ -137,6 +137,8 @@ Every material document should include a status and last-reviewed date.
   ADR-0026's evaluator-private repository and delegated-access boundary was
   accepted on 2026-08-01. ADR-0027's public-rule/private-data evaluator-v2
   architecture was accepted on 2026-08-04 and partially supersedes ADR-0026.
+  ADR-0028's bounded M1 semantic-reporting and oracle-authority disposition was
+  accepted on 2026-08-05.
 - Wave F produced the accepted M1 evaluation baseline, detailed semantic and
   platform/operational case specifications and fixture manifests, the
   RQ-028 calibration protocol, exact OpenAI M1 profile research, a
@@ -163,8 +165,11 @@ Every material document should include a status and last-reviewed date.
   rerun. The historical evaluator-v2 `/2` Stage C invocation ran once and its
   `FAIL` remains immutable, but the owner-supplied Stage C.5 adjudication
   invalidated its product verdict, so no valid successor held-out verdict
-  currently exists; no product correction is indicated. The Slice 4 product
-  candidate remains unchanged and publicly verified. Final protocol `/4` is
+  currently exists. The Slice 4 product candidate remains unchanged and
+  historically verified, but the later independent authority-completion review
+  found six semantic mismatches. ADR-0028 now resolves the intended behavior;
+  a separate public implementation and requalification task is required before
+  B2 can resume. Final protocol `/4` is
   qualified and frozen at
   `3693d19563c636cd2879804633ca4ce52448d2c1`. The B2 input bytes already exist
   and passed independent byte review, but B2 oracle qualification under `/4`
@@ -202,4 +207,6 @@ Every material document should include a status and last-reviewed date.
 - [Sanitized Stage B.2 contract gap](evaluation/evaluator-v2-successor-stage-b2-contract-gap.md)
 - [Final Slice 4 held-out scope amendment](evaluation/m1-slice4-heldout-scope-final-amendment.md)
 - [Normative oracle-authority matrix](evaluation/m1-slice4-heldout-oracle-authority-matrix.md)
+- [Accepted semantic-authority owner disposition](evaluation/m1-slice4-semantic-authority-owner-disposition.md)
+- [ADR-0028 bounded M1 semantic authority](architecture/decisions/ADR-0028-m1-bethesda-semantic-reporting-and-oracle-authority.md)
 - [Protocol `/4` final freeze handoff](evaluation/evaluator-v2-stage-a-final-bounded-freeze.json)

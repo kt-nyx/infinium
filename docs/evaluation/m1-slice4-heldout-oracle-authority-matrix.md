@@ -23,17 +23,22 @@ named here. Product-generated identifiers are never oracle authority.
 | `npcs` | Included | Resolved effective NPC facts derived from retained contributions and accepted order. | Rooted by canonical FormKey; same NPC rules as contribution facts. | Optional links are explicit null; AIDT is presence-only. | Effective semantics are independently reconstructible. |
 | `races` | Included | Resolved effective RACE facts. | Rooted by canonical FormKey. | Required projected fields are present. | Effective semantics are independently reconstructible. |
 | `placed_references` | Included | Resolved effective REFR facts. | Rooted by canonical FormKey; link and placement rules match contribution facts. | Optional links are explicit null; placement is absent when not encoded. | Effective semantics are independently reconstructible. |
-| `face_gen` | Included | Canonical NPC FormKey plus answer-free loose-provider chains and winner provider ID. | Rooted by canonical NPC FormKey; provider order preserved; paths slash-normalized and lowercase. | Missing loose assets preserve `present` and `exact_absence_known`; winner may be explicit null. | Manifest provider IDs identify installed entities and are not product answer IDs. |
-| `taxonomy` | Included | Semantic taxonomy tuple derived from independently observed record/provider semantics and the public taxonomy contract. | Rooted by evaluator-owned canonical subject, subject type, axis, facet, code-or-null, applicability, and role; facts include those fields plus taxonomy ID/version. Duplicate semantic tuples are invalid. | Null code is explicit. Product assignment, analyzer/adjudicator, evidence, and reason fields are not projected. | The semantic tuple is authorable; product-generated bookkeeping identities are not. |
-| `coverage` | Included | Population, denominator, completed count, and state computed from independently authorable projected populations. | Rooted and sorted by population. | Required for declared populations. Denominator labels and gap-ID lists are excluded. | Coverage arithmetic is authorable without product gap identities. |
-| `gaps` | Included | Population, denominator, and missing capability. | Rooted by population plus missing capability and sorted ordinally. | Empty when no snapshot-level gap exists. | Capability absence is semantic; generated gap IDs are not. |
+| `face_gen` | Included | Canonical NPC FormKey plus the accepted FaceGen precedence and answer-free loose-provider chains. | Rooted by canonical NPC FormKey; provider order preserved; paths slash-normalized and lowercase. | The semantic state is present, absent, or unknown. Protocol `/4` encodes those states as `true/false`, `false/true`, and `false/false` for `present/exact_absence_known`; `true/true` is invalid. Winner is required only for present. | Manifest provider IDs identify installed entities and are not product answer IDs; archive support is a separate capability. |
+| `taxonomy` | Included | Hybrid semantic taxonomy tuples derived from independently observed record/provider semantics and the public taxonomy contract. | Rooted by evaluator-owned canonical subject, subject type, canonical axis/facet, code-or-null, applicability, and role; duplicate semantic tuples are invalid. | Required technical tuples are present; further tuples exist only when meaningful evidence or a required explicit limitation supports them. Product assignment, analyzer/adjudicator, evidence, and reason fields are not projected. | The semantic tuple is authorable without manufacturing a mandatory all-null matrix. |
+| `coverage` | Included | The fixed ten-population registry, denominator, completed count, and state computed under the accepted owner disposition. | Rooted and sorted by population; all ten rows are emitted, including zero denominators. | Zero denominator is completed. Denominator labels and gap-ID lists are excluded. | Coverage arithmetic is authorable without product gap identities. |
+| `gaps` | Included | Layered semantic population, denominator, and missing capability from the accepted public vocabulary. | Rooted by population plus missing capability and sorted ordinally; identical pairs aggregate exact affected counts. | Empty when no snapshot-level gap exists. | Capability absence and exact semantic scope are authority; generated gap IDs and incidental prose are not. |
 | `result_gaps` | Included | Result-envelope population, denominator, and missing capability. | Same as `gaps`. | Empty when no result-level gap exists. | Preserves failure-boundary coverage without generated IDs. |
 
 Evaluator-owned semantic contribution identity is the normalized tuple of
 source plugin, load order, record FormKey, signature, raw flags, deleted state,
-and compressed state. Provider-topology taxonomy subjects are derived from the
-ordered manifest plugin/provider tuple. Unsupported-record taxonomy subjects
+and compressed state. FaceGen provider taxonomy subjects are derived from each
+declared ordered loose-provider chain, including a single-provider chain.
+Unsupported-record taxonomy subjects
 are derived from source plugin, signature, and canonical FormKey.
+
+The exact FaceGen precedence, fixed coverage registry, layered gap vocabulary,
+and canonical taxonomy axis/facet pairs are defined by the accepted
+[semantic-authority owner disposition](m1-slice4-semantic-authority-owner-disposition.md).
 
 ## Public-conformance-only fields
 

@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Held-out evaluation v2 implementation record
 
-Status: Final bounded evaluator `/4` frozen; authority-completion conformance mismatch awaiting owner disposition; B2 blocked
+Status: Final bounded evaluator `/4` frozen; owner semantic disposition complete; public product/specification realignment required; B2 blocked
 Opened: 2026-08-04
 Plan: `infinium.plan.m1.backend-semantic-proof/3`
 Execution plan: [M1 Slice 4.5](../slices/M1-slice-4.5-held-out-evaluation-v2.md)
@@ -230,8 +230,8 @@ test-output bundle then passed; no held-out invocation or retry occurred.
 
 No private fixture repository content or legacy archive content was accessed.
 Stage B private qualification and Stage C held-out scoring have not run.
-Stage B is unblocked and must autodiscover the unique frozen evaluator from the
-tracked freeze handoff. Branch publication target:
+At that Stage A checkpoint, Stage B was unblocked and required to autodiscover
+the unique frozen evaluator from the tracked freeze handoff. Branch publication target:
 `codex/m1-slice-4.5-evaluator-v2`.
 
 ## Later stages
@@ -313,7 +313,7 @@ The exact 21-file public source/protocol/test inventory is in
 [`../../evaluation/evaluator-v2-stage-a-successor-freeze.json`](../../evaluation/evaluator-v2-stage-a-successor-freeze.json).
 No private fixture content or legacy archive content was accessed. Private
 successor-corpus qualification and held-out scoring are not run. Successor
-Stage B is unblocked; Stage D has not started. This documentation-only closeout
+Stage B was unblocked at that `/3` checkpoint; Stage D had not started. This documentation-only closeout
 does not modify the frozen evaluator code, schemas, tests, calibration, adapter,
 or projection. No push was performed.
 
@@ -425,4 +425,28 @@ projection, or comparison. The focused public evaluator suite passed 12 tests
 with 1 expected platform-capability skip, confirming the frozen behavior under
 review. No private attempt 2, oracle, qualification, corpus `2.0.0`, tag,
 candidate execution, C2, Stage D, `adapt`, `score`, or `score-corpus` occurred.
-Private B2 remains blocked for owner disposition.
+Private B2 remained blocked for owner disposition.
+
+## 2026-08-05 owner semantic disposition
+
+The project owner resolved all six public semantic questions in ADR-0028 and
+the accepted semantic-authority owner disposition. The selected contract keeps
+`EDID`; uses the closed FaceGen precedence; treats loose-asset availability as
+present, absent, or unknown; retains all ten backend coverage rows; uses
+layered gaps; and emits a required technical taxonomy core plus only meaningful
+evidence-supported assignments.
+
+This was a public documentation-only disposition. Product code, evaluator code,
+schemas, private fixtures, candidate outputs, and frozen identities were not
+changed or accessed. The next authorized work is public product/specification
+realignment and requalification. B2, C2, and Stage D remain blocked until a new
+conforming candidate is frozen.
+
+Documentation closeout verification:
+
+- branch: `codex/m1-slice-4.5-semantic-disposition`;
+- `git diff --check`: passed;
+- all relative Markdown links in changed files: resolved;
+- focused `M1Contract` plus `M1Evaluation` test run: 110 passed, 9 expected
+  private/platform-capability skips, 0 failed; and
+- private fixture repository and legacy archive: not accessed.

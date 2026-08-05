@@ -1,7 +1,7 @@
 # Evaluation strategy
 
 Status: Draft  
-Last reviewed: 2026-08-04
+Last reviewed: 2026-08-05
 
 Infinium is not trustworthy because it produces plausible reports. It becomes
 trustworthy only when evidence reconstruction, candidate selection, semantic
@@ -340,3 +340,8 @@ product provenance IDs. Held-out evaluation verifies only independently
 specifiable semantic behavior listed in the
 [oracle-authority matrix](m1-slice4-heldout-oracle-authority-matrix.md). These
 partitions are reported separately and neither substitutes for the other.
+The accepted
+[semantic-authority owner disposition](m1-slice4-semantic-authority-owner-disposition.md)
+binds the exact EDID, FaceGen, availability, coverage, gap, and taxonomy
+semantics inside that unchanged partition. B2 remains blocked until the public
+product/specification contract is implemented, requalified, and frozen.

@@ -1,10 +1,16 @@
 # Product requirements
 
 Status: Accepted  
-Last reviewed: 2026-07-28
+Last reviewed: 2026-08-05
 
 Accepted amendments:
 
+- 2026-08-05 — The owner accepted the bounded M1 Bethesda semantic-reporting
+  contract in
+  [ADR-0028](../architecture/decisions/ADR-0028-m1-bethesda-semantic-reporting-and-oracle-authority.md):
+  `EDID` identifying metadata, closed FaceGen precedence, semantic tri-state
+  asset availability, a fixed backend coverage registry, layered gaps, and
+  hybrid evidence-bounded taxonomy emission.
 - 2026-07-28 — The owner reaffirmed direct, schema-constrained OpenAI
   Responses API calls through user-supplied, usage-priced Platform API keys
   and rejected Codex/ChatGPT-plan access as the core LLM adapter. ADR-0024
@@ -1023,6 +1029,22 @@ providers, winners, records, assets, configuration, runtime components,
 documentation, patches, and generated outputs. The comparison shall explain
 dependent invalidation and carryover, and shall never treat a user-designated
 reference as proof that the prior setup was correct or safe.
+
+### ANALYSIS-019 — Bounded Bethesda semantic reporting
+
+Priority: Must
+
+Delivery: M1 — Backend semantic proof
+
+The bounded M1 Bethesda analyzer shall implement the accepted `NPC_`, `RACE`,
+and `REFR` field boundary; FaceGen applicability precedence; semantic
+`present`/`absent`/`unknown` asset state; fixed ten-population backend coverage
+registry; layered coverage gaps; and hybrid evidence-bounded taxonomy emission
+defined by [ADR-0028](../architecture/decisions/ADR-0028-m1-bethesda-semantic-reporting-and-oracle-authority.md).
+`EDID` may identify a record but shall not independently establish semantic
+classification, consequence, finding, or intent. Evaluation transport may
+encode the tri-state losslessly, but product and user-facing contracts shall
+not expose an ambiguous fourth state.
 
 ## Documentation intelligence
 

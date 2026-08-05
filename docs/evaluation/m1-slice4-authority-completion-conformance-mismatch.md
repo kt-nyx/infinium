@@ -1,6 +1,6 @@
 # M1 Slice 4.5 authority-completion product-conformance mismatch
 
-Status: Terminal public conformance blocker; awaiting project-owner disposition
+Status: Owner disposition accepted; public product/specification realignment required
 
 Recorded: 2026-08-05
 
@@ -16,10 +16,28 @@ fact families. The subsequent, separately gated product-conformance review
 found that the unchanged frozen candidate does not conform to that independent
 specification.
 
-This is the required stop condition. The proposed specification is not
-accepted or frozen, no authority-completion freeze exists, private B2 must not
-resume, and no product or evaluator change is authorized by this record. The
-project owner must disposition the mismatch through the milestone plan.
+This was the required stop condition for the authority-completion attempt. The
+proposed specification was not accepted or frozen and no authority-completion
+freeze exists. The project owner has since dispositioned the six questions in
+[ADR-0028](../architecture/decisions/ADR-0028-m1-bethesda-semantic-reporting-and-oracle-authority.md)
+and the accepted
+[semantic-authority owner disposition](m1-slice4-semantic-authority-owner-disposition.md).
+Private B2 still must not resume until the public product/specification
+realignment is implemented, qualified, and frozen.
+
+## Accepted owner disposition
+
+The owner selected the candidate's `EDID` inclusion; accepted the proposed
+FaceGen precedence; replaced the loose-asset boolean concept with a semantic
+present/absent/unknown tri-state losslessly encoded by protocol `/4`; selected
+the fixed ten-row registry for backend/test authority with optional zero-row
+omission only in user-facing summaries; selected layered gaps; and selected
+hybrid evidence-bounded taxonomy emission using the accepted persisted
+axis/facet identifiers.
+
+These choices answer what correct output means. They do not retroactively make
+either the frozen candidate or the rehearsal draft conforming, and they do not
+authorize protocol `/5`, private oracle work, candidate execution, or scoring.
 
 ## Frozen identities checked
 

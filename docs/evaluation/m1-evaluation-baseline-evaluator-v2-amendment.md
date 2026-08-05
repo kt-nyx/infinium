@@ -3,7 +3,7 @@
 Status: Accepted
 Accepted: 2026-08-04
 Accepted by: Project owner
-Last reviewed: 2026-08-04
+Last reviewed: 2026-08-05
 Predecessor: [M1 evaluation baseline](m1-evaluation-baseline.md)
 
 ## Amendment model
@@ -11,6 +11,8 @@ Predecessor: [M1 evaluation baseline](m1-evaluation-baseline.md)
 The accepted M1 baseline remains authoritative except where this document
 replaces evaluator protocol, ownership, terminal-state mapping, and held-out
 gate sequencing under ADR-0027 and M1 plan revision `/3`.
+ADR-0028 later binds the bounded semantic authority inside final protocol `/4`
+without changing evaluator ownership or terminal mapping.
 
 ## Public protocol and private corpus
 
@@ -89,9 +91,9 @@ replacement, and any later scoring is a new successor tuple and invocation.
 Public successor protocol `infinium.evaluator-v2/3` is qualified and frozen at
 `34ed0c84165e9a49f44a88ecd87cac967132ebd7`. Its exact source/protocol inventory
 and calibration identity are recorded in the
-[successor Stage A freeze](evaluator-v2-stage-a-successor-freeze.json). Successor
-Stage B is unblocked. Private successor-corpus work and held-out scoring have
-not run, and Stage D has not started.
+[successor Stage A freeze](evaluator-v2-stage-a-successor-freeze.json). At that
+`/3` checkpoint, successor Stage B was unblocked. Private successor-corpus work
+and held-out scoring had not run, and Stage D had not started.
 
 ## Final bounded held-out scope clarification
 
@@ -113,6 +115,15 @@ the held-out gate or authorize a product correction, Stage C2, Stage D, Slice
 Protocol `/4` was publicly qualified and frozen at
 `3693d19563c636cd2879804633ca4ce52448d2c1`. Its machine-readable authority is
 the [final bounded freeze handoff](evaluator-v2-stage-a-final-bounded-freeze.json).
-The existing successor-corpus inputs may resume B2 once under that freeze; no
-oracle, corpus fingerprint/freeze/tag, comparison, Stage C2 score, or Stage D
-work has yet occurred under `/4`.
+At that freeze checkpoint, the existing successor-corpus inputs were permitted
+to resume B2 once; no oracle, corpus fingerprint/freeze/tag, comparison, Stage
+C2 score, or Stage D work had occurred under `/4`.
+
+## Owner semantic disposition
+
+ADR-0028 and the accepted
+[semantic-authority owner disposition](m1-slice4-semantic-authority-owner-disposition.md)
+resolve the six later authority-completion mismatches without changing
+protocol `/4`. B2 may no longer resume under the evaluator freeze alone.
+Public product/specification realignment,
+requalification, and a newly frozen conforming candidate are required first.

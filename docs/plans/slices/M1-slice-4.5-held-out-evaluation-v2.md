@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Held-out evaluation v2
 
-Status: Accepted; final bounded `/4` evaluator complete; authority-completion conformance mismatch awaiting owner disposition; B2 blocked
+Status: Accepted; owner semantic disposition complete; public product/specification realignment required; B2 blocked
 Owner: Project owner
 Prepared: 2026-08-04
 Accepted: 2026-08-04
@@ -18,7 +18,7 @@ one valid held-out verdict for the frozen Slice 4 candidate.
 
 - accepted product requirements and taxonomy `0.1.0`;
 - ADR-0001, ADR-0003, ADR-0009, ADR-0015, ADR-0018, ADR-0019, ADR-0021,
-  ADR-0026, and ADR-0027;
+  ADR-0026, ADR-0027, and ADR-0028;
 - accepted M1 evaluation baseline plus evaluator-v2 amendment;
 - M1 plan revision `/3`;
 - completed Slice 3.5 and Slice 4 implementation records; and
@@ -269,8 +269,8 @@ The authorized public task froze successor protocol `infinium.evaluator-v2/3`
 at `34ed0c84165e9a49f44a88ecd87cac967132ebd7`. Its machine-readable inventory is
 [`evaluator-v2-stage-a-successor-freeze.json`](../../evaluation/evaluator-v2-stage-a-successor-freeze.json).
 Later successor corpus construction and scoring are new fresh tasks and a new
-invocation, not a retry. Successor Stage B is unblocked but has not run. Slice
-4.5 remains active and blocked; Stage D has not started.
+invocation, not a retry. At that `/3` stage, successor Stage B was unblocked but
+had not run. Slice 4.5 remained active and blocked; Stage D had not started.
 
 ## Final bounded held-out projection amendment
 
@@ -326,4 +326,16 @@ established rules. The exact multi-surface mismatch is append-only in
 The proposed specification was not changed to match product behavior, the
 candidate and evaluator remain unchanged, and no public authority-completion
 freeze was created. Private B2, Stage C2, and Stage D remain blocked pending
-project-owner milestone-plan disposition.
+public product/specification realignment, qualification, and a newly frozen
+candidate identity.
+
+## Owner semantic disposition
+
+On 2026-08-05 the project owner accepted ADR-0028 and the public
+[semantic-authority owner disposition](../../evaluation/m1-slice4-semantic-authority-owner-disposition.md).
+The six semantic questions are closed without changing protocol `/4`. A
+separate public task must now update the Bethesda semantic implementation and
+tests, qualify the corrected candidate, and freeze its exact identity. Only
+then may private B2 resume with a fresh isolated oracle reviewer. The current
+documentation update does not perform or authorize that implementation,
+private access, candidate execution, or scoring.
