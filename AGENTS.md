@@ -73,3 +73,10 @@ authorized fresh tasks, not recursive implementation subtasks. Private
 scoring returns only the sanitized handoff permitted by governance v2.
 Evaluator or corpus maintenance has no product-scoring authority, and the
 scorer has no maintenance authority.
+
+Protocol `/4` is the final authorized M1 held-out evaluator revision. After it
+is frozen, one fresh private oracle reviewer may resume Stage B2 once. If an
+authoritative oracle still cannot be authored because of another public
+contract or projection gap, do not create `/5`, do not expand the evaluator,
+and do not use product output as truth. Record an unresolved evaluation gap
+and return to the project owner for milestone-plan disposition.

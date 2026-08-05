@@ -92,3 +92,20 @@ and calibration identity are recorded in the
 [successor Stage A freeze](evaluator-v2-stage-a-successor-freeze.json). Successor
 Stage B is unblocked. Private successor-corpus work and held-out scoring have
 not run, and Stage D has not started.
+
+## Final bounded held-out scope clarification
+
+The owner-supplied sanitized Stage B2 review found that protocol `/3` required
+exact failure codes, typed `AIDT` subfields, and internal taxonomy assignment
+IDs that an independent oracle could not author from public authority and
+hidden input bytes alone. The complete public disclosure is retained in the
+[Stage B2 contract-gap record](evaluator-v2-successor-stage-b2-contract-gap.md).
+
+The accepted
+[final Slice 4 held-out scope amendment](m1-slice4-heldout-scope-final-amendment.md)
+therefore separates implementation-specific public conformance from
+independently specifiable held-out semantics. Protocol `/3` remains qualified
+historical public evidence and is superseded before a valid successor corpus.
+Protocol `/4` is the final authorized M1 evaluator revision. It does not waive
+the held-out gate or authorize a product correction, Stage C2, Stage D, Slice
+5, or a later `/5` evaluator.

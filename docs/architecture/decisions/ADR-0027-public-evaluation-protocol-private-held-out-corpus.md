@@ -8,6 +8,11 @@ Last reviewed: 2026-08-04
 Supersedes: Part of ADR-0026
 Superseded by: None
 
+Accepted clarification, 2026-08-04: independently authorable held-out
+semantics and implementation-specific public conformance are separate proof
+surfaces. The normative boundary is recorded in
+[the final Slice 4 held-out scope amendment](../../evaluation/m1-slice4-heldout-scope-final-amendment.md).
+
 ## Context
 
 ADR-0026 correctly separated answer-bearing validation and held-out fixtures
@@ -109,6 +114,15 @@ raw and sanitized run records.
 13. Stronger OS identity, VM, or private-CI isolation remains an optional
     future enforcement mechanism. It is not an M1 prerequisite unless the
     project owner or the exercised threat model requires it.
+14. Private held-out comparison is limited to facts independently derivable
+    from public semantic/byte rules, the answer-free execution manifest,
+    accepted taxonomy vocabulary, and hidden input bytes. Exact diagnostic
+    strings, library-specific typed mappings, internal IDs, serialization,
+    persistence, and provenance identifiers remain public-conformance-only.
+15. Protocol `/4` is the final M1 evaluator revision. One fresh Stage B2
+    oracle review may resume after its freeze. A remaining authority gap is
+    recorded for owner milestone disposition; it does not authorize `/5`,
+    evaluator expansion, or use of product output as truth.
 
 ## Consequences
 

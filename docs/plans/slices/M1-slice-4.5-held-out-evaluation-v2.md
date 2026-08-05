@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Held-out evaluation v2
 
-Status: Accepted; successor public evaluator frozen, successor Stage B unblocked
+Status: Accepted; final bounded `/4` revision authorized, implementation pending
 Owner: Project owner
 Prepared: 2026-08-04
 Accepted: 2026-08-04
@@ -266,3 +266,37 @@ at `34ed0c84165e9a49f44a88ecd87cac967132ebd7`. Its machine-readable inventory is
 Later successor corpus construction and scoring are new fresh tasks and a new
 invocation, not a retry. Successor Stage B is unblocked but has not run. Slice
 4.5 remains active and blocked; Stage D has not started.
+
+## Final bounded held-out projection amendment
+
+The owner-supplied sanitized Stage B2 review is recorded in
+[`../../evaluation/evaluator-v2-successor-stage-b2-contract-gap.md`](../../evaluation/evaluator-v2-successor-stage-b2-contract-gap.md).
+The successor inputs were constructed and independently byte-reviewed without
+input correction, candidate execution, product source/output, or
+contamination, but `/3` oracle construction stopped before expected outputs
+because exact failure codes, typed `AIDT` subfields, and internal taxonomy
+assignment IDs were not independently authorable.
+
+The final accepted scope is defined by
+[`../../evaluation/m1-slice4-heldout-scope-final-amendment.md`](../../evaluation/m1-slice4-heldout-scope-final-amendment.md):
+
+- public conformance retains exact product diagnostics, the complete typed
+  `AIDT` mapping, and internal taxonomy/provenance/serialization identifiers;
+- held-out comparison retains only independently specifiable semantic facts;
+- protocol `/3` remains qualified historical public evidence but is
+  superseded before a valid successor corpus; and
+- protocol `/4`, scorer/adapter `4.0.0`, and projection `3.0.0` are the final
+  authorized M1 evaluator revision.
+
+Protocol `/4` must be qualified and frozen through the same public-only review,
+determinism, identity, write-confinement, adapter, prepared-comparison,
+aggregate, and full-repository gates already required by this plan. The public
+oracle-authority matrix is normative for every emitted fact family.
+
+After the `/4` freeze, one fresh private oracle reviewer may resume B2 once.
+If another public-contract or projection gap prevents authoritative oracle
+construction, stop: do not create `/5`, do not expand the evaluator, and do
+not use product output as truth. Record the held-out gate as an unresolved
+evaluation gap and return to the project owner for milestone-plan disposition.
+Stage C2 and Stage D remain separately authorized future tasks, Slice 5 stays
+blocked, and this amendment does not waive the held-out gate.
