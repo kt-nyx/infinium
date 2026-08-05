@@ -4,7 +4,7 @@ Status: Accepted
 Owner: Project owner  
 Prepared: 2026-07-28  
 Accepted: 2026-07-28  
-Last reviewed: 2026-08-01
+Last reviewed: 2026-08-05
 Applies to: completed M0 Wave F and accepted M1 backend semantic proof
 
 ## Purpose
@@ -40,6 +40,7 @@ of the requirement before its stated delivery milestone.
 | RQ-022 / PEX/VMAD | Static structural support is bounded but not required by the first proofs | M1 amendment or later analyzer plan |
 | RQ-023 archive/NIF breadth | Loose-only FaceGen boundary is sufficient for EVAL-0016; archive parity and a production NIF parser remain unselected | Any archive-positive or NIF-reference coverage claim |
 | RQ-027 production budgets | M0 establishes feasibility, not production thresholds | Architecture prototype and representative measured runs |
+| Exhaustive loose-file absence authority | M1's structural provider snapshot can prove an exact declared winner but cannot prove that every possible loose path was exhaustively byte-verified. Missing loose FaceGen paths therefore remain `unknown`, not `absent` | M3 exact-effective-installation and asset-coherence planning, or an earlier accepted scope amendment that defines, implements, and qualifies an exhaustive byte-verified loose-provider index |
 
 ## Accepted-design qualification risks
 

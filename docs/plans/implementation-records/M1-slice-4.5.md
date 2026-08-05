@@ -450,3 +450,74 @@ Documentation closeout verification:
 - focused `M1Contract` plus `M1Evaluation` test run: 110 passed, 9 expected
   private/platform-capability skips, 0 failed; and
 - private fixture repository and legacy archive: not accessed.
+
+## 2026-08-05 public realignment plan acceptance
+
+The project owner accepted the bounded
+[public Bethesda semantic realignment and candidate-freeze plan](../slices/M1-slice-4.5-public-product-realignment.md).
+The accepted representation uses a distinct frozen-`/4`-compatible
+`record-semantic-subject` for every FaceGen loose-provider chain. Missing loose
+paths remain `unknown` under the current structural-only snapshot; exhaustive
+byte-verified loose-file absence authority is deferred to M3 planning in the
+[deferred-question and residual-risk register](../../research/deferred-question-and-residual-risk-register.md).
+
+This planning acceptance changes no product or evaluator implementation and
+does not freeze a new candidate. Private B2, C2, Stage D, and Slice 5 remain
+blocked pending implementation, independent public review, qualification, and
+a new exact candidate freeze.
+
+## 2026-08-05 public Bethesda semantic realignment closeout
+
+The accepted clean-break public contract is implemented and frozen at candidate
+commit `a98d648bd0adb2751ee0c09828e0227b1583950f` on branch
+`codex/m1-slice-4.5-semantic-disposition`. The candidate advances the Bethesda
+semantic schema and producer to `2.0.0`, applies the closed FaceGen precedence,
+keeps undeclared loose paths `unknown`, retains all ten coverage populations,
+emits layered gaps, and uses a distinct `record-semantic-subject` for every
+declared FaceGen mesh or tint provider chain. Producers, coordinator publication
+validation, worker staging, public protocol compatibility tests, and all affected
+public test layers changed together.
+
+The one fresh public-only independent reviewer found three material issues:
+unsupported field/shape counts could collapse the same record and field across
+distinct override contributions; publication did not require exactly one FaceGen
+assessment for every winning NPC; and publication admitted extra taxonomy claims
+on otherwise valid semantic subjects. The single permitted correction pass fixed
+all three and added generic regressions. Final semantic and diff re-review found
+no unresolved material issue and no fixture-specific production branch.
+
+Exact detached-candidate evidence:
+
+- `Infinium.Bethesda.dll`: 171,520 bytes, SHA-256
+  `017de3a40a2d3b6a268bb7c024f3e053bdcaff5da7622da0fdd14dd3693d2c7d`;
+- 65-DLL evaluation runtime inventory aggregate: SHA-256
+  `aa207221286b8c66d4e432c560b673e4fc5ae78e5d388f7a6bdaac8878985a7a`;
+- locked restore and Release build: passed, 0 warnings and 0 errors;
+- focused extractor, contract, boundary, worker, oracle-agreement, and evaluator
+  public-protocol verification: 61 passed, 1 expected platform-capability skip;
+- `M1Unit`: 89 passed, 1 expected platform-capability skip;
+- `M1Contract`: 31 passed;
+- `M1Integration`: 33 passed;
+- `M1Evaluation`: 54 passed, 9 expected platform or machine-identity skips;
+- `M1Security`: 9 passed;
+- `M1Fault`: 13 passed;
+- full suite: 268 passed, 10 expected platform or machine-identity skips, 0
+  failed;
+- format, dependency-manifest, and `git diff --check`: passed; and
+- the detached worktree remained at the exact candidate with no staged or
+  normalized content diff.
+
+The complete artifact, dependency, command-result, review, and boundary evidence
+is append-only in
+[`../../evaluation/m1-slice4.5-public-product-candidate-freeze.json`](../../evaluation/m1-slice4.5-public-product-candidate-freeze.json).
+The frozen evaluator remains exact commit
+`3693d19563c636cd2879804633ca4ce52448d2c1`, protocol `/4`, with projection,
+canonicalizer, schemas, scorer, adapter, and calibration unchanged. Its public
+calibration ran twice with PASS and byte-identical 15,220-byte evidence, SHA-256
+`32470f8ab69c53ef48b9b24947b3eb4b4e782cbb2cfc645345df0d3029c12f36`.
+
+No evaluator-private repository or legacy archive content was accessed. Private
+B2, `adapt`, `score`, `score-corpus`, C2, Stage D, protocol `/5`, and live or
+billable calls were not run. The candidate was not amended and no push was
+performed. One fresh private oracle reviewer may now resume B2 once under frozen
+protocol `/4`; all later authority boundaries remain unchanged.

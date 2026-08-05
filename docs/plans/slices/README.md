@@ -27,6 +27,12 @@ Current execution plans:
   has not run. The six semantic questions are resolved; public implementation,
   requalification, and a new candidate freeze are required before B2. C2 has
   not run, Stage D has not started, and Slice 5 remains blocked.
+- [M1 Slice 4.5 — Public Bethesda semantic realignment and candidate freeze](M1-slice-4.5-public-product-realignment.md)
+  — Accepted 2026-08-05. This is the bounded public implementation contract
+  required before the single authorized private B2 resume. It records the
+  frozen-compatible per-chain FaceGen subject representation, keeps missing
+  loose assets unknown under current structural assurance, and defers
+  exhaustive byte-verified loose-file absence authority to M3 planning.
 
 Completed slices retain their exact implementation and verification evidence
 under [`../implementation-records/`](../implementation-records/README.md).

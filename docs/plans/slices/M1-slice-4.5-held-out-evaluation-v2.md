@@ -339,3 +339,14 @@ tests, qualify the corrected candidate, and freeze its exact identity. Only
 then may private B2 resume with a fresh isolated oracle reviewer. The current
 documentation update does not perform or authorize that implementation,
 private access, candidate execution, or scoring.
+
+## Accepted public product realignment plan
+
+On 2026-08-05 the project owner accepted the bounded
+[public Bethesda semantic realignment and candidate-freeze plan](M1-slice-4.5-public-product-realignment.md).
+It selects a frozen-`/4`-compatible `record-semantic-subject` for each distinct
+FaceGen loose-provider chain and keeps missing loose paths `unknown` under the
+current structural-only installation snapshot. Exhaustive byte-verified loose-
+file absence authority is deferred to M3 planning. Private B2 remains blocked
+until the public plan is implemented, independently reviewed, qualified, and a
+new exact candidate is frozen.

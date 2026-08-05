@@ -27,6 +27,10 @@ requalification, and a newly frozen candidate are now required before B2. C2
 has not run, Stage D has not started, Slice 5 remains blocked, and M1 remains
 active.
 The accepted
+[public Bethesda semantic realignment plan](slices/M1-slice-4.5-public-product-realignment.md)
+defines that bounded implementation, review, qualification, candidate-freeze,
+and fresh-agent handoff contract. It does not authorize private work or scoring.
+The accepted
 [Slice 3.5 execution plan](slices/M1-slice-3.5-bethesda-fixture-qualification.md)
 is indexed under [`slices/`](slices/README.md).
 
