@@ -210,3 +210,12 @@ sources. RESEARCH-0035 selected `REAL-NPC-0001` and `REAL-REFR-0001` as the
 current EVAL-0016/EVAL-0017 candidates; their exact private manifests and
 independent claim boundaries remain controlled by that investigation. Wave F
 must accept the final case specifications before fixture execution.
+
+## EVAL-0052 and EVAL-0086 held-out clarification
+
+The accepted [final scope amendment](m1-slice4-heldout-scope-final-amendment.md)
+narrows only the held-out proof surfaces of EVAL-0052 and applicable
+EVAL-0086 assertions. Exact failure vocabulary, typed AIDT subfields, and
+product taxonomy/provenance IDs remain public-conformance assertions. Protocol
+`/4` held-out oracles use result publication, AIDT presence, and semantic
+taxonomy tuples instead.

@@ -215,3 +215,8 @@ For ADRs selecting a technical mechanism:
 6. Link implementation plans and verification back to the ADR.
 
 Use [ADR-template.md](ADR-template.md).
+
+ADR-0027's final M1 application is protocol `/4`, frozen at
+`3693d19563c636cd2879804633ca4ce52448d2c1`. Its held-out authority is bounded
+by the [oracle-authority matrix](../../evaluation/m1-slice4-heldout-oracle-authority-matrix.md);
+protocol `/3` remains immutable superseded evidence.

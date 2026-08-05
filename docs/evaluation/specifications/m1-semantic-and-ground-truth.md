@@ -1247,3 +1247,12 @@ Acceptance of the specification still would not pass an evaluation. Passing
 the complete set would prove only the bounded M1 contracts exercised by the
 accepted M1 plan. It would not establish M3 personal trust, M4 public support,
 runtime safety, exhaustive Skyrim semantics, or a guaranteed safe playthrough.
+
+### Protocol `/4` evidence partition amendment
+
+For EVAL-0052 and the applicable EVAL-0086 surface, public conformance remains
+the authority for exact product diagnostics, typed AIDT interpretation, and
+taxonomy/provenance identifier construction. Held-out truth is limited to the
+independently authorable semantic facts in the
+[final matrix](../m1-slice4-heldout-oracle-authority-matrix.md). A future report
+must state the two evidence partitions separately.

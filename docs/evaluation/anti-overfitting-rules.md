@@ -124,3 +124,8 @@ Any rule introduced after a failing real-mod case must answer:
    use require replacement holdout coverage?
 7. Were the expected result and all answer-bearing adjudication isolated from
    the implementation, retrieval path, and model being evaluated?
+
+Protocol `/4` adds a hard authority check: if an expected value cannot be
+authored from public rules, the answer-free manifest, accepted taxonomy rules,
+and retained input bytes, it is not a held-out fact. Do not recover coverage by
+reading product output or creating protocol `/5`.

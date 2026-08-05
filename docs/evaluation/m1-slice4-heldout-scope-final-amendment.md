@@ -101,6 +101,15 @@ Passing public conformance alone does not complete the held-out partition.
 Passing the narrowed held-out partition does not claim conformance for excluded
 internal product fields. Both partitions must be reported separately.
 
+### Qualification status after implementation
+
+Protocol `/4` was qualified and frozen at
+`3693d19563c636cd2879804633ca4ce52448d2c1`. The existing independently
+byte-reviewed successor inputs may now resume B2 once under the
+[final handoff](evaluator-v2-stage-a-final-bounded-freeze.json). Oracle
+qualification, comparison, corpus freeze/tag, Stage C2, and Stage D have not
+run under `/4`.
+
 ## Final-revision hard stop
 
 Protocol `/4` is the final M1 held-out evaluator revision. After `/4` is

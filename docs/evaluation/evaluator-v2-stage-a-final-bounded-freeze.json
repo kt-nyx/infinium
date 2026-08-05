@@ -1,0 +1,77 @@
+{
+  "schema_id": "infinium.evaluator-v2.stage-a-final-bounded-freeze/v1",
+  "schema_version": "1.0.0",
+  "status": "qualified-and-frozen",
+  "frozen_candidate": {
+    "commit": "98fe8a5a173116427bf78077673fd10e8d018103",
+    "artifact_byte_length": 157696,
+    "artifact_sha256": "dc8ae44627fa40ca3937e4022c8e7914468e4d7a4cf1c40797a22ef2abec3655"
+  },
+  "frozen_public_evaluator_commit": "3693d19563c636cd2879804633ca4ce52448d2c1",
+  "predecessor": {
+    "protocol_id": "infinium.evaluator-v2/3",
+    "evaluator_commit": "34ed0c84165e9a49f44a88ecd87cac967132ebd7",
+    "disposition": "qualified public evaluator, superseded before a valid successor corpus because its projection required non-independently-authorable oracle values"
+  },
+  "identities": {
+    "protocol_id": "infinium.evaluator-v2/4",
+    "protocol_version": "4.0.0",
+    "scorer_id": "infinium.evaluator-v2.scorer",
+    "scorer_version": "4.0.0",
+    "adapter_id": "infinium.evaluator-v2.slice4-reflection-adapter",
+    "adapter_version": "4.0.0",
+    "projection_id": "infinium.evaluator-v2.slice4-semantic-projection",
+    "projection_version": "3.0.0"
+  },
+  "oracle_authority_matrix": {
+    "relative_path": "docs/evaluation/m1-slice4-heldout-oracle-authority-matrix.md",
+    "byte_length": 10571,
+    "sha256": "9b0270e40ad0155d66c9fd6d70222889c6ff81c74e282225aad846f2bbdf1696"
+  },
+  "public_calibration": {
+    "suite_id": "infinium.evaluator-v2.public-calibration/4",
+    "case_count": 56,
+    "terminal_result": "PASS",
+    "result_byte_length": 15220,
+    "result_sha256": "32470f8ab69c53ef48b9b24947b3eb4b4e782cbb2cfc645345df0d3029c12f36",
+    "byte_deterministic": true
+  },
+  "required_public_files": [
+    { "relative_path": "src/Infinium.Application/Evaluation/EmbeddedJsonSchemaValidator.cs", "byte_length": 17398, "sha256": "6d2b65c602c1a23159efaf96262503f84efefae12945c9972356b3cf61cb5d54" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/Infinium.EvaluatorV2.csproj", "byte_length": 905, "sha256": "6b5c328193f66fcb225777effd9436b78301db106ab655139cc7ee73ef8916bb" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/CalibrationSuite.cs", "byte_length": 32909, "sha256": "e0440efaea739d8b85a5670cf22c244ae3c1bff59cc7112a20048439008409de" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/EvaluatorProtocol.cs", "byte_length": 8598, "sha256": "982b02a1b994d9562fce0ca7dc2a55d874b96ae32b5ca261444b4c9526719d36" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/EvaluatorScorer.cs", "byte_length": 39898, "sha256": "15d67e630d939dba0d8f5914f0017ce3773b17c975261a2a6ca3e8fad31135ac" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/Program.cs", "byte_length": 5470, "sha256": "03716ad15053991d77f9f091ed5984827010d73515bd5d464bf269e08b299bee" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/ReflectionCandidateAdapter.cs", "byte_length": 17854, "sha256": "0599c23af00d05fdd699a22c14fda26264fedd9a990ca657ef8fb94a5c90b091" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/ResultDirectoryAuthority.cs", "byte_length": 5180, "sha256": "745e63534aa7c17a508556a6f8ceaf108aaba290672297d03da75aa0e9b4a56c" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/SemanticCanonicalizer.cs", "byte_length": 29369, "sha256": "57e9eac1d5b2b6913608eeb7c303606e2f94ddf7ce39ae42b7317ae80ae85d33" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/Properties/AssemblyInfo.cs", "byte_length": 156, "sha256": "b4a35a560ceacabdcbacbbab8b38717b1e4c622e0d96e56a3e6a99dd0f49d944" },
+    { "relative_path": "tests/Infinium.EvaluationTests/BethesdaOracleAgreementEvaluationTests.cs", "byte_length": 29934, "sha256": "59cad7ddba3946fcd97adba201e605dd0a87f51f26bc59e27a0dc40d879f5133" },
+    { "relative_path": "tests/Infinium.EvaluationTests/BethesdaSemanticExtractionEvaluationTests.cs", "byte_length": 18083, "sha256": "d686d4e31c1a38586c6a30188f2b2350bd8af4d36a7e1d0d5878646c71423d46" },
+    { "relative_path": "tests/Infinium.EvaluationTests/EvaluatorV2PublicProtocolTests.cs", "byte_length": 34145, "sha256": "b9212b099d07270224477ce57abade56f50b932edd0bd575b7acf07398c39bde" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/protocol/assertion-results.v4.schema.json", "byte_length": 1171, "sha256": "cc87545f86fdcf1f6115943adb39773d72d0947ef7da4e17ee23e8f1797dce0a" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/protocol/calibration-results.v4.schema.json", "byte_length": 1268, "sha256": "bb79ed2a33375aaa973c968744f384c7a2ca62831ce9cb282368a8f85fd405d4" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/protocol/candidate-semantic-output.v4.schema.json", "byte_length": 1031, "sha256": "18e18b1d165762ae8c50a7546cc3f805741a504db4ba4d45ec7ce42e2dc94e05" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/protocol/corpus-execution-manifest.v4.schema.json", "byte_length": 1136, "sha256": "f3d9ae8e39b80d28872d5ac52420d5a37bc34d20ab5bce16a3021b4600552afa" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/protocol/evaluator-v2-common.v4.schema.json", "byte_length": 6079, "sha256": "32e0bb9c0ef3e40bb301257485b0bb9d0731061d76b4768756e98347bc229c23" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/protocol/execution-manifest.v4.schema.json", "byte_length": 771, "sha256": "f52d83502e2e3aed7b5e2ac891003fed6329f8ddfe9116f9bf9feb12c3dc5b6f" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/protocol/expected-semantic-output.v4.schema.json", "byte_length": 979, "sha256": "1e10cce07ea2762e985202bdd8ba0d0af3bfe4dc82fc79fb3a7b6a7265a66257" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/protocol/prepared-comparison-manifest.v4.schema.json", "byte_length": 994, "sha256": "ac825f8014615860336ab66fd841cd0a6621262117d52f493089ada9c1ec7966" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/protocol/protocol.json", "byte_length": 5228, "sha256": "fcb13653d264cc691d5960995d3155c3bef1a616705a6b86af6be2794c8f8ea3" },
+    { "relative_path": "tools/evaluation/Infinium.EvaluatorV2/protocol/sanitized-result.v4.schema.json", "byte_length": 2971, "sha256": "c084c32d1507a3dcdcadd5b4bf4fd4bb11d4dd082cb1c5b187e8d35e833cf61c" }
+  ],
+  "stage_b2": {
+    "input_freeze_commit": "534373b6ef0c676f794941b0787513ed187e16d3",
+    "blocked_review_commit": "4f6b0fbacc2c7b991201870d9aeb6d5f5b67b0c3",
+    "inputs_independently_byte_reviewed": true,
+    "input_correction_required": false,
+    "private_oracle_qualification_under_protocol_4": "not-run",
+    "successor_corpus_freeze": "not-created",
+    "successor_corpus_tag": "not-created"
+  },
+  "stage_c2": "not-run",
+  "stage_d": "not-started",
+  "next_state": "resume-stage-b2-once-with-a-fresh-private-oracle-reviewer-under-protocol-4",
+  "hard_stop": "protocol /4 is the final M1 evaluator revision; do not create /5 automatically, use product output as truth, or expand the evaluator again"
+}

@@ -76,3 +76,8 @@ Every milestone plan should include:
 
 The initial milestone sequence is described in
 [`../product/scope-and-milestones.md`](../product/scope-and-milestones.md).
+
+The M1 Slice 4.5 Stage A public evaluator is frozen at protocol `/4`. Its
+[freeze handoff](../evaluation/evaluator-v2-stage-a-final-bounded-freeze.json)
+is the only authority for the one permitted B2 resume; Slice 5 remains blocked
+until later accepted stages satisfy the held-out gate.

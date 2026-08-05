@@ -165,3 +165,9 @@ inspection but may not be the sole source of expected results. Fixture
 provenance must identify direct byte assertions, manual adjudication, retained
 format invariants, and any separate evidence used. xEdit is not an Infinium
 oracle or fixture dependency.
+
+For protocol `/4` held-out authoring, every expected fact must also name an
+authority and derivation allowed by the
+[final oracle-authority matrix](m1-slice4-heldout-oracle-authority-matrix.md).
+Product output, product ID algorithms, exact product diagnostics, and Mutagen
+interpretation alone cannot supply a hidden expected value.

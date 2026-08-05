@@ -316,3 +316,90 @@ successor-corpus qualification and held-out scoring are not run. Successor
 Stage B is unblocked; Stage D has not started. This documentation-only closeout
 does not modify the frozen evaluator code, schemas, tests, calibration, adapter,
 or projection. No push was performed.
+
+## Final bounded protocol `/4` Stage A freeze
+
+Branch: `codex/m1-slice-4.5-final-heldout-projection`.
+
+The final public evaluator code/schema/test/authority freeze is
+`3693d19563c636cd2879804633ca4ce52448d2c1`. Protocol
+`infinium.evaluator-v2/4`, scorer and adapter `4.0.0`, and projection
+`infinium.evaluator-v2.slice4-semantic-projection` `3.0.0` are qualified and
+frozen. Protocol `/3` at `34ed0c84165e9a49f44a88ecd87cac967132ebd7`
+remains immutable historical evidence and is superseded before a valid
+successor corpus because its projection required non-independently-authorable
+oracle values.
+
+The held-out projection now compares result snapshot/failure presence;
+answer-free plugin/provider topology; evaluator-owned contribution, record,
+winner, and taxonomy identities; independently authorable NPC/RACE/REFR,
+FaceGen, link, coverage, and capability-gap semantics; and AIDT presence only.
+Exact failure codes, typed AIDT subfields, product contribution/participant/
+winner/gap IDs, taxonomy assignment/analyzer/evidence IDs, denominator labels,
+paths, prose, timestamps, and invocation plumbing are not held-out facts.
+They remain public-conformance or excluded surfaces as classified by the
+[normative matrix](../../evaluation/m1-slice4-heldout-oracle-authority-matrix.md).
+
+Public conformance retains the exact `esl-header-flag-missing` regression, full
+typed `BethesdaAiDataFact` byte mapping, deterministic taxonomy assignment,
+analyzer, and evidence-ID behavior, and all existing product, parser, fault,
+security, and publication tests. No production Slice 4 code changed.
+
+The one fresh-context public-only reviewer performed the required
+oracle-authorability audit without private access. Its initial audit identified
+four material issues: a stale matrix wording conflict, `/3` corpus fingerprint
+domains, no-snapshot gaps under the wrong family, and insufficiently
+directional invalid-snapshot calibration. The first two were already resolved
+in the latest tree when reported. The single focused correction pass fixed the
+remaining two. Re-review found no material findings. No second review or
+semantic correction cycle occurred. A contract-test-only Markdown line-wrap
+repair restored an established exact documentation phrase during full
+verification.
+
+Final verification:
+
+- detached candidate commit:
+  `98fe8a5a173116427bf78077673fd10e8d018103`;
+- candidate `Infinium.Bethesda.dll`: 157,696 bytes, SHA-256
+  `dc8ae44627fa40ca3937e4022c8e7914468e4d7a4cf1c40797a22ef2abec3655`;
+- locked restore and Release solution build: passed, 0 warnings/errors;
+- `M1Unit`: 88 passed, 1 expected platform skip;
+- `M1Contract`: 29 total passed;
+- `M1Integration`: 32 total passed;
+- `M1Evaluation`: 53 passed, 9 expected platform/private skips;
+- `M1Security`: 9 total passed;
+- `M1Fault`: 13 total passed;
+- full suite: 260 passed, 10 expected platform/private skips, 0 failed;
+- focused evaluator suite: 12 passed, 1 expected reparse capability skip;
+- final narrowed boundary checks: 2 passed;
+- public calibration: 56 of 56 passed twice with byte-identical 15,220-byte
+  output, SHA-256
+  `32470f8ab69c53ef48b9b24947b3eb4b4e782cbb2cfc645345df0d3029c12f36`;
+- prepared CLI smokes: known-correct PASS, taxonomy mutation FAIL, AIDT-presence
+  mutation FAIL, failure-boundary PASS, and invalid published snapshot FAIL;
+- aggregate public corpus smokes: one-member PASS, identity-drift
+  EVALUATOR_ERROR, and mixed two-member FAIL with sanitized output;
+- exact detached-candidate public NPC/REFR adapter and scorer smokes: 3 passed;
+- format, dependency-manifest, and `git diff --check`: passed;
+- required Slice 4 runtime roots have an empty diff against `98fe8a5`;
+- production source contains no fixture/held-out branching; and
+- the existing public evaluator-private registry metadata is unchanged.
+
+The machine-readable 23-file source/test/protocol inventory, matrix identity,
+and calibration identity are frozen in
+[`../../evaluation/evaluator-v2-stage-a-final-bounded-freeze.json`](../../evaluation/evaluator-v2-stage-a-final-bounded-freeze.json).
+Historical `/2` and `/3` handoffs remain unchanged.
+
+The owner-supplied B2 input freeze
+`534373b6ef0c676f794941b0787513ed187e16d3` and blocked review
+`4f6b0fbacc2c7b991201870d9aeb6d5f5b67b0c3` remain clean: no input
+correction was required, and no oracle, comparison, corpus fingerprint,
+freeze, tag, candidate execution, or scoring occurred. A fresh private oracle
+reviewer may resume B2 once under `/4`. Stage C2 has not run, Stage D has not
+started, and Slice 5 remains blocked.
+
+Protocol `/4` is the final M1 held-out evaluator revision. If the one resumed
+B2 review finds another authority gap, do not create `/5`, expand the
+evaluator, or use product output as truth. Record an unresolved evaluation gap
+and return to the project owner for milestone-plan disposition. No private
+repository or legacy archive was accessed, and no push was performed.

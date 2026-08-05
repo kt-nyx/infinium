@@ -50,3 +50,9 @@ Implementation must proceed slice-by-slice under the accepted
 [M1 backend semantic proof plan](docs/plans/milestones/M1-backend-semantic-proof.md)
 and its accepted
 [revision 3 amendment](docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md).
+
+M1 Slice 4.5 has frozen the final bounded public evaluator at protocol `/4`
+and projection `3.0.0`. The Slice 4 product candidate is unchanged. Private
+oracle qualification, Stage C2 scoring, and Stage D have not run; Slice 5
+remains blocked. See the
+[final public freeze handoff](docs/evaluation/evaluator-v2-stage-a-final-bounded-freeze.json).

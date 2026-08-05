@@ -51,3 +51,8 @@ The backend semantic proof plan must not be accepted or implemented until the
 product documentation is reviewed and accepted and the architecture/evaluation
 prerequisites are accepted. A proposed plan may be drafted earlier as a
 reviewable Wave F output.
+
+M1 status clarification: the Slice 4 product candidate remains unchanged and
+publicly verified; protocol `/4` is qualified and frozen. Successor B2 oracle
+qualification, Stage C2, and Stage D remain incomplete, so no M1 advancement
+or Slice 5 start is authorized by this freeze.

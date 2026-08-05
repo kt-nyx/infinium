@@ -109,3 +109,10 @@ historical public evidence and is superseded before a valid successor corpus.
 Protocol `/4` is the final authorized M1 evaluator revision. It does not waive
 the held-out gate or authorize a product correction, Stage C2, Stage D, Slice
 5, or a later `/5` evaluator.
+
+Protocol `/4` was publicly qualified and frozen at
+`3693d19563c636cd2879804633ca4ce52448d2c1`. Its machine-readable authority is
+the [final bounded freeze handoff](evaluator-v2-stage-a-final-bounded-freeze.json).
+The existing successor-corpus inputs may resume B2 once under that freeze; no
+oracle, corpus fingerprint/freeze/tag, comparison, Stage C2 score, or Stage D
+work has yet occurred under `/4`.

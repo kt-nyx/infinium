@@ -193,3 +193,10 @@ Every material document should include a status and last-reviewed date.
 - Record uncertainty explicitly.
 - Avoid duplicating the same authoritative statement across several documents.
 - Update this index when a new authoritative document is added.
+
+## Final bounded M1 held-out authority
+
+- [Sanitized Stage B.2 contract gap](evaluation/evaluator-v2-successor-stage-b2-contract-gap.md)
+- [Final Slice 4 held-out scope amendment](evaluation/m1-slice4-heldout-scope-final-amendment.md)
+- [Normative oracle-authority matrix](evaluation/m1-slice4-heldout-oracle-authority-matrix.md)
+- [Protocol `/4` final freeze handoff](evaluation/evaluator-v2-stage-a-final-bounded-freeze.json)

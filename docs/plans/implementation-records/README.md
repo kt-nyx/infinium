@@ -26,3 +26,5 @@ held-out scoring has not run.
 - [M1 Slice 3.5 — Bethesda binary fixture qualification](M1-slice-3.5.md)
 - [M1 Slice 4 — Bethesda semantic extraction and typed indexes](M1-slice-4.md)
 - [M1 Slice 4.5 — Held-out evaluation v2](M1-slice-4.5.md)
+  — final bounded public Stage A freeze at
+  `3693d19563c636cd2879804633ca4ce52448d2c1`; later stages pending.

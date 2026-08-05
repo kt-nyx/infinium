@@ -300,3 +300,12 @@ not use product output as truth. Record the held-out gate as an unresolved
 evaluation gap and return to the project owner for milestone-plan disposition.
 Stage C2 and Stage D remain separately authorized future tasks, Slice 5 stays
 blocked, and this amendment does not waive the held-out gate.
+
+## Final bounded Stage A freeze
+
+Protocol `/4`, scorer/adapter `4.0.0`, and projection `3.0.0` are qualified and
+frozen at `3693d19563c636cd2879804633ca4ce52448d2c1`. The final handoff is
+[`../../evaluation/evaluator-v2-stage-a-final-bounded-freeze.json`](../../evaluation/evaluator-v2-stage-a-final-bounded-freeze.json).
+The B2 inputs remain clean and independently byte-reviewed, but `/4` oracle
+qualification and corpus freeze have not run. The no-`/5` hard stop above is
+now active.

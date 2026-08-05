@@ -331,3 +331,12 @@ M2 cannot claim its workflow proof without EVAL-0056 or a reviewed successor.
 At every milestone, each requirement claimed complete must have at least one
 reviewed linked evaluation case, and all of its gating cases for the delivered
 scope must pass.
+
+## Final M1 Slice 4 held-out partition
+
+Protocol `/4` is the final M1 evaluator revision. Public conformance verifies
+implementation-specific diagnostics, typed AIDT mapping, serialization, and
+product provenance IDs. Held-out evaluation verifies only independently
+specifiable semantic behavior listed in the
+[oracle-authority matrix](m1-slice4-heldout-oracle-authority-matrix.md). These
+partitions are reported separately and neither substitutes for the other.
