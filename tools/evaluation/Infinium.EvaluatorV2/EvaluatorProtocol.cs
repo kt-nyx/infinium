@@ -8,22 +8,22 @@ namespace Infinium.EvaluatorV2;
 
 internal static class EvaluatorProtocol
 {
-    internal const string ProtocolId = "infinium.evaluator-v2/3";
-    internal const string ProtocolVersion = "3.0.0";
+    internal const string ProtocolId = "infinium.evaluator-v2/4";
+    internal const string ProtocolVersion = "4.0.0";
     internal const string ScorerId = "infinium.evaluator-v2.scorer";
-    internal const string ScorerVersion = "3.0.0";
+    internal const string ScorerVersion = "4.0.0";
     internal const string AdapterId = "infinium.evaluator-v2.slice4-reflection-adapter";
-    internal const string AdapterVersion = "3.0.0";
+    internal const string AdapterVersion = "4.0.0";
     internal const string ProjectionId = "infinium.evaluator-v2.slice4-semantic-projection";
-    internal const string ProjectionVersion = "2.0.0";
-    internal const string CandidateSchema = "infinium.evaluator-v2.candidate-semantic-output/v3";
-    internal const string ExpectedSchema = "infinium.evaluator-v2.expected-semantic-output/v3";
-    internal const string ManifestSchema = "infinium.evaluator-v2.execution-manifest/v3";
-    internal const string PreparedManifestSchema = "infinium.evaluator-v2.prepared-comparison-manifest/v3";
-    internal const string CorpusManifestSchema = "infinium.evaluator-v2.corpus-execution-manifest/v3";
-    internal const string AssertionsSchema = "infinium.evaluator-v2.assertion-results/v3";
-    internal const string SanitizedSchema = "infinium.evaluator-v2.sanitized-result/v3";
-    internal const string CalibrationSchema = "infinium.evaluator-v2.calibration-results/v3";
+    internal const string ProjectionVersion = "3.0.0";
+    internal const string CandidateSchema = "infinium.evaluator-v2.candidate-semantic-output/v4";
+    internal const string ExpectedSchema = "infinium.evaluator-v2.expected-semantic-output/v4";
+    internal const string ManifestSchema = "infinium.evaluator-v2.execution-manifest/v4";
+    internal const string PreparedManifestSchema = "infinium.evaluator-v2.prepared-comparison-manifest/v4";
+    internal const string CorpusManifestSchema = "infinium.evaluator-v2.corpus-execution-manifest/v4";
+    internal const string AssertionsSchema = "infinium.evaluator-v2.assertion-results/v4";
+    internal const string SanitizedSchema = "infinium.evaluator-v2.sanitized-result/v4";
+    internal const string CalibrationSchema = "infinium.evaluator-v2.calibration-results/v4";
 
     internal static readonly JsonSerializerOptions JsonOptions = new()
     {

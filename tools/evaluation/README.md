@@ -1,6 +1,6 @@
 # Public evaluation tooling
 
-`Infinium.EvaluatorV2` is the sole active held-out evaluation protocol. Its
+`Infinium.EvaluatorV2` protocol `/4` is the sole active held-out evaluation protocol. Its
 rules, schemas, canonicalization, reflection adapter, scorer, and answer-known
 calibration suite are public. Hidden inputs and expected semantic values are
 not stored here.
@@ -18,14 +18,17 @@ dotnet run --project tools/evaluation/Infinium.EvaluatorV2 -c Release -- protoco
 dotnet run --project tools/evaluation/Infinium.EvaluatorV2 -c Release -- calibrate --result-dir <new-directory>
 dotnet run --project tools/evaluation/Infinium.EvaluatorV2 -c Release -- adapt --manifest <manifest.json> --result-dir <new-directory>
 dotnet run --project tools/evaluation/Infinium.EvaluatorV2 -c Release -- score --manifest <manifest.json> --oracle <expected-output.json> --result-dir <new-directory>
+dotnet run --project tools/evaluation/Infinium.EvaluatorV2 -c Release -- compare-prepared --manifest <manifest.json> --candidate-output <candidate-output.json> --oracle <expected-output.json> --result-dir <new-directory>
+dotnet run --project tools/evaluation/Infinium.EvaluatorV2 -c Release -- score-corpus --manifest <corpus-manifest.json> --result-dir <new-directory>
 ```
 
 `adapt` is a public diagnostic for the exact black-box boundary. `score` is the
 one-shot scoring command. Exit code `0` is `PASS`, `1` is product `FAIL` after
 a valid comparison, and `2` is `EVALUATOR_ERROR` or invalid invocation.
 
-The authoritative protocol identifier is `infinium.evaluator-v2/1`. Schemas
-under `Infinium.EvaluatorV2/protocol/` define the answer-free manifest,
+The authoritative protocol identifier is `infinium.evaluator-v2/4`. Immutable
+`/3` schemas remain predecessor evidence; active `/4` schemas under
+`Infinium.EvaluatorV2/protocol/` define the answer-free manifest,
 candidate output, expected output, raw assertions, sanitized result, and
 calibration result. `protocol.json` defines ordering, set/sequence,
 canonicalization, aggregation, and failure-stage rules.

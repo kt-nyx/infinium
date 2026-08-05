@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Infinium.EvaluatorV2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -76,6 +77,66 @@ public sealed class EvaluatorV2PublicProtocolTests
     }
 
     [TestMethod]
+    public void OracleAuthorityMatrixAndProjectorDeclareTheSameActiveFactFamilies()
+    {
+        string matrix = File.ReadAllText(TestRepository.PathFromRoot(
+            "docs", "evaluation", "m1-slice4-heldout-oracle-authority-matrix.md"));
+        const string marker = "<!-- active-fact-families: ";
+        int start = matrix.IndexOf(marker, StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, start);
+        start += marker.Length;
+        int end = matrix.IndexOf(" -->", start, StringComparison.Ordinal);
+        Assert.IsGreaterThan(start, end);
+        string[] declared = matrix[start..end].Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+
+        CollectionAssert.AreEqual(
+            SemanticCanonicalizer.IncludedFactFamilies.Order(StringComparer.Ordinal).ToArray(),
+            declared.Order(StringComparer.Ordinal).ToArray());
+    }
+
+    [TestMethod]
+    public void ProjectionIgnoresInternalAnswerIdsAndPreservesOnlyAuthorizedBoundaries()
+    {
+        ExecutionManifest manifest = CreatePublicManifest("BETH-NPC-DEV");
+        JsonElement raw = ReflectionCandidateAdapter.ExecuteRawForTests(manifest);
+        string baseline = ProjectedJson(JsonNode.Parse(raw.GetRawText())!);
+
+        foreach (Action<JsonObject> mutation in new Action<JsonObject>[]
+                 {
+                     root => FirstTaxonomy(root)["assignment_id"] = "taxonomy:changed-internal-id",
+                     root => FirstTaxonomy(root)["analyzer_or_adjudicator_id"] = "analyzer:changed-internal-id",
+                     root => FirstTaxonomy(root)["evidence_fields"] = new JsonArray("evidence:changed-internal-id"),
+                     root => FirstAiData(root)["aggression"] = 255,
+                 })
+        {
+            JsonObject changed = JsonNode.Parse(raw.GetRawText())!.AsObject();
+            mutation(changed);
+            Assert.AreEqual(baseline, ProjectedJson(changed));
+        }
+
+        JsonObject removedAi = JsonNode.Parse(raw.GetRawText())!.AsObject();
+        JsonObject npc = removedAi["snapshot"]!["npc_contributions"]!.AsArray()
+            .Select(item => item!.AsObject())
+            .First(item => item["ai_data"] is not null);
+        npc["ai_data"] = null;
+        Assert.AreNotEqual(baseline, ProjectedJson(removedAi));
+
+        JsonObject failedA = JsonNode.Parse(raw.GetRawText())!.AsObject();
+        failedA["snapshot"] = null;
+        failedA["failures"] = JsonNode.Parse("[{\"code\":\"first-internal-code\"}]");
+        JsonObject failedB = JsonNode.Parse(failedA.ToJsonString())!.AsObject();
+        failedB["failures"]![0]!["code"] = "second-internal-code";
+        Assert.AreEqual(ProjectedJson(failedA), ProjectedJson(failedB));
+        Assert.AreNotEqual(baseline, ProjectedJson(failedA));
+
+        JsonObject duplicateTaxonomy = JsonNode.Parse(raw.GetRawText())!.AsObject();
+        JsonObject duplicate = JsonNode.Parse(FirstTaxonomy(duplicateTaxonomy).ToJsonString())!.AsObject();
+        duplicate["assignment_id"] = "taxonomy:distinct-product-id";
+        duplicateTaxonomy["snapshot"]!["taxonomy"]!.AsArray().Add(duplicate);
+        Assert.ThrowsExactly<CandidateOutputException>(() => ProjectedJson(duplicateTaxonomy));
+    }
+
+    [TestMethod]
     [TestCategory("M1Security")]
     public void ResultWriterRejectsEscapeAndOverwrite()
     {
@@ -87,18 +148,18 @@ public sealed class EvaluatorV2PublicProtocolTests
                 root,
                 "../escape.json",
                 result,
-                "calibration-results.v3.schema.json"));
+                "calibration-results.v4.schema.json"));
             Assert.IsFalse(Directory.Exists(root));
             EvaluatorScorer.WriteSingleResult(
                 root,
                 "result.json",
                 result,
-                "calibration-results.v3.schema.json");
+                "calibration-results.v4.schema.json");
             Assert.ThrowsExactly<ResultWriteException>(() => EvaluatorScorer.WriteSingleResult(
                 root,
                 "result.json",
                 result,
-                "calibration-results.v3.schema.json"));
+                "calibration-results.v4.schema.json"));
         }
         finally
         {
@@ -134,7 +195,7 @@ public sealed class EvaluatorV2PublicProtocolTests
                 Path.Combine(alias, "result"),
                 "result.json",
                 result,
-                "calibration-results.v3.schema.json"));
+                "calibration-results.v4.schema.json"));
         }
         finally
         {
@@ -184,7 +245,7 @@ public sealed class EvaluatorV2PublicProtocolTests
                 root,
                 "sanitized-result.json",
                 result,
-                "sanitized-result.v3.schema.json");
+                "sanitized-result.v4.schema.json");
 
             string json = File.ReadAllText(Path.Combine(root, "sanitized-result.json"));
             StringAssert.Contains(json, "\"failure_stage\": null", StringComparison.Ordinal);
@@ -269,16 +330,7 @@ public sealed class EvaluatorV2PublicProtocolTests
                 return new PluginExecutionInput(name, order, $"evaluator-provider-{order:D3}", path, identity.ByteLength, identity.Sha256);
             })
             .ToArray();
-        string candidatePath = Path.Combine(AppContext.BaseDirectory, "Infinium.Bethesda.dll");
-        ArtifactIdentity candidateIdentity = EvaluatorProtocol.Identity(candidatePath);
-        EvaluatorFileIdentity[] candidateFiles = Directory.EnumerateFiles(AppContext.BaseDirectory, "*.dll")
-            .Select(path =>
-            {
-                ArtifactIdentity identity = EvaluatorProtocol.Identity(path);
-                return new EvaluatorFileIdentity(Path.GetFileName(path), identity.ByteLength, identity.Sha256);
-            })
-            .OrderBy(file => file.RelativePath, StringComparer.Ordinal)
-            .ToArray();
+        CandidateIdentity candidate = PublicCandidate();
         LooseProviderExecutionInput lower = new(
             "facegen-provider-low",
             "regular_mod",
@@ -301,7 +353,7 @@ public sealed class EvaluatorV2PublicProtocolTests
         ExecutionManifest manifest = new(
             EvaluatorProtocol.ManifestSchema,
             EvaluatorProtocol.ProtocolId,
-            new CandidateIdentity(new('a', 40), candidatePath, candidateIdentity, AppContext.BaseDirectory, candidateFiles),
+            candidate,
             new EvaluatorIdentity(
                 new('b', 40),
                 EvaluatorProtocol.ProtocolId,
@@ -325,13 +377,18 @@ public sealed class EvaluatorV2PublicProtocolTests
             output.Facts.Select(item => item.FactId).ToArray());
         AssertFact(output, "plugins/0000/plugin_name", "plugin", "string", "00-pad.esm");
         AssertFact(output, "plugins/0004/master_style", "plugin", "string", "light");
-        AssertFact(output,
-            "links/contribution%3A0001%3A01-actors.esm%3A00000800%3A01-actors.esm%3Arnam%3Avalue%3A0000/target_form_key",
+        AssertMatchingFact(output,
+            fact => fact.FactId.StartsWith("npc_contributions/", StringComparison.Ordinal)
+                    && fact.FactId.EndsWith("/race/target_form_key", StringComparison.Ordinal),
             "form_key", "string", "00000810:01-actors.esm");
-        AssertFact(output, "face_gen/record%3A00000850%3A01-actors.esm/mesh/present", "face_gen", "boolean", "true");
-        AssertFact(output, "face_gen/record%3A00000850%3A01-actors.esm/mesh/provider_participant_ids/0001", "face_gen", "string", "facegen-provider-winner");
-        AssertFact(output, "face_gen/record%3A00000850%3A01-actors.esm/mesh/winner_participant_id", "face_gen", "string", "facegen-provider-winner");
-        AssertFact(output, "gaps/gap%3Ainfinium-bethesda%3Aarchive-member-read/missing_capability", "gap", "string", "archive-activation-and-member-precedence");
+        AssertFact(output, "face_gen/00000850%3A01-actors.esm/mesh/present", "face_gen", "boolean", "true");
+        AssertFact(output, "face_gen/00000850%3A01-actors.esm/mesh/provider_ids/0001", "face_gen", "string", "facegen-provider-winner");
+        AssertFact(output, "face_gen/00000850%3A01-actors.esm/mesh/winner_provider_id", "face_gen", "string", "facegen-provider-winner");
+        AssertMatchingFact(output,
+            fact => fact.FactId.StartsWith("gaps/", StringComparison.Ordinal)
+                    && fact.FactId.EndsWith("/missing_capability", StringComparison.Ordinal),
+            "gap", "string", "archive-activation-and-member-precedence");
+        AssertHeldOutBoundary(output);
         Assert.IsFalse(output.Facts.Any(fact => fact.FactId.Contains("reason", StringComparison.OrdinalIgnoreCase)
                                                || fact.FactId.Contains("message", StringComparison.OrdinalIgnoreCase)
                                                || fact.FactId.Contains("snapshot_authorized_path", StringComparison.OrdinalIgnoreCase)
@@ -344,14 +401,14 @@ public sealed class EvaluatorV2PublicProtocolTests
             Execution = manifest.Execution with { LooseProviderChains = [looseChains[0]] },
         };
         CandidateSemanticOutput partial = ReflectionCandidateAdapter.Execute(partialManifest);
-        AssertFact(partial, "face_gen/record%3A00000850%3A01-actors.esm/mesh/present", "face_gen", "boolean", "true");
-        AssertFact(partial, "face_gen/record%3A00000850%3A01-actors.esm/tint/present", "face_gen", "boolean", "false");
-        AssertFact(partial, "face_gen/record%3A00000850%3A01-actors.esm/tint/exact_absence_known", "face_gen", "boolean", "false");
+        AssertFact(partial, "face_gen/00000850%3A01-actors.esm/mesh/present", "face_gen", "boolean", "true");
+        AssertFact(partial, "face_gen/00000850%3A01-actors.esm/tint/present", "face_gen", "boolean", "false");
+        AssertFact(partial, "face_gen/00000850%3A01-actors.esm/tint/exact_absence_known", "face_gen", "boolean", "false");
         CandidateSemanticOutput exactAbsence = ReflectionCandidateAdapter.Execute(partialManifest with
         {
             Execution = partialManifest.Execution with { ArchiveMemberPopulationSupported = true },
         });
-        AssertFact(exactAbsence, "face_gen/record%3A00000850%3A01-actors.esm/tint/exact_absence_known", "face_gen", "boolean", "true");
+        AssertFact(exactAbsence, "face_gen/00000850%3A01-actors.esm/tint/exact_absence_known", "face_gen", "boolean", "true");
         Assert.IsTrue(output.Facts.Any(fact => fact.FactType == "taxonomy"
                                                && fact.FactId.EndsWith("/subject_type", StringComparison.Ordinal)
                                                && fact.Value.ValueKind == JsonValueKind.String
@@ -376,23 +433,40 @@ public sealed class EvaluatorV2PublicProtocolTests
     {
         CandidateSemanticOutput output = ReflectionCandidateAdapter.Execute(CreatePublicManifest("BETH-REFR-DEV"));
         Assert.AreEqual("completed_with_gaps", output.State);
-        AssertFact(output, "override_chains/00000840%3A01-world.esm/winner_contribution_id", "winner", "string",
-            "contribution:0005:05-deletedwinner.esp:00000840:01-world.esm");
-        AssertFact(output,
-            "placed_reference_contributions/contribution%3A0003%3A03-placement.esp%3A00000840%3A01-world.esm/owner/target_form_key",
+        AssertFact(output, "override_chains/00000840%3A01-world.esm/winner/source_plugin", "winner", "string", "05-deletedwinner.esp");
+        AssertFact(output, "override_chains/00000840%3A01-world.esm/winner/deleted", "winner", "boolean", "true");
+        AssertMatchingFact(output, fact => fact.FactId.StartsWith("placed_reference_contributions/", StringComparison.Ordinal)
+                                               && fact.FactId.EndsWith("/owner/target_form_key", StringComparison.Ordinal),
             "form_key", "string", "00000810:01-world.esm");
-        AssertFact(output,
-            "placed_reference_contributions/contribution%3A0003%3A03-placement.esp%3A00000840%3A01-world.esm/owner/state",
+        AssertMatchingFact(output, fact => fact.FactId.StartsWith("placed_reference_contributions/", StringComparison.Ordinal)
+                                               && fact.FactId.EndsWith("/owner/state", StringComparison.Ordinal),
             "ownership", "string", "resolved");
-        AssertFact(output,
-            "placed_reference_contributions/contribution%3A0003%3A03-placement.esp%3A00000840%3A01-world.esm/placement/position/x",
+        AssertMatchingFact(output, fact => fact.FactId.StartsWith("placed_reference_contributions/", StringComparison.Ordinal)
+                                               && fact.FactId.EndsWith("/placement/position/x", StringComparison.Ordinal),
             "placement", "number", "10");
-        AssertFact(output,
-            "placed_reference_contributions/contribution%3A0003%3A03-placement.esp%3A00000840%3A01-world.esm/placement/rotation/x",
+        AssertMatchingFact(output, fact => fact.FactId.StartsWith("placed_reference_contributions/", StringComparison.Ordinal)
+                                               && fact.FactId.EndsWith("/placement/rotation/x", StringComparison.Ordinal),
             "placement", "number", "0.1");
+        AssertHeldOutBoundary(output);
         Assert.IsFalse(output.Facts.Any(fact => fact.FactId.Contains("reason", StringComparison.OrdinalIgnoreCase)
                                                || fact.FactId.Contains("message", StringComparison.OrdinalIgnoreCase)));
         AssertAggregateScoring(CreatePublicManifest("BETH-REFR-DEV"), output);
+    }
+
+    [TestMethod]
+    public void PublicAdapterFixturesTogetherExerciseEveryDeclaredFactFamily()
+    {
+        CandidateSemanticOutput npc = ReflectionCandidateAdapter.Execute(CreatePublicManifest("BETH-NPC-DEV"));
+        CandidateSemanticOutput refr = ReflectionCandidateAdapter.Execute(CreatePublicManifest("BETH-REFR-DEV"));
+        string[] observed = npc.Facts.Concat(refr.Facts)
+            .Select(fact => fact.FactId.Split('/')[0])
+            .Distinct(StringComparer.Ordinal)
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        CollectionAssert.AreEqual(
+            SemanticCanonicalizer.IncludedFactFamilies.Order(StringComparer.Ordinal).ToArray(),
+            observed);
     }
 
     private static void AssertFact(CandidateSemanticOutput output, string id, string type, string valueType, string value)
@@ -403,6 +477,52 @@ public sealed class EvaluatorV2PublicProtocolTests
         Assert.AreEqual(value, fact.Value.ValueKind == JsonValueKind.String
             ? fact.Value.GetString()
             : fact.Value.GetRawText());
+    }
+
+    private static void AssertMatchingFact(
+        CandidateSemanticOutput output,
+        Func<SemanticFact, bool> predicate,
+        string type,
+        string valueType,
+        string value)
+    {
+        Assert.IsTrue(output.Facts.Any(fact =>
+            predicate(fact)
+            && fact.FactType == type
+            && fact.ValueType == valueType
+            && value == (fact.Value.ValueKind == JsonValueKind.String
+                ? fact.Value.GetString()
+                : fact.Value.GetRawText())));
+    }
+
+    private static void AssertHeldOutBoundary(CandidateSemanticOutput output)
+    {
+        string[] forbidden =
+        [
+            "contribution_id", "participant_id", "winner_contribution_id", "assignment_id",
+            "analyzer_or_adjudicator_id", "evidence_fields", "gap_id", "gap_ids", "denominator_label",
+            "failures/", "/ai_data/",
+        ];
+        Assert.IsFalse(output.Facts.Any(fact => forbidden.Any(token =>
+            fact.FactId.Contains(token, StringComparison.OrdinalIgnoreCase))));
+        AssertFact(output, "result/snapshot_present", "state", "boolean", "true");
+        AssertFact(output, "result/failure_present", "state", "boolean", "false");
+    }
+
+    private static JsonObject FirstTaxonomy(JsonObject root) =>
+        root["snapshot"]!["taxonomy"]!.AsArray()[0]!.AsObject();
+
+    private static JsonObject FirstAiData(JsonObject root) =>
+        root["snapshot"]!["npc_contributions"]!.AsArray()
+            .Select(item => item!.AsObject())
+            .Select(item => item["ai_data"])
+            .First(item => item is not null)!
+            .AsObject();
+
+    private static string ProjectedJson(JsonNode root)
+    {
+        using JsonDocument document = JsonDocument.Parse(root.ToJsonString());
+        return JsonSerializer.Serialize(SemanticCanonicalizer.Project(document.RootElement), EvaluatorProtocol.JsonOptions);
     }
 
     private static ExecutionManifest CreatePublicManifest(string fixtureId)
@@ -418,22 +538,42 @@ public sealed class EvaluatorV2PublicProtocolTests
                 int order = item.GetProperty("load_order").GetInt32();
                 return new PluginExecutionInput(item.GetProperty("file_name").GetString()!, order, $"public-provider-{order:D3}", path, identity.ByteLength, identity.Sha256);
             }).ToArray();
-        string candidatePath = Path.Combine(AppContext.BaseDirectory, "Infinium.Bethesda.dll");
-        ArtifactIdentity candidate = EvaluatorProtocol.Identity(candidatePath);
-        EvaluatorFileIdentity[] candidateFiles = Directory.EnumerateFiles(AppContext.BaseDirectory, "*.dll").Select(path =>
-        {
-            ArtifactIdentity identity = EvaluatorProtocol.Identity(path);
-            return new EvaluatorFileIdentity(Path.GetFileName(path), identity.ByteLength, identity.Sha256);
-        }).OrderBy(file => file.RelativePath, StringComparer.Ordinal).ToArray();
+        CandidateIdentity candidate = PublicCandidate();
         return new ExecutionManifest(
             EvaluatorProtocol.ManifestSchema,
             EvaluatorProtocol.ProtocolId,
-            new CandidateIdentity(new('a', 40), candidatePath, candidate, AppContext.BaseDirectory, candidateFiles),
+            candidate,
             new EvaluatorIdentity(new('b', 40), EvaluatorProtocol.ProtocolId, EvaluatorProtocol.ScorerId, EvaluatorProtocol.ScorerVersion,
                 EvaluatorProtocol.AdapterId, EvaluatorProtocol.AdapterVersion, EvaluatorProtocol.ProjectionId, EvaluatorProtocol.ProjectionVersion,
                 AppContext.BaseDirectory, []),
             new CorpusIdentity("public-test", "1.0.0", new('c', 64), "frozen", "clean"),
             new ExecutionInput(plugins, [], false, ["archive_member_read"]));
+    }
+
+    private static CandidateIdentity PublicCandidate()
+    {
+        string? overrideRoot = Environment.GetEnvironmentVariable("INFINIUM_EVALUATOR_CANDIDATE_ROOT");
+        string root = string.IsNullOrWhiteSpace(overrideRoot)
+            ? AppContext.BaseDirectory
+            : Path.GetFullPath(overrideRoot);
+        string path = Path.Combine(root, "Infinium.Bethesda.dll");
+        ArtifactIdentity artifact = EvaluatorProtocol.Identity(path);
+        EvaluatorFileIdentity[] files = Directory.EnumerateFiles(root, "*.dll")
+            .Select(file =>
+            {
+                ArtifactIdentity identity = EvaluatorProtocol.Identity(file);
+                return new EvaluatorFileIdentity(Path.GetFileName(file), identity.ByteLength, identity.Sha256);
+            })
+            .OrderBy(file => file.RelativePath, StringComparer.Ordinal)
+            .ToArray();
+        return new CandidateIdentity(
+            string.IsNullOrWhiteSpace(overrideRoot)
+                ? new string('a', 40)
+                : "98fe8a5a173116427bf78077673fd10e8d018103",
+            path,
+            artifact,
+            root,
+            files);
     }
 
     private static void AssertAggregateScoring(ExecutionManifest source, CandidateSemanticOutput candidate)

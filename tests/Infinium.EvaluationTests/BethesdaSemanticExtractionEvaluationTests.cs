@@ -178,6 +178,38 @@ public sealed class BethesdaSemanticExtractionEvaluationTests
             Assert.AreEqual(BethesdaExtractionState.InvalidInput, result.State, replacement.Values.Single());
             Assert.IsNull(result.Snapshot, replacement.Values.Single());
         }
+
+        string temporaryRoot = Path.Combine(Path.GetTempPath(), $"infinium-esl-header-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(temporaryRoot);
+        try
+        {
+            string fixtureRoot = TestRepository.PathFromRoot("test-data", "evaluation", "m1-semantic", "BETH-LIGHT-VAL");
+            using System.Text.Json.JsonDocument receipt = System.Text.Json.JsonDocument.Parse(File.ReadAllBytes(
+                Path.Combine(fixtureRoot, "inputs", "snapshot", "accepted-order.json")));
+            List<(string Name, int Order, string Path, Infinium.Domain.Contracts.OpaqueId Entity)> plugins = [];
+            foreach (System.Text.Json.JsonElement item in receipt.RootElement.GetProperty("plugin_order").EnumerateArray())
+            {
+                string name = item.GetProperty("file_name").GetString()!;
+                string source = name == "01-Native.esl"
+                    ? Path.Combine(fixtureRoot, "inputs", "mutations", "Native-HeaderFlagRemoved.esl")
+                    : Path.GetFullPath(Path.Combine([fixtureRoot, .. item.GetProperty("artifact_id").GetString()!.Split('/')]));
+                string target = Path.Combine(temporaryRoot, name);
+                File.Copy(source, target);
+                int order = item.GetProperty("load_order").GetInt32();
+                plugins.Add((name, order, target, new Infinium.Domain.Contracts.OpaqueId($"fixture-provider-{order:D3}")));
+            }
+
+            BethesdaSemanticExtractionResult exactHeaderFailure = new BethesdaSemanticExtractor().Extract(
+                BethesdaSemanticTestSnapshot.Create(plugins));
+            Assert.AreEqual(BethesdaExtractionState.InvalidInput, exactHeaderFailure.State);
+            Assert.HasCount(1, exactHeaderFailure.Failures);
+            Assert.AreEqual("esl-header-flag-missing", exactHeaderFailure.Failures[0].Code);
+            Assert.AreEqual("01-Native.esl", exactHeaderFailure.Failures[0].Input);
+        }
+        finally
+        {
+            Directory.Delete(temporaryRoot, recursive: true);
+        }
     }
 
     private static BethesdaSemanticRequest WithFaceGenAssets(

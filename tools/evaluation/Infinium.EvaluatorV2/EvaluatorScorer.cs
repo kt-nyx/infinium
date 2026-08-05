@@ -10,16 +10,16 @@ internal static class EvaluatorScorer
     [
         "Infinium.EvaluatorV2.deps.json",
         "Infinium.EvaluatorV2.runtimeconfig.json",
-        "protocol/assertion-results.v3.schema.json",
-        "protocol/calibration-results.v3.schema.json",
-        "protocol/candidate-semantic-output.v3.schema.json",
-        "protocol/corpus-execution-manifest.v3.schema.json",
-        "protocol/evaluator-v2-common.v3.schema.json",
-        "protocol/execution-manifest.v3.schema.json",
-        "protocol/expected-semantic-output.v3.schema.json",
-        "protocol/prepared-comparison-manifest.v3.schema.json",
+        "protocol/assertion-results.v4.schema.json",
+        "protocol/calibration-results.v4.schema.json",
+        "protocol/candidate-semantic-output.v4.schema.json",
+        "protocol/corpus-execution-manifest.v4.schema.json",
+        "protocol/evaluator-v2-common.v4.schema.json",
+        "protocol/execution-manifest.v4.schema.json",
+        "protocol/expected-semantic-output.v4.schema.json",
+        "protocol/prepared-comparison-manifest.v4.schema.json",
         "protocol/protocol.json",
-        "protocol/sanitized-result.v3.schema.json",
+        "protocol/sanitized-result.v4.schema.json",
     ];
 
     internal static readonly string[] RequiredEvaluatorFiles = BuildRequiredEvaluatorFiles();
@@ -35,7 +35,7 @@ internal static class EvaluatorScorer
         ExecutionManifest? manifest = null;
         try
         {
-            manifest = EvaluatorProtocol.Read<ExecutionManifest>(manifestPath, "execution-manifest.v3.schema.json");
+            manifest = EvaluatorProtocol.Read<ExecutionManifest>(manifestPath, "execution-manifest.v4.schema.json");
             ValidateManifestIdentity(manifest);
         }
         catch (Exception exception) when (IsEvaluatorInputFailure(exception))
@@ -46,7 +46,7 @@ internal static class EvaluatorScorer
         ExpectedSemanticOutput oracle;
         try
         {
-            oracle = EvaluatorProtocol.Read<ExpectedSemanticOutput>(oraclePath, "expected-semantic-output.v3.schema.json");
+            oracle = EvaluatorProtocol.Read<ExpectedSemanticOutput>(oraclePath, "expected-semantic-output.v4.schema.json");
             ValidateOracleIdentity(manifest, oracle, CorpusFingerprint(manifest, oraclePath));
         }
         catch (Exception exception) when (IsEvaluatorInputFailure(exception))
@@ -95,7 +95,7 @@ internal static class EvaluatorScorer
         PreparedComparisonManifest? manifest = null;
         try
         {
-            manifest = EvaluatorProtocol.Read<PreparedComparisonManifest>(manifestPath, "prepared-comparison-manifest.v3.schema.json");
+            manifest = EvaluatorProtocol.Read<PreparedComparisonManifest>(manifestPath, "prepared-comparison-manifest.v4.schema.json");
             ValidatePreparedManifest(manifest);
         }
         catch (Exception exception) when (IsEvaluatorInputFailure(exception))
@@ -106,7 +106,7 @@ internal static class EvaluatorScorer
         ExpectedSemanticOutput oracle;
         try
         {
-            oracle = EvaluatorProtocol.Read<ExpectedSemanticOutput>(oraclePath, "expected-semantic-output.v3.schema.json");
+            oracle = EvaluatorProtocol.Read<ExpectedSemanticOutput>(oraclePath, "expected-semantic-output.v4.schema.json");
             ValidateOracleIdentity(manifest, oracle, PreparedCorpusFingerprint(manifest, candidateOutputPath, oraclePath));
         }
         catch (Exception exception) when (IsEvaluatorInputFailure(exception))
@@ -117,7 +117,7 @@ internal static class EvaluatorScorer
         CandidateSemanticOutput candidate;
         try
         {
-            candidate = EvaluatorProtocol.Read<CandidateSemanticOutput>(candidateOutputPath, "candidate-semantic-output.v3.schema.json");
+            candidate = EvaluatorProtocol.Read<CandidateSemanticOutput>(candidateOutputPath, "candidate-semantic-output.v4.schema.json");
             ValidateCandidateIdentity(Identity(manifest), candidate);
         }
         catch (Exception exception) when (exception is CandidateOutputException || IsEvaluatorInputFailure(exception))
@@ -133,7 +133,7 @@ internal static class EvaluatorScorer
         CorpusExecutionManifest? suite = null;
         try
         {
-            suite = EvaluatorProtocol.Read<CorpusExecutionManifest>(manifestPath, "corpus-execution-manifest.v3.schema.json");
+            suite = EvaluatorProtocol.Read<CorpusExecutionManifest>(manifestPath, "corpus-execution-manifest.v4.schema.json");
             ValidateCorpusManifest(suite);
         }
         catch (Exception exception) when (IsEvaluatorInputFailure(exception))
@@ -163,7 +163,7 @@ internal static class EvaluatorScorer
                     suite.Corpus,
                     member.Execution);
                 ValidateExecutionInput(member.Execution);
-                ExpectedSemanticOutput oracle = EvaluatorProtocol.Read<ExpectedSemanticOutput>(member.OraclePath, "expected-semantic-output.v3.schema.json");
+                ExpectedSemanticOutput oracle = EvaluatorProtocol.Read<ExpectedSemanticOutput>(member.OraclePath, "expected-semantic-output.v4.schema.json");
                 ValidateOracleIdentity(suite, oracle, suiteFingerprint, requireFingerprint: false);
 
                 ScoreOutcome outcome;
@@ -282,10 +282,10 @@ internal static class EvaluatorScorer
 
     internal static void WriteResults(string resultDirectory, ScoreOutcome outcome)
     {
-        List<(string FileName, string Content)> outputs = [("sanitized-result.json", ValidatedJson(outcome.Result, "sanitized-result.v3.schema.json"))];
+        List<(string FileName, string Content)> outputs = [("sanitized-result.json", ValidatedJson(outcome.Result, "sanitized-result.v4.schema.json"))];
         if (outcome.Assertions is not null)
         {
-            outputs.Add(("assertions.json", ValidatedJson(outcome.Assertions, "assertion-results.v3.schema.json")));
+            outputs.Add(("assertions.json", ValidatedJson(outcome.Assertions, "assertion-results.v4.schema.json")));
         }
 
         WriteAtomically(resultDirectory, outputs);
@@ -293,10 +293,10 @@ internal static class EvaluatorScorer
 
     internal static void WriteCorpusResults(string resultDirectory, CorpusScoreOutcome outcome)
     {
-        List<(string FileName, string Content)> outputs = [("sanitized-result.json", ValidatedJson(outcome.Result, "sanitized-result.v3.schema.json"))];
+        List<(string FileName, string Content)> outputs = [("sanitized-result.json", ValidatedJson(outcome.Result, "sanitized-result.v4.schema.json"))];
         for (int index = 0; index < outcome.MemberAssertions.Count; index++)
         {
-            outputs.Add(($"member-{index + 1:D4}-assertions.json", ValidatedJson(outcome.MemberAssertions[index], "assertion-results.v3.schema.json")));
+            outputs.Add(($"member-{index + 1:D4}-assertions.json", ValidatedJson(outcome.MemberAssertions[index], "assertion-results.v4.schema.json")));
         }
 
         WriteAtomically(resultDirectory, outputs);
@@ -304,7 +304,7 @@ internal static class EvaluatorScorer
 
     internal static ExecutionManifest ReadAndValidateManifest(string manifestPath)
     {
-        ExecutionManifest manifest = EvaluatorProtocol.Read<ExecutionManifest>(manifestPath, "execution-manifest.v3.schema.json");
+        ExecutionManifest manifest = EvaluatorProtocol.Read<ExecutionManifest>(manifestPath, "execution-manifest.v4.schema.json");
         ValidateManifestIdentity(manifest);
         return manifest;
     }
@@ -632,7 +632,7 @@ internal static class EvaluatorScorer
     {
         ArtifactIdentity candidate = EvaluatorProtocol.Identity(candidateOutputPath);
         ArtifactIdentity oracle = EvaluatorProtocol.Identity(oraclePath);
-        string material = $"infinium.evaluator-v2.prepared-corpus/3\n{manifest.Corpus.CorpusId}|{manifest.Corpus.Version}\nqualification|{manifest.Candidate.QualificationId}|{candidate.ByteLength}|{candidate.Sha256}\noracle|{oracle.ByteLength}|{oracle.Sha256}\n";
+        string material = $"infinium.evaluator-v2.prepared-corpus/4\n{manifest.Corpus.CorpusId}|{manifest.Corpus.Version}\nqualification|{manifest.Candidate.QualificationId}|{candidate.ByteLength}|{candidate.Sha256}\noracle|{oracle.ByteLength}|{oracle.Sha256}\n";
         return Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(material)));
     }
 
@@ -640,7 +640,7 @@ internal static class EvaluatorScorer
         CorpusIdentity corpus,
         IEnumerable<(string MemberId, ExecutionInput Execution, string OraclePath)> members)
     {
-        StringBuilder material = new("infinium.evaluator-v2.corpus/3\n");
+        StringBuilder material = new("infinium.evaluator-v2.corpus/4\n");
         material.Append(corpus.CorpusId).Append('|').Append(corpus.Version).Append('\n');
         int index = 0;
         foreach ((string memberId, ExecutionInput execution, string oraclePath) in members)

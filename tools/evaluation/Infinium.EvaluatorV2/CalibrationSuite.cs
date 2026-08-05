@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Infinium.EvaluatorV2;
 
@@ -53,7 +54,14 @@ internal static class CalibrationSuite
                 ScoreCase("wrong-ownership", "FAIL", "ownership", context, Mutate(correct, "/links/owner", "00000099:base.esm")),
                 ScoreCase("wrong-placement", "FAIL", "placement", context,
                     Replace(correct, "/placement/integral", fact => fact with { Value = EvaluatorProtocol.Primitive(999d) })),
+                ScoreCase("wrong-facegen-provider-winner", "FAIL", "face_gen", context,
+                    Mutate(correct, "/face_gen/mesh/winner_provider_id", "wrong-provider")),
                 ScoreCase("wrong-gap", "FAIL", "gap", context, Mutate(correct, "/gaps/{gap_id=archive}/denominator", 3L)),
+                ScoreCase("wrong-taxonomy-code", "FAIL", "taxonomy", context, Mutate(correct, "/taxonomy/code", "area.wrong")),
+                ScoreCase("wrong-taxonomy-applicability", "FAIL", "taxonomy", context, Mutate(correct, "/taxonomy/applicability", "unknown")),
+                ScoreCase("wrong-taxonomy-role", "FAIL", "taxonomy", context, Mutate(correct, "/taxonomy/role", "predicted")),
+                ScoreCase("wrong-aidt-presence", "FAIL", "npc", context, Mutate(correct, "/npc/ai_data_present", false)),
+                ScoreCase("wrong-snapshot-publication", "FAIL", "state", context, Mutate(correct, "/result/snapshot_present", false)),
                 ScoreCase("candidate-output-contract", "FAIL", "candidate_output_contract", context,
                     correct with { ProtocolId = "wrong-protocol" }),
                 ExecutionFailureCase(context),
@@ -66,10 +74,11 @@ internal static class CalibrationSuite
             cases.AddRange(AggregateCases(context, correct));
             cases.Add(EvaluatorRootDriftCase(context, correct));
             cases.Add(CandidateDependencyDriftCase(context, correct));
+            cases.AddRange(ProjectionBoundaryCases());
             return new CalibrationResults(
                 EvaluatorProtocol.CalibrationSchema,
                 EvaluatorProtocol.ProtocolId,
-                "infinium.evaluator-v2.public-calibration/3",
+                "infinium.evaluator-v2.public-calibration/4",
                 cases,
                 cases.All(item => item.Passed));
         }
@@ -375,12 +384,108 @@ internal static class CalibrationSuite
         return new EvaluatorFileIdentity(relative, identity.ByteLength, identity.Sha256);
     }
 
+    private static List<CalibrationCaseResult> ProjectionBoundaryCases()
+    {
+        const string source = """
+            {
+              "state":"completed","failures":[],"gaps":[],
+              "snapshot":{
+                "plugins":[{"plugin_name":"Base.esm","load_order":0,"local_installed_entity_id":"provider-base","master_style":"full","masters":[]}],
+                "override_chains":{"00000042:Base.esm":{"identity":{"participant_id":"product-participant","signature":"NPC_","form_key":"00000042:Base.esm","origin_plugin":"Base.esm","origin_local_id":66},"contributions":[{"contribution_id":"product-contribution","identity":{"participant_id":"product-participant","signature":"NPC_","form_key":"00000042:Base.esm","origin_plugin":"Base.esm","origin_local_id":66},"source_plugin":"Base.esm","load_order":0,"deleted":false,"compressed":false,"raw_flags":0}],"winner":{"contribution_id":"product-contribution"}}},
+                "npc_contributions":[{"contribution":{"contribution_id":"product-contribution","identity":{"participant_id":"product-participant","signature":"NPC_","form_key":"00000042:Base.esm","origin_plugin":"Base.esm","origin_local_id":66},"source_plugin":"Base.esm","load_order":0,"deleted":false,"compressed":false,"raw_flags":0},"configuration_flags":0,"template_flags":0,"uses_template":false,"templates_traits":false,"template":null,"race":null,"hair_color":null,"ai_data":{"aggression":0},"packages":[],"head_parts":[]}],
+                "race_contributions":[],"placed_reference_contributions":[],"allowlisted_fields":[],
+                "resolved_participants":{"00000042:Base.esm":{"participant_id":"product-participant","form_key":"00000042:Base.esm"}},
+                "npcs":{},"races":{},"placed_references":{},"links":[],"face_gen":[],
+                "taxonomy":[{"assignment_id":"product-assignment","taxonomy_id":"mod-impact-taxonomy","taxonomy_version":{"major":1,"minor":0,"patch":0},"subject_participant_id":"product-contribution","subject_type":"record-contribution","axis":"technical-modification-surface","facet":"semantic-mechanism","code":"surface.plugin-data","applicability":"assigned","role":"observed","evidence_fields":["product-evidence"],"analyzer_or_adjudicator_id":"product-analyzer","reason":"ignored"}],
+                "coverage":[],"gaps":[]
+              }
+            }
+            """;
+        JsonObject baselineNode = JsonNode.Parse(source)!.AsObject();
+        string baseline = Projected(baselineNode);
+        List<CalibrationCaseResult> cases = [];
+
+        foreach ((string Id, Action<JsonObject> Mutate) in new (string, Action<JsonObject>)[]
+                 {
+                     ("projection-product-assignment-id-ignored", root => Taxonomy(root)["assignment_id"] = "changed-assignment"),
+                     ("projection-product-analyzer-id-ignored", root => Taxonomy(root)["analyzer_or_adjudicator_id"] = "changed-analyzer"),
+                     ("projection-product-evidence-id-ignored", root => Taxonomy(root)["evidence_fields"] = new JsonArray("changed-evidence")),
+                     ("projection-typed-aidt-subfields-ignored", root => Npc(root)["ai_data"]!["aggression"] = 255),
+                 })
+        {
+            JsonObject changed = JsonNode.Parse(source)!.AsObject();
+            Mutate(changed);
+            cases.Add(BoundaryCase(Id, Projected(changed) == baseline));
+        }
+
+        foreach ((string Id, Action<JsonObject> Mutate) in new (string, Action<JsonObject>)[]
+                 {
+                     ("projection-taxonomy-code-authoritative", root => Taxonomy(root)["code"] = "surface.changed"),
+                     ("projection-taxonomy-applicability-authoritative", root => Taxonomy(root)["applicability"] = "unknown"),
+                     ("projection-taxonomy-role-authoritative", root => Taxonomy(root)["role"] = "predicted"),
+                     ("projection-aidt-presence-authoritative", root => Npc(root)["ai_data"] = null),
+                 })
+        {
+            JsonObject changed = JsonNode.Parse(source)!.AsObject();
+            Mutate(changed);
+            cases.Add(BoundaryCase(Id, Projected(changed) != baseline));
+        }
+
+        JsonObject failureA = JsonNode.Parse(source)!.AsObject();
+        failureA["snapshot"] = null;
+        failureA["failures"] = JsonNode.Parse("[{\"code\":\"first-code\"}]");
+        JsonObject failureB = JsonNode.Parse(failureA.ToJsonString())!.AsObject();
+        failureB["failures"]![0]!["code"] = "second-code";
+        cases.Add(BoundaryCase("projection-failure-code-spelling-ignored", Projected(failureA) == Projected(failureB)));
+        JsonObject invalidPublished = JsonNode.Parse(source)!.AsObject();
+        invalidPublished["state"] = "invalid_input";
+        invalidPublished["failures"] = JsonNode.Parse("[{\"code\":\"internal-code\"}]");
+        cases.Add(BoundaryCase(
+            "projection-invalid-result-publishes-snapshot-rejected",
+            Projected(failureA) != Projected(invalidPublished)));
+
+        JsonObject duplicate = JsonNode.Parse(source)!.AsObject();
+        JsonObject duplicateItem = JsonNode.Parse(Taxonomy(duplicate).ToJsonString())!.AsObject();
+        duplicateItem["assignment_id"] = "another-product-assignment";
+        duplicate["snapshot"]!["taxonomy"]!.AsArray().Add(duplicateItem);
+        bool duplicateRejected;
+        try
+        {
+            _ = Projected(duplicate);
+            duplicateRejected = false;
+        }
+        catch (CandidateOutputException)
+        {
+            duplicateRejected = true;
+        }
+        cases.Add(BoundaryCase("projection-duplicate-semantic-taxonomy-rejected", duplicateRejected));
+        return cases;
+    }
+
+    private static JsonObject Taxonomy(JsonObject root) => root["snapshot"]!["taxonomy"]![0]!.AsObject();
+    private static JsonObject Npc(JsonObject root) => root["snapshot"]!["npc_contributions"]![0]!.AsObject();
+
+    private static string Projected(JsonNode source)
+    {
+        using JsonDocument document = JsonDocument.Parse(source.ToJsonString());
+        return JsonSerializer.Serialize(SemanticCanonicalizer.Project(document.RootElement), EvaluatorProtocol.JsonOptions);
+    }
+
+    private static CalibrationCaseResult BoundaryCase(string id, bool passed) => new(
+        id,
+        "PASS",
+        passed ? "PASS" : "FAIL",
+        null,
+        [],
+        passed);
+
     private static ExpectedSemanticOutput Oracle()
     {
         SemanticFact[] facts =
         [
             Fact("/chain/contributions/0", "override_chain", "First.esm"),
             Fact("/chain/contributions/1", "override_chain", "Second.esp"),
+            Fact("/face_gen/mesh/winner_provider_id", "face_gen", "provider-winner"),
             Fact("/gaps/{gap_id=archive}/denominator", "gap", 2L),
             Fact("/integer/exact", "field", 10L),
             Fact("/links/base", "link", "00000042:base.esm"),
@@ -389,6 +494,12 @@ internal static class CalibrationSuite
             NumberFact("/placement/integral", "placement", 10),
             Fact("/records/light/form_key", "form_key", "00000801:light.esl"),
             Fact("/records/regular/form_key", "form_key", "00000042:base.esm"),
+            Fact("/result/failure_present", "state", false),
+            Fact("/result/snapshot_present", "state", true),
+            Fact("/npc/ai_data_present", "npc", true),
+            Fact("/taxonomy/applicability", "taxonomy", "assigned"),
+            Fact("/taxonomy/code", "taxonomy", "area.actors.ai-packages"),
+            Fact("/taxonomy/role", "taxonomy", "established"),
             Fact("/winner/plugin", "winner", "Second.esp"),
         ];
         return new ExpectedSemanticOutput(
@@ -418,6 +529,9 @@ internal static class CalibrationSuite
     private static CandidateSemanticOutput Mutate(CandidateSemanticOutput source, string factId, long value) =>
         Replace(source, factId, fact => fact with { Value = EvaluatorProtocol.Primitive(value), ValueType = "integer" });
 
+    private static CandidateSemanticOutput Mutate(CandidateSemanticOutput source, string factId, bool value) =>
+        Replace(source, factId, fact => fact with { Value = EvaluatorProtocol.Primitive(value), ValueType = "boolean" });
+
     private static CandidateSemanticOutput Replace(
         CandidateSemanticOutput source,
         string factId,
@@ -441,6 +555,9 @@ internal static class CalibrationSuite
 
     private static SemanticFact Fact(string id, string type, long value) =>
         new(id, type, "integer", EvaluatorProtocol.Primitive(value));
+
+    private static SemanticFact Fact(string id, string type, bool value) =>
+        new(id, type, "boolean", EvaluatorProtocol.Primitive(value));
 
     private static SemanticFact NumberFact(string id, string type, double value) =>
         new(id, type, "number", EvaluatorProtocol.Primitive(value));

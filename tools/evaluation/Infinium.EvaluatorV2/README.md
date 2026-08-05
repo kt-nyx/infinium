@@ -1,27 +1,32 @@
 # Infinium public evaluator v2 successor
 
-This standalone public tool implements protocol `infinium.evaluator-v2/3`,
-scorer and adapter `3.0.0`, and Slice 4 projection
-`infinium.evaluator-v2.slice4-semantic-projection` `2.0.0`. Protocol `/2` and
-evaluator commit `72616fb6fbb3db7021e8100adc12a251c427f8d1` remain immutable
-historical evidence after Stage C.5 invalidated its product verdict.
+This standalone public tool implements protocol `infinium.evaluator-v2/4`,
+scorer and adapter `4.0.0`, and the final bounded Slice 4 projection
+`infinium.evaluator-v2.slice4-semantic-projection` `3.0.0`. Protocol `/3` at
+evaluator commit `34ed0c84165e9a49f44a88ecd87cac967132ebd7` remains immutable
+historical evidence: it was publicly qualified, then superseded before a valid
+successor corpus because its projection required non-independently-authorable
+oracle values.
 
 ## Projection contract
 
 The reflection adapter serializes the public `BethesdaSemanticExtractionResult`
 only as an inter-assembly transport, then explicitly projects named Slice 4
 members. It never recursively flattens the complete result. Included facts are
-state; accepted plugin order/identity/master data; record and contribution
-identity; override sequence and winner; selected NPC, RACE, and REFR fields;
-typed links; allowlisted-field counts; resolved participants; FaceGen and
-loose-provider topology; taxonomy; coverage; typed gaps; and stable failure
-codes.
+result publication/failure presence; accepted plugin and provider topology;
+evaluator-owned record and contribution identity; override sequence and
+semantic winner fields; selected NPC, RACE, and REFR fields; typed links;
+allowlisted-field counts; FaceGen/provider topology; evaluator-owned taxonomy
+tuples; coverage; and typed capability gaps.
 
-Excluded values are physical paths, `SnapshotAuthorizedPath`, invocation-only
-snapshot IDs, dependency fingerprints, separately bound producer/candidate
-metadata, timestamps, exception text, `Reason` or `Message` prose, display
-text, manifest-redundant byte hashes/lengths, and incidental serialization
-fields. They cannot appear in an expected output or sanitized result.
+Excluded values include every product-generated contribution, participant,
+winner, taxonomy-assignment, analyzer, evidence, gap, and snapshot ID; exact
+failure-code spelling; typed AIDT subfields; denominator labels; physical
+paths; `SnapshotAuthorizedPath`; dependency fingerprints; separately bound
+producer/candidate metadata; timestamps; exception text; `Reason` or `Message`
+prose; display text; manifest-redundant byte hashes/lengths; and incidental
+serialization fields. The normative family-by-family authority is
+`docs/evaluation/m1-slice4-heldout-oracle-authority-matrix.md`.
 
 Fact IDs use slash-delimited public collection/field names. Set/map identities
 are percent-escaped path segments sorted ordinally. Ordered plugin, master,
@@ -85,7 +90,7 @@ candidate invocation that throws is `FAIL/candidate_execution`; an invalid
 candidate projection is `FAIL/candidate_output_contract`; semantic mismatches
 are `FAIL/comparison`. A valid typed failed state compares normally.
 
-The tracked public freeze handoff at
-`docs/evaluation/evaluator-v2-stage-a-freeze.json` is the sole Stage B
-autodiscovery authority after Stage A closeout. Stage B must not substitute a
-SHA supplied out of band.
+After closeout, the tracked public freeze handoff at
+`docs/evaluation/evaluator-v2-stage-a-final-bounded-freeze.json` is the sole
+Stage B.2 autodiscovery authority. Stage B.2 must not substitute a SHA supplied
+out of band, and no further successor iteration is authorized.

@@ -14,6 +14,35 @@ internal static class ReflectionCandidateAdapter
 
     internal static CandidateSemanticOutput Execute(ExecutionManifest manifest)
     {
+        CandidateSemanticOutput output = ExecuteCore(manifest, root =>
+        {
+            string state = root.GetProperty("state").GetString()
+                ?? throw new CandidateOutputException("Candidate state is absent.");
+            IReadOnlyList<SemanticFact> facts = SemanticCanonicalizer.Project(root);
+            return new CandidateSemanticOutput(
+                EvaluatorProtocol.CandidateSchema,
+                EvaluatorProtocol.ProtocolId,
+                EvaluatorProtocol.ProjectionId,
+                EvaluatorProtocol.ProjectionVersion,
+                manifest.Candidate.Commit,
+                manifest.Candidate.Artifact,
+                state,
+                facts);
+        });
+
+        string serialized = EvaluatorProtocol.Serialize(output);
+        using JsonDocument strict = JsonDocument.Parse(serialized);
+        Infinium.Application.Evaluation.EmbeddedJsonSchemaValidator.Validate(
+            strict.RootElement,
+            "candidate-semantic-output.v4.schema.json");
+        return output;
+    }
+
+    internal static JsonElement ExecuteRawForTests(ExecutionManifest manifest) =>
+        ExecuteCore(manifest, root => root.Clone());
+
+    private static T ExecuteCore<T>(ExecutionManifest manifest, Func<JsonElement, T> consume)
+    {
         string assemblyPath = Path.GetFullPath(manifest.Candidate.AssemblyPath);
         CandidateLoadContext context = new(manifest.Candidate);
         try
@@ -39,26 +68,7 @@ internal static class ReflectionCandidateAdapter
             }
 
             using JsonDocument document = JsonDocument.Parse(JsonSerializer.Serialize(result, result.GetType(), ForeignJsonOptions));
-            JsonElement root = document.RootElement;
-            string state = root.GetProperty("state").GetString()
-                ?? throw new CandidateOutputException("Candidate state is absent.");
-            IReadOnlyList<SemanticFact> facts = SemanticCanonicalizer.Project(root);
-            CandidateSemanticOutput output = new(
-                EvaluatorProtocol.CandidateSchema,
-                EvaluatorProtocol.ProtocolId,
-                EvaluatorProtocol.ProjectionId,
-                EvaluatorProtocol.ProjectionVersion,
-                manifest.Candidate.Commit,
-                manifest.Candidate.Artifact,
-                state,
-                facts);
-
-            string serialized = EvaluatorProtocol.Serialize(output);
-            using JsonDocument strict = JsonDocument.Parse(serialized);
-            Infinium.Application.Evaluation.EmbeddedJsonSchemaValidator.Validate(
-                strict.RootElement,
-                "candidate-semantic-output.v3.schema.json");
-            return output;
+            return consume(document.RootElement);
         }
         catch (CandidateOutputException)
         {

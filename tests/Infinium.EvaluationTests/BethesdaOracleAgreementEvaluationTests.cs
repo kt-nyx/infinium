@@ -402,6 +402,17 @@ public sealed class BethesdaOracleAgreementEvaluationTests
             Assert.IsTrue(snapshot.Taxonomy.All(item =>
                 item.TaxonomyId == oracle.RootElement.GetProperty("taxonomy_id").GetString()
                 && item.TaxonomyVersion.ToString() == oracle.RootElement.GetProperty("taxonomy_version").GetString()));
+            Assert.IsTrue(snapshot.Taxonomy.All(item =>
+                item.AssignmentId.StartsWith("taxonomy:", StringComparison.Ordinal)
+                && item.AssignmentId.Length == 29));
+            Assert.IsTrue(snapshot.Taxonomy.All(item =>
+                item.AnalyzerOrAdjudicatorId == "analyzer:infinium-bethesda-m1-semantic-index"));
+            BethesdaSemanticSnapshot repeated = new BethesdaSemanticExtractor().Extract(
+                BethesdaSemanticTestSnapshot.Create(fixture)).Snapshot!;
+            CollectionAssert.AreEqual(
+                snapshot.Taxonomy.Select(item => $"{item.AssignmentId}|{item.AnalyzerOrAdjudicatorId}|{string.Join(',', item.EvidenceFields)}").ToArray(),
+                repeated.Taxonomy.Select(item => $"{item.AssignmentId}|{item.AnalyzerOrAdjudicatorId}|{string.Join(',', item.EvidenceFields)}").ToArray(),
+                $"{fixture}: product taxonomy bookkeeping IDs must remain deterministic");
             Assert.IsTrue(snapshot.Taxonomy.Where(item => item.SubjectType == "provider-topology").All(item => item.Axis != "technical-modification-surface"));
             Assert.IsFalse(snapshot.Taxonomy.Any(item => item.SubjectType == "unsupported-record" && item.Code is
                 "area.actors.ai-packages" or "area.actors.appearance-identity" or "area.world.placed-objects-activation"));

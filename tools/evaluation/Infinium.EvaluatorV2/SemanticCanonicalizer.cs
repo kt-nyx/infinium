@@ -9,39 +9,54 @@ namespace Infinium.EvaluatorV2;
 /// </summary>
 internal static partial class SemanticCanonicalizer
 {
+    internal static IReadOnlyList<string> IncludedFactFamilies { get; } =
+    [
+        "result",
+        "plugins",
+        "override_chains",
+        "npc_contributions",
+        "race_contributions",
+        "placed_reference_contributions",
+        "allowlisted_fields",
+        "npcs",
+        "races",
+        "placed_references",
+        "face_gen",
+        "taxonomy",
+        "coverage",
+        "gaps",
+        "result_gaps",
+    ];
+
     internal static IReadOnlyList<SemanticFact> Project(JsonElement result)
     {
         FactBuilder facts = new();
-        if (result.TryGetProperty("failures", out JsonElement failures))
-        {
-            foreach (JsonElement failure in failures.EnumerateArray()
-                         .OrderBy(item => Text(item, "code"), StringComparer.Ordinal))
-            {
-                string code = Text(failure, "code");
-                facts.String($"failures/{Segment(code)}/code", "failure", code);
-            }
-        }
+        bool snapshotPresent = result.TryGetProperty("snapshot", out JsonElement snapshot)
+            && snapshot.ValueKind != JsonValueKind.Null;
+        bool failurePresent = result.TryGetProperty("failures", out JsonElement failures)
+            && failures.ValueKind == JsonValueKind.Array
+            && failures.GetArrayLength() > 0;
+        facts.Boolean("result/snapshot_present", "state", snapshotPresent);
+        facts.Boolean("result/failure_present", "state", failurePresent);
 
-        if (!result.TryGetProperty("snapshot", out JsonElement snapshot)
-            || snapshot.ValueKind == JsonValueKind.Null)
+        if (!snapshotPresent)
         {
-            ProjectGaps(result.GetProperty("gaps"), "gaps", facts);
+            ProjectGaps(result.GetProperty("gaps"), "result_gaps", facts);
             return facts.Build();
         }
 
+        ProjectionContext context = ProjectionContext.Create(snapshot);
         ProjectPlugins(snapshot.GetProperty("plugins"), facts);
-        ProjectOverrideChains(snapshot.GetProperty("override_chains"), facts);
-        ProjectContributionFacts(snapshot.GetProperty("npc_contributions"), "npc_contributions", "npc", ProjectNpc, facts);
-        ProjectContributionFacts(snapshot.GetProperty("race_contributions"), "race_contributions", "race", ProjectRace, facts);
-        ProjectContributionFacts(snapshot.GetProperty("placed_reference_contributions"), "placed_reference_contributions", "reference", ProjectReference, facts);
-        ProjectFields(snapshot.GetProperty("allowlisted_fields"), facts);
-        ProjectResolvedParticipants(snapshot.GetProperty("resolved_participants"), facts);
+        ProjectOverrideChains(snapshot.GetProperty("override_chains"), context, facts);
+        ProjectContributionFacts(snapshot.GetProperty("npc_contributions"), "npc_contributions", "npc", ProjectNpc, context, facts);
+        ProjectContributionFacts(snapshot.GetProperty("race_contributions"), "race_contributions", "race", ProjectRace, context, facts);
+        ProjectContributionFacts(snapshot.GetProperty("placed_reference_contributions"), "placed_reference_contributions", "reference", ProjectReference, context, facts);
+        ProjectFields(snapshot.GetProperty("allowlisted_fields"), context, facts);
         ProjectResolvedFacts(snapshot.GetProperty("npcs"), "npcs", "npc", ProjectNpc, facts);
         ProjectResolvedFacts(snapshot.GetProperty("races"), "races", "race", ProjectRace, facts);
         ProjectResolvedFacts(snapshot.GetProperty("placed_references"), "placed_references", "reference", ProjectReference, facts);
-        ProjectLinks(snapshot.GetProperty("links"), "links", facts);
-        ProjectFaceGen(snapshot.GetProperty("face_gen"), facts);
-        ProjectTaxonomy(snapshot.GetProperty("taxonomy"), facts);
+        ProjectFaceGen(snapshot.GetProperty("face_gen"), context, facts);
+        ProjectTaxonomy(snapshot.GetProperty("taxonomy"), context, facts);
         ProjectCoverage(snapshot.GetProperty("coverage"), facts);
         ProjectGaps(snapshot.GetProperty("gaps"), "gaps", facts);
         ProjectGaps(result.GetProperty("gaps"), "result_gaps", facts);
@@ -70,14 +85,14 @@ internal static partial class SemanticCanonicalizer
             string root = $"plugins/{index:D4}";
             facts.String($"{root}/plugin_name", "plugin", Text(plugin, "plugin_name").ToLowerInvariant());
             facts.Integer($"{root}/load_order", "plugin", plugin.GetProperty("load_order").GetInt64());
-            facts.String($"{root}/local_installed_entity_id", "plugin", Text(plugin, "local_installed_entity_id").ToLowerInvariant());
+            facts.String($"{root}/provider_id", "plugin", Text(plugin, "local_installed_entity_id").ToLowerInvariant());
             facts.String($"{root}/master_style", "plugin", Text(plugin, "master_style"));
             ProjectStringSequence(plugin.GetProperty("masters"), $"{root}/masters", "plugin", value => value.ToLowerInvariant(), facts);
             index++;
         }
     }
 
-    private static void ProjectOverrideChains(JsonElement chains, FactBuilder facts)
+    private static void ProjectOverrideChains(JsonElement chains, ProjectionContext context, FactBuilder facts)
     {
         foreach (JsonProperty entry in chains.EnumerateObject().OrderBy(item => CanonicalFormKey(item.Name), StringComparer.Ordinal))
         {
@@ -92,7 +107,8 @@ internal static partial class SemanticCanonicalizer
                 index++;
             }
 
-            facts.String($"{root}/winner_contribution_id", "winner", CanonicalIdentity(Text(chain.GetProperty("winner"), "contribution_id")));
+            string winnerId = Text(chain.GetProperty("winner"), "contribution_id");
+            ProjectWinner(context.Contribution(winnerId), $"{root}/winner", facts);
         }
     }
 
@@ -101,13 +117,14 @@ internal static partial class SemanticCanonicalizer
         string collection,
         string type,
         Action<JsonElement, string, FactBuilder> projector,
+        ProjectionContext context,
         FactBuilder facts)
     {
         foreach (JsonElement item in source.EnumerateArray().OrderBy(
-                     item => CanonicalIdentity(Text(item.GetProperty("contribution"), "contribution_id")),
+                     item => context.ContributionIdentity(Text(item.GetProperty("contribution"), "contribution_id")),
                      StringComparer.Ordinal))
         {
-            string id = CanonicalIdentity(Text(item.GetProperty("contribution"), "contribution_id"));
+            string id = context.ContributionIdentity(Text(item.GetProperty("contribution"), "contribution_id"));
             projector(item, $"{collection}/{Segment(id)}", facts);
             facts.String($"{collection}/{Segment(id)}/kind", type, type);
         }
@@ -138,15 +155,7 @@ internal static partial class SemanticCanonicalizer
         ProjectOptionalLink(npc.GetProperty("template"), $"{root}/template", facts);
         ProjectOptionalLink(npc.GetProperty("race"), $"{root}/race", facts);
         ProjectOptionalLink(npc.GetProperty("hair_color"), $"{root}/hair_color", facts);
-        if (npc.GetProperty("ai_data") is { ValueKind: not JsonValueKind.Null } ai)
-        {
-            foreach (string name in new[] { "aggression", "confidence", "energy_level", "responsibility", "mood", "assistance", "warn", "warn_or_attack", "attack" })
-            {
-                facts.Integer($"{root}/ai_data/{name}", "npc", ai.GetProperty(name).GetInt64());
-            }
-
-            facts.Boolean($"{root}/ai_data/aggro_radius_behavior", "npc", ai.GetProperty("aggro_radius_behavior").GetBoolean());
-        }
+        facts.Boolean($"{root}/ai_data_present", "npc", npc.GetProperty("ai_data").ValueKind != JsonValueKind.Null);
 
         ProjectLinks(npc.GetProperty("packages"), $"{root}/packages", facts);
         ProjectLinks(npc.GetProperty("head_parts"), $"{root}/head_parts", facts);
@@ -180,7 +189,6 @@ internal static partial class SemanticCanonicalizer
 
     private static void ProjectContribution(JsonElement contribution, string root, FactBuilder facts)
     {
-        facts.String($"{root}/contribution_id", "contribution", CanonicalIdentity(Text(contribution, "contribution_id")));
         ProjectRecordIdentity(contribution.GetProperty("identity"), $"{root}/identity", facts);
         facts.String($"{root}/source_plugin", "contribution", Text(contribution, "source_plugin").ToLowerInvariant());
         facts.Integer($"{root}/load_order", "contribution", contribution.GetProperty("load_order").GetInt64());
@@ -191,7 +199,6 @@ internal static partial class SemanticCanonicalizer
 
     private static void ProjectRecordIdentity(JsonElement identity, string root, FactBuilder facts)
     {
-        facts.String($"{root}/participant_id", "record_identity", CanonicalIdentity(Text(identity, "participant_id")));
         facts.String($"{root}/signature", "record_identity", Text(identity, "signature"));
         facts.String($"{root}/form_key", "form_key", CanonicalFormKey(Text(identity, "form_key")));
         facts.String($"{root}/origin_plugin", "record_identity", Text(identity, "origin_plugin").ToLowerInvariant());
@@ -219,53 +226,37 @@ internal static partial class SemanticCanonicalizer
 
     private static void ProjectLink(JsonElement link, string root, FactBuilder facts, string factType = "link")
     {
-        facts.String($"{root}/source_participant_id", factType, CanonicalIdentity(Text(link, "source_participant_id")));
-        facts.String($"{root}/source_contribution_id", factType, CanonicalIdentity(Text(link, "source_contribution_id")));
         facts.String($"{root}/field", factType, Text(link, "field"));
         StringOrNull(link.GetProperty("component"), $"{root}/component", factType, value => value, facts);
         facts.Integer($"{root}/ordinal", factType, link.GetProperty("ordinal").GetInt64());
         StringOrNull(link.GetProperty("target_form_key"), $"{root}/target_form_key", "form_key", CanonicalFormKey, facts);
         facts.String($"{root}/state", factType, Text(link, "state"));
-        StringOrNull(link.GetProperty("target_participant_id"), $"{root}/target_participant_id", factType, CanonicalIdentity, facts);
     }
 
     private static string LinkIdentity(JsonElement link) => string.Join(':',
-        CanonicalIdentity(Text(link, "source_contribution_id")),
         Text(link, "field").ToLowerInvariant(),
         link.GetProperty("component").ValueKind == JsonValueKind.Null ? "value" : Text(link, "component").ToLowerInvariant(),
         link.GetProperty("ordinal").GetInt32().ToString("D4", System.Globalization.CultureInfo.InvariantCulture));
 
-    private static void ProjectFields(JsonElement fields, FactBuilder facts)
+    private static void ProjectFields(JsonElement fields, ProjectionContext context, FactBuilder facts)
     {
         foreach (JsonElement field in fields.EnumerateArray().OrderBy(
-                     item => $"{CanonicalIdentity(Text(item, "contribution_id"))}:{Text(item, "field")}", StringComparer.Ordinal))
+                     item => $"{context.ContributionIdentity(Text(item, "contribution_id"))}:{Text(item, "field")}", StringComparer.Ordinal))
         {
-            string identity = $"{CanonicalIdentity(Text(field, "contribution_id"))}:{Text(field, "field").ToLowerInvariant()}";
+            string identity = $"{context.ContributionIdentity(Text(field, "contribution_id"))}:{Text(field, "field").ToLowerInvariant()}";
             string root = $"allowlisted_fields/{Segment(identity)}";
-            facts.String($"{root}/contribution_id", "field", CanonicalIdentity(Text(field, "contribution_id")));
             facts.String($"{root}/field", "field", Text(field, "field"));
             facts.Integer($"{root}/count", "field", field.GetProperty("count").GetInt64());
         }
     }
 
-    private static void ProjectResolvedParticipants(JsonElement participants, FactBuilder facts)
+    private static void ProjectFaceGen(JsonElement source, ProjectionContext context, FactBuilder facts)
     {
-        foreach (JsonProperty entry in participants.EnumerateObject().OrderBy(item => CanonicalFormKey(item.Name), StringComparer.Ordinal))
+        foreach (JsonElement item in source.EnumerateArray().OrderBy(item => context.ParticipantFormKey(Text(item, "npc_participant_id")), StringComparer.Ordinal))
         {
-            string formKey = CanonicalFormKey(entry.Name);
-            string root = $"resolved_participants/{Segment(formKey)}";
-            facts.String($"{root}/participant_id", "record_identity", CanonicalIdentity(Text(entry.Value, "participant_id")));
-            facts.String($"{root}/form_key", "form_key", CanonicalFormKey(Text(entry.Value, "form_key")));
-        }
-    }
-
-    private static void ProjectFaceGen(JsonElement source, FactBuilder facts)
-    {
-        foreach (JsonElement item in source.EnumerateArray().OrderBy(item => CanonicalIdentity(Text(item, "npc_participant_id")), StringComparer.Ordinal))
-        {
-            string id = CanonicalIdentity(Text(item, "npc_participant_id"));
+            string id = context.ParticipantFormKey(Text(item, "npc_participant_id"));
             string root = $"face_gen/{Segment(id)}";
-            facts.String($"{root}/npc_participant_id", "face_gen", id);
+            facts.String($"{root}/npc_form_key", "face_gen", id);
             facts.String($"{root}/applicability", "face_gen", Text(item, "applicability"));
             facts.String($"{root}/origin_plugin", "face_gen", Text(item, "origin_plugin").ToLowerInvariant());
             facts.Integer($"{root}/origin_local_id", "face_gen", item.GetProperty("origin_local_id").GetInt64());
@@ -277,39 +268,43 @@ internal static partial class SemanticCanonicalizer
     private static void ProjectLooseAsset(JsonElement asset, string root, FactBuilder facts)
     {
         facts.String($"{root}/normalized_relative_path", "face_gen", Text(asset, "normalized_relative_path").Replace('\\', '/').ToLowerInvariant());
-        ProjectStringSequence(asset.GetProperty("provider_participant_ids"), $"{root}/provider_participant_ids", "face_gen", value => value.ToLowerInvariant(), facts);
-        StringOrNull(asset.GetProperty("winner_participant_id"), $"{root}/winner_participant_id", "face_gen", value => value.ToLowerInvariant(), facts);
+        ProjectStringSequence(asset.GetProperty("provider_participant_ids"), $"{root}/provider_ids", "face_gen", value => value.ToLowerInvariant(), facts);
+        StringOrNull(asset.GetProperty("winner_participant_id"), $"{root}/winner_provider_id", "face_gen", value => value.ToLowerInvariant(), facts);
         facts.Boolean($"{root}/present", "face_gen", asset.GetProperty("present").GetBoolean());
         facts.Boolean($"{root}/exact_absence_known", "face_gen", asset.GetProperty("exact_absence_known").GetBoolean());
     }
 
-    private static void ProjectTaxonomy(JsonElement source, FactBuilder facts)
+    private static void ProjectTaxonomy(JsonElement source, ProjectionContext context, FactBuilder facts)
     {
-        foreach (JsonElement item in source.EnumerateArray().OrderBy(TaxonomyIdentity, StringComparer.Ordinal))
+        foreach (JsonElement item in source.EnumerateArray().OrderBy(item => TaxonomyIdentity(item, context), StringComparer.Ordinal))
         {
-            string id = CanonicalIdentity(Text(item, "assignment_id"));
-            string root = $"taxonomy/{Segment(TaxonomyIdentity(item))}";
-            foreach (string name in new[] { "assignment_id", "taxonomy_id", "subject_participant_id", "subject_type", "axis", "facet", "applicability", "role", "analyzer_or_adjudicator_id" })
-            {
-                string value = Text(item, name);
-                facts.String($"{root}/{name}", "taxonomy", name.Contains("participant", StringComparison.Ordinal) || name == "assignment_id" ? CanonicalIdentity(value) : value);
-            }
+            string subject = context.TaxonomySubject(item);
+            string subjectType = Text(item, "subject_type");
+            string axis = Text(item, "axis");
+            string facet = Text(item, "facet");
+            string code = item.GetProperty("code").ValueKind == JsonValueKind.Null ? "null" : Text(item, "code");
+            string applicability = Text(item, "applicability");
+            string role = Text(item, "role");
+            string root = $"taxonomy/{Segment(subject)}/{Segment(subjectType)}/{Segment(axis)}/{Segment(facet)}/{Segment(code)}/{Segment(applicability)}/{Segment(role)}";
+            facts.String($"{root}/taxonomy_id", "taxonomy", Text(item, "taxonomy_id"));
+            facts.String($"{root}/canonical_subject", "taxonomy", subject);
+            facts.String($"{root}/subject_type", "taxonomy", subjectType);
+            facts.String($"{root}/axis", "taxonomy", axis);
+            facts.String($"{root}/facet", "taxonomy", facet);
+            facts.String($"{root}/applicability", "taxonomy", applicability);
+            facts.String($"{root}/role", "taxonomy", role);
 
             JsonElement version = item.GetProperty("taxonomy_version");
             facts.Integer($"{root}/taxonomy_version/major", "taxonomy", version.GetProperty("major").GetInt64());
             facts.Integer($"{root}/taxonomy_version/minor", "taxonomy", version.GetProperty("minor").GetInt64());
             facts.Integer($"{root}/taxonomy_version/patch", "taxonomy", version.GetProperty("patch").GetInt64());
             StringOrNull(item.GetProperty("code"), $"{root}/code", "taxonomy", value => value, facts);
-            foreach (string evidence in item.GetProperty("evidence_fields").EnumerateArray().Select(value => CanonicalIdentity(value.GetString()!)).Order(StringComparer.Ordinal))
-            {
-                facts.String($"{root}/evidence_fields/{Segment(evidence)}", "taxonomy", evidence);
-            }
         }
     }
 
-    private static string TaxonomyIdentity(JsonElement item) => string.Join('|',
-        CanonicalIdentity(Text(item, "assignment_id")),
-        CanonicalIdentity(Text(item, "subject_participant_id")),
+    private static string TaxonomyIdentity(JsonElement item, ProjectionContext context) => string.Join('|',
+        context.TaxonomySubject(item),
+        Text(item, "subject_type"),
         Text(item, "axis"),
         Text(item, "facet"),
         item.GetProperty("code").ValueKind == JsonValueKind.Null ? "null" : Text(item, "code"),
@@ -323,28 +318,35 @@ internal static partial class SemanticCanonicalizer
             string population = Text(item, "population");
             string root = $"coverage/{Segment(population)}";
             facts.String($"{root}/population", "coverage", population);
-            facts.String($"{root}/denominator_label", "coverage", Text(item, "denominator_label"));
             facts.Integer($"{root}/denominator", "coverage", item.GetProperty("denominator").GetInt64());
             facts.Integer($"{root}/completed", "coverage", item.GetProperty("completed").GetInt64());
             facts.String($"{root}/state", "coverage", Text(item, "state"));
-            foreach (string gap in item.GetProperty("gap_ids").EnumerateArray().Select(value => value.GetString()!).Order(StringComparer.Ordinal))
-            {
-                facts.String($"{root}/gap_ids/{Segment(gap)}", "coverage", gap);
-            }
         }
     }
 
     private static void ProjectGaps(JsonElement source, string collection, FactBuilder facts)
     {
-        foreach (JsonElement item in source.EnumerateArray().OrderBy(item => Text(item, "gap_id"), StringComparer.Ordinal))
+        foreach (JsonElement item in source.EnumerateArray().OrderBy(
+                     item => $"{Text(item, "population")}|{Text(item, "missing_capability")}",
+                     StringComparer.Ordinal))
         {
-            string id = Text(item, "gap_id");
-            string root = $"{collection}/{Segment(id)}";
-            facts.String($"{root}/gap_id", "gap", id);
-            facts.String($"{root}/population", "gap", Text(item, "population"));
+            string population = Text(item, "population");
+            string missingCapability = Text(item, "missing_capability");
+            string root = $"{collection}/{Segment(population)}/{Segment(missingCapability)}";
+            facts.String($"{root}/population", "gap", population);
             facts.Integer($"{root}/denominator", "gap", item.GetProperty("denominator").GetInt64());
-            facts.String($"{root}/missing_capability", "gap", Text(item, "missing_capability"));
+            facts.String($"{root}/missing_capability", "gap", missingCapability);
         }
+    }
+
+    private static void ProjectWinner(JsonElement contribution, string root, FactBuilder facts)
+    {
+        facts.String($"{root}/source_plugin", "winner", Text(contribution, "source_plugin").ToLowerInvariant());
+        facts.Integer($"{root}/load_order", "winner", contribution.GetProperty("load_order").GetInt64());
+        facts.String($"{root}/form_key", "winner", CanonicalFormKey(Text(contribution.GetProperty("identity"), "form_key")));
+        facts.Boolean($"{root}/deleted", "winner", contribution.GetProperty("deleted").GetBoolean());
+        facts.Boolean($"{root}/compressed", "winner", contribution.GetProperty("compressed").GetBoolean());
+        facts.Integer($"{root}/raw_flags", "winner", contribution.GetProperty("raw_flags").GetInt64());
     }
 
     private static void ProjectStringSequence(JsonElement array, string root, string type, Func<string, string> normalize, FactBuilder facts)
@@ -387,6 +389,148 @@ internal static partial class SemanticCanonicalizer
 
     [GeneratedRegex(@"[0-9a-fA-F]{8}:[^:/\\\s]+\.(?:esm|esp|esl)", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)]
     private static partial Regex EmbeddedFormKeyPattern();
+
+    [GeneratedRegex(@"^unsupported-record:(?<plugin>[^:]+):(?<signature>[^:]+):(?<formkey>[0-9a-fA-F]{8}:[^:]+)$", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)]
+    private static partial Regex UnsupportedSubjectPattern();
+
+    private sealed class ProjectionContext
+    {
+        private readonly Dictionary<string, JsonElement> contributions = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, string> participantFormKeys = new(StringComparer.Ordinal);
+        private readonly string providerTopologySubject;
+
+        private ProjectionContext(JsonElement snapshot)
+        {
+            foreach (JsonProperty chain in snapshot.GetProperty("override_chains").EnumerateObject())
+            {
+                foreach (JsonElement contribution in chain.Value.GetProperty("contributions").EnumerateArray())
+                {
+                    AddContribution(contribution);
+                }
+            }
+
+            foreach (string collection in new[] { "npc_contributions", "race_contributions", "placed_reference_contributions" })
+            {
+                foreach (JsonElement item in snapshot.GetProperty(collection).EnumerateArray())
+                {
+                    AddContribution(item.GetProperty("contribution"));
+                }
+            }
+
+            foreach (JsonProperty participant in snapshot.GetProperty("resolved_participants").EnumerateObject())
+            {
+                string participantId = Text(participant.Value, "participant_id");
+                string formKey = CanonicalFormKey(Text(participant.Value, "form_key"));
+                AddParticipant(participantId, formKey);
+            }
+
+            string topology = string.Join('|', snapshot.GetProperty("plugins").EnumerateArray().Select(plugin =>
+                string.Join(':',
+                    plugin.GetProperty("load_order").GetInt32().ToString("D4", System.Globalization.CultureInfo.InvariantCulture),
+                    Text(plugin, "plugin_name").ToLowerInvariant(),
+                    Text(plugin, "local_installed_entity_id").ToLowerInvariant())));
+            providerTopologySubject = $"provider-topology|{topology}";
+        }
+
+        internal static ProjectionContext Create(JsonElement snapshot) => new(snapshot);
+
+        internal JsonElement Contribution(string productId) =>
+            contributions.TryGetValue(productId, out JsonElement contribution)
+                ? contribution
+                : throw new CandidateOutputException($"Projection could not resolve contribution identity '{productId}'.");
+
+        internal string ContributionIdentity(string productId) => SemanticContributionIdentity(Contribution(productId));
+
+        internal string ParticipantFormKey(string productId) =>
+            participantFormKeys.TryGetValue(productId, out string? formKey)
+                ? formKey
+                : throw new CandidateOutputException($"Projection could not resolve participant identity '{productId}'.");
+
+        internal string TaxonomySubject(JsonElement item)
+        {
+            string productSubject = Text(item, "subject_participant_id");
+            return Text(item, "subject_type") switch
+            {
+                "record-contribution" => ContributionIdentity(productSubject),
+                "record-semantic-subject" => SemanticRecordSubject(productSubject),
+                "unsupported-record" => UnsupportedRecordSubject(productSubject),
+                "provider-topology" => providerTopologySubject,
+                string subjectType => throw new CandidateOutputException($"Projection encountered unsupported taxonomy subject type '{subjectType}'."),
+            };
+        }
+
+        private void AddContribution(JsonElement contribution)
+        {
+            string productId = Text(contribution, "contribution_id");
+            string semanticId = SemanticContributionIdentity(contribution);
+            if (contributions.TryGetValue(productId, out JsonElement existing))
+            {
+                if (!StringComparer.Ordinal.Equals(SemanticContributionIdentity(existing), semanticId))
+                {
+                    throw new CandidateOutputException($"Product contribution identity '{productId}' maps to multiple semantic contributions.");
+                }
+
+                return;
+            }
+
+            contributions.Add(productId, contribution);
+            AddParticipant(Text(contribution.GetProperty("identity"), "participant_id"),
+                CanonicalFormKey(Text(contribution.GetProperty("identity"), "form_key")));
+        }
+
+        private void AddParticipant(string productId, string formKey)
+        {
+            if (participantFormKeys.TryGetValue(productId, out string? existing) && !StringComparer.Ordinal.Equals(existing, formKey))
+            {
+                throw new CandidateOutputException($"Product participant identity '{productId}' maps to multiple FormKeys.");
+            }
+
+            participantFormKeys[productId] = formKey;
+        }
+
+        private string SemanticRecordSubject(string productSubject)
+        {
+            foreach (string contributionId in contributions.Keys.OrderByDescending(value => value.Length))
+            {
+                string prefix = $"{contributionId}:semantic:";
+                if (productSubject.StartsWith(prefix, StringComparison.Ordinal))
+                {
+                    string semanticArea = productSubject[prefix.Length..].ToLowerInvariant();
+                    return $"{ContributionIdentity(contributionId)}|semantic={semanticArea}";
+                }
+            }
+
+            throw new CandidateOutputException($"Projection could not resolve semantic taxonomy subject '{productSubject}'.");
+        }
+
+        private static string UnsupportedRecordSubject(string productSubject)
+        {
+            Match match = UnsupportedSubjectPattern().Match(productSubject);
+            if (!match.Success)
+            {
+                throw new CandidateOutputException($"Projection could not canonicalize unsupported-record subject '{productSubject}'.");
+            }
+
+            return string.Join('|',
+                "unsupported-record",
+                $"source={match.Groups["plugin"].Value.ToLowerInvariant()}",
+                $"signature={match.Groups["signature"].Value.ToLowerInvariant()}",
+                $"record={CanonicalFormKey(match.Groups["formkey"].Value)}");
+        }
+
+        private static string SemanticContributionIdentity(JsonElement contribution)
+        {
+            JsonElement identity = contribution.GetProperty("identity");
+            return string.Join('|',
+                $"source={Text(contribution, "source_plugin").ToLowerInvariant()}",
+                $"order={contribution.GetProperty("load_order").GetInt32().ToString("D4", System.Globalization.CultureInfo.InvariantCulture)}",
+                $"record={CanonicalFormKey(Text(identity, "form_key"))}",
+                $"signature={Text(identity, "signature").ToLowerInvariant()}",
+                $"flags={contribution.GetProperty("raw_flags").GetInt64():x8}",
+                $"deleted={contribution.GetProperty("deleted").GetBoolean().ToString().ToLowerInvariant()}",
+                $"compressed={contribution.GetProperty("compressed").GetBoolean().ToString().ToLowerInvariant()}");
+        }
+    }
 
     private sealed class FactBuilder
     {
