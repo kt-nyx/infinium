@@ -13,9 +13,14 @@ Slices 0 through 3.5 are complete. The accepted
 qualified the Bethesda and applicable taxonomy fixtures before Slice 4.
 The positively qualified Bethesda semantic and typed-index path is implemented
 at `98fe8a5` with passing retained public gates. Evaluator-v1 issued no valid
-held-out product verdict and is retired. Slice 4.5 is active under revision
-`/3`; it must qualify evaluator v2 and obtain one valid held-out pass before
-Slice 5 can begin.
+held-out product verdict and is retired. The historical evaluator-v2 `/2`
+Stage C invocation ran once, but Stage C.5 invalidated its product verdict; no
+valid successor held-out verdict exists. The unchanged Slice 4 candidate
+remains publicly verified. Slice 4.5 is active under plan revision `/3`, with
+final protocol `/4` qualified and frozen at
+`3693d19563c636cd2879804633ca4ce52448d2c1`. The B2 input bytes already exist
+and passed independent byte review, but B2 oracle qualification under `/4` has
+not run. C2 has not run, Stage D has not started, and Slice 5 remains blocked.
 
 Waves A through D have completed investigations and accepted integrated
 dispositions. Gates A through D are met at their applicable M0 research,
@@ -52,7 +57,7 @@ product documentation is reviewed and accepted and the architecture/evaluation
 prerequisites are accepted. A proposed plan may be drafted earlier as a
 reviewable Wave F output.
 
-M1 status clarification: the Slice 4 product candidate remains unchanged and
-publicly verified; protocol `/4` is qualified and frozen. Successor B2 oracle
-qualification, Stage C2, and Stage D remain incomplete, so no M1 advancement
-or Slice 5 start is authorized by this freeze.
+M1 status clarification: protocol `/4` is the final authorized M1 evaluator
+revision. One fresh private oracle reviewer may resume B2 once. Another
+oracle-authority gap does not authorize `/5`, evaluator expansion, or product
+output as oracle truth; it must be recorded for owner milestone disposition.

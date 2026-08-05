@@ -17,9 +17,14 @@ Current execution plans:
   readiness audit found no remaining start blocker; Slice 4 was implemented on
   2026-08-01.
 - [M1 Slice 4.5 — Held-out evaluation v2](M1-slice-4.5-held-out-evaluation-v2.md)
-  — Accepted 2026-08-04; final bounded Stage A protocol `/4` is qualified and
-  frozen, B2 may resume once with a fresh private oracle reviewer, held-out
-  scoring is not run, and Slice 5 remains blocked.
+  — Accepted 2026-08-04. The historical `/2` Stage C invocation ran once, but
+  Stage C.5 invalidated its product verdict; no valid successor held-out
+  verdict exists. The unchanged Slice 4 candidate remains publicly verified.
+  Final protocol `/4` is qualified and frozen at
+  `3693d19563c636cd2879804633ca4ce52448d2c1`. The B2 input bytes already exist
+  and passed independent byte review, but B2 oracle qualification under `/4`
+  has not run. C2 has not run, Stage D has not started, and Slice 5 remains
+  blocked.
 
 Completed slices retain their exact implementation and verification evidence
 under [`../implementation-records/`](../implementation-records/README.md).

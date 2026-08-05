@@ -11,13 +11,17 @@ the active implementation plan together with its accepted
 Completed-slice evidence is indexed under
 [`implementation-records/`](implementation-records/README.md).
 
-Slices 0 through 4 are implementation-complete. Slice 4's Mutagen semantic and
-typed-index boundary is frozen at `98fe8a5` and its retained public gates pass.
-Evaluator-v1 attempts produced no valid held-out product verdict. Active
-[Slice 4.5](slices/M1-slice-4.5-held-out-evaluation-v2.md) replaces that
-workflow with a public qualified evaluator v2 and a separately qualified
-private corpus. Evaluator-v2 held-out scoring has not run; Slice 5 remains
-blocked and M1 remains active.
+Slices 0 through 4 are implementation-complete. Slice 4's unchanged Mutagen
+semantic and typed-index candidate is frozen at `98fe8a5` and remains publicly
+verified. Evaluator-v1 attempts produced no valid held-out product verdict.
+The historical evaluator-v2 `/2` Stage C invocation ran once, but Stage C.5
+invalidated its product verdict, so no valid successor held-out verdict exists.
+Active [Slice 4.5](slices/M1-slice-4.5-held-out-evaluation-v2.md) has qualified
+and frozen final protocol `/4` at
+`3693d19563c636cd2879804633ca4ce52448d2c1`. The B2 input bytes already exist
+and passed independent byte review, but B2 oracle qualification under `/4` has
+not run. C2 has not run, Stage D has not started, Slice 5 remains blocked, and
+M1 remains active.
 The accepted
 [Slice 3.5 execution plan](slices/M1-slice-3.5-bethesda-fixture-qualification.md)
 is indexed under [`slices/`](slices/README.md).
@@ -77,7 +81,8 @@ Every milestone plan should include:
 The initial milestone sequence is described in
 [`../product/scope-and-milestones.md`](../product/scope-and-milestones.md).
 
-The M1 Slice 4.5 Stage A public evaluator is frozen at protocol `/4`. Its
+The M1 Slice 4.5 Stage A public evaluator is frozen at final protocol `/4`. Its
 [freeze handoff](../evaluation/evaluator-v2-stage-a-final-bounded-freeze.json)
-is the only authority for the one permitted B2 resume; Slice 5 remains blocked
-until later accepted stages satisfy the held-out gate.
+is the only authority for the one permitted fresh-reviewer B2 resume. Another
+oracle-authority gap does not authorize `/5`, evaluator expansion, or product
+output as oracle truth; it must be recorded for owner milestone disposition.

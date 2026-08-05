@@ -60,19 +60,20 @@ Infinium.EvaluatorV2 compare-prepared --manifest <prepared-comparison-manifest.j
 Infinium.EvaluatorV2 score-corpus --manifest <corpus-execution-manifest.json> --result-dir <new-directory>
 ```
 
-Stage B uses `compare-prepared`. It loads no candidate assembly and invokes no
-reflection adapter. An answer-free public example may identify prepared output
-with a synthetic 40-hex commit, its actual prepared JSON artifact length/hash,
-and a `qualification_id` such as
-`stage-b-independent-oracle-qualification`; that identity explicitly is not
-the frozen product candidate. The prepared manifest corpus hash binds that
-qualification ID plus the candidate-output and oracle bytes.
+`score` evaluates one execution manifest against one oracle. B2 uses only
+`compare-prepared`; it loads no candidate assembly and invokes no reflection
+adapter. Prepared qualification uses a separate retained synthetic
+qualification artifact. The prepared manifest and prepared candidate output
+reference the same synthetic artifact byte length and SHA-256. That synthetic
+identity is not the frozen product candidate. The prepared-corpus fingerprint
+separately binds the exact prepared candidate-output and oracle bytes.
 
-Stage C uses exactly one `score-corpus` command. Its manifest contains one or
-more private members, each with its own answer-free `execution`, `oracle_path`,
-and private `member_id`. The scorer emits private ordinal assertion files and
-one sanitized aggregate. Member IDs and local paths never enter the sanitized
-result. A one-member corpus is valid.
+`score-corpus` is the Stage C/C2 one-shot aggregate command for the frozen
+private corpus. C2 uses exactly one `score-corpus` invocation. Its manifest
+contains one or more private members, each with its own answer-free `execution`,
+`oracle_path`, and private `member_id`. The scorer emits private ordinal
+assertion files and one sanitized aggregate. Member IDs and local paths never
+enter the sanitized result. A one-member corpus is valid.
 
 Loose-provider chains name a normalized relative path, ordered providers,
 provider kind/priority, and exact winner. A retained provider asset supplies

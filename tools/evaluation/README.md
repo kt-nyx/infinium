@@ -22,9 +22,12 @@ dotnet run --project tools/evaluation/Infinium.EvaluatorV2 -c Release -- compare
 dotnet run --project tools/evaluation/Infinium.EvaluatorV2 -c Release -- score-corpus --manifest <corpus-manifest.json> --result-dir <new-directory>
 ```
 
-`adapt` is a public diagnostic for the exact black-box boundary. `score` is the
-one-shot scoring command. Exit code `0` is `PASS`, `1` is product `FAIL` after
-a valid comparison, and `2` is `EVALUATOR_ERROR` or invalid invocation.
+`adapt` is a public diagnostic for the exact black-box boundary. `score`
+evaluates one execution manifest against one oracle. `compare-prepared` is the
+only command used by B2. `score-corpus` is the Stage C/C2 one-shot aggregate
+command for the frozen private corpus; C2 uses exactly one `score-corpus`
+invocation. Exit code `0` is `PASS`, `1` is product `FAIL` after a valid
+comparison, and `2` is `EVALUATOR_ERROR` or invalid invocation.
 
 The authoritative protocol identifier is `infinium.evaluator-v2/4`. Immutable
 `/3` schemas remain predecessor evidence; active `/4` schemas under

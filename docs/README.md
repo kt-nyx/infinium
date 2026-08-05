@@ -160,16 +160,19 @@ Every material document should include a status and last-reviewed date.
   ADR-0026's separate evaluator-private store boundary. Slice 4 delivered the
   bounded Bethesda semantic and typed-index implementation at `98fe8a5`, with
   passing retained public gates and a successful current detached baseline
-  rerun. The historical evaluator-v2 `/2` Stage C `FAIL` remains immutable,
-  but the owner-supplied Stage C.5 adjudication invalidated its product verdict
-  and required a public evaluator successor plus materially independent private
-  corpus replacement; no product correction is indicated. Protocol `/3` is now
-  publicly qualified and frozen at `34ed0c8`; successor Stage B is unblocked
-  but no private successor work has run. The detailed
+  rerun. The historical evaluator-v2 `/2` Stage C invocation ran once and its
+  `FAIL` remains immutable, but the owner-supplied Stage C.5 adjudication
+  invalidated its product verdict, so no valid successor held-out verdict
+  currently exists; no product correction is indicated. The Slice 4 product
+  candidate remains unchanged and publicly verified. Final protocol `/4` is
+  qualified and frozen at
+  `3693d19563c636cd2879804633ca4ce52448d2c1`. The B2 input bytes already exist
+  and passed independent byte review, but B2 oracle qualification under `/4`
+  has not run. C2 has not run, and Stage D has not started. The detailed
   sanitized history is recorded in the
   [Stage C.5 incident](evaluation/evaluator-v2-stage-c5-adjudication-incident.md).
-  Slice 4.5 remains active and blocked, Stage D has not started, Slice 5 remains
-  blocked, and M1 remains active. M1 explicitly defers `QUST` forced-alias
+  Slice 4.5 remains active and incomplete, Slice 5 remains blocked, and M1
+  remains active. M1 explicitly defers `QUST` forced-alias
   semantics and retains EVAL-0017's REFR linked-reference/placement proof as
   the materially different category.
 - Infinium uses GPLv3-family strong copyleft. MO2 and LOOT remain

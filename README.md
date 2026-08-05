@@ -32,13 +32,16 @@ Start with [`docs/README.md`](docs/README.md).
   taxonomy fixtures required before Slice 4; Slice 4 delivered the bounded
   Bethesda semantic and typed-index implementation at commit `98fe8a5`, with
   passing retained public verification and a successful current baseline
-  rerun. The historical evaluator-v2 `/2` Stage C `FAIL` remains immutable,
-  but its product verdict was invalidated by Stage C.5 adjudication: no product
-  correction is indicated, `/2` is retired for the diagnosed numeric
-  typed-fact surface, and a public `/3` successor is now qualified and frozen
-  at `34ed0c8`. A materially independent private successor corpus remains
-  required; successor Stage B is unblocked but has not run. Slice 4.5 remains
-  active and blocked; Stage D has not started. See the
+  rerun. The historical evaluator-v2 `/2` Stage C invocation ran once and its
+  `FAIL` remains immutable, but Stage C.5 invalidated its product verdict, so
+  no valid successor held-out verdict currently exists. No product correction
+  is indicated, and the Slice
+  4 product candidate remains unchanged and publicly verified. Final protocol
+  `/4` is qualified and frozen at
+  `3693d19563c636cd2879804633ca4ce52448d2c1`. The B2 input bytes already exist
+  and passed independent byte review, but B2 oracle qualification under `/4`
+  has not run. C2 has not run, Stage D has not started, and Slice 4.5 remains
+  incomplete. See the
   [sanitized incident record](docs/evaluation/evaluator-v2-stage-c5-adjudication-incident.md).
   Slice 5 remains blocked and M1 remains active
 - xEdit: historical integration/oracle recommendation rejected; excluded from
@@ -53,6 +56,9 @@ and its accepted
 
 M1 Slice 4.5 has frozen the final bounded public evaluator at protocol `/4`
 and projection `3.0.0`. The Slice 4 product candidate is unchanged. Private
-oracle qualification, Stage C2 scoring, and Stage D have not run; Slice 5
-remains blocked. See the
+oracle qualification under `/4`, Stage C2 scoring, and Stage D have not run;
+Slice 5 remains blocked. One fresh private oracle reviewer may resume B2 once.
+Another authority gap does not authorize `/5`, evaluator expansion, or product
+output as oracle truth; it must be recorded for owner milestone disposition.
+See the
 [final public freeze handoff](docs/evaluation/evaluator-v2-stage-a-final-bounded-freeze.json).

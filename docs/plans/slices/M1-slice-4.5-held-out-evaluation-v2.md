@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Held-out evaluation v2
 
-Status: Accepted; final bounded `/4` revision authorized, implementation pending
+Status: Accepted; final bounded `/4` public evaluator complete; B2 oracle qualification pending
 Owner: Project owner
 Prepared: 2026-08-04
 Accepted: 2026-08-04
@@ -228,21 +228,26 @@ protocol/schema IDs, calibration and full-check results, review/corrections,
 private corpus freeze identity when available, held-out invocation identity,
 sanitized terminal result, contamination state, gaps, and push state.
 
-## Stage A successor freeze
+## Historical `/2` Stage A freeze
 
 The owner-authorized corrective pass retired public evaluator commit
 `8023cdf776a25210bcc80e7574c1aaecde278b6b` before private qualification; it
-produced no held-out product verdict. The unique successor is discoverable in
-[`../../evaluation/evaluator-v2-stage-a-freeze.json`](../../evaluation/evaluator-v2-stage-a-freeze.json).
+produced no held-out product verdict.
+[`../../evaluation/evaluator-v2-stage-a-freeze.json`](../../evaluation/evaluator-v2-stage-a-freeze.json)
+is the historical `/2` authority and must not be used for current B2 work.
+Protocol `/3` and its successor freeze are also superseded historical evidence.
+The only current B2 authority is
+[`../../evaluation/evaluator-v2-stage-a-final-bounded-freeze.json`](../../evaluation/evaluator-v2-stage-a-final-bounded-freeze.json).
 
-Stage B qualifies prepared expected outputs and deliberate mutations with:
+Historical `/2` Stage B qualified prepared expected outputs and deliberate
+mutations with:
 
 ```text
 compare-prepared --manifest <prepared-comparison-manifest.json> --candidate-output <prepared-candidate-output.json> --oracle <expected-output.json> --result-dir <new-directory>
 ```
 
-Stage C performs the single top-level held-out invocation, for a one- or
-multi-member corpus, with:
+Historical `/2` Stage C performed the single top-level held-out invocation,
+for a one- or multi-member corpus, with:
 
 ```text
 score-corpus --manifest <corpus-execution-manifest.json> --result-dir <new-directory>
