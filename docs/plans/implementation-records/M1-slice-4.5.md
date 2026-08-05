@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Held-out evaluation v2 implementation record
 
-Status: Final bounded public evaluator `/4` frozen; one B2 oracle-qualification resume pending
+Status: Final bounded evaluator `/4` frozen; authority-completion conformance mismatch awaiting owner disposition; B2 blocked
 Opened: 2026-08-04
 Plan: `infinium.plan.m1.backend-semantic-proof/3`
 Execution plan: [M1 Slice 4.5](../slices/M1-slice-4.5-held-out-evaluation-v2.md)
@@ -403,3 +403,26 @@ B2 review finds another authority gap, do not create `/5`, expand the
 evaluator, or use product output as truth. Record an unresolved evaluation gap
 and return to the project owner for milestone-plan disposition. No private
 repository or legacy archive was accessed, and no push was performed.
+
+## 2026-08-05 authority-completion conformance stop
+
+An owner-authorized public authority-completion attempt added no evaluator or
+product behavior. A fresh public specification author completed the missing
+oracle-authoring rules, and a separate fresh product-blind reviewer uniquely
+authored all fifteen fact families on an answer-free synthetic rehearsal. The
+rehearsal passed its independent mechanical and parent checks.
+
+Only after that pass did the parent inspect the frozen product source and
+public tests. The unchanged candidate differs materially from the independent
+specification on the allowed-field boundary, FaceGen precedence and exact
+absence, fixed coverage populations, gap identities/arithmetic, and taxonomy
+subjects/matrices. Exact evidence and artifact identities are recorded in
+[`../../evaluation/m1-slice4-authority-completion-conformance-mismatch.md`](../../evaluation/m1-slice4-authority-completion-conformance-mismatch.md).
+
+The stop was applied without feeding product behavior back into the
+specification and without changing the candidate, evaluator, protocol,
+projection, or comparison. The focused public evaluator suite passed 12 tests
+with 1 expected platform-capability skip, confirming the frozen behavior under
+review. No private attempt 2, oracle, qualification, corpus `2.0.0`, tag,
+candidate execution, C2, Stage D, `adapt`, `score`, or `score-corpus` occurred.
+Private B2 remains blocked for owner disposition.

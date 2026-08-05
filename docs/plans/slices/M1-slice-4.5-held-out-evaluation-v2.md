@@ -1,10 +1,10 @@
 # M1 Slice 4.5 — Held-out evaluation v2
 
-Status: Accepted; final bounded `/4` public evaluator complete; B2 oracle qualification pending
+Status: Accepted; final bounded `/4` evaluator complete; authority-completion conformance mismatch awaiting owner disposition; B2 blocked
 Owner: Project owner
 Prepared: 2026-08-04
 Accepted: 2026-08-04
-Last reviewed: 2026-08-04
+Last reviewed: 2026-08-05
 Parent plan: `infinium.plan.m1.backend-semantic-proof/3`
 Target: Slice 4.5, between implementation-complete Slice 4 and blocked Slice 5
 
@@ -314,3 +314,16 @@ frozen at `3693d19563c636cd2879804633ca4ce52448d2c1`. The final handoff is
 The B2 inputs remain clean and independently byte-reviewed, but `/4` oracle
 qualification and corpus freeze have not run. The no-`/5` hard stop above is
 now active.
+
+## Authority-completion conformance stop
+
+The owner-authorized 2026-08-05 authority-completion attempt proved that the
+new public oracle-construction rules were independently authorable, then found
+that the unchanged frozen candidate does not conform to those independently
+established rules. The exact multi-surface mismatch is append-only in
+[`../../evaluation/m1-slice4-authority-completion-conformance-mismatch.md`](../../evaluation/m1-slice4-authority-completion-conformance-mismatch.md).
+
+The proposed specification was not changed to match product behavior, the
+candidate and evaluator remain unchanged, and no public authority-completion
+freeze was created. Private B2, Stage C2, and Stage D remain blocked pending
+project-owner milestone-plan disposition.
