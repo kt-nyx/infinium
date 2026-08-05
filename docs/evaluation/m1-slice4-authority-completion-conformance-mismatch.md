@@ -1,8 +1,11 @@
 # M1 Slice 4.5 authority-completion product-conformance mismatch
 
-Status: Terminal public conformance blocker; awaiting project-owner disposition  
-Recorded: 2026-08-05  
-Protocol: `infinium.evaluator-v2/4`  
+Status: Terminal public conformance blocker; awaiting project-owner disposition
+
+Recorded: 2026-08-05
+
+Protocol: `infinium.evaluator-v2/4`
+
 Projection: `infinium.evaluator-v2.slice4-semantic-projection/3.0.0`
 
 ## Disposition
@@ -114,4 +117,3 @@ independent normative mismatch.
 - Stage C2 and Stage D did not run; and
 - corpus `infinium.m1.slice4.heldout/2.0.0` was not created, frozen, tagged, or
   pushed.
-
