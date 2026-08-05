@@ -334,74 +334,30 @@ public sealed class BethesdaOracleAgreementEvaluationTests
     [TestMethod]
     [TestCategory("M1Evaluation")]
     [TestProperty("Category", "M1Evaluation")]
-    public void Eval0086Slice4TaxonomyProjectionsKeepAxesIndependent()
+    public void Eval0086CurrentTaxonomyContractKeepsAxesIndependentWithoutHistoricalOracleAuthority()
     {
         foreach (string fixture in new[] { "BETH-NPC-DEV", "BETH-REFR-DEV", "BETH-UNSUPPORTED-VAL" })
         {
             BethesdaSemanticSnapshot snapshot = new BethesdaSemanticExtractor().Extract(
                 BethesdaSemanticTestSnapshot.Create(fixture)).Snapshot!;
-            using JsonDocument oracle = TestRepository.ReadJson(
-                "test-data", "evaluation", "m1-semantic", fixture,
-                "oracle", "taxonomy-projections.json");
-            using JsonDocument bindings = TestRepository.ReadJson(
-                "test-data", "evaluation", "m1-semantic", fixture,
-                "inputs", "taxonomy-subject-bindings.json");
-            Dictionary<string, string> productionSubjects = bindings.RootElement.GetProperty("bindings")
-                .EnumerateArray()
-                .ToDictionary(
-                    item => item.GetProperty("sealed_subject_id").GetString()!,
-                    item => item.GetProperty("production_subject_participant_id").GetString()!,
-                    StringComparer.Ordinal);
-            CollectionAssert.AreEquivalent(
-                productionSubjects.Values.Order(StringComparer.Ordinal).ToArray(),
-                snapshot.Taxonomy.Select(item => item.SubjectParticipantId).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray(),
-                $"{fixture}: exhaustive taxonomy subject closure drifted");
-            foreach (JsonElement subject in oracle.RootElement.GetProperty("subjects").EnumerateArray())
+            foreach (BethesdaRecordContribution contribution in snapshot.OverrideChains.Values.SelectMany(chain => chain.Contributions))
             {
-                JsonElement canonical = subject.GetProperty("canonical_value");
-                string sealedSubjectId = subject.GetProperty("subject_id").GetString()!;
-                string productionSubject = productionSubjects[sealedSubjectId];
-                BethesdaTaxonomyProjection[] actual = snapshot.Taxonomy
-                    .Where(item => item.SubjectParticipantId == productionSubject)
+                BethesdaTaxonomyProjection[] core = snapshot.Taxonomy
+                    .Where(item => item.SubjectParticipantId == contribution.ContributionId
+                        && item.SubjectType == "record-contribution")
                     .ToArray();
-                JsonElement[] expected = canonical.GetProperty("expected_assignments").EnumerateArray().ToArray();
-                CollectionAssert.AreEquivalent(
-                    expected.Select(TaxonomyTuple).ToArray(),
-                    actual.Select(TaxonomyTuple).ToArray(),
-                    $"{fixture}: {subject.GetProperty("subject_id").GetString()}; expected={string.Join(',', expected.Select(TaxonomyTuple))}; actual={string.Join(',', actual.Select(TaxonomyTuple))}");
-                foreach (JsonElement assignment in expected)
-                {
-                    string tuple = TaxonomyTuple(assignment);
-                    BethesdaTaxonomyProjection projection = actual.Single(item => TaxonomyTuple(item) == tuple);
-                    Assert.AreEqual(assignment.GetProperty("reason").GetString(), projection.Reason, $"{fixture}: unaccepted oracle reason for {tuple}: {projection.Reason}");
-                    Assert.IsNotEmpty(projection.EvidenceFields, $"{fixture}: {tuple} lacks evidence provenance");
-                    Assert.IsTrue(projection.EvidenceFields.All(evidence =>
-                        evidence.StartsWith("evidence:", StringComparison.Ordinal)
-                        || evidence.StartsWith("provider:", StringComparison.Ordinal)));
-                }
-
-                foreach (JsonElement forbidden in canonical.GetProperty("forbidden_assignments").EnumerateArray())
-                {
-                    string axis = forbidden.GetProperty("axis").GetString()!;
-                    string? code = forbidden.TryGetProperty("code", out JsonElement codeElement)
-                        ? codeElement.GetString()
-                        : null;
-                    bool axisHasExpectedAssignment = expected.Any(item =>
-                        item.GetProperty("axis").GetString() == axis);
-                    Assert.IsFalse(actual.Any(item =>
-                        item.Axis == axis
-                        && (code is not null
-                            ? item.Code == code
-                            : !axisHasExpectedAssignment || item.Applicability == TaxonomyApplicability.Assigned)),
-                        $"{fixture}: {productionSubject} violates forbidden {axis}/{code ?? "*"}");
-                }
-
-                Assert.IsTrue(actual.All(projection => projection.EvidenceFields.Count > 0));
+                Assert.AreEqual(2, core.Length, $"{fixture}: {contribution.ContributionId}");
+                Assert.AreEqual(1, core.Count(item => item.Facet == "semantic-mechanism" && item.Code == "surface.plugin-data"), fixture);
+                Assert.AreEqual(1, core.Count(item => item.Facet == "realization-and-delivery" && item.Code == "delivery.plugin-container"), fixture);
             }
 
+            Assert.IsFalse(snapshot.Taxonomy.Any(item => item.SubjectType == "provider-topology"), fixture);
+            Assert.IsFalse(snapshot.Taxonomy.Any(item => item.SubjectType == "unsupported-record"
+                && item.Axis == "effect-extent"), fixture);
+            Assert.IsTrue(snapshot.Taxonomy.All(item => item.EvidenceFields.Count > 0), fixture);
             Assert.IsTrue(snapshot.Taxonomy.All(item =>
-                item.TaxonomyId == oracle.RootElement.GetProperty("taxonomy_id").GetString()
-                && item.TaxonomyVersion.ToString() == oracle.RootElement.GetProperty("taxonomy_version").GetString()));
+                item.TaxonomyId == BethesdaSemanticExtractor.TaxonomyId
+                && item.TaxonomyVersion == BethesdaSemanticExtractor.TaxonomyVersion));
             Assert.IsTrue(snapshot.Taxonomy.All(item =>
                 item.AssignmentId.StartsWith("taxonomy:", StringComparison.Ordinal)
                 && item.AssignmentId.Length == 29));
@@ -413,7 +369,77 @@ public sealed class BethesdaOracleAgreementEvaluationTests
                 snapshot.Taxonomy.Select(item => $"{item.AssignmentId}|{item.AnalyzerOrAdjudicatorId}|{string.Join(',', item.EvidenceFields)}").ToArray(),
                 repeated.Taxonomy.Select(item => $"{item.AssignmentId}|{item.AnalyzerOrAdjudicatorId}|{string.Join(',', item.EvidenceFields)}").ToArray(),
                 $"{fixture}: product taxonomy bookkeeping IDs must remain deterministic");
-            Assert.IsTrue(snapshot.Taxonomy.Where(item => item.SubjectType == "provider-topology").All(item => item.Axis != "technical-modification-surface"));
+
+            Dictionary<string, string> expectedAreaSubjects = new(StringComparer.Ordinal);
+            foreach (BethesdaNpcFact npc in snapshot.NpcContributions)
+            {
+                if (npc.AiData is not null || npc.Packages.Any(link => link.State == BethesdaLinkState.Resolved))
+                {
+                    expectedAreaSubjects.Add(
+                        $"{npc.Contribution.ContributionId}:semantic:area.actors.ai-packages",
+                        "area.actors.ai-packages");
+                }
+                if (npc.Race?.State == BethesdaLinkState.Resolved)
+                {
+                    expectedAreaSubjects.Add(
+                        $"{npc.Contribution.ContributionId}:semantic:area.actors.appearance-identity",
+                        "area.actors.appearance-identity");
+                }
+            }
+            foreach (BethesdaPlacedReferenceFact reference in snapshot.PlacedReferenceContributions)
+            {
+                bool hasResolvedRelation = new[] { reference.Base, reference.LocationReference, reference.Owner }
+                    .Any(link => link?.State == BethesdaLinkState.Resolved)
+                    || reference.LinkedReferences.Any(link => link.State == BethesdaLinkState.Resolved);
+                if (reference.Placement is not null || hasResolvedRelation)
+                {
+                    expectedAreaSubjects.Add(
+                        $"{reference.Contribution.ContributionId}:semantic:area.world.placed-objects-activation",
+                        "area.world.placed-objects-activation");
+                }
+            }
+            foreach ((string subject, string code) in expectedAreaSubjects)
+            {
+                BethesdaTaxonomyProjection[] projections = snapshot.Taxonomy
+                    .Where(item => item.SubjectParticipantId == subject)
+                    .ToArray();
+                Assert.AreEqual(2, projections.Length, subject);
+                Assert.AreEqual(1, projections.Count(item => item.Facet == "semantic-mechanism" && item.Code == "surface.plugin-data"), subject);
+                Assert.AreEqual(1, projections.Count(item => item.Facet == "affected-area" && item.Code == code), subject);
+            }
+
+            HashSet<string> expectedSemanticSubjects = expectedAreaSubjects.Keys.ToHashSet(StringComparer.Ordinal);
+            foreach (BethesdaFaceGenFact fact in snapshot.FaceGen)
+            {
+                BethesdaNpcFact npc = snapshot.Npcs.Values.Single(item =>
+                    item.Contribution.Identity.ParticipantId == fact.NpcParticipantId);
+                foreach (BethesdaLooseAssetFact asset in new[] { fact.Mesh, fact.Tint })
+                {
+                    if (asset.ProviderParticipantIds.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    string subject = $"{npc.Contribution.ContributionId}:semantic:face-gen-loose-provider-chain:{asset.NormalizedRelativePath}";
+                    expectedSemanticSubjects.Add(subject);
+                    BethesdaTaxonomyProjection[] projections = snapshot.Taxonomy
+                        .Where(item => item.SubjectParticipantId == subject)
+                        .ToArray();
+                    Assert.AreEqual(2, projections.Length, subject);
+                    Assert.IsTrue(projections.Any(item => item.Facet == "semantic-mechanism" && item.Code == "surface.asset"), subject);
+                    Assert.IsTrue(projections.Any(item => item.Facet == "realization-and-delivery" && item.Code == "delivery.loose-data-file"), subject);
+                }
+            }
+
+            CollectionAssert.AreEquivalent(
+                expectedSemanticSubjects.ToArray(),
+                snapshot.Taxonomy
+                    .Where(item => item.SubjectType == "record-semantic-subject")
+                    .Select(item => item.SubjectParticipantId)
+                    .Distinct(StringComparer.Ordinal)
+                    .ToArray(),
+                $"{fixture}: every current semantic taxonomy subject must be evidence-derived");
+
             Assert.IsFalse(snapshot.Taxonomy.Any(item => item.SubjectType == "unsupported-record" && item.Code is
                 "area.actors.ai-packages" or "area.actors.appearance-identity" or "area.world.placed-objects-activation"));
         }

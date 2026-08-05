@@ -6,15 +6,6 @@ namespace Infinium.Tests;
 [TestClass]
 public sealed class BethesdaSemanticExtractionEvaluationTests
 {
-    private static readonly string[] ExpectedUnsupportedPopulations =
-    [
-        "record_family",
-        "record_field",
-        "localized_string_resolution",
-        "archive_member_read",
-        "automatic_environment_discovery",
-    ];
-
     [TestMethod]
     [TestCategory("M1Evaluation")]
     [TestProperty("Category", "M1Evaluation")]
@@ -99,12 +90,12 @@ public sealed class BethesdaSemanticExtractionEvaluationTests
         Assert.IsNotNull(templateWinner.Snapshot);
         CollectionAssert.Contains(
             result.Snapshot.FaceGen.Select(fact => fact.Applicability).ToArray(),
-            BethesdaFaceGenApplicability.CoverageGapDeletedWinner);
+            BethesdaFaceGenApplicability.NotApplicableDeletedWinner);
         CollectionAssert.Contains(
             templateWinner.Snapshot.FaceGen.Select(fact => fact.Applicability).ToArray(),
-            BethesdaFaceGenApplicability.CoverageGapTemplateTraits);
-        Assert.IsTrue(result.Gaps.Any(gap => gap.GapId.Contains(":facegen-deleted-", StringComparison.Ordinal)));
-        Assert.IsTrue(templateWinner.Gaps.Any(gap => gap.GapId.Contains(":facegen-template-", StringComparison.Ordinal)));
+            BethesdaFaceGenApplicability.NotApplicableTemplateTraits);
+        Assert.IsFalse(result.Gaps.Any(gap => gap.Population == "face-gen-applicability:deleted"));
+        Assert.IsFalse(templateWinner.Gaps.Any(gap => gap.Population == "face-gen-applicability:template"));
         BethesdaFaceGenFact lightOrigin = result.Snapshot.FaceGen.Single(fact => fact.OriginPlugin == "04-LightActors.esl");
         Assert.IsTrue(lightOrigin.Mesh.NormalizedRelativePath.Contains("/04-lightactors.esl/00000800.nif", StringComparison.Ordinal));
         Assert.AreEqual(
@@ -131,27 +122,39 @@ public sealed class BethesdaSemanticExtractionEvaluationTests
         BethesdaFaceGenFact paired = pair.Snapshot!.FaceGen.Single(fact => fact.NpcParticipantId == target.NpcParticipantId);
         Assert.IsTrue(paired.Mesh.Present);
         Assert.IsTrue(paired.Tint.Present);
-        Assert.IsTrue(paired.Mesh.ExactAbsenceKnown);
-        Assert.IsTrue(paired.Tint.ExactAbsenceKnown);
-        Assert.AreEqual(2, paired.Mesh.ProviderParticipantIds.Count);
+        Assert.AreEqual(BethesdaAssetAvailability.Present, paired.Mesh.Availability);
+        Assert.AreEqual(BethesdaAssetAvailability.Present, paired.Tint.Availability);
+        Assert.IsFalse(paired.Mesh.ExactAbsenceKnown);
+        Assert.IsFalse(paired.Tint.ExactAbsenceKnown);
+        Assert.AreEqual(1, paired.Mesh.ProviderParticipantIds.Count);
+        Assert.AreEqual(2, paired.Tint.ProviderParticipantIds.Count);
         Assert.AreEqual(paired.Mesh.ProviderParticipantIds[^1], paired.Mesh.WinnerParticipantId);
+        Assert.AreEqual(2, pair.Snapshot.Taxonomy.Count(item =>
+            item.SubjectParticipantId.EndsWith(paired.Mesh.NormalizedRelativePath, StringComparison.Ordinal)));
+        Assert.AreEqual(2, pair.Snapshot.Taxonomy.Count(item =>
+            item.SubjectParticipantId.EndsWith(paired.Tint.NormalizedRelativePath, StringComparison.Ordinal)));
 
         BethesdaSemanticExtractionResult partial = new BethesdaSemanticExtractor().Extract(
             WithFaceGenAssets(source, target, includeMesh: true, includeTint: false, archivePopulationSupported: false));
         BethesdaFaceGenFact partialFact = partial.Snapshot!.FaceGen.Single(fact => fact.NpcParticipantId == target.NpcParticipantId);
         Assert.IsTrue(partialFact.Mesh.Present);
         Assert.IsFalse(partialFact.Tint.Present);
+        Assert.AreEqual(BethesdaAssetAvailability.Unknown, partialFact.Tint.Availability);
         Assert.IsFalse(partialFact.Tint.ExactAbsenceKnown);
-        Assert.IsTrue(partial.Gaps.Any(gap => gap.GapId == "gap:infinium-bethesda:facegen-archive-unknown"));
+        Assert.IsTrue(partial.Gaps.Any(gap => gap.Population == "face-gen-archive-assets"));
 
         BethesdaSemanticExtractionResult exactMissing = new BethesdaSemanticExtractor().Extract(
             WithFaceGenAssets(source, target, includeMesh: false, includeTint: false, archivePopulationSupported: true));
         BethesdaFaceGenFact missing = exactMissing.Snapshot!.FaceGen.Single(fact => fact.NpcParticipantId == target.NpcParticipantId);
         Assert.IsFalse(missing.Mesh.Present);
         Assert.IsFalse(missing.Tint.Present);
-        Assert.IsTrue(missing.Mesh.ExactAbsenceKnown);
-        Assert.IsTrue(missing.Tint.ExactAbsenceKnown);
-        Assert.IsFalse(exactMissing.Gaps.Any(gap => gap.Population == "archive_member_read"));
+        Assert.AreEqual(BethesdaAssetAvailability.Unknown, missing.Mesh.Availability);
+        Assert.AreEqual(BethesdaAssetAvailability.Unknown, missing.Tint.Availability);
+        Assert.IsFalse(missing.Mesh.ExactAbsenceKnown);
+        Assert.IsFalse(missing.Tint.ExactAbsenceKnown);
+        Assert.IsTrue(exactMissing.Snapshot.FaceGen.SelectMany(fact => new[] { fact.Mesh, fact.Tint })
+            .All(asset => asset.Availability != BethesdaAssetAvailability.Absent));
+        Assert.IsFalse(exactMissing.Gaps.Any(gap => gap.Population == "face-gen-archive-assets"));
     }
 
     [TestMethod]
@@ -254,7 +257,10 @@ public sealed class BethesdaSemanticExtractionEvaluationTests
                 providers[1].Kind,
                 providers[1].PhysicalPath,
                 101);
-            chains.Add(new LooseProviderChain(normalizedPath, [first, winner], winner));
+            LooseProvider[] declared = normalizedPath.EndsWith(".nif", StringComparison.Ordinal)
+                ? [winner]
+                : [first, winner];
+            chains.Add(new LooseProviderChain(normalizedPath, declared, winner));
         }
     }
 
@@ -289,7 +295,7 @@ public sealed class BethesdaSemanticExtractionEvaluationTests
     [TestMethod]
     [TestCategory("M1Evaluation")]
     [TestProperty("Category", "M1Evaluation")]
-    public void Eval0052UnsupportedPopulationKeepsFiveLabeledDenominators()
+    public void Eval0052UnsupportedPopulationKeepsLayeredGapsAndFixedCoverageRows()
     {
         BethesdaSemanticExtractionResult result = new BethesdaSemanticExtractor().Extract(
             BethesdaSemanticTestSnapshot.Create(
@@ -306,15 +312,37 @@ public sealed class BethesdaSemanticExtractionEvaluationTests
             result.State,
             string.Join("; ", result.Failures.Select(failure => $"{failure.Code}: {failure.Message}")));
         Assert.IsNotNull(result.Snapshot);
-        CollectionAssert.IsSubsetOf(
-            ExpectedUnsupportedPopulations,
-            result.Gaps.Select(gap => gap.Population).Distinct().ToArray());
+        CollectionAssert.AreEqual(
+            BethesdaSemanticContract.CoveragePopulations.ToArray(),
+            result.Snapshot.Coverage.Select(row => row.Population).ToArray());
+        Assert.IsTrue(result.Gaps.Any(gap => gap.Population.StartsWith("unsupported-records:", StringComparison.Ordinal)));
+        Assert.IsTrue(result.Gaps.Any(gap => gap.Population.StartsWith("unsupported-fields:", StringComparison.Ordinal)));
+        Assert.IsTrue(result.Gaps.Any(gap => gap.Population == "localized-strings"));
+        Assert.IsTrue(result.Gaps.Any(gap => gap.Population == "automatic-environment-discovery"));
         Assert.IsTrue(result.Snapshot.Taxonomy.Any(item =>
             item.Axis == "affected-game-system-or-content-area" && item.Applicability == Infinium.Domain.Contracts.TaxonomyApplicability.Unsupported));
         Assert.IsTrue(result.Snapshot.Taxonomy.Any(item =>
             item.Axis == "consequence-type" && item.Applicability == Infinium.Domain.Contracts.TaxonomyApplicability.Unknown));
-        Assert.IsTrue(result.Snapshot.Taxonomy.Any(item =>
-            item.Axis == "effect-extent" && item.Applicability == Infinium.Domain.Contracts.TaxonomyApplicability.NotApplicable));
+        Assert.IsFalse(result.Snapshot.Taxonomy.Any(item => item.SubjectType == "provider-topology"));
+    }
+
+    [TestMethod]
+    [TestCategory("M1Evaluation")]
+    [TestProperty("Category", "M1Evaluation")]
+    public void Eval0052FixedCoverageRetainsCompletedZeroDenominatorRows()
+    {
+        BethesdaSemanticSnapshot snapshot = new BethesdaSemanticExtractor().Extract(
+            BethesdaSemanticTestSnapshot.CreateSelected("BETH-NPC-DEV", ["00-Pad.esm"])).Snapshot!;
+
+        CollectionAssert.AreEqual(
+            BethesdaSemanticContract.CoveragePopulations.ToArray(),
+            snapshot.Coverage.Select(row => row.Population).ToArray());
+        BethesdaCoveragePopulation[] zeroRows = snapshot.Coverage
+            .Where(row => row.Denominator == 0)
+            .ToArray();
+        Assert.IsGreaterThanOrEqualTo(6, zeroRows.Length);
+        Assert.IsTrue(zeroRows.All(row => row.Completed == 0
+            && row.State == Infinium.Domain.Contracts.CoverageState.Completed));
     }
 
     [TestMethod]

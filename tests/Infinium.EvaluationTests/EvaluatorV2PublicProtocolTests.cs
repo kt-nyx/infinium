@@ -384,10 +384,10 @@ public sealed class EvaluatorV2PublicProtocolTests
         AssertFact(output, "face_gen/00000850%3A01-actors.esm/mesh/present", "face_gen", "boolean", "true");
         AssertFact(output, "face_gen/00000850%3A01-actors.esm/mesh/provider_ids/0001", "face_gen", "string", "facegen-provider-winner");
         AssertFact(output, "face_gen/00000850%3A01-actors.esm/mesh/winner_provider_id", "face_gen", "string", "facegen-provider-winner");
-        AssertMatchingFact(output,
-            fact => fact.FactId.StartsWith("gaps/", StringComparison.Ordinal)
-                    && fact.FactId.EndsWith("/missing_capability", StringComparison.Ordinal),
-            "gap", "string", "archive-activation-and-member-precedence");
+        Assert.IsFalse(output.Facts.Any(fact => fact.FactId.StartsWith("gaps/", StringComparison.Ordinal)
+                                               && fact.FactId.EndsWith("/missing_capability", StringComparison.Ordinal)
+                                               && fact.Value.ValueKind == JsonValueKind.String
+                                               && fact.Value.GetString() == "archive-activation-and-member-precedence"));
         AssertHeldOutBoundary(output);
         Assert.IsFalse(output.Facts.Any(fact => fact.FactId.Contains("reason", StringComparison.OrdinalIgnoreCase)
                                                || fact.FactId.Contains("message", StringComparison.OrdinalIgnoreCase)
@@ -408,11 +408,11 @@ public sealed class EvaluatorV2PublicProtocolTests
         {
             Execution = partialManifest.Execution with { ArchiveMemberPopulationSupported = true },
         });
-        AssertFact(exactAbsence, "face_gen/00000850%3A01-actors.esm/tint/exact_absence_known", "face_gen", "boolean", "true");
-        Assert.IsTrue(output.Facts.Any(fact => fact.FactType == "taxonomy"
-                                               && fact.FactId.EndsWith("/subject_type", StringComparison.Ordinal)
-                                               && fact.Value.ValueKind == JsonValueKind.String
-                                               && fact.Value.GetString() == "provider-topology"));
+        AssertFact(exactAbsence, "face_gen/00000850%3A01-actors.esm/tint/exact_absence_known", "face_gen", "boolean", "false");
+        Assert.IsFalse(output.Facts.Any(fact => fact.FactType == "taxonomy"
+                                                && fact.FactId.EndsWith("/subject_type", StringComparison.Ordinal)
+                                                && fact.Value.ValueKind == JsonValueKind.String
+                                                && fact.Value.GetString() == "provider-topology"));
         AssertAggregateScoring(manifest, output);
 
         ExecutionManifest undeclaredDependency = manifest with
@@ -432,7 +432,7 @@ public sealed class EvaluatorV2PublicProtocolTests
     public void ReflectionAdapterProjectsExactRefrOwnershipPlacementAndWinnerFacts()
     {
         CandidateSemanticOutput output = ReflectionCandidateAdapter.Execute(CreatePublicManifest("BETH-REFR-DEV"));
-        Assert.AreEqual("completed_with_gaps", output.State);
+        Assert.AreEqual("completed", output.State);
         AssertFact(output, "override_chains/00000840%3A01-world.esm/winner/source_plugin", "winner", "string", "05-deletedwinner.esp");
         AssertFact(output, "override_chains/00000840%3A01-world.esm/winner/deleted", "winner", "boolean", "true");
         AssertMatchingFact(output, fact => fact.FactId.StartsWith("placed_reference_contributions/", StringComparison.Ordinal)

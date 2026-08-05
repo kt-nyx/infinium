@@ -213,6 +213,23 @@ public sealed class BethesdaSemanticExtractorTests
 
     [TestMethod]
     [TestCategory("M1Unit")]
+    [TestProperty("Category", "M1Unit")]
+    public void UnsupportedMemberIdentityRetainsEachOverrideContribution()
+    {
+        string first = BethesdaSemanticExtractor.UnsupportedMemberIdentity(
+            "FirstOverride.esp", "00000800:Base.esm", "NPC_", "DOFT");
+        string repeated = BethesdaSemanticExtractor.UnsupportedMemberIdentity(
+            "FirstOverride.esp", "00000800:Base.esm", "NPC_", "DOFT");
+        string second = BethesdaSemanticExtractor.UnsupportedMemberIdentity(
+            "SecondOverride.esp", "00000800:Base.esm", "NPC_", "DOFT");
+
+        Assert.AreEqual(first, repeated);
+        Assert.AreNotEqual(first, second);
+        Assert.AreEqual(2, new[] { first, repeated, second }.Distinct(StringComparer.OrdinalIgnoreCase).Count());
+    }
+
+    [TestMethod]
+    [TestCategory("M1Unit")]
     [TestCategory("M1Security")]
     [TestProperty("Category", "M1Unit")]
     [TestProperty("Category", "M1Security")]
@@ -228,18 +245,21 @@ public sealed class BethesdaSemanticExtractorTests
 
     [TestMethod]
     [TestCategory("M1Unit")]
-    [DataRow(true, BethesdaLinkState.Resolved, true, false, false, BethesdaFaceGenApplicability.CoverageGapDeletedWinner)]
-    [DataRow(false, BethesdaLinkState.Unresolved, null, false, false, BethesdaFaceGenApplicability.CoverageGapUnresolvedRace)]
-    [DataRow(false, BethesdaLinkState.Resolved, false, false, false, BethesdaFaceGenApplicability.InapplicableRaceWithoutFaceGenHead)]
-    [DataRow(false, BethesdaLinkState.Resolved, true, true, false, BethesdaFaceGenApplicability.CoverageGapTemplateSource)]
-    [DataRow(false, BethesdaLinkState.Resolved, true, false, true, BethesdaFaceGenApplicability.CoverageGapTemplateTraits)]
-    [DataRow(false, BethesdaLinkState.Resolved, true, false, false, BethesdaFaceGenApplicability.Applicable)]
+    [DataRow(true, BethesdaLinkState.Unresolved, BethesdaRaceFaceGenHeadDecision.Unknown, false, BethesdaTemplateTraitsDecision.Unknown, BethesdaFaceGenApplicability.NotApplicableDeletedWinner)]
+    [DataRow(false, BethesdaLinkState.Unresolved, BethesdaRaceFaceGenHeadDecision.Unknown, false, BethesdaTemplateTraitsDecision.Unknown, BethesdaFaceGenApplicability.UnknownTemplateTraitsDecision)]
+    [DataRow(false, BethesdaLinkState.Unresolved, BethesdaRaceFaceGenHeadDecision.Unknown, false, BethesdaTemplateTraitsDecision.KnownInherited, BethesdaFaceGenApplicability.NotApplicableTemplateTraits)]
+    [DataRow(false, null, BethesdaRaceFaceGenHeadDecision.KnownPresent, false, BethesdaTemplateTraitsDecision.KnownNotInherited, BethesdaFaceGenApplicability.UnknownRace)]
+    [DataRow(false, BethesdaLinkState.Null, BethesdaRaceFaceGenHeadDecision.KnownPresent, false, BethesdaTemplateTraitsDecision.KnownNotInherited, BethesdaFaceGenApplicability.UnknownRace)]
+    [DataRow(false, BethesdaLinkState.Unresolved, null, false, BethesdaTemplateTraitsDecision.KnownNotInherited, BethesdaFaceGenApplicability.UnknownRace)]
+    [DataRow(false, BethesdaLinkState.Resolved, BethesdaRaceFaceGenHeadDecision.Unknown, false, BethesdaTemplateTraitsDecision.KnownNotInherited, BethesdaFaceGenApplicability.UnknownRace)]
+    [DataRow(false, BethesdaLinkState.Resolved, BethesdaRaceFaceGenHeadDecision.KnownAbsent, false, BethesdaTemplateTraitsDecision.KnownNotInherited, BethesdaFaceGenApplicability.NotApplicableRaceWithoutFaceGenHead)]
+    [DataRow(false, BethesdaLinkState.Resolved, BethesdaRaceFaceGenHeadDecision.KnownPresent, true, BethesdaTemplateTraitsDecision.KnownNotInherited, BethesdaFaceGenApplicability.Applicable)]
     public void FaceGenApplicabilityUsesClosedPrecedenceMatrix(
         bool deleted,
-        BethesdaLinkState raceState,
-        bool? raceFaceGenHead,
+        BethesdaLinkState? raceState,
+        BethesdaRaceFaceGenHeadDecision? raceFaceGenHead,
         bool usesTemplate,
-        bool templatesTraits,
+        BethesdaTemplateTraitsDecision templateTraitsDecision,
         BethesdaFaceGenApplicability expected)
     {
         Assert.AreEqual(
@@ -249,7 +269,7 @@ public sealed class BethesdaSemanticExtractorTests
                 raceState,
                 raceFaceGenHead,
                 usesTemplate,
-                templatesTraits));
+                templateTraitsDecision));
     }
 
     private static string[] AppearanceTargets(BethesdaSemanticSnapshot snapshot) =>

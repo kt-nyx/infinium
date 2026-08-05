@@ -21,7 +21,7 @@ namespace Infinium.Bethesda;
 public sealed class BethesdaSemanticExtractor
 {
     public const string ProducerId = "infinium.bethesda.m1-semantic-index";
-    public const string ProducerVersion = "1.0.0";
+    public const string ProducerVersion = "2.0.0";
     public const string MutagenVersion = "0.54.2";
     public const string TaxonomyId = "infinium.skyrim-se.mod-impact-taxonomy";
     public static readonly ContractVersion TaxonomyVersion = new(0, 1, 0);
@@ -41,6 +41,23 @@ public sealed class BethesdaSemanticExtractor
             ["NPC_"] = ["EDID", "ACBS", "TPLT", "RNAM", "AIDT", "PKID", "PNAM", "HCLF"],
             ["RACE"] = ["EDID", "DATA"],
             ["REFR"] = ["EDID", "NAME", "XLKR", "XLRL", "XOWN", "DATA"],
+        };
+    private static readonly IReadOnlyDictionary<(string Record, string Field), int> FixedSemanticFieldLengths =
+        new Dictionary<(string Record, string Field), int>
+        {
+            [("NPC_", "ACBS")] = 24,
+            [("NPC_", "TPLT")] = 4,
+            [("NPC_", "RNAM")] = 4,
+            [("NPC_", "AIDT")] = 20,
+            [("NPC_", "PKID")] = 4,
+            [("NPC_", "PNAM")] = 4,
+            [("NPC_", "HCLF")] = 4,
+            [("RACE", "DATA")] = 128,
+            [("REFR", "NAME")] = 4,
+            [("REFR", "XLKR")] = 8,
+            [("REFR", "XLRL")] = 4,
+            [("REFR", "XOWN")] = 4,
+            [("REFR", "DATA")] = 24,
         };
     private readonly Action<string, int>? afterPluginRead;
     private readonly long maximumDecompressedBytes;
@@ -167,6 +184,7 @@ public sealed class BethesdaSemanticExtractor
             List<BethesdaLinkFact> links = [];
             List<BethesdaUnsupportedRecord> unsupportedRecords = [];
             List<BethesdaUnsupportedField> unsupportedFields = [];
+            List<BethesdaUnsupportedShape> unsupportedShapes = [];
 
             for (int index = 0; index < mods.Count; index++)
             {
@@ -203,6 +221,7 @@ public sealed class BethesdaSemanticExtractor
 
                 PluginStructuralObservation structural = structuralByPlugin[plugins[index].Receipt.PluginName];
                 unsupportedFields.AddRange(structural.UnsupportedFields);
+                unsupportedShapes.AddRange(structural.UnsupportedShapes);
                 foreach (BethesdaRecordContribution contribution in contributions.Where(item =>
                              item.SourcePlugin == plugins[index].Receipt.PluginName))
                 {
@@ -230,36 +249,40 @@ public sealed class BethesdaSemanticExtractor
                 {
                     INpcGetter npc = modNpcs[npcIndex];
                     BethesdaRecordContribution contribution = Contribution(npc, "NPC_", plugins[index]);
-                    BethesdaLinkFact? template = !structural.HasField(contribution.Identity.FormKey, "TPLT")
+                    BethesdaLinkFact? template = !structural.HasSupportedField(contribution.Identity.FormKey, "TPLT")
                         ? null
                         : !npc.Template.IsNull
                             ? Link(contribution, "TPLT", 0, npc.Template.FormKey, false, allRecordKeys, masterStyles, allowedOrigins)
                             : Link(contribution, "TPLT", 0, default, true, allRecordKeys, masterStyles, allowedOrigins);
-                    BethesdaLinkFact? race = !structural.HasField(contribution.Identity.FormKey, "RNAM")
+                    BethesdaLinkFact? race = !structural.HasSupportedField(contribution.Identity.FormKey, "RNAM")
                         ? null
                         : !npc.Race.IsNull
                             ? Link(contribution, "RNAM", 0, npc.Race.FormKey, false, allRecordKeys, masterStyles, allowedOrigins)
                             : Link(contribution, "RNAM", 0, default, true, allRecordKeys, masterStyles, allowedOrigins);
-                    BethesdaLinkFact? hair = !structural.HasField(contribution.Identity.FormKey, "HCLF")
+                    BethesdaLinkFact? hair = !structural.HasSupportedField(contribution.Identity.FormKey, "HCLF")
                         ? null
                         : !npc.HairColor.IsNull
                             ? Link(contribution, "HCLF", 0, npc.HairColor.FormKey, false, allRecordKeys, masterStyles, allowedOrigins)
                             : Link(contribution, "HCLF", 0, default, true, allRecordKeys, masterStyles, allowedOrigins);
-                    BethesdaLinkFact[] packages = npc.Packages
+                    BethesdaLinkFact[] packages = !structural.HasSupportedField(contribution.Identity.FormKey, "PKID")
+                        ? []
+                        : npc.Packages
                         .Select((package, ordinal) => Link(contribution, "PKID", ordinal, package.FormKey, package.IsNull, allRecordKeys, masterStyles, allowedOrigins))
                         .ToArray();
-                    BethesdaLinkFact[] headParts = npc.HeadParts
+                    BethesdaLinkFact[] headParts = !structural.HasSupportedField(contribution.Identity.FormKey, "PNAM")
+                        ? []
+                        : npc.HeadParts
                         .Select((part, ordinal) => Link(contribution, "PNAM", ordinal, part.FormKey, part.IsNull, allRecordKeys, masterStyles, allowedOrigins))
                         .ToArray();
-                    if (structural.HasField(contribution.Identity.FormKey, "DOFT")
-                        && !npc.DefaultOutfit.IsNull)
+                    if (structural.HasField(contribution.Identity.FormKey, "DOFT"))
                     {
                         unsupportedFields.Add(new BethesdaUnsupportedField(
+                            contribution.SourcePlugin,
                             contribution.Identity.FormKey,
                             "NPC_",
                             "DOFT"));
                     }
-                    BethesdaAiDataFact? ai = !structural.HasField(contribution.Identity.FormKey, "AIDT")
+                    BethesdaAiDataFact? ai = !structural.HasSupportedField(contribution.Identity.FormKey, "AIDT")
                         || npc.AIData is null
                         ? null
                         : new BethesdaAiDataFact(
@@ -273,12 +296,19 @@ public sealed class BethesdaSemanticExtractor
                             npc.AIData.WarnOrAttack,
                             npc.AIData.Attack,
                             npc.AIData.AggroRadiusBehavior);
+                    bool hasSupportedConfiguration = structural.HasSupportedField(contribution.Identity.FormKey, "ACBS");
+                    BethesdaTemplateTraitsDecision traitsDecision = !hasSupportedConfiguration
+                        ? BethesdaTemplateTraitsDecision.Unknown
+                        : npc.Configuration.TemplateFlags.HasFlag(NpcConfiguration.TemplateFlag.Traits)
+                            ? BethesdaTemplateTraitsDecision.KnownInherited
+                            : BethesdaTemplateTraitsDecision.KnownNotInherited;
                     npcFacts.Add(new BethesdaNpcFact(
                         contribution,
-                        Convert.ToUInt32(npc.Configuration.Flags, CultureInfo.InvariantCulture),
-                        Convert.ToUInt32(npc.Configuration.TemplateFlags, CultureInfo.InvariantCulture),
-                        npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.UseTemplate),
-                        npc.Configuration.TemplateFlags.HasFlag(NpcConfiguration.TemplateFlag.Traits),
+                        hasSupportedConfiguration ? Convert.ToUInt32(npc.Configuration.Flags, CultureInfo.InvariantCulture) : 0,
+                        hasSupportedConfiguration ? Convert.ToUInt32(npc.Configuration.TemplateFlags, CultureInfo.InvariantCulture) : 0,
+                        hasSupportedConfiguration && npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.UseTemplate),
+                        traitsDecision,
+                        traitsDecision == BethesdaTemplateTraitsDecision.KnownInherited,
                         template,
                         race,
                         ai,
@@ -306,9 +336,15 @@ public sealed class BethesdaSemanticExtractor
                 foreach (IRaceGetter race in mod.EnumerateMajorRecords<IRaceGetter>())
                 {
                     BethesdaRecordContribution contribution = Contribution(race, "RACE", plugins[index]);
+                    BethesdaRaceFaceGenHeadDecision faceGenHead = !structural.HasSupportedField(contribution.Identity.FormKey, "DATA")
+                        ? BethesdaRaceFaceGenHeadDecision.Unknown
+                        : race.Flags.HasFlag(Race.Flag.FaceGenHead)
+                            ? BethesdaRaceFaceGenHeadDecision.KnownPresent
+                            : BethesdaRaceFaceGenHeadDecision.KnownAbsent;
                     raceFacts.Add(new BethesdaRaceFact(
                         contribution,
-                        race.Flags.HasFlag(Race.Flag.FaceGenHead)));
+                        faceGenHead,
+                        faceGenHead == BethesdaRaceFaceGenHeadDecision.KnownPresent));
                 }
 
                 IPlacedObjectGetter[] modReferences = mod.EnumerateMajorRecords<IPlacedObjectGetter>().ToArray();
@@ -316,29 +352,31 @@ public sealed class BethesdaSemanticExtractor
                 {
                     IPlacedObjectGetter placed = modReferences[referenceIndex];
                     BethesdaRecordContribution contribution = Contribution(placed, "REFR", plugins[index]);
-                    BethesdaLinkFact? baseLink = !placed.Base.IsNull
-                        ? Link(contribution, "NAME", 0, placed.Base.FormKey, false, allRecordKeys, masterStyles, allowedOrigins)
-                        : structural.HasField(contribution.Identity.FormKey, "NAME")
-                            ? Link(contribution, "NAME", 0, default, true, allRecordKeys, masterStyles, allowedOrigins)
-                            : null;
-                    BethesdaLinkFact[] linked = placed.LinkedReferences
+                    BethesdaLinkFact? baseLink = !structural.HasSupportedField(contribution.Identity.FormKey, "NAME")
+                        ? null
+                        : !placed.Base.IsNull
+                            ? Link(contribution, "NAME", 0, placed.Base.FormKey, false, allRecordKeys, masterStyles, allowedOrigins)
+                            : Link(contribution, "NAME", 0, default, true, allRecordKeys, masterStyles, allowedOrigins);
+                    BethesdaLinkFact[] linked = !structural.HasSupportedField(contribution.Identity.FormKey, "XLKR")
+                        ? []
+                        : placed.LinkedReferences
                         .SelectMany((item, ordinal) => new[]
                         {
                             Link(contribution, "XLKR", ordinal, item.Reference.FormKey, item.Reference.IsNull, allRecordKeys, masterStyles, allowedOrigins, "linked-reference"),
                             Link(contribution, "XLKR", ordinal, item.KeywordOrReference.FormKey, item.KeywordOrReference.IsNull, allRecordKeys, masterStyles, allowedOrigins, "keyword"),
                         })
                         .ToArray();
-                    BethesdaLinkFact? location = !placed.LocationReference.IsNull
-                        ? Link(contribution, "XLRL", 0, placed.LocationReference.FormKey, false, allRecordKeys, masterStyles, allowedOrigins)
-                        : structural.HasField(contribution.Identity.FormKey, "XLRL")
-                            ? Link(contribution, "XLRL", 0, default, true, allRecordKeys, masterStyles, allowedOrigins)
-                            : null;
-                    BethesdaLinkFact? owner = !placed.Owner.IsNull
-                        ? Link(contribution, "XOWN", 0, placed.Owner.FormKey, false, allRecordKeys, masterStyles, allowedOrigins)
-                        : structural.HasField(contribution.Identity.FormKey, "XOWN")
-                            ? Link(contribution, "XOWN", 0, default, true, allRecordKeys, masterStyles, allowedOrigins)
-                            : null;
-                    BethesdaPlacementFact? placement = !structural.HasField(contribution.Identity.FormKey, "DATA")
+                    BethesdaLinkFact? location = !structural.HasSupportedField(contribution.Identity.FormKey, "XLRL")
+                        ? null
+                        : !placed.LocationReference.IsNull
+                            ? Link(contribution, "XLRL", 0, placed.LocationReference.FormKey, false, allRecordKeys, masterStyles, allowedOrigins)
+                            : Link(contribution, "XLRL", 0, default, true, allRecordKeys, masterStyles, allowedOrigins);
+                    BethesdaLinkFact? owner = !structural.HasSupportedField(contribution.Identity.FormKey, "XOWN")
+                        ? null
+                        : !placed.Owner.IsNull
+                            ? Link(contribution, "XOWN", 0, placed.Owner.FormKey, false, allRecordKeys, masterStyles, allowedOrigins)
+                            : Link(contribution, "XOWN", 0, default, true, allRecordKeys, masterStyles, allowedOrigins);
+                    BethesdaPlacementFact? placement = !structural.HasSupportedField(contribution.Identity.FormKey, "DATA")
                         || placed.Placement is null
                         ? null
                         : new BethesdaPlacementFact(
@@ -394,12 +432,21 @@ public sealed class BethesdaSemanticExtractor
             Dictionary<string, BethesdaPlacedReferenceFact> references = WinnerFacts(referenceFacts, chains, fact => fact.Contribution);
 
             BethesdaUnsupportedField[] distinctUnsupportedFields = unsupportedFields
-                .DistinctBy(item => $"{item.FormKey}|{item.RecordSignature}|{item.FieldSignature}", StringComparer.OrdinalIgnoreCase)
+                .DistinctBy(item => UnsupportedMemberIdentity(item.SourcePlugin, item.FormKey, item.RecordSignature, item.FieldSignature), StringComparer.OrdinalIgnoreCase)
                 .ToArray();
-            List<BethesdaCoverageGap> gaps = BuildGaps(request, unsupportedRecords, distinctUnsupportedFields);
+            BethesdaUnsupportedShape[] distinctUnsupportedShapes = unsupportedShapes
+                .DistinctBy(item => UnsupportedMemberIdentity(item.SourcePlugin, item.FormKey, item.RecordSignature, item.FieldSignature), StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+            List<BethesdaCoverageGap> gaps = BuildGaps(request, unsupportedRecords, distinctUnsupportedFields, distinctUnsupportedShapes);
             List<BethesdaFaceGenFact> faceGen = BuildFaceGen(input.Snapshot, npcs, races, gaps);
-            List<BethesdaTaxonomyProjection> taxonomy = BuildTaxonomy(input.Snapshot, contributions, npcFacts, referenceFacts, unsupportedRecords);
-            List<BethesdaCoveragePopulation> coverage = BuildCoverage(plugins, contributions, gaps);
+            gaps = gaps
+                .GroupBy(gap => $"{gap.Population}\0{gap.MissingCapability}", StringComparer.Ordinal)
+                .Select(group => group.First() with { Denominator = group.Sum(gap => gap.Denominator) })
+                .OrderBy(gap => gap.Population, StringComparer.Ordinal)
+                .ThenBy(gap => gap.MissingCapability, StringComparer.Ordinal)
+                .ToList();
+            List<BethesdaTaxonomyProjection> taxonomy = BuildTaxonomy(contributions, npcFacts, referenceFacts, unsupportedRecords, faceGen);
+            List<BethesdaCoveragePopulation> coverage = BuildCoverage(plugins, npcFacts, raceFacts, referenceFacts, unsupportedRecords, faceGen, taxonomy, request, input.Snapshot, gaps);
             Dictionary<string, IReadOnlyList<BethesdaLinkFact>> reverseLinks = links
                 .Where(link => link.TargetParticipantId is not null)
                 .GroupBy(link => link.TargetParticipantId!, StringComparer.Ordinal)
@@ -417,7 +464,7 @@ public sealed class BethesdaSemanticExtractor
                 request.RequestedUnsupportedCapabilities ?? []);
             BethesdaSemanticSnapshot snapshot = new(
                 input.Snapshot.Contract.SnapshotId,
-                new ContractVersion(1, 0, 0),
+                BethesdaSemanticContract.SchemaVersion,
                 ProducerId,
                 ProducerVersion,
                 dependency,
@@ -439,7 +486,9 @@ public sealed class BethesdaSemanticExtractor
                 coverage,
                 gaps);
             return new BethesdaSemanticExtractionResult(
-                gaps.Count == 0 ? BethesdaExtractionState.Completed : BethesdaExtractionState.CompletedWithGaps,
+                gaps.Count == 0 && coverage.All(row => row.State == CoverageState.Completed)
+                    ? BethesdaExtractionState.Completed
+                    : BethesdaExtractionState.CompletedWithGaps,
                 snapshot,
                 [],
                 gaps);
@@ -798,12 +847,13 @@ public sealed class BethesdaSemanticExtractor
         ModHeaderFrame header = new(GameConstants.SkyrimSE, memory);
         ReadOnlyMemorySlice<byte> remaining = memory.Slice(checked((int)header.TotalLength));
         List<BethesdaUnsupportedField> unsupported = [];
+        List<BethesdaUnsupportedShape> unsupportedShapes = [];
         Dictionary<string, Dictionary<string, int>> fields = new(StringComparer.OrdinalIgnoreCase);
         int recordCount = 0;
         while (remaining.Length > 0)
         {
             GroupFrame group = new(GameConstants.SkyrimSE, remaining);
-            ObserveGroupFields(group, plugin, masterStyles, unsupported, fields, ref recordCount, ref decompressedBytes, 0);
+            ObserveGroupFields(group, plugin, masterStyles, unsupported, unsupportedShapes, fields, ref recordCount, ref decompressedBytes, 0);
             remaining = remaining.Slice(checked((int)group.TotalLength));
         }
 
@@ -812,7 +862,7 @@ public sealed class BethesdaSemanticExtractor
             throw Input("record-count-over-limit", plugin.Receipt.PluginName, "The plugin exceeds the bounded Mutagen record population.");
         }
 
-        return new PluginStructuralObservation(fields, unsupported);
+        return new PluginStructuralObservation(fields, unsupported, unsupportedShapes);
     }
 
     private void ObserveGroupFields(
@@ -820,6 +870,7 @@ public sealed class BethesdaSemanticExtractor
         SealedPlugin plugin,
         IReadOnlyDictionary<ModKey, BethesdaMasterStyle> masterStyles,
         List<BethesdaUnsupportedField> unsupported,
+        List<BethesdaUnsupportedShape> unsupportedShapes,
         Dictionary<string, Dictionary<string, int>> fields,
         ref int recordCount,
         ref long decompressedBytes,
@@ -839,6 +890,7 @@ public sealed class BethesdaSemanticExtractor
                     plugin,
                     masterStyles,
                     unsupported,
+                    unsupportedShapes,
                     fields,
                     ref recordCount,
                     ref decompressedBytes,
@@ -903,9 +955,27 @@ public sealed class BethesdaSemanticExtractor
                 string field = subrecord.RecordType.Type;
                 recordFields[field] = recordFields.GetValueOrDefault(field) + 1;
                 ValidateStructuralLink(subrecord, signature, field, plugin, masterStyles);
+                if (FixedSemanticFieldLengths.TryGetValue((signature, field), out int expectedLength)
+                    && subrecord.Content.Length != expectedLength)
+                {
+                    if (subrecord.Content.Length < expectedLength)
+                    {
+                        throw Input(
+                            "semantic-field-shape-invalid",
+                            plugin.Receipt.PluginName,
+                            $"The {signature}:{field} field is truncated below its accepted semantic shape.");
+                    }
+
+                    unsupportedShapes.Add(new BethesdaUnsupportedShape(
+                        plugin.Receipt.PluginName,
+                        canonicalRecordKey,
+                        signature,
+                        field));
+                }
                 if (allowed is not null && !allowed.Contains(field))
                 {
                     unsupported.Add(new BethesdaUnsupportedField(
+                        plugin.Receipt.PluginName,
                         canonicalRecordKey,
                         signature,
                         field));
@@ -1002,61 +1072,180 @@ public sealed class BethesdaSemanticExtractor
     private static List<BethesdaCoverageGap> BuildGaps(
         BethesdaSemanticRequest request,
         IReadOnlyList<BethesdaUnsupportedRecord> unsupportedRecords,
-        IReadOnlyList<BethesdaUnsupportedField> unsupportedFields)
+        IReadOnlyList<BethesdaUnsupportedField> unsupportedFields,
+        IReadOnlyList<BethesdaUnsupportedShape> unsupportedShapes)
     {
         List<BethesdaCoverageGap> gaps = [];
-        int unsupportedFamilies = unsupportedRecords.Count;
-        if (unsupportedFamilies > 0)
+        foreach (IGrouping<string, BethesdaUnsupportedRecord> group in unsupportedRecords
+                     .GroupBy(record => record.Signature.ToLowerInvariant(), StringComparer.Ordinal))
         {
-            gaps.Add(Gap("record-family", "record_family", unsupportedFamilies, "One or more record families are outside the M1 positive allowlist.", "allowlisted-record-family-semantics"));
+            gaps.Add(Gap(
+                BethesdaCoverageGapCategory.UnsupportedRecord,
+                group.Key,
+                $"unsupported-records:{group.Key}",
+                group.Count(),
+                "The record family is outside the M1 positive semantic allowlist.",
+                "allowlisted-record-family-semantics"));
         }
 
-        if (unsupportedFields.Count > 0)
+        foreach (IGrouping<string, BethesdaUnsupportedField> group in unsupportedFields
+                     .GroupBy(field => $"{field.RecordSignature.ToLowerInvariant()}:{field.FieldSignature.ToLowerInvariant()}", StringComparer.Ordinal))
         {
-            gaps.Add(Gap("record-field", "record_field", unsupportedFields.Count, "One or more record fields are outside the M1 positive allowlist.", "allowlisted-record-field-semantics"));
+            gaps.Add(Gap(
+                BethesdaCoverageGapCategory.UnsupportedField,
+                group.Key,
+                $"unsupported-fields:{group.Key}",
+                group.Count(),
+                "The record field is outside the M1 positive semantic allowlist.",
+                "allowlisted-record-field-semantics"));
+        }
+
+        foreach (IGrouping<string, BethesdaUnsupportedShape> group in unsupportedShapes
+                     .GroupBy(shape => $"{shape.RecordSignature.ToLowerInvariant()}:{shape.FieldSignature.ToLowerInvariant()}", StringComparer.Ordinal))
+        {
+            gaps.Add(Gap(
+                BethesdaCoverageGapCategory.UnsupportedShape,
+                group.Key,
+                $"unsupported-shapes:{group.Key}",
+                group.Count(),
+                "The record field shape is outside the accepted semantic shape.",
+                "allowlisted-record-shape-semantics"));
         }
 
         foreach (BethesdaUnsupportedCapability capability in
                  (request.RequestedUnsupportedCapabilities ?? []).Distinct())
         {
-            (string Key, string Population, string Missing) mapping = capability switch
+            (string Detail, string Population, string Missing) mapping = capability switch
             {
-                BethesdaUnsupportedCapability.LocalizedStringResolution => ("localized-string-resolution", "localized_string_resolution", "localized-string-resolution"),
-                BethesdaUnsupportedCapability.ArchiveMemberRead => ("archive-member-read", "archive_member_read", "archive-activation-and-member-precedence"),
-                BethesdaUnsupportedCapability.AutomaticEnvironmentDiscovery => ("automatic-environment-discovery", "automatic_environment_discovery", "automatic-environment-discovery"),
+                BethesdaUnsupportedCapability.LocalizedStringResolution => ("localized-strings", "localized-strings", "localized-string-resolution"),
+                BethesdaUnsupportedCapability.ArchiveMemberRead => ("face-gen-archive-assets", "face-gen-archive-assets", "archive-activation-and-member-precedence"),
+                BethesdaUnsupportedCapability.AutomaticEnvironmentDiscovery => ("automatic-environment-discovery", "automatic-environment-discovery", "automatic-environment-discovery"),
                 _ => throw Input("unsupported-capability-invalid", capability.ToString(), "The requested unsupported capability is outside the closed Slice 4 vocabulary."),
             };
-            gaps.Add(Gap(mapping.Key, mapping.Population, 1, $"Capability '{mapping.Key}' is outside the M1 Bethesda allowlist.", mapping.Missing));
+            if (capability != BethesdaUnsupportedCapability.ArchiveMemberRead)
+            {
+                gaps.Add(Gap(
+                    BethesdaCoverageGapCategory.Capability,
+                    mapping.Detail,
+                    mapping.Population,
+                    1,
+                    $"Capability '{mapping.Detail}' is outside the M1 Bethesda allowlist.",
+                    mapping.Missing));
+            }
         }
 
         return gaps;
     }
 
-    private static BethesdaCoverageGap Gap(string key, string population, long denominator, string reason, string missing) =>
-        new($"gap:infinium-bethesda:{key}", population, denominator, reason, missing);
+    private static BethesdaCoverageGap Gap(
+        BethesdaCoverageGapCategory category,
+        string detail,
+        string population,
+        long denominator,
+        string reason,
+        string missing)
+    {
+        string material = $"{category}|{detail}|{population}|{missing}".ToLowerInvariant();
+        string digest = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(material)))[..20];
+        return new BethesdaCoverageGap(
+            $"gap:infinium-bethesda:{digest}",
+            category,
+            detail,
+            population,
+            denominator,
+            reason,
+            missing);
+    }
 
     private static List<BethesdaCoveragePopulation> BuildCoverage(
         IReadOnlyList<SealedPlugin> plugins,
-        IReadOnlyList<BethesdaRecordContribution> contributions,
+        IReadOnlyList<BethesdaNpcFact> npcs,
+        IReadOnlyList<BethesdaRaceFact> races,
+        IReadOnlyList<BethesdaPlacedReferenceFact> references,
+        IReadOnlyList<BethesdaUnsupportedRecord> unsupportedRecords,
+        IReadOnlyList<BethesdaFaceGenFact> faceGen,
+        IReadOnlyList<BethesdaTaxonomyProjection> taxonomy,
+        BethesdaSemanticRequest request,
+        Mo2InstallationSnapshot source,
         IReadOnlyList<BethesdaCoverageGap> gaps)
     {
+        BethesdaFaceGenFact[] applicable = faceGen
+            .Where(fact => fact.Applicability == BethesdaFaceGenApplicability.Applicable)
+            .ToArray();
+        BethesdaLooseAssetFact[] loose = applicable
+            .SelectMany(fact => new[] { fact.Mesh, fact.Tint })
+            .ToArray();
+        BethesdaLooseAssetFact[] archiveCandidates = loose
+            .Where(asset => asset.Availability != BethesdaAssetAvailability.Present)
+            .ToArray();
+        bool localizedRequested = (request.RequestedUnsupportedCapabilities ?? [])
+            .Contains(BethesdaUnsupportedCapability.LocalizedStringResolution);
+        bool discoveryRequested = (request.RequestedUnsupportedCapabilities ?? [])
+            .Contains(BethesdaUnsupportedCapability.AutomaticEnvironmentDiscovery);
+        long taxonomySubjects = taxonomy.Select(item => item.SubjectParticipantId).Distinct(StringComparer.Ordinal).LongCount();
+
         List<BethesdaCoveragePopulation> coverage =
         [
-            new("plugins", "enabled_snapshot_plugins", plugins.Count, plugins.Count, CoverageState.Completed, []),
-            new("allowlisted_records", "allowlisted_record_contributions", contributions.Count, contributions.Count, CoverageState.Completed, []),
+            Population("plugins", "enabled-snapshot-plugins", plugins.Count, plugins.Count, gaps),
+            Population("npc-records", "npc-record-contributions", npcs.Count, npcs.Count, gaps),
+            Population("race-records", "race-record-contributions", races.Count, races.Count, gaps),
+            Population("placed-reference-records", "placed-reference-record-contributions", references.Count, references.Count, gaps),
+            Population("unsupported-records", "unsupported-record-contributions", unsupportedRecords.Count, unsupportedRecords.Count, gaps),
+            Population("face-gen-loose-assets", "applicable-face-gen-loose-paths", loose.LongLength, loose.LongCount(asset => asset.Availability != BethesdaAssetAvailability.Unknown), gaps),
+            Population("face-gen-archive-assets", "applicable-face-gen-paths-without-loose-winner", archiveCandidates.LongLength, source.ArchiveMemberPopulationSupported ? archiveCandidates.LongLength : 0, gaps),
+            Population("localized-strings", "requested-localized-string-resolution", localizedRequested ? 1 : 0, 0, gaps),
+            Population("automatic-environment-discovery", "requested-automatic-environment-discovery", discoveryRequested ? 1 : 0, 0, gaps),
+            Population("taxonomy-subjects", "distinct-taxonomy-subjects", taxonomySubjects, taxonomySubjects, gaps),
         ];
-        foreach (IGrouping<string, BethesdaCoverageGap> group in gaps.GroupBy(gap => gap.Population, StringComparer.Ordinal))
-        {
-            coverage.Add(new BethesdaCoveragePopulation(
-                group.Key,
-                group.Key,
-                group.Sum(gap => gap.Denominator),
-                0,
-                CoverageState.Unsupported,
-                group.Select(gap => gap.GapId).ToArray()));
-        }
+
         return coverage;
     }
+
+    private static BethesdaCoveragePopulation Population(
+        string population,
+        string denominatorLabel,
+        long denominator,
+        long completed,
+        IReadOnlyList<BethesdaCoverageGap> gaps)
+    {
+        string[] gapIds = gaps
+            .Where(gap => GapBelongsToPopulation(gap, population))
+            .Select(gap => gap.GapId)
+            .OrderBy(value => value, StringComparer.Ordinal)
+            .ToArray();
+        CoverageState state;
+        if (denominator == 0 && gapIds.Length == 0)
+        {
+            state = CoverageState.Completed;
+        }
+        else if (completed == denominator && gapIds.Length == 0)
+        {
+            state = CoverageState.Completed;
+        }
+        else if (completed == 0 && denominator > 0)
+        {
+            state = CoverageState.Unsupported;
+        }
+        else
+        {
+            state = CoverageState.CompletedWithGaps;
+        }
+
+        return new BethesdaCoveragePopulation(population, denominatorLabel, denominator, completed, state, gapIds);
+    }
+
+    private static bool GapBelongsToPopulation(BethesdaCoverageGap gap, string population) => population switch
+    {
+        "npc-records" => gap.Category == BethesdaCoverageGapCategory.FaceGenApplicability
+            || gap.Category is BethesdaCoverageGapCategory.UnsupportedField or BethesdaCoverageGapCategory.UnsupportedShape
+                && gap.Detail.StartsWith("npc_:", StringComparison.Ordinal),
+        "race-records" => gap.Category is BethesdaCoverageGapCategory.UnsupportedField or BethesdaCoverageGapCategory.UnsupportedShape
+            && gap.Detail.StartsWith("race:", StringComparison.Ordinal),
+        "placed-reference-records" => gap.Category is BethesdaCoverageGapCategory.UnsupportedField or BethesdaCoverageGapCategory.UnsupportedShape
+            && gap.Detail.StartsWith("refr:", StringComparison.Ordinal),
+        "unsupported-records" => gap.Category == BethesdaCoverageGapCategory.UnsupportedRecord,
+        _ => string.Equals(gap.Population, population, StringComparison.Ordinal),
+    };
 
     private static List<BethesdaFaceGenFact> BuildFaceGen(
         Mo2InstallationSnapshot snapshot,
@@ -1074,22 +1263,28 @@ public sealed class BethesdaSemanticExtractor
             BethesdaFaceGenApplicability applicability = DetermineFaceGenApplicability(
                 npc.Contribution.Deleted,
                 npc.Race?.State,
-                race?.FaceGenHead,
+                race?.FaceGenHeadDecision,
                 npc.UsesTemplate,
-                npc.TemplatesTraits);
+                npc.TemplateTraitsDecision);
             (string reason, string? gapKey, string? missing) = applicability switch
             {
-                BethesdaFaceGenApplicability.CoverageGapDeletedWinner => ("The winning NPC contribution is deleted.", "deleted", "non-deleted-winning-npc"),
-                BethesdaFaceGenApplicability.CoverageGapUnresolvedRace => ("The winning NPC race is not resolved inside the accepted input.", "race", "resolved-winning-race"),
-                BethesdaFaceGenApplicability.InapplicableRaceWithoutFaceGenHead => ("The resolved race does not carry FaceGenHead.", null, null),
-                BethesdaFaceGenApplicability.CoverageGapTemplateSource => ("UseTemplate prevents an exact loose FaceGen applicability conclusion without the resolved template source.", "template-source", "template-source-required"),
-                BethesdaFaceGenApplicability.CoverageGapTemplateTraits => ("Template-Traits prevents an exact loose FaceGen applicability conclusion without the resolved traits source.", "template-traits", "template-traits-source-required"),
+                BethesdaFaceGenApplicability.NotApplicableDeletedWinner => ("The winning NPC contribution is deleted.", null, null),
+                BethesdaFaceGenApplicability.UnknownRace => ("The winning NPC race or its FaceGenHead decision is unknown.", "race", "resolved-winning-race"),
+                BethesdaFaceGenApplicability.NotApplicableRaceWithoutFaceGenHead => ("The resolved race does not carry FaceGenHead.", null, null),
+                BethesdaFaceGenApplicability.UnknownTemplateTraitsDecision => ("The template-traits inheritance decision is unknown.", "template", "complete-template-traits-decision"),
+                BethesdaFaceGenApplicability.NotApplicableTemplateTraits => ("The NPC inherits template traits and does not own FaceGen assets.", null, null),
                 BethesdaFaceGenApplicability.Applicable => ("The qualified loose-only FaceGen applicability predicates are satisfied.", null, null),
                 _ => throw new InvalidOperationException("The FaceGen applicability state is outside the closed Slice 4 vocabulary."),
             };
             if (gapKey is not null)
             {
-                gaps.Add(Gap($"facegen-{gapKey}-{npc.Contribution.Identity.ParticipantId}", "facegen_applicability", 1, reason, missing!));
+                gaps.Add(Gap(
+                    BethesdaCoverageGapCategory.FaceGenApplicability,
+                    gapKey,
+                    $"face-gen-applicability:{gapKey}",
+                    1,
+                    reason,
+                    missing!));
             }
 
             string origin = npc.Contribution.Identity.OriginPlugin;
@@ -1098,10 +1293,18 @@ public sealed class BethesdaSemanticExtractor
             BethesdaLooseAssetFact tint = LooseAsset(snapshot, $"textures/actors/character/facegendata/facetint/{origin}/{id}.dds");
             if (applicability == BethesdaFaceGenApplicability.Applicable
                 && !snapshot.ArchiveMemberPopulationSupported
-                && (!mesh.Present || !tint.Present)
-                && gaps.All(gap => gap.Population != "archive_member_read"))
+                && (mesh.Availability != BethesdaAssetAvailability.Present
+                    || tint.Availability != BethesdaAssetAvailability.Present))
             {
-                gaps.Add(Gap("facegen-archive-unknown", "archive_member_read", 1, "Loose FaceGen absence is not exact because archive participation is unsupported.", "archive-activation-and-member-precedence"));
+                long missingPaths = new[] { mesh, tint }
+                    .LongCount(asset => asset.Availability != BethesdaAssetAvailability.Present);
+                gaps.Add(Gap(
+                    BethesdaCoverageGapCategory.Capability,
+                    "face-gen-archive-assets",
+                    "face-gen-archive-assets",
+                    missingPaths,
+                    "Archive participation and member precedence are unsupported for applicable paths without a loose winner.",
+                    "archive-activation-and-member-precedence"));
             }
 
             results.Add(new BethesdaFaceGenFact(
@@ -1117,37 +1320,46 @@ public sealed class BethesdaSemanticExtractor
         return results;
     }
 
-    internal static BethesdaFaceGenApplicability DetermineFaceGenApplicability(
+    public static BethesdaFaceGenApplicability DetermineFaceGenApplicability(
         bool deleted,
         BethesdaLinkState? raceState,
-        bool? raceFaceGenHead,
+        BethesdaRaceFaceGenHeadDecision? raceFaceGenHead,
         bool usesTemplate,
-        bool templatesTraits)
+        BethesdaTemplateTraitsDecision templateTraitsDecision)
     {
         if (deleted)
         {
-            return BethesdaFaceGenApplicability.CoverageGapDeletedWinner;
+            return BethesdaFaceGenApplicability.NotApplicableDeletedWinner;
         }
 
-        if (raceState != BethesdaLinkState.Resolved || raceFaceGenHead is null)
+        if (templateTraitsDecision == BethesdaTemplateTraitsDecision.Unknown)
         {
-            return BethesdaFaceGenApplicability.CoverageGapUnresolvedRace;
+            return BethesdaFaceGenApplicability.UnknownTemplateTraitsDecision;
         }
 
-        if (!raceFaceGenHead.Value)
+        if (templateTraitsDecision == BethesdaTemplateTraitsDecision.KnownInherited)
         {
-            return BethesdaFaceGenApplicability.InapplicableRaceWithoutFaceGenHead;
+            return BethesdaFaceGenApplicability.NotApplicableTemplateTraits;
         }
 
-        if (usesTemplate)
+        if (raceState != BethesdaLinkState.Resolved
+            || raceFaceGenHead is null
+            || raceFaceGenHead == BethesdaRaceFaceGenHeadDecision.Unknown)
         {
-            return BethesdaFaceGenApplicability.CoverageGapTemplateSource;
+            return BethesdaFaceGenApplicability.UnknownRace;
         }
 
-        return templatesTraits
-            ? BethesdaFaceGenApplicability.CoverageGapTemplateTraits
+        return raceFaceGenHead == BethesdaRaceFaceGenHeadDecision.KnownAbsent
+            ? BethesdaFaceGenApplicability.NotApplicableRaceWithoutFaceGenHead
             : BethesdaFaceGenApplicability.Applicable;
     }
+
+    internal static string UnsupportedMemberIdentity(
+        string sourcePlugin,
+        string formKey,
+        string recordSignature,
+        string fieldSignature) =>
+        $"{sourcePlugin}|{formKey}|{recordSignature}|{fieldSignature}";
 
     private static BethesdaLooseAssetFact LooseAsset(Mo2InstallationSnapshot snapshot, string path)
     {
@@ -1156,23 +1368,34 @@ public sealed class BethesdaSemanticExtractor
             string.Equals(candidate.NormalizedRelativePath.Replace('\\', '/'), normalized, StringComparison.OrdinalIgnoreCase));
         if (chain is null)
         {
-            return new BethesdaLooseAssetFact(normalized, [], null, false, snapshot.ArchiveMemberPopulationSupported);
+            (bool present, bool exactAbsenceKnown) = BethesdaSemanticContract.AssetTransport(
+                BethesdaAssetAvailability.Unknown);
+            return new BethesdaLooseAssetFact(
+                normalized,
+                [],
+                null,
+                BethesdaAssetAvailability.Unknown,
+                present,
+                exactAbsenceKnown);
         }
 
+        (bool chainPresent, bool chainExactAbsenceKnown) = BethesdaSemanticContract.AssetTransport(
+            BethesdaAssetAvailability.Present);
         return new BethesdaLooseAssetFact(
             normalized,
             chain.Providers.Select(provider => provider.LocalInstalledEntityId.Value).ToArray(),
             chain.Winner.LocalInstalledEntityId.Value,
-            true,
-            true);
+            BethesdaAssetAvailability.Present,
+            chainPresent,
+            chainExactAbsenceKnown);
     }
 
     private static List<BethesdaTaxonomyProjection> BuildTaxonomy(
-        Mo2InstallationSnapshot source,
         IReadOnlyList<BethesdaRecordContribution> contributions,
         IReadOnlyList<BethesdaNpcFact> npcs,
         IReadOnlyList<BethesdaPlacedReferenceFact> references,
-        IReadOnlyList<BethesdaUnsupportedRecord> unsupportedRecords)
+        IReadOnlyList<BethesdaUnsupportedRecord> unsupportedRecords,
+        IReadOnlyList<BethesdaFaceGenFact> faceGen)
     {
         List<BethesdaTaxonomyProjection> results = [];
         HashSet<string> unsupportedContributionKeys = unsupportedRecords
@@ -1184,6 +1407,7 @@ public sealed class BethesdaSemanticExtractor
                      !unsupportedContributionKeys.Contains($"{contribution.SourcePlugin}\0{contribution.Identity.FormKey}\0{contribution.Identity.Signature}")))
         {
             results.Add(Projection(contribution.ContributionId, "record-contribution", "technical-modification-surface", "semantic-mechanism", "surface.plugin-data", TaxonomyApplicability.Assigned, ClassificationRole.Observed, [Evidence(contribution, "major-record", 0)], "The frozen major-record fact establishes plugin-carried record data."));
+            results.Add(Projection(contribution.ContributionId, "record-contribution", "technical-modification-surface", "realization-and-delivery", "delivery.plugin-container", TaxonomyApplicability.Assigned, ClassificationRole.Observed, [Evidence(contribution, "plugin-container", 0)], "The frozen plugin receipt establishes delivery inside a plugin container."));
         }
 
         foreach (BethesdaNpcFact npc in npcs)
@@ -1248,38 +1472,28 @@ public sealed class BethesdaSemanticExtractor
             results.Add(Projection(subject, "unsupported-record", "technical-modification-surface", "realization-and-delivery", "delivery.plugin-container", TaxonomyApplicability.Assigned, ClassificationRole.Observed, [fileEvidence, recordEvidence], "The frozen file and record facts establish delivery inside a plugin container."));
             results.Add(Projection(subject, "unsupported-record", "affected-game-system-or-content-area", "affected-area", null, TaxonomyApplicability.Unsupported, ClassificationRole.Established, [gapEvidence], "The frozen allowlist gap establishes that Slice 4 cannot determine affected-area semantics for this record family."));
             results.Add(Projection(subject, "unsupported-record", "consequence-type", "consequence-type", null, TaxonomyApplicability.Unknown, ClassificationRole.Predicted, [gapEvidence], "The surface is present, but unsupported semantics leave any consequence unknown."));
-            foreach ((string Facet, string Reason) in new[]
-                     {
-                         ("direct-subject-breadth", "No effect is established, so direct-subject breadth is not applicable."),
-                         ("spatial-breadth", "No effect is established, so spatial breadth is not applicable."),
-                         ("persistence-and-lifecycle-breadth", "No effect is established, so persistence breadth is not applicable."),
-                         ("causal-propagation-or-blast-radius", "No effect is established, so propagation breadth is not applicable."),
-                     })
-            {
-                results.Add(Projection(subject, "unsupported-record", "effect-extent", Facet, null, TaxonomyApplicability.NotApplicable, ClassificationRole.Established, [gapEvidence], Reason));
-            }
         }
 
-        if (source.Plugins.Count(plugin => plugin.Enabled) > 1)
+        IReadOnlyDictionary<string, BethesdaRecordContribution> byParticipant = contributions
+            .GroupBy(contribution => contribution.Identity.ParticipantId, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.OrderBy(item => item.LoadOrder).Last(), StringComparer.Ordinal);
+        foreach ((BethesdaFaceGenFact fact, BethesdaLooseAssetFact asset) in faceGen
+                     .SelectMany(fact => new[] { (fact, fact.Mesh), (fact, fact.Tint) })
+                     .Where(item => item.Item2.ProviderParticipantIds.Count > 0))
         {
-            string subject = $"provider-topology:{source.Contract.SnapshotId.Value}";
-            string[] evidence = source.Plugins.Where(plugin => plugin.Enabled)
-                .OrderBy(plugin => plugin.LoadOrder)
-                .Select(plugin => $"provider:{plugin.WinningLocalInstalledEntityId!.Value}")
-                .ToArray();
-            results.Add(Projection(subject, "provider-topology", "declared-purpose-and-intended-feature-area", "purpose-kind", null, TaxonomyApplicability.NotApplicable, ClassificationRole.Established, evidence, "Provider ordering is topology, not declared purpose."));
-            results.Add(Projection(subject, "provider-topology", "affected-game-system-or-content-area", "affected-area", null, TaxonomyApplicability.NotApplicable, ClassificationRole.Established, evidence, "Provider ordering alone does not describe an affected game area."));
-            results.Add(Projection(subject, "provider-topology", "consequence-type", "consequence-type", null, TaxonomyApplicability.NotApplicable, ClassificationRole.Established, evidence, "Provider ordering alone establishes no consequence."));
-            foreach ((string Facet, string Reason) in new[]
-                     {
-                         ("direct-subject-breadth", "Provider ordering alone establishes no direct-subject effect."),
-                         ("spatial-breadth", "Provider ordering alone establishes no spatial effect."),
-                         ("persistence-and-lifecycle-breadth", "Provider ordering alone establishes no persistence effect."),
-                         ("causal-propagation-or-blast-radius", "Provider ordering alone establishes no propagation effect."),
-                     })
+            if (!byParticipant.TryGetValue(fact.NpcParticipantId, out BethesdaRecordContribution? winner))
             {
-                results.Add(Projection(subject, "provider-topology", "effect-extent", Facet, null, TaxonomyApplicability.NotApplicable, ClassificationRole.Established, evidence, Reason));
+                throw new InvalidOperationException("A FaceGen fact is not bound to its winning NPC contribution.");
             }
+
+            string subject = $"{winner.ContributionId}:semantic:face-gen-loose-provider-chain:{asset.NormalizedRelativePath}";
+            string[] evidence = asset.ProviderParticipantIds.Count == 0
+                ? [$"evidence:{subject}:provider-chain:unknown"]
+                : asset.ProviderParticipantIds
+                    .Select((provider, ordinal) => $"evidence:{subject}:provider-chain:{ordinal}:{provider}")
+                    .ToArray();
+            results.Add(Projection(subject, "record-semantic-subject", "technical-modification-surface", "semantic-mechanism", "surface.asset", TaxonomyApplicability.Assigned, ClassificationRole.Observed, evidence, "The declared FaceGen loose-provider chain establishes an asset surface."));
+            results.Add(Projection(subject, "record-semantic-subject", "technical-modification-surface", "realization-and-delivery", "delivery.loose-data-file", TaxonomyApplicability.Assigned, ClassificationRole.Observed, evidence, "The declared FaceGen provider chain establishes loose-data-file delivery."));
         }
 
         return results;
@@ -1303,7 +1517,7 @@ public sealed class BethesdaSemanticExtractor
         IReadOnlyList<string> evidence,
         string reason)
     {
-        string material = string.Join('|', subject, axis, code ?? applicability.ToString(), string.Join(',', evidence));
+        string material = string.Join('|', subject, subjectType, axis, facet, code ?? applicability.ToString(), role, string.Join(',', evidence));
         string digest = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(material)))[..20];
         return new BethesdaTaxonomyProjection(
             $"taxonomy:{digest}",
@@ -1348,17 +1562,31 @@ public sealed class BethesdaSemanticExtractor
         string SourcePlugin);
 
     private sealed record BethesdaUnsupportedField(
+        string SourcePlugin,
+        string FormKey,
+        string RecordSignature,
+        string FieldSignature);
+
+    private sealed record BethesdaUnsupportedShape(
+        string SourcePlugin,
         string FormKey,
         string RecordSignature,
         string FieldSignature);
 
     private sealed record PluginStructuralObservation(
         IReadOnlyDictionary<string, Dictionary<string, int>> Fields,
-        IReadOnlyList<BethesdaUnsupportedField> UnsupportedFields)
+        IReadOnlyList<BethesdaUnsupportedField> UnsupportedFields,
+        IReadOnlyList<BethesdaUnsupportedShape> UnsupportedShapes)
     {
         public bool HasField(string formKey, string field) =>
             Fields.TryGetValue(formKey, out Dictionary<string, int>? fields)
             && fields.ContainsKey(field);
+
+        public bool HasSupportedField(string formKey, string field) =>
+            HasField(formKey, field)
+            && !UnsupportedShapes.Any(shape =>
+                string.Equals(shape.FormKey, formKey, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(shape.FieldSignature, field, StringComparison.Ordinal));
     }
 
     private sealed class BethesdaInputException(

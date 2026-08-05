@@ -37,7 +37,7 @@ public sealed class WorkerProtocolIntegrationTests
             BootstrapId = "bethesda-bootstrap",
             StagingAreaId = "bethesda-staging",
             StagedArtifactId = "bethesda-artifact",
-            OutputRelativeName = "bethesda-semantic.v1.json",
+            OutputRelativeName = "bethesda-semantic.v2.json",
             MaximumOutputBytes = 16 * 1024 * 1024,
             OneUseNonceBase64 = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)),
             OperationKind = ManagedWorkerOperationKind.BethesdaSemanticExtraction,
@@ -81,6 +81,7 @@ public sealed class WorkerProtocolIntegrationTests
         Assert.AreEqual(BethesdaSemanticExtractor.ProducerId, assignment.Operation.AdapterOrAnalyzerId);
         Assert.AreEqual(BethesdaSemanticExtractor.ProducerVersion, assignment.Operation.AdapterOrAnalyzerVersion.Value);
         Assert.AreEqual(0, assignment.Inputs.Count);
+        Assert.AreEqual("bethesda-semantic.v2.json", assignment.StagingAuthority.AllowedOutputs.Single().TypedRelativeName);
         Assert.AreEqual(StagedArtifactKind.TypedResult, assignment.StagingAuthority.AllowedOutputs.Single().Kind);
         Assert.IsNull(assignment.Operation.Mo2SnapshotCapture);
     }

@@ -213,7 +213,7 @@ public sealed class ManagedRunExecutor(
                 Guid.NewGuid().ToString("N"),
                 Guid.NewGuid().ToString("N"),
                 0,
-                isBethesda ? "bethesda-semantic.v1.json" : "slice2-substrate.v1.json",
+                isBethesda ? "bethesda-semantic.v2.json" : "slice2-substrate.v1.json",
                 isBethesda ? 64L * 1024 * 1024 : 65_536,
                 Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)),
                 DateTimeOffset.UtcNow.AddMinutes(isBethesda ? 2 : 1),

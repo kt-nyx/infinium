@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Infinium.Domain.Contracts;
 
 namespace Infinium.Bethesda;
@@ -27,15 +28,69 @@ public enum BethesdaLinkState
     Unresolved,
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter<BethesdaFaceGenApplicability>))]
 public enum BethesdaFaceGenApplicability
 {
-    Unspecified,
+    [JsonStringEnumMemberName("applicable")]
     Applicable,
-    CoverageGapDeletedWinner,
-    CoverageGapTemplateSource,
-    CoverageGapTemplateTraits,
-    CoverageGapUnresolvedRace,
-    InapplicableRaceWithoutFaceGenHead,
+    [JsonStringEnumMemberName("not_applicable_deleted_winner")]
+    NotApplicableDeletedWinner,
+    [JsonStringEnumMemberName("unknown_template_traits_decision")]
+    UnknownTemplateTraitsDecision,
+    [JsonStringEnumMemberName("not_applicable_template_traits")]
+    NotApplicableTemplateTraits,
+    [JsonStringEnumMemberName("unknown_race")]
+    UnknownRace,
+    [JsonStringEnumMemberName("not_applicable_race_without_face_gen_head")]
+    NotApplicableRaceWithoutFaceGenHead,
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter<BethesdaTemplateTraitsDecision>))]
+public enum BethesdaTemplateTraitsDecision
+{
+    [JsonStringEnumMemberName("unknown")]
+    Unknown,
+    [JsonStringEnumMemberName("known_inherited")]
+    KnownInherited,
+    [JsonStringEnumMemberName("known_not_inherited")]
+    KnownNotInherited,
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter<BethesdaRaceFaceGenHeadDecision>))]
+public enum BethesdaRaceFaceGenHeadDecision
+{
+    [JsonStringEnumMemberName("unknown")]
+    Unknown,
+    [JsonStringEnumMemberName("known_present")]
+    KnownPresent,
+    [JsonStringEnumMemberName("known_absent")]
+    KnownAbsent,
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter<BethesdaAssetAvailability>))]
+public enum BethesdaAssetAvailability
+{
+    [JsonStringEnumMemberName("present")]
+    Present,
+    [JsonStringEnumMemberName("absent")]
+    Absent,
+    [JsonStringEnumMemberName("unknown")]
+    Unknown,
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter<BethesdaCoverageGapCategory>))]
+public enum BethesdaCoverageGapCategory
+{
+    [JsonStringEnumMemberName("unsupported_record")]
+    UnsupportedRecord,
+    [JsonStringEnumMemberName("unsupported_field")]
+    UnsupportedField,
+    [JsonStringEnumMemberName("unsupported_shape")]
+    UnsupportedShape,
+    [JsonStringEnumMemberName("capability")]
+    Capability,
+    [JsonStringEnumMemberName("face_gen_applicability")]
+    FaceGenApplicability,
 }
 
 public enum BethesdaUnsupportedCapability
@@ -116,6 +171,7 @@ public sealed record BethesdaNpcFact(
     uint ConfigurationFlags,
     uint TemplateFlags,
     bool UsesTemplate,
+    BethesdaTemplateTraitsDecision TemplateTraitsDecision,
     bool TemplatesTraits,
     BethesdaLinkFact? Template,
     BethesdaLinkFact? Race,
@@ -126,6 +182,7 @@ public sealed record BethesdaNpcFact(
 
 public sealed record BethesdaRaceFact(
     BethesdaRecordContribution Contribution,
+    BethesdaRaceFaceGenHeadDecision FaceGenHeadDecision,
     bool FaceGenHead);
 
 public sealed record BethesdaVector3(float X, float Y, float Z);
@@ -146,6 +203,7 @@ public sealed record BethesdaLooseAssetFact(
     string NormalizedRelativePath,
     IReadOnlyList<string> ProviderParticipantIds,
     string? WinnerParticipantId,
+    BethesdaAssetAvailability Availability,
     bool Present,
     bool ExactAbsenceKnown);
 
@@ -160,10 +218,40 @@ public sealed record BethesdaFaceGenFact(
 
 public sealed record BethesdaCoverageGap(
     string GapId,
+    BethesdaCoverageGapCategory Category,
+    string Detail,
     string Population,
     long Denominator,
     string Reason,
     string MissingCapability);
+
+public static class BethesdaSemanticContract
+{
+    public static readonly ContractVersion SchemaVersion = new(2, 0, 0);
+
+    public static readonly IReadOnlyList<string> CoveragePopulations =
+    [
+        "plugins",
+        "npc-records",
+        "race-records",
+        "placed-reference-records",
+        "unsupported-records",
+        "face-gen-loose-assets",
+        "face-gen-archive-assets",
+        "localized-strings",
+        "automatic-environment-discovery",
+        "taxonomy-subjects",
+    ];
+
+    public static (bool Present, bool ExactAbsenceKnown) AssetTransport(
+        BethesdaAssetAvailability availability) => availability switch
+        {
+            BethesdaAssetAvailability.Present => (true, false),
+            BethesdaAssetAvailability.Absent => (false, true),
+            BethesdaAssetAvailability.Unknown => (false, false),
+            _ => throw new ArgumentOutOfRangeException(nameof(availability)),
+        };
+}
 
 public sealed record BethesdaCoveragePopulation(
     string Population,
