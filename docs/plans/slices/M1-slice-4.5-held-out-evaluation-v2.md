@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Held-out evaluation v2
 
-Status: Accepted; public evaluator and conforming product candidate frozen; private B2 authorized next
+Status: Accepted; B2 stopped on a public-authority gap; public contract-completion plan accepted
 Owner: Project owner
 Prepared: 2026-08-04
 Accepted: 2026-08-04
@@ -356,3 +356,20 @@ independent review, qualification, and exact candidate freeze completed at
 [public product candidate freeze](../../evaluation/m1-slice4.5-public-product-candidate-freeze.json).
 One fresh private oracle reviewer may now resume B2 once. B2, C2, and Stage D
 remain unrun, so Slice 4.5 remains active and Slice 5 remains blocked.
+
+## Protocol `/4` B2 terminal authority gap and owner disposition
+
+The single authorized private B2 resume ran once and terminated without an
+oracle, candidate execution, scoring, or product verdict. The sanitized handoff
+records unchanged frozen inputs, preserved answer isolation, clean
+contamination state at the terminal stop, and another unresolved public
+authority gap affecting exact evaluator-visible identity and link/state
+vocabulary.
+
+The project owner accepted the public-only
+[protocol `/4` oracle-contract completion and held-out disposition plan](M1-slice-4.5-protocol-4-oracle-contract-completion.md).
+It keeps evaluator `/4` and candidate `a98d648` frozen while completing all
+fifteen public fact-family construction rules, proving answer-free
+authorability, and auditing conformance. It does not authorize another B2
+attempt, private corpus work, C2, Stage D, protocol `/5`, or Slice 5. Slice 4.5
+and M1 remain active; Slice 5 remains blocked.

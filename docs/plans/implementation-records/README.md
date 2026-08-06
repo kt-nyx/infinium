@@ -22,11 +22,13 @@ invocation ran once, but Stage C.5 invalidated its product verdict; no valid
 successor held-out verdict exists. Slice 4.5 now owns evaluator-v2 qualification
 and held-out acceptance. Final protocol `/4` is qualified and frozen at
 `3693d19563c636cd2879804633ca4ce52448d2c1`; the B2 input bytes already exist
-and passed independent byte review, but B2 oracle qualification under `/4` has
-not run. ADR-0028 resolves the six semantic questions; public realignment,
-independent review, requalification, and candidate freeze are complete at
-`a98d648bd0adb2751ee0c09828e0227b1583950f`. One fresh private oracle reviewer
-may now resume B2 once. C2 has not run, Stage D has not started, and Slice 5
+and passed independent byte review. The single authorized B2 resume ran once
+and stopped on another public lexical-authority gap without an oracle,
+candidate execution, scoring, or product verdict. Public realignment and
+candidate freeze remain complete at
+`a98d648bd0adb2751ee0c09828e0227b1583950f`. The accepted public
+oracle-contract completion plan is pending; another B2 task is not authorized
+by the current state. C2 has not run, Stage D has not started, and Slice 5
 remains blocked.
 
 - [M1 Slice 0 — Toolchain, licensing posture, and dependency lock](M1-slice-0.md)
@@ -38,5 +40,5 @@ remains blocked.
 - [M1 Slice 4.5 — Held-out evaluation v2](M1-slice-4.5.md)
   — final bounded public Stage A freeze at
   `3693d19563c636cd2879804633ca4ce52448d2c1`; owner semantic disposition
-  accepted; public realignment complete at `a98d648`; private B2, C2, and Stage
-  D pending.
+  accepted; public realignment complete at `a98d648`; B2 stopped on a public
+  lexical-authority gap; public contract completion, C2, and Stage D pending.

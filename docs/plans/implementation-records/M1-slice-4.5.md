@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Held-out evaluation v2 implementation record
 
-Status: Public evaluator `/4` and conforming candidate frozen; private B2 authorized next; C2 and Stage D pending
+Status: Public evaluator `/4` and candidate frozen; B2 stopped on a public-authority gap; public contract completion pending
 Opened: 2026-08-04
 Plan: `infinium.plan.m1.backend-semantic-proof/3`
 Execution plan: [M1 Slice 4.5](../slices/M1-slice-4.5-held-out-evaluation-v2.md)
@@ -521,3 +521,22 @@ B2, `adapt`, `score`, `score-corpus`, C2, Stage D, protocol `/5`, and live or
 billable calls were not run. The candidate was not amended and no push was
 performed. One fresh private oracle reviewer may now resume B2 once under frozen
 protocol `/4`; all later authority boundaries remain unchanged.
+
+## 2026-08-05 protocol `/4` B2 terminal gap and plan acceptance
+
+The single authorized private B2 resume ran once. Its permitted sanitized
+handoff records terminal status blocked by another unresolved public-authority
+gap, private evidence commit
+`4fea37a2c5ee512c2f14781361d60742e62b0d57`, unchanged frozen inputs,
+preserved access and answer isolation, clean contamination state at the
+terminal stop, and no complete expected output, candidate execution, candidate
+output inspection, comparison, or scoring. This is not a product verdict.
+
+The project owner accepted the public-only
+[protocol `/4` oracle-contract completion and held-out disposition plan](../slices/M1-slice-4.5-protocol-4-oracle-contract-completion.md).
+The plan keeps evaluator `/4` and candidate `a98d648` frozen, completes exact
+public construction authority for all fifteen fact families, requires a fresh
+product-blind answer-free authorability review before candidate inspection,
+and then classifies public conformance. It does not authorize private access,
+another B2 attempt, corpus qualification, C2, Stage D, protocol `/5`, product
+or evaluator changes, or Slice 5.

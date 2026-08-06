@@ -3,7 +3,7 @@
 Status: Accepted
 Accepted: 2026-08-04
 Accepted by: Project owner
-Last reviewed: 2026-08-04
+Last reviewed: 2026-08-05
 Plan revision: `infinium.plan.m1.backend-semantic-proof/3`
 Predecessor: [M1 backend semantic proof revision 2](M1-backend-semantic-proof-adr0026-amendment.md)
 
@@ -86,3 +86,18 @@ Revision `/3` requires the public evaluator-v2 calibration and full repository
 verification defined by the Slice 4.5 plan. Private qualification and scoring
 occur only in their later fresh tasks and return sanitized evidence under
 governance v2.
+
+## Protocol `/4` B2 terminal disposition
+
+The single authorized private B2 resume ran once and stopped without an oracle,
+candidate execution, scoring, or product verdict because exact
+evaluator-visible identity and link/state vocabulary remained incompletely
+specified by public authority. The project owner accepted the public-only
+[oracle-contract completion and held-out disposition plan](../slices/M1-slice-4.5-protocol-4-oracle-contract-completion.md).
+
+Evaluator `/4` and candidate `a98d648` remain frozen. Public completion,
+answer-free product-blind authorability review, and frozen conformance audit are
+the next work. Another B2 task, corpus qualification, C2, Stage D, protocol
+`/5`, and Slice 5 are not authorized by this disposition. The existing M1 gate
+is unchanged: Slice 5 remains blocked until Slice 4.5 obtains one valid held-out
+`PASS` for an exact qualified tuple.

@@ -20,12 +20,14 @@ invalidated its product verdict, so no valid successor held-out verdict exists.
 Active [Slice 4.5](slices/M1-slice-4.5-held-out-evaluation-v2.md) has qualified
 and frozen final protocol `/4` at
 `3693d19563c636cd2879804633ca4ce52448d2c1`. The B2 input bytes already exist
-and passed independent byte review, but B2 oracle qualification under `/4` has
-not run. The six semantic questions are resolved, and the accepted public
-realignment, independent review, requalification, and candidate freeze are
-complete at `a98d648bd0adb2751ee0c09828e0227b1583950f`. One fresh private oracle
-reviewer may now resume B2 once. C2 has not run, Stage D has not started, Slice
-5 remains blocked, and M1 remains active.
+and passed independent byte review. The single authorized B2 resume ran once
+and terminated on another public lexical-authority gap without an oracle,
+candidate execution, scoring, or product verdict. The accepted public
+realignment and candidate freeze remain complete at
+`a98d648bd0adb2751ee0c09828e0227b1583950f`. The accepted
+[protocol `/4` oracle-contract completion plan](slices/M1-slice-4.5-protocol-4-oracle-contract-completion.md)
+is the next public work; it does not authorize another B2 attempt. C2 has not
+run, Stage D has not started, Slice 5 remains blocked, and M1 remains active.
 The completed
 [public Bethesda semantic realignment plan](slices/M1-slice-4.5-public-product-realignment.md)
 records that bounded implementation, review, qualification, and candidate-
