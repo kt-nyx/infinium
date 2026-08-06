@@ -104,9 +104,10 @@ qualification because its projection required non-independently-authorable
 expected values. Protocol `/4` is qualified and frozen. Public
 product/specification realignment, independent review, requalification, and a
 new candidate freeze completed at
-`a98d648bd0adb2751ee0c09828e0227b1583950f`. The existing independently
-reviewed successor inputs may now resume B2 oracle construction once. Stage C2
-has not run and Stage D has not started.
+`a98d648bd0adb2751ee0c09828e0227b1583950f`. At that checkpoint, the existing
+independently reviewed successor inputs were permitted to resume B2 oracle
+construction once. That authorization was subsequently consumed; Stage C2 has
+not run and Stage D has not started.
 
 Passing public conformance alone does not complete the held-out partition.
 Passing the narrowed held-out partition does not claim conformance for excluded
@@ -115,8 +116,8 @@ internal product fields. Both partitions must be reported separately.
 ### Qualification status after implementation
 
 Protocol `/4` was qualified and frozen at
-`3693d19563c636cd2879804633ca4ce52448d2c1`. The existing independently
-byte-reviewed successor inputs may now resume B2 once under the
+`3693d19563c636cd2879804633ca4ce52448d2c1`. At that checkpoint, the existing
+independently byte-reviewed successor inputs were permitted to resume B2 once under the
 [final handoff](evaluator-v2-stage-a-final-bounded-freeze.json). Oracle
 qualification, comparison, corpus freeze/tag, Stage C2, and Stage D have not
 run under `/4`.
@@ -140,6 +141,16 @@ The authorized `/4` B2 resume ran once and stopped without an oracle or product
 verdict. The subsequent public contract-completion attempt used its single
 correction pass, but independent re-review found a second material authority
 gap before candidate inspection. The final-revision hard stop therefore
-remains active. Project-owner milestone-plan disposition is required; no
+remains active. Project-owner milestone-plan disposition was required; no
 private successor, corpus qualification, C2, Stage D, Slice 5, or `/5` is
 authorized.
+
+## Owner disposition after the public hard stop
+
+The project owner accepted ADR-0029 and
+[work `M1/S4.5/PRE-B2`](../plans/slices/M1-slice-4.5-pre-B2-evidence-contract-totality.md).
+The RACE partial-decode branch now retains independently proven structural and
+generic technical facts, omits unproven decoded semantics, and reports exact
+coverage/gap effects. The remaining public obligation is deterministic totality
+across all fifteen fact families, not another fixture-specific correction.
+This disposition does not reopen B2 or authorize protocol `/5`.

@@ -1,6 +1,7 @@
 # M1 Slice 4 final held-out oracle-authority matrix
 
-Status: **accepted semantic matrix, but incomplete as an exact oracle-construction contract; owner disposition required**.
+Status: **accepted semantic matrix; partial-decode disposition accepted, exact
+contract totality pending `M1/S4.5/PRE-B2`**.
 
 This matrix records the bounded semantic inclusion/exclusion contract for the
 final Slice 4 successor. It does not yet form a complete exact lexical
@@ -8,13 +9,14 @@ construction contract. Product-generated identifiers are never oracle
 authority.
 
 The attempted exact lexical completion did not pass independent authorability
-re-review. In particular, this matrix does not define whether an admitted but
+re-review. The project owner subsequently resolved whether an admitted but
 undecodable record shape creates structural override, allowlisted-field, and
-technical taxonomy facts. The
+technical taxonomy facts through ADR-0029 and the owner disposition. The
 [public review attestation](m1-slice4-protocol-4-oracle-authorability-review.md)
-is the superseding completeness status. Until the owner resolves that gap,
-this matrix and the blocked construction draft must not authorize an oracle or
-private comparison.
+remains the historical failed completeness status. The accepted
+[Pre-B2 totality plan](../plans/slices/M1-slice-4.5-pre-B2-evidence-contract-totality.md)
+must now prove all state/fact combinations; until it passes, this matrix and the
+blocked construction draft must not authorize an oracle or private comparison.
 
 <!-- active-fact-families: result,plugins,override_chains,npc_contributions,race_contributions,placed_reference_contributions,allowlisted_fields,npcs,races,placed_references,face_gen,taxonomy,coverage,gaps,result_gaps -->
 
@@ -26,14 +28,14 @@ private comparison.
 | `plugins` | Included | Accepted manifest plugin order and answer-free local installed entity IDs. | Manifest order; lowercase plugin/provider IDs; ordered masters. | Required manifest facts are present; absent masters produce an empty sequence. | Load/provider topology is independently authorable. |
 | `override_chains` | Included | Record headers and ordered contributions decoded from retained plugin bytes; winner is the final effective contribution under accepted load order. | Rooted by canonical ID-first FormKey; contribution sequence remains ordered; winner fields use source plugin, load order, FormKey, flags, deleted, and compressed. | Required for observed chains. | No product contribution or winner ID is required. |
 | `npc_contributions` | Included | NPC records independently decoded from retained bytes. | Rooted by evaluator-owned semantic contribution identity; links by field, component, and ordinal. | Optional links expose explicit null state; `ai_data_present` is always boolean. | Typed AIDT subfields remain public conformance facts but are excluded from held-out scoring. |
-| `race_contributions` | Included | RACE records independently decoded from retained bytes. | Rooted by evaluator-owned semantic contribution identity. | Required projected fields are present. | Independently authorable record semantics. |
+| `race_contributions` | Included | RACE structural/common facts survive an unsupported member shape; decoded member facts require their own accepted shape evidence. | Rooted by evaluator-owned semantic contribution identity. | Omit dependent decoded fields when unavailable and report the exact unsupported-shape gap. | Preserves independently proven contribution facts without inventing member semantics. |
 | `placed_reference_contributions` | Included | REFR records independently decoded from retained bytes. | Rooted by evaluator-owned semantic contribution identity; links by field/component/ordinal; finite placement numbers retain semantic numeric comparison. | Optional links and placement follow explicit-null versus missing source semantics. | Independently authorable placement, ownership, and reference semantics. |
-| `allowlisted_fields` | Included | Count of independently observed allowlisted fields per semantic contribution. | Rooted by evaluator-owned semantic contribution identity plus lowercase field name. | No fact when the field is unobserved. | Counts are derivable without product IDs. |
+| `allowlisted_fields` | Included | Count of independently observed allowlisted fields per semantic contribution. Structural member presence alone does not prove an occurrence count. | Rooted by evaluator-owned semantic contribution identity plus lowercase field name. | No fact when the field or its exact count is not independently observed. | Counts are derivable without product IDs and are never guessed from an unsupported shape. |
 | `npcs` | Included | Resolved effective NPC facts derived from retained contributions and accepted order. | Rooted by canonical FormKey; same NPC rules as contribution facts. | Optional links are explicit null; AIDT is presence-only. | Effective semantics are independently reconstructible. |
-| `races` | Included | Resolved effective RACE facts. | Rooted by canonical FormKey. | Required projected fields are present. | Effective semantics are independently reconstructible. |
+| `races` | Included | Resolved effective RACE facts require the complete bounded decode used by the projected race semantics. | Rooted by canonical FormKey. | No complete resolved race fact when a required member such as `DATA/face_gen_head` is undecodable; retain lower-layer contribution facts and a gap. | Effective semantics are independently reconstructible only when their decode prerequisites hold. |
 | `placed_references` | Included | Resolved effective REFR facts. | Rooted by canonical FormKey; link and placement rules match contribution facts. | Optional links are explicit null; placement is absent when not encoded. | Effective semantics are independently reconstructible. |
 | `face_gen` | Included | Canonical NPC FormKey plus the accepted FaceGen precedence and answer-free loose-provider chains. | Rooted by canonical NPC FormKey; provider order preserved; paths slash-normalized and lowercase. | The semantic state is present, absent, or unknown. Protocol `/4` encodes those states as `true/false`, `false/true`, and `false/false` for `present/exact_absence_known`; `true/true` is invalid. Winner is required only for present. | Manifest provider IDs identify installed entities and are not product answer IDs; archive support is a separate capability. |
-| `taxonomy` | Included | Hybrid semantic taxonomy tuples derived from independently observed record/provider semantics and the public taxonomy contract. | Rooted by evaluator-owned canonical subject, subject type, canonical axis/facet, code-or-null, applicability, and role; duplicate semantic tuples are invalid. | Required technical tuples are present; further tuples exist only when meaningful evidence or a required explicit limitation supports them. Product assignment, analyzer/adjudicator, evidence, and reason fields are not projected. | The semantic tuple is authorable without manufacturing a mandatory all-null matrix. |
+| `taxonomy` | Included | Hybrid semantic taxonomy tuples derived from independently observed record/provider semantics and the public taxonomy contract. An admitted contribution retains its generic technical subject/assignments even when a later member decode fails. | Rooted by evaluator-owned canonical subject, subject type, canonical axis/facet, code-or-null, applicability, and role; duplicate semantic tuples are invalid. | Required generic technical tuples are present; later semantic tuples exist only when their evidence prerequisites hold. Product assignment, analyzer/adjudicator, evidence, and reason fields are not projected. | The semantic tuple is authorable without manufacturing a mandatory all-null matrix or discarding structural technical truth. |
 | `coverage` | Included | The fixed ten-population registry, denominator, completed count, and state computed under the accepted owner disposition. | Rooted and sorted by population; all ten rows are emitted, including zero denominators. | Zero denominator is completed. Denominator labels and gap-ID lists are excluded. | Coverage arithmetic is authorable without product gap identities. |
 | `gaps` | Included | Layered semantic population, denominator, and missing capability from the accepted public vocabulary. | Rooted by population plus missing capability and sorted ordinally; identical pairs aggregate exact affected counts. | Empty when no snapshot-level gap exists. | Capability absence and exact semantic scope are authority; generated gap IDs and incidental prose are not. |
 | `result_gaps` | Included | Result-envelope population, denominator, and missing capability. | Same as `gaps`. | Empty when no result-level gap exists. | Preserves failure-boundary coverage without generated IDs. |

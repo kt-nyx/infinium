@@ -48,6 +48,9 @@ specification.
   [revision 3 amendment](plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md),
   the active
   [Slice 4.5 evaluator-v2 plan](plans/slices/M1-slice-4.5-held-out-evaluation-v2.md),
+  its accepted
+  [Pre-B2 evidence-contract totality successor](plans/slices/M1-slice-4.5-pre-B2-evidence-contract-totality.md),
+  the [work-breakdown notation](plans/work-breakdown-notation.md),
   and the
   [research-agent handoff template](plans/research-investigation-agent-handoff-template.md)
 - Reference: [glossary](glossary.md)
@@ -171,11 +174,15 @@ Every material document should include a status and last-reviewed date.
   requalification, and candidate freeze are complete at conforming candidate
   `a98d648bd0adb2751ee0c09828e0227b1583950f`. Final protocol `/4` is qualified
   and frozen at
-  `3693d19563c636cd2879804633ca4ce52448d2c1`. The B2 input bytes already exist
-  and passed independent byte review, but B2 oracle qualification under `/4`
-  has not run; its single fresh-reviewer resume is now the authorized next
-  private stage. C2 has not run, and Stage D has not started. The detailed
-  sanitized history is recorded in the
+  `3693d19563c636cd2879804633ca4ce52448d2c1`. The single authorized B2 resume
+  stopped without an oracle or product verdict, and the first public contract-
+  completion attempt then hard-stopped before candidate inspection. ADR-0029
+  resolves the disclosed partial-decode choice. Accepted work
+  `M1/S4.5/PRE-B2` now starts at WP1 and replaces fixture-led corrections with
+  deterministic totality, model-derived exercises, fresh product-blind review,
+  and only then candidate classification. No new B2 is authorized. C2 has not
+  run, and Stage D has not started. The detailed sanitized history is recorded
+  in the
   [Stage C.5 incident](evaluation/evaluator-v2-stage-c5-adjudication-incident.md).
   Slice 4.5 remains active and incomplete, Slice 5 remains blocked, and M1
   remains active. M1 explicitly defers `QUST` forced-alias

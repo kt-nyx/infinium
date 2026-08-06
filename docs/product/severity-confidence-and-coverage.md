@@ -153,6 +153,15 @@ discovery, and taxonomy subjects. Rows with a zero denominator are retained and
 completed. A user-facing summary may omit those zero rows for clarity only when
 the complete detail remains accessible.
 
+Coverage follows the layered-evidence rule in
+[ADR-0029](../architecture/decisions/ADR-0029-layered-evidence-and-partial-semantic-publication.md).
+An item may contribute independently established structural or observed facts
+while remaining incomplete for a decoded, resolved, or semantic population.
+Retaining those lower-layer facts must not increment a higher-layer completed
+count. The report identifies the exact population and missing capability rather
+than discarding the whole item or presenting the unavailable layer as null,
+absent, or complete.
+
 ## Readiness
 
 Readiness is categorical:

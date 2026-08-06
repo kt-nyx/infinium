@@ -1,7 +1,7 @@
 # Anti-overfitting rules
 
 Status: Accepted
-Last reviewed: 2026-08-04
+Last reviewed: 2026-08-05
 
 The first semantic proof may use one category, technical surface, affected game
 area, or interaction shape because it exercises useful product capabilities.
@@ -60,6 +60,14 @@ fixture-specific semantic exceptions.
   accepted
   [Skyrim SE mod-impact taxonomy](../product/mod-impact-taxonomy.md);
   unevaluated taxonomy regions remain explicit coverage gaps.
+- For a bounded state machine or projection, enumerate the admitted semantic
+  state classes and prove exactly one fact/coverage/gap disposition for each.
+  Fixtures must map to that model; fixture discovery alone is not evidence that
+  the contract is total.
+- When one field or member is unsupported, verify both that independently
+  proven lower-layer facts survive and that no higher-layer value is guessed.
+  Pair this with a matched fully decoded case and a case that requires atomic
+  rejection.
 
 ## Evaluation partition and answer isolation
 
@@ -124,6 +132,9 @@ Any rule introduced after a failing real-mod case must answer:
    use require replacement holdout coverage?
 7. Were the expected result and all answer-bearing adjudication isolated from
    the implementation, retrieval path, and model being evaluated?
+8. Which general evidence-state class and fact dependency does the rule cover,
+   and did the totality gate prove that no overlapping or uncovered disposition
+   remains?
 
 Protocol `/4` adds a hard authority check: if an expected value cannot be
 authored from public rules, the answer-free manifest, accepted taxonomy rules,

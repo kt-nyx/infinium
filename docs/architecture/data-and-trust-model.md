@@ -1,7 +1,7 @@
 # Data and trust model
 
 Status: Draft  
-Last reviewed: 2026-07-28
+Last reviewed: 2026-08-05
 
 ## Principle
 
@@ -88,6 +88,27 @@ and evidence identities, including explicit absence of LLM involvement.
 Reusable external claims retain their evidence-acquisition-run provenance.
 Consuming analysis runs add application links; they do not rewrite the claims
 as locally observed or profile-owned evidence.
+
+## Layered derivation and partial success
+
+Within one claim derivation, Infinium distinguishes structural, observed,
+decoded, resolved, and semantic prerequisites. These layers do not replace the
+claim-type-specific evidence classes above. They state what must already be
+proven before a particular fact may be published.
+
+Under [ADR-0029](decisions/ADR-0029-layered-evidence-and-partial-semantic-publication.md),
+a later decode, resolution, or semantic failure does not erase an independently
+true earlier structural or observed fact. The earlier fact remains available;
+the unsupported later claim is null, unknown, omitted, or terminal only as its
+own accepted contract specifies; and the exact affected coverage and missing
+capability remain visible. Unavailable values are never guessed from product
+behavior or treated as completed work.
+
+Every fact-producing contract therefore declares its evidence prerequisites,
+null/unknown/omission behavior, coverage effect, gap effect, and atomic-failure
+boundary. Where a bounded input state space exists, those dispositions must be
+total and mechanically checkable before examples are used to claim
+qualification.
 
 Permitted source bodies/excerpts are private acquisition artifacts rather than
 claims or authority-bearing conclusions. They remain available through their

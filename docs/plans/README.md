@@ -28,10 +28,12 @@ realignment and candidate freeze remain complete at
 [protocol `/4` oracle-contract completion plan](slices/M1-slice-4.5-protocol-4-oracle-contract-completion.md)
 ran its public-only authorability attempt and stopped after the permitted
 correction pass exposed a second material public-authority gap. Candidate
-conformance was not inspected or classified. Project-owner milestone-plan
-disposition is now required; another correction, B2 attempt, corpus work, C2,
-Stage D, protocol `/5`, and Slice 5 are not authorized. M1 remains active and
-Slice 5 remains blocked.
+conformance was not inspected or classified. The project owner has now accepted
+ADR-0029 and the successor
+[Pre-B2 evidence-contract totality plan](slices/M1-slice-4.5-pre-B2-evidence-contract-totality.md).
+Its next unit is `M1/S4.5/PRE-B2/WP1`; no B2 attempt, corpus work, C2, Stage D,
+protocol `/5`, or Slice 5 is authorized. M1 remains active and Slice 5 remains
+blocked.
 The completed
 [public Bethesda semantic realignment plan](slices/M1-slice-4.5-public-product-realignment.md)
 records that bounded implementation, review, qualification, and candidate-
@@ -92,6 +94,10 @@ Every milestone plan should include:
 - completion record;
 - genuinely deferred follow-up.
 
+Use the accepted [work-breakdown notation](work-breakdown-notation.md) when a
+slice needs plan-local phases or independently assignable work packages. Stage
+names remain reserved for the evaluator lifecycle.
+
 The initial milestone sequence is described in
 [`../product/scope-and-milestones.md`](../product/scope-and-milestones.md).
 
@@ -102,3 +108,8 @@ realignment, requalification, and a newly frozen candidate must precede the
 one permitted fresh-reviewer B2 resume. Another oracle-authority gap does not
 authorize `/5`, evaluator expansion, or product output as oracle truth; it must
 be recorded for owner milestone disposition.
+
+That disposition is now ADR-0029 plus `M1/S4.5/PRE-B2`: define a total
+evidence-state contract, prove it mechanically, exercise it from the model,
+obtain a fresh product-blind review, and only then classify the frozen
+candidate. This public work does not itself resume B2.

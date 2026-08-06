@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Held-out evaluation v2
 
-Status: Accepted; public contract-completion authorability gate hard-stopped; owner disposition required
+Status: Accepted; public contract-completion attempt hard-stopped; accepted `M1/S4.5/PRE-B2` active at WP1
 Owner: Project owner
 Prepared: 2026-08-04
 Accepted: 2026-08-04
@@ -354,8 +354,9 @@ file absence authority is deferred to M3 planning. The implementation,
 independent review, qualification, and exact candidate freeze completed at
 `a98d648bd0adb2751ee0c09828e0227b1583950f`; the append-only handoff is the
 [public product candidate freeze](../../evaluation/m1-slice4.5-public-product-candidate-freeze.json).
-One fresh private oracle reviewer may now resume B2 once. B2, C2, and Stage D
-remain unrun, so Slice 4.5 remains active and Slice 5 remains blocked.
+At that checkpoint, one fresh private oracle reviewer was permitted to resume
+B2 once. That authorization was subsequently consumed; C2 and Stage D remain
+unrun, so Slice 4.5 remains active and Slice 5 remains blocked.
 
 ## Protocol `/4` B2 terminal authority gap and owner disposition
 
@@ -392,3 +393,15 @@ source/tests were not inspected and conformance was not classified. Evaluator
 `a98d648bd0adb2751ee0c09828e0227b1583950f` remain unchanged. Project-owner
 milestone-plan disposition is next; no further correction, private work,
 protocol `/5`, or downstream stage is authorized.
+
+## Accepted Pre-B2 totality successor
+
+The project owner has now accepted
+[ADR-0029](../../architecture/decisions/ADR-0029-layered-evidence-and-partial-semantic-publication.md)
+and the public-only
+[Pre-B2 evidence-contract totality plan](M1-slice-4.5-pre-B2-evidence-contract-totality.md).
+The RACE partial-decode decision is closed. Work now proceeds as
+`M1/S4.5/PRE-B2/WP1` through WP6: total state/fact model, executable totality,
+model-derived exercises, fresh product-blind review, frozen-candidate
+classification, and public closeout. No private B2, C2, Stage D, Slice 5, or
+protocol `/5` is authorized by this successor.

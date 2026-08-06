@@ -19,13 +19,14 @@ Stage C invocation ran once, but Stage C.5 invalidated its product verdict; no
 valid successor held-out verdict exists. That Slice 4 candidate retains its
 historical public verification. Slice 4.5 is active under plan revision `/3`,
 with final protocol `/4` qualified and frozen at
-`3693d19563c636cd2879804633ca4ce52448d2c1`. The B2 input bytes already exist
-and passed independent byte review, but B2 oracle qualification under `/4` has
-not run. The owner semantic disposition is accepted; public realignment,
-independent review, requalification, and a new candidate freeze are complete at
-`a98d648bd0adb2751ee0c09828e0227b1583950f`. One fresh private oracle reviewer
-may now resume B2 once. C2 has not run, Stage D has not started, and Slice 5
-remains blocked.
+`3693d19563c636cd2879804633ca4ce52448d2c1`. The single authorized B2 resume
+stopped without an oracle or product verdict. Public realignment and candidate
+freeze remain complete at
+`a98d648bd0adb2751ee0c09828e0227b1583950f`, but the first public
+contract-completion attempt then hard-stopped before candidate inspection.
+ADR-0029 and accepted work `M1/S4.5/PRE-B2` now govern the deterministic
+totality closure; WP1 is next. No new B2 is authorized. C2 has not run, Stage D
+has not started, and Slice 5 remains blocked.
 
 Waves A through D have completed investigations and accepted integrated
 dispositions. Gates A through D are met at their applicable M0 research,
@@ -63,6 +64,7 @@ prerequisites are accepted. A proposed plan may be drafted earlier as a
 reviewable Wave F output.
 
 M1 status clarification: protocol `/4` is the final authorized M1 evaluator
-revision. One fresh private oracle reviewer may resume B2 once. Another
-oracle-authority gap does not authorize `/5`, evaluator expansion, or product
-output as oracle truth; it must be recorded for owner milestone disposition.
+revision. Its authorized B2 resume stopped without an oracle or product
+verdict. ADR-0029 and `M1/S4.5/PRE-B2` supply the owner disposition; WP1 is
+next. No new B2 is authorized. Another authority gap does not authorize `/5`,
+evaluator expansion, or product output as oracle truth.

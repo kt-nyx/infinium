@@ -180,6 +180,34 @@ identity/hash pins, qualification evidence, and run records remain private.
   separate evaluator maintenance, scoring, and public closeout. A scorer never
   repairs or retries. `EVALUATOR_ERROR` blocks without a product verdict.
 
+## Contract totality before fixture qualification
+
+For bounded deterministic analyzers and evaluator projections, expected-result
+authority begins with a total evidence-state contract, not a growing list of
+fixture corrections. Following
+[ADR-0029](../architecture/decisions/ADR-0029-layered-evidence-and-partial-semantic-publication.md),
+each fact family declares its structural, observed, decoded, resolved, and
+semantic prerequisites and its exact value, null/unknown, omission/gap, or
+terminal disposition.
+
+Before a private authorability or scoring claim, a public mechanical gate must
+prove:
+
+- every admitted state/fact obligation has exactly one disposition;
+- rules do not overlap;
+- later-layer values cannot be emitted without their prerequisites;
+- coverage denominators/completion and gap projection agree with the fact
+  disposition; and
+- closed vocabularies, aggregation, ordering, and atomic rejection boundaries
+  are complete.
+
+Synthetic fixtures are generated from or explicitly mapped to this state
+model. They exercise positive, negative, partial, unsupported, and rejection
+branches and their interactions; they do not silently invent policy. A
+mechanical omission returns to the public contract/validator pass. A newly
+required semantic choice returns to the project owner. Candidate behavior and
+private expected output are never used to close either kind of gap.
+
 ## Taxonomy-dependent evaluation
 
 Evaluation selection and reporting must use the accepted
@@ -345,6 +373,10 @@ The accepted
 binds the exact EDID, FaceGen, availability, coverage, gap, and taxonomy
 semantics inside that unchanged partition. B2 was blocked until the public
 product/specification contract was implemented, requalified, and frozen. That
-prerequisite is now satisfied by conforming candidate
-`a98d648bd0adb2751ee0c09828e0227b1583950f`; one fresh private oracle reviewer
-may resume B2 once under the existing role and disclosure boundaries.
+prerequisite was satisfied by candidate
+`a98d648bd0adb2751ee0c09828e0227b1583950f`, but the authorized B2 resume then
+stopped without an oracle or product verdict. The first public contract-
+completion attempt also hard-stopped before candidate inspection. ADR-0029 and
+accepted work `M1/S4.5/PRE-B2` now require deterministic contract totality,
+model-derived exercises, and fresh product-blind review before any later role
+can be considered. No new B2 is currently authorized.

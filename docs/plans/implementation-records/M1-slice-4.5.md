@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Held-out evaluation v2 implementation record
 
-Status: Public evaluator `/4` and candidate frozen; public contract authorability hard-stopped; owner disposition required
+Status: Public evaluator `/4` and candidate frozen; first authorability plan hard-stopped; accepted `M1/S4.5/PRE-B2` active at WP1
 Opened: 2026-08-04
 Plan: `infinium.plan.m1.backend-semantic-proof/3`
 Execution plan: [M1 Slice 4.5](../slices/M1-slice-4.5-held-out-evaluation-v2.md)
@@ -395,7 +395,8 @@ The owner-supplied B2 input freeze
 `4f6b0fbacc2c7b991201870d9aeb6d5f5b67b0c3` remain clean: no input
 correction was required, and no oracle, comparison, corpus fingerprint,
 freeze, tag, candidate execution, or scoring occurred. A fresh private oracle
-reviewer may resume B2 once under `/4`. Stage C2 has not run, Stage D has not
+reviewer was permitted at that checkpoint to resume B2 once under `/4`. That
+authorization was subsequently consumed. Stage C2 has not run, Stage D has not
 started, and Slice 5 remains blocked.
 
 Protocol `/4` is the final M1 held-out evaluator revision. If the one resumed
@@ -519,8 +520,9 @@ calibration ran twice with PASS and byte-identical 15,220-byte evidence, SHA-256
 No evaluator-private repository or legacy archive content was accessed. Private
 B2, `adapt`, `score`, `score-corpus`, C2, Stage D, protocol `/5`, and live or
 billable calls were not run. The candidate was not amended and no push was
-performed. One fresh private oracle reviewer may now resume B2 once under frozen
-protocol `/4`; all later authority boundaries remain unchanged.
+performed. At that checkpoint, one fresh private oracle reviewer was permitted
+to resume B2 once under frozen protocol `/4`; that authorization was later
+consumed and all later authority boundaries remained unchanged.
 
 ## 2026-08-05 protocol `/4` B2 terminal gap and plan acceptance
 
@@ -635,3 +637,21 @@ Exact bounded closeout checks:
 - focused/full .NET tests, restore/build/format, dependency-manifest check, and
   calibration: not run after the plan-mandated hard stop; these are not test
   skips and no private skip was satisfied through private access.
+
+## 2026-08-05 layered-evidence decision and successor plan
+
+The project owner accepted ADR-0029's general rule: retain independently proven
+structural/observed facts when later decode, resolution, or semantics fail;
+omit the unavailable higher-layer claim; and report the exact coverage gap.
+For the blocked `RACE/DATA` branch, structural/common and generic technical
+taxonomy facts survive, unproven `DATA` count and `face_gen_head` do not,
+`race-records` is denominator-only for that contribution, and the exact
+unsupported-shape gap is required.
+
+The accepted
+[Pre-B2 evidence-contract totality plan](../slices/M1-slice-4.5-pre-B2-evidence-contract-totality.md)
+is now active as `M1/S4.5/PRE-B2`; WP1 is next. It replaces further
+fixture-by-fixture corrections with a machine-checkable state-to-fact model,
+generated public coverage, fresh product-blind review, and only then frozen
+candidate classification. No implementation package has run yet, and no
+private task or protocol change is authorized.

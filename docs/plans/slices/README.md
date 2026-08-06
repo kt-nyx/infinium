@@ -45,7 +45,14 @@ Current execution plans:
   finding another public lexical-authority gap. The public attempt made one
   permitted correction, but re-review found a second material cross-family
   authority gap. Frozen candidate/evaluator conformance was not inspected or
-  classified. Project-owner milestone-plan disposition is required.
+  classified. The project-owner milestone-plan disposition is supplied by the
+  next plan.
+- [M1 Slice 4.5 — Pre-B2 evidence-contract totality closure](M1-slice-4.5-pre-B2-evidence-contract-totality.md)
+  — Accepted 2026-08-05 as work ID `M1/S4.5/PRE-B2`. ADR-0029 resolves the
+  partial `RACE/DATA` disposition and requires a total state-to-fact model,
+  executable completeness gate, model-derived public exercises, fresh
+  product-blind review, and frozen candidate classification. WP1 is next. This
+  plan does not authorize private B2 or protocol `/5`.
 
 Completed slices retain their exact implementation and verification evidence
 under [`../implementation-records/`](../implementation-records/README.md).

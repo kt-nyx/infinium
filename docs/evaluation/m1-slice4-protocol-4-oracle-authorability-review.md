@@ -9,6 +9,12 @@ Evaluator: `3693d19563c636cd2879804633ca4ce52448d2c1`
 Protocol/projection: `infinium.evaluator-v2/4` /
 `infinium.evaluator-v2.slice4-semantic-projection/3.0.0`
 
+This remains the historical attestation for the failed attempt. ADR-0029 later
+resolved the disclosed partial `RACE/DATA` choice, and the accepted
+[Pre-B2 totality plan](../plans/slices/M1-slice-4.5-pre-B2-evidence-contract-totality.md)
+now owns comprehensive public closure. The failed review is not converted into
+a pass and does not authorize private work.
+
 ## Role and isolation
 
 One fresh delegated product-blind reviewer was created with no forked turns.

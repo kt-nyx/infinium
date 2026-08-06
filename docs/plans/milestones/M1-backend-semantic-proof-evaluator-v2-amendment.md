@@ -110,3 +110,13 @@ public-authority gap. Candidate conformance was not inspected or classified.
 The evaluator and candidate identities remain unchanged. Project-owner
 milestone-plan disposition, not private execution or protocol `/5`, is the
 next role. The Slice 4.5 and Slice 5 gates remain blocked.
+
+## Accepted layered-evidence totality disposition
+
+ADR-0029 and accepted work `M1/S4.5/PRE-B2` now supply that owner disposition.
+The public sequence is: total evidence-state/fact model, deterministic totality
+gate, model-derived synthetic exercises, fresh product-blind review, frozen
+candidate classification, and public governance closeout. The partial
+`RACE/DATA` semantic choice is closed; comprehensive contract proof remains
+pending at WP1. The existing Slice 4.5 held-out and Slice 5 gates are unchanged,
+and no B2, C2, Stage D, or `/5` work is authorized.

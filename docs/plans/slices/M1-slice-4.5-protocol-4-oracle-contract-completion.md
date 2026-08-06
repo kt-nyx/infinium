@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Protocol `/4` oracle-contract completion and held-out disposition
 
-Status: Hard-stopped after the permitted authorability correction pass; owner disposition required
+Status: Hard-stopped after the permitted authorability correction pass; owner disposition supplied by `M1/S4.5/PRE-B2`
 Owner: Project owner
 Accepted: 2026-08-05
 Parent plan: [M1 Slice 4.5 — Held-out evaluation v2](M1-slice-4.5-held-out-evaluation-v2.md)
@@ -615,3 +615,15 @@ the working diff. Stop on every plan stop condition. Finish with one focused
 local commit and report exact identities, files, checks, skips, review
 findings/corrections, private-access state, and next-role boundary.
 ```
+
+## 2026-08-05 owner successor disposition
+
+This plan remains an immutable hard-stopped attempt. The project owner accepted
+[ADR-0029](../../architecture/decisions/ADR-0029-layered-evidence-and-partial-semantic-publication.md),
+which resolves the partial `RACE/DATA` question through layered evidence, and
+accepted the successor
+[Pre-B2 evidence-contract totality plan](M1-slice-4.5-pre-B2-evidence-contract-totality.md).
+
+The successor is work ID `M1/S4.5/PRE-B2`; WP1 is next. It does not reopen this
+plan's consumed correction pass or authorize B2, private corpus work, C2, Stage
+D, Slice 5, or protocol `/5`.

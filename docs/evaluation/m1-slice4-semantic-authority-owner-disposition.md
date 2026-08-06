@@ -24,6 +24,36 @@ Stage C2 scoring.
 Emit its observed allowlisted-field count. Do not derive a taxonomy assignment
 or consequence from the value itself.
 
+### Layered partial-decode disposition
+
+[ADR-0029](../architecture/decisions/ADR-0029-layered-evidence-and-partial-semantic-publication.md)
+governs admitted records whose later decode or resolution is incomplete. Keep
+every independently proven lower-layer fact, omit only claims whose own
+prerequisites are unavailable, and expose the exact coverage gap. Null,
+unknown, absent, undecodable, and not applicable are distinct states.
+
+For an admitted `RACE` contribution with a structurally present but
+unsupported `DATA` shape:
+
+- emit its override-chain and common contribution facts;
+- emit the contribution taxonomy subject and its mandatory generic
+  `surface.plugin-data` and `delivery.plugin-container` assignments;
+- do not emit a `DATA` allowlisted-field count unless the exact occurrence
+  count was independently observed;
+- do not emit `face_gen_head` or a complete resolved race fact that depends on
+  decoding it;
+- include it in `race-records` denominator arithmetic but not the completed
+  count;
+- include the technical subject in taxonomy-subject arithmetic and count it
+  complete when its required generic assignments are emitted; and
+- emit/aggregate population `unsupported-shapes:race:data` with missing
+  capability `allowlisted-record-shape-semantics`.
+
+This is the authoritative disposition of the second public authorability gap.
+All other admissible state/fact combinations must be closed by the accepted
+[Pre-B2 evidence-contract totality plan](../plans/slices/M1-slice-4.5-pre-B2-evidence-contract-totality.md)
+before a new private task can be considered.
+
 ### FaceGen applicability
 
 Apply the ADR-0028 precedence exactly. Deleted and definite trait-templated
@@ -126,9 +156,10 @@ The required public realignment, independent review, requalification, and
 candidate freeze completed on 2026-08-05 at
 `a98d648bd0adb2751ee0c09828e0227b1583950f`. The exact public handoff is
 [the Slice 4.5 product candidate freeze](m1-slice4.5-public-product-candidate-freeze.json).
-One fresh isolated private B2 oracle reviewer may now receive the allowlisted
-public authority and already-frozen private inputs once. B2, C2, and Stage D
-remain unrun.
+At that checkpoint, one fresh isolated private B2 oracle reviewer was permitted
+to receive the allowlisted public authority and already-frozen private inputs
+once. That authorization was subsequently consumed by the terminal attempt
+described below; C2 and Stage D remain unrun.
 
 ## Superseding oracle-contract authorability status
 
@@ -138,5 +169,15 @@ used its one permitted correction pass and hard-stopped when independent
 re-review found a second material cross-family authority gap. This does not
 rewrite the six accepted semantic decisions above, but it means they are not
 yet a complete exact oracle-construction bundle. Candidate conformance was not
-inspected. Project-owner milestone-plan disposition is required, and no new
-B2, corpus, downstream stage, or protocol `/5` is authorized.
+inspected. Project-owner milestone-plan disposition was required, and no new
+B2, corpus, downstream stage, or protocol `/5` was authorized by that attempt.
+
+## Accepted successor disposition
+
+The project owner accepted ADR-0029 and the public-only
+[Pre-B2 evidence-contract totality plan](../plans/slices/M1-slice-4.5-pre-B2-evidence-contract-totality.md).
+That plan replaces fixture-led correction with a total state-to-fact model,
+mechanical completeness gate, model-derived synthetic coverage, fresh
+product-blind review, and only then frozen-candidate classification. Its first
+work package is `M1/S4.5/PRE-B2/WP1`. No private execution or protocol change
+is authorized by this disposition.

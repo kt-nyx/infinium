@@ -32,6 +32,13 @@ specified. Therefore this draft is not an accepted authority, and its rules
 must not be used to authorize a private oracle or candidate comparison. See
 the [public review attestation](../m1-slice4-protocol-4-oracle-authorability-review.md).
 
+ADR-0029 and the semantic owner disposition subsequently resolve that specific
+partial-decode choice. This draft nevertheless remains blocked historical
+evidence: the accepted
+[Pre-B2 totality plan](../../plans/slices/M1-slice-4.5-pre-B2-evidence-contract-totality.md)
+requires a successor evidence contract and machine-checkable state model to
+prove all fifteen families complete before any authority is accepted.
+
 The shortened taxonomy label `infinium.mod-impact-taxonomy/0.1.0` in the slice
 plan resolves here to the canonical accepted product identity above. The
 canonical identity from the accepted taxonomy and evaluation baseline controls

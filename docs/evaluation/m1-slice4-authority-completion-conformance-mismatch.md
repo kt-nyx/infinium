@@ -1,6 +1,6 @@
 # M1 Slice 4.5 authority-completion product-conformance mismatch
 
-Status: Owner disposition accepted; public realignment completed at `a98d648`; private B2 pending
+Status: Historical mismatch closed at `a98d648`; B2 later stopped; accepted `M1/S4.5/PRE-B2` active at WP1
 
 Recorded: 2026-08-05
 
@@ -144,6 +144,18 @@ requalified, and frozen on 2026-08-05 at candidate
 `a98d648bd0adb2751ee0c09828e0227b1583950f`. Exact artifact, dependency,
 verification, and boundary evidence is in the
 [public product candidate freeze](m1-slice4.5-public-product-candidate-freeze.json).
-This resolves the public product mismatch recorded here without changing
-evaluator `/4` or rewriting the historical stop. One fresh private B2 oracle
-reviewer may now resume once; B2, C2, and Stage D have not run.
+This resolved the public product mismatch recorded here without changing
+evaluator `/4` or rewriting the historical stop. At that checkpoint, one fresh
+private B2 oracle reviewer was permitted to resume once; C2 and Stage D had not
+run.
+
+## Later B2 and public-totality status
+
+That one B2 authorization was subsequently consumed and stopped without an
+oracle, candidate execution, scoring, or product verdict. The first public
+oracle-contract completion attempt then hard-stopped before candidate
+inspection on a partial-decode authority gap. ADR-0029 now resolves that
+semantic choice, and the accepted
+[Pre-B2 totality plan](../plans/slices/M1-slice-4.5-pre-B2-evidence-contract-totality.md)
+requires a comprehensive state-to-fact proof beginning at WP1. This historical
+mismatch record does not authorize a new B2 task.

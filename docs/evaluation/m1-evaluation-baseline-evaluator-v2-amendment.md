@@ -133,8 +133,9 @@ public realignment and exact candidate freeze at
 `a98d648bd0adb2751ee0c09828e0227b1583950f`. The machine-readable candidate
 handoff is
 [the public product candidate freeze](m1-slice4.5-public-product-candidate-freeze.json).
-One fresh private oracle reviewer may now resume B2 once. Oracle/corpus
-qualification, C2 scoring, and Stage D remain unrun and separately authorized.
+At that checkpoint, one fresh private oracle reviewer was permitted to resume
+B2 once. That authorization was subsequently consumed by the terminal attempt
+below. Oracle/corpus qualification, C2 scoring, and Stage D remain unrun.
 
 ## Superseding public-authority status
 
@@ -145,4 +146,15 @@ its one permitted correction pass left a second exact cross-family authority
 gap. Its [public attestation](m1-slice4-protocol-4-oracle-authorability-review.md)
 did not reach candidate conformance. Another B2 operation, corpus
 qualification, C2, Stage D, Slice 5, and protocol `/5` are not authorized by
-this status. Project-owner milestone-plan disposition is required.
+this status. Project-owner milestone-plan disposition was required and is
+supplied by the successor section below.
+
+## Accepted deterministic totality successor
+
+ADR-0029 resolves the disclosed partial-decode choice and requires lower-layer
+evidence retention with exact higher-layer coverage gaps. The accepted
+[Pre-B2 totality plan](../plans/slices/M1-slice-4.5-pre-B2-evidence-contract-totality.md)
+now owns public completion as work ID `M1/S4.5/PRE-B2`. Its total state/fact
+model and mechanical gate must pass before fixtures, a fresh product-blind
+review, or candidate conformance can support any new held-out-authorability
+claim. Private B2 remains separately unauthorized.
