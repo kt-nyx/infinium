@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Held-out evaluation v2
 
-Status: Accepted; B2 stopped on a public-authority gap; public contract-completion plan accepted
+Status: Accepted; public contract-completion authorability gate hard-stopped; owner disposition required
 Owner: Project owner
 Prepared: 2026-08-04
 Accepted: 2026-08-04
@@ -373,3 +373,22 @@ fifteen public fact-family construction rules, proving answer-free
 authorability, and auditing conformance. It does not authorize another B2
 attempt, private corpus work, C2, Stage D, protocol `/5`, or Slice 5. Slice 4.5
 and M1 remain active; Slice 5 remains blocked.
+
+## Public oracle-contract authorability hard stop
+
+The accepted public-only completion attempt delegated the required fresh,
+product-blind reviewer before any candidate inspection. The initial review
+found an ambiguous unsupported-member attachment and missing zero-denominator
+exercise. After the single permitted correction pass, the same reviewer
+confirmed that arithmetic but found a second material ambiguity: the exact
+override, allowlisted-field, taxonomy, and taxonomy-coverage projection of an
+admitted but undecodable record shape remained unspecified. The required
+Windows PowerShell validator also remained incompatible with .NET Framework.
+
+The [public review attestation](../../evaluation/m1-slice4-protocol-4-oracle-authorability-review.md)
+records the exact boundary. The authorability gate did not pass, so candidate
+source/tests were not inspected and conformance was not classified. Evaluator
+`3693d19563c636cd2879804633ca4ce52448d2c1` and candidate
+`a98d648bd0adb2751ee0c09828e0227b1583950f` remain unchanged. Project-owner
+milestone-plan disposition is next; no further correction, private work,
+protocol `/5`, or downstream stage is authorized.

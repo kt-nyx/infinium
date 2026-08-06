@@ -1,0 +1,58 @@
+{
+  "schema_id": "infinium.evaluation.protocol-4-oracle-authorability-coverage/v1",
+  "fixture_id": "P4-AUTHORABILITY-GENERIC-001",
+  "active_fact_families": {
+    "result": ["result_envelope"],
+    "plugins": ["full_plugin", "light_plugin", "ordered_masters"],
+    "override_chains": ["npc_override", "reference_override", "single_contribution_chain"],
+    "npc_contributions": ["singleton_null", "singleton_resolved", "singleton_unresolved", "repeatable_links", "aidt_presence"],
+    "race_contributions": ["face_gen_head_true", "unsupported_shape_excluded_from_decoded_facts"],
+    "placed_reference_contributions": ["placement_present", "placement_missing", "paired_xlkr", "null_owner"],
+    "allowlisted_fields": ["edid", "repeat_count", "same_field_distinct_contribution"],
+    "npcs": ["winner_projection", "deleted_precedence_contract", "template_unknown", "race_unknown"],
+    "races": ["winner_projection"],
+    "placed_references": ["winner_projection"],
+    "face_gen": ["multi_provider_chain", "single_provider_chain", "structural_unknown", "template_gap", "race_gap"],
+    "taxonomy": ["record_contribution", "ai_suffix", "appearance_suffix", "placed_reference_suffix", "face_gen_chain_suffix", "unsupported_record", "edid_negative"],
+    "coverage": ["all_ten_rows", "zero_denominator_variant", "completed", "completed_with_gaps", "unsupported"],
+    "gaps": ["all_eight_pairs", "aggregation"],
+    "result_gaps": ["snapshot_gap_mirror"]
+  },
+  "lexical_rules": {
+    "form_key": ["full_plugin", "light_plugin", "leading_zeroes"],
+    "uri_segments": ["provider_ids_with_slash", "semantic_identity_with_pipe_equals_colon"],
+    "ordering": ["manifest_sequence", "record_map", "semantic_set", "final_fact_sort"],
+    "ordinals": ["masters", "pkid", "pnam", "xlkr_components", "provider_chains"],
+    "case": ["uppercase_signatures", "lowercase_plugin_provider", "mixed_slash_face_gen_path"],
+    "numbers": ["integer_token", "decimal", "exponent", "negative_zero"],
+    "typed_null_missing": ["null_singleton", "null_link_target", "missing_placement", "empty_sequence", "taxonomy_null_mutation"],
+    "link_states": ["null", "resolved", "unresolved", "invalid_link_state"],
+    "link_components": ["linked-reference", "keyword", "invalid_xlkr_component"],
+    "face_gen_vocabulary": ["applicable", "unknown_template_traits_decision", "unknown_race", "structural_unknown"],
+    "coverage_vocabulary": ["completed", "completed_with_gaps", "unsupported", "zero_denominator"],
+    "taxonomy_vocabulary": ["assigned", "observed", "established", "closed_axes_facets"],
+    "gap_vocabulary": ["unsupported_record", "unsupported_field", "unsupported_shape", "localized", "archive", "discovery", "template", "race"]
+  },
+  "mutations": [
+    "duplicate_fact_id",
+    "duplicate_taxonomy_tuple",
+    "duplicate_provider_id",
+    "invalid_link_state",
+    "invalid_xlkr_component",
+    "invalid_face_gen_transport",
+    "nonfinite_placement",
+    "missing_coverage_row",
+    "extra_provider_topology_subject",
+    "edid_area_leak"
+  ],
+  "answer_fields_forbidden": [
+    "expected_facts",
+    "expected_output",
+    "oracle_path",
+    "candidate_output",
+    "product_contribution_id",
+    "product_participant_id",
+    "private_path",
+    "private_member_id"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "schema_id": "infinium.evaluation.protocol-4-oracle-authorability-byte-ledger/v1",
+  "fixture_id": "P4-AUTHORABILITY-ZERO-001",
+  "fixture_version": "1.0.0",
+  "encoding": "UTF-8 without BOM",
+  "result_envelope": {
+    "snapshot_publication": "published",
+    "failure_count": 0
+  },
+  "record_contributions": [],
+  "unsupported_semantic_events": [],
+  "localized_values": {"encountered": 0, "resolved": 0},
+  "automatic_environment_discovery": {"requested": false, "completed": false},
+  "archive_availability": {"decisions_required": 0, "resolved": 0},
+  "face_gen_absence_authority": "exact",
+  "mutations": []
+}

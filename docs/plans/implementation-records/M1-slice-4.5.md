@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Held-out evaluation v2 implementation record
 
-Status: Public evaluator `/4` and candidate frozen; B2 stopped on a public-authority gap; public contract completion pending
+Status: Public evaluator `/4` and candidate frozen; public contract authorability hard-stopped; owner disposition required
 Opened: 2026-08-04
 Plan: `infinium.plan.m1.backend-semantic-proof/3`
 Execution plan: [M1 Slice 4.5](../slices/M1-slice-4.5-held-out-evaluation-v2.md)
@@ -540,3 +540,98 @@ product-blind answer-free authorability review before candidate inspection,
 and then classifies public conformance. It does not authorize private access,
 another B2 attempt, corpus qualification, C2, Stage D, protocol `/5`, product
 or evaluator changes, or Slice 5.
+
+## 2026-08-05 public protocol `/4` authorability hard stop
+
+The accepted public-only completion plan began from clean commit
+`72ff330c5f8b9607c640edafd7cb0f9a2c36de7e` on branch
+`codex/m1-slice-4.5-semantic-disposition`. Preflight confirmed evaluator
+`3693d19563c636cd2879804633ca4ce52448d2c1`, candidate
+`a98d648bd0adb2751ee0c09828e0227b1583950f`, candidate closeout `2fc724a`,
+and status closeout `76136c1` as ancestors and confirmed both freeze records
+unchanged.
+
+The primary drafted all fifteen fact-family rules and a generic answer-free
+package, then delegated one fresh no-fork product-blind reviewer before any
+candidate inspection. The initial review found ambiguous unsupported-member
+coverage attachment, no zero-denominator exercise, culture-sensitive ordering,
+Windows PowerShell JSON incompatibility, and only five mutation self-checks.
+The one permitted correction pass made unsupported members explicit, reset the
+main fixture to `1.1.0`, added a 42-fact zero-row variant, adopted ordinal
+sorting, and self-exercised all ten mutations.
+
+The same reviewer independently rebuilt both exercises. It confirmed exact
+`npc-records` `5/5/completed_with_gaps`, `race-records`
+`2/1/completed_with_gaps`, and ten `0/0/completed` zero rows. Its PowerShell 7
+diagnostic passed with 1,073 main facts across all fifteen families, 42 zero
+facts, zero duplicate IDs, ten coverage populations, and all ten mutations
+rejected. The required Windows PowerShell command still failed before summary
+publication because `String.Contains(string, StringComparison)` is unavailable
+on .NET Framework.
+
+Re-review then found the second material gap: public authority does not choose
+whether the admitted undecodable RACE shape member adds an override chain,
+allowlisted `DATA` facts/count, record-contribution taxonomy core, and a
+twentieth taxonomy subject, or remains coverage/gap-only. Under the accepted
+plan this is a hard stop after the consumed correction pass. The
+[public review attestation](../../evaluation/m1-slice4-protocol-4-oracle-authorability-review.md)
+records the full evidence and isolation boundary.
+
+The authorability gate did not pass. Candidate source/tests were not inspected,
+and documentation-only conformance, product mismatch, and unresolved
+evaluator `/4` gap were therefore not classified. No focused/full product
+tests or calibration were run after the stop because they are downstream of
+the unopened candidate-conformance gate. Public JSON parsing, PowerShell syntax,
+diff whitespace, link, identity, changed-path, and protected-path checks are
+recorded in the task commit.
+
+No evaluator-private or legacy-archive path was accessed. No candidate,
+private B2, adaptation, comparison, scoring, C2, Stage D, Slice 5, billable
+call, protocol `/5`, candidate/evaluator/freeze change, or push occurred. The
+next role is the project owner for a new milestone-plan disposition; no further
+correction, reviewer, private successor, or downstream stage is authorized by
+this record.
+
+Changed files in this public hard-stop record:
+
+- `.gitignore`;
+- `docs/evaluation/fixtures/protocol-4-oracle-authorability/README.md`;
+- `docs/evaluation/fixtures/protocol-4-oracle-authorability/coverage-ledger.json`;
+- `docs/evaluation/fixtures/protocol-4-oracle-authorability/execution-manifest.json`;
+- `docs/evaluation/fixtures/protocol-4-oracle-authorability/synthetic-byte-input.json`;
+- `docs/evaluation/fixtures/protocol-4-oracle-authorability/zero-denominator-byte-input.json`;
+- `docs/evaluation/fixtures/protocol-4-oracle-authorability/zero-denominator-execution-manifest.json`;
+- `docs/evaluation/m1-evaluation-baseline-evaluator-v2-amendment.md`;
+- `docs/evaluation/m1-slice4-heldout-oracle-authority-matrix.md`;
+- `docs/evaluation/m1-slice4-heldout-scope-final-amendment.md`;
+- `docs/evaluation/m1-slice4-protocol-4-oracle-authorability-review.md`;
+- `docs/evaluation/m1-slice4-semantic-authority-owner-disposition.md`;
+- `docs/evaluation/specifications/m1-slice4-protocol-4-oracle-construction.md`;
+- `docs/plans/README.md`;
+- `docs/plans/implementation-records/M1-slice-4.5.md`;
+- `docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md`;
+- `docs/plans/slices/M1-slice-4.5-held-out-evaluation-v2.md`;
+- `docs/plans/slices/M1-slice-4.5-protocol-4-oracle-contract-completion.md`;
+- `docs/plans/slices/README.md`; and
+- `eng/validate-m1-slice4-protocol4-authorability.ps1`.
+
+Exact bounded closeout checks:
+
+- package JSON parse: passed, five files;
+- PowerShell parser: passed;
+- `pwsh` authorability diagnostic: passed, 1,073 main facts, all fifteen
+  families, 42 zero facts, ten fixed populations, zero duplicate IDs, and all
+  ten mutations rejected;
+- required Windows PowerShell authorability command: failed before summary on
+  unavailable two-argument `String.Contains`; recorded material validator
+  finding, not waived;
+- relative Markdown links: passed for all 12 changed documents;
+- ancestor identity audit: passed for evaluator, candidate, both closeouts,
+  and accepted plan commit;
+- changed/protected-path audit: passed;
+- answer-free forbidden-property, private-locator, protocol `/5` artifact, and
+  product/evaluator/test-path scans: passed;
+- `git diff --check`: passed; and
+- focused/full .NET tests, restore/build/format, dependency-manifest check, and
+  calibration: not run after the plan-mandated hard stop; these are not test
+  skips and no private skip was satisfied through private access.

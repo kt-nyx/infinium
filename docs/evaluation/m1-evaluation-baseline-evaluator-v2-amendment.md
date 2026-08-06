@@ -135,3 +135,14 @@ handoff is
 [the public product candidate freeze](m1-slice4.5-public-product-candidate-freeze.json).
 One fresh private oracle reviewer may now resume B2 once. Oracle/corpus
 qualification, C2 scoring, and Stage D remain unrun and separately authorized.
+
+## Superseding public-authority status
+
+The single authorized B2 resume subsequently ran and stopped without an
+oracle, candidate execution, comparison, scoring, or product verdict. The
+owner-authorized public contract-completion attempt then hard-stopped after
+its one permitted correction pass left a second exact cross-family authority
+gap. Its [public attestation](m1-slice4-protocol-4-oracle-authorability-review.md)
+did not reach candidate conformance. Another B2 operation, corpus
+qualification, C2, Stage D, Slice 5, and protocol `/5` are not authorized by
+this status. Project-owner milestone-plan disposition is required.

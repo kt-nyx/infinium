@@ -101,3 +101,12 @@ the next work. Another B2 task, corpus qualification, C2, Stage D, protocol
 `/5`, and Slice 5 are not authorized by this disposition. The existing M1 gate
 is unchanged: Slice 5 remains blocked until Slice 4.5 obtains one valid held-out
 `PASS` for an exact qualified tuple.
+
+## Public oracle-contract authorability stop
+
+The accepted public completion attempt later exercised its single correction
+pass and then hard-stopped when independent re-review found a second material
+public-authority gap. Candidate conformance was not inspected or classified.
+The evaluator and candidate identities remain unchanged. Project-owner
+milestone-plan disposition, not private execution or protocol `/5`, is the
+next role. The Slice 4.5 and Slice 5 gates remain blocked.

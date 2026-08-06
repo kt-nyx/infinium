@@ -27,8 +27,10 @@ Current execution plans:
   and terminated on another public lexical-authority gap without an oracle,
   candidate execution, scoring, or product verdict. Public product realignment
   and candidate freeze remain complete at
-  `a98d648bd0adb2751ee0c09828e0227b1583950f`. Public oracle-contract completion
-  is now the next work; another B2 task is not authorized by the current state.
+  `a98d648bd0adb2751ee0c09828e0227b1583950f`. The public oracle-contract
+  authorability attempt stopped after its one correction pass found a second
+  material authority gap. Candidate conformance was not inspected. Project-
+  owner disposition is next; another correction or B2 task is not authorized.
   C2 has not run, Stage D has not started, and Slice 5 remains blocked.
 - [M1 Slice 4.5 — Public Bethesda semantic realignment and candidate freeze](M1-slice-4.5-public-product-realignment.md)
   — Accepted and completed 2026-08-05 at `a98d648`. This bounded public
@@ -37,11 +39,13 @@ Current execution plans:
   loose assets unknown under current structural assurance, and defers
   exhaustive byte-verified loose-file absence authority to M3 planning.
 - [M1 Slice 4.5 — Protocol `/4` oracle-contract completion and held-out disposition](M1-slice-4.5-protocol-4-oracle-contract-completion.md)
-  — Accepted 2026-08-05; public implementation pending. The single authorized
+  — Accepted 2026-08-05; implementation hard-stopped at the product-blind
+  authorability gate. The single authorized
   private B2 resume terminated without an oracle or product verdict after
-  finding another public lexical-authority gap. This plan completes all fifteen
-  public fact-family construction rules and audits the frozen candidate and
-  evaluator without authorizing private access or another B2 attempt.
+  finding another public lexical-authority gap. The public attempt made one
+  permitted correction, but re-review found a second material cross-family
+  authority gap. Frozen candidate/evaluator conformance was not inspected or
+  classified. Project-owner milestone-plan disposition is required.
 
 Completed slices retain their exact implementation and verification evidence
 under [`../implementation-records/`](../implementation-records/README.md).

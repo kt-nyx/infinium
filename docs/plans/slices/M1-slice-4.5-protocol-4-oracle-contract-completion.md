@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Protocol `/4` oracle-contract completion and held-out disposition
 
-Status: Accepted; public implementation pending
+Status: Hard-stopped after the permitted authorability correction pass; owner disposition required
 Owner: Project owner
 Accepted: 2026-08-05
 Parent plan: [M1 Slice 4.5 — Held-out evaluation v2](M1-slice-4.5-held-out-evaluation-v2.md)
@@ -560,6 +560,30 @@ replacement coverage must be qualified before any later held-out claim.
 Only a separately qualified and frozen private corpus can unblock C2. Only one
 valid held-out `PASS` for the exact candidate/evaluator/corpus tuple can
 complete Slice 4.5 and unblock Slice 5.
+
+## 2026-08-05 implementation disposition
+
+The public attempt reached the required fresh product-blind authorability
+review without inspecting candidate source or tests. The initial review found
+an ambiguous unsupported-member attachment, a missing zero-denominator
+exercise, and validator defects. The primary made the single focused
+correction pass permitted by this plan. Re-review closed the original coverage
+arithmetic and zero-row omission but found a second material authority gap in
+the cross-family projection of an admitted undecodable record shape. It also
+found that the required Windows PowerShell validator still did not complete.
+
+The plan's hard stop therefore applies. The completed review evidence is
+recorded in the
+[public authorability attestation](../../evaluation/m1-slice4-protocol-4-oracle-authorability-review.md).
+The construction document remains a blocked draft, not accepted oracle
+authority. Candidate source/tests were not inspected, so none of the three
+frozen-conformance classifications was reached. This is not a product verdict
+or an evaluator `/4` representation-gap finding.
+
+Evaluator `/4` and candidate `a98d648` remain frozen and unchanged. The next
+role is the project owner for a new milestone-plan disposition. This record
+does not authorize another correction or reviewer, private B2 successor,
+corpus qualification, C2, Stage D, Slice 5, or protocol `/5`.
 
 ## Fresh-agent implementation handoff
 

@@ -1,11 +1,20 @@
 # M1 Slice 4 final held-out oracle-authority matrix
 
-Status: **normative for evaluator v2 protocol `/4` and projection `3.0.0`**.
+Status: **accepted semantic matrix, but incomplete as an exact oracle-construction contract; owner disposition required**.
 
-This matrix is the complete bounded projection contract for the final Slice 4
-successor. A held-out author may derive every included value from retained
-input bytes, the answer-free execution manifest, and the public contracts
-named here. Product-generated identifiers are never oracle authority.
+This matrix records the bounded semantic inclusion/exclusion contract for the
+final Slice 4 successor. It does not yet form a complete exact lexical
+construction contract. Product-generated identifiers are never oracle
+authority.
+
+The attempted exact lexical completion did not pass independent authorability
+re-review. In particular, this matrix does not define whether an admitted but
+undecodable record shape creates structural override, allowlisted-field, and
+technical taxonomy facts. The
+[public review attestation](m1-slice4-protocol-4-oracle-authorability-review.md)
+is the superseding completeness status. Until the owner resolves that gap,
+this matrix and the blocked construction draft must not authorize an oracle or
+private comparison.
 
 <!-- active-fact-families: result,plugins,override_chains,npc_contributions,race_contributions,placed_reference_contributions,allowlisted_fields,npcs,races,placed_references,face_gen,taxonomy,coverage,gaps,result_gaps -->
 

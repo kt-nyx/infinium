@@ -133,3 +133,13 @@ disposition.
 
 This amendment does not waive the held-out gate, unblock Slice 5, authorize
 Stage C2, or start Stage D.
+
+## Superseding final-revision disposition
+
+The authorized `/4` B2 resume ran once and stopped without an oracle or product
+verdict. The subsequent public contract-completion attempt used its single
+correction pass, but independent re-review found a second material authority
+gap before candidate inspection. The final-revision hard stop therefore
+remains active. Project-owner milestone-plan disposition is required; no
+private successor, corpus qualification, C2, Stage D, Slice 5, or `/5` is
+authorized.

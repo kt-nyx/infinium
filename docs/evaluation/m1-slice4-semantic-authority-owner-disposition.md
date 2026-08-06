@@ -129,3 +129,14 @@ candidate freeze completed on 2026-08-05 at
 One fresh isolated private B2 oracle reviewer may now receive the allowlisted
 public authority and already-frozen private inputs once. B2, C2, and Stage D
 remain unrun.
+
+## Superseding oracle-contract authorability status
+
+The single authorized B2 resume subsequently ran and stopped without an
+oracle or product verdict. The public-only contract-completion attempt then
+used its one permitted correction pass and hard-stopped when independent
+re-review found a second material cross-family authority gap. This does not
+rewrite the six accepted semantic decisions above, but it means they are not
+yet a complete exact oracle-construction bundle. Candidate conformance was not
+inspected. Project-owner milestone-plan disposition is required, and no new
+B2, corpus, downstream stage, or protocol `/5` is authorized.

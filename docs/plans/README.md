@@ -26,8 +26,12 @@ candidate execution, scoring, or product verdict. The accepted public
 realignment and candidate freeze remain complete at
 `a98d648bd0adb2751ee0c09828e0227b1583950f`. The accepted
 [protocol `/4` oracle-contract completion plan](slices/M1-slice-4.5-protocol-4-oracle-contract-completion.md)
-is the next public work; it does not authorize another B2 attempt. C2 has not
-run, Stage D has not started, Slice 5 remains blocked, and M1 remains active.
+ran its public-only authorability attempt and stopped after the permitted
+correction pass exposed a second material public-authority gap. Candidate
+conformance was not inspected or classified. Project-owner milestone-plan
+disposition is now required; another correction, B2 attempt, corpus work, C2,
+Stage D, protocol `/5`, and Slice 5 are not authorized. M1 remains active and
+Slice 5 remains blocked.
 The completed
 [public Bethesda semantic realignment plan](slices/M1-slice-4.5-public-product-realignment.md)
 records that bounded implementation, review, qualification, and candidate-
