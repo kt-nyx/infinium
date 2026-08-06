@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Held-out evaluation v2 implementation record
 
-Status: Public evaluator `/4` and candidate frozen; Pre-B2 WP1-WP3 complete; WP4 next; evidence contract and model remain proposed pending WP4
+Status: Public evaluator `/4` and candidate frozen; Pre-B2 WP1-WP4 complete; evidence contract/model accepted; WP5 next
 Opened: 2026-08-04
 Plan: `infinium.plan.m1.backend-semantic-proof/3`
 Execution plan: [M1 Slice 4.5](../slices/M1-slice-4.5-held-out-evaluation-v2.md)
@@ -904,3 +904,64 @@ packages, B2, C2, Stage D, adaptation, comparison, scoring, protocol `/5`, and
 live or billable calls were not started. The evidence contract and model remain
 proposed, and nothing was pushed. WP4 is next only after this correction
 commit.
+
+## 2026-08-06 Pre-B2 WP4 independent acceptance closeout
+
+`M1/S4.5/PRE-B2/WP4` ran as one genuinely fresh product-blind reviewer from a
+new clean detached worktree at exact input commit
+`1d7e372f4c8feb9cccffbb4304910fc289e14b76`. Preflight confirmed no evaluator
+`bin/`, evaluator `obj/`, or existing `work/`. The positive allowlist contained
+only the named public authorities, validation implementation, answer-free
+fixture material, and frozen evaluator `/4` mechanics. No sub-agent, prior
+review conclusion, retained expected output, product/candidate source or
+output, private fixture, legacy archive, build output, scoring, or live call
+entered the review.
+
+The independent judgment was clean. Under both Windows PowerShell
+`5.1.26100.8875` and PowerShell `7.6.3`, WP2 classified all 23,660 states as
+110 admitted, 6,180 explicitly excluded, and 17,370 invalid/terminal with zero
+uncovered or overlap, and rejected all 24 mutations. WP3 selected 515 cases,
+110 matched negatives, 236 constraint mappings, and 1,713 pairwise mappings
+with zero uncovered obligations, and rejected all 33 mutations. The two
+pre-acceptance artifacts were byte-identical at SHA-256
+`4c2c5c27d37a90d5c178d5740c07de4ef2cd98730dfabaf7540cd505f9e16989`.
+
+Independent schema validation accepted the genuine model and generated
+artifact. A separately authored weakened forbidden-property registry plus
+`expected_facts` leak was rejected, as was simultaneous corruption of the
+constructor, state-class, disposition, lexical, gap, coverage, transition,
+and higher-order partial-RACE surfaces. The reviewer independently constructed
+fresh ignored expected outputs without consulting a prior answer: 1,124 facts
+for the generic fixture and 42 for the zero-denominator fixture. Both
+authorability runs had identical summaries, all 15 families, zero duplicate
+fact IDs, all ten fixed coverage rows, ordinal normalization, and all ten
+retained mutations rejected. Their SHA-256 values were respectively
+`6688e0d149b6f04c805893723d8e7295563577562df9a9d52a40c8eef7d3d306`
+and
+`bfe456c8fd0a04d284d1f3ec599ff5115d42d48c31c18094cdbbcf677cb37e74`.
+
+The full partial `RACE/DATA` path passed independently: common contribution
+facts survive; `DATA` count, `face_gen_head`, and resolved-RACE facts are
+omitted; race coverage is denominator +1/completion +0; taxonomy coverage is
+denominator +1/completion +1; only the two required generic technical
+assignments publish; and one owning `unsupported-shapes:race:data` /
+`allowlisted-record-shape-semantics` gap aggregates one affected member at
+scope `snapshot-and-result`. Frozen evaluator `/4` represents every required
+fact and disposition exactly.
+
+After the clean judgment, WP4 changed only status/provenance machinery from
+proposed to accepted, regenerated the tracked answer-free coverage artifact,
+and reran all affected WP2/WP3 suites under both hosts. The accepted model and
+coverage schemas passed, both runtime summaries were identical, all 24 and 33
+mutations remained rejected, and the two accepted artifacts were
+byte-identical at SHA-256
+`85e6c54214dc1a73205568d6461d0c0c45d0742cd6de42b6feca87c8b9fe8714`.
+After normalizing only the model status and model hash, every generated state,
+case, mapping, outcome, and obligation was unchanged. Accepted model SHA-256
+is `09ae312824aa0c859b396fd18fef69b14905c2c6d6f901ce598d3c5ab5970bf5`.
+
+The exact public evidence is
+[the WP4 attestation](../../evaluation/m1-slice4-protocol-4-totality-review-attestation.md).
+WP1-WP4 are complete, the evidence contract/model are accepted, and
+`M1/S4.5/PRE-B2/WP5` is next. WP5, private work, B2, C2, Stage D, scoring,
+protocol `/5`, candidate access, push, amend, and squash did not occur.

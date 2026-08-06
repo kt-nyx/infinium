@@ -60,7 +60,7 @@
       "required": ["model_id", "model_version", "model_status", "sha256", "protocol_id", "projection_version"],
       "properties": {
         "model_id": { "const": "infinium.m1-slice4.protocol-4-evidence-contract" },
-        "model_version": { "const": "1.2.0" }, "model_status": { "const": "proposed" },
+        "model_version": { "const": "1.2.0" }, "model_status": { "const": "accepted" },
         "sha256": { "$ref": "#/$defs/sha256" }, "protocol_id": { "const": "infinium.evaluator-v2/4" },
         "projection_version": { "const": "3.0.0" }
       }

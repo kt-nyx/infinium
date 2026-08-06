@@ -1,10 +1,12 @@
 # M1 Slice 4 protocol `/4` evidence-state and fact-dependency contract
 
-Status: proposed
+Status: accepted
 
 Work ID: `M1/S4.5/PRE-B2/WP1`
 
 Proposed: 2026-08-05
+
+Accepted by `M1/S4.5/PRE-B2/WP4`: 2026-08-06
 
 Protocol: `infinium.evaluator-v2/4`
 
@@ -13,11 +15,11 @@ Frozen evaluator: `3693d19563c636cd2879804633ca4ce52448d2c1`
 
 ## Purpose and authority
 
-This document proposes the public evidence-state and fact-dependency contract
+This document defines the accepted public evidence-state and fact-dependency contract
 required by the accepted
 [Pre-B2 totality plan](../../plans/slices/M1-slice-4.5-pre-B2-evidence-contract-totality.md).
 It covers all fifteen active protocol `/4` fact families. Its normative
-machine-readable companion is the proposed
+machine-readable companion is the accepted
 [totality model](m1-slice4-protocol-4-totality-model.json), validated by the
 [model schema](m1-slice4-protocol-4-totality-model.schema.json).
 
@@ -46,10 +48,12 @@ supply product semantics. The historical
 inventory input only where it agrees with accepted authority; it remains a
 blocked draft.
 
-This package is proposed, not accepted. WP2 implements the executable
-totality proof, WP3 must derive exercises from the model, and WP4 is
-responsible for independent product-blind acceptance. This document does not
-authorize private work, candidate inspection, scoring, or protocol `/5`.
+This package was independently accepted by
+[`M1/S4.5/PRE-B2/WP4`](../m1-slice4-protocol-4-totality-review-attestation.md)
+after the WP2 executable totality proof, WP3 model-derived exercises, and a
+fresh product-blind authorability review all passed. The acceptance authorizes
+WP5 as the next package; this document does not itself authorize private work,
+candidate inspection, scoring, or protocol `/5`.
 
 ## Governing rules
 
@@ -640,12 +644,12 @@ coverage effect, gap effect, and atomic boundary. Each family explicitly
 partitions common state classes and prohibits an unstated default.
 
 WP2 mechanically proves the Cartesian state partition, publication
-exclusivity, dependency, coverage, and gap consistency for this proposed
+exclusivity, dependency, coverage, and gap consistency for this accepted
 contract under both supported PowerShell hosts. Its 24 negative self-tests
 include omitted admitted, invalid, and excluded regions; overlaps between
 each disposition class; catch-all exclusion; invalid atomic-boundary and
 authority references; publication-rule and dependency defects; coverage and
 gap defects; and four independent partial `RACE/DATA` mutations. Generated
 fixtures and model-derived state exercises belong to WP3, and independent
-acceptance belongs to WP4. Candidate conformance belongs to WP5. No later
-package is started or implied by this proposal.
+acceptance belongs to WP4. Both are complete. Candidate conformance belongs
+to WP5, which is next but was not started by this acceptance.

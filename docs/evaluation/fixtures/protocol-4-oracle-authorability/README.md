@@ -1,6 +1,6 @@
 # Protocol `/4` answer-free oracle-authorability rehearsal
 
-Status: Blocked public rehearsal input; not accepted oracle authority
+Status: Accepted public authorability rehearsal input
 
 Purpose: prove that a fresh product-blind reviewer can construct every active
 protocol `/4` fact from public authority and generic answer-free inputs.
@@ -19,7 +19,7 @@ protocol `/4` fact from public authority and generic answer-free inputs.
   exercise without embedding expected facts.
 - `generated-state-coverage.schema.json` defines the tracked, answer-free WP3
   coverage artifact.
-- `generated-state-coverage.json` is deterministically derived from proposed
+- `generated-state-coverage.json` is deterministically derived from accepted
   totality model `1.2.0`. It contains compact state exercises and obligation
   mappings, never expected facts or product output.
 
@@ -37,10 +37,11 @@ The package intentionally contains no expected semantic output, fact count,
 fact hash, product ID, product output, real-mod name, private identity, or
 answer-bearing oracle reference.
 
-The independent re-review stopped on a second material public-authority gap.
-The package is retained as generic evidence for owner disposition, not as a
-passing rehearsal. See the
-[public review attestation](../../m1-slice4-protocol-4-oracle-authorability-review.md).
+The fresh product-blind WP4 review passed totality, schema, adversarial,
+cross-runtime, and independent authorability checks. The package remains
+answer-free public evidence; the independently authored expected outputs stay
+ignored. See the
+[WP4 totality review attestation](../../m1-slice4-protocol-4-totality-review-attestation.md).
 
 ## Independent exercise
 

@@ -28,7 +28,7 @@
     "schema_id": { "const": "infinium.m1-slice4.protocol-4-totality-model/v1" },
     "model_id": { "const": "infinium.m1-slice4.protocol-4-evidence-contract" },
     "version": { "const": "1.2.0" },
-    "status": { "const": "proposed" },
+    "status": { "const": "accepted" },
     "work_id": { "const": "M1/S4.5/PRE-B2/WP1" },
     "protocol": { "$ref": "#/$defs/protocol" },
     "authorities": {

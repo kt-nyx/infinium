@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Pre-B2 evidence-contract totality closure
 
-Status: Accepted; WP1-WP3 complete; `M1/S4.5/PRE-B2/WP4` is next; the evidence contract and model remain proposed pending WP4
+Status: Accepted; WP1-WP4 complete; evidence contract/model accepted; `M1/S4.5/PRE-B2/WP5` is next
 Owner: Project owner
 Accepted: 2026-08-05
 Work ID: `M1/S4.5/PRE-B2`
@@ -286,6 +286,14 @@ validator passed on both hosts with 1,073 facts, zero duplicate fact IDs, all
 
 Work ID: `M1/S4.5/PRE-B2/WP4`
 Depends on: `M1/S4.5/PRE-B2/WP3`
+
+Package status: Complete. A single fresh product-blind reviewer accepted the
+contract/model after exact public-authority review, cross-runtime WP2/WP3
+validation, independent schema/adversarial checks, and a fresh 1,124-fact plus
+42-fact zero-denominator authorability rehearsal. The immutable public record
+is the
+[WP4 totality review attestation](../../evaluation/m1-slice4-protocol-4-totality-review-attestation.md).
+WP5 is next and was not started.
 
 Objective: obtain an independent public authorability and totality judgment
 without candidate knowledge.

@@ -2,7 +2,7 @@
   "schema_id": "infinium.m1-slice4.protocol-4-totality-model/v1",
   "model_id": "infinium.m1-slice4.protocol-4-evidence-contract",
   "version": "1.2.0",
-  "status": "proposed",
+  "status": "accepted",
   "work_id": "M1/S4.5/PRE-B2/WP1",
   "protocol": {
     "evaluator_commit": "3693d19563c636cd2879804633ca4ce52448d2c1",

@@ -789,7 +789,7 @@ function Invoke-ArtifactValidation([object]$Model, [object]$Truth, [object]$Sche
     }
     if ([string]$Artifact.schema_id -cne 'infinium.evaluation.protocol-4-model-derived-state-coverage/v1') { Add-Issue $issues 'artifact schema identity drifted' }
     if ([string]$Artifact.source_model.sha256 -cne $ModelHash) { Add-Issue $issues 'source model hash drifted' }
-    if ([string]$Artifact.source_model.model_status -cne 'proposed') { Add-Issue $issues 'source model must remain proposed until WP4' }
+    if ([string]$Artifact.source_model.model_status -cne 'accepted') { Add-Issue $issues 'source model must be accepted after WP4' }
     if ([string]$Artifact.source_model.protocol_id -cne 'infinium.evaluator-v2/4') { Add-Issue $issues 'protocol identity drifted' }
 
     $declaredForbidden = @($Artifact.answer_isolation.forbidden_properties | ForEach-Object { [string]$_ })
@@ -1101,11 +1101,11 @@ function Invoke-MutationSelfTests([object]$Model, [object]$Truth, [object]$Schem
     return $results.ToArray()
 }
 
-$model = Read-Json $ModelPath 'proposed totality model'
+$model = Read-Json $ModelPath 'accepted totality model'
 $schema = Read-Json $SchemaPath 'generated coverage schema'
 $modelHash = (Get-FileHash -LiteralPath $ModelPath -Algorithm SHA256).Hash.ToLowerInvariant()
-if ([string]$model.status -cne 'proposed' -or [string]$model.version -cne '1.2.0') {
-    throw 'Protocol /4 WP3 state coverage failed: source model must be proposed version 1.2.0'
+if ([string]$model.status -cne 'accepted' -or [string]$model.version -cne '1.2.0') {
+    throw 'Protocol /4 WP3 state coverage failed: source model must be accepted version 1.2.0'
 }
 $truth = New-TruthModel $model
 $expectedArtifact = New-CoverageArtifact $model $truth $modelHash

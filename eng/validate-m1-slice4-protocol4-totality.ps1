@@ -147,7 +147,7 @@ function Invoke-ModelValidation([object]$Model, [object]$Schema) {
             Add-Issue $issues "model version does not equal schema const '$($Schema.properties.version.const)'"
         }
     }
-    if ([string]$Model.status -cne 'proposed') { Add-Issue $issues 'model status must remain proposed until WP4' }
+    if ([string]$Model.status -cne 'accepted') { Add-Issue $issues 'model status must be accepted after WP4' }
     if ([string]$Model.protocol.protocol_id -cne 'infinium.evaluator-v2/4') { Add-Issue $issues 'protocol identity is not /4' }
     if ([string]$Model.protocol.evaluator_commit -cne '3693d19563c636cd2879804633ca4ce52448d2c1') { Add-Issue $issues 'evaluator commit drifted' }
     if ([string]$Model.protocol.candidate_commit -cne 'a98d648bd0adb2751ee0c09828e0227b1583950f') { Add-Issue $issues 'candidate commit drifted' }
