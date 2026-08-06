@@ -17,6 +17,21 @@ protocol `/4` fact from public authority and generic answer-free inputs.
   all ten fixed coverage populations are retained with zero denominators.
 - `coverage-ledger.json` maps every specification rule to an input or mutation
   exercise without embedding expected facts.
+- `generated-state-coverage.schema.json` defines the tracked, answer-free WP3
+  coverage artifact.
+- `generated-state-coverage.json` is deterministically derived from proposed
+  totality model `1.2.0`. It contains compact state exercises and obligation
+  mappings, never expected facts or product output.
+
+The WP3 generator is
+`eng/generate-m1-slice4-protocol4-state-coverage.ps1`. Its tracked artifact
+covers every admitted state, every admitted/invalid/excluded constraint,
+nearest matched negatives, all family-local pairwise dimension/value
+combinations, publication rules, constructors, normalization rules, atomic
+boundaries, coverage populations, gaps, transitions, and the partial
+`RACE/DATA` higher-order invariant. It also recomputes and hashes the complete
+23,660-state classification rather than treating the compact cases as a proof
+of totality by themselves.
 
 The package intentionally contains no expected semantic output, fact count,
 fact hash, product ID, product output, real-mod name, private identity, or
@@ -49,6 +64,18 @@ The output remains scratch evidence. The tracked review attestation records
 the exact input/specification hashes, method, commands, coverage, findings,
 corrections, and answer-isolation state without publishing the constructed
 answer set as future oracle authority.
+
+Generate and validate the model-derived coverage on either supported
+PowerShell host with:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File eng/generate-m1-slice4-protocol4-state-coverage.ps1
+pwsh -NoProfile -File eng/generate-m1-slice4-protocol4-state-coverage.ps1 -ValidateOnly
+```
+
+Generation is byte-stable across Windows PowerShell 5.1 and PowerShell 7.
+Derived summaries and any expected semantic outputs remain under ignored
+`work/` paths.
 
 ## Claim boundary
 

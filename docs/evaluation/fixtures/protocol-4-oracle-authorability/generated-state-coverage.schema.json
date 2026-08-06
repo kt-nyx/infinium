@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infinium.local/schemas/protocol-4-generated-state-coverage.schema.json",
+  "title": "Protocol /4 model-derived answer-free state coverage",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schema_id",
+    "artifact_version",
+    "status",
+    "work_id",
+    "source_model",
+    "generation",
+    "state_space_proof",
+    "state_cases",
+    "admitted_state_mappings",
+    "constraint_mappings",
+    "pairwise_mappings",
+    "family_mappings",
+    "state_class_mappings",
+    "rule_mappings",
+    "disposition_mappings",
+    "constructor_mappings",
+    "atomic_boundary_mappings",
+    "lexical_cases",
+    "gap_exercises",
+    "coverage_exercises",
+    "transition_mappings",
+    "higher_order_cases",
+    "category_coverage",
+    "existing_authorability_mutations",
+    "wp3_mutations",
+    "answer_isolation",
+    "summary"
+  ],
+  "properties": {
+    "$schema": { "const": "generated-state-coverage.schema.json" },
+    "schema_id": { "const": "infinium.evaluation.protocol-4-model-derived-state-coverage/v1" },
+    "artifact_version": { "const": "1.0.0" },
+    "status": { "const": "answer-free-generated-coverage" },
+    "work_id": { "const": "M1/S4.5/PRE-B2/WP3" },
+    "source_model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model_id", "model_version", "model_status", "sha256", "protocol_id", "projection_version"],
+      "properties": {
+        "model_id": { "type": "string", "minLength": 1 },
+        "model_version": { "const": "1.2.0" },
+        "model_status": { "const": "proposed" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "protocol_id": { "const": "infinium.evaluator-v2/4" },
+        "projection_version": { "const": "3.0.0" }
+      }
+    },
+    "generation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["generator", "generator_version", "deterministic", "answer_bearing_outputs_tracked", "selection_strategy"],
+      "properties": {
+        "generator": { "const": "eng/generate-m1-slice4-protocol4-state-coverage.ps1" },
+        "generator_version": { "const": "1.0.0" },
+        "deterministic": { "const": true },
+        "answer_bearing_outputs_tracked": { "const": false },
+        "selection_strategy": { "type": "string", "minLength": 1 }
+      }
+    },
+    "state_space_proof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["totals", "aggregate_state_digest_sha256", "families"],
+      "properties": {
+        "totals": { "$ref": "#/$defs/totals" },
+        "aggregate_state_digest_sha256": { "$ref": "#/$defs/sha256" },
+        "families": {
+          "type": "array",
+          "minItems": 15,
+          "maxItems": 15,
+          "items": {
+            "allOf": [
+              { "$ref": "#/$defs/totals" },
+              {
+                "type": "object",
+                "required": ["family", "state_digest_sha256"],
+                "properties": {
+                  "family": { "type": "string", "minLength": 1 },
+                  "state_digest_sha256": { "$ref": "#/$defs/sha256" }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "state_cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/state_case" }
+    },
+    "admitted_state_mappings": { "type": "array", "minItems": 110, "items": { "$ref": "#/$defs/object" } },
+    "constraint_mappings": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/object" } },
+    "pairwise_mappings": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/object" } },
+    "family_mappings": { "type": "array", "minItems": 15, "maxItems": 15, "items": { "$ref": "#/$defs/object" } },
+    "state_class_mappings": { "type": "array", "minItems": 9, "maxItems": 9, "items": { "$ref": "#/$defs/object" } },
+    "rule_mappings": { "type": "array", "minItems": 77, "maxItems": 77, "items": { "$ref": "#/$defs/object" } },
+    "disposition_mappings": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/object" } },
+    "constructor_mappings": { "type": "array", "minItems": 24, "maxItems": 24, "items": { "$ref": "#/$defs/object" } },
+    "atomic_boundary_mappings": { "type": "array", "minItems": 11, "maxItems": 11, "items": { "$ref": "#/$defs/object" } },
+    "lexical_cases": { "type": "array", "minItems": 10, "maxItems": 10, "items": { "$ref": "#/$defs/object" } },
+    "gap_exercises": { "type": "array", "minItems": 8, "maxItems": 8, "items": { "$ref": "#/$defs/object" } },
+    "coverage_exercises": { "type": "array", "minItems": 10, "maxItems": 10, "items": { "$ref": "#/$defs/object" } },
+    "transition_mappings": { "type": "array", "minItems": 6, "maxItems": 6, "items": { "$ref": "#/$defs/object" } },
+    "higher_order_cases": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/object" } },
+    "category_coverage": { "$ref": "#/$defs/object" },
+    "existing_authorability_mutations": { "type": "array", "minItems": 10, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "wp3_mutations": { "type": "array", "minItems": 13, "maxItems": 13, "items": { "$ref": "#/$defs/object" } },
+    "answer_isolation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["forbidden_properties", "expected_facts_location", "product_or_candidate_source"],
+      "properties": {
+        "forbidden_properties": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string" } },
+        "expected_facts_location": { "const": "ignored work/ only" },
+        "product_or_candidate_source": { "const": "prohibited" }
+      }
+    },
+    "summary": { "$ref": "#/$defs/object" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "object": { "type": "object" },
+    "totals": {
+      "type": "object",
+      "required": ["raw", "admitted", "excluded", "invalid", "uncovered", "overlap"],
+      "properties": {
+        "raw": { "type": "integer", "minimum": 0 },
+        "admitted": { "type": "integer", "minimum": 0 },
+        "excluded": { "type": "integer", "minimum": 0 },
+        "invalid": { "type": "integer", "minimum": 0 },
+        "uncovered": { "const": 0 },
+        "overlap": { "const": 0 }
+      }
+    },
+    "state_case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["case_id", "family", "classification", "constraint_id", "state_class", "rule_id", "atomic_boundary", "dimensions", "selection_reasons", "matched_negative_case_id"],
+      "properties": {
+        "case_id": { "type": "string", "pattern": "^P4-WP3-STATE-[A-Z0-9-]+-[0-9]{4}$" },
+        "family": { "type": "string", "minLength": 1 },
+        "classification": { "enum": ["admitted", "invalid", "excluded"] },
+        "constraint_id": { "type": "string", "minLength": 1 },
+        "state_class": { "type": ["string", "null"] },
+        "rule_id": { "type": ["string", "null"] },
+        "atomic_boundary": { "type": ["string", "null"] },
+        "dimensions": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "string" } },
+        "selection_reasons": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string" } },
+        "matched_negative_case_id": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

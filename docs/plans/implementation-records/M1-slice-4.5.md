@@ -756,3 +756,70 @@ legacy archive; evaluator `/4` mechanics; freeze record; or frozen candidate
 was accessed or changed. WP3 and later work, private work, B2, C2, Stage D,
 adaptation, comparison, scoring, and protocol `/5` were not started. No live
 or billable call ran, and no push occurred. `M1/S4.5/PRE-B2/WP3` is next.
+
+## 2026-08-06 Pre-B2 WP3 closeout
+
+`M1/S4.5/PRE-B2/WP3` began from exact clean commit
+`4dd866ace53153638b850bb89806d58deeb5384a` on branch
+`codex/m1-slice-4.5-semantic-disposition`. Public freeze metadata retained
+evaluator commit `3693d19563c636cd2879804633ca4ce52448d2c1`, protocol `/4`,
+projection `3.0.0`, and candidate commit
+`a98d648bd0adb2751ee0c09828e0227b1583950f` unchanged.
+
+WP3 added a deterministic, model-derived coverage generator, a tracked
+artifact schema, and the generated answer-free artifact to the existing
+generic authorability package. The generator recomputes all 23,660 raw states
+from proposed totality model `1.2.0`: 110 admitted, 6,180 explicitly excluded,
+17,370 invalid/terminal, zero uncovered, and zero overlapping. The compact
+artifact contains 515 state cases: all 110 admitted states, 110 nearest
+matched negatives, at least one representative for each of 236 constraints,
+and deterministic completion of all 1,713 family-local dimension/value pairs.
+
+Obligation maps cover all 15 families, all 9 state classes, all 77 publication
+rules, all 24 constructor groups, all 10 normalization rules, all 11 atomic
+boundaries, all 8 gap rules, all 10 coverage populations, all 6 manual
+transitions, outcome dispositions, evidence categories, and one targeted
+higher-order partial `RACE/DATA` case. The artifact records only generic input
+states and rule-to-case mappings. It contains no expected facts, expected
+output, product identifiers, candidate output, private locators, or oracle
+answers; derived summaries remain under ignored `work/` paths.
+
+The exact partial `RACE/DATA` exercise maps all seven required rules. It keeps
+`race-records` denominator +1/completion +0, `taxonomy-subjects` denominator
++1/completion +1, exactly two generic technical taxonomy assignments, omitted
+`DATA` count, omitted `face_gen_head`, omitted resolved race, and exactly one
+`unsupported-shapes:race:data` gap with missing capability
+`allowlisted-record-shape-semantics`, scope `snapshot-and-result`, affected
+count 1, and owner `GO-RACECONTRIB-PARTIAL-DATA`.
+
+Both Windows PowerShell 5.1 and PowerShell 7 independently generated and
+validated the artifact. The compact output was byte-identical across hosts at
+SHA-256 `2dfbadfcddd907372c7902de258b1f144cfc0ee7569593a871769fb24f9a4bf4`.
+Both rejected all 13 WP3 mutations: missing state case, false rule claim,
+unstable ordering, duplicate rule mapping, duplicate case ID, missing
+constraint mapping, missing pairwise mapping, unknown case reference, broken
+matched negative, answer-bearing property, duplicate gap owner, partial-rule
+omission, and state digest drift. JSON Schema validation passed.
+
+The unchanged totality validator passed on both hosts with all 24 existing
+mutations rejected. The unchanged authorability validator also passed on both
+hosts using the retained ignored reviewer outputs: 1,073 facts across all 15
+families, zero duplicate IDs, all 10 fixed coverage populations, and all 10
+existing mutations rejected. This mechanical reuse supplied no new semantic
+authority.
+
+One implementation correction distinguished terminal/invalid publication
+rules from admitted-state ownership: rule exercises are selected by each
+rule's declared predicate, while admitted states continue to require exactly
+one publication rule. One serialization correction made compact JSON
+byte-stable across the two PowerShell engines. Neither correction changed the
+proposed model or any semantic disposition.
+
+Changed public paths are the new generator, generated artifact and schema,
+the package README, the accepted Pre-B2 plan, and this implementation record.
+No product/candidate source, tests, diffs, assemblies, or output;
+evaluator-private material; legacy archive; evaluator `/4` mechanics; freeze
+record; or frozen candidate was accessed or changed. WP4 and later packages,
+private work, B2, C2, Stage D, adaptation, comparison, scoring, protocol `/5`,
+and live or billable calls were not run. The evidence contract and model remain
+proposed. No push occurred. `M1/S4.5/PRE-B2/WP4` is next.

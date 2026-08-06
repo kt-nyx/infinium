@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Pre-B2 evidence-contract totality closure
 
-Status: Accepted; WP1 and WP2 complete; `M1/S4.5/PRE-B2/WP3` is next; the evidence contract and model remain proposed pending WP4
+Status: Accepted; WP1-WP3 complete; `M1/S4.5/PRE-B2/WP4` is next; the evidence contract and model remain proposed pending WP4
 Owner: Project owner
 Accepted: 2026-08-05
 Work ID: `M1/S4.5/PRE-B2`
@@ -237,6 +237,10 @@ completes WP2 and unblocks WP3.
 Work ID: `M1/S4.5/PRE-B2/WP3`
 Depends on: `M1/S4.5/PRE-B2/WP2`
 
+Package status: Complete in the focused WP3 closeout. The tracked generated
+coverage remains answer-free and the source contract/model remain proposed;
+only WP4 may accept them.
+
 Objective: derive the public exercise matrix from the accepted state model,
 then use examples to validate every rule and boundary.
 
@@ -261,6 +265,19 @@ Completion requires zero uncovered rules/states, deterministic repeated
 generation, both PowerShell runtimes passing where required, all mutations
 rejected, no duplicate final fact IDs, and one focused local commit. WP3
 unblocks WP4.
+
+Closeout evidence: the generator classified all 23,660 raw model states with
+110 admitted, 6,180 excluded, 17,370 invalid/terminal, zero uncovered, and
+zero overlapping. Its 515 compact cases include all 110 admitted states, 110
+matched negatives, representatives for all 236 state constraints, and all
+1,713 family-local dimension/value pairs. Mappings cover all 15 families, 9
+state classes, 77 publication rules, 24 constructor groups, 10 normalization
+rules, 11 atomic boundaries, 8 gap rules, 10 coverage populations, 6 manual
+transitions, and the exact partial `RACE/DATA` invariant. Both PowerShell
+hosts passed generation and validation, produced byte-identical tracked
+artifacts, and rejected all 13 WP3 mutations. The unchanged authorability
+validator passed on both hosts with 1,073 facts, zero duplicate fact IDs, all
+10 fixed coverage populations, and all 10 existing mutations rejected.
 
 ### WP4 — Independent product-blind totality review
 
