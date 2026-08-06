@@ -46,7 +46,7 @@ supply product semantics. The historical
 inventory input only where it agrees with accepted authority; it remains a
 blocked draft.
 
-This package is proposed, not accepted. WP2 must implement the executable
+This package is proposed, not accepted. WP2 implements the executable
 totality proof, WP3 must derive exercises from the model, and WP4 is
 responsible for independent product-blind acceptance. This document does not
 authorize private work, candidate inspection, scoring, or protocol `/5`.
@@ -294,19 +294,18 @@ PKID/PNAM links.
 - `P4-NPCCONTRIB-UNDECODABLE` retains common facts, omits constructors that
   depend on the unsupported shape, counts the admitted NPC in the
   `npc-records` denominator but not completion, and emits the exact shape gap.
-- `P4-NPCCONTRIB-NULL-LINK` publishes typed-null singleton `/state` only.
-- `P4-NPCCONTRIB-UNRESOLVED-LINK` publishes all five link facts with
-  `unresolved` and the canonical target.
 - `P4-NPCCONTRIB-RESOLVED` publishes the complete bounded contribution and
-  increments both denominator and completion.
+  increments both denominator and completion. Its per-constructor link
+  obligations keep typed null, resolved, and unresolved distinct without
+  creating overlapping whole-record publication rules.
 - An independently observed unsupported field uses
   `P4-NPCCONTRIB-UNSUPPORTED-FIELD`; unrelated supported constructors retain
   their own dispositions.
 
 Invalid link construction or malformed framing is terminal, while a valid
 null or unresolved link is completed work. The complete contribution rule
-owns the single coverage increment; per-link null/unresolved rules never add a
-second record count.
+owns the single coverage increment; per-link dispositions never add a second
+record count.
 
 ### `race_contributions`
 
@@ -590,6 +589,33 @@ rejected under `AB-ASSET`; no rule may choose the nearer valid state.
 
 The model records these as `TRACE-*` entries bound to the exact `P4-*` rules.
 
+## WP2 mechanical encoding record
+
+Model version `1.1.0` adds an independent state-space partition to every fact
+family. Each raw Cartesian combination is matched against explicit admitted
+and invalid predicates; the stable per-family impossible constraint owns the
+remaining excluded combinations. Admission is therefore defined by evidence
+constraints rather than by whether a publication rule happens to match.
+
+WP2 made only these mechanical corrections to the WP1 package:
+
+- consolidated the overlapping NPC and placed-reference null/unresolved
+  member rules into their complete bounded-record rules while preserving the
+  typed-null and unresolved constructor dispositions;
+- added stable, singular `GO-*` ownership to each emitted gap and left the
+  allowlisted-field projection non-owning;
+- made independently observed unsupported-field states explicit, incomplete,
+  and gap-bearing while retaining only independently proven common facts;
+- gated snapshot coverage rules on snapshot publication and aligned exact
+  FaceGen availability regions with their existing resolved rule classes;
+- raised the two override rules that publish the effective-winner constructor
+  to that constructor's declared resolved evidence layer; and
+- updated the decoded-to-resolved trace to reference the consolidated rules.
+
+The accepted partial `RACE/DATA` publication and arithmetic are unchanged.
+These corrections do not accept the contract; WP4 retains sole acceptance
+authority.
+
 ## Totality and downstream boundary
 
 The schema pins the five evidence layers, nine common state classes, fifteen
@@ -598,8 +624,9 @@ every frozen fact constructor, vocabulary, dependency dimension, rule,
 coverage effect, gap effect, and atomic boundary. Each family explicitly
 partitions common state classes and prohibits an unstated default.
 
-WP1 does not claim the Cartesian state space has been mechanically proven.
-That executable completeness, exclusivity, dependency, and consistency proof
-belongs to WP2. Generated fixtures and mutation coverage belong to WP3, and
-independent acceptance belongs to WP4. Candidate conformance belongs to WP5.
-No later package is started or implied by this proposal.
+WP2 mechanically proves the Cartesian state partition, publication
+exclusivity, dependency, coverage, and gap consistency for this proposed
+contract under both supported PowerShell hosts. Generated fixtures and
+model-derived state exercises belong to WP3, and independent acceptance
+belongs to WP4. Candidate conformance belongs to WP5. No later package is
+started or implied by this proposal.

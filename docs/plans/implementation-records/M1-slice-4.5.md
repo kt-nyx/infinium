@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Held-out evaluation v2 implementation record
 
-Status: Public evaluator `/4` and candidate frozen; first authorability plan hard-stopped; accepted `M1/S4.5/PRE-B2` active at WP1
+Status: Public evaluator `/4` and candidate frozen; Pre-B2 WP1 and WP2 complete; WP3 next; evidence contract and model remain proposed pending WP4
 Opened: 2026-08-04
 Plan: `infinium.plan.m1.backend-semantic-proof/3`
 Execution plan: [M1 Slice 4.5](../slices/M1-slice-4.5-held-out-evaluation-v2.md)
@@ -650,8 +650,90 @@ unsupported-shape gap is required.
 
 The accepted
 [Pre-B2 evidence-contract totality plan](../slices/M1-slice-4.5-pre-B2-evidence-contract-totality.md)
-is now active as `M1/S4.5/PRE-B2`; WP1 is next. It replaces further
+was then active as `M1/S4.5/PRE-B2`; WP1 was next. It replaced further
 fixture-by-fixture corrections with a machine-checkable state-to-fact model,
 generated public coverage, fresh product-blind review, and only then frozen
-candidate classification. No implementation package has run yet, and no
-private task or protocol change is authorized.
+candidate classification. At that checkpoint, no implementation package had
+run and no private task or protocol change was authorized.
+
+## 2026-08-06 Pre-B2 WP1 and WP2 closeout
+
+`M1/S4.5/PRE-B2/WP1` completed at exact commit
+`aeac73110e813ccf26902e434712442546a1166c`. It created the proposed Markdown
+evidence contract, totality-model schema, and totality model. It did not accept
+that package; acceptance remains reserved to WP4.
+
+`M1/S4.5/PRE-B2/WP2` added the public executable totality validator and closed
+the Windows PowerShell compatibility defect in the existing authorability
+validator. Model version `1.1.0` explicitly partitions every family raw state
+as admitted, invalid/terminal, or excluded by a stable impossible-state
+constraint. Admission predicates are independent from publication-rule
+matching. The validator then proves exactly one publication rule and one
+constructor disposition for every admitted obligation, evidence-layer
+dependencies, closed references and vocabularies, coverage consistency,
+singular gap ownership, and the exact partial `RACE/DATA` arithmetic.
+
+Mechanical WP1 corrections were limited to explicit admissibility constraints,
+consolidation of overlapping null/unresolved member rules into the complete
+NPC and placed-reference rules, stable `GO-*` gap ownership, non-owning
+allowlisted-field projections, explicit incomplete unsupported-field states,
+publication-gated coverage predicates, two effective-winner evidence-layer
+alignments, two exact FaceGen state-class alignments, and the corresponding
+manual-trace references. The accepted partial `RACE/DATA` branch was not
+changed.
+
+Exact totality counts were:
+
+- `result`: 4 raw, 2 admitted, 0 excluded, 2 invalid;
+- `plugins`: 96 raw, 4 admitted, 32 excluded, 60 invalid;
+- `override_chains`: 64 raw, 4 admitted, 32 excluded, 28 invalid;
+- `npc_contributions`: 1,280 raw, 7 admitted, 425 excluded, 848 invalid;
+- `race_contributions`: 576 raw, 10 admitted, 314 excluded, 252 invalid;
+- `placed_reference_contributions`: 3,840 raw, 11 admitted, 853 excluded,
+  2,976 invalid;
+- `allowlisted_fields`: 144 raw, 7 admitted, 74 excluded, 63 invalid;
+- `npcs`: 1,280 raw, 6 admitted, 426 excluded, 848 invalid;
+- `races`: 64 raw, 3 admitted, 33 excluded, 28 invalid;
+- `placed_references`: 3,840 raw, 10 admitted, 854 excluded, 2,976 invalid;
+- `face_gen`: 12,096 raw, 15 admitted, 3,009 excluded, 9,072 invalid;
+- `taxonomy`: 192 raw, 10 admitted, 98 excluded, 84 invalid;
+- `coverage`: 168 raw, 11 admitted, 29 excluded, 128 invalid;
+- `gaps`: 8 raw, 5 admitted, 1 excluded, 2 invalid; and
+- `result_gaps`: 8 raw, 5 admitted, 0 excluded, 3 invalid.
+
+The total is 23,660 raw states: 110 admitted, 6,180 explicitly excluded,
+17,370 invalid/terminal, zero uncovered, and zero overlapping. Inventory is
+exactly 15 families, 10 coverage populations, 21 dimensions, 17 vocabulary
+groups, 24 constructor groups, 77 publication rules, 8 gap rules, 14 public
+authority entries, and 11 atomic boundaries.
+
+Both Windows PowerShell 5.1 and PowerShell 7 passed the totality validator and
+produced semantically identical deterministic JSON summaries under ignored
+`work/m1-slice4-protocol4-totality/` paths. Both hosts rejected all 12 negative
+self-tests: missing disposition, duplicate stable ID, overlapping rules,
+invalid evidence dependency, unknown dimension, unknown closed-vocabulary
+value, unknown constructor, unknown authority, inconsistent coverage,
+missing required gap, duplicate gap ownership, and invalid partial
+`RACE/DATA` arithmetic.
+
+The repaired authorability validator passed on both hosts using the documented
+ignored reviewer outputs: 1,073 facts across all 15 families, no duplicate
+fact IDs, all 10 fixed coverage populations, and all 10 existing mutation
+self-checks rejected. Those outputs were used only as mechanical validator
+inputs and supplied no semantic authority.
+
+The partial `RACE/DATA` trace remains exact: `race-records` denominator +1 and
+completion +0; `taxonomy-subjects` denominator +1 and completion +1 for the
+two generic technical assignments; no unproven `DATA` count; no
+`face_gen_head`; no complete resolved race; and exactly one
+`unsupported-shapes:race:data` aggregate with
+`allowlisted-record-shape-semantics`.
+
+Changed public paths in the focused WP2 closeout are the contract, model,
+schema, accepted Pre-B2 plan, this implementation record, the new totality
+validator, and the repaired authorability validator. No candidate/product
+source, tests, diffs, assemblies, or output; evaluator-private material;
+legacy archive; evaluator `/4` mechanics; freeze record; or frozen candidate
+was accessed or changed. WP3 and later work, private work, B2, C2, Stage D,
+adaptation, comparison, scoring, and protocol `/5` were not started. No live
+or billable call ran, and no push occurred. `M1/S4.5/PRE-B2/WP3` is next.

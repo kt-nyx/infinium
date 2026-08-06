@@ -385,7 +385,7 @@ foreach ($populationFact in $zeroPopulationFacts) {
 
 $serializedOutput = Get-Content -LiteralPath $outputPath -Raw
 foreach ($forbiddenToken in @('contribution_id', 'participant_id', 'winner_contribution_id', 'assignment_id', 'analyzer_or_adjudicator_id', 'evidence_fields', 'gap_id', 'gap_ids', 'snapshot_id', 'provider-topology', 'unspecified')) {
-    if ($serializedOutput.Contains($forbiddenToken, [System.StringComparison]::OrdinalIgnoreCase)) {
+    if ($serializedOutput.IndexOf($forbiddenToken, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) {
         Fail "review output contains forbidden product/unpublished token '$forbiddenToken'"
     }
 }

@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Pre-B2 evidence-contract totality closure
 
-Status: Accepted; `M1/S4.5/PRE-B2/WP1` is next
+Status: Accepted; WP1 and WP2 complete; `M1/S4.5/PRE-B2/WP3` is next; the evidence contract and model remain proposed pending WP4
 Owner: Project owner
 Accepted: 2026-08-05
 Work ID: `M1/S4.5/PRE-B2`
@@ -145,6 +145,9 @@ when doing so would weaken the fresh-context or product-blind boundary.
 
 Work ID: `M1/S4.5/PRE-B2/WP1`
 
+Package status: Complete at commit
+`aeac73110e813ccf26902e434712442546a1166c`; proposed contract package only.
+
 Objective: turn the accepted layered-evidence policy and all existing public
 protocol rules into one proposed normative contract whose state space and fact
 dependencies are explicit before any new example or candidate inspection.
@@ -196,6 +199,10 @@ WP1 unblocks WP2; it does not mark the proposed contract accepted.
 
 Work ID: `M1/S4.5/PRE-B2/WP2`
 Depends on: `M1/S4.5/PRE-B2/WP1`
+
+Package status: Complete; deterministic totality and all required negative
+self-tests pass under Windows PowerShell 5.1 and PowerShell 7 with semantically
+identical summaries. WP4 acceptance authority remains unopened.
 
 Objective: make completeness a deterministic gate rather than a reviewer
 impression.
