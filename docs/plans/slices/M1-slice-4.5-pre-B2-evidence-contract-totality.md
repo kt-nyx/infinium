@@ -202,7 +202,10 @@ Depends on: `M1/S4.5/PRE-B2/WP1`
 
 Package status: Complete; deterministic totality and all required negative
 self-tests pass under Windows PowerShell 5.1 and PowerShell 7 with semantically
-identical summaries. WP4 acceptance authority remains unopened.
+identical summaries. The focused correction replaces complement-style
+exclusions with 118 explicit, predicated exclusion regions and expands the
+negative suite to 24 mutations without changing the state-space totals. WP4
+acceptance authority remains unopened.
 
 Objective: make completeness a deterministic gate rather than a reviewer
 impression.

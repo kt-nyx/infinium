@@ -20,13 +20,14 @@
     "atomic_boundaries",
     "gap_rules",
     "coverage_registry",
+    "cross_family_invariants",
     "fact_families",
     "manual_traces"
   ],
   "properties": {
     "schema_id": { "const": "infinium.m1-slice4.protocol-4-totality-model/v1" },
     "model_id": { "const": "infinium.m1-slice4.protocol-4-evidence-contract" },
-    "version": { "const": "1.1.0" },
+    "version": { "const": "1.2.0" },
     "status": { "const": "proposed" },
     "work_id": { "const": "M1/S4.5/PRE-B2/WP1" },
     "protocol": { "$ref": "#/$defs/protocol" },
@@ -103,6 +104,14 @@
         { "$ref": "#/$defs/coverage_taxonomy" }
       ],
       "items": false
+    },
+    "cross_family_invariants": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["partial_race_data"],
+      "properties": {
+        "partial_race_data": { "$ref": "#/$defs/partial_race_data_invariant" }
+      }
     },
     "fact_families": {
       "type": "array",
@@ -341,43 +350,47 @@
     "state_space": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["admitted_regions", "invalid_regions", "excluded_constraint"],
+      "required": ["admitted_regions", "invalid_regions", "excluded_regions"],
       "properties": {
         "admitted_regions": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/admitted_region" } },
         "invalid_regions": { "type": "array", "items": { "$ref": "#/$defs/invalid_region" } },
-        "excluded_constraint": { "$ref": "#/$defs/excluded_constraint" }
+        "excluded_regions": { "type": "array", "items": { "$ref": "#/$defs/excluded_region" } }
       }
     },
     "admitted_region": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["constraint_id", "state_class", "when", "reason", "required_gap_rule_ids"],
+      "required": ["constraint_id", "state_class", "when", "reason", "required_gap_rule_ids", "authorities"],
       "properties": {
         "constraint_id": { "$ref": "#/$defs/constraint_id" },
         "state_class": { "$ref": "#/$defs/state_class_id" },
         "when": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/condition" } },
         "reason": { "type": "string", "minLength": 1 },
-        "required_gap_rule_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/rule_id" } }
+        "required_gap_rule_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/rule_id" } },
+        "authorities": { "$ref": "#/$defs/authority_refs" }
       }
     },
     "invalid_region": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["constraint_id", "when", "reason", "atomic_boundary"],
+      "required": ["constraint_id", "when", "reason", "atomic_boundary", "authorities"],
       "properties": {
         "constraint_id": { "$ref": "#/$defs/constraint_id" },
         "when": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/condition" } },
         "reason": { "type": "string", "minLength": 1 },
-        "atomic_boundary": { "type": "string", "pattern": "^AB-[A-Z0-9-]+$" }
+        "atomic_boundary": { "type": "string", "pattern": "^AB-[A-Z0-9-]+$" },
+        "authorities": { "$ref": "#/$defs/authority_refs" }
       }
     },
-    "excluded_constraint": {
+    "excluded_region": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["constraint_id", "reason"],
+      "required": ["constraint_id", "when", "reason", "authorities"],
       "properties": {
         "constraint_id": { "$ref": "#/$defs/constraint_id" },
-        "reason": { "type": "string", "minLength": 1 }
+        "when": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/condition" } },
+        "reason": { "type": "string", "minLength": 1 },
+        "authorities": { "$ref": "#/$defs/authority_refs" }
       }
     },
     "family_rule": {
@@ -448,12 +461,104 @@
         "gap_rule_id": { "$ref": "#/$defs/rule_id" },
         "owner_id": { "type": "string", "pattern": "^GO-[A-Z0-9-]+$" },
         "affected_count": { "type": "string", "minLength": 1 },
+        "affected_count_value": { "type": "integer", "minimum": 1 },
         "scope": { "enum": ["snapshot", "result", "snapshot-and-result"] }
       }
     },
     "authority_refs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
     "rule_id": { "type": "string", "pattern": "^P4-[A-Z0-9-]+$" },
     "constraint_id": { "type": "string", "pattern": "^SC-[A-Z0-9-]+$" },
+    "partial_race_data_invariant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["invariant_id", "authorities", "contribution", "allowlisted_field", "resolved_race", "taxonomy", "gap"],
+      "properties": {
+        "invariant_id": { "const": "INV-PARTIAL-RACE-DATA" },
+        "authorities": { "$ref": "#/$defs/authority_refs" },
+        "contribution": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["family", "rule_id", "common_constructor", "common_disposition", "face_gen_constructor", "face_gen_disposition", "coverage_population", "coverage_denominator", "coverage_completion", "gap_rule_id", "gap_owner_id", "gap_scope", "affected_count"],
+          "properties": {
+            "family": { "const": "race_contributions" },
+            "rule_id": { "const": "P4-RACECONTRIB-PARTIAL-DATA" },
+            "common_constructor": { "const": "FC-RACECONTRIB-COMMON" },
+            "common_disposition": { "const": "exact_value" },
+            "face_gen_constructor": { "const": "FC-RACECONTRIB-FACEGEN" },
+            "face_gen_disposition": { "const": "omit" },
+            "coverage_population": { "const": "race-records" },
+            "coverage_denominator": { "const": "increment-one" },
+            "coverage_completion": { "const": "no-increment" },
+            "gap_rule_id": { "const": "P4-GAP-UNSUPPORTED-SHAPE" },
+            "gap_owner_id": { "const": "GO-RACECONTRIB-PARTIAL-DATA" },
+            "gap_scope": { "const": "snapshot-and-result" },
+            "affected_count": { "const": 1 }
+          }
+        },
+        "allowlisted_field": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["family", "rule_id", "constructor", "disposition", "field", "occurrence_state", "count_publication"],
+          "properties": {
+            "family": { "const": "allowlisted_fields" },
+            "rule_id": { "const": "P4-FIELDS-STRUCTURAL-ONLY" },
+            "constructor": { "const": "FC-ALLOWLISTED-FIELD" },
+            "disposition": { "const": "omit" },
+            "field": { "const": "DATA" },
+            "occurrence_state": { "const": "structural-only" },
+            "count_publication": { "const": "omitted" }
+          }
+        },
+        "resolved_race": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["family", "rule_id", "constructor", "disposition"],
+          "properties": {
+            "family": { "const": "races" },
+            "rule_id": { "const": "P4-RACES-PARTIAL-DATA" },
+            "constructor": { "const": "FC-RACES-RESOLVED" },
+            "disposition": { "const": "omit" }
+          }
+        },
+        "taxonomy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["family", "rule_id", "subject_count", "coverage_population", "coverage_denominator", "coverage_completion", "assignments", "forbidden_semantic_source"],
+          "properties": {
+            "family": { "const": "taxonomy" },
+            "rule_id": { "const": "P4-TAXONOMY-PARTIAL-RACE" },
+            "subject_count": { "const": 1 },
+            "coverage_population": { "const": "taxonomy-subjects" },
+            "coverage_denominator": { "const": "increment-one" },
+            "coverage_completion": { "const": "increment-one" },
+            "assignments": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "prefixItems": [
+                { "type": "object", "additionalProperties": false, "required": ["axis", "facet", "code"], "properties": { "axis": { "const": "technical-modification-surface" }, "facet": { "const": "semantic-mechanism" }, "code": { "const": "surface.plugin-data" } } },
+                { "type": "object", "additionalProperties": false, "required": ["axis", "facet", "code"], "properties": { "axis": { "const": "technical-modification-surface" }, "facet": { "const": "realization-and-delivery" }, "code": { "const": "delivery.plugin-container" } } }
+              ],
+              "items": false
+            },
+            "forbidden_semantic_source": { "const": "DATA" }
+          }
+        },
+        "gap": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["population", "missing_capability", "scope", "affected_count", "owner_id", "aggregation_count"],
+          "properties": {
+            "population": { "const": "unsupported-shapes:race:data" },
+            "missing_capability": { "const": "allowlisted-record-shape-semantics" },
+            "scope": { "const": "snapshot-and-result" },
+            "affected_count": { "const": 1 },
+            "owner_id": { "const": "GO-RACECONTRIB-PARTIAL-DATA" },
+            "aggregation_count": { "const": 1 }
+          }
+        }
+      }
+    },
     "manual_trace": {
       "type": "object",
       "additionalProperties": false,

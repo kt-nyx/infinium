@@ -591,10 +591,13 @@ The model records these as `TRACE-*` entries bound to the exact `P4-*` rules.
 
 ## WP2 mechanical encoding record
 
-Model version `1.1.0` adds an independent state-space partition to every fact
-family. Each raw Cartesian combination is matched against explicit admitted
-and invalid predicates; the stable per-family impossible constraint owns the
-remaining excluded combinations. Admission is therefore defined by evidence
+Model version `1.2.0` corrects the initial WP2 partition so every raw
+Cartesian combination must match exactly one explicit admitted, invalid, or
+excluded predicate. The model contains 118 disjoint excluded regions, each
+with a stable constraint ID, a nonempty predicate, a specific logical-
+impossibility reason, and public authority citations. There is no complement,
+catch-all, or default exclusion: zero disposition matches is uncovered and
+more than one is overlap. Admission is therefore defined by evidence
 constraints rather than by whether a publication rule happens to match.
 
 WP2 made only these mechanical corrections to the WP1 package:
@@ -612,6 +615,18 @@ WP2 made only these mechanical corrections to the WP1 package:
   to that constructor's declared resolved evidence layer; and
 - updated the decoded-to-resolved trace to reference the consolidated rules.
 
+The focused WP2 correction additionally:
+
+- replaced the per-family complement exclusion with the 118 explicit regions
+  that cover the same 6,180 logically impossible raw tuples;
+- required and resolved authority citations for admitted, invalid, and
+  excluded constraints and checked every invalid constraint's atomic boundary;
+- added a structured cross-family invariant for the partial `RACE/DATA`
+  branch, including its two exact taxonomy assignments and singular gap owner;
+  and
+- derived the machine-readable partial-branch summary from that validated
+  invariant instead of an independently hard-coded conclusion.
+
 The accepted partial `RACE/DATA` publication and arithmetic are unchanged.
 These corrections do not accept the contract; WP4 retains sole acceptance
 authority.
@@ -626,7 +641,11 @@ partitions common state classes and prohibits an unstated default.
 
 WP2 mechanically proves the Cartesian state partition, publication
 exclusivity, dependency, coverage, and gap consistency for this proposed
-contract under both supported PowerShell hosts. Generated fixtures and
-model-derived state exercises belong to WP3, and independent acceptance
-belongs to WP4. Candidate conformance belongs to WP5. No later package is
-started or implied by this proposal.
+contract under both supported PowerShell hosts. Its 24 negative self-tests
+include omitted admitted, invalid, and excluded regions; overlaps between
+each disposition class; catch-all exclusion; invalid atomic-boundary and
+authority references; publication-rule and dependency defects; coverage and
+gap defects; and four independent partial `RACE/DATA` mutations. Generated
+fixtures and model-derived state exercises belong to WP3, and independent
+acceptance belongs to WP4. Candidate conformance belongs to WP5. No later
+package is started or implied by this proposal.

@@ -665,10 +665,11 @@ that package; acceptance remains reserved to WP4.
 
 `M1/S4.5/PRE-B2/WP2` added the public executable totality validator and closed
 the Windows PowerShell compatibility defect in the existing authorability
-validator. Model version `1.1.0` explicitly partitions every family raw state
-as admitted, invalid/terminal, or excluded by a stable impossible-state
-constraint. Admission predicates are independent from publication-rule
-matching. The validator then proves exactly one publication rule and one
+validator. Model version `1.2.0` explicitly partitions every family raw state
+as admitted, invalid/terminal, or excluded by one of 118 stable, predicated
+impossible-state constraints. No complement, catch-all, or unstated default
+can classify a tuple. Admission predicates are independent from publication-
+rule matching. The validator then proves exactly one publication rule and one
 constructor disposition for every admitted obligation, evidence-layer
 dependencies, closed references and vocabularies, coverage consistency,
 singular gap ownership, and the exact partial `RACE/DATA` arithmetic.
@@ -709,12 +710,17 @@ authority entries, and 11 atomic boundaries.
 
 Both Windows PowerShell 5.1 and PowerShell 7 passed the totality validator and
 produced semantically identical deterministic JSON summaries under ignored
-`work/m1-slice4-protocol4-totality/` paths. Both hosts rejected all 12 negative
-self-tests: missing disposition, duplicate stable ID, overlapping rules,
+`work/m1-slice4-protocol4-totality/` paths. Both hosts rejected all 24 negative
+self-tests with the expected diagnostic evidence: omitted admitted region and
+rule, omitted invalid region, omitted explicit excluded region, admitted-region,
+invalid-region, admitted/excluded, and invalid/excluded overlaps, an empty
+catch-all exclusion predicate, unknown invalid atomic boundary, unknown
+constraint authority, duplicate stable ID, overlapping publication rules,
 invalid evidence dependency, unknown dimension, unknown closed-vocabulary
-value, unknown constructor, unknown authority, inconsistent coverage,
-missing required gap, duplicate gap ownership, and invalid partial
-`RACE/DATA` arithmetic.
+value, unknown constructor, unknown rule authority, inconsistent coverage,
+missing required gap, duplicate gap ownership, and four partial `RACE/DATA`
+mutations covering arithmetic, assignment identity, field publication, and
+gap resolution.
 
 The repaired authorability validator passed on both hosts using the documented
 ignored reviewer outputs: 1,073 facts across all 15 families, no duplicate
@@ -728,6 +734,19 @@ two generic technical assignments; no unproven `DATA` count; no
 `face_gen_head`; no complete resolved race; and exactly one
 `unsupported-shapes:race:data` aggregate with
 `allowlisted-record-shape-semantics`.
+
+The focused WP2 correction found that the initial complement-style exclusion
+could mask a mechanically omitted legitimate state. It replaced that default
+with 118 nonempty, authority-cited, disjoint exclusion predicates covering the
+same 6,180 impossible tuples; added atomic-boundary and constraint-authority
+validation; and made the partial `RACE/DATA` conclusion a structured invariant
+whose reported summary is derived from validated model obligations. No product
+semantic, coverage, gap, or authority decision changed, and the exact family
+and aggregate state counts above remain unchanged.
+
+The correction changes only the proposed contract, model, schema, totality
+validator, this record, and the accepted Pre-B2 plan. The already repaired
+authorability validator is unchanged in this correction.
 
 Changed public paths in the focused WP2 closeout are the contract, model,
 schema, accepted Pre-B2 plan, this implementation record, the new totality

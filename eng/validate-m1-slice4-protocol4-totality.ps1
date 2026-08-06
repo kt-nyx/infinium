@@ -96,6 +96,36 @@ function Test-SameStringSet([object[]]$Left, [object[]]$Right) {
     return $true
 }
 
+function Get-FamilyRule([object]$Model, [string]$FamilyName, [string]$RuleId) {
+    $family = @($Model.fact_families | Where-Object { [string]$_.family -ceq $FamilyName })
+    if ($family.Count -ne 1) { return $null }
+    $rule = @($family[0].rules | Where-Object { [string]$_.rule_id -ceq $RuleId })
+    if ($rule.Count -ne 1) { return $null }
+    return $rule[0]
+}
+
+function Get-RuleOutcome([object]$Rule, [string]$ConstructorId) {
+    if ($null -eq $Rule) { return $null }
+    $outcome = @($Rule.outcomes | Where-Object { @($_.constructor_groups) -ccontains $ConstructorId })
+    if ($outcome.Count -ne 1) { return $null }
+    return $outcome[0]
+}
+
+function Convert-IncrementToCount([string]$Value) {
+    switch ($Value) {
+        'increment-one' { return 1 }
+        'increment-two' { return 2 }
+        'no-increment' { return 0 }
+        'none' { return 0 }
+        default { return $null }
+    }
+}
+
+function Convert-DispositionToSummary([string]$Value) {
+    if ($Value -ceq 'omit') { return 'omitted' }
+    return $Value
+}
+
 function Invoke-ModelValidation([object]$Model, [object]$Schema) {
     $issues = [System.Collections.Generic.List[string]]::new()
     $checks = [ordered]@{
@@ -142,8 +172,7 @@ function Invoke-ModelValidation([object]$Model, [object]$Schema) {
     $constructorIds = @($Model.fact_families | ForEach-Object { $_.constructor_groups } | ForEach-Object { [string]$_.id })
     $constraintIds = @($Model.fact_families | ForEach-Object {
         if (Test-HasProperty $_ 'state_space') {
-            $constraints = @($_.state_space.admitted_regions) + @($_.state_space.invalid_regions)
-            if (Test-HasProperty $_.state_space 'excluded_constraint') { $constraints += @($_.state_space.excluded_constraint) }
+            $constraints = @($_.state_space.admitted_regions) + @($_.state_space.invalid_regions) + @($_.state_space.excluded_regions)
             $constraints
         }
     } | ForEach-Object { if ($null -ne $_) { [string]$_.constraint_id } })
@@ -215,7 +244,21 @@ function Invoke-ModelValidation([object]$Model, [object]$Schema) {
         }
 
         $conditionContainers = @($family.rules)
-        if (Test-HasProperty $family 'state_space') { $conditionContainers += @($family.state_space.admitted_regions) + @($family.state_space.invalid_regions) }
+        $constraintContainers = @()
+        if (Test-HasProperty $family 'state_space') {
+            $constraintContainers = @($family.state_space.admitted_regions) + @($family.state_space.invalid_regions) + @($family.state_space.excluded_regions)
+            $conditionContainers += $constraintContainers
+        }
+        foreach ($constraint in $constraintContainers) {
+            if (@($constraint.when).Count -eq 0) { Add-Issue $issues "constraint '$($constraint.constraint_id)' has an empty or catch-all predicate"; $checks.state_totality = $false }
+            if (-not (Test-HasProperty $constraint 'authorities') -or @($constraint.authorities).Count -eq 0) { Add-Issue $issues "constraint '$($constraint.constraint_id)' has no authority references"; $checks.references_and_vocabularies = $false }
+            foreach ($authority in @($constraint.authorities)) {
+                if ($authorityIds -cnotcontains [string]$authority) { Add-Issue $issues "constraint '$($constraint.constraint_id)' references unknown authority '$authority'"; $checks.references_and_vocabularies = $false }
+            }
+        }
+        foreach ($invalidRegion in @($family.state_space.invalid_regions)) {
+            if ($boundaryIds -cnotcontains [string]$invalidRegion.atomic_boundary) { Add-Issue $issues "invalid region '$($invalidRegion.constraint_id)' references unknown atomic boundary '$($invalidRegion.atomic_boundary)'"; $checks.references_and_vocabularies = $false }
+        }
         foreach ($container in $conditionContainers) {
             foreach ($condition in @($container.when)) {
                 $dimension = [string]$condition.dimension
@@ -223,6 +266,8 @@ function Invoke-ModelValidation([object]$Model, [object]$Schema) {
                     Add-Issue $issues "family '$familyName' condition references undeclared dimension '$dimension'"; $checks.references_and_vocabularies = $false
                     continue
                 }
+                if (@('equals','in','not-in') -cnotcontains [string]$condition.operator) { Add-Issue $issues "family '$familyName' condition uses unknown operator '$($condition.operator)'"; $checks.references_and_vocabularies = $false }
+                if (@($condition.values).Count -eq 0) { Add-Issue $issues "family '$familyName' condition has no closed-vocabulary values"; $checks.references_and_vocabularies = $false }
                 $allowed = @($Model.dimensions.$dimension.values | ForEach-Object { [string]$_ })
                 foreach ($value in @($condition.values)) {
                     if ($allowed -cnotcontains [string]$value) { Add-Issue $issues "family '$familyName' condition uses closed-vocabulary value '$value' outside dimension '$dimension'"; $checks.references_and_vocabularies = $false }
@@ -273,15 +318,18 @@ function Invoke-ModelValidation([object]$Model, [object]$Schema) {
         }
 
         if ($issues.Count -gt 0) { continue }
-        if (-not (Test-HasProperty $family 'state_space') -or -not (Test-HasProperty $family.state_space 'excluded_constraint')) { continue }
+        if (-not (Test-HasProperty $family 'state_space')) { continue }
         $counts = [ordered]@{ family = $familyName; raw = 0; admitted = 0; excluded = 0; invalid = 0; uncovered = 0; overlap = 0 }
         foreach ($state in @(Get-StateProduct -Model $Model -Dimensions $usedDimensions)) {
             $counts.raw++
             $admitted = @($family.state_space.admitted_regions | Where-Object { Get-ConditionMatches $state @($_.when) })
             $invalid = @($family.state_space.invalid_regions | Where-Object { Get-ConditionMatches $state @($_.when) })
-            if ($admitted.Count -gt 1 -or ($admitted.Count -gt 0 -and $invalid.Count -gt 0)) { $counts.overlap++; continue }
-            if ($invalid.Count -gt 0) { $counts.invalid++; continue }
-            if ($admitted.Count -eq 0) { if (Test-HasProperty $family.state_space 'excluded_constraint') { $counts.excluded++ } else { $counts.uncovered++ }; continue }
+            $excluded = @($family.state_space.excluded_regions | Where-Object { Get-ConditionMatches $state @($_.when) })
+            $classificationMatches = $admitted.Count + $invalid.Count + $excluded.Count
+            if ($classificationMatches -eq 0) { $counts.uncovered++; continue }
+            if ($classificationMatches -gt 1) { $counts.overlap++; continue }
+            if ($invalid.Count -eq 1) { $counts.invalid++; continue }
+            if ($excluded.Count -eq 1) { $counts.excluded++; continue }
             $counts.admitted++
             $region = $admitted[0]
             $matchingRules = @($family.rules | Where-Object { Get-ConditionMatches $state @($_.when) })
@@ -301,16 +349,62 @@ function Invoke-ModelValidation([object]$Model, [object]$Schema) {
         foreach ($ruleId in @($trace.rules)) { if ($ruleIds -cnotcontains [string]$ruleId) { Add-Issue $issues "trace '$($trace.trace_id)' references unknown rule '$ruleId'"; $checks.references_and_vocabularies = $false } }
     }
 
-    $partial = @($Model.fact_families | Where-Object family -ceq 'race_contributions')[0].rules | Where-Object rule_id -ceq 'P4-RACECONTRIB-PARTIAL-DATA'
-    $partialTaxonomy = @($Model.fact_families | Where-Object family -ceq 'taxonomy')[0].rules | Where-Object rule_id -ceq 'P4-TAXONOMY-PARTIAL-RACE'
-    $partialGap = @($partial.gap_effects)
-    $shapeGap = @($Model.gap_rules | Where-Object rule_id -ceq 'P4-GAP-UNSUPPORTED-SHAPE')[0]
-    $partialOk = $null -ne $partial -and [string]$partial.coverage_effect.population -ceq 'race-records' -and [string]$partial.coverage_effect.denominator -ceq 'increment-one' -and [string]$partial.coverage_effect.completion -ceq 'no-increment' -and $partialGap.Count -eq 1 -and [string]$partialGap[0].owner_id -ceq 'GO-RACECONTRIB-PARTIAL-DATA' -and [string]$partialGap[0].gap_rule_id -ceq 'P4-GAP-UNSUPPORTED-SHAPE' -and [string]$shapeGap.population_template -ceq 'unsupported-shapes:{signature_lower}:{field_lower}' -and [string]$shapeGap.missing_capability -ceq 'allowlisted-record-shape-semantics' -and $null -ne $partialTaxonomy -and [string]$partialTaxonomy.coverage_effect.population -ceq 'taxonomy-subjects' -and [string]$partialTaxonomy.coverage_effect.denominator -ceq 'increment-one' -and [string]$partialTaxonomy.coverage_effect.completion -ceq 'increment-one'
-    $faceOutcome = @($partial.outcomes | Where-Object { @($_.constructor_groups) -ccontains 'FC-RACECONTRIB-FACEGEN' })
-    if ($faceOutcome.Count -ne 1 -or [string]$faceOutcome[0].disposition -cne 'omit') { $partialOk = $false }
-    if (-not $partialOk) { Add-Issue $issues 'partial RACE/DATA arithmetic or publication boundary drifted'; $checks.partial_race_data = $false }
+    $partialInvariant = $null
+    if ((Test-HasProperty $Model 'cross_family_invariants') -and (Test-HasProperty $Model.cross_family_invariants 'partial_race_data')) {
+        $partialInvariant = $Model.cross_family_invariants.partial_race_data
+    }
+    $partialOk = $null -ne $partialInvariant
+    if ($partialOk) {
+        foreach ($authority in @($partialInvariant.authorities)) {
+            if ($authorityIds -cnotcontains [string]$authority) { $partialOk = $false; Add-Issue $issues "partial RACE/DATA invariant references unknown authority '$authority'" }
+        }
+        $contribution = $partialInvariant.contribution
+        $fieldObligation = $partialInvariant.allowlisted_field
+        $raceObligation = $partialInvariant.resolved_race
+        $taxonomyObligation = $partialInvariant.taxonomy
+        $gapObligation = $partialInvariant.gap
+        $partialRule = Get-FamilyRule $Model ([string]$contribution.family) ([string]$contribution.rule_id)
+        $fieldRule = Get-FamilyRule $Model ([string]$fieldObligation.family) ([string]$fieldObligation.rule_id)
+        $raceRule = Get-FamilyRule $Model ([string]$raceObligation.family) ([string]$raceObligation.rule_id)
+        $taxonomyRule = Get-FamilyRule $Model ([string]$taxonomyObligation.family) ([string]$taxonomyObligation.rule_id)
+        $commonOutcome = Get-RuleOutcome $partialRule ([string]$contribution.common_constructor)
+        $faceOutcome = Get-RuleOutcome $partialRule ([string]$contribution.face_gen_constructor)
+        $fieldOutcome = Get-RuleOutcome $fieldRule ([string]$fieldObligation.constructor)
+        $raceOutcome = Get-RuleOutcome $raceRule ([string]$raceObligation.constructor)
+        $taxonomyOutcome = Get-RuleOutcome $taxonomyRule 'FC-TAXONOMY-TUPLE'
+        $partialGap = @($partialRule.gap_effects)
+        $shapeGap = @($Model.gap_rules | Where-Object { [string]$_.rule_id -ceq [string]$contribution.gap_rule_id })
+        $ownerClaims = @($Model.fact_families | ForEach-Object { $_.rules } | ForEach-Object { $_.gap_effects } | Where-Object { [string]$_.owner_id -ceq [string]$gapObligation.owner_id })
+        $resolvedPopulation = $null
+        if ($shapeGap.Count -eq 1) { $resolvedPopulation = ([string]$shapeGap[0].population_template).Replace('{signature_lower}', 'race').Replace('{field_lower}', 'data') }
+        $assignments = @($taxonomyObligation.assignments)
+        $assignmentKeys = @($assignments | ForEach-Object { '{0}|{1}|{2}' -f $_.axis, $_.facet, $_.code })
+        $requiredAssignmentKeys = @('technical-modification-surface|semantic-mechanism|surface.plugin-data','technical-modification-surface|realization-and-delivery|delivery.plugin-container')
+        $partialOk = $partialOk -and
+            [string]$partialInvariant.invariant_id -ceq 'INV-PARTIAL-RACE-DATA' -and
+            $null -ne $commonOutcome -and [string]$commonOutcome.disposition -ceq [string]$contribution.common_disposition -and [string]$contribution.common_disposition -ceq 'exact_value' -and
+            $null -ne $faceOutcome -and [string]$faceOutcome.disposition -ceq [string]$contribution.face_gen_disposition -and [string]$contribution.face_gen_disposition -ceq 'omit' -and
+            $null -ne $partialRule -and [string]$partialRule.coverage_effect.population -ceq [string]$contribution.coverage_population -and [string]$contribution.coverage_population -ceq 'race-records' -and
+            [string]$partialRule.coverage_effect.denominator -ceq [string]$contribution.coverage_denominator -and [string]$contribution.coverage_denominator -ceq 'increment-one' -and
+            [string]$partialRule.coverage_effect.completion -ceq [string]$contribution.coverage_completion -and [string]$contribution.coverage_completion -ceq 'no-increment' -and
+            $partialGap.Count -eq 1 -and [string]$partialGap[0].gap_rule_id -ceq [string]$contribution.gap_rule_id -and [string]$partialGap[0].owner_id -ceq [string]$contribution.gap_owner_id -and
+            [string]$partialGap[0].scope -ceq [string]$contribution.gap_scope -and [int]$partialGap[0].affected_count_value -eq [int]$contribution.affected_count -and
+            $null -ne $fieldOutcome -and [string]$fieldOutcome.disposition -ceq [string]$fieldObligation.disposition -and [string]$fieldObligation.disposition -ceq 'omit' -and
+            [string]$fieldObligation.field -ceq 'DATA' -and [string]$fieldObligation.occurrence_state -ceq 'structural-only' -and [string]$fieldObligation.count_publication -ceq 'omitted' -and
+            $null -ne $raceOutcome -and [string]$raceOutcome.disposition -ceq [string]$raceObligation.disposition -and [string]$raceObligation.disposition -ceq 'omit' -and
+            $null -ne $taxonomyOutcome -and [string]$taxonomyOutcome.disposition -ceq 'exact_value' -and [int]$taxonomyObligation.subject_count -eq 1 -and
+            $null -ne $taxonomyRule -and [string]$taxonomyRule.coverage_effect.population -ceq [string]$taxonomyObligation.coverage_population -and [string]$taxonomyObligation.coverage_population -ceq 'taxonomy-subjects' -and
+            [string]$taxonomyRule.coverage_effect.denominator -ceq [string]$taxonomyObligation.coverage_denominator -and [string]$taxonomyObligation.coverage_denominator -ceq 'increment-one' -and
+            [string]$taxonomyRule.coverage_effect.completion -ceq [string]$taxonomyObligation.coverage_completion -and [string]$taxonomyObligation.coverage_completion -ceq 'increment-one' -and
+            (Test-SameStringSet $assignmentKeys $requiredAssignmentKeys) -and $assignments.Count -eq 2 -and [string]$taxonomyObligation.forbidden_semantic_source -ceq 'DATA' -and
+            $shapeGap.Count -eq 1 -and [string]$resolvedPopulation -ceq [string]$gapObligation.population -and [string]$gapObligation.population -ceq 'unsupported-shapes:race:data' -and
+            [string]$shapeGap[0].missing_capability -ceq [string]$gapObligation.missing_capability -and [string]$gapObligation.missing_capability -ceq 'allowlisted-record-shape-semantics' -and
+            [string]$gapObligation.scope -ceq [string]$contribution.gap_scope -and [int]$gapObligation.affected_count -eq [int]$contribution.affected_count -and
+            [string]$gapObligation.owner_id -ceq [string]$contribution.gap_owner_id -and [int]$gapObligation.aggregation_count -eq 1 -and $ownerClaims.Count -eq 1
+    }
+    if (-not $partialOk) { Add-Issue $issues 'structured partial RACE/DATA cross-family invariant drifted'; $checks.partial_race_data = $false }
 
-    return [pscustomobject][ordered]@{ checks = [pscustomobject]$checks; issues = @($issues) }
+    return [pscustomobject][ordered]@{ checks = [pscustomobject]$checks; issues = @($issues); partial_race_data = $partialInvariant }
 }
 
 $model = Read-Json $ModelPath 'model'
@@ -322,26 +416,40 @@ $families = @($script:familyCountBuffer | Sort-Object family)
 $selfTestResults = [System.Collections.Generic.List[object]]::new()
 if (-not $SkipSelfTests) {
     $tests = @(
-        @{ name = 'missing-uncovered-disposition'; mutate = { param($m) $m.fact_families[0].state_space.PSObject.Properties.Remove('excluded_constraint') } },
-        @{ name = 'duplicate-stable-id'; mutate = { param($m) $m.fact_families[0].rules = @($m.fact_families[0].rules) + @(Copy-JsonObject $m.fact_families[0].rules[0]) } },
-        @{ name = 'overlapping-rules'; mutate = { param($m) $copy = Copy-JsonObject $m.fact_families[0].rules[0]; $copy.rule_id = 'P4-RESULT-OVERLAP-SELFTEST'; $m.fact_families[0].rules = @($m.fact_families[0].rules) + @($copy) } },
-        @{ name = 'invalid-evidence-layer-dependency'; mutate = { param($m) (@($m.fact_families | Where-Object family -ceq 'taxonomy')[0].rules | Where-Object rule_id -ceq 'P4-TAXONOMY-SEMANTIC').minimum_layer = 'structural' } },
-        @{ name = 'unknown-dimension'; mutate = { param($m) $m.fact_families[0].rules[0].when[0].dimension = 'undeclared-selftest' } },
-        @{ name = 'unknown-closed-vocabulary-value'; mutate = { param($m) $m.fact_families[0].rules[0].when[0].values[0] = 'outside-selftest-vocabulary' } },
-        @{ name = 'unknown-constructor-reference'; mutate = { param($m) $m.fact_families[0].rules[0].outcomes[0].constructor_groups[0] = 'FC-UNKNOWN-SELFTEST' } },
-        @{ name = 'unknown-authority-reference'; mutate = { param($m) $m.fact_families[0].rules[0].authorities[0] = 'unknown-selftest-authority' } },
-        @{ name = 'inconsistent-coverage-arithmetic'; mutate = { param($m) (@($m.fact_families | Where-Object family -ceq 'race_contributions')[0].rules | Where-Object rule_id -ceq 'P4-RACECONTRIB-PARTIAL-DATA').coverage_effect.completion = 'increment-one' } },
-        @{ name = 'missing-required-gap'; mutate = { param($m) (@($m.fact_families | Where-Object family -ceq 'race_contributions')[0].rules | Where-Object rule_id -ceq 'P4-RACECONTRIB-PARTIAL-DATA').gap_effects = @() } },
-        @{ name = 'duplicate-gap-ownership'; mutate = { param($m) $rules = @($m.fact_families | ForEach-Object { $_.rules } | Where-Object { @($_.gap_effects).Count -gt 0 }); $rules[1].gap_effects[0].owner_id = [string]$rules[0].gap_effects[0].owner_id } },
-        @{ name = 'invalid-partial-race-data-arithmetic'; mutate = { param($m) (@($m.fact_families | Where-Object family -ceq 'taxonomy')[0].rules | Where-Object rule_id -ceq 'P4-TAXONOMY-PARTIAL-RACE').coverage_effect.completion = 'no-increment' } }
+        @{ name = 'omitted-admitted-region-and-rule'; expect = "family 'result' has uncovered=1"; mutate = { param($m) $f=$m.fact_families[0]; $f.state_space.admitted_regions=@($f.state_space.admitted_regions|Where-Object constraint_id -cne 'SC-RESULT-PUBLISHED'); $f.rules=@($f.rules|Where-Object rule_id -cne 'P4-RESULT-PUBLISHED') } },
+        @{ name = 'omitted-invalid-region'; expect = "family 'result' has uncovered=1"; mutate = { param($m) $f=$m.fact_families[0]; $f.state_space.invalid_regions=@($f.state_space.invalid_regions|Where-Object constraint_id -cne 'SC-RESULT-SNAPSHOT-WITH-FAILURE') } },
+        @{ name = 'omitted-explicit-excluded-region'; expect = "family 'plugins' has uncovered=[1-9]"; mutate = { param($m) $f=$m.fact_families[1]; $f.state_space.excluded_regions=@($f.state_space.excluded_regions|Select-Object -Skip 1) } },
+        @{ name = 'overlapping-admitted-regions'; expect = "family 'result' has uncovered=0, overlap=1"; mutate = { param($m) $f=$m.fact_families[0]; $copy=Copy-JsonObject $f.state_space.admitted_regions[0]; $copy.constraint_id='SC-RESULT-ADMITTED-OVERLAP-SELFTEST'; $f.state_space.admitted_regions=@($f.state_space.admitted_regions)+@($copy) } },
+        @{ name = 'overlapping-invalid-regions'; expect = "family 'result' has uncovered=0, overlap=1"; mutate = { param($m) $f=$m.fact_families[0]; $copy=Copy-JsonObject $f.state_space.invalid_regions[0]; $copy.constraint_id='SC-RESULT-INVALID-OVERLAP-SELFTEST'; $f.state_space.invalid_regions=@($f.state_space.invalid_regions)+@($copy) } },
+        @{ name = 'admitted-excluded-overlap'; expect = "family 'result' has uncovered=0, overlap=1"; mutate = { param($m) $f=$m.fact_families[0]; $source=$f.state_space.admitted_regions[0]; $copy=[pscustomobject][ordered]@{constraint_id='SC-RESULT-ADMITTED-EXCLUDED-SELFTEST';when=Copy-JsonObject $source.when;reason='self-test overlap';authorities=@('adr0029')}; $f.state_space.excluded_regions=@($f.state_space.excluded_regions)+@($copy) } },
+        @{ name = 'invalid-excluded-overlap'; expect = "family 'result' has uncovered=0, overlap=1"; mutate = { param($m) $f=$m.fact_families[0]; $source=$f.state_space.invalid_regions[0]; $copy=[pscustomobject][ordered]@{constraint_id='SC-RESULT-INVALID-EXCLUDED-SELFTEST';when=Copy-JsonObject $source.when;reason='self-test overlap';authorities=@('adr0029')}; $f.state_space.excluded_regions=@($f.state_space.excluded_regions)+@($copy) } },
+        @{ name = 'empty-catch-all-excluded-predicate'; expect = 'empty or catch-all predicate'; mutate = { param($m) $f=$m.fact_families[0]; $copy=[pscustomobject][ordered]@{constraint_id='SC-RESULT-CATCHALL-SELFTEST';when=@();reason='self-test catch-all';authorities=@('adr0029')}; $f.state_space.excluded_regions=@($f.state_space.excluded_regions)+@($copy) } },
+        @{ name = 'unknown-invalid-atomic-boundary'; expect = 'references unknown atomic boundary'; mutate = { param($m) $m.fact_families[0].state_space.invalid_regions[0].atomic_boundary='AB-UNKNOWN-SELFTEST' } },
+        @{ name = 'unknown-constraint-authority'; expect = 'references unknown authority'; mutate = { param($m) $m.fact_families[0].state_space.admitted_regions[0].authorities[0]='unknown-selftest-authority' } },
+        @{ name = 'duplicate-stable-id'; expect = 'duplicate rule ID'; mutate = { param($m) $m.fact_families[0].rules = @($m.fact_families[0].rules) + @(Copy-JsonObject $m.fact_families[0].rules[0]) } },
+        @{ name = 'overlapping-rules'; expect = 'matches 2 rules'; mutate = { param($m) $copy = Copy-JsonObject $m.fact_families[0].rules[0]; $copy.rule_id = 'P4-RESULT-OVERLAP-SELFTEST'; $m.fact_families[0].rules = @($m.fact_families[0].rules) + @($copy) } },
+        @{ name = 'invalid-evidence-layer-dependency'; expect = 'lacks semantic evidence'; mutate = { param($m) (@($m.fact_families | Where-Object family -ceq 'taxonomy')[0].rules | Where-Object rule_id -ceq 'P4-TAXONOMY-SEMANTIC').minimum_layer = 'structural' } },
+        @{ name = 'unknown-dimension'; expect = 'undeclared dimension'; mutate = { param($m) $m.fact_families[0].rules[0].when[0].dimension = 'undeclared-selftest' } },
+        @{ name = 'unknown-closed-vocabulary-value'; expect = 'outside dimension'; mutate = { param($m) $m.fact_families[0].rules[0].when[0].values[0] = 'outside-selftest-vocabulary' } },
+        @{ name = 'unknown-constructor-reference'; expect = 'references unknown constructor'; mutate = { param($m) $m.fact_families[0].rules[0].outcomes[0].constructor_groups[0] = 'FC-UNKNOWN-SELFTEST' } },
+        @{ name = 'unknown-rule-authority-reference'; expect = 'references unknown authority'; mutate = { param($m) $m.fact_families[0].rules[0].authorities[0] = 'unknown-selftest-authority' } },
+        @{ name = 'inconsistent-coverage-arithmetic'; expect = 'partial RACE/DATA contribution arithmetic'; mutate = { param($m) (Get-FamilyRule $m 'race_contributions' 'P4-RACECONTRIB-PARTIAL-DATA').coverage_effect.completion = 'increment-one' } },
+        @{ name = 'missing-required-gap'; expect = 'partial RACE/DATA contribution arithmetic'; mutate = { param($m) (Get-FamilyRule $m 'race_contributions' 'P4-RACECONTRIB-PARTIAL-DATA').gap_effects = @() } },
+        @{ name = 'duplicate-gap-ownership'; expect = 'double-counted'; mutate = { param($m) $rules = @($m.fact_families | ForEach-Object { $_.rules } | Where-Object { @($_.gap_effects).Count -gt 0 }); $rules[1].gap_effects[0].owner_id = [string]$rules[0].gap_effects[0].owner_id } },
+        @{ name = 'invalid-partial-race-data-arithmetic'; expect = 'partial RACE/DATA taxonomy arithmetic'; mutate = { param($m) (Get-FamilyRule $m 'taxonomy' 'P4-TAXONOMY-PARTIAL-RACE').coverage_effect.completion = 'no-increment' } },
+        @{ name = 'invalid-partial-race-data-assignment'; expect = 'structured partial RACE/DATA'; mutate = { param($m) $m.cross_family_invariants.partial_race_data.taxonomy.assignments[0].code='surface.invalid-selftest' } },
+        @{ name = 'invalid-partial-race-data-field-publication'; expect = 'structured partial RACE/DATA'; mutate = { param($m) (Get-FamilyRule $m 'allowlisted_fields' 'P4-FIELDS-STRUCTURAL-ONLY').outcomes[0].disposition='exact_value' } },
+        @{ name = 'invalid-partial-race-data-gap-resolution'; expect = 'structured partial RACE/DATA'; mutate = { param($m) $m.cross_family_invariants.partial_race_data.gap.population='unsupported-shapes:race:wrong' } }
     )
     foreach ($test in $tests) {
         $mutation = Copy-JsonObject $model
         & $test.mutate $mutation
         $script:familyCountBuffer = [System.Collections.Generic.List[object]]::new()
         $mutated = Invoke-ModelValidation $mutation $schema
-        $rejected = @($mutated.issues).Count -gt 0
-        $selfTestResults.Add([pscustomobject][ordered]@{ name = [string]$test.name; result = $(if ($rejected) { 'rejected' } else { 'unexpectedly-passed' }) })
+        $issueText = @($mutated.issues) -join "`n"
+        $rejected = @($mutated.issues).Count -gt 0 -and $issueText -match [string]$test.expect
+        $matchedEvidence = @($mutated.issues | Where-Object { [string]$_ -match [string]$test.expect } | Select-Object -First 1)
+        $selfTestResults.Add([pscustomobject][ordered]@{ name = [string]$test.name; result = $(if ($rejected) { 'rejected' } else { 'unexpectedly-passed' }); evidence = $(if ($matchedEvidence.Count) { [string]$matchedEvidence[0] } else { '' }) })
     }
 }
 
@@ -357,11 +465,34 @@ $inventory = [ordered]@{
     gap_rules = @($model.gap_rules).Count
     authorities = @($model.authorities.PSObject.Properties).Count
     atomic_boundaries = @($model.atomic_boundaries).Count
+    excluded_regions = @($model.fact_families | ForEach-Object { $_.state_space.excluded_regions }).Count
 }
 $allSelfTestsPassed = @($selfTestResults | Where-Object result -cne 'rejected').Count -eq 0
 $passed = @($validation.issues).Count -eq 0 -and $allSelfTestsPassed
+$validatedPartial = $validation.partial_race_data
+$partialSummary = $null
+if ($null -ne $validatedPartial) {
+    $partialSummary = [pscustomobject][ordered]@{
+        invariant_id = [string]$validatedPartial.invariant_id
+        race_records_denominator = Convert-IncrementToCount ([string]$validatedPartial.contribution.coverage_denominator)
+        race_records_completion = Convert-IncrementToCount ([string]$validatedPartial.contribution.coverage_completion)
+        taxonomy_subjects_denominator = Convert-IncrementToCount ([string]$validatedPartial.taxonomy.coverage_denominator)
+        taxonomy_subjects_completion = Convert-IncrementToCount ([string]$validatedPartial.taxonomy.coverage_completion)
+        taxonomy_subject_count = [int]$validatedPartial.taxonomy.subject_count
+        generic_technical_assignments = @($validatedPartial.taxonomy.assignments)
+        data_count = [string]$validatedPartial.allowlisted_field.count_publication
+        face_gen_head = Convert-DispositionToSummary ([string]$validatedPartial.contribution.face_gen_disposition)
+        resolved_race = Convert-DispositionToSummary ([string]$validatedPartial.resolved_race.disposition)
+        gap_count = [int]$validatedPartial.gap.aggregation_count
+        gap_population = [string]$validatedPartial.gap.population
+        missing_capability = [string]$validatedPartial.gap.missing_capability
+        gap_scope = [string]$validatedPartial.gap.scope
+        affected_count = [int]$validatedPartial.gap.affected_count
+        gap_owner_id = [string]$validatedPartial.gap.owner_id
+    }
+}
 $summary = [pscustomobject][ordered]@{
-    validator = 'infinium.m1-slice4.protocol-4-totality-validator/v1'
+    validator = 'infinium.m1-slice4.protocol-4-totality-validator/v2'
     model_id = [string]$model.model_id
     model_version = [string]$model.version
     status = $(if ($passed) { 'passed' } else { 'failed' })
@@ -369,18 +500,7 @@ $summary = [pscustomobject][ordered]@{
     families = $families
     checks = $validation.checks
     inventory = [pscustomobject]$inventory
-    partial_race_data = [pscustomobject][ordered]@{
-        race_records_denominator = 1
-        race_records_completion = 0
-        taxonomy_subjects_denominator = 1
-        taxonomy_subjects_completion = 1
-        data_count = 'omitted'
-        face_gen_head = 'omitted'
-        resolved_race = 'omitted'
-        gap_count = 1
-        gap_population = 'unsupported-shapes:race:data'
-        missing_capability = 'allowlisted-record-shape-semantics'
-    }
+    partial_race_data = $partialSummary
     self_tests = @($selfTestResults)
     issues = @($validation.issues)
 }
@@ -397,7 +517,7 @@ Write-Output "Totals: raw=$($totals.raw) admitted=$($totals.admitted) excluded=$
 foreach ($family in $families) {
     Write-Output ("Family {0}: raw={1} admitted={2} excluded={3} invalid={4} uncovered={5} overlap={6}" -f $family.family, $family.raw, $family.admitted, $family.excluded, $family.invalid, $family.uncovered, $family.overlap)
 }
-Write-Output "Inventory: families=$($inventory.families) coverage=$($inventory.coverage_populations) dimensions=$($inventory.dimensions) vocabularies=$($inventory.vocabularies) constructors=$($inventory.constructor_groups) rules=$($inventory.publication_rules) gaps=$($inventory.gap_rules) authorities=$($inventory.authorities) boundaries=$($inventory.atomic_boundaries)"
-foreach ($test in @($selfTestResults)) { Write-Output "Self-test $($test.name): $($test.result)" }
+Write-Output "Inventory: families=$($inventory.families) coverage=$($inventory.coverage_populations) dimensions=$($inventory.dimensions) vocabularies=$($inventory.vocabularies) constructors=$($inventory.constructor_groups) rules=$($inventory.publication_rules) gaps=$($inventory.gap_rules) authorities=$($inventory.authorities) boundaries=$($inventory.atomic_boundaries) excluded_regions=$($inventory.excluded_regions)"
+foreach ($test in @($selfTestResults)) { Write-Output "Self-test $($test.name): $($test.result); evidence=$($test.evidence)" }
 if (@($validation.issues).Count -gt 0) { foreach ($issue in @($validation.issues)) { Write-Output "ERROR: $issue" } }
 if (-not $passed) { exit 1 }
