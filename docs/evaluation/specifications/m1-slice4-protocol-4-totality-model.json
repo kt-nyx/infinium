@@ -1,0 +1,2161 @@
+{
+  "schema_id": "infinium.m1-slice4.protocol-4-totality-model/v1",
+  "model_id": "infinium.m1-slice4.protocol-4-evidence-contract",
+  "version": "1.0.0",
+  "status": "proposed",
+  "work_id": "M1/S4.5/PRE-B2/WP1",
+  "protocol": {
+    "evaluator_commit": "3693d19563c636cd2879804633ca4ce52448d2c1",
+    "protocol_id": "infinium.evaluator-v2/4",
+    "protocol_version": "4.0.0",
+    "projection_id": "infinium.evaluator-v2.slice4-semantic-projection",
+    "projection_version": "3.0.0",
+    "candidate_commit": "a98d648bd0adb2751ee0c09828e0227b1583950f"
+  },
+  "authorities": {
+    "adr0027": {
+      "path": "../../architecture/decisions/ADR-0027-public-evaluation-protocol-private-held-out-corpus.md",
+      "status": "accepted",
+      "scope": "Public-rule/private-data boundary, terminal result boundary, frozen protocol authority, and independent authorability."
+    },
+    "adr0028": {
+      "path": "../../architecture/decisions/ADR-0028-m1-bethesda-semantic-reporting-and-oracle-authority.md",
+      "status": "accepted",
+      "scope": "EDID, FaceGen precedence, asset tri-state, fixed coverage registry, layered gaps, and hybrid taxonomy emission."
+    },
+    "adr0029": {
+      "path": "../../architecture/decisions/ADR-0029-layered-evidence-and-partial-semantic-publication.md",
+      "status": "accepted",
+      "scope": "Evidence layers, exactly-one disposition, graceful degradation, totality, and the partial RACE/DATA branch."
+    },
+    "owner_disposition": {
+      "path": "../m1-slice4-semantic-authority-owner-disposition.md",
+      "status": "accepted",
+      "scope": "Exact coverage arithmetic, gap vocabulary, FaceGen wire values, taxonomy pairs, and partial RACE/DATA projection."
+    },
+    "authority_matrix": {
+      "path": "../m1-slice4-heldout-oracle-authority-matrix.md",
+      "status": "accepted",
+      "scope": "Fifteen included fact families, held-out/public-only split, null/missing boundary, and evaluator-owned identities."
+    },
+    "taxonomy": {
+      "path": "../../product/mod-impact-taxonomy.md",
+      "status": "accepted",
+      "scope": "Canonical taxonomy identity, axis/facet pairs, applicability, roles, and hybrid emission."
+    },
+    "coverage": {
+      "path": "../../product/severity-confidence-and-coverage.md",
+      "status": "accepted",
+      "scope": "Coverage states, fixed M1 populations, labeled denominators, layered completion, and explicit gaps."
+    },
+    "data_trust": {
+      "path": "../../architecture/data-and-trust-model.md",
+      "status": "accepted",
+      "scope": "Evidence-class separation, layered derivation, partial success, provenance, and abstention."
+    },
+    "preb2_plan": {
+      "path": "../../plans/slices/M1-slice-4.5-pre-B2-evidence-contract-totality.md",
+      "status": "accepted",
+      "scope": "WP1 deliverables, fixed identities, state dimensions, verification, and downstream boundary."
+    },
+    "blocked_draft": {
+      "path": "m1-slice4-protocol-4-oracle-construction.md",
+      "status": "historical-input",
+      "scope": "Historical lexical and constructor inventory only where consistent with accepted decisions; not semantic authority."
+    },
+    "frozen_readme": {
+      "path": "../../../tools/evaluation/Infinium.EvaluatorV2/README.md@3693d19563c636cd2879804633ca4ce52448d2c1",
+      "status": "frozen-mechanics",
+      "scope": "Protocol /4 public projection and canonical mechanics."
+    },
+    "frozen_protocol": {
+      "path": "../../../tools/evaluation/Infinium.EvaluatorV2/protocol/protocol.json@3693d19563c636cd2879804633ca4ce52448d2c1",
+      "status": "frozen-mechanics",
+      "scope": "Protocol identities, schema inventory, typed values, projection rules, and terminal vocabulary."
+    },
+    "frozen_canonicalizer": {
+      "path": "../../../tools/evaluation/Infinium.EvaluatorV2/SemanticCanonicalizer.cs@3693d19563c636cd2879804633ca4ce52448d2c1",
+      "status": "frozen-mechanics",
+      "scope": "Exact fact-ID, fact-type, value-type, ordering, normalization, and canonical subject constructors."
+    },
+    "frozen_schema": {
+      "path": "../../../tools/evaluation/Infinium.EvaluatorV2/protocol/evaluator-v2-common.v4.schema.json@3693d19563c636cd2879804633ca4ce52448d2c1",
+      "status": "frozen-mechanics",
+      "scope": "Closed fact-type/value-type and execution-input vocabulary."
+    }
+  },
+  "evidence_layers": [
+    {
+      "id": "structural",
+      "ordinal": 1,
+      "definition": "Identity, envelope, signature, order, declared shape, and contribution membership established without decoding the affected value.",
+      "prerequisites": [],
+      "proves": ["framed identity", "declared membership", "sequence position", "record signature and flags"],
+      "does_not_prove": ["member occurrence count", "typed member value", "target resolution", "semantic applicability"],
+      "authorities": ["adr0029", "data_trust"]
+    },
+    {
+      "id": "observed",
+      "ordinal": 2,
+      "definition": "Exact occurrence, bytes, presence, or count established from the admitted source.",
+      "prerequisites": ["structural"],
+      "proves": ["member presence", "positive occurrence count", "retained bytes", "provider-chain observation"],
+      "does_not_prove": ["typed meaning", "reference resolution", "absence without exhaustive authority", "taxonomy meaning"],
+      "authorities": ["adr0029", "authority_matrix"]
+    },
+    {
+      "id": "decoded",
+      "ordinal": 3,
+      "definition": "A typed value or typed null produced under an accepted field and shape contract.",
+      "prerequisites": ["structural", "observed"],
+      "proves": ["typed scalar", "typed null", "link token and ordinal", "complete placement vector"],
+      "does_not_prove": ["target existence", "provider authority", "semantic classification", "exact absence without exhaustive evidence"],
+      "authorities": ["adr0029", "owner_disposition"]
+    },
+    {
+      "id": "resolved",
+      "ordinal": 4,
+      "definition": "A decoded reference, provider, localization, or dependency connected to its authoritative target or established as unresolved.",
+      "prerequisites": ["structural", "observed", "decoded"],
+      "proves": ["resolved or unresolved target state", "effective winner", "provider winner", "localized resolution"],
+      "does_not_prove": ["FaceGen applicability", "purpose", "consequence", "semantic taxonomy beyond the resolved evidence"],
+      "authorities": ["adr0029", "authority_matrix"]
+    },
+    {
+      "id": "semantic",
+      "ordinal": 5,
+      "definition": "Applicability, meaning, classification, consequence, or interpretation authorized by preceding evidence and accepted policy.",
+      "prerequisites": ["structural", "observed", "decoded", "resolved"],
+      "proves": ["FaceGen applicability", "semantic asset availability", "evidence-supported taxonomy tuples", "coverage completion"],
+      "does_not_prove": ["unsupported higher-layer claims", "purpose or consequence from EDID", "global safety", "candidate correctness"],
+      "authorities": ["adr0028", "adr0029", "taxonomy"]
+    }
+  ],
+  "state_classes": [
+    {
+      "id": "not-observed",
+      "definition": "The member, record, subject, or population member is outside the observed admitted evidence; absence is not inferred unless exhaustive authority separately establishes it.",
+      "minimum_layer": "none",
+      "required_disposition": "no_fact"
+    },
+    {
+      "id": "observed-undecodable",
+      "definition": "Structure or occurrence is independently known but the accepted bounded shape cannot produce the typed value.",
+      "minimum_layer": "observed",
+      "required_disposition": "omission_plus_gap"
+    },
+    {
+      "id": "decoded-null",
+      "definition": "The accepted decoder establishes the semantic null state; this is an explicit typed-null fact where the constructor publishes null.",
+      "minimum_layer": "decoded",
+      "required_disposition": "typed_null"
+    },
+    {
+      "id": "decoded-unresolved",
+      "definition": "A reference target FormKey is decoded but no authoritative target record resolves.",
+      "minimum_layer": "decoded",
+      "required_disposition": "exact_value"
+    },
+    {
+      "id": "resolved",
+      "definition": "Every prerequisite needed by the fact constructor is established, including target/provider resolution where applicable.",
+      "minimum_layer": "resolved",
+      "required_disposition": "exact_value"
+    },
+    {
+      "id": "semantic-applicable",
+      "definition": "Accepted semantic prerequisites establish that the fact or population applies.",
+      "minimum_layer": "semantic",
+      "required_disposition": "family_specific"
+    },
+    {
+      "id": "unsupported",
+      "definition": "The input is well framed but the bounded contract lacks the named family, field, shape, localization, archive, discovery, or applicability capability.",
+      "minimum_layer": "structural",
+      "required_disposition": "omission_plus_gap"
+    },
+    {
+      "id": "not-applicable",
+      "definition": "Accepted semantics establish that the fact or coverage member does not apply; this is not unsupported and produces no applicability gap.",
+      "minimum_layer": "semantic",
+      "required_disposition": "family_specific"
+    },
+    {
+      "id": "terminal-rejection",
+      "definition": "The lower-level evidence cannot be separated safely or an atomic publication invariant is violated, so no authoritative snapshot publication is admitted.",
+      "minimum_layer": "none",
+      "required_disposition": "terminal_rejection"
+    }
+  ],
+  "dimensions": {
+    "publication": {
+      "description": "Top-level snapshot publication state.",
+      "values": ["snapshot-published", "no-snapshot"]
+    },
+    "failure": {
+      "description": "Presence of one or more public-envelope failures.",
+      "values": ["none", "present"]
+    },
+    "record_admission": {
+      "description": "Whether a record contribution is absent, admitted, well-framed but unsupported, or malformed.",
+      "values": ["not-observed", "admitted", "unsupported-family", "malformed"]
+    },
+    "winner_state": {
+      "description": "Winning-record deletion state used before later FaceGen applicability predicates.",
+      "values": ["not-applicable", "deleted", "non-deleted"]
+    },
+    "member_presence": {
+      "description": "Observed member multiplicity.",
+      "values": ["not-observed", "present-once", "present-repeated"]
+    },
+    "occurrence_state": {
+      "description": "Strength of occurrence-count evidence.",
+      "values": ["not-observed", "structural-only", "observed-exact"]
+    },
+    "shape_support": {
+      "description": "Bounded member shape status.",
+      "values": ["supported", "unsupported", "malformed", "not-applicable"]
+    },
+    "decode_state": {
+      "description": "Typed decode result.",
+      "values": ["not-attempted", "undecodable", "decoded-value", "decoded-null"]
+    },
+    "link_state": {
+      "description": "Protocol /4 link-state vocabulary plus non-applicability and invalidity.",
+      "values": ["not-applicable", "null", "resolved", "unresolved", "invalid"]
+    },
+    "target_resolution": {
+      "description": "Decoded target resolution outcome.",
+      "values": ["not-applicable", "resolved", "unresolved", "untranslatable"]
+    },
+    "template_decision": {
+      "description": "Closed template-traits decision used by FaceGen precedence.",
+      "values": ["not-applicable", "unknown", "inherits-traits", "does-not-inherit-traits"]
+    },
+    "race_decision": {
+      "description": "Closed winning-race/FaceGenHead decision used by FaceGen precedence.",
+      "values": ["not-applicable", "missing", "null", "unresolved", "unknown-facegen-head", "resolved-with-facegen-head", "resolved-without-facegen-head"]
+    },
+    "provider_state": {
+      "description": "Declared loose-provider-chain state.",
+      "values": ["not-declared", "declared-single", "declared-multiple"]
+    },
+    "asset_availability": {
+      "description": "Semantic loose-asset state.",
+      "values": ["present", "absent", "unknown", "invalid"]
+    },
+    "archive_capability": {
+      "description": "Archive activation/member-precedence capability.",
+      "values": ["not-needed", "supported", "unsupported"]
+    },
+    "localization_capability": {
+      "description": "Localized-string resolution capability.",
+      "values": ["not-encountered", "supported", "unsupported"]
+    },
+    "discovery_state": {
+      "description": "Automatic environment discovery request and result.",
+      "values": ["not-requested", "completed", "unavailable"]
+    },
+    "taxonomy_evidence": {
+      "description": "Evidence available for hybrid taxonomy emission.",
+      "values": ["none", "technical-core", "semantic-supported", "explicit-nonassigned-required"]
+    },
+    "coverage_lifecycle": {
+      "description": "Accepted coverage state after arithmetic and lifecycle effects.",
+      "values": ["completed", "completed-with-gaps", "failed", "skipped-by-configuration", "skipped-by-limit", "unsupported", "invalid"]
+    },
+    "coverage_denominator": {
+      "description": "Whether a fixed-registry row denominator is zero, positive, or invalid.",
+      "values": ["zero", "positive", "invalid"]
+    },
+    "gap_scope": {
+      "description": "Projection collection in which an aggregated gap is published.",
+      "values": ["none", "snapshot", "result", "snapshot-and-result"]
+    }
+  },
+  "vocabularies": {
+    "fact_families": ["result", "plugins", "override_chains", "npc_contributions", "race_contributions", "placed_reference_contributions", "allowlisted_fields", "npcs", "races", "placed_references", "face_gen", "taxonomy", "coverage", "gaps", "result_gaps"],
+    "fact_types": ["state", "plugin", "winner", "override_chain", "contribution", "record_identity", "form_key", "link", "ownership", "placement", "field", "npc", "race", "reference", "face_gen", "taxonomy", "coverage", "gap", "failure"],
+    "value_types": ["string", "integer", "number", "boolean", "null"],
+    "result_states": ["completed", "completed_with_gaps", "invalid_input", "changed_during_read", "failed"],
+    "link_states": ["null", "resolved", "unresolved"],
+    "link_fields": ["TPLT", "RNAM", "HCLF", "PKID", "PNAM", "NAME", "XLKR", "XLRL", "XOWN"],
+    "link_components": ["linked-reference", "keyword"],
+    "face_gen_applicability": ["applicable", "not_applicable_deleted_winner", "unknown_template_traits_decision", "not_applicable_template_traits", "unknown_race", "not_applicable_race_without_face_gen_head"],
+    "asset_availability": ["present", "absent", "unknown"],
+    "coverage_states": ["completed", "completed_with_gaps", "failed", "skipped_by_configuration", "skipped_by_limit", "unsupported"],
+    "taxonomy_applicability": ["assigned", "unknown", "unsupported", "unmapped", "not-applicable"],
+    "taxonomy_roles": ["declared", "observed", "predicted", "established"],
+    "taxonomy_axis_facets": [
+      { "axis": "declared-purpose-and-intended-feature-area", "facet": "purpose-kind" },
+      { "axis": "technical-modification-surface", "facet": "semantic-mechanism" },
+      { "axis": "technical-modification-surface", "facet": "realization-and-delivery" },
+      { "axis": "affected-game-system-or-content-area", "facet": "affected-area" },
+      { "axis": "consequence-type", "facet": "consequence-type" },
+      { "axis": "effect-extent", "facet": "direct-subject-breadth" },
+      { "axis": "effect-extent", "facet": "spatial-breadth" },
+      { "axis": "effect-extent", "facet": "persistence-and-lifecycle-breadth" },
+      { "axis": "effect-extent", "facet": "causal-propagation-or-blast-radius" }
+    ],
+    "taxonomy_subject_types": ["record-contribution", "record-semantic-subject", "unsupported-record"],
+    "semantic_suffixes": ["area.actors.ai-packages", "area.actors.appearance-identity", "area.world.placed-objects-activation", "face-gen-loose-provider-chain:{normalized-relative-path}"],
+    "coverage_populations": ["plugins", "npc-records", "race-records", "placed-reference-records", "unsupported-records", "face-gen-loose-assets", "face-gen-archive-assets", "localized-strings", "automatic-environment-discovery", "taxonomy-subjects"],
+    "countable_fields": {
+      "NPC_": ["EDID", "ACBS", "TPLT", "RNAM", "AIDT", "PKID", "PNAM", "HCLF"],
+      "RACE": ["EDID", "DATA"],
+      "REFR": ["EDID", "NAME", "XLKR", "XLRL", "XOWN", "DATA"]
+    }
+  },
+  "normalization_rules": [
+    {
+      "rule_id": "P4-NORM-FORMKEY",
+      "subject": "canonical FormKey",
+      "rule": "Use exactly eight lowercase hexadecimal local-ID digits, colon, and a lowercase plugin filename with a nonempty basename and esm, esp, or esl extension; translate through TES4 masters before formatting; extension alone never establishes light origin.",
+      "atomic_boundary": "AB-FORMKEY",
+      "authorities": ["blocked_draft", "frozen_canonicalizer", "frozen_protocol"]
+    },
+    {
+      "rule_id": "P4-NORM-SEGMENT",
+      "subject": "fact-ID segment",
+      "rule": "Normalize the semantic value first, then percent-encode its UTF-8 bytes under RFC 3986 with uppercase hex, space as %20, and only ALPHA, DIGIT, hyphen, period, underscore, and tilde unescaped.",
+      "atomic_boundary": "AB-FACTSET",
+      "authorities": ["blocked_draft", "frozen_canonicalizer"]
+    },
+    {
+      "rule_id": "P4-NORM-ORDER",
+      "subject": "sequence and set ordering",
+      "rule": "Preserve manifest plugins, TES4 masters, override contributions, provider chains, and link occurrence order; format zero-based ordinals with minimum width four; sort maps and semantic sets ordinally by canonical identity; sort final facts ordinally by complete fact_id.",
+      "atomic_boundary": "AB-FACTSET",
+      "authorities": ["authority_matrix", "frozen_canonicalizer", "frozen_protocol"]
+    },
+    {
+      "rule_id": "P4-NORM-CASE",
+      "subject": "casing",
+      "rule": "Lowercase plugin filenames, provider IDs, paths, semantic contribution identity components, signatures embedded in identities, and projected gap signature/field components; retain Bethesda record and subrecord signature fact values as uppercase ASCII.",
+      "atomic_boundary": "AB-FACTSET",
+      "authorities": ["owner_disposition", "blocked_draft", "frozen_canonicalizer"]
+    },
+    {
+      "rule_id": "P4-NORM-NUMBER",
+      "subject": "typed primitive",
+      "rule": "Integer is exact signed Int64, number is finite IEEE-754 with numeric equality including negative zero equal to zero, and string, boolean, and null require matching JSON kinds; arrays and objects are never fact values.",
+      "atomic_boundary": "AB-TYPED-VALUE",
+      "authorities": ["frozen_protocol", "frozen_schema"]
+    },
+    {
+      "rule_id": "P4-NORM-CONTRIBUTION",
+      "subject": "semantic contribution identity",
+      "rule": "Construct source={lower plugin}|order={D4}|record={canonical FormKey}|signature={lower signature}|flags={lower hex minimum width 8}|deleted={lower boolean}|compressed={lower boolean}.",
+      "atomic_boundary": "AB-FACTSET",
+      "authorities": ["authority_matrix", "blocked_draft", "frozen_canonicalizer"]
+    },
+    {
+      "rule_id": "P4-NORM-LINK",
+      "subject": "link identity and state",
+      "rule": "Use field_lower:component_lower_or_value:ordinal_D4 as identity; only null, resolved, and unresolved states publish; only XLKR may use linked-reference or keyword components.",
+      "atomic_boundary": "AB-LINK",
+      "authorities": ["blocked_draft", "frozen_canonicalizer"]
+    },
+    {
+      "rule_id": "P4-NORM-PATH",
+      "subject": "FaceGen path",
+      "rule": "Replace backslash with slash and lowercase invariantly before comparison, subject construction, and fact-ID escaping.",
+      "atomic_boundary": "AB-ASSET",
+      "authorities": ["owner_disposition", "frozen_canonicalizer"]
+    },
+    {
+      "rule_id": "P4-NORM-TAXONOMY",
+      "subject": "taxonomy identity",
+      "rule": "Identity is canonical subject, subject type, axis, facet, code-or-literal-null, applicability, and role; assigned requires non-null code and every other applicability requires typed-null code.",
+      "atomic_boundary": "AB-TAXONOMY",
+      "authorities": ["taxonomy", "owner_disposition", "frozen_canonicalizer"]
+    },
+    {
+      "rule_id": "P4-NORM-GAP",
+      "subject": "gap aggregation",
+      "rule": "Aggregate exact positive affected-member counts by the unique ordinal key population plus missing_capability; generated IDs and reason prose never enter projected facts.",
+      "atomic_boundary": "AB-GAP",
+      "authorities": ["adr0028", "owner_disposition", "frozen_canonicalizer"]
+    }
+  ],
+  "atomic_boundaries": [
+    {
+      "id": "AB-RESULT",
+      "scope": "result envelope and snapshot publication",
+      "reject_when": "A snapshot accompanies invalid_input, changed_during_read, or failed, or either required result boolean is absent.",
+      "retained_lower_layers": "Only the two result facts and independently established result_gaps survive when no snapshot is published.",
+      "result_effect": "No snapshot family facts publish.",
+      "authorities": ["authority_matrix", "blocked_draft", "frozen_canonicalizer"]
+    },
+    {
+      "id": "AB-FORMKEY",
+      "scope": "plugin/master translation and canonical FormKey",
+      "reject_when": "Master is missing, master index or light/full origin is untranslatable or ambiguous, local ID is out of range, or the canonical lexical form is invalid.",
+      "retained_lower_layers": "None for a publication requiring the invalid FormKey because identities cannot be separated safely.",
+      "result_effect": "Terminal no-snapshot invalid input.",
+      "authorities": ["blocked_draft", "frozen_canonicalizer"]
+    },
+    {
+      "id": "AB-RECORD-FRAMING",
+      "scope": "plugin and record envelope framing",
+      "reject_when": "Malformed bytes prevent authoritative record framing, contribution membership, signature, order, or flags.",
+      "retained_lower_layers": "Unrelated independently framed inputs may be retained only in a separate valid publication; this result publishes no mixed snapshot.",
+      "result_effect": "Terminal no-snapshot state rather than an unsupported semantic member.",
+      "authorities": ["adr0029", "blocked_draft"]
+    },
+    {
+      "id": "AB-LINK",
+      "scope": "one link object",
+      "reject_when": "State, field, component, ordinal, or target combination is invalid, or the target master index is untranslatable.",
+      "retained_lower_layers": "A decoded null singleton is separable and publishes only typed-null /state; an unresolved translatable target is not rejected.",
+      "result_effect": "Invalid link construction is rejected; unsupported later semantics do not erase valid lower record facts.",
+      "authorities": ["blocked_draft", "frozen_canonicalizer"]
+    },
+    {
+      "id": "AB-PLACEMENT",
+      "scope": "REFR placement",
+      "reject_when": "Only part of the six finite position/rotation values is published or any value is nonfinite.",
+      "retained_lower_layers": "A completely absent placement is valid and emits no placement facts.",
+      "result_effect": "Reject the invalid reference fact object; do not repair the vector.",
+      "authorities": ["blocked_draft", "frozen_canonicalizer"]
+    },
+    {
+      "id": "AB-ASSET",
+      "scope": "one FaceGen mesh or tint asset object",
+      "reject_when": "present/exact_absence_known is true/true, present lacks a declared-chain winner, non-present has a winner, or the winner is outside the declared chain.",
+      "retained_lower_layers": "Valid applicability and the other asset object remain conceptually separable, but the published candidate/oracle object is rejected at its owning contract boundary.",
+      "result_effect": "Invalid publication rather than a fourth availability state.",
+      "authorities": ["adr0028", "owner_disposition"]
+    },
+    {
+      "id": "AB-COVERAGE",
+      "scope": "fixed ten-row coverage registry",
+      "reject_when": "A row is missing, extra, duplicated, arithmetically impossible, uses an unknown state, marks 0/0 other than completed, or marks a gap-bearing/incomplete row completed.",
+      "retained_lower_layers": "Underlying facts do not authorize publication of an inconsistent coverage registry.",
+      "result_effect": "Reject the snapshot publication.",
+      "authorities": ["adr0028", "owner_disposition", "coverage"]
+    },
+    {
+      "id": "AB-GAP",
+      "scope": "one aggregated gap collection",
+      "reject_when": "Population/capability is outside the closed vocabulary, affected count is nonpositive, or an aggregate key is duplicated.",
+      "retained_lower_layers": "Valid lower-layer facts remain independently true but the inconsistent snapshot/result publication is rejected.",
+      "result_effect": "Reject the owning gap collection and result publication.",
+      "authorities": ["owner_disposition", "blocked_draft"]
+    },
+    {
+      "id": "AB-TAXONOMY",
+      "scope": "one semantic taxonomy tuple and tuple set",
+      "reject_when": "Code/applicability is inconsistent, subject type/suffix is outside the closed registry, a filler/provider-topology tuple appears, or a semantic tuple identity is duplicated.",
+      "retained_lower_layers": "Valid record/provider observations remain, but invalid taxonomy publication is rejected rather than silently deduplicated.",
+      "result_effect": "Reject the owning snapshot.",
+      "authorities": ["adr0028", "taxonomy", "owner_disposition"]
+    },
+    {
+      "id": "AB-FACTSET",
+      "scope": "final canonical fact set",
+      "reject_when": "Any final fact_id is duplicated or a constructor emits an unlisted fact/value vocabulary.",
+      "retained_lower_layers": "No first/last/tie-break repair is permitted.",
+      "result_effect": "Candidate-output or oracle contract rejection.",
+      "authorities": ["authority_matrix", "frozen_canonicalizer", "frozen_protocol"]
+    },
+    {
+      "id": "AB-TYPED-VALUE",
+      "scope": "one typed primitive fact",
+      "reject_when": "value_type and JSON kind differ, integer is not exact Int64, number is nonfinite, or the value is an object/array.",
+      "retained_lower_layers": "No coercion or repair is permitted.",
+      "result_effect": "Fact-set rejection.",
+      "authorities": ["frozen_protocol", "frozen_schema"]
+    }
+  ],
+  "gap_rules": [
+    {
+      "rule_id": "P4-GAP-UNSUPPORTED-RECORD",
+      "condition": "A well-framed contribution signature is outside NPC_, RACE, and REFR.",
+      "population_template": "unsupported-records:{signature_lower}",
+      "missing_capability": "allowlisted-record-family-semantics",
+      "aggregation_key": "population+missing_capability",
+      "affected_count": "exact independently identified affected members",
+      "scope": "snapshot-and-result",
+      "authorities": ["owner_disposition"]
+    },
+    {
+      "rule_id": "P4-GAP-UNSUPPORTED-FIELD",
+      "condition": "An observed field is outside the record family's field allowlist.",
+      "population_template": "unsupported-fields:{signature_lower}:{field_lower}",
+      "missing_capability": "allowlisted-record-field-semantics",
+      "aggregation_key": "population+missing_capability",
+      "affected_count": "exact independently identified affected members",
+      "scope": "snapshot-and-result",
+      "authorities": ["owner_disposition"]
+    },
+    {
+      "rule_id": "P4-GAP-UNSUPPORTED-SHAPE",
+      "condition": "An allowlisted field is structurally present but its shape is not decodable under the bounded contract.",
+      "population_template": "unsupported-shapes:{signature_lower}:{field_lower}",
+      "missing_capability": "allowlisted-record-shape-semantics",
+      "aggregation_key": "population+missing_capability",
+      "affected_count": "exact independently identified affected members",
+      "scope": "snapshot-and-result",
+      "authorities": ["adr0029", "owner_disposition"]
+    },
+    {
+      "rule_id": "P4-GAP-LOCALIZED",
+      "condition": "An encountered localized value cannot be resolved by available string-table authority.",
+      "population_template": "localized-strings",
+      "missing_capability": "localized-string-resolution",
+      "aggregation_key": "population+missing_capability",
+      "affected_count": "exact independently identified affected members",
+      "scope": "snapshot-and-result",
+      "authorities": ["owner_disposition"]
+    },
+    {
+      "rule_id": "P4-GAP-ARCHIVE",
+      "condition": "An applicable FaceGen path without a loose winner requires an archive decision and archive activation/member precedence is unavailable.",
+      "population_template": "face-gen-archive-assets",
+      "missing_capability": "archive-activation-and-member-precedence",
+      "aggregation_key": "population+missing_capability",
+      "affected_count": "exact independently identified affected members",
+      "scope": "snapshot-and-result",
+      "authorities": ["adr0028", "owner_disposition"]
+    },
+    {
+      "rule_id": "P4-GAP-DISCOVERY",
+      "condition": "Automatic discovery is requested but unavailable.",
+      "population_template": "automatic-environment-discovery",
+      "missing_capability": "automatic-environment-discovery",
+      "aggregation_key": "population+missing_capability",
+      "affected_count": "exact independently identified affected members",
+      "scope": "snapshot-and-result",
+      "authorities": ["owner_disposition"]
+    },
+    {
+      "rule_id": "P4-GAP-TEMPLATE",
+      "condition": "A winning NPC template-traits decision is unknown.",
+      "population_template": "face-gen-applicability:template",
+      "missing_capability": "complete-template-traits-decision",
+      "aggregation_key": "population+missing_capability",
+      "affected_count": "exact independently identified affected members",
+      "scope": "snapshot-and-result",
+      "authorities": ["adr0028", "owner_disposition"]
+    },
+    {
+      "rule_id": "P4-GAP-RACE",
+      "condition": "A winning NPC race is missing, null, unresolved, or has an unknown FaceGenHead decision.",
+      "population_template": "face-gen-applicability:race",
+      "missing_capability": "resolved-winning-race",
+      "aggregation_key": "population+missing_capability",
+      "affected_count": "exact independently identified affected members",
+      "scope": "snapshot-and-result",
+      "authorities": ["adr0028", "owner_disposition"]
+    }
+  ],
+  "coverage_registry": [
+    {
+      "population": "plugins",
+      "denominator_rule": "Count manifest plugins.",
+      "completion_rule": "Count plugins admitted to the ordered effective-installation model.",
+      "zero_denominator": "0/0/completed",
+      "incomplete_state_rule": "Any non-admitted plugin prevents completed; an atomic identity/framing failure normally rejects the snapshot.",
+      "authorities": ["adr0028", "owner_disposition"]
+    },
+    {
+      "population": "npc-records",
+      "denominator_rule": "Count admitted NPC_ contributions.",
+      "completion_rule": "Count contributions decoded through the bounded NPC_ contract, including valid null/unresolved links.",
+      "zero_denominator": "0/0/completed",
+      "incomplete_state_rule": "An admitted undecodable NPC_ contribution is denominator-only, requires the exact field/shape gap, and prevents completed.",
+      "authorities": ["adr0028", "adr0029", "owner_disposition"]
+    },
+    {
+      "population": "race-records",
+      "denominator_rule": "Count admitted RACE contributions.",
+      "completion_rule": "Count contributions decoded through the bounded RACE contract.",
+      "zero_denominator": "0/0/completed",
+      "incomplete_state_rule": "The accepted partial RACE/DATA branch increments the denominator, not completion, and yields completed_with_gaps unless the whole nonzero population is unsupported.",
+      "authorities": ["adr0029", "owner_disposition"]
+    },
+    {
+      "population": "placed-reference-records",
+      "denominator_rule": "Count admitted REFR contributions.",
+      "completion_rule": "Count contributions decoded through the bounded REFR contract, including valid missing placement and null/unresolved links.",
+      "zero_denominator": "0/0/completed",
+      "incomplete_state_rule": "An admitted undecodable REFR contribution is denominator-only with its exact field/shape gap.",
+      "authorities": ["adr0028", "adr0029", "owner_disposition"]
+    },
+    {
+      "population": "unsupported-records",
+      "denominator_rule": "Count well-framed contributions outside the NPC_, RACE, and REFR allowlist.",
+      "completion_rule": "Count contributions conclusively classified as unsupported.",
+      "zero_denominator": "0/0/completed",
+      "incomplete_state_rule": "The row carries gaps and is completed_with_gaps when members are conclusively classified; it is unsupported only when its required classification capability itself is absent.",
+      "authorities": ["adr0028", "owner_disposition"]
+    },
+    {
+      "population": "face-gen-loose-assets",
+      "denominator_rule": "Count two canonical paths for each semantically applicable winning NPC.",
+      "completion_rule": "Count paths resolved to semantic present or exact absent; unknown does not complete.",
+      "zero_denominator": "0/0/completed",
+      "incomplete_state_rule": "Unknown loose availability prevents completed but does not assert absence; its missing authority is represented by the applicable provider/archive capability gap rather than a fourth value.",
+      "authorities": ["adr0028", "owner_disposition"]
+    },
+    {
+      "population": "face-gen-archive-assets",
+      "denominator_rule": "Count applicable paths without a loose winner that require an archive decision.",
+      "completion_rule": "Count paths whose archive availability is resolved by separate archive authority.",
+      "zero_denominator": "0/0/completed",
+      "incomplete_state_rule": "Unavailable archive authority produces the exact archive gap and prevents completed.",
+      "authorities": ["adr0028", "owner_disposition"]
+    },
+    {
+      "population": "localized-strings",
+      "denominator_rule": "Count encountered localized values requiring resolution.",
+      "completion_rule": "Count values resolved by available string-table authority.",
+      "zero_denominator": "0/0/completed",
+      "incomplete_state_rule": "Unresolved values produce the localized-string gap and prevent completed.",
+      "authorities": ["adr0028", "owner_disposition"]
+    },
+    {
+      "population": "automatic-environment-discovery",
+      "denominator_rule": "Use one when discovery is requested and zero otherwise.",
+      "completion_rule": "Use one only when requested discovery completes.",
+      "zero_denominator": "0/0/completed",
+      "incomplete_state_rule": "Requested unavailable discovery is 1/0 with its exact gap and a non-completed state.",
+      "authorities": ["adr0028", "owner_disposition"]
+    },
+    {
+      "population": "taxonomy-subjects",
+      "denominator_rule": "Count semantic subjects required by the bounded hybrid-emission contract: admitted contributions, recognized semantic subjects, unsupported-record subjects, and declared FaceGen-chain subjects.",
+      "completion_rule": "Count subjects whose required meaningful assignments are constructed; a partial RACE/DATA contribution completes its technical record-contribution subject when both generic technical assignments emit.",
+      "zero_denominator": "0/0/completed",
+      "incomplete_state_rule": "A required subject missing any required meaningful tuple prevents completed; absence of unrequired filler tuples has no effect.",
+      "authorities": ["adr0028", "adr0029", "owner_disposition", "taxonomy"]
+    }
+  ],
+  "fact_families": [
+    {
+      "family": "result",
+      "dimensions_used": ["publication", "failure"],
+      "constructor_groups": [
+        {
+          "id": "FC-RESULT-STATE",
+          "fact_id_templates": ["result/snapshot_present", "result/failure_present"],
+          "fact_type": ["state"],
+          "value_types": ["boolean"],
+          "minimum_layer": "structural",
+          "value_source": "Authoritative result-envelope presence tests; always emit both booleans.",
+          "authorities": ["authority_matrix", "frozen_canonicalizer"]
+        }
+      ],
+      "admissible_state_classes": ["resolved", "terminal-rejection"],
+      "inadmissible_state_classes": ["not-observed", "observed-undecodable", "decoded-null", "decoded-unresolved", "semantic-applicable", "unsupported", "not-applicable"],
+      "rules": [
+        {
+          "rule_id": "P4-RESULT-PUBLISHED",
+          "state_class": "resolved",
+          "when": [{ "dimension": "publication", "operator": "equals", "values": ["snapshot-published"] }],
+          "minimum_layer": "structural",
+          "prerequisites": ["valid result envelope", "authoritative snapshot object present"],
+          "outcomes": [{ "constructor_groups": ["FC-RESULT-STATE"], "disposition": "exact_value", "value_rule": "snapshot_present=true; failure_present equals whether one or more envelope failures exist." }],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "none", "state_effect": "Top-level state is compared separately and must be completed or completed_with_gaps for a published snapshot." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-RESULT",
+          "authorities": ["authority_matrix", "blocked_draft", "frozen_canonicalizer"]
+        },
+        {
+          "rule_id": "P4-RESULT-NO-SNAPSHOT",
+          "state_class": "terminal-rejection",
+          "when": [{ "dimension": "publication", "operator": "equals", "values": ["no-snapshot"] }],
+          "minimum_layer": "structural",
+          "prerequisites": ["valid result envelope"],
+          "outcomes": [{ "constructor_groups": ["FC-RESULT-STATE"], "disposition": "exact_value", "value_rule": "snapshot_present=false; failure_present equals whether one or more envelope failures exist." }],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "terminal", "state_effect": "No snapshot family may publish; top-level state is invalid_input, changed_during_read, or failed." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-RESULT",
+          "authorities": ["authority_matrix", "blocked_draft", "frozen_canonicalizer"]
+        }
+      ],
+      "unstated_default": "prohibited"
+    },
+    {
+      "family": "plugins",
+      "dimensions_used": ["publication", "record_admission", "member_presence", "decode_state"],
+      "constructor_groups": [
+        {
+          "id": "FC-PLUGINS-CORE",
+          "fact_id_templates": ["plugins/{plugin_ordinal_D4}/plugin_name", "plugins/{plugin_ordinal_D4}/load_order", "plugins/{plugin_ordinal_D4}/provider_id", "plugins/{plugin_ordinal_D4}/master_style"],
+          "fact_type": ["plugin"],
+          "value_types": ["string", "integer"],
+          "minimum_layer": "decoded",
+          "value_source": "Manifest order/identity plus decoded TES4 light/full origin.",
+          "authorities": ["authority_matrix", "blocked_draft", "frozen_canonicalizer"]
+        },
+        {
+          "id": "FC-PLUGINS-MASTERS",
+          "fact_id_templates": ["plugins/{plugin_ordinal_D4}/masters/{master_ordinal_D4}"],
+          "fact_type": ["plugin"],
+          "value_types": ["string"],
+          "minimum_layer": "decoded",
+          "value_source": "Ordered TES4 master list; an empty list emits no child facts.",
+          "authorities": ["blocked_draft", "frozen_canonicalizer"]
+        }
+      ],
+      "admissible_state_classes": ["not-observed", "resolved", "terminal-rejection"],
+      "inadmissible_state_classes": ["observed-undecodable", "decoded-null", "decoded-unresolved", "semantic-applicable", "unsupported", "not-applicable"],
+      "rules": [
+        {
+          "rule_id": "P4-PLUGINS-NOT-OBSERVED",
+          "state_class": "not-observed",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["not-observed"] }],
+          "minimum_layer": "none",
+          "prerequisites": [],
+          "outcomes": [
+            { "constructor_groups": ["FC-PLUGINS-CORE"], "disposition": "no_fact", "value_rule": "A non-manifest plugin is outside this publication." },
+            { "constructor_groups": ["FC-PLUGINS-MASTERS"], "disposition": "no_fact", "value_rule": "No plugin root exists." }
+          ],
+          "coverage_effect": { "population": "plugins", "denominator": "none", "completion": "none", "state_effect": "No denominator participation." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-RESULT",
+          "authorities": ["owner_disposition"]
+        },
+        {
+          "rule_id": "P4-PLUGINS-ADMITTED",
+          "state_class": "resolved",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["admitted"] }, { "dimension": "decode_state", "operator": "equals", "values": ["decoded-value"] }, { "dimension": "member_presence", "operator": "in", "values": ["present-once", "present-repeated"] }],
+          "minimum_layer": "decoded",
+          "prerequisites": ["unique manifest plugin name/load order/provider", "decoded TES4 header", "unambiguous full/light origin"],
+          "outcomes": [
+            { "constructor_groups": ["FC-PLUGINS-CORE"], "disposition": "exact_value", "value_rule": "Emit normalized manifest values and decoded master_style." },
+            { "constructor_groups": ["FC-PLUGINS-MASTERS"], "disposition": "exact_value", "value_rule": "Emit one fact per ordered master when present." }
+          ],
+          "coverage_effect": { "population": "plugins", "denominator": "increment-one", "completion": "increment-one", "state_effect": "Plugin completes." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-FORMKEY",
+          "authorities": ["authority_matrix", "blocked_draft"]
+        },
+        {
+          "rule_id": "P4-PLUGINS-NO-MASTERS",
+          "state_class": "not-observed",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["admitted"] }, { "dimension": "member_presence", "operator": "equals", "values": ["not-observed"] }],
+          "minimum_layer": "decoded",
+          "prerequisites": ["complete TES4 master-list decode establishes empty sequence"],
+          "outcomes": [
+            { "constructor_groups": ["FC-PLUGINS-CORE"], "disposition": "exact_value", "value_rule": "Emit all core plugin facts." },
+            { "constructor_groups": ["FC-PLUGINS-MASTERS"], "disposition": "no_fact", "value_rule": "Empty sequence emits no child fact, not a typed null." }
+          ],
+          "coverage_effect": { "population": "plugins", "denominator": "increment-one", "completion": "increment-one", "state_effect": "Plugin completes." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-FORMKEY",
+          "authorities": ["blocked_draft", "frozen_canonicalizer"]
+        },
+        {
+          "rule_id": "P4-PLUGINS-INVALID",
+          "state_class": "terminal-rejection",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["malformed"] }],
+          "minimum_layer": "none",
+          "prerequisites": [],
+          "outcomes": [
+            { "constructor_groups": ["FC-PLUGINS-CORE"], "disposition": "terminal_rejection", "value_rule": "Do not guess or partially publish plugin identity." },
+            { "constructor_groups": ["FC-PLUGINS-MASTERS"], "disposition": "terminal_rejection", "value_rule": "Do not publish a repaired master list." }
+          ],
+          "coverage_effect": { "population": "plugins", "denominator": "none", "completion": "terminal", "state_effect": "No authoritative snapshot." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-FORMKEY",
+          "authorities": ["blocked_draft", "frozen_canonicalizer"]
+        }
+      ],
+      "unstated_default": "prohibited"
+    },
+    {
+      "family": "override_chains",
+      "dimensions_used": ["record_admission", "shape_support", "decode_state"],
+      "constructor_groups": [
+        {
+          "id": "FC-OVERRIDE-IDENTITY",
+          "fact_id_templates": ["override_chains/{seg(form_key)}/identity/signature", "override_chains/{seg(form_key)}/identity/form_key", "override_chains/{seg(form_key)}/identity/origin_plugin", "override_chains/{seg(form_key)}/identity/origin_local_id"],
+          "fact_type": ["record_identity", "form_key"],
+          "value_types": ["string", "integer"],
+          "minimum_layer": "structural",
+          "value_source": "Canonical record identity from translated record header.",
+          "authorities": ["authority_matrix", "blocked_draft", "frozen_canonicalizer"]
+        },
+        {
+          "id": "FC-OVERRIDE-CONTRIBUTIONS",
+          "fact_id_templates": ["override_chains/{seg(form_key)}/contributions/{ordinal_D4}/identity/signature", "override_chains/{seg(form_key)}/contributions/{ordinal_D4}/identity/form_key", "override_chains/{seg(form_key)}/contributions/{ordinal_D4}/identity/origin_plugin", "override_chains/{seg(form_key)}/contributions/{ordinal_D4}/identity/origin_local_id", "override_chains/{seg(form_key)}/contributions/{ordinal_D4}/source_plugin", "override_chains/{seg(form_key)}/contributions/{ordinal_D4}/load_order", "override_chains/{seg(form_key)}/contributions/{ordinal_D4}/deleted", "override_chains/{seg(form_key)}/contributions/{ordinal_D4}/compressed", "override_chains/{seg(form_key)}/contributions/{ordinal_D4}/raw_flags"],
+          "fact_type": ["record_identity", "form_key", "contribution"],
+          "value_types": ["string", "integer", "boolean"],
+          "minimum_layer": "structural",
+          "value_source": "Ordered structurally admitted record contributions.",
+          "authorities": ["authority_matrix", "adr0029", "frozen_canonicalizer"]
+        },
+        {
+          "id": "FC-OVERRIDE-WINNER",
+          "fact_id_templates": ["override_chains/{seg(form_key)}/winner/source_plugin", "override_chains/{seg(form_key)}/winner/load_order", "override_chains/{seg(form_key)}/winner/form_key", "override_chains/{seg(form_key)}/winner/deleted", "override_chains/{seg(form_key)}/winner/compressed", "override_chains/{seg(form_key)}/winner/raw_flags"],
+          "fact_type": ["winner"],
+          "value_types": ["string", "integer", "boolean"],
+          "minimum_layer": "resolved",
+          "value_source": "Final effective contribution under accepted load order.",
+          "authorities": ["authority_matrix", "blocked_draft", "frozen_canonicalizer"]
+        }
+      ],
+      "admissible_state_classes": ["not-observed", "observed-undecodable", "resolved", "unsupported", "terminal-rejection"],
+      "inadmissible_state_classes": ["decoded-null", "decoded-unresolved", "semantic-applicable", "not-applicable"],
+      "rules": [
+        {
+          "rule_id": "P4-OVERRIDE-NOT-OBSERVED",
+          "state_class": "not-observed",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["not-observed"] }],
+          "minimum_layer": "none",
+          "prerequisites": [],
+          "outcomes": [{ "constructor_groups": ["FC-OVERRIDE-IDENTITY", "FC-OVERRIDE-CONTRIBUTIONS", "FC-OVERRIDE-WINNER"], "disposition": "no_fact", "value_rule": "No observed chain produces no fact." }],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "none", "state_effect": "No direct coverage effect." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-RECORD-FRAMING",
+          "authorities": ["adr0029"]
+        },
+        {
+          "rule_id": "P4-OVERRIDE-PARTIAL",
+          "state_class": "observed-undecodable",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["admitted"] }, { "dimension": "shape_support", "operator": "equals", "values": ["unsupported"] }],
+          "minimum_layer": "structural",
+          "prerequisites": ["record framing", "canonical FormKey", "ordered contribution headers"],
+          "outcomes": [
+            { "constructor_groups": ["FC-OVERRIDE-IDENTITY", "FC-OVERRIDE-CONTRIBUTIONS"], "disposition": "exact_value", "value_rule": "Retain structural chain and contributions despite later member decode failure." },
+            { "constructor_groups": ["FC-OVERRIDE-WINNER"], "disposition": "exact_value", "value_rule": "Winner is structural/effective-order truth and does not depend on the failed member decode." }
+          ],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "none", "state_effect": "The affected record-family population handles denominator/completion separately." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-RECORD-FRAMING",
+          "authorities": ["adr0029", "owner_disposition"]
+        },
+        {
+          "rule_id": "P4-OVERRIDE-RESOLVED",
+          "state_class": "resolved",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["admitted"] }, { "dimension": "shape_support", "operator": "equals", "values": ["supported"] }],
+          "minimum_layer": "resolved",
+          "prerequisites": ["canonical identities", "complete ordered chain", "effective winner"],
+          "outcomes": [{ "constructor_groups": ["FC-OVERRIDE-IDENTITY", "FC-OVERRIDE-CONTRIBUTIONS", "FC-OVERRIDE-WINNER"], "disposition": "exact_value", "value_rule": "Emit the complete ordered chain and semantic winner." }],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "none", "state_effect": "Record-family rows account for the contribution." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-FACTSET",
+          "authorities": ["authority_matrix", "blocked_draft"]
+        },
+        {
+          "rule_id": "P4-OVERRIDE-UNSUPPORTED-FAMILY",
+          "state_class": "unsupported",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["unsupported-family"] }],
+          "minimum_layer": "structural",
+          "prerequisites": ["well-framed record header", "canonical identity", "ordered contribution membership"],
+          "outcomes": [{ "constructor_groups": ["FC-OVERRIDE-IDENTITY", "FC-OVERRIDE-CONTRIBUTIONS", "FC-OVERRIDE-WINNER"], "disposition": "exact_value", "value_rule": "Structural override truth remains publishable for an unsupported semantic family." }],
+          "coverage_effect": { "population": "unsupported-records", "denominator": "increment-one", "completion": "increment-one", "state_effect": "Conclusive unsupported classification participates in the unsupported-records row." },
+          "gap_effects": [{ "gap_rule_id": "P4-GAP-UNSUPPORTED-RECORD", "affected_count": "one contribution", "scope": "snapshot-and-result" }],
+          "atomic_boundary": "AB-RECORD-FRAMING",
+          "authorities": ["adr0029", "owner_disposition"]
+        },
+        {
+          "rule_id": "P4-OVERRIDE-MALFORMED",
+          "state_class": "terminal-rejection",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["malformed"] }],
+          "minimum_layer": "none",
+          "prerequisites": [],
+          "outcomes": [{ "constructor_groups": ["FC-OVERRIDE-IDENTITY", "FC-OVERRIDE-CONTRIBUTIONS", "FC-OVERRIDE-WINNER"], "disposition": "terminal_rejection", "value_rule": "Malformed framing cannot be converted into an unsupported record." }],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "terminal", "state_effect": "No mixed authoritative snapshot." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-RECORD-FRAMING",
+          "authorities": ["adr0029", "blocked_draft"]
+        }
+      ],
+      "unstated_default": "prohibited"
+    },
+    {
+      "family": "npc_contributions",
+      "dimensions_used": ["record_admission", "shape_support", "decode_state", "link_state", "target_resolution"],
+      "constructor_groups": [
+        {
+          "id": "FC-NPCCONTRIB-COMMON",
+          "fact_id_templates": ["npc_contributions/{seg(contribution_identity)}/contribution/identity/signature", "npc_contributions/{seg(contribution_identity)}/contribution/identity/form_key", "npc_contributions/{seg(contribution_identity)}/contribution/identity/origin_plugin", "npc_contributions/{seg(contribution_identity)}/contribution/identity/origin_local_id", "npc_contributions/{seg(contribution_identity)}/contribution/source_plugin", "npc_contributions/{seg(contribution_identity)}/contribution/load_order", "npc_contributions/{seg(contribution_identity)}/contribution/deleted", "npc_contributions/{seg(contribution_identity)}/contribution/compressed", "npc_contributions/{seg(contribution_identity)}/contribution/raw_flags", "npc_contributions/{seg(contribution_identity)}/kind"],
+          "fact_type": ["record_identity", "form_key", "contribution", "npc"],
+          "value_types": ["string", "integer", "boolean"],
+          "minimum_layer": "structural",
+          "value_source": "Structural contribution identity plus literal kind npc.",
+          "authorities": ["adr0029", "frozen_canonicalizer"]
+        },
+        {
+          "id": "FC-NPCCONTRIB-SCALARS",
+          "fact_id_templates": ["npc_contributions/{seg(contribution_identity)}/configuration_flags", "npc_contributions/{seg(contribution_identity)}/template_flags", "npc_contributions/{seg(contribution_identity)}/uses_template", "npc_contributions/{seg(contribution_identity)}/templates_traits", "npc_contributions/{seg(contribution_identity)}/ai_data_present"],
+          "fact_type": ["npc"],
+          "value_types": ["integer", "boolean"],
+          "minimum_layer": "decoded",
+          "value_source": "Bounded NPC_ scalar decode; AIDT is presence-only.",
+          "authorities": ["authority_matrix", "blocked_draft", "frozen_canonicalizer"]
+        },
+        {
+          "id": "FC-NPCCONTRIB-LINKS",
+          "fact_id_templates": ["npc_contributions/{seg(contribution_identity)}/{template|race|hair_color}/{state|field|component|ordinal|target_form_key}", "npc_contributions/{seg(contribution_identity)}/{packages|head_parts}/{seg(link_identity)}/{state|field|component|ordinal|target_form_key}"],
+          "fact_type": ["link", "form_key"],
+          "value_types": ["string", "integer", "null"],
+          "minimum_layer": "decoded",
+          "value_source": "TPLT, RNAM, HCLF, PKID, and PNAM link decode and target resolution.",
+          "authorities": ["authority_matrix", "blocked_draft", "frozen_canonicalizer"]
+        }
+      ],
+      "admissible_state_classes": ["not-observed", "observed-undecodable", "decoded-null", "decoded-unresolved", "resolved", "unsupported", "terminal-rejection"],
+      "inadmissible_state_classes": ["semantic-applicable", "not-applicable"],
+      "rules": [
+        {
+          "rule_id": "P4-NPCCONTRIB-NOT-OBSERVED",
+          "state_class": "not-observed",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["not-observed"] }],
+          "minimum_layer": "none",
+          "prerequisites": [],
+          "outcomes": [{ "constructor_groups": ["FC-NPCCONTRIB-COMMON", "FC-NPCCONTRIB-SCALARS", "FC-NPCCONTRIB-LINKS"], "disposition": "no_fact", "value_rule": "No admitted NPC_ contribution." }],
+          "coverage_effect": { "population": "npc-records", "denominator": "none", "completion": "none", "state_effect": "No population participation." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-RECORD-FRAMING",
+          "authorities": ["adr0029"]
+        },
+        {
+          "rule_id": "P4-NPCCONTRIB-UNDECODABLE",
+          "state_class": "observed-undecodable",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["admitted"] }, { "dimension": "shape_support", "operator": "equals", "values": ["unsupported"] }],
+          "minimum_layer": "observed",
+          "prerequisites": ["well-framed NPC_ contribution", "affected field independently identified"],
+          "outcomes": [
+            { "constructor_groups": ["FC-NPCCONTRIB-COMMON"], "disposition": "exact_value", "value_rule": "Retain structural common facts." },
+            { "constructor_groups": ["FC-NPCCONTRIB-SCALARS", "FC-NPCCONTRIB-LINKS"], "disposition": "omit", "value_rule": "Omit only facts whose exact decode prerequisites depend on the unsupported field/shape." }
+          ],
+          "coverage_effect": { "population": "npc-records", "denominator": "increment-one", "completion": "no-increment", "state_effect": "Incomplete with exact unsupported field/shape gap." },
+          "gap_effects": [{ "gap_rule_id": "P4-GAP-UNSUPPORTED-SHAPE", "affected_count": "one independently identified contribution for the exact affected field", "scope": "snapshot-and-result" }],
+          "atomic_boundary": "AB-RECORD-FRAMING",
+          "authorities": ["adr0029", "owner_disposition"]
+        },
+        {
+          "rule_id": "P4-NPCCONTRIB-NULL-LINK",
+          "state_class": "decoded-null",
+          "when": [{ "dimension": "link_state", "operator": "equals", "values": ["null"] }],
+          "minimum_layer": "decoded",
+          "prerequisites": ["complete NPC_ decode", "singleton link established null"],
+          "outcomes": [
+            { "constructor_groups": ["FC-NPCCONTRIB-COMMON", "FC-NPCCONTRIB-SCALARS"], "disposition": "exact_value", "value_rule": "Emit normal contribution facts." },
+            { "constructor_groups": ["FC-NPCCONTRIB-LINKS"], "disposition": "mixed_by_constructor", "value_rule": "For the null singleton emit only /state as value_type null and JSON null; field/component/ordinal/target facts are missing. Other decoded links remain exact." }
+          ],
+          "coverage_effect": { "population": "npc-records", "denominator": "none", "completion": "none", "state_effect": "The complete contribution rule owns the single denominator/completion increment; this member rule does not duplicate it." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-LINK",
+          "authorities": ["authority_matrix", "blocked_draft"]
+        },
+        {
+          "rule_id": "P4-NPCCONTRIB-UNRESOLVED-LINK",
+          "state_class": "decoded-unresolved",
+          "when": [{ "dimension": "link_state", "operator": "equals", "values": ["unresolved"] }, { "dimension": "target_resolution", "operator": "equals", "values": ["unresolved"] }],
+          "minimum_layer": "resolved",
+          "prerequisites": ["decoded translatable target FormKey", "authoritative target lookup completed with no record"],
+          "outcomes": [
+            { "constructor_groups": ["FC-NPCCONTRIB-COMMON", "FC-NPCCONTRIB-SCALARS"], "disposition": "exact_value", "value_rule": "Emit normal contribution facts." },
+            { "constructor_groups": ["FC-NPCCONTRIB-LINKS"], "disposition": "exact_value", "value_rule": "Emit all five link facts with state unresolved and the canonical target FormKey." }
+          ],
+          "coverage_effect": { "population": "npc-records", "denominator": "none", "completion": "none", "state_effect": "Unresolved is an exact conclusion; the complete contribution rule owns the single denominator/completion increment." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-LINK",
+          "authorities": ["blocked_draft", "authority_matrix"]
+        },
+        {
+          "rule_id": "P4-NPCCONTRIB-RESOLVED",
+          "state_class": "resolved",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["admitted"] }, { "dimension": "shape_support", "operator": "equals", "values": ["supported"] }, { "dimension": "decode_state", "operator": "equals", "values": ["decoded-value"] }],
+          "minimum_layer": "resolved",
+          "prerequisites": ["complete bounded NPC_ decode", "valid link objects and target states"],
+          "outcomes": [{ "constructor_groups": ["FC-NPCCONTRIB-COMMON", "FC-NPCCONTRIB-SCALARS"], "disposition": "exact_value", "value_rule": "Emit every applicable common and scalar constructor." }, { "constructor_groups": ["FC-NPCCONTRIB-LINKS"], "disposition": "mixed_by_constructor", "value_rule": "Apply the null, resolved, or unresolved member constructor to each singleton or repeatable link; absent repeatable sequences emit no children." }],
+          "coverage_effect": { "population": "npc-records", "denominator": "increment-one", "completion": "increment-one", "state_effect": "Contribution completes." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-LINK",
+          "authorities": ["authority_matrix", "blocked_draft"]
+        },
+        {
+          "rule_id": "P4-NPCCONTRIB-UNSUPPORTED-FIELD",
+          "state_class": "unsupported",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["admitted"] }, { "dimension": "shape_support", "operator": "equals", "values": ["not-applicable"] }],
+          "minimum_layer": "observed",
+          "prerequisites": ["well-framed NPC_ contribution", "unsupported field independently observed"],
+          "outcomes": [
+            { "constructor_groups": ["FC-NPCCONTRIB-COMMON"], "disposition": "exact_value", "value_rule": "Retain structural common facts." },
+            { "constructor_groups": ["FC-NPCCONTRIB-SCALARS", "FC-NPCCONTRIB-LINKS"], "disposition": "omit", "value_rule": "Do not invent unsupported field semantics; independently decoded allowlisted members may still emit under their own constructor rules." }
+          ],
+          "coverage_effect": { "population": "npc-records", "denominator": "increment-one", "completion": "derived", "state_effect": "Completion depends on whether the unsupported field is required by the bounded NPC_ body; exact gap always attaches." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-RECORD-FRAMING",
+          "authorities": ["adr0029", "owner_disposition"]
+        },
+        {
+          "rule_id": "P4-NPCCONTRIB-INVALID",
+          "state_class": "terminal-rejection",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["malformed"] }],
+          "minimum_layer": "none",
+          "prerequisites": [],
+          "outcomes": [{ "constructor_groups": ["FC-NPCCONTRIB-COMMON", "FC-NPCCONTRIB-SCALARS", "FC-NPCCONTRIB-LINKS"], "disposition": "terminal_rejection", "value_rule": "Malformed framing or invalid link atomicity is not repaired." }],
+          "coverage_effect": { "population": "npc-records", "denominator": "none", "completion": "terminal", "state_effect": "No authoritative snapshot." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-RECORD-FRAMING",
+          "authorities": ["adr0029", "blocked_draft"]
+        }
+      ],
+      "unstated_default": "prohibited"
+    },
+    {
+      "family": "race_contributions",
+      "dimensions_used": ["record_admission", "member_presence", "occurrence_state", "shape_support", "decode_state"],
+      "constructor_groups": [
+        {
+          "id": "FC-RACECONTRIB-COMMON",
+          "fact_id_templates": ["race_contributions/{seg(contribution_identity)}/contribution/identity/signature", "race_contributions/{seg(contribution_identity)}/contribution/identity/form_key", "race_contributions/{seg(contribution_identity)}/contribution/identity/origin_plugin", "race_contributions/{seg(contribution_identity)}/contribution/identity/origin_local_id", "race_contributions/{seg(contribution_identity)}/contribution/source_plugin", "race_contributions/{seg(contribution_identity)}/contribution/load_order", "race_contributions/{seg(contribution_identity)}/contribution/deleted", "race_contributions/{seg(contribution_identity)}/contribution/compressed", "race_contributions/{seg(contribution_identity)}/contribution/raw_flags", "race_contributions/{seg(contribution_identity)}/kind"],
+          "fact_type": ["record_identity", "form_key", "contribution", "race"],
+          "value_types": ["string", "integer", "boolean"],
+          "minimum_layer": "structural",
+          "value_source": "Structural contribution identity plus literal kind race.",
+          "authorities": ["adr0029", "owner_disposition", "frozen_canonicalizer"]
+        },
+        {
+          "id": "FC-RACECONTRIB-FACEGEN",
+          "fact_id_templates": ["race_contributions/{seg(contribution_identity)}/face_gen_head"],
+          "fact_type": ["race"],
+          "value_types": ["boolean"],
+          "minimum_layer": "decoded",
+          "value_source": "Decoded bounded RACE FaceGenHead decision; never a likely default.",
+          "authorities": ["authority_matrix", "owner_disposition", "blocked_draft"]
+        }
+      ],
+      "admissible_state_classes": ["not-observed", "observed-undecodable", "resolved", "unsupported", "terminal-rejection"],
+      "inadmissible_state_classes": ["decoded-null", "decoded-unresolved", "semantic-applicable", "not-applicable"],
+      "rules": [
+        {
+          "rule_id": "P4-RACECONTRIB-NOT-OBSERVED",
+          "state_class": "not-observed",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["not-observed"] }],
+          "minimum_layer": "none",
+          "prerequisites": [],
+          "outcomes": [{ "constructor_groups": ["FC-RACECONTRIB-COMMON", "FC-RACECONTRIB-FACEGEN"], "disposition": "no_fact", "value_rule": "No admitted RACE contribution." }],
+          "coverage_effect": { "population": "race-records", "denominator": "none", "completion": "none", "state_effect": "No population participation." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-RECORD-FRAMING",
+          "authorities": ["adr0029"]
+        },
+        {
+          "rule_id": "P4-RACECONTRIB-PARTIAL-DATA",
+          "state_class": "observed-undecodable",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["admitted"] }, { "dimension": "member_presence", "operator": "in", "values": ["present-once", "present-repeated"] }, { "dimension": "shape_support", "operator": "equals", "values": ["unsupported"] }, { "dimension": "decode_state", "operator": "equals", "values": ["undecodable"] }],
+          "minimum_layer": "structural",
+          "prerequisites": ["RACE contribution admitted", "DATA structurally present", "DATA shape identified as unsupported"],
+          "outcomes": [
+            { "constructor_groups": ["FC-RACECONTRIB-COMMON"], "disposition": "exact_value", "value_rule": "Emit common contribution facts and kind race." },
+            { "constructor_groups": ["FC-RACECONTRIB-FACEGEN"], "disposition": "omit", "value_rule": "Do not emit face_gen_head because DATA did not decode." }
+          ],
+          "coverage_effect": { "population": "race-records", "denominator": "increment-one", "completion": "no-increment", "state_effect": "Row is incomplete and gap-bearing; completed_with_gaps when some supported work completes, otherwise unsupported for a wholly unsupported nonzero population." },
+          "gap_effects": [{ "gap_rule_id": "P4-GAP-UNSUPPORTED-SHAPE", "affected_count": "one admitted RACE contribution at population unsupported-shapes:race:data", "scope": "snapshot-and-result" }],
+          "atomic_boundary": "AB-RECORD-FRAMING",
+          "authorities": ["adr0029", "owner_disposition"]
+        },
+        {
+          "rule_id": "P4-RACECONTRIB-DECODED",
+          "state_class": "resolved",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["admitted"] }, { "dimension": "shape_support", "operator": "equals", "values": ["supported"] }, { "dimension": "decode_state", "operator": "equals", "values": ["decoded-value"] }],
+          "minimum_layer": "decoded",
+          "prerequisites": ["complete bounded RACE decode", "authoritative FaceGenHead boolean decision"],
+          "outcomes": [{ "constructor_groups": ["FC-RACECONTRIB-COMMON", "FC-RACECONTRIB-FACEGEN"], "disposition": "exact_value", "value_rule": "Emit common facts and the exact decoded boolean, true or false." }],
+          "coverage_effect": { "population": "race-records", "denominator": "increment-one", "completion": "increment-one", "state_effect": "Contribution completes." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-FACTSET",
+          "authorities": ["authority_matrix", "owner_disposition"]
+        },
+        {
+          "rule_id": "P4-RACECONTRIB-UNSUPPORTED-FIELD",
+          "state_class": "unsupported",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["admitted"] }, { "dimension": "shape_support", "operator": "equals", "values": ["not-applicable"] }],
+          "minimum_layer": "observed",
+          "prerequisites": ["well-framed RACE contribution", "unsupported field independently observed"],
+          "outcomes": [
+            { "constructor_groups": ["FC-RACECONTRIB-COMMON"], "disposition": "exact_value", "value_rule": "Retain common structural facts." },
+            { "constructor_groups": ["FC-RACECONTRIB-FACEGEN"], "disposition": "omit", "value_rule": "Do not infer FaceGenHead from unrelated fields." }
+          ],
+          "coverage_effect": { "population": "race-records", "denominator": "increment-one", "completion": "derived", "state_effect": "Completion depends on whether bounded required decode remains complete; exact unsupported-field gap attaches." },
+          "gap_effects": [{ "gap_rule_id": "P4-GAP-UNSUPPORTED-FIELD", "affected_count": "one independently identified contribution for the exact field", "scope": "snapshot-and-result" }],
+          "atomic_boundary": "AB-RECORD-FRAMING",
+          "authorities": ["adr0029", "owner_disposition"]
+        },
+        {
+          "rule_id": "P4-RACECONTRIB-INVALID",
+          "state_class": "terminal-rejection",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["malformed"] }],
+          "minimum_layer": "none",
+          "prerequisites": [],
+          "outcomes": [{ "constructor_groups": ["FC-RACECONTRIB-COMMON", "FC-RACECONTRIB-FACEGEN"], "disposition": "terminal_rejection", "value_rule": "Malformed record framing cannot supply a safe contribution identity." }],
+          "coverage_effect": { "population": "race-records", "denominator": "none", "completion": "terminal", "state_effect": "No authoritative snapshot." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-RECORD-FRAMING",
+          "authorities": ["adr0029"]
+        }
+      ],
+      "unstated_default": "prohibited"
+    },
+    {
+      "family": "placed_reference_contributions",
+      "dimensions_used": ["record_admission", "shape_support", "decode_state", "link_state", "target_resolution", "member_presence"],
+      "constructor_groups": [
+        {
+          "id": "FC-REFRCONTRIB-COMMON",
+          "fact_id_templates": ["placed_reference_contributions/{seg(contribution_identity)}/contribution/identity/signature", "placed_reference_contributions/{seg(contribution_identity)}/contribution/identity/form_key", "placed_reference_contributions/{seg(contribution_identity)}/contribution/identity/origin_plugin", "placed_reference_contributions/{seg(contribution_identity)}/contribution/identity/origin_local_id", "placed_reference_contributions/{seg(contribution_identity)}/contribution/source_plugin", "placed_reference_contributions/{seg(contribution_identity)}/contribution/load_order", "placed_reference_contributions/{seg(contribution_identity)}/contribution/deleted", "placed_reference_contributions/{seg(contribution_identity)}/contribution/compressed", "placed_reference_contributions/{seg(contribution_identity)}/contribution/raw_flags", "placed_reference_contributions/{seg(contribution_identity)}/kind"],
+          "fact_type": ["record_identity", "form_key", "contribution", "reference"],
+          "value_types": ["string", "integer", "boolean"],
+          "minimum_layer": "structural",
+          "value_source": "Structural REFR contribution identity plus literal kind reference.",
+          "authorities": ["adr0029", "frozen_canonicalizer"]
+        },
+        {
+          "id": "FC-REFRCONTRIB-LINKS",
+          "fact_id_templates": ["placed_reference_contributions/{seg(contribution_identity)}/{base|location_reference}/{state|field|component|ordinal|target_form_key}", "placed_reference_contributions/{seg(contribution_identity)}/owner/{state|field|component|ordinal|target_form_key}", "placed_reference_contributions/{seg(contribution_identity)}/linked_references/{seg(link_identity)}/{state|field|component|ordinal|target_form_key}"],
+          "fact_type": ["link", "ownership", "form_key"],
+          "value_types": ["string", "integer", "null"],
+          "minimum_layer": "decoded",
+          "value_source": "NAME, XLKR paired values, XLRL, and XOWN link decode and target resolution.",
+          "authorities": ["authority_matrix", "blocked_draft", "frozen_canonicalizer"]
+        },
+        {
+          "id": "FC-REFRCONTRIB-PLACEMENT",
+          "fact_id_templates": ["placed_reference_contributions/{seg(contribution_identity)}/placement/position/{x|y|z}", "placed_reference_contributions/{seg(contribution_identity)}/placement/rotation/{x|y|z}"],
+          "fact_type": ["placement"],
+          "value_types": ["number"],
+          "minimum_layer": "decoded",
+          "value_source": "All six finite decoded REFR DATA placement components, or no placement facts when DATA placement is absent.",
+          "authorities": ["authority_matrix", "blocked_draft", "frozen_canonicalizer"]
+        }
+      ],
+      "admissible_state_classes": ["not-observed", "observed-undecodable", "decoded-null", "decoded-unresolved", "resolved", "unsupported", "terminal-rejection"],
+      "inadmissible_state_classes": ["semantic-applicable", "not-applicable"],
+      "rules": [
+        {
+          "rule_id": "P4-REFRCONTRIB-NOT-OBSERVED",
+          "state_class": "not-observed",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["not-observed"] }],
+          "minimum_layer": "none",
+          "prerequisites": [],
+          "outcomes": [{ "constructor_groups": ["FC-REFRCONTRIB-COMMON", "FC-REFRCONTRIB-LINKS", "FC-REFRCONTRIB-PLACEMENT"], "disposition": "no_fact", "value_rule": "No admitted REFR contribution." }],
+          "coverage_effect": { "population": "placed-reference-records", "denominator": "none", "completion": "none", "state_effect": "No population participation." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-RECORD-FRAMING",
+          "authorities": ["adr0029"]
+        },
+        {
+          "rule_id": "P4-REFRCONTRIB-UNDECODABLE",
+          "state_class": "observed-undecodable",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["admitted"] }, { "dimension": "shape_support", "operator": "equals", "values": ["unsupported"] }],
+          "minimum_layer": "observed",
+          "prerequisites": ["well-framed REFR contribution", "affected field independently identified"],
+          "outcomes": [
+            { "constructor_groups": ["FC-REFRCONTRIB-COMMON"], "disposition": "exact_value", "value_rule": "Retain common structural facts." },
+            { "constructor_groups": ["FC-REFRCONTRIB-LINKS", "FC-REFRCONTRIB-PLACEMENT"], "disposition": "omit", "value_rule": "Omit only constructors dependent on the unsupported field/shape." }
+          ],
+          "coverage_effect": { "population": "placed-reference-records", "denominator": "increment-one", "completion": "no-increment", "state_effect": "Incomplete with exact unsupported field/shape gap." },
+          "gap_effects": [{ "gap_rule_id": "P4-GAP-UNSUPPORTED-SHAPE", "affected_count": "one independently identified contribution for the exact affected field", "scope": "snapshot-and-result" }],
+          "atomic_boundary": "AB-RECORD-FRAMING",
+          "authorities": ["adr0029", "owner_disposition"]
+        },
+        {
+          "rule_id": "P4-REFRCONTRIB-NULL-OR-NO-PLACEMENT",
+          "state_class": "decoded-null",
+          "when": [{ "dimension": "decode_state", "operator": "equals", "values": ["decoded-null"] }],
+          "minimum_layer": "decoded",
+          "prerequisites": ["complete bounded REFR decode establishes null singleton or absent placement"],
+          "outcomes": [
+            { "constructor_groups": ["FC-REFRCONTRIB-COMMON"], "disposition": "exact_value", "value_rule": "Emit common facts." },
+            { "constructor_groups": ["FC-REFRCONTRIB-LINKS"], "disposition": "mixed_by_constructor", "value_rule": "For a null singleton emit only typed-null /state; other links emit normally." },
+            { "constructor_groups": ["FC-REFRCONTRIB-PLACEMENT"], "disposition": "no_fact", "value_rule": "Absent placement emits none of the six facts, not null values." }
+          ],
+          "coverage_effect": { "population": "placed-reference-records", "denominator": "none", "completion": "none", "state_effect": "The complete contribution rule owns the single denominator/completion increment; this member rule does not duplicate it." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-PLACEMENT",
+          "authorities": ["authority_matrix", "blocked_draft"]
+        },
+        {
+          "rule_id": "P4-REFRCONTRIB-UNRESOLVED-LINK",
+          "state_class": "decoded-unresolved",
+          "when": [{ "dimension": "link_state", "operator": "equals", "values": ["unresolved"] }, { "dimension": "target_resolution", "operator": "equals", "values": ["unresolved"] }],
+          "minimum_layer": "resolved",
+          "prerequisites": ["decoded translatable target FormKey", "authoritative target lookup completed with no record"],
+          "outcomes": [
+            { "constructor_groups": ["FC-REFRCONTRIB-COMMON", "FC-REFRCONTRIB-PLACEMENT"], "disposition": "exact_value", "value_rule": "Emit normal common/placement facts where present." },
+            { "constructor_groups": ["FC-REFRCONTRIB-LINKS"], "disposition": "exact_value", "value_rule": "Emit complete link object with state unresolved and canonical target." }
+          ],
+          "coverage_effect": { "population": "placed-reference-records", "denominator": "none", "completion": "none", "state_effect": "Unresolved is an exact conclusion; the complete contribution rule owns the single denominator/completion increment." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-LINK",
+          "authorities": ["authority_matrix", "blocked_draft"]
+        },
+        {
+          "rule_id": "P4-REFRCONTRIB-RESOLVED",
+          "state_class": "resolved",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["admitted"] }, { "dimension": "shape_support", "operator": "equals", "values": ["supported"] }, { "dimension": "decode_state", "operator": "equals", "values": ["decoded-value"] }],
+          "minimum_layer": "resolved",
+          "prerequisites": ["complete bounded REFR decode", "valid link objects", "placement either complete or absent"],
+          "outcomes": [{ "constructor_groups": ["FC-REFRCONTRIB-COMMON"], "disposition": "exact_value", "value_rule": "Emit all common constructors." }, { "constructor_groups": ["FC-REFRCONTRIB-LINKS", "FC-REFRCONTRIB-PLACEMENT"], "disposition": "mixed_by_constructor", "value_rule": "Apply null, resolved, or unresolved per link; emit all six finite placement facts together when placement is present, otherwise none." }],
+          "coverage_effect": { "population": "placed-reference-records", "denominator": "increment-one", "completion": "increment-one", "state_effect": "Contribution completes." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-PLACEMENT",
+          "authorities": ["authority_matrix", "blocked_draft"]
+        },
+        {
+          "rule_id": "P4-REFRCONTRIB-UNSUPPORTED-FIELD",
+          "state_class": "unsupported",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["admitted"] }, { "dimension": "shape_support", "operator": "equals", "values": ["not-applicable"] }],
+          "minimum_layer": "observed",
+          "prerequisites": ["well-framed REFR contribution", "unsupported field independently observed"],
+          "outcomes": [
+            { "constructor_groups": ["FC-REFRCONTRIB-COMMON"], "disposition": "exact_value", "value_rule": "Retain common facts." },
+            { "constructor_groups": ["FC-REFRCONTRIB-LINKS", "FC-REFRCONTRIB-PLACEMENT"], "disposition": "omit", "value_rule": "Do not invent unsupported semantics; unrelated independently decoded constructors remain governed by their exact rules." }
+          ],
+          "coverage_effect": { "population": "placed-reference-records", "denominator": "increment-one", "completion": "derived", "state_effect": "Exact gap attaches; completion depends on whether the unsupported field is required by the bounded REFR body." },
+          "gap_effects": [{ "gap_rule_id": "P4-GAP-UNSUPPORTED-FIELD", "affected_count": "one independently identified contribution for the exact field", "scope": "snapshot-and-result" }],
+          "atomic_boundary": "AB-RECORD-FRAMING",
+          "authorities": ["adr0029", "owner_disposition"]
+        },
+        {
+          "rule_id": "P4-REFRCONTRIB-INVALID",
+          "state_class": "terminal-rejection",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["malformed"] }],
+          "minimum_layer": "none",
+          "prerequisites": [],
+          "outcomes": [{ "constructor_groups": ["FC-REFRCONTRIB-COMMON", "FC-REFRCONTRIB-LINKS", "FC-REFRCONTRIB-PLACEMENT"], "disposition": "terminal_rejection", "value_rule": "Malformed framing, invalid link, or partial/nonfinite placement is rejected." }],
+          "coverage_effect": { "population": "placed-reference-records", "denominator": "none", "completion": "terminal", "state_effect": "No authoritative snapshot." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-PLACEMENT",
+          "authorities": ["adr0029", "blocked_draft"]
+        }
+      ],
+      "unstated_default": "prohibited"
+    },
+    {
+      "family": "allowlisted_fields",
+      "dimensions_used": ["record_admission", "member_presence", "occurrence_state", "shape_support"],
+      "constructor_groups": [
+        {
+          "id": "FC-ALLOWLISTED-FIELD",
+          "fact_id_templates": ["allowlisted_fields/{seg(contribution_identity:field_lower)}/field", "allowlisted_fields/{seg(contribution_identity:field_lower)}/count"],
+          "fact_type": ["field"],
+          "value_types": ["string", "integer"],
+          "minimum_layer": "observed",
+          "value_source": "Uppercase allowlisted field token and positive exact observed occurrence count per semantic contribution.",
+          "authorities": ["authority_matrix", "owner_disposition", "frozen_canonicalizer"]
+        }
+      ],
+      "admissible_state_classes": ["not-observed", "observed-undecodable", "resolved", "unsupported", "terminal-rejection"],
+      "inadmissible_state_classes": ["decoded-null", "decoded-unresolved", "semantic-applicable", "not-applicable"],
+      "rules": [
+        {
+          "rule_id": "P4-FIELDS-NOT-OBSERVED",
+          "state_class": "not-observed",
+          "when": [{ "dimension": "occurrence_state", "operator": "equals", "values": ["not-observed"] }],
+          "minimum_layer": "none",
+          "prerequisites": ["complete member scan when absence is asserted"],
+          "outcomes": [{ "constructor_groups": ["FC-ALLOWLISTED-FIELD"], "disposition": "no_fact", "value_rule": "No count fact and no zero count fact." }],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "none", "state_effect": "The owning record-family rule decides completion." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-FACTSET",
+          "authorities": ["authority_matrix", "blocked_draft"]
+        },
+        {
+          "rule_id": "P4-FIELDS-STRUCTURAL-ONLY",
+          "state_class": "observed-undecodable",
+          "when": [{ "dimension": "occurrence_state", "operator": "equals", "values": ["structural-only"] }, { "dimension": "shape_support", "operator": "equals", "values": ["unsupported"] }],
+          "minimum_layer": "structural",
+          "prerequisites": ["member structurally present", "exact occurrence count not independently observed"],
+          "outcomes": [{ "constructor_groups": ["FC-ALLOWLISTED-FIELD"], "disposition": "omit", "value_rule": "Do not emit field or count; structural presence alone does not authorize count 1 or any count." }],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "none", "state_effect": "Owning record-family row remains incomplete when the field is required." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-FACTSET",
+          "authorities": ["adr0029", "owner_disposition"]
+        },
+        {
+          "rule_id": "P4-FIELDS-OBSERVED",
+          "state_class": "resolved",
+          "when": [{ "dimension": "occurrence_state", "operator": "equals", "values": ["observed-exact"] }, { "dimension": "member_presence", "operator": "in", "values": ["present-once", "present-repeated"] }],
+          "minimum_layer": "observed",
+          "prerequisites": ["field is in the signature-specific allowlist", "positive exact occurrence count"],
+          "outcomes": [{ "constructor_groups": ["FC-ALLOWLISTED-FIELD"], "disposition": "exact_value", "value_rule": "Emit uppercase field and positive exact count per contribution; EDID remains identifying metadata only." }],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "none", "state_effect": "No independent coverage row; supports owning record decode and taxonomy evidence only as explicitly allowed." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-FACTSET",
+          "authorities": ["adr0028", "owner_disposition", "authority_matrix"]
+        },
+        {
+          "rule_id": "P4-FIELDS-UNSUPPORTED",
+          "state_class": "unsupported",
+          "when": [{ "dimension": "shape_support", "operator": "equals", "values": ["not-applicable"] }, { "dimension": "occurrence_state", "operator": "equals", "values": ["observed-exact"] }],
+          "minimum_layer": "observed",
+          "prerequisites": ["field token independently observed", "field outside signature-specific allowlist"],
+          "outcomes": [{ "constructor_groups": ["FC-ALLOWLISTED-FIELD"], "disposition": "omit", "value_rule": "Unsupported field is represented by its exact gap, not by an allowlisted-field fact." }],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "none", "state_effect": "Owning record-family rule decides completion." },
+          "gap_effects": [{ "gap_rule_id": "P4-GAP-UNSUPPORTED-FIELD", "affected_count": "one independently identified contribution for the exact field", "scope": "snapshot-and-result" }],
+          "atomic_boundary": "AB-GAP",
+          "authorities": ["owner_disposition"]
+        },
+        {
+          "rule_id": "P4-FIELDS-INVALID",
+          "state_class": "terminal-rejection",
+          "when": [{ "dimension": "shape_support", "operator": "equals", "values": ["malformed"] }],
+          "minimum_layer": "none",
+          "prerequisites": [],
+          "outcomes": [{ "constructor_groups": ["FC-ALLOWLISTED-FIELD"], "disposition": "terminal_rejection", "value_rule": "Zero/negative count, duplicate identity, or malformed field framing is rejected." }],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "terminal", "state_effect": "Reject owning result publication." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-FACTSET",
+          "authorities": ["blocked_draft", "frozen_canonicalizer"]
+        }
+      ],
+      "unstated_default": "prohibited"
+    },
+    {
+      "family": "npcs",
+      "dimensions_used": ["record_admission", "shape_support", "decode_state", "link_state", "target_resolution"],
+      "constructor_groups": [
+        {
+          "id": "FC-NPCS-RESOLVED",
+          "fact_id_templates": ["npcs/{seg(form_key)}/contribution/{identity/signature|identity/form_key|identity/origin_plugin|identity/origin_local_id|source_plugin|load_order|deleted|compressed|raw_flags}", "npcs/{seg(form_key)}/kind", "npcs/{seg(form_key)}/{configuration_flags|template_flags|uses_template|templates_traits|ai_data_present}", "npcs/{seg(form_key)}/{template|race|hair_color}/{state|field|component|ordinal|target_form_key}", "npcs/{seg(form_key)}/{packages|head_parts}/{seg(link_identity)}/{state|field|component|ordinal|target_form_key}"],
+          "fact_type": ["record_identity", "form_key", "contribution", "npc", "link"],
+          "value_types": ["string", "integer", "boolean", "null"],
+          "minimum_layer": "resolved",
+          "value_source": "Winning fully decoded NPC contribution using contribution-family null/unresolved rules.",
+          "authorities": ["authority_matrix", "blocked_draft", "frozen_canonicalizer"]
+        }
+      ],
+      "admissible_state_classes": ["not-observed", "observed-undecodable", "decoded-null", "decoded-unresolved", "resolved", "terminal-rejection"],
+      "inadmissible_state_classes": ["semantic-applicable", "unsupported", "not-applicable"],
+      "rules": [
+        {
+          "rule_id": "P4-NPCS-NOT-OBSERVED",
+          "state_class": "not-observed",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["not-observed"] }],
+          "minimum_layer": "none",
+          "prerequisites": [],
+          "outcomes": [{ "constructor_groups": ["FC-NPCS-RESOLVED"], "disposition": "no_fact", "value_rule": "No effective NPC record." }],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "none", "state_effect": "Contribution coverage is accounted separately." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-FACTSET",
+          "authorities": ["authority_matrix"]
+        },
+        {
+          "rule_id": "P4-NPCS-UNDECODABLE",
+          "state_class": "observed-undecodable",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["admitted"] }, { "dimension": "shape_support", "operator": "equals", "values": ["unsupported"] }],
+          "minimum_layer": "observed",
+          "prerequisites": ["winning contribution known", "required NPC body not fully decoded"],
+          "outcomes": [{ "constructor_groups": ["FC-NPCS-RESOLVED"], "disposition": "omit", "value_rule": "Do not publish a complete resolved NPC fact; lower contribution/override facts survive." }],
+          "coverage_effect": { "population": "npc-records", "denominator": "none", "completion": "no-increment", "state_effect": "The contribution rule already incremented denominator and emitted exact gap." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-FACTSET",
+          "authorities": ["adr0029", "authority_matrix"]
+        },
+        {
+          "rule_id": "P4-NPCS-NULL-LINK",
+          "state_class": "decoded-null",
+          "when": [{ "dimension": "link_state", "operator": "equals", "values": ["null"] }, { "dimension": "shape_support", "operator": "equals", "values": ["supported"] }],
+          "minimum_layer": "resolved",
+          "prerequisites": ["winning NPC contribution fully decoded", "singleton null established"],
+          "outcomes": [{ "constructor_groups": ["FC-NPCS-RESOLVED"], "disposition": "mixed_by_constructor", "value_rule": "Emit the full resolved NPC; the null singleton emits only typed-null /state." }],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "none", "state_effect": "No additional coverage count beyond contribution completion." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-LINK",
+          "authorities": ["authority_matrix", "blocked_draft"]
+        },
+        {
+          "rule_id": "P4-NPCS-UNRESOLVED-LINK",
+          "state_class": "decoded-unresolved",
+          "when": [{ "dimension": "link_state", "operator": "equals", "values": ["unresolved"] }],
+          "minimum_layer": "resolved",
+          "prerequisites": ["winning NPC contribution fully decoded", "translatable target unresolved"],
+          "outcomes": [{ "constructor_groups": ["FC-NPCS-RESOLVED"], "disposition": "exact_value", "value_rule": "Emit the full resolved NPC and exact unresolved link state/target." }],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "none", "state_effect": "No duplicate coverage count." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-LINK",
+          "authorities": ["authority_matrix", "blocked_draft"]
+        },
+        {
+          "rule_id": "P4-NPCS-RESOLVED",
+          "state_class": "resolved",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["admitted"] }, { "dimension": "shape_support", "operator": "equals", "values": ["supported"] }, { "dimension": "decode_state", "operator": "equals", "values": ["decoded-value"] }],
+          "minimum_layer": "resolved",
+          "prerequisites": ["unique effective winner", "complete bounded NPC decode"],
+          "outcomes": [{ "constructor_groups": ["FC-NPCS-RESOLVED"], "disposition": "mixed_by_constructor", "value_rule": "Emit one resolved NPC object rooted by canonical FormKey; apply the exact null/resolved/unresolved constructor to each link and omit children for absent repeatable sequences." }],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "none", "state_effect": "Contribution row already accounts for completion." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-FACTSET",
+          "authorities": ["authority_matrix", "blocked_draft"]
+        },
+        {
+          "rule_id": "P4-NPCS-INVALID",
+          "state_class": "terminal-rejection",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["malformed"] }],
+          "minimum_layer": "none",
+          "prerequisites": [],
+          "outcomes": [{ "constructor_groups": ["FC-NPCS-RESOLVED"], "disposition": "terminal_rejection", "value_rule": "Ambiguous winner or invalid resolved object is rejected." }],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "terminal", "state_effect": "Reject snapshot." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-FACTSET",
+          "authorities": ["blocked_draft"]
+        }
+      ],
+      "unstated_default": "prohibited"
+    },
+    {
+      "family": "races",
+      "dimensions_used": ["record_admission", "shape_support", "decode_state"],
+      "constructor_groups": [
+        {
+          "id": "FC-RACES-RESOLVED",
+          "fact_id_templates": ["races/{seg(form_key)}/contribution/{identity/signature|identity/form_key|identity/origin_plugin|identity/origin_local_id|source_plugin|load_order|deleted|compressed|raw_flags}", "races/{seg(form_key)}/kind", "races/{seg(form_key)}/face_gen_head"],
+          "fact_type": ["record_identity", "form_key", "contribution", "race"],
+          "value_types": ["string", "integer", "boolean"],
+          "minimum_layer": "resolved",
+          "value_source": "Winning fully decoded RACE contribution.",
+          "authorities": ["authority_matrix", "blocked_draft", "frozen_canonicalizer"]
+        }
+      ],
+      "admissible_state_classes": ["not-observed", "observed-undecodable", "resolved", "terminal-rejection"],
+      "inadmissible_state_classes": ["decoded-null", "decoded-unresolved", "semantic-applicable", "unsupported", "not-applicable"],
+      "rules": [
+        {
+          "rule_id": "P4-RACES-NOT-OBSERVED",
+          "state_class": "not-observed",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["not-observed"] }],
+          "minimum_layer": "none",
+          "prerequisites": [],
+          "outcomes": [{ "constructor_groups": ["FC-RACES-RESOLVED"], "disposition": "no_fact", "value_rule": "No effective RACE record." }],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "none", "state_effect": "No direct effect." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-FACTSET",
+          "authorities": ["authority_matrix"]
+        },
+        {
+          "rule_id": "P4-RACES-PARTIAL-DATA",
+          "state_class": "observed-undecodable",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["admitted"] }, { "dimension": "shape_support", "operator": "equals", "values": ["unsupported"] }, { "dimension": "decode_state", "operator": "equals", "values": ["undecodable"] }],
+          "minimum_layer": "observed",
+          "prerequisites": ["effective RACE winner known", "required DATA decode unavailable"],
+          "outcomes": [{ "constructor_groups": ["FC-RACES-RESOLVED"], "disposition": "omit", "value_rule": "Publish no complete resolved race fact; retain override and contribution structural facts." }],
+          "coverage_effect": { "population": "race-records", "denominator": "none", "completion": "no-increment", "state_effect": "Contribution rule already accounts for denominator, no completion, and exact gap." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-FACTSET",
+          "authorities": ["adr0029", "owner_disposition", "authority_matrix"]
+        },
+        {
+          "rule_id": "P4-RACES-RESOLVED",
+          "state_class": "resolved",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["admitted"] }, { "dimension": "shape_support", "operator": "equals", "values": ["supported"] }, { "dimension": "decode_state", "operator": "equals", "values": ["decoded-value"] }],
+          "minimum_layer": "resolved",
+          "prerequisites": ["unique effective winner", "complete bounded RACE decode including FaceGenHead decision"],
+          "outcomes": [{ "constructor_groups": ["FC-RACES-RESOLVED"], "disposition": "exact_value", "value_rule": "Emit one resolved race object rooted by canonical FormKey." }],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "none", "state_effect": "No duplicate coverage count." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-FACTSET",
+          "authorities": ["authority_matrix", "owner_disposition"]
+        },
+        {
+          "rule_id": "P4-RACES-INVALID",
+          "state_class": "terminal-rejection",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["malformed"] }],
+          "minimum_layer": "none",
+          "prerequisites": [],
+          "outcomes": [{ "constructor_groups": ["FC-RACES-RESOLVED"], "disposition": "terminal_rejection", "value_rule": "Ambiguous winner or malformed record framing is rejected." }],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "terminal", "state_effect": "Reject snapshot." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-RECORD-FRAMING",
+          "authorities": ["adr0029"]
+        }
+      ],
+      "unstated_default": "prohibited"
+    },
+    {
+      "family": "placed_references",
+      "dimensions_used": ["record_admission", "shape_support", "decode_state", "link_state", "target_resolution", "member_presence"],
+      "constructor_groups": [
+        {
+          "id": "FC-REFRS-RESOLVED",
+          "fact_id_templates": ["placed_references/{seg(form_key)}/contribution/{identity/signature|identity/form_key|identity/origin_plugin|identity/origin_local_id|source_plugin|load_order|deleted|compressed|raw_flags}", "placed_references/{seg(form_key)}/kind", "placed_references/{seg(form_key)}/{base|location_reference|owner}/{state|field|component|ordinal|target_form_key}", "placed_references/{seg(form_key)}/linked_references/{seg(link_identity)}/{state|field|component|ordinal|target_form_key}", "placed_references/{seg(form_key)}/placement/{position|rotation}/{x|y|z}"],
+          "fact_type": ["record_identity", "form_key", "contribution", "reference", "link", "ownership", "placement"],
+          "value_types": ["string", "integer", "boolean", "number", "null"],
+          "minimum_layer": "resolved",
+          "value_source": "Winning fully decoded REFR contribution using contribution-family null/unresolved/placement rules.",
+          "authorities": ["authority_matrix", "blocked_draft", "frozen_canonicalizer"]
+        }
+      ],
+      "admissible_state_classes": ["not-observed", "observed-undecodable", "decoded-null", "decoded-unresolved", "resolved", "terminal-rejection"],
+      "inadmissible_state_classes": ["semantic-applicable", "unsupported", "not-applicable"],
+      "rules": [
+        {
+          "rule_id": "P4-REFRS-NOT-OBSERVED",
+          "state_class": "not-observed",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["not-observed"] }],
+          "minimum_layer": "none",
+          "prerequisites": [],
+          "outcomes": [{ "constructor_groups": ["FC-REFRS-RESOLVED"], "disposition": "no_fact", "value_rule": "No effective REFR record." }],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "none", "state_effect": "No direct effect." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-FACTSET",
+          "authorities": ["authority_matrix"]
+        },
+        {
+          "rule_id": "P4-REFRS-UNDECODABLE",
+          "state_class": "observed-undecodable",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["admitted"] }, { "dimension": "shape_support", "operator": "equals", "values": ["unsupported"] }],
+          "minimum_layer": "observed",
+          "prerequisites": ["effective REFR winner known", "required body decode unavailable"],
+          "outcomes": [{ "constructor_groups": ["FC-REFRS-RESOLVED"], "disposition": "omit", "value_rule": "Publish no complete resolved reference fact; retain lower contribution/override facts." }],
+          "coverage_effect": { "population": "placed-reference-records", "denominator": "none", "completion": "no-increment", "state_effect": "Contribution rule owns denominator/gap." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-FACTSET",
+          "authorities": ["adr0029", "authority_matrix"]
+        },
+        {
+          "rule_id": "P4-REFRS-NULL-OR-NO-PLACEMENT",
+          "state_class": "decoded-null",
+          "when": [{ "dimension": "decode_state", "operator": "equals", "values": ["decoded-null"] }, { "dimension": "shape_support", "operator": "equals", "values": ["supported"] }],
+          "minimum_layer": "resolved",
+          "prerequisites": ["winning REFR contribution fully decoded"],
+          "outcomes": [{ "constructor_groups": ["FC-REFRS-RESOLVED"], "disposition": "mixed_by_constructor", "value_rule": "Emit full resolved object; null singleton publishes typed-null /state and absent placement publishes no placement facts." }],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "none", "state_effect": "No duplicate coverage count." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-PLACEMENT",
+          "authorities": ["authority_matrix", "blocked_draft"]
+        },
+        {
+          "rule_id": "P4-REFRS-UNRESOLVED-LINK",
+          "state_class": "decoded-unresolved",
+          "when": [{ "dimension": "link_state", "operator": "equals", "values": ["unresolved"] }],
+          "minimum_layer": "resolved",
+          "prerequisites": ["winning REFR contribution fully decoded", "translatable target unresolved"],
+          "outcomes": [{ "constructor_groups": ["FC-REFRS-RESOLVED"], "disposition": "exact_value", "value_rule": "Emit full resolved object with exact unresolved link." }],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "none", "state_effect": "No duplicate coverage count." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-LINK",
+          "authorities": ["authority_matrix", "blocked_draft"]
+        },
+        {
+          "rule_id": "P4-REFRS-RESOLVED",
+          "state_class": "resolved",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["admitted"] }, { "dimension": "shape_support", "operator": "equals", "values": ["supported"] }, { "dimension": "decode_state", "operator": "equals", "values": ["decoded-value"] }],
+          "minimum_layer": "resolved",
+          "prerequisites": ["unique effective winner", "complete bounded REFR decode"],
+          "outcomes": [{ "constructor_groups": ["FC-REFRS-RESOLVED"], "disposition": "mixed_by_constructor", "value_rule": "Emit one resolved placed-reference object rooted by canonical FormKey; apply the exact per-link constructor and emit placement as an atomic six-number group or omit it when absent." }],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "none", "state_effect": "No duplicate coverage count." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-PLACEMENT",
+          "authorities": ["authority_matrix", "blocked_draft"]
+        },
+        {
+          "rule_id": "P4-REFRS-INVALID",
+          "state_class": "terminal-rejection",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["malformed"] }],
+          "minimum_layer": "none",
+          "prerequisites": [],
+          "outcomes": [{ "constructor_groups": ["FC-REFRS-RESOLVED"], "disposition": "terminal_rejection", "value_rule": "Ambiguous winner, invalid link, or partial/nonfinite placement is rejected." }],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "terminal", "state_effect": "Reject snapshot." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-PLACEMENT",
+          "authorities": ["blocked_draft"]
+        }
+      ],
+      "unstated_default": "prohibited"
+    },
+    {
+      "family": "face_gen",
+      "dimensions_used": ["record_admission", "winner_state", "template_decision", "race_decision", "provider_state", "asset_availability", "archive_capability"],
+      "constructor_groups": [
+        {
+          "id": "FC-FACEGEN-CORE",
+          "fact_id_templates": ["face_gen/{seg(npc_form_key)}/npc_form_key", "face_gen/{seg(npc_form_key)}/applicability", "face_gen/{seg(npc_form_key)}/origin_plugin", "face_gen/{seg(npc_form_key)}/origin_local_id"],
+          "fact_type": ["face_gen"],
+          "value_types": ["string", "integer"],
+          "minimum_layer": "semantic",
+          "value_source": "One assessment per winning NPC using the closed ADR-0028 precedence and exact applicability vocabulary.",
+          "authorities": ["adr0028", "owner_disposition", "frozen_canonicalizer"]
+        },
+        {
+          "id": "FC-FACEGEN-ASSET",
+          "fact_id_templates": ["face_gen/{seg(npc_form_key)}/{mesh|tint}/normalized_relative_path", "face_gen/{seg(npc_form_key)}/{mesh|tint}/provider_ids/{provider_ordinal_D4}", "face_gen/{seg(npc_form_key)}/{mesh|tint}/winner_provider_id", "face_gen/{seg(npc_form_key)}/{mesh|tint}/present", "face_gen/{seg(npc_form_key)}/{mesh|tint}/exact_absence_known"],
+          "fact_type": ["face_gen"],
+          "value_types": ["string", "boolean", "null"],
+          "minimum_layer": "resolved",
+          "value_source": "Canonical mesh/tint paths, declared ordered loose-provider chains, exact winner, and semantic availability transport.",
+          "authorities": ["adr0028", "owner_disposition", "frozen_canonicalizer"]
+        }
+      ],
+      "admissible_state_classes": ["not-observed", "decoded-null", "decoded-unresolved", "resolved", "semantic-applicable", "unsupported", "not-applicable", "terminal-rejection"],
+      "inadmissible_state_classes": ["observed-undecodable"],
+      "rules": [
+        {
+          "rule_id": "P4-FACEGEN-NOT-OBSERVED",
+          "state_class": "not-observed",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["not-observed"] }],
+          "minimum_layer": "none",
+          "prerequisites": [],
+          "outcomes": [{ "constructor_groups": ["FC-FACEGEN-CORE", "FC-FACEGEN-ASSET"], "disposition": "no_fact", "value_rule": "No winning NPC means no FaceGen assessment." }],
+          "coverage_effect": { "population": "face-gen-loose-assets", "denominator": "none", "completion": "none", "state_effect": "No asset population participation." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-ASSET",
+          "authorities": ["adr0028"]
+        },
+        {
+          "rule_id": "P4-FACEGEN-DELETED",
+          "state_class": "not-applicable",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["admitted"] }, { "dimension": "winner_state", "operator": "equals", "values": ["deleted"] }],
+          "minimum_layer": "semantic",
+          "prerequisites": ["winning NPC is deleted"],
+          "outcomes": [
+            { "constructor_groups": ["FC-FACEGEN-CORE"], "disposition": "exact_value", "value_rule": "applicability=not_applicable_deleted_winner with canonical identity/origin." },
+            { "constructor_groups": ["FC-FACEGEN-ASSET"], "disposition": "accepted_unknown", "value_rule": "Emit canonical paths, empty provider children, typed-null winner, present=false, exact_absence_known=false; this frames unknown and does not assert absence." }
+          ],
+          "coverage_effect": { "population": "face-gen-loose-assets", "denominator": "none", "completion": "none", "state_effect": "Not applicable creates no loose/archive denominator and no applicability gap." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-ASSET",
+          "authorities": ["adr0028", "owner_disposition"]
+        },
+        {
+          "rule_id": "P4-FACEGEN-TEMPLATE-UNKNOWN",
+          "state_class": "unsupported",
+          "when": [{ "dimension": "winner_state", "operator": "equals", "values": ["non-deleted"] }, { "dimension": "template_decision", "operator": "equals", "values": ["unknown"] }],
+          "minimum_layer": "semantic",
+          "prerequisites": ["winning NPC not deleted", "template-traits decision unavailable"],
+          "outcomes": [
+            { "constructor_groups": ["FC-FACEGEN-CORE"], "disposition": "accepted_unknown", "value_rule": "applicability=unknown_template_traits_decision." },
+            { "constructor_groups": ["FC-FACEGEN-ASSET"], "disposition": "accepted_unknown", "value_rule": "Emit canonical paths, empty provider children, null winner, false/false availability; do not evaluate race or asset coverage." }
+          ],
+          "coverage_effect": { "population": "face-gen-loose-assets", "denominator": "none", "completion": "none", "state_effect": "No loose/archive denominator because applicability is unknown." },
+          "gap_effects": [{ "gap_rule_id": "P4-GAP-TEMPLATE", "affected_count": "one winning NPC", "scope": "snapshot-and-result" }],
+          "atomic_boundary": "AB-ASSET",
+          "authorities": ["adr0028", "owner_disposition"]
+        },
+        {
+          "rule_id": "P4-FACEGEN-TEMPLATE-TRAITS",
+          "state_class": "not-applicable",
+          "when": [{ "dimension": "winner_state", "operator": "equals", "values": ["non-deleted"] }, { "dimension": "template_decision", "operator": "equals", "values": ["inherits-traits"] }],
+          "minimum_layer": "semantic",
+          "prerequisites": ["winning NPC not deleted", "definite trait-template inheritance"],
+          "outcomes": [
+            { "constructor_groups": ["FC-FACEGEN-CORE"], "disposition": "exact_value", "value_rule": "applicability=not_applicable_template_traits." },
+            { "constructor_groups": ["FC-FACEGEN-ASSET"], "disposition": "accepted_unknown", "value_rule": "Emit framing paths with no providers, null winner, false/false availability." }
+          ],
+          "coverage_effect": { "population": "face-gen-loose-assets", "denominator": "none", "completion": "none", "state_effect": "Not applicable; no gap." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-ASSET",
+          "authorities": ["adr0028", "owner_disposition"]
+        },
+        {
+          "rule_id": "P4-FACEGEN-RACE-NULL",
+          "state_class": "decoded-null",
+          "when": [{ "dimension": "winner_state", "operator": "equals", "values": ["non-deleted"] }, { "dimension": "template_decision", "operator": "equals", "values": ["does-not-inherit-traits"] }, { "dimension": "race_decision", "operator": "in", "values": ["missing", "null"] }],
+          "minimum_layer": "semantic",
+          "prerequisites": ["winning NPC not deleted", "template decision complete and not inherited", "race missing or decoded null"],
+          "outcomes": [
+            { "constructor_groups": ["FC-FACEGEN-CORE"], "disposition": "accepted_unknown", "value_rule": "applicability=unknown_race." },
+            { "constructor_groups": ["FC-FACEGEN-ASSET"], "disposition": "accepted_unknown", "value_rule": "Emit framing paths, no providers, null winner, false/false availability." }
+          ],
+          "coverage_effect": { "population": "face-gen-loose-assets", "denominator": "none", "completion": "none", "state_effect": "Unknown applicability; no asset denominator." },
+          "gap_effects": [{ "gap_rule_id": "P4-GAP-RACE", "affected_count": "one winning NPC", "scope": "snapshot-and-result" }],
+          "atomic_boundary": "AB-ASSET",
+          "authorities": ["adr0028", "owner_disposition"]
+        },
+        {
+          "rule_id": "P4-FACEGEN-RACE-UNRESOLVED",
+          "state_class": "decoded-unresolved",
+          "when": [{ "dimension": "winner_state", "operator": "equals", "values": ["non-deleted"] }, { "dimension": "template_decision", "operator": "equals", "values": ["does-not-inherit-traits"] }, { "dimension": "race_decision", "operator": "in", "values": ["unresolved", "unknown-facegen-head"] }],
+          "minimum_layer": "semantic",
+          "prerequisites": ["winning NPC not deleted", "template decision complete and not inherited", "race target or FaceGenHead decision unresolved"],
+          "outcomes": [
+            { "constructor_groups": ["FC-FACEGEN-CORE"], "disposition": "accepted_unknown", "value_rule": "applicability=unknown_race." },
+            { "constructor_groups": ["FC-FACEGEN-ASSET"], "disposition": "accepted_unknown", "value_rule": "Emit framing paths, no providers, null winner, false/false availability." }
+          ],
+          "coverage_effect": { "population": "face-gen-loose-assets", "denominator": "none", "completion": "none", "state_effect": "Unknown applicability; no asset denominator." },
+          "gap_effects": [{ "gap_rule_id": "P4-GAP-RACE", "affected_count": "one winning NPC", "scope": "snapshot-and-result" }],
+          "atomic_boundary": "AB-ASSET",
+          "authorities": ["adr0028", "owner_disposition"]
+        },
+        {
+          "rule_id": "P4-FACEGEN-RACE-NO-HEAD",
+          "state_class": "not-applicable",
+          "when": [{ "dimension": "winner_state", "operator": "equals", "values": ["non-deleted"] }, { "dimension": "template_decision", "operator": "equals", "values": ["does-not-inherit-traits"] }, { "dimension": "race_decision", "operator": "equals", "values": ["resolved-without-facegen-head"] }],
+          "minimum_layer": "semantic",
+          "prerequisites": ["resolved winning race explicitly lacks FaceGenHead"],
+          "outcomes": [
+            { "constructor_groups": ["FC-FACEGEN-CORE"], "disposition": "exact_value", "value_rule": "applicability=not_applicable_race_without_face_gen_head." },
+            { "constructor_groups": ["FC-FACEGEN-ASSET"], "disposition": "accepted_unknown", "value_rule": "Emit framing paths, no providers, null winner, false/false availability." }
+          ],
+          "coverage_effect": { "population": "face-gen-loose-assets", "denominator": "none", "completion": "none", "state_effect": "Not applicable; no gap." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-ASSET",
+          "authorities": ["adr0028", "owner_disposition"]
+        },
+        {
+          "rule_id": "P4-FACEGEN-APPLICABLE-PRESENT",
+          "state_class": "semantic-applicable",
+          "when": [{ "dimension": "winner_state", "operator": "equals", "values": ["non-deleted"] }, { "dimension": "template_decision", "operator": "equals", "values": ["does-not-inherit-traits"] }, { "dimension": "race_decision", "operator": "equals", "values": ["resolved-with-facegen-head"] }, { "dimension": "asset_availability", "operator": "equals", "values": ["present"] }],
+          "minimum_layer": "semantic",
+          "prerequisites": ["FaceGen applicability established", "declared provider chain", "winner within chain"],
+          "outcomes": [
+            { "constructor_groups": ["FC-FACEGEN-CORE"], "disposition": "exact_value", "value_rule": "applicability=applicable." },
+            { "constructor_groups": ["FC-FACEGEN-ASSET"], "disposition": "exact_value", "value_rule": "For each path emit normalized path, ordered providers, exact winner, present=true, exact_absence_known=false." }
+          ],
+          "coverage_effect": { "population": "face-gen-loose-assets", "denominator": "increment-one", "completion": "increment-one", "state_effect": "Apply this rule independently to mesh and tint; each present path increments denominator and completion once." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-ASSET",
+          "authorities": ["adr0028", "owner_disposition"]
+        },
+        {
+          "rule_id": "P4-FACEGEN-APPLICABLE-ABSENT-ARCHIVE-SUPPORTED",
+          "state_class": "resolved",
+          "when": [{ "dimension": "winner_state", "operator": "equals", "values": ["non-deleted"] }, { "dimension": "template_decision", "operator": "equals", "values": ["does-not-inherit-traits"] }, { "dimension": "race_decision", "operator": "equals", "values": ["resolved-with-facegen-head"] }, { "dimension": "asset_availability", "operator": "equals", "values": ["absent"] }, { "dimension": "archive_capability", "operator": "equals", "values": ["supported"] }],
+          "minimum_layer": "semantic",
+          "prerequisites": ["FaceGen applicability established", "exhaustive byte-verified loose-provider authority establishes no provider"],
+          "outcomes": [
+            { "constructor_groups": ["FC-FACEGEN-CORE"], "disposition": "exact_value", "value_rule": "applicability=applicable." },
+            { "constructor_groups": ["FC-FACEGEN-ASSET"], "disposition": "mixed_by_constructor", "value_rule": "Emit normalized path, empty providers, null winner, present=false, exact_absence_known=true." }
+          ],
+          "coverage_effect": { "population": "face-gen-loose-assets", "denominator": "increment-one", "completion": "increment-one", "state_effect": "Apply independently per path; exact loose absence completes the loose obligation.", "additional_population_effects": [{ "population": "face-gen-archive-assets", "denominator": "increment-one", "completion": "increment-one", "state_effect": "Separate archive authority resolves the required archive decision." }] },
+          "gap_effects": [],
+          "atomic_boundary": "AB-ASSET",
+          "authorities": ["adr0028", "owner_disposition"]
+        },
+        {
+          "rule_id": "P4-FACEGEN-APPLICABLE-ABSENT-ARCHIVE-UNSUPPORTED",
+          "state_class": "unsupported",
+          "when": [{ "dimension": "winner_state", "operator": "equals", "values": ["non-deleted"] }, { "dimension": "template_decision", "operator": "equals", "values": ["does-not-inherit-traits"] }, { "dimension": "race_decision", "operator": "equals", "values": ["resolved-with-facegen-head"] }, { "dimension": "asset_availability", "operator": "equals", "values": ["absent"] }, { "dimension": "archive_capability", "operator": "equals", "values": ["unsupported"] }],
+          "minimum_layer": "semantic",
+          "prerequisites": ["FaceGen applicability established", "exhaustive byte-verified loose authority establishes absence", "archive decision required but unavailable"],
+          "outcomes": [
+            { "constructor_groups": ["FC-FACEGEN-CORE"], "disposition": "exact_value", "value_rule": "applicability=applicable." },
+            { "constructor_groups": ["FC-FACEGEN-ASSET"], "disposition": "mixed_by_constructor", "value_rule": "Emit normalized path, empty providers, null winner, present=false, exact_absence_known=true." }
+          ],
+          "coverage_effect": { "population": "face-gen-loose-assets", "denominator": "increment-one", "completion": "increment-one", "state_effect": "Exact loose absence completes the loose obligation.", "additional_population_effects": [{ "population": "face-gen-archive-assets", "denominator": "increment-one", "completion": "no-increment", "state_effect": "Archive obligation is incomplete and gap-bearing." }] },
+          "gap_effects": [{ "gap_rule_id": "P4-GAP-ARCHIVE", "affected_count": "one applicable path", "scope": "snapshot-and-result" }],
+          "atomic_boundary": "AB-ASSET",
+          "authorities": ["adr0028", "owner_disposition"]
+        },
+        {
+          "rule_id": "P4-FACEGEN-APPLICABLE-UNKNOWN-ARCHIVE-SUPPORTED",
+          "state_class": "resolved",
+          "when": [{ "dimension": "winner_state", "operator": "equals", "values": ["non-deleted"] }, { "dimension": "template_decision", "operator": "equals", "values": ["does-not-inherit-traits"] }, { "dimension": "race_decision", "operator": "equals", "values": ["resolved-with-facegen-head"] }, { "dimension": "asset_availability", "operator": "equals", "values": ["unknown"] }, { "dimension": "archive_capability", "operator": "equals", "values": ["supported"] }],
+          "minimum_layer": "semantic",
+          "prerequisites": ["FaceGen applicability established", "no declared loose winner", "exhaustive loose absence not established", "separate archive decision resolved"],
+          "outcomes": [
+            { "constructor_groups": ["FC-FACEGEN-CORE"], "disposition": "exact_value", "value_rule": "applicability=applicable." },
+            { "constructor_groups": ["FC-FACEGEN-ASSET"], "disposition": "accepted_unknown", "value_rule": "Emit normalized path, empty providers, null winner, present=false, exact_absence_known=false; archive resolution never changes loose unknown." }
+          ],
+          "coverage_effect": { "population": "face-gen-loose-assets", "denominator": "increment-one", "completion": "no-increment", "state_effect": "Unknown loose path remains incomplete.", "additional_population_effects": [{ "population": "face-gen-archive-assets", "denominator": "increment-one", "completion": "increment-one", "state_effect": "Separate archive obligation completes." }] },
+          "gap_effects": [],
+          "atomic_boundary": "AB-ASSET",
+          "authorities": ["adr0028", "owner_disposition"]
+        },
+        {
+          "rule_id": "P4-FACEGEN-APPLICABLE-UNKNOWN-ARCHIVE-UNSUPPORTED",
+          "state_class": "unsupported",
+          "when": [{ "dimension": "winner_state", "operator": "equals", "values": ["non-deleted"] }, { "dimension": "template_decision", "operator": "equals", "values": ["does-not-inherit-traits"] }, { "dimension": "race_decision", "operator": "equals", "values": ["resolved-with-facegen-head"] }, { "dimension": "asset_availability", "operator": "equals", "values": ["unknown"] }, { "dimension": "archive_capability", "operator": "equals", "values": ["unsupported"] }],
+          "minimum_layer": "semantic",
+          "prerequisites": ["FaceGen applicability established", "no declared loose winner", "exhaustive loose absence not established"],
+          "outcomes": [
+            { "constructor_groups": ["FC-FACEGEN-CORE"], "disposition": "exact_value", "value_rule": "applicability=applicable." },
+            { "constructor_groups": ["FC-FACEGEN-ASSET"], "disposition": "accepted_unknown", "value_rule": "Emit normalized path, empty providers, null winner, present=false, exact_absence_known=false; never coerce to absent." }
+          ],
+          "coverage_effect": { "population": "face-gen-loose-assets", "denominator": "increment-one", "completion": "no-increment", "state_effect": "Unknown loose path does not complete loose coverage.", "additional_population_effects": [{ "population": "face-gen-archive-assets", "denominator": "increment-one", "completion": "no-increment", "state_effect": "Archive obligation is incomplete and gap-bearing." }] },
+          "gap_effects": [{ "gap_rule_id": "P4-GAP-ARCHIVE", "affected_count": "one applicable path", "scope": "snapshot-and-result" }],
+          "atomic_boundary": "AB-ASSET",
+          "authorities": ["adr0028", "owner_disposition"]
+        },
+        {
+          "rule_id": "P4-FACEGEN-INVALID",
+          "state_class": "terminal-rejection",
+          "when": [{ "dimension": "asset_availability", "operator": "equals", "values": ["invalid"] }],
+          "minimum_layer": "none",
+          "prerequisites": [],
+          "outcomes": [{ "constructor_groups": ["FC-FACEGEN-CORE", "FC-FACEGEN-ASSET"], "disposition": "terminal_rejection", "value_rule": "Reject invalid availability/winner combinations or duplicate/missing winning-NPC assessments." }],
+          "coverage_effect": { "population": "face-gen-loose-assets", "denominator": "none", "completion": "terminal", "state_effect": "Reject snapshot." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-ASSET",
+          "authorities": ["adr0028", "owner_disposition"]
+        }
+      ],
+      "unstated_default": "prohibited"
+    },
+    {
+      "family": "taxonomy",
+      "dimensions_used": ["record_admission", "shape_support", "provider_state", "taxonomy_evidence"],
+      "constructor_groups": [
+        {
+          "id": "FC-TAXONOMY-TUPLE",
+          "fact_id_templates": ["taxonomy/{seg(subject)}/{seg(subject_type)}/{seg(axis)}/{seg(facet)}/{seg(code_or_null)}/{seg(applicability)}/{seg(role)}/taxonomy_id", "taxonomy/{seg(subject)}/{seg(subject_type)}/{seg(axis)}/{seg(facet)}/{seg(code_or_null)}/{seg(applicability)}/{seg(role)}/canonical_subject", "taxonomy/{seg(subject)}/{seg(subject_type)}/{seg(axis)}/{seg(facet)}/{seg(code_or_null)}/{seg(applicability)}/{seg(role)}/subject_type", "taxonomy/{seg(subject)}/{seg(subject_type)}/{seg(axis)}/{seg(facet)}/{seg(code_or_null)}/{seg(applicability)}/{seg(role)}/axis", "taxonomy/{seg(subject)}/{seg(subject_type)}/{seg(axis)}/{seg(facet)}/{seg(code_or_null)}/{seg(applicability)}/{seg(role)}/facet", "taxonomy/{seg(subject)}/{seg(subject_type)}/{seg(axis)}/{seg(facet)}/{seg(code_or_null)}/{seg(applicability)}/{seg(role)}/applicability", "taxonomy/{seg(subject)}/{seg(subject_type)}/{seg(axis)}/{seg(facet)}/{seg(code_or_null)}/{seg(applicability)}/{seg(role)}/role", "taxonomy/{seg(subject)}/{seg(subject_type)}/{seg(axis)}/{seg(facet)}/{seg(code_or_null)}/{seg(applicability)}/{seg(role)}/taxonomy_version/major", "taxonomy/{seg(subject)}/{seg(subject_type)}/{seg(axis)}/{seg(facet)}/{seg(code_or_null)}/{seg(applicability)}/{seg(role)}/taxonomy_version/minor", "taxonomy/{seg(subject)}/{seg(subject_type)}/{seg(axis)}/{seg(facet)}/{seg(code_or_null)}/{seg(applicability)}/{seg(role)}/taxonomy_version/patch", "taxonomy/{seg(subject)}/{seg(subject_type)}/{seg(axis)}/{seg(facet)}/{seg(code_or_null)}/{seg(applicability)}/{seg(role)}/code"],
+          "fact_type": ["taxonomy"],
+          "value_types": ["string", "integer", "null"],
+          "minimum_layer": "semantic",
+          "value_source": "Canonical semantic tuple under taxonomy 0.1.0 and evaluator-owned subject identity.",
+          "authorities": ["taxonomy", "owner_disposition", "frozen_canonicalizer"]
+        }
+      ],
+      "admissible_state_classes": ["not-observed", "observed-undecodable", "decoded-null", "resolved", "semantic-applicable", "unsupported", "not-applicable", "terminal-rejection"],
+      "inadmissible_state_classes": ["decoded-unresolved"],
+      "rules": [
+        {
+          "rule_id": "P4-TAXONOMY-NOT-OBSERVED",
+          "state_class": "not-observed",
+          "when": [{ "dimension": "taxonomy_evidence", "operator": "equals", "values": ["none"] }, { "dimension": "record_admission", "operator": "equals", "values": ["not-observed"] }],
+          "minimum_layer": "none",
+          "prerequisites": [],
+          "outcomes": [{ "constructor_groups": ["FC-TAXONOMY-TUPLE"], "disposition": "no_fact", "value_rule": "No subject and no filler matrix." }],
+          "coverage_effect": { "population": "taxonomy-subjects", "denominator": "none", "completion": "none", "state_effect": "No required subject." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-TAXONOMY",
+          "authorities": ["adr0028", "taxonomy"]
+        },
+        {
+          "rule_id": "P4-TAXONOMY-TECHNICAL-CORE",
+          "state_class": "resolved",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["admitted"] }, { "dimension": "shape_support", "operator": "in", "values": ["supported", "not-applicable"] }, { "dimension": "taxonomy_evidence", "operator": "equals", "values": ["technical-core"] }],
+          "minimum_layer": "semantic",
+          "prerequisites": ["admitted plugin-record contribution", "canonical record-contribution subject"],
+          "outcomes": [{ "constructor_groups": ["FC-TAXONOMY-TUPLE"], "disposition": "exact_value", "value_rule": "Emit exactly surface.plugin-data on semantic-mechanism and delivery.plugin-container on realization-and-delivery, both assigned/observed." }],
+          "coverage_effect": { "population": "taxonomy-subjects", "denominator": "increment-one", "completion": "increment-one", "state_effect": "Technical subject completes when both mandatory tuples emit." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-TAXONOMY",
+          "authorities": ["adr0028", "owner_disposition", "taxonomy"]
+        },
+        {
+          "rule_id": "P4-TAXONOMY-PARTIAL-RACE",
+          "state_class": "observed-undecodable",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["admitted"] }, { "dimension": "shape_support", "operator": "equals", "values": ["unsupported"] }, { "dimension": "taxonomy_evidence", "operator": "equals", "values": ["technical-core"] }],
+          "minimum_layer": "semantic",
+          "prerequisites": ["admitted RACE contribution", "structural/common identity retained", "DATA decode unavailable"],
+          "outcomes": [{ "constructor_groups": ["FC-TAXONOMY-TUPLE"], "disposition": "exact_value", "value_rule": "Create the record-contribution subject and emit the two mandatory technical assignments; emit no DATA-dependent semantic area/consequence/extent/purpose tuple." }],
+          "coverage_effect": { "population": "taxonomy-subjects", "denominator": "increment-one", "completion": "increment-one", "state_effect": "The technical subject completes independently of race-record completion." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-TAXONOMY",
+          "authorities": ["adr0029", "owner_disposition"]
+        },
+        {
+          "rule_id": "P4-TAXONOMY-SEMANTIC",
+          "state_class": "semantic-applicable",
+          "when": [{ "dimension": "taxonomy_evidence", "operator": "equals", "values": ["semantic-supported"] }],
+          "minimum_layer": "semantic",
+          "prerequisites": ["decoded semantic field/link/provider evidence", "closed subject suffix", "canonical axis/facet/code"],
+          "outcomes": [{ "constructor_groups": ["FC-TAXONOMY-TUPLE"], "disposition": "exact_value", "value_rule": "Emit only supported sparse tuples: NPC AI/appearance, REFR placed-object area, or FaceGen chain asset/delivery. EDID/signature/name alone emits none." }],
+          "coverage_effect": { "population": "taxonomy-subjects", "denominator": "increment-one", "completion": "increment-one", "state_effect": "Semantic/provider subject completes when all required meaningful tuples emit." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-TAXONOMY",
+          "authorities": ["adr0028", "owner_disposition", "taxonomy"]
+        },
+        {
+          "rule_id": "P4-TAXONOMY-UNSUPPORTED-RECORD",
+          "state_class": "unsupported",
+          "when": [{ "dimension": "record_admission", "operator": "equals", "values": ["unsupported-family"] }, { "dimension": "taxonomy_evidence", "operator": "equals", "values": ["technical-core"] }],
+          "minimum_layer": "semantic",
+          "prerequisites": ["well-framed unsupported record", "canonical unsupported-record subject"],
+          "outcomes": [{ "constructor_groups": ["FC-TAXONOMY-TUPLE"], "disposition": "exact_value", "value_rule": "Emit only surface.plugin-data and delivery.plugin-container assigned/observed; limitation remains in the gap family." }],
+          "coverage_effect": { "population": "taxonomy-subjects", "denominator": "increment-one", "completion": "increment-one", "state_effect": "Unsupported technical subject completes when both tuples emit." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-TAXONOMY",
+          "authorities": ["owner_disposition", "taxonomy"]
+        },
+        {
+          "rule_id": "P4-TAXONOMY-TYPED-NULL",
+          "state_class": "decoded-null",
+          "when": [{ "dimension": "taxonomy_evidence", "operator": "equals", "values": ["explicit-nonassigned-required"] }, { "dimension": "shape_support", "operator": "equals", "values": ["supported"] }],
+          "minimum_layer": "semantic",
+          "prerequisites": ["a public subject contract explicitly requires unknown, unsupported, unmapped, or not-applicable"],
+          "outcomes": [{ "constructor_groups": ["FC-TAXONOMY-TUPLE"], "disposition": "mixed_by_constructor", "value_rule": "Use literal null in identity root and typed-null /code; all other tuple constructors emit exact values, applicability is the exact non-assigned value, and role remains explicit." }],
+          "coverage_effect": { "population": "taxonomy-subjects", "denominator": "increment-one", "completion": "increment-one", "state_effect": "Subject completes when the explicit non-assigned conclusion is the required meaningful assignment." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-TAXONOMY",
+          "authorities": ["taxonomy", "adr0028", "frozen_canonicalizer"]
+        },
+        {
+          "rule_id": "P4-TAXONOMY-NOT-APPLICABLE",
+          "state_class": "not-applicable",
+          "when": [{ "dimension": "taxonomy_evidence", "operator": "equals", "values": ["none"] }, { "dimension": "record_admission", "operator": "not-in", "values": ["not-observed"] }],
+          "minimum_layer": "semantic",
+          "prerequisites": ["no public subject contract requires an explicit non-assigned tuple"],
+          "outcomes": [{ "constructor_groups": ["FC-TAXONOMY-TUPLE"], "disposition": "no_fact", "value_rule": "Do not fill absent purpose, consequence, extent, area, or other axes with null tuples." }],
+          "coverage_effect": { "population": "taxonomy-subjects", "denominator": "none", "completion": "none", "state_effect": "No unrequired subject or tuple." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-TAXONOMY",
+          "authorities": ["adr0028", "taxonomy"]
+        },
+        {
+          "rule_id": "P4-TAXONOMY-INVALID",
+          "state_class": "terminal-rejection",
+          "when": [{ "dimension": "taxonomy_evidence", "operator": "equals", "values": ["explicit-nonassigned-required"] }, { "dimension": "shape_support", "operator": "equals", "values": ["malformed"] }],
+          "minimum_layer": "none",
+          "prerequisites": [],
+          "outcomes": [{ "constructor_groups": ["FC-TAXONOMY-TUPLE"], "disposition": "terminal_rejection", "value_rule": "Reject duplicate/filler/provider-topology tuples, invalid subject suffix, or code/applicability mismatch." }],
+          "coverage_effect": { "population": "taxonomy-subjects", "denominator": "none", "completion": "terminal", "state_effect": "Reject snapshot." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-TAXONOMY",
+          "authorities": ["adr0028", "owner_disposition"]
+        }
+      ],
+      "unstated_default": "prohibited"
+    },
+    {
+      "family": "coverage",
+      "dimensions_used": ["publication", "coverage_denominator", "coverage_lifecycle", "gap_scope"],
+      "constructor_groups": [
+        {
+          "id": "FC-COVERAGE-ROW",
+          "fact_id_templates": ["coverage/{seg(population)}/population", "coverage/{seg(population)}/denominator", "coverage/{seg(population)}/completed", "coverage/{seg(population)}/state"],
+          "fact_type": ["coverage"],
+          "value_types": ["string", "integer"],
+          "minimum_layer": "semantic",
+          "value_source": "All ten fixed registry rows with exact denominator/completed arithmetic and accepted state.",
+          "authorities": ["adr0028", "owner_disposition", "frozen_canonicalizer"]
+        }
+      ],
+      "admissible_state_classes": ["not-observed", "resolved", "semantic-applicable", "unsupported", "terminal-rejection"],
+      "inadmissible_state_classes": ["observed-undecodable", "decoded-null", "decoded-unresolved", "not-applicable"],
+      "rules": [
+        {
+          "rule_id": "P4-COVERAGE-NO-SNAPSHOT",
+          "state_class": "not-observed",
+          "when": [{ "dimension": "publication", "operator": "equals", "values": ["no-snapshot"] }],
+          "minimum_layer": "none",
+          "prerequisites": [],
+          "outcomes": [{ "constructor_groups": ["FC-COVERAGE-ROW"], "disposition": "no_fact", "value_rule": "Coverage is a snapshot family and does not publish without a snapshot." }],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "none", "state_effect": "No coverage facts." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-RESULT",
+          "authorities": ["frozen_canonicalizer"]
+        },
+        {
+          "rule_id": "P4-COVERAGE-ZERO",
+          "state_class": "resolved",
+          "when": [{ "dimension": "coverage_denominator", "operator": "equals", "values": ["zero"] }, { "dimension": "coverage_lifecycle", "operator": "equals", "values": ["completed"] }, { "dimension": "gap_scope", "operator": "equals", "values": ["none"] }],
+          "minimum_layer": "semantic",
+          "prerequisites": ["published snapshot", "fixed registry complete", "denominator=0 for the row"],
+          "outcomes": [{ "constructor_groups": ["FC-COVERAGE-ROW"], "disposition": "exact_value", "value_rule": "Emit population, denominator=0, completed=0, state=completed." }],
+          "coverage_effect": { "population": null, "denominator": "fixed-registry", "completion": "derived", "state_effect": "Zero is complete, not unknown or omitted." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-COVERAGE",
+          "authorities": ["adr0028", "owner_disposition"]
+        },
+        {
+          "rule_id": "P4-COVERAGE-COMPLETE",
+          "state_class": "semantic-applicable",
+          "when": [{ "dimension": "coverage_denominator", "operator": "equals", "values": ["positive"] }, { "dimension": "coverage_lifecycle", "operator": "equals", "values": ["completed"] }, { "dimension": "gap_scope", "operator": "equals", "values": ["none"] }],
+          "minimum_layer": "semantic",
+          "prerequisites": ["completed equals denominator", "no attached row gap"],
+          "outcomes": [{ "constructor_groups": ["FC-COVERAGE-ROW"], "disposition": "exact_value", "value_rule": "Emit exact positive or zero counts and state completed." }],
+          "coverage_effect": { "population": null, "denominator": "fixed-registry", "completion": "derived", "state_effect": "Plain completed is allowed only with exact completion and no gap." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-COVERAGE",
+          "authorities": ["owner_disposition", "coverage"]
+        },
+        {
+          "rule_id": "P4-COVERAGE-INCOMPLETE",
+          "state_class": "unsupported",
+          "when": [{ "dimension": "coverage_lifecycle", "operator": "in", "values": ["completed-with-gaps", "unsupported", "failed", "skipped-by-configuration", "skipped-by-limit"] }],
+          "minimum_layer": "semantic",
+          "prerequisites": ["exact denominator/completed arithmetic", "lifecycle or capability state established"],
+          "outcomes": [{ "constructor_groups": ["FC-COVERAGE-ROW"], "disposition": "exact_value", "value_rule": "Emit exact accepted wire state: completed_with_gaps, unsupported, failed, skipped_by_configuration, or skipped_by_limit. Later-layer failure never increments completion." }],
+          "coverage_effect": { "population": null, "denominator": "fixed-registry", "completion": "derived", "state_effect": "Use completed_with_gaps when some supported work completed; unsupported when the entire nonzero population lacks the capability; lifecycle states only when actually established." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-COVERAGE",
+          "authorities": ["coverage", "owner_disposition", "adr0029"]
+        },
+        {
+          "rule_id": "P4-COVERAGE-INVALID",
+          "state_class": "terminal-rejection",
+          "when": [{ "dimension": "publication", "operator": "equals", "values": ["snapshot-published"] }, { "dimension": "coverage_lifecycle", "operator": "equals", "values": ["invalid"] }],
+          "minimum_layer": "none",
+          "prerequisites": [],
+          "outcomes": [{ "constructor_groups": ["FC-COVERAGE-ROW"], "disposition": "terminal_rejection", "value_rule": "Reject missing/extra/duplicate rows, invalid arithmetic, zero-row non-completed state, or completed with a gap." }],
+          "coverage_effect": { "population": null, "denominator": "fixed-registry", "completion": "terminal", "state_effect": "Reject snapshot." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-COVERAGE",
+          "authorities": ["adr0028", "owner_disposition"]
+        }
+      ],
+      "unstated_default": "prohibited"
+    },
+    {
+      "family": "gaps",
+      "dimensions_used": ["publication", "gap_scope"],
+      "constructor_groups": [
+        {
+          "id": "FC-GAPS-ROW",
+          "fact_id_templates": ["gaps/{seg(population)}/{seg(missing_capability)}/population", "gaps/{seg(population)}/{seg(missing_capability)}/denominator", "gaps/{seg(population)}/{seg(missing_capability)}/missing_capability"],
+          "fact_type": ["gap"],
+          "value_types": ["string", "integer"],
+          "minimum_layer": "semantic",
+          "value_source": "Exact snapshot gap pairs aggregated by population and missing capability.",
+          "authorities": ["owner_disposition", "frozen_canonicalizer"]
+        }
+      ],
+      "admissible_state_classes": ["not-observed", "unsupported", "resolved", "terminal-rejection"],
+      "inadmissible_state_classes": ["observed-undecodable", "decoded-null", "decoded-unresolved", "semantic-applicable", "not-applicable"],
+      "rules": [
+        {
+          "rule_id": "P4-GAPS-NONE",
+          "state_class": "not-observed",
+          "when": [{ "dimension": "publication", "operator": "equals", "values": ["no-snapshot"] }, { "dimension": "gap_scope", "operator": "equals", "values": ["none"] }],
+          "minimum_layer": "semantic",
+          "prerequisites": ["all applicable gap obligations evaluated"],
+          "outcomes": [{ "constructor_groups": ["FC-GAPS-ROW"], "disposition": "no_fact", "value_rule": "Empty gap set emits no child facts." }],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "none", "state_effect": "Coverage rows still emit." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-GAP",
+          "authorities": ["authority_matrix", "blocked_draft"]
+        },
+        {
+          "rule_id": "P4-GAPS-EMIT",
+          "state_class": "unsupported",
+          "when": [{ "dimension": "publication", "operator": "equals", "values": ["snapshot-published"] }, { "dimension": "gap_scope", "operator": "in", "values": ["snapshot", "snapshot-and-result"] }],
+          "minimum_layer": "semantic",
+          "prerequisites": ["exact gap rule selected", "positive affected-member count", "snapshot published"],
+          "outcomes": [{ "constructor_groups": ["FC-GAPS-ROW"], "disposition": "exact_value", "value_rule": "Emit one aggregate row per unique exact pair with positive summed affected count." }],
+          "coverage_effect": { "population": null, "denominator": "exact-affected-count", "completion": "none", "state_effect": "Associated coverage row cannot be plain completed." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-GAP",
+          "authorities": ["owner_disposition", "adr0029"]
+        },
+        {
+          "rule_id": "P4-GAPS-RESOLVED",
+          "state_class": "resolved",
+          "when": [{ "dimension": "publication", "operator": "equals", "values": ["snapshot-published"] }, { "dimension": "gap_scope", "operator": "equals", "values": ["none"] }],
+          "minimum_layer": "semantic",
+          "prerequisites": ["all required capabilities present or no affected members"],
+          "outcomes": [{ "constructor_groups": ["FC-GAPS-ROW"], "disposition": "no_fact", "value_rule": "No gap fact is emitted for completed capability." }],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "none", "state_effect": "Coverage may be completed when arithmetic also completes." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-GAP",
+          "authorities": ["owner_disposition"]
+        },
+        {
+          "rule_id": "P4-GAPS-INVALID",
+          "state_class": "terminal-rejection",
+          "when": [{ "dimension": "gap_scope", "operator": "equals", "values": ["snapshot"] }, { "dimension": "publication", "operator": "equals", "values": ["no-snapshot"] }],
+          "minimum_layer": "none",
+          "prerequisites": [],
+          "outcomes": [{ "constructor_groups": ["FC-GAPS-ROW"], "disposition": "terminal_rejection", "value_rule": "Snapshot gaps cannot publish without a snapshot; reject invalid key/count/duplicate aggregates." }],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "terminal", "state_effect": "Reject result publication." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-GAP",
+          "authorities": ["blocked_draft", "frozen_canonicalizer"]
+        }
+      ],
+      "unstated_default": "prohibited"
+    },
+    {
+      "family": "result_gaps",
+      "dimensions_used": ["publication", "gap_scope"],
+      "constructor_groups": [
+        {
+          "id": "FC-RESULT-GAPS-ROW",
+          "fact_id_templates": ["result_gaps/{seg(population)}/{seg(missing_capability)}/population", "result_gaps/{seg(population)}/{seg(missing_capability)}/denominator", "result_gaps/{seg(population)}/{seg(missing_capability)}/missing_capability"],
+          "fact_type": ["gap"],
+          "value_types": ["string", "integer"],
+          "minimum_layer": "semantic",
+          "value_source": "Exact result-envelope gap pairs aggregated by population and missing capability.",
+          "authorities": ["authority_matrix", "blocked_draft", "frozen_canonicalizer"]
+        }
+      ],
+      "admissible_state_classes": ["not-observed", "unsupported", "resolved", "terminal-rejection"],
+      "inadmissible_state_classes": ["observed-undecodable", "decoded-null", "decoded-unresolved", "semantic-applicable", "not-applicable"],
+      "rules": [
+        {
+          "rule_id": "P4-RESULTGAPS-NONE",
+          "state_class": "not-observed",
+          "when": [{ "dimension": "gap_scope", "operator": "equals", "values": ["none"] }],
+          "minimum_layer": "semantic",
+          "prerequisites": ["all public result-gap obligations evaluated"],
+          "outcomes": [{ "constructor_groups": ["FC-RESULT-GAPS-ROW"], "disposition": "no_fact", "value_rule": "Empty result gap set emits no child facts." }],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "none", "state_effect": "No effect." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-GAP",
+          "authorities": ["authority_matrix"]
+        },
+        {
+          "rule_id": "P4-RESULTGAPS-WITH-SNAPSHOT",
+          "state_class": "unsupported",
+          "when": [{ "dimension": "publication", "operator": "equals", "values": ["snapshot-published"] }, { "dimension": "gap_scope", "operator": "equals", "values": ["snapshot-and-result"] }],
+          "minimum_layer": "semantic",
+          "prerequisites": ["published snapshot", "snapshot gaps validated"],
+          "outcomes": [{ "constructor_groups": ["FC-RESULT-GAPS-ROW"], "disposition": "exact_value", "value_rule": "Emit the same aggregate semantic pairs/counts carried by the result envelope; do not reuse product gap IDs." }],
+          "coverage_effect": { "population": null, "denominator": "exact-affected-count", "completion": "none", "state_effect": "Mirrors snapshot gap visibility without duplicating coverage arithmetic." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-GAP",
+          "authorities": ["blocked_draft", "frozen_canonicalizer"]
+        },
+        {
+          "rule_id": "P4-RESULTGAPS-NO-SNAPSHOT",
+          "state_class": "resolved",
+          "when": [{ "dimension": "publication", "operator": "equals", "values": ["no-snapshot"] }, { "dimension": "gap_scope", "operator": "in", "values": ["result", "snapshot-and-result"] }],
+          "minimum_layer": "semantic",
+          "prerequisites": ["publicly established envelope gap independent of excluded diagnostic prose"],
+          "outcomes": [{ "constructor_groups": ["FC-RESULT-GAPS-ROW"], "disposition": "exact_value", "value_rule": "Emit only independently established result-envelope gap pairs; do not invent exact gaps from failure codes or prose." }],
+          "coverage_effect": { "population": null, "denominator": "exact-affected-count", "completion": "none", "state_effect": "No snapshot coverage row exists." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-RESULT",
+          "authorities": ["authority_matrix", "blocked_draft"]
+        },
+        {
+          "rule_id": "P4-RESULTGAPS-INVALID",
+          "state_class": "terminal-rejection",
+          "when": [{ "dimension": "gap_scope", "operator": "equals", "values": ["snapshot"] }, { "dimension": "publication", "operator": "equals", "values": ["no-snapshot"] }],
+          "minimum_layer": "none",
+          "prerequisites": [],
+          "outcomes": [{ "constructor_groups": ["FC-RESULT-GAPS-ROW"], "disposition": "terminal_rejection", "value_rule": "Reject invalid key/count/duplicate aggregate or an ungrounded result gap." }],
+          "coverage_effect": { "population": null, "denominator": "none", "completion": "terminal", "state_effect": "Reject result publication." },
+          "gap_effects": [],
+          "atomic_boundary": "AB-GAP",
+          "authorities": ["blocked_draft"]
+        }
+      ],
+      "unstated_default": "prohibited"
+    }
+  ],
+  "manual_traces": [
+    {
+      "trace_id": "TRACE-STRUCTURAL-OBSERVED",
+      "boundary": "structural-to-observed",
+      "input_state": "A well-framed RACE contribution contains a structurally present DATA member but no exact independently observed occurrence count.",
+      "rules": ["P4-OVERRIDE-PARTIAL", "P4-FIELDS-STRUCTURAL-ONLY"],
+      "result": "Structural override/contribution identity survives; no DATA count publishes because structural presence alone is not observed count evidence."
+    },
+    {
+      "trace_id": "TRACE-OBSERVED-DECODED",
+      "boundary": "observed-to-decoded",
+      "input_state": "RACE/DATA occurrence is independently observed, but its bounded shape is unsupported and undecodable.",
+      "rules": ["P4-RACECONTRIB-PARTIAL-DATA", "P4-FIELDS-STRUCTURAL-ONLY"],
+      "result": "Common race contribution facts remain; face_gen_head and any unproven DATA count are omitted; unsupported-shapes:race:data is emitted with allowlisted-record-shape-semantics."
+    },
+    {
+      "trace_id": "TRACE-DECODED-RESOLVED",
+      "boundary": "decoded-to-resolved",
+      "input_state": "An NPC RNAM target FormKey decodes and translates, but no target RACE record resolves.",
+      "rules": ["P4-NPCCONTRIB-UNRESOLVED-LINK", "P4-NPCS-UNRESOLVED-LINK"],
+      "result": "All link facts publish with state unresolved and the canonical target; it is not typed null and does not become resolved."
+    },
+    {
+      "trace_id": "TRACE-RESOLVED-SEMANTIC",
+      "boundary": "resolved-to-semantic",
+      "input_state": "A non-deleted NPC does not inherit template traits and resolves to a RACE whose decoded FaceGenHead decision is true.",
+      "rules": ["P4-FACEGEN-APPLICABLE-PRESENT", "P4-TAXONOMY-SEMANTIC"],
+      "result": "FaceGen applicability is applicable; each declared chain is assessed independently; only evidence-supported sparse area/provider taxonomy subjects emit."
+    },
+    {
+      "trace_id": "TRACE-PARTIAL-RACE-DATA",
+      "boundary": "partial-race-data",
+      "input_state": "One admitted RACE contribution has structurally present unsupported DATA shape.",
+      "rules": ["P4-OVERRIDE-PARTIAL", "P4-RACECONTRIB-PARTIAL-DATA", "P4-FIELDS-STRUCTURAL-ONLY", "P4-RACES-PARTIAL-DATA", "P4-TAXONOMY-PARTIAL-RACE", "P4-COVERAGE-INCOMPLETE", "P4-GAPS-EMIT"],
+      "result": "Override chain/common contribution and two generic technical taxonomy tuples publish; DATA count, face_gen_head, and resolved race do not; race-records denominator increments without completion; taxonomy subject increments and completes; exact unsupported-shapes:race:data gap aggregates once."
+    },
+    {
+      "trace_id": "TRACE-ATOMIC-REJECTION",
+      "boundary": "atomic-rejection",
+      "input_state": "A FaceGen asset transport has present=true and exact_absence_known=true.",
+      "rules": ["P4-FACEGEN-INVALID", "P4-RESULT-NO-SNAPSHOT"],
+      "result": "The invalid fourth state is rejected at AB-ASSET; it cannot be repaired to present, absent, or unknown, and snapshot families do not publish."
+    }
+  ]
+}
