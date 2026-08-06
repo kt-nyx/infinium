@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Held-out evaluation v2 implementation record
 
-Status: Public evaluator `/4` and candidate frozen; Pre-B2 WP1 and WP2 complete; WP3 next; evidence contract and model remain proposed pending WP4
+Status: Public evaluator `/4` and candidate frozen; Pre-B2 WP1-WP3 complete; WP4 next; evidence contract and model remain proposed pending WP4
 Opened: 2026-08-04
 Plan: `infinium.plan.m1.backend-semantic-proof/3`
 Execution plan: [M1 Slice 4.5](../slices/M1-slice-4.5-held-out-evaluation-v2.md)
