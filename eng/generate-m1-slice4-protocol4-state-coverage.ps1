@@ -11,6 +11,17 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
+$script:ForbiddenArtifactProperties = @(
+    'expected_facts',
+    'expected_output',
+    'oracle_path',
+    'candidate_output',
+    'product_contribution_id',
+    'product_participant_id',
+    'private_path',
+    'private_member_id'
+)
+
 $scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 if (-not $ModelPath) {
     $ModelPath = Join-Path $scriptRoot '..\docs\evaluation\specifications\m1-slice4-protocol-4-totality-model.json'
@@ -72,6 +83,14 @@ function Test-SameStringSet([object[]]$Left, [object[]]$Right) {
         if ($a[$index] -cne $b[$index]) { return $false }
     }
     return $true
+}
+
+function Test-JsonEquivalent([object]$Left, [object]$Right) {
+    return ($Left | ConvertTo-Json -Depth 100 -Compress) -ceq ($Right | ConvertTo-Json -Depth 100 -Compress)
+}
+
+function Get-MappingByProperty([object[]]$Items, [string]$Property, [string]$Value) {
+    return @($Items | Where-Object { [string]$_.$Property -ceq $Value })
 }
 
 function Get-Sha256Text([string]$Text) {
@@ -301,7 +320,27 @@ function Get-Wp3Mutations {
         [pscustomobject][ordered]@{ id = 'answer-bearing-property'; category = 'answer-isolation'; operation = 'add an expected_facts property to the tracked artifact' },
         [pscustomobject][ordered]@{ id = 'duplicate-gap-owner'; category = 'gap-ownership'; operation = 'repeat the partial RACE/DATA gap owner' },
         [pscustomobject][ordered]@{ id = 'partial-race-rule-omission'; category = 'higher-order'; operation = 'remove one required rule-to-case binding from the partial RACE/DATA exercise' },
-        [pscustomobject][ordered]@{ id = 'state-digest-drift'; category = 'state-proof'; operation = 'replace the aggregate raw-state classification digest' }
+        [pscustomobject][ordered]@{ id = 'state-digest-drift'; category = 'state-proof'; operation = 'replace the aggregate raw-state classification digest' },
+        [pscustomobject][ordered]@{ id = 'wrong-family-mapping-case'; category = 'family-mapping'; operation = 'replace a family case with a nonexistent case' },
+        [pscustomobject][ordered]@{ id = 'wrong-state-class-case'; category = 'state-class-mapping'; operation = 'replace a state-class case with a nonexistent case' },
+        [pscustomobject][ordered]@{ id = 'wrong-disposition-case'; category = 'disposition-mapping'; operation = 'replace a disposition case with a nonexistent case' },
+        [pscustomobject][ordered]@{ id = 'wrong-constructor-case'; category = 'constructor-mapping'; operation = 'replace a constructor case with a nonexistent case' },
+        [pscustomobject][ordered]@{ id = 'wrong-atomic-boundary-case'; category = 'atomic-boundary'; operation = 'replace an atomic-boundary case with a case from another boundary' },
+        [pscustomobject][ordered]@{ id = 'changed-lexical-inputs'; category = 'lexical-input'; operation = 'change a normalization exercise input' },
+        [pscustomobject][ordered]@{ id = 'missing-lexical-inputs'; category = 'lexical-input'; operation = 'remove the generic inputs from a normalization exercise' },
+        [pscustomobject][ordered]@{ id = 'changed-gap-population'; category = 'gap-exercise'; operation = 'change a gap population template' },
+        [pscustomobject][ordered]@{ id = 'changed-gap-capability'; category = 'gap-exercise'; operation = 'change a gap missing capability' },
+        [pscustomobject][ordered]@{ id = 'changed-gap-scope'; category = 'gap-exercise'; operation = 'change a gap scope' },
+        [pscustomobject][ordered]@{ id = 'wrong-coverage-case'; category = 'coverage-exercise'; operation = 'replace a zero-coverage case with a nonexistent case' },
+        [pscustomobject][ordered]@{ id = 'wrong-transition-rule'; category = 'transition'; operation = 'replace a transition rule with a rule outside the trace' },
+        [pscustomobject][ordered]@{ id = 'wrong-transition-case'; category = 'transition'; operation = 'replace a transition case with a nonexistent case' },
+        [pscustomobject][ordered]@{ id = 'nonexistent-partial-rule-case'; category = 'higher-order'; operation = 'replace a partial RACE/DATA rule case with a nonexistent case' },
+        [pscustomobject][ordered]@{ id = 'category-coverage-drift'; category = 'category-coverage'; operation = 'change a category coverage reference' },
+        [pscustomobject][ordered]@{ id = 'missing-existing-mutation-id'; category = 'existing-mutation-registry'; operation = 'remove one retained authorability mutation ID' },
+        [pscustomobject][ordered]@{ id = 'extra-existing-mutation-id'; category = 'existing-mutation-registry'; operation = 'add an unknown retained authorability mutation ID' },
+        [pscustomobject][ordered]@{ id = 'summary-count-drift'; category = 'summary'; operation = 'change a derived coverage summary count' },
+        [pscustomobject][ordered]@{ id = 'weakened-forbidden-registry'; category = 'answer-isolation'; operation = 'remove expected_facts from the registry and add that answer-bearing property' },
+        [pscustomobject][ordered]@{ id = 'simultaneous-multi-surface-corruption'; category = 'multi-surface'; operation = 'corrupt constructor, state-class, disposition, lexical, gap, coverage, transition, and higher-order claims together' }
     )
 }
 
@@ -642,7 +681,7 @@ function New-CoverageArtifact([object]$Model, [object]$Truth, [string]$ModelHash
     return [pscustomobject][ordered]@{
         '$schema' = 'generated-state-coverage.schema.json'
         schema_id = 'infinium.evaluation.protocol-4-model-derived-state-coverage/v1'
-        artifact_version = '1.0.0'
+        artifact_version = '1.1.0'
         status = 'answer-free-generated-coverage'
         work_id = 'M1/S4.5/PRE-B2/WP3'
         source_model = [pscustomobject][ordered]@{
@@ -655,7 +694,7 @@ function New-CoverageArtifact([object]$Model, [object]$Truth, [string]$ModelHash
         }
         generation = [pscustomobject][ordered]@{
             generator = 'eng/generate-m1-slice4-protocol4-state-coverage.ps1'
-            generator_version = '1.0.0'
+            generator_version = '1.1.0'
             deterministic = $true
             answer_bearing_outputs_tracked = $false
             selection_strategy = 'all admitted states; one representative per admitted, invalid, and excluded region; nearest matched negative per admitted state; deterministic greedy pairwise completion'
@@ -684,7 +723,7 @@ function New-CoverageArtifact([object]$Model, [object]$Truth, [string]$ModelHash
         existing_authorability_mutations = $existingMutations
         wp3_mutations = @(Get-Wp3Mutations)
         answer_isolation = [pscustomobject][ordered]@{
-            forbidden_properties = @('expected_facts', 'expected_output', 'oracle_path', 'candidate_output', 'product_contribution_id', 'product_participant_id', 'private_path', 'private_member_id')
+            forbidden_properties = @($script:ForbiddenArtifactProperties)
             expected_facts_location = 'ignored work/ only'
             product_or_candidate_source = 'prohibited'
         }
@@ -742,8 +781,9 @@ function Get-ForbiddenPropertyHits([object]$Node, [string[]]$Forbidden, [string]
     return $hits
 }
 
-function Invoke-ArtifactValidation([object]$Model, [object]$Truth, [object]$Schema, [object]$Artifact, [string]$ModelHash) {
+function Invoke-ArtifactValidation([object]$Model, [object]$Truth, [object]$Schema, [object]$Artifact, [object]$Expected, [string]$ModelHash) {
     $issues = [System.Collections.Generic.List[string]]::new()
+    $coverageDrift = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
     foreach ($required in @($Schema.required)) {
         if (-not (Test-HasProperty $Artifact ([string]$required))) { Add-Issue $issues "artifact is missing schema-required property '$required'" }
     }
@@ -752,8 +792,11 @@ function Invoke-ArtifactValidation([object]$Model, [object]$Truth, [object]$Sche
     if ([string]$Artifact.source_model.model_status -cne 'proposed') { Add-Issue $issues 'source model must remain proposed until WP4' }
     if ([string]$Artifact.source_model.protocol_id -cne 'infinium.evaluator-v2/4') { Add-Issue $issues 'protocol identity drifted' }
 
-    $forbidden = @($Artifact.answer_isolation.forbidden_properties | ForEach-Object { [string]$_ })
-    $hits = @(Get-ForbiddenPropertyHits $Artifact $forbidden)
+    $declaredForbidden = @($Artifact.answer_isolation.forbidden_properties | ForEach-Object { [string]$_ })
+    if (-not (Test-SameStringSet $declaredForbidden $script:ForbiddenArtifactProperties) -or -not (Test-JsonEquivalent $declaredForbidden $script:ForbiddenArtifactProperties)) {
+        Add-Issue $issues 'answer-isolation forbidden-property registry drifted from the fixed validator registry'
+    }
+    $hits = @(Get-ForbiddenPropertyHits $Artifact $script:ForbiddenArtifactProperties)
     if ($hits.Count -gt 0) { Add-Issue $issues "answer-bearing property found at $($hits[0])" }
 
     $stateCases = @($Artifact.state_cases)
@@ -773,6 +816,7 @@ function Invoke-ArtifactValidation([object]$Model, [object]$Truth, [object]$Sche
             Add-Issue $issues "case '$($case.case_id)' makes a false state or rule coverage claim"
         }
     }
+    if (-not (Test-JsonEquivalent $stateCases @($Expected.state_cases))) { [void]$coverageDrift.Add('state_cases'); Add-Issue $issues 'generated state-case inventory drifted from recomputed model coverage' }
 
     if ([int]$Artifact.state_space_proof.totals.raw -ne [int]$Truth.totals.raw -or
         [int]$Artifact.state_space_proof.totals.admitted -ne [int]$Truth.totals.admitted -or
@@ -782,6 +826,7 @@ function Invoke-ArtifactValidation([object]$Model, [object]$Truth, [object]$Sche
         Add-Issue $issues 'raw state-space totals do not match the model'
     }
     if ([string]$Artifact.state_space_proof.aggregate_state_digest_sha256 -cne [string]$Truth.aggregate_state_digest_sha256) { Add-Issue $issues 'aggregate state classification digest drifted' }
+    if (-not (Test-JsonEquivalent $Artifact.state_space_proof $Expected.state_space_proof)) { [void]$coverageDrift.Add('state_space_proof'); Add-Issue $issues 'state-space proof drifted from reconstructed truth' }
 
     $admittedExpected = @($Truth.raw_by_global_key.Values | Where-Object { [string]$_.classification -ceq 'admitted' })
     $admittedMappings = @($Artifact.admitted_state_mappings)
@@ -795,6 +840,7 @@ function Invoke-ArtifactValidation([object]$Model, [object]$Truth, [object]$Sche
         if (-not $caseById.ContainsKey([string]$mapping.matched_negative_case_id)) { Add-Issue $issues "matched negative references unknown case '$($mapping.matched_negative_case_id)'" }
         elseif ([string]$caseById[[string]$mapping.matched_negative_case_id].classification -ceq 'admitted') { Add-Issue $issues "matched negative for '$($mapping.case_id)' is admitted" }
     }
+    if (-not (Test-JsonEquivalent $admittedMappings @($Expected.admitted_state_mappings))) { [void]$coverageDrift.Add('admitted_state_mappings'); Add-Issue $issues 'admitted-state mappings drifted from recomputed coverage' }
 
     $expectedConstraintIds = @($Model.fact_families | ForEach-Object { @($_.state_space.admitted_regions) + @($_.state_space.invalid_regions) + @($_.state_space.excluded_regions) } | ForEach-Object { [string]$_.constraint_id })
     $constraintMappings = @($Artifact.constraint_mappings)
@@ -804,6 +850,7 @@ function Invoke-ArtifactValidation([object]$Model, [object]$Truth, [object]$Sche
         $case = $caseById[[string]$mapping.representative_case_id]
         if ([string]$case.constraint_id -cne [string]$mapping.constraint_id -or [int]$mapping.state_count -ne [int]$Truth.constraint_counts[[string]$mapping.constraint_id]) { Add-Issue $issues "constraint '$($mapping.constraint_id)' has a false representative or state count" }
     }
+    if (-not (Test-JsonEquivalent $constraintMappings @($Expected.constraint_mappings))) { [void]$coverageDrift.Add('constraint_mappings'); Add-Issue $issues 'constraint mappings drifted from recomputed coverage' }
 
     $expectedPairs = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
     foreach ($family in @($Model.fact_families)) { foreach ($record in @($Truth.family_records[[string]$family.family])) { foreach ($token in @($record.pair_tokens)) { [void]$expectedPairs.Add([string]$token) } } }
@@ -814,6 +861,31 @@ function Invoke-ArtifactValidation([object]$Model, [object]$Truth, [object]$Sche
         $case = $caseById[[string]$mapping.case_id]
         $family = (@($Model.fact_families | Where-Object { [string]$_.family -ceq [string]$case.family }))[0]
         if (@(Get-PairTokens ([string]$case.family) $case.dimensions @($family.dimensions_used)) -cnotcontains [string]$mapping.pair) { Add-Issue $issues "pairwise mapping '$($mapping.pair)' makes a false coverage claim" }
+    }
+    if (-not (Test-JsonEquivalent $pairMappings @($Expected.pairwise_mappings))) { [void]$coverageDrift.Add('pairwise_mappings'); Add-Issue $issues 'pairwise mappings drifted from recomputed coverage' }
+
+    $familyMappings = @($Artifact.family_mappings)
+    if (-not (Test-SameStringSet @($familyMappings.family) @($Model.fact_families.family))) { [void]$coverageDrift.Add('family_mappings'); Add-Issue $issues 'family mapping inventory is incomplete' }
+    foreach ($mapping in $familyMappings) {
+        $expectedMapping = @(Get-MappingByProperty @($Expected.family_mappings) 'family' ([string]$mapping.family))
+        if ($expectedMapping.Count -ne 1 -or -not (Test-SameStringSet @($mapping.case_ids) @($expectedMapping[0].case_ids))) { [void]$coverageDrift.Add('family_mappings'); Add-Issue $issues "family mapping '$($mapping.family)' does not contain exactly its generated cases" }
+        foreach ($caseId in @($mapping.case_ids)) {
+            if (-not $caseById.ContainsKey([string]$caseId)) { Add-Issue $issues "family mapping '$($mapping.family)' references unknown case '$caseId'" }
+            elseif ([string]$caseById[[string]$caseId].family -cne [string]$mapping.family) { Add-Issue $issues "family mapping '$($mapping.family)' references case '$caseId' from another family" }
+        }
+    }
+
+    $stateClassMappings = @($Artifact.state_class_mappings)
+    if (-not (Test-SameStringSet @($stateClassMappings.state_class) @($Model.state_classes.id))) { [void]$coverageDrift.Add('state_class_mappings'); Add-Issue $issues 'state-class mapping inventory is incomplete' }
+    foreach ($mapping in $stateClassMappings) {
+        $expectedMapping = @(Get-MappingByProperty @($Expected.state_class_mappings) 'state_class' ([string]$mapping.state_class))
+        if ($expectedMapping.Count -ne 1 -or -not (Test-SameStringSet @($mapping.case_ids) @($expectedMapping[0].case_ids))) { [void]$coverageDrift.Add('state_class_mappings'); Add-Issue $issues "state-class mapping '$($mapping.state_class)' does not contain exactly its generated cases" }
+        foreach ($caseId in @($mapping.case_ids)) {
+            if (-not $caseById.ContainsKey([string]$caseId)) { Add-Issue $issues "state-class mapping '$($mapping.state_class)' references unknown case '$caseId'"; continue }
+            $case = $caseById[[string]$caseId]
+            $supports = [string]$case.state_class -ceq [string]$mapping.state_class -or ([string]$mapping.state_class -ceq 'terminal-rejection' -and [string]$case.classification -ceq 'invalid')
+            if (-not $supports) { Add-Issue $issues "state-class mapping '$($mapping.state_class)' references unsupported case '$caseId'" }
+        }
     }
 
     $expectedRules = @($Model.fact_families | ForEach-Object { $_.rules } | ForEach-Object { [string]$_.rule_id })
@@ -828,37 +900,160 @@ function Invoke-ArtifactValidation([object]$Model, [object]$Truth, [object]$Sche
             elseif ([string]$caseById[[string]$caseId].family -cne [string]$mapping.family -or -not (Get-ConditionMatches $caseById[[string]$caseId].dimensions @($rule.when))) { Add-Issue $issues "rule '$($mapping.rule_id)' makes a false coverage claim with case '$caseId'" }
         }
     }
+    if (-not (Test-JsonEquivalent @($Artifact.rule_mappings) @($Expected.rule_mappings))) { [void]$coverageDrift.Add('rule_mappings'); Add-Issue $issues 'publication rule mappings drifted from recomputed coverage' }
+
+    $dispositionMappings = @($Artifact.disposition_mappings)
+    if (-not (Test-SameStringSet @($dispositionMappings.disposition) @($Expected.disposition_mappings.disposition))) { [void]$coverageDrift.Add('disposition_mappings'); Add-Issue $issues 'disposition mapping inventory is incomplete' }
+    foreach ($mapping in $dispositionMappings) {
+        $expectedMapping = @(Get-MappingByProperty @($Expected.disposition_mappings) 'disposition' ([string]$mapping.disposition))
+        if ($expectedMapping.Count -ne 1 -or -not (Test-SameStringSet @($mapping.case_ids) @($expectedMapping[0].case_ids))) { [void]$coverageDrift.Add('disposition_mappings'); Add-Issue $issues "disposition mapping '$($mapping.disposition)' does not contain exactly its rule-matching cases" }
+        foreach ($caseId in @($mapping.case_ids)) {
+            if (-not $caseById.ContainsKey([string]$caseId)) { Add-Issue $issues "disposition mapping '$($mapping.disposition)' references unknown case '$caseId'"; continue }
+            $case = $caseById[[string]$caseId]
+            $family = (@($Model.fact_families | Where-Object { [string]$_.family -ceq [string]$case.family }))[0]
+            $supports = @($family.rules | Where-Object { (Get-ConditionMatches $case.dimensions @($_.when)) -and @($_.outcomes.disposition) -ccontains [string]$mapping.disposition }).Count -gt 0
+            if (-not $supports) { Add-Issue $issues "disposition mapping '$($mapping.disposition)' references unsupported case '$caseId'" }
+        }
+    }
 
     $expectedConstructors = @($Model.fact_families | ForEach-Object { $_.constructor_groups } | ForEach-Object { [string]$_.id })
-    if (-not (Test-SameStringSet @($Artifact.constructor_mappings.constructor_id) $expectedConstructors)) { Add-Issue $issues 'constructor mapping inventory is incomplete' }
-    foreach ($mapping in @($Artifact.constructor_mappings)) { if (@($mapping.case_ids).Count -eq 0) { Add-Issue $issues "constructor '$($mapping.constructor_id)' has no mapped case" } }
+    if (-not (Test-SameStringSet @($Artifact.constructor_mappings.constructor_id) $expectedConstructors)) { [void]$coverageDrift.Add('constructor_mappings'); Add-Issue $issues 'constructor mapping inventory is incomplete' }
+    foreach ($mapping in @($Artifact.constructor_mappings)) {
+        $expectedMapping = @(Get-MappingByProperty @($Expected.constructor_mappings) 'constructor_id' ([string]$mapping.constructor_id))
+        if ($expectedMapping.Count -ne 1 -or -not (Test-SameStringSet @($mapping.case_ids) @($expectedMapping[0].case_ids))) { [void]$coverageDrift.Add('constructor_mappings'); Add-Issue $issues "constructor mapping '$($mapping.constructor_id)' does not contain exactly its rule-matching cases" }
+        foreach ($caseId in @($mapping.case_ids)) {
+            if (-not $caseById.ContainsKey([string]$caseId)) { Add-Issue $issues "constructor mapping '$($mapping.constructor_id)' references unknown case '$caseId'"; continue }
+            $case = $caseById[[string]$caseId]
+            $family = (@($Model.fact_families | Where-Object { [string]$_.family -ceq [string]$mapping.family }))[0]
+            $supports = [string]$case.family -ceq [string]$mapping.family -and @($family.rules | Where-Object { (Get-ConditionMatches $case.dimensions @($_.when)) -and @($_.outcomes.constructor_groups) -ccontains [string]$mapping.constructor_id }).Count -gt 0
+            if (-not $supports) { Add-Issue $issues "constructor mapping '$($mapping.constructor_id)' references unsupported case '$caseId'" }
+        }
+    }
 
     $expectedNorm = @($Model.normalization_rules | ForEach-Object { [string]$_.rule_id })
-    if (-not (Test-SameStringSet @($Artifact.lexical_cases.rule_id) $expectedNorm)) { Add-Issue $issues 'normalization-rule lexical coverage is incomplete' }
+    if (-not (Test-SameStringSet @($Artifact.lexical_cases.rule_id) $expectedNorm)) { [void]$coverageDrift.Add('lexical_cases'); Add-Issue $issues 'normalization-rule lexical coverage is incomplete' }
+    foreach ($lexical in @($Artifact.lexical_cases)) {
+        $expectedLexical = @(Get-MappingByProperty @($Expected.lexical_cases) 'case_id' ([string]$lexical.case_id))
+        if ($expectedLexical.Count -ne 1 -or -not (Test-JsonEquivalent $lexical $expectedLexical[0])) { [void]$coverageDrift.Add('lexical_cases'); Add-Issue $issues "lexical exercise '$($lexical.case_id)' drifted from its stable rule, boundary, or generic inputs" }
+    }
     $expectedBoundaries = @($Model.atomic_boundaries | ForEach-Object { [string]$_.id })
-    if (-not (Test-SameStringSet @($Artifact.atomic_boundary_mappings.atomic_boundary) $expectedBoundaries)) { Add-Issue $issues 'atomic-boundary coverage is incomplete' }
-    foreach ($mapping in @($Artifact.atomic_boundary_mappings)) { if (@($mapping.state_case_ids).Count + @($mapping.lexical_case_ids).Count -eq 0) { Add-Issue $issues "atomic boundary '$($mapping.atomic_boundary)' has no exercise" } }
-    if (-not (Test-SameStringSet @($Artifact.gap_exercises.gap_rule_id) @($Model.gap_rules.rule_id))) { Add-Issue $issues 'gap-rule exercise inventory is incomplete' }
-    if (-not (Test-SameStringSet @($Artifact.coverage_exercises.population) @($Model.coverage_registry.population))) { Add-Issue $issues 'coverage-population exercise inventory is incomplete' }
-    if (-not (Test-SameStringSet @($Artifact.transition_mappings.trace_id) @($Model.manual_traces.trace_id))) { Add-Issue $issues 'evidence-layer transition mapping is incomplete' }
+    if (-not (Test-SameStringSet @($Artifact.atomic_boundary_mappings.atomic_boundary) $expectedBoundaries)) { [void]$coverageDrift.Add('atomic_boundary_mappings'); Add-Issue $issues 'atomic-boundary coverage is incomplete' }
+    foreach ($mapping in @($Artifact.atomic_boundary_mappings)) {
+        $expectedMapping = @(Get-MappingByProperty @($Expected.atomic_boundary_mappings) 'atomic_boundary' ([string]$mapping.atomic_boundary))
+        if ($expectedMapping.Count -ne 1 -or -not (Test-SameStringSet @($mapping.state_case_ids) @($expectedMapping[0].state_case_ids)) -or -not (Test-SameStringSet @($mapping.lexical_case_ids) @($expectedMapping[0].lexical_case_ids))) { [void]$coverageDrift.Add('atomic_boundary_mappings'); Add-Issue $issues "atomic-boundary mapping '$($mapping.atomic_boundary)' does not contain exactly its exercises" }
+        foreach ($caseId in @($mapping.state_case_ids)) {
+            if (-not $caseById.ContainsKey([string]$caseId)) { Add-Issue $issues "atomic-boundary mapping '$($mapping.atomic_boundary)' references unknown state case '$caseId'" }
+            elseif ([string]$caseById[[string]$caseId].atomic_boundary -cne [string]$mapping.atomic_boundary) { Add-Issue $issues "atomic-boundary mapping '$($mapping.atomic_boundary)' references state case '$caseId' from another boundary" }
+        }
+        foreach ($caseId in @($mapping.lexical_case_ids)) {
+            $lexical = @(Get-MappingByProperty @($Artifact.lexical_cases) 'case_id' ([string]$caseId))
+            if ($lexical.Count -ne 1) { Add-Issue $issues "atomic-boundary mapping '$($mapping.atomic_boundary)' references unknown lexical case '$caseId'" }
+            elseif ([string]$lexical[0].atomic_boundary -cne [string]$mapping.atomic_boundary) { Add-Issue $issues "atomic-boundary mapping '$($mapping.atomic_boundary)' references lexical case '$caseId' from another boundary" }
+        }
+    }
+    if (-not (Test-SameStringSet @($Artifact.gap_exercises.gap_rule_id) @($Model.gap_rules.rule_id))) { [void]$coverageDrift.Add('gap_exercises'); Add-Issue $issues 'gap-rule exercise inventory is incomplete' }
+    foreach ($exercise in @($Artifact.gap_exercises)) {
+        $expectedExercise = @(Get-MappingByProperty @($Expected.gap_exercises) 'case_id' ([string]$exercise.case_id))
+        if ($expectedExercise.Count -ne 1 -or -not (Test-JsonEquivalent $exercise $expectedExercise[0])) { [void]$coverageDrift.Add('gap_exercises'); Add-Issue $issues "gap exercise '$($exercise.case_id)' drifted from its model rule, population, capability, scope, or bindings" }
+    }
+    if (-not (Test-SameStringSet @($Artifact.coverage_exercises.population) @($Model.coverage_registry.population))) { [void]$coverageDrift.Add('coverage_exercises'); Add-Issue $issues 'coverage-population exercise inventory is incomplete' }
+    $coverageRuleByProperty = [ordered]@{ zero_case_id = 'P4-COVERAGE-ZERO'; complete_case_id = 'P4-COVERAGE-COMPLETE'; incomplete_case_id = 'P4-COVERAGE-INCOMPLETE'; no_snapshot_case_id = 'P4-COVERAGE-NO-SNAPSHOT'; invalid_case_id = 'P4-COVERAGE-INVALID' }
+    $coverageFamily = (@($Model.fact_families | Where-Object { [string]$_.family -ceq 'coverage' }))[0]
+    foreach ($exercise in @($Artifact.coverage_exercises)) {
+        $expectedExercise = @(Get-MappingByProperty @($Expected.coverage_exercises) 'population' ([string]$exercise.population))
+        if ($expectedExercise.Count -ne 1 -or -not (Test-JsonEquivalent $exercise $expectedExercise[0])) { [void]$coverageDrift.Add('coverage_exercises'); Add-Issue $issues "coverage exercise '$($exercise.population)' drifted from its intended rule cases" }
+        foreach ($property in $coverageRuleByProperty.Keys) {
+            $caseId = [string]$exercise.$property
+            if (-not $caseById.ContainsKey($caseId)) { Add-Issue $issues "coverage exercise '$($exercise.population)' references unknown $property case '$caseId'"; continue }
+            $rule = (@($coverageFamily.rules | Where-Object { [string]$_.rule_id -ceq [string]$coverageRuleByProperty[$property] }))[0]
+            if ([string]$caseById[$caseId].family -cne 'coverage' -or -not (Get-ConditionMatches $caseById[$caseId].dimensions @($rule.when))) { Add-Issue $issues "coverage exercise '$($exercise.population)' has a case that does not match $($rule.rule_id)" }
+        }
+    }
+    if (-not (Test-SameStringSet @($Artifact.transition_mappings.trace_id) @($Model.manual_traces.trace_id))) { [void]$coverageDrift.Add('transition_mappings'); Add-Issue $issues 'evidence-layer transition mapping is incomplete' }
+    foreach ($transition in @($Artifact.transition_mappings)) {
+        $trace = (@($Model.manual_traces | Where-Object { [string]$_.trace_id -ceq [string]$transition.trace_id }))[0]
+        $expectedTransition = @(Get-MappingByProperty @($Expected.transition_mappings) 'trace_id' ([string]$transition.trace_id))
+        if ($expectedTransition.Count -ne 1 -or -not (Test-JsonEquivalent $transition $expectedTransition[0])) { [void]$coverageDrift.Add('transition_mappings'); Add-Issue $issues "transition mapping '$($transition.trace_id)' drifted from the model trace or rule cases" }
+        if ($null -ne $trace -and -not (Test-SameStringSet @($transition.rule_cases.rule_id) @($trace.rules))) { Add-Issue $issues "transition mapping '$($transition.trace_id)' has the wrong rule inventory" }
+        foreach ($binding in @($transition.rule_cases)) {
+            if (-not $caseById.ContainsKey([string]$binding.case_id)) { Add-Issue $issues "transition mapping '$($transition.trace_id)' references unknown case '$($binding.case_id)'"; continue }
+            $case = $caseById[[string]$binding.case_id]
+            $family = (@($Model.fact_families | Where-Object { @($_.rules.rule_id) -ccontains [string]$binding.rule_id }))[0]
+            $rule = (@($family.rules | Where-Object { [string]$_.rule_id -ceq [string]$binding.rule_id }))[0]
+            if ($null -eq $rule -or [string]$case.family -cne [string]$family.family -or -not (Get-ConditionMatches $case.dimensions @($rule.when))) { Add-Issue $issues "transition mapping '$($transition.trace_id)' has invalid rule/case binding '$($binding.rule_id)'/'$($binding.case_id)'" }
+        }
+    }
 
     $partial = @($Artifact.higher_order_cases | Where-Object { [string]$_.invariant_id -ceq 'INV-PARTIAL-RACE-DATA' })
     $requiredPartialRules = @($Model.manual_traces | Where-Object { [string]$_.trace_id -ceq 'TRACE-PARTIAL-RACE-DATA' } | ForEach-Object { $_.rules })
-    if ($partial.Count -ne 1 -or -not (Test-SameStringSet @($partial[0].rule_cases.rule_id) $requiredPartialRules)) { Add-Issue $issues 'partial RACE/DATA higher-order rule coverage is incomplete' }
+    if ($partial.Count -ne 1 -or -not (Test-SameStringSet @($partial[0].rule_cases.rule_id) $requiredPartialRules)) { [void]$coverageDrift.Add('higher_order_cases'); Add-Issue $issues 'partial RACE/DATA higher-order rule coverage is incomplete' }
     elseif (@($partial[0].rule_cases | Where-Object { [string]::IsNullOrWhiteSpace([string]$_.case_id) }).Count -gt 0) { Add-Issue $issues 'partial RACE/DATA higher-order case has an unmapped rule' }
     if ($partial.Count -eq 1) {
+        foreach ($binding in @($partial[0].rule_cases)) {
+            if (-not $caseById.ContainsKey([string]$binding.case_id)) { Add-Issue $issues "partial RACE/DATA higher-order mapping references unknown case '$($binding.case_id)'"; continue }
+            $case = $caseById[[string]$binding.case_id]
+            $family = (@($Model.fact_families | Where-Object { @($_.rules.rule_id) -ccontains [string]$binding.rule_id }))[0]
+            $rule = (@($family.rules | Where-Object { [string]$_.rule_id -ceq [string]$binding.rule_id }))[0]
+            if ($null -eq $rule -or [string]$case.family -cne [string]$family.family -or -not (Get-ConditionMatches $case.dimensions @($rule.when))) { Add-Issue $issues "partial RACE/DATA higher-order mapping has invalid rule/case binding '$($binding.rule_id)'/'$($binding.case_id)'" }
+        }
         if (@($partial[0].gap_owner_ids).Count -ne 1 -or [string]$partial[0].gap_owner_ids[0] -cne [string]$Model.cross_family_invariants.partial_race_data.gap.owner_id) { Add-Issue $issues 'partial RACE/DATA gap ownership is not singular' }
         if (($partial[0].obligations | ConvertTo-Json -Depth 30 -Compress) -cne ($Model.cross_family_invariants.partial_race_data | ConvertTo-Json -Depth 30 -Compress)) { Add-Issue $issues 'partial RACE/DATA obligation mapping drifted from the model' }
+        if (-not (Test-JsonEquivalent $partial[0] $Expected.higher_order_cases[0])) { [void]$coverageDrift.Add('higher_order_cases'); Add-Issue $issues 'partial RACE/DATA higher-order mapping drifted from recomputed coverage' }
     }
 
+    if (-not (Test-JsonEquivalent $Artifact.category_coverage $Expected.category_coverage)) { [void]$coverageDrift.Add('category_coverage'); Add-Issue $issues 'category coverage drifted from recomputed mapping, case, mutation, or dimension/value references' }
+    $categoryMappingNames = @(
+        [string]$Artifact.category_coverage.positive_and_matched_negative.mapping,
+        [string]$Artifact.category_coverage.observed_versus_not_observed.mapping,
+        [string]$Artifact.category_coverage.supported_versus_unsupported_shape.mapping,
+        [string]$Artifact.category_coverage.missing_versus_present.mapping,
+        [string]$Artifact.category_coverage.supported_versus_unsupported_capabilities.mapping,
+        [string]$Artifact.category_coverage.coverage_complete_incomplete_zero.mapping,
+        [string]$Artifact.category_coverage.pairwise_interactions.mapping
+    )
+    $categoryMappingNames += @($Artifact.category_coverage.decoded_null_unresolved_unknown_omission_rejection.mappings | ForEach-Object { [string]$_ })
+    foreach ($mappingName in @($categoryMappingNames)) {
+        if (-not (Test-HasProperty $Artifact ([string]$mappingName))) { Add-Issue $issues "category coverage references unknown mapping '$mappingName'" }
+    }
+    $dimensionTokens = @($Artifact.category_coverage.observed_versus_not_observed.dimensions) + @($Artifact.category_coverage.supported_versus_unsupported_shape.dimensions) + @($Artifact.category_coverage.missing_versus_present.dimensions) + @($Artifact.category_coverage.supported_versus_unsupported_capabilities.dimensions)
+    foreach ($token in $dimensionTokens) {
+        $tokenText = [string]$token
+        $separatorIndex = $tokenText.IndexOf('=', [System.StringComparison]::Ordinal)
+        $dimensionName = if ($separatorIndex -gt 0) { $tokenText.Substring(0, $separatorIndex) } else { '' }
+        $dimensionValue = if ($separatorIndex -gt 0 -and $separatorIndex -lt ($tokenText.Length - 1)) { $tokenText.Substring($separatorIndex + 1) } else { '' }
+        $dimension = if ($dimensionName) { $Model.dimensions.PSObject.Properties[$dimensionName] } else { $null }
+        if ($null -eq $dimension -or @($dimension.Value.values) -cnotcontains $dimensionValue) { Add-Issue $issues "category coverage references undeclared dimension/value token '$token'" }
+    }
+    foreach ($stateClass in @($Artifact.category_coverage.decoded_null_unresolved_unknown_omission_rejection.state_classes)) {
+        if (@($Artifact.state_class_mappings.state_class) -cnotcontains [string]$stateClass) { Add-Issue $issues "category coverage references unknown state class '$stateClass'" }
+    }
+    foreach ($disposition in @($Artifact.category_coverage.decoded_null_unresolved_unknown_omission_rejection.dispositions)) {
+        if (@($Artifact.disposition_mappings.disposition) -cnotcontains [string]$disposition) { Add-Issue $issues "category coverage references unknown disposition '$disposition'" }
+    }
+    $allMutationIds = @($Artifact.existing_authorability_mutations) + @($Artifact.wp3_mutations.id)
+    foreach ($mutationId in @($Artifact.category_coverage.singular_versus_duplicate_gap_ownership.negative_mutation, $Artifact.category_coverage.aggregation_and_ordering.negative_mutation) + @($Artifact.category_coverage.duplicate_fact_and_taxonomy_identity.existing_mutations)) {
+        if ($allMutationIds -cnotcontains [string]$mutationId) { Add-Issue $issues "category coverage references unknown mutation '$mutationId'" }
+    }
+    foreach ($caseId in @($Artifact.category_coverage.aggregation_and_ordering.lexical_cases)) {
+        if (@($Artifact.lexical_cases.case_id) -cnotcontains [string]$caseId) { Add-Issue $issues "category coverage references unknown lexical case '$caseId'" }
+    }
+    foreach ($caseId in @($Artifact.category_coverage.singular_versus_duplicate_gap_ownership.positive, $Artifact.category_coverage.exact_partial_race_data.higher_order_case)) {
+        if (@($Artifact.higher_order_cases.case_id) -cnotcontains [string]$caseId) { Add-Issue $issues "category coverage references unknown higher-order case '$caseId'" }
+    }
+    $ledgerPath = Join-Path $scriptRoot '..\docs\evaluation\fixtures\protocol-4-oracle-authorability\coverage-ledger.json'
+    $ledgerMutations = @((Read-Json $ledgerPath 'existing authorability coverage ledger').mutations | ForEach-Object { [string]$_ })
+    if (-not (Test-JsonEquivalent @($Artifact.existing_authorability_mutations) $ledgerMutations)) { [void]$coverageDrift.Add('existing_authorability_mutations'); Add-Issue $issues 'existing authorability mutation registry drifted from the retained coverage ledger' }
     $expectedWp3Mutations = @(Get-Wp3Mutations | ForEach-Object { [string]$_.id })
-    if (-not (Test-SameStringSet @($Artifact.wp3_mutations.id) $expectedWp3Mutations)) { Add-Issue $issues 'WP3 mutation registry drifted' }
-    if ([int]$Artifact.summary.state_case_count -ne $stateCases.Count -or [int]$Artifact.summary.admitted_state_case_count -ne $admittedExpected.Count -or [int]$Artifact.summary.uncovered_required_obligations -ne 0) { Add-Issue $issues 'artifact summary makes a false coverage claim' }
+    if (-not (Test-SameStringSet @($Artifact.wp3_mutations.id) $expectedWp3Mutations) -or -not (Test-JsonEquivalent @($Artifact.wp3_mutations) @($Expected.wp3_mutations))) { [void]$coverageDrift.Add('wp3_mutations'); Add-Issue $issues 'WP3 mutation registry drifted' }
+
+    $computedUncovered = $coverageDrift.Count
+    if ([int]$Artifact.summary.uncovered_required_obligations -ne $computedUncovered) { Add-Issue $issues "summary uncovered_required_obligations is not computed (reported=$($Artifact.summary.uncovered_required_obligations), computed=$computedUncovered)" }
+    if (-not (Test-JsonEquivalent $Artifact.summary $Expected.summary)) { Add-Issue $issues 'artifact summary counts drifted from recomputed coverage' }
 
     return [pscustomobject][ordered]@{ passed = ($issues.Count -eq 0); issues = $issues.ToArray() }
 }
 
-function Invoke-MutationSelfTests([object]$Model, [object]$Truth, [object]$Schema, [object]$Artifact, [string]$ModelHash) {
+function Invoke-MutationSelfTests([object]$Model, [object]$Truth, [object]$Schema, [object]$Artifact, [object]$Expected, [string]$ModelHash) {
     $tests = @(
         @{ id = 'missing-state-case'; expect = 'unknown case'; mutate = { param($a) $a.state_cases = @($a.state_cases | Select-Object -Skip 1) } },
         @{ id = 'false-rule-coverage-claim'; expect = 'false coverage claim'; mutate = { param($a) $a.rule_mappings[0].case_ids[0] = [string]$a.rule_mappings[1].case_ids[0] } },
@@ -872,13 +1067,33 @@ function Invoke-MutationSelfTests([object]$Model, [object]$Truth, [object]$Schem
         @{ id = 'answer-bearing-property'; expect = 'answer-bearing property'; mutate = { param($a) $a | Add-Member -NotePropertyName expected_facts -NotePropertyValue @() } },
         @{ id = 'duplicate-gap-owner'; expect = 'gap ownership is not singular'; mutate = { param($a) $a.higher_order_cases[0].gap_owner_ids = @($a.higher_order_cases[0].gap_owner_ids) + @($a.higher_order_cases[0].gap_owner_ids[0]) } },
         @{ id = 'partial-race-rule-omission'; expect = 'partial RACE/DATA'; mutate = { param($a) $a.higher_order_cases[0].rule_cases = @($a.higher_order_cases[0].rule_cases | Select-Object -Skip 1) } },
-        @{ id = 'state-digest-drift'; expect = 'classification digest drifted'; mutate = { param($a) $a.state_space_proof.aggregate_state_digest_sha256 = ('0' * 64) } }
+        @{ id = 'state-digest-drift'; expect = 'classification digest drifted'; mutate = { param($a) $a.state_space_proof.aggregate_state_digest_sha256 = ('0' * 64) } },
+        @{ id = 'wrong-family-mapping-case'; expect = 'family mapping.*unknown case'; mutate = { param($a) $a.family_mappings[0].case_ids[0] = 'P4-WP3-STATE-NONEXISTENT-0001' } },
+        @{ id = 'wrong-state-class-case'; expect = 'state-class mapping.*unknown case'; mutate = { param($a) $a.state_class_mappings[0].case_ids[0] = 'P4-WP3-STATE-NONEXISTENT-0001' } },
+        @{ id = 'wrong-disposition-case'; expect = 'disposition mapping.*unknown case'; mutate = { param($a) $a.disposition_mappings[0].case_ids[0] = 'P4-WP3-STATE-NONEXISTENT-0001' } },
+        @{ id = 'wrong-constructor-case'; expect = 'constructor mapping.*unknown case'; mutate = { param($a) $a.constructor_mappings[0].case_ids[0] = 'P4-WP3-STATE-NONEXISTENT-0001' } },
+        @{ id = 'wrong-atomic-boundary-case'; expect = 'atomic-boundary mapping.*another boundary'; mutate = { param($a) $a.atomic_boundary_mappings[0].state_case_ids[0] = [string]$a.atomic_boundary_mappings[1].state_case_ids[0] } },
+        @{ id = 'changed-lexical-inputs'; expect = 'lexical exercise.*generic inputs'; mutate = { param($a) $a.lexical_cases[0].generic_inputs.values[0] = 'bogus-input' } },
+        @{ id = 'missing-lexical-inputs'; expect = 'lexical exercise.*generic inputs'; mutate = { param($a) $a.lexical_cases[0].PSObject.Properties.Remove('generic_inputs') } },
+        @{ id = 'changed-gap-population'; expect = 'gap exercise.*population'; mutate = { param($a) $a.gap_exercises[0].population_template = 'bogus:{signature_lower}' } },
+        @{ id = 'changed-gap-capability'; expect = 'gap exercise.*capability'; mutate = { param($a) $a.gap_exercises[0].missing_capability = 'bogus-capability' } },
+        @{ id = 'changed-gap-scope'; expect = 'gap exercise.*scope'; mutate = { param($a) $a.gap_exercises[0].scope = 'result-only' } },
+        @{ id = 'wrong-coverage-case'; expect = 'coverage exercise.*unknown zero_case_id'; mutate = { param($a) $a.coverage_exercises[0].zero_case_id = 'P4-WP3-STATE-NONEXISTENT-0001' } },
+        @{ id = 'wrong-transition-rule'; expect = 'transition mapping.*wrong rule inventory'; mutate = { param($a) $a.transition_mappings[0].rule_cases[0].rule_id = 'P4-RESULT-PUBLISHED' } },
+        @{ id = 'wrong-transition-case'; expect = 'transition mapping.*unknown case'; mutate = { param($a) $a.transition_mappings[0].rule_cases[0].case_id = 'P4-WP3-STATE-NONEXISTENT-0001' } },
+        @{ id = 'nonexistent-partial-rule-case'; expect = 'partial RACE/DATA.*unknown case'; mutate = { param($a) $a.higher_order_cases[0].rule_cases[0].case_id = 'P4-WP3-STATE-NONEXISTENT-0001' } },
+        @{ id = 'category-coverage-drift'; expect = 'category coverage drifted'; mutate = { param($a) $a.category_coverage.pairwise_interactions.mapping = 'family_mappings' } },
+        @{ id = 'missing-existing-mutation-id'; expect = 'existing authorability mutation registry drifted'; mutate = { param($a) $a.existing_authorability_mutations = @($a.existing_authorability_mutations | Select-Object -Skip 1) } },
+        @{ id = 'extra-existing-mutation-id'; expect = 'existing authorability mutation registry drifted'; mutate = { param($a) $a.existing_authorability_mutations = @($a.existing_authorability_mutations) + @('unknown-authorability-mutation') } },
+        @{ id = 'summary-count-drift'; expect = 'summary counts drifted'; mutate = { param($a) $a.summary.constructor_mapping_count++ } },
+        @{ id = 'weakened-forbidden-registry'; expect = 'answer-bearing property'; mutate = { param($a) $a.answer_isolation.forbidden_properties = @($a.answer_isolation.forbidden_properties | Where-Object { [string]$_ -cne 'expected_facts' }); $a | Add-Member -NotePropertyName expected_facts -NotePropertyValue @() } },
+        @{ id = 'simultaneous-multi-surface-corruption'; expect = 'state-class mapping.*unknown case'; mutate = { param($a) $a.constructor_mappings[0].case_ids=@('P4-WP3-STATE-NONEXISTENT-0001');$a.state_class_mappings[0].case_ids=@('P4-WP3-STATE-NONEXISTENT-0001');$a.disposition_mappings[0].case_ids=@('P4-WP3-STATE-NONEXISTENT-0001');$a.lexical_cases[0].generic_inputs=[pscustomobject]@{bogus='value'};$a.gap_exercises[0].missing_capability='bogus-capability';$a.coverage_exercises[0].zero_case_id='P4-WP3-STATE-NONEXISTENT-0001';$a.transition_mappings[0].rule_cases[0].case_id='P4-WP3-STATE-NONEXISTENT-0001';$a.higher_order_cases[0].rule_cases[0].case_id='P4-WP3-STATE-NONEXISTENT-0001' } }
     )
     $results = [System.Collections.Generic.List[object]]::new()
     foreach ($test in $tests) {
         $mutation = Copy-JsonObject $Artifact
         & $test.mutate $mutation
-        $validation = Invoke-ArtifactValidation $Model $Truth $Schema $mutation $ModelHash
+        $validation = Invoke-ArtifactValidation $Model $Truth $Schema $mutation $Expected $ModelHash
         $matching = @($validation.issues | Where-Object { [string]$_ -match [string]$test.expect } | Select-Object -First 1)
         $rejected = -not $validation.passed -and $matching.Count -eq 1
         $results.Add([pscustomobject][ordered]@{ id = [string]$test.id; result = $(if ($rejected) { 'rejected' } else { 'unexpectedly-passed' }); evidence = $(if ($matching.Count) { [string]$matching[0] } else { '' }) })
@@ -893,11 +1108,12 @@ if ([string]$model.status -cne 'proposed' -or [string]$model.version -cne '1.2.0
     throw 'Protocol /4 WP3 state coverage failed: source model must be proposed version 1.2.0'
 }
 $truth = New-TruthModel $model
+$expectedArtifact = New-CoverageArtifact $model $truth $modelHash
 if ($ValidateOnly) {
     $artifact = Read-Json $ArtifactPath 'generated state coverage artifact'
 }
 else {
-    $artifact = New-CoverageArtifact $model $truth $modelHash
+    $artifact = $expectedArtifact
     $json = ($artifact | ConvertTo-Json -Depth 100 -Compress).Replace("`r`n", "`n") + "`n"
     $parent = Split-Path -Parent $ArtifactPath
     if ($parent -and -not (Test-Path -LiteralPath $parent)) { New-Item -ItemType Directory -Path $parent -Force | Out-Null }
@@ -905,9 +1121,9 @@ else {
     $artifact = Read-Json $ArtifactPath 'generated state coverage artifact'
 }
 
-$validation = Invoke-ArtifactValidation $model $truth $schema $artifact $modelHash
+$validation = Invoke-ArtifactValidation $model $truth $schema $artifact $expectedArtifact $modelHash
 $selfTests = @()
-if (-not $SkipSelfTests) { $selfTests = @(Invoke-MutationSelfTests $model $truth $schema $artifact $modelHash) }
+if (-not $SkipSelfTests) { $selfTests = @(Invoke-MutationSelfTests $model $truth $schema $artifact $expectedArtifact $modelHash) }
 $selfTestsPassed = @($selfTests | Where-Object { [string]$_.result -cne 'rejected' }).Count -eq 0
 $passed = $validation.passed -and $selfTestsPassed
 $partialInvariant = $model.cross_family_invariants.partial_race_data
@@ -917,7 +1133,7 @@ $taxonomyDenominator = switch ([string]$partialInvariant.taxonomy.coverage_denom
 $taxonomyCompletion = switch ([string]$partialInvariant.taxonomy.coverage_completion) { 'increment-one' { 1 } 'no-increment' { 0 } default { throw 'Protocol /4 WP3 state coverage failed: unknown taxonomy completion effect' } }
 $summary = [pscustomobject][ordered]@{
     validator = 'infinium.evaluation.protocol-4-model-derived-state-coverage-validator/v1'
-    generator_version = '1.0.0'
+    generator_version = '1.1.0'
     status = $(if ($passed) { 'passed' } else { 'failed' })
     source_model_sha256 = $modelHash
     artifact_sha256 = (Get-FileHash -LiteralPath $ArtifactPath -Algorithm SHA256).Hash.ToLowerInvariant()

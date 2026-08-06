@@ -823,3 +823,84 @@ record; or frozen candidate was accessed or changed. WP4 and later packages,
 private work, B2, C2, Stage D, adaptation, comparison, scoring, protocol `/5`,
 and live or billable calls were not run. The evidence contract and model remain
 proposed. No push occurred. `M1/S4.5/PRE-B2/WP4` is next.
+
+## 2026-08-06 Pre-B2 WP3 validator/schema correction and re-review
+
+WP3 was treated as review-blocked from exact clean commit
+`1d3eb28c0be49a6afcf69df0bef2d1880b0e0812`. Independent reproduction
+confirmed that simultaneous corruption of constructor, state-class,
+disposition, lexical, gap, coverage, transition, and higher-order mappings
+returned validator status `passed` with zero issues and also passed the
+tracked schema. A separate artifact removed `expected_facts` from its own
+forbidden registry, added that answer-bearing property, and likewise passed
+the runtime validator. These were material proof defects; the generated happy
+path itself remained semantically correct.
+
+The correction replaces every normative `$defs.object` use with explicit
+closed schemas: required properties, `additionalProperties: false`, stable
+ID/reference patterns, typed nested structures, nonempty/unique arrays, and
+model-bounded enums or constants. This covers admitted-state, constraint,
+pairwise, family, state-class, rule, disposition, constructor, atomic-boundary,
+lexical, gap, coverage, transition, higher-order, category, retained-mutation,
+WP3-mutation, answer-isolation, and summary structures. Artifact and generator
+versions are now `1.1.0`.
+
+The runtime validator now independently recomputes the expected artifact from
+proposed model `1.2.0` and reconstructed 23,660-state truth without overwriting
+the artifact under validation. It verifies exact mapping inventories and all
+case references semantically: family membership; the explicit invalid-to-
+terminal state-class rule; rule predicates; rule outcomes and dispositions;
+constructor use; state and lexical boundary ownership; exact normalization
+inputs; gap templates, capabilities, scopes, and bindings; coverage rule
+cases; transition trace rule inventories and rule/case matches; all seven
+partial `RACE/DATA` rule/case bindings; category references; the retained
+authorability ledger; and every derived summary count. Uncovered required
+obligations are computed from validator findings. The forbidden-property set
+is fixed in validator code and exact in schema, so the artifact cannot weaken
+its own answer-isolation policy.
+
+The original 13 WP3 mutations remain and 20 focused mutations were added:
+wrong family, state-class, disposition, constructor, and atomic-boundary
+cases; changed and missing lexical inputs; changed gap population, capability,
+and scope; wrong coverage case; wrong transition rule and case; nonexistent
+partial rule-case reference; category drift; missing and extra retained
+mutation IDs; summary drift; weakened forbidden registry plus
+`expected_facts`; and the simultaneous eight-surface corruption. Both Windows
+PowerShell 5.1 and PowerShell 7 rejected all 33 mutations with the intended
+diagnostic evidence.
+
+Independent generation on both hosts produced byte-identical 676,359-byte
+artifacts at SHA-256
+`4c2c5c27d37a90d5c178d5740c07de4ef2cd98730dfabaf7540cd505f9e16989`
+and semantically identical machine-readable summaries. The closed schema
+accepted the genuine artifact and rejected both the simultaneous corruption
+and the self-authorized answer-bearing artifact. The exact coverage remains
+515 compact cases, 110 admitted states, 110 matched negatives, 236 constraint
+mappings, 1,713 pairwise mappings, 15 families, 9 state classes, 6
+dispositions, 77 rules, 24 constructors, 11 boundaries, 10 lexical cases, 8
+gap exercises, 10 coverage exercises, 6 transitions, and one higher-order
+case, with zero uncovered obligations.
+
+WP2 passed under both hosts with 23,660 raw states, 110 admitted, 6,180
+excluded, 17,370 invalid/terminal, zero uncovered or overlap, all 118 explicit
+excluded regions, and all 24 mutations rejected. The unchanged authorability
+validator passed under both hosts with 1,073 facts across all 15 families,
+zero duplicate fact IDs, all 10 fixed coverage populations, and all 10
+retained mutations rejected.
+
+The partial `RACE/DATA` obligations and all seven rule/case bindings remain
+exact: `race-records` denominator +1/completion +0; `taxonomy-subjects`
+denominator +1/completion +1; the two accepted generic technical assignments;
+omitted `DATA` count, `face_gen_head`, and resolved race; and one singular
+`unsupported-shapes:race:data` gap with the accepted capability, scope,
+affected count, and owner.
+
+No proposed-model or semantic correction was required. Changed public paths
+are limited to the WP3 generator, generated artifact and schema, accepted
+Pre-B2 plan, and this implementation record. No product/candidate material,
+evaluator-private fixture, legacy archive, evaluator `/4` mechanic, projection,
+freeze record, or frozen candidate was accessed or changed. WP4 and later
+packages, B2, C2, Stage D, adaptation, comparison, scoring, protocol `/5`, and
+live or billable calls were not started. The evidence contract and model remain
+proposed, and nothing was pushed. WP4 is next only after this correction
+commit.

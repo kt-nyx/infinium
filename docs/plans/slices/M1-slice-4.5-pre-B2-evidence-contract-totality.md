@@ -237,9 +237,9 @@ completes WP2 and unblocks WP3.
 Work ID: `M1/S4.5/PRE-B2/WP3`
 Depends on: `M1/S4.5/PRE-B2/WP2`
 
-Package status: Complete in the focused WP3 closeout. The tracked generated
-coverage remains answer-free and the source contract/model remain proposed;
-only WP4 may accept them.
+Package status: Complete after focused validator/schema correction and full
+WP3 re-review. The tracked generated coverage remains answer-free and the
+source contract/model remain proposed; only WP4 may accept them.
 
 Objective: derive the public exercise matrix from the accepted state model,
 then use examples to validate every rule and boundary.
@@ -275,7 +275,10 @@ state classes, 77 publication rules, 24 constructor groups, 10 normalization
 rules, 11 atomic boundaries, 8 gap rules, 10 coverage populations, 6 manual
 transitions, and the exact partial `RACE/DATA` invariant. Both PowerShell
 hosts passed generation and validation, produced byte-identical tracked
-artifacts, and rejected all 13 WP3 mutations. The unchanged authorability
+artifacts, and rejected all 33 WP3 mutations. The strengthened validator
+recomputes every reported mapping from the model and reconstructed truth;
+the schema uses closed typed structures for every normative collection and a
+fixed answer-isolation registry. The unchanged authorability
 validator passed on both hosts with 1,073 facts, zero duplicate fact IDs, all
 10 fixed coverage populations, and all 10 existing mutations rejected.
 
