@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Held-out evaluation v2 implementation record
 
-Status: Final bounded evaluator `/4` frozen; owner semantic disposition complete; public product/specification realignment required; B2 blocked
+Status: Public evaluator `/4` and conforming candidate frozen; private B2 authorized next; C2 and Stage D pending
 Opened: 2026-08-04
 Plan: `infinium.plan.m1.backend-semantic-proof/3`
 Execution plan: [M1 Slice 4.5](../slices/M1-slice-4.5-held-out-evaluation-v2.md)

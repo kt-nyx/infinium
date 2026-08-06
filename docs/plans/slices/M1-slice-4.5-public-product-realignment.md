@@ -1,9 +1,10 @@
 # M1 Slice 4.5 — Public Bethesda semantic realignment and candidate freeze
 
-Status: Accepted for implementation
+Status: Completed
 Owner: Project owner
 Prepared: 2026-08-05
 Accepted: 2026-08-05
+Completed: 2026-08-05
 Parent plan: `infinium.plan.m1.backend-semantic-proof/3`
 Parent slice: [M1 Slice 4.5 — Held-out evaluation v2](M1-slice-4.5-held-out-evaluation-v2.md)
 Starting public disposition: `40cdf30ad9cd63a91198623c88040d49b8dc40b3`
@@ -466,9 +467,24 @@ different custodian qualifies and freezes the corpus, and a later separate C2
 task performs the one-shot score. Those roles and tasks must not be combined
 with this implementation context.
 
-## Fresh-agent implementation handoff
+## Completion record
 
-Send the following prompt to a separate fresh implementation agent:
+The clean-break implementation, public verification, independent review,
+single correction pass, detached-candidate build, and candidate freeze
+completed at `a98d648bd0adb2751ee0c09828e0227b1583950f`. The candidate was not
+amended. Exact artifact, dependency, check, review, and boundary evidence is in
+the [public product candidate freeze](../../evaluation/m1-slice4.5-public-product-candidate-freeze.json).
+The separate documentation closeout is
+`2fc724af9e6cc483e98e48c2163b533a071671fa`. No private work or push occurred.
+
+This completes this subordinate public realignment plan, not Slice 4.5. One
+fresh private oracle reviewer may resume B2 once; C2 and Stage D remain later
+separate tasks.
+
+## Historical fresh-agent implementation handoff
+
+The implementation prompt used for this completed task is retained below as
+historical execution evidence:
 
 ```text
 Implement the accepted Infinium M1 Slice 4.5 public Bethesda semantic

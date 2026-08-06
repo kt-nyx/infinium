@@ -127,3 +127,11 @@ resolve the six later authority-completion mismatches without changing
 protocol `/4`. B2 may no longer resume under the evaluator freeze alone.
 Public product/specification realignment,
 requalification, and a newly frozen conforming candidate are required first.
+
+That prerequisite was satisfied on 2026-08-05 by the independently reviewed
+public realignment and exact candidate freeze at
+`a98d648bd0adb2751ee0c09828e0227b1583950f`. The machine-readable candidate
+handoff is
+[the public product candidate freeze](m1-slice4.5-public-product-candidate-freeze.json).
+One fresh private oracle reviewer may now resume B2 once. Oracle/corpus
+qualification, C2 scoring, and Stage D remain unrun and separately authorized.

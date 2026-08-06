@@ -96,16 +96,17 @@ that collapse to one semantic tuple are a candidate-output contract violation.
 
 ## Partition reporting and status
 
-The Slice 4 product candidate remains unchanged and retains its historical
-public verification, but it does not conform to the later ADR-0028 contract.
+The original Slice 4 product candidate remains historical public evidence but
+does not conform to the later ADR-0028 contract.
 The historical `/2` Stage C product verdict remains invalidated. Protocol `/3`
 is qualified public evidence but was superseded before successor corpus
 qualification because its projection required non-independently-authorable
 expected values. Protocol `/4` is qualified and frozen. Public
-product/specification realignment, requalification, and a newly frozen
-candidate are required before the existing independently reviewed successor
-inputs can resume oracle construction. Stage C2 has not run and Stage D has not
-started.
+product/specification realignment, independent review, requalification, and a
+new candidate freeze completed at
+`a98d648bd0adb2751ee0c09828e0227b1583950f`. The existing independently
+reviewed successor inputs may now resume B2 oracle construction once. Stage C2
+has not run and Stage D has not started.
 
 Passing public conformance alone does not complete the held-out partition.
 Passing the narrowed held-out partition does not claim conformance for excluded

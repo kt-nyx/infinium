@@ -12,9 +12,8 @@ Completed-slice evidence is indexed under
 [`implementation-records/`](implementation-records/README.md).
 
 Slices 0 through 4 are historically implementation-complete. Slice 4's
-unchanged Mutagen semantic and typed-index candidate is frozen at `98fe8a5` and
-retains its historical public verification, but it does not yet conform to the
-later owner-accepted ADR-0028 contract. Evaluator-v1 attempts produced no valid
+original Mutagen semantic and typed-index candidate at `98fe8a5` retains its
+historical public verification. Evaluator-v1 attempts produced no valid
 held-out product verdict.
 The historical evaluator-v2 `/2` Stage C invocation ran once, but Stage C.5
 invalidated its product verdict, so no valid successor held-out verdict exists.
@@ -22,14 +21,15 @@ Active [Slice 4.5](slices/M1-slice-4.5-held-out-evaluation-v2.md) has qualified
 and frozen final protocol `/4` at
 `3693d19563c636cd2879804633ca4ce52448d2c1`. The B2 input bytes already exist
 and passed independent byte review, but B2 oracle qualification under `/4` has
-not run. The six semantic questions are resolved; public implementation,
-requalification, and a newly frozen candidate are now required before B2. C2
-has not run, Stage D has not started, Slice 5 remains blocked, and M1 remains
-active.
-The accepted
+not run. The six semantic questions are resolved, and the accepted public
+realignment, independent review, requalification, and candidate freeze are
+complete at `a98d648bd0adb2751ee0c09828e0227b1583950f`. One fresh private oracle
+reviewer may now resume B2 once. C2 has not run, Stage D has not started, Slice
+5 remains blocked, and M1 remains active.
+The completed
 [public Bethesda semantic realignment plan](slices/M1-slice-4.5-public-product-realignment.md)
-defines that bounded implementation, review, qualification, candidate-freeze,
-and fresh-agent handoff contract. It does not authorize private work or scoring.
+records that bounded implementation, review, qualification, and candidate-
+freeze contract. It does not itself authorize scoring.
 The accepted
 [Slice 3.5 execution plan](slices/M1-slice-3.5-bethesda-fixture-qualification.md)
 is indexed under [`slices/`](slices/README.md).

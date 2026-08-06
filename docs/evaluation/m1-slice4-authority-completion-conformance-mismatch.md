@@ -1,6 +1,6 @@
 # M1 Slice 4.5 authority-completion product-conformance mismatch
 
-Status: Owner disposition accepted; public product/specification realignment required
+Status: Owner disposition accepted; public realignment completed at `a98d648`; private B2 pending
 
 Recorded: 2026-08-05
 
@@ -22,8 +22,9 @@ freeze exists. The project owner has since dispositioned the six questions in
 [ADR-0028](../architecture/decisions/ADR-0028-m1-bethesda-semantic-reporting-and-oracle-authority.md)
 and the accepted
 [semantic-authority owner disposition](m1-slice4-semantic-authority-owner-disposition.md).
-Private B2 still must not resume until the public product/specification
-realignment is implemented, qualified, and frozen.
+At this conformance-stop checkpoint, private B2 could not resume until the
+public product/specification realignment was implemented, qualified, and
+frozen.
 
 ## Accepted owner disposition
 
@@ -135,3 +136,14 @@ independent normative mismatch.
 - Stage C2 and Stage D did not run; and
 - corpus `infinium.m1.slice4.heldout/2.0.0` was not created, frozen, tagged, or
   pushed.
+
+## Subsequent public resolution
+
+The accepted public realignment was implemented, independently reviewed,
+requalified, and frozen on 2026-08-05 at candidate
+`a98d648bd0adb2751ee0c09828e0227b1583950f`. Exact artifact, dependency,
+verification, and boundary evidence is in the
+[public product candidate freeze](m1-slice4.5-public-product-candidate-freeze.json).
+This resolves the public product mismatch recorded here without changing
+evaluator `/4` or rewriting the historical stop. One fresh private B2 oracle
+reviewer may now resume once; B2, C2, and Stage D have not run.

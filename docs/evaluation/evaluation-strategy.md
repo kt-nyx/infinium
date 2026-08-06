@@ -343,5 +343,8 @@ partitions are reported separately and neither substitutes for the other.
 The accepted
 [semantic-authority owner disposition](m1-slice4-semantic-authority-owner-disposition.md)
 binds the exact EDID, FaceGen, availability, coverage, gap, and taxonomy
-semantics inside that unchanged partition. B2 remains blocked until the public
-product/specification contract is implemented, requalified, and frozen.
+semantics inside that unchanged partition. B2 was blocked until the public
+product/specification contract was implemented, requalified, and frozen. That
+prerequisite is now satisfied by conforming candidate
+`a98d648bd0adb2751ee0c09828e0227b1583950f`; one fresh private oracle reviewer
+may resume B2 once under the existing role and disclosure boundaries.

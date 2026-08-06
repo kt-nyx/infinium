@@ -160,20 +160,21 @@ Every material document should include a status and last-reviewed date.
   slices remain unsupported or pending. Slice 3.5 subsequently constructed and
   independently qualified the Bethesda and applicable taxonomy fixtures under
   ADR-0026's separate evaluator-private store boundary. Slice 4 delivered the
-  bounded Bethesda semantic and typed-index implementation at `98fe8a5`, with
-  passing retained public gates and a successful current detached baseline
-  rerun. The historical evaluator-v2 `/2` Stage C invocation ran once and its
+  original bounded Bethesda semantic and typed-index implementation at
+  `98fe8a5`, with passing retained public gates. The historical evaluator-v2
+  `/2` Stage C invocation ran once and its
   `FAIL` remains immutable, but the owner-supplied Stage C.5 adjudication
   invalidated its product verdict, so no valid successor held-out verdict
-  currently exists. The Slice 4 product candidate remains unchanged and
-  historically verified, but the later independent authority-completion review
-  found six semantic mismatches. ADR-0028 now resolves the intended behavior;
-  a separate public implementation and requalification task is required before
-  B2 can resume. Final protocol `/4` is
-  qualified and frozen at
+  currently exists. The later independent authority-completion review found six
+  semantic mismatches in that historical candidate, and ADR-0028 resolved the
+  intended behavior. The public realignment, independent review,
+  requalification, and candidate freeze are complete at conforming candidate
+  `a98d648bd0adb2751ee0c09828e0227b1583950f`. Final protocol `/4` is qualified
+  and frozen at
   `3693d19563c636cd2879804633ca4ce52448d2c1`. The B2 input bytes already exist
   and passed independent byte review, but B2 oracle qualification under `/4`
-  has not run. C2 has not run, and Stage D has not started. The detailed
+  has not run; its single fresh-reviewer resume is now the authorized next
+  private stage. C2 has not run, and Stage D has not started. The detailed
   sanitized history is recorded in the
   [Stage C.5 incident](evaluation/evaluator-v2-stage-c5-adjudication-incident.md).
   Slice 4.5 remains active and incomplete, Slice 5 remains blocked, and M1

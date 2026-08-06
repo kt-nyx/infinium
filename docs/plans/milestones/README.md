@@ -11,19 +11,21 @@ implementation milestone plan together with its accepted
 Slices 0 through 3.5 are complete. The accepted
 [execution plan](../slices/M1-slice-3.5-bethesda-fixture-qualification.md)
 qualified the Bethesda and applicable taxonomy fixtures before Slice 4.
-The positively qualified Bethesda semantic and typed-index path is implemented
-at `98fe8a5` with passing retained public gates. Evaluator-v1 issued no valid
-held-out product verdict and is retired. The historical evaluator-v2 `/2`
+The original positively qualified Bethesda semantic and typed-index path was
+implemented at `98fe8a5` with passing retained public gates. Evaluator-v1
+issued no valid held-out product verdict and is retired. The historical
+evaluator-v2 `/2`
 Stage C invocation ran once, but Stage C.5 invalidated its product verdict; no
-valid successor held-out verdict exists. The unchanged Slice 4 candidate
-retains its historical public verification but does not yet conform to
-ADR-0028. Slice 4.5 is active under plan revision `/3`, with
-final protocol `/4` qualified and frozen at
+valid successor held-out verdict exists. That Slice 4 candidate retains its
+historical public verification. Slice 4.5 is active under plan revision `/3`,
+with final protocol `/4` qualified and frozen at
 `3693d19563c636cd2879804633ca4ce52448d2c1`. The B2 input bytes already exist
 and passed independent byte review, but B2 oracle qualification under `/4` has
-not run. The owner semantic disposition is accepted; public implementation,
-requalification, and a new candidate freeze are required before B2. C2 has not
-run, Stage D has not started, and Slice 5 remains blocked.
+not run. The owner semantic disposition is accepted; public realignment,
+independent review, requalification, and a new candidate freeze are complete at
+`a98d648bd0adb2751ee0c09828e0227b1583950f`. One fresh private oracle reviewer
+may now resume B2 once. C2 has not run, Stage D has not started, and Slice 5
+remains blocked.
 
 Waves A through D have completed investigations and accepted integrated
 dispositions. Gates A through D are met at their applicable M0 research,

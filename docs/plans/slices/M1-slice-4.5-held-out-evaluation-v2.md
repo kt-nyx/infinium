@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Held-out evaluation v2
 
-Status: Accepted; owner semantic disposition complete; public product/specification realignment required; B2 blocked
+Status: Accepted; public evaluator and conforming product candidate frozen; private B2 authorized next
 Owner: Project owner
 Prepared: 2026-08-04
 Accepted: 2026-08-04
@@ -24,7 +24,10 @@ one valid held-out verdict for the frozen Slice 4 candidate.
 - completed Slice 3.5 and Slice 4 implementation records; and
 - evaluator-private fixture governance v2.
 
-Frozen candidate:
+Current conforming frozen candidate:
+`a98d648bd0adb2751ee0c09828e0227b1583950f`.
+
+Historical Slice 4 candidate:
 `98fe8a5a173116427bf78077673fd10e8d018103`.
 
 The candidate source tree remains detached, clean, and unmodified. The
@@ -340,13 +343,16 @@ then may private B2 resume with a fresh isolated oracle reviewer. The current
 documentation update does not perform or authorize that implementation,
 private access, candidate execution, or scoring.
 
-## Accepted public product realignment plan
+## Completed public product realignment
 
-On 2026-08-05 the project owner accepted the bounded
+On 2026-08-05 the project owner accepted and completed the bounded
 [public Bethesda semantic realignment and candidate-freeze plan](M1-slice-4.5-public-product-realignment.md).
 It selects a frozen-`/4`-compatible `record-semantic-subject` for each distinct
 FaceGen loose-provider chain and keeps missing loose paths `unknown` under the
 current structural-only installation snapshot. Exhaustive byte-verified loose-
-file absence authority is deferred to M3 planning. Private B2 remains blocked
-until the public plan is implemented, independently reviewed, qualified, and a
-new exact candidate is frozen.
+file absence authority is deferred to M3 planning. The implementation,
+independent review, qualification, and exact candidate freeze completed at
+`a98d648bd0adb2751ee0c09828e0227b1583950f`; the append-only handoff is the
+[public product candidate freeze](../../evaluation/m1-slice4.5-public-product-candidate-freeze.json).
+One fresh private oracle reviewer may now resume B2 once. B2, C2, and Stage D
+remain unrun, so Slice 4.5 remains active and Slice 5 remains blocked.

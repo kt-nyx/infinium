@@ -119,3 +119,13 @@ extractor and its public tests, qualify the corrected candidate, and freeze its
 new exact identity. Only then may a fresh isolated B2 oracle reviewer receive
 the allowlisted public authority and already-frozen private inputs. Protocol
 `/4` is retained; protocol `/5` is neither needed nor authorized.
+
+## Subsequent implementation status
+
+The required public realignment, independent review, requalification, and
+candidate freeze completed on 2026-08-05 at
+`a98d648bd0adb2751ee0c09828e0227b1583950f`. The exact public handoff is
+[the Slice 4.5 product candidate freeze](m1-slice4.5-public-product-candidate-freeze.json).
+One fresh isolated private B2 oracle reviewer may now receive the allowlisted
+public authority and already-frozen private inputs once. B2, C2, and Stage D
+remain unrun.

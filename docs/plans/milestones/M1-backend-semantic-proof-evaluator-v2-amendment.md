@@ -45,7 +45,8 @@ Slice 4.5 owns:
 - qualified and frozen evaluator-v2 public protocol, schemas, adapter, scorer,
   and calibration suite;
 - qualified and frozen private held-out corpus;
-- one valid held-out execution against frozen candidate `98fe8a5`; and
+- one valid held-out execution against the ADR-0028-conforming frozen candidate
+  `a98d648bd0adb2751ee0c09828e0227b1583950f`; and
 - held-out EVAL-0052 and applicable EVAL-0086 acceptance.
 
 This is a plan-decomposition correction, not a waiver, reduction, or

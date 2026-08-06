@@ -19,17 +19,19 @@ Current execution plans:
 - [M1 Slice 4.5 — Held-out evaluation v2](M1-slice-4.5-held-out-evaluation-v2.md)
   — Accepted 2026-08-04. The historical `/2` Stage C invocation ran once, but
   Stage C.5 invalidated its product verdict; no valid successor held-out
-  verdict exists. The unchanged Slice 4 candidate retains its historical
-  public verification but does not yet conform to ADR-0028.
+  verdict exists. The original Slice 4 candidate retains its historical public
+  verification.
   Final protocol `/4` is qualified and frozen at
   `3693d19563c636cd2879804633ca4ce52448d2c1`. The B2 input bytes already exist
   and passed independent byte review, but B2 oracle qualification under `/4`
-  has not run. The six semantic questions are resolved; public implementation,
-  requalification, and a new candidate freeze are required before B2. C2 has
-  not run, Stage D has not started, and Slice 5 remains blocked.
+  has not run. The six semantic questions are resolved, and public realignment,
+  independent review, requalification, and candidate freeze are complete at
+  `a98d648bd0adb2751ee0c09828e0227b1583950f`. One fresh private oracle reviewer
+  may now resume B2 once. C2 has not run, Stage D has not started, and Slice 5
+  remains blocked.
 - [M1 Slice 4.5 — Public Bethesda semantic realignment and candidate freeze](M1-slice-4.5-public-product-realignment.md)
-  — Accepted 2026-08-05. This is the bounded public implementation contract
-  required before the single authorized private B2 resume. It records the
+  — Accepted and completed 2026-08-05 at `a98d648`. This bounded public
+  implementation contract records the
   frozen-compatible per-chain FaceGen subject representation, keeps missing
   loose assets unknown under current structural assurance, and defers
   exhaustive byte-verified loose-file absence authority to M3 planning.
