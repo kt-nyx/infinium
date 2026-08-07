@@ -27,9 +27,9 @@
     ],
     "heading_scope": "ATX Markdown heading applies to its section and nested subsections until a heading of equal or lesser depth resets the stack.",
     "heading_regex": "^(?<marks>#{1,6})[ \\t]+(?<title>.+?)[ \\t]*$",
-    "current_status_heading_regex": "^(?:(?:Current|current|Present|present) .*(?:status|state|disposition|authority|boundary|assessment|architecture|amendment|identities)|[0-9]{4}-[0-9]{2}-[0-9]{2} evaluator-deferral (?:closeout status through WP3|disposition)|Final retirement boundary)$",
+    "current_status_heading_regex": "^(?:(?:Current|current|Present|present) .*(?:status|state|disposition|authority|boundary|assessment|architecture|amendment|identities)|[0-9]{4}-[0-9]{2}-[0-9]{2} evaluator-deferral (?:closeout status through WP3|disposition)|Final retirement boundary|Subsequent disposition)$",
     "historical_record_heading_regex": "(?:^|[ \\t—:/()\\-])(?:Historical|historical|Prior|prior|Original|original|Predecessor|predecessor)(?:$|[ \\t—:/()\\-])",
-    "historical_record_document_path_regex": "^docs/architecture/decisions/ADR-003(?:0|1)-|^docs/plans/implementation-records/|^docs/plans/slices/M1-slice-4\\.5-(?:held-out-evaluation-v2|pre-B2-evidence-contract-totality|protocol-4-oracle-contract-completion|protocol-5-successor-realignment|public-product-realignment)\\.md$|^docs/evaluation/m1-slice4-(?:heldout-|protocol-5-)|^docs/evaluation/evaluator-v2-|^docs/research/investigations/.*(?:evaluator|protocol-4|protocol-5|heldout|held-out)",
+    "historical_record_document_path_regex": "^docs/architecture/decisions/ADR-003(?:0|1)-|^docs/plans/implementation-records/|^docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment\\.md$|^docs/plans/slices/M1-slice-4\\.5-(?:held-out-evaluation-v2|pre-B2-evidence-contract-totality|protocol-4-oracle-contract-completion|protocol-5-successor-realignment|public-product-realignment)\\.md$|^docs/evaluation/m1-slice4-(?:heldout-|protocol-5-)|^docs/evaluation/evaluator-v2-|^docs/research/investigations/.*(?:evaluator|protocol-4|protocol-5|heldout|held-out)",
     "current_status_document_path_regex": "(?:^|/)README\\.md$|^README\\.md$|^docs/evaluation/case-catalog\\.md$|^docs/research/deferred-question-and-residual-risk-register\\.md$|^docs/plans/work-breakdown-notation\\.md$",
     "fallback_document_classification": "current_normative",
     "json_policy": "JSON has no Markdown section overrides and uses its document default."
@@ -2292,7 +2292,7 @@
     },
     {
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
-      "default_classification": "current_normative",
+      "default_classification": "historical_record",
       "occurrence_count": 88,
       "term_counts": {
         "T01": 6,
@@ -6401,40 +6401,40 @@
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 107,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T01",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 117,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T01",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 128,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T01",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 130,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T01",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 135,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T01",
@@ -7585,8 +7585,8 @@
       "path": "docs/architecture/decisions/ADR-0031-facegen-loose-availability-gap-and-protocol-5-successor-model.md",
       "line": 98,
       "count": 1,
-      "classification": "historical_record",
-      "classification_basis": "document_default:historical_record"
+      "classification": "current_status",
+      "classification_basis": "section_rule:current_status_heading@95"
     },
     {
       "term_id": "T01",
@@ -7689,8 +7689,8 @@
       "path": "docs/architecture/decisions/ADR-0030-protocol-5-successor-qualification.md",
       "line": 147,
       "count": 1,
-      "classification": "historical_record",
-      "classification_basis": "document_default:historical_record"
+      "classification": "current_status",
+      "classification_basis": "section_rule:current_status_heading@144"
     },
     {
       "term_id": "T01",
@@ -8673,8 +8673,8 @@
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 133,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T02",
@@ -11137,24 +11137,24 @@
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 127,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T03",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 132,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T03",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 134,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T03",
@@ -15089,32 +15089,32 @@
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 96,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T04",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 102,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T04",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 104,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T04",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 132,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T04",
@@ -15561,80 +15561,80 @@
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 52,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T05",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 85,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T05",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 96,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T05",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 98,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T05",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 106,
       "count": 3,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T05",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 122,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T05",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 128,
       "count": 3,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T05",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 132,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T05",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 134,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T05",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 136,
       "count": 3,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T05",
@@ -18601,56 +18601,56 @@
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 19,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T06",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 34,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T06",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 35,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T06",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 66,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T06",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 68,
       "count": 2,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T06",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 99,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T06",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 109,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T06",
@@ -20481,88 +20481,88 @@
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 15,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T07",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 48,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T07",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 63,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T07",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 68,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T07",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 82,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T07",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 92,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T07",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 108,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T07",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 118,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T07",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 122,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T07",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 127,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T07",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 134,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T07",
@@ -21593,56 +21593,56 @@
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 19,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T08",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 65,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T08",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 107,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T08",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 108,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T08",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 118,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T08",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 127,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T08",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 137,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T08",
@@ -30385,80 +30385,80 @@
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 1,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T09",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 8,
       "count": 2,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T09",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 20,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T09",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 21,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T09",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 64,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T09",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 69,
       "count": 2,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T09",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 102,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T09",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 107,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T09",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 122,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T09",
       "path": "docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md",
       "line": 134,
       "count": 1,
-      "classification": "current_normative",
-      "classification_basis": "document_default:current_normative"
+      "classification": "historical_record",
+      "classification_basis": "document_default:historical_record"
     },
     {
       "term_id": "T09",
@@ -35242,9 +35242,9 @@
     "occurrence_row_count": 3658,
     "total_occurrences": 9667,
     "counts_by_classification": {
-      "current_normative": 7722,
-      "current_status": 711,
-      "historical_record": 1234
+      "current_normative": 7655,
+      "current_status": 713,
+      "historical_record": 1299
     },
     "counts_by_term": {
       "T01": 303,
@@ -35259,9 +35259,9 @@
     }
   },
   "stale_active_language_scan": {
-    "result": "WP3 correction self-review passed; independent WP4 verification required",
-    "potential_pattern_hits": 3,
-    "distinct_source_lines": 2,
+    "result": "WP4 shared correction self-review passed",
+    "potential_pattern_hits": 4,
+    "distinct_source_lines": 3,
     "disallowed_stale_active_lines": 0,
     "expected_allowed_contexts": [
       "negative exit criteria in the active closeout plan",
