@@ -1,12 +1,20 @@
 # M1 Slice 4.5 — Held-out evaluation v2
 
-Status: Accepted; Pre-B2 WP1-WP5 complete; protocol `/5` WP1R complete and WP1 resumed
+Status: Accepted historical evaluator plan; closeout pending under ADR-0032
 Owner: Project owner
 Prepared: 2026-08-04
 Accepted: 2026-08-04
 Last reviewed: 2026-08-07
 Parent plan: `infinium.plan.m1.backend-semantic-proof/3`
-Target: Slice 4.5, between implementation-complete Slice 4 and blocked Slice 5
+Target: Slice 4.5, between implementation-complete Slice 4 and Slice 5, which
+becomes eligible only after evaluator-deferral closeout acceptance
+
+Current disposition: ADR-0032 and accepted work
+`M1/S4.5/EVAL-CLOSEOUT` supersede this plan's active held-out-`PASS`
+completion and sequencing clauses. The stages, commands, and terminal handling
+below preserve the exact historical evaluator design and attempts; they are not
+an active private workflow. Slice 4.5 remains in closeout until the deferral
+plan receives final acceptance.
 
 ## Objective
 
@@ -239,7 +247,7 @@ produced no held-out product verdict.
 [`../../evaluation/evaluator-v2-stage-a-freeze.json`](../../evaluation/evaluator-v2-stage-a-freeze.json)
 is the historical `/2` authority and must not be used for current B2 work.
 Protocol `/3` and its successor freeze are also superseded historical evidence.
-The only current B2 authority is
+At that historical checkpoint, the only B2 authority was
 [`../../evaluation/evaluator-v2-stage-a-final-bounded-freeze.json`](../../evaluation/evaluator-v2-stage-a-final-bounded-freeze.json).
 
 Historical `/2` Stage B qualified prepared expected outputs and deliberate
@@ -339,7 +347,7 @@ On 2026-08-05 the project owner accepted ADR-0028 and the public
 The six semantic questions are closed without changing protocol `/4`. A
 separate public task must now update the Bethesda semantic implementation and
 tests, qualify the corrected candidate, and freeze its exact identity. Only
-then may private B2 resume with a fresh isolated oracle reviewer. The current
+then could private B2 resume with a fresh isolated oracle reviewer. That
 documentation update does not perform or authorize that implementation,
 private access, candidate execution, or scoring.
 
@@ -356,7 +364,8 @@ independent review, qualification, and exact candidate freeze completed at
 [public product candidate freeze](../../evaluation/m1-slice4.5-public-product-candidate-freeze.json).
 At that checkpoint, one fresh private oracle reviewer was permitted to resume
 B2 once. That authorization was subsequently consumed; C2 and Stage D remain
-unrun, so Slice 4.5 remains active and Slice 5 remains blocked.
+unrun, so at that checkpoint Slice 4.5 remained active and Slice 5 remained
+blocked.
 
 ## Protocol `/4` B2 terminal authority gap and owner disposition
 
@@ -373,7 +382,7 @@ It keeps evaluator `/4` and candidate `a98d648` frozen while completing all
 fifteen public fact-family construction rules, proving answer-free
 authorability, and auditing conformance. It does not authorize another B2
 attempt, private corpus work, C2, Stage D, protocol `/5`, or Slice 5. Slice 4.5
-and M1 remain active; Slice 5 remains blocked.
+and M1 remained active at that checkpoint; Slice 5 remained blocked.
 
 ## Public oracle-contract authorability hard stop
 
@@ -404,7 +413,7 @@ The RACE partial-decode decision is closed. Work now proceeds as
 `M1/S4.5/PRE-B2/WP1` through WP6: total state/fact model, executable totality,
 model-derived exercises, fresh product-blind review, frozen-candidate
 classification, and public closeout. No private B2, C2, Stage D, Slice 5, or
-protocol `/5` is authorized by this successor.
+protocol `/5` was authorized by that historical successor disposition.
 
 ## Owner-authorized protocol `/5` successor
 
@@ -419,5 +428,28 @@ WP1's accepted-model FaceGen/coverage composition hard stop remains historical
 evidence. The owner accepted ADR-0031 and recovery package
 `M1/S4.5/PRE-B2/V5/WP1R`, which established distinct successor model
 `infinium.m1-slice4.protocol-5-evidence-contract/1.0.1`, one exact
-loose-availability gap, and the mandatory global composition proof. WP1
-resumed; WP2-WP4 remain gated on its acceptance.
+loose-availability gap, and the mandatory global composition proof. At that
+historical checkpoint, WP1 had resumed and WP2-WP4 were gated on acceptance.
+
+## 2026-08-07 evaluator-deferral disposition
+
+ADR-0032 closes the current M1 evaluator line without a private product
+verdict. Slice 4 public conformance remains passed for exact candidate
+`a98d648bd0adb2751ee0c09828e0227b1583950f` and its bounded scope. Protocol
+`/4` remains frozen historical public evidence with only the bounded regression
+use that excludes its known partial `RACE/DATA` representation gap. Protocol
+`/5` is retired unqualified with no implementation, freeze, private use, or
+verdict; WP1/WP1R/WP1V are historical records and WP2-WP4 never started.
+
+Private held-out evaluation is deferred. No current private `PASS`, `FAIL`, or
+valid product-scoring `EVALUATOR_ERROR` exists. B2, C2, Stage D, corpus work,
+scoring, and replacement-evaluator work are not authorized.
+
+This slice closes only when the accepted
+[evaluator-deferral and M1-continuation plan](M1-slice-4.5-evaluator-deferral-and-m1-continuation.md)
+receives final closeout acceptance. Its closeout language is: **public
+conformance complete; private held-out evaluation deferred; no held-out product
+verdict**. At that event, Slice 5 is the next eligible product package under
+the accepted
+[M1 continuation verification profile](../../evaluation/m1-continuation-verification-profile.md).
+M1 remains active, and none of this is a reliability or readiness claim.

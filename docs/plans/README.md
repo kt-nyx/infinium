@@ -17,7 +17,7 @@ historical public verification. Evaluator-v1 attempts produced no valid
 held-out product verdict.
 The historical evaluator-v2 `/2` Stage C invocation ran once, but Stage C.5
 invalidated its product verdict, so no valid successor held-out verdict exists.
-Active [Slice 4.5](slices/M1-slice-4.5-held-out-evaluation-v2.md) has qualified
+Historical [Slice 4.5 evaluator work](slices/M1-slice-4.5-held-out-evaluation-v2.md) qualified
 and frozen final protocol `/4` at
 `3693d19563c636cd2879804633ca4ce52448d2c1`. The B2 input bytes already exist
 and passed independent byte review. The single authorized B2 resume ran once
@@ -32,7 +32,7 @@ conformance was not inspected or classified. The project owner has now accepted
 ADR-0029 and the successor
 [Pre-B2 evidence-contract totality plan](slices/M1-slice-4.5-pre-B2-evidence-contract-totality.md).
 WP1-WP5 completed and WP5 classified an evaluator `/4` representation gap.
-The owner has now accepted ADR-0030 and the
+The owner then accepted ADR-0030 and the
 [protocol `/5` successor plan](slices/M1-slice-4.5-protocol-5-successor-realignment.md).
 WP1 then hard-stopped after the required audits confirmed an accepted-model
 composition contradiction between the FaceGen unknown-loose / archive-supported
@@ -40,8 +40,13 @@ state and coverage/gap arithmetic. The
 [public hard-stop record](../evaluation/m1-slice4-protocol-5-wp1-representability-hard-stop.md)
 preserves that decision point. ADR-0031 and WP1R accepted the distinct `/5`
 successor model, exact loose-availability gap, and global composition proof;
-WP1 resumed while WP2-WP4 remain gated. No candidate work, private access, corpus work, B2, C2, Stage D, or
-Slice 5 is authorized. M1 remains active and Slice 5 remains blocked.
+WP1V then hard-stopped, WP1 never proof-closed, and WP2-WP4 never started.
+ADR-0032 now retires `/5` unqualified, retains `/4` only for bounded public
+regression with its known gap excluded, and defers private held-out evaluation
+without a product verdict. No B2, C2, Stage D, corpus, scoring, or replacement-
+evaluator work is authorized. Slice 4.5 remains in closeout; Slice 5 is the
+next eligible product package only after final closeout acceptance, under the
+M1 continuation verification profile. M1 remains active.
 The completed
 [public Bethesda semantic realignment plan](slices/M1-slice-4.5-public-product-realignment.md)
 records that bounded implementation, review, qualification, and candidate-
@@ -121,6 +126,8 @@ That disposition is now ADR-0029 plus `M1/S4.5/PRE-B2`: define a total
 evidence-state contract, prove it mechanically, exercise it from the model,
 obtain a fresh product-blind review, and only then classify the frozen
 candidate. WP1-WP5 completed and the classification proved a `/4`
-representation gap. ADR-0030 and `M1/S4.5/PRE-B2/V5` now authorize one
-separately qualified public `/5` successor. This public work does not itself
-resume B2.
+representation gap. ADR-0030 and `M1/S4.5/PRE-B2/V5` historically authorized
+one public `/5` attempt, but ADR-0032 retired it unqualified after WP1V's final
+hard stop. Current work is the public
+[evaluator-deferral closeout](slices/M1-slice-4.5-evaluator-deferral-and-m1-continuation.md),
+not B2 or successor qualification.

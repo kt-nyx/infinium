@@ -31,6 +31,7 @@ specification.
   [security/privacy](architecture/security-and-privacy.md)
 - Evaluation: [case catalog](evaluation/case-catalog.md),
   [accepted M1 evaluation baseline](evaluation/m1-evaluation-baseline.md),
+  [accepted M1 continuation verification profile](evaluation/m1-continuation-verification-profile.md),
   [fixture guidelines](evaluation/fixture-guidelines.md), and
   [anti-overfitting rules](evaluation/anti-overfitting-rules.md), with the
   historical evaluator-v1 boundary in
@@ -46,12 +47,14 @@ specification.
   [accepted M1 backend semantic proof plan](plans/milestones/M1-backend-semantic-proof.md),
   with its accepted
   [revision 3 amendment](plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md),
-  the active
+  the historical
   [Slice 4.5 evaluator-v2 plan](plans/slices/M1-slice-4.5-held-out-evaluation-v2.md),
   its accepted
   [Pre-B2 evidence-contract totality successor](plans/slices/M1-slice-4.5-pre-B2-evidence-contract-totality.md),
-  the accepted
+  the historical retired
   [protocol `/5` successor plan](plans/slices/M1-slice-4.5-protocol-5-successor-realignment.md),
+  the active
+  [evaluator-deferral and M1-continuation closeout plan](plans/slices/M1-slice-4.5-evaluator-deferral-and-m1-continuation.md),
   the [work-breakdown notation](plans/work-breakdown-notation.md),
   and the
   [research-agent handoff template](plans/research-investigation-agent-handoff-template.md)
@@ -144,9 +147,11 @@ Every material document should include a status and last-reviewed date.
   architecture was accepted on 2026-08-04 and partially supersedes ADR-0026.
   ADR-0028's bounded M1 semantic-reporting and oracle-authority disposition and
   ADR-0029's layered-evidence decision were accepted on 2026-08-05. ADR-0030
-  and ADR-0031 were accepted on 2026-08-07: they narrowly authorize one
-  separately qualified protocol `/5` successor and its distinct semantic
-  model after the public `/4` representation and global-composition gaps.
+  and ADR-0031 were accepted on 2026-08-07 as the historical authorization and
+  semantic model for one `/5` successor attempt. ADR-0032 supersedes their
+  active `/5` authority, retires that protocol unqualified, defers private M1
+  held-out evaluation, and authorizes bounded `/4` regression plus the public
+  M1 continuation profile.
 - Wave F produced the accepted M1 evaluation baseline, detailed semantic and
   platform/operational case specifications and fixture manifests, the
   RQ-028 calibration protocol, exact OpenAI M1 profile research, a
@@ -186,19 +191,25 @@ Every material document should include a status and last-reviewed date.
   `M1/S4.5/PRE-B2` replaced fixture-led corrections with deterministic
   totality, model-derived exercises, fresh product-blind review, and candidate
   classification. WP1-WP5 completed, and WP5 proved an evaluator `/4`
-  representation gap. ADR-0030 now authorizes the public-only
+  representation gap. ADR-0030 then authorized the public-only historical
   `M1/S4.5/PRE-B2/V5` successor cycle. WP1 hard-stopped on a global
   FaceGen/coverage composition contradiction; that history remains recorded.
   ADR-0031 and WP1R accepted the distinct `/5` successor semantic model, exact
   loose-availability gap, and mandatory global composition proof. Resumed WP1
   recovery WP1V then hard-stopped after its final review found noncanonical
   resolved-link witnesses and a self-authorizing ledger/document comparison.
-  WP1 is not proof-closed; WP2-WP4 remain gated. No new B2 is authorized. C2
-  has not run, and Stage D has not started. The detailed sanitized history is recorded
+  WP1 was not proof-closed; WP2-WP4 never started. ADR-0032 now retires `/5`
+  unqualified and defers the private held-out evaluator with no valid current
+  product verdict. Frozen `/4` is retained only for bounded public regression
+  with its known gap excluded. No B2, C2, or Stage D work is authorized. The
+  detailed sanitized history is recorded
   in the
   [Stage C.5 incident](evaluation/evaluator-v2-stage-c5-adjudication-incident.md).
-  Slice 4.5 remains active and incomplete, Slice 5 remains blocked, and M1
-  remains active. M1 explicitly defers `QUST` forced-alias
+  Slice 4.5 remains in closeout until final acceptance of
+  `M1/S4.5/EVAL-CLOSEOUT`. Slice 5 is the next eligible product package only
+  after that closeout and then uses the accepted M1 continuation verification
+  profile. M1 remains active; public conformance is not a private held-out,
+  reliability, or readiness claim. M1 explicitly defers `QUST` forced-alias
   semantics and retains EVAL-0017's REFR linked-reference/placement proof as
   the materially different category.
 - Infinium uses GPLv3-family strong copyleft. MO2 and LOOT remain

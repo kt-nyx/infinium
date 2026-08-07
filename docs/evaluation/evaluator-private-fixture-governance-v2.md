@@ -5,6 +5,8 @@ Accepted: 2026-08-04
 Accepted by: Project owner
 Last reviewed: 2026-08-07
 Authority: [ADR-0027](../architecture/decisions/ADR-0027-public-evaluation-protocol-private-held-out-corpus.md)
+with the M1 deferral and sequencing disposition in
+[ADR-0032](../architecture/decisions/ADR-0032-defer-m1-held-out-evaluator-and-continue-public-verification.md)
 Predecessor: [Evaluator-private fixture governance v1](evaluator-private-fixture-governance.md)
 
 ## Purpose
@@ -91,16 +93,20 @@ maintenance, Stage C scoring, and successor maintenance require separate
 owner-authorized fresh tasks. Corpus/evaluator maintenance has no authority to
 score a product, and the scorer has no authority to maintain any tuple member.
 
-ADR-0030 authorizes public protocol `/5` as a separately qualified successor
-after a public `/4` representation gap. This is successor maintenance under a
-new identity, not repair or retry of `/4`, a corpus, or a verdict. It does not
-authorize private access, corpus eligibility, Stage B2, or scoring. Those
-remain separate fresh owner-authorized roles after the public `/5` freeze.
-ADR-0031 and `M1/S4.5/PRE-B2/V5/WP1R` accept a distinct `/5` successor
-semantic model and one exact public FaceGen loose-availability gap after the
-historical WP1 composition stop. That public semantic recovery does not grant
-private authority or alter any corpus, scoring, answer-isolation, no-retry, or
-freeze rule.
+ADR-0030 and ADR-0031 historically authorized a public `/5` successor attempt
+and its distinct semantic model after a public `/4` representation gap.
+ADR-0032 retired `/5` unqualified before evaluator implementation, freeze,
+private use, or verdict. WP1/WP1R/WP1V are historical records and WP2-WP4
+never started. No `/5`, Stage B2, C2, Stage D, corpus, adaptation, comparison,
+or scoring work is currently authorized.
+
+The private held-out evaluator is deferred until after Slice 9 and M3 planning
+around a stable versioned user-meaningful output contract. Re-entry requires
+independently authorable expected values, answer-free totality/authorability
+review, separate public implementation/private qualification/scoring/closeout
+roles, and a new accepted ADR and plan. No future protocol identity is selected
+here. Every default-deny, answer-isolation, no-retry/no-repair, exact-identity,
+contamination, provenance, and role-separation rule below remains authoritative.
 
 ## Corpus qualification and freeze
 
@@ -173,7 +179,8 @@ an automatic retry of the prior tuple.
 
 ## Enforcement boundary
 
-Fresh-context roles and repository separation are the M1 procedural boundary.
+Fresh-context roles and repository separation are the procedural boundary for
+any future evaluator work.
 Separate OS identities, VMs, or private CI brokers may be added later when the
 owner or threat model requires stronger enforcement. Their absence alone does
-not block M1 evaluator-v2 qualification or scoring.
+does not itself authorize or qualify evaluator work.

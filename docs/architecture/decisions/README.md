@@ -36,11 +36,11 @@ accepted records are superseded rather than rewritten to hide prior decisions.
 | [ADR-0024](ADR-0024-openai-user-owned-access-modes.md) | Rejected | Reject Codex/ChatGPT-plan integration for the core LLM pipeline; retain direct Responses/API-key access under ADR-0013 |
 | [ADR-0025](ADR-0025-m1-openai-model-and-synchronous-responses-profile.md) | Accepted | Use one explicit `gpt-5.6-sol` synchronous Structured Outputs profile for M1 with retained-result replay and drift requalification |
 | [ADR-0026](ADR-0026-evaluator-private-fixture-repository-and-delegated-access.md) | Accepted; partially superseded | Store private fixtures in a separate Git repository; evaluator-v1 copied-contract/scorer ownership is superseded by ADR-0027 |
-| [ADR-0027](ADR-0027-public-evaluation-protocol-private-held-out-corpus.md) | Accepted; partially superseded | Keep evaluation rules, schemas, adapter, scorer, and calibration public while private data and independent lifecycle evidence remain separate; `/4` finality superseded by ADR-0030 |
+| [ADR-0027](ADR-0027-public-evaluation-protocol-private-held-out-corpus.md) | Accepted; partially superseded | Keep evaluation rules, schemas, adapter, scorer, and calibration public while private data and lifecycle evidence remain separate; M1 held-out-`PASS` sequencing superseded by ADR-0032 |
 | [ADR-0028](ADR-0028-m1-bethesda-semantic-reporting-and-oracle-authority.md) | Accepted | Bind M1 EDID, FaceGen, asset-state, coverage, gap, and taxonomy semantics for product and oracle authority |
 | [ADR-0029](ADR-0029-layered-evidence-and-partial-semantic-publication.md) | Accepted | Retain independently proven lower-layer facts, expose later semantic gaps, and require total state-to-fact contracts |
-| [ADR-0030](ADR-0030-protocol-5-successor-qualification.md) | Accepted; partially superseded | Authorize a separately qualified protocol `/5` successor; unchanged-model clause superseded by ADR-0031 |
-| [ADR-0031](ADR-0031-facegen-loose-availability-gap-and-protocol-5-successor-model.md) | Accepted | Accept the `/5` successor semantic model and exact FaceGen loose-availability gap |
+| [ADR-0030](ADR-0030-protocol-5-successor-qualification.md) | Accepted historical decision; active authority superseded | Historical authorization for a separately qualified protocol `/5`; all active authorization superseded by ADR-0032 |
+| [ADR-0031](ADR-0031-facegen-loose-availability-gap-and-protocol-5-successor-model.md) | Accepted historical decision; active model authority superseded | Preserve the `/5` successor-model decision and durable FaceGen loose-availability gap; active model authority superseded by ADR-0032 |
 | [ADR-0032](ADR-0032-defer-m1-held-out-evaluator-and-continue-public-verification.md) | Accepted | Defer the M1 held-out evaluator, retire `/5` unqualified, retain bounded `/4` regression use, and continue M1 under public verification |
 
 ADR-0015 through ADR-0023 are accepted and jointly select the Wave E
@@ -63,14 +63,11 @@ ADR-0029 resolves the subsequent partial-decode authority gap. It defines
 structural, observed, decoded, resolved, and semantic prerequisites; preserves
 independently proven lower-layer facts; and requires an executable totality
 gate before example-based qualification.
-ADR-0030 narrowly supersedes only ADR-0027 decision 15's `/4`-finality and
+ADR-0030 historically superseded only ADR-0027 decision 15's `/4`-finality and
 no-`/5` restriction after the accepted model proved a `/4` representation
-gap. All other evaluator, private-data, role-separation, freeze, and one-shot
-rules remain authoritative.
-ADR-0031 narrowly supersedes ADR-0030's unchanged-model requirement after the
-WP1 global-composition proof found one contradiction. It preserves model
-`1.2.0` and `/4` as immutable history, accepts the distinct `/5` successor
-model `1.0.1`, and adds only exact ownership for unknown FaceGen loose assets.
+gap. ADR-0031 historically superseded ADR-0030's unchanged-model requirement,
+preserved model `1.2.0` and `/4`, accepted distinct `/5` successor model
+`1.0.1`, and added exact ownership for unknown FaceGen loose assets.
 ADR-0032 supersedes ADR-0030's active `/5` authorization and ADR-0031 only as
 active `/5` model authority while retaining the loose-availability rule in
 ADR-0028. It narrowly replaces the held-out-`PASS` prerequisite for Slice 5,
@@ -251,6 +248,7 @@ For ADRs selecting a technical mechanism:
 Use [ADR-template.md](ADR-template.md).
 
 ADR-0027's historical final M1 application was protocol `/4`, frozen at
-`3693d19563c636cd2879804633ca4ce52448d2c1`. ADR-0030 now authorizes a
-separately qualified `/5` successor after the accepted model proved a `/4`
-representation gap. `/4` and `/3` remain immutable historical evidence.
+`3693d19563c636cd2879804633ca4ce52448d2c1`. ADR-0030 historically authorized
+a `/5` successor and ADR-0031 its distinct model, but ADR-0032 retired `/5`
+unqualified before implementation or freeze. `/4` remains immutable historical
+evidence with bounded public regression use only; `/3` is historical only.

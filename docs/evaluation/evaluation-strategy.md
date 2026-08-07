@@ -360,41 +360,41 @@ At every milestone, each requirement claimed complete must have at least one
 reviewed linked evaluation case, and all of its gating cases for the delivered
 scope must pass.
 
-## M1 Slice 4 held-out partition and protocol `/5` successor
+## M1 public continuation and deferred held-out evaluation
 
-Protocol `/4` is immutable historical evidence. Public conformance verifies
-implementation-specific diagnostics, typed AIDT mapping, serialization, and
-product provenance IDs. Held-out evaluation verifies only independently
-specifiable semantic behavior listed in the
-[oracle-authority matrix](m1-slice4-heldout-oracle-authority-matrix.md). These
-partitions are reported separately and neither substitutes for the other.
-The accepted
-[semantic-authority owner disposition](m1-slice4-semantic-authority-owner-disposition.md)
-binds the exact EDID, FaceGen, availability, coverage, gap, and taxonomy
-semantics inside that unchanged partition. B2 was blocked until the public
-product/specification contract was implemented, requalified, and frozen. That
-prerequisite was satisfied by candidate
-`a98d648bd0adb2751ee0c09828e0227b1583950f`, but the authorized B2 resume then
-stopped without an oracle or product verdict. The first public contract-
-completion attempt also hard-stopped before candidate inspection. ADR-0029 and
-accepted work `M1/S4.5/PRE-B2` now require deterministic contract totality,
-model-derived exercises, and fresh product-blind review before any later role
-can be considered. The accepted totality model subsequently proved that `/4`
-cannot represent one required partial-publication outcome. ADR-0030 authorizes
-a separately qualified public `/5` successor under accepted plan
-`M1/S4.5/PRE-B2/V5`. This does not authorize candidate execution or
-realignment, private access, corpus qualification, B2, C2, Stage D, or scoring.
-WP0 completed. WP1 then hard-stopped because the accepted FaceGen
-unknown-loose/archive-supported state requires incomplete loose-asset coverage
-without any legal owning gap or lifecycle. The
-[public representability record](m1-slice4-protocol-5-wp1-representability-hard-stop.md)
-preserves that historical stop. The owner accepted the exact
-graceful-degradation disposition in ADR-0031. WP1R accepted distinct successor
-model `infinium.m1-slice4.protocol-5-evidence-contract/1.0.1`, added one exact
-loose-availability gap to both affected branches, and installed a mandatory
-global composition proof. Model `1.2.0` and protocol `/4` remain immutable.
-WP1 resumed against only the successor model, but bounded recovery WP1V hard-
-stopped after its final independent review found noncanonical resolved-link
-witnesses accepted through a self-referential ledger/document value check.
-WP1 is not proof-closed, and WP2-WP4 remain gated on a separately authorized
-resolution.
+Public product conformance, bounded `/4` regression health, private held-out
+evaluation, evaluator qualification, and product reliability/readiness are
+separate proof surfaces. Slice 4 public conformance passed for exact candidate
+`a98d648bd0adb2751ee0c09828e0227b1583950f` and its declared scope. That
+evidence includes implementation-specific diagnostics, typed AIDT mapping,
+serialization, product provenance, and the accepted ADR-0028/ADR-0029 semantic
+contract; it is not a private reliability verdict.
+
+Protocol `/4` is immutable historical public evidence. Its accepted bounded
+regression profile verifies the 23 historical blobs, 20 current non-test core
+files, and allowlisted current public tests while excluding the known partial
+`RACE/DATA` representation gap. `BOUNDED_REGRESSION_PASS` is tool/regression
+health only and cannot complete current semantics, Slice 4.5, M1, or a held-out
+gate.
+
+The historical ADR-0030/ADR-0031 `/5` attempt completed WP0 and WP1R, but WP1V
+hard-stopped after final review found noncanonical resolved-link witnesses and
+a self-referential value check. WP1 never proof-closed; WP2-WP4 never started.
+ADR-0032 retires `/5` unqualified with no implementation, freeze, private use,
+or verdict. Its identities are historical and cannot be reused.
+
+Private held-out evaluation is deferred. No current private `PASS`, `FAIL`, or
+valid product-scoring `EVALUATOR_ERROR` exists, and B2, C2, Stage D, corpus
+work, adaptation, comparison, and scoring are unauthorized. Slice 4.5 closes
+only at evaluator-deferral final acceptance; Slice 5 is the next eligible
+product package after that event.
+
+Slices 5-9 use the accepted
+[M1 continuation verification profile](m1-continuation-verification-profile.md):
+contract/schema conformance, independently expected public fixtures,
+model-derived mutation/metamorphic checks, determinism/replay/safety,
+generalization plus controlled-real evidence, and fresh review/claim control.
+Slice 7 must prove two materially different generic domains, and Slice 8 must
+run EVAL-0016 and EVAL-0017. These are public development/validation evidence,
+not held-out results. M1 remains active and cannot claim M3 reliability or
+readiness.

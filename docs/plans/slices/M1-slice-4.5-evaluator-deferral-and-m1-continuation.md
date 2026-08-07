@@ -26,7 +26,7 @@ Depends on:
 - accepted `M1/S4.5/PRE-B2/V5/WP0` and `WP1R` history; and
 - the `M1/S4.5/PRE-B2/V5/WP1V` proof-closure hard stop.
 
-Next work package: `M1/S4.5/EVAL-CLOSEOUT/WP2`
+Next work package: `M1/S4.5/EVAL-CLOSEOUT/WP4`
 
 Accepted clarification, 2026-08-07 (`M1/S4.5/EVAL-CLOSEOUT/WP2/T1`): the
 historical 23-file freeze identity is the exact Git tree at evaluator commit
@@ -36,6 +36,13 @@ files in the manifest to remain byte-identical. The three listed public test
 files may evolve through separately authorized public work and are current
 regression evidence, not original frozen qualification bytes. See the
 [freeze-boundary clarification](../../evaluation/m1-slice4-protocol-4-freeze-boundary-clarification.md).
+
+WP2 closeout status, 2026-08-07: active `/5` machine artifacts are removed;
+the historical 23-blob and current 20-file `/4` core identities pass; the
+bounded public regression wrapper, refusal tests, profile, and usage contract
+are present. WP3 documentation reconciliation is complete, and the fresh WP4
+audits are next. Slice 4.5 does not close and Slice 5 does not become eligible
+until final plan acceptance after the remaining review and closeout packages.
 
 ## Owner disposition embodied by this plan
 

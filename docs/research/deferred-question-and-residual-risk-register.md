@@ -57,6 +57,7 @@ of the requirement before its stated delivery milestone.
 | Controlled-real fixture availability | Exact private source identities remain non-redistributable; Slice 3.5 reverified every required private dependency against its retained manifest | Hash/pin verification and private acquisition manifest; synthetic equivalents remain primary | Public one-command corpus unavailable |
 | Missing M1 private held-out verdict | Slice 4 public conformance passed, but the `/4` evaluator has a known representation gap and the unimplemented `/5` successor failed public proof closure before private use | ADR-0032 defers the evaluator; later M1 slices use the accepted continuation profile and must state that no private verdict exists | M1 gains no independent private reliability/readiness claim; a future evaluator requires new authority after Slice 9 and M3 planning |
 | Frozen protocol `/4` representation limit | The exact frozen `/4` tool cannot represent the accepted partial `RACE/DATA` state without either inventing a later-layer boolean or dropping lower-layer facts | Retain `/4` only for byte-verified bounded public regression over representable states; prohibit complete-current-contract or held-out claims | The historical regression surface cannot validate the complete accepted Slice 4 semantic contract |
+| Future evaluator authorability and stability | The retired `/5` proof system accepted noncanonical self-authored witness values before independent review rejected it; the current M1 output boundary is not yet the stable user-meaningful surface needed for a proportionate held-out evaluator | Reconsider only after Slice 9 during M3 planning, with stable versioned output, independently authorable expectations, answer-free totality review, separate roles, and a new accepted ADR/plan | No protocol identity is selected; absence of a held-out verdict remains explicit until a future valid evaluation exists |
 | Mutagen defects/circular truth | Mutagen is selected and xEdit excluded; Slice 3.5 sealed independent byte/structure expectations before production parsing | Slice 4 production comparison through EVAL-0052 | Support remains only for positively qualified shapes |
 | MO2 reconstruction drift | Slice 3 implements the exact version-pinned adapter and EVAL-0051 passed for MO2 `2.5.2` with the accepted empty additional-mapper inventory | Conditional repeat for every new version/operation | Other versions/managers remain unsupported |
 | WPF/WebView2 architecture | Accepted but not needed by CLI-first M1 | No M1 graphical claim | M2 qualification may reopen ADR-0017 |
@@ -117,6 +118,13 @@ conditions at the documentation/design level:
 6. any material change to the exact M1 scope must update this register,
    evaluation baseline, and plan before implementation.
 
+ADR-0032 adds one sequencing control without changing those product
+conditions: after evaluator-deferral final acceptance, Slices 5-9 must satisfy
+all applicable layers of the accepted M1 continuation verification profile.
+Slice 7 owns two materially different generic domains, Slice 8 owns
+controlled-real EVAL-0016/EVAL-0017, and every implementation record must state
+that no private held-out verdict exists.
+
 Conditions 1 through 5 are satisfied for the accepted plan. Condition 6 is an
 ongoing change-control rule. Implementation preflight must still verify the
 actual dependency locks, fixture availability appropriate to the first slice,
@@ -142,6 +150,11 @@ shapes, and the accepted plan no longer requires them from Slice 4.
 - protected setup roots change during an M1 operation;
 - the implementation fabricates coverage, source authority, or certainty; or
 - the final requirement/case/slice traceability audit has a material gap.
+
+The missing private held-out verdict is an explicit accepted M1 residual risk,
+not a silent waiver and not a blocker to Slices 5-9 after closeout. It does
+block any claim that M1 public conformance establishes independent private
+reliability or M3 readiness.
 
 ## Register maintenance
 

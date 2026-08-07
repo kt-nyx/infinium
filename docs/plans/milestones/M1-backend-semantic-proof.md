@@ -4,7 +4,7 @@ Status: Accepted
 Owner: Project owner  
 Prepared: 2026-07-28  
 Accepted: 2026-07-28  
-Last reviewed: 2026-07-30
+Last reviewed: 2026-08-07
 Target milestone: M1 — Backend semantic proof
 
 ## Authority and start condition
@@ -30,6 +30,16 @@ EVAL-0017. The planned EVAL-0006/EVAL-0007 quest-relevance pair and its narrow
 forced-reference alias edge remain post-M1 roadmap work. Slice 3.5 below
 prepares and independently accepts the Bethesda and applicable taxonomy
 fixture packages before production Bethesda parsing begins.
+
+On 2026-08-07, the owner accepted ADR-0032 and
+`M1/S4.5/EVAL-CLOSEOUT`. The current private held-out effort is deferred with
+no valid product verdict, protocol `/5` is retired unqualified, and frozen
+protocol `/4` is retained only for bounded public regression over its known
+representable subset. After evaluator-deferral closeout receives final plan
+acceptance, Slice 5 becomes eligible under the accepted
+[M1 continuation verification profile](../../evaluation/m1-continuation-verification-profile.md).
+This does not weaken the M1 required-case set or authorize private work; it
+replaces only the held-out-`PASS` sequencing prerequisite for Slices 5-9.
 
 The plan consumes:
 
@@ -390,6 +400,13 @@ Gates:
 
 - EVAL-0032, EVAL-0037, EVAL-0039, EVAL-0067, EVAL-0079, and
   EVAL-0083 through EVAL-0086 applicable local paths.
+- applicable Layers 1 through 4 and Layer 6 of the
+  [M1 continuation verification profile](../../evaluation/m1-continuation-verification-profile.md).
+
+The Slice 5 implementation record must include exact contracts, schemas,
+independently expected public fixtures, replay identities, commands and
+counts, coverage/gaps/unsupported surfaces, fresh semantic/diff review, and an
+explicit statement that no private held-out verdict exists.
 
 ### Slice 6 — Direct OpenAI credential, budget, and semantic operations
 
@@ -428,6 +445,15 @@ Gates:
 
 - EVAL-0033 through EVAL-0035, EVAL-0064, EVAL-0067, EVAL-0076, EVAL-0077,
   EVAL-0081 synchronous path, EVAL-0083, and EVAL-0089.
+- applicable Layers 1 through 4 and Layer 6 of the M1 continuation
+  verification profile, including credential, budget, replay, secret-canary,
+  and offline/unavailable-provider evidence before any live operation.
+
+The Slice 6 implementation record must identify every non-live and live
+authorization separately; retain exact request/response, model, schema,
+reservation, settlement, replay, and safety evidence; report unsupported
+provider modes; record fresh review; and state that no private held-out verdict
+exists.
 
 ### Slice 7 — Synthetic generic reversion proof
 
@@ -445,9 +471,16 @@ Deliver:
 Gates:
 
 - EVAL-0001, EVAL-0002, EVAL-0032, EVAL-0084 through EVAL-0086.
+- all applicable layers of the M1 continuation verification profile, with
+  Layer 5 requiring matched positives and negatives across the two materially
+  different accepted domains: actor/AI/FaceGen and REFR/link/placement.
 
 The production mechanism and generic types may not contain fixture or real-mod
 names/IDs.
+
+The Slice 7 implementation record must preserve the shared-mechanism proof,
+both domain packages, model-derived and metamorphic results, taxonomy gaps,
+fresh review, and the absence of a private held-out verdict.
 
 ### Slice 8 — Controlled-real generalization
 
@@ -464,6 +497,15 @@ Gates:
 
 - EVAL-0016 and EVAL-0017 plus every upstream local/provider/record case used
   by them.
+- all six layers of the M1 continuation verification profile. EVAL-0016 and
+  EVAL-0017 remain controlled-real development/validation evidence; a result
+  that changes implementation is not held-out evidence.
+
+The Slice 8 implementation record must retain both exact package manifests and
+fingerprints, positive and matched patch controls, purpose evidence, commands
+and counts, partition transitions for product-driving results, explicit
+taxonomy gaps, fresh review, and the statement that no private held-out verdict
+exists.
 
 ### Slice 9 — End-to-end output, clean/replay equivalence, and closeout
 
@@ -481,6 +523,16 @@ Gates:
 
 - EVAL-0040 and all milestone-required cases in the accepted evaluation
   baseline.
+- all six layers of the M1 continuation verification profile across the
+  accumulated M1 surface, including the stable versioned end-to-end output,
+  required-case result index, clean/replay equivalence, safety evidence, and
+  final claim-control review.
+
+The Slice 9 implementation record is the M1 completion record. It must report
+every required case and exact run identity, commands and counts, unsupported
+surfaces and residual gaps, review findings/corrections, and the absence of a
+private held-out verdict. Public conformance alone must not be described as a
+held-out, reliability, readiness, or M3 trust result.
 
 ## Requirement-to-evaluation traceability
 
@@ -554,6 +606,8 @@ Test success without semantic/diff review is insufficient.
 M1 is complete only when:
 
 - every slice is complete;
+- Slices 5 through 9 satisfy every applicable layer of the accepted M1
+  continuation verification profile;
 - every required case has an accepted specification and retained passing run
   against one exact implementation commit;
 - all commands above pass from a clean worktree;
@@ -570,6 +624,12 @@ M1 is complete only when:
 - no excluded capability is implied by naming or output;
 - requirement-to-case-to-slice traceability has no material gap; and
 - the completion record is reviewed and accepted by the project owner.
+
+M1 completion under this profile is public product conformance for the exact
+declared scope. It does not create a private held-out verdict or establish M3
+reliability/readiness. Evaluator reconsideration requires a new ADR and plan
+after Slice 9 during M3 planning; no future protocol identity is selected by
+M1.
 
 ## Rollback and migration
 

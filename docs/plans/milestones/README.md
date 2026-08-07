@@ -17,7 +17,8 @@ issued no valid held-out product verdict and is retired. The historical
 evaluator-v2 `/2`
 Stage C invocation ran once, but Stage C.5 invalidated its product verdict; no
 valid successor held-out verdict exists. That Slice 4 candidate retains its
-historical public verification. Slice 4.5 is active under plan revision `/3`,
+historical public verification. Slice 4.5 evaluator closeout is active under
+ADR-0032 after historical work under plan revision `/3`,
 with final protocol `/4` qualified and frozen at
 `3693d19563c636cd2879804633ca4ce52448d2c1`. The single authorized B2 resume
 stopped without an oracle or product verdict. Public realignment and candidate
@@ -26,12 +27,15 @@ freeze remain complete at
 contract-completion attempt then hard-stopped before candidate inspection.
 ADR-0029 and accepted work `M1/S4.5/PRE-B2` completed through WP5, which
 classified an evaluator `/4` representation gap. ADR-0030 and accepted work
-`M1/S4.5/PRE-B2/V5` govern one separately qualified public `/5` successor.
+`M1/S4.5/PRE-B2/V5` historically governed one public `/5` successor attempt.
 WP1's accepted-model FaceGen/coverage composition hard stop remains historical
 evidence. ADR-0031 and WP1R accepted the distinct `/5` successor model and
-mandatory global composition proof; WP1 resumed and WP2-WP4 remain gated. No
-candidate or private work is authorized. C2 has not run, Stage D
-has not started, and Slice 5 remains blocked.
+mandatory global composition proof; WP1V later hard-stopped, WP1 never proof-
+closed, and WP2-WP4 never started. ADR-0032 retires `/5` unqualified and
+defers private held-out evaluation without a verdict. No B2, C2, Stage D,
+corpus, scoring, or replacement-evaluator work is authorized. Slice 4.5 closes
+only at final evaluator-deferral acceptance; Slice 5 is next eligible after
+that closeout under the continuation profile. M1 remains active.
 
 Waves A through D have completed investigations and accepted integrated
 dispositions. Gates A through D are met at their applicable M0 research,
@@ -68,8 +72,10 @@ product documentation is reviewed and accepted and the architecture/evaluation
 prerequisites are accepted. A proposed plan may be drafted earlier as a
 reviewable Wave F output.
 
-M1 status clarification: protocol `/4` remains immutable historical evidence.
-ADR-0030 narrowly authorizes a separately qualified `/5` successor after the
-accepted model proved `/4` could not represent one required partial outcome.
-Product output remains prohibited as evaluator or oracle truth. No candidate
-work, private access, B2, C2, Stage D, or Slice 5 is authorized by that cycle.
+M1 status clarification: protocol `/4` remains immutable historical evidence
+with bounded public regression use only. Protocol `/5` is retired unqualified
+with no implementation, freeze, private use, or verdict. Product output remains
+prohibited as evaluator or oracle truth. Private held-out evaluation is
+deferred. Slice 5 becomes eligible only after evaluator-deferral closeout and
+then uses the continuation profile; M1 remains active and has no private
+reliability/readiness verdict.

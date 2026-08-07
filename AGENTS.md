@@ -74,14 +74,19 @@ scoring returns only the sanitized handoff permitted by governance v2.
 Evaluator or corpus maintenance has no product-scoring authority, and the
 scorer has no maintenance authority.
 
-Protocol `/4` remains immutable historical evidence. ADR-0030, ADR-0031, and the accepted
-`M1/S4.5/PRE-B2/V5` plan authorize one separately qualified public protocol
-`/5` successor because the accepted model proved a `/4` representation gap.
-That authorization does not permit candidate execution or correction, private
-access, corpus qualification, B2, C2, scoring, or product output as truth.
-Public `/5` work must preserve model `1.2.0` as immutable history, use only the
-accepted successor model
-`infinium.m1-slice4.protocol-5-evidence-contract/1.0.1`, pass its global
-composition, representability, and fresh product-blind acceptance gates, and
-freeze before any separately authorized later role. Do not create `/6` or weaken any isolation, no-retry,
-identity, freeze, layered-evidence, coverage, gap, or answer-isolation rule.
+Protocol `/4` remains immutable historical evidence and may be used only
+through the accepted bounded public regression profile with its known partial
+`RACE/DATA` representation gap excluded. A bounded-regression pass is tool and
+allowlisted public-regression health, not current semantic, held-out, Slice
+4.5, M1, reliability, readiness, or product acceptance.
+
+ADR-0032 supersedes ADR-0030's active protocol `/5` authorization and
+ADR-0031 only as active `/5` model authority. Protocol `/5` is retired
+unqualified: it has no implementation, freeze, private use, or verdict, and
+its identities must not be reused or resumed. Private held-out evaluation is
+deferred with no valid current product verdict. Do not access private material
+or run corpus qualification, B2, C2, Stage D, adaptation, comparison, or
+scoring. M1 Slices 5-9 use the accepted continuation verification profile only
+after evaluator-deferral closeout receives final acceptance. Do not select a
+future protocol identity or weaken any isolation, no-retry, identity, freeze,
+layered-evidence, coverage, gap, provenance, or answer-isolation rule.

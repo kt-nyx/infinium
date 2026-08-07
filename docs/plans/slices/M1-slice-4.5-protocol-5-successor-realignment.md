@@ -405,3 +405,16 @@ Append exact commits, checks, counts, review cycles, correction counts,
 identities, hashes, boundaries, and downstream status to
 [`../implementation-records/M1-slice-4.5.md`](../implementation-records/M1-slice-4.5.md).
 Leave a clean unpushed local branch with one focused commit per work package.
+
+## Final retirement boundary
+
+ADR-0032 is the current authority. WP1V exhausted its correction budget and
+hard-stopped; WP1 never proof-closed; WP2, WP3, and WP4 never started. Protocol
+`/5` has no evaluator implementation, freeze, private use, or verdict. The
+identities and requirements in this plan are consumed historical evidence and
+cannot be resumed, repaired, or reused.
+
+Private held-out evaluation is deferred with no valid current product verdict.
+Slice 4.5 closes only when `M1/S4.5/EVAL-CLOSEOUT` receives final acceptance;
+Slice 5 becomes the next eligible product package after that closeout under the
+M1 continuation verification profile. M1 remains active.

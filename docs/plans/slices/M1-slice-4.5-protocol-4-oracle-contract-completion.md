@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Protocol `/4` oracle-contract completion and held-out disposition
 
-Status: Hard-stopped after the permitted authorability correction pass; owner disposition supplied by `M1/S4.5/PRE-B2`
+Status: Historical hard-stopped plan; current disposition supplied by ADR-0032
 Owner: Project owner
 Accepted: 2026-08-05
 Parent plan: [M1 Slice 4.5 — Held-out evaluation v2](M1-slice-4.5-held-out-evaluation-v2.md)
@@ -627,3 +627,13 @@ accepted the successor
 The successor is work ID `M1/S4.5/PRE-B2`; WP1 is next. It does not reopen this
 plan's consumed correction pass or authorize B2, private corpus work, C2, Stage
 D, Slice 5, or protocol `/5`.
+
+## 2026-08-07 evaluator-deferral disposition
+
+The subsequent Pre-B2 and `/5` chronology is preserved in its own accepted
+records. ADR-0032 now defers private held-out evaluation without a product
+verdict, retires `/5` unqualified, and limits frozen `/4` to bounded public
+regression with the known gap excluded. Nothing in this historical plan may be
+resumed. Slice 4.5 closes only at evaluator-deferral final acceptance; Slice 5
+becomes the next eligible product package after that closeout under the M1
+continuation verification profile. M1 remains active.

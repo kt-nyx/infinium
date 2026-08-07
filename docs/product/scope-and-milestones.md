@@ -1,7 +1,13 @@
 # Scope and milestones
 
 Status: Accepted  
-Last reviewed: 2026-07-28
+Last reviewed: 2026-08-07
+
+Accepted M1 verification amendment, 2026-08-07: ADR-0032 defers the current
+private held-out evaluator with no product verdict and makes the accepted
+[M1 continuation verification profile](../evaluation/m1-continuation-verification-profile.md)
+the public gate for Slices 5-9 after Slice 4.5 closeout. This changes
+sequencing and evidence labeling, not the M1 product goal or required cases.
 
 ## Supported product scope
 
@@ -109,6 +115,17 @@ completion of that requirement is targeted at M3.
 If it exercises an external application, its configuration contract shall
 accept an explicitly supplied validated path and report unavailable
 capabilities without silently changing scope.
+
+M1 is proved through public contract/schema conformance, independently
+expected public fixtures, model-derived mutation and metamorphic checks,
+determinism/replay/operational safety, two-domain synthetic generalization,
+controlled-real EVAL-0016/EVAL-0017 evidence, and fresh semantic/diff review.
+This public conformance package does not establish a private held-out verdict
+or the reliability/readiness required by M3. A new held-out evaluator may be
+proposed only after Slice 9 during M3 planning around a stable, versioned,
+user-meaningful output contract, with independently authorable expectations,
+answer-free totality review, separate roles, and a new accepted ADR and plan.
+No future protocol identity is selected here.
 
 ## M2: Frontend workflow proof
 

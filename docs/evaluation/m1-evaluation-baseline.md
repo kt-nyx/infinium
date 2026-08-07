@@ -4,7 +4,7 @@ Status: Accepted
 Owner: Project owner  
 Prepared: 2026-07-28  
 Accepted: 2026-07-28  
-Last reviewed: 2026-08-04
+Last reviewed: 2026-08-07
 Target milestone: M1 — Backend semantic proof
 
 ## Purpose
@@ -38,6 +38,10 @@ This baseline consumes:
   [evaluator-v2 baseline amendment](m1-evaluation-baseline-evaluator-v2-amendment.md),
   which supersede evaluator-v1 protocol/scorer ownership while preserving the
   separate private data repository;
+- accepted ADR-0032 and the
+  [M1 continuation verification profile](m1-continuation-verification-profile.md),
+  which replace only the held-out-`PASS` sequencing prerequisite for Slices
+  5-9 after evaluator-deferral closeout;
 - the accepted [anti-overfitting rules](anti-overfitting-rules.md);
 - the [fixture guidelines](fixture-guidelines.md); and
 - the accepted M0 research dispositions.
@@ -72,6 +76,11 @@ hosted web search, background/Batch/cached provider execution, archive-positive
 FaceGen, a production NIF parser, runtime-log application, named generator or
 configuration adapters, broader semantic-family coverage, M3 scale, M4
 packaging, or public supportability.
+
+M1 also does not claim a private held-out product verdict or the reliability
+and readiness required by M3. Under ADR-0032, Slices 5-9 demonstrate public
+product conformance through the continuation profile's six layers while the
+private held-out evaluator remains deferred.
 
 ## Case state vocabulary
 
@@ -287,3 +296,8 @@ M1 completion must retain:
 - known gaps and disabled capabilities; and
 - independent semantic review confirming that the evidence supports only the
   declared M1 claims.
+
+The completion evidence must explicitly state that no valid current private
+held-out verdict exists, distinguish any bounded `/4` regression health from
+product conformance, and avoid reliability/readiness language beyond the
+public evidence obtained.

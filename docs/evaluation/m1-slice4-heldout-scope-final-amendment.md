@@ -154,3 +154,17 @@ generic technical facts, omits unproven decoded semantics, and reports exact
 coverage/gap effects. The remaining public obligation is deterministic totality
 across all fifteen fact families, not another fixture-specific correction.
 This disposition does not reopen B2 or authorize protocol `/5`.
+
+## Current evaluator-deferral disposition
+
+ADR-0032 supersedes the active held-out gate and successor authorization
+described by the historical sections above. Protocol `/4` is frozen historical
+evidence with bounded public regression use only and its known partial
+`RACE/DATA` representation gap excluded. Protocol `/5` is retired unqualified
+with no implementation, freeze, private use, or verdict. Private held-out
+evaluation is deferred with no valid current product verdict; B2, C2, Stage D,
+corpus work, adaptation, comparison, and scoring are not authorized.
+
+Slice 4.5 closes only at evaluator-deferral final acceptance. Slice 5 is next
+eligible after that closeout under the M1 continuation verification profile,
+and M1 remains active.

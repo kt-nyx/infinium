@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Held-out evaluation v2 implementation record
 
-Status: Public evaluator `/4` and candidate frozen; Pre-B2 WP1-WP5 complete; protocol `/5` WP1R complete and WP1 resumed
+Status: Historical evaluator work recorded; ADR-0032 closeout pending; `/5` retired unqualified; private held-out deferred with no verdict
 Opened: 2026-08-04
 Plan: `infinium.plan.m1.backend-semantic-proof/3`
 Execution plan: [M1 Slice 4.5](../slices/M1-slice-4.5-held-out-evaluation-v2.md)
@@ -1222,3 +1222,50 @@ work, B2, C2, scoring, Stage D, Slice 5, live/billable call, protocol `/6`,
 history rewrite, push, or commit occurred. The complete evidence is preserved
 in the
 [WP1V hard-stop record](../../evaluation/m1-slice4-protocol-5-wp1v-proof-closure-hard-stop.md).
+
+## 2026-08-07 evaluator-deferral closeout status through WP3
+
+The project owner accepted ADR-0032 and work
+`M1/S4.5/EVAL-CLOSEOUT`. WP0 preserved the failed WP1V evidence at exact
+historical checkpoint `2b41ad8c06f3da0f692cd963b524ff5b5d279bd0`. WP1
+accepted evaluator deferral and migrated durable loose-availability, layered-
+gap, aggregation, and coverage semantics into non-protocol authority.
+
+WP2 removed the active `/5` machine surface and reserved its consumed
+identities against reuse. Protocol `/5` is retired unqualified with no
+implementation, freeze, private use, or verdict. The retained protocol `/4`
+boundary distinguishes 23/23 historical frozen blobs, 20/20 byte-identical
+current non-test reusable-core files, and three current public regression tests
+whose authorized evolution is not historical qualification evidence. The
+bounded wrapper and refusal suite are the only current `/4` execution path;
+`BOUNDED_REGRESSION_PASS` is historical/core/current-public-regression health
+only, with the known partial `RACE/DATA` representation gap excluded.
+
+WP3 adds the accepted, closeout-effective
+[M1 continuation verification profile](../../evaluation/m1-continuation-verification-profile.md)
+and reconciles M1 Slices 5-9, ADR/evaluation/governance/case/plan/index/tooling
+status, residual risk, and a machine-readable tracked-occurrence ledger. The
+profile requires six public layers: contract/schema conformance; independently
+expected public fixtures; model-derived mutation/metamorphic checks;
+determinism/replay/operational safety; two-domain generalization plus
+controlled-real EVAL-0016/EVAL-0017; and fresh review/claim control.
+
+Current status is intentionally conditional on the remaining plan gates:
+
+```text
+Slice 4 public conformance: passed for exact candidate and scope
+Protocol /4: frozen historical; bounded public regression only
+Protocol /5: retired unqualified; no implementation or verdict
+Private held-out evaluation: deferred; no valid current product verdict
+Slice 4.5: closeout pending; closes only at final plan acceptance
+Slice 5: next eligible product package after closeout
+M1: active
+```
+
+No candidate/product or evaluator implementation, freeze JSON, frozen `/4`
+runtime/schema/test byte, current evolved test, private material, corpus,
+adaptation, comparison, B2, C2, scoring, Stage D, or live/billable call is part
+of WP3. Implementer B did not commit or push; the parent creates the focused
+WP3 package commit, and no push occurs. Final review attestations and closeout
+acceptance belong to the later WP4/WP5 record; this entry does not predeclare
+those gates passed.

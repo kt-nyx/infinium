@@ -1,7 +1,7 @@
 # Fixture guidelines
 
 Status: Draft  
-Last reviewed: 2026-08-04
+Last reviewed: 2026-08-07
 
 Wave B's target boundaries and fixture/conformance obligations are accepted by
 ADR-0008 through ADR-0011, and the M1 Wave F case specifications are accepted;
@@ -76,6 +76,14 @@ Infinium retains only sanitized registry bindings and attestations. Evaluator-
 v2 rules and scoring remain public. Private corpus authoring and scoring occur
 only in their later purpose-bound fresh tasks, and public closeout receives no
 raw answer-bearing return.
+
+ADR-0032 defers the current M1 private held-out effort with no valid product
+verdict. Slices 5-9 therefore use public development/validation fixtures under
+the M1 continuation verification profile: expectations remain independently
+pre-authored, every positive has a meaningful negative or abstention, and any
+product-driving result is development/validation evidence rather than held-out
+evidence. This deferral does not permit private access or weaken partition,
+contamination, replacement, or answer-isolation rules.
 
 ## Required fixture metadata
 
@@ -166,8 +174,14 @@ provenance must identify direct byte assertions, manual adjudication, retained
 format invariants, and any separate evidence used. xEdit is not an Infinium
 oracle or fixture dependency.
 
-For protocol `/4` held-out authoring, every expected fact must also name an
-authority and derivation allowed by the
+The historical protocol `/4` held-out-authoring rule required every expected
+fact to name an authority and derivation allowed by the
 [final oracle-authority matrix](m1-slice4-heldout-oracle-authority-matrix.md).
 Product output, product ID algorithms, exact product diagnostics, and Mutagen
 interpretation alone cannot supply a hidden expected value.
+
+No current M1 held-out authoring is authorized. A future evaluator requires a
+new ADR and plan after Slice 9 during M3 planning; it must retain independently
+authorable expected values, answer-free totality review, and separate public
+implementation/private qualification/scoring/closeout roles. No future
+protocol identity is selected here.

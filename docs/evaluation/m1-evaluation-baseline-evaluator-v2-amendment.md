@@ -3,7 +3,7 @@
 Status: Accepted
 Accepted: 2026-08-04
 Accepted by: Project owner
-Last reviewed: 2026-08-05
+Last reviewed: 2026-08-07
 Predecessor: [M1 evaluation baseline](m1-evaluation-baseline.md)
 
 ## Amendment model
@@ -13,6 +13,9 @@ replaces evaluator protocol, ownership, terminal-state mapping, and held-out
 gate sequencing under ADR-0027 and M1 plan revision `/3`.
 ADR-0028 later binds the bounded semantic authority inside final protocol `/4`
 without changing evaluator ownership or terminal mapping.
+ADR-0032 later supersedes only the held-out-`PASS` sequencing gate for Slices
+5-9. The protocol, terminal, isolation, identity, contamination, and historical
+evidence clauses remain authoritative where applicable.
 
 ## Public protocol and private corpus
 
@@ -64,7 +67,7 @@ held-out claims, and require materially independent replacement before a later
 held-out claim. Oracle corrections require new independent evidence and a new
 version; old evidence is invalidated, not rewritten.
 
-## Partition reporting
+## Historical partition reporting
 
 Public and held-out evidence may be reported separately:
 
@@ -78,6 +81,11 @@ Overall M1 gate: pending Slice 4.5 until both applicable partitions pass
 Passing public evidence alone does not complete held-out EVAL-0052 or
 applicable EVAL-0086. M1 remains pending until the valid held-out partition
 passes and later required slices/cases complete.
+
+The block above is the historical revision `/3` reporting contract. ADR-0032
+now defers that private partition and removes it only as a sequencing
+prerequisite for later M1 slices; it does not convert public evidence into a
+held-out pass.
 
 ## Historical `/2` adjudication and successor
 
@@ -108,7 +116,8 @@ The accepted
 therefore separates implementation-specific public conformance from
 independently specifiable held-out semantics. Protocol `/3` remains qualified
 historical public evidence and is superseded before a valid successor corpus.
-Protocol `/4` is the final authorized M1 evaluator revision. It does not waive
+At that historical checkpoint, protocol `/4` was the final authorized M1
+evaluator revision. It did not waive
 the held-out gate or authorize a product correction, Stage C2, Stage D, Slice
 5, or a later `/5` evaluator.
 
@@ -158,3 +167,27 @@ now owns public completion as work ID `M1/S4.5/PRE-B2`. Its total state/fact
 model and mechanical gate must pass before fixtures, a fresh product-blind
 review, or candidate conformance can support any new held-out-authorability
 claim. Private B2 remains separately unauthorized.
+
+## Current evaluator-deferral amendment
+
+ADR-0032 and accepted work `M1/S4.5/EVAL-CLOSEOUT` now control current status:
+
+```text
+Slice 4 public conformance: passed for exact candidate and scope
+Protocol /4: frozen historical; bounded public regression only
+Protocol /5: retired unqualified; no implementation, freeze, private use, or verdict
+Private held-out evaluation: deferred; no valid current product verdict
+Slice 4.5: closes only at evaluator-deferral final acceptance
+Slice 5: next eligible product package after closeout
+M1: active
+```
+
+No current private `PASS`, `FAIL`, or valid product-scoring `EVALUATOR_ERROR`
+exists. B2, C2, Stage D, corpus work, adaptation, comparison, and scoring are
+not authorized. Frozen `/4` bounded-regression health is neither evaluator
+qualification nor a complete current-product result.
+
+After final closeout acceptance, Slices 5-9 are gated by the accepted
+[M1 continuation verification profile](m1-continuation-verification-profile.md).
+Its six public layers supplement the baseline's required case set; they do not
+waive a case, establish held-out evidence, or support M3 reliability/readiness.

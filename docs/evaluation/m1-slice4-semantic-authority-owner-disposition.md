@@ -181,3 +181,14 @@ mechanical completeness gate, model-derived synthetic coverage, fresh
 product-blind review, and only then frozen-candidate classification. Its first
 work package is `M1/S4.5/PRE-B2/WP1`. No private execution or protocol change
 is authorized by this disposition.
+
+## Current evaluator-deferral disposition
+
+The Pre-B2 totality and `/5` successor chronology remains preserved in its own
+records. ADR-0032 now retires `/5` unqualified, retains frozen `/4` only for
+bounded public regression with its known gap excluded, and defers private
+held-out evaluation without a valid current product verdict. The six semantic
+decisions in this document remain durable product authority; they no longer
+authorize an active evaluator path. Slice 4.5 closes only at evaluator-deferral
+final acceptance, after which Slice 5 is next eligible under the M1
+continuation verification profile. M1 remains active.

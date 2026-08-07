@@ -138,10 +138,16 @@ Any rule introduced after a failing real-mod case must answer:
 
 The evaluator authority check remains hard: if an expected value cannot be
 authored from public rules, the answer-free manifest, accepted taxonomy rules,
-and retained input bytes, it is not a held-out fact. ADR-0030 and ADR-0031's
-narrowly authorized `/5` successor may implement only public projection
-representability against accepted successor model
-`infinium.m1-slice4.protocol-5-evidence-contract/1.0.1`. ADR-0031's explicit
-FaceGen loose-availability gap is the only authorized semantic delta; `/5` may
-not recover coverage from product output, private answers, fixture identities,
-or any further semantic change.
+and retained input bytes, it is not a held-out fact. ADR-0030/ADR-0031's `/5`
+attempt is historical; ADR-0032 retired it unqualified before implementation
+or freeze. Its failed proof artifacts, product output, private answers, and
+fixture identities cannot become expected truth.
+
+For M1 Slices 5-9, the continuation profile requires independently expected
+public fixtures, model-derived mutation/metamorphic checks, matched negatives,
+visible abstention/coverage/gaps, and fresh semantic/diff review. Slice 7 must
+exercise the same generic mechanism across the two materially different
+actor/AI/FaceGen and REFR/link/placement domains. Slice 8 must execute
+controlled-real EVAL-0016 and EVAL-0017. Product-driving results are
+development/validation evidence, not held-out evidence, and unevaluated
+taxonomy regions remain explicit gaps.

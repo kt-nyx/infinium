@@ -1,6 +1,6 @@
 # M1 backend semantic proof plan revision 3 amendment
 
-Status: Accepted
+Status: Accepted; held-out sequencing clauses superseded by ADR-0032
 Accepted: 2026-08-04
 Accepted by: Project owner
 Last reviewed: 2026-08-07
@@ -14,6 +14,11 @@ sequencing, evaluator ownership, and gate clauses replaced below. Historical
 plans and execution evidence remain unchanged. ADR-0027, evaluator-private
 fixture governance v2, the evaluator-v2 baseline amendment, and the Slice 4.5
 execution plan are additional authority.
+
+ADR-0032 later supersedes only this revision's requirement that a private
+held-out `PASS` precede Slice 5. The historical evaluator chronology below
+remains evidence; current M1 sequencing is governed by the evaluator-deferral
+plan and the M1 continuation verification profile.
 
 ## Established implementation state
 
@@ -57,8 +62,9 @@ reinterpretation of held-out acceptance.
 - Slices 0 through 4 are implementation-complete.
 - Slice 4.5 is active under the accepted
   [execution plan](../slices/M1-slice-4.5-held-out-evaluation-v2.md).
-- Slice 5 is blocked until Slice 4.5 obtains one valid held-out `PASS` for the
-  exact candidate/evaluator/corpus tuple.
+- At this historical revision `/3` checkpoint, Slice 5 was blocked until Slice
+  4.5 obtained one valid held-out `PASS` for the exact candidate/evaluator/
+  corpus tuple.
 - `EVALUATOR_ERROR` leaves Slice 4.5 blocked and carries no product verdict.
 - M1 remains active. No later M1 slice or milestone completion is implied.
 
@@ -99,8 +105,8 @@ Evaluator `/4` and candidate `a98d648` remain frozen. Public completion,
 answer-free product-blind authorability review, and frozen conformance audit are
 the next work. Another B2 task, corpus qualification, C2, Stage D, protocol
 `/5`, and Slice 5 are not authorized by this disposition. The existing M1 gate
-is unchanged: Slice 5 remains blocked until Slice 4.5 obtains one valid held-out
-`PASS` for an exact qualified tuple.
+was unchanged at that checkpoint: Slice 5 remained blocked until Slice 4.5
+obtained one valid held-out `PASS` for an exact qualified tuple.
 
 ## Public oracle-contract authorability stop
 
@@ -129,3 +135,28 @@ authorizes accepted public work `M1/S4.5/PRE-B2/V5/WP0` through WP4 to qualify
 and freeze one `/5` successor against immutable semantic model `1.2.0`.
 Candidate implementation, private access, corpus eligibility, B2, C2, Stage D,
 and Slice 5 remain separate and unauthorized by this amendment note.
+
+## Current evaluator-deferral and continuation disposition
+
+ADR-0032 and accepted work `M1/S4.5/EVAL-CLOSEOUT` supersede the active status
+and sequencing statements above without rewriting their chronology.
+
+- Slice 4 public conformance passed for exact candidate
+  `a98d648bd0adb2751ee0c09828e0227b1583950f` and its declared scope.
+- Protocol `/4` is frozen historical public evidence and may run only through
+  its bounded public regression profile. Its known partial `RACE/DATA`
+  representation gap is excluded, so it cannot issue a complete current
+  semantic or held-out verdict.
+- Protocol `/5` is retired unqualified. It has no implementation, freeze,
+  private use, or verdict; WP1/WP1R/WP1V and WP2-WP4 are historical or
+  unstarted chronology, not resumable work.
+- Private held-out evaluation is deferred. No current private `PASS`, `FAIL`,
+  or valid product-scoring `EVALUATOR_ERROR` exists, and B2, C2, and Stage D
+  are not authorized.
+- Slice 4.5 closes only when the evaluator-deferral plan receives final
+  closeout acceptance. Slice 5 is the next eligible product package after that
+  event and is gated by the accepted
+  [M1 continuation verification profile](../../evaluation/m1-continuation-verification-profile.md).
+- M1 remains active. Public conformance, bounded `/4` regression health,
+  evaluator qualification, private held-out evaluation, and product
+  reliability/readiness are distinct claims.

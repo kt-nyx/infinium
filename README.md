@@ -22,7 +22,7 @@ Start with [`docs/README.md`](docs/README.md).
 - Product documentation: accepted baseline plus mod-impact taxonomy `0.1.0`
 - Research: Waves A through F accepted; Gates A through F met
 - M0 research plan: completed on 2026-07-28
-- Architecture: ADR-0001 through ADR-0023 and ADR-0025 through ADR-0027 accepted;
+- Architecture: ADR-0001 through ADR-0023 and ADR-0025 through ADR-0032 accepted;
   ADR-0024 rejected
 - M1 plan: revision `/3` accepted and active
 - M1 implementation: Slices 0 through 4 implementation-complete; Slice 3's exact-target,
@@ -37,13 +37,20 @@ Start with [`docs/README.md`](docs/README.md).
   no valid successor held-out verdict currently exists. No product correction
   is indicated, and the Slice
   4 product candidate remains unchanged and publicly verified. Final protocol
-  `/4` is qualified and frozen at
+  `/4` is qualified and frozen historical public evidence at
   `3693d19563c636cd2879804633ca4ce52448d2c1`. The B2 input bytes already exist
-  and passed independent byte review, but B2 oracle qualification under `/4`
-  has not run. C2 has not run, Stage D has not started, and Slice 4.5 remains
-  incomplete. See the
+  and passed independent byte review, but the single authorized B2 resume later
+  stopped without an oracle or product verdict. The `/5` successor attempt
+  hard-stopped before implementation or freeze and is retired unqualified.
+  ADR-0032 defers private held-out evaluation with no valid current verdict and
+  retains `/4` only for bounded public regression with its known gap excluded.
+  No B2, C2, Stage D, corpus, scoring, or replacement-evaluator work is
+  authorized. See the
   [sanitized incident record](docs/evaluation/evaluator-v2-stage-c5-adjudication-incident.md).
-  Slice 5 remains blocked and M1 remains active
+  Slice 4.5 remains in evaluator-deferral closeout. Slice 5 is the next eligible
+  product package only after final closeout acceptance, under the M1
+  continuation verification profile. M1 remains active; public conformance is
+  not a private reliability/readiness verdict
 - xEdit: historical integration/oracle recommendation rejected; excluded from
   every Infinium boundary
 - Abandoned implementation: removed from the active tree and retained only in
@@ -54,11 +61,11 @@ Implementation must proceed slice-by-slice under the accepted
 and its accepted
 [revision 3 amendment](docs/plans/milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md).
 
-M1 Slice 4.5 has frozen the final bounded public evaluator at protocol `/4`
-and projection `3.0.0`. The Slice 4 product candidate is unchanged. Private
-oracle qualification under `/4`, Stage C2 scoring, and Stage D have not run;
-Slice 5 remains blocked. One fresh private oracle reviewer may resume B2 once.
-Another authority gap does not authorize `/5`, evaluator expansion, or product
-output as oracle truth; it must be recorded for owner milestone disposition.
-See the
-[final public freeze handoff](docs/evaluation/evaluator-v2-stage-a-final-bounded-freeze.json).
+M1 Slice 4.5 retains frozen protocol `/4` and projection `3.0.0` as historical
+evidence. The only current use is the
+[bounded public regression profile](docs/evaluation/m1-slice4-protocol-4-bounded-regression-usage.md).
+Protocol `/5` is retired unqualified, private held-out evaluation is deferred,
+and no current product verdict exists. Current work follows the accepted
+[evaluator-deferral closeout plan](docs/plans/slices/M1-slice-4.5-evaluator-deferral-and-m1-continuation.md).
+After final closeout acceptance, Slice 5 uses the
+[M1 continuation verification profile](docs/evaluation/m1-continuation-verification-profile.md).

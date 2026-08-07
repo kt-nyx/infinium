@@ -481,6 +481,14 @@ This completes this subordinate public realignment plan, not Slice 4.5. One
 fresh private oracle reviewer may resume B2 once; C2 and Stage D remain later
 separate tasks.
 
+That was the exact post-freeze status at this historical checkpoint. The
+single authorized B2 resume was later consumed without an oracle or verdict,
+and ADR-0032 now defers private held-out evaluation. Protocol `/4` is bounded
+historical regression evidence, protocol `/5` is retired unqualified, and no
+private evaluator work is authorized. Slice 4.5 closes only at evaluator-
+deferral final acceptance; Slice 5 becomes the next eligible product package
+after that closeout under the M1 continuation verification profile.
+
 ## Historical fresh-agent implementation handoff
 
 The implementation prompt used for this completed task is retained below as

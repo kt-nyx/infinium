@@ -17,7 +17,7 @@ Current execution plans:
   readiness audit found no remaining start blocker; Slice 4 was implemented on
   2026-08-01.
 - [M1 Slice 4.5 — Held-out evaluation v2](M1-slice-4.5-held-out-evaluation-v2.md)
-  — Accepted 2026-08-04. The historical `/2` Stage C invocation ran once, but
+  — Historical evaluator plan accepted 2026-08-04. The historical `/2` Stage C invocation ran once, but
   Stage C.5 invalidated its product verdict; no valid successor held-out
   verdict exists. The original Slice 4 candidate retains its historical public
   verification.
@@ -30,9 +30,11 @@ Current execution plans:
   `a98d648bd0adb2751ee0c09828e0227b1583950f`. The public oracle-contract
   authorability attempt stopped after its one correction pass found a second
   material authority gap. The later accepted totality plan completed through
-  WP5 and classified an evaluator `/4` representation gap. ADR-0030 supplies
-  the owner disposition through the separate public `/5` successor plan.
-  C2 has not run, Stage D has not started, and Slice 5 remains blocked.
+  WP5 and classified an evaluator `/4` representation gap. The later `/5`
+  attempt hard-stopped and ADR-0032 now supplies the current deferral
+  disposition. Private evaluation is deferred with no verdict. Slice 4.5
+  closes only at final evaluator-deferral acceptance; Slice 5 is next eligible
+  after that closeout. M1 remains active.
 - [M1 Slice 4.5 — Public Bethesda semantic realignment and candidate freeze](M1-slice-4.5-public-product-realignment.md)
   — Accepted and completed 2026-08-05 at `a98d648`. This bounded public
   implementation contract records the
@@ -55,13 +57,21 @@ Current execution plans:
   product-blind review, and frozen candidate classification. WP1-WP5 completed;
   WP5 classified an evaluator `/4` representation gap.
 - [M1 Slice 4.5 — Protocol `/5` successor realignment](M1-slice-4.5-protocol-5-successor-realignment.md)
-  — Accepted 2026-08-07 as work `M1/S4.5/PRE-B2/V5`. ADR-0030 authorizes one
-  separately qualified public `/5` successor after WP5 proved a frozen `/4`
+  — Historical accepted plan from 2026-08-07, closed/retired without
+  completion. ADR-0030 authorized one public `/5` successor after WP5 proved a frozen `/4`
   representation gap. WP1's independently reproduced FaceGen/coverage
   composition hard stop remains historical evidence. ADR-0031 and WP1R
   accepted the distinct `/5` successor model, exact loose-availability gap,
-  and global composition proof; WP1 resumed and WP2-WP4 remain gated. Candidate work,
-  private access, B2, C2, Stage D, and Slice 5 remain excluded.
+  and global composition proof; WP1V then hard-stopped, WP1 never proof-closed,
+  and WP2-WP4 never started. ADR-0032 retires `/5` unqualified; its identities
+  and work packages are not resumable.
+- [M1 Slice 4.5 — Evaluator deferral and M1 continuation](M1-slice-4.5-evaluator-deferral-and-m1-continuation.md)
+  — Accepted 2026-08-07 as active work `M1/S4.5/EVAL-CLOSEOUT`. WP2 retired
+  the active `/5` machine surface and established bounded `/4` regression.
+  WP3 documentation reconciliation is complete, and the fresh WP4 audits are
+  next. Final acceptance closes Slice 4.5 as public conformance
+  complete/private held-out deferred/no verdict and makes Slice 5 next eligible
+  under the M1 continuation verification profile. M1 remains active.
 
 Completed slices retain their exact implementation and verification evidence
 under [`../implementation-records/`](../implementation-records/README.md).

@@ -1,7 +1,7 @@
 # Work-breakdown notation
 
 Status: Accepted
-Last reviewed: 2026-08-05
+Last reviewed: 2026-08-07
 
 ## Purpose
 
@@ -98,14 +98,26 @@ chat history.
 
 ```text
 M1/S4.5
-└── PRE-B2  Public prerequisites; no private execution authority
-    ├── WP1 Evidence-state and fact-dependency model
-    ├── WP2 Executable totality validator
-    ├── WP3 Generated synthetic state coverage
-    ├── WP4 Independent product-blind totality review
-    ├── WP5 Frozen candidate conformance classification
-    └── WP6 Public closeout and private-governance handoff
+├── PRE-B2  Historical public prerequisites; completed through WP5
+│   ├── WP1 Evidence-state and fact-dependency model
+│   ├── WP2 Executable totality validator
+│   ├── WP3 Generated synthetic state coverage
+│   ├── WP4 Independent product-blind totality review
+│   ├── WP5 Frozen candidate conformance classification
+│   └── WP6 Not directly executed; superseded by owner dispositions
+├── PRE-B2/V5  Historical retired successor attempt
+│   ├── WP0 Disposition and plan complete
+│   ├── WP1/WP1R/WP1V Historical proof and hard-stop records
+│   └── WP2-WP4 Never started; not resumable
+└── EVAL-CLOSEOUT  Current evaluator deferral and M1 continuation
+    ├── WP0 Preserve failed evidence
+    ├── WP1 Accept deferral and migrate durable semantics
+    ├── WP2 Retire /5 and establish bounded /4 regression
+    ├── WP3 Replace the M1 gate and reconcile documentation
+    ├── WP4 Fresh evaluator-boundary and documentation audits
+    └── WP5 Final closeout and Slice 5 handoff
 ```
 
 This map names work only. Its execution authority and gates live in the
-accepted Slice 4.5 plan.
+accepted Slice 4.5 plans. No `PRE-B2/V5` entry authorizes active work. Slice 5
+becomes eligible only after `EVAL-CLOSEOUT/WP5` final acceptance.

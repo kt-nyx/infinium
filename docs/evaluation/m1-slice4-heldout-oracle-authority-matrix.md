@@ -1,7 +1,7 @@
 # M1 Slice 4 final held-out oracle-authority matrix
 
-Status: **accepted semantic matrix; partial-decode disposition accepted, exact
-contract totality pending `M1/S4.5/PRE-B2`**.
+Status: **accepted historical held-out semantic matrix; current private use
+deferred by ADR-0032**.
 
 This matrix records the bounded semantic inclusion/exclusion contract for the
 final Slice 4 successor. It does not yet form a complete exact lexical
@@ -17,6 +17,15 @@ remains the historical failed completeness status. The accepted
 [Pre-B2 totality plan](../plans/slices/M1-slice-4.5-pre-B2-evidence-contract-totality.md)
 must now prove all state/fact combinations; until it passes, this matrix and the
 blocked construction draft must not authorize an oracle or private comparison.
+
+The stated pending status above was resolved historically by the accepted
+Pre-B2 totality work. Protocol `/4` then proved unable to represent the full
+accepted partial state, and the `/5` attempt retired unqualified. ADR-0032 now
+defers private held-out evaluation with no valid current product verdict. This
+matrix remains semantic history and may inform future independent authorability
+review, but it does not authorize B2, C2, Stage D, corpus work, scoring, or a
+protocol identity. Current Slices 5-9 use the M1 continuation verification
+profile after evaluator-deferral closeout.
 
 <!-- active-fact-families: result,plugins,override_chains,npc_contributions,race_contributions,placed_reference_contributions,allowlisted_fields,npcs,races,placed_references,face_gen,taxonomy,coverage,gaps,result_gaps -->
 

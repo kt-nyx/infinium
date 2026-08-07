@@ -5,6 +5,12 @@ Last reviewed: 2026-08-05
 
 Accepted amendments:
 
+- 2026-08-07 — ADR-0032 defers the current M1 private held-out evaluator
+  without a product verdict, retires protocol `/5` unqualified, and replaces
+  only the held-out-`PASS` sequencing prerequisite for later M1 slices with
+  the accepted public M1 continuation verification profile. This does not
+  weaken any product requirement, required M1 case, private default-deny rule,
+  or reliability/readiness claim boundary.
 - 2026-08-05 — The owner accepted the bounded M1 Bethesda semantic-reporting
   contract in
   [ADR-0028](../architecture/decisions/ADR-0028-m1-bethesda-semantic-reporting-and-oracle-authority.md):

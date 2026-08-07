@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Pre-B2 evidence-contract totality closure
 
-Status: Accepted; WP1-WP5 complete; WP5 classified an evaluator `/4` representation gap; owner disposition supplied by ADR-0030 and the separate V5 plan
+Status: Accepted historical plan; WP1-WP5 complete; current disposition supplied by ADR-0032
 Owner: Project owner
 Accepted: 2026-08-05
 Work ID: `M1/S4.5/PRE-B2`
@@ -452,3 +452,14 @@ does not rewrite or continue this plan's WP6. It creates new public work
 `M1/S4.5/PRE-B2/V5/WP0` through WP4 under immutable accepted model `1.2.0`.
 The historical `/4` evaluator and this plan's records remain unchanged;
 candidate work, private access, B2, C2, Stage D, and Slice 5 remain separate.
+
+## 2026-08-07 evaluator-deferral disposition
+
+ADR-0032 supersedes ADR-0030's active successor authorization. This plan's
+WP1-WP5 totality, review, and candidate-classification evidence remains public
+historical conformance evidence. Protocol `/4` is retained only for bounded
+public regression with its known gap excluded; protocol `/5` is retired
+unqualified; private held-out evaluation is deferred with no valid current
+product verdict. Slice 4.5 closes only at evaluator-deferral final acceptance,
+after which Slice 5 is the next eligible product package under the M1
+continuation verification profile. M1 remains active.

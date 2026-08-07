@@ -19,27 +19,36 @@ produced no
 valid held-out product verdict and is retired. The historical evaluator-v2
 `/2` Stage C
 invocation ran once, but Stage C.5 invalidated its product verdict; no valid
-successor held-out verdict exists. Slice 4.5 now owns evaluator-v2 qualification
-and held-out acceptance. Final protocol `/4` is qualified and frozen at
+successor held-out verdict exists. Slice 4.5 historically owned evaluator-v2
+qualification and held-out acceptance. Final protocol `/4` is qualified and frozen at
 `3693d19563c636cd2879804633ca4ce52448d2c1`; the B2 input bytes already exist
 and passed independent byte review. The single authorized B2 resume ran once
 and stopped on another public lexical-authority gap without an oracle,
 candidate execution, scoring, or product verdict. Public realignment and
 candidate freeze remain complete at
 `a98d648bd0adb2751ee0c09828e0227b1583950f`. The first public oracle-contract
-completion attempt hard-stopped; another B2 task is not authorized by the
-current state. C2 has not run, Stage D has not started, and Slice 5 remains
-blocked.
+completion attempt hard-stopped. ADR-0032 now defers private held-out
+evaluation without a verdict and limits `/4` to bounded public regression.
+No B2, C2, Stage D, corpus, scoring, or replacement-evaluator work is
+authorized.
 
 The first public completion attempt is historical hard-stop evidence at
 `9d29d7a`. ADR-0029 resolved its partial-decode semantic question, and accepted
 work `M1/S4.5/PRE-B2` completed through WP5. WP5 classified an evaluator `/4`
-representation gap. ADR-0030 and work `M1/S4.5/PRE-B2/V5/WP0` through WP4 now
-authorize one separately qualified public `/5` successor. WP0 completed, but
+representation gap. ADR-0030 and work `M1/S4.5/PRE-B2/V5/WP0` through WP4
+historically authorized one public `/5` successor attempt. WP0 completed, but
 WP1's accepted-model FaceGen/coverage composition hard stop remains historical
 evidence. ADR-0031 and WP1R accepted the distinct `/5` successor model and
-global composition proof; WP1 resumed and WP2-WP4 remain gated.
-Private execution remains unauthorized.
+global composition proof; WP1V later hard-stopped, WP1 never proof-closed, and
+WP2-WP4 never started. `/5` is retired unqualified. Slice 4.5 closes only at
+evaluator-deferral final acceptance; Slice 5 is next eligible after that
+closeout under the M1 continuation verification profile. M1 remains active.
+
+Slices 5-9 must add implementation records at completion. Each record must map
+its applicable continuation-profile layers to exact requirements, cases,
+fixtures/evidence, commands/results, coverage/gaps/unsupported surfaces, fresh
+review, and claims; it must state explicitly that no private held-out verdict
+exists.
 
 - [M1 Slice 0 — Toolchain, licensing posture, and dependency lock](M1-slice-0.md)
 - [M1 Slice 1 — Versioned domain, wire, output, and evaluation contracts](M1-slice-1.md)
@@ -52,6 +61,6 @@ Private execution remains unauthorized.
   `3693d19563c636cd2879804633ca4ce52448d2c1`; owner semantic disposition
   accepted; public realignment complete at `a98d648`; B2 stopped on a public
   lexical-authority gap; the first public contract attempt hard-stopped;
-  `M1/S4.5/PRE-B2/V5/WP1R` accepted the distinct successor model and resumed
-  WP1; candidate work, private access, B2, C2, and Stage D pending separate
-  authorization.
+  `M1/S4.5/PRE-B2/V5/WP1R` accepted the distinct successor model before WP1V
+  hard-stopped; ADR-0032 retires `/5` unqualified and governs the active
+  documentation closeout. Slice 5 is next eligible only after final closeout.
