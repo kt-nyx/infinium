@@ -144,8 +144,9 @@ Every material document should include a status and last-reviewed date.
   architecture was accepted on 2026-08-04 and partially supersedes ADR-0026.
   ADR-0028's bounded M1 semantic-reporting and oracle-authority disposition and
   ADR-0029's layered-evidence decision were accepted on 2026-08-05. ADR-0030
-  was accepted on 2026-08-07 and narrowly authorizes one separately qualified
-  protocol `/5` successor after the public `/4` representation gap.
+  and ADR-0031 were accepted on 2026-08-07: they narrowly authorize one
+  separately qualified protocol `/5` successor and its distinct semantic
+  model after the public `/4` representation and global-composition gaps.
 - Wave F produced the accepted M1 evaluation baseline, detailed semantic and
   platform/operational case specifications and fixture manifests, the
   RQ-028 calibration protocol, exact OpenAI M1 profile research, a
@@ -186,9 +187,11 @@ Every material document should include a status and last-reviewed date.
   totality, model-derived exercises, fresh product-blind review, and candidate
   classification. WP1-WP5 completed, and WP5 proved an evaluator `/4`
   representation gap. ADR-0030 now authorizes the public-only
-  `M1/S4.5/PRE-B2/V5` successor cycle. WP0 completed, but WP1 hard-stopped on
-  an accepted-model FaceGen/coverage composition contradiction requiring owner
-  semantic disposition; WP2-WP4 did not start. No new B2 is authorized. C2
+  `M1/S4.5/PRE-B2/V5` successor cycle. WP1 hard-stopped on a global
+  FaceGen/coverage composition contradiction; that history remains recorded.
+  ADR-0031 and WP1R accepted the distinct `/5` successor semantic model, exact
+  loose-availability gap, and mandatory global composition proof. WP1 resumed;
+  WP2-WP4 remain gated. No new B2 is authorized. C2
   has not run, and Stage D has not started. The detailed sanitized history is recorded
   in the
   [Stage C.5 incident](evaluation/evaluator-v2-stage-c5-adjudication-incident.md).

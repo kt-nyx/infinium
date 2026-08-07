@@ -39,7 +39,8 @@ accepted records are superseded rather than rewritten to hide prior decisions.
 | [ADR-0027](ADR-0027-public-evaluation-protocol-private-held-out-corpus.md) | Accepted; partially superseded | Keep evaluation rules, schemas, adapter, scorer, and calibration public while private data and independent lifecycle evidence remain separate; `/4` finality superseded by ADR-0030 |
 | [ADR-0028](ADR-0028-m1-bethesda-semantic-reporting-and-oracle-authority.md) | Accepted | Bind M1 EDID, FaceGen, asset-state, coverage, gap, and taxonomy semantics for product and oracle authority |
 | [ADR-0029](ADR-0029-layered-evidence-and-partial-semantic-publication.md) | Accepted | Retain independently proven lower-layer facts, expose later semantic gaps, and require total state-to-fact contracts |
-| [ADR-0030](ADR-0030-protocol-5-successor-qualification.md) | Accepted | Authorize a separately qualified protocol `/5` successor without weakening semantic or isolation rules |
+| [ADR-0030](ADR-0030-protocol-5-successor-qualification.md) | Accepted; partially superseded | Authorize a separately qualified protocol `/5` successor; unchanged-model clause superseded by ADR-0031 |
+| [ADR-0031](ADR-0031-facegen-loose-availability-gap-and-protocol-5-successor-model.md) | Accepted | Accept the `/5` successor semantic model and exact FaceGen loose-availability gap |
 
 ADR-0015 through ADR-0023 are accepted and jointly select the Wave E
 persistence, lifecycle, application-stack, process, IPC, credential, security,
@@ -65,6 +66,10 @@ ADR-0030 narrowly supersedes only ADR-0027 decision 15's `/4`-finality and
 no-`/5` restriction after the accepted model proved a `/4` representation
 gap. All other evaluator, private-data, role-separation, freeze, and one-shot
 rules remain authoritative.
+ADR-0031 narrowly supersedes ADR-0030's unchanged-model requirement after the
+WP1 global-composition proof found one contradiction. It preserves model
+`1.2.0` and `/4` as immutable history, accepts the distinct `/5` successor
+model `1.0.0`, and adds only exact ownership for unknown FaceGen loose assets.
 ADR-0008 through
 ADR-0011 accept the Wave B integration and semantic
 boundaries, and ADR-0012 accepts the revised Nexus interface/risk boundary,
@@ -77,7 +82,7 @@ authoritative. ADR-0001 through ADR-0011 were accepted on 2026-07-25.
 ADR-0012 through ADR-0023 and ADR-0025 were accepted on 2026-07-28, and
 ADR-0024 was rejected that day. ADR-0026 was accepted on 2026-08-01, and
 ADR-0027 was accepted on 2026-08-04, ADR-0028 and ADR-0029 were accepted on
-2026-08-05, and ADR-0030 was accepted on 2026-08-07.
+2026-08-05, and ADR-0030 and ADR-0031 were accepted on 2026-08-07.
 ADR-0007
 supersedes only ADR-0006's xEdit-specific
 provisions, ADR-0012 supersedes only ADR-0005's API-interface eligibility and

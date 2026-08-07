@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infinium.local/schemas/m1-slice4-protocol-5-successor-model.schema.json",
+  "title": "Infinium M1 Slice 4 protocol 5 successor semantic-model overlay",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id", "model_id", "version", "status", "work_id", "protocol",
+    "authority", "base_model", "delta"
+  ],
+  "properties": {
+    "schema_id": { "const": "infinium.m1-slice4.protocol-5-successor-model.schema/1.0.0" },
+    "model_id": { "const": "infinium.m1-slice4.protocol-5-evidence-contract" },
+    "version": { "const": "1.0.0" },
+    "status": { "const": "accepted" },
+    "work_id": { "const": "M1/S4.5/PRE-B2/V5/WP1R" },
+    "protocol": { "const": "/5" },
+    "authority": {
+      "type": "object", "additionalProperties": false,
+      "required": ["adr", "contract"],
+      "properties": {
+        "adr": { "const": "ADR-0031" },
+        "contract": { "const": "infinium.m1-slice4.protocol-5-evidence-contract/1.0.0" }
+      }
+    },
+    "base_model": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "contract_path", "schema_path", "attestation_path", "model_identity", "sha256", "contract_sha256", "schema_sha256", "attestation_sha256", "acceptance_commit", "relationship"],
+      "properties": {
+        "path": { "const": "docs/evaluation/specifications/m1-slice4-protocol-4-totality-model.json" },
+        "contract_path": { "const": "docs/evaluation/specifications/m1-slice4-protocol-4-evidence-contract.md" },
+        "schema_path": { "const": "docs/evaluation/specifications/m1-slice4-protocol-4-totality-model.schema.json" },
+        "attestation_path": { "const": "docs/evaluation/m1-slice4-protocol-4-totality-review-attestation.md" },
+        "model_identity": { "const": "infinium.m1-slice4.protocol-4-evidence-contract/1.2.0" },
+        "sha256": { "const": "09ae312824aa0c859b396fd18fef69b14905c2c6d6f901ce598d3c5ab5970bf5" },
+        "contract_sha256": { "const": "2f66e3311d2bfac037689b2c3959c65e10d3722a6c52dfb39877354f39699845" },
+        "schema_sha256": { "const": "dea1801b78ecb28792580bcd080c2b8330e5356d879c57326334aa1548a64d9c" },
+        "attestation_sha256": { "const": "8278bf30ace7354a035678d176c1d6036e1de6124d2c9e925e56a7b6a10f60d2" },
+        "acceptance_commit": { "const": "43d54accc1adbafc6ae6d0bb13e8f700461758c4" },
+        "relationship": { "const": "semantic-successor" }
+      }
+    },
+    "delta": {
+      "type": "object", "additionalProperties": false,
+      "required": ["added_gap_rules", "replaced_publication_rules", "updated_admitted_regions", "updated_coverage_registry", "added_cross_family_invariants", "composition_policy"],
+      "properties": {
+        "added_gap_rules": { "type": "array", "minItems": 1, "maxItems": 1, "items": { "$ref": "#/$defs/gapRule" } },
+        "replaced_publication_rules": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "$ref": "#/$defs/ruleReplacement" } },
+        "updated_admitted_regions": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "$ref": "#/$defs/regionUpdate" } },
+        "updated_coverage_registry": { "type": "array", "minItems": 1, "maxItems": 1, "items": { "$ref": "#/$defs/coverageUpdate" } },
+        "added_cross_family_invariants": { "type": "array", "minItems": 1, "maxItems": 1, "items": { "$ref": "#/$defs/invariant" } },
+        "composition_policy": { "$ref": "#/$defs/compositionPolicy" }
+      }
+    }
+  },
+  "$defs": {
+    "gapRule": { "type": "object", "required": ["rule_id", "condition", "population_template", "missing_capability", "aggregation_key", "affected_count", "scope", "authorities"], "additionalProperties": false, "properties": { "rule_id": { "const": "P5-GAP-LOOSE-AVAILABILITY" }, "condition": { "type": "string" }, "population_template": { "const": "face-gen-loose-assets" }, "missing_capability": { "const": "exhaustive-byte-verified-loose-provider-index" }, "aggregation_key": { "const": "population+missing_capability" }, "affected_count": { "const": "exact independently identified affected paths" }, "scope": { "const": "snapshot-and-result" }, "authorities": { "type": "array", "contains": { "const": "adr0031" } } } },
+    "ruleReplacement": { "type": "object", "required": ["family", "replaces_rule_id", "rule"], "additionalProperties": false, "properties": { "family": { "const": "face_gen" }, "replaces_rule_id": { "enum": ["P4-FACEGEN-APPLICABLE-UNKNOWN-ARCHIVE-SUPPORTED", "P4-FACEGEN-APPLICABLE-UNKNOWN-ARCHIVE-UNSUPPORTED"] }, "rule": { "type": "object", "required": ["rule_id", "state_class", "when", "minimum_layer", "prerequisites", "outcomes", "coverage_effect", "gap_effects", "atomic_boundary", "authorities"], "additionalProperties": true } } },
+    "regionUpdate": { "type": "object", "required": ["family", "constraint_id", "required_gap_rule_ids", "authorities"], "additionalProperties": false, "properties": { "family": { "const": "face_gen" }, "constraint_id": { "enum": ["SC-FACEGEN-UNKNOWN-SUPPORTED", "SC-FACEGEN-UNKNOWN-UNSUPPORTED"] }, "required_gap_rule_ids": { "type": "array", "contains": { "const": "P5-GAP-LOOSE-AVAILABILITY" }, "uniqueItems": true }, "authorities": { "type": "array", "contains": { "const": "adr0031" } } } },
+    "coverageUpdate": { "type": "object", "required": ["population", "incomplete_state_rule", "authorities"], "additionalProperties": false, "properties": { "population": { "const": "face-gen-loose-assets" }, "incomplete_state_rule": { "type": "string" }, "authorities": { "type": "array", "contains": { "const": "adr0031" } } } },
+    "invariant": { "type": "object", "required": ["invariant_id", "population", "gap_rule_id", "missing_capability", "per_path_coverage", "gap_affected_count", "archive_independence", "lifecycle", "result_state", "authorities"], "additionalProperties": false, "properties": { "invariant_id": { "const": "INV-FACEGEN-LOOSE-AVAILABILITY" }, "population": { "const": "face-gen-loose-assets" }, "gap_rule_id": { "const": "P5-GAP-LOOSE-AVAILABILITY" }, "missing_capability": { "const": "exhaustive-byte-verified-loose-provider-index" }, "per_path_coverage": { "const": "denominator+1,completed+0" }, "gap_affected_count": { "const": "denominator-minus-completed" }, "archive_independence": { "const": true }, "lifecycle": { "type": "object" }, "result_state": { "const": "completed_with_gaps" }, "authorities": { "type": "array", "contains": { "const": "adr0031" } } } },
+    "compositionPolicy": { "type": "object", "required": ["fixed_coverage_rows", "coverage_owned_gap_populations", "semantic_gap_only_populations", "complete_with_gap_populations", "projection_only_families", "snapshot_gap_mirroring", "atomic_rejection"], "additionalProperties": false, "properties": { "fixed_coverage_rows": { "type": "array", "minItems": 10, "maxItems": 10, "uniqueItems": true }, "coverage_owned_gap_populations": { "type": "array", "uniqueItems": true }, "semantic_gap_only_populations": { "type": "array", "uniqueItems": true }, "complete_with_gap_populations": { "type": "array", "uniqueItems": true }, "projection_only_families": { "type": "array", "uniqueItems": true }, "snapshot_gap_mirroring": { "const": true }, "atomic_rejection": { "const": "no-partial-publication" } } }
+  }
+}

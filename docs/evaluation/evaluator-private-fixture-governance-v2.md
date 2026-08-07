@@ -96,6 +96,11 @@ after a public `/4` representation gap. This is successor maintenance under a
 new identity, not repair or retry of `/4`, a corpus, or a verdict. It does not
 authorize private access, corpus eligibility, Stage B2, or scoring. Those
 remain separate fresh owner-authorized roles after the public `/5` freeze.
+ADR-0031 and `M1/S4.5/PRE-B2/V5/WP1R` accept a distinct `/5` successor
+semantic model and one exact public FaceGen loose-availability gap after the
+historical WP1 composition stop. That public semantic recovery does not grant
+private authority or alter any corpus, scoring, answer-isolation, no-retry, or
+freeze rule.
 
 ## Corpus qualification and freeze
 

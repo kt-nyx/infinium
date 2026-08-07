@@ -27,9 +27,10 @@ contract-completion attempt then hard-stopped before candidate inspection.
 ADR-0029 and accepted work `M1/S4.5/PRE-B2` completed through WP5, which
 classified an evaluator `/4` representation gap. ADR-0030 and accepted work
 `M1/S4.5/PRE-B2/V5` govern one separately qualified public `/5` successor.
-WP0 completed, but WP1 hard-stopped on an accepted-model FaceGen/coverage
-composition contradiction requiring owner semantic disposition; WP2-WP4 did
-not start. No candidate or private work is authorized. C2 has not run, Stage D
+WP1's accepted-model FaceGen/coverage composition hard stop remains historical
+evidence. ADR-0031 and WP1R accepted the distinct `/5` successor model and
+mandatory global composition proof; WP1 resumed and WP2-WP4 remain gated. No
+candidate or private work is authorized. C2 has not run, Stage D
 has not started, and Slice 5 remains blocked.
 
 Waves A through D have completed investigations and accepted integrated

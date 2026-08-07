@@ -388,5 +388,9 @@ WP0 completed. WP1 then hard-stopped because the accepted FaceGen
 unknown-loose/archive-supported state requires incomplete loose-asset coverage
 without any legal owning gap or lifecycle. The
 [public representability record](m1-slice4-protocol-5-wp1-representability-hard-stop.md)
-requires owner semantic disposition before WP1 can pass; WP2-WP4 did not
-start.
+preserves that historical stop. The owner accepted the exact
+graceful-degradation disposition in ADR-0031. WP1R accepted distinct successor
+model `infinium.m1-slice4.protocol-5-evidence-contract/1.0.0`, added one exact
+loose-availability gap to both affected branches, and installed a mandatory
+global composition proof. Model `1.2.0` and protocol `/4` remain immutable.
+WP1 may resume against only the successor model; WP2-WP4 remain gated on WP1.

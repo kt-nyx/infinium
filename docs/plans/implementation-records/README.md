@@ -36,8 +36,9 @@ The first public completion attempt is historical hard-stop evidence at
 work `M1/S4.5/PRE-B2` completed through WP5. WP5 classified an evaluator `/4`
 representation gap. ADR-0030 and work `M1/S4.5/PRE-B2/V5/WP0` through WP4 now
 authorize one separately qualified public `/5` successor. WP0 completed, but
-WP1 hard-stopped on an accepted-model FaceGen/coverage composition
-contradiction requiring owner semantic disposition; WP2-WP4 did not start.
+WP1's accepted-model FaceGen/coverage composition hard stop remains historical
+evidence. ADR-0031 and WP1R accepted the distinct `/5` successor model and
+global composition proof; WP1 resumed and WP2-WP4 remain gated.
 Private execution remains unauthorized.
 
 - [M1 Slice 0 — Toolchain, licensing posture, and dependency lock](M1-slice-0.md)
@@ -51,6 +52,6 @@ Private execution remains unauthorized.
   `3693d19563c636cd2879804633ca4ce52448d2c1`; owner semantic disposition
   accepted; public realignment complete at `a98d648`; B2 stopped on a public
   lexical-authority gap; the first public contract attempt hard-stopped;
-  `M1/S4.5/PRE-B2/V5` hard-stopped at WP1 pending owner semantic disposition;
-  candidate work, private access, B2, C2, and Stage D pending separate
+  `M1/S4.5/PRE-B2/V5/WP1R` accepted the distinct successor model and resumed
+  WP1; candidate work, private access, B2, C2, and Stage D pending separate
   authorization.

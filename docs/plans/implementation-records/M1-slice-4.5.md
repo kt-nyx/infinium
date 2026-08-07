@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Held-out evaluation v2 implementation record
 
-Status: Public evaluator `/4` and candidate frozen; Pre-B2 WP1-WP5 complete; protocol `/5` successor hard-stopped at V5/WP1 pending owner semantic disposition
+Status: Public evaluator `/4` and candidate frozen; Pre-B2 WP1-WP5 complete; protocol `/5` WP1R complete and WP1 resumed
 Opened: 2026-08-04
 Plan: `infinium.plan.m1.backend-semantic-proof/3`
 Execution plan: [M1 Slice 4.5](../slices/M1-slice-4.5-held-out-evaluation-v2.md)
@@ -1140,3 +1140,50 @@ No evaluator code, protocol implementation, adapter, scorer, calibration,
 manifest, dependency manifest, freeze, product, candidate, historical
 `/2`-`/4` artifact, private content, B2, C2, Stage D, Slice 5, live call,
 billable call, or push occurred.
+
+## 2026-08-07 protocol `/5` WP1R semantic composition recovery
+
+The owner accepted the graceful-degradation disposition as new recovery work
+`M1/S4.5/PRE-B2/V5/WP1R`, not a correction attempt from WP1's unused budget.
+ADR-0031 narrowly supersedes ADR-0030's unchanged-model clause and accepts
+`infinium.m1-slice4.protocol-5-evidence-contract/1.0.0`. Immutable predecessor
+model `1.2.0`, its contract, schema, hashes, acceptance record, and protocol
+`/4` remain unchanged.
+
+The successor overlay adds only `P5-GAP-LOOSE-AVAILABILITY`, replaces the two
+unknown-loose FaceGen rules with explicit successor IDs, updates their two
+admitted-region gap requirements and one coverage statement, and adds one
+cross-family invariant. Mesh/tint unknown remains false/false with a null
+winner; loose coverage is `+1/+0`; archive effects remain independent; and the
+loose gap aggregates once by the exact population/capability pair.
+
+The new global composition gate materializes the exact overlay, pins every
+predecessor hash, composes all admitted state effects into the ten fixed rows,
+validates gap ownership/result mirroring and atomic boundaries, constructs
+localized/discovery capability events, and enumerates all findings. Its
+accepted totals are 23,660 raw, 110 admitted, 6,180 excluded, 17,370 invalid,
+63 admitted rules composed, 853 successful witnesses, 741 pairwise
+compositions, 65 coverage effects, 47 positive effects, 14 incomplete effects,
+20 gap effects, 19 gap-bearing admitted states, zero contradictions/uncovered/
+overlap/duplicate ownership, and 24/24 rejected mutations.
+
+Windows PowerShell and PowerShell each ran twice. The four machine summaries
+were byte-identical (1,319 bytes; SHA-256
+`ed1a6b2b7e40012319023c2a0d0b1f5106e9afb1791f2980c23f876a404530a8`).
+Composition digest:
+`e61ce15bc9a4595110a55ff235f72afe34d7cdda3255251a88e61645a98ef2f0`.
+Mutation digest:
+`390db153191e62687172f93b80031c0931fcf8850b5b70d401f17b251f01943d`.
+
+Three fresh public read-only audits covered semantic delta/gap ownership,
+cross-family composition, and identity/history/documentation. Their findings
+were integrated before formal parent review. The parent found no unresolved
+material issue; zero parent-review correction passes were used. The historical
+WP1 hard stop was preserved, WP0 Markdown trailing whitespace was repaired,
+and resumed WP1 became eligible. The focused WP1R output commit is the commit
+containing this entry and is reported in the next package record and final
+handoff without rewriting this append-only entry.
+
+No evaluator implementation, product/candidate access or execution, private
+access, corpus work, B2, C2, Stage D, Slice 5, live/billable call, protocol
+`/6`, history rewrite, push, or protected-path change occurred.

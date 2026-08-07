@@ -1,17 +1,18 @@
 # M1 Slice 4.5 — Protocol `/5` successor realignment
 
-Status: Accepted; WP0 complete; hard-stopped at WP1 pending owner semantic disposition
-Owner: Project owner  
-Prepared: 2026-08-07  
-Accepted: 2026-08-07  
-Last reviewed: 2026-08-07  
-Work package: `M1/S4.5/PRE-B2/V5`  
+Status: Accepted; WP0 and WP1R complete; WP1 resumed
+Owner: Project owner
+Prepared: 2026-08-07
+Accepted: 2026-08-07
+Last reviewed: 2026-08-07
+Work package: `M1/S4.5/PRE-B2/V5`
 Parent plan: `infinium.plan.m1.backend-semantic-proof/3`
 
 ## Objective
 
 Qualify and freeze a public protocol `/5` successor whose schema and
-canonicalizer can represent every outcome in accepted semantic model `1.2.0`
+canonicalizer can represent every outcome in accepted successor semantic model
+`infinium.m1-slice4.protocol-5-evidence-contract/1.0.0`
 exactly, including partial-object retention, without inspecting or executing
 the product candidate or accessing private material.
 
@@ -22,17 +23,21 @@ This is evaluator successor qualification, not repair or retry of protocol
 
 - accepted product requirements and taxonomy `0.1.0`;
 - ADR-0027 except decision 15, which ADR-0030 narrowly supersedes;
-- ADR-0028, ADR-0029, and accepted ADR-0030;
+- ADR-0028, ADR-0029, ADR-0030, and ADR-0031;
 - evaluator-private fixture governance v2;
-- accepted model
+- immutable predecessor model
   `infinium.m1-slice4.protocol-4-evidence-contract/1.2.0` at SHA-256
   `09ae312824aa0c859b396fd18fef69b14905c2c6d6f901ce598d3c5ab5970bf5`;
+- accepted `/5` successor model
+  `infinium.m1-slice4.protocol-5-evidence-contract/1.0.0`, derived by the
+  exact ADR-0031 overlay and mandatory global composition gate;
 - historical frozen evaluator `/4`
   `3693d19563c636cd2879804633ca4ce52448d2c1`; and
 - public WP5 classification at
   `b11be1d7da01a6eb73c10bd9e6569d65beb74abc`.
 
-The model is semantic authority. `/4` mechanics may be inspected as historical
+The successor model is `/5` semantic authority. Model `1.2.0` and `/4`
+mechanics may be inspected as historical
 public implementation evidence, but neither `/4` nor the frozen candidate may
 fill a model or contract omission.
 
@@ -60,7 +65,8 @@ fill a model or contract omission.
 - predecessor answer-bearing reviews or product behavior as truth;
 - B2, C2, Stage D, Slice 5, live calls, billable calls, and push;
 - legacy archive and broad parent-directory operations; and
-- protocol `/6` or changes to accepted model `1.2.0`.
+- protocol `/6`, changes to immutable model `1.2.0`, or semantic changes beyond
+  ADR-0031's exact successor delta.
 
 ## Role and isolation model
 
@@ -121,8 +127,8 @@ The defining invariant is:
 > and no extra facts.
 
 The contract covers all 15 fact families, 9 state classes, 10 coverage
-populations, 8 gap rules, 11 atomic boundaries, constructor and normalization
-groups, and higher-order invariants in model `1.2.0`. It is not a one-off
+populations, 9 gap rules, 11 atomic boundaries, constructor and normalization
+groups, and higher-order invariants in successor model `1.0.0`. It is not a one-off
 `RACE/DATA` patch.
 
 Fresh read-only audits must separately cover property optionality/null/omission,
@@ -151,6 +157,31 @@ boundary. No correction pass was attempted because every resolution requires
 a new semantic or authority choice, which is a global hard stop. WP2 through
 WP4 did not start.
 
+### WP1R — Semantic composition recovery and successor-model acceptance
+
+Work ID: `M1/S4.5/PRE-B2/V5/WP1R`
+
+The owner accepted the exact graceful-degradation disposition recorded by
+ADR-0031. WP1R preserves the historical hard stop and immutable model `1.2.0`,
+accepts the distinct successor identity
+`infinium.m1-slice4.protocol-5-evidence-contract/1.0.0`, adds only
+`P5-GAP-LOOSE-AVAILABILITY` and the two explicit successor rule replacements,
+and installs a deterministic global composition gate.
+
+The gate materializes the exact overlay, verifies all predecessor hashes,
+composes every admitted state/rule through coverage and gaps, exercises
+cross-family aggregate witnesses, verifies fixed rows and atomic boundaries,
+and rejects 24 global mutations. It is mandatory for resumed WP1 and WP2-WP4.
+Two runs on Windows PowerShell and two on PowerShell must produce byte-identical
+machine summaries. Three fresh read-only audits cover the semantic delta,
+global composition, and history/documentation consistency. The parent may use
+at most one correction pass.
+
+WP1R status: **accepted**. The owner disposition resolved both unknown-loose
+branches without coercing unknown or coupling archive evidence. Resumed WP1
+consumes only the accepted successor identity. The original WP1 correction
+budget remains unused.
+
 ### WP2 — Deterministic representability proof
 
 Work ID: `M1/S4.5/PRE-B2/V5/WP2`
@@ -167,7 +198,8 @@ The primary validator is
 canonical output remains ignored under `work/`; no expected answer is copied
 from a product or private source.
 
-Expectations come from model `1.2.0` and the WP1 representation contract, not
+Expectations come from successor model `1.0.0`, its mandatory global
+composition proof, and the WP1 representation contract, not
 from evaluator implementation or candidate output. The validator reports exact
 raw, admitted, excluded, invalid/terminal, witness, mutation, uncovered,
 overlap, rejection, and runtime counts. Required Windows PowerShell and
@@ -222,7 +254,7 @@ Correction budget: two parent-review correction passes.
 Work ID: `M1/S4.5/PRE-B2/V5/WP4`
 
 One genuinely fresh reviewer receives only the accepted public semantic
-authority, WP0-WP3 contract and records, `/5` public implementation/tests,
+authority, WP0-WP3 and WP1R contract and records, `/5` public implementation/tests,
 deterministic validation tooling, and exact commands. The reviewer works from
 a clean detached checkout at the exact WP3 commit and independently verifies
 total representation, schema/canonicalizer exactness, absence of invented or
@@ -254,7 +286,8 @@ The immutable public records are:
 ## Parent review after every package
 
 The parent records exact exit-criterion coverage, semantic correctness,
-completeness against accepted model `1.2.0`, diff and protected-path scope,
+completeness against accepted successor model `1.0.0` and its mandatory global
+composition proof, diff and protected-path scope,
 deterministic tests and identities, documentation consistency, findings and
 correction count, and input/output commits with clean Git state. Passing tests
 do not replace semantic and diff review.
@@ -266,7 +299,8 @@ the same material finding survives two correction attempts; a correction
 weakens fact, coverage, gap, mutation, or atomic obligations; a new semantic or
 authority choice is required; candidate/private behavior becomes truth; a
 fixture-specific rule is proposed; a protected/prohibited path is accessed;
-model `1.2.0` would change; protocol `/6` is proposed; or deterministic progress
+immutable model `1.2.0` would change; the successor delta would exceed
+ADR-0031; protocol `/6` is proposed; or deterministic progress
 cannot be demonstrated.
 
 A correction counts as progress only when it reduces uncovered/contradictory
@@ -278,6 +312,8 @@ required deterministic invariant.
 The package-specific checks are additive. WP3 and WP4 run the complete set:
 
 ```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File eng/validate-m1-slice4-protocol5-global-composition.ps1
+pwsh -NoProfile -File eng/validate-m1-slice4-protocol5-global-composition.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File eng/validate-m1-slice4-protocol5-representability.ps1
 pwsh -NoProfile -File eng/validate-m1-slice4-protocol5-representability.ps1
 dotnet restore Infinium.sln --locked-mode --nologo
@@ -297,7 +333,9 @@ git diff --check
 Run `/5` calibration twice into distinct disposable directories and compare
 the declared canonical artifacts byte-for-byte. Run the representability
 validator twice on each supported host and compare its machine summary and
-tracked generated artifacts byte-for-byte. WP4 repeats the checks from the
+tracked generated artifacts byte-for-byte. Run the global composition gate
+twice on each supported PowerShell host and compare its summary byte-for-byte.
+WP4 repeats the checks from the
 exact detached WP3 commit before writing its attestation.
 
 ## Freeze and downstream handoffs

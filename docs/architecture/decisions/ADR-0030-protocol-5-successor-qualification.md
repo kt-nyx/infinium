@@ -1,12 +1,12 @@
 # ADR-0030: Authorize a separately qualified protocol `/5` successor
 
-Status: Accepted  
-Date: 2026-08-07  
-Accepted: 2026-08-07  
-Accepted by: Project owner  
-Last reviewed: 2026-08-07  
-Supersedes: ADR-0027 decision 15 only  
-Superseded by: None
+Status: Accepted; decision 3's unchanged-model clause superseded by ADR-0031
+Date: 2026-08-07
+Accepted: 2026-08-07
+Accepted by: Project owner
+Last reviewed: 2026-08-07
+Supersedes: ADR-0027 decision 15 only
+Superseded by: ADR-0031, only for the active `/5` semantic-model identity and authorized FaceGen loose-availability gap
 
 ## Context
 

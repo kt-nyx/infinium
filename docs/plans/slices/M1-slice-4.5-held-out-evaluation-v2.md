@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Held-out evaluation v2
 
-Status: Accepted; Pre-B2 WP1-WP5 complete; protocol `/5` successor hard-stopped at V5/WP1 pending owner semantic disposition
+Status: Accepted; Pre-B2 WP1-WP5 complete; protocol `/5` WP1R complete and WP1 resumed
 Owner: Project owner
 Prepared: 2026-08-04
 Accepted: 2026-08-04
@@ -411,10 +411,13 @@ protocol `/5` is authorized by this successor.
 Pre-B2 WP1-WP5 completed, and WP5 classified an evaluator `/4` representation
 gap. The project owner then accepted ADR-0030 and the
 [protocol `/5` successor plan](M1-slice-4.5-protocol-5-successor-realignment.md).
-That plan authorizes only public `M1/S4.5/PRE-B2/V5/WP0` through WP4 under
-immutable accepted model `1.2.0`. Protocol `/4` and earlier evidence remain
+That plan authorizes only public `M1/S4.5/PRE-B2/V5/WP0` through WP4. Model
+`1.2.0`, protocol `/4`, and earlier evidence remain
 unchanged. Candidate execution or correction, private access, corpus
 qualification, B2, C2, Stage D, Slice 5, and protocol `/6` remain unauthorized.
-WP0 completed. WP1 hard-stopped on an accepted-model FaceGen/coverage
-composition contradiction requiring owner semantic disposition, so WP2-WP4
-did not start.
+WP1's accepted-model FaceGen/coverage composition hard stop remains historical
+evidence. The owner accepted ADR-0031 and recovery package
+`M1/S4.5/PRE-B2/V5/WP1R`, which established distinct successor model
+`infinium.m1-slice4.protocol-5-evidence-contract/1.0.0`, one exact
+loose-availability gap, and the mandatory global composition proof. WP1
+resumed; WP2-WP4 remain gated on its acceptance.

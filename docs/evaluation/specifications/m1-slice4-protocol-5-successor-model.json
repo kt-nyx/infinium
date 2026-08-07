@@ -1,0 +1,113 @@
+{
+  "schema_id": "infinium.m1-slice4.protocol-5-successor-model.schema/1.0.0",
+  "model_id": "infinium.m1-slice4.protocol-5-evidence-contract",
+  "version": "1.0.0",
+  "status": "accepted",
+  "work_id": "M1/S4.5/PRE-B2/V5/WP1R",
+  "protocol": "/5",
+  "authority": {
+    "adr": "ADR-0031",
+    "contract": "infinium.m1-slice4.protocol-5-evidence-contract/1.0.0"
+  },
+  "base_model": {
+    "path": "docs/evaluation/specifications/m1-slice4-protocol-4-totality-model.json",
+    "contract_path": "docs/evaluation/specifications/m1-slice4-protocol-4-evidence-contract.md",
+    "schema_path": "docs/evaluation/specifications/m1-slice4-protocol-4-totality-model.schema.json",
+    "attestation_path": "docs/evaluation/m1-slice4-protocol-4-totality-review-attestation.md",
+    "model_identity": "infinium.m1-slice4.protocol-4-evidence-contract/1.2.0",
+    "sha256": "09ae312824aa0c859b396fd18fef69b14905c2c6d6f901ce598d3c5ab5970bf5",
+    "contract_sha256": "2f66e3311d2bfac037689b2c3959c65e10d3722a6c52dfb39877354f39699845",
+    "schema_sha256": "dea1801b78ecb28792580bcd080c2b8330e5356d879c57326334aa1548a64d9c",
+    "attestation_sha256": "8278bf30ace7354a035678d176c1d6036e1de6124d2c9e925e56a7b6a10f60d2",
+    "acceptance_commit": "43d54accc1adbafc6ae6d0bb13e8f700461758c4",
+    "relationship": "semantic-successor"
+  },
+  "delta": {
+    "added_gap_rules": [
+      {
+        "rule_id": "P5-GAP-LOOSE-AVAILABILITY",
+        "condition": "An applicable FaceGen path has no loose winner and exhaustive byte-verified authority cannot establish exact loose absence.",
+        "population_template": "face-gen-loose-assets",
+        "missing_capability": "exhaustive-byte-verified-loose-provider-index",
+        "aggregation_key": "population+missing_capability",
+        "affected_count": "exact independently identified affected paths",
+        "scope": "snapshot-and-result",
+        "authorities": ["adr0029", "adr0031", "owner_disposition"]
+      }
+    ],
+    "replaced_publication_rules": [
+      {
+        "family": "face_gen",
+        "replaces_rule_id": "P4-FACEGEN-APPLICABLE-UNKNOWN-ARCHIVE-SUPPORTED",
+        "rule": {
+          "rule_id": "P5-FACEGEN-APPLICABLE-UNKNOWN-ARCHIVE-SUPPORTED",
+          "state_class": "resolved",
+          "when": [
+            {"dimension":"winner_state","operator":"equals","values":["non-deleted"]},
+            {"dimension":"template_decision","operator":"equals","values":["does-not-inherit-traits"]},
+            {"dimension":"race_decision","operator":"equals","values":["resolved-with-facegen-head"]},
+            {"dimension":"asset_availability","operator":"equals","values":["unknown"]},
+            {"dimension":"archive_capability","operator":"equals","values":["supported"]}
+          ],
+          "minimum_layer": "semantic",
+          "prerequisites": ["FaceGen applicability established","no declared loose winner","exhaustive loose absence not established","separate archive decision resolved"],
+          "outcomes": [
+            {"constructor_groups":["FC-FACEGEN-CORE"],"disposition":"exact_value","value_rule":"applicability=applicable."},
+            {"constructor_groups":["FC-FACEGEN-ASSET"],"disposition":"accepted_unknown","value_rule":"Emit normalized path, empty providers, null winner, present=false, exact_absence_known=false; archive resolution never changes loose unknown."}
+          ],
+          "coverage_effect": {"population":"face-gen-loose-assets","denominator":"increment-one","completion":"no-increment","state_effect":"Unknown loose path remains incomplete and is owned by the loose-availability gap.","additional_population_effects":[{"population":"face-gen-archive-assets","denominator":"increment-one","completion":"increment-one","state_effect":"Separate archive obligation completes."}]},
+          "gap_effects": [{"gap_rule_id":"P5-GAP-LOOSE-AVAILABILITY","owner_id":"GO-FACEGEN-UNKNOWN-LOOSE","affected_count":"one applicable path","scope":"snapshot-and-result"}],
+          "atomic_boundary": "AB-ASSET",
+          "authorities": ["adr0028","adr0029","adr0031","owner_disposition"]
+        }
+      },
+      {
+        "family": "face_gen",
+        "replaces_rule_id": "P4-FACEGEN-APPLICABLE-UNKNOWN-ARCHIVE-UNSUPPORTED",
+        "rule": {
+          "rule_id": "P5-FACEGEN-APPLICABLE-UNKNOWN-ARCHIVE-UNSUPPORTED",
+          "state_class": "unsupported",
+          "when": [
+            {"dimension":"winner_state","operator":"equals","values":["non-deleted"]},
+            {"dimension":"template_decision","operator":"equals","values":["does-not-inherit-traits"]},
+            {"dimension":"race_decision","operator":"equals","values":["resolved-with-facegen-head"]},
+            {"dimension":"asset_availability","operator":"equals","values":["unknown"]},
+            {"dimension":"archive_capability","operator":"equals","values":["unsupported"]}
+          ],
+          "minimum_layer": "semantic",
+          "prerequisites": ["FaceGen applicability established","no declared loose winner","exhaustive loose absence not established"],
+          "outcomes": [
+            {"constructor_groups":["FC-FACEGEN-CORE"],"disposition":"exact_value","value_rule":"applicability=applicable."},
+            {"constructor_groups":["FC-FACEGEN-ASSET"],"disposition":"accepted_unknown","value_rule":"Emit normalized path, empty providers, null winner, present=false, exact_absence_known=false; never coerce to absent."}
+          ],
+          "coverage_effect": {"population":"face-gen-loose-assets","denominator":"increment-one","completion":"no-increment","state_effect":"Unknown loose path remains incomplete and is owned by the loose-availability gap.","additional_population_effects":[{"population":"face-gen-archive-assets","denominator":"increment-one","completion":"no-increment","state_effect":"Archive obligation is incomplete and independently gap-bearing."}]},
+          "gap_effects": [
+            {"gap_rule_id":"P5-GAP-LOOSE-AVAILABILITY","owner_id":"GO-FACEGEN-UNKNOWN-LOOSE","affected_count":"one applicable path","scope":"snapshot-and-result"},
+            {"gap_rule_id":"P4-GAP-ARCHIVE","owner_id":"GO-FACEGEN-UNKNOWN-ARCHIVE","affected_count":"one applicable path","scope":"snapshot-and-result"}
+          ],
+          "atomic_boundary": "AB-ASSET",
+          "authorities": ["adr0028","adr0029","adr0031","owner_disposition"]
+        }
+      }
+    ],
+    "updated_admitted_regions": [
+      {"family":"face_gen","constraint_id":"SC-FACEGEN-UNKNOWN-SUPPORTED","required_gap_rule_ids":["P5-GAP-LOOSE-AVAILABILITY"],"authorities":["adr0028","adr0029","adr0031","owner_disposition"]},
+      {"family":"face_gen","constraint_id":"SC-FACEGEN-UNKNOWN-UNSUPPORTED","required_gap_rule_ids":["P5-GAP-LOOSE-AVAILABILITY","P4-GAP-ARCHIVE"],"authorities":["adr0028","adr0029","adr0031","owner_disposition"]}
+    ],
+    "updated_coverage_registry": [
+      {"population":"face-gen-loose-assets","incomplete_state_rule":"Unknown loose availability prevents completion and is owned exactly by P5-GAP-LOOSE-AVAILABILITY; archive authority is independent.","authorities":["adr0028","adr0029","adr0031","owner_disposition"]}
+    ],
+    "added_cross_family_invariants": [
+      {"invariant_id":"INV-FACEGEN-LOOSE-AVAILABILITY","population":"face-gen-loose-assets","gap_rule_id":"P5-GAP-LOOSE-AVAILABILITY","missing_capability":"exhaustive-byte-verified-loose-provider-index","per_path_coverage":"denominator+1,completed+0","gap_affected_count":"denominator-minus-completed","archive_independence":true,"lifecycle":{"zero":"completed","all_incomplete_positive":"unsupported","mixed":"completed_with_gaps","complete_without_gap":"completed"},"result_state":"completed_with_gaps","authorities":["adr0029","adr0031","owner_disposition"]}
+    ],
+    "composition_policy": {
+      "fixed_coverage_rows": ["plugins","npc-records","race-records","placed-reference-records","face-gen-loose-assets","face-gen-archive-assets","unsupported-records","localized-strings","automatic-environment-discovery","taxonomy-subjects"],
+      "coverage_owned_gap_populations": ["face-gen-loose-assets","face-gen-archive-assets","npc-records","race-records","placed-reference-records","localized-strings","automatic-environment-discovery"],
+      "semantic_gap_only_populations": ["face-gen-applicability:template","face-gen-applicability:race","unsupported-fields:*","unsupported-shapes:*"],
+      "complete_with_gap_populations": ["unsupported-records"],
+      "projection_only_families": ["coverage","gaps","result_gaps"],
+      "snapshot_gap_mirroring": true,
+      "atomic_rejection": "no-partial-publication"
+    }
+  }
+}
