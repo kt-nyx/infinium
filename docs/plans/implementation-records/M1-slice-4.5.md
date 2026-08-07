@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Held-out evaluation v2 implementation record
 
-Status: Public evaluator `/4` and candidate frozen; Pre-B2 WP1-WP4 complete; evidence contract/model accepted; WP5 next
+Status: Public evaluator `/4` and candidate frozen; Pre-B2 WP1-WP5 complete; WP5 classified an evaluator `/4` representation gap; hard stop pending owner disposition
 Opened: 2026-08-04
 Plan: `infinium.plan.m1.backend-semantic-proof/3`
 Execution plan: [M1 Slice 4.5](../slices/M1-slice-4.5-held-out-evaluation-v2.md)
@@ -965,3 +965,80 @@ The exact public evidence is
 WP1-WP4 are complete, the evidence contract/model are accepted, and
 `M1/S4.5/PRE-B2/WP5` is next. WP5, private work, B2, C2, Stage D, scoring,
 protocol `/5`, candidate access, push, amend, and squash did not occur.
+
+## 2026-08-07 Pre-B2 WP5 frozen-candidate conformance classification
+
+WP5 began at exact clean commit
+`43d54accc1adbafc6ae6d0bb13e8f700461758c4` on branch
+`codex/m1-slice-4.5-semantic-disposition`. It verified accepted model `1.2.0`
+at SHA-256
+`09ae312824aa0c859b396fd18fef69b14905c2c6d6f901ce598d3c5ab5970bf5`,
+candidate `a98d648bd0adb2751ee0c09828e0227b1583950f`, candidate closeout
+`2fc724af9e6cc483e98e48c2163b533a071671fa`, and frozen evaluator
+`3693d19563c636cd2879804633ca4ce52448d2c1` with protocol `/4` and projection
+`3.0.0`.
+
+Before inspecting candidate material, WP5 prepared the complete answer-free
+fifteen-family, nine-state-class, ten-coverage-population, eight-gap-rule,
+eleven-boundary, and partial-`RACE/DATA` checklist. Candidate source, tests,
+and build output were then inspected only in a genuinely new detached
+worktree at the exact frozen commit. No sub-agent or replacement reviewer was
+used.
+
+The single classification is **evaluator `/4` representation gap**. Accepted
+rule `P4-RACECONTRIB-PARTIAL-DATA` requires common contribution facts and
+`kind=race` to remain while `/face_gen_head` is omitted. Frozen
+`SemanticCanonicalizer.ProjectRace` unconditionally emits the boolean whenever
+the containing race-contribution object is retained. Omitting the object loses
+the common facts, and omitting or mistyping the scalar rejects canonicalization.
+The frozen evaluator and candidate contain the identical canonicalizer blob
+`72f84fb74820796b0501ca7472e50a982091354b`.
+
+The candidate also has product mismatches on that admitted partial state: it
+publishes the structural `DATA` occurrence count, materializes unknown
+`face_gen_head` as `false`, retains the complete resolved race, and constructs
+`race-records` as denominator/completion `1/1` rather than `1/0`. Its override
+chain/common contribution, two generic technical taxonomy assignments,
+taxonomy `1/1` coverage, and singular
+`unsupported-shapes:race:data` / `allowlisted-record-shape-semantics` gap do
+conform. The evaluator gap controls the classification because product changes
+alone cannot express the accepted common-facts-with-scalar-omission result in
+frozen `/4`.
+
+Public reproduction used Windows 11 `10.0.26200` and .NET SDK `10.0.302`.
+Locked restore passed. Release build passed with zero warnings and errors.
+Focused semantic/product/public-protocol verification reproduced 61 passed and
+one expected platform-capability skip. Category results reproduced exactly:
+`M1Unit` 89 passed/1 skipped; `M1Contract` 31 passed; `M1Integration` 33
+passed; `M1Evaluation` 54 passed/9 skipped; `M1Security` 9 passed; and
+`M1Fault` 13 passed. The full suite reproduced 268 passed, 10 expected skips,
+and zero failures. Format and `git diff --check` passed, and the detached
+tracked tree stayed clean.
+
+`Infinium.Bethesda.dll` reproduced at 171,520 bytes and SHA-256
+`017de3a40a2d3b6a268bb7c024f3e053bdcaff5da7622da0fdd14dd3693d2c7d`.
+All 65 evaluation-runtime DLL names, lengths, and individual SHA-256 values
+matched the freeze record. The recorded aggregate
+`aa207221286b8c66d4e432c560b673e4fc5ae78e5d388f7a6bdaac8878985a7a`
+reproduces from the freeze record's listed order; literal
+`StringComparer.Ordinal` sorting produces
+`b0896d02eb7b1b82bfe51e26d82266134aa42221638d43c26edd7824fc6e9396`,
+so the aggregate's ordering description is imprecise despite exact individual
+identities.
+
+The Windows PowerShell dependency-manifest check returned exit code 1 and
+reported a stale manifest. An isolated Windows PowerShell round-trip found an
+LF/CRLF-only difference: the tracked 826-line JSON uses LF, while
+`ConvertTo-Json` plus `Environment.NewLine` emits the same content with CRLF.
+The candidate was not repaired and the required-check failure is retained as
+actual evidence.
+
+The complete comparison, family summary, exact partial-state disposition,
+verification results, limitations, and boundaries are in the
+[WP5 frozen-candidate conformance classification](../../evaluation/m1-slice4-protocol-4-frozen-candidate-conformance-classification.md).
+WP5 is complete, but WP6 is not directly authorized. An explicit
+owner-authorized successor disposition is required. Product realignment would
+also be necessary for the identified product conflicts, but it cannot repair
+the controlling frozen evaluator gap by itself. No product/evaluator repair,
+refreeze, replacement candidate, protocol `/5`, private access, B2, C2, Stage
+D, Slice 5, adaptation, scoring, live call, billable call, or push occurred.

@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Pre-B2 evidence-contract totality closure
 
-Status: Accepted; WP1-WP4 complete; evidence contract/model accepted; `M1/S4.5/PRE-B2/WP5` is next
+Status: Accepted; WP1-WP5 complete; WP5 classified an evaluator `/4` representation gap; hard-stopped pending owner disposition; WP6 is not directly authorized
 Owner: Project owner
 Accepted: 2026-08-05
 Work ID: `M1/S4.5/PRE-B2`
@@ -347,6 +347,36 @@ separate owner-authorized product realignment plan and candidate freeze. An
 evaluator gap remains an unresolved M1 evaluation gap; do not create `/5`.
 Record exact checks, identities, and classification in one focused commit.
 Only documentation-only conformance unblocks WP6 directly.
+
+#### WP5 closeout — 2026-08-07
+
+WP5 fixed its answer-free checklist before product inspection, then used a
+genuinely new detached worktree at exact candidate
+`a98d648bd0adb2751ee0c09828e0227b1583950f`. Artifact identity, all 65 runtime
+DLL identities, the focused 61-pass/1-skip baseline, all six M1 category
+totals, the full 268-pass/10-skip suite, format, and `git diff --check`
+reproduced. The Windows PowerShell dependency-manifest check failed and was not
+repaired; an isolated round-trip diagnostic found only tracked LF versus
+generated CRLF formatting. The freeze
+aggregate reproduces from its listed file order, while literal ordinal sorting
+does not; every individual DLL identity remains exact.
+
+The exact classification is **evaluator `/4` representation gap**. The
+accepted partial `RACE/DATA` rule requires retained common
+`race_contributions` facts with only `face_gen_head` omitted. Frozen
+`SemanticCanonicalizer.ProjectRace` unconditionally emits that boolean for
+every retained race-contribution object; omitting the object also drops its
+required common facts. The candidate additionally publishes the `DATA` count,
+resolved race, and `race-records` completion that the accepted partial rule
+omits or leaves incomplete.
+
+The complete evidence is the
+[frozen-candidate conformance classification](../../evaluation/m1-slice4-protocol-4-frozen-candidate-conformance-classification.md).
+This satisfies the WP5 classification objective and triggers the global stop
+condition. WP6 is not directly authorized; it requires an owner-authorized
+successor disposition. Product realignment alone cannot repair the controlling
+frozen evaluator gap, and protocol `/5`, private B2, C2, Stage D, and Slice 5
+remain unauthorized.
 
 ### WP6 — Public closeout and private-governance handoff
 
