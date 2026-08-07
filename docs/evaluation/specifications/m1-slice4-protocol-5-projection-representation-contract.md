@@ -1,28 +1,33 @@
 # M1 Slice 4 protocol `/5` projection-representation contract
 
-Status: Proposed; WP1 hard-stopped on an accepted-model composition gap
+Status: WP1V hard-stopped; not accepted
 Last reviewed: 2026-08-07
-Work ID: `M1/S4.5/PRE-B2/V5/WP1`
-Contract ID: `infinium.m1-slice4.protocol-5-projection-representation/1.0.0`
+Work ID: `M1/S4.5/PRE-B2/V5/WP1V`
+Contract ID: `infinium.m1-slice4.protocol-5-projection-representation/1.2.0`
 
-This draft is not accepted representation authority. The owner authorized its
-construction, not its acceptance. WP1 found that accepted semantic model
-`1.2.0` contains a FaceGen/coverage composition with no legal coverage-row
-outcome. See the
+The historical `1.0.0` draft at commit `e7d4c74c25814744dd370177e8404fc038152da8`
+recorded the WP1 composition stop. ADR-0031 and accepted WP1R commit
+`cd23a96be50820326db1f1247edb11c3c86f230b` supplied the sole authorized
+semantic recovery. See the
 [WP1 representability hard stop](../m1-slice4-protocol-5-wp1-representability-hard-stop.md).
-No downstream implementation may treat this draft as complete.
+The audit-blocked `1.1.0` working copy was never committed or accepted. This
+`1.2.0` working contract is preserved as failed WP1V evidence. The final
+independent re-review found noncanonical resolved-link witnesses accepted by a
+self-referential ledger/document value check, so it is not representation
+authority for resumed WP1 or later `/5` work.
 
 ## Purpose and authority
 
-This contract drafts the intended public representation boundary between a
+This contract defines the public representation boundary between a
 candidate adapter and protocol `/5` semantic canonicalization. It changes how
 accepted facts are represented, not which facts are true.
 
-Immutable semantic authority is the accepted model
-`infinium.m1-slice4.protocol-4-evidence-contract/1.2.0`, SHA-256
-`09ae312824aa0c859b396fd18fef69b14905c2c6d6f901ce598d3c5ab5970bf5`.
-ADR-0028 and ADR-0029 supply its semantics. ADR-0030 authorizes `/5` solely to
-restore complete representation. Candidate behavior, product output, private
+Semantic authority is accepted successor model
+`infinium.m1-slice4.protocol-5-evidence-contract/1.0.1`, SHA-256
+`3f375adcc59e436a75f14f8e46afcf0286bb202cb05fe256af6b679a726bab66`.
+It inherits immutable model `1.2.0` by exact hash and applies only ADR-0031's
+machine-readable FaceGen loose-availability delta. ADR-0028, ADR-0029,
+ADR-0030, and ADR-0031 supply authority. Candidate behavior, product output, private
 data, private answers, and frozen `/4` behavior are not semantic authority.
 
 The defining invariant is:
@@ -31,24 +36,45 @@ The defining invariant is:
 > that canonicalizes to exactly that outcome, with no missing required facts
 > and no extra facts.
 
-## Proposed artifacts
+## Preserved failed artifacts
 
-- this draft document;
+- this unaccepted working contract;
 - [`m1-slice4-protocol-5-projection-representation-model.json`](m1-slice4-protocol-5-projection-representation-model.json);
 - [`m1-slice4-protocol-5-projection-representation-model.schema.json`](m1-slice4-protocol-5-projection-representation-model.schema.json);
-- [`m1-slice4-protocol-5-projection-document.schema.json`](m1-slice4-protocol-5-projection-document.schema.json); and
-- accepted semantic model `1.2.0`, referenced by exact identity and hash rather
-  than copied or changed.
+- [`m1-slice4-protocol-5-projection-document.schema.json`](m1-slice4-protocol-5-projection-document.schema.json);
+- [`m1-slice4-protocol-5-projection-contract-summary.json`](m1-slice4-protocol-5-projection-contract-summary.json),
+  the deterministic but false-accepting summary at SHA-256
+  `920fe2ef10f8c066dc81c20b2e93e00d3166591b10f3580e3f71886174ee58ba`;
+- [`m1-slice4-protocol-5-rule-coverage-ledger.json`](m1-slice4-protocol-5-rule-coverage-ledger.json),
+  the failed 77-rule WP1V proof ledger at SHA-256
+  `8d88061dbcd7d206533c2ed245861c3c823f6576cd9ade727050d75bb8e22904`; and
+- accepted successor semantic model `1.0.1` and its mandatory global-composition
+  summary, referenced by exact identity and hash.
 
-The draft machine model inventories every accepted family, state class,
+The machine model inventories every accepted family, state class,
 constructor group, coverage population, gap rule, atomic boundary, and
-higher-order invariant intended for the `/5` document. It does not supply the
-missing legal coverage outcome identified by the hard stop. The JSON Schema
-validates lexical and structural shape. The
-WP2 validator enforces cross-property, constructor, arithmetic, and exact-fact
-rules that JSON Schema cannot express alone.
+higher-order invariant intended for the `/5` document. It includes ADR-0031's
+exact loose gap and the mandatory global-composition invariant. The JSON Schema
+validates lexical and structural shape. The deterministic WP1 validator
+enforces cross-property, constructor, arithmetic, provenance, and exact-template
+rules that JSON Schema cannot express alone. The final WP1V review proved that
+the current validator does not enforce exact canonical link values and instead
+accepts four resolved-link witnesses with 72 placeholder properties. WP1V did
+not close every rule. WP2 may not consume this boundary and remains unstarted.
+See the
+[WP1V hard-stop record](../m1-slice4-protocol-5-wp1v-proof-closure-hard-stop.md).
 
 ## Projection document
+
+A document binds protocol `infinium.evaluator-v2/5`, projection
+`infinium.evaluator-v2.slice4-semantic-projection/5.1.0`, document schema
+`infinium.evaluator-v2.slice4-projection-document.schema/v5.2`, representation
+model `infinium.m1-slice4.protocol-5-projection-representation/1.2.0`, and the
+exact successor semantic-model identity and hash above. Any mismatch rejects
+before facts are constructed.
+
+The representation-model SHA-256 is
+`fe5261983b7328fbe6bc092885cb9183c9a9da9ab80e63508706a6a4398ac896`.
 
 A projection document has exact identities, one accepted top-level result
 state, and a `families` object containing all fifteen accepted family
@@ -56,14 +82,24 @@ containers. Every family container is always present as an array. An empty
 array means that the accepted outcome has no object in that family; it does
 not mean unknown, unsupported, null, or failed.
 
+A published-snapshot result requires exactly ten coverage objects. A
+`P4-RESULT-NO-SNAPSHOT` result requires every snapshot family, including
+`coverage` and `gaps`, to be empty; only independently established envelope
+gaps may remain in `result_gaps`. These are schema conditions, not adapter
+conventions.
+
 Each family object contains:
 
 - `object_id`: the already canonical, family-local semantic identity; and
+- `rule_ids`: the unique ordinal set of accepted publication rules that own
+  properties in the object;
+- `constructor_groups`: the unique selected accepted constructor groups; and
 - `properties`: one or more independently authorable canonical properties.
 
 Each property contains:
 
 - `property_id`: a canonical relative path inside the object;
+- `source_rule_id`: the one accepted rule that authorizes this property;
 - `fact_type`: one accepted model fact type;
 - `value_type`: `string`, `integer`, `number`, `boolean`, or `null`; and
 - `value`: exactly the matching JSON primitive.
@@ -79,8 +115,23 @@ No input-supplied absolute fact ID exists. This prevents a property from
 escaping its declared family or object. `object_id` and `property_id` cannot
 contain empty path segments, `.` or `..` segments, backslashes, control
 characters, or percent-encoded path separators. Percent escapes must be
-uppercase and must represent UTF-8 bytes. The canonicalizer rejects a duplicate
-object ID, duplicate property ID within an object, or duplicate final fact ID.
+uppercase and must encode either an RFC 3986 reserved ASCII byte or a complete
+valid non-ASCII UTF-8 sequence. They cannot encode `/`, `\`, a control byte,
+or an unreserved ASCII byte that has a literal canonical form. Thus `:` in a
+semantic segment is `%3A`, while `%2F`, `%5C`, and `%41` reject. No semantic
+cardinality ceiling is imposed on family arrays, properties, strings, or paths;
+implementation resource limits are outside this contract and cannot make an
+otherwise admitted outcome unrepresentable. The canonicalizer rejects a
+duplicate object ID, duplicate property ID within an object, or duplicate final
+fact ID.
+
+For every object, `rule_ids` equals exactly the unique ordinal set of its
+properties' `source_rule_id` values. A rule cannot authorize a property outside
+its declared family, constructor, evidence layer, or prerequisites. FaceGen
+mesh and tint paths are independently owned: each asset property carries its
+own path rule. Common FaceGen/core properties use the ordinal-first applicable
+asset path rule (mesh before tint), so mixed outcomes require neither a
+duplicate assessment nor invented provenance.
 
 Canonicalization processes family names in the model's fixed order, sorts
 objects and properties by `StringComparer.Ordinal`, constructs final fact IDs,
@@ -110,15 +161,14 @@ fact type, or non-null typed value. Null is legal only as a property whose
 
 ## Container and constructor rules
 
-The machine model would be normative for the complete list only after WP1
-acceptance. The following summarizes
+The machine model is normative for the complete list. The following summarizes
 the family-level object boundary.
 
 | Family | Object presence | Required base when present | Conditional groups |
 |---|---|---|---|
 | `result` | Exactly one `root` object | `FC-RESULT-STATE` | None |
 | `plugins` | One object per admitted plugin | `FC-PLUGINS-CORE` | `FC-PLUGINS-MASTERS`, including authoritative empty |
-| `override_chains` | One per admitted chain | identity, contributions, winner | None after structural admission; malformed framing rejects |
+| `override_chains` | One per admitted chain | identity, one-or-more ordered contributions, winner | winner must match exactly one contribution; malformed framing rejects |
 | `npc_contributions` | One per admitted contribution, including partial | `FC-NPCCONTRIB-COMMON` | scalars and independent link constructors |
 | `race_contributions` | One per admitted contribution, including partial | `FC-RACECONTRIB-COMMON` | `FC-RACECONTRIB-FACEGEN` only after exact decode |
 | `placed_reference_contributions` | One per admitted contribution, including partial | `FC-REFRCONTRIB-COMMON` | independent links and atomic placement |
@@ -162,7 +212,7 @@ All nine accepted state classes map as follows:
 - `terminal-rejection`: reject the document or snapshot under the exact atomic
   boundary; never publish a weakened snapshot.
 
-This mapping applies to all 77 accepted publication rules, not only the partial
+This mapping applies to all 77 accepted successor publication rules, not only the partial
 `RACE/DATA` state.
 
 ## Exact partial `RACE/DATA` representation
@@ -199,10 +249,21 @@ changes the mechanism.
   `completed_with_gaps`.
 - A wholly unsupported positive row is `unsupported` with completion zero.
 - Later-layer failure never increments completion.
-- Gaps use only the eight accepted model rules and their exact population /
+- Gaps use only the nine accepted model rules and their exact population /
   missing-capability pairs.
 - Gap counts are positive sums over unique owners. A fact obligation cannot
   create the same owner twice.
+- Each applicable mesh or tint path whose loose availability remains unknown
+  contributes loose coverage `+1/+0` and exactly one
+  `P5-GAP-LOOSE-AVAILABILITY` member at
+  `face-gen-loose-assets` /
+  `exhaustive-byte-verified-loose-provider-index`. The aggregate affected count
+  equals loose denominator minus completion, without mesh/tint double count.
+- Archive coverage is independent: a resolved archive decision is `+1/+1`; an
+  unresolved decision is `+1/+0` with its separate `P4-GAP-ARCHIVE`.
+- A positive all-unknown loose row is `unsupported`, a mixed row is
+  `completed_with_gaps`, and a complete gap-free row is `completed`. Unknown
+  is never converted to absence, presence, failure, skipping, or completion.
 - With a snapshot, `gaps` is an exact multiset-equivalent copy in
   `result_gaps`. Without a snapshot, only independently established envelope
   gaps may appear in `result_gaps`.
@@ -239,8 +300,9 @@ read expected or private data.
 
 ## Acceptance and later changes
 
-WP2 must prove every admitted model state has at least one exact witness and
+WP2 must prove every admitted successor-model state has at least one exact witness and
 that every invalid or mutated shape rejects or produces the exact different
 fact set. WP3 may implement this contract but cannot weaken or silently amend
-it. A required semantic choice or change to accepted model `1.2.0` stops for
-the owner.
+it. The WP1R global-composition gate is mandatory and may not be weakened. A
+required semantic choice, a change to immutable model `1.2.0`, or a delta
+beyond ADR-0031 stops for the owner.

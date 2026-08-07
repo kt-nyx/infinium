@@ -9,9 +9,9 @@
     "authority", "base_model", "delta"
   ],
   "properties": {
-    "schema_id": { "const": "infinium.m1-slice4.protocol-5-successor-model.schema/1.0.0" },
+    "schema_id": { "const": "infinium.m1-slice4.protocol-5-successor-model.schema/1.0.1" },
     "model_id": { "const": "infinium.m1-slice4.protocol-5-evidence-contract" },
-    "version": { "const": "1.0.0" },
+    "version": { "const": "1.0.1" },
     "status": { "const": "accepted" },
     "work_id": { "const": "M1/S4.5/PRE-B2/V5/WP1R" },
     "protocol": { "const": "/5" },
@@ -20,7 +20,7 @@
       "required": ["adr", "contract"],
       "properties": {
         "adr": { "const": "ADR-0031" },
-        "contract": { "const": "infinium.m1-slice4.protocol-5-evidence-contract/1.0.0" }
+        "contract": { "const": "infinium.m1-slice4.protocol-5-evidence-contract/1.0.1" }
       }
     },
     "base_model": {
@@ -59,6 +59,6 @@
     "regionUpdate": { "type": "object", "required": ["family", "constraint_id", "required_gap_rule_ids", "authorities"], "additionalProperties": false, "properties": { "family": { "const": "face_gen" }, "constraint_id": { "enum": ["SC-FACEGEN-UNKNOWN-SUPPORTED", "SC-FACEGEN-UNKNOWN-UNSUPPORTED"] }, "required_gap_rule_ids": { "type": "array", "contains": { "const": "P5-GAP-LOOSE-AVAILABILITY" }, "uniqueItems": true }, "authorities": { "type": "array", "contains": { "const": "adr0031" } } } },
     "coverageUpdate": { "type": "object", "required": ["population", "incomplete_state_rule", "authorities"], "additionalProperties": false, "properties": { "population": { "const": "face-gen-loose-assets" }, "incomplete_state_rule": { "type": "string" }, "authorities": { "type": "array", "contains": { "const": "adr0031" } } } },
     "invariant": { "type": "object", "required": ["invariant_id", "population", "gap_rule_id", "missing_capability", "per_path_coverage", "gap_affected_count", "archive_independence", "lifecycle", "result_state", "authorities"], "additionalProperties": false, "properties": { "invariant_id": { "const": "INV-FACEGEN-LOOSE-AVAILABILITY" }, "population": { "const": "face-gen-loose-assets" }, "gap_rule_id": { "const": "P5-GAP-LOOSE-AVAILABILITY" }, "missing_capability": { "const": "exhaustive-byte-verified-loose-provider-index" }, "per_path_coverage": { "const": "denominator+1,completed+0" }, "gap_affected_count": { "const": "denominator-minus-completed" }, "archive_independence": { "const": true }, "lifecycle": { "type": "object" }, "result_state": { "const": "completed_with_gaps" }, "authorities": { "type": "array", "contains": { "const": "adr0031" } } } },
-    "compositionPolicy": { "type": "object", "required": ["fixed_coverage_rows", "coverage_owned_gap_populations", "semantic_gap_only_populations", "complete_with_gap_populations", "projection_only_families", "snapshot_gap_mirroring", "atomic_rejection"], "additionalProperties": false, "properties": { "fixed_coverage_rows": { "type": "array", "minItems": 10, "maxItems": 10, "uniqueItems": true }, "coverage_owned_gap_populations": { "type": "array", "uniqueItems": true }, "semantic_gap_only_populations": { "type": "array", "uniqueItems": true }, "complete_with_gap_populations": { "type": "array", "uniqueItems": true }, "projection_only_families": { "type": "array", "uniqueItems": true }, "snapshot_gap_mirroring": { "const": true }, "atomic_rejection": { "const": "no-partial-publication" } } }
+    "compositionPolicy": { "type": "object", "required": ["fixed_coverage_rows", "coverage_owned_gap_populations", "semantic_gap_only_populations", "complete_with_gap_populations", "projection_only_families", "snapshot_gap_mirroring", "atomic_rejection"], "additionalProperties": false, "properties": { "fixed_coverage_rows": { "type": "array", "minItems": 10, "maxItems": 10, "uniqueItems": true, "prefixItems": [{"const":"plugins"},{"const":"npc-records"},{"const":"race-records"},{"const":"placed-reference-records"},{"const":"unsupported-records"},{"const":"face-gen-loose-assets"},{"const":"face-gen-archive-assets"},{"const":"localized-strings"},{"const":"automatic-environment-discovery"},{"const":"taxonomy-subjects"}], "items": false }, "coverage_owned_gap_populations": { "type": "array", "uniqueItems": true }, "semantic_gap_only_populations": { "type": "array", "uniqueItems": true }, "complete_with_gap_populations": { "type": "array", "uniqueItems": true }, "projection_only_families": { "type": "array", "minItems": 3, "maxItems": 3, "prefixItems": [{"const":"coverage"},{"const":"gaps"},{"const":"result_gaps"}], "items": false }, "snapshot_gap_mirroring": { "const": true }, "atomic_rejection": { "const": "no-partial-publication" } } }
   }
 }

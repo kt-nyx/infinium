@@ -69,7 +69,7 @@ rules remain authoritative.
 ADR-0031 narrowly supersedes ADR-0030's unchanged-model requirement after the
 WP1 global-composition proof found one contradiction. It preserves model
 `1.2.0` and `/4` as immutable history, accepts the distinct `/5` successor
-model `1.0.0`, and adds only exact ownership for unknown FaceGen loose assets.
+model `1.0.1`, and adds only exact ownership for unknown FaceGen loose assets.
 ADR-0008 through
 ADR-0011 accept the Wave B integration and semantic
 boundaries, and ADR-0012 accepts the revised Nexus interface/risk boundary,

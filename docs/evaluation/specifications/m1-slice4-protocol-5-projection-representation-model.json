@@ -1,22 +1,45 @@
 {
-  "schema_id": "infinium.m1-slice4.protocol-5-projection-representation-model.schema/v1",
+  "schema_id": "infinium.m1-slice4.protocol-5-projection-representation-model.schema/v3",
   "model_id": "infinium.m1-slice4.protocol-5-projection-representation",
-  "version": "1.0.0",
-  "status": "proposed-blocked",
-  "work_id": "M1/S4.5/PRE-B2/V5/WP1",
+  "version": "1.2.0",
+  "status": "accepted",
+  "work_id": "M1/S4.5/PRE-B2/V5/WP1V",
   "semantic_authority": {
-    "model_id": "infinium.m1-slice4.protocol-4-evidence-contract",
-    "version": "1.2.0",
-    "sha256": "09ae312824aa0c859b396fd18fef69b14905c2c6d6f901ce598d3c5ab5970bf5",
-    "path": "docs/evaluation/specifications/m1-slice4-protocol-4-totality-model.json",
+    "model_id": "infinium.m1-slice4.protocol-5-evidence-contract",
+    "version": "1.0.1",
+    "sha256": "3f375adcc59e436a75f14f8e46afcf0286bb202cb05fe256af6b679a726bab66",
+    "path": "docs/evaluation/specifications/m1-slice4-protocol-5-successor-model.json",
     "immutable": true
+  },
+  "composition_authority": {
+    "schema_id": "infinium.m1-slice4.protocol-5-global-composition-summary/1.2.0",
+    "path": "docs/evaluation/specifications/m1-slice4-protocol-5-global-composition-summary.json",
+    "sha256": "f137c39302db01a4d348f4ca5a8b9626cc38e604012d353fe4c25cc2e9e38b95",
+    "composition_digest": "cbea94aaed2dc20a329187a4ace76a2679605530613bdf647aac9018232795ee",
+    "mandatory": true
+  },
+  "rule_ledger_authority": {
+    "schema_id": "infinium.m1-slice4.protocol-5-rule-coverage-ledger/1.0.0",
+    "path": "docs/evaluation/specifications/m1-slice4-protocol-5-rule-coverage-ledger.json",
+    "sha256": "8d88061dbcd7d206533c2ed245861c3c823f6576cd9ade727050d75bb8e22904",
+    "rules": 77,
+    "mandatory": true
   },
   "protocol": {
     "protocol_id": "infinium.evaluator-v2/5",
     "projection_id": "infinium.evaluator-v2.slice4-semantic-projection",
-    "projection_version": "4.0.0",
-    "document_schema_id": "infinium.evaluator-v2.slice4-projection-document.schema/v5",
+    "projection_version": "5.1.0",
+    "document_schema_id": "infinium.evaluator-v2.slice4-projection-document.schema/v5.2",
     "document_schema_path": "docs/evaluation/specifications/m1-slice4-protocol-5-projection-document.schema.json"
+  },
+  "projection_object_policy": {
+    "rule_provenance": "exact-unique-ordinal-property-source-rule-set",
+    "facegen_common_owner": "mesh-before-tint-ordinal-first-applicable-path-rule",
+    "semantic_cardinality_ceiling": "none",
+    "override_contributions": "one-or-more-with-exactly-one-matching-winner",
+    "canonical_path_encoding": "literal-unreserved-ascii-or-uppercase-reserved-ascii-or-complete-uppercase-nonascii-utf8",
+    "published_coverage_rows": 10,
+    "no_snapshot_snapshot_families": "all-empty"
   },
   "source_inventory": {
     "families": 15,
@@ -26,7 +49,7 @@
     "constructor_groups": 24,
     "normalization_rules": 10,
     "atomic_boundaries": 11,
-    "gap_rules": 8,
+    "gap_rules": 9,
     "coverage_populations": 10,
     "admitted_states": 110
   },
@@ -134,7 +157,7 @@
       "source_rules": ["P4-PLUGINS-NOT-OBSERVED", "P4-PLUGINS-ADMITTED", "P4-PLUGINS-NO-MASTERS", "P4-PLUGINS-INVALID"],
       "required_base_groups": ["FC-PLUGINS-CORE"],
       "conditional_groups": ["FC-PLUGINS-MASTERS"],
-      "atomic_groups": ["AB-FORMKEY"],
+      "atomic_groups": ["AB-FORMKEY", "AB-RESULT"],
       "allowed_fact_types": ["plugin"],
       "coverage_populations": ["plugins"],
       "gap_rules": []
@@ -147,9 +170,9 @@
       "source_rules": ["P4-OVERRIDE-NOT-OBSERVED", "P4-OVERRIDE-PARTIAL", "P4-OVERRIDE-RESOLVED", "P4-OVERRIDE-UNSUPPORTED-FAMILY", "P4-OVERRIDE-MALFORMED"],
       "required_base_groups": ["FC-OVERRIDE-IDENTITY", "FC-OVERRIDE-CONTRIBUTIONS", "FC-OVERRIDE-WINNER"],
       "conditional_groups": [],
-      "atomic_groups": ["AB-RECORD-FRAMING", "AB-FORMKEY"],
+      "atomic_groups": ["AB-RECORD-FRAMING", "AB-FORMKEY", "AB-FACTSET"],
       "allowed_fact_types": ["record_identity", "form_key", "contribution", "winner"],
-      "coverage_populations": [],
+      "coverage_populations": ["unsupported-records"],
       "gap_rules": ["P4-GAP-UNSUPPORTED-RECORD", "P4-GAP-UNSUPPORTED-SHAPE"]
     },
     {
@@ -173,7 +196,7 @@
       "source_rules": ["P4-RACECONTRIB-NOT-OBSERVED", "P4-RACECONTRIB-PARTIAL-DATA", "P4-RACECONTRIB-DECODED", "P4-RACECONTRIB-UNSUPPORTED-FIELD", "P4-RACECONTRIB-INVALID"],
       "required_base_groups": ["FC-RACECONTRIB-COMMON"],
       "conditional_groups": ["FC-RACECONTRIB-FACEGEN"],
-      "atomic_groups": ["AB-RECORD-FRAMING", "AB-TYPED-VALUE"],
+      "atomic_groups": ["AB-RECORD-FRAMING", "AB-TYPED-VALUE", "AB-FACTSET"],
       "allowed_fact_types": ["record_identity", "form_key", "contribution", "race"],
       "coverage_populations": ["race-records"],
       "gap_rules": ["P4-GAP-UNSUPPORTED-FIELD", "P4-GAP-UNSUPPORTED-SHAPE"]
@@ -199,7 +222,7 @@
       "source_rules": ["P4-FIELDS-NOT-OBSERVED", "P4-FIELDS-STRUCTURAL-ONLY", "P4-FIELDS-OBSERVED", "P4-FIELDS-UNSUPPORTED", "P4-FIELDS-INVALID"],
       "required_base_groups": ["FC-ALLOWLISTED-FIELD"],
       "conditional_groups": [],
-      "atomic_groups": ["AB-FACTSET"],
+      "atomic_groups": ["AB-FACTSET", "AB-GAP"],
       "allowed_fact_types": ["field"],
       "coverage_populations": [],
       "gap_rules": ["P4-GAP-UNSUPPORTED-FIELD", "P4-GAP-UNSUPPORTED-SHAPE"]
@@ -214,7 +237,7 @@
       "conditional_groups": [],
       "atomic_groups": ["AB-FACTSET", "AB-LINK"],
       "allowed_fact_types": ["record_identity", "form_key", "contribution", "npc", "link"],
-      "coverage_populations": [],
+      "coverage_populations": ["npc-records"],
       "gap_rules": []
     },
     {
@@ -225,9 +248,9 @@
       "source_rules": ["P4-RACES-NOT-OBSERVED", "P4-RACES-PARTIAL-DATA", "P4-RACES-RESOLVED", "P4-RACES-INVALID"],
       "required_base_groups": ["FC-RACES-RESOLVED"],
       "conditional_groups": [],
-      "atomic_groups": ["AB-FACTSET", "AB-TYPED-VALUE"],
+      "atomic_groups": ["AB-FACTSET", "AB-TYPED-VALUE", "AB-RECORD-FRAMING"],
       "allowed_fact_types": ["record_identity", "form_key", "contribution", "race"],
-      "coverage_populations": [],
+      "coverage_populations": ["race-records"],
       "gap_rules": []
     },
     {
@@ -240,7 +263,7 @@
       "conditional_groups": [],
       "atomic_groups": ["AB-FACTSET", "AB-LINK", "AB-PLACEMENT"],
       "allowed_fact_types": ["record_identity", "form_key", "contribution", "reference", "link", "ownership", "placement"],
-      "coverage_populations": [],
+      "coverage_populations": ["placed-reference-records"],
       "gap_rules": []
     },
     {
@@ -248,13 +271,13 @@
       "container_presence": "required",
       "empty_semantics": "No winning NPC assessment obligation.",
       "object_presence": "Exactly one assessment per winning NPC with core and two atomic asset groups.",
-      "source_rules": ["P4-FACEGEN-NOT-OBSERVED", "P4-FACEGEN-DELETED", "P4-FACEGEN-TEMPLATE-UNKNOWN", "P4-FACEGEN-TEMPLATE-TRAITS", "P4-FACEGEN-RACE-NULL", "P4-FACEGEN-RACE-UNRESOLVED", "P4-FACEGEN-RACE-NO-HEAD", "P4-FACEGEN-APPLICABLE-PRESENT", "P4-FACEGEN-APPLICABLE-ABSENT-ARCHIVE-SUPPORTED", "P4-FACEGEN-APPLICABLE-ABSENT-ARCHIVE-UNSUPPORTED", "P4-FACEGEN-APPLICABLE-UNKNOWN-ARCHIVE-SUPPORTED", "P4-FACEGEN-APPLICABLE-UNKNOWN-ARCHIVE-UNSUPPORTED", "P4-FACEGEN-INVALID"],
+      "source_rules": ["P4-FACEGEN-NOT-OBSERVED", "P4-FACEGEN-DELETED", "P4-FACEGEN-TEMPLATE-UNKNOWN", "P4-FACEGEN-TEMPLATE-TRAITS", "P4-FACEGEN-RACE-NULL", "P4-FACEGEN-RACE-UNRESOLVED", "P4-FACEGEN-RACE-NO-HEAD", "P4-FACEGEN-APPLICABLE-PRESENT", "P4-FACEGEN-APPLICABLE-ABSENT-ARCHIVE-SUPPORTED", "P4-FACEGEN-APPLICABLE-ABSENT-ARCHIVE-UNSUPPORTED", "P5-FACEGEN-APPLICABLE-UNKNOWN-ARCHIVE-SUPPORTED", "P5-FACEGEN-APPLICABLE-UNKNOWN-ARCHIVE-UNSUPPORTED", "P4-FACEGEN-INVALID"],
       "required_base_groups": ["FC-FACEGEN-CORE", "FC-FACEGEN-ASSET"],
       "conditional_groups": [],
       "atomic_groups": ["AB-ASSET"],
       "allowed_fact_types": ["face_gen"],
       "coverage_populations": ["face-gen-loose-assets", "face-gen-archive-assets"],
-      "gap_rules": ["P4-GAP-ARCHIVE", "P4-GAP-TEMPLATE", "P4-GAP-RACE"]
+      "gap_rules": ["P4-GAP-ARCHIVE", "P4-GAP-TEMPLATE", "P4-GAP-RACE", "P5-GAP-LOOSE-AVAILABILITY"]
     },
     {
       "family": "taxonomy",
@@ -277,7 +300,7 @@
       "source_rules": ["P4-COVERAGE-NO-SNAPSHOT", "P4-COVERAGE-ZERO", "P4-COVERAGE-COMPLETE", "P4-COVERAGE-INCOMPLETE", "P4-COVERAGE-INVALID"],
       "required_base_groups": ["FC-COVERAGE-ROW"],
       "conditional_groups": [],
-      "atomic_groups": ["AB-COVERAGE"],
+      "atomic_groups": ["AB-COVERAGE", "AB-RESULT"],
       "allowed_fact_types": ["coverage"],
       "coverage_populations": ["plugins", "npc-records", "race-records", "placed-reference-records", "unsupported-records", "face-gen-loose-assets", "face-gen-archive-assets", "localized-strings", "automatic-environment-discovery", "taxonomy-subjects"],
       "gap_rules": []
@@ -293,7 +316,7 @@
       "atomic_groups": ["AB-GAP"],
       "allowed_fact_types": ["gap"],
       "coverage_populations": [],
-      "gap_rules": ["P4-GAP-UNSUPPORTED-RECORD", "P4-GAP-UNSUPPORTED-FIELD", "P4-GAP-UNSUPPORTED-SHAPE", "P4-GAP-LOCALIZED", "P4-GAP-ARCHIVE", "P4-GAP-DISCOVERY", "P4-GAP-TEMPLATE", "P4-GAP-RACE"]
+      "gap_rules": ["P4-GAP-UNSUPPORTED-RECORD", "P4-GAP-UNSUPPORTED-FIELD", "P4-GAP-UNSUPPORTED-SHAPE", "P4-GAP-LOCALIZED", "P4-GAP-ARCHIVE", "P4-GAP-DISCOVERY", "P4-GAP-TEMPLATE", "P4-GAP-RACE", "P5-GAP-LOOSE-AVAILABILITY"]
     },
     {
       "family": "result_gaps",
@@ -306,7 +329,7 @@
       "atomic_groups": ["AB-GAP", "AB-RESULT"],
       "allowed_fact_types": ["gap"],
       "coverage_populations": [],
-      "gap_rules": ["P4-GAP-UNSUPPORTED-RECORD", "P4-GAP-UNSUPPORTED-FIELD", "P4-GAP-UNSUPPORTED-SHAPE", "P4-GAP-LOCALIZED", "P4-GAP-ARCHIVE", "P4-GAP-DISCOVERY", "P4-GAP-TEMPLATE", "P4-GAP-RACE"]
+      "gap_rules": ["P4-GAP-UNSUPPORTED-RECORD", "P4-GAP-UNSUPPORTED-FIELD", "P4-GAP-UNSUPPORTED-SHAPE", "P4-GAP-LOCALIZED", "P4-GAP-ARCHIVE", "P4-GAP-DISCOVERY", "P4-GAP-TEMPLATE", "P4-GAP-RACE", "P5-GAP-LOOSE-AVAILABILITY"]
     }
   ],
   "constructor_bindings": [
@@ -314,7 +337,7 @@
     { "constructor_group": "FC-PLUGINS-CORE", "family": "plugins", "presence": "required-base", "source_templates": "exact-constructor-group-from-semantic-authority", "absence_semantics": "Object absent when plugin not admitted.", "null_semantics": "Null forbidden.", "completion": "all-or-nothing" },
     { "constructor_group": "FC-PLUGINS-MASTERS", "family": "plugins", "presence": "repeatable-conditional", "source_templates": "exact-constructor-group-from-semantic-authority", "absence_semantics": "Selected empty sequence emits no child facts; unavailable plugin rejects before object.", "null_semantics": "Null forbidden.", "completion": "repeatable-zero-or-more" },
     { "constructor_group": "FC-OVERRIDE-IDENTITY", "family": "override_chains", "presence": "required-base", "source_templates": "exact-constructor-group-from-semantic-authority", "absence_semantics": "No admitted chain object.", "null_semantics": "Null forbidden.", "completion": "all-or-nothing" },
-    { "constructor_group": "FC-OVERRIDE-CONTRIBUTIONS", "family": "override_chains", "presence": "required-base", "source_templates": "exact-constructor-group-from-semantic-authority", "absence_semantics": "No admitted chain object.", "null_semantics": "Null forbidden.", "completion": "repeatable-zero-or-more" },
+    { "constructor_group": "FC-OVERRIDE-CONTRIBUTIONS", "family": "override_chains", "presence": "required-base", "source_templates": "exact-constructor-group-from-semantic-authority", "absence_semantics": "No admitted chain object.", "null_semantics": "Null forbidden.", "completion": "repeatable-one-or-more" },
     { "constructor_group": "FC-OVERRIDE-WINNER", "family": "override_chains", "presence": "required-base", "source_templates": "exact-constructor-group-from-semantic-authority", "absence_semantics": "Ambiguous or missing winner rejects.", "null_semantics": "Null forbidden.", "completion": "all-or-nothing" },
     { "constructor_group": "FC-NPCCONTRIB-COMMON", "family": "npc_contributions", "presence": "required-base", "source_templates": "exact-constructor-group-from-semantic-authority", "absence_semantics": "No admitted contribution object.", "null_semantics": "Null forbidden.", "completion": "all-or-nothing" },
     { "constructor_group": "FC-NPCCONTRIB-SCALARS", "family": "npc_contributions", "presence": "conditional", "source_templates": "exact-constructor-group-from-semantic-authority", "absence_semantics": "Decoded scalar group unavailable; retain common object.", "null_semantics": "AIDT absence is boolean false, not typed null.", "completion": "all-or-nothing" },
@@ -349,8 +372,8 @@
   "invariants": [
     {
       "invariant_id": "V5-INV-EXACT-WITNESS",
-      "source": "ADR-0030 defining invariant",
-      "requirement": "Every one of the 110 accepted admitted states has at least one schema-valid document whose canonical facts exactly equal the semantic model outcome."
+      "source": "ADR-0030, ADR-0031, and successor semantic model defining invariant",
+      "requirement": "Every one of the 110 accepted successor-model admitted states has at least one schema-valid document whose canonical facts, coverage, and gaps exactly equal the semantic outcome."
     },
     {
       "invariant_id": "V5-INV-CONSTRUCTOR-INDEPENDENCE",
@@ -364,13 +387,18 @@
     },
     {
       "invariant_id": "V5-INV-COVERAGE-REGISTRY",
-      "source": "ADR-0028 fixed coverage registry",
-      "requirement": "Every snapshot has exactly ten unique rows; zero is 0/0/completed; completed never exceeds denominator; later failure never increments completion."
+      "source": "ADR-0028 fixed coverage registry and ADR-0031 loose lifecycle",
+      "requirement": "Every snapshot has exactly ten unique rows; zero is 0/0/completed; completed never exceeds denominator; later failure never increments completion; positive loose 0/D is unsupported, mixed loose completion is completed_with_gaps, and exact loose completion without its gap is completed."
     },
     {
       "invariant_id": "V5-INV-GAP-OWNERSHIP",
-      "source": "semantic model gap rules and ADR-0029",
-      "requirement": "Only eight accepted gap rules may emit; each positive affected owner contributes once; snapshot gaps mirror exactly to result_gaps when a snapshot exists."
+      "source": "successor semantic model gap rules, ADR-0029, and ADR-0031",
+      "requirement": "Only nine accepted gap rules may emit; each positive affected owner contributes once; the loose gap count equals loose denominator minus completion; snapshot gaps mirror exactly to result_gaps when a snapshot exists."
+    },
+    {
+      "invariant_id": "V5-INV-GLOBAL-COMPOSITION",
+      "source": "ADR-0031 and accepted WP1R global composition proof",
+      "requirement": "Every admitted rule composes constructor outcomes, primary and additional coverage effects, exact owning gaps, fixed rows, lifecycle, snapshot/result publication, and atomic boundaries into at least one legal complete document."
     },
     {
       "invariant_id": "V5-INV-NULL-OMISSION-EMPTY",

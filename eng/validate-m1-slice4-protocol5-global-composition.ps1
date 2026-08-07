@@ -58,6 +58,39 @@ function Test-SameSet([object[]]$Left, [object[]]$Right) {
     return $true
 }
 
+function Test-SameSequence([object[]]$Left, [object[]]$Right) {
+    $a = @($Left | ForEach-Object { [string]$_ })
+    $b = @($Right | ForEach-Object { [string]$_ })
+    if ($a.Count -ne $b.Count) { return $false }
+    for ($i = 0; $i -lt $a.Count; $i++) { if ($a[$i] -cne $b[$i]) { return $false } }
+    return $true
+}
+
+function Convert-CanonicalJson([object]$Value) {
+    return ($Value | ConvertTo-Json -Depth 100 -Compress)
+}
+
+function Test-CanonicalEqual([object]$Left, [object]$Right) {
+    return (Convert-CanonicalJson $Left) -ceq (Convert-CanonicalJson $Right)
+}
+
+function Get-LayerRank([string]$Layer) {
+    switch ($Layer) {
+        'none' { return 0 }
+        'structural' { return 1 }
+        'observed' { return 2 }
+        'decoded' { return 3 }
+        'resolved' { return 4 }
+        'semantic' { return 5 }
+        default { return -1 }
+    }
+}
+
+function Get-ObjectPropertyNames([object]$Value) {
+    if ($null -eq $Value) { return @() }
+    return @($Value.PSObject.Properties | ForEach-Object { [string]$_.Name })
+}
+
 function Test-Condition([object]$State, [object[]]$Conditions) {
     foreach ($condition in @($Conditions)) {
         $property = $State.PSObject.Properties[[string]$condition.dimension]
@@ -104,14 +137,19 @@ function Get-GapDefinition([object]$Model, [string]$RuleId) {
 
 function Get-RuleEffects([object]$Model, [string]$Family, [object]$Rule, [string]$OccurrenceId, [System.Collections.Generic.List[string]]$Issues) {
     $coverage = [System.Collections.Generic.List[object]]::new()
-    $gaps = [System.Collections.Generic.List[object]]::new()
+    $snapshotGaps = [System.Collections.Generic.List[object]]::new()
+    $resultGaps = [System.Collections.Generic.List[object]]::new()
+    $constructors = [System.Collections.Generic.List[object]]::new()
+    $facts = [System.Collections.Generic.List[string]]::new()
+    $terminal = $false
     if (Has-Property $Rule 'coverage_effect') {
         $effects = @($Rule.coverage_effect)
         if (Has-Property $Rule.coverage_effect 'additional_population_effects') {
             $effects += @($Rule.coverage_effect.additional_population_effects)
         }
         foreach ($effect in $effects) {
-            if ($null -eq $effect.population -or [string]$effect.population -ceq '' -or [string]$effect.denominator -ceq 'terminal') { continue }
+            if ([string]$effect.completion -ceq 'terminal') { $terminal = $true }
+            if ($null -eq $effect.population -or [string]$effect.population -ceq '') { continue }
             $denominator = Convert-Increment ([string]$effect.denominator)
             $completed = Convert-Increment ([string]$effect.completion)
             if ($null -eq $denominator -or $null -eq $completed) {
@@ -121,26 +159,68 @@ function Get-RuleEffects([object]$Model, [string]$Family, [object]$Rule, [string
             $coverage.Add([pscustomobject]@{ population=[string]$effect.population; denominator=$denominator; completed=$completed; source="$Family/$($Rule.rule_id)"; occurrence=$OccurrenceId })
         }
     }
+    $familyDefinition = @($Model.fact_families | Where-Object { [string]$_.family -ceq $Family })[0]
+    foreach ($outcome in @($Rule.outcomes)) {
+        foreach ($constructorId in @($outcome.constructor_groups)) {
+            $constructor = @($familyDefinition.constructor_groups | Where-Object { [string]$_.id -ceq [string]$constructorId })
+            if ($constructor.Count -ne 1) {
+                Add-Issue $Issues 'CONSTRUCTOR-REFERENCE' "$Family/$($Rule.rule_id) references missing constructor '$constructorId'."
+                continue
+            }
+            $constructors.Add([pscustomobject]@{
+                id=[string]$constructorId
+                disposition=[string]$outcome.disposition
+                value_rule=[string]$outcome.value_rule
+                minimum_layer=[string]$constructor[0].minimum_layer
+            })
+            if (@('exact_value','typed_null','accepted_unknown','mixed_by_constructor') -ccontains [string]$outcome.disposition) {
+                foreach ($template in @($constructor[0].fact_id_templates)) {
+                    $facts.Add("$Family|$($Rule.rule_id)|$constructorId|$($outcome.disposition)|$template")
+                }
+            }
+        }
+    }
     foreach ($effect in @($Rule.gap_effects)) {
         $definition = Get-GapDefinition $Model ([string]$effect.gap_rule_id)
         if ($null -eq $definition) {
             Add-Issue $Issues 'GAP-REFERENCE' "$Family/$($Rule.rule_id) references missing gap '$($effect.gap_rule_id)'."
             continue
         }
-        $gaps.Add([pscustomobject]@{
+        $definitionPopulation = [string]$definition.population_template
+        $owned = @($coverage | Where-Object {
+            [int]$_.denominator -gt [int]$_.completed -and (
+                [string]$_.population -ceq $definitionPopulation -or
+                ([string]$_.population -ceq 'unsupported-records' -and $definitionPopulation.StartsWith('unsupported-records:', [System.StringComparison]::Ordinal)) -or
+                (([string]$_.population -cin @('npc-records','race-records','placed-reference-records')) -and ($definitionPopulation.StartsWith('unsupported-fields:', [System.StringComparison]::Ordinal) -or $definitionPopulation.StartsWith('unsupported-shapes:', [System.StringComparison]::Ordinal)))
+            )
+        })
+        $gap = [pscustomobject]@{
             rule_id=[string]$effect.gap_rule_id
             owner_id=[string]$effect.owner_id
-            population=[string]$definition.population_template
+            member_id="$OccurrenceId|$($effect.owner_id)"
+            population=$definitionPopulation
             capability=[string]$definition.missing_capability
             scope=[string]$effect.scope
             affected=1
-            snapshot_published=$true
-            result_published=$true
+            owns_population=if ($owned.Count -eq 1) { [string]$owned[0].population } else { $null }
             source="$Family/$($Rule.rule_id)"
             occurrence=$OccurrenceId
-        })
+        }
+        if ([string]$effect.scope -cin @('snapshot','snapshot-and-result')) { $snapshotGaps.Add((Copy-Object $gap)) }
+        if ([string]$effect.scope -cin @('result','snapshot-and-result')) { $resultGaps.Add((Copy-Object $gap)) }
     }
-    return [pscustomobject]@{ coverage=@($coverage); gaps=@($gaps) }
+    return [pscustomobject]@{
+        family=$Family
+        rule_id=[string]$Rule.rule_id
+        occurrence=$OccurrenceId
+        coverage=@($coverage)
+        snapshot_gaps=@($snapshotGaps)
+        result_gaps=@($resultGaps)
+        constructors=@($constructors)
+        fact_templates=@(Get-OrdinalStrings $facts)
+        terminal=$terminal
+        publishes=(-not $terminal -and $facts.Count -gt 0)
+    }
 }
 
 function Test-SemanticGapPopulation([string]$Population, [object[]]$Patterns) {
@@ -153,13 +233,27 @@ function Test-SemanticGapPopulation([string]$Population, [object[]]$Patterns) {
     return $false
 }
 
+function Get-GapAggregateLines([object[]]$Gaps) {
+    $lines = [System.Collections.Generic.List[string]]::new()
+    foreach ($group in @($Gaps | Group-Object { "$($_.population)|$($_.capability)" })) {
+        $affected = 0
+        foreach ($member in @($group.Group)) { $affected += [int]$member.affected }
+        $memberIds = @(Get-OrdinalStrings @($group.Group | ForEach-Object { [string]$_.member_id }))
+        $lines.Add("$($group.Name)|$affected|$([string]::Join(',', $memberIds))")
+    }
+    return @(Get-OrdinalStrings $lines)
+}
+
 function Test-Composition([object]$Model, [object]$Policy, [object[]]$EffectSets, [string]$WitnessId, [System.Collections.Generic.List[string]]$Issues) {
     $coverageRows = [ordered]@{}
     foreach ($population in @($Policy.fixed_coverage_rows)) {
-        $coverageRows[[string]$population] = [ordered]@{ denominator=0; completed=0 }
+        $coverageRows[[string]$population] = [ordered]@{ population=[string]$population; denominator=0; completed=0; state='completed' }
     }
     $allCoverage = @($EffectSets | ForEach-Object { @($_.coverage) })
-    $allGaps = @($EffectSets | ForEach-Object { @($_.gaps) })
+    $snapshotGaps = @($EffectSets | ForEach-Object { if (Has-Property $_ 'snapshot_gaps') { @($_.snapshot_gaps) } })
+    $resultGaps = @($EffectSets | ForEach-Object { if (Has-Property $_ 'result_gaps') { @($_.result_gaps) } })
+    $noSnapshot = @($EffectSets | Where-Object { (Has-Property $_ 'no_snapshot') -and [bool]$_.no_snapshot }).Count -gt 0
+
     foreach ($set in @($EffectSets)) {
         if ((Has-Property $set 'fact_assertions') -and $null -ne $set.fact_assertions) {
             $fact = $set.fact_assertions
@@ -167,8 +261,8 @@ function Test-Composition([object]$Model, [object]$Policy, [object[]]$EffectSets
                 Add-Issue $Issues 'INVENTED-HIGHER-FACT' "$WitnessId coerces accepted unknown loose availability."
             }
         }
-        if ((Has-Property $set 'fixed_rows_override') -and @($set.fixed_rows_override).Count -gt 0 -and -not (Test-SameSet @($set.fixed_rows_override) @($Policy.fixed_coverage_rows))) {
-            Add-Issue $Issues 'FIXED-ROW' "$WitnessId changes the exact fixed-row set."
+        if ((Has-Property $set 'fixed_rows_override') -and -not (Test-SameSequence @($set.fixed_rows_override) @($Policy.fixed_coverage_rows))) {
+            Add-Issue $Issues 'FIXED-ROW' "$WitnessId changes the exact fixed-row order or membership."
         }
         if ((Has-Property $set 'atomic_invalid') -and [bool]$set.atomic_invalid -and (Has-Property $set 'publishes') -and [bool]$set.publishes) {
             Add-Issue $Issues 'ATOMIC-PUBLICATION' "$WitnessId publishes across an atomic rejection boundary."
@@ -182,87 +276,128 @@ function Test-Composition([object]$Model, [object]$Policy, [object[]]$EffectSets
         $coverageRows[[string]$effect.population].denominator += [int]$effect.denominator
         $coverageRows[[string]$effect.population].completed += [int]$effect.completed
     }
+
     foreach ($population in @($coverageRows.Keys)) {
         $row = $coverageRows[$population]
         if ($row.completed -gt $row.denominator -or $row.denominator -lt 0 -or $row.completed -lt 0) {
             Add-Issue $Issues 'ARITHMETIC' "$WitnessId has impossible $population arithmetic $($row.completed)/$($row.denominator)."
         }
-        $related = @($allGaps | Where-Object {
-            [string]$_.population -ceq [string]$population -or
-            ([string]$population -ceq 'unsupported-records' -and [string]$_.population -like 'unsupported-records:*')
-        })
-        $isIncomplete = $row.denominator -gt $row.completed
-        $completeGapAllowed = @($Policy.complete_with_gap_populations) -ccontains [string]$population
         $incompleteEffects = @($allCoverage | Where-Object { [string]$_.population -ceq [string]$population -and [int]$_.denominator -gt [int]$_.completed })
-        $unowned = @($incompleteEffects | Where-Object {
-            $occurrence = [string]$_.occurrence
-            @($allGaps | Where-Object { [string]$_.occurrence -ceq $occurrence }).Count -eq 0
-        })
-        if ($row.denominator -gt 0 -and $isIncomplete -and $unowned.Count -gt 0) {
-            Add-Issue $Issues 'INCOMPLETE-NO-GAP' "$WitnessId has $($unowned.Count) incomplete $population effect(s) without an owning gap."
+        foreach ($effect in $incompleteEffects) {
+            $owners = @($snapshotGaps | Where-Object {
+                [string]$_.occurrence -ceq [string]$effect.occurrence -and
+                [string]$_.source -ceq [string]$effect.source -and
+                [string]$_.owns_population -ceq [string]$effect.population
+            })
+            if ($owners.Count -eq 0) { Add-Issue $Issues 'INCOMPLETE-NO-GAP' "$WitnessId has incomplete $population effect '$($effect.occurrence)' without its declared owning gap." }
+            if ($owners.Count -gt 1) { Add-Issue $Issues 'DUPLICATE-OWNER' "$WitnessId has $($owners.Count) owners for incomplete $population effect '$($effect.occurrence)'." }
         }
-        if (-not $isIncomplete -and $related.Count -gt 0 -and -not $completeGapAllowed) {
-            Add-Issue $Issues 'COMPLETE-WITH-GAP' "$WitnessId has complete $population with a gap."
+        $ownedGaps = @($snapshotGaps | Where-Object { [string]$_.owns_population -ceq [string]$population })
+        $isIncomplete = $row.denominator -gt $row.completed
+        if (-not $isIncomplete -and $ownedGaps.Count -gt 0 -and @($Policy.complete_with_gap_populations) -cnotcontains [string]$population) {
+            Add-Issue $Issues 'COMPLETE-WITH-GAP' "$WitnessId has complete $population with an owning capability gap."
         }
+        $derived = if ($row.denominator -eq 0) {
+            'completed'
+        } elseif ($row.completed -eq $row.denominator -and $ownedGaps.Count -eq 0) {
+            'completed'
+        } elseif ($row.completed -eq 0 -and $ownedGaps.Count -gt 0) {
+            'unsupported'
+        } elseif ($row.completed -gt 0 -and $row.completed -lt $row.denominator -and $ownedGaps.Count -gt 0) {
+            'completed_with_gaps'
+        } else {
+            'invalid'
+        }
+        $row.state = $derived
+        if ($derived -ceq 'invalid') { Add-Issue $Issues 'LIFECYCLE' "$WitnessId cannot derive a legal lifecycle for $population $($row.completed)/$($row.denominator)." }
     }
-    $ownerKeys = @($allGaps | ForEach-Object { "$($_.occurrence)|$($_.owner_id)|$($_.rule_id)" })
-    if (@($ownerKeys | Group-Object | Where-Object Count -gt 1).Count -gt 0) {
-        Add-Issue $Issues 'DUPLICATE-OWNER' "$WitnessId duplicates a gap owner for the same occurrence."
-    }
-    foreach ($gap in $allGaps) {
+
+    foreach ($gap in $snapshotGaps) {
         $definition = Get-GapDefinition $Model ([string]$gap.rule_id)
-        if ($null -eq $definition) { Add-Issue $Issues 'GAP-REFERENCE' "$WitnessId uses unknown gap '$($gap.rule_id)'." }
-        elseif ([string]$definition.population_template -cne [string]$gap.population -or [string]$definition.missing_capability -cne [string]$gap.capability) {
+        if ($null -eq $definition) { Add-Issue $Issues 'GAP-REFERENCE' "$WitnessId uses unknown gap '$($gap.rule_id)'."; continue }
+        if ([string]$definition.population_template -cne [string]$gap.population -or [string]$definition.missing_capability -cne [string]$gap.capability) {
             Add-Issue $Issues 'GAP-DEFINITION' "$WitnessId drifts the population/capability of '$($gap.rule_id)'."
         }
-        if ([string]$gap.scope -cne 'snapshot-and-result') {
-            Add-Issue $Issues 'GAP-SCOPE' "$WitnessId has gap '$($gap.rule_id)' outside snapshot-and-result."
-        }
-        if ((Has-Property $gap 'snapshot_published') -and -not [bool]$gap.snapshot_published) { Add-Issue $Issues 'SNAPSHOT-GAP' "$WitnessId omits snapshot gap publication." }
-        if ((Has-Property $gap 'result_published') -and -not [bool]$gap.result_published) { Add-Issue $Issues 'RESULT-GAP' "$WitnessId omits result-gap mirroring." }
-        $isFixed = $coverageRows.Contains([string]$gap.population)
-        if (-not $isFixed -and [string]$gap.population -like 'unsupported-records:*') { $isFixed = $true }
+        if ([string]$gap.scope -cne 'snapshot-and-result') { Add-Issue $Issues 'GAP-SCOPE' "$WitnessId has gap '$($gap.rule_id)' outside snapshot-and-result." }
+        if ([int]$gap.affected -lt 1) { Add-Issue $Issues 'GAP-AFFECTED' "$WitnessId has non-positive affected count for '$($gap.rule_id)'." }
+        $isFixed = $coverageRows.Contains([string]$gap.population) -or ([string]$gap.population).StartsWith('unsupported-records:', [System.StringComparison]::Ordinal)
         $isSemantic = Test-SemanticGapPopulation ([string]$gap.population) @($Policy.semantic_gap_only_populations)
-        if (-not $isFixed -and -not $isSemantic) {
-            Add-Issue $Issues 'UNRELATED-GAP' "$WitnessId has unrelated gap population '$($gap.population)'."
+        if (-not $isFixed -and -not $isSemantic) { Add-Issue $Issues 'UNRELATED-GAP' "$WitnessId has unrelated gap population '$($gap.population)'." }
+        if ($null -ne $gap.owns_population -and [string]$gap.owns_population -cne '') {
+            $ownedEffect = @($allCoverage | Where-Object {
+                [string]$_.occurrence -ceq [string]$gap.occurrence -and
+                [string]$_.source -ceq [string]$gap.source -and
+                [string]$_.population -ceq [string]$gap.owns_population -and
+                [int]$_.denominator -gt [int]$_.completed
+            })
+            if ($ownedEffect.Count -ne 1) { Add-Issue $Issues 'GAP-WITHOUT-INCOMPLETE' "$WitnessId gap member '$($gap.member_id)' does not own exactly one incomplete population effect." }
         }
     }
-    if ($coverageRows.Contains('face-gen-loose-assets')) {
-        $loose = $coverageRows['face-gen-loose-assets']
-        $looseGaps = @($allGaps | Where-Object { [string]$_.population -ceq 'face-gen-loose-assets' -and [string]$_.capability -ceq 'exhaustive-byte-verified-loose-provider-index' })
-        $expected = $loose.denominator - $loose.completed
+
+    $snapshotAggregateLines = @(Get-GapAggregateLines $snapshotGaps)
+    $resultAggregateLines = @(Get-GapAggregateLines $resultGaps)
+    if (-not (Test-SameSequence $snapshotAggregateLines $resultAggregateLines)) { Add-Issue $Issues 'GAP-MIRROR' "$WitnessId snapshot and result gap aggregates differ." }
+    $snapshotMemberIds = @(Get-OrdinalStrings @($snapshotGaps | ForEach-Object { [string]$_.member_id }))
+    $resultMemberIds = @(Get-OrdinalStrings @($resultGaps | ForEach-Object { [string]$_.member_id }))
+    if (-not (Test-SameSequence $snapshotMemberIds $resultMemberIds)) { Add-Issue $Issues 'GAP-MIRROR-MEMBER' "$WitnessId snapshot and result gap members differ." }
+    if (@($snapshotMemberIds | Group-Object | Where-Object Count -gt 1).Count -gt 0 -or @($resultMemberIds | Group-Object | Where-Object Count -gt 1).Count -gt 0) {
+        Add-Issue $Issues 'DUPLICATE-OWNER' "$WitnessId duplicates a gap owner member for one obligation."
+    }
+
+    foreach ($populationAndCapability in @(
+        [pscustomobject]@{ population='face-gen-loose-assets'; capability='exhaustive-byte-verified-loose-provider-index'; code='LOOSE-GAP-COUNT' },
+        [pscustomobject]@{ population='face-gen-archive-assets'; capability='archive-activation-and-member-precedence'; code='ARCHIVE-GAP-COUNT' }
+    )) {
+        $row = $coverageRows[[string]$populationAndCapability.population]
         $actual = 0
-        foreach ($gap in $looseGaps) { $actual += [int]$gap.affected }
-        if ([int]$actual -ne [int]$expected) {
-            Add-Issue $Issues 'LOOSE-GAP-COUNT' "$WitnessId loose gap count $actual does not equal incomplete loose obligations $expected."
-        }
+        foreach ($gap in @($snapshotGaps | Where-Object { [string]$_.population -ceq [string]$populationAndCapability.population -and [string]$_.capability -ceq [string]$populationAndCapability.capability })) { $actual += [int]$gap.affected }
+        $expected = $row.denominator - $row.completed
+        if ($actual -ne $expected) { Add-Issue $Issues ([string]$populationAndCapability.code) "$WitnessId gap affected count $actual does not equal incomplete $($populationAndCapability.population) obligations $expected." }
     }
-    if ($coverageRows.Contains('face-gen-archive-assets')) {
-        $archive = $coverageRows['face-gen-archive-assets']
-        $archiveGaps = @($allGaps | Where-Object { [string]$_.population -ceq 'face-gen-archive-assets' -and [string]$_.capability -ceq 'archive-activation-and-member-precedence' })
-        $expected = $archive.denominator - $archive.completed
-        $actual = 0
-        foreach ($gap in $archiveGaps) { $actual += [int]$gap.affected }
-        if ([int]$actual -ne [int]$expected) {
-            Add-Issue $Issues 'ARCHIVE-GAP-COUNT' "$WitnessId archive gap count $actual does not equal incomplete archive obligations $expected."
-        }
-    }
+
     foreach ($set in @($EffectSets)) {
         if ((Has-Property $set 'asserted_lifecycles') -and $null -ne $set.asserted_lifecycles) {
             foreach ($assertion in @($set.asserted_lifecycles)) {
                 if (-not $coverageRows.Contains([string]$assertion.population)) { Add-Issue $Issues 'LIFECYCLE' "$WitnessId asserts lifecycle for an unknown row."; continue }
-                $row = $coverageRows[[string]$assertion.population]
-                $rowGaps = @($allGaps | Where-Object { [string]$_.population -ceq [string]$assertion.population })
-                $derived = if ($row.denominator -eq 0) { 'completed' } elseif ($row.completed -eq $row.denominator -and $rowGaps.Count -eq 0) { 'completed' } elseif ($row.completed -eq 0 -and $rowGaps.Count -gt 0) { 'unsupported' } elseif ($row.completed -gt 0 -and $row.completed -lt $row.denominator -and $rowGaps.Count -gt 0) { 'completed_with_gaps' } else { 'invalid' }
-                if ([string]$assertion.state -cne $derived) { Add-Issue $Issues 'LIFECYCLE' "$WitnessId asserts '$($assertion.state)' for $($assertion.population), expected '$derived'." }
+                if ([string]$assertion.state -cne [string]$coverageRows[[string]$assertion.population].state) { Add-Issue $Issues 'LIFECYCLE' "$WitnessId asserts '$($assertion.state)' for $($assertion.population), expected '$($coverageRows[[string]$assertion.population].state)'." }
             }
         }
     }
-    $gapRows = @($allGaps | Group-Object { "$($_.population)|$($_.capability)" })
-    if (@($gapRows | Where-Object { @($_.Group.owner_id | Sort-Object -Unique).Count -gt 1 -and @($_.Group.source | Sort-Object -Unique).Count -eq 1 }).Count -gt 0) {
-        Add-Issue $Issues 'OVERLAPPING-OWNERSHIP' "$WitnessId has overlapping owners from one source for an aggregate gap pair."
+
+    $publishedSets = @($EffectSets | Where-Object { (Has-Property $_ 'publishes') -and [bool]$_.publishes -and [string]$_.family -cne 'result' })
+    if ($noSnapshot) {
+        if ($publishedSets.Count -gt 0 -or $allCoverage.Count -gt 0 -or $snapshotGaps.Count -gt 0 -or $resultGaps.Count -gt 0) { Add-Issue $Issues 'NO-SNAPSHOT-PUBLICATION' "$WitnessId publishes snapshot material for a no-snapshot result." }
     }
-    return [pscustomobject]@{ rows=$coverageRows; gaps=$allGaps; gap_aggregates=$gapRows.Count }
+    $familyRows = [ordered]@{}
+    foreach ($family in @($Model.fact_families | ForEach-Object { [string]$_.family })) { $familyRows[$family] = @() }
+    if (-not $noSnapshot) {
+        foreach ($set in @($EffectSets)) {
+            if ((Has-Property $set 'family') -and $familyRows.Contains([string]$set.family)) {
+                $familyRows[[string]$set.family] = @([pscustomobject]@{ rule_id=[string]$set.rule_id; constructors=@($set.constructors); fact_templates=@($set.fact_templates) })
+            }
+        }
+        if (@($familyRows['result']).Count -eq 0) {
+            $familyRows['result'] = @([pscustomobject]@{ rule_id='P4-RESULT-PUBLISHED'; constructors=@('FC-RESULT-STATE:exact_value'); fact_templates=@('result|P4-RESULT-PUBLISHED|FC-RESULT-STATE|exact_value|result/snapshot_present','result|P4-RESULT-PUBLISHED|FC-RESULT-STATE|exact_value|result/failure_present') })
+        }
+        $familyRows['coverage'] = @($coverageRows.Values)
+        $familyRows['gaps'] = @($snapshotAggregateLines)
+        $familyRows['result_gaps'] = @($resultAggregateLines)
+        if ($familyRows.Count -ne 15 -or @($familyRows['result']).Count -ne 1) { Add-Issue $Issues 'COMPLETE-SNAPSHOT' "$WitnessId does not materialize all 15 families with exactly one published result." }
+        if (@($familyRows['coverage']).Count -ne 10 -or -not (Test-SameSequence @($familyRows['coverage'] | ForEach-Object population) @($Policy.fixed_coverage_rows))) {
+            Add-Issue $Issues 'FIXED-ROW' "$WitnessId does not materialize exactly ten ordered coverage rows."
+        }
+    } else {
+        foreach ($family in @($familyRows.Keys)) { if (@($familyRows[$family]).Count -ne 0) { Add-Issue $Issues 'NO-SNAPSHOT-FAMILY' "$WitnessId no-snapshot witness contains '$family'." } }
+    }
+    return [pscustomobject]@{
+        rows=$coverageRows
+        snapshot_gaps=$snapshotGaps
+        result_gaps=$resultGaps
+        gap_aggregates=$snapshotAggregateLines.Count
+        snapshot_family_count=$familyRows.Count
+        no_snapshot=$noSnapshot
+        family_rows=$familyRows
+    }
 }
 
 function Apply-SuccessorOverlay([object]$Base, [object]$Overlay, [System.Collections.Generic.List[string]]$Issues) {
@@ -298,6 +433,103 @@ function Apply-SuccessorOverlay([object]$Base, [object]$Overlay, [System.Collect
     return $model
 }
 
+function Test-OverlaySchema([object]$Overlay, [object]$Schema, [string]$ModelFile, [string]$SchemaFile, [System.Collections.Generic.List[string]]$Issues) {
+    $expectedTop = @('schema_id','model_id','version','status','work_id','protocol','authority','base_model','delta')
+    if (-not (Test-SameSet @(Get-ObjectPropertyNames $Overlay) $expectedTop)) { Add-Issue $Issues 'SCHEMA-TOP' 'Successor model top-level properties differ from the closed schema.' }
+    if ([string]$Schema.properties.schema_id.const -cne 'infinium.m1-slice4.protocol-5-successor-model.schema/1.0.1' -or [string]$Schema.properties.version.const -cne '1.0.1') { Add-Issue $Issues 'SCHEMA-IDENTITY' 'Successor schema const identity is not 1.0.1.' }
+    if ([string]$Overlay.schema_id -cne [string]$Schema.properties.schema_id.const -or [string]$Overlay.model_id -cne [string]$Schema.properties.model_id.const -or [string]$Overlay.version -cne [string]$Schema.properties.version.const -or [string]$Overlay.status -cne [string]$Schema.properties.status.const -or [string]$Overlay.work_id -cne [string]$Schema.properties.work_id.const -or [string]$Overlay.protocol -cne [string]$Schema.properties.protocol.const) {
+        Add-Issue $Issues 'SCHEMA-CONST' 'Successor model violates one or more schema identity consts.'
+    }
+    $expectedDelta = @('added_gap_rules','replaced_publication_rules','updated_admitted_regions','updated_coverage_registry','added_cross_family_invariants','composition_policy')
+    if (-not (Test-SameSet @(Get-ObjectPropertyNames $Overlay.delta) $expectedDelta)) { Add-Issue $Issues 'SCHEMA-DELTA' 'Successor delta properties differ from the closed schema.' }
+    $expectedPolicy = @('fixed_coverage_rows','coverage_owned_gap_populations','semantic_gap_only_populations','complete_with_gap_populations','projection_only_families','snapshot_gap_mirroring','atomic_rejection')
+    if (-not (Test-SameSet @(Get-ObjectPropertyNames $Overlay.delta.composition_policy) $expectedPolicy)) { Add-Issue $Issues 'SCHEMA-POLICY' 'Composition policy properties differ from the closed schema.' }
+    $testJson = Get-Command Test-Json -ErrorAction SilentlyContinue
+    if ($null -ne $testJson) {
+        $valid = Get-Content -LiteralPath $ModelFile -Raw | Test-Json -SchemaFile $SchemaFile -ErrorAction SilentlyContinue
+        if (-not $valid) { Add-Issue $Issues 'JSON-SCHEMA' 'Successor model fails the declared JSON Schema.' }
+    }
+}
+
+function Get-CoverageShape([object]$Coverage) {
+    $items = [System.Collections.Generic.List[object]]::new()
+    foreach ($effect in @($Coverage) + @(if (Has-Property $Coverage 'additional_population_effects') { @($Coverage.additional_population_effects) })) {
+        $items.Add([ordered]@{ population=$effect.population; denominator=[string]$effect.denominator; completion=[string]$effect.completion })
+    }
+    return @($items)
+}
+
+function Test-BoundedDelta([object]$Base, [object]$Overlay, [System.Collections.Generic.List[string]]$Issues) {
+    $facegen = @($Base.fact_families | Where-Object { [string]$_.family -ceq 'face_gen' })[0]
+    $expectedSources = @('P4-FACEGEN-APPLICABLE-UNKNOWN-ARCHIVE-SUPPORTED','P4-FACEGEN-APPLICABLE-UNKNOWN-ARCHIVE-UNSUPPORTED')
+    if (-not (Test-SameSequence @($Overlay.delta.replaced_publication_rules | ForEach-Object replaces_rule_id) $expectedSources)) { Add-Issue $Issues 'DELTA-REPLACEMENTS' 'Replacement source IDs or order differ from the authorized two-rule delta.' }
+    foreach ($replacement in @($Overlay.delta.replaced_publication_rules)) {
+        $old = @($facegen.rules | Where-Object { [string]$_.rule_id -ceq [string]$replacement.replaces_rule_id })
+        if ($old.Count -ne 1) { Add-Issue $Issues 'DELTA-SOURCE' "Missing unique predecessor '$($replacement.replaces_rule_id)'."; continue }
+        $new = $replacement.rule
+        foreach ($field in @('state_class','when','minimum_layer','prerequisites','outcomes','atomic_boundary')) {
+            if (-not (Test-CanonicalEqual $old[0].$field $new.$field)) { Add-Issue $Issues 'DELTA-SEMANTICS' "$($replacement.replaces_rule_id) changes inherited '$field'." }
+        }
+        if (-not (Test-CanonicalEqual (Get-CoverageShape $old[0].coverage_effect) (Get-CoverageShape $new.coverage_effect))) { Add-Issue $Issues 'DELTA-COVERAGE' "$($replacement.replaces_rule_id) changes inherited coverage arithmetic." }
+        $newGapIds = @($new.gap_effects | ForEach-Object { [string]$_.gap_rule_id })
+        $oldGapIds = @($old[0].gap_effects | ForEach-Object { [string]$_.gap_rule_id })
+        if (-not (Test-SameSet $newGapIds (@($oldGapIds) + @('P5-GAP-LOOSE-AVAILABILITY')))) { Add-Issue $Issues 'DELTA-GAPS' "$($replacement.replaces_rule_id) does not add exactly the authorized loose gap." }
+        foreach ($oldGap in @($old[0].gap_effects)) {
+            $same = @($new.gap_effects | Where-Object { [string]$_.gap_rule_id -ceq [string]$oldGap.gap_rule_id })
+            if ($same.Count -ne 1 -or -not (Test-CanonicalEqual $oldGap $same[0])) { Add-Issue $Issues 'DELTA-GAP-INHERITANCE' "$($replacement.replaces_rule_id) changes an inherited gap effect." }
+        }
+    }
+    $gap = @($Overlay.delta.added_gap_rules)[0]
+    if ([string]$gap.rule_id -cne 'P5-GAP-LOOSE-AVAILABILITY' -or [string]$gap.population_template -cne 'face-gen-loose-assets' -or [string]$gap.missing_capability -cne 'exhaustive-byte-verified-loose-provider-index' -or [string]$gap.aggregation_key -cne 'population+missing_capability' -or [string]$gap.affected_count -cne 'exact independently identified affected paths' -or [string]$gap.scope -cne 'snapshot-and-result') { Add-Issue $Issues 'DELTA-GAP-DEFINITION' 'Added loose-availability gap differs from the owner-authorized identity.' }
+    $expectedRegionIds = @('SC-FACEGEN-UNKNOWN-SUPPORTED','SC-FACEGEN-UNKNOWN-UNSUPPORTED')
+    if (-not (Test-SameSequence @($Overlay.delta.updated_admitted_regions | ForEach-Object constraint_id) $expectedRegionIds)) { Add-Issue $Issues 'DELTA-REGIONS' 'Admitted-region update inventory drifted.' }
+    foreach ($update in @($Overlay.delta.updated_admitted_regions)) {
+        $oldRegion = @($facegen.state_space.admitted_regions | Where-Object { [string]$_.constraint_id -ceq [string]$update.constraint_id })
+        if ($oldRegion.Count -ne 1) { Add-Issue $Issues 'DELTA-REGION-SOURCE' "Missing predecessor region '$($update.constraint_id)'."; continue }
+        if ([string]$update.family -cne 'face_gen' -or -not (Test-SameSet @($update.required_gap_rule_ids) (@($oldRegion[0].required_gap_rule_ids) + @('P5-GAP-LOOSE-AVAILABILITY')))) { Add-Issue $Issues 'DELTA-REGION-GAPS' "$($update.constraint_id) does not add exactly the authorized loose gap." }
+    }
+    $coverageUpdate = @($Overlay.delta.updated_coverage_registry)[0]
+    if ([string]$coverageUpdate.population -cne 'face-gen-loose-assets' -or [string]$coverageUpdate.incomplete_state_rule -cne 'Unknown loose availability prevents completion and is owned exactly by P5-GAP-LOOSE-AVAILABILITY; archive authority is independent.') { Add-Issue $Issues 'DELTA-COVERAGE-TEXT' 'Coverage registry update differs from the authorized loose-incomplete rule.' }
+    $invariant = @($Overlay.delta.added_cross_family_invariants)[0]
+    if ([string]$invariant.invariant_id -cne 'INV-FACEGEN-LOOSE-AVAILABILITY' -or [string]$invariant.population -cne 'face-gen-loose-assets' -or [string]$invariant.gap_rule_id -cne 'P5-GAP-LOOSE-AVAILABILITY' -or [string]$invariant.missing_capability -cne 'exhaustive-byte-verified-loose-provider-index' -or [string]$invariant.per_path_coverage -cne 'denominator+1,completed+0' -or [string]$invariant.gap_affected_count -cne 'denominator-minus-completed' -or -not [bool]$invariant.archive_independence -or [string]$invariant.lifecycle.zero -cne 'completed' -or [string]$invariant.lifecycle.all_incomplete_positive -cne 'unsupported' -or [string]$invariant.lifecycle.mixed -cne 'completed_with_gaps' -or [string]$invariant.lifecycle.complete_without_gap -cne 'completed' -or [string]$invariant.result_state -cne 'completed_with_gaps') { Add-Issue $Issues 'DELTA-INVARIANT' 'Added loose-availability cross-family invariant drifted.' }
+}
+
+function Test-RuleStructures([object]$Model, [System.Collections.Generic.List[string]]$Issues) {
+    $validDispositions = @('exact_value','typed_null','accepted_unknown','mixed_by_constructor','omit','no_fact','terminal_rejection')
+    $boundaryIds = @($Model.atomic_boundaries | ForEach-Object { [string]$_.id })
+    foreach ($family in @($Model.fact_families)) {
+        $expectedConstructors = @($family.constructor_groups | ForEach-Object { [string]$_.id })
+        foreach ($rule in @($family.rules)) {
+            $assigned = @($rule.outcomes | ForEach-Object { @($_.constructor_groups) } | ForEach-Object { [string]$_ })
+            if (-not (Test-SameSet $assigned $expectedConstructors) -or @($assigned | Group-Object | Where-Object Count -gt 1).Count -gt 0) { Add-Issue $Issues 'CONSTRUCTOR-TOTALITY' "$($family.family)/$($rule.rule_id) does not assign every family constructor exactly once." }
+            if (@($rule.prerequisites | Group-Object | Where-Object Count -gt 1).Count -gt 0) { Add-Issue $Issues 'PREREQUISITE' "$($family.family)/$($rule.rule_id) duplicates a prerequisite." }
+            if ($boundaryIds -cnotcontains [string]$rule.atomic_boundary) { Add-Issue $Issues 'ATOMIC-BOUNDARY' "$($family.family)/$($rule.rule_id) lacks a valid atomic boundary." }
+            foreach ($outcome in @($rule.outcomes)) {
+                if ($validDispositions -cnotcontains [string]$outcome.disposition) { Add-Issue $Issues 'DISPOSITION' "$($family.family)/$($rule.rule_id) has unknown disposition '$($outcome.disposition)'." }
+                foreach ($constructorId in @($outcome.constructor_groups)) {
+                    $constructor = @($family.constructor_groups | Where-Object { [string]$_.id -ceq [string]$constructorId })
+                    if ($constructor.Count -ne 1) { continue }
+                    if (@('exact_value','typed_null','accepted_unknown','mixed_by_constructor') -ccontains [string]$outcome.disposition -and (Get-LayerRank ([string]$constructor[0].minimum_layer)) -gt (Get-LayerRank ([string]$rule.minimum_layer))) {
+                        Add-Issue $Issues 'INVENTED-LAYER' "$($family.family)/$($rule.rule_id) emits $constructorId above its available evidence layer."
+                    }
+                }
+            }
+        }
+    }
+}
+
+function Test-AcceptedPolicy([object]$Policy, [object]$Model, [System.Collections.Generic.List[string]]$Issues) {
+    $expectedRows = @('plugins','npc-records','race-records','placed-reference-records','unsupported-records','face-gen-loose-assets','face-gen-archive-assets','localized-strings','automatic-environment-discovery','taxonomy-subjects')
+    if (-not (Test-SameSequence @($Policy.fixed_coverage_rows) $expectedRows)) { Add-Issue $Issues 'FIXED-ROW' 'Composition policy must preserve the exact inherited ten-row order.' }
+    if (-not (Test-SameSequence @($Policy.projection_only_families) @('coverage','gaps','result_gaps'))) { Add-Issue $Issues 'PROJECTION-ONLY' 'Composition policy projection-only families must be exactly coverage, gaps, result_gaps in inherited order.' }
+    if (-not (Test-SameSequence @($Policy.coverage_owned_gap_populations) @('face-gen-loose-assets','face-gen-archive-assets','npc-records','race-records','placed-reference-records','localized-strings','automatic-environment-discovery'))) { Add-Issue $Issues 'OWNED-GAP-POPULATIONS' 'Coverage-owned gap population policy drifted.' }
+    if (-not (Test-SameSequence @($Policy.semantic_gap_only_populations) @('face-gen-applicability:template','face-gen-applicability:race','unsupported-fields:*','unsupported-shapes:*'))) { Add-Issue $Issues 'SEMANTIC-GAP-POPULATIONS' 'Semantic-only gap population policy drifted.' }
+    if (-not (Test-SameSequence @($Policy.complete_with_gap_populations) @('unsupported-records'))) { Add-Issue $Issues 'COMPLETE-WITH-GAP-POPULATIONS' 'Inherited complete-with-gap exception policy drifted.' }
+    $modelRows = @($Model.coverage_registry | ForEach-Object { [string]$_.population })
+    if (-not (Test-SameSequence @($Policy.fixed_coverage_rows) $modelRows)) { Add-Issue $Issues 'FIXED-ROW' 'Composition policy row order differs from the semantic coverage registry.' }
+    if (-not [bool]$Policy.snapshot_gap_mirroring -or [string]$Policy.atomic_rejection -cne 'no-partial-publication') { Add-Issue $Issues 'COMPOSITION-POLICY' 'Gap mirroring or atomic rejection policy drifted.' }
+}
+
 function Invoke-Mutation([string]$Id, [scriptblock]$Mutation, [object]$BaselineModel, [object]$Policy) {
     $model = Copy-Object $BaselineModel
     $set = & $Mutation $model
@@ -309,6 +541,8 @@ function Invoke-Mutation([string]$Id, [scriptblock]$Mutation, [object]$BaselineM
 $issues = [System.Collections.Generic.List[string]]::new()
 $overlay = Read-Json $ModelPath 'successor model'
 $schema = Read-Json $SchemaPath 'successor schema'
+$validatorPath = [System.IO.Path]::GetFullPath($MyInvocation.MyCommand.Path)
+Test-OverlaySchema $overlay $schema $ModelPath $SchemaPath $issues
 $basePath = Join-Path $repoRoot ([string]$overlay.base_model.path)
 $base = Read-Json $basePath 'immutable base model'
 
@@ -331,11 +565,13 @@ foreach ($name in @($frozenPaths.Keys)) {
 
 $required = @('schema_id','model_id','version','status','work_id','protocol','authority','base_model','delta')
 foreach ($name in $required) { if (-not (Has-Property $overlay $name)) { Add-Issue $issues 'SCHEMA' "Successor model is missing '$name'." } }
-if ([string]$overlay.model_id -cne 'infinium.m1-slice4.protocol-5-evidence-contract' -or [string]$overlay.version -cne '1.0.0' -or [string]$overlay.protocol -cne '/5') { Add-Issue $issues 'IDENTITY' 'Successor semantic-model identity is not the accepted /5 identity.' }
+if ([string]$overlay.model_id -cne 'infinium.m1-slice4.protocol-5-evidence-contract' -or [string]$overlay.version -cne '1.0.1' -or [string]$overlay.protocol -cne '/5') { Add-Issue $issues 'IDENTITY' 'Successor semantic-model identity is not the proof-corrected /5 identity.' }
 if ([string]$overlay.base_model.acceptance_commit -cne '43d54accc1adbafc6ae6d0bb13e8f700461758c4' -or [string]$overlay.base_model.relationship -cne 'semantic-successor') { Add-Issue $issues 'LINEAGE' 'Predecessor acceptance commit or successor relationship drifted.' }
 if (@($overlay.delta.added_gap_rules).Count -ne 1 -or @($overlay.delta.replaced_publication_rules).Count -ne 2 -or @($overlay.delta.updated_admitted_regions).Count -ne 2 -or @($overlay.delta.updated_coverage_registry).Count -ne 1 -or @($overlay.delta.added_cross_family_invariants).Count -ne 1) { Add-Issue $issues 'DELTA-SCOPE' 'Successor delta inventory is outside the authorized 1/2/2/1/1 shape.' }
+Test-BoundedDelta $base $overlay $issues
 
 $model = Apply-SuccessorOverlay $base $overlay $issues
+Test-RuleStructures $model $issues
 $allRules = @($model.fact_families | ForEach-Object { $_.rules })
 $ruleIds = @($allRules | ForEach-Object { [string]$_.rule_id })
 $gapIds = @($model.gap_rules | ForEach-Object { [string]$_.rule_id })
@@ -344,15 +580,15 @@ if ($ruleIds -ccontains 'P4-FACEGEN-APPLICABLE-UNKNOWN-ARCHIVE-SUPPORTED' -or $r
 if ($gapIds -cnotcontains 'P5-GAP-LOOSE-AVAILABILITY' -or $gapIds.Count -ne 9 -or $ruleIds.Count -ne 77) { Add-Issue $issues 'INVENTORY' 'Materialized rule/gap inventories are not 77/9.' }
 
 $policy = $overlay.delta.composition_policy
-if (@($policy.fixed_coverage_rows).Count -ne 10 -or @($policy.fixed_coverage_rows | Sort-Object -Unique).Count -ne 10) { Add-Issue $issues 'FIXED-ROW' 'Composition policy must define ten unique fixed coverage rows.' }
-$modelRows = @($model.coverage_registry | ForEach-Object { [string]$_.population })
-if (-not (Test-SameSet @($policy.fixed_coverage_rows) $modelRows)) { Add-Issue $issues 'FIXED-ROW' 'Composition policy rows differ from the semantic coverage registry.' }
+Test-AcceptedPolicy $policy $model $issues
 
 $rawStates = 0
 $admittedStates = 0
 $excludedStates = 0
 $invalidStates = 0
 $successfulWitnesses = 0
+$completeSnapshotWitnesses = 0
+$noSnapshotWitnesses = 0
 $uncoveredCompositions = 0
 $overlappingStates = 0
 $compositionLines = [System.Collections.Generic.List[string]]::new()
@@ -389,34 +625,53 @@ foreach ($family in @($model.fact_families)) {
         $actualGaps = @($rule.gap_effects | ForEach-Object { [string]$_.gap_rule_id })
         if (-not (Test-SameSet $requiredGaps $actualGaps)) { Add-Issue $issues 'REGION-GAPS' "$($family.family)/$($admitted[0].constraint_id) required gaps differ from $($rule.rule_id)." }
         $occurrence = "$($family.family):$admittedStates"
-        $effects = if (@($policy.projection_only_families) -ccontains [string]$family.family) {
-            [pscustomobject]@{ coverage=@(); gaps=@() }
-        } else {
-            Get-RuleEffects $model ([string]$family.family) $rule $occurrence $issues
-        }
+        $effects = Get-RuleEffects $model ([string]$family.family) $rule $occurrence $issues
+        if ([string]$rule.rule_id -ceq 'P4-RESULT-NO-SNAPSHOT') { $effects | Add-Member -NotePropertyName no_snapshot -NotePropertyValue $true -Force }
         $effectInstances.Add($effects)
         $before = $issues.Count
         [void](Test-Composition $model $policy @($effects) "$($family.family)/$($admitted[0].constraint_id)" $issues)
-        if ($issues.Count -eq $before) { $successfulWitnesses++ }
+        if ($issues.Count -eq $before) {
+            $successfulWitnesses++
+            if ((Has-Property $effects 'no_snapshot') -and [bool]$effects.no_snapshot) { $noSnapshotWitnesses++ } else { $completeSnapshotWitnesses++ }
+        }
         $ruleWitnesses[[string]$rule.rule_id] = $effects
         $stateText = @($state.PSObject.Properties | ForEach-Object { "$($_.Name)=$($_.Value)" }) -join ','
-        $compositionLines.Add("state|$($family.family)|$($admitted[0].constraint_id)|$($rule.rule_id)|$stateText")
+        $constructorText = @($effects.constructors | ForEach-Object { "$($_.id):$($_.disposition):$($_.value_rule)" }) -join ';'
+        $factText = [string]::Join(';', @($effects.fact_templates))
+        $compositionLines.Add("state|$($family.family)|$($admitted[0].constraint_id)|$($rule.rule_id)|$stateText|constructors=$constructorText|facts=$factText")
     }
 }
 
 $pairwiseCompositions = 0
-$effectRuleIds = @($ruleWitnesses.Keys | Where-Object { @($ruleWitnesses[$_].coverage).Count -gt 0 -or @($ruleWitnesses[$_].gaps).Count -gt 0 } | Sort-Object)
+$effectRuleIds = @($ruleWitnesses.Keys | Where-Object { @($ruleWitnesses[$_].coverage).Count -gt 0 -or @($ruleWitnesses[$_].snapshot_gaps).Count -gt 0 -or @($ruleWitnesses[$_].result_gaps).Count -gt 0 } | Sort-Object)
 for ($i=0; $i -lt $effectRuleIds.Count; $i++) {
     for ($j=$i; $j -lt $effectRuleIds.Count; $j++) {
         $pairwiseCompositions++
         $left = $effectRuleIds[$i]; $right = $effectRuleIds[$j]
         $leftEffects = Copy-Object $ruleWitnesses[$left]
         $rightEffects = Copy-Object $ruleWitnesses[$right]
-        foreach ($item in @($rightEffects.coverage) + @($rightEffects.gaps)) { $item.occurrence = "pair:$j" }
+        foreach ($item in @($rightEffects.coverage)) { $item.occurrence = "pair:$j" }
+        foreach ($item in @($rightEffects.snapshot_gaps) + @($rightEffects.result_gaps)) { $item.occurrence = "pair:$j"; $item.member_id = "pair:$j|$($item.owner_id)" }
+        $rightEffects.occurrence = "pair:$j"
         $before = $issues.Count
         [void](Test-Composition $model $policy @($leftEffects,$rightEffects) "pair/$left+$right" $issues)
         if ($issues.Count -eq $before) { $successfulWitnesses++ }
         $compositionLines.Add("pair|$left|$right")
+    }
+}
+
+$projectionRuleEffectWitnesses = 0
+foreach ($ruleId in @(Get-OrdinalStrings @($ruleWitnesses.Keys))) {
+    $set = $ruleWitnesses[$ruleId]
+    if (@($policy.projection_only_families) -cnotcontains [string]$set.family) { continue }
+    $rule = @((@($model.fact_families | Where-Object { [string]$_.family -ceq [string]$set.family })[0]).rules | Where-Object { [string]$_.rule_id -ceq $ruleId })[0]
+    $expectedFacts = @($rule.outcomes | Where-Object { @('exact_value','typed_null','accepted_unknown','mixed_by_constructor') -ccontains [string]$_.disposition }).Count -gt 0
+    $hasFacts = @($set.fact_templates).Count -gt 0
+    $hasConstructors = @($set.constructors).Count -gt 0
+    if (-not $hasConstructors -or $expectedFacts -ne $hasFacts) {
+        Add-Issue $issues 'PROJECTION-RULE-EFFECT' "$($set.family)/$ruleId did not retain its exact constructor/fact disposition."
+    } else {
+        $projectionRuleEffectWitnesses++
     }
 }
 
@@ -427,8 +682,11 @@ foreach ($event in @(
 )) {
     $definition = Get-GapDefinition $model $event.gap
     $effects = [pscustomobject]@{
+        family='coverage'; rule_id=$event.id; occurrence=$event.id
         coverage=@([pscustomobject]@{population=$event.population;denominator=1;completed=0;source=$event.id;occurrence=$event.id})
-        gaps=@([pscustomobject]@{rule_id=$event.gap;owner_id="GO-$($event.id.ToUpperInvariant())";population=[string]$definition.population_template;capability=[string]$definition.missing_capability;scope='snapshot-and-result';affected=1;snapshot_published=$true;result_published=$true;source=$event.id;occurrence=$event.id})
+        snapshot_gaps=@([pscustomobject]@{rule_id=$event.gap;owner_id="GO-$($event.id.ToUpperInvariant())";member_id="$($event.id)|GO-$($event.id.ToUpperInvariant())";population=[string]$definition.population_template;capability=[string]$definition.missing_capability;scope='snapshot-and-result';affected=1;owns_population=$event.population;source=$event.id;occurrence=$event.id})
+        result_gaps=@([pscustomobject]@{rule_id=$event.gap;owner_id="GO-$($event.id.ToUpperInvariant())";member_id="$($event.id)|GO-$($event.id.ToUpperInvariant())";population=[string]$definition.population_template;capability=[string]$definition.missing_capability;scope='snapshot-and-result';affected=1;owns_population=$event.population;source=$event.id;occurrence=$event.id})
+        constructors=@(); fact_templates=@(); terminal=$false; publishes=$false
     }
     $before = $issues.Count
     [void](Test-Composition $model $policy @($effects) "event/$($event.id)" $issues)
@@ -436,38 +694,130 @@ foreach ($event in @(
     $compositionLines.Add("event|$($event.id)|$($event.population)|$($event.gap)")
 }
 
+$globalCompositionWitnesses = 0
+$globalSets = [System.Collections.Generic.List[object]]::new()
+$globalIndex = 0
+foreach ($ruleId in @(Get-OrdinalStrings @($ruleWitnesses.Keys))) {
+    $candidate = Copy-Object $ruleWitnesses[$ruleId]
+    if ([string]$candidate.rule_id -ceq 'P4-RESULT-NO-SNAPSHOT') { continue }
+    $globalIndex++
+    $candidate.occurrence = "global:$globalIndex"
+    foreach ($effect in @($candidate.coverage)) { $effect.occurrence = $candidate.occurrence }
+    foreach ($gap in @($candidate.snapshot_gaps) + @($candidate.result_gaps)) { $gap.occurrence = $candidate.occurrence; $gap.member_id = "$($candidate.occurrence)|$($gap.owner_id)" }
+    $globalSets.Add($candidate)
+}
+$before = $issues.Count
+[void](Test-Composition $model $policy @($globalSets) 'global/all-admitted-rules-independent-occurrences' $issues)
+if ($issues.Count -eq $before) { $successfulWitnesses++; $globalCompositionWitnesses++ }
+$compositionLines.Add("global|rules=$($globalSets.Count)|families=15|rows=10")
+
+$facegenAssetPairWitnesses = 0
+$facegenKinds = @(
+    'P4-FACEGEN-APPLICABLE-PRESENT',
+    'P4-FACEGEN-APPLICABLE-ABSENT-ARCHIVE-SUPPORTED',
+    'P4-FACEGEN-APPLICABLE-ABSENT-ARCHIVE-UNSUPPORTED',
+    'P5-FACEGEN-APPLICABLE-UNKNOWN-ARCHIVE-SUPPORTED',
+    'P5-FACEGEN-APPLICABLE-UNKNOWN-ARCHIVE-UNSUPPORTED'
+)
+$facegenFamily = @($model.fact_families | Where-Object { [string]$_.family -ceq 'face_gen' })[0]
+for ($i = 0; $i -lt $facegenKinds.Count; $i++) {
+    for ($j = $i; $j -lt $facegenKinds.Count; $j++) {
+        $meshRule = @($facegenFamily.rules | Where-Object { [string]$_.rule_id -ceq $facegenKinds[$i] })[0]
+        $tintRule = @($facegenFamily.rules | Where-Object { [string]$_.rule_id -ceq $facegenKinds[$j] })[0]
+        $mesh = Get-RuleEffects $model 'face_gen' $meshRule "facegen-pair:${i}:${j}:mesh" $issues
+        $tint = Get-RuleEffects $model 'face_gen' $tintRule "facegen-pair:${i}:${j}:tint" $issues
+        $before = $issues.Count
+        [void](Test-Composition $model $policy @($mesh,$tint) "facegen-pair/$($facegenKinds[$i])+$($facegenKinds[$j])" $issues)
+        if ($issues.Count -eq $before) { $successfulWitnesses++; $facegenAssetPairWitnesses++ }
+        $compositionLines.Add("facegen-pair|mesh=$($facegenKinds[$i])|tint=$($facegenKinds[$j])")
+    }
+}
+
 $mutations = [System.Collections.Generic.List[object]]::new()
 if (-not $SkipMutationTests) {
-    $looseGap = Get-GapDefinition $model 'P5-GAP-LOOSE-AVAILABILITY'
-    $mkCoverage = { param($d,$c,$p='face-gen-loose-assets') [pscustomobject]@{ population=$p; denominator=$d; completed=$c; source='mutation'; occurrence='m1' } }
-    $mkGap = { param($owner='GO-MUTATION',$pop='face-gen-loose-assets',$cap='exhaustive-byte-verified-loose-provider-index',$occ='m1') [pscustomobject]@{ rule_id='P5-GAP-LOOSE-AVAILABILITY'; owner_id=$owner; population=$pop; capability=$cap; scope='snapshot-and-result'; affected=1; snapshot_published=$true; result_published=$true; source='mutation'; occurrence=$occ } }
-    $cases = [ordered]@{
-        'omit-supported-loose-gap' = { param($m) [pscustomobject]@{ coverage=@(& $mkCoverage 1 0); gaps=@() } }
-        'omit-unsupported-loose-gap' = { param($m) [pscustomobject]@{ coverage=@((& $mkCoverage 1 0),(& $mkCoverage 1 0 'face-gen-archive-assets')); gaps=@([pscustomobject]@{rule_id='P4-GAP-ARCHIVE';owner_id='GO-ARCHIVE';population='face-gen-archive-assets';capability='archive-activation-and-member-precedence';scope='snapshot-and-result';affected=1;snapshot_published=$true;result_published=$true;source='mutation';occurrence='m1'}) } }
-        'wrong-new-gap-rule-id' = { param($m) $g=& $mkGap; $g.rule_id='P5-GAP-WRONG'; [pscustomobject]@{ coverage=@(& $mkCoverage 1 0); gaps=@($g) } }
-        'wrong-loose-gap-population' = { param($m) $g=& $mkGap; $g.population='face-gen-archive-assets'; [pscustomobject]@{ coverage=@(& $mkCoverage 1 0); gaps=@($g) } }
-        'wrong-loose-gap-capability' = { param($m) $g=& $mkGap; $g.capability='archive-activation-and-member-precedence'; [pscustomobject]@{ coverage=@(& $mkCoverage 1 0); gaps=@($g) } }
-        'wrong-loose-gap-scope' = { param($m) $g=& $mkGap; $g.scope='snapshot-only'; [pscustomobject]@{ coverage=@(& $mkCoverage 1 0); gaps=@($g) } }
-        'zero-affected-count' = { param($m) $g=& $mkGap; $g.affected=0; [pscustomobject]@{ coverage=@(& $mkCoverage 1 0); gaps=@($g) } }
-        'multiple-count-one-path' = { param($m) $g=& $mkGap; $g.affected=2; [pscustomobject]@{ coverage=@(& $mkCoverage 1 0); gaps=@($g) } }
-        'duplicate-owner-declaration' = { param($m) $g=& $mkGap; [pscustomobject]@{ coverage=@(& $mkCoverage 2 0); gaps=@($g,(Copy-Object $g)) } }
-        'duplicate-aggregate-pair' = { param($m) [pscustomobject]@{ coverage=@(& $mkCoverage 1 0); gaps=@((& $mkGap),(& $mkGap 'GO-MUTATION-2' 'face-gen-loose-assets' 'exhaustive-byte-verified-loose-provider-index' 'm1')) } }
-        'coerce-unknown-to-absent' = { param($m) [pscustomobject]@{ coverage=@(& $mkCoverage 1 0); gaps=@(& $mkGap); fact_assertions=[pscustomobject]@{loose_state='absent';present=$false;exact_absence_known=$true} } }
-        'coerce-unknown-to-present' = { param($m) [pscustomobject]@{ coverage=@(& $mkCoverage 1 0); gaps=@(& $mkGap); fact_assertions=[pscustomobject]@{loose_state='present';present=$true;exact_absence_known=$false} } }
-        'remove-loose-denominator' = { param($m) [pscustomobject]@{ coverage=@(& $mkCoverage 0 0); gaps=@(& $mkGap) } }
-        'increment-loose-completion' = { param($m) [pscustomobject]@{ coverage=@(& $mkCoverage 1 1); gaps=@(& $mkGap) } }
-        'drift-supported-archive' = { param($m) [pscustomobject]@{ coverage=@((& $mkCoverage 1 0),(& $mkCoverage 1 0 'face-gen-archive-assets')); gaps=@(& $mkGap) } }
-        'drift-unsupported-archive' = { param($m) [pscustomobject]@{ coverage=@((& $mkCoverage 1 0),(& $mkCoverage 1 1 'face-gen-archive-assets')); gaps=@((& $mkGap),[pscustomobject]@{rule_id='P4-GAP-ARCHIVE';owner_id='GO-ARCHIVE';population='face-gen-archive-assets';capability='archive-activation-and-member-precedence';scope='snapshot-and-result';affected=1;snapshot_published=$true;result_published=$true;source='mutation';occurrence='m1'}) } }
-        'misclassify-all-unknown' = { param($m) [pscustomobject]@{ coverage=@(& $mkCoverage 1 0); gaps=@(& $mkGap); asserted_lifecycles=@([pscustomobject]@{population='face-gen-loose-assets';state='completed_with_gaps'}) } }
-        'misclassify-mixed' = { param($m) [pscustomobject]@{ coverage=@(& $mkCoverage 2 1); gaps=@(& $mkGap); asserted_lifecycles=@([pscustomobject]@{population='face-gen-loose-assets';state='unsupported'}) } }
-        'misclassify-complete' = { param($m) [pscustomobject]@{ coverage=@(& $mkCoverage 1 1); gaps=@(); asserted_lifecycles=@([pscustomobject]@{population='face-gen-loose-assets';state='completed_with_gaps'}) } }
-        'omit-fixed-row' = { param($m) [pscustomobject]@{ coverage=@(); gaps=@(); fixed_rows_override=@($policy.fixed_coverage_rows | Where-Object { $_ -cne 'plugins' }) } }
-        'add-duplicate-fixed-row' = { param($m) [pscustomobject]@{ coverage=@(); gaps=@(); fixed_rows_override=@($policy.fixed_coverage_rows) + @('plugins') } }
-        'omit-snapshot-gap-publication' = { param($m) $g=& $mkGap; $g.snapshot_published=$false; [pscustomobject]@{ coverage=@(& $mkCoverage 1 0); gaps=@($g) } }
-        'omit-result-gap-mirroring' = { param($m) $g=& $mkGap; $g.result_published=$false; [pscustomobject]@{ coverage=@(& $mkCoverage 1 0); gaps=@($g) } }
-        'publish-atomic-invalid-asset' = { param($m) [pscustomobject]@{ coverage=@(); gaps=@(); atomic_invalid=$true; publishes=$true } }
+    $supportedRule = @($facegenFamily.rules | Where-Object { [string]$_.rule_id -ceq 'P5-FACEGEN-APPLICABLE-UNKNOWN-ARCHIVE-SUPPORTED' })[0]
+    $unsupportedRule = @($facegenFamily.rules | Where-Object { [string]$_.rule_id -ceq 'P5-FACEGEN-APPLICABLE-UNKNOWN-ARCHIVE-UNSUPPORTED' })[0]
+    $presentRule = @($facegenFamily.rules | Where-Object { [string]$_.rule_id -ceq 'P4-FACEGEN-APPLICABLE-PRESENT' })[0]
+    $recordMutation = {
+        param([string]$Id, [System.Collections.Generic.List[string]]$MutationIssues, [bool]$ModelDerived)
+        $mutations.Add([pscustomobject]@{ id=$Id; rejected=($MutationIssues.Count -gt 0); model_derived=$ModelDerived; issues=@($MutationIssues | Sort-Object -Unique) })
     }
-    foreach ($id in @($cases.Keys)) { $mutations.Add((Invoke-Mutation $id $cases[$id] $model $policy)) }
+    $effectCases = [ordered]@{
+        'omit-supported-loose-gap' = { param($s) $s.snapshot_gaps=@();$s.result_gaps=@();$s }
+        'omit-snapshot-gap' = { param($s) $s.snapshot_gaps=@();$s }
+        'omit-result-gap' = { param($s) $s.result_gaps=@();$s }
+        'wrong-gap-population' = { param($s) $s.snapshot_gaps[0].population='face-gen-archive-assets';$s.result_gaps[0].population='face-gen-archive-assets';$s }
+        'wrong-gap-capability' = { param($s) $s.snapshot_gaps[0].capability='archive-activation-and-member-precedence';$s.result_gaps[0].capability='archive-activation-and-member-precedence';$s }
+        'wrong-gap-scope' = { param($s) $s.snapshot_gaps[0].scope='snapshot';$s.result_gaps[0].scope='snapshot';$s }
+        'zero-affected-count' = { param($s) $s.snapshot_gaps[0].affected=0;$s.result_gaps[0].affected=0;$s }
+        'multiple-count-one-path' = { param($s) $s.snapshot_gaps[0].affected=2;$s.result_gaps[0].affected=2;$s }
+        'duplicate-owner-member' = { param($s) $s.snapshot_gaps=@($s.snapshot_gaps)+@((Copy-Object $s.snapshot_gaps[0]));$s.result_gaps=@($s.result_gaps)+@((Copy-Object $s.result_gaps[0]));$s }
+        'coerce-unknown-to-absent' = { param($s) $s|Add-Member fact_assertions ([pscustomobject]@{loose_state='absent';present=$false;exact_absence_known=$true}) -Force;$s }
+        'coerce-unknown-to-present' = { param($s) $s|Add-Member fact_assertions ([pscustomobject]@{loose_state='present';present=$true;exact_absence_known=$false}) -Force;$s }
+        'remove-loose-denominator' = { param($s) $s.coverage[0].denominator=0;$s }
+        'increment-loose-completion' = { param($s) $s.coverage[0].completed=1;$s }
+        'drift-supported-archive' = { param($s) $s.coverage[1].completed=0;$s }
+        'wrong-owned-population' = { param($s) $s.snapshot_gaps[0].owns_population='face-gen-archive-assets';$s.result_gaps[0].owns_population='face-gen-archive-assets';$s }
+        'remove-owned-population' = { param($s) $s.snapshot_gaps[0].owns_population=$null;$s.result_gaps[0].owns_population=$null;$s }
+        'misclassify-all-unknown' = { param($s) $s|Add-Member asserted_lifecycles @([pscustomobject]@{population='face-gen-loose-assets';state='completed_with_gaps'}) -Force;$s }
+        'omit-fixed-row' = { param($s) $s|Add-Member fixed_rows_override @($policy.fixed_coverage_rows|Where-Object{$_ -cne 'plugins'}) -Force;$s }
+        'reorder-fixed-rows' = { param($s) $rows=@($policy.fixed_coverage_rows);$tmp=$rows[0];$rows[0]=$rows[1];$rows[1]=$tmp;$s|Add-Member fixed_rows_override $rows -Force;$s }
+        'publish-atomic-invalid' = { param($s) $s|Add-Member atomic_invalid $true -Force;$s.publishes=$true;$s }
+    }
+    foreach ($id in @($effectCases.Keys)) {
+        $set = Get-RuleEffects $model 'face_gen' $supportedRule "mutation:$id" ([System.Collections.Generic.List[string]]::new())
+        $set = & $effectCases[$id] $set
+        $mutationIssues = [System.Collections.Generic.List[string]]::new()
+        [void](Test-Composition $model $policy @($set) "mutation/$id" $mutationIssues)
+        & $recordMutation $id $mutationIssues $true
+    }
+
+    $mixedUnknown = Get-RuleEffects $model 'face_gen' $supportedRule 'mutation:mixed:unknown' ([System.Collections.Generic.List[string]]::new())
+    $mixedPresent = Get-RuleEffects $model 'face_gen' $presentRule 'mutation:mixed:present' ([System.Collections.Generic.List[string]]::new())
+    $mixedUnknown | Add-Member -NotePropertyName asserted_lifecycles -NotePropertyValue @([pscustomobject]@{population='face-gen-loose-assets';state='unsupported'}) -Force
+    $mixed = @($mixedUnknown, $mixedPresent)
+    $mutationIssues = [System.Collections.Generic.List[string]]::new(); [void](Test-Composition $model $policy $mixed 'mutation/misclassify-mixed' $mutationIssues); & $recordMutation 'misclassify-mixed' $mutationIssues $true
+
+    $noSnapshotSet = Copy-Object $ruleWitnesses['P4-RESULT-NO-SNAPSHOT']
+    $publishedSet = Get-RuleEffects $model 'face_gen' $presentRule 'mutation:no-snapshot:asset' ([System.Collections.Generic.List[string]]::new())
+    $mutationIssues = [System.Collections.Generic.List[string]]::new(); [void](Test-Composition $model $policy @($noSnapshotSet,$publishedSet) 'mutation/no-snapshot-with-family' $mutationIssues); & $recordMutation 'no-snapshot-with-family' $mutationIssues $true
+
+    $reuseA = Get-RuleEffects $model 'face_gen' $supportedRule 'mutation:reused-path' ([System.Collections.Generic.List[string]]::new())
+    $reuseB = Get-RuleEffects $model 'face_gen' $supportedRule 'mutation:reused-path' ([System.Collections.Generic.List[string]]::new())
+    $mutationIssues = [System.Collections.Generic.List[string]]::new(); [void](Test-Composition $model $policy @($reuseA,$reuseB) 'mutation/reused-obligation-owner' $mutationIssues); & $recordMutation 'reused-obligation-owner' $mutationIssues $true
+
+    foreach ($policyMutation in @('extra-projection-family','swapped-fixed-row-order')) {
+        $mutatedPolicy = Copy-Object $policy
+        if ($policyMutation -ceq 'extra-projection-family') { $mutatedPolicy.projection_only_families = @($mutatedPolicy.projection_only_families) + @('face_gen') }
+        else { $rows=@($mutatedPolicy.fixed_coverage_rows);$tmp=$rows[0];$rows[0]=$rows[1];$rows[1]=$tmp;$mutatedPolicy.fixed_coverage_rows=$rows }
+        $mutationIssues = [System.Collections.Generic.List[string]]::new(); Test-AcceptedPolicy $mutatedPolicy $model $mutationIssues; & $recordMutation $policyMutation $mutationIssues $true
+    }
+
+    foreach ($ruleMutation in @('missing-constructor','duplicate-constructor','unknown-disposition','invented-higher-layer','bad-atomic-boundary')) {
+        $mutatedModel = Copy-Object $model
+        $targetFamily = @($mutatedModel.fact_families | Where-Object { [string]$_.family -ceq 'face_gen' })[0]
+        $targetRule = @($targetFamily.rules | Where-Object { [string]$_.rule_id -ceq 'P5-FACEGEN-APPLICABLE-UNKNOWN-ARCHIVE-SUPPORTED' })[0]
+        switch ($ruleMutation) {
+            'missing-constructor' { $targetRule.outcomes = @($targetRule.outcomes | Where-Object { @($_.constructor_groups) -cnotcontains 'FC-FACEGEN-ASSET' }) }
+            'duplicate-constructor' { $targetRule.outcomes[0].constructor_groups = @($targetRule.outcomes[0].constructor_groups) + @('FC-FACEGEN-ASSET') }
+            'unknown-disposition' { $targetRule.outcomes[0].disposition = 'invented' }
+            'invented-higher-layer' { $targetRule.minimum_layer = 'structural' }
+            'bad-atomic-boundary' { $targetRule.atomic_boundary = 'AB-NOT-DECLARED' }
+        }
+        $mutationIssues = [System.Collections.Generic.List[string]]::new(); Test-RuleStructures $mutatedModel $mutationIssues; & $recordMutation $ruleMutation $mutationIssues $true
+    }
+
+    foreach ($overlayMutation in @('change-inherited-outcome','change-coverage-arithmetic','remove-inherited-archive-gap','change-schema-version','add-delta-property')) {
+        $mutatedOverlay = Copy-Object $overlay
+        switch ($overlayMutation) {
+            'change-inherited-outcome' { $mutatedOverlay.delta.replaced_publication_rules[0].rule.outcomes[1].value_rule = 'invented replacement' }
+            'change-coverage-arithmetic' { $mutatedOverlay.delta.replaced_publication_rules[0].rule.coverage_effect.completion = 'increment-one' }
+            'remove-inherited-archive-gap' { $mutatedOverlay.delta.replaced_publication_rules[1].rule.gap_effects = @($mutatedOverlay.delta.replaced_publication_rules[1].rule.gap_effects | Where-Object { [string]$_.gap_rule_id -cne 'P4-GAP-ARCHIVE' }) }
+            'change-schema-version' { $mutatedOverlay.version = '1.0.0' }
+            'add-delta-property' { $mutatedOverlay.delta | Add-Member -NotePropertyName unauthorized -NotePropertyValue $true }
+        }
+        $mutationIssues = [System.Collections.Generic.List[string]]::new(); Test-OverlaySchema $mutatedOverlay $schema $ModelPath $SchemaPath $mutationIssues; Test-BoundedDelta $base $mutatedOverlay $mutationIssues; & $recordMutation $overlayMutation $mutationIssues $true
+    }
     foreach ($result in @($mutations)) { if (-not $result.rejected) { Add-Issue $issues 'MUTATION-SURVIVED' "Mutation '$($result.id)' was not rejected." } }
 }
 
@@ -479,16 +829,26 @@ $admittedRulesComposed = $ruleWitnesses.Count
 $coverageEffectInstances = @($effectInstances | ForEach-Object { @($_.coverage) }).Count
 $positiveCoverageEffects = @($effectInstances | ForEach-Object { @($_.coverage) } | Where-Object { [int]$_.denominator -gt 0 }).Count
 $incompleteCoverageEffects = @($effectInstances | ForEach-Object { @($_.coverage) } | Where-Object { [int]$_.denominator -gt [int]$_.completed }).Count
-$gapEffectInstances = @($effectInstances | ForEach-Object { @($_.gaps) }).Count
-$gapBearingAdmittedStates = @($effectInstances | Where-Object { @($_.gaps).Count -gt 0 }).Count
+$gapEffectInstances = @($effectInstances | ForEach-Object { @($_.snapshot_gaps) }).Count
+$gapBearingAdmittedStates = @($effectInstances | Where-Object { @($_.snapshot_gaps).Count -gt 0 }).Count
+$snapshotGapAggregates = $gapEffectInstances
+$resultGapAggregates = @($effectInstances | ForEach-Object { @($_.result_gaps) }).Count
+$constructorAssignments = @($effectInstances | ForEach-Object { @($_.constructors) }).Count
+$factTemplatesComposed = @($effectInstances | ForEach-Object { @($_.fact_templates) }).Count
+$modelDerivedMutations = @($mutations | Where-Object { [bool]$_.model_derived }).Count
 $compositionDigest = Get-TextHash @(Get-OrdinalStrings $compositionLines)
 $mutationDigest = Get-TextHash @(Get-OrdinalStrings @($mutations | ForEach-Object { "$($_.id)|$($_.rejected)|$([string]::Join(';', @(Get-OrdinalStrings @($_.issues))))" }))
 $issueDigest = Get-TextHash @(Get-OrdinalStrings $uniqueIssues)
 $success = $uniqueIssues.Count -eq 0 -and $mutationRejected -eq $mutations.Count
 
 $summary = @"
-{"schema_id":"infinium.m1-slice4.protocol-5-global-composition-summary/1.0.0","success":$($success.ToString().ToLowerInvariant()),"semantic_model_identity":"$($overlay.model_id)/$($overlay.version)","semantic_model_sha256":"$(Get-Hash $ModelPath)","semantic_model_schema_sha256":"$(Get-Hash $SchemaPath)","base_model_sha256":"$(Get-Hash $basePath)","families":$(@($model.fact_families).Count),"publication_rules":$($ruleIds.Count),"admitted_rules_composed":$admittedRulesComposed,"gap_rules":$($gapIds.Count),"coverage_populations":$(@($model.coverage_registry).Count),"atomic_boundaries":$($atomicBoundaryIds.Count),"raw_states":$rawStates,"admitted_states_composed":$admittedStates,"successful_witnesses":$successfulWitnesses,"pairwise_compositions":$pairwiseCompositions,"capability_event_witnesses":$capabilityEventWitnesses,"coverage_effect_instances":$coverageEffectInstances,"positive_coverage_effects":$positiveCoverageEffects,"incomplete_coverage_effects":$incompleteCoverageEffects,"gap_effect_instances":$gapEffectInstances,"gap_bearing_admitted_states":$gapBearingAdmittedStates,"excluded_states":$excludedStates,"invalid_states":$invalidStates,"uncovered_compositions":$uncoveredCompositions,"overlapping_states":$overlappingStates,"contradictions":$contradictions,"duplicate_or_overlapping_ownership":$duplicateOwnership,"mutations":$($mutations.Count),"mutations_rejected":$mutationRejected,"composition_digest":"$compositionDigest","mutation_digest":"$mutationDigest","issue_digest":"$issueDigest"}
+{"schema_id":"infinium.m1-slice4.protocol-5-global-composition-summary/1.1.0","success":$($success.ToString().ToLowerInvariant()),"semantic_model_identity":"$($overlay.model_id)/$($overlay.version)","semantic_model_sha256":"$(Get-Hash $ModelPath)","semantic_model_schema_sha256":"$(Get-Hash $SchemaPath)","base_model_sha256":"$(Get-Hash $basePath)","validator_sha256":"$(Get-Hash $validatorPath)","required_runtimes":["Windows PowerShell 5.1","PowerShell 7"],"runs_per_runtime":2,"byte_for_byte_runtime_agreement_required":true,"families":$(@($model.fact_families).Count),"publication_rules":$($ruleIds.Count),"admitted_rules_composed":$admittedRulesComposed,"gap_rules":$($gapIds.Count),"coverage_populations":$(@($model.coverage_registry).Count),"atomic_boundaries":$($atomicBoundaryIds.Count),"raw_states":$rawStates,"admitted_states_composed":$admittedStates,"complete_snapshot_witnesses":$completeSnapshotWitnesses,"no_snapshot_witnesses":$noSnapshotWitnesses,"successful_witnesses":$successfulWitnesses,"pairwise_compositions":$pairwiseCompositions,"global_composition_witnesses":$globalCompositionWitnesses,"facegen_asset_pair_witnesses":$facegenAssetPairWitnesses,"capability_event_witnesses":$capabilityEventWitnesses,"coverage_effect_instances":$coverageEffectInstances,"positive_coverage_effects":$positiveCoverageEffects,"incomplete_coverage_effects":$incompleteCoverageEffects,"gap_effect_instances":$gapEffectInstances,"gap_bearing_admitted_states":$gapBearingAdmittedStates,"snapshot_gap_aggregates":$snapshotGapAggregates,"result_gap_aggregates":$resultGapAggregates,"constructor_assignments":$constructorAssignments,"fact_templates_composed":$factTemplatesComposed,"excluded_states":$excludedStates,"invalid_states":$invalidStates,"uncovered_compositions":$uncoveredCompositions,"overlapping_states":$overlappingStates,"contradictions":$contradictions,"duplicate_or_overlapping_ownership":$duplicateOwnership,"mutations":$($mutations.Count),"model_derived_mutations":$modelDerivedMutations,"mutations_rejected":$mutationRejected,"composition_digest":"$compositionDigest","mutation_digest":"$mutationDigest","issue_digest":"$issueDigest"}
 "@
+$summaryObject = $summary | ConvertFrom-Json
+$summaryObject.schema_id = 'infinium.m1-slice4.protocol-5-global-composition-summary/1.2.0'
+$summaryObject | Add-Member -NotePropertyName projection_rule_effect_witnesses -NotePropertyValue $projectionRuleEffectWitnesses
+$summaryObject | Add-Member -NotePropertyName effectless_bypasses -NotePropertyValue 0
+$summary = ($summaryObject | ConvertTo-Json -Depth 10 -Compress) + "`n"
 $summary = $summary.Trim() + "`n"
 if ($SummaryPath) {
     $directory = Split-Path -Parent $SummaryPath

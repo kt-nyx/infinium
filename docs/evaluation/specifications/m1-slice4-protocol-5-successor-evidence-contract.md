@@ -2,7 +2,7 @@
 
 Status: Accepted
 
-Version: `infinium.m1-slice4.protocol-5-evidence-contract/1.0.0`
+Version: `infinium.m1-slice4.protocol-5-evidence-contract/1.0.1`
 
 Work ID: `M1/S4.5/PRE-B2/V5/WP1R`
 
@@ -14,6 +14,12 @@ This contract is the ADR-0031 overlay on immutable accepted contract
 Every rule, vocabulary, fact constructor, state partition, normalization,
 atomic boundary, coverage population, and invariant not named below is
 inherited unchanged. This file does not revise protocol `/4`.
+
+Historical version `1.0.0` remains frozen at WP1R commit
+`cd23a96be50820326db1f1247edb11c3c86f230b`. Version `1.0.1` changes no
+semantic rule. It restores the inherited fixed-row order and strengthens the
+machine proof metadata after the resumed WP1 audit found those nonsemantic
+defects.
 
 ## Authorized replacement
 
@@ -70,7 +76,10 @@ publication, fixed coverage rows, and atomic boundaries:
 - an atomic rejection publishes no partial object.
 
 The accepted global composition validator materializes the overlay, verifies
-its exact bounded delta, composes every admitted state and rule, exercises
-cross-family aggregates, rejects model-derived mutations, and emits a
-runtime-independent machine summary. Its output must agree byte-for-byte over
-two runs on every required PowerShell runtime.
+its exact bounded delta, and composes constructor dispositions, fact templates,
+coverage, gaps, lifecycle, publication, fixed rows, and atomic boundaries into
+complete fifteen-family witnesses. It exercises all fifteen unordered
+mesh/tint path combinations, no-snapshot publication, N-way cross-family
+aggregation, and model-derived mutations, then emits a runtime-independent
+machine summary bound to the validator hash. Its output must agree
+byte-for-byte over two runs on every required PowerShell runtime.

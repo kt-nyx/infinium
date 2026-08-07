@@ -390,7 +390,11 @@ without any legal owning gap or lifecycle. The
 [public representability record](m1-slice4-protocol-5-wp1-representability-hard-stop.md)
 preserves that historical stop. The owner accepted the exact
 graceful-degradation disposition in ADR-0031. WP1R accepted distinct successor
-model `infinium.m1-slice4.protocol-5-evidence-contract/1.0.0`, added one exact
+model `infinium.m1-slice4.protocol-5-evidence-contract/1.0.1`, added one exact
 loose-availability gap to both affected branches, and installed a mandatory
 global composition proof. Model `1.2.0` and protocol `/4` remain immutable.
-WP1 may resume against only the successor model; WP2-WP4 remain gated on WP1.
+WP1 resumed against only the successor model, but bounded recovery WP1V hard-
+stopped after its final independent review found noncanonical resolved-link
+witnesses accepted through a self-referential ledger/document value check.
+WP1 is not proof-closed, and WP2-WP4 remain gated on a separately authorized
+resolution.

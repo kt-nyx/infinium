@@ -190,8 +190,10 @@ Every material document should include a status and last-reviewed date.
   `M1/S4.5/PRE-B2/V5` successor cycle. WP1 hard-stopped on a global
   FaceGen/coverage composition contradiction; that history remains recorded.
   ADR-0031 and WP1R accepted the distinct `/5` successor semantic model, exact
-  loose-availability gap, and mandatory global composition proof. WP1 resumed;
-  WP2-WP4 remain gated. No new B2 is authorized. C2
+  loose-availability gap, and mandatory global composition proof. Resumed WP1
+  recovery WP1V then hard-stopped after its final review found noncanonical
+  resolved-link witnesses and a self-authorizing ledger/document comparison.
+  WP1 is not proof-closed; WP2-WP4 remain gated. No new B2 is authorized. C2
   has not run, and Stage D has not started. The detailed sanitized history is recorded
   in the
   [Stage C.5 incident](evaluation/evaluator-v2-stage-c5-adjudication-incident.md).

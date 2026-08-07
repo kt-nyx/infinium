@@ -1,13 +1,13 @@
 {
-  "schema_id": "infinium.m1-slice4.protocol-5-successor-model.schema/1.0.0",
+  "schema_id": "infinium.m1-slice4.protocol-5-successor-model.schema/1.0.1",
   "model_id": "infinium.m1-slice4.protocol-5-evidence-contract",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "status": "accepted",
   "work_id": "M1/S4.5/PRE-B2/V5/WP1R",
   "protocol": "/5",
   "authority": {
     "adr": "ADR-0031",
-    "contract": "infinium.m1-slice4.protocol-5-evidence-contract/1.0.0"
+    "contract": "infinium.m1-slice4.protocol-5-evidence-contract/1.0.1"
   },
   "base_model": {
     "path": "docs/evaluation/specifications/m1-slice4-protocol-4-totality-model.json",
@@ -101,7 +101,7 @@
       {"invariant_id":"INV-FACEGEN-LOOSE-AVAILABILITY","population":"face-gen-loose-assets","gap_rule_id":"P5-GAP-LOOSE-AVAILABILITY","missing_capability":"exhaustive-byte-verified-loose-provider-index","per_path_coverage":"denominator+1,completed+0","gap_affected_count":"denominator-minus-completed","archive_independence":true,"lifecycle":{"zero":"completed","all_incomplete_positive":"unsupported","mixed":"completed_with_gaps","complete_without_gap":"completed"},"result_state":"completed_with_gaps","authorities":["adr0029","adr0031","owner_disposition"]}
     ],
     "composition_policy": {
-      "fixed_coverage_rows": ["plugins","npc-records","race-records","placed-reference-records","face-gen-loose-assets","face-gen-archive-assets","unsupported-records","localized-strings","automatic-environment-discovery","taxonomy-subjects"],
+      "fixed_coverage_rows": ["plugins","npc-records","race-records","placed-reference-records","unsupported-records","face-gen-loose-assets","face-gen-archive-assets","localized-strings","automatic-environment-discovery","taxonomy-subjects"],
       "coverage_owned_gap_populations": ["face-gen-loose-assets","face-gen-archive-assets","npc-records","race-records","placed-reference-records","localized-strings","automatic-environment-discovery"],
       "semantic_gap_only_populations": ["face-gen-applicability:template","face-gen-applicability:race","unsupported-fields:*","unsupported-shapes:*"],
       "complete_with_gap_populations": ["unsupported-records"],

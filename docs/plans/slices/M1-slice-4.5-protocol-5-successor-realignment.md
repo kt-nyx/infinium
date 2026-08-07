@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Protocol `/5` successor realignment
 
-Status: Accepted; WP0 and WP1R complete; WP1 resumed
+Status: Accepted plan; WP0 and WP1R complete; WP1V hard-stopped; WP1 unclosed
 Owner: Project owner
 Prepared: 2026-08-07
 Accepted: 2026-08-07
@@ -12,7 +12,7 @@ Parent plan: `infinium.plan.m1.backend-semantic-proof/3`
 
 Qualify and freeze a public protocol `/5` successor whose schema and
 canonicalizer can represent every outcome in accepted successor semantic model
-`infinium.m1-slice4.protocol-5-evidence-contract/1.0.0`
+`infinium.m1-slice4.protocol-5-evidence-contract/1.0.1`
 exactly, including partial-object retention, without inspecting or executing
 the product candidate or accessing private material.
 
@@ -29,7 +29,7 @@ This is evaluator successor qualification, not repair or retry of protocol
   `infinium.m1-slice4.protocol-4-evidence-contract/1.2.0` at SHA-256
   `09ae312824aa0c859b396fd18fef69b14905c2c6d6f901ce598d3c5ab5970bf5`;
 - accepted `/5` successor model
-  `infinium.m1-slice4.protocol-5-evidence-contract/1.0.0`, derived by the
+  `infinium.m1-slice4.protocol-5-evidence-contract/1.0.1`, derived by the
   exact ADR-0031 overlay and mandatory global composition gate;
 - historical frozen evaluator `/4`
   `3693d19563c636cd2879804633ca4ce52448d2c1`; and
@@ -128,7 +128,7 @@ The defining invariant is:
 
 The contract covers all 15 fact families, 9 state classes, 10 coverage
 populations, 9 gap rules, 11 atomic boundaries, constructor and normalization
-groups, and higher-order invariants in successor model `1.0.0`. It is not a one-off
+groups, and higher-order invariants in successor model `1.0.1`. It is not a one-off
 `RACE/DATA` patch.
 
 Fresh read-only audits must separately cover property optionality/null/omission,
@@ -164,14 +164,21 @@ Work ID: `M1/S4.5/PRE-B2/V5/WP1R`
 The owner accepted the exact graceful-degradation disposition recorded by
 ADR-0031. WP1R preserves the historical hard stop and immutable model `1.2.0`,
 accepts the distinct successor identity
-`infinium.m1-slice4.protocol-5-evidence-contract/1.0.0`, adds only
+`infinium.m1-slice4.protocol-5-evidence-contract/1.0.1`, adds only
 `P5-GAP-LOOSE-AVAILABILITY` and the two explicit successor rule replacements,
 and installs a deterministic global composition gate.
 
+WP1R commit `cd23a96be50820326db1f1247edb11c3c86f230b` froze historical
+successor version `1.0.0`. The resumed WP1 audit found only nonsemantic proof
+metadata defects: inherited coverage-row order and incomplete proof
+dimensions. Version `1.0.1` preserves the exact semantic delta while correcting
+those metadata and gate defects; `1.0.0` remains reproducible at its commit.
+
 The gate materializes the exact overlay, verifies all predecessor hashes,
-composes every admitted state/rule through coverage and gaps, exercises
-cross-family aggregate witnesses, verifies fixed rows and atomic boundaries,
-and rejects 24 global mutations. It is mandatory for resumed WP1 and WP2-WP4.
+composes every admitted state/rule through constructors, facts, coverage,
+gaps, lifecycle, fixed rows, publication, and atomic boundaries, and exercises
+complete cross-family, no-snapshot, and all mesh/tint pair witnesses plus
+model-derived mutations. It is mandatory for resumed WP1 and WP2-WP4.
 Two runs on Windows PowerShell and two on PowerShell must produce byte-identical
 machine summaries. Three fresh read-only audits cover the semantic delta,
 global composition, and history/documentation consistency. The parent may use
@@ -181,6 +188,35 @@ WP1R status: **accepted**. The owner disposition resolved both unknown-loose
 branches without coercing unknown or coupling archive evidence. Resumed WP1
 consumes only the accepted successor identity. The original WP1 correction
 budget remains unused.
+
+### WP1V — WP1 Verification Closure
+
+Work ID: `M1/S4.5/PRE-B2/V5/WP1V`
+
+WP1V is a bounded recovery beneath WP1 whose only purpose is to correct and
+independently validate the public proof system. It does not reopen ADR-0031,
+the accepted successor semantics, or any historical `/4` artifact. The proof
+must reconcile all 77 successor publication rules exactly once through a
+machine-readable rule ledger, exact admitted witnesses, exact terminal or
+no-publication witnesses, and material coverage, gap, and result-gap effects.
+Projection-only classification is descriptive and cannot erase rule effects.
+
+WP1V carries one implementation attempt, one fresh independent public review,
+and at most one correction pass followed by final re-review. It stops after
+acceptance or when that correction budget is exhausted. Acceptance requires
+byte-identical summaries from two Windows PowerShell 5.1 runs and two
+PowerShell 7 runs, all required model/document mutations rejected for their
+claimed invariant, zero unproven rules or effectless bypasses, and no unresolved
+review finding.
+
+WP1V status: **hard-stopped** after the final independent re-review found four
+resolved-link witnesses with 72 noncanonical placeholder properties and a
+self-referential ledger/document value comparison. The sole correction pass is
+exhausted. WP1 is not proof-closed, and WP2 remains gated and has not started.
+The bounded evidence is recorded in the
+[WP1V proof-closure record](../../evaluation/m1-slice4-protocol-5-wp1v-proof-closure.md)
+and its
+[append-only hard-stop record](../../evaluation/m1-slice4-protocol-5-wp1v-proof-closure-hard-stop.md).
 
 ### WP2 — Deterministic representability proof
 
@@ -198,7 +234,7 @@ The primary validator is
 canonical output remains ignored under `work/`; no expected answer is copied
 from a product or private source.
 
-Expectations come from successor model `1.0.0`, its mandatory global
+Expectations come from successor model `1.0.1`, its mandatory global
 composition proof, and the WP1 representation contract, not
 from evaluator implementation or candidate output. The validator reports exact
 raw, admitted, excluded, invalid/terminal, witness, mutation, uncovered,
@@ -286,7 +322,7 @@ The immutable public records are:
 ## Parent review after every package
 
 The parent records exact exit-criterion coverage, semantic correctness,
-completeness against accepted successor model `1.0.0` and its mandatory global
+completeness against accepted successor model `1.0.1` and its mandatory global
 composition proof, diff and protected-path scope,
 deterministic tests and identities, documentation consistency, findings and
 correction count, and input/output commits with clean Git state. Passing tests

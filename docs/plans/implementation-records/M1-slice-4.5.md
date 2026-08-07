@@ -1187,3 +1187,38 @@ handoff without rewriting this append-only entry.
 No evaluator implementation, product/candidate access or execution, private
 access, corpus work, B2, C2, Stage D, Slice 5, live/billable call, protocol
 `/6`, history rewrite, push, or protected-path change occurred.
+
+## 2026-08-07 protocol `/5` WP1V proof-closure hard stop
+
+Recovery package `M1/S4.5/PRE-B2/V5/WP1V` corrected the inherited empty-effect
+support-family bypass and current `1.0.1` authority-pointer drift, then created
+a mandatory ledger covering 77 successor publication rules: 63 classified
+admitted, 14 classified terminal, 15 families, and all 10 admitted
+`coverage`/`gaps`/`result_gaps` rules. The sole independent review rejected its
+initial generic-value witnesses, FaceGen semantics, identity drift, incomplete
+mutation routing, and runtime-dependent ledger serialization.
+
+The one permitted correction pass produced byte-identical four-runtime
+summaries: global 1,870 bytes at
+`f137c39302db01a4d348f4ca5a8b9626cc38e604012d353fe4c25cc2e9e38b95`
+and projection 2,378 bytes at
+`920fe2ef10f8c066dc81c20b2e93e00d3166591b10f3580e3f71886174ee58ba`.
+Both runtime ledger generations produced 537,465 bytes at
+`8d88061dbcd7d206533c2ed245861c3c823f6576cd9ade727050d75bb8e22904`.
+The projection validator reported 77 closed rules, 63 exact/schema witnesses,
+14 terminal witnesses, 50/50 rejected mutations, and zero issues.
+
+The final re-review returned `REJECT`. It found four admitted resolved-link
+witnesses with 72 noncanonical placeholder link properties. The validator did
+not independently enforce accepted link-state, field, component, or FormKey
+values; it copied values from the ledger into documents and compared them back
+to the same ledger. The deterministic green summaries therefore reproduce a
+material false acceptance rather than prove closure.
+
+The authorized correction budget is exhausted. WP1V hard-stopped, WP1 is not
+proof-closed, and WP2 did not start. No further correction, reviewer, recovery,
+evaluator work, candidate/product access or execution, private access, corpus
+work, B2, C2, scoring, Stage D, Slice 5, live/billable call, protocol `/6`,
+history rewrite, push, or commit occurred. The complete evidence is preserved
+in the
+[WP1V hard-stop record](../../evaluation/m1-slice4-protocol-5-wp1v-proof-closure-hard-stop.md).

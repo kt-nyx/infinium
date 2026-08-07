@@ -418,6 +418,6 @@ qualification, B2, C2, Stage D, Slice 5, and protocol `/6` remain unauthorized.
 WP1's accepted-model FaceGen/coverage composition hard stop remains historical
 evidence. The owner accepted ADR-0031 and recovery package
 `M1/S4.5/PRE-B2/V5/WP1R`, which established distinct successor model
-`infinium.m1-slice4.protocol-5-evidence-contract/1.0.0`, one exact
+`infinium.m1-slice4.protocol-5-evidence-contract/1.0.1`, one exact
 loose-availability gap, and the mandatory global composition proof. WP1
 resumed; WP2-WP4 remain gated on its acceptance.

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "infinium.m1-slice4.protocol-5-projection-representation-model.schema/v1",
+  "$id": "infinium.m1-slice4.protocol-5-projection-representation-model.schema/v3",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -10,7 +10,10 @@
     "status",
     "work_id",
     "semantic_authority",
+    "composition_authority",
+    "rule_ledger_authority",
     "protocol",
+    "projection_object_policy",
     "source_inventory",
     "family_order",
     "state_class_representation",
@@ -21,24 +24,48 @@
   ],
   "properties": {
     "schema_id": {
-      "const": "infinium.m1-slice4.protocol-5-projection-representation-model.schema/v1"
+      "const": "infinium.m1-slice4.protocol-5-projection-representation-model.schema/v3"
     },
     "model_id": {
       "const": "infinium.m1-slice4.protocol-5-projection-representation"
     },
-    "version": { "const": "1.0.0" },
-    "status": { "const": "proposed-blocked" },
-    "work_id": { "const": "M1/S4.5/PRE-B2/V5/WP1" },
+    "version": { "const": "1.2.0" },
+    "status": { "const": "accepted" },
+    "work_id": { "const": "M1/S4.5/PRE-B2/V5/WP1V" },
     "semantic_authority": {
       "type": "object",
       "additionalProperties": false,
       "required": ["model_id", "version", "sha256", "path", "immutable"],
       "properties": {
-        "model_id": { "const": "infinium.m1-slice4.protocol-4-evidence-contract" },
-        "version": { "const": "1.2.0" },
-        "sha256": { "const": "09ae312824aa0c859b396fd18fef69b14905c2c6d6f901ce598d3c5ab5970bf5" },
-        "path": { "const": "docs/evaluation/specifications/m1-slice4-protocol-4-totality-model.json" },
+        "model_id": { "const": "infinium.m1-slice4.protocol-5-evidence-contract" },
+        "version": { "const": "1.0.1" },
+        "sha256": { "const": "3f375adcc59e436a75f14f8e46afcf0286bb202cb05fe256af6b679a726bab66" },
+        "path": { "const": "docs/evaluation/specifications/m1-slice4-protocol-5-successor-model.json" },
         "immutable": { "const": true }
+      }
+    },
+    "composition_authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_id", "path", "sha256", "composition_digest", "mandatory"],
+      "properties": {
+        "schema_id": { "const": "infinium.m1-slice4.protocol-5-global-composition-summary/1.2.0" },
+        "path": { "const": "docs/evaluation/specifications/m1-slice4-protocol-5-global-composition-summary.json" },
+        "sha256": { "const": "f137c39302db01a4d348f4ca5a8b9626cc38e604012d353fe4c25cc2e9e38b95" },
+        "composition_digest": { "const": "cbea94aaed2dc20a329187a4ace76a2679605530613bdf647aac9018232795ee" },
+        "mandatory": { "const": true }
+      }
+    },
+    "rule_ledger_authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_id", "path", "sha256", "rules", "mandatory"],
+      "properties": {
+        "schema_id": { "const": "infinium.m1-slice4.protocol-5-rule-coverage-ledger/1.0.0" },
+        "path": { "const": "docs/evaluation/specifications/m1-slice4-protocol-5-rule-coverage-ledger.json" },
+        "sha256": { "const": "8d88061dbcd7d206533c2ed245861c3c823f6576cd9ade727050d75bb8e22904" },
+        "rules": { "const": 77 },
+        "mandatory": { "const": true }
       }
     },
     "protocol": {
@@ -48,9 +75,28 @@
       "properties": {
         "protocol_id": { "const": "infinium.evaluator-v2/5" },
         "projection_id": { "const": "infinium.evaluator-v2.slice4-semantic-projection" },
-        "projection_version": { "const": "4.0.0" },
-        "document_schema_id": { "const": "infinium.evaluator-v2.slice4-projection-document.schema/v5" },
+        "projection_version": { "const": "5.1.0" },
+        "document_schema_id": { "const": "infinium.evaluator-v2.slice4-projection-document.schema/v5.2" },
         "document_schema_path": { "const": "docs/evaluation/specifications/m1-slice4-protocol-5-projection-document.schema.json" }
+      }
+    },
+    "projection_object_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rule_provenance", "facegen_common_owner",
+        "semantic_cardinality_ceiling", "override_contributions",
+        "canonical_path_encoding", "published_coverage_rows",
+        "no_snapshot_snapshot_families"
+      ],
+      "properties": {
+        "rule_provenance": { "const": "exact-unique-ordinal-property-source-rule-set" },
+        "facegen_common_owner": { "const": "mesh-before-tint-ordinal-first-applicable-path-rule" },
+        "semantic_cardinality_ceiling": { "const": "none" },
+        "override_contributions": { "const": "one-or-more-with-exactly-one-matching-winner" },
+        "canonical_path_encoding": { "const": "literal-unreserved-ascii-or-uppercase-reserved-ascii-or-complete-uppercase-nonascii-utf8" },
+        "published_coverage_rows": { "const": 10 },
+        "no_snapshot_snapshot_families": { "const": "all-empty" }
       }
     },
     "source_inventory": {
@@ -65,17 +111,18 @@
         "constructor_groups": { "const": 24 },
         "normalization_rules": { "const": 10 },
         "atomic_boundaries": { "const": 11 },
-        "gap_rules": { "const": 8 },
+        "gap_rules": { "const": 9 },
         "coverage_populations": { "const": 10 },
         "admitted_states": { "const": 110 }
       }
     },
     "family_order": {
-      "type": "array",
-      "minItems": 15,
-      "maxItems": 15,
-      "uniqueItems": true,
-      "items": { "$ref": "#/$defs/family" }
+      "const": [
+        "result", "plugins", "override_chains", "npc_contributions",
+        "race_contributions", "placed_reference_contributions",
+        "allowlisted_fields", "npcs", "races", "placed_references",
+        "face_gen", "taxonomy", "coverage", "gaps", "result_gaps"
+      ]
     },
     "state_class_representation": {
       "type": "array",
@@ -106,7 +153,7 @@
     },
     "invariants": {
       "type": "array",
-      "minItems": 6,
+      "minItems": 9,
       "items": { "$ref": "#/$defs/invariant" }
     }
   },
@@ -149,7 +196,7 @@
         "object_presence": { "type": "string", "minLength": 1 },
         "source_rules": {
           "type": "array", "minItems": 1, "uniqueItems": true,
-          "items": { "type": "string", "pattern": "^P4-[A-Z0-9-]+$" }
+          "items": { "type": "string", "pattern": "^P[45]-[A-Z0-9-]+$" }
         },
         "required_base_groups": {
           "type": "array", "uniqueItems": true,
@@ -161,7 +208,7 @@
         },
         "atomic_groups": {
           "type": "array", "uniqueItems": true,
-          "items": { "type": "string", "pattern": "^(FC|AB)-[A-Z0-9-]+$" }
+          "items": { "type": "string", "pattern": "^AB-[A-Z0-9-]+$" }
         },
         "allowed_fact_types": {
           "type": "array", "minItems": 1, "uniqueItems": true,
@@ -173,7 +220,7 @@
         },
         "gap_rules": {
           "type": "array", "uniqueItems": true,
-          "items": { "type": "string", "pattern": "^P4-GAP-[A-Z0-9-]+$" }
+          "items": { "type": "string", "pattern": "^P[45]-GAP-[A-Z0-9-]+$" }
         }
       }
     },
@@ -188,7 +235,7 @@
         "source_templates": { "const": "exact-constructor-group-from-semantic-authority" },
         "absence_semantics": { "type": "string", "minLength": 1 },
         "null_semantics": { "type": "string", "minLength": 1 },
-        "completion": { "enum": ["all-or-nothing", "repeatable-zero-or-more", "constructor-defined-mixed"] }
+        "completion": { "enum": ["all-or-nothing", "repeatable-zero-or-more", "repeatable-one-or-more", "constructor-defined-mixed"] }
       }
     },
     "invariant": {

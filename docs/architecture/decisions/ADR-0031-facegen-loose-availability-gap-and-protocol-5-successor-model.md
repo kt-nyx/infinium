@@ -23,7 +23,7 @@ the WP1 hard-stop remain immutable evidence.
 
 ## Decision
 
-1. Accept `infinium.m1-slice4.protocol-5-evidence-contract/1.0.0` as the
+1. Accept `infinium.m1-slice4.protocol-5-evidence-contract/1.0.1` as the
    semantic model for the public `/5` successor. It is an explicit overlay on
    immutable model `1.2.0`; omitted content is inherited byte-for-byte.
 2. Replace only
@@ -54,6 +54,15 @@ the WP1 hard-stop remain immutable evidence.
 8. A deterministic global composition proof is required before this model or
    any dependent `/5` artifact is accepted. It must enumerate all
    contradictions rather than stopping at the first.
+
+Version `1.0.0`, accepted at WP1R commit
+`cd23a96be50820326db1f1247edb11c3c86f230b`, remains historical. The resumed
+WP1 audit found that its proof metadata listed the fixed coverage rows out of
+inherited order and that its validator did not prove every claimed composition
+dimension. Version `1.0.1` corrects only that nonsemantic proof metadata and
+strengthens the mandatory gate. Its two replacement rules, gap addition,
+coverage effects, fact dispositions, and complete authorized delta are
+identical to `1.0.0`.
 
 This ADR narrowly supersedes ADR-0030 and the accepted `/5` plan only where
 they require model `1.2.0` to remain the active, unchanged `/5` semantic input.

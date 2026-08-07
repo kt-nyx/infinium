@@ -81,7 +81,7 @@ That authorization does not permit candidate execution or correction, private
 access, corpus qualification, B2, C2, scoring, or product output as truth.
 Public `/5` work must preserve model `1.2.0` as immutable history, use only the
 accepted successor model
-`infinium.m1-slice4.protocol-5-evidence-contract/1.0.0`, pass its global
+`infinium.m1-slice4.protocol-5-evidence-contract/1.0.1`, pass its global
 composition, representability, and fresh product-blind acceptance gates, and
 freeze before any separately authorized later role. Do not create `/6` or weaken any isolation, no-retry,
 identity, freeze, layered-evidence, coverage, gap, or answer-isolation rule.
