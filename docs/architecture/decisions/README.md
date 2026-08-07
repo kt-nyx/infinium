@@ -1,7 +1,7 @@
 # Architecture Decision Records
 
 Status: Draft  
-Last reviewed: 2026-08-05
+Last reviewed: 2026-08-07
 
 ADRs preserve technical decisions and their rationale. They are append-only:
 accepted records are superseded rather than rewritten to hide prior decisions.
@@ -36,9 +36,10 @@ accepted records are superseded rather than rewritten to hide prior decisions.
 | [ADR-0024](ADR-0024-openai-user-owned-access-modes.md) | Rejected | Reject Codex/ChatGPT-plan integration for the core LLM pipeline; retain direct Responses/API-key access under ADR-0013 |
 | [ADR-0025](ADR-0025-m1-openai-model-and-synchronous-responses-profile.md) | Accepted | Use one explicit `gpt-5.6-sol` synchronous Structured Outputs profile for M1 with retained-result replay and drift requalification |
 | [ADR-0026](ADR-0026-evaluator-private-fixture-repository-and-delegated-access.md) | Accepted; partially superseded | Store private fixtures in a separate Git repository; evaluator-v1 copied-contract/scorer ownership is superseded by ADR-0027 |
-| [ADR-0027](ADR-0027-public-evaluation-protocol-private-held-out-corpus.md) | Accepted | Keep evaluation rules, schemas, adapter, scorer, and calibration public while private data and independent lifecycle evidence remain separate |
+| [ADR-0027](ADR-0027-public-evaluation-protocol-private-held-out-corpus.md) | Accepted; partially superseded | Keep evaluation rules, schemas, adapter, scorer, and calibration public while private data and independent lifecycle evidence remain separate; `/4` finality superseded by ADR-0030 |
 | [ADR-0028](ADR-0028-m1-bethesda-semantic-reporting-and-oracle-authority.md) | Accepted | Bind M1 EDID, FaceGen, asset-state, coverage, gap, and taxonomy semantics for product and oracle authority |
 | [ADR-0029](ADR-0029-layered-evidence-and-partial-semantic-publication.md) | Accepted | Retain independently proven lower-layer facts, expose later semantic gaps, and require total state-to-fact contracts |
+| [ADR-0030](ADR-0030-protocol-5-successor-qualification.md) | Accepted | Authorize a separately qualified protocol `/5` successor without weakening semantic or isolation rules |
 
 ADR-0015 through ADR-0023 are accepted and jointly select the Wave E
 persistence, lifecycle, application-stack, process, IPC, credential, security,
@@ -60,6 +61,10 @@ ADR-0029 resolves the subsequent partial-decode authority gap. It defines
 structural, observed, decoded, resolved, and semantic prerequisites; preserves
 independently proven lower-layer facts; and requires an executable totality
 gate before example-based qualification.
+ADR-0030 narrowly supersedes only ADR-0027 decision 15's `/4`-finality and
+no-`/5` restriction after the accepted model proved a `/4` representation
+gap. All other evaluator, private-data, role-separation, freeze, and one-shot
+rules remain authoritative.
 ADR-0008 through
 ADR-0011 accept the Wave B integration and semantic
 boundaries, and ADR-0012 accepts the revised Nexus interface/risk boundary,
@@ -71,8 +76,8 @@ The product baseline was accepted on 2026-07-25 and its requirements are now
 authoritative. ADR-0001 through ADR-0011 were accepted on 2026-07-25.
 ADR-0012 through ADR-0023 and ADR-0025 were accepted on 2026-07-28, and
 ADR-0024 was rejected that day. ADR-0026 was accepted on 2026-08-01, and
-ADR-0027 was accepted on 2026-08-04, and ADR-0028 and ADR-0029 were accepted on
-2026-08-05.
+ADR-0027 was accepted on 2026-08-04, ADR-0028 and ADR-0029 were accepted on
+2026-08-05, and ADR-0030 was accepted on 2026-08-07.
 ADR-0007
 supersedes only ADR-0006's xEdit-specific
 provisions, ADR-0012 supersedes only ADR-0005's API-interface eligibility and
@@ -234,7 +239,7 @@ For ADRs selecting a technical mechanism:
 
 Use [ADR-template.md](ADR-template.md).
 
-ADR-0027's final M1 application is protocol `/4`, frozen at
-`3693d19563c636cd2879804633ca4ce52448d2c1`. Its held-out authority is bounded
-by the [oracle-authority matrix](../../evaluation/m1-slice4-heldout-oracle-authority-matrix.md);
-protocol `/3` remains immutable superseded evidence.
+ADR-0027's historical final M1 application was protocol `/4`, frozen at
+`3693d19563c636cd2879804633ca4ce52448d2c1`. ADR-0030 now authorizes a
+separately qualified `/5` successor after the accepted model proved a `/4`
+representation gap. `/4` and `/3` remain immutable historical evidence.

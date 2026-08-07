@@ -1,7 +1,7 @@
 # Anti-overfitting rules
 
 Status: Accepted
-Last reviewed: 2026-08-05
+Last reviewed: 2026-08-07
 
 The first semantic proof may use one category, technical surface, affected game
 area, or interaction shape because it exercises useful product capabilities.
@@ -136,7 +136,9 @@ Any rule introduced after a failing real-mod case must answer:
    and did the totality gate prove that no overlapping or uncovered disposition
    remains?
 
-Protocol `/4` adds a hard authority check: if an expected value cannot be
+The evaluator authority check remains hard: if an expected value cannot be
 authored from public rules, the answer-free manifest, accepted taxonomy rules,
-and retained input bytes, it is not a held-out fact. Do not recover coverage by
-reading product output or creating protocol `/5`.
+and retained input bytes, it is not a held-out fact. ADR-0030's narrowly
+authorized `/5` successor may repair only public projection representability
+against accepted model `1.2.0`; it may not recover coverage from product
+output, private answers, fixture identities, or changed semantics.

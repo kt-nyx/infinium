@@ -1,7 +1,7 @@
 # Evaluation strategy
 
 Status: Draft  
-Last reviewed: 2026-08-05
+Last reviewed: 2026-08-07
 
 Infinium is not trustworthy because it produces plausible reports. It becomes
 trustworthy only when evidence reconstruction, candidate selection, semantic
@@ -360,9 +360,9 @@ At every milestone, each requirement claimed complete must have at least one
 reviewed linked evaluation case, and all of its gating cases for the delivered
 scope must pass.
 
-## Final M1 Slice 4 held-out partition
+## M1 Slice 4 held-out partition and protocol `/5` successor
 
-Protocol `/4` is the final M1 evaluator revision. Public conformance verifies
+Protocol `/4` is immutable historical evidence. Public conformance verifies
 implementation-specific diagnostics, typed AIDT mapping, serialization, and
 product provenance IDs. Held-out evaluation verifies only independently
 specifiable semantic behavior listed in the
@@ -379,4 +379,8 @@ stopped without an oracle or product verdict. The first public contract-
 completion attempt also hard-stopped before candidate inspection. ADR-0029 and
 accepted work `M1/S4.5/PRE-B2` now require deterministic contract totality,
 model-derived exercises, and fresh product-blind review before any later role
-can be considered. No new B2 is currently authorized.
+can be considered. The accepted totality model subsequently proved that `/4`
+cannot represent one required partial-publication outcome. ADR-0030 authorizes
+a separately qualified public `/5` successor under accepted plan
+`M1/S4.5/PRE-B2/V5`. This does not authorize candidate execution or
+realignment, private access, corpus qualification, B2, C2, Stage D, or scoring.

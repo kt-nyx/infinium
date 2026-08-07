@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Pre-B2 evidence-contract totality closure
 
-Status: Accepted; WP1-WP5 complete; WP5 classified an evaluator `/4` representation gap; hard-stopped pending owner disposition; WP6 is not directly authorized
+Status: Accepted; WP1-WP5 complete; WP5 classified an evaluator `/4` representation gap; owner disposition supplied by ADR-0030 and the separate V5 plan
 Owner: Project owner
 Accepted: 2026-08-05
 Work ID: `M1/S4.5/PRE-B2`
@@ -442,3 +442,13 @@ product-blind review has no material finding, frozen candidate conformance is
 classified, public status is coherent, and the next separate authority role is
 explicit. Completion is not a B2 authorization and is not a held-out product
 verdict.
+
+## 2026-08-07 owner successor disposition
+
+The owner accepted ADR-0030 and the separate
+[protocol `/5` successor plan](M1-slice-4.5-protocol-5-successor-realignment.md)
+after WP5 classified the frozen `/4` representation gap. That authorization
+does not rewrite or continue this plan's WP6. It creates new public work
+`M1/S4.5/PRE-B2/V5/WP0` through WP4 under immutable accepted model `1.2.0`.
+The historical `/4` evaluator and this plan's records remain unchanged;
+candidate work, private access, B2, C2, Stage D, and Slice 5 remain separate.

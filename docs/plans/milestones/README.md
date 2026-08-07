@@ -1,7 +1,7 @@
 # Milestone plans
 
 Status: Draft  
-Last reviewed: 2026-08-05
+Last reviewed: 2026-08-07
 
 The M0 research plan completed on 2026-07-28. The accepted
 [M1 backend semantic proof plan](M1-backend-semantic-proof.md) is the active
@@ -24,9 +24,11 @@ stopped without an oracle or product verdict. Public realignment and candidate
 freeze remain complete at
 `a98d648bd0adb2751ee0c09828e0227b1583950f`, but the first public
 contract-completion attempt then hard-stopped before candidate inspection.
-ADR-0029 and accepted work `M1/S4.5/PRE-B2` now govern the deterministic
-totality closure; WP1 is next. No new B2 is authorized. C2 has not run, Stage D
-has not started, and Slice 5 remains blocked.
+ADR-0029 and accepted work `M1/S4.5/PRE-B2` completed through WP5, which
+classified an evaluator `/4` representation gap. ADR-0030 and accepted work
+`M1/S4.5/PRE-B2/V5` now govern one separately qualified public `/5` successor.
+No candidate or private work is authorized. C2 has not run, Stage D has not
+started, and Slice 5 remains blocked.
 
 Waves A through D have completed investigations and accepted integrated
 dispositions. Gates A through D are met at their applicable M0 research,
@@ -63,8 +65,8 @@ product documentation is reviewed and accepted and the architecture/evaluation
 prerequisites are accepted. A proposed plan may be drafted earlier as a
 reviewable Wave F output.
 
-M1 status clarification: protocol `/4` is the final authorized M1 evaluator
-revision. Its authorized B2 resume stopped without an oracle or product
-verdict. ADR-0029 and `M1/S4.5/PRE-B2` supply the owner disposition; WP1 is
-next. No new B2 is authorized. Another authority gap does not authorize `/5`,
-evaluator expansion, or product output as oracle truth.
+M1 status clarification: protocol `/4` remains immutable historical evidence.
+ADR-0030 narrowly authorizes a separately qualified `/5` successor after the
+accepted model proved `/4` could not represent one required partial outcome.
+Product output remains prohibited as evaluator or oracle truth. No candidate
+work, private access, B2, C2, Stage D, or Slice 5 is authorized by that cycle.

@@ -1,7 +1,7 @@
 # Implementation records
 
 Status: Active
-Last reviewed: 2026-08-05
+Last reviewed: 2026-08-07
 
 These records retain implementation and verification evidence for completed
 or formally reviewed slices under accepted milestone plans, including explicit
@@ -31,10 +31,12 @@ completion attempt hard-stopped; another B2 task is not authorized by the
 current state. C2 has not run, Stage D has not started, and Slice 5 remains
 blocked.
 
-The first public completion attempt is now historical hard-stop evidence at
-`9d29d7a`. ADR-0029 resolves its partial-decode semantic question, and accepted
-work `M1/S4.5/PRE-B2` replaces fixture-led corrections with a deterministic
-totality pass. WP1 is next; private execution remains unauthorized.
+The first public completion attempt is historical hard-stop evidence at
+`9d29d7a`. ADR-0029 resolved its partial-decode semantic question, and accepted
+work `M1/S4.5/PRE-B2` completed through WP5. WP5 classified an evaluator `/4`
+representation gap. ADR-0030 and work `M1/S4.5/PRE-B2/V5/WP0` through WP4 now
+authorize one separately qualified public `/5` successor. Private execution
+remains unauthorized.
 
 - [M1 Slice 0 — Toolchain, licensing posture, and dependency lock](M1-slice-0.md)
 - [M1 Slice 1 — Versioned domain, wire, output, and evaluation contracts](M1-slice-1.md)
@@ -47,4 +49,5 @@ totality pass. WP1 is next; private execution remains unauthorized.
   `3693d19563c636cd2879804633ca4ce52448d2c1`; owner semantic disposition
   accepted; public realignment complete at `a98d648`; B2 stopped on a public
   lexical-authority gap; the first public contract attempt hard-stopped;
-  `M1/S4.5/PRE-B2/WP1`, C2, and Stage D pending.
+  `M1/S4.5/PRE-B2/V5` active; candidate work, private access, B2, C2, and Stage
+  D pending separate authorization.

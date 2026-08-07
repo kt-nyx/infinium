@@ -1,7 +1,7 @@
 # Infinium documentation
 
 Status: Draft  
-Last reviewed: 2026-08-05
+Last reviewed: 2026-08-07
 
 This directory is the authoritative entry point for the rebuilt Infinium
 project. It records product intent, accepted decisions, research, evaluation
@@ -50,6 +50,8 @@ specification.
   [Slice 4.5 evaluator-v2 plan](plans/slices/M1-slice-4.5-held-out-evaluation-v2.md),
   its accepted
   [Pre-B2 evidence-contract totality successor](plans/slices/M1-slice-4.5-pre-B2-evidence-contract-totality.md),
+  the accepted
+  [protocol `/5` successor plan](plans/slices/M1-slice-4.5-protocol-5-successor-realignment.md),
   the [work-breakdown notation](plans/work-breakdown-notation.md),
   and the
   [research-agent handoff template](plans/research-investigation-agent-handoff-template.md)
@@ -140,8 +142,10 @@ Every material document should include a status and last-reviewed date.
   ADR-0026's evaluator-private repository and delegated-access boundary was
   accepted on 2026-08-01. ADR-0027's public-rule/private-data evaluator-v2
   architecture was accepted on 2026-08-04 and partially supersedes ADR-0026.
-  ADR-0028's bounded M1 semantic-reporting and oracle-authority disposition was
-  accepted on 2026-08-05.
+  ADR-0028's bounded M1 semantic-reporting and oracle-authority disposition and
+  ADR-0029's layered-evidence decision were accepted on 2026-08-05. ADR-0030
+  was accepted on 2026-08-07 and narrowly authorizes one separately qualified
+  protocol `/5` successor after the public `/4` representation gap.
 - Wave F produced the accepted M1 evaluation baseline, detailed semantic and
   platform/operational case specifications and fixture manifests, the
   RQ-028 calibration protocol, exact OpenAI M1 profile research, a
@@ -178,9 +182,11 @@ Every material document should include a status and last-reviewed date.
   stopped without an oracle or product verdict, and the first public contract-
   completion attempt then hard-stopped before candidate inspection. ADR-0029
   resolves the disclosed partial-decode choice. Accepted work
-  `M1/S4.5/PRE-B2` now starts at WP1 and replaces fixture-led corrections with
-  deterministic totality, model-derived exercises, fresh product-blind review,
-  and only then candidate classification. No new B2 is authorized. C2 has not
+  `M1/S4.5/PRE-B2` replaced fixture-led corrections with deterministic
+  totality, model-derived exercises, fresh product-blind review, and candidate
+  classification. WP1-WP5 completed, and WP5 proved an evaluator `/4`
+  representation gap. ADR-0030 now authorizes the public-only
+  `M1/S4.5/PRE-B2/V5` successor cycle. No new B2 is authorized. C2 has not
   run, and Stage D has not started. The detailed sanitized history is recorded
   in the
   [Stage C.5 incident](evaluation/evaluator-v2-stage-c5-adjudication-incident.md).

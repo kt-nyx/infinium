@@ -1,10 +1,10 @@
 # M1 Slice 4.5 — Held-out evaluation v2
 
-Status: Accepted; public contract-completion attempt hard-stopped; accepted `M1/S4.5/PRE-B2` active at WP1
+Status: Accepted; Pre-B2 WP1-WP5 complete; accepted protocol `/5` successor active at V5/WP0
 Owner: Project owner
 Prepared: 2026-08-04
 Accepted: 2026-08-04
-Last reviewed: 2026-08-05
+Last reviewed: 2026-08-07
 Parent plan: `infinium.plan.m1.backend-semantic-proof/3`
 Target: Slice 4.5, between implementation-complete Slice 4 and blocked Slice 5
 
@@ -405,3 +405,13 @@ The RACE partial-decode decision is closed. Work now proceeds as
 model-derived exercises, fresh product-blind review, frozen-candidate
 classification, and public closeout. No private B2, C2, Stage D, Slice 5, or
 protocol `/5` is authorized by this successor.
+
+## Owner-authorized protocol `/5` successor
+
+Pre-B2 WP1-WP5 completed, and WP5 classified an evaluator `/4` representation
+gap. The project owner then accepted ADR-0030 and the
+[protocol `/5` successor plan](M1-slice-4.5-protocol-5-successor-realignment.md).
+That plan authorizes only public `M1/S4.5/PRE-B2/V5/WP0` through WP4 under
+immutable accepted model `1.2.0`. Protocol `/4` and earlier evidence remain
+unchanged. Candidate execution or correction, private access, corpus
+qualification, B2, C2, Stage D, Slice 5, and protocol `/6` remain unauthorized.

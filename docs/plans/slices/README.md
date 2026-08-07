@@ -1,7 +1,7 @@
 # Slice execution plans
 
 Status: Active
-Last reviewed: 2026-08-05
+Last reviewed: 2026-08-07
 
 Slice execution plans refine an accepted milestone slice into a bounded,
 fresh-agent implementation contract. They do not supersede the milestone plan,
@@ -29,8 +29,9 @@ Current execution plans:
   and candidate freeze remain complete at
   `a98d648bd0adb2751ee0c09828e0227b1583950f`. The public oracle-contract
   authorability attempt stopped after its one correction pass found a second
-  material authority gap. Candidate conformance was not inspected. Project-
-  owner disposition is next; another correction or B2 task is not authorized.
+  material authority gap. The later accepted totality plan completed through
+  WP5 and classified an evaluator `/4` representation gap. ADR-0030 supplies
+  the owner disposition through the separate public `/5` successor plan.
   C2 has not run, Stage D has not started, and Slice 5 remains blocked.
 - [M1 Slice 4.5 — Public Bethesda semantic realignment and candidate freeze](M1-slice-4.5-public-product-realignment.md)
   — Accepted and completed 2026-08-05 at `a98d648`. This bounded public
@@ -51,8 +52,14 @@ Current execution plans:
   — Accepted 2026-08-05 as work ID `M1/S4.5/PRE-B2`. ADR-0029 resolves the
   partial `RACE/DATA` disposition and requires a total state-to-fact model,
   executable completeness gate, model-derived public exercises, fresh
-  product-blind review, and frozen candidate classification. WP1 is next. This
-  plan does not authorize private B2 or protocol `/5`.
+  product-blind review, and frozen candidate classification. WP1-WP5 completed;
+  WP5 classified an evaluator `/4` representation gap.
+- [M1 Slice 4.5 — Protocol `/5` successor realignment](M1-slice-4.5-protocol-5-successor-realignment.md)
+  — Accepted 2026-08-07 as work `M1/S4.5/PRE-B2/V5`. ADR-0030 authorizes one
+  separately qualified public `/5` successor after WP5 proved a frozen `/4`
+  representation gap. WP0-WP4 cover authority, complete representation,
+  deterministic proof, public implementation, and fresh product-blind freeze.
+  Candidate work, private access, B2, C2, Stage D, and Slice 5 remain excluded.
 
 Completed slices retain their exact implementation and verification evidence
 under [`../implementation-records/`](../implementation-records/README.md).

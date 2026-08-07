@@ -3,7 +3,7 @@
 Status: Accepted
 Accepted: 2026-08-04
 Accepted by: Project owner
-Last reviewed: 2026-08-05
+Last reviewed: 2026-08-07
 Plan revision: `infinium.plan.m1.backend-semantic-proof/3`
 Predecessor: [M1 backend semantic proof revision 2](M1-backend-semantic-proof-adr0026-amendment.md)
 
@@ -120,3 +120,12 @@ candidate classification, and public governance closeout. The partial
 `RACE/DATA` semantic choice is closed; comprehensive contract proof remains
 pending at WP1. The existing Slice 4.5 held-out and Slice 5 gates are unchanged,
 and no B2, C2, Stage D, or `/5` work is authorized.
+
+## Owner-authorized protocol `/5` successor
+
+Pre-B2 WP1-WP5 completed and WP5 classified a frozen evaluator `/4`
+representation gap. ADR-0030 now supersedes only ADR-0027 decision 15 and
+authorizes accepted public work `M1/S4.5/PRE-B2/V5/WP0` through WP4 to qualify
+and freeze one `/5` successor against immutable semantic model `1.2.0`.
+Candidate implementation, private access, corpus eligibility, B2, C2, Stage D,
+and Slice 5 remain separate and unauthorized by this amendment note.

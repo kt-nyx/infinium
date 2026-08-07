@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Held-out evaluation v2 implementation record
 
-Status: Public evaluator `/4` and candidate frozen; Pre-B2 WP1-WP5 complete; WP5 classified an evaluator `/4` representation gap; hard stop pending owner disposition
+Status: Public evaluator `/4` and candidate frozen; Pre-B2 WP1-WP5 complete; owner-authorized protocol `/5` successor active at V5/WP0
 Opened: 2026-08-04
 Plan: `infinium.plan.m1.backend-semantic-proof/3`
 Execution plan: [M1 Slice 4.5](../slices/M1-slice-4.5-held-out-evaluation-v2.md)
@@ -1042,3 +1042,31 @@ also be necessary for the identified product conflicts, but it cannot repair
 the controlling frozen evaluator gap by itself. No product/evaluator repair,
 refreeze, replacement candidate, protocol `/5`, private access, B2, C2, Stage
 D, Slice 5, adaptation, scoring, live call, billable call, or push occurred.
+
+## 2026-08-07 protocol `/5` owner disposition and WP0 start
+
+The project owner explicitly authorized protocol `/5` as a separately
+qualified M1 successor in response to WP5's public evaluator `/4`
+representation gap. The authorization supersedes only ADR-0027 decision 15's
+`/4`-finality and no-`/5` restriction. It preserves private-fixture default
+denial, candidate/evaluator and answer isolation, no-retry/no-repair scoring,
+fresh-role separation, exact identities and freezes, layered-evidence
+semantics, and the prohibition on product output as truth.
+
+`M1/S4.5/PRE-B2/V5/WP0` started from clean commit
+`b11be1d7da01a6eb73c10bd9e6569d65beb74abc` on branch
+`codex/m1-slice-4.5-protocol-5-successor`. It created accepted ADR-0030 and the
+accepted protocol `/5` successor plan, then aligned public governance, plan
+indexes, `AGENTS.md`, and this record. WP0 changes documentation only; no
+evaluator code, candidate source/test/build/runtime artifact, private material,
+legacy archive, B2, C2, Stage D, Slice 5, scoring, live call, billable call, or
+push is in scope. The focused WP0 commit is recorded by the next package.
+
+Parent review covered every WP0 exit criterion, semantic scope against
+ADR-0027/0029 and model `1.2.0`, historical identity preservation, changed-path
+scope, links, and status consistency. One correction pass resolved stale
+index/status text and added the exact WP1/WP2/WP4 artifact names plus required
+verification commands to the accepted plan. The review then found no unresolved
+material issue. `git diff --check` and relative-link validation passed; all 18
+changed paths were documentation or `AGENTS.md`, with no evaluator, product,
+test, private, candidate, legacy, or generated path changed.

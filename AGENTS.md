@@ -74,9 +74,12 @@ scoring returns only the sanitized handoff permitted by governance v2.
 Evaluator or corpus maintenance has no product-scoring authority, and the
 scorer has no maintenance authority.
 
-Protocol `/4` is the final authorized M1 held-out evaluator revision. After it
-is frozen, one fresh private oracle reviewer may resume Stage B2 once. If an
-authoritative oracle still cannot be authored because of another public
-contract or projection gap, do not create `/5`, do not expand the evaluator,
-and do not use product output as truth. Record an unresolved evaluation gap
-and return to the project owner for milestone-plan disposition.
+Protocol `/4` remains immutable historical evidence. ADR-0030 and the accepted
+`M1/S4.5/PRE-B2/V5` plan authorize one separately qualified public protocol
+`/5` successor because the accepted model proved a `/4` representation gap.
+That authorization does not permit candidate execution or correction, private
+access, corpus qualification, B2, C2, scoring, or product output as truth.
+Public `/5` work must preserve accepted model `1.2.0`, pass its representability
+and fresh product-blind acceptance gates, and freeze before any separately
+authorized later role. Do not create `/6` or weaken any isolation, no-retry,
+identity, freeze, layered-evidence, coverage, gap, or answer-isolation rule.

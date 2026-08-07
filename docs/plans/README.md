@@ -1,7 +1,7 @@
 # Plans
 
 Status: Draft  
-Last reviewed: 2026-08-05
+Last reviewed: 2026-08-07
 
 The [M0 research-foundation plan](milestones/M0-research-foundation.md) was
 accepted on 2026-07-25 and completed on 2026-07-28. The accepted
@@ -31,9 +31,12 @@ correction pass exposed a second material public-authority gap. Candidate
 conformance was not inspected or classified. The project owner has now accepted
 ADR-0029 and the successor
 [Pre-B2 evidence-contract totality plan](slices/M1-slice-4.5-pre-B2-evidence-contract-totality.md).
-Its next unit is `M1/S4.5/PRE-B2/WP1`; no B2 attempt, corpus work, C2, Stage D,
-protocol `/5`, or Slice 5 is authorized. M1 remains active and Slice 5 remains
-blocked.
+WP1-WP5 completed and WP5 classified an evaluator `/4` representation gap.
+The owner has now accepted ADR-0030 and the
+[protocol `/5` successor plan](slices/M1-slice-4.5-protocol-5-successor-realignment.md).
+Its active work is `M1/S4.5/PRE-B2/V5/WP0` through WP4. No candidate work,
+private access, corpus work, B2, C2, Stage D, or Slice 5 is authorized. M1
+remains active and Slice 5 remains blocked.
 The completed
 [public Bethesda semantic realignment plan](slices/M1-slice-4.5-public-product-realignment.md)
 records that bounded implementation, review, qualification, and candidate-
@@ -101,15 +104,18 @@ names remain reserved for the evaluator lifecycle.
 The initial milestone sequence is described in
 [`../product/scope-and-milestones.md`](../product/scope-and-milestones.md).
 
-The M1 Slice 4.5 Stage A public evaluator is frozen at final protocol `/4`.
+The historical M1 Slice 4.5 Stage A public evaluator is frozen at protocol `/4`.
 ADR-0028 and the accepted semantic-authority owner disposition resolve the
 later public mismatch, but do not by themselves authorize B2. Public product
 realignment, requalification, and a newly frozen candidate must precede the
-one permitted fresh-reviewer B2 resume. Another oracle-authority gap does not
-authorize `/5`, evaluator expansion, or product output as oracle truth; it must
-be recorded for owner milestone disposition.
+one permitted fresh-reviewer B2 resume. The later representation gap was
+recorded for owner milestone disposition; product output remains prohibited as
+oracle or evaluator truth.
 
 That disposition is now ADR-0029 plus `M1/S4.5/PRE-B2`: define a total
 evidence-state contract, prove it mechanically, exercise it from the model,
 obtain a fresh product-blind review, and only then classify the frozen
-candidate. This public work does not itself resume B2.
+candidate. WP1-WP5 completed and the classification proved a `/4`
+representation gap. ADR-0030 and `M1/S4.5/PRE-B2/V5` now authorize one
+separately qualified public `/5` successor. This public work does not itself
+resume B2.

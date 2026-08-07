@@ -3,7 +3,7 @@
 Status: Accepted
 Accepted: 2026-08-04
 Accepted by: Project owner
-Last reviewed: 2026-08-04
+Last reviewed: 2026-08-07
 Authority: [ADR-0027](../architecture/decisions/ADR-0027-public-evaluation-protocol-private-held-out-corpus.md)
 Predecessor: [Evaluator-private fixture governance v1](evaluator-private-fixture-governance.md)
 
@@ -90,6 +90,12 @@ replacement, repair, or retry as recursive subtasks. Stage B authoring or
 maintenance, Stage C scoring, and successor maintenance require separate
 owner-authorized fresh tasks. Corpus/evaluator maintenance has no authority to
 score a product, and the scorer has no authority to maintain any tuple member.
+
+ADR-0030 authorizes public protocol `/5` as a separately qualified successor
+after a public `/4` representation gap. This is successor maintenance under a
+new identity, not repair or retry of `/4`, a corpus, or a verdict. It does not
+authorize private access, corpus eligibility, Stage B2, or scoring. Those
+remain separate fresh owner-authorized roles after the public `/5` freeze.
 
 ## Corpus qualification and freeze
 

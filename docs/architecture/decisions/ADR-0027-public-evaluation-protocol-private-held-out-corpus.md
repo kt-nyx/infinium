@@ -1,17 +1,22 @@
 # ADR-0027: Public evaluation protocol, private held-out corpus, and separate evaluator ownership
 
-Status: Accepted
+Status: Accepted; partially superseded by ADR-0030 decision scope only
 Date: 2026-08-04
 Accepted: 2026-08-04
 Accepted by: Project owner
 Last reviewed: 2026-08-04
 Supersedes: Part of ADR-0026
-Superseded by: None
+Superseded by: ADR-0030 decision scope only for Decision 15
 
 Accepted clarification, 2026-08-04: independently authorable held-out
 semantics and implementation-specific public conformance are separate proof
 surfaces. The normative boundary is recorded in
 [the final Slice 4 held-out scope amendment](../../evaluation/m1-slice4-heldout-scope-final-amendment.md).
+
+Accepted successor disposition, 2026-08-07: ADR-0030 supersedes only Decision
+15's `/4`-finality and no-`/5` restriction. Every other decision and boundary
+in this ADR remains authoritative. Protocol `/4` remains immutable historical
+evidence; `/5` is a separately qualified successor, not a repair or retry.
 
 ## Context
 
