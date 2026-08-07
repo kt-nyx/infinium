@@ -1,12 +1,12 @@
 # ADR-0027: Public evaluation protocol, private held-out corpus, and separate evaluator ownership
 
-Status: Accepted; partially superseded by ADR-0030 decision scope only
+Status: Accepted; partially superseded by ADR-0030 and ADR-0032 decision scope only
 Date: 2026-08-04
 Accepted: 2026-08-04
 Accepted by: Project owner
 Last reviewed: 2026-08-04
 Supersedes: Part of ADR-0026
-Superseded by: ADR-0030 decision scope only for Decision 15
+Superseded by: ADR-0030 for Decision 15; ADR-0032 only for the M1 Slice 5 held-out-`PASS` prerequisite
 
 Accepted clarification, 2026-08-04: independently authorable held-out
 semantics and implementation-specific public conformance are separate proof
@@ -17,6 +17,12 @@ Accepted successor disposition, 2026-08-07: ADR-0030 supersedes only Decision
 15's `/4`-finality and no-`/5` restriction. Every other decision and boundary
 in this ADR remains authoritative. Protocol `/4` remains immutable historical
 evidence; `/5` is a separately qualified successor, not a repair or retry.
+
+Accepted evaluator-deferral disposition, 2026-08-07: ADR-0032 retires the
+unqualified `/5` line and supersedes this ADR only where the current M1 plan
+requires a held-out `PASS` before Slice 5. Decisions 1 through 14, including
+private default denial, answer isolation, no retry or repair, exact identity,
+contamination handling, provenance, and separate roles, remain authoritative.
 
 ## Context
 

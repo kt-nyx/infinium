@@ -62,6 +62,21 @@ Archive-member support is a separate coverage capability and does not change
 the loose-asset state. Product and user-facing surfaces should expose the
 tri-state rather than asking consumers to interpret the transport pair.
 
+Each applicable NPC contributes one loose mesh obligation and one loose tint
+obligation. Aggregate each obligation exactly once. When the loose-provider
+index cannot establish either a winner or exact absence, retain `unknown`, add
+one denominator and no completion for that obligation, and publish the gap
+population `face-gen-loose-assets` with missing capability
+`exhaustive-byte-verified-loose-provider-index` at both snapshot and result
+scope. Archive availability remains an independent observation and cannot
+complete, fail, skip, or convert the loose obligation.
+
+For a positive `face-gen-loose-assets` denominator, zero completion is
+`unsupported`, partial completion is `completed_with_gaps`, and exact
+completion with no owning loose gap is `completed`. The fixed-registry `0/0`
+row remains `completed`. A later unavailable semantic layer never removes an
+independently proven lower-layer asset observation.
+
 ### 4. Backend coverage uses a fixed registry
 
 Every published bounded-M1 snapshot retains these ten coverage populations,
@@ -112,8 +127,9 @@ not independently authorize semantic classification.
   truth must remain independently authored.
 - Accepting the rehearsal specification wholesale was rejected because it was
   a review proposal, not accepted product authority.
-- Creating protocol `/5` was rejected because protocol `/4` can represent all
-  selected semantics without a schema or scorer change.
+- Creating protocol `/5` was rejected by this 2026-08-05 decision. Later
+  representation work authorized and then retired that successor; ADR-0032 is
+  the current evaluator disposition and leaves this product contract intact.
 - Keeping the two booleans as the preferred domain concept was rejected because
   the tri-state is clearer and rules out an otherwise ambiguous fourth state.
 
@@ -128,8 +144,14 @@ not independently authorize semantic classification.
 - The non-normative authority-completion draft remains useful review evidence
   but is superseded wherever it conflicts with this ADR.
 - Protocol `/4`, projection `3.0.0`, and evaluator behavior remain unchanged.
-- Private B2 remains blocked until the public product/specification alignment is
-  complete and its exact candidate identity is frozen.
+- At this decision's acceptance, private B2 remained blocked until the public
+  product/specification alignment completed and its exact candidate identity
+  was frozen.
+
+[ADR-0032](ADR-0032-defer-m1-held-out-evaluator-and-continue-public-verification.md)
+subsequently deferred the held-out evaluator and retained this ADR as product
+authority. No evaluator transport or held-out verdict is required to apply the
+asset-state, coverage, or gap rules above.
 
 ## Requirements affected
 

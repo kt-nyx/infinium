@@ -255,6 +255,12 @@ the mapping is lossless and rejects an invalid fourth combination.
 Loose-provider availability and archive-member support are separate
 observations and coverage capabilities.
 
+For applicable FaceGen paths, the mesh and tint observations are separate
+obligations and each is counted once. An unknown loose observation owns the
+gap population `face-gen-loose-assets` with missing capability
+`exhaustive-byte-verified-loose-provider-index` at snapshot and result scope.
+Archive evidence never converts that observation to present or absent.
+
 ## External claim
 
 A sourced statement from documentation or another external authority.
@@ -506,6 +512,13 @@ populations, retrieval/extraction stage, and gaps. A consuming analysis records
 which acquisition coverage/evidence it applied without rebinding the original
 record. Unlike denominators are never collapsed into a single overall
 safety/coverage percentage.
+
+For the fixed `face-gen-loose-assets` population, `0/0` is `completed`; a
+positive denominator with zero completed obligations is `unsupported`; a
+positive partial completion is `completed_with_gaps`; and exact completion
+with no owning loose gap is `completed`. Every incomplete positive state owns
+the exact loose-index capability gap, and lower-layer observations survive
+later unavailable evidence.
 
 ## Disposition
 

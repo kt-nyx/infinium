@@ -4,7 +4,7 @@ Status: Accepted
 Owner: Project owner  
 Prepared: 2026-07-28  
 Accepted: 2026-07-28  
-Last reviewed: 2026-08-05
+Last reviewed: 2026-08-07
 Applies to: completed M0 Wave F and accepted M1 backend semantic proof
 
 ## Purpose
@@ -55,6 +55,8 @@ of the requirement before its stated delivery milestone.
 | LLM semantic variability | Accepted schema-bound OpenAI path is not deterministic | Exact retained request/response, typed semantic assertions, matched negatives, held-out replacement discipline | No general model reliability claim beyond evaluated prompts/model |
 | Non-date-pinned OpenAI model drift | OpenAI currently lists only the moving `gpt-5.6-sol` snapshot identity | Accepted ADR-0025 requires retained-result replay, returned-model/capability fingerprints, and invalidation/requalification on material drift | Identical live re-execution cannot be promised; only the retained original result is exactly replayable |
 | Controlled-real fixture availability | Exact private source identities remain non-redistributable; Slice 3.5 reverified every required private dependency against its retained manifest | Hash/pin verification and private acquisition manifest; synthetic equivalents remain primary | Public one-command corpus unavailable |
+| Missing M1 private held-out verdict | Slice 4 public conformance passed, but the `/4` evaluator has a known representation gap and the unimplemented `/5` successor failed public proof closure before private use | ADR-0032 defers the evaluator; later M1 slices use the accepted continuation profile and must state that no private verdict exists | M1 gains no independent private reliability/readiness claim; a future evaluator requires new authority after Slice 9 and M3 planning |
+| Frozen protocol `/4` representation limit | The exact frozen `/4` tool cannot represent the accepted partial `RACE/DATA` state without either inventing a later-layer boolean or dropping lower-layer facts | Retain `/4` only for byte-verified bounded public regression over representable states; prohibit complete-current-contract or held-out claims | The historical regression surface cannot validate the complete accepted Slice 4 semantic contract |
 | Mutagen defects/circular truth | Mutagen is selected and xEdit excluded; Slice 3.5 sealed independent byte/structure expectations before production parsing | Slice 4 production comparison through EVAL-0052 | Support remains only for positively qualified shapes |
 | MO2 reconstruction drift | Slice 3 implements the exact version-pinned adapter and EVAL-0051 passed for MO2 `2.5.2` with the accepted empty additional-mapper inventory | Conditional repeat for every new version/operation | Other versions/managers remain unsupported |
 | WPF/WebView2 architecture | Accepted but not needed by CLI-first M1 | No M1 graphical claim | M2 qualification may reopen ADR-0017 |

@@ -162,6 +162,14 @@ count. The report identifies the exact population and missing capability rather
 than discarding the whole item or presenting the unavailable layer as null,
 absent, or complete.
 
+The fixed `face-gen-loose-assets` row counts each applicable mesh and tint path
+once. Unknown loose availability contributes `+1/+0` and owns the
+`face-gen-loose-assets` / `exhaustive-byte-verified-loose-provider-index` gap
+at snapshot and result scope; archive resolution is independent. Its lifecycle
+is `unsupported` for a positive denominator with zero completion,
+`completed_with_gaps` for positive partial completion, `completed` for exact
+completion without the gap, and `completed` for `0/0`.
+
 ## Readiness
 
 Readiness is categorical:

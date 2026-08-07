@@ -1,12 +1,12 @@
 # ADR-0030: Authorize a separately qualified protocol `/5` successor
 
-Status: Accepted; decision 3's unchanged-model clause superseded by ADR-0031
+Status: Accepted historical decision; active `/5` authorization superseded by ADR-0032
 Date: 2026-08-07
 Accepted: 2026-08-07
 Accepted by: Project owner
 Last reviewed: 2026-08-07
 Supersedes: ADR-0027 decision 15 only
-Superseded by: ADR-0031, only for the active `/5` semantic-model identity and authorized FaceGen loose-availability gap
+Superseded by: ADR-0031 only for the `/5` semantic-model identity; ADR-0032 for all active `/5` authorization
 
 ## Context
 
@@ -140,3 +140,12 @@ semantic authority, never from candidate output or private answers.
 - [Accepted protocol `/4` evidence contract](../../evaluation/specifications/m1-slice4-protocol-4-evidence-contract.md)
 - [WP5 frozen-candidate classification](../../evaluation/m1-slice4-protocol-4-frozen-candidate-conformance-classification.md)
 - [Protocol `/5` successor plan](../../plans/slices/M1-slice-4.5-protocol-5-successor-realignment.md)
+
+## Subsequent disposition
+
+[ADR-0032](ADR-0032-defer-m1-held-out-evaluator-and-continue-public-verification.md)
+retired protocol `/5` unqualified before implementation or freeze.
+This record remains the historical authority for why that identity was
+authorized and consumed, but none of its active qualification or downstream
+authorization clauses remain executable. Its isolation, immutability,
+provenance, and no-retry boundaries survive through ADR-0032.

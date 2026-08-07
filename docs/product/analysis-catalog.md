@@ -194,6 +194,11 @@ deleted, template-decision, definite trait-template, race-decision,
 race-without-FaceGen, applicable order. Non-trait template use does not suppress
 the NPC's own FaceGen check. Asset availability is reported as `present`,
 `absent`, or `unknown`; archive support is a separate capability gap.
+Each applicable mesh and tint loose path is one obligation. When exhaustive
+byte-verified loose-provider indexing is unavailable, the observation remains
+unknown and publishes `face-gen-loose-assets` /
+`exhaustive-byte-verified-loose-provider-index` at snapshot and result scope;
+archive evidence cannot discharge that gap.
 
 ## G. Patch effectiveness
 

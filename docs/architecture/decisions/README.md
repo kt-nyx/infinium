@@ -41,6 +41,7 @@ accepted records are superseded rather than rewritten to hide prior decisions.
 | [ADR-0029](ADR-0029-layered-evidence-and-partial-semantic-publication.md) | Accepted | Retain independently proven lower-layer facts, expose later semantic gaps, and require total state-to-fact contracts |
 | [ADR-0030](ADR-0030-protocol-5-successor-qualification.md) | Accepted; partially superseded | Authorize a separately qualified protocol `/5` successor; unchanged-model clause superseded by ADR-0031 |
 | [ADR-0031](ADR-0031-facegen-loose-availability-gap-and-protocol-5-successor-model.md) | Accepted | Accept the `/5` successor semantic model and exact FaceGen loose-availability gap |
+| [ADR-0032](ADR-0032-defer-m1-held-out-evaluator-and-continue-public-verification.md) | Accepted | Defer the M1 held-out evaluator, retire `/5` unqualified, retain bounded `/4` regression use, and continue M1 under public verification |
 
 ADR-0015 through ADR-0023 are accepted and jointly select the Wave E
 persistence, lifecycle, application-stack, process, IPC, credential, security,
@@ -70,6 +71,11 @@ ADR-0031 narrowly supersedes ADR-0030's unchanged-model requirement after the
 WP1 global-composition proof found one contradiction. It preserves model
 `1.2.0` and `/4` as immutable history, accepts the distinct `/5` successor
 model `1.0.1`, and adds only exact ownership for unknown FaceGen loose assets.
+ADR-0032 supersedes ADR-0030's active `/5` authorization and ADR-0031 only as
+active `/5` model authority while retaining the loose-availability rule in
+ADR-0028. It narrowly replaces the held-out-`PASS` prerequisite for Slice 5,
+preserves all isolation and provenance rules, and authorizes the public
+evaluator closeout and continuation profile.
 ADR-0008 through
 ADR-0011 accept the Wave B integration and semantic
 boundaries, and ADR-0012 accepts the revised Nexus interface/risk boundary,
@@ -82,7 +88,7 @@ authoritative. ADR-0001 through ADR-0011 were accepted on 2026-07-25.
 ADR-0012 through ADR-0023 and ADR-0025 were accepted on 2026-07-28, and
 ADR-0024 was rejected that day. ADR-0026 was accepted on 2026-08-01, and
 ADR-0027 was accepted on 2026-08-04, ADR-0028 and ADR-0029 were accepted on
-2026-08-05, and ADR-0030 and ADR-0031 were accepted on 2026-08-07.
+2026-08-05, and ADR-0030 through ADR-0032 were accepted on 2026-08-07.
 ADR-0007
 supersedes only ADR-0006's xEdit-specific
 provisions, ADR-0012 supersedes only ADR-0005's API-interface eligibility and

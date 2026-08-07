@@ -1,8 +1,10 @@
 # ADR-0031: Accept the protocol `/5` successor semantic model
 
-Status: Accepted
+Status: Accepted historical decision; active `/5` model authority superseded by ADR-0032
 
 Date: 2026-08-07
+
+Superseded by: ADR-0032 only as active `/5` model authority
 
 Work ID: `M1/S4.5/PRE-B2/V5/WP1R`
 
@@ -89,3 +91,13 @@ layered-evidence, exact-identity, and later-role boundaries remain unchanged.
   contradiction.
 - Mutating or reusing model `1.2.0` or the changed `P4` rule identities would
   destroy historical reproducibility.
+
+## Subsequent disposition
+
+[ADR-0032](ADR-0032-defer-m1-held-out-evaluator-and-continue-public-verification.md)
+retired protocol `/5` unqualified and supersedes this ADR only as
+active evaluator-model authority. The exact loose-availability, independent
+archive, gap-ownership, aggregation, and coverage-lifecycle semantics remain
+durable product authority in ADR-0028 and its product contracts. Model
+`1.0.1` and this record remain historical evidence and cannot be reused as an
+active protocol identity or verdict authority.

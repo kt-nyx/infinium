@@ -1044,7 +1044,14 @@ defined by [ADR-0028](../architecture/decisions/ADR-0028-m1-bethesda-semantic-re
 `EDID` may identify a record but shall not independently establish semantic
 classification, consequence, finding, or intent. Evaluation transport may
 encode the tri-state losslessly, but product and user-facing contracts shall
-not expose an ambiguous fourth state.
+not expose an ambiguous fourth state. Each applicable mesh and tint loose-path
+obligation is counted once. Unknown loose availability shall remain unknown,
+shall not be inferred from archive evidence, and shall expose population
+`face-gen-loose-assets` with missing capability
+`exhaustive-byte-verified-loose-provider-index` in snapshot and result gaps.
+Positive loose coverage is `unsupported` at zero completion,
+`completed_with_gaps` at partial completion, and `completed` only at exact
+completion with no owning loose gap; `0/0` remains completed.
 
 ## Documentation intelligence
 
