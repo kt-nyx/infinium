@@ -28,6 +28,15 @@ Depends on:
 
 Next work package: `M1/S4.5/EVAL-CLOSEOUT/WP2`
 
+Accepted clarification, 2026-08-07 (`M1/S4.5/EVAL-CLOSEOUT/WP2/T1`): the
+historical 23-file freeze identity is the exact Git tree at evaluator commit
+`3693d19563c636cd2879804633ca4ce52448d2c1` plus the immutable freeze
+manifest. Current reuse additionally requires the 20 non-test runtime/schema
+files in the manifest to remain byte-identical. The three listed public test
+files may evolve through separately authorized public work and are current
+regression evidence, not original frozen qualification bytes. See the
+[freeze-boundary clarification](../../evaluation/m1-slice4-protocol-4-freeze-boundary-clarification.md).
+
 ## Owner disposition embodied by this plan
 
 This plan closes the current M1 private-held-out evaluator effort without a
@@ -209,6 +218,26 @@ Do not remove historical narrative records merely because their names contain
 
 ## Frozen `/4` bounded-regression policy
 
+The bounded profile enforces three separate layers:
+
+1. **Historical freeze integrity:** read all 23 manifest paths as raw Git blobs
+   at `3693d19563c636cd2879804633ca4ce52448d2c1` and require exact byte length
+   and SHA-256 matches against the immutable freeze manifest.
+2. **Current reusable-core integrity:** mechanically classify and require all
+   20 non-test runtime/schema files in the current checkout to match their
+   frozen hashes. A missing file, extra claimed runtime dependency, or identity
+   drift fails closed.
+3. **Current public regression health:** run only allowlisted current public
+   calibration/regression tests, record their current commit and file
+   identities, and label their results current public regression evidence.
+   Their current hashes are not historical qualification acceptance criteria.
+
+The three current public test files in the freeze manifest are not part of the
+reusable-core hash gate. A current public test differing from its historical
+blob is not by itself evaluator drift when Git attributes it to authorized
+public work. It must never be represented as the original frozen qualification
+suite or as complete semantic, held-out, Slice 4.5, or product acceptance.
+
 Create:
 
 - `docs/evaluation/m1-slice4-protocol-4-bounded-regression-usage.md`; and
@@ -226,7 +255,8 @@ The profile must distinguish:
   write-confinement tests already qualified for `/4`;
 - public regression comparison for fact families and states that `/4` can
   represent exactly; and
-- verification that frozen `/4` bytes and manifests have not drifted.
+- verification that all frozen-commit blobs match the immutable manifest and
+  that the current non-test reusable core has not drifted.
 
 ### Prohibited
 
@@ -414,8 +444,9 @@ Required work:
 - reserve the `/5` identity against reuse;
 - create the `/4` bounded-regression usage document and machine profile;
 - create the public wrapper/validator outside the frozen evaluator tree;
-- verify frozen `/4` hashes and the absence of modifications beneath its
-  protected files;
+- verify 23/23 frozen-commit blob hashes, 20/20 current non-test reusable-core
+  hashes, and the authorized provenance/current identities of the three
+  evolving public regression tests;
 - inventory retained `/2` and `/3` schemas or records, prove whether each is
   required by `/4` freeze/history, and ensure none is advertised as active or
   accepted for new execution;
@@ -429,7 +460,8 @@ Exit criteria:
   surface remains in the working tree;
 - historical `/5` references are visibly historical and point to records or
   exact commits rather than missing active authority;
-- frozen `/4` is byte-identical to its freeze;
+- the frozen commit is 23/23 byte-identical to its freeze and the current
+  non-test reusable core is 20/20 byte-identical;
 - the bounded-regression command passes deterministically; and
 - no command can be mistaken for a current held-out product verdict.
 
@@ -494,14 +526,17 @@ clean candidate commit.
 Positive allowlist:
 
 - accepted public product/ADR/evaluation authority;
-- frozen `/4` evaluator source, schemas, public tests, manifests, freeze, and
-  bounded-regression profile/wrapper;
+- frozen `/4` evaluator source, schemas, historical public-test blobs,
+  manifests, freeze, current public regression tests, and bounded-regression
+  profile/wrapper;
 - `/5` retirement and hard-stop records; and
 - the candidate diff.
 
 Required findings:
 
-- frozen `/4` identity and bytes match the freeze;
+- all 23 frozen-commit blobs match the freeze, all 20 current non-test core
+  files match their frozen hashes, and the three evolved public tests are
+  correctly attributed and never presented as frozen qualification bytes;
 - permitted regression modes remain technically meaningful;
 - the known `/4` representation gap is excluded rather than normalized away;
 - no `/5` active surface remains;
@@ -754,7 +789,16 @@ unless the parent explicitly assigns that commit boundary.
 
 Stop for the owner if:
 
-- frozen `/4` bytes or identities differ from the accepted freeze;
+- any required Git blob at frozen evaluator commit
+  `3693d19563c636cd2879804633ca4ce52448d2c1` is unavailable or differs from
+  the immutable freeze manifest;
+- the frozen commit is unavailable;
+- any current non-test evaluator runtime/schema file claimed as reusable `/4`
+  core differs from its frozen hash, is missing, or has an extra unprofiled
+  runtime dependency;
+- a current public regression test is represented as original frozen
+  qualification evidence, or its changed bytes cannot be attributed to
+  authorized public work;
 - removing `/5` would erase a product semantic not yet migrated to accepted
   non-protocol authority;
 - any retained `/5` executable/schema/model surface would still appear active;

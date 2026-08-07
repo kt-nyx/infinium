@@ -100,3 +100,27 @@ and `EVAL-0086`.
 - [ADR-0030](ADR-0030-protocol-5-successor-qualification.md)
 - [ADR-0031](ADR-0031-facegen-loose-availability-gap-and-protocol-5-successor-model.md)
 - [WP1V hard stop](../../evaluation/m1-slice4-protocol-5-wp1v-proof-closure-hard-stop.md)
+
+## Accepted freeze-boundary clarification — 2026-08-07
+
+The initial WP2 preflight correctly stopped when it interpreted every
+`required_public_files` entry as required to retain its historical bytes in the
+current checkout. Owner clarification now distinguishes three layers without
+changing the freeze manifest or evaluator:
+
+1. historical freeze identity is all 23 raw Git blobs at evaluator commit
+   `3693d19563c636cd2879804633ca4ce52448d2c1` compared byte-for-byte with the
+   immutable manifest;
+2. current reusable `/4` core identity is the 20 non-test runtime/schema files
+   from that manifest, each still required to match its frozen hash; and
+3. the three test files changed by authorized public product realignment commit
+   `a98d648bd0adb2751ee0c09828e0227b1583950f` are current public regression
+   evidence, not frozen qualification bytes.
+
+A changed current public test is not, by itself, evaluator drift. It cannot be
+called the original frozen suite, complete `/4` representability, a private
+held-out verdict, Slice 4.5 `PASS`, or an overall product verdict. Any frozen
+blob mismatch, unavailable frozen identity, current non-test core mismatch,
+unattributed current test change, known-gap execution, or private/verdict
+boundary breach remains a hard stop. The exact verification evidence is in the
+[public freeze-boundary record](../../evaluation/m1-slice4-protocol-4-freeze-boundary-clarification.md).
