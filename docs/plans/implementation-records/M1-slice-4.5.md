@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Held-out evaluation v2 implementation record
 
-Status: Public evaluator `/4` and candidate frozen; Pre-B2 WP1-WP5 complete; owner-authorized protocol `/5` successor active at V5/WP0
+Status: Public evaluator `/4` and candidate frozen; Pre-B2 WP1-WP5 complete; protocol `/5` successor hard-stopped at V5/WP1 pending owner semantic disposition
 Opened: 2026-08-04
 Plan: `infinium.plan.m1.backend-semantic-proof/3`
 Execution plan: [M1 Slice 4.5](../slices/M1-slice-4.5-held-out-evaluation-v2.md)
@@ -1070,3 +1070,73 @@ verification commands to the accepted plan. The review then found no unresolved
 material issue. `git diff --check` and relative-link validation passed; all 18
 changed paths were documentation or `AGENTS.md`, with no evaluator, product,
 test, private, candidate, legacy, or generated path changed.
+
+WP0 completed at exact commit
+`2ffd40e34bd58c08e332e4f23b7e132afcf83f19`.
+
+## 2026-08-07 protocol `/5` WP1 representability hard stop
+
+`M1/S4.5/PRE-B2/V5/WP1` began from the clean WP0 commit. Four genuinely fresh,
+read-only public audits used positive allowlists and no recursive delegation:
+property optionality/null/omission; coverage and gap arithmetic;
+schema/canonicalizer expressiveness; and malformed/adversarial boundaries.
+No audit accessed candidate, private, legacy, detached-candidate, or
+answer-bearing material, and no audit edited the worktree.
+
+The optionality and expressiveness audits established a generic
+constructor-granular `/5` direction and confirmed that the controlling `/4`
+transport defect is its object-atomic raw projection canonicalizer, not the
+flat final fact arrays. WP1 retained proposed, non-authoritative contract,
+representation-model, representation-model-schema, and projection-document-
+schema drafts with status `proposed-blocked`.
+
+The coverage audit found, and the independent adversarial audit reproduced, a
+composition contradiction in accepted semantic model `1.2.0`. Rule
+`P4-FACEGEN-APPLICABLE-UNKNOWN-ARCHIVE-SUPPORTED` requires loose-asset
+denominator/completion `1/0`, archive-asset denominator/completion `1/1`, no
+gap effect, and no failed/skipped lifecycle. The accepted coverage model
+permits positive `completed` only at denominator/completion equality,
+`completed-with-gaps` or `unsupported` only with an owning
+`snapshot-and-result` gap, and failed/skipped only with the matching actual
+lifecycle. All ten population rows are required. Therefore no legal loose-
+asset coverage row exists for that admitted state.
+
+The parent reproduced the controlling values directly from the accepted model:
+
+```text
+rule=P4-FACEGEN-APPLICABLE-UNKNOWN-ARCHIVE-SUPPORTED
+loose_denominator=increment-one
+loose_completion=no-increment
+gap_effect_count=0
+no_gap_incomplete_admitted_regions=0
+explicit_invalid_region=SC-COVERAGE-GAPPED-WITHOUT-GAP
+```
+
+The prior public `/4` totality run reports 23,660 raw states, 110 admitted,
+6,180 excluded, 17,370 invalid/terminal, zero uncovered, and zero overlap,
+with 515 generated cases: 110 admitted, 221 invalid, 184 excluded, 110 matched
+negatives, 236 constraint mappings, and 1,713 pairwise combinations. It covers
+15 families, 21 dimensions, 24 constructors, 77 rules, 73 admitted regions,
+45 invalid regions, 118 excluded regions, 9 state classes, 10 coverage
+populations, 8 gap rules, 11 atomic boundaries, and 24 rejected mutations.
+That validator proves family-local partitions and partial `RACE/DATA`, but it
+does not compose every FaceGen coverage effect with a legal coverage lifecycle
+and owning gap set. A parent invocation of that otherwise independently
+reproduced validator exceeded its bounded 64.2-second command timeout once;
+it was not retried to manufacture a different result.
+
+Parent review found the WP1 defining invariant unsatisfied. Resolving it would
+require a new exact gap, an incomplete-without-gap coverage meaning/state, a
+changed denominator/completion rule, or removal/redefinition of the admitted
+state. Each is a semantic or authority choice and would change accepted model
+`1.2.0`. Under the plan's global hard-stop rules, WP1 therefore did not pass,
+zero correction attempts were made, and WP2 through WP4 did not start. The
+focused WP1 evidence commit is the commit containing this entry; its exact hash
+is reported at handoff without amending this append-only record.
+
+The complete proof and proposed-draft inventory are in the
+[WP1 representability hard-stop record](../../evaluation/m1-slice4-protocol-5-wp1-representability-hard-stop.md).
+No evaluator code, protocol implementation, adapter, scorer, calibration,
+manifest, dependency manifest, freeze, product, candidate, historical
+`/2`-`/4` artifact, private content, B2, C2, Stage D, Slice 5, live call,
+billable call, or push occurred.

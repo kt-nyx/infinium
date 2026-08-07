@@ -26,9 +26,11 @@ freeze remain complete at
 contract-completion attempt then hard-stopped before candidate inspection.
 ADR-0029 and accepted work `M1/S4.5/PRE-B2` completed through WP5, which
 classified an evaluator `/4` representation gap. ADR-0030 and accepted work
-`M1/S4.5/PRE-B2/V5` now govern one separately qualified public `/5` successor.
-No candidate or private work is authorized. C2 has not run, Stage D has not
-started, and Slice 5 remains blocked.
+`M1/S4.5/PRE-B2/V5` govern one separately qualified public `/5` successor.
+WP0 completed, but WP1 hard-stopped on an accepted-model FaceGen/coverage
+composition contradiction requiring owner semantic disposition; WP2-WP4 did
+not start. No candidate or private work is authorized. C2 has not run, Stage D
+has not started, and Slice 5 remains blocked.
 
 Waves A through D have completed investigations and accepted integrated
 dispositions. Gates A through D are met at their applicable M0 research,

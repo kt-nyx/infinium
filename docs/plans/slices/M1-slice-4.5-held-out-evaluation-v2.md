@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Held-out evaluation v2
 
-Status: Accepted; Pre-B2 WP1-WP5 complete; accepted protocol `/5` successor active at V5/WP0
+Status: Accepted; Pre-B2 WP1-WP5 complete; protocol `/5` successor hard-stopped at V5/WP1 pending owner semantic disposition
 Owner: Project owner
 Prepared: 2026-08-04
 Accepted: 2026-08-04
@@ -415,3 +415,6 @@ That plan authorizes only public `M1/S4.5/PRE-B2/V5/WP0` through WP4 under
 immutable accepted model `1.2.0`. Protocol `/4` and earlier evidence remain
 unchanged. Candidate execution or correction, private access, corpus
 qualification, B2, C2, Stage D, Slice 5, and protocol `/6` remain unauthorized.
+WP0 completed. WP1 hard-stopped on an accepted-model FaceGen/coverage
+composition contradiction requiring owner semantic disposition, so WP2-WP4
+did not start.

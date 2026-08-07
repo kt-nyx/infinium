@@ -186,8 +186,10 @@ Every material document should include a status and last-reviewed date.
   totality, model-derived exercises, fresh product-blind review, and candidate
   classification. WP1-WP5 completed, and WP5 proved an evaluator `/4`
   representation gap. ADR-0030 now authorizes the public-only
-  `M1/S4.5/PRE-B2/V5` successor cycle. No new B2 is authorized. C2 has not
-  run, and Stage D has not started. The detailed sanitized history is recorded
+  `M1/S4.5/PRE-B2/V5` successor cycle. WP0 completed, but WP1 hard-stopped on
+  an accepted-model FaceGen/coverage composition contradiction requiring owner
+  semantic disposition; WP2-WP4 did not start. No new B2 is authorized. C2
+  has not run, and Stage D has not started. The detailed sanitized history is recorded
   in the
   [Stage C.5 incident](evaluation/evaluator-v2-stage-c5-adjudication-incident.md).
   Slice 4.5 remains active and incomplete, Slice 5 remains blocked, and M1

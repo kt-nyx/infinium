@@ -1,0 +1,263 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "infinium.evaluator-v2.slice4-projection-document.schema/v5",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "protocol_id",
+    "projection_id",
+    "projection_version",
+    "semantic_model",
+    "state",
+    "families"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "infinium.evaluator-v2.slice4-projection-document/v5"
+    },
+    "protocol_id": {
+      "const": "infinium.evaluator-v2/5"
+    },
+    "projection_id": {
+      "const": "infinium.evaluator-v2.slice4-semantic-projection"
+    },
+    "projection_version": {
+      "const": "4.0.0"
+    },
+    "semantic_model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model_id", "version", "sha256"],
+      "properties": {
+        "model_id": {
+          "const": "infinium.m1-slice4.protocol-4-evidence-contract"
+        },
+        "version": {
+          "const": "1.2.0"
+        },
+        "sha256": {
+          "const": "09ae312824aa0c859b396fd18fef69b14905c2c6d6f901ce598d3c5ab5970bf5"
+        }
+      }
+    },
+    "state": {
+      "enum": [
+        "completed",
+        "completed_with_gaps",
+        "invalid_input",
+        "changed_during_read",
+        "failed"
+      ]
+    },
+    "families": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "result",
+        "plugins",
+        "override_chains",
+        "npc_contributions",
+        "race_contributions",
+        "placed_reference_contributions",
+        "allowlisted_fields",
+        "npcs",
+        "races",
+        "placed_references",
+        "face_gen",
+        "taxonomy",
+        "coverage",
+        "gaps",
+        "result_gaps"
+      ],
+      "properties": {
+        "result": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": {
+            "allOf": [
+              { "$ref": "#/$defs/projection_object" },
+              {
+                "properties": {
+                  "object_id": { "const": "root" },
+                  "rule_id": {
+                    "enum": ["P4-RESULT-PUBLISHED", "P4-RESULT-NO-SNAPSHOT"]
+                  },
+                  "constructor_groups": {
+                    "const": ["FC-RESULT-STATE"]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "plugins": { "$ref": "#/$defs/family_array" },
+        "override_chains": { "$ref": "#/$defs/family_array" },
+        "npc_contributions": { "$ref": "#/$defs/family_array" },
+        "race_contributions": { "$ref": "#/$defs/family_array" },
+        "placed_reference_contributions": { "$ref": "#/$defs/family_array" },
+        "allowlisted_fields": { "$ref": "#/$defs/family_array" },
+        "npcs": { "$ref": "#/$defs/family_array" },
+        "races": { "$ref": "#/$defs/family_array" },
+        "placed_references": { "$ref": "#/$defs/family_array" },
+        "face_gen": { "$ref": "#/$defs/family_array" },
+        "taxonomy": { "$ref": "#/$defs/family_array" },
+        "coverage": {
+          "type": "array",
+          "maxItems": 10,
+          "items": { "$ref": "#/$defs/projection_object" }
+        },
+        "gaps": { "$ref": "#/$defs/family_array" },
+        "result_gaps": { "$ref": "#/$defs/family_array" }
+      }
+    }
+  },
+  "$defs": {
+    "canonical_path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^(?:[-A-Za-z0-9._~]|%[0-9A-F]{2})+(?:/(?:[-A-Za-z0-9._~]|%[0-9A-F]{2})+)*$"
+    },
+    "family_array": {
+      "type": "array",
+      "maxItems": 200000,
+      "items": { "$ref": "#/$defs/projection_object" }
+    },
+    "projection_object": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "object_id",
+        "rule_id",
+        "constructor_groups",
+        "properties"
+      ],
+      "properties": {
+        "object_id": { "$ref": "#/$defs/canonical_path" },
+        "rule_id": {
+          "type": "string",
+          "pattern": "^P4-[A-Z0-9-]+$",
+          "maxLength": 128
+        },
+        "constructor_groups": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^FC-[A-Z0-9-]+$",
+            "maxLength": 128
+          }
+        },
+        "properties": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": { "$ref": "#/$defs/projection_property" }
+        }
+      }
+    },
+    "projection_property": {
+      "oneOf": [
+        { "$ref": "#/$defs/string_property" },
+        { "$ref": "#/$defs/integer_property" },
+        { "$ref": "#/$defs/number_property" },
+        { "$ref": "#/$defs/boolean_property" },
+        { "$ref": "#/$defs/null_property" }
+      ]
+    },
+    "property_base": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["property_id", "fact_type", "value_type", "value"],
+      "properties": {
+        "property_id": { "$ref": "#/$defs/canonical_path" },
+        "fact_type": {
+          "enum": [
+            "state",
+            "plugin",
+            "winner",
+            "override_chain",
+            "contribution",
+            "record_identity",
+            "form_key",
+            "link",
+            "ownership",
+            "placement",
+            "field",
+            "npc",
+            "race",
+            "reference",
+            "face_gen",
+            "taxonomy",
+            "coverage",
+            "gap",
+            "failure"
+          ]
+        },
+        "value_type": {
+          "enum": ["string", "integer", "number", "boolean", "null"]
+        },
+        "value": {}
+      }
+    },
+    "string_property": {
+      "allOf": [
+        { "$ref": "#/$defs/property_base" },
+        {
+          "properties": {
+            "value_type": { "const": "string" },
+            "value": { "type": "string", "maxLength": 4096 }
+          }
+        }
+      ]
+    },
+    "integer_property": {
+      "allOf": [
+        { "$ref": "#/$defs/property_base" },
+        {
+          "properties": {
+            "value_type": { "const": "integer" },
+            "value": { "type": "integer" }
+          }
+        }
+      ]
+    },
+    "number_property": {
+      "allOf": [
+        { "$ref": "#/$defs/property_base" },
+        {
+          "properties": {
+            "value_type": { "const": "number" },
+            "value": { "type": "number" }
+          }
+        }
+      ]
+    },
+    "boolean_property": {
+      "allOf": [
+        { "$ref": "#/$defs/property_base" },
+        {
+          "properties": {
+            "value_type": { "const": "boolean" },
+            "value": { "type": "boolean" }
+          }
+        }
+      ]
+    },
+    "null_property": {
+      "allOf": [
+        { "$ref": "#/$defs/property_base" },
+        {
+          "properties": {
+            "value_type": { "const": "null" },
+            "value": { "type": "null" }
+          }
+        }
+      ]
+    }
+  }
+}

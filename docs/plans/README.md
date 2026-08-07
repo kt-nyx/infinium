@@ -34,9 +34,13 @@ ADR-0029 and the successor
 WP1-WP5 completed and WP5 classified an evaluator `/4` representation gap.
 The owner has now accepted ADR-0030 and the
 [protocol `/5` successor plan](slices/M1-slice-4.5-protocol-5-successor-realignment.md).
-Its active work is `M1/S4.5/PRE-B2/V5/WP0` through WP4. No candidate work,
-private access, corpus work, B2, C2, Stage D, or Slice 5 is authorized. M1
-remains active and Slice 5 remains blocked.
+WP0 completed. WP1 then hard-stopped after two independent audits confirmed an
+accepted-model composition contradiction between the FaceGen unknown-loose /
+archive-supported state and coverage/gap arithmetic. The
+[public hard-stop record](../evaluation/m1-slice4-protocol-5-wp1-representability-hard-stop.md)
+requires owner semantic disposition before WP1 can pass; WP2-WP4 did not
+start. No candidate work, private access, corpus work, B2, C2, Stage D, or
+Slice 5 is authorized. M1 remains active and Slice 5 remains blocked.
 The completed
 [public Bethesda semantic realignment plan](slices/M1-slice-4.5-public-product-realignment.md)
 records that bounded implementation, review, qualification, and candidate-

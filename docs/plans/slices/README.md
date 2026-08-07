@@ -57,9 +57,10 @@ Current execution plans:
 - [M1 Slice 4.5 — Protocol `/5` successor realignment](M1-slice-4.5-protocol-5-successor-realignment.md)
   — Accepted 2026-08-07 as work `M1/S4.5/PRE-B2/V5`. ADR-0030 authorizes one
   separately qualified public `/5` successor after WP5 proved a frozen `/4`
-  representation gap. WP0-WP4 cover authority, complete representation,
-  deterministic proof, public implementation, and fresh product-blind freeze.
-  Candidate work, private access, B2, C2, Stage D, and Slice 5 remain excluded.
+  representation gap. WP0 completed. WP1 hard-stopped on an independently
+  reproduced accepted-model FaceGen/coverage composition contradiction that
+  requires owner semantic disposition; WP2-WP4 did not start. Candidate work,
+  private access, B2, C2, Stage D, and Slice 5 remain excluded.
 
 Completed slices retain their exact implementation and verification evidence
 under [`../implementation-records/`](../implementation-records/README.md).

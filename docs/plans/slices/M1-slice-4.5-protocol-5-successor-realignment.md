@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Protocol `/5` successor realignment
 
-Status: Accepted  
+Status: Accepted; WP0 complete; hard-stopped at WP1 pending owner semantic disposition
 Owner: Project owner  
 Prepared: 2026-08-07  
 Accepted: 2026-08-07  
@@ -139,6 +139,17 @@ Exit criteria:
 - one focused local commit completes WP1.
 
 Correction budget: one parent-review correction pass.
+
+WP1 status: **hard-stopped pending owner semantic disposition**. The four
+required fresh audits and parent review found that accepted rule
+`P4-FACEGEN-APPLICABLE-UNKNOWN-ARCHIVE-SUPPORTED` requires loose-asset
+coverage denominator/completion `1/0` while producing no owning gap and no
+failed or skipped lifecycle. Accepted coverage rules admit no such row. The
+[WP1 representability hard-stop record](../../evaluation/m1-slice4-protocol-5-wp1-representability-hard-stop.md)
+contains the mechanical proof, audit results, draft-artifact status, and exact
+boundary. No correction pass was attempted because every resolution requires
+a new semantic or authority choice, which is a global hard stop. WP2 through
+WP4 did not start.
 
 ### WP2 — Deterministic representability proof
 

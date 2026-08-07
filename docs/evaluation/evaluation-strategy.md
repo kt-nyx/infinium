@@ -384,3 +384,9 @@ cannot represent one required partial-publication outcome. ADR-0030 authorizes
 a separately qualified public `/5` successor under accepted plan
 `M1/S4.5/PRE-B2/V5`. This does not authorize candidate execution or
 realignment, private access, corpus qualification, B2, C2, Stage D, or scoring.
+WP0 completed. WP1 then hard-stopped because the accepted FaceGen
+unknown-loose/archive-supported state requires incomplete loose-asset coverage
+without any legal owning gap or lifecycle. The
+[public representability record](m1-slice4-protocol-5-wp1-representability-hard-stop.md)
+requires owner semantic disposition before WP1 can pass; WP2-WP4 did not
+start.
