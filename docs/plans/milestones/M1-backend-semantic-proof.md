@@ -35,8 +35,8 @@ On 2026-08-07, the owner accepted ADR-0032 and
 `M1/S4.5/EVAL-CLOSEOUT`. The current private held-out effort is deferred with
 no valid product verdict, protocol `/5` is retired unqualified, and frozen
 protocol `/4` is retained only for bounded public regression over its known
-representable subset. After evaluator-deferral closeout receives final plan
-acceptance, Slice 5 becomes eligible under the accepted
+representable subset. Evaluator-deferral closeout is accepted, and Slice 5 is
+eligible under the accepted
 [M1 continuation verification profile](../../evaluation/m1-continuation-verification-profile.md).
 This does not weaken the M1 required-case set or authorize private work; it
 replaces only the held-out-`PASS` sequencing prerequisite for Slices 5-9.

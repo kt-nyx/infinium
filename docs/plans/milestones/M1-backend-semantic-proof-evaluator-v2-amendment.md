@@ -153,9 +153,9 @@ and sequencing statements above without rewriting their chronology.
 - Private held-out evaluation is deferred. No current private `PASS`, `FAIL`,
   or valid product-scoring `EVALUATOR_ERROR` exists, and B2, C2, and Stage D
   are not authorized.
-- Slice 4.5 closes only when the evaluator-deferral plan receives final
-  closeout acceptance. Slice 5 is the next eligible product package after that
-  event and is gated by the accepted
+- Evaluator-deferral closeout is accepted. Slice 4.5 is closed by owner
+  disposition, and Slice 5 is the next eligible product package gated by the
+  accepted
   [M1 continuation verification profile](../../evaluation/m1-continuation-verification-profile.md).
 - M1 remains active. Public conformance, bounded `/4` regression health,
   evaluator qualification, private held-out evaluation, and product

@@ -24,8 +24,8 @@ accepted partial state, and the `/5` attempt retired unqualified. ADR-0032 now
 defers private held-out evaluation with no valid current product verdict. This
 matrix remains semantic history and may inform future independent authorability
 review, but it does not authorize B2, C2, Stage D, corpus work, scoring, or a
-protocol identity. Current Slices 5-9 use the M1 continuation verification
-profile after evaluator-deferral closeout.
+protocol identity. Evaluator-deferral closeout is accepted, and current Slices
+5-9 use the M1 continuation verification profile.
 
 <!-- active-fact-families: result,plugins,override_chains,npc_contributions,race_contributions,placed_reference_contributions,allowlisted_fields,npcs,races,placed_references,face_gen,taxonomy,coverage,gaps,result_gaps -->
 

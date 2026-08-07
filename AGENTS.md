@@ -86,7 +86,7 @@ unqualified: it has no implementation, freeze, private use, or verdict, and
 its identities must not be reused or resumed. Private held-out evaluation is
 deferred with no valid current product verdict. Do not access private material
 or run corpus qualification, B2, C2, Stage D, adaptation, comparison, or
-scoring. M1 Slices 5-9 use the accepted continuation verification profile only
-after evaluator-deferral closeout receives final acceptance. Do not select a
+scoring. Evaluator-deferral closeout is accepted. M1 Slices 5-9 use the
+accepted continuation verification profile. Do not select a
 future protocol identity or weaken any isolation, no-retry, identity, freeze,
 layered-evidence, coverage, gap, provenance, or answer-isolation rule.

@@ -177,8 +177,8 @@ Slice 4 public conformance: passed for exact candidate and scope
 Protocol /4: frozen historical; bounded public regression only
 Protocol /5: retired unqualified; no implementation, freeze, private use, or verdict
 Private held-out evaluation: deferred; no valid current product verdict
-Slice 4.5: closes only at evaluator-deferral final acceptance
-Slice 5: next eligible product package after closeout
+Slice 4.5: closed by accepted owner disposition with explicit residual risk
+Slice 5: eligible as the next product package under the continuation profile
 M1: active
 ```
 
@@ -187,7 +187,7 @@ exists. B2, C2, Stage D, corpus work, adaptation, comparison, and scoring are
 not authorized. Frozen `/4` bounded-regression health is neither evaluator
 qualification nor a complete current-product result.
 
-After final closeout acceptance, Slices 5-9 are gated by the accepted
+Evaluator-deferral closeout is accepted. Slices 5-9 are gated by the accepted
 [M1 continuation verification profile](m1-continuation-verification-profile.md).
 Its six public layers supplement the baseline's required case set; they do not
 waive a case, establish held-out evidence, or support M3 reliability/readiness.

@@ -1,20 +1,20 @@
 # M1 Slice 4.5 — Held-out evaluation v2
 
-Status: Accepted historical evaluator plan; closeout pending under ADR-0032
+Status: Accepted historical evaluator plan; closed by ADR-0032 owner disposition
 Owner: Project owner
 Prepared: 2026-08-04
 Accepted: 2026-08-04
 Last reviewed: 2026-08-07
 Parent plan: `infinium.plan.m1.backend-semantic-proof/3`
-Target: Slice 4.5, between implementation-complete Slice 4 and Slice 5, which
-becomes eligible only after evaluator-deferral closeout acceptance
+Target: Historical Slice 4.5 evaluator work between implementation-complete
+Slice 4 and now-eligible Slice 5
 
 Current disposition: ADR-0032 and accepted work
 `M1/S4.5/EVAL-CLOSEOUT` supersede this plan's active held-out-`PASS`
 completion and sequencing clauses. The stages, commands, and terminal handling
 below preserve the exact historical evaluator design and attempts; they are not
-an active private workflow. Slice 4.5 remains in closeout until the deferral
-plan receives final acceptance.
+an active private workflow. The deferral plan is accepted and complete, so
+Slice 4.5 is closed and Slice 5 is eligible under the continuation profile.
 
 ## Objective
 
@@ -445,11 +445,11 @@ Private held-out evaluation is deferred. No current private `PASS`, `FAIL`, or
 valid product-scoring `EVALUATOR_ERROR` exists. B2, C2, Stage D, corpus work,
 scoring, and replacement-evaluator work are not authorized.
 
-This slice closes only when the accepted
+The accepted
 [evaluator-deferral and M1-continuation plan](M1-slice-4.5-evaluator-deferral-and-m1-continuation.md)
-receives final closeout acceptance. Its closeout language is: **public
+received final closeout acceptance. This slice is closed as **public
 conformance complete; private held-out evaluation deferred; no held-out product
-verdict**. At that event, Slice 5 is the next eligible product package under
+verdict**. Slice 5 is the next eligible product package under
 the accepted
 [M1 continuation verification profile](../../evaluation/m1-continuation-verification-profile.md).
 M1 remains active, and none of this is a reliability or readiness claim.

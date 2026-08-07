@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Held-out evaluation v2 implementation record
 
-Status: Historical evaluator work recorded; ADR-0032 closeout pending; `/5` retired unqualified; private held-out deferred with no verdict
+Status: Complete; Slice 4.5 closed by ADR-0032 owner disposition; `/5` retired unqualified; private held-out deferred with no verdict
 Opened: 2026-08-04
 Plan: `infinium.plan.m1.backend-semantic-proof/3`
 Execution plan: [M1 Slice 4.5](../slices/M1-slice-4.5-held-out-evaluation-v2.md)
@@ -1223,7 +1223,7 @@ history rewrite, push, or commit occurred. The complete evidence is preserved
 in the
 [WP1V hard-stop record](../../evaluation/m1-slice4-protocol-5-wp1v-proof-closure-hard-stop.md).
 
-## 2026-08-07 evaluator-deferral closeout status through WP3
+## Historical 2026-08-07 evaluator-deferral closeout status through WP3
 
 The project owner accepted ADR-0032 and work
 `M1/S4.5/EVAL-CLOSEOUT`. WP0 preserved the failed WP1V evidence at exact
@@ -1269,3 +1269,78 @@ of WP3. Implementer B did not commit or push; the parent creates the focused
 WP3 package commit, and no push occurs. Final review attestations and closeout
 acceptance belong to the later WP4/WP5 record; this entry does not predeclare
 those gates passed.
+
+## Current evaluator-deferral closeout status
+
+WP3 was accepted and committed at
+`2462a990ccb6a1f6de55f3c3b14ddef16c461261`. Two fresh read-only WP4
+reviewers audited that exact clean candidate in parallel. Reviewer A returned
+`ACCEPT` with no finding after independently reproducing both-host bounded
+wrapper/refusal results, the 23 historical/20 current-core/3 evolved-test
+identity split, immutable freeze, known-gap exclusion, `/5` retirement, and
+claim boundary.
+
+Reviewer B's initial mechanical ledger reproduction was exact, but it returned
+`REJECT` because current ADR-0030/0031 retirement dispositions were classified
+historical and historical revision-3 gates were classified current normative.
+The one permitted shared WP4 correction changed only the occurrence-ledger
+policy and generated classifications. Reviewer B's targeted re-review returned
+`ACCEPT`: 366 files, 3,658 rows, 9,667 occurrences, zero mismatches, with 7,655
+current normative, 713 current status, and 1,299 historical occurrences. The
+focused correction commit is
+`40b863471031d024b858f781ee1678fd95171ed9`. No replacement reviewer was used.
+
+WP5 began from that clean commit. Locked restore passed. Release build passed
+with zero warnings/errors. Literal `Category=` results were: `M1Unit` 89
+passed/1 skipped; `M1Contract` 31 passed; `M1Integration` 33 passed;
+`M1Evaluation` 54 passed/9 skipped; `M1Security` 9 passed; and `M1Fault` 13
+passed. Supplementary `TestCategory=` results were: Unit 99 passed/1 skipped;
+Contract 50 passed; Integration 34 passed; Evaluation 73 passed/9 skipped;
+Security 95 passed/4 skipped; and Fault 93 passed/3 skipped. The full suite
+passed 268 with 10 expected skips and zero failures. Format, dependency
+manifest, JSON, links, occurrence, identity, protection, status, and diff
+checks passed. Exact final mechanical counts are recorded below.
+
+WP5 found two public integration drifts. The repository-structure contract test
+still required the superseded `sole active held-out evaluation protocol`
+phrase; it now asserts `/4` historical bounded-only use and `/5` retirement.
+The public Slice 2 substrate fixture also pinned an older accepted-M1-plan
+fingerprint. Oracle version `1.0.3` now records plan SHA-256
+`201410b74f84a34d217350b2f8f433e26323b26491061c19fe98ae2d3ae47e27`
+and public oracle SHA-256
+`8673abc9adf53439139f9d1beec92824ba41b8611a4855f5978a0fb4a2b67cbb`;
+no semantic expectation changed. Both focused gates and the full suite passed
+after integration.
+
+The bounded wrapper ran twice under Windows PowerShell 5.1 and twice under
+PowerShell 7. All normalized outputs matched SHA-256
+`23453b58e141b03267c8b17d25bf1c3fb610154e7ea041d8e6ac8e523d151e85`.
+Every run reported 23/23 historical blobs, 20/20 current core, 3/3 evolved
+tests, 56/56 calibration cases, 8/8 focused tests, and exact
+`BOUNDED_REGRESSION_PASS`. Refusals passed 11/11 under both hosts.
+
+The complete accepted evidence, removed `/5` path inventory, exact identities,
+review attestations, command counts, residual risk, and Slice 5 handoff are in
+the [closeout acceptance record](../../evaluation/m1-slice4.5-evaluator-deferral-closeout-acceptance.md).
+The focused WP5 closeout commit is the commit containing this append-only
+entry; its exact hash is reported after commit creation without amending this
+record. No private access, candidate/product output, B2, C2, Stage D,
+adaptation, comparison, scoring, live/billable call, history rewrite, or push
+occurred.
+
+```text
+Slice 4 public conformance: passed for its exact frozen candidate and scope.
+Protocol /4: frozen historical evaluator; bounded public regression use only.
+Protocol /5: retired unqualified; no implementation or verdict.
+Private held-out evaluation: deferred; no valid current product verdict.
+Slice 4.5: closed by owner disposition with explicit residual risk.
+Slice 5: eligible to begin under the M1 continuation verification profile.
+M1: active.
+```
+
+Final repository-wide mechanical counts: 183 Markdown files and 1,974 inline
+links checked, including 1,260 local links with zero unresolved local targets;
+185 tracked JSON files parsed strictly; and 367 occurrence-ledger source files,
+3,762 rows, and 9,771 occurrences independently reconciled with zero row or
+term-count differences. Classification totals are 7,731 current normative,
+711 current status, and 1,329 historical occurrences.

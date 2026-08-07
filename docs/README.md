@@ -205,10 +205,11 @@ Every material document should include a status and last-reviewed date.
   detailed sanitized history is recorded
   in the
   [Stage C.5 incident](evaluation/evaluator-v2-stage-c5-adjudication-incident.md).
-  Slice 4.5 remains in closeout until final acceptance of
-  `M1/S4.5/EVAL-CLOSEOUT`. Slice 5 is the next eligible product package only
-  after that closeout and then uses the accepted M1 continuation verification
-  profile. M1 remains active; public conformance is not a private held-out,
+  `M1/S4.5/EVAL-CLOSEOUT` is accepted and complete. Slice 4.5 is closed by
+  owner disposition, and Slice 5 is eligible as the next product package under
+  the accepted M1 continuation verification profile. The exact result is in
+  the [closeout acceptance record](evaluation/m1-slice4.5-evaluator-deferral-closeout-acceptance.md).
+  M1 remains active; public conformance is not a private held-out,
   reliability, or readiness claim. M1 explicitly defers `QUST` forced-alias
   semantics and retains EVAL-0017's REFR linked-reference/placement proof as
   the materially different category.

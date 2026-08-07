@@ -385,9 +385,9 @@ or verdict. Its identities are historical and cannot be reused.
 
 Private held-out evaluation is deferred. No current private `PASS`, `FAIL`, or
 valid product-scoring `EVALUATOR_ERROR` exists, and B2, C2, Stage D, corpus
-work, adaptation, comparison, and scoring are unauthorized. Slice 4.5 closes
-only at evaluator-deferral final acceptance; Slice 5 is the next eligible
-product package after that event.
+work, adaptation, comparison, and scoring are unauthorized. Evaluator-deferral
+closeout is accepted: Slice 4.5 is closed by owner disposition and Slice 5 is
+the next eligible product package.
 
 Slices 5-9 use the accepted
 [M1 continuation verification profile](m1-continuation-verification-profile.md):

@@ -1,7 +1,7 @@
 {
   "fixture_id": "M1-PLAT-SLICE2-SUBSTRATE-v1",
   "fixture_version": "1.0.0",
-  "oracle_version": "1.0.2",
+  "oracle_version": "1.0.3",
   "independent_authors_and_reviewers": [
     "infinium-evaluation-review"
   ],
@@ -13,7 +13,7 @@
         {
           "artifact_id": "accepted-m1-plan",
           "artifact_version": "1.0.0",
-          "fingerprint": "9d3eeaf32b078e19340c6a08ae65413339fcb1e2f58f1b84f4f71e56b4d88bd4",
+          "fingerprint": "201410b74f84a34d217350b2f8f433e26323b26491061c19fe98ae2d3ae47e27",
           "availability": "retained"
         }
       ],
@@ -189,6 +189,18 @@
   ],
   "pre_registered_at": "2026-07-29T00:00:00.0000000+00:00",
   "change_history": [
+    {
+      "oracle_version": "1.0.3",
+      "changed_at": "2026-08-07T21:40:25.9854797+00:00",
+      "independent_evidence_reference": {
+        "artifact_id": "accepted-m1-plan",
+        "artifact_version": "2026-08-07-evaluator-deferral-continuation-profile",
+        "fingerprint": "201410b74f84a34d217350b2f8f433e26323b26491061c19fe98ae2d3ae47e27",
+        "availability": "retained"
+      },
+      "prior_error_explanation": "No semantic expectation changed. The accepted-plan dependency fingerprint changed when evaluator deferral replaced the held-out sequencing gate with the public M1 continuation verification profile and final closeout status.",
+      "reviewer": "evaluator-closeout-parent"
+    },
     {
       "oracle_version": "1.0.2",
       "changed_at": "2026-07-30T15:21:21.7790812+00:00",

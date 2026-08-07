@@ -120,4 +120,4 @@ M1/S4.5
 
 This map names work only. Its execution authority and gates live in the
 accepted Slice 4.5 plans. No `PRE-B2/V5` entry authorizes active work. Slice 5
-becomes eligible only after `EVAL-CLOSEOUT/WP5` final acceptance.
+is eligible because `EVAL-CLOSEOUT/WP5` received final acceptance.

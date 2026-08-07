@@ -52,9 +52,10 @@ Final public protocol /4: qualified and frozen at 3693d19
 Owner semantic disposition: accepted under ADR-0028
 Public realignment/requalification: complete; candidate frozen at a98d648
 Private B2 oracle/corpus: terminal public-authority stop; no oracle/product verdict
-Public /5 successor: WP0 and WP1R complete; WP1V hard-stopped; WP1 not proof-closed; WP2 unstarted
-Held-out C2 scoring and Stage D: not run
-Overall M1 gate: pending Slice 4.5
+Public /5 successor: retired unqualified after WP1V hard stop; no implementation or verdict
+Held-out C2 scoring and Stage D: deferred / not authorized / no product verdict
+Slice 4.5: closed by accepted owner disposition with explicit residual risk
+Overall M1 gate: active; Slice 5 eligible under the continuation profile
 ```
 
 The sanitized owner-supplied adjudication and successor requirement are in the

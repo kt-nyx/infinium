@@ -415,6 +415,6 @@ identities and requirements in this plan are consumed historical evidence and
 cannot be resumed, repaired, or reused.
 
 Private held-out evaluation is deferred with no valid current product verdict.
-Slice 4.5 closes only when `M1/S4.5/EVAL-CLOSEOUT` receives final acceptance;
-Slice 5 becomes the next eligible product package after that closeout under the
-M1 continuation verification profile. M1 remains active.
+`M1/S4.5/EVAL-CLOSEOUT` is accepted: Slice 4.5 is closed by owner
+disposition, Slice 5 is eligible under the M1 continuation verification
+profile, and M1 remains active.

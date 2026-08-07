@@ -152,7 +152,7 @@ shapes, and the accepted plan no longer requires them from Slice 4.
 - the final requirement/case/slice traceability audit has a material gap.
 
 The missing private held-out verdict is an explicit accepted M1 residual risk,
-not a silent waiver and not a blocker to Slices 5-9 after closeout. It does
+not a silent waiver and not a blocker to Slices 5-9. Closeout is accepted. It does
 block any claim that M1 public conformance establishes independent private
 reliability or M3 readiness.
 

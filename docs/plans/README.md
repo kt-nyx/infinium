@@ -44,9 +44,9 @@ WP1V then hard-stopped, WP1 never proof-closed, and WP2-WP4 never started.
 ADR-0032 now retires `/5` unqualified, retains `/4` only for bounded public
 regression with its known gap excluded, and defers private held-out evaluation
 without a product verdict. No B2, C2, Stage D, corpus, scoring, or replacement-
-evaluator work is authorized. Slice 4.5 remains in closeout; Slice 5 is the
-next eligible product package only after final closeout acceptance, under the
-M1 continuation verification profile. M1 remains active.
+evaluator work is authorized. Evaluator-deferral closeout is accepted; Slice
+4.5 is closed, Slice 5 is eligible as the next product package under the M1
+continuation verification profile, and M1 remains active.
 The completed
 [public Bethesda semantic realignment plan](slices/M1-slice-4.5-public-product-realignment.md)
 records that bounded implementation, review, qualification, and candidate-

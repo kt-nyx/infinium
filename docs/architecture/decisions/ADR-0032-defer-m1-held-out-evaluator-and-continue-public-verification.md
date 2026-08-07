@@ -124,3 +124,11 @@ blob mismatch, unavailable frozen identity, current non-test core mismatch,
 unattributed current test change, known-gap execution, or private/verdict
 boundary breach remains a hard stop. The exact verification evidence is in the
 [public freeze-boundary record](../../evaluation/m1-slice4-protocol-4-freeze-boundary-clarification.md).
+
+## Current closeout implementation status
+
+`M1/S4.5/EVAL-CLOSEOUT` received final acceptance on 2026-08-07. The condition
+in decision 8 is satisfied: Slice 4.5 is closed by owner disposition, Slice 5
+is eligible under the continuation verification profile, and M1 remains
+active. The exact evidence is in the
+[closeout acceptance record](../../evaluation/m1-slice4.5-evaluator-deferral-closeout-acceptance.md).

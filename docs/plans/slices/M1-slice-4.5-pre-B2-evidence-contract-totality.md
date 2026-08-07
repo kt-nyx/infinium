@@ -460,6 +460,6 @@ WP1-WP5 totality, review, and candidate-classification evidence remains public
 historical conformance evidence. Protocol `/4` is retained only for bounded
 public regression with its known gap excluded; protocol `/5` is retired
 unqualified; private held-out evaluation is deferred with no valid current
-product verdict. Slice 4.5 closes only at evaluator-deferral final acceptance,
-after which Slice 5 is the next eligible product package under the M1
-continuation verification profile. M1 remains active.
+product verdict. Evaluator-deferral closeout is accepted: Slice 4.5 is closed
+by owner disposition, Slice 5 is eligible under the M1 continuation
+verification profile, and M1 remains active.

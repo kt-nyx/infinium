@@ -165,6 +165,6 @@ with no implementation, freeze, private use, or verdict. Private held-out
 evaluation is deferred with no valid current product verdict; B2, C2, Stage D,
 corpus work, adaptation, comparison, and scoring are not authorized.
 
-Slice 4.5 closes only at evaluator-deferral final acceptance. Slice 5 is next
-eligible after that closeout under the M1 continuation verification profile,
-and M1 remains active.
+Evaluator-deferral closeout is accepted. Slice 4.5 is closed by owner
+disposition, Slice 5 is eligible under the M1 continuation verification
+profile, and M1 remains active.

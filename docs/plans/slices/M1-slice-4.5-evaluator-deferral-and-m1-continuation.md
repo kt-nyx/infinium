@@ -1,6 +1,6 @@
 # M1 Slice 4.5 — Evaluator deferral and M1 continuation
 
-Status: Accepted
+Status: Accepted and completed
 
 Prepared: 2026-08-07
 
@@ -26,7 +26,8 @@ Depends on:
 - accepted `M1/S4.5/PRE-B2/V5/WP0` and `WP1R` history; and
 - the `M1/S4.5/PRE-B2/V5/WP1V` proof-closure hard stop.
 
-Next work package: `M1/S4.5/EVAL-CLOSEOUT/WP4`
+Next work package: `M1/S5`, subject to normal preflight and an accepted slice
+execution plan
 
 Accepted clarification, 2026-08-07 (`M1/S4.5/EVAL-CLOSEOUT/WP2/T1`): the
 historical 23-file freeze identity is the exact Git tree at evaluator commit
@@ -37,12 +38,13 @@ files may evolve through separately authorized public work and are current
 regression evidence, not original frozen qualification bytes. See the
 [freeze-boundary clarification](../../evaluation/m1-slice4-protocol-4-freeze-boundary-clarification.md).
 
-WP2 closeout status, 2026-08-07: active `/5` machine artifacts are removed;
-the historical 23-blob and current 20-file `/4` core identities pass; the
-bounded public regression wrapper, refusal tests, profile, and usage contract
-are present. WP3 documentation reconciliation is complete, and the fresh WP4
-audits are next. Slice 4.5 does not close and Slice 5 does not become eligible
-until final plan acceptance after the remaining review and closeout packages.
+Final closeout status, 2026-08-07: WP2 removed active `/5` machine artifacts
+and established bounded `/4` regression; WP3 established the continuation
+profile and reconciled status; both fresh WP4 reviews accept after the one
+shared ledger-classification correction; and WP5 full public verification
+passes. Slice 4.5 is closed by owner disposition, Slice 5 is eligible under the
+continuation profile, and M1 remains active. See the
+[acceptance record](../../evaluation/m1-slice4.5-evaluator-deferral-closeout-acceptance.md).
 
 ## Owner disposition embodied by this plan
 
@@ -72,9 +74,9 @@ owner-approved evaluator plan is accepted. The intended reconsideration point
 is after M1 Slice 9 during M3 trusted-personal-preflight planning. Deferral does
 not authorize private access, reveal, repair, reseal, scoring, or migration.
 
-After this plan is accepted and completed, Slice 4.5 closes as **public
+This plan is accepted and completed. Slice 4.5 is closed as **public
 conformance complete; private held-out evaluation deferred; no held-out product
-verdict**. Slice 5 becomes eligible to start under the replacement M1 public
+verdict**. Slice 5 is eligible to start under the replacement M1 public
 verification profile. This is an explicit milestone-plan disposition, not an
 implicit waiver or a claim that the product passed hidden evaluation.
 

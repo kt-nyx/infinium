@@ -189,6 +189,6 @@ records. ADR-0032 now retires `/5` unqualified, retains frozen `/4` only for
 bounded public regression with its known gap excluded, and defers private
 held-out evaluation without a valid current product verdict. The six semantic
 decisions in this document remain durable product authority; they no longer
-authorize an active evaluator path. Slice 4.5 closes only at evaluator-deferral
-final acceptance, after which Slice 5 is next eligible under the M1
+authorize an active evaluator path. Evaluator-deferral closeout is accepted:
+Slice 4.5 is closed by owner disposition, and Slice 5 is eligible under the M1
 continuation verification profile. M1 remains active.

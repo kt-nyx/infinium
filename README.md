@@ -47,9 +47,9 @@ Start with [`docs/README.md`](docs/README.md).
   No B2, C2, Stage D, corpus, scoring, or replacement-evaluator work is
   authorized. See the
   [sanitized incident record](docs/evaluation/evaluator-v2-stage-c5-adjudication-incident.md).
-  Slice 4.5 remains in evaluator-deferral closeout. Slice 5 is the next eligible
-  product package only after final closeout acceptance, under the M1
-  continuation verification profile. M1 remains active; public conformance is
+  Slice 4.5 is closed by accepted evaluator-deferral owner disposition. Slice 5
+  is eligible as the next product package under the M1 continuation
+  verification profile. M1 remains active; public conformance is
   not a private reliability/readiness verdict
 - xEdit: historical integration/oracle recommendation rejected; excluded from
   every Infinium boundary
@@ -67,5 +67,7 @@ evidence. The only current use is the
 Protocol `/5` is retired unqualified, private held-out evaluation is deferred,
 and no current product verdict exists. Current work follows the accepted
 [evaluator-deferral closeout plan](docs/plans/slices/M1-slice-4.5-evaluator-deferral-and-m1-continuation.md).
-After final closeout acceptance, Slice 5 uses the
+Slice 5 now uses the
 [M1 continuation verification profile](docs/evaluation/m1-continuation-verification-profile.md).
+The exact closeout evidence is in the
+[Slice 4.5 acceptance record](docs/evaluation/m1-slice4.5-evaluator-deferral-closeout-acceptance.md).

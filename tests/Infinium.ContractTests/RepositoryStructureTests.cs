@@ -40,7 +40,7 @@ public sealed class RepositoryStructureTests
     [TestMethod]
     [TestCategory("M1Contract")]
     [TestProperty("Category", "M1Contract")]
-    public void SliceOneContractDirectoriesAreImplementedWhileLaterToolingRemainsReserved()
+    public void SliceOneContractDirectoriesAreImplementedAndEvaluationBoundaryIsCurrent()
     {
         string[] implementedReadmes =
         [
@@ -68,6 +68,9 @@ public sealed class RepositoryStructureTests
 
         string evaluator = TestRepository.Read("tools", "evaluation", "README.md");
         StringAssert.Contains(evaluator, "Infinium.EvaluatorV2");
-        StringAssert.Contains(evaluator, "sole active held-out evaluation protocol");
+        StringAssert.Contains(evaluator, "frozen historical evaluator");
+        StringAssert.Contains(evaluator, "not an active held-out workflow");
+        StringAssert.Contains(evaluator, "Protocol `/5` is retired");
+        StringAssert.Contains(evaluator, "unqualified with no implementation");
     }
 }

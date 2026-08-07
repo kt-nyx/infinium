@@ -6,7 +6,7 @@ Last reviewed: 2026-08-07
 Accepted M1 verification amendment, 2026-08-07: ADR-0032 defers the current
 private held-out evaluator with no product verdict and makes the accepted
 [M1 continuation verification profile](../evaluation/m1-continuation-verification-profile.md)
-the public gate for Slices 5-9 after Slice 4.5 closeout. This changes
+the public gate for Slices 5-9. Slice 4.5 closeout is accepted. This changes
 sequencing and evidence labeling, not the M1 product goal or required cases.
 
 ## Supported product scope

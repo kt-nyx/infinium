@@ -41,7 +41,7 @@ This baseline consumes:
 - accepted ADR-0032 and the
   [M1 continuation verification profile](m1-continuation-verification-profile.md),
   which replace only the held-out-`PASS` sequencing prerequisite for Slices
-  5-9 after evaluator-deferral closeout;
+  5-9; evaluator-deferral closeout is accepted and the profile is effective;
 - the accepted [anti-overfitting rules](anti-overfitting-rules.md);
 - the [fixture guidelines](fixture-guidelines.md); and
 - the accepted M0 research dispositions.

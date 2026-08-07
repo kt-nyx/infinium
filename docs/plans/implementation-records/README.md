@@ -40,9 +40,9 @@ historically authorized one public `/5` successor attempt. WP0 completed, but
 WP1's accepted-model FaceGen/coverage composition hard stop remains historical
 evidence. ADR-0031 and WP1R accepted the distinct `/5` successor model and
 global composition proof; WP1V later hard-stopped, WP1 never proof-closed, and
-WP2-WP4 never started. `/5` is retired unqualified. Slice 4.5 closes only at
-evaluator-deferral final acceptance; Slice 5 is next eligible after that
-closeout under the M1 continuation verification profile. M1 remains active.
+WP2-WP4 never started. `/5` is retired unqualified. Evaluator-deferral closeout
+is accepted; Slice 4.5 is closed and Slice 5 is eligible under the M1
+continuation verification profile. M1 remains active.
 
 Slices 5-9 must add implementation records at completion. Each record must map
 its applicable continuation-profile layers to exact requirements, cases,
@@ -62,5 +62,5 @@ exists.
   accepted; public realignment complete at `a98d648`; B2 stopped on a public
   lexical-authority gap; the first public contract attempt hard-stopped;
   `M1/S4.5/PRE-B2/V5/WP1R` accepted the distinct successor model before WP1V
-  hard-stopped; ADR-0032 retires `/5` unqualified and governs the active
-  documentation closeout. Slice 5 is next eligible only after final closeout.
+  hard-stopped; ADR-0032 retires `/5` unqualified, and the evaluator-deferral
+  closeout is accepted. Slice 4.5 is closed and Slice 5 is eligible.

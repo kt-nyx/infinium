@@ -17,7 +17,7 @@ issued no valid held-out product verdict and is retired. The historical
 evaluator-v2 `/2`
 Stage C invocation ran once, but Stage C.5 invalidated its product verdict; no
 valid successor held-out verdict exists. That Slice 4 candidate retains its
-historical public verification. Slice 4.5 evaluator closeout is active under
+historical public verification. Slice 4.5 evaluator closeout is complete under
 ADR-0032 after historical work under plan revision `/3`,
 with final protocol `/4` qualified and frozen at
 `3693d19563c636cd2879804633ca4ce52448d2c1`. The single authorized B2 resume
@@ -33,9 +33,9 @@ evidence. ADR-0031 and WP1R accepted the distinct `/5` successor model and
 mandatory global composition proof; WP1V later hard-stopped, WP1 never proof-
 closed, and WP2-WP4 never started. ADR-0032 retires `/5` unqualified and
 defers private held-out evaluation without a verdict. No B2, C2, Stage D,
-corpus, scoring, or replacement-evaluator work is authorized. Slice 4.5 closes
-only at final evaluator-deferral acceptance; Slice 5 is next eligible after
-that closeout under the continuation profile. M1 remains active.
+corpus, scoring, or replacement-evaluator work is authorized. Slice 4.5 is
+closed by owner disposition; Slice 5 is eligible under the continuation
+profile. M1 remains active.
 
 Waves A through D have completed investigations and accepted integrated
 dispositions. Gates A through D are met at their applicable M0 research,
@@ -59,7 +59,8 @@ Current plans:
 - [M1 backend semantic proof](M1-backend-semantic-proof.md) — Accepted
   2026-07-28; active.
 - [M1 backend semantic proof revision 3](M1-backend-semantic-proof-evaluator-v2-amendment.md)
-  — Accepted 2026-08-04; active evaluator-v2 sequencing and gate ownership.
+  — Accepted 2026-08-04; historical evaluator-v2 sequencing, amended by
+  ADR-0032 and the accepted closeout.
 
 Expected future plans:
 
@@ -76,6 +77,6 @@ M1 status clarification: protocol `/4` remains immutable historical evidence
 with bounded public regression use only. Protocol `/5` is retired unqualified
 with no implementation, freeze, private use, or verdict. Product output remains
 prohibited as evaluator or oracle truth. Private held-out evaluation is
-deferred. Slice 5 becomes eligible only after evaluator-deferral closeout and
-then uses the continuation profile; M1 remains active and has no private
+deferred. Evaluator-deferral closeout is accepted; Slice 5 is eligible and
+uses the continuation profile. M1 remains active and has no private
 reliability/readiness verdict.

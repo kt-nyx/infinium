@@ -1,7 +1,6 @@
 # M1 continuation verification profile
 
-Status: Accepted; effective when `M1/S4.5/EVAL-CLOSEOUT` receives final plan
-acceptance
+Status: Accepted and effective
 
 Date: 2026-08-07
 
@@ -14,10 +13,10 @@ Applies to: M1 Slices 5 through 9
 ## Claim and activation boundary
 
 This is the normative development and validation gate that replaces the
-held-out-`PASS` sequencing prerequisite for the remaining M1 slices. It becomes
-effective only when the evaluator-deferral plan receives final closeout
-acceptance. Before that acceptance, Slice 4.5 remains in closeout and Slice 5
-is not yet eligible to start.
+held-out-`PASS` sequencing prerequisite for the remaining M1 slices.
+`M1/S4.5/EVAL-CLOSEOUT` is accepted and complete, so Slice 4.5 is closed and
+Slice 5 is eligible to start under this profile. The exact activation evidence
+is the [closeout acceptance record](m1-slice4.5-evaluator-deferral-closeout-acceptance.md).
 
 The profile proves public product conformance within each accepted slice's
 declared scope. It does not produce a private held-out verdict, qualify an
@@ -164,8 +163,8 @@ language beyond the evidence actually obtained.
 
 ## Slice sequencing and implementation records
 
-- Slice 5 is the next eligible product package only after evaluator-deferral
-  closeout acceptance. It must satisfy applicable Layers 1-4 and 6.
+- Slice 5 is the next eligible product package. It must satisfy applicable
+  Layers 1-4 and 6.
 - Slice 6 must satisfy applicable Layers 1-4 and 6 before any live provider
   operation; live authorization remains separate and bounded.
 - Slice 7 must satisfy all applicable layers and the exact two-materially-

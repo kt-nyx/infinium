@@ -32,9 +32,9 @@ Current execution plans:
   material authority gap. The later accepted totality plan completed through
   WP5 and classified an evaluator `/4` representation gap. The later `/5`
   attempt hard-stopped and ADR-0032 now supplies the current deferral
-  disposition. Private evaluation is deferred with no verdict. Slice 4.5
-  closes only at final evaluator-deferral acceptance; Slice 5 is next eligible
-  after that closeout. M1 remains active.
+  disposition. Private evaluation is deferred with no verdict.
+  Evaluator-deferral closeout is accepted: Slice 4.5 is closed, Slice 5 is
+  eligible, and M1 remains active.
 - [M1 Slice 4.5 — Public Bethesda semantic realignment and candidate freeze](M1-slice-4.5-public-product-realignment.md)
   — Accepted and completed 2026-08-05 at `a98d648`. This bounded public
   implementation contract records the
@@ -66,12 +66,13 @@ Current execution plans:
   and WP2-WP4 never started. ADR-0032 retires `/5` unqualified; its identities
   and work packages are not resumable.
 - [M1 Slice 4.5 — Evaluator deferral and M1 continuation](M1-slice-4.5-evaluator-deferral-and-m1-continuation.md)
-  — Accepted 2026-08-07 as active work `M1/S4.5/EVAL-CLOSEOUT`. WP2 retired
+  — Accepted and completed 2026-08-07 as work `M1/S4.5/EVAL-CLOSEOUT`. WP2 retired
   the active `/5` machine surface and established bounded `/4` regression.
-  WP3 documentation reconciliation is complete, and the fresh WP4 audits are
-  next. Final acceptance closes Slice 4.5 as public conformance
-  complete/private held-out deferred/no verdict and makes Slice 5 next eligible
-  under the M1 continuation verification profile. M1 remains active.
+  WP3 completed documentation reconciliation; both fresh WP4 audits accepted
+  after one shared ledger correction; and WP5 full verification passed. Slice
+  4.5 is closed as public conformance complete/private held-out deferred/no
+  verdict. Slice 5 is eligible under the M1 continuation verification profile,
+  and M1 remains active.
 
 Completed slices retain their exact implementation and verification evidence
 under [`../implementation-records/`](../implementation-records/README.md).
