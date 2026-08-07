@@ -1,6 +1,6 @@
 # M1 Slice 4 protocol `/5` WP1 representability hard stop
 
-Status: Historical hard stop — owner disposition accepted by ADR-0031 and WP1R
+Status: Historical hard stop; protocol `/5` retired unqualified by ADR-0032
 Recorded: 2026-08-07
 Work ID: `M1/S4.5/PRE-B2/V5/WP1`
 Input commit: `2ffd40e34bd58c08e332e4f23b7e132afcf83f19`
@@ -10,6 +10,12 @@ protocol `/5` successor semantic model and exact loose-availability gap. This
 record remains the immutable proof of why model `1.2.0` could not serve as the
 unchanged active `/5` input; it was not erased or reclassified as a WP1
 correction attempt.
+
+Final disposition: ADR-0032 later retired the entire `/5` line unqualified.
+The draft artifacts named below were removed from the active tree and remain
+available only at exact failed-evidence commit
+`2b41ad8c06f3da0f692cd963b524ff5b5d279bd0`. Their identities are consumed and
+may not be resumed or reused.
 
 ## Finding
 

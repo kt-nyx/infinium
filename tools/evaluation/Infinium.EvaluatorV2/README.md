@@ -1,103 +1,66 @@
-# Infinium public evaluator v2 successor
+# Infinium historical public evaluator `/4`
 
-This standalone public tool implements protocol `infinium.evaluator-v2/4`,
-scorer and adapter `4.0.0`, and the final bounded Slice 4 projection
-`infinium.evaluator-v2.slice4-semantic-projection` `3.0.0`. Protocol `/3` at
-evaluator commit `34ed0c84165e9a49f44a88ecd87cac967132ebd7` remains immutable
-historical evidence: it was publicly qualified, then superseded before a valid
-successor corpus because its projection required non-independently-authorable
-oracle values.
+Protocol `infinium.evaluator-v2/4`, scorer and adapter `4.0.0`, and projection
+`infinium.evaluator-v2.slice4-semantic-projection/3.0.0` are frozen historical
+public evidence. The evaluator is retained only for the bounded public
+regression use defined in
+[`docs/evaluation/m1-slice4-protocol-4-bounded-regression-usage.md`](../../../docs/evaluation/m1-slice4-protocol-4-bounded-regression-usage.md).
 
-## Projection contract
+The only current authorized entry point is:
 
-The reflection adapter serializes the public `BethesdaSemanticExtractionResult`
-only as an inter-assembly transport, then explicitly projects named Slice 4
-members. It never recursively flattens the complete result. Included facts are
-result publication/failure presence; accepted plugin and provider topology;
-evaluator-owned record and contribution identity; override sequence and
-semantic winner fields; selected NPC, RACE, and REFR fields; typed links;
-allowlisted-field counts; FaceGen/provider topology; evaluator-owned taxonomy
-tuples; coverage; and typed capability gaps.
-
-Excluded values include every product-generated contribution, participant,
-winner, taxonomy-assignment, analyzer, evidence, gap, and snapshot ID; exact
-failure-code spelling; typed AIDT subfields; denominator labels; physical
-paths; `SnapshotAuthorizedPath`; dependency fingerprints; separately bound
-producer/candidate metadata; timestamps; exception text; `Reason` or `Message`
-prose; display text; manifest-redundant byte hashes/lengths; and incidental
-serialization fields. The normative family-by-family authority is
-`docs/evaluation/m1-slice4-heldout-oracle-authority-matrix.md`. The accepted
-semantic choices inside that unchanged projection are in
-`docs/evaluation/m1-slice4-semantic-authority-owner-disposition.md` and
-ADR-0028. They require no protocol, schema, canonicalizer, or scorer change.
-
-Fact IDs use slash-delimited public collection/field names. Set/map identities
-are percent-escaped path segments sorted ordinally. Ordered plugin, master,
-contribution, link-ordinal, and provider sequences use zero-padded ordinal
-indexes. Duplicate identities are invalid. FormKeys are canonicalized from the
-Slice 4 ID-first representation to `xxxxxxxx:plugin.ext`. Explicit null and a
-missing fact differ. Missing and extra facts are product mismatches. Typed-fact
-validation follows the declared semantic `value_type`: `integer` requires an
-exactly representable signed Int64 JSON number (including integral decimal or
-exponent notation), while `number` accepts any finite JSON
-number, including an integral-valued token. Semantic numbers compare
-numerically, so `10` and `10.0` are equal when both declare `number`; semantic
-integers remain exact and type-distinct.
-
-Aggregate corpus fingerprints bind each canonical member ID in declared order,
-along with its execution inputs and oracle identity. Renaming a member without
-refreezing the corpus is an admission error.
-
-## Commands
-
-Build once, then use the frozen tool output directory as `EVALUATOR_ROOT`.
-Every result directory must be a new path below an existing, reparse-free
-parent.
-
-```text
-Infinium.EvaluatorV2 protocol
-Infinium.EvaluatorV2 calibrate --result-dir <new-directory>
-Infinium.EvaluatorV2 adapt --manifest <execution-manifest.json> --result-dir <new-directory>
-Infinium.EvaluatorV2 score --manifest <execution-manifest.json> --oracle <expected-output.json> --result-dir <new-directory>
-Infinium.EvaluatorV2 compare-prepared --manifest <prepared-comparison-manifest.json> --candidate-output <prepared-candidate-output.json> --oracle <expected-output.json> --result-dir <new-directory>
-Infinium.EvaluatorV2 score-corpus --manifest <corpus-execution-manifest.json> --result-dir <new-directory>
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File eng/invoke-m1-slice4-protocol4-bounded-regression.ps1
 ```
 
-`score` evaluates one execution manifest against one oracle. B2 uses only
-`compare-prepared`; it loads no candidate assembly and invokes no reflection
-adapter. Prepared qualification uses a separate retained synthetic
-qualification artifact. The prepared manifest and prepared candidate output
-reference the same synthetic artifact byte length and SHA-256. That synthetic
-identity is not the frozen product candidate. The prepared-corpus fingerprint
-separately binds the exact prepared candidate-output and oracle bytes.
+or the same script under PowerShell 7. A successful run terminates with
+`BOUNDED_REGRESSION_PASS`. That label means only that the historical 23-file
+freeze, current 20-file reusable core, and explicitly allowlisted current
+public regression checks remain healthy. It is not the original frozen test
+suite, a complete current semantic result, a private held-out verdict, Slice
+4.5 or M1 `PASS`, a reliability claim, or a product verdict.
 
-`score-corpus` is the Stage C/C2 one-shot aggregate command for the frozen
-private corpus. C2 uses exactly one `score-corpus` invocation. Its manifest
-contains one or more private members, each with its own answer-free `execution`,
-`oracle_path`, and private `member_id`. The scorer emits private ordinal
-assertion files and one sanitized aggregate. Member IDs and local paths never
-enter the sanitized result. A one-member corpus is valid.
+## Known exclusion
 
-Loose-provider chains name a normalized relative path, ordered providers,
-provider kind/priority, and exact winner. A retained provider asset supplies
-all of path, byte length, and SHA-256; all three are omitted together when no
-retained file is required. The manifest separately states whether archive
-member population is authoritative. The adapter constructs additional local
-installed entities and preserves the declared provider order and winner.
+Protocol `/4` cannot represent the accepted partial `RACE/DATA` outcome that
+retains independently proven common contribution facts while omitting only the
+unavailable later-layer `face_gen_head` fact. The bounded wrapper does not
+adapt or execute product output and does not exercise that state. `/4` must not
+be changed or used to reject the accepted product behavior.
 
-## Terminal boundary
+## Historical direct commands
 
-Before candidate invocation, malformed tuple/manifest/oracle data, mismatched
-retained bytes, evaluator identity/dependency drift, candidate admission, and
-result publication are `EVALUATOR_ERROR`. After valid admission, a resolved
-candidate invocation that throws is `FAIL/candidate_execution`; an invalid
-candidate projection is `FAIL/candidate_output_contract`; semantic mismatches
-are `FAIL/comparison`. A valid typed failed state compares normally.
+The frozen executable still contains `protocol`, `calibrate`, `adapt`,
+`score`, `compare-prepared`, and `score-corpus` for historical
+reproducibility. Except for calibration invoked by the bounded wrapper, those
+commands are not authorized for new active execution by the evaluator-deferral
+plan. In particular, adaptation, oracle comparison, corpus scoring, private
+manifests, and candidate execution are prohibited. Their presence is not an
+active held-out workflow or an invitation to resume B2/C2.
 
-After closeout, the tracked public freeze handoff at
-`docs/evaluation/evaluator-v2-stage-a-final-bounded-freeze.json` remains the
-sole evaluator autodiscovery authority. It is not sufficient by itself to
-resume B2: the ADR-0028 product/specification realignment must first be
-implemented, requalified, and bound to a newly frozen candidate identity.
-Stage B2 must not substitute a SHA supplied out of band, and no evaluator
-successor iteration is authorized.
+Protocol `/3` schemas remain as immutable historical bytes supporting its
+freeze record and `/4` predecessor provenance. No `/2` schema remains in the
+current tool tree. Neither predecessor is an accepted or runnable alternative
+for new work. Their exact inventory is in the bounded-regression usage
+document.
+
+## Frozen projection boundary
+
+The `/4` reflection adapter historically projected named Slice 4 members
+rather than recursively flattening the complete result. Included facts cover
+the bounded result state, plugin/provider topology, evaluator-owned record and
+contribution identity, override/winner state, selected NPC/RACE/REFR fields,
+typed links, allowlisted-field counts, FaceGen/provider topology, evaluator-
+owned taxonomy tuples, coverage, and capability gaps.
+
+Excluded values include product-generated IDs, exact failure-code spelling,
+typed AIDT subfields, physical paths, dependency fingerprints, timestamps,
+exception or reason prose, display text, and incidental serialization fields.
+The historical family authority remains in
+`docs/evaluation/m1-slice4-heldout-oracle-authority-matrix.md`; it does not
+broaden the current bounded-regression claim.
+
+The immutable freeze is
+`docs/evaluation/evaluator-v2-stage-a-final-bounded-freeze.json` at evaluator
+commit `3693d19563c636cd2879804633ca4ce52448d2c1`. The wrapper verifies all 23
+raw Git blobs at that commit and all 20 current non-test core files before any
+public check runs.

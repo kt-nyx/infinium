@@ -1,10 +1,16 @@
 # M1 Slice 4 protocol `/5` WP1V projection proof closure
 
-Status: Hard-stopped after final independent re-review
+Status: Historical failed evidence; hard-stopped and retired unqualified by ADR-0032
 
 Work ID: `M1/S4.5/PRE-B2/V5/WP1V`
 
 Date: 2026-08-07
+
+Final disposition: ADR-0032 retired protocol `/5` without implementation,
+freeze, or verdict. The failed machine artifacts described below were removed
+from the active tree and remain reproducible only at exact failed-evidence
+commit `2b41ad8c06f3da0f692cd963b524ff5b5d279bd0`. Passing validator output in
+this chronology is not active authority, and no named identity may be reused.
 
 Starting branch: `codex/m1-slice-4.5-protocol-5-successor`
 
@@ -37,9 +43,11 @@ remains reproducible at the WP1R commit.
 
 ## Finite rule closure
 
-The mandatory
-[`rule-coverage ledger`](specifications/m1-slice4-protocol-5-rule-coverage-ledger.json)
-has identity `infinium.m1-slice4.protocol-5-rule-coverage-ledger/1.0.0` and
+The mandatory historical
+`specifications/m1-slice4-protocol-5-rule-coverage-ledger.json`, retained at
+exact failed-evidence commit
+`2b41ad8c06f3da0f692cd963b524ff5b5d279bd0`, has identity
+`infinium.m1-slice4.protocol-5-rule-coverage-ledger/1.0.0` and
 SHA-256
 `8d88061dbcd7d206533c2ed245861c3c823f6576cd9ade727050d75bb8e22904`.
 It contains exactly 77 unique accepted successor publication rules:

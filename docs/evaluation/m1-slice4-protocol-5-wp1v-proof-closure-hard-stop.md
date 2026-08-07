@@ -1,10 +1,16 @@
 # M1 Slice 4 protocol `/5` WP1V proof-closure hard stop
 
-Status: Hard stop
+Status: Historical hard stop; protocol `/5` retired unqualified by ADR-0032
 
 Date: 2026-08-07
 
 Work ID: `M1/S4.5/PRE-B2/V5/WP1V`
+
+Final disposition: ADR-0032 closed the `/5` line without qualification. The
+failed proof artifacts are no longer active files and remain reproducible at
+exact failed-evidence commit
+`2b41ad8c06f3da0f692cd963b524ff5b5d279bd0`. This record preserves chronology;
+it is not a resumption point or reusable protocol/model authority.
 
 Starting branch: `codex/m1-slice-4.5-protocol-5-successor`
 

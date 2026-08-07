@@ -1,10 +1,17 @@
 # M1 Slice 4 protocol `/5` WP1R successor-model acceptance
 
-Status: Accepted
+Status: Historical accepted recovery decision; protocol `/5` retired unqualified by ADR-0032
 
 Date: 2026-08-07
 
 Work ID: `M1/S4.5/PRE-B2/V5/WP1R`
+
+Final disposition: this record preserves the accepted historical semantic
+recovery and does not authorize active evaluator work. ADR-0032 retired `/5`
+before implementation or freeze. The model and related projection identities
+are consumed, unqualified historical identities; their removed machine
+artifacts remain available at exact failed-evidence commit
+`2b41ad8c06f3da0f692cd963b524ff5b5d279bd0`.
 
 Input commit: `e7d4c74c25814744dd370177e8404fc038152da8`
 

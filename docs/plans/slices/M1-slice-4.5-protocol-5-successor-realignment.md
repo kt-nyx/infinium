@@ -1,12 +1,21 @@
 # M1 Slice 4.5 — Protocol `/5` successor realignment
 
-Status: Accepted plan; WP0 and WP1R complete; WP1V hard-stopped; WP1 unclosed
+Status: Historical accepted plan; closed/retired without completion; protocol `/5` unqualified
 Owner: Project owner
 Prepared: 2026-08-07
 Accepted: 2026-08-07
 Last reviewed: 2026-08-07
 Work package: `M1/S4.5/PRE-B2/V5`
 Parent plan: `infinium.plan.m1.backend-semantic-proof/3`
+
+Retirement disposition: ADR-0032 retired protocol `/5` unqualified after the
+WP1V hard stop. This document preserves the exact chronology and requirements
+of the abandoned qualification attempt; none of its incomplete WP1-WP4 work is
+active or resumable. The protocol, semantic-model, representation-model,
+projection-version, and document-schema identities named here are consumed
+historical identities and must not be reused. Removed machine artifacts remain
+available at exact failed-evidence commit
+`2b41ad8c06f3da0f692cd963b524ff5b5d279bd0`.
 
 ## Objective
 
