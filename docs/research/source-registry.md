@@ -1,7 +1,7 @@
 # Documentation source registry
 
 Status: Draft
-Last reviewed: 2026-08-01
+Last reviewed: 2026-08-07
 
 This document defines the registry model, initial authority classes, and
 reviewed source-level decisions. Exact endpoints, observed capabilities, and
@@ -253,6 +253,9 @@ qualification decision.
 These sources support RESEARCH-0052 and ADR-0026's development/evaluation
 repository boundary. They do not authorize public disclosure of private
 fixtures or grant ordinary workflows access to the private store.
+ADR-0027 retains the public-rule/private-data boundary, and ADR-0032 currently
+defers all private held-out authoring, qualification, comparison, and scoring;
+the registered sources do not reopen that work.
 
 | Authority | Checked identity | Registered use |
 |---|---|---|

@@ -1,6 +1,6 @@
 # M1 Slice 4 — Bethesda semantic extraction and typed indexes
 
-Status: Implementation complete with passing public gates; held-out acceptance transferred to Slice 4.5
+Status: Complete for exact public Slice 4 scope; private held-out evaluation deferred by ADR-0032
 
 Plan: `infinium.plan.m1.backend-semantic-proof/2`
 
@@ -368,3 +368,14 @@ Held-out EVAL-0052 and applicable EVAL-0086 gate ownership is transferred to
 Slice 4.5. This transfer is not a waiver: Slice 5 remains blocked until a
 qualified/frozen evaluator v2 and private corpus produce one valid held-out
 `PASS` for the exact frozen tuple.
+
+## Current post-Slice-4.5 disposition
+
+The transfer paragraph above records the historical revision `/3` sequencing
+gate. Subsequent public semantic realignment and review passed for exact
+candidate `a98d648bd0adb2751ee0c09828e0227b1583950f`. ADR-0032 later deferred
+private held-out evaluation without a product verdict, retired protocol `/5`
+unqualified, and replaced only that sequencing gate with the accepted M1
+continuation verification profile. Evaluator-deferral closeout is accepted:
+Slice 4.5 is closed, Slice 5 is eligible, and this Slice 4 record claims only
+its exact public conformance scope—not private reliability or readiness.

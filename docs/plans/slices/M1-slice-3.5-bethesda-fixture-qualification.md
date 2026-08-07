@@ -1,10 +1,10 @@
 # M1 Slice 3.5 — Independent Bethesda fixture and oracle qualification
 
-Status: Accepted
+Status: Accepted and completed
 Owner: Project owner
 Prepared: 2026-07-30
 Accepted: 2026-07-30
-Last reviewed: 2026-08-02
+Last reviewed: 2026-08-07
 Parent plan: [M1 backend semantic proof](../milestones/M1-backend-semantic-proof.md)
 and accepted [revision 2 amendment](../milestones/M1-backend-semantic-proof-adr0026-amendment.md)
 Target: Slice 3.5, between completed Slice 3 and production Slice 4

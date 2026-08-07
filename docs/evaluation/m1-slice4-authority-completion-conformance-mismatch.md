@@ -1,6 +1,6 @@
 # M1 Slice 4.5 authority-completion product-conformance mismatch
 
-Status: Historical mismatch closed at `a98d648`; B2 later stopped; accepted `M1/S4.5/PRE-B2` active at WP1
+Status: Historical mismatch closed at `a98d648`; later evaluator work closed by ADR-0032
 
 Recorded: 2026-08-05
 
@@ -159,3 +159,13 @@ semantic choice, and the accepted
 [Pre-B2 totality plan](../plans/slices/M1-slice-4.5-pre-B2-evidence-contract-totality.md)
 requires a comprehensive state-to-fact proof beginning at WP1. This historical
 mismatch record does not authorize a new B2 task.
+
+## Current disposition
+
+The accepted Pre-B2 totality work subsequently completed through WP5 and
+classified a protocol `/4` representation gap. The protocol `/5` successor
+attempt then hard-stopped before implementation or freeze. ADR-0032 retires
+`/5` unqualified and defers private held-out evaluation with no product
+verdict. Evaluator-deferral closeout is accepted: Slice 4.5 is closed, Slice 5
+is eligible under the M1 continuation verification profile, and this mismatch
+record remains historical evidence only.

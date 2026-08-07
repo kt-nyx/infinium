@@ -163,10 +163,10 @@ supplied by the successor section below.
 ADR-0029 resolves the disclosed partial-decode choice and requires lower-layer
 evidence retention with exact higher-layer coverage gaps. The accepted
 [Pre-B2 totality plan](../plans/slices/M1-slice-4.5-pre-B2-evidence-contract-totality.md)
-now owns public completion as work ID `M1/S4.5/PRE-B2`. Its total state/fact
-model and mechanical gate must pass before fixtures, a fresh product-blind
-review, or candidate conformance can support any new held-out-authorability
-claim. Private B2 remains separately unauthorized.
+historically owned the successor public-completion pass as work ID
+`M1/S4.5/PRE-B2`; it subsequently completed through WP5 and classified the
+protocol `/4` representation gap. Its completion did not authorize private B2
+or create a held-out verdict.
 
 ## Current evaluator-deferral amendment
 

@@ -64,3 +64,7 @@ exists.
   `M1/S4.5/PRE-B2/V5/WP1R` accepted the distinct successor model before WP1V
   hard-stopped; ADR-0032 retires `/5` unqualified, and the evaluator-deferral
   closeout is accepted. Slice 4.5 is closed and Slice 5 is eligible.
+- [Post-Slice-4.5 documentation and Slice 5 readiness review](M1-post-slice-4.5-documentation-readiness-review.md)
+  — repository-wide status, authority, link, JSON, and verification review
+  after fast-forward integration to `main`; confirms that Slice 5 planning is
+  the next eligible action.

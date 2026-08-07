@@ -1,19 +1,24 @@
 # Architecture overview
 
 Status: Draft  
-Last reviewed: 2026-07-28
+Last reviewed: 2026-08-07
 
-No implementation or evaluation conformance is accepted yet. ADR-0015 through
-ADR-0023 accept the complete Wave E persistence, lifecycle, application-stack,
-process, IPC, credential, security, continuity, and budget architecture. Dapr
-and ADR-0024's Codex proposal are rejected. This document maps the selected
-decomposition.
+ADR-0015 through ADR-0023 accept the complete Wave E persistence, lifecycle,
+application-stack, process, IPC, credential, security, continuity, and budget
+architecture. M1 Slices 0-4 have implemented bounded toolchain, contract,
+persistence/lifecycle, coordinator/worker/CLI, exact-target snapshot, and
+Bethesda-semantic portions of this architecture with their recorded public
+gates. Finding/case analysis, provider dispatch, generic reversion proof,
+controlled-real execution, end-to-end output, and the frontend remain later
+slices or milestones. Dapr and ADR-0024's Codex proposal are rejected. This
+document maps the selected decomposition without treating partial M1 delivery
+as complete architecture conformance.
 
 ## Required responsibilities and selected separation
 
 The responsibilities below follow from product requirements and accepted
 ADR-0015 through ADR-0023. Exact implementation details remain bounded by the
-future accepted M1 plan.
+accepted M1 plan and the later owning milestone plans.
 
 ### Presentation
 

@@ -1,6 +1,6 @@
 # M1 Slice 4 protocol `/4` public oracle-authorability review
 
-Status: Hard stop; independent re-review did not pass
+Status: Historical hard stop; independent re-review did not pass
 
 Recorded: 2026-08-05
 
@@ -12,8 +12,9 @@ Protocol/projection: `infinium.evaluator-v2/4` /
 This remains the historical attestation for the failed attempt. ADR-0029 later
 resolved the disclosed partial `RACE/DATA` choice, and the accepted
 [Pre-B2 totality plan](../plans/slices/M1-slice-4.5-pre-B2-evidence-contract-totality.md)
-now owns comprehensive public closure. The failed review is not converted into
-a pass and does not authorize private work.
+subsequently completed its separate comprehensive public pass through WP5.
+That later work does not convert this failed review into a pass or authorize
+private work. ADR-0032 supplies the current evaluator-deferral disposition.
 
 ## Role and isolation
 

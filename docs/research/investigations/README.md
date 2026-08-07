@@ -1,7 +1,7 @@
 # Research investigations
 
 Status: Draft  
-Last reviewed: 2026-08-01
+Last reviewed: 2026-08-07
 
 Place one bounded, dated investigation per file:
 
@@ -47,7 +47,7 @@ proposed disposition enabled by the report.
 | [RESEARCH-0005](RESEARCH-0005-mo2-effective-state-acquisition.md) | Completed; recommendation accepted | RQ-001 resolved for M0 by ADR-0008; Slice 3 implementation and EVAL-0051 passed for the exact admitted target, with broader target breadth unsupported |
 | [RESEARCH-0006](RESEARCH-0006-mo2-profile-selection-semantics.md) | Completed; recommendation accepted | RQ-002 resolved for M0 by ADR-0008; saved selection is suggestion-only |
 | [RESEARCH-0007](RESEARCH-0007-skyrim-runtime-support-contract.md) | Completed; recommendation accepted | RQ-003 resolved for M0 by ADR-0009; Slice 3 implementation and EVAL-0054 passed for the exact admitted target, while release breadth remains pending |
-| [RESEARCH-0008](RESEARCH-0008-mutagen-bethesda-semantic-capability.md) | Completed; recommendation accepted | RQ-004 resolved for M0 by ADR-0009; Slice 3.5 independently qualified the bounded Slice 4 input/oracle shapes, Slice 4 production conformance remains pending, and archive/string breadth remains excluded |
+| [RESEARCH-0008](RESEARCH-0008-mutagen-bethesda-semantic-capability.md) | Completed; recommendation accepted | RQ-004 resolved for M0 by ADR-0009; Slice 3.5 independently qualified the bounded input/oracle shapes and Slice 4 public conformance passed for exact candidate `a98d648` and scope; archive/string breadth remains excluded |
 | [RESEARCH-0009](RESEARCH-0009-loot-integration-and-data-contract.md) | Completed; recommendation accepted | RQ-005 resolved for M0 by ADR-0011; LOOT delivery remains milestone-conditional and qualification-gated |
 | [RESEARCH-0010](RESEARCH-0010-xedit-ground-truth-and-invocation.md) | Completed; recommendation rejected | Historical RQ-006 evidence retained; ADR-0007 excludes xEdit and replaces the proposed oracle with parser-independent first-party fixture truth |
 | [RESEARCH-0011](RESEARCH-0011-mo2-identity-installer-and-manual-state.md) | Completed; recommendation accepted | RQ-007 resolved for M0 by ADR-0008; bounded FOMOD work remains later |
@@ -141,5 +141,8 @@ Wave F's research, evaluation specifications, deferred-question ledger, M1
 plan, and independent integration review are complete through RESEARCH-0049.
 The project owner accepted the Wave F recommendations, baseline, case
 specifications/manifests, ADR-0025, residual-risk register, and M1 plan on
-2026-07-28. Gate F is met and M0 is complete. No evaluation execution or M1
-implementation result is implied.
+2026-07-28. Gate F is met and M0 is complete. That Wave F acceptance did not
+itself imply evaluation execution or an M1 implementation result. Subsequent
+M1 Slices 0-4.5 are now complete for their exact recorded scopes; M1 remains
+active and Slice 5 is the next eligible planning package under the continuation
+verification profile.

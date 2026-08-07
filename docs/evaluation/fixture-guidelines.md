@@ -4,9 +4,12 @@ Status: Draft
 Last reviewed: 2026-08-07
 
 Wave B's target boundaries and fixture/conformance obligations are accepted by
-ADR-0008 through ADR-0011, and the M1 Wave F case specifications are accepted;
-execution remains pending. Fixture status must never convert acceptance of a test
-obligation into a passed integration claim. ADR-0007 excludes xEdit from
+ADR-0008 through ADR-0011, and the M1 Wave F case specifications are accepted.
+Execution is partial: completed early M1 slices have exact retained package and
+case evidence, while later-slice and controlled-real obligations remain
+pending as identified in the case catalog and implementation records. Fixture
+status must never convert acceptance of a test obligation into a passed
+integration claim. ADR-0007 excludes xEdit from
 fixture construction, required adjudication, and conformance dependencies.
 RESEARCH-0034/0035 qualify the remaining Gate C decision boundary and
 controlled-real candidates; they do not create executable fixtures or passing

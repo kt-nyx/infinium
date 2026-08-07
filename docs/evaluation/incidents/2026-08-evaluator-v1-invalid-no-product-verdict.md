@@ -1,8 +1,8 @@
 # Evaluator-v1 invalid attempts: no product verdict
 
-Status: Completed
+Status: Completed historical incident; current disposition supplied by ADR-0032
 Date: 2026-08-04
-Last reviewed: 2026-08-04
+Last reviewed: 2026-08-07
 
 ## Summary
 
@@ -40,5 +40,15 @@ path.
   a private held-out corpus, and separate authoring/scoring/closeout stages.
 - The product baseline remains frozen at `98fe8a5`; it is not rolled back or
   modified in response to invalid evaluator attempts.
-- A valid held-out product verdict remains pending evaluator-v2 private corpus
-  qualification and one-shot scoring in later fresh tasks.
+- At this historical checkpoint, a valid held-out product verdict remained
+  pending evaluator-v2 private corpus qualification and one-shot scoring in
+  later fresh tasks.
+
+## Current disposition
+
+The evaluator-v2 successor history did not produce a valid private product
+verdict. ADR-0032 now defers private held-out evaluation, retires protocol `/5`
+unqualified, and authorizes Slices 5-9 to continue under the public M1
+continuation verification profile. This incident remains evidence that
+evaluator admission failures are not product results; it authorizes no private
+or successor evaluator work.

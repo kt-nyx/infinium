@@ -1,6 +1,6 @@
 # Evaluator-v2 successor Stage B2 contract gap
 
-Status: Accepted sanitized incident record
+Status: Accepted historical sanitized incident; current disposition supplied by ADR-0032
 
 Recorded: 2026-08-04
 
@@ -63,3 +63,13 @@ independently authorable held-out semantics from implementation-specific
 public conformance. Private oracle construction, corpus qualification, and
 scoring may resume only after the public `/4` evaluator is qualified and
 frozen.
+
+## Current disposition
+
+The final `/4` evaluator was later qualified and frozen, but private oracle
+construction still stopped without a verdict and `/4` proved unable to
+represent one accepted partial semantic state. The attempted `/5` successor
+hard-stopped before implementation or freeze. ADR-0032 retires `/5`
+unqualified, defers private held-out evaluation, and authorizes no B2, C2,
+Stage D, corpus, comparison, or scoring work. Slice 4.5 is closed and Slice 5
+is eligible under the M1 continuation verification profile.

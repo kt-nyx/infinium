@@ -1,16 +1,20 @@
 # Analysis catalog
 
 Status: Accepted  
-Last reviewed: 2026-08-05
+Last reviewed: 2026-08-07
 
 Accepted bounded-M1 clarification: ADR-0028 governs the `EDID`, FaceGen,
 asset-availability, coverage, gap, and taxonomy semantics used by the first
 Bethesda proof.
 
-This is the living inventory of desired analysis capabilities. Nothing in this
-catalog implies that an analyzer currently exists. Initial status for every
-entry is **Not implemented**. The section headings group product capabilities
-for planning; they do not replace the accepted
+This is the living inventory of desired analysis capabilities. Catalog entries
+do not imply complete analyzer delivery. M1 Slices 3 and 4 have implemented the
+bounded exact-target/MO2 snapshot and Bethesda semantic/index substrate
+described by their accepted plans; Slice 5 is the next package and owns the
+first complete evidence, candidate, finding, case, and replay path. Every
+broader capability remains unimplemented unless a current implementation record
+states its exact delivered scope. The section headings group product
+capabilities for planning; they do not replace the accepted
 [Skyrim SE mod-impact taxonomy](mod-impact-taxonomy.md). One analyzer or
 interaction may cross several sections and taxonomy codes.
 

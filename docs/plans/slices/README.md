@@ -76,3 +76,13 @@ Current execution plans:
 
 Completed slices retain their exact implementation and verification evidence
 under [`../implementation-records/`](../implementation-records/README.md).
+
+## Next action
+
+`M1/S5` is eligible to begin at the planning boundary. No accepted Slice 5
+execution plan exists yet, so implementation must not start until a bounded
+plan maps continuation-profile Layers 1-4 and 6 to exact requirements, cases,
+independently expected public fixtures, replay/safety evidence, commands,
+coverage/gaps, fresh review, and claim limits. Creating and accepting that plan
+is the next project action; private evaluator or live/billable work is not part
+of it.

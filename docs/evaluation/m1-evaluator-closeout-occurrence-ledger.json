@@ -9,7 +9,8 @@
     "token_boundary": "Terms use negative ASCII letter/digit/underscore lookarounds so incidental identifier, hash, and base64 substrings do not match."
   },
   "scope": {
-    "description": "All tracked and in-scope newly added Markdown and JSON files in the public repository, excluding this generated ledger to avoid self-reference.",
+    "description": "All tracked and in-scope newly added Markdown and JSON files in the public repository at the accepted evaluator-closeout snapshot, excluding this generated ledger to avoid self-reference. This is immutable closeout evidence, not a live index for later documentation changes.",
+    "snapshot_commit": "d19d070166c5f7c1cbeaf3a547bf7754a703ef85",
     "file_globs": [
       "**/*.md",
       "**/*.json"

@@ -1,8 +1,9 @@
 # Infinium
 
-Infinium is a planned evidence-driven pre-playthrough quality-assurance and
-diagnostic tool for large Skyrim Special Edition modlists managed with Mod
-Organizer 2.
+Infinium is an evidence-driven pre-playthrough quality-assurance and diagnostic
+tool for large Skyrim Special Edition modlists managed with Mod Organizer 2.
+The rebuilt product is being delivered incrementally under accepted milestone
+plans; it is not yet an end-user-ready preflight application.
 
 The M0 research foundation is complete. The accepted M1 backend semantic proof
 plan is now the active implementation authority.
@@ -65,9 +66,9 @@ M1 Slice 4.5 retains frozen protocol `/4` and projection `3.0.0` as historical
 evidence. The only current use is the
 [bounded public regression profile](docs/evaluation/m1-slice4-protocol-4-bounded-regression-usage.md).
 Protocol `/5` is retired unqualified, private held-out evaluation is deferred,
-and no current product verdict exists. Current work follows the accepted
-[evaluator-deferral closeout plan](docs/plans/slices/M1-slice-4.5-evaluator-deferral-and-m1-continuation.md).
-Slice 5 now uses the
+and no current product verdict exists. The completed
+[evaluator-deferral closeout plan](docs/plans/slices/M1-slice-4.5-evaluator-deferral-and-m1-continuation.md)
+records that disposition. Slice 5 now uses the
 [M1 continuation verification profile](docs/evaluation/m1-continuation-verification-profile.md).
 The exact closeout evidence is in the
 [Slice 4.5 acceptance record](docs/evaluation/m1-slice4.5-evaluator-deferral-closeout-acceptance.md).

@@ -53,8 +53,10 @@ specification.
   [Pre-B2 evidence-contract totality successor](plans/slices/M1-slice-4.5-pre-B2-evidence-contract-totality.md),
   the historical retired
   [protocol `/5` successor plan](plans/slices/M1-slice-4.5-protocol-5-successor-realignment.md),
-  the active
+  the completed
   [evaluator-deferral and M1-continuation closeout plan](plans/slices/M1-slice-4.5-evaluator-deferral-and-m1-continuation.md),
+  the completed
+  [post-Slice-4.5 documentation and Slice 5 readiness review](plans/implementation-records/M1-post-slice-4.5-documentation-readiness-review.md),
   the [work-breakdown notation](plans/work-breakdown-notation.md),
   and the
   [research-agent handoff template](plans/research-investigation-agent-handoff-template.md)

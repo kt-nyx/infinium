@@ -1,14 +1,18 @@
 # Jobs, caching, and snapshots
 
 Status: Draft  
-Last reviewed: 2026-07-28
+Last reviewed: 2026-08-07
 
 This document records required behavior. RESEARCH-0036, RESEARCH-0037,
 RESEARCH-0039, RESEARCH-0043, and RESEARCH-0046 define the storage, lifecycle,
 coordinator, and cost-control requirements and dispositions. ADR-0015,
 ADR-0016, ADR-0018, and ADR-0023 accept the persistence, lifecycle,
-coordinator/process, and cost-control architecture. Exact schema, tuning, and
-implementation-plan details remain pending.
+coordinator/process, and cost-control architecture. M1 Slices 2-4 implement the
+bounded authoritative-store, coordinator/worker/CLI, snapshot, and semantic
+publication substrate. Slice 5 must extend it through complete downstream
+evidence/case replay, and Slice 6 must add the accepted provider cost-control
+surface. Later schema, tuning, scale, and milestone-specific details remain
+pending.
 
 ## Immutable installation snapshots
 

@@ -1,6 +1,6 @@
 # M1 Slice 4.5 protocol `/4` frozen-candidate conformance classification
 
-Status: Complete — evaluator `/4` representation gap; hard stop
+Status: Historical complete classification — evaluator `/4` representation gap
 
 Recorded: 2026-08-07
 
@@ -205,10 +205,10 @@ itself nevertheless remains an actual failure and is not concealed as a pass.
 - No sub-agent or replacement reviewer was launched.
 - Nothing was pushed.
 
-## Required next disposition
+## Historical required next disposition
 
-WP5 is complete, but it does not unblock WP6 directly. Under the accepted plan,
-WP6 now requires an explicit owner-authorized successor disposition.
+At this WP5 checkpoint, completion did not unblock WP6 directly. The accepted
+plan required an explicit owner-authorized successor disposition.
 
 Product realignment is also needed if this candidate is ever reconsidered:
 the partial `DATA` count, resolved race, and race completion arithmetic conflict
@@ -216,3 +216,12 @@ with the accepted model. That work cannot resolve the controlling frozen `/4`
 representation gap by itself and is not authorized here. Protocol `/5`, a new
 evaluator, and another private pass remain prohibited by the existing M1
 boundary.
+
+## Current disposition
+
+ADR-0032 supplies the required successor disposition: protocol `/4` remains
+frozen historical evidence with bounded regression use and the representation
+gap excluded; protocol `/5` is retired unqualified; private held-out evaluation
+is deferred without a product verdict; and no WP6/private scoring path is
+authorized. Evaluator-deferral closeout is accepted, Slice 4.5 is closed, and
+Slice 5 is eligible under the M1 continuation verification profile.

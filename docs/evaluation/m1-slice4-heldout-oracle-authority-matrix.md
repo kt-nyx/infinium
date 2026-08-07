@@ -13,10 +13,10 @@ re-review. The project owner subsequently resolved whether an admitted but
 undecodable record shape creates structural override, allowlisted-field, and
 technical taxonomy facts through ADR-0029 and the owner disposition. The
 [public review attestation](m1-slice4-protocol-4-oracle-authorability-review.md)
-remains the historical failed completeness status. The accepted
+remains the historical failed completeness status. At that checkpoint, the accepted
 [Pre-B2 totality plan](../plans/slices/M1-slice-4.5-pre-B2-evidence-contract-totality.md)
-must now prove all state/fact combinations; until it passes, this matrix and the
-blocked construction draft must not authorize an oracle or private comparison.
+still had to prove all state/fact combinations before this matrix or the
+blocked construction draft could support an oracle or private comparison.
 
 The stated pending status above was resolved historically by the accepted
 Pre-B2 totality work. Protocol `/4` then proved unable to represent the full

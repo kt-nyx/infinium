@@ -3,11 +3,18 @@
 Status: Accepted  
 Accepted: 2026-07-28  
 Accepted by: Project owner  
-Last reviewed: 2026-08-01
+Last reviewed: 2026-08-07
 Companion specification:
 [M1 semantic and local-ground-truth evaluation specifications](../specifications/m1-semantic-and-ground-truth.md)
 with the accepted
 [revision 2 amendment](../specifications/m1-semantic-and-ground-truth-v2-amendment.md)
+
+Current M1 execution amendment: ADR-0032 defers private held-out evaluation
+without a product verdict. Slices 5-9 use independently expected public
+development/validation fixtures under the M1 continuation verification
+profile. Held-out rows below remain historical or future design inventory;
+they do not authorize private access, authoring, qualification, comparison, or
+scoring.
 
 ## 1. Purpose and current state
 
@@ -207,10 +214,10 @@ unavailable replayability must remain explicit.
 | `MO2-ATOMIC-DEV` | Development | EVAL-0051 | Constructed and exercised through the independent Slice 3 evaluator package | MO2 fixture operator |
 | `MO2-INTEGRATION-VAL` / `MO2-NEGATIVE-VAL` | Validation | EVAL-0051 | Constructed, independently observed, and passed for the exact admitted target | Independent MO2 observer |
 | `MO2-HO-001` | Held-out | EVAL-0051 | Required before general conformance claim; not authored/sealed | Independent holdout custodian |
-| `BETH-NPC-DEV` / `BETH-REFR-DEV` / `BETH-MALFORMED-VAL` | Development | EVAL-0052 | Constructed and independently accepted as Slice 4 inputs; malformed package reclassified after its cases influenced generator corrections; production comparison remains pending | Binary-fixture author |
+| `BETH-NPC-DEV` / `BETH-REFR-DEV` / `BETH-MALFORMED-VAL` | Development | EVAL-0052 | Constructed and independently accepted as Slice 4 inputs; malformed package reclassified after its cases influenced generator corrections; exercised by the passing exact-scope public Slice 4 conformance package | Binary-fixture author |
 | `BETH-LIGHT-VAL` / `BETH-UNSUPPORTED-VAL` | Development | EVAL-0052 | Constructed and independently reviewed; public answer exposure makes them regression/development evidence rather than independent validation | Independent binary reviewer |
-| `BETH-LIGHT-VAL-002` / `BETH-MALFORMED-VAL-002` / `BETH-UNSUPPORTED-VAL-002` | Validation | EVAL-0052 | Materially independent sealed packages in the separate evaluator-private Git store; public revision/fingerprints and attestations retained; EVAL-0052 remains unexecuted | Isolated private input/oracle roles |
-| `BETH-HO-002` | Held-out | EVAL-0052 | Sealed evaluator-private successor after `BETH-HO-001` retention was unavailable; historical v1 metadata is preserved and invalidated; supported-shape conformance remains pending | Independent holdout custodian |
+| `BETH-LIGHT-VAL-002` / `BETH-MALFORMED-VAL-002` / `BETH-UNSUPPORTED-VAL-002` | Validation | EVAL-0052 | Materially independent sealed packages in the separate evaluator-private Git store; public revision/fingerprints and attestations retained; execution against these private packages did not produce a valid verdict and is now deferred | Isolated private input/oracle roles |
+| `BETH-HO-002` | Held-out | EVAL-0052 | Sealed evaluator-private successor after `BETH-HO-001` retention was unavailable; historical v1 metadata is preserved and invalidated; private use is deferred and no valid held-out verdict exists | Independent holdout custodian |
 | `TARGET-1170-PRIVATE-VAL` and target-negative package | Validation | EVAL-0054 | Constructed in the independent Slice 3 evaluator package and passed against the exact admitted target and complete preregistered negative matrix | Runtime-gate reviewer |
 | `ANALYZER-CONTRACT-DEV` and boundary variants | Development/validation | EVAL-0065 | Required; not created | Contract reviewer |
 | `EVID-TYPES-DEV` / `EVID-LLM-VAL` / `EVID-NO-LLM-VAL` / `EVID-HOSTILE-VAL` | Development/validation | EVAL-0067 | Required; not created | Evidence-model reviewer |

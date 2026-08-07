@@ -1,6 +1,6 @@
 # M1 Slice 4 protocol `/4` bounded regression usage
 
-Status: Active public closeout profile
+Status: Accepted active bounded public regression profile
 
 Date: 2026-08-07
 

@@ -1,7 +1,7 @@
 # Evaluator v2 Stage C.5 adjudication incident
 
-Status: Accepted owner-supplied disposition; successor work active
-Last reviewed: 2026-08-04
+Status: Accepted historical incident; successor requirement dispositioned by ADR-0032
+Last reviewed: 2026-08-07
 
 ## Scope and source
 
@@ -73,3 +73,15 @@ The product's 64 MiB limit remains unchanged.
 - Successor private-corpus construction and held-out scoring have not run.
 - Any later scoring is a new tuple and invocation, not a retry.
 - Stage D has not started.
+
+## Current disposition
+
+The gate state above records the historical Stage C.5 checkpoint. Subsequent
+public successor work reached frozen protocol `/4`, then stopped on its known
+representation gap; the attempted protocol `/5` successor hard-stopped before
+implementation or freeze. ADR-0032 retires `/5` unqualified, defers private
+held-out evaluation without a product verdict, and replaces the later-M1
+sequencing gate with the accepted continuation verification profile.
+Evaluator-deferral closeout is accepted, Slice 4.5 is closed, Slice 5 is
+eligible, and M1 remains active. This incident authorizes no successor,
+private-corpus, B2, C2, Stage D, comparison, or scoring work.
