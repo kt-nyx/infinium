@@ -24,7 +24,7 @@ dotnet run --project tools/evaluation/bethesda-fixtures/Infinium.BethesdaFixture
 The generator owns only `inputs/`. It does not create fixture package metadata,
 oracles, taxonomy answers, held-out content, snapshot captures, or parser code.
 
-Bethesda fixture version `1.3.0` retains the `1.0.1` full 128-byte Skyrim `RACE/DATA`
+Bethesda fixture version `1.4.0` retains the `1.0.1` full 128-byte Skyrim `RACE/DATA`
 records and nests format-valid `REFR` records beneath interior CELL block,
 sub-block, child, and persistent-child groups. `verify` also retains the
 declared one-byte and record-order mutation invariants after that nesting.
@@ -79,12 +79,14 @@ incomplete binding bijections, any taxonomy source outside that exact sealed
 two-artifact set, and any retained oracle file absent from the expected
 oracle's exact reference closure.
 
-After independent byte and taxonomy review is complete, bind all retained
-inputs and oracle evidence into the five complete fixture packages:
+After independent byte and taxonomy review is complete, reseal the six current
+public fixture packages under the active product contracts:
 
 ```powershell
-node tools/evaluation/bethesda-fixtures/finalize-packages.mjs
+node tools/evaluation/reseal-current-public-fixtures.mjs
 ```
 
-Package finalization does not execute a semantic analyzer and does not pass
-`EVAL-0052` or `EVAL-0086`.
+The current-only resealer rejects predecessor fixture identities, pins the
+independently authored semantic-truth digests, materializes answer-free product
+analysis inputs, and refreshes exact retained-byte closures. It does not
+execute a semantic analyzer or pass `EVAL-0052` or `EVAL-0086`.

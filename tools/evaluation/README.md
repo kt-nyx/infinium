@@ -12,7 +12,7 @@ only to the scoring role, and a result-directory path whose parent exists but
 which does not yet exist. Candidate non-framework dependencies are fully
 inventoried. Existing result files are never overwritten.
 
-## Commands
+## Authorized command
 
 The only current authorized entry point is:
 
@@ -25,28 +25,18 @@ historical freeze integrity, current reusable-core integrity, and allowlisted
 current public regression health. It is not complete semantic, private held-
 out, Slice 4.5, M1, reliability/readiness, or product acceptance.
 
-The executable retains the following historical direct commands because its
-bytes are immutable:
-
-```powershell
-dotnet run --project tools/evaluation/Infinium.EvaluatorV2 -c Release -- protocol
-dotnet run --project tools/evaluation/Infinium.EvaluatorV2 -c Release -- calibrate --result-dir <new-directory>
-dotnet run --project tools/evaluation/Infinium.EvaluatorV2 -c Release -- adapt --manifest <manifest.json> --result-dir <new-directory>
-dotnet run --project tools/evaluation/Infinium.EvaluatorV2 -c Release -- score --manifest <manifest.json> --oracle <expected-output.json> --result-dir <new-directory>
-dotnet run --project tools/evaluation/Infinium.EvaluatorV2 -c Release -- compare-prepared --manifest <manifest.json> --candidate-output <candidate-output.json> --oracle <expected-output.json> --result-dir <new-directory>
-dotnet run --project tools/evaluation/Infinium.EvaluatorV2 -c Release -- score-corpus --manifest <corpus-manifest.json> --result-dir <new-directory>
-```
-
-These direct commands describe historical capability and are prohibited for
-new current execution except for `calibrate` when invoked inside the bounded
-wrapper. Do not run `adapt`, `score`, `compare-prepared`, or `score-corpus`,
-use candidate/product output, access private material, or resume B2/C2/Stage D.
+The immutable executable still contains historical protocol, calibration,
+adaptation, comparison, and scoring entry points. They are retained only as
+historical bytes and are not copy-pasteable or authorized current workflows;
+calibration is authorized only when the bounded wrapper invokes it internally.
+Do not invoke any direct evaluator command, use candidate/product output,
+access private material, or resume B2/C2/Stage D.
 Historical exit code `0` meant `PASS`, `1` meant product `FAIL` only after a
 valid comparison, and `2` meant `EVALUATOR_ERROR` or invalid invocation; no
 valid current private terminal verdict exists.
 
-The authoritative protocol identifier is `infinium.evaluator-v2/4`. Immutable
-`/3` schemas remain predecessor evidence; active `/4` schemas under
+The authoritative historical protocol identifier is `infinium.evaluator-v2/4`.
+Active `/4` schemas under
 `Infinium.EvaluatorV2/protocol/` define the answer-free manifest,
 candidate output, expected output, raw assertions, sanitized result, and
 calibration result. `protocol.json` defines ordering, set/sequence,
@@ -60,9 +50,14 @@ consumed identities cannot be reused. Future evaluator work requires a new ADR
 and plan after Slice 9 during M3 planning, and no future protocol identity is
 selected here.
 
-## Evaluator-v1 compatibility
+## Current public fixtures
 
-`Infinium.EvaluatorV2/LegacyV1/` contains readers retained only so public
-regression fixtures and historical contract tests remain usable. No command in
-the evaluator-v2 executable invokes them. They are not an active held-out
-protocol and must not be extended into another v1 package version.
+`Infinium.PublicFixtures/` owns the current product/public-fixture readers and
+validates only active product schemas. It has no evaluator protocol, scoring,
+private-corpus, or product-output authority. The default solution references
+this library and has no dependency on `Infinium.EvaluatorV2`.
+
+The retired pre-v2 compatibility readers, predecessor `/3` schemas, and
+obsolete pre-B2 proof commands are recoverable only through the Git objects in
+`docs/evaluation/retired-evaluation-assets.v1.json`. Do not restore them to an
+active build or infer current authority from their historical namespaces.

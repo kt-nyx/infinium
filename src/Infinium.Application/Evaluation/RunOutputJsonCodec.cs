@@ -27,7 +27,7 @@ public static class RunOutputJsonCodec
         }
 
         using JsonDocument document = ParseStrict(bytes);
-        EmbeddedJsonSchemaValidator.Validate(document.RootElement, "run-output.v1.schema.json");
+        ActiveJsonSchemaValidator.Validate(document.RootElement, "run-output.v1.schema.json");
         return bytes;
     }
 
@@ -40,7 +40,7 @@ public static class RunOutputJsonCodec
         }
 
         using JsonDocument document = ParseStrict(bytes);
-        EmbeddedJsonSchemaValidator.Validate(document.RootElement, "run-output.v1.schema.json");
+        ActiveJsonSchemaValidator.Validate(document.RootElement, "run-output.v1.schema.json");
         RunOutputContract output = document.Deserialize<RunOutputContract>(SerializerOptions)
             ?? throw new InvalidDataException("Run output JSON did not produce a contract document.");
         RunOutputContractInvariants.Validate(output);

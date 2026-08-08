@@ -30,12 +30,18 @@ public sealed partial class SchemaCompatibilityTests
         "run-output.v1.schema.json",
         "cli-summary.v1.schema.json",
         "diagnostic-trace.v1.schema.json",
+        "documentation-evidence.v1.schema.json",
+        "candidate-analysis.v1.schema.json",
+        "finding-case.v1.schema.json",
+        "analysis-replay.v1.schema.json",
+        "analysis-execution-input.v1.schema.json",
     ];
 
     private static readonly string[] ProtoFiles =
     [
         "infinium/common/v1/common.proto",
         "infinium/domain/v1/identities.proto",
+        "infinium/domain/v1/analysis.proto",
         "infinium/protocol/v1/protocol.proto",
         "infinium/application/v1/application.proto",
         "infinium/worker/v1/worker.proto",
@@ -160,6 +166,13 @@ public sealed partial class SchemaCompatibilityTests
             "cost",
             "readiness",
             "no_safety_guarantee");
+        AssertRequired(
+            cli.RootElement.GetProperty("properties").GetProperty("typed_counts"),
+            "documentation_revisions",
+            "passages",
+            "candidate_decisions",
+            "reconciliation_assessments",
+            "lineage_events");
         Assert.AreEqual(
             ContractConstants.RunOutputSchemaId,
             runOutput.RootElement.GetProperty("properties").GetProperty("schema_id").GetProperty("const").GetString());
@@ -446,8 +459,28 @@ public sealed partial class SchemaCompatibilityTests
                 ["EVAL-0016"],
                 ["EVAL-0017"],
                 ["EVAL-0032"],
-                ["EVAL-0065"]));
+                ["EVAL-0065"]),
+            RequiredSlice5PayloadContracts(),
+            new ContractVersion(1, 0, 0),
+            RequiredNotUsedBoundaries());
     }
+
+    private static PayloadContractDeclarationContract[] RequiredSlice5PayloadContracts() =>
+    [
+        new(ContractConstants.DocumentationEvidenceSchemaId, new ContractVersion(1, 0, 0), true),
+        new(ContractConstants.CandidateAnalysisSchemaId, new ContractVersion(1, 0, 0), true),
+        new(ContractConstants.FindingCaseSchemaId, new ContractVersion(1, 0, 0), true),
+        new(ContractConstants.AnalysisReplaySchemaId, new ContractVersion(1, 0, 0), true),
+        new(ContractConstants.AnalysisExecutionInputSchemaId, new ContractVersion(1, 0, 0), true),
+    ];
+
+    private static ExecutionBoundaryContract[] RequiredNotUsedBoundaries() =>
+    [
+        new("provider", BoundaryUseState.NotUsed, "local-only"),
+        new("hosted-search", BoundaryUseState.NotUsed, "local-only"),
+        new("nexus", BoundaryUseState.NotUsed, "local-only"),
+        new("loot", BoundaryUseState.NotUsed, "not configured"),
+    ];
 
     private static void AssertRecordProperties<T>(params string[] expected)
     {

@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/json-schema/candidate-analysis.v1.schema.json",
+  "title": "Infinium Slice 5 candidate analysis v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "schema_version", "payload_id", "originating_run_id", "analyzer_id", "population_id", "population_denominator", "decisions", "candidates", "abstentions", "gaps", "failures"],
+  "properties": {
+    "schema_id": { "const": "infinium.analysis.candidate/v1" },
+    "schema_version": { "const": "1.0.0" },
+    "payload_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "originating_run_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "analyzer_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "population_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "population_denominator": { "type": "integer", "minimum": 0, "maximum": 1000000 },
+    "decisions": { "type": "array", "maxItems": 1000000, "items": { "$ref": "#/$defs/decision" } },
+    "candidates": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/candidate" } },
+    "abstentions": { "type": "array", "maxItems": 100000, "items": { "$ref": "common.v1.schema.json#/$defs/typedArtifact" } },
+    "gaps": { "type": "array", "maxItems": 100000, "items": { "$ref": "common.v1.schema.json#/$defs/typedArtifact" } },
+    "failures": { "type": "array", "maxItems": 100000, "items": { "$ref": "common.v1.schema.json#/$defs/typedArtifact" } }
+  },
+  "$defs": {
+    "participant": {
+      "type": "object", "additionalProperties": false,
+      "required": ["participant_id", "role"],
+      "properties": {
+        "participant_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "role": { "$ref": "common.v1.schema.json#/$defs/identifier" }
+      }
+    },
+    "decision": {
+      "type": "object", "additionalProperties": false,
+      "required": ["decision_id", "population_member_id", "lane", "disposition", "participants", "join_kind", "path", "dependency_closure_id", "rationale", "evidence_ids", "admission_independent_of_score"],
+      "properties": {
+        "decision_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "population_member_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "lane": { "enum": ["deterministic-required", "mandatory-evidence", "optional-ranked"] },
+        "disposition": { "enum": ["candidate-admitted", "resolved-negative", "unsupported", "ambiguous", "invalid-input", "limited", "abstained"] },
+        "participants": { "type": "array", "minItems": 2, "maxItems": 16, "items": { "$ref": "#/$defs/participant" } },
+        "join_kind": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "path": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "$ref": "common.v1.schema.json#/$defs/identifier" } },
+        "dependency_closure_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "rationale": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+        "evidence_ids": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "common.v1.schema.json#/$defs/identifier" } },
+        "admission_independent_of_score": { "type": "boolean" },
+        "optional_rank": { "type": "integer", "minimum": 1 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "lane": { "enum": ["deterministic-required", "mandatory-evidence"] } }, "required": ["lane"] },
+          "then": { "properties": { "admission_independent_of_score": { "const": true } }, "not": { "required": ["optional_rank"] } },
+          "else": { "required": ["optional_rank"] }
+        }
+      ]
+    },
+    "candidate": {
+      "type": "object", "additionalProperties": false,
+      "required": ["candidate_id", "decision_id", "state", "causal_explanation", "supporting_evidence_ids", "contradicting_evidence_ids", "missing_information", "confidence", "threshold_id"],
+      "properties": {
+        "candidate_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "decision_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "state": { "enum": ["present", "ambiguous", "partial", "abstained", "unsupported", "failed", "limit-reached"] },
+        "causal_explanation": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+        "supporting_evidence_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.v1.schema.json#/$defs/identifier" } },
+        "contradicting_evidence_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.v1.schema.json#/$defs/identifier" } },
+        "missing_information": { "type": "array", "items": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" } },
+        "confidence": { "enum": ["speculative-lead", "plausible", "strongly-supported", "confirmed"] },
+        "threshold_id": { "$ref": "common.v1.schema.json#/$defs/identifier" }
+      }
+    }
+  }
+}

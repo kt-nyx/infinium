@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Infinium.Application.Evaluation;
-using Infinium.EvaluatorV2.LegacyV1;
+using Infinium.PublicFixtures;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Infinium.Tests;
@@ -20,7 +20,7 @@ public sealed class FixtureSchemaIntegrityTests
     {
         string root = TestRepository.PathFromRoot(
             "test-data", "evaluation", "m1-semantic", "BETH-UNSUPPORTED-VAL");
-        _ = FixturePackageReader.ReadForEvaluationHarness(root);
+        _ = PublicFixturePackageReader.Read(root);
 
         JsonObject configuration = ReadObject(
             root,
@@ -43,13 +43,13 @@ public sealed class FixtureSchemaIntegrityTests
     {
         AssertTaxonomyPackageMutationRejected(root =>
         {
-            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            JsonObject execution = ReadObject(root, PublicFixturePackageReader.ExecutionInputFileName);
             execution.Remove("case_matrix_input");
             WriteExecutionAndResealManifest(root, execution);
         });
         AssertTaxonomyPackageMutationRejected(root =>
         {
-            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            JsonObject execution = ReadObject(root, PublicFixturePackageReader.ExecutionInputFileName);
             JsonNode? configuration = execution["effective_scan_configuration"];
             execution["effective_scan_configuration"] =
                 execution["case_matrix_input"]!["artifact"]!.DeepClone();
@@ -58,7 +58,7 @@ public sealed class FixtureSchemaIntegrityTests
         });
         AssertTaxonomyPackageMutationRejected(root =>
         {
-            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            JsonObject execution = ReadObject(root, PublicFixturePackageReader.ExecutionInputFileName);
             JsonNode duplicate = execution["input_payload_refs"]!.AsArray()[0]!.DeepClone();
             execution["input_payload_refs"]!.AsArray().Add(duplicate);
             WriteExecutionAndResealManifest(root, execution);
@@ -68,14 +68,14 @@ public sealed class FixtureSchemaIntegrityTests
                 .Add("inputs/unsealed.esp"));
         AssertTaxonomyPackageMutationRejected(root =>
         {
-            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            JsonObject execution = ReadObject(root, PublicFixturePackageReader.ExecutionInputFileName);
             execution["case_matrix_input"]!["artifact"]!["fingerprint"] =
                 new string('0', 64);
             WriteExecutionAndResealManifest(root, execution);
         });
         AssertTaxonomyPackageMutationRejected(root =>
         {
-            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            JsonObject execution = ReadObject(root, PublicFixturePackageReader.ExecutionInputFileName);
             execution["input_payload_refs"]!.AsArray().RemoveAt(0);
             WriteExecutionAndResealManifest(root, execution);
         });
@@ -89,13 +89,13 @@ public sealed class FixtureSchemaIntegrityTests
     {
         AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
         {
-            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            JsonObject execution = ReadObject(root, PublicFixturePackageReader.ExecutionInputFileName);
             execution.Remove("accepted_order_construction_input");
             WriteExecutionAndResealManifest(root, execution);
         });
         AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
         {
-            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            JsonObject execution = ReadObject(root, PublicFixturePackageReader.ExecutionInputFileName);
             execution["accepted_order_construction_input"] = new JsonObject
             {
                 ["state"] = "not-applicable",
@@ -105,42 +105,42 @@ public sealed class FixtureSchemaIntegrityTests
         });
         AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
         {
-            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            JsonObject execution = ReadObject(root, PublicFixturePackageReader.ExecutionInputFileName);
             execution["accepted_order_construction_input"] =
                 execution["installation_snapshot_input"]!.DeepClone();
             WriteExecutionAndResealManifest(root, execution);
         });
         AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
         {
-            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            JsonObject execution = ReadObject(root, PublicFixturePackageReader.ExecutionInputFileName);
             execution["accepted_order_construction_input"] =
                 execution["plugin_order_input"]!.DeepClone();
             WriteExecutionAndResealManifest(root, execution);
         });
         AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
         {
-            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            JsonObject execution = ReadObject(root, PublicFixturePackageReader.ExecutionInputFileName);
             execution["installation_snapshot_input"] =
                 execution["accepted_order_construction_input"]!.DeepClone();
             WriteExecutionAndResealManifest(root, execution);
         });
         AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
         {
-            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            JsonObject execution = ReadObject(root, PublicFixturePackageReader.ExecutionInputFileName);
             execution["plugin_order_input"] =
                 execution["accepted_order_construction_input"]!.DeepClone();
             WriteExecutionAndResealManifest(root, execution);
         });
         AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
         {
-            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            JsonObject execution = ReadObject(root, PublicFixturePackageReader.ExecutionInputFileName);
             execution["accepted_order_construction_input"]!["artifact"] =
                 execution["case_matrix_input"]!["artifact"]!.DeepClone();
             WriteExecutionAndResealManifest(root, execution);
         });
         AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
         {
-            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            JsonObject execution = ReadObject(root, PublicFixturePackageReader.ExecutionInputFileName);
             execution["accepted_order_construction_input"]!["artifact"] = new JsonObject
             {
                 ["artifact_id"] = "inputs/snapshot/unsealed.json",
@@ -152,7 +152,7 @@ public sealed class FixtureSchemaIntegrityTests
         });
         AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
         {
-            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            JsonObject execution = ReadObject(root, PublicFixturePackageReader.ExecutionInputFileName);
             JsonObject acceptedReference = execution["accepted_order_construction_input"]!
                 ["artifact"]!.AsObject();
             acceptedReference["fingerprint"] = new string('0', 64);
@@ -160,7 +160,7 @@ public sealed class FixtureSchemaIntegrityTests
         });
         AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
         {
-            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            JsonObject execution = ReadObject(root, PublicFixturePackageReader.ExecutionInputFileName);
             JsonObject acceptedPayloadReference = execution["input_payload_refs"]!.AsArray()
                 .Select(item => item!.AsObject())
                 .Single(item => item["artifact_id"]!.GetValue<string>()
@@ -172,8 +172,8 @@ public sealed class FixtureSchemaIntegrityTests
         {
             string executionPath = Path.Combine(
                 root,
-                FixturePackageReader.ExecutionInputFileName);
-            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+                PublicFixturePackageReader.ExecutionInputFileName);
+            JsonObject execution = ReadObject(root, PublicFixturePackageReader.ExecutionInputFileName);
             string duplicateValue = execution["accepted_order_construction_input"]!
                 .ToJsonString();
             string executionJson = execution.ToJsonString();
@@ -185,10 +185,10 @@ public sealed class FixtureSchemaIntegrityTests
             File.WriteAllText(executionPath, executionJson);
             JsonObject manifest = ReadObject(
                 root,
-                FixturePackageReader.PublicManifestFileName);
+                PublicFixturePackageReader.PublicManifestFileName);
             manifest["input_package_fingerprint"] = Sha256(executionPath);
             WriteJson(
-                Path.Combine(root, FixturePackageReader.PublicManifestFileName),
+                Path.Combine(root, PublicFixturePackageReader.PublicManifestFileName),
                 manifest);
         });
 
@@ -243,12 +243,12 @@ public sealed class FixtureSchemaIntegrityTests
         AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
         {
             const string artifactId = "oracle/independent-byte-facts.json";
-            JsonObject oracle = ReadObject(root, FixturePackageReader.OracleFileName);
+            JsonObject oracle = ReadObject(root, PublicFixturePackageReader.OracleFileName);
             RemoveArtifactReferences(oracle, artifactId);
             File.Delete(Path.Combine(root, artifactId.Replace('/', Path.DirectorySeparatorChar)));
             WriteRootOracleAndResealManifest(root, oracle);
 
-            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            JsonObject execution = ReadObject(root, PublicFixturePackageReader.ExecutionInputFileName);
             JsonObject constructionReference = execution["input_payload_refs"]!.AsArray()
                 .Select(item => item!.AsObject())
                 .Single(item => item["artifact_id"]!.GetValue<string>()
@@ -266,7 +266,7 @@ public sealed class FixtureSchemaIntegrityTests
         {
             RemoveRetainedInputAndReseal(root, "inputs/taxonomy-subject-bindings.json");
             const string artifactId = "oracle/taxonomy-projections.json";
-            JsonObject oracle = ReadObject(root, FixturePackageReader.OracleFileName);
+            JsonObject oracle = ReadObject(root, PublicFixturePackageReader.OracleFileName);
             RemoveArtifactReferences(oracle, artifactId);
             File.Delete(Path.Combine(root, artifactId.Replace('/', Path.DirectorySeparatorChar)));
             WriteRootOracleAndResealManifest(root, oracle);
@@ -275,7 +275,7 @@ public sealed class FixtureSchemaIntegrityTests
         AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
         {
             RemoveRetainedInputAndReseal(root, "inputs/case-matrix.json");
-            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            JsonObject execution = ReadObject(root, PublicFixturePackageReader.ExecutionInputFileName);
             execution["case_matrix_input"] = new JsonObject
             {
                 ["state"] = "not-applicable",
@@ -289,7 +289,7 @@ public sealed class FixtureSchemaIntegrityTests
             RemoveRetainedInputAndReseal(
                 root,
                 "inputs/effective-scan-configuration.json");
-            JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+            JsonObject execution = ReadObject(root, PublicFixturePackageReader.ExecutionInputFileName);
             JsonObject constructionReference = execution["input_payload_refs"]!.AsArray()
                 .Select(item => item!.AsObject())
                 .Single(item => item["artifact_id"]!.GetValue<string>()
@@ -345,7 +345,7 @@ public sealed class FixtureSchemaIntegrityTests
     public void ExecutionReaderRejectsRecursiveDuplicateProperties()
     {
         using FixturePackageTestBuilder fixture = new();
-        string path = fixture.FilePath(FixturePackageReader.ExecutionInputFileName);
+        string path = fixture.FilePath(PublicFixturePackageReader.ExecutionInputFileName);
         string json = File.ReadAllText(path);
         json = json.Replace(
             "\"state\": \"empty\",",
@@ -354,7 +354,7 @@ public sealed class FixtureSchemaIntegrityTests
         File.WriteAllText(path, json);
 
         Assert.ThrowsExactly<InvalidDataException>(
-            () => FixturePackageReader.ReadExecutionInput(path));
+            () => PublicFixturePackageReader.ReadExecutionInput(path));
     }
 
     [TestMethod]
@@ -363,14 +363,14 @@ public sealed class FixtureSchemaIntegrityTests
     public void ExecutionReaderRejectsDocumentBeyondBound()
     {
         using FixturePackageTestBuilder fixture = new();
-        string path = fixture.FilePath(FixturePackageReader.ExecutionInputFileName);
+        string path = fixture.FilePath(PublicFixturePackageReader.ExecutionInputFileName);
         using (FileStream stream = new(path, FileMode.Create, FileAccess.Write, FileShare.None))
         {
             stream.SetLength((16 * 1024 * 1024) + 1);
         }
 
         Assert.ThrowsExactly<InvalidDataException>(
-            () => FixturePackageReader.ReadExecutionInput(path));
+            () => PublicFixturePackageReader.ReadExecutionInput(path));
     }
 
     [TestMethod]
@@ -382,14 +382,14 @@ public sealed class FixtureSchemaIntegrityTests
         {
             fixture.AddProvenanceProperty("unversioned_extension", new JsonObject());
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+                () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
         }
 
         using (FixturePackageTestBuilder fixture = new())
         {
             fixture.SetRedistributionClass("non-redistributable");
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+                () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
         }
     }
 
@@ -408,8 +408,8 @@ public sealed class FixtureSchemaIntegrityTests
             "oracle/independent-review-evidence.json",
             "{}"u8.ToArray());
 
-        EvaluationHarnessFixturePackage package =
-            FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath);
+        PublicFixturePackage package =
+            PublicFixturePackageReader.Read(fixture.DirectoryPath);
 
         Assert.AreEqual("fixture-development-1", package.FixtureId.Value);
     }
@@ -476,7 +476,7 @@ public sealed class FixtureSchemaIntegrityTests
 
         AssertTaxonomyPackageMutationRejected(root =>
         {
-            JsonObject oracle = ReadObject(root, FixturePackageReader.OracleFileName);
+            JsonObject oracle = ReadObject(root, PublicFixturePackageReader.OracleFileName);
             JsonObject reference = oracle["ground_truth_methods"]!.AsArray()
                 .SelectMany(method => method!["evidence_references"]!.AsArray())
                 .Select(item => item!.AsObject())
@@ -495,7 +495,7 @@ public sealed class FixtureSchemaIntegrityTests
     {
         AssertTaxonomyPackageMutationRejected(root =>
         {
-            JsonObject oracle = ReadObject(root, FixturePackageReader.OracleFileName);
+            JsonObject oracle = ReadObject(root, PublicFixturePackageReader.OracleFileName);
             JsonObject[] references = TaxonomyProjectionReferences(oracle);
             references[1]["artifact_id"] = "oracle/Taxonomy-projections.json";
             WriteRootOracleAndResealManifest(root, oracle);
@@ -503,7 +503,7 @@ public sealed class FixtureSchemaIntegrityTests
 
         AssertTaxonomyPackageMutationRejected(root =>
         {
-            JsonObject oracle = ReadObject(root, FixturePackageReader.OracleFileName);
+            JsonObject oracle = ReadObject(root, PublicFixturePackageReader.OracleFileName);
             JsonObject[] references = TaxonomyProjectionReferences(oracle);
             references[1]["artifact_version"] = "1.1.1";
             WriteRootOracleAndResealManifest(root, oracle);
@@ -511,7 +511,7 @@ public sealed class FixtureSchemaIntegrityTests
 
         AssertTaxonomyPackageMutationRejected(root =>
         {
-            JsonObject oracle = ReadObject(root, FixturePackageReader.OracleFileName);
+            JsonObject oracle = ReadObject(root, PublicFixturePackageReader.OracleFileName);
             JsonObject[] references = TaxonomyProjectionReferences(oracle);
             references[1]["fingerprint"] = new string('0', 64);
             WriteRootOracleAndResealManifest(root, oracle);
@@ -519,7 +519,7 @@ public sealed class FixtureSchemaIntegrityTests
 
         AssertTaxonomyPackageMutationRejected(root =>
         {
-            JsonObject oracle = ReadObject(root, FixturePackageReader.OracleFileName);
+            JsonObject oracle = ReadObject(root, PublicFixturePackageReader.OracleFileName);
             JsonObject[] references = TaxonomyProjectionReferences(oracle);
             references[1]["availability"] = "externally-reacquirable";
             WriteRootOracleAndResealManifest(root, oracle);
@@ -527,7 +527,7 @@ public sealed class FixtureSchemaIntegrityTests
 
         AssertTaxonomyPackageMutationRejected(root =>
         {
-            JsonObject oracle = ReadObject(root, FixturePackageReader.OracleFileName);
+            JsonObject oracle = ReadObject(root, PublicFixturePackageReader.OracleFileName);
             JsonObject[] references = TaxonomyProjectionReferences(oracle);
             references[1]["byte_length"] = references[1]["byte_length"]!.GetValue<long>() + 1;
             WriteRootOracleAndResealManifest(root, oracle);
@@ -535,7 +535,7 @@ public sealed class FixtureSchemaIntegrityTests
 
         AssertTaxonomyPackageMutationRejected(root =>
         {
-            JsonObject oracle = ReadObject(root, FixturePackageReader.OracleFileName);
+            JsonObject oracle = ReadObject(root, PublicFixturePackageReader.OracleFileName);
             JsonObject[] references = TaxonomyProjectionReferences(oracle);
             _ = references[0].Remove("byte_length");
             WriteRootOracleAndResealManifest(root, oracle);
@@ -543,7 +543,7 @@ public sealed class FixtureSchemaIntegrityTests
 
         AssertTaxonomyPackageMutationRejected(root =>
         {
-            JsonObject oracle = ReadObject(root, FixturePackageReader.OracleFileName);
+            JsonObject oracle = ReadObject(root, PublicFixturePackageReader.OracleFileName);
             JsonObject[] references = TaxonomyProjectionReferences(oracle);
             _ = references[1].Remove("byte_length");
             WriteRootOracleAndResealManifest(root, oracle);
@@ -583,7 +583,7 @@ public sealed class FixtureSchemaIntegrityTests
 
         AssertTaxonomySourceMutationRejected((root, _, sources) =>
         {
-            JsonObject oracle = ReadObject(root, FixturePackageReader.OracleFileName);
+            JsonObject oracle = ReadObject(root, PublicFixturePackageReader.OracleFileName);
             JsonObject unexpected = ArtifactReferences(
                     oracle,
                     "oracle/manual-hex-worksheet.json")
@@ -614,7 +614,7 @@ public sealed class FixtureSchemaIntegrityTests
                 [0x54, 0x45, 0x53, 0x35]);
 
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+                () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
         }
 
         using (FixturePackageTestBuilder fixture = new())
@@ -624,7 +624,7 @@ public sealed class FixtureSchemaIntegrityTests
                 new string('1', 64));
 
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+                () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
         }
 
         using (FixturePackageTestBuilder fixture = new())
@@ -634,7 +634,7 @@ public sealed class FixtureSchemaIntegrityTests
                 new string('1', 64));
 
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+                () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
         }
     }
 
@@ -663,7 +663,7 @@ public sealed class FixtureSchemaIntegrityTests
         Assert.IsTrue(CreateHardLinkW(retained, source, 0));
 
         Assert.ThrowsExactly<InvalidDataException>(
-            () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+            () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
     }
 
     [TestMethod]
@@ -688,21 +688,21 @@ public sealed class FixtureSchemaIntegrityTests
             fixture.SetDeclaredInputBytes(bytes.LongLength);
 
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+                () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
         }
 
         using (FixturePackageTestBuilder fixture = new())
         {
             fixture.AddRetainedInputReference("inputs/NUL.esp", new string('1', 64));
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+                () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
         }
 
         using (FixturePackageTestBuilder fixture = new())
         {
             fixture.AddRetainedInputReference("INPUTS/missing.esp", new string('1', 64));
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+                () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
         }
     }
 
@@ -720,7 +720,7 @@ public sealed class FixtureSchemaIntegrityTests
                 Convert.ToHexStringLower(SHA256.HashData(bytes)));
             fixture.SetDeclaredInputBytes(1);
 
-            _ = FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath);
+            _ = PublicFixturePackageReader.Read(fixture.DirectoryPath);
         }
 
         using (FixturePackageTestBuilder fixture = new())
@@ -731,7 +731,7 @@ public sealed class FixtureSchemaIntegrityTests
             fixture.SetDeclaredInputBytes(1);
 
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+                () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
         }
 
         using (FixturePackageTestBuilder fixture = new())
@@ -740,7 +740,7 @@ public sealed class FixtureSchemaIntegrityTests
             fixture.AddRetainedInputArtifact("inputs/two.esp", [0x02]);
 
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(
+                () => PublicFixturePackageReader.Read(
                     fixture.DirectoryPath,
                     new RetainedArtifactValidationTestOptions(MaximumReferenceCount: 1)));
         }
@@ -751,7 +751,7 @@ public sealed class FixtureSchemaIntegrityTests
             fixture.AddRetainedInputArtifact("inputs/two.esp", [0x03, 0x04]);
 
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(
+                () => PublicFixturePackageReader.Read(
                     fixture.DirectoryPath,
                     new RetainedArtifactValidationTestOptions(MaximumAggregateBytes: 3)));
         }
@@ -768,7 +768,7 @@ public sealed class FixtureSchemaIntegrityTests
             fixture.AddRetainedInputArtifact(artifactId, [0x01, 0x02, 0x03]);
 
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(
+                () => PublicFixturePackageReader.Read(
                     fixture.DirectoryPath,
                     new RetainedArtifactValidationTestOptions(
                         MaximumArtifactBytes: 3,
@@ -796,7 +796,7 @@ public sealed class FixtureSchemaIntegrityTests
             fixture.SetDeclaredInputBytes(1);
 
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+                () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
         }
     }
 
@@ -811,7 +811,7 @@ public sealed class FixtureSchemaIntegrityTests
                 "inputs/project-authored.esp",
                 [0x54, 0x45, 0x53, 0x34]);
             Directory.CreateDirectory(Path.Combine(fixture.DirectoryPath, "support"));
-            _ = FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath);
+            _ = PublicFixturePackageReader.Read(fixture.DirectoryPath);
         }
 
         using (FixturePackageTestBuilder fixture = new())
@@ -821,7 +821,7 @@ public sealed class FixtureSchemaIntegrityTests
                 [0x54, 0x45, 0x53, 0x34]);
             File.WriteAllText(Path.Combine(fixture.DirectoryPath, "extra.json"), "{}");
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+                () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
         }
     }
 
@@ -843,7 +843,7 @@ public sealed class FixtureSchemaIntegrityTests
             using FixturePackageTestBuilder fixture = new();
             fixture.AddRetainedInputReference(artifactId, new string('1', 64));
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath),
+                () => PublicFixturePackageReader.Read(fixture.DirectoryPath),
                 artifactId);
         }
 
@@ -854,7 +854,7 @@ public sealed class FixtureSchemaIntegrityTests
         validFixture.AddRetainedInputReference(
             "https://public.example/specification",
             new string('2', 64));
-        _ = FixturePackageReader.ReadForEvaluationHarness(validFixture.DirectoryPath);
+        _ = PublicFixturePackageReader.Read(validFixture.DirectoryPath);
     }
 
     [TestMethod]
@@ -881,7 +881,7 @@ public sealed class FixtureSchemaIntegrityTests
         try
         {
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(
+                () => PublicFixturePackageReader.Read(
                     fixture.DirectoryPath,
                     new RetainedArtifactValidationTestOptions(
                         BeforeScopePin: candidate =>
@@ -927,7 +927,7 @@ public sealed class FixtureSchemaIntegrityTests
         try
         {
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(
+                () => PublicFixturePackageReader.Read(
                     fixture.DirectoryPath,
                     new RetainedArtifactValidationTestOptions(
                         BeforeArtifactOpen: candidate =>
@@ -961,12 +961,12 @@ public sealed class FixtureSchemaIntegrityTests
             [0x54, 0x45, 0x53, 0x34]);
         string oraclePath = Path.Combine(
             fixture.DirectoryPath,
-            BethesdaByteOracleValidator.ArtifactId.Replace(
+            PublicBethesdaOracleValidator.ArtifactId.Replace(
                 '/',
                 Path.DirectorySeparatorChar));
 
-        EvaluationHarnessFixturePackage package =
-            FixturePackageReader.ReadForEvaluationHarness(
+        PublicFixturePackage package =
+            PublicFixturePackageReader.Read(
                 fixture.DirectoryPath,
                 new RetainedArtifactValidationTestOptions(
                     AfterArtifactsSnapshotted: () =>
@@ -974,7 +974,7 @@ public sealed class FixtureSchemaIntegrityTests
 
         Assert.AreEqual("fixture-development-1", package.FixtureId.Value);
         Assert.ThrowsExactly<InvalidDataException>(
-            () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+            () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
     }
 
     [TestMethod]
@@ -987,11 +987,11 @@ public sealed class FixtureSchemaIntegrityTests
             "inputs/project-authored.esp",
             [0x54, 0x45, 0x53, 0x34]);
         fixture.ReplaceRetainedOracleArtifactAndRefreshReference(
-            BethesdaByteOracleValidator.ArtifactId,
+            PublicBethesdaOracleValidator.ArtifactId,
             "not-json"u8.ToArray());
 
         Assert.ThrowsExactly<InvalidDataException>(
-            () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+            () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
     }
 
     [TestMethod]
@@ -1004,11 +1004,11 @@ public sealed class FixtureSchemaIntegrityTests
             "inputs/project-authored.esp",
             [0x54, 0x45, 0x53, 0x34]);
         fixture.RenameRetainedOracleReference(
-            BethesdaByteOracleValidator.ArtifactId,
+            PublicBethesdaOracleValidator.ArtifactId,
             "oracle/INDEPENDENT-BYTE-FACTS.JSON");
 
         Assert.ThrowsExactly<InvalidDataException>(
-            () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+            () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
     }
 
     [TestMethod]
@@ -1020,7 +1020,7 @@ public sealed class FixtureSchemaIntegrityTests
         {
             fixture.AddOracleExpectedItem("expected_findings", "expected-1", "observation");
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+                () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
         }
 
         using (FixturePackageTestBuilder fixture = new())
@@ -1031,7 +1031,7 @@ public sealed class FixtureSchemaIntegrityTests
                 "finding",
                 "missing-ground-truth-method");
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+                () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
         }
 
         using (FixturePackageTestBuilder fixture = new())
@@ -1039,14 +1039,14 @@ public sealed class FixtureSchemaIntegrityTests
             fixture.AddOracleExpectedItem("expected_observations", "duplicate-expected-id", "observation");
             fixture.AddOracleExpectedItem("expected_findings", "duplicate-expected-id", "finding");
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+                () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
         }
 
         using (FixturePackageTestBuilder fixture = new())
         {
             fixture.AddDuplicateGroundTruthMethod();
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+                () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
         }
     }
 
@@ -1059,14 +1059,14 @@ public sealed class FixtureSchemaIntegrityTests
         {
             fixture.RemoveOracleProperty("expected_failures");
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+                () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
         }
 
         using (FixturePackageTestBuilder fixture = new())
         {
             fixture.RemoveOracleProperty("expected_collection_states");
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+                () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
         }
     }
 
@@ -1079,7 +1079,7 @@ public sealed class FixtureSchemaIntegrityTests
         {
             fixture.SetExpectedCollectionState("observations", "populated");
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+                () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
         }
 
         using (FixturePackageTestBuilder fixture = new())
@@ -1087,7 +1087,7 @@ public sealed class FixtureSchemaIntegrityTests
             fixture.AddOracleExpectedItem("expected_observations", "expected-1", "observation");
             fixture.SetExpectedCollectionState("observations", "empty");
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+                () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
         }
     }
 
@@ -1104,8 +1104,8 @@ public sealed class FixtureSchemaIntegrityTests
             "expected-coverage-1",
             "coverage");
 
-        EvaluationHarnessFixturePackage package =
-            FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath);
+        PublicFixturePackage package =
+            PublicFixturePackageReader.Read(fixture.DirectoryPath);
 
         Assert.AreEqual(
             "empty",
@@ -1124,7 +1124,7 @@ public sealed class FixtureSchemaIntegrityTests
         {
             fixture.AddTaxonomyAssignment("assignment-1", "missing-expected-item");
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+                () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
         }
 
         using (FixturePackageTestBuilder fixture = new())
@@ -1133,7 +1133,7 @@ public sealed class FixtureSchemaIntegrityTests
             fixture.AddTaxonomyAssignment("assignment-1", "expected-1");
             fixture.AddTaxonomyAssignment("assignment-1", "expected-1");
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+                () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
         }
     }
 
@@ -1169,7 +1169,7 @@ public sealed class FixtureSchemaIntegrityTests
             fixture.SetPartitionHistory(to, history);
 
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath),
+                () => PublicFixturePackageReader.Read(fixture.DirectoryPath),
                 $"{from} -> {to}");
         }
     }
@@ -1200,13 +1200,13 @@ public sealed class FixtureSchemaIntegrityTests
             fixture.SetPartitionHistory("development", history);
 
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+                () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
         }
 
         using (FixturePackageTestBuilder fixture = new())
         {
             using JsonDocument manifest = JsonDocument.Parse(
-                File.ReadAllBytes(fixture.FilePath(FixturePackageReader.PublicManifestFileName)));
+                File.ReadAllBytes(fixture.FilePath(PublicFixturePackageReader.PublicManifestFileName)));
             string currentInput = manifest.RootElement.GetProperty("input_package_fingerprint").GetString()!;
             JsonArray history =
             [
@@ -1228,7 +1228,7 @@ public sealed class FixtureSchemaIntegrityTests
             fixture.SetPartitionHistory("development", history);
 
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+                () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
         }
     }
 
@@ -1256,8 +1256,8 @@ public sealed class FixtureSchemaIntegrityTests
         ];
         fixture.SetPartitionHistory("development", history);
 
-        EvaluationHarnessFixturePackage package =
-            FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath);
+        PublicFixturePackage package =
+            PublicFixturePackageReader.Read(fixture.DirectoryPath);
 
         Assert.AreEqual(FixturePartition.Development, package.Partition);
     }
@@ -1277,7 +1277,7 @@ public sealed class FixtureSchemaIntegrityTests
             fixture.SetPublicString("created_at", timestamp);
 
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath),
+                () => PublicFixturePackageReader.Read(fixture.DirectoryPath),
                 timestamp);
         }
     }
@@ -1289,7 +1289,7 @@ public sealed class FixtureSchemaIntegrityTests
         JsonObject summary = CreateCliSummary();
         using (JsonDocument document = JsonDocument.Parse(summary.ToJsonString()))
         {
-            EmbeddedJsonSchemaValidator.Validate(
+            ActiveJsonSchemaValidator.Validate(
                 document.RootElement,
                 "cli-summary.v1.schema.json");
         }
@@ -1298,7 +1298,7 @@ public sealed class FixtureSchemaIntegrityTests
         using (JsonDocument document = JsonDocument.Parse(summary.ToJsonString()))
         {
             Assert.ThrowsExactly<InvalidDataException>(
-                () => EmbeddedJsonSchemaValidator.Validate(
+                () => ActiveJsonSchemaValidator.Validate(
                     document.RootElement,
                     "cli-summary.v1.schema.json"));
         }
@@ -1308,7 +1308,7 @@ public sealed class FixtureSchemaIntegrityTests
         summary["cost"]!.AsObject()["calculated_actual_nano_usd"] = null;
         using (JsonDocument document = JsonDocument.Parse(summary.ToJsonString()))
         {
-            EmbeddedJsonSchemaValidator.Validate(
+            ActiveJsonSchemaValidator.Validate(
                 document.RootElement,
                 "cli-summary.v1.schema.json");
         }
@@ -1318,7 +1318,7 @@ public sealed class FixtureSchemaIntegrityTests
         using (JsonDocument document = JsonDocument.Parse(summary.ToJsonString()))
         {
             Assert.ThrowsExactly<InvalidDataException>(
-                () => EmbeddedJsonSchemaValidator.Validate(
+                () => ActiveJsonSchemaValidator.Validate(
                     document.RootElement,
                     "cli-summary.v1.schema.json"));
         }
@@ -1328,7 +1328,7 @@ public sealed class FixtureSchemaIntegrityTests
         using (JsonDocument document = JsonDocument.Parse(summary.ToJsonString()))
         {
             Assert.ThrowsExactly<InvalidDataException>(
-                () => EmbeddedJsonSchemaValidator.Validate(
+                () => ActiveJsonSchemaValidator.Validate(
                     document.RootElement,
                     "cli-summary.v1.schema.json"));
         }
@@ -1356,6 +1356,11 @@ public sealed class FixtureSchemaIntegrityTests
             "invalid_inputs",
             "coverage_gaps",
             "failures",
+            "documentation_revisions",
+            "passages",
+            "candidate_decisions",
+            "reconciliation_assessments",
+            "lineage_events",
         })
         {
             typedCounts[name] = 0;
@@ -1419,7 +1424,7 @@ public sealed class FixtureSchemaIntegrityTests
                 root);
             mutate(root);
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(root));
+                () => PublicFixturePackageReader.Read(root));
         }
         finally
         {
@@ -1436,7 +1441,7 @@ public sealed class FixtureSchemaIntegrityTests
             root,
             artifactId.Replace('/', Path.DirectorySeparatorChar));
         File.Delete(artifactPath);
-        JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+        JsonObject execution = ReadObject(root, PublicFixturePackageReader.ExecutionInputFileName);
         RemoveArtifactReferences(execution["input_payload_refs"], artifactId);
         execution["resource_and_time_limits"]!["input_bytes"] = Directory
             .EnumerateFiles(Path.Combine(root, "inputs"), "*", SearchOption.AllDirectories)
@@ -1502,7 +1507,7 @@ public sealed class FixtureSchemaIntegrityTests
                 ["plugin_order"] = receipt["plugin_order"]!.DeepClone(),
             });
         receipt["expected_capture_binding_fingerprint"] =
-            BethesdaByteOracleValidator.ComputeCanonicalFingerprint(binding);
+            PublicBethesdaOracleValidator.ComputeCanonicalFingerprint(binding);
     }
 
     private static void WriteAndResealExecutionControl(
@@ -1514,7 +1519,7 @@ public sealed class FixtureSchemaIntegrityTests
             root,
             artifactId.Replace('/', Path.DirectorySeparatorChar));
         WriteJson(artifactPath, value);
-        JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+        JsonObject execution = ReadObject(root, PublicFixturePackageReader.ExecutionInputFileName);
         JsonObject[] references = ArtifactReferences(execution, artifactId).ToArray();
         Assert.IsTrue(references.Length >= 2);
         string fingerprint = Sha256(artifactPath);
@@ -1538,11 +1543,11 @@ public sealed class FixtureSchemaIntegrityTests
         string root,
         JsonObject execution)
     {
-        string executionPath = Path.Combine(root, FixturePackageReader.ExecutionInputFileName);
+        string executionPath = Path.Combine(root, PublicFixturePackageReader.ExecutionInputFileName);
         WriteJson(executionPath, execution);
-        JsonObject manifest = ReadObject(root, FixturePackageReader.PublicManifestFileName);
+        JsonObject manifest = ReadObject(root, PublicFixturePackageReader.PublicManifestFileName);
         manifest["input_package_fingerprint"] = Sha256(executionPath);
-        WriteJson(Path.Combine(root, FixturePackageReader.PublicManifestFileName), manifest);
+        WriteJson(Path.Combine(root, PublicFixturePackageReader.PublicManifestFileName), manifest);
     }
 
     private static void CopyDirectory(string source, string destination)
@@ -1582,7 +1587,7 @@ public sealed class FixtureSchemaIntegrityTests
             root,
             artifactId.Replace('/', Path.DirectorySeparatorChar));
         WriteJson(artifactPath, value);
-        JsonObject execution = ReadObject(root, FixturePackageReader.ExecutionInputFileName);
+        JsonObject execution = ReadObject(root, PublicFixturePackageReader.ExecutionInputFileName);
         JsonObject reference = execution["input_payload_refs"]!.AsArray()
             .Select(item => item!.AsObject())
             .Single(item => item["artifact_id"]!.GetValue<string>() == artifactId);
@@ -1592,11 +1597,11 @@ public sealed class FixtureSchemaIntegrityTests
             reference["byte_length"] = new FileInfo(artifactPath).Length;
         }
 
-        string executionPath = Path.Combine(root, FixturePackageReader.ExecutionInputFileName);
+        string executionPath = Path.Combine(root, PublicFixturePackageReader.ExecutionInputFileName);
         WriteJson(executionPath, execution);
-        JsonObject manifest = ReadObject(root, FixturePackageReader.PublicManifestFileName);
+        JsonObject manifest = ReadObject(root, PublicFixturePackageReader.PublicManifestFileName);
         manifest["input_package_fingerprint"] = Sha256(executionPath);
-        WriteJson(Path.Combine(root, FixturePackageReader.PublicManifestFileName), manifest);
+        WriteJson(Path.Combine(root, PublicFixturePackageReader.PublicManifestFileName), manifest);
     }
 
     private static void WriteAndResealOracle(
@@ -1608,7 +1613,7 @@ public sealed class FixtureSchemaIntegrityTests
             root,
             artifactId.Replace('/', Path.DirectorySeparatorChar));
         WriteJson(artifactPath, value);
-        JsonObject oracle = ReadObject(root, FixturePackageReader.OracleFileName);
+        JsonObject oracle = ReadObject(root, PublicFixturePackageReader.OracleFileName);
         JsonObject[] references = ArtifactReferences(oracle, artifactId).ToArray();
         Assert.IsNotEmpty(references);
         foreach (JsonObject reference in references)
@@ -1625,11 +1630,11 @@ public sealed class FixtureSchemaIntegrityTests
 
     private static void WriteRootOracleAndResealManifest(string root, JsonObject oracle)
     {
-        string oraclePath = Path.Combine(root, FixturePackageReader.OracleFileName);
+        string oraclePath = Path.Combine(root, PublicFixturePackageReader.OracleFileName);
         WriteJson(oraclePath, oracle);
-        JsonObject manifest = ReadObject(root, FixturePackageReader.PublicManifestFileName);
+        JsonObject manifest = ReadObject(root, PublicFixturePackageReader.PublicManifestFileName);
         manifest["oracle_fingerprint"] = Sha256(oraclePath);
-        WriteJson(Path.Combine(root, FixturePackageReader.PublicManifestFileName), manifest);
+        WriteJson(Path.Combine(root, PublicFixturePackageReader.PublicManifestFileName), manifest);
     }
 
     private static JsonObject[] TaxonomyProjectionReferences(JsonObject oracle)

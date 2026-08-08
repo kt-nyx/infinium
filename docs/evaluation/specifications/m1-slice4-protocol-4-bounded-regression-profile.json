@@ -66,7 +66,7 @@
     },
     {
       "id": "focused-public-regression",
-      "command": "dotnet test tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj --configuration Release --filter <exact-focused-test-allowlist> --logger trx"
+      "command": "dotnet test tests/Infinium.Protocol4RegressionTests/Infinium.Protocol4RegressionTests.csproj --configuration Release --filter <exact-focused-test-allowlist> --logger trx"
     }
   ],
   "excluded_semantic_states": [

@@ -37,11 +37,11 @@ plan. In particular, adaptation, oracle comparison, corpus scoring, private
 manifests, and candidate execution are prohibited. Their presence is not an
 active held-out workflow or an invitation to resume B2/C2.
 
-Protocol `/3` schemas remain as immutable historical bytes supporting its
-freeze record and `/4` predecessor provenance. No `/2` schema remains in the
-current tool tree. Neither predecessor is an accepted or runnable alternative
-for new work. Their exact inventory is in the bounded-regression usage
-document.
+Protocol `/3` schema bytes remain recoverable from their recorded Git objects
+and historical freeze records, but are absent from the current tool tree. No
+`/2` schema remains either. Neither predecessor is an accepted or runnable
+alternative for new work. The current retirement inventory is
+`docs/evaluation/retired-evaluation-assets.v1.json`.
 
 ## Frozen projection boundary
 

@@ -55,7 +55,7 @@ public static class CliSummaryJsonCodec
             try
             {
                 BoundedJsonDocumentReader.RejectDuplicateProperties(document.RootElement, "$");
-                EmbeddedJsonSchemaValidator.Validate(
+                ActiveJsonSchemaValidator.Validate(
                     document.RootElement,
                     "cli-summary.v1.schema.json");
                 return document;

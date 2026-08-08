@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/repository/repository-evaluation-authority.v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "schema_version", "status", "authority", "surfaces"],
+  "properties": {
+    "schema_id": { "const": "infinium.repository.evaluation-authority/v1" },
+    "schema_version": { "const": "1.0.0" },
+    "status": { "const": "current" },
+    "authority": { "const": "project-owner-authorized-boundary-hardening-2026-08-08" },
+    "surfaces": {
+      "type": "array",
+      "minItems": 6,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/surface" }
+    }
+  },
+  "$defs": {
+    "nonEmptyString": { "type": "string", "minLength": 1 },
+    "surface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "paths", "claim"],
+      "properties": {
+        "id": { "$ref": "#/$defs/nonEmptyString" },
+        "paths": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/nonEmptyString" } },
+        "validator": { "$ref": "#/$defs/nonEmptyString" },
+        "entry_point": { "$ref": "#/$defs/nonEmptyString" },
+        "default_solution_member": { "type": "boolean" },
+        "values": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/nonEmptyString" } },
+        "claim": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    }
+  }
+}

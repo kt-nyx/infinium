@@ -1,0 +1,106 @@
+{
+  "schema_id": "infinium.evaluation.fixture-replay-manifest/v1",
+  "schema_version": "1",
+  "fixture_id": "BETH-UNSUPPORTED-VAL",
+  "fixture_version": "1.4.0",
+  "replay_state": "complete-clean",
+  "dependency_graph_fingerprint": "43760614594ed84685c0d9c4a612c03422e7731d3a112e48979a62a5924203fc",
+  "retained_inputs": [
+    {
+      "dependency_id": "inputs-analysis-context-json",
+      "sha256": "95a028182b449557f792eb31be8faf5f911f4976ad94c62b218d884026a2f4c5",
+      "byte_length": 320
+    },
+    {
+      "dependency_id": "inputs-analysis-execution-input-json",
+      "sha256": "e0494a8a8698f004776a3de420e9ac56f20f3736415437630565f2ce73bbdc51",
+      "byte_length": 2681
+    },
+    {
+      "dependency_id": "inputs-analysis-installation-snapshot-json",
+      "sha256": "9b0b6302e67e53e7da9ccfd5fc92910fee6e6e4a46f2e865ed23402d405364bc",
+      "byte_length": 474
+    },
+    {
+      "dependency_id": "inputs-analyzer-declaration-json",
+      "sha256": "b2d8c06b95ed127cd7cab95aa06ed708e9873b47a830180c3b5c8bcfda8cccd5",
+      "byte_length": 5074
+    },
+    {
+      "dependency_id": "inputs-bethesda-semantic-input-json",
+      "sha256": "ef7f9160ee9ee1778fff1cf60b1869f4dc6375212d68bc3627a5dfaece05ac72",
+      "byte_length": 479
+    },
+    {
+      "dependency_id": "inputs-case-matrix-json",
+      "sha256": "1108850aa4da5e729f7002f5300b9b4ea84e79b1bbeb168e2e31b4f20dea86f0",
+      "byte_length": 1173
+    },
+    {
+      "dependency_id": "inputs-construction-manifest-json",
+      "sha256": "7d9f02fe5a9d394a6dc1b69be2a3f280d1d4626c9937bb117a858ffd1226a233",
+      "byte_length": 6044
+    },
+    {
+      "dependency_id": "inputs-effective-scan-configuration-json",
+      "sha256": "cf5a20a5398dc07d080527cdf745bb3b722c42a1e6201bf48882d32c667d926a",
+      "byte_length": 3041
+    },
+    {
+      "dependency_id": "inputs-plugins-LocalizedDependency_English-strings",
+      "sha256": "5119dacdfa9be32a443106dd645e743cac50237f1808575e9b0e3aff9c4e97d4",
+      "byte_length": 56
+    },
+    {
+      "dependency_id": "inputs-plugins-LocalizedDependency-esp",
+      "sha256": "43115de64ffaa9853f8823525877ac7c0eaa93e28f7d02c22a20521b0c9eb605",
+      "byte_length": 206
+    },
+    {
+      "dependency_id": "inputs-plugins-UnsupportedFamily-esp",
+      "sha256": "28a3f77b1c46ef8088d57987f3e43fa7e39a778fc8718f3b5d2bf567c96965ba",
+      "byte_length": 192
+    },
+    {
+      "dependency_id": "inputs-plugins-UnsupportedNpcField-esp",
+      "sha256": "498515791b9196341c286ca4b65c6565ab9d7b07c59e8eb42365a1a85fce44d2",
+      "byte_length": 236
+    },
+    {
+      "dependency_id": "inputs-requests-archive-member-json",
+      "sha256": "de1feea7e111a0ebe86283c0b966380b5b41bbe8939a479e1188b94ccf7aa36b",
+      "byte_length": 252
+    },
+    {
+      "dependency_id": "inputs-requests-automatic-environment-discovery-json",
+      "sha256": "0d16d3d57a7ea939ce4294ca6f0261e50009a67a2270b75db16bbc64aa1cec43",
+      "byte_length": 214
+    },
+    {
+      "dependency_id": "inputs-requests-localized-string-resolution-json",
+      "sha256": "b2b66ab85f98c052174b8f5632abeaa53deb18704e8df1d0d37f963312fd997d",
+      "byte_length": 246
+    },
+    {
+      "dependency_id": "inputs-resolved-input-manifest-json",
+      "sha256": "bceecbfdce6be48b8612060273b9b57295a08f00f03cf32a4bceb23192cd6868",
+      "byte_length": 435
+    },
+    {
+      "dependency_id": "inputs-snapshot-accepted-order-json",
+      "sha256": "ec7826ba6e46636e6a2fd90f016639543a2009e40ea912fc3ce07afc18ed36af",
+      "byte_length": 2568
+    },
+    {
+      "dependency_id": "inputs-taxonomy-subject-bindings-json",
+      "sha256": "34596a1bc44cac229028060c1db0aea1b85c6fe45ca4d8c31ac0ebc29532d5f2",
+      "byte_length": 784
+    }
+  ],
+  "boundaries": [
+    "provider",
+    "hosted-search",
+    "nexus",
+    "loot"
+  ]
+}

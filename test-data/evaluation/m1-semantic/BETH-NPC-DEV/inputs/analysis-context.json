@@ -1,0 +1,9 @@
+{
+  "schema_id": "infinium.analysis.fixture-context/v1",
+  "schema_version": "1",
+  "context_id": "beth-npc-dev.current-public-context",
+  "fixture_id": "BETH-NPC-DEV",
+  "fixture_version": "1.4.0",
+  "authority": "project-authored-current-public-fixture",
+  "use_case": "bethesda-semantic-regression"
+}

@@ -63,7 +63,12 @@
         "abstentions",
         "invalid_inputs",
         "coverage_gaps",
-        "failures"
+        "failures",
+        "documentation_revisions",
+        "passages",
+        "candidate_decisions",
+        "reconciliation_assessments",
+        "lineage_events"
       ],
       "properties": {
         "observations": {
@@ -115,6 +120,21 @@
           "$ref": "#/$defs/count"
         },
         "failures": {
+          "$ref": "#/$defs/count"
+        },
+        "documentation_revisions": {
+          "$ref": "#/$defs/count"
+        },
+        "passages": {
+          "$ref": "#/$defs/count"
+        },
+        "candidate_decisions": {
+          "$ref": "#/$defs/count"
+        },
+        "reconciliation_assessments": {
+          "$ref": "#/$defs/count"
+        },
+        "lineage_events": {
           "$ref": "#/$defs/count"
         }
       }

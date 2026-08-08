@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/json-schema/finding-case.v1.schema.json",
+  "title": "Infinium Slice 5 finding and case v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "schema_version", "payload_id", "originating_run_id", "findings", "recommendations", "cases", "reconciliation_assessments", "lineage_events", "taxonomy_assignments", "coverage", "gaps"],
+  "properties": {
+    "schema_id": { "const": "infinium.analysis.finding-case/v1" },
+    "schema_version": { "const": "1.0.0" },
+    "payload_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "originating_run_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "findings": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/finding" } },
+    "recommendations": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/recommendation" } },
+    "cases": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/case" } },
+    "reconciliation_assessments": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/reconciliation" } },
+    "lineage_events": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/lineage" } },
+    "taxonomy_assignments": { "type": "array", "maxItems": 100000, "items": { "$ref": "common.v1.schema.json#/$defs/taxonomyAssignment" } },
+    "coverage": { "type": "array", "maxItems": 100000, "items": { "$ref": "common.v1.schema.json#/$defs/coverageRecord" } },
+    "gaps": { "type": "array", "maxItems": 100000, "items": { "$ref": "common.v1.schema.json#/$defs/typedArtifact" } }
+  },
+  "$defs": {
+    "ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.v1.schema.json#/$defs/identifier" } },
+    "finding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["finding_occurrence_id", "logical_finding_id", "originating_run_id", "candidate_id", "conclusion", "severity", "confidence", "evidence_ids", "identity_envelope_id"],
+      "properties": {
+        "finding_occurrence_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "logical_finding_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "originating_run_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "candidate_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "conclusion": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+        "severity": { "enum": ["advisory", "minor", "moderate", "major", "blocker"] },
+        "confidence": { "enum": ["plausible", "strongly-supported", "confirmed"] },
+        "evidence_ids": { "$ref": "#/$defs/ids" },
+        "identity_envelope_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "supersedes_occurrence_id": { "$ref": "common.v1.schema.json#/$defs/identifier" }
+      }
+    },
+    "recommendation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["recommendation_id", "kind", "action", "uncertainty", "reversibility", "risks", "evidence_ids"],
+      "properties": {
+        "recommendation_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "kind": { "enum": ["remediation", "alternative-remediation", "validation", "further-investigation", "abstention"] },
+        "finding_occurrence_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "abstention_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "action": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+        "uncertainty": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+        "reversibility": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+        "risks": { "type": "array", "items": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" } },
+        "evidence_ids": { "$ref": "#/$defs/ids" }
+      },
+      "oneOf": [{ "required": ["finding_occurrence_id"] }, { "required": ["abstention_id"] }]
+    },
+    "case": {
+      "type": "object", "additionalProperties": false,
+      "required": ["case_occurrence_id", "logical_case_id", "originating_run_id", "kind", "finding_occurrence_ids", "candidate_ids", "shared_cause", "cause_proof_evidence_ids", "affects_readiness"],
+      "properties": {
+        "case_occurrence_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "logical_case_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "originating_run_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "kind": { "enum": ["supported", "lead-only"] },
+        "finding_occurrence_ids": { "$ref": "#/$defs/ids" },
+        "candidate_ids": { "$ref": "#/$defs/ids" },
+        "shared_cause": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+        "cause_proof_evidence_ids": { "$ref": "#/$defs/ids" },
+        "affects_readiness": { "type": "boolean" }
+      },
+      "allOf": [
+        { "if": { "properties": { "kind": { "const": "lead-only" } }, "required": ["kind"] }, "then": { "properties": { "finding_occurrence_ids": { "maxItems": 0 }, "affects_readiness": { "const": false } } } },
+        { "if": { "properties": { "kind": { "const": "supported" } }, "required": ["kind"] }, "then": { "properties": { "finding_occurrence_ids": { "minItems": 1 } } } }
+      ]
+    },
+    "gate": { "enum": ["proven-equivalent", "proven-different", "ambiguous", "unknown", "not-evaluated"] },
+    "reconciliation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["assessment_id", "prior_occurrence_id", "current_occurrence_id", "gates", "outcome", "gaps"],
+      "properties": {
+        "assessment_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "prior_occurrence_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "current_occurrence_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "gates": { "type": "object", "additionalProperties": false, "required": ["causal", "applicability", "dependency", "producer"], "properties": { "causal": { "$ref": "#/$defs/gate" }, "applicability": { "$ref": "#/$defs/gate" }, "dependency": { "$ref": "#/$defs/gate" }, "producer": { "$ref": "#/$defs/gate" } } },
+        "outcome": { "enum": ["exact-continuation", "analytical-revision", "related-follow-up", "new-distinct", "ambiguous", "unknown", "not-observed", "not-evaluated"] },
+        "gaps": { "type": "array", "items": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" } }
+      }
+    },
+    "lineage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["event_id", "kind", "predecessor_ids", "successor_ids"],
+      "properties": {
+        "event_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "kind": { "enum": ["supersedes", "analytical-revision", "related-follow-up", "promotes-lead", "merge-successor", "split-successor", "correction-successor"] },
+        "predecessor_ids": { "$ref": "#/$defs/ids" },
+        "successor_ids": { "$ref": "#/$defs/ids" },
+        "reconciliation_assessment_id": { "$ref": "common.v1.schema.json#/$defs/identifier" }
+      }
+    }
+  }
+}

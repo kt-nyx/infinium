@@ -1455,7 +1455,7 @@ internal static class FixtureGenerator
                 schema_id = "infinium.evaluation.bethesda-case-matrix/v1",
                 schema_version = "1",
                 fixture_id = fixtureId,
-                fixture_version = "1.3.0",
+                fixture_version = "1.4.0",
                 source_basis = "accepted-slice-3.5-plan-and-retained-execution-inputs",
                 cases = scenarios,
             });
@@ -1468,7 +1468,7 @@ internal static class FixtureGenerator
                 schema_id = "infinium.scan.effective-configuration/v1",
                 schema_version = "1",
                 configuration_id = $"{fixtureId.ToLowerInvariant()}.slice4-fixture",
-                configuration_version = "1.3.0",
+                configuration_version = "1.4.0",
                 resolved_at = "2026-08-02T16:00:00.0000000+00:00",
                 saved_configuration_reference = JsonDocument.Parse("null").RootElement.Clone(),
                 analyzers = new[]
@@ -1537,6 +1537,21 @@ internal static class FixtureGenerator
                     origin = "default",
                 },
                 semantic_context_overrides = Array.Empty<object>(),
+                payload_contracts = new[]
+                {
+                    new { schema_id = "infinium.documentation.evidence/v1", schema_version = "1.0.0", required = true },
+                    new { schema_id = "infinium.analysis.candidate/v1", schema_version = "1.0.0", required = true },
+                    new { schema_id = "infinium.analysis.finding-case/v1", schema_version = "1.0.0", required = true },
+                    new { schema_id = "infinium.analysis.replay/v1", schema_version = "1.0.0", required = true },
+                    new { schema_id = "infinium.run-output/v1", schema_version = "1.0.0", required = true },
+                },
+                not_used_boundaries = new[]
+                {
+                    new { boundary_id = "provider", state = "not-used", reason = "The retained fixture generator performs no provider dispatch." },
+                    new { boundary_id = "hosted-search", state = "not-used", reason = "The retained fixture generator performs no hosted search." },
+                    new { boundary_id = "nexus", state = "not-used", reason = "The retained fixture generator performs no Nexus acquisition." },
+                    new { boundary_id = "loot", state = "not-used", reason = "The retained fixture generator performs no LOOT operation." },
+                },
             };
     }
 }

@@ -15,28 +15,88 @@
   ],
   "files": [
     {
+      "path": "analysis-context.json",
+      "regions": [
+        {
+          "offset": 0,
+          "length": 308,
+          "kind": "project-authored-analysis-input-metadata"
+        }
+      ],
+      "byte_length": 308,
+      "sha256": "a7e73570ea9d6c32c8f58d2b07d120309b2f0e492fa6b087e78be6e1dc3d2e8e"
+    },
+    {
+      "path": "analysis-execution-input.json",
+      "regions": [
+        {
+          "offset": 0,
+          "length": 2669,
+          "kind": "project-authored-analysis-input-metadata"
+        }
+      ],
+      "byte_length": 2669,
+      "sha256": "97e8c60832ec6a3c1f249b4810146634ba16d5befe7f5556d5f5c9b5c85447b5"
+    },
+    {
+      "path": "analysis-installation-snapshot.json",
+      "regions": [
+        {
+          "offset": 0,
+          "length": 462,
+          "kind": "project-authored-analysis-input-metadata"
+        }
+      ],
+      "byte_length": 462,
+      "sha256": "e725950565398cd897ac69f27c67afcc9102285e6ff829ad3dfacea487742a4f"
+    },
+    {
+      "path": "analyzer-declaration.json",
+      "regions": [
+        {
+          "offset": 0,
+          "length": 5074,
+          "kind": "project-authored-analysis-input-metadata"
+        }
+      ],
+      "byte_length": 5074,
+      "sha256": "b2d8c06b95ed127cd7cab95aa06ed708e9873b47a830180c3b5c8bcfda8cccd5"
+    },
+    {
+      "path": "bethesda-semantic-input.json",
+      "regions": [
+        {
+          "offset": 0,
+          "length": 467,
+          "kind": "project-authored-analysis-input-metadata"
+        }
+      ],
+      "byte_length": 467,
+      "sha256": "d4e0460052dbad51f69778ed9dc6ea37cdbe44a78a7cd1b9209fed1c942ab6bd"
+    },
+    {
       "path": "case-matrix.json",
-      "sha256": "9f48105397105b3c4dbabac0bbc6f9b4b7b0e63ae2c13f10d7e48c63e5faf3c8",
+      "sha256": "257bf433158793534f14e4285ed57c2e5811495629bd1af046e8a16aa253832e",
       "regions": [
         {
           "offset": 0,
           "kind": "project-authored-request-or-matrix-metadata",
-          "length": 2410
+          "length": 2322
         }
       ],
-      "byte_length": 2410
+      "byte_length": 2322
     },
     {
       "path": "effective-scan-configuration.json",
-      "sha256": "dac67628390bc9b4bf468cdad2631b48b5e4a4400beab46574ae7be212bb1130",
+      "sha256": "87340c96ff04443768f70f4999327d820ad816bbd9d8ec13c1ab29e3fd3d25c0",
       "regions": [
         {
           "offset": 0,
           "kind": "project-authored-request-or-matrix-metadata",
-          "length": 1794
+          "length": 3035
         }
       ],
-      "byte_length": 1794
+      "byte_length": 3035
     },
     {
       "path": "mutations/Consumer-LightReferenceOutOfRange.esp",
@@ -171,15 +231,28 @@
       "byte_length": 227
     },
     {
+      "path": "resolved-input-manifest.json",
+      "regions": [
+        {
+          "offset": 0,
+          "length": 423,
+          "kind": "project-authored-analysis-input-metadata"
+        }
+      ],
+      "byte_length": 423,
+      "sha256": "5d28c850f2e81bdf8d529f85c992c5e19e70267ca12ca14bd821091b63e0b220"
+    },
+    {
       "path": "construction-manifest.json",
       "regions": [
         {
           "offset": 0,
           "kind": "project-authored-construction-metadata",
-          "length": 5102
+          "length": 6892
         }
       ],
-      "byte_length": 5102
+      "byte_length": 6892,
+      "sha256": null
     }
   ]
 }

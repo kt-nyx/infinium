@@ -138,10 +138,15 @@ No predecessor protocol is accepted for new execution.
 |---|---|---|---|
 | `/2` | `evaluator-v2-stage-a-freeze.json`, `evaluator-v2-stage-a-successor-freeze.json`, and `evaluator-v2-stage-c5-adjudication-incident.md` | Historical freeze, supersession, and invalidated-verdict chronology required to explain `/4` lineage | Prohibited; no `/2` schema remains in the tool tree |
 | `/3` | `evaluator-v2-stage-a-successor-freeze.json`, `evaluator-v2-stage-a-final-bounded-freeze.json`, `evaluator-v2-successor-stage-b2-contract-gap.md`, and `m1-evaluation-baseline-evaluator-v2-amendment.md` | Historical predecessor freeze and the authority gap that led to `/4` | Prohibited; records are historical only |
-| `/3` schemas | `assertion-results`, `calibration-results`, `candidate-semantic-output`, `corpus-execution-manifest`, `evaluator-v2-common`, `execution-manifest`, `expected-semantic-output`, `prepared-comparison-manifest`, and `sanitized-result`, all `.v3.schema.json` under `tools/evaluation/Infinium.EvaluatorV2/protocol/` | Exact historical bytes named by the `/3` freeze and retained for `/4` predecessor provenance | Prohibited; `/4` code binds only `/4` identities and `.v4` schemas |
+| `/3` schemas | Exact Git blob identities for `assertion-results`, `calibration-results`, `candidate-semantic-output`, `corpus-execution-manifest`, `evaluator-v2-common`, `execution-manifest`, `expected-semantic-output`, `prepared-comparison-manifest`, and `sanitized-result` in `retired-evaluation-assets.v1.json` | Exact historical bytes remain recoverable without placing predecessor schemas in the active tool tree | Prohibited; `/4` code binds only `/4` identities and `.v4` schemas |
 | `/4` `protocol.json` predecessor entry | One historical `/3` identity/status object inside the active frozen `/4` declaration | Explains immutable predecessor lineage | Does not activate `/3` |
 
-The inventory is closed: there are zero current `.v2.schema.json` files and
-exactly nine `.v3.schema.json` files. Adding a predecessor command or
+The inventory is closed: there are zero current `.v2.schema.json` or
+`.v3.schema.json` files. Adding a predecessor command or
 advertising either predecessor as accepted/runnable would violate this usage
 contract.
+
+The default solution graph does not reference or compile `Infinium.EvaluatorV2`.
+The allowlisted focused tests are linked from their unchanged tracked source
+path into the out-of-solution `Infinium.Protocol4RegressionTests` project and
+remain reachable only through the bounded wrapper.

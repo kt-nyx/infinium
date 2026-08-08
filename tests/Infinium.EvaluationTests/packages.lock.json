@@ -383,12 +383,6 @@
       "infinium.domain": {
         "type": "Project"
       },
-      "infinium.evaluatorv2": {
-        "type": "Project",
-        "dependencies": {
-          "Infinium.Application": "[1.0.0, )"
-        }
-      },
       "infinium.mo2": {
         "type": "Project",
         "dependencies": {
@@ -401,6 +395,12 @@
           "Infinium.Domain": "[1.0.0, )",
           "Microsoft.Data.Sqlite.Core": "[10.0.10, )",
           "SQLitePCLRaw.bundle_e_sqlite3": "[3.0.5, )"
+        }
+      },
+      "infinium.publicfixtures": {
+        "type": "Project",
+        "dependencies": {
+          "Infinium.Application": "[1.0.0, )"
         }
       },
       "Google.Protobuf": {

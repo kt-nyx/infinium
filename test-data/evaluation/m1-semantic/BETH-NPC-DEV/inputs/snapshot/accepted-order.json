@@ -2,12 +2,12 @@
   "schema_id": "infinium.evaluation.bethesda-accepted-order-construction-input/v1",
   "schema_version": "1",
   "fixture_id": "BETH-NPC-DEV",
-  "fixture_version": "1.3.0",
+  "fixture_version": "1.4.0",
   "source_basis": "accepted-slice-3.5-construction-manifest-and-retained-input-seals",
   "snapshot_contract_version": "3.0.0",
   "adapter_id": "infinium.mo2-static-reconstruction/v3",
   "selected_profile_name": "BETH-NPC-DEV",
-  "construction_manifest_fingerprint": "36eff8e41f2c09d1f2ee93056d242fd924edce26923382581b303bde612641df",
+  "construction_manifest_fingerprint": "16181a4765093cdb5ce28b9112059d840107f37eb1655efd1ae7863a2ed7d28a",
   "provider_order": [
     {
       "provider_id": "beth-npc-dev-provider-00",

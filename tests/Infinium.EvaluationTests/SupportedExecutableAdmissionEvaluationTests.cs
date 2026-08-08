@@ -1,7 +1,5 @@
 using System.Runtime.Versioning;
-using Infinium.Application.Evaluation;
 using Infinium.Domain.Contracts;
-using Infinium.EvaluatorV2.LegacyV1;
 using Infinium.Mo2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -11,35 +9,6 @@ namespace Infinium.Tests;
 public sealed class SupportedExecutableAdmissionEvaluationTests
 {
     public TestContext TestContext { get; set; } = null!;
-
-    [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Contract")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Contract")]
-    public void IndependentSlice3EvaluatorPackagePassesStrictFixtureContracts()
-    {
-        string package = Path.GetFullPath(
-            Path.Combine(
-                AppContext.BaseDirectory,
-                "..",
-                "..",
-                "..",
-                "..",
-                "..",
-                "docs",
-                "evaluation",
-                "fixtures",
-                "independent-slice3-evaluator-20260729"));
-
-        EvaluationHarnessFixturePackage loaded =
-            FixturePackageReader.ReadForEvaluationHarness(package);
-
-        Assert.AreEqual(
-            new OpaqueId("SLICE3-INDEPENDENT-VAL-20260729"),
-            loaded.FixtureId);
-        Assert.AreEqual(FixturePartition.Validation, loaded.Partition);
-    }
 
     [TestMethod]
     [TestCategory("M1Evaluation")]

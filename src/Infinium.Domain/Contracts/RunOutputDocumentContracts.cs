@@ -38,6 +38,11 @@ public sealed record RunOutputContract(
     IReadOnlyList<TypedArtifactDocumentContract> InvalidInputs,
     IReadOnlyList<TypedArtifactDocumentContract> CoverageGaps,
     IReadOnlyList<TypedArtifactDocumentContract> Failures,
+    IReadOnlyList<TypedArtifactDocumentContract> DocumentationRevisions,
+    IReadOnlyList<TypedArtifactDocumentContract> Passages,
+    IReadOnlyList<TypedArtifactDocumentContract> CandidateDecisions,
+    IReadOnlyList<TypedArtifactDocumentContract> ReconciliationAssessments,
+    IReadOnlyList<TypedArtifactDocumentContract> LineageEvents,
     IReadOnlyDictionary<string, RunOutputCollectionStateContract> CollectionStates,
     IReadOnlyList<TaxonomyAssignmentDocumentContract> TaxonomyAssignments,
     IReadOnlyList<CoverageDocumentContract> AnalyzerCoverage,
@@ -45,6 +50,8 @@ public sealed record RunOutputContract(
     ReadinessDocumentContract Readiness,
     ReplayabilityDocumentContract Replayability,
     AuditabilityDocumentContract Auditability,
+    ArtifactReferenceDocumentContract ReplayManifest,
+    IReadOnlyList<ExcludedCapabilityDocumentContract> NotUsedBoundaries,
     string CliSummaryFingerprint,
     IReadOnlyList<ArtifactReferenceDocumentContract> DiagnosticTraceReferences);
 
@@ -151,6 +158,11 @@ public static class RunOutputContractInvariants
         "invalid_inputs",
         "coverage_gaps",
         "failures",
+        "documentation_revisions",
+        "passages",
+        "candidate_decisions",
+        "reconciliation_assessments",
+        "lineage_events",
     };
 
     public static void Validate(RunOutputContract output)
@@ -182,6 +194,8 @@ public static class RunOutputContractInvariants
         if (output.AnalyzerDeclarations.Count == 0
             || output.AnalyzerCoverage.Count == 0
             || output.ExcludedCapabilities.Count == 0
+            || output.NotUsedBoundaries.Count < 4
+            || output.NotUsedBoundaries.Any(value => !StringComparer.Ordinal.Equals(value.State, "not-used"))
             || !output.Readiness.NoSafetyGuarantee
             || !RequiredCollectionNames.SetEquals(output.CollectionStates.Keys))
         {
@@ -209,6 +223,11 @@ public static class RunOutputContractInvariants
                 ["invalid_inputs"] = output.InvalidInputs,
                 ["coverage_gaps"] = output.CoverageGaps,
                 ["failures"] = output.Failures,
+                ["documentation_revisions"] = output.DocumentationRevisions,
+                ["passages"] = output.Passages,
+                ["candidate_decisions"] = output.CandidateDecisions,
+                ["reconciliation_assessments"] = output.ReconciliationAssessments,
+                ["lineage_events"] = output.LineageEvents,
             };
         Dictionary<string, string> expectedArtifactTypes = new(StringComparer.Ordinal)
         {
@@ -229,6 +248,11 @@ public static class RunOutputContractInvariants
             ["invalid_inputs"] = "invalid-input",
             ["coverage_gaps"] = "coverage-gap",
             ["failures"] = "failure",
+            ["documentation_revisions"] = "documentation-revision",
+            ["passages"] = "passage",
+            ["candidate_decisions"] = "candidate-decision",
+            ["reconciliation_assessments"] = "reconciliation-assessment",
+            ["lineage_events"] = "lineage-event",
         };
         foreach ((string name, IReadOnlyList<TypedArtifactDocumentContract> artifacts) in collections)
         {

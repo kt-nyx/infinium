@@ -3,8 +3,8 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Infinium.Application.Evaluation;
-using Infinium.EvaluatorV2.LegacyV1;
 using Infinium.Mo2;
+using Infinium.PublicFixtures;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Infinium.Tests;
@@ -430,7 +430,7 @@ public sealed class BethesdaSnapshotQualificationTests
                 ["plugin_order"] = pluginOrder,
             };
             using JsonDocument document = JsonDocument.Parse(binding.ToJsonString());
-            return BethesdaByteOracleValidator.ComputeCanonicalFingerprint(
+            return PublicBethesdaOracleValidator.ComputeCanonicalFingerprint(
                 document.RootElement);
         }
 

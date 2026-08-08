@@ -1,0 +1,121 @@
+{
+  "schema_id": "infinium.evaluation.fixture-replay-manifest/v1",
+  "schema_version": "1",
+  "fixture_id": "BETH-LIGHT-VAL",
+  "fixture_version": "1.4.0",
+  "replay_state": "complete-clean",
+  "dependency_graph_fingerprint": "148e00d01a172cdc5eaa86a8ac685b8061a27686a52fa9571e943b615a535556",
+  "retained_inputs": [
+    {
+      "dependency_id": "inputs-analysis-context-json",
+      "sha256": "a7e73570ea9d6c32c8f58d2b07d120309b2f0e492fa6b087e78be6e1dc3d2e8e",
+      "byte_length": 308
+    },
+    {
+      "dependency_id": "inputs-analysis-execution-input-json",
+      "sha256": "97e8c60832ec6a3c1f249b4810146634ba16d5befe7f5556d5f5c9b5c85447b5",
+      "byte_length": 2669
+    },
+    {
+      "dependency_id": "inputs-analysis-installation-snapshot-json",
+      "sha256": "e725950565398cd897ac69f27c67afcc9102285e6ff829ad3dfacea487742a4f",
+      "byte_length": 462
+    },
+    {
+      "dependency_id": "inputs-analyzer-declaration-json",
+      "sha256": "b2d8c06b95ed127cd7cab95aa06ed708e9873b47a830180c3b5c8bcfda8cccd5",
+      "byte_length": 5074
+    },
+    {
+      "dependency_id": "inputs-bethesda-semantic-input-json",
+      "sha256": "d4e0460052dbad51f69778ed9dc6ea37cdbe44a78a7cd1b9209fed1c942ab6bd",
+      "byte_length": 467
+    },
+    {
+      "dependency_id": "inputs-case-matrix-json",
+      "sha256": "257bf433158793534f14e4285ed57c2e5811495629bd1af046e8a16aa253832e",
+      "byte_length": 2322
+    },
+    {
+      "dependency_id": "inputs-construction-manifest-json",
+      "sha256": "0d49c0035935ec3f32e6d196cf2e64ccd90ad95b49162679d8f128b76c2da892",
+      "byte_length": 6892
+    },
+    {
+      "dependency_id": "inputs-effective-scan-configuration-json",
+      "sha256": "87340c96ff04443768f70f4999327d820ad816bbd9d8ec13c1ab29e3fd3d25c0",
+      "byte_length": 3035
+    },
+    {
+      "dependency_id": "inputs-mutations-Consumer-LightReferenceOutOfRange-esp",
+      "sha256": "938de42aa562dcf02b7678a71dd22ed13451c36a389a7e75dccf7ef1bc33a913",
+      "byte_length": 420
+    },
+    {
+      "dependency_id": "inputs-mutations-FlaggedEsp-AboveLightMaximum-esp",
+      "sha256": "3b517170f45521c8f7bed82347a077db939799d764c55860c39f59b6751d2140",
+      "byte_length": 227
+    },
+    {
+      "dependency_id": "inputs-mutations-FlaggedEsp-BelowObjectRange-esp",
+      "sha256": "e67567fd8b8789314817db69585e2caf55bfbca0341e1943defbadc313027070",
+      "byte_length": 226
+    },
+    {
+      "dependency_id": "inputs-mutations-Native-AboveLightMaximum-esl",
+      "sha256": "fe8e35888609636451e8462e9bc7cc2659433c84620f9c25abafc1fa2dc79394",
+      "byte_length": 223
+    },
+    {
+      "dependency_id": "inputs-mutations-Native-BelowObjectRange-esl",
+      "sha256": "06cc4e3b1021c0213229669ea57444a4e0db438f74e17228233b1fb67dedfca0",
+      "byte_length": 222
+    },
+    {
+      "dependency_id": "inputs-mutations-Native-HeaderFlagRemoved-esl",
+      "sha256": "687d6d7fd35b8c7ffbe4f28dc178fe0fcb36c4a54777bcccb93611a165227182",
+      "byte_length": 236
+    },
+    {
+      "dependency_id": "inputs-plugins-00-Pad-esm",
+      "sha256": "7ee03b2ef46c82525644553259b32260c0defc87b61ae986519acab32496fd89",
+      "byte_length": 109
+    },
+    {
+      "dependency_id": "inputs-plugins-01-Native-esl",
+      "sha256": "8bd7537ada2bc83c61ef399b1145bb63c0ef68aef90cba49be0565053cf44b98",
+      "byte_length": 265
+    },
+    {
+      "dependency_id": "inputs-plugins-02-Flagged-esp",
+      "sha256": "e60f667e43a62a8b24d8702cbcb9f6242017c84cf138bc74d2cb84e5ae649609",
+      "byte_length": 268
+    },
+    {
+      "dependency_id": "inputs-plugins-03-Consumer-esp",
+      "sha256": "9c13f801a9f9464568b1b8e9f517cf03d1013960e9a5130c9dd02ec18d0b080c",
+      "byte_length": 497
+    },
+    {
+      "dependency_id": "inputs-plugins-04-Winner-esp",
+      "sha256": "3b75c15391d47da2327107e61cce602003a757a12afba41382807760b8cbeeda",
+      "byte_length": 227
+    },
+    {
+      "dependency_id": "inputs-resolved-input-manifest-json",
+      "sha256": "5d28c850f2e81bdf8d529f85c992c5e19e70267ca12ca14bd821091b63e0b220",
+      "byte_length": 423
+    },
+    {
+      "dependency_id": "inputs-snapshot-accepted-order-json",
+      "sha256": "5e96760bf54e1b4b316340b358d83f379cce9e06507c663a0d27668ed2667fe7",
+      "byte_length": 4437
+    }
+  ],
+  "boundaries": [
+    "provider",
+    "hosted-search",
+    "nexus",
+    "loot"
+  ]
+}

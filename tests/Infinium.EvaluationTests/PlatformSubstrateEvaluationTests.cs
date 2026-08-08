@@ -3,8 +3,8 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Infinium.Application.Evaluation;
 using Infinium.Domain.Contracts;
-using Infinium.EvaluatorV2.LegacyV1;
 using Infinium.Persistence;
+using Infinium.PublicFixtures;
 using Microsoft.Data.Sqlite;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -27,7 +27,7 @@ public sealed class PlatformSubstrateEvaluationTests
     [TestProperty("Category", "M1Evaluation")]
     public void SliceTwoFixturePackageLoadsThroughAcceptedContractWithExplicitCoverageGap()
     {
-        EvaluationHarnessFixturePackage package = FixturePackageReader.ReadForEvaluationHarness(
+        PublicFixturePackage package = PublicFixturePackageReader.Read(
             SliceTwoFixtureDirectory);
 
         Assert.AreEqual("M1-PLAT-SLICE2-SUBSTRATE-v1", package.FixtureId.Value);
@@ -92,7 +92,7 @@ public sealed class PlatformSubstrateEvaluationTests
         string directory = CopySliceTwoFixture();
         try
         {
-            string executionPath = Path.Combine(directory, FixturePackageReader.ExecutionInputFileName);
+            string executionPath = Path.Combine(directory, PublicFixturePackageReader.ExecutionInputFileName);
             JsonObject execution = JsonNode.Parse(File.ReadAllText(executionPath))!.AsObject();
             execution["expected_labels"] = new JsonArray("answer");
             File.WriteAllText(
@@ -101,7 +101,7 @@ public sealed class PlatformSubstrateEvaluationTests
             RefreshManifestFingerprint(directory, "input_package_fingerprint", executionPath);
 
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(directory));
+                () => PublicFixturePackageReader.Read(directory));
         }
         finally
         {
@@ -118,11 +118,11 @@ public sealed class PlatformSubstrateEvaluationTests
         try
         {
             File.AppendAllText(
-                Path.Combine(directory, FixturePackageReader.OracleFileName),
+                Path.Combine(directory, PublicFixturePackageReader.OracleFileName),
                 Environment.NewLine);
 
             Assert.ThrowsExactly<InvalidDataException>(
-                () => FixturePackageReader.ReadForEvaluationHarness(directory));
+                () => PublicFixturePackageReader.Read(directory));
         }
         finally
         {
@@ -364,7 +364,7 @@ public sealed class PlatformSubstrateEvaluationTests
         string propertyName,
         string targetPath)
     {
-        string manifestPath = Path.Combine(directory, FixturePackageReader.PublicManifestFileName);
+        string manifestPath = Path.Combine(directory, PublicFixturePackageReader.PublicManifestFileName);
         JsonObject manifest = JsonNode.Parse(File.ReadAllText(manifestPath))!.AsObject();
         manifest[propertyName] = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(targetPath)))
             .ToLowerInvariant();

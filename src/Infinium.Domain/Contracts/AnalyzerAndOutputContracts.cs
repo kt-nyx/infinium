@@ -161,6 +161,11 @@ public sealed record LinkedEvaluationCasesContract(
     IReadOnlyList<string> CrossCategory,
     IReadOnlyList<string> Gap);
 
+public sealed record PayloadContractDeclarationContract(
+    string SchemaId,
+    ContractVersion SchemaVersion,
+    bool Required);
+
 public sealed record AnalyzerDeclarationContract(
     string SchemaId,
     ContractVersion SchemaVersion,
@@ -184,7 +189,10 @@ public sealed record AnalyzerDeclarationContract(
     AnalyzerMaturity Maturity,
     bool RawDevelopmentOutput,
     bool PresetOrMaturitySuppression,
-    LinkedEvaluationCasesContract LinkedEvaluationCases);
+    LinkedEvaluationCasesContract LinkedEvaluationCases,
+    IReadOnlyList<PayloadContractDeclarationContract> PayloadContracts,
+    ContractVersion StateModelVersion,
+    IReadOnlyList<ExecutionBoundaryContract> NotUsedBoundaries);
 
 public sealed record DiagnosticTraceFieldContract(
     string Name,
@@ -231,7 +239,12 @@ public sealed record TypedOutputCountsContract(
     long Abstentions,
     long InvalidInputs,
     long CoverageGaps,
-    long Failures);
+    long Failures,
+    long DocumentationRevisions,
+    long Passages,
+    long CandidateDecisions,
+    long ReconciliationAssessments,
+    long LineageEvents);
 
 public sealed record CoverageStateCountsContract(
     long Completed,
@@ -429,6 +442,24 @@ public static class DomainContractInvariants
         RequireNonEmpty(declaration.LinkedEvaluationCases.Gap, "gap evaluation cases");
         RequireNonEmpty(evaluationCases, nameof(declaration.LinkedEvaluationCases));
         RequireUnique(evaluationCases, nameof(declaration.LinkedEvaluationCases));
+        RequireNonEmpty(declaration.PayloadContracts, nameof(declaration.PayloadContracts));
+        string[] requiredSlice5Schemas =
+        [
+            ContractConstants.DocumentationEvidenceSchemaId,
+            ContractConstants.CandidateAnalysisSchemaId,
+            ContractConstants.FindingCaseSchemaId,
+            ContractConstants.AnalysisReplaySchemaId,
+            ContractConstants.AnalysisExecutionInputSchemaId,
+        ];
+        ExecutionBoundaryContractInvariants.ValidateProductCapabilities(
+            declaration.NotUsedBoundaries,
+            requireNotUsed: true);
+        if (declaration.StateModelVersion.Major != 1
+            || !requiredSlice5Schemas.All(schemaId => declaration.PayloadContracts.Any(
+                item => item.Required && StringComparer.Ordinal.Equals(item.SchemaId, schemaId))))
+        {
+            throw new InvalidOperationException("Slice 5 analyzers must bind every required v1 payload, state model v1, and explicit not-used boundary.");
+        }
     }
 
     public static void Validate(TaxonomyAssignmentContract assignment)
@@ -518,6 +549,23 @@ public static class DomainContractInvariants
                 "declared-mandatory-and-causal-lanes" or "expanded-deterministic-lanes"))
         {
             throw new InvalidOperationException("Effective cache and candidate controls use a closed M1 vocabulary.");
+        }
+        string[] requiredPayloadSchemas =
+        [
+            ContractConstants.DocumentationEvidenceSchemaId,
+            ContractConstants.CandidateAnalysisSchemaId,
+            ContractConstants.FindingCaseSchemaId,
+            ContractConstants.AnalysisReplaySchemaId,
+            ContractConstants.AnalysisExecutionInputSchemaId,
+        ];
+        ExecutionBoundaryContractInvariants.ValidateProductCapabilities(
+            configuration.NotUsedBoundaries,
+            requireNotUsed: true);
+        if (!requiredPayloadSchemas.All(schemaId => configuration.PayloadContracts.Any(
+                item => item.Required && StringComparer.Ordinal.Equals(item.SchemaId, schemaId))))
+        {
+            throw new InvalidOperationException(
+                "Effective Slice 5 configuration must bind execution input, required payloads, and not-used boundaries.");
         }
 
         bool providerDisabled = configuration.Provider.Mode == ProviderMode.Disabled;
@@ -1175,6 +1223,11 @@ public static class DomainContractInvariants
             || summary.TypedCounts.InvalidInputs < 0
             || summary.TypedCounts.CoverageGaps < 0
             || summary.TypedCounts.Failures < 0
+            || summary.TypedCounts.DocumentationRevisions < 0
+            || summary.TypedCounts.Passages < 0
+            || summary.TypedCounts.CandidateDecisions < 0
+            || summary.TypedCounts.ReconciliationAssessments < 0
+            || summary.TypedCounts.LineageEvents < 0
             || summary.CoverageStateCounts.Completed < 0
             || summary.CoverageStateCounts.CompletedWithGaps < 0
             || summary.CoverageStateCounts.Failed < 0

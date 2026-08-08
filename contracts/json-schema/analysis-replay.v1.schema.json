@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/json-schema/analysis-replay.v1.schema.json",
+  "title": "Infinium Slice 5 analysis replay manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "schema_version", "replay_manifest_id", "originating_run_id", "mode", "replay_state", "auditability_state", "dependencies", "edges", "outputs", "missing_dependency_ids", "coverage_gap_ids", "semantically_equivalent"],
+  "properties": {
+    "schema_id": { "const": "infinium.analysis.replay/v1" },
+    "schema_version": { "const": "1.0.0" },
+    "replay_manifest_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "originating_run_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "mode": { "enum": ["clean", "incremental", "retained-downstream-replay"] },
+    "replay_state": { "enum": ["complete-clean", "partial", "audit-only", "unavailable", "failed-identity-drift"] },
+    "auditability_state": { "enum": ["complete", "partial", "unavailable"] },
+    "dependencies": { "type": "array", "maxItems": 1000000, "items": { "$ref": "#/$defs/dependency" } },
+    "edges": { "type": "array", "maxItems": 2000000, "items": { "$ref": "#/$defs/edge" } },
+    "outputs": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/output" } },
+    "missing_dependency_ids": { "$ref": "#/$defs/ids" },
+    "coverage_gap_ids": { "$ref": "#/$defs/ids" },
+    "semantically_equivalent": { "type": "boolean" },
+    "compared_run_id": { "$ref": "common.v1.schema.json#/$defs/identifier" }
+  },
+  "$defs": {
+    "ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.v1.schema.json#/$defs/identifier" } },
+    "dependency": {
+      "type": "object", "additionalProperties": false,
+      "required": ["dependency_id", "kind", "version", "fingerprint", "state"],
+      "properties": {
+        "dependency_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "kind": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+        "fingerprint": { "$ref": "common.v1.schema.json#/$defs/sha256" },
+        "state": { "enum": ["present", "missing", "unsupported", "unavailable", "failed"] }
+      }
+    },
+    "edge": {
+      "type": "object", "additionalProperties": false,
+      "required": ["from", "to"],
+      "properties": { "from": { "$ref": "common.v1.schema.json#/$defs/identifier" }, "to": { "$ref": "common.v1.schema.json#/$defs/identifier" } }
+    },
+    "output": {
+      "type": "object", "additionalProperties": false,
+      "required": ["artifact_id", "schema_id", "schema_version", "semantic_fingerprint", "byte_fingerprint"],
+      "properties": {
+        "artifact_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "schema_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "schema_version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+        "semantic_fingerprint": { "$ref": "common.v1.schema.json#/$defs/sha256" },
+        "byte_fingerprint": { "$ref": "common.v1.schema.json#/$defs/sha256" }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "mode": { "enum": ["incremental", "retained-downstream-replay"] } }, "required": ["mode"] },
+      "then": { "required": ["compared_run_id"] },
+      "else": { "not": { "required": ["compared_run_id"] } }
+    },
+    {
+      "if": { "properties": { "replay_state": { "const": "complete-clean" } }, "required": ["replay_state"] },
+      "then": {
+        "properties": {
+          "auditability_state": { "const": "complete" },
+          "missing_dependency_ids": { "maxItems": 0 },
+          "coverage_gap_ids": { "maxItems": 0 },
+          "semantically_equivalent": { "const": true }
+        }
+      }
+    }
+  ]
+}

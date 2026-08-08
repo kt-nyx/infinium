@@ -263,7 +263,9 @@ public sealed record EffectiveScanConfigurationContract(
     IReadOnlyList<EffectiveThresholdSettingContract> Thresholds,
     EffectiveProviderSettingContract Provider,
     EffectiveResourceSettingContract Resources,
-    IReadOnlyList<SemanticContextOverrideContract> SemanticContextOverrides);
+    IReadOnlyList<SemanticContextOverrideContract> SemanticContextOverrides,
+    IReadOnlyList<PayloadContractDeclarationContract> PayloadContracts,
+    IReadOnlyList<ExecutionBoundaryContract> NotUsedBoundaries);
 
 public sealed record ResolvedInputContract(
     OpaqueId InputId,

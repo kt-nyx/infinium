@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/repository/retired-evaluation-assets.v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "schema_version", "status", "authority", "source_commit", "archive_mechanism", "entries", "retained_current_metadata"],
+  "properties": {
+    "schema_id": { "const": "infinium.repository.retired-evaluation-assets/v1" },
+    "schema_version": { "const": "1.0.0" },
+    "status": { "const": "retired-from-active-tree" },
+    "authority": { "const": "project-owner-authorized-boundary-hardening-2026-08-08" },
+    "source_commit": { "$ref": "#/$defs/gitObject" },
+    "archive_mechanism": { "$ref": "#/$defs/nonEmptyString" },
+    "entries": { "type": "array", "minItems": 20, "uniqueItems": true, "items": { "$ref": "#/$defs/entry" } },
+    "retained_current_metadata": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/retained" } }
+  },
+  "$defs": {
+    "nonEmptyString": { "type": "string", "minLength": 1 },
+    "gitObject": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "path", "git_blob", "replacement", "reason"],
+      "properties": {
+        "kind": { "enum": ["compiled-source", "registry", "protocol-schema", "historical-proof-tool", "fixture-tool"] },
+        "path": { "$ref": "#/$defs/nonEmptyString" },
+        "git_blob": { "$ref": "#/$defs/gitObject" },
+        "replacement": { "type": ["string", "null"] },
+        "reason": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    },
+    "retained": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "git_blob_at_source_commit", "classification"],
+      "properties": {
+        "path": { "$ref": "#/$defs/nonEmptyString" },
+        "git_blob_at_source_commit": { "$ref": "#/$defs/gitObject" },
+        "classification": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    }
+  }
+}

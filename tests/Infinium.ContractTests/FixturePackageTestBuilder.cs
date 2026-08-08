@@ -3,7 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Infinium.Application.Evaluation;
 using Infinium.Domain.Contracts;
-using Infinium.EvaluatorV2.LegacyV1;
+using Infinium.PublicFixtures;
 
 namespace Infinium.Tests;
 
@@ -26,19 +26,19 @@ internal sealed class FixturePackageTestBuilder : IDisposable
 
     internal void RemovePublicProperty(string propertyName)
     {
-        MutateObject(FixturePackageReader.PublicManifestFileName, root => root.Remove(propertyName));
+        MutateObject(PublicFixturePackageReader.PublicManifestFileName, root => root.Remove(propertyName));
     }
 
     internal void RemoveOracleProperty(string propertyName)
     {
-        MutateObject(FixturePackageReader.OracleFileName, root => root.Remove(propertyName));
-        RefreshFingerprint("oracle_fingerprint", FixturePackageReader.OracleFileName);
+        MutateObject(PublicFixturePackageReader.OracleFileName, root => root.Remove(propertyName));
+        RefreshFingerprint("oracle_fingerprint", PublicFixturePackageReader.OracleFileName);
     }
 
     internal void AddExecutionProperty(string propertyName, JsonNode value)
     {
-        MutateObject(FixturePackageReader.ExecutionInputFileName, root => root[propertyName] = value);
-        RefreshFingerprint("input_package_fingerprint", FixturePackageReader.ExecutionInputFileName);
+        MutateObject(PublicFixturePackageReader.ExecutionInputFileName, root => root[propertyName] = value);
+        RefreshFingerprint("input_package_fingerprint", PublicFixturePackageReader.ExecutionInputFileName);
     }
 
     internal void AddNestedExecutionProperty(
@@ -47,20 +47,20 @@ internal sealed class FixturePackageTestBuilder : IDisposable
         JsonNode value)
     {
         MutateObject(
-            FixturePackageReader.ExecutionInputFileName,
+            PublicFixturePackageReader.ExecutionInputFileName,
             root => root[parentPropertyName]!.AsObject()[propertyName] = value);
-        RefreshFingerprint("input_package_fingerprint", FixturePackageReader.ExecutionInputFileName);
+        RefreshFingerprint("input_package_fingerprint", PublicFixturePackageReader.ExecutionInputFileName);
     }
 
     internal void RemoveExecutionProperty(string propertyName)
     {
-        MutateObject(FixturePackageReader.ExecutionInputFileName, root => root.Remove(propertyName));
-        RefreshFingerprint("input_package_fingerprint", FixturePackageReader.ExecutionInputFileName);
+        MutateObject(PublicFixturePackageReader.ExecutionInputFileName, root => root.Remove(propertyName));
+        RefreshFingerprint("input_package_fingerprint", PublicFixturePackageReader.ExecutionInputFileName);
     }
 
     internal void SetPublicString(string propertyName, string value)
     {
-        MutateObject(FixturePackageReader.PublicManifestFileName, root => root[propertyName] = value);
+        MutateObject(PublicFixturePackageReader.PublicManifestFileName, root => root[propertyName] = value);
     }
 
     internal void AddKnownAnswerTransitionWithoutReplacement()
@@ -90,7 +90,7 @@ internal sealed class FixturePackageTestBuilder : IDisposable
         string groundTruthMethodId = "project-authored-method")
     {
         MutateObject(
-            FixturePackageReader.OracleFileName,
+            PublicFixturePackageReader.OracleFileName,
             root =>
             {
                 root[collection]!.AsArray().Add(
@@ -111,23 +111,23 @@ internal sealed class FixturePackageTestBuilder : IDisposable
                         .AsObject()["state"] = "populated";
                 }
             });
-        RefreshFingerprint("oracle_fingerprint", FixturePackageReader.OracleFileName);
+        RefreshFingerprint("oracle_fingerprint", PublicFixturePackageReader.OracleFileName);
     }
 
     internal void SetExpectedCollectionState(string collectionStateName, string state)
     {
         MutateObject(
-            FixturePackageReader.OracleFileName,
+            PublicFixturePackageReader.OracleFileName,
             root => root["expected_collection_states"]!
                 .AsObject()[collectionStateName]!
                 .AsObject()["state"] = state);
-        RefreshFingerprint("oracle_fingerprint", FixturePackageReader.OracleFileName);
+        RefreshFingerprint("oracle_fingerprint", PublicFixturePackageReader.OracleFileName);
     }
 
     internal void AddTaxonomyAssignment(string assignmentId, string subjectExpectedId)
     {
         MutateObject(
-            FixturePackageReader.OracleFileName,
+            PublicFixturePackageReader.OracleFileName,
             root => root["expected_taxonomy_assignments"]!.AsArray().Add(
                 new JsonObject
                 {
@@ -146,23 +146,23 @@ internal sealed class FixturePackageTestBuilder : IDisposable
                     ["reason"] = "Contract integrity test assignment.",
                     ["derivation_provenance"] = Provenance(),
                 }));
-        RefreshFingerprint("oracle_fingerprint", FixturePackageReader.OracleFileName);
+        RefreshFingerprint("oracle_fingerprint", PublicFixturePackageReader.OracleFileName);
     }
 
     internal void AddDuplicateGroundTruthMethod()
     {
         MutateObject(
-            FixturePackageReader.OracleFileName,
+            PublicFixturePackageReader.OracleFileName,
             root => root["ground_truth_methods"]!.AsArray().Add(
                 root["ground_truth_methods"]![0]!.DeepClone()));
-        RefreshFingerprint("oracle_fingerprint", FixturePackageReader.OracleFileName);
+        RefreshFingerprint("oracle_fingerprint", PublicFixturePackageReader.OracleFileName);
     }
 
     internal void AddRetainedInputArtifact(string relativePath, byte[] bytes)
     {
         WriteRetainedArtifact(relativePath, bytes);
         MutateObject(
-            FixturePackageReader.ExecutionInputFileName,
+            PublicFixturePackageReader.ExecutionInputFileName,
             root =>
             {
                 root["input_payload_refs"]!.AsArray().Add(
@@ -171,25 +171,25 @@ internal sealed class FixturePackageTestBuilder : IDisposable
                 limits["input_bytes"] =
                     limits["input_bytes"]!.GetValue<long>() + bytes.LongLength;
             });
-        RefreshFingerprint("input_package_fingerprint", FixturePackageReader.ExecutionInputFileName);
+        RefreshFingerprint("input_package_fingerprint", PublicFixturePackageReader.ExecutionInputFileName);
     }
 
     internal void AddRetainedOracleArtifact(string relativePath, byte[] bytes)
     {
         WriteRetainedArtifact(relativePath, bytes);
         MutateObject(
-            FixturePackageReader.OracleFileName,
+            PublicFixturePackageReader.OracleFileName,
             root => root["ground_truth_methods"]![0]!["evidence_references"]!
                 .AsArray()
                 .Add(ArtifactReference(relativePath, Fingerprint(relativePath))));
-        RefreshFingerprint("oracle_fingerprint", FixturePackageReader.OracleFileName);
+        RefreshFingerprint("oracle_fingerprint", PublicFixturePackageReader.OracleFileName);
     }
 
     internal byte[] AddSupplementalBethesdaOracle(string inputArtifactId, byte[] inputBytes)
     {
         AddRetainedInputArtifact(inputArtifactId, inputBytes);
         MutateObject(
-            FixturePackageReader.OracleFileName,
+            PublicFixturePackageReader.OracleFileName,
             root => root["ground_truth_methods"]!.AsArray().Add(
                 new JsonObject
                 {
@@ -265,17 +265,17 @@ internal sealed class FixturePackageTestBuilder : IDisposable
         byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(
             supplemental,
             IndentedJsonOptions);
-        AddRetainedOracleArtifact(BethesdaByteOracleValidator.ArtifactId, bytes);
+        AddRetainedOracleArtifact(PublicBethesdaOracleValidator.ArtifactId, bytes);
         return bytes;
     }
 
     internal void AddRetainedInputReference(string relativePath, string fingerprint)
     {
         MutateObject(
-            FixturePackageReader.ExecutionInputFileName,
+            PublicFixturePackageReader.ExecutionInputFileName,
             root => root["input_payload_refs"]!.AsArray().Add(
                 ArtifactReference(relativePath, fingerprint)));
-        RefreshFingerprint("input_package_fingerprint", FixturePackageReader.ExecutionInputFileName);
+        RefreshFingerprint("input_package_fingerprint", PublicFixturePackageReader.ExecutionInputFileName);
     }
 
     internal void ReplaceRetainedOracleArtifactAndRefreshReference(
@@ -285,7 +285,7 @@ internal sealed class FixturePackageTestBuilder : IDisposable
         WriteRetainedArtifact(relativePath, bytes);
         string fingerprint = Fingerprint(relativePath);
         MutateObject(
-            FixturePackageReader.OracleFileName,
+            PublicFixturePackageReader.OracleFileName,
             root =>
             {
                 foreach (JsonNode? method in root["ground_truth_methods"]!.AsArray())
@@ -302,13 +302,13 @@ internal sealed class FixturePackageTestBuilder : IDisposable
                     }
                 }
             });
-        RefreshFingerprint("oracle_fingerprint", FixturePackageReader.OracleFileName);
+        RefreshFingerprint("oracle_fingerprint", PublicFixturePackageReader.OracleFileName);
     }
 
     internal void RenameRetainedOracleReference(string fromArtifactId, string toArtifactId)
     {
         MutateObject(
-            FixturePackageReader.OracleFileName,
+            PublicFixturePackageReader.OracleFileName,
             root =>
             {
                 foreach (JsonNode? method in root["ground_truth_methods"]!.AsArray())
@@ -325,15 +325,15 @@ internal sealed class FixturePackageTestBuilder : IDisposable
                     }
                 }
             });
-        RefreshFingerprint("oracle_fingerprint", FixturePackageReader.OracleFileName);
+        RefreshFingerprint("oracle_fingerprint", PublicFixturePackageReader.OracleFileName);
     }
 
     internal void SetDeclaredInputBytes(long inputBytes)
     {
         MutateObject(
-            FixturePackageReader.ExecutionInputFileName,
+            PublicFixturePackageReader.ExecutionInputFileName,
             root => root["resource_and_time_limits"]!["input_bytes"] = inputBytes);
-        RefreshFingerprint("input_package_fingerprint", FixturePackageReader.ExecutionInputFileName);
+        RefreshFingerprint("input_package_fingerprint", PublicFixturePackageReader.ExecutionInputFileName);
     }
 
     internal void MutateRetainedArtifact(string relativePath, byte[] bytes)
@@ -343,28 +343,28 @@ internal sealed class FixturePackageTestBuilder : IDisposable
 
     internal void AddProvenanceProperty(string propertyName, JsonNode value)
     {
-        MutateObject(FixturePackageReader.ProvenanceFileName, root => root[propertyName] = value);
-        RefreshFingerprint("provenance_fingerprint", FixturePackageReader.ProvenanceFileName);
+        MutateObject(PublicFixturePackageReader.ProvenanceFileName, root => root[propertyName] = value);
+        RefreshFingerprint("provenance_fingerprint", PublicFixturePackageReader.ProvenanceFileName);
     }
 
     internal void SetRedistributionClass(string redistributionClass)
     {
         MutateObject(
-            FixturePackageReader.RedistributionFileName,
+            PublicFixturePackageReader.RedistributionFileName,
             root => root["redistribution_class"] = redistributionClass);
     }
 
     internal void SetPartitionHistory(string currentPartition, JsonArray history)
     {
         MutateObject(
-            FixturePackageReader.PublicManifestFileName,
+            PublicFixturePackageReader.PublicManifestFileName,
             root =>
             {
                 root["partition"] = currentPartition;
                 root["partition_history"] = history.DeepClone();
             });
         MutateObject(
-            FixturePackageReader.PartitionHistoryFileName,
+            PublicFixturePackageReader.PartitionHistoryFileName,
             root => root["partition_history"] = history.DeepClone());
     }
 
@@ -420,6 +420,7 @@ internal sealed class FixturePackageTestBuilder : IDisposable
             ["accepted_order_construction_input"] = EmptyInputComponent(),
             ["analysis_context_input"] = EmptyInputComponent(),
             ["effective_scan_configuration"] = ArtifactReference("effective-configuration"),
+            ["analysis_execution_input"] = ArtifactReference("analysis-execution-input"),
             ["case_matrix_input"] = EmptyInputComponent(),
             ["runtime_support_input"] = EmptyInputComponent(),
             ["mo2_instance_profile_input"] = EmptyInputComponent(),
@@ -451,7 +452,7 @@ internal sealed class FixturePackageTestBuilder : IDisposable
             },
             ["input_payload_refs"] = new JsonArray(),
         };
-        WriteJson(FixturePackageReader.ExecutionInputFileName, execution);
+        WriteJson(PublicFixturePackageReader.ExecutionInputFileName, execution);
 
         JsonObject oracle = new()
         {
@@ -488,19 +489,30 @@ internal sealed class FixturePackageTestBuilder : IDisposable
             ["expected_abstentions"] = new JsonArray(),
             ["expected_invalid_inputs"] = new JsonArray(),
             ["expected_failures"] = new JsonArray(),
+            ["expected_documentation_revisions"] = new JsonArray(),
+            ["expected_passages"] = new JsonArray(),
+            ["expected_candidate_decisions"] = new JsonArray(),
+            ["expected_reconciliation_assessments"] = new JsonArray(),
+            ["expected_lineage_events"] = new JsonArray(),
             ["expected_coverage_and_gaps"] = new JsonArray(),
             ["expected_collection_states"] = EmptyCollectionStates(),
             ["expected_taxonomy_assignments"] = new JsonArray(),
             ["expected_replayability"] = "complete-clean",
+            ["expected_replay_manifest"] = ArtifactReference("replay-manifest"),
+            ["expected_not_used_boundaries"] = new JsonArray(
+                "provider",
+                "hosted-search",
+                "nexus",
+                "loot"),
             ["forbidden_claims"] = new JsonArray(),
             ["known_limits"] = new JsonArray("contract-only fixture"),
             ["pre_registered_at"] = DateTimeOffset.UnixEpoch.ToString("O"),
             ["change_history"] = new JsonArray(),
         };
-        WriteJson(FixturePackageReader.OracleFileName, oracle);
+        WriteJson(PublicFixturePackageReader.OracleFileName, oracle);
 
         WriteJson(
-            FixturePackageReader.ProvenanceFileName,
+            PublicFixturePackageReader.ProvenanceFileName,
             new JsonObject
             {
                 ["fixture_id"] = "fixture-development-1",
@@ -508,16 +520,18 @@ internal sealed class FixturePackageTestBuilder : IDisposable
                 ["created_by"] = "project-authored-test",
             });
         WriteJson(
-            FixturePackageReader.ReplayDependenciesFileName,
+            PublicFixturePackageReader.ReplayDependenciesFileName,
             new JsonObject
             {
                 ["fixture_id"] = "fixture-development-1",
                 ["fixture_version"] = "1.0.0",
                 ["expected_replay_state"] = "complete-clean",
                 ["dependencies"] = new JsonArray(),
+                ["dependency_graph_fingerprint"] = new string('0', 64),
+                ["expected_output_references"] = new JsonArray(),
             });
         WriteJson(
-            FixturePackageReader.RedistributionFileName,
+            PublicFixturePackageReader.RedistributionFileName,
             new JsonObject
             {
                 ["fixture_id"] = "fixture-development-1",
@@ -537,7 +551,7 @@ internal sealed class FixturePackageTestBuilder : IDisposable
             },
         };
         WriteJson(
-            FixturePackageReader.PartitionHistoryFileName,
+            PublicFixturePackageReader.PartitionHistoryFileName,
             new JsonObject
             {
                 ["fixture_id"] = "fixture-development-1",
@@ -558,16 +572,16 @@ internal sealed class FixturePackageTestBuilder : IDisposable
             ["partition_history"] = history,
             ["taxonomy_id"] = ContractConstants.TaxonomyId,
             ["taxonomy_version"] = ContractConstants.TaxonomyVersion,
-            ["input_package_fingerprint"] = Fingerprint(FixturePackageReader.ExecutionInputFileName),
-            ["oracle_fingerprint"] = Fingerprint(FixturePackageReader.OracleFileName),
-            ["provenance_fingerprint"] = Fingerprint(FixturePackageReader.ProvenanceFileName),
-            ["replay_dependency_fingerprint"] = Fingerprint(FixturePackageReader.ReplayDependenciesFileName),
+            ["input_package_fingerprint"] = Fingerprint(PublicFixturePackageReader.ExecutionInputFileName),
+            ["oracle_fingerprint"] = Fingerprint(PublicFixturePackageReader.OracleFileName),
+            ["provenance_fingerprint"] = Fingerprint(PublicFixturePackageReader.ProvenanceFileName),
+            ["replay_dependency_fingerprint"] = Fingerprint(PublicFixturePackageReader.ReplayDependenciesFileName),
             ["redistribution_class"] = "project-authored",
             ["owner"] = "evaluation-owner",
             ["review_state"] = "reviewed",
             ["created_at"] = DateTimeOffset.UnixEpoch.ToString("O"),
         };
-        WriteJson(FixturePackageReader.PublicManifestFileName, manifest);
+        WriteJson(PublicFixturePackageReader.PublicManifestFileName, manifest);
     }
 
     private static JsonObject EmptyInputComponent()
@@ -673,7 +687,7 @@ internal sealed class FixturePackageTestBuilder : IDisposable
     private void RefreshFingerprint(string propertyName, string targetFileName)
     {
         MutateObject(
-            FixturePackageReader.PublicManifestFileName,
+            PublicFixturePackageReader.PublicManifestFileName,
             root => root[propertyName] = Fingerprint(targetFileName));
     }
 

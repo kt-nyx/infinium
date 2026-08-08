@@ -1,6 +1,6 @@
 {
   "fixture_id": "M1-PLAT-SLICE2-SUBSTRATE-v1",
-  "fixture_version": "1.0.0",
+  "fixture_version": "1.1.0",
   "partition_history": [
     {
       "from": null,

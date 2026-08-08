@@ -30,11 +30,12 @@ specification.
   [integration boundaries](architecture/integrations.md), and
   [security/privacy](architecture/security-and-privacy.md)
 - Evaluation: [case catalog](evaluation/case-catalog.md),
+  [product/evaluator authority boundary](evaluation/product-evaluator-boundary.md),
   [accepted M1 evaluation baseline](evaluation/m1-evaluation-baseline.md),
   [accepted M1 continuation verification profile](evaluation/m1-continuation-verification-profile.md),
   [fixture guidelines](evaluation/fixture-guidelines.md), and
   [anti-overfitting rules](evaluation/anti-overfitting-rules.md), with the
-  historical evaluator-v1 boundary in
+  historical evaluator-private boundary in
   [evaluator-private fixture governance](evaluation/evaluator-private-fixture-governance.md)
   and current public-rule/private-data boundary in
   [evaluator-private fixture governance v2](evaluation/evaluator-private-fixture-governance-v2.md)

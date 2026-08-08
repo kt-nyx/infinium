@@ -92,6 +92,11 @@ public sealed class RunOutputJsonCodecTests
             "invalid_inputs",
             "coverage_gaps",
             "failures",
+            "documentation_revisions",
+            "passages",
+            "candidate_decisions",
+            "reconciliation_assessments",
+            "lineage_events",
         ];
         Dictionary<string, RunOutputCollectionStateContract> collectionStates =
             collectionNames.ToDictionary(
@@ -148,6 +153,11 @@ public sealed class RunOutputJsonCodecTests
             [],
             [],
             [],
+            [],
+            [],
+            [],
+            [],
+            [],
             collectionStates,
             [],
             [coverage],
@@ -159,6 +169,13 @@ public sealed class RunOutputJsonCodecTests
                 Reference("dependency-manifest-1"),
                 []),
             new AuditabilityDocumentContract("complete", []),
+            Reference("replay-manifest-1"),
+            [
+                new ExcludedCapabilityDocumentContract("provider", "not-used", "local-only"),
+                new ExcludedCapabilityDocumentContract("hosted-search", "not-used", "local-only"),
+                new ExcludedCapabilityDocumentContract("nexus", "not-used", "local-only"),
+                new ExcludedCapabilityDocumentContract("private-evaluator", "not-used", "prohibited"),
+            ],
             fingerprint,
             []);
     }

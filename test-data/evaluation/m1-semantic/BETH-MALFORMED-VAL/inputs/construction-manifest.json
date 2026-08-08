@@ -15,28 +15,88 @@
   ],
   "files": [
     {
+      "path": "analysis-context.json",
+      "regions": [
+        {
+          "offset": 0,
+          "length": 316,
+          "kind": "project-authored-analysis-input-metadata"
+        }
+      ],
+      "byte_length": 316,
+      "sha256": "b7cf9d0993cb12978b91eef9632066649b5cd383516967abdf7a4eefeff03c22"
+    },
+    {
+      "path": "analysis-execution-input.json",
+      "regions": [
+        {
+          "offset": 0,
+          "length": 2677,
+          "kind": "project-authored-analysis-input-metadata"
+        }
+      ],
+      "byte_length": 2677,
+      "sha256": "42f27906c1345b605ce164c11d87025d65356c478a283bd71f368ec9f8307a05"
+    },
+    {
+      "path": "analysis-installation-snapshot.json",
+      "regions": [
+        {
+          "offset": 0,
+          "length": 470,
+          "kind": "project-authored-analysis-input-metadata"
+        }
+      ],
+      "byte_length": 470,
+      "sha256": "9077b6ae0e7e6c87054ffe4f75c93a8c58a82245dbb4bd3b20407d37421f4925"
+    },
+    {
+      "path": "analyzer-declaration.json",
+      "regions": [
+        {
+          "offset": 0,
+          "length": 5074,
+          "kind": "project-authored-analysis-input-metadata"
+        }
+      ],
+      "byte_length": 5074,
+      "sha256": "b2d8c06b95ed127cd7cab95aa06ed708e9873b47a830180c3b5c8bcfda8cccd5"
+    },
+    {
+      "path": "bethesda-semantic-input.json",
+      "regions": [
+        {
+          "offset": 0,
+          "length": 475,
+          "kind": "project-authored-analysis-input-metadata"
+        }
+      ],
+      "byte_length": 475,
+      "sha256": "cbc5068b13a0c6a08079e30e5cee02c20070ab031b2f1507cbbd7db7baba1bb4"
+    },
+    {
       "path": "case-matrix.json",
-      "sha256": "8e750b9d07a310ec2b1b0f12b1e26b84c5b5585f76c57506a817b04da41b0f45",
+      "sha256": "5949ced08fabe6291761c4470bf464899951750ad3ac2d73add36d1709ab20a4",
       "regions": [
         {
           "offset": 0,
           "kind": "project-authored-request-or-matrix-metadata",
-          "length": 3762
+          "length": 3628
         }
       ],
-      "byte_length": 3762
+      "byte_length": 3628
     },
     {
       "path": "effective-scan-configuration.json",
-      "sha256": "0474388eac7e1fe6656e70a4006dc24da8bc932f96ca0f7170c42bd88fd96743",
+      "sha256": "29de52a3106e7eaeff237751ed89f6d4cf7290c4ec9cbd7e8e9ec7197ffd9309",
       "regions": [
         {
           "offset": 0,
           "kind": "project-authored-request-or-matrix-metadata",
-          "length": 1798
+          "length": 3039
         }
       ],
-      "byte_length": 1798
+      "byte_length": 3039
     },
     {
       "path": "mutations/ChangedDuringRead-A.esp",
@@ -268,15 +328,27 @@
     },
     {
       "path": "requests/changed-during-read-plan.json",
-      "sha256": "c59bcd05587e09243a2d703cd6a9ce9c79dfcf87bacef8d0a0d239890852d0d2",
+      "sha256": "2b79388c5745454c92ae5cc7aa4a584321d3f0aa5374b11232c1b709a8b10ef2",
       "regions": [
         {
           "offset": 0,
           "kind": "project-authored-request-or-matrix-metadata",
-          "length": 355
+          "length": 345
         }
       ],
-      "byte_length": 355
+      "byte_length": 345
+    },
+    {
+      "path": "resolved-input-manifest.json",
+      "regions": [
+        {
+          "offset": 0,
+          "length": 431,
+          "kind": "project-authored-analysis-input-metadata"
+        }
+      ],
+      "byte_length": 431,
+      "sha256": "94fb394cae6f1b11338c56f03df82de38ead1de3ac1e9c09bc688ca71d7a888c"
     },
     {
       "path": "construction-manifest.json",
@@ -284,10 +356,11 @@
         {
           "offset": 0,
           "kind": "project-authored-construction-metadata",
-          "length": 8139
+          "length": 9821
         }
       ],
-      "byte_length": 8139
+      "byte_length": 9821,
+      "sha256": null
     }
   ]
 }

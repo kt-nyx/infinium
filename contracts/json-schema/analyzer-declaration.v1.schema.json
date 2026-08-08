@@ -27,7 +27,10 @@
     "maturity",
     "raw_development_output",
     "preset_or_maturity_suppression",
-    "linked_evaluation_cases"
+    "linked_evaluation_cases",
+    "payload_contracts",
+    "state_model_version",
+    "not_used_boundaries"
   ],
   "properties": {
     "schema_id": {
@@ -358,9 +361,44 @@
           "$ref": "#/$defs/evaluationIdArray"
         }
       }
+    },
+    "payload_contracts": {
+      "type": "array",
+      "minItems": 5,
+      "items": { "$ref": "#/$defs/payloadContract" }
+    },
+    "state_model_version": {
+      "const": "1.0.0"
+    },
+    "not_used_boundaries": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/notUsedBoundary" }
     }
   },
   "$defs": {
+    "payloadContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_id", "schema_version", "required"],
+      "properties": {
+        "schema_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "schema_version": { "const": "1.0.0" },
+        "required": { "const": true }
+      }
+    },
+    "notUsedBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["boundary_id", "state", "reason"],
+      "properties": {
+        "boundary_id": { "enum": ["provider", "hosted-search", "nexus", "loot"] },
+        "state": { "const": "not-used" },
+        "reason": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }
+      }
+    },
     "nonEmptyIdentifierArray": {
       "type": "array",
       "minItems": 1,

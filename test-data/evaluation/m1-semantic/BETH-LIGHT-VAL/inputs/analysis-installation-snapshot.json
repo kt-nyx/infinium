@@ -1,0 +1,11 @@
+{
+  "schema_id": "infinium.analysis.fixture-installation-snapshot/v1",
+  "schema_version": "1",
+  "snapshot_id": "beth-light-val.synthetic-bethesda-snapshot",
+  "fixture_id": "BETH-LIGHT-VAL",
+  "fixture_version": "1.4.0",
+  "state": "provided",
+  "source_artifact_id": "inputs/snapshot/accepted-order.json",
+  "assurance": "selectively-content-sealed",
+  "reason": "The current product input binds the retained synthetic accepted-order construction receipt."
+}

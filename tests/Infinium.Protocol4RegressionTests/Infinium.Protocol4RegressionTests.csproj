@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- The frozen evaluator grants internals only to this historical assembly identity. -->
+    <AssemblyName>Infinium.EvaluationTests</AssemblyName>
+    <RootNamespace>Infinium.Tests</RootNamespace>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\tools\evaluation\Infinium.EvaluatorV2\Infinium.EvaluatorV2.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Infinium.EvaluationTests\EvaluatorV2PublicProtocolTests.cs" Link="EvaluatorV2PublicProtocolTests.cs" />
+  </ItemGroup>
+</Project>

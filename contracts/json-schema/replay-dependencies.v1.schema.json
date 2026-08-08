@@ -8,7 +8,9 @@
     "fixture_id",
     "fixture_version",
     "expected_replay_state",
-    "dependencies"
+    "dependencies",
+    "dependency_graph_fingerprint",
+    "expected_output_references"
   ],
   "properties": {
     "fixture_id": {
@@ -30,6 +32,13 @@
       "items": {
         "$ref": "#/$defs/replayDependency"
       }
+    },
+    "dependency_graph_fingerprint": {
+      "$ref": "common.v1.schema.json#/$defs/sha256"
+    },
+    "expected_output_references": {
+      "type": "array",
+      "items": { "$ref": "common.v1.schema.json#/$defs/artifactReference" }
     }
   },
   "$defs": {

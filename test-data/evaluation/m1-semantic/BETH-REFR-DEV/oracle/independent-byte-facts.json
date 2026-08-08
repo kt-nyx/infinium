@@ -2,7 +2,7 @@
   "schema_id": "infinium.evaluation.bethesda-byte-oracle/v1",
   "schema_version": "1",
   "fixture_id": "BETH-REFR-DEV",
-  "fixture_version": "1.3.0",
+  "fixture_version": "1.4.0",
   "oracle_artifact_version": "1.3.0",
   "canonicalization": "infinium-canonical-json-sha256/v1",
   "independent_authors_and_reviewers": [
@@ -23,7 +23,6 @@
   "files": [
     {
       "artifact_id": "inputs/mutations/Boundaries-RepeatedXLKROrder.esp",
-      "byte_length": 456,
       "sha256": "5381f8c3634bbdc043e70a47ad34e3eabf17c53d0e0c44b2b3abe7bfaf811afa",
       "provider_id": "project-authored:beth-refr-dev",
       "scenario_memberships": [
@@ -263,11 +262,11 @@
           "length": 24,
           "classification": "subrecord-data"
         }
-      ]
+      ],
+      "byte_length": 456
     },
     {
       "artifact_id": "inputs/mutations/Refr-DanglingExtendedSize.esp",
-      "byte_length": 381,
       "sha256": "66c26b524cc61d4cae8aed2c72e54fe0497b995a39afcfa5605f34c40aecfe5e",
       "provider_id": "project-authored:beth-refr-dev",
       "scenario_memberships": [
@@ -451,11 +450,11 @@
           "length": 4,
           "classification": "subrecord-data"
         }
-      ]
+      ],
+      "byte_length": 381
     },
     {
       "artifact_id": "inputs/mutations/Refr-SubrecordBodyOverrun.esp",
-      "byte_length": 381,
       "sha256": "44ca93eecdb9cc4126414457dbb3e1896e0e024c40a846f7f717452de4bf5e6c",
       "provider_id": "project-authored:beth-refr-dev",
       "scenario_memberships": [
@@ -639,11 +638,11 @@
           "length": 4,
           "classification": "opaque"
         }
-      ]
+      ],
+      "byte_length": 381
     },
     {
       "artifact_id": "inputs/mutations/Refr-SubrecordHeaderTruncated.esp",
-      "byte_length": 377,
       "sha256": "f6b55d04a89acdf3cd308b04cea181fb3432c350f09256271f234fba8449e6af",
       "provider_id": "project-authored:beth-refr-dev",
       "scenario_memberships": [
@@ -820,11 +819,11 @@
           "length": 2,
           "classification": "opaque"
         }
-      ]
+      ],
+      "byte_length": 377
     },
     {
       "artifact_id": "inputs/mutations/compression/03-Placement.esp",
-      "byte_length": 495,
       "sha256": "5120f0801c0b346ca48c96a0e8481a1e5c51a5d687920eae8644886d2d44ffe7",
       "provider_id": "project-authored:beth-refr-dev",
       "scenario_memberships": [
@@ -1114,11 +1113,11 @@
           "length": 24,
           "classification": "subrecord-data"
         }
-      ]
+      ],
+      "byte_length": 495
     },
     {
       "artifact_id": "inputs/mutations/master-order-reindexed/03-Placement.esp",
-      "byte_length": 445,
       "sha256": "e7cc933670d5ae1d7cac00d4719219febb6b9dd45d998256a9f7648c52898c6b",
       "provider_id": "project-authored:beth-refr-dev",
       "scenario_memberships": [
@@ -1359,11 +1358,11 @@
           "length": 24,
           "classification": "subrecord-data"
         }
-      ]
+      ],
+      "byte_length": 445
     },
     {
       "artifact_id": "inputs/mutations/master-order-unreindexed/03-Placement.esp",
-      "byte_length": 445,
       "sha256": "a66a4fac0c2869bbbd804ea2a3c7a3278c5338c41eb406a9596542dde3a9099f",
       "provider_id": "project-authored:beth-refr-dev",
       "scenario_memberships": [
@@ -1604,11 +1603,11 @@
           "length": 24,
           "classification": "subrecord-data"
         }
-      ]
+      ],
+      "byte_length": 445
     },
     {
       "artifact_id": "inputs/mutations/one-byte-data/03-Placement.esp",
-      "byte_length": 492,
       "sha256": "7c19bf6201683c1dbcbffd826c28939db4851031866bc44537952635b19e5f48",
       "provider_id": "project-authored:beth-refr-dev",
       "scenario_memberships": [
@@ -1891,11 +1890,11 @@
           "length": 24,
           "classification": "subrecord-data"
         }
-      ]
+      ],
+      "byte_length": 492
     },
     {
       "artifact_id": "inputs/mutations/record-order/01-World.esm",
-      "byte_length": 721,
       "sha256": "e548fc0c04a2d33f6845fdd396778f843dc3e9e60455bf3a775d1f22907aac5c",
       "provider_id": "project-authored:beth-refr-dev",
       "scenario_memberships": [
@@ -2261,11 +2260,11 @@
           "length": 24,
           "classification": "subrecord-data"
         }
-      ]
+      ],
+      "byte_length": 721
     },
     {
       "artifact_id": "inputs/plugins/00-Pad.esm",
-      "byte_length": 109,
       "sha256": "7ee03b2ef46c82525644553259b32260c0defc87b61ae986519acab32496fd89",
       "provider_id": "project-authored:beth-refr-dev",
       "scenario_memberships": [
@@ -2328,11 +2327,11 @@
           "length": 11,
           "classification": "subrecord-data"
         }
-      ]
+      ],
+      "byte_length": 109
     },
     {
       "artifact_id": "inputs/plugins/01-World.esm",
-      "byte_length": 721,
       "sha256": "2deb9af830987c664bafcc4ee8625c1eebafb8b7eeea2b9f360f1d4f571fbe31",
       "provider_id": "project-authored:beth-refr-dev",
       "scenario_memberships": [
@@ -2710,11 +2709,11 @@
           "length": 24,
           "classification": "subrecord-data"
         }
-      ]
+      ],
+      "byte_length": 721
     },
     {
       "artifact_id": "inputs/plugins/02-Relations.esp",
-      "byte_length": 469,
       "sha256": "fe518c78e5f4b03cfb446719d527d199131b3afcb01331afee658ccb479c516d",
       "provider_id": "project-authored:beth-refr-dev",
       "scenario_memberships": [
@@ -2982,11 +2981,11 @@
           "length": 24,
           "classification": "subrecord-data"
         }
-      ]
+      ],
+      "byte_length": 469
     },
     {
       "artifact_id": "inputs/plugins/03-Placement.esp",
-      "byte_length": 492,
       "sha256": "3374f636e1d20b5a407f66235c8eadc972ceed4c7b8286267b34ab411aa1804f",
       "provider_id": "project-authored:beth-refr-dev",
       "scenario_memberships": [
@@ -3277,11 +3276,11 @@
           "length": 24,
           "classification": "subrecord-data"
         }
-      ]
+      ],
+      "byte_length": 492
     },
     {
       "artifact_id": "inputs/plugins/04-MergedWinner.esp",
-      "byte_length": 458,
       "sha256": "b21eb31e835bb61a7d8af28fe7ee5206cfa4776e2ed6d588eb597b310eade85b",
       "provider_id": "project-authored:beth-refr-dev",
       "scenario_memberships": [
@@ -3535,11 +3534,11 @@
           "length": 24,
           "classification": "subrecord-data"
         }
-      ]
+      ],
+      "byte_length": 458
     },
     {
       "artifact_id": "inputs/plugins/05-DeletedWinner.esp",
-      "byte_length": 385,
       "sha256": "964a8724d83d9cc5f184bd2f03c7e9b6597d1af791265f2fe3ca0adbe0e83cb5",
       "provider_id": "project-authored:beth-refr-dev",
       "scenario_memberships": [
@@ -3723,11 +3722,11 @@
           "length": 17,
           "classification": "subrecord-data"
         }
-      ]
+      ],
+      "byte_length": 385
     },
     {
       "artifact_id": "inputs/plugins/06-Boundaries.esp",
-      "byte_length": 538,
       "sha256": "bd9fc7eaefb681ebc2885ae4c6bd4904aae6cc25a0e8f20ad4b6d347a8adef6e",
       "provider_id": "project-authored:beth-refr-dev",
       "scenario_memberships": [
@@ -4030,7 +4029,8 @@
           "length": 24,
           "classification": "subrecord-data"
         }
-      ]
+      ],
+      "byte_length": 538
     }
   ],
   "facts": [

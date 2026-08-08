@@ -26,10 +26,17 @@
     "expected_abstentions",
     "expected_invalid_inputs",
     "expected_failures",
+    "expected_documentation_revisions",
+    "expected_passages",
+    "expected_candidate_decisions",
+    "expected_reconciliation_assessments",
+    "expected_lineage_events",
     "expected_coverage_and_gaps",
     "expected_collection_states",
     "expected_taxonomy_assignments",
     "expected_replayability",
+    "expected_replay_manifest",
+    "expected_not_used_boundaries",
     "forbidden_claims",
     "known_limits",
     "pre_registered_at",
@@ -133,6 +140,21 @@
     "expected_failures": {
       "$ref": "#/$defs/expectedFailureCollection"
     },
+    "expected_documentation_revisions": {
+      "type": "array", "items": { "$ref": "#/$defs/expectedItem" }
+    },
+    "expected_passages": {
+      "type": "array", "items": { "$ref": "#/$defs/expectedItem" }
+    },
+    "expected_candidate_decisions": {
+      "type": "array", "items": { "$ref": "#/$defs/expectedItem" }
+    },
+    "expected_reconciliation_assessments": {
+      "type": "array", "items": { "$ref": "#/$defs/expectedItem" }
+    },
+    "expected_lineage_events": {
+      "type": "array", "items": { "$ref": "#/$defs/expectedItem" }
+    },
     "expected_coverage_and_gaps": {
       "$ref": "#/$defs/expectedCoverageAndGapCollection"
     },
@@ -167,6 +189,16 @@
         "audit-only",
         "unavailable"
       ]
+    },
+    "expected_replay_manifest": {
+      "$ref": "common.v1.schema.json#/$defs/artifactReference"
+    },
+    "expected_not_used_boundaries": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": { "enum": ["provider", "hosted-search", "nexus", "loot"] }
     },
     "forbidden_claims": {
       "type": "array",
@@ -555,7 +587,12 @@
             "failure",
             "coverage-gap",
             "coverage",
-            "audit-gap"
+            "audit-gap",
+            "documentation-revision",
+            "passage",
+            "candidate-decision",
+            "reconciliation-assessment",
+            "lineage-event"
           ]
         },
         "expected_state": {

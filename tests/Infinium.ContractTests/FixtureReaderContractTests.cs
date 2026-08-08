@@ -1,7 +1,7 @@
 using System.Text.Json.Nodes;
 using Infinium.Application.Evaluation;
 using Infinium.Domain.Contracts;
-using Infinium.EvaluatorV2.LegacyV1;
+using Infinium.PublicFixtures;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Infinium.Tests;
@@ -18,7 +18,7 @@ public sealed class FixtureReaderContractTests
     {
         using FixturePackageTestBuilder fixture = new();
 
-        EvaluationHarnessFixturePackage package = FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath);
+        PublicFixturePackage package = PublicFixturePackageReader.Read(fixture.DirectoryPath);
 
         Assert.AreEqual("fixture-development-1", package.FixtureId.Value);
         Assert.AreEqual(FixturePartition.Development, package.Partition);
@@ -34,8 +34,8 @@ public sealed class FixtureReaderContractTests
     {
         using FixturePackageTestBuilder fixture = new();
 
-        ExecutionFixturePackage package = FixturePackageReader.ReadExecutionInput(
-            fixture.FilePath(FixturePackageReader.ExecutionInputFileName));
+        ExecutionFixturePackage package = PublicFixturePackageReader.ReadExecutionInput(
+            fixture.FilePath(PublicFixturePackageReader.ExecutionInputFileName));
 
         Assert.AreEqual("fixture-development-1", package.FixtureId.Value);
         Assert.IsFalse(package.ExecutionInput.TryGetProperty("oracle_fingerprint", out _));
@@ -51,7 +51,7 @@ public sealed class FixtureReaderContractTests
         fixture.RemovePublicProperty("oracle_fingerprint");
 
         Assert.ThrowsExactly<InvalidDataException>(
-            () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+            () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
     }
 
     [TestMethod]
@@ -63,7 +63,7 @@ public sealed class FixtureReaderContractTests
         fixture.RemovePublicProperty("partition");
 
         Assert.ThrowsExactly<InvalidDataException>(
-            () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+            () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
     }
 
     [TestMethod]
@@ -75,7 +75,7 @@ public sealed class FixtureReaderContractTests
         fixture.RemoveOracleProperty("ground_truth_methods");
 
         Assert.ThrowsExactly<InvalidDataException>(
-            () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+            () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
     }
 
     [TestMethod]
@@ -87,7 +87,7 @@ public sealed class FixtureReaderContractTests
         fixture.RemoveOracleProperty("expected_coverage_and_gaps");
 
         Assert.ThrowsExactly<InvalidDataException>(
-            () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+            () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
     }
 
     [TestMethod]
@@ -99,7 +99,7 @@ public sealed class FixtureReaderContractTests
         fixture.RemovePublicProperty("taxonomy_version");
 
         Assert.ThrowsExactly<InvalidDataException>(
-            () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+            () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
     }
 
     [TestMethod]
@@ -111,7 +111,7 @@ public sealed class FixtureReaderContractTests
         fixture.SetPublicString("schema_version", "2");
 
         Assert.ThrowsExactly<InvalidDataException>(
-            () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+            () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
     }
 
     [TestMethod]
@@ -126,8 +126,8 @@ public sealed class FixtureReaderContractTests
             new JsonArray("the hidden answer"));
 
         Assert.ThrowsExactly<InvalidDataException>(
-            () => FixturePackageReader.ReadExecutionInput(
-                fixture.FilePath(FixturePackageReader.ExecutionInputFileName)));
+            () => PublicFixturePackageReader.ReadExecutionInput(
+                fixture.FilePath(PublicFixturePackageReader.ExecutionInputFileName)));
     }
 
     [TestMethod]
@@ -141,8 +141,8 @@ public sealed class FixtureReaderContractTests
         fixture.RemoveExecutionProperty("resource_and_time_limits");
 
         Assert.ThrowsExactly<InvalidDataException>(
-            () => FixturePackageReader.ReadExecutionInput(
-                fixture.FilePath(FixturePackageReader.ExecutionInputFileName)));
+            () => PublicFixturePackageReader.ReadExecutionInput(
+                fixture.FilePath(PublicFixturePackageReader.ExecutionInputFileName)));
     }
 
     [TestMethod]
@@ -154,8 +154,8 @@ public sealed class FixtureReaderContractTests
         fixture.AddExecutionProperty("metadata", new JsonObject { ["note"] = "not answer bearing" });
 
         Assert.ThrowsExactly<InvalidDataException>(
-            () => FixturePackageReader.ReadExecutionInput(
-                fixture.FilePath(FixturePackageReader.ExecutionInputFileName)));
+            () => PublicFixturePackageReader.ReadExecutionInput(
+                fixture.FilePath(PublicFixturePackageReader.ExecutionInputFileName)));
     }
 
     [TestMethod]
@@ -167,7 +167,7 @@ public sealed class FixtureReaderContractTests
         fixture.SetPublicString("partition", "known-answer-promoted-to-held-out");
 
         Assert.ThrowsExactly<InvalidDataException>(
-            () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+            () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
     }
 
     [TestMethod]
@@ -181,6 +181,6 @@ public sealed class FixtureReaderContractTests
         fixture.AddKnownAnswerTransitionWithoutReplacement();
 
         Assert.ThrowsExactly<InvalidDataException>(
-            () => FixturePackageReader.ReadForEvaluationHarness(fixture.DirectoryPath));
+            () => PublicFixturePackageReader.Read(fixture.DirectoryPath));
     }
 }

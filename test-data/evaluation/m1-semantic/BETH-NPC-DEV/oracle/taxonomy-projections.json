@@ -2,7 +2,7 @@
   "schema_id": "infinium.evaluation.taxonomy-projections/v1",
   "schema_version": "1",
   "fixture_id": "BETH-NPC-DEV",
-  "fixture_version": "1.3.0",
+  "fixture_version": "1.4.0",
   "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
   "taxonomy_version": "0.1.0",
   "reviewer_id": "taxonomy-reviewer",
@@ -10,15 +10,17 @@
   "source_artifacts": [
     {
       "artifact_id": "oracle/independent-byte-facts.json",
-      "artifact_version": "1.3.0",
-      "fingerprint": "ab999c4f06594de1cc7aa8e997ae047c6075134d0ccf706b7f23693d9cd8e4e7",
-      "availability": "retained"
+      "artifact_version": "1.4.0",
+      "fingerprint": "045f8fe94964b0ea8f0d84bd091a22a391d188320c33d514f53728bdd72456ce",
+      "availability": "retained",
+      "byte_length": 485333
     },
     {
       "artifact_id": "inputs/snapshot/accepted-order.json",
-      "artifact_version": "1.3.0",
-      "fingerprint": "22fc97254ac3a1914521e992d36a8e6ebd5a908e2fe5b308477e6ecc48ea721c",
-      "availability": "retained"
+      "artifact_version": "1.4.0",
+      "fingerprint": "03044a3bca941e0a34d5fde9d665d2b19c0eb2c1eefcc8e47d6f2d0cc12b0f4c",
+      "availability": "retained",
+      "byte_length": 5797
     }
   ],
   "subjects": [

@@ -37,6 +37,11 @@
     "invalid_inputs",
     "coverage_gaps",
     "failures",
+    "documentation_revisions",
+    "passages",
+    "candidate_decisions",
+    "reconciliation_assessments",
+    "lineage_events",
     "collection_states",
     "taxonomy_assignments",
     "analyzer_coverage",
@@ -44,6 +49,8 @@
     "readiness",
     "replayability",
     "auditability",
+    "replay_manifest",
+    "not_used_boundaries",
     "cli_summary_fingerprint",
     "diagnostic_trace_references"
   ],
@@ -161,6 +168,21 @@
     "failures": {
       "$ref": "#/$defs/failureCollection"
     },
+    "documentation_revisions": {
+      "$ref": "#/$defs/documentationRevisionCollection"
+    },
+    "passages": {
+      "$ref": "#/$defs/passageCollection"
+    },
+    "candidate_decisions": {
+      "$ref": "#/$defs/candidateDecisionCollection"
+    },
+    "reconciliation_assessments": {
+      "$ref": "#/$defs/reconciliationAssessmentCollection"
+    },
+    "lineage_events": {
+      "$ref": "#/$defs/lineageEventCollection"
+    },
     "collection_states": {
       "type": "object",
       "additionalProperties": false,
@@ -181,7 +203,12 @@
         "abstentions",
         "invalid_inputs",
         "coverage_gaps",
-        "failures"
+        "failures",
+        "documentation_revisions",
+        "passages",
+        "candidate_decisions",
+        "reconciliation_assessments",
+        "lineage_events"
       ],
       "properties": {
         "observations": {
@@ -234,6 +261,21 @@
         },
         "failures": {
           "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "documentation_revisions": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "passages": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "candidate_decisions": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "reconciliation_assessments": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
+        },
+        "lineage_events": {
+          "$ref": "common.v1.schema.json#/$defs/collectionState"
         }
       }
     },
@@ -270,7 +312,8 @@
               "unsupported",
               "excluded",
               "disabled-by-configuration",
-              "not-applicable"
+              "not-applicable",
+              "not-used"
             ]
           },
           "reason": {
@@ -362,6 +405,23 @@
         }
       }
     },
+    "replay_manifest": {
+      "$ref": "common.v1.schema.json#/$defs/artifactReference"
+    },
+    "not_used_boundaries": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["capability_id", "state", "reason"],
+        "properties": {
+          "capability_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+          "state": { "const": "not-used" },
+          "reason": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }
+        }
+      }
+    },
     "cli_summary_fingerprint": {
       "$ref": "common.v1.schema.json#/$defs/fingerprint"
     },
@@ -373,6 +433,26 @@
     }
   },
   "$defs": {
+    "documentationRevisionCollection": {
+      "type": "array",
+      "items": { "allOf": [{ "$ref": "common.v1.schema.json#/$defs/typedArtifact" }, { "type": "object", "properties": { "artifact_type": { "const": "documentation-revision" } } }] }
+    },
+    "passageCollection": {
+      "type": "array",
+      "items": { "allOf": [{ "$ref": "common.v1.schema.json#/$defs/typedArtifact" }, { "type": "object", "properties": { "artifact_type": { "const": "passage" } } }] }
+    },
+    "candidateDecisionCollection": {
+      "type": "array",
+      "items": { "allOf": [{ "$ref": "common.v1.schema.json#/$defs/typedArtifact" }, { "type": "object", "properties": { "artifact_type": { "const": "candidate-decision" } } }] }
+    },
+    "reconciliationAssessmentCollection": {
+      "type": "array",
+      "items": { "allOf": [{ "$ref": "common.v1.schema.json#/$defs/typedArtifact" }, { "type": "object", "properties": { "artifact_type": { "const": "reconciliation-assessment" } } }] }
+    },
+    "lineageEventCollection": {
+      "type": "array",
+      "items": { "allOf": [{ "$ref": "common.v1.schema.json#/$defs/typedArtifact" }, { "type": "object", "properties": { "artifact_type": { "const": "lineage-event" } } }] }
+    },
     "observationCollection": {
       "type": "array",
       "items": {

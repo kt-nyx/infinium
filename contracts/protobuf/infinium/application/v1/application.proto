@@ -6,6 +6,7 @@ option csharp_namespace = "Infinium.Contracts.Protobuf.Application.V1";
 
 import "infinium/common/v1/common.proto";
 import "infinium/domain/v1/identities.proto";
+import "infinium/domain/v1/analysis.proto";
 import "infinium/protocol/v1/protocol.proto";
 
 service ApplicationService {
@@ -26,6 +27,105 @@ service ApplicationService {
       returns (SubmitSnapshotCaptureResponse);
   rpc GetSnapshotCapture(GetSnapshotCaptureRequest)
       returns (GetSnapshotCaptureResponse);
+  rpc GetAnalysisSummary(GetAnalysisSummaryRequest)
+      returns (GetAnalysisSummaryResponse);
+  rpc ListAnalysisArtifacts(ListAnalysisArtifactsRequest)
+      returns (ListAnalysisArtifactsResponse);
+  rpc GetAnalysisProvenance(GetAnalysisProvenanceRequest)
+      returns (GetAnalysisProvenanceResponse);
+  rpc GetAnalysisReplay(GetAnalysisReplayRequest)
+      returns (GetAnalysisReplayResponse);
+}
+
+message GetAnalysisSummaryRequest {
+  infinium.domain.v1.RunId run_id = 1;
+  infinium.domain.v1.ProjectionVersion expected_projection_version = 2;
+}
+
+message GetAnalysisSummaryResponse {
+  oneof result {
+    AnalysisSummary summary = 1;
+    ProjectionInvalidated projection_invalidated = 2;
+    infinium.common.v1.Failure failure = 3;
+  }
+}
+
+message AnalysisSummary {
+  infinium.domain.v1.RunId run_id = 1;
+  uint64 finding_count = 2;
+  uint64 supported_case_count = 3;
+  uint64 lead_only_case_count = 4;
+  uint64 candidate_decision_count = 5;
+  uint64 coverage_population_count = 6;
+  uint64 gap_count = 7;
+  uint64 unsupported_count = 8;
+  infinium.domain.v1.ReplaySummary replay = 9;
+  infinium.domain.v1.ProjectionVersion projection_version = 20;
+}
+
+message ListAnalysisArtifactsRequest {
+  infinium.domain.v1.RunId run_id = 1;
+  repeated infinium.domain.v1.AnalysisArtifactKind kinds = 2;
+  repeated infinium.domain.v1.AnalysisArtifactState states = 3;
+  uint32 requested_page_size = 4;
+  PageCursor after = 5;
+  infinium.domain.v1.ProjectionVersion expected_projection_version = 6;
+
+  reserved 90 to 99;
+  reserved "sql", "path", "url", "object_type", "object_id";
+}
+
+message ListAnalysisArtifactsResponse {
+  oneof result {
+    AnalysisArtifactPage page = 1;
+    CursorRejection cursor_rejection = 2;
+    infinium.common.v1.Failure failure = 3;
+  }
+}
+
+message AnalysisArtifactPage {
+  repeated infinium.domain.v1.AnalysisArtifactReference items = 1;
+  PageCursor next = 2;
+  bool has_more = 3;
+  infinium.domain.v1.ProjectionVersion projection_version = 4;
+}
+
+message GetAnalysisProvenanceRequest {
+  infinium.domain.v1.RunId run_id = 1;
+  infinium.domain.v1.AnalysisArtifactId artifact_id = 2;
+  uint32 requested_maximum_edges = 3;
+  infinium.domain.v1.ProjectionVersion expected_projection_version = 4;
+}
+
+message GetAnalysisProvenanceResponse {
+  oneof result {
+    AnalysisProvenance provenance = 1;
+    ProjectionInvalidated projection_invalidated = 2;
+    infinium.common.v1.Failure failure = 3;
+  }
+}
+
+message AnalysisProvenance {
+  infinium.domain.v1.AnalysisArtifactReference artifact = 1;
+  repeated infinium.domain.v1.AnalysisArtifactReference sources = 2;
+  repeated infinium.domain.v1.AnalysisArtifactReference supporting_evidence = 3;
+  repeated infinium.domain.v1.AnalysisArtifactReference contradicting_evidence = 4;
+  repeated infinium.domain.v1.AnalysisArtifactReference dependencies = 5;
+  bool truncated = 6;
+  infinium.domain.v1.ProjectionVersion projection_version = 20;
+}
+
+message GetAnalysisReplayRequest {
+  infinium.domain.v1.RunId run_id = 1;
+  infinium.domain.v1.ProjectionVersion expected_projection_version = 2;
+}
+
+message GetAnalysisReplayResponse {
+  oneof result {
+    infinium.domain.v1.ReplaySummary replay = 1;
+    ProjectionInvalidated projection_invalidated = 2;
+    infinium.common.v1.Failure failure = 3;
+  }
 }
 
 message SubmitSnapshotCaptureRequest {

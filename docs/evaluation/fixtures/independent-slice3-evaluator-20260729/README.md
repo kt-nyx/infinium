@@ -1,5 +1,12 @@
 # Independent M1 Slice 3 evaluator package
 
+> **Historical evaluator evidence — not a current product fixture.** This
+> package preserves the 2026-07-29 Slice 3 evaluator occurrence and its
+> chronology. It is excluded from the default solution, current public-fixture
+> validation, current product schemas, and every current execution workflow.
+> Do not migrate, execute, or cite its versioned shapes as current authority.
+> See `docs/evaluation/repository-evaluation-authority.v1.json`.
+
 Status: EVAL-0051 and EVAL-0054 passed for the exact admitted target
 Evaluator role: separately isolated oracle author
 Specification set: `infinium.eval.m1.semantic-and-ground-truth/1`

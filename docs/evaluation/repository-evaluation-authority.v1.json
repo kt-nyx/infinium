@@ -1,0 +1,71 @@
+{
+  "schema_id": "infinium.repository.evaluation-authority/v1",
+  "schema_version": "1.0.0",
+  "status": "current",
+  "authority": "project-owner-authorized-boundary-hardening-2026-08-08",
+  "surfaces": [
+    {
+      "id": "current-product-contracts",
+      "paths": [
+        "contracts/json-schema/",
+        "contracts/protobuf/",
+        "src/Infinium.Domain/Contracts/",
+        "src/Infinium.Application/Evaluation/ActiveJsonSchemaValidator.cs"
+      ],
+      "validator": "Infinium.Application.Evaluation.ActiveJsonSchemaValidator",
+      "claim": "current product contract"
+    },
+    {
+      "id": "current-public-fixtures",
+      "paths": [
+        "tools/evaluation/Infinium.PublicFixtures/",
+        "tools/evaluation/reseal-current-public-fixtures.mjs",
+        "test-data/evaluation/m1-platform/M1-PLAT-SLICE2-SUBSTRATE-v1/",
+        "test-data/evaluation/m1-semantic/BETH-NPC-DEV/",
+        "test-data/evaluation/m1-semantic/BETH-REFR-DEV/",
+        "test-data/evaluation/m1-semantic/BETH-LIGHT-VAL/",
+        "test-data/evaluation/m1-semantic/BETH-MALFORMED-VAL/",
+        "test-data/evaluation/m1-semantic/BETH-UNSUPPORTED-VAL/"
+      ],
+      "validator": "Infinium.Application.Evaluation.ActiveJsonSchemaValidator",
+      "claim": "independently authored public fixture contract evidence; never product-derived oracle authority"
+    },
+    {
+      "id": "historical-protocol-4-bounded-regression",
+      "paths": [
+        "tools/evaluation/Infinium.EvaluatorV2/",
+        "tests/Infinium.EvaluationTests/EvaluatorV2PublicProtocolTests.cs",
+        "tests/Infinium.Protocol4RegressionTests/",
+        "eng/invoke-m1-slice4-protocol4-bounded-regression.ps1"
+      ],
+      "validator": "Infinium.Application.Evaluation.EmbeddedJsonSchemaValidator",
+      "entry_point": "eng/invoke-m1-slice4-protocol4-bounded-regression.ps1",
+      "default_solution_member": false,
+      "claim": "historical core and allowlisted current public regression health only; no product verdict"
+    },
+    {
+      "id": "retained-historical-authorability-evidence",
+      "paths": [
+        "docs/evaluation/fixtures/protocol-4-oracle-authorability/",
+        "docs/evaluation/fixtures/independent-slice3-evaluator-20260729/"
+      ],
+      "default_solution_member": false,
+      "claim": "accepted historical evaluator evidence cited by chronological records; not current fixture input, executable workflow, or product authority"
+    },
+    {
+      "id": "fixture-governance-vocabulary",
+      "paths": [
+        "contracts/json-schema/common.v1.schema.json",
+        "contracts/json-schema/replay-dependencies.v1.schema.json"
+      ],
+      "values": ["evaluator-private", "held-out"],
+      "claim": "accepted older public-fixture provenance vocabulary only; not a product capability"
+    },
+    {
+      "id": "retired-material",
+      "paths": ["docs/evaluation/retired-evaluation-assets.v1.json"],
+      "default_solution_member": false,
+      "claim": "Git-object inventory only; no active compilation, schema validation, or execution"
+    }
+  ]
+}

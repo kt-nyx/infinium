@@ -1,0 +1,11 @@
+{
+  "schema_id": "infinium.analysis.fixture-bethesda-semantic-input/v1",
+  "schema_version": "1",
+  "semantic_input_id": "beth-refr-dev.semantic-input",
+  "fixture_id": "BETH-REFR-DEV",
+  "fixture_version": "1.4.0",
+  "state": "provided",
+  "case_matrix_artifact_id": "inputs/case-matrix.json",
+  "accepted_order_artifact_id": "inputs/snapshot/accepted-order.json",
+  "reason": "The input selects retained bytes and operations without containing outcome labels."
+}

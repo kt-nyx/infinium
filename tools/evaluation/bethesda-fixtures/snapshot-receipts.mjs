@@ -19,7 +19,7 @@ const fixtureIds = [
   "BETH-UNSUPPORTED-VAL",
 ];
 const pluginExtensions = new Set([".esm", ".esp", ".esl"]);
-const fixtureVersion = "1.3.0";
+const fixtureVersion = "1.4.0";
 
 for (const fixtureId of fixtureIds) {
   const inputRoot = path.join(fixtureRoot, fixtureId, "inputs");

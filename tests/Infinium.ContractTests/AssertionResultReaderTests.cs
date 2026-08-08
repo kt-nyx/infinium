@@ -1,13 +1,13 @@
 using System.Text.Json;
 using Infinium.Application.Evaluation;
 using Infinium.Domain.Contracts;
-using Infinium.EvaluatorV2.LegacyV1;
+using Infinium.PublicFixtures;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Infinium.Tests;
 
 [TestClass]
-public sealed class AssertionResultReaderTests
+public sealed class PublicAssertionResultReaderTests
 {
     private static readonly string[] ContractOnlyMessages =
     [
@@ -42,6 +42,10 @@ public sealed class AssertionResultReaderTests
                         run_output_fingerprint = new string('b', 64),
                         oracle_fingerprint = new string('c', 64),
                         assertion_type = "presence",
+                        actual_schema_id = ContractConstants.RunOutputSchemaId,
+                        oracle_schema_id = "infinium.evaluation.fixture-oracle/v1",
+                        state_model_version = "1.0.0",
+                        canonical_comparison_fingerprint = new string('d', 64),
                         status = "not-applicable",
                         actual_references = Array.Empty<string>(),
                         oracle_entry_references = Array.Empty<string>(),
@@ -49,7 +53,7 @@ public sealed class AssertionResultReaderTests
                         evaluated_at = DateTimeOffset.UnixEpoch.ToString("O"),
                     }));
 
-            EvaluationAssertionResult result = AssertionResultReader.Read(path);
+            EvaluationAssertionResult result = PublicAssertionResultReader.Read(path);
 
             Assert.AreEqual("analyzer-declaration-required-fields", result.AssertionId);
             Assert.AreEqual(AssertionStatus.NotApplicable, result.Status);
@@ -88,6 +92,10 @@ public sealed class AssertionResultReaderTests
                     "run_output_fingerprint": "{{new string('b', 64)}}",
                     "oracle_fingerprint": "{{new string('c', 64)}}",
                     "assertion_type": "presence",
+                    "actual_schema_id": "{{ContractConstants.RunOutputSchemaId}}",
+                    "oracle_schema_id": "infinium.evaluation.fixture-oracle/v1",
+                    "state_model_version": "1.0.0",
+                    "canonical_comparison_fingerprint": "{{new string('d', 64)}}",
                     "status": "success-ish",
                     "actual_references": [],
                     "oracle_entry_references": [],
@@ -96,7 +104,7 @@ public sealed class AssertionResultReaderTests
                   }
                   """);
 
-            Assert.ThrowsExactly<InvalidDataException>(() => AssertionResultReader.Read(path));
+            Assert.ThrowsExactly<InvalidDataException>(() => PublicAssertionResultReader.Read(path));
         }
         finally
         {
@@ -116,7 +124,7 @@ public sealed class AssertionResultReaderTests
         {
             File.WriteAllText(path, CreateAssertionJson(dirtyWorktree: true, status: "passed"));
 
-            Assert.ThrowsExactly<InvalidDataException>(() => AssertionResultReader.Read(path));
+            Assert.ThrowsExactly<InvalidDataException>(() => PublicAssertionResultReader.Read(path));
         }
         finally
         {
@@ -140,7 +148,7 @@ public sealed class AssertionResultReaderTests
                     assertionType: "presence",
                     actualReferences: [],
                     oracleReferences: ["oracle-1"]));
-            Assert.ThrowsExactly<InvalidDataException>(() => AssertionResultReader.Read(path));
+            Assert.ThrowsExactly<InvalidDataException>(() => PublicAssertionResultReader.Read(path));
 
             File.WriteAllText(
                 path,
@@ -150,7 +158,7 @@ public sealed class AssertionResultReaderTests
                     assertionType: "absence",
                     actualReferences: [],
                     oracleReferences: ["oracle-1"]));
-            EvaluationAssertionResult accepted = AssertionResultReader.Read(path);
+            EvaluationAssertionResult accepted = PublicAssertionResultReader.Read(path);
             Assert.AreEqual(AssertionStatus.Passed, accepted.Status);
 
             File.WriteAllText(
@@ -161,7 +169,7 @@ public sealed class AssertionResultReaderTests
                     assertionType: "absence",
                     actualReferences: [],
                     oracleReferences: []));
-            Assert.ThrowsExactly<InvalidDataException>(() => AssertionResultReader.Read(path));
+            Assert.ThrowsExactly<InvalidDataException>(() => PublicAssertionResultReader.Read(path));
         }
         finally
         {
@@ -182,7 +190,7 @@ public sealed class AssertionResultReaderTests
                 "\"run_id\":\"run-1\",\"run_id\":\"run-2\"",
                 StringComparison.Ordinal);
             File.WriteAllText(path, duplicate);
-            Assert.ThrowsExactly<InvalidDataException>(() => AssertionResultReader.Read(path));
+            Assert.ThrowsExactly<InvalidDataException>(() => PublicAssertionResultReader.Read(path));
 
             File.WriteAllText(
                 path,
@@ -190,7 +198,7 @@ public sealed class AssertionResultReaderTests
                     false,
                     "failed",
                     evaluatedAt: "1970-01-01T01:00:00.0000000+01:00"));
-            Assert.ThrowsExactly<InvalidDataException>(() => AssertionResultReader.Read(path));
+            Assert.ThrowsExactly<InvalidDataException>(() => PublicAssertionResultReader.Read(path));
         }
         finally
         {
@@ -207,7 +215,7 @@ public sealed class AssertionResultReaderTests
         try
         {
             File.WriteAllText(path, new string('x', (4 * 1024 * 1024) + 1));
-            Assert.ThrowsExactly<InvalidDataException>(() => AssertionResultReader.Read(path));
+            Assert.ThrowsExactly<InvalidDataException>(() => PublicAssertionResultReader.Read(path));
         }
         finally
         {
@@ -241,6 +249,10 @@ public sealed class AssertionResultReaderTests
                 run_output_fingerprint = new string('b', 64),
                 oracle_fingerprint = new string('c', 64),
                 assertion_type = assertionType,
+                actual_schema_id = ContractConstants.RunOutputSchemaId,
+                oracle_schema_id = "infinium.evaluation.fixture-oracle/v1",
+                state_model_version = "1.0.0",
+                canonical_comparison_fingerprint = new string('d', 64),
                 status,
                 actual_references = actualReferences ?? [],
                 oracle_entry_references = oracleReferences ?? [],

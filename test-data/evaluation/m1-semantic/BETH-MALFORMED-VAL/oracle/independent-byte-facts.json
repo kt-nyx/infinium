@@ -2,7 +2,7 @@
   "schema_id": "infinium.evaluation.bethesda-byte-oracle/v1",
   "schema_version": "1",
   "fixture_id": "BETH-MALFORMED-VAL",
-  "fixture_version": "1.3.0",
+  "fixture_version": "1.4.0",
   "oracle_artifact_version": "1.3.0",
   "canonicalization": "infinium-canonical-json-sha256/v1",
   "independent_authors_and_reviewers": [
@@ -23,7 +23,6 @@
   "files": [
     {
       "artifact_id": "inputs/mutations/ChangedDuringRead-A.esp",
-      "byte_length": 195,
       "sha256": "031fbd75c5308f768bf019f0f8eeece31ee13a5807f096d837ccf2ff648fb382",
       "provider_id": "project-authored:beth-malformed-val",
       "scenario_memberships": [
@@ -114,11 +113,11 @@
           "length": 19,
           "classification": "subrecord-data"
         }
-      ]
+      ],
+      "byte_length": 195
     },
     {
       "artifact_id": "inputs/mutations/ChangedDuringRead-B.esp",
-      "byte_length": 195,
       "sha256": "2f2a531fb151103dd5fa4d4ea09bda627bcc036c66a5a9f2b3b6cbb95a0e5682",
       "provider_id": "project-authored:beth-malformed-val",
       "scenario_memberships": [
@@ -209,11 +208,11 @@
           "length": 19,
           "classification": "subrecord-data"
         }
-      ]
+      ],
+      "byte_length": 195
     },
     {
       "artifact_id": "inputs/mutations/CompressedDeclaredSizeOverLimit.esp",
-      "byte_length": 218,
       "sha256": "14c88c5fdc978eb8e86c67d22e58ebdbcddd8354eea03c679c07e3b99bc3ceac",
       "provider_id": "project-authored:beth-malformed-val",
       "scenario_memberships": [
@@ -297,11 +296,11 @@
           "length": 36,
           "classification": "compressed-container"
         }
-      ]
+      ],
+      "byte_length": 218
     },
     {
       "artifact_id": "inputs/mutations/CompressedInvalidZlib.esp",
-      "byte_length": 179,
       "sha256": "3f049937732519afcdb5b262e0736b490af09c497fb5ddd1e2b3740734f62cb0",
       "provider_id": "project-authored:beth-malformed-val",
       "scenario_memberships": [
@@ -385,11 +384,11 @@
           "length": 7,
           "classification": "compressed-container"
         }
-      ]
+      ],
+      "byte_length": 179
     },
     {
       "artifact_id": "inputs/mutations/CompressedMissingLength.esp",
-      "byte_length": 176,
       "sha256": "f9cff9c2ebc63affd5428f132f1f05e2180763d0bb51d64f8d0b95cab3a98bf3",
       "provider_id": "project-authored:beth-malformed-val",
       "scenario_memberships": [
@@ -473,11 +472,11 @@
           "length": 2,
           "classification": "compressed-container"
         }
-      ]
+      ],
+      "byte_length": 176
     },
     {
       "artifact_id": "inputs/mutations/CompressedSizeMismatch.esp",
-      "byte_length": 200,
       "sha256": "e03e9eda355ea841f8b70a76c6108eb45d329119715d21509aebc9ebbb461b06",
       "provider_id": "project-authored:beth-malformed-val",
       "scenario_memberships": [
@@ -561,11 +560,11 @@
           "length": 27,
           "classification": "compressed-container"
         }
-      ]
+      ],
+      "byte_length": 200
     },
     {
       "artifact_id": "inputs/mutations/GroupSizeOverflow.esp",
-      "byte_length": 192,
       "sha256": "5c9210bcbda9319820909e0985eb614991a6e964d7b3009b22214236f8c3133c",
       "provider_id": "project-authored:beth-malformed-val",
       "scenario_memberships": [
@@ -635,11 +634,11 @@
           "length": 77,
           "classification": "opaque"
         }
-      ]
+      ],
+      "byte_length": 192
     },
     {
       "artifact_id": "inputs/mutations/GroupSizePastEnd.esp",
-      "byte_length": 192,
       "sha256": "5acfedf3235c9ed94c04467712633d47b56db2a8f2eda622bba7f5622ff48bfb",
       "provider_id": "project-authored:beth-malformed-val",
       "scenario_memberships": [
@@ -709,11 +708,11 @@
           "length": 77,
           "classification": "opaque"
         }
-      ]
+      ],
+      "byte_length": 192
     },
     {
       "artifact_id": "inputs/mutations/GroupSizeTooSmall.esp",
-      "byte_length": 192,
       "sha256": "088f8254c1d89ff0d4460cd2b09de23de2913d22d0a2ed8398039fbfe979617e",
       "provider_id": "project-authored:beth-malformed-val",
       "scenario_memberships": [
@@ -783,11 +782,11 @@
           "length": 77,
           "classification": "opaque"
         }
-      ]
+      ],
+      "byte_length": 192
     },
     {
       "artifact_id": "inputs/mutations/InvalidLinkMasterIndex.esp",
-      "byte_length": 412,
       "sha256": "63f649f2a9a5fa75d7ce2098202942bfcb5f08465753c916a1ec5e61758179f7",
       "provider_id": "project-authored:beth-malformed-val",
       "scenario_memberships": [
@@ -985,11 +984,11 @@
           "length": 24,
           "classification": "subrecord-data"
         }
-      ]
+      ],
+      "byte_length": 412
     },
     {
       "artifact_id": "inputs/mutations/InvalidRecordMasterIndex.esp",
-      "byte_length": 243,
       "sha256": "0ac5d15a5655791dc45eb3972d95a0d95a5b95eb19f02d2ab7bd6804d6656b52",
       "provider_id": "project-authored:beth-malformed-val",
       "scenario_memberships": [
@@ -1110,11 +1109,11 @@
           "length": 25,
           "classification": "subrecord-data"
         }
-      ]
+      ],
+      "byte_length": 243
     },
     {
       "artifact_id": "inputs/mutations/MasterMissingDataPair.esp",
-      "byte_length": 147,
       "sha256": "45c63369cdcede68077a0acde19f53350442862a49700ded1bdacda2e9b2fdf1",
       "provider_id": "project-authored:beth-malformed-val",
       "scenario_memberships": [
@@ -1191,11 +1190,11 @@
           "length": 17,
           "classification": "subrecord-data"
         }
-      ]
+      ],
+      "byte_length": 147
     },
     {
       "artifact_id": "inputs/mutations/NestedGroupsOverLimit.esp",
-      "byte_length": 1841,
       "sha256": "5ce416f7764bebb47e56003a6c1a761ed5768953d100f0b49a4309b40cd6472a",
       "provider_id": "project-authored:beth-malformed-val",
       "scenario_memberships": [
@@ -1720,11 +1719,11 @@
           "length": 157,
           "classification": "opaque"
         }
-      ]
+      ],
+      "byte_length": 1841
     },
     {
       "artifact_id": "inputs/mutations/RecordCountOverLimit.esp",
-      "byte_length": 147639,
       "sha256": "2e327eb2853bde587819a93777e1c90dcbc949bab5df1a08632cb19e9d9024ca",
       "provider_id": "project-authored:beth-malformed-val",
       "scenario_memberships": [
@@ -87803,11 +87802,11 @@
           "length": 48,
           "classification": "opaque"
         }
-      ]
+      ],
+      "byte_length": 147639
     },
     {
       "artifact_id": "inputs/mutations/RecordSizeOverflow.esp",
-      "byte_length": 192,
       "sha256": "bae71380b2369e497332893645d27fdb8b2abc491afefb38db63a0010f3fdb7f",
       "provider_id": "project-authored:beth-malformed-val",
       "scenario_memberships": [
@@ -87828,11 +87827,11 @@
           "length": 192,
           "classification": "opaque"
         }
-      ]
+      ],
+      "byte_length": 192
     },
     {
       "artifact_id": "inputs/mutations/SubrecordCountOverLimit.esp",
-      "byte_length": 24756,
       "sha256": "b57e87c0030ecc438a1009a151737ea3df3272ee5c66db9ec38c70d8061ae7e2",
       "provider_id": "project-authored:beth-malformed-val",
       "scenario_memberships": [
@@ -116588,11 +116587,11 @@
           "length": 6,
           "classification": "subrecord-header"
         }
-      ]
+      ],
+      "byte_length": 24756
     },
     {
       "artifact_id": "inputs/mutations/TruncatedRecordHeader.esp",
-      "byte_length": 10,
       "sha256": "30a8fe7ea38c41855b2933cb3966ec07218956689eea94a8cb744d6e8c8fdc64",
       "provider_id": "project-authored:beth-malformed-val",
       "scenario_memberships": [
@@ -116613,11 +116612,11 @@
           "length": 10,
           "classification": "opaque"
         }
-      ]
+      ],
+      "byte_length": 10
     },
     {
       "artifact_id": "inputs/mutations/TruncatedRecordPayload.esp",
-      "byte_length": 189,
       "sha256": "13ac01a8c3f97735ab4f0ac37c8ca1cc0b3f13466b4eb0be712e6ddffbfbf614",
       "provider_id": "project-authored:beth-malformed-val",
       "scenario_memberships": [
@@ -116694,11 +116693,11 @@
           "length": 50,
           "classification": "opaque"
         }
-      ]
+      ],
+      "byte_length": 189
     },
     {
       "artifact_id": "inputs/plugins/MinimalValid.esp",
-      "byte_length": 192,
       "sha256": "d12230139a9f3ae2c5116b3076a14a65fb39532ec1ea18e0e42183ba6c98acda",
       "provider_id": "project-authored:beth-malformed-val",
       "scenario_memberships": [
@@ -116803,7 +116802,8 @@
           "length": 4,
           "classification": "subrecord-data"
         }
-      ]
+      ],
+      "byte_length": 192
     }
   ],
   "facts": [

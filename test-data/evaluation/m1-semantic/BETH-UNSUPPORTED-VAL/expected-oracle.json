@@ -1,6 +1,6 @@
 {
   "fixture_id": "BETH-UNSUPPORTED-VAL",
-  "fixture_version": "1.3.0",
+  "fixture_version": "1.4.0",
   "oracle_version": "1.3.0",
   "independent_authors_and_reviewers": [
     "oracle-reviewer"
@@ -12,9 +12,10 @@
       "evidence_references": [
         {
           "artifact_id": "oracle/manual-hex-worksheet.json",
-          "artifact_version": "1",
-          "fingerprint": "ef07a9486cc958aa0782fce2d2cba152c86aa92bee37c1ee12a5697281eb640c",
-          "availability": "retained"
+          "artifact_version": "1.4.0",
+          "fingerprint": "3812f7df1b51e7cefd74e7d939027fc88285db59c41bf8258a0e4c3e3f560dfd",
+          "availability": "retained",
+          "byte_length": 21581
         }
       ],
       "independent_of_system_under_test": true
@@ -25,15 +26,17 @@
       "evidence_references": [
         {
           "artifact_id": "oracle/independent-reader-report.json",
-          "artifact_version": "1",
-          "fingerprint": "d3efb8faff5b43848e7513a90fc74073c329a4bf37e2f2e1fd0ed11e735a7888",
-          "availability": "retained"
+          "artifact_version": "1.4.0",
+          "fingerprint": "d6e6d0af2f45ec4e616a59cae6168538cabda213e839aaff82e920f754e86923",
+          "availability": "retained",
+          "byte_length": 18764
         },
         {
           "artifact_id": "oracle/independent-byte-facts.json",
-          "artifact_version": "1.3.0",
-          "fingerprint": "1e6f2d17e62a112165f0f1e0fa74e3b14e6d36cb60a3623c34ce65e0ca9323a5",
-          "availability": "retained"
+          "artifact_version": "1.4.0",
+          "fingerprint": "37b933822da4e89cfd8ec8eb452cbfd5a3e28153c510874c0a121b10b0ef1d17",
+          "availability": "retained",
+          "byte_length": 27673
         }
       ],
       "independent_of_system_under_test": true
@@ -44,10 +47,10 @@
       "evidence_references": [
         {
           "artifact_id": "oracle/taxonomy-projections.json",
-          "artifact_version": "1.3.0",
-          "fingerprint": "f6ff58534fdb0fdc6bca7be3cb2675eb075dacd11f85d7fdb5309322ea922484",
+          "artifact_version": "1.4.0",
+          "fingerprint": "ef9c12feeb077e42a9b27eeddffcee46050894ed66b23abb4a81275b08985744",
           "availability": "retained",
-          "byte_length": 13666
+          "byte_length": 13402
         }
       ],
       "independent_of_system_under_test": true
@@ -462,9 +465,10 @@
       "changed_at": "2026-07-30T23:00:00.0000000+00:00",
       "independent_evidence_reference": {
         "artifact_id": "oracle/manual-hex-worksheet.json",
-        "artifact_version": "1",
-        "fingerprint": "ef07a9486cc958aa0782fce2d2cba152c86aa92bee37c1ee12a5697281eb640c",
-        "availability": "retained"
+        "artifact_version": "1.4.0",
+        "fingerprint": "3812f7df1b51e7cefd74e7d939027fc88285db59c41bf8258a0e4c3e3f560dfd",
+        "availability": "retained",
+        "byte_length": 21581
       },
       "prior_error_explanation": "Version 1.0.0 attributed the manual method without comparing its decoded semantic answers and classified mutation changes from artifact dependencies instead of logical baseline deltas.",
       "reviewer": "oracle-reviewer"
@@ -474,9 +478,10 @@
       "changed_at": "2026-08-01T22:00:00.0000000+00:00",
       "independent_evidence_reference": {
         "artifact_id": "oracle/manual-hex-worksheet.json",
-        "artifact_version": "1",
-        "fingerprint": "ef07a9486cc958aa0782fce2d2cba152c86aa92bee37c1ee12a5697281eb640c",
-        "availability": "retained"
+        "artifact_version": "1.4.0",
+        "fingerprint": "3812f7df1b51e7cefd74e7d939027fc88285db59c41bf8258a0e4c3e3f560dfd",
+        "availability": "retained",
+        "byte_length": 21581
       },
       "prior_error_explanation": "Fixture version 1.0.0 encoded RACE flags at the wrong DATA offset and placed REFR records outside canonical CELL children.",
       "reviewer": "oracle-reviewer"
@@ -486,10 +491,10 @@
       "changed_at": "2026-08-02T12:00:00.0000000+00:00",
       "independent_evidence_reference": {
         "artifact_id": "oracle/taxonomy-projections.json",
-        "artifact_version": "1.3.0",
-        "fingerprint": "f6ff58534fdb0fdc6bca7be3cb2675eb075dacd11f85d7fdb5309322ea922484",
+        "artifact_version": "1.4.0",
+        "fingerprint": "ef9c12feeb077e42a9b27eeddffcee46050894ed66b23abb4a81275b08985744",
         "availability": "retained",
-        "byte_length": 13666
+        "byte_length": 13402
       },
       "prior_error_explanation": "Fixture version 1.0.1 did not seal exhaustive literal taxonomy subject bindings or retain the taxonomy projection inside the expected oracle's exact reference closure.",
       "reviewer": "oracle-reviewer"
@@ -499,9 +504,10 @@
       "changed_at": "2026-08-02T16:00:00.0000000+00:00",
       "independent_evidence_reference": {
         "artifact_id": "oracle/manual-hex-worksheet.json",
-        "artifact_version": "1",
-        "fingerprint": "ef07a9486cc958aa0782fce2d2cba152c86aa92bee37c1ee12a5697281eb640c",
-        "availability": "retained"
+        "artifact_version": "1.4.0",
+        "fingerprint": "3812f7df1b51e7cefd74e7d939027fc88285db59c41bf8258a0e4c3e3f560dfd",
+        "availability": "retained",
+        "byte_length": 21581
       },
       "prior_error_explanation": "Fixture version 1.1.0 assigned its answer-free execution scenario inventory to the effective scan-configuration role instead of sealing distinct scan-configuration and case-matrix inputs.",
       "reviewer": "oracle-reviewer"
@@ -511,12 +517,31 @@
       "changed_at": "2026-08-02T20:00:00.0000000+00:00",
       "independent_evidence_reference": {
         "artifact_id": "oracle/manual-hex-worksheet.json",
-        "artifact_version": "1",
-        "fingerprint": "ef07a9486cc958aa0782fce2d2cba152c86aa92bee37c1ee12a5697281eb640c",
-        "availability": "retained"
+        "artifact_version": "1.4.0",
+        "fingerprint": "3812f7df1b51e7cefd74e7d939027fc88285db59c41bf8258a0e4c3e3f560dfd",
+        "availability": "retained",
+        "byte_length": 21581
       },
       "prior_error_explanation": "Fixture version 1.2.0 did not declare the accepted-order construction receipt as its own mandatory execution-input role, distinct from installation-snapshot and runtime plugin-order inputs.",
       "reviewer": "oracle-reviewer"
     }
+  ],
+  "expected_documentation_revisions": [],
+  "expected_passages": [],
+  "expected_candidate_decisions": [],
+  "expected_reconciliation_assessments": [],
+  "expected_lineage_events": [],
+  "expected_replay_manifest": {
+    "artifact_id": "oracle/replay-manifest.json",
+    "artifact_version": "1.4.0",
+    "fingerprint": "27d4f300c48324469d7feaefd2bce2a250d828cb32dd437c7258318c0d4259d2",
+    "availability": "retained",
+    "byte_length": 3772
+  },
+  "expected_not_used_boundaries": [
+    "provider",
+    "hosted-search",
+    "nexus",
+    "loot"
   ]
 }

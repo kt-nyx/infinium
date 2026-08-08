@@ -1,6 +1,6 @@
 {
   "fixture_id": "BETH-LIGHT-VAL",
-  "fixture_version": "1.3.0",
+  "fixture_version": "1.4.0",
   "oracle_version": "1.3.0",
   "independent_authors_and_reviewers": [
     "oracle-reviewer"
@@ -12,9 +12,10 @@
       "evidence_references": [
         {
           "artifact_id": "oracle/manual-hex-worksheet.json",
-          "artifact_version": "1",
-          "fingerprint": "0b664ceaf985a636275c08170e09f58cc9ad7a78bc50e6e8567cba814a38d227",
-          "availability": "retained"
+          "artifact_version": "1.4.0",
+          "fingerprint": "7fbe965c02e0e5d8b2c5a9c112e6ba42de27d90ef5388aa6b31d512a8894773d",
+          "availability": "retained",
+          "byte_length": 91490
         }
       ],
       "independent_of_system_under_test": true
@@ -25,15 +26,17 @@
       "evidence_references": [
         {
           "artifact_id": "oracle/independent-reader-report.json",
-          "artifact_version": "1",
-          "fingerprint": "5b9aecdbb92bf23a11d6597500dc36a888b217caf31f527b025c0a6be5b99ea0",
-          "availability": "retained"
+          "artifact_version": "1.4.0",
+          "fingerprint": "e9bef00717b5d99ad4e63e1df44116ab7d73bb291179c40a03e21165d3543143",
+          "availability": "retained",
+          "byte_length": 77305
         },
         {
           "artifact_id": "oracle/independent-byte-facts.json",
-          "artifact_version": "1.3.0",
-          "fingerprint": "b7e6440256296084fa85164fb9740b9ba60903ac1d965a1d05d0b2a28b10a637",
-          "availability": "retained"
+          "artifact_version": "1.4.0",
+          "fingerprint": "263ef9c79da1028c1b2981b00034050e7be919df1424b9edefeb810342c2c41e",
+          "availability": "retained",
+          "byte_length": 160202
         }
       ],
       "independent_of_system_under_test": true
@@ -1482,9 +1485,10 @@
       "changed_at": "2026-07-30T23:00:00.0000000+00:00",
       "independent_evidence_reference": {
         "artifact_id": "oracle/manual-hex-worksheet.json",
-        "artifact_version": "1",
-        "fingerprint": "0b664ceaf985a636275c08170e09f58cc9ad7a78bc50e6e8567cba814a38d227",
-        "availability": "retained"
+        "artifact_version": "1.4.0",
+        "fingerprint": "7fbe965c02e0e5d8b2c5a9c112e6ba42de27d90ef5388aa6b31d512a8894773d",
+        "availability": "retained",
+        "byte_length": 91490
       },
       "prior_error_explanation": "Version 1.0.0 attributed the manual method without comparing its decoded semantic answers and classified mutation changes from artifact dependencies instead of logical baseline deltas.",
       "reviewer": "oracle-reviewer"
@@ -1494,9 +1498,10 @@
       "changed_at": "2026-08-01T22:00:00.0000000+00:00",
       "independent_evidence_reference": {
         "artifact_id": "oracle/manual-hex-worksheet.json",
-        "artifact_version": "1",
-        "fingerprint": "0b664ceaf985a636275c08170e09f58cc9ad7a78bc50e6e8567cba814a38d227",
-        "availability": "retained"
+        "artifact_version": "1.4.0",
+        "fingerprint": "7fbe965c02e0e5d8b2c5a9c112e6ba42de27d90ef5388aa6b31d512a8894773d",
+        "availability": "retained",
+        "byte_length": 91490
       },
       "prior_error_explanation": "Fixture version 1.0.0 encoded RACE flags at the wrong DATA offset and placed REFR records outside canonical CELL children.",
       "reviewer": "oracle-reviewer"
@@ -1506,9 +1511,10 @@
       "changed_at": "2026-08-02T12:00:00.0000000+00:00",
       "independent_evidence_reference": {
         "artifact_id": "oracle/manual-hex-worksheet.json",
-        "artifact_version": "1",
-        "fingerprint": "0b664ceaf985a636275c08170e09f58cc9ad7a78bc50e6e8567cba814a38d227",
-        "availability": "retained"
+        "artifact_version": "1.4.0",
+        "fingerprint": "7fbe965c02e0e5d8b2c5a9c112e6ba42de27d90ef5388aa6b31d512a8894773d",
+        "availability": "retained",
+        "byte_length": 91490
       },
       "prior_error_explanation": "Fixture version 1.0.1 was uniformly resealed so the public Bethesda suite shares one versioned exact-reference-closure reader contract; this package had no taxonomy or physical oracle-closure defect.",
       "reviewer": "oracle-reviewer"
@@ -1518,9 +1524,10 @@
       "changed_at": "2026-08-02T16:00:00.0000000+00:00",
       "independent_evidence_reference": {
         "artifact_id": "oracle/manual-hex-worksheet.json",
-        "artifact_version": "1",
-        "fingerprint": "0b664ceaf985a636275c08170e09f58cc9ad7a78bc50e6e8567cba814a38d227",
-        "availability": "retained"
+        "artifact_version": "1.4.0",
+        "fingerprint": "7fbe965c02e0e5d8b2c5a9c112e6ba42de27d90ef5388aa6b31d512a8894773d",
+        "availability": "retained",
+        "byte_length": 91490
       },
       "prior_error_explanation": "Fixture version 1.1.0 assigned its answer-free execution scenario inventory to the effective scan-configuration role instead of sealing distinct scan-configuration and case-matrix inputs.",
       "reviewer": "oracle-reviewer"
@@ -1530,12 +1537,31 @@
       "changed_at": "2026-08-02T20:00:00.0000000+00:00",
       "independent_evidence_reference": {
         "artifact_id": "oracle/manual-hex-worksheet.json",
-        "artifact_version": "1",
-        "fingerprint": "0b664ceaf985a636275c08170e09f58cc9ad7a78bc50e6e8567cba814a38d227",
-        "availability": "retained"
+        "artifact_version": "1.4.0",
+        "fingerprint": "7fbe965c02e0e5d8b2c5a9c112e6ba42de27d90ef5388aa6b31d512a8894773d",
+        "availability": "retained",
+        "byte_length": 91490
       },
       "prior_error_explanation": "Fixture version 1.2.0 did not declare the accepted-order construction receipt as its own mandatory execution-input role, distinct from installation-snapshot and runtime plugin-order inputs.",
       "reviewer": "oracle-reviewer"
     }
+  ],
+  "expected_documentation_revisions": [],
+  "expected_passages": [],
+  "expected_candidate_decisions": [],
+  "expected_reconciliation_assessments": [],
+  "expected_lineage_events": [],
+  "expected_replay_manifest": {
+    "artifact_id": "oracle/replay-manifest.json",
+    "artifact_version": "1.4.0",
+    "fingerprint": "7c32ef535f68cb089b953257cade63b91aa7f5979b7379256543ec95130588a9",
+    "availability": "retained",
+    "byte_length": 4305
+  },
+  "expected_not_used_boundaries": [
+    "provider",
+    "hosted-search",
+    "nexus",
+    "loot"
   ]
 }

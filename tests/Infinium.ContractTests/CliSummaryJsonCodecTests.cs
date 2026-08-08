@@ -54,7 +54,8 @@ public sealed class CliSummaryJsonCodecTests
             "completed",
             (int)CliExitCode.Success,
             new TypedOutputCountsContract(
-                1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+                1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                1, 1, 1, 1, 1),
             new CoverageStateCountsContract(1, 0, 0, 0, 0, 0),
             17,
             new CliCostContract(3, 2, 1, 1, 0, 10, 10, false),

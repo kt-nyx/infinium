@@ -71,6 +71,11 @@ public static class CliSummaryDocumentContractInvariants
             || summary.TypedCounts.InvalidInputs < 0
             || summary.TypedCounts.CoverageGaps < 0
             || summary.TypedCounts.Failures < 0
+            || summary.TypedCounts.DocumentationRevisions < 0
+            || summary.TypedCounts.Passages < 0
+            || summary.TypedCounts.CandidateDecisions < 0
+            || summary.TypedCounts.ReconciliationAssessments < 0
+            || summary.TypedCounts.LineageEvents < 0
             || summary.CoverageStateCounts.Completed < 0
             || summary.CoverageStateCounts.CompletedWithGaps < 0
             || summary.CoverageStateCounts.Failed < 0

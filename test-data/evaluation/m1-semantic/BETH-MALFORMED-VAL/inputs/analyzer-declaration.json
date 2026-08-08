@@ -1,0 +1,197 @@
+{
+  "schema_id": "infinium.analyzer.declaration/v1",
+  "schema_version": "1",
+  "analyzer_id": "current-public-bethesda-semantic",
+  "analyzer_version": "1.0.0",
+  "semantic_contract_version": "1.0.0",
+  "identity_contract_version": "1.0.0",
+  "ruleset_version": "1.0.0",
+  "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
+  "taxonomy_version": "0.1.0",
+  "scope": {
+    "supported_inputs": [
+      "sealed-bethesda-plugin-bytes"
+    ],
+    "excluded_inputs": [
+      {
+        "scope_id": "live-or-private-input",
+        "reason": "Only retained public local inputs are admitted."
+      }
+    ],
+    "supported_record_field_asset_shapes": [
+      "bounded-bethesda-record-field-link"
+    ],
+    "excluded_record_field_asset_shapes": [
+      {
+        "scope_id": "unregistered-shape",
+        "reason": "Unregistered shapes remain explicit gaps."
+      }
+    ],
+    "supported_taxonomy_codes": [
+      "bounded-current-public-scope"
+    ],
+    "unsupported_taxonomy_codes": [
+      {
+        "scope_id": "unbound-taxonomy-code",
+        "reason": "Unbound codes are not inferred."
+      }
+    ],
+    "supported_extent_facets": [
+      "direct"
+    ],
+    "excluded_extent_facets": [
+      {
+        "scope_id": "unproven-propagation",
+        "reason": "Propagation requires separate evidence."
+      }
+    ]
+  },
+  "input_populations": [
+    {
+      "population_id": "retained-public-inputs",
+      "description": "Retained current public package inputs.",
+      "required": true
+    }
+  ],
+  "dependencies": [],
+  "minimum_snapshot_assurance": "selectively-content-sealed",
+  "thresholds": {
+    "candidate_admission": {
+      "rule_id": "candidate-admission-v1",
+      "ruleset_version": "1.0.0",
+      "description": "Use the accepted typed rule without numeric score authority."
+    },
+    "evidence": {
+      "rule_id": "evidence-v1",
+      "ruleset_version": "1.0.0",
+      "description": "Use the accepted typed rule without numeric score authority."
+    },
+    "abstention": {
+      "rule_id": "abstention-v1",
+      "ruleset_version": "1.0.0",
+      "description": "Use the accepted typed rule without numeric score authority."
+    },
+    "finding_promotion": {
+      "rule_id": "finding-promotion-v1",
+      "ruleset_version": "1.0.0",
+      "description": "Use the accepted typed rule without numeric score authority."
+    }
+  },
+  "possible_outputs": [
+    "observation",
+    "deterministic-result",
+    "candidate",
+    "hypothesis",
+    "finding",
+    "recommendation",
+    "supported-case",
+    "lead-only-case",
+    "abstention",
+    "invalid-input",
+    "coverage-gap",
+    "failure"
+  ],
+  "coverage": {
+    "populations": [
+      "retained-public-inputs"
+    ],
+    "possible_states": [
+      "completed",
+      "completed-with-gaps",
+      "failed",
+      "skipped-by-configuration",
+      "skipped-by-limit",
+      "unsupported"
+    ],
+    "unsupported_behavior": "Retain the input and expose a typed gap without promotion."
+  },
+  "operation_requirements": {
+    "mode": "local-only",
+    "network_required": false,
+    "llm_required": false,
+    "provider_required": false
+  },
+  "expected_scale_and_cost": {
+    "population_scale": "bounded-fixture",
+    "cost_class": "local-moderate",
+    "billable": false
+  },
+  "resource_bounds": {
+    "max_input_items": 10000,
+    "max_output_items": 10000,
+    "max_wall_time_ms": 120000
+  },
+  "maturity": "Experimental",
+  "raw_development_output": true,
+  "preset_or_maturity_suppression": false,
+  "linked_evaluation_cases": {
+    "positive": [
+      "EVAL-0052"
+    ],
+    "negative": [
+      "EVAL-0052"
+    ],
+    "boundary": [
+      "EVAL-0052"
+    ],
+    "malformed": [
+      "EVAL-0052"
+    ],
+    "cross_category": [
+      "EVAL-0052"
+    ],
+    "gap": [
+      "EVAL-0052"
+    ]
+  },
+  "payload_contracts": [
+    {
+      "schema_id": "infinium.documentation.evidence/v1",
+      "schema_version": "1.0.0",
+      "required": true
+    },
+    {
+      "schema_id": "infinium.analysis.candidate/v1",
+      "schema_version": "1.0.0",
+      "required": true
+    },
+    {
+      "schema_id": "infinium.analysis.finding-case/v1",
+      "schema_version": "1.0.0",
+      "required": true
+    },
+    {
+      "schema_id": "infinium.analysis.replay/v1",
+      "schema_version": "1.0.0",
+      "required": true
+    },
+    {
+      "schema_id": "infinium.run-output/v1",
+      "schema_version": "1.0.0",
+      "required": true
+    }
+  ],
+  "state_model_version": "1.0.0",
+  "not_used_boundaries": [
+    {
+      "boundary_id": "provider",
+      "state": "not-used",
+      "reason": "Current public fixture execution is local and non-billable."
+    },
+    {
+      "boundary_id": "hosted-search",
+      "state": "not-used",
+      "reason": "Current public fixture execution is local and non-billable."
+    },
+    {
+      "boundary_id": "nexus",
+      "state": "not-used",
+      "reason": "Current public fixture execution is local and non-billable."
+    },
+    {
+      "boundary_id": "loot",
+      "state": "not-used",
+      "reason": "Current public fixture execution is local and non-billable."
+    }
+  ]
+}

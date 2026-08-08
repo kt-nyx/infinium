@@ -2,6 +2,11 @@
 
 Status: Accepted public authorability rehearsal input
 
+Current repository classification: retained historical pre-B2 proof evidence;
+not current fixture input, an executable workflow, product authority, or
+evaluator authority. See
+`docs/evaluation/repository-evaluation-authority.v1.json`.
+
 Purpose: prove that a fresh product-blind reviewer can construct every active
 protocol `/4` fact from public authority and generic answer-free inputs.
 

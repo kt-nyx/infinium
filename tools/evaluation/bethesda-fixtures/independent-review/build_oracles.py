@@ -15,7 +15,7 @@ METHODS = [
     "manual-annotated-hex-worksheet-v1",
     "independent-bounded-raw-reader-v1",
 ]
-FIXTURE_VERSION = "1.3.0"
+FIXTURE_VERSION = "1.4.0"
 ORACLE_VERSION = "1.3.0"
 ORACLE_CHANGED_AT = "2026-08-02T20:00:00.0000000+00:00"
 PLUGIN_SUFFIXES = {".esm", ".esp", ".esl"}

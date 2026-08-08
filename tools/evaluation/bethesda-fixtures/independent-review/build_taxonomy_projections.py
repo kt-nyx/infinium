@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any
 
 
-FIXTURE_VERSION = "1.3.0"
+FIXTURE_VERSION = "1.4.0"
 ORACLE_ARTIFACT_VERSION = "1.3.0"
 REVIEWED_AT = "2026-08-02T12:00:00.0000000+00:00"
 TAXONOMY_ID = "infinium.skyrim-se.mod-impact-taxonomy"

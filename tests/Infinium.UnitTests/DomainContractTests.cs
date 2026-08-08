@@ -119,7 +119,21 @@ public sealed class DomainContractTests
                 ["EVAL-0016"],
                 ["EVAL-0017"],
                 ["EVAL-0032"],
-                ["EVAL-0065"]));
+                ["EVAL-0065"]),
+            [
+                new(ContractConstants.DocumentationEvidenceSchemaId, new ContractVersion(1, 0, 0), true),
+                new(ContractConstants.CandidateAnalysisSchemaId, new ContractVersion(1, 0, 0), true),
+                new(ContractConstants.FindingCaseSchemaId, new ContractVersion(1, 0, 0), true),
+                new(ContractConstants.AnalysisReplaySchemaId, new ContractVersion(1, 0, 0), true),
+                new(ContractConstants.AnalysisExecutionInputSchemaId, new ContractVersion(1, 0, 0), true),
+            ],
+            new ContractVersion(1, 0, 0),
+            [
+                new("provider", BoundaryUseState.NotUsed, "local-only"),
+                new("hosted-search", BoundaryUseState.NotUsed, "local-only"),
+                new("nexus", BoundaryUseState.NotUsed, "local-only"),
+                new("loot", BoundaryUseState.NotUsed, "not configured"),
+            ]);
     }
 
     [TestMethod]
@@ -356,7 +370,8 @@ public sealed class DomainContractTests
     public void CliSummaryKeepsDurationUsageCostAndUnresolvedHoldsExplicit()
     {
         TypedOutputCountsContract typedCounts = new(
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0);
         CoverageStateCountsContract coverageCounts = new(0, 0, 0, 0, 0, 0);
         CliSummaryAggregateContract valid = new(
             ContractConstants.CliSummarySchemaId,

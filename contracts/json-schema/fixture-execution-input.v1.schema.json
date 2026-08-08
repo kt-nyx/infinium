@@ -12,6 +12,7 @@
     "accepted_order_construction_input",
     "analysis_context_input",
     "effective_scan_configuration",
+    "analysis_execution_input",
     "case_matrix_input",
     "runtime_support_input",
     "mo2_instance_profile_input",
@@ -43,6 +44,9 @@
       "$ref": "#/$defs/inputComponent"
     },
     "effective_scan_configuration": {
+      "$ref": "common.v1.schema.json#/$defs/artifactReference"
+    },
+    "analysis_execution_input": {
       "$ref": "common.v1.schema.json#/$defs/artifactReference"
     },
     "case_matrix_input": {

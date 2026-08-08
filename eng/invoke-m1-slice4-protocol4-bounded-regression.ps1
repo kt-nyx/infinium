@@ -122,8 +122,8 @@ while ($profileParent.FullName.StartsWith($repositoryPrefix, [StringComparison]:
     $profileParent = $profileParent.Parent
 }
 $profileIdentity = Get-FileIdentity $resolvedProfile
-if ([long]$profileIdentity.ByteLength -ne 4693 -or
-    [string]$profileIdentity.Sha256 -cne '44ea3e8720056bbd35229a4bb727699a44b86ea155dab4218c0aaaae332cf803') {
+if ([long]$profileIdentity.ByteLength -ne 4711 -or
+    [string]$profileIdentity.Sha256 -cne '20d494313170ceabc3515c7783d2f95a65547eafc77dc4ea82caa1e85c80b45e') {
     Refuse 'bounded-regression profile bytes drifted'
 }
 $profile = Get-Content -Raw -LiteralPath $resolvedProfile | ConvertFrom-Json
@@ -269,7 +269,7 @@ try {
     [IO.Directory]::CreateDirectory($testResults) | Out-Null
     $filter = ($expectedTests | ForEach-Object { "FullyQualifiedName=$_" }) -join '|'
     $testOutput = Invoke-Dotnet @(
-        'test', 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj',
+        'test', 'tests/Infinium.Protocol4RegressionTests/Infinium.Protocol4RegressionTests.csproj',
         '--configuration', 'Release', '--nologo', '--filter', $filter,
         '--logger', 'trx;LogFileName=bounded-regression.trx', '--results-directory', $testResults
     ) $repositoryRoot 'focused public regression'

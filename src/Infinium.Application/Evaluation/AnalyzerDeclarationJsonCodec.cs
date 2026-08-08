@@ -19,7 +19,7 @@ public static class AnalyzerDeclarationJsonCodec
         AnalyzerDeclarationDto dto = ToDto(declaration);
         string json = JsonSerializer.Serialize(dto, Options);
         using JsonDocument document = JsonDocument.Parse(json);
-        EmbeddedJsonSchemaValidator.Validate(document.RootElement, "analyzer-declaration.v1.schema.json");
+        ActiveJsonSchemaValidator.Validate(document.RootElement, "analyzer-declaration.v1.schema.json");
         return json;
     }
 
@@ -34,7 +34,7 @@ public static class AnalyzerDeclarationJsonCodec
                 CommentHandling = JsonCommentHandling.Disallow,
                 MaxDepth = 64,
             });
-        EmbeddedJsonSchemaValidator.Validate(document.RootElement, "analyzer-declaration.v1.schema.json");
+        ActiveJsonSchemaValidator.Validate(document.RootElement, "analyzer-declaration.v1.schema.json");
         AnalyzerDeclarationDto dto = JsonSerializer.Deserialize<AnalyzerDeclarationDto>(json, Options)
             ?? throw new InvalidDataException("Analyzer declaration is empty.");
         AnalyzerDeclarationContract declaration = FromDto(dto);
@@ -104,7 +104,16 @@ public static class AnalyzerDeclarationJsonCodec
                 value.LinkedEvaluationCases.Boundary,
                 value.LinkedEvaluationCases.Malformed,
                 value.LinkedEvaluationCases.CrossCategory,
-                value.LinkedEvaluationCases.Gap));
+                value.LinkedEvaluationCases.Gap),
+            value.PayloadContracts.Select(item => new PayloadContractDto(
+                item.SchemaId,
+                item.SchemaVersion.ToString(),
+                item.Required)).ToArray(),
+            value.StateModelVersion.ToString(),
+            value.NotUsedBoundaries.Select(item => new BoundaryDto(
+                item.BoundaryId,
+                "not-used",
+                item.Reason)).ToArray());
     }
 
     private static AnalyzerDeclarationContract FromDto(AnalyzerDeclarationDto value)
@@ -172,7 +181,16 @@ public static class AnalyzerDeclarationJsonCodec
                 value.LinkedEvaluationCases.Boundary,
                 value.LinkedEvaluationCases.Malformed,
                 value.LinkedEvaluationCases.CrossCategory,
-                value.LinkedEvaluationCases.Gap));
+                value.LinkedEvaluationCases.Gap),
+            value.PayloadContracts.Select(item => new PayloadContractDeclarationContract(
+                item.SchemaId,
+                ContractVersion.Parse(item.SchemaVersion),
+                item.Required)).ToArray(),
+            ContractVersion.Parse(value.StateModelVersion),
+            value.NotUsedBoundaries.Select(item =>
+                StringComparer.Ordinal.Equals(item.State, "not-used")
+                    ? new ExecutionBoundaryContract(item.BoundaryId, BoundaryUseState.NotUsed, item.Reason)
+                    : throw new InvalidDataException($"Unknown boundary state '{item.State}'.")).ToArray());
     }
 
     private static ReasonedScopeDto[] ToReasoned(IReadOnlyList<ReasonedAnalyzerScopeContract> values)
@@ -323,7 +341,14 @@ public static class AnalyzerDeclarationJsonCodec
         string Maturity,
         bool RawDevelopmentOutput,
         bool PresetOrMaturitySuppression,
-        LinkedCasesDto LinkedEvaluationCases);
+        LinkedCasesDto LinkedEvaluationCases,
+        IReadOnlyList<PayloadContractDto> PayloadContracts,
+        string StateModelVersion,
+        IReadOnlyList<BoundaryDto> NotUsedBoundaries);
+
+    private sealed record PayloadContractDto(string SchemaId, string SchemaVersion, bool Required);
+
+    private sealed record BoundaryDto(string BoundaryId, string State, string Reason);
 
     private sealed record AnalyzerScopeDto(
         IReadOnlyList<string> SupportedInputs,

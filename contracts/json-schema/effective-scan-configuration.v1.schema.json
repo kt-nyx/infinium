@@ -20,7 +20,9 @@
     "thresholds",
     "provider",
     "resources",
-    "semantic_context_overrides"
+    "semantic_context_overrides",
+    "payload_contracts",
+    "not_used_boundaries"
   ],
   "properties": {
     "schema_id": {
@@ -411,6 +413,36 @@
           "origin": {
             "const": "semantic-context-override"
           }
+        }
+      }
+    },
+    "payload_contracts": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["schema_id", "schema_version", "required"],
+        "properties": {
+          "schema_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+          "schema_version": { "const": "1.0.0" },
+          "required": { "const": true }
+        }
+      }
+    },
+    "not_used_boundaries": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["boundary_id", "state", "reason"],
+        "properties": {
+          "boundary_id": { "enum": ["provider", "hosted-search", "nexus", "loot"] },
+          "state": { "const": "not-used" },
+          "reason": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }
         }
       }
     }

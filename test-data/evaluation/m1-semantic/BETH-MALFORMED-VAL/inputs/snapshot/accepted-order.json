@@ -2,12 +2,12 @@
   "schema_id": "infinium.evaluation.bethesda-accepted-order-construction-input/v1",
   "schema_version": "1",
   "fixture_id": "BETH-MALFORMED-VAL",
-  "fixture_version": "1.3.0",
+  "fixture_version": "1.4.0",
   "source_basis": "accepted-slice-3.5-construction-manifest-and-retained-input-seals",
   "snapshot_contract_version": "3.0.0",
   "adapter_id": "infinium.mo2-static-reconstruction/v3",
   "selected_profile_name": "BETH-MALFORMED-VAL",
-  "construction_manifest_fingerprint": "9208c2b59f5e54b971dbb081f8d5bfd304dc8c2041ec8cb2b063eeed2e3ecd47",
+  "construction_manifest_fingerprint": "827c1a6bb900097f3ecf7d267f6c024ef641c79dcaf8bd63a83bcecdc2af56f2",
   "provider_order": [
     {
       "provider_id": "beth-malformed-val-provider-00",

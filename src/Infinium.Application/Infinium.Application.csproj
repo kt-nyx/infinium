@@ -16,7 +16,7 @@
               GrpcServices="Both" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="..\..\contracts\json-schema\analyzer-declaration.v1.schema.json;..\..\contracts\json-schema\cli-summary.v1.schema.json;..\..\contracts\json-schema\common.v1.schema.json;..\..\contracts\json-schema\run-output.v1.schema.json">
+    <EmbeddedResource Include="..\..\contracts\json-schema\*.json">
       <LogicalName>Infinium.Contracts.JsonSchema.%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>
   </ItemGroup>

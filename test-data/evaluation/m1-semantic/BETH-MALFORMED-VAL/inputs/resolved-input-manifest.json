@@ -1,0 +1,15 @@
+{
+  "schema_id": "infinium.evaluation.current-public-resolved-input-manifest/v1",
+  "schema_version": "1",
+  "manifest_id": "beth-malformed-val.resolved-inputs",
+  "fixture_id": "BETH-MALFORMED-VAL",
+  "fixture_version": "1.4.0",
+  "seed": 3520260730,
+  "source_artifact_ids": [
+    "inputs/case-matrix.json",
+    "inputs/snapshot/accepted-order.json"
+  ],
+  "analyzer_artifact_ids": [
+    "inputs/analyzer-declaration.json"
+  ]
+}

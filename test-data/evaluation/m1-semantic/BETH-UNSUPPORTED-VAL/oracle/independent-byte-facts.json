@@ -2,7 +2,7 @@
   "schema_id": "infinium.evaluation.bethesda-byte-oracle/v1",
   "schema_version": "1",
   "fixture_id": "BETH-UNSUPPORTED-VAL",
-  "fixture_version": "1.3.0",
+  "fixture_version": "1.4.0",
   "oracle_artifact_version": "1.3.0",
   "canonicalization": "infinium-canonical-json-sha256/v1",
   "independent_authors_and_reviewers": [
@@ -23,7 +23,6 @@
   "files": [
     {
       "artifact_id": "inputs/plugins/LocalizedDependency.esp",
-      "byte_length": 206,
       "sha256": "43115de64ffaa9853f8823525877ac7c0eaa93e28f7d02c22a20521b0c9eb605",
       "provider_id": "project-authored:beth-unsupported-val",
       "scenario_memberships": [
@@ -128,11 +127,11 @@
           "length": 4,
           "classification": "subrecord-data"
         }
-      ]
+      ],
+      "byte_length": 206
     },
     {
       "artifact_id": "inputs/plugins/UnsupportedFamily.esp",
-      "byte_length": 192,
       "sha256": "28a3f77b1c46ef8088d57987f3e43fa7e39a778fc8718f3b5d2bf567c96965ba",
       "provider_id": "project-authored:beth-unsupported-val",
       "scenario_memberships": [
@@ -223,11 +222,11 @@
           "length": 18,
           "classification": "subrecord-data"
         }
-      ]
+      ],
+      "byte_length": 192
     },
     {
       "artifact_id": "inputs/plugins/UnsupportedNpcField.esp",
-      "byte_length": 236,
       "sha256": "498515791b9196341c286ca4b65c6565ab9d7b07c59e8eb42365a1a85fce44d2",
       "provider_id": "project-authored:beth-unsupported-val",
       "scenario_memberships": [
@@ -346,7 +345,8 @@
           "length": 4,
           "classification": "subrecord-data"
         }
-      ]
+      ],
+      "byte_length": 236
     }
   ],
   "facts": [
