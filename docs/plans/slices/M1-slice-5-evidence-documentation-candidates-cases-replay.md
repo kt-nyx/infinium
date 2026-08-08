@@ -1,8 +1,12 @@
 # M1 Slice 5 — Evidence, documentation, candidates, cases, and replay
 
-Status: Proposed
+Status: Accepted
 
 Prepared: 2026-08-07
+
+Accepted: 2026-08-07
+
+Accepted by: Project owner
 
 Owner: Project owner
 
@@ -25,10 +29,10 @@ Depends on:
 
 Next work package: `M1/S5/WP1`
 
-This plan is proposed for owner review. It is not implementation authority.
-No Slice 5 product code, schema, fixture, test, or runtime change may begin
-until the project owner changes this plan to `Accepted` or records equivalent
-explicit acceptance.
+This plan is accepted implementation authority for its dependency-ordered work
+packages. `M1/S5/WP1` may begin after its normal preflight. Each later package
+remains gated by completion and review of its declared prerequisite package;
+acceptance does not authorize work outside this plan or waive a stop condition.
 
 ## 1. Objective and exact exit state
 
@@ -915,9 +919,9 @@ Slice 5 creates no prompts, provider requests, credentials, live packages,
 model admissions, provider provenance, or settlement. Provider/search/Nexus
 remain `not-used`. No package begins Slice 6 because the local path completed.
 
-## 20. Owner acceptance checklist
+## 20. Owner acceptance decision
 
-Before changing `Status: Proposed`, confirm:
+The project owner accepted this plan on 2026-08-07. Acceptance confirms:
 
 - clean-break completion of the accepted M1 v1 envelopes and storage schema 4
   are acceptable;
@@ -929,6 +933,6 @@ Before changing `Status: Proposed`, confirm:
 - transition mechanics do not claim Slice 7 mechanism or Slice 8 accuracy; and
 - private evaluator, `/5`, live/billable, legacy, and later slices stay closed.
 
-No unresolved product-authority conflict was found. Owner changes to a
-contract, fixture, threshold, migration, or claim boundary require plan
-revision and re-review before acceptance.
+No unresolved product-authority conflict was found. A later owner change to a
+contract, fixture, threshold, migration, or claim boundary requires plan
+revision and re-review before the affected work proceeds.
