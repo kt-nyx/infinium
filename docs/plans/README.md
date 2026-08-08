@@ -47,6 +47,11 @@ without a product verdict. No B2, C2, Stage D, corpus, scoring, or replacement-
 evaluator work is authorized. Evaluator-deferral closeout is accepted; Slice
 4.5 is closed, Slice 5 is eligible as the next product package under the M1
 continuation verification profile, and M1 remains active.
+The proposed
+[M1 Slice 5 execution plan](slices/M1-slice-5-evidence-documentation-candidates-cases-replay.md)
+defines the clean-break evidence-to-replay work as `M1/S5/WP1` through `WP6`.
+It remains at the proposed-plan boundary and is not implementation authority
+until the project owner accepts it.
 The completed
 [public Bethesda semantic realignment plan](slices/M1-slice-4.5-public-product-realignment.md)
 records that bounded implementation, review, qualification, and candidate-
