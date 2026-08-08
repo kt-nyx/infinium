@@ -4,20 +4,25 @@ Status: Active
 Last reviewed: 2026-08-08
 
 Slice execution plans refine an accepted milestone slice into a bounded,
-fresh-agent implementation contract. They do not supersede the milestone plan,
+assignable implementation contract. They do not supersede the milestone plan,
 accepted product requirements, ADRs, evaluation specifications, or fixture
 manifests. If an execution plan conflicts with one of those authorities, the
-higher-authority artifact controls and the discrepancy blocks implementation
-until it is reconciled.
+higher-authority artifact controls and only the affected decision path
+escalates under the
+[development execution policy](../../development/execution-policy.md).
+Independent in-scope work continues.
+
+[`../../current-state.md`](../../current-state.md) is the sole current package
+handoff. Status text and strict review/stop rules in older plan summaries are
+historical and do not govern ordinary current development.
 
 Current execution plans:
 
 - [M1 Slice 5 — Evidence, documentation, candidates, cases, and replay](M1-slice-5-evidence-documentation-candidates-cases-replay.md)
   — Accepted 2026-08-07 as work `M1/S5`. It defines six dependency-ordered
   public work packages for the clean-break evidence-to-replay path under
-  continuation-profile Layers 1-4 and 6. `M1/S5/WP1` is complete and reviewed;
-  `M1/S5/WP2` is the next authorized implementation package. Later packages remain gated by their declared
-  prerequisites and review boundaries.
+  continuation-profile Layers 1-4 and 6. Consult `current-state.md` for the
+  live package and prerequisite handoff.
 - [M1 Slice 3.5 — Independent Bethesda fixture and oracle qualification](M1-slice-3.5-bethesda-fixture-qualification.md)
   — Accepted 2026-07-30, amended and completed 2026-08-01; the pre-Slice-4
   readiness audit found no remaining start blocker; Slice 4 was implemented on

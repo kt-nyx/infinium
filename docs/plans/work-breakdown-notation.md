@@ -66,17 +66,19 @@ a claim that an agent, file, test, fixture, or implementation is correct.
 
 **Work-package authority** is the narrow permission supplied by an accepted
 plan after that package's prerequisites and entry gate are satisfied. It
-authorizes only the package's declared objective, paths/actions, deliverables,
-and verification. It does not authorize later packages, private evaluator
-work, live/billable operations, protected paths, or architecture outside the
-accepted decisions. A completed prerequisite can make the next package
-authorized automatically when the accepted plan says so; it does not make the
-whole slice authorized at once.
+authorizes the package's objective, paths/actions, deliverables, verification,
+and ordinary correction/re-review cycles under the
+[development execution policy](../development/execution-policy.md). It does
+not authorize later packages, private evaluator work, live/billable
+operations, protected paths, or architecture outside accepted decisions. A
+completed prerequisite can make the next package authorized automatically
+when the accepted plan says so; it does not make the whole slice authorized at
+once.
 
 If a work package must be subdivided, append a task component only in its own
 plan, for example `M1/S4.5/PRE-B2/WP2/T1`. Prefer another work package when the
-unit has a separate deliverable, authority boundary, reviewer, or stop
-condition.
+unit has a separate vertical deliverable, authority boundary, reviewer, or
+owner decision.
 
 ## Stability rules
 
@@ -106,10 +108,17 @@ Next work package: M1/S5/WP2
 ```
 
 Each work-package section records its canonical ID, objective, inputs,
-allowed paths/actions, deliverables, verification, stop conditions, and the
-next package it unblocks. Implementation and review records use the same ID so
-fresh-agent prompts and later status reports can be traced without relying on
-chat history.
+allowed paths/actions, vertical deliverables, contract maturity, verification,
+recoverable failures, genuine escalation conditions, and the next package it
+unblocks. Implementation and review records use the same ID so later status
+reports can be traced without relying on chat history.
+
+Ordinary packages do not define a fixed review or correction budget. Reviews
+classify findings as must-fix, follow-up, non-blocking, owner/authority
+decision, or safety/isolation breach. Must-fix findings return to correction
+and re-review until accepted. A package may add terminal rules only for an
+explicitly identified evaluator, private-answer, security, destructive, or
+externally effectful operation.
 
 ## Historical Slice 4.5 map
 
@@ -143,13 +152,14 @@ work.
 
 ```text
 M1/S5
-├── WP1 Contracts, migration, and authority boundary — complete and reviewed
-├── WP2 Typed evidence and provenance — next authorized package
-├── WP3 Candidate generation and selection — gated by WP2
-├── WP4 Findings, cases, coverage, and taxonomy — gated by WP3
-├── WP5 Coordinator, replay, export, and platform cases — gated by WP4
-└── WP6 Comprehensive public corpus and closeout — gated by WP5
+├── WP1 Contracts, migration, and authority boundary
+├── WP2 Typed evidence and provenance
+├── WP3 Candidate generation and selection
+├── WP4 Findings, cases, coverage, and taxonomy
+├── WP5 Coordinator, replay, export, and platform cases
+└── WP6 Comprehensive public corpus and closeout
 ```
 
 The accepted Slice 5 plan and its current implementation record control the
-exact scopes and gates. This map is navigation, not substitute authority.
+exact scopes and gates. [`../current-state.md`](../current-state.md) controls
+the current handoff. This map is scope navigation, not status authority.

@@ -10,13 +10,15 @@ and the accepted
 
 Applies to: M1 Slices 5 through 9
 
+Execution policy: [Development execution policy](../development/execution-policy.md)
+
 ## Claim and activation boundary
 
 This is the normative development and validation gate that replaces the
 held-out-`PASS` sequencing prerequisite for the remaining M1 slices.
 `M1/S4.5/EVAL-CLOSEOUT` is accepted and complete, so Slice 4.5 is closed.
-Slice 5 WP1 is complete and reviewed; WP2 is the next eligible package under
-this profile. The exact activation evidence
+The current eligible package is stated in
+[`../current-state.md`](../current-state.md). The profile's activation evidence
 is the [closeout acceptance record](m1-slice4.5-evaluator-deferral-closeout-acceptance.md).
 
 The profile proves public product conformance within each accepted slice's
@@ -26,6 +28,14 @@ M1 by itself. Protocol `/4` bounded regression is optional supporting tool
 health evidence only where its allowlisted representable subset is relevant;
 it is not one of the six replacement layers and cannot satisfy any layer on its
 own.
+
+This profile defines evidence required for acceptance; it does not impose a
+finite correction budget on ordinary product work. A failed command, fixture
+defect, schema mismatch, incomplete implementation, or review finding returns
+to correction and re-review under the development execution policy. Only an
+authority decision or safety/isolation escalation condition pauses the affected
+path. Evaluator-specific freeze and no-retry rules remain confined to a
+separately authorized evaluator task.
 
 For every row below, the owning slice must retain the exact executed command,
 commit, fixture and result identities, pass/fail/skip counts, unsupported
@@ -154,6 +164,11 @@ and that no private held-out verdict exists. No M1 or later claim uses
 `held-out`, `independently validated`, `reliable`, `ready`, or equivalent
 language beyond the evidence actually obtained.
 
+Reviewers classify findings as must-fix, follow-up, non-blocking,
+owner/authority decision, or safety/isolation breach and return `ACCEPT`,
+`CORRECT`, or `ESCALATE`. `CORRECT` may repeat until must-fix findings close;
+correction count is retained as evidence, not used as a stop threshold.
+
 | Mapping | Required value |
 |---|---|
 | Requirements | `EVID-002`, `EVID-006`, `EVID-007`, `COVER-001` through `COVER-003`, `ANALYSIS-016`, `PROD-002`, `PROD-004`, `SNAP-006` |
@@ -164,8 +179,9 @@ language beyond the evidence actually obtained.
 
 ## Slice sequencing and implementation records
 
-- Slice 5 WP1 is complete and reviewed. WP2 is the next eligible package, and
-  WP2-WP6 must satisfy their applicable Layers 1-4 and 6 in dependency order.
+- Slice 5 packages must satisfy their applicable Layers 1-4 and 6 in the
+  dependency order declared by the active plan; `current-state.md` identifies
+  the live handoff.
 - Slice 6 must satisfy applicable Layers 1-4 and 6 before any live provider
   operation; live authorization remains separate and bounded.
 - Slice 7 must satisfy all applicable layers and the exact two-materially-

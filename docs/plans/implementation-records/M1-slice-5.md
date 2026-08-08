@@ -46,6 +46,24 @@ expected counts. Product output remains prohibited as oracle truth, private
 held-out work remains deferred, protocol `/4` remains frozen historical
 bounded-regression evidence, and `/5` remains retired.
 
+## Current development-execution amendment
+
+On 2026-08-08 the project owner accepted the repository-wide
+[development execution policy](../../development/execution-policy.md) for
+ordinary work. For `M1/S5/WP2` through `WP6`, fixed correction budgets and a
+second-review-defect hard stop are superseded. Each package implements vertical
+increments, runs focused checks, classifies findings, corrects must-fix defects,
+and re-reviews until accepted.
+
+Owner escalation is now limited to conflicting or materially missing accepted
+semantics, required scope/authority expansion, unavailable owner-controlled
+dependencies after safe alternatives, and security/private-answer/protected-
+root/destructive/external-effect boundaries. Routine test, fixture, schema,
+codec, validator, documentation, implementation, and review defects are
+recoverable. The earlier correction-count and hard-stop chronology below
+remains accurate historical evidence for WP1; it is not current execution
+policy for later packages.
+
 The recovery branch was created from baseline HEAD with the existing worktree
 intact. An exact 727-record dirty-path inventory was written under ignored
 `artifacts/m1-slice5/wp1-recovery/` before generated material was removed. The
@@ -221,10 +239,12 @@ that material final-review defect. At that point:
   held-out claim is made; and
 - owner disposition was required before any new correction authority.
 
-The accepted staged-verification recovery amendment now supplies that bounded
-authority. It does not waive any known contract, migration, security,
-answer-isolation, or frozen-evaluator defect; a material defect remaining after
-the fresh recovery review is still a hard stop.
+The accepted staged-verification recovery amendment supplied that bounded WP1
+authority. Under the execution rules then in force, a material defect remaining
+after the fresh WP1 recovery review was a hard stop. The current development-
+execution amendment near the top of this record supersedes that correction
+limit for WP2-WP6 without weakening contract, migration, security,
+answer-isolation, or frozen-evaluator boundaries.
 
 No evaluator-private repository file, private corpus, B2/C2/Stage D/scoring
 surface, protocol `/5`, future protocol identity, abandoned legacy archive,

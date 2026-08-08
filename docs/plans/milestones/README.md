@@ -4,6 +4,13 @@ Status: Active navigation
 
 Last reviewed: 2026-08-08
 
+Current execution status lives only in
+[`../../current-state.md`](../../current-state.md), and ordinary review and
+correction follow the
+[`development execution policy`](../../development/execution-policy.md).
+Chronology below is retained navigation, not a source of current correction
+budgets or stop rules.
+
 The M0 research plan completed on 2026-07-28. The accepted
 [M1 backend semantic proof plan](M1-backend-semantic-proof.md) is the active
 implementation milestone plan together with its accepted

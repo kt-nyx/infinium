@@ -12,24 +12,30 @@ inspect, restore, or use that archive unless the user explicitly requests it.
 Before research, planning, architecture, or implementation work:
 
 1. `docs/README.md`
-2. `docs/product/product-definition.md`
-3. `docs/product/requirements.md`
-4. `docs/product/mod-impact-taxonomy.md`
-5. `docs/product/workflows.md`
-6. `docs/product/domain-model.md`
-7. `docs/product/severity-confidence-and-coverage.md`
-8. `docs/product/analysis-catalog.md`
-9. `docs/product/scope-and-milestones.md`
-10. `docs/architecture/overview.md`
-11. `docs/architecture/data-and-trust-model.md`
-12. Relevant accepted ADRs under `docs/architecture/decisions/`
+2. `docs/current-state.md`
+3. `docs/development/execution-policy.md`
+4. `docs/product/product-definition.md`
+5. `docs/product/requirements.md`
+6. `docs/product/mod-impact-taxonomy.md`
+7. `docs/product/workflows.md`
+8. `docs/product/domain-model.md`
+9. `docs/product/severity-confidence-and-coverage.md`
+10. `docs/product/analysis-catalog.md`
+11. `docs/product/scope-and-milestones.md`
+12. `docs/architecture/overview.md`
+13. `docs/architecture/data-and-trust-model.md`
+14. Relevant accepted ADRs under `docs/architecture/decisions/`
 
 Before following links from an older plan, implementation record, attestation,
 or occurrence ledger, establish the current repository state from:
 
-13. `docs/evaluation/product-evaluator-boundary.md`
-14. `docs/evaluation/repository-evaluation-authority.v1.json`
 15. the active accepted slice plan and its current implementation record
+
+When the task touches public fixtures, evaluation tools, evaluator terminology,
+or authority-sensitive schemas, also read:
+
+16. `docs/evaluation/product-evaluator-boundary.md`
+17. `docs/evaluation/repository-evaluation-authority.v1.json`
 
 Historical records preserve what happened at an earlier commit; they are not a
 navigation path for current implementation. A historical path, package name,
@@ -57,6 +63,11 @@ Then read the task-specific material:
 - implementation: the active accepted milestone plan, active slice plan, and
   prerequisite implementation record.
 
+Do not load historical evaluator plans, incident chronology, hard-stop records,
+or private governance for ordinary product implementation unless the active
+plan identifies one as a direct task input. Historical execution constraints
+do not become current defaults merely because an old record is linked.
+
 ## Working rules
 
 - Treat accepted product documents and ADRs as authoritative.
@@ -76,8 +87,30 @@ Then read the task-specific material:
   analysis.
 - Preserve full provenance and expose coverage gaps rather than inventing
   certainty.
+- Follow `docs/development/execution-policy.md` for ordinary work: implement,
+  test, review, correct, and re-review until the package is accepted or a
+  genuine escalation condition occurs.
+- Treat failed tests, review findings, fixture defects, schema/codec mismatch,
+  validator bugs, stale documentation, and incomplete implementation as
+  recoverable work, not owner-level blockers by themselves.
+- Do not impose correction-pass budgets on ordinary product work. Review
+  findings must be classified as must-fix, follow-up, non-blocking,
+  owner/authority decision, or safety/isolation breach.
+- Escalate only the affected path when accepted authority conflicts or is
+  materially incomplete, scope/authority must expand, an owner-controlled
+  dependency is unavailable after safe alternatives, or continuing would
+  violate a security, private-answer, protected-root, destructive, or external
+  effect boundary. Continue independent in-scope work where possible.
+- Treat contracts as implementation-active until producer, consumer,
+  persistence, round-trip, invalid-state, and focused fixture evidence support
+  freezing them. Update all affected seams together when implementation
+  evidence requires a clean-break revision.
 
-## Evaluator-private fixtures
+## Special evaluator and private-fixture boundaries
+
+This section applies when work touches evaluator authority or private-fixture
+operations. Its freeze, isolation, no-retry, and terminal-stop rules do not
+define the correction policy for ordinary product development.
 
 ### Repository authority map
 
@@ -117,13 +150,13 @@ expansion contract. WP6 assembles and independently reviews the comprehensive
 cross-package corpus. No rejected or preauthored comprehensive Slice 5 corpus
 is a prerequisite for product implementation.
 
-Current M1 handoff: `M1/S5/WP1` is complete and reviewed at
-`a333f016f66cafc393f165448e777276f3b6bd88`; `M1/S5/WP2` is the next eligible
-package. The rejected WP1-generated 28-package corpus, its registry, generator,
-fixture-only tests, and WP1 fixture-independence/generator-feasibility gates do
-not exist as current inputs and must not be reconstructed from historical
-names. Current public fixture discovery is limited to the six exact identities
-in `docs/evaluation/repository-evaluation-authority.v1.json`. Later Slice 5
+The current M1 handoff is stated only in `docs/current-state.md`; do not infer
+it from this file or historical records. For Slice 5, the rejected WP1-generated
+28-package corpus, its registry, generator, fixture-only tests, and WP1
+fixture-independence/generator-feasibility gates do not exist as current inputs
+and must not be reconstructed from historical names. Current public fixture
+discovery is limited to the six exact identities in
+`docs/evaluation/repository-evaluation-authority.v1.json`. Later Slice 5
 packages assign and freeze new semantic fixture identities within their own
 scope; product output never authors expected truth.
 
@@ -134,9 +167,10 @@ debugging, tuning, or reviewing production behavior.
 Evaluator v2 keeps protocol, schemas, canonicalization, scorer, adapter, and
 calibration public under ADR-0027. Ordinary product implementation must not
 create, orchestrate, repair, replace, or retry private evaluation work. It
-stops on a private evaluator or corpus failure. Stage B authoring and
-maintenance, Stage C scoring, and successor maintenance are separately
-authorized fresh tasks, not recursive implementation subtasks. Private
+stops the affected private operation on a private evaluator or corpus failure;
+unrelated public product work may continue within its accepted scope. Stage B
+authoring and maintenance, Stage C scoring, and successor maintenance are
+separately authorized fresh tasks, not recursive implementation subtasks. Private
 scoring returns only the sanitized handoff permitted by governance v2.
 Evaluator or corpus maintenance has no product-scoring authority, and the
 scorer has no maintenance authority.

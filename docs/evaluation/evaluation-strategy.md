@@ -9,6 +9,13 @@ trustworthy only when evidence reconstruction, candidate selection, semantic
 classification, abstention, and user-facing/release presentation are evaluated
 separately against known answers.
 
+For ordinary product and public-fixture development, evaluation failures and
+review findings return to correction and re-review under the
+[development execution policy](../development/execution-policy.md). This
+strategy defines evidence and claim standards; it does not impose an evaluator-
+style correction budget or terminal stop on ordinary implementation. Private
+and one-shot evaluator operations remain governed by their explicit protocols.
+
 ADR-0008 through ADR-0011 accept Wave B's target boundaries and qualification
 obligations, not the full Wave F case specifications or their execution. Until
 the named cases pass, no MO2, Mutagen, snapshot, runtime, or LOOT surface may

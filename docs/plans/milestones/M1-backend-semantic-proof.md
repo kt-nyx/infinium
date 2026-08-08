@@ -587,7 +587,8 @@ milestone entry points requires a reviewed plan amendment.
 
 ## Review cycle
 
-For each slice:
+For each slice, follow the repository
+[development execution policy](../../development/execution-policy.md):
 
 1. implement the complete declared contract;
 2. run the slice's unit, contract, integration, security/fault, and evaluation
@@ -599,7 +600,11 @@ For each slice:
 6. rerun the affected checks and the accumulated M1 regression set;
 7. record exact commands/results and intentional behavior changes.
 
-Test success without semantic/diff review is insufficient.
+Repeat correction and re-review as needed until acceptance. Test success
+without semantic/diff review is insufficient, and a failed check or review
+finding is not an owner-level blocker by itself. Only the policy's explicit
+authority, scope, dependency, safety, isolation, destructive, or external-
+effect escalation conditions pause the affected path.
 
 ## Completion criteria
 

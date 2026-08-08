@@ -8,6 +8,13 @@ or formally reviewed slices under accepted milestone plans, including explicit
 blockers. They do not modify the authority of the plans or mark unexercised
 evaluation cases as passed.
 
+Implementation records are historical evidence. Use
+[`../../current-state.md`](../../current-state.md) for the live handoff and the
+[`development execution policy`](../../development/execution-policy.md) for
+ordinary review/correction behavior. A historical blocker, correction limit,
+or stop condition does not propagate into current work unless a current
+accepted exceptional protocol explicitly invokes it.
+
 Slices 0 through 3.5 are complete. The initial Slice 4 attempt stopped at a
 Mutagen/EVAL-0052 fixture-conformance defect, and no partial production
 implementation was retained. The project owner subsequently selected Option A:

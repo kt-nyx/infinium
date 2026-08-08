@@ -8,7 +8,7 @@ Accepted: 2026-08-07
 
 Accepted by: Project owner
 
-Amended: 2026-08-08; staged-verification recovery amendment accepted by the project owner
+Amended: 2026-08-08; staged-verification recovery and development-execution policy alignment accepted by the project owner
 
 Owner: Project owner
 
@@ -23,6 +23,7 @@ Depends on:
   [evaluator-v2 amendment](../milestones/M1-backend-semantic-proof-evaluator-v2-amendment.md);
 - completed and accepted `M1/S4.5/EVAL-CLOSEOUT`;
 - accepted [ADR-0032](../../architecture/decisions/ADR-0032-defer-m1-held-out-evaluator-and-continue-public-verification.md);
+- the accepted [development execution policy](../../development/execution-policy.md);
 - the accepted [M1 continuation verification profile](../../evaluation/m1-continuation-verification-profile.md);
 - the accepted product, architecture, evaluation, and fixture authorities
   listed below; and
@@ -35,7 +36,8 @@ This plan is accepted implementation authority for its dependency-ordered work
 packages. `M1/S5/WP1` completed and passed fresh review on 2026-08-08, making
 `M1/S5/WP2` eligible after its normal preflight. Each later package remains
 gated by completion and review of its declared prerequisite package;
-acceptance does not authorize work outside this plan or waive a stop condition.
+acceptance does not authorize work outside this plan or waive an authority,
+security, isolation, protected-root, destructive, or external-effect boundary.
 
 Implementation state on 2026-08-08: the prior owner-authorized WP1 correction
 pass completed substantial repository-boundary, contract, state, and migration
@@ -48,7 +50,8 @@ Recovery state on 2026-08-08: WP1 retained the closed product contracts,
 strict codecs, additive protobuf, schema-4 migration/storage declarations,
 current public-fixture reader, and repository-boundary enforcement; removed
 the rejected premature comprehensive corpus and fixture-only authority; and
-passed one fresh review after one bounded correction pass. WP2-WP6 may now
+passed fresh review after the bounded correction process then governing WP1.
+WP2-WP6 may now
 proceed in dependency order under the staged, work-package-owned fixture
 authority below. No global evaluator, private oracle, protocol `/4` verdict,
 or preauthored comprehensive corpus blocks Slice 5 product development.
@@ -57,11 +60,11 @@ or preauthored comprehensive corpus blocks Slice 5 product development.
 
 On 2026-08-08 the project owner explicitly authorized WP1 to replace, rather
 than preserve or weaken around, the rejected public Slice 5 fixture set. The
-replacement must be comprehensive, independently expected, recursively
-answer-isolated, and exact enough for later typed machine comparison. The
-single WP1 correction pass covers the complete set of findings from the first
-fresh review; another material authority, state-model, fixture-independence,
-security, or claim-boundary defect on final re-review remains a hard stop.
+replacement was required to be comprehensive, independently expected,
+recursively answer-isolated, and exact enough for later typed machine
+comparison. The correction limit recorded for that completed WP1 recovery was
+historical execution control. It does not govern WP2-WP6, which now use the
+repository development execution policy.
 
 The owner also authorized a repository-wide public audit and integration pass
 for legacy or historical code, schemas, tests, and fixture data that a fresh
@@ -216,8 +219,8 @@ order, then this plan and these task-specific authorities completely:
   [analysis catalog](../../product/analysis-catalog.md),
   [taxonomy](../../product/mod-impact-taxonomy.md), and
   [severity, confidence, coverage, and readiness](../../product/severity-confidence-and-coverage.md);
-- accepted ADR-0015 through ADR-0023, ADR-0025, ADR-0027 through ADR-0029,
-  and ADR-0032 under [`../../architecture/decisions/`](../../architecture/decisions/README.md);
+- accepted ADR-0015 through ADR-0023, ADR-0025, and ADR-0032 under
+  [`../../architecture/decisions/`](../../architecture/decisions/README.md);
 - accepted [M1 evaluation baseline](../../evaluation/m1-evaluation-baseline.md),
   [semantic specifications](../../evaluation/specifications/m1-semantic-and-ground-truth.md),
   [semantic revision 2 amendment](../../evaluation/specifications/m1-semantic-and-ground-truth-v2-amendment.md),
@@ -226,19 +229,24 @@ order, then this plan and these task-specific authorities completely:
   and [platform fixture manifests](../../evaluation/fixtures/m1-platform-fixture-manifests.md);
 - accepted [evaluation strategy](../../evaluation/evaluation-strategy.md),
   [fixture guidelines](../../evaluation/fixture-guidelines.md),
-  [anti-overfitting rules](../../evaluation/anti-overfitting-rules.md), and
-  [private-fixture governance v2](../../evaluation/evaluator-private-fixture-governance-v2.md); and
-- the completed
-  [post-Slice-4.5 readiness review](../implementation-records/M1-post-slice-4.5-documentation-readiness-review.md)
-  and Slice 0–4 records under
-  [`../implementation-records/`](../implementation-records/README.md).
+  [anti-overfitting rules](../../evaluation/anti-overfitting-rules.md),
+  [product/evaluator boundary](../../evaluation/product-evaluator-boundary.md),
+  and [M1 continuation profile](../../evaluation/m1-continuation-verification-profile.md); and
+- the current [Slice 5 implementation record](../implementation-records/M1-slice-5.md).
+
+Private-fixture governance, retired evaluator plans, incident chronology, and
+Slice 4.5 hard-stop records are not ordinary Slice 5 implementation inputs.
+They may be read only for separately authorized evaluator work or a specific
+historical audit.
 
 Precedence is accepted product requirements/taxonomy, accepted ADRs, accepted
 milestone/evaluation specifications and amendments, this plan, then
 implementation records and code. Later accepted authority supersedes earlier
 text only to its stated extent. This plan may choose physical files, package
 seams, deterministic fixture sizes, and commands; it may not create product
-semantics. A conflict or missing semantic decision hard-stops affected work.
+semantics. A conflict or missing semantic decision escalates only the affected
+decision path under the development execution policy; independent in-scope
+work continues.
 
 ADR-0032 is current evaluator authority. Protocol `/5` is retired unqualified
 and must not be resumed, reused, repaired, replaced, or used as a model.
@@ -674,16 +682,24 @@ WP1 contracts/schemas/states/migration/boundary
  -> WP6 accumulated verification/review/closeout
 ```
 
-The recommended split matches real dependencies. WP1 freezes the cross-seam
-product contract without preauthoring later semantic truth. WP2 precedes WP3 because applicability/
+The recommended split matches real dependencies. WP1 establishes the initial
+cross-seam product contract without preauthoring later semantic truth. WP2 precedes WP3 because applicability/
 purpose are inputs. WP3 precedes WP4 because conclusions require retained
 candidate decisions. WP5 integrates after semantic objects stabilize; earlier
 packages still add typed storage adapters/tests so WP5 is not schema redesign.
 
-Every package permits one material semantic/diff review, one correction pass,
-and final re-review. Mechanical fixes may join that correction. A new material
-authority/model/fixture/security/claim defect on final review stops; do not
-enter a fixture-led loop.
+WP1 contract surfaces remain `Implementation-active` throughout WP2-WP5.
+Each behavior-owning package may revise them when producer/consumer,
+persistence, invalid-state, or focused-fixture evidence requires it, with all
+affected seams updated together. Producer/consumer-validated surfaces become
+`Slice-frozen` only when WP6 closes and Slice 5 is accepted.
+
+Every package uses the repository development loop: implement a vertical
+increment, run focused checks, perform semantic/diff review, classify findings,
+correct must-fix defects, and re-review until accepted. There is no fixed
+correction-pass budget for ordinary Slice 5 work. Expected-output changes still
+require independent evidence and review; product output never becomes fixture
+truth.
 
 Before the focused WP1–WP5 commands, run exactly:
 
@@ -738,15 +754,19 @@ fingerprint, rejection matrix, state/edge closure, repository-boundary and
 retirement evidence, logs, review/correction/judgment, and the rejected-corpus
 identity/disposition record.
 
-**Stop conditions.** Unclosed state; conflicting/missing accepted semantics;
-answer-bearing WP1 example or self-certification; missing contract authority;
-need to reinterpret a protocol major; frozen `/4` inventory drift; archived
-material reachable from a current build/schema/test/default-documentation
-surface; second material review defect.
+**Recoverable failures.** Unclosed state, contract/codec/schema/migration
+mismatch, answer-bearing example, incomplete authority enforcement, reachable
+archived material, or review defect returns to correction and re-review.
+
+**Escalation conditions.** Conflicting or materially missing accepted product
+semantics; required private/evaluator access; frozen `/4` byte drift; or an
+authority, security, isolation, protected-root, destructive, or external-effect
+boundary that cannot be preserved within WP1 scope.
 
 **Review.** Fresh contract/boundary reviewer checks every cross-seam field,
 state totality, answer-free examples, version transition, storage edge, and
-prohibited authority. One material correction pass.
+prohibited authority. WP1's completed recovery review/correction cycle remains
+recorded in its implementation record.
 
 **Unblocks.** `M1/S5/WP2` after the narrowed contract/boundary gate and final
 WP1 recovery review pass.
@@ -789,13 +809,21 @@ powershell -NoProfile -ExecutionPolicy Bypass -File eng/verify-m1-slice5.ps1 -Ga
 reuse/clean-import counts, passage checks, authority transitions, hostile
 canaries, deletion/replay gap, queries, commands, review.
 
-**Stop conditions.** Need for NLP/model inference; missing passage/source
-authority; content-triggered action; import/application collapse; external/
-private/legacy dependency; second material review defect.
+**Recoverable failures.** Import/application collapse, passage/hash/provenance
+defects, schema/codec/storage mismatch, incorrect applicability or purpose
+assignment, fixture defects, test failures, and review findings return to
+correction and re-review.
+
+**Escalation conditions.** Accepted authority cannot determine required source,
+passage, applicability, or purpose semantics; completing WP2 requires NLP/model
+inference, external/private/legacy access, or content-triggered action; or a
+security/isolation boundary cannot be preserved.
 
 **Review.** Fresh evidence/provenance reviewer checks passages, applicability,
 purpose authority, inert content, source policy, retention/replay effects, and
-that import alone creates no conclusion.
+that import alone creates no conclusion. Findings are classified under the
+development execution policy and must-fix findings are re-reviewed after
+correction.
 
 **Unblocks.** `M1/S5/WP3`.
 
@@ -837,9 +865,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File eng/verify-m1-slice5.ps1 -Ga
 output counts, structural hashes, score/rename/reorder/winner diffs, resource
 measurements, checkpoints, commands, review.
 
-**Stop conditions.** Missed declared supported/mandatory candidate; ranking
-removes required work; unbounded pairing; unsupported semantics become
-findings; taxonomy/name/fixture establishes cause; second material defect.
+**Recoverable failures.** Missed supported/mandatory candidates, ranking that
+removes required work, unbounded implementation, incorrect promotion,
+taxonomy/name/fixture leakage, test/fixture defects, and review findings return
+to correction and re-review.
+
+**Escalation conditions.** Accepted authority cannot define a required join,
+lane, abstention, or scale meaning; completing WP3 requires private/live/model
+or later-slice authority; or a security/isolation boundary cannot be
+preserved.
 
 **Review.** Fresh candidate/anti-overfitting reviewer checks joins, lanes,
 populations, invalidation, limits, raw retention, and forbidden inputs.
@@ -882,9 +916,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File eng/verify-m1-slice5.ps1 -Ga
 false merge/split/ambiguity; occurrence/logical/reconciliation/lineage IDs;
 coverage denominators/states/gaps; taxonomy history; commands/review.
 
-**Stop conditions.** Below-threshold finding; lead affects readiness; grouping
-without cause; false continuity/destructive rewrite/implicit carryover;
-combined safety score; second material defect.
+**Recoverable failures.** Below-threshold findings, lead/readiness leakage,
+grouping without cause, false continuity, destructive rewrite, implicit
+carryover, combined safety scores, test/fixture defects, and review findings
+return to correction and re-review.
+
+**Escalation conditions.** Accepted authority cannot determine required
+promotion, grouping, lineage, taxonomy, coverage, or gap semantics; completing
+WP4 requires new analyzer, private/live, controlled-real, or later-slice
+authority; or a security/isolation boundary cannot be preserved.
 
 **Review.** Fresh findings/case/lineage reviewer checks transitions, negatives,
 cause proof, gates, taxonomy roles, coverage/gaps, and claim boundary.
@@ -929,10 +969,15 @@ dependency closures; write/effect receipts and canaries; recovery; DB/CAS
 integrity/backup/projection; queries/cursors; human/JSON equality; partial/
 failure outputs; commands/review.
 
-**Stop conditions.** Partial publication; output-derived replay truth;
-dependency substitution/hidden gap; direct DB consumer; worker publication;
-protected-root effect; unbounded query; history mutation; second material
-defect.
+**Recoverable failures.** Partial publication, output-derived replay truth,
+dependency substitution or hidden gaps, direct-DB consumption, worker-owned
+publication, unbounded query, history mutation, test/fixture defects, and
+review findings return to correction and re-review before acceptance.
+
+**Escalation conditions.** An actual or required protected-root, secret,
+private-answer, destructive, or unauthorized external effect; accepted
+authority cannot determine required publication/replay semantics; or
+completing WP5 requires live/provider/credential/later-slice authority.
 
 **Review.** Fresh integration/security/replay reviewer checks atomicity,
 identity/equivalence, failure points, output, write/process/IPC authority, and
@@ -942,12 +987,13 @@ no scope expansion.
 
 ## 16. `M1/S5/WP6` — Accumulated verification, fresh review, and closeout
 
-**Objective.** Prove the public boundary, perform one bounded correction cycle,
-and produce exact implementation evidence and owner acceptance packet.
+**Objective.** Prove the public boundary, close review findings through bounded
+in-scope correction/re-review, and produce exact implementation evidence and
+an owner acceptance packet.
 
 **Prerequisites.** WP1–WP5 complete with final package reviews/evidence.
 
-**Allowed paths/actions.** Tests/scripts, bounded corrections within prior
+**Allowed paths/actions.** Tests/scripts, corrections within prior
 paths, implementation record, proposed owner status/index updates.
 
 **Prohibited.** New scope; output-driven oracle changes; private/live/legacy/
@@ -955,8 +1001,9 @@ later-slice work; self-accepting plan/Slice.
 
 **Deliverables.** Assemble and independently review the comprehensive clean,
 incremental, replay, and cross-stage corpus; full floor; `-Gate All`;
-traceability ownership audit; final semantic/diff review and one correction;
-complete record; gaps/no-verdict claim. Only owner marks accepted/complete.
+traceability ownership audit; final semantic/diff review and correction/
+re-review closure; complete record; gaps/no-verdict claim. Only owner marks
+accepted/complete.
 
 **Verification.** Focused aggregate:
 
@@ -990,13 +1037,20 @@ reconcile public authority rather than invoking evaluator files ad hoc.
 final diff, review checklist/input commit, findings/correction/decision, local
 commit.
 
-**Stop conditions.** Failing command; missing owner; unexplained skip;
-contamination; second material finding; authority drift; prohibited access; or
-claim beyond Section 1.
+**Recoverable failures.** Failing commands, unexplained skips, incomplete
+evidence, ordinary authority-document drift, claim overstatement, fixture/test
+defects, and review findings return to correction, rerun, and re-review.
 
-**Review.** Fresh reviewer uses exact clean implementation commit/diff and
-answer-free authority checklist. One correction pass; final re-review is
-pass/fail and another material defect hard-stops for owner disposition.
+**Escalation conditions.** Private-answer contamination or prohibited access;
+an unresolved conflict in accepted authority; a required scope/permission
+expansion; or a security, protected-root, destructive, or external-effect
+boundary that cannot be preserved.
+
+**Review.** Fresh reviewer uses the exact clean implementation commit/diff and
+answer-free authority checklist, classifies findings, and returns `ACCEPT`,
+`CORRECT`, or `ESCALATE`. `CORRECT` returns must-fix findings to another
+bounded correction/re-review cycle; only a policy escalation condition requires
+owner disposition.
 
 **Unblocks.** Owner Slice 5 acceptance and `M1/S6` planning, not implementation.
 
@@ -1023,8 +1077,8 @@ pass/fail and another material defect hard-stops for owner disposition.
   schema evidence;
 - every failure, limit, unsupported/abstention/coverage/replay/audit gap,
   unprocessed population, and skip;
-- fresh review input/checklist/findings, single correction, files, final
-  judgment and independence;
+- fresh review input/checklist/classified findings, correction/re-review cycles,
+  files, final judgment, and independence;
 - explicit no private/corpus/scoring/`/5`/future-protocol/live/billable/legacy/
   controlled-real/Slice-6+ access; and
 - exact claim: public synthetic local/fixture Slice 5 conformance only;
