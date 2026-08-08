@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/json-schema/documentation-claim-import.v1.schema.json",
+  "title": "Infinium deterministic documentation claim import v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "schema_version", "source_id", "source_kind", "source_revision", "availability", "byte_fingerprint", "byte_length", "claims", "applications"],
+  "properties": {
+    "schema_id": { "const": "infinium.documentation.claim-import/v1" },
+    "schema_version": { "const": "1.0.0" },
+    "source_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "source_kind": { "enum": ["project-authored-local", "fixture"] },
+    "source_revision": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+    "availability": { "enum": ["present", "deleted", "unavailable"] },
+    "byte_fingerprint": { "$ref": "common.v1.schema.json#/$defs/sha256" },
+    "byte_length": { "type": "integer", "minimum": 0, "maximum": 8388608 },
+    "supplying_snapshot_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "claims": { "type": "array", "maxItems": 10000, "items": { "$ref": "#/$defs/claim" } },
+    "applications": { "type": "array", "maxItems": 10000, "items": { "$ref": "#/$defs/application" } }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "source_kind": { "const": "project-authored-local" } } },
+      "then": { "required": ["supplying_snapshot_id"] }
+    }
+  ],
+  "$defs": {
+    "claim": {
+      "type": "object", "additionalProperties": false,
+      "required": ["claim_key", "utf8_start_offset", "utf8_end_offset", "exact_text", "kind", "conditions", "authority", "applicability", "classification_role", "contradicting_claim_keys"],
+      "properties": {
+        "claim_key": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "utf8_start_offset": { "type": "integer", "minimum": 0, "maximum": 8388608 },
+        "utf8_end_offset": { "type": "integer", "minimum": 1, "maximum": 8388608 },
+        "exact_text": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+        "kind": { "enum": ["declared-purpose", "requirement", "incompatibility", "installation-instruction", "priority-instruction", "lifecycle-instruction", "configuration-instruction", "patch-instruction", "known-issue"] },
+        "conditions": { "type": "array", "maxItems": 100, "uniqueItems": true, "items": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" } },
+        "authority": { "const": "authoritative-external" },
+        "applicability": { "enum": ["applicable", "not-applicable", "unknown", "unsupported", "contradicted"] },
+        "classification_role": { "enum": ["declared", "observed", "predicted", "established"] },
+        "contradicting_claim_keys": { "type": "array", "maxItems": 100, "uniqueItems": true, "items": { "$ref": "common.v1.schema.json#/$defs/identifier" } }
+      }
+    },
+    "application": {
+      "type": "object", "additionalProperties": false,
+      "required": ["claim_key", "consuming_run_id", "analysis_context_id", "subject_id", "subject_type", "dependency_closure_id", "applicability", "supporting_claim_keys"],
+      "properties": {
+        "claim_key": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "consuming_run_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "analysis_context_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "subject_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "subject_type": { "const": "installed-entity" },
+        "dependency_closure_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "applicability": { "enum": ["applicable", "not-applicable", "unknown", "unsupported", "contradicted"] },
+        "supporting_claim_keys": { "type": "array", "maxItems": 100, "uniqueItems": true, "items": { "$ref": "common.v1.schema.json#/$defs/identifier" } },
+        "declared_purpose": { "$ref": "#/$defs/purpose" }
+      }
+    },
+    "purpose": {
+      "type": "object", "additionalProperties": false,
+      "required": ["code", "applicability_condition_ids", "analyzer_or_adjudicator_id", "reason"],
+      "properties": {
+        "code": { "enum": ["purpose.add-expand", "purpose.replace-overhaul", "purpose.modify-tune", "purpose.fix-restore", "purpose.integrate-patch", "purpose.configure-expose-choice", "purpose.generate-precompute", "purpose.provide-runtime-framework", "purpose.provide-tool-workflow", "purpose.remove-disable"] },
+        "applicability_condition_ids": { "type": "array", "maxItems": 100, "uniqueItems": true, "items": { "$ref": "common.v1.schema.json#/$defs/identifier" } },
+        "analyzer_or_adjudicator_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "reason": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }
+      }
+    }
+  }
+}

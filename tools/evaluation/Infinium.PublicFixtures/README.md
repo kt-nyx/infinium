@@ -5,6 +5,11 @@ product contract and evaluation tests. It validates project-authored public
 fixture packages and assertion results against the active product schemas in
 `contracts/json-schema/`.
 
+The WP2 documentation reader additionally closes the two independently
+authored `DOC-WP2-CORE-DEV` and `DOC-WP2-ADVERSARIAL-VAL` packages, verifies
+their exact retained UTF-8 source bytes and dependency fingerprints, and
+admits their claim-import manifests through the active product validator.
+
 This library is not an evaluator protocol, scorer, oracle authority, held-out
 workflow, or product runtime dependency. It does not reference
 `Infinium.EvaluatorV2`, its frozen `/4` protocol schemas, predecessor `/3`

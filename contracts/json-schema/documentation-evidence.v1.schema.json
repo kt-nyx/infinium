@@ -4,34 +4,70 @@
   "title": "Infinium Slice 5 documentation evidence v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_id", "schema_version", "payload_id", "originating_run_id", "revisions", "passages", "claims", "applications", "purpose_assignments", "gaps", "failures"],
+  "required": ["schema_id", "schema_version", "payload_id", "originating_run_id", "revisions", "imports", "passages", "claims", "applications", "purpose_assignments", "deletion_receipts", "gaps", "failures"],
   "properties": {
     "schema_id": { "const": "infinium.documentation.evidence/v1" },
     "schema_version": { "const": "1.0.0" },
     "payload_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
     "originating_run_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
     "revisions": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/revision" } },
+    "imports": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/import" } },
     "passages": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/passage" } },
     "claims": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/claim" } },
     "applications": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/application" } },
-    "purpose_assignments": { "type": "array", "maxItems": 100000, "items": { "$ref": "common.v1.schema.json#/$defs/taxonomyAssignment" } },
-    "gaps": { "type": "array", "maxItems": 100000, "items": { "$ref": "common.v1.schema.json#/$defs/typedArtifact" } },
-    "failures": { "type": "array", "maxItems": 100000, "items": { "$ref": "common.v1.schema.json#/$defs/typedArtifact" } }
+    "purpose_assignments": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/purposeAssignment" } },
+    "deletion_receipts": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/deletionReceipt" } },
+    "gaps": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/gap" } },
+    "failures": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/failure" } }
   },
   "$defs": {
     "revision": {
       "type": "object", "additionalProperties": false,
-      "required": ["revision_id", "source_id", "byte_fingerprint", "byte_length", "import_run_id", "retention_state", "replay_state"],
+      "required": ["revision_id", "source_id", "source_kind", "source_revision", "byte_fingerprint", "byte_length", "retention_state", "replay_state"],
       "properties": {
         "revision_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
         "source_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "source_kind": { "enum": ["project-authored-local", "fixture"] },
+        "source_revision": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
         "byte_fingerprint": { "$ref": "common.v1.schema.json#/$defs/sha256" },
         "byte_length": { "type": "integer", "minimum": 0 },
-        "import_run_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
         "supplying_snapshot_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
         "retention_state": { "enum": ["present", "partial", "unavailable"] },
         "replay_state": { "enum": ["complete-clean", "partial", "audit-only", "unavailable", "failed-identity-drift"] }
-      }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "source_kind": { "const": "project-authored-local" } } },
+          "then": { "required": ["supplying_snapshot_id"] }
+        }
+      ]
+    },
+    "import": {
+      "type": "object", "additionalProperties": false,
+      "required": ["import_id", "import_run_id", "revision_id", "mode", "dependency_closure_id", "extractor_id", "llm_involvement", "llm_operation", "boundaries", "created_at"],
+      "properties": {
+        "import_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "import_run_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "revision_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "mode": { "enum": ["clean-import", "retained-reuse"] },
+        "reused_import_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "dependency_closure_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "extractor_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "llm_involvement": { "const": "none" },
+        "llm_operation": { "const": "none" },
+        "boundaries": {
+          "type": "array", "minItems": 4, "maxItems": 4,
+          "items": { "$ref": "#/$defs/boundary" }
+        },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "mode": { "const": "retained-reuse" } } },
+          "then": { "required": ["reused_import_id"] },
+          "else": { "not": { "required": ["reused_import_id"] } }
+        }
+      ]
     },
     "passage": {
       "type": "object", "additionalProperties": false,
@@ -47,14 +83,15 @@
     },
     "claim": {
       "type": "object", "additionalProperties": false,
-      "required": ["claim_id", "passage_id", "kind", "exact_text", "conditions", "authority", "applicability", "classification_role", "contradicting_evidence_ids"],
+      "required": ["claim_id", "producing_import_id", "passage_id", "kind", "exact_text", "conditions", "authority", "applicability", "classification_role", "contradicting_evidence_ids"],
       "properties": {
         "claim_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "producing_import_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
         "passage_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
         "kind": { "enum": ["declared-purpose", "requirement", "incompatibility", "installation-instruction", "priority-instruction", "lifecycle-instruction", "configuration-instruction", "patch-instruction", "known-issue"] },
         "exact_text": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
         "conditions": { "type": "array", "items": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" } },
-        "authority": { "enum": ["snapshot-bound-local", "deterministic-derived", "authoritative-external", "corroborated-community", "uncorroborated-report", "user-statement", "test-result", "heuristic-or-llm-inference"] },
+        "authority": { "const": "authoritative-external" },
         "applicability": { "enum": ["applicable", "not-applicable", "unknown", "unsupported", "contradicted"] },
         "classification_role": { "enum": ["declared", "observed", "predicted", "established"] },
         "contradicting_evidence_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.v1.schema.json#/$defs/identifier" } }
@@ -62,15 +99,88 @@
     },
     "application": {
       "type": "object", "additionalProperties": false,
-      "required": ["application_id", "claim_id", "consuming_run_id", "analysis_context_id", "dependency_closure_id", "applicability", "evidence_ids"],
+      "required": ["application_id", "claim_id", "consuming_run_id", "analysis_context_id", "subject_id", "subject_type", "dependency_closure_id", "applicability", "evidence_ids"],
       "properties": {
         "application_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
         "claim_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
         "consuming_run_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
         "analysis_context_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "subject_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "subject_type": { "const": "installed-entity" },
         "dependency_closure_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
         "applicability": { "enum": ["applicable", "not-applicable", "unknown", "unsupported", "contradicted"] },
         "evidence_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.v1.schema.json#/$defs/identifier" } }
+      }
+    },
+    "gap": {
+      "type": "object", "additionalProperties": false,
+      "required": ["gap_id", "originating_run_id", "kind", "revision_id", "replay_effect", "reason", "created_at"],
+      "properties": {
+        "gap_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "originating_run_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "kind": { "enum": ["contradiction", "deletion", "unavailable-source", "replay"] },
+        "revision_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "claim_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "application_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "replay_effect": { "enum": ["complete-clean", "partial", "audit-only", "unavailable", "failed-identity-drift"] },
+        "reason": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+        "created_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "deletionReceipt": {
+      "type": "object", "additionalProperties": false,
+      "required": ["receipt_id", "originating_run_id", "revision_id", "deleted_body_fingerprint", "deleted_passage_ids", "independently_retained_payload_ids", "replay_effect", "deleted_at", "reason"],
+      "properties": {
+        "receipt_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "originating_run_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "revision_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "deleted_body_fingerprint": { "$ref": "common.v1.schema.json#/$defs/sha256" },
+        "deleted_passage_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.v1.schema.json#/$defs/identifier" } },
+        "independently_retained_payload_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.v1.schema.json#/$defs/identifier" } },
+        "replay_effect": { "enum": ["audit-only", "unavailable"] },
+        "deleted_at": { "type": "string", "format": "date-time" },
+        "reason": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }
+      }
+    },
+    "purposeAssignment": {
+      "type": "object", "additionalProperties": false,
+      "required": ["assignment_id", "taxonomy_id", "taxonomy_version", "axis", "facet", "code", "applicability", "subject_id", "subject_type", "role", "claim_id", "application_id", "applicability_condition_ids", "analyzer_or_adjudicator_id", "created_at", "reason"],
+      "properties": {
+        "assignment_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "taxonomy_id": { "const": "infinium.skyrim-se.mod-impact-taxonomy" },
+        "taxonomy_version": { "const": "0.1.0" },
+        "axis": { "const": "declared-purpose-and-intended-feature-area" },
+        "facet": { "const": "purpose-kind" },
+        "code": { "enum": ["purpose.add-expand", "purpose.replace-overhaul", "purpose.modify-tune", "purpose.fix-restore", "purpose.integrate-patch", "purpose.configure-expose-choice", "purpose.generate-precompute", "purpose.provide-runtime-framework", "purpose.provide-tool-workflow", "purpose.remove-disable"] },
+        "applicability": { "const": "assigned" },
+        "subject_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "subject_type": { "const": "installed-entity" },
+        "role": { "const": "declared" },
+        "claim_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "application_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "applicability_condition_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.v1.schema.json#/$defs/identifier" } },
+        "analyzer_or_adjudicator_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "reason": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }
+      }
+    },
+    "failure": {
+      "type": "object", "additionalProperties": false,
+      "required": ["failure_id", "failure_code", "message", "retryable"],
+      "properties": {
+        "failure_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "failure_code": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "message": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "retryable": { "type": "boolean" }
+      }
+    },
+    "boundary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["boundary_id", "state", "reason"],
+      "properties": {
+        "boundary_id": { "enum": ["provider", "hosted-search", "nexus", "loot"] },
+        "state": { "const": "not-used" },
+        "reason": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }
       }
     }
   }

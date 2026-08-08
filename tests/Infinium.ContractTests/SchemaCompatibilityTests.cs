@@ -31,6 +31,7 @@ public sealed partial class SchemaCompatibilityTests
         "cli-summary.v1.schema.json",
         "diagnostic-trace.v1.schema.json",
         "documentation-evidence.v1.schema.json",
+        "documentation-claim-import.v1.schema.json",
         "candidate-analysis.v1.schema.json",
         "finding-case.v1.schema.json",
         "analysis-replay.v1.schema.json",

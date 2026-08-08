@@ -1,0 +1,7 @@
+{
+  "fixture_id": "DOC-WP2-ADVERSARIAL-VAL",
+  "fixture_version": "1.0.0",
+  "redistribution_class": "project-authored-redistributable",
+  "contains_third_party_content": false,
+  "constraints": ["Secret-shaped, command-shaped, URL-shaped, SQL-shaped, and JNDI-shaped strings are synthetic inert test data."]
+}

@@ -13,6 +13,21 @@ public static class DocumentationEvidenceJsonCodec
         Slice5ContractJsonCodec.Deserialize<DocumentationEvidenceContract>(bytes, "documentation-evidence.v1.schema.json", static item => Slice5ContractInvariants.Validate(item));
 }
 
+public static class DocumentationClaimImportJsonCodec
+{
+    public static byte[] Serialize(DocumentationClaimImportManifestContract value) =>
+        Slice5ContractJsonCodec.Serialize(
+            value,
+            "documentation-claim-import.v1.schema.json",
+            static item => DocumentationClaimImportContractInvariants.Validate(item));
+
+    public static DocumentationClaimImportManifestContract Deserialize(ReadOnlySpan<byte> bytes) =>
+        Slice5ContractJsonCodec.Deserialize<DocumentationClaimImportManifestContract>(
+            bytes,
+            "documentation-claim-import.v1.schema.json",
+            static item => DocumentationClaimImportContractInvariants.Validate(item));
+}
+
 public static class CandidateAnalysisJsonCodec
 {
     public static byte[] Serialize(CandidateAnalysisContract value) =>
@@ -98,6 +113,7 @@ internal static class Slice5ContractJsonCodec
         options.Converters.Add(new OpaqueIdJsonConverter());
         options.Converters.Add(new ContractVersionJsonConverter());
         options.Converters.Add(new Sha256FingerprintJsonConverter());
+        options.Converters.Add(new UtcTimestampJsonConverter());
         return options;
     }
 
@@ -155,5 +171,14 @@ internal static class Slice5ContractJsonCodec
 
         public override void Write(Utf8JsonWriter writer, Sha256Fingerprint value, JsonSerializerOptions options) =>
             writer.WriteStringValue(value.Value);
+    }
+
+    private sealed class UtcTimestampJsonConverter : JsonConverter<UtcTimestamp>
+    {
+        public override UtcTimestamp Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
+            UtcTimestamp.Parse(reader.GetString() ?? throw new JsonException("UTC timestamp must be a string."));
+
+        public override void Write(Utf8JsonWriter writer, UtcTimestamp value, JsonSerializerOptions options) =>
+            writer.WriteStringValue(value.ToString());
     }
 }

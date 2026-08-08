@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Contracts')]
+    [ValidateSet('Contracts', 'Documentation')]
     [string] $Gate,
 
     [Parameter(Mandatory = $true)]
@@ -43,7 +43,7 @@ function Get-FileEvidence([string] $Path) {
 
 function Write-GateReport([string] $Name, [System.Collections.IDictionary] $Body) {
     $report = [ordered]@{
-        schema_id = 'infinium.verification.m1-slice5-wp1/v1'
+        schema_id = 'infinium.verification.m1-slice5/v1'
         schema_version = '1'
         gate = $Name
         result = 'passed'
@@ -62,6 +62,7 @@ function Invoke-ContractsGate {
     $schemaRoot = Join-Path $repoRoot 'contracts/json-schema'
     $requiredSchemas = [ordered]@{
         'documentation-evidence.v1.schema.json' = 'infinium.documentation.evidence/v1'
+        'documentation-claim-import.v1.schema.json' = 'infinium.documentation.claim-import/v1'
         'candidate-analysis.v1.schema.json' = 'infinium.analysis.candidate/v1'
         'finding-case.v1.schema.json' = 'infinium.analysis.finding-case/v1'
         'analysis-replay.v1.schema.json' = 'infinium.analysis.replay/v1'
@@ -155,9 +156,81 @@ function Invoke-ContractsGate {
     })
 }
 
+function Invoke-DocumentationGate {
+    $requiredPaths = @(
+        'contracts/json-schema/documentation-claim-import.v1.schema.json',
+        'contracts/json-schema/documentation-evidence.v1.schema.json',
+        'src/Infinium.Analysis/Documentation/DocumentationEvidenceImporter.cs',
+        'src/Infinium.Application/Documentation/DocumentationEvidencePhase.cs',
+        'test-data/evaluation/m1-semantic/DOC-WP2-CORE-DEV',
+        'test-data/evaluation/m1-semantic/DOC-WP2-ADVERSARIAL-VAL'
+    )
+    foreach ($relativePath in $requiredPaths) {
+        if (-not (Test-Path -LiteralPath (Join-Path $repoRoot $relativePath))) {
+            throw "Required WP2 documentation surface is missing: $relativePath"
+        }
+    }
+
+    $fixtureRoots = @(
+        (Join-Path $repoRoot 'test-data/evaluation/m1-semantic/DOC-WP2-CORE-DEV'),
+        (Join-Path $repoRoot 'test-data/evaluation/m1-semantic/DOC-WP2-ADVERSARIAL-VAL')
+    )
+    $fixtureEvidence = @()
+    foreach ($fixtureRoot in $fixtureRoots) {
+        foreach ($file in Get-ChildItem -LiteralPath $fixtureRoot -Recurse -File | Sort-Object FullName) {
+            if ($file.Extension -ceq '.json') {
+                $null = Read-StrictJson $file.FullName
+            }
+            $fixtureEvidence += Get-FileEvidence $file.FullName
+        }
+    }
+
+    $documentationSource = [System.IO.File]::ReadAllText(
+        (Join-Path $repoRoot 'src/Infinium.Analysis/Documentation/DocumentationEvidenceImporter.cs'))
+    foreach ($forbidden in @('HttpClient', 'OpenAIClient', 'NexusClient', 'Process.Start', 'PowerShell.Create')) {
+        if ($documentationSource.IndexOf($forbidden, [StringComparison]::Ordinal) -ge 0) {
+            throw "WP2 deterministic documentation source reaches forbidden capability: $forbidden"
+        }
+    }
+
+    $testCommands = @(
+        @('test', 'tests/Infinium.UnitTests/Infinium.UnitTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~DocumentationSource|FullyQualifiedName~ClaimImport'),
+        @('test', 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~DocumentationEvidence|FullyQualifiedName~CleanLayers'),
+        @('test', 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~EvidenceTypes|FullyQualifiedName~ProvenanceLocal|FullyQualifiedName~UntrustedDocumentation')
+    )
+    $testResults = @()
+    foreach ($arguments in $testCommands) {
+        $testOutput = @(& dotnet @arguments 2>&1)
+        $testOutput | ForEach-Object { Write-Host $_ }
+        if ($LASTEXITCODE -ne 0) {
+            throw "WP2 focused verification failed: dotnet $($arguments -join ' ')"
+        }
+        $testTranscript = $testOutput -join [Environment]::NewLine
+        if ($testTranscript -notmatch 'Total:\s+[1-9][0-9]*') {
+            throw "WP2 focused verification matched zero tests: dotnet $($arguments -join ' ')"
+        }
+        $testResults += "dotnet $($arguments -join ' ')"
+    }
+
+    Write-GateReport 'Documentation' ([ordered]@{
+        deterministic_importer = Get-FileEvidence (Join-Path $repoRoot 'src/Infinium.Analysis/Documentation/DocumentationEvidenceImporter.cs')
+        phase_adapter = Get-FileEvidence (Join-Path $repoRoot 'src/Infinium.Application/Documentation/DocumentationEvidencePhase.cs')
+        fixture_file_count = $fixtureEvidence.Count
+        fixture_files = $fixtureEvidence
+        focused_test_commands = $testResults
+        llm_involvement = 'none'
+        provider_search_nexus_loot = 'not-used'
+        private_fixture_access = 'not-used'
+    })
+}
+
 Push-Location $repoRoot
 try {
-    Invoke-ContractsGate
+    if ($Gate -ceq 'Contracts') {
+        Invoke-ContractsGate
+    } else {
+        Invoke-DocumentationGate
+    }
 } finally {
     Pop-Location
 }

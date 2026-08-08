@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Infinium.Analysis\Infinium.Analysis.csproj" />
     <ProjectReference Include="..\..\src\Infinium.Application\Infinium.Application.csproj" />
     <ProjectReference Include="..\..\src\Infinium.Bethesda\Infinium.Bethesda.csproj" />
     <ProjectReference Include="..\..\src\Infinium.Domain\Infinium.Domain.csproj" />

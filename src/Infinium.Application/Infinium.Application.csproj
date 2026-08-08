@@ -1,8 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <ProjectReference Include="..\Infinium.Analysis\Infinium.Analysis.csproj" />
     <ProjectReference Include="..\Infinium.Domain\Infinium.Domain.csproj" />
     <ProjectReference Include="..\Infinium.Bethesda\Infinium.Bethesda.csproj" />
     <ProjectReference Include="..\Infinium.Mo2\Infinium.Mo2.csproj" />
+    <ProjectReference Include="..\Infinium.Persistence\Infinium.Persistence.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Google.Protobuf" />

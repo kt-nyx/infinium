@@ -1,0 +1,181 @@
+{
+  "schema_id": "infinium.documentation.claim-import/v1",
+  "schema_version": "1.0.0",
+  "source_id": "doc-source-core",
+  "source_kind": "fixture",
+  "source_revision": "core-r1",
+  "availability": "present",
+  "byte_fingerprint": "89ae20b5415dfb794c518eb75b2d8e5af74a810171b8cf2a8540694d127f5388",
+  "byte_length": 411,
+  "supplying_snapshot_id": "snapshot-core-001",
+  "claims": [
+    {
+      "claim_key": "core-purpose",
+      "utf8_start_offset": 0,
+      "utf8_end_offset": 57,
+      "exact_text": "Résumé Ω — Purpose: Adds an optional aurora feature.",
+      "kind": "declared-purpose",
+      "conditions": [],
+      "authority": "authoritative-external",
+      "applicability": "applicable",
+      "classification_role": "declared",
+      "contradicting_claim_keys": []
+    },
+    {
+      "claim_key": "core-requirement",
+      "utf8_start_offset": 58,
+      "utf8_end_offset": 101,
+      "exact_text": "Requires Framework A when profile=enhanced.",
+      "kind": "requirement",
+      "conditions": ["profile=enhanced"],
+      "authority": "authoritative-external",
+      "applicability": "applicable",
+      "classification_role": "declared",
+      "contradicting_claim_keys": []
+    },
+    {
+      "claim_key": "core-incompatibility",
+      "utf8_start_offset": 102,
+      "utf8_end_offset": 157,
+      "exact_text": "Incompatible with Legacy Weather when profile=enhanced.",
+      "kind": "incompatibility",
+      "conditions": ["profile=enhanced"],
+      "authority": "authoritative-external",
+      "applicability": "contradicted",
+      "classification_role": "declared",
+      "contradicting_claim_keys": ["core-patch"]
+    },
+    {
+      "claim_key": "core-install",
+      "utf8_start_offset": 158,
+      "utf8_end_offset": 193,
+      "exact_text": "Install and load after Framework A.",
+      "kind": "installation-instruction",
+      "conditions": [],
+      "authority": "authoritative-external",
+      "applicability": "applicable",
+      "classification_role": "declared",
+      "contradicting_claim_keys": []
+    },
+    {
+      "claim_key": "core-priority",
+      "utf8_start_offset": 158,
+      "utf8_end_offset": 193,
+      "exact_text": "Install and load after Framework A.",
+      "kind": "priority-instruction",
+      "conditions": [],
+      "authority": "authoritative-external",
+      "applicability": "applicable",
+      "classification_role": "declared",
+      "contradicting_claim_keys": []
+    },
+    {
+      "claim_key": "core-lifecycle",
+      "utf8_start_offset": 194,
+      "utf8_end_offset": 222,
+      "exact_text": "Disable before uninstalling.",
+      "kind": "lifecycle-instruction",
+      "conditions": [],
+      "authority": "authoritative-external",
+      "applicability": "applicable",
+      "classification_role": "declared",
+      "contradicting_claim_keys": []
+    },
+    {
+      "claim_key": "core-config",
+      "utf8_start_offset": 223,
+      "utf8_end_offset": 258,
+      "exact_text": "Set glow=false for low-vision mode.",
+      "kind": "configuration-instruction",
+      "conditions": ["mode=low-vision"],
+      "authority": "authoritative-external",
+      "applicability": "not-applicable",
+      "classification_role": "declared",
+      "contradicting_claim_keys": []
+    },
+    {
+      "claim_key": "core-patch",
+      "utf8_start_offset": 259,
+      "utf8_end_offset": 304,
+      "exact_text": "Apply Patch P when Legacy Weather is present.",
+      "kind": "patch-instruction",
+      "conditions": ["legacy-weather=present"],
+      "authority": "authoritative-external",
+      "applicability": "applicable",
+      "classification_role": "declared",
+      "contradicting_claim_keys": ["core-incompatibility"]
+    },
+    {
+      "claim_key": "core-known-issue",
+      "utf8_start_offset": 305,
+      "utf8_end_offset": 359,
+      "exact_text": "Known issue: rain may flicker on interior transitions.",
+      "kind": "known-issue",
+      "conditions": ["transition=interior"],
+      "authority": "authoritative-external",
+      "applicability": "contradicted",
+      "classification_role": "declared",
+      "contradicting_claim_keys": ["core-counter-issue"]
+    },
+    {
+      "claim_key": "core-counter-issue",
+      "utf8_start_offset": 360,
+      "utf8_end_offset": 410,
+      "exact_text": "No known issue occurs during interior transitions.",
+      "kind": "known-issue",
+      "conditions": ["transition=interior"],
+      "authority": "authoritative-external",
+      "applicability": "contradicted",
+      "classification_role": "declared",
+      "contradicting_claim_keys": ["core-known-issue"]
+    }
+  ],
+  "applications": [
+    {
+      "claim_key": "core-purpose",
+      "consuming_run_id": "run-doc-core-import",
+      "analysis_context_id": "context-core",
+      "subject_id": "installed-core-weather",
+      "subject_type": "installed-entity",
+      "dependency_closure_id": "closure-core",
+      "applicability": "applicable",
+      "supporting_claim_keys": ["core-requirement"],
+      "declared_purpose": {
+        "code": "purpose.add-expand",
+        "applicability_condition_ids": [],
+        "analyzer_or_adjudicator_id": "fixture-oracle-author",
+        "reason": "The exact declared-purpose passage names an additive optional feature."
+      }
+    },
+    {
+      "claim_key": "core-install",
+      "consuming_run_id": "run-doc-core-import",
+      "analysis_context_id": "context-core",
+      "subject_id": "installed-core-weather",
+      "subject_type": "installed-entity",
+      "dependency_closure_id": "closure-core",
+      "applicability": "applicable",
+      "supporting_claim_keys": ["core-priority"]
+    },
+    {
+      "claim_key": "core-patch",
+      "consuming_run_id": "run-doc-core-import",
+      "analysis_context_id": "context-core",
+      "subject_id": "installed-core-weather",
+      "subject_type": "installed-entity",
+      "dependency_closure_id": "closure-core",
+      "applicability": "applicable",
+      "supporting_claim_keys": ["core-requirement"]
+    },
+    {
+      "claim_key": "core-known-issue",
+      "consuming_run_id": "run-doc-core-import",
+      "analysis_context_id": "context-core",
+      "subject_id": "installed-core-weather",
+      "subject_type": "installed-entity",
+      "dependency_closure_id": "closure-core",
+      "applicability": "contradicted",
+      "supporting_claim_keys": ["core-counter-issue"]
+    }
+  ]
+}

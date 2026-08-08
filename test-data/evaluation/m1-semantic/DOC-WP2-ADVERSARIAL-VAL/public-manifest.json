@@ -1,0 +1,29 @@
+{
+  "schema_id": "infinium.evaluation.fixture-public-manifest/v1",
+  "schema_version": "1",
+  "fixture_id": "DOC-WP2-ADVERSARIAL-VAL",
+  "fixture_version": "1.0.0",
+  "evaluation_ids": ["EVAL-0033", "EVAL-0034", "EVAL-0035", "EVAL-0037", "EVAL-0064", "EVAL-0067", "EVAL-0083"],
+  "purpose": "Validate inert hostile documentation, malformed and unsupported rejection, clean-versus-retained reuse, source deletion/unavailability gaps, replay downgrade, and explicit external-boundary non-use.",
+  "classification": "boundary",
+  "partition": "validation",
+  "partition_history": [
+    {
+      "from": null,
+      "to": "validation",
+      "at": "2026-08-08T18:05:00.0000000+00:00",
+      "reason": "Fresh public WP2 adversarial package preregistered and independently authored before product comparison.",
+      "change_influenced_implementation": false
+    }
+  ],
+  "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
+  "taxonomy_version": "0.1.0",
+  "input_package_fingerprint": "5ee2cdf28b9b98d7c0abc22a698ecfac79286030e926a7fc3fc12fd62f352d8c",
+  "oracle_fingerprint": "8a435a592549dcacdb447c89e60ae629dafdc3f8bca5adf7a9063038d3897843",
+  "provenance_fingerprint": "dc9458ba1b4a8f699e7aa8ca06e23f79c58af5fc8e8cf15357f379e8b4311230",
+  "replay_dependency_fingerprint": "f0d501c9659db42d8e872c7f49e3a6f65b973976dd36fe627f8a880ab6212022",
+  "redistribution_class": "project-authored-redistributable",
+  "owner": "infinium-evaluation",
+  "review_state": "accepted",
+  "created_at": "2026-08-08T18:05:00.0000000+00:00"
+}

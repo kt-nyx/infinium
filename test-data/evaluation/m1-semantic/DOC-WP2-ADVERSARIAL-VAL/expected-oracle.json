@@ -1,0 +1,163 @@
+{
+  "fixture_id": "DOC-WP2-ADVERSARIAL-VAL",
+  "fixture_version": "1.0.0",
+  "oracle_authorship": "independent-before-product-comparison",
+  "clean": {
+    "expected_result": "accepted-inert",
+    "expected_counts": { "revisions": 1, "imports": 1, "passages": 4, "claims": 4, "applications": 1, "purpose_assignments": 0, "deletion_receipts": 0, "gaps": 0, "failures": 0 },
+    "revision_id": "docrev-5ab9ded5066400229fea85bdfe3fc1fe",
+    "import_id": "docimport-71f3c025c80d70633928dabc417ec3ce",
+    "reused_import_id_presence": "absent",
+    "created_at": "2026-08-08T18:30:00.0000000+00:00",
+    "supplying_snapshot_id": "snapshot-adversarial-001",
+    "retention_state": "present",
+    "replay_state": "complete-clean",
+    "revision_descriptors": ["39:docrev-5ab9ded5066400229fea85bdfe3fc1fe22:doc-source-adversarial7:fixture14:adversarial-r164:e0b05439353b6871a839cd89942626756917f612bae9bb285e59a39f8900079e3:21124:snapshot-adversarial-0017:present14:complete-clean"],
+    "import_descriptors": ["42:docimport-71f3c025c80d70633928dabc417ec3ce25:run-doc-adversarial-clean39:docrev-5ab9ded5066400229fea85bdfe3fc1fe12:clean-import4:none19:closure-adversarial21:deterministic-utf8-v14:none4:none263:63:8:provider8:not-used40:deterministic local documentation import69:13:hosted-search8:not-used40:deterministic local documentation import60:5:nexus8:not-used40:deterministic local documentation import59:4:loot8:not-used40:deterministic local documentation import33:2026-08-08T18:30:00.0000000+00:00"],
+    "failure_descriptors": [],
+    "aggregate_descriptor_list_sha256": {
+      "revisions": "555e5dad3d33592b7c485f6331044770088f0d3f82db564b255c851497d5b732",
+      "imports": "e29129db1294f4713c04cd74fbd9e754cfd8099a4b20a132d99447b70fdc7443",
+      "passages": "879d4bbb6f38223f6a439d34a0b52afd894f7737a978c18fdf963b3ff42d4fe6",
+      "claims": "38d50d618204d52da2307aecfc48c94bdc440e25f8290f1ad2e6f5472b56ac14",
+      "applications": "ef309465400c84c9db26f6c6ad7c3fc7b41b95584c2f661a64326d1ff5e1b3eb",
+      "purpose_assignments": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "deletion_receipts": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gaps": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "failures": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "payload_id": "docevidence-4ced9c0c47bc60d5cc156207f2e846ea",
+    "source_sha256": "e0b05439353b6871a839cd89942626756917f612bae9bb285e59a39f8900079e",
+    "source_byte_length": 211,
+    "passages": [
+      { "passage_id": "docpass-8c07105fa6d652a540f356add5796cb1", "utf8_start_offset": 89, "utf8_end_offset": 121, "passage_fingerprint": "4d294d411bbd281daaca04299a397ad4f863f8d35df7f4eb0ab9740a6558c73b", "state": "present" },
+      { "passage_id": "docpass-c42010b95474875359aea9d9ce1b6673", "utf8_start_offset": 154, "utf8_end_offset": 210, "passage_fingerprint": "ee0152ac615133446d1ad6023c1a6a3813c0f8f59c24903757bc04b7ea774d64", "state": "present" },
+      { "passage_id": "docpass-f36c45d44fb82ec8f20172cb1aa90d8f", "utf8_start_offset": 122, "utf8_end_offset": 153, "passage_fingerprint": "62395f9b83eab421dc53127dd954a523f55dc7491fdc6ba8310bf31cf8b4f82e", "state": "present" },
+      { "passage_id": "docpass-f9e4341673223befa6f39c8a7303d810", "utf8_start_offset": 0, "utf8_end_offset": 88, "passage_fingerprint": "b81a7e16b4771ed82e7324470bb53eb1df0eab166ee91e2dbf552793343125c9", "state": "present" }
+    ],
+    "claims": [
+      { "claim_key": "adv-jndi", "claim_base_id": "docclaimbase-21d45d566f94815d81aae128cc3ae2d7", "direct_contradiction_base_ids": [], "reachable_contradiction_descriptors": [], "claim_id": "docclaim-76132f175b633ec3d7bc34274c6a7619", "producing_import_id": "docimport-71f3c025c80d70633928dabc417ec3ce", "passage_id": "docpass-c42010b95474875359aea9d9ce1b6673", "applicability": "unknown" },
+      { "claim_key": "adv-command", "claim_base_id": "docclaimbase-2f296609dc86f320f7384cec34667afd", "direct_contradiction_base_ids": [], "reachable_contradiction_descriptors": [], "claim_id": "docclaim-83d7e5fea7432d69dd6f80060ecb660e", "producing_import_id": "docimport-71f3c025c80d70633928dabc417ec3ce", "passage_id": "docpass-f9e4341673223befa6f39c8a7303d810", "applicability": "unsupported" },
+      { "claim_key": "adv-secret", "claim_base_id": "docclaimbase-90c20871dc408b55e35d56c9dfa1ee7f", "direct_contradiction_base_ids": [], "reachable_contradiction_descriptors": [], "claim_id": "docclaim-ba327e65d688347f9220d4aa61a42c1b", "producing_import_id": "docimport-71f3c025c80d70633928dabc417ec3ce", "passage_id": "docpass-f36c45d44fb82ec8f20172cb1aa90d8f", "applicability": "unsupported" },
+      { "claim_key": "adv-sql", "claim_base_id": "docclaimbase-63ce1803c3f1c127cde468ce355aa7ac", "direct_contradiction_base_ids": [], "reachable_contradiction_descriptors": [], "claim_id": "docclaim-deb6722302e195517e109765a8bb92fa", "producing_import_id": "docimport-71f3c025c80d70633928dabc417ec3ce", "passage_id": "docpass-8c07105fa6d652a540f356add5796cb1", "applicability": "unsupported" }
+    ],
+    "application_id": "docapply-d22eee37059e4fb1d754d1c2ebd4249e",
+    "application_evidence_ids": ["docclaim-76132f175b633ec3d7bc34274c6a7619"],
+    "application_target": { "consuming_run_id": "run-doc-adversarial-clean", "installation_snapshot_id": "snapshot-adversarial-001", "analysis_context_id": "context-adversarial", "resolved_input_manifest_id": "resolved-input-adversarial-001", "subject_id": "installed-adversarial-doc", "subject_type": "installed-entity", "dependency_closure_id": "closure-adversarial" },
+    "deletion_receipts": [],
+    "llm_involvement": "none",
+    "llm_operation": "none",
+    "boundaries": [
+      { "boundary_id": "provider", "state": "not-used", "reason": "deterministic local documentation import" },
+      { "boundary_id": "hosted-search", "state": "not-used", "reason": "deterministic local documentation import" },
+      { "boundary_id": "nexus", "state": "not-used", "reason": "deterministic local documentation import" },
+      { "boundary_id": "loot", "state": "not-used", "reason": "deterministic local documentation import" }
+    ],
+    "authorized_external_actions": []
+  },
+  "retained_reuse_deleted": {
+    "expected_result": "accepted-with-gaps",
+    "revision_id": "docrev-5ab9ded5066400229fea85bdfe3fc1fe",
+    "preserved_passage_ids": ["docpass-8c07105fa6d652a540f356add5796cb1", "docpass-c42010b95474875359aea9d9ce1b6673", "docpass-f36c45d44fb82ec8f20172cb1aa90d8f", "docpass-f9e4341673223befa6f39c8a7303d810"],
+    "preserved_claim_ids": ["docclaim-76132f175b633ec3d7bc34274c6a7619", "docclaim-83d7e5fea7432d69dd6f80060ecb660e", "docclaim-ba327e65d688347f9220d4aa61a42c1b", "docclaim-deb6722302e195517e109765a8bb92fa"],
+    "preserved_application_ids": ["docapply-d22eee37059e4fb1d754d1c2ebd4249e"],
+    "import_id": "docimport-eea4ee7feb9caa554aa7d88cc72a80f1",
+    "reused_import_id": "docimport-71f3c025c80d70633928dabc417ec3ce",
+    "created_at": "2026-08-08T18:30:00.0000000+00:00",
+    "supplying_snapshot_id": "snapshot-adversarial-001",
+    "retention_state": "present",
+    "revision_replay_state": "complete-clean",
+    "revision_descriptor": "39:docrev-5ab9ded5066400229fea85bdfe3fc1fe22:doc-source-adversarial7:fixture14:adversarial-r164:e0b05439353b6871a839cd89942626756917f612bae9bb285e59a39f8900079e3:21124:snapshot-adversarial-0017:present14:complete-clean",
+    "import_descriptors": ["42:docimport-eea4ee7feb9caa554aa7d88cc72a80f133:run-doc-adversarial-reuse-deleted39:docrev-5ab9ded5066400229fea85bdfe3fc1fe14:retained-reuse42:docimport-71f3c025c80d70633928dabc417ec3ce19:closure-adversarial21:deterministic-utf8-v14:none4:none263:63:8:provider8:not-used40:deterministic local documentation import69:13:hosted-search8:not-used40:deterministic local documentation import60:5:nexus8:not-used40:deterministic local documentation import59:4:loot8:not-used40:deterministic local documentation import33:2026-08-08T18:30:00.0000000+00:00"],
+    "failure_descriptors": [],
+    "aggregate_descriptor_list_sha256": {
+      "revisions": "555e5dad3d33592b7c485f6331044770088f0d3f82db564b255c851497d5b732",
+      "imports": "7b7202ba6cbba5a820c1efc71560103ceb26c81860f91524d33bdf9df4d5c12a",
+      "passages": "879d4bbb6f38223f6a439d34a0b52afd894f7737a978c18fdf963b3ff42d4fe6",
+      "claims": "38d50d618204d52da2307aecfc48c94bdc440e25f8290f1ad2e6f5472b56ac14",
+      "applications": "ef309465400c84c9db26f6c6ad7c3fc7b41b95584c2f661a64326d1ff5e1b3eb",
+      "purpose_assignments": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "deletion_receipts": "26ea9e20360e62f687a962a842503f8c9fbd9246696fe482f1dc96513153f36b",
+      "gaps": "4878d94befa4f6220dc5ae9f439e79b1ede79674cbd2fee20a96144e0e31e3d8",
+      "failures": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "gap_ids": ["docgap-1fb79b3627e028a27104e8094d33d914", "docgap-9233c88010b01782d176d0ced7188866"],
+    "gap_kinds": ["replay", "deletion"],
+    "gaps": [
+      { "gap_id": "docgap-1fb79b3627e028a27104e8094d33d914", "originating_run_id": "run-doc-adversarial-reuse-deleted", "kind": "replay", "revision_id": "docrev-5ab9ded5066400229fea85bdfe3fc1fe", "replay_effect": "audit-only", "reason": "Deletion leaves an inspectable audit identity but prevents clean source replay.", "created_at": "2026-08-08T18:30:00.0000000+00:00" },
+      { "gap_id": "docgap-9233c88010b01782d176d0ced7188866", "originating_run_id": "run-doc-adversarial-reuse-deleted", "kind": "deletion", "revision_id": "docrev-5ab9ded5066400229fea85bdfe3fc1fe", "replay_effect": "audit-only", "reason": "The source body was explicitly deleted; its fingerprint remains but exact passage replay is unavailable.", "created_at": "2026-08-08T18:30:00.0000000+00:00" }
+    ],
+    "deletion_receipt_count": 1,
+    "deletion_receipts": [
+      {
+        "receipt_id": "docdelete-bf2dcb16c18ef145453589d5eb16988e",
+        "originating_run_id": "run-doc-adversarial-reuse-deleted",
+        "revision_id": "docrev-5ab9ded5066400229fea85bdfe3fc1fe",
+        "deleted_body_fingerprint": "e0b05439353b6871a839cd89942626756917f612bae9bb285e59a39f8900079e",
+        "deleted_passage_ids": ["docpass-8c07105fa6d652a540f356add5796cb1", "docpass-c42010b95474875359aea9d9ce1b6673", "docpass-f36c45d44fb82ec8f20172cb1aa90d8f", "docpass-f9e4341673223befa6f39c8a7303d810"],
+        "independently_retained_payload_ids": [],
+        "replay_effect": "audit-only",
+        "deleted_at": "2026-08-08T18:30:00.0000000+00:00",
+        "reason": "The retained source body and exact passage payloads were selected for deletion after dependent evidence publication."
+      }
+    ],
+    "persistence_replay_state": "audit-only",
+    "payload_id": "docevidence-b3f8e0062102d7feff5bd759144203b5"
+  },
+  "retained_reuse_unavailable": {
+    "expected_result": "accepted-with-gaps",
+    "revision_id": "docrev-5ab9ded5066400229fea85bdfe3fc1fe",
+    "preserved_passage_ids": ["docpass-8c07105fa6d652a540f356add5796cb1", "docpass-c42010b95474875359aea9d9ce1b6673", "docpass-f36c45d44fb82ec8f20172cb1aa90d8f", "docpass-f9e4341673223befa6f39c8a7303d810"],
+    "preserved_claim_ids": ["docclaim-76132f175b633ec3d7bc34274c6a7619", "docclaim-83d7e5fea7432d69dd6f80060ecb660e", "docclaim-ba327e65d688347f9220d4aa61a42c1b", "docclaim-deb6722302e195517e109765a8bb92fa"],
+    "preserved_application_ids": ["docapply-d22eee37059e4fb1d754d1c2ebd4249e"],
+    "import_id": "docimport-c33e734193a3a99022fe731929c2e5cd",
+    "reused_import_id": "docimport-71f3c025c80d70633928dabc417ec3ce",
+    "created_at": "2026-08-08T18:30:00.0000000+00:00",
+    "supplying_snapshot_id": "snapshot-adversarial-001",
+    "retention_state": "present",
+    "revision_replay_state": "complete-clean",
+    "revision_descriptor": "39:docrev-5ab9ded5066400229fea85bdfe3fc1fe22:doc-source-adversarial7:fixture14:adversarial-r164:e0b05439353b6871a839cd89942626756917f612bae9bb285e59a39f8900079e3:21124:snapshot-adversarial-0017:present14:complete-clean",
+    "import_descriptors": ["42:docimport-c33e734193a3a99022fe731929c2e5cd37:run-doc-adversarial-reuse-unavailable39:docrev-5ab9ded5066400229fea85bdfe3fc1fe14:retained-reuse42:docimport-71f3c025c80d70633928dabc417ec3ce19:closure-adversarial21:deterministic-utf8-v14:none4:none263:63:8:provider8:not-used40:deterministic local documentation import69:13:hosted-search8:not-used40:deterministic local documentation import60:5:nexus8:not-used40:deterministic local documentation import59:4:loot8:not-used40:deterministic local documentation import33:2026-08-08T18:30:00.0000000+00:00"],
+    "failure_descriptors": [],
+    "aggregate_descriptor_list_sha256": {
+      "revisions": "555e5dad3d33592b7c485f6331044770088f0d3f82db564b255c851497d5b732",
+      "imports": "853363bccb0c45a93169c4595e56ffbfe63b3aa0ef24c483086c2e95d3667e05",
+      "passages": "879d4bbb6f38223f6a439d34a0b52afd894f7737a978c18fdf963b3ff42d4fe6",
+      "claims": "38d50d618204d52da2307aecfc48c94bdc440e25f8290f1ad2e6f5472b56ac14",
+      "applications": "ef309465400c84c9db26f6c6ad7c3fc7b41b95584c2f661a64326d1ff5e1b3eb",
+      "purpose_assignments": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "deletion_receipts": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "gaps": "0bcbedfc82b62261944b024bbf3e883d7a7c89b1caecb891650c79c585b5b1e9",
+      "failures": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "gap_ids": ["docgap-5cd259843135b1888b7fd2619c54881d", "docgap-7f513993752538394cb1a4f4622bf069"],
+    "gap_kinds": ["replay", "unavailable-source"],
+    "gaps": [
+      { "gap_id": "docgap-5cd259843135b1888b7fd2619c54881d", "originating_run_id": "run-doc-adversarial-reuse-unavailable", "kind": "replay", "revision_id": "docrev-5ab9ded5066400229fea85bdfe3fc1fe", "replay_effect": "partial", "reason": "Live source reacquisition is unavailable, but retained source bytes preserve bounded replay.", "created_at": "2026-08-08T18:30:00.0000000+00:00" },
+      { "gap_id": "docgap-7f513993752538394cb1a4f4622bf069", "originating_run_id": "run-doc-adversarial-reuse-unavailable", "kind": "unavailable-source", "revision_id": "docrev-5ab9ded5066400229fea85bdfe3fc1fe", "replay_effect": "partial", "reason": "The live source revision is unavailable; the retained revision remains available for bounded reuse or clean re-extraction.", "created_at": "2026-08-08T18:30:00.0000000+00:00" }
+    ],
+    "deletion_receipt_count": 0,
+    "deletion_receipts": [],
+    "persistence_replay_state": "complete-clean",
+    "payload_id": "docevidence-7b0f18e6f7a9b8953bae8c7b334e9fda"
+  },
+  "rejections": {
+    "invalid-utf8": "rejected-invalid-utf8",
+    "split-multibyte": "rejected-invalid-utf8-boundary",
+    "fingerprint-mismatch": "rejected-source-fingerprint-mismatch",
+    "unknown-claim-kind": "rejected-schema",
+    "unsupported-source-kind": "rejected-schema",
+    "local-missing-snapshot": "rejected-missing-snapshot-binding",
+    "clean-import-deleted": "rejected-clean-import-deleted",
+    "reuse-with-source-bytes": "rejected-clean-reuse-collapse"
+  },
+  "accepted_boundaries": {
+    "fixture-missing-snapshot": "accepted"
+  },
+  "downstream_objects": {
+    "candidates": "not-created-by-wp2",
+    "hypotheses": "not-created-by-wp2",
+    "findings": "not-created-by-wp2",
+    "cases": "not-created-by-wp2"
+  }
+}

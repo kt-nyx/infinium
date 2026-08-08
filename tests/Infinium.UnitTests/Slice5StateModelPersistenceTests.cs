@@ -21,12 +21,18 @@ public sealed class Slice5StateModelPersistenceTests
         "case_memberships",
         "case_occurrence_details",
         "documentation_passages",
+        "documentation_imports",
         "documentation_revisions",
+        "documentation_application_bindings",
+        "documentation_deletion_receipts",
+        "documentation_purpose_assignment_details",
+        "documentation_gap_details",
         "effect_receipts",
         "evidence_application_links",
         "evidence_revisions",
         "finding_occurrence_details",
         "lineage_details",
+        "payload_backup_pins",
         "reconciliation_details",
         "taxonomy_assignments",
     ];
@@ -40,6 +46,9 @@ public sealed class Slice5StateModelPersistenceTests
         "idx_dependency_edges_from",
         "idx_dependency_edges_to",
         "idx_documentation_passages_revision",
+        "idx_documentation_imports_revision",
+        "idx_documentation_application_bindings_run",
+        "idx_documentation_deletion_receipts_revision",
         "idx_effect_receipts_run",
         "idx_evidence_applications_run",
         "idx_evidence_revisions_passage",
@@ -73,7 +82,7 @@ public sealed class Slice5StateModelPersistenceTests
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'storage_contract_version';"));
         Assert.AreEqual(
-            "c3e52d52638a5a1bd7466bbab65e9005057c646b2705a1e0032fc2ca504ca54c",
+            "195fc92064e9f204157f5b355bac141516f00e496e5ed6962dd34280cbd3532d",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'schema_fingerprint';"));
@@ -198,11 +207,11 @@ public sealed class Slice5StateModelPersistenceTests
         command.CommandText =
             """
             INSERT INTO documentation_revisions(
-                documentation_revision_id, source_id, source_kind, source_revision, import_run_id,
+                documentation_revision_id, source_id, source_kind, source_revision,
                 content_sha256, byte_length, availability_state, retention_state,
                 replay_state, created_at)
             VALUES (
-                'revision-invalid', 'source-a', 'invented-source', '1', 'import-a',
+                'revision-invalid', 'source-a', 'invented-source', '1',
                 $sha, 0, 'unavailable', 'partial', 'audit-only', $now);
             """;
         command.Parameters.AddWithValue("$sha", new string('a', 64));
@@ -212,11 +221,11 @@ public sealed class Slice5StateModelPersistenceTests
         command.CommandText =
             """
             INSERT INTO documentation_revisions(
-                documentation_revision_id, source_id, source_kind, source_revision, import_run_id,
+                documentation_revision_id, source_id, source_kind, source_revision,
                 content_sha256, byte_length, availability_state, retention_state,
                 replay_state, created_at)
             VALUES (
-                'revision-valid', 'source-a', 'fixture', '1', 'import-a',
+                'revision-valid', 'source-a', 'fixture', '1',
                 $sha, 0, 'unavailable', 'partial', 'audit-only', $now);
             """;
         command.ExecuteNonQuery();

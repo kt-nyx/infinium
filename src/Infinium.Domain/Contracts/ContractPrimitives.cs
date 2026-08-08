@@ -122,6 +122,7 @@ public static class ContractConstants
     public const string DiagnosticTraceSchemaId = "infinium.diagnostic.trace/v1";
     public const string EvaluationAssertionSchemaId = "infinium.evaluation.assertion-result/v1";
     public const string DocumentationEvidenceSchemaId = "infinium.documentation.evidence/v1";
+    public const string DocumentationClaimImportSchemaId = "infinium.documentation.claim-import/v1";
     public const string CandidateAnalysisSchemaId = "infinium.analysis.candidate/v1";
     public const string FindingCaseSchemaId = "infinium.analysis.finding-case/v1";
     public const string AnalysisReplaySchemaId = "infinium.analysis.replay/v1";

@@ -18,9 +18,9 @@ records preserve evidence and history.
 |---|---|
 | Milestone | `M1` — active |
 | Active slice | `M1/S5` — active |
-| Completed package | `M1/S5/WP1`, complete and reviewed at `a333f016f66cafc393f165448e777276f3b6bd88` |
-| Next eligible package | `M1/S5/WP2` — documentation evidence and deterministic claims |
-| Later packages | `WP3` through `WP6`, dependency-gated by the active Slice 5 plan |
+| Completed package | `M1/S5/WP2`, complete and reviewed in its focused implementation commit |
+| Next eligible package | `M1/S5/WP3` — causal joins, candidates, hypotheses, and abstention |
+| Later packages | `WP4` through `WP6`, dependency-gated by the active Slice 5 plan |
 | Default execution policy | [Development execution policy](development/execution-policy.md) |
 | Active milestone plan | [M1 backend semantic proof](plans/milestones/M1-backend-semantic-proof.md) |
 | Active slice plan | [M1 Slice 5](plans/slices/M1-slice-5-evidence-documentation-candidates-cases-replay.md) |
@@ -42,9 +42,13 @@ records preserve evidence and history.
 ## Current Slice 5 boundary
 
 WP1 established the contract, codec, state, migration, and repository-boundary
-foundation. Its rejected preauthored 28-package comprehensive corpus is not a
-current input and must not be reconstructed. WP2 through WP5 each own the small
-semantic cases for behavior they implement; WP6 owns the accumulated
+foundation. WP2 completed deterministic documentation evidence, exact
+passages/claims/applications/declared purpose, clean-import/retained-reuse,
+typed persistence, deletion/replay gaps, and two independently authored public
+semantic packages. Its accepted implementation record is the current evidence
+handoff to WP3. The rejected preauthored 28-package comprehensive corpus is not
+a current input and must not be reconstructed. WP3 through WP5 each own the
+small semantic cases for behavior they implement; WP6 owns the accumulated
 cross-package corpus and closeout.
 
 WP1's broad Slice 5 contracts are `Implementation-active`, not

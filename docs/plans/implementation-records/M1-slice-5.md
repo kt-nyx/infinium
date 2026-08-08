@@ -384,3 +384,150 @@ WP2-WP6 may proceed only in dependency order under staged, work-package-owned
 fixture authority. No global evaluator, private oracle, protocol `/4` verdict,
 or preauthored comprehensive corpus blocks Slice 5 product development. Slice
 5 and M1 remain active and are not complete.
+
+## Work-package closeout — `M1/S5/WP2` complete and reviewed
+
+WP2 was implemented from accepted input commit
+`ad233b2a3edf5c420af2f3124e2065235e2ce3e7` on 2026-08-08. This focused
+commit completes deterministic documentation evidence and claim import without
+model, network, search, Nexus, refresh transport, real/private source, source
+instruction execution, or candidate/finding/case promotion.
+
+### Delivered vertical slice
+
+- Added the closed `documentation-claim-import.v1` schema, domain request and
+  manifest contracts, strict JSON codec coverage, bounded UTF-8/range/reference
+  validation, and typed bounded failures.
+- Implemented clean import and retained reuse as separate paths. Clean import
+  hashes exact source bytes and exact UTF-8 passage slices; reuse consumes the
+  retained revision, passages, claims, applications, and purpose assignments,
+  records its producing/reused import identity, and does not re-extract.
+- Added collision-safe semantic identities for passages, claims, applications,
+  declared-purpose assignments, imports, deletion receipts, gaps, and complete
+  evidence aggregates. Aggregate identity covers every serialized semantic
+  field, including import time, boundary reason, contradictions, conditions,
+  provenance, receipts, gaps, and failures, and is recomputed by the domain
+  invariant.
+- Added exact applicability/application target admission bound to consuming
+  run, immutable installation snapshot, analysis context, resolved input
+  manifest, installed subject/type, and dependency closure. Declared purpose
+  remains a declaration supported by an exact purpose claim/application; WP2
+  performs no prose inference.
+- Extended schema-4 persistence with append-only documentation revisions,
+  imports, passages, claims, applications, purpose assignments, gaps, deletion
+  receipts, typed edges, application-target mappings, and backup payload pins.
+  Publication checks the canonical serialized contract against the supplied
+  object, rechecks exact source/passage bytes, rejects same-ID/different-row
+  drift, and preserves traversal without dangling documentation edges.
+- Implemented post-publication physical source/passage deletion with a durable
+  receipt, replay/deletion gaps, shared-owner re-evaluation, and backup-retained
+  payload disclosure. Historical evidence metadata remains immutable; main CAS
+  bytes are removed only after the logical publication transaction commits.
+- Added explicit `llm = none` and provider, hosted-search, Nexus, and LOOT
+  `not-used` boundary records. Hostile documentation stays inert.
+- Added the `Documentation` verification gate with zero-test rejection and
+  registered exactly two work-package-owned public semantic packages. The
+  accepted fixture specification was corrected to keep WP2 before all
+  candidate, finding, recommendation, and case production.
+- Corrected the older Slice 2 platform test so a retained historical oracle is
+  checked against its reviewed retained authority rather than mutable current
+  plan bytes. The unrelated Slice 2 fixture and oracle remained byte-identical
+  to the accepted baseline.
+
+Database schema 4 now has the frozen implementation fingerprint
+`195fc92064e9f204157f5b355bac141516f00e496e5ed6962dd34280cbd3532d`.
+WP1 contracts remain implementation-active for the later vertical packages;
+this closeout does not declare them Slice-frozen.
+
+### Independent WP2 fixture evidence
+
+The fresh product-blind fixture author/reviewer role
+`/root/wp2_fixture_author` authored only
+`DOC-WP2-CORE-DEV@1.0.0` and `DOC-WP2-ADVERSARIAL-VAL@1.0.0` before product
+comparison. It did not inspect or execute product code/output. After public
+identity rules were finalized, the same role independently recomputed every
+length-framed identity, file hash, package closure, replay dependency, and
+manifest fingerprint and returned a product-free consistency pass. The product
+comparison then consumed the frozen results without using product output to
+author expected truth.
+
+Final retained identities are:
+
+| Package/evidence | Identity or SHA-256 |
+|---|---|
+| Core payload | `docevidence-b00f3d167541bef79ea09e07689b2165` |
+| Core input graph | `8a2ecc117185b7d99be95778c79fd74133d41811bb4ad987f755a8ab10f001ff` |
+| Core oracle | `27269a4a7a6e39761ce26d5927552bea9d2b6d8f8028160a7bcacd8911b090e1` |
+| Core replay dependencies | `ce9423786d4750f58be394f42ff1975db062f71853650130d61a5480cacb543f` |
+| Core public manifest | `722fe2b92fabed44ecf543cc82f56eda5c62432cd21a7bb65322d513cd509feb` |
+| Adversarial clean payload | `docevidence-4ced9c0c47bc60d5cc156207f2e846ea` |
+| Adversarial deleted-reuse payload | `docevidence-b3f8e0062102d7feff5bd759144203b5` |
+| Adversarial unavailable-live-source payload | `docevidence-7b0f18e6f7a9b8953bae8c7b334e9fda` |
+| Preserved adversarial revision | `docrev-5ab9ded5066400229fea85bdfe3fc1fe` |
+| Deletion receipt | `docdelete-bf2dcb16c18ef145453589d5eb16988e` |
+| Adversarial input graph | `5ee2cdf28b9b98d7c0abc22a698ecfac79286030e926a7fc3fc12fd62f352d8c` |
+| Adversarial oracle | `8a435a592549dcacdb447c89e60ae629dafdc3f8bca5adf7a9063038d3897843` |
+| Adversarial replay dependencies | `f0d501c9659db42d8e872c7f49e3a6f65b973976dd36fe627f8a880ab6212022` |
+| Adversarial public manifest | `f0010623c26f78d6cb037cfd113c14441a85737f7420d4e78c53d68c332b2dc2` |
+
+The exact product comparison passed all three WP2 evaluation tests and directly
+compared revision/import/boundary, passage range/hash/text state, claim and
+contradiction graph, producing import, application target/evidence,
+purpose/condition authority, gap, receipt, provenance, and payload semantics.
+
+### Review, correction, and final judgment
+
+The fresh read-only evidence/provenance reviewer role
+`/root/wp2_authority_audit` did not edit. Its first complete review classified
+ten recoverable must-fix classes: transitive contradiction identity,
+input-shaped application identity, incomplete aggregate identity, ambiguous
+retained availability, deletion-receipt admission, application-target
+admission, gap wire tokens, backup retention, incomplete oracle comparison,
+and hostile-input computational work. All were corrected with focused
+regressions and the same reviewer re-reviewed the current tree.
+
+During the final pass the reviewer found one additional material scope leak:
+an unrelated Slice 2 oracle had been resealed to current plan bytes without its
+own version/reviewer history. The two fixture files were restored exactly, the
+stale current-plan comparison test was corrected, and the same reviewer then
+returned **ACCEPT** with no remaining must-fix finding. It verified exact
+identity, retention/replay/deletion and backup semantics, target admission,
+schema/codec/persistence traversal, closed gap tokens, product-blind fixture
+provenance, zero-test gate behavior, and the WP2/no-provider/no-WP3 boundary.
+
+Crash interruption and deletion-failure injection remain part of WP5 fault and
+replay verification; they do not weaken the WP2 logical-commit-before-physical-
+deletion contract. No other unsupported WP2 path is hidden: unavailable or
+deleted sources produce explicit gaps, invalid input produces typed bounded
+failure, and prose that cannot be deterministically declared remains
+unsupported/unknown rather than inferred.
+
+### Final verification
+
+| Command or check | Final result |
+|---|---|
+| `dotnet restore Infinium.sln --locked-mode --nologo` | Passed |
+| `dotnet build Infinium.sln -c Release --no-restore --nologo` | Passed; 0 warnings, 0 errors |
+| Focused documentation/claim unit tests | 13 passed, 0 failed, 0 skipped |
+| Focused documentation integration tests | 3 passed, 0 failed, 0 skipped |
+| Focused documentation evaluation tests | 3 passed, 0 failed, 0 skipped |
+| `eng/verify-m1-slice5.ps1 -Gate Documentation` | Passed; `artifacts/m1-slice5/wp2/documentation.json` |
+| `Category=M1Unit` | 111 passed, 1 environment-dependent symbolic-link test skipped |
+| `Category=M1Contract` | 38 passed, 0 failed, 0 skipped |
+| `Category=M1Integration` | 36 passed, 0 failed, 0 skipped |
+| `Category=M1Evaluation` | 43 passed, 8 existing environment-dependent private tests skipped |
+| `Category=M1Security` | 9 passed, 0 failed, 0 skipped |
+| `Category=M1Fault` | 13 passed, 0 failed, 0 skipped |
+| Full Release solution | 289 passed, 9 existing environment/private skips, 0 failed |
+| Historical platform/public fixture check after scope correction | 8 passed, 0 failed, 0 skipped |
+| `dotnet format ... --verify-no-changes` | Passed |
+| `eng/update-dependency-manifest.ps1 -Check` | Passed |
+| `git diff --check` | Passed; line-ending notices only |
+
+No evaluator-private repository, private corpus, abandoned legacy archive,
+live/billable provider, protocol `/5`, B2/C2/Stage D/scoring, or WP3+
+implementation surface was accessed. Nothing was pushed.
+
+`M1/S5/WP2` is complete and independently reviewed. `M1/S5/WP3` is the next
+eligible package. WP4-WP6 remain dependency-gated, and Slice 5 and M1 remain
+active and incomplete.

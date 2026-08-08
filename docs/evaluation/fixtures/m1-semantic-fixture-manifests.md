@@ -952,16 +952,23 @@ forbidden edges.
 
 ### 11.1 WP2 local-provenance slot
 
-One deterministic finding/case linked through:
+The accepted M1 Slice 5 plan's later work-package boundary supersedes this
+section's former WP2 finding/case promotion language. WP2 ends at admitted
+documentation revisions, exact passages, authoritative external claims,
+application links, declared-purpose assignments, explicit gaps, and deletion
+receipts. Candidate, hypothesis, finding, case, recommendation, and readiness
+promotion remain WP3/WP4 work and must not be created by WP2.
+
+The WP2 deterministic provenance chain is:
 
 ```text
 fixture bytes
   -> installation snapshot and assurance
   -> analysis context + effective scan configuration
   -> analysis run + resolved manifest
-  -> parser/analyzer versions
-  -> observation -> candidate -> hypothesis -> finding -> case/recommendation
-  -> coverage and taxonomy assignments
+  -> extractor version -> document revision -> exact passage -> external claim
+  -> application binding/link -> declared-purpose assignment and explicit gaps
+  -> deletion receipt where configured
 ```
 
 Provider/source nodes must be explicitly `not-used`, not absent ambiguously.
@@ -1008,7 +1015,8 @@ work and requires:
 - immutable historical output;
 - retained permitted fingerprint/reference and deletion receipt;
 - changed replay/audit disclosure;
-- no inspectable-passage claim after deletion; and
+- no inspectable source or passage bytes after deletion (historical passage and
+  claim metadata remain immutable); and
 - no new derivation authorized from the missing evidence.
 
 Project-authored synthetic source/provider data is tracked. Any later private

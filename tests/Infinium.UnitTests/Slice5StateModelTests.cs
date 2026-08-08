@@ -121,7 +121,8 @@ public sealed class Slice5StateModelTests
     {
         ClaimApplicationContract application = new(
             Id("application-1"), Id("claim-1"), Id("run-1"), Id("context-1"),
-            Id("closure-1"), ClaimApplicabilityState.Applicable, []);
+            Id("subject-1"), "installed-entity", Id("closure-1"),
+            ClaimApplicabilityState.Applicable, [Id("claim-1")]);
         DocumentationEvidenceContract valid = DocumentationWithApplications([application]);
         Slice5ContractInvariants.Validate(valid);
 
@@ -145,27 +146,45 @@ public sealed class Slice5StateModelTests
         [], [], [], [], [], [], [], []);
 
     private static DocumentationEvidenceContract DocumentationWithApplications(
-        IReadOnlyList<ClaimApplicationContract> applications) => new(
+        IReadOnlyList<ClaimApplicationContract> applications)
+    {
+        DocumentationEvidenceContract value = new(
             ContractConstants.DocumentationEvidenceSchemaId,
             Version(),
             Id("documentation-payload"),
             Id("run-1"),
             [
                 new(
-                    Id("revision-1"), Id("source-1"), Fingerprint, 1, Id("import-1"), null,
+                    Id("revision-1"), Id("source-1"), DocumentationSourceKind.Fixture, "1",
+                    Fingerprint, 1, Id("snapshot-1"),
                     Slice5ResultState.Present, ReplayState.CompleteClean),
+            ],
+            [
+                new(
+                    Id("import-1"), Id("run-1"), Id("revision-1"),
+                    DocumentationImportMode.CleanImport, null, Id("closure-1"), Id("extractor-1"),
+                    LlmInvolvementState.None, LlmOperation.None,
+                    [
+                        new("provider", BoundaryUseState.NotUsed, "local fixture"),
+                        new("hosted-search", BoundaryUseState.NotUsed, "local fixture"),
+                        new("nexus", BoundaryUseState.NotUsed, "local fixture"),
+                        new("loot", BoundaryUseState.NotUsed, "local fixture"),
+                    ],
+                    new UtcTimestamp(DateTimeOffset.UnixEpoch)),
             ],
             [
                 new(Id("passage-1"), Id("revision-1"), 0, 1, Fingerprint, Slice5ResultState.Present),
             ],
             [
                 new(
-                    Id("claim-1"), Id("passage-1"), ClaimKind.Requirement, "exact claim", [],
-                    EvidenceAuthority.SnapshotBoundLocal, ClaimApplicabilityState.Applicable,
+                    Id("claim-1"), Id("import-1"), Id("passage-1"), ClaimKind.Requirement, "exact claim", [],
+                    EvidenceAuthority.AuthoritativeExternal, ClaimApplicabilityState.Applicable,
                     ClassificationRole.Observed, []),
             ],
             applications,
-            [], [], []);
+            [], [], [], []);
+        return value with { PayloadId = DocumentationEvidenceIdentity.ComputePayloadId(value) };
+    }
 
     private static CandidateDecisionContract AdmittedDecision(string decisionId, string memberId) => new(
         Id(decisionId), Id(memberId), CandidateLane.OptionalRanked,

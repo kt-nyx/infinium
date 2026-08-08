@@ -1,0 +1,9 @@
+Résumé Ω — Purpose: Adds an optional aurora feature.
+Requires Framework A when profile=enhanced.
+Incompatible with Legacy Weather when profile=enhanced.
+Install and load after Framework A.
+Disable before uninstalling.
+Set glow=false for low-vision mode.
+Apply Patch P when Legacy Weather is present.
+Known issue: rain may flicker on interior transitions.
+No known issue occurs during interior transitions.

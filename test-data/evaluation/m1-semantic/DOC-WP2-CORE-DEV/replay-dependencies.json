@@ -1,0 +1,46 @@
+{
+  "fixture_id": "DOC-WP2-CORE-DEV",
+  "fixture_version": "1.0.0",
+  "expected_replay_state": "complete-clean",
+  "dependency_graph_fingerprint_method": "SHA-256 of ordinal path entries encoded as path NUL lowercase-sha256 NUL decimal-byte-length LF.",
+  "dependency_graph_fingerprint": "8a2ecc117185b7d99be95778c79fd74133d41811bb4ad987f755a8ab10f001ff",
+  "dependencies": [
+    {
+      "dependency_id": "inputs-case-matrix-json",
+      "path": "inputs/case-matrix.json",
+      "kind": "tracked-fixture-input",
+      "sha256": "b4a1129844645270aee8fedbe358c4a0897b34f36c8db8dd323a964cfd0c8e18",
+      "byte_length": 3122,
+      "availability": "retained",
+      "required_for": ["clean-recomputation", "audit"]
+    },
+    {
+      "dependency_id": "inputs-claim-import-json",
+      "path": "inputs/claim-import.json",
+      "kind": "tracked-fixture-input",
+      "sha256": "b9d697bff315e1dc10dd51f240faed7dd251d80105d7d626c6403d8af1edc9dc",
+      "byte_length": 6340,
+      "availability": "retained",
+      "required_for": ["clean-recomputation", "audit"]
+    },
+    {
+      "dependency_id": "inputs-source-txt",
+      "path": "inputs/source.txt",
+      "kind": "tracked-fixture-input",
+      "sha256": "89ae20b5415dfb794c518eb75b2d8e5af74a810171b8cf2a8540694d127f5388",
+      "byte_length": 411,
+      "availability": "retained",
+      "required_for": ["clean-recomputation", "exact-passage-check", "audit"],
+      "deletion_effect": "Historical identities remain auditable only if retained evidence exists; clean recomputation becomes unavailable and must emit deletion/replay gaps."
+    }
+  ],
+  "expected_output_references": [
+    {
+      "artifact_id": "expected-oracle.json",
+      "artifact_version": "1.0.0",
+      "fingerprint": "27269a4a7a6e39761ce26d5927552bea9d2b6d8f8028160a7bcacd8911b090e1",
+      "byte_length": 16202,
+      "availability": "retained"
+    }
+  ]
+}

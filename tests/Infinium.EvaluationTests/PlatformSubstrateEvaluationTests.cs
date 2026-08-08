@@ -59,14 +59,13 @@ public sealed class PlatformSubstrateEvaluationTests
         JsonElement planEvidence = package.Oracle
             .GetProperty("ground_truth_methods")[0]
             .GetProperty("evidence_references")[0];
+        JsonElement retainedPlanEvidence = package.Oracle
+            .GetProperty("change_history")[0]
+            .GetProperty("independent_evidence_reference");
         Assert.AreEqual(
-            FileFingerprint(Path.Combine(
-                TestRepository.Root,
-                "docs",
-                "plans",
-                "milestones",
-                "M1-backend-semantic-proof.md")),
-            planEvidence.GetProperty("fingerprint").GetString());
+            retainedPlanEvidence.GetProperty("fingerprint").GetString(),
+            planEvidence.GetProperty("fingerprint").GetString(),
+            "Historical fixture evidence must remain bound to its reviewed retained authority, not mutable current-plan bytes.");
         JsonElement gap = package.Oracle
             .GetProperty("expected_coverage_and_gaps")
             .EnumerateArray()
@@ -376,9 +375,6 @@ public sealed class PlatformSubstrateEvaluationTests
     private static string Fingerprint(string value) =>
         Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(value)))
             .ToLowerInvariant();
-
-    private static string FileFingerprint(string path) =>
-        Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))).ToLowerInvariant();
 
     private static string Temp(string kind) =>
         Path.Combine(Path.GetTempPath(), $"infinium-{kind}-{Guid.NewGuid():N}");

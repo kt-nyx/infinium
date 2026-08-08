@@ -25,7 +25,9 @@
         "test-data/evaluation/m1-semantic/BETH-REFR-DEV/",
         "test-data/evaluation/m1-semantic/BETH-LIGHT-VAL/",
         "test-data/evaluation/m1-semantic/BETH-MALFORMED-VAL/",
-        "test-data/evaluation/m1-semantic/BETH-UNSUPPORTED-VAL/"
+        "test-data/evaluation/m1-semantic/BETH-UNSUPPORTED-VAL/",
+        "test-data/evaluation/m1-semantic/DOC-WP2-CORE-DEV/",
+        "test-data/evaluation/m1-semantic/DOC-WP2-ADVERSARIAL-VAL/"
       ],
       "validator": "Infinium.Application.Evaluation.ActiveJsonSchemaValidator",
       "claim": "independently authored public fixture contract evidence; never product-derived oracle authority"

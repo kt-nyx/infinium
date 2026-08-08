@@ -1,0 +1,38 @@
+{
+  "fixture_id": "DOC-WP2-CORE-DEV",
+  "fixture_version": "1.0.0",
+  "execution_binding": {
+    "originating_run_id": "run-doc-core-import",
+    "import_run_id": "run-doc-core-import",
+    "mode": "clean-import",
+    "dependency_closure_id": "closure-core",
+    "extractor_id": "deterministic-utf8-v1",
+    "imported_at": "2026-08-08T18:30:00.0000000+00:00"
+  },
+  "application_targets": [
+    { "application_claim_key": "core-purpose", "consuming_run_id": "run-doc-core-import", "installation_snapshot_id": "snapshot-core-001", "analysis_context_id": "context-core", "resolved_input_manifest_id": "resolved-input-core-001", "subject_id": "installed-core-weather", "subject_type": "installed-entity", "dependency_closure_id": "closure-core" },
+    { "application_claim_key": "core-install", "consuming_run_id": "run-doc-core-import", "installation_snapshot_id": "snapshot-core-001", "analysis_context_id": "context-core", "resolved_input_manifest_id": "resolved-input-core-001", "subject_id": "installed-core-weather", "subject_type": "installed-entity", "dependency_closure_id": "closure-core" },
+    { "application_claim_key": "core-patch", "consuming_run_id": "run-doc-core-import", "installation_snapshot_id": "snapshot-core-001", "analysis_context_id": "context-core", "resolved_input_manifest_id": "resolved-input-core-001", "subject_id": "installed-core-weather", "subject_type": "installed-entity", "dependency_closure_id": "closure-core" },
+    { "application_claim_key": "core-known-issue", "consuming_run_id": "run-doc-core-import", "installation_snapshot_id": "snapshot-core-001", "analysis_context_id": "context-core", "resolved_input_manifest_id": "resolved-input-core-001", "subject_id": "installed-core-weather", "subject_type": "installed-entity", "dependency_closure_id": "closure-core" }
+  ],
+  "aggregate_output_binding": {
+    "schema_id": "infinium.documentation.evidence/v1",
+    "schema_version": "1.0.0",
+    "passage_state": "present",
+    "llm_involvement": "none",
+    "llm_operation": "none",
+    "boundaries": [
+      { "boundary_id": "provider", "state": "not-used", "reason": "deterministic local documentation import" },
+      { "boundary_id": "hosted-search", "state": "not-used", "reason": "deterministic local documentation import" },
+      { "boundary_id": "nexus", "state": "not-used", "reason": "deterministic local documentation import" },
+      { "boundary_id": "loot", "state": "not-used", "reason": "deterministic local documentation import" }
+    ],
+    "list_order": "one revision and import; passages, claims, applications, purposes, receipts, and gaps ordinal by stable ID; all nested sets ordinal-sorted"
+  },
+  "cases": [
+    { "case_id": "core-clean", "classification": "positive", "expected": "accepted" },
+    { "case_id": "core-multibyte-offset", "classification": "boundary", "expected": "accepted-exact-byte-range" },
+    { "case_id": "core-shared-passage", "classification": "boundary", "expected": "one-passage-two-claims" },
+    { "case_id": "core-purpose-not-inferred", "classification": "negative", "expected": "only-explicit-declared-purpose-assigned" }
+  ]
+}

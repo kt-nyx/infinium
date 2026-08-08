@@ -400,15 +400,23 @@
         "resolved": "0.13.1.398",
         "contentHash": "Cm9fOJZ5Meb7uFON2XtvO2oiw/2hxAnkXI+5enms0AGNRZu5vPhw1PF5H1B2W8SbRZxqE/hkzMkWdIOO0MGPzg=="
       },
+      "infinium.analysis": {
+        "type": "Project",
+        "dependencies": {
+          "Infinium.Domain": "[1.0.0, )"
+        }
+      },
       "infinium.application": {
         "type": "Project",
         "dependencies": {
           "Google.Protobuf": "[3.31.1, )",
           "Grpc.Core.Api": "[2.80.0, )",
           "Grpc.Net.Client": "[2.80.0, )",
+          "Infinium.Analysis": "[1.0.0, )",
           "Infinium.Bethesda": "[1.0.0, )",
           "Infinium.Domain": "[1.0.0, )",
-          "Infinium.Mo2": "[1.0.0, )"
+          "Infinium.Mo2": "[1.0.0, )",
+          "Infinium.Persistence": "[1.0.0, )"
         }
       },
       "infinium.bethesda": {

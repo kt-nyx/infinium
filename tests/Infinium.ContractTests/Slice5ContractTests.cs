@@ -20,7 +20,11 @@ public sealed class Slice5ContractTests
             Version(),
             Id("documentation-payload"),
             Id("run-1"),
-            [], [], [], [], [], [], []);
+            [], [], [], [], [], [], [], [], []);
+        documentation = documentation with
+        {
+            PayloadId = DocumentationEvidenceIdentity.ComputePayloadId(documentation),
+        };
         CandidateAnalysisContract candidates = new(
             ContractConstants.CandidateAnalysisSchemaId,
             Version(),
