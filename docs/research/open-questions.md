@@ -1,7 +1,8 @@
 # Open research questions
 
-Status: Draft  
-Last reviewed: 2026-08-07
+Status: Active register
+
+Last reviewed: 2026-08-08
 
 The product baseline was accepted on 2026-07-25. The
 [M0 research-foundation plan](../plans/milestones/M0-research-foundation.md) is

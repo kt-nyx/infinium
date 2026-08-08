@@ -41,14 +41,14 @@ corrected these documentation drifts:
    completed;
 6. the protocol `/4` usage header still described itself as a closeout profile
    instead of the active bounded regression profile; and
-7. the slice-plan index did not state prominently that Slice 5 is eligible at
-   the planning boundary but still requires an accepted execution plan before
+7. the slice-plan index did not state prominently that Slice 5 was eligible at
+   that planning boundary but still required an accepted execution plan before
    implementation.
 
 Historical results and failed gates were not rewritten. Current-disposition
 sections and status headers distinguish them from present authority.
 
-## Current project boundary
+## Project boundary established by this review
 
 The resulting documentation agrees on this state:
 
@@ -60,9 +60,12 @@ M1 Slice 4.5: closed by accepted owner disposition.
 Protocol /4: frozen historical evidence; bounded public regression only.
 Protocol /5: retired unqualified; no implementation, freeze, private use, or verdict.
 Private held-out evaluation: deferred; no valid current product verdict.
-M1/S5: next eligible planning package; implementation requires an accepted slice plan.
+M1/S5: next eligible planning package at this checkpoint; implementation requires an accepted slice plan.
 M2-M4: not started.
 ```
+
+Current status is maintained by the accepted Slice 5 plan and implementation
+record: WP1 is complete and reviewed, and WP2 is next.
 
 Public conformance does not establish private held-out reliability, M3 trust,
 readiness for a personal playthrough, or public MVP readiness.

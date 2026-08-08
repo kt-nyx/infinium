@@ -1,7 +1,7 @@
 # Slice execution plans
 
 Status: Active
-Last reviewed: 2026-08-07
+Last reviewed: 2026-08-08
 
 Slice execution plans refine an accepted milestone slice into a bounded,
 fresh-agent implementation contract. They do not supersede the milestone plan,
@@ -15,8 +15,8 @@ Current execution plans:
 - [M1 Slice 5 — Evidence, documentation, candidates, cases, and replay](M1-slice-5-evidence-documentation-candidates-cases-replay.md)
   — Accepted 2026-08-07 as work `M1/S5`. It defines six dependency-ordered
   public work packages for the clean-break evidence-to-replay path under
-  continuation-profile Layers 1-4 and 6. `M1/S5/WP1` is the next authorized
-  implementation package; later packages remain gated by their declared
+  continuation-profile Layers 1-4 and 6. `M1/S5/WP1` is complete and reviewed;
+  `M1/S5/WP2` is the next authorized implementation package. Later packages remain gated by their declared
   prerequisites and review boundaries.
 - [M1 Slice 3.5 — Independent Bethesda fixture and oracle qualification](M1-slice-3.5-bethesda-fixture-qualification.md)
   — Accepted 2026-07-30, amended and completed 2026-08-01; the pre-Slice-4
@@ -39,8 +39,9 @@ Current execution plans:
   WP5 and classified an evaluator `/4` representation gap. The later `/5`
   attempt hard-stopped and ADR-0032 now supplies the current deferral
   disposition. Private evaluation is deferred with no verdict.
-  Evaluator-deferral closeout is accepted: Slice 4.5 is closed, Slice 5 is
-  eligible, and M1 remains active.
+  Evaluator-deferral closeout is accepted: Slice 4.5 is closed. That closeout
+  made Slice 5 eligible; Slice 5 WP1 has since completed and WP2 is next. M1
+  remains active.
 - [M1 Slice 4.5 — Public Bethesda semantic realignment and candidate freeze](M1-slice-4.5-public-product-realignment.md)
   — Accepted and completed 2026-08-05 at `a98d648`. This bounded public
   implementation contract records the
@@ -77,8 +78,8 @@ Current execution plans:
   WP3 completed documentation reconciliation; both fresh WP4 audits accepted
   after one shared ledger correction; and WP5 full verification passed. Slice
   4.5 is closed as public conformance complete/private held-out deferred/no
-  verdict. Slice 5 is eligible under the M1 continuation verification profile,
-  and M1 remains active.
+  verdict. This closeout made Slice 5 eligible; current execution has since
+  completed Slice 5 WP1 and advanced to WP2. M1 remains active.
 
 Completed slices retain their exact implementation and verification evidence
 under [`../implementation-records/`](../implementation-records/README.md).
@@ -88,6 +89,6 @@ under [`../implementation-records/`](../implementation-records/README.md).
 The accepted `M1/S5` execution plan maps continuation-profile Layers 1-4 and 6
 to exact requirements, cases,
 independently expected public fixtures, contracts, replay/safety evidence,
-commands, coverage/gaps, fresh review, and claim limits. `M1/S5/WP1` is the
+commands, coverage/gaps, fresh review, and claim limits. `M1/S5/WP2` is the
 next action and may begin after its normal preflight. Private evaluator and
 live/billable work are not part of it.

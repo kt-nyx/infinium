@@ -1,10 +1,11 @@
 # Evaluator-private fixture governance
 
 Status: Superseded for evaluator v2; retained as historical evaluator-v1 governance
-Last reviewed: 2026-08-01
+Last reviewed: 2026-08-08
 Authority: [ADR-0026](../architecture/decisions/ADR-0026-evaluator-private-fixture-repository-and-delegated-access.md)
 
-Successor: [Evaluator-private fixture governance v2](evaluator-private-fixture-governance-v2.md)
+Successor: [Evaluator-private fixture governance v2](evaluator-private-fixture-governance-v2.md),
+whose M1 operational use is currently deferred by ADR-0032.
 
 ## Purpose
 

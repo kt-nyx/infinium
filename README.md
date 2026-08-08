@@ -48,9 +48,12 @@ Start with [`docs/README.md`](docs/README.md).
   No B2, C2, Stage D, corpus, scoring, or replacement-evaluator work is
   authorized. See the
   [sanitized incident record](docs/evaluation/evaluator-v2-stage-c5-adjudication-incident.md).
-  Slice 4.5 is closed by accepted evaluator-deferral owner disposition. Slice 5
-  is eligible as the next product package under the M1 continuation
-  verification profile. M1 remains active; public conformance is
+  Slice 4.5 is closed by accepted evaluator-deferral owner disposition. Slice
+  5 WP1 is complete and reviewed at `a333f016`; its premature comprehensive
+  fixture corpus was rejected and removed, while the valid product contracts,
+  schema-4 migration, and repository boundaries were retained. WP2 is the next
+  eligible package under staged work-package verification and the M1
+  continuation profile. M1 remains active; public conformance is
   not a private reliability/readiness verdict
 - xEdit: historical integration/oracle recommendation rejected; excluded from
   every Infinium boundary
@@ -72,3 +75,8 @@ records that disposition. Slice 5 now uses the
 [M1 continuation verification profile](docs/evaluation/m1-continuation-verification-profile.md).
 The exact closeout evidence is in the
 [Slice 4.5 acceptance record](docs/evaluation/m1-slice4.5-evaluator-deferral-closeout-acceptance.md).
+The current product handoff is the accepted
+[Slice 5 plan](docs/plans/slices/M1-slice-5-evidence-documentation-candidates-cases-replay.md)
+and its [WP1 closeout record](docs/plans/implementation-records/M1-slice-5.md).
+Fresh product agents must not use historical evaluator packages or the removed
+WP1-generated corpus as implementation input.

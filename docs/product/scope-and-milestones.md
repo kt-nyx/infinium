@@ -1,13 +1,16 @@
 # Scope and milestones
 
 Status: Accepted  
-Last reviewed: 2026-08-07
+Last reviewed: 2026-08-08
 
 Accepted M1 verification amendment, 2026-08-07: ADR-0032 defers the current
 private held-out evaluator with no product verdict and makes the accepted
 [M1 continuation verification profile](../evaluation/m1-continuation-verification-profile.md)
 the public gate for Slices 5-9. Slice 4.5 closeout is accepted. This changes
 sequencing and evidence labeling, not the M1 product goal or required cases.
+Slice 5 WP1 is complete and reviewed; WP2 is the next eligible package under
+staged work-package-owned fixtures, with the comprehensive cross-stage corpus
+deferred to WP6 rather than preauthored before its producing behavior exists.
 
 ## Supported product scope
 

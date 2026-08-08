@@ -416,5 +416,6 @@ cannot be resumed, repaired, or reused.
 
 Private held-out evaluation is deferred with no valid current product verdict.
 `M1/S4.5/EVAL-CLOSEOUT` is accepted: Slice 4.5 is closed by owner
-disposition, Slice 5 is eligible under the M1 continuation verification
-profile, and M1 remains active.
+disposition. That closeout made Slice 5 eligible; Slice 5 WP1 has since
+completed and WP2 is next under the M1 continuation verification profile. M1
+remains active.

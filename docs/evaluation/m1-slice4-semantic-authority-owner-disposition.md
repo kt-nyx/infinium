@@ -190,5 +190,6 @@ bounded public regression with its known gap excluded, and defers private
 held-out evaluation without a valid current product verdict. The six semantic
 decisions in this document remain durable product authority; they no longer
 authorize an active evaluator path. Evaluator-deferral closeout is accepted:
-Slice 4.5 is closed by owner disposition, and Slice 5 is eligible under the M1
-continuation verification profile. M1 remains active.
+Slice 4.5 is closed by owner disposition. That closeout made Slice 5 eligible;
+Slice 5 WP1 has since completed and WP2 is next under the M1 continuation
+verification profile. M1 remains active.

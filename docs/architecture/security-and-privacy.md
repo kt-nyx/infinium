@@ -1,7 +1,8 @@
 # Security and privacy
 
-Status: Draft  
-Last reviewed: 2026-08-01
+Status: Accepted synthesis; actively maintained
+
+Last reviewed: 2026-08-08
 
 ## Security posture
 

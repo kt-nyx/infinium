@@ -1,7 +1,8 @@
 # Architecture Decision Records
 
-Status: Draft  
-Last reviewed: 2026-08-07
+Status: Active navigation
+
+Last reviewed: 2026-08-08
 
 ADRs preserve technical decisions and their rationale. They are append-only:
 accepted records are superseded rather than rewritten to hide prior decisions.

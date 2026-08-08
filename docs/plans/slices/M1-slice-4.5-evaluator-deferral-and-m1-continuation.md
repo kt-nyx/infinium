@@ -42,8 +42,9 @@ Final closeout status, 2026-08-07: WP2 removed active `/5` machine artifacts
 and established bounded `/4` regression; WP3 established the continuation
 profile and reconciled status; both fresh WP4 reviews accept after the one
 shared ledger-classification correction; and WP5 full public verification
-passes. Slice 4.5 is closed by owner disposition, Slice 5 is eligible under the
-continuation profile, and M1 remains active. See the
+passes. Slice 4.5 is closed by owner disposition. That closeout made Slice 5
+eligible under the continuation profile; Slice 5 WP1 has since completed and
+WP2 is next. M1 remains active. See the
 [acceptance record](../../evaluation/m1-slice4.5-evaluator-deferral-closeout-acceptance.md).
 
 ## Owner disposition embodied by this plan
@@ -76,8 +77,9 @@ not authorize private access, reveal, repair, reseal, scoring, or migration.
 
 This plan is accepted and completed. Slice 4.5 is closed as **public
 conformance complete; private held-out evaluation deferred; no held-out product
-verdict**. Slice 5 is eligible to start under the replacement M1 public
-verification profile. This is an explicit milestone-plan disposition, not an
+verdict**. This closeout made Slice 5 eligible to start under the replacement
+M1 public verification profile; Slice 5 WP1 has since completed and WP2 is
+next. This is an explicit milestone-plan disposition, not an
 implicit waiver or a claim that the product passed hidden evaluation.
 
 ## Why retirement is proportionate
@@ -617,7 +619,7 @@ Required work:
 - identify `M1/S5` as the next eligible product work, subject to its normal
   preflight and accepted plan.
 
-Final status language:
+Accepted closeout status language from 2026-08-07:
 
 ```text
 Slice 4 public conformance: passed for its exact frozen candidate and scope.
@@ -628,6 +630,8 @@ Slice 4.5: closed by owner disposition with explicit residual risk.
 Slice 5: eligible to begin under the M1 continuation verification profile.
 M1: active.
 ```
+
+Current Slice 5 status is WP1 complete and reviewed; WP2 is next.
 
 ## Required verification inventory
 

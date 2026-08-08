@@ -7,14 +7,15 @@ Accepted: 2026-08-04
 Last reviewed: 2026-08-07
 Parent plan: `infinium.plan.m1.backend-semantic-proof/3`
 Target: Historical Slice 4.5 evaluator work between implementation-complete
-Slice 4 and now-eligible Slice 5
+Slice 4 and the then-not-started Slice 5
 
 Current disposition: ADR-0032 and accepted work
 `M1/S4.5/EVAL-CLOSEOUT` supersede this plan's active held-out-`PASS`
 completion and sequencing clauses. The stages, commands, and terminal handling
 below preserve the exact historical evaluator design and attempts; they are not
 an active private workflow. The deferral plan is accepted and complete, so
-Slice 4.5 is closed and Slice 5 is eligible under the continuation profile.
+Slice 4.5 is closed. Slice 5 WP1 has since completed and WP2 is next under the
+continuation profile.
 
 ## Objective
 
@@ -449,7 +450,7 @@ The accepted
 [evaluator-deferral and M1-continuation plan](M1-slice-4.5-evaluator-deferral-and-m1-continuation.md)
 received final closeout acceptance. This slice is closed as **public
 conformance complete; private held-out evaluation deferred; no held-out product
-verdict**. Slice 5 is the next eligible product package under
-the accepted
+verdict**. That closeout made Slice 5 eligible under the accepted
 [M1 continuation verification profile](../../evaluation/m1-continuation-verification-profile.md).
-M1 remains active, and none of this is a reliability or readiness claim.
+Slice 5 WP1 has since completed and WP2 is next. M1 remains active, and none of
+this is a reliability or readiness claim.

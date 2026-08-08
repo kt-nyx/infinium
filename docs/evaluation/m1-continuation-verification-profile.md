@@ -2,7 +2,7 @@
 
 Status: Accepted and effective
 
-Date: 2026-08-07
+Date: 2026-08-08
 
 Authority: [ADR-0032](../architecture/decisions/ADR-0032-defer-m1-held-out-evaluator-and-continue-public-verification.md)
 and the accepted
@@ -14,8 +14,9 @@ Applies to: M1 Slices 5 through 9
 
 This is the normative development and validation gate that replaces the
 held-out-`PASS` sequencing prerequisite for the remaining M1 slices.
-`M1/S4.5/EVAL-CLOSEOUT` is accepted and complete, so Slice 4.5 is closed and
-Slice 5 is eligible to start under this profile. The exact activation evidence
+`M1/S4.5/EVAL-CLOSEOUT` is accepted and complete, so Slice 4.5 is closed.
+Slice 5 WP1 is complete and reviewed; WP2 is the next eligible package under
+this profile. The exact activation evidence
 is the [closeout acceptance record](m1-slice4.5-evaluator-deferral-closeout-acceptance.md).
 
 The profile proves public product conformance within each accepted slice's
@@ -163,8 +164,8 @@ language beyond the evidence actually obtained.
 
 ## Slice sequencing and implementation records
 
-- Slice 5 is the next eligible product package. It must satisfy applicable
-  Layers 1-4 and 6.
+- Slice 5 WP1 is complete and reviewed. WP2 is the next eligible package, and
+  WP2-WP6 must satisfy their applicable Layers 1-4 and 6 in dependency order.
 - Slice 6 must satisfy applicable Layers 1-4 and 6 before any live provider
   operation; live authorization remains separate and bounded.
 - Slice 7 must satisfy all applicable layers and the exact two-materially-

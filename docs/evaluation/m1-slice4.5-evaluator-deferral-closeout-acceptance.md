@@ -29,6 +29,9 @@ Slice 5: eligible to begin under the M1 continuation verification profile.
 M1: active.
 ```
 
+This block records the accepted 2026-08-07 closeout state. Current Slice 5
+status is WP1 complete and reviewed; WP2 is next.
+
 No private corpus, expected output, answer-bearing material, candidate/product
 output, B2, C2, Stage D, adaptation, comparison, scoring, live call, or
 billable call was used. No push occurred.

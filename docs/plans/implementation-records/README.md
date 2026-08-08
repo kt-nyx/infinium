@@ -1,7 +1,7 @@
 # Implementation records
 
 Status: Active
-Last reviewed: 2026-08-07
+Last reviewed: 2026-08-08
 
 These records retain implementation and verification evidence for completed
 or formally reviewed slices under accepted milestone plans, including explicit
@@ -41,8 +41,9 @@ WP1's accepted-model FaceGen/coverage composition hard stop remains historical
 evidence. ADR-0031 and WP1R accepted the distinct `/5` successor model and
 global composition proof; WP1V later hard-stopped, WP1 never proof-closed, and
 WP2-WP4 never started. `/5` is retired unqualified. Evaluator-deferral closeout
-is accepted; Slice 4.5 is closed and Slice 5 is eligible under the M1
-continuation verification profile. M1 remains active.
+is accepted; Slice 4.5 is closed, Slice 5 WP1 is complete and reviewed, and
+Slice 5 WP2 is next under the M1 continuation verification profile. M1 remains
+active.
 
 Slices 5-9 must add implementation records at completion. Each record must map
 its applicable continuation-profile layers to exact requirements, cases,
@@ -68,11 +69,12 @@ eligible without another owner acceptance gate.
   lexical-authority gap; the first public contract attempt hard-stopped;
   `M1/S4.5/PRE-B2/V5/WP1R` accepted the distinct successor model before WP1V
   hard-stopped; ADR-0032 retires `/5` unqualified, and the evaluator-deferral
-  closeout is accepted. Slice 4.5 is closed and Slice 5 is eligible.
+  closeout is accepted. Slice 4.5 is closed; Slice 5 WP1 is complete and WP2 is
+  next.
 - [Post-Slice-4.5 documentation and Slice 5 readiness review](M1-post-slice-4.5-documentation-readiness-review.md)
   — repository-wide status, authority, link, JSON, and verification review
-  after fast-forward integration to `main`; confirms that Slice 5 planning is
-  the next eligible action.
+  after fast-forward integration to `main`; records the now-completed readiness
+  gate that allowed Slice 5 planning to begin.
 - [M1 Slice 5 — Evidence, documentation, candidates, cases, and replay](M1-slice-5.md)
   — WP1 complete and reviewed after removal/deferral of the rejected premature
   comprehensive corpus; WP2 is eligible under staged work-package authority.

@@ -1,7 +1,8 @@
 # Fixture guidelines
 
-Status: Draft  
-Last reviewed: 2026-08-07
+Status: Accepted; actively maintained
+
+Last reviewed: 2026-08-08
 
 Wave B's target boundaries and fixture/conformance obligations are accepted by
 ADR-0008 through ADR-0011, and the M1 Wave F case specifications are accepted.

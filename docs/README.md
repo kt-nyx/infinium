@@ -1,7 +1,8 @@
 # Infinium documentation
 
-Status: Draft  
-Last reviewed: 2026-08-07
+Status: Active navigation
+
+Last reviewed: 2026-08-08
 
 This directory is the authoritative entry point for the rebuilt Infinium
 project. It records product intent, accepted decisions, research, evaluation
@@ -58,6 +59,10 @@ specification.
   [evaluator-deferral and M1-continuation closeout plan](plans/slices/M1-slice-4.5-evaluator-deferral-and-m1-continuation.md),
   the completed
   [post-Slice-4.5 documentation and Slice 5 readiness review](plans/implementation-records/M1-post-slice-4.5-documentation-readiness-review.md),
+  the active accepted
+  [Slice 5 execution plan](plans/slices/M1-slice-5-evidence-documentation-candidates-cases-replay.md),
+  and its current
+  [WP1 implementation closeout](plans/implementation-records/M1-slice-5.md),
   the [work-breakdown notation](plans/work-breakdown-notation.md),
   and the
   [research-agent handoff template](plans/research-investigation-agent-handoff-template.md)
@@ -209,8 +214,10 @@ Every material document should include a status and last-reviewed date.
   in the
   [Stage C.5 incident](evaluation/evaluator-v2-stage-c5-adjudication-incident.md).
   `M1/S4.5/EVAL-CLOSEOUT` is accepted and complete. Slice 4.5 is closed by
-  owner disposition, and Slice 5 is eligible as the next product package under
-  the accepted M1 continuation verification profile. The exact result is in
+  owner disposition. Slice 5 WP1 is complete and reviewed at `a333f016`; its
+  rejected preauthored comprehensive corpus has no current authority, and WP2
+  is the next eligible product package under staged work-package verification
+  and the accepted M1 continuation profile. The exact evaluator result is in
   the [closeout acceptance record](evaluation/m1-slice4.5-evaluator-deferral-closeout-acceptance.md).
   M1 remains active; public conformance is not a private held-out,
   reliability, or readiness claim. M1 explicitly defers `QUST` forced-alias
@@ -238,7 +245,13 @@ Every material document should include a status and last-reviewed date.
 - Avoid duplicating the same authoritative statement across several documents.
 - Update this index when a new authoritative document is added.
 
-## Final bounded M1 held-out authority
+## Historical bounded M1 held-out record
+
+The links below explain the retained Slice 4/4.5 evaluator chronology. They are
+not the current implementation reading flow, do not authorize private access or
+scoring, and do not provide current product fixtures. Ordinary Slice 5 work
+uses the product/evaluator boundary, continuation profile, active Slice 5 plan,
+and current implementation record linked above.
 
 - [Sanitized Stage B.2 contract gap](evaluation/evaluator-v2-successor-stage-b2-contract-gap.md)
 - [Final Slice 4 held-out scope amendment](evaluation/m1-slice4-heldout-scope-final-amendment.md)

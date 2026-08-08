@@ -154,8 +154,8 @@ and sequencing statements above without rewriting their chronology.
   or valid product-scoring `EVALUATOR_ERROR` exists, and B2, C2, and Stage D
   are not authorized.
 - Evaluator-deferral closeout is accepted. Slice 4.5 is closed by owner
-  disposition, and Slice 5 is the next eligible product package gated by the
-  accepted
+  disposition. Slice 5 is active: WP1 is complete and reviewed, and WP2 is the
+  next package gated by the accepted
   [M1 continuation verification profile](../../evaluation/m1-continuation-verification-profile.md).
 - M1 remains active. Public conformance, bounded `/4` regression health,
   evaluator qualification, private held-out evaluation, and product

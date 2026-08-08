@@ -1,7 +1,8 @@
 # Integration boundaries
 
-Status: Draft  
-Last reviewed: 2026-07-28
+Status: Accepted synthesis; actively maintained
+
+Last reviewed: 2026-08-08
 
 ADR-0006 accepts the high-level external-application and bundled-dependency
 posture. ADR-0007 excludes xEdit from every Infinium boundary. ADR-0008 through

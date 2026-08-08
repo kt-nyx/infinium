@@ -1,7 +1,8 @@
 # Data and trust model
 
-Status: Draft  
-Last reviewed: 2026-08-07
+Status: Accepted synthesis; actively maintained
+
+Last reviewed: 2026-08-08
 
 ## Principle
 
@@ -13,8 +14,10 @@ content-addressed payload storage (ADR-0015), append-only finding/case
 reconciliation and review-state carryover decisions (ADR-0022), and a
 single-owned atomic cost ledger (ADR-0023). M1 Slice 2 implements and publicly
 exercises the bounded authoritative-store, lifecycle, identity/lineage
-substrate, and write-authority portions. Slice 5 owns complete evidence,
-finding, case, reconciliation, and replay behavior; Slice 6 owns the provider
+substrate, and write-authority portions. Slice 5 WP1 now supplies the clean-
+break contracts and migration foundation; WP2 is next and begins the typed
+evidence/provenance implementation. Later Slice 5 packages own candidate,
+finding, case, reconciliation, replay, and corpus behavior; Slice 6 owns the provider
 cost-ledger boundary. Unimplemented portions and full evaluation conformance
 remain pending rather than being inferred from the delivered substrate.
 

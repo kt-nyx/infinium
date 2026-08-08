@@ -1,7 +1,8 @@
 # Evaluation case catalog
 
-Status: Draft  
-Last reviewed: 2026-08-07
+Status: Accepted; actively maintained
+
+Last reviewed: 2026-08-08
 
 Executable evaluation fixtures now exist for completed early M1 slices; most
 later cases remain planned. This catalog records both executed status and
@@ -55,7 +56,7 @@ Private B2 oracle/corpus: terminal public-authority stop; no oracle/product verd
 Public /5 successor: retired unqualified after WP1V hard stop; no implementation or verdict
 Held-out C2 scoring and Stage D: deferred / not authorized / no product verdict
 Slice 4.5: closed by accepted owner disposition with explicit residual risk
-Overall M1 gate: active; Slice 5 eligible under the continuation profile
+Overall M1 gate: active; Slice 5 WP1 complete; WP2 next under staged verification
 ```
 
 The sanitized owner-supplied adjudication and successor requirement are in the

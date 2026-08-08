@@ -1,7 +1,8 @@
 # Milestone plans
 
-Status: Draft  
-Last reviewed: 2026-08-07
+Status: Active navigation
+
+Last reviewed: 2026-08-08
 
 The M0 research plan completed on 2026-07-28. The accepted
 [M1 backend semantic proof plan](M1-backend-semantic-proof.md) is the active
@@ -34,8 +35,8 @@ mandatory global composition proof; WP1V later hard-stopped, WP1 never proof-
 closed, and WP2-WP4 never started. ADR-0032 retires `/5` unqualified and
 defers private held-out evaluation without a verdict. No B2, C2, Stage D,
 corpus, scoring, or replacement-evaluator work is authorized. Slice 4.5 is
-closed by owner disposition; Slice 5 is eligible under the continuation
-profile. M1 remains active.
+closed by owner disposition. Slice 5 WP1 is complete and reviewed, WP2 is the
+next eligible package under staged verification, and M1 remains active.
 
 Waves A through D have completed investigations and accepted integrated
 dispositions. Gates A through D are met at their applicable M0 research,
@@ -77,6 +78,6 @@ M1 status clarification: protocol `/4` remains immutable historical evidence
 with bounded public regression use only. Protocol `/5` is retired unqualified
 with no implementation, freeze, private use, or verdict. Product output remains
 prohibited as evaluator or oracle truth. Private held-out evaluation is
-deferred. Evaluator-deferral closeout is accepted; Slice 5 is eligible and
-uses the continuation profile. M1 remains active and has no private
+deferred. Evaluator-deferral closeout is accepted; Slice 5 WP1 is complete,
+WP2 is next, and the slice uses the continuation profile. M1 remains active and has no private
 reliability/readiness verdict.

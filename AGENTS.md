@@ -24,6 +24,18 @@ Before research, planning, architecture, or implementation work:
 11. `docs/architecture/data-and-trust-model.md`
 12. Relevant accepted ADRs under `docs/architecture/decisions/`
 
+Before following links from an older plan, implementation record, attestation,
+or occurrence ledger, establish the current repository state from:
+
+13. `docs/evaluation/product-evaluator-boundary.md`
+14. `docs/evaluation/repository-evaluation-authority.v1.json`
+15. the active accepted slice plan and its current implementation record
+
+Historical records preserve what happened at an earlier commit; they are not a
+navigation path for current implementation. A historical path, package name,
+command, schema, protocol identity, or status statement is never current merely
+because it remains documented.
+
 Then read the task-specific material:
 
 - research: the relevant entry in `docs/research/open-questions.md`,
@@ -32,11 +44,18 @@ Then read the task-specific material:
 - architecture: `docs/architecture/decisions/README.md`, relevant proposed
   ADRs/research, and the applicable integration, jobs/caching, and
   security/privacy documents;
-- evaluation or analyzer work: `docs/evaluation/evaluation-strategy.md`,
+- ordinary public evaluation or analyzer work: `docs/evaluation/evaluation-strategy.md`,
   `docs/evaluation/case-catalog.md`, `docs/evaluation/fixture-guidelines.md`,
-  `docs/evaluation/anti-overfitting-rules.md`, and
-  `docs/evaluation/evaluator-private-fixture-governance-v2.md`;
-- implementation: the active accepted milestone plan, if one exists.
+  `docs/evaluation/anti-overfitting-rules.md`,
+  `docs/evaluation/m1-continuation-verification-profile.md`, and the active
+  slice plan. Do not read private-fixture files or historical evaluator plans
+  for ordinary product work;
+- separately authorized private evaluator work:
+  `docs/evaluation/evaluator-private-fixture-governance-v2.md`, the exact
+  accepted evaluator plan, and the private repository's own `AGENTS.md` and
+  `GOVERNANCE.md` before any private access;
+- implementation: the active accepted milestone plan, active slice plan, and
+  prerequisite implementation record.
 
 ## Working rules
 
@@ -97,6 +116,16 @@ output. WP3 owns candidate scale/stress construction and any product-reachable
 expansion contract. WP6 assembles and independently reviews the comprehensive
 cross-package corpus. No rejected or preauthored comprehensive Slice 5 corpus
 is a prerequisite for product implementation.
+
+Current M1 handoff: `M1/S5/WP1` is complete and reviewed at
+`a333f016f66cafc393f165448e777276f3b6bd88`; `M1/S5/WP2` is the next eligible
+package. The rejected WP1-generated 28-package corpus, its registry, generator,
+fixture-only tests, and WP1 fixture-independence/generator-feasibility gates do
+not exist as current inputs and must not be reconstructed from historical
+names. Current public fixture discovery is limited to the six exact identities
+in `docs/evaluation/repository-evaluation-authority.v1.json`. Later Slice 5
+packages assign and freeze new semantic fixture identities within their own
+scope; product output never authors expected truth.
 
 The separately versioned evaluator-private fixture repository is default-deny
 for ordinary Infinium work. Do not read its files directly while implementing,

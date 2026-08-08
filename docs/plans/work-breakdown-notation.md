@@ -1,7 +1,7 @@
 # Work-breakdown notation
 
 Status: Accepted
-Last reviewed: 2026-08-07
+Last reviewed: 2026-08-08
 
 ## Purpose
 
@@ -24,22 +24,24 @@ decimals indefinitely.
 Use:
 
 ```text
-{milestone}/{slice}/{phase}/{work-package}
+{milestone}/{slice}/[{phase}/]{work-package}
 ```
 
-For the current effort:
+The phase component is optional. The current effort is:
 
 ```text
-M1/S4.5/PRE-B2/WP1
+M1/S5/WP2
 ```
 
 The components mean:
 
 - `M1`: accepted milestone;
-- `S4.5`: milestone slice;
-- `PRE-B2`: plan-local phase containing the public prerequisites for a future
-  B2 authorization; and
-- `WP1`: one bounded, assignable work package.
+- `S5`: milestone slice; and
+- `WP2`: one bounded, assignable work package.
+
+Historical work such as `M1/S4.5/PRE-B2/WP1` includes a plan-local phase
+because that slice needed one. `PRE-B2` never granted evaluator-stage
+authority.
 
 The matching human label is written in full on first use, for example:
 “M1 Slice 4.5 — Pre-B2 evidence-contract totality — WP1: Evidence-state
@@ -55,6 +57,21 @@ model.” The canonical ID may be used alone after that.
   stage, protocol, retry, or authorization to run B2.
 - **Work package** is the smallest unit intended for implementation by one
   fresh agent without an owner decision during normal execution.
+
+## Authority vocabulary
+
+In project documents, **authority** means a public, accepted decision that
+permits a specific action or establishes which contract controls it. It is not
+a claim that an agent, file, test, fixture, or implementation is correct.
+
+**Work-package authority** is the narrow permission supplied by an accepted
+plan after that package's prerequisites and entry gate are satisfied. It
+authorizes only the package's declared objective, paths/actions, deliverables,
+and verification. It does not authorize later packages, private evaluator
+work, live/billable operations, protected paths, or architecture outside the
+accepted decisions. A completed prerequisite can make the next package
+authorized automatically when the accepted plan says so; it does not make the
+whole slice authorized at once.
 
 If a work package must be subdivided, append a task component only in its own
 plan, for example `M1/S4.5/PRE-B2/WP2/T1`. Prefer another work package when the
@@ -82,10 +99,10 @@ a new ID if its scope materially changes.
 Every plan that uses this notation records:
 
 ```text
-Work ID: M1/S4.5/PRE-B2
-Parent: M1/S4.5
+Work ID: M1/S5
+Parent: M1
 Depends on: <canonical IDs or accepted artifacts>
-Next work package: M1/S4.5/PRE-B2/WP1
+Next work package: M1/S5/WP2
 ```
 
 Each work-package section records its canonical ID, objective, inputs,
@@ -94,7 +111,7 @@ next package it unblocks. Implementation and review records use the same ID so
 fresh-agent prompts and later status reports can be traced without relying on
 chat history.
 
-## Current Slice 4.5 map
+## Historical Slice 4.5 map
 
 ```text
 M1/S4.5
@@ -118,6 +135,21 @@ M1/S4.5
     └── WP5 Final closeout and Slice 5 handoff
 ```
 
-This map names work only. Its execution authority and gates live in the
-accepted Slice 4.5 plans. No `PRE-B2/V5` entry authorizes active work. Slice 5
-is eligible because `EVAL-CLOSEOUT/WP5` received final acceptance.
+This map names historical work only. Its former execution authority and gates
+live in the accepted Slice 4.5 plans. No `PRE-B2/V5` entry authorizes active
+work.
+
+## Current Slice 5 map
+
+```text
+M1/S5
+├── WP1 Contracts, migration, and authority boundary — complete and reviewed
+├── WP2 Typed evidence and provenance — next authorized package
+├── WP3 Candidate generation and selection — gated by WP2
+├── WP4 Findings, cases, coverage, and taxonomy — gated by WP3
+├── WP5 Coordinator, replay, export, and platform cases — gated by WP4
+└── WP6 Comprehensive public corpus and closeout — gated by WP5
+```
+
+The accepted Slice 5 plan and its current implementation record control the
+exact scopes and gates. This map is navigation, not substitute authority.

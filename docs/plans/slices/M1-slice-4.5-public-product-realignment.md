@@ -486,8 +486,9 @@ single authorized B2 resume was later consumed without an oracle or verdict,
 and ADR-0032 now defers private held-out evaluation. Protocol `/4` is bounded
 historical regression evidence, protocol `/5` is retired unqualified, and no
 private evaluator work is authorized. Evaluator-deferral closeout is accepted:
-Slice 4.5 is closed by owner disposition, and Slice 5 is eligible under the M1
-continuation verification profile.
+Slice 4.5 is closed by owner disposition. That closeout made Slice 5 eligible;
+Slice 5 WP1 has since completed and WP2 is next under the M1 continuation
+verification profile.
 
 ## Historical fresh-agent implementation handoff
 

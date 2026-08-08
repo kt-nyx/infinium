@@ -1,7 +1,8 @@
 # Glossary
 
-Status: Draft  
-Last reviewed: 2026-07-26
+Status: Active reference
+
+Last reviewed: 2026-08-08
 
 This glossary supplies short definitions. Normative semantics live in the
 [domain model](product/domain-model.md) and accepted

@@ -376,6 +376,7 @@ gate. Subsequent public semantic realignment and review passed for exact
 candidate `a98d648bd0adb2751ee0c09828e0227b1583950f`. ADR-0032 later deferred
 private held-out evaluation without a product verdict, retired protocol `/5`
 unqualified, and replaced only that sequencing gate with the accepted M1
-continuation verification profile. Evaluator-deferral closeout is accepted:
-Slice 4.5 is closed, Slice 5 is eligible, and this Slice 4 record claims only
-its exact public conformance scope—not private reliability or readiness.
+continuation verification profile. Evaluator-deferral closeout later closed
+Slice 4.5 and made Slice 5 eligible; Slice 5 WP1 has since completed and WP2 is
+next. This Slice 4 record claims only its exact public conformance scope—not
+private reliability or readiness.

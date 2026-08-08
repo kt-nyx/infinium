@@ -3,7 +3,7 @@
 Status: Accepted  
 Accepted: 2026-07-28  
 Accepted by: Project owner  
-Last reviewed: 2026-08-07
+Last reviewed: 2026-08-08
 Companion specification:
 [M1 semantic and local-ground-truth evaluation specifications](../specifications/m1-semantic-and-ground-truth.md)
 with the accepted
@@ -15,6 +15,14 @@ development/validation fixtures under the M1 continuation verification
 profile. Held-out rows below remain historical or future design inventory;
 they do not authorize private access, authoring, qualification, comparison, or
 scoring.
+
+Slice 5 recovery amendment, 2026-08-08: the rejected WP1-generated
+comprehensive corpus and its 28 package identities are not current packages or
+reserved future identities. Sections below specify case obligations and staged
+fixture slots only. WP2-WP5 assign, pre-register, freeze, and independently
+review fresh package identities for their own behavior; WP6 assembles the
+cross-stage corpus. Do not use this document as package discovery or attempt to
+recover the deleted corpus.
 
 ## 1. Purpose and current state
 
@@ -207,9 +215,9 @@ unavailable replayability must remain explicit.
 | `SEM-NPC-HO-001` / `SEM-NPC-HO-NEG-001` | Held-out | EVAL-0001/0002 | Required before held-out pass; not authored/sealed | Independent holdout custodian |
 | `REAL-NPC-0001-POS` / `REAL-NPC-0001-CTRL` | Validation | EVAL-0016 | Research-qualified candidate; final executable manifest not created | Evaluation owner |
 | `REAL-REFR-0001-POS` / `REAL-REFR-0001-CTRL` | Validation | EVAL-0017 | Research-qualified candidate; final executable manifest not created | Evaluation owner |
-| `CAND-ATOMIC-DEV` | Development | EVAL-0032 | Required; not created | Independent population author |
-| `CAND-INTEGRATION-VAL` | Validation | EVAL-0032 | Required; not created | Evaluation owner |
-| `CAND-SCALE-VAL` / `CAND-STRESS-VAL` | Validation | EVAL-0032 | Required; not created | Benchmark/evaluation owner |
+| WP3 atomic candidate slot; identity assigned by WP3 | Development | EVAL-0032 | Required in WP3; not created | Independent population author |
+| WP3 candidate integration slot; identity assigned by WP3 | Validation | EVAL-0032 | Required in WP3; not created | Evaluation owner |
+| WP3 scale/stress slots; identities assigned by WP3 | Validation | EVAL-0032 | Required in WP3; not created | Benchmark/evaluation owner |
 | `CAND-HO-001` | Held-out | EVAL-0032 | Required before held-out recall claim; not authored/sealed | Independent holdout custodian |
 | `MO2-ATOMIC-DEV` | Development | EVAL-0051 | Constructed and exercised through the independent Slice 3 evaluator package | MO2 fixture operator |
 | `MO2-INTEGRATION-VAL` / `MO2-NEGATIVE-VAL` | Validation | EVAL-0051 | Constructed, independently observed, and passed for the exact admitted target | Independent MO2 observer |
@@ -220,18 +228,18 @@ unavailable replayability must remain explicit.
 | `BETH-HO-002` | Held-out | EVAL-0052 | Sealed evaluator-private successor after `BETH-HO-001` retention was unavailable; historical v1 metadata is preserved and invalidated; private use is deferred and no valid held-out verdict exists | Independent holdout custodian |
 | `TARGET-1170-PRIVATE-VAL` and target-negative package | Validation | EVAL-0054 | Constructed in the independent Slice 3 evaluator package and passed against the exact admitted target and complete preregistered negative matrix | Runtime-gate reviewer |
 | `ANALYZER-CONTRACT-DEV` and boundary variants | Development/validation | EVAL-0065 | Required; not created | Contract reviewer |
-| `EVID-TYPES-DEV` / `EVID-LLM-VAL` / `EVID-NO-LLM-VAL` / `EVID-HOSTILE-VAL` | Development/validation | EVAL-0067 | Required; not created | Evidence-model reviewer |
+| WP2 evidence-type, no-model, and hostile-content slots plus the later live-model slot; identities assigned by their owning WPs | Development/validation | EVAL-0067 | Required incrementally; not created | Evidence-model reviewer |
 | `LLM-CLAIM-LIVE-VAL` | Validation | EVAL-0067/EVAL-0083 plus live-provider gates | Required for the M1 live semantic proof; not created | Source-claim and provider reviewers |
 | `LLM-INVESTIGATE-LIVE-VAL` | Validation | EVAL-0067/EVAL-0083 plus live-provider gates | Required for the M1 live semantic proof; not created | Candidate-analysis and provider reviewers |
 | `EVID-HO-001` | Held-out | EVAL-0067 | Required before broad type-boundary claim; not authored/sealed | Independent holdout custodian |
-| `PROV-LOCAL-DEV` / `PROV-SOURCE-LLM-VAL` / `PROV-CONTRADICTION-VAL` / `PROV-DELETION-VAL` | Development/validation | EVAL-0083 | Required; not created | Provenance reviewer |
+| WP2 local, contradiction, and deletion provenance slots plus the later live-source slot; identities assigned by their owning WPs | Development/validation | EVAL-0083 | Required incrementally; not created | Provenance reviewer |
 | `PROV-LIVE-COMPOSED-VAL` | Validation | EVAL-0083 plus applicable live-provider gates | Required if M1 retains its bounded live Responses proof; not created | Provenance and provider reviewers |
 | `PROV-HO-001` | Held-out | EVAL-0083 | Required before broad provenance claim; not authored/sealed | Independent holdout custodian |
-| `CASE-SHARED-DEV` / `CASE-DISTINCT-VAL` / `CASE-LEAD-VAL` / `CASE-METAMORPH-VAL` | Development/validation | EVAL-0084 | Required; not created | Causal-grouping reviewer |
+| WP4 shared, distinct, lead-only, and metamorphic case-grouping slots; identities assigned by WP4 | Development/validation | EVAL-0084 | Required in WP4; not created | Causal-grouping reviewer |
 | `CASE-HO-001` | Held-out | EVAL-0084 | Required before broad grouping claim; not authored/sealed | Independent holdout custodian |
-| `COVER-MATRIX-DEV` / `COVER-ZERO-FINDING-VAL` / `COVER-PARTIAL-VAL` / `COVER-TARGETED-VAL` | Development/validation | EVAL-0085 | Required; not created | Coverage/readiness reviewer |
+| WP4 coverage matrix, zero-finding, partial, and targeted slots; identities assigned by WP4 | Development/validation | EVAL-0085 | Required in WP4; not created | Coverage/readiness reviewer |
 | `COVER-HO-001` | Held-out | EVAL-0085 | Required before broad presentation claim; not authored/sealed | Independent holdout custodian |
-| `TAX-AXES-DEV` / `TAX-COUNTEREXAMPLE-VAL` / `TAX-STATE-VAL` / `TAX-HISTORY-VAL` | Development/validation | EVAL-0086 | Slice 4-applicable BETH-linked projections accepted; broader packages and history mechanics remain required | Taxonomy reviewer |
+| WP4 taxonomy axes, counterexample, state, and history slots; identities assigned by WP4 | Development/validation | EVAL-0086 | Slice 4-applicable BETH-linked projections accepted; broader packages and history mechanics remain required in WP4 | Taxonomy reviewer |
 | `TAX-HO-001` | Held-out | EVAL-0086 | Required before broad classification claim; not authored/sealed | Independent holdout custodian |
 
 The known-answer real candidates cannot be promoted to held-out by changing a
@@ -492,7 +500,7 @@ third-party bytes.
 
 ## 6. Candidate-selection packages
 
-### 6.1 `CAND-ATOMIC-DEV`
+### 6.1 WP3 atomic candidate slot
 
 The truth manifest must contain at least one typed relationship or explicit
 unsupported/gap example and an eligible population for each stratum below.
@@ -520,11 +528,11 @@ or finding authority.
 
 ### 6.2 Integration, scale, and stress
 
-`CAND-INTEGRATION-VAL` combines supported strata with broad distractors,
+The WP3 integration slot combines supported strata with broad distractors,
 duplicate paths, ambiguous intent, renamed participants, unrelated insertion,
 and relevant-winner changes.
 
-`CAND-SCALE-VAL` and `CAND-STRESS-VAL` are deterministic project-authored
+The WP3 scale and stress slots use deterministic project-authored
 generators with pinned generator version, seed, population counts, planted
 truth, and expected structural hashes. They measure candidate recall/volume and
 operational cost without becoming a semantic oracle for real profiles.
@@ -852,7 +860,7 @@ CLI and JSON outputs are compared for semantic equality.
 
 ### 10.2 Evidence packages
 
-`EVID-TYPES-DEV` supplies one valid example and one empty-set example of each
+The WP2 evidence-type slot supplies one valid example and one empty-set example of each
 typed domain object.
 
 `EVID-LLM-VAL` supplies a project-authored inert OpenAI-like direct Response
@@ -869,8 +877,8 @@ enabled search operation, acquired claim source, or support claim. Only a
 separate project-authored local/fixture document revision and exact passage may
 support an external claim in M1.
 
-`EVID-NO-LLM-VAL` produces the corresponding deterministic result and explicitly
-records no LLM involvement. `EVID-HOSTILE-VAL` embeds instruction-like text in
+The WP2 no-model slot produces the corresponding deterministic result and explicitly
+records no LLM involvement. The WP2 hostile-content slot embeds instruction-like text in
 documentation/search/tool output and expects it to remain untrusted data.
 
 All provider IDs, content, and usage are marked synthetic. These packages do
@@ -942,7 +950,7 @@ either live semantic operation.
 The pre-registered provenance DAG for each package includes exact required and
 forbidden edges.
 
-### 11.1 `PROV-LOCAL-DEV`
+### 11.1 WP2 local-provenance slot
 
 One deterministic finding/case linked through:
 
@@ -991,10 +999,10 @@ qualification call jointly owned by the
 
 ### 11.3 Contradiction and deletion
 
-`PROV-CONTRADICTION-VAL` requires both supporting and contradicting evidence
+The WP2 contradiction slot requires both supporting and contradicting evidence
 and the reason neither was silently discarded.
 
-`PROV-DELETION-VAL` removes one source body/payload after configured dependent
+The WP2 deletion slot removes one source body/payload after configured dependent
 work and requires:
 
 - immutable historical output;
@@ -1008,7 +1016,7 @@ variant follows source-specific retention and non-redistribution.
 
 ## 12. Case-grouping packages
 
-`CASE-SHARED-DEV` contains at least three findings:
+The WP4 shared-cause slot contains at least three findings:
 
 - two record/asset findings with the same typed stale-reversion cause,
   applicability, and resolution; and
@@ -1017,7 +1025,7 @@ variant follows source-specific retention and non-redistribution.
 Expected grouping is one two-member supported case plus one distinct supported
 case.
 
-`CASE-DISTINCT-VAL` supplies:
+The WP4 distinct-cause slot supplies:
 
 - same mod, different causal conditions;
 - same record family, different applicability/dependencies;
@@ -1026,10 +1034,10 @@ case.
 
 Each remains separate.
 
-`CASE-LEAD-VAL` supplies a candidate/hypothesis below finding threshold and
+The WP4 lead-only slot supplies a candidate/hypothesis below finding threshold and
 expects one lead-only case, zero supported cases, and no readiness effect.
 
-`CASE-METAMORPH-VAL` renames/reorders participants and randomizes candidate
+The WP4 metamorphic slot renames/reorders participants and randomizes candidate
 enumeration; membership must remain identical. The oracle contains typed
 causal conditions and expected membership but no model-visible case labels.
 
@@ -1037,7 +1045,7 @@ causal conditions and expected membership but no model-visible case labels.
 
 The fixture population ledger is the independent oracle.
 
-### 13.1 `COVER-MATRIX-DEV`
+### 13.1 WP4 coverage-matrix slot
 
 Include distinct populations for:
 
@@ -1054,10 +1062,10 @@ member has one exact reason and denominator membership.
 
 ### 13.2 Boundary variants
 
-- `COVER-ZERO-FINDING-VAL`: zero findings, nonzero unsupported/gap population.
-- `COVER-PARTIAL-VAL`: one failed analyzer, one limited analyzer, and retained
+- Zero-finding slot: zero findings, nonzero unsupported/gap population.
+- Partial-coverage slot: one failed analyzer, one limited analyzer, and retained
   reportable work; readiness must be incomplete/provisional.
-- `COVER-TARGETED-VAL`: one targeted analyzer with valid narrow scope and no
+- Targeted-coverage slot: one targeted analyzer with valid narrow scope and no
   permission to borrow prior full-scan coverage.
 - Lead-only variant: one lead-only case and zero supported cases/findings.
 
@@ -1107,8 +1115,8 @@ Every oracle entry pins:
 
 ### 14.2 Historical/split-merge mechanics
 
-Because no successor to product taxonomy `0.1.0` is accepted, `TAX-HISTORY-VAL`
-uses:
+Because no successor to product taxonomy `0.1.0` is accepted, the WP4 taxonomy-
+history slot uses:
 
 - real product `0.1.0` only to assert original-version retention; and
 - project-authored non-product schemas

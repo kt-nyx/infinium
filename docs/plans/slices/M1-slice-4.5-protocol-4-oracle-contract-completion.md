@@ -635,5 +635,6 @@ records. ADR-0032 now defers private held-out evaluation without a product
 verdict, retires `/5` unqualified, and limits frozen `/4` to bounded public
 regression with the known gap excluded. Nothing in this historical plan may be
 resumed. Evaluator-deferral closeout is accepted: Slice 4.5 is closed by owner
-disposition, Slice 5 is eligible under the M1 continuation verification
-profile, and M1 remains active.
+disposition. That closeout made Slice 5 eligible; Slice 5 WP1 has since
+completed and WP2 is next under the M1 continuation verification profile. M1
+remains active.

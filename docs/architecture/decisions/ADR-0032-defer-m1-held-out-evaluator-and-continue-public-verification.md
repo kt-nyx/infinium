@@ -128,7 +128,8 @@ boundary breach remains a hard stop. The exact verification evidence is in the
 ## Current closeout implementation status
 
 `M1/S4.5/EVAL-CLOSEOUT` received final acceptance on 2026-08-07. The condition
-in decision 8 is satisfied: Slice 4.5 is closed by owner disposition, Slice 5
-is eligible under the continuation verification profile, and M1 remains
-active. The exact evidence is in the
+in decision 8 is satisfied: Slice 4.5 is closed by owner disposition. Slice 5
+WP1 has since completed and been reviewed, and WP2 is next under the
+continuation verification profile. M1 remains active. The exact evaluator-
+closeout evidence is in the
 [closeout acceptance record](../../evaluation/m1-slice4.5-evaluator-deferral-closeout-acceptance.md).

@@ -3,7 +3,7 @@
 Status: Accepted  
 Accepted: 2026-07-28  
 Accepted by: Project owner  
-Last reviewed: 2026-07-30
+Last reviewed: 2026-08-08
 Target milestone: M1 — Backend semantic proof
 
 ## 1. Purpose and authority
@@ -24,6 +24,13 @@ It refines the planned cases in the
 EVAL-0086 refinements in RESEARCH-0022 and RESEARCH-0021. It does not create an
 implementation, make a fixture execution-ready, execute a fixture, or mark any
 case as passed.
+
+The 2026-08-08 Slice 5 recovery retired the prematurely generated fixture
+identities that had been derived from this specification. The fixture-family
+descriptions below remain accepted semantic obligations, but they now describe
+staged work-package slots rather than reserved package names. Each owning Slice
+5 work package must assign a fresh identity when it authors and reviews that
+slot. Do not reconstruct the removed corpus from historical names or records.
 
 The controlling product and architecture contracts are:
 
@@ -517,10 +524,11 @@ authority that the M1 claim boundary excludes.
 real-profile correctness; model reasoning quality; taxonomy labels as causal
 proof; and an all-pairs exception.
 
-**Fixture partition and input.** `CAND-ATOMIC-DEV`, `CAND-INTEGRATION-VAL`,
-`CAND-SCALE-VAL`, `CAND-STRESS-VAL`, the two controlled-real validation
-packages, and sealed `CAND-HO-001`. Each has a separately pre-registered truth
-population and canonical participant graph.
+**Fixture partition and input.** WP3 owns separate atomic, integration, scale,
+and stress public fixture slots, plus the two controlled-real validation
+packages. Any future held-out slot requires separate authorization. Each slot
+has a separately pre-registered truth population and canonical participant
+graph and receives a fresh package identity only in its owning work package.
 
 **Independent truth and isolation.** Fixture construction supplies the planted
 relationships and negative/gap populations. Expected lane/candidate
@@ -877,11 +885,13 @@ evidence-bound-candidate-investigation extensions.
 platform cases), source acquisition fidelity, broad model quality, and
 user-facing UI.
 
-**Fixture partition and input.** `EVID-TYPES-DEV`, `EVID-LLM-VAL`,
-`EVID-NO-LLM-VAL`, `EVID-HOSTILE-VAL`, `LLM-CLAIM-LIVE-VAL`,
-`LLM-INVESTIGATE-LIVE-VAL`, and sealed `EVID-HO-001`. Deterministic provider
-fixtures use inert retained transcripts. The two live validation fixtures run
-only after the platform credential/security/budget qualification gate opens.
+**Fixture partition and input.** WP2 owns separate evidence-type,
+deterministic-provider, no-model, and hostile-content public fixture slots.
+Later live claim-extraction and candidate-investigation slots run only after
+the platform credential/security/budget qualification gate opens. Any future
+held-out slot requires separate authorization. Deterministic provider fixtures
+use inert retained transcripts, and every slot receives a fresh package
+identity only in its owning work package.
 
 **Independent truth and isolation.** The oracle specifies permitted transitions
 and required/forbidden authority. Expected labels are absent from model and
@@ -959,15 +969,17 @@ redistribution of source bodies. A later extension must add
 Nexus interface/spec/schema/query/fingerprint routing and hosted-search
 action/source provenance before either boundary is enabled.
 
-**Fixture partition and input.** `PROV-LOCAL-DEV`,
-`PROV-SOURCE-LLM-VAL`, `PROV-CONTRADICTION-VAL`,
-`PROV-DELETION-VAL`, the conditionally composed
-`PROV-LIVE-COMPOSED-VAL`, and sealed `PROV-HO-001`.
+**Fixture partition and input.** WP2 owns separate local, deterministic
+source-model, contradiction, and deletion public fixture slots. A later live
+composed slot is conditional on its provider and platform gates. Any future
+held-out slot requires separate authorization. Every slot receives a fresh
+package identity only in its owning work package.
 
-`PROV-SOURCE-LLM-VAL` uses an inert project-authored direct-Response transcript
+The deterministic source-model slot uses an inert project-authored
+direct-Response transcript
 for deterministic provenance assertions. Because the accepted M1 baseline also
 includes both accepted live semantic operations,
-`PROV-LIVE-COMPOSED-VAL` must additionally apply the same provenance assertions
+the later live composed slot must additionally apply the same provenance assertions
 to their exact retained calls/outputs admitted by the applicable provider,
 credential, and budget cases in the
 [platform fixture manifests](../fixtures/m1-platform-fixture-manifests.md).
@@ -1043,9 +1055,10 @@ and ordering/rename metamorph.
 merge/split adjudication, user dispositions, and case-grouping accuracy outside
 the declared causal fixture families.
 
-**Fixture partition and input.** `CASE-SHARED-DEV`,
-`CASE-DISTINCT-VAL`, `CASE-LEAD-VAL`, `CASE-METAMORPH-VAL`, and sealed
-`CASE-HO-001`.
+**Fixture partition and input.** WP4 owns separate shared-cause,
+distinct-cause, lead-only, and metamorphic public fixture slots. Any future
+held-out slot requires separate authorization. Every slot receives a fresh
+package identity only in its owning work package.
 
 **Independent truth and isolation.** The oracle pre-registers typed causal
 conditions, applicability, dependency closures, and expected membership. Names
@@ -1099,9 +1112,10 @@ scope-limited targeted run.
 readiness policy, a single aggregate safety metric, or coverage populations
 not declared by the fixture.
 
-**Fixture partition and input.** `COVER-MATRIX-DEV`,
-`COVER-ZERO-FINDING-VAL`, `COVER-PARTIAL-VAL`,
-`COVER-TARGETED-VAL`, and sealed `COVER-HO-001`.
+**Fixture partition and input.** WP4 owns separate coverage-matrix,
+zero-finding, partial, and targeted public fixture slots. Any future held-out
+slot requires separate authorization. Every slot receives a fresh package
+identity only in its owning work package.
 
 **Independent truth and isolation.** A pre-registered population ledger defines
 eligible members, denominators, states, exclusions, gaps, findings, leads, and
@@ -1168,9 +1182,11 @@ taxonomy, inferring classification from hosting/file/record labels, or testing
 semantic analyzer correctness beyond the independently supplied fixture
 evidence.
 
-**Fixture partition and input.** `TAX-AXES-DEV`, `TAX-COUNTEREXAMPLE-VAL`,
-`TAX-STATE-VAL`, `TAX-HISTORY-VAL`, controlled-real EVAL-0016/0017
-classification projections, and sealed `TAX-HO-001`.
+**Fixture partition and input.** WP4 owns separate taxonomy-axis,
+counterexample, state, and history public fixture slots, plus controlled-real
+EVAL-0016/0017 classification projections. Any future held-out slot requires
+separate authorization. Every slot receives a fresh package identity only in
+its owning work package.
 
 **Independent truth and isolation.** An independently reviewed oracle maps each
 subject to exact axis/facet/code, applicability state, role, evidence, and

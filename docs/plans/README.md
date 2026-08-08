@@ -1,7 +1,8 @@
 # Plans
 
-Status: Draft  
-Last reviewed: 2026-08-07
+Status: Active navigation
+
+Last reviewed: 2026-08-08
 
 The [M0 research-foundation plan](milestones/M0-research-foundation.md) was
 accepted on 2026-07-25 and completed on 2026-07-28. The accepted
@@ -43,10 +44,10 @@ successor model, exact loose-availability gap, and global composition proof;
 WP1V then hard-stopped, WP1 never proof-closed, and WP2-WP4 never started.
 ADR-0032 now retires `/5` unqualified, retains `/4` only for bounded public
 regression with its known gap excluded, and defers private held-out evaluation
-without a product verdict. No B2, C2, Stage D, corpus, scoring, or replacement-
-evaluator work is authorized. Evaluator-deferral closeout is accepted; Slice
-4.5 is closed, Slice 5 is eligible as the next product package under the M1
-continuation verification profile, and M1 remains active.
+without a product verdict. No B2, C2, Stage D, private corpus, scoring, or
+replacement-evaluator work is authorized. Evaluator-deferral closeout is
+accepted; Slice 4.5 is closed, Slice 5 is active with WP1 complete and WP2 next
+under the M1 continuation verification profile, and M1 remains active.
 The accepted
 [M1 Slice 5 execution plan](slices/M1-slice-5-evidence-documentation-candidates-cases-replay.md)
 defines the clean-break evidence-to-replay work as `M1/S5/WP1` through `WP6`.

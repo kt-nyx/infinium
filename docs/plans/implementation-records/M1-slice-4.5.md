@@ -1334,9 +1334,11 @@ Protocol /4: frozen historical evaluator; bounded public regression use only.
 Protocol /5: retired unqualified; no implementation or verdict.
 Private held-out evaluation: deferred; no valid current product verdict.
 Slice 4.5: closed by owner disposition with explicit residual risk.
-Slice 5: eligible to begin under the M1 continuation verification profile.
+Slice 5 at this closeout: eligible to begin under the continuation profile.
 M1: active.
 ```
+
+Current Slice 5 status is WP1 complete and reviewed; WP2 is next.
 
 Final repository-wide mechanical counts: 183 Markdown files and 1,974 inline
 links checked, including 1,260 local links with zero unresolved local targets;

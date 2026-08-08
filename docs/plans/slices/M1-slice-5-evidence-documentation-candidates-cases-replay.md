@@ -85,8 +85,8 @@ maintainer or agent could mistake for current authority. That pass shall:
 6. continue to exclude the evaluator-private repository and the abandoned
    sibling implementation archive.
 
-This amendment permits changes under the non-frozen
-`tools/evaluation/Infinium.EvaluatorV2/LegacyV1/` compatibility surface,
+This amendment permits removal or replacement of the now-retired pre-v2
+public-fixture compatibility surface recorded in the retirement manifest,
 current public pre-Slice-5 fixture packages and their tests, repository
 authority/navigation documentation, and focused archive/authority enforcement
 tooling/tests. It does not authorize evaluator `/4` repair, evaluator successor
@@ -706,8 +706,8 @@ recorded dirty-path recovery inventory and isolated WP1 worktree.
 `src/Infinium.Persistence/` migration/schema only, contract/unit/evaluation
 schema tests, minimal answer-free contract examples, and
 `eng/verify-m1-slice5.ps1` contract mode. The 2026-08-08 owner
-amendment additionally permits the non-frozen `LegacyV1` compatibility
-surface, current public pre-Slice-5 fixture packages and tests, repository
+amendment additionally permits the now-retired pre-v2 public-fixture
+compatibility surface, current public pre-Slice-5 fixture packages and tests, repository
 authority/navigation documents including `AGENTS.md`, and focused
 archive/authority enforcement tooling and tests.
 

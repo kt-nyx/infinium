@@ -1,7 +1,8 @@
 # Research investigations
 
-Status: Draft  
-Last reviewed: 2026-08-07
+Status: Active navigation
+
+Last reviewed: 2026-08-08
 
 Place one bounded, dated investigation per file:
 
@@ -143,6 +144,6 @@ The project owner accepted the Wave F recommendations, baseline, case
 specifications/manifests, ADR-0025, residual-risk register, and M1 plan on
 2026-07-28. Gate F is met and M0 is complete. That Wave F acceptance did not
 itself imply evaluation execution or an M1 implementation result. Subsequent
-M1 Slices 0-4.5 are now complete for their exact recorded scopes; M1 remains
-active and Slice 5 is the next eligible planning package under the continuation
-verification profile.
+M1 Slices 0-4.5 are complete for their exact recorded scopes. Slice 5 is now
+active: WP1 is complete and reviewed, WP2 is the next authorized package under
+the continuation verification profile, and M1 remains active.

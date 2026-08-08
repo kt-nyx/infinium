@@ -223,5 +223,6 @@ ADR-0032 supplies the required successor disposition: protocol `/4` remains
 frozen historical evidence with bounded regression use and the representation
 gap excluded; protocol `/5` is retired unqualified; private held-out evaluation
 is deferred without a product verdict; and no WP6/private scoring path is
-authorized. Evaluator-deferral closeout is accepted, Slice 4.5 is closed, and
-Slice 5 is eligible under the M1 continuation verification profile.
+authorized. Evaluator-deferral closeout is accepted and Slice 4.5 is closed.
+That closeout made Slice 5 eligible; Slice 5 WP1 has since completed and WP2 is
+next under the M1 continuation verification profile.

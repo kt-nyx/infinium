@@ -6,7 +6,7 @@ Accepted: 2026-07-28
 
 Accepted by: Project owner
 
-Last reviewed: 2026-07-28
+Last reviewed: 2026-08-08
 
 ## Purpose
 
@@ -15,6 +15,13 @@ This document defines the pre-registered fixture families for
 It creates no executable fixture, contains no production implementation, and
 does not mark any EVAL execution passed or any described fixture
 execution-ready.
+
+The 2026-08-08 Slice 5 recovery removed six prematurely instantiated platform
+packages. Their behavioral descriptions remain accepted obligations, but the
+affected sections below are now staged WP5 slots, not current or reserved
+fixture identities. WP5 must assign fresh package identities when it authors
+and reviews those slots. Do not reconstruct the removed packages from
+historical records.
 
 All initial fixtures are synthetic and use invented identities. No real mod
 name, Nexus identity, private profile, or answer-bearing filename may enter
@@ -203,7 +210,7 @@ typed analytical outcome under `S1/C1/G1/M1`.
 dependency graph, transition policy, job definitions, application/schema
 versions, and event trace.
 
-### M1-PLAT-UNTRUSTED-v1
+### WP5 untrusted-content platform slot
 
 **Cases:** EVAL-0033 and EVAL-0035.
 
@@ -257,7 +264,7 @@ queued/retry/reserved/in-flight deletion states.
 redaction policy/version, expected fact set, helper/adapter versions where
 enabled, and full canary scan.
 
-### M1-PLAT-CLEAN-LAYERS-v1
+### WP5 clean-layer and reuse platform slot
 
 **Cases:** EVAL-0037 and EVAL-0039.
 
@@ -512,7 +519,7 @@ authorization/reservation/final-gate events, provider transcript, Response and
 usage receipt, settlement/hold/adjustment records, process/IPC trace, and
 canary scan. The key is never retained as a replay dependency.
 
-### M1-PLAT-LINEAGE-v1
+### WP5 lineage platform slot
 
 **Cases:** EVAL-0079.
 
@@ -548,7 +555,7 @@ compatibility declarations, dependency closures, evidence/contradictions,
 taxonomy versions, review events, policy versions, deletion receipt, and
 candidate permutations.
 
-### M1-PLAT-WRITES-v1
+### WP5 write-boundary platform slot
 
 **Cases:** EVAL-0035 and EVAL-0080.
 
@@ -607,7 +614,7 @@ price/configuration identities, simulator receipts, deadlines/clock events,
 credential-generation metadata where applicable, fault schedule, and expected
 ledger/projection tables.
 
-### M1-PLAT-PERSIST-v1
+### WP5 persistence platform slot
 
 **Cases:** EVAL-0087.
 
@@ -635,7 +642,7 @@ measurements.
 payload manifest/bytes, application/schema/migration/native SQLite versions,
 fault schedule, backup pins, deletion plan, and expected rebuilt projections.
 
-### M1-PLAT-IPC-v1
+### WP5 IPC platform slot
 
 **Cases:** EVAL-0088.
 

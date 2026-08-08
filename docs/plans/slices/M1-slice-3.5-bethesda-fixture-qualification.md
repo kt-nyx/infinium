@@ -9,6 +9,13 @@ Parent plan: [M1 backend semantic proof](../milestones/M1-backend-semantic-proof
 and accepted [revision 2 amendment](../milestones/M1-backend-semantic-proof-adr0026-amendment.md)
 Target: Slice 3.5, between completed Slice 3 and production Slice 4
 
+Current navigation note: this completed historical plan preserves the package
+names and later-slice assignments used at its 2026-07-30 checkpoint. The
+2026-08-08 Slice 5 recovery later removed the prematurely instantiated
+taxonomy package identities named below. They are not current or reserved;
+the owning Slice 5 work package must assign fresh identities. Do not use this
+plan as a current fixture-authoring recipe.
+
 Accepted amendment: On 2026-08-01 the project owner selected ADR-0026's
 separate private Git repository and fresh-context delegated-access model. The
 public answer-bearing `BETH-LIGHT-VAL` and `BETH-UNSUPPORTED-VAL` versions are
@@ -447,17 +454,17 @@ Required Slice 4 projections are:
 - the `TAX-12A`/`TAX-12B` record-family counterexample, represented as
   independent pre-registered evidence rather than a Slice 4 inference.
 
-Package these subjects in the applicable portions of `TAX-AXES-DEV`,
-`TAX-COUNTEREXAMPLE-VAL`, and `TAX-STATE-VAL`, or in schema-valid Slice
-4-specific projections that retain those canonical subject IDs and source
-package links. The taxonomy reviewer records exact subject, axis/facet/code or
-applicability state, role, evidence, conditions, reason, confidence reference,
-and forbidden copied assignments.
+At this historical checkpoint these subjects were assigned to later taxonomy
+packages or schema-valid Slice 4 projections retaining canonical subject IDs
+and source-package links. The required review data was exact subject,
+axis/facet/code or applicability state, role, evidence, conditions, reason,
+confidence reference, and forbidden copied assignments.
 
-`TAX-HISTORY-VAL`, split/merge mechanics, the broader `TAX-HO-001`, and
-taxonomy assertions dependent on later claims/findings remain in their planned
-later slices. Slice 3.5 must not manufacture semantic affected-area truth from
-raw record family merely to complete those packages early.
+History, split/merge mechanics, broader held-out coverage, and taxonomy
+assertions dependent on later claims/findings remained in later slices. Slice
+3.5 did not manufacture semantic affected-area truth from raw record family.
+Current Slice 5 package identities are assigned only by the owning staged work
+package.
 
 ## Implementation work sequence
 

@@ -3,7 +3,7 @@
 Status: Accepted
 Accepted: 2026-08-04
 Accepted by: Project owner
-Last reviewed: 2026-08-07
+Last reviewed: 2026-08-08
 Authority: [ADR-0027](../architecture/decisions/ADR-0027-public-evaluation-protocol-private-held-out-corpus.md)
 with the M1 deferral and sequencing disposition in
 [ADR-0032](../architecture/decisions/ADR-0032-defer-m1-held-out-evaluator-and-continue-public-verification.md)
@@ -15,6 +15,16 @@ This is the canonical operational policy for evaluator v2. It preserves
 ADR-0026's separate private repository and answer isolation while making all
 evaluation rules public and limiting the private repository to hidden data and
 its lifecycle evidence.
+
+## Current M1 disposition
+
+This document governs isolation and lifecycle rules if a future evaluator is
+separately authorized; it is not an active M1 scoring runbook. ADR-0032 defers
+private held-out evaluation until after Slice 9 and M3 planning around a stable
+user-meaningful output contract. No current B2, C2, Stage D, corpus authoring,
+qualification, adaptation, comparison, scoring, repair, or replacement task is
+authorized. Ordinary Slice 5 work must not read the private repository and
+must use public staged work-package fixtures instead.
 
 ## Public-rule and private-data boundary
 

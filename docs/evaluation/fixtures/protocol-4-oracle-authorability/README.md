@@ -28,15 +28,15 @@ protocol `/4` fact from public authority and generic answer-free inputs.
   totality model `1.2.0`. It contains compact state exercises and obligation
   mappings, never expected facts or product output.
 
-The WP3 generator is
-`eng/generate-m1-slice4-protocol4-state-coverage.ps1`. Its tracked artifact
-covers every admitted state, every admitted/invalid/excluded constraint,
+The historical WP3 generation pass produced a tracked artifact covering every
+admitted state, every admitted/invalid/excluded constraint,
 nearest matched negatives, all family-local pairwise dimension/value
 combinations, publication rules, constructors, normalization rules, atomic
 boundaries, coverage populations, gaps, transitions, and the partial
 `RACE/DATA` higher-order invariant. It also recomputes and hashes the complete
 23,660-state classification rather than treating the compact cases as a proof
-of totality by themselves.
+of totality by themselves. The generator was retired and has no current entry
+point.
 
 The package intentionally contains no expected semantic output, fact count,
 fact hash, product ID, product output, real-mod name, private identity, or
@@ -48,40 +48,16 @@ answer-free public evidence; the independently authored expected outputs stay
 ignored. See the
 [WP4 totality review attestation](../../m1-slice4-protocol-4-totality-review-attestation.md).
 
-## Independent exercise
+## Historical execution state
 
-A fresh reviewer reads the normative specification, this directory, and the
-frozen evaluator `/4` public mechanics. The reviewer constructs a complete
-`expected-semantic-output.v4.json` under an ignored `work/` directory and runs:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File eng/validate-m1-slice4-protocol4-authorability.ps1 `
-  -PackageRoot docs/evaluation/fixtures/protocol-4-oracle-authorability `
-  -ExpectedOutput work/m1-slice4-protocol4-authorability-review/expected-semantic-output.v4.json `
-  -ZeroDenominatorExpectedOutput work/m1-slice4-protocol4-authorability-review/zero-denominator-expected-semantic-output.v4.json
-```
-
-The validator checks answer isolation, family/rule coverage, fact typing,
-ordering, uniqueness, fixed coverage rows, closed vocabularies, forbidden
-product-ID tokens, and generic invalid mutations. It does not supply semantic
-answers or compare with product behavior.
-
-The output remains scratch evidence. The tracked review attestation records
-the exact input/specification hashes, method, commands, coverage, findings,
-corrections, and answer-isolation state without publishing the constructed
-answer set as future oracle authority.
-
-Generate and validate the model-derived coverage on either supported
-PowerShell host with:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File eng/generate-m1-slice4-protocol4-state-coverage.ps1
-pwsh -NoProfile -File eng/generate-m1-slice4-protocol4-state-coverage.ps1 -ValidateOnly
-```
-
-Generation is byte-stable across Windows PowerShell 5.1 and PowerShell 7.
-Derived summaries and any expected semantic outputs remain under ignored
-`work/` paths.
+The independent exercise and its generated scratch outputs are complete
+historical evidence. Their dedicated generator and validator were retired in
+the 2026-08-08 evaluator-deferral closeout and there is no current command that
+authors or validates this package. Do not reconstruct those tools or use this
+directory to create a new oracle. Protocol `/4` may be exercised only through
+the accepted bounded public regression wrapper named by the repository
+authority inventory; that wrapper does not make this package current fixture
+input or evaluator authority.
 
 ## Claim boundary
 

@@ -1,7 +1,7 @@
 # Documentation source registry
 
-Status: Draft
-Last reviewed: 2026-08-07
+Status: Active register
+Last reviewed: 2026-08-08
 
 This document defines the registry model, initial authority classes, and
 reviewed source-level decisions. Exact endpoints, observed capabilities, and

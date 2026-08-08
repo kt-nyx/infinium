@@ -178,7 +178,7 @@ Protocol /4: frozen historical; bounded public regression only
 Protocol /5: retired unqualified; no implementation, freeze, private use, or verdict
 Private held-out evaluation: deferred; no valid current product verdict
 Slice 4.5: closed by accepted owner disposition with explicit residual risk
-Slice 5: eligible as the next product package under the continuation profile
+Slice 5: active; WP1 complete and reviewed; WP2 next under staged verification
 M1: active
 ```
 
