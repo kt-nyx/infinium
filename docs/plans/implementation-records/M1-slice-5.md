@@ -528,6 +528,30 @@ No evaluator-private repository, private corpus, abandoned legacy archive,
 live/billable provider, protocol `/5`, B2/C2/Stage D/scoring, or WP3+
 implementation surface was accessed. Nothing was pushed.
 
-`M1/S5/WP2` is complete and independently reviewed. `M1/S5/WP3` is the next
-eligible package. WP4-WP6 remain dependency-gated, and Slice 5 and M1 remain
-active and incomplete.
+At commit `84f3edc288c4988fefd5df36d63c1c53084de1ff`, WP2 was declared complete
+and independently reviewed and WP3 was identified as the next eligible
+package. The subsequent review below supersedes only that live handoff; it
+does not rewrite the implementation and verification history above.
+
+### Post-completion review and corrective handoff
+
+A repository review on 2026-08-08 found one remaining must-fix fixture-boundary
+defect. `DocumentationFixturePackageReader` registers the two WP2 packages as
+current public fixture evidence but applies `ActiveJsonSchemaValidator` only to
+`public-manifest.json` and `inputs/claim-import.json`. It parses and
+fingerprints other files without validating the accepted provenance, replay,
+redistribution, and partition-history contracts. It also does not require the
+final partition-history state to equal the public manifest or exercise those
+rules with package-mutation tests. The registered authority surface therefore
+overstates the closure currently enforced by the executable reader.
+
+This is a targeted evidence-package correction rather than a rejection of the
+documentation product path. The importer, identities, persistence, deletion
+effects, inert-content handling, and focused product tests showed no additional
+must-fix defect in this review. WP2 must now align the entire package with
+active schemas (or add accepted WP2-specific schemas where the generic fixture
+contracts cannot express the required fields), validate transition and exact
+file closure semantics, add negative mutation coverage, reseal affected public
+hashes without deriving expected truth from product output, and obtain a fresh
+independent fixture/authority review. WP3 is not eligible until that correction
+is accepted.
