@@ -88,6 +88,14 @@ product-driving result is development/validation evidence rather than held-out
 evidence. This deferral does not permit private access or weaken partition,
 contamination, replacement, or answer-isolation rules.
 
+For M1 Slice 5, public semantic fixtures are authored and reviewed by the work
+package that owns the behavior. WP1 provides only closed contracts, invariants,
+boundary enforcement, and minimal answer-free examples. WP2 owns documentation
+and provenance truth, WP3 owns candidate and scale/stress truth, WP4 owns
+finding/case/taxonomy/lineage/coverage truth, WP5 owns publication/replay/
+recovery/query/output/platform truth, and WP6 assembles the comprehensive
+cross-stage corpus. Each expected set freezes before product comparison.
+
 ## Required fixture metadata
 
 - fixture ID and version;

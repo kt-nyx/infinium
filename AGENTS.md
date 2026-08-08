@@ -60,6 +60,44 @@ Then read the task-specific material:
 
 ## Evaluator-private fixtures
 
+### Repository authority map
+
+- Current product contracts and codecs live under `contracts/json-schema/`,
+  `contracts/protobuf/`, and `src/`; repository-governance schemas under
+  `contracts/repository/` are contract-test metadata and never product inputs;
+  current public-fixture readers live under
+  `tools/evaluation/Infinium.PublicFixtures/` and use the active product
+  validator.
+- `tools/evaluation/Infinium.EvaluatorV2/` is frozen historical protocol `/4`
+  evidence. It is outside the default solution graph and may run only through
+  `eng/invoke-m1-slice4-protocol4-bounded-regression.ps1`.
+- `docs/evaluation/fixtures/independent-slice3-evaluator-20260729/` is retained
+  historical evaluator evidence. It is not a current public fixture, must not
+  be validated with live product schemas, and has no current executable entry
+  point or product authority.
+- Retired compatibility code, predecessor schemas, and obsolete proof tools
+  exist only through Git identities recorded in
+  `docs/evaluation/retired-evaluation-assets.v1.json`.
+
+Do not infer current authority from a namespace, filename, schema version, or
+historical path. Consult
+`docs/evaluation/product-evaluator-boundary.md` and its linked machine-readable
+inventory; product/default-solution projects must not reference
+`Infinium.EvaluatorV2` or retired paths. Product schema versions, public fixture
+package versions, evaluator protocol/scorer/projection versions, and repository
+authority-manifest versions are independent axes and must never be substituted
+for one another.
+
+For M1 Slice 5, semantic fixtures are staged work-package evidence. WP1 owns
+closed product contracts, codecs, state invariants, schema-4 migration, and
+repository-boundary enforcement plus minimal answer-free contract examples.
+WP2-WP5 each author, freeze, and independently review the small semantic cases
+for behavior introduced by that package before comparing them with product
+output. WP3 owns candidate scale/stress construction and any product-reachable
+expansion contract. WP6 assembles and independently reviews the comprehensive
+cross-package corpus. No rejected or preauthored comprehensive Slice 5 corpus
+is a prerequisite for product implementation.
+
 The separately versioned evaluator-private fixture repository is default-deny
 for ordinary Infinium work. Do not read its files directly while implementing,
 debugging, tuning, or reviewing production behavior.

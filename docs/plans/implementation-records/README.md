@@ -50,6 +50,12 @@ fixtures/evidence, commands/results, coverage/gaps/unsupported surfaces, fresh
 review, and claims; it must state explicitly that no private held-out verdict
 exists.
 
+The [M1 Slice 5 record](M1-slice-5.md) retains the failed comprehensive-corpus
+review and the owner-authorized staged-verification recovery. WP1 recovery is
+in progress; the rejected corpus establishes no product verdict. A successful
+narrowed WP1 contract/boundary review will make WP2 eligible without another
+owner acceptance gate.
+
 - [M1 Slice 0 — Toolchain, licensing posture, and dependency lock](M1-slice-0.md)
 - [M1 Slice 1 — Versioned domain, wire, output, and evaluation contracts](M1-slice-1.md)
 - [M1 Slice 2 — Local execution substrate, persistence, and platform boundaries](M1-slice-2.md)
@@ -68,3 +74,6 @@ exists.
   — repository-wide status, authority, link, JSON, and verification review
   after fast-forward integration to `main`; confirms that Slice 5 planning is
   the next eligible action.
+- [M1 Slice 5 — Evidence, documentation, candidates, cases, and replay](M1-slice-5.md)
+  — WP1 staged-verification recovery in progress after removal/deferral of the
+  rejected premature comprehensive corpus.

@@ -1,12 +1,14 @@
 # M1 Slice 5 — Evidence, documentation, candidates, cases, and replay
 
-Status: Accepted
+Status: Accepted plan; owner-authorized `M1/S5/WP1` staged-verification recovery in progress
 
 Prepared: 2026-08-07
 
 Accepted: 2026-08-07
 
 Accepted by: Project owner
+
+Amended: 2026-08-08; staged-verification recovery amendment accepted by the project owner
 
 Owner: Project owner
 
@@ -27,12 +29,99 @@ Depends on:
 - implementation-complete M1 Slices 0 through 4 at the exact current public
   baseline.
 
-Next work package: `M1/S5/WP1`
+Next work package: `M1/S5/WP1` staged-verification recovery
 
 This plan is accepted implementation authority for its dependency-ordered work
 packages. `M1/S5/WP1` may begin after its normal preflight. Each later package
 remains gated by completion and review of its declared prerequisite package;
 acceptance does not authorize work outside this plan or waive a stop condition.
+
+Implementation state on 2026-08-08: the prior owner-authorized WP1 correction
+pass completed substantial repository-boundary, contract, state, and migration
+work, but its premature 28-package comprehensive semantic corpus returned a
+material final-review `FAIL`. The failed review establishes no product verdict
+and does not reject the independently valid contract foundation. The project
+owner has explicitly authorized the bounded staged-verification recovery below.
+
+### Owner amendment — fixture replacement and historical-surface isolation
+
+On 2026-08-08 the project owner explicitly authorized WP1 to replace, rather
+than preserve or weaken around, the rejected public Slice 5 fixture set. The
+replacement must be comprehensive, independently expected, recursively
+answer-isolated, and exact enough for later typed machine comparison. The
+single WP1 correction pass covers the complete set of findings from the first
+fresh review; another material authority, state-model, fixture-independence,
+security, or claim-boundary defect on final re-review remains a hard stop.
+
+The owner also authorized a repository-wide public audit and integration pass
+for legacy or historical code, schemas, tests, and fixture data that a fresh
+maintainer or agent could mistake for current authority. That pass shall:
+
+1. mechanically distinguish current product authority, active public
+   regression support, retired compatibility material, and byte-frozen
+   evaluator-protocol evidence;
+2. remove retired compatibility code/data from current build, test discovery,
+   schema resolution, and default documentation paths, using deletion plus Git
+   history or an explicitly quarantined non-build historical location as
+   appropriate;
+3. give retained historical material an unmistakable authority marker,
+   machine-readable inventory, owner/reason/successor metadata, and automated
+   rejection from current dependency and schema surfaces;
+4. prevent evaluator protocol numbers such as `/4` from being interpreted as
+   product schema or fixture versions, and document the separate version axes;
+5. verify the exact `/4` freeze inventory before edits and leave every frozen
+   evaluator runtime/schema/core byte, identity, and historical record
+   unchanged; and
+6. continue to exclude the evaluator-private repository and the abandoned
+   sibling implementation archive.
+
+This amendment permits changes under the non-frozen
+`tools/evaluation/Infinium.EvaluatorV2/LegacyV1/` compatibility surface,
+current public pre-Slice-5 fixture packages and their tests, repository
+authority/navigation documentation, and focused archive/authority enforcement
+tooling/tests. It does not authorize evaluator `/4` repair, evaluator successor
+work, private corpus work, product analysis behavior, or a compatibility shim
+that becomes a second current analytical contract.
+
+### Accepted owner recovery amendment — staged work-package verification
+
+On 2026-08-08 the project owner explicitly authorized recovery and closeout of
+`M1/S5/WP1`. This amendment supersedes the prior WP1 hard stop only for this
+bounded recovery. It removes the rejected 28-package corpus, its current
+registry/discovery authority, and fixture-only generators, schemas, verifier
+modes, scale identities, and self-consistency tests while preserving valid
+product contracts, strict codecs, additive protobuf, state invariants,
+`M1-S5-0004`, database schema `4`, storage contract `1.3.0`, and repository
+product/evaluator separation.
+
+Slice 5 verification is work-package-owned and dependency ordered:
+
+1. WP1 owns complete closed product contracts and codecs, additive query/wire
+   definitions, total state and referential-integrity invariants, schema-4
+   migration/storage declarations, repository-boundary enforcement, minimal
+   answer-free schema examples, round-trip/closure/state/migration/boundary
+   tests, and a fresh contract/boundary review.
+2. WP2 owns documentation revision, passage, claim, applicability, and
+   provenance fixtures and independently authored expected results.
+3. WP3 owns causal-join, candidate, hypothesis, abstention, scale, and stress
+   fixtures. Scale populations must be supplied directly or through a
+   product-reachable deterministic expansion contract, and exact expected
+   counts must come from an independent declarative/reference model.
+4. WP4 owns finding, recommendation, case, taxonomy, reconciliation, lineage,
+   coverage, and gap fixtures and expected results.
+5. WP5 owns publication, platform/write-boundary, replay, recovery, query, and
+   output fixtures and expected results.
+6. WP6 assembles and independently reviews the comprehensive clean,
+   incremental, replay, and cross-stage corpus after the relevant product
+   interfaces exist.
+
+Every behavior-owning package freezes its small answer-isolated expected cases
+before comparison with product output and passes its own staged evidence before
+unblocking the next package. Product output never authors, repairs, or
+certifies expected truth. Property, invariant, round-trip, closure,
+determinism, and safety tests may precede complete semantic fixtures. No private
+evaluator verdict, protocol `/4` verdict, or preauthored comprehensive corpus
+is a Slice 5 product-development prerequisite.
 
 ## 1. Objective and exact exit state
 
@@ -338,9 +427,11 @@ generic semantic or controlled-real proof.
 
 | Fixture/artifact family | Construction/contract owner | Behavior/gate owner |
 |---|---|---|
-| `EVID-*`, local `PROV-*`, clean-layer and hostile-document packages | WP1 | WP2, then replay/output in WP5 |
-| `CAND-*` atomic/integration/scale/stress packages | WP1 | WP3, then equivalence in WP5 |
-| `CASE-*`, `COVER-*`, and `TAX-*` packages | WP1 | WP4, then reporting/replay in WP5 |
+| `EVID-*`, local `PROV-*`, and hostile-document packages | WP2 | WP2, then replay/output in WP5 |
+| `CAND-*` atomic/integration/scale/stress packages | WP3 | WP3, then equivalence in WP5 |
+| `CASE-*`, `COVER-*`, and `TAX-*` packages | WP4 | WP4, then reporting/replay in WP5 |
+| Publication, clean-layer, write, persistence, IPC, replay, query, and output packages | WP5 | WP5 |
+| Comprehensive clean/incremental/replay/cross-stage corpus | WP6 | WP6 |
 | Documentation revision, exact passage, claim, application, purpose assignment | WP1 schema | WP2 producer/storage; WP5 query/replay |
 | Eligible decision, candidate, hypothesis, abstention, dependency closure | WP1 schema | WP3 producer/storage; WP5 replay |
 | Finding, recommendation, case occurrence/logical identity, reconciliation, lineage | WP1 schema | WP4 producer/storage; WP5 publication/query |
@@ -489,43 +580,60 @@ introduced. Inspectable versioned rule predicates are threshold authority.
 
 ### 9.1 Required packages
 
-WP1 constructs answer-isolated executable packages for:
-
-- `CAND-ATOMIC-DEV`, `CAND-INTEGRATION-VAL`, `CAND-SCALE-VAL`,
-  `CAND-STRESS-VAL`;
-- `EVID-TYPES-DEV`, `EVID-NO-LLM-VAL`, `EVID-HOSTILE-VAL`;
-- `PROV-LOCAL-DEV`, `PROV-CONTRADICTION-VAL`, `PROV-DELETION-VAL`;
-- `CASE-SHARED-DEV`, `CASE-DISTINCT-VAL`, `CASE-LEAD-VAL`,
-  `CASE-METAMORPH-VAL`;
-- `COVER-MATRIX-DEV`, `COVER-ZERO-FINDING-VAL`, `COVER-PARTIAL-VAL`,
-  `COVER-TARGETED-VAL`;
-- `TAX-AXES-DEV`, `TAX-COUNTEREXAMPLE-VAL`, `TAX-STATE-VAL`,
-  `TAX-HISTORY-VAL`; and
-- applicable `M1-PLAT-UNTRUSTED-v1`, `M1-PLAT-CLEAN-LAYERS-v1`,
-  `M1-PLAT-LINEAGE-v1`, `M1-PLAT-WRITES-v1`, `M1-PLAT-PERSIST-v1`,
-  `M1-PLAT-IPC-v1` variants.
+The behavior-owning work package preregisters the smallest packages needed for
+its exact positive, matched-negative, malformed, unsupported, ambiguous,
+partial, abstention, coverage, and gap obligations. Package identities are
+assigned only when the corresponding product interface and independent truth
+model exist. The 28 rejected WP1 identities are historical failed-work
+evidence in the implementation record and are not reserved or current package
+authority.
 
 `EVID-LLM-VAL`, `PROV-SOURCE-LLM-VAL`, all `LLM-*`, `PROV-LIVE-*`,
 controlled-real, and every `*-HO-*` slot are excluded.
 
-Scale is fixed at 50,000 entities, 100,000 edges, 1,000 planted required/
-mandatory candidates, 4,000 negatives, 500 unsupported/gaps. Stress is
-1,000,000 entities, 2,000,000 edges, 10,000 planted required/mandatory,
-50,000 negatives, 10,000 unsupported/gaps. Seeds, generator version, counts,
-and structural hashes freeze before selector work. Safety ceilings are 120
-seconds, 2 GiB process memory, and 100,000 candidate output; these are not M3
-performance claims. WP1 measures generator-only feasibility first;
-infeasibility requires plan amendment, not post-output count tuning.
+WP3 selects and preregisters candidate scale/stress populations and ceilings
+from a directly supplied or product-reachable deterministic expansion
+contract. Exact expected counts come from an independent declarative/reference
+model and freeze before selector comparison. Scale evidence remains bounded M1
+structural evidence, not an M3 performance claim; infeasibility requires a plan
+amendment, not post-output count tuning.
 
 ### 9.2 Independence
 
-Each package has public manifest, answer-free execution input, isolated oracle,
+Each behavior-owning package has a public manifest, answer-free execution input, isolated oracle,
 provenance, replay dependencies, redistribution, and partition history.
 Generator truth/hand-authored causal matrices—not product output—author the
 oracle, frozen before evaluated behavior. Production receives execution input
 only. An identified author records method; an independent reviewer validates
-against authority/generator/source truth without product output. Packages do
-not gate WP2–WP5 until review passes.
+against authority/generator/source truth without product output. Its cases
+gate only that package and declared successors after review passes. WP6
+performs the accumulated cross-package review.
+
+Answer isolation applies recursively to every product-reachable referenced
+payload, not only to `execution-input.json`. Input property names, values,
+identities, labels, prose, topology annotations, and ordering may describe
+facts available to the product but may not encode expected disposition,
+winner, match/control class, supported/unsupported answer, causal conclusion,
+oracle membership, or adjudication. Fixture IDs, package paths, partitions,
+seeds, and author/reviewer metadata remain harness-only. The verifier rejects
+answer-bearing aliases and recursively follows every retained product input
+reference.
+
+An oracle retains exact typed expected objects, states, identities,
+relationships, counts, coverage denominators, gaps, and canonical comparison
+values. A digest of English expectation prose is metadata, never the expected
+value. Every admitted candidate decision maps one-to-one to an exact expected
+candidate; every resolved negative, unsupported, malformed, ambiguous,
+limited, and abstained population member is explicitly represented. Positive
+packages may not substitute an empty collection plus a coarse fingerprint for
+typed expected output.
+
+Package closure is exact: the registry lists every file and no extra file may
+exist; each document length/hash is recomputed; the package aggregate is
+recomputed from stable ordered document identities; source offsets and bytes
+are checked; and independent review state must be terminal-passed before a
+package can gate later work. Regeneration must reproduce all non-review bytes
+and structural identities exactly.
 
 If validation output changes behavior/schema/threshold/ranking, transition it
 to development and create an independent validation replacement. Never edit
@@ -548,7 +656,7 @@ comparisons never use display prose.
 ## 10. Dependency graph and review policy
 
 ```text
-WP1 contracts/schemas/states/fixture design
+WP1 contracts/schemas/states/migration/boundary
  -> WP2 documentation evidence/claims
  -> WP3 joins/candidates/hypotheses
  -> WP4 findings/cases/lineage/coverage
@@ -557,7 +665,7 @@ WP1 contracts/schemas/states/fixture design
 ```
 
 The recommended split matches real dependencies. WP1 freezes the cross-seam
-contract and expected fixture model. WP2 precedes WP3 because applicability/
+product contract without preauthoring later semantic truth. WP2 precedes WP3 because applicability/
 purpose are inputs. WP3 precedes WP4 because conclusions require retained
 candidate decisions. WP5 integrates after semantic objects stabilize; earlier
 packages still add typed storage adapters/tests so WP5 is not schema redesign.
@@ -574,53 +682,64 @@ dotnet restore Infinium.sln --locked-mode --nologo
 dotnet build Infinium.sln -c Release --no-restore --nologo
 ```
 
-## 11. `M1/S5/WP1` — Contracts, schemas, states, and fixture design
+## 11. `M1/S5/WP1` — Contracts, schemas, states, migration, and authority boundary
 
-**Objective.** Establish the total clean-break contract and freeze independently
-expected fixture designs before runtime behavior.
+**Objective.** Establish the total clean-break product contract, storage
+migration, state invariants, and enforceable product/evaluator boundary before
+runtime behavior.
 
-**Prerequisites.** Accepted plan; clean current baseline; Section 2 authority;
-recorded independent fixture author/reviewer roles.
+**Prerequisites.** Accepted plan and recovery amendment; Section 2 authority;
+recorded dirty-path recovery inventory and isolated WP1 worktree.
 
 **Allowed paths/actions.** `src/Infinium.Domain/Contracts/`, contract codecs in
 `src/Infinium.Application/`, `contracts/json-schema/`, `contracts/protobuf/`,
 `src/Infinium.Persistence/` migration/schema only, contract/unit/evaluation
-schema tests, Slice 5 `test-data/evaluation/` documents/generators, and
-`eng/verify-m1-slice5.ps1` contract/fixture modes.
+schema tests, minimal answer-free contract examples, and
+`eng/verify-m1-slice5.ps1` contract mode. The 2026-08-08 owner
+amendment additionally permits the non-frozen `LegacyV1` compatibility
+surface, current public pre-Slice-5 fixture packages and tests, repository
+authority/navigation documents including `AGENTS.md`, and focused
+archive/authority enforcement tooling and tests.
 
 **Prohibited.** Analysis behavior; source import; selection; findings/cases;
-coordinator/worker/CLI runtime changes; private/live/legacy/later-slice work;
-expectations derived from product execution.
+coordinator/worker/CLI runtime changes; private/live/abandoned-implementation/
+later-slice work; frozen evaluator `/4` core or protocol changes; expectations
+derived from product execution.
 
-**Deliverables.** Sections 7–9 contracts; migration `M1-S5-0004`; strict
-codecs/invariants; fixture generators and frozen package/oracle fingerprints;
-generator-only feasibility record; authority/state/field/edge ledger started
-in `docs/plans/implementation-records/M1-slice-5.md`; no behavior claim.
+**Deliverables.** Section 7 contracts and Section 8 states; migration
+`M1-S5-0004`, schema `4`, storage contract `1.3.0`; strict codecs/invariants;
+minimal answer-free schema examples and serialization/round-trip/closure/state/
+migration tests; authority/state/field/edge ledger started in
+`docs/plans/implementation-records/M1-slice-5.md`; repository legacy/historical
+inventory and integrated quarantine/removal; product/evaluator version-axis
+guidance and automated current-authority enforcement; no dependency on the
+rejected semantic corpus and no behavior claim.
 
 **Verification.** After locked restore and Release build:
 
 ```powershell
 dotnet test tests/Infinium.ContractTests/Infinium.ContractTests.csproj -c Release --no-build --nologo --filter "FullyQualifiedName~Slice5Contract"
 dotnet test tests/Infinium.UnitTests/Infinium.UnitTests.csproj -c Release --no-build --nologo --filter "FullyQualifiedName~Slice5StateModel"
-dotnet test tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj -c Release --no-build --nologo --filter "FullyQualifiedName~Slice5FixtureContract"
 powershell -NoProfile -ExecutionPolicy Bypass -File eng/verify-m1-slice5.ps1 -Gate Contracts -OutputRoot artifacts/m1-slice5/wp1
-powershell -NoProfile -ExecutionPolicy Bypass -File eng/verify-m1-slice5.ps1 -Gate FixtureIndependence -OutputRoot artifacts/m1-slice5/wp1
-powershell -NoProfile -ExecutionPolicy Bypass -File eng/verify-m1-slice5.ps1 -Gate GeneratorFeasibility -OutputRoot artifacts/m1-slice5/wp1
 ```
 
 **Retained evidence.** Contract/schema lists/hashes, migration/schema
-fingerprint, rejection matrix, fixture/oracle/partition hashes, role ledger,
-generator counts/seeds/hashes/resources, logs, review/correction/judgment.
+fingerprint, rejection matrix, state/edge closure, repository-boundary and
+retirement evidence, logs, review/correction/judgment, and the rejected-corpus
+identity/disposition record.
 
 **Stop conditions.** Unclosed state; conflicting/missing accepted semantics;
-missing independent expected authority; answer leakage; infeasible fixed bound;
-need to reinterpret a protocol major; second material review defect.
+answer-bearing WP1 example or self-certification; missing contract authority;
+need to reinterpret a protocol major; frozen `/4` inventory drift; archived
+material reachable from a current build/schema/test/default-documentation
+surface; second material review defect.
 
-**Review.** Fresh contract/evidence reviewer checks every cross-seam field,
-state totality, fixture separation, version transition, storage edge, and
+**Review.** Fresh contract/boundary reviewer checks every cross-seam field,
+state totality, answer-free examples, version transition, storage edge, and
 prohibited authority. One material correction pass.
 
-**Unblocks.** `M1/S5/WP2` after fixture review and final WP1 re-review pass.
+**Unblocks.** `M1/S5/WP2` after the narrowed contract/boundary gate and final
+WP1 recovery review pass.
 
 ## 12. `M1/S5/WP2` — Documentation evidence and deterministic claims
 
@@ -643,6 +762,9 @@ validator; import/application identities and supplying-snapshot/dependency
 edges; applicability and purpose assignments; contradiction/deletion gaps;
 clean-import/reuse separation; typed storage adapter; explicit `llm = none`
 and provider/search/Nexus `not-used`.
+WP2 also authors, freezes, and independently reviews its documentation,
+passage, claim, applicability, contradiction, deletion, and provenance cases
+before comparing them with product output.
 
 **Verification.** After locked restore and Release build:
 
@@ -687,6 +809,9 @@ causality; fixture/name exceptions.
 dependency; deterministic-required, mandatory-evidence, optional-ranked lanes;
 limited/unprocessed work; candidate/hypothesis/abstention transitions; exact
 counts; independent analyzer execution; targeted invalidation/restart.
+WP3 also owns independently expected causal-join, candidate, hypothesis,
+abstention, scale, and stress packages, including the product-reachable
+population construction and independent declarative/reference count model.
 
 **Verification.** After locked restore and Release build:
 
@@ -731,6 +856,8 @@ controlled-real work.
 grouping and cause proofs; immutable occurrences/logical IDs; four-gate
 reconciliation/outcomes; lead promotion/supersession; separate taxonomy roles/
 axes/states; coverage/gaps and no-safety assertions.
+WP4 also authors, freezes, and independently reviews finding, recommendation,
+case, taxonomy, reconciliation, lineage, coverage, and gap packages.
 
 **Verification.** After locked restore and Release build:
 
@@ -773,6 +900,8 @@ DB access; setup/game/MO2 writes; new semantics; private/legacy/later slice.
 JSON; dependency/replay manifests; clean/incremental/replay equivalence;
 identity-drift failure; backup/restore/projection; protected-root canaries;
 partial terminal output; crash/stale-worker recovery.
+WP5 also owns publication, platform/write-boundary, replay, recovery, query,
+and output fixtures and their independently authored expected results.
 
 **Verification.** After locked restore and Release build:
 
@@ -814,9 +943,10 @@ paths, implementation record, proposed owner status/index updates.
 **Prohibited.** New scope; output-driven oracle changes; private/live/legacy/
 later-slice work; self-accepting plan/Slice.
 
-**Deliverables.** Full floor; `-Gate All`; traceability ownership audit; final
-semantic/diff review and one correction; complete record; gaps/no-verdict
-claim. Only owner marks accepted/complete.
+**Deliverables.** Assemble and independently review the comprehensive clean,
+incremental, replay, and cross-stage corpus; full floor; `-Gate All`;
+traceability ownership audit; final semantic/diff review and one correction;
+complete record; gaps/no-verdict claim. Only owner marks accepted/complete.
 
 **Verification.** Focused aggregate:
 
@@ -871,8 +1001,9 @@ pass/fail and another material defect hard-stops for owner disposition.
   output/CLI/replay versions;
 - producer/consumer/storage/wire/output/replay ledger proving no stale active
   reader/writer or compatibility shim;
-- fixture IDs/versions/partitions/history and all document fingerprints,
-  author/reviewer/method, generators/seeds/counts/hashes, contamination changes;
+- staged fixture IDs/versions/partitions/history and all document fingerprints,
+  owning WP, author/reviewer/method, generators/seeds/counts/hashes, and
+  contamination changes;
 - case/layer results, exact commands, pass/fail/skip counts, durations/
   resources, mutations, lane recall/volume, grouping, coverage/gaps, replay
   hashes;
@@ -932,6 +1063,22 @@ The project owner accepted this plan on 2026-08-07. Acceptance confirms:
   fixture documents;
 - transition mechanics do not claim Slice 7 mechanism or Slice 8 accuracy; and
 - private evaluator, `/5`, live/billable, legacy, and later slices stay closed.
+
+The owner first amended WP1 on 2026-08-08 to authorize comprehensive replacement of
+the rejected public fixtures and repository-wide isolation of non-frozen
+legacy/historical surfaces. In this sentence, the earlier `legacy` exclusion
+continues to mean the abandoned sibling implementation archive and frozen
+evaluator history; it no longer prohibits the explicitly bounded in-repository
+compatibility cleanup described in the amendment.
+
+The owner then accepted the staged-verification recovery amendment on
+2026-08-08. The rejected comprehensive corpus is removed/deferred and has no
+product authority. WP1 closes only on contracts, codecs, state invariants,
+migration/storage declarations, answer-free examples, repository boundaries,
+and fresh contract/boundary review. WP2-WP6 own semantic fixtures incrementally
+in dependency order, with WP3 owning scale/stress and WP6 owning the complete
+cross-stage corpus. No additional owner acceptance gate is required between a
+successful WP1 recovery and WP2.
 
 No unresolved product-authority conflict was found. A later owner change to a
 contract, fixture, threshold, migration, or claim boundary requires plan

@@ -91,7 +91,7 @@ and review. Product output is never copied into an expected fixture as truth.
 | Cases | EVAL-0001, EVAL-0002, EVAL-0016, EVAL-0017, EVAL-0032, EVAL-0052, EVAL-0085, EVAL-0086 |
 | Evidence | Pre-execution expected observations and outcomes; independent byte/format/source/adjudication provenance; partition history; matched negative or abstention for every positive; reviewed explanation and successor evidence for any expectation change |
 | Commands | Common `M1Contract` and `M1Evaluation` commands; deterministic fixture-generation/validation commands and exact oracle/expectation checks declared by the owning slice without using product output |
-| Owning slices | Slice 5 owns public documentation/evidence/case fixtures; Slice 7 owns both synthetic domain packages; Slice 8 owns the controlled-real EVAL-0016/EVAL-0017 packages; Slice 9 audits retained expected-value provenance across the complete runs |
+| Owning slices | Slice 5 uses staged ownership: WP2 owns documentation/claim/provenance cases, WP3 owns joins/candidates/hypotheses/abstention including scale/stress, WP4 owns findings/cases/taxonomy/lineage/coverage/gaps, WP5 owns publication/replay/recovery/query/output/platform cases, and WP6 assembles the comprehensive cross-stage corpus. Slice 7 owns both synthetic domain packages; Slice 8 owns the controlled-real EVAL-0016/EVAL-0017 packages; Slice 9 audits retained expected-value provenance across the complete runs |
 
 ### Layer 3 — Model-derived, mutation, and metamorphic checks
 

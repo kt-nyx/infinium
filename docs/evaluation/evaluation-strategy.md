@@ -398,3 +398,11 @@ Slice 7 must prove two materially different generic domains, and Slice 8 must
 run EVAL-0016 and EVAL-0017. These are public development/validation evidence,
 not held-out results. M1 remains active and cannot claim M3 reliability or
 readiness.
+
+Slice 5 applies those layers incrementally. WP1 is limited to product
+contracts, codecs, invariants, migration/storage declarations, answer-free
+examples, and repository-boundary tests. WP2-WP5 each freeze independently
+authored cases for the behavior they introduce before product comparison; WP3
+owns scale/stress construction and an independent count model; WP6 assembles
+the comprehensive cross-stage corpus. The rejected preauthored 28-package WP1
+corpus has no current authority and is not a prerequisite for product work.

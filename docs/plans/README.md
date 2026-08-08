@@ -50,8 +50,11 @@ continuation verification profile, and M1 remains active.
 The accepted
 [M1 Slice 5 execution plan](slices/M1-slice-5-evidence-documentation-candidates-cases-replay.md)
 defines the clean-break evidence-to-replay work as `M1/S5/WP1` through `WP6`.
-`M1/S5/WP1` is the next authorized implementation package; each later package
-remains gated by its declared prerequisite and review boundary.
+Its accepted staged-verification recovery amendment removes the rejected
+preauthored 28-package corpus from current authority: WP1 owns contracts,
+state, migration, and boundaries; WP2-WP5 own their semantic cases; WP6 owns
+the comprehensive corpus. `M1/S5/WP1` recovery is the next authorized package;
+each later package remains gated by its declared prerequisite and review.
 The completed
 [public Bethesda semantic realignment plan](slices/M1-slice-4.5-public-product-realignment.md)
 records that bounded implementation, review, qualification, and candidate-
