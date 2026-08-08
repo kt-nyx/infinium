@@ -1,6 +1,6 @@
 # M1 Slice 5 — Evidence, documentation, candidates, cases, and replay
 
-Status: Owner-authorized `M1/S5/WP1` staged-verification recovery in progress; Slice 5 is not complete
+Status: `M1/S5/WP1` complete and reviewed; `M1/S5/WP2` is eligible; Slice 5 is not complete
 
 Plan: `M1/S5`
 
@@ -14,7 +14,11 @@ Branch: `codex/m1-slice5-staged-verification-recovery`
 
 Baseline commit: `fcf71e184b7544a964530d581792c4948d47cda6`
 
-Implementation commit: pending recovery review and verification
+Implementation commit: `bf1d830706afb78204016d0b1054a83cdb1b79b4`
+
+Recovery-amendment commit: `6badd958f01a53f892915d56dfb90af4c3ea299c`
+
+Closeout commit: this record's final local commit
 
 ## Authority and owner amendment
 
@@ -116,7 +120,7 @@ Two consecutive resealer runs produced the same combined tree digest
 
 ## Contracts, state model, and persistence
 
-The uncommitted WP1 implementation contains the Slice 5 documentation,
+The recovered WP1 implementation contains the Slice 5 documentation,
 candidate, finding/case, replay, and analysis-execution contracts in domain,
 strict JSON, and additive protobuf forms. It extends analyzer declarations,
 effective configuration, run output, CLI summaries, fixture/oracle envelopes,
@@ -133,9 +137,9 @@ storage contract `1.3.0`, including append-only analytical tables, traversal
 indexes, and update/delete guards. No WP2+ producer, coordinator, worker, CLI,
 query, or replay execution behavior was implemented.
 
-## Replacement fixture construction
+## Historical rejected fixture construction
 
-The generator produced the exact 28 planned public package identities: six
+The rejected prior generator produced the exact 28 planned public package identities: six
 development and 22 validation packages, with 484 registered documents and no
 missing, extra, hash, or package-aggregate closure errors. The registry is
 100,351 bytes with SHA-256
@@ -226,3 +230,137 @@ No evaluator-private repository file, private corpus, B2/C2/Stage D/scoring
 surface, protocol `/5`, future protocol identity, abandoned legacy archive,
 controlled-real package, live/billable provider, or Slice 6+ implementation
 surface was accessed. Nothing was pushed.
+
+## Recovery closeout — `M1/S5/WP1` complete and reviewed
+
+The owner-authorized recovery completed on 2026-08-08. Commit
+`6badd958f01a53f892915d56dfb90af4c3ea299c` accepted the staged-verification
+amendment. Commit `bf1d830706afb78204016d0b1054a83cdb1b79b4` recovered the
+product/evaluator boundary and WP1 contract, codec, state, protobuf, migration,
+storage, current-public-package, and test foundation. The boundary and product
+foundation were combined because the current public-fixture reader depends on
+the active product schemas and validator; a narrower intermediate commit would
+not have represented a buildable current authority surface.
+
+### Rejected corpus removal and deferral
+
+The premature comprehensive corpus was removed from the worktree and deferred
+to its owning packages. It comprised these exact rejected package identities:
+
+- WP3: `CAND-ATOMIC-DEV`, `CAND-INTEGRATION-VAL`, `CAND-SCALE-VAL`, and
+  `CAND-STRESS-VAL`;
+- WP4: `CASE-DISTINCT-VAL`, `CASE-LEAD-VAL`, `CASE-METAMORPH-VAL`,
+  `CASE-SHARED-DEV`, `COVER-MATRIX-DEV`, `COVER-PARTIAL-VAL`,
+  `COVER-TARGETED-VAL`, `COVER-ZERO-FINDING-VAL`, `EVID-HOSTILE-VAL`,
+  `EVID-NO-LLM-VAL`, `EVID-TYPES-DEV`, `PROV-CONTRADICTION-VAL`,
+  `PROV-DELETION-VAL`, `PROV-LOCAL-DEV`, `TAX-AXES-DEV`,
+  `TAX-COUNTEREXAMPLE-VAL`, `TAX-HISTORY-VAL`, and `TAX-STATE-VAL`; and
+- WP5: `M1-PLAT-CLEAN-LAYERS-v1`, `M1-PLAT-IPC-v1`,
+  `M1-PLAT-LINEAGE-v1`, `M1-PLAT-PERSIST-v1`,
+  `M1-PLAT-UNTRUSTED-v1`, and `M1-PLAT-WRITES-v1`.
+
+The 28 generated package directories, 484-document registry,
+`test-data/evaluation/m1-semantic/generators/` project and frozen identity,
+`Slice5FixtureContractEvaluationTests.cs`, and the `FixtureIndependence` and
+`GeneratorFeasibility` verifier modes are absent. No generator-only or
+fixture-only schema remains current. Active fixture schemas remain only because
+the six older current public packages use them. The old 28 identities establish
+no product verdict and are not frozen future identities.
+
+Mechanical recovery checks found zero rejected package directories, no Slice 5
+package registry, no rejected generator, and no fixture-only Slice 5 test. The
+current public reader admits exactly the six packages listed below; the default
+solution and default projects do not discover the rejected corpus or the
+historical evaluator. Planning/specification references to future case names
+remain requirements, not current package registration or acceptance.
+
+### Retained WP1 foundation
+
+The recovered current product surface retains:
+
+- closed documentation-evidence, candidate-analysis, finding/case,
+  analysis-replay, and answer-free execution-input domain contracts and JSON
+  schemas;
+- strict JSON parsing, duplicate/unknown-property rejection, active embedded
+  schema validation, exact schema identities, and additive domain/application
+  protobuf contracts;
+- explicit unknown, unsupported, invalid-input, abstention, coverage, gap,
+  replay, auditability, boundary, limit, failure, and terminal states;
+- contract-level candidate population, decision, admission, uniqueness, and
+  one-to-one closure invariants, without candidate production or ranking;
+- replay identity/dependency/output contracts without replay execution;
+- migration `M1-S5-0004`, database schema `4`, storage contract `1.3.0`, 20
+  strict analytical tables, 16 traversal indexes, integrity constraints, and
+  40 append-only update/delete guards; and
+- `Infinium.PublicFixtures`, product/evaluator authority and retirement
+  manifests, default-solution exclusion of evaluator `/4`, the out-of-solution
+  bounded-regression project/wrapper, and automated repository-boundary tests.
+
+No documentation importer, claim executor, candidate producer/ranker, finding,
+recommendation, case, taxonomy, coordinator/worker/CLI/query behavior, replay
+execution, scale expansion, provider/model/search/Nexus behavior, or other
+WP2+ runtime implementation was added.
+
+### Six older current public packages
+
+`M1-PLAT-SLICE2-SUBSTRATE-v1@1.1.0` and
+`BETH-NPC-DEV@1.4.0`, `BETH-REFR-DEV@1.4.0`,
+`BETH-LIGHT-VAL@1.4.0`, `BETH-MALFORMED-VAL@1.4.0`, and
+`BETH-UNSUPPORTED-VAL@1.4.0` remain current. Their clean-break migration added
+answer-free current analysis envelopes and replay/dependency representation;
+it did not change independently authored semantic truth. The current-only
+resealer rejected any semantic-truth drift and reproduced all six closures.
+
+### Final verification
+
+| Command or check | Final result |
+|---|---|
+| `git diff --check` | Passed |
+| `dotnet restore Infinium.sln --locked-mode --nologo` | Passed |
+| `dotnet build Infinium.sln -c Release --no-restore --nologo` | Passed; 0 warnings, 0 errors |
+| Focused `FullyQualifiedName~Slice5Contract` | 5 passed, 0 failed, 0 skipped |
+| Focused `FullyQualifiedName~Slice5StateModel` | 10 passed, 0 failed, 0 skipped |
+| Repository boundary | 3 passed, 0 failed, 0 skipped |
+| Current public-fixture reader | 13 passed, 0 failed, 0 skipped |
+| Active fixture/schema integrity | 35 passed, 0 failed, 0 skipped |
+| Current Bethesda package qualification | 1 passed, 0 failed, 0 skipped |
+| Platform substrate | 7 passed, 0 failed, 0 skipped |
+| Bethesda snapshot qualification | 3 passed, 0 failed, 0 skipped |
+| Schema compatibility | 7 passed, 0 failed, 0 skipped |
+| Affected assertion/CLI/run-output codecs | 10 passed, 0 failed, 0 skipped |
+| `Category=M1Contract` | 37 passed, 0 failed, 0 skipped |
+| `Category=M1Evaluation` | 40 passed, 0 failed, 8 existing environment-dependent private tests skipped |
+| `dotnet format ... --verify-no-changes` | Passed |
+| `eng/update-dependency-manifest.ps1 -Check` | Passed |
+| `eng/verify-m1-slice5.ps1 -Gate Contracts` | Passed; 13 required schemas, 24 parsed schemas, 2 protobuf files, 20 retired Git blobs |
+| Accepted protocol `/4` wrapper | `BOUNDED_REGRESSION_PASS`; 23/23 historical blobs, 20/20 frozen core, 3/3 evolved tests, 8/8 focused tests, 56/56 calibration cases |
+
+Ignored recovery evidence is retained under
+`artifacts/m1-slice5/wp1-recovery/`: `pre-recovery-dirty-paths.txt` is 40,618
+bytes at SHA-256
+`6f2860110ebb5f9631425a07b2552d3bb4ca9ec420d09343199ce02ee2dd43c9`;
+`rejected-corpus-inventory.md` is 1,545 bytes at SHA-256
+`6154660c9d09a0e75fe3bbbb3a28c3625859b7d72a9a133f1b4f386a424f747a`;
+and final `contracts.json` is 5,601 bytes at SHA-256
+`46e7cf1ad38f13593befb4b3b57ffd6f47153b654f2828a6faa10057ac369c84`.
+
+### Fresh recovery review
+
+The sole fresh read-only reviewer initially found two material cross-seam
+defects: clean `complete-clean` replay was unsatisfiable across schema/domain
+rules, and claim applications lacked unique identity and admitted-claim
+closure. One bounded correction pass aligned replay mode/state rules, enforced
+application uniqueness/reference/applicability, and added regression tests.
+The same reviewer re-reviewed the corrected staged diff and returned `PASS`
+with no findings. Correction count: one.
+
+Frozen protocol `/4` remains exact historical bounded-regression evidence and
+establishes no product verdict. Protocol `/5` remains retired unqualified. No
+private repository, abandoned archive, live provider, scoring, B2, C2, Stage D,
+WP2+ implementation, or push occurred.
+
+`M1/S5/WP1` is complete and reviewed. `M1/S5/WP2` is the next eligible package.
+WP2-WP6 may proceed only in dependency order under staged, work-package-owned
+fixture authority. No global evaluator, private oracle, protocol `/4` verdict,
+or preauthored comprehensive corpus blocks Slice 5 product development. Slice
+5 and M1 remain active and are not complete.

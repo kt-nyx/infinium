@@ -1,6 +1,6 @@
 # M1 Slice 5 — Evidence, documentation, candidates, cases, and replay
 
-Status: Accepted plan; owner-authorized `M1/S5/WP1` staged-verification recovery in progress
+Status: Accepted plan; `M1/S5/WP1` complete and reviewed; Slice 5 remains active
 
 Prepared: 2026-08-07
 
@@ -29,11 +29,12 @@ Depends on:
 - implementation-complete M1 Slices 0 through 4 at the exact current public
   baseline.
 
-Next work package: `M1/S5/WP1` staged-verification recovery
+Next work package: `M1/S5/WP2`
 
 This plan is accepted implementation authority for its dependency-ordered work
-packages. `M1/S5/WP1` may begin after its normal preflight. Each later package
-remains gated by completion and review of its declared prerequisite package;
+packages. `M1/S5/WP1` completed and passed fresh review on 2026-08-08, making
+`M1/S5/WP2` eligible after its normal preflight. Each later package remains
+gated by completion and review of its declared prerequisite package;
 acceptance does not authorize work outside this plan or waive a stop condition.
 
 Implementation state on 2026-08-08: the prior owner-authorized WP1 correction
@@ -42,6 +43,15 @@ work, but its premature 28-package comprehensive semantic corpus returned a
 material final-review `FAIL`. The failed review establishes no product verdict
 and does not reject the independently valid contract foundation. The project
 owner has explicitly authorized the bounded staged-verification recovery below.
+
+Recovery state on 2026-08-08: WP1 retained the closed product contracts,
+strict codecs, additive protobuf, schema-4 migration/storage declarations,
+current public-fixture reader, and repository-boundary enforcement; removed
+the rejected premature comprehensive corpus and fixture-only authority; and
+passed one fresh review after one bounded correction pass. WP2-WP6 may now
+proceed in dependency order under the staged, work-package-owned fixture
+authority below. No global evaluator, private oracle, protocol `/4` verdict,
+or preauthored comprehensive corpus blocks Slice 5 product development.
 
 ### Owner amendment — fixture replacement and historical-surface isolation
 
