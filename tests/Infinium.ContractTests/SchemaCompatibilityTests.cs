@@ -36,6 +36,8 @@ public sealed partial class SchemaCompatibilityTests
         "documentation-fixture-oracle.v1.schema.json",
         "documentation-fixture-provenance.v1.schema.json",
         "candidate-analysis.v1.schema.json",
+        "candidate-delivered-expansion.v1.schema.json",
+        "candidate-delivered-input.v1.schema.json",
         "finding-case.v1.schema.json",
         "analysis-replay.v1.schema.json",
         "analysis-execution-input.v1.schema.json",

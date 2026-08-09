@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/json-schema/candidate-delivered-input.v1.schema.json",
+  "title": "Infinium Slice 5 answer-free delivered candidate input v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "schema_version", "payload_id", "originating_run_id", "source_snapshot_id", "analysis_context_id", "configuration_id", "link_facts", "face_gen_facts", "coverage_gap_facts", "documentation_facts"],
+  "properties": {
+    "schema_id": { "const": "infinium.analysis.candidate-delivered-input/v1" },
+    "schema_version": { "const": "1.0.0" },
+    "payload_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "originating_run_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "source_snapshot_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "analysis_context_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "configuration_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "link_facts": { "type": "array", "maxItems": 1000000, "items": { "$ref": "#/$defs/linkFact" } },
+    "face_gen_facts": { "type": "array", "maxItems": 1000000, "items": { "$ref": "#/$defs/faceGenFact" } },
+    "coverage_gap_facts": { "type": "array", "maxItems": 1000000, "items": { "$ref": "#/$defs/gapFact" } },
+    "documentation_facts": { "type": "array", "maxItems": 1000000, "items": { "$ref": "#/$defs/documentationFact" } }
+  },
+  "$defs": {
+    "ids16": { "type": "array", "minItems": 1, "maxItems": 16, "uniqueItems": true, "items": { "$ref": "common.v1.schema.json#/$defs/identifier" } },
+    "ids16Optional": { "type": "array", "maxItems": 16, "uniqueItems": true, "items": { "$ref": "common.v1.schema.json#/$defs/identifier" } },
+    "ids64": { "type": "array", "minItems": 1, "maxItems": 64, "uniqueItems": true, "items": { "$ref": "common.v1.schema.json#/$defs/identifier" } },
+    "linkState": { "enum": ["absent", "null", "resolved", "unresolved"] },
+    "token": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9_.-]+$" },
+    "sourceIdentity": { "type": "string", "minLength": 1, "maxLength": 512 },
+    "linkFact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["fact_id", "record_participant_id", "prior_contribution_id", "winning_contribution_id", "prior_source_identity", "winning_source_identity", "field", "ordinal", "prior_state", "winning_state", "dependency_ids", "evidence_ids"],
+      "properties": {
+        "fact_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "record_participant_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "prior_contribution_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "winning_contribution_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "prior_source_identity": { "$ref": "#/$defs/sourceIdentity" },
+        "winning_source_identity": { "$ref": "#/$defs/sourceIdentity" },
+        "field": { "$ref": "#/$defs/token" },
+        "component": { "$ref": "#/$defs/token" },
+        "ordinal": { "type": "integer", "minimum": 0, "maximum": 2147483647 },
+        "prior_state": { "$ref": "#/$defs/linkState" },
+        "prior_target_participant_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "winning_state": { "$ref": "#/$defs/linkState" },
+        "winning_target_participant_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "dependency_ids": { "$ref": "#/$defs/ids64" },
+        "evidence_ids": { "$ref": "#/$defs/ids16" }
+      },
+      "allOf": [
+        { "if": { "properties": { "prior_state": { "const": "resolved" } }, "required": ["prior_state"] }, "then": { "required": ["prior_target_participant_id"] }, "else": { "not": { "required": ["prior_target_participant_id"] } } },
+        { "if": { "properties": { "winning_state": { "const": "resolved" } }, "required": ["winning_state"] }, "then": { "required": ["winning_target_participant_id"] }, "else": { "not": { "required": ["winning_target_participant_id"] } } }
+      ]
+    },
+    "faceGenFact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["fact_id", "npc_participant_id", "applicability", "mesh_asset_id", "mesh_availability", "tint_asset_id", "tint_availability", "locality", "specificity", "dependency_ids", "evidence_ids"],
+      "properties": {
+        "fact_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "npc_participant_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "applicability": { "enum": ["applicable", "not-applicable", "unknown"] },
+        "mesh_asset_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "mesh_availability": { "enum": ["present", "absent", "unknown"] },
+        "mesh_provider_participant_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "tint_asset_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "tint_availability": { "enum": ["present", "absent", "unknown"] },
+        "tint_provider_participant_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "locality": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "specificity": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "dependency_ids": { "$ref": "#/$defs/ids64" },
+        "evidence_ids": { "$ref": "#/$defs/ids16" }
+      },
+      "allOf": [
+        { "if": { "properties": { "mesh_availability": { "const": "present" } }, "required": ["mesh_availability"] }, "then": { "required": ["mesh_provider_participant_id"] }, "else": { "not": { "required": ["mesh_provider_participant_id"] } } },
+        { "if": { "properties": { "tint_availability": { "const": "present" } }, "required": ["tint_availability"] }, "then": { "required": ["tint_provider_participant_id"] }, "else": { "not": { "required": ["tint_provider_participant_id"] } } }
+      ]
+    },
+    "gapFact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["fact_id", "population_id", "denominator", "missing_capability", "reason", "dependency_ids", "evidence_ids"],
+      "properties": {
+        "fact_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "population_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "denominator": { "type": "integer", "minimum": 0 },
+        "missing_capability": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 2048 },
+        "dependency_ids": { "$ref": "#/$defs/ids64" },
+        "evidence_ids": { "$ref": "#/$defs/ids16" }
+      }
+    },
+    "documentationFact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["fact_id", "application_id", "claim_id", "passage_id", "revision_id", "subject_id", "consuming_run_id", "analysis_context_id", "applicability", "dependency_ids", "supporting_evidence_ids", "contradicting_evidence_ids"],
+      "properties": {
+        "fact_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "application_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "claim_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "passage_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "revision_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "subject_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "consuming_run_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "supplying_snapshot_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "analysis_context_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "applicability": { "enum": ["applicable", "not-applicable", "unknown", "unsupported", "contradicted"] },
+        "dependency_ids": { "$ref": "#/$defs/ids64" },
+        "supporting_evidence_ids": { "$ref": "#/$defs/ids16" },
+        "contradicting_evidence_ids": { "$ref": "#/$defs/ids16Optional" }
+      }
+    }
+  }
+}

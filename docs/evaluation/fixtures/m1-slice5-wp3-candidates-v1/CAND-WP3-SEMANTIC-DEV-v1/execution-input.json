@@ -1,0 +1,73 @@
+{
+  "fixture_id": "CAND-WP3-SEMANTIC-DEV-v1",
+  "fixture_version": "1.0.0",
+  "installation_snapshot_input": {
+    "state": "empty",
+    "reason": "Run, snapshot, context, and configuration bindings are carried by the delivered candidate contract."
+  },
+  "accepted_order_construction_input": {
+    "state": "not-applicable",
+    "reason": "No plugin-order construction is exercised by WP3 candidate fixtures."
+  },
+  "analysis_context_input": {
+    "state": "empty",
+    "reason": "The delivered candidate contract carries the exact analysis-context binding."
+  },
+  "effective_scan_configuration": {
+    "artifact_id": "binding/configuration/semantic-a",
+    "artifact_version": "1.0.0",
+    "fingerprint": "51072c97d3d27c0a77e235c14b458fd0bac7464d3eeca28039d2965605a735cf",
+    "availability": "retained"
+  },
+  "analysis_execution_input": {
+    "artifact_id": "inputs/candidate-delivered-input.json",
+    "artifact_version": "1.0.0",
+    "fingerprint": "9b0b834de489c29609cc9ad9a535a70b3c3dae966e6ac1c7f369c5bf1247b0fe",
+    "availability": "retained",
+    "byte_length": 9208
+  },
+  "case_matrix_input": {
+    "state": "not-applicable",
+    "reason": "Case construction is outside WP3."
+  },
+  "runtime_support_input": {
+    "state": "not-applicable",
+    "reason": "No runtime operation is exercised."
+  },
+  "mo2_instance_profile_input": {
+    "state": "not-applicable",
+    "reason": "No MO2 capture is exercised."
+  },
+  "plugin_order_input": {
+    "state": "not-applicable",
+    "reason": "No plugin-order input is exercised."
+  },
+  "provider_order_input": {
+    "state": "not-applicable",
+    "reason": "No provider-order input is exercised."
+  },
+  "source_claim_inputs": [],
+  "analyzer_declarations": [],
+  "tool_library_versions": [],
+  "declared_archive_state": {
+    "state": "excluded",
+    "reason": "Archive semantics are outside WP3."
+  },
+  "declared_supported_capabilities": [],
+  "declared_unsupported_capabilities": [],
+  "resource_and_time_limits": {
+    "wall_time_ms": 30000,
+    "memory_bytes": 134217728,
+    "input_bytes": 9208,
+    "output_bytes": 67108864
+  },
+  "input_payload_refs": [
+    {
+      "artifact_id": "inputs/candidate-delivered-input.json",
+      "artifact_version": "1.0.0",
+      "fingerprint": "9b0b834de489c29609cc9ad9a535a70b3c3dae966e6ac1c7f369c5bf1247b0fe",
+      "availability": "retained",
+      "byte_length": 9208
+    }
+  ]
+}

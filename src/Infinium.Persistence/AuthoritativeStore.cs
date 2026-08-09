@@ -11,7 +11,7 @@ using Microsoft.Data.Sqlite;
 
 namespace Infinium.Persistence;
 
-public sealed class AuthoritativeStore : IDisposable
+public sealed partial class AuthoritativeStore : IDisposable
 {
     public const int CurrentSchemaVersion = 4;
     public const string CurrentStorageContractVersion = "1.3.0";
@@ -1754,6 +1754,36 @@ public sealed class AuthoritativeStore : IDisposable
         }
     }
 
+    public void EnsureCandidateAttemptIsCurrent(AttemptRecord attempt, RunBinding binding)
+    {
+        ArgumentNullException.ThrowIfNull(attempt);
+        ValidateBinding(binding);
+        lock (gate)
+        {
+            using SqliteTransaction transaction = BeginTransaction();
+            EnsureCurrentAttempt(attempt, transaction);
+            long bindingMatches = ScalarLong(
+                """
+                SELECT COUNT(*) FROM runs
+                WHERE run_id = $run AND installation_snapshot_id = $snapshot
+                  AND analysis_context_id = $context
+                  AND effective_scan_configuration_id = $config
+                  AND resolved_input_manifest_id = $manifest;
+                """,
+                transaction,
+                ("$run", attempt.RunId),
+                ("$snapshot", binding.InstallationSnapshotId),
+                ("$context", binding.AnalysisContextId),
+                ("$config", binding.EffectiveScanConfigurationId),
+                ("$manifest", binding.ResolvedInputManifestId));
+            if (bindingMatches != 1)
+            {
+                throw new InvalidOperationException("Candidate attempt dependencies differ from the immutable run binding.");
+            }
+            transaction.Rollback();
+        }
+    }
+
     public void AddCheckpoint(
         string checkpointId,
         AttemptRecord attempt,
@@ -1799,7 +1829,7 @@ public sealed class AuthoritativeStore : IDisposable
 
             Execute(
                 """
-                INSERT INTO checkpoints(
+                INSERT OR IGNORE INTO checkpoints(
                     checkpoint_id, run_id, attempt_id, installation_snapshot_id,
                     analysis_context_id, effective_scan_configuration_id,
                     resolved_input_manifest_id, dependency_closure_id,
@@ -1822,15 +1852,41 @@ public sealed class AuthoritativeStore : IDisposable
                 ("$completed", completedPartitionsJson),
                 ("$pending", pendingAndGapsJson),
                 ("$now", ToText(now)));
+            long checkpointMatches = ScalarLong(
+                """
+                SELECT COUNT(*) FROM checkpoints
+                WHERE checkpoint_id = $checkpoint AND run_id = $run AND attempt_id = $attempt
+                  AND installation_snapshot_id = $snapshot AND analysis_context_id = $context
+                  AND effective_scan_configuration_id = $config
+                  AND resolved_input_manifest_id = $manifest AND dependency_closure_id = $dependency
+                  AND content_sha256 = $sha AND completed_partitions_json = $completed
+                  AND pending_and_gaps_json = $pending;
+                """,
+                transaction,
+                ("$checkpoint", checkpointId),
+                ("$run", attempt.RunId),
+                ("$attempt", attempt.AttemptId),
+                ("$snapshot", binding.InstallationSnapshotId),
+                ("$context", binding.AnalysisContextId),
+                ("$config", binding.EffectiveScanConfigurationId),
+                ("$manifest", binding.ResolvedInputManifestId),
+                ("$dependency", dependencyClosureId),
+                ("$sha", contentSha256),
+                ("$completed", completedPartitionsJson),
+                ("$pending", pendingAndGapsJson));
+            if (checkpointMatches != 1)
+            {
+                throw new InvalidOperationException("A checkpoint identity resolves to different retained state.");
+            }
             Execute(
                 """
-                INSERT INTO audit_events(
+                INSERT OR IGNORE INTO audit_events(
                     audit_event_id, event_kind, object_kind, object_id,
                     detail_payload_id, occurred_at)
                 VALUES ($id, 'checkpoint-recorded', 'checkpoint', $object, NULL, $now);
                 """,
                 transaction,
-                ("$id", Guid.NewGuid().ToString("N")),
+                ("$id", "checkpoint-recorded-" + checkpointId),
                 ("$object", checkpointId),
                 ("$now", ToText(now)));
             transaction.Commit();
@@ -5661,13 +5717,12 @@ public sealed class AuthoritativeStore : IDisposable
             relationship_id TEXT NOT NULL,
             disposition TEXT NOT NULL CHECK(disposition IN (
                 'candidate-admitted','resolved-negative','unsupported','ambiguous',
-                'invalid-input','limited','abstained')),
+                'invalid-input','limited','deferred','unprocessed','failed')),
             lane TEXT NOT NULL CHECK(lane IN (
                 'deterministic-required','mandatory-evidence','optional-ranked')),
             rule_version TEXT NOT NULL,
             decision_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
-            created_at TEXT NOT NULL,
-            UNIQUE(run_id, population_id, relationship_id)
+            created_at TEXT NOT NULL
         ) STRICT;
         CREATE TABLE analysis_candidates(
             candidate_id TEXT PRIMARY KEY,
@@ -5677,7 +5732,7 @@ public sealed class AuthoritativeStore : IDisposable
             lane TEXT NOT NULL CHECK(lane IN (
                 'deterministic-required','mandatory-evidence','optional-ranked')),
             candidate_state TEXT NOT NULL CHECK(candidate_state IN (
-                'present','ambiguous','partial','abstained','unsupported','failed','limit-reached')),
+                'present','ambiguous','abstained')),
             dependency_closure_id TEXT NOT NULL,
             candidate_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
             created_at TEXT NOT NULL
@@ -5687,7 +5742,7 @@ public sealed class AuthoritativeStore : IDisposable
             candidate_id TEXT NOT NULL REFERENCES analysis_candidates(candidate_id) ON DELETE RESTRICT,
             run_id TEXT NOT NULL REFERENCES runs(run_id) ON DELETE RESTRICT,
             hypothesis_state TEXT NOT NULL CHECK(hypothesis_state IN (
-                'present','ambiguous','partial','abstained','unsupported','failed','limit-reached')),
+                'present','ambiguous','partial')),
             confidence TEXT NOT NULL CHECK(confidence IN (
                 'speculative-lead','plausible','strongly-supported','confirmed')),
             threshold_id TEXT NOT NULL,
@@ -5784,27 +5839,28 @@ public sealed class AuthoritativeStore : IDisposable
             detail_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT
         ) STRICT;
         CREATE TABLE analysis_dependency_edges(
-            dependency_edge_id TEXT PRIMARY KEY,
+            dependency_edge_id TEXT NOT NULL,
             run_id TEXT NOT NULL REFERENCES runs(run_id) ON DELETE RESTRICT,
             from_kind TEXT NOT NULL CHECK(from_kind IN (
                 'documentation-import','documentation-revision','passage','evidence-revision',
-                'claim-application','taxonomy-assignment','documentation-gap','installed-entity','candidate-decision',
-                'candidate','hypothesis','finding-occurrence','recommendation','case-occurrence',
+                'claim-application','taxonomy-assignment','documentation-gap','installed-entity','candidate-analysis-root','candidate-decision','dependency-closure',
+                'candidate','hypothesis','abstention','failure','finding-occurrence','recommendation','case-occurrence',
                 'coverage','gap','replay-manifest','run-output')),
             from_id TEXT NOT NULL,
             to_kind TEXT NOT NULL CHECK(to_kind IN (
                 'snapshot','analysis-context','scan-configuration','resolved-input-manifest',
                 'documentation-import','documentation-revision','passage','evidence-revision','claim-application',
-                'installed-entity','candidate-decision',
+                'installed-entity','documentation-evidence','evidence','dependency-closure','dependency','candidate-decision',
                 'candidate','hypothesis','finding-occurrence','recommendation','case-occurrence',
-                'coverage','gap','payload')),
+                'coverage','gap','source-fact','payload','execution-input-binding','policy-binding','threshold-binding','limit-binding','analyzer-declaration-binding')),
             to_id TEXT NOT NULL,
             edge_kind TEXT NOT NULL CHECK(edge_kind IN (
                 'derived-from','supports','supported-by','contradicts','applies','applies-to',
                 'depends-on','consumes','conditioned-by','classifies','limits','reuses',
-                'member-of','supersedes','produced-by')),
+                'member-of','supersedes','produced-by','uses')),
             edge_payload_id TEXT REFERENCES payloads(payload_id) ON DELETE RESTRICT,
             created_at TEXT NOT NULL,
+            PRIMARY KEY(dependency_edge_id, run_id),
             UNIQUE(run_id, from_kind, from_id, to_kind, to_id, edge_kind)
         ) STRICT;
         CREATE TABLE case_memberships(

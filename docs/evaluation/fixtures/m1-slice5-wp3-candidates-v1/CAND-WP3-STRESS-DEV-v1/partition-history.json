@@ -1,0 +1,13 @@
+{
+  "fixture_id": "CAND-WP3-STRESS-DEV-v1",
+  "fixture_version": "1.0.0",
+  "partition_history": [
+    {
+      "from": null,
+      "to": "development",
+      "at": "2026-08-09T06:20:47.5665585+00:00",
+      "reason": "Pre-registered from accepted public authority before any product comparison.",
+      "change_influenced_implementation": false
+    }
+  ]
+}

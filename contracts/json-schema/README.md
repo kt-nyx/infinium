@@ -30,9 +30,18 @@ network.
 | `run-output.v1.schema.json` | `infinium.run-output/v1` |
 | `cli-summary.v1.schema.json` | `infinium.cli-summary/v1` |
 | `diagnostic-trace.v1.schema.json` | `infinium.diagnostic.trace/v1` |
+| `documentation-evidence.v1.schema.json` | `infinium.documentation.evidence/v1` |
+| `candidate-analysis.v1.schema.json` | `infinium.analysis.candidate/v1` |
+| `candidate-delivered-input.v1.schema.json` | `infinium.analysis.candidate-delivered-input/v1` |
+| `candidate-delivered-expansion.v1.schema.json` | `infinium.analysis.candidate-delivered-expansion/v1` |
 
 `common.v1.schema.json` contains shared closed definitions and is not itself an
 instance contract.
+
+The WP3 delivered-input and expansion contracts contain only snapshot-bound
+Bethesda/WP2 facts and deterministic construction parameters. Candidate lanes,
+dispositions, gaps, failures, expected output, fixture identities, oracle
+metadata, and generator seeds are not part of either product contract.
 
 ## Evaluation-package isolation
 

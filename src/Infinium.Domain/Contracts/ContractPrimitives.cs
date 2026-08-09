@@ -127,4 +127,6 @@ public static class ContractConstants
     public const string FindingCaseSchemaId = "infinium.analysis.finding-case/v1";
     public const string AnalysisReplaySchemaId = "infinium.analysis.replay/v1";
     public const string AnalysisExecutionInputSchemaId = "infinium.analysis.execution-input/v1";
+    public const string CandidateDeliveredInputSchemaId = "infinium.analysis.candidate-delivered-input/v1";
+    public const string CandidateDeliveredExpansionSchemaId = "infinium.analysis.candidate-delivered-expansion/v1";
 }

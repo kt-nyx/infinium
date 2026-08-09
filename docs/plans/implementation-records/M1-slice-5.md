@@ -1,6 +1,6 @@
 # M1 Slice 5 — Evidence, documentation, candidates, cases, and replay
 
-Status: `M1/S5/WP1` complete and reviewed; `M1/S5/WP2` is eligible; Slice 5 is not complete
+Status: `M1/S5/WP1` through `M1/S5/WP3` complete and reviewed; `M1/S5/WP4` is eligible; Slice 5 is not complete
 
 Plan: `M1/S5`
 
@@ -684,3 +684,323 @@ No evaluator-private repository, private corpus, legacy archive, historical
 evaluator material, live provider, WP3+ implementation, or push was accessed
 or performed. The final local task commit is reported in the handoff because a
 commit cannot contain its own hash.
+
+## M1/S5/WP3 — causal joins, candidates, hypotheses, and abstention
+
+Status: Ready for final acceptance review; uncommitted implementation
+
+Branch: `codex/m1-s5-wp3-candidates`
+
+Baseline commit: `1634b2a64c678dff4d163bce26938ab58b169e91`
+
+Implementation commit: pending final local commit
+
+### Authority and scope
+
+WP3 began only after the live handoff in `docs/current-state.md` established
+that the accepted WP2 correction was complete and WP3 was eligible. The work
+consumed the accepted Slice 5 plan, its current implementation record, the
+delivered Bethesda indexes, and WP2 documentation evidence. It did not read or
+use the legacy archive, evaluator-private repository, historical evaluator
+internals, protocol `/5`, live/provider/model output, real profile content, or
+WP4-WP6 semantics.
+
+WP1's implementation-active candidate contract could not represent the
+accepted WP3 vertical: it had no separate hypothesis collection, conflated
+candidate and proposed explanation state, used incompatible gap/failure
+shapes, and lacked an exact aggregate payload identity. The plan expressly
+allows an implementation-driven clean break, so WP3 revised the domain model,
+schema, codec, persistence, fixtures, and tests together. The resulting
+`candidate-analysis.v1` schema SHA-256 is
+`3b6d68a376ac0452e0ef5d17613f48b40145431da2e7e17d9081734f4c848708`.
+Schema-4 storage remains the accepted migration number; its revised exact SQL
+fingerprint is
+`d2bc8879ed400d08bcdf0869389535de58b30b8a9ceaf118984e570fb582fefa`.
+
+### Implemented vertical
+
+- The Application-owned `DeliveredIndexCandidatePopulationSource` constructs
+  bounded relationship populations from exact Bethesda override/link, FaceGen,
+  coverage-gap, and WP2 claim-application indexes while the pure Analysis
+  engine remains Bethesda-independent. It neither scans all pairs nor uses
+  taxonomy assignments as causality.
+- Every declared population member receives one decision. The closed outcome
+  ledger retains admitted, resolved-negative, unsupported, invalid, limited,
+  deferred, unprocessed, abstained, and failed states. `not-applicable` is a
+  pre-lane marker only for invalid, negative, unsupported, deferred, and failed
+  outcomes; admitted work remains limited to the three plan-authorized lanes.
+- Deterministic-required and mandatory-evidence admission is score-independent.
+  Optional-ranked work uses a stable declared rank and explicit limit outcome.
+  Candidates, hypotheses, abstentions, gaps, and failures retain separate typed
+  identities and dependency edges; WP3 emits no finding, recommendation, case,
+  readiness, or runtime conclusion.
+- Stable length-framed identities bind member inputs, decisions, candidates,
+  hypotheses, abstentions, gaps, failures, dependency closure, aggregate
+  counts, and the exact serialized aggregate. Domain invariants reject missing
+  ledger rows, duplicate identities, participant/path defects, invalid links,
+  count drift, and payload-identity drift.
+- Candidate analysis is serialized through the active schema, transactionally
+  materialized into candidate decision/candidate/hypothesis/dependency tables,
+  retained as the exact aggregate payload, and verified on readback. The WP3
+  application phase persists an exact checkpoint envelope. Restart reuses only
+  population members whose input fingerprint and policy/threshold/limit
+  identities are unchanged; a relevant mutation recomputes one member while
+  preserving eleven unrelated members in the frozen semantic case.
+- `Candidates` and `CandidateScale` verification modes now execute real,
+  non-zero focused suites and retain machine-readable count, identity, hash,
+  timing, and verification-driver memory evidence. WP5 still owns coordinator
+  orchestration, cross-stage atomic publication/replay, query, and CLI output;
+  WP4 owns findings/cases and materialized analysis-gap lineage.
+
+### Independent semantic and scale truth
+
+The product-blind fixture author received only the accepted public authority
+allowlist and WP3 fixture assignment. Before product comparison, its first
+semantic draft was audited and found to assign two structurally identical
+relationships to different lanes. The author independently corrected that
+derivability defect, made the structural reference strings explicit, bumped
+both fixture/oracle versions to `1.1.0`, retained the prior hashes in append-only
+change history, and froze the corrected package. Product comparison began only
+after the correction and freeze.
+
+| Package | Identity | Frozen input SHA-256 | Frozen oracle SHA-256 |
+|---|---|---|---|
+| Semantic | `CAND-WP3-SEM-20260808-01` / `1.1.0` | `3939994e3ed05c31f2e640d3009aea5fdeb6a1497015d9932fd0aa8b9066414d` | `67dd54b86b91918c9e44be58348d46928249ed9de9a7c96d08b9363dd583a4d9` |
+| Scale/stress | `CAND-WP3-SCALE-20260808-01` / `1.1.0` | `fe963e6826a524ea08cb91280d0c934fd987d36f6b73e266a66498b6aad7440a` | `bb86b8991b550e1ec644176beca5cfc4f89b5e980bab61fe318afec45ee6a8c6` |
+
+The package has exact file closure, no reparse points, frozen byte hashes,
+answer-free inputs, redistribution/isolation attestations, and eight structured
+documents validated through the active WP3 fixture schema/codec. Fixed nested
+object boundaries reject missing or unrecognized properties. The package
+README hash is
+`eef155a8a0ad98b8c04a762d91aa7e060ea04e8831537dfb635a1376f9f6764d`.
+
+The semantic oracle closes 12 decisions: 7 candidates, 5 hypotheses, 2
+abstentions, 4 gaps, 1 isolated analyzer failure, 1 invalid input, 1 matched
+negative, and 1 limit-unprocessed member. It asserts zero findings, cases,
+model dispatches, tokens, and provider cost. Exact membership, lanes,
+participants, join paths, analyzer isolation, rename/reorder invariance, and
+relevant-mutation delta all match product output.
+
+| Profile | Relationship rows | Candidates | Hypotheses | Abstentions | Gaps | Structural reference SHA-256 |
+|---|---:|---:|---:|---:|---:|---|
+| `scale-4096` | 21,248 | 7,168 | 3,072 | 256 | 768 | `4861b4fe4d7fc380cbf7bba1615f38b77abad1c440f7a65660506774752a3b63` |
+| `stress-262144` | 1,359,872 | 458,752 | 196,608 | 16,384 | 49,152 | `a994472cd60a023f549cda8410821fe06a9639eada1fbe9d8450d36c1b93afb6` |
+
+The scale profile runs the full product-reachable expansion and candidate
+pipeline. The stress profile uses the same accepted recipe with an independent
+closed-form count model and streaming structural hash, avoiding retention of a
+million-row aggregate solely for a stress assertion. Both record zero all-pairs
+comparisons. The initial retained gate runs measured 2,734 ms for the scale
+test, 95,744,000 bytes peak for the Candidates verification driver, and
+88,113,152 bytes peak for the CandidateScale verification driver; the retained
+JSON reports preserve the final measurements.
+
+### Recoverable corrections before final review
+
+- Corrected the independent fixture's pre-comparison generic-derivability
+  defect without using product output as truth.
+- Added the missing separate hypothesis/abstention/gap/failure and exact-count/
+  payload-identity contract seams across schema, domain, codec, persistence,
+  and tests.
+- Corrected candidate lane counts so resolved negatives are recorded before
+  lane admission rather than inflating a work-lane denominator.
+- Corrected optional limits to apply only to candidate-eligible complete or
+  ambiguous members, preserving typed negative closure.
+- Corrected invalid-input handling so malformed participants/path do not create
+  a false missing-information gap.
+- Corrected one semantic canonical-role adapter after the product-blind author
+  independently distinguished the relationship kind before freeze.
+- Updated the exact schema-4 fingerprint after the clean-break SQL constraint
+  revision.
+- Added nested fixture-shape rejection and active package hash/identity/answer-
+  separation checks after review of the prior WP2 fixture-boundary lesson.
+- Moved the delivered Bethesda-index adapter from Analysis to Application after
+  the locked restore exposed unnecessary transitive dependency and lock-graph
+  expansion; the final locked graph is unchanged from baseline.
+
+Focused candidate, integration, exact semantic, mutation, scale, active-schema,
+round-trip, persistence, and delivered-index tests pass. The final full
+verification floor and fresh candidate/anti-overfitting review are recorded in
+the completion amendment below once accepted.
+
+### 2026-08-09 authority-blocked correction
+
+The preceding WP3 draft record is not acceptance evidence and its fixture,
+scale, gate, hash, timing, schema-fingerprint, and completion claims are
+superseded. During independent anti-overfitting review, the product-blind
+fixture author and product reviewer identified an accepted-authority gap: the
+plan requires product-reachable construction from delivered Bethesda/WP2
+substrate and prohibits semantics outside that substrate, but the allowed
+public authority does not define a field-level answer-free fixture payload for
+that product source. The staged generic relationship stream cannot reach the
+delivered product source without an unauthorized fixture-specific semantic
+adapter. The author therefore paused re-freeze and review rather than inventing
+the missing contract.
+
+No WP3 fixture or validation identity is current, no Candidates or
+CandidateScale gate has passed, and WP3 is not complete. The working tree
+contains an uncommitted product draft with a green Release build and focused
+product contract/unit/integration checks, but the evaluation gate remains
+intentionally non-authoritative and failing. No WP3 commit or push was made.
+Owner action is required to accept a public field-level delivered-substrate
+fixture contract (or provide a maintainer-authored answer-free payload
+projection) before fixture authoring, product comparison, final verification,
+and independent acceptance can resume.
+
+### 2026-08-09 owner clarification and authority-resolution amendment
+
+The preceding authority-blocked conclusion was mistaken and is superseded by
+the owner's explicit WP3 recovery direction. The accepted Slice 5 plan already
+assigns WP3 ownership of its candidate semantic/scale fixtures and of the
+smallest product-reachable scale expansion contract. Defining that contract
+from the already delivered Bethesda indexes and WP2 evidence does not require
+new architecture authority or a new owner decision.
+
+The recovery preserved the uncommitted branch and removed the circular
+instance-derived fixture schema and the answer-injecting evaluation adapters.
+WP3 now defines two independently authored product contracts:
+
+- `infinium.analysis.candidate-delivered-input/v1`, a closed factual projection
+  of snapshot-bound prior/winner links, FaceGen applicability/provider facts,
+  explicit coverage gaps, and WP2 documentation applications;
+- `infinium.analysis.candidate-delivered-expansion/v1`, a bounded deterministic
+  construction recipe containing only factual patterns and cadence.
+
+The active `DeliveredIndexCandidatePopulationSource` consumes the delivered
+input contract for both adapted real Bethesda/WP2 inputs and public fixtures.
+Neither contract can carry lanes, dispositions, candidate/hypothesis states,
+abstentions, gaps, failures, expected output, fixture IDs, oracle metadata,
+generator IDs, or seeds. The expansion implementation preflights total fact
+rows, materializes only bounded validation populations, and measures larger
+stress populations through the same enumerator and length-framed factual stream
+receipt. Product candidate publication remains bounded by the existing 64 MiB
+aggregate/CAS limit.
+
+The earlier WP3 fixture directory, identities, hashes, comparisons, scale
+counts, timings, and gate claims remain withdrawn. A fresh product-blind author
+has been commissioned against only accepted public authority plus the new
+schemas and field guide. New fixture identities, independent review evidence,
+product comparison, final verification, and acceptance are recorded only after
+that authoring/review sequence completes.
+
+### 2026-08-09 product-reachable recovery and pre-final evidence
+
+This amendment supersedes the blocked status and every earlier WP3 fixture,
+hash, scale, and gate claim while retaining the chronology above. The recovery
+continued from baseline `1634b2a64c678dff4d163bce26938ab58b169e91`
+without reset, preserved `human-guide/`, and did not access the legacy archive,
+evaluator-private repository, historical evaluator implementation, private
+fixtures, live/provider/model services, or WP4+ implementation.
+
+The completed product vertical adds the smallest closed answer-free delivered
+substrate contract and its bounded expansion, strict schema/domain/codecs,
+the real `DeliveredIndexCandidatePopulationSource`, exact execution/analyzer/
+policy/threshold/limit bindings, total typed ledger, traversable dependency
+closure, schema-4 persistence/readback, attempt-fenced atomic aggregate and
+checkpoint publication, targeted restart invalidation, and bounded failure
+isolation. The circular instance-derived schema generator and answer-injecting
+test adapter were removed. Candidate payload publication and readback remain
+bounded by 64 MiB; the validation population is fully materialized while the
+one-million-fact stress population uses the same product expansion recipe and
+streaming measurement only.
+
+Active contract fingerprints are:
+
+| Surface | SHA-256 |
+|---|---|
+| `candidate-analysis.v1.schema.json` | `e5c90acdadd9ff71c04fcb04b9395cb932d3f417ca9d0248024d5735b5077729` |
+| `candidate-delivered-input.v1.schema.json` | `4398b5640691c5aaaf01d415f5ad70c84dfd099f40f9c4897af582f0c643e97b` |
+| `candidate-delivered-expansion.v1.schema.json` | `4efe1b6a0827f012048dc71da592023031c5de57cf9ff213020316426d222cbe` |
+| `analysis.proto` | `229571ef3dd85075f4364ee43cd6353cde6f15aaf679c8ada31f5ea5bf7a8e4f` |
+| delivered-input field guide | `6db5a5efe0f2df7672fc960c7343cbc980897baf33eec7726738af60ae7dbcca` |
+| schema-4 SQL | `0e4fbeb821fdd83d86737d60979fa35d9a1300a4d971450c516f66d07ef2231e` |
+
+#### Independently frozen public evidence
+
+A fresh product-blind author froze three separate standard public packages
+before product comparison. Its nested reviewer independently read only accepted
+public authority, the new schemas/field guide, and final package bytes. It
+returned `ACCEPT` with no finding and explicitly did not inspect product source,
+tests, tools, output, build artifacts, Git history, withdrawn packages, legacy,
+or private material. The author's later accidental receipt of an unsolicited
+sibling status summary occurred after the byte-stable freeze; no bytes changed,
+and the nested reviewer remained independently isolated.
+
+| Package | Partition | Public-manifest SHA-256 |
+|---|---|---|
+| `CAND-WP3-SEMANTIC-DEV-v1/1.0.0` | development | `94799a0d9fd5c90594d5da7074297fe257e44aad69b98487bdc7ea5619370afb` |
+| `CAND-WP3-SCALE-VAL-v1/1.0.0` | validation | `98e1f3bcb88e40c52abbbddc62ed9f3d613e90d09c4a15d51be081bc8a1bf2c8` |
+| `CAND-WP3-STRESS-DEV-v1/1.0.0` | development | `5b5507622d217223aa2a28a049d5c82b7e411238aaa6c10f415f27c594d1ebbf` |
+
+The clean reviewer reproduced all nine files per package, exact refs/hashes/
+timestamps, answer isolation, source-fact and `derived-from` closure, the six
+rename/reorder/relevant-evidence/rank/unrelated/dependency metamorph classes,
+and these independent totals:
+
+| Profile | Facts | Admitted | Negative | Ambiguous | Unsupported | Candidates | Hypotheses | Abstentions | Stream SHA-256 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| semantic | 16 | 5 | 4 | 5 | 2 | 10 | 10 | 7 | direct-input exact membership |
+| validation scale | 3,200 | 940 | 940 | 820 | 500 | 1,760 | 1,760 | 1,320 | `b3e51f9a61042cf5038b0ac25e353929db86e96381606c3599cd63f7175cdb25` |
+| streaming stress | 1,000,000 | 293,750 | 293,750 | 256,250 | 156,250 | 550,000 | 550,000 | 412,500 | `89bee1f740818d905e8dd2e7b8b549e94574c2514c18a8562714e21bcbad5df5` |
+
+The independent validation-scale semantic projection is 2,047,092 bytes,
+below the 67,108,864-byte boundary. Product comparison entered exclusively
+through the real delivered-index source. The development semantic comparison
+exposed shared lane-provenance, deterministic-hypothesis, and unsupported-
+abstention defects; those were corrected across producer, domain/schema,
+wire, persistence, and tests before the validation-scale comparison. The
+validation package did not drive or tune those corrections. The final semantic,
+all-six-metamorph, full validation-scale, and streaming stress comparisons pass.
+
+#### Pre-final gates
+
+`Candidates` and `CandidateScale` both pass with non-zero focused contract,
+unit, integration, and evaluation tests. Their machine reports are retained at
+`artifacts/verification/wp3-final/candidates.json` and
+`artifacts/verification/wp3-final/candidatescale.json`; the reports bind the
+exact package identities/hashes, counts, receipts, execution form, timings,
+and verification-driver peak working sets. The `Contracts` gate also passes
+with the two new active schemas and current repository-authority registration.
+The complete Release floor, fresh candidate/anti-overfitting/security/diff
+review, current-state advancement, and final local commit are recorded in the
+acceptance amendment after they complete.
+
+### WP3 acceptance amendment — 2026-08-09
+
+WP3 is complete and accepted. A separate final product reviewer inspected the
+settled live diff from baseline
+`1634b2a64c678dff4d163bce26938ab58b169e91`, including contracts/schema/wire,
+the real delivered source and expansion, ledger invariants, exact provenance,
+persistence, attempt fencing, checkpoint invalidation, resource bounds,
+fixture and answer isolation, verifier truthfulness, documentation, and
+protected paths. After each reported defect was corrected and re-reviewed, the
+reviewer returned `ACCEPT` with no must-fix, follow-up, non-blocking,
+authority, or safety/isolation finding.
+
+The settled machine gates pass with fresh reports:
+
+- `Candidates`: 11 contract, 22 unit, 6 integration, and 1 semantic evaluation
+  test;
+- `CandidateScale`: 1 package-integrity contract and 2 validation/stress
+  evaluation tests;
+- `Contracts`: both active delivered-input schemas and the revised candidate
+  aggregate contract are accepted by the repository contract gate.
+
+The final locked Release verification passed with zero build warnings or
+errors. The unfiltered solution projects report 151 unit tests passed with one
+expected platform skip, 134 contract tests passed, 41 integration tests
+passed, and 45 evaluation tests passed with eight expected private/environment
+skips. The `M1Unit`, `M1Contract`, `M1Integration`, `M1Evaluation`,
+`M1Security`, and `M1Fault` category floors all pass. `dotnet format
+--verify-no-changes`, dependency-manifest semantic verification, strict JSON
+parsing for the changed/package documents, Markdown link checking, and `git
+diff --check` pass; the dependency manifest retains only its benign generated
+format/line-ending rewrite. No protected root, evaluator-private material,
+legacy archive, live/provider/model service, or WP4+ implementation entered
+the work. The pre-existing untracked `human-guide/` remains untouched and is
+excluded from the focused commit.
+
+`docs/current-state.md` now advances the only live handoff to `M1/S5/WP4`.
+The focused implementation commit is reported in the final handoff; nothing
+is pushed.

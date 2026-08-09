@@ -1,4 +1,7 @@
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using Infinium.Analysis.Candidates;
 using Infinium.Application.Evaluation;
 using Infinium.Domain.Contracts;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -33,7 +36,70 @@ public sealed class Slice5ContractTests
             Id("analyzer-1"),
             Id("population-1"),
             0,
-            [], [], [], [], []);
+            [], [], [], [], [])
+        {
+            PolicyId = Id("policy-1"),
+            ThresholdId = Id("threshold-1"),
+            LimitId = Id("limit-1"),
+            ExecutionInputId = Id("execution-input-1"),
+            ExecutionInputDescriptors = ["execution-binding"],
+            PolicyDescriptors = ["policy-binding"],
+            ThresholdDescriptors = ["threshold-binding"],
+            LimitDescriptors = ["limit-binding"],
+            ExecutionInputFingerprint = CandidateAnalysisIdentity.StructuralHash(["execution-binding"]),
+            PolicyFingerprint = CandidateAnalysisIdentity.StructuralHash(["policy-binding"]),
+            ThresholdFingerprint = CandidateAnalysisIdentity.StructuralHash(["threshold-binding"]),
+            LimitFingerprint = CandidateAnalysisIdentity.StructuralHash(["limit-binding"]),
+            AnalyzerBindings = [new(Id("analyzer-1"), Version(), Version(),
+                CandidateAnalysisIdentity.StructuralHash(["{}"]), "{}")],
+            AnalyzerSetFingerprint = CandidateAnalysisIdentity.StructuralHash(
+                [$"analyzer-1:{CandidateAnalysisIdentity.StructuralHash(["{}"]).Value}"]),
+        };
+        candidates = candidates with
+        {
+            AnalysisRootId = CandidateAnalysisIdentity.StableId(
+                "candidate-analysis-root", "run-1", "population-1",
+                candidates.ExecutionInputFingerprint.Value, candidates.PolicyFingerprint.Value,
+                candidates.ThresholdFingerprint.Value, candidates.LimitFingerprint.Value,
+                candidates.AnalyzerSetFingerprint.Value),
+            DependencyEdges =
+            [
+                Edge("candidate-analysis-root", CandidateAnalysisIdentity.StableId(
+                        "candidate-analysis-root", "run-1", "population-1",
+                        candidates.ExecutionInputFingerprint.Value, candidates.PolicyFingerprint.Value,
+                        candidates.ThresholdFingerprint.Value, candidates.LimitFingerprint.Value,
+                        candidates.AnalyzerSetFingerprint.Value),
+                    "execution-input-binding", CandidateAnalysisIdentity.StableId(
+                        "candidate-execution-input-binding", "execution-input-1", candidates.ExecutionInputFingerprint.Value), "uses"),
+                Edge("candidate-analysis-root", CandidateAnalysisIdentity.StableId(
+                        "candidate-analysis-root", "run-1", "population-1",
+                        candidates.ExecutionInputFingerprint.Value, candidates.PolicyFingerprint.Value,
+                        candidates.ThresholdFingerprint.Value, candidates.LimitFingerprint.Value,
+                        candidates.AnalyzerSetFingerprint.Value),
+                    "policy-binding", CandidateAnalysisIdentity.StableId("candidate-policy-binding", "policy-1", candidates.PolicyFingerprint.Value), "uses"),
+                Edge("candidate-analysis-root", CandidateAnalysisIdentity.StableId(
+                        "candidate-analysis-root", "run-1", "population-1",
+                        candidates.ExecutionInputFingerprint.Value, candidates.PolicyFingerprint.Value,
+                        candidates.ThresholdFingerprint.Value, candidates.LimitFingerprint.Value,
+                        candidates.AnalyzerSetFingerprint.Value),
+                    "threshold-binding", CandidateAnalysisIdentity.StableId("candidate-threshold-binding", "threshold-1", candidates.ThresholdFingerprint.Value), "uses"),
+                Edge("candidate-analysis-root", CandidateAnalysisIdentity.StableId(
+                        "candidate-analysis-root", "run-1", "population-1",
+                        candidates.ExecutionInputFingerprint.Value, candidates.PolicyFingerprint.Value,
+                        candidates.ThresholdFingerprint.Value, candidates.LimitFingerprint.Value,
+                        candidates.AnalyzerSetFingerprint.Value),
+                    "limit-binding", CandidateAnalysisIdentity.StableId("candidate-limit-binding", "limit-1", candidates.LimitFingerprint.Value), "uses"),
+                Edge("candidate-analysis-root", CandidateAnalysisIdentity.StableId(
+                        "candidate-analysis-root", "run-1", "population-1",
+                        candidates.ExecutionInputFingerprint.Value, candidates.PolicyFingerprint.Value,
+                        candidates.ThresholdFingerprint.Value, candidates.LimitFingerprint.Value,
+                        candidates.AnalyzerSetFingerprint.Value),
+                    "analyzer-declaration-binding", CandidateAnalysisIdentity.StableId(
+                        "candidate-analyzer-binding", "analyzer-1", Version().ToString(), Version().ToString(), CandidateAnalysisIdentity.StructuralHash(["{}"]).Value), "uses"),
+            ],
+        };
+        candidates = candidates with { Counts = CandidateAnalysisCounts.Compute(candidates) };
+        candidates = candidates with { PayloadId = CandidateAnalysisIdentity.ComputePayloadId(candidates) };
         FindingCaseContract findings = new(
             ContractConstants.FindingCaseSchemaId,
             Version(),
@@ -56,6 +122,181 @@ public sealed class Slice5ContractTests
         AssertSemanticRoundTrip(findings, FindingCaseJsonCodec.Serialize, bytes => FindingCaseJsonCodec.Deserialize(bytes));
         AssertSemanticRoundTrip(replay, AnalysisReplayJsonCodec.Serialize, bytes => AnalysisReplayJsonCodec.Deserialize(bytes));
         AssertSemanticRoundTrip(execution, AnalysisExecutionInputJsonCodec.Serialize, bytes => AnalysisExecutionInputJsonCodec.Deserialize(bytes));
+    }
+
+    [TestMethod]
+    [TestCategory("M1Contract")]
+    [TestCategory("M1Security")]
+    [TestProperty("Category", "M1Contract")]
+    [TestProperty("Category", "M1Security")]
+    public void CandidateContractRejectsDanglingMissingMisdirectedAndSemanticallyUnboundReferences()
+    {
+        CandidateAnalysisContract valid = CreateNonEmptyCandidateAnalysis();
+        AssertSemanticRoundTrip(valid, CandidateAnalysisJsonCodec.Serialize, bytes => CandidateAnalysisJsonCodec.Deserialize(bytes));
+
+        JsonNode schemaMutation = JsonNode.Parse(CandidateAnalysisJsonCodec.Serialize(valid))!;
+        Assert.IsTrue(schemaMutation["candidates"]![0]!.AsObject().Remove("hypothesis_id"));
+        using (JsonDocument missingHypothesisId = JsonDocument.Parse(schemaMutation.ToJsonString()))
+        {
+            Assert.ThrowsExactly<InvalidDataException>(() => ActiveJsonSchemaValidator.Validate(
+                missingHypothesisId.RootElement, "candidate-analysis.v1.schema.json"));
+        }
+
+        CandidateDependencyEdgeContract firstEdge = valid.DependencyEdges[0];
+        CandidateDependencyEdgeContract misdirected = firstEdge with
+        {
+            EdgeId = CandidateAnalysisIdentity.StableId(
+                "candidate-edge", firstEdge.FromKind, firstEdge.FromId.Value,
+                "candidate", firstEdge.ToId.Value, firstEdge.EdgeKind),
+            ToKind = "candidate",
+        };
+        CandidateDependencyEdgeContract dangling = Edge(
+            "candidate", Id("missing-candidate"), "candidate-decision", valid.Decisions[0].DecisionId, "derived-from");
+
+        AssertRejected(Reidentify(valid with { DependencyEdges = valid.DependencyEdges.Skip(1).ToArray() }));
+        AssertRejected(Reidentify(valid with { DependencyEdges = valid.DependencyEdges.Append(dangling).ToArray() }));
+        AssertRejected(Reidentify(valid with { DependencyEdges = valid.DependencyEdges.Skip(1).Prepend(misdirected).ToArray() }));
+        AssertRejected(Reidentify(valid with { PolicyId = Id("different-policy") }));
+        AssertRejected(Reidentify(valid with
+        {
+            Decisions = [valid.Decisions[0] with { DependencyIds = [Id("different-dependency")] }],
+        }));
+        AssertRejected(Reidentify(valid with
+        {
+            Candidates = [valid.Candidates[0] with { SupportingEvidenceIds = [Id("invented-evidence")] }],
+        }));
+        AssertRejected(Reidentify(valid with
+        {
+            Candidates = [valid.Candidates[0] with { HypothesisId = Id("different-hypothesis") }],
+        }));
+        AssertRejected(valid with
+        {
+            Decisions = [valid.Decisions[0] with { Lane = CandidateLane.Unspecified }],
+        });
+        AssertRejected(RecountAndIdentify(valid with
+        {
+            Candidates = [valid.Candidates[0] with
+            {
+                State = Slice5ResultState.Abstained,
+                MissingInformation = ["required witness"],
+            }],
+            Hypotheses = [valid.Hypotheses[0] with
+            {
+                State = Slice5ResultState.Partial,
+                MissingInformation = ["required witness"],
+            }],
+        }));
+
+        CandidateDecisionContract failedDecision = valid.Decisions[0] with
+        {
+            Lane = CandidateLane.MandatoryEvidence,
+            Disposition = CandidateDecisionDisposition.Failed,
+            AdmissionIndependentOfScore = false,
+        };
+        AssertRejected(RecountAndIdentify(valid with
+        {
+            Decisions = [failedDecision],
+            Candidates = [],
+            Hypotheses = [],
+            DependencyEdges = valid.DependencyEdges.Take(3).ToArray(),
+        }));
+        AssertRejected(RecountAndIdentify(valid with
+        {
+            Decisions = [failedDecision with { Disposition = CandidateDecisionDisposition.Unsupported }],
+            Candidates = [],
+            Hypotheses = [],
+            DependencyEdges = valid.DependencyEdges.Take(3).ToArray(),
+        }));
+        CandidateGapContract falseGap = new(
+            Id("false-gap"), valid.Decisions[0].DecisionId, valid.PopulationId,
+            Slice5ResultState.Missing, "claimed missing witness", "required witness");
+        AssertRejected(RecountAndIdentify(valid with
+        {
+            Gaps = [falseGap],
+            DependencyEdges = valid.DependencyEdges.Append(Edge(
+                "gap", falseGap.GapId, "candidate-decision", falseGap.DecisionId, "limits")).ToArray(),
+        }));
+
+        static void AssertRejected(CandidateAnalysisContract value) =>
+            Assert.ThrowsExactly<InvalidOperationException>(() => CandidateAnalysisJsonCodec.Serialize(value));
+    }
+
+    [TestMethod]
+    [TestCategory("M1Contract")]
+    [TestCategory("M1Mutation")]
+    [TestProperty("Category", "M1Contract")]
+    [TestProperty("Category", "M1Mutation")]
+    public void CandidateContractRequiresExactAbstentionAndOptionalLimitCorrespondence()
+    {
+        CandidateAnalysisContract unsupported = ExecuteCandidateContract(
+            [CandidateMember("unsupported", CandidateLane.MandatoryEvidence, CausalJoinInputState.Unsupported)]);
+        CandidateAbstentionContract retainedUnsupported = unsupported.Abstentions.Single();
+        CandidateDependencyEdgeContract retainedUnsupportedEdge = unsupported.DependencyEdges.Single(item =>
+            item.FromKind == "abstention" && item.FromId == retainedUnsupported.AbstentionId);
+        AssertRejected(RecountAndIdentify(unsupported with
+        {
+            Abstentions = [],
+            DependencyEdges = unsupported.DependencyEdges.Where(item => item.EdgeId != retainedUnsupportedEdge.EdgeId).ToArray(),
+        }));
+
+        CandidateAbstentionContract duplicateUnsupported = retainedUnsupported with
+        {
+            AbstentionId = Id("duplicate-unsupported-abstention"),
+        };
+        AssertRejected(RecountAndIdentify(unsupported with
+        {
+            Abstentions = unsupported.Abstentions.Append(duplicateUnsupported).ToArray(),
+            DependencyEdges = unsupported.DependencyEdges.Append(Edge(
+                "abstention", duplicateUnsupported.AbstentionId, "candidate-decision",
+                duplicateUnsupported.DecisionId, "derived-from")).ToArray(),
+        }));
+        CandidateGapContract duplicateGap = unsupported.Gaps.Single() with
+        {
+            GapId = Id("duplicate-unsupported-gap"),
+        };
+        AssertRejected(RecountAndIdentify(unsupported with
+        {
+            Gaps = unsupported.Gaps.Append(duplicateGap).ToArray(),
+            DependencyEdges = unsupported.DependencyEdges.Append(Edge(
+                "gap", duplicateGap.GapId, "candidate-decision", duplicateGap.DecisionId, "derived-from")).ToArray(),
+        }));
+
+        CandidateAnalysisContract linked = ExecuteCandidateContract(
+        [
+            CandidateMember("missing-one", CandidateLane.MandatoryEvidence, CausalJoinInputState.Complete,
+                ["first required witness"], emitGap: true),
+            CandidateMember("missing-two", CandidateLane.MandatoryEvidence, CausalJoinInputState.Complete,
+                ["second required witness"], emitGap: true),
+        ]);
+        CandidateAbstentionContract firstAbstention = linked.Abstentions.OrderBy(item => item.AbstentionId.Value, StringComparer.Ordinal).First();
+        OpaqueId otherDecisionId = linked.Decisions.Single(item => item.DecisionId != firstAbstention.DecisionId).DecisionId;
+        CandidateDependencyEdgeContract firstAbstentionEdge = linked.DependencyEdges.Single(item =>
+            item.FromKind == "abstention" && item.FromId == firstAbstention.AbstentionId);
+        AssertRejected(RecountAndIdentify(linked with
+        {
+            Abstentions = linked.Abstentions.Select(item => item.AbstentionId == firstAbstention.AbstentionId
+                ? item with { DecisionId = otherDecisionId }
+                : item).ToArray(),
+            DependencyEdges = linked.DependencyEdges.Where(item => item.EdgeId != firstAbstentionEdge.EdgeId)
+                .Append(Edge("abstention", firstAbstention.AbstentionId, "candidate-decision", otherDecisionId, "derived-from"))
+                .ToArray(),
+        }));
+
+        CandidateAnalysisContract limited = ExecuteCandidateContract(
+            [CandidateMember("limited", CandidateLane.OptionalRanked, CausalJoinInputState.Complete, rank: 1)],
+            new CandidateExecutionLimits(Id("candidate-limit-contract"), 1, 0));
+        AssertRejected(RecountAndIdentify(limited with
+        {
+            Decisions = [limited.Decisions.Single() with
+            {
+                Lane = CandidateLane.MandatoryEvidence,
+                AdmissionIndependentOfScore = true,
+                OptionalRank = null,
+            }],
+        }));
+
+        static void AssertRejected(CandidateAnalysisContract value) =>
+            Assert.ThrowsExactly<InvalidOperationException>(() => CandidateAnalysisJsonCodec.Serialize(value));
     }
 
     [TestMethod]
@@ -165,6 +406,171 @@ public sealed class Slice5ContractTests
                 new("nexus", BoundaryUseState.NotUsed, "local-only"),
                 new("loot", BoundaryUseState.NotUsed, "not configured"),
             ]);
+    }
+
+    private static CandidateAnalysisContract CreateNonEmptyCandidateAnalysis()
+    {
+        string declarationJson = "{}";
+        Sha256Fingerprint declarationFingerprint = CandidateAnalysisIdentity.StructuralHash([declarationJson]);
+        string[] executionDescriptors = ["execution-binding"];
+        string[] policyDescriptors = ["policy-binding"];
+        string[] thresholdDescriptors = ["threshold-binding"];
+        string[] limitDescriptors = ["limit-binding"];
+        Sha256Fingerprint executionFingerprint = CandidateAnalysisIdentity.StructuralHash(executionDescriptors);
+        Sha256Fingerprint policyFingerprint = CandidateAnalysisIdentity.StructuralHash(policyDescriptors);
+        Sha256Fingerprint thresholdFingerprint = CandidateAnalysisIdentity.StructuralHash(thresholdDescriptors);
+        Sha256Fingerprint limitFingerprint = CandidateAnalysisIdentity.StructuralHash(limitDescriptors);
+        Sha256Fingerprint analyzerSetFingerprint = CandidateAnalysisIdentity.StructuralHash(
+            [$"analyzer-contract:{declarationFingerprint.Value}"]);
+        OpaqueId analysisRoot = CandidateAnalysisIdentity.StableId(
+            "candidate-analysis-root", "run-contract", "population-contract", executionFingerprint.Value,
+            policyFingerprint.Value, thresholdFingerprint.Value, limitFingerprint.Value, analyzerSetFingerprint.Value);
+        OpaqueId member = Id("member-contract");
+        OpaqueId decisionId = Id("decision-contract");
+        OpaqueId candidateId = Id("candidate-contract");
+        OpaqueId hypothesisId = Id("hypothesis-contract");
+        OpaqueId dependency = Id("dependency-contract");
+        OpaqueId evidence = Id("evidence-contract");
+        OpaqueId closure = CandidateAnalysisIdentity.StableId(
+            "candidate-closure", member.Value, dependency.Value);
+        CandidateDecisionContract decision = new(
+            decisionId, member, Id("source-fact-contract"), CandidateLane.MandatoryEvidence,
+            CandidateDecisionDisposition.CandidateAdmitted,
+            [new(Id("source-contract"), "source"), new(Id("target-contract"), "target")],
+            "typed-causal-join", [Id("source-contract"), evidence, Id("target-contract")], closure,
+            "A retained causal input deserves downstream analysis.", [evidence], true, null)
+        {
+            AnalyzerId = Id("analyzer-contract"),
+            PolicyId = Id("policy-contract"),
+            ThresholdId = Id("threshold-contract"),
+            LimitId = Id("limit-contract"),
+            DependencyIds = [dependency],
+        };
+        CandidateAnalysisEntryContract candidate = new(
+            candidateId, decisionId, Slice5ResultState.Present,
+            "A retained causal input deserves downstream analysis.", [evidence], [], [],
+            AnalysisConfidence.Plausible, Id("threshold-contract"))
+        {
+            HypothesisId = hypothesisId,
+        };
+        CandidateHypothesisContract hypothesis = new(
+            hypothesisId, candidateId, Slice5ResultState.Present,
+            "A retained causal input deserves downstream analysis.",
+            "The retained relationship may alter downstream analysis of the exact participants.",
+            [evidence], [], [], AnalysisConfidence.Plausible, Id("threshold-contract"));
+        CandidateAnalysisContract value = new(
+            ContractConstants.CandidateAnalysisSchemaId, Version(), Id("pending"), Id("run-contract"),
+            Id("analyzer-contract"), Id("population-contract"), 1,
+            [decision], [candidate], [], [], [])
+        {
+            PolicyId = Id("policy-contract"),
+            ThresholdId = Id("threshold-contract"),
+            LimitId = Id("limit-contract"),
+            ExecutionInputId = Id("execution-input-contract"),
+            AnalysisRootId = analysisRoot,
+            ExecutionInputDescriptors = executionDescriptors,
+            PolicyDescriptors = policyDescriptors,
+            ThresholdDescriptors = thresholdDescriptors,
+            LimitDescriptors = limitDescriptors,
+            ExecutionInputFingerprint = executionFingerprint,
+            PolicyFingerprint = policyFingerprint,
+            ThresholdFingerprint = thresholdFingerprint,
+            LimitFingerprint = limitFingerprint,
+            AnalyzerBindings = [new(Id("analyzer-contract"), Version(), Version(), declarationFingerprint, declarationJson)],
+            AnalyzerSetFingerprint = analyzerSetFingerprint,
+            Hypotheses = [hypothesis],
+            DependencyEdges =
+            [
+                Edge("candidate-analysis-root", analysisRoot, "execution-input-binding",
+                    CandidateAnalysisIdentity.StableId("candidate-execution-input-binding", "execution-input-contract", executionFingerprint.Value), "uses"),
+                Edge("candidate-analysis-root", analysisRoot, "policy-binding",
+                    CandidateAnalysisIdentity.StableId("candidate-policy-binding", "policy-contract", policyFingerprint.Value), "uses"),
+                Edge("candidate-analysis-root", analysisRoot, "threshold-binding",
+                    CandidateAnalysisIdentity.StableId("candidate-threshold-binding", "threshold-contract", thresholdFingerprint.Value), "uses"),
+                Edge("candidate-analysis-root", analysisRoot, "limit-binding",
+                    CandidateAnalysisIdentity.StableId("candidate-limit-binding", "limit-contract", limitFingerprint.Value), "uses"),
+                Edge("candidate-analysis-root", analysisRoot, "analyzer-declaration-binding",
+                    CandidateAnalysisIdentity.StableId("candidate-analyzer-binding", "analyzer-contract", Version().ToString(), Version().ToString(), declarationFingerprint.Value), "uses"),
+                Edge("candidate-decision", decisionId, "source-fact", Id("source-fact-contract"), "derived-from"),
+                Edge("candidate-decision", decisionId, "dependency-closure", closure, "depends-on"),
+                Edge("dependency-closure", closure, "dependency", dependency, "depends-on"),
+                Edge("candidate-decision", decisionId, "evidence", evidence, "derived-from"),
+                Edge("candidate", candidateId, "candidate-decision", decisionId, "derived-from"),
+                Edge("candidate", candidateId, "evidence", evidence, "supports"),
+                Edge("hypothesis", hypothesisId, "candidate", candidateId, "derived-from"),
+                Edge("hypothesis", hypothesisId, "evidence", evidence, "supports"),
+            ],
+        };
+        value = value with { Counts = CandidateAnalysisCounts.Compute(value) };
+        return Reidentify(value);
+    }
+
+    private static CandidateAnalysisContract Reidentify(CandidateAnalysisContract value) =>
+        value with { PayloadId = CandidateAnalysisIdentity.ComputePayloadId(value) };
+
+    private static CandidateAnalysisContract RecountAndIdentify(CandidateAnalysisContract value)
+    {
+        value = value with { Counts = CandidateAnalysisCounts.Compute(value) };
+        return Reidentify(value);
+    }
+
+    private static CandidateDependencyEdgeContract Edge(
+        string fromKind,
+        OpaqueId fromId,
+        string toKind,
+        OpaqueId toId,
+        string edgeKind) => new(
+            CandidateAnalysisIdentity.StableId(
+                "candidate-edge", fromKind, fromId.Value, toKind, toId.Value, edgeKind),
+            fromKind, fromId, toKind, toId, edgeKind);
+
+    private static CandidateAnalysisContract ExecuteCandidateContract(
+        IReadOnlyList<CausalJoinPopulationMember> members,
+        CandidateExecutionLimits? limits = null)
+    {
+        OpaqueId analyzerId = Id("analyzer-contract-pipeline");
+        ContractCandidatePopulationSource source = new(analyzerId, members);
+        return CandidatePipeline.Execute(new CandidatePipelineRequest(
+            Id("run-contract-pipeline"), Id("population-contract-pipeline"),
+            Id("policy-contract-pipeline"), Id("threshold-contract-pipeline"),
+            limits ?? CandidateExecutionLimits.Default, new CandidatePopulationContext(null), [source])).Analysis;
+    }
+
+    private static CausalJoinPopulationMember CandidateMember(
+        string id,
+        CandidateLane lane,
+        CausalJoinInputState state,
+        IReadOnlyList<string>? missing = null,
+        long? rank = null,
+        bool emitGap = false) => new(
+        Id("member-" + id), Id("analyzer-contract-pipeline"), lane,
+        [new(Id("source-" + id), "source"), new(Id("target-" + id), "target")],
+        "typed-causal-join", [Id("source-" + id), Id("evidence-" + id), Id("target-" + id)],
+        [Id("dependency-" + id)], [Id("evidence-" + id)], [], missing ?? [], state,
+        "A bounded causal relationship is retained.",
+        "The exact relationship may change downstream analysis of its retained participants.",
+        rank, EmitGap: emitGap)
+        {
+            SourceFactId = Id("fact-" + id),
+        };
+
+    private sealed class ContractCandidatePopulationSource(
+        OpaqueId analyzerId,
+        IReadOnlyList<CausalJoinPopulationMember> members) : ICandidatePopulationSource
+    {
+        public OpaqueId AnalyzerId => analyzerId;
+
+        public AnalyzerDeclarationContract Declaration { get; } = CandidateAnalyzerDeclarations.Create(
+            analyzerId, Math.Max(1, members.Count), 1_000_000,
+            supportedShapes: members.Select(item => item.JoinKind).Distinct(StringComparer.Ordinal).ToArray());
+
+        public IReadOnlyList<CausalJoinPopulationMember> DeclarePopulation(
+            CandidatePopulationContext context,
+            CancellationToken cancellationToken = default) => members;
+
+        public IReadOnlyList<CausalJoinPopulationMember> ConstructPopulation(
+            CandidatePopulationContext context,
+            CancellationToken cancellationToken = default) => members;
     }
 
     private static ArtifactReferenceContract Reference(string id) =>

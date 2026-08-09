@@ -52,6 +52,7 @@ enum CandidateLane {
   CANDIDATE_LANE_OPTIONAL_RANKED = 3;
   CANDIDATE_LANE_UNKNOWN = 4;
   CANDIDATE_LANE_UNSUPPORTED = 5;
+  reserved 6;
 }
 
 enum CandidateDecisionDisposition {
@@ -64,6 +65,9 @@ enum CandidateDecisionDisposition {
   CANDIDATE_DECISION_DISPOSITION_LIMITED = 6;
   CANDIDATE_DECISION_DISPOSITION_ABSTAINED = 7;
   CANDIDATE_DECISION_DISPOSITION_UNKNOWN = 8;
+  CANDIDATE_DECISION_DISPOSITION_DEFERRED = 9;
+  CANDIDATE_DECISION_DISPOSITION_UNPROCESSED = 10;
+  CANDIDATE_DECISION_DISPOSITION_FAILED = 11;
 }
 
 enum AnalysisConfidence {
@@ -139,6 +143,7 @@ message CandidateDecisionSummary {
   CandidateDecisionDisposition disposition = 4;
   bool admission_independent_of_score = 5;
   string inert_reason = 6;
+  AnalysisArtifactId source_fact_id = 7;
 }
 
 message FindingCaseSummary {

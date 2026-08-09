@@ -1,0 +1,126 @@
+{
+  "schema_id": "infinium.analysis.candidate-delivered-expansion/v1",
+  "schema_version": "1.0.0",
+  "expansion_id": "payload.expansion.002",
+  "originating_run_id": "run.candidate.002",
+  "source_snapshot_id": "snapshot.candidate.002",
+  "analysis_context_id": "context.candidate.002",
+  "configuration_id": "configuration.candidate.002",
+  "subject_count": 3200,
+  "link_series": [
+    {
+      "every": 2,
+      "field": "linked_reference",
+      "component": "target",
+      "patterns": [
+        {
+          "prior_state": "resolved",
+          "winning_state": "resolved",
+          "prior_target_offset": 0,
+          "winning_target_offset": 0
+        },
+        {
+          "prior_state": "resolved",
+          "winning_state": "resolved",
+          "prior_target_offset": 0,
+          "winning_target_offset": 1
+        },
+        {
+          "prior_state": "absent",
+          "winning_state": "resolved",
+          "winning_target_offset": 2
+        },
+        {
+          "prior_state": "unresolved",
+          "winning_state": "resolved",
+          "winning_target_offset": 3
+        },
+        {
+          "prior_state": "null",
+          "winning_state": "null"
+        }
+      ]
+    }
+  ],
+  "face_gen_series": [
+    {
+      "every": 4,
+      "patterns": [
+        {
+          "applicability": "applicable",
+          "mesh_availability": "present",
+          "mesh_provider_present": true,
+          "tint_availability": "absent",
+          "tint_provider_present": false,
+          "locality": 80,
+          "specificity": 60
+        },
+        {
+          "applicability": "not-applicable",
+          "mesh_availability": "absent",
+          "mesh_provider_present": false,
+          "tint_availability": "absent",
+          "tint_provider_present": false,
+          "locality": 10,
+          "specificity": 10
+        },
+        {
+          "applicability": "unknown",
+          "mesh_availability": "unknown",
+          "mesh_provider_present": false,
+          "tint_availability": "unknown",
+          "tint_provider_present": false,
+          "locality": 20,
+          "specificity": 70
+        },
+        {
+          "applicability": "applicable",
+          "mesh_availability": "unknown",
+          "mesh_provider_present": false,
+          "tint_availability": "present",
+          "tint_provider_present": true,
+          "locality": 50,
+          "specificity": 90
+        }
+      ]
+    }
+  ],
+  "documentation_series": [
+    {
+      "every": 8,
+      "patterns": [
+        {
+          "applicability": "applicable",
+          "supplying_snapshot_matches": true,
+          "analysis_context_matches": true,
+          "has_contradicting_evidence": false
+        },
+        {
+          "applicability": "not-applicable",
+          "supplying_snapshot_matches": true,
+          "analysis_context_matches": true,
+          "has_contradicting_evidence": false
+        },
+        {
+          "applicability": "unknown",
+          "supplying_snapshot_matches": true,
+          "analysis_context_matches": true,
+          "has_contradicting_evidence": false
+        },
+        {
+          "applicability": "applicable",
+          "supplying_snapshot_matches": false,
+          "analysis_context_matches": true,
+          "has_contradicting_evidence": false
+        }
+      ]
+    }
+  ],
+  "coverage_gap_series": [
+    {
+      "every": 8,
+      "missing_capability": "capability.expansion.001",
+      "reason": "A delivered expansion capability is unavailable for this factual member."
+    }
+  ]
+}

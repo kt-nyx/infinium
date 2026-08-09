@@ -1,0 +1,312 @@
+{
+  "schema_id": "infinium.analysis.candidate-delivered-input/v1",
+  "schema_version": "1.0.0",
+  "payload_id": "payload.candidate.001",
+  "originating_run_id": "run.candidate.001",
+  "source_snapshot_id": "snapshot.candidate.001",
+  "analysis_context_id": "context.candidate.001",
+  "configuration_id": "configuration.candidate.001",
+  "link_facts": [
+    {
+      "fact_id": "fact.l.001",
+      "record_participant_id": "participant.r.001",
+      "prior_contribution_id": "contribution.001",
+      "winning_contribution_id": "contribution.002",
+      "prior_source_identity": "source-amber",
+      "winning_source_identity": "source-birch",
+      "field": "linked_reference",
+      "ordinal": 0,
+      "prior_state": "resolved",
+      "prior_target_participant_id": "participant.t.001",
+      "winning_state": "resolved",
+      "winning_target_participant_id": "participant.t.002",
+      "dependency_ids": [
+        "dependency.001"
+      ],
+      "evidence_ids": [
+        "evidence.001"
+      ]
+    },
+    {
+      "fact_id": "fact.l.002",
+      "record_participant_id": "participant.r.002",
+      "prior_contribution_id": "contribution.003",
+      "winning_contribution_id": "contribution.004",
+      "prior_source_identity": "source-cinder",
+      "winning_source_identity": "source-delta",
+      "field": "linked_reference",
+      "ordinal": 0,
+      "prior_state": "resolved",
+      "prior_target_participant_id": "participant.t.003",
+      "winning_state": "resolved",
+      "winning_target_participant_id": "participant.t.003",
+      "dependency_ids": [
+        "dependency.002"
+      ],
+      "evidence_ids": [
+        "evidence.002"
+      ]
+    },
+    {
+      "fact_id": "fact.l.003",
+      "record_participant_id": "participant.r.003",
+      "prior_contribution_id": "contribution.005",
+      "winning_contribution_id": "contribution.006",
+      "prior_source_identity": "source-ember",
+      "winning_source_identity": "source-fern",
+      "field": "enable_parent",
+      "component": "parent",
+      "ordinal": 0,
+      "prior_state": "unresolved",
+      "winning_state": "resolved",
+      "winning_target_participant_id": "participant.t.004",
+      "dependency_ids": [
+        "dependency.003"
+      ],
+      "evidence_ids": [
+        "evidence.003"
+      ]
+    },
+    {
+      "fact_id": "fact.l.004",
+      "record_participant_id": "participant.r.004",
+      "prior_contribution_id": "contribution.007",
+      "winning_contribution_id": "contribution.008",
+      "prior_source_identity": "source-grove",
+      "winning_source_identity": "source-harbor",
+      "field": "linked_reference",
+      "ordinal": 1,
+      "prior_state": "absent",
+      "winning_state": "resolved",
+      "winning_target_participant_id": "participant.t.005",
+      "dependency_ids": [
+        "dependency.004"
+      ],
+      "evidence_ids": [
+        "evidence.004"
+      ]
+    },
+    {
+      "fact_id": "fact.l.005",
+      "record_participant_id": "participant.r.005",
+      "prior_contribution_id": "contribution.009",
+      "winning_contribution_id": "contribution.010",
+      "prior_source_identity": "source-iris",
+      "winning_source_identity": "source-juniper",
+      "field": "enable_parent",
+      "ordinal": 0,
+      "prior_state": "null",
+      "winning_state": "null",
+      "dependency_ids": [
+        "dependency.005"
+      ],
+      "evidence_ids": [
+        "evidence.005"
+      ]
+    }
+  ],
+  "face_gen_facts": [
+    {
+      "fact_id": "fact.f.001",
+      "npc_participant_id": "participant.n.001",
+      "applicability": "applicable",
+      "mesh_asset_id": "asset.m.001",
+      "mesh_availability": "present",
+      "mesh_provider_participant_id": "provider.m.001",
+      "tint_asset_id": "asset.t.001",
+      "tint_availability": "absent",
+      "locality": 80,
+      "specificity": 60,
+      "dependency_ids": [
+        "dependency.006"
+      ],
+      "evidence_ids": [
+        "evidence.006"
+      ]
+    },
+    {
+      "fact_id": "fact.f.002",
+      "npc_participant_id": "participant.n.002",
+      "applicability": "applicable",
+      "mesh_asset_id": "asset.m.002",
+      "mesh_availability": "absent",
+      "tint_asset_id": "asset.t.002",
+      "tint_availability": "present",
+      "tint_provider_participant_id": "provider.t.002",
+      "locality": 80,
+      "specificity": 40,
+      "dependency_ids": [
+        "dependency.007"
+      ],
+      "evidence_ids": [
+        "evidence.007"
+      ]
+    },
+    {
+      "fact_id": "fact.f.003",
+      "npc_participant_id": "participant.n.003",
+      "applicability": "not-applicable",
+      "mesh_asset_id": "asset.m.003",
+      "mesh_availability": "absent",
+      "tint_asset_id": "asset.t.003",
+      "tint_availability": "absent",
+      "locality": 10,
+      "specificity": 10,
+      "dependency_ids": [
+        "dependency.008"
+      ],
+      "evidence_ids": [
+        "evidence.008"
+      ]
+    },
+    {
+      "fact_id": "fact.f.004",
+      "npc_participant_id": "participant.n.004",
+      "applicability": "unknown",
+      "mesh_asset_id": "asset.m.004",
+      "mesh_availability": "unknown",
+      "tint_asset_id": "asset.t.004",
+      "tint_availability": "unknown",
+      "locality": 20,
+      "specificity": 70,
+      "dependency_ids": [
+        "dependency.009"
+      ],
+      "evidence_ids": [
+        "evidence.009"
+      ]
+    },
+    {
+      "fact_id": "fact.f.005",
+      "npc_participant_id": "participant.n.005",
+      "applicability": "applicable",
+      "mesh_asset_id": "asset.m.005",
+      "mesh_availability": "unknown",
+      "tint_asset_id": "asset.t.005",
+      "tint_availability": "present",
+      "tint_provider_participant_id": "provider.t.005",
+      "locality": 50,
+      "specificity": 90,
+      "dependency_ids": [
+        "dependency.010"
+      ],
+      "evidence_ids": [
+        "evidence.010"
+      ]
+    }
+  ],
+  "coverage_gap_facts": [
+    {
+      "fact_id": "fact.g.001",
+      "population_id": "population.semantic.001",
+      "denominator": 3,
+      "missing_capability": "capability.semantic.001",
+      "reason": "A delivered capability is unavailable for three factual members.",
+      "dependency_ids": [
+        "dependency.011"
+      ],
+      "evidence_ids": [
+        "evidence.011"
+      ]
+    }
+  ],
+  "documentation_facts": [
+    {
+      "fact_id": "fact.d.001",
+      "application_id": "application.001",
+      "claim_id": "claim.001",
+      "passage_id": "passage.001",
+      "revision_id": "revision.001",
+      "subject_id": "subject.001",
+      "consuming_run_id": "run.candidate.001",
+      "supplying_snapshot_id": "snapshot.candidate.001",
+      "analysis_context_id": "context.candidate.001",
+      "applicability": "applicable",
+      "dependency_ids": [
+        "dependency.012"
+      ],
+      "supporting_evidence_ids": [
+        "evidence.012"
+      ],
+      "contradicting_evidence_ids": []
+    },
+    {
+      "fact_id": "fact.d.002",
+      "application_id": "application.002",
+      "claim_id": "claim.002",
+      "passage_id": "passage.002",
+      "revision_id": "revision.002",
+      "subject_id": "subject.002",
+      "consuming_run_id": "run.candidate.001",
+      "supplying_snapshot_id": "snapshot.candidate.001",
+      "analysis_context_id": "context.candidate.001",
+      "applicability": "not-applicable",
+      "dependency_ids": [
+        "dependency.013"
+      ],
+      "supporting_evidence_ids": [
+        "evidence.013"
+      ],
+      "contradicting_evidence_ids": []
+    },
+    {
+      "fact_id": "fact.d.003",
+      "application_id": "application.003",
+      "claim_id": "claim.003",
+      "passage_id": "passage.003",
+      "revision_id": "revision.003",
+      "subject_id": "subject.003",
+      "consuming_run_id": "run.candidate.001",
+      "supplying_snapshot_id": "snapshot.candidate.001",
+      "analysis_context_id": "context.candidate.001",
+      "applicability": "unknown",
+      "dependency_ids": [
+        "dependency.014"
+      ],
+      "supporting_evidence_ids": [
+        "evidence.014"
+      ],
+      "contradicting_evidence_ids": []
+    },
+    {
+      "fact_id": "fact.d.004",
+      "application_id": "application.004",
+      "claim_id": "claim.004",
+      "passage_id": "passage.004",
+      "revision_id": "revision.004",
+      "subject_id": "subject.004",
+      "consuming_run_id": "run.candidate.001",
+      "supplying_snapshot_id": "snapshot.candidate.001",
+      "analysis_context_id": "context.candidate.001",
+      "applicability": "contradicted",
+      "dependency_ids": [
+        "dependency.015"
+      ],
+      "supporting_evidence_ids": [
+        "evidence.015"
+      ],
+      "contradicting_evidence_ids": [
+        "evidence.016"
+      ]
+    },
+    {
+      "fact_id": "fact.d.005",
+      "application_id": "application.005",
+      "claim_id": "claim.005",
+      "passage_id": "passage.005",
+      "revision_id": "revision.005",
+      "subject_id": "subject.005",
+      "consuming_run_id": "run.candidate.001",
+      "supplying_snapshot_id": "snapshot.candidate.001",
+      "analysis_context_id": "context.candidate.099",
+      "applicability": "applicable",
+      "dependency_ids": [
+        "dependency.016"
+      ],
+      "supporting_evidence_ids": [
+        "evidence.017"
+      ],
+      "contradicting_evidence_ids": []
+    }
+  ]
+}

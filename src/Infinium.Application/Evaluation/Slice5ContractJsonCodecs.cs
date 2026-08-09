@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Infinium.Domain.Contracts;
 
 namespace Infinium.Application.Evaluation;
@@ -37,6 +36,24 @@ public static class CandidateAnalysisJsonCodec
         Slice5ContractJsonCodec.Deserialize<CandidateAnalysisContract>(bytes, "candidate-analysis.v1.schema.json", static item => Slice5ContractInvariants.Validate(item));
 }
 
+public static class CandidateDeliveredInputJsonCodec
+{
+    public static byte[] Serialize(CandidateDeliveredInputContract value) =>
+        Slice5ContractJsonCodec.Serialize(value, "candidate-delivered-input.v1.schema.json", static item => CandidateDeliveredContractInvariants.Validate(item));
+
+    public static CandidateDeliveredInputContract Deserialize(ReadOnlySpan<byte> bytes) =>
+        Slice5ContractJsonCodec.Deserialize<CandidateDeliveredInputContract>(bytes, "candidate-delivered-input.v1.schema.json", static item => CandidateDeliveredContractInvariants.Validate(item));
+}
+
+public static class CandidateDeliveredExpansionJsonCodec
+{
+    public static byte[] Serialize(CandidateDeliveredExpansionContract value) =>
+        Slice5ContractJsonCodec.Serialize(value, "candidate-delivered-expansion.v1.schema.json", static item => CandidateDeliveredContractInvariants.Validate(item));
+
+    public static CandidateDeliveredExpansionContract Deserialize(ReadOnlySpan<byte> bytes) =>
+        Slice5ContractJsonCodec.Deserialize<CandidateDeliveredExpansionContract>(bytes, "candidate-delivered-expansion.v1.schema.json", static item => CandidateDeliveredContractInvariants.Validate(item));
+}
+
 public static class FindingCaseJsonCodec
 {
     public static byte[] Serialize(FindingCaseContract value) =>
@@ -67,7 +84,9 @@ public static class AnalysisExecutionInputJsonCodec
 internal static class Slice5ContractJsonCodec
 {
     private const int MaximumDocumentBytes = 64 * 1024 * 1024;
-    private static readonly JsonSerializerOptions SerializerOptions = CreateOptions();
+    private static readonly JsonSerializerOptions SerializerOptions = ContractJsonSerializer.Options;
+
+    internal static JsonSerializerOptions JsonOptions => SerializerOptions;
 
     internal static byte[] Serialize<T>(T value, string schemaFile, Action<T> validate)
     {
@@ -99,24 +118,6 @@ internal static class Slice5ContractJsonCodec
         return value;
     }
 
-    private static JsonSerializerOptions CreateOptions()
-    {
-        JsonSerializerOptions options = new()
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-            PropertyNameCaseInsensitive = false,
-            UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            WriteIndented = true,
-        };
-        options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.KebabCaseLower));
-        options.Converters.Add(new OpaqueIdJsonConverter());
-        options.Converters.Add(new ContractVersionJsonConverter());
-        options.Converters.Add(new Sha256FingerprintJsonConverter());
-        options.Converters.Add(new UtcTimestampJsonConverter());
-        return options;
-    }
-
     private static JsonDocument ParseStrict(ReadOnlySpan<byte> bytes, string schemaFile)
     {
         try
@@ -146,39 +147,4 @@ internal static class Slice5ContractJsonCodec
         }
     }
 
-    private sealed class OpaqueIdJsonConverter : JsonConverter<OpaqueId>
-    {
-        public override OpaqueId Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
-            new(reader.GetString() ?? throw new JsonException("Opaque ID must be a string."));
-
-        public override void Write(Utf8JsonWriter writer, OpaqueId value, JsonSerializerOptions options) =>
-            writer.WriteStringValue(value.Value);
-    }
-
-    private sealed class ContractVersionJsonConverter : JsonConverter<ContractVersion>
-    {
-        public override ContractVersion Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
-            ContractVersion.Parse(reader.GetString() ?? throw new JsonException("Contract version must be a string."));
-
-        public override void Write(Utf8JsonWriter writer, ContractVersion value, JsonSerializerOptions options) =>
-            writer.WriteStringValue(value.ToString());
-    }
-
-    private sealed class Sha256FingerprintJsonConverter : JsonConverter<Sha256Fingerprint>
-    {
-        public override Sha256Fingerprint Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
-            new(reader.GetString() ?? throw new JsonException("SHA-256 must be a string."));
-
-        public override void Write(Utf8JsonWriter writer, Sha256Fingerprint value, JsonSerializerOptions options) =>
-            writer.WriteStringValue(value.Value);
-    }
-
-    private sealed class UtcTimestampJsonConverter : JsonConverter<UtcTimestamp>
-    {
-        public override UtcTimestamp Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
-            UtcTimestamp.Parse(reader.GetString() ?? throw new JsonException("UTC timestamp must be a string."));
-
-        public override void Write(Utf8JsonWriter writer, UtcTimestamp value, JsonSerializerOptions options) =>
-            writer.WriteStringValue(value.ToString());
-    }
 }

@@ -1,0 +1,188 @@
+{
+  "fixture_id": "CAND-WP3-STRESS-DEV-v1",
+  "fixture_version": "1.0.0",
+  "oracle_version": "1.0.0",
+  "independent_authors_and_reviewers": [
+    "codex.product-blind.wp3.fixture-author.20260809"
+  ],
+  "ground_truth_methods": [
+    {
+      "method_id": "method.wp3.independent.reference",
+      "method": "Product-blind declarative classification and independent expansion enumeration from accepted public authority. No product implementation, tests, output, build artifact, private fixture, withdrawn fixture, history, or identity algorithm was inspected.",
+      "evidence_references": [
+        {
+          "artifact_id": "inputs/candidate-delivered-expansion.json",
+          "artifact_version": "1.0.0",
+          "fingerprint": "ec4e7ba13374735b0a539f4dbc680a5fe83ed69fe96f53289b2a3921eeff79e3",
+          "availability": "retained",
+          "byte_length": 3521
+        },
+        {
+          "artifact_id": "oracle/streaming-expansion-receipt.json",
+          "artifact_version": "1.0.0",
+          "fingerprint": "7bb809aea7f975ee0d7618e904ffe4b3664405ce4add7f13b2bb968113b08cf4",
+          "availability": "retained",
+          "byte_length": 7072
+        }
+      ],
+      "independent_of_system_under_test": true
+    }
+  ],
+  "expected_observations": [],
+  "expected_deterministic_results": [
+    {
+      "expected_id": "oracle.deterministic.stream-receipt",
+      "subject_id": "wp3.expansion-stream",
+      "expected_type": "deterministic-result",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.wp3.independent.reference"
+      ],
+      "canonical_value_fingerprint": "6a627faec1b3801cab8410f24d2c4d3ecc3f26384bb4f8ad5b7b4add33d3944f"
+    }
+  ],
+  "expected_external_claims": [],
+  "expected_application_links": [],
+  "expected_discovery_leads": [],
+  "expected_model_proposals": [],
+  "expected_proposal_admissions": [],
+  "expected_candidates": [],
+  "expected_hypotheses": [],
+  "expected_findings": [],
+  "expected_recommendations": [],
+  "expected_supported_cases": [],
+  "expected_lead_only_cases": [],
+  "expected_abstentions": [],
+  "expected_invalid_inputs": [],
+  "expected_failures": [],
+  "expected_documentation_revisions": [],
+  "expected_passages": [],
+  "expected_candidate_decisions": [],
+  "expected_reconciliation_assessments": [],
+  "expected_lineage_events": [],
+  "expected_coverage_and_gaps": [
+    {
+      "expected_id": "oracle.coverage.population-summary",
+      "subject_id": "wp3.candidate-population",
+      "expected_type": "coverage",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.wp3.independent.reference"
+      ],
+      "canonical_value_fingerprint": "6a627faec1b3801cab8410f24d2c4d3ecc3f26384bb4f8ad5b7b4add33d3944f"
+    }
+  ],
+  "expected_collection_states": {
+    "observations": {
+      "state": "empty",
+      "reason": "WP3 fixture does not author observations."
+    },
+    "deterministic_results": {
+      "state": "populated",
+      "reason": "Independent stream receipt is retained."
+    },
+    "external_claims": {
+      "state": "empty",
+      "reason": "WP3 fixture does not author external claims."
+    },
+    "application_links": {
+      "state": "empty",
+      "reason": "WP3 fixture consumes delivered facts only."
+    },
+    "discovery_leads": {
+      "state": "empty",
+      "reason": "No discovery system is exercised."
+    },
+    "model_proposals": {
+      "state": "not-applicable",
+      "reason": "No model is used."
+    },
+    "proposal_admissions": {
+      "state": "not-applicable",
+      "reason": "No model proposal exists."
+    },
+    "candidates": {
+      "state": "not-applicable",
+      "reason": "Stress receipt does not materialize a candidate aggregate."
+    },
+    "hypotheses": {
+      "state": "not-applicable",
+      "reason": "Stress receipt does not materialize hypotheses."
+    },
+    "findings": {
+      "state": "not-applicable",
+      "reason": "Findings are outside WP3."
+    },
+    "recommendations": {
+      "state": "not-applicable",
+      "reason": "Recommendations are outside WP3."
+    },
+    "supported_cases": {
+      "state": "not-applicable",
+      "reason": "Supported cases are outside WP3."
+    },
+    "lead_only_cases": {
+      "state": "not-applicable",
+      "reason": "Cases are outside WP3."
+    },
+    "abstentions": {
+      "state": "not-applicable",
+      "reason": "Stress receipt retains abstention counts without materialization."
+    },
+    "invalid_inputs": {
+      "state": "empty",
+      "reason": "All authored inputs are structurally valid."
+    },
+    "coverage_gaps": {
+      "state": "empty",
+      "reason": "WP3 retains unsupported ledger memberships rather than authoring WP4 coverage-gap objects."
+    },
+    "failures": {
+      "state": "empty",
+      "reason": "No execution failure is expected."
+    }
+  },
+  "expected_taxonomy_assignments": [],
+  "expected_replayability": "complete-clean",
+  "expected_replay_manifest": {
+    "artifact_id": "replay-dependencies.json",
+    "artifact_version": "1.0.0",
+    "fingerprint": "de5265aea6860eb087e82f8b0309b19b5e0770bdef604881c0ada0ae3a9d9148",
+    "availability": "retained",
+    "byte_length": 2396
+  },
+  "expected_not_used_boundaries": [
+    "provider",
+    "hosted-search",
+    "nexus",
+    "loot"
+  ],
+  "forbidden_claims": [
+    {
+      "claim_id": "forbidden.finding",
+      "claim_type": "finding",
+      "reason": "WP3 does not author findings."
+    },
+    {
+      "claim_id": "forbidden.case",
+      "claim_type": "case",
+      "reason": "WP3 does not author cases."
+    },
+    {
+      "claim_id": "forbidden.readiness",
+      "claim_type": "readiness",
+      "reason": "Candidate evidence does not establish readiness or safety."
+    },
+    {
+      "claim_id": "forbidden.product-comparison",
+      "claim_type": "product-comparison",
+      "reason": "The freeze predates and is independent of product comparison."
+    }
+  ],
+  "known_limits": [
+    "Stress evidence proves independent expansion counts and the factual stream receipt only; it does not materialize or compare a candidate aggregate.",
+    "This is bounded M1 structural evidence, not an M3 performance claim."
+  ],
+  "pre_registered_at": "2026-08-09T06:20:47.5665585+00:00",
+  "change_history": []
+}

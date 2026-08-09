@@ -21,3 +21,23 @@ inventory and `retired-evaluation-assets.v1.json` for Git-backed retirements.
 Product capability boundaries are exactly `provider`, `hosted-search`, `nexus`,
 and `loot`. `evaluator-private` and `held-out` remain only as accepted older
 public-fixture provenance vocabulary; they are not product capabilities.
+
+The current WP3 public candidate evidence consists of three separately closed
+packages under `docs/evaluation/fixtures/m1-slice5-wp3-candidates-v1/`:
+
+- `CAND-WP3-SEMANTIC-DEV-v1/1.0.0` (`development`) contains the answer-free
+  direct delivered-input artifact and independently frozen semantic projection;
+- `CAND-WP3-SCALE-VAL-v1/1.0.0` (`validation`) contains the answer-free bounded
+  expansion and its independently enumerated population projection; and
+- `CAND-WP3-STRESS-DEV-v1/1.0.0` (`development`) uses the same expansion recipe
+  at the streaming-only stress boundary.
+
+Their accepted public-manifest SHA-256 values are respectively
+`94799a0d9fd5c90594d5da7074297fe257e44aad69b98487bdc7ea5619370afb`,
+`98e1f3bcb88e40c52abbbddc62ed9f3d613e90d09c4a15d51be081bc8a1bf2c8`,
+and `5b5507622d217223aa2a28a049d5c82b7e411238aaa6c10f415f27c594d1ebbf`.
+The scale validation package was compared only after the development semantic
+package had exposed the shared lane, hypothesis, and unsupported-abstention
+defects; it did not author or tune those corrections. These packages establish
+only bounded WP3 candidate construction and do not establish findings, cases,
+readiness, reliability, or any private verdict.

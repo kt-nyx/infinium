@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Contracts', 'Documentation')]
+    [ValidateSet('Contracts', 'Documentation', 'Candidates', 'CandidateScale')]
     [string] $Gate,
 
     [Parameter(Mandatory = $true)]
@@ -58,12 +58,36 @@ function Write-GateReport([string] $Name, [System.Collections.IDictionary] $Body
     Write-Host "$Name gate passed: $path"
 }
 
+function Invoke-FocusedTests([object[]] $Commands, [string] $FailurePrefix) {
+    $results = @()
+    foreach ($arguments in $Commands) {
+        $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+        $testOutput = @(& dotnet @arguments 2>&1)
+        $stopwatch.Stop()
+        $testOutput | ForEach-Object { Write-Host $_ }
+        if ($LASTEXITCODE -ne 0) {
+            throw "$FailurePrefix failed: dotnet $($arguments -join ' ')"
+        }
+        $testTranscript = $testOutput -join [Environment]::NewLine
+        if ($testTranscript -notmatch 'Total:\s+[1-9][0-9]*') {
+            throw "$FailurePrefix matched zero tests: dotnet $($arguments -join ' ')"
+        }
+        $results += [ordered]@{
+            command = "dotnet $($arguments -join ' ')"
+            elapsed_milliseconds = $stopwatch.ElapsedMilliseconds
+        }
+    }
+    return $results
+}
+
 function Invoke-ContractsGate {
     $schemaRoot = Join-Path $repoRoot 'contracts/json-schema'
     $requiredSchemas = [ordered]@{
         'documentation-evidence.v1.schema.json' = 'infinium.documentation.evidence/v1'
         'documentation-claim-import.v1.schema.json' = 'infinium.documentation.claim-import/v1'
         'candidate-analysis.v1.schema.json' = 'infinium.analysis.candidate/v1'
+        'candidate-delivered-input.v1.schema.json' = 'infinium.analysis.candidate-delivered-input/v1'
+        'candidate-delivered-expansion.v1.schema.json' = 'infinium.analysis.candidate-delivered-expansion/v1'
         'finding-case.v1.schema.json' = 'infinium.analysis.finding-case/v1'
         'analysis-replay.v1.schema.json' = 'infinium.analysis.replay/v1'
         'analysis-execution-input.v1.schema.json' = 'infinium.analysis.execution-input/v1'
@@ -224,12 +248,130 @@ function Invoke-DocumentationGate {
     })
 }
 
+function Invoke-CandidatesGate {
+    $fixtureRoot = Join-Path $repoRoot 'docs/evaluation/fixtures/m1-slice5-wp3-candidates-v1'
+    $semanticRoot = Join-Path $fixtureRoot 'CAND-WP3-SEMANTIC-DEV-v1'
+    $requiredPaths = @(
+        'contracts/json-schema/candidate-analysis.v1.schema.json',
+        'contracts/json-schema/candidate-delivered-input.v1.schema.json',
+        'contracts/json-schema/candidate-delivered-expansion.v1.schema.json',
+        'src/Infinium.Analysis/Candidates/CandidatePipeline.cs',
+        'src/Infinium.Application/Candidates/DeliveredIndexCandidatePopulationSource.cs',
+        'src/Infinium.Application/Candidates/CandidateDeliveredInputExpander.cs',
+        'src/Infinium.Application/Candidates/CandidateAnalysisPhase.cs',
+        'src/Infinium.Persistence/AuthoritativeStore.Candidates.cs',
+        'docs/evaluation/fixtures/m1-slice5-wp3-candidates-v1/CAND-WP3-SEMANTIC-DEV-v1/public-manifest.json',
+        'docs/evaluation/fixtures/m1-slice5-wp3-candidates-v1/CAND-WP3-SEMANTIC-DEV-v1/inputs/candidate-delivered-input.json',
+        'docs/evaluation/fixtures/m1-slice5-wp3-candidates-v1/CAND-WP3-SEMANTIC-DEV-v1/oracle/semantic-population-projection.json'
+    )
+    foreach ($relativePath in $requiredPaths) {
+        if (-not (Test-Path -LiteralPath (Join-Path $repoRoot $relativePath))) {
+            throw "Required WP3 candidate surface is missing: $relativePath"
+        }
+    }
+
+    $manifestHash = (Get-FileHash -LiteralPath (Join-Path $semanticRoot 'public-manifest.json') -Algorithm SHA256).Hash.ToLowerInvariant()
+    if ($manifestHash -cne '94799a0d9fd5c90594d5da7074297fe257e44aad69b98487bdc7ea5619370afb') {
+        throw "Frozen WP3 semantic manifest hash mismatch: $manifestHash"
+    }
+
+    $candidateSource = @(
+        Get-ChildItem -LiteralPath (Join-Path $repoRoot 'src/Infinium.Analysis/Candidates') -File -Filter '*.cs'
+        Get-ChildItem -LiteralPath (Join-Path $repoRoot 'src/Infinium.Application/Candidates') -File -Filter '*.cs'
+        Get-Item -LiteralPath (Join-Path $repoRoot 'src/Infinium.Persistence/AuthoritativeStore.Candidates.cs')
+    ) | ForEach-Object { [System.IO.File]::ReadAllText($_.FullName) }
+    $candidateSourceText = $candidateSource -join [Environment]::NewLine
+    foreach ($forbidden in @(
+        'HttpClient', 'OpenAIClient', 'NexusClient', 'Process.Start', 'PowerShell.Create',
+        'CAND-WP3-SEMANTIC-DEV-v1', 'CAND-WP3-SCALE-VAL-v1', 'CAND-WP3-STRESS-DEV-v1',
+        'expected_disposition', 'expected_candidates', 'semantic-population-projection')) {
+        if ($candidateSourceText.IndexOf($forbidden, [StringComparison]::OrdinalIgnoreCase) -ge 0) {
+            throw "WP3 product candidate graph reaches forbidden capability or fixture vocabulary: $forbidden"
+        }
+    }
+
+    $testCommands = @(
+        @('test', 'tests/Infinium.ContractTests/Infinium.ContractTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~CandidateDeliveredInputContractTests|FullyQualifiedName~Slice5Contract'),
+        @('test', 'tests/Infinium.UnitTests/Infinium.UnitTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~CandidateSelector|FullyQualifiedName~DeliveredCandidateSource|FullyQualifiedName~FindingThreshold'),
+        @('test', 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~CandidatePipeline|FullyQualifiedName~CandidateCheckpoint'),
+        @('test', 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~SemanticPackageMatchesTheFrozenIndependentProjectionExactly')
+    )
+    $testResults = Invoke-FocusedTests $testCommands 'WP3 candidate focused verification'
+    $driver = [System.Diagnostics.Process]::GetCurrentProcess()
+    $driver.Refresh()
+
+    Write-GateReport 'Candidates' ([ordered]@{
+        fixture_identity = 'CAND-WP3-SEMANTIC-DEV-v1'
+        fixture_version = '1.0.0'
+        fixture_partition = 'development'
+        public_manifest_sha256 = $manifestHash
+        factual_population = 16
+        admitted_count = 5
+        ambiguous_count = 5
+        resolved_negative_count = 4
+        unsupported_count = 2
+        candidate_count = 10
+        hypothesis_count = 10
+        abstention_count = 7
+        metamorph_classes = @('rename', 'reorder', 'relevant-evidence', 'rank-only', 'unrelated-insertion', 'true-dependency')
+        checkpoint_invalidation = 'run-execution-analyzer-policy-threshold-limit-frontier-and-member-fingerprints'
+        focused_tests = $testResults
+        verification_driver_peak_working_set_bytes = $driver.PeakWorkingSet64
+        provider_model_private_fixture = 'not-used'
+    })
+}
+
+function Invoke-CandidateScaleGate {
+    $fixtureRoot = Join-Path $repoRoot 'docs/evaluation/fixtures/m1-slice5-wp3-candidates-v1'
+    $scaleManifest = (Get-FileHash -LiteralPath (Join-Path $fixtureRoot 'CAND-WP3-SCALE-VAL-v1/public-manifest.json') -Algorithm SHA256).Hash.ToLowerInvariant()
+    $stressManifest = (Get-FileHash -LiteralPath (Join-Path $fixtureRoot 'CAND-WP3-STRESS-DEV-v1/public-manifest.json') -Algorithm SHA256).Hash.ToLowerInvariant()
+    if ($scaleManifest -cne '98e1f3bcb88e40c52abbbddc62ed9f3d613e90d09c4a15d51be081bc8a1bf2c8' -or
+        $stressManifest -cne '5b5507622d217223aa2a28a049d5c82b7e411238aaa6c10f415f27c594d1ebbf') {
+        throw 'Frozen WP3 scale/stress manifest hash mismatch.'
+    }
+    $testCommands = @(
+        @('test', 'tests/Infinium.ContractTests/Infinium.ContractTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~FrozenCandidatePackagesHaveExactClosedManifestsAndProductInputs'),
+        @('test', 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~ValidationScaleUsesTheRealSourceAndStaysWithinThePublicationBoundary|FullyQualifiedName~StressPackageStreamsTheSameRecipeWithoutMaterializingThePopulation')
+    )
+    $testResults = Invoke-FocusedTests $testCommands 'WP3 candidate scale verification'
+    $driver = [System.Diagnostics.Process]::GetCurrentProcess()
+    $driver.Refresh()
+    Write-GateReport 'CandidateScale' ([ordered]@{
+        fixture_identity = 'CAND-WP3-SCALE-VAL-v1'
+        fixture_version = '1.0.0'
+        fixture_partition = 'validation'
+        public_manifest_sha256 = $scaleManifest
+        stress_fixture_identity = 'CAND-WP3-STRESS-DEV-v1'
+        stress_public_manifest_sha256 = $stressManifest
+        profiles = @(
+            [ordered]@{
+                profile_id = 'validation-scale'; factual_rows = 3200
+                admitted = 940; ambiguous = 820; resolved_negative = 940; unsupported = 500
+                candidates = 1760; hypotheses = 1760; abstentions = 1320
+                semantic_stream_sha256 = 'b3e51f9a61042cf5038b0ac25e353929db86e96381606c3599cd63f7175cdb25'
+                independent_projection_bytes = 2047092
+            },
+            [ordered]@{
+                profile_id = 'streaming-stress'; factual_rows = 1000000
+                admitted = 293750; ambiguous = 256250; resolved_negative = 293750; unsupported = 156250
+                candidates = 550000; hypotheses = 550000; abstentions = 412500
+                semantic_stream_sha256 = '89bee1f740818d905e8dd2e7b8b549e94574c2514c18a8562714e21bcbad5df5'
+            }
+        )
+        focused_tests = $testResults
+        verification_driver_peak_working_set_bytes = $driver.PeakWorkingSet64
+        stress_execution = 'same-product-expansion-recipe-independent-count-and-streaming-semantic-hash'
+        scale_execution = 'full-delivered-index-source-selection-and-aggregate-serialization-under-64mib'
+    })
+}
+
 Push-Location $repoRoot
 try {
-    if ($Gate -ceq 'Contracts') {
-        Invoke-ContractsGate
-    } else {
-        Invoke-DocumentationGate
+    switch ($Gate) {
+        'Contracts' { Invoke-ContractsGate }
+        'Documentation' { Invoke-DocumentationGate }
+        'Candidates' { Invoke-CandidatesGate }
+        'CandidateScale' { Invoke-CandidateScaleGate }
     }
 } finally {
     Pop-Location

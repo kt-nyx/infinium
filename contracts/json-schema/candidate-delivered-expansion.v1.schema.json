@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/json-schema/candidate-delivered-expansion.v1.schema.json",
+  "title": "Infinium Slice 5 answer-free delivered candidate expansion v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "schema_version", "expansion_id", "originating_run_id", "source_snapshot_id", "analysis_context_id", "configuration_id", "subject_count", "link_series", "face_gen_series", "documentation_series", "coverage_gap_series"],
+  "properties": {
+    "schema_id": { "const": "infinium.analysis.candidate-delivered-expansion/v1" },
+    "schema_version": { "const": "1.0.0" },
+    "expansion_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "originating_run_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "source_snapshot_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "analysis_context_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "configuration_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "subject_count": { "type": "integer", "minimum": 1, "maximum": 1000000 },
+    "link_series": { "type": "array", "maxItems": 128, "items": { "$ref": "#/$defs/linkSeries" } },
+    "face_gen_series": { "type": "array", "maxItems": 128, "items": { "$ref": "#/$defs/faceGenSeries" } },
+    "documentation_series": { "type": "array", "maxItems": 128, "items": { "$ref": "#/$defs/documentationSeries" } },
+    "coverage_gap_series": { "type": "array", "maxItems": 128, "items": { "$ref": "#/$defs/gapSeries" } }
+  },
+  "$defs": {
+    "every": { "type": "integer", "minimum": 1, "maximum": 1000000 },
+    "patterns": { "type": "array", "minItems": 1, "maxItems": 64 },
+    "linkState": { "enum": ["absent", "null", "resolved", "unresolved"] },
+    "token": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9_.-]+$" },
+    "linkPattern": {
+      "type": "object", "additionalProperties": false,
+      "required": ["prior_state", "winning_state"],
+      "properties": {
+        "prior_state": { "$ref": "#/$defs/linkState" },
+        "winning_state": { "$ref": "#/$defs/linkState" },
+        "prior_target_offset": { "type": "integer", "minimum": 0, "maximum": 999999 },
+        "winning_target_offset": { "type": "integer", "minimum": 0, "maximum": 999999 }
+      },
+      "allOf": [
+        { "if": { "properties": { "prior_state": { "const": "resolved" } }, "required": ["prior_state"] }, "then": { "required": ["prior_target_offset"] }, "else": { "not": { "required": ["prior_target_offset"] } } },
+        { "if": { "properties": { "winning_state": { "const": "resolved" } }, "required": ["winning_state"] }, "then": { "required": ["winning_target_offset"] }, "else": { "not": { "required": ["winning_target_offset"] } } }
+      ]
+    },
+    "linkSeries": {
+      "type": "object", "additionalProperties": false,
+      "required": ["every", "field", "patterns"],
+      "properties": { "every": { "$ref": "#/$defs/every" }, "field": { "$ref": "#/$defs/token" }, "component": { "$ref": "#/$defs/token" }, "patterns": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "$ref": "#/$defs/linkPattern" } } }
+    },
+    "faceGenPattern": {
+      "type": "object", "additionalProperties": false,
+      "required": ["applicability", "mesh_availability", "mesh_provider_present", "tint_availability", "tint_provider_present", "locality", "specificity"],
+      "properties": {
+        "applicability": { "enum": ["applicable", "not-applicable", "unknown"] },
+        "mesh_availability": { "enum": ["present", "absent", "unknown"] },
+        "mesh_provider_present": { "type": "boolean" },
+        "tint_availability": { "enum": ["present", "absent", "unknown"] },
+        "tint_provider_present": { "type": "boolean" },
+        "locality": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "specificity": { "type": "integer", "minimum": 0, "maximum": 100 }
+      }
+    },
+    "faceGenSeries": {
+      "type": "object", "additionalProperties": false,
+      "required": ["every", "patterns"],
+      "properties": { "every": { "$ref": "#/$defs/every" }, "patterns": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "$ref": "#/$defs/faceGenPattern" } } }
+    },
+    "documentationPattern": {
+      "type": "object", "additionalProperties": false,
+      "required": ["applicability", "supplying_snapshot_matches", "analysis_context_matches", "has_contradicting_evidence"],
+      "properties": {
+        "applicability": { "enum": ["applicable", "not-applicable", "unknown", "unsupported", "contradicted"] },
+        "supplying_snapshot_matches": { "type": "boolean" },
+        "analysis_context_matches": { "type": "boolean" },
+        "has_contradicting_evidence": { "type": "boolean" }
+      }
+    },
+    "documentationSeries": {
+      "type": "object", "additionalProperties": false,
+      "required": ["every", "patterns"],
+      "properties": { "every": { "$ref": "#/$defs/every" }, "patterns": { "type": "array", "minItems": 1, "maxItems": 64, "items": { "$ref": "#/$defs/documentationPattern" } } }
+    },
+    "gapSeries": {
+      "type": "object", "additionalProperties": false,
+      "required": ["every", "missing_capability", "reason"],
+      "properties": {
+        "every": { "$ref": "#/$defs/every" },
+        "missing_capability": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 2048 }
+      }
+    }
+  }
+}

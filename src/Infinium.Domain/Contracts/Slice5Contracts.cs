@@ -102,7 +102,10 @@ public enum CandidateDecisionDisposition
     Ambiguous,
     InvalidInput,
     Limited,
+    Deferred,
+    Unprocessed,
     Abstained,
+    Failed,
 }
 
 public enum AnalysisConfidence
@@ -314,6 +317,7 @@ public sealed record CandidateParticipantContract(OpaqueId ParticipantId, string
 public sealed record CandidateDecisionContract(
     OpaqueId DecisionId,
     OpaqueId PopulationMemberId,
+    OpaqueId SourceFactId,
     CandidateLane Lane,
     CandidateDecisionDisposition Disposition,
     IReadOnlyList<CandidateParticipantContract> Participants,
@@ -323,7 +327,18 @@ public sealed record CandidateDecisionContract(
     string Rationale,
     IReadOnlyList<OpaqueId> EvidenceIds,
     bool AdmissionIndependentOfScore,
-    long? OptionalRank);
+    long? OptionalRank)
+{
+    public OpaqueId AnalyzerId { get; init; } = new("analyzer-unspecified");
+
+    public OpaqueId PolicyId { get; init; } = new("policy-unspecified");
+
+    public OpaqueId ThresholdId { get; init; } = new("threshold-unspecified");
+
+    public OpaqueId LimitId { get; init; } = new("limit-unspecified");
+
+    public IReadOnlyList<OpaqueId> DependencyIds { get; init; } = [];
+}
 
 public sealed record CandidateAnalysisEntryContract(
     OpaqueId CandidateId,
@@ -334,7 +349,81 @@ public sealed record CandidateAnalysisEntryContract(
     IReadOnlyList<OpaqueId> ContradictingEvidenceIds,
     IReadOnlyList<string> MissingInformation,
     AnalysisConfidence Confidence,
+    OpaqueId ThresholdId)
+{
+    public OpaqueId? HypothesisId { get; init; }
+
+    public OpaqueId? AbstentionId { get; init; }
+}
+
+public sealed record CandidateHypothesisContract(
+    OpaqueId HypothesisId,
+    OpaqueId CandidateId,
+    Slice5ResultState State,
+    string ProposedExplanation,
+    string PredictedImpact,
+    IReadOnlyList<OpaqueId> SupportingEvidenceIds,
+    IReadOnlyList<OpaqueId> ContradictingEvidenceIds,
+    IReadOnlyList<string> MissingInformation,
+    AnalysisConfidence Confidence,
     OpaqueId ThresholdId);
+
+public sealed record CandidateAbstentionContract(
+    OpaqueId AbstentionId,
+    OpaqueId DecisionId,
+    OpaqueId? CandidateId,
+    OpaqueId AnalyzerId,
+    string Reason,
+    IReadOnlyList<string> RequiredInformation);
+
+public sealed record CandidateGapContract(
+    OpaqueId GapId,
+    OpaqueId DecisionId,
+    OpaqueId PopulationId,
+    Slice5ResultState State,
+    string Reason,
+    string MissingCapabilityOrInformation);
+
+public sealed record CandidateFailureContract(
+    OpaqueId FailureId,
+    OpaqueId AnalyzerId,
+    IReadOnlyList<OpaqueId> PopulationMemberIds,
+    string FailureCode,
+    string Message,
+    bool Retryable);
+
+public sealed record CandidateDependencyEdgeContract(
+    OpaqueId EdgeId,
+    string FromKind,
+    OpaqueId FromId,
+    string ToKind,
+    OpaqueId ToId,
+    string EdgeKind);
+
+public sealed record CandidateAnalyzerBindingContract(
+    OpaqueId AnalyzerId,
+    ContractVersion AnalyzerVersion,
+    ContractVersion RulesetVersion,
+    Sha256Fingerprint DeclarationFingerprint,
+    string CanonicalDeclarationJson);
+
+public sealed record CandidatePopulationCountsContract(
+    long Population,
+    long DeterministicRequired,
+    long MandatoryEvidence,
+    long OptionalRanked,
+    long CandidateAdmitted,
+    long Hypotheses,
+    long Abstentions,
+    long Gaps,
+    long Failures,
+    long ResolvedNegative,
+    long Unsupported,
+    long Ambiguous,
+    long InvalidInput,
+    long Limited,
+    long Deferred,
+    long Unprocessed);
 
 public sealed record CandidateAnalysisContract(
     string SchemaId,
@@ -346,9 +435,47 @@ public sealed record CandidateAnalysisContract(
     long PopulationDenominator,
     IReadOnlyList<CandidateDecisionContract> Decisions,
     IReadOnlyList<CandidateAnalysisEntryContract> Candidates,
-    IReadOnlyList<AbstentionContract> Abstentions,
-    IReadOnlyList<CoverageGapContract> Gaps,
-    IReadOnlyList<FailureContract> Failures);
+    IReadOnlyList<CandidateAbstentionContract> Abstentions,
+    IReadOnlyList<CandidateGapContract> Gaps,
+    IReadOnlyList<CandidateFailureContract> Failures)
+{
+    public OpaqueId PolicyId { get; init; } = new("policy-unspecified");
+
+    public OpaqueId ThresholdId { get; init; } = new("threshold-unspecified");
+
+    public OpaqueId LimitId { get; init; } = new("limit-unspecified");
+
+    public OpaqueId ExecutionInputId { get; init; } = new("execution-input-unspecified");
+
+    public OpaqueId AnalysisRootId { get; init; } = new("candidate-analysis-root-unspecified");
+
+    public Sha256Fingerprint ExecutionInputFingerprint { get; init; } = new(new string('0', 64));
+
+    public Sha256Fingerprint PolicyFingerprint { get; init; } = new(new string('0', 64));
+
+    public Sha256Fingerprint ThresholdFingerprint { get; init; } = new(new string('0', 64));
+
+    public Sha256Fingerprint LimitFingerprint { get; init; } = new(new string('0', 64));
+
+    public Sha256Fingerprint AnalyzerSetFingerprint { get; init; } = new(new string('0', 64));
+
+    public IReadOnlyList<CandidateAnalyzerBindingContract> AnalyzerBindings { get; init; } = [];
+
+    public IReadOnlyList<string> ExecutionInputDescriptors { get; init; } = [];
+
+    public IReadOnlyList<string> PolicyDescriptors { get; init; } = [];
+
+    public IReadOnlyList<string> ThresholdDescriptors { get; init; } = [];
+
+    public IReadOnlyList<string> LimitDescriptors { get; init; } = [];
+
+    public IReadOnlyList<CandidateHypothesisContract> Hypotheses { get; init; } = [];
+
+    public IReadOnlyList<CandidateDependencyEdgeContract> DependencyEdges { get; init; } = [];
+
+    public CandidatePopulationCountsContract Counts { get; init; } = new(
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+}
 
 public sealed record FindingContract(
     OpaqueId FindingOccurrenceId,
@@ -713,6 +840,7 @@ public static class Slice5ContractInvariants
     public static void Validate(CandidateAnalysisContract value)
     {
         RequireHeader(value.SchemaId, value.SchemaVersion, ContractConstants.CandidateAnalysisSchemaId);
+        ArgumentNullException.ThrowIfNull(value.Counts);
         if (value.PopulationDenominator < 0 || value.Decisions.Count != value.PopulationDenominator)
         {
             throw new InvalidOperationException("Every candidate population member requires exactly one eligible decision.");
@@ -721,22 +849,96 @@ public static class Slice5ContractInvariants
         RequireUnique(value.Decisions.Select(item => item.PopulationMemberId), "candidate population members");
         RequireUnique(value.Candidates.Select(item => item.CandidateId), "candidates");
         RequireUnique(value.Candidates.Select(item => item.DecisionId), "candidate decision references");
+        RequireUnique(value.Hypotheses.Select(item => item.HypothesisId), "candidate hypotheses");
+        RequireUnique(value.Hypotheses.Select(item => item.CandidateId), "hypothesis candidate references");
+        RequireUnique(value.Abstentions.Select(item => item.AbstentionId), "candidate abstentions");
+        RequireUnique(value.Gaps.Select(item => item.GapId), "candidate gaps");
+        RequireUnique(value.Gaps.Select(item => item.DecisionId), "candidate gap decision references");
+        RequireUnique(value.Failures.Select(item => item.FailureId), "candidate failures");
+        RequireUnique(value.DependencyEdges.Select(item => item.EdgeId), "candidate dependency edges");
+        RequireUnique(value.AnalyzerBindings.Select(item => item.AnalyzerId), "candidate analyzer bindings");
+        HashSet<OpaqueId> boundAnalyzers = value.AnalyzerBindings.Select(item => item.AnalyzerId).ToHashSet();
+        Sha256Fingerprint expectedAnalyzerSetFingerprint = CandidateAnalysisIdentity.StructuralHash(
+            value.AnalyzerBindings.Select(item =>
+                $"{item.AnalyzerId.Value}:{item.DeclarationFingerprint.Value}"));
+        bool invalidDescriptors = new[]
+            {
+                value.ExecutionInputDescriptors,
+                value.PolicyDescriptors,
+                value.ThresholdDescriptors,
+                value.LimitDescriptors,
+            }
+            .Any(items => items.Count is 0 or > 512
+                || items.Any(item => string.IsNullOrWhiteSpace(item) || item.Length > 4096));
+        if (value.AnalyzerBindings.Count == 0
+            || value.AnalysisRootId != CandidateAnalysisIdentity.StableId(
+                "candidate-analysis-root", value.OriginatingRunId.Value, value.PopulationId.Value,
+                value.ExecutionInputFingerprint.Value, value.PolicyFingerprint.Value,
+                value.ThresholdFingerprint.Value, value.LimitFingerprint.Value, value.AnalyzerSetFingerprint.Value)
+            || value.Decisions.Any(item => !boundAnalyzers.Contains(item.AnalyzerId))
+            || value.AnalyzerSetFingerprint != expectedAnalyzerSetFingerprint
+            || value.AnalyzerBindings.Any(item => string.IsNullOrWhiteSpace(item.CanonicalDeclarationJson)
+                || item.CanonicalDeclarationJson.Length > 65536
+                || item.DeclarationFingerprint != CandidateAnalysisIdentity.StructuralHash([item.CanonicalDeclarationJson]))
+            || invalidDescriptors
+            || value.ExecutionInputFingerprint != CandidateAnalysisIdentity.StructuralHash(value.ExecutionInputDescriptors)
+            || value.PolicyFingerprint != CandidateAnalysisIdentity.StructuralHash(value.PolicyDescriptors)
+            || value.ThresholdFingerprint != CandidateAnalysisIdentity.StructuralHash(value.ThresholdDescriptors)
+            || value.LimitFingerprint != CandidateAnalysisIdentity.StructuralHash(value.LimitDescriptors))
+        {
+            throw new InvalidOperationException("Candidate analysis requires exact execution, analyzer, policy, threshold, and limit semantic bindings.");
+        }
         Dictionary<OpaqueId, CandidateDecisionContract> decisions = value.Decisions.ToDictionary(item => item.DecisionId);
         foreach (CandidateDecisionContract decision in value.Decisions)
         {
             if (decision.Lane == CandidateLane.Unspecified
                 || decision.Disposition == CandidateDecisionDisposition.Unspecified
-                || decision.Participants.Count < 2
+                || decision.Disposition == CandidateDecisionDisposition.Abstained
+                || StringComparer.Ordinal.Equals(decision.SourceFactId.Value, "source-fact-unspecified")
+                || decision.Participants.Count > 16
+                || (decision.Disposition is not (CandidateDecisionDisposition.InvalidInput or CandidateDecisionDisposition.Failed)
+                    && decision.Participants.Count < 2)
                 || decision.Participants.Select(item => item.Role).Distinct(StringComparer.Ordinal).Count() != decision.Participants.Count
-                || (decision.Lane is CandidateLane.DeterministicRequired or CandidateLane.MandatoryEvidence
-                    && !decision.AdmissionIndependentOfScore)
-                || (decision.Lane != CandidateLane.OptionalRanked && decision.OptionalRank is not null))
+                || decision.Participants.Any(item => string.IsNullOrWhiteSpace(item.Role)
+                    || item.Role.Length > 128
+                    || !IsAsciiToken(item.Role))
+                || string.IsNullOrWhiteSpace(decision.JoinKind)
+                || decision.JoinKind.Length > 128
+                || !IsAsciiToken(decision.JoinKind)
+                || decision.Path.Count > 64
+                || (decision.Disposition is not (CandidateDecisionDisposition.InvalidInput or CandidateDecisionDisposition.Failed)
+                    && decision.Path.Count == 0)
+                || (decision.Disposition is not (CandidateDecisionDisposition.InvalidInput or CandidateDecisionDisposition.Failed)
+                    && decision.Participants.Any(item => !decision.Path.Contains(item.ParticipantId)))
+                || decision.EvidenceIds.Count > 128
+                || (decision.Disposition is not (CandidateDecisionDisposition.InvalidInput or CandidateDecisionDisposition.Failed)
+                    && decision.EvidenceIds.Count == 0)
+                || decision.EvidenceIds.Distinct().Count() != decision.EvidenceIds.Count
+                || decision.DependencyIds.Count > 128
+                || (decision.Disposition is not (CandidateDecisionDisposition.InvalidInput or CandidateDecisionDisposition.Failed)
+                    && decision.DependencyIds.Count == 0)
+                || decision.DependencyIds.Distinct().Count() != decision.DependencyIds.Count
+                || decision.DependencyClosureId != CandidateAnalysisIdentity.StableId(
+                    "candidate-closure",
+                    decision.DependencyIds.Select(item => item.Value).Prepend(decision.PopulationMemberId.Value).ToArray())
+                || decision.PolicyId != value.PolicyId
+                || decision.ThresholdId != value.ThresholdId
+                || decision.LimitId != value.LimitId
+                || string.IsNullOrWhiteSpace(decision.Rationale)
+                || decision.Rationale.Length > 4096
+                || decision.AdmissionIndependentOfScore !=
+                    (decision.Lane is CandidateLane.DeterministicRequired or CandidateLane.MandatoryEvidence)
+                || (decision.Disposition == CandidateDecisionDisposition.Limited
+                    && decision.Lane != CandidateLane.OptionalRanked)
+                || (decision.Lane != CandidateLane.OptionalRanked && decision.OptionalRank is not null)
+                || (decision.Lane == CandidateLane.OptionalRanked && decision.OptionalRank is null or <= 0))
             {
                 throw new InvalidOperationException("Candidate decisions require closed lane/disposition, canonical roles, and score-independent mandatory admission.");
             }
         }
         HashSet<OpaqueId> admittedDecisionIds = value.Decisions
-            .Where(item => item.Disposition == CandidateDecisionDisposition.CandidateAdmitted)
+            .Where(item => item.Disposition is CandidateDecisionDisposition.CandidateAdmitted
+                or CandidateDecisionDisposition.Ambiguous)
             .Select(item => item.DecisionId)
             .ToHashSet();
         HashSet<OpaqueId> candidateDecisionIds = value.Candidates.Select(item => item.DecisionId).ToHashSet();
@@ -747,12 +949,240 @@ public static class Slice5ContractInvariants
         foreach (CandidateAnalysisEntryContract candidate in value.Candidates)
         {
             if (!decisions.TryGetValue(candidate.DecisionId, out CandidateDecisionContract? decision)
-                || decision.Disposition != CandidateDecisionDisposition.CandidateAdmitted
-                || candidate.State == Slice5ResultState.Unspecified
-                || candidate.Confidence == AnalysisConfidence.Unspecified)
+                || decision.Disposition is not (CandidateDecisionDisposition.CandidateAdmitted
+                    or CandidateDecisionDisposition.Ambiguous)
+                || candidate.State is not (Slice5ResultState.Present or Slice5ResultState.Ambiguous or Slice5ResultState.Abstained)
+                || candidate.Confidence == AnalysisConfidence.Unspecified
+                || candidate.ThresholdId != value.ThresholdId
+                || string.IsNullOrWhiteSpace(candidate.CausalExplanation)
+                || candidate.CausalExplanation.Length > 4096
+                || candidate.SupportingEvidenceIds.Count > 128
+                || candidate.ContradictingEvidenceIds.Count > 128
+                || candidate.MissingInformation.Count > 32
+                || candidate.MissingInformation.Any(item => string.IsNullOrWhiteSpace(item) || item.Length > 1024)
+                || candidate.SupportingEvidenceIds.Distinct().Count() != candidate.SupportingEvidenceIds.Count
+                || candidate.ContradictingEvidenceIds.Distinct().Count() != candidate.ContradictingEvidenceIds.Count
+                || !candidate.SupportingEvidenceIds.ToHashSet().SetEquals(decision.EvidenceIds)
+                || (candidate.HypothesisId is not null) != value.Hypotheses.Any(item => item.CandidateId == candidate.CandidateId)
+                || candidate.HypothesisId is null
+                || (candidate.AbstentionId is not null) != value.Abstentions.Any(item => item.CandidateId == candidate.CandidateId)
+                || (candidate.AbstentionId is not null) != (candidate.MissingInformation.Count != 0)
+                || (candidate.State == Slice5ResultState.Abstained) != (candidate.MissingInformation.Count != 0)
+                || (candidate.State == Slice5ResultState.Ambiguous) != (candidate.MissingInformation.Count == 0
+                    && candidate.ContradictingEvidenceIds.Count != 0)
+                || (candidate.State == Slice5ResultState.Present) != (candidate.MissingInformation.Count == 0
+                    && candidate.ContradictingEvidenceIds.Count == 0))
             {
-                throw new InvalidOperationException("Candidates require one admitted decision and explicit state/confidence.");
+                throw new InvalidOperationException("Candidates require one admitted decision and explicit, closed hypothesis/abstention linkage.");
             }
+        }
+        Dictionary<OpaqueId, CandidateAnalysisEntryContract> candidates = value.Candidates.ToDictionary(item => item.CandidateId);
+        foreach (CandidateHypothesisContract hypothesis in value.Hypotheses)
+        {
+            if (!candidates.TryGetValue(hypothesis.CandidateId, out CandidateAnalysisEntryContract? candidate)
+                || candidate.HypothesisId != hypothesis.HypothesisId
+                || hypothesis.State is not (Slice5ResultState.Present or Slice5ResultState.Ambiguous or Slice5ResultState.Partial)
+                || hypothesis.Confidence == AnalysisConfidence.Unspecified
+                || hypothesis.ThresholdId != value.ThresholdId
+                || string.IsNullOrWhiteSpace(hypothesis.ProposedExplanation)
+                || hypothesis.ProposedExplanation.Length > 4096
+                || string.IsNullOrWhiteSpace(hypothesis.PredictedImpact)
+                || hypothesis.PredictedImpact.Length > 4096
+                || hypothesis.SupportingEvidenceIds.Count > 128
+                || hypothesis.ContradictingEvidenceIds.Count > 128
+                || hypothesis.MissingInformation.Count > 32
+                || !hypothesis.SupportingEvidenceIds.ToHashSet().SetEquals(candidate.SupportingEvidenceIds)
+                || !hypothesis.ContradictingEvidenceIds.ToHashSet().SetEquals(candidate.ContradictingEvidenceIds)
+                || !hypothesis.MissingInformation.SequenceEqual(candidate.MissingInformation, StringComparer.Ordinal)
+                || (candidate.State == Slice5ResultState.Abstained
+                    ? hypothesis.State != Slice5ResultState.Partial
+                    : hypothesis.State != candidate.State))
+            {
+                throw new InvalidOperationException("Every hypothesis requires one linked candidate and closed evidence-bound state.");
+            }
+        }
+        foreach (CandidateAbstentionContract abstention in value.Abstentions)
+        {
+            if (!decisions.TryGetValue(abstention.DecisionId, out CandidateDecisionContract? abstentionDecision)
+                || abstention.AnalyzerId != abstentionDecision.AnalyzerId
+                || (abstention.CandidateId is not null
+                    && (!candidates.TryGetValue(abstention.CandidateId, out CandidateAnalysisEntryContract? candidate)
+                        || candidate.DecisionId != abstention.DecisionId
+                        || candidate.AbstentionId != abstention.AbstentionId
+                        || !abstention.RequiredInformation.SequenceEqual(candidate.MissingInformation, StringComparer.Ordinal)))
+                || (abstention.CandidateId is null
+                    && abstentionDecision.Disposition is not (CandidateDecisionDisposition.Abstained
+                        or CandidateDecisionDisposition.Unsupported))
+                || string.IsNullOrWhiteSpace(abstention.Reason)
+                || abstention.Reason.Length > 4096
+                || abstention.RequiredInformation.Count is 0 or > 32
+                || abstention.RequiredInformation.Any(item => string.IsNullOrWhiteSpace(item) || item.Length > 1024))
+            {
+                throw new InvalidOperationException("Abstentions require a decision, optional linked candidate, reason, and required information.");
+            }
+        }
+        HashSet<OpaqueId> unsupportedDecisionIds = value.Decisions
+            .Where(item => item.Disposition == CandidateDecisionDisposition.Unsupported)
+            .Select(item => item.DecisionId)
+            .ToHashSet();
+        OpaqueId[] unsupportedAbstentionDecisionIds = value.Abstentions
+            .Where(item => item.CandidateId is null)
+            .Select(item => item.DecisionId)
+            .ToArray();
+        if (unsupportedAbstentionDecisionIds.Distinct().Count() != unsupportedAbstentionDecisionIds.Length
+            || !unsupportedDecisionIds.SetEquals(unsupportedAbstentionDecisionIds))
+        {
+            throw new InvalidOperationException("Unsupported decisions and candidate-less abstentions must correspond exactly.");
+        }
+        foreach (CandidateGapContract gap in value.Gaps)
+        {
+            if (!decisions.TryGetValue(gap.DecisionId, out CandidateDecisionContract? gapDecision)
+                || gap.PopulationId != value.PopulationId
+                || gap.State is Slice5ResultState.Unspecified or Slice5ResultState.Present
+                || (gapDecision.Disposition switch
+                {
+                    CandidateDecisionDisposition.CandidateAdmitted or CandidateDecisionDisposition.Ambiguous => gap.State != Slice5ResultState.Missing,
+                    CandidateDecisionDisposition.Unsupported => gap.State != Slice5ResultState.Unsupported,
+                    CandidateDecisionDisposition.Limited or CandidateDecisionDisposition.Unprocessed => gap.State != Slice5ResultState.LimitReached,
+                    CandidateDecisionDisposition.Deferred => gap.State != Slice5ResultState.Partial,
+                    CandidateDecisionDisposition.Failed => gap.State != Slice5ResultState.Failed,
+                    _ => true,
+                })
+                || (gapDecision.Disposition is CandidateDecisionDisposition.CandidateAdmitted
+                        or CandidateDecisionDisposition.Ambiguous
+                    && !value.Candidates.Any(candidate =>
+                        candidate.DecisionId == gap.DecisionId
+                        && candidate.State == Slice5ResultState.Abstained
+                        && candidate.MissingInformation.Contains(
+                            gap.MissingCapabilityOrInformation,
+                            StringComparer.Ordinal)))
+                || string.IsNullOrWhiteSpace(gap.Reason)
+                || gap.Reason.Length > 4096
+                || string.IsNullOrWhiteSpace(gap.MissingCapabilityOrInformation)
+                || gap.MissingCapabilityOrInformation.Length > 1024)
+            {
+                throw new InvalidOperationException("Candidate gaps require a closed non-present state and a population decision.");
+            }
+        }
+        foreach (CandidateFailureContract failure in value.Failures)
+        {
+            if (failure.PopulationMemberIds.Count is 0 or > 1024
+                || failure.PopulationMemberIds.Any(id => value.Decisions.All(decision => decision.PopulationMemberId != id))
+                || failure.PopulationMemberIds.Any(id => value.Decisions.Single(decision => decision.PopulationMemberId == id).AnalyzerId != failure.AnalyzerId)
+                || string.IsNullOrWhiteSpace(failure.FailureCode)
+                || string.IsNullOrWhiteSpace(failure.Message)
+                || failure.Message.Length > 512)
+            {
+                throw new InvalidOperationException("Candidate failures require bounded diagnostics and affected population members.");
+            }
+        }
+        HashSet<OpaqueId> failedMemberIds = value.Decisions
+            .Where(item => item.Disposition == CandidateDecisionDisposition.Failed)
+            .Select(item => item.PopulationMemberId)
+            .ToHashSet();
+        OpaqueId[] retainedFailedMemberIds = value.Failures
+            .SelectMany(item => item.PopulationMemberIds)
+            .ToArray();
+        if (retainedFailedMemberIds.Distinct().Count() != retainedFailedMemberIds.Length
+            || !failedMemberIds.SetEquals(retainedFailedMemberIds))
+        {
+            throw new InvalidOperationException("Failed decisions and retained failure diagnostics must correspond exactly.");
+        }
+        HashSet<OpaqueId> requiredGapDecisionIds = value.Decisions
+            .Where(item => item.Disposition is CandidateDecisionDisposition.Unsupported
+                or CandidateDecisionDisposition.Limited
+                or CandidateDecisionDisposition.Unprocessed
+                or CandidateDecisionDisposition.Deferred)
+            .Select(item => item.DecisionId)
+            .ToHashSet();
+        HashSet<OpaqueId> retainedRequiredGapDecisionIds = value.Gaps
+            .Where(item => requiredGapDecisionIds.Contains(item.DecisionId))
+            .Select(item => item.DecisionId)
+            .ToHashSet();
+        if (!requiredGapDecisionIds.SetEquals(retainedRequiredGapDecisionIds))
+        {
+            throw new InvalidOperationException("Unsupported, limited, deferred, and unprocessed decisions require explicit gaps.");
+        }
+        HashSet<CandidateDependencyEdgeContract> expectedEdges = [];
+        expectedEdges.Add(CandidateEdge("candidate-analysis-root", value.AnalysisRootId, "execution-input-binding",
+            CandidateAnalysisIdentity.StableId("candidate-execution-input-binding", value.ExecutionInputId.Value, value.ExecutionInputFingerprint.Value), "uses"));
+        expectedEdges.Add(CandidateEdge("candidate-analysis-root", value.AnalysisRootId, "policy-binding",
+            CandidateAnalysisIdentity.StableId("candidate-policy-binding", value.PolicyId.Value, value.PolicyFingerprint.Value), "uses"));
+        expectedEdges.Add(CandidateEdge("candidate-analysis-root", value.AnalysisRootId, "threshold-binding",
+            CandidateAnalysisIdentity.StableId("candidate-threshold-binding", value.ThresholdId.Value, value.ThresholdFingerprint.Value), "uses"));
+        expectedEdges.Add(CandidateEdge("candidate-analysis-root", value.AnalysisRootId, "limit-binding",
+            CandidateAnalysisIdentity.StableId("candidate-limit-binding", value.LimitId.Value, value.LimitFingerprint.Value), "uses"));
+        foreach (CandidateAnalyzerBindingContract analyzerBinding in value.AnalyzerBindings)
+        {
+            expectedEdges.Add(CandidateEdge("candidate-analysis-root", value.AnalysisRootId, "analyzer-declaration-binding",
+                CandidateAnalysisIdentity.StableId("candidate-analyzer-binding", analyzerBinding.AnalyzerId.Value,
+                    analyzerBinding.AnalyzerVersion.ToString(), analyzerBinding.RulesetVersion.ToString(), analyzerBinding.DeclarationFingerprint.Value), "uses"));
+        }
+        foreach (CandidateDecisionContract decision in value.Decisions)
+        {
+            expectedEdges.Add(CandidateEdge("candidate-decision", decision.DecisionId, "source-fact", decision.SourceFactId, "derived-from"));
+            expectedEdges.Add(CandidateEdge("candidate-decision", decision.DecisionId, "dependency-closure", decision.DependencyClosureId, "depends-on"));
+            foreach (OpaqueId dependencyId in decision.DependencyIds)
+            {
+                expectedEdges.Add(CandidateEdge("dependency-closure", decision.DependencyClosureId, "dependency", dependencyId, "depends-on"));
+            }
+            foreach (OpaqueId evidenceId in decision.EvidenceIds)
+            {
+                expectedEdges.Add(CandidateEdge("candidate-decision", decision.DecisionId, "evidence", evidenceId, "derived-from"));
+            }
+        }
+        foreach (CandidateAnalysisEntryContract candidate in value.Candidates)
+        {
+            expectedEdges.Add(CandidateEdge("candidate", candidate.CandidateId, "candidate-decision", candidate.DecisionId, "derived-from"));
+            foreach (OpaqueId evidenceId in candidate.SupportingEvidenceIds)
+            {
+                expectedEdges.Add(CandidateEdge("candidate", candidate.CandidateId, "evidence", evidenceId, "supports"));
+            }
+            foreach (OpaqueId evidenceId in candidate.ContradictingEvidenceIds)
+            {
+                expectedEdges.Add(CandidateEdge("candidate", candidate.CandidateId, "evidence", evidenceId, "contradicts"));
+            }
+        }
+        foreach (CandidateHypothesisContract hypothesis in value.Hypotheses)
+        {
+            expectedEdges.Add(CandidateEdge("hypothesis", hypothesis.HypothesisId, "candidate", hypothesis.CandidateId, "derived-from"));
+            foreach (OpaqueId evidenceId in hypothesis.SupportingEvidenceIds)
+            {
+                expectedEdges.Add(CandidateEdge("hypothesis", hypothesis.HypothesisId, "evidence", evidenceId, "supports"));
+            }
+            foreach (OpaqueId evidenceId in hypothesis.ContradictingEvidenceIds)
+            {
+                expectedEdges.Add(CandidateEdge("hypothesis", hypothesis.HypothesisId, "evidence", evidenceId, "contradicts"));
+            }
+        }
+        foreach (CandidateAbstentionContract abstention in value.Abstentions)
+        {
+            expectedEdges.Add(CandidateEdge("abstention", abstention.AbstentionId, "candidate-decision", abstention.DecisionId, "derived-from"));
+        }
+        foreach (CandidateGapContract gap in value.Gaps)
+        {
+            expectedEdges.Add(CandidateEdge("gap", gap.GapId, "candidate-decision", gap.DecisionId, "derived-from"));
+        }
+        foreach (CandidateFailureContract failure in value.Failures)
+        {
+            foreach (OpaqueId memberId in failure.PopulationMemberIds)
+            {
+                OpaqueId decisionId = value.Decisions.Single(item => item.PopulationMemberId == memberId).DecisionId;
+                expectedEdges.Add(CandidateEdge("failure", failure.FailureId, "candidate-decision", decisionId, "derived-from"));
+            }
+        }
+        if (!expectedEdges.SetEquals(value.DependencyEdges))
+        {
+            throw new InvalidOperationException("Candidate dependency edges must exactly close every typed output and evidence reference.");
+        }
+        CandidatePopulationCountsContract actual = CandidateAnalysisCounts.Compute(value);
+        if (actual != value.Counts)
+        {
+            throw new InvalidOperationException("Candidate population and output counts must exactly match the decision ledger.");
+        }
+        if (CandidateAnalysisIdentity.ComputePayloadId(value) != value.PayloadId)
+        {
+            throw new InvalidOperationException("Candidate analysis payload identity must cover the exact aggregate semantics.");
         }
     }
 
@@ -826,7 +1256,24 @@ public static class Slice5ContractInvariants
     {
         RequireHeader(value.SchemaId, value.SchemaVersion, ContractConstants.AnalysisExecutionInputSchemaId);
         ExecutionBoundaryContractInvariants.ValidateProductCapabilities(value.Boundaries, requireNotUsed: false);
+        RequireUnique(value.SourceInputs.Select(item => item.ArtifactId), "analysis execution source inputs");
+        RequireUnique(value.AnalyzerDeclarations.Select(item => item.ArtifactId), "analysis execution analyzer declarations");
+        ArtifactReferenceContract[] references =
+        [
+            value.InstallationSnapshot,
+            value.BethesdaSemanticInput,
+            .. value.SourceInputs,
+            .. value.AnalyzerDeclarations,
+            value.EffectiveConfiguration,
+            value.ResolvedInputManifest,
+        ];
         if (value.Mode == ReplayMode.Unspecified
+            || value.Seed < 0
+            || value.SourceInputs.Count > 128
+            || value.AnalyzerDeclarations.Count > 128
+            || references.Any(item => string.IsNullOrWhiteSpace(item.Availability)
+                || item.Availability.Length > 128
+                || item.Availability is not ("retained" or "externally-reacquirable" or "evaluator-private" or "unavailable"))
             || value.Limits.MaximumEntities is < 1 or > 1_000_000
             || value.Limits.MaximumEdges is < 1 or > 2_000_000
             || value.Limits.MaximumTruthRows is < 1 or > 100_000
@@ -845,6 +1292,24 @@ public static class Slice5ContractInvariants
             throw new InvalidOperationException($"Payload must bind {expectedSchemaId} major v1.");
         }
     }
+
+    private static bool IsAsciiToken(string value) => value.Length != 0
+        && char.IsAsciiLetterOrDigit(value[0])
+        && value.All(character => char.IsAsciiLetterOrDigit(character)
+            || character is '.' or '_' or ':' or '/' or '-');
+
+    private static CandidateDependencyEdgeContract CandidateEdge(
+        string fromKind,
+        OpaqueId fromId,
+        string toKind,
+        OpaqueId toId,
+        string edgeKind) => new(
+        CandidateAnalysisIdentity.StableId("candidate-edge", fromKind, fromId.Value, toKind, toId.Value, edgeKind),
+        fromKind,
+        fromId,
+        toKind,
+        toId,
+        edgeKind);
 
     private static void RequireUnique(IEnumerable<OpaqueId> ids, string description)
     {

@@ -2,7 +2,7 @@
 
 Status: Current execution authority
 
-Last reviewed: 2026-08-08
+Last reviewed: 2026-08-09
 
 Owner: Project owner
 
@@ -18,9 +18,9 @@ records preserve evidence and history.
 |---|---|
 | Milestone | `M1` — active |
 | Active slice | `M1/S5` — active |
-| Completed package | `M1/S5/WP1` and `M1/S5/WP2` |
-| Next eligible package | `M1/S5/WP3` — candidate and hypothesis generation |
-| Later packages | `WP4` through `WP6`, dependency-gated by the active Slice 5 plan |
+| Completed package | `M1/S5/WP1`, `M1/S5/WP2`, and `M1/S5/WP3` |
+| Next eligible package | `M1/S5/WP4` — findings, cases, and coverage publication |
+| Later packages | `WP5` and `WP6`, dependency-gated by the active Slice 5 plan |
 | Default execution policy | [Development execution policy](development/execution-policy.md) |
 | Active milestone plan | [M1 backend semantic proof](plans/milestones/M1-backend-semantic-proof.md) |
 | Active slice plan | [M1 Slice 5](plans/slices/M1-slice-5-evidence-documentation-candidates-cases-replay.md) |
@@ -42,18 +42,20 @@ records preserve evidence and history.
 ## Current Slice 5 boundary
 
 WP1 established the contract, codec, state, migration, and repository-boundary
-foundation. WP2's deterministic documentation product path, typed persistence,
-and focused behavior tests are implemented. Its corrective public-fixture gate
-now schema-validates and semantically closes every structured package document,
-partition transition, replay dependency, provenance/answer-isolation field,
-independent derivation binding, and exact file/directory boundary. Focused
-hostile mutation evidence, the full Release verification floor, a fresh
-authority/diff review, and a separate product-blind fixture review accepted the
-correction without changing expected semantic truth. WP2 is complete and WP3
-is now eligible. The rejected preauthored
+foundation. WP2 completed the deterministic documentation product path, typed
+persistence, and independently frozen public evidence. WP3 now completes the
+answer-free delivered Bethesda/WP2 candidate input and bounded expansion
+contracts, candidate/hypothesis/abstention selection, exact provenance and
+dependency closure, schema-4 persistence/readback, attempt-fenced checkpoint
+restart, and the real-source semantic, validation-scale, and streaming-stress
+gates. Three independently authored public packages received a clean
+product-blind fixture review before product comparison; a separate final
+product review accepted the settled implementation with no remaining findings.
+The full Release floor and `Candidates`, `CandidateScale`, and `Contracts`
+gates pass. WP3 is complete and WP4 is now eligible. The rejected preauthored
 28-package comprehensive corpus is not a current input and must not be
-reconstructed. WP3 through WP5 each own the small semantic cases for behavior
-they implement; WP6 owns the accumulated cross-package corpus and closeout.
+reconstructed. WP4 and WP5 each own the small semantic cases for behavior they
+implement; WP6 owns the accumulated cross-package corpus and closeout.
 
 WP1's broad Slice 5 contracts are `Implementation-active`, not
 `Slice-frozen`. WP2-WP5 may revise them when vertical producer, consumer,
