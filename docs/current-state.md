@@ -18,9 +18,9 @@ records preserve evidence and history.
 |---|---|
 | Milestone | `M1` — active |
 | Active slice | `M1/S5` — active |
-| Completed package | `M1/S5/WP1`, `M1/S5/WP2`, and `M1/S5/WP3` |
-| Next eligible package | `M1/S5/WP4` — findings, cases, and coverage publication |
-| Later packages | `WP5` and `WP6`, dependency-gated by the active Slice 5 plan |
+| Completed package | `M1/S5/WP1` through `M1/S5/WP4` |
+| Next eligible package | `M1/S5/WP5` — replay, integration, safety, recovery, and reporting |
+| Later packages | `WP6`, dependency-gated by the active Slice 5 plan |
 | Default execution policy | [Development execution policy](development/execution-policy.md) |
 | Active milestone plan | [M1 backend semantic proof](plans/milestones/M1-backend-semantic-proof.md) |
 | Active slice plan | [M1 Slice 5](plans/slices/M1-slice-5-evidence-documentation-candidates-cases-replay.md) |
@@ -52,7 +52,16 @@ gates. Three independently authored public packages received a clean
 product-blind fixture review before product comparison; a separate final
 product review accepted the settled implementation with no remaining findings.
 The full Release floor and `Candidates`, `CandidateScale`, and `Contracts`
-gates pass. WP3 is complete and WP4 is now eligible. The rejected preauthored
+gates pass. WP3 is complete. WP4 now adds the product-reachable finding input
+producer, promotion and abstention rules, typed recommendations, causally
+grouped supported and lead-only cases, immutable occurrence/logical identity,
+all eight four-gate reconciliation outcomes, append-only lineage and lead
+promotion, taxonomy history/projection, exact coverage member/gap/failure
+ledgers, schema-5 typed persistence with accepted schema-4 migration, and the
+no-safety publication boundary. Four independently authored generic public
+packages were frozen and accepted before product comparison; the settled
+product passed fresh review, the exact `M1Cases` surface, and the `Cases` gate.
+WP4 is complete and WP5 is now eligible. The rejected preauthored
 28-package comprehensive corpus is not a current input and must not be
 reconstructed. WP4 and WP5 each own the small semantic cases for behavior they
 implement; WP6 owns the accumulated cross-package corpus and closeout.

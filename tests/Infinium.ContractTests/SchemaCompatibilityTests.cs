@@ -38,6 +38,7 @@ public sealed partial class SchemaCompatibilityTests
         "candidate-analysis.v1.schema.json",
         "candidate-delivered-expansion.v1.schema.json",
         "candidate-delivered-input.v1.schema.json",
+        "finding-case-input.v1.schema.json",
         "finding-case.v1.schema.json",
         "analysis-replay.v1.schema.json",
         "analysis-execution-input.v1.schema.json",
@@ -394,8 +395,10 @@ public sealed partial class SchemaCompatibilityTests
     [TestMethod]
     [TestCategory("M1Contract")]
     [TestCategory("M1Evaluation")]
+    [TestCategory("M1Cases")]
     [TestProperty("Category", "M1Contract")]
     [TestProperty("Category", "M1Evaluation")]
+    [TestProperty("Category", "M1Cases")]
     public void AnalyzerDeclarationSurvivesSchemaValidatedJsonRoundTrip()
     {
         AnalyzerDeclarationContract original = CreateAnalyzerDeclaration();
@@ -404,6 +407,8 @@ public sealed partial class SchemaCompatibilityTests
         AnalyzerDeclarationContract roundTripped = AnalyzerDeclarationJsonCodec.Deserialize(json);
 
         Assert.AreEqual(original.AnalyzerId, roundTripped.AnalyzerId);
+        Assert.AreEqual(original.AnalyzerFamily, roundTripped.AnalyzerFamily);
+        Assert.AreNotEqual(roundTripped.AnalyzerId, roundTripped.AnalyzerFamily);
         Assert.AreEqual(original.RulesetVersion, roundTripped.RulesetVersion);
         Assert.AreEqual(original.Scope.SupportedExtentFacets[0], roundTripped.Scope.SupportedExtentFacets[0]);
         Assert.AreEqual(original.LinkedEvaluationCases.Gap[0], roundTripped.LinkedEvaluationCases.Gap[0]);
@@ -468,7 +473,10 @@ public sealed partial class SchemaCompatibilityTests
                 ["EVAL-0065"]),
             RequiredSlice5PayloadContracts(),
             new ContractVersion(1, 0, 0),
-            RequiredNotUsedBoundaries());
+            RequiredNotUsedBoundaries())
+        {
+            AnalyzerFamily = "generic-scope-incongruent-family",
+        };
     }
 
     private static PayloadContractDeclarationContract[] RequiredSlice5PayloadContracts() =>

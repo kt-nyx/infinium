@@ -491,14 +491,14 @@ public sealed record TaxonomyAssignmentContract(
     TaxonomyApplicability Applicability,
     OpaqueId SubjectId,
     string SubjectType,
-    ClassificationRole Role,
+    ClassificationRole? Role,
     IReadOnlyList<OpaqueId> EvidenceIds,
     IReadOnlyList<OpaqueId> ApplicabilityConditionIds,
     OpaqueId? ConfidenceAssessmentId,
     OpaqueId AnalyzerOrAdjudicatorId,
     UtcTimestamp CreatedAt,
     string Reason,
-    OpaqueId? SupersedesAssignmentId);
+    IReadOnlyList<OpaqueId> SupersedesAssignmentIds);
 
 public sealed record DependencyClosureContract(
     OpaqueId ClosureId,
@@ -524,7 +524,10 @@ public sealed record IdentityEnvelopeContract(
     string AffectedLocus,
     IReadOnlyList<string> ApplicabilityPredicates,
     OpaqueId DependencyClosureId,
-    Sha256Fingerprint CanonicalSignature);
+    Sha256Fingerprint CanonicalSignature)
+{
+    public ContractVersion AnalyzerVersion { get; init; } = new(1, 0, 0);
+}
 
 public sealed record FindingOccurrenceContract(
     OpaqueId OccurrenceId,
@@ -580,9 +583,26 @@ public sealed record CoverageContract(
     string TaxonomyId,
     ContractVersion TaxonomyVersion,
     IReadOnlyList<OpaqueId> TaxonomyAssignmentIds,
-    IReadOnlyList<string> Exclusions,
+    IReadOnlyList<CoverageExclusionContract> Exclusions,
     IReadOnlyList<OpaqueId> GapIds,
-    IReadOnlyList<OpaqueId> FailureIds);
+    IReadOnlyList<OpaqueId> FailureIds)
+{
+    public IReadOnlyList<CoverageMemberResultContract> MemberResults { get; init; } = [];
+}
+
+public sealed record CoverageMemberResultContract(
+    OpaqueId MemberId,
+    CoverageMemberState State,
+    string Reason,
+    string MissingCapabilityOrInformation,
+    OpaqueId? GapId,
+    OpaqueId? FailureId,
+    IReadOnlyList<OpaqueId> TaxonomyAssignmentIds);
+
+public sealed record CoverageExclusionContract(
+    OpaqueId MemberId,
+    string Reason,
+    CoverageMemberState State);
 
 public sealed record ReplayabilityAssessmentContract(
     ReplayClass ReplayClass,

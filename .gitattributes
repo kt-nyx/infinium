@@ -14,3 +14,4 @@
 # Evaluation fixtures are byte-exact retained artifacts whose SHA-256 values
 # are transitively bound by package manifests. Never rewrite or text-merge them.
 test-data/evaluation/m1-semantic/** binary
+docs/evaluation/fixtures/m1-slice5-wp4-cases-v1/*.json -text -diff -merge -eol

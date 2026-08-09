@@ -63,6 +63,15 @@ public static class FindingCaseJsonCodec
         Slice5ContractJsonCodec.Deserialize<FindingCaseContract>(bytes, "finding-case.v1.schema.json", static item => Slice5ContractInvariants.Validate(item));
 }
 
+public static class FindingCaseInputJsonCodec
+{
+    public static byte[] Serialize(FindingCaseInputContract value) =>
+        Slice5ContractJsonCodec.Serialize(value, "finding-case-input.v1.schema.json", static item => FindingCaseContractInvariants.Validate(item));
+
+    public static FindingCaseInputContract Deserialize(ReadOnlySpan<byte> bytes) =>
+        Slice5ContractJsonCodec.Deserialize<FindingCaseInputContract>(bytes, "finding-case-input.v1.schema.json", static item => FindingCaseContractInvariants.Validate(item));
+}
+
 public static class AnalysisReplayJsonCodec
 {
     public static byte[] Serialize(AnalysisReplayContract value) =>

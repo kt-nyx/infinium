@@ -13,8 +13,8 @@ namespace Infinium.Persistence;
 
 public sealed partial class AuthoritativeStore : IDisposable
 {
-    public const int CurrentSchemaVersion = 4;
-    public const string CurrentStorageContractVersion = "1.3.0";
+    public const int CurrentSchemaVersion = 5;
+    public const string CurrentStorageContractVersion = "1.4.0";
     private const string SchemaV3Fingerprint =
         "02fed67fa5dac6c28ec2a9f477733edc9f12eaa03a08f9d7dec05b502e45d6cf";
     private const int MaximumBackupManifestBytes = 16 * 1024 * 1024;
@@ -4018,6 +4018,76 @@ public sealed partial class AuthoritativeStore : IDisposable
                     ("$now", ToText(DateTimeOffset.UtcNow)));
                 transaction.Commit();
             }
+
+            if (current <= 4)
+            {
+                ValidateSchema4MigrationSource();
+                using var transaction = BeginTransaction();
+                Execute(SchemaV5, transaction);
+                CreateAppendOnlyTriggers(SchemaV5AppendOnlyTables, transaction);
+                string schemaFingerprint = ComputeSchemaFingerprint(connection, transaction);
+                Execute(
+                    """
+                    UPDATE store_metadata SET value = '5' WHERE key = 'schema_version';
+                    UPDATE store_metadata SET value = '1.4.0'
+                    WHERE key = 'storage_contract_version';
+                    UPDATE store_metadata SET value = $schema_fingerprint
+                    WHERE key = 'schema_fingerprint';
+                    INSERT INTO migration_history(
+                        migration_id, from_version, to_version, applied_at, sqlite_source_id)
+                    VALUES ('M1-S5-WP4-0005', 4, 5, $now, $sqlite_source);
+                    PRAGMA user_version = 5;
+                    """,
+                    transaction,
+                    ("$schema_fingerprint", schemaFingerprint),
+                    ("$sqlite_source", BindingIdentity.SourceId),
+                    ("$now", ToText(DateTimeOffset.UtcNow)));
+                transaction.Commit();
+            }
+        }
+    }
+
+    private void ValidateSchema4MigrationSource()
+    {
+        Dictionary<string, string> metadata = new(StringComparer.Ordinal);
+        using (SqliteCommand command = connection.CreateCommand())
+        {
+            command.CommandText =
+                """
+                SELECT key, value FROM store_metadata
+                WHERE key IN (
+                    'schema_version','schema_fingerprint','storage_contract_version',
+                    'sqlite_version','sqlite_source_id');
+                """;
+            using SqliteDataReader reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                metadata.Add(reader.GetString(0), reader.GetString(1));
+            }
+        }
+        const string schema4Fingerprint = "0e4fbeb821fdd83d86737d60979fa35d9a1300a4d971450c516f66d07ef2231e";
+        if (metadata.Count != 5
+            || metadata["schema_version"] != "4"
+            || metadata["storage_contract_version"] != "1.3.0"
+            || metadata["sqlite_version"] != BindingIdentity.Version
+            || metadata["sqlite_source_id"] != BindingIdentity.SourceId
+            || metadata["schema_fingerprint"] != schema4Fingerprint
+            || ComputeSchemaFingerprint(connection) != schema4Fingerprint)
+        {
+            throw new InvalidOperationException(
+                "Schema 4 does not match the exact accepted Slice 5 contract required for WP4 migration.");
+        }
+        using SqliteCommand migration = connection.CreateCommand();
+        migration.CommandText =
+            """
+            SELECT COUNT(*) FROM migration_history
+            WHERE migration_id = 'M1-S5-0004' AND from_version = 3 AND to_version = 4
+              AND sqlite_source_id = $source;
+            """;
+        migration.Parameters.AddWithValue("$source", BindingIdentity.SourceId);
+        if (Convert.ToInt32(migration.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
+        {
+            throw new InvalidOperationException("Schema 4 migration provenance is invalid.");
         }
     }
 
@@ -4072,8 +4142,11 @@ public sealed partial class AuthoritativeStore : IDisposable
     }
 
     private void CreateSchemaV4AppendOnlyTriggers(SqliteTransaction transaction)
+        => CreateAppendOnlyTriggers(SchemaV4AppendOnlyTables, transaction);
+
+    private void CreateAppendOnlyTriggers(IEnumerable<string> tables, SqliteTransaction transaction)
     {
-        foreach (string table in SchemaV4AppendOnlyTables)
+        foreach (string table in tables)
         {
             Execute(
                 $"""
@@ -5409,6 +5482,9 @@ public sealed partial class AuthoritativeStore : IDisposable
         "index:idx_taxonomy_subject",
         "table:analysis_candidates",
         "table:analysis_coverage",
+        "table:analysis_coverage_failure_links",
+        "table:analysis_coverage_gap_links",
+        "table:analysis_coverage_taxonomy_links",
         "table:analysis_dependency_edges",
         "table:analysis_gaps",
         "table:analysis_hypotheses",
@@ -5419,6 +5495,7 @@ public sealed partial class AuthoritativeStore : IDisposable
         "table:audit_events",
         "table:candidate_decisions",
         "table:case_memberships",
+        "table:case_hypothesis_memberships",
         "table:case_occurrence_details",
         "table:case_occurrences",
         "table:checkpoints",
@@ -5435,10 +5512,19 @@ public sealed partial class AuthoritativeStore : IDisposable
         "table:evidence_application_links",
         "table:evidence_revisions",
         "table:finding_occurrence_details",
+        "table:finding_case_abstentions",
+        "table:finding_case_case_details",
+        "table:finding_case_finding_details",
+        "table:finding_case_gap_details",
+        "table:finding_case_publications",
+        "table:finding_case_recommendations",
+        "table:finding_case_taxonomy_assignments",
+        "table:finding_promotion_assessments",
         "table:finding_occurrences",
         "table:job_nodes",
         "table:lifecycle_events",
         "table:lineage_details",
+        "table:lineage_event_edges",
         "table:lineage_events",
         "table:logical_cases",
         "table:logical_findings",
@@ -5450,6 +5536,8 @@ public sealed partial class AuthoritativeStore : IDisposable
         "table:publication_receipts",
         "table:reconciliation_assessments",
         "table:reconciliation_details",
+        "table:reconciliation_metadata",
+        "table:reconciliation_proof_links",
         "table:run_projection",
         "table:run_operations",
         "table:runs",
@@ -5458,10 +5546,17 @@ public sealed partial class AuthoritativeStore : IDisposable
         "table:snapshot_capture_operations",
         "table:snapshot_capture_publications",
         "table:taxonomy_assignments",
+        "table:taxonomy_projection_edges",
         "trigger:analysis_candidates_append_only_delete",
         "trigger:analysis_candidates_append_only_update",
         "trigger:analysis_coverage_append_only_delete",
         "trigger:analysis_coverage_append_only_update",
+        "trigger:analysis_coverage_failure_links_append_only_delete",
+        "trigger:analysis_coverage_failure_links_append_only_update",
+        "trigger:analysis_coverage_gap_links_append_only_delete",
+        "trigger:analysis_coverage_gap_links_append_only_update",
+        "trigger:analysis_coverage_taxonomy_links_append_only_delete",
+        "trigger:analysis_coverage_taxonomy_links_append_only_update",
         "trigger:analysis_dependency_edges_append_only_delete",
         "trigger:analysis_dependency_edges_append_only_update",
         "trigger:analysis_gaps_append_only_delete",
@@ -5478,6 +5573,8 @@ public sealed partial class AuthoritativeStore : IDisposable
         "trigger:candidate_decisions_append_only_update",
         "trigger:case_memberships_append_only_delete",
         "trigger:case_memberships_append_only_update",
+        "trigger:case_hypothesis_memberships_append_only_delete",
+        "trigger:case_hypothesis_memberships_append_only_update",
         "trigger:case_occurrence_details_append_only_delete",
         "trigger:case_occurrence_details_append_only_update",
         "trigger:documentation_passages_append_only_delete",
@@ -5504,12 +5601,36 @@ public sealed partial class AuthoritativeStore : IDisposable
         "trigger:evidence_revisions_append_only_update",
         "trigger:finding_occurrence_details_append_only_delete",
         "trigger:finding_occurrence_details_append_only_update",
+        "trigger:finding_case_abstentions_append_only_delete",
+        "trigger:finding_case_abstentions_append_only_update",
+        "trigger:finding_case_case_details_append_only_delete",
+        "trigger:finding_case_case_details_append_only_update",
+        "trigger:finding_case_finding_details_append_only_delete",
+        "trigger:finding_case_finding_details_append_only_update",
+        "trigger:finding_case_gap_details_append_only_delete",
+        "trigger:finding_case_gap_details_append_only_update",
+        "trigger:finding_case_publications_append_only_delete",
+        "trigger:finding_case_publications_append_only_update",
+        "trigger:finding_case_recommendations_append_only_delete",
+        "trigger:finding_case_recommendations_append_only_update",
+        "trigger:finding_case_taxonomy_assignments_append_only_delete",
+        "trigger:finding_case_taxonomy_assignments_append_only_update",
+        "trigger:finding_promotion_assessments_append_only_delete",
+        "trigger:finding_promotion_assessments_append_only_update",
         "trigger:lineage_details_append_only_delete",
         "trigger:lineage_details_append_only_update",
+        "trigger:lineage_event_edges_append_only_delete",
+        "trigger:lineage_event_edges_append_only_update",
         "trigger:reconciliation_details_append_only_delete",
         "trigger:reconciliation_details_append_only_update",
+        "trigger:reconciliation_metadata_append_only_delete",
+        "trigger:reconciliation_metadata_append_only_update",
+        "trigger:reconciliation_proof_links_append_only_delete",
+        "trigger:reconciliation_proof_links_append_only_update",
         "trigger:taxonomy_assignments_append_only_delete",
         "trigger:taxonomy_assignments_append_only_update",
+        "trigger:taxonomy_projection_edges_append_only_delete",
+        "trigger:taxonomy_projection_edges_append_only_update",
         "trigger:lifecycle_events_append_only_delete",
         "trigger:lifecycle_events_append_only_update",
         "trigger:audit_events_append_only_delete",
@@ -5564,6 +5685,222 @@ public sealed partial class AuthoritativeStore : IDisposable
         "reconciliation_details",
         "taxonomy_assignments",
     ];
+
+    private static readonly string[] SchemaV5AppendOnlyTables =
+    [
+        "analysis_coverage_failure_links",
+        "analysis_coverage_gap_links",
+        "analysis_coverage_taxonomy_links",
+        "case_hypothesis_memberships",
+        "finding_case_abstentions",
+        "finding_case_case_details",
+        "finding_case_finding_details",
+        "finding_case_gap_details",
+        "finding_case_publications",
+        "finding_case_recommendations",
+        "finding_case_taxonomy_assignments",
+        "finding_promotion_assessments",
+        "lineage_event_edges",
+        "reconciliation_metadata",
+        "reconciliation_proof_links",
+        "taxonomy_projection_edges",
+    ];
+
+    private const string SchemaV5 =
+        """
+        ALTER TABLE lineage_events ADD COLUMN predecessor_occurrence_id TEXT;
+        ALTER TABLE lineage_events ADD COLUMN successor_occurrence_id TEXT;
+        ALTER TABLE finding_occurrences ADD COLUMN analyzer_version TEXT NOT NULL DEFAULT 'legacy-unspecified';
+        DROP INDEX idx_findings_signature;
+        CREATE INDEX idx_findings_signature ON finding_occurrences(
+            analyzer_family, analyzer_version, identity_contract_version, canonical_signature);
+        ALTER TABLE analysis_coverage ADD COLUMN analyzer_id TEXT NOT NULL DEFAULT 'legacy-unspecified';
+        ALTER TABLE analysis_coverage ADD COLUMN denominator_label TEXT NOT NULL DEFAULT 'legacy coverage';
+        ALTER TABLE analysis_coverage ADD COLUMN exclusions_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(exclusions_json));
+        ALTER TABLE analysis_coverage ADD COLUMN member_results_json TEXT NOT NULL DEFAULT '[]' CHECK(json_valid(member_results_json));
+        CREATE TABLE finding_case_publications(
+            finding_case_payload_id TEXT PRIMARY KEY REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+            run_id TEXT NOT NULL REFERENCES runs(run_id) ON DELETE RESTRICT,
+            input_id TEXT NOT NULL,
+            promotion_policy_id TEXT NOT NULL,
+            promotion_policy_version TEXT NOT NULL,
+            reconciliation_policy_id TEXT NOT NULL,
+            reconciliation_policy_version TEXT NOT NULL,
+            boundaries_json TEXT NOT NULL CHECK(json_valid(boundaries_json)),
+            publication_claim_boundary TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        ) STRICT;
+        CREATE TABLE finding_promotion_assessments(
+            promotion_assessment_id TEXT PRIMARY KEY,
+            run_id TEXT NOT NULL REFERENCES runs(run_id) ON DELETE RESTRICT,
+            hypothesis_id TEXT NOT NULL REFERENCES analysis_hypotheses(hypothesis_id) ON DELETE RESTRICT,
+            state_present INTEGER NOT NULL CHECK(state_present IN (0,1)),
+            confidence_at_least_plausible INTEGER NOT NULL CHECK(confidence_at_least_plausible IN (0,1)),
+            has_supporting_evidence INTEGER NOT NULL CHECK(has_supporting_evidence IN (0,1)),
+            has_no_defeating_contradictions INTEGER NOT NULL CHECK(has_no_defeating_contradictions IN (0,1)),
+            has_no_missing_information INTEGER NOT NULL CHECK(has_no_missing_information IN (0,1)),
+            severity_closed INTEGER NOT NULL CHECK(severity_closed IN (0,1)),
+            identity_closed INTEGER NOT NULL CHECK(identity_closed IN (0,1)),
+            conclusion_available INTEGER NOT NULL CHECK(conclusion_available IN (0,1)),
+            lead_eligible_state INTEGER NOT NULL CHECK(lead_eligible_state IN (0,1)),
+            promotion_outcome TEXT NOT NULL CHECK(promotion_outcome IN ('supported-finding','lead-only','abstained')),
+            reasons_json TEXT NOT NULL CHECK(json_valid(reasons_json)),
+            assessment_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+            created_at TEXT NOT NULL
+        ) STRICT;
+        CREATE TABLE finding_case_abstentions(
+            abstention_id TEXT PRIMARY KEY,
+            run_id TEXT NOT NULL REFERENCES runs(run_id) ON DELETE RESTRICT,
+            hypothesis_id TEXT NOT NULL REFERENCES analysis_hypotheses(hypothesis_id) ON DELETE RESTRICT,
+            reason TEXT NOT NULL,
+            required_information_json TEXT NOT NULL CHECK(json_valid(required_information_json)),
+            evidence_ids_json TEXT NOT NULL CHECK(json_valid(evidence_ids_json)),
+            abstention_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+            created_at TEXT NOT NULL
+        ) STRICT;
+        CREATE TABLE finding_case_finding_details(
+            finding_occurrence_id TEXT PRIMARY KEY REFERENCES finding_occurrences(finding_occurrence_id) ON DELETE RESTRICT,
+            hypothesis_id TEXT NOT NULL REFERENCES analysis_hypotheses(hypothesis_id) ON DELETE RESTRICT,
+            conclusion TEXT NOT NULL,
+            evidence_ids_json TEXT NOT NULL CHECK(json_valid(evidence_ids_json)),
+            case_identity_envelope_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+            taxonomy_assignment_ids_json TEXT NOT NULL CHECK(json_valid(taxonomy_assignment_ids_json)),
+            semantic_fingerprint TEXT NOT NULL,
+            supersedes_occurrence_id TEXT,
+            detail_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+            created_at TEXT NOT NULL
+        ) STRICT;
+        CREATE TABLE finding_case_recommendations(
+            recommendation_id TEXT PRIMARY KEY,
+            run_id TEXT NOT NULL REFERENCES runs(run_id) ON DELETE RESTRICT,
+            finding_occurrence_id TEXT REFERENCES finding_occurrences(finding_occurrence_id) ON DELETE RESTRICT,
+            abstention_id TEXT REFERENCES finding_case_abstentions(abstention_id) ON DELETE RESTRICT,
+            lead_hypothesis_id TEXT REFERENCES analysis_hypotheses(hypothesis_id) ON DELETE RESTRICT,
+            recommendation_kind TEXT NOT NULL CHECK(recommendation_kind IN (
+                'remediation','alternative-remediation','validation','further-investigation','abstention')),
+            action TEXT NOT NULL,
+            uncertainty TEXT NOT NULL,
+            reversibility TEXT NOT NULL,
+            verification TEXT NOT NULL,
+            risks_json TEXT NOT NULL CHECK(json_valid(risks_json)),
+            evidence_ids_json TEXT NOT NULL CHECK(json_valid(evidence_ids_json)),
+            recommendation_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+            created_at TEXT NOT NULL,
+            CHECK((finding_occurrence_id IS NOT NULL) + (abstention_id IS NOT NULL) + (lead_hypothesis_id IS NOT NULL) = 1)
+        ) STRICT;
+        CREATE TABLE case_hypothesis_memberships(
+            case_hypothesis_membership_id TEXT PRIMARY KEY,
+            case_occurrence_id TEXT NOT NULL REFERENCES case_occurrences(case_occurrence_id) ON DELETE RESTRICT,
+            hypothesis_id TEXT NOT NULL REFERENCES analysis_hypotheses(hypothesis_id) ON DELETE RESTRICT,
+            membership_role TEXT NOT NULL CHECK(membership_role IN ('cause','lead')),
+            cause_proof_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+            created_at TEXT NOT NULL,
+            UNIQUE(case_occurrence_id,hypothesis_id)
+        ) STRICT;
+        CREATE TABLE finding_case_case_details(
+            case_occurrence_id TEXT PRIMARY KEY REFERENCES case_occurrences(case_occurrence_id) ON DELETE RESTRICT,
+            shared_cause TEXT NOT NULL,
+            cause_proof_evidence_ids_json TEXT NOT NULL CHECK(json_valid(cause_proof_evidence_ids_json)),
+            semantic_fingerprint TEXT NOT NULL,
+            supersedes_occurrence_id TEXT,
+            detail_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+            created_at TEXT NOT NULL
+        ) STRICT;
+        CREATE TABLE finding_case_taxonomy_assignments(
+            taxonomy_assignment_id TEXT PRIMARY KEY,
+            run_id TEXT NOT NULL REFERENCES runs(run_id) ON DELETE RESTRICT,
+            subject_kind TEXT NOT NULL CHECK(subject_kind IN ('hypothesis','finding-occurrence','case-occurrence')),
+            subject_id TEXT NOT NULL,
+            taxonomy_id TEXT NOT NULL,
+            taxonomy_version TEXT NOT NULL,
+            axis TEXT NOT NULL,
+            facet TEXT NOT NULL,
+            taxonomy_code TEXT,
+            applicability_state TEXT NOT NULL CHECK(applicability_state IN ('assigned','unknown','unsupported','unmapped','not-applicable')),
+            classification_role TEXT CHECK(classification_role IN ('declared','observed','predicted','established')),
+            evidence_ids_json TEXT NOT NULL CHECK(json_valid(evidence_ids_json)),
+            applicability_condition_ids_json TEXT NOT NULL CHECK(json_valid(applicability_condition_ids_json)),
+            confidence_assessment_id TEXT,
+            analyzer_or_adjudicator_id TEXT NOT NULL,
+            reason TEXT NOT NULL,
+            supersedes_assignment_ids_json TEXT NOT NULL CHECK(json_valid(supersedes_assignment_ids_json)),
+            assignment_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+            created_at TEXT NOT NULL,
+            CHECK((applicability_state = 'assigned') = (taxonomy_code IS NOT NULL)),
+            CHECK(applicability_state <> 'assigned' OR classification_role IS NOT NULL)
+        ) STRICT;
+        CREATE TABLE taxonomy_projection_edges(
+            taxonomy_projection_id TEXT PRIMARY KEY,
+            source_assignment_id TEXT NOT NULL REFERENCES finding_case_taxonomy_assignments(taxonomy_assignment_id) ON DELETE RESTRICT,
+            projected_assignment_id TEXT NOT NULL REFERENCES finding_case_taxonomy_assignments(taxonomy_assignment_id) ON DELETE RESTRICT,
+            mapping_authority_id TEXT NOT NULL,
+            evidence_ids_json TEXT NOT NULL CHECK(json_valid(evidence_ids_json)),
+            reason TEXT NOT NULL,
+            projection_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+            created_at TEXT NOT NULL
+        ) STRICT;
+        CREATE TABLE finding_case_gap_details(
+            gap_id TEXT PRIMARY KEY REFERENCES analysis_gaps(gap_id) ON DELETE RESTRICT,
+            reason TEXT NOT NULL,
+            missing_capability_or_information TEXT NOT NULL,
+            evidence_ids_json TEXT NOT NULL CHECK(json_valid(evidence_ids_json)),
+            detail_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+            created_at TEXT NOT NULL
+        ) STRICT;
+        CREATE TABLE analysis_coverage_taxonomy_links(
+            coverage_taxonomy_link_id TEXT PRIMARY KEY,
+            coverage_result_id TEXT NOT NULL REFERENCES analysis_coverage(coverage_result_id) ON DELETE RESTRICT,
+            taxonomy_assignment_id TEXT NOT NULL REFERENCES finding_case_taxonomy_assignments(taxonomy_assignment_id) ON DELETE RESTRICT,
+            link_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+            created_at TEXT NOT NULL,
+            UNIQUE(coverage_result_id,taxonomy_assignment_id)
+        ) STRICT;
+        CREATE TABLE analysis_coverage_gap_links(
+            coverage_gap_link_id TEXT PRIMARY KEY,
+            coverage_result_id TEXT NOT NULL REFERENCES analysis_coverage(coverage_result_id) ON DELETE RESTRICT,
+            gap_id TEXT NOT NULL REFERENCES analysis_gaps(gap_id) ON DELETE RESTRICT,
+            link_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+            created_at TEXT NOT NULL,
+            UNIQUE(coverage_result_id,gap_id)
+        ) STRICT;
+        CREATE TABLE analysis_coverage_failure_links(
+            coverage_failure_link_id TEXT PRIMARY KEY,
+            coverage_result_id TEXT NOT NULL REFERENCES analysis_coverage(coverage_result_id) ON DELETE RESTRICT,
+            failure_id TEXT NOT NULL,
+            failure_code TEXT NOT NULL,
+            message TEXT NOT NULL,
+            retryable INTEGER NOT NULL CHECK(retryable IN (0,1)),
+            link_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+            created_at TEXT NOT NULL,
+            UNIQUE(coverage_result_id,failure_id)
+        ) STRICT;
+        CREATE TABLE reconciliation_metadata(
+            reconciliation_assessment_id TEXT PRIMARY KEY REFERENCES reconciliation_assessments(reconciliation_assessment_id) ON DELETE RESTRICT,
+            actor_id TEXT NOT NULL,
+            policy_id TEXT NOT NULL,
+            policy_version TEXT NOT NULL,
+            proof_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+            visible_by_default INTEGER NOT NULL CHECK(visible_by_default IN (0,1)),
+            created_at TEXT NOT NULL
+        ) STRICT;
+        CREATE TABLE reconciliation_proof_links(
+            reconciliation_proof_link_id TEXT PRIMARY KEY,
+            reconciliation_assessment_id TEXT NOT NULL REFERENCES reconciliation_assessments(reconciliation_assessment_id) ON DELETE RESTRICT,
+            evidence_id TEXT NOT NULL,
+            proof_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+            created_at TEXT NOT NULL,
+            UNIQUE(reconciliation_assessment_id,evidence_id)
+        ) STRICT;
+        CREATE TABLE lineage_event_edges(
+            lineage_event_edge_id TEXT PRIMARY KEY,
+            lineage_event_id TEXT NOT NULL REFERENCES lineage_events(lineage_event_id) ON DELETE RESTRICT,
+            edge_side TEXT NOT NULL CHECK(edge_side IN ('predecessor','successor')),
+            occurrence_id TEXT NOT NULL,
+            proof_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+            created_at TEXT NOT NULL,
+            UNIQUE(lineage_event_id,edge_side,occurrence_id)
+        ) STRICT;
+        """;
 
     private const string SchemaV4 =
         """

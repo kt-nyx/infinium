@@ -4,97 +4,168 @@
   "title": "Infinium Slice 5 finding and case v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_id", "schema_version", "payload_id", "originating_run_id", "findings", "recommendations", "cases", "reconciliation_assessments", "lineage_events", "taxonomy_assignments", "coverage", "gaps"],
+  "required": ["schema_id", "schema_version", "payload_id", "originating_run_id", "input_id", "promotion_policy_id", "promotion_policy_version", "reconciliation_policy_id", "reconciliation_policy_version", "promotion_assessments", "abstentions", "findings", "recommendations", "cases", "reconciliation_assessments", "lineage_events", "taxonomy_assignments", "taxonomy_projections", "coverage", "coverage_failures", "gaps", "boundaries", "publication_claim_boundary"],
   "properties": {
     "schema_id": { "const": "infinium.analysis.finding-case/v1" },
     "schema_version": { "const": "1.0.0" },
     "payload_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
     "originating_run_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "input_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "promotion_policy_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "promotion_policy_version": { "const": "1.0.0" },
+    "reconciliation_policy_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "reconciliation_policy_version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+    "promotion_assessments": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/promotion" } },
+    "abstentions": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/abstention" } },
     "findings": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/finding" } },
     "recommendations": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/recommendation" } },
     "cases": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/case" } },
-    "reconciliation_assessments": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/reconciliation" } },
-    "lineage_events": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/lineage" } },
-    "taxonomy_assignments": { "type": "array", "maxItems": 100000, "items": { "$ref": "common.v1.schema.json#/$defs/taxonomyAssignment" } },
-    "coverage": { "type": "array", "maxItems": 100000, "items": { "$ref": "common.v1.schema.json#/$defs/coverageRecord" } },
-    "gaps": { "type": "array", "maxItems": 100000, "items": { "$ref": "common.v1.schema.json#/$defs/typedArtifact" } }
+    "reconciliation_assessments": { "type": "array", "maxItems": 200000, "items": { "$ref": "#/$defs/reconciliation" } },
+    "lineage_events": { "type": "array", "maxItems": 200000, "items": { "$ref": "#/$defs/lineage" } },
+    "taxonomy_assignments": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/taxonomyAssignment" } },
+    "taxonomy_projections": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/taxonomyProjection" } },
+    "coverage": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/coverage" } },
+    "coverage_failures": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/coverageFailure" } },
+    "gaps": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/gap" } },
+    "boundaries": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "$ref": "#/$defs/boundary" } },
+    "publication_claim_boundary": { "const": "no-safety-claim" }
   },
   "$defs": {
-    "ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.v1.schema.json#/$defs/identifier" } },
+    "id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+    "strings": { "type": "array", "items": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" } },
+    "taxonomyAssignment": {
+      "type": "object", "additionalProperties": false,
+      "required": ["assignment_id", "taxonomy_id", "taxonomy_version", "axis", "facet", "applicability", "subject_id", "subject_type", "evidence_ids", "applicability_condition_ids", "analyzer_or_adjudicator_id", "created_at", "reason", "supersedes_assignment_ids"],
+      "properties": {
+        "assignment_id": { "$ref": "#/$defs/id" }, "taxonomy_id": { "$ref": "#/$defs/id" }, "taxonomy_version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+        "axis": { "$ref": "#/$defs/id" }, "facet": { "$ref": "#/$defs/id" }, "code": { "$ref": "#/$defs/id" },
+        "applicability": { "enum": ["assigned", "unknown", "unsupported", "unmapped", "not-applicable"] },
+        "subject_id": { "$ref": "#/$defs/id" }, "subject_type": { "$ref": "#/$defs/id" },
+        "role": { "type": ["string", "null"], "enum": ["declared", "observed", "predicted", "established", null] },
+        "evidence_ids": { "$ref": "#/$defs/ids" }, "applicability_condition_ids": { "$ref": "#/$defs/ids" },
+        "confidence_assessment_id": { "$ref": "#/$defs/id" }, "analyzer_or_adjudicator_id": { "$ref": "#/$defs/id" },
+        "created_at": { "$ref": "common.v1.schema.json#/$defs/utcTimestamp" }, "reason": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+        "supersedes_assignment_ids": { "$ref": "#/$defs/ids" }
+      },
+      "oneOf": [
+        { "properties": { "applicability": { "const": "assigned" }, "role": { "enum": ["declared", "observed", "predicted", "established"] } }, "required": ["code", "role"] },
+        { "properties": { "applicability": { "enum": ["unknown", "unsupported", "unmapped", "not-applicable"] } }, "not": { "required": ["code"] } }
+      ]
+    },
+    "coverage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["coverage_id", "originating_run_id", "analyzer_id", "population_id", "denominator_label", "denominator", "completed_count", "state", "taxonomy_id", "taxonomy_version", "taxonomy_assignment_ids", "exclusions", "gap_ids", "failure_ids", "member_results"],
+      "properties": {
+        "coverage_id": { "$ref": "#/$defs/id" }, "originating_run_id": { "$ref": "#/$defs/id" }, "analyzer_id": { "$ref": "#/$defs/id" },
+        "population_id": { "$ref": "#/$defs/id" }, "denominator_label": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+        "denominator": { "type": "integer", "minimum": 0 }, "completed_count": { "type": "integer", "minimum": 0 },
+        "state": { "enum": ["completed", "completed-with-gaps", "failed", "skipped-by-configuration", "skipped-by-limit", "unsupported"] },
+        "taxonomy_id": { "$ref": "#/$defs/id" }, "taxonomy_version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+        "taxonomy_assignment_ids": { "$ref": "#/$defs/ids" }, "exclusions": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/coverageExclusion" } },
+        "gap_ids": { "$ref": "#/$defs/ids" }, "failure_ids": { "$ref": "#/$defs/ids" },
+        "member_results": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/coverageMemberResult" } }
+      }
+    },
+    "coverageExclusion": {
+      "type": "object", "additionalProperties": false,
+      "required": ["member_id", "reason", "state"],
+      "properties": { "member_id": { "$ref": "#/$defs/id" }, "reason": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "state": { "enum": ["skipped-by-configuration", "skipped-by-limit"] } }
+    },
+    "coverageMemberResult": {
+      "type": "object", "additionalProperties": false,
+      "required": ["member_id", "state", "reason", "missing_capability_or_information", "taxonomy_assignment_ids"],
+      "properties": {
+        "member_id": { "$ref": "#/$defs/id" },
+        "state": { "enum": ["completed", "completed-with-gaps", "failed", "skipped-by-configuration", "skipped-by-limit", "unsupported"] },
+        "reason": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+        "missing_capability_or_information": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+        "gap_id": { "oneOf": [{ "$ref": "#/$defs/id" }, { "type": "null" }] },
+        "failure_id": { "oneOf": [{ "$ref": "#/$defs/id" }, { "type": "null" }] },
+        "taxonomy_assignment_ids": { "$ref": "#/$defs/ids" }
+      }
+    },
+    "identity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["analyzer_family", "analyzer_version", "semantic_contract_version", "identity_contract_version", "participants_and_roles", "causal_condition", "affected_locus", "applicability_predicates", "dependency_closure_id", "canonical_signature"],
+      "properties": {
+        "analyzer_family": { "$ref": "#/$defs/id" },
+        "analyzer_version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+        "semantic_contract_version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+        "identity_contract_version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+        "participants_and_roles": { "type": "object", "additionalProperties": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" } },
+        "causal_condition": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+        "affected_locus": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+        "applicability_predicates": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" } },
+        "dependency_closure_id": { "$ref": "#/$defs/id" },
+        "canonical_signature": { "$ref": "common.v1.schema.json#/$defs/sha256" }
+      }
+    },
+    "promotion": {
+      "type": "object", "additionalProperties": false,
+      "required": ["assessment_id", "hypothesis_id", "state_present", "confidence_at_least_plausible", "has_supporting_evidence", "has_no_defeating_contradictions", "has_no_missing_information", "severity_closed", "identity_closed", "conclusion_available", "lead_eligible_state", "outcome", "reasons"],
+      "properties": {
+        "assessment_id": { "$ref": "#/$defs/id" }, "hypothesis_id": { "$ref": "#/$defs/id" },
+        "state_present": { "type": "boolean" }, "confidence_at_least_plausible": { "type": "boolean" }, "has_supporting_evidence": { "type": "boolean" }, "has_no_defeating_contradictions": { "type": "boolean" }, "has_no_missing_information": { "type": "boolean" }, "severity_closed": { "type": "boolean" }, "identity_closed": { "type": "boolean" }, "conclusion_available": { "type": "boolean" }, "lead_eligible_state": { "type": "boolean" },
+        "outcome": { "enum": ["supported-finding", "lead-only", "abstained"] }, "reasons": { "$ref": "#/$defs/strings" }
+      }
+    },
+    "abstention": {
+      "type": "object", "additionalProperties": false,
+      "required": ["abstention_id", "hypothesis_id", "reason", "required_information", "evidence_ids"],
+      "properties": { "abstention_id": { "$ref": "#/$defs/id" }, "hypothesis_id": { "$ref": "#/$defs/id" }, "reason": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "required_information": { "$ref": "#/$defs/strings" }, "evidence_ids": { "$ref": "#/$defs/ids" } }
+    },
     "finding": {
       "type": "object", "additionalProperties": false,
-      "required": ["finding_occurrence_id", "logical_finding_id", "originating_run_id", "candidate_id", "conclusion", "severity", "confidence", "evidence_ids", "identity_envelope_id"],
+      "required": ["finding_occurrence_id", "logical_finding_id", "originating_run_id", "candidate_id", "hypothesis_id", "conclusion", "severity", "confidence", "evidence_ids", "identity_envelope_id", "identity_envelope", "case_identity_envelope_id", "case_identity_envelope", "taxonomy_assignment_ids", "semantic_fingerprint"],
       "properties": {
-        "finding_occurrence_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
-        "logical_finding_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
-        "originating_run_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
-        "candidate_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
-        "conclusion": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
-        "severity": { "enum": ["advisory", "minor", "moderate", "major", "blocker"] },
-        "confidence": { "enum": ["plausible", "strongly-supported", "confirmed"] },
-        "evidence_ids": { "$ref": "#/$defs/ids" },
-        "identity_envelope_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
-        "supersedes_occurrence_id": { "$ref": "common.v1.schema.json#/$defs/identifier" }
+        "finding_occurrence_id": { "$ref": "#/$defs/id" }, "logical_finding_id": { "$ref": "#/$defs/id" }, "originating_run_id": { "$ref": "#/$defs/id" }, "candidate_id": { "$ref": "#/$defs/id" }, "hypothesis_id": { "$ref": "#/$defs/id" },
+        "conclusion": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "severity": { "enum": ["advisory", "minor", "moderate", "major", "blocker"] }, "confidence": { "enum": ["plausible", "strongly-supported", "confirmed"] },
+        "evidence_ids": { "$ref": "#/$defs/ids" }, "identity_envelope_id": { "$ref": "#/$defs/id" }, "identity_envelope": { "$ref": "#/$defs/identity" }, "case_identity_envelope_id": { "$ref": "#/$defs/id" }, "case_identity_envelope": { "$ref": "#/$defs/identity" }, "taxonomy_assignment_ids": { "$ref": "#/$defs/ids" }, "semantic_fingerprint": { "$ref": "common.v1.schema.json#/$defs/sha256" }, "supersedes_occurrence_id": { "$ref": "#/$defs/id" }
       }
     },
     "recommendation": {
       "type": "object", "additionalProperties": false,
-      "required": ["recommendation_id", "kind", "action", "uncertainty", "reversibility", "risks", "evidence_ids"],
+      "required": ["recommendation_id", "kind", "action", "uncertainty", "reversibility", "risks", "verification", "evidence_ids"],
       "properties": {
-        "recommendation_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
-        "kind": { "enum": ["remediation", "alternative-remediation", "validation", "further-investigation", "abstention"] },
-        "finding_occurrence_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
-        "abstention_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
-        "action": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
-        "uncertainty": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
-        "reversibility": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
-        "risks": { "type": "array", "items": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" } },
-        "evidence_ids": { "$ref": "#/$defs/ids" }
+        "recommendation_id": { "$ref": "#/$defs/id" }, "kind": { "enum": ["remediation", "alternative-remediation", "validation", "further-investigation", "abstention"] }, "finding_occurrence_id": { "$ref": "#/$defs/id" }, "abstention_id": { "$ref": "#/$defs/id" }, "lead_hypothesis_id": { "$ref": "#/$defs/id" },
+        "action": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "uncertainty": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "reversibility": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "risks": { "$ref": "#/$defs/strings" }, "verification": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "evidence_ids": { "$ref": "#/$defs/ids" }
       },
-      "oneOf": [{ "required": ["finding_occurrence_id"] }, { "required": ["abstention_id"] }]
+      "oneOf": [
+        { "required": ["finding_occurrence_id"], "properties": { "kind": { "enum": ["remediation", "alternative-remediation", "validation"] } }, "not": { "anyOf": [{ "required": ["abstention_id"] }, { "required": ["lead_hypothesis_id"] }] } },
+        { "required": ["abstention_id"], "properties": { "kind": { "enum": ["abstention", "further-investigation"] } }, "not": { "anyOf": [{ "required": ["finding_occurrence_id"] }, { "required": ["lead_hypothesis_id"] }] } },
+        { "required": ["lead_hypothesis_id"], "properties": { "kind": { "const": "further-investigation" } }, "not": { "anyOf": [{ "required": ["finding_occurrence_id"] }, { "required": ["abstention_id"] }] } }
+      ]
     },
     "case": {
       "type": "object", "additionalProperties": false,
-      "required": ["case_occurrence_id", "logical_case_id", "originating_run_id", "kind", "finding_occurrence_ids", "candidate_ids", "shared_cause", "cause_proof_evidence_ids", "affects_readiness"],
+      "required": ["case_occurrence_id", "logical_case_id", "originating_run_id", "kind", "finding_occurrence_ids", "candidate_ids", "hypothesis_ids", "shared_cause", "cause_proof_evidence_ids", "identity_envelope_id", "identity_envelope", "semantic_fingerprint", "affects_readiness"],
       "properties": {
-        "case_occurrence_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
-        "logical_case_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
-        "originating_run_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
-        "kind": { "enum": ["supported", "lead-only"] },
-        "finding_occurrence_ids": { "$ref": "#/$defs/ids" },
-        "candidate_ids": { "$ref": "#/$defs/ids" },
-        "shared_cause": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
-        "cause_proof_evidence_ids": { "$ref": "#/$defs/ids" },
-        "affects_readiness": { "type": "boolean" }
-      },
-      "allOf": [
-        { "if": { "properties": { "kind": { "const": "lead-only" } }, "required": ["kind"] }, "then": { "properties": { "finding_occurrence_ids": { "maxItems": 0 }, "affects_readiness": { "const": false } } } },
-        { "if": { "properties": { "kind": { "const": "supported" } }, "required": ["kind"] }, "then": { "properties": { "finding_occurrence_ids": { "minItems": 1 } } } }
-      ]
+        "case_occurrence_id": { "$ref": "#/$defs/id" }, "logical_case_id": { "$ref": "#/$defs/id" }, "originating_run_id": { "$ref": "#/$defs/id" }, "kind": { "enum": ["supported", "lead-only"] }, "finding_occurrence_ids": { "$ref": "#/$defs/ids" }, "candidate_ids": { "$ref": "#/$defs/ids" }, "hypothesis_ids": { "$ref": "#/$defs/ids" }, "shared_cause": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "cause_proof_evidence_ids": { "$ref": "#/$defs/ids" }, "identity_envelope_id": { "$ref": "#/$defs/id" }, "identity_envelope": { "$ref": "#/$defs/identity" }, "semantic_fingerprint": { "$ref": "common.v1.schema.json#/$defs/sha256" }, "supersedes_occurrence_id": { "$ref": "#/$defs/id" }, "affects_readiness": { "type": "boolean" }
+      }
     },
     "gate": { "enum": ["proven-equivalent", "proven-different", "ambiguous", "unknown", "not-evaluated"] },
     "reconciliation": {
       "type": "object", "additionalProperties": false,
-      "required": ["assessment_id", "prior_occurrence_id", "current_occurrence_id", "gates", "outcome", "gaps"],
-      "properties": {
-        "assessment_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
-        "prior_occurrence_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
-        "current_occurrence_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
-        "gates": { "type": "object", "additionalProperties": false, "required": ["causal", "applicability", "dependency", "producer"], "properties": { "causal": { "$ref": "#/$defs/gate" }, "applicability": { "$ref": "#/$defs/gate" }, "dependency": { "$ref": "#/$defs/gate" }, "producer": { "$ref": "#/$defs/gate" } } },
-        "outcome": { "enum": ["exact-continuation", "analytical-revision", "related-follow-up", "new-distinct", "ambiguous", "unknown", "not-observed", "not-evaluated"] },
-        "gaps": { "type": "array", "items": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" } }
-      }
+      "required": ["assessment_id", "subject_kind", "gates", "outcome", "gaps", "considered_occurrence_ids", "proof_evidence_ids", "policy_version", "mechanism", "actor_id", "assessed_at", "visible_by_default"],
+      "properties": { "assessment_id": { "$ref": "#/$defs/id" }, "subject_kind": { "enum": ["finding", "case"] }, "prior_occurrence_id": { "$ref": "#/$defs/id" }, "current_occurrence_id": { "$ref": "#/$defs/id" }, "gates": { "type": "object", "additionalProperties": false, "required": ["causal", "applicability", "dependency", "producer"], "properties": { "causal": { "$ref": "#/$defs/gate" }, "applicability": { "$ref": "#/$defs/gate" }, "dependency": { "$ref": "#/$defs/gate" }, "producer": { "$ref": "#/$defs/gate" } } }, "outcome": { "enum": ["exact-continuation", "analytical-revision", "related-follow-up", "new-distinct", "ambiguous", "unknown", "not-observed", "not-evaluated"] }, "gaps": { "$ref": "#/$defs/strings" }, "considered_occurrence_ids": { "$ref": "#/$defs/ids" }, "proof_evidence_ids": { "$ref": "#/$defs/ids" }, "policy_version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "mechanism": { "const": "automatic" }, "actor_id": { "$ref": "#/$defs/id" }, "assessed_at": { "$ref": "common.v1.schema.json#/$defs/utcTimestamp" }, "visible_by_default": { "type": "boolean" } },
+      "allOf": [
+        { "if": { "properties": { "outcome": { "const": "new-distinct" } }, "required": ["outcome"] }, "then": { "not": { "required": ["prior_occurrence_id"] } }, "else": { "required": ["prior_occurrence_id"] } }
+      ]
     },
     "lineage": {
-      "type": "object", "additionalProperties": false,
-      "required": ["event_id", "kind", "predecessor_ids", "successor_ids"],
-      "properties": {
-        "event_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
-        "kind": { "enum": ["supersedes", "analytical-revision", "related-follow-up", "promotes-lead", "merge-successor", "split-successor", "correction-successor"] },
-        "predecessor_ids": { "$ref": "#/$defs/ids" },
-        "successor_ids": { "$ref": "#/$defs/ids" },
-        "reconciliation_assessment_id": { "$ref": "common.v1.schema.json#/$defs/identifier" }
-      }
-    }
+      "type": "object", "additionalProperties": false, "required": ["event_id", "kind", "predecessor_ids", "successor_ids"],
+      "properties": { "event_id": { "$ref": "#/$defs/id" }, "kind": { "enum": ["supersedes", "analytical-revision", "related-follow-up", "promotes-lead", "merge-successor", "split-successor", "correction-successor"] }, "predecessor_ids": { "$ref": "#/$defs/ids" }, "successor_ids": { "$ref": "#/$defs/ids" }, "reconciliation_assessment_id": { "$ref": "#/$defs/id" } }
+    },
+    "taxonomyProjection": {
+      "type": "object", "additionalProperties": false, "required": ["projection_id", "source_assignment_id", "projected_assignment_id", "mapping_authority_id", "evidence_ids", "reason"],
+      "properties": { "projection_id": { "$ref": "#/$defs/id" }, "source_assignment_id": { "$ref": "#/$defs/id" }, "projected_assignment_id": { "$ref": "#/$defs/id" }, "mapping_authority_id": { "$ref": "#/$defs/id" }, "evidence_ids": { "$ref": "#/$defs/ids" }, "reason": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" } }
+    },
+    "gap": {
+      "type": "object", "additionalProperties": false, "required": ["gap_id", "population_id", "stage_id", "state", "replay_effect", "conclusion_effect", "reason", "missing_capability_or_information", "evidence_ids"],
+      "properties": { "gap_id": { "$ref": "#/$defs/id" }, "population_id": { "$ref": "#/$defs/id" }, "stage_id": { "$ref": "#/$defs/id" }, "state": { "enum": ["missing-information", "missing-capability", "missing-dependency", "unsupported", "failed", "limited", "unavailable", "deleted", "audit-gap"] }, "replay_effect": { "enum": ["none", "partial", "audit-only", "unavailable"] }, "conclusion_effect": { "enum": ["none", "bounded", "abstain", "unavailable"] }, "reason": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "missing_capability_or_information": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "evidence_ids": { "$ref": "#/$defs/ids" } }
+    },
+    "coverageFailure": { "type": "object", "additionalProperties": false, "required": ["failure_id", "analyzer_id", "failure_code", "message", "retryable"], "properties": { "failure_id": { "$ref": "#/$defs/id" }, "analyzer_id": { "$ref": "#/$defs/id" }, "failure_code": { "$ref": "#/$defs/id" }, "message": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "retryable": { "type": "boolean" } } },
+    "boundary": { "type": "object", "additionalProperties": false, "required": ["boundary_id", "state", "reason"], "properties": { "boundary_id": { "enum": ["provider", "hosted-search", "nexus", "loot"] }, "state": { "const": "not-used" }, "reason": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" } } }
   }
 }

@@ -52,7 +52,7 @@ public sealed class DomainContractTests
             new OpaqueId("analyzer-1"),
             new UtcTimestamp(DateTimeOffset.UnixEpoch),
             "unsupported example",
-            null);
+            []);
 
         Assert.ThrowsExactly<InvalidOperationException>(() => DomainContractInvariants.Validate(invalid));
     }

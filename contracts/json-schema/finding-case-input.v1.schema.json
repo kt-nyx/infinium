@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/json-schema/finding-case-input.v1.schema.json",
+  "title": "Infinium Slice 5 answer-free finding and case facts v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "schema_version", "input_id", "originating_run_id", "promotion_policy_id", "promotion_policy_version", "reconciliation_policy_id", "reconciliation_policy_version", "reconciliation_actor_id", "assessment_time", "candidate_analysis", "finding_evidence_facts", "finding_recommendation_facts", "shared_cause_proofs", "taxonomy_classification_facts", "taxonomy_projection_inputs", "coverage_population_facts", "coverage_member_facts", "coverage_failure_facts", "prior_findings", "prior_cases", "producer_compatibilities", "related_finding_facts", "reconciliation_candidate_facts", "boundaries"],
+  "properties": {
+    "schema_id": { "const": "infinium.analysis.finding-case-input/v1" },
+    "schema_version": { "const": "1.0.0" },
+    "input_id": { "$ref": "#/$defs/id" },
+    "originating_run_id": { "$ref": "#/$defs/id" },
+    "promotion_policy_id": { "$ref": "#/$defs/id" },
+    "promotion_policy_version": { "const": "1.0.0" },
+    "reconciliation_policy_id": { "$ref": "#/$defs/id" },
+    "reconciliation_policy_version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+    "reconciliation_actor_id": { "$ref": "#/$defs/id" },
+    "assessment_time": { "$ref": "common.v1.schema.json#/$defs/utcTimestamp" },
+    "candidate_analysis": { "$ref": "candidate-analysis.v1.schema.json" },
+    "finding_evidence_facts": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/findingFact" } },
+    "finding_recommendation_facts": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/recommendationFact" } },
+    "shared_cause_proofs": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/causeProof" } },
+    "taxonomy_classification_facts": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/taxonomyFact" } },
+    "taxonomy_projection_inputs": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/taxonomyProjection" } },
+    "coverage_population_facts": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/coveragePopulation" } },
+    "coverage_member_facts": { "type": "array", "maxItems": 1000000, "items": { "$ref": "#/$defs/coverageMember" } },
+    "coverage_failure_facts": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/coverageFailure" } },
+    "prior_findings": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/priorFinding" } },
+    "prior_cases": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/priorCase" } },
+    "producer_compatibilities": { "type": "array", "maxItems": 10000, "items": { "$ref": "#/$defs/compatibility" } },
+    "related_finding_facts": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/relatedFinding" } },
+    "reconciliation_candidate_facts": { "type": "array", "maxItems": 100000, "items": { "$ref": "#/$defs/reconciliationCandidate" } },
+    "boundaries": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "$ref": "#/$defs/boundary" } }
+  },
+  "$defs": {
+    "id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+    "strings": { "type": "array", "uniqueItems": true, "items": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" } },
+    "role": { "type": ["string", "null"], "enum": ["declared", "observed", "predicted", "established", null] },
+    "identity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["analyzer_family", "analyzer_version", "semantic_contract_version", "identity_contract_version", "participants_and_roles", "causal_condition", "affected_locus", "applicability_predicates", "dependency_closure_id", "canonical_signature"],
+      "properties": {
+        "analyzer_family": { "$ref": "#/$defs/id" }, "analyzer_version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "semantic_contract_version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "identity_contract_version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+        "participants_and_roles": { "type": "object", "additionalProperties": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" } },
+        "causal_condition": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "affected_locus": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+        "applicability_predicates": { "$ref": "#/$defs/strings" }, "dependency_closure_id": { "$ref": "#/$defs/id" }, "canonical_signature": { "$ref": "common.v1.schema.json#/$defs/sha256" }
+      }
+    },
+    "findingFact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["fact_id", "hypothesis_id", "worst_credible_consequence", "affected_locus", "causal_condition", "applicability_predicates", "defeating_contradiction_ids", "retained_non_defeating_contradiction_ids", "evidence_ids"],
+      "properties": { "fact_id": { "$ref": "#/$defs/id" }, "hypothesis_id": { "$ref": "#/$defs/id" }, "worst_credible_consequence": { "enum": ["unspecified", "maintenance-only", "localized-low-impact", "meaningful-bounded-loss", "important-requirement-failure", "useful-playthrough-blocked"] }, "affected_locus": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "causal_condition": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "applicability_predicates": { "$ref": "#/$defs/strings" }, "defeating_contradiction_ids": { "$ref": "#/$defs/ids" }, "retained_non_defeating_contradiction_ids": { "$ref": "#/$defs/ids" }, "evidence_ids": { "$ref": "#/$defs/ids" } }
+    },
+    "recommendationFact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["fact_id", "hypothesis_id", "kind", "action", "uncertainty", "reversibility", "risks", "verification", "evidence_ids"],
+      "properties": { "fact_id": { "$ref": "#/$defs/id" }, "hypothesis_id": { "$ref": "#/$defs/id" }, "kind": { "enum": ["remediation", "alternative-remediation", "validation", "further-investigation", "abstention"] }, "action": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "uncertainty": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "reversibility": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "risks": { "$ref": "#/$defs/strings" }, "verification": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "evidence_ids": { "$ref": "#/$defs/ids" } }
+    },
+    "causeProof": {
+      "type": "object", "additionalProperties": false,
+      "required": ["proof_id", "hypothesis_ids", "analyzer_family", "analyzer_version", "semantic_contract_version", "identity_contract_version", "participants_and_roles", "causal_condition", "affected_locus", "applicability_predicates", "dependency_closure_id", "evidence_ids"],
+      "properties": { "proof_id": { "$ref": "#/$defs/id" }, "hypothesis_ids": { "$ref": "#/$defs/ids" }, "analyzer_family": { "$ref": "#/$defs/id" }, "analyzer_version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "semantic_contract_version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "identity_contract_version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "participants_and_roles": { "type": "object", "additionalProperties": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" } }, "causal_condition": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "affected_locus": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "applicability_predicates": { "$ref": "#/$defs/strings" }, "dependency_closure_id": { "$ref": "#/$defs/id" }, "evidence_ids": { "$ref": "#/$defs/ids" } }
+    },
+    "taxonomyFact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["fact_id", "hypothesis_id", "taxonomy_id", "taxonomy_version", "axis", "facet", "applicability", "evidence_ids", "applicability_condition_ids", "analyzer_or_adjudicator_id", "created_at", "reason"],
+      "properties": { "fact_id": { "$ref": "#/$defs/id" }, "hypothesis_id": { "$ref": "#/$defs/id" }, "taxonomy_id": { "$ref": "#/$defs/id" }, "taxonomy_version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "axis": { "$ref": "#/$defs/id" }, "facet": { "$ref": "#/$defs/id" }, "code": { "$ref": "#/$defs/id" }, "applicability": { "enum": ["assigned", "unknown", "unsupported", "unmapped", "not-applicable"] }, "role": { "$ref": "#/$defs/role" }, "evidence_ids": { "$ref": "#/$defs/ids" }, "applicability_condition_ids": { "$ref": "#/$defs/ids" }, "confidence_assessment_id": { "$ref": "#/$defs/id" }, "analyzer_or_adjudicator_id": { "$ref": "#/$defs/id" }, "created_at": { "$ref": "common.v1.schema.json#/$defs/utcTimestamp" }, "reason": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "source_assignment_id": { "$ref": "#/$defs/id" }, "supersedes_assignment_id": { "$ref": "#/$defs/id" } },
+      "allOf": [{ "if": { "properties": { "applicability": { "const": "assigned" } } }, "then": { "required": ["code"], "properties": { "role": { "type": "string" } } }, "else": { "not": { "required": ["code"] } } }]
+    },
+    "taxonomyProjection": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_classification_fact_id", "target_taxonomy_id", "target_taxonomy_version", "target_axis", "target_facet", "target_applicability", "mapping_authority_id", "evidence_ids", "reason"],
+      "properties": { "source_classification_fact_id": { "$ref": "#/$defs/id" }, "target_taxonomy_id": { "$ref": "#/$defs/id" }, "target_taxonomy_version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "target_axis": { "$ref": "#/$defs/id" }, "target_facet": { "$ref": "#/$defs/id" }, "target_code": { "$ref": "#/$defs/id" }, "target_applicability": { "enum": ["assigned", "unknown", "unsupported", "unmapped", "not-applicable"] }, "mapping_authority_id": { "$ref": "#/$defs/id" }, "evidence_ids": { "$ref": "#/$defs/ids" }, "reason": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "target_role": { "$ref": "#/$defs/role" }, "target_analyzer_or_adjudicator_id": { "$ref": "#/$defs/id" }, "projection_created_at": { "$ref": "common.v1.schema.json#/$defs/utcTimestamp" } }
+    },
+    "coveragePopulation": { "type": "object", "additionalProperties": false, "required": ["fact_id", "analyzer_id", "population_id", "denominator_label", "evidence_ids"], "properties": { "fact_id": { "$ref": "#/$defs/id" }, "analyzer_id": { "$ref": "#/$defs/id" }, "population_id": { "$ref": "#/$defs/id" }, "denominator_label": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "evidence_ids": { "$ref": "#/$defs/ids" } } },
+    "coverageMember": { "type": "object", "additionalProperties": false, "required": ["fact_id", "analyzer_id", "population_id", "denominator_label", "member_id", "state", "reason", "missing_capability_or_information", "taxonomy_classification_fact_ids"], "properties": { "fact_id": { "$ref": "#/$defs/id" }, "analyzer_id": { "$ref": "#/$defs/id" }, "population_id": { "$ref": "#/$defs/id" }, "denominator_label": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "member_id": { "$ref": "#/$defs/id" }, "state": { "enum": ["completed", "completed-with-gaps", "failed", "skipped-by-configuration", "skipped-by-limit", "unsupported"] }, "reason": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "missing_capability_or_information": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "failure_id": { "$ref": "#/$defs/id" }, "taxonomy_classification_fact_ids": { "$ref": "#/$defs/ids" }, "gap_id": { "$ref": "#/$defs/id" } } },
+    "coverageFailure": { "type": "object", "additionalProperties": false, "required": ["failure_id", "analyzer_id", "failure_code", "message", "retryable"], "properties": { "failure_id": { "$ref": "#/$defs/id" }, "analyzer_id": { "$ref": "#/$defs/id" }, "failure_code": { "$ref": "#/$defs/id" }, "message": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "retryable": { "type": "boolean" } } },
+    "priorFinding": { "type": "object", "additionalProperties": false, "required": ["finding_occurrence_id", "logical_finding_id", "originating_run_id", "candidate_id", "hypothesis_id", "identity_envelope", "semantic_fingerprint", "proof_available", "applicable_population_ids"], "properties": { "finding_occurrence_id": { "$ref": "#/$defs/id" }, "logical_finding_id": { "$ref": "#/$defs/id" }, "originating_run_id": { "$ref": "#/$defs/id" }, "candidate_id": { "$ref": "#/$defs/id" }, "hypothesis_id": { "$ref": "#/$defs/id" }, "identity_envelope": { "$ref": "#/$defs/identity" }, "semantic_fingerprint": { "$ref": "common.v1.schema.json#/$defs/sha256" }, "proof_available": { "type": "boolean" }, "applicable_population_ids": { "$ref": "#/$defs/strings" } } },
+    "priorCase": { "type": "object", "additionalProperties": false, "required": ["case_occurrence_id", "logical_case_id", "originating_run_id", "kind", "finding_occurrence_ids", "hypothesis_ids", "identity_envelope", "semantic_fingerprint", "proof_available", "applicable_population_ids"], "properties": { "case_occurrence_id": { "$ref": "#/$defs/id" }, "logical_case_id": { "$ref": "#/$defs/id" }, "originating_run_id": { "$ref": "#/$defs/id" }, "kind": { "enum": ["supported", "lead-only"] }, "finding_occurrence_ids": { "$ref": "#/$defs/ids" }, "hypothesis_ids": { "$ref": "#/$defs/ids" }, "identity_envelope": { "$ref": "#/$defs/identity" }, "semantic_fingerprint": { "$ref": "common.v1.schema.json#/$defs/sha256" }, "proof_available": { "type": "boolean" }, "applicable_population_ids": { "$ref": "#/$defs/strings" } } },
+    "compatibility": { "type": "object", "additionalProperties": false, "required": ["compatibility_id", "prior_analyzer_family", "prior_analyzer_version", "prior_semantic_contract_version", "prior_identity_contract_version", "current_analyzer_family", "current_analyzer_version", "current_semantic_contract_version", "current_identity_contract_version", "compatible", "evidence_ids"], "properties": { "compatibility_id": { "$ref": "#/$defs/id" }, "prior_analyzer_family": { "$ref": "#/$defs/id" }, "prior_analyzer_version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "prior_semantic_contract_version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "prior_identity_contract_version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "current_analyzer_family": { "$ref": "#/$defs/id" }, "current_analyzer_version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "current_semantic_contract_version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "current_identity_contract_version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }, "compatible": { "type": "boolean" }, "evidence_ids": { "$ref": "#/$defs/ids" } } },
+    "relatedFinding": { "type": "object", "additionalProperties": false, "required": ["fact_id", "current_hypothesis_id", "prior_occurrence_id", "evidence_ids", "reason"], "properties": { "fact_id": { "$ref": "#/$defs/id" }, "current_hypothesis_id": { "$ref": "#/$defs/id" }, "prior_occurrence_id": { "$ref": "#/$defs/id" }, "evidence_ids": { "$ref": "#/$defs/ids" }, "reason": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" } } },
+    "reconciliationCandidate": { "type": "object", "additionalProperties": false, "required": ["fact_id", "current_hypothesis_id", "prior_occurrence_ids"], "properties": { "fact_id": { "$ref": "#/$defs/id" }, "current_hypothesis_id": { "$ref": "#/$defs/id" }, "prior_occurrence_ids": { "$ref": "#/$defs/ids" } } },
+    "boundary": { "type": "object", "additionalProperties": false, "required": ["boundary_id", "state", "reason"], "properties": { "boundary_id": { "enum": ["provider", "hosted-search", "nexus", "loot"] }, "state": { "const": "not-used" }, "reason": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" } } }
+  }
+}

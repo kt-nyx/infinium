@@ -235,11 +235,11 @@ unavailable replayability must remain explicit.
 | WP2 local, contradiction, and deletion provenance slots plus the later live-source slot; identities assigned by their owning WPs | Development/validation | EVAL-0083 | Required incrementally; not created | Provenance reviewer |
 | `PROV-LIVE-COMPOSED-VAL` | Validation | EVAL-0083 plus applicable live-provider gates | Required if M1 retains its bounded live Responses proof; not created | Provenance and provider reviewers |
 | `PROV-HO-001` | Held-out | EVAL-0083 | Required before broad provenance claim; not authored/sealed | Independent holdout custodian |
-| WP4 shared, distinct, lead-only, and metamorphic case-grouping slots; identities assigned by WP4 | Development/validation | EVAL-0084 | Required in WP4; not created | Causal-grouping reviewer |
+| `infinium.m1s5.wp4.causal-conclusions.generic-a/1.0.3` and `infinium.m1s5.wp4.reconciliation-lineage.generic-b/1.0.3` | Development/validation | EVAL-0084 | Independently authored, frozen, product-blind reviewed, and accepted for bounded WP4 verification | Causal-grouping reviewer |
 | `CASE-HO-001` | Held-out | EVAL-0084 | Required before broad grouping claim; not authored/sealed | Independent holdout custodian |
-| WP4 coverage matrix, zero-finding, partial, and targeted slots; identities assigned by WP4 | Development/validation | EVAL-0085 | Required in WP4; not created | Coverage/readiness reviewer |
+| `infinium.m1s5.wp4.coverage-boundaries.generic-d/1.0.3` | Development/validation | EVAL-0085 | Independently authored, frozen, product-blind reviewed, and accepted for bounded WP4 verification | Coverage/readiness reviewer |
 | `COVER-HO-001` | Held-out | EVAL-0085 | Required before broad presentation claim; not authored/sealed | Independent holdout custodian |
-| WP4 taxonomy axes, counterexample, state, and history slots; identities assigned by WP4 | Development/validation | EVAL-0086 | Slice 4-applicable BETH-linked projections accepted; broader packages and history mechanics remain required in WP4 | Taxonomy reviewer |
+| `infinium.m1s5.wp4.taxonomy-history.generic-c/1.0.3` | Development/validation | EVAL-0086 | Independently authored, frozen, product-blind reviewed, and accepted for bounded WP4 verification; prior Slice 4 projections remain separate evidence | Taxonomy reviewer |
 | `TAX-HO-001` | Held-out | EVAL-0086 | Required before broad classification claim; not authored/sealed | Independent holdout custodian |
 
 The known-answer real candidates cannot be promoted to held-out by changing a
@@ -1140,6 +1140,27 @@ stand in for future Skyrim taxonomy acceptance.
 EVAL-0016/0017 may supply validation subjects for actor/AI/FaceGen and
 world/placed-reference regions. They do not replace the broader synthetic
 matrix and do not make those two regions the product taxonomy.
+
+### 14.4 WP4 frozen package assignment and review
+
+WP4 assigned four generic package identities and froze them together in the
+tracked `m1-slice5-wp4-cases-v1` handoff:
+
+| Package identity | Partition | Bounded obligation |
+|---|---|---|
+| `infinium.m1s5.wp4.causal-conclusions.generic-a/1.0.3` | `wp4-causal-conclusions` | Promotion, explicit abstention, recommendations, supported/lead grouping, false-merge/split negatives, and rename/order metamorph |
+| `infinium.m1s5.wp4.reconciliation-lineage.generic-b/1.0.3` | `wp4-reconciliation-lineage` | Four independent gates, all eight outcomes, one-to-one continuity, member-first case reconciliation, visibility, promotion, and append-only lineage |
+| `infinium.m1s5.wp4.taxonomy-history.generic-c/1.0.3` | `wp4-taxonomy-history` | The required TAX matrix, roles/states/negative absences, product-history retention, and non-product split/merge provenance |
+| `infinium.m1s5.wp4.coverage-boundaries.generic-d/1.0.3` | `wp4-coverage-boundaries` | Exact labeled population ledgers, every required state, visible gaps/failures/exclusions, and no combined or safety percentage |
+
+The exact frozen truth is 254,857 bytes with SHA-256
+`528bed0cd3ce399b54ae99f2ebb12e63981f292228c5c972191098c535e90fa2`.
+A fresh product-blind reviewer independently recomputed the byte identity,
+rechecked the complete answer-isolation and semantic checklist, closed all
+findings from the rejected v1.0.0 through v1.0.2 drafts, and returned `ACCEPT`
+without modifying the truth. This accepts only the four bounded public WP4
+packages. It is not a held-out, prevalence, performance, comprehensive-domain,
+safety, broad M1-readiness, or private-evaluator verdict.
 
 ## 15. Redistribution and privacy matrix
 

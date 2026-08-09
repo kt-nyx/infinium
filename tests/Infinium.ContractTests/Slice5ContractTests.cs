@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Infinium.Analysis.Candidates;
+using Infinium.Analysis.Cases;
 using Infinium.Application.Evaluation;
 using Infinium.Domain.Contracts;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -12,6 +13,47 @@ namespace Infinium.Tests;
 public sealed class Slice5ContractTests
 {
     private static readonly Sha256Fingerprint Fingerprint = new(new string('a', 64));
+
+    [TestMethod]
+    [TestCategory("M1Contract")]
+    [TestCategory("M1Cases")]
+    [TestProperty("Category", "M1Contract")]
+    [TestProperty("Category", "M1Cases")]
+    public void FindingPromotionInputAndPublicationRoundTripThroughClosedSchemas()
+    {
+        FindingCaseInputContract input = CreateFindingCaseInput();
+        byte[] inputBytes = FindingCaseInputJsonCodec.Serialize(input);
+        CollectionAssert.AreEqual(inputBytes, FindingCaseInputJsonCodec.Serialize(FindingCaseInputJsonCodec.Deserialize(inputBytes)));
+
+        FindingCaseContract output = FindingCasePipeline.Execute(input);
+        byte[] outputBytes = FindingCaseJsonCodec.Serialize(output);
+        CollectionAssert.AreEqual(outputBytes, FindingCaseJsonCodec.Serialize(FindingCaseJsonCodec.Deserialize(outputBytes)));
+        Assert.AreEqual(output.PayloadId, FindingCaseJsonCodec.Deserialize(outputBytes).PayloadId);
+    }
+
+    [TestMethod]
+    [TestCategory("M1Contract")]
+    [TestCategory("M1Security")]
+    [TestProperty("Category", "M1Contract")]
+    [TestProperty("Category", "M1Security")]
+    public void CaseGroupingPublicationRejectsMissingCausalProofAndAnswerBearingInput()
+    {
+        FindingCaseInputContract input = CreateFindingCaseInput();
+        FindingCaseContract output = FindingCasePipeline.Execute(input);
+        Slice5CaseContract invalidCase = output.Cases.Single() with { CauseProofEvidenceIds = [] };
+        FindingCaseContract invalid = output with { Cases = [invalidCase] };
+        invalid = invalid with { PayloadId = FindingCaseIdentity.ComputePayloadId(invalid) };
+        Assert.ThrowsExactly<InvalidOperationException>(() => FindingCaseJsonCodec.Serialize(invalid));
+
+        string json = Encoding.UTF8.GetString(FindingCaseInputJsonCodec.Serialize(input));
+        string answerBearing = json.Replace(
+            "\"promotion_policy_id\": \"promotion-policy-contract\"",
+            "\"promotion_policy_id\": \"promotion-policy-contract\",\n  \"expected_outcome\": \"supported-finding\"",
+            StringComparison.Ordinal);
+        Assert.AreNotEqual(json, answerBearing);
+        Assert.ThrowsExactly<InvalidDataException>(() =>
+            FindingCaseInputJsonCodec.Deserialize(Encoding.UTF8.GetBytes(answerBearing)));
+    }
 
     [TestMethod]
     [TestCategory("M1Contract")]
@@ -50,7 +92,7 @@ public sealed class Slice5ContractTests
             PolicyFingerprint = CandidateAnalysisIdentity.StructuralHash(["policy-binding"]),
             ThresholdFingerprint = CandidateAnalysisIdentity.StructuralHash(["threshold-binding"]),
             LimitFingerprint = CandidateAnalysisIdentity.StructuralHash(["limit-binding"]),
-            AnalyzerBindings = [new(Id("analyzer-1"), Version(), Version(),
+            AnalyzerBindings = [new(Id("analyzer-1"), Version(), Version(), Version(), Version(),
                 CandidateAnalysisIdentity.StructuralHash(["{}"]), "{}")],
             AnalyzerSetFingerprint = CandidateAnalysisIdentity.StructuralHash(
                 [$"analyzer-1:{CandidateAnalysisIdentity.StructuralHash(["{}"]).Value}"]),
@@ -95,7 +137,8 @@ public sealed class Slice5ContractTests
                         candidates.ThresholdFingerprint.Value, candidates.LimitFingerprint.Value,
                         candidates.AnalyzerSetFingerprint.Value),
                     "analyzer-declaration-binding", CandidateAnalysisIdentity.StableId(
-                        "candidate-analyzer-binding", "analyzer-1", Version().ToString(), Version().ToString(), CandidateAnalysisIdentity.StructuralHash(["{}"]).Value), "uses"),
+                        "candidate-analyzer-binding", "analyzer-1", Version().ToString(), Version().ToString(),
+                        Version().ToString(), Version().ToString(), CandidateAnalysisIdentity.StructuralHash(["{}"]).Value), "uses"),
             ],
         };
         candidates = candidates with { Counts = CandidateAnalysisCounts.Compute(candidates) };
@@ -105,7 +148,16 @@ public sealed class Slice5ContractTests
             Version(),
             Id("finding-payload"),
             Id("run-1"),
-            [], [], [], [], [], [], [], []);
+            Id("finding-input"), Id("promotion-policy"), Version(),
+            Id("reconciliation-policy"), Version(),
+            [], [], [], [], [], [], [], [], [], [], [], [],
+            [
+                new("provider", BoundaryUseState.NotUsed, "local-only"),
+                new("hosted-search", BoundaryUseState.NotUsed, "local-only"),
+                new("nexus", BoundaryUseState.NotUsed, "local-only"),
+                new("loot", BoundaryUseState.NotUsed, "not configured"),
+            ], "no-safety-claim");
+        findings = findings with { PayloadId = FindingCaseIdentity.ComputePayloadId(findings) };
         AnalysisReplayContract replay = new(
             ContractConstants.AnalysisReplaySchemaId,
             Version(),
@@ -408,6 +460,61 @@ public sealed class Slice5ContractTests
             ]);
     }
 
+    private static FindingCaseInputContract CreateFindingCaseInput()
+    {
+        CandidateAnalysisContract candidates = CreateNonEmptyCandidateAnalysis();
+        CandidateHypothesisContract hypothesis = candidates.Hypotheses.Single();
+        CandidateAnalysisEntryContract candidate = candidates.Candidates.Single(item => item.CandidateId == hypothesis.CandidateId);
+        CandidateDecisionContract decision = candidates.Decisions.Single(item => item.DecisionId == candidate.DecisionId);
+        CandidateAnalyzerBindingContract binding = candidates.AnalyzerBindings.Single(item => item.AnalyzerId == decision.AnalyzerId);
+        FindingEvidenceFactContract findingFact = new(
+            Id("finding-fact-contract"), hypothesis.HypothesisId,
+            WorstCredibleConsequence.MeaningfulBoundedLoss, "finding-locus", candidate.CausalExplanation,
+            ["applicable"], [], [],
+            hypothesis.SupportingEvidenceIds);
+        SharedCauseProofContract causeProof = new(
+            Id("cause-proof-contract"), [hypothesis.HypothesisId], decision.AnalyzerId.Value,
+            binding.SemanticContractVersion, binding.IdentityContractVersion,
+            decision.Participants.ToDictionary(item => item.ParticipantId.Value, item => item.Role, StringComparer.Ordinal),
+            candidate.CausalExplanation, findingFact.AffectedLocus, findingFact.ApplicabilityPredicates,
+            FindingCaseIdentity.SharedCauseDependencyClosureId(decision.DependencyIds),
+            hypothesis.SupportingEvidenceIds);
+        FindingCaseInputContract input = new(
+            ContractConstants.FindingCaseInputSchemaId, Version(), Id("pending"), candidates.OriginatingRunId,
+            Id("promotion-policy-contract"), Version(), Id("reconciliation-policy-contract"), Version(),
+            Id("reconciliation-actor-contract"),
+            new UtcTimestamp(new DateTimeOffset(2026, 8, 9, 12, 0, 0, TimeSpan.Zero)),
+            candidates, [findingFact],
+            [new FindingRecommendationFactContract(
+                Id("recommendation-fact-contract"), hypothesis.HypothesisId, RecommendationKind.Validation,
+                "Validate the typed causal condition.", "Bounded to supplied typed evidence.",
+                "No installed state is changed by analysis.", ["Applicability must remain valid."],
+                "Reobserve the affected locus.", hypothesis.SupportingEvidenceIds)],
+            [causeProof], [], [],
+            [new CoveragePopulationFactContract(Id("coverage-population-contract"), candidates.AnalyzerId,
+                "candidate-hypotheses", "admitted hypotheses")],
+            [new CoverageMemberFactContract(Id("coverage-member-contract"), candidates.AnalyzerId,
+                "candidate-hypotheses", "admitted hypotheses", hypothesis.HypothesisId,
+                CoverageMemberState.Completed, "completed", "none", null, [])],
+            [], [], [], [], [],
+            [
+                new("provider", BoundaryUseState.NotUsed, "local deterministic analysis"),
+                new("hosted-search", BoundaryUseState.NotUsed, "local deterministic analysis"),
+                new("nexus", BoundaryUseState.NotUsed, "local deterministic analysis"),
+                new("loot", BoundaryUseState.NotUsed, "not configured"),
+            ]);
+        return input with { InputId = FindingCaseIdentity.ComputeInputId(input) };
+    }
+
+    private static IdentityEnvelopeContract FindingIdentity(string cause, string locus, string dependency)
+    {
+        IdentityEnvelopeContract identity = new(
+            "analyzer-contract", Version(), Version(),
+            new Dictionary<string, string> { ["source-contract"] = "source", ["target-contract"] = "target" },
+            cause, locus, ["applicable"], Id(dependency), Fingerprint);
+        return identity with { CanonicalSignature = FindingCaseIdentity.ComputeIdentitySignature(identity) };
+    }
+
     private static CandidateAnalysisContract CreateNonEmptyCandidateAnalysis()
     {
         string declarationJson = "{}";
@@ -476,7 +583,7 @@ public sealed class Slice5ContractTests
             PolicyFingerprint = policyFingerprint,
             ThresholdFingerprint = thresholdFingerprint,
             LimitFingerprint = limitFingerprint,
-            AnalyzerBindings = [new(Id("analyzer-contract"), Version(), Version(), declarationFingerprint, declarationJson)],
+            AnalyzerBindings = [new(Id("analyzer-contract"), Version(), Version(), Version(), Version(), declarationFingerprint, declarationJson)],
             AnalyzerSetFingerprint = analyzerSetFingerprint,
             Hypotheses = [hypothesis],
             DependencyEdges =
@@ -490,7 +597,9 @@ public sealed class Slice5ContractTests
                 Edge("candidate-analysis-root", analysisRoot, "limit-binding",
                     CandidateAnalysisIdentity.StableId("candidate-limit-binding", "limit-contract", limitFingerprint.Value), "uses"),
                 Edge("candidate-analysis-root", analysisRoot, "analyzer-declaration-binding",
-                    CandidateAnalysisIdentity.StableId("candidate-analyzer-binding", "analyzer-contract", Version().ToString(), Version().ToString(), declarationFingerprint.Value), "uses"),
+                    CandidateAnalysisIdentity.StableId("candidate-analyzer-binding", "analyzer-contract",
+                        Version().ToString(), Version().ToString(), Version().ToString(), Version().ToString(),
+                        declarationFingerprint.Value), "uses"),
                 Edge("candidate-decision", decisionId, "source-fact", Id("source-fact-contract"), "derived-from"),
                 Edge("candidate-decision", decisionId, "dependency-closure", closure, "depends-on"),
                 Edge("dependency-closure", closure, "dependency", dependency, "depends-on"),

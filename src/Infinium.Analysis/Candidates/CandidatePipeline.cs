@@ -45,14 +45,16 @@ public sealed record CausalJoinPopulationMember(
         $"lane={Lane}",
         CandidateAnalysisIdentity.FramedSequence(
             "participants",
-            Participants.Select(item => CandidateAnalysisIdentity.FramedSequence(
+            Participants.OrderBy(item => item.Role, StringComparer.Ordinal)
+                .ThenBy(item => item.ParticipantId.Value, StringComparer.Ordinal)
+                .Select(item => CandidateAnalysisIdentity.FramedSequence(
                 "participant", [item.Role, item.ParticipantId.Value]))),
         $"join-kind={JoinKind}",
         CandidateAnalysisIdentity.FramedSequence("path", Path.Select(item => item.Value)),
-        CandidateAnalysisIdentity.FramedSequence("dependencies", DependencyIds.Select(item => item.Value)),
-        CandidateAnalysisIdentity.FramedSequence("supporting-evidence", SupportingEvidenceIds.Select(item => item.Value)),
-        CandidateAnalysisIdentity.FramedSequence("contradicting-evidence", ContradictingEvidenceIds.Select(item => item.Value)),
-        CandidateAnalysisIdentity.FramedSequence("missing-information", MissingInformation),
+        CandidateAnalysisIdentity.FramedSequence("dependencies", DependencyIds.Select(item => item.Value).Order(StringComparer.Ordinal)),
+        CandidateAnalysisIdentity.FramedSequence("supporting-evidence", SupportingEvidenceIds.Select(item => item.Value).Order(StringComparer.Ordinal)),
+        CandidateAnalysisIdentity.FramedSequence("contradicting-evidence", ContradictingEvidenceIds.Select(item => item.Value).Order(StringComparer.Ordinal)),
+        CandidateAnalysisIdentity.FramedSequence("missing-information", MissingInformation.Order(StringComparer.Ordinal)),
         $"input-state={InputState}",
         $"rationale={Rationale}",
         $"predicted-impact={PredictedImpact}",
@@ -783,9 +785,14 @@ public static class CandidatePipeline
                 return new CandidateAnalyzerBindingContract(
                     source.AnalyzerId,
                     source.Declaration.AnalyzerVersion,
+                    source.Declaration.SemanticContractVersion,
+                    source.Declaration.IdentityContractVersion,
                     source.Declaration.RulesetVersion,
                     CandidateAnalysisIdentity.StructuralHash([declarationJson]),
-                    declarationJson);
+                    declarationJson)
+                {
+                    AnalyzerFamily = source.Declaration.AnalyzerFamily,
+                };
             })
             .ToArray();
         Sha256Fingerprint analyzerSetFingerprint = CandidateAnalysisIdentity.StructuralHash(
@@ -807,7 +814,9 @@ public static class CandidatePipeline
         {
             edges.Add(Edge("candidate-analysis-root", analysisRootId, "analyzer-declaration-binding",
                 CandidateAnalysisIdentity.StableId("candidate-analyzer-binding", analyzerBinding.AnalyzerId.Value,
-                    analyzerBinding.AnalyzerVersion.ToString(), analyzerBinding.RulesetVersion.ToString(), analyzerBinding.DeclarationFingerprint.Value), "uses"));
+                    analyzerBinding.AnalyzerVersion.ToString(), analyzerBinding.SemanticContractVersion.ToString(),
+                    analyzerBinding.IdentityContractVersion.ToString(), analyzerBinding.RulesetVersion.ToString(),
+                    analyzerBinding.DeclarationFingerprint.Value), "uses"));
         }
         foreach (CandidateMemberOutcome outcome in outcomes)
         {

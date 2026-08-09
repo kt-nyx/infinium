@@ -177,10 +177,13 @@
     },
     "analyzerBinding": {
       "type": "object", "additionalProperties": false,
-      "required": ["analyzer_id", "analyzer_version", "ruleset_version", "declaration_fingerprint", "canonical_declaration_json"],
+      "required": ["analyzer_id", "analyzer_family", "analyzer_version", "semantic_contract_version", "identity_contract_version", "ruleset_version", "declaration_fingerprint", "canonical_declaration_json"],
       "properties": {
         "analyzer_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "analyzer_family": { "$ref": "common.v1.schema.json#/$defs/identifier" },
         "analyzer_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "semantic_contract_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "identity_contract_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
         "ruleset_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
         "declaration_fingerprint": { "$ref": "common.v1.schema.json#/$defs/sha256" },
         "canonical_declaration_json": { "type": "string", "minLength": 2, "maxLength": 65536 }

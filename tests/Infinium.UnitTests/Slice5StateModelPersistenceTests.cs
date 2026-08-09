@@ -7,10 +7,33 @@ namespace Infinium.Tests;
 [TestClass]
 public sealed class Slice5StateModelPersistenceTests
 {
+    private static readonly string[] Slice5Wp4Tables =
+    [
+        "finding_case_publications",
+        "finding_promotion_assessments",
+        "finding_case_abstentions",
+        "finding_case_finding_details",
+        "finding_case_recommendations",
+        "case_hypothesis_memberships",
+        "finding_case_case_details",
+        "finding_case_taxonomy_assignments",
+        "taxonomy_projection_edges",
+        "finding_case_gap_details",
+        "analysis_coverage_taxonomy_links",
+        "analysis_coverage_gap_links",
+        "analysis_coverage_failure_links",
+        "reconciliation_metadata",
+        "reconciliation_proof_links",
+        "lineage_event_edges",
+    ];
+
     private static readonly string[] Slice5Tables =
     [
         "analysis_candidates",
         "analysis_coverage",
+        "analysis_coverage_failure_links",
+        "analysis_coverage_gap_links",
+        "analysis_coverage_taxonomy_links",
         "analysis_dependency_edges",
         "analysis_gaps",
         "analysis_hypotheses",
@@ -19,6 +42,7 @@ public sealed class Slice5StateModelPersistenceTests
         "analysis_run_outputs",
         "candidate_decisions",
         "case_memberships",
+        "case_hypothesis_memberships",
         "case_occurrence_details",
         "documentation_passages",
         "documentation_imports",
@@ -31,10 +55,22 @@ public sealed class Slice5StateModelPersistenceTests
         "evidence_application_links",
         "evidence_revisions",
         "finding_occurrence_details",
+        "finding_case_abstentions",
+        "finding_case_case_details",
+        "finding_case_finding_details",
+        "finding_case_gap_details",
+        "finding_case_publications",
+        "finding_case_recommendations",
+        "finding_case_taxonomy_assignments",
+        "finding_promotion_assessments",
         "lineage_details",
+        "lineage_event_edges",
         "payload_backup_pins",
         "reconciliation_details",
+        "reconciliation_metadata",
+        "reconciliation_proof_links",
         "taxonomy_assignments",
+        "taxonomy_projection_edges",
     ];
 
     private static readonly string[] Slice5Indexes =
@@ -62,38 +98,40 @@ public sealed class Slice5StateModelPersistenceTests
 
     [TestMethod]
     [TestCategory("M1Unit")]
+    [TestCategory("M1Cases")]
     [TestProperty("Category", "M1Unit")]
-    public void Slice5StateModelSchema4HasExactMigrationContractAndObjects()
+    [TestProperty("Category", "M1Cases")]
+    public void Slice5StateModelSchema5HasExactMigrationContractAndObjects()
     {
         using TemporaryStore temporary = new();
         using AuthoritativeStore store = temporary.Open();
-        Assert.AreEqual(4, store.GetSchemaVersion());
+        Assert.AreEqual(5, store.GetSchemaVersion());
 
         using SqliteConnection connection = temporary.OpenRaw();
-        Assert.AreEqual("4", ScalarText(connection, "PRAGMA user_version;"));
+        Assert.AreEqual("5", ScalarText(connection, "PRAGMA user_version;"));
         Assert.AreEqual(
-            "4",
+            "5",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'schema_version';"));
         Assert.AreEqual(
-            "1.3.0",
+            "1.4.0",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'storage_contract_version';"));
         Assert.AreEqual(
-            "0e4fbeb821fdd83d86737d60979fa35d9a1300a4d971450c516f66d07ef2231e",
+            "e6d27152687e6b0c806da58a716a9ab909817f046fbe3bf11d8846da5e5dc87d",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'schema_fingerprint';"));
         Assert.AreEqual(
-            "3|4",
+            "4|5",
             ScalarText(
                 connection,
                 """
                 SELECT CAST(from_version AS TEXT) || '|' || CAST(to_version AS TEXT)
                 FROM migration_history
-                WHERE migration_id = 'M1-S5-0004';
+                WHERE migration_id = 'M1-S5-WP4-0005';
                 """));
 
         CollectionAssert.AreEquivalent(
@@ -130,13 +168,15 @@ public sealed class Slice5StateModelPersistenceTests
 
     [TestMethod]
     [TestCategory("M1Unit")]
+    [TestCategory("M1Cases")]
     [TestProperty("Category", "M1Unit")]
-    public void Slice5StateModelMigratesSchema3ForwardAndRefusesNewerSchema()
+    [TestProperty("Category", "M1Cases")]
+    public void Slice5StateModelMigratesAcceptedSchema4ForwardAndRefusesNewerSchema()
     {
         using TemporaryStore migration = new();
         using (AuthoritativeStore store = migration.Open())
         {
-            Assert.AreEqual(4, store.GetSchemaVersion());
+            Assert.AreEqual(5, store.GetSchemaVersion());
         }
 
         using (SqliteConnection connection = migration.OpenRaw())
@@ -145,25 +185,36 @@ public sealed class Slice5StateModelPersistenceTests
             command.CommandText =
                 string.Join(
                     Environment.NewLine,
-                    Slice5Tables.Reverse().Select(table => $"DROP TABLE {table};"))
+                    Slice5Wp4Tables.Reverse().Select(table => $"DROP TABLE {table};"))
                 +
                 """
 
-                DELETE FROM migration_history WHERE migration_id = 'M1-S5-0004';
-                UPDATE store_metadata SET value = '3' WHERE key = 'schema_version';
-                UPDATE store_metadata SET value = '1.2.0'
+                ALTER TABLE lineage_events DROP COLUMN predecessor_occurrence_id;
+                ALTER TABLE lineage_events DROP COLUMN successor_occurrence_id;
+                DROP INDEX idx_findings_signature;
+                ALTER TABLE finding_occurrences DROP COLUMN analyzer_version;
+                CREATE INDEX idx_findings_signature ON finding_occurrences(
+                    analyzer_family, identity_contract_version, canonical_signature);
+                ALTER TABLE analysis_coverage DROP COLUMN analyzer_id;
+                ALTER TABLE analysis_coverage DROP COLUMN denominator_label;
+                ALTER TABLE analysis_coverage DROP COLUMN exclusions_json;
+                ALTER TABLE analysis_coverage DROP COLUMN member_results_json;
+
+                DELETE FROM migration_history WHERE migration_id = 'M1-S5-WP4-0005';
+                UPDATE store_metadata SET value = '4' WHERE key = 'schema_version';
+                UPDATE store_metadata SET value = '1.3.0'
                     WHERE key = 'storage_contract_version';
                 UPDATE store_metadata SET value =
-                    '02fed67fa5dac6c28ec2a9f477733edc9f12eaa03a08f9d7dec05b502e45d6cf'
+                    '0e4fbeb821fdd83d86737d60979fa35d9a1300a4d971450c516f66d07ef2231e'
                     WHERE key = 'schema_fingerprint';
-                PRAGMA user_version = 3;
+                PRAGMA user_version = 4;
                 """;
             command.ExecuteNonQuery();
         }
 
         using (AuthoritativeStore migrated = migration.Open())
         {
-            Assert.AreEqual(4, migrated.GetSchemaVersion());
+            Assert.AreEqual(5, migrated.GetSchemaVersion());
         }
 
         using (SqliteConnection connection = migration.OpenRaw())
@@ -172,19 +223,19 @@ public sealed class Slice5StateModelPersistenceTests
                 1L,
                 ScalarInt64(
                     connection,
-                    "SELECT COUNT(*) FROM migration_history WHERE migration_id = 'M1-S5-0004';"));
+                    "SELECT COUNT(*) FROM migration_history WHERE migration_id = 'M1-S5-WP4-0005';"));
         }
 
         using TemporaryStore newer = new();
         using (AuthoritativeStore store = newer.Open())
         {
-            Assert.AreEqual(4, store.GetSchemaVersion());
+            Assert.AreEqual(5, store.GetSchemaVersion());
         }
 
         using (SqliteConnection connection = newer.OpenRaw())
         using (SqliteCommand command = connection.CreateCommand())
         {
-            command.CommandText = "PRAGMA user_version = 5;";
+            command.CommandText = "PRAGMA user_version = 6;";
             command.ExecuteNonQuery();
         }
 
@@ -192,7 +243,7 @@ public sealed class Slice5StateModelPersistenceTests
         Assert.IsNotNull(exception.InnerException);
         StringAssert.Contains(
             exception.InnerException.Message,
-            "Database schema 5 is newer than supported schema 4.");
+            "Database schema 6 is newer than supported schema 5.");
     }
 
     [TestMethod]

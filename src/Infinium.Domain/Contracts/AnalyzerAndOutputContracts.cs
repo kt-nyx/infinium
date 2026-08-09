@@ -192,7 +192,10 @@ public sealed record AnalyzerDeclarationContract(
     LinkedEvaluationCasesContract LinkedEvaluationCases,
     IReadOnlyList<PayloadContractDeclarationContract> PayloadContracts,
     ContractVersion StateModelVersion,
-    IReadOnlyList<ExecutionBoundaryContract> NotUsedBoundaries);
+    IReadOnlyList<ExecutionBoundaryContract> NotUsedBoundaries)
+{
+    public string AnalyzerFamily { get; init; } = AnalyzerId;
+}
 
 public sealed record DiagnosticTraceFieldContract(
     string Name,
@@ -346,6 +349,7 @@ public static class DomainContractInvariants
         }
 
         RequireText(declaration.AnalyzerId, nameof(declaration.AnalyzerId));
+        RequireText(declaration.AnalyzerFamily, nameof(declaration.AnalyzerFamily));
         if (!StringComparer.Ordinal.Equals(declaration.TaxonomyId, ContractConstants.TaxonomyId)
             || declaration.TaxonomyVersion != ContractVersion.Parse(ContractConstants.TaxonomyVersion))
         {
@@ -1084,7 +1088,10 @@ public static class DomainContractInvariants
             "coverage taxonomy assignment IDs");
         RequireUnique(coverage.GapIds.Select(value => value.Value), "coverage gap IDs");
         RequireUnique(coverage.FailureIds.Select(value => value.Value), "coverage failure IDs");
-        if (coverage.Exclusions.Any(string.IsNullOrWhiteSpace)
+        if (coverage.Exclusions.Any(item => string.IsNullOrWhiteSpace(item.MemberId.Value)
+                || string.IsNullOrWhiteSpace(item.Reason)
+                || item.State is not (CoverageMemberState.SkippedByConfiguration or CoverageMemberState.SkippedByLimit))
+            || coverage.Exclusions.Select(item => item.MemberId).Distinct().Count() != coverage.Exclusions.Count
             || (coverage.State == CoverageState.Completed
                 && (coverage.CompletedCount != coverage.Denominator
                     || coverage.GapIds.Count != 0

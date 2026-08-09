@@ -8,6 +8,7 @@
     "schema_id",
     "schema_version",
     "analyzer_id",
+    "analyzer_family",
     "analyzer_version",
     "semantic_contract_version",
     "identity_contract_version",
@@ -40,6 +41,9 @@
       "const": "1"
     },
     "analyzer_id": {
+      "$ref": "common.v1.schema.json#/$defs/identifier"
+    },
+    "analyzer_family": {
       "$ref": "common.v1.schema.json#/$defs/identifier"
     },
     "analyzer_version": {

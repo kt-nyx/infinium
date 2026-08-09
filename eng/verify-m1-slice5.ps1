@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Contracts', 'Documentation', 'Candidates', 'CandidateScale')]
+    [ValidateSet('Contracts', 'Documentation', 'Candidates', 'CandidateScale', 'Cases')]
     [string] $Gate,
 
     [Parameter(Mandatory = $true)]
@@ -69,12 +69,16 @@ function Invoke-FocusedTests([object[]] $Commands, [string] $FailurePrefix) {
             throw "$FailurePrefix failed: dotnet $($arguments -join ' ')"
         }
         $testTranscript = $testOutput -join [Environment]::NewLine
-        if ($testTranscript -notmatch 'Total:\s+[1-9][0-9]*') {
+        $totalMatch = [regex]::Match($testTranscript, 'Total:\s+([1-9][0-9]*)')
+        if (-not $totalMatch.Success) {
             throw "$FailurePrefix matched zero tests: dotnet $($arguments -join ' ')"
         }
+        $passedMatch = [regex]::Match($testTranscript, 'Passed:\s+([0-9]+)')
         $results += [ordered]@{
             command = "dotnet $($arguments -join ' ')"
             elapsed_milliseconds = $stopwatch.ElapsedMilliseconds
+            matched_tests = [int]$totalMatch.Groups[1].Value
+            passed_tests = if ($passedMatch.Success) { [int]$passedMatch.Groups[1].Value } else { $null }
         }
     }
     return $results
@@ -89,6 +93,7 @@ function Invoke-ContractsGate {
         'candidate-delivered-input.v1.schema.json' = 'infinium.analysis.candidate-delivered-input/v1'
         'candidate-delivered-expansion.v1.schema.json' = 'infinium.analysis.candidate-delivered-expansion/v1'
         'finding-case.v1.schema.json' = 'infinium.analysis.finding-case/v1'
+        'finding-case-input.v1.schema.json' = 'infinium.analysis.finding-case-input/v1'
         'analysis-replay.v1.schema.json' = 'infinium.analysis.replay/v1'
         'analysis-execution-input.v1.schema.json' = 'infinium.analysis.execution-input/v1'
         'analyzer-declaration.v1.schema.json' = 'infinium.analyzer.declaration/v1'
@@ -365,6 +370,92 @@ function Invoke-CandidateScaleGate {
     })
 }
 
+function Invoke-CasesGate {
+    $fixtureRoot = Join-Path $repoRoot 'docs/evaluation/fixtures/m1-slice5-wp4-cases-v1'
+    $requiredPaths = @(
+        'contracts/json-schema/finding-case-input.v1.schema.json',
+        'contracts/json-schema/finding-case.v1.schema.json',
+        'contracts/json-schema/analyzer-declaration.v1.schema.json',
+        'contracts/json-schema/candidate-analysis.v1.schema.json',
+        'src/Infinium.Analysis/Conclusions/FindingConclusionProducer.cs',
+        'src/Infinium.Analysis/Cases/FindingCasePipeline.cs',
+        'src/Infinium.Application/FindingCases/FindingCaseAnalysisPhase.cs',
+        'src/Infinium.Application/Evaluation/AnalyzerDeclarationJsonCodec.cs',
+        'src/Infinium.Persistence/AuthoritativeStore.FindingCases.cs',
+        'docs/evaluation/fixtures/m1-slice5-wp4-cases-v1/README.md',
+        'docs/evaluation/fixtures/m1-slice5-wp4-cases-v1/wp4-independent-truth.v1.0.3.json',
+        'docs/evaluation/fixtures/m1-slice5-wp4-cases-v1/independent-review.md'
+    )
+    foreach ($relativePath in $requiredPaths) {
+        if (-not (Test-Path -LiteralPath (Join-Path $repoRoot $relativePath))) {
+            throw "Required WP4 finding/case surface is missing: $relativePath"
+        }
+    }
+    $truthPath = Join-Path $fixtureRoot 'wp4-independent-truth.v1.0.3.json'
+    $reviewPath = Join-Path $fixtureRoot 'independent-review.md'
+    $truth = Read-StrictJson $truthPath
+    $truthHash = (Get-FileHash -LiteralPath $truthPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    $review = [System.IO.File]::ReadAllText($reviewPath)
+    if ($truth.package_registry.Count -ne 4 -or
+        $truthHash -cne '528bed0cd3ce399b54ae99f2ebb12e63981f292228c5c972191098c535e90fa2' -or
+        $review.IndexOf('Verdict: `ACCEPT`', [StringComparison]::Ordinal) -lt 0 -or
+        $review.IndexOf($truthHash, [StringComparison]::OrdinalIgnoreCase) -lt 0) {
+        throw 'WP4 semantic truth is not a four-package independently accepted frozen handoff.'
+    }
+
+    $productSources = @(
+        Get-ChildItem -LiteralPath (Join-Path $repoRoot 'src/Infinium.Domain/Contracts') -File -Filter '*.cs'
+        Get-Item -LiteralPath (Join-Path $repoRoot 'src/Infinium.Analysis/Candidates/CandidatePipeline.cs')
+        Get-ChildItem -LiteralPath (Join-Path $repoRoot 'src/Infinium.Analysis/Conclusions') -Recurse -File -Filter '*.cs'
+        Get-ChildItem -LiteralPath (Join-Path $repoRoot 'src/Infinium.Analysis/Cases') -Recurse -File -Filter '*.cs'
+        Get-ChildItem -LiteralPath (Join-Path $repoRoot 'src/Infinium.Application/FindingCases') -Recurse -File -Filter '*.cs'
+        Get-Item -LiteralPath (Join-Path $repoRoot 'src/Infinium.Application/Evaluation/Slice5ContractJsonCodecs.cs')
+        Get-Item -LiteralPath (Join-Path $repoRoot 'src/Infinium.Application/Evaluation/AnalyzerDeclarationJsonCodec.cs')
+        Get-Item -LiteralPath (Join-Path $repoRoot 'src/Infinium.Persistence/AuthoritativeStore.cs')
+        Get-Item -LiteralPath (Join-Path $repoRoot 'src/Infinium.Persistence/AuthoritativeStore.FindingCases.cs')
+        Get-Item -LiteralPath (Join-Path $repoRoot 'contracts/json-schema/finding-case-input.v1.schema.json')
+        Get-Item -LiteralPath (Join-Path $repoRoot 'contracts/json-schema/finding-case.v1.schema.json')
+        Get-Item -LiteralPath (Join-Path $repoRoot 'contracts/json-schema/analyzer-declaration.v1.schema.json')
+        Get-Item -LiteralPath (Join-Path $repoRoot 'contracts/json-schema/candidate-analysis.v1.schema.json')
+    ) | ForEach-Object { [System.IO.File]::ReadAllText($_.FullName) }
+    $productSourceText = $productSources -join [Environment]::NewLine
+    foreach ($forbidden in @(
+        'expected_typed_output', 'infinium.m1s5.wp4.', 'wp4-independent-truth',
+        'HttpClient', 'OpenAIClient', 'NexusClient', 'Process.Start', 'PowerShell.Create')) {
+        if ($productSourceText.IndexOf($forbidden, [StringComparison]::OrdinalIgnoreCase) -ge 0) {
+            throw "WP4 product graph reaches forbidden capability or fixture vocabulary: $forbidden"
+        }
+    }
+
+    $testCommands = @(
+        @('test', 'tests/Infinium.ContractTests/Infinium.ContractTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'TestCategory=M1Cases'),
+        @('test', 'tests/Infinium.UnitTests/Infinium.UnitTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'TestCategory=M1Cases'),
+        @('test', 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'TestCategory=M1Cases'),
+        @('test', 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'TestCategory=M1Cases')
+    )
+    $testResults = Invoke-FocusedTests $testCommands 'WP4 finding/case focused verification'
+    $expectedTestCounts = @(2, 7, 4, 5)
+    for ($index = 0; $index -lt $expectedTestCounts.Count; $index++) {
+        if ($testResults[$index].matched_tests -ne $expectedTestCounts[$index] -or
+            $testResults[$index].passed_tests -ne $expectedTestCounts[$index]) {
+            throw "WP4 focused test count mismatch at project index $index; expected $($expectedTestCounts[$index]) exact passing tests."
+        }
+    }
+    Write-GateReport 'Cases' ([ordered]@{
+        fixture_versions = @($truth.package_registry | ForEach-Object { "$($_.package_id)/$($_.package_version)" })
+        truth_sha256 = $truthHash
+        independent_review = 'accepted'
+        promotion_predicates = @('present','plausible-or-better','support','no-defeating-contradiction','no-missing-information','closed-severity','closed-identity')
+        reconciliation_gates = @('causal','applicability','dependency','producer')
+        reconciliation_outcomes = @('exact-continuation','analytical-revision','related-follow-up','new-distinct','ambiguous','unknown','not-observed','not-evaluated')
+        review_state_carryover = 'none'
+        coverage_presentation = 'exact-labeled-populations-no-combined-percentage-no-safety-claim'
+        product_executed_fixture_packages = @('causal-conclusions','reconciliation-lineage','taxonomy-history','coverage-boundaries')
+        focused_tests = $testResults
+        provider_model_private_fixture = 'not-used'
+    })
+}
+
 Push-Location $repoRoot
 try {
     switch ($Gate) {
@@ -372,6 +463,7 @@ try {
         'Documentation' { Invoke-DocumentationGate }
         'Candidates' { Invoke-CandidatesGate }
         'CandidateScale' { Invoke-CandidateScaleGate }
+        'Cases' { Invoke-CasesGate }
     }
 } finally {
     Pop-Location

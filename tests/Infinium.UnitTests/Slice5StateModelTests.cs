@@ -95,14 +95,21 @@ public sealed class Slice5StateModelTests
     {
         FindingContract finding = new(
             Id("finding-1"), Id("logical-finding-1"), Id("run-1"), Id("candidate-1"),
+            Id("hypothesis-1"),
             "speculative only", FindingSeverity.Major, AnalysisConfidence.SpeculativeLead,
-            [Id("evidence-1")], Id("identity-1"), null);
+            [Id("evidence-1")], FindingCaseIdentity.EnvelopeId(Identity()), Identity(),
+            FindingCaseIdentity.EnvelopeId(Identity()), Identity(), [],
+            FindingCaseIdentity.FindingSemanticFingerprint(
+                "speculative only", FindingSeverity.Major, AnalysisConfidence.SpeculativeLead, Identity(), []), null);
         FindingCaseContract speculative = EmptyFindingCases() with { Findings = [finding] };
         Assert.ThrowsExactly<InvalidOperationException>(() => Slice5ContractInvariants.Validate(speculative));
 
         Slice5CaseContract lead = new(
             Id("case-1"), Id("logical-case-1"), Id("run-1"), CaseOccurrenceKind.LeadOnly,
-            [], [Id("candidate-1")], "shared unresolved cause", [Id("evidence-1")], true);
+            [], [Id("candidate-1")], [Id("hypothesis-1")], "cause", [Id("evidence-1")],
+            FindingCaseIdentity.EnvelopeId(Identity()), Identity(),
+            FindingCaseIdentity.CaseSemanticFingerprint(
+                CaseOccurrenceKind.LeadOnly, Identity(), []), null, true);
         FindingCaseContract readinessLead = EmptyFindingCases() with { Cases = [lead] };
         Assert.ThrowsExactly<InvalidOperationException>(() => Slice5ContractInvariants.Validate(readinessLead));
     }
@@ -184,7 +191,7 @@ public sealed class Slice5StateModelTests
             PolicyFingerprint = CandidateAnalysisIdentity.StructuralHash(policyDescriptors),
             ThresholdFingerprint = CandidateAnalysisIdentity.StructuralHash(thresholdDescriptors),
             LimitFingerprint = CandidateAnalysisIdentity.StructuralHash(limitDescriptors),
-            AnalyzerBindings = [new(Id("analyzer-1"), Version(), Version(), declarationFingerprint, declarationJson)],
+            AnalyzerBindings = [new(Id("analyzer-1"), Version(), Version(), Version(), Version(), declarationFingerprint, declarationJson)],
             AnalyzerSetFingerprint = CandidateAnalysisIdentity.StructuralHash(
                 [$"analyzer-1:{declarationFingerprint.Value}"]),
         };
@@ -209,7 +216,7 @@ public sealed class Slice5StateModelTests
                     CandidateAnalysisIdentity.StableId("candidate-limit-binding", value.LimitId.Value, value.LimitFingerprint.Value), "uses"),
                 Edge("candidate-analysis-root", value.AnalysisRootId, "analyzer-declaration-binding",
                     CandidateAnalysisIdentity.StableId("candidate-analyzer-binding", "analyzer-1", Version().ToString(),
-                        Version().ToString(), declarationFingerprint.Value), "uses"),
+                        Version().ToString(), Version().ToString(), Version().ToString(), declarationFingerprint.Value), "uses"),
             ],
         };
         value = value with { Counts = CandidateAnalysisCounts.Compute(value) };
@@ -218,7 +225,20 @@ public sealed class Slice5StateModelTests
 
     private static FindingCaseContract EmptyFindingCases() => new(
         ContractConstants.FindingCaseSchemaId, Version(), Id("payload-1"), Id("run-1"),
-        [], [], [], [], [], [], [], []);
+        Id("input-1"), Id("promotion-policy-1"), Version(),
+        Id("reconciliation-policy-1"), Version(),
+        PromotionAssessments: [], Abstentions: [], Findings: [], Recommendations: [], Cases: [],
+        ReconciliationAssessments: [], LineageEvents: [], TaxonomyAssignments: [], TaxonomyProjections: [],
+        Coverage: [], CoverageFailures: [], Gaps: [], Boundaries: FindingCasePipelineTests.Boundaries(),
+        PublicationClaimBoundary: "no-safety-claim");
+
+    private static IdentityEnvelopeContract Identity()
+    {
+        IdentityEnvelopeContract value = new(
+            "analyzer-family", Version(), Version(), new Dictionary<string, string> { ["subject-1"] = "subject" },
+            "cause", "locus", ["applicable"], Id("dependency-1"), Fingerprint);
+        return value with { CanonicalSignature = FindingCaseIdentity.ComputeIdentitySignature(value) };
+    }
 
     private static DocumentationEvidenceContract DocumentationWithApplications(
         IReadOnlyList<ClaimApplicationContract> applications)

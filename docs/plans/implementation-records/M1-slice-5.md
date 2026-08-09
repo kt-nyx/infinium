@@ -1,6 +1,6 @@
 # M1 Slice 5 — Evidence, documentation, candidates, cases, and replay
 
-Status: `M1/S5/WP1` through `M1/S5/WP3` complete and reviewed; `M1/S5/WP4` is eligible; Slice 5 is not complete
+Status: `M1/S5/WP1` through `M1/S5/WP4` complete and reviewed; `M1/S5/WP5` is eligible; Slice 5 is not complete
 
 Plan: `M1/S5`
 
@@ -1004,3 +1004,137 @@ excluded from the focused commit.
 `docs/current-state.md` now advances the only live handoff to `M1/S5/WP4`.
 The focused implementation commit is reported in the final handoff; nothing
 is pushed.
+
+## M1/S5/WP4 — findings, cases, lineage, taxonomy, coverage, and gaps
+
+Status: Complete and independently reviewed; `M1/S5/WP5` is eligible.
+
+WP4 started from accepted HEAD
+`603adfa1a891dc4b17af8d2c09428987260d0dce` on focused branch
+`codex/m1-s5-wp4-findings-cases`. The pre-existing untracked `human-guide/`
+directory and unrelated user state were preserved. No legacy archive,
+evaluator-private repository, historical evaluator implementation, private
+fixture, controlled-real input, live/provider/model/credential service, or
+WP5 behavior was read or used.
+
+### Delivered vertical and contract seams
+
+The accepted vertical consumes the retained WP3 candidate aggregate through a
+product-reachable Application input producer and publishes one closed
+`infinium.analysis.finding-case/v1` aggregate. It includes:
+
+- an explicit nine-field promotion assessment whose deterministic three-way
+  result is supported finding, lead-only, or abstained;
+- typed conclusion, severity, remediation/further-investigation,
+  reversibility, risks, verification, abstention, and evidence provenance;
+- supported cases grouped only through exact shared-cause proofs and separate
+  lead-only cases that never affect readiness;
+- immutable finding/case occurrences, stable logical identities, explicit
+  four-gate reconciliation, all eight closed outcomes, member-first case
+  reconciliation, analytical/related lineage, and dedicated lead promotion;
+- taxonomy applicability, axis/facet/code, classification role, historical
+  predecessor sets, and explicit split/merge mapping provenance without
+  severity or intended-target inference;
+- exact labeled coverage member ledgers, exclusions, failures, typed gaps,
+  per-population completed numerators, and a mandatory `no-safety-claim`
+  publication boundary; and
+- strict input/output JSON schemas and codecs, fail-closed domain invariants,
+  typed append-only persistence/readback, transaction-fenced publication, and
+  same-identity/different-semantics rejection.
+
+The authoritative store is now schema 5 with storage contract `1.4.0` and
+schema fingerprint
+`e6d27152687e6b0c806da58a716a9ab909817f046fbe3bf11d8846da5e5dc87d`.
+Migration `M1-S5-WP4-0005` advances a genuine accepted schema-4 store without
+relabeling retained logical lineage as occurrence history. Typed rows retain
+analyzer family/version and semantic/identity versions, all promotion
+predicates, abstentions/recommendations, case memberships, taxonomy history
+and projections, exact coverage members/exclusions, gap/failure details, and
+multi-edge lineage. Integration evidence verifies exact values and atomic
+rollback, not only row counts.
+
+### Independently frozen public evidence
+
+A product-blind author produced the four small WP4 packages before product
+comparison. A separate product-blind reviewer accepted frozen v1.0.3 without
+reading product source, tests, output, build artifacts, legacy, private, or
+rejected comprehensive corpus material. The frozen truth is 254,857 bytes with
+SHA-256
+`528bed0cd3ce399b54ae99f2ebb12e63981f292228c5c972191098c535e90fa2`.
+
+| Package identity | Purpose |
+|---|---|
+| `infinium.m1s5.wp4.causal-conclusions.generic-a/1.0.3` | promotion, recommendations, supported/lead separation, causal grouping, false merge/split negatives, and rename/reorder metamorphism |
+| `infinium.m1s5.wp4.reconciliation-lineage.generic-b/1.0.3` | all eight reconciliation outcomes, four gates, global one-to-one identity, member-first case continuity, append-only lineage, review non-carryover, and lead promotion |
+| `infinium.m1s5.wp4.taxonomy-history.generic-c/1.0.3` | all product applicability/role states, exact subject negatives, historical identity, and non-product split/merge projection provenance |
+| `infinium.m1s5.wp4.coverage-boundaries.generic-d/1.0.3` | exact population/member denominators and numerators, failures/gaps/exclusions, zero/lead/partial/targeted boundaries, and no-safety presentation |
+
+The accepted fixture review is retained at
+`docs/evaluation/fixtures/m1-slice5-wp4-cases-v1/independent-review.md`.
+Product comparison executes all four packages through the production pipeline,
+including every coverage boundary variant, one global eight-outcome ledger,
+reverse candidate order, dedicated lead promotion, the exact five member/two
+case reconciliation matrices, all 69 product taxonomy assignment semantics,
+and the exact split/merge predecessor and mapping edges.
+
+### Correction and re-review ledger
+
+The development loop treated ordinary failures as recoverable and repeatedly
+returned them to correction. Material corrections included: complete typed
+input/output/schema/persistence closure; stable non-ordinal identities;
+evidence-scoped promotion and recommendations; exact shared-cause/member
+proofs; global one-to-one reconciliation and explicit candidate scopes;
+absence versus resolution semantics; Decision 8 member-first continuity;
+dedicated lead promotion and occurrence lineage; analyzer-family/version and
+semantic taxonomy fingerprints; complete coverage member/gap/failure ledgers;
+schema-4-to-5 migration safety; and exact fixture-to-product comparisons.
+Production keyword/fixture-phrase classification and answer pass-through were
+removed in favor of typed answer-free source facts and authority mappings.
+
+The final unfiltered Release floor then exposed one additional clean-break
+drift: `analyzer_family` had been added to the analyzer declaration domain and
+schema but not its JSON codec. The codec producer/consumer and domain
+validation were corrected, its schema round trip passed, and the full floor
+was rerun. The final fresh product reviewer found no surviving code, fixture,
+gate, authority, or safety/isolation issue. Its report is retained at
+`artifacts/m1-slice5/wp4-product-final-review/README.md` with SHA-256
+`8c83453ea4a1b66bae9c7a1ba7427d7ca3deedc2a88b18f6a90fd985b9ab9c18`.
+
+### Verification and bounded claim
+
+After locked restore, the Release build completes with zero warnings and zero
+errors. The categorized `M1Cases` surface passes exactly 2 contract, 7 unit
+(including current schema fingerprint and real schema-4 migration), 4
+integration, and 5 semantic evaluation tests. The `Cases` gate passes and
+retains its machine report at `artifacts/m1-slice5/wp4/cases.json`; it scans
+the complete reachable WP4 domain/candidate/conclusion/case/Application/codec/
+persistence/schema graph for fixture answers and forbidden external
+capabilities, and it refuses zero or unexpected test counts.
+
+The exact accepted-plan filters passed 4 unit, 4 integration, and 3 semantic
+evaluation tests with no skips. The unfiltered Release floor passed 156 unit
+tests with one environment-dependent symbolic-link skip, 136 contract tests,
+45 integration tests, and 50 evaluation tests with eight expected
+private/environment skips. Category floors passed:
+
+- `M1Unit`: 148 passed, 1 symbolic-link skip;
+- `M1Contract`: 99 passed;
+- `M1Integration`: 45 passed;
+- `M1Evaluation`: 50 passed, 8 private/environment skips;
+- `M1Security`: 37 unit passed/1 skip, 49 contract passed, 16 integration
+  passed, and 7 evaluation passed/2 skips; and
+- `M1Fault`: 32 unit, 43 contract, and 15 integration passed, plus 9
+  evaluation passed/3 expected identity-environment skips.
+
+`dotnet format --verify-no-changes`, dependency-manifest semantic checking,
+strict parsing of every changed JSON document, local-link validation for all
+five changed Markdown documents, and `git diff --check` passed. The full floor
+first found the missing analyzer-family DTO mapping; after correction the
+analyzer declaration round trip was added to `M1Cases`, the gate's reachable
+source/schema scan was widened, and the exact 2/7/4/5 gate rerun passed.
+
+This evidence proves only the bounded public synthetic WP4 behavior and its
+local deterministic product path. It is not a readiness, safety, reliability,
+held-out, private-evaluator, controlled-real, whole-M1, or Slice 5 verdict.
+WP5 remains responsible for replay, coordinator integration, reporting/query,
+recovery, and write/non-mutation safety. No push was performed.

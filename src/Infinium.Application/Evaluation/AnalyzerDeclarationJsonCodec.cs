@@ -48,6 +48,7 @@ public static class AnalyzerDeclarationJsonCodec
             value.SchemaId,
             "1",
             value.AnalyzerId,
+            value.AnalyzerFamily,
             value.AnalyzerVersion.ToString(),
             value.SemanticContractVersion.ToString(),
             value.IdentityContractVersion.ToString(),
@@ -190,7 +191,10 @@ public static class AnalyzerDeclarationJsonCodec
             value.NotUsedBoundaries.Select(item =>
                 StringComparer.Ordinal.Equals(item.State, "not-used")
                     ? new ExecutionBoundaryContract(item.BoundaryId, BoundaryUseState.NotUsed, item.Reason)
-                    : throw new InvalidDataException($"Unknown boundary state '{item.State}'.")).ToArray());
+                    : throw new InvalidDataException($"Unknown boundary state '{item.State}'.")).ToArray())
+        {
+            AnalyzerFamily = value.AnalyzerFamily,
+        };
     }
 
     private static ReasonedScopeDto[] ToReasoned(IReadOnlyList<ReasonedAnalyzerScopeContract> values)
@@ -322,6 +326,7 @@ public static class AnalyzerDeclarationJsonCodec
         string SchemaId,
         string SchemaVersion,
         string AnalyzerId,
+        string AnalyzerFamily,
         string AnalyzerVersion,
         string SemanticContractVersion,
         string IdentityContractVersion,
