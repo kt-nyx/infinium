@@ -18,7 +18,13 @@
     "product_output_used": false,
     "product_importer_inspected": false,
     "answer_bearing_material_in_path_under_test": false,
-    "derivation_record": "oracle/independent-derivation.md"
+    "derivation_record": {
+      "artifact_id": "oracle/independent-derivation.md",
+      "artifact_version": "1.0.0",
+      "fingerprint": "5cafb981d970a2e0895f808232d60d25818713e5b70ba23fef012b93d1e810af",
+      "availability": "retained",
+      "byte_length": 2932
+    }
   },
   "hostile_canaries": ["powershell-command", "network-url", "sql-command", "secret-shaped-string", "jndi-shaped-string"],
   "known_limitations": [

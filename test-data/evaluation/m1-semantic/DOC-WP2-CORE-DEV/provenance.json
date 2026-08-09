@@ -18,7 +18,13 @@
     "product_output_used": false,
     "product_importer_inspected": false,
     "answer_bearing_material_in_path_under_test": false,
-    "derivation_record": "oracle/independent-derivation.md"
+    "derivation_record": {
+      "artifact_id": "oracle/independent-derivation.md",
+      "artifact_version": "1.0.0",
+      "fingerprint": "20a281c519403a9ac70d15821ef120e6ce62757bb8fdd36ef2a7c504b362ab97",
+      "availability": "retained",
+      "byte_length": 2871
+    }
   },
   "known_limitations": [
     "Synthetic documentation proves deterministic representation and provenance only.",

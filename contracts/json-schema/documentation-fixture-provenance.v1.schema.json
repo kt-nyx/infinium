@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/json-schema/documentation-fixture-provenance.v1.schema.json",
+  "title": "Infinium WP2 documentation fixture provenance v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fixture_id",
+    "fixture_version",
+    "created_by",
+    "created_at",
+    "source_origin",
+    "source_kind",
+    "real_mod_or_tool_content",
+    "game_version",
+    "mod_version",
+    "tool_version",
+    "applicable_requirements",
+    "applicable_analyzers",
+    "ground_truth_method",
+    "identity_method",
+    "answer_isolation",
+    "known_limitations"
+  ],
+  "properties": {
+    "fixture_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "fixture_version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+    "created_by": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "created_at": { "$ref": "common.v1.schema.json#/$defs/utcTimestamp" },
+    "source_origin": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+    "source_kind": { "enum": ["fixture", "project-authored-local"] },
+    "real_mod_or_tool_content": { "const": false },
+    "game_version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+    "mod_version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+    "tool_version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+    "applicable_requirements": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "common.v1.schema.json#/$defs/identifier" }
+    },
+    "applicable_analyzers": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "common.v1.schema.json#/$defs/identifier" }
+    },
+    "ground_truth_method": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+    "identity_method": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+    "answer_isolation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authored_before_product_comparison",
+        "product_output_used",
+        "product_importer_inspected",
+        "answer_bearing_material_in_path_under_test",
+        "derivation_record"
+      ],
+      "properties": {
+        "authored_before_product_comparison": { "const": true },
+        "product_output_used": { "const": false },
+        "product_importer_inspected": { "const": false },
+        "answer_bearing_material_in_path_under_test": { "const": false },
+        "derivation_record": {
+          "allOf": [
+            { "$ref": "common.v1.schema.json#/$defs/artifactReference" },
+            {
+              "type": "object",
+              "properties": {
+                "artifact_id": { "const": "oracle/independent-derivation.md" },
+                "availability": { "const": "retained" }
+              },
+              "required": ["byte_length"]
+            }
+          ]
+        }
+      }
+    },
+    "hostile_canaries": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "common.v1.schema.json#/$defs/identifier" }
+    },
+    "known_limitations": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" }
+    }
+  }
+}

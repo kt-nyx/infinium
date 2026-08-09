@@ -18,8 +18,8 @@ records preserve evidence and history.
 |---|---|
 | Milestone | `M1` — active |
 | Active slice | `M1/S5` — active |
-| Completed package | `M1/S5/WP1`; WP2 product implementation is present but its public-fixture gate is in correction |
-| Next eligible package | `M1/S5/WP2` correction — close and mutation-test the public fixture package contract before WP3 |
+| Completed package | `M1/S5/WP1` and `M1/S5/WP2` |
+| Next eligible package | `M1/S5/WP3` — candidate and hypothesis generation |
 | Later packages | `WP4` through `WP6`, dependency-gated by the active Slice 5 plan |
 | Default execution policy | [Development execution policy](development/execution-policy.md) |
 | Active milestone plan | [M1 backend semantic proof](plans/milestones/M1-backend-semantic-proof.md) |
@@ -43,13 +43,14 @@ records preserve evidence and history.
 
 WP1 established the contract, codec, state, migration, and repository-boundary
 foundation. WP2's deterministic documentation product path, typed persistence,
-and focused behavior tests are implemented. A post-completion review found
-that its custom public-fixture reader does not close or schema-validate the
-entire registered package: only the public manifest and claim-import document
-use the active validator, while provenance, replay, redistribution, and
-partition history bypass their accepted schema/transition checks. WP2 remains
-in a targeted correction and independent fixture re-review until that evidence
-boundary is closed. WP3 is not yet eligible. The rejected preauthored
+and focused behavior tests are implemented. Its corrective public-fixture gate
+now schema-validates and semantically closes every structured package document,
+partition transition, replay dependency, provenance/answer-isolation field,
+independent derivation binding, and exact file/directory boundary. Focused
+hostile mutation evidence, the full Release verification floor, a fresh
+authority/diff review, and a separate product-blind fixture review accepted the
+correction without changing expected semantic truth. WP2 is complete and WP3
+is now eligible. The rejected preauthored
 28-package comprehensive corpus is not a current input and must not be
 reconstructed. WP3 through WP5 each own the small semantic cases for behavior
 they implement; WP6 owns the accumulated cross-package corpus and closeout.

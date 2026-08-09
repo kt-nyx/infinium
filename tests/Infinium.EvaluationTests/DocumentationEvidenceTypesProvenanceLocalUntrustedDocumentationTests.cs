@@ -12,9 +12,6 @@ namespace Infinium.Tests;
 [TestClass]
 public sealed class DocumentationEvidenceTypesProvenanceLocalUntrustedDocumentationTests
 {
-    private static readonly UtcTimestamp ImportedAt = new(
-        new DateTimeOffset(2026, 8, 8, 18, 30, 0, TimeSpan.Zero));
-
     [TestMethod]
     [TestCategory("M1Evaluation")]
     [TestCategory("M1Security")]
@@ -174,10 +171,10 @@ public sealed class DocumentationEvidenceTypesProvenanceLocalUntrustedDocumentat
         DocumentationImportRequestContract request = new(
             new OpaqueId(matrixCase.GetProperty("originating_run_id").GetString()!),
             new OpaqueId(matrixCase.GetProperty("import_run_id").GetString()!),
-            DocumentationImportMode.RetainedReuse,
+            ParseImportMode(matrixCase.GetProperty("mode").GetString()!),
             new OpaqueId(package.CaseMatrix.GetProperty("clean_execution_binding").GetProperty("dependency_closure_id").GetString()!),
             new OpaqueId(package.CaseMatrix.GetProperty("clean_execution_binding").GetProperty("extractor_id").GetString()!),
-            ImportedAt,
+            UtcTimestamp.Parse(matrixCase.GetProperty("imported_at").GetString()!),
             manifest,
             null,
             clean,
@@ -202,10 +199,10 @@ public sealed class DocumentationEvidenceTypesProvenanceLocalUntrustedDocumentat
         new(
             new OpaqueId(binding.GetProperty("originating_run_id").GetString()!),
             new OpaqueId(binding.GetProperty("import_run_id").GetString()!),
-            DocumentationImportMode.CleanImport,
+            ParseImportMode(binding.GetProperty("mode").GetString()!),
             new OpaqueId(binding.GetProperty("dependency_closure_id").GetString()!),
             new OpaqueId(binding.GetProperty("extractor_id").GetString()!),
-            ImportedAt,
+            UtcTimestamp.Parse(binding.GetProperty("imported_at").GetString()!),
             package.ClaimImport,
             package.SourceBytes,
             null,
@@ -330,7 +327,7 @@ public sealed class DocumentationEvidenceTypesProvenanceLocalUntrustedDocumentat
         Assert.AreEqual(expected.GetProperty("import_id").GetString(), actual.Imports.Single().ImportId.Value);
         Assert.AreEqual(expected.GetProperty("reused_import_id").GetString(), actual.Imports.Single().ReusedImportId?.Value);
         Assert.AreEqual(DocumentationImportMode.RetainedReuse, actual.Imports.Single().Mode);
-        Assert.AreEqual(ImportedAt.ToString(), actual.Imports.Single().CreatedAt.ToString());
+        Assert.AreEqual(expected.GetProperty("created_at").GetString(), actual.Imports.Single().CreatedAt.ToString());
         CollectionAssert.AreEqual(retained.Passages.ToArray(), actual.Passages.ToArray());
         CollectionAssert.AreEqual(retained.Claims.ToArray(), actual.Claims.ToArray());
         CollectionAssert.AreEqual(retained.Applications.ToArray(), actual.Applications.ToArray());
@@ -549,6 +546,13 @@ public sealed class DocumentationEvidenceTypesProvenanceLocalUntrustedDocumentat
         DocumentationImportMode.CleanImport => "clean-import",
         DocumentationImportMode.RetainedReuse => "retained-reuse",
         _ => throw new InvalidOperationException(),
+    };
+
+    private static DocumentationImportMode ParseImportMode(string value) => value switch
+    {
+        "clean-import" => DocumentationImportMode.CleanImport,
+        "retained-reuse" => DocumentationImportMode.RetainedReuse,
+        _ => throw new InvalidDataException("Fixture import mode is not closed."),
     };
 
     private static string ClaimKindToken(ClaimKind value) => value switch

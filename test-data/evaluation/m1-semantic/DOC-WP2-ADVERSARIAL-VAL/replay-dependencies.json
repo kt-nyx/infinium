@@ -2,39 +2,42 @@
   "fixture_id": "DOC-WP2-ADVERSARIAL-VAL",
   "fixture_version": "1.0.0",
   "expected_replay_state": "complete-clean",
-  "scenario_replay_states": {
-    "retained-reuse-deleted": "audit-only",
-    "retained-reuse-unavailable": "complete-clean"
-  },
-  "dependency_graph_fingerprint_method": "SHA-256 of ordinal path entries encoded as path NUL lowercase-sha256 NUL decimal-byte-length LF.",
   "dependency_graph_fingerprint": "5ee2cdf28b9b98d7c0abc22a698ecfac79286030e926a7fc3fc12fd62f352d8c",
   "dependencies": [
     {
       "dependency_id": "inputs-case-matrix-json",
-      "path": "inputs/case-matrix.json",
       "kind": "tracked-fixture-input",
+      "identity_or_version": "inputs/case-matrix.json",
       "sha256": "45a98637a36a1ce7d8fc6526e4a1b8f54c4789e8cec414c383802bc76e9e4984",
       "byte_length": 4821,
+      "retention_location_class": "tracked-repository",
       "availability": "retained",
-      "required_for": ["clean-recomputation", "boundary-replay", "audit"]
+      "required_for": ["clean-recomputation", "boundary-replay", "audit"],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Removal makes clean recomputation unavailable and leaves only retained output audit evidence."
     },
     {
       "dependency_id": "inputs-claim-import-json",
-      "path": "inputs/claim-import.json",
       "kind": "tracked-fixture-input",
+      "identity_or_version": "inputs/claim-import.json",
       "sha256": "3d6671a4c442ad2f08f9afd23be85b5edccf4cebb37f7e69e75c44be48f43df0",
       "byte_length": 2475,
+      "retention_location_class": "tracked-repository",
       "availability": "retained",
-      "required_for": ["clean-recomputation", "boundary-replay", "audit"]
+      "required_for": ["clean-recomputation", "boundary-replay", "audit"],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Removal makes clean recomputation unavailable and leaves only retained output audit evidence."
     },
     {
       "dependency_id": "inputs-source-txt",
-      "path": "inputs/source.txt",
       "kind": "tracked-fixture-input",
+      "identity_or_version": "inputs/source.txt",
       "sha256": "e0b05439353b6871a839cd89942626756917f612bae9bb285e59a39f8900079e",
       "byte_length": 211,
+      "retention_location_class": "tracked-repository",
       "availability": "retained",
-      "required_for": ["clean-recomputation", "exact-passage-check", "audit"],
+      "required_for": ["clean-recomputation", "audit"],
+      "permission_and_redistribution": "project-authored-redistributable",
       "deletion_effect": "Deletion makes clean recomputation unavailable and retained evidence audit-only. Separate live-source unavailability retains R1 bytes and preserves partial replay."
     }
   ],
@@ -44,6 +47,13 @@
       "artifact_version": "1.0.0",
       "fingerprint": "8a435a592549dcacdb447c89e60ae629dafdc3f8bca5adf7a9063038d3897843",
       "byte_length": 15398,
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "oracle/independent-derivation.md",
+      "artifact_version": "1.0.0",
+      "fingerprint": "5cafb981d970a2e0895f808232d60d25818713e5b70ba23fef012b93d1e810af",
+      "byte_length": 2932,
       "availability": "retained"
     }
   ]

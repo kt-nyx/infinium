@@ -555,3 +555,132 @@ file closure semantics, add negative mutation coverage, reseal affected public
 hashes without deriving expected truth from product output, and obtain a fresh
 independent fixture/authority review. WP3 is not eligible until that correction
 is accepted.
+
+### Public-fixture corrective completion
+
+The targeted correction started from pushed commit
+`66b6b5300bc27c545d5738bda4c99a1369b7b5f6` on branch
+`codex/m1-s5-wp2-documentation-evidence`. It changed only the WP2 public
+fixture reader, active public JSON schemas, focused contract/security mutation
+tests, the focused evaluation harness, the two registered WP2 package
+governance documents, this record, and the live handoff. It did not reopen the
+documentation importer, evidence identity, persistence, deletion, or semantic
+oracle implementation.
+
+`DocumentationFixturePackageReader` now validates all eight structured JSON
+documents in each package with `ActiveJsonSchemaValidator`. It reuses the
+accepted generic public-manifest, claim-import, replay-dependency,
+redistribution, and partition-history schemas. The generic fixture contracts
+cannot represent the complete WP2 documentation case-matrix, oracle, or
+answer-isolation provenance shapes, so the correction adds these closed,
+package-specific active schemas:
+
+| Active schema file | SHA-256 |
+|---|---|
+| `documentation-fixture-case-matrix.v1.schema.json` | `1f5ad895537dd748743383c5072cb6b3321f05d4767965c9a0f36f2d4ba8cefc` |
+| `documentation-fixture-oracle.v1.schema.json` | `abb92a4090c09e9e4fccf5d7081e9f88711b4d4d2ed77ce8ba6cc54e6d03bb4b` |
+| `documentation-fixture-provenance.v1.schema.json` | `0ea6164a04dadd6a2ce93596a020cd3f17fb478ca90dabd5ddc0bed36fbb47ee` |
+
+The reader additionally requires exact fixture/version agreement; exact
+manifest/partition-history equality; a valid initial assignment and only the
+accepted known-answer transition to development; strict timestamp order; final
+partition agreement; materially independent replacement identity and input/
+oracle fingerprints; unique bounded replay dependency IDs and paths; exact
+three-file input closure; safe normalized in-package paths; exact hashes and
+lengths; exact oracle/derivation output closure; redistribution agreement;
+answer-isolation constants; exact derivation path/version/hash/length; case,
+claim-import, and oracle application-target agreement; exact external-boundary
+agreement; and exact root/input/oracle file and directory closure with no
+reparse point. It also binds the clean execution mode, run, dependency,
+extractor, timestamp, aggregate passage/retention/replay state, no-model and
+no-external-boundary fields to the corresponding oracle objects; binds reuse
+run/time/deletion data; closes typed core/adversarial claim branches; and
+checks exact oracle counts, indexes, and unique typed identities. The focused
+evaluation harness now consumes fixture-bound mode and timestamps rather than
+hard-coded values.
+
+The mutation suite contains 45 WP2 package-integrity cases plus the active
+schema-set closure check. It proves rejection of schema-invalid provenance,
+replay, redistribution, partition history, case matrix, and oracle documents;
+partition-history disagreement; answer-isolation, redistribution, identity,
+application-target, replay-state, and boundary drift; missing, extra,
+duplicate, escaping, or over-bound replay dependencies; replay governance,
+clean-mode, execution-time, aggregate-state, typed-claim, no-external-use,
+oracle count/index, hash, length, and derivation drift; and unexpected files,
+directories, and reparse points. It also proves that both registered packages
+and one fully specified accepted
+validation-to-development transition remain admissible.
+
+#### Corrected package identities and independent review
+
+Expected semantic truth did **not** change. Against the starting commit, both
+`expected-oracle.json` files, both case matrices, both claim-import inputs,
+both source payloads, both independent derivation records, and both partition
+histories remain byte-identical. Product output did not author or rewrite any
+expected claim, ID, count, outcome, payload identity, deletion receipt, or
+gap. Only provenance, replay, redistribution, and public-manifest governance
+bytes were resealed.
+
+| Package/evidence | Final identity or SHA-256 |
+|---|---|
+| Core payload | `docevidence-b00f3d167541bef79ea09e07689b2165` |
+| Core input graph | `8a2ecc117185b7d99be95778c79fd74133d41811bb4ad987f755a8ab10f001ff` |
+| Core oracle | `27269a4a7a6e39761ce26d5927552bea9d2b6d8f8028160a7bcacd8911b090e1` |
+| Core provenance | `a3f1af914352599c0095cb0545a0adf69c27c34f3285f6452146d7d664f8e3aa` |
+| Core replay dependencies | `6626d955025039cc887329043491dcb2c1c2350e14e1b64eadc8ac8acf90c47b` |
+| Core independent derivation | `20a281c519403a9ac70d15821ef120e6ce62757bb8fdd36ef2a7c504b362ab97`; 2,871 bytes |
+| Core public manifest | `a46782cee9fe0fec47465f6866803652970ca81b5d554366cedf38995ef780f0` |
+| Adversarial clean payload | `docevidence-4ced9c0c47bc60d5cc156207f2e846ea` |
+| Adversarial deleted-reuse payload | `docevidence-b3f8e0062102d7feff5bd759144203b5` |
+| Adversarial unavailable-live-source payload | `docevidence-7b0f18e6f7a9b8953bae8c7b334e9fda` |
+| Adversarial input graph | `5ee2cdf28b9b98d7c0abc22a698ecfac79286030e926a7fc3fc12fd62f352d8c` |
+| Adversarial oracle | `8a435a592549dcacdb447c89e60ae629dafdc3f8bca5adf7a9063038d3897843` |
+| Adversarial provenance | `bb8add0a3a1f834a09eb78a3809ad9a56def9af5664309e31f735c607ab75f04` |
+| Adversarial replay dependencies | `7f60992a8cf51048c567b7cfee98d0b82d620f5780757cc38802925f4fb2ff85` |
+| Adversarial independent derivation | `5cafb981d970a2e0895f808232d60d25818713e5b70ba23fef012b93d1e810af`; 2,932 bytes |
+| Adversarial public manifest | `a38c1623c34c583508f0dbf91dbed0c8694c7cdc5a9b3c09524385c2b6195cc5` |
+
+The fresh product-blind reviewer role
+`/root/wp2_product_blind_fixture_review` inspected no product source, test,
+output, or build artifact. It independently recomputed every input, oracle,
+provenance, replay, derivation, redistribution, partition-history, and raw
+manifest hash/length; verified exact package and dependency/output closure;
+confirmed all identities, transitions, redistribution, answer-isolation, and
+derivation bindings; confirmed the expected semantic truth was byte-unchanged;
+and returned **ACCEPT** with no finding. After the final schema tightening it
+repeated the product-blind review, independently recomputed the same package
+bindings plus the three schema fingerprints above, and again returned
+**ACCEPT**. A separate fresh authority/diff reviewer drove correction of the
+remaining execution/aggregate, typed-claim, boundary, replay-governance, and
+oracle-internal seams; its final review found the corrected implementation
+semantically green.
+
+#### Corrective verification
+
+| Command or check | Final result |
+|---|---|
+| `dotnet restore Infinium.sln --locked-mode --nologo` | Passed |
+| `dotnet build Infinium.sln -c Release --no-restore --nologo` | Passed; 0 warnings, 0 errors |
+| Focused documentation/claim unit tests | 13 passed, 0 failed, 0 skipped |
+| Focused documentation integration tests | 3 passed, 0 failed, 0 skipped |
+| Focused documentation evaluation/product comparison | 3 passed, 0 failed, 0 skipped |
+| Focused fixture contract/security/mutation plus schema-set check | 46 passed, 0 failed, 0 skipped |
+| `eng/verify-m1-slice5.ps1 -Gate Documentation` | Passed; `artifacts/m1-slice5/wp2/documentation.json` |
+| `Category=M1Unit` | 111 passed, 1 environment-dependent symbolic-link test skipped |
+| `Category=M1Contract` | 38 passed, 0 failed, 0 skipped |
+| `Category=M1Integration` | 36 passed, 0 failed, 0 skipped |
+| `Category=M1Evaluation` | 43 passed, 8 existing environment-dependent private tests skipped |
+| `Category=M1Security` | 9 passed, 0 failed, 0 skipped |
+| `Category=M1Fault` | 13 passed, 0 failed, 0 skipped |
+| Full Release solution | 334 passed, 9 existing environment/private skips, 0 failed: 129 unit/1 skipped, 128 contract, 35 integration, 42 evaluation/8 skipped |
+| `dotnet format ... --verify-no-changes` | Passed after formatter-only correction and affected reruns |
+| `eng/update-dependency-manifest.ps1 -Check` | Passed |
+| Changed/new JSON parse | Passed; 11 documents |
+| Changed-document local-link check | Passed; 6 local links |
+| Protected/out-of-scope path check | Passed; 17 focused commit paths; unrelated untracked `human-guide/` excluded |
+| `git diff --check` and final semantic diff review | Passed |
+
+No evaluator-private repository, private corpus, legacy archive, historical
+evaluator material, live provider, WP3+ implementation, or push was accessed
+or performed. The final local task commit is reported in the handoff because a
+commit cannot contain its own hash.

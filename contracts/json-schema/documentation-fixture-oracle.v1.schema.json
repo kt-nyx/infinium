@@ -1,0 +1,658 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.infinium.dev/json-schema/documentation-fixture-oracle.v1.schema.json",
+  "title": "Infinium WP2 documentation fixture oracle v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fixture_id",
+    "fixture_version",
+    "oracle_authorship",
+    "downstream_objects"
+  ],
+  "properties": {
+    "fixture_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "fixture_version": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+    "oracle_authorship": { "const": "independent-before-product-comparison" },
+    "expected_result": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+    "expected_counts": { "$ref": "#/$defs/counts" },
+    "revision": { "$ref": "#/$defs/revision" },
+    "import": { "$ref": "#/$defs/import" },
+    "revision_descriptors": { "$ref": "#/$defs/stringArray" },
+    "import_descriptors": { "$ref": "#/$defs/stringArray" },
+    "failure_descriptors": { "$ref": "#/$defs/stringArray" },
+    "aggregate_descriptor_list_sha256": { "$ref": "#/$defs/aggregateHashes" },
+    "passages": { "$ref": "#/$defs/passages" },
+    "claims": { "$ref": "#/$defs/coreClaims" },
+    "applications": { "$ref": "#/$defs/applications" },
+    "purpose_assignment": { "$ref": "#/$defs/purposeAssignment" },
+    "gaps": { "$ref": "#/$defs/gaps" },
+    "deletion_receipts": { "$ref": "#/$defs/deletionReceipts" },
+    "payload_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "clean": { "$ref": "#/$defs/cleanScenario" },
+    "retained_reuse_deleted": { "$ref": "#/$defs/reuseScenario" },
+    "retained_reuse_unavailable": { "$ref": "#/$defs/reuseScenario" },
+    "rejections": { "$ref": "#/$defs/rejections" },
+    "accepted_boundaries": { "$ref": "#/$defs/acceptedBoundaries" },
+    "downstream_objects": { "$ref": "#/$defs/downstreamObjects" }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "expected_result",
+        "expected_counts",
+        "revision",
+        "import",
+        "revision_descriptors",
+        "import_descriptors",
+        "failure_descriptors",
+        "aggregate_descriptor_list_sha256",
+        "passages",
+        "claims",
+        "applications",
+        "purpose_assignment",
+        "gaps",
+        "deletion_receipts",
+        "payload_id"
+      ],
+      "not": {
+        "anyOf": [
+          { "required": ["clean"] },
+          { "required": ["retained_reuse_deleted"] },
+          { "required": ["retained_reuse_unavailable"] },
+          { "required": ["rejections"] },
+          { "required": ["accepted_boundaries"] }
+        ]
+      }
+    },
+    {
+      "required": [
+        "clean",
+        "retained_reuse_deleted",
+        "retained_reuse_unavailable",
+        "rejections",
+        "accepted_boundaries"
+      ],
+      "not": {
+        "anyOf": [
+          { "required": ["expected_result"] },
+          { "required": ["expected_counts"] },
+          { "required": ["revision"] },
+          { "required": ["import"] },
+          { "required": ["revision_descriptors"] },
+          { "required": ["import_descriptors"] },
+          { "required": ["failure_descriptors"] },
+          { "required": ["aggregate_descriptor_list_sha256"] },
+          { "required": ["passages"] },
+          { "required": ["claims"] },
+          { "required": ["applications"] },
+          { "required": ["purpose_assignment"] },
+          { "required": ["gaps"] },
+          { "required": ["deletion_receipts"] },
+          { "required": ["payload_id"] }
+        ]
+      }
+    }
+  ],
+  "$defs": {
+    "identifier": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "nonEmptyString": { "$ref": "common.v1.schema.json#/$defs/nonEmptyString" },
+    "sha256": { "$ref": "common.v1.schema.json#/$defs/sha256" },
+    "utcTimestamp": { "$ref": "common.v1.schema.json#/$defs/utcTimestamp" },
+    "stringArray": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": { "$ref": "#/$defs/nonEmptyString" }
+    },
+    "identifierArray": {
+      "type": "array",
+      "maxItems": 10000,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/identifier" }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revisions",
+        "imports",
+        "passages",
+        "claims",
+        "applications",
+        "purpose_assignments",
+        "deletion_receipts",
+        "gaps",
+        "failures"
+      ],
+      "properties": {
+        "revisions": { "$ref": "#/$defs/count" },
+        "imports": { "$ref": "#/$defs/count" },
+        "passages": { "$ref": "#/$defs/count" },
+        "claims": { "$ref": "#/$defs/count" },
+        "applications": { "$ref": "#/$defs/count" },
+        "purpose_assignments": { "$ref": "#/$defs/count" },
+        "deletion_receipts": { "$ref": "#/$defs/count" },
+        "gaps": { "$ref": "#/$defs/count" },
+        "failures": { "$ref": "#/$defs/count" }
+      }
+    },
+    "count": { "type": "integer", "minimum": 0, "maximum": 10000 },
+    "aggregateHashes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revisions",
+        "imports",
+        "passages",
+        "claims",
+        "applications",
+        "purpose_assignments",
+        "deletion_receipts",
+        "gaps",
+        "failures"
+      ],
+      "properties": {
+        "revisions": { "$ref": "#/$defs/sha256" },
+        "imports": { "$ref": "#/$defs/sha256" },
+        "passages": { "$ref": "#/$defs/sha256" },
+        "claims": { "$ref": "#/$defs/sha256" },
+        "applications": { "$ref": "#/$defs/sha256" },
+        "purpose_assignments": { "$ref": "#/$defs/sha256" },
+        "deletion_receipts": { "$ref": "#/$defs/sha256" },
+        "gaps": { "$ref": "#/$defs/sha256" },
+        "failures": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "revision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revision_id",
+        "source_id",
+        "source_kind",
+        "source_revision",
+        "byte_fingerprint",
+        "byte_length",
+        "supplying_snapshot_id",
+        "retention_state",
+        "replay_state"
+      ],
+      "properties": {
+        "revision_id": { "$ref": "#/$defs/identifier" },
+        "source_id": { "$ref": "#/$defs/identifier" },
+        "source_kind": { "enum": ["fixture", "project-authored-local"] },
+        "source_revision": { "$ref": "#/$defs/nonEmptyString" },
+        "byte_fingerprint": { "$ref": "#/$defs/sha256" },
+        "byte_length": { "type": "integer", "minimum": 0, "maximum": 8388608 },
+        "supplying_snapshot_id": { "$ref": "#/$defs/identifier" },
+        "retention_state": { "$ref": "#/$defs/resultState" },
+        "replay_state": { "$ref": "#/$defs/replayState" }
+      }
+    },
+    "import": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "import_id",
+        "import_run_id",
+        "mode",
+        "reused_import_id_presence",
+        "dependency_closure_id",
+        "extractor_id",
+        "llm_involvement",
+        "llm_operation",
+        "boundaries",
+        "created_at"
+      ],
+      "properties": {
+        "import_id": { "$ref": "#/$defs/identifier" },
+        "import_run_id": { "$ref": "#/$defs/identifier" },
+        "mode": { "enum": ["clean-import", "retained-reuse"] },
+        "reused_import_id_presence": { "enum": ["absent", "present"] },
+        "dependency_closure_id": { "$ref": "#/$defs/identifier" },
+        "extractor_id": { "$ref": "#/$defs/identifier" },
+        "llm_involvement": { "const": "none" },
+        "llm_operation": { "const": "none" },
+        "boundaries": { "$ref": "#/$defs/boundaries" },
+        "created_at": { "$ref": "#/$defs/utcTimestamp" }
+      }
+    },
+    "boundaries": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": { "$ref": "#/$defs/boundary" }
+    },
+    "boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["boundary_id", "state", "reason"],
+      "properties": {
+        "boundary_id": { "enum": ["provider", "hosted-search", "nexus", "loot"] },
+        "state": { "const": "not-used" },
+        "reason": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    },
+    "passages": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": { "$ref": "#/$defs/passage" }
+    },
+    "passage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "passage_id",
+        "utf8_start_offset",
+        "utf8_end_offset",
+        "passage_fingerprint",
+        "state"
+      ],
+      "properties": {
+        "passage_id": { "$ref": "#/$defs/identifier" },
+        "utf8_start_offset": { "type": "integer", "minimum": 0, "maximum": 8388608 },
+        "utf8_end_offset": { "type": "integer", "minimum": 0, "maximum": 8388608 },
+        "passage_fingerprint": { "$ref": "#/$defs/sha256" },
+        "state": { "$ref": "#/$defs/resultState" }
+      }
+    },
+    "coreClaims": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": { "$ref": "#/$defs/coreClaim" }
+    },
+    "coreClaim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "claim_key",
+        "claim_base_id",
+        "direct_contradiction_base_ids",
+        "reachable_contradiction_descriptors",
+        "claim_id",
+        "producing_import_id",
+        "passage_id",
+        "kind",
+        "contradicting_evidence_ids"
+      ],
+      "properties": {
+        "claim_key": { "$ref": "#/$defs/identifier" },
+        "claim_base_id": { "$ref": "#/$defs/identifier" },
+        "direct_contradiction_base_ids": { "$ref": "#/$defs/identifierArray" },
+        "reachable_contradiction_descriptors": { "$ref": "#/$defs/stringArray" },
+        "claim_id": { "$ref": "#/$defs/identifier" },
+        "producing_import_id": { "$ref": "#/$defs/identifier" },
+        "passage_id": { "$ref": "#/$defs/identifier" },
+        "kind": { "$ref": "#/$defs/claimKind" },
+        "contradicting_evidence_ids": { "$ref": "#/$defs/identifierArray" }
+      }
+    },
+    "adversarialClaims": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": { "$ref": "#/$defs/adversarialClaim" }
+    },
+    "adversarialClaim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "claim_key",
+        "claim_base_id",
+        "direct_contradiction_base_ids",
+        "reachable_contradiction_descriptors",
+        "claim_id",
+        "producing_import_id",
+        "passage_id",
+        "applicability"
+      ],
+      "properties": {
+        "claim_key": { "$ref": "#/$defs/identifier" },
+        "claim_base_id": { "$ref": "#/$defs/identifier" },
+        "direct_contradiction_base_ids": { "$ref": "#/$defs/identifierArray" },
+        "reachable_contradiction_descriptors": { "$ref": "#/$defs/stringArray" },
+        "claim_id": { "$ref": "#/$defs/identifier" },
+        "producing_import_id": { "$ref": "#/$defs/identifier" },
+        "passage_id": { "$ref": "#/$defs/identifier" },
+        "applicability": { "$ref": "#/$defs/applicability" }
+      }
+    },
+    "applications": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": { "$ref": "#/$defs/application" }
+    },
+    "application": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "claim_key",
+        "application_id",
+        "claim_id",
+        "consuming_run_id",
+        "installation_snapshot_id",
+        "analysis_context_id",
+        "resolved_input_manifest_id",
+        "subject_id",
+        "subject_type",
+        "dependency_closure_id",
+        "applicability",
+        "evidence_ids"
+      ],
+      "properties": {
+        "claim_key": { "$ref": "#/$defs/identifier" },
+        "application_id": { "$ref": "#/$defs/identifier" },
+        "claim_id": { "$ref": "#/$defs/identifier" },
+        "consuming_run_id": { "$ref": "#/$defs/identifier" },
+        "installation_snapshot_id": { "$ref": "#/$defs/identifier" },
+        "analysis_context_id": { "$ref": "#/$defs/identifier" },
+        "resolved_input_manifest_id": { "$ref": "#/$defs/identifier" },
+        "subject_id": { "$ref": "#/$defs/identifier" },
+        "subject_type": { "$ref": "#/$defs/identifier" },
+        "dependency_closure_id": { "$ref": "#/$defs/identifier" },
+        "applicability": { "$ref": "#/$defs/applicability" },
+        "evidence_ids": { "$ref": "#/$defs/identifierArray" }
+      }
+    },
+    "purposeAssignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assignment_id",
+        "taxonomy_id",
+        "taxonomy_version",
+        "axis",
+        "facet",
+        "code",
+        "applicability",
+        "subject_id",
+        "subject_type",
+        "role",
+        "claim_id",
+        "application_id",
+        "applicability_condition_ids",
+        "analyzer_or_adjudicator_id",
+        "created_at",
+        "reason"
+      ],
+      "properties": {
+        "assignment_id": { "$ref": "#/$defs/identifier" },
+        "taxonomy_id": { "const": "infinium.skyrim-se.mod-impact-taxonomy" },
+        "taxonomy_version": { "const": "0.1.0" },
+        "axis": { "$ref": "#/$defs/identifier" },
+        "facet": { "$ref": "#/$defs/identifier" },
+        "code": { "$ref": "#/$defs/identifier" },
+        "applicability": { "enum": ["assigned", "unknown", "unsupported", "unmapped", "not-applicable"] },
+        "subject_id": { "$ref": "#/$defs/identifier" },
+        "subject_type": { "$ref": "#/$defs/identifier" },
+        "role": { "enum": ["declared", "observed", "predicted", "established"] },
+        "claim_id": { "$ref": "#/$defs/identifier" },
+        "application_id": { "$ref": "#/$defs/identifier" },
+        "applicability_condition_ids": { "$ref": "#/$defs/identifierArray" },
+        "analyzer_or_adjudicator_id": { "$ref": "#/$defs/identifier" },
+        "created_at": { "$ref": "#/$defs/utcTimestamp" },
+        "reason": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    },
+    "gaps": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": { "$ref": "#/$defs/gap" }
+    },
+    "gap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gap_id",
+        "originating_run_id",
+        "kind",
+        "revision_id",
+        "replay_effect",
+        "reason",
+        "created_at"
+      ],
+      "properties": {
+        "gap_id": { "$ref": "#/$defs/identifier" },
+        "originating_run_id": { "$ref": "#/$defs/identifier" },
+        "kind": { "enum": ["contradiction", "deletion", "unavailable-source", "replay"] },
+        "revision_id": { "$ref": "#/$defs/identifier" },
+        "claim_id": { "$ref": "#/$defs/identifier" },
+        "application_id": { "$ref": "#/$defs/identifier" },
+        "replay_effect": { "$ref": "#/$defs/replayState" },
+        "reason": { "$ref": "#/$defs/nonEmptyString" },
+        "created_at": { "$ref": "#/$defs/utcTimestamp" }
+      }
+    },
+    "deletionReceipts": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": { "$ref": "#/$defs/deletionReceipt" }
+    },
+    "deletionReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "receipt_id",
+        "originating_run_id",
+        "revision_id",
+        "deleted_body_fingerprint",
+        "deleted_passage_ids",
+        "independently_retained_payload_ids",
+        "replay_effect",
+        "deleted_at",
+        "reason"
+      ],
+      "properties": {
+        "receipt_id": { "$ref": "#/$defs/identifier" },
+        "originating_run_id": { "$ref": "#/$defs/identifier" },
+        "revision_id": { "$ref": "#/$defs/identifier" },
+        "deleted_body_fingerprint": { "$ref": "#/$defs/sha256" },
+        "deleted_passage_ids": { "$ref": "#/$defs/identifierArray" },
+        "independently_retained_payload_ids": { "$ref": "#/$defs/identifierArray" },
+        "replay_effect": { "$ref": "#/$defs/replayState" },
+        "deleted_at": { "$ref": "#/$defs/utcTimestamp" },
+        "reason": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    },
+    "cleanScenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expected_result",
+        "expected_counts",
+        "revision_id",
+        "import_id",
+        "reused_import_id_presence",
+        "created_at",
+        "supplying_snapshot_id",
+        "retention_state",
+        "replay_state",
+        "revision_descriptors",
+        "import_descriptors",
+        "failure_descriptors",
+        "aggregate_descriptor_list_sha256",
+        "payload_id",
+        "source_sha256",
+        "source_byte_length",
+        "passages",
+        "claims",
+        "application_id",
+        "application_evidence_ids",
+        "application_target",
+        "deletion_receipts",
+        "llm_involvement",
+        "llm_operation",
+        "boundaries",
+        "authorized_external_actions"
+      ],
+      "properties": {
+        "expected_result": { "$ref": "#/$defs/nonEmptyString" },
+        "expected_counts": { "$ref": "#/$defs/counts" },
+        "revision_id": { "$ref": "#/$defs/identifier" },
+        "import_id": { "$ref": "#/$defs/identifier" },
+        "reused_import_id_presence": { "enum": ["absent", "present"] },
+        "created_at": { "$ref": "#/$defs/utcTimestamp" },
+        "supplying_snapshot_id": { "$ref": "#/$defs/identifier" },
+        "retention_state": { "$ref": "#/$defs/resultState" },
+        "replay_state": { "$ref": "#/$defs/replayState" },
+        "revision_descriptors": { "$ref": "#/$defs/stringArray" },
+        "import_descriptors": { "$ref": "#/$defs/stringArray" },
+        "failure_descriptors": { "$ref": "#/$defs/stringArray" },
+        "aggregate_descriptor_list_sha256": { "$ref": "#/$defs/aggregateHashes" },
+        "payload_id": { "$ref": "#/$defs/identifier" },
+        "source_sha256": { "$ref": "#/$defs/sha256" },
+        "source_byte_length": { "type": "integer", "minimum": 0, "maximum": 8388608 },
+        "passages": { "$ref": "#/$defs/passages" },
+        "claims": { "$ref": "#/$defs/adversarialClaims" },
+        "application_id": { "$ref": "#/$defs/identifier" },
+        "application_evidence_ids": { "$ref": "#/$defs/identifierArray" },
+        "application_target": { "$ref": "#/$defs/applicationTarget" },
+        "deletion_receipts": { "$ref": "#/$defs/deletionReceipts" },
+        "llm_involvement": { "const": "none" },
+        "llm_operation": { "const": "none" },
+        "boundaries": { "$ref": "#/$defs/boundaries" },
+        "authorized_external_actions": { "type": "array", "maxItems": 0 }
+      }
+    },
+    "applicationTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "consuming_run_id",
+        "installation_snapshot_id",
+        "analysis_context_id",
+        "resolved_input_manifest_id",
+        "subject_id",
+        "subject_type",
+        "dependency_closure_id"
+      ],
+      "properties": {
+        "consuming_run_id": { "$ref": "#/$defs/identifier" },
+        "installation_snapshot_id": { "$ref": "#/$defs/identifier" },
+        "analysis_context_id": { "$ref": "#/$defs/identifier" },
+        "resolved_input_manifest_id": { "$ref": "#/$defs/identifier" },
+        "subject_id": { "$ref": "#/$defs/identifier" },
+        "subject_type": { "$ref": "#/$defs/identifier" },
+        "dependency_closure_id": { "$ref": "#/$defs/identifier" }
+      }
+    },
+    "reuseScenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expected_result",
+        "revision_id",
+        "preserved_passage_ids",
+        "preserved_claim_ids",
+        "preserved_application_ids",
+        "import_id",
+        "reused_import_id",
+        "created_at",
+        "supplying_snapshot_id",
+        "retention_state",
+        "revision_replay_state",
+        "revision_descriptor",
+        "import_descriptors",
+        "failure_descriptors",
+        "aggregate_descriptor_list_sha256",
+        "gap_ids",
+        "gap_kinds",
+        "gaps",
+        "deletion_receipt_count",
+        "deletion_receipts",
+        "persistence_replay_state",
+        "payload_id"
+      ],
+      "properties": {
+        "expected_result": { "$ref": "#/$defs/nonEmptyString" },
+        "revision_id": { "$ref": "#/$defs/identifier" },
+        "preserved_passage_ids": { "$ref": "#/$defs/identifierArray" },
+        "preserved_claim_ids": { "$ref": "#/$defs/identifierArray" },
+        "preserved_application_ids": { "$ref": "#/$defs/identifierArray" },
+        "import_id": { "$ref": "#/$defs/identifier" },
+        "reused_import_id": { "$ref": "#/$defs/identifier" },
+        "created_at": { "$ref": "#/$defs/utcTimestamp" },
+        "supplying_snapshot_id": { "$ref": "#/$defs/identifier" },
+        "retention_state": { "$ref": "#/$defs/resultState" },
+        "revision_replay_state": { "$ref": "#/$defs/replayState" },
+        "revision_descriptor": { "$ref": "#/$defs/nonEmptyString" },
+        "import_descriptors": { "$ref": "#/$defs/stringArray" },
+        "failure_descriptors": { "$ref": "#/$defs/stringArray" },
+        "aggregate_descriptor_list_sha256": { "$ref": "#/$defs/aggregateHashes" },
+        "gap_ids": { "$ref": "#/$defs/identifierArray" },
+        "gap_kinds": {
+          "type": "array",
+          "maxItems": 10000,
+          "items": { "enum": ["contradiction", "deletion", "unavailable-source", "replay"] }
+        },
+        "gaps": { "$ref": "#/$defs/gaps" },
+        "deletion_receipt_count": { "$ref": "#/$defs/count" },
+        "deletion_receipts": { "$ref": "#/$defs/deletionReceipts" },
+        "persistence_replay_state": { "$ref": "#/$defs/replayState" },
+        "payload_id": { "$ref": "#/$defs/identifier" }
+      }
+    },
+    "rejections": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "invalid-utf8",
+        "split-multibyte",
+        "fingerprint-mismatch",
+        "unknown-claim-kind",
+        "unsupported-source-kind",
+        "local-missing-snapshot",
+        "clean-import-deleted",
+        "reuse-with-source-bytes"
+      ],
+      "properties": {
+        "invalid-utf8": { "$ref": "#/$defs/nonEmptyString" },
+        "split-multibyte": { "$ref": "#/$defs/nonEmptyString" },
+        "fingerprint-mismatch": { "$ref": "#/$defs/nonEmptyString" },
+        "unknown-claim-kind": { "$ref": "#/$defs/nonEmptyString" },
+        "unsupported-source-kind": { "$ref": "#/$defs/nonEmptyString" },
+        "local-missing-snapshot": { "$ref": "#/$defs/nonEmptyString" },
+        "clean-import-deleted": { "$ref": "#/$defs/nonEmptyString" },
+        "reuse-with-source-bytes": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    },
+    "acceptedBoundaries": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fixture-missing-snapshot"],
+      "properties": {
+        "fixture-missing-snapshot": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    },
+    "downstreamObjects": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["candidates", "hypotheses", "findings", "cases"],
+      "properties": {
+        "candidates": { "const": "not-created-by-wp2" },
+        "hypotheses": { "const": "not-created-by-wp2" },
+        "findings": { "const": "not-created-by-wp2" },
+        "cases": { "const": "not-created-by-wp2" }
+      }
+    },
+    "claimKind": {
+      "enum": [
+        "declared-purpose",
+        "requirement",
+        "incompatibility",
+        "installation-instruction",
+        "priority-instruction",
+        "lifecycle-instruction",
+        "configuration-instruction",
+        "patch-instruction",
+        "known-issue"
+      ]
+    },
+    "applicability": {
+      "enum": ["applicable", "not-applicable", "unknown", "unsupported", "contradicted"]
+    },
+    "resultState": { "enum": ["present", "partial", "unavailable"] },
+    "replayState": {
+      "enum": ["complete-clean", "partial", "audit-only", "unavailable", "failed-identity-drift"]
+    }
+  }
+}
