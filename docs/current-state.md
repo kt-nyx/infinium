@@ -18,9 +18,9 @@ records preserve evidence and history.
 |---|---|
 | Milestone | `M1` — active |
 | Active slice | `M1/S5` — active |
-| Completed package | `M1/S5/WP1` through `M1/S5/WP4` |
-| Next eligible package | `M1/S5/WP5` — replay, integration, safety, recovery, and reporting |
-| Later packages | `WP6`, dependency-gated by the active Slice 5 plan |
+| Completed package | `M1/S5/WP1` through `M1/S5/WP5` |
+| Next eligible package | `M1/S5/WP6` — accumulated verification, fresh review, and closeout |
+| Later work | Slice 5 owner acceptance and successor slices, dependency-gated by the active plans |
 | Default execution policy | [Development execution policy](development/execution-policy.md) |
 | Active milestone plan | [M1 backend semantic proof](plans/milestones/M1-backend-semantic-proof.md) |
 | Active slice plan | [M1 Slice 5](plans/slices/M1-slice-5-evidence-documentation-candidates-cases-replay.md) |
@@ -61,10 +61,26 @@ ledgers, schema-5 typed persistence with accepted schema-4 migration, and the
 no-safety publication boundary. Four independently authored generic public
 packages were frozen and accepted before product comparison; the settled
 product passed fresh review, the exact `M1Cases` surface, and the `Cases` gate.
-WP4 is complete and WP5 is now eligible. The rejected preauthored
-28-package comprehensive corpus is not a current input and must not be
-reconstructed. WP4 and WP5 each own the small semantic cases for behavior they
-implement; WP6 owns the accumulated cross-package corpus and closeout.
+WP5 now completes bounded `analysis-v1` execution, atomic publication, retained
+replay and targeted invalidation, typed result/provenance/output queries,
+human/JSON semantic reporting, terminal cancellation/limit/failure output,
+stale-attempt recovery, final-object write policy, and explicit external-effect
+receipts. Its independently authored 12-case development/validation package
+passed closed-schema and answer-isolation validation before dispatch and a
+fresh whole-object product comparison. The final review found no remaining
+must-fix or authority breach. The retained safety evidence physically covers
+Windows final-object identity, hard links, junction/mount reparses,
+relative/parent/case paths, canaries, handle-relative writes, and pinned-handle
+races. Native symbolic-link creation was unavailable with Windows error 1314;
+native 8.3, UNC, device, alternate-data-stream, and cross-volume qualification
+remain explicit gaps or stand-ins. These gaps do not broaden the package into a
+native-filesystem, external-adapter, readiness, full-EVAL, or whole-Slice
+verdict. WP5 is complete and WP6 is now eligible.
+
+The rejected preauthored 28-package comprehensive corpus is not a current input
+and must not be reconstructed. WP4 and WP5 each own the small semantic cases
+for behavior they implement; WP6 owns the accumulated cross-package corpus and
+closeout.
 
 WP1's broad Slice 5 contracts are `Implementation-active`, not
 `Slice-frozen`. WP2-WP5 may revise them when vertical producer, consumer,

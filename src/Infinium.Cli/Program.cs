@@ -1,16 +1,18 @@
 using System.Runtime.InteropServices;
 using System.Text.Json;
+using Infinium.Application.Evaluation;
 using Infinium.Application.Runtime;
 using Infinium.Contracts.Protobuf.Application.V1;
 using Infinium.Contracts.Protobuf.Common.V1;
 using Infinium.Contracts.Protobuf.Domain.V1;
+using CliSummaryDocumentContract = Infinium.Domain.Contracts.CliSummaryDocumentContract;
 
 string? root = FirstOption(args, "--root");
 string? command = args.FirstOrDefault(argument => !argument.StartsWith("--", StringComparison.Ordinal)
     && !string.Equals(argument, root, StringComparison.Ordinal));
 if (string.IsNullOrWhiteSpace(root)
     || !Path.IsPathFullyQualified(root)
-    || command is not ("start" or "status" or "wait" or "cancel" or "inspect"))
+    || command is not ("start" or "status" or "wait" or "cancel" or "inspect" or "results"))
 {
     Usage();
     return 2;
@@ -30,15 +32,47 @@ try
         "start" => await StartAsync(connection, args, json).ConfigureAwait(false),
         "status" => await StatusAsync(connection, args, json, inspect: false).ConfigureAwait(false),
         "inspect" => await StatusAsync(connection, args, json, inspect: true).ConfigureAwait(false),
+        "results" => await ResultsAsync(connection, args, json).ConfigureAwait(false),
         "wait" => await WaitAsync(connection, args, json).ConfigureAwait(false),
         "cancel" => await CancelAsync(connection, args, json).ConfigureAwait(false),
         _ => 2,
     };
 }
+
 catch (Exception exception)
 {
     Console.Error.WriteLine(Bounded(exception.Message));
     return 1;
+}
+
+static async Task<int> ResultsAsync(
+    CoordinatorConnection connection,
+    string[] arguments,
+    bool json)
+{
+    string runId = PositionalAfter(arguments, "results");
+    GetAnalysisOutputResponse response = await connection.Client.GetAnalysisOutputAsync(
+        new GetAnalysisOutputRequest
+        {
+            RunId = new RunId { Value = runId },
+            ExpectedProjectionVersion = new ProjectionVersion { Value = "1" },
+        },
+        deadline: DateTime.UtcNow.AddSeconds(15)).ResponseAsync.ConfigureAwait(false);
+    if (response.ResultCase != GetAnalysisOutputResponse.ResultOneofCase.Output)
+    {
+        throw new InvalidOperationException(response.Failure?.Detail ?? "Analysis output query failed.");
+    }
+    CliSummaryDocumentContract summary = CliSummaryJsonCodec.Deserialize(response.Output.CliSummaryJson.Span);
+    if (json)
+    {
+        await Console.OpenStandardOutput().WriteAsync(response.Output.RunOutputJson.Memory).ConfigureAwait(false);
+        Console.WriteLine();
+    }
+    else
+    {
+        Console.Write(response.Output.HumanOutput);
+    }
+    return summary.ExitCode;
 }
 
 static async Task<int> StartAsync(
@@ -623,4 +657,5 @@ static void Usage() =>
           Infinium.Cli --root <absolute-product-root> wait <run-id> [--timeout-seconds <1..3600>] [--json]
           Infinium.Cli --root <absolute-product-root> cancel <run-id> [--command-id <id>] [--json]
           Infinium.Cli --root <absolute-product-root> inspect <run-id> [--json]
+          Infinium.Cli --root <absolute-product-root> results <run-id> [--json]
         """);

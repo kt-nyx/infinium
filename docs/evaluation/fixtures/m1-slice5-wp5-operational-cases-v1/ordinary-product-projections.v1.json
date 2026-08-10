@@ -1,0 +1,279 @@
+{
+  "projection_collection_schema": "infinium.public-fixture.ordinary-product-projection-collection/1.0.2",
+  "projections": [
+    {
+      "input_kind": "publication-request",
+      "entities": [
+        {"kind": "publication", "identity": "publication-cedar-00", "attributes": [{"name": "revision", "value": 0}, {"name": "record-identities", "value": ["record-cedar-a"]}]},
+        {"kind": "record", "identity": "record-cedar-a", "attributes": [{"name": "payload-identity", "value": "payload-cedar-a0"}, {"name": "value", "value": "baseline-cedar"}]},
+        {"kind": "staged-record", "identity": "record-cedar-a", "attributes": [{"name": "payload-identity", "value": "payload-cedar-a1"}, {"name": "value", "value": "candidate-cedar"}]},
+        {"kind": "staged-record", "identity": "record-cedar-b", "attributes": [{"name": "payload-identity", "value": "payload-cedar-b1"}, {"name": "value", "value": "candidate-birch"}]}
+      ],
+      "relations": [{"from": "record-cedar-a", "type": "depends-on", "to": "record-cedar-b"}],
+      "commands": [{"kind": "publish-staged-result", "parameters": [{"name": "run", "value": "run-cedar-01"}, {"name": "job", "value": "job-cedar-01"}, {"name": "attempt", "value": "attempt-cedar-01"}, {"name": "next-revision", "value": 1}]}]
+    },
+    {
+      "input_kind": "analysis-reuse-request",
+      "entities": [
+        {"kind": "source", "identity": "source-maple-r1", "attributes": [{"name": "fingerprint", "value": "maple-r1-fingerprint"}]},
+        {"kind": "source", "identity": "source-elm-r1", "attributes": [{"name": "fingerprint", "value": "elm-r1-fingerprint"}]},
+        {"kind": "result-fact", "identity": "fact-maple-r1", "attributes": [{"name": "value", "value": "maple-supported"}]},
+        {"kind": "result-fact", "identity": "fact-elm-r1", "attributes": [{"name": "value", "value": "elm-supported"}]},
+        {"kind": "source", "identity": "source-maple-r2", "attributes": [{"name": "fingerprint", "value": "maple-r2-fingerprint"}]},
+        {"kind": "result-fact", "identity": "fact-maple-r2", "attributes": [{"name": "value", "value": "maple-supported-r2"}]}
+      ],
+      "relations": [
+        {"from": "extract-maple", "type": "depends-on", "to": "source-maple-r1"},
+        {"from": "analyze-maple", "type": "depends-on", "to": "extract-maple"},
+        {"from": "analyze-elm", "type": "depends-on", "to": "source-elm-r1"},
+        {"from": "publish-maple-elm", "type": "depends-on", "to": "analyze-maple"},
+        {"from": "publish-maple-elm", "type": "depends-on", "to": "analyze-elm"}
+      ],
+      "commands": [
+        {"kind": "analyze-clean", "parameters": [{"name": "sources", "value": ["source-maple-r1", "source-elm-r1"]}]},
+        {"kind": "analyze-incremental", "parameters": [{"name": "sources", "value": ["source-maple-r1", "source-elm-r1"]}]},
+        {"kind": "analyze-retained-replay", "parameters": [{"name": "sources", "value": ["source-maple-r1", "source-elm-r1"]}]},
+        {"kind": "analyze-incremental", "parameters": [{"name": "sources", "value": ["source-maple-r2", "source-elm-r1"]}]}
+      ]
+    },
+    {
+      "input_kind": "result-query-request",
+      "entities": [
+        {"kind": "result", "identity": "result-iris-04", "attributes": [{"name": "rank", "value": 2}, {"name": "state", "value": "visible"}]},
+        {"kind": "result", "identity": "result-iris-01", "attributes": [{"name": "rank", "value": 3}, {"name": "state", "value": "visible"}]},
+        {"kind": "result", "identity": "result-iris-06", "attributes": [{"name": "rank", "value": 1}, {"name": "state", "value": "hidden"}]},
+        {"kind": "result", "identity": "result-iris-03", "attributes": [{"name": "rank", "value": 2}, {"name": "state", "value": "visible"}]},
+        {"kind": "result", "identity": "result-iris-02", "attributes": [{"name": "rank", "value": 3}, {"name": "state", "value": "visible"}]},
+        {"kind": "result", "identity": "result-iris-05", "attributes": [{"name": "rank", "value": 1}, {"name": "state", "value": "visible"}]}
+      ],
+      "relations": [],
+      "commands": [{"kind": "query-results", "parameters": [{"name": "publication", "value": "publication-iris-01"}, {"name": "filter-state", "value": "visible"}, {"name": "sort", "value": ["rank-descending", "identity-ascending"]}, {"name": "page-size", "value": 2}, {"name": "maximum-page-size", "value": 3}]}]
+    },
+    {
+      "input_kind": "run-output-request",
+      "entities": [
+        {"kind": "run", "identity": "run-oak-partial", "attributes": [{"name": "terminal-state", "value": "completed-with-gaps"}, {"name": "facts", "value": ["fact-oak-a", "fact-oak-b"]}, {"name": "gaps", "value": ["gap-oak-c"]}]},
+        {"kind": "run", "identity": "run-oak-cancelled", "attributes": [{"name": "terminal-state", "value": "cancelled"}, {"name": "facts", "value": ["fact-oak-a"]}, {"name": "gaps", "value": ["gap-oak-b", "gap-oak-c"]}]},
+        {"kind": "run", "identity": "run-oak-limit", "attributes": [{"name": "terminal-state", "value": "limit-reached"}, {"name": "facts", "value": ["fact-oak-a", "fact-oak-b"]}, {"name": "gaps", "value": ["gap-oak-limit-c"]}]},
+        {"kind": "run", "identity": "run-oak-failed", "attributes": [{"name": "terminal-state", "value": "failed"}, {"name": "facts", "value": ["fact-oak-a"]}, {"name": "gaps", "value": ["gap-oak-failure-b", "gap-oak-failure-c"]}]}
+      ],
+      "relations": [],
+      "commands": [
+        {"kind": "render-run", "parameters": [{"name": "format", "value": "human-v1"}, {"name": "runs", "value": ["run-oak-partial", "run-oak-cancelled", "run-oak-limit", "run-oak-failed"]}]},
+        {"kind": "render-run", "parameters": [{"name": "format", "value": "json-v1"}, {"name": "runs", "value": ["run-oak-partial", "run-oak-cancelled", "run-oak-limit", "run-oak-failed"]}]}
+      ]
+    },
+    {
+      "input_kind": "attempt-recovery-request",
+      "entities": [
+        {"kind": "coordinator-epoch", "identity": "epoch-pine-31", "attributes": [{"name": "ordinal", "value": 31}]},
+        {"kind": "coordinator-epoch", "identity": "epoch-pine-32", "attributes": [{"name": "ordinal", "value": 32}]},
+        {"kind": "attempt", "identity": "attempt-pine-old", "attributes": [{"name": "epoch", "value": 31}, {"name": "lease", "value": "lease-pine-old"}, {"name": "stage", "value": "stage-pine-old"}]},
+        {"kind": "attempt", "identity": "attempt-pine-new", "attributes": [{"name": "epoch", "value": 32}, {"name": "lease", "value": "lease-pine-new"}, {"name": "stage", "value": "stage-pine-new"}]}
+      ],
+      "relations": [{"from": "attempt-pine-old", "type": "owns-stage", "to": "stage-pine-old"}, {"from": "attempt-pine-new", "type": "owns-stage", "to": "stage-pine-new"}],
+      "commands": [
+        {"kind": "admit-staged-attempt", "parameters": [{"name": "attempt", "value": "attempt-pine-old"}, {"name": "presented-epoch", "value": 31}]},
+        {"kind": "admit-staged-attempt", "parameters": [{"name": "attempt", "value": "attempt-pine-new"}, {"name": "presented-epoch", "value": 32}]},
+        {"kind": "admit-staged-attempt", "parameters": [{"name": "attempt", "value": "attempt-pine-new"}, {"name": "presented-epoch", "value": 32}]}
+      ]
+    },
+    {
+      "input_kind": "filesystem-write-request",
+      "entities": [
+        {"kind": "root", "identity": "d-r0", "attributes": [{"name": "path", "value": "Q:/fxd/r0"}, {"name": "write-class", "value": "data"}]},
+        {"kind": "root", "identity": "d-r1", "attributes": [{"name": "path", "value": "Q:/fxd/r1"}, {"name": "write-class", "value": "payloads"}]},
+        {"kind": "root", "identity": "d-r2", "attributes": [{"name": "path", "value": "Q:/fxd/r2"}, {"name": "write-class", "value": "attempts"}]},
+        {"kind": "root", "identity": "d-r3", "attributes": [{"name": "path", "value": "Q:/fxd/r3"}, {"name": "write-class", "value": "diagnostics"}]},
+        {"kind": "root", "identity": "d-r4", "attributes": [{"name": "path", "value": "Q:/fxd/r4"}, {"name": "write-class", "value": "run-output"}]},
+        {"kind": "root", "identity": "d-r5", "attributes": [{"name": "path", "value": "Q:/fxd/r5"}, {"name": "write-class", "value": null}]},
+        {"kind": "root", "identity": "d-r6", "attributes": [{"name": "path", "value": "Q:/fxd/r6"}, {"name": "write-class", "value": null}]},
+        {"kind": "root", "identity": "d-r7", "attributes": [{"name": "path", "value": "Q:/fxd/r7"}, {"name": "write-class", "value": null}]},
+        {"kind": "root", "identity": "d-r8", "attributes": [{"name": "path", "value": "Q:/fxd/r8"}, {"name": "write-class", "value": null}]},
+        {"kind": "target", "identity": "d-t00", "attributes": [{"name": "path", "value": "Q:/fxd/r0/n00.bin"}]},
+        {"kind": "target", "identity": "d-t01", "attributes": [{"name": "path", "value": "Q:/fxd/r1/n01.bin"}]},
+        {"kind": "target", "identity": "d-t02", "attributes": [{"name": "path", "value": "Q:/fxd/r2/n02.json"}]},
+        {"kind": "target", "identity": "d-t03", "attributes": [{"name": "path", "value": "Q:/fxd/r3/n03.json"}]},
+        {"kind": "target", "identity": "d-t04", "attributes": [{"name": "path", "value": "Q:/fxd/r4/n04.json"}]},
+        {"kind": "target", "identity": "d-t05", "attributes": [{"name": "path", "value": "Q:/fxd/r0/../r4/n05.json"}]},
+        {"kind": "target", "identity": "d-t06", "attributes": [{"name": "path", "value": "Q:/fxd/r5/n06.bin"}]},
+        {"kind": "target", "identity": "d-t07", "attributes": [{"name": "path", "value": "Q:/fxd/r0/../../fxd/r6/n07.bin"}]},
+        {"kind": "target", "identity": "d-t08", "attributes": [{"name": "path", "value": "Q:/fxd/r7/n08.bin"}]},
+        {"kind": "target", "identity": "d-t09", "attributes": [{"name": "path", "value": "d-a09/n09.bin"}]},
+        {"kind": "target", "identity": "d-t10", "attributes": [{"name": "path", "value": "Q:/fxd/r0/n10/n10.bin"}]},
+        {"kind": "target", "identity": "d-t11", "attributes": [{"name": "path", "value": "Q:/fxd/r0/n11/n11.bin"}]},
+        {"kind": "target", "identity": "d-t12", "attributes": [{"name": "path", "value": "Q:/fxd/r0/n12/n12.bin"}]},
+        {"kind": "target", "identity": "d-t13", "attributes": [{"name": "path", "value": "Q:/fxd/r0/n13.bin"}]},
+        {"kind": "target", "identity": "d-t14", "attributes": [{"name": "path", "value": "Q:/FXD/R6/N14.BIN"}]},
+        {"kind": "target", "identity": "d-t15", "attributes": [{"name": "path", "value": "q:/FxD/r7/n15.bin"}]},
+        {"kind": "target", "identity": "d-t16", "attributes": [{"name": "path", "value": "//d-host/d-share/n16.bin"}]},
+        {"kind": "target", "identity": "d-t17", "attributes": [{"name": "path", "value": "//?/Q:/fxd/r8/n17.bin"}]},
+        {"kind": "target", "identity": "d-t18", "attributes": [{"name": "path", "value": "Q:/fxd/r0/n18.bin:s1"}]},
+        {"kind": "target", "identity": "d-t19", "attributes": [{"name": "path", "value": "R:/d19/n19.bin"}]},
+        {"kind": "target", "identity": "d-t20", "attributes": [{"name": "path", "value": "Q:/fxd/r0/n20/n20.bin"}]},
+        {"kind": "target", "identity": "d-t21", "attributes": [{"name": "path", "value": "Q:/fxd/r0/n21.bin"}]},
+        {"kind": "target", "identity": "d-t22", "attributes": [{"name": "path", "value": "Q:/fxd/r0/n22/n22.bin"}]},
+        {"kind": "target", "identity": "d-t23", "attributes": [{"name": "path", "value": "Q:/fxd/r0/n23.bin"}]},
+        {"kind": "target", "identity": "d-t24", "attributes": [{"name": "path", "value": "Q:/fxd"}]}
+      ],
+      "relations": [],
+      "commands": [
+        {"kind": "write", "parameters": [{"name": "target", "value": "d-t00"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "d-t01"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "d-t02"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "d-t03"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "d-t04"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "d-t05"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "d-t06"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "d-t07"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "d-t08"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "d-t09"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "d-t10"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "d-t11"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "d-t12"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "d-t13"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "d-t14"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "d-t15"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "d-t16"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "d-t17"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "d-t18"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "d-t19"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "d-t20"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "d-t21"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "d-t22"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "d-t23"}]},
+        {"kind": "delete-recursive", "parameters": [{"name": "target", "value": "d-t24"}]}
+      ]
+    },
+    {
+      "input_kind": "publication-request",
+      "entities": [
+        {"kind": "publication", "identity": "publication-spruce-07", "attributes": [{"name": "revision", "value": 7}, {"name": "record-identities", "value": ["record-spruce-left", "record-spruce-right"]}]},
+        {"kind": "record", "identity": "record-spruce-left", "attributes": [{"name": "payload-identity", "value": "payload-spruce-left-7"}]},
+        {"kind": "record", "identity": "record-spruce-right", "attributes": [{"name": "payload-identity", "value": "payload-spruce-right-7"}]},
+        {"kind": "staged-record", "identity": "record-spruce-left", "attributes": [{"name": "payload-identity", "value": "payload-spruce-left-8"}]},
+        {"kind": "staged-record", "identity": "record-spruce-center", "attributes": [{"name": "payload-identity", "value": "payload-spruce-center-8"}]}
+      ],
+      "relations": [{"from": "record-spruce-center", "type": "derived-from", "to": "record-spruce-left"}],
+      "commands": [{"kind": "publish-staged-result", "parameters": [{"name": "run", "value": "run-spruce-08"}, {"name": "job", "value": "job-spruce-08"}, {"name": "attempt", "value": "attempt-spruce-08"}, {"name": "next-revision", "value": 8}]}]
+    },
+    {
+      "input_kind": "analysis-reuse-request",
+      "entities": [
+        {"kind": "retained-dependency", "identity": "dependency-willow-body", "attributes": [{"name": "required-fingerprint", "value": "willow-body-fingerprint-r1"}, {"name": "resolved-fingerprint", "value": "willow-body-fingerprint-r2"}]},
+        {"kind": "retained-dependency", "identity": "dependency-willow-policy", "attributes": [{"name": "required-fingerprint", "value": "willow-policy-fingerprint-r1"}, {"name": "resolved-fingerprint", "value": "willow-policy-fingerprint-r1"}]},
+        {"kind": "available-dependency", "identity": "dependency-willow-body-copy", "attributes": [{"name": "fingerprint", "value": "willow-body-fingerprint-r1"}]}
+      ],
+      "relations": [{"from": "result-willow-origin", "type": "depends-on", "to": "dependency-willow-body"}, {"from": "result-willow-origin", "type": "depends-on", "to": "dependency-willow-policy"}],
+      "commands": [{"kind": "analyze-retained-replay", "parameters": [{"name": "origin-result", "value": "result-willow-origin"}, {"name": "network-enabled", "value": false}]}]
+    },
+    {
+      "input_kind": "result-query-request",
+      "entities": [
+        {"kind": "result", "identity": "result-violet-c", "attributes": [{"name": "updated-tick", "value": 14}, {"name": "group", "value": "open"}]},
+        {"kind": "result", "identity": "result-violet-a", "attributes": [{"name": "updated-tick", "value": 18}, {"name": "group", "value": "open"}]},
+        {"kind": "result", "identity": "result-violet-e", "attributes": [{"name": "updated-tick", "value": 9}, {"name": "group", "value": "closed"}]},
+        {"kind": "result", "identity": "result-violet-b", "attributes": [{"name": "updated-tick", "value": 18}, {"name": "group", "value": "open"}]},
+        {"kind": "result", "identity": "result-violet-d", "attributes": [{"name": "updated-tick", "value": 11}, {"name": "group", "value": "open"}]}
+      ],
+      "relations": [],
+      "commands": [{"kind": "query-results", "parameters": [{"name": "publication", "value": "publication-violet-09"}, {"name": "filter-group", "value": "open"}, {"name": "sort", "value": ["updated-tick-descending", "identity-descending"]}, {"name": "page-size", "value": 3}, {"name": "maximum-page-size", "value": 3}]}]
+    },
+    {
+      "input_kind": "run-output-request",
+      "entities": [
+        {"kind": "run", "identity": "run-larch-partial", "attributes": [{"name": "terminal-state", "value": "completed-with-gaps"}, {"name": "facts", "value": ["fact-larch-z"]}, {"name": "gaps", "value": ["gap-larch-x", "gap-larch-y"]}, {"name": "review-state", "value": "unreviewed"}]},
+        {"kind": "run", "identity": "run-larch-cancelled", "attributes": [{"name": "terminal-state", "value": "cancelled"}, {"name": "facts", "value": []}, {"name": "gaps", "value": ["gap-larch-cancelled-all"]}, {"name": "review-state", "value": "not-started"}]},
+        {"kind": "run", "identity": "run-larch-limit", "attributes": [{"name": "terminal-state", "value": "limit-reached"}, {"name": "facts", "value": ["fact-larch-x", "fact-larch-y", "fact-larch-z"]}, {"name": "gaps", "value": ["gap-larch-limit-tail"]}, {"name": "review-state", "value": "reviewed"}]},
+        {"kind": "run", "identity": "run-larch-failed", "attributes": [{"name": "terminal-state", "value": "failed"}, {"name": "facts", "value": ["fact-larch-x", "fact-larch-y"]}, {"name": "gaps", "value": ["gap-larch-failure-tail"]}, {"name": "review-state", "value": "unreviewed"}]}
+      ],
+      "relations": [],
+      "commands": [
+        {"kind": "render-run", "parameters": [{"name": "format", "value": "human-v1"}, {"name": "runs", "value": ["run-larch-partial", "run-larch-cancelled", "run-larch-limit", "run-larch-failed"]}]},
+        {"kind": "render-run", "parameters": [{"name": "format", "value": "json-v1"}, {"name": "runs", "value": ["run-larch-partial", "run-larch-cancelled", "run-larch-limit", "run-larch-failed"]}]}
+      ]
+    },
+    {
+      "input_kind": "attempt-recovery-request",
+      "entities": [
+        {"kind": "coordinator-epoch", "identity": "epoch-ash-73", "attributes": [{"name": "ordinal", "value": 73}]},
+        {"kind": "coordinator-epoch", "identity": "epoch-ash-74", "attributes": [{"name": "ordinal", "value": 74}]},
+        {"kind": "attempt", "identity": "attempt-ash-old", "attributes": [{"name": "epoch", "value": 73}, {"name": "lease", "value": "lease-ash-old"}, {"name": "checkpoint", "value": "checkpoint-ash-old"}]},
+        {"kind": "attempt", "identity": "attempt-ash-new", "attributes": [{"name": "epoch", "value": 74}, {"name": "lease", "value": "lease-ash-new"}, {"name": "checkpoint", "value": "checkpoint-ash-new"}]}
+      ],
+      "relations": [{"from": "attempt-ash-old", "type": "owns-checkpoint", "to": "checkpoint-ash-old"}, {"from": "attempt-ash-new", "type": "owns-checkpoint", "to": "checkpoint-ash-new"}],
+      "commands": [
+        {"kind": "resume-from-checkpoint", "parameters": [{"name": "attempt", "value": "attempt-ash-old"}, {"name": "presented-epoch", "value": 73}]},
+        {"kind": "resume-from-checkpoint", "parameters": [{"name": "attempt", "value": "attempt-ash-new"}, {"name": "presented-epoch", "value": 74}]},
+        {"kind": "admit-staged-attempt", "parameters": [{"name": "attempt", "value": "attempt-ash-new"}, {"name": "presented-epoch", "value": 74}]}
+      ]
+    },
+    {
+      "input_kind": "filesystem-write-request",
+      "entities": [
+        {"kind": "root", "identity": "v-r0", "attributes": [{"name": "path", "value": "S:/fxv/u0"}, {"name": "write-class", "value": "run-output"}]},
+        {"kind": "root", "identity": "v-r1", "attributes": [{"name": "path", "value": "S:/fxv/u1"}, {"name": "write-class", "value": null}]},
+        {"kind": "root", "identity": "v-r2", "attributes": [{"name": "path", "value": "S:/fxv/u2"}, {"name": "write-class", "value": "diagnostics"}]},
+        {"kind": "root", "identity": "v-r3", "attributes": [{"name": "path", "value": "S:/fxv/u3"}, {"name": "write-class", "value": null}]},
+        {"kind": "root", "identity": "v-r4", "attributes": [{"name": "path", "value": "S:/fxv/u4"}, {"name": "write-class", "value": "payloads"}]},
+        {"kind": "root", "identity": "v-r5", "attributes": [{"name": "path", "value": "S:/fxv/u5"}, {"name": "write-class", "value": "data"}]},
+        {"kind": "root", "identity": "v-r6", "attributes": [{"name": "path", "value": "S:/fxv/u6"}, {"name": "write-class", "value": null}]},
+        {"kind": "root", "identity": "v-r7", "attributes": [{"name": "path", "value": "S:/fxv/u7"}, {"name": "write-class", "value": "attempts"}]},
+        {"kind": "root", "identity": "v-r8", "attributes": [{"name": "path", "value": "S:/fxv/u8"}, {"name": "write-class", "value": null}]},
+        {"kind": "target", "identity": "v-t06", "attributes": [{"name": "path", "value": "S:/fxv/u1/m06.bin"}]},
+        {"kind": "target", "identity": "v-t00", "attributes": [{"name": "path", "value": "S:/fxv/u5/m00.bin"}]},
+        {"kind": "target", "identity": "v-t10", "attributes": [{"name": "path", "value": "S:/fxv/u5/m10/m10.bin"}]},
+        {"kind": "target", "identity": "v-t01", "attributes": [{"name": "path", "value": "S:/fxv/u4/m01.bin"}]},
+        {"kind": "target", "identity": "v-t21", "attributes": [{"name": "path", "value": "S:/fxv/u5/m21.bin"}]},
+        {"kind": "target", "identity": "v-t02", "attributes": [{"name": "path", "value": "S:/fxv/u7/m02.json"}]},
+        {"kind": "target", "identity": "v-t07", "attributes": [{"name": "path", "value": "S:/fxv/u5/../../fxv/u3/m07.bin"}]},
+        {"kind": "target", "identity": "v-t03", "attributes": [{"name": "path", "value": "S:/fxv/u2/m03.json"}]},
+        {"kind": "target", "identity": "v-t13", "attributes": [{"name": "path", "value": "S:/fxv/u5/m13.bin"}]},
+        {"kind": "target", "identity": "v-t04", "attributes": [{"name": "path", "value": "S:/fxv/u0/m04.json"}]},
+        {"kind": "target", "identity": "v-t05", "attributes": [{"name": "path", "value": "S:/fxv/u5/../u2/m05.json"}]},
+        {"kind": "target", "identity": "v-t23", "attributes": [{"name": "path", "value": "S:/fxv/u5/m23.bin"}]},
+        {"kind": "target", "identity": "v-t11", "attributes": [{"name": "path", "value": "S:/fxv/u5/m11/m11.bin"}]},
+        {"kind": "target", "identity": "v-t15", "attributes": [{"name": "path", "value": "s:/FxV/u6/m15.bin"}]},
+        {"kind": "target", "identity": "v-t12", "attributes": [{"name": "path", "value": "S:/fxv/u5/m12/m12.bin"}]},
+        {"kind": "target", "identity": "v-t14", "attributes": [{"name": "path", "value": "S:/FXV/U3/M14.BIN"}]},
+        {"kind": "target", "identity": "v-t09", "attributes": [{"name": "path", "value": "v-a09/m09.bin"}]},
+        {"kind": "target", "identity": "v-t20", "attributes": [{"name": "path", "value": "S:/fxv/u5/m20/m20.bin"}]},
+        {"kind": "target", "identity": "v-t19", "attributes": [{"name": "path", "value": "T:/v19/m19.bin"}]},
+        {"kind": "target", "identity": "v-t18", "attributes": [{"name": "path", "value": "S:/fxv/u5/m18.bin:s2"}]},
+        {"kind": "target", "identity": "v-t08", "attributes": [{"name": "path", "value": "S:/fxv/u8/m08.bin"}]},
+        {"kind": "target", "identity": "v-t24", "attributes": [{"name": "path", "value": "S:/fxv"}]},
+        {"kind": "target", "identity": "v-t17", "attributes": [{"name": "path", "value": "//?/S:/fxv/u8/m17.bin"}]},
+        {"kind": "target", "identity": "v-t16", "attributes": [{"name": "path", "value": "//v-host/v-share/m16.bin"}]},
+        {"kind": "target", "identity": "v-t22", "attributes": [{"name": "path", "value": "S:/fxv/u5/m22/m22.bin"}]}
+      ],
+      "relations": [],
+      "commands": [
+        {"kind": "write", "parameters": [{"name": "target", "value": "v-t06"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "v-t00"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "v-t10"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "v-t01"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "v-t21"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "v-t02"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "v-t07"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "v-t03"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "v-t13"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "v-t04"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "v-t05"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "v-t23"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "v-t11"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "v-t15"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "v-t12"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "v-t14"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "v-t09"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "v-t20"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "v-t19"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "v-t18"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "v-t08"}]},
+        {"kind": "delete-recursive", "parameters": [{"name": "target", "value": "v-t24"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "v-t17"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "v-t16"}]},
+        {"kind": "write", "parameters": [{"name": "target", "value": "v-t22"}]}
+      ]
+    }
+  ]
+}

@@ -53,7 +53,7 @@ public sealed class RunOutputJsonCodecTests
             () => RunOutputJsonCodec.Deserialize(Encoding.UTF8.GetBytes(duplicateSchemaId)));
     }
 
-    private static RunOutputContract CreateValidOutput()
+    internal static RunOutputContract CreateValidOutput()
     {
         string fingerprint = new('a', 64);
         ArtifactReferenceDocumentContract Reference(string id) =>

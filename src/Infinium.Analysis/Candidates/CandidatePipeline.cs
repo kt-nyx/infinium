@@ -167,12 +167,12 @@ public sealed record CandidatePipelineRequest(
                 $"configuration={Context.ConfigurationId?.Value ?? "none"}",
                 $"documentation={Context.DocumentationEvidence?.PayloadId.Value ?? "none"}",
         ]
-        : ExecutionDescriptors(ExecutionInput);
+        : DescribeExecutionInput(ExecutionInput);
 
     public Sha256Fingerprint ExecutionInputFingerprint =>
         CandidateAnalysisIdentity.StructuralHash(ExecutionInputDescriptors);
 
-    private static List<string> ExecutionDescriptors(AnalysisExecutionInputContract input)
+    public static IReadOnlyList<string> DescribeExecutionInput(AnalysisExecutionInputContract input)
     {
         List<string> descriptors =
         [

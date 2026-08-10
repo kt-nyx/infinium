@@ -3,6 +3,22 @@ param(
     [switch]$Check
 )
 
+if ($PSVersionTable.PSVersion.Major -lt 7) {
+    $pwsh = Get-Command pwsh.exe -ErrorAction Stop
+    $arguments = @(
+        '-NoProfile',
+        '-File',
+        $PSCommandPath,
+        '-RepositoryRoot',
+        $RepositoryRoot
+    )
+    if ($Check) {
+        $arguments += '-Check'
+    }
+    & $pwsh.Source @arguments
+    exit $LASTEXITCODE
+}
+
 $ErrorActionPreference = 'Stop'
 $manifestPath = Join-Path $RepositoryRoot 'dependencies/dependency-manifest.json'
 $curationPath = Join-Path $RepositoryRoot 'dependencies/dependency-curation.json'

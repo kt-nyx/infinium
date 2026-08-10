@@ -292,6 +292,29 @@ public sealed partial class AuthoritativeStore
         }
     }
 
+    public CandidateCheckpointPersistenceRecord ReadCandidateCheckpoint(string checkpointId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(checkpointId);
+        lock (gate)
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText =
+                """
+                SELECT checkpoint_id, run_id, dependency_closure_id, content_sha256,
+                       completed_partitions_json, pending_and_gaps_json, created_at
+                FROM checkpoints WHERE checkpoint_id=$checkpoint;
+                """;
+            command.Parameters.AddWithValue("$checkpoint", checkpointId);
+            using SqliteDataReader reader = command.ExecuteReader();
+            return reader.Read()
+                ? new CandidateCheckpointPersistenceRecord(
+                    reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3),
+                    reader.GetString(4), reader.GetString(5), DateTimeOffset.Parse(
+                        reader.GetString(6), System.Globalization.CultureInfo.InvariantCulture))
+                : throw new KeyNotFoundException($"Candidate checkpoint '{checkpointId}' does not exist.");
+        }
+    }
+
     private static string CandidateLaneToken(CandidateLane value) => value switch
     {
         CandidateLane.DeterministicRequired => "deterministic-required",

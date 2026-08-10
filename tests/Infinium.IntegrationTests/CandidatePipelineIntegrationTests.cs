@@ -271,14 +271,20 @@ internal sealed class CandidateStoreContext : IDisposable
 {
     private readonly string root;
     private readonly long coordinatorFencingEpoch;
+    private readonly bool preserveRoot;
 
-    public CandidateStoreContext()
+    public CandidateStoreContext(
+        string? rootOverride = null,
+        TimeSpan? coordinatorLease = null,
+        bool preserveRoot = false)
     {
-        root = Path.Combine(Path.GetTempPath(), $"infinium-candidate-{Guid.NewGuid():N}");
+        root = rootOverride ?? Path.Combine(Path.GetTempPath(), $"infinium-candidate-{Guid.NewGuid():N}");
+        this.preserveRoot = preserveRoot;
         Paths = new StoragePaths(root);
         Store = new AuthoritativeStore(Paths);
         CoordinatorAuthority authority = Store.AcquireCoordinatorAuthority(
-            "candidate-integration", DateTimeOffset.UtcNow, TimeSpan.FromMinutes(10));
+            "candidate-integration", DateTimeOffset.UtcNow, coordinatorLease ?? TimeSpan.FromMinutes(10));
+        Authority = authority;
         coordinatorFencingEpoch = authority.FencingEpoch;
         Binding = new RunBinding("snapshot-candidate", "context-candidate", "config-candidate", "manifest-candidate");
         RunRecord queued = Store.CreateRun(
@@ -294,6 +300,7 @@ internal sealed class CandidateStoreContext : IDisposable
     public AuthoritativeStore Store { get; }
     public RunBinding Binding { get; }
     public AttemptRecord Attempt { get; }
+    public CoordinatorAuthority Authority { get; }
 
     public AttemptRecord StartRecoveryAttempt(DateTimeOffset now)
     {
@@ -315,9 +322,25 @@ internal sealed class CandidateStoreContext : IDisposable
     {
         Store.Dispose();
         Paths.Dispose();
-        if (Directory.Exists(root))
+        if (!preserveRoot && Directory.Exists(root))
         {
-            Directory.Delete(root, recursive: true);
+            for (int attempt = 0; ; attempt++)
+            {
+                try
+                {
+                    Directory.Delete(root, recursive: true);
+                    break;
+                }
+                catch (IOException) when (attempt < 4)
+                {
+                    if (attempt == 0)
+                    {
+                        GC.Collect();
+                        GC.WaitForPendingFinalizers();
+                    }
+                    Thread.Sleep(25 * (attempt + 1));
+                }
+            }
         }
     }
 }

@@ -35,6 +35,28 @@ service ApplicationService {
       returns (GetAnalysisProvenanceResponse);
   rpc GetAnalysisReplay(GetAnalysisReplayRequest)
       returns (GetAnalysisReplayResponse);
+  rpc GetAnalysisOutput(GetAnalysisOutputRequest)
+      returns (GetAnalysisOutputResponse);
+}
+
+message GetAnalysisOutputRequest {
+  infinium.domain.v1.RunId run_id = 1;
+  infinium.domain.v1.ProjectionVersion expected_projection_version = 2;
+}
+
+message GetAnalysisOutputResponse {
+  oneof result {
+    AnalysisOutputPayload output = 1;
+    ProjectionInvalidated projection_invalidated = 2;
+    infinium.common.v1.Failure failure = 3;
+  }
+}
+
+message AnalysisOutputPayload {
+  bytes run_output_json = 1;
+  bytes cli_summary_json = 2;
+  string human_output = 3;
+  infinium.domain.v1.ProjectionVersion projection_version = 4;
 }
 
 message GetAnalysisSummaryRequest {
@@ -70,9 +92,19 @@ message ListAnalysisArtifactsRequest {
   uint32 requested_page_size = 4;
   PageCursor after = 5;
   infinium.domain.v1.ProjectionVersion expected_projection_version = 6;
+  AnalysisArtifactSort sort = 7;
 
   reserved 90 to 99;
   reserved "sql", "path", "url", "object_type", "object_id";
+}
+
+enum AnalysisArtifactSort {
+  ANALYSIS_ARTIFACT_SORT_UNSPECIFIED = 0;
+  ANALYSIS_ARTIFACT_SORT_IDENTITY_ASCENDING = 1;
+  ANALYSIS_ARTIFACT_SORT_RANK_DESCENDING_IDENTITY_ASCENDING = 2;
+  ANALYSIS_ARTIFACT_SORT_UPDATED_TICK_DESCENDING_IDENTITY_DESCENDING = 3;
+  ANALYSIS_ARTIFACT_SORT_UNKNOWN = 4;
+  ANALYSIS_ARTIFACT_SORT_UNSUPPORTED = 5;
 }
 
 message ListAnalysisArtifactsResponse {

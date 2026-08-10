@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Infinium.Application.Analysis;
 using Infinium.Application.Runtime;
 using Infinium.Bethesda;
 using Infinium.Mo2;
@@ -22,6 +23,7 @@ public sealed class ManagedRunExecutor(
     ILogger<ManagedRunExecutor> logger)
 {
     private const string BethesdaSemanticOperation = "bethesda-semantic-v1";
+    private const string AnalysisV1Operation = "analysis-v1";
     private static readonly JsonSerializerOptions StrictJson = new()
     {
         UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
@@ -57,6 +59,24 @@ public sealed class ManagedRunExecutor(
         return ExecuteCoreAsync(runId);
     }
 
+    public Task ExecuteAnalysisV1Async(string runId, AnalysisV1WorkAssignment assignment)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(runId);
+        AnalysisPublicationBuilder.ValidateAssignment(assignment);
+        if (assignment.ExecutionInput.RunId.Value != runId)
+        {
+            throw new InvalidOperationException("The bounded analysis-v1 assignment belongs to another run.");
+        }
+        byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(assignment);
+        if (bytes.LongLength > AnalysisV1WorkAssignment.MaximumAssignmentBytes)
+        {
+            throw new InvalidOperationException("The analysis-v1 assignment exceeds its serialized bound.");
+        }
+        _ = runtime.Store.RegisterRunOperation(
+            runId, AnalysisV1Operation, Encoding.UTF8.GetString(bytes), DateTimeOffset.UtcNow);
+        return ExecuteCoreAsync(runId);
+    }
+
     public void RecoverAtStartup()
     {
         DateTimeOffset? afterCreatedAt = null;
@@ -82,7 +102,11 @@ public sealed class ManagedRunExecutor(
                         run.RunId,
                         "interrupted-by-coordinator-recovery",
                         runtime.Authority.FencingEpoch);
-                    if (runtime.Store.HasRecoverablePublication(run.RunId))
+                    AnalysisV1WorkAssignment? recoveryAnalysis = ResolveAnalysisAssignment(run);
+                    bool committedPublication = runtime.Store.HasRecoverablePublication(run.RunId)
+                        && (recoveryAnalysis is null
+                            || runtime.Store.GetAnalysisSemanticFingerprint(run.RunId) is not null);
+                    if (committedPublication)
                     {
                         _ = runtime.Store.Transition(
                             Guid.NewGuid().ToString("N"),
@@ -126,14 +150,33 @@ public sealed class ManagedRunExecutor(
                         run.RunId,
                         "cancelled-at-recovery-boundary",
                         runtime.Authority.FencingEpoch);
-                    _ = runtime.Store.Transition(
-                        Guid.NewGuid().ToString("N"),
-                        run.RunId,
-                        run.Generation,
-                        LifecycleState.Cancelled,
-                        runtime.Authority.FencingEpoch,
-                        "coordinator recovery observed cancellation",
-                        DateTimeOffset.UtcNow);
+                    AnalysisV1WorkAssignment? cancellationAnalysis = ResolveAnalysisAssignment(run);
+                    if (cancellationAnalysis is null)
+                    {
+                        _ = runtime.Store.Transition(
+                            Guid.NewGuid().ToString("N"),
+                            run.RunId,
+                            run.Generation,
+                            LifecycleState.Cancelled,
+                            runtime.Authority.FencingEpoch,
+                            "coordinator recovery observed cancellation",
+                            DateTimeOffset.UtcNow);
+                    }
+                    else
+                    {
+                        DateTimeOffset cancellationTime = DateTimeOffset.UtcNow;
+                        AnalysisCancellationPublicationAdmission admission =
+                            runtime.Store.PrepareCancelledAnalysisPublication(
+                                run.RunId, runtime.Authority.FencingEpoch,
+                                CoordinatorTerminalReceiptBytes(
+                                    cancellationAnalysis, run.RunId,
+                                    "coordinator-recovery-cancellation-output-only"),
+                                cancellationTime);
+                        _ = AnalysisExecutionPhase.PublishTerminalFallback(
+                            runtime.Store, cancellationAnalysis, admission.Attempt, run.Binding,
+                            admission.ValidationReceiptPayloadId, AnalysisTerminalOutcome.Cancelled,
+                            "coordinator recovery published cancellation output", cancellationTime);
+                    }
                     continue;
                 }
 
@@ -173,6 +216,9 @@ public sealed class ManagedRunExecutor(
 
     private async Task ExecuteCoreAsync(string runId)
     {
+        AnalysisV1WorkAssignment? activeAnalysis = null;
+        AttemptRecord? activeAttempt = null;
+        string? activeValidationReceiptPayloadId = null;
         try
         {
             RunRecord queued = runtime.Store.GetRun(runId);
@@ -183,6 +229,8 @@ public sealed class ManagedRunExecutor(
 
             ManagedBethesdaSemanticAssignment? bethesdaAssignment =
                 ResolveBethesdaAssignment(queued);
+            AnalysisV1WorkAssignment? analysisAssignment = ResolveAnalysisAssignment(queued);
+            activeAnalysis = analysisAssignment;
 
             DispatchAdmission dispatch = runtime.Store.DispatchAttempt(
                 Guid.NewGuid().ToString("N"),
@@ -192,6 +240,7 @@ public sealed class ManagedRunExecutor(
                 TimeSpan.FromMinutes(2),
                 DateTimeOffset.UtcNow);
             AttemptRecord attempt = dispatch.Attempt;
+            activeAttempt = attempt;
             using AttemptStagingAuthority staging =
                 runtime.Store.Paths.CreateAttemptStagingDirectory(attempt.AttemptId);
             runtime.Store.RecordAuditEvent(
@@ -200,6 +249,7 @@ public sealed class ManagedRunExecutor(
                 attempt.AttemptId,
                 DateTimeOffset.UtcNow);
             bool isBethesda = bethesdaAssignment is not null;
+            bool isAnalysis = analysisAssignment is not null;
             ManagedWorkerBootstrap bootstrap = new(
                 1,
                 Guid.NewGuid().ToString("N"),
@@ -213,16 +263,18 @@ public sealed class ManagedRunExecutor(
                 Guid.NewGuid().ToString("N"),
                 Guid.NewGuid().ToString("N"),
                 0,
-                isBethesda ? "bethesda-semantic.v2.json" : "slice2-substrate.v1.json",
-                isBethesda ? 64L * 1024 * 1024 : 65_536,
+                isBethesda ? "bethesda-semantic.v2.json"
+                    : isAnalysis ? "analysis-v1-validation-receipt.json" : "slice2-substrate.v1.json",
+                isBethesda ? 64L * 1024 * 1024 : isAnalysis ? 1024 * 1024 : 65_536,
                 Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)),
                 DateTimeOffset.UtcNow.AddMinutes(isBethesda ? 2 : 1),
-                isBethesda
-                    ? ManagedWorkerOperationKind.BethesdaSemanticExtraction
+                isBethesda ? ManagedWorkerOperationKind.BethesdaSemanticExtraction
+                    : isAnalysis ? ManagedWorkerOperationKind.AnalysisV1
                     : ManagedWorkerOperationKind.SubstrateValidation,
                 "1.0.0",
                 null,
-                bethesdaAssignment);
+                bethesdaAssignment,
+                analysisAssignment);
             ManagedWorkerResult result = await LaunchWorkerAsync(
                 bootstrap,
                 staging.Handle).ConfigureAwait(false);
@@ -239,7 +291,7 @@ public sealed class ManagedRunExecutor(
                     bethesdaAssignment,
                     bootstrap.MaximumOutputBytes);
             }
-            runtime.Store.AdmitStagedPayload(
+            PayloadAdmission validationAdmission = runtime.Store.AdmitStagedPayload(
                 attempt,
                 result.OutputRelativeName,
                 result.Sha256,
@@ -247,15 +299,90 @@ public sealed class ManagedRunExecutor(
                 result.ManifestSha256,
                 bootstrap.MaximumOutputBytes,
                 DateTimeOffset.UtcNow,
-                Guid.NewGuid().ToString("N"),
+                isAnalysis ? null : Guid.NewGuid().ToString("N"),
                 bootstrap.StagedArtifactId);
+            activeValidationReceiptPayloadId = isAnalysis ? validationAdmission.PayloadId : null;
+            if (analysisAssignment is not null)
+            {
+                byte[] receiptBytes = runtime.Store.ReadCandidateAnalysisPayload(validationAdmission.PayloadId);
+                AnalysisWorkerValidationReceipt receipt = JsonSerializer.Deserialize<AnalysisWorkerValidationReceipt>(receiptBytes, StrictJson)
+                    ?? throw new InvalidDataException("The analysis-v1 worker validation receipt is malformed.");
+                if (receipt.AssignmentId != analysisAssignment.AssignmentId
+                    || receipt.RunId != runId
+                    || receipt.Disposition != "validated-for-coordinator-publication-only"
+                    || receipt.ValidatedInputs.Count != 3
+                    || receipt.ExternalEffects.Values.Any(value => value != "not-used"))
+                {
+                    throw new InvalidDataException("The analysis-v1 worker validation receipt differs from its launch authority.");
+                }
+                RunRecord beforePublication = runtime.Store.GetRun(runId);
+                AnalysisV1WorkAssignment finalAssignment = beforePublication.State == LifecycleState.Cancelling
+                    ? analysisAssignment with
+                    {
+                        TerminalOutcome = AnalysisTerminalOutcome.Cancelled,
+                        TerminalReason = "analysis cancelled at the coordinator publication boundary",
+                    }
+                    : analysisAssignment;
+                _ = AnalysisExecutionPhase.Execute(
+                    runtime.Store, finalAssignment, attempt, beforePublication.Binding,
+                    validationAdmission.PayloadId, DateTimeOffset.UtcNow);
+            }
         }
         catch (WorkerStoppedAtSafeBoundaryException)
         {
             RunRecord current = runtime.Store.GetRun(runId);
-            if (current.State is LifecycleState.Pausing or LifecycleState.Cancelling)
+            if (current.State == LifecycleState.Cancelling
+                && activeAnalysis is not null
+                && activeAttempt is not null)
+            {
+                PublishAnalysisTerminalFallback(
+                    activeAnalysis, activeAttempt, activeValidationReceiptPayloadId,
+                    current, AnalysisTerminalOutcome.Cancelled,
+                    "analysis cancelled at a managed-worker safe boundary");
+            }
+            else if (current.State is LifecycleState.Pausing or LifecycleState.Cancelling)
             {
                 ObserveSafeBoundary(current);
+            }
+        }
+        catch (AnalysisIdentityDriftException exception)
+        {
+            logger.LogError(exception, "Analysis identity drift invalidated run {RunId}.", runId);
+            try
+            {
+                RunRecord current = runtime.Store.GetRun(runId);
+                if (!LifecyclePolicy.IsTerminal(current.State))
+                {
+                    runtime.Store.Transition(
+                        Guid.NewGuid().ToString("N"), runId, current.Generation,
+                        LifecycleState.InvalidatedByChangedInput, runtime.Authority.FencingEpoch,
+                        "analysis-v1 retained dependency identity drift", DateTimeOffset.UtcNow);
+                }
+            }
+            catch (Exception transitionException)
+            {
+                logger.LogError(transitionException, "Failed to persist identity drift for run {RunId}.", runId);
+            }
+        }
+        catch (AnalysisOutputLimitException exception)
+        {
+            logger.LogError(exception, "Analysis output limit was reached for run {RunId}.", runId);
+            try
+            {
+                RunRecord current = runtime.Store.GetRun(runId);
+                if (activeAnalysis is not null
+                    && activeAttempt is not null
+                    && current.State is LifecycleState.Running or LifecycleState.Waiting)
+                {
+                    PublishAnalysisTerminalFallback(
+                        activeAnalysis, activeAttempt, activeValidationReceiptPayloadId,
+                        current, AnalysisTerminalOutcome.LimitReached,
+                        "analysis-v1 coordinator publication limit reached");
+                }
+            }
+            catch (Exception transitionException)
+            {
+                logger.LogError(transitionException, "Failed to publish limit output for run {RunId}.", runId);
             }
         }
         catch (Exception exception)
@@ -264,9 +391,31 @@ public sealed class ManagedRunExecutor(
             try
             {
                 RunRecord current = runtime.Store.GetRun(runId);
-                if (current.State is LifecycleState.Pausing or LifecycleState.Cancelling)
+                if (current.State == LifecycleState.Pausing)
                 {
                     ObserveSafeBoundary(current);
+                }
+                else if (current.State == LifecycleState.Cancelling
+                    && activeAnalysis is not null
+                    && activeAttempt is not null)
+                {
+                    PublishAnalysisTerminalFallback(
+                        activeAnalysis, activeAttempt, activeValidationReceiptPayloadId,
+                        current, AnalysisTerminalOutcome.Cancelled,
+                        "analysis cancelled after managed execution failure");
+                }
+                else if (current.State == LifecycleState.Cancelling)
+                {
+                    ObserveSafeBoundary(current);
+                }
+                else if (activeAnalysis is not null
+                    && activeAttempt is not null
+                    && current.State is LifecycleState.Running or LifecycleState.Waiting)
+                {
+                    PublishAnalysisTerminalFallback(
+                        activeAnalysis, activeAttempt, activeValidationReceiptPayloadId,
+                        current, AnalysisTerminalOutcome.Failed,
+                        "analysis-v1 worker or publication execution failed");
                 }
                 else if (!LifecyclePolicy.IsTerminal(current.State))
                 {
@@ -289,6 +438,47 @@ public sealed class ManagedRunExecutor(
             }
         }
     }
+
+    private void PublishAnalysisTerminalFallback(
+        AnalysisV1WorkAssignment assignment,
+        AttemptRecord attempt,
+        string? existingValidationReceiptPayloadId,
+        RunRecord current,
+        AnalysisTerminalOutcome outcome,
+        string reason)
+    {
+        string validationPayloadId = existingValidationReceiptPayloadId
+            ?? runtime.Store.AdmitAnalysisCoordinatorFailureReceipt(
+                attempt,
+                CoordinatorTerminalReceiptBytes(
+                    assignment, attempt.RunId, "coordinator-terminal-fallback-only"),
+                DateTimeOffset.UtcNow);
+        _ = AnalysisExecutionPhase.PublishTerminalFallback(
+            runtime.Store, assignment, attempt, current.Binding, validationPayloadId,
+            outcome, reason, DateTimeOffset.UtcNow);
+    }
+
+    private static byte[] CoordinatorTerminalReceiptBytes(
+        AnalysisV1WorkAssignment assignment,
+        string runId,
+        string disposition) =>
+        JsonSerializer.SerializeToUtf8Bytes(new AnalysisWorkerValidationReceipt(
+            1,
+            assignment.AssignmentId,
+            runId,
+            [assignment.DocumentationEvidence, assignment.CandidateAnalysis, assignment.FindingCase],
+            checked(assignment.DocumentationEvidence.ByteLength
+                + assignment.CandidateAnalysis.ByteLength
+                + assignment.FindingCase.ByteLength),
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["provider"] = "not-used",
+                ["model"] = "not-used",
+                ["credential"] = "not-used",
+                ["live"] = "not-used",
+                ["billable"] = "not-used",
+            },
+            disposition));
 
     internal async Task<ManagedWorkerResult> LaunchWorkerAsync(
         ManagedWorkerBootstrap bootstrap,
@@ -405,6 +595,10 @@ public sealed class ManagedRunExecutor(
             return null;
         }
 
+        if (string.Equals(operation.OperationKind, AnalysisV1Operation, StringComparison.Ordinal))
+        {
+            return null;
+        }
         if (!string.Equals(operation.OperationKind, BethesdaSemanticOperation, StringComparison.Ordinal))
         {
             throw new InvalidOperationException(
@@ -442,6 +636,36 @@ public sealed class ManagedRunExecutor(
         return SealBethesdaAssignment(new ManagedBethesdaSemanticAssignment(
             accepted,
             intent.RequestedUnsupportedCapabilities));
+    }
+
+    private AnalysisV1WorkAssignment? ResolveAnalysisAssignment(RunRecord run)
+    {
+        RunOperationRecord? operation = runtime.Store.GetRunOperation(run.RunId);
+        if (operation is null || operation.OperationKind == BethesdaSemanticOperation)
+        {
+            return null;
+        }
+        if (operation.OperationKind != AnalysisV1Operation)
+        {
+            throw new InvalidOperationException("The durable run operation kind is unsupported by this executor.");
+        }
+        string actualSha = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(operation.RequestJson)));
+        if (actualSha != operation.RequestSha256)
+        {
+            throw new AnalysisIdentityDriftException("The durable analysis-v1 assignment failed identity validation.");
+        }
+        AnalysisV1WorkAssignment assignment = JsonSerializer.Deserialize<AnalysisV1WorkAssignment>(operation.RequestJson, StrictJson)
+            ?? throw new InvalidDataException("The durable analysis-v1 assignment is malformed.");
+        AnalysisPublicationBuilder.ValidateAssignment(assignment);
+        if (assignment.ExecutionInput.RunId.Value != run.RunId
+            || assignment.ExecutionInput.InstallationSnapshot.ArtifactId.Value != run.Binding.InstallationSnapshotId
+            || assignment.AnalysisContextId != run.Binding.AnalysisContextId
+            || assignment.ExecutionInput.EffectiveConfiguration.ArtifactId.Value != run.Binding.EffectiveScanConfigurationId
+            || assignment.ExecutionInput.ResolvedInputManifest.ArtifactId.Value != run.Binding.ResolvedInputManifestId)
+        {
+            throw new AnalysisIdentityDriftException("The durable analysis-v1 assignment differs from the immutable run binding.");
+        }
+        return assignment;
     }
 
     private static ManagedBethesdaSemanticAssignment SealBethesdaAssignment(

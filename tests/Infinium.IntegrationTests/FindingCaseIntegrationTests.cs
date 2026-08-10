@@ -180,7 +180,7 @@ public sealed class FindingCaseIntegrationTests
             runId, "population-cases");
     }
 
-    private static FindingCaseInputContract Input(
+    internal static FindingCaseInputContract Input(
         CandidateAnalysisContract candidates,
         IReadOnlyList<PriorFindingContract>? priorFindings = null,
         IReadOnlyList<PriorCaseContract>? priorCases = null,
@@ -283,12 +283,12 @@ public sealed class FindingCaseIntegrationTests
         return input with { InputId = FindingCaseIdentity.ComputeInputId(input) };
     }
 
-    private static PriorFindingContract PriorFinding(FindingContract value) => new(
+    internal static PriorFindingContract PriorFinding(FindingContract value) => new(
         value.FindingOccurrenceId, value.LogicalFindingId, value.OriginatingRunId,
         value.CandidateId, value.HypothesisId, value.IdentityEnvelope, value.SemanticFingerprint, true,
         ["candidate-hypotheses"]);
 
-    private static PriorCaseContract PriorCase(Slice5CaseContract value) => new(
+    internal static PriorCaseContract PriorCase(Slice5CaseContract value) => new(
         value.CaseOccurrenceId, value.LogicalCaseId, value.OriginatingRunId, value.Kind,
         value.FindingOccurrenceIds, value.HypothesisIds, value.IdentityEnvelope, value.SemanticFingerprint, true,
         ["candidate-hypotheses"]);

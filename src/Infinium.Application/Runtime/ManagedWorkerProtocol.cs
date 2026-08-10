@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using Infinium.Application.Analysis;
 using Infinium.Bethesda;
 using Infinium.Mo2;
 
@@ -25,13 +26,15 @@ public sealed record ManagedWorkerBootstrap(
     ManagedWorkerOperationKind OperationKind = ManagedWorkerOperationKind.SubstrateValidation,
     string OutputSchemaVersion = ManagedWorkerManifest.OutputSchemaVersion,
     ManagedMo2SnapshotCaptureAssignment? Mo2SnapshotCapture = null,
-    ManagedBethesdaSemanticAssignment? BethesdaSemanticExtraction = null);
+    ManagedBethesdaSemanticAssignment? BethesdaSemanticExtraction = null,
+    AnalysisV1WorkAssignment? AnalysisV1 = null);
 
 public enum ManagedWorkerOperationKind
 {
     SubstrateValidation,
     Mo2SnapshotCapture,
     BethesdaSemanticExtraction,
+    AnalysisV1,
 }
 
 public sealed record ManagedBethesdaSemanticAssignment(

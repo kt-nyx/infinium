@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Text;
 using Google.Protobuf;
+using Infinium.Application.Analysis;
 using Infinium.Application.Runtime;
 using Infinium.Bethesda;
 using Infinium.Contracts.Protobuf.Common.V1;
@@ -113,6 +114,8 @@ public sealed class WorkerBootstrapRegistry
                     ? bootstrap.RunId
                     : bootstrap.OperationKind == ManagedWorkerOperationKind.BethesdaSemanticExtraction
                         ? bootstrap.RunId + "-bethesda-semantic"
+                        : bootstrap.OperationKind == ManagedWorkerOperationKind.AnalysisV1
+                            ? bootstrap.RunId + "-analysis-v1"
                         : bootstrap.RunId + "-slice2-substrate",
             },
             JobNodeId = new JobNodeId
@@ -121,6 +124,8 @@ public sealed class WorkerBootstrapRegistry
                     ? bootstrap.RunId + "-capture"
                     : bootstrap.OperationKind == ManagedWorkerOperationKind.BethesdaSemanticExtraction
                         ? bootstrap.RunId + "-bethesda-index"
+                        : bootstrap.OperationKind == ManagedWorkerOperationKind.AnalysisV1
+                            ? bootstrap.RunId + "-analysis-publication"
                         : bootstrap.RunId + "-root",
             },
             AttemptId = new AttemptId { Value = bootstrap.AttemptId },
@@ -138,6 +143,8 @@ public sealed class WorkerBootstrapRegistry
                 MaximumTotalInputBytes = bootstrap.OperationKind
                     == ManagedWorkerOperationKind.BethesdaSemanticExtraction
                         ? 64UL * 1024 * 1024
+                        : bootstrap.OperationKind == ManagedWorkerOperationKind.AnalysisV1
+                            ? checked((ulong)(bootstrap.AnalysisV1?.MaximumInputBytes ?? 0))
                         : 1,
                 MaximumTotalOutputBytes = checked((ulong)bootstrap.MaximumOutputBytes),
                 MaximumSingleOutputBytes = checked((ulong)bootstrap.MaximumOutputBytes),
@@ -145,6 +152,8 @@ public sealed class WorkerBootstrapRegistry
                     == ManagedWorkerOperationKind.BethesdaSemanticExtraction
                         ? checked((ulong)(bootstrap.BethesdaSemanticExtraction?
                             .AcceptedSnapshot.Snapshot?.Plugins.Count(plugin => plugin.Enabled) ?? 1))
+                        : bootstrap.OperationKind == ManagedWorkerOperationKind.AnalysisV1
+                            ? 3UL
                         : 1,
                 MaximumProgressUpdates = 8,
                 MaximumStagedOutputs = 1,
@@ -154,6 +163,8 @@ public sealed class WorkerBootstrapRegistry
                     Value = bootstrap.OperationKind
                         == ManagedWorkerOperationKind.BethesdaSemanticExtraction
                             ? 120_000UL
+                            : bootstrap.OperationKind == ManagedWorkerOperationKind.AnalysisV1
+                                ? checked((ulong)(bootstrap.AnalysisV1?.ExecutionInput.Limits.MaximumWallTimeMilliseconds ?? 0))
                             : 30_000UL,
                 },
             },
@@ -168,11 +179,47 @@ public sealed class WorkerBootstrapRegistry
             MaximumBytes = checked((ulong)bootstrap.MaximumOutputBytes),
             Required = true,
         });
+        if (bootstrap.OperationKind == ManagedWorkerOperationKind.AnalysisV1)
+        {
+            foreach (RetainedAnalysisPayloadSeal seal in new[]
+            {
+                bootstrap.AnalysisV1!.DocumentationEvidence,
+                bootstrap.AnalysisV1.CandidateAnalysis,
+                bootstrap.AnalysisV1.FindingCase,
+            })
+            {
+                assignment.Inputs.Add(new WorkerInput
+                {
+                    PayloadId = new PayloadId { Value = seal.PayloadId },
+                    Content = new ContentDigest
+                    {
+                        Algorithm = DigestAlgorithm.Sha256,
+                        Value = ByteString.CopyFrom(Convert.FromHexString(seal.Sha256)),
+                        SizeBytes = checked((ulong)seal.ByteLength),
+                    },
+                    Kind = WorkerInputKind.ImmutablePayload,
+                    LogicalName = seal.SchemaId,
+                });
+            }
+        }
         return assignment;
     }
 
     private static WorkerOperation BuildOperation(ManagedWorkerBootstrap bootstrap)
     {
+        if (bootstrap.OperationKind == ManagedWorkerOperationKind.AnalysisV1)
+        {
+            _ = bootstrap.AnalysisV1
+                ?? throw new InvalidOperationException("The bounded analysis-v1 assignment is absent.");
+            return new WorkerOperation
+            {
+                Kind = WorkerOperationKind.RunDeclaredAnalyzer,
+                AdapterOrAnalyzerId = "infinium.analysis-v1-publication-validator",
+                AdapterOrAnalyzerVersion = new SemanticVersion { Value = "1.0.0" },
+                AssignmentSchemaVersion = new SemanticVersion { Value = "1.0.0" },
+            };
+        }
+
         if (bootstrap.OperationKind == ManagedWorkerOperationKind.BethesdaSemanticExtraction)
         {
             _ = bootstrap.BethesdaSemanticExtraction

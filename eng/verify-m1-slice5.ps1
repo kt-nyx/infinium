@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Contracts', 'Documentation', 'Candidates', 'CandidateScale', 'Cases')]
+    [ValidateSet('Contracts', 'Documentation', 'Candidates', 'CandidateScale', 'Cases', 'Replay', 'Output', 'Safety')]
     [string] $Gate,
 
     [Parameter(Mandatory = $true)]
@@ -456,6 +456,155 @@ function Invoke-CasesGate {
     })
 }
 
+function Get-Wp5FixtureEvidence([string] $ReceiptPath) {
+    $fixtureRoot = Join-Path $repoRoot 'docs/evaluation/fixtures/m1-slice5-wp5-operational-cases-v1'
+    $manifestPath = Join-Path $fixtureRoot 'fixture-manifest.v1.json'
+    $manifest = Read-StrictJson $manifestPath
+    if ([string] $manifest.status -notmatch 'accepted|independently-reviewed') {
+        throw "WP5 operational fixture package is not independently accepted: $($manifest.status)"
+    }
+    $files = @()
+    foreach ($entry in @($manifest.files)) {
+        $path = Join-Path $fixtureRoot ([string] $entry.path)
+        $actual = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant()
+        if ($actual -cne [string] $entry.sha256) {
+            throw "WP5 frozen fixture digest mismatch: $($entry.path)"
+        }
+        if ([System.IO.Path]::GetExtension($path) -ceq '.json') {
+            $null = Read-StrictJson $path
+        }
+        $files += Get-FileEvidence $path
+    }
+    $harnessPath = Join-Path $fixtureRoot 'harness-envelope.v1.json'
+    $harness = Read-StrictJson $harnessPath
+    $projectionSchemaPath = Join-Path $fixtureRoot 'ordinary-product-projection.schema.json'
+    $schemaHash = (Get-FileHash -LiteralPath $projectionSchemaPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    $retainedReceipts = Read-StrictJson $ReceiptPath
+    $validationReceipts = @($retainedReceipts.projection_validation_receipts)
+    $topologyReceipts = @($retainedReceipts.topology_capability_receipts)
+    $expectedCases = @($harness.case_bindings | ForEach-Object { [string] $_.case_id } | Sort-Object)
+    $actualCases = @($validationReceipts | ForEach-Object { [string] $_.CaseId } | Sort-Object)
+    if ([string] $retainedReceipts.schema_id -cne 'infinium.verification.wp5-projection-validation-receipts/v1' -or
+        (Compare-Object $expectedCases $actualCases) -or
+        @($validationReceipts | Where-Object {
+            [string] $_.SchemaSha256 -cne $schemaHash -or
+            [string] $_.Disposition -cne 'closed-schema-and-answer-isolation-validated-before-product-dispatch'
+        }).Count -ne 0) {
+        throw 'WP5 retained pre-dispatch projection validation receipts are incomplete or inconsistent.'
+    }
+    $fixtureCount = @($manifest.fixture_manifests).Count
+    $caseCount = @($harness.case_bindings).Count
+    if ($fixtureCount -ne 2 -or $caseCount -ne 12 -or $validationReceipts.Count -ne 12) {
+        throw "WP5 operational fixture cardinality changed: $fixtureCount packages, $caseCount cases."
+    }
+    return [ordered]@{
+        registry_id = [string] $manifest.fixture_registry_id
+        registry_version = [string] $manifest.fixture_registry_version
+        fixture_count = $fixtureCount
+        case_count = $caseCount
+        manifest = Get-FileEvidence $manifestPath
+        frozen_files = $files
+        projection_validation_receipts = $validationReceipts
+        projection_validation_receipt_file = Get-FileEvidence $ReceiptPath
+        topology_capability_receipts = $topologyReceipts
+        independent_review_status = [string] $manifest.answer_isolation_review.independent_review_status
+    }
+}
+
+function Invoke-Wp5FocusedTestsWithReceiptCapture([object[]] $Commands, [string] $FailurePrefix) {
+    $receiptPath = Join-Path $resolvedOutputRoot 'wp5-projection-validation-receipts.json'
+    if ([System.IO.File]::Exists($receiptPath)) {
+        [System.IO.File]::Delete($receiptPath)
+    }
+    $priorReceiptPath = [Environment]::GetEnvironmentVariable('INFINIUM_WP5_VALIDATION_RECEIPT_PATH', 'Process')
+    [Environment]::SetEnvironmentVariable('INFINIUM_WP5_VALIDATION_RECEIPT_PATH', $receiptPath, 'Process')
+    try {
+        $tests = Invoke-FocusedTests $Commands $FailurePrefix
+    } finally {
+        [Environment]::SetEnvironmentVariable('INFINIUM_WP5_VALIDATION_RECEIPT_PATH', $priorReceiptPath, 'Process')
+    }
+    if (-not [System.IO.File]::Exists($receiptPath)) {
+        throw 'The WP5 product comparison did not retain its pre-dispatch validation receipts.'
+    }
+    return [pscustomobject]@{ Tests = $tests; ReceiptPath = $receiptPath }
+}
+
+function Invoke-ReplayGate {
+    $capture = Invoke-Wp5FocusedTestsWithReceiptCapture @(
+        @('test', 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~AnalysisReplay|FullyQualifiedName~Slice5FailureRecovery'),
+        @('test', 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~CleanIncrementalReplay')
+    ) 'WP5 replay verification'
+    $fixtures = Get-Wp5FixtureEvidence $capture.ReceiptPath
+    Write-GateReport 'Replay' ([ordered]@{
+        fixtures = $fixtures
+        focused_tests = $capture.Tests
+        execution_modes = @('clean', 'incremental', 'retained-downstream-replay')
+        identity_drift = 'fail-closed'
+        publication = 'coordinator-owned-atomic'
+        recovery = 'stale-attempt-fenced-and-retryable'
+        provider_model_credential_live_billable = 'not-used'
+    })
+}
+
+function Invoke-OutputGate {
+    $capture = Invoke-Wp5FocusedTestsWithReceiptCapture @(
+        @('test', 'tests/Infinium.ContractTests/Infinium.ContractTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~Slice5Output|FullyQualifiedName~Slice5Query'),
+        @('test', 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~Slice5Cli|FullyQualifiedName~FrozenWp5OperationalCasesAreBoundToProductExecutionBeforeOracleComparison'),
+        @('test', 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~Slice5Operational')
+    ) 'WP5 output verification'
+    $fixtures = Get-Wp5FixtureEvidence $capture.ReceiptPath
+    $cliProject = [System.IO.File]::ReadAllText((Join-Path $repoRoot 'src/Infinium.Cli/Infinium.Cli.csproj'))
+    $cliSource = [System.IO.File]::ReadAllText((Join-Path $repoRoot 'src/Infinium.Cli/Program.cs'))
+    foreach ($forbidden in @('Infinium.Persistence', 'Microsoft.Data.Sqlite', 'SqliteConnection')) {
+        if ($cliProject.IndexOf($forbidden, [StringComparison]::Ordinal) -ge 0 -or
+            $cliSource.IndexOf($forbidden, [StringComparison]::Ordinal) -ge 0) {
+            throw "WP5 CLI reaches a forbidden direct database surface: $forbidden"
+        }
+    }
+    Write-GateReport 'Output' ([ordered]@{
+        fixtures = $fixtures
+        focused_tests = $capture.Tests
+        query_boundary = 'typed-application-grpc-only'
+        pagination = 'authenticated-bounded-keyset-cursor'
+        json_contract = 'infinium.run-output/v1'
+        human_json_semantics = 'shared-run-owned-projection'
+        frozen_product_comparison_cases = 12
+        direct_cli_database_access = $false
+        safety_guarantee = 'none'
+    })
+}
+
+function Invoke-SafetyGate {
+    $capture = Invoke-Wp5FocusedTestsWithReceiptCapture @(
+        @('test', 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~AnalysisReplayLeavesProtectedRootCanaries|FullyQualifiedName~AnalysisReplayManagedWorker|FullyQualifiedName~Slice5FailureRecovery|FullyQualifiedName~FrozenWp5OperationalCasesAreBoundToProductExecutionBeforeOracleComparison'),
+        @('test', 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~Slice5Operational')
+    ) 'WP5 safety verification'
+    $fixtures = Get-Wp5FixtureEvidence $capture.ReceiptPath
+    $wp5Sources = @(
+        Get-ChildItem -LiteralPath (Join-Path $repoRoot 'src/Infinium.Application/Analysis') -File -Filter '*.cs'
+        Get-Item -LiteralPath (Join-Path $repoRoot 'src/Infinium.Persistence/AuthoritativeStore.AnalysisPublication.cs')
+        Get-Item -LiteralPath (Join-Path $repoRoot 'src/Infinium.Coordinator/ManagedRunExecutor.cs')
+    ) | ForEach-Object { [System.IO.File]::ReadAllText($_.FullName) }
+    $source = $wp5Sources -join [Environment]::NewLine
+    foreach ($forbidden in @('HttpClient', 'OpenAIClient', 'NexusClient', 'PowerShell.Create')) {
+        if ($source.IndexOf($forbidden, [StringComparison]::Ordinal) -ge 0) {
+            throw "WP5 local publication graph reaches forbidden external capability: $forbidden"
+        }
+    }
+    Write-GateReport 'Safety' ([ordered]@{
+        fixtures = $fixtures
+        focused_tests = $capture.Tests
+        authorized_write_classes = @('database', 'payload-store', 'staging', 'trace', 'run-output')
+        protected_root_canaries = 'unchanged'
+        provider_model_credential_live_billable = 'not-used'
+        export = 'not-implemented'
+        external_process = 'contained-managed-worker-only'
+        setup_game_mo2_writes = 0
+        frozen_product_comparison_cases = 12
+        native_topology_qualification = 'bounded-subset-with-explicit-capability-gaps'
+    })
+}
+
 Push-Location $repoRoot
 try {
     switch ($Gate) {
@@ -464,6 +613,9 @@ try {
         'Candidates' { Invoke-CandidatesGate }
         'CandidateScale' { Invoke-CandidateScaleGate }
         'Cases' { Invoke-CasesGate }
+        'Replay' { Invoke-ReplayGate }
+        'Output' { Invoke-OutputGate }
+        'Safety' { Invoke-SafetyGate }
     }
 } finally {
     Pop-Location

@@ -349,10 +349,20 @@
           "enum": [
             "present",
             "rejected",
+            "resolved-negative",
+            "missing",
+            "invalid-input",
             "unsupported",
+            "ambiguous",
+            "partial",
+            "abstained",
             "unknown",
             "unmapped",
             "not-applicable",
+            "not-used",
+            "cancelled",
+            "limit-reached",
+            "unavailable",
             "failed"
           ]
         },

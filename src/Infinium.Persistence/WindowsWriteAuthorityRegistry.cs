@@ -520,6 +520,11 @@ public sealed class WindowsWriteAuthorityRegistry : IDisposable
             }
 
             RejectProtectedWrite(existing);
+            FinalObjectAuthorityPolicy.RequireAuthorized(
+                operationSupported: true,
+                capabilityFreshAtUse: true,
+                finalObjectIdentityProven: true,
+                finalObjectOwnerRootAuthorized: true);
             return candidate;
         }
     }

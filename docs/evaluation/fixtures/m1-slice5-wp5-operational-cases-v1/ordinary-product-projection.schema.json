@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "infinium.public-fixture.ordinary-product-projection/1.0.2",
+  "title": "Closed ordinary product projection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["input_kind", "entities", "relations", "commands"],
+  "properties": {
+    "input_kind": {
+      "enum": [
+        "publication-request",
+        "analysis-reuse-request",
+        "result-query-request",
+        "run-output-request",
+        "attempt-recovery-request",
+        "filesystem-write-request"
+      ]
+    },
+    "entities": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/entity"}
+    },
+    "relations": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/relation"}
+    },
+    "commands": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/command"}
+    }
+  },
+  "$defs": {
+    "scalar": {
+      "type": ["string", "integer", "boolean", "null"]
+    },
+    "value": {
+      "oneOf": [
+        {"$ref": "#/$defs/scalar"},
+        {
+          "type": "array",
+          "items": {"$ref": "#/$defs/scalar"}
+        }
+      ]
+    },
+    "attribute": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "value"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "value": {"$ref": "#/$defs/value"}
+      }
+    },
+    "entity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "identity", "attributes"],
+      "properties": {
+        "kind": {"type": "string", "minLength": 1},
+        "identity": {"type": "string", "minLength": 1},
+        "attributes": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/attribute"}
+        }
+      }
+    },
+    "relation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "type", "to"],
+      "properties": {
+        "from": {"type": "string", "minLength": 1},
+        "type": {"type": "string", "minLength": 1},
+        "to": {"type": "string", "minLength": 1}
+      }
+    },
+    "parameter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "value"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "value": {"$ref": "#/$defs/value"}
+      }
+    },
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "parameters"],
+      "properties": {
+        "kind": {"type": "string", "minLength": 1},
+        "parameters": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/parameter"}
+        }
+      }
+    }
+  }
+}

@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Google.Protobuf;
+using Infinium.Application.Analysis;
 using Infinium.Application.Runtime;
 using Infinium.Bethesda;
 using Infinium.Contracts.Protobuf.Common.V1;
@@ -126,14 +127,17 @@ try
         throw new InvalidOperationException("The coordinator rejected worker progress.");
     }
 
-    await Task.Delay(2_000).ConfigureAwait(false);
+    await Task.Delay(
+        bootstrap.OperationKind == ManagedWorkerOperationKind.AnalysisV1 ? 10 : 2_000)
+        .ConfigureAwait(false);
     PollControlResponse control = await client.PollControlAsync(new PollControlRequest
     {
         AttemptId = new AttemptId { Value = bootstrap.AttemptId },
         CoordinatorFencingEpoch = checked((ulong)bootstrap.CoordinatorFencingEpoch),
         AttemptFencingToken = checked((ulong)bootstrap.AttemptFencingToken),
     }, deadline: GetRpcDeadline(bootstrap)).ResponseAsync.ConfigureAwait(false);
-    if (control.Control == WorkerControl.CancelAtSafeBoundary)
+    if (control.Control == WorkerControl.CancelAtSafeBoundary
+        && bootstrap.OperationKind != ManagedWorkerOperationKind.AnalysisV1)
     {
         WorkerTerminalReceiptResponse cancelled =
             await client.SubmitTerminalReceiptAsync(new WorkerTerminalReceipt
@@ -156,7 +160,9 @@ try
         return 3;
     }
 
-    if (control.Control != WorkerControl.Continue)
+    if (control.Control != WorkerControl.Continue
+        && !(control.Control == WorkerControl.CancelAtSafeBoundary
+            && bootstrap.OperationKind == ManagedWorkerOperationKind.AnalysisV1))
     {
         throw new InvalidOperationException("The coordinator withdrew the worker authority.");
     }
@@ -251,6 +257,30 @@ try
             coordinatorFencingEpoch = bootstrap.CoordinatorFencingEpoch,
             attemptFencingToken = bootstrap.AttemptFencingToken,
         });
+    }
+    else if (assignment.Operation.Kind == WorkerOperationKind.RunDeclaredAnalyzer
+        && bootstrap.OperationKind == ManagedWorkerOperationKind.AnalysisV1)
+    {
+        AnalysisV1WorkAssignment analysis = bootstrap.AnalysisV1
+            ?? throw new InvalidOperationException("The bounded analysis-v1 assignment is missing.");
+        AnalysisPublicationBuilder.ValidateAssignment(analysis);
+        RetainedAnalysisPayloadSeal[] seals =
+            [analysis.DocumentationEvidence, analysis.CandidateAnalysis, analysis.FindingCase];
+        payload = JsonSerializer.SerializeToUtf8Bytes(new AnalysisWorkerValidationReceipt(
+            1,
+            analysis.AssignmentId,
+            analysis.ExecutionInput.RunId.Value,
+            seals,
+            seals.Sum(item => item.ByteLength),
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["provider"] = "not-used",
+                ["model"] = "not-used",
+                ["credential"] = "not-used",
+                ["live"] = "not-used",
+                ["billable"] = "not-used",
+            },
+            "validated-for-coordinator-publication-only"));
     }
     else
     {
@@ -388,10 +418,14 @@ static void Validate(ManagedWorkerBootstrap bootstrap)
             && bootstrap.Mo2SnapshotCapture is null)
         || (bootstrap.OperationKind == ManagedWorkerOperationKind.BethesdaSemanticExtraction
             && bootstrap.BethesdaSemanticExtraction is null)
+        || (bootstrap.OperationKind == ManagedWorkerOperationKind.AnalysisV1
+            && bootstrap.AnalysisV1 is null)
         || (bootstrap.OperationKind != ManagedWorkerOperationKind.Mo2SnapshotCapture
             && bootstrap.Mo2SnapshotCapture is not null)
         || (bootstrap.OperationKind != ManagedWorkerOperationKind.BethesdaSemanticExtraction
             && bootstrap.BethesdaSemanticExtraction is not null)
+        || (bootstrap.OperationKind != ManagedWorkerOperationKind.AnalysisV1
+            && bootstrap.AnalysisV1 is not null)
         || bootstrap.ExpiresAt <= DateTimeOffset.UtcNow
         || Convert.FromBase64String(bootstrap.OneUseNonceBase64).Length != 32)
     {
@@ -443,7 +477,19 @@ static void ValidateAssignment(
                 || assignment.Operation.AdapterOrAnalyzerVersion?.Value
                     != BethesdaSemanticExtractor.ProducerVersion
                 || assignment.Limits?.MaximumTotalInputBytes != 64UL * 1024 * 1024
-                || assignment.Limits.MaximumDuration?.Value != 120_000)))
+                || assignment.Limits.MaximumDuration?.Value != 120_000))
+        || (bootstrap.OperationKind == ManagedWorkerOperationKind.AnalysisV1
+            && (assignment.Operation?.Kind != WorkerOperationKind.RunDeclaredAnalyzer
+                || assignment.Operation.AdapterOrAnalyzerId
+                    != "infinium.analysis-v1-publication-validator"
+                || assignment.Operation.AdapterOrAnalyzerVersion?.Value != "1.0.0"
+                || assignment.Inputs.Count != 3
+                || assignment.Inputs.Any(input => input.Kind != WorkerInputKind.ImmutablePayload)
+                || assignment.Limits?.MaximumTotalInputBytes
+                    != checked((ulong)bootstrap.AnalysisV1!.MaximumInputBytes)
+                || assignment.Limits.MaximumWorkUnits != 3
+                || assignment.Limits.MaximumDuration?.Value
+                    != checked((ulong)bootstrap.AnalysisV1.ExecutionInput.Limits.MaximumWallTimeMilliseconds))))
     {
         throw new InvalidOperationException("The worker assignment exceeds its launch authority.");
     }

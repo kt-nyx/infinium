@@ -54,6 +54,34 @@ internal static class ActiveJsonSchemaValidator
         ValidateNode(instance, schema, schemaFileName, schemaFileName, "$");
     }
 
+    internal static void Validate(JsonElement instance, JsonElement schema, string schemaIdentity)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(schemaIdentity);
+        string runtimeName = "runtime-schema-" + Guid.NewGuid().ToString("N") + ".json";
+        JsonDocument document = JsonDocument.Parse(schema.GetRawText());
+        try
+        {
+            BoundedJsonDocumentReader.RejectDuplicateProperties(document.RootElement, schemaIdentity);
+            EnsureSupportedSchemaVocabulary(document.RootElement, schemaIdentity);
+            if (!Schemas.TryAdd(runtimeName, document))
+            {
+                throw new InvalidOperationException("A runtime JSON Schema identity collided unexpectedly.");
+            }
+            ValidateNode(instance, document.RootElement, runtimeName, runtimeName, "$");
+        }
+        finally
+        {
+            if (Schemas.TryRemove(runtimeName, out JsonDocument? retained))
+            {
+                retained.Dispose();
+            }
+            else
+            {
+                document.Dispose();
+            }
+        }
+    }
+
     private static void ValidateNode(
         JsonElement instance,
         JsonElement schema,

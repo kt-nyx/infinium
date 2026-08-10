@@ -1,6 +1,6 @@
 # M1 Slice 5 — Evidence, documentation, candidates, cases, and replay
 
-Status: `M1/S5/WP1` through `M1/S5/WP4` complete and reviewed; `M1/S5/WP5` is eligible; Slice 5 is not complete
+Status: `M1/S5/WP1` through `M1/S5/WP5` complete and reviewed; `M1/S5/WP6` is eligible; Slice 5 is not complete
 
 Plan: `M1/S5`
 
@@ -1138,3 +1138,163 @@ local deterministic product path. It is not a readiness, safety, reliability,
 held-out, private-evaluator, controlled-real, whole-M1, or Slice 5 verdict.
 WP5 remains responsible for replay, coordinator integration, reporting/query,
 recovery, and write/non-mutation safety. No push was performed.
+
+## `M1/S5/WP5` — Replay, integration, safety, recovery, and reporting
+
+Started: 2026-08-09
+
+Branch: `codex/m1-s5-wp5-replay-publication`
+
+Baseline commit: `7fb6ea6d88e105ba7acec8b8db7ea541be64fae2`
+
+Implementation commit: this record's final local commit
+
+### Traceability checklist
+
+| WP5 deliverable | Settled evidence |
+|---|---|
+| bounded `analysis-v1` assignment and retained inputs | closed assignment, exact three-input seals, byte/work/query bounds, durable operation identity, and managed-worker validation receipt |
+| coordinator-owned atomic publication | one SQLite transaction admits replay/output/index/effect ownership, dependency edges, lifecycle CAS, projection/job updates, and publication receipts; injected failures expose no authoritative partial result |
+| retained replay and targeted invalidation | exact source/configuration/schema/analyzer/policy/threshold/limit/seed/payload identities, semantic fingerprinting, clean/incremental/downstream-replay equivalence, and fail-closed retained-identity drift |
+| result query and reporting | typed application gRPC summary/replay/artifact/provenance/output queries, bounded authenticated keyset cursors, shared human and canonical `infinium.run-output/v1` semantics, and CLI consumption only through the application boundary |
+| partial and failure output | explicit completed-with-gaps, cancelled, limit-reached, and failed run output plus terminal CLI summaries and exit codes |
+| recovery and integrity | interrupted-run retry, stale-attempt fencing, coordinator-owned failure output, orphan reconciliation, backup/restore/integrity/projection readback, and contained-worker restart execution |
+| write and external boundaries | fixed product write classes, disposable-root and protected-root canaries, coordinator payload admission, inert external surfaces, and provider/model/credential/live/billable `not-used` receipts |
+| staged public truth | independently authored and reviewed 12-case development/validation package for six operational families; product output did not author or repair expected truth |
+| verification | exact plan filters, `Replay`/`Output`/`Safety` gates, full Release floor, category floors, format/dependency/JSON/link/diff checks, and fresh final product review |
+
+### Integrated product path
+
+`AnalysisV1WorkAssignment` binds the immutable run and the exact retained WP2,
+WP3, and WP4 payload identities. The contained managed worker validates those
+bounded inputs and produces only a coordinator-publication receipt. The
+coordinator then deserializes the existing typed stage documents, validates
+their exact identities and canonical round trips, and constructs replay,
+run-output, CLI-summary, artifact-index, and external-boundary documents
+without reimplementing candidate, finding, grouping, reconciliation,
+taxonomy, or coverage semantics.
+
+`AuthoritativeStore.PublishAnalysisResult` publishes the complete result graph
+and terminal lifecycle transition atomically. Failure injection before
+admission, after physical admission, before terminal CAS, and before commit
+proves that no partial result becomes authoritative. Content-addressed files
+left by an interrupted physical admission remain non-authoritative and appear
+explicitly as reconciliation orphans; a fresh fenced attempt can retry and
+publish the sole authoritative result. Retained identity drift fails closed.
+
+The application boundary exposes bounded summary, replay, artifact,
+provenance, and complete-output queries. Artifact pagination is stable by
+artifact identity and uses an authenticated cursor bound to the run,
+publication fingerprint, filters, order, and page size. `Infinium.Cli results`
+uses only that boundary. Human and JSON output are projections of the same
+run-owned contracts, including explicit gaps, unsupported scope, terminal
+state, and no-safety language.
+
+### Product-blind fixture and oracle review
+
+The final frozen registry is
+`infinium.m1s5.wp5.operational-cases.20260809.3` with:
+
+| Package identity | Partition and purpose |
+|---|---|
+| `infinium.m1s5.wp5.publication-replay-query-output-recovery-safety.lantern-a/1.0.2` | development counterparts for atomic publication, replay/invalidation, bounded query, terminal human/JSON output, recovery, and write/non-mutation safety |
+| `infinium.m1s5.wp5.publication-replay-query-output-recovery-safety.compass-b/1.0.2` | materially independent validation counterparts for the same six families |
+
+The first authoring revision was rejected because harness metadata and
+answer-directed descriptions remained in the product-input file and the two
+partitions covered disjoint families. Revision 1.0.1 physically separated the
+closed ordinary projection, harness envelope, and oracle and supplied
+development/validation counterparts, but review rejected its isomorphic
+safety order and underdetermined link/race topology. Revision 1.0.2 uses
+neutral target identities, a separately frozen complete final-object
+topology, explicit race transitions, and a non-isomorphic validation order.
+The independent reviewer re-derived 9 accepted/16 rejected development writes
+and 10 accepted/15 rejected validation writes exactly and accepted the frozen
+truth. The accepted comparison status is
+`independently-reviewed-accepted-comparison-complete-with-explicit-native-capability-gaps`.
+All 12 selected projections pass the closed-schema and answer-isolation checks
+before product dispatch, retain exact raw-byte validation receipts, and compare
+as whole objects against the frozen oracle after execution. The safety adapter
+retains 19 topology-capability receipts. It physically exercises distinct
+Windows roots and objects, final-object identity, handle-relative writes, NTFS
+hard links, junction/mount reparses, relative/parent/case paths, canaries, and
+pinned-handle replacement races. Native symbolic-link creation was unavailable
+with Windows error 1314; the mount-point substitute is not symbolic-link
+qualification. Native 8.3, UNC, device, alternate-data-stream, and cross-volume
+qualification remain explicit gaps or stand-ins. The package makes no
+standalone native-filesystem, external-adapter, full-EVAL, readiness, or Slice
+verdict; WP6 owns comprehensive cross-package execution and Slice acceptance.
+
+Frozen/reviewed file hashes are:
+
+| File | SHA-256 |
+|---|---|
+| `ordinary-product-projection.schema.json` | `b59430067ccc0b50f6757d41b658b8fcc4317f57bc01e7aaa90bc8525011db5e` |
+| `ordinary-product-projections.v1.json` | `33f739fabf923da3bf8b864bf199a07d65a7fa9a04d54755c3034af4fab0bdca` |
+| `safety-topologies.v1.json` | `e544e974055e6cf79c7753cd9a28f760c118e26535af1449fbae910c06e178ac` |
+| `harness-envelope.v1.json` | `4964bc553afdb9cba848c98542d7bf750b124b1ecedaf42134370505a76a2852` |
+| `expected-results.v1.json` | `b971504c46fb46bae2ba6fdd596a1ac730f492cd352792b8e48f6517cac8cf37` |
+| final `fixture-manifest.v1.json` | `794f87804efcea7432c60f14702da5774ab2c16d7b82d9222e87259334f56078` |
+| `independent-review.md` | `5258a4a11b6e41be4270ad40459a8a51e1a3b272c0c3e313f85cce14ad84afec` |
+| final `README.md` | `a727948ab7754b28884991129970973e36bd8b876c66bfea16ca500414f672bf` |
+
+### Verification and correction ledger
+
+Locked restore passed and the Release build completed with zero warnings and
+zero errors. The exact plan filters passed 3 contract, 18 integration, and 3
+evaluation tests with no skips. The three retained gates passed with:
+
+- `Replay`: 18 integration and 1 evaluation test;
+- `Output`: 3 contract, 3 integration, and 3 evaluation tests; and
+- `Safety`: 4 integration and 3 evaluation tests.
+
+The current gate reports are retained under `artifacts/m1-slice5/wp5/` as
+`replay.json`, `output.json`, and `safety.json`. The Output gate also retains 12
+pre-dispatch projection-validation receipts and 19 explicit topology-capability
+receipts.
+
+| Retained gate evidence | SHA-256 |
+|---|---|
+| `replay.json` | `516a4eb67b2b9bbf9fc54af50a397023f0a134cbee8f423d7abbf43049000306` |
+| `output.json` | `271308e365785db67ec06cf7a06a945e4fb699da6d8f782be79fe1422920065d` |
+| `safety.json` | `823ad259bbb5c0c587c90c27c43652e84cda3d93e1b22b4b423a5bc5d50a6818` |
+| `wp5-projection-validation-receipts.json` | `5722cb615d59b5e33b977c0afa97f01a21df1a208beb0f1c191873a91200100d` |
+
+The unfiltered Release floor passed 156 unit tests with one existing
+environment-dependent symbolic-link skip, 139 contract tests, 63 integration
+tests, and 53 evaluation tests with eight existing private/environment skips:
+411 passed and 9 skipped overall. Category floors passed:
+
+- `M1Unit`: 138 passed, 1 symbolic-link skip;
+- `M1Contract`: 45 passed;
+- `M1Integration`: 54 passed;
+- `M1Evaluation`: 52 passed, 8 private/environment skips;
+- `M1Security`: 9 passed; and
+- `M1Fault`: 13 passed.
+
+Recoverable findings corrected during the development loop included
+run-specific or underdetermined semantic fingerprints, candidate execution-input
+drift at the WP3/WP5 seam, unavailable replay dependencies being reported as
+clean, missing WP2 evidence and relation membership in published output,
+unbounded unary query/output seams, incomplete human output, cursor typing and
+ordering mismatches, and recovery mistaking a staged validation receipt for a
+committed analysis result. Terminal fallback, item reserve/counting, and wall
+time were corrected to preserve retained evidence, distinguish cancellation,
+limit, and failure, and cooperatively stop work. Fixture answer-isolation,
+partition, safety-topology, physical replacement-race, native-capability, and
+pre-dispatch receipt defects were corrected across rejected authoring and
+product-review revisions. The production write-authority surface remains
+unchanged. The dependency-manifest updater now delegates Windows PowerShell 5
+invocations to PowerShell 7 so the required check is formatting-stable without
+rewriting unchanged dependency data. All affected producer, consumer,
+persistence, test, fixture, and gate seams were corrected and rerun; a fresh
+final reviewer accepted the settled tree with no remaining must-fix or authority
+breach.
+
+This package proves only the bounded public synthetic local WP5 path. It makes
+no whole-Slice, whole-M1, readiness, reliability, real-filesystem-platform,
+controlled-real, private-held-out, live-provider, credential, billable, or
+safety verdict. No private held-out product verdict exists. WP6 remains
+responsible for the comprehensive cross-package corpus, accumulated review,
+Slice 5 traceability audit, contract freeze proposal, and owner acceptance
+packet. No push was performed.

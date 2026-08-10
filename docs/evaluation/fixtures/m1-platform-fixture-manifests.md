@@ -29,6 +29,37 @@ production logic. Fixture answer manifests and canary values are supplied only
 to the evaluation harness, never to the coordinator, worker, helper, adapter,
 renderer, model, retrieval path, or analyzer under test.
 
+## Instantiated WP5 package identities
+
+The product-blind WP5 authoring pass on 2026-08-09 assigned these fresh public
+package identities without reconstructing the removed packages:
+
+| Package identity | Version | Partition | Status |
+|---|---:|---|---|
+| `infinium.m1s5.wp5.publication-replay-query-output-recovery-safety.lantern-a` | `1.0.2` | development | independently reviewed; typed-policy comparison complete; explicit native capability gaps |
+| `infinium.m1s5.wp5.publication-replay-query-output-recovery-safety.compass-b` | `1.0.2` | validation | independently reviewed; typed-policy comparison complete; explicit native capability gaps |
+
+Their shared registry, answer-free factual inputs, and separately isolated
+expected results are under
+[`m1-slice5-wp5-operational-cases-v1/`](m1-slice5-wp5-operational-cases-v1/README.md).
+This registration records their bounded typed-policy comparison as complete:
+12/12 frozen bindings passed with no expected-truth edits and with actual
+pre-dispatch schema/answer-isolation receipts. It does not establish
+unconditional execution-ready native filesystem coverage. Native symbolic-link
+creation was unavailable, and native 8.3 alias, UNC, device,
+alternate-data-stream, and cross-volume qualification remain explicit gaps or
+stand-ins. The result does not broaden the registered EVAL claims or establish
+the explicitly excluded full external-adapter, lifecycle, persistence, or IPC
+matrices. A validation result that drives product change must follow the
+partition transition and replacement rules below.
+
+Version `1.0.2` replaces the review-rejected `1.0.1` authoring bytes while
+preserving its accepted projection isolation and symmetric family structure.
+It gives both safety counterparts neutral, explicit physical object graphs and
+complete race transitions; permutes the validation command order; and derives
+independent accept/reject vectors solely from frozen final-object authority
+facts. The rejected identities are not executable or authoritative inputs.
+
 ## Common manifest schema
 
 Every instantiated fixture manifest shall contain:

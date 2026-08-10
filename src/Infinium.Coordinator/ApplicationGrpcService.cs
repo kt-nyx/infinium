@@ -3,6 +3,8 @@ using System.Text.Json;
 using System.Threading.Channels;
 using Google.Protobuf;
 using Grpc.Core;
+using Infinium.Application.Analysis;
+using Infinium.Application.Evaluation;
 using Infinium.Application.Runtime;
 using Infinium.Contracts.Protobuf.Application.V1;
 using Infinium.Contracts.Protobuf.Common.V1;
@@ -13,6 +15,15 @@ using Microsoft.AspNetCore.Connections.Features;
 using DomainLifecycleState = Infinium.Domain.Contracts.LifecycleState;
 
 namespace Infinium.Coordinator;
+
+internal sealed record AnalysisArtifactCursor(
+    string RunId,
+    string PublicationIdentity,
+    string FilterHash,
+    AnalysisArtifactSortOrder SortOrder,
+    uint PageSize,
+    AnalysisArtifactCursorKey LastKey,
+    DateTimeOffset ExpiresAt);
 
 public sealed class ApplicationGrpcService(
     CoordinatorRuntime runtime,
@@ -251,6 +262,314 @@ public sealed class ApplicationGrpcService(
                 ProjectionVersion = new ProjectionVersion { Value = "1" },
             },
         });
+    }
+
+    public override Task<GetAnalysisSummaryResponse> GetAnalysisSummary(
+        GetAnalysisSummaryRequest request,
+        ServerCallContext context)
+    {
+        RequireNegotiated(context);
+        if (!IsCurrentProjection(request.ExpectedProjectionVersion))
+        {
+            return Task.FromResult(new GetAnalysisSummaryResponse { ProjectionInvalidated = ProjectionInvalidated() });
+        }
+        try
+        {
+            AnalysisSummaryPersistenceRecord value = runtime.Store.GetAnalysisSummary(
+                Required(request.RunId?.Value, "run ID"));
+            return Task.FromResult(new GetAnalysisSummaryResponse
+            {
+                Summary = new AnalysisSummary
+                {
+                    RunId = new RunId { Value = value.RunId },
+                    FindingCount = checked((ulong)value.FindingCount),
+                    SupportedCaseCount = checked((ulong)value.SupportedCaseCount),
+                    LeadOnlyCaseCount = checked((ulong)value.LeadOnlyCaseCount),
+                    CandidateDecisionCount = checked((ulong)value.CandidateDecisionCount),
+                    CoveragePopulationCount = checked((ulong)value.CoveragePopulationCount),
+                    GapCount = checked((ulong)value.GapCount),
+                    UnsupportedCount = checked((ulong)value.UnsupportedCount),
+                    Replay = ToProto(value),
+                    ProjectionVersion = new ProjectionVersion { Value = value.ProjectionVersion },
+                },
+            });
+        }
+        catch (KeyNotFoundException)
+        {
+            return Task.FromResult(new GetAnalysisSummaryResponse
+            {
+                Failure = Failure(FailureCode.NotFound, "The run has no published analysis result."),
+            });
+        }
+        catch (ArgumentException exception)
+        {
+            return Task.FromResult(new GetAnalysisSummaryResponse
+            {
+                Failure = Failure(FailureCode.InvalidArgument, Bounded(exception.Message)),
+            });
+        }
+    }
+
+    public override Task<GetAnalysisReplayResponse> GetAnalysisReplay(
+        GetAnalysisReplayRequest request,
+        ServerCallContext context)
+    {
+        RequireNegotiated(context);
+        if (!IsCurrentProjection(request.ExpectedProjectionVersion))
+        {
+            return Task.FromResult(new GetAnalysisReplayResponse { ProjectionInvalidated = ProjectionInvalidated() });
+        }
+        try
+        {
+            AnalysisReplayPersistenceRecord value = runtime.Store.GetAnalysisReplay(
+                Required(request.RunId?.Value, "run ID"));
+            return Task.FromResult(new GetAnalysisReplayResponse { Replay = ToProto(value) });
+        }
+        catch (KeyNotFoundException)
+        {
+            return Task.FromResult(new GetAnalysisReplayResponse
+            {
+                Failure = Failure(FailureCode.NotFound, "The run has no published replay manifest."),
+            });
+        }
+    }
+
+    public override Task<ListAnalysisArtifactsResponse> ListAnalysisArtifacts(
+        ListAnalysisArtifactsRequest request,
+        ServerCallContext context)
+    {
+        RequireNegotiated(context);
+        if (!IsCurrentProjection(request.ExpectedProjectionVersion))
+        {
+            return Task.FromResult(new ListAnalysisArtifactsResponse
+            {
+                CursorRejection = new CursorRejection
+                {
+                    Disposition = CursorDisposition.ProjectionInvalidated,
+                    CurrentProjectionVersion = new ProjectionVersion { Value = "1" },
+                    Failure = Failure(FailureCode.ResyncRequired, "The analysis projection was rebuilt."),
+                },
+            });
+        }
+        if (request.RequestedPageSize is < 1 or > 100
+            || request.Kinds.Count > 7
+            || request.States.Count > 20
+            || request.Kinds.Any(item => item is AnalysisArtifactKind.Unspecified or AnalysisArtifactKind.Unknown or AnalysisArtifactKind.Unsupported)
+            || request.States.Any(item => item is AnalysisArtifactState.Unspecified or AnalysisArtifactState.Unknown)
+            || request.Sort is AnalysisArtifactSort.Unknown or AnalysisArtifactSort.Unsupported)
+        {
+            return Task.FromResult(new ListAnalysisArtifactsResponse
+            {
+                Failure = Failure(FailureCode.InvalidArgument, "The analysis artifact query exceeds its closed bounds."),
+            });
+        }
+        try
+        {
+            string runId = Required(request.RunId?.Value, "run ID");
+            string[] kinds = request.Kinds.Select(KindToken).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
+            string[] states = request.States.Select(StateToken).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
+            string publicationIdentity = runtime.Store.GetAnalysisSemanticFingerprint(runId)
+                ?? throw new KeyNotFoundException("The run has no published analysis output.");
+            AnalysisArtifactSortOrder sortOrder = ArtifactSort(request.Sort);
+            string filterHash = QueryHash(kinds, states);
+            AnalysisArtifactCursorKey? after = null;
+            if (request.After is not null && request.After.OpaqueValue.Length != 0)
+            {
+                AnalysisArtifactCursor cursor;
+                try
+                {
+                    cursor = JsonSerializer.Deserialize<AnalysisArtifactCursor>(DecodeAuthenticated(request.After.OpaqueValue))
+                        ?? throw new InvalidOperationException("The analysis cursor is malformed.");
+                }
+                catch (Exception exception) when (exception is InvalidOperationException or JsonException)
+                {
+                    throw new AnalysisCursorException(
+                        CursorDisposition.Malformed,
+                        "The analysis cursor is malformed: " + exception.Message);
+                }
+                AnalysisArtifactCursorBindingDisposition binding = AnalysisArtifactCursorBindingPolicy.Validate(
+                    new AnalysisArtifactCursorBinding(
+                        cursor.RunId, cursor.PublicationIdentity, cursor.FilterHash,
+                        cursor.SortOrder, checked((int)cursor.PageSize), cursor.ExpiresAt),
+                    new AnalysisArtifactCursorBinding(
+                        runId, publicationIdentity, filterHash, sortOrder,
+                        checked((int)request.RequestedPageSize), DateTimeOffset.MaxValue),
+                    DateTimeOffset.UtcNow);
+                if (binding != AnalysisArtifactCursorBindingDisposition.Accepted)
+                {
+                    throw binding switch
+                    {
+                        AnalysisArtifactCursorBindingDisposition.Expired => new AnalysisCursorException(
+                            CursorDisposition.Expired, "The analysis cursor expired."),
+                        AnalysisArtifactCursorBindingDisposition.ScopeMismatch => new AnalysisCursorException(
+                            CursorDisposition.ScopeMismatch, "The analysis cursor belongs to another run."),
+                        AnalysisArtifactCursorBindingDisposition.PublicationMismatch => new AnalysisCursorException(
+                            CursorDisposition.ProjectionInvalidated, "The analysis publication changed."),
+                        AnalysisArtifactCursorBindingDisposition.QueryMismatch => new AnalysisCursorException(
+                            CursorDisposition.QueryMismatch, "The analysis cursor belongs to another filter or page size."),
+                        _ => new AnalysisCursorException(
+                            CursorDisposition.SortMismatch, "The analysis cursor belongs to another sort order."),
+                    };
+                }
+                after = cursor.LastKey;
+            }
+            AnalysisArtifactPagePersistenceRecord result = runtime.Store.ListAnalysisArtifacts(
+                runId, kinds.ToHashSet(StringComparer.Ordinal), states.ToHashSet(StringComparer.Ordinal),
+                checked((int)request.RequestedPageSize), sortOrder, after);
+            AnalysisArtifactPage page = new()
+            {
+                HasMore = result.HasMore,
+                ProjectionVersion = new ProjectionVersion { Value = "1" },
+            };
+            page.Items.Add(result.Items.Select(ToProto));
+            if (result.NextKey is not null)
+            {
+                page.Next = new PageCursor
+                {
+                    OpaqueValue = EncodeAuthenticated(JsonSerializer.SerializeToUtf8Bytes(
+                        new AnalysisArtifactCursor(
+                            runId, publicationIdentity, filterHash, sortOrder, request.RequestedPageSize,
+                            result.NextKey, DateTimeOffset.UtcNow.AddMinutes(5)))),
+                };
+            }
+            return Task.FromResult(new ListAnalysisArtifactsResponse { Page = page });
+        }
+        catch (AnalysisCursorException exception)
+        {
+            return Task.FromResult(new ListAnalysisArtifactsResponse
+            {
+                CursorRejection = new CursorRejection
+                {
+                    Disposition = exception.Disposition,
+                    CurrentProjectionVersion = new ProjectionVersion { Value = "1" },
+                    Failure = Failure(FailureCode.ResyncRequired, Bounded(exception.Message)),
+                },
+            });
+        }
+        catch (KeyNotFoundException)
+        {
+            return Task.FromResult(new ListAnalysisArtifactsResponse
+            {
+                Failure = Failure(FailureCode.NotFound, "The run has no published analysis artifact index."),
+            });
+        }
+    }
+
+    public override Task<GetAnalysisProvenanceResponse> GetAnalysisProvenance(
+        GetAnalysisProvenanceRequest request,
+        ServerCallContext context)
+    {
+        RequireNegotiated(context);
+        if (!IsCurrentProjection(request.ExpectedProjectionVersion))
+        {
+            return Task.FromResult(new GetAnalysisProvenanceResponse { ProjectionInvalidated = ProjectionInvalidated() });
+        }
+        if (request.RequestedMaximumEdges is < 1 or > 256)
+        {
+            return Task.FromResult(new GetAnalysisProvenanceResponse
+            {
+                Failure = Failure(FailureCode.InvalidArgument, "The provenance edge bound must be between 1 and 256."),
+            });
+        }
+        try
+        {
+            string runId = Required(request.RunId?.Value, "run ID");
+            string artifactId = Required(request.ArtifactId?.Value, "analysis artifact ID");
+            AnalysisArtifactPersistenceRecord artifact = runtime.Store.ListAnalysisArtifacts(
+                runId, new HashSet<string>(), new HashSet<string>(), 100,
+                AnalysisArtifactSortOrder.IdentityAscending, null)
+                .Items.Single(item => item.ArtifactId == artifactId);
+            Infinium.Domain.Contracts.ReplayDependencyNodeContract[] dependencies = AnalysisReplayJsonCodec
+                .Deserialize(runtime.Store.ReadAnalysisReplay(runId))
+                .Dependencies
+                .OrderBy(item => item.DependencyId.Value, StringComparer.Ordinal)
+                .Take(checked((int)request.RequestedMaximumEdges + 1))
+                .ToArray();
+            AnalysisProvenance provenance = new()
+            {
+                Artifact = ToProto(artifact),
+                Truncated = dependencies.Length > request.RequestedMaximumEdges,
+                ProjectionVersion = new ProjectionVersion { Value = "1" },
+            };
+            provenance.Dependencies.Add(dependencies.Take(checked((int)request.RequestedMaximumEdges)).Select(dependency =>
+                new AnalysisArtifactReference
+                {
+                    ArtifactId = new AnalysisArtifactId { Value = dependency.DependencyId.Value },
+                    Kind = AnalysisArtifactKind.Unknown,
+                    SchemaId = dependency.Kind,
+                    SchemaVersion = new SemanticVersion { Value = dependency.Version.ToString() },
+                    Revision = 1,
+                    State = ProtoState(JsonNamingPolicy.KebabCaseLower.ConvertName(dependency.State.ToString())),
+                    ContentDigest = new ContentDigest
+                    {
+                        Algorithm = DigestAlgorithm.Sha256,
+                        Value = ByteString.CopyFrom(Convert.FromHexString(dependency.Fingerprint.Value)),
+                    },
+                    ProvenanceId = new AnalysisArtifactId { Value = dependency.DependencyId.Value },
+                    DependencyClosureId = new AnalysisArtifactId { Value = artifact.DependencyClosureId },
+                }));
+            return Task.FromResult(new GetAnalysisProvenanceResponse { Provenance = provenance });
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or KeyNotFoundException)
+        {
+            return Task.FromResult(new GetAnalysisProvenanceResponse
+            {
+                Failure = Failure(FailureCode.NotFound, "The requested published analysis artifact does not exist."),
+            });
+        }
+    }
+
+    public override Task<GetAnalysisOutputResponse> GetAnalysisOutput(
+        GetAnalysisOutputRequest request,
+        ServerCallContext context)
+    {
+        RequireNegotiated(context);
+        if (!IsCurrentProjection(request.ExpectedProjectionVersion))
+        {
+            return Task.FromResult(new GetAnalysisOutputResponse { ProjectionInvalidated = ProjectionInvalidated() });
+        }
+        try
+        {
+            string runId = Required(request.RunId?.Value, "run ID");
+            byte[] outputBytes = runtime.Store.ReadAnalysisRunOutput(runId);
+            byte[] summaryBytes = runtime.Store.ReadAnalysisCliSummary(runId);
+            if (outputBytes.LongLength > AnalysisV1WorkAssignment.AbsoluteMaximumOutputBytes
+                || summaryBytes.LongLength > 128 * 1024)
+            {
+                throw new InvalidDataException("The retained result exceeds its application query bound.");
+            }
+            string human = AnalysisOutputRenderer.Render(
+                RunOutputJsonCodec.Deserialize(outputBytes), CliSummaryJsonCodec.Deserialize(summaryBytes));
+            GetAnalysisOutputResponse response = new()
+            {
+                Output = new AnalysisOutputPayload
+                {
+                    RunOutputJson = ByteString.CopyFrom(outputBytes),
+                    CliSummaryJson = ByteString.CopyFrom(summaryBytes),
+                    HumanOutput = human,
+                    ProjectionVersion = new ProjectionVersion { Value = "1" },
+                },
+            };
+            if (response.CalculateSize() > ProtocolConstants.MaximumMessageBytes)
+            {
+                throw new InvalidDataException("The retained result exceeds the application protocol message bound.");
+            }
+            return Task.FromResult(response);
+        }
+        catch (KeyNotFoundException)
+        {
+            return Task.FromResult(new GetAnalysisOutputResponse
+            {
+                Failure = Failure(FailureCode.NotFound, "The run has no published analysis output."),
+            });
+        }
+        catch (InvalidDataException exception)
+        {
+            return Task.FromResult(new GetAnalysisOutputResponse
+            {
+                Failure = Failure(FailureCode.LimitExceeded, Bounded(exception.Message)),
+            });
+        }
     }
 
     public override Task<SubmitRunCommandResponse> SubmitRunCommand(
@@ -1227,6 +1546,122 @@ public sealed class ApplicationGrpcService(
         }
     }
 
+    private static ReplaySummary ToProto(AnalysisSummaryPersistenceRecord value) => new()
+    {
+        ReplayManifestId = new ReplayManifestId { Value = value.ReplayManifestId },
+        ReplayState = ReplayState(value.ReplayState),
+        AuditabilityState = AuditabilityState(value.AuditabilityState),
+        SemanticallyEquivalent = value.SemanticallyEquivalent,
+        DependencyCount = checked((ulong)value.DependencyCount),
+        MissingDependencyCount = checked((ulong)value.MissingDependencyCount),
+        CoverageGapCount = checked((ulong)value.CoverageGapCount),
+    };
+
+    private static ReplaySummary ToProto(AnalysisReplayPersistenceRecord value) => new()
+    {
+        ReplayManifestId = new ReplayManifestId { Value = value.ReplayManifestId },
+        ReplayState = ReplayState(value.ReplayState),
+        AuditabilityState = AuditabilityState(value.AuditabilityState),
+        SemanticallyEquivalent = value.SemanticallyEquivalent,
+        DependencyCount = checked((ulong)value.DependencyCount),
+        MissingDependencyCount = checked((ulong)value.MissingDependencyCount),
+        CoverageGapCount = checked((ulong)value.CoverageGapCount),
+    };
+
+    private static AnalysisArtifactReference ToProto(AnalysisArtifactPersistenceRecord value) => new()
+    {
+        ArtifactId = new AnalysisArtifactId { Value = value.ArtifactId },
+        Kind = value.Kind switch
+        {
+            "documentation-evidence" => AnalysisArtifactKind.DocumentationEvidence,
+            "candidate-analysis" => AnalysisArtifactKind.CandidateAnalysis,
+            "finding-case" => AnalysisArtifactKind.FindingCase,
+            "analysis-replay" => AnalysisArtifactKind.AnalysisReplay,
+            "analysis-execution-input" => AnalysisArtifactKind.AnalysisExecutionInput,
+            _ => AnalysisArtifactKind.Unknown,
+        },
+        SchemaId = value.SchemaId,
+        SchemaVersion = new SemanticVersion { Value = value.SchemaVersion },
+        Revision = checked((ulong)value.Revision),
+        State = ProtoState(value.State),
+        ContentDigest = new ContentDigest
+        {
+            Algorithm = DigestAlgorithm.Sha256,
+            Value = ByteString.CopyFrom(Convert.FromHexString(value.ContentSha256)),
+            SizeBytes = checked((ulong)value.ByteLength),
+        },
+        ByteLength = checked((ulong)value.ByteLength),
+        ProvenanceId = new AnalysisArtifactId { Value = value.ProvenanceId },
+        DependencyClosureId = new AnalysisArtifactId { Value = value.DependencyClosureId },
+    };
+
+    private static string KindToken(AnalysisArtifactKind value) => value switch
+    {
+        AnalysisArtifactKind.DocumentationEvidence => "documentation-evidence",
+        AnalysisArtifactKind.CandidateAnalysis => "candidate-analysis",
+        AnalysisArtifactKind.FindingCase => "finding-case",
+        AnalysisArtifactKind.AnalysisReplay => "analysis-replay",
+        AnalysisArtifactKind.AnalysisExecutionInput => "analysis-execution-input",
+        _ => throw new ArgumentException("Analysis artifact kind is not queryable."),
+    };
+
+    private static string StateToken(AnalysisArtifactState value) =>
+        JsonNamingPolicy.KebabCaseLower.ConvertName(value.ToString());
+
+    private static AnalysisArtifactState ProtoState(string value) => value switch
+    {
+        "present" => AnalysisArtifactState.Present,
+        "resolved-negative" => AnalysisArtifactState.ResolvedNegative,
+        "missing" => AnalysisArtifactState.Missing,
+        "invalid-input" => AnalysisArtifactState.InvalidInput,
+        "unsupported" => AnalysisArtifactState.Unsupported,
+        "ambiguous" => AnalysisArtifactState.Ambiguous,
+        "partial" => AnalysisArtifactState.Partial,
+        "abstained" => AnalysisArtifactState.Abstained,
+        "not-applicable" => AnalysisArtifactState.NotApplicable,
+        "not-used" => AnalysisArtifactState.NotUsed,
+        "failed" => AnalysisArtifactState.Failed,
+        "cancelled" => AnalysisArtifactState.Cancelled,
+        "limit-reached" => AnalysisArtifactState.LimitReached,
+        "unavailable" => AnalysisArtifactState.Unavailable,
+        _ => AnalysisArtifactState.Unknown,
+    };
+
+    private static Infinium.Contracts.Protobuf.Domain.V1.ReplayState ReplayState(string value) => value switch
+    {
+        "complete-clean" => Infinium.Contracts.Protobuf.Domain.V1.ReplayState.CompleteClean,
+        "partial" => Infinium.Contracts.Protobuf.Domain.V1.ReplayState.Partial,
+        "audit-only" => Infinium.Contracts.Protobuf.Domain.V1.ReplayState.AuditOnly,
+        "unavailable" => Infinium.Contracts.Protobuf.Domain.V1.ReplayState.Unavailable,
+        "failed-identity-drift" => Infinium.Contracts.Protobuf.Domain.V1.ReplayState.FailedIdentityDrift,
+        _ => Infinium.Contracts.Protobuf.Domain.V1.ReplayState.Unknown,
+    };
+
+    private static Infinium.Contracts.Protobuf.Domain.V1.AuditabilityState AuditabilityState(string value) => value switch
+    {
+        "complete" => Infinium.Contracts.Protobuf.Domain.V1.AuditabilityState.Complete,
+        "partial" => Infinium.Contracts.Protobuf.Domain.V1.AuditabilityState.CompleteWithGaps,
+        "unavailable" => Infinium.Contracts.Protobuf.Domain.V1.AuditabilityState.Unavailable,
+        _ => Infinium.Contracts.Protobuf.Domain.V1.AuditabilityState.Unknown,
+    };
+
+    private static AnalysisArtifactSortOrder ArtifactSort(AnalysisArtifactSort value) => value switch
+    {
+        AnalysisArtifactSort.Unspecified or AnalysisArtifactSort.IdentityAscending =>
+            AnalysisArtifactSortOrder.IdentityAscending,
+        AnalysisArtifactSort.RankDescendingIdentityAscending =>
+            AnalysisArtifactSortOrder.RankDescendingIdentityAscending,
+        AnalysisArtifactSort.UpdatedTickDescendingIdentityDescending =>
+            AnalysisArtifactSortOrder.UpdatedTickDescendingIdentityDescending,
+        _ => throw new ArgumentException("The analysis artifact sort is not supported."),
+    };
+
+    private static string QueryHash(
+        IReadOnlyList<string> kinds,
+        IReadOnlyList<string> states) =>
+        Convert.ToHexStringLower(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(
+            string.Join('\n', string.Join(',', kinds), string.Join(',', states)))));
+
     private sealed record RunPageCursor(
         DateTimeOffset CreatedAt,
         string RunId,
@@ -1239,4 +1674,10 @@ public sealed class ApplicationGrpcService(
         long DurableSequence,
         string ProjectionVersion,
         DateTimeOffset ExpiresAt);
+
+    private sealed class AnalysisCursorException(CursorDisposition disposition, string message)
+        : InvalidOperationException(message)
+    {
+        public CursorDisposition Disposition { get; } = disposition;
+    }
 }
