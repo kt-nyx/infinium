@@ -1467,17 +1467,17 @@ Implementation date: 2026-08-10
 
 Starting commit: `e7de0305515657223c513195f8323b2649b6c7c8`
 
-Status: Implementation and independent corpus review complete. Six exact
-candidates (`50195fdd33f030f75364f703f636b6ecc1fdb7bd`,
-`8bd73c26cde1d569d44b5f70191528df0390e443`, and
+Status: Implementation, independent corpus review, and terminal whole-slice
+review complete. Six exact candidates (`50195fdd33f030f75364f703f636b6ecc1fdb7bd`,
+`8bd73c26cde1d569d44b5f70191528df0390e443`,
 `93054129fc877193726ca934e72c6483329e4b34`,
-`944a0d7c681034b1cb6313596d35b0625ce542dc`, and
+`944a0d7c681034b1cb6313596d35b0625ce542dc`,
 `258287a524439aefd369d6a4095a7b6da1ebd037`, and
 `0274b3b3968605390387a50aefe1d1827b588308`) received fresh whole-slice
-`CORRECT` verdicts. All classified correction sets are closed in the current
-candidate tree; fresh exact-commit review is pending. Owner acceptance is
-requested only after an `ACCEPT` review. Slice 5 remains active and is not
-marked accepted or complete.
+`CORRECT` verdicts. The terminal exact candidate
+`d47e4290a95cd86cbcf210374cd76788902cc7fb` received `ACCEPT`; all classified
+findings are closed. Owner acceptance is now requested. Slice 5 remains active
+and is not marked accepted or complete pending that explicit owner decision.
 
 ### Scope and authority
 
@@ -1863,3 +1863,23 @@ proves rejection, while the valid expansion and public semantic/scale fixture
 paths pass. The corrected aggregate gate and unfiltered 417-pass Release floor
 are green. A fresh exact-commit reviewer must confirm this sixth-cycle closure
 before owner handoff.
+
+The terminal exact candidate commit was
+`d47e4290a95cd86cbcf210374cd76788902cc7fb`. Its fresh final review returned
+**ACCEPT**. The report is
+`artifacts/m1-slice5/wp6-final-review-v7/final-review.md`, 12437 bytes,
+SHA-256 `fa0ce342d299ebaf1f8b85f26fdd0df2e6efcd67c9e3cee82cb21392e1db67ba`.
+The reviewer independently confirmed V6-MF-01 closed: the real delivered-index
+source deterministically resolves the materialized expansion payload,
+admission requires exactly one distinct resolved identity equal to the asserted
+root, the snapshot-as-root mutation rejects, and valid direct, expansion,
+semantic-fixture, and scale-fixture paths pass. All findings from review cycles
+v1 through v6 are closed. Exact Gate All, locked build and format, the full
+417-pass/9-skip suite, dependency-manifest, 22 changed-JSON, schema-hash,
+prior-report-identity, and diff checks passed. No must-fix, follow-up,
+non-blocking, owner/authority, safety, or isolation finding remains.
+
+This terminal `ACCEPT` is implementation-review evidence, not owner
+self-acceptance. WP6 now awaits the explicit owner decisions in the acceptance
+packet above. Until then, Slice 5 remains active, its contracts remain
+`Implementation-active`, and no successor-slice implementation is authorized.

@@ -134,8 +134,9 @@ current candidate resolves the deterministic materialized root through the
 real delivered-index source and requires exact equality during admission. It
 also executes all four managed cases, validates immutable
 source-authority Git blobs, reports 35 direct requirements, and passes the
-corrected Comprehensive gate. A fresh whole-slice review of the exact committed
-candidate is still required.
+corrected Comprehensive gate. The terminal independent whole-slice review of
+exact commit `d47e4290a95cd86cbcf210374cd76788902cc7fb` returned `ACCEPT` with
+all prior findings closed and no remaining classified issue.
 
 WP6 is not owner-accepted, the Slice 5 contracts are not frozen, and Slice 5 is
 not complete. The only eligible handoff after a final `ACCEPT` review is owner
