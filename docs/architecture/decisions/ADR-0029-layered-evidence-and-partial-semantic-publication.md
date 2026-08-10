@@ -1,6 +1,8 @@
 # ADR-0029: Retain independently proven evidence through partial semantic failure
 
 Status: Accepted
+
+Last reviewed: 2026-08-10
 Date: 2026-08-05
 Deciders: Project owner
 

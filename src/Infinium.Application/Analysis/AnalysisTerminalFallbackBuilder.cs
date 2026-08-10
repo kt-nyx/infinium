@@ -1,14 +1,14 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using Infinium.Application.Evaluation;
+using Infinium.Application.Serialization;
 using Infinium.Domain.Contracts;
 
 namespace Infinium.Application.Analysis;
 
 /// <summary>
 /// Produces the small coordinator-owned terminal document used only when the
-/// ordinary WP2-WP4 projection cannot be completed. It never retries or
+/// ordinary documentation, candidate, and finding/case projection cannot be completed. It never retries or
 /// interprets the failed semantic payloads.
 /// </summary>
 public static class AnalysisTerminalFallbackBuilder
@@ -56,20 +56,20 @@ public static class AnalysisTerminalFallbackBuilder
             assignment.FindingCase.Sha256);
 
         List<ReplayDependencyNodeContract> dependencies = [];
-        void Add(string id, string kind, string version, string fingerprint, Slice5ResultState state) =>
+        void Add(string id, string kind, string version, string fingerprint, AnalysisResultState state) =>
             dependencies.Add(new ReplayDependencyNodeContract(
                 new OpaqueId(id), kind, ContractVersion.Parse(version), new Sha256Fingerprint(fingerprint), state));
         Add(assignment.ExecutionInput.ExecutionInputId.Value, "execution-input",
             assignment.ExecutionInput.SchemaVersion.ToString(),
-            Hash(AnalysisExecutionInputJsonCodec.Serialize(assignment.ExecutionInput)), Slice5ResultState.Present);
+            Hash(AnalysisExecutionInputJsonCodec.Serialize(assignment.ExecutionInput)), AnalysisResultState.Present);
         foreach ((string kind, ArtifactReferenceContract value) in References(assignment.ExecutionInput))
         {
             Add(value.ArtifactId.Value, kind, value.ArtifactVersion.ToString(), value.Fingerprint.Value,
-                value.Availability == "retained" ? Slice5ResultState.Present : Slice5ResultState.Unavailable);
+                value.Availability == "retained" ? AnalysisResultState.Present : AnalysisResultState.Unavailable);
         }
-        Slice5ResultState PhaseState(RetainedAnalysisPayloadSeal seal) => assignment.PhaseExecutions.Any(
+        AnalysisResultState PhaseState(RetainedAnalysisPayloadSeal seal) => assignment.PhaseExecutions.Any(
             item => item.Output.PayloadId == seal.PayloadId && item.Output.Sha256 == seal.Sha256)
-            ? Slice5ResultState.Present : Slice5ResultState.Unavailable;
+            ? AnalysisResultState.Present : AnalysisResultState.Unavailable;
         Add(assignment.DocumentationEvidence.PayloadId, "documentation-evidence",
             assignment.DocumentationEvidence.SchemaVersion, assignment.DocumentationEvidence.Sha256, PhaseState(assignment.DocumentationEvidence));
         Add(assignment.CandidateAnalysis.PayloadId, "candidate-analysis",
@@ -83,13 +83,13 @@ public static class AnalysisTerminalFallbackBuilder
                 : throw new InvalidDataException("Fallback dependency identities contain conflicting metadata."))
             .OrderBy(item => item.DependencyId.Value, StringComparer.Ordinal)
             .ToArray();
-        OpaqueId[] missing = uniqueDependencies.Where(item => item.State != Slice5ResultState.Present)
+        OpaqueId[] missing = uniqueDependencies.Where(item => item.State != AnalysisResultState.Present)
             .Select(item => item.DependencyId).ToArray();
         string replayManifestId = StableId(
             "analysis-terminal-replay", dependencyClosureId, semanticFingerprint, terminalOutcome.ToString());
         Add(replayManifestId, "analysis-replay", "1.0.0",
             Hash(Encoding.UTF8.GetBytes(dependencyClosureId + "|" + semanticFingerprint)),
-            Slice5ResultState.Present);
+            AnalysisResultState.Present);
         uniqueDependencies = dependencies
             .GroupBy(item => item.DependencyId)
             .Select(group => group.Distinct().Count() == 1
@@ -97,7 +97,7 @@ public static class AnalysisTerminalFallbackBuilder
                 : throw new InvalidDataException("Fallback dependency identities contain conflicting metadata."))
             .OrderBy(item => item.DependencyId.Value, StringComparer.Ordinal)
             .ToArray();
-        missing = uniqueDependencies.Where(item => item.State != Slice5ResultState.Present)
+        missing = uniqueDependencies.Where(item => item.State != AnalysisResultState.Present)
             .Select(item => item.DependencyId).ToArray();
         HashSet<OpaqueId> documentationInputs = assignment.DocumentationDependencyIds.Count == 0
             ? [assignment.AnalysisContext.ContextId]
@@ -137,7 +137,7 @@ public static class AnalysisTerminalFallbackBuilder
                 ReplayOutput(assignment.FindingCase),
             ],
             missing, [], false, assignment.ExecutionInput.PriorRunId);
-        Slice5ContractInvariants.Validate(replay);
+        AnalysisReplayContractInvariants.Validate(replay);
 
         ExternalBoundaryReceipt boundaryReceipt = new(
             1, runId,
@@ -202,7 +202,7 @@ public static class AnalysisTerminalFallbackBuilder
         ArtifactReferenceDocumentContract Reference(ArtifactReferenceContract value) =>
             new(value.ArtifactId.Value, value.ArtifactVersion.ToString(), value.Fingerprint.Value, value.Availability);
         ArtifactProvenanceDocumentContract provenance = new(
-            "m1-s5-wp5-terminal-fallback", "1.0.0", assignment.ExecutionInput.RunId.Value,
+            "analysis-terminal-fallback", "1.0.0", assignment.ExecutionInput.RunId.Value,
             [Reference(assignment.ExecutionInput.InstallationSnapshot), Reference(assignment.ExecutionInput.EffectiveConfiguration)],
             [], [], new LlmInvolvementDocumentContract("none", "none", null));
         bool Retained(RetainedAnalysisPayloadSeal seal) => assignment.PhaseExecutions.Any(
@@ -223,11 +223,11 @@ public static class AnalysisTerminalFallbackBuilder
             name => new RunOutputCollectionStateContract("empty", "no retained evidence exists for this collection"),
             StringComparer.Ordinal);
         states["documentation_revisions"] = new("populated", Retained(assignment.DocumentationEvidence)
-            ? "retained WP2 stage evidence remains authoritative" : "WP2 stage evidence is explicitly unavailable");
+            ? "retained documentation evidence remains authoritative" : "documentation evidence is explicitly unavailable");
         states["candidates"] = new("populated", Retained(assignment.CandidateAnalysis)
-            ? "retained WP3 stage evidence remains authoritative" : "WP3 stage evidence is explicitly unavailable");
+            ? "retained candidate analysis remains authoritative" : "candidate analysis is explicitly unavailable");
         states["findings"] = new("populated", Retained(assignment.FindingCase)
-            ? "retained WP4 stage evidence remains authoritative" : "WP4 stage evidence is explicitly unavailable");
+            ? "retained finding and case analysis remains authoritative" : "finding and case analysis is explicitly unavailable");
         string markerKind = assignment.TerminalOutcome switch
         {
             AnalysisTerminalOutcome.Cancelled => "cancellation-gap",
@@ -283,8 +283,8 @@ public static class AnalysisTerminalFallbackBuilder
             [], [], [], [], [], [], [], [candidateStage], [], [findingStage], [], [], [], [], [],
             terminalGaps, terminalFailures, [documentationStage], [], [], [], [],
             states, [], coverage,
-            [new ExcludedCapabilityDocumentContract("slice-6-and-later", "unsupported", "outside WP5 authority")],
-            new ReadinessDocumentContract("no-readiness-evaluation", "m1-slice5-wp5", true),
+            [new ExcludedCapabilityDocumentContract("future-analysis-capabilities", "unsupported", "outside bounded analysis authority")],
+            new ReadinessDocumentContract("no-readiness-evaluation", "bounded-local-analysis", true),
             new ReplayabilityDocumentContract(
                 "partial", "boundary-replay",
                 new ArtifactReferenceDocumentContract(closure, "1.0.0", semanticFingerprint, "retained"), []),

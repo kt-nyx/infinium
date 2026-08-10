@@ -11,16 +11,16 @@ public sealed class SupportedExecutableAdmissionEvaluationTests
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Evaluation")]
     [TestProperty("EvaluationCase", "EVAL-0054")]
     public void PrivateExactSkyrimRuntimeIsAdmitted()
     {
-        string? path = Environment.GetEnvironmentVariable("INFINIUM_M1_TARGET_1170_PATH");
+        string? path = Environment.GetEnvironmentVariable("INFINIUM_SKYRIM_1170_PATH");
         if (string.IsNullOrWhiteSpace(path))
         {
             Assert.Inconclusive(
-                "Set INFINIUM_M1_TARGET_1170_PATH to the evaluator-private exact executable.");
+                "Set INFINIUM_SKYRIM_1170_PATH to the evaluator-private exact executable.");
         }
 
         ExecutableAdmission admission = new SupportedExecutableManifests().AdmitSkyrim(
@@ -38,16 +38,16 @@ public sealed class SupportedExecutableAdmissionEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Evaluation")]
     [TestProperty("EvaluationCase", "EVAL-0051")]
     public void PrivateExactMo2BuildIsAdmitted()
     {
-        string? path = Environment.GetEnvironmentVariable("INFINIUM_M1_MO2_252_PATH");
+        string? path = Environment.GetEnvironmentVariable("INFINIUM_MO2_252_PATH");
         if (string.IsNullOrWhiteSpace(path))
         {
             Assert.Inconclusive(
-                "Set INFINIUM_M1_MO2_252_PATH to the evaluator-private exact executable.");
+                "Set INFINIUM_MO2_252_PATH to the evaluator-private exact executable.");
         }
 
         ExecutableAdmission admission = new SupportedExecutableManifests().AdmitMo2(path);
@@ -60,12 +60,12 @@ public sealed class SupportedExecutableAdmissionEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Evaluation")]
     [TestProperty("EvaluationCase", "EVAL-0051")]
     public void PrivateExactSkyrimGamePluginIsAdmitted()
     {
-        string mo2 = GetPrivateVariable("INFINIUM_M1_MO2_252_PATH");
+        string mo2 = GetPrivateVariable("INFINIUM_MO2_252_PATH");
         string path = Path.Combine(
             Path.GetDirectoryName(mo2)!,
             "plugins",
@@ -83,18 +83,18 @@ public sealed class SupportedExecutableAdmissionEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "Security")]
     [TestProperty("EvaluationCase", "EVAL-0051")]
     public void PrivateConfiguredInstanceCapturesAnExplicitProfileWithoutLaunch()
     {
-        string instanceRoot = GetPrivateVariable("INFINIUM_M1_MO2_INSTANCE_ROOT");
-        string baseDirectory = GetPrivateVariable("INFINIUM_M1_MO2_BASE_DIRECTORY");
-        string profile = GetPrivateVariable("INFINIUM_M1_MO2_PROFILE");
-        string mo2 = GetPrivateVariable("INFINIUM_M1_MO2_252_PATH");
-        string skyrim = GetPrivateVariable("INFINIUM_M1_TARGET_1170_PATH");
+        string instanceRoot = GetPrivateVariable("INFINIUM_MO2_INSTANCE_ROOT");
+        string baseDirectory = GetPrivateVariable("INFINIUM_MO2_BASE_DIRECTORY");
+        string profile = GetPrivateVariable("INFINIUM_MO2_PROFILE");
+        string mo2 = GetPrivateVariable("INFINIUM_MO2_252_PATH");
+        string skyrim = GetPrivateVariable("INFINIUM_SKYRIM_1170_PATH");
 
         Mo2SnapshotCaptureRequest request = new(
             mo2,
@@ -138,18 +138,18 @@ public sealed class SupportedExecutableAdmissionEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "Security")]
     [TestProperty("EvaluationCase", "EVAL-0046")]
     [SupportedOSPlatform("windows")]
     public void PrivateExactCapturePreservesAllProtectedRootsAndLaunchState()
     {
         Mo2SnapshotCaptureRequest request = PrivateCaptureRequest();
-        string instanceBase = GetPrivateVariable("INFINIUM_M1_MO2_BASE_DIRECTORY");
+        string instanceBase = GetPrivateVariable("INFINIUM_MO2_BASE_DIRECTORY");
         string gameRoot = Path.GetDirectoryName(
-            GetPrivateVariable("INFINIUM_M1_TARGET_1170_PATH"))!;
+            GetPrivateVariable("INFINIUM_SKYRIM_1170_PATH"))!;
         IReadOnlyList<string> protectedRoots =
         [
             Path.GetDirectoryName(request.Mo2ExecutablePath)!,
@@ -186,8 +186,8 @@ public sealed class SupportedExecutableAdmissionEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Evaluation")]
     [TestProperty("EvaluationCase", "EVAL-0054")]
     public void MissingRuntimeIsIndeterminateAndNeverBestEffortAdmitted()
     {
@@ -205,12 +205,12 @@ public sealed class SupportedExecutableAdmissionEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Evaluation")]
     [TestProperty("EvaluationCase", "EVAL-0054")]
     public void KnownUnsupportedGogChannelIsRejectedBeforeAdmission()
     {
-        string path = Environment.GetEnvironmentVariable("INFINIUM_M1_TARGET_1170_PATH")
+        string path = Environment.GetEnvironmentVariable("INFINIUM_SKYRIM_1170_PATH")
             ?? Path.Combine(Path.GetTempPath(), "not-read-for-unsupported-context.exe");
         RuntimeTargetContext unsupported = new("windows-x64", "gog", "489830");
 
@@ -229,8 +229,8 @@ public sealed class SupportedExecutableAdmissionEvaluationTests
     [DataRow("windows-x86", "steam", "489830")]
     [DataRow("linux-x64", "steam", "489830")]
     [DataRow("windows-x64", "steam", "not-489830")]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Evaluation")]
     [TestProperty("EvaluationCase", "EVAL-0054")]
     public void UnsupportedPlatformArchitectureOrApplicationIsRejectedBeforeAdmission(
         string platform,
@@ -252,10 +252,10 @@ public sealed class SupportedExecutableAdmissionEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "Fault")]
     [TestProperty("EvaluationCase", "EVAL-0054")]
     public void ProjectAuthoredMalformedExecutableIsIndeterminate()
     {
@@ -285,18 +285,18 @@ public sealed class SupportedExecutableAdmissionEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "Fault")]
     [TestProperty("EvaluationCase", "EVAL-0054")]
     public void SameVersionOneByteMutationIsUnrecognized()
     {
-        string? source = Environment.GetEnvironmentVariable("INFINIUM_M1_TARGET_1170_PATH");
+        string? source = Environment.GetEnvironmentVariable("INFINIUM_SKYRIM_1170_PATH");
         if (string.IsNullOrWhiteSpace(source))
         {
             Assert.Inconclusive(
-                "Set INFINIUM_M1_TARGET_1170_PATH to derive the private one-byte mutation.");
+                "Set INFINIUM_SKYRIM_1170_PATH to derive the private one-byte mutation.");
         }
 
         string directory = Path.Combine(
@@ -337,10 +337,10 @@ public sealed class SupportedExecutableAdmissionEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "Fault")]
     [TestProperty("EvaluationCase", "EVAL-0054")]
     public void UnreadableRuntimeIsIndeterminateWithAnExactReason()
     {
@@ -375,14 +375,14 @@ public sealed class SupportedExecutableAdmissionEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "Fault")]
     [TestProperty("EvaluationCase", "EVAL-0054")]
     public void ExactMetadataWithConflictingByteLengthIsInconsistent()
     {
-        string source = GetPrivateVariable("INFINIUM_M1_TARGET_1170_PATH");
+        string source = GetPrivateVariable("INFINIUM_SKYRIM_1170_PATH");
         string directory = Path.Combine(
             Path.GetTempPath(),
             $"Infinium-EVAL-0054-inconsistent-{Guid.NewGuid():N}");
@@ -418,10 +418,10 @@ public sealed class SupportedExecutableAdmissionEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "Fault")]
     [TestProperty("EvaluationCase", "EVAL-0054")]
     public void ExecutableIdentityCaptureRaceInvalidatesWithoutSnapshotOutput()
     {
@@ -440,10 +440,10 @@ public sealed class SupportedExecutableAdmissionEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "Fault")]
     [TestProperty("EvaluationCase", "EVAL-0054")]
     public void UnsupportedManagerFailsBeforePathResolutionWithoutSnapshotOutput()
     {
@@ -491,10 +491,10 @@ public sealed class SupportedExecutableAdmissionEvaluationTests
 
     private static Mo2SnapshotCaptureRequest PrivateCaptureRequest()
     {
-        string instanceRoot = GetPrivateVariable("INFINIUM_M1_MO2_INSTANCE_ROOT");
-        string baseDirectory = GetPrivateVariable("INFINIUM_M1_MO2_BASE_DIRECTORY");
-        string mo2 = GetPrivateVariable("INFINIUM_M1_MO2_252_PATH");
-        string skyrim = GetPrivateVariable("INFINIUM_M1_TARGET_1170_PATH");
+        string instanceRoot = GetPrivateVariable("INFINIUM_MO2_INSTANCE_ROOT");
+        string baseDirectory = GetPrivateVariable("INFINIUM_MO2_BASE_DIRECTORY");
+        string mo2 = GetPrivateVariable("INFINIUM_MO2_252_PATH");
+        string skyrim = GetPrivateVariable("INFINIUM_SKYRIM_1170_PATH");
         return new Mo2SnapshotCaptureRequest(
             mo2,
             instanceRoot,
@@ -504,7 +504,7 @@ public sealed class SupportedExecutableAdmissionEvaluationTests
             Path.Combine(baseDirectory, "overwrite"),
             Path.Combine(Path.GetDirectoryName(skyrim)!, "Data"),
             skyrim,
-            GetPrivateVariable("INFINIUM_M1_MO2_PROFILE"),
+            GetPrivateVariable("INFINIUM_MO2_PROFILE"),
             SupportedRuntime(),
             [],
             []);

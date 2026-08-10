@@ -2,7 +2,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Infinium.Application.Evaluation;
 using Infinium.Mo2;
 using Infinium.PublicFixtures;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -22,13 +21,13 @@ public sealed class BethesdaSnapshotQualificationTests
     ];
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Security")]
-    public void FrozenBethesdaInputsCrossAcceptedSlice3SnapshotBoundary()
+    [TestCategory("Evaluation")]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Security")]
+    public void FrozenBethesdaInputsCrossAcceptedSnapshotBoundary()
     {
         foreach (string fixtureId in FixtureIds)
         {
@@ -92,12 +91,12 @@ public sealed class BethesdaSnapshotQualificationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Security")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Security")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Security")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "Security")]
+    [TestProperty("Category", "Fault")]
     public void SameSizeTimestampMutationInvalidatesRetainedBethesdaInputReceipt()
     {
         using SnapshotFixture fixture = new("BETH-NPC-DEV");
@@ -123,12 +122,12 @@ public sealed class BethesdaSnapshotQualificationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Security")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Security")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Security")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "Security")]
+    [TestProperty("Category", "Fault")]
     public void MidReadMutationCannotRetainFrozenBethesdaSnapshot()
     {
         using SnapshotFixture fixture = new("BETH-REFR-DEV");
@@ -174,13 +173,13 @@ public sealed class BethesdaSnapshotQualificationTests
             string tempRoot = Path.GetFullPath(Path.GetTempPath());
             root = Path.Combine(
                 tempRoot,
-                $"infinium-slice35-snapshot-{Guid.NewGuid():N}");
+                $"infinium-bethesda-snapshot-{Guid.NewGuid():N}");
             Directory.CreateDirectory(root);
 
             string receiptPath = TestRepository.PathFromRoot(
                 "test-data",
-                "evaluation",
-                "m1-semantic",
+                "public-fixtures",
+                "bethesda",
                 fixtureId,
                 "inputs",
                 "snapshot",
@@ -190,8 +189,8 @@ public sealed class BethesdaSnapshotQualificationTests
             JsonElement receipt = receiptDocument.RootElement;
             string constructionManifestPath = TestRepository.PathFromRoot(
                 "test-data",
-                "evaluation",
-                "m1-semantic",
+                "public-fixtures",
+                "bethesda",
                 fixtureId,
                 "inputs",
                 "construction-manifest.json");
@@ -247,8 +246,8 @@ public sealed class BethesdaSnapshotQualificationTests
                     return TestRepository.PathFromRoot(
                         [
                             "test-data",
-                            "evaluation",
-                            "m1-semantic",
+                            "public-fixtures",
+                            "bethesda",
                             fixtureId,
                             .. artifactParts,
                         ]);
@@ -443,7 +442,7 @@ public sealed class BethesdaSnapshotQualificationTests
                     tempRoot + Path.DirectorySeparatorChar,
                     StringComparison.OrdinalIgnoreCase)
                 || !Path.GetFileName(resolvedRoot).StartsWith(
-                    "infinium-slice35-snapshot-",
+                    "infinium-bethesda-snapshot-",
                     StringComparison.Ordinal))
             {
                 throw new InvalidOperationException("Unsafe snapshot test cleanup target.");
@@ -481,7 +480,7 @@ public sealed class BethesdaSnapshotQualificationTests
                     file.Name,
                     file.Length,
                     Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(path))),
-                    "slice35-test",
+                    "bethesda-snapshot-test",
                     null,
                     null,
                     null),

@@ -1,0 +1,113 @@
+{
+  "schema_id": "infinium.scan.effective-configuration/v1",
+  "schema_version": "1",
+  "configuration_id": "platform-analysis-runtime-dev-v1.current-public",
+  "configuration_version": "1.1.0",
+  "resolved_at": "2026-08-08T00:00:00.0000000+00:00",
+  "saved_configuration_reference": null,
+  "analyzers": [
+    {
+      "analyzer_id": "current-public-platform-substrate",
+      "analyzer_version": "1.0.0",
+      "declaration_fingerprint": "63bfd46d12b3ef876b7e38923b6320243ebc1908b82fcba295f229e8c39fd476",
+      "enabled": true,
+      "origin": "default"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "retained-current-public-inputs",
+      "mode": "local-fixture",
+      "enabled": true,
+      "origin": "default"
+    }
+  ],
+  "budgets": {
+    "max_dispatch_count": 0,
+    "max_input_tokens": 0,
+    "max_output_tokens": 0,
+    "max_hosted_search_calls": 0,
+    "max_nano_usd": 0,
+    "dispatch_deadline": "2026-08-08T00:02:00.0000000+00:00",
+    "origin": "default"
+  },
+  "cache_policy": {
+    "analytical_mode": "force-clean-recomputation",
+    "source_mode": "reuse-resolved-source",
+    "provider_cache_mode": "disabled",
+    "origin": "default"
+  },
+  "tracing": {
+    "enabled": false,
+    "level": "off",
+    "sensitivity_label": "sensitive-development-diagnostic",
+    "origin": "default"
+  },
+  "candidate_breadth": {
+    "mode": "declared-mandatory-and-causal-lanes",
+    "max_candidates": 10000,
+    "all_pairs_llm_comparison": false,
+    "origin": "default"
+  },
+  "thresholds": [],
+  "provider": {
+    "mode": "disabled",
+    "origin": "default"
+  },
+  "resources": {
+    "max_general_workers": 1,
+    "max_memory_bytes": 536870912,
+    "max_output_bytes": 16777216,
+    "origin": "default"
+  },
+  "semantic_context_overrides": [],
+  "payload_contracts": [
+    {
+      "schema_id": "infinium.documentation.evidence/v1",
+      "schema_version": "1.0.0",
+      "required": true
+    },
+    {
+      "schema_id": "infinium.analysis.candidate/v1",
+      "schema_version": "1.0.0",
+      "required": true
+    },
+    {
+      "schema_id": "infinium.analysis.finding-case/v1",
+      "schema_version": "1.0.0",
+      "required": true
+    },
+    {
+      "schema_id": "infinium.analysis.replay/v1",
+      "schema_version": "1.0.0",
+      "required": true
+    },
+    {
+      "schema_id": "infinium.run-output/v1",
+      "schema_version": "1.0.0",
+      "required": true
+    }
+  ],
+  "not_used_boundaries": [
+    {
+      "boundary_id": "provider",
+      "state": "not-used",
+      "reason": "The current public fixture configuration is local and non-billable."
+    },
+    {
+      "boundary_id": "hosted-search",
+      "state": "not-used",
+      "reason": "The current public fixture configuration is local and non-billable."
+    },
+    {
+      "boundary_id": "nexus",
+      "state": "not-used",
+      "reason": "The current public fixture configuration is local and non-billable."
+    },
+    {
+      "boundary_id": "loot",
+      "state": "not-used",
+      "reason": "The current public fixture configuration is local and non-billable."
+    }
+  ]
+}

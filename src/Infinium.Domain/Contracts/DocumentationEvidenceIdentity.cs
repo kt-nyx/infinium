@@ -163,11 +163,11 @@ public static class DocumentationEvidenceIdentity
         return new OpaqueId(prefix + "-" + Convert.ToHexStringLower(hash.GetHashAndReset())[..32]);
     }
 
-    private static string ResultStateToken(Slice5ResultState value) => value switch
+    private static string ResultStateToken(AnalysisResultState value) => value switch
     {
-        Slice5ResultState.Present => "present",
-        Slice5ResultState.Partial => "partial",
-        Slice5ResultState.Unavailable => "unavailable",
+        AnalysisResultState.Present => "present",
+        AnalysisResultState.Partial => "partial",
+        AnalysisResultState.Unavailable => "unavailable",
         _ => throw new InvalidOperationException("Documentation retention state is not closed."),
     };
 

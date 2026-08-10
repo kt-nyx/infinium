@@ -1,5 +1,6 @@
 using Infinium.Analysis.Candidates;
 using Infinium.Application.Candidates;
+using Infinium.Application.Serialization;
 using Infinium.Bethesda;
 using Infinium.Domain.Contracts;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -10,8 +11,8 @@ namespace Infinium.Tests;
 public sealed class CandidateSelectorTests
 {
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void CandidateSelectorProducesTotalLedgerAndScoreIndependentRequiredLanes()
     {
         CandidatePipelineResult result = Execute(
@@ -37,8 +38,8 @@ public sealed class CandidateSelectorTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void CandidateSelectorRetainsAbstentionGapFailureAndUnrelatedWork()
     {
         CandidatePipelineResult result = Execute(
@@ -60,8 +61,8 @@ public sealed class CandidateSelectorTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void CandidateSelectorIsolatesPopulationDeclarationFailureFromUnrelatedAnalyzers()
     {
         OpaqueId goodAnalyzer = Id("analyzer-good");
@@ -83,14 +84,14 @@ public sealed class CandidateSelectorTests
         Assert.AreEqual(1L, result.Analysis.Counts.Failures);
         Assert.IsTrue(result.Analysis.Failures.Single().FailureCode == "analyzer-declaration-failed");
         string retained = System.Text.Encoding.UTF8.GetString(
-            Infinium.Application.Evaluation.CandidateAnalysisJsonCodec.Serialize(result.Analysis));
+            Infinium.Application.Serialization.CandidateAnalysisJsonCodec.Serialize(result.Analysis));
         Assert.IsFalse(retained.Contains("C:\\private\\fixture-answer.json", StringComparison.Ordinal));
         Assert.IsFalse(retained.Contains("secret fixture content", StringComparison.Ordinal));
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void CandidateSelectorConvertsMalformedOrEvidenceFreeMembersToInvalidWithoutAbortingOthers()
     {
         CausalJoinPopulationMember malformed = Member(
@@ -112,8 +113,8 @@ public sealed class CandidateSelectorTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void CandidateSelectorRestartReusesOnlyUnchangedMemberFingerprints()
     {
         CausalJoinPopulationMember first = Member("first", CandidateLane.DeterministicRequired, CausalJoinInputState.Complete);
@@ -129,8 +130,8 @@ public sealed class CandidateSelectorTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void CandidateSelectorOptionalContentMutationInvalidatesOnlyThatMember()
     {
         CausalJoinPopulationMember first = Member(
@@ -148,8 +149,8 @@ public sealed class CandidateSelectorTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void CandidateSelectorNeverReusesCheckpointAcrossRuns()
     {
         CausalJoinPopulationMember member = Member(
@@ -168,8 +169,8 @@ public sealed class CandidateSelectorTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void CandidateSelectorInvalidatesCheckpointWhenLimitSemanticsChangeUnderSameId()
     {
         CausalJoinPopulationMember member = Member(
@@ -185,8 +186,8 @@ public sealed class CandidateSelectorTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void CandidateFingerprintsDistinguishSwappedFieldAndLimitValues()
     {
         CausalJoinPopulationMember baseline = Member("fingerprint", CandidateLane.OptionalRanked, CausalJoinInputState.Complete, rank: 1);
@@ -215,8 +216,8 @@ public sealed class CandidateSelectorTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void CandidateCheckpointRejectsSameIdAnalyzerSemanticDrift()
     {
         CausalJoinPopulationMember member = Member("semantic-drift", CandidateLane.MandatoryEvidence, CausalJoinInputState.Complete);
@@ -242,8 +243,8 @@ public sealed class CandidateSelectorTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void CandidateSelectorEnforcesAnalyzerIdentityScopeAndResourceDeclarations()
     {
         OpaqueId analyzer = Id("analyzer-test");
@@ -353,8 +354,8 @@ public sealed class CandidateSelectorTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void CandidateSelectorBoundsEveryMemberBeforeHashAndEdgeMaterialization()
     {
         CausalJoinPopulationMember oversized = Member(
@@ -369,8 +370,8 @@ public sealed class CandidateSelectorTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void CandidateSelectorInvalidatesOptionalFrontierWhenRankOrderChanges()
     {
         CausalJoinPopulationMember first = Member(
@@ -396,8 +397,8 @@ public sealed class CandidateSelectorTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void CandidateSelectorInvalidatesGlobalWorkFrontierWhenMembershipChanges()
     {
         CausalJoinPopulationMember first = Member("first", CandidateLane.DeterministicRequired, CausalJoinInputState.Complete);
@@ -416,8 +417,8 @@ public sealed class CandidateSelectorTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void CandidateWorkLimitPreservesAllPreclassifiedNegativeStates()
     {
         CandidatePipelineResult result = Execute(
@@ -442,8 +443,8 @@ public sealed class CandidateSelectorTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void CandidateSelectorConsumesDeliveredBethesdaAndDocumentationIndexes()
     {
         BethesdaSemanticSnapshot bethesda = EmptyBethesdaSnapshot() with
@@ -485,8 +486,8 @@ public sealed class CandidateSelectorTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void DeliveredIndexesPreserveFaceGenNegativesUnknownsAndUnresolvedLinkIdentity()
     {
         BethesdaRecordIdentity identity = new("record-1", "NPC_", "000001:Fixture.esm", "Fixture.esm", 1);
@@ -615,7 +616,7 @@ public sealed class CandidateSelectorTests
             Id("documentation-payload"), run,
             [new(Id("revision-1"), Id("source-1"), DocumentationSourceKind.Fixture, "1",
                 new Sha256Fingerprint(new string('2', 64)), 1, Id("snapshot-indexes"),
-                Slice5ResultState.Present, ReplayState.CompleteClean)],
+                AnalysisResultState.Present, ReplayState.CompleteClean)],
             [new(Id("import-1"), run, Id("revision-1"), DocumentationImportMode.CleanImport, null,
                 Id("closure-1"), Id("extractor-1"), LlmInvolvementState.None, LlmOperation.None,
                 [
@@ -625,7 +626,7 @@ public sealed class CandidateSelectorTests
                     new("loot", BoundaryUseState.NotUsed, "local fixture"),
                 ], new UtcTimestamp(DateTimeOffset.UnixEpoch))],
             [new(Id("passage-1"), Id("revision-1"), 0, 1,
-                new Sha256Fingerprint(new string('3', 64)), Slice5ResultState.Present)],
+                new Sha256Fingerprint(new string('3', 64)), AnalysisResultState.Present)],
             [new(Id("claim-1"), Id("import-1"), Id("passage-1"), ClaimKind.Requirement,
                 "exact claim", [], EvidenceAuthority.AuthoritativeExternal,
                 ClaimApplicabilityState.Applicable, ClassificationRole.Observed, [])],
@@ -655,8 +656,8 @@ public sealed class CandidateSelectorTests
 public sealed class FindingThresholdTests
 {
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void FindingThresholdLeavesAmbiguousCandidateAsHypothesisWithoutFindingPromotion()
     {
         CausalJoinPopulationMember ambiguous = CandidateSelectorTests.Member(
@@ -671,7 +672,7 @@ public sealed class FindingThresholdTests
             CandidateExecutionLimits.Default, new CandidatePopulationContext(null),
             [new TestCandidatePopulationSource(analyzer, [ambiguous])]));
 
-        Assert.AreEqual(Slice5ResultState.Ambiguous, result.Analysis.Candidates.Single().State);
+        Assert.AreEqual(AnalysisResultState.Ambiguous, result.Analysis.Candidates.Single().State);
         Assert.AreEqual(AnalysisConfidence.SpeculativeLead, result.Analysis.Hypotheses.Single().Confidence);
         Assert.IsFalse(result.Analysis.GetType().GetProperties().Any(property =>
             property.Name.Contains("Finding", StringComparison.Ordinal)

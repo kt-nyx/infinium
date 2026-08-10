@@ -1,0 +1,52 @@
+{
+  "schema_identity": "infinium.public-fixture.cross_stage.independent-expected-results/1.0.7",
+  "content_class": "oracle-only-never-product-input",
+  "authorship": "independent-before-product-comparison",
+  "product_output_used": false,
+  "independent_derivation_rules": {
+    "candidate_link": "resolved unequal targets admit; resolved equal targets are resolved-negative",
+    "candidate_documentation": "contradicted applicability is ambiguous and retains a needs-information abstention",
+    "finding_case_promotion": "requires assigned consequence, applicable state, at least plausible support, causal proof, no contradiction, and no missing information",
+    "finding_case_grouping": "requires equal causal locus, causal conditions, applicability conditions, and dependency closure",
+    "finding_case_recommendation": "one recommendation follows a promoted finding; one needs-information recommendation follows the contradicted hypothesis",
+    "identity_boundary": "opaque product identities and canonical hashes are not independently predicted"
+  },
+  "cases": [
+    {
+      "case_id": "CROSS-STAGE-CLEAN-D01",
+      "expected": {
+        "documentation": {"revisions":1,"imports":1,"passages":3,"claims":3,"applications":2,"purpose_assignments":1,"contradiction_gaps":3,"failures":0},
+        "candidate": {"decisions":{"admitted":1,"resolved-negative":1,"ambiguous":1,"unsupported":0},"candidates":2,"hypotheses":2,"abstentions":1},
+        "finding_case": {"findings":1,"recommendations":2,"supported_cases":1,"lead_only_cases":1,"readiness_effect_from_leads":0,"coverage":{"denominator":3,"completed":2,"state":"completed-with-gaps","visible_gaps":1}},
+        "operations": {"publication_commits":1,"partial_publications":0,"terminal_state":"completed-with-gaps","human_json_semantically_equivalent":true,"network_calls":0,"provider_dispatches":0}
+      }
+    },
+    {
+      "case_id": "CROSS-STAGE-UNCHANGED-D02",
+      "expected": {"resolved_dependencies_equal_clean":true,"documentation_checkpoint":"reused-exact","candidate_execution":"recomputed-run-binding","finding_case_execution":"recomputed-from-current-candidate-closure","typed_semantic_equivalence_to_clean":true,"byte_reuse_claim":"documentation-checkpoint-only","new_semantic_object_count":"not-predeclared","publication_commits":1,"history_mutations":0,"network_calls":0}
+    },
+    {
+      "case_id": "CROSS-STAGE-CHANGED-D03",
+      "expected": {"changed_dependencies":["source.001:r1->r2"],"documentation_phase":"new-revision-and-dependent-checkpoint","documentation_checkpoint_reuse":false,"candidate_execution":"recomputed-transitively-with-new-run-binding","finding_case_execution":"recomputed-from-current-candidate-closure","operations_execution":"new-aggregate-publication","stable_unrelated_typed_facts":["fact.001","fact.002"],"stable_fact_checkpoint_reuse":"not-asserted","documentation_shape_counts_equal_clean":true,"semantic_fingerprint_equivalence":"not-asserted","new_revision_identity_required":true,"retained_history_mutations":0,"network_calls":0}
+    },
+    {
+      "case_id": "CROSS-STAGE-REPLAY-D04",
+      "expected": {"replayability":"complete-clean","retained_dependencies_verified":true,"documentation_checkpoint":"reused-exact","candidate_execution":"recomputed-run-binding","finding_case_execution":"recomputed-from-current-candidate-closure","operations_execution":"new-replay-publication","typed_semantic_equivalence_to_clean":true,"human_json_semantically_equivalent":true,"hidden_dependency_substitutions":0,"network_calls":0,"provider_dispatches":0,"history_mutations":0}
+    }
+  ],
+  "cross_case_invariants": [
+    "ordinary product input contains no package, case, EVAL, oracle, partition, or expected-result metadata",
+    "clean, unchanged incremental, and retained replay have equivalent typed semantics while only the exact documentation stage checkpoint is reused",
+    "unchanged incremental and replay recompute candidate stage with the current run binding and recompute finding/case stage from the resulting closure",
+    "the r1-to-r2 formatting-only source change creates a new documentation stage revision and transitively recomputes candidate stage, finding/case stage, and publication while unrelated typed facts remain stable without a checkpoint-reuse claim",
+    "resolved negative and contradicted evidence never become findings",
+    "lead-only output remains separate and has zero readiness effect",
+    "human and JSON views derive from one admitted aggregate and expose coverage gaps",
+    "all external capability boundaries remain not-used"
+  ],
+  "bounded_gaps": [
+    "Opaque product-generated IDs and canonical output hashes are intentionally not guessed; the comparison harness must bind them from accepted product identity contracts before execution.",
+    "This corpus does not extend operations stage native filesystem qualification or claim EVAL-0046, full EVAL-0082, full EVAL-0087, or full EVAL-0088 coverage.",
+    "No generalization, controlled-real, private held-out, reliability, readiness, safety, live, provider, or milestone-completion verdict is established."
+  ]
+}

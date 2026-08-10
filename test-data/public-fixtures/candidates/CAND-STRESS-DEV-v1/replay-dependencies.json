@@ -1,0 +1,61 @@
+{
+  "fixture_id": "CAND-STRESS-DEV-v1",
+  "fixture_version": "1.0.0",
+  "expected_replay_state": "complete-clean",
+  "dependencies": [
+    {
+      "dependency_id": "dependency.input",
+      "kind": "candidate-delivered-expansion",
+      "identity_or_version": "inputs/candidate-delivered-expansion.json",
+      "sha256": "ec4e7ba13374735b0a539f4dbc680a5fe83ed69fe96f53289b2a3921eeff79e3",
+      "byte_length": 3521,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "boundary-replay",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Clean recomputation and boundary replay become unavailable."
+    },
+    {
+      "dependency_id": "dependency.field-guide",
+      "kind": "accepted-public-authority",
+      "identity_or_version": "candidate-delivered-input-v1",
+      "sha256": "6db5a5efe0f2df7672fc960c7343cbc980897baf33eec7726738af60ae7dbcca",
+      "byte_length": 8316,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Independent semantic audit loses its field-guide authority binding."
+    },
+    {
+      "dependency_id": "dependency.slice-plan",
+      "kind": "accepted-public-authority",
+      "identity_or_version": "docs/plans/milestones/m1/slices/s5/plan.md",
+      "sha256": "8d7413d4015732eeb2726fb19661248feace2a664ed49ada70e8c77edb4658c2",
+      "byte_length": 69241,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Package-scope and claim-boundary audit loses its plan binding."
+    }
+  ],
+  "dependency_graph_fingerprint": "bb15f5d31a70e4d28e302d8952a9112c522d62df24a36d07437c547b9baf8a74",
+  "expected_output_references": [
+    {
+      "artifact_id": "oracle/streaming-expansion-receipt.json",
+      "artifact_version": "1.0.0",
+      "fingerprint": "2cd19b24e556de59111e06da8255fcecd0146cdeb221950731a373757b7e0c23",
+      "availability": "retained",
+      "byte_length": 6948
+    }
+  ]
+}

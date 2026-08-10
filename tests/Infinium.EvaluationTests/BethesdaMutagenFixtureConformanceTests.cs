@@ -10,8 +10,8 @@ namespace Infinium.Tests;
 public sealed class BethesdaMutagenFixtureConformanceTests
 {
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Evaluation")]
     public void NpcRaceControlsAreReadableThroughThePinnedSemanticApi()
     {
         using ParsedFixture fixture = ParseAcceptedPlugins("BETH-NPC-DEV");
@@ -29,8 +29,8 @@ public sealed class BethesdaMutagenFixtureConformanceTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Evaluation")]
     public void RefrControlsAreReadableThroughCanonicalCellChildren()
     {
         using ParsedFixture fixture = ParseAcceptedPlugins("BETH-REFR-DEV");
@@ -47,8 +47,8 @@ public sealed class BethesdaMutagenFixtureConformanceTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Evaluation")]
     public void LightPluginReferenceControlsAlsoUseCanonicalCellChildren()
     {
         using ParsedFixture fixture = ParseAcceptedPlugins("BETH-LIGHT-VAL");
@@ -64,8 +64,8 @@ public sealed class BethesdaMutagenFixtureConformanceTests
     {
         string fixtureRoot = TestRepository.PathFromRoot(
             "test-data",
-            "evaluation",
-            "m1-semantic",
+            "public-fixtures",
+            "bethesda",
             fixtureId);
         using JsonDocument snapshot = JsonDocument.Parse(
             File.ReadAllBytes(Path.Combine(fixtureRoot, "inputs", "snapshot", "accepted-order.json")));

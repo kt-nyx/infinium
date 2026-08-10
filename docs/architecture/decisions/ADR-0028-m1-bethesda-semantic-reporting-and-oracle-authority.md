@@ -1,6 +1,8 @@
 # ADR-0028: Bound M1 Bethesda semantic reporting and oracle authority
 
 Status: Accepted
+
+Last reviewed: 2026-08-10
 Date: 2026-08-05
 Deciders: Project owner
 

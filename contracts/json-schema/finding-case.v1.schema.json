@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.infinium.dev/json-schema/finding-case.v1.schema.json",
-  "title": "Infinium Slice 5 finding and case v1",
+  "title": "Infinium finding and case v1",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_id", "schema_version", "payload_id", "originating_run_id", "input_id", "promotion_policy_id", "promotion_policy_version", "reconciliation_policy_id", "reconciliation_policy_version", "promotion_assessments", "abstentions", "findings", "recommendations", "cases", "reconciliation_assessments", "lineage_events", "taxonomy_assignments", "taxonomy_projections", "coverage", "coverage_failures", "gaps", "boundaries", "publication_claim_boundary"],

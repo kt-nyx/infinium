@@ -24,10 +24,10 @@ public sealed partial class ProtoAuthorityContractTests
     ];
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Contract")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Contract")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Contract")]
+    [TestProperty("Category", "Security")]
     public void OperationOwnerAndProviderDispatchUseClosedTypedAuthorityIdentities()
     {
         string identities = ReadProto("infinium/domain/v1/identities.proto");
@@ -72,10 +72,10 @@ public sealed partial class ProtoAuthorityContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Contract")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Contract")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Contract")]
+    [TestProperty("Category", "Security")]
     public void PrivilegedMessagesReserveAuthorityBandAndForbiddenNames()
     {
         foreach (string specification in PrivilegedMessagesWithReservedAuthorityBand)
@@ -94,10 +94,10 @@ public sealed partial class ProtoAuthorityContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Contract")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Contract")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Contract")]
+    [TestProperty("Category", "Security")]
     public void WorkerAndHelperStringFieldsRemainOnExplicitInertAllowlist()
     {
         AssertStringFieldAllowlist(
@@ -136,10 +136,10 @@ public sealed partial class ProtoAuthorityContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Contract")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Contract")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Contract")]
+    [TestProperty("Category", "Security")]
     public void HelperUnknownFieldsAreExplicitlyRejectedRatherThanForwarded()
     {
         string readme = TestRepository.Read("contracts", "protobuf", "README.md");
@@ -157,8 +157,8 @@ public sealed partial class ProtoAuthorityContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestProperty("Category", "M1Contract")]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Contract")]
     public void ProtoMessagesDoNotReuseFieldNumbersWithinAMessage()
     {
         string protobufRoot = TestRepository.PathFromRoot("contracts", "protobuf");

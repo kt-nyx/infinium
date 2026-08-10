@@ -1,0 +1,135 @@
+{
+  "schema_id": "infinium.evaluation.bethesda-case-matrix/v1",
+  "schema_version": "1",
+  "fixture_id": "BETH-MALFORMED-VAL",
+  "fixture_version": "1.4.0",
+  "source_basis": "accepted-bethesda-scenario-inventory-and-retained-execution-inputs",
+  "cases": [
+    {
+      "scenario_id": "malformed-control",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/plugins/MinimalValid.esp"
+      ]
+    },
+    {
+      "scenario_id": "malformed-truncated-record-header",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/mutations/TruncatedRecordHeader.esp"
+      ]
+    },
+    {
+      "scenario_id": "malformed-truncated-record-payload",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/mutations/TruncatedRecordPayload.esp"
+      ]
+    },
+    {
+      "scenario_id": "malformed-record-size-overflow",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/mutations/RecordSizeOverflow.esp"
+      ]
+    },
+    {
+      "scenario_id": "malformed-group-size-too-small",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/mutations/GroupSizeTooSmall.esp"
+      ]
+    },
+    {
+      "scenario_id": "malformed-group-size-past-end",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/mutations/GroupSizePastEnd.esp"
+      ]
+    },
+    {
+      "scenario_id": "malformed-group-size-overflow",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/mutations/GroupSizeOverflow.esp"
+      ]
+    },
+    {
+      "scenario_id": "malformed-compressed-missing-length",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/mutations/CompressedMissingLength.esp"
+      ]
+    },
+    {
+      "scenario_id": "malformed-compressed-invalid-zlib",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/mutations/CompressedInvalidZlib.esp"
+      ]
+    },
+    {
+      "scenario_id": "malformed-compressed-size-mismatch",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/mutations/CompressedSizeMismatch.esp"
+      ]
+    },
+    {
+      "scenario_id": "malformed-compressed-declared-size-over-limit",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/mutations/CompressedDeclaredSizeOverLimit.esp"
+      ]
+    },
+    {
+      "scenario_id": "malformed-nested-groups-over-limit",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/mutations/NestedGroupsOverLimit.esp"
+      ]
+    },
+    {
+      "scenario_id": "malformed-record-count-over-limit",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/mutations/RecordCountOverLimit.esp"
+      ]
+    },
+    {
+      "scenario_id": "malformed-subrecord-count-over-limit",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/mutations/SubrecordCountOverLimit.esp"
+      ]
+    },
+    {
+      "scenario_id": "malformed-record-master-index",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/mutations/InvalidRecordMasterIndex.esp"
+      ]
+    },
+    {
+      "scenario_id": "malformed-link-master-index",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/mutations/InvalidLinkMasterIndex.esp"
+      ]
+    },
+    {
+      "scenario_id": "malformed-unpaired-master",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/mutations/MasterMissingDataPair.esp"
+      ]
+    },
+    {
+      "scenario_id": "malformed-changed-during-read",
+      "operation": "orchestrated-read",
+      "input_artifact_ids": [
+        "inputs/requests/changed-during-read-plan.json"
+      ]
+    }
+  ]
+}

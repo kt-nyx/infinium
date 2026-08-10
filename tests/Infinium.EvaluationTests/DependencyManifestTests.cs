@@ -8,8 +8,8 @@ namespace Infinium.Tests;
 public sealed class DependencyManifestTests
 {
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Evaluation")]
     public void DependencyManifestMatchesCentralDirectPackageVersions()
     {
         using JsonDocument manifest = TestRepository.ReadJson("dependencies", "dependency-manifest.json");
@@ -35,8 +35,8 @@ public sealed class DependencyManifestTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Evaluation")]
     public void DependencyManifestInventoriesEveryResolvedLockIdentity()
     {
         using JsonDocument manifest = TestRepository.ReadJson("dependencies", "dependency-manifest.json");
@@ -60,8 +60,8 @@ public sealed class DependencyManifestTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Evaluation")]
     public void DependencyManifestCarriesLicenseAndProvenanceForEveryResolvedPackage()
     {
         using JsonDocument manifest = TestRepository.ReadJson("dependencies", "dependency-manifest.json");
@@ -109,8 +109,8 @@ public sealed class DependencyManifestTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Evaluation")]
     public void DependencyManifestPreservesCuratedLicensesAndActualPackageHashes()
     {
         using JsonDocument manifest = TestRepository.ReadJson("dependencies", "dependency-manifest.json");
@@ -150,8 +150,8 @@ public sealed class DependencyManifestTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Evaluation")]
     public void NoOperativeProjectLicenseWasIntroduced()
     {
         string[] operativeLicenseFiles =
@@ -173,7 +173,7 @@ public sealed class DependencyManifestTests
         Assert.HasCount(
             0,
             introducedLicenseFiles,
-            $"Slice 0 must not introduce an operative license file: {string.Join(", ", introducedLicenseFiles)}");
+            $"The current dependency policy must not introduce an operative license file: {string.Join(", ", introducedLicenseFiles)}");
 
         string[] projectMetadataFiles = EnumerateRepositoryFiles()
             .Where(path => Path.GetExtension(path) is ".csproj" or ".props" or ".targets")
@@ -191,7 +191,7 @@ public sealed class DependencyManifestTests
             Assert.HasCount(
                 0,
                 operativeProperties,
-                $"Slice 0 must not introduce operative license metadata in '{projectMetadataFile}'.");
+                $"The current dependency policy must not introduce operative license metadata in '{projectMetadataFile}'.");
         }
 
         string buildProperties = TestRepository.Read("Directory.Build.props");

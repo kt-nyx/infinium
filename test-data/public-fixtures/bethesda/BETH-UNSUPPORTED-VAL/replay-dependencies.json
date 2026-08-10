@@ -1,0 +1,350 @@
+{
+  "fixture_id": "BETH-UNSUPPORTED-VAL",
+  "fixture_version": "1.4.0",
+  "expected_replay_state": "complete-clean",
+  "dependencies": [
+    {
+      "dependency_id": "inputs-analysis-context-json",
+      "kind": "tracked-fixture-input",
+      "identity_or_version": "1.4.0",
+      "sha256": "95a028182b449557f792eb31be8faf5f911f4976ad94c62b218d884026a2f4c5",
+      "byte_length": 320,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "boundary-replay",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Removal makes clean recomputation incomplete and creates an explicit replay and audit gap."
+    },
+    {
+      "dependency_id": "inputs-analysis-execution-input-json",
+      "kind": "tracked-fixture-input",
+      "identity_or_version": "1.4.0",
+      "sha256": "e0494a8a8698f004776a3de420e9ac56f20f3736415437630565f2ce73bbdc51",
+      "byte_length": 2681,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "boundary-replay",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Removal makes clean recomputation incomplete and creates an explicit replay and audit gap."
+    },
+    {
+      "dependency_id": "inputs-analysis-installation-snapshot-json",
+      "kind": "tracked-fixture-input",
+      "identity_or_version": "1.4.0",
+      "sha256": "9b0b6302e67e53e7da9ccfd5fc92910fee6e6e4a46f2e865ed23402d405364bc",
+      "byte_length": 474,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "boundary-replay",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Removal makes clean recomputation incomplete and creates an explicit replay and audit gap."
+    },
+    {
+      "dependency_id": "inputs-analyzer-declaration-json",
+      "kind": "tracked-fixture-input",
+      "identity_or_version": "1.4.0",
+      "sha256": "b2d8c06b95ed127cd7cab95aa06ed708e9873b47a830180c3b5c8bcfda8cccd5",
+      "byte_length": 5074,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "boundary-replay",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Removal makes clean recomputation incomplete and creates an explicit replay and audit gap."
+    },
+    {
+      "dependency_id": "inputs-bethesda-semantic-input-json",
+      "kind": "tracked-fixture-input",
+      "identity_or_version": "1.4.0",
+      "sha256": "ef7f9160ee9ee1778fff1cf60b1869f4dc6375212d68bc3627a5dfaece05ac72",
+      "byte_length": 479,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "boundary-replay",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Removal makes clean recomputation incomplete and creates an explicit replay and audit gap."
+    },
+    {
+      "dependency_id": "inputs-case-matrix-json",
+      "kind": "tracked-fixture-input",
+      "identity_or_version": "1.4.0",
+      "sha256": "4011522eed28f5f53f9e2029bf18a01abe0e618cb1916effa2f8cfc6cceaff72",
+      "byte_length": 1186,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "boundary-replay",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Removal makes clean recomputation incomplete and creates an explicit replay and audit gap."
+    },
+    {
+      "dependency_id": "inputs-construction-manifest-json",
+      "kind": "tracked-fixture-input",
+      "identity_or_version": "1.4.0",
+      "sha256": "69ffdbeeb66be79c0fd56ae68c7fedf74d98f81acb026ebac35542c1cef01127",
+      "byte_length": 6044,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "boundary-replay",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Removal makes clean recomputation incomplete and creates an explicit replay and audit gap."
+    },
+    {
+      "dependency_id": "inputs-effective-scan-configuration-json",
+      "kind": "tracked-fixture-input",
+      "identity_or_version": "1.4.0",
+      "sha256": "cf5a20a5398dc07d080527cdf745bb3b722c42a1e6201bf48882d32c667d926a",
+      "byte_length": 3041,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "boundary-replay",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Removal makes clean recomputation incomplete and creates an explicit replay and audit gap."
+    },
+    {
+      "dependency_id": "inputs-plugins-LocalizedDependency_English-strings",
+      "kind": "tracked-fixture-input",
+      "identity_or_version": "1.4.0",
+      "sha256": "5119dacdfa9be32a443106dd645e743cac50237f1808575e9b0e3aff9c4e97d4",
+      "byte_length": 56,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "boundary-replay",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Removal makes clean recomputation incomplete and creates an explicit replay and audit gap."
+    },
+    {
+      "dependency_id": "inputs-plugins-LocalizedDependency-esp",
+      "kind": "tracked-fixture-input",
+      "identity_or_version": "1.4.0",
+      "sha256": "43115de64ffaa9853f8823525877ac7c0eaa93e28f7d02c22a20521b0c9eb605",
+      "byte_length": 206,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "boundary-replay",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Removal makes clean recomputation incomplete and creates an explicit replay and audit gap."
+    },
+    {
+      "dependency_id": "inputs-plugins-UnsupportedFamily-esp",
+      "kind": "tracked-fixture-input",
+      "identity_or_version": "1.4.0",
+      "sha256": "28a3f77b1c46ef8088d57987f3e43fa7e39a778fc8718f3b5d2bf567c96965ba",
+      "byte_length": 192,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "boundary-replay",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Removal makes clean recomputation incomplete and creates an explicit replay and audit gap."
+    },
+    {
+      "dependency_id": "inputs-plugins-UnsupportedNpcField-esp",
+      "kind": "tracked-fixture-input",
+      "identity_or_version": "1.4.0",
+      "sha256": "498515791b9196341c286ca4b65c6565ab9d7b07c59e8eb42365a1a85fce44d2",
+      "byte_length": 236,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "boundary-replay",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Removal makes clean recomputation incomplete and creates an explicit replay and audit gap."
+    },
+    {
+      "dependency_id": "inputs-requests-archive-member-json",
+      "kind": "tracked-fixture-input",
+      "identity_or_version": "1.4.0",
+      "sha256": "de1feea7e111a0ebe86283c0b966380b5b41bbe8939a479e1188b94ccf7aa36b",
+      "byte_length": 252,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "boundary-replay",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Removal makes clean recomputation incomplete and creates an explicit replay and audit gap."
+    },
+    {
+      "dependency_id": "inputs-requests-automatic-environment-discovery-json",
+      "kind": "tracked-fixture-input",
+      "identity_or_version": "1.4.0",
+      "sha256": "0d16d3d57a7ea939ce4294ca6f0261e50009a67a2270b75db16bbc64aa1cec43",
+      "byte_length": 214,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "boundary-replay",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Removal makes clean recomputation incomplete and creates an explicit replay and audit gap."
+    },
+    {
+      "dependency_id": "inputs-requests-localized-string-resolution-json",
+      "kind": "tracked-fixture-input",
+      "identity_or_version": "1.4.0",
+      "sha256": "b2b66ab85f98c052174b8f5632abeaa53deb18704e8df1d0d37f963312fd997d",
+      "byte_length": 246,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "boundary-replay",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Removal makes clean recomputation incomplete and creates an explicit replay and audit gap."
+    },
+    {
+      "dependency_id": "inputs-resolved-input-manifest-json",
+      "kind": "tracked-fixture-input",
+      "identity_or_version": "1.4.0",
+      "sha256": "bceecbfdce6be48b8612060273b9b57295a08f00f03cf32a4bceb23192cd6868",
+      "byte_length": 435,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "boundary-replay",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Removal makes clean recomputation incomplete and creates an explicit replay and audit gap."
+    },
+    {
+      "dependency_id": "inputs-snapshot-accepted-order-json",
+      "kind": "tracked-fixture-input",
+      "identity_or_version": "1.4.0",
+      "sha256": "a14b1574816b31b1863bd0ba05b76ce3bb3f3607b862a6b338e007131e11ac52",
+      "byte_length": 2567,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "boundary-replay",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Removal makes clean recomputation incomplete and creates an explicit replay and audit gap."
+    },
+    {
+      "dependency_id": "inputs-taxonomy-subject-bindings-json",
+      "kind": "tracked-fixture-input",
+      "identity_or_version": "1.4.0",
+      "sha256": "34596a1bc44cac229028060c1db0aea1b85c6fe45ca4d8c31ac0ebc29532d5f2",
+      "byte_length": 784,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "boundary-replay",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Removal makes clean recomputation incomplete and creates an explicit replay and audit gap."
+    },
+    {
+      "dependency_id": "tools-fixtures-reseal-public-fixtures-mjs",
+      "kind": "tracked-source",
+      "identity_or_version": "6f04f97315b3eced6b4528a8693c5e1159022d4aedb794db76169adb1827399f",
+      "sha256": "6f04f97315b3eced6b4528a8693c5e1159022d4aedb794db76169adb1827399f",
+      "byte_length": 29831,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Retained package bytes remain auditable, but deterministic current-package reconstruction is lost."
+    },
+    {
+      "dependency_id": "tools-fixtures-bethesda-Program-cs",
+      "kind": "tracked-source",
+      "identity_or_version": "e3e285230e16674b5e12f1aff738095086c96ea6596e919587e7e23b5fe7d2c0",
+      "sha256": "e3e285230e16674b5e12f1aff738095086c96ea6596e919587e7e23b5fe7d2c0",
+      "byte_length": 71060,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Retained package bytes remain auditable, but deterministic current-package reconstruction is lost."
+    },
+    {
+      "dependency_id": "tools-fixtures-bethesda-Infinium-BethesdaFixtures-Generator-csproj",
+      "kind": "tracked-source",
+      "identity_or_version": "f360a93248ae4a6a92176c50f85eba13e630c3f64af23ad970b395cb0028b04e",
+      "sha256": "f360a93248ae4a6a92176c50f85eba13e630c3f64af23ad970b395cb0028b04e",
+      "byte_length": 308,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Retained package bytes remain auditable, but deterministic current-package reconstruction is lost."
+    }
+  ],
+  "dependency_graph_fingerprint": "d7be202899c76d4675627d1bca29ba96948d2ed70aaae9db78a888d9fcd5b856",
+  "expected_output_references": [
+    {
+      "artifact_id": "oracle/replay-manifest.json",
+      "artifact_version": "1.4.0",
+      "fingerprint": "37fb08b0324cbd4288a038dc88fe6650a5e680025278715d47ecfb7beea712b8",
+      "availability": "retained",
+      "byte_length": 3772
+    }
+  ]
+}

@@ -4,8 +4,7 @@ Status: Completed
 
 Date: 2026-07-28
 
-Last reviewed: 2026-07-28
-
+Last reviewed: 2026-08-10
 Researcher: Codex agent with delegated independent work packages
 
 Primary RQs: RQ-028, RQ-029, RQ-030, RQ-038
@@ -48,9 +47,9 @@ not mark any fixture executed, evaluation passed, or implementation conformant.
 
 - [M1 evaluation baseline](../../evaluation/m1-evaluation-baseline.md)
 - [M1 semantic and local-ground-truth specifications](../../evaluation/specifications/m1-semantic-and-ground-truth.md)
-- [M1 semantic fixture manifests](../../evaluation/fixtures/m1-semantic-fixture-manifests.md)
+- [M1 semantic fixture manifests](../../evaluation/specifications/semantic-fixture-catalog.md)
 - [M1 platform and operational specifications](../../evaluation/specifications/m1-platform-and-operational.md)
-- [M1 platform fixture manifests](../../evaluation/fixtures/m1-platform-fixture-manifests.md)
+- [M1 platform fixture manifests](../../evaluation/specifications/platform-fixture-catalog.md)
 - updated [case catalog](../../evaluation/case-catalog.md),
   [evaluation strategy](../../evaluation/evaluation-strategy.md), and
   [fixture guidelines](../../evaluation/fixture-guidelines.md)
@@ -87,7 +86,7 @@ ADR-0025 is accepted.
 
 ### Implementation plan
 
-- [M1 backend semantic proof plan](../../plans/milestones/M1-backend-semantic-proof.md)
+- [M1 backend semantic proof plan](../../plans/milestones/m1/plan.md)
 
 The plan creates a clean source tree without restoring or consulting the
 external abandoned-implementation archive, remains

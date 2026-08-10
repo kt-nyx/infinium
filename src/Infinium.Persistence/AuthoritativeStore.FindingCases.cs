@@ -13,7 +13,7 @@ public sealed partial class AuthoritativeStore
         RunBinding binding,
         DateTimeOffset now)
     {
-        Slice5ContractInvariants.Validate(value);
+        FindingCaseContractInvariants.Validate(value);
         ArgumentNullException.ThrowIfNull(attempt);
         ValidateBinding(binding);
         lock (gate)
@@ -238,7 +238,7 @@ public sealed partial class AuthoritativeStore
                     ("$fingerprint", finding.SemanticFingerprint.Value),
                     ("$supersedes", finding.SupersedesOccurrenceId?.Value), ("$payload", payloadId));
             }
-            foreach (Slice5RecommendationContract recommendation in value.Recommendations)
+            foreach (FindingRecommendationContract recommendation in value.Recommendations)
             {
                 string risksJson = JsonSerializer.Serialize(recommendation.Risks.Order(StringComparer.Ordinal).ToArray());
                 string evidenceJson = JsonSerializer.Serialize(
@@ -280,7 +280,7 @@ public sealed partial class AuthoritativeStore
                     ("$verification", recommendation.Verification),
                     ("$risks", risksJson), ("$evidence", evidenceJson), ("$payload", payloadId));
             }
-            foreach (Slice5CaseContract @case in value.Cases)
+            foreach (AnalysisCaseContract @case in value.Cases)
             {
                 string identityPayload = AdmitJsonPayload(
                     @case.IdentityEnvelope, "case-identity-envelope",
@@ -539,7 +539,7 @@ public sealed partial class AuthoritativeStore
                     InsertCoverageLink("failure", coverage.CoverageId, failureId, failure, payloadId, now, transaction);
                 }
             }
-            foreach (Slice5ReconciliationContract reconciliation in value.ReconciliationAssessments)
+            foreach (OccurrenceReconciliationContract reconciliation in value.ReconciliationAssessments)
             {
                 Execute(
                     """
@@ -651,7 +651,7 @@ public sealed partial class AuthoritativeStore
                         ("$evidence", evidenceId.Value), ("$payload", payloadId));
                 }
             }
-            foreach (Slice5LineageContract lineage in value.LineageEvents)
+            foreach (OccurrenceLineageContract lineage in value.LineageEvents)
             {
                 Execute(
                     """
@@ -862,7 +862,7 @@ public sealed partial class AuthoritativeStore
         }
     }
 
-    private static string FindSubjectKind(Slice5LineageContract lineage, FindingCaseContract value)
+    private static string FindSubjectKind(OccurrenceLineageContract lineage, FindingCaseContract value)
     {
         if (lineage.ReconciliationAssessmentId is not null)
         {
@@ -872,7 +872,7 @@ public sealed partial class AuthoritativeStore
         return "case";
     }
 
-    private static OpaqueId SuccessorLogicalId(Slice5LineageContract lineage, FindingCaseContract value)
+    private static OpaqueId SuccessorLogicalId(OccurrenceLineageContract lineage, FindingCaseContract value)
     {
         OpaqueId successor = lineage.SuccessorIds.OrderBy(item => item.Value, StringComparer.Ordinal).First();
         FindingContract? finding = value.Findings.SingleOrDefault(item => item.FindingOccurrenceId == successor);

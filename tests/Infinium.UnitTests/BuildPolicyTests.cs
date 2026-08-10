@@ -9,8 +9,8 @@ namespace Infinium.Tests;
 public sealed class BuildPolicyTests
 {
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void GlobalJsonPinsTheExactSupportedSdk()
     {
         using JsonDocument document = TestRepository.ReadJson("global.json");
@@ -22,8 +22,8 @@ public sealed class BuildPolicyTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void BuildPolicyPinsTheDeterministicSupportedTarget()
     {
         XDocument buildProperties = TestRepository.ReadXml("Directory.Build.props");
@@ -45,9 +45,9 @@ public sealed class BuildPolicyTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
-    public void CentralPackagePolicyPinsOnlyAcceptedPackagesThroughSliceTwo()
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
+    public void CentralPackagePolicyPinsOnlyAcceptedPackages()
     {
         Dictionary<string, string> expectedPackages = new(StringComparer.Ordinal)
         {
@@ -78,8 +78,8 @@ public sealed class BuildPolicyTests
     }
 
     [TestMethod]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Security")]
     public void ProductionSourcesDoNotReferenceExcludedArchaeology()
     {
         string sourceRoot = TestRepository.PathFromRoot("src");
@@ -109,9 +109,9 @@ public sealed class BuildPolicyTests
     }
 
     [TestMethod]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Security")]
-    public void SliceTwoProductWritersDoNotRegressToPathnameMutation()
+    [TestCategory("Security")]
+    [TestProperty("Category", "Security")]
+    public void ProductWritersDoNotRegressToPathnameMutation()
     {
         Dictionary<string, string[]> forbiddenBySource =
             new(StringComparer.Ordinal)
@@ -158,8 +158,8 @@ public sealed class BuildPolicyTests
     }
 
     [TestMethod]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Security")]
     public void IgnorePolicyProtectsSecretsWithoutHidingNestedEvidence()
     {
         string[] ignoreRules = TestRepository
@@ -182,8 +182,8 @@ public sealed class BuildPolicyTests
     }
 
     [TestMethod]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Fault")]
     public void RestorePolicyRequiresLockFiles()
     {
         XDocument buildProperties = TestRepository.ReadXml("Directory.Build.props");
@@ -195,13 +195,13 @@ public sealed class BuildPolicyTests
     }
 
     [TestMethod]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Fault")]
     public void LockedRestoreRejectsDependencyDrift()
     {
         string temporaryRoot = Path.Combine(
             Path.GetTempPath(),
-            $"infinium-slice0-lock-drift-{Guid.NewGuid():N}");
+            $"infinium-package-lock-drift-{Guid.NewGuid():N}");
         string projectDirectory = Path.Combine(temporaryRoot, "src", "Infinium.Bethesda");
         Directory.CreateDirectory(projectDirectory);
 

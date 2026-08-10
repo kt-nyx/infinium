@@ -1,0 +1,186 @@
+{
+  "schema_identity": "infinium.public-fixture.independent-expected-results/1.0.2",
+  "registry_identity": "infinium.public-fixtures.analysis-operations.operational-cases.20260809.3",
+  "registry_version": "1.0.2",
+  "content_class": "oracle-only-never-product-input",
+  "product_output_used": false,
+  "expectation_change_policy": "A product mismatch cannot change this truth. Correction requires independent evidence, explanation, version bump, new digest, and fresh review.",
+  "cases": [
+    {
+      "case_id": "OPS-LANTERN-PUBLICATION-D01",
+      "package_identity": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.lantern-a",
+      "expected": {
+        "after_fault": {"current_publication": "publication-cedar-00", "revision": 0, "queryable_records": ["record-cedar-a"], "queryable_payloads": ["payload-cedar-a0"], "partial_publications": 0, "staged_data_queryable": false},
+        "after_recovery": {"revision": 1, "queryable_records": ["record-cedar-a", "record-cedar-b"], "queryable_payloads": ["payload-cedar-a1", "payload-cedar-b1"], "published_relations": 1, "commit_count": 1},
+        "fault_trigger_count": 1,
+        "provider_dispatch_count": 0
+      }
+    },
+    {
+      "case_id": "OPS-LANTERN-REPLAY-D02",
+      "package_identity": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.lantern-a",
+      "expected": {
+        "equivalent_executions": ["clean", "unchanged-incremental", "retained-replay"],
+        "baseline_projection": ["fact-maple-r1", "fact-elm-r1"],
+        "single_source_change_projection": ["fact-maple-r2", "fact-elm-r1"],
+        "invalidated_nodes": ["source-maple-r1", "extract-maple", "analyze-maple", "publish-maple-elm"],
+        "reused_nodes": ["source-elm-r1", "analyze-elm"],
+        "network_calls": 0,
+        "hidden_dependency_substitutions": 0
+      }
+    },
+    {
+      "case_id": "OPS-LANTERN-QUERY-D03",
+      "package_identity": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.lantern-a",
+      "expected": {
+        "cursor_kind": "opaque-keyset",
+        "cursor_bindings": ["query", "publication", "filter", "sort", "last-key"],
+        "pages": [["result-iris-01", "result-iris-02"], ["result-iris-03", "result-iris-04"], ["result-iris-05"]],
+        "returned_once": 5,
+        "hidden_returned": 0,
+        "reordered_population_pages_identical": true,
+        "invalid_cursor_results": ["typed-invalid-cursor", "typed-query-mismatch", "typed-publication-mismatch", "typed-limit-rejection"],
+        "direct_database_access": false
+      }
+    },
+    {
+      "case_id": "OPS-LANTERN-OUTPUT-D04",
+      "package_identity": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.lantern-a",
+      "expected": {
+        "terminal_states": ["completed-with-gaps", "cancelled", "limit-reached", "failed"],
+        "run_projections": [
+          {"run": "run-oak-partial", "facts": ["fact-oak-a", "fact-oak-b"], "gaps": ["gap-oak-c"]},
+          {"run": "run-oak-cancelled", "facts": ["fact-oak-a"], "gaps": ["gap-oak-b", "gap-oak-c"]},
+          {"run": "run-oak-limit", "facts": ["fact-oak-a", "fact-oak-b"], "gaps": ["gap-oak-limit-c"]},
+          {"run": "run-oak-failed", "facts": ["fact-oak-a"], "gaps": ["gap-oak-failure-b", "gap-oak-failure-c"]}
+        ],
+        "human_json_semantically_equivalent": true,
+        "fabricated_facts": 0,
+        "metamorphic_projection_changes": 0,
+        "source_run_mutations": 0
+      }
+    },
+    {
+      "case_id": "OPS-LANTERN-RECOVERY-D05",
+      "package_identity": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.lantern-a",
+      "expected": {
+        "winning_epoch": 32,
+        "old_attempt_admission": "rejected-stale-fence",
+        "new_attempt_admission": "accepted",
+        "duplicate_new_admission": "idempotent-no-op",
+        "publication_commits": 1,
+        "old_stage_authoritative": false,
+        "old_stage_disposition": "reconciliation-only"
+      }
+    },
+    {
+      "case_id": "OPS-LANTERN-SAFETY-D06",
+      "package_identity": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.lantern-a",
+      "expected": {
+        "decision_rule_identity": "final-object-authority-rule/1.0.0",
+        "accepted_command_indices": [0, 1, 2, 3, 4, 5, 11, 13, 21],
+        "rejected_command_indices": [6, 7, 8, 9, 10, 12, 14, 15, 16, 17, 18, 19, 20, 22, 23, 24],
+        "target_decisions": ["d-t00:accept", "d-t01:accept", "d-t02:accept", "d-t03:accept", "d-t04:accept", "d-t05:accept", "d-t06:reject", "d-t07:reject", "d-t08:reject", "d-t09:reject", "d-t10:reject", "d-t11:accept", "d-t12:reject", "d-t13:accept", "d-t14:reject", "d-t15:reject", "d-t16:reject", "d-t17:reject", "d-t18:reject", "d-t19:reject", "d-t20:reject", "d-t21:accept", "d-t22:reject", "d-t23:reject", "d-t24:reject"],
+        "accepted_write_classes": ["data", "payloads", "attempts", "diagnostics", "run-output", "relative-alias-authorized", "junction-authorized", "hard-link-authorized", "opened-authorized-object-after-final-entry-replacement"],
+        "protected_root_changes": 0,
+        "writes_outside_authorized_final_objects": 0,
+        "external_processes": 0,
+        "network_requests": 0,
+        "shell_invocations": 0,
+        "credential_operations": 0,
+        "external_tool_operations": 0,
+        "canary_matches_in_ordinary_surfaces": 0,
+        "real_external_adapter_qualification": false
+      }
+    },
+    {
+      "case_id": "OPS-COMPASS-PUBLICATION-V01",
+      "package_identity": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.compass-b",
+      "expected": {
+        "after_fault": {"current_publication": "publication-spruce-07", "revision": 7, "queryable_records": ["record-spruce-left", "record-spruce-right"], "partial_publications": 0, "intent_authoritative": false},
+        "after_recovery": {"revision": 8, "queryable_records": ["record-spruce-center", "record-spruce-left"], "queryable_payloads": ["payload-spruce-center-8", "payload-spruce-left-8"], "published_relations": 1, "commit_count": 1},
+        "fault_trigger_count": 1,
+        "provider_dispatch_count": 0
+      }
+    },
+    {
+      "case_id": "OPS-COMPASS-REPLAY-V02",
+      "package_identity": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.compass-b",
+      "expected": {
+        "replay_admission": "rejected",
+        "reason": "retained-dependency-identity-drift",
+        "mismatched_dependency": "dependency-willow-body",
+        "equal-fingerprint-different-identity-substitute_used": false,
+        "same-identity-different-fingerprint-used": false,
+        "new_publications": 0,
+        "network_calls": 0,
+        "gap": "required-retained-dependency-unavailable",
+        "replayability": "not-currently-replayable"
+      }
+    },
+    {
+      "case_id": "OPS-COMPASS-QUERY-V03",
+      "package_identity": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.compass-b",
+      "expected": {
+        "cursor_kind": "opaque-keyset",
+        "cursor_bindings": ["query", "publication", "filter", "sort", "last-key"],
+        "pages": [["result-violet-b", "result-violet-a", "result-violet-c"], ["result-violet-d"]],
+        "returned_once": 4,
+        "closed_returned": 0,
+        "reordered_population_pages_identical": true,
+        "invalid_cursor_results": ["typed-invalid-cursor", "typed-filter-mismatch", "typed-publication-mismatch", "typed-limit-rejection"],
+        "direct_database_access": false
+      }
+    },
+    {
+      "case_id": "OPS-COMPASS-OUTPUT-V04",
+      "package_identity": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.compass-b",
+      "expected": {
+        "terminal_states": ["completed-with-gaps", "cancelled", "limit-reached", "failed"],
+        "run_projections": [
+          {"run": "run-larch-partial", "facts": ["fact-larch-z"], "gaps": ["gap-larch-x", "gap-larch-y"], "review": "unreviewed"},
+          {"run": "run-larch-cancelled", "facts": [], "gaps": ["gap-larch-cancelled-all"], "review": "not-started"},
+          {"run": "run-larch-limit", "facts": ["fact-larch-x", "fact-larch-y", "fact-larch-z"], "gaps": ["gap-larch-limit-tail"], "review": "reviewed"},
+          {"run": "run-larch-failed", "facts": ["fact-larch-x", "fact-larch-y"], "gaps": ["gap-larch-failure-tail"], "review": "unreviewed"}
+        ],
+        "human_json_semantically_equivalent": true,
+        "fabricated_facts": 0,
+        "metamorphic_projection_changes": 0,
+        "source_run_mutations": 0
+      }
+    },
+    {
+      "case_id": "OPS-COMPASS-RECOVERY-V05",
+      "package_identity": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.compass-b",
+      "expected": {
+        "winning_epoch": 74,
+        "old_checkpoint_resume": "rejected-stale-fence",
+        "new_checkpoint_resume": "accepted",
+        "new_attempt_admission": "accepted",
+        "publication_commits": 1,
+        "old_checkpoint_mutated": false,
+        "old_checkpoint_disposition": "retained-audit-only"
+      }
+    },
+    {
+      "case_id": "OPS-COMPASS-SAFETY-V06",
+      "package_identity": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.compass-b",
+      "expected": {
+        "decision_rule_identity": "final-object-authority-rule/1.0.0",
+        "accepted_command_indices": [1, 2, 3, 5, 7, 9, 10, 14, 15, 17],
+        "rejected_command_indices": [0, 4, 6, 8, 11, 12, 13, 16, 18, 19, 20, 21, 22, 23, 24],
+        "target_decisions": ["v-t06:reject", "v-t00:accept", "v-t10:accept", "v-t01:accept", "v-t21:reject", "v-t02:accept", "v-t07:reject", "v-t03:accept", "v-t13:reject", "v-t04:accept", "v-t05:accept", "v-t23:reject", "v-t11:reject", "v-t15:reject", "v-t12:accept", "v-t14:accept", "v-t09:reject", "v-t20:accept", "v-t19:reject", "v-t18:reject", "v-t08:reject", "v-t24:reject", "v-t17:reject", "v-t16:reject", "v-t22:reject"],
+        "accepted_write_classes": ["data", "payloads", "attempts", "diagnostics", "run-output", "relative-alias-authorized", "symbolic-link-authorized", "mount-point-authorized", "short-name-authorized", "opened-authorized-object-after-ancestor-replacement"],
+        "protected_root_changes": 0,
+        "writes_outside_authorized_final_objects": 0,
+        "external_processes": 0,
+        "network_requests": 0,
+        "shell_invocations": 0,
+        "credential_operations": 0,
+        "external_tool_operations": 0,
+        "canary_matches_in_ordinary_surfaces": 0,
+        "real_external_adapter_qualification": false
+      }
+    }
+  ]
+}

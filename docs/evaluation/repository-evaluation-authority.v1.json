@@ -10,6 +10,7 @@
         "contracts/json-schema/",
         "contracts/protobuf/",
         "src/Infinium.Domain/Contracts/",
+        "src/Infinium.Application/Serialization/",
         "src/Infinium.Application/Evaluation/ActiveJsonSchemaValidator.cs"
       ],
       "validator": "Infinium.Application.Evaluation.ActiveJsonSchemaValidator",
@@ -18,25 +19,27 @@
     {
       "id": "current-public-fixtures",
       "paths": [
-        "tools/evaluation/Infinium.PublicFixtures/",
-        "tools/evaluation/reseal-current-public-fixtures.mjs",
-        "test-data/evaluation/m1-platform/M1-PLAT-SLICE2-SUBSTRATE-v1/",
-        "test-data/evaluation/m1-semantic/BETH-NPC-DEV/",
-        "test-data/evaluation/m1-semantic/BETH-REFR-DEV/",
-        "test-data/evaluation/m1-semantic/BETH-LIGHT-VAL/",
-        "test-data/evaluation/m1-semantic/BETH-MALFORMED-VAL/",
-        "test-data/evaluation/m1-semantic/BETH-UNSUPPORTED-VAL/",
-        "test-data/evaluation/m1-semantic/DOC-WP2-CORE-DEV/",
-        "test-data/evaluation/m1-semantic/DOC-WP2-ADVERSARIAL-VAL/",
-        "docs/evaluation/fixtures/m1-slice5-wp3-candidates-v1/CAND-WP3-SEMANTIC-DEV-v1/",
-        "docs/evaluation/fixtures/m1-slice5-wp3-candidates-v1/CAND-WP3-SCALE-VAL-v1/",
-        "docs/evaluation/fixtures/m1-slice5-wp3-candidates-v1/CAND-WP3-STRESS-DEV-v1/",
-        "docs/evaluation/fixtures/m1-slice5-wp4-cases-v1/",
-        "docs/evaluation/fixtures/m1-slice5-wp5-operational-cases-v1/",
-        "docs/evaluation/fixtures/m1-slice5-wp6-cross-stage-corpus-v1/"
+        "tools/fixtures/Infinium.PublicFixtures/",
+        "tools/fixtures/bethesda/",
+        "tools/fixtures/reseal-public-fixtures.mjs",
+        "test-data/public-fixtures/",
+        "test-data/public-fixtures/platform/analysis-runtime-substrate/",
+        "test-data/public-fixtures/bethesda/BETH-NPC-DEV/",
+        "test-data/public-fixtures/bethesda/BETH-REFR-DEV/",
+        "test-data/public-fixtures/bethesda/BETH-LIGHT-VAL/",
+        "test-data/public-fixtures/bethesda/BETH-MALFORMED-VAL/",
+        "test-data/public-fixtures/bethesda/BETH-UNSUPPORTED-VAL/",
+        "test-data/public-fixtures/documentation/DOC-CLAIM-CORE-DEV/",
+        "test-data/public-fixtures/documentation/DOC-CLAIM-ADVERSARIAL-VAL/",
+        "test-data/public-fixtures/candidates/CAND-SEMANTIC-DEV-v1/",
+        "test-data/public-fixtures/candidates/CAND-SCALE-VAL-v1/",
+        "test-data/public-fixtures/candidates/CAND-STRESS-DEV-v1/",
+        "test-data/public-fixtures/findings-cases/",
+        "test-data/public-fixtures/operations/analysis-lifecycle/",
+        "test-data/public-fixtures/cross-stage/analysis-pipeline/"
       ],
       "validator": "Infinium.Application.Evaluation.ActiveJsonSchemaValidator",
-      "claim": "independently authored public fixture contract evidence; never product-derived oracle authority"
+      "claim": "functionally organized, independently authored public fixture contract evidence; never product-derived oracle authority"
     },
     {
       "id": "historical-protocol-4-bounded-regression",
@@ -54,11 +57,11 @@
     {
       "id": "retained-historical-authorability-evidence",
       "paths": [
-        "docs/evaluation/fixtures/protocol-4-oracle-authorability/",
-        "docs/evaluation/fixtures/independent-slice3-evaluator-20260729/"
+        "docs/evaluation/evaluator-history.md",
+        "docs/evaluation/retired-evaluation-assets.v1.json"
       ],
       "default_solution_member": false,
-      "claim": "accepted historical evaluator evidence cited by chronological records; not current fixture input, executable workflow, or product authority"
+      "claim": "Git-identified historical evaluator evidence; not current fixture input, executable workflow, or product authority"
     },
     {
       "id": "fixture-governance-vocabulary",

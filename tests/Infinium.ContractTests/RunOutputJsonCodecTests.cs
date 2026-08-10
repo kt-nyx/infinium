@@ -1,5 +1,5 @@
 using System.Text;
-using Infinium.Application.Evaluation;
+using Infinium.Application.Serialization;
 using Infinium.Domain.Contracts;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -9,8 +9,8 @@ namespace Infinium.Tests;
 public sealed class RunOutputJsonCodecTests
 {
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestProperty("Category", "M1Contract")]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Contract")]
     public void StableRunOutputRoundTripsThroughItsPublishedSchema()
     {
         RunOutputContract expected = CreateValidOutput();
@@ -31,10 +31,10 @@ public sealed class RunOutputJsonCodecTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Contract")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Contract")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Contract")]
+    [TestProperty("Category", "Fault")]
     public void StableRunOutputRejectsCollectionTypeDriftAndDuplicateKeys()
     {
         string json = Encoding.UTF8.GetString(RunOutputJsonCodec.Serialize(CreateValidOutput()));
@@ -54,10 +54,10 @@ public sealed class RunOutputJsonCodecTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Contract")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Contract")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Contract")]
+    [TestProperty("Category", "Fault")]
     public void StableRunOutputRejectsContradictoryCompleteReplayProjection()
     {
         RunOutputContract valid = CreateValidOutput();
@@ -195,7 +195,7 @@ public sealed class RunOutputJsonCodecTests
             collectionStates,
             [],
             [coverage],
-            [new ExcludedCapabilityDocumentContract("runtime-assets", "unsupported", "outside M1")],
+            [new ExcludedCapabilityDocumentContract("runtime-assets", "unsupported", "outside bounded local analysis")],
             new ReadinessDocumentContract("no-readiness-evaluation", "none", true),
             new ReplayabilityDocumentContract(
                 "complete",

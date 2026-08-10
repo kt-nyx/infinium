@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
-using Infinium.Application.Evaluation;
+using Infinium.Application.Serialization;
 using Infinium.Domain.Contracts;
 
 namespace Infinium.Application.Analysis;
@@ -102,11 +102,11 @@ public static class AnalysisOutputRenderer
 
     public static byte[] RenderOperationalProjectionJson(IEnumerable<AnalysisOperationalRunProjection> runs) =>
         JsonSerializer.SerializeToUtf8Bytes(
-            ProjectOperationalRuns(runs), Slice5ContractJsonCodec.JsonOptions);
+            ProjectOperationalRuns(runs), SchemaValidatedJsonCodec.JsonOptions);
 
     public static IReadOnlyList<AnalysisOperationalRunProjection> ParseOperationalProjectionJson(
         ReadOnlySpan<byte> json) =>
-        JsonSerializer.Deserialize<AnalysisOperationalRunProjection[]>(json, Slice5ContractJsonCodec.JsonOptions)
+        JsonSerializer.Deserialize<AnalysisOperationalRunProjection[]>(json, SchemaValidatedJsonCodec.JsonOptions)
             ?? throw new InvalidDataException("JSON operational projection is empty.");
 
     public static string RenderOperationalProjectionHuman(IEnumerable<AnalysisOperationalRunProjection> runs)
@@ -120,7 +120,7 @@ public static class AnalysisOutputRenderer
         }
         text.Append(OperationalProjectionMarker);
         text.AppendLine(Encoding.UTF8.GetString(JsonSerializer.SerializeToUtf8Bytes(
-            projected, Slice5ContractJsonCodec.JsonOptions)));
+            projected, SchemaValidatedJsonCodec.JsonOptions)));
         return text.ToString();
     }
 
@@ -133,7 +133,7 @@ public static class AnalysisOutputRenderer
             throw new InvalidDataException("Human output has no canonical operational projection.");
         }
         string json = human[(marker + OperationalProjectionMarker.Length)..].Trim();
-        return JsonSerializer.Deserialize<AnalysisOperationalRunProjection[]>(json, Slice5ContractJsonCodec.JsonOptions)
+        return JsonSerializer.Deserialize<AnalysisOperationalRunProjection[]>(json, SchemaValidatedJsonCodec.JsonOptions)
             ?? throw new InvalidDataException("Human operational projection is empty.");
     }
 

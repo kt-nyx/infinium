@@ -2,7 +2,7 @@
 
 Status: Completed — operational disposition accepted in ADR-0006
 Date: 2026-07-25
-Last reviewed: 2026-07-25
+Last reviewed: 2026-08-10
 Researcher: Codex agent
 Primary RQ: RQ-026 — What licensing and distribution obligations apply to bundled helpers or external tools?
 M0 wave: Wave A
@@ -71,7 +71,7 @@ Accepted requirements and decisions:
   constrain evidence authority, provenance, and the initial Skyrim/MO2/Windows
   scope.
 - The accepted
-  [M0 research-foundation plan](../../plans/milestones/M0-research-foundation.md)
+  [M0 research-foundation plan](../../plans/milestones/m0/plan.md)
   originally made RQ-026 exit-blocking and requires every M1 helper or
   architectural distribution candidate to have a known posture or be excluded.
 

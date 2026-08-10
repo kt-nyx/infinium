@@ -18,10 +18,10 @@ public sealed class Mo2ReadOnlyIntegrationTests
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Security")]
     [TestProperty("EvaluationCase", "EVAL-0046")]
     public void ExplicitCaptureIsReadOnlyAcrossEveryDeclaredProtectedRoot()
     {
@@ -103,10 +103,10 @@ public sealed class Mo2ReadOnlyIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Security")]
     [TestProperty("EvaluationCase", "EVAL-0046")]
     public void ReadOnlyCaptureIsTheOnlyPubliclyReachableAdapterOperation()
     {
@@ -130,8 +130,8 @@ public sealed class Mo2ReadOnlyIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestProperty("Category", "M1Integration")]
+    [TestCategory("Integration")]
+    [TestProperty("Category", "Integration")]
     public void NoPassiveEventCreatesASnapshotOrStartsAProcess()
     {
         using IntegrationFixture fixture = new();
@@ -462,7 +462,7 @@ public sealed class Mo2ReadOnlyIntegrationTests
 
         internal IntegrationFixture()
         {
-            Root = Path.Combine(Path.GetTempPath(), $"Infinium-Slice3-Integration-{Guid.NewGuid():N}");
+            Root = Path.Combine(Path.GetTempPath(), $"Infinium-Snapshot-Integration-{Guid.NewGuid():N}");
             InstanceRoot = Directory.CreateDirectory(Path.Combine(Root, "instance")).FullName;
             string profiles = Directory.CreateDirectory(Path.Combine(InstanceRoot, "profiles")).FullName;
             string profile = Directory.CreateDirectory(Path.Combine(profiles, "Explicit")).FullName;

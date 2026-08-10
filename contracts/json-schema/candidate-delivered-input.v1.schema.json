@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.infinium.dev/json-schema/candidate-delivered-input.v1.schema.json",
-  "title": "Infinium Slice 5 answer-free delivered candidate input v1",
+  "title": "Infinium answer-free delivered candidate input v1",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_id", "schema_version", "payload_id", "originating_run_id", "source_snapshot_id", "analysis_context_id", "configuration_id", "link_facts", "face_gen_facts", "coverage_gap_facts", "documentation_facts"],

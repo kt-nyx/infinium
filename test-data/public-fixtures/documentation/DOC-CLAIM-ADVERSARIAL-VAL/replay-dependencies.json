@@ -1,0 +1,71 @@
+{
+  "fixture_id": "DOC-CLAIM-ADVERSARIAL-VAL",
+  "fixture_version": "1.0.0",
+  "expected_replay_state": "complete-clean",
+  "dependency_graph_fingerprint": "c392e0856c183c9370acdb003e42e4e426f79f56ce29bedfd4ea545e46477d6f",
+  "dependencies": [
+    {
+      "dependency_id": "inputs-case-matrix-json",
+      "kind": "tracked-fixture-input",
+      "identity_or_version": "inputs/case-matrix.json",
+      "sha256": "98992291129eb86584111ac4bed0461e60ce3d326d055cd7dad464f947c5238a",
+      "byte_length": 4823,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "boundary-replay",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Removal makes clean recomputation unavailable and leaves only retained output audit evidence."
+    },
+    {
+      "dependency_id": "inputs-claim-import-json",
+      "kind": "tracked-fixture-input",
+      "identity_or_version": "inputs/claim-import.json",
+      "sha256": "3d6671a4c442ad2f08f9afd23be85b5edccf4cebb37f7e69e75c44be48f43df0",
+      "byte_length": 2475,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "boundary-replay",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Removal makes clean recomputation unavailable and leaves only retained output audit evidence."
+    },
+    {
+      "dependency_id": "inputs-source-txt",
+      "kind": "tracked-fixture-input",
+      "identity_or_version": "inputs/source.txt",
+      "sha256": "e0b05439353b6871a839cd89942626756917f612bae9bb285e59a39f8900079e",
+      "byte_length": 211,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Deletion makes clean recomputation unavailable and retained evidence audit-only. Separate live-source unavailability retains R1 bytes and preserves partial replay."
+    }
+  ],
+  "expected_output_references": [
+    {
+      "artifact_id": "expected-oracle.json",
+      "artifact_version": "1.0.0",
+      "fingerprint": "56763ff8877f791002556e48eac124bf97fb841b4027ed9b88a4372c20c15848",
+      "byte_length": 15440,
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "oracle/independent-derivation.md",
+      "artifact_version": "1.0.0",
+      "fingerprint": "30da88021c4f62a9400b4b3b90216a080ac890c5fd15cebde69e07be8c949fba",
+      "byte_length": 2950,
+      "availability": "retained"
+    }
+  ]
+}

@@ -1,5 +1,4 @@
 using System.Text.Json.Nodes;
-using Infinium.Application.Evaluation;
 using Infinium.Domain.Contracts;
 using Infinium.PublicFixtures;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -10,10 +9,10 @@ namespace Infinium.Tests;
 public sealed class FixtureReaderContractTests
 {
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Contract")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Contract")]
+    [TestCategory("Integration")]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Contract")]
     public void CompleteHarnessPackageValidatesFingerprintsIdentityPartitionAndOracle()
     {
         using FixturePackageTestBuilder fixture = new();
@@ -26,10 +25,10 @@ public sealed class FixtureReaderContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Contract")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Contract")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Contract")]
+    [TestProperty("Category", "Security")]
     public void ExecutionReaderReturnsOnlyExecutionInput()
     {
         using FixturePackageTestBuilder fixture = new();
@@ -43,8 +42,8 @@ public sealed class FixtureReaderContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Fault")]
     public void HarnessReaderRefusesMissingFingerprint()
     {
         using FixturePackageTestBuilder fixture = new();
@@ -55,8 +54,8 @@ public sealed class FixtureReaderContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Fault")]
     public void HarnessReaderRefusesMissingPartition()
     {
         using FixturePackageTestBuilder fixture = new();
@@ -67,8 +66,8 @@ public sealed class FixtureReaderContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Fault")]
     public void HarnessReaderRefusesMissingGroundTruth()
     {
         using FixturePackageTestBuilder fixture = new();
@@ -79,8 +78,8 @@ public sealed class FixtureReaderContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Fault")]
     public void HarnessReaderRefusesMissingExpectedGapDeclaration()
     {
         using FixturePackageTestBuilder fixture = new();
@@ -91,8 +90,8 @@ public sealed class FixtureReaderContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Fault")]
     public void HarnessReaderRefusesMissingTaxonomyVersion()
     {
         using FixturePackageTestBuilder fixture = new();
@@ -103,8 +102,8 @@ public sealed class FixtureReaderContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Fault")]
     public void HarnessReaderRefusesUnsupportedPublicSchemaVersion()
     {
         using FixturePackageTestBuilder fixture = new();
@@ -115,8 +114,8 @@ public sealed class FixtureReaderContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Security")]
     public void ClosedExecutionSchemaRejectsNestedAnswerBearingProperties()
     {
         using FixturePackageTestBuilder fixture = new();
@@ -131,10 +130,10 @@ public sealed class FixtureReaderContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Fault")]
-    [TestCategory("M1Contract")]
-    [TestProperty("Category", "M1Fault")]
-    [TestProperty("Category", "M1Contract")]
+    [TestCategory("Fault")]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Fault")]
+    [TestProperty("Category", "Contract")]
     public void ExecutionReaderRejectsMissingSchemaRequiredField()
     {
         using FixturePackageTestBuilder fixture = new();
@@ -146,8 +145,8 @@ public sealed class FixtureReaderContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Security")]
     public void ExecutionReaderRejectsArbitraryExtensionObjects()
     {
         using FixturePackageTestBuilder fixture = new();
@@ -159,8 +158,8 @@ public sealed class FixtureReaderContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Evaluation")]
     public void PartitionVocabularyIsClosedAndCannotRelabelKnownAnswers()
     {
         using FixturePackageTestBuilder fixture = new();
@@ -171,10 +170,10 @@ public sealed class FixtureReaderContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "Fault")]
     public void KnownAnswerTransitionRequiresIndependentReplacementCoverage()
     {
         using FixturePackageTestBuilder fixture = new();

@@ -3,7 +3,7 @@
 Status: Accepted  
 Accepted: 2026-07-28  
 Accepted by: Project owner  
-Last reviewed: 2026-08-08
+Last reviewed: 2026-08-10
 Target milestone: M1 — Backend semantic proof
 
 ## 1. Purpose and authority
@@ -207,7 +207,7 @@ every NPC or AI field; generic patch correctness; and broad Skyrim safety.
 validation rename/reorder metamorph `SEM-NPC-VAL-001`, and a sealed
 independently authored held-out replacement `SEM-NPC-HO-001`. The resolved
 input uses the corresponding packages in the
-[accepted fixture manifest](../fixtures/m1-semantic-fixture-manifests.md).
+[accepted fixture manifest](semantic-fixture-catalog.md).
 
 **Independent truth and isolation.** Project-authored plugin bytes are
 hand-audited before production parsing. The oracle pins origin FormKeys,
@@ -982,7 +982,7 @@ includes both accepted live semantic operations,
 the later live composed slot must additionally apply the same provenance assertions
 to their exact retained calls/outputs admitted by the applicable provider,
 credential, and budget cases in the
-[platform fixture manifests](../fixtures/m1-platform-fixture-manifests.md).
+[platform fixture manifests](platform-fixture-catalog.md).
 It also references the earlier qualification request. It may execute only
 after the dispatch gate opens and does not independently authorize another
 paid call.

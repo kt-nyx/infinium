@@ -4,14 +4,14 @@ Status: Accepted; partially superseded by ADR-0030 and ADR-0032 decision scope o
 Date: 2026-08-04
 Accepted: 2026-08-04
 Accepted by: Project owner
-Last reviewed: 2026-08-04
+Last reviewed: 2026-08-10
 Supersedes: Part of ADR-0026
 Superseded by: ADR-0030 for Decision 15; ADR-0032 only for the M1 Slice 5 held-out-`PASS` prerequisite
 
 Accepted clarification, 2026-08-04: independently authorable held-out
 semantics and implementation-specific public conformance are separate proof
 surfaces. The normative boundary is recorded in
-[the final Slice 4 held-out scope amendment](../../evaluation/m1-slice4-heldout-scope-final-amendment.md).
+[the final Slice 4 held-out scope amendment](../../evaluation/evaluator-history.md).
 
 Accepted successor disposition, 2026-08-07: ADR-0030 supersedes only Decision
 15's `/4`-finality and no-`/5` restriction. Every other decision and boundary
@@ -201,4 +201,4 @@ raw and sanitized run records.
 - [ADR-0026](ADR-0026-evaluator-private-fixture-repository-and-delegated-access.md)
 - [Evaluator-private fixture governance v2](../../evaluation/evaluator-private-fixture-governance-v2.md)
 - [M1 evaluation baseline evaluator-v2 amendment](../../evaluation/m1-evaluation-baseline-evaluator-v2-amendment.md)
-- [M1 Slice 4.5 execution plan](../../plans/slices/M1-slice-4.5-held-out-evaluation-v2.md)
+- [M1 Slice 4.5 execution plan](../../evaluation/evaluator-history.md)

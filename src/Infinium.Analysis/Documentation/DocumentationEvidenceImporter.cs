@@ -83,11 +83,11 @@ public static class DocumentationEvidenceImporter
             manifest.SourceRevision,
             manifest.ByteFingerprint.Value,
             manifest.ByteLength.ToString(CultureInfo.InvariantCulture));
-        Slice5ResultState retentionState = manifest.Availability switch
+        AnalysisResultState retentionState = manifest.Availability switch
         {
-            DocumentationSourceAvailability.Present => Slice5ResultState.Present,
-            DocumentationSourceAvailability.Deleted => Slice5ResultState.Unavailable,
-            DocumentationSourceAvailability.Unavailable => Slice5ResultState.Unavailable,
+            DocumentationSourceAvailability.Present => AnalysisResultState.Present,
+            DocumentationSourceAvailability.Deleted => AnalysisResultState.Unavailable,
+            DocumentationSourceAvailability.Unavailable => AnalysisResultState.Unavailable,
             _ => throw new InvalidOperationException("Source availability must be closed."),
         };
         ReplayState replayState = manifest.Availability switch
@@ -171,7 +171,7 @@ public static class DocumentationEvidenceImporter
                     input.Utf8StartOffset,
                     input.Utf8EndOffset,
                     passageFingerprint,
-                    Slice5ResultState.Present);
+                    AnalysisResultState.Present);
                 cachedPassage = (decodedText, newPassage);
                 passagesByRange.Add(rangeKey, cachedPassage);
                 passages.Add(newPassage);
@@ -348,7 +348,7 @@ public static class DocumentationEvidenceImporter
             gaps,
             []);
         result = result with { PayloadId = DocumentationEvidenceIdentity.ComputePayloadId(result) };
-        Slice5ContractInvariants.Validate(result);
+        DocumentationEvidenceContractInvariants.Validate(result);
         return result;
     }
 
@@ -356,7 +356,7 @@ public static class DocumentationEvidenceImporter
     {
         DocumentationEvidenceContract retained = request.RetainedEvidence
             ?? throw new InvalidOperationException("Retained reuse requires a retained documentation evidence payload.");
-        Slice5ContractInvariants.Validate(retained);
+        DocumentationEvidenceContractInvariants.Validate(retained);
         if (request.SourceBytes is not null
             || request.Manifest.Claims.Count != 0
             || request.Manifest.Applications.Count != 0)
@@ -435,7 +435,7 @@ public static class DocumentationEvidenceImporter
             Gaps = gaps,
         };
         result = result with { PayloadId = DocumentationEvidenceIdentity.ComputePayloadId(result) };
-        Slice5ContractInvariants.Validate(result);
+        DocumentationEvidenceContractInvariants.Validate(result);
         return result;
     }
 
@@ -772,7 +772,7 @@ public static class DocumentationEvidenceImporter
     private static string AuthorityToken(EvidenceAuthority value) => value switch
     {
         EvidenceAuthority.AuthoritativeExternal => "authoritative-external",
-        _ => throw new InvalidOperationException("WP2 documentation claims require authoritative-external authority."),
+        _ => throw new InvalidOperationException("Documentation claims require authoritative-external authority."),
     };
 
     private static string ApplicabilityToken(ClaimApplicabilityState value) => value switch

@@ -6,8 +6,8 @@ namespace Infinium.Tests;
 public sealed class RepositoryStructureTests
 {
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestProperty("Category", "M1Contract")]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Contract")]
     public void AcceptedSliceZeroProjectSkeletonExists()
     {
         string[] projects =
@@ -38,19 +38,19 @@ public sealed class RepositoryStructureTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestProperty("Category", "M1Contract")]
-    public void SliceOneContractDirectoriesAreImplementedAndEvaluationBoundaryIsCurrent()
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Contract")]
+    public void ContractDirectoriesAreImplementedAndEvaluationBoundaryIsCurrent()
     {
-        string[] implementedReadmes =
-        [
-            "contracts/protobuf/README.md",
-            "contracts/json-schema/README.md",
-        ];
-        foreach (string readme in implementedReadmes)
+        IReadOnlyDictionary<string, string> implementedReadmes = new Dictionary<string, string>
+        {
+            ["contracts/protobuf/README.md"] = "# Protobuf contracts",
+            ["contracts/json-schema/README.md"] = "# JSON schemas",
+        };
+        foreach ((string readme, string heading) in implementedReadmes)
         {
             string content = TestRepository.Read(readme.Split('/'));
-            StringAssert.Contains(content, "M1 Slice 1");
+            StringAssert.Contains(content, heading);
             StringAssert.Contains(content, "contract");
         }
 
@@ -63,7 +63,7 @@ public sealed class RepositoryStructureTests
         foreach (string readme in reservedReadmes)
         {
             string content = TestRepository.Read(readme.Split('/'));
-            StringAssert.Contains(content, "not implemented by Slice 0");
+            StringAssert.Contains(content, "not implemented");
         }
 
         string evaluator = TestRepository.Read("tools", "evaluation", "README.md");

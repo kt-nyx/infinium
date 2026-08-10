@@ -3,7 +3,7 @@
 Status: Completed — recommendation accepted as
 `infinium.skyrim-se.mod-impact-taxonomy/0.1.0`  
 Date: 2026-07-25  
-Last reviewed: 2026-07-28
+Last reviewed: 2026-08-10
 Researcher: Codex agent  
 Primary question: RQ-036  
 M0 wave: C  
@@ -58,7 +58,7 @@ It is governed by:
   [taxonomy dependency map](../taxonomy-dependency-map.md), which inventories
   every product consumer but is explicitly not the answer; and
 - the accepted
-  [M0 Wave C plan](../../plans/milestones/M0-research-foundation.md#wave-c--analysis-surfaces-taxonomy-corpus-and-candidate-scale),
+  [M0 Wave C plan](../../plans/milestones/m0/plan.md#wave-c--analysis-surfaces-taxonomy-corpus-and-candidate-scale),
   which requires a distinct, versioned, corpus-tested product taxonomy.
 
 This report proposes

@@ -1,6 +1,6 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using Infinium.Application.Evaluation;
+using Infinium.Application.Serialization;
 using Infinium.Domain.Contracts;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -56,8 +56,8 @@ public sealed partial class SchemaCompatibilityTests
     ];
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestProperty("Category", "M1Contract")]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Contract")]
     public void JsonSchemaSetIsVersionedClosedAndLocallyResolvable()
     {
         string schemaDirectory = TestRepository.PathFromRoot("contracts", "json-schema");
@@ -104,10 +104,10 @@ public sealed partial class SchemaCompatibilityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Contract")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Contract")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Contract")]
+    [TestProperty("Category", "Evaluation")]
     public void StableJsonContractsRetainTypedCollectionsAndAcceptedConstants()
     {
         using JsonDocument publicManifest = ReadSchema("fixture-public-manifest.v1.schema.json");
@@ -225,8 +225,8 @@ public sealed partial class SchemaCompatibilityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Security")]
     public void ExecutionInputSchemaCannotCarryAnswerBearingProperties()
     {
         using JsonDocument execution = ReadSchema("fixture-execution-input.v1.schema.json");
@@ -252,8 +252,8 @@ public sealed partial class SchemaCompatibilityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestProperty("Category", "M1Contract")]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Contract")]
     public void ProtobufContractsUseVersionedPackagesResolvableImportsAndFailClosedEnums()
     {
         string protoDirectory = TestRepository.PathFromRoot("contracts", "protobuf");
@@ -287,8 +287,8 @@ public sealed partial class SchemaCompatibilityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Security")]
     public void CredentialHelperSchemaHasNoRpcServiceOrSecretBearingFields()
     {
         string helper = TestRepository.Read("contracts", "protobuf", "infinium", "helper", "v1", "helper.proto");
@@ -315,8 +315,8 @@ public sealed partial class SchemaCompatibilityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestProperty("Category", "M1Contract")]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Contract")]
     public void DomainContractsExposeTheStableSchemaBoundaries()
     {
         AssertRecordProperties<AnalyzerDeclarationContract>(
@@ -393,12 +393,12 @@ public sealed partial class SchemaCompatibilityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Cases")]
-    [TestProperty("Category", "M1Contract")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Cases")]
+    [TestCategory("Contract")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Cases")]
+    [TestProperty("Category", "Contract")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "Cases")]
     public void AnalyzerDeclarationSurvivesSchemaValidatedJsonRoundTrip()
     {
         AnalyzerDeclarationContract original = CreateAnalyzerDeclaration();
@@ -459,7 +459,7 @@ public sealed partial class SchemaCompatibilityTests
                 [CoverageState.Completed, CoverageState.CompletedWithGaps, CoverageState.Unsupported],
                 "unsupported inputs emit explicit coverage"),
             new AnalyzerOperationRequirementsContract(ExecutionRequirement.LocalOnly, false, false, false),
-            new AnalyzerScaleAndCostContract("bounded M1", AnalyzerCostClass.LocalModerate, false),
+            new AnalyzerScaleAndCostContract("bounded local analysis", AnalyzerCostClass.LocalModerate, false),
             new AnalyzerResourceBoundsContract(100, 100, 1_000),
             AnalyzerMaturity.Experimental,
             true,
@@ -471,7 +471,7 @@ public sealed partial class SchemaCompatibilityTests
                 ["EVAL-0017"],
                 ["EVAL-0032"],
                 ["EVAL-0065"]),
-            RequiredSlice5PayloadContracts(),
+            RequiredAnalysisPayloadContracts(),
             new ContractVersion(1, 0, 0),
             RequiredNotUsedBoundaries())
         {
@@ -479,7 +479,7 @@ public sealed partial class SchemaCompatibilityTests
         };
     }
 
-    private static PayloadContractDeclarationContract[] RequiredSlice5PayloadContracts() =>
+    private static PayloadContractDeclarationContract[] RequiredAnalysisPayloadContracts() =>
     [
         new(ContractConstants.DocumentationEvidenceSchemaId, new ContractVersion(1, 0, 0), true),
         new(ContractConstants.CandidateAnalysisSchemaId, new ContractVersion(1, 0, 0), true),

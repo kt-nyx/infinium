@@ -5,8 +5,8 @@ using System.Threading.Channels;
 using Google.Protobuf;
 using Grpc.Core;
 using Infinium.Application.Analysis;
-using Infinium.Application.Evaluation;
 using Infinium.Application.Runtime;
+using Infinium.Application.Serialization;
 using Infinium.Contracts.Protobuf.Application.V1;
 using Infinium.Contracts.Protobuf.Common.V1;
 using Infinium.Contracts.Protobuf.Domain.V1;
@@ -102,7 +102,7 @@ public sealed class ApplicationGrpcService(
             {
                 Failure = Failure(
                     FailureCode.Unsupported,
-                    "Slice 2 supports the deterministic created-at ascending run query only."),
+                    "The run query supports deterministic created-at ascending order only."),
             });
         }
 
@@ -252,7 +252,7 @@ public sealed class ApplicationGrpcService(
             {
                 Failure = Failure(
                     FailureCode.Unsupported,
-                    "Slice 2 has no finding producer or supported finding query shape."),
+                    "The current query service has no finding producer or supported finding query shape."),
             });
         }
 

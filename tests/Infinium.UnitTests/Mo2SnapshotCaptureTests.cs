@@ -10,10 +10,10 @@ namespace Infinium.Tests;
 public sealed class Mo2SnapshotCaptureTests
 {
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Contract")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Contract")]
+    [TestCategory("Unit")]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Contract")]
     public void ExplicitProfileReconstructsEnabledProviderAndPluginState()
     {
         using SnapshotFixture fixture = new();
@@ -64,10 +64,10 @@ public sealed class Mo2SnapshotCaptureTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Contract")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Contract")]
+    [TestCategory("Unit")]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Contract")]
     public void SnapshotRetainsRawControlsAndCanonicalStructuralDependencies()
     {
         using SnapshotFixture fixture = new();
@@ -112,10 +112,10 @@ public sealed class Mo2SnapshotCaptureTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Contract")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Contract")]
+    [TestCategory("Unit")]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Contract")]
     public void IdenticalRecapturesHaveDistinctOccurrenceIdsAndStableFingerprints()
     {
         using SnapshotFixture fixture = new();
@@ -135,10 +135,10 @@ public sealed class Mo2SnapshotCaptureTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Contract")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Contract")]
+    [TestCategory("Unit")]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Contract")]
     public void ExactGamePluginForcesCoreOrderAndClassifiesForeignData()
     {
         using SnapshotFixture fixture = new();
@@ -195,10 +195,10 @@ public sealed class Mo2SnapshotCaptureTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
     public void HiddenManagementAndDisabledContentNeverEnterEffectiveData()
     {
         using SnapshotFixture fixture = new();
@@ -226,10 +226,10 @@ public sealed class Mo2SnapshotCaptureTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Unit")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Fault")]
     public void RunningMo2FailsClosedBeforeReadingProfileState()
     {
         using SnapshotFixture fixture = new();
@@ -243,10 +243,10 @@ public sealed class Mo2SnapshotCaptureTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Unit")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Fault")]
     public void SameSizeControlMutationInvalidatesCapture()
     {
         using SnapshotFixture fixture = new();
@@ -270,10 +270,10 @@ public sealed class Mo2SnapshotCaptureTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Unit")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Fault")]
     public void UnknownMapperAndMissingModRemainVisibleGaps()
     {
         using SnapshotFixture fixture = new();
@@ -311,8 +311,8 @@ public sealed class Mo2SnapshotCaptureTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void QualifiedMapperContributesOnlyItsDeclaredVirtualPrefix()
     {
         using SnapshotFixture fixture = new();
@@ -346,8 +346,8 @@ public sealed class Mo2SnapshotCaptureTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void LocalInstalledIdentityDoesNotCollapseMutableSourceHints()
     {
         using SnapshotFixture fixture = new();
@@ -373,10 +373,10 @@ public sealed class Mo2SnapshotCaptureTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Unit")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Fault")]
     public void SameSizeMetaMutationInvalidatesCapture()
     {
         using SnapshotFixture fixture = new();
@@ -397,10 +397,10 @@ public sealed class Mo2SnapshotCaptureTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
     public void HiddenDirectoriesAndConfiguredSkipsNeverContribute()
     {
         using SnapshotFixture fixture = new();
@@ -433,16 +433,16 @@ public sealed class Mo2SnapshotCaptureTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
     public void NestedJunctionIsRecordedAsAGapAndNeverTraversed()
     {
         using SnapshotFixture fixture = new();
         string protectedRoot = Path.Combine(
             Path.GetTempPath(),
-            $"Infinium-Slice3-Protected-{Guid.NewGuid():N}");
+            $"Infinium-Snapshot-Protected-{Guid.NewGuid():N}");
         Directory.CreateDirectory(protectedRoot);
         string canary = Path.Combine(protectedRoot, "must-not-enter-snapshot.txt");
         File.WriteAllText(canary, "protected", Encoding.UTF8);
@@ -476,12 +476,12 @@ public sealed class Mo2SnapshotCaptureTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
+    [TestProperty("Category", "Fault")]
     public void NestedDirectoryReplacementWithJunctionCannotRedirectTraversal()
     {
         using SnapshotFixture fixture = new();
@@ -490,7 +490,7 @@ public sealed class Mo2SnapshotCaptureTests
         File.WriteAllText(Path.Combine(nested, "safe.txt"), "safe", Encoding.UTF8);
         string protectedRoot = Path.Combine(
             Path.GetTempPath(),
-            $"Infinium-Slice3-Race-Protected-{Guid.NewGuid():N}");
+            $"Infinium-Snapshot-Race-Protected-{Guid.NewGuid():N}");
         Directory.CreateDirectory(protectedRoot);
         string canary = Path.Combine(protectedRoot, "race-canary.txt");
         File.WriteAllText(canary, "protected", Encoding.UTF8);
@@ -536,10 +536,10 @@ public sealed class Mo2SnapshotCaptureTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Unit")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Fault")]
     public void Mo2StartingDuringCaptureInvalidatesTheAttempt()
     {
         using SnapshotFixture fixture = new();
@@ -553,10 +553,10 @@ public sealed class Mo2SnapshotCaptureTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Unit")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Fault")]
     public void ExecutableIdentityChangingDuringCaptureInvalidatesTheAttempt()
     {
         using SnapshotFixture fixture = new();
@@ -570,10 +570,10 @@ public sealed class Mo2SnapshotCaptureTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
     public void UnqualifiedMapperRootIsNeverOpened()
     {
         using SnapshotFixture fixture = new();
@@ -593,10 +593,10 @@ public sealed class Mo2SnapshotCaptureTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Unit")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Fault")]
     public void MissingRequiredProfileControlFailsWithoutSnapshot()
     {
         using SnapshotFixture fixture = new();
@@ -610,10 +610,10 @@ public sealed class Mo2SnapshotCaptureTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Contract")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Contract")]
+    [TestCategory("Unit")]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Contract")]
     public void RenamingPhysicalModDirectoryPreservesEntityIdentity()
     {
         using SnapshotFixture fixture = new();
@@ -634,8 +634,8 @@ public sealed class Mo2SnapshotCaptureTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void MissingAndUnrecognizedExecutablesFailAdmissionWithoutFallback()
     {
         SupportedExecutableManifests manifests = new();
@@ -649,10 +649,10 @@ public sealed class Mo2SnapshotCaptureTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Unit")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Fault")]
     public void UnsupportedManagerFailsBeforeAnyPathResolution()
     {
         using SnapshotFixture fixture = new();
@@ -673,7 +673,7 @@ public sealed class Mo2SnapshotCaptureTests
     {
         internal SnapshotFixture()
         {
-            Root = Path.Combine(Path.GetTempPath(), $"Infinium-Slice3-{Guid.NewGuid():N}");
+            Root = Path.Combine(Path.GetTempPath(), $"Infinium-Snapshot-{Guid.NewGuid():N}");
             InstanceRoot = Directory.CreateDirectory(Path.Combine(Root, "instance")).FullName;
             ProfilesRoot = Directory.CreateDirectory(Path.Combine(InstanceRoot, "profiles")).FullName;
             ModsRoot = Directory.CreateDirectory(Path.Combine(InstanceRoot, "mods")).FullName;

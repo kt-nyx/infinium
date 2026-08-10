@@ -2,8 +2,7 @@
 
 Status: Accepted; actively maintained
 
-Last reviewed: 2026-08-08
-
+Last reviewed: 2026-08-10
 Infinium is not trustworthy because it produces plausible reports. It becomes
 trustworthy only when evidence reconstruction, candidate selection, semantic
 classification, abstention, and user-facing/release presentation are evaluated
@@ -11,7 +10,7 @@ separately against known answers.
 
 For ordinary product and public-fixture development, evaluation failures and
 review findings return to correction and re-review under the
-[development execution policy](../development/execution-policy.md). This
+[development execution policy](../execution-policy.md). This
 strategy defines evidence and claim standards; it does not impose an evaluator-
 style correction budget or terminal stop on ordinary implementation. Private
 and one-shot evaluator operations remain governed by their explicit protocols.
@@ -394,8 +393,8 @@ or verdict. Its identities are historical and cannot be reused.
 Private held-out evaluation is deferred. No current private `PASS`, `FAIL`, or
 valid product-scoring `EVALUATOR_ERROR` exists, and B2, C2, Stage D, corpus
 work, adaptation, comparison, and scoring are unauthorized. Evaluator-deferral
-closeout is accepted: Slice 4.5 is closed by owner disposition. Slice 5 WP1 is
-complete and reviewed, and WP2 is the next eligible product package.
+closeout is accepted: Slice 4.5 is closed by owner disposition. The live
+product handoff is stated only in [current project state](../current-state.md).
 
 Slices 5-9 use the accepted
 [M1 continuation verification profile](m1-continuation-verification-profile.md):

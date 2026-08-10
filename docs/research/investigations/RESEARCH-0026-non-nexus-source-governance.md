@@ -12,8 +12,7 @@ historical evidence.
 
 Date: 2026-07-26
 
-Last reviewed: 2026-07-28
-
+Last reviewed: 2026-08-10
 Researcher: Codex agent
 
 Primary research question: RQ-010
@@ -122,7 +121,7 @@ All external sources were retrieved or rechecked on **2026-07-26**.
 
 | ID | Primary source | Version/revision | Claim-level relevance |
 |---|---|---|---|
-| I1 | [Accepted product requirements](../../product/requirements.md), [source registry](../source-registry.md), and [M0 plan](../../plans/milestones/M0-research-foundation.md) | Current accepted/draft repository state reviewed 2026-07-26 | Normative source authority, retention, search, provenance, and Wave D scope. |
+| I1 | [Accepted product requirements](../../product/requirements.md), [source registry](../source-registry.md), and [M0 plan](../../plans/milestones/m0/plan.md) | Current accepted/draft repository state reviewed 2026-07-26 | Normative source authority, retention, search, provenance, and Wave D scope. |
 | I2 | [RESEARCH-0001](RESEARCH-0001-nexus-access-policy.md), [RESEARCH-0003](RESEARCH-0003-retention-replay-export-policy.md), and [RESEARCH-0004](RESEARCH-0004-wave-a-policy-and-evidence-handling-integration.md) | Completed/accepted Wave A inputs | Four-axis permissions, source-specific handling, and the prohibition on generalizing Nexus risk acceptance. |
 | G1 | [GitHub Terms of Service](https://docs.github.com/en/site-policy/github-terms/github-terms-of-service) | Effective 2026-04-27 | Public-repository access, user-content/licence boundaries, API terms, rate-abuse restrictions, and mutable-policy trigger. |
 | G2 | [GitHub Acceptable Use Policies](https://docs.github.com/en/site-policy/acceptable-use-policies/github-acceptable-use-policies) | Moving policy; retrieved 2026-07-26 | Prohibits excessive bulk activity and misuse of personal information; distinguishes API collection from scraping while retaining API/Terms obligations. |

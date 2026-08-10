@@ -1,0 +1,37 @@
+{
+  "schema_id": "infinium.evaluation.fixture-public-manifest/v1",
+  "schema_version": "1",
+  "fixture_id": "DOC-CLAIM-ADVERSARIAL-VAL",
+  "fixture_version": "1.0.0",
+  "evaluation_ids": [
+    "EVAL-0033",
+    "EVAL-0034",
+    "EVAL-0035",
+    "EVAL-0037",
+    "EVAL-0064",
+    "EVAL-0067",
+    "EVAL-0083"
+  ],
+  "purpose": "Validate inert hostile documentation, malformed and unsupported rejection, clean-versus-retained reuse, source deletion/unavailability gaps, replay downgrade, and explicit external-boundary non-use.",
+  "classification": "boundary",
+  "partition": "validation",
+  "partition_history": [
+    {
+      "from": null,
+      "to": "validation",
+      "at": "2026-08-08T18:05:00.0000000+00:00",
+      "reason": "Fresh public documentation stage adversarial package preregistered and independently authored before product comparison.",
+      "change_influenced_implementation": false
+    }
+  ],
+  "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
+  "taxonomy_version": "0.1.0",
+  "input_package_fingerprint": "c392e0856c183c9370acdb003e42e4e426f79f56ce29bedfd4ea545e46477d6f",
+  "oracle_fingerprint": "56763ff8877f791002556e48eac124bf97fb841b4027ed9b88a4372c20c15848",
+  "provenance_fingerprint": "25a912b3f148997fe597b1a8d6fd0e657830c26856ddb1939baff0e76431bf84",
+  "replay_dependency_fingerprint": "de417f7c04ea02af20e4c458ba202e5044964df6690942b9e602fbbd0ceb9580",
+  "redistribution_class": "project-authored-redistributable",
+  "owner": "infinium-evaluation",
+  "review_state": "accepted",
+  "created_at": "2026-08-08T18:05:00.0000000+00:00"
+}

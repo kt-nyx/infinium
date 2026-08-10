@@ -11,10 +11,10 @@ namespace Infinium.Tests;
 public sealed class BethesdaSemanticBoundaryIntegrationTests
 {
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Security")]
     public void CoordinatorAdmitsOnlySnapshotBoundStrictTypedResult()
     {
         BethesdaSemanticRequest request = BethesdaSemanticTestSnapshot.Create("BETH-REFR-DEV");
@@ -58,10 +58,10 @@ public sealed class BethesdaSemanticBoundaryIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Security")]
     public void CoordinatorRejectsTamperedSealsDependencyWinnersAndReverseLinks()
     {
         BethesdaSemanticRequest request = BethesdaSemanticTestSnapshot.Create("BETH-REFR-DEV");
@@ -105,10 +105,10 @@ public sealed class BethesdaSemanticBoundaryIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Security")]
     public void CoordinatorRejectsTamperedV2AvailabilityCoverageGapAndTaxonomyContracts()
     {
         BethesdaSemanticRequest request = BethesdaSemanticTestSnapshot.Create("BETH-NPC-DEV");
@@ -273,10 +273,10 @@ public sealed class BethesdaSemanticBoundaryIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Security")]
     public void ExtractionReadsOnlySnapshotWinnersAndDoesNotMutateInputs()
     {
         BethesdaSemanticRequest request = BethesdaSemanticTestSnapshot.Create("BETH-NPC-DEV");
@@ -307,17 +307,17 @@ public sealed class BethesdaSemanticBoundaryIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Integration")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Fault")]
     public void MidReadIdentityChangeFailsWithoutPartialSemanticAuthority()
     {
         string source = TestRepository.PathFromRoot(
-            "test-data", "evaluation", "m1-semantic", "BETH-MALFORMED-VAL",
+            "test-data", "public-fixtures", "bethesda", "BETH-MALFORMED-VAL",
             "inputs", "mutations", "ChangedDuringRead-A.esp");
         string alternate = TestRepository.PathFromRoot(
-            "test-data", "evaluation", "m1-semantic", "BETH-MALFORMED-VAL",
+            "test-data", "public-fixtures", "bethesda", "BETH-MALFORMED-VAL",
             "inputs", "mutations", "ChangedDuringRead-B.esp");
         string root = Path.Combine(Path.GetTempPath(), $"infinium-bethesda-drift-{Guid.NewGuid():N}");
         Directory.CreateDirectory(root);
@@ -347,10 +347,10 @@ public sealed class BethesdaSemanticBoundaryIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Security")]
     public void SnapshotWinnerPathCannotBeReboundToAnotherPluginName()
     {
         BethesdaSemanticRequest request = BethesdaSemanticTestSnapshot.Create("BETH-LIGHT-VAL");

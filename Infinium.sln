@@ -33,7 +33,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infinium.IntegrationTests",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infinium.EvaluationTests", "tests\Infinium.EvaluationTests\Infinium.EvaluationTests.csproj", "{01321761-01A1-4FC3-A0DD-06E9676FD240}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infinium.PublicFixtures", "tools\evaluation\Infinium.PublicFixtures\Infinium.PublicFixtures.csproj", "{4BE7D215-659C-4B74-B06F-01936667EE69}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infinium.PublicFixtures", "tools\fixtures\Infinium.PublicFixtures\Infinium.PublicFixtures.csproj", "{4BE7D215-659C-4B74-B06F-01936667EE69}"
 EndProject
 Global
   GlobalSection(SolutionConfigurationPlatforms) = preSolution

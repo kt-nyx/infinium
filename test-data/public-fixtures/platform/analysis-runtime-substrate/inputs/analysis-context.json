@@ -1,0 +1,9 @@
+{
+  "schema_id": "infinium.analysis.fixture-context/v1",
+  "schema_version": "1",
+  "context_id": "platform-analysis-runtime-dev-v1.current-public-context",
+  "fixture_id": "PLATFORM-ANALYSIS-RUNTIME-DEV-v1",
+  "fixture_version": "1.1.0",
+  "authority": "project-authored-current-public-fixture",
+  "use_case": "platform-substrate-regression"
+}

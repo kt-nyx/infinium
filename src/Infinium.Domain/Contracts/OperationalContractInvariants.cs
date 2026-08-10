@@ -551,7 +551,7 @@ public static class OperationalContractInvariants
             || purpose != CredentialPurpose.OpenAiResponses
             || endpoint != ProviderEndpoint.OpenAiResponsesV1)
         {
-            throw new InvalidOperationException("The provider binding is not an accepted closed M1 combination.");
+            throw new InvalidOperationException("The provider binding is not an accepted closed analysis combination.");
         }
     }
 

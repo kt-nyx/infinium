@@ -1,0 +1,90 @@
+{
+  "schema_id": "infinium.evaluation.bethesda-case-matrix/v1",
+  "schema_version": "1",
+  "fixture_id": "BETH-NPC-DEV",
+  "fixture_version": "1.4.0",
+  "source_basis": "accepted-bethesda-scenario-inventory-and-retained-execution-inputs",
+  "cases": [
+    {
+      "scenario_id": "npc-layered-winner",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/plugins/00-Pad.esm",
+        "inputs/plugins/01-Actors.esm",
+        "inputs/plugins/02-Behavior.esp",
+        "inputs/plugins/03-Appearance.esp"
+      ]
+    },
+    {
+      "scenario_id": "npc-deleted-winner",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/plugins/01-Actors.esm",
+        "inputs/plugins/06-DeletedWinner.esp"
+      ]
+    },
+    {
+      "scenario_id": "npc-light-plugin",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/plugins/01-Actors.esm",
+        "inputs/plugins/04-LightActors.esl",
+        "inputs/plugins/05-LightWinner.esp"
+      ]
+    },
+    {
+      "scenario_id": "npc-compression-equivalence",
+      "operation": "compare",
+      "input_artifact_ids": [
+        "inputs/plugins/03-Appearance.esp",
+        "inputs/mutations/uncompressed/03-Appearance.esp"
+      ]
+    },
+    {
+      "scenario_id": "npc-one-byte-field-change",
+      "operation": "compare",
+      "input_artifact_ids": [
+        "inputs/plugins/02-Behavior.esp",
+        "inputs/mutations/one-byte-aidt/02-Behavior.esp"
+      ]
+    },
+    {
+      "scenario_id": "npc-master-reindexing",
+      "operation": "compare",
+      "input_artifact_ids": [
+        "inputs/mutations/master-order-reindexed/03-Appearance.esp",
+        "inputs/mutations/master-order-unreindexed/03-Appearance.esp"
+      ]
+    },
+    {
+      "scenario_id": "npc-record-order",
+      "operation": "compare",
+      "input_artifact_ids": [
+        "inputs/plugins/01-Actors.esm",
+        "inputs/mutations/record-order/01-Actors.esm"
+      ]
+    },
+    {
+      "scenario_id": "npc-repeated-pkid-order",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/mutations/Behavior-RepeatedPKIDOrder.esp"
+      ]
+    },
+    {
+      "scenario_id": "npc-repeated-pnam-order",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/mutations/Appearance-RepeatedPNAMOrder.esp"
+      ]
+    },
+    {
+      "scenario_id": "npc-local-id-change",
+      "operation": "compare",
+      "input_artifact_ids": [
+        "inputs/plugins/01-Actors.esm",
+        "inputs/mutations/local-id/01-Actors.esm"
+      ]
+    }
+  ]
+}

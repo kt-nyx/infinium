@@ -13,10 +13,10 @@ namespace Infinium.Tests;
 public sealed class WriteAuthorityTests
 {
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
     public void RegisteredProtectedRootRejectsDescendantsAndCaseAliases()
     {
         string root = Temp();
@@ -45,10 +45,10 @@ public sealed class WriteAuthorityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
     public void RegisteredProtectedRootRejectsShortNameAliasWhenAvailable()
     {
         string root = Temp();
@@ -77,10 +77,10 @@ public sealed class WriteAuthorityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
     public void ProductAuthorityRejectsSymbolicLinkTraversalWhenAvailable()
     {
         string root = Temp();
@@ -114,10 +114,10 @@ public sealed class WriteAuthorityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
     public void ProductAuthorityRejectsJunctionTraversalWhenAvailable()
     {
         string root = Temp();
@@ -161,10 +161,10 @@ public sealed class WriteAuthorityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
     public void ExistingHardLinkedWriteTargetIsRejectedWhenAvailable()
     {
         string root = Temp();
@@ -196,10 +196,10 @@ public sealed class WriteAuthorityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
     public void PinnedProductRootRejectsReplacementAndDisposedRegistryInvalidatesCapabilities()
     {
         string root = Temp();
@@ -227,10 +227,10 @@ public sealed class WriteAuthorityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
     public void PinnedProtectedRootDetectsReplacementWhenRenameIsPermitted()
     {
         string root = Temp();
@@ -252,10 +252,10 @@ public sealed class WriteAuthorityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
     public void ProductAuthorityIdentitySurvivesCreationOfMissingIntermediateDirectories()
     {
         string root = Temp();
@@ -282,10 +282,10 @@ public sealed class WriteAuthorityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
     public void ProductAuthorityRejectsDeviceAdsAndRecursiveDeleteRequests()
     {
         string root = Temp();
@@ -316,10 +316,10 @@ public sealed class WriteAuthorityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
     public void ClosedWriteClassMappingRejectsUnclassifiedAndEscapingPaths()
     {
         string root = Temp();
@@ -351,10 +351,10 @@ public sealed class WriteAuthorityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
     public void CreatedProductTreeUsesProtectedPrivateInheritableDacls()
     {
         string root = Temp();
@@ -386,10 +386,10 @@ public sealed class WriteAuthorityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
     public void ExistingPermissiveProductRootFailsClosedWithoutAclRewrite()
     {
         string root = Temp();
@@ -426,10 +426,10 @@ public sealed class WriteAuthorityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
     public void RetainedClassHandleDetectsRenameAndHandlesReleaseOnDispose()
     {
         string root = Temp();
@@ -457,12 +457,12 @@ public sealed class WriteAuthorityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
+    [TestProperty("Category", "Fault")]
     public void GuardedSqliteFamilyBlocksReplacementAndPersistsWalSidecars()
     {
         string root = Temp();
@@ -510,12 +510,12 @@ public sealed class WriteAuthorityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
+    [TestProperty("Category", "Fault")]
     public void GuardedSqliteMutationRejectsAChangedHardLinkCount()
     {
         string root = Temp();
@@ -547,10 +547,10 @@ public sealed class WriteAuthorityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
     public void RuntimeDescriptorPublicationAtomicallyReplacesOnlyItsFixedLeaf()
     {
         string root = Temp();
@@ -591,10 +591,10 @@ public sealed class WriteAuthorityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
     public void RestorePublicationRenamesTheRetainedSiblingAndRebindsTargetAuthority()
     {
         string root = Temp();
@@ -633,12 +633,12 @@ public sealed class WriteAuthorityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
+    [TestProperty("Category", "Fault")]
     public void FailedRestoreCleanupDeletesOnlyTheRetainedStagingTree()
     {
         string root = Temp();
@@ -671,12 +671,12 @@ public sealed class WriteAuthorityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
+    [TestProperty("Category", "Fault")]
     public void RestoreStagingWriteClassCannotBeReplacedBeforePublication()
     {
         string root = Temp();
@@ -702,12 +702,12 @@ public sealed class WriteAuthorityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
+    [TestProperty("Category", "Fault")]
     public void RestorePublicationRollsBackAChangedTreeAfterRootRename()
     {
         string root = Temp();
@@ -747,12 +747,12 @@ public sealed class WriteAuthorityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
+    [TestProperty("Category", "Fault")]
     public void RestorePublicationRejectsBytesChangedAfterValidation()
     {
         string root = Temp();
@@ -824,12 +824,12 @@ public sealed class WriteAuthorityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
+    [TestProperty("Category", "Fault")]
     public void RestorePublicationDeletesRejectedTreeWhenRollbackNameIsOccupied()
     {
         string root = Temp();

@@ -1,0 +1,83 @@
+{
+  "schema_id": "infinium.analysis.execution-input/v1",
+  "schema_version": "1.0.0",
+  "execution_input_id": "platform-analysis-runtime-dev-v1.clean-execution",
+  "run_id": "platform-analysis-runtime-dev-v1.clean-run",
+  "installation_snapshot": {
+    "artifact_id": "inputs/analysis-installation-snapshot.json",
+    "artifact_version": "1.1.0",
+    "fingerprint": "2ec43e9a61c180d56caf5cc342511736541d42f26205d05fa5162ea30459e650",
+    "availability": "retained",
+    "byte_length": 442
+  },
+  "bethesda_semantic_input": {
+    "artifact_id": "inputs/bethesda-semantic-input.json",
+    "artifact_version": "1.1.0",
+    "fingerprint": "69dfe871e745a73c0a6232582e5e2ad351cb7ebd330f7e6546d1f7ab6f3cbb97",
+    "availability": "retained",
+    "byte_length": 431
+  },
+  "source_inputs": [
+    {
+      "artifact_id": "inputs/analysis-context.json",
+      "artifact_version": "1.1.0",
+      "fingerprint": "158e7b6b376c51c5ff98db9f57c2a3986bd17142d339444649a1bfecfcc58e99",
+      "availability": "retained",
+      "byte_length": 345
+    }
+  ],
+  "analyzer_declarations": [
+    {
+      "artifact_id": "inputs/analyzer-declaration.json",
+      "artifact_version": "1.1.0",
+      "fingerprint": "63bfd46d12b3ef876b7e38923b6320243ebc1908b82fcba295f229e8c39fd476",
+      "availability": "retained",
+      "byte_length": 5033
+    }
+  ],
+  "effective_configuration": {
+    "artifact_id": "inputs/effective-scan-configuration.json",
+    "artifact_version": "1.1.0",
+    "fingerprint": "2cf53f1ac7f46822ddce303feccd1c2cfa9fc5050550aaffc7da3790048aedec",
+    "availability": "retained",
+    "byte_length": 3054
+  },
+  "resolved_input_manifest": {
+    "artifact_id": "inputs/resolved-input-manifest.json",
+    "artifact_version": "1.1.0",
+    "fingerprint": "74e28a0b509c184778d376b502dcf93965c2ec3c42efb5e2ab128843ed527de8",
+    "availability": "retained",
+    "byte_length": 421
+  },
+  "mode": "clean",
+  "seed": 3520260730,
+  "limits": {
+    "maximum_entities": 64,
+    "maximum_edges": 128,
+    "maximum_truth_rows": 64,
+    "maximum_output_items": 64,
+    "maximum_wall_time_milliseconds": 120000
+  },
+  "boundaries": [
+    {
+      "boundary_id": "provider",
+      "state": "not-used",
+      "reason": "This current public package is local and non-billable."
+    },
+    {
+      "boundary_id": "hosted-search",
+      "state": "not-used",
+      "reason": "This current public package is local and non-billable."
+    },
+    {
+      "boundary_id": "nexus",
+      "state": "not-used",
+      "reason": "This current public package is local and non-billable."
+    },
+    {
+      "boundary_id": "loot",
+      "state": "not-used",
+      "reason": "This current public package is local and non-billable."
+    }
+  ]
+}

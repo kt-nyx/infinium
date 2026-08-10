@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.infinium.dev/json-schema/documentation-fixture-case-matrix.v1.schema.json",
-  "title": "Infinium WP2 documentation fixture case matrix v1",
+  "title": "Infinium documentation fixture case matrix v1",
   "type": "object",
   "additionalProperties": false,
   "required": [

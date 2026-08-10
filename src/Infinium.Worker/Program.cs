@@ -3,8 +3,8 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using Google.Protobuf;
 using Infinium.Application.Analysis;
-using Infinium.Application.Evaluation;
 using Infinium.Application.Runtime;
+using Infinium.Application.Serialization;
 using Infinium.Bethesda;
 using Infinium.Contracts.Protobuf.Common.V1;
 using Infinium.Contracts.Protobuf.Domain.V1;
@@ -254,7 +254,7 @@ try
         payload = JsonSerializer.SerializeToUtf8Bytes(new
         {
             schemaVersion = 1,
-            kind = "m1-slice2-substrate",
+            kind = "staged-artifact-validation",
             bootstrap.RunId,
             bootstrap.AttemptId,
             coordinatorFencingEpoch = bootstrap.CoordinatorFencingEpoch,
@@ -547,21 +547,21 @@ static RetainedAnalysisPayloadSeal[] ValidateAnalysisInputs(
                 DocumentationEvidenceContract documentation = DocumentationEvidenceJsonCodec.Deserialize(bytes);
                 if (!bytes.AsSpan().SequenceEqual(DocumentationEvidenceJsonCodec.Serialize(documentation)))
                 {
-                    throw new InvalidDataException("The staged WP2 payload identity is not canonical.");
+                    throw new InvalidDataException("The staged documentation evidence payload identity is not canonical.");
                 }
                 break;
             case ContractConstants.CandidateAnalysisSchemaId:
                 CandidateAnalysisContract candidates = CandidateAnalysisJsonCodec.Deserialize(bytes);
                 if (!bytes.AsSpan().SequenceEqual(CandidateAnalysisJsonCodec.Serialize(candidates)))
                 {
-                    throw new InvalidDataException("The staged WP3 payload identity is not canonical.");
+                    throw new InvalidDataException("The staged candidate analysis payload identity is not canonical.");
                 }
                 break;
             case ContractConstants.FindingCaseSchemaId:
                 FindingCaseContract findings = FindingCaseJsonCodec.Deserialize(bytes);
                 if (!bytes.AsSpan().SequenceEqual(FindingCaseJsonCodec.Serialize(findings)))
                 {
-                    throw new InvalidDataException("The staged WP4 payload identity is not canonical.");
+                    throw new InvalidDataException("The staged finding and case analysis payload identity is not canonical.");
                 }
                 break;
             default:

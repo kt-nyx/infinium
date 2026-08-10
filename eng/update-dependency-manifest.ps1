@@ -133,7 +133,7 @@ $direct = foreach ($id in ($directVersions.Keys | Sort-Object)) {
         } elseif ($id -eq 'Grpc.Tools') {
             'build-time protobuf code generation'
         } else {
-            'M1 production runtime'
+            'production runtime'
         }
     }
 }
@@ -187,9 +187,9 @@ foreach ($identity in ($resolved.Keys | Sort-Object)) {
     }
 }
 
-$manifest.revision = 'm1-slice-2/1'
-$manifest.reviewedOn = '2026-07-29'
-$manifest.scope = 'NuGet packages and .NET toolchain used through M1 Slice 2'
+$manifest.revision = 'dependency-manifest/1'
+$manifest.reviewedOn = '2026-08-10'
+$manifest.scope = 'NuGet packages and .NET toolchain used by the current Infinium solution'
 $manifest.lockIdentity.resolvedPackageCount = $resolvedEntries.Count
 $manifest.lockIdentity.productionGraph = 'src/Infinium.Persistence/packages.lock.json'
 $manifest.lockIdentity.emptyProjectLocks = 'Project-local locks without external package dependencies'

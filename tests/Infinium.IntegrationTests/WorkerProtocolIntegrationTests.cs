@@ -23,10 +23,10 @@ namespace Infinium.Tests;
 public sealed class WorkerProtocolIntegrationTests
 {
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Security")]
     public void BethesdaBootstrapProducesOnlyTheClosedTypedIndexAssignment()
     {
         using WorkerContext context = new();
@@ -87,10 +87,10 @@ public sealed class WorkerProtocolIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Integration")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Fault")]
     public async Task WorkerOutputReaderEnforcesUtf8ByteBoundsWhileStreaming()
     {
         byte[] acceptedBytes = Encoding.UTF8.GetBytes("bounded-é");
@@ -114,10 +114,10 @@ public sealed class WorkerProtocolIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Security")]
     public async Task PipePeerValidationUsesTheConnectedClientProcessToken()
     {
         if (!OperatingSystem.IsWindows())
@@ -150,10 +150,10 @@ public sealed class WorkerProtocolIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Security")]
     public void RuntimeAdmissionBoundsAreFiniteAndCapacityIsReleased()
     {
         string root = Path.Combine(
@@ -222,10 +222,10 @@ public sealed class WorkerProtocolIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Security")]
     public async Task SuspendedWorkerUsesOnlyDeclaredHandlesAndOriginalDirectoryObject()
     {
         if (!OperatingSystem.IsWindows())
@@ -338,10 +338,10 @@ public sealed class WorkerProtocolIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Integration")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Fault")]
     public void WorkerReceiptsEnforceBoundsAndPermitOnlyExactReplay()
     {
         using WorkerContext context = new();
@@ -459,10 +459,10 @@ public sealed class WorkerProtocolIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Integration")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Fault")]
     public void RecoveryFinalizesVerifiedCommittedPublicationWithoutRedispatch()
     {
         using WorkerContext context = new();

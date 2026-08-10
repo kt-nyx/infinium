@@ -61,7 +61,7 @@ internal static class ProtoMapping
                 new DomainProto.ScanConfigurationId { Value = run.Binding.EffectiveScanConfigurationId },
             ResolvedInputManifestId =
                 new DomainProto.ResolvedInputManifestId { Value = run.Binding.ResolvedInputManifestId },
-            // Slice 2 retains lifecycle and publication authority, but not the complete
+            // The coordinator retains lifecycle and publication authority, but not the complete
             // input/dependency set required to promise a replay.
             ReplayabilityState = DomainProto.ReplayabilityState.Unavailable,
             AuditabilityState = DomainProto.AuditabilityState.CompleteWithGaps,

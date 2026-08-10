@@ -1,7 +1,7 @@
 using Infinium.Analysis.Candidates;
 using Infinium.Application.Candidates;
-using Infinium.Application.Evaluation;
 using Infinium.Application.FindingCases;
+using Infinium.Application.Serialization;
 using Infinium.Domain.Contracts;
 using Infinium.Persistence;
 using Microsoft.Data.Sqlite;
@@ -13,10 +13,10 @@ namespace Infinium.Tests;
 public sealed class FindingCaseIntegrationTests
 {
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Cases")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Cases")]
+    [TestCategory("Integration")]
+    [TestCategory("Cases")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Cases")]
     public void CasePublicationPersistsExactAggregateOccurrencesCoverageAndCanonicalPayload()
     {
         using CandidateStoreContext context = new();
@@ -54,12 +54,12 @@ public sealed class FindingCaseIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Cases")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Cases")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Integration")]
+    [TestCategory("Cases")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Cases")]
+    [TestProperty("Category", "Fault")]
     public void CasePublicationRejectsStaleAttemptBeforeAnyAggregateRowIsCommitted()
     {
         using CandidateStoreContext context = new();
@@ -77,12 +77,12 @@ public sealed class FindingCaseIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Cases")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Cases")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Integration")]
+    [TestCategory("Cases")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Cases")]
+    [TestProperty("Category", "Fault")]
     public void CasePublicationRejectsSameIdentityWithDifferentSemanticsAndRollsBackWholeRetry()
     {
         using CandidateStoreContext context = new();
@@ -115,17 +115,17 @@ public sealed class FindingCaseIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Cases")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Cases")]
+    [TestCategory("Integration")]
+    [TestCategory("Cases")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Cases")]
     public void LineageReconciliationPromotesLeadBySuccessorWithoutRelabelOrReviewCarryover()
     {
         using CandidateStoreContext context = new();
         CandidateAnalysisPhaseResult firstCandidates = PublishCandidates(context, "run-candidate", promoteLead: false);
         FindingCaseAnalysisPhaseResult first = FindingCaseAnalysisPhase.Execute(
             context.Store, Input(firstCandidates.Pipeline.Analysis), context.Attempt, context.Binding, DateTimeOffset.UtcNow);
-        Slice5CaseContract priorLead = first.Analysis.Cases.Single(item => item.Kind == CaseOccurrenceKind.LeadOnly);
+        AnalysisCaseContract priorLead = first.Analysis.Cases.Single(item => item.Kind == CaseOccurrenceKind.LeadOnly);
 
         const string successorRun = "run-cases-successor";
         AttemptRecord successorAttempt = context.CreateRunAttempt(successorRun, DateTimeOffset.UtcNow.AddSeconds(1));
@@ -139,14 +139,14 @@ public sealed class FindingCaseIntegrationTests
         FindingCaseAnalysisPhaseResult successor = FindingCaseAnalysisPhase.Execute(
             context.Store, successorInput, successorAttempt, context.Binding, DateTimeOffset.UtcNow.AddSeconds(3));
 
-        Slice5LineageContract promotion = successor.Analysis.LineageEvents.Single(item => item.Kind == LineageKind.PromotesLead);
+        OccurrenceLineageContract promotion = successor.Analysis.LineageEvents.Single(item => item.Kind == LineageKind.PromotesLead);
         Assert.IsNull(promotion.ReconciliationAssessmentId);
-        Slice5CaseContract supportedSuccessor = successor.Analysis.Cases.Single(item =>
+        AnalysisCaseContract supportedSuccessor = successor.Analysis.Cases.Single(item =>
             item.SupersedesOccurrenceId == priorLead.CaseOccurrenceId);
         Assert.AreNotEqual(priorLead.LogicalCaseId, supportedSuccessor.LogicalCaseId);
         Assert.AreEqual(priorLead.CaseOccurrenceId, promotion.PredecessorIds.Single());
         Assert.AreEqual(supportedSuccessor.CaseOccurrenceId, promotion.SuccessorIds.Single());
-        Assert.IsNull(typeof(Slice5CaseContract).GetProperty("ReviewState"));
+        Assert.IsNull(typeof(AnalysisCaseContract).GetProperty("ReviewState"));
         Assert.AreEqual(
             successor.Analysis.LineageEvents.Count,
             CandidatePipelineIntegrationTests.Count(context.Paths.Database, "lineage_events"));
@@ -250,9 +250,9 @@ public sealed class FindingCaseIntegrationTests
             .ToArray();
         FindingCaseInputContract input = new(
             ContractConstants.FindingCaseInputSchemaId, Version(), CandidatePipelineIntegrationTests.Id("pending"),
-            candidates.OriginatingRunId, CandidatePipelineIntegrationTests.Id("promotion-policy-wp4"), Version(),
-            CandidatePipelineIntegrationTests.Id("reconciliation-policy-wp4"), Version(),
-            CandidatePipelineIntegrationTests.Id("reconciliation-actor-wp4"),
+            candidates.OriginatingRunId, CandidatePipelineIntegrationTests.Id("promotion-policy-finding_case"), Version(),
+            CandidatePipelineIntegrationTests.Id("reconciliation-policy-finding_case"), Version(),
+            CandidatePipelineIntegrationTests.Id("reconciliation-actor-finding_case"),
             new UtcTimestamp(new DateTimeOffset(2026, 8, 9, 12, 0, 0, TimeSpan.Zero)),
             candidates, facts, RecommendationFacts(facts), proofs, taxonomyFacts, [],
             [new CoveragePopulationFactContract(CandidatePipelineIntegrationTests.Id("coverage-population"), candidates.AnalyzerId,
@@ -288,7 +288,7 @@ public sealed class FindingCaseIntegrationTests
         value.CandidateId, value.HypothesisId, value.IdentityEnvelope, value.SemanticFingerprint, true,
         ["candidate-hypotheses"]);
 
-    internal static PriorCaseContract PriorCase(Slice5CaseContract value) => new(
+    internal static PriorCaseContract PriorCase(AnalysisCaseContract value) => new(
         value.CaseOccurrenceId, value.LogicalCaseId, value.OriginatingRunId, value.Kind,
         value.FindingOccurrenceIds, value.HypothesisIds, value.IdentityEnvelope, value.SemanticFingerprint, true,
         ["candidate-hypotheses"]);

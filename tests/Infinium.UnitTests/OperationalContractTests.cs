@@ -11,8 +11,8 @@ public sealed class OperationalContractTests
     private static readonly AnalysisRunOwnerContract AnalysisOwner = new(Id("analysis-run-1"));
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void LifecycleTransitionRequiresExplicitHistoryKindPolicyCasAndFence()
     {
         LifecycleTransitionContract valid = new(
@@ -58,8 +58,8 @@ public sealed class OperationalContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void AttemptsCarryTypedOwnerLeaseFenceGenerationRetryAndOutcome()
     {
         AttemptContract valid = CreateAttempt(
@@ -99,8 +99,8 @@ public sealed class OperationalContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void CheckpointRequiresDependencyVersionsProgressAndDeclaredWorkState()
     {
         CheckpointContract valid = new(
@@ -150,8 +150,8 @@ public sealed class OperationalContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void ProviderAssignmentRejectsAccountBillingGenerationAndReservationSubstitution()
     {
         ProviderAccessProfileContract profile = CreateProfile();
@@ -197,8 +197,8 @@ public sealed class OperationalContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void ReservationsRejectZeroUnknownNegativeAndDuplicateScopeRepresentations()
     {
         BudgetReservationContract valid = CreateReservation();
@@ -234,8 +234,8 @@ public sealed class OperationalContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void UsageKeepsProviderQuantitiesCalculatedCostAndProviderFactsDistinct()
     {
         BudgetReservationContract reservation = CreateReservation();
@@ -271,8 +271,8 @@ public sealed class OperationalContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void DispatchFenceRejectsStaleAttemptAndCredentialAuthority()
     {
         AttemptContract attempt = CreateAttempt(AnalysisOwner);
@@ -310,8 +310,8 @@ public sealed class OperationalContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void StagedOutputCanOnlyFillExactAssignedSlotsWithinBounds()
     {
         WorkerAssignmentContract assignment = CreateWorkerAssignment();
@@ -377,7 +377,7 @@ public sealed class OperationalContractTests
             V1,
             ProviderKind.OpenAi,
             CredentialPurpose.OpenAiResponses,
-            "M1 test profile",
+            "bounded test profile",
             2,
             3,
             Id("account-1"),

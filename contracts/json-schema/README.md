@@ -1,6 +1,6 @@
 # JSON schemas
 
-These files are the M1 Slice 1 machine contracts for evaluation packages,
+These files are the product machine contracts for evaluation packages,
 analyzer/configuration declarations, run-owned output, CLI summaries, and
 sensitive developer traces. They use JSON Schema Draft 2020-12. Every schema
 has a stable absolute `$id`. Root output/declaration contracts also carry a
@@ -38,8 +38,8 @@ network.
 `common.v1.schema.json` contains shared closed definitions and is not itself an
 instance contract.
 
-The WP3 delivered-input and expansion contracts contain only snapshot-bound
-Bethesda/WP2 facts and deterministic construction parameters. Candidate lanes,
+The candidate stage delivered-input and expansion contracts contain only snapshot-bound
+Bethesda/documentation stage facts and deterministic construction parameters. Candidate lanes,
 dispositions, gaps, failures, expected output, fixture identities, oracle
 metadata, and generator seeds are not part of either product contract.
 
@@ -79,10 +79,10 @@ unsupported, not-applicable, or failed production. Analyzer coverage uses
 labeled denominators and cannot represent one aggregate safety percentage.
 CLI summaries retain nonnegative elapsed duration and keep provider usage,
 locally calculated actual cost, reserved cost, and unresolved holds in
-separate fields. Readiness is only the M1 placeholder and always carries
+separate fields. Readiness remains a placeholder and always carries
 `no_safety_guarantee: true`.
 
-Analyzer maturity is fixed to `Experimental` in M1, raw development output is
+Analyzer maturity is fixed to `Experimental` in the current bounded contracts, raw development output is
 mandatory, and preset/maturity suppression is forbidden. Effective analyzer,
 source, budget, cache, trace, candidate, threshold, provider, resource, and
 semantic-override settings each retain their origin independently.

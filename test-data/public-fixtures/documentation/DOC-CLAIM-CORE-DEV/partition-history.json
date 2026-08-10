@@ -1,0 +1,13 @@
+{
+  "fixture_id": "DOC-CLAIM-CORE-DEV",
+  "fixture_version": "1.0.0",
+  "partition_history": [
+    {
+      "from": null,
+      "to": "development",
+      "at": "2026-08-08T18:00:00.0000000+00:00",
+      "reason": "Fresh public documentation stage semantic package preregistered before product comparison.",
+      "change_influenced_implementation": false
+    }
+  ]
+}

@@ -11,13 +11,13 @@ namespace Infinium.Tests;
 [TestClass]
 public sealed class DocumentationFixturePackageIntegrityTests
 {
-    private const string CoreFixture = "DOC-WP2-CORE-DEV";
-    private const string AdversarialFixture = "DOC-WP2-ADVERSARIAL-VAL";
+    private const string CoreFixture = "DOC-CLAIM-CORE-DEV";
+    private const string AdversarialFixture = "DOC-CLAIM-ADVERSARIAL-VAL";
 
     [TestMethod]
     [DataRow(CoreFixture)]
     [DataRow(AdversarialFixture)]
-    [TestCategory("M1Contract")]
+    [TestCategory("Contract")]
     public void RegisteredDocumentationFixturePackageIsClosed(string fixtureId)
     {
         DocumentationFixturePackage package = DocumentationFixturePackageReader.Read(FixtureRoot(fixtureId));
@@ -31,7 +31,7 @@ public sealed class DocumentationFixturePackageIntegrityTests
     [DataRow("partition-history")]
     [DataRow("case-matrix")]
     [DataRow("oracle")]
-    [TestCategory("M1Contract")]
+    [TestCategory("Contract")]
     public void SchemaInvalidStructuredDocumentIsRejected(string document)
     {
         AssertMutationRejected(AdversarialFixture, root =>
@@ -94,7 +94,7 @@ public sealed class DocumentationFixturePackageIntegrityTests
     [TestMethod]
     [DataRow("case-matrix")]
     [DataRow("oracle")]
-    [TestCategory("M1Contract")]
+    [TestCategory("Contract")]
     public void StructuredDocumentBranchShapeIsClosed(string document)
     {
         AssertMutationRejected(CoreFixture, root =>
@@ -119,7 +119,7 @@ public sealed class DocumentationFixturePackageIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
+    [TestCategory("Contract")]
     public void PartitionHistoryMustExactlyMatchPublicManifest()
     {
         AssertMutationRejected(CoreFixture, root =>
@@ -131,7 +131,7 @@ public sealed class DocumentationFixturePackageIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
+    [TestCategory("Contract")]
     public void AnswerIsolationAndRedistributionAgreementAreEnforced()
     {
         AssertMutationRejected(CoreFixture, root =>
@@ -159,7 +159,7 @@ public sealed class DocumentationFixturePackageIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
+    [TestCategory("Contract")]
     public void CaseMatrixApplicationTargetsMustMatchClaimImport()
     {
         AssertMutationRejected(CoreFixture, root =>
@@ -172,7 +172,7 @@ public sealed class DocumentationFixturePackageIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
+    [TestCategory("Contract")]
     public void CaseMatrixApplicationTargetsMustMatchOracle()
     {
         AssertMutationRejected(CoreFixture, root =>
@@ -189,7 +189,7 @@ public sealed class DocumentationFixturePackageIntegrityTests
     [DataRow("availability")]
     [DataRow("permission")]
     [DataRow("expected-state")]
-    [TestCategory("M1Contract")]
+    [TestCategory("Contract")]
     public void ReplayGovernanceMustMatchPackageAndCleanOracle(string mutation)
     {
         AssertMutationRejected(CoreFixture, root =>
@@ -221,7 +221,7 @@ public sealed class DocumentationFixturePackageIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
+    [TestCategory("Contract")]
     public void InitialPartitionAssignmentCannotClaimImplementationInfluence()
     {
         AssertMutationRejected(CoreFixture, root =>
@@ -242,7 +242,7 @@ public sealed class DocumentationFixturePackageIntegrityTests
     [DataRow(AdversarialFixture, "reuse-retention")]
     [DataRow(AdversarialFixture, "reuse-time")]
     [DataRow(AdversarialFixture, "deletion-reason")]
-    [TestCategory("M1Contract")]
+    [TestCategory("Contract")]
     public void CaseMatrixExecutionAndAggregateBindingsMustMatchOracle(
         string fixtureId,
         string mutation)
@@ -287,7 +287,7 @@ public sealed class DocumentationFixturePackageIntegrityTests
     [TestMethod]
     [DataRow(CoreFixture, "kind")]
     [DataRow(AdversarialFixture, "applicability")]
-    [TestCategory("M1Contract")]
+    [TestCategory("Contract")]
     public void OracleClaimsRequireTheirExactBranchTypedFields(
         string fixtureId,
         string property)
@@ -305,8 +305,8 @@ public sealed class DocumentationFixturePackageIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Security")]
+    [TestCategory("Contract")]
+    [TestCategory("Security")]
     public void ExternalBoundaryCannotBecomeUsedEvenWhenCaseAndOracleAgree()
     {
         AssertMutationRejected(CoreFixture, root =>
@@ -326,7 +326,7 @@ public sealed class DocumentationFixturePackageIntegrityTests
     [TestMethod]
     [DataRow("kind")]
     [DataRow("required-for")]
-    [TestCategory("M1Contract")]
+    [TestCategory("Contract")]
     public void ReplayDependenciesMustRemainCleanRecomputableTrackedInputs(string mutation)
     {
         AssertMutationRejected(CoreFixture, root =>
@@ -349,7 +349,7 @@ public sealed class DocumentationFixturePackageIntegrityTests
     [TestMethod]
     [DataRow("count")]
     [DataRow("reuse-index")]
-    [TestCategory("M1Contract")]
+    [TestCategory("Contract")]
     public void OracleCountsAndReuseIndexesMustMatchTypedObjects(string mutation)
     {
         AssertMutationRejected(AdversarialFixture, root =>
@@ -369,7 +369,7 @@ public sealed class DocumentationFixturePackageIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
+    [TestCategory("Contract")]
     public void EveryStructuredCompanionMustMatchFixtureIdentity()
     {
         string[] documents =
@@ -408,7 +408,7 @@ public sealed class DocumentationFixturePackageIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
+    [TestCategory("Contract")]
     public void ValidKnownAnswerTransitionToDevelopmentIsAccepted()
     {
         WithFixtureCopy(AdversarialFixture, root =>
@@ -423,7 +423,7 @@ public sealed class DocumentationFixturePackageIntegrityTests
                 ["at"] = "2026-08-08T18:06:00.0000000+00:00",
                 ["reason"] = "Known answers influenced implementation; materially independent validation replacement registered.",
                 ["change_influenced_implementation"] = true,
-                ["replacement_fixture_id"] = "DOC-WP2-REPLACEMENT-VAL",
+                ["replacement_fixture_id"] = "DOC-CLAIM-REPLACEMENT-VAL",
                 ["replacement_partition"] = "validation",
                 ["replacement_input_package_fingerprint"] = new string('1', 64),
                 ["replacement_oracle_fingerprint"] = new string('2', 64),
@@ -453,8 +453,8 @@ public sealed class DocumentationFixturePackageIntegrityTests
     [DataRow("duplicate")]
     [DataRow("path-escape")]
     [DataRow("unbounded")]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Security")]
+    [TestCategory("Contract")]
+    [TestCategory("Security")]
     public void ReplayDependencyClosureMutationIsRejected(string mutation)
     {
         AssertMutationRejected(CoreFixture, root =>
@@ -507,8 +507,8 @@ public sealed class DocumentationFixturePackageIntegrityTests
     [DataRow("hash")]
     [DataRow("length")]
     [DataRow("independent-derivation")]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Security")]
+    [TestCategory("Contract")]
+    [TestCategory("Security")]
     public void TamperEvidentBindingDriftIsRejected(string mutation)
     {
         AssertMutationRejected(CoreFixture, root =>
@@ -542,8 +542,8 @@ public sealed class DocumentationFixturePackageIntegrityTests
     [TestMethod]
     [DataRow("file")]
     [DataRow("directory")]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Security")]
+    [TestCategory("Contract")]
+    [TestCategory("Security")]
     public void UnexpectedPackageEntryIsRejected(string entryKind)
     {
         AssertMutationRejected(CoreFixture, root =>
@@ -561,8 +561,8 @@ public sealed class DocumentationFixturePackageIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Security")]
+    [TestCategory("Contract")]
+    [TestCategory("Security")]
     public void ReparsePointInPackageIsRejected()
     {
         WithFixtureCopy(CoreFixture, root =>
@@ -614,7 +614,7 @@ public sealed class DocumentationFixturePackageIntegrityTests
     }
 
     private static string FixtureRoot(string fixtureId) => TestRepository.PathFromRoot(
-        "test-data", "evaluation", "m1-semantic", fixtureId);
+        "test-data", "public-fixtures", "documentation", fixtureId);
 
     private static void CopyDirectory(string source, string destination)
     {

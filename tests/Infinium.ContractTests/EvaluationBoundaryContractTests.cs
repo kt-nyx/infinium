@@ -10,12 +10,20 @@ public sealed class EvaluationBoundaryContractTests
 {
     private static readonly string[] CurrentPublicFixtureFamilies =
     [
-        "test-data/evaluation/m1-platform/M1-PLAT-SLICE2-SUBSTRATE-v1",
-        "test-data/evaluation/m1-semantic/BETH-NPC-DEV",
-        "test-data/evaluation/m1-semantic/BETH-REFR-DEV",
-        "test-data/evaluation/m1-semantic/BETH-LIGHT-VAL",
-        "test-data/evaluation/m1-semantic/BETH-MALFORMED-VAL",
-        "test-data/evaluation/m1-semantic/BETH-UNSUPPORTED-VAL",
+        "test-data/public-fixtures/platform/analysis-runtime-substrate",
+        "test-data/public-fixtures/bethesda/BETH-NPC-DEV",
+        "test-data/public-fixtures/bethesda/BETH-REFR-DEV",
+        "test-data/public-fixtures/bethesda/BETH-LIGHT-VAL",
+        "test-data/public-fixtures/bethesda/BETH-MALFORMED-VAL",
+        "test-data/public-fixtures/bethesda/BETH-UNSUPPORTED-VAL",
+        "test-data/public-fixtures/documentation/DOC-CLAIM-CORE-DEV",
+        "test-data/public-fixtures/documentation/DOC-CLAIM-ADVERSARIAL-VAL",
+        "test-data/public-fixtures/candidates/CAND-SEMANTIC-DEV-v1",
+        "test-data/public-fixtures/candidates/CAND-SCALE-VAL-v1",
+        "test-data/public-fixtures/candidates/CAND-STRESS-DEV-v1",
+        "test-data/public-fixtures/findings-cases",
+        "test-data/public-fixtures/operations/analysis-lifecycle",
+        "test-data/public-fixtures/cross-stage/analysis-pipeline",
     ];
 
     private static readonly string[] CurrentAuthoritySurfaceIds =
@@ -29,10 +37,10 @@ public sealed class EvaluationBoundaryContractTests
     ];
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Contract")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Contract")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Contract")]
+    [TestProperty("Category", "Security")]
     public void RepositoryAuthorityAndRetirementManifestsAreClosedAndActionable()
     {
         using JsonDocument authority = ReadAndValidate(
@@ -69,10 +77,10 @@ public sealed class EvaluationBoundaryContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Contract")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Contract")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Contract")]
+    [TestProperty("Category", "Security")]
     public void DefaultSolutionGraphCannotReachHistoricalEvaluatorOrRetiredCompatibility()
     {
         string solution = File.ReadAllText(TestRepository.PathFromRoot("Infinium.sln"));
@@ -98,7 +106,7 @@ public sealed class EvaluationBoundaryContractTests
             applicationProject.Contains("contracts\\repository", StringComparison.OrdinalIgnoreCase),
             "Repository-governance schemas must not ship in the product Application assembly.");
 
-        string publicFixtureRoot = TestRepository.PathFromRoot("tools", "evaluation", "Infinium.PublicFixtures");
+        string publicFixtureRoot = TestRepository.PathFromRoot("tools", "fixtures", "Infinium.PublicFixtures");
         string publicFixtureSource = string.Join('\n', Directory.EnumerateFiles(publicFixtureRoot, "*.cs", SearchOption.AllDirectories)
             .Select(File.ReadAllText));
         Assert.IsFalse(publicFixtureSource.Contains("EmbeddedJsonSchemaValidator", StringComparison.Ordinal));
@@ -111,8 +119,8 @@ public sealed class EvaluationBoundaryContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestProperty("Category", "M1Contract")]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Contract")]
     public void ProductCapabilityBoundaryRejectsEvaluatorGovernanceIdentities()
     {
         ExecutionBoundaryContract[] valid =

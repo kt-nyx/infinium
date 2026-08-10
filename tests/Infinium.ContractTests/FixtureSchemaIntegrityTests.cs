@@ -13,13 +13,13 @@ namespace Infinium.Tests;
 public sealed class FixtureSchemaIntegrityTests
 {
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Security")]
+    [TestCategory("Contract")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Security")]
     public void BethesdaCaseMatrixAndScanConfigurationHaveDistinctAcceptedRoles()
     {
         string root = TestRepository.PathFromRoot(
-            "test-data", "evaluation", "m1-semantic", "BETH-UNSUPPORTED-VAL");
+            "test-data", "public-fixtures", "bethesda", "BETH-UNSUPPORTED-VAL");
         _ = PublicFixturePackageReader.Read(root);
 
         JsonObject configuration = ReadObject(
@@ -36,9 +36,9 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Fault")]
-    [TestCategory("M1Security")]
+    [TestCategory("Contract")]
+    [TestCategory("Fault")]
+    [TestCategory("Security")]
     public void BethesdaExecutionControlsRejectMissingSwappedDuplicateUnsealedAndStaleBindings()
     {
         AssertTaxonomyPackageMutationRejected(root =>
@@ -82,9 +82,9 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Fault")]
-    [TestCategory("M1Security")]
+    [TestCategory("Contract")]
+    [TestCategory("Fault")]
+    [TestCategory("Security")]
     public void BethesdaAcceptedOrderConstructionRoleRejectsDowngradeSubstitutionAndReceiptDrift()
     {
         AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
@@ -235,9 +235,9 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Fault")]
-    [TestCategory("M1Security")]
+    [TestCategory("Contract")]
+    [TestCategory("Fault")]
+    [TestCategory("Security")]
     public void AcceptedBethesdaIdentityRejectsFullyResealedProtectedArtifactDowngrades()
     {
         AssertBethesdaPackageMutationRejected("BETH-LIGHT-VAL", root =>
@@ -300,8 +300,8 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Fault")]
+    [TestCategory("Contract")]
+    [TestCategory("Fault")]
     public void BethesdaCaseMatrixRejectsWrongSchemaNonListCasesDuplicateIdsUnsupportedOperationsAndArityErrors()
     {
         AssertCaseMatrixMutationRejected(matrix =>
@@ -340,8 +340,8 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Security")]
-    [TestCategory("M1Fault")]
+    [TestCategory("Security")]
+    [TestCategory("Fault")]
     public void ExecutionReaderRejectsRecursiveDuplicateProperties()
     {
         using FixturePackageTestBuilder fixture = new();
@@ -358,8 +358,8 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Security")]
-    [TestCategory("M1Fault")]
+    [TestCategory("Security")]
+    [TestCategory("Fault")]
     public void ExecutionReaderRejectsDocumentBeyondBound()
     {
         using FixturePackageTestBuilder fixture = new();
@@ -374,8 +374,8 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Fault")]
+    [TestCategory("Contract")]
+    [TestCategory("Fault")]
     public void HarnessRejectsUnknownSupportingDocumentFieldsAndRedistributionDrift()
     {
         using (FixturePackageTestBuilder fixture = new())
@@ -394,10 +394,10 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Contract")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Contract")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Contract")]
+    [TestProperty("Category", "Security")]
     public void HarnessBindsRetainedInputAndOracleArtifactsTransitively()
     {
         using FixturePackageTestBuilder fixture = new();
@@ -415,10 +415,10 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Contract")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Contract")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Contract")]
+    [TestProperty("Category", "Security")]
     public void TaxonomyBindingClosureRejectsMissingDuplicateUnexpectedAndUnreferencedMaterial()
     {
         AssertTaxonomyPackageMutationRejected(root =>
@@ -461,10 +461,10 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Contract")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Contract")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Contract")]
+    [TestProperty("Category", "Fault")]
     public void TaxonomyBindingClosureRejectsStaleCanonicalAndLengthSeals()
     {
         AssertTaxonomyPackageMutationRejected(root =>
@@ -487,10 +487,10 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Contract")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Contract")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Contract")]
+    [TestProperty("Category", "Fault")]
     public void RepeatedTaxonomyReferenceRequiresExactFirstReferenceMetadata()
     {
         AssertTaxonomyPackageMutationRejected(root =>
@@ -551,10 +551,10 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Contract")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Contract")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Contract")]
+    [TestProperty("Category", "Fault")]
     public void TaxonomyProjectionSourcesRequireExactResolvedRetainedSet()
     {
         AssertTaxonomySourceMutationRejected((_, source, _) =>
@@ -598,10 +598,10 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Security")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Security")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Security")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Security")]
+    [TestProperty("Category", "Fault")]
     public void HarnessRejectsRetainedArtifactMutationMissingFilesAndTraversal()
     {
         using (FixturePackageTestBuilder fixture = new())
@@ -639,10 +639,10 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Security")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Security")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Security")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Security")]
+    [TestProperty("Category", "Fault")]
     public void HarnessRejectsHardLinkedRetainedArtifactsOnWindows()
     {
         if (!OperatingSystem.IsWindows())
@@ -667,8 +667,8 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Security")]
-    [TestCategory("M1Fault")]
+    [TestCategory("Security")]
+    [TestCategory("Fault")]
     public void HarnessRejectsAlternateDataStreamsAndWindowsDeviceNames()
     {
         using (FixturePackageTestBuilder fixture = new())
@@ -707,8 +707,8 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Security")]
-    [TestCategory("M1Fault")]
+    [TestCategory("Security")]
+    [TestCategory("Fault")]
     public void HarnessReusesConsistentScopedReferencesAndRejectsRetainedArtifactBudgetOverruns()
     {
         using (FixturePackageTestBuilder fixture = new())
@@ -758,8 +758,8 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Security")]
-    [TestCategory("M1Fault")]
+    [TestCategory("Security")]
+    [TestCategory("Fault")]
     public void HarnessRejectsRetainedArtifactGrowthAndInputByteDeclarationDrift()
     {
         using (FixturePackageTestBuilder fixture = new())
@@ -801,8 +801,8 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Fault")]
+    [TestCategory("Contract")]
+    [TestCategory("Fault")]
     public void HarnessRequiresExactlySevenRootDocumentsButAllowsSupportDirectories()
     {
         using (FixturePackageTestBuilder fixture = new())
@@ -826,8 +826,8 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Security")]
-    [TestCategory("M1Fault")]
+    [TestCategory("Security")]
+    [TestCategory("Fault")]
     public void ExecutionInputRejectsOracleAnswerBearingAndPrivatePathArtifactIds()
     {
         string[] rejectedArtifactIds =
@@ -858,8 +858,8 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Security")]
-    [TestCategory("M1Fault")]
+    [TestCategory("Security")]
+    [TestCategory("Fault")]
     [DoNotParallelize]
     public void HarnessRejectsJunctionSwapBeforeScopePinOnWindows()
     {
@@ -904,8 +904,8 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Security")]
-    [TestCategory("M1Fault")]
+    [TestCategory("Security")]
+    [TestCategory("Fault")]
     [DoNotParallelize]
     public void HarnessRejectsJunctionSwapAfterScopePinOnWindows()
     {
@@ -950,8 +950,8 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Security")]
-    [TestCategory("M1Fault")]
+    [TestCategory("Security")]
+    [TestCategory("Fault")]
     [DoNotParallelize]
     public void SupplementalOracleUsesTheFingerprintValidatedSnapshotAcrossPhases()
     {
@@ -978,8 +978,8 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Security")]
-    [TestCategory("M1Fault")]
+    [TestCategory("Security")]
+    [TestCategory("Fault")]
     public void MalformedFingerprintValidSupplementalOracleIsAFixtureDataFailure()
     {
         using FixturePackageTestBuilder fixture = new();
@@ -995,8 +995,8 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Security")]
-    [TestCategory("M1Fault")]
+    [TestCategory("Security")]
+    [TestCategory("Fault")]
     public void SupplementalOracleArtifactIdRejectsCaseOnlyAlias()
     {
         using FixturePackageTestBuilder fixture = new();
@@ -1012,8 +1012,8 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Fault")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Fault")]
     public void OracleRejectsWrongCollectionTypeUnknownMethodsAndDuplicateIds()
     {
         using (FixturePackageTestBuilder fixture = new())
@@ -1051,8 +1051,8 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Fault")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Fault")]
     public void OracleRequiresFailureAndCollectionStateExpectations()
     {
         using (FixturePackageTestBuilder fixture = new())
@@ -1071,8 +1071,8 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Fault")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Fault")]
     public void OracleCollectionStatesMustMatchExpectedItemCounts()
     {
         using (FixturePackageTestBuilder fixture = new())
@@ -1092,10 +1092,10 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Contract")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Contract")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Contract")]
+    [TestProperty("Category", "Evaluation")]
     public void CoverageExpectationDoesNotLaunderCoverageGapCollectionState()
     {
         using FixturePackageTestBuilder fixture = new();
@@ -1116,8 +1116,8 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Fault")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Fault")]
     public void OracleTaxonomyAssignmentsRequireUniqueIdsAndExpectedSubjects()
     {
         using (FixturePackageTestBuilder fixture = new())
@@ -1138,8 +1138,8 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Security")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Security")]
     public void PartitionHistoryForbidsKnownAnswerLaundering()
     {
         foreach ((string from, string to) in new[]
@@ -1175,8 +1175,8 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Fault")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Fault")]
     public void KnownAnswerTransitionRequiresChronologyAndIndependentFingerprints()
     {
         using (FixturePackageTestBuilder fixture = new())
@@ -1233,8 +1233,8 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Contract")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Contract")]
     public void KnownAnswerTransitionAcceptsCompleteIndependentReplacementMetadata()
     {
         using FixturePackageTestBuilder fixture = new();
@@ -1263,8 +1263,8 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Fault")]
+    [TestCategory("Contract")]
+    [TestCategory("Fault")]
     public void SchemasRequireCanonicalUtcTimestampText()
     {
         foreach (string timestamp in new[]
@@ -1283,7 +1283,7 @@ public sealed class FixtureSchemaIntegrityTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
+    [TestCategory("Contract")]
     public void CliSummaryRequiresDurationAndSeparatedCostUsage()
     {
         JsonObject summary = CreateCliSummary();
@@ -1420,7 +1420,7 @@ public sealed class FixtureSchemaIntegrityTests
         {
             CopyDirectory(
                 TestRepository.PathFromRoot(
-                    "test-data", "evaluation", "m1-semantic", fixtureId),
+                    "test-data", "public-fixtures", "bethesda", fixtureId),
                 root);
             mutate(root);
             Assert.ThrowsExactly<InvalidDataException>(

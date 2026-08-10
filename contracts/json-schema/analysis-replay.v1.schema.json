@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.infinium.dev/json-schema/analysis-replay.v1.schema.json",
-  "title": "Infinium Slice 5 analysis replay manifest v1",
+  "title": "Infinium analysis replay manifest v1",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_id", "schema_version", "replay_manifest_id", "originating_run_id", "mode", "replay_state", "auditability_state", "dependencies", "edges", "outputs", "missing_dependency_ids", "coverage_gap_ids", "semantically_equivalent"],

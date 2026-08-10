@@ -1,0 +1,11 @@
+{
+  "schema_id": "infinium.analysis.fixture-bethesda-semantic-input/v1",
+  "schema_version": "1",
+  "semantic_input_id": "platform-analysis-runtime-dev-v1.semantic-input",
+  "fixture_id": "PLATFORM-ANALYSIS-RUNTIME-DEV-v1",
+  "fixture_version": "1.1.0",
+  "state": "not-applicable",
+  "case_matrix_artifact_id": null,
+  "accepted_order_artifact_id": null,
+  "reason": "Bethesda semantics are outside this platform-only package."
+}

@@ -1,8 +1,8 @@
 {
   "schema": "infinium.dependency-license-provenance/v1",
-  "revision": "m1-slice-2/1",
-  "reviewedOn": "2026-07-29",
-  "scope": "NuGet packages and .NET toolchain used through M1 Slice 2",
+  "revision": "dependency-manifest/1",
+  "reviewedOn": "2026-08-10",
+  "scope": "NuGet packages and .NET toolchain used by the current Infinium solution",
   "projectLicensePosture": {
     "family": "GNU General Public License version 3 family",
     "operativeSpdxSelector": null,
@@ -44,7 +44,7 @@
       "repository": "https://github.com/protocolbuffers/protobuf.git",
       "repositoryCommit": "74211c0dfc2777318ab53c2cd2c317a2ef9012de",
       "nupkgSha512": "9Hk6TtRt1Gp7TMULdsM8Cbkrtlv1A6OIaGruwDuEVNyALi9rKlWWuOSV90vPUKVBvOcCEnxw8ku5D4/eGk06Gw==",
-      "use": "M1 production runtime"
+      "use": "production runtime"
     },
     {
       "id": "Grpc.AspNetCore",
@@ -53,7 +53,7 @@
       "repository": "https://github.com/grpc/grpc-dotnet.git",
       "repositoryCommit": "f22747c72676120b2bc69a1ba7c8bed995e29b1b",
       "nupkgSha512": "WS8n0+sHEp4V1b8/rZxfe5ZkdXKMUMP2ArxX4zNqBzyFh6IhEzUNxg/+u6Xf+ZY5qhJEZN05fsjXIRwLt/QOHA==",
-      "use": "M1 production runtime"
+      "use": "production runtime"
     },
     {
       "id": "Grpc.Core.Api",
@@ -62,7 +62,7 @@
       "repository": "https://github.com/grpc/grpc-dotnet.git",
       "repositoryCommit": "f22747c72676120b2bc69a1ba7c8bed995e29b1b",
       "nupkgSha512": "El6Pvolx/T/qUBsMGjLX5HHJ6V4mfcfA/3xm2wv6IwlFvX3bUcNCAl6xytolFmKaLpRBMo1bIO3ZeBRaOQppjw==",
-      "use": "M1 production runtime"
+      "use": "production runtime"
     },
     {
       "id": "Grpc.Net.Client",
@@ -71,7 +71,7 @@
       "repository": "https://github.com/grpc/grpc-dotnet.git",
       "repositoryCommit": "f22747c72676120b2bc69a1ba7c8bed995e29b1b",
       "nupkgSha512": "jkFiQhWWL5QLzcNnC6h9Tp68MJw4OQRf3PAgGr9ph8RGSImZMXa8w4VEv/Rt+Z8/qYcaf2xsn/2u3YIAyXmYDw==",
-      "use": "M1 production runtime"
+      "use": "production runtime"
     },
     {
       "id": "Grpc.Tools",
@@ -89,7 +89,7 @@
       "repository": "https://github.com/dotnet/dotnet",
       "repositoryCommit": "f7d90799ce4ef09a0bb257852a57248d2a8fb8dd",
       "nupkgSha512": "cjobd7/jlmmCygJCJWstwyDth4xO2UgGgNddkbcWrCcBP6X+UzgAxQx8YADlAEasEK9dvEjjyk64hcbtZbwssQ==",
-      "use": "M1 production runtime"
+      "use": "production runtime"
     },
     {
       "id": "Microsoft.NET.Test.Sdk",
@@ -125,7 +125,7 @@
       "repository": "https://github.com/Mutagen-Modding/Mutagen",
       "repositoryCommit": "282bb99a77b2df7f1b092b06270e8e3c8fb55463",
       "nupkgSha512": "i7Oy40FQy/ppU8oj1x9RrDqB9JOBHpJXk5j1nBIm0NK6mAX9HDWkvLzcs9fMlhVO9Ri7TsgS1gslD+n0oxKT9g==",
-      "use": "M1 production runtime"
+      "use": "production runtime"
     },
     {
       "id": "SQLitePCLRaw.bundle_e_sqlite3",
@@ -134,7 +134,7 @@
       "repository": "https://github.com/ericsink/SQLitePCL.raw",
       "repositoryCommit": "",
       "nupkgSha512": "EvmAAUwl8MPiDHszFBiTP8hMdjW2VZfOqwnCDqAMBVBDyGa++GFOprw416SE2P8znUOHu+dgvIkvTicCzSOrLw==",
-      "use": "M1 production runtime"
+      "use": "production runtime"
     }
   ],
   "resolvedPackages": [

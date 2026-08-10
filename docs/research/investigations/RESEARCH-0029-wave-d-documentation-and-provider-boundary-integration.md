@@ -10,8 +10,7 @@ ADR-0012 through ADR-0014.
 
 Date: 2026-07-26
 
-Last reviewed: 2026-07-28
-
+Last reviewed: 2026-08-10
 Researcher: Codex agent
 
 Primary scope: Independent integration review of RQ-008 and RQ-010 through
@@ -88,7 +87,7 @@ This review used:
 - accepted ADR-0001 through ADR-0011, with particular reliance on ADR-0001,
   ADR-0002, ADR-0003, ADR-0005, ADR-0006, and ADR-0011;
 - the accepted
-  [M0 research-foundation plan](../../plans/milestones/M0-research-foundation.md);
+  [M0 research-foundation plan](../../plans/milestones/m0/plan.md);
 - the research handoff and wave-integration procedure;
 - the source registry, open-question registry, and investigation index;
 - the evaluation strategy, case catalog, fixture guidelines, and

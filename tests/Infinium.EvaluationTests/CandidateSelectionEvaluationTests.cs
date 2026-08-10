@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using Infinium.Analysis.Candidates;
 using Infinium.Application.Candidates;
-using Infinium.Application.Evaluation;
+using Infinium.Application.Serialization;
 using Infinium.Domain.Contracts;
 using Infinium.PublicFixtures;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -12,16 +12,16 @@ namespace Infinium.Tests;
 [TestClass]
 public sealed class CandidateSelectionEvaluationTests
 {
-    private const string FixtureRoot = "docs/evaluation/fixtures/m1-slice5-wp3-candidates-v1";
+    private const string FixtureRoot = "test-data/public-fixtures/candidates";
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Candidates")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Candidates")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Candidates")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "Candidates")]
     public void SemanticPackageMatchesTheFrozenIndependentProjectionExactly()
     {
-        CandidateFixture fixture = ReadFixture("CAND-WP3-SEMANTIC-DEV-v1");
+        CandidateFixture fixture = ReadFixture("CAND-SEMANTIC-DEV-v1");
         Assert.IsNotNull(fixture.Package.DeliveredInput);
 
         CandidatePipelineResult result = Execute(fixture.Package);
@@ -30,13 +30,13 @@ public sealed class CandidateSelectionEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1CandidateScale")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1CandidateScale")]
+    [TestCategory("Evaluation")]
+    [TestCategory("CandidateScale")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "CandidateScale")]
     public void ValidationScaleUsesTheRealSourceAndStaysWithinThePublicationBoundary()
     {
-        CandidateFixture fixture = ReadFixture("CAND-WP3-SCALE-VAL-v1");
+        CandidateFixture fixture = ReadFixture("CAND-SCALE-VAL-v1");
         CandidateDeliveredExpansionContract expansion = fixture.Package.DeliveredExpansion
             ?? throw new AssertFailedException("The validation-scale package must retain an expansion.");
         JsonElement projection = fixture.Projection.RootElement;
@@ -55,14 +55,14 @@ public sealed class CandidateSelectionEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1CandidateScale")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1CandidateScale")]
+    [TestCategory("Evaluation")]
+    [TestCategory("CandidateScale")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "CandidateScale")]
     public void StressPackageStreamsTheSameRecipeWithoutMaterializingThePopulation()
     {
-        CandidateFixture scale = ReadFixture("CAND-WP3-SCALE-VAL-v1");
-        CandidateFixture stress = ReadFixture("CAND-WP3-STRESS-DEV-v1", "oracle/streaming-expansion-receipt.json");
+        CandidateFixture scale = ReadFixture("CAND-SCALE-VAL-v1");
+        CandidateFixture stress = ReadFixture("CAND-STRESS-DEV-v1", "oracle/streaming-expansion-receipt.json");
         CandidateDeliveredExpansionContract scaleExpansion = scale.Package.DeliveredExpansion!;
         CandidateDeliveredExpansionContract stressExpansion = stress.Package.DeliveredExpansion!;
 
@@ -156,9 +156,9 @@ public sealed class CandidateSelectionEvaluationTests
             if (candidateExpected)
             {
                 string hypothesisState = item.GetProperty("hypothesis_state").GetString()!;
-                Assert.AreEqual(hypothesisState == "needs-input" ? Slice5ResultState.Abstained : Slice5ResultState.Present,
+                Assert.AreEqual(hypothesisState == "needs-input" ? AnalysisResultState.Abstained : AnalysisResultState.Present,
                     candidatesByFact[sourceFactId].State, $"candidate state {sourceFactId}");
-                Assert.AreEqual(hypothesisState == "needs-input" ? Slice5ResultState.Partial : Slice5ResultState.Present,
+                Assert.AreEqual(hypothesisState == "needs-input" ? AnalysisResultState.Partial : AnalysisResultState.Present,
                     hypothesesByFact[sourceFactId].State, $"hypothesis state {sourceFactId}");
             }
             if (decision.Lane == CandidateLane.OptionalRanked)

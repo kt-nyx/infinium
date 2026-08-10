@@ -1,8 +1,7 @@
 # Analysis catalog
 
 Status: Accepted  
-Last reviewed: 2026-08-08
-
+Last reviewed: 2026-08-10
 Accepted bounded-M1 clarification: ADR-0028 governs the `EDID`, FaceGen,
 asset-availability, coverage, gap, and taxonomy semantics used by the first
 Bethesda proof.
@@ -10,10 +9,10 @@ Bethesda proof.
 This is the living inventory of desired analysis capabilities. Catalog entries
 do not imply complete analyzer delivery. M1 Slices 3 and 4 have implemented the
 bounded exact-target/MO2 snapshot and Bethesda semantic/index substrate
-described by their accepted plans. Slice 5 is active: WP1 delivered its
-contracts, migration, and evaluator boundary, and WP2 is the next authorized
-package on the path to the first complete evidence, candidate, finding, case,
-and replay flow. Every
+described by their accepted plans. Slice 5 owns the first complete evidence,
+candidate, finding, case, publication, and replay flow; its exact delivered
+and accepted status is stated only in [current project state](../current-state.md)
+and the owning implementation record. Every
 broader capability remains unimplemented unless a current implementation record
 states its exact delivered scope. The section headings group product
 capabilities for planning; they do not replace the accepted

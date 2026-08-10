@@ -14,8 +14,8 @@ namespace Infinium.Tests;
 public sealed class PersistenceAndLifecycleTests
 {
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void ExactPatchedSqliteBindingAndStrictForeignKeySchemaAreRequired()
     {
         using TemporaryStore temporary = new();
@@ -46,8 +46,8 @@ public sealed class PersistenceAndLifecycleTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void LifecyclePolicyCoversPauseResumeCancelAndTerminalClosure()
     {
         LifecyclePolicy.EnsureAllowed(LifecycleState.Queued, LifecycleState.Running);
@@ -66,8 +66,8 @@ public sealed class PersistenceAndLifecycleTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void DurableCommandsAreIdempotentAndRunBindingsRemainImmutable()
     {
         using TemporaryStore temporary = new();
@@ -159,10 +159,10 @@ public sealed class PersistenceAndLifecycleTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Unit")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Fault")]
     public void StaleAttemptCannotPublishAndDigestMismatchLeavesNoAuthority()
     {
         using TemporaryStore temporary = new();
@@ -241,10 +241,10 @@ public sealed class PersistenceAndLifecycleTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Unit")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Fault")]
     public void LedgerPersistsPauseResumeCancelAndNeverReopensTerminalState()
     {
         using TemporaryStore temporary = new();
@@ -272,10 +272,10 @@ public sealed class PersistenceAndLifecycleTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Unit")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Fault")]
     public void CoordinatorLeaseRenewalRejectsUnacquiredStaleAndExpiredEpochs()
     {
         DateTimeOffset now = DateTimeOffset.UtcNow;
@@ -339,10 +339,10 @@ public sealed class PersistenceAndLifecycleTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Unit")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Fault")]
     public void NewCoordinatorEpochGloballyFencesEveryOlderMutationAndAttempt()
     {
         using TemporaryStore temporary = new();
@@ -429,10 +429,10 @@ public sealed class PersistenceAndLifecycleTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Unit")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Fault")]
     public void CheckpointAdmissionRequiresCurrentUniqueAttemptBindingAndBoundedJson()
     {
         using TemporaryStore temporary = new();
@@ -529,10 +529,10 @@ public sealed class PersistenceAndLifecycleTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Unit")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Fault")]
     public void ExistingStoreRefusesMetadataAndSchemaIdentityDrift()
     {
         using (TemporaryStore metadataTemporary = new())
@@ -574,10 +574,10 @@ public sealed class PersistenceAndLifecycleTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Unit")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Fault")]
     public void RestoreRejectsIncompleteOrMismatchedManifestWithoutCreatingTarget()
     {
         using TemporaryStore source = new();
@@ -631,10 +631,10 @@ public sealed class PersistenceAndLifecycleTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
     public void FixedWriteClassesBackupAndRestoreHaveDurableAuditRecords()
     {
         using TemporaryStore source = new();
@@ -687,9 +687,9 @@ public sealed class PersistenceAndLifecycleTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Unit")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Fault")]
     public void BackupIdentityCollisionCannotOverwriteAnExistingBackup()
     {
         using TemporaryStore temporary = new();
@@ -709,12 +709,12 @@ public sealed class PersistenceAndLifecycleTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
+    [TestProperty("Category", "Fault")]
     public void BackupRejectsCorruptCasBytesAndRemovesThePartialBundle()
     {
         using TemporaryStore temporary = new();
@@ -774,10 +774,10 @@ public sealed class PersistenceAndLifecycleTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Unit")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Fault")]
     public void ImmutableAuthorityTablesInstallUpdateAndDeleteGuards()
     {
         using TemporaryStore temporary = new();
@@ -835,10 +835,10 @@ public sealed class PersistenceAndLifecycleTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Unit")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Fault")]
     public void PayloadAdmissionRequiresExactLengthAndRetainsCanonicalManifestDigest()
     {
         using TemporaryStore temporary = new();
@@ -959,10 +959,10 @@ public sealed class PersistenceAndLifecycleTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Unit")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Fault")]
     public void DispatchAndPublicationRaceAtomicallyWithLifecycleCommands()
     {
         using TemporaryStore temporary = new();

@@ -4,8 +4,8 @@ using System.Text.Json;
 using Infinium.Analysis.Candidates;
 using Infinium.Application.Candidates;
 using Infinium.Application.Documentation;
-using Infinium.Application.Evaluation;
 using Infinium.Application.FindingCases;
+using Infinium.Application.Serialization;
 using Infinium.Domain.Contracts;
 
 namespace Infinium.Application.Analysis;
@@ -43,7 +43,7 @@ public static class AnalysisPublicationBuilder
             documentation = DocumentationEvidenceJsonCodec.Deserialize(documentationBytes);
             candidates = CandidateAnalysisJsonCodec.Deserialize(candidateBytes);
             findingCases = FindingCaseJsonCodec.Deserialize(findingCaseBytes);
-            Slice5ContractInvariants.Validate(assignment.ExecutionInput);
+            AnalysisExecutionContractInvariants.Validate(assignment.ExecutionInput);
             cancellationToken.ThrowIfCancellationRequested();
             string admittedRunId = assignment.ExecutionInput.RunId.Value;
             string SourceRun(string phaseId) => assignment.PhaseExecutions
@@ -56,7 +56,7 @@ public static class AnalysisPublicationBuilder
                 || candidates.ExecutionInputFingerprint != CandidateAnalysisIdentity.StructuralHash(
                     CandidatePipelineRequest.DescribeExecutionInput(assignment.ExecutionInput)))
             {
-                throw new InvalidDataException("WP2-WP4 aggregate identities do not bind the admitted analysis-v1 execution input.");
+                throw new InvalidDataException("Documentation, candidate, and finding/case aggregate identities do not bind the admitted analysis-v1 execution input.");
             }
         }
         catch (Exception exception) when (exception is InvalidDataException or InvalidOperationException)
@@ -91,7 +91,7 @@ public static class AnalysisPublicationBuilder
             assignment, documentation, candidates, findingCases, documentationSha, candidateSha, findingSha);
         cancellationToken.ThrowIfCancellationRequested();
         OpaqueId[] missingDependencyIds = dependencies
-            .Where(item => item.State != Slice5ResultState.Present)
+            .Where(item => item.State != AnalysisResultState.Present)
             .Select(item => item.DependencyId)
             .Distinct().OrderBy(item => item.Value, StringComparer.Ordinal).ToArray();
         List<ReplayDependencyEdgeContract> dependencyEdges = [];
@@ -106,7 +106,7 @@ public static class AnalysisPublicationBuilder
                 && !assignment.ExecutionInput.SourceInputs.Any(item => item.ArtifactId == id)))
         {
             throw new AnalysisIdentityDriftException(
-                "Documentation provenance dependencies differ from the exact retained WP2 input closure.");
+                "Documentation provenance dependencies differ from the exact retained documentation input closure.");
         }
         Dictionary<string, OpaqueId> phaseNodes = assignment.PhaseExecutions.ToDictionary(
             item => item.PhaseId,
@@ -197,7 +197,7 @@ public static class AnalysisPublicationBuilder
         dependencies.Add(new ReplayDependencyNodeContract(
             replayNode, "analysis-replay", new ContractVersion(1, 0, 0),
             new Sha256Fingerprint(Hash(Encoding.UTF8.GetBytes(
-                dependencyClosureId + "|" + semanticFingerprint))), Slice5ResultState.Present));
+                dependencyClosureId + "|" + semanticFingerprint))), AnalysisResultState.Present));
         dependencyEdges.Add(new ReplayDependencyEdgeContract(replayNode, assignment.ExecutionInput.ExecutionInputId));
         dependencyEdges.Add(new ReplayDependencyEdgeContract(replayNode, documentation.PayloadId));
         dependencyEdges.Add(new ReplayDependencyEdgeContract(replayNode, candidates.PayloadId));
@@ -225,7 +225,7 @@ public static class AnalysisPublicationBuilder
                 .Distinct().OrderBy(item => item.Value, StringComparer.Ordinal).ToArray(),
             semanticallyEquivalent,
             assignment.ExecutionInput.PriorRunId);
-        Slice5ContractInvariants.Validate(replay);
+        AnalysisReplayContractInvariants.Validate(replay);
 
         ExternalBoundaryReceipt boundaryReceipt = new(
             1,
@@ -238,7 +238,7 @@ public static class AnalysisPublicationBuilder
                 ["live"] = "not-used",
                 ["billable"] = "not-used",
             },
-            "M1 Slice 5 WP5 is a retained local-only execution path.");
+            "The bounded analysis pipeline is a retained local-only execution path.");
 
         string provisionalCliFingerprint = new string('0', 64);
         RunOutputContract provisional = BuildRunOutput(
@@ -293,7 +293,7 @@ public static class AnalysisPublicationBuilder
     public static void ValidateAssignment(AnalysisV1WorkAssignment assignment)
     {
         ArgumentNullException.ThrowIfNull(assignment);
-        Slice5ContractInvariants.Validate(assignment.ExecutionInput);
+        AnalysisExecutionContractInvariants.Validate(assignment.ExecutionInput);
         if (assignment.SchemaVersion != AnalysisV1WorkAssignment.CurrentSchemaVersion
             || string.IsNullOrWhiteSpace(assignment.AssignmentId)
             || assignment.AssignmentId.Length > 128
@@ -396,25 +396,25 @@ public static class AnalysisPublicationBuilder
             contradicting?.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray() ?? [],
             new LlmInvolvementDocumentContract("none", "none", null));
         List<TypedArtifactDocumentContract> docs = documentation.Revisions.Select(item =>
-            Typed(item.RevisionId.Value, "documentation-revision", Kebab(item.RetentionState), documentPayload, DocumentProvenance("m1-s5-wp2-documentation-evidence"))).ToList();
+            Typed(item.RevisionId.Value, "documentation-revision", Kebab(item.RetentionState), documentPayload, DocumentProvenance("documentation-evidence"))).ToList();
         List<TypedArtifactDocumentContract> imports = documentation.Imports.Select(item =>
             Typed(item.ImportId.Value, "deterministic-result", "present", documentPayload,
                 DocumentProvenance(item.ExtractorId.Value, [item.RevisionId.Value]))).ToList();
         List<TypedArtifactDocumentContract> passages = documentation.Passages.Select(item =>
-            Typed(item.PassageId.Value, "passage", Kebab(item.State), documentPayload, DocumentProvenance("m1-s5-wp2-documentation-evidence"))).ToList();
+            Typed(item.PassageId.Value, "passage", Kebab(item.State), documentPayload, DocumentProvenance("documentation-evidence"))).ToList();
         List<TypedArtifactDocumentContract> claims = documentation.Claims.Select(item =>
             Typed(item.ClaimId.Value, "external-claim", ClaimState(item.Applicability), documentPayload,
-                DocumentProvenance("m1-s5-wp2-documentation-evidence",
+                DocumentProvenance("documentation-evidence",
                     [item.ProducingImportId.Value, item.PassageId.Value],
                     item.ContradictingEvidenceIds.Select(id => id.Value).ToArray()))).ToList();
         List<TypedArtifactDocumentContract> applications = documentation.Applications.Select(item =>
             Typed(item.ApplicationId.Value, "application-link", ClaimState(item.Applicability), documentPayload,
-                DocumentProvenance("m1-s5-wp2-documentation-evidence",
+                DocumentProvenance("documentation-evidence",
                     [item.ClaimId.Value, .. item.EvidenceIds.Select(id => id.Value)]))).ToList();
         List<TypedArtifactDocumentContract> deletionReceipts = documentation.DeletionReceipts.Select(item =>
             Typed(item.ReceiptId.Value, "deterministic-result",
                 item.ReplayEffect == ReplayState.CompleteClean ? "present" : "partial", documentPayload,
-                DocumentProvenance("m1-s5-wp2-documentation-evidence",
+                DocumentProvenance("documentation-evidence",
                     [item.RevisionId.Value, .. item.IndependentlyRetainedPayloadIds.Select(id => id.Value)]))).ToList();
         List<TypedArtifactDocumentContract> candidateArtifacts = candidates.Candidates.Select(item =>
             Typed(item.CandidateId.Value, "candidate", Kebab(item.State), candidatePayload, DocumentProvenance(candidates.AnalyzerId.Value))).ToList();
@@ -425,34 +425,34 @@ public static class AnalysisPublicationBuilder
         List<TypedArtifactDocumentContract> abstentions = candidates.Abstentions.Select(item =>
             Typed(item.AbstentionId.Value, "abstention", "abstained", candidatePayload, DocumentProvenance(item.AnalyzerId.Value)))
             .Concat(findingCases.Abstentions.Select(item =>
-                Typed(item.AbstentionId.Value, "abstention", "abstained", findingPayload, DocumentProvenance("m1-s5-wp4-finding-case-analysis"))))
+                Typed(item.AbstentionId.Value, "abstention", "abstained", findingPayload, DocumentProvenance("finding-case-analysis"))))
             .GroupBy(item => item.ArtifactId, StringComparer.Ordinal).Select(item => item.First()).ToList();
         List<TypedArtifactDocumentContract> findings = findingCases.Findings.Select(item =>
-            Typed(item.FindingOccurrenceId.Value, "finding", "present", findingPayload, DocumentProvenance("m1-s5-wp4-finding-case-analysis"))).ToList();
+            Typed(item.FindingOccurrenceId.Value, "finding", "present", findingPayload, DocumentProvenance("finding-case-analysis"))).ToList();
         List<TypedArtifactDocumentContract> recommendations = findingCases.Recommendations.Select(item =>
-            Typed(item.RecommendationId.Value, "recommendation", "present", findingPayload, DocumentProvenance("m1-s5-wp4-finding-case-analysis"))).ToList();
+            Typed(item.RecommendationId.Value, "recommendation", "present", findingPayload, DocumentProvenance("finding-case-analysis"))).ToList();
         List<TypedArtifactDocumentContract> supportedCases = findingCases.Cases.Where(item => item.Kind == CaseOccurrenceKind.Supported).Select(item =>
-            Typed(item.CaseOccurrenceId.Value, "supported-case", "present", findingPayload, DocumentProvenance("m1-s5-wp4-finding-case-analysis"))).ToList();
+            Typed(item.CaseOccurrenceId.Value, "supported-case", "present", findingPayload, DocumentProvenance("finding-case-analysis"))).ToList();
         List<TypedArtifactDocumentContract> leadCases = findingCases.Cases.Where(item => item.Kind == CaseOccurrenceKind.LeadOnly).Select(item =>
-            Typed(item.CaseOccurrenceId.Value, "lead-only-case", "present", findingPayload, DocumentProvenance("m1-s5-wp4-finding-case-analysis"))).ToList();
+            Typed(item.CaseOccurrenceId.Value, "lead-only-case", "present", findingPayload, DocumentProvenance("finding-case-analysis"))).ToList();
         List<TypedArtifactDocumentContract> discoveryLeads = findingCases.Cases.Where(item => item.Kind == CaseOccurrenceKind.LeadOnly).Select(item =>
-            Typed("lead-" + item.CaseOccurrenceId.Value, "discovery-lead", "present", findingPayload, DocumentProvenance("m1-s5-wp4-finding-case-analysis"))).ToList();
+            Typed("lead-" + item.CaseOccurrenceId.Value, "discovery-lead", "present", findingPayload, DocumentProvenance("finding-case-analysis"))).ToList();
         List<TypedArtifactDocumentContract> gaps = documentation.Gaps.Select(item =>
-            Typed(item.GapId.Value, "coverage-gap", "partial", documentPayload, DocumentProvenance("m1-s5-wp2-documentation-evidence")))
+            Typed(item.GapId.Value, "coverage-gap", "partial", documentPayload, DocumentProvenance("documentation-evidence")))
             .Concat(candidates.Gaps.Select(item =>
                 Typed(item.GapId.Value, "coverage-gap", Kebab(item.State), candidatePayload, DocumentProvenance(candidates.AnalyzerId.Value))))
             .Concat(findingCases.Gaps.Select(item =>
-                Typed(item.GapId.Value, "coverage-gap", "partial", findingPayload, DocumentProvenance("m1-s5-wp4-finding-case-analysis"))))
+                Typed(item.GapId.Value, "coverage-gap", "partial", findingPayload, DocumentProvenance("finding-case-analysis"))))
             .Concat(replay.MissingDependencyIds.Select(item =>
                 Typed(MissingDependencyGapId(item.Value), "coverage-gap", "unavailable", candidatePayload,
-                    DocumentProvenance("m1-s5-wp5-replay-dependency-audit", [item.Value]))))
+                    DocumentProvenance("analysis-replay-dependency-audit", [item.Value]))))
             .GroupBy(item => item.ArtifactId, StringComparer.Ordinal).Select(item => item.First()).ToList();
         List<TypedArtifactDocumentContract> replayDependencyGaps = replay.MissingDependencyIds.Select(item =>
                 Typed(MissingDependencyGapId(item.Value), "coverage-gap", "unavailable", candidatePayload,
-                    DocumentProvenance("m1-s5-wp5-replay-dependency-audit", [item.Value])))
+                    DocumentProvenance("analysis-replay-dependency-audit", [item.Value])))
             .ToList();
         List<TypedArtifactDocumentContract> failures = documentation.Failures.Select(item =>
-            Typed(item.FailureId.Value, "failure", "failed", documentPayload, DocumentProvenance("m1-s5-wp2-documentation-evidence")))
+            Typed(item.FailureId.Value, "failure", "failed", documentPayload, DocumentProvenance("documentation-evidence")))
             .Concat(candidates.Failures.Select(item =>
                 Typed(item.FailureId.Value, "failure", "failed", candidatePayload, DocumentProvenance(item.AnalyzerId.Value))))
             .Concat(findingCases.CoverageFailures.Select(item =>
@@ -461,7 +461,7 @@ public static class AnalysisPublicationBuilder
         List<TypedArtifactDocumentContract> reconciliations = findingCases.ReconciliationAssessments.Select(item =>
             Typed(item.AssessmentId.Value, "reconciliation-assessment", "present", findingPayload, DocumentProvenance(item.ActorId.Value))).ToList();
         List<TypedArtifactDocumentContract> lineage = findingCases.LineageEvents.Select(item =>
-            Typed(item.EventId.Value, "lineage-event", "present", findingPayload, DocumentProvenance("m1-s5-wp4-finding-case-analysis"))).ToList();
+            Typed(item.EventId.Value, "lineage-event", "present", findingPayload, DocumentProvenance("finding-case-analysis"))).ToList();
 
         Dictionary<string, IReadOnlyList<TypedArtifactDocumentContract>> collections = new(StringComparer.Ordinal)
         {
@@ -537,8 +537,8 @@ public static class AnalysisPublicationBuilder
             collections["coverage_gaps"], collections["failures"], collections["documentation_revisions"],
             collections["passages"], collections["candidate_decisions"], collections["reconciliation_assessments"],
             collections["lineage_events"], states, taxonomy, coverage,
-            [new ExcludedCapabilityDocumentContract("slice-6-and-later", "unsupported", "outside WP5 authority")],
-            new ReadinessDocumentContract("no-readiness-evaluation", "m1-slice5-wp5", true),
+            [new ExcludedCapabilityDocumentContract("future-analysis-capabilities", "unsupported", "outside bounded analysis authority")],
+            new ReadinessDocumentContract("no-readiness-evaluation", "bounded-local-analysis", true),
             new ReplayabilityDocumentContract(
                 replay.ReplayState == ReplayState.CompleteClean ? "complete" : "partial",
                 replay.ReplayState == ReplayState.CompleteClean ? "complete-clean" : "boundary-replay",
@@ -550,8 +550,8 @@ public static class AnalysisPublicationBuilder
                 Hash(AnalysisReplayJsonCodec.Serialize(replay)), "retained"),
             [
                 new ExcludedCapabilityDocumentContract("provider", "not-used", "local-only retained execution"),
-                new ExcludedCapabilityDocumentContract("model", "not-used", "no model surface in WP5"),
-                new ExcludedCapabilityDocumentContract("credential", "not-used", "no credential surface in WP5"),
+                new ExcludedCapabilityDocumentContract("model", "not-used", "no model surface in bounded local analysis"),
+                new ExcludedCapabilityDocumentContract("credential", "not-used", "no credential surface in bounded local analysis"),
                 new ExcludedCapabilityDocumentContract("live", "not-used", "network-off execution"),
                 new ExcludedCapabilityDocumentContract("billable", "not-used", "no billable dispatch"),
             ],
@@ -617,7 +617,7 @@ public static class AnalysisPublicationBuilder
         string findingSha)
     {
         List<ReplayDependencyNodeContract> result = [];
-        void Add(string id, string kind, string version, string fingerprint, Slice5ResultState state = Slice5ResultState.Present) =>
+        void Add(string id, string kind, string version, string fingerprint, AnalysisResultState state = AnalysisResultState.Present) =>
             result.Add(new ReplayDependencyNodeContract(new OpaqueId(id), kind, ContractVersion.Parse(version), new Sha256Fingerprint(fingerprint), state));
         Add(assignment.ExecutionInput.ExecutionInputId.Value, "execution-input", assignment.ExecutionInput.SchemaVersion.ToString(),
             Hash(AnalysisExecutionInputJsonCodec.Serialize(assignment.ExecutionInput)));
@@ -638,7 +638,7 @@ public static class AnalysisPublicationBuilder
                 continue;
             }
             Add(value.ArtifactId.Value, kind, value.ArtifactVersion.ToString(), value.Fingerprint.Value,
-                value.Availability == "retained" ? Slice5ResultState.Present : Slice5ResultState.Unavailable);
+                value.Availability == "retained" ? AnalysisResultState.Present : AnalysisResultState.Unavailable);
         }
         Add(documentation.PayloadId.Value, "documentation-evidence", documentation.SchemaVersion.ToString(), documentationSha);
         Add(candidates.PayloadId.Value, "candidate-analysis", candidates.SchemaVersion.ToString(), candidateSha);
@@ -727,10 +727,10 @@ public static class AnalysisPublicationBuilder
                     cancellationToken.ThrowIfCancellationRequested();
                     return item;
                 })
-                .OrderBy(item => JsonSerializer.Serialize(item, Slice5ContractJsonCodec.JsonOptions), StringComparer.Ordinal);
+                .OrderBy(item => JsonSerializer.Serialize(item, SchemaValidatedJsonCodec.JsonOptions), StringComparer.Ordinal);
 
         string Anchor(object value) => Hash(JsonSerializer.SerializeToUtf8Bytes(
-            value, Slice5ContractJsonCodec.JsonOptions));
+            value, SchemaValidatedJsonCodec.JsonOptions));
         object SemanticEnvelope(IdentityEnvelopeContract value) => new
         {
             value.AnalyzerFamily,
@@ -864,7 +864,7 @@ public static class AnalysisPublicationBuilder
                 item.Severity,
                 item.Confidence,
             }));
-        foreach (Slice5CaseContract item in findingCases.Cases)
+        foreach (AnalysisCaseContract item in findingCases.Cases)
         {
             occurrenceAnchors.Add(item.CaseOccurrenceId, "case:" + Anchor(new
             {
@@ -1362,7 +1362,7 @@ public static class AnalysisPublicationBuilder
                 findingCases.PublicationClaimBoundary,
             },
         };
-        byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(projection, Slice5ContractJsonCodec.JsonOptions);
+        byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(projection, SchemaValidatedJsonCodec.JsonOptions);
         cancellationToken.ThrowIfCancellationRequested();
         return bytes;
     }

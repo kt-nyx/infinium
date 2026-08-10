@@ -1,0 +1,247 @@
+{
+  "fixture_id": "PLATFORM-ANALYSIS-RUNTIME-DEV-v1",
+  "fixture_version": "1.1.0",
+  "oracle_version": "1.0.3",
+  "independent_authors_and_reviewers": [
+    "infinium-evaluation-review"
+  ],
+  "ground_truth_methods": [
+    {
+      "method_id": "accepted-plan-contract-review",
+      "method": "Independent comparison of observable substrate behavior with the accepted platform architecture and accepted architecture contracts.",
+      "evidence_references": [
+        {
+          "artifact_id": "accepted-platform-architecture",
+          "artifact_version": "1.0.0",
+          "fingerprint": "201410b74f84a34d217350b2f8f433e26323b26491061c19fe98ae2d3ae47e27",
+          "availability": "retained"
+        }
+      ],
+      "independent_of_system_under_test": true
+    }
+  ],
+  "expected_observations": [],
+  "expected_deterministic_results": [
+    {
+      "expected_id": "expected-lifecycle-substrate",
+      "subject_id": "PLATFORM-LIFECYCLE-v1",
+      "expected_type": "deterministic-result",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "accepted-plan-contract-review"
+      ],
+      "canonical_value_fingerprint": "a46dd2ddb8b2c7a88148a546b79ed23e6c474b434d4e1f5a040ea66616284a1a"
+    },
+    {
+      "expected_id": "expected-lineage-substrate",
+      "subject_id": "PLATFORM-LINEAGE-v1",
+      "expected_type": "deterministic-result",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "accepted-plan-contract-review"
+      ],
+      "canonical_value_fingerprint": "9375ef9bc62fbb72ed20b20a48c5113b76a1315adc07e87e4a24a5aac6c3e35f"
+    },
+    {
+      "expected_id": "expected-write-boundary-substrate",
+      "subject_id": "PLATFORM-WRITES-v1",
+      "expected_type": "deterministic-result",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "accepted-plan-contract-review"
+      ],
+      "canonical_value_fingerprint": "350008568c4a1feb1b57c7c1faa5d96817565d938c66c3f50b31c906897452e4"
+    },
+    {
+      "expected_id": "expected-persistence-substrate",
+      "subject_id": "PLATFORM-PERSISTENCE-v1",
+      "expected_type": "deterministic-result",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "accepted-plan-contract-review"
+      ],
+      "canonical_value_fingerprint": "ba784647ec84ff9993621d53c0c3c84aff26c26ea1eb88b8ef418933cab950f8"
+    },
+    {
+      "expected_id": "expected-ipc-substrate",
+      "subject_id": "PLATFORM-IPC-v1",
+      "expected_type": "deterministic-result",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "accepted-plan-contract-review"
+      ],
+      "canonical_value_fingerprint": "b58ee03086a62becd109eb886ba64cc2ce2e19d44cd7d4ba08865cedf606d44e"
+    }
+  ],
+  "expected_external_claims": [],
+  "expected_application_links": [],
+  "expected_discovery_leads": [],
+  "expected_model_proposals": [],
+  "expected_proposal_admissions": [],
+  "expected_candidates": [],
+  "expected_hypotheses": [],
+  "expected_findings": [],
+  "expected_recommendations": [],
+  "expected_supported_cases": [],
+  "expected_lead_only_cases": [],
+  "expected_abstentions": [],
+  "expected_invalid_inputs": [],
+  "expected_failures": [],
+  "expected_coverage_and_gaps": [
+    {
+      "expected_id": "expected-complete-case-gap",
+      "subject_id": "complete-platform-evaluation-case",
+      "expected_type": "coverage-gap",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "accepted-plan-contract-review"
+      ],
+      "canonical_value_fingerprint": "81a915f7641d5be8fcfaf847fb7e5e02a2a0d6e2e5c0eaed233ca6a799c64338"
+    }
+  ],
+  "expected_collection_states": {
+    "observations": {
+      "state": "empty",
+      "reason": "No semantic observations are produced by this substrate fixture."
+    },
+    "deterministic_results": {
+      "state": "populated",
+      "reason": "Each platform capability family has a preregistered deterministic substrate expectation."
+    },
+    "external_claims": {
+      "state": "empty",
+      "reason": "The fixture makes no external claims."
+    },
+    "application_links": {
+      "state": "empty",
+      "reason": "Application links are outside the platform substrate package."
+    },
+    "discovery_leads": {
+      "state": "empty",
+      "reason": "Discovery leads are outside the platform substrate package."
+    },
+    "model_proposals": {
+      "state": "empty",
+      "reason": "No model use is authorized or required."
+    },
+    "proposal_admissions": {
+      "state": "empty",
+      "reason": "No model proposals are produced."
+    },
+    "candidates": {
+      "state": "empty",
+      "reason": "Semantic candidates are outside the platform substrate package."
+    },
+    "hypotheses": {
+      "state": "empty",
+      "reason": "Semantic hypotheses are outside the platform substrate package."
+    },
+    "findings": {
+      "state": "empty",
+      "reason": "Semantic findings are outside the platform substrate package."
+    },
+    "recommendations": {
+      "state": "empty",
+      "reason": "Recommendations are outside the platform substrate package."
+    },
+    "supported_cases": {
+      "state": "empty",
+      "reason": "No complete accepted evaluation case is claimed."
+    },
+    "lead_only_cases": {
+      "state": "empty",
+      "reason": "Lead-only semantic cases are outside the platform substrate package."
+    },
+    "abstentions": {
+      "state": "empty",
+      "reason": "No analyzer decision is made by this substrate fixture."
+    },
+    "invalid_inputs": {
+      "state": "empty",
+      "reason": "Malformed inputs are covered by mutation tests rather than the accepted package."
+    },
+    "coverage_gaps": {
+      "state": "populated",
+      "reason": "The fixture explicitly preserves the gap between platform substrate coverage and complete accepted product cases."
+    },
+    "failures": {
+      "state": "empty",
+      "reason": "The accepted package describes successful substrate execution."
+    }
+  },
+  "expected_taxonomy_assignments": [],
+  "expected_replayability": "complete-clean",
+  "forbidden_claims": [
+    {
+      "claim_id": "forbid-complete-case-pass",
+      "claim_type": "complete-evaluation-case-passed",
+      "reason": "The package implements only declared platform substrate portions."
+    },
+    {
+      "claim_id": "forbid-provider-use",
+      "claim_type": "live-provider-execution",
+      "reason": "The fixture is local, deterministic, and answer-isolated."
+    }
+  ],
+  "known_limits": [
+    "This package evaluates the platform substrate only and is not evidence that a complete accepted product evaluation case passed.",
+    "No real installation, mod, provider, credential, or protected root is used."
+  ],
+  "pre_registered_at": "2026-07-29T00:00:00.0000000+00:00",
+  "change_history": [
+    {
+      "oracle_version": "1.0.3",
+      "changed_at": "2026-08-07T21:40:25.9854797+00:00",
+      "independent_evidence_reference": {
+        "artifact_id": "accepted-platform-architecture",
+        "artifact_version": "2026-08-07-evaluator-deferral-continuation-profile",
+        "fingerprint": "201410b74f84a34d217350b2f8f433e26323b26491061c19fe98ae2d3ae47e27",
+        "availability": "retained"
+      },
+      "prior_error_explanation": "No semantic expectation changed. The accepted-plan dependency fingerprint changed when evaluator deferral replaced the held-out sequencing gate with the public M1 continuation verification profile and final closeout status.",
+      "reviewer": "evaluator-closeout-parent"
+    },
+    {
+      "oracle_version": "1.0.2",
+      "changed_at": "2026-07-30T15:21:21.7790812+00:00",
+      "independent_evidence_reference": {
+        "artifact_id": "accepted-platform-architecture",
+        "artifact_version": "2026-07-30-slice-3.5-execution-plan",
+        "fingerprint": "9d3eeaf32b078e19340c6a08ae65413339fcb1e2f58f1b84f4f71e56b4d88bd4",
+        "availability": "retained"
+      },
+      "prior_error_explanation": "No semantic expectation changed. The accepted-plan dependency fingerprint changed when the owner added the authoritative Slice 3.5 fresh-agent execution-plan link.",
+      "reviewer": "project-owner"
+    },
+    {
+      "oracle_version": "1.0.1",
+      "changed_at": "2026-07-30T14:58:15.4420835+00:00",
+      "independent_evidence_reference": {
+        "artifact_id": "accepted-platform-architecture",
+        "artifact_version": "2026-07-30-slice-3.5-amendment",
+        "fingerprint": "26d4dc251cb732cf88ca039f7577630e332d7a30080256d152f8cee5ac397a6d",
+        "availability": "retained"
+      },
+      "prior_error_explanation": "No semantic expectation changed. The accepted-plan dependency fingerprint changed when the owner deferred M1 QUST alias semantics and inserted Slice 3.5.",
+      "reviewer": "project-owner"
+    }
+  ],
+  "expected_documentation_revisions": [],
+  "expected_passages": [],
+  "expected_candidate_decisions": [],
+  "expected_reconciliation_assessments": [],
+  "expected_lineage_events": [],
+  "expected_replay_manifest": {
+    "artifact_id": "oracle/replay-manifest.json",
+    "artifact_version": "1.1.0",
+    "fingerprint": "464dec21ba0cdeb6ed38f027c5bcb03b176452678b061bdc32af6620e30e375f",
+    "availability": "retained",
+    "byte_length": 1718
+  },
+  "expected_not_used_boundaries": [
+    "provider",
+    "hosted-search",
+    "nexus",
+    "loot"
+  ]
+}

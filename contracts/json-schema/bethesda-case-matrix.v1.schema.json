@@ -27,7 +27,7 @@
       "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
     },
     "source_basis": {
-      "const": "accepted-slice-3.5-plan-and-retained-execution-inputs"
+      "const": "accepted-bethesda-scenario-inventory-and-retained-execution-inputs"
     },
     "cases": {
       "type": "array",

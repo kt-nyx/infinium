@@ -2,6 +2,8 @@
 
 Status: Accepted historical decision; active `/5` model authority superseded by ADR-0032
 
+Last reviewed: 2026-08-10
+
 Date: 2026-08-07
 
 Superseded by: ADR-0032 only as active `/5` model authority

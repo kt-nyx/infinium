@@ -1,6 +1,6 @@
 using Infinium.Analysis.Candidates;
 using Infinium.Application.Candidates;
-using Infinium.Application.Evaluation;
+using Infinium.Application.Serialization;
 using Infinium.Domain.Contracts;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -10,8 +10,8 @@ namespace Infinium.Tests;
 public sealed class DeliveredCandidateSourceTests
 {
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void AnswerFreeExpansionFlowsThroughTheRealDeliveredSource()
     {
         CandidateDeliveredExpansionContract expansion = new(
@@ -76,10 +76,10 @@ public sealed class DeliveredCandidateSourceTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Mutation")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Mutation")]
+    [TestCategory("Unit")]
+    [TestCategory("Mutation")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Mutation")]
     public void PipelineBindsExactDeliveredBytesAndAnalyzerDeclaration()
     {
         CandidateDeliveredInputContract input = new(
@@ -150,10 +150,10 @@ public sealed class DeliveredCandidateSourceTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Mutation")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Mutation")]
+    [TestCategory("Unit")]
+    [TestCategory("Mutation")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Mutation")]
     public void PipelineBindsExactExpansionBytesBeforeTheRealSourceExpandsThem()
     {
         CandidateDeliveredExpansionContract expansion = new(
@@ -192,7 +192,7 @@ public sealed class DeliveredCandidateSourceTests
         Assert.AreEqual(context.AdmittedDeliveredInputId, result.Analysis.DeliveredInputId);
         Assert.IsTrue(result.Analysis.Decisions.All(item =>
             item.DependencyIds.Contains(result.Analysis.DeliveredInputId)));
-        Slice5ContractInvariants.Validate(result.Analysis);
+        CandidateAnalysisContractInvariants.Validate(result.Analysis);
         OpaqueId substitutedRoot = Id("candidate-delivered-input-expansion-substitution");
         CandidateAnalysisContract substituted = result.Analysis with
         {
@@ -207,7 +207,7 @@ public sealed class DeliveredCandidateSourceTests
                     : item).ToArray(),
         };
         Assert.ThrowsExactly<InvalidOperationException>(() =>
-            Slice5ContractInvariants.Validate(substituted));
+            CandidateAnalysisContractInvariants.Validate(substituted));
         Assert.ThrowsExactly<InvalidOperationException>(() => CandidatePipeline.Execute(request with
         {
             Context = context with { DeliveredExpansionByteFingerprint = new Sha256Fingerprint(new string('f', 64)) },
@@ -223,10 +223,10 @@ public sealed class DeliveredCandidateSourceTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Unit")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Fault")]
     public void CooperativeSourceCannotRunPastTheAdmittedDeadline()
     {
         OpaqueId run = Id("run-deadline");

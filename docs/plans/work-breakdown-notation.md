@@ -1,8 +1,7 @@
 # Work-breakdown notation
 
 Status: Accepted
-Last reviewed: 2026-08-08
-
+Last reviewed: 2026-08-10
 ## Purpose
 
 Infinium work sometimes needs a finer boundary than a milestone or slice, but
@@ -68,7 +67,7 @@ a claim that an agent, file, test, fixture, or implementation is correct.
 plan after that package's prerequisites and entry gate are satisfied. It
 authorizes the package's objective, paths/actions, deliverables, verification,
 and ordinary correction/re-review cycles under the
-[development execution policy](../development/execution-policy.md). It does
+[development execution policy](../execution-policy.md). It does
 not authorize later packages, private evaluator work, live/billable
 operations, protected paths, or architecture outside accepted decisions. A
 completed prerequisite can make the next package authorized automatically

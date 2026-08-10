@@ -1,0 +1,129 @@
+{
+  "schema_id": "infinium.evaluation.candidate-semantic-population-projection/v1",
+  "schema_version": "1.0.0",
+  "fixture_id": "CAND-STRESS-DEV-v1",
+  "fixture_version": "1.0.0",
+  "partition": "development",
+  "freeze_state": "pre-product-comparison",
+  "product_comparison_occurred": false,
+  "source_artifact": {
+    "path": "inputs/candidate-delivered-expansion.json",
+    "sha256": "ec4e7ba13374735b0a539f4dbc680a5fe83ed69fe96f53289b2a3921eeff79e3",
+    "byte_length": 3521,
+    "schema_version": "1.0.0"
+  },
+  "authority_basis": [
+    "docs/evaluation/candidate-delivered-input-v1.md",
+    "docs/plans/milestones/m1/slices/s5/plan.md",
+    "docs/architecture/decisions/ADR-0028-m1-bethesda-semantic-reporting-and-oracle-authority.md"
+  ],
+  "independent_derivation": {
+    "relationship_rules": {
+      "link": "Any unresolved side is ambiguous; equal comparable links are resolved negatives; every other comparable change or introduction/removal is admitted.",
+      "face_gen": "Not-applicable is negative; unknown applicability or availability is ambiguous; remaining applicable facts are admitted and ordered only by locality, specificity, then stable member key.",
+      "documentation": "Run/snapshot/context mismatch or unsupported applicability is unsupported; not-applicable is negative; unknown or contradicted is ambiguous; remaining applicable facts are admitted.",
+      "coverage_gap": "Each delivered coverage-gap fact is an unsupported mandatory-evidence ledger member."
+    },
+    "candidate_rule": "Admitted and ambiguous decisions retain candidates and hypotheses; ambiguous and unsupported decisions retain abstentions; resolved negatives retain none.",
+    "count_formula": "For each series, emitted rows = floor((subject_count - 1) / every) + 1. Pattern index = emission_ordinal modulo pattern_count.",
+    "stream_framing": "Each UTF-8 field is framed as eight lowercase hexadecimal byte-length digits, colon, and field bytes. The concatenated field frames form one record, which receives the same outer frame. Record order is header, link, facegen, documentation, coverage-gap; link ordinal equals the zero-based link-series index; documentation records contain applicability, snapshot match, context match, and contradiction only.",
+    "identity_boundary": "Population rows remain keyed by kind/series/subject coordinates. Expanded source_fact_id is candidate-{kind}-fact-s{series:D3}-n{subject:D8}; all other product identities remain opaque and excluded."
+  },
+  "semantic_population_summary": {
+    "factual_rows": 1000000,
+    "by_kind": {
+      "link": 500000,
+      "face-gen": 250000,
+      "documentation": 125000,
+      "coverage-gap": 125000
+    },
+    "by_disposition": {
+      "admitted": 293750,
+      "resolved-negative": 293750,
+      "ambiguous": 256250,
+      "unsupported": 156250
+    },
+    "by_lane": {
+      "deterministic-required": 500000,
+      "optional-ranked": 250000,
+      "mandatory-evidence": 250000
+    },
+    "candidates": 550000,
+    "hypotheses": 550000,
+    "abstentions": 412500
+  },
+  "optional_rank_order": [],
+  "factual_stream_receipt": {
+    "algorithm": "sha256",
+    "field_framing": "8-lowercase-hex-byte-length-colon-utf8",
+    "record_framing": "same framing around concatenated field frames",
+    "record_order": "header-link-facegen-documentation-coverage-gap",
+    "identity_independent": true,
+    "sha256": "89bee1f740818d905e8dd2e7b8b549e94574c2514c18a8562714e21bcbad5df5"
+  },
+  "member_projection": null,
+  "recipe_relationship": {
+    "relationship": "same-series-recipe-as-validation-scale-with-different-subject-count",
+    "proof": "The independently retained recipe fingerprint is identical; no other package oracle or path is referenced."
+  },
+  "materialization": {
+    "state": "not-materialized",
+    "member_count": 1000000,
+    "method": "One factual row was classified and length-framed into SHA-256 at a time; no member or candidate aggregate array was retained."
+  },
+  "aggregate_boundary": {
+    "maximum_bytes": 67108864,
+    "candidate_aggregate_materialized": false,
+    "note": "Stress evidence does not request or publish a full candidate aggregate."
+  },
+  "metamorphic_closure": [
+    {
+      "metamorph_id": "metamorph.rename-bindings",
+      "transformation": "Rename run, snapshot, context, configuration, and expansion bindings consistently.",
+      "invariant": "Population counts, coordinate memberships, and public source_fact_id values remain identical; the header receipt changes because the renamed bindings are factual stream fields."
+    },
+    {
+      "metamorph_id": "metamorph.reorder-input-properties",
+      "transformation": "Reorder JSON object properties without changing factual series or pattern array order.",
+      "invariant": "The semantic stream receipt, all counts, coordinate membership, source_fact_id values, dispositions, and derived optional ordering remain identical."
+    },
+    {
+      "metamorph_id": "metamorph.relevant-evidence",
+      "transformation": "Change documentation pattern 0 has_contradicting_evidence from false to true.",
+      "expected_change": "Exactly 31,250 documentation members change admitted to ambiguous; candidate and hypothesis counts remain 550,000, 31,250 hypothesis states change to needs-input, and abstentions increase from 412,500 to 443,750."
+    },
+    {
+      "metamorph_id": "metamorph.rank-only",
+      "transformation": "Increase face-gen pattern 0 locality from 80 to 81.",
+      "invariant": "Candidate membership and disposition counts remain identical; only optional order and the factual stream receipt change."
+    },
+    {
+      "metamorph_id": "metamorph.unrelated-series",
+      "transformation": "Append a sparse equal-link series at a fresh kind-local series index.",
+      "invariant": "All existing coordinate memberships and source_fact_id values remain identical; only predictable new resolved-negative rows are added."
+    },
+    {
+      "metamorph_id": "metamorph.true-dependency",
+      "transformation": "Change link pattern 1 winning target offset from 1 to 0.",
+      "expected_change": "Exactly 100,000 link members change admitted to resolved-negative; candidate and hypothesis counts each decrease from 550,000 to 450,000."
+    }
+  ],
+  "same_recipe_proof": {
+    "method": "Exact deep equality of link_series, face_gen_series, documentation_series, and coverage_gap_series after excluding subject_count and expansion_id.",
+    "matched": true,
+    "oracle_or_product_identity_used": false
+  },
+  "source_fact_identity": {
+    "expansion_formula": "candidate-{kind}-fact-s{series:D3}-n{subject:D8}",
+    "kind_tokens": [
+      "link",
+      "facegen",
+      "documentation",
+      "coverage-gap"
+    ],
+    "series_scope": "zero-based kind-local series index padded to three digits",
+    "subject_scope": "emitted subject index padded to eight digits",
+    "edge_kind": "derived-from",
+    "opaque_product_ids_reproduced": false
+  }
+}

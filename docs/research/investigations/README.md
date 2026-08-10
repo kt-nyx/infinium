@@ -2,8 +2,7 @@
 
 Status: Active navigation
 
-Last reviewed: 2026-08-08
-
+Last reviewed: 2026-08-10
 Place one bounded, dated investigation per file:
 
 ```text
@@ -25,7 +24,7 @@ Use this outline:
 10. ADR or follow-up enabled
 
 The product-documentation baseline and current
-[M0 research-foundation plan](../../plans/milestones/M0-research-foundation.md)
+[M0 research-foundation plan](../../plans/milestones/m0/plan.md)
 are accepted. Investigations may begin only within that plan's sequence,
 preflight, authority, source, artifact, and review constraints. Use the
 [research-agent handoff template](../../plans/research-investigation-agent-handoff-template.md)
@@ -145,5 +144,5 @@ specifications/manifests, ADR-0025, residual-risk register, and M1 plan on
 2026-07-28. Gate F is met and M0 is complete. That Wave F acceptance did not
 itself imply evaluation execution or an M1 implementation result. Subsequent
 M1 Slices 0-4.5 are complete for their exact recorded scopes. Slice 5 is now
-active: WP1 is complete and reviewed, WP2 is the next authorized package under
-the continuation verification profile, and M1 remains active.
+active under the continuation verification profile; its live handoff is stated
+only in [current project state](../../current-state.md). M1 remains active.

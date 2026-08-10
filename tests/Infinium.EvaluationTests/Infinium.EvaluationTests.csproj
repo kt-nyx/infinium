@@ -5,7 +5,7 @@
     <ProjectReference Include="..\..\src\Infinium.Bethesda\Infinium.Bethesda.csproj" />
     <ProjectReference Include="..\..\src\Infinium.Mo2\Infinium.Mo2.csproj" />
     <ProjectReference Include="..\..\src\Infinium.Persistence\Infinium.Persistence.csproj" />
-    <ProjectReference Include="..\..\tools\evaluation\Infinium.PublicFixtures\Infinium.PublicFixtures.csproj" />
+    <ProjectReference Include="..\..\tools\fixtures\Infinium.PublicFixtures\Infinium.PublicFixtures.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="EvaluatorV2PublicProtocolTests.cs" />

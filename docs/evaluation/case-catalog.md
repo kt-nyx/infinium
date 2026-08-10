@@ -2,8 +2,7 @@
 
 Status: Accepted; actively maintained
 
-Last reviewed: 2026-08-08
-
+Last reviewed: 2026-08-10
 Executable evaluation fixtures now exist for completed early M1 slices; most
 later cases remain planned. This catalog records both executed status and
 planned cases. The Requirements column provides baseline traceability; a case
@@ -56,13 +55,13 @@ Private B2 oracle/corpus: terminal public-authority stop; no oracle/product verd
 Public /5 successor: retired unqualified after WP1V hard stop; no implementation or verdict
 Held-out C2 scoring and Stage D: deferred / not authorized / no product verdict
 Slice 4.5: closed by accepted owner disposition with explicit residual risk
-Overall M1 gate: active; Slice 5 WP1 complete; WP2 next under staged verification
+Overall M1 gate: active; live handoff is stated only in docs/current-state.md
 ```
 
-The sanitized owner-supplied adjudication and successor requirement are in the
-[Stage C.5 incident record](evaluator-v2-stage-c5-adjudication-incident.md).
+The sanitized evaluator chronology and successor dispositions are in
+[Evaluator history](evaluator-history.md).
 The exact public successor handoff is
-[machine-readable](evaluator-v2-stage-a-successor-freeze.json).
+[machine-readable](evaluator-history.md).
 
 | ID | Type | Historical planning label | Expected purpose | Requirements | Status |
 |---|---|---|---|---|---|
@@ -219,14 +218,14 @@ must accept the final case specifications before fixture execution.
 
 ## EVAL-0052 and EVAL-0086 held-out clarification
 
-The accepted [final scope amendment](m1-slice4-heldout-scope-final-amendment.md)
+The accepted [final scope amendment](evaluator-history.md)
 narrows only the held-out proof surfaces of EVAL-0052 and applicable
 EVAL-0086 assertions. Exact failure vocabulary, typed AIDT subfields, and
 product taxonomy/provenance IDs remain public-conformance assertions. Protocol
 `/4` held-out oracles use result publication, AIDT presence, and semantic
 taxonomy tuples instead.
 The accepted
-[semantic-authority owner disposition](m1-slice4-semantic-authority-owner-disposition.md)
+[semantic-authority owner disposition](evaluator-history.md)
 supplies the exact bounded rules without changing protocol `/4` or projection
 `3.0.0`.
 

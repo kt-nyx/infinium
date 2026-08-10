@@ -68,7 +68,7 @@ authorize-then-pathname behavior.
 
 ## Authoritative constraints
 
-- [M1 Slice 2](../../plans/milestones/M1-backend-semantic-proof.md) makes
+- [M1 Slice 2](../../plans/milestones/m1/plan.md) makes
   EVAL-0080 a gate.
 - [ADR-0015](../../architecture/decisions/ADR-0015-authoritative-evidence-persistence-and-payload-storage.md)
   requires the exact patched SQLite line and coordinated WAL behavior.

@@ -22,7 +22,7 @@ public static class FindingCasePipeline
         List<FindingCaseAbstentionContract> abstentions = [];
         List<FindingDraft> supported = [];
         List<LeadDraft> leads = [];
-        List<Slice5RecommendationContract> recommendations = [];
+        List<FindingRecommendationContract> recommendations = [];
 
         foreach (CandidateHypothesisContract hypothesis in input.CandidateAnalysis.Hypotheses
                      .OrderBy(item => item.HypothesisId.Value, StringComparer.Ordinal))
@@ -30,7 +30,7 @@ public static class FindingCasePipeline
             conclusions.TryGetValue(hypothesis.HypothesisId, out FindingConclusionAssessmentContract? conclusion);
             evidenceFacts.TryGetValue(hypothesis.HypothesisId, out FindingEvidenceFactContract? fact);
             proofsByHypothesis.TryGetValue(hypothesis.HypothesisId, out SharedCauseProofContract[]? causeProofs);
-            bool state = hypothesis.State == Slice5ResultState.Present;
+            bool state = hypothesis.State == AnalysisResultState.Present;
             bool confidence = hypothesis.Confidence is AnalysisConfidence.Plausible
                 or AnalysisConfidence.StronglySupported or AnalysisConfidence.Confirmed;
             bool support = hypothesis.SupportingEvidenceIds.Count > 0 && fact?.EvidenceIds.Count > 0
@@ -41,7 +41,7 @@ public static class FindingCasePipeline
                 or FindingSeverity.Moderate or FindingSeverity.Major or FindingSeverity.Blocker;
             bool identity = conclusion is not null && causeProofs?.Length == 1;
             bool conclusionAvailable = conclusion is not null;
-            bool leadEligibleState = hypothesis.State is not (Slice5ResultState.Failed or Slice5ResultState.Unsupported);
+            bool leadEligibleState = hypothesis.State is not (AnalysisResultState.Failed or AnalysisResultState.Unsupported);
             FindingPromotionOutcome outcome = FindingCaseContractInvariants.ExpectedPromotionOutcome(
                 state, confidence, support, noDefeating, noMissing, severity, identity,
                 conclusionAvailable, leadEligibleState);
@@ -63,7 +63,7 @@ public static class FindingCasePipeline
                     hypothesis.MissingInformation.Concat(reasons).Distinct(StringComparer.Ordinal).ToArray(),
                     hypothesis.SupportingEvidenceIds.Concat(hypothesis.ContradictingEvidenceIds).Distinct().ToArray());
                 abstentions.Add(abstention);
-                recommendations.Add(new Slice5RecommendationContract(
+                recommendations.Add(new FindingRecommendationContract(
                     CandidateAnalysisIdentity.StableId("recommendation", abstentionId.Value),
                     RecommendationKind.Abstention, null, abstentionId, null,
                     conclusion?.Action ?? "Obtain the missing typed evidence before drawing a conclusion.",
@@ -86,7 +86,7 @@ public static class FindingCasePipeline
                     hypothesis.SupportingEvidenceIds.Concat(hypothesis.ContradictingEvidenceIds).Distinct().ToArray());
                 abstentions.Add(leadAbstention);
                 leads.Add(new LeadDraft(hypothesis, conclusion));
-                recommendations.Add(new Slice5RecommendationContract(
+                recommendations.Add(new FindingRecommendationContract(
                     CandidateAnalysisIdentity.StableId("recommendation", promotionId.Value),
                     RecommendationKind.FurtherInvestigation, null, leadAbstention.AbstentionId, null,
                     conclusion.Action, conclusion.Uncertainty, conclusion.Reversibility,
@@ -105,13 +105,13 @@ public static class FindingCasePipeline
             Dictionary<OpaqueId, IReadOnlyList<OpaqueId>> taxonomyByHypothesis,
             Dictionary<OpaqueId, OpaqueId> assignmentByFact) = BuildTaxonomy(input, findingOccurrenceByHypothesis);
 
-        (List<FindingContract> findings, List<Slice5ReconciliationContract> findingReconciliations,
-            List<Slice5LineageContract> findingLineage) = ReconcileFindings(
+        (List<FindingContract> findings, List<OccurrenceReconciliationContract> findingReconciliations,
+            List<OccurrenceLineageContract> findingLineage) = ReconcileFindings(
                 input, supported, taxonomyByHypothesis, assignments.ToDictionary(item => item.AssignmentId));
         foreach (FindingContract finding in findings)
         {
             FindingConclusionAssessmentContract conclusion = conclusions[finding.HypothesisId];
-            recommendations.Add(new Slice5RecommendationContract(
+            recommendations.Add(new FindingRecommendationContract(
                 CandidateAnalysisIdentity.StableId("recommendation", finding.FindingOccurrenceId.Value),
                 conclusion.RecommendationKind, finding.FindingOccurrenceId, null, null,
                 conclusion.Action, conclusion.Uncertainty, conclusion.Reversibility,
@@ -120,8 +120,8 @@ public static class FindingCasePipeline
         }
 
         List<CaseDraft> caseDrafts = BuildCaseDrafts(input, findings, leads);
-        (List<Slice5CaseContract> cases, List<Slice5ReconciliationContract> caseReconciliations,
-            List<Slice5LineageContract> caseLineage) = ReconcileCases(
+        (List<AnalysisCaseContract> cases, List<OccurrenceReconciliationContract> caseReconciliations,
+            List<OccurrenceLineageContract> caseLineage) = ReconcileCases(
                 input, caseDrafts, findings, findingReconciliations);
         (List<CoverageContract> coverage, List<FindingCaseGapContract> gaps) =
             BuildCoverage(input, assignmentByFact);
@@ -138,11 +138,11 @@ public static class FindingCasePipeline
             assignments, projections, coverage, input.CoverageFailureFacts, gaps, input.Boundaries,
             "no-safety-claim");
         result = result with { PayloadId = FindingCaseIdentity.ComputePayloadId(result) };
-        Slice5ContractInvariants.Validate(result);
+        FindingCaseContractInvariants.Validate(result);
         return result;
     }
 
-    private static (List<FindingContract>, List<Slice5ReconciliationContract>, List<Slice5LineageContract>)
+    private static (List<FindingContract>, List<OccurrenceReconciliationContract>, List<OccurrenceLineageContract>)
         ReconcileFindings(
             FindingCaseInputContract input,
             IReadOnlyList<FindingDraft> drafts,
@@ -201,8 +201,8 @@ public static class FindingCasePipeline
             }));
         HashSet<OpaqueId> accountedPrior = [];
         List<FindingContract> findings = [];
-        List<Slice5ReconciliationContract> reconciliations = [];
-        List<Slice5LineageContract> lineage = [];
+        List<OccurrenceReconciliationContract> reconciliations = [];
+        List<OccurrenceLineageContract> lineage = [];
         foreach (CurrentFinding item in current)
         {
             PriorFindingContract[] candidatePriors = candidatesByCurrent[item.Draft.OccurrenceId];
@@ -387,16 +387,16 @@ public static class FindingCasePipeline
         return drafts;
     }
 
-    private static (List<Slice5CaseContract>, List<Slice5ReconciliationContract>, List<Slice5LineageContract>)
+    private static (List<AnalysisCaseContract>, List<OccurrenceReconciliationContract>, List<OccurrenceLineageContract>)
         ReconcileCases(
             FindingCaseInputContract input,
             IReadOnlyList<CaseDraft> drafts,
             IReadOnlyList<FindingContract> findings,
-            IReadOnlyList<Slice5ReconciliationContract> findingAssessments)
+            IReadOnlyList<OccurrenceReconciliationContract> findingAssessments)
     {
-        List<Slice5CaseContract> cases = [];
-        List<Slice5ReconciliationContract> reconciliations = [];
-        List<Slice5LineageContract> lineage = [];
+        List<AnalysisCaseContract> cases = [];
+        List<OccurrenceReconciliationContract> reconciliations = [];
+        List<OccurrenceLineageContract> lineage = [];
         HashSet<OpaqueId> accountedPrior = [];
         Dictionary<(OpaqueId Current, OpaqueId Prior), GateEvaluation> matrix = [];
         Dictionary<(OpaqueId Current, OpaqueId Prior), bool> memberClosure = [];
@@ -406,7 +406,7 @@ public static class FindingCasePipeline
             {
                 GateEvaluation evaluation = Gates(prior.IdentityEnvelope, draft.IdentityEnvelope,
                     prior.ProofAvailable, input.ProducerCompatibilities, caseIdentity: true);
-                Slice5ReconciliationContract[] memberAssessments = RelevantMemberAssessments(prior, draft, findingAssessments);
+                OccurrenceReconciliationContract[] memberAssessments = RelevantMemberAssessments(prior, draft, findingAssessments);
                 bool supportedToLead = prior.Kind == CaseOccurrenceKind.Supported
                     && draft.Kind == CaseOccurrenceKind.LeadOnly;
                 bool memberFirstClosed = (draft.Kind == CaseOccurrenceKind.LeadOnly
@@ -450,7 +450,7 @@ public static class FindingCasePipeline
                 : [];
             Sha256Fingerprint semantic = FindingCaseIdentity.CaseSemanticFingerprint(
                 draft.Kind, draft.IdentityEnvelope, semanticMembers);
-            cases.Add(new Slice5CaseContract(
+            cases.Add(new AnalysisCaseContract(
                 draft.OccurrenceId, logicalId, input.OriginatingRunId, draft.Kind,
                 draft.FindingOccurrenceIds, draft.CandidateIds, draft.HypothesisIds,
                 draft.IdentityEnvelope.CausalCondition, draft.CauseProofEvidenceIds,
@@ -460,10 +460,10 @@ public static class FindingCasePipeline
             if (matched is not null)
             {
                 accountedPrior.Add(matched.CaseOccurrenceId);
-                Slice5ReconciliationContract[] members = RelevantMemberAssessments(matched, draft, findingAssessments);
+                OccurrenceReconciliationContract[] members = RelevantMemberAssessments(matched, draft, findingAssessments);
                 if (promotesLead)
                 {
-                    lineage.Add(new Slice5LineageContract(
+                    lineage.Add(new OccurrenceLineageContract(
                         CandidateAnalysisIdentity.StableId("lineage", "case", matched.CaseOccurrenceId.Value,
                             draft.OccurrenceId.Value, LineageKind.PromotesLead.ToString()),
                         LineageKind.PromotesLead, [matched.CaseOccurrenceId], [draft.OccurrenceId], null));
@@ -572,15 +572,15 @@ public static class FindingCasePipeline
         return (cases, reconciliations, lineage);
     }
 
-    private static Slice5ReconciliationContract[] RelevantMemberAssessments(
-        PriorCaseContract prior, CaseDraft current, IReadOnlyList<Slice5ReconciliationContract> assessments) =>
+    private static OccurrenceReconciliationContract[] RelevantMemberAssessments(
+        PriorCaseContract prior, CaseDraft current, IReadOnlyList<OccurrenceReconciliationContract> assessments) =>
         assessments.Where(item => item.SubjectKind == "finding"
             && ((item.PriorOccurrenceId is not null && prior.FindingOccurrenceIds.Contains(item.PriorOccurrenceId))
                 || (item.CurrentOccurrenceId is not null && current.FindingOccurrenceIds.Contains(item.CurrentOccurrenceId))))
             .ToArray();
 
     private static bool MemberSetHasClosedAssessmentCoverage(
-        PriorCaseContract prior, CaseDraft current, IReadOnlyList<Slice5ReconciliationContract> assessments)
+        PriorCaseContract prior, CaseDraft current, IReadOnlyList<OccurrenceReconciliationContract> assessments)
     {
         bool closed = assessments.All(item => item.Outcome switch
         {
@@ -602,7 +602,7 @@ public static class FindingCasePipeline
         string subjectKind, OpaqueId? priorId, OpaqueId currentId, GateEvaluation evaluation,
         ReconciliationOutcome outcome, OpaqueId[] considered,
         IReadOnlyList<OpaqueId> proof, FindingCaseInputContract input,
-        List<Slice5ReconciliationContract> assessments, List<Slice5LineageContract> lineage,
+        List<OccurrenceReconciliationContract> assessments, List<OccurrenceLineageContract> lineage,
         OpaqueId? priorLogicalId, OpaqueId currentLogicalId, bool promotesLead = false)
     {
         ReconciliationGatesContract gates = evaluation.Gates;
@@ -624,7 +624,7 @@ public static class FindingCasePipeline
         OpaqueId assessmentId = CandidateAnalysisIdentity.StableId(
             "reconciliation", subjectKind, priorId?.Value ?? "no-predecessor", currentId.Value, outcome.ToString(),
             input.ReconciliationPolicyId.Value, input.ReconciliationPolicyVersion.ToString());
-        assessments.Add(new Slice5ReconciliationContract(
+        assessments.Add(new OccurrenceReconciliationContract(
             assessmentId, subjectKind, priorId, currentId, gates, outcome, gaps,
             considered.Distinct().OrderBy(item => item.Value, StringComparer.Ordinal).ToArray(),
             proof.Distinct().DefaultIfEmpty(priorId ?? currentId).ToArray(), input.ReconciliationPolicyVersion,
@@ -636,7 +636,7 @@ public static class FindingCasePipeline
             LineageKind kind = promotesLead ? LineageKind.PromotesLead
                 : outcome == ReconciliationOutcome.AnalyticalRevision ? LineageKind.AnalyticalRevision
                 : LineageKind.RelatedFollowUp;
-            lineage.Add(new Slice5LineageContract(
+            lineage.Add(new OccurrenceLineageContract(
                 CandidateAnalysisIdentity.StableId("lineage", subjectKind, priorId.Value, currentId.Value, kind.ToString()),
                 kind, [priorId], [currentId], assessmentId));
         }
@@ -645,7 +645,7 @@ public static class FindingCasePipeline
     private static void AddAbsenceAssessments<T>(
         string subjectKind, IReadOnlyList<T> priors, Func<T, OpaqueId> id,
         Func<T, IReadOnlyList<string>> populations, HashSet<OpaqueId> accounted,
-        FindingCaseInputContract input, List<Slice5ReconciliationContract> assessments)
+        FindingCaseInputContract input, List<OccurrenceReconciliationContract> assessments)
     {
         Dictionary<string, CoverageMemberFactContract[]> members = input.CoverageMemberFacts
             .GroupBy(item => item.PopulationId, StringComparer.Ordinal)
@@ -661,7 +661,7 @@ public static class FindingCasePipeline
                 && populationMembers.All(member => member.State == CoverageMemberState.Completed));
             ReconciliationOutcome outcome = observed ? ReconciliationOutcome.NotObserved : ReconciliationOutcome.NotEvaluated;
             OpaqueId priorId = id(prior);
-            assessments.Add(new Slice5ReconciliationContract(
+            assessments.Add(new OccurrenceReconciliationContract(
                 CandidateAnalysisIdentity.StableId("reconciliation", subjectKind, priorId.Value, outcome.ToString()),
                 subjectKind, priorId, null, observed
                     ? EmptyGates() with { Applicability = ReconciliationGateState.ProvenEquivalent }

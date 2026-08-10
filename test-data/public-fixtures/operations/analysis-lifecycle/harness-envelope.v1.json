@@ -1,0 +1,254 @@
+{
+  "schema_identity": "infinium.public-fixture.harness-envelope/1.0.2",
+  "registry_identity": "infinium.public-fixtures.analysis-operations.operational-cases.20260809.3",
+  "registry_version": "1.0.2",
+  "content_class": "harness-only-never-product-input",
+  "product_projection_contract": {
+    "source_file": "ordinary-product-projections.v1.json",
+    "schema_file": "ordinary-product-projection.schema.json",
+    "selection_rule": "Select exactly one /projections/{index} object from the frozen source file.",
+    "validation_rule": "Validate the selected object against the closed schema, require zero additional properties at every schema object, recursively scan names and values against the forbidden sets, then serialize and forward only that selected object.",
+    "forwarded_to_product": "selected-projection-object-only",
+    "never_forwarded_to_product": [
+      "this harness envelope",
+      "registry or package identity",
+      "case identity",
+      "partition or counterpart mapping",
+      "EVAL identity",
+      "purpose or coverage claim",
+      "fault or mutation schedule",
+      "canary identity, value, mapping, or materialization instruction",
+      "effect-spy or protected-root oracle configuration",
+      "oracle filename, pointer, digest, or expected value",
+      "review state or answer-bearing note"
+    ],
+    "forbidden_recursive_property_names": [
+      "fixture_id",
+      "package_identity",
+      "case_id",
+      "partition",
+      "eval_case_ids",
+      "purpose",
+      "expected",
+      "oracle",
+      "canary",
+      "fault_schedule",
+      "counterpart_case_id"
+    ],
+    "forbidden_exact_string_values": "all package IDs, case IDs, EVAL IDs, oracle pointers, and freshly materialized canary values from this envelope",
+    "fail_closed": true,
+    "validation_receipt_required": true
+  },
+  "packages": [
+    {
+      "package_identity": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.lantern-a",
+      "version": "1.0.2",
+      "partition": "development"
+    },
+    {
+      "package_identity": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.compass-b",
+      "version": "1.0.2",
+      "partition": "validation"
+    }
+  ],
+  "case_bindings": [
+    {
+      "case_id": "OPS-LANTERN-PUBLICATION-D01",
+      "package_identity": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.lantern-a",
+      "partition": "development",
+      "behavior_family": "atomic-publication",
+      "counterpart_case_id": "OPS-COMPASS-PUBLICATION-V01",
+      "eval_case_ids": [],
+      "product_projection_index": 0,
+      "oracle_pointer": "expected-results.v1.json#case_id=OPS-LANTERN-PUBLICATION-D01",
+      "harness_controls": {
+        "fault": "terminate after all payload and edge staging and before coordinator admission",
+        "recovery": "repeat the ordinary publication request under a fresh attempt identity",
+        "required_receipts": ["fault-trigger", "transaction-boundary", "stage-reconciliation", "publication-query"]
+      }
+    },
+    {
+      "case_id": "OPS-LANTERN-REPLAY-D02",
+      "package_identity": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.lantern-a",
+      "partition": "development",
+      "behavior_family": "replay-and-invalidation",
+      "counterpart_case_id": "OPS-COMPASS-REPLAY-V02",
+      "eval_case_ids": ["EVAL-0037", "EVAL-0039"],
+      "product_projection_index": 1,
+      "oracle_pointer": "expected-results.v1.json#case_id=OPS-LANTERN-REPLAY-D02",
+      "harness_controls": {
+        "execution_order": ["clean", "unchanged-incremental", "retained-replay", "single-source-change"],
+        "network_spy": "deny-and-count",
+        "required_receipts": ["dependency-closure", "reuse-decision", "semantic-projection"]
+      }
+    },
+    {
+      "case_id": "OPS-LANTERN-QUERY-D03",
+      "package_identity": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.lantern-a",
+      "partition": "development",
+      "behavior_family": "bounded-query",
+      "counterpart_case_id": "OPS-COMPASS-QUERY-V03",
+      "eval_case_ids": [],
+      "product_projection_index": 2,
+      "oracle_pointer": "expected-results.v1.json#case_id=OPS-LANTERN-QUERY-D03",
+      "harness_controls": {
+        "follow_next_cursor_until_terminal": true,
+        "metamorphic_input_permutation": [5, 2, 4, 0, 1, 3],
+        "invalid_cursor_variants": ["one-byte-tamper", "different-query", "different-publication", "page-size-over-maximum"],
+        "required_receipts": ["query-request", "cursor-binding", "page-sequence"]
+      }
+    },
+    {
+      "case_id": "OPS-LANTERN-OUTPUT-D04",
+      "package_identity": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.lantern-a",
+      "partition": "development",
+      "behavior_family": "terminal-and-equivalent-output",
+      "counterpart_case_id": "OPS-COMPASS-OUTPUT-V04",
+      "eval_case_ids": ["EVAL-0040"],
+      "product_projection_index": 3,
+      "oracle_pointer": "expected-results.v1.json#case_id=OPS-LANTERN-OUTPUT-D04",
+      "harness_controls": {
+        "compare_semantic_projection": ["human-v1", "json-v1"],
+        "metamorphic_changes": ["display-title-only", "fact-input-order-only"],
+        "required_receipts": ["human-output", "json-output", "source-publication-identity"]
+      }
+    },
+    {
+      "case_id": "OPS-LANTERN-RECOVERY-D05",
+      "package_identity": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.lantern-a",
+      "partition": "development",
+      "behavior_family": "attempt-recovery",
+      "counterpart_case_id": "OPS-COMPASS-RECOVERY-V05",
+      "eval_case_ids": [],
+      "product_projection_index": 4,
+      "oracle_pointer": "expected-results.v1.json#case_id=OPS-LANTERN-RECOVERY-D05",
+      "harness_controls": {
+        "crash_boundary": "after old attempt stage becomes durable",
+        "lease_transition": "expire old lease before new epoch assignment",
+        "command_order": [0, 1, 2],
+        "required_receipts": ["epoch", "lease", "admission", "publication"]
+      }
+    },
+    {
+      "case_id": "OPS-LANTERN-SAFETY-D06",
+      "package_identity": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.lantern-a",
+      "partition": "development",
+      "behavior_family": "write-and-nonmutation-safety",
+      "counterpart_case_id": "OPS-COMPASS-SAFETY-V06",
+      "eval_case_ids": ["EVAL-0035", "EVAL-0080"],
+      "product_projection_index": 5,
+      "oracle_pointer": "expected-results.v1.json#case_id=OPS-LANTERN-SAFETY-D06",
+      "harness_controls": {
+        "topology_file": "safety-topologies.v1.json#topology_identity=topology-delta-17",
+        "topology_construction": "materialize every declared root, object, entry identity, resolution edge, and race phase exactly before invoking the selected ordinary projection",
+        "filesystem_capabilities": ["case-insensitive", "symlink", "junction", "mount-point", "hard-link", "short-name", "alternate-stream", "cross-volume"],
+        "command_target_order": ["d-t00", "d-t01", "d-t02", "d-t03", "d-t04", "d-t05", "d-t06", "d-t07", "d-t08", "d-t09", "d-t10", "d-t11", "d-t12", "d-t13", "d-t14", "d-t15", "d-t16", "d-t17", "d-t18", "d-t19", "d-t20", "d-t21", "d-t22", "d-t23", "d-t24"],
+        "race_transition_identities": ["d-t20", "d-t21", "d-t22", "d-t23"],
+        "derivation_rule": "safety-topologies.v1.json#/decision_rule",
+        "protected_root_canary": "fresh-random-harness-only",
+        "external_effect_canary": "fresh-random-harness-only",
+        "inert_stand_ins": ["network-spy", "process-launch-spy", "shell-spy", "credential-store-spy", "external-tool-spy"],
+        "required_receipts": ["projection-validation", "topology-construction", "race-phase-trigger", "opened-final-object", "root-authority", "authorized-write-log", "deletion-plan", "before-after-root", "effect-spy", "canary-scan"]
+      }
+    },
+    {
+      "case_id": "OPS-COMPASS-PUBLICATION-V01",
+      "package_identity": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.compass-b",
+      "partition": "validation",
+      "behavior_family": "atomic-publication",
+      "counterpart_case_id": "OPS-LANTERN-PUBLICATION-D01",
+      "eval_case_ids": [],
+      "product_projection_index": 6,
+      "oracle_pointer": "expected-results.v1.json#case_id=OPS-COMPASS-PUBLICATION-V01",
+      "harness_controls": {
+        "fault": "terminate after durable publication intent and before authoritative transaction commit",
+        "recovery": "reconcile intent then repeat under a fresh attempt identity",
+        "required_receipts": ["fault-trigger", "intent", "transaction-boundary", "publication-query"]
+      }
+    },
+    {
+      "case_id": "OPS-COMPASS-REPLAY-V02",
+      "package_identity": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.compass-b",
+      "partition": "validation",
+      "behavior_family": "replay-and-invalidation",
+      "counterpart_case_id": "OPS-LANTERN-REPLAY-D02",
+      "eval_case_ids": ["EVAL-0037", "EVAL-0039"],
+      "product_projection_index": 7,
+      "oracle_pointer": "expected-results.v1.json#case_id=OPS-COMPASS-REPLAY-V02",
+      "harness_controls": {
+        "resolver_mode": "retained-only",
+        "network_spy": "deny-and-count",
+        "required_receipts": ["dependency-resolution", "identity-and-fingerprint-check", "replay-admission", "gap"]
+      }
+    },
+    {
+      "case_id": "OPS-COMPASS-QUERY-V03",
+      "package_identity": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.compass-b",
+      "partition": "validation",
+      "behavior_family": "bounded-query",
+      "counterpart_case_id": "OPS-LANTERN-QUERY-D03",
+      "eval_case_ids": [],
+      "product_projection_index": 8,
+      "oracle_pointer": "expected-results.v1.json#case_id=OPS-COMPASS-QUERY-V03",
+      "harness_controls": {
+        "follow_next_cursor_until_terminal": true,
+        "metamorphic_input_permutation": [4, 2, 0, 3, 1],
+        "invalid_cursor_variants": ["truncated", "different-filter", "expired-publication", "page-size-over-maximum"],
+        "required_receipts": ["query-request", "cursor-binding", "page-sequence"]
+      }
+    },
+    {
+      "case_id": "OPS-COMPASS-OUTPUT-V04",
+      "package_identity": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.compass-b",
+      "partition": "validation",
+      "behavior_family": "terminal-and-equivalent-output",
+      "counterpart_case_id": "OPS-LANTERN-OUTPUT-D04",
+      "eval_case_ids": ["EVAL-0040"],
+      "product_projection_index": 9,
+      "oracle_pointer": "expected-results.v1.json#case_id=OPS-COMPASS-OUTPUT-V04",
+      "harness_controls": {
+        "compare_semantic_projection": ["human-v1", "json-v1"],
+        "metamorphic_changes": ["different-display-locale-with-identities-fixed", "run-input-order-only"],
+        "required_receipts": ["human-output", "json-output", "source-publication-identity"]
+      }
+    },
+    {
+      "case_id": "OPS-COMPASS-RECOVERY-V05",
+      "package_identity": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.compass-b",
+      "partition": "validation",
+      "behavior_family": "attempt-recovery",
+      "counterpart_case_id": "OPS-LANTERN-RECOVERY-D05",
+      "eval_case_ids": [],
+      "product_projection_index": 10,
+      "oracle_pointer": "expected-results.v1.json#case_id=OPS-COMPASS-RECOVERY-V05",
+      "harness_controls": {
+        "crash_boundary": "after old checkpoint commit and before output stage",
+        "lease_transition": "expire old lease before checkpoint resume",
+        "command_order": [0, 1, 2],
+        "required_receipts": ["checkpoint", "epoch", "lease", "admission", "publication"]
+      }
+    },
+    {
+      "case_id": "OPS-COMPASS-SAFETY-V06",
+      "package_identity": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.compass-b",
+      "partition": "validation",
+      "behavior_family": "write-and-nonmutation-safety",
+      "counterpart_case_id": "OPS-LANTERN-SAFETY-D06",
+      "eval_case_ids": ["EVAL-0035", "EVAL-0080"],
+      "product_projection_index": 11,
+      "oracle_pointer": "expected-results.v1.json#case_id=OPS-COMPASS-SAFETY-V06",
+      "harness_controls": {
+        "topology_file": "safety-topologies.v1.json#topology_identity=topology-epsilon-29",
+        "topology_construction": "materialize the independently assigned roots, objects, entries, resolution edges, and race phases exactly before invoking the selected ordinary projection",
+        "filesystem_capabilities": ["case-insensitive", "symlink", "junction", "mount-point", "hard-link", "short-name", "alternate-stream", "cross-volume"],
+        "command_target_order": ["v-t06", "v-t00", "v-t10", "v-t01", "v-t21", "v-t02", "v-t07", "v-t03", "v-t13", "v-t04", "v-t05", "v-t23", "v-t11", "v-t15", "v-t12", "v-t14", "v-t09", "v-t20", "v-t19", "v-t18", "v-t08", "v-t24", "v-t17", "v-t16", "v-t22"],
+        "race_transition_identities": ["v-t20", "v-t21", "v-t22", "v-t23"],
+        "derivation_rule": "safety-topologies.v1.json#/decision_rule",
+        "protected_root_canary": "fresh-independent-random-harness-only",
+        "external_effect_canary": "fresh-independent-random-harness-only",
+        "inert_stand_ins": ["independent-network-spy", "independent-process-launch-spy", "independent-shell-spy", "independent-credential-store-spy", "independent-external-tool-spy"],
+        "required_receipts": ["projection-validation", "topology-construction", "race-phase-trigger", "opened-final-object", "root-authority", "authorized-write-log", "deletion-plan", "before-after-root", "effect-spy", "canary-scan"]
+      }
+    }
+  ]
+}

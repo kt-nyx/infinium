@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using Infinium.Application.Documentation;
-using Infinium.Application.Evaluation;
+using Infinium.Application.Serialization;
 using Infinium.Domain.Contracts;
 using Infinium.Persistence;
 using Microsoft.Data.Sqlite;
@@ -15,8 +15,8 @@ public sealed class DocumentationEvidencePhaseIntegrationTests
     private static DateTimeOffset Now => DateTimeOffset.UtcNow;
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestProperty("Category", "M1Integration")]
+    [TestCategory("Integration")]
+    [TestProperty("Category", "Integration")]
     public void PhasePublishesReadbackAndRetainedDeletionReuseAtomically()
     {
         string root = Path.Combine(Path.GetTempPath(), $"infinium-documentation-{Guid.NewGuid():N}");
@@ -173,8 +173,8 @@ public sealed class DocumentationEvidencePhaseIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestProperty("Category", "M1Integration")]
+    [TestCategory("Integration")]
+    [TestProperty("Category", "Integration")]
     public void DeletionReceiptPreservesContentAddressedBytesOwnedByAnotherRevision()
     {
         string root = Path.Combine(Path.GetTempPath(), $"infinium-documentation-shared-{Guid.NewGuid():N}");
@@ -236,8 +236,8 @@ public sealed class DocumentationEvidencePhaseIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestProperty("Category", "M1Integration")]
+    [TestCategory("Integration")]
+    [TestProperty("Category", "Integration")]
     public void DeletionReceiptRecordsBackupPinsWhileRemovingMainPayloadCopies()
     {
         string root = Path.Combine(Path.GetTempPath(), $"infinium-documentation-backup-{Guid.NewGuid():N}");

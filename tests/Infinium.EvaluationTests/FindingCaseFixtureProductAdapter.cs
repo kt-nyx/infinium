@@ -443,7 +443,7 @@ internal static class FindingCaseFixtureProductAdapter
         {
             string currentFactId = Text(current, "fact_id");
             OpaqueId occurrence = occurrenceByFact[currentFactId];
-            Slice5ReconciliationContract assessment = reconciled.ReconciliationAssessments.Single(item =>
+            OccurrenceReconciliationContract assessment = reconciled.ReconciliationAssessments.Single(item =>
                 item.SubjectKind == "finding" && item.CurrentOccurrenceId == occurrence);
             return new ReconciliationObservation(
                 currentFactId, current.GetProperty("candidate_prior_occurrences").EnumerateArray()
@@ -504,7 +504,7 @@ internal static class FindingCaseFixtureProductAdapter
             Build(priorFact, Text(priorFact, "run_fact_id"), lead: true);
         FindingCaseContract prior = FindingCasePipeline.Execute(Reidentify(Input(
             priorRun.Candidates, [priorRun.Fact], [priorRun.Proof], [], [], [], [], [], [], [], [])));
-        Slice5CaseContract priorLead = prior.Cases.Single(item => item.Kind == CaseOccurrenceKind.LeadOnly);
+        AnalysisCaseContract priorLead = prior.Cases.Single(item => item.Kind == CaseOccurrenceKind.LeadOnly);
         PriorCaseContract priorCase = new(
             priorLead.CaseOccurrenceId, priorLead.LogicalCaseId, priorLead.OriginatingRunId, priorLead.Kind,
             priorLead.FindingOccurrenceIds, priorLead.HypothesisIds, priorLead.IdentityEnvelope,

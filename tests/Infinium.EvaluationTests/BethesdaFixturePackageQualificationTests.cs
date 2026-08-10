@@ -16,20 +16,20 @@ public sealed class BethesdaFixturePackageQualificationTests
     ];
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Contract")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Contract")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Contract")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "Security")]
     public void TrackedBethesdaPackagesLoadThroughCurrentPublicFixtureContracts()
     {
         foreach ((string fixtureId, FixturePartition partition) in Fixtures)
         {
             string directory = TestRepository.PathFromRoot(
                 "test-data",
-                "evaluation",
-                "m1-semantic",
+                "public-fixtures",
+                "bethesda",
                 fixtureId);
 
             PublicFixturePackage package = PublicFixturePackageReader.Read(directory);

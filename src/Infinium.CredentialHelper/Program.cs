@@ -1,2 +1,2 @@
-Console.Error.WriteLine("Infinium.CredentialHelper is a Slice 0 scaffold; credential behavior is not implemented.");
+Console.Error.WriteLine("Infinium.CredentialHelper is an inactive scaffold; credential behavior is not implemented.");
 return 1;

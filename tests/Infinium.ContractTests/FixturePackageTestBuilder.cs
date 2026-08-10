@@ -1,7 +1,6 @@
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Infinium.Application.Evaluation;
 using Infinium.Domain.Contracts;
 using Infinium.PublicFixtures;
 
@@ -15,7 +14,7 @@ internal sealed class FixturePackageTestBuilder : IDisposable
 
     internal FixturePackageTestBuilder()
     {
-        directory = Path.Combine(Path.GetTempPath(), "infinium-slice1-tests", Guid.NewGuid().ToString("N"));
+        directory = Path.Combine(Path.GetTempPath(), "infinium-fixture-contract-tests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
         WriteValidPackage();
     }
@@ -432,7 +431,7 @@ internal sealed class FixturePackageTestBuilder : IDisposable
             ["declared_archive_state"] = new JsonObject
             {
                 ["state"] = "unsupported",
-                ["reason"] = "Archive support is outside the M1 baseline.",
+                ["reason"] = "Archive support is outside the bounded Bethesda semantic baseline.",
             },
             ["declared_supported_capabilities"] = new JsonArray(),
             ["declared_unsupported_capabilities"] = new JsonArray

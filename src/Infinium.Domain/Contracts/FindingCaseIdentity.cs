@@ -129,7 +129,7 @@ public static class FindingCaseIdentity
             value.PublicationClaimBoundary);
 }
 
-public static class FindingCaseContractInvariants
+public static partial class FindingCaseContractInvariants
 {
     public static CoverageState ExpectedCoverageState(IReadOnlyList<CoverageMemberState> states)
     {
@@ -200,7 +200,7 @@ public static class FindingCaseContractInvariants
         {
             throw new InvalidOperationException("Finding/case inputs require the current exact schema identity.");
         }
-        Slice5ContractInvariants.Validate(value.CandidateAnalysis);
+        CandidateAnalysisContractInvariants.Validate(value.CandidateAnalysis);
         ExecutionBoundaryContractInvariants.ValidateProductCapabilities(value.Boundaries, requireNotUsed: true);
         if (value.OriginatingRunId != value.CandidateAnalysis.OriginatingRunId
             || value.PromotionPolicyVersion != new ContractVersion(1, 0, 0)
@@ -223,7 +223,7 @@ public static class FindingCaseContractInvariants
         {
             if (!hypotheses.TryGetValue(fact.HypothesisId, out CandidateHypothesisContract? hypothesis)
                 || (fact.WorstCredibleConsequence == WorstCredibleConsequence.Unspecified
-                    && hypothesis.State == Slice5ResultState.Present)
+                    && hypothesis.State == AnalysisResultState.Present)
                 || string.IsNullOrWhiteSpace(fact.AffectedLocus)
                 || string.IsNullOrWhiteSpace(fact.CausalCondition)
                 || fact.ApplicabilityPredicates.Count == 0

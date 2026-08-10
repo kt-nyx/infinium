@@ -5,8 +5,8 @@ using Infinium.Analysis.Candidates;
 using Infinium.Application.Analysis;
 using Infinium.Application.Candidates;
 using Infinium.Application.Documentation;
-using Infinium.Application.Evaluation;
 using Infinium.Application.FindingCases;
+using Infinium.Application.Serialization;
 using Infinium.Bethesda;
 using Infinium.Domain.Contracts;
 using Infinium.Persistence;
@@ -229,7 +229,7 @@ internal static class ManagedAnalysisOrchestrator
         _ = WithDocumentationReferences(request, request.ExecutionInput);
         ValidateDeliveredCandidateInput(request, runId, binding);
         SemanticAnalysisContextIdentity.Validate(request.AnalysisContext);
-        Slice5ContractInvariants.Validate(request.ExecutionInput);
+        AnalysisExecutionContractInvariants.Validate(request.ExecutionInput);
         if (request.SchemaVersion != ManagedAnalysisOrchestrationRequest.CurrentSchemaVersion
             || request.RequestId.Length is < 1 or > 128
             || request.ExecutionInput.RunId.Value != runId

@@ -2,7 +2,7 @@
 
 Status: Completed — recommendation accepted by project owner
 Date: 2026-07-25
-Last reviewed: 2026-07-28
+Last reviewed: 2026-08-10
 Researcher: Codex agent
 Primary RQ: RQ-023 — Which asset formats can be checked for referenced-file
 completeness efficiently?
@@ -55,7 +55,7 @@ It is governed by:
 - [ADR-0010](../../architecture/decisions/ADR-0010-snapshot-fingerprint-and-dependency-invalidation.md),
   which requires structural manifests, scoped hashes, and typed dependency
   closure; and
-- [Gate C](../../plans/milestones/M0-research-foundation.md#wave-c--analysis-surfaces-taxonomy-corpus-and-candidate-scale),
+- [Gate C](../../plans/milestones/m0/plan.md#wave-c--analysis-surfaces-taxonomy-corpus-and-candidate-scale),
   which requires materially different surfaces, matched negatives,
   candidate-first scaling, and explicit unsupported regions.
 
@@ -812,7 +812,7 @@ Primary and maintained implementation sources:
 
 Repository authority and related investigations:
 
-- [Accepted M0 research plan](../../plans/milestones/M0-research-foundation.md)
+- [Accepted M0 research plan](../../plans/milestones/m0/plan.md)
 - [Research questions](../open-questions.md)
 - [Taxonomy dependency map](../taxonomy-dependency-map.md)
 - [RESEARCH-0014 — Root and native component surfaces](RESEARCH-0014-root-native-component-surfaces.md)

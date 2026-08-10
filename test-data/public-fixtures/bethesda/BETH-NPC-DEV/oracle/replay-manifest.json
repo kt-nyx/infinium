@@ -1,0 +1,146 @@
+{
+  "schema_id": "infinium.evaluation.fixture-replay-manifest/v1",
+  "schema_version": "1",
+  "fixture_id": "BETH-NPC-DEV",
+  "fixture_version": "1.4.0",
+  "replay_state": "complete-clean",
+  "dependency_graph_fingerprint": "66e081389fe667b050755429c676b41834752bb28c16325313fe88e2a1156441",
+  "retained_inputs": [
+    {
+      "dependency_id": "inputs-analysis-context-json",
+      "sha256": "bfe10cbe672fe83e02a7053c855c578196b9f0c6839fe7436a32996366513333",
+      "byte_length": 304
+    },
+    {
+      "dependency_id": "inputs-analysis-execution-input-json",
+      "sha256": "369b6a1f0833b23b39a3525cb692c89e039687573edeff796c134bc26a46c14b",
+      "byte_length": 2665
+    },
+    {
+      "dependency_id": "inputs-analysis-installation-snapshot-json",
+      "sha256": "c25f78b0dd2dac888f82662803e58911eeaf6e39251b2092450a313fa2ff06fb",
+      "byte_length": 458
+    },
+    {
+      "dependency_id": "inputs-analyzer-declaration-json",
+      "sha256": "b2d8c06b95ed127cd7cab95aa06ed708e9873b47a830180c3b5c8bcfda8cccd5",
+      "byte_length": 5074
+    },
+    {
+      "dependency_id": "inputs-bethesda-semantic-input-json",
+      "sha256": "1b3267e5b77b30441709a910ef456609786df1940aaefcb6e08ac23aec724316",
+      "byte_length": 463
+    },
+    {
+      "dependency_id": "inputs-case-matrix-json",
+      "sha256": "158e6a458e94c059500abd45906df38ea692b83195f823c9a82f66dbcc7b1c75",
+      "byte_length": 2527
+    },
+    {
+      "dependency_id": "inputs-construction-manifest-json",
+      "sha256": "0c3c28237e962ef6edd7cf8b32105288235283d81eb300f9d098e96d3322b333",
+      "byte_length": 8511
+    },
+    {
+      "dependency_id": "inputs-effective-scan-configuration-json",
+      "sha256": "fcba02303c4c9cd9cc2f2bc19930427dcca6c06f73d45398e81851d367bcc3eb",
+      "byte_length": 3033
+    },
+    {
+      "dependency_id": "inputs-mutations-Appearance-RepeatedPNAMOrder-esp",
+      "sha256": "602a582d7982e48fba9b9540cd54814723a6499031947206cdc2ef0ea5351e82",
+      "byte_length": 290
+    },
+    {
+      "dependency_id": "inputs-mutations-Behavior-RepeatedPKIDOrder-esp",
+      "sha256": "66fadbaba695c0465664bc446debbc32551ecc137001c7e4657b5114375652a3",
+      "byte_length": 278
+    },
+    {
+      "dependency_id": "inputs-mutations-local-id-01-Actors-esm",
+      "sha256": "8c1b43a017f8086d8ea7771c9f8e6aeb0ae92e6127145d9a2e01be53f3969781",
+      "byte_length": 1056
+    },
+    {
+      "dependency_id": "inputs-mutations-master-order-reindexed-03-Appearance-esp",
+      "sha256": "630245108c39580f13b3c120a0aadeab00bb98d247bf79eff68a63482dd58082",
+      "byte_length": 332
+    },
+    {
+      "dependency_id": "inputs-mutations-master-order-unreindexed-03-Appearance-esp",
+      "sha256": "65614271553c48e953ad6c3e9983459f9d43fea3efdd86da21bddf31a9983e48",
+      "byte_length": 332
+    },
+    {
+      "dependency_id": "inputs-mutations-one-byte-aidt-02-Behavior-esp",
+      "sha256": "9103daeff9372eafe341df18008345dab16ab0bf5d1a90ea4f6debedb32e5f8a",
+      "byte_length": 330
+    },
+    {
+      "dependency_id": "inputs-mutations-record-order-01-Actors-esm",
+      "sha256": "1911fb74f8b8b987540388183cf01d693af8c11140a0dcc0516291e294ea2934",
+      "byte_length": 1056
+    },
+    {
+      "dependency_id": "inputs-mutations-uncompressed-03-Appearance-esp",
+      "sha256": "535793c1763183f076bd8790d267806111902f47a685b0af8af8e6993dc97e1a",
+      "byte_length": 352
+    },
+    {
+      "dependency_id": "inputs-plugins-00-Pad-esm",
+      "sha256": "7ee03b2ef46c82525644553259b32260c0defc87b61ae986519acab32496fd89",
+      "byte_length": 109
+    },
+    {
+      "dependency_id": "inputs-plugins-01-Actors-esm",
+      "sha256": "51009a32d022089dbee64de0c690e8bb339557c4b4fc5cb925d92c0edc6bccc0",
+      "byte_length": 1056
+    },
+    {
+      "dependency_id": "inputs-plugins-02-Behavior-esp",
+      "sha256": "112c5db091640838b0997fbdc8b8e7e6ad29c8c84ccbf5c7dc256207c20b457f",
+      "byte_length": 330
+    },
+    {
+      "dependency_id": "inputs-plugins-03-Appearance-esp",
+      "sha256": "59c45094cf5bfc18a7b30b45c1061bf573971cf969ac3a1fd04e24d6d85d0597",
+      "byte_length": 345
+    },
+    {
+      "dependency_id": "inputs-plugins-04-LightActors-esl",
+      "sha256": "61156b1d27dc0ac056afbc21cd880a41ce6c6a463c3831a3caf10ab43b05fa42",
+      "byte_length": 261
+    },
+    {
+      "dependency_id": "inputs-plugins-05-LightWinner-esp",
+      "sha256": "3f02c54d6fb01eba5e3416a1a01abd8d3235dfc083ab4ef4655cd59f39d5990b",
+      "byte_length": 305
+    },
+    {
+      "dependency_id": "inputs-plugins-06-DeletedWinner-esp",
+      "sha256": "295811fc839deb951eea1e0cfce5dbaafd9dfeec6a67a95d601e680608f6ab0c",
+      "byte_length": 218
+    },
+    {
+      "dependency_id": "inputs-resolved-input-manifest-json",
+      "sha256": "1ecf8e544c9ddf310cc832043a2811d6678b1faa2409a8123b3f463ddfbcc5dc",
+      "byte_length": 419
+    },
+    {
+      "dependency_id": "inputs-snapshot-accepted-order-json",
+      "sha256": "6ceac3f30ca5710b80ad59826d6c05dcb4efc301734b05cce039dc91b0638215",
+      "byte_length": 5796
+    },
+    {
+      "dependency_id": "inputs-taxonomy-subject-bindings-json",
+      "sha256": "b0e8ec0028394d55d9de4d2e9034e1c098a3e4ebc8bdc9e3ee8f1fb1dd751ec2",
+      "byte_length": 3269
+    }
+  ],
+  "boundaries": [
+    "provider",
+    "hosted-search",
+    "nexus",
+    "loot"
+  ]
+}

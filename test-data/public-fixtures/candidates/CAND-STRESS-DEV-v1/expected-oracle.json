@@ -1,0 +1,188 @@
+{
+  "fixture_id": "CAND-STRESS-DEV-v1",
+  "fixture_version": "1.0.0",
+  "oracle_version": "1.0.0",
+  "independent_authors_and_reviewers": [
+    "codex.product-blind.candidate.fixture-author.20260809"
+  ],
+  "ground_truth_methods": [
+    {
+      "method_id": "method.candidate.independent.reference",
+      "method": "Product-blind declarative classification and independent expansion enumeration from accepted public authority. No product implementation, tests, output, build artifact, private fixture, withdrawn fixture, history, or identity algorithm was inspected.",
+      "evidence_references": [
+        {
+          "artifact_id": "inputs/candidate-delivered-expansion.json",
+          "artifact_version": "1.0.0",
+          "fingerprint": "ec4e7ba13374735b0a539f4dbc680a5fe83ed69fe96f53289b2a3921eeff79e3",
+          "availability": "retained",
+          "byte_length": 3521
+        },
+        {
+          "artifact_id": "oracle/streaming-expansion-receipt.json",
+          "artifact_version": "1.0.0",
+          "fingerprint": "2cd19b24e556de59111e06da8255fcecd0146cdeb221950731a373757b7e0c23",
+          "availability": "retained",
+          "byte_length": 6948
+        }
+      ],
+      "independent_of_system_under_test": true
+    }
+  ],
+  "expected_observations": [],
+  "expected_deterministic_results": [
+    {
+      "expected_id": "oracle.deterministic.stream-receipt",
+      "subject_id": "candidate.expansion-stream",
+      "expected_type": "deterministic-result",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "6a627faec1b3801cab8410f24d2c4d3ecc3f26384bb4f8ad5b7b4add33d3944f"
+    }
+  ],
+  "expected_external_claims": [],
+  "expected_application_links": [],
+  "expected_discovery_leads": [],
+  "expected_model_proposals": [],
+  "expected_proposal_admissions": [],
+  "expected_candidates": [],
+  "expected_hypotheses": [],
+  "expected_findings": [],
+  "expected_recommendations": [],
+  "expected_supported_cases": [],
+  "expected_lead_only_cases": [],
+  "expected_abstentions": [],
+  "expected_invalid_inputs": [],
+  "expected_failures": [],
+  "expected_documentation_revisions": [],
+  "expected_passages": [],
+  "expected_candidate_decisions": [],
+  "expected_reconciliation_assessments": [],
+  "expected_lineage_events": [],
+  "expected_coverage_and_gaps": [
+    {
+      "expected_id": "oracle.coverage.population-summary",
+      "subject_id": "candidate.candidate-population",
+      "expected_type": "coverage",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "6a627faec1b3801cab8410f24d2c4d3ecc3f26384bb4f8ad5b7b4add33d3944f"
+    }
+  ],
+  "expected_collection_states": {
+    "observations": {
+      "state": "empty",
+      "reason": "candidate stage fixture does not author observations."
+    },
+    "deterministic_results": {
+      "state": "populated",
+      "reason": "Independent stream receipt is retained."
+    },
+    "external_claims": {
+      "state": "empty",
+      "reason": "candidate stage fixture does not author external claims."
+    },
+    "application_links": {
+      "state": "empty",
+      "reason": "candidate stage fixture consumes delivered facts only."
+    },
+    "discovery_leads": {
+      "state": "empty",
+      "reason": "No discovery system is exercised."
+    },
+    "model_proposals": {
+      "state": "not-applicable",
+      "reason": "No model is used."
+    },
+    "proposal_admissions": {
+      "state": "not-applicable",
+      "reason": "No model proposal exists."
+    },
+    "candidates": {
+      "state": "not-applicable",
+      "reason": "Stress receipt does not materialize a candidate aggregate."
+    },
+    "hypotheses": {
+      "state": "not-applicable",
+      "reason": "Stress receipt does not materialize hypotheses."
+    },
+    "findings": {
+      "state": "not-applicable",
+      "reason": "Findings are outside candidate stage."
+    },
+    "recommendations": {
+      "state": "not-applicable",
+      "reason": "Recommendations are outside candidate stage."
+    },
+    "supported_cases": {
+      "state": "not-applicable",
+      "reason": "Supported cases are outside candidate stage."
+    },
+    "lead_only_cases": {
+      "state": "not-applicable",
+      "reason": "Cases are outside candidate stage."
+    },
+    "abstentions": {
+      "state": "not-applicable",
+      "reason": "Stress receipt retains abstention counts without materialization."
+    },
+    "invalid_inputs": {
+      "state": "empty",
+      "reason": "All authored inputs are structurally valid."
+    },
+    "coverage_gaps": {
+      "state": "empty",
+      "reason": "candidate stage retains unsupported ledger memberships rather than authoring finding/case stage coverage-gap objects."
+    },
+    "failures": {
+      "state": "empty",
+      "reason": "No execution failure is expected."
+    }
+  },
+  "expected_taxonomy_assignments": [],
+  "expected_replayability": "complete-clean",
+  "expected_replay_manifest": {
+    "artifact_id": "replay-dependencies.json",
+    "artifact_version": "1.0.0",
+    "fingerprint": "f306eccc2db84e560f3c60003a39b466fd263caf15f009802b8cca54a763c334",
+    "availability": "retained",
+    "byte_length": 2369
+  },
+  "expected_not_used_boundaries": [
+    "provider",
+    "hosted-search",
+    "nexus",
+    "loot"
+  ],
+  "forbidden_claims": [
+    {
+      "claim_id": "forbidden.finding",
+      "claim_type": "finding",
+      "reason": "candidate stage does not author findings."
+    },
+    {
+      "claim_id": "forbidden.case",
+      "claim_type": "case",
+      "reason": "candidate stage does not author cases."
+    },
+    {
+      "claim_id": "forbidden.readiness",
+      "claim_type": "readiness",
+      "reason": "Candidate evidence does not establish readiness or safety."
+    },
+    {
+      "claim_id": "forbidden.product-comparison",
+      "claim_type": "product-comparison",
+      "reason": "The freeze predates and is independent of product comparison."
+    }
+  ],
+  "known_limits": [
+    "Stress evidence proves independent expansion counts and the factual stream receipt only; it does not materialize or compare a candidate aggregate.",
+    "This is bounded candidate structural evidence, not an M3 performance claim."
+  ],
+  "pre_registered_at": "2026-08-09T06:20:47.5665585+00:00",
+  "change_history": []
+}

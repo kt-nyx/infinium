@@ -1,0 +1,14 @@
+{
+  "schema_id": "infinium.evaluation.current-public-resolved-input-manifest/v1",
+  "schema_version": "1",
+  "manifest_id": "platform-analysis-runtime-dev-v1.resolved-inputs",
+  "fixture_id": "PLATFORM-ANALYSIS-RUNTIME-DEV-v1",
+  "fixture_version": "1.1.0",
+  "seed": 3520260730,
+  "source_artifact_ids": [
+    "inputs/analysis-context.json"
+  ],
+  "analyzer_artifact_ids": [
+    "inputs/analyzer-declaration.json"
+  ]
+}

@@ -20,7 +20,7 @@ namespace Infinium.Bethesda;
 
 public sealed class BethesdaSemanticExtractor
 {
-    public const string ProducerId = "infinium.bethesda.m1-semantic-index";
+    public const string ProducerId = "infinium.bethesda.semantic-index";
     public const string ProducerVersion = "2.0.0";
     public const string MutagenVersion = "0.54.2";
     public const string TaxonomyId = "infinium.skyrim-se.mod-impact-taxonomy";
@@ -95,7 +95,7 @@ public sealed class BethesdaSemanticExtractor
                 throw Input(
                     "unsupported-capability-request-invalid",
                     "requested-unsupported-capabilities",
-                    "Requested unsupported capabilities must be a unique subset of the closed Slice 4 vocabulary.");
+                    "Requested unsupported capabilities must be a unique subset of the closed semantic capability vocabulary.");
             }
 
             ValidatedInput input = ValidateInput(request.AcceptedSnapshot);
@@ -608,7 +608,7 @@ public sealed class BethesdaSemanticExtractor
             || result.Snapshot.SkyrimGamePluginAdmission.State != AdmissionState.Accepted
             || result.Snapshot.RuntimeAdmission.State != AdmissionState.Accepted)
         {
-            throw Input("snapshot-not-accepted", "accepted-snapshot", "Bethesda extraction requires an accepted Slice 3 snapshot.");
+            throw Input("snapshot-not-accepted", "accepted-snapshot", "Bethesda extraction requires an accepted installation snapshot.");
         }
 
         Mo2InstallationSnapshot snapshot = result.Snapshot;
@@ -1084,7 +1084,7 @@ public sealed class BethesdaSemanticExtractor
                 group.Key,
                 $"unsupported-records:{group.Key}",
                 group.Count(),
-                "The record family is outside the M1 positive semantic allowlist.",
+                "The record family is outside the positive semantic allowlist.",
                 "allowlisted-record-family-semantics"));
         }
 
@@ -1096,7 +1096,7 @@ public sealed class BethesdaSemanticExtractor
                 group.Key,
                 $"unsupported-fields:{group.Key}",
                 group.Count(),
-                "The record field is outside the M1 positive semantic allowlist.",
+                "The record field is outside the positive semantic allowlist.",
                 "allowlisted-record-field-semantics"));
         }
 
@@ -1120,7 +1120,7 @@ public sealed class BethesdaSemanticExtractor
                 BethesdaUnsupportedCapability.LocalizedStringResolution => ("localized-strings", "localized-strings", "localized-string-resolution"),
                 BethesdaUnsupportedCapability.ArchiveMemberRead => ("face-gen-archive-assets", "face-gen-archive-assets", "archive-activation-and-member-precedence"),
                 BethesdaUnsupportedCapability.AutomaticEnvironmentDiscovery => ("automatic-environment-discovery", "automatic-environment-discovery", "automatic-environment-discovery"),
-                _ => throw Input("unsupported-capability-invalid", capability.ToString(), "The requested unsupported capability is outside the closed Slice 4 vocabulary."),
+                _ => throw Input("unsupported-capability-invalid", capability.ToString(), "The requested unsupported capability is outside the closed semantic capability vocabulary."),
             };
             if (capability != BethesdaUnsupportedCapability.ArchiveMemberRead)
             {
@@ -1129,7 +1129,7 @@ public sealed class BethesdaSemanticExtractor
                     mapping.Detail,
                     mapping.Population,
                     1,
-                    $"Capability '{mapping.Detail}' is outside the M1 Bethesda allowlist.",
+                    $"Capability '{mapping.Detail}' is outside the Bethesda semantic allowlist.",
                     mapping.Missing));
             }
         }
@@ -1274,7 +1274,7 @@ public sealed class BethesdaSemanticExtractor
                 BethesdaFaceGenApplicability.UnknownTemplateTraitsDecision => ("The template-traits inheritance decision is unknown.", "template", "complete-template-traits-decision"),
                 BethesdaFaceGenApplicability.NotApplicableTemplateTraits => ("The NPC inherits template traits and does not own FaceGen assets.", null, null),
                 BethesdaFaceGenApplicability.Applicable => ("The qualified loose-only FaceGen applicability predicates are satisfied.", null, null),
-                _ => throw new InvalidOperationException("The FaceGen applicability state is outside the closed Slice 4 vocabulary."),
+                _ => throw new InvalidOperationException("The FaceGen applicability state is outside the closed semantic vocabulary."),
             };
             if (gapKey is not null)
             {
@@ -1470,7 +1470,7 @@ public sealed class BethesdaSemanticExtractor
             string gapEvidence = $"evidence:{subject}:record-family-gap:0";
             results.Add(Projection(subject, "unsupported-record", "technical-modification-surface", "semantic-mechanism", "surface.plugin-data", TaxonomyApplicability.Assigned, ClassificationRole.Observed, [recordEvidence], "The frozen major-record fact establishes plugin-carried record data even though its family semantics are unsupported."));
             results.Add(Projection(subject, "unsupported-record", "technical-modification-surface", "realization-and-delivery", "delivery.plugin-container", TaxonomyApplicability.Assigned, ClassificationRole.Observed, [fileEvidence, recordEvidence], "The frozen file and record facts establish delivery inside a plugin container."));
-            results.Add(Projection(subject, "unsupported-record", "affected-game-system-or-content-area", "affected-area", null, TaxonomyApplicability.Unsupported, ClassificationRole.Established, [gapEvidence], "The frozen allowlist gap establishes that Slice 4 cannot determine affected-area semantics for this record family."));
+            results.Add(Projection(subject, "unsupported-record", "affected-game-system-or-content-area", "affected-area", null, TaxonomyApplicability.Unsupported, ClassificationRole.Established, [gapEvidence], "The frozen allowlist gap establishes that the semantic extractor cannot determine affected-area semantics for this record family."));
             results.Add(Projection(subject, "unsupported-record", "consequence-type", "consequence-type", null, TaxonomyApplicability.Unknown, ClassificationRole.Predicted, [gapEvidence], "The surface is present, but unsupported semantics leave any consequence unknown."));
         }
 
@@ -1531,7 +1531,7 @@ public sealed class BethesdaSemanticExtractor
             applicability,
             role,
             evidence,
-            "analyzer:infinium-bethesda-m1-semantic-index",
+            "analyzer:infinium-bethesda-semantic-index",
             reason);
     }
 

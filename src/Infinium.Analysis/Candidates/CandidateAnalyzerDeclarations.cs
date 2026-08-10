@@ -23,9 +23,9 @@ public static class CandidateAnalyzerDeclarations
         ContractVersion.Parse(ContractConstants.TaxonomyVersion),
         new AnalyzerScopeContract(
             [supportedInput],
-            [new("untyped-or-unbounded-input", "outside the bounded WP3 causal population")],
+            [new("untyped-or-unbounded-input", "outside the bounded causal candidate population")],
             supportedShapes ?? ["canonical-participant-join"],
-            [new("whole-profile-or-all-pairs", "explicitly excluded from WP3")],
+            [new("whole-profile-or-all-pairs", "explicitly excluded from candidate analysis")],
             [
                 "surface.plugin-data",
                 "surface.asset",
@@ -33,11 +33,11 @@ public static class CandidateAnalyzerDeclarations
                 "extent.propagation.bounded-dependents",
             ],
             [
-                new("purpose-target.*", "WP3 does not infer declared purpose from local causal inputs"),
+                new("purpose-target.*", "candidate analysis does not infer declared purpose from local causal inputs"),
                 new("consequence.*", "candidate generation establishes no consequence or finding"),
             ],
             ["extent.subject.bounded-set", "extent.propagation.bounded-dependents"],
-            [new("extent.*.runtime-or-installation-wide", "WP3 establishes no runtime-wide effect extent")]),
+            [new("extent.*.runtime-or-installation-wide", "candidate analysis establishes no runtime-wide effect extent")]),
         inputPopulations ?? [new("eligible-causal-population", "one declared row per bounded relationship member", true)],
         dependencies ?? [new(supportedInput, new ContractVersion(1, 0, 0), true, CoverageState.Unsupported)],
         SnapshotAssuranceState.SelectivelyContentSealed,
@@ -45,7 +45,7 @@ public static class CandidateAnalyzerDeclarations
             new("candidate-admission", "1", "closed lane and disposition rules"),
             new("evidence", "1", "retained supporting evidence is required for non-invalid work"),
             new("abstention", "1", "missing required information retains an explicit abstention"),
-            new("finding-promotion", "1", "not performed by WP3")),
+            new("finding-promotion", "1", "not performed by candidate analysis")),
         ["candidate-decision", "candidate", "hypothesis", "abstention", "coverage-gap", "failure"],
         new AnalyzerCoverageDeclarationContract(
             ["eligible-causal-population"],

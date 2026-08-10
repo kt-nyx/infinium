@@ -21,7 +21,7 @@ public static class CandidateAnalysisCounts
             value.Failures.Count,
             value.Decisions.Count(item => item.Disposition == CandidateDecisionDisposition.ResolvedNegative),
             value.Decisions.Count(item => item.Disposition == CandidateDecisionDisposition.Unsupported),
-            value.Candidates.Count(item => item.State == Slice5ResultState.Ambiguous),
+            value.Candidates.Count(item => item.State == AnalysisResultState.Ambiguous),
             value.Decisions.Count(item => item.Disposition == CandidateDecisionDisposition.InvalidInput),
             value.Decisions.Count(item => item.Disposition == CandidateDecisionDisposition.Limited),
             value.Decisions.Count(item => item.Disposition == CandidateDecisionDisposition.Deferred),
@@ -186,6 +186,6 @@ public static class CandidateAnalysisIdentity
         _ => throw new InvalidOperationException("Candidate disposition is not closed."),
     };
 
-    private static string State(Slice5ResultState value) => value.ToString();
+    private static string State(AnalysisResultState value) => value.ToString();
     private static string Confidence(AnalysisConfidence value) => value.ToString();
 }

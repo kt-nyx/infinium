@@ -1,0 +1,69 @@
+{
+  "fixture_id": "DOC-CLAIM-CORE-DEV",
+  "fixture_version": "1.0.0",
+  "expected_replay_state": "complete-clean",
+  "dependency_graph_fingerprint": "ffa307e8c712662106fd172f0e5f124714d6ee3e9f5d378e91ce706524a1e241",
+  "dependencies": [
+    {
+      "dependency_id": "inputs-case-matrix-json",
+      "kind": "tracked-fixture-input",
+      "identity_or_version": "inputs/case-matrix.json",
+      "sha256": "5f1469d418f7af962c817df134ecbef9350e9080cbcf422adc4bc86a6a39e292",
+      "byte_length": 3124,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Removal makes clean recomputation unavailable and leaves only retained output audit evidence."
+    },
+    {
+      "dependency_id": "inputs-claim-import-json",
+      "kind": "tracked-fixture-input",
+      "identity_or_version": "inputs/claim-import.json",
+      "sha256": "b9d697bff315e1dc10dd51f240faed7dd251d80105d7d626c6403d8af1edc9dc",
+      "byte_length": 6340,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Removal makes clean recomputation unavailable and leaves only retained output audit evidence."
+    },
+    {
+      "dependency_id": "inputs-source-txt",
+      "kind": "tracked-fixture-input",
+      "identity_or_version": "inputs/source.txt",
+      "sha256": "89ae20b5415dfb794c518eb75b2d8e5af74a810171b8cf2a8540694d127f5388",
+      "byte_length": 411,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Historical identities remain auditable only if retained evidence exists; clean recomputation becomes unavailable and must emit deletion/replay gaps."
+    }
+  ],
+  "expected_output_references": [
+    {
+      "artifact_id": "expected-oracle.json",
+      "artifact_version": "1.0.0",
+      "fingerprint": "f3d457476f078e02c5fa32dc28d252ad220b2de147bb3eb6b13b891261aeb7b2",
+      "byte_length": 16244,
+      "availability": "retained"
+    },
+    {
+      "artifact_id": "oracle/independent-derivation.md",
+      "artifact_version": "1.0.0",
+      "fingerprint": "88da9006346714d64db758d7f6280eff260856624d130248b8fabce03136c756",
+      "byte_length": 2889,
+      "availability": "retained"
+    }
+  ]
+}

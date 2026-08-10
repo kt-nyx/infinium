@@ -1,0 +1,61 @@
+{
+  "fixture_id": "CAND-SEMANTIC-DEV-v1",
+  "fixture_version": "1.0.0",
+  "expected_replay_state": "complete-clean",
+  "dependencies": [
+    {
+      "dependency_id": "dependency.input",
+      "kind": "candidate-delivered-input",
+      "identity_or_version": "inputs/candidate-delivered-input.json",
+      "sha256": "9b0b834de489c29609cc9ad9a535a70b3c3dae966e6ac1c7f369c5bf1247b0fe",
+      "byte_length": 9208,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "clean-recomputation",
+        "boundary-replay",
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Clean recomputation and boundary replay become unavailable."
+    },
+    {
+      "dependency_id": "dependency.field-guide",
+      "kind": "accepted-public-authority",
+      "identity_or_version": "candidate-delivered-input-v1",
+      "sha256": "6db5a5efe0f2df7672fc960c7343cbc980897baf33eec7726738af60ae7dbcca",
+      "byte_length": 8316,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Independent semantic audit loses its field-guide authority binding."
+    },
+    {
+      "dependency_id": "dependency.slice-plan",
+      "kind": "accepted-public-authority",
+      "identity_or_version": "docs/plans/milestones/m1/slices/s5/plan.md",
+      "sha256": "8d7413d4015732eeb2726fb19661248feace2a664ed49ada70e8c77edb4658c2",
+      "byte_length": 69241,
+      "retention_location_class": "tracked-repository",
+      "availability": "retained",
+      "required_for": [
+        "audit"
+      ],
+      "permission_and_redistribution": "project-authored-redistributable",
+      "deletion_effect": "Package-scope and claim-boundary audit loses its plan binding."
+    }
+  ],
+  "dependency_graph_fingerprint": "02f5117934a62cf627db35313ed8e7b6135c95751cc77ef08c782a0081038cce",
+  "expected_output_references": [
+    {
+      "artifact_id": "oracle/semantic-population-projection.json",
+      "artifact_version": "1.0.0",
+      "fingerprint": "bf4244532825c59308780ff136fd6eb4d5def8a30b498d90510a38393e795115",
+      "availability": "retained",
+      "byte_length": 18275
+    }
+  ]
+}

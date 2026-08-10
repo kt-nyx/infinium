@@ -3,11 +3,11 @@
 Status: Accepted
 Accepted: 2026-08-04
 Accepted by: Project owner
-Last reviewed: 2026-08-08
+Last reviewed: 2026-08-10
 Authority: [ADR-0027](../architecture/decisions/ADR-0027-public-evaluation-protocol-private-held-out-corpus.md)
 with the M1 deferral and sequencing disposition in
 [ADR-0032](../architecture/decisions/ADR-0032-defer-m1-held-out-evaluator-and-continue-public-verification.md)
-Predecessor: [Evaluator-private fixture governance v1](evaluator-private-fixture-governance.md)
+Predecessor: [Evaluator-private fixture governance v1](evaluator-history.md)
 
 ## Purpose
 

@@ -1,6 +1,6 @@
 using Infinium.Analysis.Candidates;
 using Infinium.Application.Candidates;
-using Infinium.Application.Evaluation;
+using Infinium.Application.Serialization;
 using Infinium.Domain.Contracts;
 using Infinium.Persistence;
 using Microsoft.Data.Sqlite;
@@ -12,8 +12,8 @@ namespace Infinium.Tests;
 public sealed class CandidatePipelineIntegrationTests
 {
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestProperty("Category", "M1Integration")]
+    [TestCategory("Integration")]
+    [TestProperty("Category", "Integration")]
     public void CandidatePipelinePublishesCanonicalPayloadRowsAndDependencyEdges()
     {
         using CandidateStoreContext context = new();
@@ -35,10 +35,10 @@ public sealed class CandidatePipelineIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Candidates")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Candidates")]
+    [TestCategory("Integration")]
+    [TestCategory("Candidates")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Candidates")]
     public void CandidatePipelinePersistsAmbiguousLaneProvenanceAndUnsupportedAbstention()
     {
         using CandidateStoreContext context = new();
@@ -72,8 +72,8 @@ public sealed class CandidatePipelineIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestProperty("Category", "M1Integration")]
+    [TestCategory("Integration")]
+    [TestProperty("Category", "Integration")]
     public void CandidatePersistenceScopesDecisionsByPopulationAndSharedEdgesByRun()
     {
         using CandidateStoreContext context = new();
@@ -183,10 +183,10 @@ public sealed class CandidatePipelineIntegrationTests
 public sealed class CandidateCheckpointIntegrationTests
 {
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Integration")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Fault")]
     public void StaleAttemptCannotPublishAnyCandidatePhaseState()
     {
         using CandidateStoreContext context = new();
@@ -201,10 +201,10 @@ public sealed class CandidateCheckpointIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Integration")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Fault")]
     public void CandidateCheckpointRetryUnderNewAttemptRetainsAttemptScopedIdentity()
     {
         using CandidateStoreContext context = new();
@@ -224,10 +224,10 @@ public sealed class CandidateCheckpointIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Integration")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Fault")]
     public void CandidateCheckpointReadbackReusesUnchangedAndInvalidatesOnlyRelevantInput()
     {
         using CandidateStoreContext context = new();

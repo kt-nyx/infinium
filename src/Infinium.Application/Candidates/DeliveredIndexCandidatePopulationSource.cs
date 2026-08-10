@@ -12,7 +12,7 @@ public sealed class DeliveredIndexCandidatePopulationSource : ICandidatePopulati
 
     public AnalyzerDeclarationContract Declaration { get; } = CandidateAnalyzerDeclarations.Create(
         Id,
-        supportedInput: "candidate-delivered-input/v1 factual Bethesda and WP2 projection",
+        supportedInput: "candidate-delivered-input/v1 factual Bethesda and documentation evidence projection",
         supportedShapes:
         [
             "record-link-winner-comparison",
@@ -26,7 +26,7 @@ public sealed class DeliveredIndexCandidatePopulationSource : ICandidatePopulati
             new("delivered-record-links", "snapshot-bound prior and winner link facts", false),
             new("delivered-facegen", "snapshot-bound FaceGen applicability and provider facts", false),
             new("delivered-coverage-gaps", "explicit unsupported delivered populations", false),
-            new("wp2-documentation-applications", "run/snapshot/context-bound WP2 application facts", false),
+            new("documentation-applications", "run/snapshot/context-bound documentation application facts", false),
         ],
         dependencies:
         [
@@ -251,7 +251,7 @@ public static class CandidateDeliveredInputAdapter
         }
         if (documentationEvidence is not null)
         {
-            Slice5ContractInvariants.Validate(documentationEvidence);
+            DocumentationEvidenceContractInvariants.Validate(documentationEvidence);
             if (documentationEvidence.OriginatingRunId != originatingRunId
                 && documentationEvidence.OriginatingRunId != retainedDocumentationSourceRunId)
             {

@@ -6,8 +6,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Infinium.Tests;
 
 [TestClass]
-[TestCategory("M1Evaluation")]
-[TestProperty("Category", "M1Evaluation")]
+[TestCategory("Evaluation")]
+[TestProperty("Category", "Evaluation")]
 public sealed class EvaluatorV2PublicProtocolTests
 {
     [TestMethod]
@@ -137,7 +137,7 @@ public sealed class EvaluatorV2PublicProtocolTests
     }
 
     [TestMethod]
-    [TestCategory("M1Security")]
+    [TestCategory("Security")]
     public void ResultWriterRejectsEscapeAndOverwrite()
     {
         string root = Path.Combine(Path.GetTempPath(), $"infinium-v2-writer-{Guid.NewGuid():N}");
@@ -171,7 +171,7 @@ public sealed class EvaluatorV2PublicProtocolTests
     }
 
     [TestMethod]
-    [TestCategory("M1Security")]
+    [TestCategory("Security")]
     public void ResultWriterRejectsReparsePointAncestorsWhenAvailable()
     {
         string root = Path.Combine(Path.GetTempPath(), $"infinium-v2-alias-{Guid.NewGuid():N}");
@@ -260,7 +260,7 @@ public sealed class EvaluatorV2PublicProtocolTests
     }
 
     [TestMethod]
-    [TestCategory("M1Security")]
+    [TestCategory("Security")]
     public void ProductionSourcesContainNoEvaluatorFixtureOrPartitionPolicy()
     {
         string sourceRoot = TestRepository.PathFromRoot("src");
@@ -275,7 +275,7 @@ public sealed class EvaluatorV2PublicProtocolTests
     }
 
     [TestMethod]
-    [TestCategory("M1Security")]
+    [TestCategory("Security")]
     public void EvaluatorIdentityBindsExecutingRootDependenciesAndProtocolBytes()
     {
         EvaluatorFileIdentity[] files = EvaluatorScorer.RequiredEvaluatorFiles.Select(relative =>
@@ -314,7 +314,7 @@ public sealed class EvaluatorV2PublicProtocolTests
     [TestMethod]
     public void ReflectionAdapterExecutesTheDeclaredCandidateArtifact()
     {
-        string fixtureRoot = TestRepository.PathFromRoot("test-data", "evaluation", "m1-semantic", "BETH-NPC-DEV");
+        string fixtureRoot = TestRepository.PathFromRoot("test-data", "public-fixtures", "bethesda", "BETH-NPC-DEV");
         using JsonDocument receipt = JsonDocument.Parse(File.ReadAllBytes(
             Path.Combine(fixtureRoot, "inputs", "snapshot", "accepted-order.json")));
         PluginExecutionInput[] plugins = receipt.RootElement.GetProperty("plugin_order")
@@ -527,7 +527,7 @@ public sealed class EvaluatorV2PublicProtocolTests
 
     private static ExecutionManifest CreatePublicManifest(string fixtureId)
     {
-        string fixtureRoot = TestRepository.PathFromRoot("test-data", "evaluation", "m1-semantic", fixtureId);
+        string fixtureRoot = TestRepository.PathFromRoot("test-data", "public-fixtures", "bethesda", fixtureId);
         using JsonDocument receipt = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(fixtureRoot, "inputs", "snapshot", "accepted-order.json")));
         PluginExecutionInput[] plugins = receipt.RootElement.GetProperty("plugin_order").EnumerateArray()
             .OrderBy(item => item.GetProperty("load_order").GetInt32()).Select(item =>

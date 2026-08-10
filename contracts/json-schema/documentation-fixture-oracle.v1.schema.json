@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.infinium.dev/json-schema/documentation-fixture-oracle.v1.schema.json",
-  "title": "Infinium WP2 documentation fixture oracle v1",
+  "title": "Infinium documentation fixture oracle v1",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -628,10 +628,10 @@
       "additionalProperties": false,
       "required": ["candidates", "hypotheses", "findings", "cases"],
       "properties": {
-        "candidates": { "const": "not-created-by-wp2" },
-        "hypotheses": { "const": "not-created-by-wp2" },
-        "findings": { "const": "not-created-by-wp2" },
-        "cases": { "const": "not-created-by-wp2" }
+        "candidates": { "const": "not-created-by-documentation" },
+        "hypotheses": { "const": "not-created-by-documentation" },
+        "findings": { "const": "not-created-by-documentation" },
+        "cases": { "const": "not-created-by-documentation" }
       }
     },
     "claimKind": {

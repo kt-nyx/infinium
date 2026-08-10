@@ -14,6 +14,7 @@ using Infinium.Application.Documentation;
 using Infinium.Application.Evaluation;
 using Infinium.Application.FindingCases;
 using Infinium.Application.Runtime;
+using Infinium.Application.Serialization;
 using Infinium.Bethesda;
 using Infinium.Contracts.Protobuf.Application.V1;
 using Infinium.Contracts.Protobuf.Common.V1;
@@ -41,9 +42,9 @@ public sealed class AnalysisReplayIntegrationTests
         new(ContractJsonSerializer.Options) { WriteIndented = true };
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Replay")]
-    public async Task ManagedAnalysisProductPathExecutesWp2Wp3Wp4RecoversPhaseBoundariesAndPublishes()
+    [TestCategory("Integration")]
+    [TestCategory("Replay")]
+    public async Task ManagedAnalysisProductPathExecutesDocumentationCandidateFindingCaseRecoversPhaseBoundariesAndPublishes()
     {
         string root = Path.Combine(Path.GetTempPath(), $"infinium-managed-analysis-{Guid.NewGuid():N}");
         StoragePaths paths = new(root);
@@ -131,7 +132,7 @@ public sealed class AnalysisReplayIntegrationTests
                 request.ExecutionInput.SourceInputs.All(original => original.ArtifactId != item.ArtifactId)).ArtifactId.Value;
             Assert.IsNotNull(store.ReadAnalysisPhaseCheckpoint(runId, DocumentationEvidencePhase.PhaseId,
                 first.PhaseExecutions[0].InputFingerprint));
-            store.SettleLiveAttempts(runId, "simulated-coordinator-loss-after-wp4", authority.FencingEpoch);
+            store.SettleLiveAttempts(runId, "simulated-coordinator-loss-after-finding_case", authority.FencingEpoch);
             Assert.ThrowsExactly<InvalidOperationException>(() => ManagedAnalysisOrchestrator.Execute(
                 store, request, firstAttempt, binding, DateTimeOffset.UtcNow, () => false));
 
@@ -296,7 +297,7 @@ public sealed class AnalysisReplayIntegrationTests
                 "EvaluationHarness", DateTimeOffset.UtcNow.AddMinutes(5));
             _ = store.Transition("start-managed-restart-near-expiry", expiredRestartRunId,
                 expiredRestartQueued.Generation, LifecycleState.Running, authority.FencingEpoch,
-                "simulate restart after retained WP2 near deadline", DateTimeOffset.UtcNow);
+                "simulate restart after retained documentation evidence near deadline", DateTimeOffset.UtcNow);
             AttemptRecord expiredRestartAttempt = store.CreateAttempt(expiredRestartRunId,
                 authority.FencingEpoch, TimeSpan.FromMinutes(2), DateTimeOffset.UtcNow);
             Assert.ThrowsExactly<InvalidOperationException>(() => ManagedAnalysisOrchestrator.Execute(
@@ -449,7 +450,7 @@ public sealed class AnalysisReplayIntegrationTests
                         RunRecord running = store.GetRun(liveCancelledRunId);
                         _ = store.Transition("cancel-managed-analysis-live", liveCancelledRunId,
                             running.Generation, LifecycleState.Cancelling, authority.FencingEpoch,
-                            "cancel after retained WP2 boundary", DateTimeOffset.UtcNow);
+                            "cancel after retained documentation evidence boundary", DateTimeOffset.UtcNow);
                     }
                 }));
             Assert.IsNotNull(store.ReadLatestAnalysisPhaseCheckpoint(
@@ -462,11 +463,11 @@ public sealed class AnalysisReplayIntegrationTests
             Assert.AreEqual(LifecycleState.Cancelled, store.GetRun(liveCancelledRunId).State);
             AnalysisReplayContract liveCancelledReplay = AnalysisReplayJsonCodec.Deserialize(
                 store.ReadAnalysisReplay(liveCancelledRunId));
-            Assert.AreEqual(Slice5ResultState.Present, liveCancelledReplay.Dependencies.Single(item =>
+            Assert.AreEqual(AnalysisResultState.Present, liveCancelledReplay.Dependencies.Single(item =>
                 item.Kind == "documentation-evidence").State);
             Assert.IsTrue(liveCancelledReplay.Dependencies.Where(item =>
                 item.Kind is "candidate-analysis" or "finding-case").All(item =>
-                    item.State == Slice5ResultState.Unavailable));
+                    item.State == AnalysisResultState.Unavailable));
             AnalysisArtifactPersistenceRecord[] cancelledArtifacts = store.ListAnalysisArtifacts(
                 liveCancelledRunId, new HashSet<string>(), new HashSet<string>(), 100,
                 AnalysisArtifactSortOrder.IdentityAscending, null).Items.ToArray();
@@ -584,13 +585,13 @@ public sealed class AnalysisReplayIntegrationTests
         new("loot", BoundaryUseState.NotUsed, "local-only"),
     ];
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Replay")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Replay")]
-    public void AnalysisReplayPublishesWp2ThroughWp4AtomicallyAndSurvivesBackupRestore()
+    [TestCategory("Integration")]
+    [TestCategory("Replay")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Replay")]
+    public void AnalysisReplayPublishesDocumentationThroughFindingCaseAtomicallyAndSurvivesBackupRestore()
     {
-        using Wp5Context context = new();
+        using OperationalContext context = new();
         AnalysisExecutionPhaseResult published = context.Publish();
 
         Assert.AreEqual(LifecycleState.Completed, context.Store.GetRun(context.RunId).State);
@@ -638,8 +639,8 @@ public sealed class AnalysisReplayIntegrationTests
         Assert.IsTrue(context.Store.ReadAnalysisBoundaryReceipt(context.RunId)
             .AsSpan().IndexOf("not-used"u8) >= 0);
 
-        BackupArtifact backup = context.Store.CreateBackup("wp5-replay", DateTimeOffset.UtcNow);
-        string restoreRoot = Path.Combine(Path.GetTempPath(), "infinium-wp5-restore-" + Guid.NewGuid().ToString("N"));
+        BackupArtifact backup = context.Store.CreateBackup("operations-replay", DateTimeOffset.UtcNow);
+        string restoreRoot = Path.Combine(Path.GetTempPath(), "infinium-operations-restore-" + Guid.NewGuid().ToString("N"));
         try
         {
             using StoragePaths restoredPaths = new(restoreRoot);
@@ -660,13 +661,13 @@ public sealed class AnalysisReplayIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Fault")]
-    public void Slice5FailureRecoveryRollsBackInjectedPublicationAndRejectsStaleAttempt()
+    [TestCategory("Integration")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Fault")]
+    public void AnalysisFailureRecoveryRollsBackInjectedPublicationAndRejectsStaleAttempt()
     {
-        using Wp5Context rollback = new();
+        using OperationalContext rollback = new();
         Assert.ThrowsExactly<InvalidOperationException>(() => rollback.Publish(
             point =>
             {
@@ -687,7 +688,7 @@ public sealed class AnalysisReplayIntegrationTests
             RunOutputJsonCodec.Serialize(recovered.Bundle.RunOutput),
             rollback.Store.ReadAnalysisRunOutput(rollback.RunId));
 
-        using Wp5Context stale = new();
+        using OperationalContext stale = new();
         AttemptRecord old = stale.Attempt;
         _ = stale.Context.StartRecoveryAttempt(DateTimeOffset.UtcNow.AddSeconds(1));
         Assert.ThrowsExactly<InvalidDataException>(() => stale.Publish(attempt: old));
@@ -695,13 +696,13 @@ public sealed class AnalysisReplayIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Replay")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Replay")]
+    [TestCategory("Integration")]
+    [TestCategory("Replay")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Replay")]
     public void AnalysisReplayFailsClosedOnDriftAndPaginatesDeterministically()
     {
-        using Wp5Context context = new();
+        using OperationalContext context = new();
         AnalysisV1WorkAssignment drifted = context.Assignment with
         {
             CandidateAnalysis = context.Assignment.CandidateAnalysis with { Sha256 = new string('0', 64) },
@@ -768,13 +769,13 @@ public sealed class AnalysisReplayIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Cli")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Cli")]
-    public void Slice5CliHumanAndJsonRepresentTheSameTerminalSemantics()
+    [TestCategory("Integration")]
+    [TestCategory("Cli")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Cli")]
+    public void AnalysisCliHumanAndJsonRepresentTheSameTerminalSemantics()
     {
-        using Wp5Context context = new(AnalysisTerminalOutcome.LimitReached);
+        using OperationalContext context = new(AnalysisTerminalOutcome.LimitReached);
         AnalysisExecutionPhaseResult result = context.Publish();
         string human = AnalysisOutputRenderer.Render(result.Bundle.RunOutput, result.Bundle.CliSummary);
 
@@ -788,15 +789,15 @@ public sealed class AnalysisReplayIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Replay")]
+    [TestCategory("Integration")]
+    [TestCategory("Replay")]
     public void AnalysisReplayCleanIncrementalAndReplayPreserveUnchangedSemanticOutput()
     {
-        using Wp5Context clean = new();
+        using OperationalContext clean = new();
         AnalysisExecutionPhaseResult cleanResult = clean.Publish();
 
-        AttemptRecord incrementalAttempt = clean.Context.CreateRunAttempt("run-wp5-incremental", DateTimeOffset.UtcNow);
-        using Wp5Context incremental = new(
+        AttemptRecord incrementalAttempt = clean.Context.CreateRunAttempt("run-operations-incremental", DateTimeOffset.UtcNow);
+        using OperationalContext incremental = new(
             mode: ReplayMode.Incremental,
             priorRunId: new OpaqueId(clean.RunId),
             context: clean.Context,
@@ -804,8 +805,8 @@ public sealed class AnalysisReplayIntegrationTests
             priorFindingCase: clean.FindingCases);
         AnalysisExecutionPhaseResult incrementalResult = incremental.Publish();
 
-        AttemptRecord replayAttempt = clean.Context.CreateRunAttempt("run-wp5-replay", DateTimeOffset.UtcNow);
-        using Wp5Context replay = new(
+        AttemptRecord replayAttempt = clean.Context.CreateRunAttempt("run-operations-replay", DateTimeOffset.UtcNow);
+        using OperationalContext replay = new(
             mode: ReplayMode.RetainedDownstreamReplay,
             priorRunId: new OpaqueId(incremental.RunId),
             context: clean.Context,
@@ -822,13 +823,13 @@ public sealed class AnalysisReplayIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Replay")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Replay")]
+    [TestCategory("Integration")]
+    [TestCategory("Replay")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Replay")]
     public void UnavailableDependenciesAreExplicitAndPreventCompleteCleanReplayAndAudit()
     {
-        using Wp5Context context = new(unavailableDependency: true);
+        using OperationalContext context = new(unavailableDependency: true);
         AnalysisExecutionPhaseResult result = context.Publish();
 
         Assert.AreEqual(ReplayState.Partial, result.Bundle.Replay.ReplayState);
@@ -842,8 +843,8 @@ public sealed class AnalysisReplayIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Fault")]
+    [TestCategory("Integration")]
+    [TestCategory("Fault")]
     [DataRow(AnalysisTerminalOutcome.CompletedWithGaps, LifecycleState.CompletedWithGaps, "completed-with-gaps")]
     [DataRow(AnalysisTerminalOutcome.Cancelled, LifecycleState.Cancelled, "cancelled")]
     [DataRow(AnalysisTerminalOutcome.Failed, LifecycleState.Failed, "failed")]
@@ -852,7 +853,7 @@ public sealed class AnalysisReplayIntegrationTests
         LifecycleState expectedState,
         string expectedToken)
     {
-        using Wp5Context context = new(outcome);
+        using OperationalContext context = new(outcome);
         if (outcome == AnalysisTerminalOutcome.Cancelled)
         {
             RunRecord run = context.Store.GetRun(context.RunId);
@@ -873,13 +874,13 @@ public sealed class AnalysisReplayIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Integration")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Fault")]
     public void CoordinatorFallbackPublishesTerminalFailureAndLimitOutputsWithoutReexecutingSemanticProjection()
     {
-        using Wp5Context failure = new();
+        using OperationalContext failure = new();
         AnalysisExecutionPhaseResult failed = AnalysisExecutionPhase.PublishTerminalFallback(
             failure.Store, failure.Assignment, failure.Attempt, failure.Context.Binding,
             failure.ValidationReceiptPayloadId, AnalysisTerminalOutcome.Failed,
@@ -893,7 +894,7 @@ public sealed class AnalysisReplayIntegrationTests
         Assert.IsTrue(failed.Bundle.RunOutput.AnalyzerCoverage.All(item => item.Status == "failed"));
         Assert.AreEqual("failed", failed.Bundle.CliSummary.Outcome);
 
-        using Wp5Context limited = new();
+        using OperationalContext limited = new();
         AnalysisExecutionPhaseResult limitOutput = AnalysisExecutionPhase.PublishTerminalFallback(
             limited.Store, limited.Assignment, limited.Attempt, limited.Context.Binding,
             limited.ValidationReceiptPayloadId, AnalysisTerminalOutcome.LimitReached,
@@ -906,11 +907,11 @@ public sealed class AnalysisReplayIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Limit")]
+    [TestCategory("Integration")]
+    [TestCategory("Limit")]
     public void TerminalFallbackReservesAndCountsEveryMandatoryItemForMultipleAnalyzers()
     {
-        using Wp5Context context = new();
+        using OperationalContext context = new();
         ArtifactReferenceContract first = context.Assignment.ExecutionInput.AnalyzerDeclarations[0];
         AnalysisExecutionInputContract twoAnalyzerInput = context.Assignment.ExecutionInput with
         {
@@ -943,11 +944,11 @@ public sealed class AnalysisReplayIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Replay")]
+    [TestCategory("Integration")]
+    [TestCategory("Replay")]
     public void SemanticFingerprintChangesWhenDocumentationGraphMembershipIsSwapped()
     {
-        using Wp5Context context = new();
+        using OperationalContext context = new();
         DocumentationEvidenceContract documentation = DocumentationEvidenceJsonCodec.Deserialize(
             context.Store.ReadCandidateAnalysisPayload(context.Assignment.DocumentationEvidence.PayloadId));
         CandidateAnalysisContract candidates = CandidateAnalysisJsonCodec.Deserialize(
@@ -1051,15 +1052,15 @@ public sealed class AnalysisReplayIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Limit")]
+    [TestCategory("Integration")]
+    [TestCategory("Limit")]
     public void TinyReplayDeadlineIsClassifiedAsALimitAndNeverAsGenericFailure()
     {
-        using Wp5Context baseline = new();
+        using OperationalContext baseline = new();
         _ = baseline.Publish();
         AttemptRecord attempt = baseline.Context.CreateRunAttempt(
-            "run-wp5-tiny-deadline", DateTimeOffset.UtcNow);
-        using Wp5Context replay = new(
+            "run-operations-tiny-deadline", DateTimeOffset.UtcNow);
+        using OperationalContext replay = new(
             mode: ReplayMode.Incremental,
             priorRunId: new OpaqueId(baseline.RunId),
             context: baseline.Context,
@@ -1078,13 +1079,13 @@ public sealed class AnalysisReplayIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Recovery")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Recovery")]
+    [TestCategory("Integration")]
+    [TestCategory("Recovery")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Recovery")]
     public void CancellationRecoveryCreatesAFencedPublicationAttemptAndRetainsCancelledOutput()
     {
-        using Wp5Context context = new();
+        using OperationalContext context = new();
         RunRecord cancelling = context.Store.Transition(
             Guid.NewGuid().ToString("N"), context.RunId,
             context.Store.GetRun(context.RunId).Generation,
@@ -1126,11 +1127,11 @@ public sealed class AnalysisReplayIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Safety")]
+    [TestCategory("Integration")]
+    [TestCategory("Safety")]
     public void AnalysisReplayLeavesProtectedRootCanariesAndExternalBoundariesUntouched()
     {
-        string root = Path.Combine(Path.GetTempPath(), "infinium-wp5-canaries-" + Guid.NewGuid().ToString("N"));
+        string root = Path.Combine(Path.GetTempPath(), "infinium-operations-canaries-" + Guid.NewGuid().ToString("N"));
         string[] protectedRoots = ["setup", "game", "mo2"];
         try
         {
@@ -1144,7 +1145,7 @@ public sealed class AnalysisReplayIntegrationTests
                 before[canary] = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(canary)));
             }
 
-            using Wp5Context context = new();
+            using OperationalContext context = new();
             _ = context.Publish();
 
             foreach ((string canary, string fingerprint) in before)
@@ -1167,18 +1168,18 @@ public sealed class AnalysisReplayIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Cli")]
-    public async Task Slice5CliReadsPublishedOutputThroughTheCoordinatorQueryBoundary()
+    [TestCategory("Integration")]
+    [TestCategory("Cli")]
+    public async Task AnalysisCliReadsPublishedOutputThroughTheCoordinatorQueryBoundary()
     {
-        string root = Path.Combine(Path.GetTempPath(), "infinium-wp5-cli-" + Guid.NewGuid().ToString("N"));
+        string root = Path.Combine(Path.GetTempPath(), "infinium-operations-cli-" + Guid.NewGuid().ToString("N"));
         int coordinatorPid = 0;
         string publicationContextId;
         try
         {
             using (CandidateStoreContext storeContext = new(
                 root, TimeSpan.FromSeconds(1), preserveRoot: true))
-            using (Wp5Context publication = new(
+            using (OperationalContext publication = new(
                 context: storeContext,
                 attempt: storeContext.Attempt))
             {
@@ -1349,11 +1350,11 @@ public sealed class AnalysisReplayIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Cli")]
-    public void Slice5CliStartsAndReadsManagedWp2Wp3Wp4ProductExecution()
+    [TestCategory("Integration")]
+    [TestCategory("Cli")]
+    public void AnalysisCliStartsAndReadsManagedDocumentationCandidateFindingCaseProductExecution()
     {
-        string root = Path.Combine(Path.GetTempPath(), "infinium-wp5-managed-cli-" + Guid.NewGuid().ToString("N"));
+        string root = Path.Combine(Path.GetTempPath(), "infinium-operations-managed-cli-" + Guid.NewGuid().ToString("N"));
         string requestPath = Path.Combine(root, "managed-analysis-request.json");
         int coordinatorPid = 0;
         try
@@ -1447,11 +1448,11 @@ public sealed class AnalysisReplayIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Replay")]
+    [TestCategory("Integration")]
+    [TestCategory("Replay")]
     public async Task AnalysisReplayManagedWorkerValidatesAndCoordinatorPublishesTheRetainedStages()
     {
-        using Wp5Context context = new();
+        using OperationalContext context = new();
         RunRecord staged = context.Store.GetRun(context.RunId);
         _ = context.Store.Transition(
             Guid.NewGuid().ToString("N"), context.RunId, staged.Generation,
@@ -1512,13 +1513,13 @@ public sealed class AnalysisReplayIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Evaluation")]
-    public void FrozenWp5OperationalCasesAreBoundToProductExecutionBeforeOracleComparison()
+    [TestCategory("Integration")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Evaluation")]
+    public void FrozenOperationalOperationalCasesAreBoundToProductExecutionBeforeOracleComparison()
     {
-        string fixtureRoot = Path.Combine(TestRepository.Root, "docs", "evaluation", "fixtures", "m1-slice5-wp5-operational-cases-v1");
+        string fixtureRoot = Path.Combine(TestRepository.Root, "test-data", "public-fixtures", "operations", "analysis-lifecycle");
         using JsonDocument projections = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(fixtureRoot, "ordinary-product-projections.v1.json")));
         using JsonDocument envelope = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(fixtureRoot, "harness-envelope.v1.json")));
         using JsonDocument topologies = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(fixtureRoot, "safety-topologies.v1.json")));
@@ -1531,7 +1532,7 @@ public sealed class AnalysisReplayIntegrationTests
         Dictionary<string, JsonNode> actualByCase = new(StringComparer.Ordinal);
         Dictionary<string, ProjectionValidationReceipt> validationReceipts = new(StringComparer.Ordinal);
         List<MaterializedSafetyTopology.TopologyCapabilityReceipt> topologyCapabilityReceipts = [];
-        string? retainedReceiptPath = Environment.GetEnvironmentVariable("INFINIUM_WP5_VALIDATION_RECEIPT_PATH");
+        string? retainedReceiptPath = Environment.GetEnvironmentVariable("INFINIUM_ANALYSIS_VALIDATION_RECEIPT_PATH");
         foreach (JsonElement binding in envelope.RootElement.GetProperty("case_bindings").EnumerateArray())
         {
             string caseId = binding.GetProperty("case_id").GetString()!;
@@ -1550,7 +1551,7 @@ public sealed class AnalysisReplayIntegrationTests
                 Convert.ToHexStringLower(SHA256.HashData(projectionBytes)),
                 projectionBytes.LongLength,
                 "closed-schema-and-answer-isolation-validated-before-product-dispatch"));
-            PersistWp5ExecutionReceipts(
+            PersistOperationalExecutionReceipts(
                 retainedReceiptPath, validationReceipts.Values, topologyCapabilityReceipts);
             actualByCase.Add(caseId, family switch
             {
@@ -1563,7 +1564,7 @@ public sealed class AnalysisReplayIntegrationTests
                     projectionIndex, projection, topologies.RootElement, topologyCapabilityReceipts),
                 _ => throw new AssertFailedException("The frozen fixture contains an unbound behavior family: " + family),
             });
-            PersistWp5ExecutionReceipts(
+            PersistOperationalExecutionReceipts(
                 retainedReceiptPath, validationReceipts.Values, topologyCapabilityReceipts);
         }
 
@@ -1583,7 +1584,7 @@ public sealed class AnalysisReplayIntegrationTests
             item.Disposition == "closed-schema-and-answer-isolation-validated-before-product-dispatch"));
     }
 
-    private static void PersistWp5ExecutionReceipts(
+    private static void PersistOperationalExecutionReceipts(
         string? path,
         IEnumerable<ProjectionValidationReceipt> projectionReceipts,
         IEnumerable<MaterializedSafetyTopology.TopologyCapabilityReceipt> topologyReceipts)
@@ -1594,11 +1595,11 @@ public sealed class AnalysisReplayIntegrationTests
         }
         string fullPath = Path.GetFullPath(path);
         string directory = Path.GetDirectoryName(fullPath)
-            ?? throw new InvalidDataException("The WP5 validation receipt path has no directory.");
+            ?? throw new InvalidDataException("The analysis validation receipt path has no directory.");
         Directory.CreateDirectory(directory);
         byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(new
         {
-            schema_id = "infinium.verification.wp5-projection-validation-receipts/v1",
+            schema_id = "infinium.verification.operations-projection-validation-receipts/v1",
             projection_validation_receipts = projectionReceipts.OrderBy(item => item.CaseId).ToArray(),
             topology_capability_receipts = topologyReceipts.Distinct().OrderBy(item => item.Capability).ThenBy(item => item.NativeDisposition).ToArray(),
         });
@@ -1693,7 +1694,7 @@ public sealed class AnalysisReplayIntegrationTests
             .Single(item => item.GetProperty("name").GetString() == "next-revision")
             .GetProperty("value").GetInt32();
 
-        using Wp5Context baseline = new();
+        using OperationalContext baseline = new();
         AnalysisPublicationBundle baselineBundle = PrepareFrozenAtomicBundle(
             baseline, projection, publication, currentRecords, publicationAttributes["revision"].GetInt32());
         _ = AnalysisExecutionPhase.PublishPreparedBundleForVerification(
@@ -1703,7 +1704,7 @@ public sealed class AnalysisReplayIntegrationTests
         string candidateRunId = projection.GetProperty("commands")[0].GetProperty("parameters").EnumerateArray()
             .Single(item => item.GetProperty("name").GetString() == "run").GetProperty("value").GetString()!;
         AttemptRecord candidateAttempt = baseline.Context.CreateRunAttempt(candidateRunId, DateTimeOffset.UtcNow);
-        using Wp5Context candidate = new(context: baseline.Context, attempt: candidateAttempt);
+        using OperationalContext candidate = new(context: baseline.Context, attempt: candidateAttempt);
         AnalysisPublicationBundle stagedBundle = PrepareFrozenAtomicBundle(
             candidate, projection, publication, stagedRecords, nextRevision);
         int faultCount = 0;
@@ -1785,7 +1786,7 @@ public sealed class AnalysisReplayIntegrationTests
     }
 
     private static AnalysisPublicationBundle PrepareFrozenAtomicBundle(
-        Wp5Context context,
+        OperationalContext context,
         JsonElement projection,
         JsonElement publication,
         IReadOnlyList<JsonElement> records,
@@ -1822,7 +1823,7 @@ public sealed class AnalysisReplayIntegrationTests
             .Select(id => new ReplayDependencyNodeContract(
                 new OpaqueId(id), "fixture-publication-node", new ContractVersion(1, 0, 0),
                 new Sha256Fingerprint(Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(id)))),
-                Slice5ResultState.Present)).ToArray();
+                AnalysisResultState.Present)).ToArray();
         ReplayDependencyEdgeContract[] fixtureEdges = projection.GetProperty("relations").EnumerateArray()
             .Select(item => new ReplayDependencyEdgeContract(
                 new OpaqueId(item.GetProperty("from").GetString()!),
@@ -1834,7 +1835,7 @@ public sealed class AnalysisReplayIntegrationTests
             Dependencies = [.. ordinary.Replay.Dependencies, .. fixtureDependencies],
             Edges = [.. ordinary.Replay.Edges, .. fixtureEdges],
         };
-        Slice5ContractInvariants.Validate(replay);
+        AnalysisReplayContractInvariants.Validate(replay);
         return ordinary with { Replay = replay, Artifacts = artifacts };
     }
 
@@ -1853,15 +1854,15 @@ public sealed class AnalysisReplayIntegrationTests
     {
         if (projectionIndex == 1)
         {
-            using Wp5Context clean = new();
+            using OperationalContext clean = new();
             AnalysisExecutionPhaseResult cleanResult = clean.Publish();
             AttemptRecord incrementalAttempt = clean.Context.CreateRunAttempt("run-fixture-incremental", DateTimeOffset.UtcNow);
-            using Wp5Context incremental = new(
+            using OperationalContext incremental = new(
                 mode: ReplayMode.Incremental, priorRunId: new OpaqueId(clean.RunId), context: clean.Context,
                 attempt: incrementalAttempt, priorFindingCase: clean.FindingCases);
             AnalysisExecutionPhaseResult incrementalResult = incremental.Publish();
             AttemptRecord replayAttempt = clean.Context.CreateRunAttempt("run-fixture-replay", DateTimeOffset.UtcNow);
-            using Wp5Context replay = new(
+            using OperationalContext replay = new(
                 mode: ReplayMode.RetainedDownstreamReplay, priorRunId: new OpaqueId(incremental.RunId),
                 context: clean.Context, attempt: replayAttempt, priorFindingCase: incremental.FindingCases);
             AnalysisExecutionPhaseResult replayResult = replay.Publish();
@@ -1894,13 +1895,13 @@ public sealed class AnalysisReplayIntegrationTests
             };
         }
 
-        using Wp5Context drift = new();
+        using OperationalContext drift = new();
         AnalysisIdentityDriftException identityDrift = Assert.ThrowsExactly<AnalysisIdentityDriftException>(() =>
             drift.Publish(assignment: drift.Assignment with
             {
                 CandidateAnalysis = drift.Assignment.CandidateAnalysis with { Sha256 = new string('0', 64) },
             }));
-        using Wp5Context substitute = new();
+        using OperationalContext substitute = new();
         Assert.ThrowsExactly<AnalysisIdentityDriftException>(() => substitute.Publish(assignment: substitute.Assignment with
         {
             CandidateAnalysis = substitute.Assignment.CandidateAnalysis with { PayloadId = "equal-fingerprint-different-identity" },
@@ -2045,7 +2046,7 @@ public sealed class AnalysisReplayIntegrationTests
                 "limit-reached" => AnalysisTerminalOutcome.LimitReached,
                 _ => AnalysisTerminalOutcome.Failed,
             };
-            using Wp5Context context = new(outcome);
+            using OperationalContext context = new(outcome);
             if (outcome == AnalysisTerminalOutcome.Cancelled)
             {
                 RunRecord current = context.Store.GetRun(context.RunId);
@@ -2091,7 +2092,7 @@ public sealed class AnalysisReplayIntegrationTests
             .Max(item => Attributes(item)["ordinal"].GetInt32());
         if (projectionIndex == 4)
         {
-            using Wp5Context old = new();
+            using OperationalContext old = new();
             AttemptRecord stale = old.Attempt;
             AttemptRecord currentAttempt = old.Context.StartRecoveryAttempt(DateTimeOffset.UtcNow.AddSeconds(1));
             bool staleRejected = false;
@@ -2118,7 +2119,7 @@ public sealed class AnalysisReplayIntegrationTests
             };
         }
 
-        using Wp5Context checkpointContext = new();
+        using OperationalContext checkpointContext = new();
         CandidateCheckpointState checkpoint = CandidateAnalysisPhase.ReadLatestCheckpoint(
             checkpointContext.Store, checkpointContext.RunId)!;
         CandidateCheckpointPersistenceRecord oldCheckpoint = checkpointContext.Store.ReadLatestCandidateCheckpoint(
@@ -2302,7 +2303,7 @@ public sealed class AnalysisReplayIntegrationTests
             string topologyId = topology.GetProperty("topology_identity").GetString()!;
             string authorizedParent = Path.Combine(productRoot, "operational-topology", topologyId);
             protectedParent = Path.Combine(
-                Path.GetTempPath(), "infinium-wp5-protected-" + Guid.NewGuid().ToString("N"));
+                Path.GetTempPath(), "infinium-operations-protected-" + Guid.NewGuid().ToString("N"));
             entryRoot = Path.Combine(authorizedParent, "entry-schedule");
             try
             {
@@ -2812,7 +2813,7 @@ public sealed class AnalysisReplayIntegrationTests
             process.Kill(entireProcessTree: true);
             process.WaitForExit();
         }
-        Assert.IsTrue(exited, "WP5 CLI query exceeded its process bound.");
+        Assert.IsTrue(exited, "The analysis CLI query exceeded its process bound.");
         return new ProcessResult(process.ExitCode, stdout.GetAwaiter().GetResult(), stderr.GetAwaiter().GetResult());
     }
 
@@ -2824,12 +2825,12 @@ public sealed class AnalysisReplayIntegrationTests
         long ProjectionByteLength,
         string Disposition);
 
-    internal sealed class Wp5Context : IDisposable
+    internal sealed class OperationalContext : IDisposable
     {
         private readonly AttemptStagingAuthority staging;
         private readonly bool ownsContext;
 
-        public Wp5Context(
+        public OperationalContext(
             AnalysisTerminalOutcome terminal = AnalysisTerminalOutcome.Completed,
             ReplayMode mode = ReplayMode.Clean,
             OpaqueId? priorRunId = null,
@@ -2852,7 +2853,7 @@ public sealed class AnalysisReplayIntegrationTests
             };
             CandidatePipelineRequest candidateRequest = CandidatePipelineIntegrationTests.Request(
                 [CandidatePipelineIntegrationTests.Member("alpha"), CandidatePipelineIntegrationTests.Member("beta"), lead],
-                RunId, "population-wp5");
+                RunId, "population-operations");
             SemanticAnalysisContextContract semanticContext = CandidatePipelineIntegrationTests.SemanticContext(
                 Context.Binding.AnalysisContextId);
             candidateRequest = candidateRequest with
@@ -2889,7 +2890,7 @@ public sealed class AnalysisReplayIntegrationTests
                 Seal(Store, candidates.Receipt.PayloadId, candidates.Pipeline.Analysis.SchemaId, candidates.Pipeline.Analysis.SchemaVersion.ToString()),
                 Seal(Store, findingCases.Receipt.StoredPayloadId, findingCases.Analysis.SchemaId, findingCases.Analysis.SchemaVersion.ToString()),
                 new string('a', 40), DateTimeOffset.UtcNow.AddSeconds(-1), terminal,
-                "WP5 integration terminal outcome", 192L * 1024 * 1024,
+                "analysis integration terminal outcome", 192L * 1024 * 1024,
                 AnalysisV1WorkAssignment.AbsoluteMaximumOutputBytes, 100);
             ValidationReceiptPayloadId = StageValidationReceipt();
         }
@@ -2960,29 +2961,29 @@ public sealed class AnalysisReplayIntegrationTests
             const string text = "Purpose: Adds an inert capability.\nRequirement: Component remains local.\n";
             byte[] bytes = Encoding.UTF8.GetBytes(text);
             DocumentationClaimInputContract purpose = new(
-                new OpaqueId("wp5-purpose"), 0, 34, "Purpose: Adds an inert capability.",
+                new OpaqueId("operations-purpose"), 0, 34, "Purpose: Adds an inert capability.",
                 ClaimKind.DeclaredPurpose, [], EvidenceAuthority.AuthoritativeExternal,
                 ClaimApplicabilityState.Applicable, ClassificationRole.Declared, []);
             long requirementStart = Encoding.UTF8.GetByteCount("Purpose: Adds an inert capability.\n");
             DocumentationClaimInputContract requirement = new(
-                new OpaqueId("wp5-requirement"), requirementStart, bytes.Length - 1,
+                new OpaqueId("operations-requirement"), requirementStart, bytes.Length - 1,
                 "Requirement: Component remains local.", ClaimKind.Requirement, [],
                 EvidenceAuthority.AuthoritativeExternal, ClaimApplicabilityState.Applicable,
                 ClassificationRole.Declared, []);
             DocumentationApplicationInputContract application = new(
                 purpose.ClaimKey, new OpaqueId(runId), new OpaqueId(Context.Binding.AnalysisContextId),
-                new OpaqueId("entity-wp5"), "installed-entity", new OpaqueId("closure-wp5"),
+                new OpaqueId("entity-operations"), "installed-entity", new OpaqueId("closure-operations"),
                 ClaimApplicabilityState.Applicable, [requirement.ClaimKey],
                 new("purpose.add-expand", [requirement.ClaimKey], new OpaqueId("documentation-importer"), "exact declared purpose"));
             DocumentationClaimImportManifestContract manifest = new(
                 ContractConstants.DocumentationClaimImportSchemaId, new ContractVersion(1, 0, 0),
-                new OpaqueId("source-wp5"), DocumentationSourceKind.Fixture, "fixture-wp5-r1",
+                new OpaqueId("source-operations"), DocumentationSourceKind.Fixture, "fixture-operations-r1",
                 DocumentationSourceAvailability.Present,
                 new Sha256Fingerprint(Convert.ToHexStringLower(SHA256.HashData(bytes))), bytes.Length,
                 new OpaqueId(Context.Binding.InstallationSnapshotId), [purpose, requirement], [application]);
             return new DocumentationImportRequestContract(
                 new OpaqueId(runId), new OpaqueId(runId), DocumentationImportMode.CleanImport,
-                new OpaqueId("closure-wp5"), new OpaqueId("extractor-wp5"),
+                new OpaqueId("closure-operations"), new OpaqueId("extractor-operations"),
                 new UtcTimestamp(DateTimeOffset.UtcNow), manifest, bytes, null,
                 [new DocumentationApplicationTargetContract(
                     application.ConsumingRunId, new OpaqueId(Context.Binding.InstallationSnapshotId),

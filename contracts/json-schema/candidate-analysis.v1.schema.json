@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.infinium.dev/json-schema/candidate-analysis.v1.schema.json",
-  "title": "Infinium Slice 5 candidate analysis v1",
+  "title": "Infinium candidate analysis v1",
   "type": "object",
   "additionalProperties": false,
   "required": [

@@ -1,5 +1,5 @@
 using System.Text.Json;
-using Infinium.Application.Evaluation;
+using Infinium.Application.Serialization;
 using Infinium.Domain.Contracts;
 using Infinium.Persistence;
 
@@ -7,7 +7,7 @@ namespace Infinium.Application.Analysis;
 
 public static class AnalysisExecutionPhase
 {
-    public const string PhaseId = "m1-s5-wp5-analysis-publication";
+    public const string PhaseId = "analysis-publication";
     public const string PhaseVersion = "1.0.0";
 
     public static AnalysisExecutionPhaseResult Execute(
@@ -137,7 +137,7 @@ public static class AnalysisExecutionPhase
             || !replayBytes.AsSpan().SequenceEqual(AnalysisReplayJsonCodec.Serialize(AnalysisReplayJsonCodec.Deserialize(replayBytes)))
             || !cliBytes.AsSpan().SequenceEqual(CliSummaryJsonCodec.Serialize(CliSummaryJsonCodec.Deserialize(cliBytes))))
         {
-            throw new InvalidDataException("WP5 publication documents failed canonical round-trip verification.");
+            throw new InvalidDataException("Analysis publication documents failed canonical round-trip verification.");
         }
 
         LifecycleState terminal = assignment.TerminalOutcome switch

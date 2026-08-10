@@ -1,0 +1,258 @@
+{
+  "schema": "infinium.bethesda-fixture-construction",
+  "schema_version": 1,
+  "package_id": "BETH-LIGHT-VAL",
+  "generator": "Infinium.BethesdaFixtures.Generator",
+  "generator_version": 1,
+  "fixed_seed": "3520260730",
+  "dependencies": ".NET/BCL only",
+  "input_prohibitions": [
+    "No game or mod bytes consumed.",
+    "No Mutagen or xEdit input consumed.",
+    "No network input consumed.",
+    "No production parser input consumed.",
+    "No oracle, taxonomy answer, held-out content, or snapshot capture input consumed."
+  ],
+  "files": [
+    {
+      "path": "analysis-context.json",
+      "regions": [
+        {
+          "offset": 0,
+          "length": 308,
+          "kind": "project-authored-analysis-input-metadata"
+        }
+      ],
+      "byte_length": 308,
+      "sha256": "a7e73570ea9d6c32c8f58d2b07d120309b2f0e492fa6b087e78be6e1dc3d2e8e"
+    },
+    {
+      "path": "analysis-execution-input.json",
+      "regions": [
+        {
+          "offset": 0,
+          "length": 2669,
+          "kind": "project-authored-analysis-input-metadata"
+        }
+      ],
+      "byte_length": 2669,
+      "sha256": "97e8c60832ec6a3c1f249b4810146634ba16d5befe7f5556d5f5c9b5c85447b5"
+    },
+    {
+      "path": "analysis-installation-snapshot.json",
+      "regions": [
+        {
+          "offset": 0,
+          "length": 462,
+          "kind": "project-authored-analysis-input-metadata"
+        }
+      ],
+      "byte_length": 462,
+      "sha256": "e725950565398cd897ac69f27c67afcc9102285e6ff829ad3dfacea487742a4f"
+    },
+    {
+      "path": "analyzer-declaration.json",
+      "regions": [
+        {
+          "offset": 0,
+          "length": 5074,
+          "kind": "project-authored-analysis-input-metadata"
+        }
+      ],
+      "byte_length": 5074,
+      "sha256": "b2d8c06b95ed127cd7cab95aa06ed708e9873b47a830180c3b5c8bcfda8cccd5"
+    },
+    {
+      "path": "bethesda-semantic-input.json",
+      "regions": [
+        {
+          "offset": 0,
+          "length": 467,
+          "kind": "project-authored-analysis-input-metadata"
+        }
+      ],
+      "byte_length": 467,
+      "sha256": "d4e0460052dbad51f69778ed9dc6ea37cdbe44a78a7cd1b9209fed1c942ab6bd"
+    },
+    {
+      "path": "case-matrix.json",
+      "sha256": "7f811267c4d771e713dc7a29170d2339cd3a8dcd08722dd9e24cd995c4439bb6",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-request-or-matrix-metadata",
+          "length": 2335
+        }
+      ],
+      "byte_length": 2335
+    },
+    {
+      "path": "effective-scan-configuration.json",
+      "sha256": "87340c96ff04443768f70f4999327d820ad816bbd9d8ec13c1ab29e3fd3d25c0",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-request-or-matrix-metadata",
+          "length": 3035
+        }
+      ],
+      "byte_length": 3035
+    },
+    {
+      "path": "mutations/Consumer-LightReferenceOutOfRange.esp",
+      "sha256": "938de42aa562dcf02b7678a71dd22ed13451c36a389a7e75dccf7ef1bc33a913",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 420
+        }
+      ],
+      "byte_length": 420
+    },
+    {
+      "path": "mutations/FlaggedEsp-AboveLightMaximum.esp",
+      "sha256": "3b517170f45521c8f7bed82347a077db939799d764c55860c39f59b6751d2140",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 227
+        }
+      ],
+      "byte_length": 227
+    },
+    {
+      "path": "mutations/FlaggedEsp-BelowObjectRange.esp",
+      "sha256": "e67567fd8b8789314817db69585e2caf55bfbca0341e1943defbadc313027070",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 226
+        }
+      ],
+      "byte_length": 226
+    },
+    {
+      "path": "mutations/Native-AboveLightMaximum.esl",
+      "sha256": "fe8e35888609636451e8462e9bc7cc2659433c84620f9c25abafc1fa2dc79394",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 223
+        }
+      ],
+      "byte_length": 223
+    },
+    {
+      "path": "mutations/Native-BelowObjectRange.esl",
+      "sha256": "06cc4e3b1021c0213229669ea57444a4e0db438f74e17228233b1fb67dedfca0",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 222
+        }
+      ],
+      "byte_length": 222
+    },
+    {
+      "path": "mutations/Native-HeaderFlagRemoved.esl",
+      "sha256": "687d6d7fd35b8c7ffbe4f28dc178fe0fcb36c4a54777bcccb93611a165227182",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 236
+        }
+      ],
+      "byte_length": 236
+    },
+    {
+      "path": "plugins/00-Pad.esm",
+      "sha256": "7ee03b2ef46c82525644553259b32260c0defc87b61ae986519acab32496fd89",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 109
+        }
+      ],
+      "byte_length": 109
+    },
+    {
+      "path": "plugins/01-Native.esl",
+      "sha256": "8bd7537ada2bc83c61ef399b1145bb63c0ef68aef90cba49be0565053cf44b98",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 265
+        }
+      ],
+      "byte_length": 265
+    },
+    {
+      "path": "plugins/02-Flagged.esp",
+      "sha256": "e60f667e43a62a8b24d8702cbcb9f6242017c84cf138bc74d2cb84e5ae649609",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 268
+        }
+      ],
+      "byte_length": 268
+    },
+    {
+      "path": "plugins/03-Consumer.esp",
+      "sha256": "9c13f801a9f9464568b1b8e9f517cf03d1013960e9a5130c9dd02ec18d0b080c",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 497
+        }
+      ],
+      "byte_length": 497
+    },
+    {
+      "path": "plugins/04-Winner.esp",
+      "sha256": "3b75c15391d47da2327107e61cce602003a757a12afba41382807760b8cbeeda",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-tes4-bytes",
+          "length": 227
+        }
+      ],
+      "byte_length": 227
+    },
+    {
+      "path": "resolved-input-manifest.json",
+      "regions": [
+        {
+          "offset": 0,
+          "length": 423,
+          "kind": "project-authored-analysis-input-metadata"
+        }
+      ],
+      "byte_length": 423,
+      "sha256": "5d28c850f2e81bdf8d529f85c992c5e19e70267ca12ca14bd821091b63e0b220"
+    },
+    {
+      "path": "construction-manifest.json",
+      "regions": [
+        {
+          "offset": 0,
+          "kind": "project-authored-construction-metadata",
+          "length": 6892
+        }
+      ],
+      "byte_length": 6892,
+      "sha256": null
+    }
+  ]
+}

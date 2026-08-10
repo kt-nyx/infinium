@@ -7,8 +7,8 @@ namespace Infinium.Tests;
 public sealed class BethesdaSemanticContractTests
 {
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestProperty("Category", "M1Contract")]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Contract")]
     public void ResultUsesClosedTypedCollectionsAndPinnedProducerIdentity()
     {
         BethesdaSemanticExtractionResult result = new BethesdaSemanticExtractor().Extract(
@@ -36,8 +36,8 @@ public sealed class BethesdaSemanticContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestProperty("Category", "M1Contract")]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Contract")]
     public void CleanBreakTransportUsesExactV2FaceGenVocabularyAndFixedCoverageRows()
     {
         BethesdaSemanticSnapshot snapshot = new BethesdaSemanticExtractor().Extract(
@@ -70,8 +70,8 @@ public sealed class BethesdaSemanticContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestProperty("Category", "M1Contract")]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Contract")]
     public void AvailabilityTransportMappingIsExactForAllThreeStates()
     {
         Assert.AreEqual((true, false), BethesdaSemanticContract.AssetTransport(BethesdaAssetAvailability.Present));

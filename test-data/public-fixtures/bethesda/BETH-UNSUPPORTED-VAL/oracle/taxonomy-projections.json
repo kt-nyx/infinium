@@ -1,0 +1,321 @@
+{
+  "schema_id": "infinium.evaluation.taxonomy-projections/v1",
+  "schema_version": "1",
+  "fixture_id": "BETH-UNSUPPORTED-VAL",
+  "fixture_version": "1.4.0",
+  "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
+  "taxonomy_version": "0.1.0",
+  "reviewer_id": "taxonomy-reviewer",
+  "reviewed_at": "2026-08-02T12:00:00.0000000+00:00",
+  "source_artifacts": [
+    {
+      "artifact_id": "oracle/independent-byte-facts.json",
+      "artifact_version": "1.4.0",
+      "fingerprint": "37b933822da4e89cfd8ec8eb452cbfd5a3e28153c510874c0a121b10b0ef1d17",
+      "availability": "retained",
+      "byte_length": 27673
+    },
+    {
+      "artifact_id": "inputs/snapshot/accepted-order.json",
+      "artifact_version": "1.4.0",
+      "fingerprint": "a14b1574816b31b1863bd0ba05b76ce3bb3f3607b862a6b338e007131e11ac52",
+      "availability": "retained",
+      "byte_length": 2567
+    }
+  ],
+  "subjects": [
+    {
+      "subject_id": "TAX-CLOSURE-0001",
+      "canonical_value": {
+        "subject_id": "TAX-CLOSURE-0001",
+        "subject_type": "record-contribution",
+        "source_package_id": "BETH-UNSUPPORTED-VAL",
+        "source_evidence_references": [
+          "beth.beth-unsupported-val.fact-00018"
+        ],
+        "independent_semantic_evidence_references": [],
+        "expected_assignments": [
+          {
+            "axis": "technical-modification-surface",
+            "facet": "semantic-mechanism",
+            "code": "surface.plugin-data",
+            "applicability_state": "assigned",
+            "classification_role": "observed",
+            "evidence_references": [
+              "beth.beth-unsupported-val.fact-00018"
+            ],
+            "reason": "The frozen major-record fact establishes plugin-carried record data."
+          }
+        ],
+        "forbidden_assignments": [
+          {
+            "axis": "declared-purpose-and-intended-feature-area",
+            "reason": "No author-purpose evidence is present."
+          },
+          {
+            "axis": "consequence-type",
+            "reason": "The frozen facts establish no consequence."
+          },
+          {
+            "axis": "effect-extent",
+            "reason": "The frozen facts establish no effect extent."
+          },
+          {
+            "axis": "affected-game-system-or-content-area",
+            "code": "area.actors.ai-packages",
+            "reason": "A different independently evidenced semantic area cannot be copied to this subject."
+          },
+          {
+            "axis": "affected-game-system-or-content-area",
+            "code": "area.actors.appearance-identity",
+            "reason": "A different independently evidenced semantic area cannot be copied to this subject."
+          },
+          {
+            "axis": "affected-game-system-or-content-area",
+            "code": "area.world.placed-objects-activation",
+            "reason": "A different independently evidenced semantic area cannot be copied to this subject."
+          }
+        ]
+      },
+      "canonical_value_fingerprint": "7b353c4fb9ed824cd1fbb0ed1c1d858f07d23fa0de68e70464cda1ed218d869d"
+    },
+    {
+      "subject_id": "TAX-CLOSURE-0002",
+      "canonical_value": {
+        "subject_id": "TAX-CLOSURE-0002",
+        "subject_type": "provider-topology",
+        "source_package_id": "BETH-UNSUPPORTED-VAL",
+        "source_evidence_references": [
+          "inputs/snapshot/accepted-order.json",
+          "beth-unsupported-val-provider-00",
+          "beth-unsupported-val-provider-01",
+          "beth-unsupported-val-provider-02"
+        ],
+        "independent_semantic_evidence_references": [],
+        "expected_assignments": [
+          {
+            "axis": "declared-purpose-and-intended-feature-area",
+            "facet": "purpose-kind",
+            "applicability_state": "not-applicable",
+            "classification_role": "established",
+            "evidence_references": [
+              "beth-unsupported-val-provider-00",
+              "beth-unsupported-val-provider-01",
+              "beth-unsupported-val-provider-02",
+              "inputs/snapshot/accepted-order.json"
+            ],
+            "reason": "Provider ordering is topology, not declared purpose."
+          },
+          {
+            "axis": "affected-game-system-or-content-area",
+            "facet": "affected-area",
+            "applicability_state": "not-applicable",
+            "classification_role": "established",
+            "evidence_references": [
+              "beth-unsupported-val-provider-00",
+              "beth-unsupported-val-provider-01",
+              "beth-unsupported-val-provider-02",
+              "inputs/snapshot/accepted-order.json"
+            ],
+            "reason": "Provider ordering alone does not describe an affected game area."
+          },
+          {
+            "axis": "consequence-type",
+            "facet": "consequence-type",
+            "applicability_state": "not-applicable",
+            "classification_role": "established",
+            "evidence_references": [
+              "beth-unsupported-val-provider-00",
+              "beth-unsupported-val-provider-01",
+              "beth-unsupported-val-provider-02",
+              "inputs/snapshot/accepted-order.json"
+            ],
+            "reason": "Provider ordering alone establishes no consequence."
+          },
+          {
+            "axis": "effect-extent",
+            "facet": "direct-subject-breadth",
+            "applicability_state": "not-applicable",
+            "classification_role": "established",
+            "evidence_references": [
+              "beth-unsupported-val-provider-00",
+              "beth-unsupported-val-provider-01",
+              "beth-unsupported-val-provider-02",
+              "inputs/snapshot/accepted-order.json"
+            ],
+            "reason": "Provider ordering alone establishes no direct-subject effect."
+          },
+          {
+            "axis": "effect-extent",
+            "facet": "spatial-breadth",
+            "applicability_state": "not-applicable",
+            "classification_role": "established",
+            "evidence_references": [
+              "beth-unsupported-val-provider-00",
+              "beth-unsupported-val-provider-01",
+              "beth-unsupported-val-provider-02",
+              "inputs/snapshot/accepted-order.json"
+            ],
+            "reason": "Provider ordering alone establishes no spatial effect."
+          },
+          {
+            "axis": "effect-extent",
+            "facet": "persistence-and-lifecycle-breadth",
+            "applicability_state": "not-applicable",
+            "classification_role": "established",
+            "evidence_references": [
+              "beth-unsupported-val-provider-00",
+              "beth-unsupported-val-provider-01",
+              "beth-unsupported-val-provider-02",
+              "inputs/snapshot/accepted-order.json"
+            ],
+            "reason": "Provider ordering alone establishes no persistence effect."
+          },
+          {
+            "axis": "effect-extent",
+            "facet": "causal-propagation-or-blast-radius",
+            "applicability_state": "not-applicable",
+            "classification_role": "established",
+            "evidence_references": [
+              "beth-unsupported-val-provider-00",
+              "beth-unsupported-val-provider-01",
+              "beth-unsupported-val-provider-02",
+              "inputs/snapshot/accepted-order.json"
+            ],
+            "reason": "Provider ordering alone establishes no propagation effect."
+          }
+        ],
+        "forbidden_assignments": [
+          {
+            "axis": "technical-modification-surface",
+            "reason": "Provider and winner topology cannot establish a semantic surface or delivery code without separate content evidence."
+          }
+        ]
+      },
+      "canonical_value_fingerprint": "6581027a27f5590e83fee4d965954e2578e744cad5f092446377940c6e09270d"
+    },
+    {
+      "subject_id": "TAX-06",
+      "canonical_value": {
+        "subject_id": "TAX-06",
+        "subject_type": "unsupported-record",
+        "source_package_id": "BETH-UNSUPPORTED-VAL",
+        "source_evidence_references": [
+          "beth.beth-unsupported-val.fact-00012"
+        ],
+        "independent_semantic_evidence_references": [
+          "beth.beth-unsupported-val.fact-00012"
+        ],
+        "expected_assignments": [
+          {
+            "axis": "technical-modification-surface",
+            "facet": "semantic-mechanism",
+            "code": "surface.plugin-data",
+            "applicability_state": "assigned",
+            "classification_role": "observed",
+            "evidence_references": [
+              "beth.beth-unsupported-val.fact-00012"
+            ],
+            "reason": "The frozen major-record fact establishes plugin-carried record data even though its family semantics are unsupported."
+          },
+          {
+            "axis": "technical-modification-surface",
+            "facet": "realization-and-delivery",
+            "code": "delivery.plugin-container",
+            "applicability_state": "assigned",
+            "classification_role": "observed",
+            "evidence_references": [
+              "beth.beth-unsupported-val.fact-00012"
+            ],
+            "reason": "The frozen file and record facts establish delivery inside a plugin container."
+          },
+          {
+            "axis": "affected-game-system-or-content-area",
+            "facet": "affected-area",
+            "applicability_state": "unsupported",
+            "classification_role": "established",
+            "evidence_references": [
+              "beth.beth-unsupported-val.fact-00012"
+            ],
+            "reason": "The frozen allowlist gap establishes that Slice 4 cannot determine affected-area semantics for this record family."
+          },
+          {
+            "axis": "consequence-type",
+            "facet": "consequence-type",
+            "applicability_state": "unknown",
+            "classification_role": "predicted",
+            "evidence_references": [
+              "beth.beth-unsupported-val.fact-00012"
+            ],
+            "reason": "The surface is present, but unsupported semantics leave any consequence unknown."
+          },
+          {
+            "axis": "effect-extent",
+            "facet": "direct-subject-breadth",
+            "applicability_state": "not-applicable",
+            "classification_role": "established",
+            "evidence_references": [
+              "beth.beth-unsupported-val.fact-00012"
+            ],
+            "reason": "No effect is established, so direct-subject breadth is not applicable."
+          },
+          {
+            "axis": "effect-extent",
+            "facet": "spatial-breadth",
+            "applicability_state": "not-applicable",
+            "classification_role": "established",
+            "evidence_references": [
+              "beth.beth-unsupported-val.fact-00012"
+            ],
+            "reason": "No effect is established, so spatial breadth is not applicable."
+          },
+          {
+            "axis": "effect-extent",
+            "facet": "persistence-and-lifecycle-breadth",
+            "applicability_state": "not-applicable",
+            "classification_role": "established",
+            "evidence_references": [
+              "beth.beth-unsupported-val.fact-00012"
+            ],
+            "reason": "No effect is established, so persistence breadth is not applicable."
+          },
+          {
+            "axis": "effect-extent",
+            "facet": "causal-propagation-or-blast-radius",
+            "applicability_state": "not-applicable",
+            "classification_role": "established",
+            "evidence_references": [
+              "beth.beth-unsupported-val.fact-00012"
+            ],
+            "reason": "No effect is established, so propagation breadth is not applicable."
+          }
+        ],
+        "forbidden_assignments": [
+          {
+            "axis": "declared-purpose-and-intended-feature-area",
+            "reason": "No author-purpose evidence is present."
+          },
+          {
+            "axis": "affected-game-system-or-content-area",
+            "reason": "Unsupported record-family semantics cannot be guessed from the signature or filename."
+          },
+          {
+            "axis": "consequence-type",
+            "code": "consequence.incorrect-functional-behavior",
+            "reason": "A present unsupported surface does not establish breakage."
+          }
+        ]
+      },
+      "canonical_value_fingerprint": "3cb76d29f9c9861f2bce5ccf350eb4e26c9ed435532fdd9696863924633585ab"
+    }
+  ],
+  "review_assertions": [
+    "The sealed subject set exhaustively covers the accepted Slice 4 production taxonomy subject-ID contract for this package.",
+    "Every sealed subject has one literal exact production subject binding and no target is reused.",
+    "Technical surfaces are observed only from frozen local byte facts.",
+    "Affected areas are established only from separate field or resolved-link evidence.",
+    "Provider topology is not converted into a technical surface or gameplay area.",
+    "Purpose, consequence, and effect extent are not inferred where evidence does not establish them.",
+    "No production output, Mutagen answer, xEdit answer, held-out answer, filename heuristic, area heuristic, or record-family shortcut authored the bindings or expected assignments."
+  ]
+}

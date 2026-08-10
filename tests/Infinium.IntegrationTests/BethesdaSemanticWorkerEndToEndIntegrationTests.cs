@@ -21,10 +21,10 @@ namespace Infinium.Tests;
 public sealed class BethesdaSemanticWorkerEndToEndIntegrationTests
 {
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Security")]
     public async Task PublishedSnapshotFlowsThroughContainedWorkerValidationAndCasAdmission()
     {
         if (!OperatingSystem.IsWindows())
@@ -47,10 +47,10 @@ public sealed class BethesdaSemanticWorkerEndToEndIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Integration")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Fault")]
     public async Task RecoveryRedispatchesDurableSemanticOperationThroughContainedWorker()
     {
         if (!OperatingSystem.IsWindows())
@@ -88,10 +88,10 @@ public sealed class BethesdaSemanticWorkerEndToEndIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Security")]
     public async Task AggregatePluginBytesFailBeforeDispatchOrPublication()
     {
         if (!OperatingSystem.IsWindows())
@@ -133,10 +133,10 @@ public sealed class BethesdaSemanticWorkerEndToEndIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Security")]
     public void DurableSemanticIntentIsIdempotentAndCannotBeRebound()
     {
         string root = TemporaryRoot();

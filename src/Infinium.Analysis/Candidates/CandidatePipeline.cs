@@ -369,7 +369,7 @@ public static class CandidatePipeline
 
         if (population.Count > 1_000_000)
         {
-            throw new InvalidDataException("Candidate population exceeds the M1 bounded population contract.");
+            throw new InvalidDataException("Candidate population exceeds the bounded population contract.");
         }
         if (population.Select(item => item.PopulationMemberId).Distinct().Count() != population.Count)
         {
@@ -684,24 +684,24 @@ public static class CandidatePipeline
         {
             OpaqueId candidateId = CandidateAnalysisIdentity.StableId("candidate", decisionId.Value, closureId.Value);
             bool mustAbstain = member.MissingInformation.Count != 0;
-            Slice5ResultState candidateState = mustAbstain
-                ? Slice5ResultState.Abstained
+            AnalysisResultState candidateState = mustAbstain
+                ? AnalysisResultState.Abstained
                 : member.ContradictingEvidenceIds.Count != 0 || member.InputState == CausalJoinInputState.Ambiguous
-                    ? Slice5ResultState.Ambiguous
-                    : Slice5ResultState.Present;
+                    ? AnalysisResultState.Ambiguous
+                    : AnalysisResultState.Present;
             OpaqueId hypothesisId = CandidateAnalysisIdentity.StableId("hypothesis", candidateId.Value, request.ThresholdId.Value);
             OpaqueId? abstentionId = mustAbstain ? CandidateAnalysisIdentity.StableId("candidate-abstention", candidateId.Value, request.ThresholdId.Value) : null;
             candidate = new CandidateAnalysisEntryContract(
                 candidateId, decisionId, candidateState, member.Rationale,
                 member.SupportingEvidenceIds, member.ContradictingEvidenceIds, member.MissingInformation,
-                candidateState == Slice5ResultState.Present ? AnalysisConfidence.Plausible : AnalysisConfidence.SpeculativeLead,
+                candidateState == AnalysisResultState.Present ? AnalysisConfidence.Plausible : AnalysisConfidence.SpeculativeLead,
                 request.ThresholdId)
             {
                 HypothesisId = hypothesisId,
                 AbstentionId = abstentionId,
             };
             hypothesis = new CandidateHypothesisContract(
-                hypothesisId, candidateId, mustAbstain ? Slice5ResultState.Partial : candidateState,
+                hypothesisId, candidateId, mustAbstain ? AnalysisResultState.Partial : candidateState,
                 member.Rationale,
                 member.PredictedImpact,
                 member.SupportingEvidenceIds, member.ContradictingEvidenceIds, member.MissingInformation,
@@ -717,7 +717,7 @@ public static class CandidatePipeline
             {
                 gap = new CandidateGapContract(
                     CandidateAnalysisIdentity.StableId("candidate-gap", decisionId.Value, "missing-information"),
-                    decisionId, request.PopulationId, Slice5ResultState.Missing,
+                    decisionId, request.PopulationId, AnalysisResultState.Missing,
                     "The candidate remains admitted, but a required causal witness is missing.",
                     member.MissingInformation[0]);
             }
@@ -727,11 +727,11 @@ public static class CandidatePipeline
             or CandidateDecisionDisposition.Unprocessed
             or CandidateDecisionDisposition.Deferred)
         {
-            Slice5ResultState state = disposition switch
+            AnalysisResultState state = disposition switch
             {
-                CandidateDecisionDisposition.Unsupported => Slice5ResultState.Unsupported,
-                CandidateDecisionDisposition.Limited or CandidateDecisionDisposition.Unprocessed => Slice5ResultState.LimitReached,
-                _ => Slice5ResultState.Partial,
+                CandidateDecisionDisposition.Unsupported => AnalysisResultState.Unsupported,
+                CandidateDecisionDisposition.Limited or CandidateDecisionDisposition.Unprocessed => AnalysisResultState.LimitReached,
+                _ => AnalysisResultState.Partial,
             };
             gap = new CandidateGapContract(
                 CandidateAnalysisIdentity.StableId("candidate-gap", decisionId.Value, disposition.ToString()),
@@ -765,7 +765,7 @@ public static class CandidatePipeline
             {
                 gap = new CandidateGapContract(
                     CandidateAnalysisIdentity.StableId("candidate-gap", decisionId.Value, "analyzer-failure"),
-                    decisionId, request.PopulationId, Slice5ResultState.Failed,
+                    decisionId, request.PopulationId, AnalysisResultState.Failed,
                     "The analyzer failed for this population member; unrelated analyzers remain independent.",
                     member.FailureCode ?? "candidate-analysis-failed");
             }
@@ -878,7 +878,7 @@ public static class CandidatePipeline
         CandidateAnalysisContract result = new(
             ContractConstants.CandidateAnalysisSchemaId, new ContractVersion(1, 0, 0), new OpaqueId("candidate-analysis-pending"),
             request.OriginatingRunId,
-            request.Sources.Count == 1 ? request.Sources[0].AnalyzerId : new OpaqueId("candidate-analyzers-m1-s5-wp3"),
+            request.Sources.Count == 1 ? request.Sources[0].AnalyzerId : new OpaqueId("candidate-analyzers-composite"),
             request.PopulationId, decisions.Length, decisions, candidates, abstentions, gaps, failures)
         {
             PolicyId = request.PolicyId,
@@ -903,7 +903,7 @@ public static class CandidatePipeline
         };
         result = result with { Counts = CandidateAnalysisCounts.Compute(result) };
         result = result with { PayloadId = CandidateAnalysisIdentity.ComputePayloadId(result) };
-        Slice5ContractInvariants.Validate(result);
+        CandidateAnalysisContractInvariants.Validate(result);
         return result;
     }
 
@@ -921,7 +921,7 @@ public static class CandidatePipeline
         }
         if (request.ExecutionInput is { } executionInput)
         {
-            Slice5ContractInvariants.Validate(executionInput);
+            AnalysisExecutionContractInvariants.Validate(executionInput);
             if (executionInput.RunId != request.OriginatingRunId
                 || request.Context.SourceSnapshotId != executionInput.InstallationSnapshot.ArtifactId
                 || request.Context.ConfigurationId != executionInput.EffectiveConfiguration.ArtifactId)
@@ -1007,7 +1007,7 @@ public static class CandidatePipeline
                 || source.Declaration.OperationRequirements.Mode != ExecutionRequirement.LocalOnly
                 || source.Declaration.ExpectedScaleAndCost.Billable)
             {
-                throw new InvalidOperationException("WP3 candidate sources require matching local, non-billable analyzer declarations.");
+                throw new InvalidOperationException("Candidate sources require matching local, non-billable analyzer declarations.");
             }
         }
         if (request.Sources.Count == 0

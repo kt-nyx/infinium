@@ -4,8 +4,7 @@ Status: Completed — Gate disposition amended by ADR-0005, ADR-0006, ADR-0007, 
 
 Date: 2026-07-25
 
-Last reviewed: 2026-07-28
-
+Last reviewed: 2026-08-10
 Researcher: Codex review agent
 
 Subsequent disposition: Accepted ADR-0012 through ADR-0014 and
@@ -44,7 +43,7 @@ researched and later rejected.
 This review checks whether the three Wave A reports answer RQ-009, RQ-026, and
 RQ-031 against current primary evidence; remain consistent with the accepted
 product baseline, ADR-0001 through ADR-0007, and the accepted
-[M0 plan](../../plans/milestones/M0-research-foundation.md); and jointly satisfy
+[M0 plan](../../plans/milestones/m0/plan.md); and jointly satisfy
 the exact three-part Gate A.
 
 It does not:

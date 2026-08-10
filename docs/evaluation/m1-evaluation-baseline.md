@@ -4,7 +4,7 @@ Status: Accepted
 Owner: Project owner  
 Prepared: 2026-07-28  
 Accepted: 2026-07-28  
-Last reviewed: 2026-08-07
+Last reviewed: 2026-08-10
 Target milestone: M1 — Backend semantic proof
 
 ## Purpose
@@ -15,9 +15,9 @@ assertions:
 
 - [semantic and local-ground-truth specifications](specifications/m1-semantic-and-ground-truth.md)
   with the accepted [revision 2 amendment](specifications/m1-semantic-and-ground-truth-v2-amendment.md);
-- [semantic fixture manifests](fixtures/m1-semantic-fixture-manifests.md);
+- [semantic fixture manifests](specifications/semantic-fixture-catalog.md);
 - [platform and operational specifications](specifications/m1-platform-and-operational.md);
-- [platform fixture manifests](fixtures/m1-platform-fixture-manifests.md).
+- [platform fixture manifests](specifications/platform-fixture-catalog.md).
 
 Acceptance of this baseline or a case specification does not mark a fixture
 executed, an implementation conformant, an analyzer mature, or a product

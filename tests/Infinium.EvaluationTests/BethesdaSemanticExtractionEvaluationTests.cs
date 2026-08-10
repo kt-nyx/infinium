@@ -7,8 +7,8 @@ namespace Infinium.Tests;
 public sealed class BethesdaSemanticExtractionEvaluationTests
 {
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Evaluation")]
     public void Eval0052NpcFixtureProducesCanonicalWinnerAndAllowlistedFields()
     {
         BethesdaSemanticExtractionResult result = new BethesdaSemanticExtractor().Extract(
@@ -33,8 +33,8 @@ public sealed class BethesdaSemanticExtractionEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Evaluation")]
     public void Eval0052RefrFixtureProducesRelationsPlacementsAndDeletedWinner()
     {
         BethesdaSemanticExtractionResult result = new BethesdaSemanticExtractor().Extract(
@@ -54,8 +54,8 @@ public sealed class BethesdaSemanticExtractionEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Evaluation")]
     public void Eval0052LightFixtureRetainsFullAndLightOrigins()
     {
         BethesdaSemanticExtractionResult result = new BethesdaSemanticExtractor().Extract(
@@ -71,8 +71,8 @@ public sealed class BethesdaSemanticExtractionEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Evaluation")]
     public void Eval0052FaceGenUsesQualifiedApplicabilityAndExplicitCoverageGaps()
     {
         BethesdaSemanticExtractionResult result = new BethesdaSemanticExtractor().Extract(
@@ -104,8 +104,8 @@ public sealed class BethesdaSemanticExtractionEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Evaluation")]
     public void Eval0052FaceGenLooseProvidersRetainWinnerPairsAndArchiveQualifiedAbsence()
     {
         BethesdaSemanticRequest source = BethesdaSemanticTestSnapshot.CreateSelected(
@@ -158,10 +158,10 @@ public sealed class BethesdaSemanticExtractionEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "Fault")]
     public void Eval0052RejectsEveryInvalidLightOriginAndReferenceBoundary()
     {
         Dictionary<string, string>[] replacements =
@@ -186,7 +186,7 @@ public sealed class BethesdaSemanticExtractionEvaluationTests
         Directory.CreateDirectory(temporaryRoot);
         try
         {
-            string fixtureRoot = TestRepository.PathFromRoot("test-data", "evaluation", "m1-semantic", "BETH-LIGHT-VAL");
+            string fixtureRoot = TestRepository.PathFromRoot("test-data", "public-fixtures", "bethesda", "BETH-LIGHT-VAL");
             using System.Text.Json.JsonDocument receipt = System.Text.Json.JsonDocument.Parse(File.ReadAllBytes(
                 Path.Combine(fixtureRoot, "inputs", "snapshot", "accepted-order.json")));
             List<(string Name, int Order, string Path, Infinium.Domain.Contracts.OpaqueId Entity)> plugins = [];
@@ -265,14 +265,14 @@ public sealed class BethesdaSemanticExtractionEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "Fault")]
     public void Eval0052MalformedPopulationFailsAtomically()
     {
         string mutationRoot = TestRepository.PathFromRoot(
-            "test-data", "evaluation", "m1-semantic", "BETH-MALFORMED-VAL", "inputs", "mutations");
+            "test-data", "public-fixtures", "bethesda", "BETH-MALFORMED-VAL", "inputs", "mutations");
         string[] malformedPaths = Directory.EnumerateFiles(mutationRoot, "*.*", SearchOption.AllDirectories)
             .Where(path => Path.GetExtension(path) is ".esm" or ".esp" or ".esl")
             .Where(path => !Path.GetFileName(path).StartsWith("ChangedDuringRead-", StringComparison.Ordinal))
@@ -293,8 +293,8 @@ public sealed class BethesdaSemanticExtractionEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Evaluation")]
     public void Eval0052UnsupportedPopulationKeepsLayeredGapsAndFixedCoverageRows()
     {
         BethesdaSemanticExtractionResult result = new BethesdaSemanticExtractor().Extract(
@@ -327,8 +327,8 @@ public sealed class BethesdaSemanticExtractionEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Evaluation")]
     public void Eval0052FixedCoverageRetainsCompletedZeroDenominatorRows()
     {
         BethesdaSemanticSnapshot snapshot = new BethesdaSemanticExtractor().Extract(
@@ -346,10 +346,10 @@ public sealed class BethesdaSemanticExtractionEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Contract")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Contract")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "Contract")]
     public void Eval0052ProducesNoLaterSliceConclusionCollections()
     {
         Type snapshotType = typeof(BethesdaSemanticSnapshot);

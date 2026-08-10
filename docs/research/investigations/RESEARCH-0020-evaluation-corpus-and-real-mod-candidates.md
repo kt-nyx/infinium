@@ -3,7 +3,7 @@
 Status: Completed — recommendation accepted by project owner; candidate
 qualification subsequently completed by RESEARCH-0035
 Date: 2026-07-25  
-Last reviewed: 2026-07-30
+Last reviewed: 2026-08-10
 Researcher: Codex agent  
 Primary question: RQ-025  
 Decision enabled: reproducible corpus structure and the candidate-repair and
@@ -839,7 +839,7 @@ placement lead is not sufficient for EVAL-0017.
 
 Repository authority and research:
 
-- [M0 research foundation plan](../../plans/milestones/M0-research-foundation.md)
+- [M0 research foundation plan](../../plans/milestones/m0/plan.md)
 - [Evaluation strategy](../../evaluation/evaluation-strategy.md)
 - [Evaluation case catalog](../../evaluation/case-catalog.md)
 - [Fixture guidelines](../../evaluation/fixture-guidelines.md)

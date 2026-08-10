@@ -1,0 +1,16 @@
+{
+  "schema_identity":"infinium.public-fixture.cross_stage.replay-dependencies/1.0.7",
+  "package_identity":"infinium.public-fixtures.cross-stage-analysis.cross-stage.clean-incremental-replay.generic-a",
+  "package_version":"1.0.7",
+  "expected_replay_state":"complete-clean",
+  "dependencies":[
+    {"dependency_id":"ordinary-input","path":"ordinary-product-inputs.v1.json","availability":"retained","required_for":["clean-recomputation","incremental","retained-replay","audit"],"deletion_effect":"Execution and clean replay unavailable."},
+    {"dependency_id":"ordinary-schema","path":"ordinary-product-input.schema.json","availability":"retained","required_for":["pre-dispatch-validation","audit"],"deletion_effect":"Sole product-reachable projection cannot be qualified."},
+    {"dependency_id":"harness","path":"harness-envelope.v1.json","availability":"retained","required_for":["case-selection","receipt-selection","post-observation-oracle-selection","comparison","audit"],"deletion_effect":"Case binding, required observation receipts, oracle timing, and scoped ownership audit unavailable."},
+    {"dependency_id":"oracle","path":"expected-results.v1.json","availability":"retained","required_for":["post-observation-comparison","audit"],"deletion_effect":"Expected truth unavailable; no comparison verdict permitted."},
+    {"dependency_id":"prior-result.001","identity":"result.001","producer_case_id":"CROSS-STAGE-CLEAN-D01","availability":"retained","binding":"exact-retained-identity","required_for":["CROSS-STAGE-UNCHANGED-D02","CROSS-STAGE-CHANGED-D03","CROSS-STAGE-REPLAY-D04","audit"],"hidden_substitutions":0,"deletion_effect":"D02-D04 are unavailable and no substitute prior result is permitted."},
+    {"dependency_id":"source-r1","identity":"source.001/r1","sha256":"c30f163b5ef32be392d1f046d0cf84c054e060df1f5b99e9954f86ec9763fe18","bytes":167,"availability":"retained","required_for":["clean-recomputation","incremental","retained-replay","audit"],"deletion_effect":"r1 clean replay unavailable."},
+    {"dependency_id":"source-r2","identity":"source.001/r2","sha256":"3545a682abed293ddcbec2f1525a956d9e7264500ff7f709f18b3fd1b3425c92","bytes":202,"availability":"retained","required_for":["changed-dependency-incremental","audit"],"deletion_effect":"changed-source case unavailable."}
+  ],
+  "forbidden_substitutions":["network refresh","same identity with changed bytes","same bytes under a substituted required identity","hidden substitution for result.001","product output as expected truth"]
+}

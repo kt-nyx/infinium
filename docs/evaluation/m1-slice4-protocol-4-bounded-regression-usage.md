@@ -2,12 +2,14 @@
 
 Status: Accepted active bounded public regression profile
 
+Last reviewed: 2026-08-10
+
 Date: 2026-08-07
 
 Work ID: `M1/S4.5/EVAL-CLOSEOUT/WP2`
 
 Authority: ADR-0032, the accepted evaluator-deferral plan, and the accepted
-[freeze-boundary clarification](m1-slice4-protocol-4-freeze-boundary-clarification.md)
+[freeze-boundary clarification](evaluator-history.md)
 
 ## Claim boundary
 

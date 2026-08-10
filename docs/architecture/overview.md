@@ -2,18 +2,16 @@
 
 Status: Accepted synthesis; actively maintained
 
-Last reviewed: 2026-08-08
-
+Last reviewed: 2026-08-10
 ADR-0015 through ADR-0023 accept the complete Wave E persistence, lifecycle,
 application-stack, process, IPC, credential, security, continuity, and budget
-architecture. M1 Slices 0-4 have implemented bounded toolchain, contract,
-persistence/lifecycle, coordinator/worker/CLI, exact-target snapshot, and
-Bethesda-semantic portions of this architecture with their recorded public
-gates. Finding/case analysis, provider dispatch, generic reversion proof,
-controlled-real execution, end-to-end output, and the frontend remain later
-slices or milestones. Dapr and ADR-0024's Codex proposal are rejected. This
-document maps the selected decomposition without treating partial M1 delivery
-as complete architecture conformance.
+architecture. Exact implementation status and evidence live in
+[current project state](../current-state.md) and the owning slice records;
+this synthesis does not duplicate that moving handoff. Provider dispatch,
+generic reversion proof, controlled-real execution, and the frontend remain
+later slices or milestones. Dapr and ADR-0024's Codex proposal are rejected.
+This document maps the selected decomposition without treating partial M1
+delivery as complete architecture conformance.
 
 ## Required responsibilities and selected separation
 

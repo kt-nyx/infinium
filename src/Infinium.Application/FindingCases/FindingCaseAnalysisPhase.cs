@@ -1,5 +1,5 @@
 using Infinium.Analysis.Cases;
-using Infinium.Application.Evaluation;
+using Infinium.Application.Serialization;
 using Infinium.Domain.Contracts;
 using Infinium.Persistence;
 
@@ -7,7 +7,7 @@ namespace Infinium.Application.FindingCases;
 
 public static class FindingCaseAnalysisPhase
 {
-    public const string PhaseId = "m1-s5-wp4-finding-case-analysis";
+    public const string PhaseId = "finding-case-analysis";
     public const string PhaseVersion = "1.0.0";
 
     public static FindingCaseAnalysisPhaseResult Execute(

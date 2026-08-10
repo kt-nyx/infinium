@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Infinium.Application.Evaluation;
 using Infinium.Domain.Contracts;
 using Infinium.PublicFixtures;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -15,8 +14,8 @@ public sealed class PublicAssertionResultReaderTests
     ];
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestProperty("Category", "M1Contract")]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Contract")]
     public void AssertionReaderPreservesTypedStatusesAndExactExecutionIdentity()
     {
         string path = Path.Combine(Path.GetTempPath(), $"infinium-assertion-{Guid.NewGuid():N}.json");
@@ -66,8 +65,8 @@ public sealed class PublicAssertionResultReaderTests
     }
 
     [TestMethod]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Fault")]
     public void AssertionReaderRefusesUnknownStatus()
     {
         string path = Path.Combine(Path.GetTempPath(), $"infinium-assertion-{Guid.NewGuid():N}.json");
@@ -113,10 +112,10 @@ public sealed class PublicAssertionResultReaderTests
     }
 
     [TestMethod]
-    [TestCategory("M1Fault")]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Fault")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Fault")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Fault")]
+    [TestProperty("Category", "Evaluation")]
     public void AssertionReaderRefusesPassingEvidenceFromDirtyWorktree()
     {
         string path = Path.Combine(Path.GetTempPath(), $"infinium-assertion-{Guid.NewGuid():N}.json");
@@ -133,8 +132,8 @@ public sealed class PublicAssertionResultReaderTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Fault")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Fault")]
     public void PassingAssertionsRequireEvidenceReferencesByAssertionType()
     {
         string path = Path.Combine(Path.GetTempPath(), $"infinium-assertion-{Guid.NewGuid():N}.json");
@@ -178,8 +177,8 @@ public sealed class PublicAssertionResultReaderTests
     }
 
     [TestMethod]
-    [TestCategory("M1Security")]
-    [TestCategory("M1Fault")]
+    [TestCategory("Security")]
+    [TestCategory("Fault")]
     public void AssertionReaderRejectsDuplicateKeysAndNonCanonicalTime()
     {
         string path = Path.Combine(Path.GetTempPath(), $"infinium-assertion-{Guid.NewGuid():N}.json");
@@ -207,8 +206,8 @@ public sealed class PublicAssertionResultReaderTests
     }
 
     [TestMethod]
-    [TestCategory("M1Security")]
-    [TestCategory("M1Fault")]
+    [TestCategory("Security")]
+    [TestCategory("Fault")]
     public void AssertionReaderRejectsDocumentBeyondBound()
     {
         string path = Path.Combine(Path.GetTempPath(), $"infinium-assertion-{Guid.NewGuid():N}.json");

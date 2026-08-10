@@ -1,5 +1,5 @@
 using Infinium.Analysis.Documentation;
-using Infinium.Application.Evaluation;
+using Infinium.Application.Serialization;
 using Infinium.Domain.Contracts;
 using Infinium.Persistence;
 
@@ -7,7 +7,7 @@ namespace Infinium.Application.Documentation;
 
 public static class DocumentationEvidencePhase
 {
-    public const string PhaseId = "m1-s5-wp2-documentation-evidence";
+    public const string PhaseId = "documentation-evidence";
     public const string ExtractorVersion = "1.0.0";
 
     public static DocumentationEvidencePhaseResult Execute(

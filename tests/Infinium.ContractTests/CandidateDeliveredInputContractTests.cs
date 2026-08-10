@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using System.Text.Json.Nodes;
 using Infinium.Application.Candidates;
-using Infinium.Application.Evaluation;
+using Infinium.Application.Serialization;
 using Infinium.Domain.Contracts;
 using Infinium.PublicFixtures;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -12,8 +12,8 @@ namespace Infinium.Tests;
 public sealed class CandidateDeliveredInputContractTests
 {
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestProperty("Category", "M1Contract")]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Contract")]
     public void DeliveredInputAndExpansionRoundTripThroughClosedSchemas()
     {
         CandidateDeliveredExpansionContract expansion = Expansion();
@@ -38,10 +38,10 @@ public sealed class CandidateDeliveredInputContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Mutation")]
-    [TestProperty("Category", "M1Contract")]
-    [TestProperty("Category", "M1Mutation")]
+    [TestCategory("Contract")]
+    [TestCategory("Mutation")]
+    [TestProperty("Category", "Contract")]
+    [TestProperty("Category", "Mutation")]
     public void DeliveredInputRejectsAnswersUnknownFieldsAndSemanticDrift()
     {
         CandidateDeliveredInputContract input = CandidateDeliveredInputExpander.Expand(Expansion());
@@ -78,10 +78,10 @@ public sealed class CandidateDeliveredInputContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Scale")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Scale")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Scale")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "Scale")]
     public void DeliveredExpansionUsesOneRecipeForBoundedMaterializationAndStreamingStress()
     {
         CandidateDeliveredExpansionContract small = Expansion();
@@ -100,20 +100,20 @@ public sealed class CandidateDeliveredInputContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Contract")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Contract")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Contract")]
+    [TestProperty("Category", "Security")]
     public void FrozenCandidatePackagesHaveExactClosedManifestsAndProductInputs()
     {
         Dictionary<string, string> expectedManifests = new(StringComparer.Ordinal)
         {
-            ["CAND-WP3-SEMANTIC-DEV-v1"] = "635a3e6f75251867d14f328ac5e450cfe6784005753c7717be51d431fcc173e1",
-            ["CAND-WP3-SCALE-VAL-v1"] = "f0db950e7e5110bf4b4c60005a1dca84195abe2217429c4c6b343de865ac5ae2",
-            ["CAND-WP3-STRESS-DEV-v1"] = "54dd5df9aac989e7443eaffc8e80cbec8db58b75df2d675f32ebd0ca28b4ae5a",
+            ["CAND-SEMANTIC-DEV-v1"] = "9b5ef698f342428efc9499085b081bfa2f9284db3c9fc287547a7f7dd2fc507d",
+            ["CAND-SCALE-VAL-v1"] = "e95930df3ef536a6f0bfd72d5195fd1d17fda2fe9fd6488423818edbf35c8d06",
+            ["CAND-STRESS-DEV-v1"] = "b552521f3b5f6efac23a204fc7269b0cc59b15a1231baa81dce9d5164b35f72f",
         };
         string root = Path.Combine(FindRepositoryRoot(),
-            "docs", "evaluation", "fixtures", "m1-slice5-wp3-candidates-v1");
+            "test-data", "public-fixtures", "candidates");
         CollectionAssert.AreEquivalent(expectedManifests.Keys.ToArray(),
             Directory.GetDirectories(root).Select(Path.GetFileName).ToArray());
 

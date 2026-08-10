@@ -36,7 +36,7 @@
       "$ref": "common.v1.schema.json#/$defs/nonEmptyString"
     },
     "source_basis": {
-      "const": "accepted-slice-3.5-construction-manifest-and-retained-input-seals"
+      "const": "accepted-bethesda-construction-manifest-and-retained-input-seals"
     },
     "snapshot_contract_version": {
       "const": "3.0.0"

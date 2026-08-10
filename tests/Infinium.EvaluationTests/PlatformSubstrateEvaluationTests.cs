@@ -1,7 +1,6 @@
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Infinium.Application.Evaluation;
 using Infinium.Domain.Contracts;
 using Infinium.Persistence;
 using Infinium.PublicFixtures;
@@ -15,22 +14,22 @@ public sealed class PlatformSubstrateEvaluationTests
 {
     private static readonly string[] PlatformFamilies =
     [
-        "M1-PLAT-LIFECYCLE-v1",
-        "M1-PLAT-LINEAGE-v1",
-        "M1-PLAT-WRITES-v1",
-        "M1-PLAT-PERSIST-v1",
-        "M1-PLAT-IPC-v1",
+        "PLATFORM-LIFECYCLE-v1",
+        "PLATFORM-LINEAGE-v1",
+        "PLATFORM-WRITES-v1",
+        "PLATFORM-PERSISTENCE-v1",
+        "PLATFORM-IPC-v1",
     ];
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Evaluation")]
-    public void SliceTwoFixturePackageLoadsThroughAcceptedContractWithExplicitCoverageGap()
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Evaluation")]
+    public void PlatformFixturePackageLoadsThroughAcceptedContractWithExplicitCoverageGap()
     {
         PublicFixturePackage package = PublicFixturePackageReader.Read(
-            SliceTwoFixtureDirectory);
+            PlatformFixtureDirectory);
 
-        Assert.AreEqual("M1-PLAT-SLICE2-SUBSTRATE-v1", package.FixtureId.Value);
+        Assert.AreEqual("PLATFORM-ANALYSIS-RUNTIME-DEV-v1", package.FixtureId.Value);
         Assert.AreEqual(FixturePartition.Development, package.Partition);
         string[] families = package.ExecutionInput
             .GetProperty("declared_supported_capabilities")
@@ -51,7 +50,7 @@ public sealed class PlatformSubstrateEvaluationTests
         {
             string subject = expected.GetProperty("subject_id").GetString()!;
             Assert.AreEqual(
-                Fingerprint($"{subject}:plan-declared-slice2-substrate-present"),
+                Fingerprint($"{subject}:platform-substrate-present"),
                 expected.GetProperty("canonical_value_fingerprint").GetString(),
                 subject);
         }
@@ -70,10 +69,10 @@ public sealed class PlatformSubstrateEvaluationTests
             .GetProperty("expected_coverage_and_gaps")
             .EnumerateArray()
             .Single();
-        Assert.AreEqual("complete-M1-evaluation-case", gap.GetProperty("subject_id").GetString());
+        Assert.AreEqual("complete-platform-evaluation-case", gap.GetProperty("subject_id").GetString());
         Assert.AreEqual("coverage-gap", gap.GetProperty("expected_type").GetString());
         Assert.AreEqual(
-            Fingerprint("complete-M1-evaluation-case:coverage-gap-present"),
+            Fingerprint("complete-platform-evaluation-case:coverage-gap-present"),
             gap.GetProperty("canonical_value_fingerprint").GetString());
         Assert.IsTrue(
             package.Oracle.GetProperty("forbidden_claims")
@@ -84,11 +83,11 @@ public sealed class PlatformSubstrateEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Evaluation")]
-    public void SliceTwoFixturePackageRejectsAnswerBearingExecutionMutationAfterFingerprintRefresh()
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Evaluation")]
+    public void PlatformFixturePackageRejectsAnswerBearingExecutionMutationAfterFingerprintRefresh()
     {
-        string directory = CopySliceTwoFixture();
+        string directory = CopyPlatformFixture();
         try
         {
             string executionPath = Path.Combine(directory, PublicFixturePackageReader.ExecutionInputFileName);
@@ -109,11 +108,11 @@ public sealed class PlatformSubstrateEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Evaluation")]
-    public void SliceTwoFixturePackageRejectsOracleTampering()
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Evaluation")]
+    public void PlatformFixturePackageRejectsOracleTampering()
     {
-        string directory = CopySliceTwoFixture();
+        string directory = CopyPlatformFixture();
         try
         {
             File.AppendAllText(
@@ -130,10 +129,10 @@ public sealed class PlatformSubstrateEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "Fault")]
     public void PersistFixtureBackupRestoreProjectionAndPayloadRoundTrip()
     {
         string sourceRoot = Temp("persist-source");
@@ -212,8 +211,8 @@ public sealed class PlatformSubstrateEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Evaluation")]
     public void LineageFixtureSchemaRetainsTypedAppendOnlySubstrate()
     {
         string root = Temp("lineage");
@@ -243,10 +242,10 @@ public sealed class PlatformSubstrateEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "Security")]
     public void WritesFixtureRejectsTraversalRelativeAndProtectedRoots()
     {
         Assert.ThrowsExactly<ArgumentException>(() => new StoragePaths("relative-root"));
@@ -285,10 +284,10 @@ public sealed class PlatformSubstrateEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "Fault")]
     public void PersistFixtureRejectsNewerSchemaAndTamperedBackup()
     {
         string newerRoot = Temp("newer-schema");
@@ -338,19 +337,19 @@ public sealed class PlatformSubstrateEvaluationTests
     private static RunBinding Binding(string suffix) =>
         new($"snapshot-{suffix}", $"context-{suffix}", $"config-{suffix}", $"manifest-{suffix}");
 
-    private static string SliceTwoFixtureDirectory =>
+    private static string PlatformFixtureDirectory =>
         Path.Combine(
             TestRepository.Root,
             "test-data",
-            "evaluation",
-            "m1-platform",
-            "M1-PLAT-SLICE2-SUBSTRATE-v1");
+            "public-fixtures",
+            "platform",
+            "analysis-runtime-substrate");
 
-    private static string CopySliceTwoFixture()
+    private static string CopyPlatformFixture()
     {
-        string target = Temp("slice2-fixture");
+        string target = Temp("platform-fixture");
         Directory.CreateDirectory(target);
-        foreach (string sourcePath in Directory.EnumerateFiles(SliceTwoFixtureDirectory))
+        foreach (string sourcePath in Directory.EnumerateFiles(PlatformFixtureDirectory))
         {
             File.Copy(sourcePath, Path.Combine(target, Path.GetFileName(sourcePath)));
         }

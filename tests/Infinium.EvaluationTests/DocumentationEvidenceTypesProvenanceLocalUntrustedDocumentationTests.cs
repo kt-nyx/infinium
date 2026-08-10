@@ -2,7 +2,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Infinium.Analysis.Documentation;
-using Infinium.Application.Evaluation;
 using Infinium.Domain.Contracts;
 using Infinium.PublicFixtures;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -13,13 +12,13 @@ namespace Infinium.Tests;
 public sealed class DocumentationEvidenceTypesProvenanceLocalUntrustedDocumentationTests
 {
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "Security")]
     public void EvidenceTypesCoreFixtureMatchesIndependentOracle()
     {
-        DocumentationFixturePackage package = Read("DOC-WP2-CORE-DEV");
+        DocumentationFixturePackage package = Read("DOC-CLAIM-CORE-DEV");
         JsonElement binding = package.CaseMatrix.GetProperty("execution_binding");
         DocumentationEvidenceContract actual = DocumentationEvidenceImporter.Import(
             CleanRequest(package, binding));
@@ -66,13 +65,13 @@ public sealed class DocumentationEvidenceTypesProvenanceLocalUntrustedDocumentat
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "Security")]
     public void UntrustedDocumentationRemainsInertAndRetainedReuseRecordsLoss()
     {
-        DocumentationFixturePackage package = Read("DOC-WP2-ADVERSARIAL-VAL");
+        DocumentationFixturePackage package = Read("DOC-CLAIM-ADVERSARIAL-VAL");
         JsonElement cleanBinding = package.CaseMatrix.GetProperty("clean_execution_binding");
         DocumentationImportRequestContract cleanRequest = CleanRequest(package, cleanBinding);
         DocumentationEvidenceContract clean = DocumentationEvidenceImporter.Import(cleanRequest);
@@ -131,11 +130,11 @@ public sealed class DocumentationEvidenceTypesProvenanceLocalUntrustedDocumentat
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Evaluation")]
     public void ProvenanceLocalPackagesAreFrozenAnswerIsolatedAndCurrent()
     {
-        foreach (string fixtureId in new[] { "DOC-WP2-CORE-DEV", "DOC-WP2-ADVERSARIAL-VAL" })
+        foreach (string fixtureId in new[] { "DOC-CLAIM-CORE-DEV", "DOC-CLAIM-ADVERSARIAL-VAL" })
         {
             DocumentationFixturePackage package = Read(fixtureId);
             JsonElement isolation = package.Provenance.GetProperty("answer_isolation");
@@ -144,7 +143,7 @@ public sealed class DocumentationEvidenceTypesProvenanceLocalUntrustedDocumentat
             Assert.IsFalse(isolation.GetProperty("product_importer_inspected").GetBoolean());
             Assert.AreEqual("accepted", package.PublicManifest.GetProperty("review_state").GetString());
             JsonElement downstream = package.Oracle.GetProperty("downstream_objects");
-            Assert.IsTrue(downstream.EnumerateObject().All(item => item.Value.GetString() == "not-created-by-wp2"));
+            Assert.IsTrue(downstream.EnumerateObject().All(item => item.Value.GetString() == "not-created-by-documentation"));
         }
     }
 
@@ -220,7 +219,7 @@ public sealed class DocumentationEvidenceTypesProvenanceLocalUntrustedDocumentat
 
     private static DocumentationFixturePackage Read(string fixtureId) =>
         DocumentationFixturePackageReader.Read(TestRepository.PathFromRoot(
-            "test-data", "evaluation", "m1-semantic", fixtureId));
+            "test-data", "public-fixtures", "documentation", fixtureId));
 
     private static void AssertCounts(JsonElement expected, DocumentationEvidenceContract actual)
     {
@@ -404,7 +403,7 @@ public sealed class DocumentationEvidenceTypesProvenanceLocalUntrustedDocumentat
             Assert.AreEqual(item.GetProperty("utf8_start_offset").GetInt64(), passage.Utf8StartOffset);
             Assert.AreEqual(item.GetProperty("utf8_end_offset").GetInt64(), passage.Utf8EndOffset);
             Assert.AreEqual(item.GetProperty("passage_fingerprint").GetString(), passage.PassageFingerprint.Value);
-            Assert.AreEqual(Slice5ResultState.Present, passage.State);
+            Assert.AreEqual(AnalysisResultState.Present, passage.State);
         }
     }
 
@@ -514,11 +513,11 @@ public sealed class DocumentationEvidenceTypesProvenanceLocalUntrustedDocumentat
         _ => throw new InvalidOperationException(),
     };
 
-    private static string ResultStateToken(Slice5ResultState value) => value switch
+    private static string ResultStateToken(AnalysisResultState value) => value switch
     {
-        Slice5ResultState.Present => "present",
-        Slice5ResultState.Partial => "partial",
-        Slice5ResultState.Unavailable => "unavailable",
+        AnalysisResultState.Present => "present",
+        AnalysisResultState.Partial => "partial",
+        AnalysisResultState.Unavailable => "unavailable",
         _ => throw new InvalidOperationException(),
     };
 

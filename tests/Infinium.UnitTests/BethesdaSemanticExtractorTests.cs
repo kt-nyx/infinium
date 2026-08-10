@@ -12,8 +12,8 @@ public sealed class BethesdaSemanticExtractorTests
     ];
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void DependencyClosureChangesWhenOnePluginByteChanges()
     {
         BethesdaSemanticExtractionResult baseline = new BethesdaSemanticExtractor().Extract(
@@ -37,8 +37,8 @@ public sealed class BethesdaSemanticExtractorTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void CanonicalParticipantSurvivesCompressionAndRecordReordering()
     {
         BethesdaSemanticExtractionResult baseline = new BethesdaSemanticExtractor().Extract(
@@ -70,8 +70,8 @@ public sealed class BethesdaSemanticExtractorTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void MasterTableReindexingPreservesCanonicalLinksOnlyWhenBytesAreReindexed()
     {
         BethesdaSemanticExtractionResult reindexed = new BethesdaSemanticExtractor().Extract(
@@ -100,8 +100,8 @@ public sealed class BethesdaSemanticExtractorTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void RepeatedSubrecordOrderIsRetainedAsSemanticEvidence()
     {
         BethesdaSemanticExtractionResult baseline = new BethesdaSemanticExtractor().Extract(
@@ -113,10 +113,10 @@ public sealed class BethesdaSemanticExtractorTests
             string packagePath = Path.Combine(root, "02-Behavior.esp");
             string headPartPath = Path.Combine(root, "03-Appearance.esp");
             File.Copy(
-                TestRepository.PathFromRoot("test-data", "evaluation", "m1-semantic", "BETH-NPC-DEV", "inputs", "mutations", "Behavior-RepeatedPKIDOrder.esp"),
+                TestRepository.PathFromRoot("test-data", "public-fixtures", "bethesda", "BETH-NPC-DEV", "inputs", "mutations", "Behavior-RepeatedPKIDOrder.esp"),
                 packagePath);
             File.Copy(
-                TestRepository.PathFromRoot("test-data", "evaluation", "m1-semantic", "BETH-NPC-DEV", "inputs", "mutations", "Appearance-RepeatedPNAMOrder.esp"),
+                TestRepository.PathFromRoot("test-data", "public-fixtures", "bethesda", "BETH-NPC-DEV", "inputs", "mutations", "Appearance-RepeatedPNAMOrder.esp"),
                 headPartPath);
             BethesdaSemanticExtractionResult packages = new BethesdaSemanticExtractor().Extract(
                 BethesdaSemanticTestSnapshot.Create(
@@ -160,10 +160,10 @@ public sealed class BethesdaSemanticExtractorTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
     public void NonAcceptedSnapshotCannotProducePartialAuthority()
     {
         BethesdaSemanticRequest accepted = BethesdaSemanticTestSnapshot.Create("BETH-NPC-DEV");
@@ -183,10 +183,10 @@ public sealed class BethesdaSemanticExtractorTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
     public void UnsupportedCapabilityRequestMustUseUniqueClosedValues()
     {
         BethesdaSemanticRequest source = BethesdaSemanticTestSnapshot.Create("BETH-NPC-DEV");
@@ -212,8 +212,8 @@ public sealed class BethesdaSemanticExtractorTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void UnsupportedMemberIdentityRetainsEachOverrideContribution()
     {
         string first = BethesdaSemanticExtractor.UnsupportedMemberIdentity(
@@ -229,10 +229,10 @@ public sealed class BethesdaSemanticExtractorTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
     public void ValidCompressedRecordPopulationIsRejectedBeforeExceedingAggregateAuthorityBound()
     {
         BethesdaSemanticExtractionResult result = new BethesdaSemanticExtractor(maximumDecompressedBytes: 1).Extract(
@@ -244,7 +244,7 @@ public sealed class BethesdaSemanticExtractorTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
+    [TestCategory("Unit")]
     [DataRow(true, BethesdaLinkState.Unresolved, BethesdaRaceFaceGenHeadDecision.Unknown, false, BethesdaTemplateTraitsDecision.Unknown, BethesdaFaceGenApplicability.NotApplicableDeletedWinner)]
     [DataRow(false, BethesdaLinkState.Unresolved, BethesdaRaceFaceGenHeadDecision.Unknown, false, BethesdaTemplateTraitsDecision.Unknown, BethesdaFaceGenApplicability.UnknownTemplateTraitsDecision)]
     [DataRow(false, BethesdaLinkState.Unresolved, BethesdaRaceFaceGenHeadDecision.Unknown, false, BethesdaTemplateTraitsDecision.KnownInherited, BethesdaFaceGenApplicability.NotApplicableTemplateTraits)]

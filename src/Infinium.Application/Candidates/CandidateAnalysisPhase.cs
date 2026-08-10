@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using System.Text.Json;
 using Infinium.Analysis.Candidates;
-using Infinium.Application.Evaluation;
+using Infinium.Application.Serialization;
 using Infinium.Domain.Contracts;
 using Infinium.Persistence;
 
@@ -9,7 +9,7 @@ namespace Infinium.Application.Candidates;
 
 public static class CandidateAnalysisPhase
 {
-    public const string PhaseId = "m1-s5-wp3-candidate-analysis";
+    public const string PhaseId = "candidate-analysis";
     public const string PhaseVersion = "1.0.0";
 
     public static CandidateAnalysisPhaseResult Execute(
@@ -56,7 +56,7 @@ public static class CandidateAnalysisPhase
                     pipeline.Analysis.Counts.Unprocessed,
                     pipeline.Analysis.Counts.Limited,
                     pipeline.Analysis.Gaps.Select(item => item.GapId.Value).Order(StringComparer.Ordinal).ToArray()),
-                    Slice5ContractJsonCodec.JsonOptions)),
+                    SchemaValidatedJsonCodec.JsonOptions)),
             attempt,
             binding,
             now);
@@ -89,7 +89,7 @@ public static class CandidateAnalysisPhase
         }
         CandidateCheckpointPayloadReference reference = JsonSerializer.Deserialize<CandidateCheckpointPayloadReference>(
             record.CompletedPartitionsJson,
-            Slice5ContractJsonCodec.JsonOptions)
+            SchemaValidatedJsonCodec.JsonOptions)
             ?? throw new InvalidDataException("Candidate checkpoint payload reference is empty.");
         if (!StringComparer.Ordinal.Equals(reference.Sha256, record.ContentSha256)
             || reference.ByteLength < 1
@@ -105,7 +105,7 @@ public static class CandidateAnalysisPhase
         }
         CandidateCheckpointEnvelope envelope = JsonSerializer.Deserialize<CandidateCheckpointEnvelope>(
             bytes,
-            Slice5ContractJsonCodec.JsonOptions)
+            SchemaValidatedJsonCodec.JsonOptions)
             ?? throw new InvalidDataException("Candidate checkpoint is empty.");
         CandidateCheckpointState state = new(
             envelope.OriginatingRunId,
@@ -148,7 +148,7 @@ public static class CandidateAnalysisPhase
                 .OrderBy(item => item.Key.Value, StringComparer.Ordinal)
                 .Select(item => new CandidateCheckpointEntryEnvelope(item.Key, item.Value))
                 .ToArray());
-        return JsonSerializer.SerializeToUtf8Bytes(envelope, Slice5ContractJsonCodec.JsonOptions);
+        return JsonSerializer.SerializeToUtf8Bytes(envelope, SchemaValidatedJsonCodec.JsonOptions);
     }
 
     private sealed record CandidateCheckpointEnvelope(

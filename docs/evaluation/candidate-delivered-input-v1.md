@@ -2,6 +2,8 @@
 
 Status: implementation-active WP3 product contract.
 
+Last reviewed: 2026-08-10
+
 This document defines the public, answer-free boundary used to construct the
 M1 Slice 5 WP3 candidate population. The machine contracts are:
 

@@ -1,0 +1,610 @@
+{
+  "fixture_id": "CAND-SEMANTIC-DEV-v1",
+  "fixture_version": "1.0.0",
+  "oracle_version": "1.0.0",
+  "independent_authors_and_reviewers": [
+    "codex.product-blind.candidate.fixture-author.20260809"
+  ],
+  "ground_truth_methods": [
+    {
+      "method_id": "method.candidate.independent.reference",
+      "method": "Product-blind declarative classification and independent expansion enumeration from accepted public authority. No product implementation, tests, output, build artifact, private fixture, withdrawn fixture, history, or identity algorithm was inspected.",
+      "evidence_references": [
+        {
+          "artifact_id": "inputs/candidate-delivered-input.json",
+          "artifact_version": "1.0.0",
+          "fingerprint": "9b0b834de489c29609cc9ad9a535a70b3c3dae966e6ac1c7f369c5bf1247b0fe",
+          "availability": "retained",
+          "byte_length": 9208
+        },
+        {
+          "artifact_id": "oracle/semantic-population-projection.json",
+          "artifact_version": "1.0.0",
+          "fingerprint": "bf4244532825c59308780ff136fd6eb4d5def8a30b498d90510a38393e795115",
+          "availability": "retained",
+          "byte_length": 18275
+        }
+      ],
+      "independent_of_system_under_test": true
+    }
+  ],
+  "expected_observations": [],
+  "expected_deterministic_results": [],
+  "expected_external_claims": [],
+  "expected_application_links": [],
+  "expected_discovery_leads": [],
+  "expected_model_proposals": [],
+  "expected_proposal_admissions": [],
+  "expected_candidates": [
+    {
+      "expected_id": "oracle.candidate.fact.l.001",
+      "subject_id": "fact.l.001",
+      "expected_type": "candidate",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "bab7fb0688b906164ad742b07dab3e6b1529ff4fca0befecf24bcc9e9fa57417"
+    },
+    {
+      "expected_id": "oracle.candidate.fact.l.003",
+      "subject_id": "fact.l.003",
+      "expected_type": "candidate",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "0bb682fe41b75f439555066148e495bf2b54933d1d757f30c6ec490602ecc341"
+    },
+    {
+      "expected_id": "oracle.candidate.fact.l.004",
+      "subject_id": "fact.l.004",
+      "expected_type": "candidate",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "5120f82d28b22b4abfbbfdf103b8dc0e13bdd8e7d1380f2a08371a6fd48886c2"
+    },
+    {
+      "expected_id": "oracle.candidate.fact.f.001",
+      "subject_id": "fact.f.001",
+      "expected_type": "candidate",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "52ae03510a39cfe26b6470bf9c4dd5d49af8043a077593df6e06f4836e19dda4"
+    },
+    {
+      "expected_id": "oracle.candidate.fact.f.002",
+      "subject_id": "fact.f.002",
+      "expected_type": "candidate",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "714a518e03dbbe3e33d68f4b26fcc7a3208a5a538dda91ff0808c1259789333b"
+    },
+    {
+      "expected_id": "oracle.candidate.fact.f.004",
+      "subject_id": "fact.f.004",
+      "expected_type": "candidate",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "0bcc00098cdc75d9f2ebc36456028e29cfca31d864eca9724434ac8a39b1eac1"
+    },
+    {
+      "expected_id": "oracle.candidate.fact.f.005",
+      "subject_id": "fact.f.005",
+      "expected_type": "candidate",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "b478815b2ad44a0bf44725e501dbd7458697c6295e6732c36076c9aee9df3484"
+    },
+    {
+      "expected_id": "oracle.candidate.fact.d.001",
+      "subject_id": "fact.d.001",
+      "expected_type": "candidate",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "d09c23ae3faf569d709a705b878b790114b79345d2ab34452596e6eaa31b343d"
+    },
+    {
+      "expected_id": "oracle.candidate.fact.d.003",
+      "subject_id": "fact.d.003",
+      "expected_type": "candidate",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "0666a170181c03296ec15ed83d836fcd444f87ea5b1df68344b729ed961491d2"
+    },
+    {
+      "expected_id": "oracle.candidate.fact.d.004",
+      "subject_id": "fact.d.004",
+      "expected_type": "candidate",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "cc5b82aab808e7504b72325d8c1599322ca753812062d53838118ccd27e30ba6"
+    }
+  ],
+  "expected_hypotheses": [
+    {
+      "expected_id": "oracle.hypothesis.fact.l.001",
+      "subject_id": "fact.l.001",
+      "expected_type": "hypothesis",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "c0bfc93c4a18012e009ad7b779745f14885fa637e32a615b37fdeea0a62d83f5"
+    },
+    {
+      "expected_id": "oracle.hypothesis.fact.l.003",
+      "subject_id": "fact.l.003",
+      "expected_type": "hypothesis",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "f79164457b8c024c1fb1369ee8e7871059957bfa554169ef00212ed44d8348e8"
+    },
+    {
+      "expected_id": "oracle.hypothesis.fact.l.004",
+      "subject_id": "fact.l.004",
+      "expected_type": "hypothesis",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "344e27467dd1d6c63d45d72188c346517029f0c199c62bd1c5cd1e8c0029b3da"
+    },
+    {
+      "expected_id": "oracle.hypothesis.fact.f.001",
+      "subject_id": "fact.f.001",
+      "expected_type": "hypothesis",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "e75929239d035feeb40394b6621d729909d4e51f813d8b046bcefedfc38fd981"
+    },
+    {
+      "expected_id": "oracle.hypothesis.fact.f.002",
+      "subject_id": "fact.f.002",
+      "expected_type": "hypothesis",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "8f3feda314e941a45c1be780e1e3a5d5babb7acbd47da0f8c8af4bad8f8af6c7"
+    },
+    {
+      "expected_id": "oracle.hypothesis.fact.f.004",
+      "subject_id": "fact.f.004",
+      "expected_type": "hypothesis",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "abc7935df71c2515ee73cf6bfd02c5a930d40b16d1eb8b1b8be4b560826709bc"
+    },
+    {
+      "expected_id": "oracle.hypothesis.fact.f.005",
+      "subject_id": "fact.f.005",
+      "expected_type": "hypothesis",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "5fb101cc87b2b479632a0eef4333bb8873ea7eb09982d9308ad62b139e6e7bd3"
+    },
+    {
+      "expected_id": "oracle.hypothesis.fact.d.001",
+      "subject_id": "fact.d.001",
+      "expected_type": "hypothesis",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "4e7c9c11628c90d5b5d6e6e655960c5cb4a98f9edd11a14d332d4af05e3a0f14"
+    },
+    {
+      "expected_id": "oracle.hypothesis.fact.d.003",
+      "subject_id": "fact.d.003",
+      "expected_type": "hypothesis",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "24ca0619addde052dbab4609923fccaffef1c6706d36cc415c66ad7581a8eddf"
+    },
+    {
+      "expected_id": "oracle.hypothesis.fact.d.004",
+      "subject_id": "fact.d.004",
+      "expected_type": "hypothesis",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "44f7854516670fb23dd6e7bd2663931a8f21c381774ba725c85a605b45fa8b73"
+    }
+  ],
+  "expected_findings": [],
+  "expected_recommendations": [],
+  "expected_supported_cases": [],
+  "expected_lead_only_cases": [],
+  "expected_abstentions": [
+    {
+      "expected_id": "oracle.abstention.fact.l.003",
+      "subject_id": "fact.l.003",
+      "expected_type": "abstention",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "872ef6f7ed377347d2cfe641fc1748b30e216e494f968a28c502c54de362d0a8"
+    },
+    {
+      "expected_id": "oracle.abstention.fact.f.004",
+      "subject_id": "fact.f.004",
+      "expected_type": "abstention",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "1f26f366fa40e66f2febcfc4e6a520fbf32d2871a713e044f6aa3c38e67459c6"
+    },
+    {
+      "expected_id": "oracle.abstention.fact.f.005",
+      "subject_id": "fact.f.005",
+      "expected_type": "abstention",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "afcd16e67dfd0c5800d8c1f9b0cdc2185d3ea25b5910055277d60d3d12d7c075"
+    },
+    {
+      "expected_id": "oracle.abstention.fact.d.003",
+      "subject_id": "fact.d.003",
+      "expected_type": "abstention",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "a42e837ee39ce5c5356fb5eab70f020320819db04d1bc4be2850d694b9c84379"
+    },
+    {
+      "expected_id": "oracle.abstention.fact.d.004",
+      "subject_id": "fact.d.004",
+      "expected_type": "abstention",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "ecdaf706fb7c9381c408a96354b952c51a0e5b5827235bd30a3434992f677775"
+    },
+    {
+      "expected_id": "oracle.abstention.fact.d.005",
+      "subject_id": "fact.d.005",
+      "expected_type": "abstention",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "3c29fee8901d284b5d956c6518a4c0cb87d26b01ddd9097b5f678a3a0d5379fb"
+    },
+    {
+      "expected_id": "oracle.abstention.fact.g.001",
+      "subject_id": "fact.g.001",
+      "expected_type": "abstention",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "ac59abd30632c4beb988221c260f561636e283d1f04e80c8dbf16af283096bff"
+    }
+  ],
+  "expected_invalid_inputs": [],
+  "expected_failures": [],
+  "expected_documentation_revisions": [],
+  "expected_passages": [],
+  "expected_candidate_decisions": [
+    {
+      "expected_id": "oracle.candidate-decision.fact.l.001",
+      "subject_id": "fact.l.001",
+      "expected_type": "candidate-decision",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "2208f46fb3c3d263ea41f68a3ee0dfda51f881bc62dd7581f47ca5a049127e1c"
+    },
+    {
+      "expected_id": "oracle.candidate-decision.fact.l.002",
+      "subject_id": "fact.l.002",
+      "expected_type": "candidate-decision",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "fc019cc56e2f40a1c3d279fb444970662eeb81edd45e05e3118a9fbd3900d0a3"
+    },
+    {
+      "expected_id": "oracle.candidate-decision.fact.l.003",
+      "subject_id": "fact.l.003",
+      "expected_type": "candidate-decision",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "3cb3e1b63e1b8ddbc711e6388f52af957e5d21f1ccb8af6b318be62087b2f887"
+    },
+    {
+      "expected_id": "oracle.candidate-decision.fact.l.004",
+      "subject_id": "fact.l.004",
+      "expected_type": "candidate-decision",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "af360f1b98cb47c936465c0d845e85eca4bc3d7006d5e1d571198eb0e8daf971"
+    },
+    {
+      "expected_id": "oracle.candidate-decision.fact.l.005",
+      "subject_id": "fact.l.005",
+      "expected_type": "candidate-decision",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "9f967424ee3bc457cc0dfc35faa31fc51cd2cda2179cbd14c80bdbad539287b3"
+    },
+    {
+      "expected_id": "oracle.candidate-decision.fact.f.001",
+      "subject_id": "fact.f.001",
+      "expected_type": "candidate-decision",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "fbc30afad7cae22c04bdc99e6004518c3fb1a119e2c84063fd7b0b78a54efef5"
+    },
+    {
+      "expected_id": "oracle.candidate-decision.fact.f.002",
+      "subject_id": "fact.f.002",
+      "expected_type": "candidate-decision",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "dbcd7d7bb3c75ba37f00351f87a904dcabc9a6578567b7ef974ee482b9d571d2"
+    },
+    {
+      "expected_id": "oracle.candidate-decision.fact.f.003",
+      "subject_id": "fact.f.003",
+      "expected_type": "candidate-decision",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "547c16ff03b09cd2bbd1d870b8c85a9153abcf61d7c478bc31e5488b4cbb63d2"
+    },
+    {
+      "expected_id": "oracle.candidate-decision.fact.f.004",
+      "subject_id": "fact.f.004",
+      "expected_type": "candidate-decision",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "015fe3317f896bb7311e74e219e99c26fe705465dfe73eaf183d6ecff5d67ec5"
+    },
+    {
+      "expected_id": "oracle.candidate-decision.fact.f.005",
+      "subject_id": "fact.f.005",
+      "expected_type": "candidate-decision",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "96dd1b2c7f83aea979f0068b7bc19578424f1f4c05ecfcd78c533343fe7cf156"
+    },
+    {
+      "expected_id": "oracle.candidate-decision.fact.d.001",
+      "subject_id": "fact.d.001",
+      "expected_type": "candidate-decision",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "3e197fbd876dfa2f2c4d0b928249506723214eb1f2a48f4819f4412abf5e8cfe"
+    },
+    {
+      "expected_id": "oracle.candidate-decision.fact.d.002",
+      "subject_id": "fact.d.002",
+      "expected_type": "candidate-decision",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "4106a26eb9fa61ccb02f62146aac10cfd146bf2882d834ee9b241d0e0db44ad1"
+    },
+    {
+      "expected_id": "oracle.candidate-decision.fact.d.003",
+      "subject_id": "fact.d.003",
+      "expected_type": "candidate-decision",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "ed2787a7c3160304aed4732faeeb39d1022548994e872584b49a9c287b3843df"
+    },
+    {
+      "expected_id": "oracle.candidate-decision.fact.d.004",
+      "subject_id": "fact.d.004",
+      "expected_type": "candidate-decision",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "ab8fe809ec61599fac5beee60af74eb7c50eb5f4a634e89674eac3b0b02a6332"
+    },
+    {
+      "expected_id": "oracle.candidate-decision.fact.d.005",
+      "subject_id": "fact.d.005",
+      "expected_type": "candidate-decision",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "abbf18cf3153acda85b0b5679c0f6d2a8fe61c2693065614dfe508d6a9ff8b2d"
+    },
+    {
+      "expected_id": "oracle.candidate-decision.fact.g.001",
+      "subject_id": "fact.g.001",
+      "expected_type": "candidate-decision",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "4c25d36b911552fda152e7858b46129a4bb8783584146d258bdacba7732bb0f2"
+    }
+  ],
+  "expected_reconciliation_assessments": [],
+  "expected_lineage_events": [],
+  "expected_coverage_and_gaps": [
+    {
+      "expected_id": "oracle.coverage.population-summary",
+      "subject_id": "candidate.candidate-population",
+      "expected_type": "coverage",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "method.candidate.independent.reference"
+      ],
+      "canonical_value_fingerprint": "bb402b3e1e442227a140d010a02d4cc557aca9ed3fd48bafb3a3ad5a4582c471"
+    }
+  ],
+  "expected_collection_states": {
+    "observations": {
+      "state": "empty",
+      "reason": "candidate stage fixture does not author observations."
+    },
+    "deterministic_results": {
+      "state": "empty",
+      "reason": "No separate deterministic result is expected."
+    },
+    "external_claims": {
+      "state": "empty",
+      "reason": "candidate stage fixture does not author external claims."
+    },
+    "application_links": {
+      "state": "empty",
+      "reason": "candidate stage fixture consumes delivered facts only."
+    },
+    "discovery_leads": {
+      "state": "empty",
+      "reason": "No discovery system is exercised."
+    },
+    "model_proposals": {
+      "state": "not-applicable",
+      "reason": "No model is used."
+    },
+    "proposal_admissions": {
+      "state": "not-applicable",
+      "reason": "No model proposal exists."
+    },
+    "candidates": {
+      "state": "populated",
+      "reason": "10 exact semantic candidate memberships are expected."
+    },
+    "hypotheses": {
+      "state": "populated",
+      "reason": "10 exact semantic hypothesis memberships are expected."
+    },
+    "findings": {
+      "state": "not-applicable",
+      "reason": "Findings are outside candidate stage."
+    },
+    "recommendations": {
+      "state": "not-applicable",
+      "reason": "Recommendations are outside candidate stage."
+    },
+    "supported_cases": {
+      "state": "not-applicable",
+      "reason": "Supported cases are outside candidate stage."
+    },
+    "lead_only_cases": {
+      "state": "not-applicable",
+      "reason": "Cases are outside candidate stage."
+    },
+    "abstentions": {
+      "state": "populated",
+      "reason": "7 exact semantic abstention memberships are expected."
+    },
+    "invalid_inputs": {
+      "state": "empty",
+      "reason": "All authored inputs are structurally valid."
+    },
+    "coverage_gaps": {
+      "state": "empty",
+      "reason": "candidate stage retains unsupported ledger memberships rather than authoring finding/case stage coverage-gap objects."
+    },
+    "failures": {
+      "state": "empty",
+      "reason": "No execution failure is expected."
+    }
+  },
+  "expected_taxonomy_assignments": [],
+  "expected_replayability": "complete-clean",
+  "expected_replay_manifest": {
+    "artifact_id": "replay-dependencies.json",
+    "artifact_version": "1.0.0",
+    "fingerprint": "25c993cccaff64c0820d88dd414a890f0f078129ecfe29b467db36c3a86b702d",
+    "availability": "retained",
+    "byte_length": 2367
+  },
+  "expected_not_used_boundaries": [
+    "provider",
+    "hosted-search",
+    "nexus",
+    "loot"
+  ],
+  "forbidden_claims": [
+    {
+      "claim_id": "forbidden.finding",
+      "claim_type": "finding",
+      "reason": "candidate stage does not author findings."
+    },
+    {
+      "claim_id": "forbidden.case",
+      "claim_type": "case",
+      "reason": "candidate stage does not author cases."
+    },
+    {
+      "claim_id": "forbidden.readiness",
+      "claim_type": "readiness",
+      "reason": "Candidate evidence does not establish readiness or safety."
+    },
+    {
+      "claim_id": "forbidden.product-comparison",
+      "claim_type": "product-comparison",
+      "reason": "The freeze predates and is independent of product comparison."
+    }
+  ],
+  "known_limits": [
+    "This fixture proves only the bounded candidate stage candidate contract and does not establish findings, cases, generic Slice 7 semantics, controlled-real behavior, reliability, readiness, or a private verdict."
+  ],
+  "pre_registered_at": "2026-08-09T06:20:47.5665585+00:00",
+  "change_history": []
+}

@@ -1,0 +1,121 @@
+{
+  "fixture_id": "DOC-CLAIM-CORE-DEV",
+  "fixture_version": "1.0.0",
+  "oracle_authorship": "independent-before-product-comparison",
+  "expected_result": "accepted",
+  "expected_counts": {
+    "revisions": 1,
+    "imports": 1,
+    "passages": 9,
+    "claims": 10,
+    "applications": 4,
+    "purpose_assignments": 1,
+    "deletion_receipts": 0,
+    "gaps": 5,
+    "failures": 0
+  },
+  "revision": {
+    "revision_id": "docrev-8d50dd11882d110b874709af12e2c977",
+    "source_id": "doc-source-core",
+    "source_kind": "fixture",
+    "source_revision": "core-r1",
+    "byte_fingerprint": "89ae20b5415dfb794c518eb75b2d8e5af74a810171b8cf2a8540694d127f5388",
+    "byte_length": 411,
+    "supplying_snapshot_id": "snapshot-core-001",
+    "retention_state": "present",
+    "replay_state": "complete-clean"
+  },
+  "import": {
+    "import_id": "docimport-811cc8f59305f35efa7aa43d8a484ae3",
+    "import_run_id": "run-doc-core-import",
+    "mode": "clean-import",
+    "reused_import_id_presence": "absent",
+    "dependency_closure_id": "closure-core",
+    "extractor_id": "deterministic-utf8-v1",
+    "created_at": "2026-08-08T18:30:00.0000000+00:00",
+    "llm_involvement": "none",
+    "llm_operation": "none",
+    "boundaries": [
+      { "boundary_id": "provider", "state": "not-used", "reason": "deterministic local documentation import" },
+      { "boundary_id": "hosted-search", "state": "not-used", "reason": "deterministic local documentation import" },
+      { "boundary_id": "nexus", "state": "not-used", "reason": "deterministic local documentation import" },
+      { "boundary_id": "loot", "state": "not-used", "reason": "deterministic local documentation import" }
+    ]
+  },
+  "revision_descriptors": ["39:docrev-8d50dd11882d110b874709af12e2c97715:doc-source-core7:fixture7:core-r164:89ae20b5415dfb794c518eb75b2d8e5af74a810171b8cf2a8540694d127f53883:41117:snapshot-core-0017:present14:complete-clean"],
+  "import_descriptors": ["42:docimport-811cc8f59305f35efa7aa43d8a484ae319:run-doc-core-import39:docrev-8d50dd11882d110b874709af12e2c97712:clean-import4:none12:closure-core21:deterministic-utf8-v14:none4:none263:63:8:provider8:not-used40:deterministic local documentation import69:13:hosted-search8:not-used40:deterministic local documentation import60:5:nexus8:not-used40:deterministic local documentation import59:4:loot8:not-used40:deterministic local documentation import33:2026-08-08T18:30:00.0000000+00:00"],
+  "failure_descriptors": [],
+  "aggregate_descriptor_list_sha256": {
+    "revisions": "87268eab01a0013b6a26af022c58cc40242feb46e596c41efc5f102c8c41c3de",
+    "imports": "b859059af62ac6221d8762ec17ceb6826f3fa007748cef65d48727a2a88c3084",
+    "passages": "f77b9a40d52de936f9fe8b554cbc523593d235041534777b2f2a0ca22d7f2224",
+    "claims": "ebd125bb2a3d0d7fbfab0bd31b12cc5f52f560b0ff3a23826a8a8cd73e176377",
+    "applications": "c7f69f9ca0ca46713522308b7b318daf418ae52d49a0a16c1ffb410bf0a00b37",
+    "purpose_assignments": "bbd0ed98e499d98242e0b82eac4760edbf6fa8e82bdb013ff49042c88d6a7d53",
+    "deletion_receipts": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gaps": "3c01d49bf78880c754cac92e82f33755043e0cd278937c4dfbd8f819c816184e",
+    "failures": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "passages": [
+    { "passage_id": "docpass-4f1291290dc0ddaa7823695ffbc570eb", "utf8_start_offset": 102, "utf8_end_offset": 157, "passage_fingerprint": "a3aba97c90e5bc745fd718fd083d8b55e73663c423ae7dd84d9f8d333a3e1671", "state": "present" },
+    { "passage_id": "docpass-5922aaaa301dee9cab34b020d4191811", "utf8_start_offset": 259, "utf8_end_offset": 304, "passage_fingerprint": "9ad8a0107cbf3fd321f16d62424e054de22522db0cdb71b4807ea64578970d56", "state": "present" },
+    { "passage_id": "docpass-5f83e53981200f98868c4475ddc29918", "utf8_start_offset": 194, "utf8_end_offset": 222, "passage_fingerprint": "47269c193067b32ab596a4e2e0ba81fd5076e758f42d8b3a1c23b178ad58c14c", "state": "present" },
+    { "passage_id": "docpass-6000656e0486228a70096cce63aa8208", "utf8_start_offset": 58, "utf8_end_offset": 101, "passage_fingerprint": "8245d9be266606c5f6923296b3b9bcf7513e7cc229637d1f2831fa359afc7dd1", "state": "present" },
+    { "passage_id": "docpass-7ae9ddb30c00ddb4c984719f38e4e72e", "utf8_start_offset": 0, "utf8_end_offset": 57, "passage_fingerprint": "a80f350b9bc8aa2efeed1ab8251cf67dd70531f913bab640f9b824373cb50ee1", "state": "present" },
+    { "passage_id": "docpass-96cf8bcd8c7d223ccee6d2b5b2b00cfa", "utf8_start_offset": 360, "utf8_end_offset": 410, "passage_fingerprint": "a38fa00556ea485c4aa1fce25ea12d624f4d87f6b70bf677c7eaa472f17e5de5", "state": "present" },
+    { "passage_id": "docpass-b33a37b9a9f7234896c7b05563011420", "utf8_start_offset": 305, "utf8_end_offset": 359, "passage_fingerprint": "bcf58572d3bfd94a49897c9d7c3c337f741bed644f4e199e0e24484773f5447f", "state": "present" },
+    { "passage_id": "docpass-c07ccc47c8afdaf59f5113cc93fa6c8a", "utf8_start_offset": 223, "utf8_end_offset": 258, "passage_fingerprint": "3949cd077ce1cec693214c2ef3616104c15a8a671348af04f9dd8c8a2f005091", "state": "present" },
+    { "passage_id": "docpass-dc6eb8c3372764d20a9265b5d9d66095", "utf8_start_offset": 158, "utf8_end_offset": 193, "passage_fingerprint": "12c8d1232c31916d66ca23c7698b7b27d0052608cc8798e614ddc8493fd7f503", "state": "present" }
+  ],
+  "claims": [
+    { "claim_key": "core-counter-issue", "claim_base_id": "docclaimbase-f34b131eb4ba9a8c4d45fa7b261b0595", "direct_contradiction_base_ids": ["docclaimbase-bbe651e815bf50ad8b8c0928560b03d3"], "reachable_contradiction_descriptors": ["45:docclaimbase-bbe651e815bf50ad8b8c0928560b03d348:45:docclaimbase-f34b131eb4ba9a8c4d45fa7b261b0595"], "claim_id": "docclaim-09793e98f4e52bd4710896e3c7261555", "producing_import_id": "docimport-811cc8f59305f35efa7aa43d8a484ae3", "passage_id": "docpass-96cf8bcd8c7d223ccee6d2b5b2b00cfa", "kind": "known-issue", "contradicting_evidence_ids": ["docclaim-5b106f14fe6a5a64357d662e2d497a92"] },
+    { "claim_key": "core-purpose", "claim_base_id": "docclaimbase-b7b1e75d3e6e8f7b122129a6fa567a22", "direct_contradiction_base_ids": [], "reachable_contradiction_descriptors": [], "claim_id": "docclaim-55249f95ac17753a3b5217e5edb42068", "producing_import_id": "docimport-811cc8f59305f35efa7aa43d8a484ae3", "passage_id": "docpass-7ae9ddb30c00ddb4c984719f38e4e72e", "kind": "declared-purpose", "contradicting_evidence_ids": [] },
+    { "claim_key": "core-known-issue", "claim_base_id": "docclaimbase-bbe651e815bf50ad8b8c0928560b03d3", "direct_contradiction_base_ids": ["docclaimbase-f34b131eb4ba9a8c4d45fa7b261b0595"], "reachable_contradiction_descriptors": ["45:docclaimbase-f34b131eb4ba9a8c4d45fa7b261b059548:45:docclaimbase-bbe651e815bf50ad8b8c0928560b03d3"], "claim_id": "docclaim-5b106f14fe6a5a64357d662e2d497a92", "producing_import_id": "docimport-811cc8f59305f35efa7aa43d8a484ae3", "passage_id": "docpass-b33a37b9a9f7234896c7b05563011420", "kind": "known-issue", "contradicting_evidence_ids": ["docclaim-09793e98f4e52bd4710896e3c7261555"] },
+    { "claim_key": "core-patch", "claim_base_id": "docclaimbase-b0948c53ee032f5070b0e51b25a2a394", "direct_contradiction_base_ids": ["docclaimbase-6bae8edca8f5ca73215c59719e777878"], "reachable_contradiction_descriptors": ["45:docclaimbase-6bae8edca8f5ca73215c59719e77787848:45:docclaimbase-b0948c53ee032f5070b0e51b25a2a394"], "claim_id": "docclaim-7330152ae29110994cff7c92a9b70e92", "producing_import_id": "docimport-811cc8f59305f35efa7aa43d8a484ae3", "passage_id": "docpass-5922aaaa301dee9cab34b020d4191811", "kind": "patch-instruction", "contradicting_evidence_ids": ["docclaim-8bd203b96ee64f2709a6170fd6860ad7"] },
+    { "claim_key": "core-lifecycle", "claim_base_id": "docclaimbase-9596491637ba354c6065914731366db2", "direct_contradiction_base_ids": [], "reachable_contradiction_descriptors": [], "claim_id": "docclaim-7cb4276a84f8bc98501309db26ae20a5", "producing_import_id": "docimport-811cc8f59305f35efa7aa43d8a484ae3", "passage_id": "docpass-5f83e53981200f98868c4475ddc29918", "kind": "lifecycle-instruction", "contradicting_evidence_ids": [] },
+    { "claim_key": "core-priority", "claim_base_id": "docclaimbase-5521791b4d228cf9869f4713d822ae9b", "direct_contradiction_base_ids": [], "reachable_contradiction_descriptors": [], "claim_id": "docclaim-83669f03dbf82581b68b61d2945d171a", "producing_import_id": "docimport-811cc8f59305f35efa7aa43d8a484ae3", "passage_id": "docpass-dc6eb8c3372764d20a9265b5d9d66095", "kind": "priority-instruction", "contradicting_evidence_ids": [] },
+    { "claim_key": "core-incompatibility", "claim_base_id": "docclaimbase-6bae8edca8f5ca73215c59719e777878", "direct_contradiction_base_ids": ["docclaimbase-b0948c53ee032f5070b0e51b25a2a394"], "reachable_contradiction_descriptors": ["45:docclaimbase-b0948c53ee032f5070b0e51b25a2a39448:45:docclaimbase-6bae8edca8f5ca73215c59719e777878"], "claim_id": "docclaim-8bd203b96ee64f2709a6170fd6860ad7", "producing_import_id": "docimport-811cc8f59305f35efa7aa43d8a484ae3", "passage_id": "docpass-4f1291290dc0ddaa7823695ffbc570eb", "kind": "incompatibility", "contradicting_evidence_ids": ["docclaim-7330152ae29110994cff7c92a9b70e92"] },
+    { "claim_key": "core-config", "claim_base_id": "docclaimbase-ce28bc937d024cd1c12d835899d45203", "direct_contradiction_base_ids": [], "reachable_contradiction_descriptors": [], "claim_id": "docclaim-92192fd55358b8bda8c2589ef390cbcc", "producing_import_id": "docimport-811cc8f59305f35efa7aa43d8a484ae3", "passage_id": "docpass-c07ccc47c8afdaf59f5113cc93fa6c8a", "kind": "configuration-instruction", "contradicting_evidence_ids": [] },
+    { "claim_key": "core-requirement", "claim_base_id": "docclaimbase-c1b25d264640d7f401faab09aee58386", "direct_contradiction_base_ids": [], "reachable_contradiction_descriptors": [], "claim_id": "docclaim-e4fd12f8fa3804bbc39a64484d14bc46", "producing_import_id": "docimport-811cc8f59305f35efa7aa43d8a484ae3", "passage_id": "docpass-6000656e0486228a70096cce63aa8208", "kind": "requirement", "contradicting_evidence_ids": [] },
+    { "claim_key": "core-install", "claim_base_id": "docclaimbase-0367607f41c8348dc8628d2aaee92adc", "direct_contradiction_base_ids": [], "reachable_contradiction_descriptors": [], "claim_id": "docclaim-feddda6f8f36bf72388a7b1b4f01076c", "producing_import_id": "docimport-811cc8f59305f35efa7aa43d8a484ae3", "passage_id": "docpass-dc6eb8c3372764d20a9265b5d9d66095", "kind": "installation-instruction", "contradicting_evidence_ids": [] }
+  ],
+  "applications": [
+    { "claim_key": "core-purpose", "application_id": "docapply-0e317daee4db89cb777ac42c99532041", "claim_id": "docclaim-55249f95ac17753a3b5217e5edb42068", "consuming_run_id": "run-doc-core-import", "installation_snapshot_id": "snapshot-core-001", "analysis_context_id": "context-core", "resolved_input_manifest_id": "resolved-input-core-001", "subject_id": "installed-core-weather", "subject_type": "installed-entity", "dependency_closure_id": "closure-core", "applicability": "applicable", "evidence_ids": ["docclaim-55249f95ac17753a3b5217e5edb42068", "docclaim-e4fd12f8fa3804bbc39a64484d14bc46"] },
+    { "claim_key": "core-known-issue", "application_id": "docapply-2cbb81d55773b194fff6dbd75e4f1c15", "claim_id": "docclaim-5b106f14fe6a5a64357d662e2d497a92", "consuming_run_id": "run-doc-core-import", "installation_snapshot_id": "snapshot-core-001", "analysis_context_id": "context-core", "resolved_input_manifest_id": "resolved-input-core-001", "subject_id": "installed-core-weather", "subject_type": "installed-entity", "dependency_closure_id": "closure-core", "applicability": "contradicted", "evidence_ids": ["docclaim-09793e98f4e52bd4710896e3c7261555", "docclaim-5b106f14fe6a5a64357d662e2d497a92"] },
+    { "claim_key": "core-install", "application_id": "docapply-3c3a68d37c2255ebe06def7affc89fbf", "claim_id": "docclaim-feddda6f8f36bf72388a7b1b4f01076c", "consuming_run_id": "run-doc-core-import", "installation_snapshot_id": "snapshot-core-001", "analysis_context_id": "context-core", "resolved_input_manifest_id": "resolved-input-core-001", "subject_id": "installed-core-weather", "subject_type": "installed-entity", "dependency_closure_id": "closure-core", "applicability": "applicable", "evidence_ids": ["docclaim-83669f03dbf82581b68b61d2945d171a", "docclaim-feddda6f8f36bf72388a7b1b4f01076c"] },
+    { "claim_key": "core-patch", "application_id": "docapply-bf0d75bac162f2a5b28541a3dd878bbf", "claim_id": "docclaim-7330152ae29110994cff7c92a9b70e92", "consuming_run_id": "run-doc-core-import", "installation_snapshot_id": "snapshot-core-001", "analysis_context_id": "context-core", "resolved_input_manifest_id": "resolved-input-core-001", "subject_id": "installed-core-weather", "subject_type": "installed-entity", "dependency_closure_id": "closure-core", "applicability": "applicable", "evidence_ids": ["docclaim-7330152ae29110994cff7c92a9b70e92", "docclaim-e4fd12f8fa3804bbc39a64484d14bc46"] }
+  ],
+  "purpose_assignment": {
+    "assignment_id": "purpose-a2e7a1b8b436bbb10d9054fa1f1b9df1",
+    "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
+    "taxonomy_version": "0.1.0",
+    "axis": "declared-purpose-and-intended-feature-area",
+    "facet": "purpose-kind",
+    "code": "purpose.add-expand",
+    "applicability": "assigned",
+    "subject_id": "installed-core-weather",
+    "subject_type": "installed-entity",
+    "role": "declared",
+    "claim_id": "docclaim-55249f95ac17753a3b5217e5edb42068",
+    "application_id": "docapply-0e317daee4db89cb777ac42c99532041",
+    "applicability_condition_ids": [],
+    "analyzer_or_adjudicator_id": "fixture-oracle-author",
+    "created_at": "2026-08-08T18:30:00.0000000+00:00",
+    "reason": "The exact declared-purpose passage names an additive optional feature."
+  },
+  "gaps": [
+    { "gap_id": "docgap-2627467f7b528dcf1394d7b8f2b9585f", "originating_run_id": "run-doc-core-import", "kind": "contradiction", "revision_id": "docrev-8d50dd11882d110b874709af12e2c977", "claim_id": "docclaim-09793e98f4e52bd4710896e3c7261555", "replay_effect": "complete-clean", "reason": "The retained external claim has explicit contradicting evidence or contradicted applicability.", "created_at": "2026-08-08T18:30:00.0000000+00:00" },
+    { "gap_id": "docgap-505b360afd80280ced2ce30d4c6bf1d3", "originating_run_id": "run-doc-core-import", "kind": "contradiction", "revision_id": "docrev-8d50dd11882d110b874709af12e2c977", "claim_id": "docclaim-8bd203b96ee64f2709a6170fd6860ad7", "replay_effect": "complete-clean", "reason": "The retained external claim has explicit contradicting evidence or contradicted applicability.", "created_at": "2026-08-08T18:30:00.0000000+00:00" },
+    { "gap_id": "docgap-509e0bcb7c40c9c89e41782f9a624a61", "originating_run_id": "run-doc-core-import", "kind": "contradiction", "revision_id": "docrev-8d50dd11882d110b874709af12e2c977", "claim_id": "docclaim-5b106f14fe6a5a64357d662e2d497a92", "application_id": "docapply-2cbb81d55773b194fff6dbd75e4f1c15", "replay_effect": "complete-clean", "reason": "The consuming analysis application is explicitly contradicted.", "created_at": "2026-08-08T18:30:00.0000000+00:00" },
+    { "gap_id": "docgap-9b0be049c2bd5da8f55e778cc768441b", "originating_run_id": "run-doc-core-import", "kind": "contradiction", "revision_id": "docrev-8d50dd11882d110b874709af12e2c977", "claim_id": "docclaim-7330152ae29110994cff7c92a9b70e92", "replay_effect": "complete-clean", "reason": "The retained external claim has explicit contradicting evidence or contradicted applicability.", "created_at": "2026-08-08T18:30:00.0000000+00:00" },
+    { "gap_id": "docgap-fb72978a892f175fe5ddb029784c24c1", "originating_run_id": "run-doc-core-import", "kind": "contradiction", "revision_id": "docrev-8d50dd11882d110b874709af12e2c977", "claim_id": "docclaim-5b106f14fe6a5a64357d662e2d497a92", "replay_effect": "complete-clean", "reason": "The retained external claim has explicit contradicting evidence or contradicted applicability.", "created_at": "2026-08-08T18:30:00.0000000+00:00" }
+  ],
+  "deletion_receipts": [],
+  "payload_id": "docevidence-b00f3d167541bef79ea09e07689b2165",
+  "downstream_objects": {
+    "candidates": "not-created-by-documentation",
+    "hypotheses": "not-created-by-documentation",
+    "findings": "not-created-by-documentation",
+    "cases": "not-created-by-documentation"
+  }
+}

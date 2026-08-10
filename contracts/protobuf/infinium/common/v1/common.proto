@@ -15,7 +15,7 @@ message DurationMillis {
   uint64 value = 1;
 }
 
-// A content identity. M1 supports SHA-256 only; other algorithms fail closed.
+// A content identity. The current contract supports SHA-256 only; other algorithms fail closed.
 message ContentDigest {
   DigestAlgorithm algorithm = 1;
   bytes value = 2;

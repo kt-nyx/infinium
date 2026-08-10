@@ -437,7 +437,7 @@ public static class BethesdaSemanticPublicationValidator
                 || !Enum.IsDefined(item.Applicability)
                 || !Enum.IsDefined(item.Role)
                 || item.EvidenceFields.Count == 0
-                || item.AnalyzerOrAdjudicatorId != "analyzer:infinium-bethesda-m1-semantic-index"
+                || item.AnalyzerOrAdjudicatorId != "analyzer:infinium-bethesda-semantic-index"
                 || item.SubjectType is not ("record-contribution" or "record-semantic-subject" or "unsupported-record")))
         {
             return false;

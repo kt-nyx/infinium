@@ -22,8 +22,8 @@ namespace Infinium.Tests;
 public sealed class SolutionIntegrationTests
 {
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestProperty("Category", "M1Integration")]
+    [TestCategory("Integration")]
+    [TestProperty("Category", "Integration")]
     public void SolutionContainsEveryDeclaredProject()
     {
         string solution = TestRepository.Read("Infinium.sln");
@@ -44,8 +44,8 @@ public sealed class SolutionIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestProperty("Category", "M1Integration")]
+    [TestCategory("Integration")]
+    [TestProperty("Category", "Integration")]
     public void EveryProjectHasARestoreLock()
     {
         string[] projectDirectories = TestRepository
@@ -63,10 +63,10 @@ public sealed class SolutionIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Integration")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Evaluation")]
     public void RunOutputClassifiesEveryLifecycleUnitWithoutUnsupportedAuditClaims()
     {
         foreach (Infinium.Domain.Contracts.LifecycleState state
@@ -100,10 +100,10 @@ public sealed class SolutionIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Security")]
     public void RuntimeEntryPointsFailClosedOutsideTheirTypedAuthority()
     {
         ProcessResult cli = Run("Infinium.Cli", []);
@@ -131,14 +131,14 @@ public sealed class SolutionIntegrationTests
 
         ProcessResult helper = Run("Infinium.CredentialHelper", []);
         Assert.AreEqual(1, helper.ExitCode);
-        StringAssert.Contains(helper.Error, "Slice 0 scaffold");
+        StringAssert.Contains(helper.Error, "inactive scaffold");
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Integration")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Evaluation")]
     public async Task CliCoordinatorWorkerNamedPipeFlowCompletesAndInspectsImmutableBindings()
     {
         string root = Path.Combine(
@@ -304,10 +304,10 @@ public sealed class SolutionIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Integration")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Fault")]
     public async Task CoordinatorRestartFencesInterruptedWorkerAndRecoversDurableRun()
     {
         string root = Path.Combine(
@@ -371,10 +371,10 @@ public sealed class SolutionIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Integration")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Fault")]
     public async Task CoordinatorRestartObservesPendingCancellationAndSettlesAttempt()
     {
         string root = Path.Combine(
@@ -454,7 +454,7 @@ public sealed class SolutionIntegrationTests
     {
         if (!OperatingSystem.IsWindows())
         {
-            Assert.Inconclusive("The Slice 2 named-pipe integration contract requires Windows.");
+            Assert.Inconclusive("The named-pipe integration contract requires Windows.");
         }
 
         RuntimeDescriptor descriptor = RuntimeDescriptor.Read(root);

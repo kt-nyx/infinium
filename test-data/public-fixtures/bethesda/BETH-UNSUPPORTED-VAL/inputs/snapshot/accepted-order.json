@@ -1,0 +1,63 @@
+{
+  "schema_id": "infinium.evaluation.bethesda-accepted-order-construction-input/v1",
+  "schema_version": "1",
+  "fixture_id": "BETH-UNSUPPORTED-VAL",
+  "fixture_version": "1.4.0",
+  "source_basis": "accepted-bethesda-construction-manifest-and-retained-input-seals",
+  "snapshot_contract_version": "3.0.0",
+  "adapter_id": "infinium.mo2-static-reconstruction/v3",
+  "selected_profile_name": "BETH-UNSUPPORTED-VAL",
+  "construction_manifest_fingerprint": "69ffdbeeb66be79c0fd56ae68c7fedf74d98f81acb026ebac35542c1cef01127",
+  "provider_order": [
+    {
+      "provider_id": "beth-unsupported-val-provider-00",
+      "priority": 0,
+      "source_artifact_id": "inputs/plugins/LocalizedDependency.esp",
+      "source_sha256": "43115de64ffaa9853f8823525877ac7c0eaa93e28f7d02c22a20521b0c9eb605"
+    },
+    {
+      "provider_id": "beth-unsupported-val-provider-01",
+      "priority": 1,
+      "source_artifact_id": "inputs/plugins/UnsupportedFamily.esp",
+      "source_sha256": "28a3f77b1c46ef8088d57987f3e43fa7e39a778fc8718f3b5d2bf567c96965ba"
+    },
+    {
+      "provider_id": "beth-unsupported-val-provider-02",
+      "priority": 2,
+      "source_artifact_id": "inputs/plugins/UnsupportedNpcField.esp",
+      "source_sha256": "498515791b9196341c286ca4b65c6565ab9d7b07c59e8eb42365a1a85fce44d2"
+    }
+  ],
+  "plugin_order": [
+    {
+      "load_order": 0,
+      "file_name": "LocalizedDependency.esp",
+      "artifact_id": "inputs/plugins/LocalizedDependency.esp",
+      "sha256": "43115de64ffaa9853f8823525877ac7c0eaa93e28f7d02c22a20521b0c9eb605",
+      "provider_id": "beth-unsupported-val-provider-00"
+    },
+    {
+      "load_order": 1,
+      "file_name": "UnsupportedFamily.esp",
+      "artifact_id": "inputs/plugins/UnsupportedFamily.esp",
+      "sha256": "28a3f77b1c46ef8088d57987f3e43fa7e39a778fc8718f3b5d2bf567c96965ba",
+      "provider_id": "beth-unsupported-val-provider-01"
+    },
+    {
+      "load_order": 2,
+      "file_name": "UnsupportedNpcField.esp",
+      "artifact_id": "inputs/plugins/UnsupportedNpcField.esp",
+      "sha256": "498515791b9196341c286ca4b65c6565ab9d7b07c59e8eb42365a1a85fce44d2",
+      "provider_id": "beth-unsupported-val-provider-02"
+    }
+  ],
+  "isolated_capture_variants": [],
+  "capture_binding_algorithm": "infinium.fixture-snapshot-capture-binding/v1",
+  "expected_capture_binding_fingerprint": "0a6cd91f5e445860a0c2d98a330e201825aa8ca768a0766d536c18cf92b9945d",
+  "capture_policy": {
+    "manager_launch": "forbidden",
+    "usvfs_launch": "forbidden",
+    "protected_root_write": "forbidden",
+    "supplied_order_only": true
+  }
+}

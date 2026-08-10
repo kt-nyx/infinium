@@ -1,0 +1,539 @@
+{
+  "schema_id": "infinium.evaluation.candidate-semantic-population-projection/v1",
+  "schema_version": "1.0.0",
+  "fixture_id": "CAND-SEMANTIC-DEV-v1",
+  "fixture_version": "1.0.0",
+  "partition": "development",
+  "freeze_state": "pre-product-comparison",
+  "product_comparison_occurred": false,
+  "source_artifact": {
+    "path": "inputs/candidate-delivered-input.json",
+    "sha256": "9b0b834de489c29609cc9ad9a535a70b3c3dae966e6ac1c7f369c5bf1247b0fe",
+    "byte_length": 9208,
+    "schema_version": "1.0.0"
+  },
+  "authority_basis": [
+    "docs/evaluation/candidate-delivered-input-v1.md",
+    "docs/plans/milestones/m1/slices/s5/plan.md",
+    "docs/architecture/decisions/ADR-0028-m1-bethesda-semantic-reporting-and-oracle-authority.md"
+  ],
+  "independent_derivation": {
+    "relationship_rules": {
+      "link": "Any unresolved side is ambiguous; equal comparable links are resolved negatives; every other comparable change or introduction/removal is admitted.",
+      "face_gen": "Not-applicable is negative; unknown applicability or availability is ambiguous; remaining applicable facts are admitted and ordered only by locality, specificity, then stable member key.",
+      "documentation": "Run/snapshot/context mismatch or unsupported applicability is unsupported; not-applicable is negative; unknown or contradicted is ambiguous; remaining applicable facts are admitted.",
+      "coverage_gap": "Each delivered coverage-gap fact is an unsupported mandatory-evidence ledger member."
+    },
+    "candidate_rule": "Admitted and ambiguous decisions retain candidates and hypotheses; ambiguous and unsupported decisions retain abstentions; resolved negatives retain none.",
+    "count_formula": "For each series, emitted rows = floor((subject_count - 1) / every) + 1. Pattern index = emission_ordinal modulo pattern_count.",
+    "stream_framing": "Each UTF-8 field is framed as eight lowercase hexadecimal byte-length digits, colon, and field bytes. The concatenated field frames form one record, which receives the same outer frame. Record order is header, link, facegen, documentation, coverage-gap; link ordinal equals the zero-based link-series index; documentation records contain applicability, snapshot match, context match, and contradiction only.",
+    "identity_boundary": "Membership and expected items are keyed by the producer-chosen delivered fact_id, repeated as source_fact_id with an exact derived-from edge. No product opaque identity algorithm is reproduced.",
+    "expected_item_fingerprinting": "SHA-256 over one record using the field-guide 8-lowercase-hex UTF-8 field framing and outer record framing. Fields are expected-item-v1, expected_type, semantic_member_key, source_fact_id, expected_state, then compact member_projection JSON in stored property order."
+  },
+  "semantic_population_summary": {
+    "factual_rows": 16,
+    "by_kind": {
+      "link": 5,
+      "face-gen": 5,
+      "documentation": 5,
+      "coverage-gap": 1
+    },
+    "by_disposition": {
+      "admitted": 5,
+      "resolved-negative": 4,
+      "ambiguous": 5,
+      "unsupported": 2
+    },
+    "by_lane": {
+      "deterministic-required": 5,
+      "optional-ranked": 5,
+      "mandatory-evidence": 6
+    },
+    "candidates": 10,
+    "hypotheses": 10,
+    "abstentions": 7
+  },
+  "optional_rank_order": [
+    "fact.f.001",
+    "fact.f.002",
+    "fact.f.005",
+    "fact.f.004"
+  ],
+  "factual_stream_receipt": null,
+  "member_projection": [
+    {
+      "semantic_member_key": "fact.l.001",
+      "source_fact_id": "fact.l.001",
+      "derived_from_edge": {
+        "edge_kind": "derived-from",
+        "source_fact_id": "fact.l.001"
+      },
+      "source_kind": "link",
+      "lane": "deterministic-required",
+      "expected_disposition": "admitted",
+      "candidate_membership": true,
+      "hypothesis_state": "evidence-bound",
+      "abstention_state": "absent",
+      "factual_projection": {
+        "field": "linked_reference",
+        "component": null,
+        "prior_state": "resolved",
+        "winning_state": "resolved",
+        "prior_target": "participant.t.001",
+        "winning_target": "participant.t.002",
+        "dependency_ids": [
+          "dependency.001"
+        ],
+        "evidence_ids": [
+          "evidence.001"
+        ]
+      }
+    },
+    {
+      "semantic_member_key": "fact.l.002",
+      "source_fact_id": "fact.l.002",
+      "derived_from_edge": {
+        "edge_kind": "derived-from",
+        "source_fact_id": "fact.l.002"
+      },
+      "source_kind": "link",
+      "lane": "deterministic-required",
+      "expected_disposition": "resolved-negative",
+      "candidate_membership": false,
+      "hypothesis_state": "absent",
+      "abstention_state": "absent",
+      "factual_projection": {
+        "field": "linked_reference",
+        "component": null,
+        "prior_state": "resolved",
+        "winning_state": "resolved",
+        "prior_target": "participant.t.003",
+        "winning_target": "participant.t.003",
+        "dependency_ids": [
+          "dependency.002"
+        ],
+        "evidence_ids": [
+          "evidence.002"
+        ]
+      }
+    },
+    {
+      "semantic_member_key": "fact.l.003",
+      "source_fact_id": "fact.l.003",
+      "derived_from_edge": {
+        "edge_kind": "derived-from",
+        "source_fact_id": "fact.l.003"
+      },
+      "source_kind": "link",
+      "lane": "deterministic-required",
+      "expected_disposition": "ambiguous",
+      "candidate_membership": true,
+      "hypothesis_state": "needs-input",
+      "abstention_state": "missing-information",
+      "factual_projection": {
+        "field": "enable_parent",
+        "component": "parent",
+        "prior_state": "unresolved",
+        "winning_state": "resolved",
+        "prior_target": null,
+        "winning_target": "participant.t.004",
+        "dependency_ids": [
+          "dependency.003"
+        ],
+        "evidence_ids": [
+          "evidence.003"
+        ]
+      }
+    },
+    {
+      "semantic_member_key": "fact.l.004",
+      "source_fact_id": "fact.l.004",
+      "derived_from_edge": {
+        "edge_kind": "derived-from",
+        "source_fact_id": "fact.l.004"
+      },
+      "source_kind": "link",
+      "lane": "deterministic-required",
+      "expected_disposition": "admitted",
+      "candidate_membership": true,
+      "hypothesis_state": "evidence-bound",
+      "abstention_state": "absent",
+      "factual_projection": {
+        "field": "linked_reference",
+        "component": null,
+        "prior_state": "absent",
+        "winning_state": "resolved",
+        "prior_target": null,
+        "winning_target": "participant.t.005",
+        "dependency_ids": [
+          "dependency.004"
+        ],
+        "evidence_ids": [
+          "evidence.004"
+        ]
+      }
+    },
+    {
+      "semantic_member_key": "fact.l.005",
+      "source_fact_id": "fact.l.005",
+      "derived_from_edge": {
+        "edge_kind": "derived-from",
+        "source_fact_id": "fact.l.005"
+      },
+      "source_kind": "link",
+      "lane": "deterministic-required",
+      "expected_disposition": "resolved-negative",
+      "candidate_membership": false,
+      "hypothesis_state": "absent",
+      "abstention_state": "absent",
+      "factual_projection": {
+        "field": "enable_parent",
+        "component": null,
+        "prior_state": "null",
+        "winning_state": "null",
+        "prior_target": null,
+        "winning_target": null,
+        "dependency_ids": [
+          "dependency.005"
+        ],
+        "evidence_ids": [
+          "evidence.005"
+        ]
+      }
+    },
+    {
+      "semantic_member_key": "fact.f.001",
+      "source_fact_id": "fact.f.001",
+      "derived_from_edge": {
+        "edge_kind": "derived-from",
+        "source_fact_id": "fact.f.001"
+      },
+      "source_kind": "face-gen",
+      "lane": "optional-ranked",
+      "expected_disposition": "admitted",
+      "candidate_membership": true,
+      "hypothesis_state": "evidence-bound",
+      "abstention_state": "absent",
+      "factual_projection": {
+        "applicability": "applicable",
+        "mesh_availability": "present",
+        "tint_availability": "absent",
+        "locality": 80,
+        "specificity": 60,
+        "dependency_ids": [
+          "dependency.006"
+        ],
+        "evidence_ids": [
+          "evidence.006"
+        ]
+      }
+    },
+    {
+      "semantic_member_key": "fact.f.002",
+      "source_fact_id": "fact.f.002",
+      "derived_from_edge": {
+        "edge_kind": "derived-from",
+        "source_fact_id": "fact.f.002"
+      },
+      "source_kind": "face-gen",
+      "lane": "optional-ranked",
+      "expected_disposition": "admitted",
+      "candidate_membership": true,
+      "hypothesis_state": "evidence-bound",
+      "abstention_state": "absent",
+      "factual_projection": {
+        "applicability": "applicable",
+        "mesh_availability": "absent",
+        "tint_availability": "present",
+        "locality": 80,
+        "specificity": 40,
+        "dependency_ids": [
+          "dependency.007"
+        ],
+        "evidence_ids": [
+          "evidence.007"
+        ]
+      }
+    },
+    {
+      "semantic_member_key": "fact.f.003",
+      "source_fact_id": "fact.f.003",
+      "derived_from_edge": {
+        "edge_kind": "derived-from",
+        "source_fact_id": "fact.f.003"
+      },
+      "source_kind": "face-gen",
+      "lane": "optional-ranked",
+      "expected_disposition": "resolved-negative",
+      "candidate_membership": false,
+      "hypothesis_state": "absent",
+      "abstention_state": "absent",
+      "factual_projection": {
+        "applicability": "not-applicable",
+        "mesh_availability": "absent",
+        "tint_availability": "absent",
+        "locality": 10,
+        "specificity": 10,
+        "dependency_ids": [
+          "dependency.008"
+        ],
+        "evidence_ids": [
+          "evidence.008"
+        ]
+      }
+    },
+    {
+      "semantic_member_key": "fact.f.004",
+      "source_fact_id": "fact.f.004",
+      "derived_from_edge": {
+        "edge_kind": "derived-from",
+        "source_fact_id": "fact.f.004"
+      },
+      "source_kind": "face-gen",
+      "lane": "optional-ranked",
+      "expected_disposition": "ambiguous",
+      "candidate_membership": true,
+      "hypothesis_state": "needs-input",
+      "abstention_state": "missing-information",
+      "factual_projection": {
+        "applicability": "unknown",
+        "mesh_availability": "unknown",
+        "tint_availability": "unknown",
+        "locality": 20,
+        "specificity": 70,
+        "dependency_ids": [
+          "dependency.009"
+        ],
+        "evidence_ids": [
+          "evidence.009"
+        ]
+      }
+    },
+    {
+      "semantic_member_key": "fact.f.005",
+      "source_fact_id": "fact.f.005",
+      "derived_from_edge": {
+        "edge_kind": "derived-from",
+        "source_fact_id": "fact.f.005"
+      },
+      "source_kind": "face-gen",
+      "lane": "optional-ranked",
+      "expected_disposition": "ambiguous",
+      "candidate_membership": true,
+      "hypothesis_state": "needs-input",
+      "abstention_state": "missing-information",
+      "factual_projection": {
+        "applicability": "applicable",
+        "mesh_availability": "unknown",
+        "tint_availability": "present",
+        "locality": 50,
+        "specificity": 90,
+        "dependency_ids": [
+          "dependency.010"
+        ],
+        "evidence_ids": [
+          "evidence.010"
+        ]
+      }
+    },
+    {
+      "semantic_member_key": "fact.d.001",
+      "source_fact_id": "fact.d.001",
+      "derived_from_edge": {
+        "edge_kind": "derived-from",
+        "source_fact_id": "fact.d.001"
+      },
+      "source_kind": "documentation",
+      "lane": "mandatory-evidence",
+      "expected_disposition": "admitted",
+      "candidate_membership": true,
+      "hypothesis_state": "evidence-bound",
+      "abstention_state": "absent",
+      "factual_projection": {
+        "applicability": "applicable",
+        "supplying_snapshot_matches": true,
+        "analysis_context_matches": true,
+        "has_supporting_evidence": true,
+        "has_contradicting_evidence": false,
+        "dependency_ids": [
+          "dependency.012"
+        ]
+      }
+    },
+    {
+      "semantic_member_key": "fact.d.002",
+      "source_fact_id": "fact.d.002",
+      "derived_from_edge": {
+        "edge_kind": "derived-from",
+        "source_fact_id": "fact.d.002"
+      },
+      "source_kind": "documentation",
+      "lane": "mandatory-evidence",
+      "expected_disposition": "resolved-negative",
+      "candidate_membership": false,
+      "hypothesis_state": "absent",
+      "abstention_state": "absent",
+      "factual_projection": {
+        "applicability": "not-applicable",
+        "supplying_snapshot_matches": true,
+        "analysis_context_matches": true,
+        "has_supporting_evidence": true,
+        "has_contradicting_evidence": false,
+        "dependency_ids": [
+          "dependency.013"
+        ]
+      }
+    },
+    {
+      "semantic_member_key": "fact.d.003",
+      "source_fact_id": "fact.d.003",
+      "derived_from_edge": {
+        "edge_kind": "derived-from",
+        "source_fact_id": "fact.d.003"
+      },
+      "source_kind": "documentation",
+      "lane": "mandatory-evidence",
+      "expected_disposition": "ambiguous",
+      "candidate_membership": true,
+      "hypothesis_state": "needs-input",
+      "abstention_state": "missing-information",
+      "factual_projection": {
+        "applicability": "unknown",
+        "supplying_snapshot_matches": true,
+        "analysis_context_matches": true,
+        "has_supporting_evidence": true,
+        "has_contradicting_evidence": false,
+        "dependency_ids": [
+          "dependency.014"
+        ]
+      }
+    },
+    {
+      "semantic_member_key": "fact.d.004",
+      "source_fact_id": "fact.d.004",
+      "derived_from_edge": {
+        "edge_kind": "derived-from",
+        "source_fact_id": "fact.d.004"
+      },
+      "source_kind": "documentation",
+      "lane": "mandatory-evidence",
+      "expected_disposition": "ambiguous",
+      "candidate_membership": true,
+      "hypothesis_state": "needs-input",
+      "abstention_state": "missing-information",
+      "factual_projection": {
+        "applicability": "contradicted",
+        "supplying_snapshot_matches": true,
+        "analysis_context_matches": true,
+        "has_supporting_evidence": true,
+        "has_contradicting_evidence": true,
+        "dependency_ids": [
+          "dependency.015"
+        ]
+      }
+    },
+    {
+      "semantic_member_key": "fact.d.005",
+      "source_fact_id": "fact.d.005",
+      "derived_from_edge": {
+        "edge_kind": "derived-from",
+        "source_fact_id": "fact.d.005"
+      },
+      "source_kind": "documentation",
+      "lane": "mandatory-evidence",
+      "expected_disposition": "unsupported",
+      "candidate_membership": false,
+      "hypothesis_state": "absent",
+      "abstention_state": "unsupported",
+      "factual_projection": {
+        "applicability": "applicable",
+        "supplying_snapshot_matches": true,
+        "analysis_context_matches": false,
+        "has_supporting_evidence": true,
+        "has_contradicting_evidence": false,
+        "dependency_ids": [
+          "dependency.016"
+        ]
+      }
+    },
+    {
+      "semantic_member_key": "fact.g.001",
+      "source_fact_id": "fact.g.001",
+      "derived_from_edge": {
+        "edge_kind": "derived-from",
+        "source_fact_id": "fact.g.001"
+      },
+      "source_kind": "coverage-gap",
+      "lane": "mandatory-evidence",
+      "expected_disposition": "unsupported",
+      "candidate_membership": false,
+      "hypothesis_state": "absent",
+      "abstention_state": "unsupported",
+      "factual_projection": {
+        "population_id": "population.semantic.001",
+        "denominator": 3,
+        "missing_capability": "capability.semantic.001",
+        "reason": "A delivered capability is unavailable for three factual members.",
+        "dependency_ids": [
+          "dependency.011"
+        ],
+        "evidence_ids": [
+          "evidence.011"
+        ]
+      }
+    }
+  ],
+  "metamorphic_closure": [
+    {
+      "metamorph_id": "metamorph.rename-display-only",
+      "transformation": "Rename prior_source_identity and winning_source_identity strings only.",
+      "invariant": "All existing decision, candidate, hypothesis, and abstention memberships remain identical."
+    },
+    {
+      "metamorph_id": "metamorph.reorder-input",
+      "transformation": "Permute every factual collection and reorder unrelated members.",
+      "invariant": "Keyed semantic membership remains identical; optional ranking follows declared rank inputs and stable member key, never input order."
+    },
+    {
+      "metamorph_id": "metamorph.relevant-evidence",
+      "transformation": "Change fact.d.001 applicability to contradicted and add one contradicting evidence identity.",
+      "changed_members": [
+        "fact.d.001"
+      ],
+      "expected_change": "Disposition changes admitted to ambiguous; candidate membership remains; hypothesis becomes needs-input; one abstention is added."
+    },
+    {
+      "metamorph_id": "metamorph.rank-only",
+      "transformation": "Increase fact.f.002 locality from 80 to 90.",
+      "changed_members": [
+        "fact.f.002"
+      ],
+      "expected_change": "Only optional candidate order changes; membership and disposition remain identical."
+    },
+    {
+      "metamorph_id": "metamorph.unrelated-insertion",
+      "transformation": "Insert one new comparable equal-link fact with fresh neutral identities.",
+      "invariant": "All existing members remain identical; exactly one new resolved-negative member is added."
+    },
+    {
+      "metamorph_id": "metamorph.true-dependency",
+      "transformation": "Change fact.l.001 winning target to participant.t.001.",
+      "changed_members": [
+        "fact.l.001"
+      ],
+      "expected_change": "Only fact.l.001 changes from admitted to resolved-negative; its candidate and hypothesis memberships are removed."
+    }
+  ],
+  "source_fact_identity": {
+    "expansion_formula": null,
+    "direct_input_rule": "source_fact_id equals the delivered fact_id",
+    "edge_kind": "derived-from",
+    "opaque_product_ids_reproduced": false
+  },
+  "optional_rank_source_fact_ids": [
+    "fact.f.001",
+    "fact.f.002",
+    "fact.f.005",
+    "fact.f.004"
+  ]
+}

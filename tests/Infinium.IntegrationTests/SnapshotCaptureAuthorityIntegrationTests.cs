@@ -18,10 +18,10 @@ namespace Infinium.Tests;
 public sealed class SnapshotCaptureAuthorityIntegrationTests
 {
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Integration")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Evaluation")]
     public void CaptureExistsOnlyAfterExplicitDurableIdempotentSubmission()
     {
         using CaptureStoreContext context = new();
@@ -77,10 +77,10 @@ public sealed class SnapshotCaptureAuthorityIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Integration")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Fault")]
     public void ExpiredQueuedCaptureTerminalizesWithoutStarvingLaterWork()
     {
         using CaptureStoreContext context = new();
@@ -127,10 +127,10 @@ public sealed class SnapshotCaptureAuthorityIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Integration")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Fault")]
     public void ExpiredAttemptCanFailButCannotPublish()
     {
         using CaptureStoreContext context = new();
@@ -175,10 +175,10 @@ public sealed class SnapshotCaptureAuthorityIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Security")]
     public void TypedWorkerAssignmentRetainsCaptureAuthorityAndRejectsStaleProgress()
     {
         using CaptureStoreContext context = new();
@@ -287,10 +287,10 @@ public sealed class SnapshotCaptureAuthorityIntegrationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Integration")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Integration")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Integration")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Integration")]
+    [TestProperty("Category", "Fault")]
     public void CoordinatorRejectsMalformedOrStaleSnapshotPublication()
     {
         ManagedMo2SnapshotCaptureAssignment selection = Selection(Path.GetTempPath());

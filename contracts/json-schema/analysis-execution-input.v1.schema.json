@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.infinium.dev/json-schema/analysis-execution-input.v1.schema.json",
-  "title": "Infinium Slice 5 answer-free analysis execution input v1",
+  "title": "Infinium answer-free analysis execution input v1",
   "type": "object",
   "additionalProperties": false,
   "required": [

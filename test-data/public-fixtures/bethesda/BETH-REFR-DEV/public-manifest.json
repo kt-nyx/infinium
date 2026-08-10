@@ -1,0 +1,32 @@
+{
+  "schema_id": "infinium.evaluation.fixture-public-manifest/v1",
+  "schema_version": "1",
+  "fixture_id": "BETH-REFR-DEV",
+  "fixture_version": "1.4.0",
+  "evaluation_ids": [
+    "EVAL-0052",
+    "EVAL-0086"
+  ],
+  "purpose": "Qualify project-authored placed-reference, relation, placement, override, winner, FormKey, boundary, and bounded taxonomy evidence for later Slice 4 evaluation.",
+  "classification": "boundary",
+  "partition": "development",
+  "partition_history": [
+    {
+      "from": null,
+      "to": "development",
+      "at": "2026-08-01T22:00:00.0000000+00:00",
+      "reason": "Corrected successor to fixture version 1.0.0 after the Slice 4 Mutagen conformance probe exposed a fixture-structure error.",
+      "change_influenced_implementation": true
+    }
+  ],
+  "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
+  "taxonomy_version": "0.1.0",
+  "input_package_fingerprint": "2344888df2959033b5d333ff3a9ada2cfe1db3dbfb33042262f1d85084fd8158",
+  "oracle_fingerprint": "4a24d32424405aebe0d39b1378adaabb254a447fafc687d3c6cea33c55a74e93",
+  "provenance_fingerprint": "1fc4fc6ccc291b77bcd92d106600e1b1998780c36f1e00951a1c4f9736a79dd7",
+  "replay_dependency_fingerprint": "a6db287509b616d508cdc32e9a6cdb781b6d7e2f9fea4a2c3c388e26d6fbf150",
+  "redistribution_class": "project-authored-redistributable",
+  "owner": "infinium-evaluation",
+  "review_state": "accepted",
+  "created_at": "2026-08-02T20:00:00.0000000+00:00"
+}

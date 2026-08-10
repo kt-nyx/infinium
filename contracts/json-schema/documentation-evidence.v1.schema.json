@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.infinium.dev/json-schema/documentation-evidence.v1.schema.json",
-  "title": "Infinium Slice 5 documentation evidence v1",
+  "title": "Infinium documentation evidence v1",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_id", "schema_version", "payload_id", "originating_run_id", "revisions", "imports", "passages", "claims", "applications", "purpose_assignments", "deletion_receipts", "gaps", "failures"],

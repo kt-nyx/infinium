@@ -5,8 +5,7 @@ exact baseline remains deferred
 
 Date: 2026-07-25
 
-Last reviewed: 2026-07-28
-
+Last reviewed: 2026-08-10
 Researcher: Codex agent
 
 Primary question: RQ-027
@@ -130,7 +129,7 @@ This investigation is governed by:
   candidate recall, volume, provenance, latency, IO, memory, disk, and model
   escalation; and
 - the accepted
-  [M0 Wave C plan](../../plans/milestones/M0-research-foundation.md#wave-c--analysis-surfaces-taxonomy-corpus-and-candidate-scale).
+  [M0 Wave C plan](../../plans/milestones/m0/plan.md#wave-c--analysis-surfaces-taxonomy-corpus-and-candidate-scale).
 
 The private `Brain Blast Destruction 2024` profile occupies only rung 5 of the
 [evaluation profile ladder](../../evaluation/evaluation-strategy.md#profile-ladder).

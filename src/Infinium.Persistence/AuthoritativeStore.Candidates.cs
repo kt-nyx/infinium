@@ -15,7 +15,7 @@ public sealed partial class AuthoritativeStore
         DateTimeOffset now)
     {
         ArgumentNullException.ThrowIfNull(checkpoint);
-        Slice5ContractInvariants.Validate(analysis);
+        CandidateAnalysisContractInvariants.Validate(analysis);
         ValidateBinding(binding);
         ValidateSha256(checkpoint.ContentSha256);
         ValidateBoundedJson(checkpoint.PendingAndGapsJson, nameof(checkpoint.PendingAndGapsJson));
@@ -349,15 +349,15 @@ public sealed partial class AuthoritativeStore
         _ => throw new InvalidOperationException("Candidate disposition is not persistable."),
     };
 
-    private static string CandidateStateToken(Slice5ResultState value) => value switch
+    private static string CandidateStateToken(AnalysisResultState value) => value switch
     {
-        Slice5ResultState.Present => "present",
-        Slice5ResultState.Ambiguous => "ambiguous",
-        Slice5ResultState.Partial => "partial",
-        Slice5ResultState.Abstained => "abstained",
-        Slice5ResultState.Unsupported => "unsupported",
-        Slice5ResultState.Failed => "failed",
-        Slice5ResultState.LimitReached => "limit-reached",
+        AnalysisResultState.Present => "present",
+        AnalysisResultState.Ambiguous => "ambiguous",
+        AnalysisResultState.Partial => "partial",
+        AnalysisResultState.Abstained => "abstained",
+        AnalysisResultState.Unsupported => "unsupported",
+        AnalysisResultState.Failed => "failed",
+        AnalysisResultState.LimitReached => "limit-reached",
         _ => throw new InvalidOperationException("Candidate state is not persistable."),
     };
 

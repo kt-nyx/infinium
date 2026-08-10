@@ -1,0 +1,36 @@
+{
+  "schema_id": "infinium.evaluation.fixture-public-manifest/v1",
+  "schema_version": "1",
+  "fixture_id": "DOC-CLAIM-CORE-DEV",
+  "fixture_version": "1.0.0",
+  "evaluation_ids": [
+    "EVAL-0037",
+    "EVAL-0039",
+    "EVAL-0064",
+    "EVAL-0067",
+    "EVAL-0083",
+    "EVAL-0086"
+  ],
+  "purpose": "Exercise deterministic UTF-8 documentation revision, exact passage, closed claim kinds, shared passage, applicability, contradiction, purpose assignment, provenance, and no-model boundaries.",
+  "classification": "boundary",
+  "partition": "development",
+  "partition_history": [
+    {
+      "from": null,
+      "to": "development",
+      "at": "2026-08-08T18:00:00.0000000+00:00",
+      "reason": "Fresh public documentation stage semantic package preregistered before product comparison.",
+      "change_influenced_implementation": false
+    }
+  ],
+  "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
+  "taxonomy_version": "0.1.0",
+  "input_package_fingerprint": "ffa307e8c712662106fd172f0e5f124714d6ee3e9f5d378e91ce706524a1e241",
+  "oracle_fingerprint": "f3d457476f078e02c5fa32dc28d252ad220b2de147bb3eb6b13b891261aeb7b2",
+  "provenance_fingerprint": "cbd4d7ea13343aed2b5076c0a82cfc784e8be83fef2c247c08ca853bfc643ac3",
+  "replay_dependency_fingerprint": "a23bc349e10c093128284ac32e16db1892e8eaed55ce6e4654260cac11c043cd",
+  "redistribution_class": "project-authored-redistributable",
+  "owner": "infinium-evaluation",
+  "review_state": "accepted",
+  "created_at": "2026-08-08T18:00:00.0000000+00:00"
+}

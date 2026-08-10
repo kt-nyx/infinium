@@ -1,0 +1,13 @@
+{
+  "fixture_id": "PLATFORM-ANALYSIS-RUNTIME-DEV-v1",
+  "fixture_version": "1.1.0",
+  "partition_history": [
+    {
+      "from": null,
+      "to": "development",
+      "at": "2026-07-29T00:00:00.0000000+00:00",
+      "reason": "Initial registration of the project-authored platform runtime substrate fixture.",
+      "change_influenced_implementation": false
+    }
+  ]
+}

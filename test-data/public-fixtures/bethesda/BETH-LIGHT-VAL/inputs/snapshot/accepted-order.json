@@ -1,0 +1,114 @@
+{
+  "schema_id": "infinium.evaluation.bethesda-accepted-order-construction-input/v1",
+  "schema_version": "1",
+  "fixture_id": "BETH-LIGHT-VAL",
+  "fixture_version": "1.4.0",
+  "source_basis": "accepted-bethesda-construction-manifest-and-retained-input-seals",
+  "snapshot_contract_version": "3.0.0",
+  "adapter_id": "infinium.mo2-static-reconstruction/v3",
+  "selected_profile_name": "BETH-LIGHT-VAL",
+  "construction_manifest_fingerprint": "f56d30c824f48950cafb3176b9db48b49d233fc8a27ab88d623b92a6b77f3694",
+  "provider_order": [
+    {
+      "provider_id": "beth-light-val-provider-00",
+      "priority": 0,
+      "source_artifact_id": "inputs/plugins/00-Pad.esm",
+      "source_sha256": "7ee03b2ef46c82525644553259b32260c0defc87b61ae986519acab32496fd89"
+    },
+    {
+      "provider_id": "beth-light-val-provider-01",
+      "priority": 1,
+      "source_artifact_id": "inputs/plugins/01-Native.esl",
+      "source_sha256": "8bd7537ada2bc83c61ef399b1145bb63c0ef68aef90cba49be0565053cf44b98"
+    },
+    {
+      "provider_id": "beth-light-val-provider-02",
+      "priority": 2,
+      "source_artifact_id": "inputs/plugins/02-Flagged.esp",
+      "source_sha256": "e60f667e43a62a8b24d8702cbcb9f6242017c84cf138bc74d2cb84e5ae649609"
+    },
+    {
+      "provider_id": "beth-light-val-provider-03",
+      "priority": 3,
+      "source_artifact_id": "inputs/plugins/03-Consumer.esp",
+      "source_sha256": "9c13f801a9f9464568b1b8e9f517cf03d1013960e9a5130c9dd02ec18d0b080c"
+    },
+    {
+      "provider_id": "beth-light-val-provider-04",
+      "priority": 4,
+      "source_artifact_id": "inputs/plugins/04-Winner.esp",
+      "source_sha256": "3b75c15391d47da2327107e61cce602003a757a12afba41382807760b8cbeeda"
+    }
+  ],
+  "plugin_order": [
+    {
+      "load_order": 0,
+      "file_name": "00-Pad.esm",
+      "artifact_id": "inputs/plugins/00-Pad.esm",
+      "sha256": "7ee03b2ef46c82525644553259b32260c0defc87b61ae986519acab32496fd89",
+      "provider_id": "beth-light-val-provider-00"
+    },
+    {
+      "load_order": 1,
+      "file_name": "01-Native.esl",
+      "artifact_id": "inputs/plugins/01-Native.esl",
+      "sha256": "8bd7537ada2bc83c61ef399b1145bb63c0ef68aef90cba49be0565053cf44b98",
+      "provider_id": "beth-light-val-provider-01"
+    },
+    {
+      "load_order": 2,
+      "file_name": "02-Flagged.esp",
+      "artifact_id": "inputs/plugins/02-Flagged.esp",
+      "sha256": "e60f667e43a62a8b24d8702cbcb9f6242017c84cf138bc74d2cb84e5ae649609",
+      "provider_id": "beth-light-val-provider-02"
+    },
+    {
+      "load_order": 3,
+      "file_name": "03-Consumer.esp",
+      "artifact_id": "inputs/plugins/03-Consumer.esp",
+      "sha256": "9c13f801a9f9464568b1b8e9f517cf03d1013960e9a5130c9dd02ec18d0b080c",
+      "provider_id": "beth-light-val-provider-03"
+    },
+    {
+      "load_order": 4,
+      "file_name": "04-Winner.esp",
+      "artifact_id": "inputs/plugins/04-Winner.esp",
+      "sha256": "3b75c15391d47da2327107e61cce602003a757a12afba41382807760b8cbeeda",
+      "provider_id": "beth-light-val-provider-04"
+    }
+  ],
+  "isolated_capture_variants": [
+    {
+      "artifact_id": "inputs/mutations/Consumer-LightReferenceOutOfRange.esp",
+      "sha256": "938de42aa562dcf02b7678a71dd22ed13451c36a389a7e75dccf7ef1bc33a913"
+    },
+    {
+      "artifact_id": "inputs/mutations/FlaggedEsp-AboveLightMaximum.esp",
+      "sha256": "3b517170f45521c8f7bed82347a077db939799d764c55860c39f59b6751d2140"
+    },
+    {
+      "artifact_id": "inputs/mutations/FlaggedEsp-BelowObjectRange.esp",
+      "sha256": "e67567fd8b8789314817db69585e2caf55bfbca0341e1943defbadc313027070"
+    },
+    {
+      "artifact_id": "inputs/mutations/Native-AboveLightMaximum.esl",
+      "sha256": "fe8e35888609636451e8462e9bc7cc2659433c84620f9c25abafc1fa2dc79394"
+    },
+    {
+      "artifact_id": "inputs/mutations/Native-BelowObjectRange.esl",
+      "sha256": "06cc4e3b1021c0213229669ea57444a4e0db438f74e17228233b1fb67dedfca0"
+    },
+    {
+      "artifact_id": "inputs/mutations/Native-HeaderFlagRemoved.esl",
+      "sha256": "687d6d7fd35b8c7ffbe4f28dc178fe0fcb36c4a54777bcccb93611a165227182"
+    }
+  ],
+  "capture_binding_algorithm": "infinium.fixture-snapshot-capture-binding/v1",
+  "expected_capture_binding_fingerprint": "2c8a848950949c145d9177db6b934658ef55c087f187adb538a889aa61e398c1",
+  "capture_policy": {
+    "manager_launch": "forbidden",
+    "usvfs_launch": "forbidden",
+    "protected_root_write": "forbidden",
+    "supplied_order_only": true
+  }
+}

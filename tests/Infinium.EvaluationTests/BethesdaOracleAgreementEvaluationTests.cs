@@ -23,14 +23,14 @@ public sealed class BethesdaOracleAgreementEvaluationTests
     ];
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Evaluation")]
     public void Eval0052CoreRecordsLinksChainsAndWinnersMatchIndependentOracle()
     {
         foreach (string fixture in CoreFixtures)
         {
             using JsonDocument oracle = TestRepository.ReadJson(
-                "test-data", "evaluation", "m1-semantic", fixture,
+                "test-data", "public-fixtures", "bethesda", fixture,
                 "oracle", "independent-reader-report.json");
             foreach (JsonElement scenario in oracle.RootElement.GetProperty("scenario_semantics").EnumerateArray())
             {
@@ -332,8 +332,8 @@ public sealed class BethesdaOracleAgreementEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestProperty("Category", "M1Evaluation")]
+    [TestCategory("Evaluation")]
+    [TestProperty("Category", "Evaluation")]
     public void Eval0086CurrentTaxonomyContractKeepsAxesIndependentWithoutHistoricalOracleAuthority()
     {
         foreach (string fixture in new[] { "BETH-NPC-DEV", "BETH-REFR-DEV", "BETH-UNSUPPORTED-VAL" })
@@ -362,7 +362,7 @@ public sealed class BethesdaOracleAgreementEvaluationTests
                 item.AssignmentId.StartsWith("taxonomy:", StringComparison.Ordinal)
                 && item.AssignmentId.Length == 29));
             Assert.IsTrue(snapshot.Taxonomy.All(item =>
-                item.AnalyzerOrAdjudicatorId == "analyzer:infinium-bethesda-m1-semantic-index"));
+                item.AnalyzerOrAdjudicatorId == "analyzer:infinium-bethesda-semantic-index"));
             BethesdaSemanticSnapshot repeated = new BethesdaSemanticExtractor().Extract(
                 BethesdaSemanticTestSnapshot.Create(fixture)).Snapshot!;
             CollectionAssert.AreEqual(
@@ -473,9 +473,9 @@ public sealed class BethesdaOracleAgreementEvaluationTests
     private static BethesdaSemanticRequest ScenarioRequest(string fixture, JsonElement scenario)
     {
         string fixtureRoot = TestRepository.PathFromRoot(
-            "test-data", "evaluation", "m1-semantic", fixture, "inputs");
+            "test-data", "public-fixtures", "bethesda", fixture, "inputs");
         using JsonDocument reader = TestRepository.ReadJson(
-            "test-data", "evaluation", "m1-semantic", fixture,
+            "test-data", "public-fixtures", "bethesda", fixture,
             "oracle", "independent-reader-report.json");
         Dictionary<string, string[]> mastersByPath = reader.RootElement.GetProperty("files")
             .EnumerateArray()

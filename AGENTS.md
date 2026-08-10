@@ -7,13 +7,19 @@ repository at sibling path `../infinium-legacy-archive/`; the tracked portion
 also remains recoverable from Git history through commit `7dd3da6`. Do not
 inspect, restore, or use that archive unless the user explicitly requests it.
 
+Superseded evaluator-development staging directories are consolidated at
+`../infinium-evaluator-development-archive/`. That archive is also out of
+scope unless the user explicitly authorizes archaeological evaluator review.
+Its presence does not grant private-fixture access or current evaluator
+authority.
+
 ## Required reading order
 
 Before research, planning, architecture, or implementation work:
 
 1. `docs/README.md`
 2. `docs/current-state.md`
-3. `docs/development/execution-policy.md`
+3. `docs/execution-policy.md`
 4. `docs/product/product-definition.md`
 5. `docs/product/requirements.md`
 6. `docs/product/mod-impact-taxonomy.md`
@@ -87,7 +93,7 @@ do not become current defaults merely because an old record is linked.
   analysis.
 - Preserve full provenance and expose coverage gaps rather than inventing
   certainty.
-- Follow `docs/development/execution-policy.md` for ordinary work: implement,
+- Follow `docs/execution-policy.md` for ordinary work: implement,
   test, review, correct, and re-review until the package is accepted or a
   genuine escalation condition occurs.
 - Treat failed tests, review findings, fixture defects, schema/codec mismatch,
@@ -118,15 +124,15 @@ define the correction policy for ordinary product development.
   `contracts/protobuf/`, and `src/`; repository-governance schemas under
   `contracts/repository/` are contract-test metadata and never product inputs;
   current public-fixture readers live under
-  `tools/evaluation/Infinium.PublicFixtures/` and use the active product
+  `tools/fixtures/Infinium.PublicFixtures/` and use the active product
   validator.
 - `tools/evaluation/Infinium.EvaluatorV2/` is frozen historical protocol `/4`
   evidence. It is outside the default solution graph and may run only through
   `eng/invoke-m1-slice4-protocol4-bounded-regression.ps1`.
-- `docs/evaluation/fixtures/independent-slice3-evaluator-20260729/` is retained
-  historical evaluator evidence. It is not a current public fixture, must not
-  be validated with live product schemas, and has no current executable entry
-  point or product authority.
+- The former `docs/evaluation/fixtures/independent-slice3-evaluator-20260729/`
+  tree is Git-only historical evaluator evidence recorded in the retirement
+  inventory. It is not a current public fixture, executable workflow, or
+  product authority.
 - Retired compatibility code, predecessor schemas, and obsolete proof tools
   exist only through Git identities recorded in
   `docs/evaluation/retired-evaluation-assets.v1.json`.

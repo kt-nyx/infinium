@@ -7,8 +7,8 @@ namespace Infinium.Tests;
 public sealed class DomainContractTests
 {
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void ContractPrimitivesRejectAmbiguousOrUnversionedValues()
     {
         Assert.ThrowsExactly<ArgumentException>(() => _ = new OpaqueId(" "));
@@ -19,8 +19,8 @@ public sealed class DomainContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void Sha256FingerprintNormalizesCaseWithoutChangingIdentity()
     {
         Sha256Fingerprint upper = new(new string('A', 64));
@@ -31,8 +31,8 @@ public sealed class DomainContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void TaxonomyAssignmentRequiresCodeOnlyForAssignedState()
     {
         TaxonomyAssignmentContract invalid = new(
@@ -58,8 +58,8 @@ public sealed class DomainContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void AnalyzerDeclarationRequiresAcceptedTaxonomyAndRawExperimentalOutput()
     {
         AnalyzerDeclarationContract invalid = CreateAnalyzerDeclaration() with
@@ -108,7 +108,7 @@ public sealed class DomainContractTests
                 [CoverageState.Completed, CoverageState.CompletedWithGaps, CoverageState.Unsupported],
                 "unsupported inputs emit explicit coverage"),
             new AnalyzerOperationRequirementsContract(ExecutionRequirement.LocalOnly, false, false, false),
-            new AnalyzerScaleAndCostContract("bounded M1", AnalyzerCostClass.LocalModerate, false),
+            new AnalyzerScaleAndCostContract("bounded local analysis", AnalyzerCostClass.LocalModerate, false),
             new AnalyzerResourceBoundsContract(100, 100, 1_000),
             AnalyzerMaturity.Experimental,
             true,
@@ -137,8 +137,8 @@ public sealed class DomainContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Fault")]
     public void DefaultLifecycleAndCoverageStatesAreExplicitlyUnspecified()
     {
         LifecycleState lifecycle = (LifecycleState)Enum.ToObject(typeof(LifecycleState), 0);
@@ -151,8 +151,8 @@ public sealed class DomainContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void TerminalLifecycleStateCannotTransition()
     {
         LifecycleTransitionContract transition = new(
@@ -173,8 +173,8 @@ public sealed class DomainContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void LeadOnlyCaseCannotContainAFinding()
     {
         CaseOccurrenceContract invalid = new(
@@ -192,8 +192,8 @@ public sealed class DomainContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void SupportedCaseRequiresAFinding()
     {
         CaseOccurrenceContract invalid = new(
@@ -211,8 +211,8 @@ public sealed class DomainContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestProperty("Category", "M1Contract")]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Contract")]
     public void TypedEvidenceContractsAreDistinctRuntimeTypes()
     {
         Type[] types =
@@ -236,10 +236,10 @@ public sealed class DomainContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
     public void LlmAdmissionRequiresExplicitOperationAndInvocation()
     {
         LlmInvolvementContract invalid = new(
@@ -252,10 +252,10 @@ public sealed class DomainContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
     public void ProposalAdmissionRejectsTypeOrInvocationAuthorityDrift()
     {
         RunOutputAggregateContract valid = CreateProposalAdmissionOutput();
@@ -283,10 +283,10 @@ public sealed class DomainContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestCategory("M1Security")]
-    [TestProperty("Category", "M1Unit")]
-    [TestProperty("Category", "M1Security")]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    [TestProperty("Category", "Unit")]
+    [TestProperty("Category", "Security")]
     public void RunOutputRejectsUnaccountedAdmissionAndAuthorityLaundering()
     {
         RunOutputAggregateContract valid = CreateProposalAdmissionOutput();
@@ -303,8 +303,8 @@ public sealed class DomainContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void RunOutputRejectsNestedAndCollectionStateDrift()
     {
         RunOutputAggregateContract valid = CreateProposalAdmissionOutput();
@@ -332,8 +332,8 @@ public sealed class DomainContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void CoverageRejectsImpossibleCountsAndDanglingRunReferences()
     {
         RunOutputAggregateContract valid = CreateProposalAdmissionOutput();
@@ -365,8 +365,8 @@ public sealed class DomainContractTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit")]
-    [TestProperty("Category", "M1Unit")]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void CliSummaryKeepsDurationUsageCostAndUnresolvedHoldsExplicit()
     {
         TypedOutputCountsContract typedCounts = new(

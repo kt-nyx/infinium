@@ -148,7 +148,7 @@ public sealed partial class AuthoritativeStore
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(request.Attempt);
         ValidateBinding(request.Binding);
-        Slice5ContractInvariants.Validate(request.Replay);
+        AnalysisReplayContractInvariants.Validate(request.Replay);
         RunOutputContractInvariants.Validate(request.RunOutput);
         ValidateSha256(request.SemanticOutputFingerprint);
         if (request.RunOutput.RunId != request.Attempt.RunId

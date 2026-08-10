@@ -2269,7 +2269,7 @@ public sealed partial class AuthoritativeStore : IDisposable
         DocumentationEvidenceContract evidence)
     {
         ArgumentNullException.ThrowIfNull(evidence);
-        Slice5ContractInvariants.Validate(evidence);
+        DocumentationEvidenceContractInvariants.Validate(evidence);
         if (evidence.DeletionReceipts.Count == 0)
         {
             return evidence;
@@ -2329,7 +2329,7 @@ public sealed partial class AuthoritativeStore : IDisposable
             {
                 PayloadId = DocumentationEvidenceIdentity.ComputePayloadId(prepared),
             };
-            Slice5ContractInvariants.Validate(prepared);
+            DocumentationEvidenceContractInvariants.Validate(prepared);
             return prepared;
         }
     }
@@ -2341,7 +2341,7 @@ public sealed partial class AuthoritativeStore : IDisposable
         DateTimeOffset now)
     {
         ArgumentNullException.ThrowIfNull(evidence);
-        Slice5ContractInvariants.Validate(evidence);
+        DocumentationEvidenceContractInvariants.Validate(evidence);
         byte[] canonicalEvidence = JsonSerializer.SerializeToUtf8Bytes(evidence, DocumentationPayloadJsonOptions);
         if (!serializedEvidence.Span.SequenceEqual(canonicalEvidence))
         {
@@ -2350,13 +2350,13 @@ public sealed partial class AuthoritativeStore : IDisposable
         }
         if (evidence.Revisions.Count != 1 || evidence.Imports.Count != 1)
         {
-            throw new InvalidOperationException("WP2 publication accepts one revision/import transaction at a time.");
+            throw new InvalidOperationException("Documentation publication accepts one revision/import transaction at a time.");
         }
 
         DocumentationRevisionContract revision = evidence.Revisions[0];
         DocumentationImportContract import = evidence.Imports[0];
         bool cleanImport = import.Mode == DocumentationImportMode.CleanImport;
-        if ((cleanImport && revision.RetentionState == Slice5ResultState.Present) != sourceBytes.HasValue)
+        if ((cleanImport && revision.RetentionState == AnalysisResultState.Present) != sourceBytes.HasValue)
         {
             throw new InvalidOperationException("Retained source bytes must match the revision retention state.");
         }
@@ -3743,7 +3743,7 @@ public sealed partial class AuthoritativeStore : IDisposable
                     System.Globalization.CultureInfo.InvariantCulture) != 1)
             {
                 throw new InvalidOperationException(
-                    "The Slice 5 analytical storage migration identity is invalid.");
+                    "The analysis pipeline analytical storage migration identity is invalid.");
             }
         }
 
@@ -4107,7 +4107,7 @@ public sealed partial class AuthoritativeStore : IDisposable
             || ComputeSchemaFingerprint(connection) != schema4Fingerprint)
         {
             throw new InvalidOperationException(
-                "Schema 4 does not match the exact accepted Slice 5 contract required for WP4 migration.");
+                "Schema 4 does not match the exact accepted analysis contract required for finding and case storage migration.");
         }
         using SqliteCommand migration = connection.CreateCommand();
         migration.CommandText =
@@ -4151,7 +4151,7 @@ public sealed partial class AuthoritativeStore : IDisposable
             || ComputeSchemaFingerprint(connection) != SchemaV3Fingerprint)
         {
             throw new InvalidOperationException(
-                "Schema 3 does not match the exact M1 storage contract required for migration.");
+                "Schema 3 does not match the exact accepted storage contract required for migration.");
         }
 
         using SqliteCommand migration = connection.CreateCommand();
@@ -4956,11 +4956,11 @@ public sealed partial class AuthoritativeStore : IDisposable
         _ => throw new InvalidOperationException("Documentation import mode is not closed."),
     };
 
-    private static string ResultStateToken(Slice5ResultState value) => value switch
+    private static string ResultStateToken(AnalysisResultState value) => value switch
     {
-        Slice5ResultState.Present => "present",
-        Slice5ResultState.Partial => "partial",
-        Slice5ResultState.Unavailable => "unavailable",
+        AnalysisResultState.Present => "present",
+        AnalysisResultState.Partial => "partial",
+        AnalysisResultState.Unavailable => "unavailable",
         _ => throw new InvalidOperationException("Documentation retention state is not persistable."),
     };
 

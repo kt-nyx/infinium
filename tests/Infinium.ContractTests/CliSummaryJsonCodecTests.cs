@@ -1,5 +1,5 @@
 using System.Text;
-using Infinium.Application.Evaluation;
+using Infinium.Application.Serialization;
 using Infinium.Domain.Contracts;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -9,8 +9,8 @@ namespace Infinium.Tests;
 public sealed class CliSummaryJsonCodecTests
 {
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestProperty("Category", "M1Contract")]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Contract")]
     public void StableCliSummaryRoundTripsWithDurationAndSeparatedCost()
     {
         CliSummaryDocumentContract expected = CreateValidSummary();
@@ -26,10 +26,10 @@ public sealed class CliSummaryJsonCodecTests
     }
 
     [TestMethod]
-    [TestCategory("M1Contract")]
-    [TestCategory("M1Fault")]
-    [TestProperty("Category", "M1Contract")]
-    [TestProperty("Category", "M1Fault")]
+    [TestCategory("Contract")]
+    [TestCategory("Fault")]
+    [TestProperty("Category", "Contract")]
+    [TestProperty("Category", "Fault")]
     public void StableCliSummaryRejectsExitAndCostAvailabilityDrift()
     {
         string json = Encoding.UTF8.GetString(CliSummaryJsonCodec.Serialize(CreateValidSummary()));

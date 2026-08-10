@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.infinium.dev/json-schema/finding-case-input.v1.schema.json",
-  "title": "Infinium Slice 5 answer-free finding and case facts v1",
+  "title": "Infinium answer-free finding and case facts v1",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_id", "schema_version", "input_id", "originating_run_id", "promotion_policy_id", "promotion_policy_version", "reconciliation_policy_id", "reconciliation_policy_version", "reconciliation_actor_id", "assessment_time", "candidate_analysis", "finding_evidence_facts", "finding_recommendation_facts", "shared_cause_proofs", "taxonomy_classification_facts", "taxonomy_projection_inputs", "coverage_population_facts", "coverage_member_facts", "coverage_failure_facts", "prior_findings", "prior_cases", "producer_compatibilities", "related_finding_facts", "reconciliation_candidate_facts", "boundaries"],

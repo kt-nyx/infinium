@@ -1,6 +1,6 @@
 # Protobuf contracts
 
-Status: M1 Slice 1 contract
+Status: current product contract
 Protocol generation: `v1`
 
 These proto3 schemas define Infinium's versioned local process contracts. They
@@ -72,14 +72,14 @@ messages so later changes cannot accidentally add secrets, generic paths,
 database access, arbitrary URLs/commands, or publication claims to those
 surfaces.
 
-## M1 finite ceilings
+## Finite contract ceilings
 
 Proto3 does not enforce collection, byte, or numeric limits. Producers and
 consumers must validate before allocation/use and reject a zero, larger,
 negative-where-prohibited, inconsistent, or overflowed value. Negotiation may
 select a lower value, never a higher one.
 
-The M1 contract ceilings are:
+The current contract ceilings are:
 
 | Item | Ceiling |
 | --- | ---: |

@@ -1,0 +1,13 @@
+{
+  "fixture_id": "DOC-CLAIM-ADVERSARIAL-VAL",
+  "fixture_version": "1.0.0",
+  "partition_history": [
+    {
+      "from": null,
+      "to": "validation",
+      "at": "2026-08-08T18:05:00.0000000+00:00",
+      "reason": "Fresh public documentation stage adversarial package preregistered and independently authored before product comparison.",
+      "change_influenced_implementation": false
+    }
+  ]
+}

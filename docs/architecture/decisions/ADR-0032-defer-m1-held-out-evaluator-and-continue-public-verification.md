@@ -2,6 +2,8 @@
 
 Status: Accepted
 
+Last reviewed: 2026-08-10
+
 Date: 2026-08-07
 
 Accepted by: Project owner
@@ -60,7 +62,7 @@ current attempt lacks.
    This decision authorizes no private access, candidate execution, corpus
    work, adaptation, scoring, or replacement evaluator.
 8. Authorize the public closeout and replacement verification work in
-   [the evaluator-deferral plan](../../plans/slices/M1-slice-4.5-evaluator-deferral-and-m1-continuation.md).
+   [the evaluator-deferral plan](../../plans/milestones/m1/slices/s4.5/plan.md).
    Slice 5 becomes eligible only when that plan's closeout is accepted.
 
 ## Future evaluator re-entry
@@ -99,7 +101,7 @@ and `EVAL-0086`.
 - [ADR-0029](ADR-0029-layered-evidence-and-partial-semantic-publication.md)
 - [ADR-0030](ADR-0030-protocol-5-successor-qualification.md)
 - [ADR-0031](ADR-0031-facegen-loose-availability-gap-and-protocol-5-successor-model.md)
-- [WP1V hard stop](../../evaluation/m1-slice4-protocol-5-wp1v-proof-closure-hard-stop.md)
+- [WP1V hard stop](../../evaluation/evaluator-history.md)
 
 ## Accepted freeze-boundary clarification — 2026-08-07
 
@@ -123,13 +125,13 @@ held-out verdict, Slice 4.5 `PASS`, or an overall product verdict. Any frozen
 blob mismatch, unavailable frozen identity, current non-test core mismatch,
 unattributed current test change, known-gap execution, or private/verdict
 boundary breach remains a hard stop. The exact verification evidence is in the
-[public freeze-boundary record](../../evaluation/m1-slice4-protocol-4-freeze-boundary-clarification.md).
+[public freeze-boundary record](../../evaluation/evaluator-history.md).
 
-## Current closeout implementation status
+## Closeout implementation status at acceptance
 
 `M1/S4.5/EVAL-CLOSEOUT` received final acceptance on 2026-08-07. The condition
 in decision 8 is satisfied: Slice 4.5 is closed by owner disposition. Slice 5
-WP1 has since completed and been reviewed, and WP2 is next under the
-continuation verification profile. M1 remains active. The exact evaluator-
-closeout evidence is in the
-[closeout acceptance record](../../evaluation/m1-slice4.5-evaluator-deferral-closeout-acceptance.md).
+became eligible under the continuation verification profile. Later execution
+status is maintained only in [current project state](../../current-state.md).
+The exact evaluator-closeout evidence is in the
+[closeout acceptance record](../../evaluation/evaluator-history.md).

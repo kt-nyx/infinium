@@ -2,8 +2,7 @@
 
 Status: Active navigation
 
-Last reviewed: 2026-08-08
-
+Last reviewed: 2026-08-10
 This directory is the authoritative entry point for the rebuilt Infinium
 project. It records product intent, accepted decisions, current execution,
 research, evaluation standards, and implementation evidence without treating
@@ -12,7 +11,7 @@ the abandoned code or historical evaluator work as current instructions.
 ## Start here
 
 1. [Current project state](current-state.md)
-2. [Development execution policy](development/execution-policy.md)
+2. [Development execution policy](execution-policy.md)
 3. [Product definition](product/product-definition.md)
 4. [Requirements](product/requirements.md)
 5. [Skyrim SE mod-impact taxonomy](product/mod-impact-taxonomy.md)
@@ -37,7 +36,7 @@ its package status into navigation files or infer current work from historical
 plans and records.
 
 Ordinary development follows the
-[development execution policy](development/execution-policy.md): implement a
+[development execution policy](execution-policy.md): implement a
 vertical increment, run focused checks, review, classify findings, correct,
 and re-review. Routine defects do not create a correction-budget stop. Strict
 freeze, no-retry, and terminal-stop rules remain scoped to the evaluator or
@@ -49,9 +48,11 @@ other exceptional operation that explicitly requires them.
   [jobs/caching/snapshots](architecture/jobs-caching-and-snapshots.md),
   [integration boundaries](architecture/integrations.md), and
   [security/privacy](architecture/security-and-privacy.md)
-- Evaluation: [evaluation strategy](evaluation/evaluation-strategy.md),
+- Evaluation: [evaluation index](evaluation/README.md),
+  [evaluation strategy](evaluation/evaluation-strategy.md),
   [case catalog](evaluation/case-catalog.md),
   [product/evaluator authority boundary](evaluation/product-evaluator-boundary.md),
+  [evaluator history](evaluation/evaluator-history.md),
   [M1 continuation verification profile](evaluation/m1-continuation-verification-profile.md),
   [fixture guidelines](evaluation/fixture-guidelines.md), and
   [anti-overfitting rules](evaluation/anti-overfitting-rules.md)
@@ -61,9 +62,9 @@ other exceptional operation that explicitly requires them.
   and [investigation procedure](research/investigations/README.md)
 - Planning: [plan policy](plans/README.md),
   [work-breakdown notation](plans/work-breakdown-notation.md),
-  [active M1 plan](plans/milestones/M1-backend-semantic-proof.md),
-  [active Slice 5 plan](plans/slices/M1-slice-5-evidence-documentation-candidates-cases-replay.md),
-  and [current Slice 5 record](plans/implementation-records/M1-slice-5.md)
+  [active M1 plan](plans/milestones/m1/plan.md),
+  [active Slice 5 plan](plans/milestones/m1/slices/s5/plan.md),
+  and [current Slice 5 record](plans/milestones/m1/slices/s5/record.md)
 - Reference: [glossary](glossary.md)
 
 ## Document authority
@@ -109,13 +110,17 @@ Every material document should include a status and last-reviewed date.
 
 The old implementation is outside the active repository. A maintainer-local
 archive exists at sibling path `../infinium-legacy-archive/`, and the tracked
-implementation remains recoverable through Git commit `7dd3da6`. Do not
-inspect it unless the project owner explicitly requests archaeological review.
+implementation remains recoverable through Git commit `7dd3da6`. Superseded
+evaluator-development staging is consolidated separately at
+`../infinium-evaluator-development-archive/`. Do not inspect either archive
+unless the project owner explicitly requests the corresponding archaeological
+review.
 
-M0 research, Waves A through F, M1 Slices 0 through 4, Slice 4.5 evaluator
-work, and Slice 5 WP1 have detailed accepted plans, ADRs, and implementation
-records under their respective indexes. Those documents preserve evidence and
-chronology; they are not the default path for current implementation.
+M0 research, Waves A through F, completed M1 slices, and the active Slice 5
+record live under the milestone hierarchy. Superseded evaluator-attempt prose
+and proof fixtures are summarized in
+[Evaluator history](evaluation/evaluator-history.md) and retained by exact Git
+blob rather than copied through current navigation.
 
 Private held-out evaluation is deferred with no valid current product verdict.
 Protocol `/5` is retired unqualified. Frozen protocol `/4` is historical

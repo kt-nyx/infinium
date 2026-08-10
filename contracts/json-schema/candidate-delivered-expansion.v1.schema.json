@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.infinium.dev/json-schema/candidate-delivered-expansion.v1.schema.json",
-  "title": "Infinium Slice 5 answer-free delivered candidate expansion v1",
+  "title": "Infinium answer-free delivered candidate expansion v1",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_id", "schema_version", "expansion_id", "originating_run_id", "source_snapshot_id", "analysis_context_id", "configuration_id", "subject_count", "link_series", "face_gen_series", "documentation_series", "coverage_gap_series"],

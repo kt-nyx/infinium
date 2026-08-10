@@ -3,7 +3,7 @@
 Status: Accepted
 Accepted: 2026-08-01
 Accepted by: Project owner
-Last reviewed: 2026-08-01
+Last reviewed: 2026-08-10
 Specification set: `infinium.eval.m1.semantic-and-ground-truth/2`
 Predecessor: [`infinium.eval.m1.semantic-and-ground-truth/1`](m1-semantic-and-ground-truth.md)
 
@@ -12,7 +12,7 @@ Predecessor: [`infinium.eval.m1.semantic-and-ground-truth/1`](m1-semantic-and-gr
 This accepted amendment creates revision `/2` without rewriting retained
 execution or claims bound to revision `/1`. Revision `/2` incorporates `/1`
 except for the two replacements below. ADR-0026 and
-[evaluator-private fixture governance](../evaluator-private-fixture-governance.md)
+[evaluator-private fixture governance](../evaluator-history.md)
 are controlling authority for those replacements. All other cases, assertions,
 support boundaries, and non-pass claims remain unchanged.
 

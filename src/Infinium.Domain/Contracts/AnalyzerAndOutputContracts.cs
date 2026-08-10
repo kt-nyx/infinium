@@ -353,7 +353,7 @@ public static class DomainContractInvariants
         if (!StringComparer.Ordinal.Equals(declaration.TaxonomyId, ContractConstants.TaxonomyId)
             || declaration.TaxonomyVersion != ContractVersion.Parse(ContractConstants.TaxonomyVersion))
         {
-            throw new InvalidOperationException("M1 analyzer declarations must bind the accepted taxonomy version.");
+            throw new InvalidOperationException("Analyzer declarations must bind the accepted taxonomy version.");
         }
 
         if (declaration.Maturity != AnalyzerMaturity.Experimental
@@ -361,7 +361,7 @@ public static class DomainContractInvariants
             || declaration.PresetOrMaturitySuppression)
         {
             throw new InvalidOperationException(
-                "M1 analyzers are Experimental, retain raw output, and cannot suppress by maturity or preset.");
+                "Bounded analyzers are Experimental, retain raw output, and cannot suppress by maturity or preset.");
         }
         if (declaration.OperationRequirements.Mode == ExecutionRequirement.Unspecified
             || declaration.Coverage.PossibleStates.Contains(CoverageState.Unspecified))
@@ -447,7 +447,7 @@ public static class DomainContractInvariants
         RequireNonEmpty(evaluationCases, nameof(declaration.LinkedEvaluationCases));
         RequireUnique(evaluationCases, nameof(declaration.LinkedEvaluationCases));
         RequireNonEmpty(declaration.PayloadContracts, nameof(declaration.PayloadContracts));
-        string[] requiredSlice5Schemas =
+        string[] requiredAnalysisSchemas =
         [
             ContractConstants.DocumentationEvidenceSchemaId,
             ContractConstants.CandidateAnalysisSchemaId,
@@ -459,10 +459,10 @@ public static class DomainContractInvariants
             declaration.NotUsedBoundaries,
             requireNotUsed: true);
         if (declaration.StateModelVersion.Major != 1
-            || !requiredSlice5Schemas.All(schemaId => declaration.PayloadContracts.Any(
+            || !requiredAnalysisSchemas.All(schemaId => declaration.PayloadContracts.Any(
                 item => item.Required && StringComparer.Ordinal.Equals(item.SchemaId, schemaId))))
         {
-            throw new InvalidOperationException("Slice 5 analyzers must bind every required v1 payload, state model v1, and explicit not-used boundary.");
+            throw new InvalidOperationException("analysis pipeline analyzers must bind every required v1 payload, state model v1, and explicit not-used boundary.");
         }
     }
 
@@ -472,7 +472,7 @@ public static class DomainContractInvariants
         if (!StringComparer.Ordinal.Equals(assignment.TaxonomyId, ContractConstants.TaxonomyId)
             || assignment.TaxonomyVersion != ContractVersion.Parse(ContractConstants.TaxonomyVersion))
         {
-            throw new InvalidOperationException("The taxonomy contract is not the accepted M1 taxonomy version.");
+            throw new InvalidOperationException("The taxonomy contract is not the accepted taxonomy version.");
         }
 
         bool hasCode = !string.IsNullOrWhiteSpace(assignment.Code);
@@ -543,7 +543,7 @@ public static class DomainContractInvariants
             || configuration.Resources.MaximumMemoryBytes < 1
             || configuration.Resources.MaximumOutputBytes < 1)
         {
-            throw new InvalidOperationException("Effective controls must retain finite M1 bounds.");
+            throw new InvalidOperationException("Effective controls must retain finite analysis bounds.");
         }
         if (configuration.CachePolicy.AnalyticalMode is not ("reuse-valid" or "force-clean-recomputation")
             || configuration.CachePolicy.SourceMode is not ("reuse-resolved-source" or "force-clean-extraction")
@@ -552,7 +552,7 @@ public static class DomainContractInvariants
             || configuration.CandidateBreadth.Mode is not (
                 "declared-mandatory-and-causal-lanes" or "expanded-deterministic-lanes"))
         {
-            throw new InvalidOperationException("Effective cache and candidate controls use a closed M1 vocabulary.");
+            throw new InvalidOperationException("Effective cache and candidate controls use the closed analysis vocabulary.");
         }
         string[] requiredPayloadSchemas =
         [
@@ -569,7 +569,7 @@ public static class DomainContractInvariants
                 item => item.Required && StringComparer.Ordinal.Equals(item.SchemaId, schemaId))))
         {
             throw new InvalidOperationException(
-                "Effective Slice 5 configuration must bind execution input, required payloads, and not-used boundaries.");
+                "Effective analysis pipeline configuration must bind execution input, required payloads, and not-used boundaries.");
         }
 
         bool providerDisabled = configuration.Provider.Mode == ProviderMode.Disabled;

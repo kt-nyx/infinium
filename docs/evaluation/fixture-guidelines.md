@@ -2,8 +2,7 @@
 
 Status: Accepted; actively maintained
 
-Last reviewed: 2026-08-08
-
+Last reviewed: 2026-08-10
 Wave B's target boundaries and fixture/conformance obligations are accepted by
 ADR-0008 through ADR-0011, and the M1 Wave F case specifications are accepted.
 Execution is partial: completed early M1 slices have exact retained package and
@@ -18,9 +17,9 @@ cases.
 
 Wave F produced the accepted
 [common M1 baseline](m1-evaluation-baseline.md), accepted
-[semantic fixture manifests](fixtures/m1-semantic-fixture-manifests.md), and
+[semantic fixture manifests](specifications/semantic-fixture-catalog.md), and
 accepted
-[platform fixture manifests](fixtures/m1-platform-fixture-manifests.md).
+[platform fixture manifests](specifications/platform-fixture-catalog.md).
 These pre-register detailed fixture families and obligations. Their acceptance
 approves the designs only; the described fixture packages remain uncreated or
 unexecuted where their manifests say so.

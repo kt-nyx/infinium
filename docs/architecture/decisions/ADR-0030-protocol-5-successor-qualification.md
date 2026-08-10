@@ -4,7 +4,7 @@ Status: Accepted historical decision; active `/5` authorization superseded by AD
 Date: 2026-08-07
 Accepted: 2026-08-07
 Accepted by: Project owner
-Last reviewed: 2026-08-07
+Last reviewed: 2026-08-10
 Supersedes: ADR-0027 decision 15 only
 Superseded by: ADR-0031 only for the `/5` semantic-model identity; ADR-0032 for all active `/5` authorization
 
@@ -137,9 +137,9 @@ semantic authority, never from candidate output or private answers.
 
 - [ADR-0027](ADR-0027-public-evaluation-protocol-private-held-out-corpus.md)
 - [ADR-0029](ADR-0029-layered-evidence-and-partial-semantic-publication.md)
-- [Accepted protocol `/4` evidence contract](../../evaluation/specifications/m1-slice4-protocol-4-evidence-contract.md)
-- [WP5 frozen-candidate classification](../../evaluation/m1-slice4-protocol-4-frozen-candidate-conformance-classification.md)
-- [Protocol `/5` successor plan](../../plans/slices/M1-slice-4.5-protocol-5-successor-realignment.md)
+- [Accepted protocol `/4` evidence contract](../../evaluation/evaluator-history.md)
+- [WP5 frozen-candidate classification](../../evaluation/evaluator-history.md)
+- [Protocol `/5` successor plan](../../evaluation/evaluator-history.md)
 
 ## Subsequent disposition
 

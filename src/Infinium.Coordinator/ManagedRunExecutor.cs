@@ -338,7 +338,7 @@ public sealed class ManagedRunExecutor(
                 Guid.NewGuid().ToString("N"),
                 0,
                 isBethesda ? "bethesda-semantic.v2.json"
-                    : isAnalysis ? "analysis-v1-validation-receipt.json" : "slice2-substrate.v1.json",
+                    : isAnalysis ? "analysis-v1-validation-receipt.json" : "platform-substrate.v1.json",
                 isBethesda ? 64L * 1024 * 1024 : isAnalysis ? 1024 * 1024 : 65_536,
                 Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)),
                 workerExpiry,
@@ -562,7 +562,7 @@ public sealed class ManagedRunExecutor(
     {
         RetainedAnalysisPayloadSeal[] seals =
             [assignment.DocumentationEvidence, assignment.CandidateAnalysis, assignment.FindingCase];
-        string[] names = ["analysis-wp2-input.json", "analysis-wp3-input.json", "analysis-wp4-input.json"];
+        string[] names = ["analysis-documentation-input.json", "analysis-candidate-input.json", "analysis-finding-case-input.json"];
         long total = 0;
         for (int index = 0; index < seals.Length; index++)
         {

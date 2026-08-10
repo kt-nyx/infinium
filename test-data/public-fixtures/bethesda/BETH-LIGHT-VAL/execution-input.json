@@ -1,0 +1,280 @@
+{
+  "fixture_id": "BETH-LIGHT-VAL",
+  "fixture_version": "1.4.0",
+  "installation_snapshot_input": {
+    "state": "not-applicable",
+    "reason": "The canonical Bethesda package uses the distinct accepted-order construction role; the current analysis envelope retains its own typed snapshot descriptor."
+  },
+  "accepted_order_construction_input": {
+    "state": "provided",
+    "reason": "Retained Slice 3.5 receipt authoritatively binds construction of the accepted provider/plugin-order projection.",
+    "artifact": {
+      "artifact_id": "inputs/snapshot/accepted-order.json",
+      "artifact_version": "1.4.0",
+      "fingerprint": "e117df61cd1c82f47cf98c0b8735ef1112210de42d325849484bbaf96d60d5cc",
+      "availability": "retained",
+      "byte_length": 4436
+    }
+  },
+  "analysis_context_input": {
+    "state": "provided",
+    "reason": "The current answer-free analysis context is retained and fingerprinted.",
+    "artifact": {
+      "artifact_id": "inputs/analysis-context.json",
+      "artifact_version": "1.4.0",
+      "fingerprint": "a7e73570ea9d6c32c8f58d2b07d120309b2f0e492fa6b087e78be6e1dc3d2e8e",
+      "availability": "retained",
+      "byte_length": 308
+    }
+  },
+  "effective_scan_configuration": {
+    "artifact_id": "inputs/effective-scan-configuration.json",
+    "artifact_version": "1.4.0",
+    "fingerprint": "87340c96ff04443768f70f4999327d820ad816bbd9d8ec13c1ab29e3fd3d25c0",
+    "availability": "retained",
+    "byte_length": 3035
+  },
+  "case_matrix_input": {
+    "state": "provided",
+    "reason": "Retained answer-free scenarios bind exact operations and input membership independently of scan configuration and oracle answers.",
+    "artifact": {
+      "artifact_id": "inputs/case-matrix.json",
+      "artifact_version": "1.4.0",
+      "fingerprint": "7f811267c4d771e713dc7a29170d2339cd3a8dcd08722dd9e24cd995c4439bb6",
+      "availability": "retained",
+      "byte_length": 2335
+    }
+  },
+  "runtime_support_input": {
+    "state": "not-applicable",
+    "reason": "Runtime execution is outside the Bethesda byte-input qualification boundary."
+  },
+  "mo2_instance_profile_input": {
+    "state": "provided",
+    "reason": "Retained synthetic profile receipt records the selected profile and accepted adapter identity.",
+    "artifact": {
+      "artifact_id": "inputs/snapshot/accepted-order.json",
+      "artifact_version": "1.4.0",
+      "fingerprint": "e117df61cd1c82f47cf98c0b8735ef1112210de42d325849484bbaf96d60d5cc",
+      "availability": "retained",
+      "byte_length": 4436
+    }
+  },
+  "plugin_order_input": {
+    "state": "not-applicable",
+    "reason": "No runtime plugin-order input is retained; accepted-order projection construction is declared separately."
+  },
+  "provider_order_input": {
+    "state": "provided",
+    "reason": "Retained synthetic profile receipt records exact provider order and fingerprints.",
+    "artifact": {
+      "artifact_id": "inputs/snapshot/accepted-order.json",
+      "artifact_version": "1.4.0",
+      "fingerprint": "e117df61cd1c82f47cf98c0b8735ef1112210de42d325849484bbaf96d60d5cc",
+      "availability": "retained",
+      "byte_length": 4436
+    }
+  },
+  "source_claim_inputs": [],
+  "analyzer_declarations": [
+    {
+      "artifact_id": "inputs/analyzer-declaration.json",
+      "artifact_version": "1.4.0",
+      "fingerprint": "b2d8c06b95ed127cd7cab95aa06ed708e9873b47a830180c3b5c8bcfda8cccd5",
+      "availability": "retained",
+      "byte_length": 5074
+    }
+  ],
+  "tool_library_versions": [
+    {
+      "component_id": "Infinium.BethesdaFixtures.Generator",
+      "version": "1.4.0",
+      "fingerprint": "e3e285230e16674b5e12f1aff738095086c96ea6596e919587e7e23b5fe7d2c0"
+    },
+    {
+      "component_id": "current-public-fixture-resealer",
+      "version": "1.0.0",
+      "fingerprint": "6f04f97315b3eced6b4528a8693c5e1159022d4aedb794db76169adb1827399f"
+    }
+  ],
+  "declared_archive_state": {
+    "state": "excluded",
+    "reason": "Archive-member semantics are outside this retained plugin-byte package."
+  },
+  "declared_supported_capabilities": [
+    "bethesda-project-authored-fixture-input-v1",
+    "slice3.5-accepted-order-construction-input-v1"
+  ],
+  "declared_unsupported_capabilities": [
+    {
+      "capability_id": "production-bethesda-semantic-analysis",
+      "reason": "Slice 3.5 prepares inputs and independent truth only; production analysis remains pending Slice 4."
+    },
+    {
+      "capability_id": "complete-eval-0052-or-eval-0086-pass",
+      "reason": "Package acceptance does not execute or pass either evaluation case."
+    }
+  ],
+  "resource_and_time_limits": {
+    "wall_time_ms": 120000,
+    "memory_bytes": 536870912,
+    "input_bytes": 29021,
+    "output_bytes": 16777216
+  },
+  "input_payload_refs": [
+    {
+      "artifact_id": "inputs/analysis-context.json",
+      "artifact_version": "1.4.0",
+      "fingerprint": "a7e73570ea9d6c32c8f58d2b07d120309b2f0e492fa6b087e78be6e1dc3d2e8e",
+      "availability": "retained",
+      "byte_length": 308
+    },
+    {
+      "artifact_id": "inputs/analysis-execution-input.json",
+      "artifact_version": "1.4.0",
+      "fingerprint": "97e8c60832ec6a3c1f249b4810146634ba16d5befe7f5556d5f5c9b5c85447b5",
+      "availability": "retained",
+      "byte_length": 2669
+    },
+    {
+      "artifact_id": "inputs/analysis-installation-snapshot.json",
+      "artifact_version": "1.4.0",
+      "fingerprint": "e725950565398cd897ac69f27c67afcc9102285e6ff829ad3dfacea487742a4f",
+      "availability": "retained",
+      "byte_length": 462
+    },
+    {
+      "artifact_id": "inputs/analyzer-declaration.json",
+      "artifact_version": "1.4.0",
+      "fingerprint": "b2d8c06b95ed127cd7cab95aa06ed708e9873b47a830180c3b5c8bcfda8cccd5",
+      "availability": "retained",
+      "byte_length": 5074
+    },
+    {
+      "artifact_id": "inputs/bethesda-semantic-input.json",
+      "artifact_version": "1.4.0",
+      "fingerprint": "d4e0460052dbad51f69778ed9dc6ea37cdbe44a78a7cd1b9209fed1c942ab6bd",
+      "availability": "retained",
+      "byte_length": 467
+    },
+    {
+      "artifact_id": "inputs/case-matrix.json",
+      "artifact_version": "1.4.0",
+      "fingerprint": "7f811267c4d771e713dc7a29170d2339cd3a8dcd08722dd9e24cd995c4439bb6",
+      "availability": "retained",
+      "byte_length": 2335
+    },
+    {
+      "artifact_id": "inputs/construction-manifest.json",
+      "artifact_version": "1.4.0",
+      "fingerprint": "f56d30c824f48950cafb3176b9db48b49d233fc8a27ab88d623b92a6b77f3694",
+      "availability": "retained",
+      "byte_length": 6892
+    },
+    {
+      "artifact_id": "inputs/effective-scan-configuration.json",
+      "artifact_version": "1.4.0",
+      "fingerprint": "87340c96ff04443768f70f4999327d820ad816bbd9d8ec13c1ab29e3fd3d25c0",
+      "availability": "retained",
+      "byte_length": 3035
+    },
+    {
+      "artifact_id": "inputs/mutations/Consumer-LightReferenceOutOfRange.esp",
+      "artifact_version": "1.4.0",
+      "fingerprint": "938de42aa562dcf02b7678a71dd22ed13451c36a389a7e75dccf7ef1bc33a913",
+      "availability": "retained",
+      "byte_length": 420
+    },
+    {
+      "artifact_id": "inputs/mutations/FlaggedEsp-AboveLightMaximum.esp",
+      "artifact_version": "1.4.0",
+      "fingerprint": "3b517170f45521c8f7bed82347a077db939799d764c55860c39f59b6751d2140",
+      "availability": "retained",
+      "byte_length": 227
+    },
+    {
+      "artifact_id": "inputs/mutations/FlaggedEsp-BelowObjectRange.esp",
+      "artifact_version": "1.4.0",
+      "fingerprint": "e67567fd8b8789314817db69585e2caf55bfbca0341e1943defbadc313027070",
+      "availability": "retained",
+      "byte_length": 226
+    },
+    {
+      "artifact_id": "inputs/mutations/Native-AboveLightMaximum.esl",
+      "artifact_version": "1.4.0",
+      "fingerprint": "fe8e35888609636451e8462e9bc7cc2659433c84620f9c25abafc1fa2dc79394",
+      "availability": "retained",
+      "byte_length": 223
+    },
+    {
+      "artifact_id": "inputs/mutations/Native-BelowObjectRange.esl",
+      "artifact_version": "1.4.0",
+      "fingerprint": "06cc4e3b1021c0213229669ea57444a4e0db438f74e17228233b1fb67dedfca0",
+      "availability": "retained",
+      "byte_length": 222
+    },
+    {
+      "artifact_id": "inputs/mutations/Native-HeaderFlagRemoved.esl",
+      "artifact_version": "1.4.0",
+      "fingerprint": "687d6d7fd35b8c7ffbe4f28dc178fe0fcb36c4a54777bcccb93611a165227182",
+      "availability": "retained",
+      "byte_length": 236
+    },
+    {
+      "artifact_id": "inputs/plugins/00-Pad.esm",
+      "artifact_version": "1.4.0",
+      "fingerprint": "7ee03b2ef46c82525644553259b32260c0defc87b61ae986519acab32496fd89",
+      "availability": "retained",
+      "byte_length": 109
+    },
+    {
+      "artifact_id": "inputs/plugins/01-Native.esl",
+      "artifact_version": "1.4.0",
+      "fingerprint": "8bd7537ada2bc83c61ef399b1145bb63c0ef68aef90cba49be0565053cf44b98",
+      "availability": "retained",
+      "byte_length": 265
+    },
+    {
+      "artifact_id": "inputs/plugins/02-Flagged.esp",
+      "artifact_version": "1.4.0",
+      "fingerprint": "e60f667e43a62a8b24d8702cbcb9f6242017c84cf138bc74d2cb84e5ae649609",
+      "availability": "retained",
+      "byte_length": 268
+    },
+    {
+      "artifact_id": "inputs/plugins/03-Consumer.esp",
+      "artifact_version": "1.4.0",
+      "fingerprint": "9c13f801a9f9464568b1b8e9f517cf03d1013960e9a5130c9dd02ec18d0b080c",
+      "availability": "retained",
+      "byte_length": 497
+    },
+    {
+      "artifact_id": "inputs/plugins/04-Winner.esp",
+      "artifact_version": "1.4.0",
+      "fingerprint": "3b75c15391d47da2327107e61cce602003a757a12afba41382807760b8cbeeda",
+      "availability": "retained",
+      "byte_length": 227
+    },
+    {
+      "artifact_id": "inputs/resolved-input-manifest.json",
+      "artifact_version": "1.4.0",
+      "fingerprint": "5d28c850f2e81bdf8d529f85c992c5e19e70267ca12ca14bd821091b63e0b220",
+      "availability": "retained",
+      "byte_length": 423
+    },
+    {
+      "artifact_id": "inputs/snapshot/accepted-order.json",
+      "artifact_version": "1.4.0",
+      "fingerprint": "e117df61cd1c82f47cf98c0b8735ef1112210de42d325849484bbaf96d60d5cc",
+      "availability": "retained",
+      "byte_length": 4436
+    }
+  ],
+  "analysis_execution_input": {
+    "artifact_id": "inputs/analysis-execution-input.json",
+    "artifact_version": "1.4.0",
+    "fingerprint": "97e8c60832ec6a3c1f249b4810146634ba16d5befe7f5556d5f5c9b5c85447b5",
+    "availability": "retained",
+    "byte_length": 2669
+  }
+}

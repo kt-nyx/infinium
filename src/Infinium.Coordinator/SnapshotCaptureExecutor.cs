@@ -42,7 +42,7 @@ public sealed class SnapshotCaptureExecutor(
     public void RecoverAtStartup()
     {
         // Running capture attempts cannot retain worker authority across a
-        // coordinator epoch. This bounded M1 path records them failed rather
+        // coordinator epoch. This bounded snapshot path records them failed rather
         // than inventing a successful publication or automatically rerunning
         // a now-stale filesystem observation.
         _ = runtime.Store.FenceInterruptedSnapshotCaptures(

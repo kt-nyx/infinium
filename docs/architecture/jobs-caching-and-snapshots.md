@@ -2,18 +2,16 @@
 
 Status: Accepted synthesis; actively maintained
 
-Last reviewed: 2026-08-08
-
+Last reviewed: 2026-08-10
 This document records required behavior. RESEARCH-0036, RESEARCH-0037,
 RESEARCH-0039, RESEARCH-0043, and RESEARCH-0046 define the storage, lifecycle,
 coordinator, and cost-control requirements and dispositions. ADR-0015,
 ADR-0016, ADR-0018, and ADR-0023 accept the persistence, lifecycle,
 coordinator/process, and cost-control architecture. M1 Slices 2-4 implement the
 bounded authoritative-store, coordinator/worker/CLI, snapshot, and semantic
-publication substrate. Slice 5 WP1 has added the clean-break downstream
-contracts and migration foundation; WP2 is next and begins typed
-evidence/provenance behavior. Later Slice 5 packages add candidates,
-findings/cases, replay, platform cases, and the comprehensive public corpus.
+publication substrate. The Slice 5 plan owns downstream evidence, candidates,
+findings/cases, publication, replay, platform cases, and comprehensive public
+evidence; consult [current project state](../current-state.md) for delivery status.
 Slice 6 must add the accepted provider cost-control surface. Later tuning,
 scale, and milestone-specific details remain pending.
 

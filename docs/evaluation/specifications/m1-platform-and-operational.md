@@ -6,8 +6,7 @@ Accepted: 2026-07-28
 
 Accepted by: Project owner
 
-Last reviewed: 2026-07-28
-
+Last reviewed: 2026-08-10
 ## Purpose and authority
 
 This document specifies the platform and operational half of the Wave F M1
@@ -32,7 +31,7 @@ implementation, or authorize production implementation before an accepted M1
 plan.
 
 The companion
-[fixture manifests](../fixtures/m1-platform-fixture-manifests.md) define the
+[fixture manifests](platform-fixture-catalog.md) define the
 pre-registered inputs, canaries, fault points, replay dependencies, and expected
 artifacts used below.
 

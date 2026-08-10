@@ -1,0 +1,341 @@
+{
+  "fixture_registry_id": "infinium.public-fixtures.analysis-operations.operational-cases.20260809.3",
+  "fixture_registry_version": "1.0.2",
+  "status": "independently-reviewed-accepted-comparison-complete-with-explicit-native-capability-gaps",
+  "created_utc": "2026-08-09T00:00:00Z",
+  "purpose": "Product-blind public truth for atomic publication, replay and targeted invalidation, bounded query, terminal and representation-equivalent output, stale-attempt recovery, and write/non-mutation safety.",
+  "positive_negative_boundary_class": [
+    "positive",
+    "negative",
+    "boundary"
+  ],
+  "eval_case_ids": [
+    "EVAL-0035",
+    "EVAL-0037",
+    "EVAL-0039",
+    "EVAL-0040",
+    "EVAL-0080"
+  ],
+  "requirement_ids": [],
+  "adr_ids": [],
+  "taxonomy_version": "not-applicable-platform-only",
+  "taxonomy_assignments_or_not_applicable": "not-applicable",
+  "application_and_schema_versions": {
+    "application": "must-be-bound-by-harness-before-execution",
+    "projection_schema": "infinium.public-fixture.ordinary-product-projection/1.0.2",
+    "harness_envelope": "infinium.public-fixture.harness-envelope/1.0.2",
+    "safety_topology": "infinium.public-fixture.safety-topology/1.0.2",
+    "oracle_schema": "infinium.public-fixture.independent-expected-results/1.0.2"
+  },
+  "protocol_and_native_dependency_versions": "not-applicable",
+  "installation_snapshot_identity": "fresh-disposable-root-per-case",
+  "analysis_context_identity": "ordinary-projection-owned",
+  "effective_scan_configuration_identity": "ordinary-projection-owned",
+  "resolved_input_manifest_identity": "ordinary-product-projections.v1.json@33f739fabf923da3bf8b864bf199a07d65a7fa9a04d54755c3034af4fab0bdca",
+  "owner_run_job_attempt_identities": "ordinary-projection-owned",
+  "expected_observations": "oracle-only:expected-results.v1.json",
+  "expected_candidates_hypotheses_findings_cases": "not-applicable",
+  "expected_abstentions_gaps_coverage": "oracle-only by case",
+  "expected_lifecycle_and_cost_events": "oracle-only by case; all provider and billable activity zero",
+  "expected_filesystem_process_network_effects": "oracle-only safety cases",
+  "expected_replayability_and_auditability": "exact frozen projections, envelope, oracle, harness receipts, and retained case artifacts",
+  "fault_schedule": "harness-only:harness-envelope.v1.json",
+  "security_and_non_mutation_canaries": "harness-only:harness-envelope.v1.json safety bindings",
+  "ground_truth_method": "Synthetic construction and direct derivation from atomic commit boundaries, exact dependency identity, graph reachability, stable key ordering, declared terminal facts and gaps, monotonic fencing epochs, final-object path authority, before/after root equivalence, and inert effect spies.",
+  "answer_isolation_review": {
+    "author_status": "product-blind",
+    "product_output_used": false,
+    "comparison_status": "complete-12-of-12-passed-from-sanitized-receipt",
+    "independent_review_status": "accepted",
+    "ordinary_product_projection": "ordinary-product-projections.v1.json#/projections/{selected-index}",
+    "harness_only_envelope": "harness-envelope.v1.json",
+    "oracle_only": "expected-results.v1.json"
+  },
+  "product_projection_enforcement": {
+    "projection_file": "ordinary-product-projections.v1.json",
+    "projection_file_sha256": "33f739fabf923da3bf8b864bf199a07d65a7fa9a04d54755c3034af4fab0bdca",
+    "schema_file": "ordinary-product-projection.schema.json",
+    "schema_file_sha256": "b59430067ccc0b50f6757d41b658b8fcc4317f57bc01e7aaa90bc8525011db5e",
+    "safety_topology_file": "safety-topologies.v1.json",
+    "safety_topology_file_sha256": "e544e974055e6cf79c7753cd9a28f760c118e26535af1449fbae910c06e178ac",
+    "safety_decision_derivation": "final-object-authority-rule/1.0.0 from frozen topology facts; command ordinal and path-token classification are prohibited",
+    "closed_schema_required": true,
+    "recursive_harness_identity_and_canary_deny_scan_required": true,
+    "selected_object_only_forwarding_required": true,
+    "validation_receipt_required": true,
+    "failure_mode": "fail-closed-before-product-invocation"
+  },
+  "replay_dependency_manifest": {
+    "required": [
+      "all five frozen JSON files",
+      "projection-validation receipt",
+      "fault receipts where applicable",
+      "dependency and cursor traces",
+      "human and JSON outputs",
+      "before/after root manifests",
+      "opened-final-object and authorized-write receipts",
+      "effect-spy and canary reports"
+    ],
+    "forbidden_substitutions": [
+      "network refresh",
+      "same identity with changed facts",
+      "same facts under a different required identity",
+      "product output as oracle",
+      "harness or oracle metadata as product input"
+    ]
+  },
+  "licensing_redistribution_and_privacy": "Project-created generic inert synthetic data for public repository redistribution; no real mod, user, machine, secret, credential, private fixture, executable, or network endpoint.",
+  "known_limits": [
+    "No EVAL-0046 external-adapter qualification is claimed; effect stand-ins prove only that ordinary operations stage operations do not use external effects.",
+    "No EVAL-0082 lifecycle-matrix claim is made.",
+    "No EVAL-0087 persistence-matrix claim is made; atomic publication is a narrower operations stage slice obligation.",
+    "No EVAL-0088 IPC-matrix claim is made; bounded cursor behavior is a narrower operations stage slice obligation.",
+    "Native symbolic-link creation was unavailable with Windows error 1314; a mount-point reparse substitute exercised the link-type-neutral final-open policy but does not qualify native symbolic links.",
+    "Native 8.3 alias, UNC, device, alternate-data-stream, and cross-volume qualification remain explicit capability gaps or stand-ins.",
+    "No provider, credential, budget, export, scale, unconditional native filesystem coverage, or private held-out claim is made.",
+    "Requirement and ADR identifiers were not present in the product-blind allowlist and are not invented.",
+    "Application and product schema identities remain a harness binding prerequisite."
+  ],
+  "reviewer_and_review_time": {
+    "reviewer": "codex-product-blind-operations-v1.0.2-review-20260809",
+    "reviewed_utc": "2026-08-09T21:19:29.481Z",
+    "status": "accepted-product-blind-review-with-sanitized-comparison-closeout-and-native-capability-correction"
+  },
+  "independent_review_record": {
+    "path": "independent-review.md",
+    "sha256": "07b7c316625b62c1376abbdc77d4f46fab2fb2dbf3af5fac883e9e71166cf01e",
+    "verdict": "accepted"
+  },
+  "product_comparison_record": {
+    "receipt_class": "sanitized-product-comparison-receipt",
+    "recorded_utc": "2026-08-09T22:58:29.392Z",
+    "capability_correction_recorded_utc": "2026-08-09T23:35:38.402Z",
+    "execution_order": "all-12-ordinary-projection-bindings-executed-before-expected-results-loaded",
+    "comparison_method": "whole-expected-object-JsonNode.DeepEquals",
+    "bindings_total": 12,
+    "bindings_passed": 12,
+    "expected_truth_edits": 0,
+    "pre_dispatch_receipts": "closed-schema-and-answer-isolation-receipts-retained-by-each-gate-from-actual-validator",
+    "safety_execution": {
+      "physically_exercised": [
+        "distinct-roots-and-objects",
+        "final-Windows-object-identity",
+        "protected-root-canaries",
+        "handle-relative-writes",
+        "NTFS-hard-links",
+        "junction-and-mount-point-reparse-entries",
+        "relative-parent-and-case-path-forms",
+        "pinned-handle-entry-replacement-races"
+      ],
+      "authorization": "writes-only-after-FinalObjectAuthorityPolicy-authorization",
+      "native_symbolic_link": "unavailable-Windows-error-1314-not-qualified",
+      "symbolic_link_substitute": "mount-point-reparse-substitute-exercised-link-type-neutral-final-open-policy",
+      "explicit_native_capability_gaps_or_stand_ins": [
+        "8.3-alias",
+        "UNC",
+        "device",
+        "alternate-data-stream",
+        "cross-volume"
+      ]
+    },
+    "safety_controls": [
+      "protected-root-canary-hashing",
+      "inert-external-effect-counters"
+    ],
+    "comparison_scope": "completed-typed-policy-comparison-with-explicit-native-capability-gaps",
+    "unconditional_native_execution_ready": false,
+    "eval_claims_broadened": false,
+    "raw_product_material_inspected_by_product_blind_reviewer": false
+  },
+  "fixture_manifests": [
+    {
+      "fixture_id": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.lantern-a",
+      "fixture_version": "1.0.2",
+      "partition": "development",
+      "partition_history": [
+        {
+          "time_utc": "2026-08-09T00:00:00Z",
+          "event": "v1.0.2 product-blind replacement pre-registered as development after v1.0.1 safety-independence review rejection"
+        }
+      ],
+      "purpose": "Development counterparts for all six bounded operations stage operational families.",
+      "positive_negative_boundary_class": [
+        "positive",
+        "negative",
+        "boundary"
+      ],
+      "eval_case_ids": [
+        "EVAL-0035",
+        "EVAL-0037",
+        "EVAL-0039",
+        "EVAL-0040",
+        "EVAL-0080"
+      ],
+      "requirement_ids": [],
+      "adr_ids": [],
+      "taxonomy_version": "not-applicable-platform-only",
+      "taxonomy_assignments_or_not_applicable": "not-applicable",
+      "application_and_schema_versions": "registry-level",
+      "protocol_and_native_dependency_versions": "not-applicable",
+      "installation_snapshot_identity": "fresh-disposable-development-roots",
+      "analysis_context_identity": "ordinary-projection-owned",
+      "effective_scan_configuration_identity": "ordinary-projection-owned",
+      "resolved_input_manifest_identity": "registry-level",
+      "owner_run_job_attempt_identities": "ordinary-projection-owned",
+      "expected_observations": "oracle-only development cases",
+      "expected_candidates_hypotheses_findings_cases": "not-applicable",
+      "expected_abstentions_gaps_coverage": "oracle-only development cases",
+      "expected_lifecycle_and_cost_events": "oracle-only development cases",
+      "expected_filesystem_process_network_effects": "oracle-only development safety case",
+      "expected_replayability_and_auditability": "registry-level",
+      "fault_schedule": "harness-only development bindings",
+      "security_and_non_mutation_canaries": "harness-only development safety binding",
+      "ground_truth_method": "registry-level",
+      "answer_isolation_review": "registry-level",
+      "replay_dependency_manifest": "registry-level",
+      "licensing_redistribution_and_privacy": "registry-level",
+      "known_limits": "registry-level",
+      "reviewer_and_review_time": "registry-level"
+    },
+    {
+      "fixture_id": "infinium.public-fixtures.analysis-operations.publication-replay-query-output-recovery-safety.compass-b",
+      "fixture_version": "1.0.2",
+      "partition": "validation",
+      "partition_history": [
+        {
+          "time_utc": "2026-08-09T00:00:00Z",
+          "event": "v1.0.2 product-blind replacement pre-registered as validation after v1.0.1 safety-independence review rejection"
+        }
+      ],
+      "purpose": "Materially independent validation counterparts for all six bounded operations stage operational families.",
+      "positive_negative_boundary_class": [
+        "positive",
+        "negative",
+        "boundary"
+      ],
+      "eval_case_ids": [
+        "EVAL-0035",
+        "EVAL-0037",
+        "EVAL-0039",
+        "EVAL-0040",
+        "EVAL-0080"
+      ],
+      "requirement_ids": [],
+      "adr_ids": [],
+      "taxonomy_version": "not-applicable-platform-only",
+      "taxonomy_assignments_or_not_applicable": "not-applicable",
+      "application_and_schema_versions": "registry-level",
+      "protocol_and_native_dependency_versions": "not-applicable",
+      "installation_snapshot_identity": "fresh-disposable-validation-roots",
+      "analysis_context_identity": "ordinary-projection-owned",
+      "effective_scan_configuration_identity": "ordinary-projection-owned",
+      "resolved_input_manifest_identity": "registry-level",
+      "owner_run_job_attempt_identities": "ordinary-projection-owned",
+      "expected_observations": "oracle-only validation cases",
+      "expected_candidates_hypotheses_findings_cases": "not-applicable",
+      "expected_abstentions_gaps_coverage": "oracle-only validation cases",
+      "expected_lifecycle_and_cost_events": "oracle-only validation cases",
+      "expected_filesystem_process_network_effects": "oracle-only validation safety case",
+      "expected_replayability_and_auditability": "registry-level",
+      "fault_schedule": "harness-only validation bindings",
+      "security_and_non_mutation_canaries": "harness-only validation safety binding",
+      "ground_truth_method": "registry-level",
+      "answer_isolation_review": "registry-level",
+      "replay_dependency_manifest": "registry-level",
+      "licensing_redistribution_and_privacy": "registry-level",
+      "known_limits": "registry-level",
+      "reviewer_and_review_time": "registry-level"
+    }
+  ],
+  "family_counterparts": [
+    {
+      "family": "atomic-publication",
+      "development": "OPS-LANTERN-PUBLICATION-D01",
+      "validation": "OPS-COMPASS-PUBLICATION-V01"
+    },
+    {
+      "family": "replay-and-invalidation",
+      "development": "OPS-LANTERN-REPLAY-D02",
+      "validation": "OPS-COMPASS-REPLAY-V02"
+    },
+    {
+      "family": "bounded-query",
+      "development": "OPS-LANTERN-QUERY-D03",
+      "validation": "OPS-COMPASS-QUERY-V03"
+    },
+    {
+      "family": "terminal-and-equivalent-output",
+      "development": "OPS-LANTERN-OUTPUT-D04",
+      "validation": "OPS-COMPASS-OUTPUT-V04"
+    },
+    {
+      "family": "attempt-recovery",
+      "development": "OPS-LANTERN-RECOVERY-D05",
+      "validation": "OPS-COMPASS-RECOVERY-V05"
+    },
+    {
+      "family": "write-and-nonmutation-safety",
+      "development": "OPS-LANTERN-SAFETY-D06",
+      "validation": "OPS-COMPASS-SAFETY-V06"
+    }
+  ],
+  "files": [
+    {
+      "path": "expected-results.v1.json",
+      "role": "oracle-only-never-product-input",
+      "sha256": "1e71a461dc01d7613edf77a882b9c4fe06f2e36e3d45788f2569ab0506eb8c51",
+      "bytes": 10828
+    },
+    {
+      "path": "harness-envelope.v1.json",
+      "role": "harness-only-never-product-input",
+      "sha256": "67e3d6e74cee12fad86989318d9b799349a35a3d78726524ca3cc106bc4680b6",
+      "bytes": 14006
+    },
+    {
+      "path": "independent-review.md",
+      "role": "product-blind-independent-review-and-sanitized-comparison-closeout-record",
+      "sha256": "07b7c316625b62c1376abbdc77d4f46fab2fb2dbf3af5fac883e9e71166cf01e",
+      "bytes": 5967
+    },
+    {
+      "path": "ordinary-product-projection.schema.json",
+      "role": "harness-only-projection-validator",
+      "sha256": "b59430067ccc0b50f6757d41b658b8fcc4317f57bc01e7aaa90bc8525011db5e",
+      "bytes": 2633
+    },
+    {
+      "path": "ordinary-product-projections.v1.json",
+      "role": "closed-ordinary-product-projection-source",
+      "sha256": "33f739fabf923da3bf8b864bf199a07d65a7fa9a04d54755c3034af4fab0bdca",
+      "bytes": 26499
+    },
+    {
+      "path": "README.md",
+      "role": "human-handoff-and-claim-boundary",
+      "sha256": "71e2e70cca0124f6802280feb4bc2d4388d0e590b691905f812a3c737b4240fd",
+      "bytes": 9963
+    },
+    {
+      "path": "safety-topologies.v1.json",
+      "role": "harness-only-physical-topology-and-final-object-facts",
+      "sha256": "e544e974055e6cf79c7753cd9a28f760c118e26535af1449fbae910c06e178ac",
+      "bytes": 20262
+    }
+  ],
+  "package_file_paths": [
+    "README.md",
+    "expected-results.v1.json",
+    "fixture-manifest.v1.json",
+    "harness-envelope.v1.json",
+    "independent-review.md",
+    "ordinary-product-projection.schema.json",
+    "ordinary-product-projections.v1.json",
+    "safety-topologies.v1.json"
+  ],
+  "manifest_self_hash_policy": {
+    "included_in_package_file_paths": true,
+    "excluded_from_hash_bound_files": true,
+    "reason": "A document cannot recursively contain its own stable byte hash."
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "schema_id": "infinium.evaluation.bethesda-case-matrix/v1",
+  "schema_version": "1",
+  "fixture_id": "BETH-LIGHT-VAL",
+  "fixture_version": "1.4.0",
+  "source_basis": "accepted-bethesda-scenario-inventory-and-retained-execution-inputs",
+  "cases": [
+    {
+      "scenario_id": "light-native-minimum",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/plugins/01-Native.esl"
+      ]
+    },
+    {
+      "scenario_id": "light-native-maximum",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/plugins/01-Native.esl"
+      ]
+    },
+    {
+      "scenario_id": "light-flagged-esp-minimum",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/plugins/02-Flagged.esp"
+      ]
+    },
+    {
+      "scenario_id": "light-flagged-esp-maximum",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/plugins/02-Flagged.esp"
+      ]
+    },
+    {
+      "scenario_id": "light-native-below-range",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/mutations/Native-BelowObjectRange.esl"
+      ]
+    },
+    {
+      "scenario_id": "light-native-above-range",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/mutations/Native-AboveLightMaximum.esl"
+      ]
+    },
+    {
+      "scenario_id": "light-flagged-below-range",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/mutations/FlaggedEsp-BelowObjectRange.esp"
+      ]
+    },
+    {
+      "scenario_id": "light-flagged-above-range",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/mutations/FlaggedEsp-AboveLightMaximum.esp"
+      ]
+    },
+    {
+      "scenario_id": "light-extension-header-mismatch",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/mutations/Native-HeaderFlagRemoved.esl"
+      ]
+    },
+    {
+      "scenario_id": "light-reference-out-of-range",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/mutations/Consumer-LightReferenceOutOfRange.esp"
+      ]
+    },
+    {
+      "scenario_id": "light-consumer-and-winner",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/plugins/01-Native.esl",
+        "inputs/plugins/02-Flagged.esp",
+        "inputs/plugins/03-Consumer.esp",
+        "inputs/plugins/04-Winner.esp"
+      ]
+    }
+  ]
+}

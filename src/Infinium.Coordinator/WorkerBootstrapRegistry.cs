@@ -116,7 +116,7 @@ public sealed class WorkerBootstrapRegistry
                         ? bootstrap.RunId + "-bethesda-semantic"
                         : bootstrap.OperationKind == ManagedWorkerOperationKind.AnalysisV1
                             ? bootstrap.RunId + "-analysis-v1"
-                        : bootstrap.RunId + "-slice2-substrate",
+                        : bootstrap.RunId + "-platform-substrate",
             },
             JobNodeId = new JobNodeId
             {
@@ -251,7 +251,7 @@ public sealed class WorkerBootstrapRegistry
             return new WorkerOperation
             {
                 Kind = WorkerOperationKind.ValidateStagedArtifact,
-                AdapterOrAnalyzerId = "infinium.m1.slice2.substrate",
+                AdapterOrAnalyzerId = "infinium.staged-artifact-validator",
                 AdapterOrAnalyzerVersion = new SemanticVersion { Value = "1.0.0" },
                 AssignmentSchemaVersion = new SemanticVersion { Value = "1.0.0" },
             };

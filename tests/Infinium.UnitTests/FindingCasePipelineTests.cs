@@ -9,8 +9,8 @@ namespace Infinium.Tests;
 public sealed class FindingCasePipelineTests
 {
     [TestMethod]
-    [TestCategory("M1Unit"), TestCategory("M1Cases")]
-    [TestProperty("Category", "M1Unit"), TestProperty("Category", "M1Cases")]
+    [TestCategory("Unit"), TestCategory("Cases")]
+    [TestProperty("Category", "Unit"), TestProperty("Category", "Cases")]
     public void FindingPromotionDerivesConclusionsAndKeepsDefeatedHypothesisAsLead()
     {
         FindingCaseContract result = FindingCasePipeline.Execute(CreateInput("run-cases-a"));
@@ -27,8 +27,8 @@ public sealed class FindingCasePipelineTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit"), TestCategory("M1Cases")]
-    [TestProperty("Category", "M1Unit"), TestProperty("Category", "M1Cases")]
+    [TestCategory("Unit"), TestCategory("Cases")]
+    [TestProperty("Category", "Unit"), TestProperty("Category", "Cases")]
     public void FindingPromotionRetainsNonDefeatingContradictionWithoutFalseNegative()
     {
         FindingCaseInputContract input = CreateInput("run-nondefeating");
@@ -53,14 +53,14 @@ public sealed class FindingCasePipelineTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit"), TestCategory("M1Cases")]
-    [TestProperty("Category", "M1Unit"), TestProperty("Category", "M1Cases")]
+    [TestCategory("Unit"), TestCategory("Cases")]
+    [TestProperty("Category", "Unit"), TestProperty("Category", "Cases")]
     public void CaseGroupingUsesIndependentTypedProofAndIgnoresOrderNamesAndTaxonomyRouting()
     {
         FindingCaseContract baseline = FindingCasePipeline.Execute(CreateInput("run-cases-a"));
         FindingCaseContract permuted = FindingCasePipeline.Execute(CreateInput("run-cases-a", reverse: true));
 
-        Slice5CaseContract supported = baseline.Cases.Single(item => item.Kind == CaseOccurrenceKind.Supported);
+        AnalysisCaseContract supported = baseline.Cases.Single(item => item.Kind == CaseOccurrenceKind.Supported);
         Assert.AreEqual(2, supported.FindingOccurrenceIds.Count);
         Assert.AreEqual(1, baseline.Cases.Count(item => item.Kind == CaseOccurrenceKind.Supported));
         CollectionAssert.AreEquivalent(
@@ -90,8 +90,8 @@ public sealed class FindingCasePipelineTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit"), TestCategory("M1Cases")]
-    [TestProperty("Category", "M1Unit"), TestProperty("Category", "M1Cases")]
+    [TestCategory("Unit"), TestCategory("Cases")]
+    [TestProperty("Category", "Unit"), TestProperty("Category", "Cases")]
     public void LineageReconciliationEmitsAllEightOutcomesAndDoesNotReuseOnePrior()
     {
         FindingCaseContract baseline = FindingCasePipeline.Execute(CreateInput("run-history"));
@@ -172,8 +172,8 @@ public sealed class FindingCasePipelineTests
     }
 
     [TestMethod]
-    [TestCategory("M1Unit"), TestCategory("M1Cases")]
-    [TestProperty("Category", "M1Unit"), TestProperty("Category", "M1Cases")]
+    [TestCategory("Unit"), TestCategory("Cases")]
+    [TestProperty("Category", "Unit"), TestProperty("Category", "Cases")]
     public void TaxonomyHistoryPreservesAllMergeSourcesAndDoesNotMutateProductAssignments()
     {
         FindingCaseInputContract input = CreateInput("run-taxonomy");
@@ -245,8 +245,8 @@ public sealed class FindingCasePipelineTests
         }
         FindingCaseInputContract input = new(
             ContractConstants.FindingCaseInputSchemaId, Version(), Id("pending"), Id(runId),
-            Id("promotion-policy-wp4"), Version(), Id("reconciliation-policy-wp4"), Version(),
-            Id("reconciliation-actor-wp4"),
+            Id("promotion-policy-finding_case"), Version(), Id("reconciliation-policy-finding_case"), Version(),
+            Id("reconciliation-actor-finding_case"),
             new UtcTimestamp(new DateTimeOffset(2026, 8, 9, 12, 0, 0, TimeSpan.Zero)), candidates,
             evidence, RecommendationFacts(evidence), proofs, [], [],
             [new CoveragePopulationFactContract(Id("coverage-population-fact"), Id("analyzer-cases"), "population-cases", "generic members")],

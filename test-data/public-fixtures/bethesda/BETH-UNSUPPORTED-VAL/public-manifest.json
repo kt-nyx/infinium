@@ -1,0 +1,50 @@
+{
+  "schema_id": "infinium.evaluation.fixture-public-manifest/v1",
+  "schema_version": "1",
+  "fixture_id": "BETH-UNSUPPORTED-VAL",
+  "fixture_version": "1.4.0",
+  "evaluation_ids": [
+    "EVAL-0052",
+    "EVAL-0086"
+  ],
+  "purpose": "Qualify explicit unsupported and gap states for unallowlisted, localized, archive-member, discovery, and bounded taxonomy inputs.",
+  "classification": "unsupported",
+  "partition": "development",
+  "partition_history": [
+    {
+      "from": null,
+      "to": "validation",
+      "at": "2026-07-30T18:00:00.0000000+00:00",
+      "reason": "Initial registration before the answer-bearing package entered ordinary implementation context.",
+      "change_influenced_implementation": false
+    },
+    {
+      "from": "validation",
+      "to": "development",
+      "at": "2026-08-01T18:00:00.0000000+00:00",
+      "reason": "Owner-approved correction: public answer exposure makes this package development evidence under ADR-0026.",
+      "change_influenced_implementation": true,
+      "replacement_fixture_id": "BETH-UNSUPPORTED-VAL-002",
+      "replacement_partition": "validation",
+      "replacement_input_package_fingerprint": "8baf21151d962852c4791a35d6f1133c8b17ae3edc8aab628b25efbf539fa1f2",
+      "replacement_oracle_fingerprint": "3f3c5ea19cc06c141d7095fb8811bb5a157123cc7309c285348df694b240885d",
+      "independence_evidence_reference": {
+        "artifact_id": "beth-unsupported-val-002-independence-evidence",
+        "artifact_version": "1.1.0",
+        "fingerprint": "75f06caab220c2500cf6fd8f35671ba5baaefe99c0962e7d7c825efee4fca4f2",
+        "availability": "evaluator-private"
+      },
+      "authorized_by": "project-owner/user-directed-slice4-fixture-conformance-correction-20260801"
+    }
+  ],
+  "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
+  "taxonomy_version": "0.1.0",
+  "input_package_fingerprint": "4013b6a0a52e95cb9e09c061b36bb66e04eab9bc2896555c19499d3d69c68a97",
+  "oracle_fingerprint": "025d9e1e5cb5575d709776494d8605436d561a6e1327f1a6b36a0a09ff99a7db",
+  "provenance_fingerprint": "6e31707c20fc28419b71336b47126b6cbb6c7a9248d2d3a94031e2d9a8c8b5b4",
+  "replay_dependency_fingerprint": "439e379b0249b9c47dec4ef7f06b57e3a4abbb2ac1ce57ecd50159298625c560",
+  "redistribution_class": "project-authored-redistributable",
+  "owner": "infinium-evaluation",
+  "review_state": "accepted",
+  "created_at": "2026-08-02T20:00:00.0000000+00:00"
+}

@@ -15,8 +15,8 @@ internal static class BethesdaSemanticTestSnapshot
     {
         string fixtureRoot = TestRepository.PathFromRoot(
             "test-data",
-            "evaluation",
-            "m1-semantic",
+            "public-fixtures",
+            "bethesda",
             fixtureId);
         using JsonDocument receipt = JsonDocument.Parse(File.ReadAllBytes(
             Path.Combine(fixtureRoot, "inputs", "snapshot", "accepted-order.json")));
@@ -53,8 +53,8 @@ internal static class BethesdaSemanticTestSnapshot
     {
         string fixtureRoot = TestRepository.PathFromRoot(
             "test-data",
-            "evaluation",
-            "m1-semantic",
+            "public-fixtures",
+            "bethesda",
             fixtureId);
         using JsonDocument receipt = JsonDocument.Parse(File.ReadAllBytes(
             Path.Combine(fixtureRoot, "inputs", "snapshot", "accepted-order.json")));

@@ -2,8 +2,8 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using Infinium.Analysis.Candidates;
 using Infinium.Analysis.Cases;
-using Infinium.Application.Evaluation;
 using Infinium.Application.FindingCases;
+using Infinium.Application.Serialization;
 using Infinium.Domain.Contracts;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -12,7 +12,7 @@ namespace Infinium.Tests;
 [TestClass]
 public sealed class FindingCaseEvaluationTests
 {
-    private const string ExpectedTruthSha256 = "528bed0cd3ce399b54ae99f2ebb12e63981f292228c5c972191098c535e90fa2";
+    private const string ExpectedTruthSha256 = "6f395a3de625c8d72ea8bd73b70aedede213e9533b9299ebed931f7b4eb5b3d2";
     private static readonly string[] ExpectedReconciliationOutcomes =
     [
         "exact-continuation", "analytical-revision", "related-follow-up", "new-distinct",
@@ -22,10 +22,10 @@ public sealed class FindingCaseEvaluationTests
         ["test-v1-assignment-motion", "test-v1-assignment-disk", "test-v1-assignment-stream"];
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Cases")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Cases")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Cases")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "Cases")]
     public void CaseGroupingFrozenIndependentTruthIsAnswerIsolatedAndExercisesFalseMergeAndSplitGuards()
     {
         using JsonDocument truth = LoadTruth(out string sha256);
@@ -88,7 +88,7 @@ public sealed class FindingCaseEvaluationTests
             string source = basisType == "finding"
                 ? sourceByOracleFinding[oracle.GetProperty("basis_id").GetString()!]
                 : sourceByOracleAbstention[oracle.GetProperty("basis_id").GetString()!];
-            Slice5RecommendationContract[] matches = basisType == "finding"
+            FindingRecommendationContract[] matches = basisType == "finding"
                 ? baseline.Output.Recommendations.Where(item => item.FindingOccurrenceId is not null
                     && baseline.SourceHypothesis(baseline.Output.Findings.Single(finding =>
                         finding.FindingOccurrenceId == item.FindingOccurrenceId).HypothesisId) == source).ToArray()
@@ -98,7 +98,7 @@ public sealed class FindingCaseEvaluationTests
             Assert.AreEqual(1, matches.Length, $"No exact recommendation basis for {basisType}/{source}. "
                 + string.Join(", ", baseline.Output.Recommendations.Select(item =>
                     $"{item.Kind}:{item.FindingOccurrenceId?.Value}:{item.AbstentionId?.Value}:{item.LeadHypothesisId?.Value}")));
-            Slice5RecommendationContract actual = matches[0];
+            FindingRecommendationContract actual = matches[0];
             Assert.AreEqual(basisType == "finding" ? RecommendationKind.Remediation : RecommendationKind.FurtherInvestigation,
                 actual.Kind);
             Assert.AreEqual(oracle.GetProperty("action").GetString(), actual.Action);
@@ -125,7 +125,7 @@ public sealed class FindingCaseEvaluationTests
         {
             string group = GroupKey(oracle.GetProperty("hypothesis_members").EnumerateArray()
                 .Select(item => item.GetString()!));
-            Slice5CaseContract actual = baseline.Output.Cases.Single(item => item.Kind == CaseOccurrenceKind.Supported
+            AnalysisCaseContract actual = baseline.Output.Cases.Single(item => item.Kind == CaseOccurrenceKind.Supported
                 && GroupKey(item.HypothesisIds.Select(baseline.SourceHypothesis)) == group);
             Assert.AreEqual(oracle.GetProperty("case_kind").GetString(), Kebab(actual.Kind));
             Assert.AreEqual(oracle.GetProperty("identity_envelope")
@@ -155,10 +155,10 @@ public sealed class FindingCaseEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Cases")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Cases")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Cases")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "Cases")]
     public void CoveragePresentationClosesEveryPopulationStateWithoutCombinedPercentageOrSafetyClaim()
     {
         using JsonDocument truth = LoadTruth(out _);
@@ -257,10 +257,10 @@ public sealed class FindingCaseEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Cases")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Cases")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Cases")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "Cases")]
     public void LineageReconciliationFrozenPackageExecutesAllEightOutcomesThroughProductPolicy()
     {
         using JsonDocument truth = LoadTruth(out _);
@@ -338,7 +338,7 @@ public sealed class FindingCaseEvaluationTests
             string expectedSuccessor = oracle.GetProperty("successor_occurrence_ids")[0].GetString()!;
             string factId = sourceByOccurrence[expectedSuccessor];
             OpaqueId actualSuccessor = execution.OccurrenceByFact[factId];
-            Slice5LineageContract lineage = execution.Output.LineageEvents.Single(item =>
+            OccurrenceLineageContract lineage = execution.Output.LineageEvents.Single(item =>
                 item.SuccessorIds.Contains(actualSuccessor));
             string expectedKind = oracle.GetProperty("kind").GetString()!;
             Assert.AreEqual(expectedKind == "supersedes-finding-revision"
@@ -369,11 +369,11 @@ public sealed class FindingCaseEvaluationTests
         JsonElement leadOracle = expected.GetProperty("lead_promotion");
         LeadPromotionExecution promotion = FindingCaseFixtureProductAdapter.ExecuteLeadPromotion(
             factual.GetProperty("lead_promotion_facts"));
-        Slice5CaseContract priorLead = promotion.Prior.Cases.Single(item => item.Kind == CaseOccurrenceKind.LeadOnly);
-        Slice5CaseContract supportedSuccessor = promotion.Current.Cases.Single(item =>
+        AnalysisCaseContract priorLead = promotion.Prior.Cases.Single(item => item.Kind == CaseOccurrenceKind.LeadOnly);
+        AnalysisCaseContract supportedSuccessor = promotion.Current.Cases.Single(item =>
             item.Kind == CaseOccurrenceKind.Supported);
         FindingContract successorFinding = promotion.Current.Findings.Single();
-        Slice5LineageContract promotionLineage = promotion.Current.LineageEvents.Single(item =>
+        OccurrenceLineageContract promotionLineage = promotion.Current.LineageEvents.Single(item =>
             item.Kind == LineageKind.PromotesLead);
         Assert.AreEqual(leadOracle.GetProperty("prior_case_occurrence").GetProperty("kind").GetString(),
             Kebab(priorLead.Kind));
@@ -385,14 +385,14 @@ public sealed class FindingCaseEvaluationTests
         Assert.AreEqual(supportedSuccessor.CaseOccurrenceId, promotionLineage.SuccessorIds.Single());
         Assert.IsNull(promotionLineage.ReconciliationAssessmentId);
         Assert.AreEqual(successorFinding.FindingOccurrenceId, supportedSuccessor.FindingOccurrenceIds.Single());
-        Assert.IsNull(typeof(Slice5CaseContract).GetProperty("ReviewState"));
+        Assert.IsNull(typeof(AnalysisCaseContract).GetProperty("ReviewState"));
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Cases")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Cases")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Cases")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "Cases")]
     public void CaseReconciliationExecutesMemberFirstDecisionEightContinuityAndRejectsLookalikeMerge()
     {
         using JsonDocument truth = LoadTruth(out _);
@@ -401,9 +401,9 @@ public sealed class FindingCaseEvaluationTests
         JsonElement oracle = package.GetProperty("expected_typed_output").GetProperty("case_reconciliation");
         AssertNoAnswerKeys(factual);
         CaseReconciliationExecution execution = FindingCaseFixtureProductAdapter.ExecuteCaseReconciliation(factual);
-        Slice5CaseContract priorCase = execution.Prior.Cases.Single(item => item.Kind == CaseOccurrenceKind.Supported);
-        Slice5CaseContract currentCase = execution.Current.Cases.Single(item => item.Kind == CaseOccurrenceKind.Supported);
-        Slice5ReconciliationContract continuity = execution.Current.ReconciliationAssessments.Single(item =>
+        AnalysisCaseContract priorCase = execution.Prior.Cases.Single(item => item.Kind == CaseOccurrenceKind.Supported);
+        AnalysisCaseContract currentCase = execution.Current.Cases.Single(item => item.Kind == CaseOccurrenceKind.Supported);
+        OccurrenceReconciliationContract continuity = execution.Current.ReconciliationAssessments.Single(item =>
             item.SubjectKind == "case" && item.CurrentOccurrenceId == currentCase.CaseOccurrenceId);
         Assert.AreEqual("exact-continuation", Kebab(continuity.Outcome), string.Join(" | ",
             execution.Current.ReconciliationAssessments.Select(item =>
@@ -416,7 +416,7 @@ public sealed class FindingCaseEvaluationTests
         Assert.IsTrue(memberAssessmentIds.All(continuity.ProofEvidenceIds.Contains));
         Assert.AreEqual(3, oracle.GetProperty("exact_counts").GetProperty("case_occurrences").GetInt32());
 
-        Slice5ReconciliationContract[] actualMembers = execution.Current.ReconciliationAssessments
+        OccurrenceReconciliationContract[] actualMembers = execution.Current.ReconciliationAssessments
             .Where(item => item.SubjectKind == "finding")
             .Concat(execution.Lookalike.ReconciliationAssessments.Where(item => item.SubjectKind == "finding"))
             .ToArray();
@@ -431,14 +431,14 @@ public sealed class FindingCaseEvaluationTests
             string.Join(Environment.NewLine, expectedMemberGates.Select(item => "EXPECTED " + item)
                 .Concat(actualMemberGates.Select(item => "ACTUAL " + item))));
 
-        Slice5CaseContract lookalikeCase = execution.Lookalike.Cases.Single(item => item.Kind == CaseOccurrenceKind.Supported);
-        Slice5ReconciliationContract rejected = execution.Lookalike.ReconciliationAssessments.Single(item =>
+        AnalysisCaseContract lookalikeCase = execution.Lookalike.Cases.Single(item => item.Kind == CaseOccurrenceKind.Supported);
+        OccurrenceReconciliationContract rejected = execution.Lookalike.ReconciliationAssessments.Single(item =>
             item.SubjectKind == "case" && item.CurrentOccurrenceId == lookalikeCase.CaseOccurrenceId);
         Assert.AreEqual(ReconciliationOutcome.NewDistinct, rejected.Outcome,
             $"Gates={rejected.Gates}; gaps={string.Join(',', rejected.Gaps)}; considered={string.Join(',', rejected.ConsideredOccurrenceIds)}");
         Assert.IsNull(rejected.PriorOccurrenceId);
         Assert.AreNotEqual(priorCase.LogicalCaseId, lookalikeCase.LogicalCaseId);
-        Slice5ReconciliationContract[] actualCases = [continuity, rejected];
+        OccurrenceReconciliationContract[] actualCases = [continuity, rejected];
         JsonElement[] oracleCases = oracle.GetProperty("case_assessments").EnumerateArray().ToArray();
         Assert.AreEqual(oracle.GetProperty("exact_counts").GetProperty("case_reconciliation_assessments").GetInt32(),
             actualCases.Length);
@@ -450,10 +450,10 @@ public sealed class FindingCaseEvaluationTests
     }
 
     [TestMethod]
-    [TestCategory("M1Evaluation")]
-    [TestCategory("M1Cases")]
-    [TestProperty("Category", "M1Evaluation")]
-    [TestProperty("Category", "M1Cases")]
+    [TestCategory("Evaluation")]
+    [TestCategory("Cases")]
+    [TestProperty("Category", "Evaluation")]
+    [TestProperty("Category", "Cases")]
     public void TaxonomyHistoryPreservesProductAssignmentAndUsesExplicitNonProductMappingProvenance()
     {
         using JsonDocument truth = LoadTruth(out _);
@@ -652,7 +652,7 @@ public sealed class FindingCaseEvaluationTests
             }).ToArray(),
         };
         candidates = candidates with { PayloadId = CandidateAnalysisIdentity.ComputePayloadId(candidates) };
-        Slice5ContractInvariants.Validate(candidates);
+        CandidateAnalysisContractInvariants.Validate(candidates);
 
         FindingEvidenceFactContract[] evidenceFacts = facts.Where(pair => generatedHypotheses.ContainsKey(pair.Key)).Select(pair =>
         {
@@ -817,7 +817,7 @@ public sealed class FindingCaseEvaluationTests
             ParseGate(gates.GetProperty("producer-contract-compatibility").GetString()!));
     }
 
-    private static string CanonicalReconciliation(Slice5ReconciliationContract value) => string.Join("|",
+    private static string CanonicalReconciliation(OccurrenceReconciliationContract value) => string.Join("|",
         Kebab(value.Outcome), value.Gates.Causal, value.Gates.Applicability, value.Gates.Dependency,
         value.Gates.Producer);
 
@@ -869,8 +869,8 @@ public sealed class FindingCaseEvaluationTests
     private static JsonDocument LoadTruth(out string sha256)
     {
         string path = Path.Combine(
-            FindRepositoryRoot(), "docs", "evaluation", "fixtures", "m1-slice5-wp4-cases-v1",
-            "wp4-independent-truth.v1.0.3.json");
+            FindRepositoryRoot(), "test-data", "public-fixtures", "findings-cases",
+            "finding-case-independent-truth.v1.0.3.json");
         byte[] bytes = File.ReadAllBytes(path);
         sha256 = Convert.ToHexStringLower(SHA256.HashData(bytes));
         return JsonDocument.Parse(bytes);

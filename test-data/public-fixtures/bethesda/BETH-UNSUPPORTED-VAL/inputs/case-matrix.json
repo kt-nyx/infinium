@@ -1,0 +1,44 @@
+{
+  "schema_id": "infinium.evaluation.bethesda-case-matrix/v1",
+  "schema_version": "1",
+  "fixture_id": "BETH-UNSUPPORTED-VAL",
+  "fixture_version": "1.4.0",
+  "source_basis": "accepted-bethesda-scenario-inventory-and-retained-execution-inputs",
+  "cases": [
+    {
+      "scenario_id": "unsupported-record-family",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/plugins/UnsupportedFamily.esp"
+      ]
+    },
+    {
+      "scenario_id": "unsupported-npc-field",
+      "operation": "scan",
+      "input_artifact_ids": [
+        "inputs/plugins/UnsupportedNpcField.esp"
+      ]
+    },
+    {
+      "scenario_id": "unsupported-localized-string",
+      "operation": "request",
+      "input_artifact_ids": [
+        "inputs/requests/localized-string-resolution.json"
+      ]
+    },
+    {
+      "scenario_id": "unsupported-archive-member",
+      "operation": "request",
+      "input_artifact_ids": [
+        "inputs/requests/archive-member.json"
+      ]
+    },
+    {
+      "scenario_id": "unsupported-environment-discovery",
+      "operation": "request",
+      "input_artifact_ids": [
+        "inputs/requests/automatic-environment-discovery.json"
+      ]
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 
 Status: Completed — recommendation accepted by project owner
 Date: 2026-07-25
-Last reviewed: 2026-07-26
+Last reviewed: 2026-08-10
 Researcher: Codex agent
 Primary question: RQ-022
 M0 wave: C
@@ -48,7 +48,7 @@ This investigation is governed by:
   including pinned Mutagen `0.54.2` and field-qualified Bethesda semantics;
 - [ADR-0010](../../architecture/decisions/ADR-0010-snapshot-fingerprint-and-dependency-invalidation.md),
   which requires hashes, dependency closure, and scoped invalidation; and
-- [the accepted M0 plan](../../plans/milestones/M0-research-foundation.md#wave-c--analysis-surfaces-taxonomy-corpus-and-candidate-scale),
+- [the accepted M0 plan](../../plans/milestones/m0/plan.md#wave-c--analysis-surfaces-taxonomy-corpus-and-candidate-scale),
   which permits this bounded survey without requiring a complete named-script
   analyzer roadmap.
 

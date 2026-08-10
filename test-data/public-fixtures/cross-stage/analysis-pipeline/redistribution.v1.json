@@ -1,0 +1,13 @@
+{
+  "schema_identity":"infinium.public-fixture.cross_stage.redistribution/1.0.7",
+  "package_identity":"infinium.public-fixtures.cross-stage-analysis.cross-stage.clean-incremental-replay.generic-a",
+  "package_version":"1.0.7",
+  "content_origin":"project-authored-generic-synthetic",
+  "redistribution_class":"repository-public-redistributable",
+  "third_party_payloads":false,
+  "real_mod_or_game_material":false,
+  "personal_or_machine_data":false,
+  "secrets_or_credentials":false,
+  "private_fixture_material":false,
+  "restrictions":["Expected results remain evaluation-harness input only and are never forwarded to product execution."]
+}

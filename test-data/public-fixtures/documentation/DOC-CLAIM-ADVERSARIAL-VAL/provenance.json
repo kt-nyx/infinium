@@ -1,0 +1,55 @@
+{
+  "fixture_id": "DOC-CLAIM-ADVERSARIAL-VAL",
+  "fixture_version": "1.0.0",
+  "created_by": "fresh-context-independent-documentation-fixture-author",
+  "created_at": "2026-08-08T18:05:00.0000000+00:00",
+  "source_origin": "project-authored-synthetic-hostile-documentation",
+  "source_kind": "fixture",
+  "real_mod_or_tool_content": false,
+  "game_version": "not-applicable-synthetic",
+  "mod_version": "not-applicable-synthetic",
+  "tool_version": "not-applicable-synthetic",
+  "applicable_requirements": [
+    "DOC-007",
+    "DOC-008",
+    "DOC-011",
+    "EVID-004",
+    "EVID-006",
+    "EVID-007",
+    "OPS-002",
+    "SEC-001",
+    "SEC-002",
+    "SEC-003",
+    "SEC-004"
+  ],
+  "applicable_analyzers": [
+    "deterministic-utf8-v1"
+  ],
+  "ground_truth_method": "Manual adversarial authorship from accepted documentation stage trust boundaries and closed schema, followed by independent byte-offset, SHA-256, stable-identity, and replay-gap calculation.",
+  "identity_method": "Four-byte signed big-endian UTF-8 length plus UTF-8 bytes for each ordered field; first 32 lowercase SHA-256 hex characters; ordinal length:value canonical sets.",
+  "answer_isolation": {
+    "authored_before_product_comparison": true,
+    "product_output_used": false,
+    "product_importer_inspected": false,
+    "answer_bearing_material_in_path_under_test": false,
+    "derivation_record": {
+      "artifact_id": "oracle/independent-derivation.md",
+      "artifact_version": "1.0.0",
+      "fingerprint": "30da88021c4f62a9400b4b3b90216a080ac890c5fd15cebde69e07be8c949fba",
+      "availability": "retained",
+      "byte_length": 2950
+    }
+  },
+  "hostile_canaries": [
+    "powershell-command",
+    "network-url",
+    "sql-command",
+    "secret-shaped-string",
+    "jndi-shaped-string"
+  ],
+  "known_limitations": [
+    "Synthetic hostile strings demonstrate inert data handling but are not an exhaustive security test.",
+    "Deletion and unavailability are fixture-modeled state transitions, not filesystem deletion operations.",
+    "The package establishes no held-out, real-mod, safety, compatibility, or readiness verdict."
+  ]
+}

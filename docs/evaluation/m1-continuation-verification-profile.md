@@ -2,15 +2,17 @@
 
 Status: Accepted and effective
 
+Last reviewed: 2026-08-10
+
 Date: 2026-08-08
 
 Authority: [ADR-0032](../architecture/decisions/ADR-0032-defer-m1-held-out-evaluator-and-continue-public-verification.md)
 and the accepted
-[evaluator-deferral and M1-continuation plan](../plans/slices/M1-slice-4.5-evaluator-deferral-and-m1-continuation.md)
+[evaluator-deferral and M1-continuation plan](../plans/milestones/m1/slices/s4.5/plan.md)
 
 Applies to: M1 Slices 5 through 9
 
-Execution policy: [Development execution policy](../development/execution-policy.md)
+Execution policy: [Development execution policy](../execution-policy.md)
 
 ## Claim and activation boundary
 
@@ -19,7 +21,7 @@ held-out-`PASS` sequencing prerequisite for the remaining M1 slices.
 `M1/S4.5/EVAL-CLOSEOUT` is accepted and complete, so Slice 4.5 is closed.
 The current eligible package is stated in
 [`../current-state.md`](../current-state.md). The profile's activation evidence
-is the [closeout acceptance record](m1-slice4.5-evaluator-deferral-closeout-acceptance.md).
+is the [closeout acceptance record](evaluator-history.md).
 
 The profile proves public product conformance within each accepted slice's
 declared scope. It does not produce a private held-out verdict, qualify an
