@@ -1,6 +1,7 @@
 # M1 Slice 5 — Evidence, documentation, candidates, cases, and replay
 
-Status: Active Slice 5 implementation record; repository normalization and exact terminal re-review completed and accepted; awaiting explicit owner acceptance
+Status: Completed
+Disposition: Repository normalization and terminal re-review complete; awaiting explicit owner acceptance
 
 Last reviewed: 2026-08-10
 
@@ -2104,3 +2105,66 @@ or evidentiary role. Protocols `/4` and `/5` remain permanently reserved and
 retired. Current Slice 5 verification uses the accepted continuation profile;
 no replacement evaluator, private verdict, Slice 5 owner acceptance, or
 successor-slice authority is implied by this correction.
+
+### Final repository consolidation and context cleanup
+
+At the project owner's direction, implementation commit
+`5514919b8f742d00e59752fa7125da487a390926` completes the final cleanup pass
+before Slice 5 owner review. The change is organizational and governance-bound:
+it does not revise product meaning, public expected truth, or the Slice 5 claim
+boundary.
+
+The implementation:
+
+- replaced the broad default agent-reading list with compact current and
+  task-specific authority routing, added a concise Slice 5 current summary,
+  moved current candidate-input guidance into product documentation, grouped
+  evaluator history explicitly, and introduced strict documentation metadata,
+  local-link, and JSON validation;
+- split the largest production source files by architectural responsibility,
+  moved finding/case analysis into its functional namespace, and preserved all
+  public contracts, serialized identities, and applied migration IDs;
+- consolidated repeated test infrastructure at the test root, split oversized
+  test classes and fixture adapters without changing test discovery, and
+  extended build-policy coverage across the newly split persistence files;
+- added a schema-validated registry for all 18 current public fixture packages,
+  reduced repository evaluation authority to the registry and current tooling,
+  moved candidate guidance to its functional product path, and resealed the
+  three candidate packages as version `1.0.1` without changing their product
+  input payloads or normalized expected facts;
+- preserved the accepted cross-stage `1.0.7` semantic history and appended the
+  normalization-only `1.0.8` event after a fresh reviewer caught and rejected
+  an intermediate history rewrite; and
+- removed two obsolete dirty evaluator-era temporary worktrees after a bounded
+  check established that they contained no untracked or non-deletion work.
+  The two Cursor-managed detached worktrees remain untouched. The regenerated
+  ignored `artifacts/` and `work/` trees were removed after verification.
+
+The official fixture resealer produced two byte-identical runs. Independent
+product-blind review accepted the final platform, Bethesda, and candidate
+packages with all 132 retained input payload files byte-identical to their
+pre-cleanup versions. A separate fresh review accepted the exact cross-stage
+package after verifying closure, answer isolation, source pins, replay, all
+four cases, all 11 registrations, append-only history, and functional wording.
+The final cross-stage manifest is 14,108 bytes with SHA-256
+`1bb5b29b3ad384da034032a83b6b0b65156f1c873f6d89e503aa2f954c66de6a`;
+its ordered aggregate is
+`97340e1d98cb0dd28391f63fa751026a4b084eab5e64d68a72126b33f7473a03`.
+
+Exact working-tree verification passed:
+
+- locked restore and Release build with zero warnings and zero errors;
+- solution formatting with no changes required;
+- documentation validation over 160 metadata files, 162 Markdown link
+  sources, and 13 JSON files;
+- the full solution test floor: 418 passed, 9 skipped for declared platform or
+  private-environment availability, and 0 failed; and
+- `eng/verify-analysis-pipeline.ps1 -Gate All`, including Contracts,
+  Documentation, Candidates, CandidateScale, Cases, Replay, Output, Safety,
+  Comprehensive, Traceability, exact cross-stage closure, and answer
+  isolation.
+
+No private fixture repository, protocol archive, or abandoned implementation
+archive was accessed. This evidence completes the authorized cleanup, not
+project-owner acceptance of Slice 5. Contracts remain implementation-active,
+and no Slice 6 implementation is authorized until explicit owner acceptance.

@@ -15,8 +15,9 @@ Slice 5 implements the evidence-to-analysis pipeline from retained
 documentation evidence through candidate construction, finding/case analysis,
 publication, replay, and terminal fallback. Its staged public fixtures preserve
 independent answer authority and culminate in cross-stage evidence. The
-pre-closeout repository normalization changed functional names and locations,
-not product semantics or fixture truth.
+pre-closeout repository normalization and final consolidation changed
+functional names, locations, file boundaries, and repository navigation, not
+product semantics or fixture truth.
 
 | Need | Read |
 |---|---|
@@ -27,10 +28,12 @@ not product semantics or fixture truth.
 
 ## Current closeout boundary
 
-Implementation, normalization, and terminal re-review are complete. The slice
-is not owner-accepted, and its contracts remain implementation-active until the
-owner explicitly accepts and freezes the revised closeout candidate. No Slice
-6 implementation is authorized by this summary.
+Implementation, normalization, final consolidation, and independent re-review
+are complete through implementation commit
+`5514919b8f742d00e59752fa7125da487a390926`. The slice is not owner-accepted,
+and its contracts remain implementation-active until the owner explicitly
+accepts and freezes the revised closeout candidate. No Slice 6 implementation
+is authorized by this summary.
 
 Historical paths, package names, and intermediate statuses in the full record
 describe their own checkpoints. They are not current navigation or authority.
