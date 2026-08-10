@@ -18,35 +18,19 @@ separate sibling Git repository `../infinium-evaluator-archive/`. That archive
 is non-authoritative and out of scope unless the user explicitly requests
 protocol archaeology. Do not run or restore it during ordinary product work.
 
-## Required reading order
+## Required reading
 
-Before research, planning, architecture, or implementation work:
+Before any research, planning, architecture, or implementation work, read only
+the core entry set:
 
 1. `docs/README.md`
 2. `docs/current-state.md`
 3. `docs/execution-policy.md`
-4. `docs/product/product-definition.md`
-5. `docs/product/requirements.md`
-6. `docs/product/mod-impact-taxonomy.md`
-7. `docs/product/workflows.md`
-8. `docs/product/domain-model.md`
-9. `docs/product/severity-confidence-and-coverage.md`
-10. `docs/product/analysis-catalog.md`
-11. `docs/product/scope-and-milestones.md`
-12. `docs/architecture/overview.md`
-13. `docs/architecture/data-and-trust-model.md`
-14. Relevant accepted ADRs under `docs/architecture/decisions/`
 
-Before following links from an older plan, implementation record, attestation,
-or occurrence ledger, establish the current repository state from:
-
-15. the active accepted slice plan and its current implementation record
-
-When the task touches public fixtures, evaluation tools, evaluator terminology,
-or authority-sensitive schemas, also read:
-
-16. `docs/evaluation/product-evaluator-boundary.md`
-17. `docs/evaluation/repository-evaluation-authority.v1.json`
+Then load only the task-specific authority identified by those entry documents.
+For product behavior, this normally means the relevant accepted product
+document, ADR, milestone/slice summary, and owning full plan. Read the full
+implementation record only when chronology or exact retained evidence matters.
 
 Historical records preserve what happened at an earlier commit; they are not a
 navigation path for current implementation. A historical path, package name,
@@ -71,8 +55,10 @@ Then read the task-specific material:
   `docs/evaluation/evaluator-private-fixture-governance-v2.md`, the exact
   accepted evaluator plan, and the private repository's own `AGENTS.md` and
   `GOVERNANCE.md` before any private access;
-- implementation: the active accepted milestone plan, active slice plan, and
-  prerequisite implementation record.
+- implementation: the active accepted milestone plan, the active slice's
+  compact entry document, and its full accepted plan; load prerequisite or
+  current implementation records only when the task depends on their evidence
+  or chronology.
 
 Do not load historical evaluator plans, incident chronology, hard-stop records,
 or private governance for ordinary product implementation unless the active
@@ -167,10 +153,10 @@ it from this file or historical records. For Slice 5, the rejected WP1-generated
 28-package corpus, its registry, generator, fixture-only tests, and WP1
 fixture-independence/generator-feasibility gates do not exist as current inputs
 and must not be reconstructed from historical names. Current public fixture
-discovery is limited to the six exact identities in
-`docs/evaluation/repository-evaluation-authority.v1.json`. Later Slice 5
-packages assign and freeze new semantic fixture identities within their own
-scope; product output never authors expected truth.
+discovery is closed-world and limited to the exact paths and identities in
+`docs/evaluation/repository-evaluation-authority.v1.json`; no path, namespace,
+or historical record can add an implicit fixture. Product output never authors
+expected truth.
 
 The separately versioned evaluator-private fixture repository is default-deny
 for ordinary Infinium work. Do not read its files directly while implementing,

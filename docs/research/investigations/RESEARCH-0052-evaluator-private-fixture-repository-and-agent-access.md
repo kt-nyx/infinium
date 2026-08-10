@@ -1,6 +1,7 @@
 # RESEARCH-0052: Evaluator-private fixture repository and agent access
 
-Status: Completed; recommendation accepted
+Status: Completed
+Disposition: recommendation accepted
 Date: 2026-08-01
 Last reviewed: 2026-08-01
 Researcher: Codex with project-owner disposition

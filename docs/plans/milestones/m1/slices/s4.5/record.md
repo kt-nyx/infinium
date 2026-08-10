@@ -1,6 +1,7 @@
 # M1 Slice 4.5 — Held-out evaluation v2 implementation record
 
-Status: Complete; Slice 4.5 closed by ADR-0032 owner disposition; `/5` retired unqualified; private held-out deferred with no verdict
+Status: Completed
+Disposition: Slice 4.5 closed by ADR-0032; `/5` retired unqualified; private held-out deferred with no verdict
 
 Last reviewed: 2026-08-10
 Opened: 2026-08-04

@@ -1,6 +1,7 @@
 # RESEARCH-0020: Evaluation corpus and real-mod candidates
 
-Status: Completed — recommendation accepted by project owner; candidate
+Status: Completed
+Disposition: recommendation accepted by project owner; candidate
 qualification subsequently completed by RESEARCH-0035
 Date: 2026-07-25  
 Last reviewed: 2026-08-10

@@ -1,6 +1,7 @@
 # RESEARCH-0016: Configuration ecosystem survey
 
-Status: Completed — recommendation accepted by project owner
+Status: Completed
+Disposition: recommendation accepted by project owner
 Date: 2026-07-25
 Last reviewed: 2026-07-26
 Researcher: Codex agent

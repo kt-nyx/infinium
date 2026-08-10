@@ -118,9 +118,9 @@
     {
       "dependency_id": "fixtures-tooling-reseal-public-fixtures-mjs",
       "kind": "tracked-source",
-      "identity_or_version": "c169293da64c89b805f6406015367ad80167dae2aade6edcd8934a23c176dcaa",
-      "sha256": "c169293da64c89b805f6406015367ad80167dae2aade6edcd8934a23c176dcaa",
-      "byte_length": 29781,
+      "identity_or_version": "cdc69ef26072ef7fc02d69a9292814fef4ec2824b880380de00befa714098700",
+      "sha256": "cdc69ef26072ef7fc02d69a9292814fef4ec2824b880380de00befa714098700",
+      "byte_length": 46212,
       "retention_location_class": "tracked-repository",
       "availability": "retained",
       "required_for": [
@@ -131,12 +131,12 @@
       "deletion_effect": "Retained package bytes remain auditable, but deterministic current-package reconstruction is lost."
     }
   ],
-  "dependency_graph_fingerprint": "624437028ec9d16c863b239cba374462ef637003110df529d5391862cb19c3ac",
+  "dependency_graph_fingerprint": "600fd4c07dc57ad46747c2407c4490782b551865a55d3f4a233951b3a83799a9",
   "expected_output_references": [
     {
       "artifact_id": "oracle/replay-manifest.json",
       "artifact_version": "1.1.0",
-      "fingerprint": "4e9c53226ac7d2fd2d135732c06fac78bc216711ca807c898d29d36c08993161",
+      "fingerprint": "b61321e40a2167603c4f3e3c835b2aab78d94c109f581367f7ef01e77af8f9c3",
       "availability": "retained",
       "byte_length": 1718
     }

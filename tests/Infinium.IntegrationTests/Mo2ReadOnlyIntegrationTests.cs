@@ -75,15 +75,14 @@ public sealed class Mo2ReadOnlyIntegrationTests
         Assert.IsNotNull(result.Snapshot);
         Assert.IsFalse(result.Snapshot.Mo2OrUsvfsLaunched);
         string reparseEvidence =
-            ReadReparseIdentity(fixture.ReparseCanary, directory: true);
+            WindowsProtectedRootCanary.DescribeReparseIdentity(fixture.ReparseCanary, directory: true);
         Assert.Contains("tag=A0000003", reparseEvidence);
         Assert.Contains(
             NormalizeCanaryPath(fixture.ReparseTarget),
             reparseEvidence,
             StringComparison.OrdinalIgnoreCase);
-        string[] releasedHandleEvidence = fixture.ProtectedRoots
-            .Select(ObserveExclusiveRenameEquivalentOpen)
-            .ToArray();
+        IReadOnlyList<string> releasedHandleEvidence =
+            WindowsProtectedRootCanary.ObserveReleasedRootHandles(fixture.ProtectedRoots);
 
         TestContext.WriteLine(
             $"process_descendants_before={string.Join(',', processesBefore.CurrentProcessDescendants)}");
@@ -155,201 +154,8 @@ public sealed class Mo2ReadOnlyIntegrationTests
     }
 
     private static Dictionary<string, string> FingerprintProtectedRoots(
-        IReadOnlyList<string> roots)
-    {
-        return roots
-            .Select((root, index) => new
-            {
-                Key = $"{index:D2}:{Path.GetFileName(root)}",
-                Fingerprint = FingerprintTree(root),
-            })
-            .ToDictionary(
-                value => value.Key,
-                value => value.Fingerprint,
-                StringComparer.Ordinal);
-    }
-
-    private static string FingerprintTree(string root)
-    {
-        StringBuilder canonical = new();
-        IEnumerable<string> paths = EnumerateTreeWithoutFollowingReparses(root);
-        foreach (string path in paths
-                     .OrderBy(
-                         path => Path.GetRelativePath(root, path),
-                         StringComparer.OrdinalIgnoreCase)
-                     .ThenBy(
-                         path => Path.GetRelativePath(root, path),
-                         StringComparer.Ordinal))
-        {
-            FileAttributes attributes = File.GetAttributes(path);
-            string relative = Path.GetRelativePath(root, path);
-            bool directory = (attributes & FileAttributes.Directory) != 0;
-            FileSystemInfo info = directory
-                ? new DirectoryInfo(path)
-                : new FileInfo(path);
-            WindowsObjectIdentity identity =
-                WindowsReadOnlyObjectIdentity.Open(path, directory);
-            string reparseIdentity = (attributes & FileAttributes.ReparsePoint) != 0
-                ? ReadReparseIdentity(path, directory)
-                : "not-reparse";
-            canonical.Append(relative)
-                .Append('|')
-                .Append((long)attributes)
-                .Append('|')
-                .Append(info.CreationTimeUtc.Ticks)
-                .Append('|')
-                .Append(info.LastWriteTimeUtc.Ticks)
-                .Append('|')
-                .Append(identity.CanonicalValue)
-                .Append('|')
-                .Append(identity.NumberOfLinks)
-                .Append('|')
-                .Append(reparseIdentity)
-                .Append('|')
-                .Append(GetSddl(info, directory))
-                .Append('|')
-                .Append((attributes & FileAttributes.ReparsePoint) == 0
-                    ? FingerprintAlternateStreams(path)
-                    : "not-enumerated-for-reparse-object")
-                .Append('|');
-            if (!directory)
-            {
-                FileInfo file = (FileInfo)info;
-                canonical.Append(file.Length)
-                    .Append('|')
-                    .Append(Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))));
-            }
-
-            canonical.AppendLine();
-        }
-
-        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(canonical.ToString())));
-    }
-
-    private static List<string> EnumerateTreeWithoutFollowingReparses(
-        string root)
-    {
-        List<string> result = [root];
-        Stack<string> directories = new();
-        directories.Push(root);
-        while (directories.Count > 0)
-        {
-            string directory = directories.Pop();
-            foreach (string child in Directory.EnumerateFileSystemEntries(
-                         directory,
-                         "*",
-                         SearchOption.TopDirectoryOnly))
-            {
-                result.Add(child);
-                FileAttributes attributes = File.GetAttributes(child);
-                if ((attributes & FileAttributes.Directory) != 0
-                    && (attributes & FileAttributes.ReparsePoint) == 0)
-                {
-                    directories.Push(child);
-                }
-            }
-        }
-
-        return result;
-    }
-
-    private static string GetSddl(FileSystemInfo info, bool directory)
-    {
-        FileSystemSecurity security = directory
-            ? ((DirectoryInfo)info).GetAccessControl()
-            : ((FileInfo)info).GetAccessControl();
-        return security.GetSecurityDescriptorSddlForm(AccessControlSections.All);
-    }
-
-    private static string FingerprintAlternateStreams(string path)
-    {
-        List<string> streams = [];
-        nint find = FindFirstStreamW(
-            path,
-            FindStreamInfoStandard,
-            out Win32FindStreamData data,
-            0);
-        if (find == InvalidHandleValue)
-        {
-            int error = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
-            return error == ErrorHandleEof
-                ? string.Empty
-                : throw new System.ComponentModel.Win32Exception(
-                    error,
-                    "Protected-root alternate streams could not be enumerated.");
-        }
-
-        try
-        {
-            do
-            {
-                string streamName = data.StreamName;
-                if (!string.Equals(streamName, "::$DATA", StringComparison.OrdinalIgnoreCase))
-                {
-                    string streamPath = $"{path}{streamName}";
-                    streams.Add(
-                        $"{streamName}|{data.StreamSize}|"
-                        + Convert.ToHexString(
-                            SHA256.HashData(File.ReadAllBytes(streamPath))));
-                }
-            }
-            while (FindNextStreamW(find, out data));
-
-            int error = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
-            if (error != ErrorHandleEof)
-            {
-                throw new System.ComponentModel.Win32Exception(
-                    error,
-                    "Protected-root alternate stream enumeration failed.");
-            }
-        }
-        finally
-        {
-            _ = FindClose(find);
-        }
-
-        return string.Join(
-            ';',
-            streams.OrderBy(value => value, StringComparer.OrdinalIgnoreCase));
-    }
-
-    private static string ReadReparseIdentity(string path, bool directory)
-    {
-        using SafeFileHandle handle = CreateFileW(
-            path,
-            FileReadAttributes,
-            FileShareRead | FileShareWrite | FileShareDelete,
-            0,
-            OpenExisting,
-            FileFlagOpenReparsePoint | (directory ? FileFlagBackupSemantics : 0),
-            0);
-        if (handle.IsInvalid)
-        {
-            throw new System.ComponentModel.Win32Exception(
-                Marshal.GetLastWin32Error(),
-                "The protected-root reparse object could not be opened.");
-        }
-
-        if (!GetFileInformationByHandleEx(
-                handle,
-                FileAttributeTagInfo,
-                out FileAttributeTagInformation tag,
-                checked((uint)Marshal.SizeOf<FileAttributeTagInformation>())))
-        {
-            throw new System.ComponentModel.Win32Exception(
-                Marshal.GetLastWin32Error(),
-                "The protected-root reparse tag could not be read.");
-        }
-
-        FileSystemInfo info = directory
-            ? new DirectoryInfo(path)
-            : new FileInfo(path);
-        string target = info.ResolveLinkTarget(returnFinalTarget: true)?.FullName
-            ?? throw new InvalidDataException(
-                "The disposable reparse canary has no resolvable target.");
-        return FormattableString.Invariant(
-            $"tag={tag.ReparseTag:X8}|target={NormalizeCanaryPath(target)}");
-    }
+        IReadOnlyList<string> roots) => WindowsProtectedRootCanary.Capture(roots)
+        .ToDictionary(item => item.Key, item => item.Value, StringComparer.OrdinalIgnoreCase);
 
     private static ProcessEvidence CaptureProcessEvidence()
     {
@@ -430,28 +236,6 @@ public sealed class Mo2ReadOnlyIntegrationTests
     private static string ProcessIdentity(ProcessTreeEntry entry) =>
         FormattableString.Invariant(
             $"{entry.ProcessId}|{entry.ParentProcessId}|{entry.ExecutableFile}");
-
-    private static string ObserveExclusiveRenameEquivalentOpen(string path)
-    {
-        using SafeFileHandle handle = CreateFileW(
-            path,
-            DeleteAccess | FileReadAttributes,
-            shareMode: 0,
-            0,
-            OpenExisting,
-            FileFlagBackupSemantics | FileFlagOpenReparsePoint,
-            0);
-        if (handle.IsInvalid)
-        {
-            throw new AssertFailedException(
-                $"Protected root retained a handle that prevents rename-equivalent exclusive access: "
-                + $"{path} (Win32 {Marshal.GetLastWin32Error()}).");
-        }
-
-        WindowsObjectIdentity identity = WindowsReadOnlyObjectIdentity.Read(handle);
-        return FormattableString.Invariant(
-            $"{NormalizeCanaryPath(path)}|{identity.CanonicalValue}|exclusive-delete-open");
-    }
 
     private static string NormalizeCanaryPath(string path) =>
         Path.GetFullPath(path).Replace('\\', '/');

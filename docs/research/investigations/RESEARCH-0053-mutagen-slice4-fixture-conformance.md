@@ -1,7 +1,7 @@
 # RESEARCH-0053 — Mutagen 0.54.2 conformance with accepted Slice 4 fixtures
 
-Status: Completed; Option A implemented
-
+Status: Completed
+Disposition: Option A implemented
 Last reviewed: 2026-08-10
 
 Date: 2026-08-01

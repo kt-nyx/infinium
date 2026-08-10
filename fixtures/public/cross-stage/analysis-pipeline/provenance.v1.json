@@ -1,14 +1,20 @@
 {
-  "schema_identity":"infinium.public-fixture.cross_stage.provenance/1.0.7",
-  "package_identity":"infinium.public-fixtures.cross-stage-analysis.cross-stage.clean-incremental-replay.generic-a",
-  "package_version":"1.0.7",
-  "source_authority_revision":"e7de0305515657223c513195f8323b2649b6c7c8",
-  "author":{"role":"fresh-answer-isolated-public-fixture-author","product_source_access":false,"product_test_access":false,"product_output_access":false,"private_material_access":false},
-  "ground_truth_method":"Hand-authored neutral facts from accepted public authority and frozen documentation stage-operations stage handoffs; exact expectations independently derived from declared state, promotion, grouping, dependency, and replay rules.",
-  "ordinary_input":"ordinary-product-inputs.v1.json",
-  "ordinary_input_schema":"ordinary-product-input.schema.json",
-  "harness_only":"harness-envelope.v1.json",
-  "oracle_only":"expected-results.v1.json",
-  "product_comparison_occurred":false,
-  "prohibited_sources_used":[]
+  "schema_identity": "infinium.public-fixture.cross_stage.provenance/1.0.8",
+  "package_identity": "infinium.public-fixtures.cross-stage-analysis.cross-stage.clean-incremental-replay.generic-a",
+  "package_version": "1.0.8",
+  "source_authority_revision": "e7de0305515657223c513195f8323b2649b6c7c8",
+  "author": {
+    "role": "fresh-answer-isolated-public-fixture-author",
+    "product_source_access": false,
+    "product_test_access": false,
+    "product_output_access": false,
+    "private_material_access": false
+  },
+  "ground_truth_method": "Hand-authored neutral facts from accepted public authority and frozen documentation-through-operations handoffs; exact expectations independently derived from declared state, promotion, grouping, dependency, and replay rules.",
+  "ordinary_input": "ordinary-product-inputs.v1.json",
+  "ordinary_input_schema": "ordinary-product-input.schema.json",
+  "harness_only": "harness-envelope.v1.json",
+  "oracle_only": "expected-results.v1.json",
+  "product_comparison_occurred": false,
+  "prohibited_sources_used": []
 }

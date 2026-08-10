@@ -1,9 +1,11 @@
 # M1 Slice 3.5 implementation record
 
-Status: **Complete.** Slice 4 later completed at `98fe8a5`; the 2026-07-30 implementation and review record below is
+Status: Completed
+Disposition: Historical completed implementation record
 
 Last reviewed: 2026-08-10
-preserved as historical evidence. Its public-answer blocker and ignored-store
+Slice 4 later completed at `98fe8a5`; the 2026-07-30 implementation and review
+record below is preserved as historical evidence. Its public-answer blocker and ignored-store
 topology were resolved by the owner-approved 2026-08-01 ADR-0026 amendment
 recorded at the end of this document. Statements below that Slice 4 had not
 started describe the historical point at which they were written.

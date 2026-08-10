@@ -1,7 +1,7 @@
 # RESEARCH-0029: Wave D documentation and provider-boundary integration
 
-Status: Completed; prior integration result superseded
-
+Status: Completed
+Disposition: prior integration result superseded
 Subsequent revision: This remains the valid integration result for
 2026-07-26. Its authenticated-Nexus, separate GraphQL-approval, and
 provider-parity blockers are superseded by RESEARCH-0030 through

@@ -1,7 +1,7 @@
 # RESEARCH-0011: MO2 identity, installer, and manual-change state
 
-Status: Completed — recommendation accepted by ADR-0008
-
+Status: Completed
+Disposition: recommendation accepted by ADR-0008
 Date: 2026-07-25
 
 Last reviewed: 2026-07-26

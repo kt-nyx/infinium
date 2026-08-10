@@ -1,6 +1,7 @@
 # RESEARCH-0002: Helper-tool licensing and distribution posture
 
-Status: Completed — operational disposition accepted in ADR-0006
+Status: Completed
+Disposition: operational disposition accepted in ADR-0006
 Date: 2026-07-25
 Last reviewed: 2026-08-10
 Researcher: Codex agent

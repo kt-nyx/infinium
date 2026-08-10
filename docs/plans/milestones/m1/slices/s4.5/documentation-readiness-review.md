@@ -1,8 +1,9 @@
 # Post-Slice-4.5 documentation and Slice 5 readiness review
 
-Status: Complete
+Status: Completed
+Disposition: Historical readiness record
 
-Current disposition: Historical readiness record. ADR-0033 later retired and
+ADR-0033 later retired and
 externally archived protocol `/4`; any bounded-use statement below records the
 2026-08-07 checkpoint and is not current policy.
 

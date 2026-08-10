@@ -4,7 +4,7 @@
   "fixture_id": "BETH-LIGHT-VAL",
   "fixture_version": "1.4.0",
   "replay_state": "complete-clean",
-  "dependency_graph_fingerprint": "94218fb5bbe2646bd41036b690503aa833d0d11c92692c55d89850c09d8b26fe",
+  "dependency_graph_fingerprint": "8cf113d4acffbcccd02f96a88226d9813d1201a61c17f86801c70ce887153a8a",
   "retained_inputs": [
     {
       "dependency_id": "inputs-analysis-context-json",

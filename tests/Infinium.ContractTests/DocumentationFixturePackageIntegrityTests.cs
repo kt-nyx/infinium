@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -572,7 +571,7 @@ public sealed class DocumentationFixturePackageIntegrityTests
             Directory.CreateDirectory(outside);
             try
             {
-                CreateJunctionOrInconclusive(junction, outside);
+                TestFileSystem.CreateJunctionOrInconclusive(junction, outside);
                 Assert.ThrowsExactly<InvalidDataException>(() => DocumentationFixturePackageReader.Read(root));
             }
             finally
@@ -601,7 +600,7 @@ public sealed class DocumentationFixturePackageIntegrityTests
         string root = Path.Combine(Path.GetTempPath(), $"infinium-doc-fixture-{Guid.NewGuid():N}");
         try
         {
-            CopyDirectory(FixtureRoot(fixtureId), root);
+            TestFileSystem.CopyDirectory(FixtureRoot(fixtureId), root);
             action(root);
         }
         finally
@@ -615,20 +614,6 @@ public sealed class DocumentationFixturePackageIntegrityTests
 
     private static string FixtureRoot(string fixtureId) => TestRepository.PathFromRoot(
         "fixtures", "public", "documentation", fixtureId);
-
-    private static void CopyDirectory(string source, string destination)
-    {
-        Directory.CreateDirectory(destination);
-        foreach (string directory in Directory.EnumerateDirectories(source, "*", SearchOption.AllDirectories))
-        {
-            Directory.CreateDirectory(Path.Combine(destination, Path.GetRelativePath(source, directory)));
-        }
-        foreach (string file in Directory.EnumerateFiles(source, "*", SearchOption.AllDirectories))
-        {
-            string target = Path.Combine(destination, Path.GetRelativePath(source, file));
-            File.Copy(file, target);
-        }
-    }
 
     private static JsonObject ReadObject(string root, string relative) => JsonNode.Parse(
         File.ReadAllText(Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar))))!.AsObject();
@@ -701,23 +686,4 @@ public sealed class DocumentationFixturePackageIntegrityTests
     private static string Sha256(string path) =>
         Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(path)));
 
-    private static void CreateJunctionOrInconclusive(string link, string target)
-    {
-        using Process process = Process.Start(new ProcessStartInfo
-        {
-            FileName = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.System),
-                "cmd.exe"),
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            ArgumentList = { "/d", "/c", "mklink", "/J", link, target },
-        }) ?? throw new InvalidOperationException("Could not start the junction helper.");
-        process.WaitForExit();
-        if (process.ExitCode != 0)
-        {
-            Assert.Inconclusive($"Junction creation is unavailable: {process.StandardError.ReadToEnd()}");
-        }
-    }
 }

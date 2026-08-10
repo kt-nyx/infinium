@@ -1,8 +1,9 @@
 # RESEARCH-0042: Finding and case continuity and reconciliation
 
-- **Status:** Completed
+Status: Completed
+Last reviewed: 2026-07-28
+
 - **Date opened:** 2026-07-28
-- **Last reviewed:** 2026-07-28
 - **Researcher:** Codex agent
 - **Primary research question:** RQ-033
 - **Research wave:** M0 Wave E

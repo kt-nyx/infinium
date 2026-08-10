@@ -1,6 +1,7 @@
 # RESEARCH-0010: xEdit ground truth and invocation
 
-Status: Completed — recommendation rejected and superseded by ADR-0007  
+Status: Completed
+Disposition: recommendation rejected and superseded by ADR-0007
 Date: 2026-07-25  
 Last reviewed: 2026-07-25  
 Researcher: Codex agent  

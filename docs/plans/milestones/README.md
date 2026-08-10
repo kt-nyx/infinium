@@ -1,8 +1,10 @@
 # Milestone plans
 
-Status: Active navigation
+Status: Accepted
+Disposition: Active navigation
 
 Last reviewed: 2026-08-10
+
 - [M0 research foundation](m0/plan.md) - accepted and completed research foundation.
 - [M1 backend semantic proof](m1/README.md) - active milestone hierarchy.
 

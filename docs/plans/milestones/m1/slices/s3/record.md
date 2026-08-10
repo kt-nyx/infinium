@@ -1,9 +1,10 @@
 # M1 Slice 3 implementation record
 
-Status: **Gate-accepted and implementation-complete.** The owner accepted
+Status: Completed
+Disposition: Gate-accepted and implementation-complete
 
 Last reviewed: 2026-08-10
-RESEARCH-0051's conditional-positive additional-mapper amendment on
+The owner accepted RESEARCH-0051's conditional-positive additional-mapper amendment on
 2026-07-30, the independent explicit-target MO2 UI/VFS oracle is retained, and
 EVAL-0045, EVAL-0046 for the delivered exact headless capture operation,
 EVAL-0051, and EVAL-0054 pass.

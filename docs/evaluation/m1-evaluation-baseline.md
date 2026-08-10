@@ -35,7 +35,7 @@ This baseline consumes:
 - accepted ADR-0026, which defines evaluator-private repository and delegated
   access boundaries;
 - accepted ADR-0027 and the
-  [evaluator-v2 baseline amendment](m1-evaluation-baseline-evaluator-v2-amendment.md),
+  [historical evaluator-v2 baseline amendment](history/m1-evaluator-v2-baseline-amendment.md),
   which supersede evaluator-v1 protocol/scorer ownership while preserving the
   separate private data repository;
 - accepted ADR-0032 and the

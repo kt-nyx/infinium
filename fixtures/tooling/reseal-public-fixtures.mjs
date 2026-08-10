@@ -54,6 +54,32 @@ const fixtures = [
   },
 ];
 
+const candidateFixtures = [
+  {
+    relativeRoot: "fixtures/public/candidates/CAND-SEMANTIC-DEV-v1",
+    fixtureId: "CAND-SEMANTIC-DEV-v1",
+    version: "1.0.1",
+    productArtifact: "inputs/candidate-delivered-input.json",
+    oracleArtifact: "oracle/semantic-population-projection.json",
+  },
+  {
+    relativeRoot: "fixtures/public/candidates/CAND-SCALE-VAL-v1",
+    fixtureId: "CAND-SCALE-VAL-v1",
+    version: "1.0.1",
+    productArtifact: "inputs/candidate-delivered-expansion.json",
+    oracleArtifact: "oracle/semantic-population-projection.json",
+  },
+  {
+    relativeRoot: "fixtures/public/candidates/CAND-STRESS-DEV-v1",
+    fixtureId: "CAND-STRESS-DEV-v1",
+    version: "1.0.1",
+    productArtifact: "inputs/candidate-delivered-expansion.json",
+    oracleArtifact: "oracle/streaming-expansion-receipt.json",
+  },
+];
+
+const candidateAuthorityPath = "docs/product/candidate-input-and-expansion.md";
+
 const semanticTruthProperties = [
   "expected_observations", "expected_deterministic_results", "expected_external_claims",
   "expected_application_links", "expected_discovery_leads", "expected_model_proposals",
@@ -150,6 +176,312 @@ for (const fixture of fixtures) {
     `${fixture.fixtureId}/${fixture.version} input=${manifest.input_package_fingerprint} ` +
       `oracle=${manifest.oracle_fingerprint} replay=${manifest.replay_dependency_fingerprint}\n`,
   );
+}
+
+for (const fixture of candidateFixtures) {
+  await resealCandidateFixture(fixture);
+}
+
+await resealCrossStageFixture();
+
+async function resealCrossStageFixture() {
+  const fixtureRoot = path.join(repositoryRoot, "fixtures/public/cross-stage/analysis-pipeline");
+  const manifestPath = path.join(fixtureRoot, "fixture-manifest.v1.json");
+  const originalExpected = await readJson(path.join(fixtureRoot, "expected-results.v1.json"));
+  const packagePaths = [
+    "ordinary-product-inputs.v1.json", "ordinary-product-input.schema.json",
+    "harness-envelope.v1.json", "expected-results.v1.json", "provenance.v1.json",
+    "replay-dependencies.v1.json", "redistribution.v1.json", "partition-history.v1.json",
+    "README.md", "fixture-manifest.v1.json",
+  ];
+
+  for (const relative of packagePaths.filter((item) => item !== "fixture-manifest.v1.json")) {
+    const filePath = path.join(fixtureRoot, relative);
+    if (relative.endsWith(".json")) {
+      await writeJson(filePath, rewriteCrossStageGovernance(await readJson(filePath)));
+    } else {
+      const text = await readFile(filePath, "utf8");
+      await writeFile(filePath, rewriteCrossStageText(text));
+    }
+  }
+
+  const historyPath = path.join(fixtureRoot, "partition-history.v1.json");
+  const history = await readJson(historyPath);
+  const retainedResultClosure = history.history.find(
+    (entry) => entry.event.startsWith("Closed the exact retained result.001 producer-consumer flow"));
+  if (!retainedResultClosure) {
+    throw new Error("Cross-stage partition history lost the accepted 1.0.7 retained-result closure.");
+  }
+  retainedResultClosure.version = "1.0.7";
+  if (!history.history.some((entry) => entry.version === "1.0.8")) {
+    history.history.push({
+      version: "1.0.8",
+      partition: "development",
+      event: "Functionally normalized current fixture prose, rebound the three candidate-analysis package registrations after their authority-path and governance-version 1.0.1 reseal, and added the current functional package registry; retained 1.0.7 result/query semantics, expected facts, and product flow remained unchanged.",
+      product_comparison_occurred: false,
+    });
+  }
+  await writeJson(historyPath, history);
+
+  const readmePath = path.join(fixtureRoot, "README.md");
+  let readme = await readFile(readmePath, "utf8");
+  const normalizationNarrative =
+    "Version `1.0.8` functionally normalizes current fixture terminology, " +
+    "rebinds the three candidate-analysis registrations to their current authority path and `1.0.1` governance seals, " +
+    "and indexes the package through the functional public-fixture registry. " +
+    "The accepted `1.0.7` result/query flow, expected truth, answer isolation, and product execution are unchanged.\n\n";
+  if (!readme.includes(normalizationNarrative)) {
+    readme = readme.replace("Package: `", normalizationNarrative + "Package: `");
+  }
+  await writeFile(readmePath, readme);
+
+  const expectedAfter = await readJson(path.join(fixtureRoot, "expected-results.v1.json"));
+  if (canonicalJson(rewriteCrossStageGovernance(originalExpected)) !== canonicalJson(expectedAfter)) {
+    throw new Error("Cross-stage normalization changed expected truth beyond functional wording/version identity.");
+  }
+
+  const manifest = rewriteCrossStageGovernance(await readJson(manifestPath));
+  manifest.status = "normalization-reseal-pending-independent-review";
+  manifest.package_file_paths = packagePaths;
+  for (const registration of manifest.accumulated_package_registrations) {
+    if (!registration.package_identity.startsWith("CAND-")) continue;
+    const candidatePath = path.join(repositoryRoot, ...registration.authority_path.split("/"));
+    const candidateBytes = await readFile(candidatePath);
+    registration.version = "1.0.1";
+    registration.bytes = candidateBytes.length;
+    registration.sha256 = sha256(candidateBytes);
+  }
+  manifest.files = [];
+  for (const relative of packagePaths.filter((item) => item !== "fixture-manifest.v1.json")) {
+    const bytes = await readFile(path.join(fixtureRoot, relative));
+    const previous = (await readJsonIfJsonManifest(manifestPath)).files?.find((item) => item.path === relative);
+    manifest.files.push({
+      path: relative,
+      role: previous?.role ?? "current-public-fixture-governance",
+      bytes: bytes.length,
+      sha256: sha256(bytes),
+    });
+  }
+  manifest.content_aggregate.sha256 = contentAggregate(manifest.files);
+  await writeJson(manifestPath, manifest);
+
+  const manifestBytes = await readFile(manifestPath);
+  const reviewPath = path.join(fixtureRoot, "independent-review.md");
+  const marker = "## v1.0.8 repository-cleanup normalization revalidation";
+  let review = await readFile(reviewPath, "utf8");
+  const addendum = `${marker}\n\n` +
+    `Verdict: **PENDING INDEPENDENT REVIEW**\n\n` +
+    `Review target: \`${manifest.package_identity}/1.0.8\`\n\n` +
+    `- manifest bytes: \`${manifestBytes.length.toLocaleString("en-US")}\`\n` +
+    `- manifest SHA-256: \`${sha256(manifestBytes)}\`\n` +
+    `- ordered content aggregate: \`${manifest.content_aggregate.sha256}\`\n` +
+    `- closure: 10 package files, 9 non-self hash/length bindings, 11 accumulated registrations\n` +
+    `- required review: confirm normalization-only functional wording, candidate authority-path/version reseals, functional registry indexing, and exact retention of the accepted 1.0.7 result/query closure; confirm expected facts, answer isolation, four-case execution, and source-authority pins remain unchanged\n` +
+    `- product output used to author truth: false\n`;
+  if (review.includes(marker)) review = `${review.slice(0, review.indexOf(marker)).trimEnd()}\n\n${addendum}`;
+  else review = `${review.trimEnd()}\n\n${addendum}`;
+  await writeFile(reviewPath, review);
+
+  process.stdout.write(
+    `cross-stage/1.0.8 manifest=${sha256(manifestBytes)} aggregate=${manifest.content_aggregate.sha256}\n`,
+  );
+}
+
+async function readJsonIfJsonManifest(filePath) {
+  return readJson(filePath);
+}
+
+function rewriteCrossStageGovernance(value) {
+  if (Array.isArray(value)) return value.map(rewriteCrossStageGovernance);
+  if (value !== null && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(
+      ([key, item]) => [key, rewriteCrossStageGovernance(item)]));
+  }
+  return typeof value === "string" ? rewriteCrossStageText(value) : value;
+}
+
+function rewriteCrossStageText(value) {
+  return value
+    .replaceAll("Analysis pipeline cross-stage corpus independent cross-stage corpus v1", "Analysis pipeline cross-stage fixture corpus v1")
+    .replaceAll("Version `1.0.8` makes the prior-result chain executable", "Version `1.0.7` makes the prior-result chain executable")
+    .replaceAll("documentation stage-finding/case stage", "documentation and finding/case analysis")
+    .replaceAll("documentation stage/operations stage", "documentation and analysis-operations")
+    .replaceAll("documentation stage-operations stage", "documentation-through-operations")
+    .replaceAll("candidate stage/finding/case stage", "candidate and finding/case analysis")
+    .replaceAll("candidate stage/operations stage", "candidate analysis and analysis-operations")
+    .replaceAll("finding/case stage/operations stage", "finding/case analysis and analysis-operations")
+    .replaceAll("contract foundation-operations stage", "contract-foundation and analysis-operations")
+    .replaceAll("documentation stage", "documentation analysis")
+    .replaceAll("candidate stage", "candidate analysis")
+    .replaceAll("finding/case stage", "finding/case analysis")
+    .replaceAll("operations stage", "analysis-operations");
+}
+
+function contentAggregate(files) {
+  const value = files.map((file) => `${file.path}:${file.bytes}:${file.sha256}\n`).join("");
+  return sha256(Buffer.from(value, "utf8"));
+}
+
+async function resealCandidateFixture(fixture) {
+  const fixtureRoot = path.join(repositoryRoot, fixture.relativeRoot);
+  const productPath = path.join(fixtureRoot, ...fixture.productArtifact.split("/"));
+  const productBytes = await readFile(productPath);
+  const productFingerprint = sha256(productBytes);
+  const oracleArtifactPath = path.join(fixtureRoot, ...fixture.oracleArtifact.split("/"));
+  const originalOracleArtifact = await readJson(oracleArtifactPath);
+  const originalExpectedOracle = await readJson(path.join(fixtureRoot, "expected-oracle.json"));
+
+  for (const relative of [
+    "execution-input.json", "expected-oracle.json", "partition-history.json",
+    "provenance.json", "redistribution.json", fixture.oracleArtifact,
+  ]) {
+    const filePath = path.join(fixtureRoot, ...relative.split("/"));
+    const document = rewriteCandidateGovernance(await readJson(filePath));
+    if (Object.hasOwn(document, "fixture_version")) document.fixture_version = fixture.version;
+    await writeJson(filePath, document);
+  }
+
+  const executionPath = path.join(fixtureRoot, "execution-input.json");
+  const execution = await readJson(executionPath);
+  const inputReferences = [execution.analysis_execution_input, ...execution.input_payload_refs]
+    .filter((reference) => reference?.artifact_id === fixture.productArtifact);
+  if (inputReferences.length !== 2) {
+    throw new Error(`${fixture.fixtureId} does not bind its product artifact in both required input locations.`);
+  }
+  for (const reference of inputReferences) {
+    reference.fingerprint = productFingerprint;
+    reference.byte_length = productBytes.length;
+  }
+  await writeJson(executionPath, execution);
+
+  const authorityPath = path.join(repositoryRoot, ...candidateAuthorityPath.split("/"));
+  const authorityBytes = await readFile(authorityPath);
+  const planIdentity = "docs/plans/milestones/m1/slices/s5/plan.md";
+  const planPath = path.join(repositoryRoot, ...planIdentity.split("/"));
+  const planBytes = await readFile(planPath);
+  const replayPath = path.join(fixtureRoot, "replay-dependencies.json");
+  const replay = rewriteCandidateGovernance(await readJson(replayPath));
+  replay.fixture_version = fixture.version;
+  const inputDependency = replay.dependencies.find(
+    (dependency) => dependency.dependency_id === "dependency.input");
+  const authorityDependency = replay.dependencies.find(
+    (dependency) => dependency.dependency_id === "dependency.field-guide");
+  const planDependency = replay.dependencies.find(
+    (dependency) => dependency.dependency_id === "dependency.slice-plan");
+  if (!inputDependency || !authorityDependency || !planDependency) {
+    throw new Error(`${fixture.fixtureId} candidate replay dependency closure is incomplete.`);
+  }
+  Object.assign(inputDependency, {
+    identity_or_version: fixture.productArtifact,
+    sha256: productFingerprint,
+    byte_length: productBytes.length,
+  });
+  Object.assign(authorityDependency, {
+    identity_or_version: candidateAuthorityPath,
+    sha256: sha256(authorityBytes),
+    byte_length: authorityBytes.length,
+  });
+  Object.assign(planDependency, {
+    identity_or_version: planIdentity,
+    sha256: sha256(planBytes),
+    byte_length: planBytes.length,
+  });
+  const oracleArtifactBytes = await readFile(oracleArtifactPath);
+  replay.expected_output_references = [{
+    artifact_id: fixture.oracleArtifact,
+    artifact_version: "1.0.0",
+    fingerprint: sha256(oracleArtifactBytes),
+    availability: "retained",
+    byte_length: oracleArtifactBytes.length,
+  }];
+  replay.dependency_graph_fingerprint = candidateDependencyGraphFingerprint(replay.dependencies);
+  await writeJson(replayPath, replay);
+
+  const expectedOraclePath = path.join(fixtureRoot, "expected-oracle.json");
+  const expectedOracle = await readJson(expectedOraclePath);
+  refreshCandidateArtifactReference(
+    expectedOracle,
+    fixture.oracleArtifact,
+    oracleArtifactBytes,
+  );
+  expectedOracle.expected_replay_manifest = await artifactReference(
+    fixtureRoot, "replay-dependencies.json", fixture.version);
+  await writeJson(expectedOraclePath, expectedOracle);
+
+  const manifestPath = path.join(fixtureRoot, "public-manifest.json");
+  const manifest = rewriteCandidateGovernance(await readJson(manifestPath));
+  manifest.fixture_version = fixture.version;
+  manifest.input_package_fingerprint = await fileSha256(executionPath);
+  manifest.oracle_fingerprint = await fileSha256(expectedOraclePath);
+  manifest.provenance_fingerprint = await fileSha256(path.join(fixtureRoot, "provenance.json"));
+  manifest.replay_dependency_fingerprint = await fileSha256(replayPath);
+  await writeJson(manifestPath, manifest);
+
+  if (await fileSha256(productPath) !== productFingerprint) {
+    throw new Error(`${fixture.fixtureId} reseal changed product input bytes.`);
+  }
+  const expectedOracleAfter = await readJson(expectedOraclePath);
+  const normalizedOriginalExpectations = candidateExpectations(
+    rewriteCandidateGovernance(structuredClone(originalExpectedOracle)));
+  if (canonicalJson(candidateExpectations(expectedOracleAfter)) !== canonicalJson(normalizedOriginalExpectations)) {
+    throw new Error(`${fixture.fixtureId} reseal changed candidate expected truth.`);
+  }
+  const expectedOracleArtifact = rewriteCandidateGovernance(structuredClone(originalOracleArtifact));
+  expectedOracleArtifact.fixture_version = fixture.version;
+  if (canonicalJson(await readJson(oracleArtifactPath)) !== canonicalJson(expectedOracleArtifact)) {
+    throw new Error(`${fixture.fixtureId} reseal changed candidate oracle facts beyond governance identity.`);
+  }
+
+  process.stdout.write(
+    `${fixture.fixtureId}/${fixture.version} input=${manifest.input_package_fingerprint} ` +
+      `oracle=${manifest.oracle_fingerprint} replay=${manifest.replay_dependency_fingerprint}\n`,
+  );
+}
+
+function rewriteCandidateGovernance(value) {
+  if (Array.isArray(value)) return value.map(rewriteCandidateGovernance);
+  if (value !== null && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(
+      ([key, item]) => [key, rewriteCandidateGovernance(item)]));
+  }
+  if (typeof value !== "string") return value;
+  return value
+    .replaceAll("docs/evaluation/candidate-delivered-input-v1.md", candidateAuthorityPath)
+    .replaceAll("candidate-delivered-input-v1", candidateAuthorityPath)
+    .replaceAll("candidate stage candidate", "candidate analysis")
+    .replaceAll("candidate stage semantic", "candidate analysis semantic")
+    .replaceAll("candidate stage", "candidate analysis")
+    .replaceAll("finding/case stage", "finding/case analysis");
+}
+
+function candidateExpectations(oracle) {
+  return Object.fromEntries(Object.entries(oracle).filter(([key]) =>
+    (key.startsWith("expected_") && !["expected_replay_manifest"].includes(key))
+      || key === "forbidden_claims"));
+}
+
+function refreshCandidateArtifactReference(value, artifactId, bytes) {
+  if (Array.isArray(value)) {
+    for (const item of value) refreshCandidateArtifactReference(item, artifactId, bytes);
+    return;
+  }
+  if (value === null || typeof value !== "object") return;
+  if (value.artifact_id === artifactId) {
+    value.fingerprint = sha256(bytes);
+    value.byte_length = bytes.length;
+  }
+  for (const nested of Object.values(value)) {
+    refreshCandidateArtifactReference(nested, artifactId, bytes);
+  }
+}
+
+function candidateDependencyGraphFingerprint(dependencies) {
+  const canonical = dependencies
+    .map((dependency) =>
+      `${dependency.identity_or_version}\0${dependency.sha256}\0${dependency.byte_length}\n`)
+    .sort((left, right) => left.localeCompare(right, "en"))
+    .join("");
+  return sha256(Buffer.from(canonical, "utf8"));
 }
 
 async function materializeCurrentInputs(fixtureRoot, fixture) {

@@ -4,7 +4,7 @@
   "fixture_id": "BETH-MALFORMED-VAL",
   "fixture_version": "1.4.0",
   "replay_state": "complete-clean",
-  "dependency_graph_fingerprint": "ef4d693d8c8806328a5b2bbd1939c2768c5bdfa0ab3072a85281ace5acf5baeb",
+  "dependency_graph_fingerprint": "ce068435f9711a0bc7f1e55151b561eed2d10be2ca2773d7dcaac184526f85ec",
   "retained_inputs": [
     {
       "dependency_id": "inputs-analysis-context-json",

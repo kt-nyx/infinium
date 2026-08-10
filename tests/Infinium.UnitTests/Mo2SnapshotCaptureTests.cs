@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Text;
 using Infinium.Domain.Contracts;
 using Infinium.Mo2;
@@ -449,7 +448,7 @@ public sealed class Mo2SnapshotCaptureTests
         string junction = Path.Combine(fixture.ModsRoot, "High", "nested-junction");
         try
         {
-            CreateJunctionOrInconclusive(junction, protectedRoot);
+            TestFileSystem.CreateJunctionOrInconclusive(junction, protectedRoot);
 
             Mo2SnapshotCaptureResult result =
                 fixture.CreateCapture().Capture(fixture.Request);
@@ -470,7 +469,7 @@ public sealed class Mo2SnapshotCaptureTests
         }
         finally
         {
-            DeleteJunction(junction);
+            TestFileSystem.DeleteJunction(junction);
             Directory.Delete(protectedRoot, recursive: true);
         }
     }
@@ -506,7 +505,7 @@ public sealed class Mo2SnapshotCaptureTests
             }
 
             Directory.Move(nested, displaced);
-            CreateJunctionOrInconclusive(nested, protectedRoot);
+            TestFileSystem.CreateJunctionOrInconclusive(nested, protectedRoot);
         };
 
         try
@@ -525,7 +524,7 @@ public sealed class Mo2SnapshotCaptureTests
         }
         finally
         {
-            DeleteJunction(nested);
+            TestFileSystem.DeleteJunction(nested);
             if (Directory.Exists(displaced))
             {
                 Directory.Move(displaced, nested);
@@ -886,41 +885,4 @@ public sealed class Mo2SnapshotCaptureTests
                 []);
     }
 
-    private static void CreateJunctionOrInconclusive(string link, string target)
-    {
-        using Process process = Process.Start(new ProcessStartInfo
-        {
-            FileName = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.System),
-                "cmd.exe"),
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            ArgumentList =
-            {
-                "/d",
-                "/c",
-                "mklink",
-                "/J",
-                link,
-                target,
-            },
-        }) ?? throw new InvalidOperationException("Could not start the junction helper.");
-        process.WaitForExit();
-        if (process.ExitCode != 0)
-        {
-            Assert.Inconclusive(
-                $"Junction creation is unavailable: {process.StandardError.ReadToEnd()}");
-        }
-    }
-
-    private static void DeleteJunction(string path)
-    {
-        if (Directory.Exists(path)
-            && (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0)
-        {
-            Directory.Delete(path);
-        }
-    }
 }

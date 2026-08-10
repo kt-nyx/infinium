@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text.Json;
 using Infinium.Application.Evaluation;
 using Infinium.Domain.Contracts;
@@ -35,6 +36,12 @@ public sealed class EvaluationBoundaryContractTests
         "retired-material",
     ];
 
+    private static readonly string[] CurrentPublicFixtureAuthorityPaths =
+    [
+        "fixtures/tooling/",
+        "fixtures/public/public-fixture-registry.v1.json",
+    ];
+
     [TestMethod]
     [TestCategory("Contract")]
     [TestCategory("Security")]
@@ -57,6 +64,15 @@ public sealed class EvaluationBoundaryContractTests
             CurrentAuthoritySurfaceIds,
             surfaceIds);
 
+        JsonElement publicFixtureSurface = authority.RootElement.GetProperty("surfaces")
+            .EnumerateArray()
+            .Single(item => item.GetProperty("id").GetString() == "current-public-fixtures");
+        CollectionAssert.AreEquivalent(
+            CurrentPublicFixtureAuthorityPaths,
+            publicFixtureSurface.GetProperty("paths").EnumerateArray()
+                .Select(item => item.GetString()!)
+                .ToArray());
+
         foreach (JsonElement entry in retirement.RootElement.GetProperty("entries").EnumerateArray())
         {
             string retiredPath = entry.GetProperty("path").GetString()!;
@@ -72,6 +88,55 @@ public sealed class EvaluationBoundaryContractTests
         foreach (string path in CurrentPublicFixtureFamilies)
         {
             Assert.IsTrue(Directory.Exists(TestRepository.PathFromRoot([.. path.Split('/')])), path);
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Contract")]
+    public void PublicFixtureRegistryExactlyIndexesEveryCurrentFunctionalPackage()
+    {
+        using JsonDocument registry = ReadAndValidate(
+            "fixtures/public/public-fixture-registry.v1.json",
+            "public-fixture-registry.v1.schema.json");
+        JsonElement[] entries = registry.RootElement.GetProperty("packages")
+            .EnumerateArray()
+            .ToArray();
+        Assert.AreEqual(18, entries.Length);
+
+        Dictionary<string, FixtureRegistryEntry> actual = entries.ToDictionary(
+            item => item.GetProperty("package_identity").GetString()!,
+            item => new FixtureRegistryEntry(
+                item.GetProperty("package_version").GetString()!,
+                item.GetProperty("partition").GetString()!,
+                item.GetProperty("package_path").GetString()!,
+                item.GetProperty("authority_file").GetString()!,
+                item.GetProperty("authority_bytes").GetInt64(),
+                item.GetProperty("authority_sha256").GetString()!,
+                item.TryGetProperty("authority_status", out JsonElement status)
+                    ? status.GetString()
+                    : null),
+            StringComparer.Ordinal);
+        Assert.AreEqual(entries.Length, actual.Count, "Package identities must be unique.");
+
+        Dictionary<string, FixtureSourceIdentity> expected = DiscoverCurrentFixturePackages();
+        CollectionAssert.AreEquivalent(expected.Keys.ToArray(), actual.Keys.ToArray());
+        foreach ((string identity, FixtureSourceIdentity source) in expected)
+        {
+            FixtureRegistryEntry registered = actual[identity];
+            Assert.AreEqual(source.Version, registered.Version, identity);
+            Assert.AreEqual(source.Partition, registered.Partition, identity);
+            Assert.AreEqual(source.PackagePath, registered.PackagePath, identity);
+            Assert.AreEqual(source.AuthorityFile, registered.AuthorityFile, identity);
+            Assert.AreEqual(source.AuthorityStatus, registered.AuthorityStatus, identity);
+
+            string authorityPath = TestRepository.PathFromRoot([.. registered.AuthorityFile.Split('/')]);
+            byte[] bytes = File.ReadAllBytes(authorityPath);
+            Assert.AreEqual(bytes.LongLength, registered.AuthorityBytes, identity);
+            Assert.AreEqual(
+                Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant(),
+                registered.AuthoritySha256,
+                identity);
         }
     }
 
@@ -156,4 +221,93 @@ public sealed class EvaluationBoundaryContractTests
         ActiveJsonSchemaValidator.Validate(document.RootElement, schemaName);
         return document;
     }
+
+    private static Dictionary<string, FixtureSourceIdentity> DiscoverCurrentFixturePackages()
+    {
+        Dictionary<string, FixtureSourceIdentity> packages = new(StringComparer.Ordinal);
+        string publicRoot = TestRepository.PathFromRoot("fixtures", "public");
+        foreach (string manifestPath in Directory.EnumerateFiles(
+                     publicRoot,
+                     "public-manifest.json",
+                     SearchOption.AllDirectories))
+        {
+            using JsonDocument manifest = JsonDocument.Parse(File.ReadAllBytes(manifestPath));
+            string packagePath = RepositoryRelativePath(Path.GetDirectoryName(manifestPath)!);
+            packages.Add(
+                manifest.RootElement.GetProperty("fixture_id").GetString()!,
+                new FixtureSourceIdentity(
+                    manifest.RootElement.GetProperty("fixture_version").GetString()!,
+                    manifest.RootElement.GetProperty("partition").GetString()!,
+                    packagePath,
+                    packagePath + "/public-manifest.json"));
+        }
+
+        const string findingAuthority = "fixtures/public/findings-cases/finding-case-independent-truth.v1.0.3.json";
+        using (JsonDocument findings = JsonDocument.Parse(File.ReadAllBytes(
+                   TestRepository.PathFromRoot([.. findingAuthority.Split('/')]))))
+        {
+            foreach (JsonElement package in findings.RootElement.GetProperty("package_registry").EnumerateArray())
+            {
+                packages.Add(
+                    package.GetProperty("package_id").GetString()!,
+                    new FixtureSourceIdentity(
+                        package.GetProperty("package_version").GetString()!,
+                        package.GetProperty("partition").GetString()!,
+                        "fixtures/public/findings-cases",
+                        findingAuthority));
+            }
+        }
+
+        const string operationsAuthority = "fixtures/public/operations/analysis-lifecycle/fixture-manifest.v1.json";
+        using (JsonDocument operations = JsonDocument.Parse(File.ReadAllBytes(TestRepository.PathFromRoot(
+                   "fixtures", "public", "operations", "analysis-lifecycle", "harness-envelope.v1.json"))))
+        {
+            foreach (JsonElement package in operations.RootElement.GetProperty("packages").EnumerateArray())
+            {
+                packages.Add(
+                    package.GetProperty("package_identity").GetString()!,
+                    new FixtureSourceIdentity(
+                        package.GetProperty("version").GetString()!,
+                        package.GetProperty("partition").GetString()!,
+                        "fixtures/public/operations/analysis-lifecycle",
+                        operationsAuthority));
+            }
+        }
+
+        const string crossStageAuthority = "fixtures/public/cross-stage/analysis-pipeline/fixture-manifest.v1.json";
+        using (JsonDocument crossStage = JsonDocument.Parse(File.ReadAllBytes(
+                   TestRepository.PathFromRoot([.. crossStageAuthority.Split('/')]))))
+        {
+            JsonElement root = crossStage.RootElement;
+            packages.Add(
+                root.GetProperty("package_identity").GetString()!,
+                new FixtureSourceIdentity(
+                    root.GetProperty("package_version").GetString()!,
+                    root.GetProperty("partition").GetString()!,
+                    "fixtures/public/cross-stage/analysis-pipeline",
+                    crossStageAuthority,
+                    root.GetProperty("status").GetString()));
+        }
+
+        return packages;
+    }
+
+    private static string RepositoryRelativePath(string fullPath) =>
+        Path.GetRelativePath(TestRepository.Root, fullPath).Replace('\\', '/');
+
+    private sealed record FixtureSourceIdentity(
+        string Version,
+        string Partition,
+        string PackagePath,
+        string AuthorityFile,
+        string? AuthorityStatus = null);
+
+    private sealed record FixtureRegistryEntry(
+        string Version,
+        string Partition,
+        string PackagePath,
+        string AuthorityFile,
+        long AuthorityBytes,
+        string AuthoritySha256,
+        string? AuthorityStatus);
 }

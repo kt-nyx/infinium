@@ -1,4 +1,4 @@
-using Infinium.Analysis.Cases;
+using Infinium.Analysis.FindingCases;
 using Infinium.Application.Serialization;
 using Infinium.Domain.Contracts;
 using Infinium.Persistence;

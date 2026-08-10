@@ -4,7 +4,7 @@
   "fixture_id": "BETH-NPC-DEV",
   "fixture_version": "1.4.0",
   "replay_state": "complete-clean",
-  "dependency_graph_fingerprint": "32c202c7ac2f7e6f9e0c466edf01c97bdecc144ce2bf6670358b33ee39ff5dda",
+  "dependency_graph_fingerprint": "6bba6c22276cb07996526258d8826385dccd6d04499ebe3fea750e89a17fe644",
   "retained_inputs": [
     {
       "dependency_id": "inputs-analysis-context-json",

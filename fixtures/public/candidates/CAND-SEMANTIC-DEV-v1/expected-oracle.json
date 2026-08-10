@@ -1,6 +1,6 @@
 {
   "fixture_id": "CAND-SEMANTIC-DEV-v1",
-  "fixture_version": "1.0.0",
+  "fixture_version": "1.0.1",
   "oracle_version": "1.0.0",
   "independent_authors_and_reviewers": [
     "codex.product-blind.candidate.fixture-author.20260809"
@@ -20,9 +20,9 @@
         {
           "artifact_id": "oracle/semantic-population-projection.json",
           "artifact_version": "1.0.0",
-          "fingerprint": "bf4244532825c59308780ff136fd6eb4d5def8a30b498d90510a38393e795115",
+          "fingerprint": "626b5553ce3e47cae7f2720fa70f490d8fb7cd82d717772fd0944d0422629c33",
           "availability": "retained",
-          "byte_length": 18275
+          "byte_length": 18273
         }
       ],
       "independent_of_system_under_test": true
@@ -498,7 +498,7 @@
   "expected_collection_states": {
     "observations": {
       "state": "empty",
-      "reason": "candidate stage fixture does not author observations."
+      "reason": "candidate analysis fixture does not author observations."
     },
     "deterministic_results": {
       "state": "empty",
@@ -506,11 +506,11 @@
     },
     "external_claims": {
       "state": "empty",
-      "reason": "candidate stage fixture does not author external claims."
+      "reason": "candidate analysis fixture does not author external claims."
     },
     "application_links": {
       "state": "empty",
-      "reason": "candidate stage fixture consumes delivered facts only."
+      "reason": "candidate analysis fixture consumes delivered facts only."
     },
     "discovery_leads": {
       "state": "empty",
@@ -534,19 +534,19 @@
     },
     "findings": {
       "state": "not-applicable",
-      "reason": "Findings are outside candidate stage."
+      "reason": "Findings are outside candidate analysis."
     },
     "recommendations": {
       "state": "not-applicable",
-      "reason": "Recommendations are outside candidate stage."
+      "reason": "Recommendations are outside candidate analysis."
     },
     "supported_cases": {
       "state": "not-applicable",
-      "reason": "Supported cases are outside candidate stage."
+      "reason": "Supported cases are outside candidate analysis."
     },
     "lead_only_cases": {
       "state": "not-applicable",
-      "reason": "Cases are outside candidate stage."
+      "reason": "Cases are outside candidate analysis."
     },
     "abstentions": {
       "state": "populated",
@@ -558,7 +558,7 @@
     },
     "coverage_gaps": {
       "state": "empty",
-      "reason": "candidate stage retains unsupported ledger memberships rather than authoring finding/case stage coverage-gap objects."
+      "reason": "candidate analysis retains unsupported ledger memberships rather than authoring finding/case analysis coverage-gap objects."
     },
     "failures": {
       "state": "empty",
@@ -569,10 +569,10 @@
   "expected_replayability": "complete-clean",
   "expected_replay_manifest": {
     "artifact_id": "replay-dependencies.json",
-    "artifact_version": "1.0.0",
-    "fingerprint": "25c993cccaff64c0820d88dd414a890f0f078129ecfe29b467db36c3a86b702d",
+    "artifact_version": "1.0.1",
+    "fingerprint": "6707bd3573cb0fb3a8d34520d2bcc51a0175fc7b1de9f29af114cb0de1ab75a0",
     "availability": "retained",
-    "byte_length": 2367
+    "byte_length": 2384
   },
   "expected_not_used_boundaries": [
     "provider",
@@ -584,12 +584,12 @@
     {
       "claim_id": "forbidden.finding",
       "claim_type": "finding",
-      "reason": "candidate stage does not author findings."
+      "reason": "candidate analysis does not author findings."
     },
     {
       "claim_id": "forbidden.case",
       "claim_type": "case",
-      "reason": "candidate stage does not author cases."
+      "reason": "candidate analysis does not author cases."
     },
     {
       "claim_id": "forbidden.readiness",
@@ -603,7 +603,7 @@
     }
   ],
   "known_limits": [
-    "This fixture proves only the bounded candidate stage candidate contract and does not establish findings, cases, generic Slice 7 semantics, controlled-real behavior, reliability, readiness, or a private verdict."
+    "This fixture proves only the bounded candidate analysis contract and does not establish findings, cases, generic Slice 7 semantics, controlled-real behavior, reliability, readiness, or a private verdict."
   ],
   "pre_registered_at": "2026-08-09T06:20:47.5665585+00:00",
   "change_history": []

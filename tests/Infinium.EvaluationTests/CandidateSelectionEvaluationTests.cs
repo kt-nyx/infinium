@@ -78,7 +78,7 @@ public sealed class CandidateSelectionEvaluationTests
 
     private static CandidateFixture ReadFixture(string directoryName, string projectionPath = "oracle/semantic-population-projection.json")
     {
-        string root = FindRepositoryRoot();
+        string root = TestRepository.Root;
         string directory = Path.Combine(root, FixtureRoot.Replace('/', Path.DirectorySeparatorChar), directoryName);
         CandidatePublicFixturePackage package = CandidateFixturePackageReader.Read(directory);
         JsonDocument projection = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(
@@ -356,16 +356,6 @@ public sealed class CandidateSelectionEvaluationTests
 
     private static Sha256Fingerprint Fingerprint(byte[] bytes) =>
         new(Convert.ToHexStringLower(SHA256.HashData(bytes)));
-
-    private static string FindRepositoryRoot()
-    {
-        DirectoryInfo? directory = new(AppContext.BaseDirectory);
-        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "Infinium.sln")))
-        {
-            directory = directory.Parent;
-        }
-        return directory?.FullName ?? throw new DirectoryNotFoundException("Repository root was not found.");
-    }
 
     private sealed record CandidateFixture(CandidatePublicFixturePackage Package, JsonDocument Projection);
 }

@@ -4,7 +4,7 @@
   "fixture_id": "BETH-UNSUPPORTED-VAL",
   "fixture_version": "1.4.0",
   "replay_state": "complete-clean",
-  "dependency_graph_fingerprint": "6db130f2ead2ebdb4f66ad01b9300375d6306d9a2bcf191356e1650707b14534",
+  "dependency_graph_fingerprint": "399d4207e80459228dc3d3148851be2d60a917256563428d948716c5006173af",
   "retained_inputs": [
     {
       "dependency_id": "inputs-analysis-context-json",

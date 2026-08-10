@@ -1,7 +1,7 @@
 # RESEARCH-0004: Wave A policy and evidence-handling integration
 
-Status: Completed — Gate disposition amended by ADR-0005, ADR-0006, ADR-0007, and accepted RQ-031 owner disposition
-
+Status: Completed
+Disposition: Gate disposition amended by ADR-0005, ADR-0006, ADR-0007, and accepted RQ-031 owner disposition
 Date: 2026-07-25
 
 Last reviewed: 2026-08-10

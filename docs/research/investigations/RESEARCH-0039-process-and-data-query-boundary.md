@@ -1,7 +1,7 @@
 # RESEARCH-0039: Process and data-query boundary
 
-Status: Completed; recommendations accepted
-
+Status: Completed
+Disposition: recommendations accepted
 Date: 2026-07-28
 
 Last reviewed: 2026-07-28

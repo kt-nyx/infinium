@@ -1,10 +1,11 @@
-# M1 evaluation baseline evaluator-v2 amendment
+# Historical evaluator-v2 amendment to the M1 evaluation baseline
 
 Status: Accepted
+Disposition: Historical evaluator baseline; no active command, gate, or product-evidence role
 Accepted: 2026-08-04
 Accepted by: Project owner
 Last reviewed: 2026-08-10
-Predecessor: [M1 evaluation baseline](m1-evaluation-baseline.md)
+Predecessor: [M1 evaluation baseline](../m1-evaluation-baseline.md)
 
 Current disposition: Historical evaluator baseline. ADR-0033 retires and
 externally archives protocol `/4`; no command, test, review gate, or product
@@ -95,7 +96,7 @@ held-out pass.
 ## Historical `/2` adjudication and successor
 
 The owner-supplied Stage C.5 adjudication is recorded in the
-[sanitized incident](evaluator-history.md). The
+[sanitized incident](../evaluator-history.md). The
 historical `/2` `FAIL` remains immutable, but its product verdict is invalidated.
 No product correction is indicated. Evaluator `/2` is retired for the diagnosed
 numeric typed-fact surface, the historical private corpus requires complete
@@ -104,7 +105,7 @@ replacement, and any later scoring is a new successor tuple and invocation.
 Public successor protocol `infinium.evaluator-v2/3` is qualified and frozen at
 `34ed0c84165e9a49f44a88ecd87cac967132ebd7`. Its exact source/protocol inventory
 and calibration identity are recorded in the
-[successor Stage A freeze](evaluator-history.md). At that
+[successor Stage A freeze](../evaluator-history.md). At that
 `/3` checkpoint, successor Stage B was unblocked. Private successor-corpus work
 and held-out scoring had not run, and Stage D had not started.
 
@@ -114,10 +115,10 @@ The owner-supplied sanitized Stage B2 review found that protocol `/3` required
 exact failure codes, typed `AIDT` subfields, and internal taxonomy assignment
 IDs that an independent oracle could not author from public authority and
 hidden input bytes alone. The complete public disclosure is retained in the
-[Stage B2 contract-gap record](evaluator-history.md).
+[Stage B2 contract-gap record](../evaluator-history.md).
 
 The accepted
-[final Slice 4 held-out scope amendment](evaluator-history.md)
+[final Slice 4 held-out scope amendment](../evaluator-history.md)
 therefore separates implementation-specific public conformance from
 independently specifiable held-out semantics. Protocol `/3` remains qualified
 historical public evidence and is superseded before a valid successor corpus.
@@ -128,7 +129,7 @@ the held-out gate or authorize a product correction, Stage C2, Stage D, Slice
 
 Protocol `/4` was publicly qualified and frozen at
 `3693d19563c636cd2879804633ca4ce52448d2c1`. Its machine-readable authority is
-the [archived final freeze history](evaluator-history.md).
+the [archived final freeze history](../evaluator-history.md).
 At that freeze checkpoint, the existing successor-corpus inputs were permitted
 to resume B2 once; no oracle, corpus fingerprint/freeze/tag, comparison, Stage
 C2 score, or Stage D work had occurred under `/4`.
@@ -136,7 +137,7 @@ C2 score, or Stage D work had occurred under `/4`.
 ## Owner semantic disposition
 
 ADR-0028 and the accepted
-[semantic-authority owner disposition](evaluator-history.md)
+[semantic-authority owner disposition](../evaluator-history.md)
 resolve the six later authority-completion mismatches without changing
 protocol `/4`. B2 may no longer resume under the evaluator freeze alone.
 Public product/specification realignment,
@@ -146,7 +147,7 @@ That prerequisite was satisfied on 2026-08-05 by the independently reviewed
 public realignment and exact candidate freeze at
 `a98d648bd0adb2751ee0c09828e0227b1583950f`. The machine-readable candidate
 handoff is
-[the public product candidate freeze](evaluator-history.md).
+[the public product candidate freeze](../evaluator-history.md).
 At that checkpoint, one fresh private oracle reviewer was permitted to resume
 B2 once. That authorization was subsequently consumed by the terminal attempt
 below. Oracle/corpus qualification, C2 scoring, and Stage D remain unrun.
@@ -157,7 +158,7 @@ The single authorized B2 resume subsequently ran and stopped without an
 oracle, candidate execution, comparison, scoring, or product verdict. The
 owner-authorized public contract-completion attempt then hard-stopped after
 its one permitted correction pass left a second exact cross-family authority
-gap. Its [public attestation](evaluator-history.md)
+gap. Its [public attestation](../evaluator-history.md)
 did not reach candidate conformance. Another B2 operation, corpus
 qualification, C2, Stage D, Slice 5, and protocol `/5` are not authorized by
 this status. Project-owner milestone-plan disposition was required and is
@@ -167,7 +168,7 @@ supplied by the successor section below.
 
 ADR-0029 resolves the disclosed partial-decode choice and requires lower-layer
 evidence retention with exact higher-layer coverage gaps. The accepted
-[Pre-B2 totality plan](evaluator-history.md)
+[Pre-B2 totality plan](../evaluator-history.md)
 historically owned the successor public-completion pass as work ID
 `M1/S4.5/PRE-B2`; it subsequently completed through WP5 and classified the
 protocol `/4` representation gap. Its completion did not authorize private B2
@@ -193,6 +194,6 @@ not authorized. Historical `/4` regression health was neither evaluator
 qualification nor a complete current-product result.
 
 Evaluator-deferral closeout is accepted. Slices 5-9 are gated by the accepted
-[M1 continuation verification profile](m1-continuation-verification-profile.md).
+[M1 continuation verification profile](../m1-continuation-verification-profile.md).
 Its six public layers supplement the baseline's required case set; they do not
 waive a case, establish held-out evidence, or support M3 reliability/readiness.

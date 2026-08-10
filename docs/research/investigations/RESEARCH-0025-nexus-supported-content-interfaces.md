@@ -1,7 +1,7 @@
 # RESEARCH-0025: Nexus supported content interfaces
 
-Status: Completed; operative recommendation superseded
-
+Status: Completed
+Disposition: operative recommendation superseded
 Subsequent revision: Authenticated
 [RESEARCH-0030](RESEARCH-0030-nexus-latest-interface-qualification.md) and
 accepted ADR-0012 supersede this report's operative interface recommendation,

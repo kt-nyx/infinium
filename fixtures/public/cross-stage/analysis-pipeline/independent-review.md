@@ -142,3 +142,63 @@ This pin verifies relocation only and does not replace or broaden the
 independent semantic verdict above.
 
 Verdict: **ACCEPT** for the exact fixture-root relocation.
+
+## v1.0.8 repository-cleanup normalization revalidation
+
+Reviewer: `codex-fresh-product-blind-cross-stage-normalization-review-20260810-final`
+
+Verdict: **ACCEPT**
+
+Review target: `infinium.public-fixtures.cross-stage-analysis.cross-stage.clean-incremental-replay.generic-a/1.0.8`
+
+- pending author freeze: `fixture-manifest.v1.json` 14,097 bytes; SHA-256 `7d641d09c80ce6b30db1e8c160479be8e8dece7cf2740c44d988529ae734bb7a`
+- final accepted manifest: `fixture-manifest.v1.json` 14,108 bytes; SHA-256 `1bb5b29b3ad384da034032a83b6b0b65156f1c873f6d89e503aa2f954c66de6a`
+- ordered nine-entry content aggregate: SHA-256 `97340e1d98cb0dd28391f63fa751026a4b084eab5e64d68a72126b33f7473a03`
+- author two-run tree digest: SHA-256 `2c06eb0344b32ee7ff72d4573a383ee72a33071bb57d812107aec88387b755ad`
+- closure: 10 exact package files plus this external review record; 9 non-self hash/length bindings; manifest self included only in `package_file_paths`; 11 accumulated registrations resolve at their declared current bytes, SHA-256 identities, versions, partitions, and authority paths
+- registry consistency: package identity, version, partition, package path, and authority path agree; the cross-stage registry manifest hash intentionally remains at the prior accepted pin until this independent acceptance is propagated
+
+The final freeze preserves the accepted append-only 1.0.7 event for the D01
+producer and D02-D04 exact `result.001` consumers, deletion/substitution
+failure, captured opaque run bindings, bounded Application
+`result-query-request`/`query-results` surface, single atomic publications, and
+post-observation oracle loading. The appended 1.0.8 event remains
+normalization-only. The four ordinary requests and four oracle pointers remain
+one-to-one. The r1/r2 source bytes, hashes, passage offsets, neutral facts,
+exact counts, negative and abstention behavior, supported/lead-only grouping,
+coverage gap, replay dependencies, thirteen immutable source-authority pins,
+redistribution, partition, and claim boundary remain unchanged.
+
+The three candidate-analysis registrations now resolve exactly at their
+current `1.0.1` public-manifest byte and SHA-256 seals, and those exact pins
+agree with the public registry. Current candidate and cross-stage functional
+prose contains no legacy documentation-stage, candidate-stage,
+finding/case-stage, or operations-stage wording. Older mechanical terms remain
+only inside the retained historical v1.0.7 review chronology, not current
+author-facing fixture authority. The immutable source-authority list remains
+bound to its accepted starting revision and is not silently rewritten as
+current mutable authority.
+
+Strict parsing passed for all nine JSON files. The closed ordinary-input schema
+validated the sole product projection and rejected independently introduced
+top-level and nested properties, missing required data, an invalid mode, an
+uppercase hash, and a duplicate dependency. The product projection contains
+no case, EVAL, oracle, expected-result, package, partition, receipt, query,
+review, or other harness-only metadata. All non-self file lengths and hashes,
+the ordered aggregate, both retained source bodies, all claim slices, the
+four-case request/oracle/receipt joins, the retained prior-result dependency,
+and all accumulated registrations independently recomputed exactly. No
+must-fix, follow-up, non-blocking, owner/authority-decision, or
+safety/isolation finding remains.
+
+Allowed sources used: repository `AGENTS.md`; accepted public product and
+architecture documents and ADRs; the named public evaluation documents;
+current JSON product schemas and public-registry schema; the public fixture
+registry; all eleven files in this cross-stage directory; and only the current
+retained public fixture manifests explicitly referenced by this package.
+
+Prohibited sources not accessed: product source, tests, engineering scripts,
+build or product output, Git status/diff/history/objects, private or evaluator-
+private material, sibling/archive repositories, human-guide or legacy
+material, live/provider material, and product execution. No product output or
+implementation comparison authored or changed expected truth.

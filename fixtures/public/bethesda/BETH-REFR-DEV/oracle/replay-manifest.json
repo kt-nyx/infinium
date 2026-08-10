@@ -4,7 +4,7 @@
   "fixture_id": "BETH-REFR-DEV",
   "fixture_version": "1.4.0",
   "replay_state": "complete-clean",
-  "dependency_graph_fingerprint": "8b1c8f0d6d56a687d6ca085569cfe4d7b3a68e42f65893834bebe900239d35bb",
+  "dependency_graph_fingerprint": "4757811b0c73a0e46393ac3d253f3537e39c8643e2b682a1eae11dc7b305ab1c",
   "retained_inputs": [
     {
       "dependency_id": "inputs-analysis-context-json",

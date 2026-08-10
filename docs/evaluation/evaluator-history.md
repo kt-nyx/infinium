@@ -1,6 +1,7 @@
 # Evaluator history and current disposition
 
-Status: Historical navigation
+Status: Accepted
+Disposition: Historical navigation
 
 Last reviewed: 2026-08-10
 

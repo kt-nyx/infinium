@@ -1,7 +1,8 @@
 # Dependency licence and provenance review
 
-Status: M1 Slice 0 verified
-Reviewed: 2026-07-28
+Status: Completed
+Disposition: M1 Slice 0 dependency licence and provenance review verified
+Last reviewed: 2026-08-10
 
 [`dependency-manifest.json`](dependency-manifest.json) inventories every NuGet
 package resolved by the committed lockfiles. The lockfiles are authoritative

@@ -1,6 +1,7 @@
 # Open research questions
 
-Status: Active register
+Status: Accepted
+Disposition: Active register
 
 Last reviewed: 2026-08-10
 The product baseline was accepted on 2026-07-25. The

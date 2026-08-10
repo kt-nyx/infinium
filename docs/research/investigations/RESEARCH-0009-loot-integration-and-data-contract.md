@@ -1,6 +1,7 @@
 # RESEARCH-0009 — LOOT integration and data contract
 
-Status: Completed — recommendation accepted by ADR-0011
+Status: Completed
+Disposition: recommendation accepted by ADR-0011
 Date: 2026-07-25
 Last reviewed: 2026-07-25
 Researcher: Codex agent

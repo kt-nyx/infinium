@@ -1,6 +1,7 @@
 # RESEARCH-0046: Dapr Workflow desktop lifecycle qualification
 
-Status: Closed; Dapr rejected by owner without prototype
+Status: Completed
+Disposition: Closed; Dapr rejected by owner without prototype
 
 Date: 2026-07-28
 

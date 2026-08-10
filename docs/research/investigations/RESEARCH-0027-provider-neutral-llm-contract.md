@@ -1,7 +1,7 @@
 # RESEARCH-0027: Provider-neutral LLM claim-extraction and investigation contract
 
-Status: Completed; recommendation partially superseded
-
+Status: Completed
+Disposition: recommendation partially superseded
 Subsequent revision: The two schema-bound semantic operations, citation
 contract, and host validation/admission rules remain useful. The recommendation
 that this provider-neutral subset cap the complete LLM capability surface is

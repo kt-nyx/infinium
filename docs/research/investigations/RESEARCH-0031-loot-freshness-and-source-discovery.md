@@ -1,6 +1,7 @@
 # RESEARCH-0031 — LOOT freshness and source discovery
 
-Status: Completed; recommendation accepted by ADR-0014  
+Status: Completed
+Disposition: recommendation accepted by ADR-0014
 Date: 2026-07-28  
 Last reviewed: 2026-07-28  
 Researcher: Codex agent  

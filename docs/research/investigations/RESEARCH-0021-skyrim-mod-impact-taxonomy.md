@@ -1,6 +1,7 @@
 # RESEARCH-0021: Skyrim mod impact taxonomy
 
-Status: Completed — recommendation accepted as
+Status: Completed
+Disposition: recommendation accepted as
 `infinium.skyrim-se.mod-impact-taxonomy/0.1.0`  
 Date: 2026-07-25  
 Last reviewed: 2026-08-10

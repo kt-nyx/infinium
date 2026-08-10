@@ -1,6 +1,7 @@
 # M1 Slice 2 implementation record
 
-Status: Complete after review, correction, and re-review
+Status: Completed
+Disposition: Complete after review, correction, and re-review
 
 Last reviewed: 2026-08-10
 Review completed: 2026-07-29

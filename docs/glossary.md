@@ -1,6 +1,7 @@
 # Glossary
 
-Status: Active reference
+Status: Accepted
+Disposition: Active reference
 
 Last reviewed: 2026-08-08
 

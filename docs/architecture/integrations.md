@@ -1,7 +1,7 @@
 # Integration boundaries
 
-Status: Accepted synthesis; actively maintained
-
+Status: Accepted
+Disposition: synthesis; actively maintained
 Last reviewed: 2026-08-08
 
 ADR-0006 accepts the high-level external-application and bundled-dependency

@@ -1,6 +1,7 @@
 # ADR-0027: Public evaluation protocol, private held-out corpus, and separate evaluator ownership
 
-Status: Accepted; partially superseded by ADR-0030, ADR-0032, and ADR-0033
+Status: Accepted
+Disposition: partially superseded by ADR-0030, ADR-0032, and ADR-0033
 Date: 2026-08-04
 Accepted: 2026-08-04
 Accepted by: Project owner
@@ -205,5 +206,5 @@ raw and sanitized run records.
 
 - [ADR-0026](ADR-0026-evaluator-private-fixture-repository-and-delegated-access.md)
 - [Evaluator-private fixture governance v2](../../evaluation/evaluator-private-fixture-governance-v2.md)
-- [M1 evaluation baseline evaluator-v2 amendment](../../evaluation/m1-evaluation-baseline-evaluator-v2-amendment.md)
+- [Historical M1 evaluator-v2 baseline amendment](../../evaluation/history/m1-evaluator-v2-baseline-amendment.md)
 - [M1 Slice 4.5 execution plan](../../evaluation/evaluator-history.md)

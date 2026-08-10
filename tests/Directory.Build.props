@@ -14,5 +14,15 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)TestRepository.cs" Link="TestRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BethesdaSemanticTestSnapshot.cs" Link="BethesdaSemanticTestSnapshot.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)TestFileSystem.cs" Link="TestFileSystem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)WindowsProtectedRootCanary.cs"
+             Link="WindowsProtectedRootCanary.cs"
+             Condition="'$(MSBuildProjectName)' == 'Infinium.EvaluationTests' Or '$(MSBuildProjectName)' == 'Infinium.IntegrationTests'" />
+    <Compile Include="$(MSBuildThisFileDirectory)TestCandidatePopulationSource.cs"
+             Link="TestCandidatePopulationSource.cs"
+             Condition="'$(MSBuildProjectName)' == 'Infinium.UnitTests' Or '$(MSBuildProjectName)' == 'Infinium.IntegrationTests'" />
+    <Compile Include="$(MSBuildThisFileDirectory)TestProcessRunner.cs"
+             Link="TestProcessRunner.cs"
+             Condition="'$(MSBuildProjectName)' == 'Infinium.IntegrationTests'" />
   </ItemGroup>
 </Project>

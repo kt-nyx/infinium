@@ -1,10 +1,10 @@
 {
-  "schema_identity": "infinium.public-fixture.cross_stage.fixture-manifest/1.0.7",
+  "schema_identity": "infinium.public-fixture.cross_stage.fixture-manifest/1.0.8",
   "registry_identity": "infinium.public-fixtures.cross-stage-analysis.cross-stage-corpus.20260810.1",
-  "registry_version": "1.0.7",
+  "registry_version": "1.0.8",
   "status": "independently-reviewed-accepted-normalization-revalidation",
   "package_identity": "infinium.public-fixtures.cross-stage-analysis.cross-stage.clean-incremental-replay.generic-a",
-  "package_version": "1.0.7",
+  "package_version": "1.0.8",
   "partition": "development",
   "case_count": 4,
   "package_file_paths": [
@@ -23,62 +23,62 @@
     {
       "path": "ordinary-product-inputs.v1.json",
       "role": "sole-ordinary-product-input",
-      "bytes": 7908,
-      "sha256": "cc918e2a317785c9c59298f898ee3ef421d72be5907bc419238e07a623174366"
+      "bytes": 10767,
+      "sha256": "dd6fd2f74d282a5c9c0371db0c43c67d8fc0bec0ecf67d0f953baafa5db06b16"
     },
     {
       "path": "ordinary-product-input.schema.json",
       "role": "closed-harness-side-pre-dispatch-schema",
-      "bytes": 7958,
-      "sha256": "dc3d6a1f03be5a1c81c47c30662eb270e1197d9f092edd186375b581605e52d9"
+      "bytes": 13238,
+      "sha256": "9f08704f29d4df3d7c400d2dc28c57c22366cde21237ab4b7e46a2cdb4fae6c3"
     },
     {
       "path": "harness-envelope.v1.json",
       "role": "harness-only-never-product-input",
-      "bytes": 18833,
-      "sha256": "7adc11428089a64364da04f1655689a6368216e2989e48ce6e6990c70bcc9540"
+      "bytes": 26312,
+      "sha256": "78be4be719c79cf8c49f7f5fb7d21e1c48d657202aee127a9590dbdc5b85e163"
     },
     {
       "path": "expected-results.v1.json",
       "role": "oracle-only-never-product-input",
-      "bytes": 5126,
-      "sha256": "df3ddab66c9cb1ac5c06362dbd37e8bf415954c66685a019b3af882f11b6b9dd"
+      "bytes": 6027,
+      "sha256": "fc61e19dbcb2df0f81179d41354ae1206a19a1fabe0c6caa0bd06fbf7de91d1d"
     },
     {
       "path": "provenance.v1.json",
       "role": "authorship-and-ground-truth-provenance",
-      "bytes": 1021,
-      "sha256": "23f8cfe4b271aeb6888f21aaf559c0001d4e0221f5b619217118715a23cb6462"
+      "bytes": 1062,
+      "sha256": "c9fdf3a33d96edeeda8fbd8a3e0ac9bfa1fd67445a9f4cc36e5c7a4edac2b4e2"
     },
     {
       "path": "replay-dependencies.v1.json",
       "role": "replay-dependency-closure",
-      "bytes": 2523,
-      "sha256": "a1a892c687b4d1aec306fb420ec09ef80bb68c2eab5665d2a67f3db8e9ef16c9"
+      "bytes": 3184,
+      "sha256": "72731fc041341e8cfab6fa0b3dc77778b750a13bdcd4c1bf9b40d4940d51137c"
     },
     {
       "path": "redistribution.v1.json",
       "role": "redistribution-and-privacy",
-      "bytes": 645,
-      "sha256": "f3471f700201b4042c4645838771aaf87e044eed3b28b8efa1b1e44a351c08e8"
+      "bytes": 664,
+      "sha256": "9ae6e8db453e5a9218a7243ab473ec8f5ad8e132ffab0ecdacc19ed0b017f76d"
     },
     {
       "path": "partition-history.v1.json",
       "role": "partition-and-version-history",
-      "bytes": 2643,
-      "sha256": "7f7ad4bcb66caa50796a4d0765a954aba00a4a85cc6a39360ebf5abcedb31802"
+      "bytes": 3395,
+      "sha256": "d7b2e67c7433677dd47fdceef5a261fc929b9dc799d1b9190bafa451f90d4836"
     },
     {
       "path": "README.md",
       "role": "human-handoff-and-claim-boundary",
-      "bytes": 5129,
-      "sha256": "df97a7f45de06f7504f80231744e7ff27130531571074ebff4ee6428886aa4a5"
+      "bytes": 5488,
+      "sha256": "5645a6db69655907ea791d3ba775d6984ca075c870f162a3914887c6bbb02f64"
     }
   ],
   "content_aggregate": {
     "algorithm": "sha256",
     "ordered_entry_format": "path:bytes:sha256 followed by LF for each files entry in array order",
-    "sha256": "5666d39defeae38cd9691fc5e6bc62ca7b99d4867e57512409e6d134f25034c7"
+    "sha256": "97340e1d98cb0dd28391f63fa751026a4b084eab5e64d68a72126b33f7473a03"
   },
   "manifest_self_hash_policy": {
     "included_in_package_file_paths": true,
@@ -109,31 +109,31 @@
     },
     {
       "package_identity": "CAND-SEMANTIC-DEV-v1",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "partition": "development",
       "authority_path": "fixtures/public/candidates/CAND-SEMANTIC-DEV-v1/public-manifest.json",
-      "bytes": 1479,
-      "sha256": "9b5ef698f342428efc9499085b081bfa2f9284db3c9fc287547a7f7dd2fc507d",
+      "bytes": 1482,
+      "sha256": "d1e9b03d1b8d8235830b9c73cbd2c9cb0b35ac93a132989f7ba04b6b13cdbc3b",
       "review_status": "sealed-and-accepted-by-current-public-authority",
       "bounded_claim": "Small direct candidate population with admitted, negative, ambiguous, unsupported, hypothesis, abstention, ranking, and metamorphic closure."
     },
     {
       "package_identity": "CAND-SCALE-VAL-v1",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "partition": "validation",
       "authority_path": "fixtures/public/candidates/CAND-SCALE-VAL-v1/public-manifest.json",
       "bytes": 1444,
-      "sha256": "e95930df3ef536a6f0bfd72d5195fd1d17fda2fe9fd6488423818edbf35c8d06",
+      "sha256": "410be905be0e27a16ce753e607eabed125eb67917b942e69b33858731a808c00",
       "review_status": "sealed-and-accepted-by-current-public-authority",
       "bounded_claim": "Bounded 3,200-member validation-scale candidate expansion with independently enumerated counts."
     },
     {
       "package_identity": "CAND-STRESS-DEV-v1",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "partition": "development",
       "authority_path": "fixtures/public/candidates/CAND-STRESS-DEV-v1/public-manifest.json",
       "bytes": 1496,
-      "sha256": "b552521f3b5f6efac23a204fc7269b0cc59b15a1231baa81dce9d5164b35f72f",
+      "sha256": "985de373ac9a65263f47a6259548975af648c8cb4eb8716a181a181332990abf",
       "review_status": "sealed-and-accepted-by-current-public-authority",
       "bounded_claim": "Streaming-only 1,000,000-member structural stress receipt; not a materialized aggregate or performance claim."
     },
@@ -272,11 +272,11 @@
       "sha256": "06d18e7df2cf1076f1a430007fa31df86bdf01a59cbbe54e675f40f11eeaef50"
     }
   ],
-  "isolation_statement": "Expected truth was authored from accepted public authority and frozen documentation stage-operations stage handoffs without product source, tests, scripts, builds, output, Git history or diff, private/evaluator-private material, legacy material, human-guide material, live/provider material, or product execution.",
+  "isolation_statement": "Expected truth was authored from accepted public authority and frozen documentation-through-operations handoffs without product source, tests, scripts, builds, output, Git history or diff, private/evaluator-private material, legacy material, human-guide material, live/provider material, or product execution.",
   "known_gaps": [
     "Opaque product identity and canonical hash binding remains harness work.",
     "Only the bounded Application result-query-request/query-results surface is exercised; no documentation-field or other field-level query is claimed.",
-    "Native filesystem gaps remain those recorded by operations stage.",
+    "Native filesystem gaps remain those recorded by analysis-operations.",
     "No Layer 5 generalization or controlled-real evidence.",
     "ANALYSIS-019 Bethesda analysis, OPS-004 scale and structural limits, ADR-0017 desktop and Windows stack, and ADR-0023 cost ledger and budget authority are inherited only and are not exercised by this four-case corpus.",
     "No full EVAL-0046, EVAL-0082, EVAL-0087, or EVAL-0088 matrix is exercised by this four-case corpus."

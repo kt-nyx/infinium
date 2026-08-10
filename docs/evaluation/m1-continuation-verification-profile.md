@@ -1,7 +1,7 @@
 # M1 continuation verification profile
 
-Status: Accepted and effective
-
+Status: Accepted
+Disposition: and effective
 Last reviewed: 2026-08-10
 
 Date: 2026-08-08

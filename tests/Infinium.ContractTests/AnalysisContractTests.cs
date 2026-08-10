@@ -2,7 +2,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Infinium.Analysis.Candidates;
-using Infinium.Analysis.Cases;
+using Infinium.Analysis.FindingCases;
 using Infinium.Application.Evaluation;
 using Infinium.Application.Serialization;
 using Infinium.Domain.Contracts;

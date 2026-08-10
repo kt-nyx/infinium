@@ -181,12 +181,20 @@ if (-not [System.IO.File]::Exists($reviewPath)) {
 $review = [System.IO.File]::ReadAllText($reviewPath)
 $manifestLength = (Get-Item -LiteralPath $manifestPath).Length
 $manifestSha = Get-Sha256 $manifestPath
-$reviewVerdictMissing = $review -notmatch '(?im)^Verdict:\s*\*\*ACCEPT\*\*'
-$reviewManifestMissing = $review.IndexOf($manifestSha, [StringComparison]::Ordinal) -lt 0
-$reviewAggregateMissing = $review.IndexOf($aggregateSha, [StringComparison]::Ordinal) -lt 0
-$reviewLengthMissing = $review.IndexOf(
+$normalizationReviewMarker = '## v1.0.8 repository-cleanup normalization revalidation'
+$normalizationReviewIndex = $review.IndexOf($normalizationReviewMarker, [StringComparison]::Ordinal)
+$normalizationReview = if ($normalizationReviewIndex -ge 0) {
+    $review.Substring($normalizationReviewIndex)
+} else {
+    ''
+}
+$manifestStatusDrifted = [string] $manifest.status -cne 'independently-reviewed-accepted-normalization-revalidation'
+$reviewVerdictMissing = $normalizationReview -notmatch '(?im)^Verdict:\s*\*\*ACCEPT\*\*'
+$reviewManifestMissing = $normalizationReview.IndexOf($manifestSha, [StringComparison]::Ordinal) -lt 0
+$reviewAggregateMissing = $normalizationReview.IndexOf($aggregateSha, [StringComparison]::Ordinal) -lt 0
+$reviewLengthMissing = $normalizationReview.IndexOf(
     $manifestLength.ToString('N0', [Globalization.CultureInfo]::InvariantCulture), [StringComparison]::Ordinal) -lt 0
-if ($reviewVerdictMissing -or $reviewManifestMissing -or $reviewAggregateMissing -or $reviewLengthMissing) {
+if ($manifestStatusDrifted -or $reviewVerdictMissing -or $reviewManifestMissing -or $reviewAggregateMissing -or $reviewLengthMissing) {
     throw 'cross-stage corpus final independent review does not externally freeze and accept the exact manifest/aggregate.'
 }
 

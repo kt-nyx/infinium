@@ -1,6 +1,7 @@
 # Bethesda byte-format evidence profile v1
 
-Status: Frozen for M1 Slice 3.5 independent fixture construction and review
+Status: Accepted
+Disposition: Frozen for M1 Slice 3.5 independent fixture construction and review
 
 Last reviewed: 2026-08-10
 

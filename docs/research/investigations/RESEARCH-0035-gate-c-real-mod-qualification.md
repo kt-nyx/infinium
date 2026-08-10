@@ -1,6 +1,7 @@
 # RESEARCH-0035 — Gate C controlled-real case qualification
 
-Status: Completed — recommendation accepted; RQ-025 Gate C prerequisite
+Status: Completed
+Disposition: recommendation accepted; RQ-025 Gate C prerequisite
 satisfied
 Date: 2026-07-28
 Last reviewed: 2026-07-28

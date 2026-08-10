@@ -1,7 +1,7 @@
 # Data and trust model
 
-Status: Accepted synthesis; actively maintained
-
+Status: Accepted
+Disposition: synthesis; actively maintained
 Last reviewed: 2026-08-10
 ## Principle
 

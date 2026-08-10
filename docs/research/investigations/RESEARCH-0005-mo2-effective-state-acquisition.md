@@ -1,6 +1,7 @@
 # RESEARCH-0005: MO2 effective-state acquisition
 
-Status: Completed — recommendation accepted by ADR-0008
+Status: Completed
+Disposition: recommendation accepted by ADR-0008
 Date: 2026-07-25
 Last reviewed: 2026-07-25
 Researcher: Codex agent

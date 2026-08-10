@@ -1,6 +1,7 @@
 # M1 backend semantic proof
 
-Status: Active navigation
+Status: Accepted
+Disposition: Active navigation
 
 Last reviewed: 2026-08-10
 
@@ -21,7 +22,7 @@ Live status is stated only in [current project state](../../../current-state.md)
 - `S3.5`: [plan](slices/s3.5/plan.md) and [record](slices/s3.5/record.md)
 - `S4`: [implementation record](slices/s4/record.md)
 - `S4.5`: [plan, product realignment, record, and readiness review](slices/s4.5/README.md)
-- `S5`: [plan, normalization amendment, and implementation record](slices/s5/README.md)
+- `S5`: [current summary, plan, normalization amendment, and record](slices/s5/README.md)
 
 Historical evaluator attempts formerly stored as parallel Slice 4.5 plans are
 summarized in [Evaluator history](../../../evaluation/evaluator-history.md) and

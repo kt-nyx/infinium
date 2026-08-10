@@ -1,11 +1,12 @@
-# WP3 delivered candidate input and expansion v1
+# Candidate input and deterministic expansion
 
-Status: implementation-active WP3 product contract.
+Status: Accepted
+Disposition: Implementation-active product contract
 
 Last reviewed: 2026-08-10
 
-This document defines the public, answer-free boundary used to construct the
-M1 Slice 5 WP3 candidate population. The machine contracts are:
+This document defines the public, answer-free product boundary used to
+construct a candidate population. The machine contracts are:
 
 - `candidate-delivered-input.v1.schema.json`;
 - `candidate-delivered-expansion.v1.schema.json`.
@@ -46,7 +47,7 @@ The four factual collections have these meanings:
   missing capability, reason, dependencies, and evidence. The source maps the
   fact to a mandatory-evidence unsupported ledger member; the input does not
   prescribe the ledger disposition.
-- `documentation_facts` retain the exact WP2 application, claim, passage,
+- `documentation_facts` retain the exact documentation application, claim, passage,
   revision, local subject, run/snapshot/context binding, factual applicability,
   dependencies, and supporting/contradicting evidence. The source derives a
   mandatory-evidence join. Cross-run, cross-snapshot, or cross-context facts
@@ -60,7 +61,8 @@ Every retained candidate decision carries the originating delivered
 `source_fact_id` and an exact `derived-from` dependency edge, so independent
 comparison and later audit do not reproduce opaque population-member IDs.
 
-The production Bethesda/WP2 adapter is only a projection into this contract.
+The production Bethesda/documentation-evidence adapter is only a projection
+into this contract.
 The same `DeliveredIndexCandidatePopulationSource` consumes both adapted real
 inputs and public-fixture inputs; no fixture-only population source is part of
 the semantic gate.
@@ -130,8 +132,9 @@ identities and are excluded from independent oracle construction.
 
 ## Independent fixture use
 
-A product-blind fixture author may read the accepted WP3 plan and public
-Bethesda/WP2 authorities together with these two schemas and this field guide.
+A product-blind fixture author may read the accepted owning plan and public
+Bethesda/documentation-evidence authorities together with these two schemas
+and this field guide.
 The author supplies only closed delivered facts or expansion parameters and
 keeps expected candidate behavior in a separately frozen oracle. Product
 source, tests, output, builds, private fixtures, and product identity algorithms

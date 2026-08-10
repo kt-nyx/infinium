@@ -67,6 +67,9 @@ internal static class WindowsProtectedRootCanary
         return roots.Select(ObserveExclusiveRenameEquivalentOpen).ToArray();
     }
 
+    internal static string DescribeReparseIdentity(string path, bool directory) =>
+        ReadReparseIdentity(path, directory);
+
     private static string FingerprintTree(string root)
     {
         StringBuilder canonical = new();
@@ -252,8 +255,9 @@ internal static class WindowsProtectedRootCanary
         string target = info.ResolveLinkTarget(returnFinalTarget: true)?.FullName
             ?? throw new InvalidDataException(
                 "A protected reparse object has no resolvable target.");
+        string normalizedTarget = Path.GetFullPath(target).Replace('\\', '/');
         return FormattableString.Invariant(
-            $"tag={tag.ReparseTag:X8}|target={Path.GetFullPath(target)}");
+            $"tag={tag.ReparseTag:X8}|target={normalizedTarget}");
     }
 
     private static string ObserveExclusiveRenameEquivalentOpen(string path)

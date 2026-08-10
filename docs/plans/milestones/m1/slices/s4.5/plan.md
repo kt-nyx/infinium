@@ -1,7 +1,7 @@
 # M1 Slice 4.5 — Evaluator deferral and M1 continuation
 
-Status: Accepted and completed
-
+Status: Accepted
+Disposition: and completed
 Current disposition: Historical execution plan. ADR-0033 later retired and
 externally archived protocol `/4`; none of the wrapper, freeze, test, or review
 instructions below remain runnable or current.

@@ -1,8 +1,9 @@
 # RESEARCH-0050: SQLite opened-object write authority
 
-- **Status:** Completed
+Status: Completed
+Last reviewed: 2026-07-29
+
 - **Date opened:** 2026-07-29
-- **Last reviewed:** 2026-07-29
 - **Researcher:** Codex agent
 - **Primary question:** Can Slice 2 satisfy ADR-0021 for SQLite without
   replacing the accepted SQLite/WAL architecture?

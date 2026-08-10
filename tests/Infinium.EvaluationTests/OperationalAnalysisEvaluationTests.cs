@@ -272,15 +272,5 @@ public sealed class OperationalAnalysisEvaluationTests
         new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Disallow, AllowTrailingCommas = false });
 
     private static string FixtureRoot() => Path.Combine(
-        FindRepositoryRoot(), "fixtures", "public", "operations", "analysis-lifecycle");
-
-    private static string FindRepositoryRoot()
-    {
-        DirectoryInfo? current = new(AppContext.BaseDirectory);
-        while (current is not null && !File.Exists(Path.Combine(current.FullName, "Infinium.sln")))
-        {
-            current = current.Parent;
-        }
-        return current?.FullName ?? throw new DirectoryNotFoundException("Infinium repository root was not found.");
-    }
+        TestRepository.Root, "fixtures", "public", "operations", "analysis-lifecycle");
 }

@@ -1,6 +1,7 @@
 # Research investigations
 
-Status: Active navigation
+Status: Accepted
+Disposition: Active navigation
 
 Last reviewed: 2026-08-10
 Place one bounded, dated investigation per file:

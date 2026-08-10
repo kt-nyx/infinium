@@ -1,7 +1,7 @@
 using Infinium.Analysis.Conclusions;
 using Infinium.Domain.Contracts;
 
-namespace Infinium.Analysis.Cases;
+namespace Infinium.Analysis.FindingCases;
 
 public static class FindingCasePipeline
 {

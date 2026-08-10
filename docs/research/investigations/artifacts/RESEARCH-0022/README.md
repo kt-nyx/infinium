@@ -1,6 +1,7 @@
 # RESEARCH-0022 benchmark artifacts
 
-Status: Completed — retained research artifact set  
+Status: Completed
+Disposition: retained research artifact set
 Last reviewed: 2026-07-26
 
 These files support the bounded synthetic candidate-index and ranking

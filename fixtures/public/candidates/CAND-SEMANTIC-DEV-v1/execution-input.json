@@ -1,13 +1,13 @@
 {
   "fixture_id": "CAND-SEMANTIC-DEV-v1",
-  "fixture_version": "1.0.0",
+  "fixture_version": "1.0.1",
   "installation_snapshot_input": {
     "state": "empty",
     "reason": "Run, snapshot, context, and configuration bindings are carried by the delivered candidate contract."
   },
   "accepted_order_construction_input": {
     "state": "not-applicable",
-    "reason": "No plugin-order construction is exercised by candidate stage candidate fixtures."
+    "reason": "No plugin-order construction is exercised by candidate analysis fixtures."
   },
   "analysis_context_input": {
     "state": "empty",
@@ -28,7 +28,7 @@
   },
   "case_matrix_input": {
     "state": "not-applicable",
-    "reason": "Case construction is outside candidate stage."
+    "reason": "Case construction is outside candidate analysis."
   },
   "runtime_support_input": {
     "state": "not-applicable",
@@ -51,7 +51,7 @@
   "tool_library_versions": [],
   "declared_archive_state": {
     "state": "excluded",
-    "reason": "Archive semantics are outside candidate stage."
+    "reason": "Archive semantics are outside candidate analysis."
   },
   "declared_supported_capabilities": [],
   "declared_unsupported_capabilities": [],

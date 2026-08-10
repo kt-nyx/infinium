@@ -808,7 +808,7 @@ public static class DocumentationFixturePackageReader
     {
         "development" => FixturePartition.Development,
         "validation" => FixturePartition.Validation,
-        _ => throw new InvalidDataException("documentation stage documentation fixture partition must be development or validation."),
+        _ => throw new InvalidDataException("Documentation fixture partition must be development or validation."),
     };
 
     private static void ValidateRedistribution(JsonElement manifest, JsonElement redistribution)

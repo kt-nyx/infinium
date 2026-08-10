@@ -1,33 +1,24 @@
 # Infinium documentation
 
-Status: Active navigation
+Status: Accepted
+Disposition: Active navigation
 
 Last reviewed: 2026-08-10
+
 This directory is the authoritative entry point for the rebuilt Infinium
 project. It records product intent, accepted decisions, current execution,
 research, evaluation standards, and implementation evidence without treating
 the abandoned code or historical evaluator work as current instructions.
 
-## Start here
+## Core entry
 
 1. [Current project state](current-state.md)
 2. [Development execution policy](execution-policy.md)
-3. [Product definition](product/product-definition.md)
-4. [Requirements](product/requirements.md)
-5. [Skyrim SE mod-impact taxonomy](product/mod-impact-taxonomy.md)
-6. [Workflows](product/workflows.md)
-7. [Domain model](product/domain-model.md)
-8. [Severity, confidence, maturity, coverage, and readiness](product/severity-confidence-and-coverage.md)
-9. [Analysis catalog](product/analysis-catalog.md)
-10. [Scope and milestones](product/scope-and-milestones.md)
-11. [Architecture overview](architecture/overview.md)
-12. [Data and trust model](architecture/data-and-trust-model.md)
-13. [Architecture decisions](architecture/decisions/README.md)
 
-After that baseline, read the active milestone plan, active slice plan, and
-current implementation record linked from `current-state.md`. Load evaluation,
-research, integration, security, or historical documents only when the task
-touches those surfaces.
+Then load only the task-specific product, architecture, planning, evaluation,
+or research authority below. The compact active-slice entry links the full
+plan and record without making either large historical document mandatory for
+unrelated work.
 
 ## Current execution
 
@@ -45,6 +36,8 @@ other exceptional operation that explicitly requires them.
 ## Supporting document map
 
 - Architecture: [decision index](architecture/decisions/README.md),
+  [overview](architecture/overview.md),
+  [data and trust model](architecture/data-and-trust-model.md),
   [jobs/caching/snapshots](architecture/jobs-caching-and-snapshots.md),
   [integration boundaries](architecture/integrations.md), and
   [security/privacy](architecture/security-and-privacy.md)
@@ -63,8 +56,15 @@ other exceptional operation that explicitly requires them.
 - Planning: [plan policy](plans/README.md),
   [work-breakdown notation](plans/work-breakdown-notation.md),
   [active M1 plan](plans/milestones/m1/plan.md),
-  [active Slice 5 plan](plans/milestones/m1/slices/s5/plan.md),
-  and [current Slice 5 record](plans/milestones/m1/slices/s5/record.md)
+  and [current Slice 5 entry](plans/milestones/m1/slices/s5/current.md)
+- Product: [product definition](product/product-definition.md),
+  [requirements](product/requirements.md),
+  [mod-impact taxonomy](product/mod-impact-taxonomy.md),
+  [workflows](product/workflows.md), [domain model](product/domain-model.md),
+  [severity/confidence/coverage](product/severity-confidence-and-coverage.md),
+  [analysis catalog](product/analysis-catalog.md),
+  [scope/milestones](product/scope-and-milestones.md), and
+  [candidate input and deterministic expansion](product/candidate-input-and-expansion.md)
 - Reference: [glossary](glossary.md)
 
 ## Document authority

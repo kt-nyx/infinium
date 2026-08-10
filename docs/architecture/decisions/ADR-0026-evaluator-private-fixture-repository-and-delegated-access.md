@@ -1,6 +1,7 @@
 # ADR-0026: Evaluator-private fixture repository and delegated access
 
-Status: Accepted; partially superseded by ADR-0027
+Status: Accepted
+Disposition: partially superseded by ADR-0027
 Date: 2026-08-01
 Accepted: 2026-08-01
 Accepted by: Project owner

@@ -4,7 +4,7 @@
   "fixture_id": "PLATFORM-ANALYSIS-RUNTIME-DEV-v1",
   "fixture_version": "1.1.0",
   "replay_state": "complete-clean",
-  "dependency_graph_fingerprint": "624437028ec9d16c863b239cba374462ef637003110df529d5391862cb19c3ac",
+  "dependency_graph_fingerprint": "600fd4c07dc57ad46747c2407c4490782b551865a55d3f4a233951b3a83799a9",
   "retained_inputs": [
     {
       "dependency_id": "inputs-analysis-context-json",

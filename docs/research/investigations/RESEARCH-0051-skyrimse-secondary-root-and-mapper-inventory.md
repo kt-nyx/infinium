@@ -1,6 +1,7 @@
 # RESEARCH-0051: Skyrim SE secondary-root and mapper inventory
 
-Status: Completed; recommendation accepted and integrated
+Status: Completed
+Disposition: recommendation accepted and integrated
 Date: 2026-07-29
 Last reviewed: 2026-07-30
 Researcher: Codex

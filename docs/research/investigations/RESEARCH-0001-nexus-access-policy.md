@@ -1,7 +1,7 @@
 # RESEARCH-0001: Nexus access and evidence-handling policy
 
-Status: Completed — operational disposition accepted and amended
-
+Status: Completed
+Disposition: operational disposition accepted and amended
 Date: 2026-07-25
 
 Last reviewed: 2026-07-28

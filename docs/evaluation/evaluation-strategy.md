@@ -1,7 +1,7 @@
 # Evaluation strategy
 
-Status: Accepted; actively maintained
-
+Status: Accepted
+Disposition: actively maintained
 Last reviewed: 2026-08-10
 Infinium is not trustworthy because it produces plausible reports. It becomes
 trustworthy only when evidence reconstruction, candidate selection, semantic

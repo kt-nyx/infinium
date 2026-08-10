@@ -41,7 +41,7 @@ public sealed class ManagedCrossStageCorpusIntegrationTests
     [TestCategory("Replay")]
     public async Task FrozenCrossStageFourCaseCorpusExecutesManagedCoordinatorAndTypedQueryBeforeOracleComparison()
     {
-        string repositoryRoot = FindRepositoryRoot();
+        string repositoryRoot = TestRepository.Root;
         string fixtureRoot = Path.Combine([repositoryRoot, .. FixturePath]);
         using JsonDocument ordinary = Parse(Path.Combine(fixtureRoot, "ordinary-product-inputs.v1.json"));
         using JsonDocument harness = Parse(Path.Combine(fixtureRoot, "harness-envelope.v1.json"));
@@ -239,7 +239,7 @@ public sealed class ManagedCrossStageCorpusIntegrationTests
     public void ManagedRequestRejectsDeliveredInputFingerprintOrSourceReferenceDriftBeforeAdmission()
     {
         string fixtureRoot = Path.Combine(
-            [FindRepositoryRoot(), .. FixturePath]);
+            [TestRepository.Root, .. FixturePath]);
         using JsonDocument ordinary = Parse(Path.Combine(fixtureRoot, "ordinary-product-inputs.v1.json"));
         JsonElement shared = ordinary.RootElement.GetProperty("shared_facts");
         JsonElement requestInput = ordinary.RootElement.GetProperty("requests").EnumerateArray()
@@ -1007,16 +1007,6 @@ public sealed class ManagedCrossStageCorpusIntegrationTests
             AllowTrailingCommas = false,
             CommentHandling = JsonCommentHandling.Disallow,
         });
-
-    private static string FindRepositoryRoot()
-    {
-        DirectoryInfo? current = new(AppContext.BaseDirectory);
-        while (current is not null && !File.Exists(Path.Combine(current.FullName, "Infinium.sln")))
-        {
-            current = current.Parent;
-        }
-        return current?.FullName ?? throw new DirectoryNotFoundException("Infinium repository root was not found.");
-    }
 
     private static OpaqueId Id(string value) => new(value);
     private static ContractVersion Version() => new(1, 0, 0);

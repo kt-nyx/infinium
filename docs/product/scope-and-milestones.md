@@ -202,18 +202,6 @@ Additional concerns include:
 
 ## Explicitly after M4
 
-- write-capable remediation or autonomous setup changes;
-- patch generation;
-- other mod managers;
-- other Skyrim runtimes, editions, and total conversions;
-- other games;
-- continuous monitoring;
-- custom in-game instrumentation;
-- product-initiated MO2/game launch for tracked test sessions;
-- save-to-installation-snapshot association;
-- community/shared compatibility service;
-- full documentation revision browser;
-- prospective installer-choice recording;
-- detailed local-resource controls;
-- game-performance recommendations and automated in-game benchmarking;
-- global general-purpose chat.
+The authoritative exclusion and deferral list is maintained once in
+[Requirements](requirements.md#deferred-requirements). This milestone summary
+does not duplicate that list.

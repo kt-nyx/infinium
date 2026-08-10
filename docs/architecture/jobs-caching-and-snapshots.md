@@ -1,7 +1,7 @@
 # Jobs, caching, and snapshots
 
-Status: Accepted synthesis; actively maintained
-
+Status: Accepted
+Disposition: synthesis; actively maintained
 Last reviewed: 2026-08-10
 This document records required behavior. RESEARCH-0036, RESEARCH-0037,
 RESEARCH-0039, RESEARCH-0043, and RESEARCH-0046 define the storage, lifecycle,

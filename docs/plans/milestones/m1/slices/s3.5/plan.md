@@ -1,6 +1,7 @@
 # M1 Slice 3.5 — Independent Bethesda fixture and oracle qualification
 
-Status: Accepted and completed
+Status: Accepted
+Disposition: and completed
 Owner: Project owner
 Prepared: 2026-07-30
 Accepted: 2026-07-30

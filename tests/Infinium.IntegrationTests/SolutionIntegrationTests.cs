@@ -696,43 +696,11 @@ public sealed class SolutionIntegrationTests
     private static ProcessResult Run(
         string project,
         IReadOnlyList<string> arguments,
-        int timeoutMilliseconds = 15_000)
-    {
-        ProcessStartInfo startInfo = new()
-        {
-            FileName = "dotnet",
-            WorkingDirectory = TestRepository.Root,
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = true,
-        };
-        startInfo.ArgumentList.Add("run");
-        startInfo.ArgumentList.Add("--project");
-        startInfo.ArgumentList.Add($"src/{project}");
-        startInfo.ArgumentList.Add("-c");
-        startInfo.ArgumentList.Add("Release");
-        startInfo.ArgumentList.Add("--no-build");
-        startInfo.ArgumentList.Add("--");
-        foreach (string argument in arguments)
-        {
-            startInfo.ArgumentList.Add(argument);
-        }
-
-        using Process process = Process.Start(startInfo)!;
-        Task<string> output = process.StandardOutput.ReadToEndAsync();
-        Task<string> error = process.StandardError.ReadToEndAsync();
-        bool exited = process.WaitForExit(timeoutMilliseconds);
-        if (!exited)
-        {
-            process.Kill(entireProcessTree: true);
-            process.WaitForExit();
-        }
-
-        Assert.IsTrue(exited, $"{project} did not terminate within its bound.");
-        Task.WaitAll(output, error);
-        return new ProcessResult(process.ExitCode, output.Result, error.Result);
-    }
+        int timeoutMilliseconds = 15_000) => TestProcessRunner.RunDotnetProject(
+            $"src/{project}",
+            arguments,
+            timeoutMilliseconds,
+            $"{project} did not terminate within its bound.");
 
     private static void StopProcess(int processId)
     {
@@ -801,5 +769,4 @@ public sealed class SolutionIntegrationTests
             lastFailure);
     }
 
-    private sealed record ProcessResult(int ExitCode, string Output, string Error);
 }

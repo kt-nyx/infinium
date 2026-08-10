@@ -1,7 +1,7 @@
 # Evaluation case catalog
 
-Status: Accepted; actively maintained
-
+Status: Accepted
+Disposition: actively maintained
 Last reviewed: 2026-08-10
 Executable evaluation fixtures now exist for completed early M1 slices; most
 later cases remain planned. This catalog records both executed status and

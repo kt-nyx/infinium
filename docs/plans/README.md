@@ -1,8 +1,10 @@
 # Plans
 
-Status: Active navigation
+Status: Accepted
+Disposition: Active navigation
 
 Last reviewed: 2026-08-10
+
 The live handoff is [current project state](../current-state.md). Ordinary work
 follows the [repository execution policy](../execution-policy.md).
 

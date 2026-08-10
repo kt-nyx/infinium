@@ -1,6 +1,7 @@
 # RESEARCH-0034 — Loose-only FaceGen identity/provider qualification
 
-Status: Completed — recommendation accepted; RQ-023 Gate C prerequisite
+Status: Completed
+Disposition: recommendation accepted; RQ-023 Gate C prerequisite
 satisfied
 Date: 2026-07-28
 Last reviewed: 2026-07-28

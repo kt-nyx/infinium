@@ -1,8 +1,8 @@
-# Analysis pipeline cross-stage corpus independent cross-stage corpus v1
+# Analysis pipeline cross-stage fixture corpus v1
 
 Status: `author-frozen`
 
-This corrected `1.0.7` public development corpus supplies four generic synthetic paths:
+This corrected `1.0.8` public development corpus supplies four generic synthetic paths:
 clean execution, unchanged incremental execution, one formatting-only source
 dependency revision with targeted invalidation, and complete retained replay.
 
@@ -23,10 +23,10 @@ manifest byte length and SHA-256.
 
 The oracle freezes exact stage counts where accepted authority defines them and
 uses explicit invariants/gaps instead of guessing opaque product IDs or output
-hashes. Unchanged incremental and retained replay reuse the exact documentation stage checkpoint,
-then recompute candidate stage with the current run binding and finding/case stage from that closure. The r2
-document changes only a non-claim formatting line: documentation stage creates a new revision and
-dependent checkpoint, candidate stage/finding/case stage recompute transitively, and unrelated typed facts
+hashes. Unchanged incremental and retained replay reuse the exact documentation analysis checkpoint,
+then recompute candidate analysis with the current run binding and finding/case analysis from that closure. The r2
+document changes only a non-claim formatting line: documentation analysis creates a new revision and
+dependent checkpoint, candidate and finding/case analysis recompute transitively, and unrelated typed facts
 remain stable without claiming checkpoint or aggregate reuse. No cross-revision
 semantic fingerprint equality is asserted.
 
@@ -35,14 +35,14 @@ The ownership audit limits direct four-case coverage to exercised facts.
 `ADR-0017` desktop/Windows-stack, and `ADR-0023` cost-ledger/budget authority
 are indexed only as bounded inherited evidence and are not directly exercised.
 
-Version `1.0.5` refreshes only the accumulated candidate stage public-manifest byte and
-SHA-256 seals after their mechanical closure correction. candidate stage semantic oracle,
+Version `1.0.5` refreshes only the accumulated candidate analysis public-manifest byte and
+SHA-256 seals after their mechanical closure correction. candidate analysis semantic oracle,
 projection, and expected candidate truth bytes were unchanged; product output
 did not influence this corpus truth.
 
 Version `1.0.6` makes every harness case executable without oracle preloading.
 Each case selects its exact `input_id`, mode, revision, and prior-result binding;
-requires coordinator, documentation stage-finding/case stage, atomic publication, typed application query,
+requires coordinator, documentation and finding/case analysis, atomic publication, typed application query,
 human/JSON output, no-external-effect, and oracle-timing receipts; seals the
 product observation; and only then loads its selected oracle pointer. Missing,
 unselected, or unexpected receipt data fails the comparison closed. All of
@@ -66,9 +66,11 @@ surface to retrieve that run's published analysis result. The response requires
 a bounded typed result plus present, semantically equivalent human and JSON
 projections. No documentation-field or other field-level query is claimed.
 
-Package: `infinium.public-fixtures.cross-stage-analysis.cross-stage.clean-incremental-replay.generic-a/1.0.7`
+Version `1.0.8` functionally normalizes current fixture terminology, rebinds the three candidate-analysis registrations to their current authority path and `1.0.1` governance seals, and indexes the package through the functional public-fixture registry. The accepted `1.0.7` result/query flow, expected truth, answer isolation, and product execution are unchanged.
 
-Registry: `infinium.public-fixtures.cross-stage-analysis.cross-stage-corpus.20260810.1/1.0.7`
+Package: `infinium.public-fixtures.cross-stage-analysis.cross-stage.clean-incremental-replay.generic-a/1.0.8`
+
+Registry: `infinium.public-fixtures.cross-stage-analysis.cross-stage-corpus.20260810.1/1.0.8`
 
 Partition: `development`
 
@@ -78,7 +80,7 @@ readiness, safety, broad-domain, native-filesystem, milestone-completion, or own
 acceptance verdict.
 
 Isolation attestation: the author used only the authorized public documents and
-frozen documentation stage-operations stage fixture handoffs. No product source, tests, engineering scripts,
+frozen documentation-through-operations fixture handoffs. No product source, tests, engineering scripts,
 build/product output, Git history/diff, private/evaluator-private repository,
 legacy archive, human guide, live/provider material, or product execution was
 accessed.

@@ -267,7 +267,10 @@ function Invoke-CandidatesGate {
         'contracts/json-schema/candidate-analysis.v1.schema.json',
         'contracts/json-schema/candidate-delivered-input.v1.schema.json',
         'contracts/json-schema/candidate-delivered-expansion.v1.schema.json',
-        'src/Infinium.Analysis/Candidates/CandidatePipeline.cs',
+        'src/Infinium.Analysis/Candidates/CandidateContracts.cs',
+        'src/Infinium.Analysis/Candidates/CandidatePipeline.Assembly.cs',
+        'src/Infinium.Analysis/Candidates/CandidatePipeline.Evaluation.cs',
+        'src/Infinium.Analysis/Candidates/CandidatePipeline.Execution.cs',
         'src/Infinium.Application/Candidates/DeliveredIndexCandidatePopulationSource.cs',
         'src/Infinium.Application/Candidates/CandidateDeliveredInputExpander.cs',
         'src/Infinium.Application/Candidates/CandidateAnalysisPhase.cs',
@@ -283,7 +286,7 @@ function Invoke-CandidatesGate {
     }
 
     $manifestHash = (Get-FileHash -LiteralPath (Join-Path $semanticRoot 'public-manifest.json') -Algorithm SHA256).Hash.ToLowerInvariant()
-    if ($manifestHash -cne '9b5ef698f342428efc9499085b081bfa2f9284db3c9fc287547a7f7dd2fc507d') {
+    if ($manifestHash -cne 'd1e9b03d1b8d8235830b9c73cbd2c9cb0b35ac93a132989f7ba04b6b13cdbc3b') {
         throw "Frozen candidate stage semantic manifest hash mismatch: $manifestHash"
     }
 
@@ -314,7 +317,7 @@ function Invoke-CandidatesGate {
 
     Write-GateReport 'Candidates' ([ordered]@{
         fixture_identity = 'CAND-SEMANTIC-DEV-v1'
-        fixture_version = '1.0.0'
+        fixture_version = '1.0.1'
         fixture_partition = 'development'
         public_manifest_sha256 = $manifestHash
         factual_population = 16
@@ -337,8 +340,8 @@ function Invoke-CandidateScaleGate {
     $fixtureRoot = Join-Path $repoRoot 'fixtures/public/candidates'
     $scaleManifest = (Get-FileHash -LiteralPath (Join-Path $fixtureRoot 'CAND-SCALE-VAL-v1/public-manifest.json') -Algorithm SHA256).Hash.ToLowerInvariant()
     $stressManifest = (Get-FileHash -LiteralPath (Join-Path $fixtureRoot 'CAND-STRESS-DEV-v1/public-manifest.json') -Algorithm SHA256).Hash.ToLowerInvariant()
-    if ($scaleManifest -cne 'e95930df3ef536a6f0bfd72d5195fd1d17fda2fe9fd6488423818edbf35c8d06' -or
-        $stressManifest -cne 'b552521f3b5f6efac23a204fc7269b0cc59b15a1231baa81dce9d5164b35f72f') {
+    if ($scaleManifest -cne '410be905be0e27a16ce753e607eabed125eb67917b942e69b33858731a808c00' -or
+        $stressManifest -cne '985de373ac9a65263f47a6259548975af648c8cb4eb8716a181a181332990abf') {
         throw 'Frozen candidate stage scale/stress manifest hash mismatch.'
     }
     $testCommands = @(
@@ -350,7 +353,7 @@ function Invoke-CandidateScaleGate {
     $driver.Refresh()
     Write-GateReport 'CandidateScale' ([ordered]@{
         fixture_identity = 'CAND-SCALE-VAL-v1'
-        fixture_version = '1.0.0'
+        fixture_version = '1.0.1'
         fixture_partition = 'validation'
         public_manifest_sha256 = $scaleManifest
         stress_fixture_identity = 'CAND-STRESS-DEV-v1'
@@ -385,7 +388,7 @@ function Invoke-CasesGate {
         'contracts/json-schema/analyzer-declaration.v1.schema.json',
         'contracts/json-schema/candidate-analysis.v1.schema.json',
         'src/Infinium.Analysis/Conclusions/FindingConclusionProducer.cs',
-        'src/Infinium.Analysis/Cases/FindingCasePipeline.cs',
+        'src/Infinium.Analysis/FindingCases/FindingCasePipeline.cs',
         'src/Infinium.Application/FindingCases/FindingCaseAnalysisPhase.cs',
         'src/Infinium.Application/Serialization/AnalyzerDeclarationJsonCodec.cs',
         'src/Infinium.Persistence/AuthoritativeStore.FindingCases.cs',
@@ -412,9 +415,9 @@ function Invoke-CasesGate {
 
     $productSources = @(
         Get-ChildItem -LiteralPath (Join-Path $repoRoot 'src/Infinium.Domain/Contracts') -File -Filter '*.cs'
-        Get-Item -LiteralPath (Join-Path $repoRoot 'src/Infinium.Analysis/Candidates/CandidatePipeline.cs')
+        Get-ChildItem -LiteralPath (Join-Path $repoRoot 'src/Infinium.Analysis/Candidates') -File -Filter '*.cs'
         Get-ChildItem -LiteralPath (Join-Path $repoRoot 'src/Infinium.Analysis/Conclusions') -Recurse -File -Filter '*.cs'
-        Get-ChildItem -LiteralPath (Join-Path $repoRoot 'src/Infinium.Analysis/Cases') -Recurse -File -Filter '*.cs'
+        Get-ChildItem -LiteralPath (Join-Path $repoRoot 'src/Infinium.Analysis/FindingCases') -Recurse -File -Filter '*.cs'
         Get-ChildItem -LiteralPath (Join-Path $repoRoot 'src/Infinium.Application/FindingCases') -Recurse -File -Filter '*.cs'
         Get-Item -LiteralPath (Join-Path $repoRoot 'src/Infinium.Application/Serialization/FindingCaseContractJsonCodecs.cs')
         Get-Item -LiteralPath (Join-Path $repoRoot 'src/Infinium.Application/Serialization/AnalyzerDeclarationJsonCodec.cs')
@@ -569,7 +572,7 @@ function Invoke-ReplayGate {
 function Invoke-OutputGate {
     $capture = Invoke-OperationalFocusedTestsWithReceiptCapture @(
         @('test', 'tests/Infinium.ContractTests/Infinium.ContractTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~AnalysisOutput|FullyQualifiedName~AnalysisQuery'),
-        @('test', 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~AnalysisCli|FullyQualifiedName~FrozenOperationalOperationalCasesAreBoundToProductExecutionBeforeOracleComparison'),
+        @('test', 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~AnalysisCli|FullyQualifiedName~FrozenOperationalCasesAreBoundToProductExecutionBeforeOracleComparison'),
         @('test', 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~AnalysisOperational')
     ) 'operational stage output verification'
     $fixtures = Get-OperationalFixtureEvidence $capture.ReceiptPath
@@ -596,7 +599,7 @@ function Invoke-OutputGate {
 
 function Invoke-SafetyGate {
     $capture = Invoke-OperationalFocusedTestsWithReceiptCapture @(
-        @('test', 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~AnalysisReplayLeavesProtectedRootCanaries|FullyQualifiedName~AnalysisReplayManagedWorker|FullyQualifiedName~AnalysisFailureRecovery|FullyQualifiedName~FrozenOperationalOperationalCasesAreBoundToProductExecutionBeforeOracleComparison'),
+        @('test', 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~AnalysisReplayLeavesProtectedRootCanaries|FullyQualifiedName~AnalysisReplayManagedWorker|FullyQualifiedName~AnalysisFailureRecovery|FullyQualifiedName~FrozenOperationalCasesAreBoundToProductExecutionBeforeOracleComparison'),
         @('test', 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~AnalysisOperational')
     ) 'operational stage safety verification'
     $fixtures = Get-OperationalFixtureEvidence $capture.ReceiptPath

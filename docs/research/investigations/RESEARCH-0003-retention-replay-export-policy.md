@@ -1,7 +1,7 @@
 # RESEARCH-0003: Retention, replay, and export policy boundary
 
-Status: Completed — owner disposition accepted for M0
-
+Status: Completed
+Disposition: owner disposition accepted for M0
 Date: 2026-07-25
 
 Accepted: 2026-07-25

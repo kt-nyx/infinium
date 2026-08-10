@@ -1,6 +1,7 @@
 # RESEARCH-0023: Scale and performance baselines
 
-Status: Completed — method and rough-feasibility recommendation accepted;
+Status: Completed
+Disposition: method and rough-feasibility recommendation accepted;
 exact baseline remains deferred
 
 Date: 2026-07-25

@@ -1,6 +1,7 @@
 # Taxonomy research dependency map
 
-Status: Completed — satisfied by `infinium.skyrim-se.mod-impact-taxonomy/0.1.0`
+Status: Completed
+Disposition: satisfied by `infinium.skyrim-se.mod-impact-taxonomy/0.1.0`
 Last reviewed: 2026-07-28
 
 This document inventories where Infinium needs classifications related to how

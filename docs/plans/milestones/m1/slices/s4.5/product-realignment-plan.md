@@ -61,7 +61,7 @@ task-specific authorities are:
 - [historical evaluator disposition](../../../../../evaluation/evaluator-history.md);
 - [authority-completion conformance mismatch](../../../../../evaluation/evaluator-history.md);
 - [final held-out scope amendment](../../../../../evaluation/evaluator-history.md);
-- [evaluator-v2 baseline amendment](../../../../../evaluation/m1-evaluation-baseline-evaluator-v2-amendment.md);
+- [historical evaluator-v2 baseline amendment](../../../../../evaluation/history/m1-evaluator-v2-baseline-amendment.md);
 - [parent Slice 4.5 plan](../../../../../evaluation/evaluator-history.md);
 - [Slice 4 implementation record](../s4/record.md);
 - [Slice 4.5 implementation record](record.md);

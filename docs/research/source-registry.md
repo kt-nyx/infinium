@@ -1,6 +1,7 @@
 # Documentation source registry
 
-Status: Active register
+Status: Accepted
+Disposition: Active register
 Last reviewed: 2026-08-08
 
 This document defines the registry model, initial authority classes, and

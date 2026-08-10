@@ -1,6 +1,7 @@
 # M1 Slice 4 — Bethesda semantic extraction and typed indexes
 
-Status: Complete for exact public Slice 4 scope; private held-out evaluation deferred by ADR-0032
+Status: Completed
+Disposition: Complete for exact public Slice 4 scope; private held-out evaluation deferred by ADR-0032
 
 Last reviewed: 2026-08-10
 

@@ -19,24 +19,8 @@
     {
       "id": "current-public-fixtures",
       "paths": [
-        "fixtures/tooling/Infinium.PublicFixtures/",
-        "fixtures/tooling/bethesda/",
-        "fixtures/tooling/reseal-public-fixtures.mjs",
-        "fixtures/public/",
-        "fixtures/public/platform/analysis-runtime-substrate/",
-        "fixtures/public/bethesda/BETH-NPC-DEV/",
-        "fixtures/public/bethesda/BETH-REFR-DEV/",
-        "fixtures/public/bethesda/BETH-LIGHT-VAL/",
-        "fixtures/public/bethesda/BETH-MALFORMED-VAL/",
-        "fixtures/public/bethesda/BETH-UNSUPPORTED-VAL/",
-        "fixtures/public/documentation/DOC-CLAIM-CORE-DEV/",
-        "fixtures/public/documentation/DOC-CLAIM-ADVERSARIAL-VAL/",
-        "fixtures/public/candidates/CAND-SEMANTIC-DEV-v1/",
-        "fixtures/public/candidates/CAND-SCALE-VAL-v1/",
-        "fixtures/public/candidates/CAND-STRESS-DEV-v1/",
-        "fixtures/public/findings-cases/",
-        "fixtures/public/operations/analysis-lifecycle/",
-        "fixtures/public/cross-stage/analysis-pipeline/"
+        "fixtures/tooling/",
+        "fixtures/public/public-fixture-registry.v1.json"
       ],
       "validator": "Infinium.Application.Evaluation.ActiveJsonSchemaValidator",
       "claim": "functionally organized, independently authored public fixture contract evidence; never product-derived oracle authority"

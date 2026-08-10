@@ -1,7 +1,7 @@
 # M1 Slice 5 — Evidence, documentation, candidates, cases, and replay
 
-Status: Accepted plan; live handoff is maintained in `docs/current-state.md`
-
+Status: Accepted
+Disposition: plan; live handoff is maintained in `docs/current-state.md`
 Last reviewed: 2026-08-10
 
 Prepared: 2026-08-07
@@ -919,7 +919,7 @@ reconciliation, taxonomy, coverage, and gaps.
 **Prerequisites.** WP3 complete and reviewed.
 
 **Allowed paths/actions.** `src/Infinium.Analysis/Conclusions/`,
-`src/Infinium.Analysis/Cases/`, related persistence/projections, WP4 tests/
+`src/Infinium.Analysis/FindingCases/`, related persistence/projections, WP4 tests/
 fixtures, verification `Cases` mode.
 
 **Prohibited.** New analyzers; automatic disposition/review carryover;

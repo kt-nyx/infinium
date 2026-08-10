@@ -1,80 +1,598 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "infinium.public-fixture.cross_stage.ordinary-cross-stage-inputs/1.0.7",
+  "$id": "infinium.public-fixture.cross_stage.ordinary-cross-stage-inputs/1.0.8",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_identity","content_class","shared_facts","requests"],
+  "required": [
+    "schema_identity",
+    "content_class",
+    "shared_facts",
+    "requests"
+  ],
   "properties": {
-    "schema_identity": {"const":"infinium.public-fixture.cross_stage.ordinary-cross-stage-inputs/1.0.7"},
-    "content_class": {"const":"ordinary-product-input-only"},
-    "shared_facts": {"$ref":"#/$defs/sharedFacts"},
-    "requests": {"type":"array","minItems":4,"maxItems":4,"items":{"$ref":"#/$defs/request"}}
+    "schema_identity": {
+      "const": "infinium.public-fixture.cross_stage.ordinary-cross-stage-inputs/1.0.8"
+    },
+    "content_class": {
+      "const": "ordinary-product-input-only"
+    },
+    "shared_facts": {
+      "$ref": "#/$defs/sharedFacts"
+    },
+    "requests": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "$ref": "#/$defs/request"
+      }
+    }
   },
   "$defs": {
-    "stringArray": {"type":"array","items":{"type":"string","minLength":1},"uniqueItems":true},
+    "stringArray": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
     "bindings": {
-      "type":"object","additionalProperties":false,
-      "required":["snapshot_id","analysis_context_id","configuration_id","resolved_manifest_id","analyzer_id","ruleset_id"],
-      "properties":{"snapshot_id":{"type":"string"},"analysis_context_id":{"type":"string"},"configuration_id":{"type":"string"},"resolved_manifest_id":{"type":"string"},"analyzer_id":{"type":"string"},"ruleset_id":{"type":"string"}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot_id",
+        "analysis_context_id",
+        "configuration_id",
+        "resolved_manifest_id",
+        "analyzer_id",
+        "ruleset_id"
+      ],
+      "properties": {
+        "snapshot_id": {
+          "type": "string"
+        },
+        "analysis_context_id": {
+          "type": "string"
+        },
+        "configuration_id": {
+          "type": "string"
+        },
+        "resolved_manifest_id": {
+          "type": "string"
+        },
+        "analyzer_id": {
+          "type": "string"
+        },
+        "ruleset_id": {
+          "type": "string"
+        }
+      }
     },
     "claim": {
-      "type":"object","additionalProperties":false,
-      "required":["claim_key","start","end","kind","authority","applicability","role","contradicts"],
-      "properties":{"claim_key":{"type":"string"},"start":{"type":"integer","minimum":0},"end":{"type":"integer","minimum":1},"kind":{"enum":["declared-purpose","known-issue","patch-instruction"]},"authority":{"const":"authoritative-external"},"applicability":{"enum":["applicable","contradicted"]},"role":{"const":"declared"},"contradicts":{"$ref":"#/$defs/stringArray"}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "claim_key",
+        "start",
+        "end",
+        "kind",
+        "authority",
+        "applicability",
+        "role",
+        "contradicts"
+      ],
+      "properties": {
+        "claim_key": {
+          "type": "string"
+        },
+        "start": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "kind": {
+          "enum": [
+            "declared-purpose",
+            "known-issue",
+            "patch-instruction"
+          ]
+        },
+        "authority": {
+          "const": "authoritative-external"
+        },
+        "applicability": {
+          "enum": [
+            "applicable",
+            "contradicted"
+          ]
+        },
+        "role": {
+          "const": "declared"
+        },
+        "contradicts": {
+          "$ref": "#/$defs/stringArray"
+        }
+      }
     },
     "revision": {
-      "type":"object","additionalProperties":false,
-      "required":["revision_key","source_id","source_kind","source_revision","availability","byte_length","sha256","supplying_snapshot_id","text","claims"],
-      "properties":{"revision_key":{"type":"string"},"source_id":{"type":"string"},"source_kind":{"const":"fixture"},"source_revision":{"type":"string"},"availability":{"const":"present"},"byte_length":{"type":"integer","minimum":1},"sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"},"supplying_snapshot_id":{"type":"string"},"text":{"type":"string"},"claims":{"type":"array","minItems":3,"maxItems":3,"items":{"$ref":"#/$defs/claim"}}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revision_key",
+        "source_id",
+        "source_kind",
+        "source_revision",
+        "availability",
+        "byte_length",
+        "sha256",
+        "supplying_snapshot_id",
+        "text",
+        "claims"
+      ],
+      "properties": {
+        "revision_key": {
+          "type": "string"
+        },
+        "source_id": {
+          "type": "string"
+        },
+        "source_kind": {
+          "const": "fixture"
+        },
+        "source_revision": {
+          "type": "string"
+        },
+        "availability": {
+          "const": "present"
+        },
+        "byte_length": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "supplying_snapshot_id": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "claims": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/$defs/claim"
+          }
+        }
+      }
     },
     "application": {
-      "type":"object","additionalProperties":false,
-      "required":["application_key","claim_key","subject_id","applicability"],
-      "properties":{"application_key":{"type":"string"},"claim_key":{"type":"string"},"subject_id":{"type":"string"},"applicability":{"enum":["applicable","contradicted"]},"declared_purpose_code":{"type":"string"},"supporting_claim_keys":{"$ref":"#/$defs/stringArray"}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "application_key",
+        "claim_key",
+        "subject_id",
+        "applicability"
+      ],
+      "properties": {
+        "application_key": {
+          "type": "string"
+        },
+        "claim_key": {
+          "type": "string"
+        },
+        "subject_id": {
+          "type": "string"
+        },
+        "applicability": {
+          "enum": [
+            "applicable",
+            "contradicted"
+          ]
+        },
+        "declared_purpose_code": {
+          "type": "string"
+        },
+        "supporting_claim_keys": {
+          "$ref": "#/$defs/stringArray"
+        }
+      }
     },
     "candidateFact": {
-      "type":"object","additionalProperties":false,
-      "required":["fact_id","kind","dependency_ids","evidence_ids"],
-      "properties":{"fact_id":{"type":"string"},"kind":{"enum":["link","documentation-application"]},"prior_state":{"enum":["resolved"]},"prior_target":{"type":"string"},"winning_state":{"enum":["resolved"]},"winning_target":{"type":"string"},"application_key":{"type":"string"},"dependency_ids":{"$ref":"#/$defs/stringArray"},"evidence_ids":{"$ref":"#/$defs/stringArray"}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fact_id",
+        "kind",
+        "dependency_ids",
+        "evidence_ids"
+      ],
+      "properties": {
+        "fact_id": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "link",
+            "documentation-application"
+          ]
+        },
+        "prior_state": {
+          "enum": [
+            "resolved"
+          ]
+        },
+        "prior_target": {
+          "type": "string"
+        },
+        "winning_state": {
+          "enum": [
+            "resolved"
+          ]
+        },
+        "winning_target": {
+          "type": "string"
+        },
+        "application_key": {
+          "type": "string"
+        },
+        "dependency_ids": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "evidence_ids": {
+          "$ref": "#/$defs/stringArray"
+        }
+      }
     },
     "conclusionRules": {
-      "type":"object","additionalProperties":false,
-      "required":["promotion_rule","grouping_rule","recommendation_rule","lead_readiness_effect"],
-      "properties":{"promotion_rule":{"const":"plausible-support-and-no-defeating-contradiction"},"grouping_rule":{"const":"demonstrated-shared-cause-only"},"recommendation_rule":{"const":"finding-or-explicit-needs-information"},"lead_readiness_effect":{"const":"none"}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "promotion_rule",
+        "grouping_rule",
+        "recommendation_rule",
+        "lead_readiness_effect"
+      ],
+      "properties": {
+        "promotion_rule": {
+          "const": "plausible-support-and-no-defeating-contradiction"
+        },
+        "grouping_rule": {
+          "const": "demonstrated-shared-cause-only"
+        },
+        "recommendation_rule": {
+          "const": "finding-or-explicit-needs-information"
+        },
+        "lead_readiness_effect": {
+          "const": "none"
+        }
+      }
     },
     "consequence": {
-      "type":"object","additionalProperties":false,"required":["state","code"],
-      "properties":{"state":{"enum":["assigned","not-applicable","unknown"]},"code":{"type":["string","null"]}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "code"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "assigned",
+            "not-applicable",
+            "unknown"
+          ]
+        },
+        "code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
     },
     "causalLocus": {
-      "type":"object","additionalProperties":false,"required":["kind","subject_id","field"],
-      "properties":{"kind":{"enum":["record-field-relation","documentation-application"]},"subject_id":{"type":"string"},"field":{"type":"string"}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "subject_id",
+        "field"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "record-field-relation",
+            "documentation-application"
+          ]
+        },
+        "subject_id": {
+          "type": "string"
+        },
+        "field": {
+          "type": "string"
+        }
+      }
     },
     "proofFact": {
-      "type":"object","additionalProperties":false,"required":["proof_fact_id","kind","subject_id","locus","evidence_ids"],
-      "properties":{"proof_fact_id":{"type":"string"},"kind":{"enum":["typed-relation-delta","typed-relation-equality","typed-contradiction-edge"]},"subject_id":{"type":"string"},"locus":{"type":"string"},"evidence_ids":{"$ref":"#/$defs/stringArray"}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "proof_fact_id",
+        "kind",
+        "subject_id",
+        "locus",
+        "evidence_ids"
+      ],
+      "properties": {
+        "proof_fact_id": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "typed-relation-delta",
+            "typed-relation-equality",
+            "typed-contradiction-edge"
+          ]
+        },
+        "subject_id": {
+          "type": "string"
+        },
+        "locus": {
+          "type": "string"
+        },
+        "evidence_ids": {
+          "$ref": "#/$defs/stringArray"
+        }
+      }
     },
     "recommendationFacts": {
-      "type":"object","additionalProperties":false,"required":["action_kind","uncertainty","reversibility","risks","needed_information"],
-      "properties":{"action_kind":{"enum":["validate-relation","none","obtain-additional-evidence"]},"uncertainty":{"enum":["bounded","none","unresolved"]},"reversibility":{"enum":["non-mutating","not-applicable"]},"risks":{"$ref":"#/$defs/stringArray"},"needed_information":{"$ref":"#/$defs/stringArray"}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action_kind",
+        "uncertainty",
+        "reversibility",
+        "risks",
+        "needed_information"
+      ],
+      "properties": {
+        "action_kind": {
+          "enum": [
+            "validate-relation",
+            "none",
+            "obtain-additional-evidence"
+          ]
+        },
+        "uncertainty": {
+          "enum": [
+            "bounded",
+            "none",
+            "unresolved"
+          ]
+        },
+        "reversibility": {
+          "enum": [
+            "non-mutating",
+            "not-applicable"
+          ]
+        },
+        "risks": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "needed_information": {
+          "$ref": "#/$defs/stringArray"
+        }
+      }
     },
     "conclusionFact": {
-      "type":"object","additionalProperties":false,
-      "required":["fact_id","consequence","causal_locus","causal_conditions","applicability","applicability_condition_ids","support_level","supporting_evidence_ids","contradicting_evidence_ids","missing_information","dependency_ids","causal_proof_facts","recommendation_facts"],
-      "properties":{"fact_id":{"type":"string"},"consequence":{"$ref":"#/$defs/consequence"},"causal_locus":{"$ref":"#/$defs/causalLocus"},"causal_conditions":{"$ref":"#/$defs/stringArray"},"applicability":{"enum":["applicable","contradicted"]},"applicability_condition_ids":{"$ref":"#/$defs/stringArray"},"support_level":{"enum":["plausible","confirmed"]},"supporting_evidence_ids":{"$ref":"#/$defs/stringArray"},"contradicting_evidence_ids":{"$ref":"#/$defs/stringArray"},"missing_information":{"$ref":"#/$defs/stringArray"},"dependency_ids":{"$ref":"#/$defs/stringArray"},"causal_proof_facts":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/proofFact"}},"recommendation_facts":{"$ref":"#/$defs/recommendationFacts"}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fact_id",
+        "consequence",
+        "causal_locus",
+        "causal_conditions",
+        "applicability",
+        "applicability_condition_ids",
+        "support_level",
+        "supporting_evidence_ids",
+        "contradicting_evidence_ids",
+        "missing_information",
+        "dependency_ids",
+        "causal_proof_facts",
+        "recommendation_facts"
+      ],
+      "properties": {
+        "fact_id": {
+          "type": "string"
+        },
+        "consequence": {
+          "$ref": "#/$defs/consequence"
+        },
+        "causal_locus": {
+          "$ref": "#/$defs/causalLocus"
+        },
+        "causal_conditions": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "applicability": {
+          "enum": [
+            "applicable",
+            "contradicted"
+          ]
+        },
+        "applicability_condition_ids": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "support_level": {
+          "enum": [
+            "plausible",
+            "confirmed"
+          ]
+        },
+        "supporting_evidence_ids": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "contradicting_evidence_ids": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "missing_information": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "dependency_ids": {
+          "$ref": "#/$defs/stringArray"
+        },
+        "causal_proof_facts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/proofFact"
+          }
+        },
+        "recommendation_facts": {
+          "$ref": "#/$defs/recommendationFacts"
+        }
+      }
     },
     "coverage": {
-      "type":"object","additionalProperties":false,"required":["population_id","member_fact_ids"],
-      "properties":{"population_id":{"type":"string"},"member_fact_ids":{"type":"array","minItems":3,"maxItems":3,"items":{"type":"string"},"uniqueItems":true}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "population_id",
+        "member_fact_ids"
+      ],
+      "properties": {
+        "population_id": {
+          "type": "string"
+        },
+        "member_fact_ids": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      }
     },
     "sharedFacts": {
-      "type":"object","additionalProperties":false,
-      "required":["bindings","documentation_revisions","applications","candidate_source_facts","conclusion_rules","conclusion_factual_inputs","coverage_population","boundaries"],
-      "properties":{"bindings":{"$ref":"#/$defs/bindings"},"documentation_revisions":{"type":"array","minItems":2,"maxItems":2,"items":{"$ref":"#/$defs/revision"}},"applications":{"type":"array","minItems":2,"maxItems":2,"items":{"$ref":"#/$defs/application"}},"candidate_source_facts":{"type":"array","minItems":3,"maxItems":3,"items":{"$ref":"#/$defs/candidateFact"}},"conclusion_rules":{"$ref":"#/$defs/conclusionRules"},"conclusion_factual_inputs":{"type":"array","minItems":3,"maxItems":3,"items":{"$ref":"#/$defs/conclusionFact"}},"coverage_population":{"$ref":"#/$defs/coverage"},"boundaries":{"type":"array","minItems":4,"maxItems":4,"items":{"enum":["provider:not-used","hosted-search:not-used","nexus:not-used","loot:not-used"]},"uniqueItems":true}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bindings",
+        "documentation_revisions",
+        "applications",
+        "candidate_source_facts",
+        "conclusion_rules",
+        "conclusion_factual_inputs",
+        "coverage_population",
+        "boundaries"
+      ],
+      "properties": {
+        "bindings": {
+          "$ref": "#/$defs/bindings"
+        },
+        "documentation_revisions": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/revision"
+          }
+        },
+        "applications": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/application"
+          }
+        },
+        "candidate_source_facts": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/$defs/candidateFact"
+          }
+        },
+        "conclusion_rules": {
+          "$ref": "#/$defs/conclusionRules"
+        },
+        "conclusion_factual_inputs": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/$defs/conclusionFact"
+          }
+        },
+        "coverage_population": {
+          "$ref": "#/$defs/coverage"
+        },
+        "boundaries": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "enum": [
+              "provider:not-used",
+              "hosted-search:not-used",
+              "nexus:not-used",
+              "loot:not-used"
+            ]
+          },
+          "uniqueItems": true
+        }
+      }
     },
     "request": {
-      "type":"object","additionalProperties":false,"required":["input_id","mode","revision_key","prior_result","network_enabled"],
-      "properties":{"input_id":{"type":"string"},"mode":{"enum":["clean","incremental","retained-replay"]},"revision_key":{"enum":["revision.001","revision.002"]},"prior_result":{"enum":["absent","result.001"]},"network_enabled":{"const":false}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input_id",
+        "mode",
+        "revision_key",
+        "prior_result",
+        "network_enabled"
+      ],
+      "properties": {
+        "input_id": {
+          "type": "string"
+        },
+        "mode": {
+          "enum": [
+            "clean",
+            "incremental",
+            "retained-replay"
+          ]
+        },
+        "revision_key": {
+          "enum": [
+            "revision.001",
+            "revision.002"
+          ]
+        },
+        "prior_result": {
+          "enum": [
+            "absent",
+            "result.001"
+          ]
+        },
+        "network_enabled": {
+          "const": false
+        }
+      }
     }
   }
 }

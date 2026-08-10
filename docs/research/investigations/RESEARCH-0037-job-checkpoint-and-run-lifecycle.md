@@ -1,7 +1,7 @@
 # RESEARCH-0037: Durable job, checkpoint, and run lifecycle
 
-Status: Completed; recommendation accepted
-
+Status: Completed
+Disposition: recommendation accepted
 Date: 2026-07-28
 
 Last reviewed: 2026-07-28

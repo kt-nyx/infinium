@@ -1,7 +1,7 @@
 # RESEARCH-0028: Provider capability and authentication boundary
 
-Status: Completed; recommendation partially superseded
-
+Status: Completed
+Disposition: recommendation partially superseded
 Subsequent revision: Authentication, capability-snapshot, invocation,
 usage/cost, cancellation, and retention findings remain historical inputs.
 The initial portability/parity implication is superseded by the owner's

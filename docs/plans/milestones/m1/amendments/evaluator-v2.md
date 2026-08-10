@@ -1,6 +1,7 @@
 # M1 backend semantic proof plan revision 3 amendment
 
-Status: Accepted historical amendment; held-out sequencing superseded by ADR-0032 and active protocol `/4` retention superseded by ADR-0033
+Status: Accepted
+Disposition: historical amendment; held-out sequencing superseded by ADR-0032 and active protocol `/4` retention superseded by ADR-0033
 Accepted: 2026-08-04
 Accepted by: Project owner
 Last reviewed: 2026-08-10

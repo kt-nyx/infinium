@@ -1,7 +1,7 @@
 # RESEARCH-0030: Nexus latest-interface qualification
 
-Status: Completed; recommendation accepted by ADR-0012
-
+Status: Completed
+Disposition: recommendation accepted by ADR-0012
 Date: 2026-07-28
 
 Last reviewed: 2026-07-28

@@ -1,7 +1,7 @@
 # ADR-0031: Accept the protocol `/5` successor semantic model
 
-Status: Accepted historical decision; active `/5` model authority superseded by ADR-0032
-
+Status: Accepted
+Disposition: historical decision; active `/5` model authority superseded by ADR-0032
 Last reviewed: 2026-08-10
 
 Date: 2026-08-07

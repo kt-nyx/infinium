@@ -1,6 +1,7 @@
 # M1 Slice 4.5
 
-Status: Historical navigation
+Status: Accepted
+Disposition: Historical navigation
 
 Last reviewed: 2026-08-10
 

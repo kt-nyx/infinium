@@ -1,7 +1,7 @@
 # ADR-0032: Defer the M1 held-out evaluator and continue with public verification
 
-Status: Accepted; partially superseded by ADR-0033
-
+Status: Accepted
+Disposition: partially superseded by ADR-0033
 Last reviewed: 2026-08-10
 
 Date: 2026-08-07

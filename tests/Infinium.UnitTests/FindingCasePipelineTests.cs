@@ -1,5 +1,5 @@
 using Infinium.Analysis.Candidates;
-using Infinium.Analysis.Cases;
+using Infinium.Analysis.FindingCases;
 using Infinium.Domain.Contracts;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 

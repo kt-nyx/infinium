@@ -1,6 +1,7 @@
 # RESEARCH-0007: Skyrim SE runtime support contract
 
-Status: Completed — recommendation accepted by ADR-0009
+Status: Completed
+Disposition: recommendation accepted by ADR-0009
 Date: 2026-07-25
 Last reviewed: 2026-07-25
 Researcher: Codex agent

@@ -116,15 +116,6 @@ public sealed class BuildPolicyTests
         Dictionary<string, string[]> forbiddenBySource =
             new(StringComparer.Ordinal)
             {
-                ["src/Infinium.Persistence/AuthoritativeStore.cs"] =
-                [
-                    "Directory.CreateDirectory(",
-                    "Directory.Move(",
-                    "Directory.Delete(",
-                    "File.Copy(",
-                    "File.Move(",
-                    "File.Delete(",
-                ],
                 ["src/Infinium.Application/Runtime/RuntimeDescriptor.cs"] =
                 [
                     "FileStream(",
@@ -143,6 +134,29 @@ public sealed class BuildPolicyTests
                     "CreateFileW(",
                 ],
             };
+
+        string[] persistenceWriterForbiddenTokens =
+        [
+            "Directory.CreateDirectory(",
+            "Directory.Move(",
+            "Directory.Delete(",
+            "File.Copy(",
+            "File.Move(",
+            "File.Delete(",
+        ];
+        foreach (string sourcePath in Directory.EnumerateFiles(
+                     TestRepository.PathFromRoot("src", "Infinium.Persistence"),
+                     "AuthoritativeStore*.cs",
+                     SearchOption.TopDirectoryOnly))
+        {
+            string content = File.ReadAllText(sourcePath);
+            foreach (string forbiddenToken in persistenceWriterForbiddenTokens)
+            {
+                Assert.IsFalse(
+                    content.Contains(forbiddenToken, StringComparison.Ordinal),
+                    $"{Path.GetRelativePath(TestRepository.Root, sourcePath)} regressed to pathname mutation through '{forbiddenToken}'.");
+            }
+        }
 
         foreach ((string relativePath, string[] forbiddenTokens) in forbiddenBySource)
         {

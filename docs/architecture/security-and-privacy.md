@@ -1,7 +1,7 @@
 # Security and privacy
 
-Status: Accepted synthesis; actively maintained
-
+Status: Accepted
+Disposition: synthesis; actively maintained
 Last reviewed: 2026-08-08
 
 ## Security posture

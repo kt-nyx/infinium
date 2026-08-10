@@ -26,7 +26,7 @@ public sealed class CrossStageCorpusIntegrationTests
     [TestProperty("Category", "Evaluation")]
     public void FrozenCrossStageComprehensiveCorpusExecutesDocumentationThroughOperationalBeforeOracleComparison()
     {
-        string fixtureRoot = Path.Combine([FindRepositoryRoot(), .. FixturePath]);
+        string fixtureRoot = Path.Combine([TestRepository.Root, .. FixturePath]);
         using JsonDocument ordinary = Parse(Path.Combine(fixtureRoot, "ordinary-product-inputs.v1.json"));
         AssertOrdinaryProductInputIsAnswerFree(ordinary.RootElement);
 
@@ -51,7 +51,7 @@ public sealed class CrossStageCorpusIntegrationTests
             RunRecord queued = store.CreateRun("command-cross_stage-comprehensive-clean", runId, binding,
                 authority.FencingEpoch, DateTimeOffset.UtcNow);
             _ = store.Transition("transition-cross_stage-comprehensive-clean", runId, queued.Generation,
-                LifecycleState.Running, authority.FencingEpoch, "execute frozen cross-stage corpus corpus", DateTimeOffset.UtcNow);
+                LifecycleState.Running, authority.FencingEpoch, "execute frozen cross-stage corpus", DateTimeOffset.UtcNow);
             AttemptRecord attempt = store.CreateAttempt(runId, authority.FencingEpoch,
                 TimeSpan.FromMinutes(5), DateTimeOffset.UtcNow);
 
@@ -452,16 +452,6 @@ public sealed class CrossStageCorpusIntegrationTests
 
     private static JsonDocument Parse(string path) => JsonDocument.Parse(
         File.ReadAllBytes(path), new JsonDocumentOptions { AllowTrailingCommas = false, CommentHandling = JsonCommentHandling.Disallow });
-
-    private static string FindRepositoryRoot()
-    {
-        DirectoryInfo? current = new(AppContext.BaseDirectory);
-        while (current is not null && !File.Exists(Path.Combine(current.FullName, "Infinium.sln")))
-        {
-            current = current.Parent;
-        }
-        return current?.FullName ?? throw new DirectoryNotFoundException("Infinium repository root was not found.");
-    }
 
     private static OpaqueId Id(string value) => new(value);
     private static ContractVersion Version() => new(1, 0, 0);

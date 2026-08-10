@@ -2,7 +2,7 @@
   "schema_id": "infinium.evaluation.candidate-semantic-population-projection/v1",
   "schema_version": "1.0.0",
   "fixture_id": "CAND-SEMANTIC-DEV-v1",
-  "fixture_version": "1.0.0",
+  "fixture_version": "1.0.1",
   "partition": "development",
   "freeze_state": "pre-product-comparison",
   "product_comparison_occurred": false,
@@ -13,7 +13,7 @@
     "schema_version": "1.0.0"
   },
   "authority_basis": [
-    "docs/evaluation/candidate-delivered-input-v1.md",
+    "docs/product/candidate-input-and-expansion.md",
     "docs/plans/milestones/m1/slices/s5/plan.md",
     "docs/architecture/decisions/ADR-0028-m1-bethesda-semantic-reporting-and-oracle-authority.md"
   ],

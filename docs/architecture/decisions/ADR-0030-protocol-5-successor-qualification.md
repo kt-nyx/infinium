@@ -1,6 +1,7 @@
 # ADR-0030: Authorize a separately qualified protocol `/5` successor
 
-Status: Accepted historical decision; active `/5` authorization superseded by ADR-0032
+Status: Accepted
+Disposition: historical decision; active `/5` authorization superseded by ADR-0032
 Date: 2026-08-07
 Accepted: 2026-08-07
 Accepted by: Project owner

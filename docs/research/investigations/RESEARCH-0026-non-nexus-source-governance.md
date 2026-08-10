@@ -1,7 +1,7 @@
 # RESEARCH-0026: Non-Nexus source governance
 
-Status: Completed; recommendation revised and partially superseded
-
+Status: Completed
+Disposition: recommendation revised and partially superseded
 Subsequent revision:
 [RESEARCH-0031](RESEARCH-0031-loot-freshness-and-source-discovery.md) revises
 the LOOT freshness and GitHub-documentation priority recommendations, while

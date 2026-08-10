@@ -1,7 +1,7 @@
 # Architecture overview
 
-Status: Accepted synthesis; actively maintained
-
+Status: Accepted
+Disposition: synthesis; actively maintained
 Last reviewed: 2026-08-10
 ADR-0015 through ADR-0023 accept the complete Wave E persistence, lifecycle,
 application-stack, process, IPC, credential, security, continuity, and budget

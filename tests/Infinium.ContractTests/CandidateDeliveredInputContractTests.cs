@@ -108,11 +108,11 @@ public sealed class CandidateDeliveredInputContractTests
     {
         Dictionary<string, string> expectedManifests = new(StringComparer.Ordinal)
         {
-            ["CAND-SEMANTIC-DEV-v1"] = "9b5ef698f342428efc9499085b081bfa2f9284db3c9fc287547a7f7dd2fc507d",
-            ["CAND-SCALE-VAL-v1"] = "e95930df3ef536a6f0bfd72d5195fd1d17fda2fe9fd6488423818edbf35c8d06",
-            ["CAND-STRESS-DEV-v1"] = "b552521f3b5f6efac23a204fc7269b0cc59b15a1231baa81dce9d5164b35f72f",
+            ["CAND-SEMANTIC-DEV-v1"] = "d1e9b03d1b8d8235830b9c73cbd2c9cb0b35ac93a132989f7ba04b6b13cdbc3b",
+            ["CAND-SCALE-VAL-v1"] = "410be905be0e27a16ce753e607eabed125eb67917b942e69b33858731a808c00",
+            ["CAND-STRESS-DEV-v1"] = "985de373ac9a65263f47a6259548975af648c8cb4eb8716a181a181332990abf",
         };
-        string root = Path.Combine(FindRepositoryRoot(),
+        string root = Path.Combine(TestRepository.Root,
             "fixtures", "public", "candidates");
         CollectionAssert.AreEquivalent(expectedManifests.Keys.ToArray(),
             Directory.GetDirectories(root).Select(Path.GetFileName).ToArray());
@@ -125,7 +125,7 @@ public sealed class CandidateDeliveredInputContractTests
             Assert.AreEqual(9, Directory.GetFiles(directory, "*", SearchOption.AllDirectories).Length);
             CandidatePublicFixturePackage package = CandidateFixturePackageReader.Read(directory);
             Assert.AreEqual(packageName, package.Package.FixtureId.Value);
-            Assert.AreEqual(new ContractVersion(1, 0, 0), package.Package.FixtureVersion);
+            Assert.AreEqual(new ContractVersion(1, 0, 1), package.Package.FixtureVersion);
             Assert.AreEqual(packageName.Contains("SCALE-VAL", StringComparison.Ordinal)
                 ? FixturePartition.Validation : FixturePartition.Development, package.Package.Partition);
             Assert.AreEqual(packageName.Contains("SEMANTIC", StringComparison.Ordinal), package.DeliveredInput is not null);
@@ -168,13 +168,4 @@ public sealed class CandidateDeliveredInputContractTests
 
     private static OpaqueId Id(string value) => new(value);
 
-    private static string FindRepositoryRoot()
-    {
-        DirectoryInfo? directory = new(AppContext.BaseDirectory);
-        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "Infinium.sln")))
-        {
-            directory = directory.Parent;
-        }
-        return directory?.FullName ?? throw new DirectoryNotFoundException("Repository root was not found.");
-    }
 }

@@ -1,6 +1,7 @@
 # RESEARCH-0012: Snapshot fingerprint and dependency invalidation
 
-Status: Completed — recommendation accepted by ADR-0010
+Status: Completed
+Disposition: recommendation accepted by ADR-0010
 Date: 2026-07-25  
 Last reviewed: 2026-07-25  
 Researcher: Codex agent  

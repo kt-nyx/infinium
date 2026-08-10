@@ -1,6 +1,7 @@
 # Evaluation
 
-Status: Active navigation
+Status: Accepted
+Disposition: Active navigation
 
 Last reviewed: 2026-08-10
 
@@ -30,6 +31,7 @@ navigation, not executable fixture packages.
 - [Repository authority inventory](repository-evaluation-authority.v1.json)
 - [Evaluator-private governance v2](evaluator-private-fixture-governance-v2.md)
 - [Evaluator history and current disposition](evaluator-history.md)
+- [Historical evaluator documents](history/README.md)
 - [Retired asset Git inventory](retired-evaluation-assets.v1.json)
 
 Protocols `/4` and `/5` and all predecessor evaluator attempts are retired

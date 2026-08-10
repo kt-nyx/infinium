@@ -1,7 +1,7 @@
 # RESEARCH-0032: OpenAI-first LLM and governed web-search boundary
 
-Status: Completed; recommendation accepted by ADR-0013
-
+Status: Completed
+Disposition: recommendation accepted by ADR-0013
 Date: 2026-07-28
 
 Last reviewed: 2026-07-28
