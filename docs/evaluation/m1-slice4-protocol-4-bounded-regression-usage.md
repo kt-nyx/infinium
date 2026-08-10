@@ -78,15 +78,24 @@ extra claimed dependencies, or identity drift.
 
 ### 3. Current public regression
 
-These three files are current public regression evidence changed only by
-authorized public product-realignment commit
-`a98d648bd0adb2751ee0c09828e0227b1583950f`:
+These three files are current public regression evidence changed only by the
+two authorized public commits below, listed newest first:
+
+1. repository normalization commit
+   `8e75995f9f0f6b3934f806af08fb46799fc6e0ea`; and
+2. product-realignment commit
+   `a98d648bd0adb2751ee0c09828e0227b1583950f`.
 
 | Path | Current bytes | Current SHA-256 |
 |---|---:|---|
-| `tests/Infinium.EvaluationTests/BethesdaOracleAgreementEvaluationTests.cs` | 30,972 | `f02b67afaad9a22d893a0b819fa33175c6a2d256db8d8255c45241c5b51a4a51` |
-| `tests/Infinium.EvaluationTests/BethesdaSemanticExtractionEvaluationTests.cs` | 20,267 | `73e0ee3c3f4c617982e7d0e5de0d596feee4d958a951d8ef7fc9418b8084991a` |
-| `tests/Infinium.EvaluationTests/EvaluatorV2PublicProtocolTests.cs` | 34,302 | `c7c99bcf234ad3a72a1e04a52fa9835fb3d1f912c95b0b0aaf80a22bdcb5b01f` |
+| `tests/Infinium.EvaluationTests/BethesdaOracleAgreementEvaluationTests.cs` | 30,967 | `ba99dedcb9a98ddb4e2c63eb2b900e9a7c314c2d3af36f2368f715ac7ad74f70` |
+| `tests/Infinium.EvaluationTests/BethesdaSemanticExtractionEvaluationTests.cs` | 20,219 | `58681e739cb170cbffad0cd30f41e3ec9e10c181603a5f33b829a32e0745804f` |
+| `tests/Infinium.EvaluationTests/EvaluatorV2PublicProtocolTests.cs` | 34,294 | `821c7bae79c049b3d0bcc52e772e2c55e4af3a16840b7510570f6800b4865e8d` |
+
+The evaluator and out-of-solution regression-project `packages.lock.json`
+files are current restore metadata, not members of the 20-file frozen core.
+They are refreshed only to represent the authorized current product project
+graph; they do not change protocol `/4` source, schema, or semantic identities.
 
 The wrapper runs the 56-case answer-known public calibration and exactly eight
 public-only tests covering calibration mutations, typed values,

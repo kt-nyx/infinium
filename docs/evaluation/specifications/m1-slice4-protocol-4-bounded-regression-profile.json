@@ -1,6 +1,6 @@
 {
   "schema_id": "infinium.m1-slice4.protocol-4-bounded-regression-profile/1",
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "status": "accepted-bounded-historical-regression",
   "mode": "bounded-public-regression",
   "claim": "historical-and-current-public-regression-health-only",
@@ -24,22 +24,25 @@
   },
   "current_public_regression": {
     "classification": "current public regression evidence, never frozen qualification bytes",
-    "authorized_change_commit": "a98d648bd0adb2751ee0c09828e0227b1583950f",
+    "authorized_change_commits": [
+      "8e75995f9f0f6b3934f806af08fb46799fc6e0ea",
+      "a98d648bd0adb2751ee0c09828e0227b1583950f"
+    ],
     "evolved_tests": [
       {
         "relative_path": "tests/Infinium.EvaluationTests/BethesdaOracleAgreementEvaluationTests.cs",
-        "byte_length": 30972,
-        "sha256": "f02b67afaad9a22d893a0b819fa33175c6a2d256db8d8255c45241c5b51a4a51"
+        "byte_length": 30967,
+        "sha256": "ba99dedcb9a98ddb4e2c63eb2b900e9a7c314c2d3af36f2368f715ac7ad74f70"
       },
       {
         "relative_path": "tests/Infinium.EvaluationTests/BethesdaSemanticExtractionEvaluationTests.cs",
-        "byte_length": 20267,
-        "sha256": "73e0ee3c3f4c617982e7d0e5de0d596feee4d958a951d8ef7fc9418b8084991a"
+        "byte_length": 20219,
+        "sha256": "58681e739cb170cbffad0cd30f41e3ec9e10c181603a5f33b829a32e0745804f"
       },
       {
         "relative_path": "tests/Infinium.EvaluationTests/EvaluatorV2PublicProtocolTests.cs",
-        "byte_length": 34302,
-        "sha256": "c7c99bcf234ad3a72a1e04a52fa9835fb3d1f912c95b0b0aaf80a22bdcb5b01f"
+        "byte_length": 34294,
+        "sha256": "821c7bae79c049b3d0bcc52e772e2c55e4af3a16840b7510570f6800b4865e8d"
       }
     ],
     "calibration": {

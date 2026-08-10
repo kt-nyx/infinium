@@ -122,14 +122,14 @@ while ($profileParent.FullName.StartsWith($repositoryPrefix, [StringComparison]:
     $profileParent = $profileParent.Parent
 }
 $profileIdentity = Get-FileIdentity $resolvedProfile
-if ([long]$profileIdentity.ByteLength -ne 4711 -or
-    [string]$profileIdentity.Sha256 -cne '20d494313170ceabc3515c7783d2f95a65547eafc77dc4ea82caa1e85c80b45e') {
+if ([long]$profileIdentity.ByteLength -ne 4776 -or
+    [string]$profileIdentity.Sha256 -cne '9241510a5de781d087aeddebc7c1cb750b35c1bf14172e8042256869d2538f2d') {
     Refuse 'bounded-regression profile bytes drifted'
 }
 $profile = Get-Content -Raw -LiteralPath $resolvedProfile | ConvertFrom-Json
 
 if ([string]$profile.schema_id -cne 'infinium.m1-slice4.protocol-4-bounded-regression-profile/1' -or
-    [string]$profile.schema_version -cne '1.0.0' -or
+    [string]$profile.schema_version -cne '1.1.0' -or
     [string]$profile.status -cne 'accepted-bounded-historical-regression' -or
     [string]$profile.mode -cne $Mode -or
     [string]$profile.claim -cne $Claim) {
@@ -205,19 +205,24 @@ if ([string]$protocol.protocol_id -cne [string]$freeze.protocol_id -or
 }
 
 $regression = $profile.current_public_regression
-if ([string]$regression.classification -cne 'current public regression evidence, never frozen qualification bytes' -or
-    [string]$regression.authorized_change_commit -cne 'a98d648bd0adb2751ee0c09828e0227b1583950f') {
+if ([string]$regression.classification -cne 'current public regression evidence, never frozen qualification bytes') {
     Refuse 'current public-regression classification or provenance drifted'
 }
+$authorizedChangeCommits = @($regression.authorized_change_commits)
+Assert-ExactStrings $authorizedChangeCommits @(
+    '8e75995f9f0f6b3934f806af08fb46799fc6e0ea',
+    'a98d648bd0adb2751ee0c09828e0227b1583950f'
+) 'authorized current public-regression commits'
 $evolvedTests = @($regression.evolved_tests)
 Assert-ExactStrings @($evolvedTests.relative_path) @($frozenTestFiles.relative_path) 'evolved public-test paths'
 foreach ($test in $evolvedTests) {
     $identity = Get-FileIdentity (Join-Path $repositoryRoot ([string]$test.relative_path))
     Assert-Identity $identity ([long]$test.byte_length) ([string]$test.sha256) "current public regression test $($test.relative_path)"
     $changes = @(& git -C $repositoryRoot log --format=%H "$($freeze.evaluator_commit)..HEAD" -- ([string]$test.relative_path))
-    if ($LASTEXITCODE -ne 0 -or $changes.Count -ne 1 -or [string]$changes[0] -cne [string]$regression.authorized_change_commit) {
-        Refuse "current public regression test provenance drifted: $($test.relative_path)"
+    if ($LASTEXITCODE -ne 0) {
+        Refuse "current public regression test provenance unavailable: $($test.relative_path)"
     }
+    Assert-ExactStrings $changes $authorizedChangeCommits "current public regression test provenance: $($test.relative_path)"
 }
 
 $expectedTests = @(

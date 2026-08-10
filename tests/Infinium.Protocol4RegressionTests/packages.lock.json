@@ -285,6 +285,32 @@
         "resolved": "1.4.2",
         "contentHash": "yjj+3zgz8zgXpiiC3ZdF/iyTBbz2fFvMxZFEBPUcwZjIvXOf37Ylm+K58hqMfIBt5JgU/Z2uoUS67JmTLe973A=="
       },
+      "SQLite": {
+        "type": "Transitive",
+        "resolved": "3.53.4",
+        "contentHash": "KN7jeWqgUPeBRe1FlcpZURzxomuKKEKHmBBQfg+Nx7NkY1LjKhzHvH+3ASkNvhayESE34nMBinL9CV21JfPRJw=="
+      },
+      "SQLitePCLRaw.config.e_sqlite3": {
+        "type": "Transitive",
+        "resolved": "3.0.5",
+        "contentHash": "aSk8WE5tF2MybESMgtZAEyMVCAWA0nBqOMc48HFoa9UoSdtm3goDXVzNRnefeKIwE6bV9NaNXptn1F9ReMQI0Q==",
+        "dependencies": {
+          "SQLitePCLRaw.provider.e_sqlite3": "3.0.5"
+        }
+      },
+      "SQLitePCLRaw.core": {
+        "type": "Transitive",
+        "resolved": "3.0.5",
+        "contentHash": "k81AYXXRCw3Zj8rOhyBoCsx/U97KYDFI2CSKr/ijl5BwpsW/hX/4kBiDmerFaoust8nxBwa0IHQFw8MmSHRtnQ=="
+      },
+      "SQLitePCLRaw.provider.e_sqlite3": {
+        "type": "Transitive",
+        "resolved": "3.0.5",
+        "contentHash": "um8YSWduhhuskTG2bHfZrBqMNQOydfU8pcseT+cu5RivOGyoUbCrGXxgoRNTmRYw2VbMWnEZVVFcneZT/5dsBg==",
+        "dependencies": {
+          "SQLitePCLRaw.core": "3.0.5"
+        }
+      },
       "StrongInject": {
         "type": "Transitive",
         "resolved": "1.4.4",
@@ -335,15 +361,23 @@
         "resolved": "0.13.1.398",
         "contentHash": "Cm9fOJZ5Meb7uFON2XtvO2oiw/2hxAnkXI+5enms0AGNRZu5vPhw1PF5H1B2W8SbRZxqE/hkzMkWdIOO0MGPzg=="
       },
+      "infinium.analysis": {
+        "type": "Project",
+        "dependencies": {
+          "Infinium.Domain": "[1.0.0, )"
+        }
+      },
       "infinium.application": {
         "type": "Project",
         "dependencies": {
           "Google.Protobuf": "[3.31.1, )",
           "Grpc.Core.Api": "[2.80.0, )",
           "Grpc.Net.Client": "[2.80.0, )",
+          "Infinium.Analysis": "[1.0.0, )",
           "Infinium.Bethesda": "[1.0.0, )",
           "Infinium.Domain": "[1.0.0, )",
-          "Infinium.Mo2": "[1.0.0, )"
+          "Infinium.Mo2": "[1.0.0, )",
+          "Infinium.Persistence": "[1.0.0, )"
         }
       },
       "infinium.bethesda": {
@@ -369,6 +403,14 @@
           "Infinium.Domain": "[1.0.0, )"
         }
       },
+      "infinium.persistence": {
+        "type": "Project",
+        "dependencies": {
+          "Infinium.Domain": "[1.0.0, )",
+          "Microsoft.Data.Sqlite.Core": "[10.0.10, )",
+          "SQLitePCLRaw.bundle_e_sqlite3": "[3.0.5, )"
+        }
+      },
       "Google.Protobuf": {
         "type": "CentralTransitive",
         "requested": "[3.31.1, )",
@@ -391,6 +433,15 @@
           "Microsoft.Extensions.Logging.Abstractions": "8.0.0"
         }
       },
+      "Microsoft.Data.Sqlite.Core": {
+        "type": "CentralTransitive",
+        "requested": "[10.0.10, )",
+        "resolved": "10.0.10",
+        "contentHash": "TPCs0ldm7AWqcKmp6f/Xr+14sat7hx4rHfRlS4RgCURBH2thEWbAKEyX7cCWr63zVJVOJIJZTg2cBiUXa8ys6g==",
+        "dependencies": {
+          "SQLitePCLRaw.core": "2.1.11"
+        }
+      },
       "Mutagen.Bethesda.Skyrim": {
         "type": "CentralTransitive",
         "requested": "[0.54.2, )",
@@ -400,6 +451,16 @@
           "Loqui": "3.7.0",
           "Mutagen.Bethesda.Core": "0.54.2",
           "Noggog.CSharpExt": "4.3.0"
+        }
+      },
+      "SQLitePCLRaw.bundle_e_sqlite3": {
+        "type": "CentralTransitive",
+        "requested": "[3.0.5, )",
+        "resolved": "3.0.5",
+        "contentHash": "SW8iASIyWMrLzqabUHYQRvALhvD4ylSBsj4PgEVGwc36kQjc9xT5kSV/XQ9rU7nIpBWD+LPyX3Hlw5FzyUzGeQ==",
+        "dependencies": {
+          "SQLite": "3.53.4",
+          "SQLitePCLRaw.config.e_sqlite3": "3.0.5"
         }
       }
     }

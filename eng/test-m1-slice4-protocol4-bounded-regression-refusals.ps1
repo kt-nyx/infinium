@@ -80,7 +80,7 @@ try {
     $path = New-MutatedProfile 'current-test-hash' { param($profile) $profile.current_public_regression.evolved_tests[0].sha256 = ('0' * 64) }
     Invoke-ExpectedRefusal 'current-test-hash' @('-ProfilePath', $path)
 
-    $path = New-MutatedProfile 'test-provenance' { param($profile) $profile.current_public_regression.authorized_change_commit = ('0' * 40) }
+    $path = New-MutatedProfile 'test-provenance' { param($profile) $profile.current_public_regression.authorized_change_commits[0] = ('0' * 40) }
     Invoke-ExpectedRefusal 'test-provenance' @('-ProfilePath', $path)
 
     $path = New-MutatedProfile 'extra-command' {
