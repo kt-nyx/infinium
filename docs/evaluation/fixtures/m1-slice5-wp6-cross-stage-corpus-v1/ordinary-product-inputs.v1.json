@@ -1,0 +1,118 @@
+{
+  "schema_identity": "infinium.public-fixture.wp6.ordinary-cross-stage-inputs/1.0.5",
+  "content_class": "ordinary-product-input-only",
+  "shared_facts": {
+    "bindings": {
+      "snapshot_id": "snapshot.001",
+      "analysis_context_id": "context.001",
+      "configuration_id": "configuration.001",
+      "resolved_manifest_id": "manifest.001",
+      "analyzer_id": "analyzer.001",
+      "ruleset_id": "ruleset.001"
+    },
+    "documentation_revisions": [
+      {
+        "revision_key": "revision.001",
+        "source_id": "source.001",
+        "source_kind": "fixture",
+        "source_revision": "r1",
+        "availability": "present",
+        "byte_length": 167,
+        "sha256": "c30f163b5ef32be392d1f046d0cf84c054e060df1f5b99e9954f86ec9763fe18",
+        "supplying_snapshot_id": "snapshot.001",
+        "text": "Purpose: Provides a neutral bridge for component groups.\nKnown issue: The bridge may retain a stale relation.\nCompatibility note: Adapter mode preserves the relation.\n",
+        "claims": [
+          {"claim_key":"claim.001","start":0,"end":56,"kind":"declared-purpose","authority":"authoritative-external","applicability":"applicable","role":"declared","contradicts":[]},
+          {"claim_key":"claim.002","start":57,"end":109,"kind":"known-issue","authority":"authoritative-external","applicability":"contradicted","role":"declared","contradicts":["claim.003"]},
+          {"claim_key":"claim.003","start":110,"end":166,"kind":"patch-instruction","authority":"authoritative-external","applicability":"applicable","role":"declared","contradicts":["claim.002"]}
+        ]
+      },
+      {
+        "revision_key": "revision.002",
+        "source_id": "source.001",
+        "source_kind": "fixture",
+        "source_revision": "r2",
+        "availability": "present",
+        "byte_length": 202,
+        "sha256": "3545a682abed293ddcbec2f1525a956d9e7264500ff7f709f18b3fd1b3425c92",
+        "supplying_snapshot_id": "snapshot.001",
+        "text": "Revision note: formatting updated.\nPurpose: Provides a neutral bridge for component groups.\nKnown issue: The bridge may retain a stale relation.\nCompatibility note: Adapter mode preserves the relation.\n",
+        "claims": [
+          {"claim_key":"claim.001","start":35,"end":91,"kind":"declared-purpose","authority":"authoritative-external","applicability":"applicable","role":"declared","contradicts":[]},
+          {"claim_key":"claim.002","start":92,"end":144,"kind":"known-issue","authority":"authoritative-external","applicability":"contradicted","role":"declared","contradicts":["claim.003"]},
+          {"claim_key":"claim.003","start":145,"end":201,"kind":"patch-instruction","authority":"authoritative-external","applicability":"applicable","role":"declared","contradicts":["claim.002"]}
+        ]
+      }
+    ],
+    "applications": [
+      {"application_key":"application.001","claim_key":"claim.001","subject_id":"entity.001","applicability":"applicable","declared_purpose_code":"purpose.add-expand"},
+      {"application_key":"application.002","claim_key":"claim.002","subject_id":"entity.001","applicability":"contradicted","supporting_claim_keys":["claim.003"]}
+    ],
+    "candidate_source_facts": [
+      {"fact_id":"fact.001","kind":"link","prior_state":"resolved","prior_target":"entity.002","winning_state":"resolved","winning_target":"entity.003","dependency_ids":["dependency.001"],"evidence_ids":["evidence.001"]},
+      {"fact_id":"fact.002","kind":"link","prior_state":"resolved","prior_target":"entity.004","winning_state":"resolved","winning_target":"entity.004","dependency_ids":["dependency.002"],"evidence_ids":["evidence.002"]},
+      {"fact_id":"fact.003","kind":"documentation-application","application_key":"application.002","dependency_ids":["dependency.source.001"],"evidence_ids":["claim.002","claim.003"]}
+    ],
+    "conclusion_rules": {
+      "promotion_rule": "plausible-support-and-no-defeating-contradiction",
+      "grouping_rule": "demonstrated-shared-cause-only",
+      "recommendation_rule": "finding-or-explicit-needs-information",
+      "lead_readiness_effect": "none"
+    },
+    "conclusion_factual_inputs": [
+      {
+        "fact_id":"fact.001",
+        "consequence":{"state":"assigned","code":"consequence.incorrect-functional-behavior"},
+        "causal_locus":{"kind":"record-field-relation","subject_id":"entity.001","field":"linked_reference"},
+        "causal_conditions":["prior-target-differs-from-winning-target"],
+        "applicability":"applicable",
+        "applicability_condition_ids":["condition.001"],
+        "support_level":"plausible",
+        "supporting_evidence_ids":["evidence.001","claim.001"],
+        "contradicting_evidence_ids":[],
+        "missing_information":[],
+        "dependency_ids":["dependency.001"],
+        "causal_proof_facts":[{"proof_fact_id":"proof.001","kind":"typed-relation-delta","subject_id":"entity.001","locus":"linked_reference","evidence_ids":["evidence.001"]}],
+        "recommendation_facts":{"action_kind":"validate-relation","uncertainty":"bounded","reversibility":"non-mutating","risks":["state-may-differ-after-new-input"],"needed_information":[]}
+      },
+      {
+        "fact_id":"fact.002",
+        "consequence":{"state":"not-applicable","code":null},
+        "causal_locus":{"kind":"record-field-relation","subject_id":"entity.004","field":"linked_reference"},
+        "causal_conditions":["prior-target-equals-winning-target"],
+        "applicability":"applicable",
+        "applicability_condition_ids":["condition.002"],
+        "support_level":"confirmed",
+        "supporting_evidence_ids":["evidence.002"],
+        "contradicting_evidence_ids":[],
+        "missing_information":[],
+        "dependency_ids":["dependency.002"],
+        "causal_proof_facts":[{"proof_fact_id":"proof.002","kind":"typed-relation-equality","subject_id":"entity.004","locus":"linked_reference","evidence_ids":["evidence.002"]}],
+        "recommendation_facts":{"action_kind":"none","uncertainty":"none","reversibility":"not-applicable","risks":[],"needed_information":[]}
+      },
+      {
+        "fact_id":"fact.003",
+        "consequence":{"state":"unknown","code":null},
+        "causal_locus":{"kind":"documentation-application","subject_id":"entity.001","field":"application.002"},
+        "causal_conditions":["applicable-claim-has-direct-contradiction"],
+        "applicability":"contradicted",
+        "applicability_condition_ids":["condition.003"],
+        "support_level":"plausible",
+        "supporting_evidence_ids":["claim.002"],
+        "contradicting_evidence_ids":["claim.003"],
+        "missing_information":["uncontradicted-applicable-evidence"],
+        "dependency_ids":["dependency.source.001"],
+        "causal_proof_facts":[{"proof_fact_id":"proof.003","kind":"typed-contradiction-edge","subject_id":"entity.001","locus":"application.002","evidence_ids":["claim.002","claim.003"]}],
+        "recommendation_facts":{"action_kind":"obtain-additional-evidence","uncertainty":"unresolved","reversibility":"non-mutating","risks":["premature-conclusion"],"needed_information":["uncontradicted-applicable-evidence"]}
+      }
+    ],
+    "coverage_population": {"population_id":"population.001","member_fact_ids":["fact.001","fact.002","fact.003"]},
+    "boundaries": ["provider:not-used","hosted-search:not-used","nexus:not-used","loot:not-used"]
+  },
+  "requests": [
+    {"input_id":"input.001","mode":"clean","revision_key":"revision.001","prior_result":"absent","network_enabled":false},
+    {"input_id":"input.002","mode":"incremental","revision_key":"revision.001","prior_result":"result.001","network_enabled":false},
+    {"input_id":"input.003","mode":"incremental","revision_key":"revision.002","prior_result":"result.001","network_enabled":false},
+    {"input_id":"input.004","mode":"retained-replay","revision_key":"revision.001","prior_result":"result.001","network_enabled":false}
+  ]
+}

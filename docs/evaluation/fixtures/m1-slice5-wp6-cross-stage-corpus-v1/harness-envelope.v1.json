@@ -1,0 +1,79 @@
+{
+  "schema_identity": "infinium.public-fixture.wp6.harness-envelope/1.0.5",
+  "content_class": "harness-only-never-product-input",
+  "registry_identity": "infinium.m1s5.wp6.cross-stage-corpus.20260810.1",
+  "package_identity": "infinium.m1s5.wp6.cross-stage.clean-incremental-replay.generic-a",
+  "package_version": "1.0.5",
+  "partition": "development",
+  "product_projection": {
+    "source": "ordinary-product-inputs.v1.json",
+    "selection": "forward exactly one requests entry plus shared_facts",
+    "forbidden": ["this-envelope","case-id","partition","eval-id","expected-results","oracle-pointer","review-metadata"],
+    "fail_closed": true
+  },
+  "cases": [
+    {"case_id":"WP6-CROSS-CLEAN-D01","input_id":"input.001","kind":"clean","eval_ids":["EVAL-0032","EVAL-0036","EVAL-0037","EVAL-0039","EVAL-0064","EVAL-0067","EVAL-0083","EVAL-0084","EVAL-0085","EVAL-0086"],"oracle_pointer":"expected-results.v1.json#/cases/0"},
+    {"case_id":"WP6-CROSS-UNCHANGED-D02","input_id":"input.002","kind":"unchanged-incremental","eval_ids":["EVAL-0026","EVAL-0032","EVAL-0037","EVAL-0083","EVAL-0085"],"oracle_pointer":"expected-results.v1.json#/cases/1"},
+    {"case_id":"WP6-CROSS-CHANGED-D03","input_id":"input.003","kind":"changed-dependency-incremental","eval_ids":["EVAL-0026","EVAL-0037","EVAL-0083"],"oracle_pointer":"expected-results.v1.json#/cases/2"},
+    {"case_id":"WP6-CROSS-REPLAY-D04","input_id":"input.004","kind":"retained-downstream-replay","eval_ids":["EVAL-0026","EVAL-0037","EVAL-0039","EVAL-0040","EVAL-0064","EVAL-0083","EVAL-0087"],"oracle_pointer":"expected-results.v1.json#/cases/3"}
+  ],
+  "ownership_audit": {
+    "exercised_by_this_four_case_corpus": {
+      "requirement_groups": [
+        {"ids":["EVID-001","EVID-002","EVID-006","EVID-007","DOC-002","DOC-008","DOC-011"],"assertion":"Typed local fixture evidence, exact revision/passage/application provenance, contradiction visibility, and clean/reuse separation."},
+        {"ids":["ANALYSIS-003","ANALYSIS-004","ANALYSIS-005","ANALYSIS-016","ANALYSIS-017"],"assertion":"One bounded analyzer over three factual members preserves admitted, negative, and ambiguous states without output labels in product input."},
+        {"ids":["FIND-001","FIND-002","FIND-003","FIND-004","FIND-011","COVER-001","COVER-002","COVER-003"],"assertion":"Typed consequence/cause/recommendation facts derive one supported and one lead-only path with one labeled coverage population and no safety claim."},
+        {"ids":["SNAP-001","SNAP-002","SNAP-004","SNAP-005","SNAP-006","SCAN-007","PROD-002","PROD-004","OPS-001","OPS-002","OPS-003","AI-003","AI-004","AI-006","AI-007"],"assertion":"Immutable bindings, targeted recomputation, retained replay, equivalent output, explicit gaps, and external boundaries not-used."}
+      ],
+      "adr_groups": [
+        {"ids":["ADR-0015","ADR-0016","ADR-0021","ADR-0022"],"assertion":"Bounded evidence, analysis, immutable binding, publication, and replay rules exercised by the four cases."},
+        {"ids":["ADR-0028","ADR-0029"],"assertion":"Typed taxonomy/evidence-state separation and partial publication exercised only for the declared synthetic facts."},
+        {"ids":["ADR-0032"],"assertion":"Public continuation claim boundary; no private verdict or protocol work."}
+      ],
+      "eval_entries": [
+        {"id":"EVAL-0026","assertion":"Snapshot/context/config/input bindings remain immutable across clean, incremental, changed-source, and replay requests.","exclusions":["mid-run editor UI","full lifecycle matrix"]},
+        {"id":"EVAL-0032","assertion":"Three delivered members derive one admitted, one resolved-negative, and one ambiguous decision with exact candidate/hypothesis/abstention counts.","exclusions":["scale","stress","broad recall","all-pairs performance"]},
+        {"id":"EVAL-0036","assertion":"One lead-only path is separately counted and has zero readiness effect.","exclusions":["readiness calibration","user-interface presentation"]},
+        {"id":"EVAL-0037","assertion":"Clean, unchanged incremental, formatting-only source revision, and retained replay remain distinct; no refresh transport is used.","exclusions":["live acquisition","network refresh"]},
+        {"id":"EVAL-0039","assertion":"Local fixture revision, passage, claim application, supplying snapshot, and consuming context are traversable.","exclusions":["independent network acquisition","archive documentation"]},
+        {"id":"EVAL-0040","assertion":"Retained replay produces semantically equivalent human and JSON views with visible gaps.","exclusions":["export workflow","sharing policy"]},
+        {"id":"EVAL-0064","assertion":"All four requests are network-off with provider, search, Nexus, and LOOT explicitly not-used.","exclusions":["provider adapter qualification","credential behavior"]},
+        {"id":"EVAL-0067","assertion":"Claims, candidate decisions, hypotheses, findings, recommendations, leads, and gaps remain typed and model-free.","exclusions":["LLM proposal/admission","live model transparency"]},
+        {"id":"EVAL-0083","assertion":"The local source-to-conclusion dependency chain and contradiction are explicit; external nodes are not-used.","exclusions":["Nexus","hosted search","OpenAI provenance"]},
+        {"id":"EVAL-0084","assertion":"Neutral causal facts derive one single-member supported group and one separate lead-only path.","exclusions":["broad grouping accuracy","merge/split review","cross-run reconciliation"]},
+        {"id":"EVAL-0085","assertion":"One three-member population reports denominator, completed count, state, and visible gap without a combined safety percentage.","exclusions":["readiness verdict","multi-population presentation"]},
+        {"id":"EVAL-0086","assertion":"Declared purpose and consequence remain separate typed axes for the supplied generic subject.","exclusions":["taxonomy breadth","history migration","controlled-real classification"]},
+        {"id":"EVAL-0087","assertion":"Retained replay verifies exact dependency identity and preserves append-only history.","exclusions":["migration","backup/restore","corruption","WAL pressure","full persistence matrix"]}
+      ]
+    },
+    "assembled_existing_wp1_wp5_evidence": {
+      "requirement_groups": [
+        {"ids":["EVID-003","EVID-004","EVID-005","DOC-006","DOC-007","FIND-005","FIND-006","FIND-007","FIND-008","FIND-009","FIND-010","FIND-012","FIND-013","FIND-014","SCAN-005","SCAN-006","SCAN-009","AUTH-001","AUTH-002","AUTH-003","SEC-001","SEC-002","SEC-003","SEC-004"],"ownership":"Indexed from accepted WP1-WP5 package and review evidence; not newly exercised by this corpus."},
+        {"ids":["ANALYSIS-019"],"ownership":"Inherited Bethesda analysis authority only; this four-case corpus supplies no Bethesda analysis evidence."},
+        {"ids":["OPS-004"],"ownership":"Inherited scale and structural-limit authority only; this four-case corpus supplies no scale or structural-limit evidence."}
+      ],
+      "adr_groups": [
+        {"ids":["ADR-0013","ADR-0018","ADR-0019","ADR-0020","ADR-0025","ADR-0027"],"ownership":"Existing accepted boundary evidence only; no new provider, security, or evaluator assertion."},
+        {"ids":["ADR-0017"],"ownership":"Inherited desktop and Windows-stack authority only; this four-case corpus does not exercise that stack."},
+        {"ids":["ADR-0023"],"ownership":"Inherited cost-ledger and budget authority only; this four-case corpus supplies no cost-ledger or budget evidence."}
+      ],
+      "eval_entries": [
+        {"id":"EVAL-0033","assertion":"Existing WP2 inert hostile-content evidence assembled by package reference.","exclusions":["not re-executed here","no new security verdict"]},
+        {"id":"EVAL-0034","assertion":"Existing WP2/WP5 minimization and no-provider evidence assembled by package reference.","exclusions":["credential lifecycle","live provider"]},
+        {"id":"EVAL-0035","assertion":"Existing bounded WP5 final-object authority evidence assembled by package reference.","exclusions":["unqualified native path coverage"]},
+        {"id":"EVAL-0038","assertion":"Accepted WP5 run/recovery evidence indexed from its completed package record.","exclusions":["not exercised by these four cases"]},
+        {"id":"EVAL-0045","assertion":"Inherited manual-initiation evidence remains referenced by accepted current state.","exclusions":["not exercised by these four cases"]},
+        {"id":"EVAL-0046","assertion":"Inherited exact delivered external-operation non-mutation evidence only.","exclusions":["no new external adapter","not exercised here"]},
+        {"id":"EVAL-0051","assertion":"Inherited exact admitted MO2 substrate evidence remains unchanged.","exclusions":["no broader MO2 claim","not exercised here"]},
+        {"id":"EVAL-0052","assertion":"Inherited exact-scope Bethesda public conformance remains unchanged.","exclusions":["no new Bethesda semantics","no private verdict"]},
+        {"id":"EVAL-0054","assertion":"Inherited exact supported-target gate remains unchanged.","exclusions":["no new runtime qualification"]},
+        {"id":"EVAL-0065","assertion":"Existing WP3 analyzer declaration and bounded candidate-package evidence assembled by reference.","exclusions":["no analyzer breadth claim"]},
+        {"id":"EVAL-0079","assertion":"Existing WP4/WP5 reconciliation and append-only lineage evidence assembled by reference.","exclusions":["not exercised by the changed-source case","no carryover claim here"]},
+        {"id":"EVAL-0080","assertion":"Existing bounded WP5 write/non-mutation comparison assembled by reference.","exclusions":["native capability gaps retained"]},
+        {"id":"EVAL-0082","assertion":"Existing WP3/WP5 development-control evidence assembled by reference.","exclusions":["full lifecycle/control matrix not claimed by this corpus"]},
+        {"id":"EVAL-0087","assertion":"Existing WP5 atomic publication/recovery evidence assembled at its registered bounded scope.","exclusions":["full persistence/corruption matrix not claimed"]},
+        {"id":"EVAL-0088","assertion":"Existing WP5 bounded query/cursor evidence assembled by reference.","exclusions":["full IPC/version/role matrix not claimed"]}
+      ]
+    }
+  }
+}

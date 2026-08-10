@@ -108,9 +108,9 @@ public sealed class CandidateDeliveredInputContractTests
     {
         Dictionary<string, string> expectedManifests = new(StringComparer.Ordinal)
         {
-            ["CAND-WP3-SEMANTIC-DEV-v1"] = "94799a0d9fd5c90594d5da7074297fe257e44aad69b98487bdc7ea5619370afb",
-            ["CAND-WP3-SCALE-VAL-v1"] = "98e1f3bcb88e40c52abbbddc62ed9f3d613e90d09c4a15d51be081bc8a1bf2c8",
-            ["CAND-WP3-STRESS-DEV-v1"] = "5b5507622d217223aa2a28a049d5c82b7e411238aaa6c10f415f27c594d1ebbf",
+            ["CAND-WP3-SEMANTIC-DEV-v1"] = "635a3e6f75251867d14f328ac5e450cfe6784005753c7717be51d431fcc173e1",
+            ["CAND-WP3-SCALE-VAL-v1"] = "f0db950e7e5110bf4b4c60005a1dca84195abe2217429c4c6b343de865ac5ae2",
+            ["CAND-WP3-STRESS-DEV-v1"] = "54dd5df9aac989e7443eaffc8e80cbec8db58b75df2d675f32ebd0ca28b4ae5a",
         };
         string root = Path.Combine(FindRepositoryRoot(),
             "docs", "evaluation", "fixtures", "m1-slice5-wp3-candidates-v1");

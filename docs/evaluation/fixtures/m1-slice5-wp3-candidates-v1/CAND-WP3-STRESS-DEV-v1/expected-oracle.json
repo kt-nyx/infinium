@@ -20,9 +20,9 @@
         {
           "artifact_id": "oracle/streaming-expansion-receipt.json",
           "artifact_version": "1.0.0",
-          "fingerprint": "7bb809aea7f975ee0d7618e904ffe4b3664405ce4add7f13b2bb968113b08cf4",
+          "fingerprint": "97b6a99754698d966b3cac7ba2ab901f3922f6ebca78ba301be08d0323571353",
           "availability": "retained",
-          "byte_length": 7072
+          "byte_length": 6982
         }
       ],
       "independent_of_system_under_test": true
@@ -147,9 +147,9 @@
   "expected_replay_manifest": {
     "artifact_id": "replay-dependencies.json",
     "artifact_version": "1.0.0",
-    "fingerprint": "de5265aea6860eb087e82f8b0309b19b5e0770bdef604881c0ada0ae3a9d9148",
+    "fingerprint": "3b347fa061f8f9b018adc5b2ad1d16249762005650852aa370819615934d689d",
     "availability": "retained",
-    "byte_length": 2396
+    "byte_length": 2336
   },
   "expected_not_used_boundaries": [
     "provider",

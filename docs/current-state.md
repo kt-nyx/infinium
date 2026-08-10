@@ -2,7 +2,7 @@
 
 Status: Current execution authority
 
-Last reviewed: 2026-08-09
+Last reviewed: 2026-08-10
 
 Owner: Project owner
 
@@ -19,8 +19,9 @@ records preserve evidence and history.
 | Milestone | `M1` — active |
 | Active slice | `M1/S5` — active |
 | Completed package | `M1/S5/WP1` through `M1/S5/WP5` |
-| Next eligible package | `M1/S5/WP6` — accumulated verification, fresh review, and closeout |
-| Later work | Slice 5 owner acceptance and successor slices, dependency-gated by the active plans |
+| Package awaiting owner acceptance | `M1/S5/WP6` — implementation and independent review complete; not owner-accepted |
+| Next eligible action | Owner review of the WP6 evidence, contract-freeze proposal, and Slice 5 acceptance packet |
+| Later work | Successor-slice planning only after explicit Slice 5 owner acceptance; no successor implementation is authorized |
 | Default execution policy | [Development execution policy](development/execution-policy.md) |
 | Active milestone plan | [M1 backend semantic proof](plans/milestones/M1-backend-semantic-proof.md) |
 | Active slice plan | [M1 Slice 5](plans/slices/M1-slice-5-evidence-documentation-candidates-cases-replay.md) |
@@ -87,16 +88,35 @@ verdict. A fresh final product-path review traced real production execution
 separately from test construction and found no remaining must-fix or authority
 breach. WP5 is complete and WP6 is now eligible.
 
-The rejected preauthored 28-package comprehensive corpus is not a current input
-and must not be reconstructed. WP4 and WP5 each own the small semantic cases
-for behavior they implement; WP6 owns the accumulated cross-package corpus and
-closeout.
+WP6 has assembled an independently authored and reviewed four-case public
+cross-stage corpus over the exact eleven accepted WP2-WP5 fixture packages.
+The ordinary product inputs were validated answer-free before dispatch, the
+real WP2 -> WP3 -> WP4 -> coordinator/publication/query/output path ran before
+the frozen oracle was loaded, and clean, unchanged incremental, changed-source,
+and retained replay requests matched the expected typed counts and lifecycle
+semantics. The final corpus review verdict is `ACCEPT`; all nine Slice 5 gates,
+the new `Comprehensive` gate, the explicit traceability audit, the full Release
+test floor, formatting, dependency-manifest, strict JSON, local-link, and diff
+checks pass. This is bounded public synthetic local/fixture conformance only.
+It is not a private, held-out, native-platform, controlled-real, reliability,
+readiness, safety, whole-M1, or product-acceptance verdict.
 
-WP1's broad Slice 5 contracts are `Implementation-active`, not
-`Slice-frozen`. WP2-WP5 may revise them when vertical producer, consumer,
-persistence, invalid-state, and focused-fixture evidence exposes a problem,
-provided every affected seam changes together. The contracts become
-`Slice-frozen` only with accepted Slice 5 closeout.
+WP6 implementation and review are complete, but the project owner has not yet
+accepted WP6, frozen the Slice 5 contracts, or marked Slice 5 complete. The only
+eligible handoff is owner review of the acceptance packet in the current
+implementation record. M1/S6 may be planned only after that explicit decision;
+it is not eligible for implementation from this status document.
+
+The rejected preauthored 28-package comprehensive corpus is not a current input
+and was not reconstructed. WP4 and WP5 each own the small semantic cases for
+behavior they implement; WP6 owns the accumulated cross-package corpus and
+closeout evidence now awaiting owner acceptance.
+
+WP1's broad Slice 5 contracts remain `Implementation-active`, not
+`Slice-frozen`, pending owner acceptance. WP2-WP6 may revise them when vertical
+producer, consumer, persistence, invalid-state, and focused-fixture evidence
+exposes a problem, provided every affected seam changes together. The contracts
+become `Slice-frozen` only with accepted Slice 5 closeout.
 
 Slice 5 uses the repository-wide development loop: implement a vertical
 increment, test, review, correct, and re-review until accepted. Routine defects

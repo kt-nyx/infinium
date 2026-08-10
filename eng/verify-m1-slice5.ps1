@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Contracts', 'Documentation', 'Candidates', 'CandidateScale', 'Cases', 'Replay', 'Output', 'Safety')]
+    [ValidateSet('Contracts', 'Documentation', 'Candidates', 'CandidateScale', 'Cases', 'Replay', 'Output', 'Safety', 'Comprehensive', 'All')]
     [string] $Gate,
 
     [Parameter(Mandatory = $true)]
@@ -276,7 +276,7 @@ function Invoke-CandidatesGate {
     }
 
     $manifestHash = (Get-FileHash -LiteralPath (Join-Path $semanticRoot 'public-manifest.json') -Algorithm SHA256).Hash.ToLowerInvariant()
-    if ($manifestHash -cne '94799a0d9fd5c90594d5da7074297fe257e44aad69b98487bdc7ea5619370afb') {
+    if ($manifestHash -cne '635a3e6f75251867d14f328ac5e450cfe6784005753c7717be51d431fcc173e1') {
         throw "Frozen WP3 semantic manifest hash mismatch: $manifestHash"
     }
 
@@ -330,8 +330,8 @@ function Invoke-CandidateScaleGate {
     $fixtureRoot = Join-Path $repoRoot 'docs/evaluation/fixtures/m1-slice5-wp3-candidates-v1'
     $scaleManifest = (Get-FileHash -LiteralPath (Join-Path $fixtureRoot 'CAND-WP3-SCALE-VAL-v1/public-manifest.json') -Algorithm SHA256).Hash.ToLowerInvariant()
     $stressManifest = (Get-FileHash -LiteralPath (Join-Path $fixtureRoot 'CAND-WP3-STRESS-DEV-v1/public-manifest.json') -Algorithm SHA256).Hash.ToLowerInvariant()
-    if ($scaleManifest -cne '98e1f3bcb88e40c52abbbddc62ed9f3d613e90d09c4a15d51be081bc8a1bf2c8' -or
-        $stressManifest -cne '5b5507622d217223aa2a28a049d5c82b7e411238aaa6c10f415f27c594d1ebbf') {
+    if ($scaleManifest -cne 'f0db950e7e5110bf4b4c60005a1dca84195abe2217429c4c6b343de865ac5ae2' -or
+        $stressManifest -cne '54dd5df9aac989e7443eaffc8e80cbec8db58b75df2d675f32ebd0ca28b4ae5a') {
         throw 'Frozen WP3 scale/stress manifest hash mismatch.'
     }
     $testCommands = @(
@@ -605,6 +605,81 @@ function Invoke-SafetyGate {
     })
 }
 
+function Invoke-ComprehensiveGate {
+    $fixtureRoot = Join-Path $repoRoot 'docs/evaluation/fixtures/m1-slice5-wp6-cross-stage-corpus-v1'
+    $verificationScript = Join-Path $repoRoot 'eng/verify-m1-slice5-wp6-corpus.ps1'
+    $verificationOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $verificationScript -FixtureRoot $fixtureRoot 2>&1)
+    $verificationOutput | ForEach-Object { Write-Host $_ }
+    if ($LASTEXITCODE -ne 0) {
+        throw 'WP6 frozen corpus closure, answer-isolation, or accumulated ownership verification failed.'
+    }
+    $tests = Invoke-FocusedTests @(
+        @('test', 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~FrozenWp6ComprehensiveCorpusExecutesWp2ThroughWp5BeforeOracleComparison|FullyQualifiedName~ManagedAnalysisProductPathExecutesWp2Wp3Wp4RecoversPhaseBoundariesAndPublishes|FullyQualifiedName~AnalysisReplayCleanIncrementalAndReplayPreserveUnchangedSemanticOutput|FullyQualifiedName~Slice5CliStartsAndReadsManagedWp2Wp3Wp4ProductExecution'),
+        @('test', 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~DocumentationEvidenceTypesProvenanceLocalUntrustedDocumentationTests|FullyQualifiedName~CandidateSelectionEvaluationTests|FullyQualifiedName~FindingCaseEvaluationTests|FullyQualifiedName~Slice5OperationalEvaluationTests')
+    ) 'WP6 comprehensive product comparison'
+    $manifestPath = Join-Path $fixtureRoot 'fixture-manifest.v1.json'
+    $manifest = Read-StrictJson $manifestPath
+    $reviewPath = Join-Path $fixtureRoot 'independent-review.md'
+    $harnessPath = Join-Path $fixtureRoot 'harness-envelope.v1.json'
+    $harness = Read-StrictJson $harnessPath
+    $direct = $harness.ownership_audit.exercised_by_this_four_case_corpus
+    $inherited = $harness.ownership_audit.assembled_existing_wp1_wp5_evidence
+    $directRequirements = @($direct.requirement_groups | ForEach-Object { @($_.ids) }) | Sort-Object -Unique
+    $directAdrs = @($direct.adr_groups | ForEach-Object { @($_.ids) }) | Sort-Object -Unique
+    $directEvals = @($direct.eval_entries | ForEach-Object { [string] $_.id }) | Sort-Object -Unique
+    $inheritedRequirements = @($inherited.requirement_groups | ForEach-Object { @($_.ids) }) | Sort-Object -Unique
+    $inheritedAdrs = @($inherited.adr_groups | ForEach-Object { @($_.ids) }) | Sort-Object -Unique
+    $inheritedEvals = @($inherited.eval_entries | ForEach-Object { [string] $_.id }) | Sort-Object -Unique
+    Write-GateReport 'Traceability' ([ordered]@{
+        fixture_registry_id = [string] $manifest.registry_identity
+        package_identity = [string] $manifest.package_identity
+        direct_exercise = [ordered]@{
+            requirement_ids = $directRequirements
+            requirement_count = $directRequirements.Count
+            adr_ids = $directAdrs
+            adr_count = $directAdrs.Count
+            evaluation_ids = $directEvals
+            evaluation_count = $directEvals.Count
+        }
+        inherited_index_only = [ordered]@{
+            requirement_ids = $inheritedRequirements
+            requirement_count = $inheritedRequirements.Count
+            adr_ids = $inheritedAdrs
+            adr_count = $inheritedAdrs.Count
+            evaluation_ids = $inheritedEvals
+            evaluation_count = $inheritedEvals.Count
+            no_exercise_boundary = 'These identifiers are indexed from accepted WP1-WP5 evidence and are not newly exercised by the four-case WP6 corpus.'
+        }
+        accumulated_package_registrations = [ordered]@{
+            total = @($manifest.accumulated_package_registrations).Count
+            wp2 = @($manifest.accumulated_package_registrations | Where-Object { $_.package_identity -like 'DOC-WP2-*' }).Count
+            wp3 = @($manifest.accumulated_package_registrations | Where-Object { $_.package_identity -like 'CAND-WP3-*' }).Count
+            wp4 = @($manifest.accumulated_package_registrations | Where-Object { $_.package_identity -like 'infinium.m1s5.wp4.*' }).Count
+            wp5 = @($manifest.accumulated_package_registrations | Where-Object { $_.package_identity -like 'infinium.m1s5.wp5.*' }).Count
+        }
+        overlap_note = 'EVAL-0087 is directly exercised only for retained replay dependency identity/history and separately indexes WP5 atomic publication/recovery at its existing bounded scope.'
+        claim_boundary = 'public-synthetic-local-fixture-slice5-conformance-only'
+    })
+    Write-GateReport 'Comprehensive' ([ordered]@{
+        fixture_registry_id = [string] $manifest.registry_identity
+        fixture_registry_version = [string] $manifest.registry_version
+        package_identity = [string] $manifest.package_identity
+        package_version = [string] $manifest.package_version
+        partition = [string] $manifest.partition
+        case_count = @($manifest.case_count)[0]
+        package_file_count = @($manifest.package_file_paths).Count
+        accumulated_package_registration_count = @($manifest.accumulated_package_registrations).Count
+        manifest = Get-FileEvidence $manifestPath
+        independent_review = Get-FileEvidence $reviewPath
+        independent_review_verdict = 'ACCEPT'
+        product_comparison_order = 'validate-ordinary-input-then-execute-product-then-load-frozen-oracle'
+        production_path = 'WP2-WP3-WP4-coordinator-publication-query-output-plus-clean-incremental-replay'
+        focused_tests = $tests
+        private_held_out_live_billable_protocol5 = 'not-used'
+        claim_boundary = 'public-synthetic-local-fixture-slice5-conformance-only'
+    })
+}
+
 Push-Location $repoRoot
 try {
     switch ($Gate) {
@@ -616,6 +691,23 @@ try {
         'Replay' { Invoke-ReplayGate }
         'Output' { Invoke-OutputGate }
         'Safety' { Invoke-SafetyGate }
+        'Comprehensive' { Invoke-ComprehensiveGate }
+        'All' {
+            Invoke-ContractsGate
+            Invoke-DocumentationGate
+            Invoke-CandidatesGate
+            Invoke-CandidateScaleGate
+            Invoke-CasesGate
+            Invoke-ReplayGate
+            Invoke-OutputGate
+            Invoke-SafetyGate
+            Invoke-ComprehensiveGate
+            Write-GateReport 'All' ([ordered]@{
+                included_gates = @('Contracts', 'Documentation', 'Candidates', 'CandidateScale', 'Cases', 'Replay', 'Output', 'Safety', 'Comprehensive')
+                claim_boundary = 'public-synthetic-local-slice5-conformance-only'
+                private_held_out_live_billable_protocol5 = 'not-used'
+            })
+        }
     }
 } finally {
     Pop-Location

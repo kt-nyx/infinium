@@ -1,6 +1,6 @@
 # M1 Slice 5 — Evidence, documentation, candidates, cases, and replay
 
-Status: `M1/S5/WP1` through `M1/S5/WP5` complete and reviewed; `M1/S5/WP6` is eligible; Slice 5 is not complete
+Status: `M1/S5/WP1` through `M1/S5/WP5` complete and reviewed; `M1/S5/WP6` implementation and independent review complete, awaiting owner acceptance; Slice 5 is not complete
 
 Plan: `M1/S5`
 
@@ -1460,3 +1460,219 @@ Application-query evidence. The review was then rerun on the corrected record;
 its final verdict was **ACCEPTED**, with no remaining must-fix, follow-up,
 owner/authority, or safety/isolation finding. It confirmed WP5 complete and
 WP6 eligible.
+
+## `M1/S5/WP6` — Comprehensive corpus, accumulated verification, and owner packet
+
+Implementation date: 2026-08-10
+
+Starting commit: `e7de0305515657223c513195f8323b2649b6c7c8`
+
+Status: Implementation and independent corpus review complete; fresh final
+whole-slice review pending the exact candidate commit; owner acceptance is
+requested. Slice 5 remains active and is not marked accepted or complete.
+
+### Scope and authority
+
+WP6 assembled the accepted WP2-WP5 package evidence into one bounded public
+cross-stage corpus, added the missing comprehensive verification gate, executed
+the real product path before reading frozen truth, reran every accumulated gate
+and the full Release floor, and prepared the traceability, contract-freeze, and
+owner-acceptance proposals. The work used the accepted M1 and Slice 5 plans,
+current product/evaluation authority, ADRs, and the current WP1-WP5 record. It
+did not use the rejected 28-package corpus or infer current authority from
+historical evaluator material.
+
+The final corpus is
+`infinium.m1s5.wp6.cross-stage-corpus.20260810.1/1.0.5`, package
+`infinium.m1s5.wp6.cross-stage.clean-incremental-replay.generic-a/1.0.5`, in
+the `development` partition. It contains four cases and exactly ten package
+files. Its manifest registers the exact eleven accepted WP2-WP5 packages: two
+WP2, three WP3, four WP4, and two WP5 packages.
+
+### Answer-isolated corpus authoring and review
+
+A product-blind author constructed neutral ordinary inputs, a harness-only
+envelope, a separate exact/bounded expected-result oracle, replay/provenance
+records, package metadata, and documentation. A fresh product-blind reviewer
+validated those artifacts before any product comparison. The first review
+classified five must-fix defects: an answer-bearing causal label, insufficient
+facts to derive the WP3/WP4 counts independently, incomplete package closure,
+incomplete WP2-WP5 registration, and overbroad authority ownership. Four
+correction/re-review iterations removed the leaked answer, made every expected
+count independently derivable, closed the exact file/package inventory, and
+separated four-case exercise from inherited package indexing. The final
+v1.0.5 review verdict is **ACCEPT**, with all five findings closed and no
+answer-isolation or authority breach.
+
+The independent reviewer confirmed that the ordinary inputs, expected results,
+schema, harness semantics, provenance, replay, and redistribution facts are
+byte-identical to the accepted v1.0.4 semantics after package-version
+normalization. Only three accumulated WP3 manifest registrations changed in
+v1.0.5. `product_output_used`, `product_output_access`, and
+`product_output_comparison` remained false throughout authoring and review.
+
+| Frozen WP6 evidence | Bytes | SHA-256 |
+|---|---:|---|
+| `ordinary-product-inputs.v1.json` | 7900 | `26a27c326b606ce10745a28d1c24f384b4446bff9bdf10242be21dca6a2532f5` |
+| `ordinary-product-input.schema.json` | 7942 | `67e1806a0a7767574be78cc862e5b8bb08e8774d6310b8b3b35bee92c18f3514` |
+| `harness-envelope.v1.json` | 10199 | `e7da161525dfab6d76b54b73ddc1f4152c90e2766bcd74ff88b003da093261fa` |
+| `expected-results.v1.json` | 4796 | `069e24721eea57253c32d805dd6709f7dbd39a06287ec8f1d4e7f197c69336e5` |
+| `provenance.v1.json` | 882 | `4945dbf011af9cd0a8b56245ceaa1a4940a76f878e614b666ed26dad5bc4687f` |
+| `replay-dependencies.v1.json` | 1941 | `7cfbcf09285ccbf5533e3671e04715f8ecd104f077be3416856c08af74400b63` |
+| `redistribution.v1.json` | 609 | `0e32859594893f14deedb9113d38bfcc0766f00ec0bcec362a859d97cbd3afee` |
+| `partition-history.v1.json` | 1854 | `8d8b235828b98c39f6ec9e06a49da338a100a3141bd470d23111b75494bbf88b` |
+| `README.md` | 3184 | `651f4022457ec27a99cd73c41f417cbcd2c57e9e40006f0a68fb2f134f77789b` |
+| `fixture-manifest.v1.json` | 11533 | `8c6cc9657a9821ad236f0251363c43d668ccbf2940c8663df18894bf9a2ac4bc` |
+| ten-file content aggregate | — | `d4000b171d54c522ae0bb9ae1ddc874d82068061e17482d87ee2e24f8f0b1f99` |
+| external `independent-review.md` | 7791 | `7b405175ee7afa923bce3112d63f089c5b9af161091e7dff8d866f7e63c27691` |
+
+### Product execution and semantic comparison
+
+The new integration harness first validates the ordinary inputs against the
+closed schema and scans them for forbidden expected-output vocabulary. It then
+maps only neutral facts through the production `DocumentationEvidencePhase`,
+`CandidateAnalysisPhase`, `FindingCaseAnalysisPhase`, coordinator execution,
+atomic publication, typed query, human output, and JSON output. Only after all
+product views are retained does it load the independently frozen expected
+results.
+
+The comparison passed these exact cross-stage facts:
+
+- WP2: one revision/import, three passages and claims, two applications, one
+  purpose, three visible contradiction gaps, and zero failures;
+- WP3: one admitted, one resolved-negative, and one ambiguous member, two
+  candidates/hypotheses, one abstention, and zero unsupported members;
+- WP4: one finding, two recommendations, one supported path, one separate
+  lead-only path with zero readiness effect, and coverage `3/2` as
+  `completed-with-gaps` with one visible gap; and
+- WP5: one atomic publication, `completed-with-gaps` terminal lifecycle,
+  semantically equal human and JSON views, exact clean/unchanged-incremental/
+  changed-source/retained-replay behavior, and zero external effects.
+
+The focused comprehensive gate passed four integration tests and fourteen
+accumulated evaluation tests with no skips. These tests cover the frozen WP6
+comparison, the corrected managed WP2-WP5 path, clean/incremental/replay
+equivalence, CLI readback, and the accepted WP2-WP5 semantic packages.
+
+### Repaired WP3 fixture closure
+
+The first aggregate run exposed pre-existing metadata-only seal drift in all
+three accepted WP3 packages: their retained projection/receipt byte lengths and
+hashes did not match the unchanged on-disk artifacts, so their dependent
+replay, oracle, and public-manifest seals were not closed. Product output was
+not consulted. The package metadata was corrected from the existing frozen
+bytes, every dependent seal was recomputed, and the WP3 candidate evaluation
+tests passed three of three. No candidate, hypothesis, abstention, expected
+semantic count, or expected projection fact changed.
+
+The current WP3 public-manifest identities, which supersede the stale hashes
+recorded earlier in this historical record, are:
+
+| Package | Bytes | SHA-256 |
+|---|---:|---|
+| `CAND-WP3-SCALE-VAL-v1` | 1442 | `f0db950e7e5110bf4b4c60005a1dca84195abe2217429c4c6b343de865ac5ae2` |
+| `CAND-WP3-SEMANTIC-DEV-v1` | 1465 | `635a3e6f75251867d14f328ac5e450cfe6784005753c7717be51d431fcc173e1` |
+| `CAND-WP3-STRESS-DEV-v1` | 1494 | `54dd5df9aac989e7443eaffc8e80cbec8db58b75df2d675f32ebd0ca28b4ae5a` |
+
+The repository evaluation-authority inventory, product/evaluator boundary,
+contract-test pins, Slice 5 gate pins, and WP6 registrations now use those exact
+current identities.
+
+### Traceability audit
+
+The generated `traceability.json` separates direct four-case exercise from
+inherited package indexing. The corpus directly exercises 33 requirement IDs,
+7 ADR IDs, and 13 evaluation entries at their stated assertions and exclusions.
+It separately indexes 26 inherited requirements, 8 inherited ADRs, and 15
+inherited evaluation entries from accepted WP1-WP5 evidence. In particular,
+`ANALYSIS-019`, `OPS-004`, `ADR-0017`, and `ADR-0023` are inherited-only for
+Bethesda analysis, scale/structural limits, the desktop/Windows stack, and the
+cost-ledger/budget respectively; the four cases claim none of those surfaces.
+`EVAL-0087` is direct only for retained replay dependency identity/history and
+separately indexes WP5 atomic publication/recovery at its accepted bounded
+scope.
+
+### Gate and verification evidence
+
+`pwsh -NoProfile -ExecutionPolicy Bypass -File eng/verify-m1-slice5.ps1
+-Gate All -OutputRoot artifacts/m1-slice5/wp6` passed the exact aggregate of
+`Contracts`, `Documentation`, `Candidates`, `CandidateScale`, `Cases`,
+`Replay`, `Output`, `Safety`, and `Comprehensive`. The final retained reports
+are:
+
+| Gate report | SHA-256 |
+|---|---|
+| `contracts.json` | `a4a1be6c573a93c43801b16722b54286e36292320baae06e285582f33a8f139c` |
+| `documentation.json` | `ecdbd8ca2bed17c08da464ed91208b12d6ab5b636e2ab59bffa0568ee5630c9a` |
+| `candidates.json` | `0afb5bab4305c5529f985fd51fa7705d5d4f29bcad5de34d0dd7c7de5169c6c8` |
+| `candidatescale.json` | `a4f0f25bb3b2b68f796452416dae6fffc6b042f714bfb43bd75b18d3bd69fe1b` |
+| `cases.json` | `f4a0700ee5351157b747d00ba217bae9ce29595354c7a1f54bcbc9431da6c19e` |
+| `replay.json` | `44a311267df3f957718f65b144520fe7db38132b0aeee66f722b2f2a759c2df8` |
+| `output.json` | `d5855c5006d22a7ff56a4ab7d9fd08415c2d897fd83bfe036889980783b4e79a` |
+| `safety.json` | `a7e36a7294b3d052a66a2752d361bf6eed675d040e4e9f407e28ea7c76f652a8` |
+| `traceability.json` | `4f31b3d0f176fb33f403f3016f1ddcafdddb3489615e0d4c769ac6686d423ed5` |
+| `comprehensive.json` | `15345a7b96084be9d153d55ede57f2708b1cf1c019ab98c5539ea4e27a07af06` |
+| `all.json` | `aaa195832c816c8b942d49e46825dcc5a8ddc9bbfd7e9613497f1413e0e14e28` |
+
+Locked restore and the Release build passed with zero warnings and zero errors.
+The category floors passed:
+
+- `M1Unit`: 138 passed and one environment-dependent symbolic-link skip;
+- `M1Contract`: 45 passed with no skips;
+- `M1Integration`: 55 passed with no skips;
+- `M1Evaluation`: 52 passed and eight private/local-environment admission skips;
+- `M1Security`: 9 passed with no skips; and
+- `M1Fault`: 13 passed with no skips.
+
+The unfiltered Release suite passed 156 unit, 139 contract, 66 integration, and
+53 evaluation tests: 414 passed and 9 skipped overall. The supported
+`dotnet format Infinium.sln --verify-no-changes --no-restore` check and the
+PowerShell 7 dependency-manifest check passed. Strict changed-JSON parsing,
+changed-Markdown local-link validation, `git diff --check`, and a final semantic
+diff audit are required again after the final review record is settled.
+
+Protocol `/4` was not run because the continuation verification profile does
+not require the optional frozen historical regression for this change. No
+private/evaluator-fixture repository, legacy archive, protocol `/5`, provider,
+credential, network acquisition, live game, billable call, external adapter,
+MO2/game write, later-slice implementation, or `human-guide/` surface was used.
+
+### Explicit gaps and claim boundary
+
+This package proves only public generic synthetic local/fixture Slice 5
+cross-stage conformance and accumulated repository-gate health. It does not
+prove controlled-real behavior, native filesystem breadth beyond WP5's retained
+bounded evidence, Bethesda breadth, scale/stress beyond the registered WP3
+packages, security/readiness/reliability, complete lifecycle/corruption/IPC
+matrices, full EVAL coverage, whole-M1 acceptance, or private held-out quality.
+It does not predict opaque private identities and it creates no private product
+verdict.
+
+### Owner acceptance packet and status proposals
+
+The project owner is asked to review and, if satisfied, make these explicit
+decisions:
+
+1. accept the WP6 implementation, independent corpus review, comprehensive
+   product comparison, accumulated gates, traceability audit, and retained
+   verification evidence;
+2. accept the metadata-only WP3 seal correction and its superseding public
+   manifest identities;
+3. accept the proposal to change the Slice 5 contracts from
+   `Implementation-active` to `Slice-frozen` and mark M1/S5 accepted/complete;
+4. authorize M1/S6 planning under the milestone dependency graph, without
+   authorizing M1/S6 implementation; and
+5. retain all explicit claim boundaries and gaps above without interpreting
+   this public synthetic evidence as a readiness, safety, private, or whole-M1
+   verdict.
+
+Until the owner makes those decisions, the authoritative status remains:
+WP1-WP5 complete; WP6 implementation/review complete but awaiting owner
+acceptance; Slice 5 active and not complete; contracts
+`Implementation-active`; no successor-slice implementation eligible.
+
+### Fresh final whole-slice review
+
+Pending against the exact local candidate commit. Its final input commit,
+reviewed file set, classified findings, corrections, re-review result, and
+judgment will be appended here before final handoff.

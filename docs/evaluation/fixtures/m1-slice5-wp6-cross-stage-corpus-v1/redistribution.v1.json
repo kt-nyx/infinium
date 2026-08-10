@@ -1,0 +1,13 @@
+{
+  "schema_identity":"infinium.public-fixture.wp6.redistribution/1.0.5",
+  "package_identity":"infinium.m1s5.wp6.cross-stage.clean-incremental-replay.generic-a",
+  "package_version":"1.0.5",
+  "content_origin":"project-authored-generic-synthetic",
+  "redistribution_class":"repository-public-redistributable",
+  "third_party_payloads":false,
+  "real_mod_or_game_material":false,
+  "personal_or_machine_data":false,
+  "secrets_or_credentials":false,
+  "private_fixture_material":false,
+  "restrictions":["Expected results remain evaluation-harness input only and are never forwarded to product execution."]
+}

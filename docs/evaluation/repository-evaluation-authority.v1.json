@@ -32,7 +32,8 @@
         "docs/evaluation/fixtures/m1-slice5-wp3-candidates-v1/CAND-WP3-SCALE-VAL-v1/",
         "docs/evaluation/fixtures/m1-slice5-wp3-candidates-v1/CAND-WP3-STRESS-DEV-v1/",
         "docs/evaluation/fixtures/m1-slice5-wp4-cases-v1/",
-        "docs/evaluation/fixtures/m1-slice5-wp5-operational-cases-v1/"
+        "docs/evaluation/fixtures/m1-slice5-wp5-operational-cases-v1/",
+        "docs/evaluation/fixtures/m1-slice5-wp6-cross-stage-corpus-v1/"
       ],
       "validator": "Infinium.Application.Evaluation.ActiveJsonSchemaValidator",
       "claim": "independently authored public fixture contract evidence; never product-derived oracle authority"
