@@ -53,6 +53,40 @@ public sealed class RunOutputJsonCodecTests
             () => RunOutputJsonCodec.Deserialize(Encoding.UTF8.GetBytes(duplicateSchemaId)));
     }
 
+    [TestMethod]
+    [TestCategory("M1Contract")]
+    [TestCategory("M1Fault")]
+    [TestProperty("Category", "M1Contract")]
+    [TestProperty("Category", "M1Fault")]
+    public void StableRunOutputRejectsContradictoryCompleteReplayProjection()
+    {
+        RunOutputContract valid = CreateValidOutput();
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
+            RunOutputContractInvariants.Validate(valid with
+            {
+                Replayability = valid.Replayability with { ExactClass = "audit-only" },
+            }));
+
+        TypedArtifactDocumentContract replayGap = valid.Observations[0] with
+        {
+            ArtifactId = "coverage-gap-1",
+            ArtifactType = "coverage-gap",
+        };
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
+            RunOutputContractInvariants.Validate(valid with
+            {
+                Replayability = valid.Replayability with { Gaps = [replayGap] },
+            }));
+
+        string json = Encoding.UTF8.GetString(RunOutputJsonCodec.Serialize(valid));
+        string contradictory = json.Replace(
+            "\"exact_class\": \"complete-clean\"",
+            "\"exact_class\": \"audit-only\"",
+            StringComparison.Ordinal);
+        Assert.ThrowsExactly<InvalidDataException>(() =>
+            RunOutputJsonCodec.Deserialize(Encoding.UTF8.GetBytes(contradictory)));
+    }
+
     internal static RunOutputContract CreateValidOutput()
     {
         string fingerprint = new('a', 64);
@@ -165,7 +199,7 @@ public sealed class RunOutputJsonCodecTests
             new ReadinessDocumentContract("no-readiness-evaluation", "none", true),
             new ReplayabilityDocumentContract(
                 "complete",
-                "audit-only",
+                "complete-clean",
                 Reference("dependency-manifest-1"),
                 []),
             new AuditabilityDocumentContract("complete", []),

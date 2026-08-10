@@ -107,14 +107,19 @@ traceability, left source-authority seals unresolved, and failed the whitespace
 diff check. The first correction candidate then received `CORRECT` because its
 D04 test masked `partial` product replay against a frozen `complete-clean`
 oracle, and because ID-only documentation-node deduplication could hide drifted
-retained metadata. The current candidate separates semantic coverage gaps from
-retained replay/audit loss, normalizes run-binding identities out of the
-semantic output fingerprint, requires exact documentation alias
-version/hash/state, compares D04 directly to `CompleteClean`, and makes
-Comprehensive validate that receipt. It also executes all four managed cases,
-validates immutable source-authority Git blobs, reports 35 direct requirements,
-and passes the corrected Comprehensive gate. A fresh whole-slice review of the
-exact committed candidate is still required.
+retained metadata. The third exact candidate received `CORRECT` because the
+replay projection still exposed a partial semantic gap while claiming complete
+replay, its alias test stopped before the intended guard and the reachable
+guard used a generic failure type, and prefix-wide delivered-input
+normalization could hide an ordinary dependency substitution. The current
+candidate separates semantic coverage gaps from retained replay/audit loss
+across domain, schema, producer, consumer, and receipt seams; requires exact
+documentation alias version/hash/state with typed identity-drift failure; and
+normalizes only the single delivered-root dependency common to every decision.
+It also executes all four managed cases, validates immutable source-authority
+Git blobs, reports 35 direct requirements, and passes the corrected
+Comprehensive gate. A fresh whole-slice review of the exact committed candidate
+is still required.
 
 WP6 is not owner-accepted, the Slice 5 contracts are not frozen, and Slice 5 is
 not complete. The only eligible handoff after a final `ACCEPT` review is owner

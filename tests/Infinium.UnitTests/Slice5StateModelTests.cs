@@ -127,6 +127,10 @@ public sealed class Slice5StateModelTests
         Assert.ThrowsExactly<InvalidOperationException>(() => Slice5ContractInvariants.Validate(invalid));
 
         Slice5ContractInvariants.Validate(invalid with { MissingDependencyIds = [] });
+        Assert.AreEqual(
+            GapReplayEffect.None,
+            FindingCaseContractInvariants.ExpectedCoverageGapShape(
+                [CoverageMemberState.CompletedWithGaps]).Replay);
     }
 
     [TestMethod]

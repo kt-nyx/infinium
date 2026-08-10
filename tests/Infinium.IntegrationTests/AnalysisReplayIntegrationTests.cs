@@ -709,18 +709,50 @@ public sealed class AnalysisReplayIntegrationTests
         Assert.ThrowsExactly<AnalysisIdentityDriftException>(() => context.Publish(assignment: drifted));
         Assert.IsNull(context.Store.GetAnalysisSemanticFingerprint(context.RunId));
 
-        ArtifactReferenceContract driftedDocumentationAlias = new(
-            new OpaqueId(context.Assignment.DocumentationEvidence.PayloadId),
-            ContractVersion.Parse(context.Assignment.DocumentationEvidence.SchemaVersion),
-            new Sha256Fingerprint(new string('0', 64)), "retained");
-        AnalysisV1WorkAssignment aliasDrift = context.Assignment with
+        DocumentationEvidenceContract documentation = DocumentationEvidenceJsonCodec.Deserialize(
+            context.Store.ReadCandidateAnalysisPayload(context.Assignment.DocumentationEvidence.PayloadId));
+        CandidateAnalysisContract candidates = CandidateAnalysisJsonCodec.Deserialize(
+            context.Store.ReadCandidateAnalysisPayload(context.Assignment.CandidateAnalysis.PayloadId));
+        FindingCaseContract findings = FindingCaseJsonCodec.Deserialize(
+            context.Store.ReadCandidateAnalysisPayload(context.Assignment.FindingCase.PayloadId));
+
+        AnalysisV1WorkAssignment WithDocumentationAlias(
+            ContractVersion version,
+            Sha256Fingerprint fingerprint,
+            string availability)
         {
-            ExecutionInput = context.Assignment.ExecutionInput with
+            ArtifactReferenceContract alias = new(
+                documentation.PayloadId,
+                version,
+                fingerprint,
+                availability);
+            return context.Assignment with
             {
-                SourceInputs = [.. context.Assignment.ExecutionInput.SourceInputs, driftedDocumentationAlias],
-            },
-        };
-        Assert.ThrowsExactly<AnalysisIdentityDriftException>(() => context.Publish(assignment: aliasDrift));
+                ExecutionInput = context.Assignment.ExecutionInput with
+                {
+                    SourceInputs = [.. context.Assignment.ExecutionInput.SourceInputs, alias],
+                },
+            };
+        }
+
+        ContractVersion documentationVersion =
+            documentation.SchemaVersion;
+        Sha256Fingerprint documentationFingerprint =
+            new(context.Assignment.DocumentationEvidence.Sha256);
+        void AssertAliasRejected(AnalysisV1WorkAssignment aliasDrift, string driftKind) =>
+            Assert.ThrowsExactly<AnalysisIdentityDriftException>(() =>
+                AnalysisPublicationBuilder.BuildDependenciesForVerification(
+                    aliasDrift, documentation, candidates, findings), driftKind);
+
+        AssertAliasRejected(
+            WithDocumentationAlias(documentationVersion, new Sha256Fingerprint(new string('0', 64)), "retained"),
+            "documentation fingerprint drift must reach and fail the alias guard");
+        AssertAliasRejected(
+            WithDocumentationAlias(ContractVersion.Parse("2.0.0"), documentationFingerprint, "retained"),
+            "documentation version drift must reach and fail the alias guard");
+        AssertAliasRejected(
+            WithDocumentationAlias(documentationVersion, documentationFingerprint, "unavailable"),
+            "documentation retention drift must reach and fail the alias guard");
         Assert.IsNull(context.Store.GetAnalysisSemanticFingerprint(context.RunId));
 
         _ = context.Publish();
@@ -959,6 +991,31 @@ public sealed class AnalysisReplayIntegrationTests
             AnalysisPublicationBuilder.SemanticFingerprintForVerification(importBaseline, candidates, findings),
             AnalysisPublicationBuilder.SemanticFingerprintForVerification(
                 importBaseline with { Claims = importSwappedClaims }, candidates, findings));
+
+        CandidateDecisionContract decision = candidates.Decisions.First(item =>
+            item.DependencyIds.Any(id => !id.Value.StartsWith("candidate-delivered-input-", StringComparison.Ordinal)));
+        OpaqueId ordinaryDependency = decision.DependencyIds.First(id =>
+            !id.Value.StartsWith("candidate-delivered-input-", StringComparison.Ordinal));
+        OpaqueId substitutedDependency = new("candidate-delivered-input-forged-ordinary-dependency");
+        CandidateDecisionContract substitutedDecision = decision with
+        {
+            DependencyIds = decision.DependencyIds.Select(id =>
+                id == ordinaryDependency ? substitutedDependency : id).ToArray(),
+        };
+        CandidateAnalysisContract substitutedCandidates = candidates with
+        {
+            Decisions = candidates.Decisions.Select(item => item == decision ? substitutedDecision : item).ToArray(),
+            DependencyEdges = candidates.DependencyEdges.Select(item =>
+                item.FromId == decision.DependencyClosureId
+                    && item.ToKind == "dependency"
+                    && item.ToId == ordinaryDependency
+                    ? item with { ToId = substitutedDependency }
+                    : item).ToArray(),
+        };
+        Assert.AreNotEqual(
+            AnalysisPublicationBuilder.SemanticFingerprintForVerification(importBaseline, candidates, findings),
+            AnalysisPublicationBuilder.SemanticFingerprintForVerification(
+                importBaseline, substitutedCandidates, findings));
     }
 
     [TestMethod]

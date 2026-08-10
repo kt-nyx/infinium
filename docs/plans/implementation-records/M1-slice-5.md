@@ -1467,10 +1467,11 @@ Implementation date: 2026-08-10
 
 Starting commit: `e7de0305515657223c513195f8323b2649b6c7c8`
 
-Status: Implementation and independent corpus review complete. Two exact
-candidates (`50195fdd33f030f75364f703f636b6ecc1fdb7bd` and
-`8bd73c26cde1d569d44b5f70191528df0390e443`) received fresh whole-slice
-`CORRECT` verdicts. Both classified correction sets are closed in the current
+Status: Implementation and independent corpus review complete. Three exact
+candidates (`50195fdd33f030f75364f703f636b6ecc1fdb7bd`,
+`8bd73c26cde1d569d44b5f70191528df0390e443`, and
+`93054129fc877193726ca934e72c6483329e4b34`) received fresh whole-slice
+`CORRECT` verdicts. All classified correction sets are closed in the current
 candidate tree; fresh exact-commit review is pending. Owner acceptance is
 requested only after an `ACCEPT` review. Slice 5 remains active and is not
 marked accepted or complete.
@@ -1623,25 +1624,25 @@ scope.
 ### Gate and verification evidence
 
 `pwsh -NoProfile -ExecutionPolicy Bypass -File eng/verify-m1-slice5.ps1
--Gate All -OutputRoot artifacts/m1-slice5/wp6-final-correction` passed the exact aggregate of
+-Gate All -OutputRoot artifacts/m1-slice5/wp6-final-correction-v2` passed the exact aggregate of
 `Contracts`, `Documentation`, `Candidates`, `CandidateScale`, `Cases`,
 `Replay`, `Output`, `Safety`, and `Comprehensive`. The final retained reports
 are:
 
 | Gate report | SHA-256 |
 |---|---|
-| `contracts.json` | `3781aa0679ec8697cbad13ebf312b6ab07d3652c7cd0ca45e080c85fdfc511a5` |
-| `documentation.json` | `b0472f3b62936329e0d07c0cbcfeed8994000493aa831318bcf3dc161b8fe6f9` |
-| `candidates.json` | `bc31cbd7380b7e0bf7a046e0f5c6b27ab704f465d5c79efdec71a7d313d324b7` |
-| `candidatescale.json` | `1031474434f19157b79883d1894bf8dbee94a64b71d7582bba6710be5527acf5` |
-| `cases.json` | `69c7090310f7447f9e365b6c4e2b4008eb545dace5dbc21c6ec9a93dda9fb251` |
-| `replay.json` | `23ba40f206a4e0979c1c660024537b538c7fc199cdbc9c5abb1c7a97ab592932` |
-| `output.json` | `01deb4991266d84a6f2ba626682b96e3f52d011d6a1417a00a01f8b50e8c3fd9` |
-| `safety.json` | `88c21791f4e68db6f8ed27398db7c2e0515280e53369db4aaabdeaac07c5d48e` |
-| `traceability.json` | `55e47795aecc0388df0ad5c992c41c88c42a1eb8db6c966b3f2c912fa7a295e5` |
-| `comprehensive.json` | `0a694da4d270ed2b3169555693091270ddfb4b7f029d1db6fd9b4dc214b6c1bc` |
+| `contracts.json` | `24f94e4b85b4a0fe6df0317ec39f02dc51c404cb01fca9f2f7d7e4fa3b19fbcf` |
+| `documentation.json` | `53e9665b9766acd7c4efa4e87a9bdc9a98cc6102ee1b5b1bf8e0f07816393d7a` |
+| `candidates.json` | `6dc79b90f2867b78fd8d3294e217b007c94863dc4273e11cddd5a58ac815f4fa` |
+| `candidatescale.json` | `b2c466d55bf76ed57772ff1b22d514b984e4681c036f2542e5e00dbf01cc0c77` |
+| `cases.json` | `caa3896c816631e1e3a239319ef7ea3394aa3a5065e25e275859c5f8e3018971` |
+| `replay.json` | `7490bf87c421d4bc0a02bee9e5cd172b3d91ad4382af671df1d26c9a5fa46ddc` |
+| `output.json` | `8e6392a7bec4ca6e11e6b6f4df78562b469c730f172808eed6bff3371aef90a0` |
+| `safety.json` | `112b43c719e2fd9b14cabd410a94c0d90e893b9b461532eddaf12058c9ea1276` |
+| `traceability.json` | `fb9706b7053fd9a6ea0b4b4de84f19433d979bbc847f070573fc30d13bda2252` |
+| `comprehensive.json` | `a830d90c19231803a558949fe738f341c83d1c59ee75035c66b584058480e636` |
 | `product-comparison-receipt.json` | `95cf41ab827ff373d13f3ca392c90bac5bc7a2d44a1b8da66106442b4906bce7` |
-| `all.json` | `cc8876a2f08fbd26dc039080ff19b3e2ff4f1ca5ed8ef5b7e8d5201215e16f07` |
+| `all.json` | `45ca059c5a1302ce92d1d0e88ce5e8355d67be37c34ec167990afda1f93804f0` |
 
 Locked restore and the Release build passed with zero warnings and zero errors.
 The category floors passed:
@@ -1653,8 +1654,8 @@ The category floors passed:
 - `M1Security`: 109 passed and three environment/private-admission skips; and
 - `M1Fault`: 104 passed and three private/local-environment admission skips.
 
-The unfiltered Release suite passed 156 unit, 139 contract, 68 integration, and
-53 evaluation tests: 416 passed and 9 skipped overall. The supported
+The unfiltered Release suite passed 156 unit, 140 contract, 68 integration, and
+53 evaluation tests: 417 passed and 9 skipped overall. The supported
 `dotnet format Infinium.sln --verify-no-changes --no-restore` check and the
 PowerShell 7 dependency-manifest check passed. Strict changed-JSON parsing,
 changed-Markdown local-link validation, `git diff --check`, and a final semantic
@@ -1754,3 +1755,31 @@ The Comprehensive receipt gate independently requires the ordered four cases
 and those D04 replay facts. Corrected Comprehensive passed 6 integration and
 14 evaluation tests with no skips. A fresh exact-commit reviewer must now
 confirm both second-cycle closures before owner handoff.
+
+The third exact candidate commit was
+`93054129fc877193726ca934e72c6483329e4b34`. Its fresh final review returned
+**CORRECT**. The report is
+`artifacts/m1-slice5/wp6-final-review-v3/final-review.md`, 16157 bytes,
+SHA-256 `dd30b3999f95f6287aceeedb2e41972a9ffc0017ba78e02399e556e952a30357`.
+It confirmed the earlier coordinator/query, traceability, source-authority,
+diff-hygiene, and exact alias-guard implementation corrections, but classified
+three remaining must-fixes: complete replay was not projected coherently from
+the separately visible semantic coverage gap; the alias regression did not
+reach the intended guard and its reachable exception was not typed as identity
+drift; and prefix-wide delivered-input normalization could mask an ordinary
+dependency substitution. It found no owner/authority or safety/isolation
+breach.
+
+The current correction closes all three findings. Completed-with-gaps semantic
+coverage now has no replay effect unless a retained dependency is actually
+missing; run-output replay/audit projections expose only dependency gaps and
+domain plus JSON Schema invariants reject a complete state with a non-clean
+class or any replay/audit gap. D04 verifies those coherent product documents.
+Focused invalid-state evidence reaches the production dependency builder with
+independent documentation version, hash, and retention mutations, and each
+fails with `AnalysisIdentityDriftException`. Semantic normalization now selects
+only the one delivered-root ID common to every decision; a forged ordinary
+dependency with the same prefix changes both decision and graph projections.
+The corrected aggregate gate and unfiltered 417-pass Release floor are green.
+A fresh exact-commit reviewer must confirm these third-cycle closures before
+owner handoff.

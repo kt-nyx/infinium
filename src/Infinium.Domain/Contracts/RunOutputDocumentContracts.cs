@@ -285,5 +285,14 @@ public static class RunOutputContractInvariants
             throw new InvalidOperationException(
                 "Stable run-output coverage must use bounded counts and the run taxonomy.");
         }
+        if ((StringComparer.Ordinal.Equals(output.Replayability.ProductState, "complete")
+                && (!StringComparer.Ordinal.Equals(output.Replayability.ExactClass, "complete-clean")
+                    || output.Replayability.Gaps.Count != 0))
+            || (StringComparer.Ordinal.Equals(output.Auditability.State, "complete")
+                && output.Auditability.Gaps.Count != 0))
+        {
+            throw new InvalidOperationException(
+                "Complete run-output replay and audit states cannot expose replay dependency gaps.");
+        }
     }
 }

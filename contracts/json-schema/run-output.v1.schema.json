@@ -54,6 +54,71 @@
     "cli_summary_fingerprint",
     "diagnostic_trace_references"
   ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "replayability": {
+            "properties": {
+              "product_state": {
+                "const": "complete"
+              }
+            },
+            "required": [
+              "product_state"
+            ]
+          }
+        },
+        "required": [
+          "replayability"
+        ]
+      },
+      "then": {
+        "properties": {
+          "replayability": {
+            "properties": {
+              "exact_class": {
+                "const": "complete-clean"
+              },
+              "gaps": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "auditability": {
+            "properties": {
+              "state": {
+                "const": "complete"
+              }
+            },
+            "required": [
+              "state"
+            ]
+          }
+        },
+        "required": [
+          "auditability"
+        ]
+      },
+      "then": {
+        "properties": {
+          "auditability": {
+            "properties": {
+              "gaps": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
   "properties": {
     "schema_id": {
       "const": "infinium.run-output/v1"

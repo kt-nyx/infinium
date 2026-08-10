@@ -157,7 +157,7 @@ public static class FindingCaseContractInvariants
             CoverageMemberState.Failed => (FindingGapState.Failed, GapReplayEffect.Partial, GapConclusionEffect.Unavailable),
             CoverageMemberState.Unsupported => (FindingGapState.Unsupported, GapReplayEffect.Unavailable, GapConclusionEffect.Abstain),
             CoverageMemberState.SkippedByLimit => (FindingGapState.Limited, GapReplayEffect.Partial, GapConclusionEffect.Bounded),
-            _ => (FindingGapState.MissingInformation, GapReplayEffect.Partial, GapConclusionEffect.Bounded),
+            _ => (FindingGapState.MissingInformation, GapReplayEffect.None, GapConclusionEffect.Bounded),
         };
     }
 

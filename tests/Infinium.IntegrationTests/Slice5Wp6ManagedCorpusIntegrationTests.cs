@@ -637,6 +637,11 @@ public sealed class Slice5Wp6ManagedCorpusIntegrationTests
                 Assert.AreEqual(ReplayState.CompleteClean, actual.Replay.ReplayState);
                 Assert.AreEqual("complete-clean", expected.GetProperty("replayability").GetString());
                 Assert.AreEqual(AuditabilityState.Complete, actual.Replay.AuditabilityState);
+                Assert.AreEqual("complete", actual.Output.Replayability.ProductState);
+                Assert.AreEqual("complete-clean", actual.Output.Replayability.ExactClass);
+                Assert.HasCount(0, actual.Output.Replayability.Gaps);
+                Assert.AreEqual("complete", actual.Output.Auditability.State);
+                Assert.HasCount(0, actual.Output.Auditability.Gaps);
                 Assert.AreEqual(clean.RunId, actual.Replay.ComparedRunId?.Value);
                 Assert.AreEqual(expected.GetProperty("retained_dependencies_verified").GetBoolean(),
                     actual.Replay.MissingDependencyIds.Count == 0);

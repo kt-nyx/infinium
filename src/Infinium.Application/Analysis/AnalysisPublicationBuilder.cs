@@ -447,6 +447,10 @@ public static class AnalysisPublicationBuilder
                 Typed(MissingDependencyGapId(item.Value), "coverage-gap", "unavailable", candidatePayload,
                     DocumentProvenance("m1-s5-wp5-replay-dependency-audit", [item.Value]))))
             .GroupBy(item => item.ArtifactId, StringComparer.Ordinal).Select(item => item.First()).ToList();
+        List<TypedArtifactDocumentContract> replayDependencyGaps = replay.MissingDependencyIds.Select(item =>
+                Typed(MissingDependencyGapId(item.Value), "coverage-gap", "unavailable", candidatePayload,
+                    DocumentProvenance("m1-s5-wp5-replay-dependency-audit", [item.Value])))
+            .ToList();
         List<TypedArtifactDocumentContract> failures = documentation.Failures.Select(item =>
             Typed(item.FailureId.Value, "failure", "failed", documentPayload, DocumentProvenance("m1-s5-wp2-documentation-evidence")))
             .Concat(candidates.Failures.Select(item =>
@@ -537,11 +541,11 @@ public static class AnalysisPublicationBuilder
             new ReadinessDocumentContract("no-readiness-evaluation", "m1-slice5-wp5", true),
             new ReplayabilityDocumentContract(
                 replay.ReplayState == ReplayState.CompleteClean ? "complete" : "partial",
-                assignment.ExecutionInput.Mode == ReplayMode.Clean ? "complete-clean" : "boundary-replay",
-                new ArtifactReferenceDocumentContract(dependencyClosureId, "1.0.0", semanticFingerprint, "retained"), gaps),
+                replay.ReplayState == ReplayState.CompleteClean ? "complete-clean" : "boundary-replay",
+                new ArtifactReferenceDocumentContract(dependencyClosureId, "1.0.0", semanticFingerprint, "retained"), replayDependencyGaps),
             new AuditabilityDocumentContract(
                 replay.AuditabilityState == AuditabilityState.Complete ? "complete" : "complete-with-gaps",
-                replay.AuditabilityState == AuditabilityState.Complete ? [] : gaps),
+                replay.AuditabilityState == AuditabilityState.Complete ? [] : replayDependencyGaps),
             new ArtifactReferenceDocumentContract(replay.ReplayManifestId.Value, replay.SchemaVersion.ToString(),
                 Hash(AnalysisReplayJsonCodec.Serialize(replay)), "retained"),
             [
@@ -628,7 +632,7 @@ public static class AnalysisPublicationBuilder
                     || value.Fingerprint.Value != documentationSha
                     || value.Availability != "retained")
                 {
-                    throw new InvalidDataException(
+                    throw new AnalysisIdentityDriftException(
                         $"Replay dependency identity '{value.ArtifactId.Value}' resolves to drifted retained metadata.");
                 }
                 continue;
@@ -658,12 +662,22 @@ public static class AnalysisPublicationBuilder
             ReplayDependencyNodeContract first = group.First();
             if (group.Any(item => item != first))
             {
-                throw new InvalidDataException(
+                throw new AnalysisIdentityDriftException(
                     $"Replay dependency identity '{group.Key.Value}' resolves to drifted retained metadata.");
             }
             return first;
         }).ToList();
     }
+
+    internal static IReadOnlyList<ReplayDependencyNodeContract> BuildDependenciesForVerification(
+        AnalysisV1WorkAssignment assignment,
+        DocumentationEvidenceContract documentation,
+        CandidateAnalysisContract candidates,
+        FindingCaseContract findingCases) =>
+        BuildDependencies(assignment, documentation, candidates, findingCases,
+            assignment.DocumentationEvidence.Sha256,
+            assignment.CandidateAnalysis.Sha256,
+            assignment.FindingCase.Sha256);
 
     private static IEnumerable<(string Kind, ArtifactReferenceContract Value)> References(AnalysisExecutionInputContract value)
     {
@@ -728,10 +742,23 @@ public static class AnalysisPublicationBuilder
             value.AffectedLocus,
             applicability = value.ApplicabilityPredicates.OrderBy(item => item, StringComparer.Ordinal),
         };
-        string SemanticDependency(OpaqueId id) => id.Value.StartsWith(
-            "candidate-delivered-input-", StringComparison.Ordinal)
-                ? "candidate-delivered-input"
-                : id.Value;
+        HashSet<OpaqueId> deliveredRootCandidates = candidates.Decisions.Count == 0
+            ? []
+            : candidates.Decisions
+                .Select(item => item.DependencyIds
+                    .Where(id => id.Value.StartsWith("candidate-delivered-input-", StringComparison.Ordinal))
+                    .ToHashSet())
+                .Aggregate((left, right) =>
+                {
+                    left.IntersectWith(right);
+                    return left;
+                });
+        OpaqueId? deliveredRootId = deliveredRootCandidates.Count == 1
+            ? deliveredRootCandidates.Single()
+            : null;
+        string SemanticDependency(OpaqueId id) => id == deliveredRootId
+            ? "candidate-delivered-input"
+            : id.Value;
         Dictionary<OpaqueId, string> revisionAnchors = documentation.Revisions.ToDictionary(
             item => item.RevisionId,
             item => Anchor(new
