@@ -49,12 +49,12 @@ records or source-authority identities. Current work applies this map:
 
 | Accepted development-era name | Current functional name/path |
 |---|---|
-| `test-data/evaluation/m1-platform/M1-PLAT-SLICE2-SUBSTRATE-v1/` | `test-data/public-fixtures/platform/analysis-runtime-substrate/` (`PLATFORM-ANALYSIS-RUNTIME-DEV-v1`) |
-| `test-data/evaluation/m1-semantic/BETH-*` | `test-data/public-fixtures/bethesda/BETH-*` |
-| `DOC-WP2-CORE-DEV`, `DOC-WP2-ADVERSARIAL-VAL` | `DOC-CLAIM-CORE-DEV`, `DOC-CLAIM-ADVERSARIAL-VAL` under `test-data/public-fixtures/documentation/` |
-| `docs/evaluation/fixtures/m1-slice5-wp3-candidates-v1/` | `test-data/public-fixtures/candidates/`, with the `WP3` component removed from package IDs |
-| Slice 5 WP4, WP5, and WP6 fixture roots | `test-data/public-fixtures/findings-cases/`, `operations/analysis-lifecycle/`, and `cross-stage/analysis-pipeline/` |
-| `tools/evaluation/Infinium.PublicFixtures`, Bethesda fixture tooling, and the resealer | `tools/fixtures/Infinium.PublicFixtures`, `tools/fixtures/bethesda`, and `tools/fixtures/reseal-public-fixtures.mjs` |
+| `test-data/evaluation/m1-platform/M1-PLAT-SLICE2-SUBSTRATE-v1/` | `fixtures/public/platform/analysis-runtime-substrate/` (`PLATFORM-ANALYSIS-RUNTIME-DEV-v1`) |
+| `test-data/evaluation/m1-semantic/BETH-*` | `fixtures/public/bethesda/BETH-*` |
+| `DOC-WP2-CORE-DEV`, `DOC-WP2-ADVERSARIAL-VAL` | `DOC-CLAIM-CORE-DEV`, `DOC-CLAIM-ADVERSARIAL-VAL` under `fixtures/public/documentation/` |
+| `docs/evaluation/fixtures/m1-slice5-wp3-candidates-v1/` | `fixtures/public/candidates/`, with the `WP3` component removed from package IDs |
+| Slice 5 WP4, WP5, and WP6 fixture roots | `fixtures/public/findings-cases/`, `operations/analysis-lifecycle/`, and `cross-stage/analysis-pipeline/` |
+| `tools/evaluation/Infinium.PublicFixtures`, Bethesda fixture tooling, and the resealer | `fixtures/tooling/Infinium.PublicFixtures`, `fixtures/tooling/bethesda`, and `fixtures/tooling/reseal-public-fixtures.mjs` |
 | Slice-numbered verification scripts | `eng/verify-analysis-pipeline.ps1` and `eng/verify-cross-stage-corpus.ps1` |
 | `WP2 -> WP3 -> WP4` phase labels | `documentation-evidence -> candidate-analysis -> finding-case-analysis`, followed by `analysis-publication` or `analysis-terminal-fallback` |
 

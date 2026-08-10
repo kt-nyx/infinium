@@ -113,10 +113,10 @@ public sealed class BethesdaSemanticExtractorTests
             string packagePath = Path.Combine(root, "02-Behavior.esp");
             string headPartPath = Path.Combine(root, "03-Appearance.esp");
             File.Copy(
-                TestRepository.PathFromRoot("test-data", "public-fixtures", "bethesda", "BETH-NPC-DEV", "inputs", "mutations", "Behavior-RepeatedPKIDOrder.esp"),
+                TestRepository.PathFromRoot("fixtures", "public", "bethesda", "BETH-NPC-DEV", "inputs", "mutations", "Behavior-RepeatedPKIDOrder.esp"),
                 packagePath);
             File.Copy(
-                TestRepository.PathFromRoot("test-data", "public-fixtures", "bethesda", "BETH-NPC-DEV", "inputs", "mutations", "Appearance-RepeatedPNAMOrder.esp"),
+                TestRepository.PathFromRoot("fixtures", "public", "bethesda", "BETH-NPC-DEV", "inputs", "mutations", "Appearance-RepeatedPNAMOrder.esp"),
                 headPartPath);
             BethesdaSemanticExtractionResult packages = new BethesdaSemanticExtractor().Extract(
                 BethesdaSemanticTestSnapshot.Create(

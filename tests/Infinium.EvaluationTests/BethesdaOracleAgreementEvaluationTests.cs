@@ -30,7 +30,7 @@ public sealed class BethesdaOracleAgreementEvaluationTests
         foreach (string fixture in CoreFixtures)
         {
             using JsonDocument oracle = TestRepository.ReadJson(
-                "test-data", "public-fixtures", "bethesda", fixture,
+                "fixtures", "public", "bethesda", fixture,
                 "oracle", "independent-reader-report.json");
             foreach (JsonElement scenario in oracle.RootElement.GetProperty("scenario_semantics").EnumerateArray())
             {
@@ -473,9 +473,9 @@ public sealed class BethesdaOracleAgreementEvaluationTests
     private static BethesdaSemanticRequest ScenarioRequest(string fixture, JsonElement scenario)
     {
         string fixtureRoot = TestRepository.PathFromRoot(
-            "test-data", "public-fixtures", "bethesda", fixture, "inputs");
+            "fixtures", "public", "bethesda", fixture, "inputs");
         using JsonDocument reader = TestRepository.ReadJson(
-            "test-data", "public-fixtures", "bethesda", fixture,
+            "fixtures", "public", "bethesda", fixture,
             "oracle", "independent-reader-report.json");
         Dictionary<string, string[]> mastersByPath = reader.RootElement.GetProperty("files")
             .EnumerateArray()

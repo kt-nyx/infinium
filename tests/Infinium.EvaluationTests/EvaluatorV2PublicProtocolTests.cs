@@ -314,7 +314,7 @@ public sealed class EvaluatorV2PublicProtocolTests
     [TestMethod]
     public void ReflectionAdapterExecutesTheDeclaredCandidateArtifact()
     {
-        string fixtureRoot = TestRepository.PathFromRoot("test-data", "public-fixtures", "bethesda", "BETH-NPC-DEV");
+        string fixtureRoot = TestRepository.PathFromRoot("fixtures", "public", "bethesda", "BETH-NPC-DEV");
         using JsonDocument receipt = JsonDocument.Parse(File.ReadAllBytes(
             Path.Combine(fixtureRoot, "inputs", "snapshot", "accepted-order.json")));
         PluginExecutionInput[] plugins = receipt.RootElement.GetProperty("plugin_order")
@@ -527,7 +527,7 @@ public sealed class EvaluatorV2PublicProtocolTests
 
     private static ExecutionManifest CreatePublicManifest(string fixtureId)
     {
-        string fixtureRoot = TestRepository.PathFromRoot("test-data", "public-fixtures", "bethesda", fixtureId);
+        string fixtureRoot = TestRepository.PathFromRoot("fixtures", "public", "bethesda", fixtureId);
         using JsonDocument receipt = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(fixtureRoot, "inputs", "snapshot", "accepted-order.json")));
         PluginExecutionInput[] plugins = receipt.RootElement.GetProperty("plugin_order").EnumerateArray()
             .OrderBy(item => item.GetProperty("load_order").GetInt32()).Select(item =>

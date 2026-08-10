@@ -26,7 +26,7 @@ and `loot`. `evaluator-private` and `held-out` remain only as accepted older
 public-fixture provenance vocabulary; they are not product capabilities.
 
 The current public candidate evidence consists of three separately closed
-packages under `test-data/public-fixtures/candidates/`:
+packages under `fixtures/public/candidates/`:
 
 - `CAND-SEMANTIC-DEV-v1/1.0.0` (`development`) contains the answer-free
   direct delivered-input artifact and independently frozen semantic projection;

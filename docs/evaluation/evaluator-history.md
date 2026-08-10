@@ -61,7 +61,7 @@ Historical plan-path families normalize as follows:
 |---|---|
 | `docs/plans/slices/M1-slice-4.5-*` | This history plus the [Slice 4.5 plan and record](../plans/milestones/m1/slices/s4.5/README.md) |
 | `docs/plans/implementation-records/M1-slice-*.md` | The owning slice directory under `docs/plans/milestones/m1/slices/` |
-| `docs/evaluation/fixtures/m1-slice5-*` | Functional public-fixture families under `test-data/public-fixtures/` |
+| `docs/evaluation/fixtures/m1-slice5-*` | Functional public-fixture families under `fixtures/public/` |
 | `docs/evaluation/fixtures/independent-slice3-evaluator-20260729/` and `protocol-4-oracle-authorability/` | Git-only historical evidence in the retired-asset inventory |
 
 Do not reconstruct a retired evaluator workflow from these mappings. They are

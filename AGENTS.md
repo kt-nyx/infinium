@@ -124,7 +124,7 @@ define the correction policy for ordinary product development.
   `contracts/protobuf/`, and `src/`; repository-governance schemas under
   `contracts/repository/` are contract-test metadata and never product inputs;
   current public-fixture readers live under
-  `tools/fixtures/Infinium.PublicFixtures/` and use the active product
+  `fixtures/tooling/Infinium.PublicFixtures/` and use the active product
   validator.
 - `tools/evaluation/Infinium.EvaluatorV2/` is frozen historical protocol `/4`
   evidence. It is outside the default solution graph and may run only through

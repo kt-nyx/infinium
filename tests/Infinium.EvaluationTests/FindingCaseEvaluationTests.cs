@@ -869,7 +869,7 @@ public sealed class FindingCaseEvaluationTests
     private static JsonDocument LoadTruth(out string sha256)
     {
         string path = Path.Combine(
-            FindRepositoryRoot(), "test-data", "public-fixtures", "findings-cases",
+            FindRepositoryRoot(), "fixtures", "public", "findings-cases",
             "finding-case-independent-truth.v1.0.3.json");
         byte[] bytes = File.ReadAllBytes(path);
         sha256 = Convert.ToHexStringLower(SHA256.HashData(bytes));

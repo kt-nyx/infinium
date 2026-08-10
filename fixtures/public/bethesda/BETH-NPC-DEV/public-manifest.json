@@ -1,0 +1,32 @@
+{
+  "schema_id": "infinium.evaluation.fixture-public-manifest/v1",
+  "schema_version": "1",
+  "fixture_id": "BETH-NPC-DEV",
+  "fixture_version": "1.4.0",
+  "evaluation_ids": [
+    "EVAL-0052",
+    "EVAL-0086"
+  ],
+  "purpose": "Qualify project-authored NPC, race, override, winner, FormKey, field, link, and bounded taxonomy evidence for later Slice 4 evaluation.",
+  "classification": "boundary",
+  "partition": "development",
+  "partition_history": [
+    {
+      "from": null,
+      "to": "development",
+      "at": "2026-08-01T22:00:00.0000000+00:00",
+      "reason": "Corrected successor to fixture version 1.0.0 after the Slice 4 Mutagen conformance probe exposed a fixture-structure error.",
+      "change_influenced_implementation": true
+    }
+  ],
+  "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
+  "taxonomy_version": "0.1.0",
+  "input_package_fingerprint": "7715c7bdcd37ca441b29b775e589dcc6d3e883577b6c6fd355f27823579ed6fb",
+  "oracle_fingerprint": "a717819fbb46639fd3e02ea61181eb4ce6f432e225028569bd63a3f3423f5e05",
+  "provenance_fingerprint": "586e9edb95ef643602872f471c253038cae20b6f727bc965033bb1034e4c4a03",
+  "replay_dependency_fingerprint": "54aa475d4e329b98b4ea154488e3d2eedf139d9dfdbdf5cabab184e81afdf393",
+  "redistribution_class": "project-authored-redistributable",
+  "owner": "infinium-evaluation",
+  "review_state": "accepted",
+  "created_at": "2026-08-02T20:00:00.0000000+00:00"
+}

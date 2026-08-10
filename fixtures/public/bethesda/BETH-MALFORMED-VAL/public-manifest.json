@@ -1,0 +1,49 @@
+{
+  "schema_id": "infinium.evaluation.fixture-public-manifest/v1",
+  "schema_version": "1",
+  "fixture_id": "BETH-MALFORMED-VAL",
+  "fixture_version": "1.4.0",
+  "evaluation_ids": [
+    "EVAL-0052"
+  ],
+  "purpose": "Qualify project-authored malformed Bethesda byte boundaries and bounded failure expectations for later Slice 4 evaluation.",
+  "classification": "malformed",
+  "partition": "development",
+  "partition_history": [
+    {
+      "from": null,
+      "to": "validation",
+      "at": "2026-07-30T18:00:00.0000000+00:00",
+      "reason": "Initial registration before review discovered that validation cases had already influenced fixture-generator corrections.",
+      "change_influenced_implementation": false
+    },
+    {
+      "from": "validation",
+      "to": "development",
+      "at": "2026-07-30T18:00:00.0000001+00:00",
+      "reason": "Review correction: malformed cases guided generator fixes, so they cannot remain validation evidence.",
+      "change_influenced_implementation": true,
+      "replacement_fixture_id": "BETH-MALFORMED-VAL-002",
+      "replacement_partition": "validation",
+      "replacement_input_package_fingerprint": "9c8dd5621c714626d566abf81f4b94173d926d12c9ae367e63c649123376a915",
+      "replacement_oracle_fingerprint": "82acea697b56dae14741c033a72f922354252ae4c57d5cbf74da6218298976e8",
+      "independence_evidence_reference": {
+        "artifact_id": "BETH-MALFORMED-VAL-002.structure-correction-independence-attestation",
+        "artifact_version": "1.1.0",
+        "fingerprint": "934b542e6072951453cd732e5ad8a99ef7dc654d3cde479bba01504591dd0fb6",
+        "availability": "evaluator-private"
+      },
+      "authorized_by": "project-owner/user-directed-slice4-fixture-conformance-correction-20260801"
+    }
+  ],
+  "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
+  "taxonomy_version": "0.1.0",
+  "input_package_fingerprint": "0ee1361ef536732bcafac1630b0c89b2393a0836d3ae03bb6eafefe50009d4a4",
+  "oracle_fingerprint": "d7d45e86947644f59d52744b66e9b0d739c246e2dd7c45c98d5b1504b4256fc4",
+  "provenance_fingerprint": "dd31506e9bb463e836d56ed365c7956944be5ab99a28aa06d56e4cbd72f2133c",
+  "replay_dependency_fingerprint": "061f5fb6621f3313463fb2c9177fab05900a525588c7088396b63a7bb445e315",
+  "redistribution_class": "project-authored-redistributable",
+  "owner": "infinium-evaluation",
+  "review_state": "accepted",
+  "created_at": "2026-08-02T20:00:00.0000000+00:00"
+}

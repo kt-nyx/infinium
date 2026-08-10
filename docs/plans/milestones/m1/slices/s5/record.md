@@ -1926,8 +1926,8 @@ On 2026-08-10 the project owner accepted the
 - reduced `current-state.md` to the live handoff and retained detailed package
   and review chronology in this record;
 - moved executable fixture navigation out of documentation and added a focused
-  evaluation index over the functional `test-data/public-fixtures/` and
-  `tools/fixtures/` roots;
+  evaluation index over the functional `fixtures/public/` and
+  `fixtures/tooling/` roots;
 - consolidated evaluator-v1, predecessor v2, protocol `/5`, intermediate
   `/4` proof, incident, occurrence-ledger, and proof-fixture material into one
   evaluator-history summary plus exact Git identities; and
@@ -1961,8 +1961,8 @@ The implementation:
 - moved product serialization codecs out of the evaluation namespace while
   leaving the frozen embedded validator at its exact path and bytes;
 - consolidated 18 current public fixture packages under
-  `test-data/public-fixtures/`, moved their readers and authoring tools under
-  `tools/fixtures/`, functionally renamed active package and producer
+  `fixtures/public/`, moved their readers and authoring tools under
+  `fixtures/tooling/`, functionally renamed active package and producer
   identities, and resealed every affected manifest, receipt, fingerprint, and
   source-authority binding;
 - protected the complete current public-fixture root from text conversion and

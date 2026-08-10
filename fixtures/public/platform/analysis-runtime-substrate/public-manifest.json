@@ -1,0 +1,36 @@
+{
+  "schema_id": "infinium.evaluation.fixture-public-manifest/v1",
+  "schema_version": "1",
+  "fixture_id": "PLATFORM-ANALYSIS-RUNTIME-DEV-v1",
+  "fixture_version": "1.1.0",
+  "evaluation_ids": [
+    "EVAL-0026",
+    "EVAL-0038",
+    "EVAL-0079",
+    "EVAL-0080",
+    "EVAL-0087",
+    "EVAL-0088"
+  ],
+  "purpose": "Exercise the accepted platform lifecycle, lineage, write-safety, persistence, and local IPC substrate without semantic answers or real installation data.",
+  "classification": "boundary",
+  "partition": "development",
+  "partition_history": [
+    {
+      "from": null,
+      "to": "development",
+      "at": "2026-07-29T00:00:00.0000000+00:00",
+      "reason": "Initial registration of the project-authored platform runtime substrate fixture.",
+      "change_influenced_implementation": false
+    }
+  ],
+  "taxonomy_id": "infinium.skyrim-se.mod-impact-taxonomy",
+  "taxonomy_version": "0.1.0",
+  "input_package_fingerprint": "2e5813b6c9f7d1c03c2a829f95b5b4adffd923f890be69241eb60f60c5c5375a",
+  "oracle_fingerprint": "30f87e17525305b3cb6a39723fe56efa6ab352ab15c1adf3b1d73333b5cc1434",
+  "provenance_fingerprint": "81aca2306a63e61d45ce4848c2b7c8f68d526e7a4fb231cd1423c1492d5b592e",
+  "replay_dependency_fingerprint": "601650c3fecfa832868fa2e93dce8ddfa314836d15dcb0626f4bd4b2c03e2602",
+  "redistribution_class": "project-authored",
+  "owner": "infinium-evaluation",
+  "review_state": "accepted",
+  "created_at": "2026-07-29T00:00:00.0000000+00:00"
+}

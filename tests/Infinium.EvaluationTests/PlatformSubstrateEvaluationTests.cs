@@ -340,8 +340,8 @@ public sealed class PlatformSubstrateEvaluationTests
     private static string PlatformFixtureDirectory =>
         Path.Combine(
             TestRepository.Root,
-            "test-data",
-            "public-fixtures",
+            "fixtures",
+            "public",
             "platform",
             "analysis-runtime-substrate");
 

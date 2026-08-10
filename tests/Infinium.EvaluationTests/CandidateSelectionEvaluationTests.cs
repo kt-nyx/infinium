@@ -12,7 +12,7 @@ namespace Infinium.Tests;
 [TestClass]
 public sealed class CandidateSelectionEvaluationTests
 {
-    private const string FixtureRoot = "test-data/public-fixtures/candidates";
+    private const string FixtureRoot = "fixtures/public/candidates";
 
     [TestMethod]
     [TestCategory("Evaluation")]

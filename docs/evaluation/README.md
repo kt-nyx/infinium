@@ -20,8 +20,8 @@ make implementation, fixture, or product-acceptance claims by themselves.
 - [Platform fixture catalog](specifications/platform-fixture-catalog.md)
 - [Semantic fixture catalog](specifications/semantic-fixture-catalog.md)
 
-Executable public fixtures live under `test-data/public-fixtures/`; their tools
-live under `tools/fixtures/`. Documentation contains specifications and
+Executable public fixtures live under `fixtures/public/`; their tools
+live under `fixtures/tooling/`. Documentation contains specifications and
 navigation, not executable fixture packages.
 
 ## Authority and evaluator boundary

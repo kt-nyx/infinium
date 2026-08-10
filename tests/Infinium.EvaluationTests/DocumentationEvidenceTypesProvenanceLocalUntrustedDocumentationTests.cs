@@ -219,7 +219,7 @@ public sealed class DocumentationEvidenceTypesProvenanceLocalUntrustedDocumentat
 
     private static DocumentationFixturePackage Read(string fixtureId) =>
         DocumentationFixturePackageReader.Read(TestRepository.PathFromRoot(
-            "test-data", "public-fixtures", "documentation", fixtureId));
+            "fixtures", "public", "documentation", fixtureId));
 
     private static void AssertCounts(JsonElement expected, DocumentationEvidenceContract actual)
     {

@@ -186,7 +186,7 @@ public sealed class BethesdaSemanticExtractionEvaluationTests
         Directory.CreateDirectory(temporaryRoot);
         try
         {
-            string fixtureRoot = TestRepository.PathFromRoot("test-data", "public-fixtures", "bethesda", "BETH-LIGHT-VAL");
+            string fixtureRoot = TestRepository.PathFromRoot("fixtures", "public", "bethesda", "BETH-LIGHT-VAL");
             using System.Text.Json.JsonDocument receipt = System.Text.Json.JsonDocument.Parse(File.ReadAllBytes(
                 Path.Combine(fixtureRoot, "inputs", "snapshot", "accepted-order.json")));
             List<(string Name, int Order, string Path, Infinium.Domain.Contracts.OpaqueId Entity)> plugins = [];
@@ -272,7 +272,7 @@ public sealed class BethesdaSemanticExtractionEvaluationTests
     public void Eval0052MalformedPopulationFailsAtomically()
     {
         string mutationRoot = TestRepository.PathFromRoot(
-            "test-data", "public-fixtures", "bethesda", "BETH-MALFORMED-VAL", "inputs", "mutations");
+            "fixtures", "public", "bethesda", "BETH-MALFORMED-VAL", "inputs", "mutations");
         string[] malformedPaths = Directory.EnumerateFiles(mutationRoot, "*.*", SearchOption.AllDirectories)
             .Where(path => Path.GetExtension(path) is ".esm" or ".esp" or ".esl")
             .Where(path => !Path.GetFileName(path).StartsWith("ChangedDuringRead-", StringComparison.Ordinal))

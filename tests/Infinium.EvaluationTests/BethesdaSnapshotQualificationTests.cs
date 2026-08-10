@@ -177,8 +177,8 @@ public sealed class BethesdaSnapshotQualificationTests
             Directory.CreateDirectory(root);
 
             string receiptPath = TestRepository.PathFromRoot(
-                "test-data",
-                "public-fixtures",
+                "fixtures",
+                "public",
                 "bethesda",
                 fixtureId,
                 "inputs",
@@ -188,8 +188,8 @@ public sealed class BethesdaSnapshotQualificationTests
                 JsonDocument.Parse(File.ReadAllBytes(receiptPath));
             JsonElement receipt = receiptDocument.RootElement;
             string constructionManifestPath = TestRepository.PathFromRoot(
-                "test-data",
-                "public-fixtures",
+                "fixtures",
+                "public",
                 "bethesda",
                 fixtureId,
                 "inputs",
@@ -245,8 +245,8 @@ public sealed class BethesdaSnapshotQualificationTests
                         .Split('/');
                     return TestRepository.PathFromRoot(
                         [
-                            "test-data",
-                            "public-fixtures",
+                            "fixtures",
+                            "public",
                             "bethesda",
                             fixtureId,
                             .. artifactParts,

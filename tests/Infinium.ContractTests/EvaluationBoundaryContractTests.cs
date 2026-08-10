@@ -10,20 +10,20 @@ public sealed class EvaluationBoundaryContractTests
 {
     private static readonly string[] CurrentPublicFixtureFamilies =
     [
-        "test-data/public-fixtures/platform/analysis-runtime-substrate",
-        "test-data/public-fixtures/bethesda/BETH-NPC-DEV",
-        "test-data/public-fixtures/bethesda/BETH-REFR-DEV",
-        "test-data/public-fixtures/bethesda/BETH-LIGHT-VAL",
-        "test-data/public-fixtures/bethesda/BETH-MALFORMED-VAL",
-        "test-data/public-fixtures/bethesda/BETH-UNSUPPORTED-VAL",
-        "test-data/public-fixtures/documentation/DOC-CLAIM-CORE-DEV",
-        "test-data/public-fixtures/documentation/DOC-CLAIM-ADVERSARIAL-VAL",
-        "test-data/public-fixtures/candidates/CAND-SEMANTIC-DEV-v1",
-        "test-data/public-fixtures/candidates/CAND-SCALE-VAL-v1",
-        "test-data/public-fixtures/candidates/CAND-STRESS-DEV-v1",
-        "test-data/public-fixtures/findings-cases",
-        "test-data/public-fixtures/operations/analysis-lifecycle",
-        "test-data/public-fixtures/cross-stage/analysis-pipeline",
+        "fixtures/public/platform/analysis-runtime-substrate",
+        "fixtures/public/bethesda/BETH-NPC-DEV",
+        "fixtures/public/bethesda/BETH-REFR-DEV",
+        "fixtures/public/bethesda/BETH-LIGHT-VAL",
+        "fixtures/public/bethesda/BETH-MALFORMED-VAL",
+        "fixtures/public/bethesda/BETH-UNSUPPORTED-VAL",
+        "fixtures/public/documentation/DOC-CLAIM-CORE-DEV",
+        "fixtures/public/documentation/DOC-CLAIM-ADVERSARIAL-VAL",
+        "fixtures/public/candidates/CAND-SEMANTIC-DEV-v1",
+        "fixtures/public/candidates/CAND-SCALE-VAL-v1",
+        "fixtures/public/candidates/CAND-STRESS-DEV-v1",
+        "fixtures/public/findings-cases",
+        "fixtures/public/operations/analysis-lifecycle",
+        "fixtures/public/cross-stage/analysis-pipeline",
     ];
 
     private static readonly string[] CurrentAuthoritySurfaceIds =
@@ -106,7 +106,7 @@ public sealed class EvaluationBoundaryContractTests
             applicationProject.Contains("contracts\\repository", StringComparison.OrdinalIgnoreCase),
             "Repository-governance schemas must not ship in the product Application assembly.");
 
-        string publicFixtureRoot = TestRepository.PathFromRoot("tools", "fixtures", "Infinium.PublicFixtures");
+        string publicFixtureRoot = TestRepository.PathFromRoot("fixtures", "tooling", "Infinium.PublicFixtures");
         string publicFixtureSource = string.Join('\n', Directory.EnumerateFiles(publicFixtureRoot, "*.cs", SearchOption.AllDirectories)
             .Select(File.ReadAllText));
         Assert.IsFalse(publicFixtureSource.Contains("EmbeddedJsonSchemaValidator", StringComparison.Ordinal));

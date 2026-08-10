@@ -40,7 +40,7 @@ package identities without reconstructing the removed packages:
 
 Their shared registry, answer-free factual inputs, and separately isolated
 expected results are under
-[`m1-slice5-wp5-operational-cases-v1/`](../../../test-data/public-fixtures/operations/analysis-lifecycle/README.md).
+[`m1-slice5-wp5-operational-cases-v1/`](../../../fixtures/public/operations/analysis-lifecycle/README.md).
 This registration records their bounded typed-policy comparison as complete:
 12/12 frozen bindings passed with no expected-truth edits and with actual
 pre-dispatch schema/answer-isolation receipts. It does not establish

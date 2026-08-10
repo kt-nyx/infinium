@@ -14,8 +14,8 @@ internal static class BethesdaSemanticTestSnapshot
         IReadOnlyList<BethesdaUnsupportedCapability>? unsupportedCapabilities = null)
     {
         string fixtureRoot = TestRepository.PathFromRoot(
-            "test-data",
-            "public-fixtures",
+            "fixtures",
+            "public",
             "bethesda",
             fixtureId);
         using JsonDocument receipt = JsonDocument.Parse(File.ReadAllBytes(
@@ -52,8 +52,8 @@ internal static class BethesdaSemanticTestSnapshot
         IReadOnlyDictionary<string, string>? replacements = null)
     {
         string fixtureRoot = TestRepository.PathFromRoot(
-            "test-data",
-            "public-fixtures",
+            "fixtures",
+            "public",
             "bethesda",
             fixtureId);
         using JsonDocument receipt = JsonDocument.Parse(File.ReadAllBytes(

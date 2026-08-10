@@ -27,8 +27,8 @@ public sealed class BethesdaFixturePackageQualificationTests
         foreach ((string fixtureId, FixturePartition partition) in Fixtures)
         {
             string directory = TestRepository.PathFromRoot(
-                "test-data",
-                "public-fixtures",
+                "fixtures",
+                "public",
                 "bethesda",
                 fixtureId);
 

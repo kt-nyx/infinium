@@ -54,17 +54,11 @@ public sealed class RepositoryStructureTests
             StringAssert.Contains(content, "contract");
         }
 
-        string[] reservedReadmes =
-        [
-            "test-data/synthetic/README.md",
-            "test-data/manifests/README.md",
-        ];
-
-        foreach (string readme in reservedReadmes)
-        {
-            string content = TestRepository.Read(readme.Split('/'));
-            StringAssert.Contains(content, "not implemented");
-        }
+        Assert.IsTrue(Directory.Exists(TestRepository.PathFromRoot("fixtures", "public")));
+        Assert.IsTrue(Directory.Exists(TestRepository.PathFromRoot("fixtures", "tooling")));
+        Assert.IsFalse(Directory.Exists(TestRepository.PathFromRoot("test-data")));
+        Assert.IsFalse(Directory.Exists(
+            TestRepository.PathFromRoot("tools", "evaluation", "private-fixtures")));
 
         string evaluator = TestRepository.Read("tools", "evaluation", "README.md");
         StringAssert.Contains(evaluator, "Infinium.EvaluatorV2");

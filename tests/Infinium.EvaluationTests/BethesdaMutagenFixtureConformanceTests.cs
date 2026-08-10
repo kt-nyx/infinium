@@ -63,8 +63,8 @@ public sealed class BethesdaMutagenFixtureConformanceTests
     private static ParsedFixture ParseAcceptedPlugins(string fixtureId)
     {
         string fixtureRoot = TestRepository.PathFromRoot(
-            "test-data",
-            "public-fixtures",
+            "fixtures",
+            "public",
             "bethesda",
             fixtureId);
         using JsonDocument snapshot = JsonDocument.Parse(

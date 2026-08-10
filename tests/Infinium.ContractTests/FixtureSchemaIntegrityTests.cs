@@ -19,7 +19,7 @@ public sealed class FixtureSchemaIntegrityTests
     public void BethesdaCaseMatrixAndScanConfigurationHaveDistinctAcceptedRoles()
     {
         string root = TestRepository.PathFromRoot(
-            "test-data", "public-fixtures", "bethesda", "BETH-UNSUPPORTED-VAL");
+            "fixtures", "public", "bethesda", "BETH-UNSUPPORTED-VAL");
         _ = PublicFixturePackageReader.Read(root);
 
         JsonObject configuration = ReadObject(
@@ -1420,7 +1420,7 @@ public sealed class FixtureSchemaIntegrityTests
         {
             CopyDirectory(
                 TestRepository.PathFromRoot(
-                    "test-data", "public-fixtures", "bethesda", fixtureId),
+                    "fixtures", "public", "bethesda", fixtureId),
                 root);
             mutate(root);
             Assert.ThrowsExactly<InvalidDataException>(

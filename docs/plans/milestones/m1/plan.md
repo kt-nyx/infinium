@@ -168,16 +168,17 @@ tests/
   Infinium.ContractTests/
   Infinium.IntegrationTests/
   Infinium.EvaluationTests/
-test-data/
-  synthetic/
-  manifests/
+fixtures/
+  public/
+  tooling/
 tools/
   evaluation/
 ```
 
-Controlled-real bytes remain outside the tracked repository. `test-data`
+Controlled-real bytes remain outside the tracked repository. `fixtures/public`
 contains only permitted synthetic bytes, public identities, hashes, expected
-structural values, and private-acquisition manifests.
+structural values, and public manifests. Fixture readers, generators, and
+resealing utilities live beside them under `fixtures/tooling`.
 
 ## Required contracts
 
@@ -573,8 +574,7 @@ dotnet test Infinium.sln -c Release --no-build --filter "Category=M1Integration"
 dotnet test Infinium.sln -c Release --no-build --filter "Category=M1Evaluation"
 dotnet test Infinium.sln -c Release --no-build --filter "Category=M1Security"
 dotnet test Infinium.sln -c Release --no-build --filter "Category=M1Fault"
-dotnet run --project src/Infinium.Cli -c Release --no-build -- evaluate --manifest test-data/manifests/m1-suite.json --output artifacts/m1-evaluation
-dotnet run --project src/Infinium.Cli -c Release --no-build -- verify-evaluation --input artifacts/m1-evaluation
+powershell -NoProfile -ExecutionPolicy Bypass -File eng/verify-analysis-pipeline.ps1 -Gate All -OutputRoot <temporary-output-root>
 git diff --check
 ```
 

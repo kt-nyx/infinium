@@ -1519,7 +1519,7 @@ public sealed class AnalysisReplayIntegrationTests
     [TestProperty("Category", "Evaluation")]
     public void FrozenOperationalOperationalCasesAreBoundToProductExecutionBeforeOracleComparison()
     {
-        string fixtureRoot = Path.Combine(TestRepository.Root, "test-data", "public-fixtures", "operations", "analysis-lifecycle");
+        string fixtureRoot = Path.Combine(TestRepository.Root, "fixtures", "public", "operations", "analysis-lifecycle");
         using JsonDocument projections = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(fixtureRoot, "ordinary-product-projections.v1.json")));
         using JsonDocument envelope = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(fixtureRoot, "harness-envelope.v1.json")));
         using JsonDocument topologies = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(fixtureRoot, "safety-topologies.v1.json")));

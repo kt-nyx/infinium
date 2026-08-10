@@ -52,10 +52,11 @@ selected here.
 
 ## Current public fixtures
 
-`Infinium.PublicFixtures/` owns the current product/public-fixture readers and
-validates only active product schemas. It has no evaluator protocol, scoring,
-private-corpus, or product-output authority. The default solution references
-this library and has no dependency on `Infinium.EvaluatorV2`.
+`fixtures/tooling/Infinium.PublicFixtures/` owns the current
+product/public-fixture readers and validates only active product schemas. It
+has no evaluator protocol, scoring, private-corpus, or product-output
+authority. The default solution references this library and has no dependency
+on `Infinium.EvaluatorV2`.
 
 The retired pre-v2 compatibility readers, predecessor `/3` schemas, and
 obsolete pre-B2 proof commands are recoverable only through the Git objects in

@@ -13,4 +13,4 @@
 
 # Public fixtures are byte-exact retained artifacts whose SHA-256 values are
 # transitively bound by package manifests. Never rewrite or text-merge them.
-test-data/public-fixtures/** -text -diff -merge -eol
+fixtures/public/** -text -diff -merge -eol

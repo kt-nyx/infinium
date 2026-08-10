@@ -1,0 +1,51 @@
+{
+  "schema_id": "infinium.evaluation.fixture-replay-manifest/v1",
+  "schema_version": "1",
+  "fixture_id": "PLATFORM-ANALYSIS-RUNTIME-DEV-v1",
+  "fixture_version": "1.1.0",
+  "replay_state": "complete-clean",
+  "dependency_graph_fingerprint": "624437028ec9d16c863b239cba374462ef637003110df529d5391862cb19c3ac",
+  "retained_inputs": [
+    {
+      "dependency_id": "inputs-analysis-context-json",
+      "sha256": "158e7b6b376c51c5ff98db9f57c2a3986bd17142d339444649a1bfecfcc58e99",
+      "byte_length": 345
+    },
+    {
+      "dependency_id": "inputs-analysis-execution-input-json",
+      "sha256": "9d8131b20cc3825b7b568a524a309094c20eac74299b530b3f30366d3c09b28f",
+      "byte_length": 2694
+    },
+    {
+      "dependency_id": "inputs-analysis-installation-snapshot-json",
+      "sha256": "2ec43e9a61c180d56caf5cc342511736541d42f26205d05fa5162ea30459e650",
+      "byte_length": 442
+    },
+    {
+      "dependency_id": "inputs-analyzer-declaration-json",
+      "sha256": "63bfd46d12b3ef876b7e38923b6320243ebc1908b82fcba295f229e8c39fd476",
+      "byte_length": 5033
+    },
+    {
+      "dependency_id": "inputs-bethesda-semantic-input-json",
+      "sha256": "69dfe871e745a73c0a6232582e5e2ad351cb7ebd330f7e6546d1f7ab6f3cbb97",
+      "byte_length": 431
+    },
+    {
+      "dependency_id": "inputs-effective-scan-configuration-json",
+      "sha256": "2cf53f1ac7f46822ddce303feccd1c2cfa9fc5050550aaffc7da3790048aedec",
+      "byte_length": 3054
+    },
+    {
+      "dependency_id": "inputs-resolved-input-manifest-json",
+      "sha256": "74e28a0b509c184778d376b502dcf93965c2ec3c42efb5e2ab128843ed527de8",
+      "byte_length": 421
+    }
+  ],
+  "boundaries": [
+    "provider",
+    "hosted-search",
+    "nexus",
+    "loot"
+  ]
+}

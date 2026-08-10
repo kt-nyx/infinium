@@ -272,7 +272,7 @@ public sealed class OperationalAnalysisEvaluationTests
         new JsonDocumentOptions { CommentHandling = JsonCommentHandling.Disallow, AllowTrailingCommas = false });
 
     private static string FixtureRoot() => Path.Combine(
-        FindRepositoryRoot(), "test-data", "public-fixtures", "operations", "analysis-lifecycle");
+        FindRepositoryRoot(), "fixtures", "public", "operations", "analysis-lifecycle");
 
     private static string FindRepositoryRoot()
     {

@@ -191,8 +191,8 @@ function Invoke-DocumentationGate {
         'contracts/json-schema/documentation-evidence.v1.schema.json',
         'src/Infinium.Analysis/Documentation/DocumentationEvidenceImporter.cs',
         'src/Infinium.Application/Documentation/DocumentationEvidencePhase.cs',
-        'test-data/public-fixtures/documentation/DOC-CLAIM-CORE-DEV',
-        'test-data/public-fixtures/documentation/DOC-CLAIM-ADVERSARIAL-VAL'
+        'fixtures/public/documentation/DOC-CLAIM-CORE-DEV',
+        'fixtures/public/documentation/DOC-CLAIM-ADVERSARIAL-VAL'
     )
     foreach ($relativePath in $requiredPaths) {
         if (-not (Test-Path -LiteralPath (Join-Path $repoRoot $relativePath))) {
@@ -201,8 +201,8 @@ function Invoke-DocumentationGate {
     }
 
     $fixtureRoots = @(
-        (Join-Path $repoRoot 'test-data/public-fixtures/documentation/DOC-CLAIM-CORE-DEV'),
-        (Join-Path $repoRoot 'test-data/public-fixtures/documentation/DOC-CLAIM-ADVERSARIAL-VAL')
+        (Join-Path $repoRoot 'fixtures/public/documentation/DOC-CLAIM-CORE-DEV'),
+        (Join-Path $repoRoot 'fixtures/public/documentation/DOC-CLAIM-ADVERSARIAL-VAL')
     )
     $fixtureEvidence = @()
     foreach ($fixtureRoot in $fixtureRoots) {
@@ -254,7 +254,7 @@ function Invoke-DocumentationGate {
 }
 
 function Invoke-CandidatesGate {
-    $fixtureRoot = Join-Path $repoRoot 'test-data/public-fixtures/candidates'
+    $fixtureRoot = Join-Path $repoRoot 'fixtures/public/candidates'
     $semanticRoot = Join-Path $fixtureRoot 'CAND-SEMANTIC-DEV-v1'
     $requiredPaths = @(
         'contracts/json-schema/candidate-analysis.v1.schema.json',
@@ -265,9 +265,9 @@ function Invoke-CandidatesGate {
         'src/Infinium.Application/Candidates/CandidateDeliveredInputExpander.cs',
         'src/Infinium.Application/Candidates/CandidateAnalysisPhase.cs',
         'src/Infinium.Persistence/AuthoritativeStore.Candidates.cs',
-        'test-data/public-fixtures/candidates/CAND-SEMANTIC-DEV-v1/public-manifest.json',
-        'test-data/public-fixtures/candidates/CAND-SEMANTIC-DEV-v1/inputs/candidate-delivered-input.json',
-        'test-data/public-fixtures/candidates/CAND-SEMANTIC-DEV-v1/oracle/semantic-population-projection.json'
+        'fixtures/public/candidates/CAND-SEMANTIC-DEV-v1/public-manifest.json',
+        'fixtures/public/candidates/CAND-SEMANTIC-DEV-v1/inputs/candidate-delivered-input.json',
+        'fixtures/public/candidates/CAND-SEMANTIC-DEV-v1/oracle/semantic-population-projection.json'
     )
     foreach ($relativePath in $requiredPaths) {
         if (-not (Test-Path -LiteralPath (Join-Path $repoRoot $relativePath))) {
@@ -327,7 +327,7 @@ function Invoke-CandidatesGate {
 }
 
 function Invoke-CandidateScaleGate {
-    $fixtureRoot = Join-Path $repoRoot 'test-data/public-fixtures/candidates'
+    $fixtureRoot = Join-Path $repoRoot 'fixtures/public/candidates'
     $scaleManifest = (Get-FileHash -LiteralPath (Join-Path $fixtureRoot 'CAND-SCALE-VAL-v1/public-manifest.json') -Algorithm SHA256).Hash.ToLowerInvariant()
     $stressManifest = (Get-FileHash -LiteralPath (Join-Path $fixtureRoot 'CAND-STRESS-DEV-v1/public-manifest.json') -Algorithm SHA256).Hash.ToLowerInvariant()
     if ($scaleManifest -cne 'e95930df3ef536a6f0bfd72d5195fd1d17fda2fe9fd6488423818edbf35c8d06' -or
@@ -371,7 +371,7 @@ function Invoke-CandidateScaleGate {
 }
 
 function Invoke-CasesGate {
-    $fixtureRoot = Join-Path $repoRoot 'test-data/public-fixtures/findings-cases'
+    $fixtureRoot = Join-Path $repoRoot 'fixtures/public/findings-cases'
     $requiredPaths = @(
         'contracts/json-schema/finding-case-input.v1.schema.json',
         'contracts/json-schema/finding-case.v1.schema.json',
@@ -382,9 +382,9 @@ function Invoke-CasesGate {
         'src/Infinium.Application/FindingCases/FindingCaseAnalysisPhase.cs',
         'src/Infinium.Application/Serialization/AnalyzerDeclarationJsonCodec.cs',
         'src/Infinium.Persistence/AuthoritativeStore.FindingCases.cs',
-        'test-data/public-fixtures/findings-cases/README.md',
-        'test-data/public-fixtures/findings-cases/finding-case-independent-truth.v1.0.3.json',
-        'test-data/public-fixtures/findings-cases/independent-review.md'
+        'fixtures/public/findings-cases/README.md',
+        'fixtures/public/findings-cases/finding-case-independent-truth.v1.0.3.json',
+        'fixtures/public/findings-cases/independent-review.md'
     )
     foreach ($relativePath in $requiredPaths) {
         if (-not (Test-Path -LiteralPath (Join-Path $repoRoot $relativePath))) {
@@ -457,7 +457,7 @@ function Invoke-CasesGate {
 }
 
 function Get-OperationalFixtureEvidence([string] $ReceiptPath) {
-    $fixtureRoot = Join-Path $repoRoot 'test-data/public-fixtures/operations/analysis-lifecycle'
+    $fixtureRoot = Join-Path $repoRoot 'fixtures/public/operations/analysis-lifecycle'
     $manifestPath = Join-Path $fixtureRoot 'fixture-manifest.v1.json'
     $manifest = Read-StrictJson $manifestPath
     if ([string] $manifest.status -notmatch 'accepted|independently-reviewed') {
@@ -619,7 +619,7 @@ function Invoke-SafetyGate {
 }
 
 function Invoke-ComprehensiveGate {
-    $fixtureRoot = Join-Path $repoRoot 'test-data/public-fixtures/cross-stage/analysis-pipeline'
+    $fixtureRoot = Join-Path $repoRoot 'fixtures/public/cross-stage/analysis-pipeline'
     $verificationScript = Join-Path $repoRoot 'eng/verify-cross-stage-corpus.ps1'
     $verificationOutput = @(& pwsh -NoProfile -ExecutionPolicy Bypass -File $verificationScript -FixtureRoot $fixtureRoot 2>&1)
     $verificationOutput | ForEach-Object { Write-Host $_ }

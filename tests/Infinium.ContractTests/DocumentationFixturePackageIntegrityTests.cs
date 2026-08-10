@@ -614,7 +614,7 @@ public sealed class DocumentationFixturePackageIntegrityTests
     }
 
     private static string FixtureRoot(string fixtureId) => TestRepository.PathFromRoot(
-        "test-data", "public-fixtures", "documentation", fixtureId);
+        "fixtures", "public", "documentation", fixtureId);
 
     private static void CopyDirectory(string source, string destination)
     {

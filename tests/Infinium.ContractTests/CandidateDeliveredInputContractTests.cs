@@ -113,7 +113,7 @@ public sealed class CandidateDeliveredInputContractTests
             ["CAND-STRESS-DEV-v1"] = "b552521f3b5f6efac23a204fc7269b0cc59b15a1231baa81dce9d5164b35f72f",
         };
         string root = Path.Combine(FindRepositoryRoot(),
-            "test-data", "public-fixtures", "candidates");
+            "fixtures", "public", "candidates");
         CollectionAssert.AreEquivalent(expectedManifests.Keys.ToArray(),
             Directory.GetDirectories(root).Select(Path.GetFileName).ToArray());
 

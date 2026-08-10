@@ -314,10 +314,10 @@ public sealed class BethesdaSemanticBoundaryIntegrationTests
     public void MidReadIdentityChangeFailsWithoutPartialSemanticAuthority()
     {
         string source = TestRepository.PathFromRoot(
-            "test-data", "public-fixtures", "bethesda", "BETH-MALFORMED-VAL",
+            "fixtures", "public", "bethesda", "BETH-MALFORMED-VAL",
             "inputs", "mutations", "ChangedDuringRead-A.esp");
         string alternate = TestRepository.PathFromRoot(
-            "test-data", "public-fixtures", "bethesda", "BETH-MALFORMED-VAL",
+            "fixtures", "public", "bethesda", "BETH-MALFORMED-VAL",
             "inputs", "mutations", "ChangedDuringRead-B.esp");
         string root = Path.Combine(Path.GetTempPath(), $"infinium-bethesda-drift-{Guid.NewGuid():N}");
         Directory.CreateDirectory(root);

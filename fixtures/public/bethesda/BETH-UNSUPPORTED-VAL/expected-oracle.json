@@ -1,0 +1,547 @@
+{
+  "fixture_id": "BETH-UNSUPPORTED-VAL",
+  "fixture_version": "1.4.0",
+  "oracle_version": "1.3.0",
+  "independent_authors_and_reviewers": [
+    "oracle-reviewer"
+  ],
+  "ground_truth_methods": [
+    {
+      "method_id": "manual-annotated-hex-worksheet-v1",
+      "method": "Manual annotated hexadecimal offset worksheet over frozen bytes.",
+      "evidence_references": [
+        {
+          "artifact_id": "oracle/manual-hex-worksheet.json",
+          "artifact_version": "1.4.0",
+          "fingerprint": "3812f7df1b51e7cefd74e7d939027fc88285db59c41bf8258a0e4c3e3f560dfd",
+          "availability": "retained",
+          "byte_length": 21581
+        }
+      ],
+      "independent_of_system_under_test": true
+    },
+    {
+      "method_id": "independent-bounded-raw-reader-v1",
+      "method": "Separately implemented bounded raw TES4 byte reader.",
+      "evidence_references": [
+        {
+          "artifact_id": "oracle/independent-reader-report.json",
+          "artifact_version": "1.4.0",
+          "fingerprint": "d6e6d0af2f45ec4e616a59cae6168538cabda213e839aaff82e920f754e86923",
+          "availability": "retained",
+          "byte_length": 18764
+        },
+        {
+          "artifact_id": "oracle/independent-byte-facts.json",
+          "artifact_version": "1.4.0",
+          "fingerprint": "ff830804c75b462d64544b19701d548adb9816cf37e95c4b4badccca7734d171",
+          "availability": "retained",
+          "byte_length": 27679
+        }
+      ],
+      "independent_of_system_under_test": true
+    },
+    {
+      "method_id": "independent-taxonomy-projection-review-v1",
+      "method": "Exhaustive taxonomy projection and literal subject-binding review from frozen byte facts and the accepted public subject-ID contract.",
+      "evidence_references": [
+        {
+          "artifact_id": "oracle/taxonomy-projections.json",
+          "artifact_version": "1.4.0",
+          "fingerprint": "b02ea4a620dcac94050ba0e11e590c1f3b0836bc829196fddbb943f6c02a717c",
+          "availability": "retained",
+          "byte_length": 13409
+        }
+      ],
+      "independent_of_system_under_test": true
+    }
+  ],
+  "expected_observations": [
+    {
+      "expected_id": "beth.beth-unsupported-val.fact-00001",
+      "subject_id": "beth-unsupported-val.file-000.identity",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "ed9eba5cbfabd4a93fce052f31256d77e7bbffb1de87e64e73cf6caa1b825f72"
+    },
+    {
+      "expected_id": "beth.beth-unsupported-val.fact-00002",
+      "subject_id": "beth-unsupported-val.file-000.masters",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "f8070fb785e8edba908be437574c088ad286d58d65fa6ca793354ebe3d42dd39"
+    },
+    {
+      "expected_id": "beth.beth-unsupported-val.fact-00003",
+      "subject_id": "beth-unsupported-val.file-000.esl-flag",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "d4053bc79b31cf204abed0e18e5d225e55e3592ad40bbb13a119d22ae2760818"
+    },
+    {
+      "expected_id": "beth.beth-unsupported-val.fact-00004",
+      "subject_id": "beth-unsupported-val.file-000.group-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "3e76a49c54df462fc8fc84acf9ac46ba138897a237d61ce44c2ef4141ab773db"
+    },
+    {
+      "expected_id": "beth.beth-unsupported-val.fact-00005",
+      "subject_id": "beth-unsupported-val.file-000.record-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "b58c4bf7da50aa2647198074b17f15c412b01e2eef1425ca197306b034e0f0ce"
+    },
+    {
+      "expected_id": "beth.beth-unsupported-val.fact-00006",
+      "subject_id": "beth-unsupported-val.file-000.record-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "31408cdc10d426f4b0273e76672f635f4dbcd14f9732c28e6e68308fd55979d5"
+    },
+    {
+      "expected_id": "beth.beth-unsupported-val.fact-00007",
+      "subject_id": "beth-unsupported-val.file-001.identity",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "6b239273094adee01a697d209130e1aba554437efcb09112652df2a98188d716"
+    },
+    {
+      "expected_id": "beth.beth-unsupported-val.fact-00008",
+      "subject_id": "beth-unsupported-val.file-001.masters",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "452deab90e80902711adae4e2df21f94eb8fb91642dab34467c3e8ad9982cb45"
+    },
+    {
+      "expected_id": "beth.beth-unsupported-val.fact-00009",
+      "subject_id": "beth-unsupported-val.file-001.esl-flag",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "bd54a2450ea3940816fabde9f97caedc5e9c50680199e888197e5d70399b1f86"
+    },
+    {
+      "expected_id": "beth.beth-unsupported-val.fact-00010",
+      "subject_id": "beth-unsupported-val.file-001.group-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "9c0bc8aa5c40f46e7c5e295dc05cc451250065755f2a69d769f249c10681a549"
+    },
+    {
+      "expected_id": "beth.beth-unsupported-val.fact-00011",
+      "subject_id": "beth-unsupported-val.file-001.record-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "c122da10c944af3a3a226a2ee841e7f720f27d4d763a475f4a7a2526c52c5ede"
+    },
+    {
+      "expected_id": "beth.beth-unsupported-val.fact-00012",
+      "subject_id": "beth-unsupported-val.file-001.record-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "f187824ebbad97619ade2326e0f8443f7e9ccefa0b56248ae4f54032d3cb318e"
+    },
+    {
+      "expected_id": "beth.beth-unsupported-val.fact-00013",
+      "subject_id": "beth-unsupported-val.file-002.identity",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "b78c09f7356b410a42b3914c0c3fee8842c4b04208fc35a2d4f4c57aec6857ff"
+    },
+    {
+      "expected_id": "beth.beth-unsupported-val.fact-00014",
+      "subject_id": "beth-unsupported-val.file-002.masters",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "9fd9000a86644a20b59ea580bea6c7777df061aa7a761de703aa86b75f7f3284"
+    },
+    {
+      "expected_id": "beth.beth-unsupported-val.fact-00015",
+      "subject_id": "beth-unsupported-val.file-002.esl-flag",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "cae4de214352507478524cb644d484d812e4272f7cc3d532a9a0868991195442"
+    },
+    {
+      "expected_id": "beth.beth-unsupported-val.fact-00016",
+      "subject_id": "beth-unsupported-val.file-002.group-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "149394fa2b992b771bf6b3ae4aca1a9c6044ea79dea59d3ce9b72bd75651018b"
+    },
+    {
+      "expected_id": "beth.beth-unsupported-val.fact-00017",
+      "subject_id": "beth-unsupported-val.file-002.record-0000",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "4cd381f5ac2bb5b1e1f249679914c3ca0ddb37128a4830fb6247450bad8543e5"
+    },
+    {
+      "expected_id": "beth.beth-unsupported-val.fact-00018",
+      "subject_id": "beth-unsupported-val.file-002.record-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "cd81d5ce99500fde68572caee93e55cd1046e28ec1a27fdc499984d38afb4804"
+    },
+    {
+      "expected_id": "beth.beth-unsupported-val.fact-00019",
+      "subject_id": "beth-unsupported-val.file-002.record-0001.sub-0001",
+      "expected_type": "observation",
+      "expected_state": "present",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "9e49fbde8bef88053007abc821a1ae1829792f7950f08e05fa5964d0fdb3c54f"
+    }
+  ],
+  "expected_deterministic_results": [],
+  "expected_external_claims": [],
+  "expected_application_links": [],
+  "expected_discovery_leads": [],
+  "expected_model_proposals": [],
+  "expected_proposal_admissions": [],
+  "expected_candidates": [],
+  "expected_hypotheses": [],
+  "expected_findings": [],
+  "expected_recommendations": [],
+  "expected_supported_cases": [],
+  "expected_lead_only_cases": [],
+  "expected_abstentions": [],
+  "expected_failures": [],
+  "expected_invalid_inputs": [],
+  "expected_coverage_and_gaps": [
+    {
+      "expected_id": "beth.beth-unsupported-val.fact-00020",
+      "subject_id": "beth-unsupported-val.unsupported-record-family",
+      "expected_type": "coverage-gap",
+      "expected_state": "unsupported",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "e387132d8c14afba66661551b716c71fb7801a053aa2aca4b1714f6531c3b72e"
+    },
+    {
+      "expected_id": "beth.beth-unsupported-val.fact-00021",
+      "subject_id": "beth-unsupported-val.unsupported-npc-field",
+      "expected_type": "coverage-gap",
+      "expected_state": "unsupported",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "f093b126a942320d7fcd128ccf248968a9f2b8242effa146412d4e3a9f9d24c3"
+    },
+    {
+      "expected_id": "beth.beth-unsupported-val.fact-00022",
+      "subject_id": "beth-unsupported-val.unsupported-localized-string",
+      "expected_type": "coverage-gap",
+      "expected_state": "unsupported",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "cb5ce8d13774a1778e983f1ef8811a1125927a8451077b27c0bc0e5dc0207d6b"
+    },
+    {
+      "expected_id": "beth.beth-unsupported-val.fact-00023",
+      "subject_id": "beth-unsupported-val.unsupported-archive-member",
+      "expected_type": "coverage-gap",
+      "expected_state": "unsupported",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "6d872178c88c93a2592ac33fe7a492d47455614c9a3a1318ad4c40cb033fbaff"
+    },
+    {
+      "expected_id": "beth.beth-unsupported-val.fact-00024",
+      "subject_id": "beth-unsupported-val.unsupported-environment-discovery",
+      "expected_type": "coverage-gap",
+      "expected_state": "unsupported",
+      "ground_truth_method_ids": [
+        "manual-annotated-hex-worksheet-v1",
+        "independent-bounded-raw-reader-v1"
+      ],
+      "canonical_value_fingerprint": "b3674a42832c49b4137064c3e10f99ca8a800c88560eda33f777bd45e0de3025"
+    }
+  ],
+  "expected_collection_states": {
+    "observations": {
+      "state": "populated",
+      "reason": "Pre-registered independent byte expectations are present."
+    },
+    "deterministic_results": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    },
+    "external_claims": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    },
+    "application_links": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    },
+    "discovery_leads": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    },
+    "model_proposals": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    },
+    "proposal_admissions": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    },
+    "candidates": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    },
+    "hypotheses": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    },
+    "findings": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    },
+    "recommendations": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    },
+    "supported_cases": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    },
+    "lead_only_cases": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    },
+    "abstentions": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    },
+    "invalid_inputs": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    },
+    "coverage_gaps": {
+      "state": "populated",
+      "reason": "Pre-registered independent byte expectations are present."
+    },
+    "failures": {
+      "state": "empty",
+      "reason": "No Slice 3.5 expectation is assigned to this collection."
+    }
+  },
+  "expected_taxonomy_assignments": [],
+  "expected_replayability": "complete-clean",
+  "forbidden_claims": [
+    {
+      "claim_id": "forbidden-01",
+      "claim_type": "raw-formid-is-formkey",
+      "reason": "File-local indices are not canonical identity."
+    },
+    {
+      "claim_id": "forbidden-02",
+      "claim_type": "extension-proves-light",
+      "reason": "Only the TES4 light flag establishes light origin."
+    },
+    {
+      "claim_id": "forbidden-03",
+      "claim_type": "template-inheritance",
+      "reason": "Template inheritance is outside the frozen allowlist."
+    },
+    {
+      "claim_id": "forbidden-04",
+      "claim_type": "record-family-proves-meaning",
+      "reason": "Record family does not prove purpose or gameplay meaning."
+    },
+    {
+      "claim_id": "forbidden-05",
+      "claim_type": "conflict-is-finding",
+      "reason": "A structural conflict alone is not a finding."
+    },
+    {
+      "claim_id": "forbidden-06",
+      "claim_type": "xesp-enable-parent",
+      "reason": "XESP is outside the EVAL-0052 positive allowlist."
+    },
+    {
+      "claim_id": "forbidden-07",
+      "claim_type": "archive-or-string-resolution",
+      "reason": "Archive and localized-string resolution are unsupported."
+    },
+    {
+      "claim_id": "forbidden-08",
+      "claim_type": "environment-discovery",
+      "reason": "Automatic environment discovery is unsupported."
+    }
+  ],
+  "known_limits": [
+    "The oracle covers only the frozen EVAL-0052 positive allowlist.",
+    "Decompressed logical offsets are distinct from physical file offsets.",
+    "No production parser, Mutagen, xEdit, held-out input, or taxonomy answer authored these values."
+  ],
+  "pre_registered_at": "2026-07-30T00:00:00.0000000+00:00",
+  "change_history": [
+    {
+      "oracle_version": "1.0.1",
+      "changed_at": "2026-07-30T23:00:00.0000000+00:00",
+      "independent_evidence_reference": {
+        "artifact_id": "oracle/manual-hex-worksheet.json",
+        "artifact_version": "1.4.0",
+        "fingerprint": "3812f7df1b51e7cefd74e7d939027fc88285db59c41bf8258a0e4c3e3f560dfd",
+        "availability": "retained",
+        "byte_length": 21581
+      },
+      "prior_error_explanation": "Version 1.0.0 attributed the manual method without comparing its decoded semantic answers and classified mutation changes from artifact dependencies instead of logical baseline deltas.",
+      "reviewer": "oracle-reviewer"
+    },
+    {
+      "oracle_version": "1.0.2",
+      "changed_at": "2026-08-01T22:00:00.0000000+00:00",
+      "independent_evidence_reference": {
+        "artifact_id": "oracle/manual-hex-worksheet.json",
+        "artifact_version": "1.4.0",
+        "fingerprint": "3812f7df1b51e7cefd74e7d939027fc88285db59c41bf8258a0e4c3e3f560dfd",
+        "availability": "retained",
+        "byte_length": 21581
+      },
+      "prior_error_explanation": "Fixture version 1.0.0 encoded RACE flags at the wrong DATA offset and placed REFR records outside canonical CELL children.",
+      "reviewer": "oracle-reviewer"
+    },
+    {
+      "oracle_version": "1.1.0",
+      "changed_at": "2026-08-02T12:00:00.0000000+00:00",
+      "independent_evidence_reference": {
+        "artifact_id": "oracle/taxonomy-projections.json",
+        "artifact_version": "1.4.0",
+        "fingerprint": "b02ea4a620dcac94050ba0e11e590c1f3b0836bc829196fddbb943f6c02a717c",
+        "availability": "retained",
+        "byte_length": 13409
+      },
+      "prior_error_explanation": "Fixture version 1.0.1 did not seal exhaustive literal taxonomy subject bindings or retain the taxonomy projection inside the expected oracle's exact reference closure.",
+      "reviewer": "oracle-reviewer"
+    },
+    {
+      "oracle_version": "1.2.0",
+      "changed_at": "2026-08-02T16:00:00.0000000+00:00",
+      "independent_evidence_reference": {
+        "artifact_id": "oracle/manual-hex-worksheet.json",
+        "artifact_version": "1.4.0",
+        "fingerprint": "3812f7df1b51e7cefd74e7d939027fc88285db59c41bf8258a0e4c3e3f560dfd",
+        "availability": "retained",
+        "byte_length": 21581
+      },
+      "prior_error_explanation": "Fixture version 1.1.0 assigned its answer-free execution scenario inventory to the effective scan-configuration role instead of sealing distinct scan-configuration and case-matrix inputs.",
+      "reviewer": "oracle-reviewer"
+    },
+    {
+      "oracle_version": "1.3.0",
+      "changed_at": "2026-08-02T20:00:00.0000000+00:00",
+      "independent_evidence_reference": {
+        "artifact_id": "oracle/manual-hex-worksheet.json",
+        "artifact_version": "1.4.0",
+        "fingerprint": "3812f7df1b51e7cefd74e7d939027fc88285db59c41bf8258a0e4c3e3f560dfd",
+        "availability": "retained",
+        "byte_length": 21581
+      },
+      "prior_error_explanation": "Fixture version 1.2.0 did not declare the accepted-order construction receipt as its own mandatory execution-input role, distinct from installation-snapshot and runtime plugin-order inputs.",
+      "reviewer": "oracle-reviewer"
+    }
+  ],
+  "expected_documentation_revisions": [],
+  "expected_passages": [],
+  "expected_candidate_decisions": [],
+  "expected_reconciliation_assessments": [],
+  "expected_lineage_events": [],
+  "expected_replay_manifest": {
+    "artifact_id": "oracle/replay-manifest.json",
+    "artifact_version": "1.4.0",
+    "fingerprint": "860b37e47f61313d0fca248a8a05c23c5a306fbccd76ac3201661c83e6cdb927",
+    "availability": "retained",
+    "byte_length": 3772
+  },
+  "expected_not_used_boundaries": [
+    "provider",
+    "hosted-search",
+    "nexus",
+    "loot"
+  ]
+}

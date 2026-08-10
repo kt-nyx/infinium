@@ -17,7 +17,7 @@ namespace Infinium.Tests;
 [TestClass]
 public sealed class CrossStageCorpusIntegrationTests
 {
-    private static readonly string[] FixturePath = ["test-data", "public-fixtures", "cross-stage", "analysis-pipeline"];
+    private static readonly string[] FixturePath = ["fixtures", "public", "cross-stage", "analysis-pipeline"];
 
     [TestMethod]
     [TestCategory("Integration")]
