@@ -382,7 +382,8 @@ internal static class ManagedAnalysisOrchestrator
         CandidatePopulationContext context = new(documentation, request.ExecutionInput.RunId,
             request.ExecutionInput.InstallationSnapshot.ArtifactId, request.AnalysisContext.ContextId,
             request.ExecutionInput.EffectiveConfiguration.ArtifactId, delivered,
-            new Sha256Fingerprint(Hash(deliveredBytes)));
+            new Sha256Fingerprint(Hash(deliveredBytes)),
+            AdmittedDeliveredInputId: delivered.PayloadId);
         CandidatePipelineRequest pipeline = new(request.ExecutionInput.RunId, request.Candidate.PopulationId,
             request.Candidate.PolicyId, request.Candidate.ThresholdId, request.Candidate.Limits,
             context, [new DeliveredIndexCandidatePopulationSource()], effectiveExecutionInput);

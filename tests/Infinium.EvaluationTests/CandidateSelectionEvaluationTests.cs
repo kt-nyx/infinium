@@ -99,6 +99,8 @@ public sealed class CandidateSelectionEvaluationTests
             ? CandidateDeliveredExpansionJsonCodec.Serialize(expansion!)
             : CandidateDeliveredInputJsonCodec.Serialize(input);
         Sha256Fingerprint artifactFingerprint = Fingerprint(bytes);
+        OpaqueId deliveredRootId = input?.PayloadId
+            ?? CandidateDeliveredInputExpander.Expand(expansion!).PayloadId;
 
         DeliveredIndexCandidatePopulationSource source = new();
         Sha256Fingerprint analyzerFingerprint = CandidateAnalysisIdentity.StructuralHash(
@@ -113,7 +115,7 @@ public sealed class CandidateSelectionEvaluationTests
             ReplayMode.Clean, null, 0, new(10_000, 500_000, 100_000, 100_000, 120_000), Boundaries());
         CandidatePopulationContext context = new(
             null, run, snapshot, contextId, configuration, input, input is null ? null : artifactFingerprint,
-            expansion, expansion is null ? null : artifactFingerprint);
+            expansion, expansion is null ? null : artifactFingerprint, deliveredRootId);
         return CandidatePipeline.Execute(new(
             run, new OpaqueId($"population-{package.Package.FixtureId.Value}"),
             new OpaqueId("candidate-policy-v1"), new OpaqueId("candidate-threshold-v1"),

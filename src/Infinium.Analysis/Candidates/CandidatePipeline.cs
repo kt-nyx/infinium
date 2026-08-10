@@ -74,7 +74,8 @@ public sealed record CandidatePopulationContext(
     CandidateDeliveredInputContract? DeliveredInput = null,
     Sha256Fingerprint? DeliveredInputByteFingerprint = null,
     CandidateDeliveredExpansionContract? DeliveredExpansion = null,
-    Sha256Fingerprint? DeliveredExpansionByteFingerprint = null);
+    Sha256Fingerprint? DeliveredExpansionByteFingerprint = null,
+    OpaqueId? AdmittedDeliveredInputId = null);
 
 public interface ICandidatePopulationSource
 {
@@ -880,7 +881,7 @@ public static class CandidatePipeline
             LimitId = request.Limits.LimitId,
             ExecutionInputId = request.ExecutionInputId,
             AnalysisRootId = analysisRootId,
-            DeliveredInputId = request.Context.DeliveredInput?.PayloadId
+            DeliveredInputId = request.Context.AdmittedDeliveredInputId
                 ?? new OpaqueId("candidate-delivered-input-unspecified"),
             ExecutionInputFingerprint = request.ExecutionInputFingerprint,
             PolicyFingerprint = request.PolicyFingerprint,
@@ -940,13 +941,21 @@ public static class CandidatePipeline
             {
                 throw new InvalidOperationException("Candidate execution must admit exactly one delivered input or expansion artifact.");
             }
+            if (request.Context.DeliveredInput is null
+                && request.Context.DeliveredExpansion is null
+                && request.Context.AdmittedDeliveredInputId is not null)
+            {
+                throw new InvalidOperationException(
+                    "A delivered-input root cannot be admitted without delivered input or expansion bytes.");
+            }
             if (request.Context.DeliveredInput is { } delivered)
             {
                 CandidateDeliveredContractInvariants.Validate(delivered);
                 Sha256Fingerprint actualFingerprint = ContractJsonSerializer.Fingerprint(delivered);
                 ArtifactReferenceContract? deliveredReference = executionInput.SourceInputs.SingleOrDefault(item =>
                     item.ArtifactId == delivered.PayloadId);
-                if (request.Context.DeliveredInputByteFingerprint is null
+                if (request.Context.AdmittedDeliveredInputId != delivered.PayloadId
+                    || request.Context.DeliveredInputByteFingerprint is null
                     || deliveredReference is null
                     || deliveredReference.ArtifactVersion != CandidateDeliveredInputIdentity.Version
                     || request.Context.DeliveredInputByteFingerprint != actualFingerprint
@@ -962,7 +971,8 @@ public static class CandidatePipeline
                 Sha256Fingerprint actualFingerprint = ContractJsonSerializer.Fingerprint(expansion);
                 ArtifactReferenceContract? expansionReference = executionInput.SourceInputs.SingleOrDefault(item =>
                     item.ArtifactId == expansion.ExpansionId);
-                if (request.Context.DeliveredExpansionByteFingerprint is null
+                if (request.Context.AdmittedDeliveredInputId is null
+                    || request.Context.DeliveredExpansionByteFingerprint is null
                     || expansionReference is null
                     || expansionReference.ArtifactVersion != CandidateDeliveredInputIdentity.Version
                     || request.Context.DeliveredExpansionByteFingerprint != actualFingerprint
@@ -973,7 +983,9 @@ public static class CandidatePipeline
                 }
             }
         }
-        else if (request.Context.DeliveredInput is not null || request.Context.DeliveredExpansion is not null)
+        else if (request.Context.DeliveredInput is not null
+            || request.Context.DeliveredExpansion is not null
+            || request.Context.AdmittedDeliveredInputId is not null)
         {
             throw new InvalidOperationException("A delivered candidate input or expansion requires an admitted analysis execution input.");
         }

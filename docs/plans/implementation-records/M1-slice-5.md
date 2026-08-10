@@ -909,7 +909,7 @@ Active contract fingerprints are:
 
 | Surface | SHA-256 |
 |---|---|
-| `candidate-analysis.v1.schema.json` | `e5c90acdadd9ff71c04fcb04b9395cb932d3f417ca9d0248024d5735b5077729` |
+| `candidate-analysis.v1.schema.json` | `f2c14a579772d0d5d6703dec9bd67da06e580a0a94b61cc93e83469e5dd6ebce` |
 | `candidate-delivered-input.v1.schema.json` | `4398b5640691c5aaaf01d415f5ad70c84dfd099f40f9c4897af582f0c643e97b` |
 | `candidate-delivered-expansion.v1.schema.json` | `4efe1b6a0827f012048dc71da592023031c5de57cf9ff213020316426d222cbe` |
 | `analysis.proto` | `229571ef3dd85075f4364ee43cd6353cde6f15aaf679c8ada31f5ea5bf7a8e4f` |
@@ -1467,11 +1467,12 @@ Implementation date: 2026-08-10
 
 Starting commit: `e7de0305515657223c513195f8323b2649b6c7c8`
 
-Status: Implementation and independent corpus review complete. Four exact
+Status: Implementation and independent corpus review complete. Five exact
 candidates (`50195fdd33f030f75364f703f636b6ecc1fdb7bd`,
 `8bd73c26cde1d569d44b5f70191528df0390e443`, and
-`93054129fc877193726ca934e72c6483329e4b34`, and
-`944a0d7c681034b1cb6313596d35b0625ce542dc`) received fresh whole-slice
+`93054129fc877193726ca934e72c6483329e4b34`,
+`944a0d7c681034b1cb6313596d35b0625ce542dc`, and
+`258287a524439aefd369d6a4095a7b6da1ebd037`) received fresh whole-slice
 `CORRECT` verdicts. All classified correction sets are closed in the current
 candidate tree; fresh exact-commit review is pending. Owner acceptance is
 requested only after an `ACCEPT` review. Slice 5 remains active and is not
@@ -1625,25 +1626,25 @@ scope.
 ### Gate and verification evidence
 
 `pwsh -NoProfile -ExecutionPolicy Bypass -File eng/verify-m1-slice5.ps1
--Gate All -OutputRoot artifacts/m1-slice5/wp6-final-correction-v3` passed the exact aggregate of
+-Gate All -OutputRoot artifacts/m1-slice5/wp6-final-correction-v5` passed the exact aggregate of
 `Contracts`, `Documentation`, `Candidates`, `CandidateScale`, `Cases`,
 `Replay`, `Output`, `Safety`, and `Comprehensive`. The final retained reports
 are:
 
 | Gate report | SHA-256 |
 |---|---|
-| `contracts.json` | `5753dd89672fdb784b12e5f93fb2748f49efc9d9ec7a2e4414e207ccfe30f9e0` |
-| `documentation.json` | `9d86f6475cf2d0b8e0679896886c570c35737611875f7b84d4c3ffc083c554ba` |
-| `candidates.json` | `180b019de6cf48dddab23b867942efa04d2e8caa96a31c584e124be6353a2249` |
-| `candidatescale.json` | `1851915b004278fae8f3ee4690d3f0ea299a989e10e7675fae4a6e3cf4e46a62` |
-| `cases.json` | `bc7706b0ca6312318d337681518dbcab78222e885e030594a6782249db8b2bf4` |
-| `replay.json` | `7b882b1bebb5b3cfa689b761750a9d0320f93bccaf5504c58b2f5f9b93277b97` |
-| `output.json` | `ea039050377630efcb6dedafd9cc7a7bbaab6bbee8866cc4f04567eaa6546f9c` |
-| `safety.json` | `edb1e84144a00db58fef052782647ecf46fd5dd65b8af24ea9234958f9b8ce23` |
-| `traceability.json` | `7ce6680c2cc44d5c2113e3b5f3d3688b56b3c1e875fb583ce9d031546659e285` |
-| `comprehensive.json` | `56c43bf4906ee122f3e03d3ec3b1b17e2efa9bb9eceb1b1dffe71974f001b9eb` |
+| `contracts.json` | `8cd1a73f2151058f49b0917a9445468b0c8b68e2f91cd8103a3fbd325e123895` |
+| `documentation.json` | `5f607a485a802bab89a2713577bfe61cebfd19416b9c2293556215d9de384ab1` |
+| `candidates.json` | `f0b58a6af724fea8f86f228e7fec871bccb8215589ab9fe818a6c10579f029f2` |
+| `candidatescale.json` | `cabcd08f28f69ea42a734eaced4065b32d32077174d9810dfa12fd762a40680e` |
+| `cases.json` | `bc4b1ba9e16dace908bb1658f287d5a5edfc3533e8c1d8c9cc4c65d218172917` |
+| `replay.json` | `a7f2509586a6b5e7b75cfeb9e821a44864f7ac4194785f5a017d61870991e3c7` |
+| `output.json` | `2a0f08eba8a74a17cea576dd3df4bb70c5751ff8cacc065e2f95c3fa0865a95b` |
+| `safety.json` | `c339884ef4bfd539335919cd027433573dd2e06c7b9eff6d092f54b2943f7eba` |
+| `traceability.json` | `7a7a2f0a1717c5aad81bdbba8198b5da3650cc6870ea5fbc7c24447bd0fa029a` |
+| `comprehensive.json` | `18d418c9e974b357de39dc12c889701e40f686643a30b6ec11333678c380a5ba` |
 | `product-comparison-receipt.json` | `296dbe63ba3705ef88453b82a3c3d24d1866fc4f27fc1fdf59f2bd77d11d97f5` |
-| `all.json` | `125e66927e58152c04a21b38dc2ad87e02b7b59bb37df15bfb60ae5f001bbae5` |
+| `all.json` | `d55969803b10df442799c164235d59f2896bfb3ac0467a89e6788cf3ddea374c` |
 
 Locked restore and the Release build passed with zero warnings and zero errors.
 The category floors passed:
@@ -1810,4 +1811,30 @@ count, audit state, and audit gap count for every case; Comprehensive requires
 D04 to be complete/complete-clean with zero replay and audit gaps. The
 corrected aggregate gate and unfiltered 417-pass Release floor are green. A
 fresh exact-commit reviewer must confirm these fourth-cycle closures before
+owner handoff.
+
+The fifth exact candidate commit was
+`258287a524439aefd369d6a4095a7b6da1ebd037`. Its fresh final review returned
+**CORRECT**. The report is
+`artifacts/m1-slice5/wp6-final-review-v5/final-review.md`, 14616 bytes,
+SHA-256 `0404c87fa9efb97b83293f6653d6e718c24c87f4cd76b92378e5fe9d3f5264d3`.
+It closed the receipt/Comprehensive finding and confirmed all gates plus the
+417-pass Release floor. It classified two remaining must-fixes: the
+product-reachable delivered-expansion path materialized and used an exact root
+but candidate publication emitted the unspecified sentinel, and this record's
+active candidate-analysis schema fingerprint was stale. It found no
+owner/authority or safety/isolation breach.
+
+The current correction closes both findings. Candidate population context now
+carries an explicit admitted delivered-input identity for either input form.
+Direct delivered bytes must match their payload ID; expansion bytes must supply
+the deterministic materialized payload ID; every produced decision must bind
+that exact root; and contexts without admitted execution input cannot claim a
+root. The managed coordinator, public fixture adapter, delivered-input unit
+path, and delivered-expansion unit path all supply the field. The expansion
+test validates the produced contract and rejects an all-decision/graph root
+substitution. The active schema table now records exact current SHA-256
+`f2c14a579772d0d5d6703dec9bd67da06e580a0a94b61cc93e83469e5dd6ebce`.
+The corrected aggregate gate and unfiltered 417-pass Release floor are green.
+A fresh exact-commit reviewer must confirm these fifth-cycle closures before
 owner handoff.

@@ -122,7 +122,12 @@ replay/audit projection fields, and because its common-prefix root inference
 could still mask an all-decision substitution. The current candidate records
 and validates those receipt fields and binds the authoritative delivered root
 into candidate schema, identity, invariants, producer output, and semantic
-projection. It also executes all four managed cases, validates immutable
+projection. The fifth exact candidate received `CORRECT` because the
+product-reachable delivered-expansion path did not yet supply that root and the
+active record retained a stale candidate-schema hash. The current candidate
+admits the materialized expansion root explicitly, proves its
+producer/invariant behavior, updates every public consumer, and records the
+current schema fingerprint. It also executes all four managed cases, validates immutable
 source-authority Git blobs, reports 35 direct requirements, and passes the
 corrected Comprehensive gate. A fresh whole-slice review of the exact committed
 candidate is still required.

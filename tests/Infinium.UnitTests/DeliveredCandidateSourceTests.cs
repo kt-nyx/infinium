@@ -112,7 +112,8 @@ public sealed class DeliveredCandidateSourceTests
              new("loot", BoundaryUseState.NotUsed, "local-only")]);
         CandidatePopulationContext context = new(
             null, input.OriginatingRunId, input.SourceSnapshotId, input.AnalysisContextId,
-            input.ConfigurationId, input, byteFingerprint);
+            input.ConfigurationId, input, byteFingerprint,
+            AdmittedDeliveredInputId: input.PayloadId);
         CandidatePipelineRequest request = new(
             input.OriginatingRunId, Id("population-delivered-bound"), Id("policy-delivered-bound"),
             Id("threshold-delivered-bound"), new(Id("limit-delivered-bound"), 10, 10), context, [source], executionInput);
@@ -122,6 +123,10 @@ public sealed class DeliveredCandidateSourceTests
         Assert.ThrowsExactly<InvalidOperationException>(() => CandidatePipeline.Execute(request with
         {
             Context = context with { DeliveredInputByteFingerprint = new Sha256Fingerprint(new string('f', 64)) },
+        }));
+        Assert.ThrowsExactly<InvalidOperationException>(() => CandidatePipeline.Execute(request with
+        {
+            Context = context with { DeliveredInput = null, DeliveredInputByteFingerprint = null },
         }));
         Assert.ThrowsExactly<InvalidOperationException>(() => CandidatePipeline.Execute(request with
         {
@@ -176,13 +181,33 @@ public sealed class DeliveredCandidateSourceTests
              new("loot", BoundaryUseState.NotUsed, "local-only")]);
         CandidatePopulationContext context = new(
             null, expansion.OriginatingRunId, expansion.SourceSnapshotId, expansion.AnalysisContextId,
-            expansion.ConfigurationId, null, null, expansion, byteFingerprint);
+            expansion.ConfigurationId, null, null, expansion, byteFingerprint,
+            CandidateDeliveredInputExpander.Expand(expansion).PayloadId);
         CandidatePipelineRequest request = new(
             expansion.OriginatingRunId, Id("population-expansion-bound"), Id("policy-expansion-bound"),
             Id("threshold-expansion-bound"), new(Id("limit-expansion-bound"), 100, 100), context, [source], executionInput);
 
         CandidatePipelineResult result = CandidatePipeline.Execute(request);
         Assert.AreEqual(1L, result.Analysis.Counts.Population);
+        Assert.AreEqual(context.AdmittedDeliveredInputId, result.Analysis.DeliveredInputId);
+        Assert.IsTrue(result.Analysis.Decisions.All(item =>
+            item.DependencyIds.Contains(result.Analysis.DeliveredInputId)));
+        Slice5ContractInvariants.Validate(result.Analysis);
+        OpaqueId substitutedRoot = Id("candidate-delivered-input-expansion-substitution");
+        CandidateAnalysisContract substituted = result.Analysis with
+        {
+            Decisions = result.Analysis.Decisions.Select(item => item with
+            {
+                DependencyIds = item.DependencyIds.Select(id =>
+                    id == result.Analysis.DeliveredInputId ? substitutedRoot : id).ToArray(),
+            }).ToArray(),
+            DependencyEdges = result.Analysis.DependencyEdges.Select(item =>
+                item.ToKind == "dependency" && item.ToId == result.Analysis.DeliveredInputId
+                    ? item with { ToId = substitutedRoot }
+                    : item).ToArray(),
+        };
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
+            Slice5ContractInvariants.Validate(substituted));
         Assert.ThrowsExactly<InvalidOperationException>(() => CandidatePipeline.Execute(request with
         {
             Context = context with { DeliveredExpansionByteFingerprint = new Sha256Fingerprint(new string('f', 64)) },
