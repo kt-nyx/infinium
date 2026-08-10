@@ -127,7 +127,12 @@ product-reachable delivered-expansion path did not yet supply that root and the
 active record retained a stale candidate-schema hash. The current candidate
 admits the materialized expansion root explicitly, proves its
 producer/invariant behavior, updates every public consumer, and records the
-current schema fingerprint. It also executes all four managed cases, validates immutable
+current schema fingerprint. The sixth exact candidate received `CORRECT`
+because expansion admission still trusted any non-null asserted root; the
+sentinel or a common snapshot dependency could therefore be mislabeled. The
+current candidate resolves the deterministic materialized root through the
+real delivered-index source and requires exact equality during admission. It
+also executes all four managed cases, validates immutable
 source-authority Git blobs, reports 35 direct requirements, and passes the
 corrected Comprehensive gate. A fresh whole-slice review of the exact committed
 candidate is still required.

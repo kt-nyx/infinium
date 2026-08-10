@@ -4,7 +4,7 @@ using Infinium.Domain.Contracts;
 
 namespace Infinium.Application.Candidates;
 
-public sealed class DeliveredIndexCandidatePopulationSource : ICandidatePopulationSource
+public sealed class DeliveredIndexCandidatePopulationSource : ICandidatePopulationSource, ICandidateDeliveredRootResolver
 {
     public static readonly OpaqueId Id = new("candidate-source-delivered-indexes-v1");
 
@@ -80,6 +80,26 @@ public sealed class DeliveredIndexCandidatePopulationSource : ICandidatePopulati
         return BuildLinkJoins(input, cancellationToken).Concat(BuildFaceGenJoins(input, cancellationToken))
             .Concat(BuildGapJoins(input, cancellationToken)).Concat(BuildDocumentationJoins(input, cancellationToken))
             .OrderBy(item => item.PopulationMemberId.Value, StringComparer.Ordinal).ToArray();
+    }
+
+    public OpaqueId ResolveDeliveredInputId(CandidatePopulationContext context)
+    {
+        if (context.DeliveredInput is not null && context.DeliveredExpansion is not null)
+        {
+            throw new InvalidOperationException(
+                "Delivered root resolution requires exactly one input or expansion artifact.");
+        }
+        if (context.DeliveredInput is { } input)
+        {
+            CandidateDeliveredContractInvariants.Validate(input);
+            return input.PayloadId;
+        }
+        if (context.DeliveredExpansion is { } expansion)
+        {
+            return CandidateDeliveredInputExpander.Expand(expansion).PayloadId;
+        }
+        throw new InvalidOperationException(
+            "Delivered root resolution requires input or expansion bytes.");
     }
 
     private static IEnumerable<CausalJoinPopulationMember> BuildLinkJoins(

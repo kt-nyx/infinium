@@ -92,6 +92,11 @@ public interface ICandidatePopulationSource
         CancellationToken cancellationToken = default);
 }
 
+public interface ICandidateDeliveredRootResolver
+{
+    public OpaqueId ResolveDeliveredInputId(CandidatePopulationContext context);
+}
+
 public sealed record CandidateExecutionLimits(
     OpaqueId LimitId,
     long MaximumPopulationWork,
@@ -971,7 +976,13 @@ public static class CandidatePipeline
                 Sha256Fingerprint actualFingerprint = ContractJsonSerializer.Fingerprint(expansion);
                 ArtifactReferenceContract? expansionReference = executionInput.SourceInputs.SingleOrDefault(item =>
                     item.ArtifactId == expansion.ExpansionId);
+                OpaqueId[] resolvedRoots = request.Sources
+                    .OfType<ICandidateDeliveredRootResolver>()
+                    .Select(item => item.ResolveDeliveredInputId(request.Context))
+                    .Distinct().ToArray();
                 if (request.Context.AdmittedDeliveredInputId is null
+                    || resolvedRoots.Length != 1
+                    || resolvedRoots[0] != request.Context.AdmittedDeliveredInputId
                     || request.Context.DeliveredExpansionByteFingerprint is null
                     || expansionReference is null
                     || expansionReference.ArtifactVersion != CandidateDeliveredInputIdentity.Version

@@ -214,6 +214,10 @@ public sealed class DeliveredCandidateSourceTests
         }));
         Assert.ThrowsExactly<InvalidOperationException>(() => CandidatePipeline.Execute(request with
         {
+            Context = context with { AdmittedDeliveredInputId = expansion.SourceSnapshotId },
+        }));
+        Assert.ThrowsExactly<InvalidOperationException>(() => CandidatePipeline.Execute(request with
+        {
             Context = context with { DeliveredExpansion = expansion with { SubjectCount = 2 } },
         }));
     }

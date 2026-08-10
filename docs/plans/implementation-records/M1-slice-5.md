@@ -1467,12 +1467,13 @@ Implementation date: 2026-08-10
 
 Starting commit: `e7de0305515657223c513195f8323b2649b6c7c8`
 
-Status: Implementation and independent corpus review complete. Five exact
+Status: Implementation and independent corpus review complete. Six exact
 candidates (`50195fdd33f030f75364f703f636b6ecc1fdb7bd`,
 `8bd73c26cde1d569d44b5f70191528df0390e443`, and
 `93054129fc877193726ca934e72c6483329e4b34`,
 `944a0d7c681034b1cb6313596d35b0625ce542dc`, and
-`258287a524439aefd369d6a4095a7b6da1ebd037`) received fresh whole-slice
+`258287a524439aefd369d6a4095a7b6da1ebd037`, and
+`0274b3b3968605390387a50aefe1d1827b588308`) received fresh whole-slice
 `CORRECT` verdicts. All classified correction sets are closed in the current
 candidate tree; fresh exact-commit review is pending. Owner acceptance is
 requested only after an `ACCEPT` review. Slice 5 remains active and is not
@@ -1626,25 +1627,25 @@ scope.
 ### Gate and verification evidence
 
 `pwsh -NoProfile -ExecutionPolicy Bypass -File eng/verify-m1-slice5.ps1
--Gate All -OutputRoot artifacts/m1-slice5/wp6-final-correction-v5` passed the exact aggregate of
+-Gate All -OutputRoot artifacts/m1-slice5/wp6-final-correction-v6` passed the exact aggregate of
 `Contracts`, `Documentation`, `Candidates`, `CandidateScale`, `Cases`,
 `Replay`, `Output`, `Safety`, and `Comprehensive`. The final retained reports
 are:
 
 | Gate report | SHA-256 |
 |---|---|
-| `contracts.json` | `8cd1a73f2151058f49b0917a9445468b0c8b68e2f91cd8103a3fbd325e123895` |
-| `documentation.json` | `5f607a485a802bab89a2713577bfe61cebfd19416b9c2293556215d9de384ab1` |
-| `candidates.json` | `f0b58a6af724fea8f86f228e7fec871bccb8215589ab9fe818a6c10579f029f2` |
-| `candidatescale.json` | `cabcd08f28f69ea42a734eaced4065b32d32077174d9810dfa12fd762a40680e` |
-| `cases.json` | `bc4b1ba9e16dace908bb1658f287d5a5edfc3533e8c1d8c9cc4c65d218172917` |
-| `replay.json` | `a7f2509586a6b5e7b75cfeb9e821a44864f7ac4194785f5a017d61870991e3c7` |
-| `output.json` | `2a0f08eba8a74a17cea576dd3df4bb70c5751ff8cacc065e2f95c3fa0865a95b` |
-| `safety.json` | `c339884ef4bfd539335919cd027433573dd2e06c7b9eff6d092f54b2943f7eba` |
-| `traceability.json` | `7a7a2f0a1717c5aad81bdbba8198b5da3650cc6870ea5fbc7c24447bd0fa029a` |
-| `comprehensive.json` | `18d418c9e974b357de39dc12c889701e40f686643a30b6ec11333678c380a5ba` |
+| `contracts.json` | `63427779d6e37433dc20673bc27024720ada5d5bc5d74f0db4c0d174d0ccbe71` |
+| `documentation.json` | `ebdb4b780c9f36f14a4d5144d043e30878fe1c8113af5dc55df9a5097fd1eaf1` |
+| `candidates.json` | `bf0fa8eb3268500e9aba3762d4ce2c6a167b68e80b36c9a9cfd12277ff1e8851` |
+| `candidatescale.json` | `429b99e0ee1348d994fcf9e5191b7cb97a39d86398c112d10316f3e3c5d1c435` |
+| `cases.json` | `4fd85047f1966d5eb7fa7ca639b49bf8932452a29f999c1c00d095aadf39b80d` |
+| `replay.json` | `e2fe531a4ec114234836a094d4ac2804a6ca353419a3388f6aff19f895ec59ad` |
+| `output.json` | `f3ea0bec147bd927703382036df04f8eca8f939fd72d59dcfc49538f8f779db9` |
+| `safety.json` | `3cdce14420a266ce73fe0fd7b392570853a818f2988c50475cdd819b46658106` |
+| `traceability.json` | `db130f3a382e975b29b1c805c58a498ccbd2db5bb0d2d79ef79707f03bfbc7eb` |
+| `comprehensive.json` | `cb428f24b47ac0c013a81a80dd9b3d6dfd42d48c14caa8575f313c4d5d42306f` |
 | `product-comparison-receipt.json` | `296dbe63ba3705ef88453b82a3c3d24d1866fc4f27fc1fdf59f2bd77d11d97f5` |
-| `all.json` | `d55969803b10df442799c164235d59f2896bfb3ac0467a89e6788cf3ddea374c` |
+| `all.json` | `5b2fab5f93f08af2d5ecb779f02618267ecade39732182dd0a2f46860c4617ba` |
 
 Locked restore and the Release build passed with zero warnings and zero errors.
 The category floors passed:
@@ -1838,3 +1839,27 @@ substitution. The active schema table now records exact current SHA-256
 The corrected aggregate gate and unfiltered 417-pass Release floor are green.
 A fresh exact-commit reviewer must confirm these fifth-cycle closures before
 owner handoff.
+
+The sixth exact candidate commit was
+`0274b3b3968605390387a50aefe1d1827b588308`. Its fresh final review returned
+**CORRECT**. The report is
+`artifacts/m1-slice5/wp6-final-review-v6/final-review.md`, 13024 bytes,
+SHA-256 `71cc7a106cb351b96e2f588ebeb87503217156ded97ca7983282973cacec2834`.
+It closed the active schema-fingerprint finding and confirmed the intended
+direct/expansion consumers and candidate invariant, but classified one
+remaining must-fix: expansion admission accepted any non-null asserted root.
+The sentinel bypassed membership validation and the source snapshot passed it
+because every real expanded decision already depended on that snapshot, so the
+wrong identity could receive semantic normalization. It found no
+owner/authority or safety/isolation breach.
+
+The current correction closes that finding. Candidate sources that materialize
+delivered expansions now implement a typed root resolver. The candidate
+pipeline asks the real admitted source to deterministically expand the bytes,
+requires exactly one resolved root, and compares it for exact equality with the
+asserted admission field before any candidate publication. A focused mutation
+uses the expansion's real source-snapshot dependency as the asserted root and
+proves rejection, while the valid expansion and public semantic/scale fixture
+paths pass. The corrected aggregate gate and unfiltered 417-pass Release floor
+are green. A fresh exact-commit reviewer must confirm this sixth-cycle closure
+before owner handoff.
