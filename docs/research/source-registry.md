@@ -2,7 +2,7 @@
 
 Status: Accepted
 Disposition: Active register
-Last reviewed: 2026-08-08
+Last reviewed: 2026-08-10
 
 This document defines the registry model, initial authority classes, and
 reviewed source-level decisions. Exact endpoints, observed capabilities, and
@@ -166,7 +166,8 @@ source-transmission permission.
 | Authority set | Status | Verified date | Registered research use and gap |
 |---|---|---|---|
 | JSON Schema 2020-12 core/validation | **Accepted design authority; implementation subset not qualified** | Retrieved 2026-07-26 | Standards baseline for schema-bound semantic operations; provider constrained-output subsets do not implement the full standard |
-| OpenAI direct API documentation and OpenAPI `2.3.0` | **Accepted initial-provider design authority under ADR-0013** | Reverified 2026-07-28 | Responses, Structured Outputs, hosted web search, background, Batch, caching, usage/cost/rate, and retention design input; exact account/model conformance remains pending |
+| OpenAI direct API documentation | **Accepted mutable initial-provider technical evidence under ADR-0013/0025** | Reverified 2026-08-10 | Current `gpt-5.6-sol`, Responses, Structured Outputs, prompt caching, token counting, pricing, usage, and data-control facts used by [RESEARCH-0054](investigations/RESEARCH-0054-slice6-openai-profile-and-implementation-readiness-refresh.md); exact account/live conformance remains pending and every live package requires a fresh drift check |
+| OpenAI OpenAPI `2.3.0` | **Accepted initial-provider design snapshot; not current-provider conformance** | Reverified 2026-07-28 | Retained Wave D request/response design input only; RESEARCH-0054 did not reverify this package and current provider facts come from the official direct documentation row above |
 | Anthropic Claude Platform documentation | **Historical portability evidence; no M1 adapter proposed** | Retrieved 2026-07-26 | Preserved capability comparison only; a second-provider adapter does not gate M1 |
 | Google Gemini structured-output documentation | **Historical schema-portability evidence** | Retrieved 2026-07-26 | Preserves the finding that schema shape still requires host semantic validation; not an M1 adapter proposal |
 

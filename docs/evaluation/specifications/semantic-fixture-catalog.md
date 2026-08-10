@@ -1,8 +1,8 @@
 # M1 semantic fixture-manifest specifications
 
-Status: Accepted  
-Accepted: 2026-07-28  
-Accepted by: Project owner  
+Status: Accepted
+Accepted: 2026-07-28
+Accepted by: Project owner
 Last reviewed: 2026-08-10
 Companion specification:
 [M1 semantic and local-ground-truth evaluation specifications](../specifications/m1-semantic-and-ground-truth.md)
@@ -145,11 +145,14 @@ not the runtime `plugin_order_input`. Its schema seals fixture/version
 identity, a fixed construction-manifest/retained-seal source basis, the
 accepted orders, and the no-launch/no-write capture policy.
 
-Complete private validation and held-out packages, autonomous delegated access,
-sanitized publication, and contamination transitions follow
-[evaluator-private fixture governance v2](../evaluator-private-fixture-governance-v2.md)
-and ADR-0027 for evaluator v2. The predecessor governance and ADR-0026 remain
-the authority for interpreting retained evaluator-v1 history.
+Historical/private validation and held-out packages, autonomous delegated
+access, sanitized publication, and contamination transitions are interpreted
+through [evaluator-private fixture governance v2](../evaluator-private-fixture-governance-v2.md)
+and ADR-0027 only when a separately authorized private evaluator task exists.
+ADR-0032 currently defers that work without a verdict. For Slices 5-9, public
+development/validation packages keep expected answers isolated in the public
+evaluation harness and outside product/model inputs; they require no private
+repository access or holdout custodian.
 
 ### 2.3 Oracle fields
 
@@ -1239,11 +1242,15 @@ The owner may accept this manifest specification as the M1 fixture design
 before the described packages exist. Before any package may itself be accepted
 as an executable fixture or executed as an M1 gate:
 
-1. assign fixture, oracle, reviewer, and holdout-custodian owners;
+1. assign fixture, oracle, and reviewer owners; assign a holdout custodian only
+   for a separately authorized future held-out package;
 2. create and independently review every required synthetic input/oracle;
-3. seal held-out package and oracle fingerprints before use;
-4. verify all controlled-real private dependencies against the RESEARCH-0035
-   manifest without committing payloads;
+3. freeze public development/validation package and oracle fingerprints before
+   comparison; seal held-out fingerprints only for a separately authorized
+   future held-out package;
+4. verify controlled-real private dependencies against the RESEARCH-0035
+   manifest only in a separately authorized Slice 8/private task; this is not a
+   prerequisite for Slice 6 public package execution;
 5. verify the recorded plan/specification reconciliation: EVAL-0051 uses the
    accepted exact-target additional-mapper inventory, while M1 EVAL-0052
    excludes `QUST`/forced-alias semantics and follows the NPC/RACE/REFR

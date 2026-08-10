@@ -32,7 +32,8 @@ implementation has passed it.
 Wave F produced the accepted
 [M1 evaluation baseline](m1-evaluation-baseline.md), its two accepted
 [case-specification sets](specifications/), and their
-[fixture-manifest sets](fixtures/). “Wave F specification accepted; execution
+[closed-world public fixture authority](repository-evaluation-authority.v1.json).
+“Wave F specification accepted; execution
 pending” means the detailed obligation is authoritative but no fixture or
 implementation has passed the case.
 

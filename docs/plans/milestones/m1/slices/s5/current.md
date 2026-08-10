@@ -32,8 +32,9 @@ Implementation, normalization, final consolidation, and independent re-review
 are complete through implementation commit
 `5514919b8f742d00e59752fa7125da487a390926`. On 2026-08-10 the project owner
 accepted the revised closeout candidate, marked Slice 5 complete, and froze its
-contracts at `Slice-frozen`. Slice 6 planning is eligible, but no Slice 6
-implementation is authorized by this summary.
+contracts at `Slice-frozen`. That closeout made Slice 6 planning eligible, but
+this historical summary never authorizes Slice 6 implementation; live authority
+remains solely in `docs/current-state.md`.
 
 Historical paths, package names, and intermediate statuses in the full record
 describe their own checkpoints. They are not current navigation or authority.

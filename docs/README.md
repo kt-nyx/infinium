@@ -56,7 +56,7 @@ other exceptional operation that explicitly requires them.
 - Planning: [plan policy](plans/README.md),
   [work-breakdown notation](plans/work-breakdown-notation.md),
   [active M1 plan](plans/milestones/m1/plan.md),
-  and [current Slice 5 entry](plans/milestones/m1/slices/s5/current.md)
+  and [current Slice 6 entry](plans/milestones/m1/slices/s6/README.md)
 - Product: [product definition](product/product-definition.md),
   [requirements](product/requirements.md),
   [mod-impact taxonomy](product/mod-impact-taxonomy.md),
@@ -117,8 +117,8 @@ code and its last regression closure are in the separate sibling Git repository
 `../infinium-evaluator-archive/`. Do not inspect any archive unless the project
 owner explicitly requests the corresponding archaeological review.
 
-M0 research, Waves A through F, completed M1 slices, and the active Slice 5
-record live under the milestone hierarchy. Superseded evaluator-attempt prose
+M0 research, Waves A through F, completed M1 slices, and the active Slice 6
+plan/handoff live under the milestone hierarchy. Superseded evaluator-attempt prose
 and proof fixtures are summarized in
 [Evaluator history](evaluation/evaluator-history.md) and retained by exact Git
 blob rather than copied through current navigation.

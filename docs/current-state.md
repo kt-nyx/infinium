@@ -16,15 +16,31 @@ review history.
 | Field | Current value |
 |---|---|
 | Milestone | `M1` - active |
-| Active slice | None; `M1/S5` is owner-accepted and complete |
-| Current authorized work | None; Slice 6 has no accepted slice plan or implementation authorization |
+| Active slice | `M1/S6` - owner-accepted; implementation-active |
+| Current authorized work | `M1/S6/WP1` only: contracts, codecs, migration, finite-bound policy, answer-free examples, public authority updates, focused verification, review, correction, and re-review under the accepted Slice 6 plan |
 | Accepted Slice 5 candidate | Final cleanup implementation `5514919b8f742d00e59752fa7125da487a390926`, following public-fixture consolidation and protocol `/4` retirement |
-| Next eligible action | Plan `M1/S6` against the accepted milestone scope and Slice 5 handoff |
-| Later work | Slice 6 implementation requires a specific accepted slice plan; no successor implementation is currently authorized |
+| Accepted Slice 6 plan | Explicit stateless/cache-off ADR-0025 conformance closure; no separate ADR; eleven packages with distinct native/live authorization gates |
+| Next eligible action | Implement and independently accept `M1/S6/WP1` from the exact accepted plan; create the Slice 6 implementation record before product edits |
+| Later work | The orchestrator may advance WP1-WP3 and WP5-WP8 only through accepted prerequisite/package gates while updating this handoff. WP4 and WP9-WP11 always require their exact fresh owner authorization; no Credential Manager or provider request is authorized now |
 | Execution policy | [Repository execution policy](execution-policy.md) |
 | Milestone plan | [M1 backend semantic proof](plans/milestones/m1/plan.md) |
-| Slice entry | [Slice 5 current summary and navigation](plans/milestones/m1/slices/s5/current.md) |
+| Slice entry | [Slice 6 current summary and navigation](plans/milestones/m1/slices/s6/README.md) |
 | Public verification profile | [M1 continuation verification profile](evaluation/m1-continuation-verification-profile.md) |
+
+## Accepted Slice 6 authority
+
+On 2026-08-10 the project owner accepted the independently reviewed Slice 6
+plan and accepted explicit `reasoning.context: "current_turn"`, standard
+reasoning mode, and explicit prompt-cache mode with no cache breakpoint/key as
+ADR-0025 conformance closure. No separate ADR is required.
+
+This handoff opens only `M1/S6/WP1`. Plan acceptance permits automatic
+progression among the named non-live packages only after each prerequisite
+package is independently accepted and this file is advanced to the exact next
+package. It does not authorize the WP4 disposable native Credential Manager
+gate, production-profile enrollment/verification, or any WP9-WP11 provider
+request. Those effects remain closed pending their own exact owner-approved
+manifests.
 
 ## Completed Slice 5 boundary
 

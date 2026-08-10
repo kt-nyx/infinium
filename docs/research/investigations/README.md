@@ -94,6 +94,7 @@ proposed disposition enabled by the report.
 | [RESEARCH-0051](RESEARCH-0051-skyrimse-secondary-root-and-mapper-inventory.md) | Completed; recommendation accepted | The exact Skyrim SE game plugin has no secondary Data root and only maps profile plugin/load-order controls outside Data; the owner accepted the empty mapper allowlist and conditional-positive EVAL-0051 amendment |
 | [RESEARCH-0052](RESEARCH-0052-evaluator-private-fixture-repository-and-agent-access.md) | Completed; recommendation accepted | ADR-0026 accepts a separate private Git history plus purpose-bound fresh-context delegated agent access and sanitized disclosure |
 | [RESEARCH-0053](RESEARCH-0053-mutagen-slice4-fixture-conformance.md) | Completed; Option A implemented | The owner selected fixture correction and independent resealing. Public Bethesda fixture version `1.0.1` and immutable private successors correct the noncanonical RACE/REFR structures, retained Mutagen `0.54.2` conformance passes, and ADR-0009 remains unchanged |
+| [RESEARCH-0054](RESEARCH-0054-slice6-openai-profile-and-implementation-readiness-refresh.md) | Completed; recommendation accepted | Slice 6 remains viable; the owner accepted explicit stateless reasoning and cache-off fields as ADR-0025 conformance closure with no separate ADR, plus provider-capable configuration v2, evidence-acquisition ownership, closed provider contracts, deterministic gates, and three separately authorized requests |
 
 Supporting artifact:
 
@@ -144,6 +145,7 @@ The project owner accepted the Wave F recommendations, baseline, case
 specifications/manifests, ADR-0025, residual-risk register, and M1 plan on
 2026-07-28. Gate F is met and M0 is complete. That Wave F acceptance did not
 itself imply evaluation execution or an M1 implementation result. Subsequent
-M1 Slices 0-4.5 are complete for their exact recorded scopes. Slice 5 is now
-active under the continuation verification profile; its live handoff is stated
-only in [current project state](../../current-state.md). M1 remains active.
+M1 Slices 0-5 are complete for their exact recorded scopes. Slice 6 has an
+accepted plan and is active at its exact package stated in
+[current project state](../../current-state.md) under the continuation
+verification profile. M1 remains active.
