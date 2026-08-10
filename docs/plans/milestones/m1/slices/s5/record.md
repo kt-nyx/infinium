@@ -1,7 +1,7 @@
 # M1 Slice 5 — Evidence, documentation, candidates, cases, and replay
 
 Status: Completed
-Disposition: Repository normalization and terminal re-review complete; awaiting explicit owner acceptance
+Disposition: Owner-accepted and complete for the public synthetic local/fixture Slice 5 scope
 
 Last reviewed: 2026-08-10
 
@@ -12,6 +12,8 @@ Work packages: `M1/S5/WP1-WP6` plus the accepted repository-normalization amendm
 Started: 2026-08-07
 
 Final review: 2026-08-10
+
+Owner accepted: 2026-08-10
 
 Branch: `codex/m1-s5-repository-normalization`
 
@@ -2165,6 +2167,43 @@ Exact working-tree verification passed:
   isolation.
 
 No private fixture repository, protocol archive, or abandoned implementation
-archive was accessed. This evidence completes the authorized cleanup, not
-project-owner acceptance of Slice 5. Contracts remain implementation-active,
-and no Slice 6 implementation is authorized until explicit owner acceptance.
+archive was accessed. At that checkpoint this evidence completed the authorized
+cleanup but did not self-accept Slice 5; contracts remained
+implementation-active until the owner decision recorded below.
+
+## 2026-08-10 owner acceptance and Slice 5 closeout
+
+The project owner requested review of the current Slice 5 status and explicitly
+authorized closeout if the slice was complete. The closeout review confirmed
+that WP1-WP6,
+repository normalization, public-fixture consolidation, protocol `/4`
+retirement, final repository consolidation, and terminal independent re-review
+are complete with no unresolved must-fix, follow-up, owner/authority, safety,
+or isolation finding.
+
+The owner accepts the revised closeout candidate through implementation commit
+`5514919b8f742d00e59752fa7125da487a390926` and its retained documentation and
+review evidence. This acceptance also accepts the incorporated metadata-only
+fixture corrections, advances the Slice 5 contracts from
+`Implementation-active` to `Slice-frozen`, and marks `M1/S5` accepted and
+complete. It makes `M1/S6` planning eligible but does not authorize Slice 6
+implementation, live provider work, or any private evaluator operation.
+
+The closeout verification at repository head reran locked restore, Release
+build, the six current category floors, the complete solution suite, formatting,
+dependency-manifest freshness, `eng/verify-analysis-pipeline.ps1 -Gate All`,
+and diff hygiene. The complete solution result was 418 passed, 9 declared
+platform/private-environment skips, and 0 failed; every analysis-pipeline gate
+passed. Review found that the active plan/profile still used obsolete
+`Category=M1...` filters that selected zero tests. That recoverable
+documentation defect was corrected to the repository's current
+`TestCategory=Unit|Contract|Integration|Evaluation|Security|Fault` metadata,
+and the six filters then exercised 148/1, 113/0, 70/0, 75/8, 109/3, and 105/3
+passed/skipped tests respectively, with zero failures. The closeout validation
+also found that `eng/validate-documentation.ps1` bound its optional repository
+root before `$PSScriptRoot` was available under Windows PowerShell. The script
+now resolves that default after parameter binding and passes with no explicit
+root under both Windows PowerShell and PowerShell 7.
+
+This closeout proves only public synthetic local/fixture Slice 5 conformance.
+No private held-out product verdict exists; M1 remains active and incomplete.

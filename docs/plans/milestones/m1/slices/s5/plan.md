@@ -1038,7 +1038,7 @@ accepted/complete.
 **Verification.** Focused aggregate:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File eng/verify-m1-slice5.ps1 -Gate All -OutputRoot artifacts/m1-slice5/wp6
+powershell -NoProfile -ExecutionPolicy Bypass -File eng/verify-analysis-pipeline.ps1 -Gate All -OutputRoot artifacts/analysis-pipeline/closeout
 ```
 
 Complete common floor:
@@ -1046,12 +1046,12 @@ Complete common floor:
 ```powershell
 dotnet restore Infinium.sln --locked-mode --nologo
 dotnet build Infinium.sln -c Release --no-restore --nologo
-dotnet test Infinium.sln -c Release --no-build --nologo --filter "Category=M1Unit"
-dotnet test Infinium.sln -c Release --no-build --nologo --filter "Category=M1Contract"
-dotnet test Infinium.sln -c Release --no-build --nologo --filter "Category=M1Integration"
-dotnet test Infinium.sln -c Release --no-build --nologo --filter "Category=M1Evaluation"
-dotnet test Infinium.sln -c Release --no-build --nologo --filter "Category=M1Security"
-dotnet test Infinium.sln -c Release --no-build --nologo --filter "Category=M1Fault"
+dotnet test Infinium.sln -c Release --no-build --nologo --filter "TestCategory=Unit"
+dotnet test Infinium.sln -c Release --no-build --nologo --filter "TestCategory=Contract"
+dotnet test Infinium.sln -c Release --no-build --nologo --filter "TestCategory=Integration"
+dotnet test Infinium.sln -c Release --no-build --nologo --filter "TestCategory=Evaluation"
+dotnet test Infinium.sln -c Release --no-build --nologo --filter "TestCategory=Security"
+dotnet test Infinium.sln -c Release --no-build --nologo --filter "TestCategory=Fault"
 dotnet test Infinium.sln -c Release --no-build --nologo
 dotnet format Infinium.sln --verify-no-changes --no-restore --verbosity minimal
 powershell -NoProfile -ExecutionPolicy Bypass -File eng/update-dependency-manifest.ps1 -Check

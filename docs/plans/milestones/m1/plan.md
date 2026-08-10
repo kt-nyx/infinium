@@ -570,12 +570,12 @@ root:
 ```powershell
 dotnet restore Infinium.sln --locked-mode
 dotnet build Infinium.sln -c Release --no-restore
-dotnet test Infinium.sln -c Release --no-build --filter "Category=M1Unit"
-dotnet test Infinium.sln -c Release --no-build --filter "Category=M1Contract"
-dotnet test Infinium.sln -c Release --no-build --filter "Category=M1Integration"
-dotnet test Infinium.sln -c Release --no-build --filter "Category=M1Evaluation"
-dotnet test Infinium.sln -c Release --no-build --filter "Category=M1Security"
-dotnet test Infinium.sln -c Release --no-build --filter "Category=M1Fault"
+dotnet test Infinium.sln -c Release --no-build --filter "TestCategory=Unit"
+dotnet test Infinium.sln -c Release --no-build --filter "TestCategory=Contract"
+dotnet test Infinium.sln -c Release --no-build --filter "TestCategory=Integration"
+dotnet test Infinium.sln -c Release --no-build --filter "TestCategory=Evaluation"
+dotnet test Infinium.sln -c Release --no-build --filter "TestCategory=Security"
+dotnet test Infinium.sln -c Release --no-build --filter "TestCategory=Fault"
 powershell -NoProfile -ExecutionPolicy Bypass -File eng/verify-analysis-pipeline.ps1 -Gate All -OutputRoot <temporary-output-root>
 git diff --check
 ```

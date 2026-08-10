@@ -1,10 +1,34 @@
 [CmdletBinding()]
 param(
-    [string]$RepositoryRoot = (Split-Path -Parent $PSScriptRoot)
+    [string]$RepositoryRoot
 )
+
+if ($PSVersionTable.PSEdition -ne 'Core') {
+    $pwsh = Get-Command pwsh -ErrorAction SilentlyContinue
+    if ($null -eq $pwsh) {
+        throw 'Documentation validation requires PowerShell 7 or a pwsh executable available on PATH.'
+    }
+
+    $arguments = @('-NoProfile', '-File', $PSCommandPath)
+    if (-not [string]::IsNullOrWhiteSpace($RepositoryRoot)) {
+        $arguments += @('-RepositoryRoot', $RepositoryRoot)
+    }
+
+    & $pwsh.Source @arguments
+    if ($LASTEXITCODE -ne 0) {
+        throw "PowerShell 7 documentation validation failed with exit code $LASTEXITCODE."
+    }
+    return
+}
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+
+$RepositoryRoot = if ([string]::IsNullOrWhiteSpace($RepositoryRoot)) {
+    Split-Path -Parent $PSScriptRoot
+} else {
+    $RepositoryRoot
+}
 
 $repositoryRootPath = [System.IO.Path]::GetFullPath($RepositoryRoot)
 $allowedStatuses = @(

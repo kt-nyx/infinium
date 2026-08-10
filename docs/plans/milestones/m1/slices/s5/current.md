@@ -1,7 +1,7 @@
 # M1 Slice 5 current summary
 
 Status: Accepted
-Disposition: Active slice navigation; owner acceptance pending
+Disposition: Completed slice navigation
 Last reviewed: 2026-08-10
 
 Live authorization and the next eligible action are stated only in
@@ -26,14 +26,14 @@ product semantics or fixture truth.
 | Review exact implementation chronology, commands, corrections, or evidence | [Full implementation record](record.md) |
 | Determine current authorization or the next eligible action | [Current project state](../../../../../current-state.md) |
 
-## Current closeout boundary
+## Accepted closeout boundary
 
 Implementation, normalization, final consolidation, and independent re-review
 are complete through implementation commit
-`5514919b8f742d00e59752fa7125da487a390926`. The slice is not owner-accepted,
-and its contracts remain implementation-active until the owner explicitly
-accepts and freezes the revised closeout candidate. No Slice 6 implementation
-is authorized by this summary.
+`5514919b8f742d00e59752fa7125da487a390926`. On 2026-08-10 the project owner
+accepted the revised closeout candidate, marked Slice 5 complete, and froze its
+contracts at `Slice-frozen`. Slice 6 planning is eligible, but no Slice 6
+implementation is authorized by this summary.
 
 Historical paths, package names, and intermediate statuses in the full record
 describe their own checkpoints. They are not current navigation or authority.
