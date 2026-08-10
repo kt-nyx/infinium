@@ -1,6 +1,6 @@
 # M1 Slice 5 — Evidence, documentation, candidates, cases, and replay
 
-Status: `M1/S5/WP1` through `M1/S5/WP5` complete and reviewed; `M1/S5/WP6` corrected implementation and independent corpus review complete, fresh final re-review pending; Slice 5 is not complete
+Status: `M1/S5/WP1` through `M1/S5/WP5` complete and reviewed; `M1/S5/WP6` implementation and independent corpus review complete, two final-review correction cycles closed in the candidate tree, fresh exact-commit re-review pending; Slice 5 is not complete
 
 Plan: `M1/S5`
 
@@ -1467,12 +1467,13 @@ Implementation date: 2026-08-10
 
 Starting commit: `e7de0305515657223c513195f8323b2649b6c7c8`
 
-Status: Implementation and independent corpus review complete. The first exact
-candidate (`50195fdd33f030f75364f703f636b6ecc1fdb7bd`) received a fresh
-whole-slice `CORRECT` verdict; its must-fix findings have been corrected and a
-fresh review of the corrected exact commit is pending. Owner acceptance is
-requested only after that review. Slice 5 remains active and is not marked
-accepted or complete.
+Status: Implementation and independent corpus review complete. Two exact
+candidates (`50195fdd33f030f75364f703f636b6ecc1fdb7bd` and
+`8bd73c26cde1d569d44b5f70191528df0390e443`) received fresh whole-slice
+`CORRECT` verdicts. Both classified correction sets are closed in the current
+candidate tree; fresh exact-commit review is pending. Owner acceptance is
+requested only after an `ACCEPT` review. Slice 5 remains active and is not
+marked accepted or complete.
 
 ### Scope and authority
 
@@ -1622,25 +1623,25 @@ scope.
 ### Gate and verification evidence
 
 `pwsh -NoProfile -ExecutionPolicy Bypass -File eng/verify-m1-slice5.ps1
--Gate All -OutputRoot artifacts/m1-slice5/wp6-final-verification` passed the exact aggregate of
+-Gate All -OutputRoot artifacts/m1-slice5/wp6-final-correction` passed the exact aggregate of
 `Contracts`, `Documentation`, `Candidates`, `CandidateScale`, `Cases`,
 `Replay`, `Output`, `Safety`, and `Comprehensive`. The final retained reports
 are:
 
 | Gate report | SHA-256 |
 |---|---|
-| `contracts.json` | `f15e51ece796b5823098ec57f6c18191fac50076b652bcfa4f40b67aaadae863` |
-| `documentation.json` | `ce9ab13f8bbb5937608a9a63912d4d57dccde5f4fe11e68628cb961fec35dfa4` |
-| `candidates.json` | `17c19aba241c8102090f9e1d4446119f0cd89f90cfbdeaca48a6da824aabf4fd` |
-| `candidatescale.json` | `4e1a3b3b2f0ff41f0ef5221c84fe7a107ff11194a7b0e715701f77ca7f6a186e` |
-| `cases.json` | `65ffb8494b8eb95a628c21a7d4534da2d3f5d2ec5263de8c3c0bcfa0d63e490a` |
-| `replay.json` | `aaf542260e5c33974ea252417364b733b60ac622d10513e44ba552d967968880` |
-| `output.json` | `55817cda98f05d9c625ce0b7f20261498ce7c20cb23b45ffd60aed40053c63ef` |
-| `safety.json` | `d61b449b082f73cf379629a7b67cd1da7684d2b1aabf48f676587f167983678c` |
-| `traceability.json` | `1b60b71fcfedaa474ec5a0a6f0416d6d50cdfa8fb419badb822aa101bd96986a` |
-| `comprehensive.json` | `82f72a57014b46d085c775c4e20ab686d109ffa08a7f66217f2724e5f9ba3428` |
-| `product-comparison-receipt.json` | `306aed96ecd20b2513cb3e4b92ae2cd745be5211dcbe64550364bafb92210069` |
-| `all.json` | `4f8962893a0903933915352ba5e4980bb86f655d64e1e0d861adbe771e1d2703` |
+| `contracts.json` | `3781aa0679ec8697cbad13ebf312b6ab07d3652c7cd0ca45e080c85fdfc511a5` |
+| `documentation.json` | `b0472f3b62936329e0d07c0cbcfeed8994000493aa831318bcf3dc161b8fe6f9` |
+| `candidates.json` | `bc31cbd7380b7e0bf7a046e0f5c6b27ab704f465d5c79efdec71a7d313d324b7` |
+| `candidatescale.json` | `1031474434f19157b79883d1894bf8dbee94a64b71d7582bba6710be5527acf5` |
+| `cases.json` | `69c7090310f7447f9e365b6c4e2b4008eb545dace5dbc21c6ec9a93dda9fb251` |
+| `replay.json` | `23ba40f206a4e0979c1c660024537b538c7fc199cdbc9c5abb1c7a97ab592932` |
+| `output.json` | `01deb4991266d84a6f2ba626682b96e3f52d011d6a1417a00a01f8b50e8c3fd9` |
+| `safety.json` | `88c21791f4e68db6f8ed27398db7c2e0515280e53369db4aaabdeaac07c5d48e` |
+| `traceability.json` | `55e47795aecc0388df0ad5c992c41c88c42a1eb8db6c966b3f2c912fa7a295e5` |
+| `comprehensive.json` | `0a694da4d270ed2b3169555693091270ddfb4b7f029d1db6fd9b4dc214b6c1bc` |
+| `product-comparison-receipt.json` | `95cf41ab827ff373d13f3ca392c90bac5bc7a2d44a1b8da66106442b4906bce7` |
+| `all.json` | `cc8876a2f08fbd26dc039080ff19b3e2ff4f1ca5ed8ef5b7e8d5201215e16f07` |
 
 Locked restore and the Release build passed with zero warnings and zero errors.
 The category floors passed:
@@ -1722,3 +1723,34 @@ reads and hashes those Git blobs; and the accepted independent review has no
 trailing whitespace. A fresh final reviewer must confirm these closures
 against the exact corrected commit before owner handoff. Its exact input
 commit, report identity, and verdict will be appended here.
+
+The second exact candidate commit was
+`8bd73c26cde1d569d44b5f70191528df0390e443`. Its fresh final review also
+returned **CORRECT**. The report is
+`artifacts/m1-slice5/wp6-final-review-v2/final-review.md`, 13171 bytes,
+SHA-256 `dcaf262a65806c5d2710dc53db701cba2bf671fc565af9e872268d1e7a2814fc`.
+It confirmed that the original coordinator/query, traceability,
+source-authority, and diff-hygiene findings were closed, but classified two
+remaining must-fixes: D04 asserted the actual `partial` replay beside the
+frozen `complete-clean` expectation and still emitted a passing comparison;
+and documentation replay-node deduplication suppressed a same-ID source
+reference without first proving equal version, hash, and retained state. It
+found no owner/authority or safety/isolation breach.
+
+The current correction follows accepted replay authority rather than product
+output. Semantic coverage gaps remain separately visible in the run output but
+no longer manufacture retained-dependency or audit-trail loss. Complete-clean
+replay still requires a complete terminal state, no execution failures, no
+missing dependency, complete audit, and equivalent semantic output. The
+semantic projection now removes run-binding-only delivered-input, candidate
+abstention/gap, occurrence, coverage-gap, and identity-envelope retrieval IDs
+while retaining their typed semantic contents; D04 therefore compares equal to
+the clean run without hiding factual changes. A documentation output alias is
+deduplicated only after exact schema version, byte hash, and `retained` state
+match; drift fails closed. The four-case test now compares the actual D04
+`CompleteClean`/complete-audit result, exact prior-run binding, zero missing
+dependencies and history mutations, plus the remaining D02-D04 oracle fields.
+The Comprehensive receipt gate independently requires the ordered four cases
+and those D04 replay facts. Corrected Comprehensive passed 6 integration and
+14 evaluation tests with no skips. A fresh exact-commit reviewer must now
+confirm both second-cycle closures before owner handoff.

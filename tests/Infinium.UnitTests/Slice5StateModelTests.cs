@@ -117,7 +117,7 @@ public sealed class Slice5StateModelTests
     [TestMethod]
     [TestCategory("M1Unit")]
     [TestProperty("Category", "M1Unit")]
-    public void Slice5StateModelCompleteReplayCannotHideMissingDependenciesOrGaps()
+    public void Slice5StateModelCompleteReplayCannotHideMissingDependenciesButPreservesSeparateCoverageGaps()
     {
         AnalysisReplayContract invalid = new(
             ContractConstants.AnalysisReplaySchemaId, Version(), Id("replay-1"), Id("run-1"),
@@ -125,6 +125,8 @@ public sealed class Slice5StateModelTests
             [], [], [], [Id("missing-1")], [Id("gap-1")], true, Id("prior-run"));
 
         Assert.ThrowsExactly<InvalidOperationException>(() => Slice5ContractInvariants.Validate(invalid));
+
+        Slice5ContractInvariants.Validate(invalid with { MissingDependencyIds = [] });
     }
 
     [TestMethod]

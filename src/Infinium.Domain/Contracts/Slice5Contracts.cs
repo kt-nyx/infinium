@@ -1872,11 +1872,10 @@ public static class Slice5ContractInvariants
         }
         if (value.ReplayState == ReplayState.CompleteClean
             && (value.MissingDependencyIds.Count != 0
-                || value.CoverageGapIds.Count != 0
                 || !value.SemanticallyEquivalent
                 || value.AuditabilityState != AuditabilityState.Complete))
         {
-            throw new InvalidOperationException("Complete-clean replay requires complete dependencies, audit, and semantic equivalence.");
+            throw new InvalidOperationException("Complete-clean replay requires complete retained dependencies, audit, and semantic equivalence.");
         }
     }
 

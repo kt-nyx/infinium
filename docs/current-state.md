@@ -19,8 +19,8 @@ records preserve evidence and history.
 | Milestone | `M1` — active |
 | Active slice | `M1/S5` — active |
 | Completed package | `M1/S5/WP1` through `M1/S5/WP5` |
-| Package awaiting owner acceptance | `M1/S5/WP6` — corrected implementation and independent corpus review complete; fresh final re-review pending; not owner-accepted |
-| Next eligible action | Fresh final review of the corrected exact WP6 commit, then owner review only if that verdict is `ACCEPT` |
+| Package awaiting owner acceptance | `M1/S5/WP6` — implementation and independent corpus review complete; two final-review correction cycles closed in the candidate tree; fresh exact-commit re-review pending; not owner-accepted |
+| Next eligible action | Commit and freshly review the replay/oracle correction candidate, then owner review only if that exact verdict is `ACCEPT` |
 | Later work | Successor-slice planning only after explicit Slice 5 owner acceptance; no successor implementation is authorized |
 | Default execution policy | [Development execution policy](development/execution-policy.md) |
 | Active milestone plan | [M1 backend semantic proof](plans/milestones/M1-backend-semantic-proof.md) |
@@ -104,10 +104,17 @@ readiness, safety, whole-M1, or product-acceptance verdict.
 The first exact whole-slice candidate received a `CORRECT` verdict because it
 executed only D01, bypassed the managed coordinator/query boundary, overstated
 traceability, left source-authority seals unresolved, and failed the whitespace
-diff check. The correction candidate now executes all four managed cases,
+diff check. The first correction candidate then received `CORRECT` because its
+D04 test masked `partial` product replay against a frozen `complete-clean`
+oracle, and because ID-only documentation-node deduplication could hide drifted
+retained metadata. The current candidate separates semantic coverage gaps from
+retained replay/audit loss, normalizes run-binding identities out of the
+semantic output fingerprint, requires exact documentation alias
+version/hash/state, compares D04 directly to `CompleteClean`, and makes
+Comprehensive validate that receipt. It also executes all four managed cases,
 validates immutable source-authority Git blobs, reports 35 direct requirements,
-and passes the aggregate gates and Release floor. A fresh whole-slice re-review
-of the exact corrected commit is still required.
+and passes the corrected Comprehensive gate. A fresh whole-slice review of the
+exact committed candidate is still required.
 
 WP6 is not owner-accepted, the Slice 5 contracts are not frozen, and Slice 5 is
 not complete. The only eligible handoff after a final `ACCEPT` review is owner

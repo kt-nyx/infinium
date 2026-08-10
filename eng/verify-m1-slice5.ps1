@@ -629,10 +629,18 @@ function Invoke-ComprehensiveGate {
     }
     $comparisonReceipt = Read-StrictJson $comparisonReceiptPath
     $expectedCaseIds = @('WP6-CROSS-CLEAN-D01', 'WP6-CROSS-UNCHANGED-D02', 'WP6-CROSS-CHANGED-D03', 'WP6-CROSS-REPLAY-D04')
-    $actualCaseIds = @($comparisonReceipt.cases.case_id | Sort-Object)
+    $actualCaseIds = @($comparisonReceipt.cases.case_id)
+    $replayCase = @($comparisonReceipt.cases | Where-Object { $_.case_id -ceq 'WP6-CROSS-REPLAY-D04' })
     if (([string] $comparisonReceipt.result -cne 'passed') -or
         ([string] $comparisonReceipt.oracle_load_order -cne 'after-all-four-observations-sealed') -or
-        (($actualCaseIds -join "`n") -cne (@($expectedCaseIds | Sort-Object) -join "`n")) -or
+        (($actualCaseIds -join "`n") -cne ($expectedCaseIds -join "`n")) -or
+        ($replayCase.Count -ne 1) -or
+        ([string] $replayCase[0].replay_state -cne 'complete-clean') -or
+        ([string] $replayCase[0].auditability_state -cne 'complete') -or
+        (-not [bool] $replayCase[0].semantically_equivalent) -or
+        ($replayCase[0].missing_dependency_count -ne 0) -or
+        ([string] $replayCase[0].prior_run_id -cne 'run-input-001') -or
+        ($replayCase[0].history_mutations -ne 0) -or
         (@($comparisonReceipt.cases | Where-Object {
                 ($_.coordinator_terminal_state -cne 'completed-with-gaps') -or
                 ($_.publication_commits -ne 1) -or

@@ -709,6 +709,20 @@ public sealed class AnalysisReplayIntegrationTests
         Assert.ThrowsExactly<AnalysisIdentityDriftException>(() => context.Publish(assignment: drifted));
         Assert.IsNull(context.Store.GetAnalysisSemanticFingerprint(context.RunId));
 
+        ArtifactReferenceContract driftedDocumentationAlias = new(
+            new OpaqueId(context.Assignment.DocumentationEvidence.PayloadId),
+            ContractVersion.Parse(context.Assignment.DocumentationEvidence.SchemaVersion),
+            new Sha256Fingerprint(new string('0', 64)), "retained");
+        AnalysisV1WorkAssignment aliasDrift = context.Assignment with
+        {
+            ExecutionInput = context.Assignment.ExecutionInput with
+            {
+                SourceInputs = [.. context.Assignment.ExecutionInput.SourceInputs, driftedDocumentationAlias],
+            },
+        };
+        Assert.ThrowsExactly<AnalysisIdentityDriftException>(() => context.Publish(assignment: aliasDrift));
+        Assert.IsNull(context.Store.GetAnalysisSemanticFingerprint(context.RunId));
+
         _ = context.Publish();
         AnalysisArtifactPagePersistenceRecord first = context.Store.ListAnalysisArtifacts(
             context.RunId, new HashSet<string>(), new HashSet<string>(), 2,

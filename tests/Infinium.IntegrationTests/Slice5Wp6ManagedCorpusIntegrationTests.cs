@@ -134,6 +134,7 @@ public sealed class Slice5Wp6ManagedCorpusIntegrationTests
             Assert.AreEqual(HandshakeDisposition.Accepted, handshake.Disposition);
 
             Dictionary<string, ManagedCaseObservation> observations = new(StringComparer.Ordinal);
+            List<string> executionOrder = [];
             DocumentationEvidenceContract? cleanDocumentation = null;
             string? cleanRunId = null;
             byte[]? cleanOutputBefore = null;
@@ -181,7 +182,17 @@ public sealed class Slice5Wp6ManagedCorpusIntegrationTests
                 }).ResponseAsync;
                 Assert.AreEqual(GetAnalysisOutputResponse.ResultOneofCase.Output, queried.ResultCase, queried.Failure?.Detail);
                 ManagedCaseObservation observation = Observe(caseId, runId, store, queried.Output);
+                if (cleanOutputBefore is not null)
+                {
+                    observation = observation with
+                    {
+                        RetainedHistoryUnchanged = cleanOutputBefore.AsSpan()
+                            .SequenceEqual(store.ReadAnalysisRunOutput(cleanRunId!)),
+                    };
+                }
+                AssertHarnessReceipt(caseEnvelope.GetProperty("required_receipts"), observation, cleanRunId);
                 observations.Add(caseId, observation);
+                executionOrder.Add(caseId);
                 if (mode == "clean")
                 {
                     cleanRunId = runId;
@@ -194,6 +205,10 @@ public sealed class Slice5Wp6ManagedCorpusIntegrationTests
             Assert.IsNotNull(cleanOutputBefore);
             CollectionAssert.AreEqual(cleanOutputBefore, store.ReadAnalysisRunOutput(cleanRunId));
             Assert.HasCount(4, observations);
+            CollectionAssert.AreEqual(
+                harness.RootElement.GetProperty("observation_protocol").GetProperty("case_execution_order")
+                    .EnumerateArray().Select(item => item.GetString()!).ToArray(),
+                executionOrder);
 
             // Frozen expected truth becomes available only after every coordinator/query observation is sealed.
             using JsonDocument expected = Parse(Path.Combine(fixtureRoot, "expected-results.v1.json"));
@@ -202,7 +217,7 @@ public sealed class Slice5Wp6ManagedCorpusIntegrationTests
                 string caseId = expectedCase.GetProperty("case_id").GetString()!;
                 AssertCase(expectedCase.GetProperty("expected"), observations[caseId], observations["WP6-CROSS-CLEAN-D01"]);
             }
-            WriteComparisonReceipt(repositoryRoot, observations.Values.OrderBy(item => item.CaseId, StringComparer.Ordinal));
+            WriteComparisonReceipt(repositoryRoot, executionOrder.Select(caseId => observations[caseId]));
         }
         finally
         {
@@ -538,13 +553,12 @@ public sealed class Slice5Wp6ManagedCorpusIntegrationTests
         ExternalBoundaryReceipt boundary = JsonSerializer.Deserialize<ExternalBoundaryReceipt>(
             store.ReadAnalysisBoundaryReceipt(runId))
             ?? throw new AssertFailedException("The managed boundary receipt was unavailable.");
-        int externalEffects = boundary.Effects.Count(item => item.Value != "not-used");
         return new(
             caseId, runId, documentation, candidates, findings, output, replay,
             docsCheckpoint.Disposition, candidateCheckpoint.Disposition, findingCheckpoint.Disposition,
             store.GetAnalysisSemanticFingerprint(runId)!,
             TypedSemanticFingerprint(documentation, candidates, findings),
-            queryMatchesStore, humanEmbedsJson, externalEffects);
+            queryMatchesStore, humanEmbedsJson, boundary.Effects);
     }
 
     private static void AssertCase(JsonElement expected, ManagedCaseObservation actual, ManagedCaseObservation clean)
@@ -562,47 +576,85 @@ public sealed class Slice5Wp6ManagedCorpusIntegrationTests
                 Assert.AreEqual("recomputed-invalidated", actual.FindingDisposition);
                 break;
             case "WP6-CROSS-UNCHANGED-D02":
+                Assert.AreEqual(clean.RunId, actual.Replay.ComparedRunId?.Value);
                 Assert.AreEqual(expected.GetProperty("resolved_dependencies_equal_clean").GetBoolean(),
                     actual.DocumentationCheckpointPayloadId == clean.DocumentationCheckpointPayloadId);
+                Assert.AreEqual("reused-exact", expected.GetProperty("wp2_checkpoint").GetString());
                 Assert.AreEqual("reused-retained-phase", actual.DocumentationDisposition);
+                Assert.AreEqual("recomputed-run-binding", expected.GetProperty("wp3_execution").GetString());
                 Assert.AreEqual("recomputed-run-binding", actual.CandidateDisposition);
+                Assert.AreEqual("recomputed-from-current-wp3-closure", expected.GetProperty("wp4_execution").GetString());
                 Assert.IsTrue(actual.FindingDisposition.StartsWith("recomputed-", StringComparison.Ordinal));
                 Assert.AreEqual(expected.GetProperty("typed_semantic_equivalence_to_clean").GetBoolean(),
                     actual.TypedSemanticFingerprint == clean.TypedSemanticFingerprint);
+                Assert.AreEqual("wp2-checkpoint-only", expected.GetProperty("byte_reuse_claim").GetString());
+                Assert.AreNotEqual(clean.Candidates.PayloadId, actual.Candidates.PayloadId);
+                Assert.AreNotEqual(clean.Findings.PayloadId, actual.Findings.PayloadId);
+                Assert.AreEqual("not-predeclared", expected.GetProperty("new_semantic_object_count").GetString());
                 Assert.AreEqual(expected.GetProperty("publication_commits").GetInt32(), actual.QueryMatchesStore ? 1 : 0);
+                Assert.AreEqual(expected.GetProperty("history_mutations").GetInt32(), actual.RetainedHistoryUnchanged ? 0 : 1);
                 Assert.AreEqual(expected.GetProperty("network_calls").GetInt32(), actual.ExternalEffects);
                 break;
             case "WP6-CROSS-CHANGED-D03":
+                Assert.AreEqual(clean.RunId, actual.Replay.ComparedRunId?.Value);
                 Assert.AreNotEqual(clean.DocumentationCheckpointPayloadId, actual.DocumentationCheckpointPayloadId);
+                Assert.AreEqual("new-revision-and-dependent-checkpoint", expected.GetProperty("wp2_phase").GetString());
+                Assert.IsFalse(expected.GetProperty("wp2_checkpoint_reuse").GetBoolean());
                 Assert.AreNotEqual("reused-retained-phase", actual.DocumentationDisposition);
+                Assert.AreEqual("recomputed-transitively-with-new-run-binding", expected.GetProperty("wp3_execution").GetString());
                 Assert.AreEqual("recomputed-invalidated", actual.CandidateDisposition);
+                Assert.AreEqual("recomputed-from-current-wp3-closure", expected.GetProperty("wp4_execution").GetString());
                 Assert.IsTrue(actual.FindingDisposition.StartsWith("recomputed-", StringComparison.Ordinal));
+                Assert.AreEqual("new-aggregate-publication", expected.GetProperty("wp5_execution").GetString());
                 Assert.AreEqual(expected.GetProperty("wp2_shape_counts_equal_clean").GetBoolean(),
                     DocumentationShape(actual.Documentation) == DocumentationShape(clean.Documentation));
                 Assert.AreEqual(expected.GetProperty("new_revision_identity_required").GetBoolean(),
                     actual.Documentation.Revisions.Single().RevisionId != clean.Documentation.Revisions.Single().RevisionId);
+                string changedDependency = expected.GetProperty("changed_dependencies")[0].GetString()!;
+                Assert.AreEqual("source.001:r1->r2", changedDependency);
+                Assert.AreEqual(clean.Documentation.Revisions.Single().SourceId,
+                    actual.Documentation.Revisions.Single().SourceId);
+                Assert.AreEqual("r1", clean.Documentation.Revisions.Single().SourceRevision);
+                Assert.AreEqual("r2", actual.Documentation.Revisions.Single().SourceRevision);
+                Assert.AreNotEqual(clean.Documentation.Revisions.Single().ByteFingerprint,
+                    actual.Documentation.Revisions.Single().ByteFingerprint);
                 foreach (string stable in expected.GetProperty("stable_unrelated_typed_facts").EnumerateArray()
                     .Select(item => item.GetString()!))
                 {
-                    Assert.IsTrue(actual.Candidates.Decisions.Any(item => item.SourceFactId == Id(stable)));
+                    CandidateDecisionContract cleanFact = clean.Candidates.Decisions.Single(item => item.SourceFactId == Id(stable));
+                    CandidateDecisionContract actualFact = actual.Candidates.Decisions.Single(item => item.SourceFactId == Id(stable));
+                    Assert.AreEqual(StableDecisionShape(cleanFact), StableDecisionShape(actualFact));
                 }
+                Assert.AreEqual("not-asserted", expected.GetProperty("stable_fact_checkpoint_reuse").GetString());
+                Assert.AreEqual("not-asserted", expected.GetProperty("semantic_fingerprint_equivalence").GetString());
+                Assert.AreEqual(expected.GetProperty("retained_history_mutations").GetInt32(), actual.RetainedHistoryUnchanged ? 0 : 1);
                 Assert.AreEqual(expected.GetProperty("network_calls").GetInt32(), actual.ExternalEffects);
                 break;
             case "WP6-CROSS-REPLAY-D04":
+                Assert.IsTrue(actual.Replay.SemanticallyEquivalent,
+                    $"Replay semantic fingerprint {actual.SemanticFingerprint} did not equal clean {clean.SemanticFingerprint}. "
+                    + SemanticProjectionDifference(clean, actual));
+                Assert.AreEqual(ReplayState.CompleteClean, actual.Replay.ReplayState);
                 Assert.AreEqual("complete-clean", expected.GetProperty("replayability").GetString());
+                Assert.AreEqual(AuditabilityState.Complete, actual.Replay.AuditabilityState);
                 Assert.AreEqual(clean.RunId, actual.Replay.ComparedRunId?.Value);
-                Assert.AreEqual(ReplayState.Partial, actual.Replay.ReplayState);
                 Assert.AreEqual(expected.GetProperty("retained_dependencies_verified").GetBoolean(),
                     actual.Replay.MissingDependencyIds.Count == 0);
+                Assert.AreEqual("reused-exact", expected.GetProperty("wp2_checkpoint").GetString());
                 Assert.AreEqual("reused-retained-phase", actual.DocumentationDisposition);
+                Assert.AreEqual("recomputed-run-binding", expected.GetProperty("wp3_execution").GetString());
                 Assert.AreEqual("recomputed-run-binding", actual.CandidateDisposition);
+                Assert.AreEqual("recomputed-from-current-wp3-closure", expected.GetProperty("wp4_execution").GetString());
                 Assert.IsTrue(actual.FindingDisposition.StartsWith("recomputed-", StringComparison.Ordinal));
+                Assert.AreEqual("new-replay-publication", expected.GetProperty("wp5_execution").GetString());
                 Assert.AreEqual(expected.GetProperty("typed_semantic_equivalence_to_clean").GetBoolean(),
                     actual.TypedSemanticFingerprint == clean.TypedSemanticFingerprint);
                 Assert.AreEqual(expected.GetProperty("human_json_semantically_equivalent").GetBoolean(), actual.HumanEmbedsJson);
                 Assert.AreEqual(expected.GetProperty("hidden_dependency_substitutions").GetInt32(),
                     actual.Replay.MissingDependencyIds.Count);
                 Assert.AreEqual(expected.GetProperty("network_calls").GetInt32(), actual.ExternalEffects);
+                Assert.AreEqual(expected.GetProperty("provider_dispatches").GetInt32(), actual.ProviderDispatches);
+                Assert.AreEqual(expected.GetProperty("history_mutations").GetInt32(), actual.RetainedHistoryUnchanged ? 0 : 1);
                 break;
             default:
                 Assert.Fail("Unexpected WP6 case identity: " + actual.CaseId);
@@ -628,6 +680,8 @@ public sealed class Slice5Wp6ManagedCorpusIntegrationTests
             item.Disposition == CandidateDecisionDisposition.ResolvedNegative));
         Assert.AreEqual(decisions.GetProperty("ambiguous").GetInt32(), actual.Candidates.Decisions.Count(item =>
             item.Disposition == CandidateDecisionDisposition.Ambiguous));
+        Assert.AreEqual(decisions.GetProperty("unsupported").GetInt32(), actual.Candidates.Decisions.Count(item =>
+            item.Disposition == CandidateDecisionDisposition.Unsupported));
         Assert.AreEqual(expected.GetProperty("wp3").GetProperty("candidates").GetInt32(), actual.Candidates.Candidates.Count);
         Assert.AreEqual(expected.GetProperty("wp3").GetProperty("hypotheses").GetInt32(), actual.Candidates.Hypotheses.Count);
         Assert.AreEqual(expected.GetProperty("wp3").GetProperty("abstentions").GetInt32(), actual.Candidates.Abstentions.Count);
@@ -638,19 +692,103 @@ public sealed class Slice5Wp6ManagedCorpusIntegrationTests
             actual.Findings.Cases.Count(item => item.Kind == CaseOccurrenceKind.Supported));
         Assert.AreEqual(wp4.GetProperty("lead_only_cases").GetInt32(),
             actual.Findings.Cases.Count(item => item.Kind == CaseOccurrenceKind.LeadOnly));
+        Assert.AreEqual(wp4.GetProperty("readiness_effect_from_leads").GetInt32(),
+            actual.Findings.Cases.Count(item => item.Kind == CaseOccurrenceKind.LeadOnly && item.AffectsReadiness));
         JsonElement coverage = wp4.GetProperty("coverage");
         Assert.AreEqual(coverage.GetProperty("denominator").GetInt64(), actual.Findings.Coverage.Single().Denominator);
         Assert.AreEqual(coverage.GetProperty("completed").GetInt64(), actual.Findings.Coverage.Single().CompletedCount);
         Assert.AreEqual(coverage.GetProperty("visible_gaps").GetInt32(), actual.Findings.Gaps.Count);
+        Assert.AreEqual(coverage.GetProperty("state").GetString(),
+            JsonNamingPolicy.KebabCaseLower.ConvertName(actual.Findings.Coverage.Single().State.ToString()));
         JsonElement wp5 = expected.GetProperty("wp5");
         Assert.AreEqual(wp5.GetProperty("publication_commits").GetInt32(), actual.QueryMatchesStore ? 1 : 0);
+        Assert.AreEqual(wp5.GetProperty("partial_publications").GetInt32(), actual.QueryMatchesStore ? 0 : 1);
         Assert.AreEqual(wp5.GetProperty("terminal_state").GetString(), actual.Output.RunState);
         Assert.AreEqual(wp5.GetProperty("human_json_semantically_equivalent").GetBoolean(), actual.HumanEmbedsJson);
+        Assert.AreEqual(wp5.GetProperty("network_calls").GetInt32(), actual.ExternalEffects);
+        Assert.AreEqual(wp5.GetProperty("provider_dispatches").GetInt32(), actual.ProviderDispatches);
+    }
+
+    private static void AssertHarnessReceipt(
+        JsonElement required, ManagedCaseObservation actual, string? cleanRunId)
+    {
+        Assert.AreEqual("admitted", required.GetProperty("coordinator").GetProperty("admission").GetString());
+        Assert.AreEqual(required.GetProperty("coordinator").GetProperty("execution").GetString(), actual.Output.RunState);
+        JsonElement prior = required.GetProperty("prior_result_flow");
+        if (prior.TryGetProperty("input", out JsonElement input))
+        {
+            Assert.AreEqual("absent", input.GetString());
+            Assert.IsNull(actual.Replay.ComparedRunId);
+            Assert.AreEqual("result.001", prior.GetProperty("produces").GetString());
+        }
+        else
+        {
+            Assert.AreEqual("result.001", prior.GetProperty("consumes").GetString());
+            Assert.AreEqual(cleanRunId, actual.Replay.ComparedRunId?.Value);
+            Assert.AreEqual("exact-retained-identity", prior.GetProperty("binding").GetString());
+        }
+        Assert.AreEqual(0, prior.GetProperty("hidden_substitutions").GetInt32());
+        Assert.IsTrue(required.GetProperty("run_binding").GetProperty("captured").GetBoolean());
+        Assert.IsFalse(required.GetProperty("run_binding").GetProperty("opaque_value_predeclared").GetBoolean());
+        JsonElement publication = required.GetProperty("publication");
+        Assert.AreEqual(publication.GetProperty("commit_count").GetInt32(), actual.QueryMatchesStore ? 1 : 0);
+        Assert.IsTrue(publication.GetProperty("atomic").GetBoolean());
+        Assert.AreEqual(publication.GetProperty("partial_publications").GetInt32(), actual.QueryMatchesStore ? 0 : 1);
+        JsonElement query = required.GetProperty("application_result_query");
+        Assert.AreEqual("Application", query.GetProperty("request").GetProperty("surface").GetString());
+        Assert.AreEqual("result-query-request", query.GetProperty("request").GetProperty("type").GetString());
+        Assert.AreEqual(0, query.GetProperty("request").GetProperty("field_level_predicates").GetArrayLength());
+        Assert.AreEqual("query-results", query.GetProperty("response").GetProperty("type").GetString());
+        Assert.IsTrue(query.GetProperty("response").GetProperty("bounded").GetBoolean());
+        Assert.AreEqual(query.GetProperty("response").GetProperty("published_analysis_result_count").GetInt32(),
+            actual.QueryMatchesStore ? 1 : 0);
+        Assert.AreEqual(query.GetProperty("response").GetProperty("typed_result_present").GetBoolean(), actual.QueryMatchesStore);
+        Assert.AreEqual(query.GetProperty("human_json_projections").GetProperty("semantically_equivalent").GetBoolean(),
+            actual.HumanEmbedsJson);
+        JsonElement effects = required.GetProperty("external_effects");
+        Assert.AreEqual(effects.GetProperty("network_calls").GetInt32(), actual.ExternalEffects);
+        Assert.AreEqual(effects.GetProperty("provider_dispatches").GetInt32(), actual.ProviderDispatches);
+        Assert.AreEqual(effects.GetProperty("external_mutations").GetInt32(), actual.ExternalEffects);
+        Assert.IsTrue(required.GetProperty("oracle_load").GetProperty("observation_sealed").GetBoolean());
+        Assert.AreEqual("after-observation", required.GetProperty("oracle_load").GetProperty("load_sequence").GetString());
     }
 
     private static string DocumentationShape(DocumentationEvidenceContract value) => string.Join('|',
         value.Revisions.Count, value.Imports.Count, value.Passages.Count, value.Claims.Count,
         value.Applications.Count, value.PurposeAssignments.Count, value.Gaps.Count, value.Failures.Count);
+
+    private static string SemanticProjectionDifference(ManagedCaseObservation expected, ManagedCaseObservation actual)
+    {
+        string left = Encoding.UTF8.GetString(AnalysisPublicationBuilder.SemanticProjectionForVerification(
+            expected.Documentation, expected.Candidates, expected.Findings));
+        string right = Encoding.UTF8.GetString(AnalysisPublicationBuilder.SemanticProjectionForVerification(
+            actual.Documentation, actual.Candidates, actual.Findings));
+        int length = Math.Min(left.Length, right.Length);
+        int index = Enumerable.Range(0, length).FirstOrDefault(i => left[i] != right[i], -1);
+        if (index < 0)
+        {
+            index = length;
+        }
+        int start = Math.Max(0, index - 240);
+        int leftCount = Math.Min(480, left.Length - start);
+        int rightCount = Math.Min(480, right.Length - start);
+        return $"First projection difference at {index}; clean={left.Substring(start, leftCount)}; replay={right.Substring(start, rightCount)}";
+    }
+
+    private static string StableDecisionShape(CandidateDecisionContract value) => JsonSerializer.Serialize(new
+    {
+        value.SourceFactId,
+        value.Lane,
+        value.Disposition,
+        value.JoinKind,
+        path = value.Path,
+        value.Rationale,
+        participants = value.Participants.OrderBy(item => item.ParticipantId.Value),
+        evidence = value.EvidenceIds.OrderBy(item => item.Value),
+        dependencies = value.DependencyIds
+            .Where(item => !item.Value.StartsWith("candidate-delivered-input-", StringComparison.Ordinal))
+            .OrderBy(item => item.Value),
+    });
 
     private static string TypedSemanticFingerprint(
         DocumentationEvidenceContract documentation,
@@ -728,6 +866,12 @@ public sealed class Slice5Wp6ManagedCorpusIntegrationTests
                     wp4 = item.FindingDisposition,
                 },
                 publication_commits = item.QueryMatchesStore ? 1 : 0,
+                replay_state = JsonNamingPolicy.KebabCaseLower.ConvertName(item.Replay.ReplayState.ToString()),
+                auditability_state = JsonNamingPolicy.KebabCaseLower.ConvertName(item.Replay.AuditabilityState.ToString()),
+                semantically_equivalent = item.Replay.SemanticallyEquivalent,
+                missing_dependency_count = item.Replay.MissingDependencyIds.Count,
+                prior_run_id = item.Replay.ComparedRunId?.Value,
+                history_mutations = item.RetainedHistoryUnchanged ? 0 : 1,
                 application_result_query = new
                 {
                     request = new
@@ -881,8 +1025,11 @@ public sealed class Slice5Wp6ManagedCorpusIntegrationTests
         string TypedSemanticFingerprint,
         bool QueryMatchesStore,
         bool HumanEmbedsJson,
-        int ExternalEffects)
+        IReadOnlyDictionary<string, string> BoundaryEffects)
     {
         public string DocumentationCheckpointPayloadId => Documentation.PayloadId.Value;
+        public int ExternalEffects => BoundaryEffects.Count(item => item.Value != "not-used");
+        public int ProviderDispatches => BoundaryEffects.TryGetValue("provider", out string? value) && value != "not-used" ? 1 : 0;
+        public bool RetainedHistoryUnchanged { get; init; } = true;
     }
 }

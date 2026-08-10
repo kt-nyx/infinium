@@ -171,10 +171,7 @@ public static class AnalysisPublicationBuilder
             dependencyEdges.Add(new ReplayDependencyEdgeContract(findingCases.PayloadId, findingCases.ReconciliationPolicyId));
         }
 
-        bool hasGaps = documentation.Gaps.Count != 0
-            || candidates.Gaps.Count != 0
-            || findingCases.Gaps.Count != 0
-            || documentation.Failures.Count != 0
+        bool hasExecutionFailures = documentation.Failures.Count != 0
             || candidates.Failures.Count != 0
             || findingCases.CoverageFailures.Count != 0;
         bool completeTerminal = assignment.TerminalOutcome is AnalysisTerminalOutcome.Completed
@@ -182,10 +179,15 @@ public static class AnalysisPublicationBuilder
         bool semanticallyEquivalent = assignment.ExecutionInput.Mode == ReplayMode.Clean
             ? true
             : StringComparer.Ordinal.Equals(comparedSemanticFingerprint, semanticFingerprint);
-        ReplayState replayState = completeTerminal && !hasGaps && missingDependencyIds.Length == 0 && semanticallyEquivalent
+        // Coverage gaps describe the bounded semantic result, not loss from the
+        // retained dependency or audit closure. A completed-with-gaps result can
+        // still replay completely from its exact retained inputs.
+        ReplayState replayState = completeTerminal && !hasExecutionFailures
+            && missingDependencyIds.Length == 0 && semanticallyEquivalent
             ? ReplayState.CompleteClean
             : ReplayState.Partial;
-        AuditabilityState auditabilityState = completeTerminal && !hasGaps && missingDependencyIds.Length == 0
+        AuditabilityState auditabilityState = completeTerminal && !hasExecutionFailures
+            && missingDependencyIds.Length == 0
             ? AuditabilityState.Complete
             : AuditabilityState.Partial;
         string replayManifestId = StableId(
@@ -622,6 +624,13 @@ public static class AnalysisPublicationBuilder
             // generic source-input kind and the authoritative documentation kind.
             if (value.ArtifactId == documentation.PayloadId)
             {
+                if (value.ArtifactVersion != documentation.SchemaVersion
+                    || value.Fingerprint.Value != documentationSha
+                    || value.Availability != "retained")
+                {
+                    throw new InvalidDataException(
+                        $"Replay dependency identity '{value.ArtifactId.Value}' resolves to drifted retained metadata.");
+                }
                 continue;
             }
             Add(value.ArtifactId.Value, kind, value.ArtifactVersion.ToString(), value.Fingerprint.Value,
@@ -683,6 +692,19 @@ public static class AnalysisPublicationBuilder
         DocumentationEvidenceContract documentation,
         CandidateAnalysisContract candidates,
         FindingCaseContract findingCases,
+        CancellationToken cancellationToken) =>
+        Hash(SemanticProjection(documentation, candidates, findingCases, cancellationToken));
+
+    internal static byte[] SemanticProjectionForVerification(
+        DocumentationEvidenceContract documentation,
+        CandidateAnalysisContract candidates,
+        FindingCaseContract findingCases) =>
+        SemanticProjection(documentation, candidates, findingCases, CancellationToken.None);
+
+    private static byte[] SemanticProjection(
+        DocumentationEvidenceContract documentation,
+        CandidateAnalysisContract candidates,
+        FindingCaseContract findingCases,
         CancellationToken cancellationToken)
     {
         IOrderedEnumerable<T> Sorted<T>(IEnumerable<T> values) =>
@@ -695,6 +717,21 @@ public static class AnalysisPublicationBuilder
 
         string Anchor(object value) => Hash(JsonSerializer.SerializeToUtf8Bytes(
             value, Slice5ContractJsonCodec.JsonOptions));
+        object SemanticEnvelope(IdentityEnvelopeContract value) => new
+        {
+            value.AnalyzerFamily,
+            value.AnalyzerVersion,
+            value.SemanticContractVersion,
+            value.IdentityContractVersion,
+            participants = value.ParticipantsAndRoles.OrderBy(item => item.Key, StringComparer.Ordinal),
+            value.CausalCondition,
+            value.AffectedLocus,
+            applicability = value.ApplicabilityPredicates.OrderBy(item => item, StringComparer.Ordinal),
+        };
+        string SemanticDependency(OpaqueId id) => id.Value.StartsWith(
+            "candidate-delivered-input-", StringComparison.Ordinal)
+                ? "candidate-delivered-input"
+                : id.Value;
         Dictionary<OpaqueId, string> revisionAnchors = documentation.Revisions.ToDictionary(
             item => item.RevisionId,
             item => Anchor(new
@@ -773,7 +810,8 @@ public static class AnalysisPublicationBuilder
                 item.PolicyId,
                 item.ThresholdId,
                 item.LimitId,
-                dependencies = item.DependencyIds.OrderBy(id => id.Value),
+                dependencies = item.DependencyIds.Select(SemanticDependency)
+                    .OrderBy(id => id, StringComparer.Ordinal),
             }));
         Dictionary<OpaqueId, string> candidateAnchors = candidates.Candidates.ToDictionary(
             item => item.CandidateId,
@@ -803,10 +841,24 @@ public static class AnalysisPublicationBuilder
                 item.ThresholdId,
             }));
         Dictionary<OpaqueId, string> occurrenceAnchors = findingCases.Findings
-            .ToDictionary(item => item.FindingOccurrenceId, item => "finding:" + item.SemanticFingerprint.Value);
+            .ToDictionary(item => item.FindingOccurrenceId, item => "finding:" + Anchor(new
+            {
+                candidate = candidateAnchors[item.CandidateId],
+                hypothesis = hypothesisAnchors[item.HypothesisId],
+                item.Conclusion,
+                item.Severity,
+                item.Confidence,
+            }));
         foreach (Slice5CaseContract item in findingCases.Cases)
         {
-            occurrenceAnchors.Add(item.CaseOccurrenceId, "case:" + item.SemanticFingerprint.Value);
+            occurrenceAnchors.Add(item.CaseOccurrenceId, "case:" + Anchor(new
+            {
+                item.Kind,
+                candidates = item.CandidateIds.Select(id => candidateAnchors[id]).OrderBy(value => value, StringComparer.Ordinal),
+                hypotheses = item.HypothesisIds.Select(id => hypothesisAnchors[id]).OrderBy(value => value, StringComparer.Ordinal),
+                item.SharedCause,
+                item.AffectsReadiness,
+            }));
         }
         string Occurrence(OpaqueId? id) => id is null ? "none"
             : occurrenceAnchors.GetValueOrDefault(id, "external:" + id.Value);
@@ -823,6 +875,16 @@ public static class AnalysisPublicationBuilder
                 item.AnalyzerId,
                 item.Reason,
                 item.RequiredInformation,
+            }));
+        Dictionary<OpaqueId, string> candidateGapAnchors = candidates.Gaps.ToDictionary(
+            item => item.GapId,
+            item => Anchor(new
+            {
+                decision = decisionAnchors[item.DecisionId],
+                item.PopulationId,
+                item.State,
+                item.Reason,
+                item.MissingCapabilityOrInformation,
             }));
         Dictionary<OpaqueId, string> taxonomyAnchors = findingCases.TaxonomyAssignments.ToDictionary(
             item => item.AssignmentId,
@@ -852,6 +914,22 @@ public static class AnalysisPublicationBuilder
                 item.RequiredInformation,
                 evidence = item.EvidenceIds.Select(Evidence).OrderBy(value => value, StringComparer.Ordinal),
             }));
+        Dictionary<OpaqueId, string> findingGapAnchors = findingCases.Gaps.ToDictionary(
+            item => item.GapId,
+            item => Anchor(new
+            {
+                item.PopulationId,
+                item.StageId,
+                item.State,
+                item.ReplayEffect,
+                item.ConclusionEffect,
+                item.Reason,
+                item.MissingCapabilityOrInformation,
+                evidence = item.EvidenceIds.Select(Evidence).OrderBy(value => value, StringComparer.Ordinal),
+            }));
+        Dictionary<OpaqueId, string> coverageFailureAnchors = findingCases.CoverageFailures.ToDictionary(
+            item => item.FailureId,
+            item => Anchor(new { item.AnalyzerId, item.FailureCode, item.Message, item.Retryable }));
         Dictionary<OpaqueId, OpaqueId> exactContinuationAliases = findingCases.ReconciliationAssessments
             .Where(item => item.PriorOccurrenceId is not null && item.CurrentOccurrenceId is not null
                 && item.Outcome == ReconciliationOutcome.ExactContinuation
@@ -873,8 +951,11 @@ public static class AnalysisPublicationBuilder
             "candidate" => candidateAnchors[id],
             "candidate-decision" => decisionAnchors[id],
             "hypothesis" => hypothesisAnchors[id],
+            "abstention" => abstentionAnchors[id],
+            "gap" => candidateGapAnchors[id],
             "candidate-analysis-root" or "execution-input-binding" or "dependency-closure" => kind,
             "analyzer-declaration-binding" or "policy-binding" or "threshold-binding" or "limit-binding" => kind,
+            "dependency" => SemanticDependency(id),
             _ => Evidence(id),
         };
 
@@ -1020,7 +1101,7 @@ public static class AnalysisPublicationBuilder
                     item.PolicyId,
                     item.ThresholdId,
                     item.LimitId,
-                    dependencies = Sorted(item.DependencyIds),
+                    dependencies = Sorted(item.DependencyIds.Select(SemanticDependency)),
                 })),
                 entries = Sorted(candidates.Candidates.Select(item => new
                 {
@@ -1121,10 +1202,9 @@ public static class AnalysisPublicationBuilder
                     item.Severity,
                     item.Confidence,
                     evidence = Sorted(item.EvidenceIds.Select(Evidence)),
-                    item.IdentityEnvelope,
-                    item.CaseIdentityEnvelope,
+                    identity = SemanticEnvelope(item.IdentityEnvelope),
+                    caseIdentity = SemanticEnvelope(item.CaseIdentityEnvelope),
                     taxonomyAssignments = Sorted(item.TaxonomyAssignmentIds.Select(id => taxonomyAnchors[id])),
-                    item.SemanticFingerprint,
                     supersedes = item.SupersedesOccurrenceId is not null
                         && SemanticOccurrence(item.SupersedesOccurrenceId) == Occurrence(item.FindingOccurrenceId)
                             ? "none" : SemanticOccurrence(item.SupersedesOccurrenceId),
@@ -1151,8 +1231,7 @@ public static class AnalysisPublicationBuilder
                     hypotheses = Sorted(item.HypothesisIds.Select(id => hypothesisAnchors[id])),
                     item.SharedCause,
                     causeProof = Sorted(item.CauseProofEvidenceIds.Select(Evidence)),
-                    item.IdentityEnvelope,
-                    item.SemanticFingerprint,
+                    identity = SemanticEnvelope(item.IdentityEnvelope),
                     supersedes = item.SupersedesOccurrenceId is not null
                         && SemanticOccurrence(item.SupersedesOccurrenceId) == Occurrence(item.CaseOccurrenceId)
                             ? "none" : SemanticOccurrence(item.SupersedesOccurrenceId),
@@ -1226,8 +1305,8 @@ public static class AnalysisPublicationBuilder
                     item.TaxonomyId,
                     item.TaxonomyVersion,
                     assignments = Sorted(item.TaxonomyAssignmentIds.Select(id => taxonomyAnchors[id])),
-                    gaps = Sorted(item.GapIds),
-                    failures = Sorted(item.FailureIds),
+                    gaps = Sorted(item.GapIds.Select(id => findingGapAnchors[id])),
+                    failures = Sorted(item.FailureIds.Select(id => coverageFailureAnchors[id])),
                     exclusions = Sorted(item.Exclusions.Select(exclusion => new
                     {
                         member = Subject(exclusion.MemberId),
@@ -1240,8 +1319,8 @@ public static class AnalysisPublicationBuilder
                         member.State,
                         member.Reason,
                         member.MissingCapabilityOrInformation,
-                        member.FailureId,
-                        member.GapId,
+                        failure = member.FailureId is null ? "none" : coverageFailureAnchors[member.FailureId],
+                        gap = member.GapId is null ? "none" : findingGapAnchors[member.GapId],
                         taxonomy = Sorted(member.TaxonomyAssignmentIds.Select(id => taxonomyAnchors[id])),
                     })),
                 })),
@@ -1269,7 +1348,7 @@ public static class AnalysisPublicationBuilder
         };
         byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(projection, Slice5ContractJsonCodec.JsonOptions);
         cancellationToken.ThrowIfCancellationRequested();
-        return Hash(bytes);
+        return bytes;
     }
 
     private static ReplayOutputContract ReplayOutput(RetainedAnalysisPayloadSeal seal, OpaqueId artifactId, string sha) =>
