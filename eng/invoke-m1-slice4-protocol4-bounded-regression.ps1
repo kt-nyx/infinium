@@ -122,8 +122,8 @@ while ($profileParent.FullName.StartsWith($repositoryPrefix, [StringComparison]:
     $profileParent = $profileParent.Parent
 }
 $profileIdentity = Get-FileIdentity $resolvedProfile
-if ([long]$profileIdentity.ByteLength -ne 4776 -or
-    [string]$profileIdentity.Sha256 -cne '9241510a5de781d087aeddebc7c1cb750b35c1bf14172e8042256869d2538f2d') {
+if ([long]$profileIdentity.ByteLength -ne 4826 -or
+    [string]$profileIdentity.Sha256 -cne 'fd4af5c2f1a442a71323faa50b3bfd4ee032e11befb5ebbefb4b915234ddfeb8') {
     Refuse 'bounded-regression profile bytes drifted'
 }
 $profile = Get-Content -Raw -LiteralPath $resolvedProfile | ConvertFrom-Json
@@ -210,6 +210,7 @@ if ([string]$regression.classification -cne 'current public regression evidence,
 }
 $authorizedChangeCommits = @($regression.authorized_change_commits)
 Assert-ExactStrings $authorizedChangeCommits @(
+    '8b20d1a4be9546e21270ba28b1b6c8e2f2908cf8',
     '8e75995f9f0f6b3934f806af08fb46799fc6e0ea',
     'a98d648bd0adb2751ee0c09828e0227b1583950f'
 ) 'authorized current public-regression commits'

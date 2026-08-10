@@ -25,24 +25,25 @@
   "current_public_regression": {
     "classification": "current public regression evidence, never frozen qualification bytes",
     "authorized_change_commits": [
+      "8b20d1a4be9546e21270ba28b1b6c8e2f2908cf8",
       "8e75995f9f0f6b3934f806af08fb46799fc6e0ea",
       "a98d648bd0adb2751ee0c09828e0227b1583950f"
     ],
     "evolved_tests": [
       {
         "relative_path": "tests/Infinium.EvaluationTests/BethesdaOracleAgreementEvaluationTests.cs",
-        "byte_length": 30967,
-        "sha256": "ba99dedcb9a98ddb4e2c63eb2b900e9a7c314c2d3af36f2368f715ac7ad74f70"
+        "byte_length": 30937,
+        "sha256": "e1076060c7a119ae2af234165f5e672d69e4e8563f9a2c5fb92c586eb6473ef2"
       },
       {
         "relative_path": "tests/Infinium.EvaluationTests/BethesdaSemanticExtractionEvaluationTests.cs",
-        "byte_length": 20219,
-        "sha256": "58681e739cb170cbffad0cd30f41e3ec9e10c181603a5f33b829a32e0745804f"
+        "byte_length": 20199,
+        "sha256": "b558b611f826c770d56876e91d884dd414141d73104cec7441c6311f819ee2e6"
       },
       {
         "relative_path": "tests/Infinium.EvaluationTests/EvaluatorV2PublicProtocolTests.cs",
-        "byte_length": 34294,
-        "sha256": "821c7bae79c049b3d0bcc52e772e2c55e4af3a16840b7510570f6800b4865e8d"
+        "byte_length": 34274,
+        "sha256": "72cff609aecbf45c3df8d1bb59030260a65a56c9b0a0a850dec867ee42c85456"
       }
     ],
     "calibration": {
