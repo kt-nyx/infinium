@@ -17,7 +17,7 @@ review history.
 | Milestone | `M1` - active |
 | Active slice | `M1/S5` - active and not owner-accepted |
 | Current authorized work | None; [pre-closeout repository normalization](plans/milestones/m1/slices/s5/repository-normalization.md) is complete |
-| Revised closeout candidate | Repository normalization through public-fixture consolidation `8b20d1a4be9546e21270ba28b1b6c8e2f2908cf8` plus protocol `/4` rebaseline `a255a2bc73d233efaa4117139e7b540dcc71b7c9`; owner review remains pending |
+| Revised closeout candidate | Repository normalization through public-fixture consolidation `8b20d1a4be9546e21270ba28b1b6c8e2f2908cf8` and protocol `/4` retirement `60fad172abef402a2469015064b069020777aaea`; owner review remains pending |
 | Next eligible action | Project-owner review and explicit Slice 5 acceptance or a bounded correction request |
 | Later work | Slice 6 planning requires explicit Slice 5 owner acceptance; no successor implementation is authorized |
 | Execution policy | [Repository execution policy](execution-policy.md) |

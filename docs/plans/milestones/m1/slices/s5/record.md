@@ -2062,3 +2062,45 @@ files, 3/3 evolved tests, 8/8 focused tests, and 56/56 calibration cases; its
 fail-closed suite passed 11/11 refusal cases. This evidence makes `/4` an
 out-of-solution repository regression floor, not dead product code and not a
 current product or acceptance verdict.
+
+### Protocol `/4` retirement and external archive correction
+
+At the project owner's direction, ADR-0033 superseded the bounded-regression
+retention described immediately above. Infinium commit
+`60fad172abef402a2469015064b069020777aaea` removes protocol `/4` from active
+development, testing, and review. The exact pre-retirement source baseline is
+`f73a2659a07305702eda775699cacd612f8d9fe2`.
+
+The last public closure is preserved in the separate maintainer-local Git
+repository `../infinium-evaluator-archive/` at commit
+`c490de9689d8e9f8dfc7eccb3d056ab5b083e9fd`. Its
+`protocol-4/repository-snapshot/` contains 38/38 exact source Git blobs and no
+private fixtures. The archive is non-authoritative, has no configured remote,
+is excluded from ordinary product context, and requires an explicit owner
+request for archaeological access.
+
+The active repository removes the evaluator project and schemas, protocol-only
+test project and test, duplicate embedded validator, friend-assembly seam,
+wrapper and refusal suite, machine profile, freeze, authority matrix, and
+path-retention redirects. Thirty-six tracked files were retired from the active
+tree, with exact source-commit/blob identities recorded in
+`retired-evaluation-assets.v1.json`. Boundary tests and the analysis-pipeline
+contracts gate now fail if evaluator projects or paths reappear. The two
+ordinary Bethesda public evaluation tests remain current product tests.
+
+Post-retirement verification passed:
+
+- locked solution restore and Release build with zero warnings and errors;
+- the complete solution test floor: 417 passed, 9 skipped, 0 failed;
+- every `verify-analysis-pipeline.ps1 -Gate All` functional gate;
+- formatting, dependency-manifest freshness, and diff hygiene;
+- 159 Markdown files and 1,226 local links with zero broken targets;
+- the authority/retirement schema and exact-Git-identity contract tests; and
+- physical absence of `tools/`, the protocol-only test directory,
+  `artifacts/`, and `work/`.
+
+Protocol `/4` now has no active command, test, review gate, product authority,
+or evidentiary role. Protocols `/4` and `/5` remain permanently reserved and
+retired. Current Slice 5 verification uses the accepted continuation profile;
+no replacement evaluator, private verdict, Slice 5 owner acceptance, or
+successor-slice authority is implied by this correction.

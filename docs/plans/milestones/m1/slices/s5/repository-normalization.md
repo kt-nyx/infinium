@@ -83,3 +83,11 @@ Acceptance requires:
 - a revised implementation record and owner-acceptance packet that retain all
   existing claim boundaries and explicitly state that no private held-out
   verdict exists.
+
+## Later owner-approved protocol retirement
+
+ADR-0033 completed the superseding retirement at Infinium commit
+`60fad172abef402a2469015064b069020777aaea`. The exact final public closure is
+preserved in the excluded sibling Git archive at commit
+`c490de9689d8e9f8dfc7eccb3d056ab5b083e9fd`; protocol `/4` has no active
+repository path, command, test, review gate, or authority role.
