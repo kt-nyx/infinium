@@ -1,18 +1,18 @@
 # M1 Slice 5 — Evidence, documentation, candidates, cases, and replay
 
-Status: Active Slice 5 implementation record; pre-normalization WP6 terminal review accepted, owner-approved repository normalization and revalidation in progress; Slice 5 is not owner-accepted
+Status: Active Slice 5 implementation record; repository normalization and exact terminal re-review completed and accepted; awaiting explicit owner acceptance
 
 Last reviewed: 2026-08-10
 
 Plan: `M1/S5`
 
-Work package: `M1/S5/WP1`
+Work packages: `M1/S5/WP1-WP6` plus the accepted repository-normalization amendment
 
 Started: 2026-08-07
 
-Final review: 2026-08-08
+Final review: 2026-08-10
 
-Branch: `codex/m1-slice5-staged-verification-recovery`
+Branch: `codex/m1-s5-repository-normalization`
 
 Baseline commit: `fcf71e184b7544a964530d581792c4948d47cda6`
 
@@ -1939,7 +1939,88 @@ resolved 163 Markdown files with zero missing local targets, found zero
 outdated copied current-package handoffs, validated all 18 current authority
 paths, verified 77 retired Git blobs and three retained redirect identities,
 validated both repository-authority JSON documents against their schemas, and
-passed the focused repository authority/retirement contract test. The final
-protocol `/4` freeze manifest, bounded-regression profile, and authority matrix
-remain byte-identical to `HEAD`. No private fixture or legacy-archive content
-was accessed.
+passed the focused repository authority/retirement contract test. At that
+documentation-only checkpoint, the final protocol `/4` freeze manifest,
+bounded-regression profile, and authority matrix remained byte-identical to
+`HEAD`. No private fixture or legacy-archive content was accessed.
+
+### Normalization implementation and revised closeout candidate
+
+The accepted authority commit is
+`19ae1000a3b1ad3d1602f8385e25286933271667`. The normalized product,
+fixture, tool, test, and documentation candidate is
+`8e75995f9f0f6b3934f806af08fb46799fc6e0ea`. The bounded protocol `/4`
+rebaseline is `14826bdfb8ca548d1112b64e2a845824dce8ba45`.
+
+The implementation:
+
+- split the broad Slice 5 domain-contract and codec files by documentation,
+  candidate, finding/case, replay, and execution responsibility, removed a
+  dead duplicate artifact-reference contract, and replaced active planning
+  names with functional analysis identities without compatibility aliases;
+- moved product serialization codecs out of the evaluation namespace while
+  leaving the frozen embedded validator at its exact path and bytes;
+- consolidated 18 current public fixture packages under
+  `test-data/public-fixtures/`, moved their readers and authoring tools under
+  `tools/fixtures/`, functionally renamed active package and producer
+  identities, and resealed every affected manifest, receipt, fingerprint, and
+  source-authority binding;
+- protected the complete current public-fixture root from text conversion and
+  merges, and established exact closure for the operational and cross-stage
+  packages;
+- replaced planning-era test, script, phase, worker-input, diagnostic, and
+  environment names while preserving applied migration IDs and frozen
+  historical protocol identities;
+- organized plans as milestone -> slice, reduced current-state navigation,
+  consolidated evaluator history, and Git-retired 77 superseded evaluator
+  files with exact recovery identities; and
+- removed six clean obsolete detached worktrees, moved 11 non-Git evaluator
+  development directories without content inspection into the excluded
+  sibling `../infinium-evaluator-development-archive/`, removed six empty
+  legacy directory trees, and deleted the ignored `artifacts/` and `work/`
+  scratch trees. The deleted scratch data comprised 2,837 generated artifact
+  files (503,016,190 bytes) and 62 temporary work files (7,001,511 bytes); it
+  was intentionally not archived and is reproducible from the recorded
+  verification commands. The evaluator-private fixture repository and
+  `../infinium-legacy-archive/` were not accessed.
+
+Two dirty detached evaluator-era worktrees under the system temporary root
+were retained because deleting them would discard uncommitted state. Two
+Cursor-managed detached worktrees were also left untouched. None is part of
+the active repository authority or default solution graph; their later archive
+or deletion requires an explicit owner decision after inspecting their local
+state.
+
+Protocol `/4` was re-opened only at its current-regression boundary. Its three
+allowlisted evolved tests now bind the normalization commit, while its 20-file
+reusable core and all 23 historical freeze blobs remain byte-exact. The
+evaluator and out-of-solution regression-project lock files were refreshed
+only with current transitive restore-closure metadata; no frozen project,
+source, schema, direct dependency, package version, or semantic identity
+changed.
+
+Final verification on the revised candidate passed:
+
+- locked solution restore; Release build with zero warnings and zero errors;
+- the complete solution test floor: 417 passed, 9 skipped, 0 failed;
+- `eng/verify-analysis-pipeline.ps1 -Gate All`, including Contracts,
+  Documentation, Candidates, CandidateScale, Cases, Replay, Output, Safety,
+  Comprehensive, exact cross-stage closure, and answer isolation;
+- all 18 public fixture packages, strict JSON/schema and authority checks,
+  dependency-manifest check, formatting, local-link validation, stale-name
+  scans, and diff hygiene;
+- protocol `/4`: 23/23 historical blobs, 20/20 frozen current-core files,
+  3/3 evolved tests, 8/8 focused tests, and 56/56 calibration cases; and
+- 11/11 fail-closed refusal cases.
+
+Independent fixture review returned **ACCEPT**. Documentation/authority review
+found zero broken links, invalid JSON, missing authority paths, or failed
+retired-identity checks. The terminal exact-commit re-review returned
+**ACCEPT** for `14826bdfb8ca548d1112b64e2a845824dce8ba45`, with no must-fix,
+follow-up, non-blocking, authority, safety, or isolation finding.
+
+This is the revised Slice 5 owner-acceptance packet. Terminal review acceptance
+is implementation evidence, not project-owner acceptance. Slice 5 remains
+active, contracts remain `Implementation-active`, no private held-out verdict
+exists, and no successor-slice implementation is authorized until the project
+owner explicitly accepts this candidate.

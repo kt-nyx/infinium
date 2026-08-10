@@ -16,9 +16,9 @@ review history.
 |---|---|
 | Milestone | `M1` - active |
 | Active slice | `M1/S5` - active and not owner-accepted |
-| Current authorized work | [Pre-closeout repository normalization](plans/milestones/m1/slices/s5/repository-normalization.md) |
-| Prior closeout candidate | WP1-WP6 implementation and review completed at `d47e4290a95cd86cbcf210374cd76788902cc7fb`; terminal review returned `ACCEPT`, but that candidate was not owner-accepted and is superseded only as the exact closeout candidate by the normalization amendment |
-| Next eligible action | Complete normalization, rerun the full Slice 5 and protocol `/4` public verification floors, obtain fresh terminal review, and present a revised owner-acceptance packet |
+| Current authorized work | None; [pre-closeout repository normalization](plans/milestones/m1/slices/s5/repository-normalization.md) is complete |
+| Revised closeout candidate | Normalized implementation `8e75995f9f0f6b3934f806af08fb46799fc6e0ea` plus protocol `/4` rebaseline `14826bdfb8ca548d1112b64e2a845824dce8ba45`; fresh terminal review returned `ACCEPT` |
+| Next eligible action | Project-owner review and explicit Slice 5 acceptance or a bounded correction request |
 | Later work | Slice 6 planning requires explicit Slice 5 owner acceptance; no successor implementation is authorized |
 | Execution policy | [Repository execution policy](execution-policy.md) |
 | Milestone plan | [M1 backend semantic proof](plans/milestones/m1/plan.md) |
@@ -28,13 +28,13 @@ review history.
 
 ## Current Slice 5 boundary
 
-The accepted normalization amendment permits functional renaming,
+The accepted normalization amendment completed functional renaming,
 fixture/tool relocation, documentation consolidation, and removal of proven
-temporary material before closeout. Slice 5 contracts remain
-`Implementation-active`; normalization must update every affected producer,
-consumer, persistence seam, schema, fixture, test, and document together.
-Existing semantic truth and claim boundaries do not change merely because a
-path or development-era identity changes.
+temporary material. Every affected producer, consumer, persistence seam,
+schema, fixture, test, and current document was updated together. Public
+semantic truth and claim boundaries did not change. Slice 5 contracts remain
+`Implementation-active` until the project owner explicitly accepts and freezes
+the revised closeout candidate.
 
 The complete package chronology, correction cycles, retained evidence,
 coverage limits, and owner-acceptance proposal live in the
