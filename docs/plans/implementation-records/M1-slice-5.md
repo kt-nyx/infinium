@@ -1883,3 +1883,15 @@ This terminal `ACCEPT` is implementation-review evidence, not owner
 self-acceptance. WP6 now awaits the explicit owner decisions in the acceptance
 packet above. Until then, Slice 5 remains active, its contracts remain
 `Implementation-active`, and no successor-slice implementation is authorized.
+
+The first documentation-only final-head commit was
+`a4b14d2c5ce25f9460f467db24c7604b79337be9`. Its bounded review returned
+**CORRECT**. The report is
+`artifacts/m1-slice5/wp6-final-review-v8/final-review.md`, 5318 bytes,
+SHA-256 `6c51aa9fc3f0ebae1da0a9de3f7d1407ecaa7c7b395cdbd7f7a7573374088e64`.
+It confirmed the v7 report identity, owner reservation, two-file-only diff,
+links, diff hygiene, and byte-identical implementation/evaluation trees. Its
+sole must-fix was that the authoritative active-handoff table still described
+an early correction cycle and re-review as the next action. The table now
+states terminal review complete, owner acceptance pending, and owner review as
+the only eligible next action.

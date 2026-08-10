@@ -19,8 +19,8 @@ records preserve evidence and history.
 | Milestone | `M1` — active |
 | Active slice | `M1/S5` — active |
 | Completed package | `M1/S5/WP1` through `M1/S5/WP5` |
-| Package awaiting owner acceptance | `M1/S5/WP6` — implementation and independent corpus review complete; two final-review correction cycles closed in the candidate tree; fresh exact-commit re-review pending; not owner-accepted |
-| Next eligible action | Commit and freshly review the replay/oracle correction candidate, then owner review only if that exact verdict is `ACCEPT` |
+| Package awaiting owner acceptance | `M1/S5/WP6` — implementation, independent corpus review, and terminal whole-slice review complete; exact implementation candidate `d47e4290a95cd86cbcf210374cd76788902cc7fb` received `ACCEPT`; not owner-accepted |
+| Next eligible action | Owner review of the WP6 acceptance packet and explicit Slice 5 status decisions; no implementation action is eligible |
 | Later work | Successor-slice planning only after explicit Slice 5 owner acceptance; no successor implementation is authorized |
 | Default execution policy | [Development execution policy](development/execution-policy.md) |
 | Active milestone plan | [M1 backend semantic proof](plans/milestones/M1-backend-semantic-proof.md) |
