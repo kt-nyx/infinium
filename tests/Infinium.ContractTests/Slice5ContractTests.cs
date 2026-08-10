@@ -457,7 +457,10 @@ public sealed class Slice5ContractTests
                 new("hosted-search", BoundaryUseState.NotUsed, "local-only"),
                 new("nexus", BoundaryUseState.NotUsed, "local-only"),
                 new("loot", BoundaryUseState.NotUsed, "not configured"),
-            ]);
+            ])
+        {
+            AnalysisContext = Reference("context-1"),
+        };
     }
 
     private static FindingCaseInputContract CreateFindingCaseInput()

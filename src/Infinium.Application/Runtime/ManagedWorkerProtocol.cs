@@ -27,7 +27,8 @@ public sealed record ManagedWorkerBootstrap(
     string OutputSchemaVersion = ManagedWorkerManifest.OutputSchemaVersion,
     ManagedMo2SnapshotCaptureAssignment? Mo2SnapshotCapture = null,
     ManagedBethesdaSemanticAssignment? BethesdaSemanticExtraction = null,
-    AnalysisV1WorkAssignment? AnalysisV1 = null);
+    AnalysisV1WorkAssignment? AnalysisV1 = null,
+    IReadOnlyList<string>? AnalysisInputRelativeNames = null);
 
 public enum ManagedWorkerOperationKind
 {

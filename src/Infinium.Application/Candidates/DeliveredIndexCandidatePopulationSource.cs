@@ -222,6 +222,7 @@ public static class CandidateDeliveredInputAdapter
         OpaqueId configurationId,
         BethesdaSemanticSnapshot? bethesdaSnapshot,
         DocumentationEvidenceContract? documentationEvidence,
+        OpaqueId? retainedDocumentationSourceRunId = null,
         CancellationToken cancellationToken = default)
     {
         if (bethesdaSnapshot is not null && bethesdaSnapshot.SourceSnapshotId != sourceSnapshotId)
@@ -231,7 +232,8 @@ public static class CandidateDeliveredInputAdapter
         if (documentationEvidence is not null)
         {
             Slice5ContractInvariants.Validate(documentationEvidence);
-            if (documentationEvidence.OriginatingRunId != originatingRunId)
+            if (documentationEvidence.OriginatingRunId != originatingRunId
+                && documentationEvidence.OriginatingRunId != retainedDocumentationSourceRunId)
             {
                 throw new InvalidDataException("The documentation evidence does not match the delivered-input run binding.");
             }

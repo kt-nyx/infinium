@@ -289,6 +289,21 @@ public sealed partial class AuthoritativeStore
                     ("$from", request.Replay.ReplayManifestId.Value), ("$to", dependency.DependencyId.Value),
                     ("$payload", replayPayloadId), ("$now", ToText(request.PublishedAt)));
             }
+            foreach (ReplayDependencyEdgeContract dependency in request.Replay.Edges)
+            {
+                string edgeId = StableAnalysisId(
+                    "replay-closure-edge", request.Attempt.RunId,
+                    dependency.From.Value, dependency.To.Value);
+                Execute(
+                    """
+                    INSERT OR IGNORE INTO analysis_dependency_edges(
+                        dependency_edge_id,run_id,from_kind,from_id,to_kind,to_id,edge_kind,edge_payload_id,created_at)
+                    VALUES ($id,$run,'dependency-closure',$from,'dependency',$to,'depends-on',$payload,$now);
+                    """, transaction,
+                    ("$id", edgeId), ("$run", request.Attempt.RunId),
+                    ("$from", dependency.From.Value), ("$to", dependency.To.Value),
+                    ("$payload", replayPayloadId), ("$now", ToText(request.PublishedAt)));
+            }
             foreach (string effectClass in new[] { "database", "payload-store", "staging", "trace", "run-output" })
             {
                 Execute(
@@ -322,7 +337,7 @@ public sealed partial class AuthoritativeStore
             }
             Execute(
                 "UPDATE attempts SET outcome='analysis-result-published', lease_expires_at=$now WHERE attempt_id=$attempt;",
-                transaction, ("$now", ToText(request.PublishedAt)), ("$attempt", request.Attempt.AttemptId));
+                transaction, ("$now", ToText(request.PublishedAt.AddTicks(1))), ("$attempt", request.Attempt.AttemptId));
             Execute(
                 "UPDATE job_nodes SET lifecycle_state=$state,lifecycle_generation=$generation,updated_at=$now WHERE run_id=$run;",
                 transaction, ("$state", request.TerminalState.ToString()), ("$generation", nextGeneration),
@@ -468,17 +483,24 @@ public sealed partial class AuthoritativeStore
         return AnalysisArtifactKeysetPaginator.Page(all, kinds, states, maximumCount, sortOrder, after);
     }
 
+    public AnalysisArtifactPersistenceRecord GetAnalysisArtifact(string runId, string artifactId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(runId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(artifactId);
+        byte[] bytes = ReadOwnedAnalysisPayload("analysis-artifact-index", runId);
+        AnalysisArtifactPersistenceRecord[] all = JsonSerializer.Deserialize<AnalysisArtifactPersistenceRecord[]>(bytes)
+            ?? throw new InvalidDataException("The retained analysis artifact index is empty.");
+        return all.SingleOrDefault(item => item.ArtifactId == artifactId)
+            ?? throw new KeyNotFoundException($"Published analysis artifact '{artifactId}' does not exist.");
+    }
+
     public IReadOnlyList<string> ListAnalysisDependencyIds(string runId, string artifactId, int maximumCount)
     {
-        if (maximumCount is < 1 or > 256)
+        if (maximumCount is < 1 or > 257)
         {
             throw new ArgumentOutOfRangeException(nameof(maximumCount));
         }
-        AnalysisArtifactPersistenceRecord artifact = ListAnalysisArtifacts(
-            runId, new HashSet<string>(), new HashSet<string>(), 100,
-            AnalysisArtifactSortOrder.IdentityAscending, null)
-            .Items.SingleOrDefault(item => item.ArtifactId == artifactId)
-            ?? throw new KeyNotFoundException($"Published analysis artifact '{artifactId}' does not exist.");
+        AnalysisArtifactPersistenceRecord artifact = GetAnalysisArtifact(runId, artifactId);
         if (string.IsNullOrWhiteSpace(artifact.DependencyClosureId))
         {
             throw new InvalidDataException("The published artifact has no dependency closure identity.");
@@ -488,10 +510,20 @@ public sealed partial class AuthoritativeStore
             using SqliteCommand command = connection.CreateCommand();
             command.CommandText =
                 """
-                SELECT to_id FROM analysis_dependency_edges
-                WHERE run_id=$run AND from_kind='replay-manifest' ORDER BY to_id LIMIT $limit;
+                WITH RECURSIVE closure(dependency_id) AS (
+                    SELECT to_id FROM analysis_dependency_edges
+                    WHERE run_id=$run AND from_kind='dependency-closure' AND from_id=$artifact
+                        AND edge_kind='depends-on'
+                    UNION
+                    SELECT edge.to_id FROM analysis_dependency_edges edge
+                    JOIN closure prior ON edge.from_id=prior.dependency_id
+                    WHERE edge.run_id=$run AND edge.from_kind='dependency-closure'
+                        AND edge.edge_kind='depends-on'
+                )
+                SELECT dependency_id FROM closure ORDER BY dependency_id LIMIT $limit;
                 """;
             command.Parameters.AddWithValue("$run", runId);
+            command.Parameters.AddWithValue("$artifact", artifactId);
             command.Parameters.AddWithValue("$limit", maximumCount);
             using SqliteDataReader reader = command.ExecuteReader();
             List<string> ids = [];

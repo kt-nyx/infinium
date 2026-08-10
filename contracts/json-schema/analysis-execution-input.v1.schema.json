@@ -5,7 +5,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "schema_id", "schema_version", "execution_input_id", "run_id",
+    "schema_id", "schema_version", "execution_input_id", "run_id", "analysis_context",
     "installation_snapshot", "bethesda_semantic_input", "source_inputs",
     "analyzer_declarations", "effective_configuration", "resolved_input_manifest",
     "mode", "seed", "limits", "boundaries"
@@ -15,6 +15,7 @@
     "schema_version": { "const": "1.0.0" },
     "execution_input_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
     "run_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "analysis_context": { "$ref": "common.v1.schema.json#/$defs/artifactReference" },
     "installation_snapshot": { "$ref": "common.v1.schema.json#/$defs/artifactReference" },
     "bethesda_semantic_input": { "$ref": "common.v1.schema.json#/$defs/artifactReference" },
     "source_inputs": { "$ref": "#/$defs/artifactReferences" },

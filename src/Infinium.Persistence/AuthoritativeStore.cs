@@ -271,7 +271,9 @@ public sealed partial class AuthoritativeStore : IDisposable
         long coordinatorFencingEpoch,
         DateTimeOffset now,
         string? startInitiationKind = null,
-        DateTimeOffset? startDispatchDeadline = null)
+        DateTimeOffset? startDispatchDeadline = null,
+        string? operationKind = null,
+        string? operationRequestJson = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(durableCommandId);
         ArgumentException.ThrowIfNullOrWhiteSpace(runId);
@@ -285,6 +287,21 @@ public sealed partial class AuthoritativeStore : IDisposable
         if (startInitiationKind is not null)
         {
             ValidateAuditToken(startInitiationKind, nameof(startInitiationKind));
+        }
+        if ((operationKind is null) != (operationRequestJson is null))
+        {
+            throw new ArgumentException("A durable run operation kind and request must be supplied together.");
+        }
+        string? operationSha256 = null;
+        if (operationKind is not null)
+        {
+            ValidateAuditToken(operationKind, nameof(operationKind));
+            if (string.IsNullOrWhiteSpace(operationRequestJson)
+                || Encoding.UTF8.GetByteCount(operationRequestJson) > MaximumCheckpointJsonBytes)
+            {
+                throw new InvalidOperationException("The durable run operation request exceeds its bound.");
+            }
+            operationSha256 = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(operationRequestJson)));
         }
 
         lock (gate)
@@ -315,6 +332,12 @@ public sealed partial class AuthoritativeStore : IDisposable
                 {
                     throw new InvalidOperationException(
                         "A durable command key cannot be rebound to different start inputs.");
+                }
+                if (operationKind is not null
+                    && ScalarLong("SELECT COUNT(*) FROM run_operations WHERE run_id=$run AND operation_kind=$kind AND request_sha256=$sha;",
+                        transaction, ("$run", existingRun.RunId), ("$kind", operationKind), ("$sha", operationSha256)) != 1)
+                {
+                    throw new InvalidOperationException("A durable command key cannot be rebound to different run-operation inputs.");
                 }
 
                 transaction.Commit();
@@ -386,6 +409,15 @@ public sealed partial class AuthoritativeStore : IDisposable
                 transaction,
                 ("$run", runId),
                 ("$now", ToText(now)));
+            if (operationKind is not null)
+            {
+                Execute(
+                    """
+                    INSERT INTO run_operations(run_id,operation_kind,request_json,request_sha256,created_at)
+                    VALUES ($run,$kind,$request,$sha,$now);
+                    """, transaction, ("$run", runId), ("$kind", operationKind),
+                    ("$request", operationRequestJson), ("$sha", operationSha256), ("$now", ToText(now)));
+            }
             transaction.Commit();
             return GetRunCore(runId);
         }

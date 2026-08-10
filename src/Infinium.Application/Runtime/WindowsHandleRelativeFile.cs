@@ -6,6 +6,29 @@ namespace Infinium.Application.Runtime;
 
 public static class WindowsHandleRelativeFile
 {
+    public static FileStream OpenRead(nint directoryHandle, string relativeName)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            throw new PlatformNotSupportedException(
+                "Handle-relative staged input currently requires Windows.");
+        }
+
+        if (directoryHandle is 0 or -1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(directoryHandle));
+        }
+
+        ValidateLeafName(relativeName);
+        SafeFileHandle file = OpenRelative(
+            directoryHandle,
+            relativeName,
+            GENERIC_READ | SYNCHRONIZE,
+            FILE_SHARE_READ,
+            FILE_OPEN);
+        return new FileStream(file, FileAccess.Read, bufferSize: 4096, isAsync: false);
+    }
+
     public static FileStream CreateNew(nint directoryHandle, string relativeName)
     {
         if (!OperatingSystem.IsWindows())
@@ -20,6 +43,22 @@ public static class WindowsHandleRelativeFile
         }
 
         ValidateLeafName(relativeName);
+        SafeFileHandle file = OpenRelative(
+            directoryHandle,
+            relativeName,
+            GENERIC_WRITE | SYNCHRONIZE,
+            0,
+            FILE_CREATE);
+        return new FileStream(file, FileAccess.Write, bufferSize: 4096, isAsync: false);
+    }
+
+    private static SafeFileHandle OpenRelative(
+        nint directoryHandle,
+        string relativeName,
+        uint desiredAccess,
+        uint shareAccess,
+        uint disposition)
+    {
         nint nameBuffer = Marshal.StringToHGlobalUni(relativeName);
         nint unicodeStringBuffer = 0;
         try
@@ -41,13 +80,13 @@ public static class WindowsHandleRelativeFile
             };
             int status = NtCreateFile(
                 out SafeFileHandle file,
-                GENERIC_WRITE | SYNCHRONIZE,
+                desiredAccess,
                 ref attributes,
                 out _,
                 0,
                 FILE_ATTRIBUTE_NORMAL,
-                0,
-                FILE_CREATE,
+                shareAccess,
+                disposition,
                 FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
                 0,
                 0);
@@ -58,8 +97,7 @@ public static class WindowsHandleRelativeFile
                     checked((int)RtlNtStatusToDosError(status)),
                     "The handle-relative staged output could not be created.");
             }
-
-            return new FileStream(file, FileAccess.Write, bufferSize: 4096, isAsync: false);
+            return file;
         }
         finally
         {
@@ -109,8 +147,11 @@ public static class WindowsHandleRelativeFile
     }
 
     private const uint GENERIC_WRITE = 0x40000000;
+    private const uint GENERIC_READ = 0x80000000;
     private const uint SYNCHRONIZE = 0x00100000;
+    private const uint FILE_SHARE_READ = 0x00000001;
     private const uint FILE_ATTRIBUTE_NORMAL = 0x00000080;
+    private const uint FILE_OPEN = 1;
     private const uint FILE_CREATE = 2;
     private const uint FILE_SYNCHRONOUS_IO_NONALERT = 0x00000020;
     private const uint FILE_NON_DIRECTORY_FILE = 0x00000040;

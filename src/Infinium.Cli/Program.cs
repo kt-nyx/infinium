@@ -1,5 +1,8 @@
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text.Json;
+using Google.Protobuf;
+using Infinium.Application.Analysis;
 using Infinium.Application.Evaluation;
 using Infinium.Application.Runtime;
 using Infinium.Contracts.Protobuf.Application.V1;
@@ -85,6 +88,37 @@ static async Task<int> StartAsync(
     string configuration = RequiredOption(arguments, "--configuration");
     string manifest = RequiredOption(arguments, "--manifest");
     string commandId = BoundedCommandId(arguments);
+    string? analysisRequestPath = Option(arguments, "--analysis-request");
+    byte[]? analysisRequestBytes = null;
+    string? requestedRunId = null;
+    if (analysisRequestPath is not null)
+    {
+        string fullPath = Path.GetFullPath(analysisRequestPath);
+        using FileStream input = new(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        if (input.Length is < 1 or > ManagedAnalysisOrchestrationRequest.MaximumRequestBytes)
+        {
+            throw new InvalidOperationException("The managed analysis request exceeds its CLI input bound.");
+        }
+        analysisRequestBytes = new byte[checked((int)input.Length)];
+        input.ReadExactly(analysisRequestBytes);
+        ManagedAnalysisOrchestrationRequest managed = JsonSerializer.Deserialize<ManagedAnalysisOrchestrationRequest>(
+            analysisRequestBytes, Infinium.Domain.Contracts.ContractJsonSerializer.Options)
+            ?? throw new InvalidOperationException("The managed analysis request is malformed.");
+        analysisRequestBytes = JsonSerializer.SerializeToUtf8Bytes(
+            managed, Infinium.Domain.Contracts.ContractJsonSerializer.Options);
+        if (analysisRequestBytes.LongLength > ManagedAnalysisOrchestrationRequest.MaximumRequestBytes)
+        {
+            throw new InvalidOperationException("The canonical managed analysis request exceeds its CLI input bound.");
+        }
+        requestedRunId = managed.ExecutionInput.RunId.Value;
+        if (managed.ExecutionInput.InstallationSnapshot.ArtifactId.Value != snapshot
+            || managed.AnalysisContext.ContextId.Value != context
+            || managed.ExecutionInput.EffectiveConfiguration.ArtifactId.Value != configuration
+            || managed.ExecutionInput.ResolvedInputManifest.ArtifactId.Value != manifest)
+        {
+            throw new InvalidOperationException("The managed analysis request differs from the CLI immutable bindings.");
+        }
+    }
     SubmitRunCommandRequest request = new()
     {
         IdempotencyKey = new DurableCommandId { Value = commandId },
@@ -98,6 +132,11 @@ static async Task<int> StartAsync(
             DispatchDeadline = Instant(DateTimeOffset.UtcNow.AddMinutes(5)),
         },
     };
+    if (analysisRequestBytes is not null)
+    {
+        request.Start.AnalysisOrchestrationRequestJson = ByteString.CopyFrom(analysisRequestBytes);
+        request.Start.RequestedRunId = new RunId { Value = requestedRunId };
+    }
     SubmitRunCommandResponse response =
         await SubmitDurableAsync(connection, request).ConfigureAwait(false);
     if (response.Disposition is not (CommandDisposition.Accepted or CommandDisposition.AlreadyAccepted))
@@ -368,7 +407,8 @@ static bool DurableStatusMatchesRequest(
                 == request.Start.EffectiveScanConfigurationId?.Value
             && accepted.ResolvedInputManifestId?.Value
                 == request.Start.ResolvedInputManifestId?.Value
-            && accepted.ManualInitiationKind == request.Start.InitiationKind,
+            && accepted.ManualInitiationKind == request.Start.InitiationKind
+            && ManagedStartIdentityMatches(accepted, request.Start),
         SubmitRunCommandRequest.CommandOneofCase.Pause =>
             MatchesTransition(
                 status,
@@ -392,6 +432,22 @@ static bool DurableStatusMatchesRequest(
                 request.Cancel.ExpectedLifecycleGeneration),
         _ => false,
     };
+}
+
+static bool ManagedStartIdentityMatches(
+    DurableCommandInputIdentity accepted,
+    ManualStartCommand requested)
+{
+    if (requested.AnalysisOrchestrationRequestJson.Length == 0)
+    {
+        return string.IsNullOrEmpty(accepted.RequestedRunId?.Value)
+            && accepted.AnalysisOrchestrationRequest is null;
+    }
+    byte[] bytes = requested.AnalysisOrchestrationRequestJson.ToByteArray();
+    return accepted.RequestedRunId?.Value == requested.RequestedRunId?.Value
+        && accepted.AnalysisOrchestrationRequest?.Algorithm == DigestAlgorithm.Sha256
+        && accepted.AnalysisOrchestrationRequest.Value.Span.SequenceEqual(SHA256.HashData(bytes))
+        && accepted.AnalysisOrchestrationRequest.SizeBytes == checked((ulong)bytes.LongLength);
 }
 
 static bool MatchesTransition(
@@ -580,7 +636,7 @@ static void ValidateCommandArguments(string[] arguments, string command)
     {
         case "start":
             valueOptions.UnionWith(
-                ["--snapshot", "--context", "--configuration", "--manifest", "--command-id"]);
+                ["--snapshot", "--context", "--configuration", "--manifest", "--command-id", "--analysis-request"]);
             expectedPositionals = 0;
             break;
         case "wait":
@@ -652,7 +708,7 @@ static void Usage() =>
     Console.Error.WriteLine(
         """
         Usage:
-          Infinium.Cli --root <absolute-product-root> start --snapshot <id> --context <id> --configuration <id> --manifest <id> [--command-id <id>] [--json]
+          Infinium.Cli --root <absolute-product-root> start --snapshot <id> --context <id> --configuration <id> --manifest <id> [--analysis-request <json-path>] [--command-id <id>] [--json]
           Infinium.Cli --root <absolute-product-root> status <run-id> [--json]
           Infinium.Cli --root <absolute-product-root> wait <run-id> [--timeout-seconds <1..3600>] [--json]
           Infinium.Cli --root <absolute-product-root> cancel <run-id> [--command-id <id>] [--json]

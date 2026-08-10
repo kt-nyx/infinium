@@ -181,13 +181,21 @@ public sealed class WorkerBootstrapRegistry
         });
         if (bootstrap.OperationKind == ManagedWorkerOperationKind.AnalysisV1)
         {
-            foreach (RetainedAnalysisPayloadSeal seal in new[]
+            RetainedAnalysisPayloadSeal[] seals =
             {
                 bootstrap.AnalysisV1!.DocumentationEvidence,
                 bootstrap.AnalysisV1.CandidateAnalysis,
                 bootstrap.AnalysisV1.FindingCase,
-            })
+            };
+            string[] names = bootstrap.AnalysisInputRelativeNames?.ToArray()
+                ?? throw new InvalidOperationException("The analysis-v1 staged input names are absent.");
+            if (names.Length != seals.Length)
             {
+                throw new InvalidOperationException("The analysis-v1 staged input names are incomplete.");
+            }
+            for (int index = 0; index < seals.Length; index++)
+            {
+                RetainedAnalysisPayloadSeal seal = seals[index];
                 assignment.Inputs.Add(new WorkerInput
                 {
                     PayloadId = new PayloadId { Value = seal.PayloadId },
@@ -198,7 +206,8 @@ public sealed class WorkerBootstrapRegistry
                         SizeBytes = checked((ulong)seal.ByteLength),
                     },
                     Kind = WorkerInputKind.ImmutablePayload,
-                    LogicalName = seal.SchemaId,
+                    LogicalName = names[index],
+                    InheritedReadHandleSlot = 1,
                 });
             }
         }

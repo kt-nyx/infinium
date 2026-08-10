@@ -2,7 +2,10 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Infinium.Analysis.Candidates;
+using Infinium.Application.Candidates;
+using Infinium.Application.Documentation;
 using Infinium.Application.Evaluation;
+using Infinium.Application.FindingCases;
 using Infinium.Domain.Contracts;
 
 namespace Infinium.Application.Analysis;
@@ -43,9 +46,11 @@ public static class AnalysisPublicationBuilder
             Slice5ContractInvariants.Validate(assignment.ExecutionInput);
             cancellationToken.ThrowIfCancellationRequested();
             string admittedRunId = assignment.ExecutionInput.RunId.Value;
-            if (documentation.OriginatingRunId.Value != admittedRunId
-                || candidates.OriginatingRunId.Value != admittedRunId
-                || findingCases.OriginatingRunId.Value != admittedRunId
+            string SourceRun(string phaseId) => assignment.PhaseExecutions
+                .SingleOrDefault(item => item.PhaseId == phaseId)?.SourceRunId ?? admittedRunId;
+            if (documentation.OriginatingRunId.Value != SourceRun(DocumentationEvidencePhase.PhaseId)
+                || candidates.OriginatingRunId.Value != SourceRun(CandidateAnalysisPhase.PhaseId)
+                || findingCases.OriginatingRunId.Value != SourceRun(FindingCaseAnalysisPhase.PhaseId)
                 || findingCases.InputId.Value.Length == 0
                 || candidates.ExecutionInputId != assignment.ExecutionInput.ExecutionInputId
                 || candidates.ExecutionInputFingerprint != CandidateAnalysisIdentity.StructuralHash(
@@ -89,12 +94,82 @@ public static class AnalysisPublicationBuilder
             .Where(item => item.State != Slice5ResultState.Present)
             .Select(item => item.DependencyId)
             .Distinct().OrderBy(item => item.Value, StringComparer.Ordinal).ToArray();
-        List<ReplayDependencyEdgeContract> dependencyEdges = dependencies
-            .Where(item => item.DependencyId.Value != assignment.ExecutionInput.ExecutionInputId.Value)
-            .Select(item => new ReplayDependencyEdgeContract(
-                assignment.ExecutionInput.ExecutionInputId,
-                item.DependencyId))
-            .ToList();
+        List<ReplayDependencyEdgeContract> dependencyEdges = [];
+        HashSet<OpaqueId> documentationDependencyIds = assignment.DocumentationDependencyIds.Count == 0
+            ? assignment.ExecutionInput.SourceInputs.Select(item => item.ArtifactId)
+                .Where(id => documentation.Revisions.Any(item => item.SourceId == id))
+                .Append(assignment.AnalysisContext.ContextId).ToHashSet()
+            : assignment.DocumentationDependencyIds.ToHashSet();
+        if (!documentationDependencyIds.Contains(assignment.AnalysisContext.ContextId)
+            || documentation.Revisions.Any(item => !documentationDependencyIds.Contains(item.SourceId))
+            || documentationDependencyIds.Any(id => id != assignment.AnalysisContext.ContextId
+                && !assignment.ExecutionInput.SourceInputs.Any(item => item.ArtifactId == id)))
+        {
+            throw new AnalysisIdentityDriftException(
+                "Documentation provenance dependencies differ from the exact retained WP2 input closure.");
+        }
+        Dictionary<string, OpaqueId> phaseNodes = assignment.PhaseExecutions.ToDictionary(
+            item => item.PhaseId,
+            item => new OpaqueId("phase-" + Hash(Encoding.UTF8.GetBytes(item.PhaseId + "|" + item.InputFingerprint))[..32]),
+            StringComparer.Ordinal);
+        if (phaseNodes.TryGetValue(DocumentationEvidencePhase.PhaseId, out OpaqueId? documentationPhase)
+            && phaseNodes.TryGetValue(CandidateAnalysisPhase.PhaseId, out OpaqueId? candidatePhase)
+            && phaseNodes.TryGetValue(FindingCaseAnalysisPhase.PhaseId, out OpaqueId? findingPhase))
+        {
+            OpaqueId documentationOutput = documentation.PayloadId;
+            OpaqueId candidateOutput = candidates.PayloadId;
+            OpaqueId findingOutput = findingCases.PayloadId;
+            dependencyEdges.Add(new ReplayDependencyEdgeContract(documentationOutput, documentationPhase));
+            dependencyEdges.Add(new ReplayDependencyEdgeContract(candidateOutput, candidatePhase));
+            dependencyEdges.Add(new ReplayDependencyEdgeContract(findingOutput, findingPhase));
+            dependencyEdges.Add(new ReplayDependencyEdgeContract(candidatePhase, documentationOutput));
+            dependencyEdges.Add(new ReplayDependencyEdgeContract(findingPhase, candidateOutput));
+            foreach ((string kind, ArtifactReferenceContract reference) in References(assignment.ExecutionInput))
+            {
+                dependencyEdges.Add(new ReplayDependencyEdgeContract(
+                    assignment.ExecutionInput.ExecutionInputId, reference.ArtifactId));
+                if (documentationDependencyIds.Contains(reference.ArtifactId))
+                {
+                    dependencyEdges.Add(new ReplayDependencyEdgeContract(documentationPhase, reference.ArtifactId));
+                }
+                if (kind is "analysis-context" or "installation-snapshot" or "bethesda-semantic-input"
+                    or "source-input" or "analyzer-declaration" or "effective-configuration" or "resolved-input-manifest")
+                {
+                    dependencyEdges.Add(new ReplayDependencyEdgeContract(candidatePhase, reference.ArtifactId));
+                }
+            }
+            dependencyEdges.Add(new ReplayDependencyEdgeContract(candidatePhase, candidates.PolicyId));
+            dependencyEdges.Add(new ReplayDependencyEdgeContract(candidatePhase, candidates.ThresholdId));
+            dependencyEdges.Add(new ReplayDependencyEdgeContract(candidatePhase, candidates.LimitId));
+            dependencyEdges.Add(new ReplayDependencyEdgeContract(findingPhase, findingCases.PromotionPolicyId));
+            dependencyEdges.Add(new ReplayDependencyEdgeContract(findingPhase, findingCases.ReconciliationPolicyId));
+            dependencyEdges.Add(new ReplayDependencyEdgeContract(candidatePhase,
+                new OpaqueId("fixture-seed-" + assignment.ExecutionInput.Seed)));
+        }
+        else
+        {
+            foreach ((string kind, ArtifactReferenceContract reference) in References(assignment.ExecutionInput))
+            {
+                dependencyEdges.Add(new ReplayDependencyEdgeContract(
+                    assignment.ExecutionInput.ExecutionInputId, reference.ArtifactId));
+                if (documentationDependencyIds.Contains(reference.ArtifactId))
+                {
+                    dependencyEdges.Add(new ReplayDependencyEdgeContract(documentation.PayloadId, reference.ArtifactId));
+                }
+                if (kind is "analysis-context" or "installation-snapshot" or "bethesda-semantic-input"
+                    or "source-input" or "analyzer-declaration" or "effective-configuration" or "resolved-input-manifest")
+                {
+                    dependencyEdges.Add(new ReplayDependencyEdgeContract(candidates.PayloadId, reference.ArtifactId));
+                }
+            }
+            dependencyEdges.Add(new ReplayDependencyEdgeContract(candidates.PayloadId, documentation.PayloadId));
+            dependencyEdges.Add(new ReplayDependencyEdgeContract(findingCases.PayloadId, candidates.PayloadId));
+            dependencyEdges.Add(new ReplayDependencyEdgeContract(candidates.PayloadId, candidates.PolicyId));
+            dependencyEdges.Add(new ReplayDependencyEdgeContract(candidates.PayloadId, candidates.ThresholdId));
+            dependencyEdges.Add(new ReplayDependencyEdgeContract(candidates.PayloadId, candidates.LimitId));
+            dependencyEdges.Add(new ReplayDependencyEdgeContract(findingCases.PayloadId, findingCases.PromotionPolicyId));
+            dependencyEdges.Add(new ReplayDependencyEdgeContract(findingCases.PayloadId, findingCases.ReconciliationPolicyId));
+        }
 
         bool hasGaps = documentation.Gaps.Count != 0
             || candidates.Gaps.Count != 0
@@ -116,6 +191,15 @@ public static class AnalysisPublicationBuilder
         string replayManifestId = StableId(
             "analysis-replay", dependencyClosureId, semanticFingerprint,
             assignment.TerminalOutcome.ToString(), semanticallyEquivalent.ToString());
+        OpaqueId replayNode = new(replayManifestId);
+        dependencies.Add(new ReplayDependencyNodeContract(
+            replayNode, "analysis-replay", new ContractVersion(1, 0, 0),
+            new Sha256Fingerprint(Hash(Encoding.UTF8.GetBytes(
+                dependencyClosureId + "|" + semanticFingerprint))), Slice5ResultState.Present));
+        dependencyEdges.Add(new ReplayDependencyEdgeContract(replayNode, assignment.ExecutionInput.ExecutionInputId));
+        dependencyEdges.Add(new ReplayDependencyEdgeContract(replayNode, documentation.PayloadId));
+        dependencyEdges.Add(new ReplayDependencyEdgeContract(replayNode, candidates.PayloadId));
+        dependencyEdges.Add(new ReplayDependencyEdgeContract(replayNode, findingCases.PayloadId));
         AnalysisReplayContract replay = new(
             ContractConstants.AnalysisReplaySchemaId,
             new ContractVersion(1, 0, 0),
@@ -211,8 +295,8 @@ public static class AnalysisPublicationBuilder
         if (assignment.SchemaVersion != AnalysisV1WorkAssignment.CurrentSchemaVersion
             || string.IsNullOrWhiteSpace(assignment.AssignmentId)
             || assignment.AssignmentId.Length > 128
-            || string.IsNullOrWhiteSpace(assignment.AnalysisContextId)
-            || assignment.AnalysisContextId.Length > 128
+            || string.IsNullOrWhiteSpace(assignment.AnalysisContext.ContextId.Value)
+            || assignment.AnalysisContext.ContextId.Value.Length > 128
             || assignment.ExecutionInput.Boundaries.Any(item => item.State != BoundaryUseState.NotUsed)
             || assignment.MaximumInputBytes is < 1 or > AnalysisV1WorkAssignment.AbsoluteMaximumInputBytes
             || assignment.MaximumOutputBytes is < AnalysisV1WorkAssignment.MinimumTerminalOutputBytes
@@ -230,6 +314,24 @@ public static class AnalysisPublicationBuilder
                 TimeSpan.FromSeconds(1)))
         {
             throw new InvalidDataException("The analysis-v1 assignment is unbounded, malformed, or enables an external boundary.");
+        }
+        SemanticAnalysisContextIdentity.Validate(assignment.AnalysisContext);
+        if (assignment.ExecutionInput.AnalysisContext.ArtifactId != assignment.AnalysisContext.ContextId
+            || assignment.ExecutionInput.AnalysisContext.ArtifactVersion != assignment.AnalysisContext.SchemaVersion
+            || assignment.ExecutionInput.AnalysisContext.Fingerprint != assignment.AnalysisContext.CanonicalFingerprint
+            || assignment.ExecutionInput.AnalysisContext.Availability != "retained")
+        {
+            throw new InvalidDataException("The execution input does not retain the exact semantic analysis context identity.");
+        }
+        if (assignment.DocumentationDependencyIds.Count != 0
+            && (assignment.DocumentationDependencyIds.Count > 10_002
+                || assignment.DocumentationDependencyIds.Distinct().Count()
+                    != assignment.DocumentationDependencyIds.Count
+                || !assignment.DocumentationDependencyIds.Contains(assignment.AnalysisContext.ContextId)
+                || assignment.DocumentationDependencyIds.Any(id => id != assignment.AnalysisContext.ContextId
+                    && !assignment.ExecutionInput.SourceInputs.Any(item => item.ArtifactId == id))))
+        {
+            throw new InvalidDataException("The exact documentation input dependency closure is malformed.");
         }
 
         RetainedAnalysisPayloadSeal[] seals =
@@ -249,6 +351,21 @@ public static class AnalysisPublicationBuilder
                 || item.Sha256.Any(ch => ch is not (>= '0' and <= '9' or >= 'a' and <= 'f'))))
         {
             throw new InvalidDataException("The analysis-v1 retained payload seals are invalid or duplicated.");
+        }
+        string[] knownPhases =
+            [DocumentationEvidencePhase.PhaseId, CandidateAnalysisPhase.PhaseId, FindingCaseAnalysisPhase.PhaseId];
+        if (assignment.PhaseExecutions.Count > knownPhases.Length
+            || assignment.PhaseExecutions.Select(item => item.PhaseId).Distinct(StringComparer.Ordinal).Count()
+                != assignment.PhaseExecutions.Count
+            || assignment.PhaseExecutions.Any(item => !knownPhases.Contains(item.PhaseId, StringComparer.Ordinal)
+                || item.InputFingerprint.Length != 64
+                || item.InputFingerprint.Any(ch => ch is not (>= '0' and <= '9' or >= 'a' and <= 'f'))
+                || item.SourceRunId.Length is < 1 or > 128
+                || item.Disposition is not ("recomputed-invalidated" or "recomputed-run-binding"
+                    or "reused-completed-phase" or "reused-retained-phase")
+                || !seals.Contains(item.Output)))
+        {
+            throw new InvalidDataException("The analysis-v1 phase execution ledger is malformed.");
         }
     }
 
@@ -401,8 +518,8 @@ public static class AnalysisPublicationBuilder
             assignment.ImplementationCommit, Utc(assignment.StartedAt), Utc(endedAt),
             Reference(assignment.ExecutionInput.InstallationSnapshot),
             new ArtifactReferenceDocumentContract(
-                assignment.AnalysisContextId, "1.0.0",
-                Hash(Encoding.UTF8.GetBytes(assignment.AnalysisContextId)), "retained"),
+                assignment.AnalysisContext.ContextId.Value, assignment.AnalysisContext.SchemaVersion.ToString(),
+                assignment.AnalysisContext.CanonicalFingerprint.Value, "retained"),
             Reference(assignment.ExecutionInput.EffectiveConfiguration), Reference(assignment.ExecutionInput.ResolvedInputManifest),
             ContractConstants.TaxonomyId, ContractConstants.TaxonomyVersion,
             assignment.ExecutionInput.AnalyzerDeclarations.Select(Reference).ToArray(),
@@ -515,6 +632,11 @@ public static class AnalysisPublicationBuilder
             Hash(Encoding.UTF8.GetBytes(findingCases.ReconciliationPolicyId.Value + "|" + findingCases.ReconciliationPolicyVersion)));
         Add("fixture-seed-" + assignment.ExecutionInput.Seed, "fixture-seed", "1.0.0",
             Hash(Encoding.UTF8.GetBytes(assignment.ExecutionInput.Seed.ToString(System.Globalization.CultureInfo.InvariantCulture))));
+        foreach (AnalysisPhaseExecution phase in assignment.PhaseExecutions)
+        {
+            Add("phase-" + Hash(Encoding.UTF8.GetBytes(phase.PhaseId + "|" + phase.InputFingerprint))[..32],
+                "analysis-phase", "1.0.0", phase.InputFingerprint);
+        }
         return result.GroupBy(item => item.DependencyId).Select(group =>
         {
             ReplayDependencyNodeContract first = group.First();
@@ -528,6 +650,7 @@ public static class AnalysisPublicationBuilder
 
     private static IEnumerable<(string Kind, ArtifactReferenceContract Value)> References(AnalysisExecutionInputContract value)
     {
+        yield return ("analysis-context", value.AnalysisContext);
         yield return ("installation-snapshot", value.InstallationSnapshot);
         yield return ("bethesda-semantic-input", value.BethesdaSemanticInput);
         foreach (ArtifactReferenceContract item in value.SourceInputs)

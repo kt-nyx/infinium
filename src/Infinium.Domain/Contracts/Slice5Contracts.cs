@@ -962,7 +962,12 @@ public sealed record AnalysisExecutionInputContract(
     OpaqueId? PriorRunId,
     long Seed,
     AnalysisExecutionLimitsContract Limits,
-    IReadOnlyList<ExecutionBoundaryContract> Boundaries);
+    IReadOnlyList<ExecutionBoundaryContract> Boundaries)
+{
+    public ArtifactReferenceContract AnalysisContext { get; init; } = new(
+        new OpaqueId("analysis-context-unspecified"), new ContractVersion(1, 0, 0),
+        new Sha256Fingerprint(new string('0', 64)), "unavailable");
+}
 
 public static class Slice5ContractInvariants
 {
@@ -1883,6 +1888,7 @@ public static class Slice5ContractInvariants
         RequireUnique(value.AnalyzerDeclarations.Select(item => item.ArtifactId), "analysis execution analyzer declarations");
         ArtifactReferenceContract[] references =
         [
+            value.AnalysisContext,
             value.InstallationSnapshot,
             value.BethesdaSemanticInput,
             .. value.SourceInputs,

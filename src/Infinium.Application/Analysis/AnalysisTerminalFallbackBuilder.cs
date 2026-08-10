@@ -67,12 +67,15 @@ public static class AnalysisTerminalFallbackBuilder
             Add(value.ArtifactId.Value, kind, value.ArtifactVersion.ToString(), value.Fingerprint.Value,
                 value.Availability == "retained" ? Slice5ResultState.Present : Slice5ResultState.Unavailable);
         }
+        Slice5ResultState PhaseState(RetainedAnalysisPayloadSeal seal) => assignment.PhaseExecutions.Any(
+            item => item.Output.PayloadId == seal.PayloadId && item.Output.Sha256 == seal.Sha256)
+            ? Slice5ResultState.Present : Slice5ResultState.Unavailable;
         Add(assignment.DocumentationEvidence.PayloadId, "documentation-evidence",
-            assignment.DocumentationEvidence.SchemaVersion, assignment.DocumentationEvidence.Sha256, Slice5ResultState.Present);
+            assignment.DocumentationEvidence.SchemaVersion, assignment.DocumentationEvidence.Sha256, PhaseState(assignment.DocumentationEvidence));
         Add(assignment.CandidateAnalysis.PayloadId, "candidate-analysis",
-            assignment.CandidateAnalysis.SchemaVersion, assignment.CandidateAnalysis.Sha256, Slice5ResultState.Present);
+            assignment.CandidateAnalysis.SchemaVersion, assignment.CandidateAnalysis.Sha256, PhaseState(assignment.CandidateAnalysis));
         Add(assignment.FindingCase.PayloadId, "finding-case",
-            assignment.FindingCase.SchemaVersion, assignment.FindingCase.Sha256, Slice5ResultState.Present);
+            assignment.FindingCase.SchemaVersion, assignment.FindingCase.Sha256, PhaseState(assignment.FindingCase));
         ReplayDependencyNodeContract[] uniqueDependencies = dependencies
             .GroupBy(item => item.DependencyId)
             .Select(group => group.Distinct().Count() == 1
@@ -84,13 +87,50 @@ public static class AnalysisTerminalFallbackBuilder
             .Select(item => item.DependencyId).ToArray();
         string replayManifestId = StableId(
             "analysis-terminal-replay", dependencyClosureId, semanticFingerprint, terminalOutcome.ToString());
+        Add(replayManifestId, "analysis-replay", "1.0.0",
+            Hash(Encoding.UTF8.GetBytes(dependencyClosureId + "|" + semanticFingerprint)),
+            Slice5ResultState.Present);
+        uniqueDependencies = dependencies
+            .GroupBy(item => item.DependencyId)
+            .Select(group => group.Distinct().Count() == 1
+                ? group.First()
+                : throw new InvalidDataException("Fallback dependency identities contain conflicting metadata."))
+            .OrderBy(item => item.DependencyId.Value, StringComparer.Ordinal)
+            .ToArray();
+        missing = uniqueDependencies.Where(item => item.State != Slice5ResultState.Present)
+            .Select(item => item.DependencyId).ToArray();
+        HashSet<OpaqueId> documentationInputs = assignment.DocumentationDependencyIds.Count == 0
+            ? [assignment.AnalysisContext.ContextId]
+            : assignment.DocumentationDependencyIds.ToHashSet();
+        List<ReplayDependencyEdgeContract> edges = [];
+        void Edge(string from, string to)
+        {
+            if (from != to && uniqueDependencies.Any(item => item.DependencyId.Value == to))
+            {
+                edges.Add(new ReplayDependencyEdgeContract(new OpaqueId(from), new OpaqueId(to)));
+            }
+        }
+        foreach ((_, ArtifactReferenceContract reference) in References(assignment.ExecutionInput))
+        {
+            Edge(assignment.ExecutionInput.ExecutionInputId.Value, reference.ArtifactId.Value);
+            Edge(assignment.CandidateAnalysis.PayloadId, reference.ArtifactId.Value);
+        }
+        foreach (OpaqueId input in documentationInputs)
+        {
+            Edge(assignment.DocumentationEvidence.PayloadId, input.Value);
+        }
+        Edge(assignment.CandidateAnalysis.PayloadId, assignment.DocumentationEvidence.PayloadId);
+        Edge(assignment.FindingCase.PayloadId, assignment.CandidateAnalysis.PayloadId);
+        Edge(replayManifestId, assignment.ExecutionInput.ExecutionInputId.Value);
+        Edge(replayManifestId, assignment.DocumentationEvidence.PayloadId);
+        Edge(replayManifestId, assignment.CandidateAnalysis.PayloadId);
+        Edge(replayManifestId, assignment.FindingCase.PayloadId);
         AnalysisReplayContract replay = new(
             ContractConstants.AnalysisReplaySchemaId, new ContractVersion(1, 0, 0),
             new OpaqueId(replayManifestId), assignment.ExecutionInput.RunId, assignment.ExecutionInput.Mode,
             ReplayState.Partial, AuditabilityState.Partial, uniqueDependencies,
-            uniqueDependencies.Where(item => item.DependencyId != assignment.ExecutionInput.ExecutionInputId)
-                .Select(item => new ReplayDependencyEdgeContract(assignment.ExecutionInput.ExecutionInputId, item.DependencyId))
-                .ToArray(),
+            edges.Distinct().OrderBy(item => item.From.Value, StringComparer.Ordinal)
+                .ThenBy(item => item.To.Value, StringComparer.Ordinal).ToArray(),
             [
                 ReplayOutput(assignment.DocumentationEvidence),
                 ReplayOutput(assignment.CandidateAnalysis),
@@ -134,9 +174,9 @@ public static class AnalysisTerminalFallbackBuilder
         byte[] replayBytes = AnalysisReplayJsonCodec.Serialize(replay);
         List<AnalysisPublishedArtifact> artifacts =
         [
-            Published(assignment.DocumentationEvidence, "documentation-evidence", dependencyClosureId),
-            Published(assignment.CandidateAnalysis, "candidate-analysis", dependencyClosureId),
-            Published(assignment.FindingCase, "finding-case", dependencyClosureId),
+            Published(assignment, assignment.DocumentationEvidence, "documentation-evidence", dependencyClosureId),
+            Published(assignment, assignment.CandidateAnalysis, "candidate-analysis", dependencyClosureId),
+            Published(assignment, assignment.FindingCase, "finding-case", dependencyClosureId),
             new(replayManifestId, "analysis-replay", replay.SchemaId, replay.SchemaVersion.ToString(), 1,
                 "partial", Hash(replayBytes), replayBytes.LongLength,
                 StableId("provenance", replayManifestId), dependencyClosureId),
@@ -165,10 +205,13 @@ public static class AnalysisTerminalFallbackBuilder
             "m1-s5-wp5-terminal-fallback", "1.0.0", assignment.ExecutionInput.RunId.Value,
             [Reference(assignment.ExecutionInput.InstallationSnapshot), Reference(assignment.ExecutionInput.EffectiveConfiguration)],
             [], [], new LlmInvolvementDocumentContract("none", "none", null));
+        bool Retained(RetainedAnalysisPayloadSeal seal) => assignment.PhaseExecutions.Any(
+            item => item.Output.PayloadId == seal.PayloadId && item.Output.Sha256 == seal.Sha256);
         TypedArtifactDocumentContract Stage(string kind, string artifactType, RetainedAnalysisPayloadSeal seal) => new(
             StableId("analysis-terminal-retained-stage", assignment.ExecutionInput.RunId.Value, kind, seal.Sha256), 1,
-            artifactType, "present",
-            new ArtifactReferenceDocumentContract(seal.PayloadId, seal.SchemaVersion, seal.Sha256, "retained"), provenance);
+            artifactType, Retained(seal) ? "present" : "unavailable",
+            new ArtifactReferenceDocumentContract(seal.PayloadId, seal.SchemaVersion, seal.Sha256,
+                Retained(seal) ? "retained" : "unavailable"), provenance);
         TypedArtifactDocumentContract documentationStage = Stage(
             "documentation-evidence", "documentation-revision", assignment.DocumentationEvidence);
         TypedArtifactDocumentContract candidateStage = Stage(
@@ -179,9 +222,12 @@ public static class AnalysisTerminalFallbackBuilder
             name => name,
             name => new RunOutputCollectionStateContract("empty", "no retained evidence exists for this collection"),
             StringComparer.Ordinal);
-        states["documentation_revisions"] = new("populated", "retained WP2 stage evidence remains authoritative");
-        states["candidates"] = new("populated", "retained WP3 stage evidence remains authoritative");
-        states["findings"] = new("populated", "retained WP4 stage evidence remains authoritative");
+        states["documentation_revisions"] = new("populated", Retained(assignment.DocumentationEvidence)
+            ? "retained WP2 stage evidence remains authoritative" : "WP2 stage evidence is explicitly unavailable");
+        states["candidates"] = new("populated", Retained(assignment.CandidateAnalysis)
+            ? "retained WP3 stage evidence remains authoritative" : "WP3 stage evidence is explicitly unavailable");
+        states["findings"] = new("populated", Retained(assignment.FindingCase)
+            ? "retained WP4 stage evidence remains authoritative" : "WP4 stage evidence is explicitly unavailable");
         string markerKind = assignment.TerminalOutcome switch
         {
             AnalysisTerminalOutcome.Cancelled => "cancellation-gap",
@@ -199,7 +245,7 @@ public static class AnalysisTerminalFallbackBuilder
             assignment.TerminalOutcome == AnalysisTerminalOutcome.Failed ? "failure" : "coverage-gap", markerState,
             new ArtifactReferenceDocumentContract(
                 assignment.FindingCase.PayloadId, assignment.FindingCase.SchemaVersion,
-                assignment.FindingCase.Sha256, "retained"), provenance);
+                assignment.FindingCase.Sha256, Retained(assignment.FindingCase) ? "retained" : "unavailable"), provenance);
         bool isFailure = assignment.TerminalOutcome == AnalysisTerminalOutcome.Failed;
         states[isFailure ? "failures" : "coverage_gaps"] = new("populated", reason);
         TypedArtifactDocumentContract[] terminalGaps = isFailure ? [] : [terminalMarker];
@@ -228,7 +274,8 @@ public static class AnalysisTerminalFallbackBuilder
             assignment.ImplementationCommit, Utc(assignment.StartedAt), Utc(endedAt),
             Reference(assignment.ExecutionInput.InstallationSnapshot),
             new ArtifactReferenceDocumentContract(
-                assignment.AnalysisContextId, "1.0.0", Hash(Encoding.UTF8.GetBytes(assignment.AnalysisContextId)), "retained"),
+                assignment.AnalysisContext.ContextId.Value, assignment.AnalysisContext.SchemaVersion.ToString(),
+                assignment.AnalysisContext.CanonicalFingerprint.Value, "retained"),
             Reference(assignment.ExecutionInput.EffectiveConfiguration),
             Reference(assignment.ExecutionInput.ResolvedInputManifest),
             ContractConstants.TaxonomyId, ContractConstants.TaxonomyVersion,
@@ -298,6 +345,7 @@ public static class AnalysisTerminalFallbackBuilder
 
     private static IEnumerable<(string Kind, ArtifactReferenceContract Value)> References(AnalysisExecutionInputContract input)
     {
+        yield return ("analysis-context", input.AnalysisContext);
         yield return ("installation-snapshot", input.InstallationSnapshot);
         yield return ("bethesda-semantic-input", input.BethesdaSemanticInput);
         foreach (ArtifactReferenceContract value in input.SourceInputs)
@@ -317,8 +365,10 @@ public static class AnalysisTerminalFallbackBuilder
             new Sha256Fingerprint(seal.Sha256), new Sha256Fingerprint(seal.Sha256));
 
     private static AnalysisPublishedArtifact Published(
-        RetainedAnalysisPayloadSeal seal, string kind, string closure) =>
-        new(seal.PayloadId, kind, seal.SchemaId, seal.SchemaVersion, 1, "present", seal.Sha256,
+        AnalysisV1WorkAssignment assignment, RetainedAnalysisPayloadSeal seal, string kind, string closure) =>
+        new(seal.PayloadId, kind, seal.SchemaId, seal.SchemaVersion, 1,
+            assignment.PhaseExecutions.Any(item => item.Output.PayloadId == seal.PayloadId && item.Output.Sha256 == seal.Sha256)
+                ? "present" : "unavailable", seal.Sha256,
             seal.ByteLength, StableId("provenance", seal.PayloadId), closure);
 
     private static string Utc(DateTimeOffset value) => value.ToUniversalTime().ToString("O");

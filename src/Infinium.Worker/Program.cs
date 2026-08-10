@@ -3,13 +3,16 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using Google.Protobuf;
 using Infinium.Application.Analysis;
+using Infinium.Application.Evaluation;
 using Infinium.Application.Runtime;
 using Infinium.Bethesda;
 using Infinium.Contracts.Protobuf.Common.V1;
 using Infinium.Contracts.Protobuf.Domain.V1;
 using Infinium.Contracts.Protobuf.Protocol.V1;
 using Infinium.Contracts.Protobuf.Worker.V1;
+using Infinium.Domain.Contracts;
 using Infinium.Mo2;
+using StagedArtifactKind = Infinium.Contracts.Protobuf.Worker.V1.StagedArtifactKind;
 
 if (args.Length == 1
     && string.Equals(args[0], "containment-probe", StringComparison.Ordinal))
@@ -264,8 +267,7 @@ try
         AnalysisV1WorkAssignment analysis = bootstrap.AnalysisV1
             ?? throw new InvalidOperationException("The bounded analysis-v1 assignment is missing.");
         AnalysisPublicationBuilder.ValidateAssignment(analysis);
-        RetainedAnalysisPayloadSeal[] seals =
-            [analysis.DocumentationEvidence, analysis.CandidateAnalysis, analysis.FindingCase];
+        RetainedAnalysisPayloadSeal[] seals = ValidateAnalysisInputs(bootstrap, assignment, analysis);
         payload = JsonSerializer.SerializeToUtf8Bytes(new AnalysisWorkerValidationReceipt(
             1,
             analysis.AssignmentId,
@@ -419,13 +421,15 @@ static void Validate(ManagedWorkerBootstrap bootstrap)
         || (bootstrap.OperationKind == ManagedWorkerOperationKind.BethesdaSemanticExtraction
             && bootstrap.BethesdaSemanticExtraction is null)
         || (bootstrap.OperationKind == ManagedWorkerOperationKind.AnalysisV1
-            && bootstrap.AnalysisV1 is null)
+            && (bootstrap.AnalysisV1 is null
+                || bootstrap.AnalysisInputRelativeNames is null
+                || bootstrap.AnalysisInputRelativeNames.Count != 3))
         || (bootstrap.OperationKind != ManagedWorkerOperationKind.Mo2SnapshotCapture
             && bootstrap.Mo2SnapshotCapture is not null)
         || (bootstrap.OperationKind != ManagedWorkerOperationKind.BethesdaSemanticExtraction
             && bootstrap.BethesdaSemanticExtraction is not null)
         || (bootstrap.OperationKind != ManagedWorkerOperationKind.AnalysisV1
-            && bootstrap.AnalysisV1 is not null)
+            && (bootstrap.AnalysisV1 is not null || bootstrap.AnalysisInputRelativeNames is not null))
         || bootstrap.ExpiresAt <= DateTimeOffset.UtcNow
         || Convert.FromBase64String(bootstrap.OneUseNonceBase64).Length != 32)
     {
@@ -485,6 +489,9 @@ static void ValidateAssignment(
                 || assignment.Operation.AdapterOrAnalyzerVersion?.Value != "1.0.0"
                 || assignment.Inputs.Count != 3
                 || assignment.Inputs.Any(input => input.Kind != WorkerInputKind.ImmutablePayload)
+                || assignment.Inputs.Any(input => input.InheritedReadHandleSlot != 1)
+                || !assignment.Inputs.Select(input => input.LogicalName)
+                    .SequenceEqual(bootstrap.AnalysisInputRelativeNames!, StringComparer.Ordinal)
                 || assignment.Limits?.MaximumTotalInputBytes
                     != checked((ulong)bootstrap.AnalysisV1!.MaximumInputBytes)
                 || assignment.Limits.MaximumWorkUnits != 3
@@ -493,6 +500,80 @@ static void ValidateAssignment(
     {
         throw new InvalidOperationException("The worker assignment exceeds its launch authority.");
     }
+}
+
+static RetainedAnalysisPayloadSeal[] ValidateAnalysisInputs(
+    ManagedWorkerBootstrap bootstrap,
+    WorkerAssignment assignment,
+    AnalysisV1WorkAssignment analysis)
+{
+    RetainedAnalysisPayloadSeal[] expected =
+        [analysis.DocumentationEvidence, analysis.CandidateAnalysis, analysis.FindingCase];
+    string[] names = bootstrap.AnalysisInputRelativeNames?.ToArray()
+        ?? throw new InvalidOperationException("The analysis-v1 staged input names are absent.");
+    if (names.Length != expected.Length || assignment.Inputs.Count != expected.Length)
+    {
+        throw new InvalidOperationException("The analysis-v1 immutable input set is incomplete.");
+    }
+    long total = 0;
+    for (int index = 0; index < expected.Length; index++)
+    {
+        RetainedAnalysisPayloadSeal seal = expected[index];
+        WorkerInput authority = assignment.Inputs[index];
+        if (authority.PayloadId?.Value != seal.PayloadId
+            || authority.Content?.Algorithm != DigestAlgorithm.Sha256
+            || !authority.Content.Value.Span.SequenceEqual(Convert.FromHexString(seal.Sha256))
+            || authority.Content.SizeBytes != checked((ulong)seal.ByteLength)
+            || authority.LogicalName != names[index]
+            || authority.InheritedReadHandleSlot != 1)
+        {
+            throw new InvalidOperationException("The analysis-v1 worker input authority differs from its immutable seal.");
+        }
+        using FileStream input = WindowsHandleRelativeFile.OpenRead(
+            new nint(bootstrap.InheritedStagingDirectoryHandle), names[index]);
+        if (input.Length != seal.ByteLength || seal.ByteLength > analysis.MaximumInputBytes)
+        {
+            throw new InvalidDataException("The staged analysis-v1 input length differs from its immutable seal.");
+        }
+        byte[] bytes = new byte[checked((int)seal.ByteLength)];
+        input.ReadExactly(bytes);
+        if (Convert.ToHexStringLower(SHA256.HashData(bytes)) != seal.Sha256)
+        {
+            throw new InvalidDataException("The staged analysis-v1 input digest differs from its immutable seal.");
+        }
+        switch (seal.SchemaId)
+        {
+            case ContractConstants.DocumentationEvidenceSchemaId:
+                DocumentationEvidenceContract documentation = DocumentationEvidenceJsonCodec.Deserialize(bytes);
+                if (!bytes.AsSpan().SequenceEqual(DocumentationEvidenceJsonCodec.Serialize(documentation)))
+                {
+                    throw new InvalidDataException("The staged WP2 payload identity is not canonical.");
+                }
+                break;
+            case ContractConstants.CandidateAnalysisSchemaId:
+                CandidateAnalysisContract candidates = CandidateAnalysisJsonCodec.Deserialize(bytes);
+                if (!bytes.AsSpan().SequenceEqual(CandidateAnalysisJsonCodec.Serialize(candidates)))
+                {
+                    throw new InvalidDataException("The staged WP3 payload identity is not canonical.");
+                }
+                break;
+            case ContractConstants.FindingCaseSchemaId:
+                FindingCaseContract findings = FindingCaseJsonCodec.Deserialize(bytes);
+                if (!bytes.AsSpan().SequenceEqual(FindingCaseJsonCodec.Serialize(findings)))
+                {
+                    throw new InvalidDataException("The staged WP4 payload identity is not canonical.");
+                }
+                break;
+            default:
+                throw new InvalidDataException("The staged analysis-v1 input schema is not allowlisted.");
+        }
+        total = checked(total + seal.ByteLength);
+    }
+    if (total > analysis.MaximumInputBytes)
+    {
+        throw new InvalidDataException("The staged analysis-v1 input set exceeds its total byte authority.");
+    }
+    return expected;
 }
 
 static async Task<byte[]> ReadBoundedAsync(Stream stream, int maximumBytes)

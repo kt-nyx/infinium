@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Text.Json;
 using Infinium.Application.Evaluation;
 using Infinium.Domain.Contracts;
@@ -21,11 +20,11 @@ public static class AnalysisExecutionPhase
         Action<string>? failureInjection = null)
     {
         ArgumentNullException.ThrowIfNull(store);
-        Stopwatch elapsed = Stopwatch.StartNew();
-        TimeSpan phaseLimit = TimeSpan.FromMilliseconds(assignment.ExecutionInput.Limits.MaximumWallTimeMilliseconds);
+        DateTimeOffset deadline = assignment.ExecutionDeadline
+            ?? now.AddMilliseconds(assignment.ExecutionInput.Limits.MaximumWallTimeMilliseconds);
         void RequireTime()
         {
-            if (elapsed.Elapsed >= phaseLimit)
+            if (DateTimeOffset.UtcNow >= deadline)
             {
                 throw new AnalysisOutputLimitException("The coordinator analysis phase exceeded its wall-time authority.");
             }
@@ -33,7 +32,10 @@ public static class AnalysisExecutionPhase
         AnalysisPublicationBuilder.ValidateAssignment(assignment);
         if (assignment.ExecutionInput.RunId.Value != attempt.RunId
             || assignment.ExecutionInput.InstallationSnapshot.ArtifactId.Value != binding.InstallationSnapshotId
-            || assignment.AnalysisContextId != binding.AnalysisContextId
+            || assignment.AnalysisContext.ContextId.Value != binding.AnalysisContextId
+            || assignment.ExecutionInput.AnalysisContext.ArtifactId != assignment.AnalysisContext.ContextId
+            || assignment.ExecutionInput.AnalysisContext.ArtifactVersion != assignment.AnalysisContext.SchemaVersion
+            || assignment.ExecutionInput.AnalysisContext.Fingerprint != assignment.AnalysisContext.CanonicalFingerprint
             || assignment.ExecutionInput.EffectiveConfiguration.ArtifactId.Value != binding.EffectiveScanConfigurationId
             || assignment.ExecutionInput.ResolvedInputManifest.ArtifactId.Value != binding.ResolvedInputManifestId)
         {
@@ -55,7 +57,7 @@ public static class AnalysisExecutionPhase
         }
 
         AnalysisPublicationBundle bundle;
-        TimeSpan remaining = phaseLimit - elapsed.Elapsed;
+        TimeSpan remaining = deadline - DateTimeOffset.UtcNow;
         if (remaining <= TimeSpan.Zero)
         {
             throw new AnalysisOutputLimitException("The coordinator analysis phase exceeded its wall-time authority.");

@@ -7,6 +7,7 @@ using System.Text.Json.Serialization;
 using Infinium.Application.Analysis;
 using Infinium.Application.Runtime;
 using Infinium.Bethesda;
+using Infinium.Domain.Contracts;
 using Infinium.Mo2;
 using Infinium.Persistence;
 using Microsoft.Extensions.Logging;
@@ -24,6 +25,7 @@ public sealed class ManagedRunExecutor(
 {
     private const string BethesdaSemanticOperation = "bethesda-semantic-v1";
     private const string AnalysisV1Operation = "analysis-v1";
+    private const string ManagedAnalysisOperation = "managed-analysis-v1";
     private static readonly JsonSerializerOptions StrictJson = new()
     {
         UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
@@ -41,6 +43,21 @@ public sealed class ManagedRunExecutor(
                 pumpRunning = true;
                 _ = Task.Run(DrainAsync);
             }
+        }
+    }
+
+    internal async Task WaitForIdleAsync(CancellationToken cancellationToken)
+    {
+        while (true)
+        {
+            lock (gate)
+            {
+                if (!pumpRunning)
+                {
+                    return;
+                }
+            }
+            await Task.Delay(10, cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -77,6 +94,39 @@ public sealed class ManagedRunExecutor(
         return ExecuteCoreAsync(runId);
     }
 
+    public void RegisterManagedAnalysis(string runId, ManagedAnalysisOrchestrationRequest request)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(runId);
+        RunRecord run = runtime.Store.GetRun(runId);
+        ManagedAnalysisOrchestrator.Validate(request, runId, run.Binding);
+        byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(request, ContractJsonSerializer.Options);
+        if (bytes.LongLength is < 1 or > ManagedAnalysisOrchestrationRequest.MaximumRequestBytes)
+        {
+            throw new InvalidOperationException("The managed analysis orchestration request exceeds its bounded durable contract.");
+        }
+        _ = runtime.Store.RegisterRunOperation(runId, ManagedAnalysisOperation,
+            Encoding.UTF8.GetString(bytes), DateTimeOffset.UtcNow);
+    }
+
+    public RunRecord CreateManagedAnalysisRun(
+        string commandId,
+        string runId,
+        RunBinding binding,
+        ManagedAnalysisOrchestrationRequest request,
+        string initiationKind,
+        DateTimeOffset dispatchDeadline)
+    {
+        ManagedAnalysisOrchestrator.Validate(request, runId, binding);
+        byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(request, ContractJsonSerializer.Options);
+        if (bytes.LongLength is < 1 or > ManagedAnalysisOrchestrationRequest.MaximumRequestBytes)
+        {
+            throw new InvalidOperationException("The managed analysis orchestration request exceeds its bounded durable contract.");
+        }
+        return runtime.Store.CreateRun(commandId, runId, binding, runtime.Authority.FencingEpoch,
+            DateTimeOffset.UtcNow, initiationKind, dispatchDeadline, ManagedAnalysisOperation,
+            Encoding.UTF8.GetString(bytes));
+    }
+
     public void RecoverAtStartup()
     {
         DateTimeOffset? afterCreatedAt = null;
@@ -102,7 +152,7 @@ public sealed class ManagedRunExecutor(
                         run.RunId,
                         "interrupted-by-coordinator-recovery",
                         runtime.Authority.FencingEpoch);
-                    AnalysisV1WorkAssignment? recoveryAnalysis = ResolveAnalysisAssignment(run);
+                    AnalysisV1WorkAssignment? recoveryAnalysis = ResolveTerminalAwareAnalysis(run);
                     bool committedPublication = runtime.Store.HasRecoverablePublication(run.RunId)
                         && (recoveryAnalysis is null
                             || runtime.Store.GetAnalysisSemanticFingerprint(run.RunId) is not null);
@@ -150,7 +200,7 @@ public sealed class ManagedRunExecutor(
                         run.RunId,
                         "cancelled-at-recovery-boundary",
                         runtime.Authority.FencingEpoch);
-                    AnalysisV1WorkAssignment? cancellationAnalysis = ResolveAnalysisAssignment(run);
+                    AnalysisV1WorkAssignment? cancellationAnalysis = ResolveTerminalAwareAnalysis(run);
                     if (cancellationAnalysis is null)
                     {
                         _ = runtime.Store.Transition(
@@ -230,7 +280,9 @@ public sealed class ManagedRunExecutor(
             ManagedBethesdaSemanticAssignment? bethesdaAssignment =
                 ResolveBethesdaAssignment(queued);
             AnalysisV1WorkAssignment? analysisAssignment = ResolveAnalysisAssignment(queued);
-            activeAnalysis = analysisAssignment;
+            ManagedAnalysisOrchestrationRequest? orchestrationRequest = ResolveManagedAnalysisRequest(queued);
+            activeAnalysis = analysisAssignment ?? (orchestrationRequest is null
+                ? null : ManagedAnalysisOrchestrator.TerminalAssignment(runtime.Store, orchestrationRequest));
 
             DispatchAdmission dispatch = runtime.Store.DispatchAttempt(
                 Guid.NewGuid().ToString("N"),
@@ -248,8 +300,30 @@ public sealed class ManagedRunExecutor(
                 "attempt",
                 attempt.AttemptId,
                 DateTimeOffset.UtcNow);
+            if (orchestrationRequest is not null)
+            {
+                analysisAssignment = ManagedAnalysisOrchestrator.Execute(
+                    runtime.Store, orchestrationRequest, attempt, queued.Binding, DateTimeOffset.UtcNow,
+                    () => runtime.Store.GetRun(runId).State is LifecycleState.Pausing or LifecycleState.Cancelling,
+                    progress: partial => activeAnalysis = partial);
+                activeAnalysis = analysisAssignment;
+            }
             bool isBethesda = bethesdaAssignment is not null;
             bool isAnalysis = analysisAssignment is not null;
+            if (analysisAssignment?.ExecutionDeadline is DateTimeOffset admittedDeadline
+                && DateTimeOffset.UtcNow >= admittedDeadline)
+            {
+                throw new AnalysisOutputLimitException(
+                    "The managed analysis deadline expired before worker validation dispatch.");
+            }
+            string[]? analysisInputRelativeNames = analysisAssignment is null
+                ? null : StageAnalysisInputs(runtime.Store, staging.Handle, analysisAssignment);
+            DateTimeOffset workerExpiry = DateTimeOffset.UtcNow.AddMinutes(isBethesda ? 2 : 1);
+            if (analysisAssignment?.ExecutionDeadline is DateTimeOffset analysisDeadline
+                && analysisDeadline < workerExpiry)
+            {
+                workerExpiry = analysisDeadline;
+            }
             ManagedWorkerBootstrap bootstrap = new(
                 1,
                 Guid.NewGuid().ToString("N"),
@@ -267,14 +341,15 @@ public sealed class ManagedRunExecutor(
                     : isAnalysis ? "analysis-v1-validation-receipt.json" : "slice2-substrate.v1.json",
                 isBethesda ? 64L * 1024 * 1024 : isAnalysis ? 1024 * 1024 : 65_536,
                 Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)),
-                DateTimeOffset.UtcNow.AddMinutes(isBethesda ? 2 : 1),
+                workerExpiry,
                 isBethesda ? ManagedWorkerOperationKind.BethesdaSemanticExtraction
                     : isAnalysis ? ManagedWorkerOperationKind.AnalysisV1
                     : ManagedWorkerOperationKind.SubstrateValidation,
                 "1.0.0",
                 null,
                 bethesdaAssignment,
-                analysisAssignment);
+                analysisAssignment,
+                analysisInputRelativeNames);
             ManagedWorkerResult result = await LaunchWorkerAsync(
                 bootstrap,
                 staging.Handle).ConfigureAwait(false);
@@ -480,6 +555,39 @@ public sealed class ManagedRunExecutor(
             },
             disposition));
 
+    private static string[] StageAnalysisInputs(
+        AuthoritativeStore store,
+        SafeFileHandle stagingDirectory,
+        AnalysisV1WorkAssignment assignment)
+    {
+        RetainedAnalysisPayloadSeal[] seals =
+            [assignment.DocumentationEvidence, assignment.CandidateAnalysis, assignment.FindingCase];
+        string[] names = ["analysis-wp2-input.json", "analysis-wp3-input.json", "analysis-wp4-input.json"];
+        long total = 0;
+        for (int index = 0; index < seals.Length; index++)
+        {
+            RetainedAnalysisPayloadSeal seal = seals[index];
+            byte[] bytes = store.ReadCandidateAnalysisPayload(seal.PayloadId);
+            if (bytes.LongLength != seal.ByteLength
+                || Convert.ToHexStringLower(SHA256.HashData(bytes)) != seal.Sha256)
+            {
+                throw new AnalysisIdentityDriftException(
+                    "A retained analysis phase payload drifted before contained-worker validation.");
+            }
+            total = checked(total + bytes.LongLength);
+            using FileStream output = WindowsHandleRelativeFile.CreateNew(
+                stagingDirectory.DangerousGetHandle(), names[index]);
+            output.Write(bytes);
+            output.Flush(flushToDisk: true);
+        }
+        if (total > assignment.MaximumInputBytes)
+        {
+            throw new AnalysisOutputLimitException(
+                "The retained analysis phase payloads exceed the contained-worker input authority.");
+        }
+        return names;
+    }
+
     internal async Task<ManagedWorkerResult> LaunchWorkerAsync(
         ManagedWorkerBootstrap bootstrap,
         SafeFileHandle stagingDirectory)
@@ -595,7 +703,8 @@ public sealed class ManagedRunExecutor(
             return null;
         }
 
-        if (string.Equals(operation.OperationKind, AnalysisV1Operation, StringComparison.Ordinal))
+        if (string.Equals(operation.OperationKind, AnalysisV1Operation, StringComparison.Ordinal)
+            || string.Equals(operation.OperationKind, ManagedAnalysisOperation, StringComparison.Ordinal))
         {
             return null;
         }
@@ -641,7 +750,8 @@ public sealed class ManagedRunExecutor(
     private AnalysisV1WorkAssignment? ResolveAnalysisAssignment(RunRecord run)
     {
         RunOperationRecord? operation = runtime.Store.GetRunOperation(run.RunId);
-        if (operation is null || operation.OperationKind == BethesdaSemanticOperation)
+        if (operation is null || operation.OperationKind == BethesdaSemanticOperation
+            || operation.OperationKind == ManagedAnalysisOperation)
         {
             return null;
         }
@@ -659,13 +769,43 @@ public sealed class ManagedRunExecutor(
         AnalysisPublicationBuilder.ValidateAssignment(assignment);
         if (assignment.ExecutionInput.RunId.Value != run.RunId
             || assignment.ExecutionInput.InstallationSnapshot.ArtifactId.Value != run.Binding.InstallationSnapshotId
-            || assignment.AnalysisContextId != run.Binding.AnalysisContextId
+            || assignment.AnalysisContext.ContextId.Value != run.Binding.AnalysisContextId
             || assignment.ExecutionInput.EffectiveConfiguration.ArtifactId.Value != run.Binding.EffectiveScanConfigurationId
             || assignment.ExecutionInput.ResolvedInputManifest.ArtifactId.Value != run.Binding.ResolvedInputManifestId)
         {
             throw new AnalysisIdentityDriftException("The durable analysis-v1 assignment differs from the immutable run binding.");
         }
         return assignment;
+    }
+
+    private ManagedAnalysisOrchestrationRequest? ResolveManagedAnalysisRequest(RunRecord run)
+    {
+        RunOperationRecord? operation = runtime.Store.GetRunOperation(run.RunId);
+        if (operation is null || operation.OperationKind != ManagedAnalysisOperation)
+        {
+            return null;
+        }
+        string actualSha = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(operation.RequestJson)));
+        if (actualSha != operation.RequestSha256)
+        {
+            throw new AnalysisIdentityDriftException("The durable managed analysis request failed identity validation.");
+        }
+        ManagedAnalysisOrchestrationRequest request = JsonSerializer.Deserialize<ManagedAnalysisOrchestrationRequest>(
+            operation.RequestJson, ContractJsonSerializer.Options)
+            ?? throw new InvalidDataException("The durable managed analysis request is malformed.");
+        ManagedAnalysisOrchestrator.Validate(request, run.RunId, run.Binding);
+        return request;
+    }
+
+    private AnalysisV1WorkAssignment? ResolveTerminalAwareAnalysis(RunRecord run)
+    {
+        AnalysisV1WorkAssignment? assignment = ResolveAnalysisAssignment(run);
+        if (assignment is not null)
+        {
+            return assignment;
+        }
+        ManagedAnalysisOrchestrationRequest? request = ResolveManagedAnalysisRequest(run);
+        return request is null ? null : ManagedAnalysisOrchestrator.TerminalAssignment(runtime.Store, request);
     }
 
     private static ManagedBethesdaSemanticAssignment SealBethesdaAssignment(

@@ -518,6 +518,8 @@ message ManualStartCommand {
   infinium.domain.v1.ResolvedInputManifestId resolved_input_manifest_id = 4;
   infinium.common.v1.Instant dispatch_deadline = 5;
   ManualInitiationKind initiation_kind = 6;
+  bytes analysis_orchestration_request_json = 7;
+  infinium.domain.v1.RunId requested_run_id = 8;
 }
 
 enum ManualInitiationKind {
@@ -590,6 +592,8 @@ message DurableCommandInputIdentity {
   infinium.domain.v1.ResolvedInputManifestId resolved_input_manifest_id = 6;
   ManualInitiationKind manual_initiation_kind = 7;
   infinium.common.v1.Instant dispatch_deadline = 8;
+  infinium.domain.v1.RunId requested_run_id = 9;
+  infinium.common.v1.ContentDigest analysis_orchestration_request = 10;
 }
 
 enum DurableCommandKind {

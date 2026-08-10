@@ -123,17 +123,32 @@ public sealed class CandidatePipelineIntegrationTests
 
     internal static AnalysisExecutionInputContract ExecutionInput(
         ICandidatePopulationSource source,
-        string runId = "run-candidate") => new(
-        ContractConstants.AnalysisExecutionInputSchemaId, new ContractVersion(1, 0, 0), Id("execution-input-" + runId),
-        Id(runId), Reference("snapshot-candidate"), Reference("bethesda-candidate"), [],
-        [new(source.AnalyzerId, new ContractVersion(1, 0, 0),
-            CandidateAnalysisIdentity.StructuralHash([System.Text.Json.JsonSerializer.Serialize(source.Declaration)]), "retained")],
-        Reference("config-candidate"), Reference("manifest-candidate"), ReplayMode.Clean, null, 0,
-        new(1_000_000, 2_000_000, 100_000, 100_000, 120_000),
-        [new("provider", BoundaryUseState.NotUsed, "local-only"),
-         new("hosted-search", BoundaryUseState.NotUsed, "local-only"),
-         new("nexus", BoundaryUseState.NotUsed, "local-only"),
-         new("loot", BoundaryUseState.NotUsed, "local-only")]);
+        string runId = "run-candidate")
+    {
+        SemanticAnalysisContextContract context = SemanticContext("context-candidate");
+        return new(
+            ContractConstants.AnalysisExecutionInputSchemaId, new ContractVersion(1, 0, 0), Id("execution-input-" + runId),
+            Id(runId), Reference("snapshot-candidate"), Reference("bethesda-candidate"), [],
+            [new(source.AnalyzerId, new ContractVersion(1, 0, 0),
+                CandidateAnalysisIdentity.StructuralHash([System.Text.Json.JsonSerializer.Serialize(source.Declaration)]), "retained")],
+            Reference("config-candidate"), Reference("manifest-candidate"), ReplayMode.Clean, null, 0,
+            new(1_000_000, 2_000_000, 100_000, 100_000, 120_000),
+            [new("provider", BoundaryUseState.NotUsed, "local-only"),
+             new("hosted-search", BoundaryUseState.NotUsed, "local-only"),
+             new("nexus", BoundaryUseState.NotUsed, "local-only"),
+             new("loot", BoundaryUseState.NotUsed, "local-only")])
+        {
+            AnalysisContext = new(context.ContextId, context.SchemaVersion, context.CanonicalFingerprint, "retained"),
+        };
+    }
+
+    internal static SemanticAnalysisContextContract SemanticContext(string id)
+    {
+        SemanticAnalysisContextContract value = new(
+            Id(id), new ContractVersion(1, 0, 0), new Sha256Fingerprint(new string('0', 64)),
+            [], new Dictionary<string, string>());
+        return value with { CanonicalFingerprint = SemanticAnalysisContextIdentity.ComputeFingerprint(value) };
+    }
 
     private static ArtifactReferenceContract Reference(string id) => new(
         Id(id), new ContractVersion(1, 0, 0), new Sha256Fingerprint(new string('a', 64)), "retained");

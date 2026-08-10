@@ -1298,3 +1298,165 @@ safety verdict. No private held-out product verdict exists. WP6 remains
 responsible for the comprehensive cross-package corpus, accumulated review,
 Slice 5 traceability audit, contract freeze proposal, and owner acceptance
 packet. No push was performed.
+
+### Post-closeout product-path correction
+
+Correction baseline: `abead1774bd9a2f89cfed1005c5ba6bd50dab885`
+
+The earlier WP5 closeout was provisional and overstated three product-path
+properties: it began managed execution from precomputed WP2-WP4 aggregates,
+kept targeted invalidation in synthetic test topology, and derived the analysis
+context fingerprint from its text identifier. The normal correction loop
+reopened WP5 and replaced those claims with the product-reachable path and
+evidence below. This section supersedes the earlier path description and stale
+verification counts wherever they conflict.
+
+#### Production phase flow and recovery
+
+The production call graph is:
+
+`Infinium.Cli start --analysis-request` -> protobuf `ManualStartCommand` ->
+`ApplicationGrpcService.Start` -> atomic
+`ManagedRunExecutor.CreateManagedAnalysisRun` -> durable run/operation ->
+`ManagedRunExecutor` -> `ManagedAnalysisOrchestrator` -> existing
+`DocumentationEvidencePhase` (WP2) -> durable checkpoint -> existing
+`CandidateAnalysisPhase` (WP3) -> durable checkpoint -> existing
+`FindingCaseAnalysisPhase` (WP4) -> durable checkpoint -> final
+`AnalysisV1WorkAssignment` -> managed worker validation of the exact three
+retained payload seals -> coordinator-only atomic publication -> Application
+query boundary -> `Infinium.Cli results`.
+
+The start request contains admitted source and analysis dependencies, not
+precomputed WP2-WP4 output. Run creation and durable operation registration are
+one store transaction, closing the dispatch race exposed during broad-suite
+testing. Phase input and phase checkpoints are retained in coordinator-owned
+persistence with attempt fencing, source-run provenance, logical dependency
+fingerprints, payload seals, and disposition. A current-run restart reuses an
+exact completed checkpoint. Across runs, an eligible unchanged WP2 checkpoint
+is byte-reused with its original source-run identity and the disposition
+`reused-retained-phase`. WP3 is recomputed as `recomputed-run-binding` because
+its aggregate is bound to the new run, and WP4 is recomputed as either
+`recomputed-run-binding` or `recomputed-invalidated` according to its actual
+closure. Interrupted boundaries after WP2, WP3, WP4, and before final
+publication recover through the same executor. Cancellation is observed both
+before dispatch and live between phases; no later phase is dispatched after a
+live cancellation boundary. One immutable wall deadline is anchored to the
+coordinator-admitted run creation time and survives retries/restart. Wall/item
+limit and cancellation outcomes publish cause-specific bounded terminal
+output; unavailable early-stage aggregates are reported unavailable rather
+than fabricated as retained. Stale attempts cannot checkpoint or publish, and
+unavailable, physically missing, substituted, or drifted required dependencies
+fail closed without an ordinary publication.
+
+#### Product replay and semantic context
+
+The orchestrator computes deterministic logical fingerprints for the real
+documentation, candidate, and finding phases and applies
+`ReplayInvalidationPlanner.InvalidatedClosure` before execution. The retained
+replay manifest and persisted dependency-closure edges contain the actual phase
+and aggregate graph to source, semantic context, Bethesda input, manifest,
+configuration, analyzer, policy, threshold, limit, seed, upstream payload, and
+finding-policy dependencies as applicable. WP2 provenance is restricted to
+the documentation inputs it actually consumed and does not inherit the
+candidate-delivered input created later. Retained documentation reuse adds an
+exact versioned/fingerprinted prior-evidence reference and rejects same-ID
+metadata substitution before admission. Only a complete, available, unchanged
+WP2 closure is byte-reused. A finding-policy-only change reuses WP2, recomputes
+run-bound WP3, and invalidates WP4; a missing or substituted Bethesda or phase
+payload identity fails closed. Clean, unchanged incremental, and retained
+downstream replay preserve the same stored semantic fingerprint. Ordinary and
+terminal-fallback publication expose all five aggregate provenance roots, and
+the bounded Application gRPC query traverses their exact closures rather than
+returning every replay dependency.
+
+`SemanticAnalysisContextIdentity` now computes and validates the canonical
+context fingerprint from framed context ID, schema version, sorted semantic
+input revisions, and sorted policy parameters. `AnalysisExecutionInputContract`,
+its JSON Schema, the managed orchestration request, work assignment, replay
+dependencies, provenance, ordinary run output, and terminal fallback all carry
+the exact context ID, version, and canonical fingerprint. Same-ID version or
+fingerprint drift, substituted identities, and execution-input/assignment
+mismatch are rejected; no seam synthesizes `SHA256(context ID)` as context
+truth.
+
+#### Corrected regression and verification evidence
+
+The new managed product-path regression starts with an admitted Bethesda
+semantic input and documentation source, invokes the real WP2-WP4 boundaries,
+recovers at every phase boundary, rejects a stale first attempt, publishes
+atomically, and reads the result through Application and CLI. It also covers
+clean/incremental/replay equivalence, a finding-policy-only transitive
+invalidation with actual WP2 reuse and run-bound WP3 reprojection, unavailable,
+physically missing, and drifted Bethesda dependencies, retained-documentation
+reuse plus same-ID metadata-collision rejection, a one-millisecond limit, a
+restart after WP2 beyond the immutable admitted deadline, pre-dispatch and live
+between-phase cancellation, terminal-fallback provenance for all five
+aggregate roots, and exact semantic-context readback. The CLI/query regression
+calls `GetAnalysisProvenance` for all five aggregate kinds and verifies exact
+context reachability plus bounded truncation. Contract tests cover context
+round trip and same-ID version/fingerprint drift. These tests fail against the
+pre-correction architecture because it has neither the production caller nor
+durable phase graph, cannot reuse a real unaffected node, exposes only flat or
+empty aggregate provenance, and does not retain the canonical context
+identity.
+
+Final verification on the corrected tree:
+
+- locked restore passed; Release build passed with zero warnings and zero
+  errors;
+- exact WP5 filters: 3 contract, 20 integration, and 3 evaluation passed with
+  zero skips;
+- `Replay`: 20 integration and 1 evaluation passed;
+- `Output`: 3 contract, 4 integration, and 3 evaluation passed;
+- `Safety`: 4 integration and 3 evaluation passed;
+- unfiltered Release floor: 156 unit passed/1 existing symbolic-link skip,
+  139 contract passed, 65 integration passed, and 53 evaluation passed/8
+  existing private or environment skips, for 413 passed and 9 skipped overall;
+- `M1Unit`: 150 passed/1 skip; `M1Contract`: 113 passed;
+  `M1Integration`: 65 passed; `M1Evaluation`: 53 passed/8 skips;
+- `M1Security`: 37 unit passed/1 skip, 49 contract passed, 16 integration
+  passed, and 7 evaluation passed/2 skips; and
+- `M1Fault`: 32 unit, 43 contract, 20 integration, and 9 evaluation passed,
+  with 3 expected identity-environment skips.
+
+Final retained gate hashes are:
+
+| Evidence | SHA-256 |
+|---|---|
+| `artifacts/m1-slice5/wp5/replay.json` | `a2730efb2b670360374fbc3d00e6940d4eb8d7f2c2ee4be1480e508160a1dc06` |
+| `artifacts/m1-slice5/wp5/output.json` | `6a95e47730ce49370fef978adc9581ee455db4d4f7e6322523def631472aa8af` |
+| `artifacts/m1-slice5/wp5/safety.json` | `b8bb23cb7950f323a714442219eb342424e7d1e69d8d831cd261863ce2351bca` |
+| `artifacts/m1-slice5/wp5/wp5-projection-validation-receipts.json` | `5722cb615d59b5e33b977c0afa97f01a21df1a208beb0f1c191873a91200100d` |
+
+The supported `dotnet format Infinium.sln --no-restore
+--verify-no-changes` command, PowerShell 7 dependency-manifest check, strict
+changed-JSON parsing, changed-Markdown local-link validation, and
+`git diff --check` passed. The accepted plan's obsolete `dotnet format -c
+Release` spelling was rejected by the installed formatter and was not counted
+as evidence. Recoverable issues found and corrected during final verification
+were the non-atomic run/operation registration race, false retained-state
+claims in early terminal fallback, an equal acquired/expiry timestamp in
+terminal attempt recovery, integration cleanup racing the live executor,
+live cancellation being mistaken for pause-only control, label-only replay
+reuse, incomplete phase fingerprints, overbroad/empty aggregate provenance,
+missing retained-import identity edges, a resettable retry deadline, and an
+untyped malformed managed-request boundary.
+No legacy archive, private fixture, evaluator-private material, provider,
+credential, live, or billable surface was accessed. `human-guide/` was
+untouched. The fresh product-path review below is the final authority for WP5
+completion and WP6 eligibility; no push was performed.
+
+#### Fresh product-path review
+
+The required fresh reviewer traced the settled production call graph rather
+than accepting fixture/test preconstruction. Its first settled-source pass
+found the three product gaps closed with no remaining source must-fix, then
+classified this implementation record's obsolete all-stage-reprojection and
+pre-dispatch-only cancellation wording as a documentation must-fix. The text
+above was corrected to the exercised WP2 byte-reuse/WP3 run-binding/WP4
+invalidation behavior and expanded with the late cancellation, restart
+deadline, physical-missing, retained-import, fallback-provenance, and
+Application-query evidence. The review was then rerun on the corrected record;
+its final verdict was **ACCEPTED**, with no remaining must-fix, follow-up,
+owner/authority, or safety/isolation finding. It confirmed WP5 complete and
+WP6 eligible.

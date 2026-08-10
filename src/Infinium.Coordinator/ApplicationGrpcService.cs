@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
 using Google.Protobuf;
@@ -10,6 +11,7 @@ using Infinium.Contracts.Protobuf.Application.V1;
 using Infinium.Contracts.Protobuf.Common.V1;
 using Infinium.Contracts.Protobuf.Domain.V1;
 using Infinium.Contracts.Protobuf.Protocol.V1;
+using Infinium.Domain.Contracts;
 using Infinium.Persistence;
 using Microsoft.AspNetCore.Connections.Features;
 using DomainLifecycleState = Infinium.Domain.Contracts.LifecycleState;
@@ -475,15 +477,15 @@ public sealed class ApplicationGrpcService(
         {
             string runId = Required(request.RunId?.Value, "run ID");
             string artifactId = Required(request.ArtifactId?.Value, "analysis artifact ID");
-            AnalysisArtifactPersistenceRecord artifact = runtime.Store.ListAnalysisArtifacts(
-                runId, new HashSet<string>(), new HashSet<string>(), 100,
-                AnalysisArtifactSortOrder.IdentityAscending, null)
-                .Items.Single(item => item.ArtifactId == artifactId);
-            Infinium.Domain.Contracts.ReplayDependencyNodeContract[] dependencies = AnalysisReplayJsonCodec
-                .Deserialize(runtime.Store.ReadAnalysisReplay(runId))
-                .Dependencies
-                .OrderBy(item => item.DependencyId.Value, StringComparer.Ordinal)
-                .Take(checked((int)request.RequestedMaximumEdges + 1))
+            AnalysisArtifactPersistenceRecord artifact = runtime.Store.GetAnalysisArtifact(runId, artifactId);
+            AnalysisReplayContract replay = AnalysisReplayJsonCodec.Deserialize(runtime.Store.ReadAnalysisReplay(runId));
+            Dictionary<string, ReplayDependencyNodeContract> nodes = replay.Dependencies
+                .ToDictionary(item => item.DependencyId.Value, StringComparer.Ordinal);
+            string[] dependencyIds = runtime.Store.ListAnalysisDependencyIds(
+                runId, artifactId, checked((int)request.RequestedMaximumEdges + 1)).ToArray();
+            ReplayDependencyNodeContract[] dependencies = dependencyIds
+                .Select(id => nodes.TryGetValue(id, out ReplayDependencyNodeContract? node)
+                    ? node : throw new InvalidDataException("The retained replay edge names an absent dependency node."))
                 .ToArray();
             AnalysisProvenance provenance = new()
             {
@@ -515,6 +517,22 @@ public sealed class ApplicationGrpcService(
             return Task.FromResult(new GetAnalysisProvenanceResponse
             {
                 Failure = Failure(FailureCode.NotFound, "The requested published analysis artifact does not exist."),
+            });
+        }
+        catch (ArgumentException)
+        {
+            return Task.FromResult(new GetAnalysisProvenanceResponse
+            {
+                Failure = Failure(FailureCode.InvalidArgument,
+                    "The provenance query identities are malformed."),
+            });
+        }
+        catch (Exception exception) when (exception is InvalidDataException or OverflowException)
+        {
+            return Task.FromResult(new GetAnalysisProvenanceResponse
+            {
+                Failure = Failure(FailureCode.Internal,
+                    "The retained provenance graph could not be projected safely."),
             });
         }
     }
@@ -623,12 +641,15 @@ public sealed class ApplicationGrpcService(
         catch (Exception exception) when (
             exception is ArgumentException
                 or InvalidOperationException
+                or InvalidDataException
+                or JsonException
                 or KeyNotFoundException)
         {
             return Task.FromResult(new SubmitRunCommandResponse
             {
                 Disposition = CommandDisposition.Rejected,
-                Failure = Failure(FailureCode.Conflict, Bounded(exception.Message)),
+                Failure = Failure(exception is InvalidDataException or JsonException
+                    ? FailureCode.InvalidArgument : FailureCode.Conflict, Bounded(exception.Message)),
             });
         }
     }
@@ -694,6 +715,17 @@ public sealed class ApplicationGrpcService(
                     Enum.Parse<ManualInitiationKind>(command.StartInitiationKind);
                 status.AcceptedInput.DispatchDeadline =
                     ProtoMapping.ToProto(command.StartDispatchDeadline.Value);
+                RunOperationRecord? operation = runtime.Store.GetRunOperation(command.RunId);
+                if (operation?.OperationKind == "managed-analysis-v1")
+                {
+                    status.AcceptedInput.RequestedRunId = new RunId { Value = command.RunId };
+                    status.AcceptedInput.AnalysisOrchestrationRequest = new ContentDigest
+                    {
+                        Algorithm = DigestAlgorithm.Sha256,
+                        Value = ByteString.CopyFrom(Convert.FromHexString(operation.RequestSha256)),
+                        SizeBytes = checked((ulong)Encoding.UTF8.GetByteCount(operation.RequestJson)),
+                    };
+                }
             }
 
             return Task.FromResult(new GetDurableCommandResponse { Status = status });
@@ -1022,15 +1054,31 @@ public sealed class ApplicationGrpcService(
             Required(command.AnalysisContextId?.Value, "analysis context ID"),
             Required(command.EffectiveScanConfigurationId?.Value, "scan configuration ID"),
             Required(command.ResolvedInputManifestId?.Value, "resolved input manifest ID"));
-        string runId = Guid.NewGuid().ToString("N");
-        RunRecord run = runtime.Store.CreateRun(
-            commandId,
-            runId,
-            binding,
-            runtime.Authority.FencingEpoch,
-            DateTimeOffset.UtcNow,
-            command.InitiationKind.ToString(),
-            FromProto(command.DispatchDeadline));
+        ManagedAnalysisOrchestrationRequest? managedRequest = null;
+        string runId;
+        if (command.AnalysisOrchestrationRequestJson.Length == 0)
+        {
+            runId = Guid.NewGuid().ToString("N");
+        }
+        else
+        {
+            if (command.AnalysisOrchestrationRequestJson.Length > ManagedAnalysisOrchestrationRequest.MaximumRequestBytes)
+            {
+                throw new InvalidOperationException("The managed analysis request exceeds its IPC admission bound.");
+            }
+            runId = Required(command.RequestedRunId?.Value, "requested managed analysis run ID");
+            managedRequest = JsonSerializer.Deserialize<ManagedAnalysisOrchestrationRequest>(
+                command.AnalysisOrchestrationRequestJson.Span, ContractJsonSerializer.Options)
+                ?? throw new InvalidOperationException("The managed analysis request is malformed.");
+            ManagedAnalysisOrchestrator.Validate(managedRequest, runId, binding);
+        }
+        RunRecord run = managedRequest is null
+            ? runtime.Store.CreateRun(
+                commandId, runId, binding, runtime.Authority.FencingEpoch, DateTimeOffset.UtcNow,
+                command.InitiationKind.ToString(), FromProto(command.DispatchDeadline))
+            : executor.CreateManagedAnalysisRun(
+                commandId, runId, binding, managedRequest, command.InitiationKind.ToString(),
+                FromProto(command.DispatchDeadline));
         executor.Schedule(run.RunId);
         return run;
     }

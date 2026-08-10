@@ -103,12 +103,35 @@ public sealed class Slice5OutputQueryContractTests
             valid with { MaximumOutputBytes = AnalysisV1WorkAssignment.AbsoluteMaximumOutputBytes + 1 }));
         Assert.ThrowsExactly<InvalidDataException>(() => AnalysisPublicationBuilder.ValidateAssignment(
             valid with { MaximumOutputBytes = AnalysisV1WorkAssignment.MinimumTerminalOutputBytes - 1 }));
+        Assert.ThrowsExactly<InvalidDataException>(() => AnalysisPublicationBuilder.ValidateAssignment(
+            valid with
+            {
+                AnalysisContext = valid.AnalysisContext with
+                {
+                    CanonicalFingerprint = new Sha256Fingerprint(new string('f', 64)),
+                },
+            }));
+        Assert.ThrowsExactly<InvalidDataException>(() => AnalysisPublicationBuilder.ValidateAssignment(
+            valid with
+            {
+                ExecutionInput = valid.ExecutionInput with
+                {
+                    AnalysisContext = valid.ExecutionInput.AnalysisContext with
+                    {
+                        ArtifactVersion = new ContractVersion(9, 0, 0),
+                    },
+                },
+            }));
     }
 
     private static AnalysisV1WorkAssignment ValidAssignment()
     {
         ArtifactReferenceContract Reference(string id) => new(
             new OpaqueId(id), new ContractVersion(1, 0, 0), new Sha256Fingerprint(new string('a', 64)), "retained");
+        SemanticAnalysisContextContract context = new(
+            new OpaqueId("context-1"), new ContractVersion(1, 0, 0),
+            new Sha256Fingerprint(new string('0', 64)), [], new Dictionary<string, string>());
+        context = context with { CanonicalFingerprint = SemanticAnalysisContextIdentity.ComputeFingerprint(context) };
         AnalysisExecutionInputContract input = new(
             ContractConstants.AnalysisExecutionInputSchemaId,
             new ContractVersion(1, 0, 0),
@@ -129,9 +152,12 @@ public sealed class Slice5OutputQueryContractTests
                 new ExecutionBoundaryContract("hosted-search", BoundaryUseState.NotUsed, "local-only"),
                 new ExecutionBoundaryContract("nexus", BoundaryUseState.NotUsed, "local-only"),
                 new ExecutionBoundaryContract("loot", BoundaryUseState.NotUsed, "local-only"),
-            ]);
+            ])
+        {
+            AnalysisContext = new(context.ContextId, context.SchemaVersion, context.CanonicalFingerprint, "retained"),
+        };
         return new AnalysisV1WorkAssignment(
-            1, "assignment-1", input, "context-1",
+            1, "assignment-1", input, context,
             new RetainedAnalysisPayloadSeal("documentation-1", ContractConstants.DocumentationEvidenceSchemaId, "1.0.0", new string('a', 64), 1),
             new RetainedAnalysisPayloadSeal("candidate-1", ContractConstants.CandidateAnalysisSchemaId, "1.0.0", new string('b', 64), 1),
             new RetainedAnalysisPayloadSeal("finding-case-1", ContractConstants.FindingCaseSchemaId, "1.0.0", new string('c', 64), 1),

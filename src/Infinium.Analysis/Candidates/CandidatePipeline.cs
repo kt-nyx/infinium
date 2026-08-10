@@ -179,6 +179,7 @@ public sealed record CandidatePipelineRequest(
             "contract=analysis-execution-input/v1",
             $"execution-input-id={input.ExecutionInputId.Value}",
             $"run-id={input.RunId.Value}",
+            Reference("analysis-context", input.AnalysisContext),
             Reference("installation-snapshot", input.InstallationSnapshot),
             Reference("bethesda-semantic-input", input.BethesdaSemanticInput),
             Reference("effective-configuration", input.EffectiveConfiguration),

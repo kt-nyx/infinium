@@ -61,21 +61,31 @@ ledgers, schema-5 typed persistence with accepted schema-4 migration, and the
 no-safety publication boundary. Four independently authored generic public
 packages were frozen and accepted before product comparison; the settled
 product passed fresh review, the exact `M1Cases` surface, and the `Cases` gate.
-WP5 now completes bounded `analysis-v1` execution, atomic publication, retained
-replay and targeted invalidation, typed result/provenance/output queries,
-human/JSON semantic reporting, terminal cancellation/limit/failure output,
-stale-attempt recovery, final-object write policy, and explicit external-effect
-receipts. Its independently authored 12-case development/validation package
-passed closed-schema and answer-isolation validation before dispatch and a
-fresh whole-object product comparison. The final review found no remaining
-must-fix or authority breach. The retained safety evidence physically covers
-Windows final-object identity, hard links, junction/mount reparses,
+WP5 now completes bounded `analysis-v1` execution from admitted, non-precomputed
+inputs through a durable coordinator-owned WP2 -> WP3 -> WP4 phase graph,
+managed-worker seal validation, atomic publication, retained replay and
+targeted invalidation, typed result/provenance/output queries, and CLI readback.
+The production entry is `Infinium.Cli start --analysis-request`; the Application
+boundary atomically admits the run and durable operation before the executor
+invokes the existing stage boundaries and checkpoints each retained result.
+Restart, stale-attempt fencing, cancellation, wall/item limits, missing or
+drifted dependencies, and terminal output are exercised on that same product
+path. The immutable semantic-analysis context retains and validates its exact
+ID, schema version, and canonical fingerprint through input, assignment,
+replay, provenance, ordinary output, and terminal fallback.
+
+Its independently authored 12-case development/validation package passed
+closed-schema and answer-isolation validation before dispatch and a fresh
+whole-object product comparison. The retained safety evidence physically
+covers Windows final-object identity, hard links, junction/mount reparses,
 relative/parent/case paths, canaries, handle-relative writes, and pinned-handle
 races. Native symbolic-link creation was unavailable with Windows error 1314;
 native 8.3, UNC, device, alternate-data-stream, and cross-volume qualification
 remain explicit gaps or stand-ins. These gaps do not broaden the package into a
 native-filesystem, external-adapter, readiness, full-EVAL, or whole-Slice
-verdict. WP5 is complete and WP6 is now eligible.
+verdict. A fresh final product-path review traced real production execution
+separately from test construction and found no remaining must-fix or authority
+breach. WP5 is complete and WP6 is now eligible.
 
 The rejected preauthored 28-package comprehensive corpus is not a current input
 and must not be reconstructed. WP4 and WP5 each own the small semantic cases
