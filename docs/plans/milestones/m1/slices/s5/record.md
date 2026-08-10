@@ -2024,3 +2024,41 @@ is implementation evidence, not project-owner acceptance. Slice 5 remains
 active, contracts remain `Implementation-active`, no private held-out verdict
 exists, and no successor-slice implementation is authorized until the project
 owner explicitly accepts this candidate.
+
+### Public-fixture root consolidation correction
+
+Owner-requested follow-up commit
+`8b20d1a4be9546e21270ba28b1b6c8e2f2908cf8` completed the remaining physical
+fixture consolidation. All 18 current public packages now live under
+`fixtures/public/`; their readers, Bethesda authoring utilities, and resealer
+live under `fixtures/tooling/`. The obsolete `test-data/manifests/`,
+`test-data/synthetic/`, and `tools/evaluation/private-fixtures/` placeholder
+surfaces were removed, leaving no `test-data/` or `tools/fixtures/` root. The
+ordinary `tests/` root remains because it contains the four active default-
+solution test projects rather than fixture data.
+
+All path-bound manifests, source-authority references, solution/project links,
+scripts, tests, and current documentation were updated together. Bethesda
+authoring self-tests exposed and corrected a stale documentation-evidence path
+and incomplete exact byte-length emission; regenerated projections and package
+seals are deterministic, and a second official reseal produced no diff.
+
+Verification on the exact consolidation commit passed the complete solution
+floor (417 passed, 9 skipped, 0 failed), the full analysis-pipeline `All` gate,
+88 focused fixture/authority contract tests, 19 focused Bethesda evaluation
+tests, strict JSON parsing, locked dependency-manifest validation, formatting,
+and diff hygiene. The final cross-stage manifest is 14,107 bytes with SHA-256
+`5d1f8a4492d74c6430ebf4b26650559a1d04c2bc7b5a332bcd17cb6f3e1fbc7f`;
+its content aggregate remains
+`5666d39defeae38cd9691fc5e6bc62ca7b99d4867e57512409e6d134f25034c7`.
+
+Protocol `/4` is not referenced by the product projects or default solution
+graph, but it is still used through its sole authorized manual bounded-
+regression wrapper. Rebaseline commit
+`a255a2bc73d233efaa4117139e7b540dcc71b7c9` binds the three evolved public
+tests to the relocated fixture paths while leaving all 20 frozen reusable-core
+files unchanged. The wrapper passed 23/23 historical blobs, 20/20 current-core
+files, 3/3 evolved tests, 8/8 focused tests, and 56/56 calibration cases; its
+fail-closed suite passed 11/11 refusal cases. This evidence makes `/4` an
+out-of-solution repository regression floor, not dead product code and not a
+current product or acceptance verdict.
