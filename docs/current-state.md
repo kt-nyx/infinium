@@ -115,11 +115,17 @@ normalization could hide an ordinary dependency substitution. The current
 candidate separates semantic coverage gaps from retained replay/audit loss
 across domain, schema, producer, consumer, and receipt seams; requires exact
 documentation alias version/hash/state with typed identity-drift failure; and
-normalizes only the single delivered-root dependency common to every decision.
-It also executes all four managed cases, validates immutable source-authority
-Git blobs, reports 35 direct requirements, and passes the corrected
-Comprehensive gate. A fresh whole-slice review of the exact committed candidate
-is still required.
+normalizes only the exact delivered-root identity carried by the admitted
+candidate contract. The fourth exact candidate received `CORRECT` because the
+retained receipt and Comprehensive gate still omitted the run-output
+replay/audit projection fields, and because its common-prefix root inference
+could still mask an all-decision substitution. The current candidate records
+and validates those receipt fields and binds the authoritative delivered root
+into candidate schema, identity, invariants, producer output, and semantic
+projection. It also executes all four managed cases, validates immutable
+source-authority Git blobs, reports 35 direct requirements, and passes the
+corrected Comprehensive gate. A fresh whole-slice review of the exact committed
+candidate is still required.
 
 WP6 is not owner-accepted, the Slice 5 contracts are not frozen, and Slice 5 is
 not complete. The only eligible handoff after a final `ACCEPT` review is owner

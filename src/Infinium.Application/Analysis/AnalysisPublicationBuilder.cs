@@ -742,21 +742,9 @@ public static class AnalysisPublicationBuilder
             value.AffectedLocus,
             applicability = value.ApplicabilityPredicates.OrderBy(item => item, StringComparer.Ordinal),
         };
-        HashSet<OpaqueId> deliveredRootCandidates = candidates.Decisions.Count == 0
-            ? []
-            : candidates.Decisions
-                .Select(item => item.DependencyIds
-                    .Where(id => id.Value.StartsWith("candidate-delivered-input-", StringComparison.Ordinal))
-                    .ToHashSet())
-                .Aggregate((left, right) =>
-                {
-                    left.IntersectWith(right);
-                    return left;
-                });
-        OpaqueId? deliveredRootId = deliveredRootCandidates.Count == 1
-            ? deliveredRootCandidates.Single()
-            : null;
-        string SemanticDependency(OpaqueId id) => id == deliveredRootId
+        string SemanticDependency(OpaqueId id) => id == candidates.DeliveredInputId
+                && !StringComparer.Ordinal.Equals(
+                    candidates.DeliveredInputId.Value, "candidate-delivered-input-unspecified")
             ? "candidate-delivered-input"
             : id.Value;
         Dictionary<OpaqueId, string> revisionAnchors = documentation.Revisions.ToDictionary(
@@ -1092,6 +1080,7 @@ public static class AnalysisPublicationBuilder
                 candidates.AnalyzerId,
                 candidates.PopulationId,
                 candidates.PopulationDenominator,
+                deliveredInput = SemanticDependency(candidates.DeliveredInputId),
                 candidates.PolicyFingerprint,
                 candidates.ThresholdFingerprint,
                 candidates.LimitFingerprint,

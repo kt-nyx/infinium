@@ -1467,10 +1467,11 @@ Implementation date: 2026-08-10
 
 Starting commit: `e7de0305515657223c513195f8323b2649b6c7c8`
 
-Status: Implementation and independent corpus review complete. Three exact
+Status: Implementation and independent corpus review complete. Four exact
 candidates (`50195fdd33f030f75364f703f636b6ecc1fdb7bd`,
 `8bd73c26cde1d569d44b5f70191528df0390e443`, and
-`93054129fc877193726ca934e72c6483329e4b34`) received fresh whole-slice
+`93054129fc877193726ca934e72c6483329e4b34`, and
+`944a0d7c681034b1cb6313596d35b0625ce542dc`) received fresh whole-slice
 `CORRECT` verdicts. All classified correction sets are closed in the current
 candidate tree; fresh exact-commit review is pending. Owner acceptance is
 requested only after an `ACCEPT` review. Slice 5 remains active and is not
@@ -1624,25 +1625,25 @@ scope.
 ### Gate and verification evidence
 
 `pwsh -NoProfile -ExecutionPolicy Bypass -File eng/verify-m1-slice5.ps1
--Gate All -OutputRoot artifacts/m1-slice5/wp6-final-correction-v2` passed the exact aggregate of
+-Gate All -OutputRoot artifacts/m1-slice5/wp6-final-correction-v3` passed the exact aggregate of
 `Contracts`, `Documentation`, `Candidates`, `CandidateScale`, `Cases`,
 `Replay`, `Output`, `Safety`, and `Comprehensive`. The final retained reports
 are:
 
 | Gate report | SHA-256 |
 |---|---|
-| `contracts.json` | `24f94e4b85b4a0fe6df0317ec39f02dc51c404cb01fca9f2f7d7e4fa3b19fbcf` |
-| `documentation.json` | `53e9665b9766acd7c4efa4e87a9bdc9a98cc6102ee1b5b1bf8e0f07816393d7a` |
-| `candidates.json` | `6dc79b90f2867b78fd8d3294e217b007c94863dc4273e11cddd5a58ac815f4fa` |
-| `candidatescale.json` | `b2c466d55bf76ed57772ff1b22d514b984e4681c036f2542e5e00dbf01cc0c77` |
-| `cases.json` | `caa3896c816631e1e3a239319ef7ea3394aa3a5065e25e275859c5f8e3018971` |
-| `replay.json` | `7490bf87c421d4bc0a02bee9e5cd172b3d91ad4382af671df1d26c9a5fa46ddc` |
-| `output.json` | `8e6392a7bec4ca6e11e6b6f4df78562b469c730f172808eed6bff3371aef90a0` |
-| `safety.json` | `112b43c719e2fd9b14cabd410a94c0d90e893b9b461532eddaf12058c9ea1276` |
-| `traceability.json` | `fb9706b7053fd9a6ea0b4b4de84f19433d979bbc847f070573fc30d13bda2252` |
-| `comprehensive.json` | `a830d90c19231803a558949fe738f341c83d1c59ee75035c66b584058480e636` |
-| `product-comparison-receipt.json` | `95cf41ab827ff373d13f3ca392c90bac5bc7a2d44a1b8da66106442b4906bce7` |
-| `all.json` | `45ca059c5a1302ce92d1d0e88ce5e8355d67be37c34ec167990afda1f93804f0` |
+| `contracts.json` | `5753dd89672fdb784b12e5f93fb2748f49efc9d9ec7a2e4414e207ccfe30f9e0` |
+| `documentation.json` | `9d86f6475cf2d0b8e0679896886c570c35737611875f7b84d4c3ffc083c554ba` |
+| `candidates.json` | `180b019de6cf48dddab23b867942efa04d2e8caa96a31c584e124be6353a2249` |
+| `candidatescale.json` | `1851915b004278fae8f3ee4690d3f0ea299a989e10e7675fae4a6e3cf4e46a62` |
+| `cases.json` | `bc7706b0ca6312318d337681518dbcab78222e885e030594a6782249db8b2bf4` |
+| `replay.json` | `7b882b1bebb5b3cfa689b761750a9d0320f93bccaf5504c58b2f5f9b93277b97` |
+| `output.json` | `ea039050377630efcb6dedafd9cc7a7bbaab6bbee8866cc4f04567eaa6546f9c` |
+| `safety.json` | `edb1e84144a00db58fef052782647ecf46fd5dd65b8af24ea9234958f9b8ce23` |
+| `traceability.json` | `7ce6680c2cc44d5c2113e3b5f3d3688b56b3c1e875fb583ce9d031546659e285` |
+| `comprehensive.json` | `56c43bf4906ee122f3e03d3ec3b1b17e2efa9bb9eceb1b1dffe71974f001b9eb` |
+| `product-comparison-receipt.json` | `296dbe63ba3705ef88453b82a3c3d24d1866fc4f27fc1fdf59f2bd77d11d97f5` |
+| `all.json` | `125e66927e58152c04a21b38dc2ad87e02b7b59bb37df15bfb60ae5f001bbae5` |
 
 Locked restore and the Release build passed with zero warnings and zero errors.
 The category floors passed:
@@ -1782,4 +1783,31 @@ only the one delivered-root ID common to every decision; a forged ordinary
 dependency with the same prefix changes both decision and graph projections.
 The corrected aggregate gate and unfiltered 417-pass Release floor are green.
 A fresh exact-commit reviewer must confirm these third-cycle closures before
+owner handoff.
+
+The fourth exact candidate commit was
+`944a0d7c681034b1cb6313596d35b0625ce542dc`. Its fresh final review returned
+**CORRECT**. The report is
+`artifacts/m1-slice5/wp6-final-review-v4/final-review.md`, 14123 bytes,
+SHA-256 `8c30838f0eb415006f071fa2189081d234b6ac7c289ffacb5281b95929a37ca8`.
+It confirmed the v3 alias guard and typed identity-drift closure, the exact
+aggregate gate, and the 417-pass Release floor, but classified two remaining
+must-fixes. The retained comparison receipt and Comprehensive gate did not
+carry the D04 run-output replayability/auditability fields, and the
+common-prefix/intersection delivered-root heuristic could still normalize away
+an all-decision root substitution. It found no owner/authority or
+safety/isolation breach.
+
+The current correction closes both findings. Candidate analysis now carries
+the exact delivered-input root admitted by the candidate population context;
+that identity is required by schema, bound into payload identity, checked on
+every delivered decision, produced by the pipeline, and alone receives
+run-binding normalization in the semantic projection. The regression changes
+that root in every decision and graph edge while retaining the authoritative
+contract field, and proves the semantic fingerprint changes. The comparison
+receipt now records run-output replay product state, exact class, replay gap
+count, audit state, and audit gap count for every case; Comprehensive requires
+D04 to be complete/complete-clean with zero replay and audit gaps. The
+corrected aggregate gate and unfiltered 417-pass Release floor are green. A
+fresh exact-commit reviewer must confirm these fourth-cycle closures before
 owner handoff.

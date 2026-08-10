@@ -637,6 +637,11 @@ function Invoke-ComprehensiveGate {
         ($replayCase.Count -ne 1) -or
         ([string] $replayCase[0].replay_state -cne 'complete-clean') -or
         ([string] $replayCase[0].auditability_state -cne 'complete') -or
+        ([string] $replayCase[0].output_replayability.product_state -cne 'complete') -or
+        ([string] $replayCase[0].output_replayability.exact_class -cne 'complete-clean') -or
+        ($replayCase[0].output_replayability.gap_count -ne 0) -or
+        ([string] $replayCase[0].output_auditability.state -cne 'complete') -or
+        ($replayCase[0].output_auditability.gap_count -ne 0) -or
         (-not [bool] $replayCase[0].semantically_equivalent) -or
         ($replayCase[0].missing_dependency_count -ne 0) -or
         ([string] $replayCase[0].prior_run_id -cne 'run-input-001') -or

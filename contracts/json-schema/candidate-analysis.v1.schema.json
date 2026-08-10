@@ -8,7 +8,7 @@
     "schema_id", "schema_version", "payload_id", "originating_run_id", "analyzer_id",
     "population_id", "population_denominator", "decisions", "candidates", "abstentions",
     "gaps", "failures", "policy_id", "threshold_id", "limit_id", "hypotheses",
-    "dependency_edges", "counts", "execution_input_id", "analysis_root_id", "execution_input_fingerprint",
+    "dependency_edges", "counts", "execution_input_id", "analysis_root_id", "delivered_input_id", "execution_input_fingerprint",
     "policy_fingerprint", "threshold_fingerprint", "limit_fingerprint",
     "analyzer_set_fingerprint", "analyzer_bindings", "execution_input_descriptors",
     "policy_descriptors", "threshold_descriptors", "limit_descriptors"
@@ -26,6 +26,7 @@
     "limit_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
     "execution_input_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
     "analysis_root_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+    "delivered_input_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
     "execution_input_fingerprint": { "$ref": "common.v1.schema.json#/$defs/sha256" },
     "policy_fingerprint": { "$ref": "common.v1.schema.json#/$defs/sha256" },
     "threshold_fingerprint": { "$ref": "common.v1.schema.json#/$defs/sha256" },

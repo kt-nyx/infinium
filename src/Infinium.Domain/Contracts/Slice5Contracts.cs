@@ -515,6 +515,8 @@ public sealed record CandidateAnalysisContract(
 
     public OpaqueId AnalysisRootId { get; init; } = new("candidate-analysis-root-unspecified");
 
+    public OpaqueId DeliveredInputId { get; init; } = new("candidate-delivered-input-unspecified");
+
     public Sha256Fingerprint ExecutionInputFingerprint { get; init; } = new(new string('0', 64));
 
     public Sha256Fingerprint PolicyFingerprint { get; init; } = new(new string('0', 64));
@@ -1226,6 +1228,12 @@ public static class Slice5ContractInvariants
             || value.LimitFingerprint != CandidateAnalysisIdentity.StructuralHash(value.LimitDescriptors))
         {
             throw new InvalidOperationException("Candidate analysis requires exact execution, analyzer, policy, threshold, and limit semantic bindings.");
+        }
+        if (!StringComparer.Ordinal.Equals(value.DeliveredInputId.Value, "candidate-delivered-input-unspecified")
+            && value.Decisions.Any(item => !item.DependencyIds.Contains(value.DeliveredInputId)))
+        {
+            throw new InvalidOperationException(
+                "Every delivered candidate decision must bind the exact admitted delivered-input root.");
         }
         Dictionary<OpaqueId, CandidateDecisionContract> decisions = value.Decisions.ToDictionary(item => item.DecisionId);
         foreach (CandidateDecisionContract decision in value.Decisions)

@@ -48,6 +48,7 @@ public static class CandidateAnalysisIdentity
             value.LimitId.Value,
             value.ExecutionInputId.Value,
             value.AnalysisRootId.Value,
+            value.DeliveredInputId.Value,
             value.ExecutionInputFingerprint.Value,
             value.PolicyFingerprint.Value,
             value.ThresholdFingerprint.Value,

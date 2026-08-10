@@ -1016,6 +1016,38 @@ public sealed class AnalysisReplayIntegrationTests
             AnalysisPublicationBuilder.SemanticFingerprintForVerification(importBaseline, candidates, findings),
             AnalysisPublicationBuilder.SemanticFingerprintForVerification(
                 importBaseline, substitutedCandidates, findings));
+
+        OpaqueId exactRoot = new("candidate-delivered-input-exact-admitted-root");
+        CandidateAnalysisContract deliveredCandidates = candidates with
+        {
+            Decisions = candidates.Decisions.Select(item => item with
+            {
+                DependencyIds = item.DependencyIds.Append(exactRoot).ToArray(),
+            }).ToArray(),
+            DependencyEdges = candidates.DependencyEdges.Concat(candidates.Decisions.Select((item, index) =>
+                new CandidateDependencyEdgeContract(
+                    new OpaqueId($"test-delivered-edge-{index}"),
+                    "dependency-closure", item.DependencyClosureId,
+                    "dependency", exactRoot, "depends-on"))).ToArray(),
+            DeliveredInputId = exactRoot,
+        };
+        OpaqueId substitutedRoot = new("candidate-delivered-input-forged-common-root");
+        CandidateAnalysisContract rootSubstitutedCandidates = deliveredCandidates with
+        {
+            Decisions = deliveredCandidates.Decisions.Select(item => item with
+            {
+                DependencyIds = item.DependencyIds.Select(id =>
+                    id == exactRoot ? substitutedRoot : id).ToArray(),
+            }).ToArray(),
+            DependencyEdges = deliveredCandidates.DependencyEdges.Select(item =>
+                item.ToKind == "dependency" && item.ToId == exactRoot
+                    ? item with { ToId = substitutedRoot }
+                    : item).ToArray(),
+        };
+        Assert.AreNotEqual(
+            AnalysisPublicationBuilder.SemanticFingerprintForVerification(importBaseline, deliveredCandidates, findings),
+            AnalysisPublicationBuilder.SemanticFingerprintForVerification(
+                importBaseline, rootSubstitutedCandidates, findings));
     }
 
     [TestMethod]

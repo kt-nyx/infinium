@@ -880,6 +880,8 @@ public static class CandidatePipeline
             LimitId = request.Limits.LimitId,
             ExecutionInputId = request.ExecutionInputId,
             AnalysisRootId = analysisRootId,
+            DeliveredInputId = request.Context.DeliveredInput?.PayloadId
+                ?? new OpaqueId("candidate-delivered-input-unspecified"),
             ExecutionInputFingerprint = request.ExecutionInputFingerprint,
             PolicyFingerprint = request.PolicyFingerprint,
             ThresholdFingerprint = request.ThresholdFingerprint,

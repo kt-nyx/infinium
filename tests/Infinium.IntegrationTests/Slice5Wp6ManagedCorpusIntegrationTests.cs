@@ -873,6 +873,17 @@ public sealed class Slice5Wp6ManagedCorpusIntegrationTests
                 publication_commits = item.QueryMatchesStore ? 1 : 0,
                 replay_state = JsonNamingPolicy.KebabCaseLower.ConvertName(item.Replay.ReplayState.ToString()),
                 auditability_state = JsonNamingPolicy.KebabCaseLower.ConvertName(item.Replay.AuditabilityState.ToString()),
+                output_replayability = new
+                {
+                    product_state = item.Output.Replayability.ProductState,
+                    exact_class = item.Output.Replayability.ExactClass,
+                    gap_count = item.Output.Replayability.Gaps.Count,
+                },
+                output_auditability = new
+                {
+                    state = item.Output.Auditability.State,
+                    gap_count = item.Output.Auditability.Gaps.Count,
+                },
                 semantically_equivalent = item.Replay.SemanticallyEquivalent,
                 missing_dependency_count = item.Replay.MissingDependencyIds.Count,
                 prior_run_id = item.Replay.ComparedRunId?.Value,
