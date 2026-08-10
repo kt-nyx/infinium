@@ -32,8 +32,8 @@ navigation, not executable fixture packages.
 - [Evaluator history and current disposition](evaluator-history.md)
 - [Retired asset Git inventory](retired-evaluation-assets.v1.json)
 
-Frozen protocol `/4` remains at its required historical paths and can run only
-through the bounded regression wrapper described in
-[bounded regression usage](m1-slice4-protocol-4-bounded-regression-usage.md).
-Protocol `/5` and predecessor evaluator attempts are Git-only history, not
-current navigation or implementation inputs.
+Protocols `/4` and `/5` and all predecessor evaluator attempts are retired
+history, not current navigation, review gates, or implementation inputs. The
+last public `/4` closure is preserved in the excluded sibling archive recorded
+by [ADR-0033](../architecture/decisions/ADR-0033-retire-and-archive-protocol-4-evaluator.md)
+and the retired-asset inventory.

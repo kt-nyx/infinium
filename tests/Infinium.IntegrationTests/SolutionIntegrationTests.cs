@@ -30,9 +30,6 @@ public sealed class SolutionIntegrationTests
         string[] projectFiles = TestRepository
             .EnumerateProjectFiles()
             .Select(path => Path.GetRelativePath(TestRepository.Root, path).Replace('/', '\\'))
-            .Where(path => !StringComparer.Ordinal.Equals(
-                path,
-                "tests\\Infinium.Protocol4RegressionTests\\Infinium.Protocol4RegressionTests.csproj"))
             .Order(StringComparer.Ordinal)
             .ToArray();
 

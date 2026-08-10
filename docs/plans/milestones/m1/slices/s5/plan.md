@@ -12,6 +12,9 @@ Accepted by: Project owner
 
 Amended: 2026-08-08; staged-verification recovery and development-execution policy alignment accepted by the project owner
 
+Later amendment: ADR-0033 retires protocol `/4`; all wrapper, freeze, and
+in-repository evaluator-retention clauses below are historical and superseded
+
 Owner: Project owner
 
 Work ID: `M1/S5`
@@ -96,7 +99,7 @@ for legacy or historical code, schemas, tests, and fixture data that a fresh
 maintainer or agent could mistake for current authority. That pass shall:
 
 1. mechanically distinguish current product authority, active public
-   regression support, retired compatibility material, and byte-frozen
+   regression support, retired compatibility material, and archived
    evaluator-protocol evidence;
 2. remove retired compatibility code/data from current build, test discovery,
    schema resolution, and default documentation paths, using deletion plus Git
@@ -107,9 +110,9 @@ maintainer or agent could mistake for current authority. That pass shall:
    rejection from current dependency and schema surfaces;
 4. prevent evaluator protocol numbers such as `/4` from being interpreted as
    product schema or fixture versions, and document the separate version axes;
-5. verify the exact `/4` freeze inventory before edits and leave every frozen
-   evaluator runtime/schema/core byte, identity, and historical record
-   unchanged; and
+5. verify the exact `/4` closure before external archival, preserve it by Git
+   identity in the dedicated archive, and remove every active-repository
+   evaluator runtime/schema/test/execution seam; and
 6. continue to exclude the evaluator-private repository and the abandoned
    sibling implementation archive.
 
@@ -117,7 +120,8 @@ This amendment permits removal or replacement of the now-retired pre-v2
 public-fixture compatibility surface recorded in the retirement manifest,
 current public pre-Slice-5 fixture packages and their tests, repository
 authority/navigation documentation, and focused archive/authority enforcement
-tooling/tests. It does not authorize evaluator `/4` repair, evaluator successor
+tooling/tests. It does not authorize archived evaluator restoration or
+execution, evaluator successor
 work, private corpus work, product analysis behavior, or a compatibility shim
 that becomes a second current analytical contract.
 
@@ -273,11 +277,10 @@ semantics. A conflict or missing semantic decision escalates only the affected
 decision path under the development execution policy; independent in-scope
 work continues.
 
-ADR-0032 is current evaluator authority. Protocol `/5` is retired unqualified
-and must not be resumed, reused, repaired, replaced, or used as a model.
-Protocol `/4` may run only through its accepted bounded public regression
-wrapper with the known `RACE/DATA` gap excluded. It cannot issue a current
-product, Slice 5, M1, reliability, readiness, or held-out verdict.
+ADR-0032 and ADR-0033 are current evaluator authority. Protocols `/4` and `/5`
+are retired and must not be resumed, reused, repaired, replaced, or used as a
+model. Protocol `/4` is externally archived as non-authoritative historical
+evidence and has no command, test, review, or verdict role.
 
 ## 3. Baseline and preflight
 
@@ -344,7 +347,7 @@ exist.
 MSTest unit, contract, integration, and evaluation projects expose `M1Unit`,
 `M1Contract`, `M1Integration`, `M1Evaluation`, `M1Security`, and `M1Fault`
 floors. Strict schema readers, fixture contracts, mutation/failure tooling,
-protected-root canaries, and bounded `/4` regression are reusable. Product
+protected-root canaries, and public continuation verification are reusable. Product
 output remains forbidden as fixture truth.
 
 ### 4.4 Inherited Slice 0–4 dependencies
@@ -359,8 +362,9 @@ output remains forbidden as fixture truth.
 - Slice 4: Mutagen `0.54.2` extraction, exact supported shapes, typed indexes,
   fixed coverage populations, taxonomy projections, layered gaps, and sealed
   publication.
-- Slice 4.5: evaluator deferral, `/5` retirement, bounded `/4` regression, and
-  continuation authority; no private verdict.
+- Slice 4.5: evaluator deferral and continuation authority; ADR-0033 later
+  retired and externally archived `/4`, while `/5` remains retired; no private
+  verdict exists.
 
 Slice 5 consumes rather than widens these. Archive, PEX/VMAD, native,
 configuration, generator, asset-parser, and broader-record strata remain
@@ -389,7 +393,8 @@ lead/gap/routing-only where no bounded analyzer exists.
 
 - evaluator-private access/enumeration; corpus, qualification, comparison,
   adaptation, B2, C2, Stage D, or scoring;
-- protocol `/5`, future protocol identity, or unbounded `/4`;
+- any archived evaluator protocol, future protocol identity, or evaluator
+  successor work;
 - live/billable calls, credentials, hosted search, Nexus, provider budgets,
   prompts/model admission, or `Infinium.OpenAI` implementation;
 - legacy archive access; Slice 6 provider integration; Slice 7 generic
@@ -754,7 +759,7 @@ archive/authority enforcement tooling and tests.
 
 **Prohibited.** Analysis behavior; source import; selection; findings/cases;
 coordinator/worker/CLI runtime changes; private/live/abandoned-implementation/
-later-slice work; frozen evaluator `/4` core or protocol changes; expectations
+later-slice work; archived evaluator restoration or execution; expectations
 derived from product execution.
 
 **Deliverables.** Section 7 contracts and Section 8 states; migration
@@ -784,7 +789,7 @@ mismatch, answer-bearing example, incomplete authority enforcement, reachable
 archived material, or review defect returns to correction and re-review.
 
 **Escalation conditions.** Conflicting or materially missing accepted product
-semantics; required private/evaluator access; frozen `/4` byte drift; or an
+semantics; required private/evaluator access; archived evaluator reintroduction; or an
 authority, security, isolation, protected-root, destructive, or external-effect
 boundary that cannot be preserved within WP1 scope.
 
@@ -1053,10 +1058,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File eng/update-dependency-manife
 git diff --check
 ```
 
-The `/4` wrapper may run only through its existing accepted allowlist/refusal
-command recorded by `M1/S4.5/EVAL-CLOSEOUT`, report bounded regression, exclude
-the `RACE/DATA` gap, and make no verdict. If command identity drifted, stop and
-reconcile public authority rather than invoking evaluator files ad hoc.
+Verification shall prove that archived evaluator code, schemas, projects,
+embedded validator, wrapper/refusal scripts, and active authority surfaces are
+absent. The retired-asset inventory shall identify the exact source and archive
+commits. No archived evaluator file may be invoked ad hoc.
 
 **Retained evidence.** Section 17 record, logs/counts/skips, ownership audit,
 final diff, review checklist/input commit, findings/correction/decision, local

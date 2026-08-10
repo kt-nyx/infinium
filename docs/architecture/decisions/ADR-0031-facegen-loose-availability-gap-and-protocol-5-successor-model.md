@@ -6,7 +6,10 @@ Last reviewed: 2026-08-10
 
 Date: 2026-08-07
 
-Superseded by: ADR-0032 only as active `/5` model authority
+Superseded by: ADR-0032 as active `/5` model authority; ADR-0033 for active `/4` retention
+
+Later disposition: Protocols `/4` and `/5` are retired. ADR-0033 externally
+archives `/4`; neither protocol has an active execution or review role.
 
 Work ID: `M1/S4.5/PRE-B2/V5/WP1R`
 

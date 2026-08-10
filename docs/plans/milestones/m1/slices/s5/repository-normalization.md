@@ -8,6 +8,10 @@ Accepted: 2026-08-10
 
 Last reviewed: 2026-08-10
 
+Superseded in part: ADR-0033 and the project owner's 2026-08-10 protocol `/4`
+retirement supersede only this amendment's `/4` path-preservation and bounded-
+regression requirements. The completed normalization evidence remains valid.
+
 ## Authority and purpose
 
 The project owner accepted this bounded pre-closeout amendment on 2026-08-10.
@@ -19,7 +23,7 @@ This amendment supersedes the exact terminal-review candidate only as a
 closeout candidate. It does not reject the accepted implementation evidence,
 accept Slice 5, freeze its contracts, or authorize successor-slice work. The
 renamed and reorganized exact candidate must pass the complete Slice 5 floor,
-the applicable protocol `/4` bounded regression, and fresh terminal review
+the applicable public continuation profile, and fresh terminal review
 before a revised owner-acceptance packet is presented.
 
 ## Authorized work
@@ -38,9 +42,9 @@ before a revised owner-acceptance packet is presented.
    records beside their owning plans, separate current authority from history,
    and consolidate superseded evaluator attempts and incidents into compact
    history plus exact Git-identity inventories.
-4. Preserve the frozen protocol `/4` reusable core byte-for-byte and at its
-   required paths. Only its current regression integration, public fixture
-   references, authorized hashes, and provenance may be updated.
+4. Historical at execution time: preserve the frozen protocol `/4` reusable
+   core. ADR-0033 later superseded this item and moved the exact closure to the
+   excluded sibling archive.
 5. Remove proven temporary or superseded generated material, remove clean
    obsolete detached sibling worktrees through Git, and consolidate the
    approved small evaluator-development directories into one excluded sibling
@@ -73,7 +77,7 @@ Acceptance requires:
 - every functional Slice 5 gate and the comprehensive public corpus;
 - schema, fixture, fingerprint, repository-authority, dependency, strict-JSON,
   link, stale-reference, and diff checks;
-- protocol `/4` bounded regression and refusal checks;
+- repository proof that archived evaluator paths and commands are absent;
 - fresh code/fixture, documentation/authority, and terminal whole-slice review;
   and
 - a revised implementation record and owner-acceptance packet that retain all

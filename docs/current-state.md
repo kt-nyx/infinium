@@ -46,9 +46,8 @@ Do not copy that chronology back into current navigation documents.
 - Private held-out evaluation is deferred and has no valid current product
   verdict.
 - Protocol `/5` is retired unqualified and is not resumable.
-- Protocol `/4` is immutable historical evidence with bounded public
-  regression use only. It is not a product, Slice 5, M1, held-out,
-  reliability, readiness, or acceptance verdict.
+- Protocol `/4` is retired under ADR-0033 and archived outside this repository.
+  It has no current execution, testing, review, or authority role.
 - Ordinary product work must not access the evaluator-private fixture
   repository or create, repair, retry, or replace private evaluator work.
 - The compact chronology and exact Git-backed recovery map are in

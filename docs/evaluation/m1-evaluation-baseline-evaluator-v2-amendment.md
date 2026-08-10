@@ -6,6 +6,10 @@ Accepted by: Project owner
 Last reviewed: 2026-08-10
 Predecessor: [M1 evaluation baseline](m1-evaluation-baseline.md)
 
+Current disposition: Historical evaluator baseline. ADR-0033 retires and
+externally archives protocol `/4`; no command, test, review gate, or product
+evidence role in this document remains active.
+
 ## Amendment model
 
 The accepted M1 baseline remains authoritative except where this document
@@ -13,9 +17,10 @@ replaces evaluator protocol, ownership, terminal-state mapping, and held-out
 gate sequencing under ADR-0027 and M1 plan revision `/3`.
 ADR-0028 later binds the bounded semantic authority inside final protocol `/4`
 without changing evaluator ownership or terminal mapping.
-ADR-0032 later supersedes only the held-out-`PASS` sequencing gate for Slices
-5-9. The protocol, terminal, isolation, identity, contamination, and historical
-evidence clauses remain authoritative where applicable.
+ADR-0032 later superseded the held-out-`PASS` sequencing gate for Slices 5-9.
+ADR-0033 then retired the remaining protocol `/4` implementation and review
+role. Isolation, identity reservation, contamination, and historical-evidence
+clauses remain authoritative where applicable.
 
 ## Public protocol and private corpus
 
@@ -123,7 +128,7 @@ the held-out gate or authorize a product correction, Stage C2, Stage D, Slice
 
 Protocol `/4` was publicly qualified and frozen at
 `3693d19563c636cd2879804633ca4ce52448d2c1`. Its machine-readable authority is
-the [final bounded freeze handoff](evaluator-v2-stage-a-final-bounded-freeze.json).
+the [archived final freeze history](evaluator-history.md).
 At that freeze checkpoint, the existing successor-corpus inputs were permitted
 to resume B2 once; no oracle, corpus fingerprint/freeze/tag, comparison, Stage
 C2 score, or Stage D work had occurred under `/4`.
@@ -174,7 +179,7 @@ ADR-0032 and accepted work `M1/S4.5/EVAL-CLOSEOUT` now control current status:
 
 ```text
 Slice 4 public conformance: passed for exact candidate and scope
-Protocol /4: frozen historical; bounded public regression only
+Protocol /4: retired and archived by ADR-0033; no active execution or review role
 Protocol /5: retired unqualified; no implementation, freeze, private use, or verdict
 Private held-out evaluation: deferred; no valid current product verdict
 Slice 4.5: closed by accepted owner disposition with explicit residual risk
@@ -184,7 +189,7 @@ M1: active
 
 No current private `PASS`, `FAIL`, or valid product-scoring `EVALUATOR_ERROR`
 exists. B2, C2, Stage D, corpus work, adaptation, comparison, and scoring are
-not authorized. Frozen `/4` bounded-regression health is neither evaluator
+not authorized. Historical `/4` regression health was neither evaluator
 qualification nor a complete current-product result.
 
 Evaluator-deferral closeout is accepted. Slices 5-9 are gated by the accepted

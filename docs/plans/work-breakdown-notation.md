@@ -137,7 +137,7 @@ M1/S4.5
 └── EVAL-CLOSEOUT  Current evaluator deferral and M1 continuation
     ├── WP0 Preserve failed evidence
     ├── WP1 Accept deferral and migrate durable semantics
-    ├── WP2 Retire /5 and establish bounded /4 regression
+    ├── WP2 Historical: retire /5 and bound /4 (later archived by ADR-0033)
     ├── WP3 Replace the M1 gate and reconcile documentation
     ├── WP4 Fresh evaluator-boundary and documentation audits
     └── WP5 Final closeout and Slice 5 handoff

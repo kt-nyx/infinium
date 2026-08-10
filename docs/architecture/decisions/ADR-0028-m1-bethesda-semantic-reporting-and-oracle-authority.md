@@ -6,6 +6,10 @@ Last reviewed: 2026-08-10
 Date: 2026-08-05
 Deciders: Project owner
 
+Later disposition: ADR-0033 retires and externally archives protocol `/4`.
+This ADR's product semantic decisions remain authoritative; its evaluator
+application is historical only.
+
 ## Context
 
 The Slice 4.5 authority-completion rehearsal proved that protocol `/4` is

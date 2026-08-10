@@ -6,7 +6,10 @@ Accepted: 2026-08-07
 Accepted by: Project owner
 Last reviewed: 2026-08-10
 Supersedes: ADR-0027 decision 15 only
-Superseded by: ADR-0031 only for the `/5` semantic-model identity; ADR-0032 for all active `/5` authorization
+Superseded by: ADR-0031 only for the `/5` semantic-model identity; ADR-0032 for all active `/5` authorization; ADR-0033 for active `/4` retention
+
+Later disposition: Protocols `/4` and `/5` are retired. ADR-0033 externally
+archives `/4`; neither protocol has an active execution or review role.
 
 ## Context
 

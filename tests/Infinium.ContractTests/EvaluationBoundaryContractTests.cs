@@ -30,7 +30,6 @@ public sealed class EvaluationBoundaryContractTests
     [
         "current-product-contracts",
         "current-public-fixtures",
-        "historical-protocol-4-bounded-regression",
         "retained-historical-authorability-evidence",
         "fixture-governance-vocabulary",
         "retired-material",
@@ -112,10 +111,13 @@ public sealed class EvaluationBoundaryContractTests
         Assert.IsFalse(publicFixtureSource.Contains("EmbeddedJsonSchemaValidator", StringComparison.Ordinal));
         Assert.IsFalse(publicFixtureSource.Contains("Infinium.EvaluatorV2", StringComparison.Ordinal));
 
-        string protocolProject = File.ReadAllText(TestRepository.PathFromRoot(
-            "tests", "Infinium.Protocol4RegressionTests", "Infinium.Protocol4RegressionTests.csproj"));
-        StringAssert.Contains(protocolProject, "Infinium.EvaluatorV2", StringComparison.Ordinal);
-        StringAssert.Contains(protocolProject, "EvaluatorV2PublicProtocolTests.cs", StringComparison.Ordinal);
+        Assert.IsFalse(Directory.Exists(TestRepository.PathFromRoot("tools")));
+        Assert.IsFalse(Directory.Exists(TestRepository.PathFromRoot(
+            "tests", "Infinium.Protocol4RegressionTests")));
+        Assert.IsFalse(File.Exists(TestRepository.PathFromRoot(
+            "tests", "Infinium.EvaluationTests", "EvaluatorV2PublicProtocolTests.cs")));
+        Assert.IsFalse(File.Exists(TestRepository.PathFromRoot(
+            "src", "Infinium.Application", "Evaluation", "EmbeddedJsonSchemaValidator.cs")));
     }
 
     [TestMethod]

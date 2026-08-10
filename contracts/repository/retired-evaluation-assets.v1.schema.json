@@ -3,14 +3,15 @@
   "$id": "https://schemas.infinium.dev/repository/retired-evaluation-assets.v1.schema.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_id", "schema_version", "status", "authority", "source_commit", "archive_mechanism", "entries", "retained_current_metadata"],
+  "required": ["schema_id", "schema_version", "status", "authority", "source_commit", "archive_mechanism", "external_archives", "entries", "retained_current_metadata"],
   "properties": {
     "schema_id": { "const": "infinium.repository.retired-evaluation-assets/v1" },
-    "schema_version": { "const": "1.0.0" },
+    "schema_version": { "const": "1.1.0" },
     "status": { "const": "retired-from-active-tree" },
-    "authority": { "const": "project-owner-authorized-boundary-hardening-2026-08-08" },
+    "authority": { "const": "project-owner-authorized-protocol-4-retirement-2026-08-10" },
     "source_commit": { "$ref": "#/$defs/gitObject" },
     "archive_mechanism": { "$ref": "#/$defs/nonEmptyString" },
+    "external_archives": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/archive" } },
     "entries": { "type": "array", "minItems": 20, "uniqueItems": true, "items": { "$ref": "#/$defs/entry" } },
     "retained_current_metadata": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/retained" } }
   },
@@ -25,8 +26,20 @@
         "kind": { "enum": ["compiled-source", "registry", "protocol-schema", "historical-proof-tool", "fixture-tool"] },
         "path": { "$ref": "#/$defs/nonEmptyString" },
         "git_blob": { "$ref": "#/$defs/gitObject" },
+        "source_commit": { "$ref": "#/$defs/gitObject" },
         "replacement": { "type": ["string", "null"] },
         "reason": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    },
+    "archive": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "commit", "source_commit", "classification"],
+      "properties": {
+        "path": { "$ref": "#/$defs/nonEmptyString" },
+        "commit": { "$ref": "#/$defs/gitObject" },
+        "source_commit": { "$ref": "#/$defs/gitObject" },
+        "classification": { "$ref": "#/$defs/nonEmptyString" }
       }
     },
     "retained": {

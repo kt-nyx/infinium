@@ -17,7 +17,7 @@ inventory, `retired-evaluation-assets.v1.json` for Git-backed retirements, and
 |---|---|---|
 | Product schema ID/version | Current clean-break product payload and codec contract under `contracts/json-schema/` and `src/` | May be consumed by product and current public fixtures; evaluator identities confer no product meaning. |
 | Public fixture package/version | Independently authored public evidence validated by `Infinium.PublicFixtures` | May establish only its registered public fixture expectations; never product-derived oracle truth or a product/evaluator verdict. |
-| Protocol `/4`, scorer/adapter `4.0.0`, projection `3.0.0` | Frozen historical bounded-regression identity | Reachable only through the accepted wrapper and dedicated out-of-solution test project; never current product authority. |
+| Protocol `/4`, scorer/adapter `4.0.0`, projection `3.0.0` | Retired archived historical identity | No active repository paths, command, test, or review role; permanently reserved and never current product authority. |
 | Protocol `/2`, `/3`, or retired `/5` identities | Retired historical chronology | Recoverable through recorded Git identities only; never runnable or reusable authority. |
 | Repository authority/retirement schema `1.0.0` | Closed-world repository governance metadata | Classifies paths and Git objects only; it creates no product semantics or evaluator verdict. |
 

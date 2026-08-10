@@ -1,6 +1,6 @@
 # M1 backend semantic proof plan revision 3 amendment
 
-Status: Accepted; held-out sequencing clauses superseded by ADR-0032
+Status: Accepted historical amendment; held-out sequencing superseded by ADR-0032 and active protocol `/4` retention superseded by ADR-0033
 Accepted: 2026-08-04
 Accepted by: Project owner
 Last reviewed: 2026-08-10
@@ -19,6 +19,9 @@ ADR-0032 later supersedes only this revision's requirement that a private
 held-out `PASS` precede Slice 5. The historical evaluator chronology below
 remains evidence; current M1 sequencing is governed by the evaluator-deferral
 plan and the M1 continuation verification profile.
+ADR-0033 subsequently retired and externally archived protocol `/4`; no
+evaluator command, test, review gate, or product evidence role below remains
+active.
 
 ## Established implementation state
 
@@ -138,15 +141,15 @@ and Slice 5 remain separate and unauthorized by this amendment note.
 
 ## Current evaluator-deferral and continuation disposition
 
-ADR-0032 and accepted work `M1/S4.5/EVAL-CLOSEOUT` supersede the active status
-and sequencing statements above without rewriting their chronology.
+ADR-0032, ADR-0033, and accepted work `M1/S4.5/EVAL-CLOSEOUT` supersede the
+active status and sequencing statements above without rewriting their
+chronology.
 
 - Slice 4 public conformance passed for exact candidate
   `a98d648bd0adb2751ee0c09828e0227b1583950f` and its declared scope.
-- Protocol `/4` is frozen historical public evidence and may run only through
-  its bounded public regression profile. Its known partial `RACE/DATA`
-  representation gap is excluded, so it cannot issue a complete current
-  semantic or held-out verdict.
+- Protocol `/4` is retired and externally archived as non-authoritative
+  historical evidence. It has no active command, test, review, semantic, or
+  held-out-verdict role.
 - Protocol `/5` is retired unqualified. It has no implementation, freeze,
   private use, or verdict; WP1/WP1R/WP1V and WP2-WP4 are historical or
   unstarted chronology, not resumable work.

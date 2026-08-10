@@ -2,6 +2,10 @@
 
 Status: Accepted and completed
 
+Current disposition: Historical execution plan. ADR-0033 later retired and
+externally archived protocol `/4`; none of the wrapper, freeze, test, or review
+instructions below remain runnable or current.
+
 Last reviewed: 2026-08-10
 
 Prepared: 2026-08-07

@@ -6,6 +6,10 @@ Last reviewed: 2026-08-10
 Date: 2026-08-05
 Deciders: Project owner
 
+Later disposition: ADR-0033 retires and externally archives protocol `/4`.
+This ADR's layered-evidence product rules remain authoritative; its evaluator
+application is historical only.
+
 ## Context
 
 The M1 Slice 4.5 protocol `/4` authorability exercise exposed a recurring

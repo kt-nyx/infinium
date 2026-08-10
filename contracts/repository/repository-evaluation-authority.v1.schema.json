@@ -6,12 +6,12 @@
   "required": ["schema_id", "schema_version", "status", "authority", "surfaces"],
   "properties": {
     "schema_id": { "const": "infinium.repository.evaluation-authority/v1" },
-    "schema_version": { "const": "1.0.0" },
+    "schema_version": { "const": "1.1.0" },
     "status": { "const": "current" },
-    "authority": { "const": "project-owner-authorized-boundary-hardening-2026-08-08" },
+    "authority": { "const": "project-owner-authorized-protocol-4-retirement-2026-08-10" },
     "surfaces": {
       "type": "array",
-      "minItems": 6,
+      "minItems": 5,
       "uniqueItems": true,
       "items": { "$ref": "#/$defs/surface" }
     }

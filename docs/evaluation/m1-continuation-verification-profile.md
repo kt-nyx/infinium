@@ -26,10 +26,8 @@ is the [closeout acceptance record](evaluator-history.md).
 The profile proves public product conformance within each accepted slice's
 declared scope. It does not produce a private held-out verdict, qualify an
 evaluator or corpus, demonstrate production reliability/readiness, or complete
-M1 by itself. Protocol `/4` bounded regression is optional supporting tool
-health evidence only where its allowlisted representable subset is relevant;
-it is not one of the six replacement layers and cannot satisfy any layer on its
-own.
+M1 by itself. Retired evaluator protocols provide no current supporting tool,
+review evidence, or replacement layer.
 
 This profile defines evidence required for acceptance; it does not impose a
 finite correction budget on ordinary product work. A failed command, fixture
@@ -202,15 +200,13 @@ evidence where applicable; fresh-review inputs, findings, corrections, and
 judgment; proof that no private material or held-out verdict entered the work;
 and the precise next-slice/M1 status.
 
-## Protocol `/4` supporting regression
+## Archived evaluator protocols
 
-When a later public change touches the `/4` allowlisted representable subset,
-run the bounded wrapper described in
-[the bounded-regression usage contract](m1-slice4-protocol-4-bounded-regression-usage.md).
-`BOUNDED_REGRESSION_PASS` means only historical freeze integrity, current
-reusable-core integrity, and allowlisted current public regression health. The
-known partial `RACE/DATA` gap remains excluded. This result cannot satisfy a
-held-out, reliability, readiness, Slice 4.5, M1, or complete-product claim.
+Protocols `/2` through `/5` are retired historical identities and provide no
+current command, test, review gate, or product evidence. Protocol `/4`'s final
+public closure is archived under ADR-0033, but ordinary work must not inspect,
+execute, restore, or cite that archive as current verification. Slices 5-9 use
+only the six public layers above and their owning plans.
 
 ## Future evaluator reconsideration
 

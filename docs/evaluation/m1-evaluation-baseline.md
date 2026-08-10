@@ -298,6 +298,6 @@ M1 completion must retain:
   declared M1 claims.
 
 The completion evidence must explicitly state that no valid current private
-held-out verdict exists, distinguish any bounded `/4` regression health from
-product conformance, and avoid reliability/readiness language beyond the
-public evidence obtained.
+held-out verdict exists, that archived evaluator protocols provide no current
+review evidence, and avoid reliability/readiness language beyond the public
+evidence obtained.

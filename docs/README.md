@@ -112,9 +112,10 @@ The old implementation is outside the active repository. A maintainer-local
 archive exists at sibling path `../infinium-legacy-archive/`, and the tracked
 implementation remains recoverable through Git commit `7dd3da6`. Superseded
 evaluator-development staging is consolidated separately at
-`../infinium-evaluator-development-archive/`. Do not inspect either archive
-unless the project owner explicitly requests the corresponding archaeological
-review.
+`../infinium-evaluator-development-archive/`. Retired public protocol `/4`
+code and its last regression closure are in the separate sibling Git repository
+`../infinium-evaluator-archive/`. Do not inspect any archive unless the project
+owner explicitly requests the corresponding archaeological review.
 
 M0 research, Waves A through F, completed M1 slices, and the active Slice 5
 record live under the milestone hierarchy. Superseded evaluator-attempt prose
@@ -123,8 +124,8 @@ and proof fixtures are summarized in
 blob rather than copied through current navigation.
 
 Private held-out evaluation is deferred with no valid current product verdict.
-Protocol `/5` is retired unqualified. Frozen protocol `/4` is historical
-bounded-regression tooling only. The current evaluator inventory and exact
+Protocols `/4` and `/5` are retired and have no active execution or review
+role. The current evaluator inventory and exact
 version-axis boundary live in
 [product-evaluator-boundary.md](evaluation/product-evaluator-boundary.md) and
 [repository-evaluation-authority.v1.json](evaluation/repository-evaluation-authority.v1.json).

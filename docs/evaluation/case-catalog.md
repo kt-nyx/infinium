@@ -48,7 +48,7 @@ Current Slice 4/4.5 partition state:
 Public Slice 4 evidence: passed
 Evaluator-v1 held-out attempts: blocked / no product verdict
 Historical evaluator-v2 /2 Stage C: immutable FAIL; product verdict invalidated
-Final public protocol /4: qualified and frozen at 3693d19
+Final public protocol /4: qualified/frozen historically; retired and archived by ADR-0033
 Owner semantic disposition: accepted under ADR-0028
 Public realignment/requalification: complete; candidate frozen at a98d648
 Private B2 oracle/corpus: terminal public-authority stop; no oracle/product verdict
@@ -116,7 +116,7 @@ The exact public successor handoff is
 | EVAL-0049 | Synthetic boundary | Remediation/validation | A supported remediation states risks, reversibility, and meaningful verification; an unsupported resolution instead produces a snapshot/case-scoped, bounded validation or missing-evidence plan with save/test risks and inconclusive outcomes, and neither makes a global-safety claim | PROD-004, FIND-004, VALID-001 | Planned |
 | EVAL-0050 | Synthetic boundary | Resolution state | User-resolved disposition is visibly unverified until new evidence validates it; verification creates new evidence/review history and only the analytical finding/case revisions actually produced by reanalysis, without rewriting the decision or prior finding | FIND-005, FIND-006 | Planned |
 | EVAL-0051 | Integration ground truth | MO2 effective state | For pinned MO2 `2.5.2` disposable instances, explicit profile selection, enabled state/order, plugin state/order, qualified loose providers, hidden/deleted/unmanaged state, mapper effects, and physical-local/source identity separation agree with authoritative MO2 behavior; archive-provider behavior is tested only when separately qualified and otherwise becomes a gap, the saved selection is only a startup suggestion, drift fails closed, and the private reference profile is not an oracle | SCOPE-003, SCOPE-005, SNAP-001 | Passed 2026-07-30 for the exact admitted MO2/Skyrim target and accepted empty additional-mapper inventory; broader MO2 versions, mappers, and archive members remain unsupported |
-| EVAL-0052 | Integration ground truth | Bethesda records | For positively allowlisted `Mutagen.Bethesda.Skyrim` `0.54.2` shapes, supported plugin order, records, override chains, winners, FormKeys, links, states, and field values agree with independently specified hand-audited binary/semantic fixture expectations; the Mutagen path under test is not the sole source of expected results, and unsupported archive/string/record semantics become explicit gaps | SCOPE-005, ANALYSIS-003, ANALYSIS-019, COVER-001 | Public Slice 4 conformance passed for exact candidate `a98d648` and scope. Frozen protocol `/4` has bounded regression value but cannot represent the complete accepted partial `RACE/DATA` state. Protocol `/5` is retired unqualified. Private held-out evaluation is deferred with no valid current verdict. Later M1 use is public development/validation evidence under the continuation profile. |
+| EVAL-0052 | Integration ground truth | Bethesda records | For positively allowlisted `Mutagen.Bethesda.Skyrim` `0.54.2` shapes, supported plugin order, records, override chains, winners, FormKeys, links, states, and field values agree with independently specified hand-audited binary/semantic fixture expectations; the Mutagen path under test is not the sole source of expected results, and unsupported archive/string/record semantics become explicit gaps | SCOPE-005, ANALYSIS-003, ANALYSIS-019, COVER-001 | Public Slice 4 conformance passed for exact candidate `a98d648` and scope. Protocols `/4` and `/5` are retired; `/4` is archived and has no current evidence role. Private held-out evaluation is deferred with no valid current verdict. Later M1 use is public development/validation evidence under the continuation profile. |
 | EVAL-0053 | Integration fidelity | LOOT | When LOOT coverage is claimed, the pinned libloot `0.29.6` read-only adapter reproduces the exact selected immutable masterlist/prelude pair, private userlist, configuration, and allowlisted diagnostics; refresh tests cover 200/304, corrupt/partial/pair-invalid updates, atomic activation/rollback, offline/stale state, unsupported compatibility lines, run-binding races, and historical replay; authorities remain distinct and no set/write/apply operation is reachable | AUTH-003, EVID-003, ANALYSIS-002 | ADR-0011 and ADR-0014 gates accepted; specification/execution pending |
 | EVAL-0054 | Synthetic boundary | Supported target | Only the exact initial Steam Windows x64 Skyrim SE `1.6.1170.0` executable identity accepted by ADR-0009 enters semantic analysis; unknown hashes, other channels/runtimes, unsupported managers/platforms, malformed inputs, and mid-capture changes fail clearly without best-effort conclusions or fabricated coverage | SCOPE-001, SCOPE-002, SCOPE-006 | Passed 2026-07-29 against the evaluator-private exact target and complete preregistered negative matrix |
 | EVAL-0055 | Synthetic coverage | Documentation | Full enabled-mod mode accounts for every eligible identifiable mod and reports exclusions, limits, failures, and unresolved identities | COVER-001, COVER-002, DOC-001 | Planned |
@@ -221,18 +221,19 @@ must accept the final case specifications before fixture execution.
 The accepted [final scope amendment](evaluator-history.md)
 narrows only the held-out proof surfaces of EVAL-0052 and applicable
 EVAL-0086 assertions. Exact failure vocabulary, typed AIDT subfields, and
-product taxonomy/provenance IDs remain public-conformance assertions. Protocol
-`/4` held-out oracles use result publication, AIDT presence, and semantic
-taxonomy tuples instead.
+product taxonomy/provenance IDs remain public-conformance assertions. The
+historical protocol `/4` oracle partition used result publication, AIDT
+presence, and semantic taxonomy tuples instead.
 The accepted
 [semantic-authority owner disposition](evaluator-history.md)
-supplies the exact bounded rules without changing protocol `/4` or projection
-`3.0.0`.
+historically supplied the bounded rules without changing protocol `/4` or
+projection `3.0.0`.
 
 ADR-0032 defers the current private held-out partition with no valid product
-verdict and retires protocol `/5` unqualified. Public EVAL-0052 and applicable
+verdict and retires protocol `/5` unqualified. ADR-0033 retires and archives
+protocol `/4` with no current review role. Public EVAL-0052 and applicable
 EVAL-0086 conformance for Slice 4 remains valid for exact candidate `a98d648`
-and scope; bounded `/4` regression health remains a separate narrower claim.
+and scope.
 For later M1 slices, these and all remaining cases are executed as public
 development/validation evidence under the
 [M1 continuation verification profile](m1-continuation-verification-profile.md).

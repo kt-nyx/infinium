@@ -1270,5 +1270,5 @@ For EVAL-0052 and the applicable EVAL-0086 surface, public conformance remains
 the authority for exact product diagnostics, typed AIDT interpretation, and
 taxonomy/provenance identifier construction. Held-out truth is limited to the
 independently authorable semantic facts in the
-[final matrix](../m1-slice4-heldout-oracle-authority-matrix.md). A future report
+[archived matrix history](../evaluator-history.md). A future report
 must state the two evidence partitions separately.

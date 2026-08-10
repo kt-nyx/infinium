@@ -1,8 +1,8 @@
 {
   "schema_id": "infinium.repository.evaluation-authority/v1",
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "status": "current",
-  "authority": "project-owner-authorized-boundary-hardening-2026-08-08",
+  "authority": "project-owner-authorized-protocol-4-retirement-2026-08-10",
   "surfaces": [
     {
       "id": "current-product-contracts",
@@ -42,26 +42,13 @@
       "claim": "functionally organized, independently authored public fixture contract evidence; never product-derived oracle authority"
     },
     {
-      "id": "historical-protocol-4-bounded-regression",
-      "paths": [
-        "tools/evaluation/Infinium.EvaluatorV2/",
-        "tests/Infinium.EvaluationTests/EvaluatorV2PublicProtocolTests.cs",
-        "tests/Infinium.Protocol4RegressionTests/",
-        "eng/invoke-m1-slice4-protocol4-bounded-regression.ps1"
-      ],
-      "validator": "Infinium.Application.Evaluation.EmbeddedJsonSchemaValidator",
-      "entry_point": "eng/invoke-m1-slice4-protocol4-bounded-regression.ps1",
-      "default_solution_member": false,
-      "claim": "historical core and allowlisted current public regression health only; no product verdict"
-    },
-    {
       "id": "retained-historical-authorability-evidence",
       "paths": [
         "docs/evaluation/evaluator-history.md",
         "docs/evaluation/retired-evaluation-assets.v1.json"
       ],
       "default_solution_member": false,
-      "claim": "Git-identified historical evaluator evidence; not current fixture input, executable workflow, or product authority"
+      "claim": "Git-identified historical evaluator evidence and external protocol-4 archive navigation; not current fixture input, executable workflow, review gate, or product authority"
     },
     {
       "id": "fixture-governance-vocabulary",

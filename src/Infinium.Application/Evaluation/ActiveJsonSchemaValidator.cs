@@ -6,8 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace Infinium.Application.Evaluation;
 
-// Current product-contract validator. The separate EmbeddedJsonSchemaValidator
-// is byte-frozen protocol /4 evaluator evidence and must not gain active callers.
+// Current product-contract validator.
 internal static class ActiveJsonSchemaValidator
 {
     private const string ResourcePrefix = "Infinium.Contracts.JsonSchema.";

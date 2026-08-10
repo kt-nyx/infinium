@@ -2,6 +2,10 @@
 
 Status: Complete
 
+Current disposition: Historical readiness record. ADR-0033 later retired and
+externally archived protocol `/4`; any bounded-use statement below records the
+2026-08-07 checkpoint and is not current policy.
+
 Last reviewed: 2026-08-10
 
 Review date: 2026-08-07

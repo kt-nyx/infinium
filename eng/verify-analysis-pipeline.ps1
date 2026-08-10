@@ -152,10 +152,16 @@ function Invoke-ContractsGate {
     $retiredEntries = @($retirement.entries)
     foreach ($entry in $retiredEntries) {
         $relativePath = [string] $entry.path
+        $entrySourceCommit = if ($entry.PSObject.Properties.Name -contains 'source_commit') {
+            [string] $entry.source_commit
+        }
+        else {
+            $sourceCommit
+        }
         if (Test-Path -LiteralPath (Join-Path $repoRoot $relativePath)) {
             throw "Retired evaluation asset remains active in the working tree: $relativePath"
         }
-        $actualBlob = @(& git -C $repoRoot rev-parse "$($sourceCommit):$relativePath" 2>&1)
+        $actualBlob = @(& git -C $repoRoot rev-parse "$($entrySourceCommit):$relativePath" 2>&1)
         if ($LASTEXITCODE -ne 0 -or $actualBlob.Count -ne 1 -or
             ([string] $actualBlob[0]).Trim() -cne [string] $entry.git_blob) {
             throw "Retired evaluation asset Git identity mismatch: $relativePath"
@@ -181,7 +187,8 @@ function Invoke-ContractsGate {
         repository_authority_manifest = Get-FileEvidence $authorityPath
         retired_asset_manifest = Get-FileEvidence $retirementPath
         retired_git_blob_count = $retiredEntries.Count
-        historical_evaluator_in_default_solution = $false
+        active_evaluator_in_repository = $false
+        external_evaluator_archive_count = @($retirement.external_archives).Count
     })
 }
 

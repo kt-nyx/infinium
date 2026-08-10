@@ -1,6 +1,6 @@
 # ADR-0032: Defer the M1 held-out evaluator and continue with public verification
 
-Status: Accepted
+Status: Accepted; partially superseded by ADR-0033
 
 Last reviewed: 2026-08-10
 
@@ -135,3 +135,12 @@ became eligible under the continuation verification profile. Later execution
 status is maintained only in [current project state](../../current-state.md).
 The exact evaluator-closeout evidence is in the
 [closeout acceptance record](../../evaluation/evaluator-history.md).
+
+## Later protocol `/4` retirement
+
+On 2026-08-10 the project owner accepted
+[ADR-0033](ADR-0033-retire-and-archive-protocol-4-evaluator.md). ADR-0033
+supersedes decision 5 and the freeze-boundary clarification as current policy:
+protocol `/4` is archived, has no active execution or review role, and is not
+retained in the Infinium working tree. This record continues to preserve the
+decision and evidence that governed the earlier evaluator-deferral closeout.

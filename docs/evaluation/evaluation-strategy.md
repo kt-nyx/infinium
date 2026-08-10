@@ -369,20 +369,17 @@ scope must pass.
 
 ## M1 public continuation and deferred held-out evaluation
 
-Public product conformance, bounded `/4` regression health, private held-out
-evaluation, evaluator qualification, and product reliability/readiness are
-separate proof surfaces. Slice 4 public conformance passed for exact candidate
+Public product conformance, private held-out evaluation, evaluator
+qualification, and product reliability/readiness are separate proof surfaces.
+Slice 4 public conformance passed for exact candidate
 `a98d648bd0adb2751ee0c09828e0227b1583950f` and its declared scope. That
 evidence includes implementation-specific diagnostics, typed AIDT mapping,
 serialization, product provenance, and the accepted ADR-0028/ADR-0029 semantic
 contract; it is not a private reliability verdict.
 
-Protocol `/4` is immutable historical public evidence. Its accepted bounded
-regression profile verifies the 23 historical blobs, 20 current non-test core
-files, and allowlisted current public tests while excluding the known partial
-`RACE/DATA` representation gap. `BOUNDED_REGRESSION_PASS` is tool/regression
-health only and cannot complete current semantics, Slice 4.5, M1, or a held-out
-gate.
+Protocol `/4` is retired and archived under ADR-0033. It has no active profile,
+command, test, or review role. Its historical representation gap remains part
+of evaluator chronology but supplies no current evidence.
 
 The historical ADR-0030/ADR-0031 `/5` attempt completed WP0 and WP1R, but WP1V
 hard-stopped after final review found noncanonical resolved-link witnesses and

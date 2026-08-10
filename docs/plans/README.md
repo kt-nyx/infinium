@@ -24,9 +24,9 @@ instead of in parallel global folders. Work-package sections remain inside
 their owning slice plan and record unless they require an independently
 authoritative artifact.
 
-The legacy `slices/` directory contains only a tiny historical redirect whose
-exact path is linked by the immutable protocol `/4` authority matrix. It is not
-an active parallel plan hierarchy; its original bytes are Git-inventoried.
+The legacy `slices/` directory has been removed. Its final evaluator-only
+redirect is preserved by Git identity in the retired-asset inventory and the
+external protocol archive; it is not an active parallel plan hierarchy.
 
 ## Authority and history
 

@@ -13,6 +13,11 @@ scope unless the user explicitly authorizes archaeological evaluator review.
 Its presence does not grant private-fixture access or current evaluator
 authority.
 
+Retired public protocol `/4` code and its final regression closure are in the
+separate sibling Git repository `../infinium-evaluator-archive/`. That archive
+is non-authoritative and out of scope unless the user explicitly requests
+protocol archaeology. Do not run or restore it during ordinary product work.
+
 ## Required reading order
 
 Before research, planning, architecture, or implementation work:
@@ -126,9 +131,10 @@ define the correction policy for ordinary product development.
   current public-fixture readers live under
   `fixtures/tooling/Infinium.PublicFixtures/` and use the active product
   validator.
-- `tools/evaluation/Infinium.EvaluatorV2/` is frozen historical protocol `/4`
-  evidence. It is outside the default solution graph and may run only through
-  `eng/invoke-m1-slice4-protocol4-bounded-regression.ps1`.
+- Protocol `/4` is retired from the active repository. Its final public
+  snapshot is archived at `../infinium-evaluator-archive/` commit
+  `c490de9689d8e9f8dfc7eccb3d056ab5b083e9fd`; it has no current entry point,
+  test requirement, review gate, or authority.
 - The former `docs/evaluation/fixtures/independent-slice3-evaluator-20260729/`
   tree is Git-only historical evaluator evidence recorded in the retirement
   inventory. It is not a current public fixture, executable workflow, or
@@ -140,8 +146,8 @@ define the correction policy for ordinary product development.
 Do not infer current authority from a namespace, filename, schema version, or
 historical path. Consult
 `docs/evaluation/product-evaluator-boundary.md` and its linked machine-readable
-inventory; product/default-solution projects must not reference
-`Infinium.EvaluatorV2` or retired paths. Product schema versions, public fixture
+inventory; product/default-solution projects must not reference archived
+evaluator code or retired paths. Product schema versions, public fixture
 package versions, evaluator protocol/scorer/projection versions, and repository
 authority-manifest versions are independent axes and must never be substituted
 for one another.
@@ -170,9 +176,10 @@ The separately versioned evaluator-private fixture repository is default-deny
 for ordinary Infinium work. Do not read its files directly while implementing,
 debugging, tuning, or reviewing production behavior.
 
-Evaluator v2 keeps protocol, schemas, canonicalization, scorer, adapter, and
-calibration public under ADR-0027. Ordinary product implementation must not
-create, orchestrate, repair, replace, or retry private evaluation work. It
+Evaluator v2 protocol, schemas, canonicalization, scorer, adapter, and
+calibration are archived historical material under ADR-0033. Ordinary product
+implementation must not create, orchestrate, repair, replace, or retry private
+evaluation work. It
 stops the affected private operation on a private evaluator or corpus failure;
 unrelated public product work may continue within its accepted scope. Stage B
 authoring and maintenance, Stage C scoring, and successor maintenance are
@@ -181,11 +188,10 @@ scoring returns only the sanitized handoff permitted by governance v2.
 Evaluator or corpus maintenance has no product-scoring authority, and the
 scorer has no maintenance authority.
 
-Protocol `/4` remains immutable historical evidence and may be used only
-through the accepted bounded public regression profile with its known partial
-`RACE/DATA` representation gap excluded. A bounded-regression pass is tool and
-allowlisted public-regression health, not current semantic, held-out, Slice
-4.5, M1, reliability, readiness, or product acceptance.
+Protocol `/4` is retired and archived. It may not be run, restored, resumed,
+or used as review evidence. Its identities are permanently reserved. Current
+product review uses only the accepted M1 continuation verification profile and
+owning slice plans.
 
 ADR-0032 supersedes ADR-0030's active protocol `/5` authorization and
 ADR-0031 only as active `/5` model authority. Protocol `/5` is retired

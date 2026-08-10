@@ -2,6 +2,10 @@
 
 Status: Completed
 
+Current disposition: Historical execution plan. ADR-0033 later retired and
+externally archived protocol `/4`; its evaluator commands and review role are
+no longer current.
+
 Last reviewed: 2026-08-10
 Owner: Project owner
 Prepared: 2026-08-05
@@ -54,7 +58,7 @@ task-specific authorities are:
 
 - [ADR-0028](../../../../../architecture/decisions/ADR-0028-m1-bethesda-semantic-reporting-and-oracle-authority.md);
 - [semantic-authority owner disposition](../../../../../evaluation/evaluator-history.md);
-- [final held-out oracle-authority matrix](../../../../../evaluation/m1-slice4-heldout-oracle-authority-matrix.md);
+- [historical evaluator disposition](../../../../../evaluation/evaluator-history.md);
 - [authority-completion conformance mismatch](../../../../../evaluation/evaluator-history.md);
 - [final held-out scope amendment](../../../../../evaluation/evaluator-history.md);
 - [evaluator-v2 baseline amendment](../../../../../evaluation/m1-evaluation-baseline-evaluator-v2-amendment.md);

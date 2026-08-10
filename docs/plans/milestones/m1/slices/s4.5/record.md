@@ -340,7 +340,7 @@ Exact failure codes, typed AIDT subfields, product contribution/participant/
 winner/gap IDs, taxonomy assignment/analyzer/evidence IDs, denominator labels,
 paths, prose, timestamps, and invocation plumbing are not held-out facts.
 They remain public-conformance or excluded surfaces as classified by the
-[normative matrix](../../../../../evaluation/m1-slice4-heldout-oracle-authority-matrix.md).
+[historical evaluator disposition](../../../../../evaluation/evaluator-history.md).
 
 Public conformance retains the exact `esl-header-flag-missing` regression, full
 typed `BethesdaAiDataFact` byte mapping, deterministic taxonomy assignment,
@@ -389,7 +389,7 @@ Final verification:
 
 The machine-readable 23-file source/test/protocol inventory, matrix identity,
 and calibration identity are frozen in
-[`../../evaluation/evaluator-v2-stage-a-final-bounded-freeze.json`](../../../../../evaluation/evaluator-v2-stage-a-final-bounded-freeze.json).
+[historical evaluator disposition](../../../../../evaluation/evaluator-history.md).
 Historical `/2` and `/3` handoffs remain unchanged.
 
 The owner-supplied B2 input freeze
@@ -1342,6 +1342,24 @@ M1: active.
 
 Later Slice 5 status is maintained only in
 [current project state](../../../../../current-state.md).
+
+## 2026-08-10 post-closeout protocol `/4` retirement
+
+ADR-0033 supersedes this record's former current-status statements about
+bounded protocol `/4` use. The project owner retired the evaluator from active
+development, testing, and review. Its last exact public closure is preserved as
+non-authoritative historical evidence in the separate
+`../infinium-evaluator-archive/` repository at commit
+`c490de9689d8e9f8dfc7eccb3d056ab5b083e9fd`, sourced from Infinium commit
+`f73a2659a07305702eda775699cacd612f8d9fe2`.
+
+No `/4` runtime, schema, evaluator-only test project, embedded validator,
+wrapper, refusal suite, freeze, profile, or authority matrix remains executable
+or authoritative in the active repository. Historical entries above document
+what happened at their original checkpoints; they are not current commands or
+review requirements. Protocols `/4` and `/5` are retired, their identities are
+reserved, and current product verification uses only the accepted public
+continuation profile.
 
 Final repository-wide mechanical counts: 183 Markdown files and 1,974 inline
 links checked, including 1,260 local links with zero unresolved local targets;

@@ -186,8 +186,8 @@ format invariants, and any separate evidence used. xEdit is not an Infinium
 oracle or fixture dependency.
 
 The historical protocol `/4` held-out-authoring rule required every expected
-fact to name an authority and derivation allowed by the
-[final oracle-authority matrix](m1-slice4-heldout-oracle-authority-matrix.md).
+fact to name an authority and derivation allowed by its now-archived final
+oracle-authority matrix; see [Evaluator history](evaluator-history.md).
 Product output, product ID algorithms, exact product diagnostics, and Mutagen
 interpretation alone cannot supply a hidden expected value.
 

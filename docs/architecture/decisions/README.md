@@ -42,7 +42,8 @@ accepted records are superseded rather than rewritten to hide prior decisions.
 | [ADR-0029](ADR-0029-layered-evidence-and-partial-semantic-publication.md) | Accepted | Retain independently proven lower-layer facts, expose later semantic gaps, and require total state-to-fact contracts |
 | [ADR-0030](ADR-0030-protocol-5-successor-qualification.md) | Accepted historical decision; active authority superseded | Historical authorization for a separately qualified protocol `/5`; all active authorization superseded by ADR-0032 |
 | [ADR-0031](ADR-0031-facegen-loose-availability-gap-and-protocol-5-successor-model.md) | Accepted historical decision; active model authority superseded | Preserve the `/5` successor-model decision and durable FaceGen loose-availability gap; active model authority superseded by ADR-0032 |
-| [ADR-0032](ADR-0032-defer-m1-held-out-evaluator-and-continue-public-verification.md) | Accepted | Defer the M1 held-out evaluator, retire `/5` unqualified, retain bounded `/4` regression use, and continue M1 under public verification |
+| [ADR-0032](ADR-0032-defer-m1-held-out-evaluator-and-continue-public-verification.md) | Accepted; partially superseded | Defer the M1 held-out evaluator, retire `/5`, and continue M1 under public verification; `/4` retention superseded by ADR-0033 |
+| [ADR-0033](ADR-0033-retire-and-archive-protocol-4-evaluator.md) | Accepted | Retire `/4` from active code and review, archive its public closure externally, and reserve its identities |
 
 ADR-0015 through ADR-0023 are accepted and jointly select the Wave E
 persistence, lifecycle, application-stack, process, IPC, credential, security,
@@ -74,6 +75,9 @@ active `/5` model authority while retaining the loose-availability rule in
 ADR-0028. It narrowly replaces the held-out-`PASS` prerequisite for Slice 5,
 preserves all isolation and provenance rules, and authorizes the public
 evaluator closeout and continuation profile.
+ADR-0033 supersedes the remaining active protocol `/4` retention and bounded
+regression provisions. Protocol `/4` is archived outside Infinium and no
+evaluator protocol is a current command or review gate.
 ADR-0008 through
 ADR-0011 accept the Wave B integration and semantic
 boundaries, and ADR-0012 accepts the revised Nexus interface/risk boundary,
@@ -86,7 +90,8 @@ authoritative. ADR-0001 through ADR-0011 were accepted on 2026-07-25.
 ADR-0012 through ADR-0023 and ADR-0025 were accepted on 2026-07-28, and
 ADR-0024 was rejected that day. ADR-0026 was accepted on 2026-08-01, and
 ADR-0027 was accepted on 2026-08-04, ADR-0028 and ADR-0029 were accepted on
-2026-08-05, and ADR-0030 through ADR-0032 were accepted on 2026-08-07.
+2026-08-05, ADR-0030 through ADR-0032 were accepted on 2026-08-07, and
+ADR-0033 was accepted on 2026-08-10.
 ADR-0007
 supersedes only ADR-0006's xEdit-specific
 provisions, ADR-0012 supersedes only ADR-0005's API-interface eligibility and
@@ -251,5 +256,6 @@ Use [ADR-template.md](ADR-template.md).
 ADR-0027's historical final M1 application was protocol `/4`, frozen at
 `3693d19563c636cd2879804633ca4ce52448d2c1`. ADR-0030 historically authorized
 a `/5` successor and ADR-0031 its distinct model, but ADR-0032 retired `/5`
-unqualified before implementation or freeze. `/4` remains immutable historical
-evidence with bounded public regression use only; `/3` is historical only.
+unqualified before implementation or freeze. ADR-0033 later retired and
+archived `/4`; protocols `/2` through `/5` now have no active execution or
+review role.
