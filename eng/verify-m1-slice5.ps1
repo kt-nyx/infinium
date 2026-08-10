@@ -613,10 +613,43 @@ function Invoke-ComprehensiveGate {
     if ($LASTEXITCODE -ne 0) {
         throw 'WP6 frozen corpus closure, answer-isolation, or accumulated ownership verification failed.'
     }
-    $tests = Invoke-FocusedTests @(
-        @('test', 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~FrozenWp6ComprehensiveCorpusExecutesWp2ThroughWp5BeforeOracleComparison|FullyQualifiedName~ManagedAnalysisProductPathExecutesWp2Wp3Wp4RecoversPhaseBoundariesAndPublishes|FullyQualifiedName~AnalysisReplayCleanIncrementalAndReplayPreserveUnchangedSemanticOutput|FullyQualifiedName~Slice5CliStartsAndReadsManagedWp2Wp3Wp4ProductExecution'),
-        @('test', 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~DocumentationEvidenceTypesProvenanceLocalUntrustedDocumentationTests|FullyQualifiedName~CandidateSelectionEvaluationTests|FullyQualifiedName~FindingCaseEvaluationTests|FullyQualifiedName~Slice5OperationalEvaluationTests')
-    ) 'WP6 comprehensive product comparison'
+    $comparisonReceiptPath = Join-Path $resolvedOutputRoot 'product-comparison-receipt.json'
+    if (Test-Path -LiteralPath $comparisonReceiptPath -PathType Leaf) {
+        Remove-Item -LiteralPath $comparisonReceiptPath -Force
+    }
+    $priorReceiptRoot = [Environment]::GetEnvironmentVariable('INFINIUM_WP6_RECEIPT_ROOT')
+    try {
+        [Environment]::SetEnvironmentVariable('INFINIUM_WP6_RECEIPT_ROOT', $resolvedOutputRoot)
+        $tests = Invoke-FocusedTests @(
+            @('test', 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~FrozenWp6FourCaseCorpusExecutesManagedCoordinatorAndTypedQueryBeforeOracleComparison|FullyQualifiedName~ManagedRequestRejectsDeliveredInputFingerprintOrSourceReferenceDriftBeforeAdmission|FullyQualifiedName~FrozenWp6ComprehensiveCorpusExecutesWp2ThroughWp5BeforeOracleComparison|FullyQualifiedName~ManagedAnalysisProductPathExecutesWp2Wp3Wp4RecoversPhaseBoundariesAndPublishes|FullyQualifiedName~AnalysisReplayCleanIncrementalAndReplayPreserveUnchangedSemanticOutput|FullyQualifiedName~Slice5CliStartsAndReadsManagedWp2Wp3Wp4ProductExecution'),
+            @('test', 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj', '-c', 'Release', '--no-build', '--nologo', '--filter', 'FullyQualifiedName~DocumentationEvidenceTypesProvenanceLocalUntrustedDocumentationTests|FullyQualifiedName~CandidateSelectionEvaluationTests|FullyQualifiedName~FindingCaseEvaluationTests|FullyQualifiedName~Slice5OperationalEvaluationTests')
+        ) 'WP6 comprehensive product comparison'
+    } finally {
+        [Environment]::SetEnvironmentVariable('INFINIUM_WP6_RECEIPT_ROOT', $priorReceiptRoot)
+    }
+    $comparisonReceipt = Read-StrictJson $comparisonReceiptPath
+    $expectedCaseIds = @('WP6-CROSS-CLEAN-D01', 'WP6-CROSS-UNCHANGED-D02', 'WP6-CROSS-CHANGED-D03', 'WP6-CROSS-REPLAY-D04')
+    $actualCaseIds = @($comparisonReceipt.cases.case_id | Sort-Object)
+    if (([string] $comparisonReceipt.result -cne 'passed') -or
+        ([string] $comparisonReceipt.oracle_load_order -cne 'after-all-four-observations-sealed') -or
+        (($actualCaseIds -join "`n") -cne (@($expectedCaseIds | Sort-Object) -join "`n")) -or
+        (@($comparisonReceipt.cases | Where-Object {
+                ($_.coordinator_terminal_state -cne 'completed-with-gaps') -or
+                ($_.publication_commits -ne 1) -or
+                ($_.application_result_query.request.surface -cne 'Application') -or
+                ($_.application_result_query.request.type -cne 'result-query-request') -or
+                (@($_.application_result_query.request.field_level_predicates).Count -ne 0) -or
+                ($_.application_result_query.response.type -cne 'query-results') -or
+                (-not [bool] $_.application_result_query.response.bounded) -or
+                (-not [bool] $_.application_result_query.response.typed_result_present) -or
+                ($_.application_result_query.response.published_analysis_result_count -ne 1) -or
+                ($_.application_result_query.field_level_query_claim -cne 'none') -or
+                (-not [bool] $_.application_result_query.human_json_projections.semantically_equivalent) -or
+                ($_.external_effects -ne 0) -or
+                ($_.oracle_comparison -cne 'passed')
+            }).Count -ne 0)) {
+        throw 'WP6 four-case product-comparison receipt is missing or overstates a required observation.'
+    }
     $manifestPath = Join-Path $fixtureRoot 'fixture-manifest.v1.json'
     $manifest = Read-StrictJson $manifestPath
     $reviewPath = Join-Path $fixtureRoot 'independent-review.md'
@@ -658,6 +691,8 @@ function Invoke-ComprehensiveGate {
             wp5 = @($manifest.accumulated_package_registrations | Where-Object { $_.package_identity -like 'infinium.m1s5.wp5.*' }).Count
         }
         overlap_note = 'EVAL-0087 is directly exercised only for retained replay dependency identity/history and separately indexes WP5 atomic publication/recovery at its existing bounded scope.'
+        product_comparison_receipt = Get-FileEvidence $comparisonReceiptPath
+        directly_executed_case_ids = $actualCaseIds
         claim_boundary = 'public-synthetic-local-fixture-slice5-conformance-only'
     })
     Write-GateReport 'Comprehensive' ([ordered]@{
@@ -674,6 +709,8 @@ function Invoke-ComprehensiveGate {
         independent_review_verdict = 'ACCEPT'
         product_comparison_order = 'validate-ordinary-input-then-execute-product-then-load-frozen-oracle'
         production_path = 'WP2-WP3-WP4-coordinator-publication-query-output-plus-clean-incremental-replay'
+        product_comparison_receipt = Get-FileEvidence $comparisonReceiptPath
+        directly_executed_case_ids = $actualCaseIds
         focused_tests = $tests
         private_held_out_live_billable_protocol5 = 'not-used'
         claim_boundary = 'public-synthetic-local-fixture-slice5-conformance-only'

@@ -1,79 +1,80 @@
-# M1 Slice 5 WP6 mechanical-seal independent review v5
+# M1 Slice 5 WP6 v1.0.7 independent corpus review
 
-Review date: 2026-08-10  
-Reviewed package: `infinium.m1s5.wp6.cross-stage.clean-incremental-replay.generic-a/1.0.5`  
-Reviewed registry: `infinium.m1s5.wp6.cross-stage-corpus.20260810.1/1.0.5`  
-Partition: `development`  
+Review date: 2026-08-10
+Reviewed package: `infinium.m1s5.wp6.cross-stage.clean-incremental-replay.generic-a/1.0.7`
+Reviewed registry: `infinium.m1s5.wp6.cross-stage-corpus.20260810.1/1.0.7`
+Partition: `development`
 Verdict: **ACCEPT**
 
-Frozen v1.0.5 changes only required package/schema version strings, mechanical package seals, the three corrected WP3 public-manifest seals, and their explanatory README/partition-history metadata. The ordinary facts and semantic oracle become byte-identical to accepted v1.0.4 after replacing only `1.0.5` with `1.0.4`. Product output was not used, MF-01 through MF-05 remain closed, and truth did not change.
+The author-frozen v1.0.7 package closes MF-06 and MF-07 without altering ordinary facts or expected semantic truth. D01 now produces, captures, and retains exact `result.001`; D02-D04 consume only that D01 result under explicit execution order, no-substitution, and deletion-fails-closed rules. Every case uses the accepted bounded Application `result-query-request` / `query-results` surface with a captured run identity and makes no field-level query claim. MF-01 through MF-07 are closed.
 
 ## Exact frozen identity and closure
 
-The manifest is included in the ten declared package paths and intentionally excluded from its recursively hash-bound nine-entry `files` array. This review externally freezes it as:
+The manifest is included in the ten declared paths and intentionally excluded from its recursively hash-bound nine-entry `files` array. This review externally freezes it as:
 
-- `fixture-manifest.v1.json`: **11,533 bytes**; SHA-256 `8c6cc9657a9821ad236f0251363c43d668ccbf2940c8663df18894bf9a2ac4bc`
-- recomputed ordered nine-entry content aggregate: SHA-256 `d4000b171d54c522ae0bb9ae1ddc874d82068061e17482d87ee2e24f8f0b1f99`
+- `fixture-manifest.v1.json`: **12,447 bytes**; SHA-256 `0ec59305ac08d4b50ff6b44ff422dfd52e1b1555fd789d74785421b7832f0363`
+- recomputed ordered nine-entry aggregate: SHA-256 `6f44fdd34b871cdb46339fe8763e374395142579e5381dd8c800614e48dbc5b3`
 - closure: 10 declared paths, 10 files present, no extra or missing file
 
 | Path | Bytes | Recomputed SHA-256 |
 |---|---:|---|
-| `expected-results.v1.json` | 4,796 | `069e24721eea57253c32d805dd6709f7dbd39a06287ec8f1d4e7f197c69336e5` |
-| `fixture-manifest.v1.json` | 11,533 | `8c6cc9657a9821ad236f0251363c43d668ccbf2940c8663df18894bf9a2ac4bc` |
-| `harness-envelope.v1.json` | 10,199 | `e7da161525dfab6d76b54b73ddc1f4152c90e2766bcd74ff88b003da093261fa` |
-| `ordinary-product-input.schema.json` | 7,942 | `67e1806a0a7767574be78cc862e5b8bb08e8774d6310b8b3b35bee92c18f3514` |
-| `ordinary-product-inputs.v1.json` | 7,900 | `26a27c326b606ce10745a28d1c24f384b4446bff9bdf10242be21dca6a2532f5` |
-| `partition-history.v1.json` | 1,854 | `8d8b235828b98c39f6ec9e06a49da338a100a3141bd470d23111b75494bbf88b` |
-| `provenance.v1.json` | 882 | `4945dbf011af9cd0a8b56245ceaa1a4940a76f878e614b666ed26dad5bc4687f` |
-| `README.md` | 3,184 | `651f4022457ec27a99cd73c41f417cbcd2c57e9e40006f0a68fb2f134f77789b` |
-| `redistribution.v1.json` | 609 | `0e32859594893f14deedb9113d38bfcc0766f00ec0bcec362a859d97cbd3afee` |
-| `replay-dependencies.v1.json` | 1,941 | `7cfbcf09285ccbf5533e3671e04715f8ecd104f077be3416856c08af74400b63` |
+| `expected-results.v1.json` | 4,796 | `7e6808925f7ef9029c998a5e4bd970546b4dcda6f54931a6987234dfc0dc5e36` |
+| `fixture-manifest.v1.json` | 12,447 | `0ec59305ac08d4b50ff6b44ff422dfd52e1b1555fd789d74785421b7832f0363` |
+| `harness-envelope.v1.json` | 18,394 | `5bb82e3a3a4980dc5c163a2c024cdc68ce641dfc0381d450e00eb2013f7592e2` |
+| `ordinary-product-input.schema.json` | 7,942 | `23c9cb6aa1457535507b03089b4a2e4147bde2726bdcf50f458888c1f36f7b3f` |
+| `ordinary-product-inputs.v1.json` | 7,900 | `c1a2f33d3a2e1c29fb3e222ea36c6584ac888d4aa20abef4e9db5bb71355c6a5` |
+| `partition-history.v1.json` | 2,595 | `b33a96d415d07d326a3d9cb0a11ebacc4e22564ad63f6587c7ec6db10f31b445` |
+| `provenance.v1.json` | 956 | `43419c96a3a6e6dab235d46c545f941201f8597197193326ade22356bb9964f8` |
+| `README.md` | 4,873 | `ff83d651b06baf1298623f971945fd8fce81e3a058b5afeb488b14aa19fb02c7` |
+| `redistribution.v1.json` | 609 | `e5d8869d7ed8859200b5473ece40a229f6df0ae60dbf01bae95695f1326817db` |
+| `replay-dependencies.v1.json` | 2,479 | `684cfa56786d5987ccf3ac8d011eef4f1e945d29126a1782074d8acbbd433aaa` |
 
-All nine internally declared file lengths and hashes match. The aggregate independently recomputes from the declared ordered `path:bytes:sha256` plus LF representation. All 11 accumulated package registrations resolve to their declared current frozen bytes and hashes.
+All nine internal lengths and hashes match current package bytes. The aggregate independently recomputes from the declared ordered `path:bytes:sha256` plus LF representation.
 
-## v1.0.4-to-v1.0.5 semantic invariance
-
-The following v1.0.5 files are byte-for-byte equal to the accepted promoted v1.0.4 files after replacing every `1.0.5` occurrence with `1.0.4` and making no other transformation:
-
-| File | v1.0.5 occurrences normalized | Result |
-|---|---:|---|
-| `ordinary-product-inputs.v1.json` | 1 | EXACT |
-| `expected-results.v1.json` | 1 | EXACT |
-| `ordinary-product-input.schema.json` | 2 | EXACT |
-| `harness-envelope.v1.json` | 2 | EXACT |
-| `provenance.v1.json` | 2 | EXACT |
-| `redistribution.v1.json` | 2 | EXACT |
-| `replay-dependencies.v1.json` | 2 | EXACT |
-
-This proves that ordinary facts, offsets, causal inputs, coverage population, isolated expected counts/invariants, phase/replay rules, ownership mappings, provenance assertions, and replay/redistribution semantics did not change. The manifest retains the same package paths, file roles, non-WP3 registrations, source-authority provenance block, isolation statement, known gaps, and claim boundary as v1.0.4. Its only registration deltas are the three WP3 public-manifest SHA-256 seals. README and partition history add only the v1.0.5 seal explanation/version event.
-
-`expected-results.v1.json` has `product_output_used: false`. Provenance has `product_output_access: false` and `product_comparison_occurred: false`. Every partition-history event, including v1.0.5, has `product_comparison_occurred: false`. The change is therefore mechanical seal metadata, not product-derived truth repair.
-
-## Corrected WP3 accumulated registrations
-
-All three declarations equal the current corrected public manifests at their exact paths:
-
-| Registration | Bytes | Recomputed/current SHA-256 | Result |
-|---|---:|---|---|
-| `CAND-WP3-SCALE-VAL-v1/1.0.0` | 1,442 | `f0db950e7e5110bf4b4c60005a1dca84195abe2217429c4c6b343de865ac5ae2` | EXACT |
-| `CAND-WP3-SEMANTIC-DEV-v1/1.0.0` | 1,465 | `635a3e6f75251867d14f328ac5e450cfe6784005753c7717be51d431fcc173e1` | EXACT |
-| `CAND-WP3-STRESS-DEV-v1/1.0.0` | 1,494 | `54dd5df9aac989e7443eaffc8e80cbec8db58b75df2d675f32ebd0ca28b4ae5a` | EXACT |
-
-Their identities, versions, partitions, purposes, input/oracle/provenance/replay fingerprints, bounded claims, and sealed review state remain independently registered; v1.0.5 merely replaces the stale public-manifest byte seals.
-
-## Regression checklist
+## Validation checklist
 
 | Check | Result |
 |---|---|
-| JSON and strict schema | PASS. All nine JSON documents parse and the ordinary input validates. Independently constructed top-level/nested extras, missing required data, invalid mode, duplicate dependency ID, and uppercase SHA mutations are rejected. |
-| Answer isolation | PASS. The ordinary product input is version-only changed and still contains no answer/oracle/expected/case/EVAL/package/partition/winner/canary metadata. Harness and oracle remain isolated. |
-| MF-01 | CLOSED. No supported-cause or oracle membership entered ordinary input. |
-| MF-02 | CLOSED. WP3/WP4 truth remains exactly the accepted independently derivable v1.0.4 truth. |
-| MF-03 | CLOSED. Exact ten-file closure, internal hashes, external manifest freeze, aggregate, schema, and four governance records pass. |
-| MF-04 | CLOSED. Eleven prerequisite registrations resolve; the three WP3 seals now match current corrected public manifests. |
-| MF-05 | CLOSED. The version-only-identical ownership audit keeps `ANALYSIS-019`, `OPS-004`, `ADR-0017`, and `ADR-0023` outside direct ownership and maps them accurately as inherited-only Bethesda, scale/structural-limit, desktop/Windows-stack, and cost-ledger/budget authority. |
-| Truth and replay | PASS. Expected truth, ordinary facts, source offsets, phase invalidation, checkpoint reuse, run-bound recomputation, atomic publication, human/JSON equality, gaps, and zero network/provider effects are unchanged. |
-| Provenance and anti-overfitting | PASS. Synthetic/public provenance and redistribution remain unchanged; no real-mod or fixture-specific production exception was introduced. |
+| JSON and strict ordinary-input schema | PASS. All nine JSON documents parse and the ordinary input validates. Independently constructed top-level/nested extras, missing required data, invalid mode, duplicate dependency ID, and uppercase SHA mutations are rejected. |
+| Answer isolation | PASS. The product-reachable input has no answer, oracle, expected, case, EVAL, package, partition, winner, canary, or receipt metadata. Harness bindings/receipts and oracle remain isolated and fail closed. |
+| Package/source evidence | PASS. Revision 1 remains 167 UTF-8 bytes at `c30f163b5ef32be392d1f046d0cf84c054e060df1f5b99e9954f86ec9763fe18`; revision 2 remains 202 bytes at `3545a682abed293ddcbec2f1525a956d9e7264500ff7f709f18b3fd1b3425c92`. Accepted passage offsets and semantic facts are unchanged. |
+| Four request bindings | PASS. D01-D04 map one-to-one to `input.001`-`input.004`; mode, revision, prior-result literal, and network-off state match exactly. |
+| Four oracle bindings/order | PASS. Case IDs match `/cases/0` through `/cases/3`; both per-case locations prohibit pre-observation loading. Global order selects and resolves bindings, validates/dispatches ordinary input, captures run identity, executes/publishes once, issues the bounded result query, seals observation/receipts, then loads and compares the selected oracle. |
+| D01 result production/capture/retention | PASS. D01 has no prior input, produces exact `result.001`, captures it from its single atomic publication as `published-analysis-result-binding`, retains it, and reports zero hidden substitutions. The global flow names D01 as the sole producer. |
+| D02-D04 exact consumption | PASS. Each consumes `result.001` from D01 using `exact-retained-identity`; the fixed execution order places D01 first. The replay record retains `prior-result.001`, names all three consumers, records zero substitutions, forbids hidden substitution, and makes deletion render D02-D04 unavailable rather than permitting replacement. |
+| Coordinator/WP2-WP4/publication | PASS. All cases require coordinator admission/completion, the authority-correct clean/reuse/recompute phase disposition, exactly one atomic publication, and zero partial publication. Changed-source invalidation and retained replay remain distinct. |
+| Generic Application result query | PASS. Every case uses `surface: Application`, request `result-query-request`, response `query-results`, captured opaque run binding, bounded response, one published typed analysis result, empty field predicates, and `field_level_query_claim: none`. It makes no invented documentation-application lookup claim. |
+| Human/JSON/no-effects | PASS. Each query receipt and output receipt requires human and JSON presence plus semantic equality. Network calls, provider dispatches, and external mutations are zero. |
+| Registrations | PASS. All 11 package declarations resolve at exact current bytes/hashes: both WP2 packages, WP3 semantic/scale/stress, all four WP4 identities, and both WP5 partitions. |
+| Ownership | PASS. The ownership block is unchanged from v1.0.6. Direct assertions remain bounded; `ANALYSIS-019`, `OPS-004`, `ADR-0017`, and `ADR-0023` remain accurate inherited-only mappings. |
+| Source-authority revision | PASS. Manifest and provenance agree on `e7de0305515657223c513195f8323b2649b6c7c8`. The immutable resolution policy and all 13 frozen path/byte/SHA entries are unchanged from v1.0.6; later mutable state cannot substitute authority, and adopting later authority requires a new version/review. |
+| Provenance/replay/history/redistribution | PASS. Product source/test/output/private access and product comparison are false; prohibited sources are empty. Replay closure now includes the prior-result dependency and correct deletion/substitution semantics. Partition history is append-only with every comparison flag false. Content remains project-authored synthetic, public-redistributable, non-private, and secret-free. |
+
+## Semantic invariance
+
+After replacing `1.0.7` with `1.0.6` and making no other transformation, these files are byte-identical to the independently reviewed v1.0.6 bodies:
+
+- `ordinary-product-inputs.v1.json`
+- `expected-results.v1.json`
+- `ordinary-product-input.schema.json`
+- `provenance.v1.json`
+- `redistribution.v1.json`
+
+Therefore ordinary facts, source text and offsets, WP2-WP4 truth, phase/replay expected results, product-output non-use, strict schema, source-authority revision, and redistribution truth did not change. Harness changes are limited to the explicit prior-result flow, captured run bindings, accepted generic result-query receipts, and sequencing needed to close MF-06/MF-07. Replay dependencies add the corresponding retained prior result and fail-closed deletion/substitution behavior. README, partition history, and manifest record and seal those changes.
+
+`product_output_used`, author `product_output_access`, provenance `product_comparison_occurred`, and every partition-history comparison flag remain false. No semantic truth was derived from product output.
+
+## Finding closure
+
+| Finding | Status | Closure basis |
+|---|---|---|
+| MF-01 — answer-bearing causal conclusion | **CLOSED** | Ordinary input remains answer-free. |
+| MF-02 — WP3/WP4 truth not independently derivable | **CLOSED** | Neutral facts and exact oracle are version-only unchanged. |
+| MF-03 — package not exactly closed | **CLOSED** | Ten-file closure, hashes, aggregate, schema, and governance records pass. |
+| MF-04 — incomplete WP2-WP5 accumulation | **CLOSED** | All 11 current registrations resolve exactly. |
+| MF-05 — unscoped/inaccurate ownership | **CLOSED** | Accepted direct/inherited mappings are unchanged. |
+| MF-06 — D02-D04 lacked an executable prior result | **CLOSED** | D01 exact production/capture/retention, ordered consumers, retained replay dependency, no substitution, and deletion failure are explicit and consistent. |
+| MF-07 — unsupported field-level query | **CLOSED** | All four cases use only bounded Application `result-query-request` / `query-results`, captured run identity, typed result presence, and no field predicate or field-level claim. |
 
 ## Classified findings
 
@@ -99,8 +100,8 @@ None observed.
 
 ## Isolation attestation
 
-I preserved the answer-free checklist established before the earlier corpus reviews and reviewed only the ten public author files, the accepted promoted v1.0.4 public corpus baseline, and the declared allowed current/frozen public authorities. I did not inspect product source, tests, `eng/`, build/product output, Git state/diff/history, private/evaluator-private material, human-guide material, legacy or historical evaluator implementation/material, protocol `/5`, or live/provider material. I did not execute product code or use product output as truth.
+I reviewed only the ten v1.0.7 author files, allowed current public authority, accepted public WP2-WP5 fixture handoffs, and the previously reviewed v1.0.6 public author freeze for normalized comparison. I did not inspect product source, tests, product/build output, current uncommitted product changes, any final whole-slice review report, private/evaluator-private material, legacy or historical evaluator implementation/material, Git state/diff/history, protocol `/5`, human-guide material, or live/provider material. No product comparison was performed or used.
 
 ## Verdict
 
-**ACCEPT.** Frozen v1.0.5 is an exact mechanical reseal of accepted v1.0.4 truth. The ten-file package and aggregate close exactly, the three WP3 registrations now match the corrected current public manifests, `product_output_used` remains false, MF-01 through MF-05 remain closed, and no truth, ordinary fact, semantic phase/replay rule, ownership boundary, or isolation property changed.
+**ACCEPT.** Frozen v1.0.7 satisfies exact package closure, hashing, aggregate, strict answer-free input validation, executable ordered D01-D04 bindings, exact retained prior-result semantics, post-observation oracle order, authority-correct WP2-WP4/publication/output receipts, accepted generic bounded Application result query, 11-package accumulation, ownership, immutable source-authority provenance, replay/partition/redistribution governance, and semantic invariance. MF-01 through MF-07 are closed with no remaining finding or isolation breach.

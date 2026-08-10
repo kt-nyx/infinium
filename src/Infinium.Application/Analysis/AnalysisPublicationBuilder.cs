@@ -617,6 +617,13 @@ public static class AnalysisPublicationBuilder
             Hash(AnalysisExecutionInputJsonCodec.Serialize(assignment.ExecutionInput)));
         foreach ((string kind, ArtifactReferenceContract value) in References(assignment.ExecutionInput))
         {
+            // Retained documentation is also emitted below as the typed phase output.
+            // Keep one replay node for that identity instead of assigning both the
+            // generic source-input kind and the authoritative documentation kind.
+            if (value.ArtifactId == documentation.PayloadId)
+            {
+                continue;
+            }
             Add(value.ArtifactId.Value, kind, value.ArtifactVersion.ToString(), value.Fingerprint.Value,
                 value.Availability == "retained" ? Slice5ResultState.Present : Slice5ResultState.Unavailable);
         }
@@ -642,7 +649,8 @@ public static class AnalysisPublicationBuilder
             ReplayDependencyNodeContract first = group.First();
             if (group.Any(item => item != first))
             {
-                throw new InvalidDataException("A replay dependency identity resolves to drifted retained metadata.");
+                throw new InvalidDataException(
+                    $"Replay dependency identity '{group.Key.Value}' resolves to drifted retained metadata.");
             }
             return first;
         }).ToList();

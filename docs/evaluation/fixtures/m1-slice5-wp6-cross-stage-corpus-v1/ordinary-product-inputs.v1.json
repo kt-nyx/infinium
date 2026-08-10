@@ -1,5 +1,5 @@
 {
-  "schema_identity": "infinium.public-fixture.wp6.ordinary-cross-stage-inputs/1.0.5",
+  "schema_identity": "infinium.public-fixture.wp6.ordinary-cross-stage-inputs/1.0.7",
   "content_class": "ordinary-product-input-only",
   "shared_facts": {
     "bindings": {

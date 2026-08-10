@@ -1,6 +1,6 @@
 # M1 Slice 5 — Evidence, documentation, candidates, cases, and replay
 
-Status: `M1/S5/WP1` through `M1/S5/WP5` complete and reviewed; `M1/S5/WP6` implementation and independent review complete, awaiting owner acceptance; Slice 5 is not complete
+Status: `M1/S5/WP1` through `M1/S5/WP5` complete and reviewed; `M1/S5/WP6` corrected implementation and independent corpus review complete, fresh final re-review pending; Slice 5 is not complete
 
 Plan: `M1/S5`
 
@@ -1467,9 +1467,12 @@ Implementation date: 2026-08-10
 
 Starting commit: `e7de0305515657223c513195f8323b2649b6c7c8`
 
-Status: Implementation and independent corpus review complete; fresh final
-whole-slice review pending the exact candidate commit; owner acceptance is
-requested. Slice 5 remains active and is not marked accepted or complete.
+Status: Implementation and independent corpus review complete. The first exact
+candidate (`50195fdd33f030f75364f703f636b6ecc1fdb7bd`) received a fresh
+whole-slice `CORRECT` verdict; its must-fix findings have been corrected and a
+fresh review of the corrected exact commit is pending. Owner acceptance is
+requested only after that review. Slice 5 remains active and is not marked
+accepted or complete.
 
 ### Scope and authority
 
@@ -1483,8 +1486,8 @@ did not use the rejected 28-package corpus or infer current authority from
 historical evaluator material.
 
 The final corpus is
-`infinium.m1s5.wp6.cross-stage-corpus.20260810.1/1.0.5`, package
-`infinium.m1s5.wp6.cross-stage.clean-incremental-replay.generic-a/1.0.5`, in
+`infinium.m1s5.wp6.cross-stage-corpus.20260810.1/1.0.7`, package
+`infinium.m1s5.wp6.cross-stage.clean-incremental-replay.generic-a/1.0.7`, in
 the `development` partition. It contains four cases and exactly ten package
 files. Its manifest registers the exact eleven accepted WP2-WP5 packages: two
 WP2, three WP3, four WP4, and two WP5 packages.
@@ -1500,41 +1503,53 @@ facts to derive the WP3/WP4 counts independently, incomplete package closure,
 incomplete WP2-WP5 registration, and overbroad authority ownership. Four
 correction/re-review iterations removed the leaked answer, made every expected
 count independently derivable, closed the exact file/package inventory, and
-separated four-case exercise from inherited package indexing. The final
-v1.0.5 review verdict is **ACCEPT**, with all five findings closed and no
-answer-isolation or authority breach.
+separated four-case exercise from inherited package indexing. The v1.0.5
+review closed those five findings. The first whole-slice review then showed
+that the harness selected only D01 and bypassed the coordinator/query surface.
+Product-blind corpus v1.0.6 added four bindings and receipts, but its
+independent review correctly rejected missing D01 prior-result production and
+an invented field-level documentation query. Product-blind v1.0.7 corrected
+both: D01 produces, captures, and retains `result.001`; D02-D04 consume that
+exact result without substitution; and every case uses only the accepted
+bounded Application `result-query-request`/`query-results` surface. The final
+v1.0.7 corpus review verdict is **ACCEPT**, with all seven corpus findings
+closed and no answer-isolation or authority breach.
 
 The independent reviewer confirmed that the ordinary inputs, expected results,
 schema, harness semantics, provenance, replay, and redistribution facts are
-byte-identical to the accepted v1.0.4 semantics after package-version
-normalization. Only three accumulated WP3 manifest registrations changed in
-v1.0.5. `product_output_used`, `product_output_access`, and
+semantically invariant with the accepted v1.0.5 corpus after package-version
+normalization. The added material is harness-only run binding, prior-result
+flow, receipt, immutable source-authority, and generic Application query
+evidence. `product_output_used`, `product_output_access`, and
 `product_output_comparison` remained false throughout authoring and review.
 
 | Frozen WP6 evidence | Bytes | SHA-256 |
 |---|---:|---|
-| `ordinary-product-inputs.v1.json` | 7900 | `26a27c326b606ce10745a28d1c24f384b4446bff9bdf10242be21dca6a2532f5` |
-| `ordinary-product-input.schema.json` | 7942 | `67e1806a0a7767574be78cc862e5b8bb08e8774d6310b8b3b35bee92c18f3514` |
-| `harness-envelope.v1.json` | 10199 | `e7da161525dfab6d76b54b73ddc1f4152c90e2766bcd74ff88b003da093261fa` |
-| `expected-results.v1.json` | 4796 | `069e24721eea57253c32d805dd6709f7dbd39a06287ec8f1d4e7f197c69336e5` |
-| `provenance.v1.json` | 882 | `4945dbf011af9cd0a8b56245ceaa1a4940a76f878e614b666ed26dad5bc4687f` |
-| `replay-dependencies.v1.json` | 1941 | `7cfbcf09285ccbf5533e3671e04715f8ecd104f077be3416856c08af74400b63` |
-| `redistribution.v1.json` | 609 | `0e32859594893f14deedb9113d38bfcc0766f00ec0bcec362a859d97cbd3afee` |
-| `partition-history.v1.json` | 1854 | `8d8b235828b98c39f6ec9e06a49da338a100a3141bd470d23111b75494bbf88b` |
-| `README.md` | 3184 | `651f4022457ec27a99cd73c41f417cbcd2c57e9e40006f0a68fb2f134f77789b` |
-| `fixture-manifest.v1.json` | 11533 | `8c6cc9657a9821ad236f0251363c43d668ccbf2940c8663df18894bf9a2ac4bc` |
-| ten-file content aggregate | — | `d4000b171d54c522ae0bb9ae1ddc874d82068061e17482d87ee2e24f8f0b1f99` |
-| external `independent-review.md` | 7791 | `7b405175ee7afa923bce3112d63f089c5b9af161091e7dff8d866f7e63c27691` |
+| `ordinary-product-inputs.v1.json` | 7900 | `c1a2f33d3a2e1c29fb3e222ea36c6584ac888d4aa20abef4e9db5bb71355c6a5` |
+| `ordinary-product-input.schema.json` | 7942 | `23c9cb6aa1457535507b03089b4a2e4147bde2726bdcf50f458888c1f36f7b3f` |
+| `harness-envelope.v1.json` | 18394 | `5bb82e3a3a4980dc5c163a2c024cdc68ce641dfc0381d450e00eb2013f7592e2` |
+| `expected-results.v1.json` | 4796 | `7e6808925f7ef9029c998a5e4bd970546b4dcda6f54931a6987234dfc0dc5e36` |
+| `provenance.v1.json` | 956 | `43419c96a3a6e6dab235d46c545f941201f8597197193326ade22356bb9964f8` |
+| `replay-dependencies.v1.json` | 2479 | `684cfa56786d5987ccf3ac8d011eef4f1e945d29126a1782074d8acbbd433aaa` |
+| `redistribution.v1.json` | 609 | `e5d8869d7ed8859200b5473ece40a229f6df0ae60dbf01bae95695f1326817db` |
+| `partition-history.v1.json` | 2595 | `b33a96d415d07d326a3d9cb0a11ebacc4e22564ad63f6587c7ec6db10f31b445` |
+| `README.md` | 4873 | `ff83d651b06baf1298623f971945fd8fce81e3a058b5afeb488b14aa19fb02c7` |
+| `fixture-manifest.v1.json` | 12447 | `0ec59305ac08d4b50ff6b44ff422dfd52e1b1555fd789d74785421b7832f0363` |
+| ten-file content aggregate | — | `6f44fdd34b871cdb46339fe8763e374395142579e5381dd8c800614e48dbc5b3` |
+| external `independent-review.md` | 10158 | `ec3ff76d511082edd8c3d451cfc9cdae5a6f5f22a4e0de0415957bd439cb69f4` |
 
 ### Product execution and semantic comparison
 
-The new integration harness first validates the ordinary inputs against the
-closed schema and scans them for forbidden expected-output vocabulary. It then
-maps only neutral facts through the production `DocumentationEvidencePhase`,
-`CandidateAnalysisPhase`, `FindingCaseAnalysisPhase`, coordinator execution,
-atomic publication, typed query, human output, and JSON output. Only after all
-product views are retained does it load the independently frozen expected
-results.
+The corrected integration harness first validates the ordinary inputs against
+the closed schema and scans them for forbidden expected-output vocabulary. It
+then starts the real in-process coordinator and worker pipe surfaces, admits
+all four requests through `ManagedRunExecutor`, executes WP2-WP4 through
+`ManagedAnalysisOrchestrator`, commits atomic publication, and retrieves each
+published result through the typed Application `GetAnalysisOutput` boundary.
+Only after all four product observations and receipts are sealed does it load
+the independently frozen expected results. The managed request now accepts an
+optional delivered candidate input only with its exact byte fingerprint and
+source reference; drift is rejected before admission.
 
 The comparison passed these exact cross-stage facts:
 
@@ -1549,10 +1564,22 @@ The comparison passed these exact cross-stage facts:
   semantically equal human and JSON views, exact clean/unchanged-incremental/
   changed-source/retained-replay behavior, and zero external effects.
 
-The focused comprehensive gate passed four integration tests and fourteen
+The focused comprehensive gate passed six integration tests and fourteen
 accumulated evaluation tests with no skips. These tests cover the frozen WP6
-comparison, the corrected managed WP2-WP5 path, clean/incremental/replay
+four-case comparison, delivered-input admission drift, the supplemental direct
+clean comparison, the managed WP2-WP5 path, clean/incremental/replay
 equivalence, CLI readback, and the accepted WP2-WP5 semantic packages.
+
+The first legitimate four-case run exposed and repaired two product defects.
+Retained documentation had been compared across the semantic-payload and
+persistence-payload identity domains, preventing exact checkpoint aliasing.
+The replay dependency builder also emitted retained documentation once as a
+generic source input and again as a typed documentation output, producing one
+identity with conflicting kinds. Reuse now requires exact prior checkpoint
+hash and length, and publication emits only the authoritative typed replay
+node. Cross-run factual fixture IDs that legitimately vary by run are scoped
+to the run so the authoritative store continues to reject actual semantic ID
+substitution.
 
 ### Repaired WP3 fixture closure
 
@@ -1581,7 +1608,7 @@ current identities.
 ### Traceability audit
 
 The generated `traceability.json` separates direct four-case exercise from
-inherited package indexing. The corpus directly exercises 33 requirement IDs,
+inherited package indexing. The corpus directly exercises 35 requirement IDs,
 7 ADR IDs, and 13 evaluation entries at their stated assertions and exclusions.
 It separately indexes 26 inherited requirements, 8 inherited ADRs, and 15
 inherited evaluation entries from accepted WP1-WP5 evidence. In particular,
@@ -1595,41 +1622,43 @@ scope.
 ### Gate and verification evidence
 
 `pwsh -NoProfile -ExecutionPolicy Bypass -File eng/verify-m1-slice5.ps1
--Gate All -OutputRoot artifacts/m1-slice5/wp6` passed the exact aggregate of
+-Gate All -OutputRoot artifacts/m1-slice5/wp6-final-verification` passed the exact aggregate of
 `Contracts`, `Documentation`, `Candidates`, `CandidateScale`, `Cases`,
 `Replay`, `Output`, `Safety`, and `Comprehensive`. The final retained reports
 are:
 
 | Gate report | SHA-256 |
 |---|---|
-| `contracts.json` | `a4a1be6c573a93c43801b16722b54286e36292320baae06e285582f33a8f139c` |
-| `documentation.json` | `ecdbd8ca2bed17c08da464ed91208b12d6ab5b636e2ab59bffa0568ee5630c9a` |
-| `candidates.json` | `0afb5bab4305c5529f985fd51fa7705d5d4f29bcad5de34d0dd7c7de5169c6c8` |
-| `candidatescale.json` | `a4f0f25bb3b2b68f796452416dae6fffc6b042f714bfb43bd75b18d3bd69fe1b` |
-| `cases.json` | `f4a0700ee5351157b747d00ba217bae9ce29595354c7a1f54bcbc9431da6c19e` |
-| `replay.json` | `44a311267df3f957718f65b144520fe7db38132b0aeee66f722b2f2a759c2df8` |
-| `output.json` | `d5855c5006d22a7ff56a4ab7d9fd08415c2d897fd83bfe036889980783b4e79a` |
-| `safety.json` | `a7e36a7294b3d052a66a2752d361bf6eed675d040e4e9f407e28ea7c76f652a8` |
-| `traceability.json` | `4f31b3d0f176fb33f403f3016f1ddcafdddb3489615e0d4c769ac6686d423ed5` |
-| `comprehensive.json` | `15345a7b96084be9d153d55ede57f2708b1cf1c019ab98c5539ea4e27a07af06` |
-| `all.json` | `aaa195832c816c8b942d49e46825dcc5a8ddc9bbfd7e9613497f1413e0e14e28` |
+| `contracts.json` | `f15e51ece796b5823098ec57f6c18191fac50076b652bcfa4f40b67aaadae863` |
+| `documentation.json` | `ce9ab13f8bbb5937608a9a63912d4d57dccde5f4fe11e68628cb961fec35dfa4` |
+| `candidates.json` | `17c19aba241c8102090f9e1d4446119f0cd89f90cfbdeaca48a6da824aabf4fd` |
+| `candidatescale.json` | `4e1a3b3b2f0ff41f0ef5221c84fe7a107ff11194a7b0e715701f77ca7f6a186e` |
+| `cases.json` | `65ffb8494b8eb95a628c21a7d4534da2d3f5d2ec5263de8c3c0bcfa0d63e490a` |
+| `replay.json` | `aaf542260e5c33974ea252417364b733b60ac622d10513e44ba552d967968880` |
+| `output.json` | `55817cda98f05d9c625ce0b7f20261498ce7c20cb23b45ffd60aed40053c63ef` |
+| `safety.json` | `d61b449b082f73cf379629a7b67cd1da7684d2b1aabf48f676587f167983678c` |
+| `traceability.json` | `1b60b71fcfedaa474ec5a0a6f0416d6d50cdfa8fb419badb822aa101bd96986a` |
+| `comprehensive.json` | `82f72a57014b46d085c775c4e20ab686d109ffa08a7f66217f2724e5f9ba3428` |
+| `product-comparison-receipt.json` | `306aed96ecd20b2513cb3e4b92ae2cd745be5211dcbe64550364bafb92210069` |
+| `all.json` | `4f8962893a0903933915352ba5e4980bb86f655d64e1e0d861adbe771e1d2703` |
 
 Locked restore and the Release build passed with zero warnings and zero errors.
 The category floors passed:
 
-- `M1Unit`: 138 passed and one environment-dependent symbolic-link skip;
-- `M1Contract`: 45 passed with no skips;
-- `M1Integration`: 55 passed with no skips;
-- `M1Evaluation`: 52 passed and eight private/local-environment admission skips;
-- `M1Security`: 9 passed with no skips; and
-- `M1Fault`: 13 passed with no skips.
+- `M1Unit`: 148 passed and one environment-dependent symbolic-link skip;
+- `M1Contract`: 111 passed with no skips;
+- `M1Integration`: 70 passed with no skips;
+- `M1Evaluation`: 75 passed and eight private/local-environment admission skips;
+- `M1Security`: 109 passed and three environment/private-admission skips; and
+- `M1Fault`: 104 passed and three private/local-environment admission skips.
 
-The unfiltered Release suite passed 156 unit, 139 contract, 66 integration, and
-53 evaluation tests: 414 passed and 9 skipped overall. The supported
+The unfiltered Release suite passed 156 unit, 139 contract, 68 integration, and
+53 evaluation tests: 416 passed and 9 skipped overall. The supported
 `dotnet format Infinium.sln --verify-no-changes --no-restore` check and the
 PowerShell 7 dependency-manifest check passed. Strict changed-JSON parsing,
 changed-Markdown local-link validation, `git diff --check`, and a final semantic
-diff audit are required again after the final review record is settled.
+diff audit are run after this record is settled and again after final review
+closeout.
 
 Protocol `/4` was not run because the continuation verification profile does
 not require the optional frozen historical regression for this change. No
@@ -1673,6 +1702,23 @@ acceptance; Slice 5 active and not complete; contracts
 
 ### Fresh final whole-slice review
 
-Pending against the exact local candidate commit. Its final input commit,
-reviewed file set, classified findings, corrections, re-review result, and
-judgment will be appended here before final handoff.
+The first exact candidate commit was
+`50195fdd33f030f75364f703f636b6ecc1fdb7bd`. Its fresh final review returned
+**CORRECT**. The report is
+`artifacts/m1-slice5/wp6-final-review/final-review.md`, 11465 bytes, SHA-256
+`5f6cd7a84e48e2e183c0d3e83c4ca4ab33f5b8fe5bce857ad489278698e49f12`.
+It classified five must-fix findings: D02-D04 were not executed; D01 bypassed
+the managed coordinator and typed query; Comprehensive/Traceability and this
+record therefore overclaimed scope (including 33 rather than the actual 35
+direct requirements); three source-authority seals were unresolved and the
+validator ignored them; and `git diff --check` failed on four review lines.
+It found no owner/authority or safety/isolation breach.
+
+The corrected candidate closes all five findings. The exact four cases now run
+through managed coordinator execution and typed result query; the traceability
+count is 35; the manifest binds every source-authority entry to immutable
+starting revision `e7de0305515657223c513195f8323b2649b6c7c8`; the validator
+reads and hashes those Git blobs; and the accepted independent review has no
+trailing whitespace. A fresh final reviewer must confirm these closures
+against the exact corrected commit before owner handoff. Its exact input
+commit, report identity, and verdict will be appended here.

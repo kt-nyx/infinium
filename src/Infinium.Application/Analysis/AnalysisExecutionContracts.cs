@@ -53,7 +53,12 @@ public sealed record CandidatePhaseParameters(
     OpaqueId PopulationId,
     OpaqueId PolicyId,
     OpaqueId ThresholdId,
-    CandidateExecutionLimits Limits);
+    CandidateExecutionLimits Limits)
+{
+    public CandidateDeliveredInputContract? DeliveredInput { get; init; }
+
+    public Sha256Fingerprint? DeliveredInputByteFingerprint { get; init; }
+}
 
 public sealed record FindingCasePhaseParameters(
     OpaqueId PromotionPolicyId,

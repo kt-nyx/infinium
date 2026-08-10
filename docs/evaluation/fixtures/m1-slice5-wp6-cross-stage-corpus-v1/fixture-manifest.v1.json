@@ -1,10 +1,10 @@
 {
-  "schema_identity":"infinium.public-fixture.wp6.fixture-manifest/1.0.5",
+  "schema_identity":"infinium.public-fixture.wp6.fixture-manifest/1.0.7",
   "registry_identity":"infinium.m1s5.wp6.cross-stage-corpus.20260810.1",
-  "registry_version":"1.0.5",
+  "registry_version":"1.0.7",
   "status":"author-frozen-pending-independent-review",
   "package_identity":"infinium.m1s5.wp6.cross-stage.clean-incremental-replay.generic-a",
-  "package_version":"1.0.5",
+  "package_version":"1.0.7",
   "partition":"development",
   "case_count":4,
   "package_file_paths":[
@@ -20,20 +20,20 @@
     "fixture-manifest.v1.json"
   ],
   "files":[
-    {"path":"ordinary-product-inputs.v1.json","role":"sole-ordinary-product-input","bytes":7900,"sha256":"26a27c326b606ce10745a28d1c24f384b4446bff9bdf10242be21dca6a2532f5"},
-    {"path":"ordinary-product-input.schema.json","role":"closed-harness-side-pre-dispatch-schema","bytes":7942,"sha256":"67e1806a0a7767574be78cc862e5b8bb08e8774d6310b8b3b35bee92c18f3514"},
-    {"path":"harness-envelope.v1.json","role":"harness-only-never-product-input","bytes":10199,"sha256":"e7da161525dfab6d76b54b73ddc1f4152c90e2766bcd74ff88b003da093261fa"},
-    {"path":"expected-results.v1.json","role":"oracle-only-never-product-input","bytes":4796,"sha256":"069e24721eea57253c32d805dd6709f7dbd39a06287ec8f1d4e7f197c69336e5"},
-    {"path":"provenance.v1.json","role":"authorship-and-ground-truth-provenance","bytes":882,"sha256":"4945dbf011af9cd0a8b56245ceaa1a4940a76f878e614b666ed26dad5bc4687f"},
-    {"path":"replay-dependencies.v1.json","role":"replay-dependency-closure","bytes":1941,"sha256":"7cfbcf09285ccbf5533e3671e04715f8ecd104f077be3416856c08af74400b63"},
-    {"path":"redistribution.v1.json","role":"redistribution-and-privacy","bytes":609,"sha256":"0e32859594893f14deedb9113d38bfcc0766f00ec0bcec362a859d97cbd3afee"},
-    {"path":"partition-history.v1.json","role":"partition-and-version-history","bytes":1854,"sha256":"8d8b235828b98c39f6ec9e06a49da338a100a3141bd470d23111b75494bbf88b"},
-    {"path":"README.md","role":"human-handoff-and-claim-boundary","bytes":3184,"sha256":"651f4022457ec27a99cd73c41f417cbcd2c57e9e40006f0a68fb2f134f77789b"}
+    {"path":"ordinary-product-inputs.v1.json","role":"sole-ordinary-product-input","bytes":7900,"sha256":"c1a2f33d3a2e1c29fb3e222ea36c6584ac888d4aa20abef4e9db5bb71355c6a5"},
+    {"path":"ordinary-product-input.schema.json","role":"closed-harness-side-pre-dispatch-schema","bytes":7942,"sha256":"23c9cb6aa1457535507b03089b4a2e4147bde2726bdcf50f458888c1f36f7b3f"},
+    {"path":"harness-envelope.v1.json","role":"harness-only-never-product-input","bytes":18394,"sha256":"5bb82e3a3a4980dc5c163a2c024cdc68ce641dfc0381d450e00eb2013f7592e2"},
+    {"path":"expected-results.v1.json","role":"oracle-only-never-product-input","bytes":4796,"sha256":"7e6808925f7ef9029c998a5e4bd970546b4dcda6f54931a6987234dfc0dc5e36"},
+    {"path":"provenance.v1.json","role":"authorship-and-ground-truth-provenance","bytes":956,"sha256":"43419c96a3a6e6dab235d46c545f941201f8597197193326ade22356bb9964f8"},
+    {"path":"replay-dependencies.v1.json","role":"replay-dependency-closure","bytes":2479,"sha256":"684cfa56786d5987ccf3ac8d011eef4f1e945d29126a1782074d8acbbd433aaa"},
+    {"path":"redistribution.v1.json","role":"redistribution-and-privacy","bytes":609,"sha256":"e5d8869d7ed8859200b5473ece40a229f6df0ae60dbf01bae95695f1326817db"},
+    {"path":"partition-history.v1.json","role":"partition-and-version-history","bytes":2595,"sha256":"b33a96d415d07d326a3d9cb0a11ebacc4e22564ad63f6587c7ec6db10f31b445"},
+    {"path":"README.md","role":"human-handoff-and-claim-boundary","bytes":4873,"sha256":"ff83d651b06baf1298623f971945fd8fce81e3a058b5afeb488b14aa19fb02c7"}
   ],
   "content_aggregate": {
     "algorithm":"sha256",
     "ordered_entry_format":"path:bytes:sha256 followed by LF for each files entry in array order",
-    "sha256":"d4000b171d54c522ae0bb9ae1ddc874d82068061e17482d87ee2e24f8f0b1f99"
+    "sha256":"6f44fdd34b871cdb46339fe8763e374395142579e5381dd8c800614e48dbc5b3"
   },
   "manifest_self_hash_policy": {
     "included_in_package_file_paths":true,
@@ -54,6 +54,13 @@
     {"package_identity":"infinium.m1s5.wp5.publication-replay-query-output-recovery-safety.lantern-a","version":"1.0.2","partition":"development","authority_path":"docs/evaluation/fixtures/m1-slice5-wp5-operational-cases-v1/fixture-manifest.v1.json","bytes":14424,"sha256":"794f87804efcea7432c60f14702da5774ab2c16d7b82d9222e87259334f56078","review_status":"independently-reviewed-accepted-comparison-complete-with-explicit-native-capability-gaps","bounded_claim":"Development counterparts for atomic publication, replay/invalidation, query, output, recovery, and final-object safety."},
     {"package_identity":"infinium.m1s5.wp5.publication-replay-query-output-recovery-safety.compass-b","version":"1.0.2","partition":"validation","authority_path":"docs/evaluation/fixtures/m1-slice5-wp5-operational-cases-v1/fixture-manifest.v1.json","bytes":14424,"sha256":"794f87804efcea7432c60f14702da5774ab2c16d7b82d9222e87259334f56078","review_status":"independently-reviewed-accepted-comparison-complete-with-explicit-native-capability-gaps","bounded_claim":"Materially independent validation counterparts with the same six bounded families and retained native capability gaps."}
   ],
+  "source_authority_resolution":{
+    "accepted_starting_revision":"e7de0305515657223c513195f8323b2649b6c7c8",
+    "resolution":"Resolve every source_authority path, byte length, and SHA-256 from the exact tree at accepted_starting_revision.",
+    "drift_policy":"Later worktree, status, index, or branch changes do not alter these frozen identities and must not masquerade as authority drift.",
+    "revision_policy":"Adopting authority from any later revision requires an explicit newly versioned author freeze and fresh independent review; silent substitution is forbidden.",
+    "verification_boundary":"The author preserved the accepted path/bytes/SHA-256 entries and did not use Git history, product output, or current mutable status to rewrite truth."
+  },
   "source_authority":[
     {"path":"docs/current-state.md","bytes":6490,"sha256":"7839e5b08c78f6a28327df6eb3171cbcc8c64565ca8a62d06381a03e804d0372"},
     {"path":"docs/development/execution-policy.md","bytes":6633,"sha256":"f8bf122bba383ff5efcd09def3aafdd95ef56bb7b58bfb85542c2d49557d9672"},
@@ -70,6 +77,6 @@
     {"path":"docs/evaluation/fixtures/m1-platform-fixture-manifests.md","bytes":35863,"sha256":"06d18e7df2cf1076f1a430007fa31df86bdf01a59cbbe54e675f40f11eeaef50"}
   ],
   "isolation_statement":"Expected truth was authored from accepted public authority and frozen WP2-WP5 handoffs without product source, tests, scripts, builds, output, Git history or diff, private/evaluator-private material, legacy material, human-guide material, live/provider material, or product execution.",
-  "known_gaps":["Opaque product identity and canonical hash binding remains harness work.","Native filesystem gaps remain those recorded by WP5.","No Layer 5 generalization or controlled-real evidence.","ANALYSIS-019 Bethesda analysis, OPS-004 scale and structural limits, ADR-0017 desktop and Windows stack, and ADR-0023 cost ledger and budget authority are inherited only and are not exercised by this four-case corpus.","No full EVAL-0046, EVAL-0082, EVAL-0087, or EVAL-0088 matrix is exercised by this four-case corpus."],
+  "known_gaps":["Opaque product identity and canonical hash binding remains harness work.","Only the bounded Application result-query-request/query-results surface is exercised; no documentation-field or other field-level query is claimed.","Native filesystem gaps remain those recorded by WP5.","No Layer 5 generalization or controlled-real evidence.","ANALYSIS-019 Bethesda analysis, OPS-004 scale and structural limits, ADR-0017 desktop and Windows stack, and ADR-0023 cost ledger and budget authority are inherited only and are not exercised by this four-case corpus.","No full EVAL-0046, EVAL-0082, EVAL-0087, or EVAL-0088 matrix is exercised by this four-case corpus."],
   "claim_boundary":"Public generic synthetic local/fixture Slice 5 cross-stage development evidence and accumulated package index only; no private held-out, reliability, readiness, safety, broad-domain, M1-completion, or owner-acceptance verdict."
 }

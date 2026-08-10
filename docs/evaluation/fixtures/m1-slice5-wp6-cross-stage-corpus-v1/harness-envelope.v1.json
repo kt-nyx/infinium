@@ -1,21 +1,104 @@
 {
-  "schema_identity": "infinium.public-fixture.wp6.harness-envelope/1.0.5",
+  "schema_identity": "infinium.public-fixture.wp6.harness-envelope/1.0.7",
   "content_class": "harness-only-never-product-input",
   "registry_identity": "infinium.m1s5.wp6.cross-stage-corpus.20260810.1",
   "package_identity": "infinium.m1s5.wp6.cross-stage.clean-incremental-replay.generic-a",
-  "package_version": "1.0.5",
+  "package_version": "1.0.7",
   "partition": "development",
   "product_projection": {
     "source": "ordinary-product-inputs.v1.json",
     "selection": "forward exactly one requests entry plus shared_facts",
-    "forbidden": ["this-envelope","case-id","partition","eval-id","expected-results","oracle-pointer","review-metadata"],
+    "forbidden": ["this-envelope","case-id","partition","eval-id","expected-results","oracle-pointer","receipt-requirements","prior-result-flow","run-binding","application-result-query","review-metadata"],
     "fail_closed": true
   },
+  "observation_protocol": {
+    "case_execution_order": ["WP6-CROSS-CLEAN-D01","WP6-CROSS-UNCHANGED-D02","WP6-CROSS-CHANGED-D03","WP6-CROSS-REPLAY-D04"],
+    "sequence": ["select-case-binding","resolve-exact-prior-result-binding","validate-ordinary-projection","dispatch-product-input","capture-run-identity","execute-and-publish-once","issue-bounded-application-result-query","seal-product-observation-and-receipts","load-selected-oracle","compare"],
+    "oracle_load_before_observation": "forbidden",
+    "missing_or_unselected_receipt": "case-fails-closed",
+    "unexpected_receipt_field": "case-fails-closed",
+    "comparison_unit": "one-case-one-observation-one-oracle",
+    "retained_prior_result_flow": {
+      "identity":"result.001",
+      "producer":{"case_id":"WP6-CROSS-CLEAN-D01","capture_from":"single-atomic-publication","availability":"retained"},
+      "consumers":["WP6-CROSS-UNCHANGED-D02","WP6-CROSS-CHANGED-D03","WP6-CROSS-REPLAY-D04"],
+      "binding":"exact-retained-identity",
+      "hidden_substitution":"forbidden"
+    }
+  },
   "cases": [
-    {"case_id":"WP6-CROSS-CLEAN-D01","input_id":"input.001","kind":"clean","eval_ids":["EVAL-0032","EVAL-0036","EVAL-0037","EVAL-0039","EVAL-0064","EVAL-0067","EVAL-0083","EVAL-0084","EVAL-0085","EVAL-0086"],"oracle_pointer":"expected-results.v1.json#/cases/0"},
-    {"case_id":"WP6-CROSS-UNCHANGED-D02","input_id":"input.002","kind":"unchanged-incremental","eval_ids":["EVAL-0026","EVAL-0032","EVAL-0037","EVAL-0083","EVAL-0085"],"oracle_pointer":"expected-results.v1.json#/cases/1"},
-    {"case_id":"WP6-CROSS-CHANGED-D03","input_id":"input.003","kind":"changed-dependency-incremental","eval_ids":["EVAL-0026","EVAL-0037","EVAL-0083"],"oracle_pointer":"expected-results.v1.json#/cases/2"},
-    {"case_id":"WP6-CROSS-REPLAY-D04","input_id":"input.004","kind":"retained-downstream-replay","eval_ids":["EVAL-0026","EVAL-0037","EVAL-0039","EVAL-0040","EVAL-0064","EVAL-0083","EVAL-0087"],"oracle_pointer":"expected-results.v1.json#/cases/3"}
+    {
+      "case_id":"WP6-CROSS-CLEAN-D01",
+      "kind":"clean",
+      "request_binding":{"input_id":"input.001","mode":"clean","revision_key":"revision.001","prior_result":"absent"},
+      "post_observation_oracle":{"pointer":"expected-results.v1.json#/cases/0","load_after":"observation-receipt-sealed","pre_observation_load":"forbidden"},
+      "required_receipts":{
+        "coordinator":{"admission":"admitted","execution":"completed-with-gaps"},
+        "prior_result_flow":{"input":"absent","produces":"result.001","capture":"published-analysis-result-binding","availability":"retained","hidden_substitutions":0},
+        "run_binding":{"identity_source":"coordinator-observation","alias":"observed-run.d01","captured":true,"opaque_value_predeclared":false},
+        "phase_dispositions":{"wp2":"computed-clean","wp3":"computed-clean","wp4":"computed-clean"},
+        "publication":{"commit_count":1,"atomic":true,"partial_publications":0,"disposition":"new-clean-publication"},
+        "application_result_query":{"request":{"surface":"Application","type":"result-query-request","run_identity_binding":"observed-run.d01","selection":"published-analysis-result-for-run","field_level_predicates":[]},"response":{"type":"query-results","bounded":true,"run_identity_binding":"observed-run.d01","published_analysis_result_count":1,"typed_result_present":true},"human_json_projections":{"human_present":true,"json_present":true,"semantically_equivalent":true},"field_level_query_claim":"none"},
+        "outputs":{"human_present":true,"json_present":true,"semantically_equivalent":true},
+        "external_effects":{"network_calls":0,"provider_dispatches":0,"external_mutations":0},
+        "oracle_load":{"observation_sealed":true,"load_sequence":"after-observation","pointer":"expected-results.v1.json#/cases/0"}
+      },
+      "eval_ids":["EVAL-0032","EVAL-0036","EVAL-0037","EVAL-0039","EVAL-0064","EVAL-0067","EVAL-0083","EVAL-0084","EVAL-0085","EVAL-0086"]
+    },
+    {
+      "case_id":"WP6-CROSS-UNCHANGED-D02",
+      "kind":"unchanged-incremental",
+      "request_binding":{"input_id":"input.002","mode":"incremental","revision_key":"revision.001","prior_result":"result.001"},
+      "post_observation_oracle":{"pointer":"expected-results.v1.json#/cases/1","load_after":"observation-receipt-sealed","pre_observation_load":"forbidden"},
+      "required_receipts":{
+        "coordinator":{"admission":"admitted","execution":"completed-with-gaps"},
+        "prior_result_flow":{"consumes":"result.001","producer_case_id":"WP6-CROSS-CLEAN-D01","availability":"retained","binding":"exact-retained-identity","hidden_substitutions":0},
+        "run_binding":{"identity_source":"coordinator-observation","alias":"observed-run.d02","captured":true,"opaque_value_predeclared":false},
+        "phase_dispositions":{"wp2":"reused-exact","wp3":"recomputed-run-binding","wp4":"recomputed-from-current-wp3-closure"},
+        "publication":{"commit_count":1,"atomic":true,"partial_publications":0,"disposition":"new-incremental-publication"},
+        "application_result_query":{"request":{"surface":"Application","type":"result-query-request","run_identity_binding":"observed-run.d02","selection":"published-analysis-result-for-run","field_level_predicates":[]},"response":{"type":"query-results","bounded":true,"run_identity_binding":"observed-run.d02","published_analysis_result_count":1,"typed_result_present":true},"human_json_projections":{"human_present":true,"json_present":true,"semantically_equivalent":true},"field_level_query_claim":"none"},
+        "outputs":{"human_present":true,"json_present":true,"semantically_equivalent":true},
+        "external_effects":{"network_calls":0,"provider_dispatches":0,"external_mutations":0},
+        "oracle_load":{"observation_sealed":true,"load_sequence":"after-observation","pointer":"expected-results.v1.json#/cases/1"}
+      },
+      "eval_ids":["EVAL-0026","EVAL-0032","EVAL-0037","EVAL-0083","EVAL-0085"]
+    },
+    {
+      "case_id":"WP6-CROSS-CHANGED-D03",
+      "kind":"changed-dependency-incremental",
+      "request_binding":{"input_id":"input.003","mode":"incremental","revision_key":"revision.002","prior_result":"result.001"},
+      "post_observation_oracle":{"pointer":"expected-results.v1.json#/cases/2","load_after":"observation-receipt-sealed","pre_observation_load":"forbidden"},
+      "required_receipts":{
+        "coordinator":{"admission":"admitted","execution":"completed-with-gaps"},
+        "prior_result_flow":{"consumes":"result.001","producer_case_id":"WP6-CROSS-CLEAN-D01","availability":"retained","binding":"exact-retained-identity","hidden_substitutions":0},
+        "run_binding":{"identity_source":"coordinator-observation","alias":"observed-run.d03","captured":true,"opaque_value_predeclared":false},
+        "phase_dispositions":{"wp2":"new-revision-and-dependent-checkpoint","wp3":"recomputed-transitively-with-new-run-binding","wp4":"recomputed-from-current-wp3-closure"},
+        "publication":{"commit_count":1,"atomic":true,"partial_publications":0,"disposition":"new-aggregate-publication"},
+        "application_result_query":{"request":{"surface":"Application","type":"result-query-request","run_identity_binding":"observed-run.d03","selection":"published-analysis-result-for-run","field_level_predicates":[]},"response":{"type":"query-results","bounded":true,"run_identity_binding":"observed-run.d03","published_analysis_result_count":1,"typed_result_present":true},"human_json_projections":{"human_present":true,"json_present":true,"semantically_equivalent":true},"field_level_query_claim":"none"},
+        "outputs":{"human_present":true,"json_present":true,"semantically_equivalent":true},
+        "external_effects":{"network_calls":0,"provider_dispatches":0,"external_mutations":0},
+        "oracle_load":{"observation_sealed":true,"load_sequence":"after-observation","pointer":"expected-results.v1.json#/cases/2"}
+      },
+      "eval_ids":["EVAL-0026","EVAL-0037","EVAL-0083"]
+    },
+    {
+      "case_id":"WP6-CROSS-REPLAY-D04",
+      "kind":"retained-downstream-replay",
+      "request_binding":{"input_id":"input.004","mode":"retained-replay","revision_key":"revision.001","prior_result":"result.001"},
+      "post_observation_oracle":{"pointer":"expected-results.v1.json#/cases/3","load_after":"observation-receipt-sealed","pre_observation_load":"forbidden"},
+      "required_receipts":{
+        "coordinator":{"admission":"admitted","execution":"completed-with-gaps"},
+        "prior_result_flow":{"consumes":"result.001","producer_case_id":"WP6-CROSS-CLEAN-D01","availability":"retained","binding":"exact-retained-identity","hidden_substitutions":0},
+        "run_binding":{"identity_source":"coordinator-observation","alias":"observed-run.d04","captured":true,"opaque_value_predeclared":false},
+        "phase_dispositions":{"wp2":"reused-exact","wp3":"recomputed-run-binding","wp4":"recomputed-from-current-wp3-closure"},
+        "publication":{"commit_count":1,"atomic":true,"partial_publications":0,"disposition":"new-replay-publication"},
+        "application_result_query":{"request":{"surface":"Application","type":"result-query-request","run_identity_binding":"observed-run.d04","selection":"published-analysis-result-for-run","field_level_predicates":[]},"response":{"type":"query-results","bounded":true,"run_identity_binding":"observed-run.d04","published_analysis_result_count":1,"typed_result_present":true},"human_json_projections":{"human_present":true,"json_present":true,"semantically_equivalent":true},"field_level_query_claim":"none"},
+        "outputs":{"human_present":true,"json_present":true,"semantically_equivalent":true},
+        "external_effects":{"network_calls":0,"provider_dispatches":0,"external_mutations":0},
+        "oracle_load":{"observation_sealed":true,"load_sequence":"after-observation","pointer":"expected-results.v1.json#/cases/3"}
+      },
+      "eval_ids":["EVAL-0026","EVAL-0037","EVAL-0039","EVAL-0040","EVAL-0064","EVAL-0083","EVAL-0087"]
+    }
   ],
   "ownership_audit": {
     "exercised_by_this_four_case_corpus": {

@@ -1,5 +1,5 @@
 {
-  "schema_identity": "infinium.public-fixture.wp6.independent-expected-results/1.0.5",
+  "schema_identity": "infinium.public-fixture.wp6.independent-expected-results/1.0.7",
   "content_class": "oracle-only-never-product-input",
   "authorship": "independent-before-product-comparison",
   "product_output_used": false,

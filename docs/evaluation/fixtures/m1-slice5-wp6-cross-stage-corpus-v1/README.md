@@ -2,7 +2,7 @@
 
 Status: `author-frozen`
 
-This corrected `1.0.5` public development corpus supplies four generic synthetic paths:
+This corrected `1.0.7` public development corpus supplies four generic synthetic paths:
 clean execution, unchanged incremental execution, one formatting-only source
 dependency revision with targeted invalidation, and complete retained replay.
 
@@ -40,9 +40,35 @@ SHA-256 seals after their mechanical closure correction. WP3 semantic oracle,
 projection, and expected candidate truth bytes were unchanged; product output
 did not influence this corpus truth.
 
-Package: `infinium.m1s5.wp6.cross-stage.clean-incremental-replay.generic-a/1.0.5`
+Version `1.0.6` makes every harness case executable without oracle preloading.
+Each case selects its exact `input_id`, mode, revision, and prior-result binding;
+requires coordinator, WP2-WP4, atomic publication, typed application query,
+human/JSON output, no-external-effect, and oracle-timing receipts; seals the
+product observation; and only then loads its selected oracle pointer. Missing,
+unselected, or unexpected receipt data fails the comparison closed. All of
+this metadata is harness-only and is forbidden from the product projection.
 
-Registry: `infinium.m1s5.wp6.cross-stage-corpus.20260810.1/1.0.5`
+The source-authority entries resolve immutably at accepted starting revision
+`e7de0305515657223c513195f8323b2649b6c7c8`. Their recorded paths, byte lengths,
+and SHA-256 identities belong to that revision. Later worktree, status, or index
+changes are not drift and must not replace these identities; adopting later
+authority requires a newly versioned authoring and independent review cycle.
+
+Version `1.0.7` makes the prior-result chain executable: D01 captures and
+retains its singly published analysis result as exact harness binding
+`result.001`; D02-D04 consume that retained identity with zero hidden
+substitutions. The replay-dependency record makes deletion or substitution a
+fail-closed case unavailability, never a replacement opportunity.
+
+Each case captures its opaque run identity from the coordinator observation and
+uses only the accepted bounded Application `result-query-request`/`query-results`
+surface to retrieve that run's published analysis result. The response requires
+a bounded typed result plus present, semantically equivalent human and JSON
+projections. No documentation-field or other field-level query is claimed.
+
+Package: `infinium.m1s5.wp6.cross-stage.clean-incremental-replay.generic-a/1.0.7`
+
+Registry: `infinium.m1s5.wp6.cross-stage-corpus.20260810.1/1.0.7`
 
 Partition: `development`
 

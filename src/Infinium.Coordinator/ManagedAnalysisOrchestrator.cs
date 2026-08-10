@@ -67,6 +67,20 @@ internal static class ManagedAnalysisOrchestrator
             accepted_targets = request.DocumentationImport.AcceptedApplicationTargets
                 .OrderBy(item => JsonSerializer.Serialize(item, ContractJsonSerializer.Options), StringComparer.Ordinal),
         });
+        if (request.DocumentationImport.Mode == DocumentationImportMode.RetainedReuse
+            && request.DocumentationImport.RetainedEvidence is { } retainedDocumentation
+            && request.ExecutionInput.PriorRunId is { } priorRunId)
+        {
+            AnalysisPhaseCheckpointRecord? previous = store.ReadLatestAnalysisPhaseCheckpoint(
+                priorRunId.Value, DocumentationEvidencePhase.PhaseId);
+            byte[] retainedBytes = DocumentationEvidenceJsonCodec.Serialize(retainedDocumentation);
+            if (previous is not null
+                && previous.PayloadSha256 == Hash(retainedBytes)
+                && previous.PayloadByteLength == retainedBytes.LongLength)
+            {
+                docsFingerprint = previous.InputFingerprint;
+            }
+        }
         string candidateFingerprint = Fingerprint(new
         {
             docsFingerprint,
@@ -102,7 +116,8 @@ internal static class ManagedAnalysisOrchestrator
         phaseCompleted?.Invoke(DocumentationEvidencePhase.PhaseId);
         Boundary();
         (CandidateAnalysisContract Candidate, AnalysisExecutionInputContract ExecutionInput, RetainedAnalysisPayloadSeal Seal, AnalysisPhaseExecution Execution) candidates =
-            LoadOrExecuteCandidates(store, request, attempt, binding, candidateFingerprint, invalidated, docs.Documentation, now);
+            LoadOrExecuteCandidates(store, request, attempt, binding, candidateFingerprint, invalidated,
+                docs.Documentation, docs.Execution.Disposition == "reused-retained-phase", now);
         progress?.Invoke(Assignment(request, candidates.ExecutionInput, [docs.Execution, candidates.Execution], executionDeadline));
         phaseCompleted?.Invoke(CandidateAnalysisPhase.PhaseId);
         Boundary();
@@ -212,6 +227,7 @@ internal static class ManagedAnalysisOrchestrator
     {
         ArgumentNullException.ThrowIfNull(request);
         _ = WithDocumentationReferences(request, request.ExecutionInput);
+        ValidateDeliveredCandidateInput(request, runId, binding);
         SemanticAnalysisContextIdentity.Validate(request.AnalysisContext);
         Slice5ContractInvariants.Validate(request.ExecutionInput);
         if (request.SchemaVersion != ManagedAnalysisOrchestrationRequest.CurrentSchemaVersion
@@ -243,6 +259,43 @@ internal static class ManagedAnalysisOrchestrator
             || request.TerminalOutcome is not (AnalysisTerminalOutcome.Completed or AnalysisTerminalOutcome.CompletedWithGaps))
         {
             throw new AnalysisIdentityDriftException("The durable managed analysis request differs from its immutable run binding.");
+        }
+    }
+
+    private static void ValidateDeliveredCandidateInput(
+        ManagedAnalysisOrchestrationRequest request,
+        string runId,
+        RunBinding binding)
+    {
+        CandidateDeliveredInputContract? delivered = request.Candidate.DeliveredInput;
+        Sha256Fingerprint? declaredFingerprint = request.Candidate.DeliveredInputByteFingerprint;
+        if (delivered is null && declaredFingerprint is null)
+        {
+            return;
+        }
+        if (delivered is null || declaredFingerprint is null)
+        {
+            throw new AnalysisIdentityDriftException(
+                "The managed candidate delivered input and its byte fingerprint must be supplied together.");
+        }
+
+        CandidateDeliveredContractInvariants.Validate(delivered);
+        byte[] bytes = CandidateDeliveredInputJsonCodec.Serialize(delivered);
+        Sha256Fingerprint actualFingerprint = new(Hash(bytes));
+        ArtifactReferenceContract? reference = request.ExecutionInput.SourceInputs.SingleOrDefault(item =>
+            item.ArtifactId == delivered.PayloadId);
+        if (delivered.OriginatingRunId.Value != runId
+            || delivered.SourceSnapshotId.Value != binding.InstallationSnapshotId
+            || delivered.AnalysisContextId.Value != binding.AnalysisContextId
+            || delivered.ConfigurationId.Value != binding.EffectiveScanConfigurationId
+            || actualFingerprint != declaredFingerprint
+            || reference is null
+            || reference.ArtifactVersion != delivered.SchemaVersion
+            || reference.Fingerprint != actualFingerprint
+            || reference.Availability != "retained")
+        {
+            throw new AnalysisIdentityDriftException(
+                "The managed candidate delivered input differs from its immutable run binding or source reference.");
         }
     }
 
@@ -289,18 +342,26 @@ internal static class ManagedAnalysisOrchestrator
     private static (CandidateAnalysisContract, AnalysisExecutionInputContract, RetainedAnalysisPayloadSeal, AnalysisPhaseExecution)
         LoadOrExecuteCandidates(AuthoritativeStore store, ManagedAnalysisOrchestrationRequest request,
             AttemptRecord attempt, RunBinding binding, string fingerprint, IReadOnlySet<string> invalidated,
-            DocumentationEvidenceContract documentation, DateTimeOffset now)
+            DocumentationEvidenceContract documentation, bool documentationReused, DateTimeOffset now)
     {
-        BethesdaSemanticSnapshot? bethesda = ReadBethesda(store, request.ExecutionInput.BethesdaSemanticInput);
-        CandidateDeliveredInputContract delivered = CandidateDeliveredInputAdapter.Create(
-            request.ExecutionInput.RunId,
-            request.ExecutionInput.InstallationSnapshot.ArtifactId,
-            request.AnalysisContext.ContextId,
-            request.ExecutionInput.EffectiveConfiguration.ArtifactId,
-            bethesda,
-            documentation,
-            retainedDocumentationSourceRunId: documentation.OriginatingRunId == request.ExecutionInput.RunId
-                ? null : documentation.OriginatingRunId);
+        CandidateDeliveredInputContract delivered;
+        if (request.Candidate.DeliveredInput is { } supplied)
+        {
+            delivered = supplied;
+        }
+        else
+        {
+            BethesdaSemanticSnapshot? bethesda = ReadBethesda(store, request.ExecutionInput.BethesdaSemanticInput);
+            delivered = CandidateDeliveredInputAdapter.Create(
+                request.ExecutionInput.RunId,
+                request.ExecutionInput.InstallationSnapshot.ArtifactId,
+                request.AnalysisContext.ContextId,
+                request.ExecutionInput.EffectiveConfiguration.ArtifactId,
+                bethesda,
+                documentation,
+                retainedDocumentationSourceRunId: documentation.OriginatingRunId == request.ExecutionInput.RunId
+                    ? null : documentation.OriginatingRunId);
+        }
         byte[] deliveredBytes = CandidateDeliveredInputJsonCodec.Serialize(delivered);
         _ = store.RetainAnalysisPhaseInput(attempt, "candidate-delivered-input",
             delivered.PayloadId.Value, deliveredBytes, now);
@@ -326,7 +387,7 @@ internal static class ManagedAnalysisOrchestrator
             request.Candidate.PolicyId, request.Candidate.ThresholdId, request.Candidate.Limits,
             context, [new DeliveredIndexCandidatePopulationSource()], effectiveExecutionInput);
         CandidateAnalysisPhaseResult result = CandidateAnalysisPhase.Execute(store, pipeline, attempt, binding, now);
-        string disposition = invalidated.Contains(CandidateAnalysisPhase.PhaseId)
+        string disposition = invalidated.Contains(CandidateAnalysisPhase.PhaseId) && !documentationReused
             ? "recomputed-invalidated" : "recomputed-run-binding";
         AnalysisPhaseCheckpointRecord recorded = store.RecordAnalysisPhaseCheckpoint(attempt, binding,
             CandidateAnalysisPhase.PhaseId, fingerprint, result.Receipt.PayloadId,

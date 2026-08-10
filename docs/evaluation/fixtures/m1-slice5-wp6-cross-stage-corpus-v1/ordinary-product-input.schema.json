@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "infinium.public-fixture.wp6.ordinary-cross-stage-inputs/1.0.5",
+  "$id": "infinium.public-fixture.wp6.ordinary-cross-stage-inputs/1.0.7",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_identity","content_class","shared_facts","requests"],
   "properties": {
-    "schema_identity": {"const":"infinium.public-fixture.wp6.ordinary-cross-stage-inputs/1.0.5"},
+    "schema_identity": {"const":"infinium.public-fixture.wp6.ordinary-cross-stage-inputs/1.0.7"},
     "content_class": {"const":"ordinary-product-input-only"},
     "shared_facts": {"$ref":"#/$defs/sharedFacts"},
     "requests": {"type":"array","minItems":4,"maxItems":4,"items":{"$ref":"#/$defs/request"}}

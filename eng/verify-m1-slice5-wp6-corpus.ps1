@@ -25,6 +25,33 @@ function Get-Sha256([string] $Path) {
     return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
 }
 
+function Get-GitBlobBytes([string] $Revision, [string] $Path) {
+    $start = [System.Diagnostics.ProcessStartInfo]::new()
+    $start.FileName = 'git'
+    $start.UseShellExecute = $false
+    $start.RedirectStandardOutput = $true
+    $start.RedirectStandardError = $true
+    $start.ArgumentList.Add('-C')
+    $start.ArgumentList.Add($repoRoot)
+    $start.ArgumentList.Add('cat-file')
+    $start.ArgumentList.Add('blob')
+    $start.ArgumentList.Add("${Revision}:$Path")
+    $process = [System.Diagnostics.Process]::Start($start)
+    $memory = [System.IO.MemoryStream]::new()
+    try {
+        $process.StandardOutput.BaseStream.CopyTo($memory)
+        $errorText = $process.StandardError.ReadToEnd()
+        $process.WaitForExit()
+        if ($process.ExitCode -ne 0) {
+            throw "Unable to resolve frozen source authority '${Revision}:$Path': $errorText"
+        }
+        return ,$memory.ToArray()
+    } finally {
+        $memory.Dispose()
+        $process.Dispose()
+    }
+}
+
 function Assert-NoForbiddenProperty([object] $Value, [string[]] $Forbidden) {
     if ($null -eq $Value) {
         return
@@ -112,6 +139,25 @@ foreach ($registration in $registrations) {
     $item = Get-Item -LiteralPath $authorityPath
     if ($item.Length -ne [long] $registration.bytes -or (Get-Sha256 $authorityPath) -cne [string] $registration.sha256) {
         throw "Accumulated package authority identity drifted: $($registration.package_identity)"
+    }
+}
+
+$authorityRevision = [string] $manifest.source_authority_resolution.accepted_starting_revision
+if ($authorityRevision -cne 'e7de0305515657223c513195f8323b2649b6c7c8') {
+    throw 'WP6 source authority is not bound to the accepted starting revision.'
+}
+foreach ($authority in @($manifest.source_authority)) {
+    $authorityPath = [string] $authority.path
+    if ([System.IO.Path]::IsPathRooted($authorityPath) -or
+        $authorityPath -match '(^|[\\/])\.\.([\\/]|$)') {
+        throw "WP6 source authority path is unsafe: $authorityPath"
+    }
+    [byte[]] $authorityBytes = Get-GitBlobBytes $authorityRevision $authorityPath
+    $authoritySha = [Convert]::ToHexStringLower(
+        [System.Security.Cryptography.SHA256]::HashData($authorityBytes))
+    if (($authorityBytes.LongLength -ne [long] $authority.bytes) -or
+        ($authoritySha -cne [string] $authority.sha256)) {
+        throw "WP6 frozen source authority identity does not resolve at the accepted revision: $authorityPath"
     }
 }
 

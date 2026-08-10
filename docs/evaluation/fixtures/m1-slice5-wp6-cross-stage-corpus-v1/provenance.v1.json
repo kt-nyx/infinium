@@ -1,7 +1,8 @@
 {
-  "schema_identity":"infinium.public-fixture.wp6.provenance/1.0.5",
+  "schema_identity":"infinium.public-fixture.wp6.provenance/1.0.7",
   "package_identity":"infinium.m1s5.wp6.cross-stage.clean-incremental-replay.generic-a",
-  "package_version":"1.0.5",
+  "package_version":"1.0.7",
+  "source_authority_revision":"e7de0305515657223c513195f8323b2649b6c7c8",
   "author":{"role":"fresh-answer-isolated-public-fixture-author","product_source_access":false,"product_test_access":false,"product_output_access":false,"private_material_access":false},
   "ground_truth_method":"Hand-authored neutral facts from accepted public authority and frozen WP2-WP5 handoffs; exact expectations independently derived from declared state, promotion, grouping, dependency, and replay rules.",
   "ordinary_input":"ordinary-product-inputs.v1.json",

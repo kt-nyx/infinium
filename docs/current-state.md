@@ -19,8 +19,8 @@ records preserve evidence and history.
 | Milestone | `M1` — active |
 | Active slice | `M1/S5` — active |
 | Completed package | `M1/S5/WP1` through `M1/S5/WP5` |
-| Package awaiting owner acceptance | `M1/S5/WP6` — implementation and independent review complete; not owner-accepted |
-| Next eligible action | Owner review of the WP6 evidence, contract-freeze proposal, and Slice 5 acceptance packet |
+| Package awaiting owner acceptance | `M1/S5/WP6` — corrected implementation and independent corpus review complete; fresh final re-review pending; not owner-accepted |
+| Next eligible action | Fresh final review of the corrected exact WP6 commit, then owner review only if that verdict is `ACCEPT` |
 | Later work | Successor-slice planning only after explicit Slice 5 owner acceptance; no successor implementation is authorized |
 | Default execution policy | [Development execution policy](development/execution-policy.md) |
 | Active milestone plan | [M1 backend semantic proof](plans/milestones/M1-backend-semantic-proof.md) |
@@ -94,18 +94,26 @@ The ordinary product inputs were validated answer-free before dispatch, the
 real WP2 -> WP3 -> WP4 -> coordinator/publication/query/output path ran before
 the frozen oracle was loaded, and clean, unchanged incremental, changed-source,
 and retained replay requests matched the expected typed counts and lifecycle
-semantics. The final corpus review verdict is `ACCEPT`; all nine Slice 5 gates,
+semantics. The final independent corpus review verdict is `ACCEPT`; all nine Slice 5 gates,
 the new `Comprehensive` gate, the explicit traceability audit, the full Release
 test floor, formatting, dependency-manifest, strict JSON, local-link, and diff
 checks pass. This is bounded public synthetic local/fixture conformance only.
 It is not a private, held-out, native-platform, controlled-real, reliability,
 readiness, safety, whole-M1, or product-acceptance verdict.
 
-WP6 implementation and review are complete, but the project owner has not yet
-accepted WP6, frozen the Slice 5 contracts, or marked Slice 5 complete. The only
-eligible handoff is owner review of the acceptance packet in the current
-implementation record. M1/S6 may be planned only after that explicit decision;
-it is not eligible for implementation from this status document.
+The first exact whole-slice candidate received a `CORRECT` verdict because it
+executed only D01, bypassed the managed coordinator/query boundary, overstated
+traceability, left source-authority seals unresolved, and failed the whitespace
+diff check. The correction candidate now executes all four managed cases,
+validates immutable source-authority Git blobs, reports 35 direct requirements,
+and passes the aggregate gates and Release floor. A fresh whole-slice re-review
+of the exact corrected commit is still required.
+
+WP6 is not owner-accepted, the Slice 5 contracts are not frozen, and Slice 5 is
+not complete. The only eligible handoff after a final `ACCEPT` review is owner
+review of the acceptance packet in the current implementation record. M1/S6
+may be planned only after that explicit owner decision; it is not eligible for
+implementation from this status document.
 
 The rejected preauthored 28-package comprehensive corpus is not a current input
 and was not reconstructed. WP4 and WP5 each own the small semantic cases for
