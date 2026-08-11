@@ -1,12 +1,31 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Contracts', 'StateSurfaces', 'StateTotality')]
+    [ValidateSet('Contracts', 'StateSurfaces', 'StateTotality', 'Layer6Review')]
     [string] $Gate,
 
     [Parameter(Mandatory = $true)]
-    [string] $OutputRoot
+    [string] $OutputRoot,
+
+    [string] $BaselineCommit,
+
+    [string] $CandidateCommit
 )
+
+if ($Gate -eq 'Layer6Review' -and $PSVersionTable.PSEdition -ne 'Core') {
+    $pwsh = Get-Command pwsh.exe -ErrorAction Stop
+    $arguments = @(
+        '-NoProfile',
+        '-ExecutionPolicy', 'Bypass',
+        '-File', $PSCommandPath,
+        '-Gate', $Gate,
+        '-OutputRoot', $OutputRoot,
+        '-BaselineCommit', $BaselineCommit,
+        '-CandidateCommit', $CandidateCommit
+    )
+    & $pwsh.Source @arguments
+    exit $LASTEXITCODE
+}
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -65,6 +84,318 @@ function Write-Receipt([string] $Name, [System.Collections.IDictionary] $Evidenc
         (Join-Path $resolvedOutputRoot ($Name.ToLowerInvariant() + '.json')),
         $json + [Environment]::NewLine,
         [System.Text.UTF8Encoding]::new($false))
+}
+
+function Write-JsonReport([string] $Name, [object] $Value) {
+    $path = Join-Path $resolvedOutputRoot $Name
+    $json = $Value | ConvertTo-Json -Depth 32
+    [System.IO.File]::WriteAllText(
+        $path,
+        $json + [Environment]::NewLine,
+        [System.Text.UTF8Encoding]::new($false))
+    return [ordered]@{
+        file = $Name
+        sha256 = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant()
+    }
+}
+
+function Resolve-GitCommit([string] $Value, [string] $ParameterName) {
+    if ([string]::IsNullOrWhiteSpace($Value)) {
+        throw "Layer6Review requires -$ParameterName."
+    }
+    $resolved = (& git -C $repoRoot rev-parse --verify "$Value`^{commit}").Trim()
+    if ($LASTEXITCODE -ne 0 -or $resolved -notmatch '^[0-9a-f]{40,64}$') {
+        throw "Layer6Review cannot resolve -$ParameterName '$Value' to a commit."
+    }
+    return $resolved
+}
+
+function Get-CandidateText([string] $Commit, [string] $Path) {
+    $lines = @(& git -C $repoRoot show "$Commit`:$Path")
+    if ($LASTEXITCODE -ne 0) {
+        throw "Cannot read candidate blob '$Path'."
+    }
+    return [string]::Join("`n", $lines)
+}
+
+function Assert-NoDuplicateJsonProperties([System.Text.Json.JsonElement] $Element, [string] $Path) {
+    if ($Element.ValueKind -eq [System.Text.Json.JsonValueKind]::Object) {
+        $names = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+        foreach ($property in $Element.EnumerateObject()) {
+            if (-not $names.Add($property.Name)) {
+                throw "Changed JSON '$Path' contains duplicate property '$($property.Name)'."
+            }
+            Assert-NoDuplicateJsonProperties $property.Value $Path
+        }
+    }
+    elseif ($Element.ValueKind -eq [System.Text.Json.JsonValueKind]::Array) {
+        foreach ($item in $Element.EnumerateArray()) {
+            Assert-NoDuplicateJsonProperties $item $Path
+        }
+    }
+}
+
+function Test-Wp1AllowedPath([string] $Path) {
+    $exact = @(
+        'contracts/json-schema/README.md',
+        'contracts/protobuf/README.md',
+        'contracts/repository/public-fixture-registry.v1.schema.json',
+        'docs/evaluation/repository-evaluation-authority.v1.json',
+        'docs/plans/milestones/m1/slices/s6/README.md',
+        'docs/plans/milestones/m1/slices/s6/record.md',
+        'docs/plans/milestones/m1/slices/s6/wp1-contract-traceability.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp1-acceptance-ledger.v1.json',
+        'eng/generate-m1-slice6-wp1-traceability.ps1',
+        'eng/verify-m1-slice6.ps1',
+        'fixtures/public/public-fixture-registry.v1.json',
+        'fixtures/tooling/reseal-public-fixtures.mjs'
+    )
+    if ($exact -ccontains $Path) {
+        return $true
+    }
+    foreach ($prefix in @(
+        'contracts/json-schema/',
+        'contracts/protobuf/infinium/application/',
+        'contracts/protobuf/infinium/helper/v2/',
+        'fixtures/public/contracts/provider-wp1/',
+        'fixtures/tooling/Infinium.PublicFixtures/',
+        'src/Infinium.Application/',
+        'src/Infinium.Domain/',
+        'src/Infinium.Persistence/',
+        'tests/Infinium.ContractTests/',
+        'tests/Infinium.UnitTests/'
+    )) {
+        if ($Path.StartsWith($prefix, [System.StringComparison]::Ordinal)) {
+            return $true
+        }
+    }
+    return $false
+}
+
+function Test-Wp1ProtectedPath([string] $Path) {
+    $exact = @(
+        'AGENTS.md',
+        'docs/current-state.md',
+        'docs/evaluation/m1-continuation-verification-profile.md',
+        'docs/plans/milestones/m1/slices/s6/current.md',
+        'docs/plans/milestones/m1/slices/s6/orchestrator-handoff.md',
+        'docs/plans/milestones/m1/slices/s6/plan.md',
+        'docs/research/investigations/RESEARCH-0054-slice6-openai-profile-and-implementation-readiness-refresh.md',
+        'docs/architecture/decisions/ADR-0023-atomic-cost-ledger-and-hard-budget-enforcement.md',
+        'contracts/json-schema/effective-scan-configuration.v1.schema.json',
+        'contracts/json-schema/run-output.v1.schema.json',
+        'contracts/json-schema/cli-summary.v1.schema.json',
+        'src/Infinium.Application/Serialization/RunOutputJsonCodec.cs',
+        'src/Infinium.Application/Serialization/CliSummaryJsonCodec.cs'
+    )
+    if ($exact -ccontains $Path) {
+        return $true
+    }
+    return $Path.StartsWith('contracts/protobuf/infinium/helper/v1/', [System.StringComparison]::Ordinal)
+}
+
+function Invoke-Layer6ReviewGate {
+    $baselineHash = Resolve-GitCommit $BaselineCommit 'BaselineCommit'
+    $candidateHash = Resolve-GitCommit $CandidateCommit 'CandidateCommit'
+    & git -C $repoRoot merge-base --is-ancestor $baselineHash $candidateHash
+    if ($LASTEXITCODE -ne 0) {
+        throw "Layer6Review baseline $baselineHash is not an ancestor of candidate $candidateHash."
+    }
+
+    $nameStatusLines = @(& git -C $repoRoot -c core.quotePath=false diff --name-status --find-renames $baselineHash $candidateHash --)
+    if ($LASTEXITCODE -ne 0) {
+        throw 'Layer6Review could not derive the candidate change set.'
+    }
+
+    $changedPaths = [System.Collections.Generic.List[object]]::new()
+    foreach ($line in $nameStatusLines) {
+        if ([string]::IsNullOrWhiteSpace($line)) {
+            continue
+        }
+        $parts = $line -split "`t"
+        $status = $parts[0]
+        $paths = if ($status.StartsWith('R', [System.StringComparison]::Ordinal)) { @($parts[1], $parts[2]) } else { @($parts[1]) }
+        foreach ($path in $paths) {
+            $isProtected = Test-Wp1ProtectedPath $path
+            $isAllowed = Test-Wp1AllowedPath $path
+            $privateOrArchive = $path -match '(?i)(^|/)(private|legacy|archive)(/|$)' -or
+                $path -match '(?i)independent-slice3-evaluator' -or
+                $path -match '(?i)^docs/evaluation/fixtures/'
+            $baselineBlob = $null
+            $candidateBlob = $null
+            & git -C $repoRoot cat-file -e "$baselineHash`:$path" 2>$null
+            if ($LASTEXITCODE -eq 0) {
+                $baselineBlob = (& git -C $repoRoot rev-parse "$baselineHash`:$path").Trim()
+            }
+            & git -C $repoRoot cat-file -e "$candidateHash`:$path" 2>$null
+            if ($LASTEXITCODE -eq 0) {
+                $candidateBlob = (& git -C $repoRoot rev-parse "$candidateHash`:$path").Trim()
+            }
+            $changedPaths.Add([ordered]@{
+                path = $path
+                status = $status
+                allowed = $isAllowed
+                protected = $isProtected
+                private_or_archive = $privateOrArchive
+                baseline_blob = $baselineBlob
+                candidate_blob = $candidateBlob
+            })
+        }
+    }
+
+    $pathFailures = @($changedPaths | Where-Object { -not $_.allowed -or $_.protected -or $_.private_or_archive })
+    $pathReport = Write-JsonReport 'layer6-changed-paths.json' ([ordered]@{
+        baseline_commit = $baselineHash
+        candidate_commit = $candidateHash
+        changed_path_count = $changedPaths.Count
+        failure_count = $pathFailures.Count
+        paths = @($changedPaths)
+    })
+
+    $jsonResults = [System.Collections.Generic.List[object]]::new()
+    foreach ($entry in @($changedPaths | Where-Object { $_.candidate_blob -and $_.path.EndsWith('.json', [System.StringComparison]::OrdinalIgnoreCase) })) {
+        $text = Get-CandidateText $candidateHash $entry.path
+        $options = [System.Text.Json.JsonDocumentOptions]::new()
+        $options.AllowTrailingCommas = $false
+        $options.CommentHandling = [System.Text.Json.JsonCommentHandling]::Disallow
+        $options.MaxDepth = 128
+        try {
+            $document = [System.Text.Json.JsonDocument]::Parse($text, $options)
+            try {
+                Assert-NoDuplicateJsonProperties $document.RootElement $entry.path
+            } finally {
+                $document.Dispose()
+            }
+            $jsonResults.Add([ordered]@{ path = $entry.path; valid = $true; error = $null })
+        } catch {
+            $jsonResults.Add([ordered]@{ path = $entry.path; valid = $false; error = $_.Exception.Message })
+        }
+    }
+    $jsonFailures = @($jsonResults | Where-Object { -not $_.valid })
+    $jsonReport = Write-JsonReport 'layer6-changed-json.json' ([ordered]@{
+        baseline_commit = $baselineHash
+        candidate_commit = $candidateHash
+        parsed_count = $jsonResults.Count
+        failure_count = $jsonFailures.Count
+        files = @($jsonResults)
+    })
+
+    $linkResults = [System.Collections.Generic.List[object]]::new()
+    $markdownLinkPattern = '(?<!!)\[[^\]]+\]\((?<target>[^)]+)\)'
+    foreach ($entry in @($changedPaths | Where-Object { $_.candidate_blob -and $_.path.EndsWith('.md', [System.StringComparison]::OrdinalIgnoreCase) })) {
+        $text = Get-CandidateText $candidateHash $entry.path
+        foreach ($match in [regex]::Matches($text, $markdownLinkPattern)) {
+            $target = $match.Groups['target'].Value.Trim()
+            if ($target.StartsWith('<') -and $target.EndsWith('>')) {
+                $target = $target.Substring(1, $target.Length - 2)
+            }
+            if ($target -match '^(?:https?://|mailto:|#)') {
+                continue
+            }
+            $pathTarget = ($target -split '#', 2)[0]
+            if ([string]::IsNullOrWhiteSpace($pathTarget)) {
+                continue
+            }
+            $pathTarget = [System.Uri]::UnescapeDataString($pathTarget)
+            $baseDirectory = [System.IO.Path]::GetDirectoryName($entry.path.Replace('/', [System.IO.Path]::DirectorySeparatorChar))
+            $combined = [System.IO.Path]::GetFullPath((Join-Path $repoRoot (Join-Path $baseDirectory $pathTarget)))
+            $insideRepository = $combined.StartsWith($repoRoot + [System.IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase)
+            $resolvedRelative = if ($insideRepository) {
+                [System.IO.Path]::GetRelativePath($repoRoot, $combined).Replace([System.IO.Path]::DirectorySeparatorChar, '/')
+            } else { $null }
+            $exists = $false
+            if ($insideRepository) {
+                & git -C $repoRoot cat-file -e "$candidateHash`:$resolvedRelative" 2>$null
+                $exists = $LASTEXITCODE -eq 0
+            }
+            $linkResults.Add([ordered]@{
+                source = $entry.path
+                target = $target
+                resolved_path = $resolvedRelative
+                valid = $insideRepository -and $exists
+            })
+        }
+    }
+    $linkFailures = @($linkResults | Where-Object { -not $_.valid })
+    $linkReport = Write-JsonReport 'layer6-relative-links.json' ([ordered]@{
+        baseline_commit = $baselineHash
+        candidate_commit = $candidateHash
+        checked_count = $linkResults.Count
+        failure_count = $linkFailures.Count
+        links = @($linkResults)
+    })
+
+    $claimMatches = [System.Collections.Generic.List[object]]::new()
+    $gapMatches = [System.Collections.Generic.List[object]]::new()
+    $claimPattern = '(?i)\b(Implementation-active|Accepted|Completed|passed|held-out|independently validated|reliable|ready)\b'
+    $gapPattern = '(?i)\b(unsupported|gap|abstention|deferred|blocked-authority-required|unavailable|unknown)\b'
+    foreach ($entry in @($changedPaths | Where-Object { $_.candidate_blob -and ($_.path.EndsWith('.md') -or $_.path.EndsWith('.json')) })) {
+        $lines = (Get-CandidateText $candidateHash $entry.path) -split "`n"
+        for ($index = 0; $index -lt $lines.Count; $index++) {
+            foreach ($match in [regex]::Matches($lines[$index], $claimPattern)) {
+                $claimMatches.Add([ordered]@{ path = $entry.path; line = $index + 1; term = $match.Value })
+            }
+            foreach ($match in [regex]::Matches($lines[$index], $gapPattern)) {
+                $gapMatches.Add([ordered]@{ path = $entry.path; line = $index + 1; term = $match.Value })
+            }
+        }
+    }
+    $claimReport = Write-JsonReport 'layer6-status-claims.json' ([ordered]@{
+        baseline_commit = $baselineHash
+        candidate_commit = $candidateHash
+        occurrence_count = $claimMatches.Count
+        occurrences = @($claimMatches)
+        disposition = 'review-required-occurrence-inventory-not-semantic-acceptance'
+    })
+    $gapReport = Write-JsonReport 'layer6-gap-inventory.json' ([ordered]@{
+        baseline_commit = $baselineHash
+        candidate_commit = $candidateHash
+        occurrence_count = $gapMatches.Count
+        occurrences = @($gapMatches)
+        disposition = 'retained-unsupported-and-gap-inventory'
+    })
+    $absenceReport = Write-JsonReport 'layer6-private-archive-absence.json' ([ordered]@{
+        baseline_commit = $baselineHash
+        candidate_commit = $candidateHash
+        changed_path_match_count = @($changedPaths | Where-Object { $_.private_or_archive }).Count
+        changed_path_matches = @($changedPaths | Where-Object { $_.private_or_archive } | ForEach-Object { $_.path })
+        private_access_permitted = $false
+        archive_access_permitted = $false
+    })
+
+    $failures = [System.Collections.Generic.List[string]]::new()
+    foreach ($failure in $pathFailures) {
+        $failures.Add("Changed path is outside WP1 authority or protected: $($failure.path)")
+    }
+    foreach ($failure in $jsonFailures) {
+        $failures.Add("Changed JSON is invalid: $($failure.path): $($failure.error)")
+    }
+    foreach ($failure in $linkFailures) {
+        $failures.Add("Changed Markdown has broken relative link: $($failure.source): $($failure.target)")
+    }
+
+    $status = if ($failures.Count -eq 0) { 'passed' } else { 'failed' }
+    Write-Receipt 'Layer6Review' ([ordered]@{
+        baseline_input = $BaselineCommit
+        baseline_commit = $baselineHash
+        candidate_input = $CandidateCommit
+        candidate_commit = $candidateHash
+        candidate_bound = $true
+        changed_path_count = $changedPaths.Count
+        allowed_path_failure_count = $pathFailures.Count
+        strict_changed_json_failure_count = $jsonFailures.Count
+        relative_link_failure_count = $linkFailures.Count
+        status_claim_occurrence_count = $claimMatches.Count
+        unsupported_gap_occurrence_count = $gapMatches.Count
+        failures = @($failures)
+        reports = @($pathReport, $jsonReport, $linkReport, $claimReport, $gapReport, $absenceReport)
+    }) $status
+    if ($failures.Count -gt 0) {
+        foreach ($failure in $failures) {
+            Write-Error $failure
+        }
+        throw "Layer6Review failed with $($failures.Count) finding(s)."
+    }
 }
 
 function Invoke-ContractsGate {
@@ -235,6 +566,7 @@ try {
         'Contracts' { Invoke-ContractsGate }
         'StateSurfaces' { Invoke-StateSurfaceGate $false }
         'StateTotality' { Invoke-StateSurfaceGate $true }
+        'Layer6Review' { Invoke-Layer6ReviewGate }
     }
 } finally {
     Pop-Location
