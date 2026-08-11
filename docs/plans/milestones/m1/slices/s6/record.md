@@ -2267,3 +2267,11 @@ protected-root write, WP3 implementation, current-state advancement, or Slice
 5 v1 byte/semantic change. Final package acceptance remains reserved to a
 fresh read-only reviewer; this entry records an implementation candidate, not
 self-acceptance. No push occurred.
+
+Candidate-bound `Layer6Review` passed against exact WP2 implementation base
+`01af949dc42c842eea6a922ef2fadba90039b3ec` and product candidate
+`90d616daa91768ef2f87c15bc9d8a4e28a31f420`. Its 1,650-byte receipt has
+SHA-256
+`18f860aa65f5957c8323f400f6be98886e562db866be177faf822405ccc3dd7c`,
+with 52 changed paths and zero allowed-path, strict-JSON, relative-link, or
+private/archive failures. Network and credential permissions remained false.
