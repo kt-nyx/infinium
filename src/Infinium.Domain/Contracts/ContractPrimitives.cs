@@ -130,4 +130,13 @@ public static class ContractConstants
     public const string AnalysisExecutionInputSchemaId = "infinium.analysis.execution-input/v1";
     public const string CandidateDeliveredInputSchemaId = "infinium.analysis.candidate-delivered-input/v1";
     public const string CandidateDeliveredExpansionSchemaId = "infinium.analysis.candidate-delivered-expansion/v1";
+    public const string ProviderAccessProfileSchemaId = "infinium.provider.access-profile/v1";
+    public const string ProviderOperationSchemaId = "infinium.provider.operation/v1";
+    public const string ProviderResponseSchemaId = "infinium.provider.response/v1";
+    public const string SourceClaimExtractionSchemaId = "infinium.llm.source-claim-extraction/v1";
+    public const string CandidateInvestigationSchemaId = "infinium.llm.candidate-investigation/v1";
+    public const string ProviderExecutionInputSchemaId = "infinium.provider.execution-input/v1";
+    public const string EffectiveScanConfigurationV2SchemaId = "infinium.scan.effective-configuration/v2";
+    public const string RunOutputV2SchemaId = "infinium.run-output/v2";
+    public const string CliSummaryV2SchemaId = "infinium.cli-summary/v2";
 }

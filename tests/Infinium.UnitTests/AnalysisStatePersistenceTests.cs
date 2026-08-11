@@ -27,6 +27,19 @@ public sealed class AnalysisStatePersistenceTests
         "lineage_event_edges",
     ];
 
+    private static readonly string[] ProviderSchema6TablesInCreationOrder =
+    [
+        "provider_access_profiles", "provider_generations", "provider_credential_intents",
+        "provider_capability_snapshots", "provider_price_snapshots", "evidence_acquisition_runs",
+        "evidence_acquisition_parent_links", "evidence_acquisition_application_links",
+        "provider_operation_authorizations", "provider_operation_attempts", "provider_requests",
+        "provider_reservations", "provider_reservation_scope_items", "provider_dispatch_fences",
+        "provider_transport_events", "provider_responses", "provider_usage_entries",
+        "provider_settlements", "provider_settlement_adjustments", "provider_semantic_proposals",
+        "provider_semantic_admissions", "provider_replay_edges", "provider_operation_projection",
+        "provider_profile_projection", "provider_budget_projection",
+    ];
+
     private static readonly string[] AnalysisTables =
     [
         "analysis_candidates",
@@ -101,26 +114,26 @@ public sealed class AnalysisStatePersistenceTests
     [TestCategory("Cases")]
     [TestProperty("Category", "Unit")]
     [TestProperty("Category", "Cases")]
-    public void AnalysisStateModelSchema5HasExactMigrationContractAndObjects()
+    public void AnalysisStateModelSchema6HasExactMigrationContractAndObjects()
     {
         using TemporaryStore temporary = new();
         using AuthoritativeStore store = temporary.Open();
-        Assert.AreEqual(5, store.GetSchemaVersion());
+        Assert.AreEqual(6, store.GetSchemaVersion());
 
         using SqliteConnection connection = temporary.OpenRaw();
-        Assert.AreEqual("5", ScalarText(connection, "PRAGMA user_version;"));
+        Assert.AreEqual("6", ScalarText(connection, "PRAGMA user_version;"));
         Assert.AreEqual(
-            "5",
+            "6",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'schema_version';"));
         Assert.AreEqual(
-            "1.4.0",
+            "1.5.0",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'storage_contract_version';"));
         Assert.AreEqual(
-            "e6d27152687e6b0c806da58a716a9ab909817f046fbe3bf11d8846da5e5dc87d",
+            "c820c0935dc4e5ff4c68dd70b40be6a6e232661357db89e2cb4b454850382124",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'schema_fingerprint';"));
@@ -132,6 +145,15 @@ public sealed class AnalysisStatePersistenceTests
                 SELECT CAST(from_version AS TEXT) || '|' || CAST(to_version AS TEXT)
                 FROM migration_history
                 WHERE migration_id = 'M1-S5-WP4-0005';
+                """));
+        Assert.AreEqual(
+            "5|6",
+            ScalarText(
+                connection,
+                """
+                SELECT CAST(from_version AS TEXT) || '|' || CAST(to_version AS TEXT)
+                FROM migration_history
+                WHERE migration_id = 'M1-S6-0006';
                 """));
 
         CollectionAssert.AreEquivalent(
@@ -171,12 +193,12 @@ public sealed class AnalysisStatePersistenceTests
     [TestCategory("Cases")]
     [TestProperty("Category", "Unit")]
     [TestProperty("Category", "Cases")]
-    public void AnalysisStateModelMigratesAcceptedSchema4ForwardAndRefusesNewerSchema()
+    public void AnalysisStateModelMigratesAcceptedSchema5ForwardAndRefusesNewerSchema()
     {
         using TemporaryStore migration = new();
         using (AuthoritativeStore store = migration.Open())
         {
-            Assert.AreEqual(5, store.GetSchemaVersion());
+            Assert.AreEqual(6, store.GetSchemaVersion());
         }
 
         using (SqliteConnection connection = migration.OpenRaw())
@@ -185,36 +207,25 @@ public sealed class AnalysisStatePersistenceTests
             command.CommandText =
                 string.Join(
                     Environment.NewLine,
-                    AnalysisFindingCaseTables.Reverse().Select(table => $"DROP TABLE {table};"))
+                    ProviderSchema6TablesInCreationOrder.Reverse().Select(table => $"DROP TABLE {table};"))
                 +
                 """
 
-                ALTER TABLE lineage_events DROP COLUMN predecessor_occurrence_id;
-                ALTER TABLE lineage_events DROP COLUMN successor_occurrence_id;
-                DROP INDEX idx_findings_signature;
-                ALTER TABLE finding_occurrences DROP COLUMN analyzer_version;
-                CREATE INDEX idx_findings_signature ON finding_occurrences(
-                    analyzer_family, identity_contract_version, canonical_signature);
-                ALTER TABLE analysis_coverage DROP COLUMN analyzer_id;
-                ALTER TABLE analysis_coverage DROP COLUMN denominator_label;
-                ALTER TABLE analysis_coverage DROP COLUMN exclusions_json;
-                ALTER TABLE analysis_coverage DROP COLUMN member_results_json;
-
-                DELETE FROM migration_history WHERE migration_id = 'M1-S5-WP4-0005';
-                UPDATE store_metadata SET value = '4' WHERE key = 'schema_version';
-                UPDATE store_metadata SET value = '1.3.0'
+                DELETE FROM migration_history WHERE migration_id = 'M1-S6-0006';
+                UPDATE store_metadata SET value = '5' WHERE key = 'schema_version';
+                UPDATE store_metadata SET value = '1.4.0'
                     WHERE key = 'storage_contract_version';
                 UPDATE store_metadata SET value =
-                    '0e4fbeb821fdd83d86737d60979fa35d9a1300a4d971450c516f66d07ef2231e'
+                    'e6d27152687e6b0c806da58a716a9ab909817f046fbe3bf11d8846da5e5dc87d'
                     WHERE key = 'schema_fingerprint';
-                PRAGMA user_version = 4;
+                PRAGMA user_version = 5;
                 """;
             command.ExecuteNonQuery();
         }
 
         using (AuthoritativeStore migrated = migration.Open())
         {
-            Assert.AreEqual(5, migrated.GetSchemaVersion());
+            Assert.AreEqual(6, migrated.GetSchemaVersion());
         }
 
         using (SqliteConnection connection = migration.OpenRaw())
@@ -223,19 +234,19 @@ public sealed class AnalysisStatePersistenceTests
                 1L,
                 ScalarInt64(
                     connection,
-                    "SELECT COUNT(*) FROM migration_history WHERE migration_id = 'M1-S5-WP4-0005';"));
+                    "SELECT COUNT(*) FROM migration_history WHERE migration_id = 'M1-S6-0006';"));
         }
 
         using TemporaryStore newer = new();
         using (AuthoritativeStore store = newer.Open())
         {
-            Assert.AreEqual(5, store.GetSchemaVersion());
+            Assert.AreEqual(6, store.GetSchemaVersion());
         }
 
         using (SqliteConnection connection = newer.OpenRaw())
         using (SqliteCommand command = connection.CreateCommand())
         {
-            command.CommandText = "PRAGMA user_version = 6;";
+            command.CommandText = "PRAGMA user_version = 7;";
             command.ExecuteNonQuery();
         }
 
@@ -243,7 +254,7 @@ public sealed class AnalysisStatePersistenceTests
         Assert.IsNotNull(exception.InnerException);
         StringAssert.Contains(
             exception.InnerException.Message,
-            "Database schema 6 is newer than supported schema 5.");
+            "Database schema 7 is newer than supported schema 6.");
     }
 
     [TestMethod]

@@ -42,6 +42,15 @@ public sealed partial class SchemaCompatibilityTests
         "finding-case.v1.schema.json",
         "analysis-replay.v1.schema.json",
         "analysis-execution-input.v1.schema.json",
+        "provider-access-profile.v1.schema.json",
+        "provider-operation.v1.schema.json",
+        "provider-response.v1.schema.json",
+        "source-claim-extraction.v1.schema.json",
+        "candidate-investigation.v1.schema.json",
+        "provider-execution-input.v1.schema.json",
+        "effective-scan-configuration.v2.schema.json",
+        "run-output.v2.schema.json",
+        "cli-summary.v2.schema.json",
     ];
 
     private static readonly string[] ProtoFiles =
@@ -53,6 +62,7 @@ public sealed partial class SchemaCompatibilityTests
         "infinium/application/v1/application.proto",
         "infinium/worker/v1/worker.proto",
         "infinium/helper/v1/helper.proto",
+        "infinium/helper/v2/helper.proto",
     ];
 
     [TestMethod]
@@ -598,10 +608,10 @@ public sealed partial class SchemaCompatibilityTests
         }
     }
 
-    [GeneratedRegex(@"^\s*package\s+infinium\.[a-z.]+\.v1\s*;", RegexOptions.Multiline | RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"^\s*package\s+infinium\.[a-z.]+\.v[12]\s*;", RegexOptions.Multiline | RegexOptions.CultureInvariant)]
     private static partial Regex VersionedPackageRegex();
 
-    [GeneratedRegex(@"^\s*option\s+csharp_namespace\s*=\s*""Infinium\.Contracts\.[A-Za-z.]+\.V1""\s*;", RegexOptions.Multiline | RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"^\s*option\s+csharp_namespace\s*=\s*""Infinium\.Contracts\.[A-Za-z.]+\.V[12]""\s*;", RegexOptions.Multiline | RegexOptions.CultureInvariant)]
     private static partial Regex VersionedCsharpNamespaceRegex();
 
     [GeneratedRegex(@"^\s*import\s+""([^""]+)""\s*;", RegexOptions.Multiline | RegexOptions.CultureInvariant)]

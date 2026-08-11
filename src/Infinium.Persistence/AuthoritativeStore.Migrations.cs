@@ -151,6 +151,78 @@ public sealed partial class AuthoritativeStore
                     ("$now", ToText(DateTimeOffset.UtcNow)));
                 transaction.Commit();
             }
+
+            if (current <= 5)
+            {
+                ValidateSchema5MigrationSource();
+                using var transaction = BeginTransaction();
+                Execute(SchemaV6, transaction);
+                CreateAppendOnlyTriggers(SchemaV6AppendOnlyTables, transaction);
+                string schemaFingerprint = ComputeSchemaFingerprint(connection, transaction);
+                Execute(
+                    """
+                    UPDATE store_metadata SET value = '6' WHERE key = 'schema_version';
+                    UPDATE store_metadata SET value = '1.5.0'
+                    WHERE key = 'storage_contract_version';
+                    UPDATE store_metadata SET value = $schema_fingerprint
+                    WHERE key = 'schema_fingerprint';
+                    INSERT INTO migration_history(
+                        migration_id, from_version, to_version, applied_at, sqlite_source_id)
+                    VALUES ('M1-S6-0006', 5, 6, $now, $sqlite_source);
+                    PRAGMA user_version = 6;
+                    """,
+                    transaction,
+                    ("$schema_fingerprint", schemaFingerprint),
+                    ("$sqlite_source", BindingIdentity.SourceId),
+                    ("$now", ToText(DateTimeOffset.UtcNow)));
+                transaction.Commit();
+            }
+        }
+    }
+
+    private void ValidateSchema5MigrationSource()
+    {
+        Dictionary<string, string> metadata = new(StringComparer.Ordinal);
+        using (SqliteCommand command = connection.CreateCommand())
+        {
+            command.CommandText =
+                """
+                SELECT key, value FROM store_metadata
+                WHERE key IN (
+                    'schema_version','schema_fingerprint','storage_contract_version',
+                    'sqlite_version','sqlite_source_id');
+                """;
+            using SqliteDataReader reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                metadata.Add(reader.GetString(0), reader.GetString(1));
+            }
+        }
+
+        const string schema5Fingerprint = "e6d27152687e6b0c806da58a716a9ab909817f046fbe3bf11d8846da5e5dc87d";
+        if (metadata.Count != 5
+            || metadata["schema_version"] != "5"
+            || metadata["storage_contract_version"] != "1.4.0"
+            || metadata["sqlite_version"] != BindingIdentity.Version
+            || metadata["sqlite_source_id"] != BindingIdentity.SourceId
+            || metadata["schema_fingerprint"] != schema5Fingerprint
+            || ComputeSchemaFingerprint(connection) != schema5Fingerprint)
+        {
+            throw new InvalidOperationException(
+                "Schema 5 does not match the exact accepted Slice 5 storage contract required for M1-S6-0006.");
+        }
+
+        using SqliteCommand migration = connection.CreateCommand();
+        migration.CommandText =
+            """
+            SELECT COUNT(*) FROM migration_history
+            WHERE migration_id = 'M1-S5-WP4-0005' AND from_version = 4 AND to_version = 5
+              AND sqlite_source_id = $source;
+            """;
+        migration.Parameters.AddWithValue("$source", BindingIdentity.SourceId);
+        if (Convert.ToInt32(migration.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
+        {
+            throw new InvalidOperationException("Schema 5 migration provenance is invalid.");
         }
     }
 
@@ -299,6 +371,10 @@ public sealed partial class AuthoritativeStore
         "index:idx_snapshot_capture_dispatch",
         "index:idx_snapshot_capture_one_live_attempt",
         "index:idx_taxonomy_subject",
+        "index:idx_provider_active_generation",
+        "index:idx_provider_one_live_attempt",
+        "index:idx_provider_request_fingerprint",
+        "index:idx_provider_reservation_scope",
         "table:analysis_candidates",
         "table:analysis_coverage",
         "table:analysis_coverage_failure_links",
@@ -366,6 +442,31 @@ public sealed partial class AuthoritativeStore
         "table:snapshot_capture_publications",
         "table:taxonomy_assignments",
         "table:taxonomy_projection_edges",
+        "table:evidence_acquisition_application_links",
+        "table:evidence_acquisition_parent_links",
+        "table:evidence_acquisition_runs",
+        "table:provider_access_profiles",
+        "table:provider_budget_projection",
+        "table:provider_capability_snapshots",
+        "table:provider_credential_intents",
+        "table:provider_dispatch_fences",
+        "table:provider_generations",
+        "table:provider_operation_attempts",
+        "table:provider_operation_authorizations",
+        "table:provider_operation_projection",
+        "table:provider_profile_projection",
+        "table:provider_price_snapshots",
+        "table:provider_replay_edges",
+        "table:provider_requests",
+        "table:provider_reservation_scope_items",
+        "table:provider_reservations",
+        "table:provider_responses",
+        "table:provider_semantic_admissions",
+        "table:provider_semantic_proposals",
+        "table:provider_settlement_adjustments",
+        "table:provider_settlements",
+        "table:provider_transport_events",
+        "table:provider_usage_entries",
         "trigger:analysis_candidates_append_only_delete",
         "trigger:analysis_candidates_append_only_update",
         "trigger:analysis_coverage_append_only_delete",
@@ -473,6 +574,50 @@ public sealed partial class AuthoritativeStore
         "trigger:snapshot_capture_request_immutable",
         "trigger:snapshot_capture_publications_append_only_delete",
         "trigger:snapshot_capture_publications_append_only_update",
+        "trigger:evidence_acquisition_application_links_append_only_delete",
+        "trigger:evidence_acquisition_application_links_append_only_update",
+        "trigger:evidence_acquisition_parent_links_append_only_delete",
+        "trigger:evidence_acquisition_parent_links_append_only_update",
+        "trigger:evidence_acquisition_runs_append_only_delete",
+        "trigger:evidence_acquisition_runs_append_only_update",
+        "trigger:provider_access_profiles_append_only_delete",
+        "trigger:provider_access_profiles_append_only_update",
+        "trigger:provider_capability_snapshots_append_only_delete",
+        "trigger:provider_capability_snapshots_append_only_update",
+        "trigger:provider_credential_intents_append_only_delete",
+        "trigger:provider_credential_intents_append_only_update",
+        "trigger:provider_dispatch_fences_append_only_delete",
+        "trigger:provider_dispatch_fences_append_only_update",
+        "trigger:provider_generations_append_only_delete",
+        "trigger:provider_generations_append_only_update",
+        "trigger:provider_operation_attempts_append_only_delete",
+        "trigger:provider_operation_attempts_append_only_update",
+        "trigger:provider_operation_authorizations_append_only_delete",
+        "trigger:provider_operation_authorizations_append_only_update",
+        "trigger:provider_price_snapshots_append_only_delete",
+        "trigger:provider_price_snapshots_append_only_update",
+        "trigger:provider_replay_edges_append_only_delete",
+        "trigger:provider_replay_edges_append_only_update",
+        "trigger:provider_requests_append_only_delete",
+        "trigger:provider_requests_append_only_update",
+        "trigger:provider_reservation_scope_items_append_only_delete",
+        "trigger:provider_reservation_scope_items_append_only_update",
+        "trigger:provider_reservations_append_only_delete",
+        "trigger:provider_reservations_append_only_update",
+        "trigger:provider_responses_append_only_delete",
+        "trigger:provider_responses_append_only_update",
+        "trigger:provider_semantic_admissions_append_only_delete",
+        "trigger:provider_semantic_admissions_append_only_update",
+        "trigger:provider_semantic_proposals_append_only_delete",
+        "trigger:provider_semantic_proposals_append_only_update",
+        "trigger:provider_settlement_adjustments_append_only_delete",
+        "trigger:provider_settlement_adjustments_append_only_update",
+        "trigger:provider_settlements_append_only_delete",
+        "trigger:provider_settlements_append_only_update",
+        "trigger:provider_transport_events_append_only_delete",
+        "trigger:provider_transport_events_append_only_update",
+        "trigger:provider_usage_entries_append_only_delete",
+        "trigger:provider_usage_entries_append_only_update",
     ];
 
     private static readonly string[] SchemaV4AppendOnlyTables =
@@ -523,6 +668,32 @@ public sealed partial class AuthoritativeStore
         "reconciliation_metadata",
         "reconciliation_proof_links",
         "taxonomy_projection_edges",
+    ];
+
+    private static readonly string[] SchemaV6AppendOnlyTables =
+    [
+        "evidence_acquisition_application_links",
+        "evidence_acquisition_parent_links",
+        "evidence_acquisition_runs",
+        "provider_access_profiles",
+        "provider_capability_snapshots",
+        "provider_credential_intents",
+        "provider_dispatch_fences",
+        "provider_generations",
+        "provider_operation_attempts",
+        "provider_operation_authorizations",
+        "provider_price_snapshots",
+        "provider_replay_edges",
+        "provider_requests",
+        "provider_reservation_scope_items",
+        "provider_reservations",
+        "provider_responses",
+        "provider_semantic_admissions",
+        "provider_semantic_proposals",
+        "provider_settlement_adjustments",
+        "provider_settlements",
+        "provider_transport_events",
+        "provider_usage_entries",
     ];
 
     private const string SchemaV5 =
@@ -1518,6 +1689,266 @@ public sealed partial class AuthoritativeStore
         CREATE INDEX idx_reconciliation_successor ON reconciliation_assessments(
             subject_kind, successor_occurrence_id);
         CREATE INDEX idx_lineage_successor ON lineage_events(subject_kind, successor_logical_id);
+        """;
+
+    private const string SchemaV6 =
+        """
+        CREATE TABLE provider_access_profiles(
+            profile_id TEXT PRIMARY KEY,
+            provider TEXT NOT NULL CHECK(provider = 'openai'),
+            purpose TEXT NOT NULL CHECK(purpose = 'responses'),
+            display_label TEXT NOT NULL,
+            account_identity_id TEXT NOT NULL,
+            billing_scope_identity_id TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        ) STRICT;
+        CREATE TABLE provider_generations(
+            generation_id TEXT PRIMARY KEY,
+            profile_id TEXT NOT NULL REFERENCES provider_access_profiles(profile_id) ON DELETE RESTRICT,
+            generation_ordinal INTEGER NOT NULL CHECK(generation_ordinal > 0),
+            revocation_epoch INTEGER NOT NULL CHECK(revocation_epoch >= 0),
+            created_at TEXT NOT NULL,
+            UNIQUE(profile_id,generation_ordinal),
+            UNIQUE(profile_id,generation_id)
+        ) STRICT;
+        CREATE TABLE provider_credential_intents(
+            intent_id TEXT PRIMARY KEY,
+            profile_id TEXT NOT NULL REFERENCES provider_access_profiles(profile_id) ON DELETE RESTRICT,
+            generation_id TEXT NOT NULL REFERENCES provider_generations(generation_id) ON DELETE RESTRICT,
+            intent_kind TEXT NOT NULL CHECK(intent_kind IN ('enroll','replace','verify','disable','delete','recover')),
+            intent_state TEXT NOT NULL CHECK(intent_state IN ('pending','completed','failed','cancelled','unavailable')),
+            from_lifecycle_state TEXT NOT NULL CHECK(from_lifecycle_state IN (
+              'none','pending-enrollment','active-unverified','active-verified','replacing','disabled',
+              'delete-pending','deleted','secure-store-unavailable','recovery-required')),
+            to_lifecycle_state TEXT NOT NULL CHECK(to_lifecycle_state IN (
+              'pending-enrollment','active-unverified','active-verified','replacing','disabled',
+              'delete-pending','deleted','secure-store-unavailable','recovery-required')),
+            verification_state TEXT NOT NULL CHECK(verification_state IN (
+              'available','unavailable','unsupported','not-applicable','not-used')),
+            capability_snapshot_id TEXT,
+            recovery_disposition TEXT NOT NULL,
+            cleanup_disposition TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        ) STRICT;
+        CREATE TABLE provider_capability_snapshots(
+            capability_snapshot_id TEXT PRIMARY KEY,
+            provider TEXT NOT NULL,
+            model TEXT NOT NULL,
+            service_tier TEXT NOT NULL,
+            profile_json TEXT NOT NULL CHECK(json_valid(profile_json)),
+            fingerprint TEXT NOT NULL UNIQUE,
+            created_at TEXT NOT NULL
+        ) STRICT;
+        CREATE TABLE provider_price_snapshots(
+            price_snapshot_id TEXT PRIMARY KEY,
+            provider TEXT NOT NULL,
+            model TEXT NOT NULL,
+            currency TEXT NOT NULL CHECK(currency = 'USD'),
+            rules_json TEXT NOT NULL CHECK(json_valid(rules_json)),
+            fingerprint TEXT NOT NULL UNIQUE,
+            created_at TEXT NOT NULL
+        ) STRICT;
+        CREATE TABLE evidence_acquisition_runs(
+            acquisition_run_id TEXT PRIMARY KEY,
+            installation_snapshot_id TEXT,
+            analysis_context_id TEXT NOT NULL,
+            effective_configuration_id TEXT NOT NULL,
+            resolved_input_manifest_id TEXT NOT NULL,
+            lifecycle_state TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        ) STRICT;
+        CREATE TABLE evidence_acquisition_parent_links(
+            parent_link_id TEXT PRIMARY KEY,
+            acquisition_run_id TEXT NOT NULL REFERENCES evidence_acquisition_runs(acquisition_run_id) ON DELETE RESTRICT,
+            analysis_run_id TEXT NOT NULL REFERENCES runs(run_id) ON DELETE RESTRICT,
+            relation TEXT NOT NULL CHECK(relation IN ('initiated-by','attached','detached')),
+            dispatch_sequence_cutoff INTEGER,
+            created_at TEXT NOT NULL
+        ) STRICT;
+        CREATE TABLE evidence_acquisition_application_links(
+            application_link_id TEXT PRIMARY KEY,
+            acquisition_run_id TEXT NOT NULL REFERENCES evidence_acquisition_runs(acquisition_run_id) ON DELETE RESTRICT,
+            analysis_run_id TEXT NOT NULL REFERENCES runs(run_id) ON DELETE RESTRICT,
+            admitted_artifact_id TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        ) STRICT;
+        CREATE TABLE provider_operation_authorizations(
+            authorization_id TEXT PRIMARY KEY,
+            operation_id TEXT NOT NULL UNIQUE,
+            owner_kind TEXT NOT NULL CHECK(owner_kind IN ('analysis-run','evidence-acquisition-run')),
+            owner_id TEXT NOT NULL,
+            profile_id TEXT NOT NULL REFERENCES provider_access_profiles(profile_id) ON DELETE RESTRICT,
+            generation_id TEXT NOT NULL REFERENCES provider_generations(generation_id) ON DELETE RESTRICT,
+            revocation_epoch INTEGER NOT NULL CHECK(revocation_epoch >= 0),
+            request_fingerprint TEXT NOT NULL,
+            capability_snapshot_id TEXT NOT NULL REFERENCES provider_capability_snapshots(capability_snapshot_id) ON DELETE RESTRICT,
+            price_snapshot_id TEXT NOT NULL REFERENCES provider_price_snapshots(price_snapshot_id) ON DELETE RESTRICT,
+            limits_json TEXT NOT NULL CHECK(json_valid(limits_json)),
+            confirmed_at TEXT NOT NULL
+        ) STRICT;
+        CREATE TABLE provider_operation_attempts(
+            provider_attempt_id TEXT PRIMARY KEY,
+            operation_id TEXT NOT NULL REFERENCES provider_operation_authorizations(operation_id) ON DELETE RESTRICT,
+            attempt_ordinal INTEGER NOT NULL CHECK(attempt_ordinal > 0),
+            initial_state TEXT NOT NULL CHECK(initial_state = 'proposed'),
+            coordinator_fencing_epoch INTEGER NOT NULL CHECK(coordinator_fencing_epoch > 0),
+            created_at TEXT NOT NULL,
+            UNIQUE(operation_id,attempt_ordinal)
+        ) STRICT;
+        CREATE TABLE provider_requests(
+            request_id TEXT PRIMARY KEY,
+            operation_id TEXT NOT NULL REFERENCES provider_operation_authorizations(operation_id) ON DELETE RESTRICT,
+            provider_attempt_id TEXT NOT NULL REFERENCES provider_operation_attempts(provider_attempt_id) ON DELETE RESTRICT,
+            request_fingerprint TEXT NOT NULL,
+            settings_fingerprint TEXT NOT NULL,
+            output_schema_fingerprint TEXT NOT NULL,
+            payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+            created_at TEXT NOT NULL,
+            UNIQUE(operation_id,request_fingerprint)
+        ) STRICT;
+        CREATE UNIQUE INDEX idx_provider_request_fingerprint ON provider_requests(request_fingerprint);
+        CREATE TABLE provider_reservations(
+            reservation_id TEXT PRIMARY KEY,
+            operation_id TEXT NOT NULL REFERENCES provider_operation_authorizations(operation_id) ON DELETE RESTRICT,
+            provider_attempt_id TEXT NOT NULL REFERENCES provider_operation_attempts(provider_attempt_id) ON DELETE RESTRICT,
+            request_id TEXT NOT NULL REFERENCES provider_requests(request_id) ON DELETE RESTRICT,
+            usage_json TEXT NOT NULL CHECK(json_valid(usage_json)),
+            maximum_nano_usd INTEGER NOT NULL CHECK(maximum_nano_usd > 0),
+            expires_at TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            UNIQUE(operation_id)
+        ) STRICT;
+        CREATE TABLE provider_reservation_scope_items(
+            reservation_scope_item_id TEXT PRIMARY KEY,
+            reservation_id TEXT NOT NULL REFERENCES provider_reservations(reservation_id) ON DELETE RESTRICT,
+            scope_kind TEXT NOT NULL CHECK(scope_kind IN ('operation','evidence-acquisition-run','analysis-run','provider-profile','provider-account','global')),
+            scope_id TEXT NOT NULL,
+            usage_json TEXT NOT NULL CHECK(json_valid(usage_json)),
+            nano_usd INTEGER NOT NULL CHECK(nano_usd >= 0),
+            UNIQUE(reservation_id,scope_kind,scope_id)
+        ) STRICT;
+        CREATE INDEX idx_provider_reservation_scope ON provider_reservation_scope_items(scope_kind,scope_id);
+        CREATE TABLE provider_dispatch_fences(
+            dispatch_fence_id TEXT PRIMARY KEY,
+            reservation_id TEXT NOT NULL REFERENCES provider_reservations(reservation_id) ON DELETE RESTRICT,
+            provider_attempt_id TEXT NOT NULL REFERENCES provider_operation_attempts(provider_attempt_id) ON DELETE RESTRICT,
+            coordinator_fencing_epoch INTEGER NOT NULL CHECK(coordinator_fencing_epoch > 0),
+            generation_id TEXT NOT NULL REFERENCES provider_generations(generation_id) ON DELETE RESTRICT,
+            revocation_epoch INTEGER NOT NULL CHECK(revocation_epoch >= 0),
+            authorized INTEGER NOT NULL CHECK(authorized IN (0,1)),
+            decision_reason TEXT NOT NULL,
+            evaluated_at TEXT NOT NULL
+        ) STRICT;
+        CREATE TABLE provider_transport_events(
+            transport_event_id TEXT PRIMARY KEY,
+            provider_attempt_id TEXT NOT NULL REFERENCES provider_operation_attempts(provider_attempt_id) ON DELETE RESTRICT,
+            event_kind TEXT NOT NULL CHECK(event_kind IN ('not-started','may-have-started','started','response-staged','failed-known','ambiguous')),
+            sequence INTEGER NOT NULL CHECK(sequence > 0),
+            occurred_at TEXT NOT NULL,
+            UNIQUE(provider_attempt_id,sequence)
+        ) STRICT;
+        CREATE TABLE provider_responses(
+            response_record_id TEXT PRIMARY KEY,
+            request_id TEXT NOT NULL REFERENCES provider_requests(request_id) ON DELETE RESTRICT,
+            provider_attempt_id TEXT NOT NULL REFERENCES provider_operation_attempts(provider_attempt_id) ON DELETE RESTRICT,
+            raw_response_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+            response_fingerprint TEXT NOT NULL,
+            response_state TEXT NOT NULL,
+            response_metadata_json TEXT NOT NULL CHECK(json_valid(response_metadata_json)),
+            created_at TEXT NOT NULL,
+            UNIQUE(request_id)
+        ) STRICT;
+        CREATE TABLE provider_usage_entries(
+            usage_entry_id TEXT PRIMARY KEY,
+            provider_attempt_id TEXT NOT NULL REFERENCES provider_operation_attempts(provider_attempt_id) ON DELETE RESTRICT,
+            request_id TEXT NOT NULL REFERENCES provider_requests(request_id) ON DELETE RESTRICT,
+            usage_json TEXT NOT NULL CHECK(json_valid(usage_json)),
+            calculated_nano_usd INTEGER NOT NULL CHECK(calculated_nano_usd >= 0),
+            receipt_state TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            UNIQUE(provider_attempt_id)
+        ) STRICT;
+        CREATE TABLE provider_settlements(
+            settlement_id TEXT PRIMARY KEY,
+            reservation_id TEXT NOT NULL REFERENCES provider_reservations(reservation_id) ON DELETE RESTRICT,
+            usage_entry_id TEXT REFERENCES provider_usage_entries(usage_entry_id) ON DELETE RESTRICT,
+            state TEXT NOT NULL CHECK(state IN ('settled','failed-known','unresolved-hold','overrun')),
+            released_nano_usd INTEGER NOT NULL CHECK(released_nano_usd >= 0),
+            retained_hold_nano_usd INTEGER NOT NULL CHECK(retained_hold_nano_usd >= 0),
+            created_at TEXT NOT NULL,
+            UNIQUE(reservation_id)
+        ) STRICT;
+        CREATE TABLE provider_settlement_adjustments(
+            adjustment_id TEXT PRIMARY KEY,
+            settlement_id TEXT NOT NULL REFERENCES provider_settlements(settlement_id) ON DELETE RESTRICT,
+            delta_nano_usd INTEGER NOT NULL,
+            authority_kind TEXT NOT NULL,
+            reason TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        ) STRICT;
+        CREATE TABLE provider_semantic_proposals(
+            proposal_id TEXT PRIMARY KEY,
+            operation_id TEXT NOT NULL REFERENCES provider_operation_authorizations(operation_id) ON DELETE RESTRICT,
+            proposal_kind TEXT NOT NULL CHECK(proposal_kind IN ('source-claim','candidate-hypothesis','abstention','gap')),
+            payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+            created_at TEXT NOT NULL
+        ) STRICT;
+        CREATE TABLE provider_semantic_admissions(
+            admission_id TEXT PRIMARY KEY,
+            proposal_id TEXT NOT NULL REFERENCES provider_semantic_proposals(proposal_id) ON DELETE RESTRICT,
+            state TEXT NOT NULL CHECK(state IN ('admitted','rejected','abstained','unavailable','unsupported','deleted')),
+            host_policy_id TEXT NOT NULL,
+            reason TEXT NOT NULL,
+            admitted_artifact_id TEXT,
+            created_at TEXT NOT NULL
+        ) STRICT;
+        CREATE TABLE provider_replay_edges(
+            replay_edge_id TEXT PRIMARY KEY,
+            operation_id TEXT NOT NULL REFERENCES provider_operation_authorizations(operation_id) ON DELETE RESTRICT,
+            response_record_id TEXT NOT NULL REFERENCES provider_responses(response_record_id) ON DELETE RESTRICT,
+            replay_state TEXT NOT NULL CHECK(replay_state IN ('retained-response','audit-only','unavailable')),
+            dependency_manifest_id TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        ) STRICT;
+        CREATE TABLE provider_operation_projection(
+            operation_id TEXT PRIMARY KEY REFERENCES provider_operation_authorizations(operation_id) ON DELETE CASCADE,
+            provider_attempt_id TEXT NOT NULL REFERENCES provider_operation_attempts(provider_attempt_id) ON DELETE RESTRICT,
+            state TEXT NOT NULL,
+            reserved_nano_usd INTEGER NOT NULL CHECK(reserved_nano_usd >= 0),
+            calculated_nano_usd INTEGER NOT NULL CHECK(calculated_nano_usd >= 0),
+            unresolved_hold INTEGER NOT NULL CHECK(unresolved_hold IN (0,1)),
+            projection_version INTEGER NOT NULL CHECK(projection_version > 0),
+            updated_at TEXT NOT NULL
+        ) STRICT;
+        CREATE UNIQUE INDEX idx_provider_one_live_attempt ON provider_operation_projection(provider_attempt_id)
+          WHERE state IN ('reserved','assigned','final-gate-authorized','transport-not-started','transport-may-have-started','response-staged');
+        CREATE TABLE provider_profile_projection(
+            profile_id TEXT PRIMARY KEY REFERENCES provider_access_profiles(profile_id) ON DELETE CASCADE,
+            generation_id TEXT NOT NULL,
+            revocation_epoch INTEGER NOT NULL CHECK(revocation_epoch >= 0),
+            lifecycle_state TEXT NOT NULL CHECK(lifecycle_state IN (
+              'pending-enrollment','active-unverified','active-verified','replacing','disabled',
+              'delete-pending','deleted','secure-store-unavailable','recovery-required')),
+            verification_state TEXT NOT NULL CHECK(verification_state IN (
+              'available','unavailable','unsupported','not-applicable','not-used')),
+            capability_snapshot_id TEXT,
+            projection_version INTEGER NOT NULL CHECK(projection_version > 0),
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY(profile_id,generation_id)
+              REFERENCES provider_generations(profile_id,generation_id) ON DELETE RESTRICT
+        ) STRICT;
+        CREATE UNIQUE INDEX idx_provider_active_generation ON provider_profile_projection(generation_id)
+          WHERE lifecycle_state IN ('active-unverified','active-verified','replacing');
+        CREATE TABLE provider_budget_projection(
+            scope_kind TEXT NOT NULL,
+            scope_id TEXT NOT NULL,
+            reserved_nano_usd INTEGER NOT NULL CHECK(reserved_nano_usd >= 0),
+            settled_nano_usd INTEGER NOT NULL CHECK(settled_nano_usd >= 0),
+            unresolved_nano_usd INTEGER NOT NULL CHECK(unresolved_nano_usd >= 0),
+            projection_version INTEGER NOT NULL CHECK(projection_version > 0),
+            updated_at TEXT NOT NULL,
+            PRIMARY KEY(scope_kind,scope_id)
+        ) STRICT;
         """;
 }
 

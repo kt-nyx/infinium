@@ -25,6 +25,7 @@ public sealed class EvaluationBoundaryContractTests
         "fixtures/public/findings-cases",
         "fixtures/public/operations/analysis-lifecycle",
         "fixtures/public/cross-stage/analysis-pipeline",
+        "fixtures/public/contracts/provider-wp1",
     ];
 
     private static readonly string[] CurrentAuthoritySurfaceIds =
@@ -94,7 +95,7 @@ public sealed class EvaluationBoundaryContractTests
     [TestMethod]
     [TestCategory("Contract")]
     [TestProperty("Category", "Contract")]
-    public void PublicFixtureRegistryExactlyIndexesEveryCurrentFunctionalPackage()
+    public void ProviderPublicFixtureRegistryExactlyIndexesEveryCurrentFunctionalPackage()
     {
         using JsonDocument registry = ReadAndValidate(
             "fixtures/public/public-fixture-registry.v1.json",
@@ -102,7 +103,7 @@ public sealed class EvaluationBoundaryContractTests
         JsonElement[] entries = registry.RootElement.GetProperty("packages")
             .EnumerateArray()
             .ToArray();
-        Assert.AreEqual(18, entries.Length);
+        Assert.AreEqual(19, entries.Length);
 
         Dictionary<string, FixtureRegistryEntry> actual = entries.ToDictionary(
             item => item.GetProperty("package_identity").GetString()!,
@@ -286,6 +287,21 @@ public sealed class EvaluationBoundaryContractTests
                     root.GetProperty("partition").GetString()!,
                     "fixtures/public/cross-stage/analysis-pipeline",
                     crossStageAuthority,
+                    root.GetProperty("status").GetString()));
+        }
+
+        const string providerAuthority = "fixtures/public/contracts/provider-wp1/contract-examples.v1.json";
+        using (JsonDocument provider = JsonDocument.Parse(File.ReadAllBytes(
+                   TestRepository.PathFromRoot([.. providerAuthority.Split('/')]))))
+        {
+            JsonElement root = provider.RootElement;
+            packages.Add(
+                root.GetProperty("package_identity").GetString()!,
+                new FixtureSourceIdentity(
+                    root.GetProperty("package_version").GetString()!,
+                    root.GetProperty("partition").GetString()!,
+                    "fixtures/public/contracts/provider-wp1",
+                    providerAuthority,
                     root.GetProperty("status").GetString()));
         }
 

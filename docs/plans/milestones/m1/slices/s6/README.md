@@ -11,6 +11,8 @@ Live authorization remains stated only in
 - [Accepted Slice 6 plan](plan.md)
 - [Slice 6 provider-profile and implementation-readiness investigation](../../../../../research/investigations/RESEARCH-0054-slice6-openai-profile-and-implementation-readiness-refresh.md)
 - [Copy-paste implementation-orchestrator handoff](orchestrator-handoff.md)
+- [Append-only implementation record](record.md)
+- [WP1 field-to-seam traceability inventory](wp1-contract-traceability.v1.json)
 
 The project owner accepted the plan and its explicit stateless/cache-off
 ADR-0025 conformance closure on 2026-08-10; no separate ADR is required.

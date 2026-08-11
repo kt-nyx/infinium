@@ -561,6 +561,48 @@ public sealed partial class AuthoritativeStore
             }
         }
 
+        using (var migration = database.CreateCommand())
+        {
+            migration.CommandText =
+                """
+                SELECT COUNT(*)
+                FROM migration_history
+                WHERE migration_id = 'M1-S5-WP4-0005'
+                  AND from_version = 4
+                  AND to_version = 5
+                  AND sqlite_source_id = $source;
+                """;
+            migration.Parameters.AddWithValue("$source", binding.SourceId);
+            if (Convert.ToInt32(
+                    migration.ExecuteScalar(),
+                    System.Globalization.CultureInfo.InvariantCulture) != 1)
+            {
+                throw new InvalidOperationException(
+                    "The Slice 5 finding/case completion migration identity is invalid.");
+            }
+        }
+
+        using (var migration = database.CreateCommand())
+        {
+            migration.CommandText =
+                """
+                SELECT COUNT(*)
+                FROM migration_history
+                WHERE migration_id = 'M1-S6-0006'
+                  AND from_version = 5
+                  AND to_version = 6
+                  AND sqlite_source_id = $source;
+                """;
+            migration.Parameters.AddWithValue("$source", binding.SourceId);
+            if (Convert.ToInt32(
+                    migration.ExecuteScalar(),
+                    System.Globalization.CultureInfo.InvariantCulture) != 1)
+            {
+                throw new InvalidOperationException(
+                    "The provider-operation storage migration identity is invalid.");
+            }
+        }
+
         HashSet<string> actualObjects = new(StringComparer.Ordinal);
         using (var schema = database.CreateCommand())
         {

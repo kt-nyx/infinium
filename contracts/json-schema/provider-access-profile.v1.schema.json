@@ -1,0 +1,16 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://schemas.infinium.dev/json-schema/provider-access-profile.v1.schema.json",
+  "title":"infinium.provider.access-profile/v1",
+  "type":"object","additionalProperties":false,
+  "required":["schema_id","schema_version","profile_id","generation_id","generation_ordinal","revocation_epoch","provider","purpose","display_label","lifecycle_state","verification_state","account_identity_id","billing_scope_identity_id","capability_snapshot_id","intent_id","recovery_disposition","cleanup_disposition","recorded_at"],
+  "properties":{
+    "schema_id":{"const":"infinium.provider.access-profile/v1"},"schema_version":{"const":"1"},
+    "profile_id":{"$ref":"common.v1.schema.json#/$defs/identifier"},"generation_id":{"$ref":"common.v1.schema.json#/$defs/identifier"},"generation_ordinal":{"type":"integer","minimum":1},"revocation_epoch":{"type":"integer","minimum":0},
+    "provider":{"const":"openai"},"purpose":{"const":"responses"},"display_label":{"type":"string","minLength":1,"maxLength":128},
+    "lifecycle_state":{"enum":["pending-enrollment","active-unverified","active-verified","replacing","disabled","delete-pending","deleted","secure-store-unavailable","recovery-required"]},
+    "verification_state":{"$ref":"provider-operation.v1.schema.json#/$defs/availability"},
+    "account_identity_id":{"$ref":"common.v1.schema.json#/$defs/identifier"},"billing_scope_identity_id":{"$ref":"common.v1.schema.json#/$defs/identifier"},"capability_snapshot_id":{"$ref":"common.v1.schema.json#/$defs/identifier"},"intent_id":{"$ref":"common.v1.schema.json#/$defs/identifier"},
+    "recovery_disposition":{"enum":["not-required","required","unavailable"]},"cleanup_disposition":{"enum":["not-requested","pending","confirmed","failed"]},"recorded_at":{"$ref":"common.v1.schema.json#/$defs/utcTimestamp"}
+  }
+}

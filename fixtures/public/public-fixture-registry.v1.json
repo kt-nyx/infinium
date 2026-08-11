@@ -1,8 +1,8 @@
 {
-  "schema_identity": "infinium.repository.public-fixture-registry/1.0.0",
-  "registry_version": "1.0.0",
+  "schema_identity": "infinium.repository.public-fixture-registry/1.1.0",
+  "registry_version": "1.1.0",
   "status": "current",
-  "package_count": 18,
+  "package_count": 19,
   "packages": [
     {
       "package_identity": "PLATFORM-ANALYSIS-RUNTIME-DEV-v1",
@@ -166,6 +166,16 @@
       "authority_bytes": 14108,
       "authority_sha256": "1bb5b29b3ad384da034032a83b6b0b65156f1c873f6d89e503aa2f954c66de6a",
       "authority_status": "independently-reviewed-accepted-normalization-revalidation"
+    },
+    {
+      "package_identity": "infinium.public-fixtures.provider-contracts.wp1.answer-free",
+      "package_version": "1.0.0",
+      "partition": "development",
+      "package_path": "fixtures/public/contracts/provider-wp1",
+      "authority_file": "fixtures/public/contracts/provider-wp1/contract-examples.v1.json",
+      "authority_bytes": 10089,
+      "authority_sha256": "e895bf72f9daf8da091ff3bf74f9ee41017f6d4d350a5586366026d3efbec45d",
+      "authority_status": "implementation-active-answer-free"
     }
   ]
 }

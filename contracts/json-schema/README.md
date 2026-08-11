@@ -34,9 +34,24 @@ network.
 | `candidate-analysis.v1.schema.json` | `infinium.analysis.candidate/v1` |
 | `candidate-delivered-input.v1.schema.json` | `infinium.analysis.candidate-delivered-input/v1` |
 | `candidate-delivered-expansion.v1.schema.json` | `infinium.analysis.candidate-delivered-expansion/v1` |
+| `provider-access-profile.v1.schema.json` | `infinium.provider.access-profile/v1` |
+| `provider-operation.v1.schema.json` | `infinium.provider.operation/v1` |
+| `provider-response.v1.schema.json` | `infinium.provider.response/v1` |
+| `source-claim-extraction.v1.schema.json` | `infinium.llm.source-claim-extraction/v1` |
+| `candidate-investigation.v1.schema.json` | `infinium.llm.candidate-investigation/v1` |
+| `provider-execution-input.v1.schema.json` | `infinium.provider.execution-input/v1` |
+| `effective-scan-configuration.v2.schema.json` | `infinium.scan.effective-configuration/v2` |
+| `run-output.v2.schema.json` | `infinium.run-output/v2` |
+| `cli-summary.v2.schema.json` | `infinium.cli-summary/v2` |
 
 `common.v1.schema.json` contains shared closed definitions and is not itself an
 instance contract.
+
+The Slice 6 v2 configuration and output contracts are additive provider-active
+supplements. They bind the exact frozen local v1 artifact by identity or
+fingerprint and do not reinterpret or replace the Slice 5 v1 bytes. All nine
+Slice 6 contracts are closed at every declared object boundary and contain no
+credential target, secret byte, authorization-header, or raw-header field.
 
 The candidate stage delivered-input and expansion contracts contain only snapshot-bound
 Bethesda/documentation stage facts and deterministic construction parameters. Candidate lanes,

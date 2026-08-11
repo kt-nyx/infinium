@@ -13,6 +13,92 @@ namespace Infinium.Tests;
 [TestClass]
 public sealed class PersistenceAndLifecycleTests
 {
+    private static readonly string[] ProviderProjectionNames =
+    [
+        "provider_operation_projection",
+        "provider_budget_projection",
+        "provider_profile_projection",
+    ];
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
+    public void Schema6ProviderPersistenceAndBackupRestoreDeclarationsAreClosed()
+    {
+        using TemporaryStore temporary = new();
+        using AuthoritativeStore store = temporary.Open();
+
+        Assert.AreEqual(6, store.GetSchemaVersion());
+        CollectionAssert.AreEquivalent(
+            ProviderProjectionNames,
+            ProviderPersistenceDeclarations.RebuildableProjections.ToArray());
+        CollectionAssert.Contains(
+            ProviderPersistenceDeclarations.StructurallyExcludedClasses.ToArray(),
+            "provider-secret-bytes");
+
+        using SqliteConnection connection = new($"Data Source={store.Paths.Database};Mode=ReadOnly;Pooling=False");
+        connection.Open();
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText =
+            """
+            SELECT
+              (SELECT COUNT(*) FROM migration_history
+               WHERE migration_id='M1-S6-0006' AND from_version=5 AND to_version=6),
+              (SELECT COUNT(*) FROM sqlite_schema
+               WHERE type='table' AND name LIKE 'provider_%'),
+              (SELECT COUNT(*) FROM sqlite_schema
+               WHERE type='trigger' AND name LIKE 'provider_%_append_only_%');
+            """;
+        using SqliteDataReader reader = command.ExecuteReader();
+        Assert.IsTrue(reader.Read());
+        Assert.AreEqual(1L, reader.GetInt64(0));
+        Assert.AreEqual(22L, reader.GetInt64(1));
+        Assert.AreEqual(38L, reader.GetInt64(2));
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
+    public void Schema6ProviderPersistenceBackupRestoreRoundTripRetainsMigrationAndProjectionContract()
+    {
+        using TemporaryStore source = new();
+        BackupArtifact backup;
+        using (AuthoritativeStore store = source.Open())
+        {
+            backup = store.CreateBackup("Schema6Provider", DateTimeOffset.UtcNow);
+        }
+
+        string targetParent = Path.Combine(Path.GetTempPath(), $"infinium-schema6-restore-{Guid.NewGuid():N}");
+        string targetRoot = Path.Combine(targetParent, "product");
+        Directory.CreateDirectory(targetParent);
+        try
+        {
+            using (StoragePaths target = new(targetRoot))
+            {
+                AuthoritativeStore.RestoreBackup(backup, target);
+            }
+            using AuthoritativeStore restored = new(new StoragePaths(targetRoot));
+            Assert.AreEqual(6, restored.GetSchemaVersion());
+            using SqliteConnection connection = new($"Data Source={restored.Paths.Database};Mode=ReadOnly;Pooling=False");
+            connection.Open();
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText =
+                """
+                SELECT COUNT(*)
+                FROM migration_history
+                WHERE migration_id='M1-S6-0006' AND from_version=5 AND to_version=6;
+                """;
+            Assert.AreEqual(1L, (long)command.ExecuteScalar()!);
+        }
+        finally
+        {
+            if (Directory.Exists(targetParent))
+            {
+                Directory.Delete(targetParent, recursive: true);
+            }
+        }
+    }
+
     [TestMethod]
     [TestCategory("Unit")]
     [TestProperty("Category", "Unit")]

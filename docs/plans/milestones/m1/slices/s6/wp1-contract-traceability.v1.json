@@ -1,0 +1,98 @@
+{
+  "schema_identity": "infinium.traceability.m1-s6-wp1/v1",
+  "schema_version": "1",
+  "status": "implementation-active",
+  "mapping_rule": "Every field listed for a contract inherits that contract's explicit authority, producer, consumer, persistence, output, and replay mapping. Local definition paths begin with $defs.",
+  "contracts": [
+    {
+      "schema": "provider-access-profile.v1.schema.json",
+      "fields": ["schema_id", "schema_version", "profile_id", "generation_id", "generation_ordinal", "revocation_epoch", "provider", "purpose", "display_label", "lifecycle_state", "verification_state", "account_identity_id", "billing_scope_identity_id", "capability_snapshot_id", "intent_id", "recovery_disposition", "cleanup_disposition", "recorded_at"],
+      "authority": ["ADR-0016", "ADR-0017", "ADR-0022"],
+      "producer": "provider enrollment and lifecycle host service",
+      "consumer": "profile query, dispatch revalidation, and status projection",
+      "persistence": ["provider_access_profiles", "provider_generations", "provider_credential_intents", "provider_profile_projection"],
+      "output": "non-secret profile/status query only",
+      "replay": "generation and revocation identity retained; secret material structurally absent"
+    },
+    {
+      "schema": "provider-operation.v1.schema.json",
+      "fields": ["schema_id", "schema_version", "operation_id", "owner_id", "owner_kind", "job_node_id", "attempt_id", "request_id", "profile_id", "generation_id", "revocation_epoch", "capability_snapshot", "price_snapshot", "settings_fingerprint", "output_schema_fingerprint", "request_fingerprint", "limits", "authorization_id", "reservation_id", "dispatch_fence_id", "state", "transport_state", "receipt_state", "usage", "settlement_state", "replay_state", "recorded_at", "$defs.identityReference.identity", "$defs.identityReference.fingerprint", "$defs.finiteLimits.maximum_request_bytes", "$defs.finiteLimits.maximum_input_tokens", "$defs.finiteLimits.maximum_output_tokens", "$defs.finiteLimits.maximum_raw_response_bytes", "$defs.finiteLimits.maximum_dispatch_count", "$defs.finiteLimits.maximum_calculated_nano_usd", "$defs.finiteLimits.deadline_milliseconds", "$defs.usage.dispatch_count", "$defs.usage.input_tokens", "$defs.usage.output_tokens", "$defs.usage.reasoning_tokens", "$defs.usage.cache_read_tokens", "$defs.usage.cache_write_tokens", "$defs.usage.priced_tool_calls", "$defs.usage.calculated_nano_usd", "$defs.usage.billing_availability", "$defs.usage.rate_availability", "$defs.usage.credit_availability", "$defs.priceRule.rule_id", "$defs.priceRule.provider", "$defs.priceRule.model", "$defs.priceRule.service_tier", "$defs.priceRule.context_band", "$defs.priceRule.cache_class", "$defs.priceRule.token_class", "$defs.priceRule.tool_class", "$defs.priceRule.region", "$defs.priceRule.currency", "$defs.priceRule.numerator_nano_usd", "$defs.priceRule.denominator_tokens", "$defs.priceRule.revision"],
+      "authority": ["ADR-0017", "ADR-0018", "ADR-0019", "ADR-0021", "ADR-0022", "ADR-0023", "ADR-0025"],
+      "producer": "provider operation authorization, attempt, receipt, and settlement host services",
+      "consumer": "coordinator, helper-private dispatch, budget projection, publication, and query",
+      "persistence": ["provider_operation_authorizations", "provider_operation_attempts", "provider_requests", "provider_reservations", "provider_dispatch_fences", "provider_transport_events", "provider_usage_entries", "provider_settlements", "provider_operation_projection"],
+      "output": "run-output v2 provider operation reference and CLI summary v2 aggregates",
+      "replay": "request/settings/schema/snapshot identities and terminal receipt state retained"
+    },
+    {
+      "schema": "provider-response.v1.schema.json",
+      "fields": ["schema_id", "schema_version", "response_record_id", "operation_id", "request_id", "raw_response_payload", "raw_response_bytes", "http_status", "provider_response_id", "state", "refusal_code", "incomplete_reason", "error_code", "requested_model", "returned_model", "requested_service_tier", "returned_service_tier", "reasoning_context", "reasoning_mode", "prompt_cache_mode", "usage", "validation_state", "admission_state", "recorded_at"],
+      "authority": ["ADR-0018", "ADR-0019", "ADR-0020", "ADR-0021", "ADR-0022"],
+      "producer": "provider adapter receipt staging boundary",
+      "consumer": "strict validator, host admission, usage settlement, publication, and audit query",
+      "persistence": ["provider_responses", "provider_usage_entries", "provider_semantic_admissions", "payloads"],
+      "output": "typed status/reference only; raw transport remains CAS referenced",
+      "replay": "retained raw-response payload plus exact requested/returned profile and usage availability"
+    },
+    {
+      "schema": "source-claim-extraction.v1.schema.json",
+      "fields": ["schema_id", "schema_version", "acquisition_run_id", "operation_id", "source_revision_id", "passage_ids", "declared_purpose", "claim_proposals", "contradiction_evidence_ids", "abstentions", "gaps", "validation_ids", "application_link_ids", "$defs.proposal.proposal_id", "$defs.proposal.passage_id", "$defs.proposal.claim", "$defs.proposal.condition_ids", "$defs.proposal.state", "$defs.proposal.reason"],
+      "authority": ["ADR-0015", "ADR-0020", "ADR-0025", "REQ-FUNC-020", "REQ-FUNC-022"],
+      "producer": "strict provider response parser as untrusted proposal",
+      "consumer": "Slice 5 documentation authority validation and explicit application service",
+      "persistence": ["evidence_acquisition_runs", "provider_semantic_proposals", "provider_semantic_admissions", "evidence_acquisition_application_links"],
+      "output": "admitted proposal/application references, abstentions, and gaps",
+      "replay": "source revision, passage set, validations, admissions, and application links retained"
+    },
+    {
+      "schema": "candidate-investigation.v1.schema.json",
+      "fields": ["schema_id", "schema_version", "operation_id", "candidate_id", "participant_ids", "participant_roles", "causal_path_ids", "dependency_closure_id", "evidence_ids", "hypothesis_proposals", "abstentions", "gaps", "validation_ids", "admission_link_ids", "$defs.proposal.proposal_id", "$defs.proposal.candidate_id", "$defs.proposal.hypothesis", "$defs.proposal.supporting_evidence_ids", "$defs.proposal.contradicting_evidence_ids", "$defs.proposal.missing_information", "$defs.proposal.state", "$defs.proposal.reason"],
+      "authority": ["ADR-0015", "ADR-0020", "ADR-0025", "REQ-FUNC-021", "REQ-FUNC-022"],
+      "producer": "strict provider response parser as untrusted proposal",
+      "consumer": "Slice 5 candidate evidence and admission policy",
+      "persistence": ["provider_semantic_proposals", "provider_semantic_admissions", "evidence_acquisition_application_links"],
+      "output": "admitted hypothesis links, abstentions, and explicit gaps",
+      "replay": "candidate population, participants, dependency closure, evidence, validation, and admission identities retained"
+    },
+    {
+      "schema": "provider-execution-input.v1.schema.json",
+      "fields": ["schema_id", "schema_version", "operation_id", "owner_id", "installation_snapshot_id", "analysis_context_id", "effective_configuration_id", "resolved_input_manifest_id", "profile_id", "generation_id", "capability_snapshot", "price_snapshot", "limits", "prompt_id", "prompt_fingerprint", "output_schema_id", "output_schema_fingerprint", "operation_kind", "canonical_request_fingerprint"],
+      "authority": ["ADR-0018", "ADR-0019", "ADR-0020", "ADR-0023", "ADR-0025"],
+      "producer": "provider operation selection and confirmation service",
+      "consumer": "bounded request builder and final dispatch gate",
+      "persistence": ["provider_operation_authorizations", "provider_requests", "provider_reservations"],
+      "output": "answer-free execution manifest reference",
+      "replay": "all product input, configuration, prompt, schema, price, capability, and request identities retained"
+    },
+    {
+      "schema": "effective-scan-configuration.v2.schema.json",
+      "fields": ["schema_id", "schema_version", "configuration_id", "local_configuration_v1_id", "local_configuration_v1_fingerprint", "access_profile_id", "generation_id", "model", "reasoning_effort", "reasoning_context", "reasoning_mode", "store", "service_tier", "background", "stream", "tool_choice", "tool_count", "truncation", "prompt_cache_mode", "has_prompt_cache_key", "has_prompt_cache_breakpoint", "limits", "not_used_boundaries"],
+      "authority": ["ADR-0018", "ADR-0020", "ADR-0023", "RESEARCH-0054"],
+      "producer": "provider-active effective configuration resolver",
+      "consumer": "request builder, authorization, verifier, and public publication supplement",
+      "persistence": ["evidence_acquisition_runs", "provider_operation_authorizations"],
+      "output": "additive effective-configuration v2 identity; local v1 bytes remain unchanged",
+      "replay": "local v1 identity/fingerprint and exact stateless cache-off provider settings retained"
+    },
+    {
+      "schema": "run-output.v2.schema.json",
+      "fields": ["schema_id", "schema_version", "run_id", "local_run_output_v1", "effective_configuration_v2_id", "provider_operations", "evidence_acquisition_run_ids", "capability_drift_ids", "price_drift_ids", "provider_gaps", "contains_raw_transport", "contains_secret", "$defs.publication.operation_id", "$defs.publication.acquisition_run_id", "$defs.publication.authorization_id", "$defs.publication.response_id", "$defs.publication.admission_id", "$defs.publication.usage_entry_id", "$defs.publication.settlement_id", "$defs.publication.replay_edge_id", "$defs.publication.availability", "$defs.publication.live"],
+      "authority": ["ADR-0015", "ADR-0021", "ADR-0022", "ADR-0025"],
+      "producer": "additive provider publication supplement",
+      "consumer": "CLI summary v2, audit query, retained-response replay",
+      "persistence": ["analysis_run_outputs", "provider_replay_edges", "evidence_acquisition_application_links"],
+      "output": "public provider references, availability, and gaps with raw transport/secrets forbidden",
+      "replay": "local run-output v1 fingerprint plus provider operation/acquisition/receipt/settlement/replay identities retained"
+    },
+    {
+      "schema": "cli-summary.v2.schema.json",
+      "fields": ["schema_id", "schema_version", "run_id", "local_cli_summary_v1_fingerprint", "provider_state", "dispatch_count", "input_tokens", "output_tokens", "reasoning_tokens", "cache_read_tokens", "cache_write_tokens", "calculated_nano_usd", "reserved_nano_usd", "unresolved_hold", "replay_state", "gaps", "contains_raw_transport", "contains_secret"],
+      "authority": ["ADR-0019", "ADR-0021", "ADR-0022", "ADR-0025"],
+      "producer": "non-secret provider operation summary projection",
+      "consumer": "CLI formatter and audit inspection",
+      "persistence": ["provider_operation_projection", "provider_budget_projection"],
+      "output": "bounded aggregate counters, money, state, replay, and gaps only",
+      "replay": "fingerprint binds the frozen local CLI summary v1 while provider aggregates remain independently reconstructable"
+    }
+  ]
+}

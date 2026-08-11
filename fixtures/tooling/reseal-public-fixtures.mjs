@@ -183,6 +183,54 @@ for (const fixture of candidateFixtures) {
 }
 
 await resealCrossStageFixture();
+await resealProviderContractExamples();
+
+async function resealProviderContractExamples() {
+  const authorityRelative = "fixtures/public/contracts/provider-wp1/contract-examples.v1.json";
+  const authorityPath = path.join(repositoryRoot, ...authorityRelative.split("/"));
+  const authorityBytes = await readFile(authorityPath);
+  const authority = JSON.parse(authorityBytes.toString("utf8"));
+  const schemaNames = [
+    "provider-access-profile.v1.schema.json", "provider-operation.v1.schema.json",
+    "provider-response.v1.schema.json", "source-claim-extraction.v1.schema.json",
+    "candidate-investigation.v1.schema.json", "provider-execution-input.v1.schema.json",
+    "effective-scan-configuration.v2.schema.json", "run-output.v2.schema.json",
+    "cli-summary.v2.schema.json",
+  ];
+  if (authority.package_identity !== "infinium.public-fixtures.provider-contracts.wp1.answer-free"
+      || authority.package_version !== "1.0.0" || authority.partition !== "development"
+      || authority.status !== "implementation-active-answer-free" || authority.answer_free !== true
+      || JSON.stringify(Object.keys(authority.examples).sort()) !== JSON.stringify(schemaNames.sort())) {
+    throw new Error("Provider WP1 contract-example authority is incomplete or not answer-free.");
+  }
+  const serialized = JSON.stringify(authority);
+  for (const forbidden of ["expected_answer", "expected_label", "oracle", "provider_secret", "credential_target", "authorization_header"]) {
+    if (serialized.includes(`\"${forbidden}\"`)) {
+      throw new Error(`Provider WP1 contract examples contain forbidden field ${forbidden}.`);
+    }
+  }
+
+  const registryPath = path.join(repositoryRoot, "fixtures/public/public-fixture-registry.v1.json");
+  const registry = await readJson(registryPath);
+  const retained = registry.packages.filter(
+    (item) => item.package_identity !== authority.package_identity,
+  );
+  retained.push({
+    package_identity: authority.package_identity,
+    package_version: authority.package_version,
+    partition: authority.partition,
+    package_path: "fixtures/public/contracts/provider-wp1",
+    authority_file: authorityRelative,
+    authority_bytes: authorityBytes.length,
+    authority_sha256: sha256(authorityBytes),
+    authority_status: authority.status,
+  });
+  registry.schema_identity = "infinium.repository.public-fixture-registry/1.1.0";
+  registry.registry_version = "1.1.0";
+  registry.package_count = retained.length;
+  registry.packages = retained;
+  await writeJson(registryPath, registry);
+}
 
 async function resealCrossStageFixture() {
   const fixtureRoot = path.join(repositoryRoot, "fixtures/public/cross-stage/analysis-pipeline");
