@@ -1142,3 +1142,104 @@ private evidence was invented. No network/DNS/provider, Credential Manager,
 native credential, private fixture, sibling repository, legacy/evaluator
 archive, later-package, current-state, push, amend, or frozen Slice 5 v1 edit
 occurred.
+
+## Ninth-cycle final response/persistence totality correction — 2026-08-11
+
+Fresh contract and boundary review rejected candidate
+`38b37f925919820b43c29fd230a86f3d08063bc8`. The findings were recoverable
+WP1 implementation and evidence defects, not authority conflicts.
+
+### Corrected final totality and helper boundaries
+
+- Cancelled responses now prohibit every provider, transport, header, request,
+  billing, returned-profile, semantic, and rate-limit fact across JSON,
+  domain, application protobuf validation, and schema-6 SQL while retaining a
+  truthful zero-dispatch usage row. Every dispatched non-cancelled response
+  retains dispatch count one; response, usage, and rate availability close at
+  an append-only response-finalization event only after exactly one usage row
+  and the corresponding rate-fact cardinality are present.
+- Oversized responses now retain only the exact configured raw-response bound
+  plus a bounded observation of at least bound plus one. They cannot retain an
+  over-limit body. The overflow fact is closed across JSON, protobuf, domain,
+  application, helper, SQL, and traceability. Helper receipt staging enforces
+  both the response and staged-output ceilings.
+- Qualification limits now compose the general finite-limit contract while
+  independently requiring and closing all seven dimensions. Missing and extra
+  dimensions are rejected by the active schema validator.
+- Helper-v2 decode enforces the coordinator-selected maximum frame size before
+  parsing every received frame. Bootstrap accepts only the exact expected
+  one-use nonce fingerprint and expiry. Final revalidation binds both the
+  request fingerprint and canonical-request digest to the expected fingerprint
+  using constant-time digest comparison. The transport flag is true if and
+  only if the outcome is `TransportMayHaveStarted`.
+- Semantic admission links require nonblank admission and response identities.
+  Candidate admission-link lists bind `AdmissionId`; source-claim application
+  lists continue to bind `ApplicationLinkId`.
+- Credential intent lifecycle now has an immutable, versioned append-only event
+  chain. A pending intent can be followed by an exact terminal successor under
+  the same root without mutating or reusing an intent primary key; root,
+  predecessor, version, profile, generation, kind, transition, and time rebinds
+  fail closed.
+- Persistence uses a coherent append-only finalization seam: a completed
+  response row remains proposed until its exact usage and rate facts exist,
+  after which one immutable finalization admits it. Cancelled zero-dispatch
+  responses use the same seam. Later usage/rate mutation, missing usage,
+  fabricated cancellation facts, rate facts under unavailable rate state, and
+  incomplete available-rate cardinality are executable rejections.
+
+The nine Slice 6 contracts remain `Proposed`; WP1 remains `Deferred` solely on
+the absent accepted repository-local input-bound tokenizer/provider-framing
+proof. This correction does not accept WP1, authorize native credential or
+live provider work, advance `docs/current-state.md`, or unblock WP2.
+
+### Superseding identities and exact blocked receipt root
+
+- Schema-6 fingerprint:
+  `bf685f3d364b336417b357ce99c19f9a4a3a407be119e30a2c19abd2cf7a0d75`.
+- Helper-v2 transitive fingerprint:
+  `2b447cc75a94be781cc22373303670fd4c8143afb26ef112baf8b8739cd129dd`.
+- Full application protobuf-set fingerprint:
+  `940dbad1dc29882804d9db4a9ae388ddf36acb23b201c6481c95bf327d56ebd7`.
+- Answer-free example: 15,103 bytes,
+  `b61134710d37b6b301bc1ee70d3c51979869242247a3cece56b3099093d2537d`.
+- Public registry: 8,790 bytes,
+  `f1dcd3e4ecb9ee5001a0f68fb9736e816d5cf5f3c5759676ec8532e0bdf8ec3d`.
+- Per-field traceability: 962,819 bytes,
+  `7737ed69e4906a423a7b3db36b70190c38e7abe3eb328d42f7c5c8d962ef16ca`.
+- Exact gate `OutputRoot`: `artifacts/m1-slice6/wp1-ninth-final`.
+- Receipt SHA-256 identities: `Contracts`
+  `7707926b9083a2b52880526fdcd33ddcdf8b9566b38f0f268eb9e36848362db1`,
+  `StateSurfaces`
+  `32ab13da332a2e149ff4104292de032e5284fc400574b907810c2d8e1ad5dc86`,
+  and `StateTotality`
+  `a3600ad7ebf816cae3c3d8f52567160b0310f43e504b7814e411d8f0e7c888e4`.
+
+### Ninth-cycle verification
+
+1. Release solution build passed with zero warnings and zero errors. Focused
+   provider, helper, application, schema, credential-event, response-
+   finalization, cancellation, usage, rate, and trace checks passed: Unit
+   39/0/0 and Contract 9/0/0.
+2. `Contracts` passed 19/0/0. `StateSurfaces` passed 19/0/0 state checks and
+   10/0/0 migration/relational/adversarial checks. `StateTotality` ran the
+   same 29 green checks, wrote `blocked-authority-required` with network and
+   credential permissions false and the superseding schema fingerprint, then
+   exited 1 solely because the accepted repository-local tokenizer/provider-
+   framing proof is absent.
+3. The final Release category matrix passed: Unit 168/0/1; Contract 124/0/0;
+   Integration 70/0/0; Evaluation 75/0/8; Security 111/0/3; and Fault
+   105/0/3. The final unfiltered Release solution passed Unit 176/0/1,
+   Contract 152/0/0, Integration 68/0/0, and Evaluation 53/0/8.
+4. Deterministic trace regeneration, `dotnet format --verify-no-changes`,
+   dependency-manifest check, documentation validation, `git diff --check`,
+   current-state and frozen Slice 5 v1 immutability, protected-path and
+   answer-isolation checks, public-fixture scope, and forbidden secret/live-
+   effect scans passed. The fixture resealer was exercised; unrelated public
+   reseals were restored and the intended provider WP1 answer-free example and
+   registry retained their accepted bytes.
+
+No proof, gate result, owner acceptance, credential, provider response, or
+private evidence was invented. No network/DNS/provider, Credential Manager,
+native credential, private fixture, sibling repository, legacy/evaluator
+archive, later-package, current-state, push, amend, or frozen Slice 5 v1 edit
+occurred.

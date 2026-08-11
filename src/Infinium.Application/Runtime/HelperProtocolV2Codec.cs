@@ -36,9 +36,13 @@ public static class HelperProtocolV2Codec
         string? expectedReservationGroupId = null,
         ProviderOperationKindV2? expectedOperationKind = null,
         HelperLimitsV2? expectedLimits = null,
-        Infinium.Contracts.Protobuf.Common.V1.Instant? expectedDispatchDeadline = null)
+        Infinium.Contracts.Protobuf.Common.V1.Instant? expectedDispatchDeadline = null,
+        ulong expectedMaximumFrameBytes = HelperProtocolV2Constants.MaximumFrameBytes,
+        byte[]? expectedOneUseNonceFingerprintSha256 = null,
+        Infinium.Contracts.Protobuf.Common.V1.Instant? expectedBootstrapExpiresAt = null)
     {
-        if (bytes.IsEmpty || bytes.Length > HelperProtocolV2Constants.MaximumFrameBytes)
+        if (expectedMaximumFrameBytes is 0 or > HelperProtocolV2Constants.MaximumFrameBytes
+            || bytes.IsEmpty || (ulong)bytes.Length > expectedMaximumFrameBytes)
         {
             throw new InvalidDataException("Helper v2 frame size is outside the closed bound.");
         }
@@ -59,7 +63,8 @@ public static class HelperProtocolV2Codec
             expectedPriceSnapshotId, expectedSettings, expectedOutputSchema, expectedEffectiveConfigurationId,
             expectedNonSecretReceipt, expectedRevocationEpoch, expectedAccountIdentityId,
             expectedBillingScopeIdentityId, expectedReservationGroupId, expectedOperationKind,
-            expectedLimits, expectedDispatchDeadline);
+            expectedLimits, expectedDispatchDeadline, expectedMaximumFrameBytes,
+            expectedOneUseNonceFingerprintSha256, expectedBootstrapExpiresAt);
         return frame;
     }
 
@@ -104,7 +109,10 @@ public static class HelperProtocolV2Codec
         string? expectedReservationGroupId,
         ProviderOperationKindV2? expectedOperationKind,
         HelperLimitsV2? expectedLimits,
-        Infinium.Contracts.Protobuf.Common.V1.Instant? expectedDispatchDeadline)
+        Infinium.Contracts.Protobuf.Common.V1.Instant? expectedDispatchDeadline,
+        ulong expectedMaximumFrameBytes,
+        byte[]? expectedOneUseNonceFingerprintSha256,
+        Infinium.Contracts.Protobuf.Common.V1.Instant? expectedBootstrapExpiresAt)
     {
         if (frame.Sequence == 0
             || frame.ProtocolFingerprintSha256.Length != 32
@@ -128,9 +136,19 @@ public static class HelperProtocolV2Codec
                     frame.Bootstrap.ProviderDispatch, expectedProfileId, expectedGenerationId,
                     expectedOperationId, expectedAttemptId, "bootstrap");
                 Require(expectedCommandId, "expected_bootstrap.command_id");
+                if (expectedOneUseNonceFingerprintSha256 is null
+                    || expectedOneUseNonceFingerprintSha256.Length != 32
+                    || expectedBootstrapExpiresAt is null)
+                {
+                    throw new InvalidDataException("Bootstrap expected nonce and coordinator-selected expiry are required.");
+                }
                 if (frame.Bootstrap.CommandId != expectedCommandId
                     || expectedCoordinatorFencingEpoch is null or 0
-                    || frame.Bootstrap.CoordinatorFencingEpoch != expectedCoordinatorFencingEpoch)
+                    || frame.Bootstrap.CoordinatorFencingEpoch != expectedCoordinatorFencingEpoch
+                    || !CryptographicOperations.FixedTimeEquals(
+                        frame.Bootstrap.OneUseNonceFingerprintSha256.Span,
+                        expectedOneUseNonceFingerprintSha256)
+                    || !SameInstant(frame.Bootstrap.ExpiresAt, expectedBootstrapExpiresAt))
                 {
                     throw new InvalidDataException("Bootstrap must bind the expected command, subject, and fencing epoch.");
                 }
@@ -167,6 +185,10 @@ public static class HelperProtocolV2Codec
                 break;
             default:
                 throw new InvalidDataException("Helper v2 payload kind must be explicit.");
+        }
+        if (expectedLimits is not null && expectedLimits.MaximumFrameBytes != expectedMaximumFrameBytes)
+        {
+            throw new InvalidDataException("Received helper frame must use the exact coordinator-selected frame bound.");
         }
     }
 
@@ -398,7 +420,10 @@ public static class HelperProtocolV2Codec
         if (value.OperationId!.Value != expectedOperationId || value.AttemptId!.Value != expectedAttemptId
             || value.AccessProfileId!.Value != expectedProfileId || value.GenerationId!.Value != expectedGenerationId
             || value.RequestId != expectedRequestId || value.DispatchId!.Value != expectedDispatchId
-            || !value.RequestFingerprintSha256.Span.SequenceEqual(expectedRequestFingerprintSha256)
+            || !CryptographicOperations.FixedTimeEquals(
+                value.RequestFingerprintSha256.Span, expectedRequestFingerprintSha256)
+            || !CryptographicOperations.FixedTimeEquals(
+                value.CanonicalRequest.Value.Span, expectedRequestFingerprintSha256)
             || value.CoordinatorFencingEpoch != expectedCoordinatorFencingEpoch
             || value.RevocationEpoch != expectedRevocationEpoch
             || value.AccountIdentityId!.Value != expectedAccountIdentityId
@@ -506,6 +531,7 @@ public static class HelperProtocolV2Codec
             || (!dispatch && (value.Credential!.AccessProfileId.Value != expectedProfileId
                 || value.Credential.GenerationId.Value != expectedGenerationId))
             || value.OutcomeHasResponse != hasResponse
+            || value.TransportMayHaveStarted != (value.Outcome == HelperOutcomeV2.TransportMayHaveStarted)
             || (hasResponse && !ValidDigest(value.RawResponse))
             || (!dispatch && (value.TransportMayHaveStarted || hasResponse
                 || value.InputTokens is not null || value.OutputTokens is not null || value.ReasoningTokens is not null
@@ -569,7 +595,12 @@ public static class HelperProtocolV2Codec
             || value.TotalTokens is not null || value.ReasoningTokens is not null
             || value.CacheReadTokens is not null || value.CacheWriteTokens is not null
             || value.PricedToolCalls is not null || value.CalculatedNanoUsd is not null;
-        if (!value.OutcomeHasResponse && hasUsage)
+        bool oversized = value.Outcome == HelperOutcomeV2.Oversized;
+        if ((!value.OutcomeHasResponse && hasUsage && !oversized)
+            || oversized && (value.OutcomeHasResponse || value.RawResponse is not null
+                || !value.HasOverflowObservedAtLeastBytes
+                || value.OverflowObservedAtLeastBytes != checked(limits.MaximumResponseBytes + 1))
+            || !oversized && value.HasOverflowObservedAtLeastBytes)
         {
             throw new InvalidDataException("A receipt without a response cannot fabricate provider usage.");
         }
@@ -582,7 +613,8 @@ public static class HelperProtocolV2Codec
             throw new InvalidDataException("A completed provider receipt requires bounded raw response and complete typed usage.");
         }
         if (value.RawResponse is not null && (!ValidDigest(value.RawResponse)
-                || value.RawResponse.SizeBytes > limits.MaximumResponseBytes)
+                || value.RawResponse.SizeBytes > limits.MaximumResponseBytes
+                || value.RawResponse.SizeBytes > limits.MaximumStagedOutputBytes)
             || IsAvailable(value.InputTokens) && value.InputTokens!.Value > limits.MaximumInputTokens
             || IsAvailable(value.OutputTokens) && value.OutputTokens!.Value > limits.MaximumOutputTokens
             || IsAvailable(value.ReasoningTokens)

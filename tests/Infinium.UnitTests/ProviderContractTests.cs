@@ -181,6 +181,25 @@ public sealed class ProviderContractTests
                 ErrorAvailability = ProviderAvailabilityState.Available,
                 ErrorCode = "unexpected-error-fact",
             }));
+        ProviderResponseDocument cancelled = FutureResponse(ProviderResponseState.Cancelled);
+        Assert.ThrowsExactly<InvalidOperationException>(() => ProviderOperationContractInvariants.Validate(
+            cancelled with { ResponseHeadersAvailability = ProviderAvailabilityState.Unsupported }));
+        Assert.ThrowsExactly<InvalidOperationException>(() => ProviderOperationContractInvariants.Validate(
+            cancelled with
+            {
+                ProviderResponseIdAvailability = ProviderAvailabilityState.Available,
+                ProviderResponseId = "fabricated-provider-response",
+            }));
+        ProviderResponseDocument oversized = FutureResponse(ProviderResponseState.Oversized);
+        Assert.ThrowsExactly<InvalidOperationException>(() => ProviderOperationContractInvariants.Validate(
+            oversized with { OverflowObservedAtLeastBytes = oversized.MaximumRawResponseBytes + 2 }));
+        Assert.ThrowsExactly<InvalidOperationException>(() => ProviderOperationContractInvariants.Validate(
+            oversized with
+            {
+                RawResponseAvailability = ProviderAvailabilityState.Available,
+                RawResponsePayload = Ref("over-limit-body"),
+                RawResponseBytes = 128,
+            }));
     }
 
     [TestMethod]
@@ -267,10 +286,12 @@ public sealed class ProviderContractTests
         CandidateInvestigationDocument candidate = new(
             ContractConstants.CandidateInvestigationSchemaId, "1", Id("operation-1"), "analysis-run", Id("run-1"),
             Id("run-1"), Id("candidate-1"), [Id("participant-1")], ["subject"], [Id("path-1")],
-            Id("closure-1"), [Id("evidence-1")], [admitted], [], [], [Id("validation-1")], [Id("application-1")],
+            Id("closure-1"), [Id("evidence-1")], [admitted], [], [], [Id("validation-1")], [Id("admission-1")],
             [new(Id("admission-1"), Id("proposal-1"), Id("authorization-1"), Id("operation-1"), Id("response-1"), "analysis-run",
                 Id("run-1"), Id("candidate-1"), Id("validation-1"), Id("application-1"), ProposalAdmissionState.Admitted)]);
         ProviderOperationContractInvariants.Validate(candidate);
+        Assert.ThrowsExactly<InvalidOperationException>(() => ProviderOperationContractInvariants.Validate(
+            candidate with { AdmissionLinkIds = [Id("application-1")] }));
         Assert.ThrowsExactly<InvalidOperationException>(() =>
             ProviderOperationContractInvariants.Validate(candidate with { OwnerId = Id("run-other") }));
         Assert.ThrowsExactly<InvalidOperationException>(() =>
@@ -319,6 +340,7 @@ public sealed class ProviderContractTests
         Limits: new(65_536, 73_728, 4_096, 1_048_576, 1, 600_000_000, 120_000), InputBoundProof: BlockedProof(),
         Availability: ProviderAvailabilityState.Unavailable, RawResponseAvailability: ProviderAvailabilityState.Unavailable,
         RawResponsePayload: null, RawResponseBytes: null, MaximumRawResponseBytes: 1_048_576,
+        OverflowObservedAtLeastBytes: null,
         ResponseHeadersPayload: null, ResponseHeadersBytes: null, ResponseHeadersAvailability: ProviderAvailabilityState.Unavailable,
         HttpStatus: null, HttpStatusAvailability: ProviderAvailabilityState.Unavailable,
         ProviderResponseId: null, ProviderResponseIdAvailability: ProviderAvailabilityState.Unavailable,
@@ -336,7 +358,8 @@ public sealed class ProviderContractTests
     private static ProviderResponseDocument FutureResponse(ProviderResponseState state)
     {
         bool completed = state == ProviderResponseState.Completed;
-        bool raw = state != ProviderResponseState.Cancelled;
+        bool oversized = state == ProviderResponseState.Oversized;
+        bool raw = state != ProviderResponseState.Cancelled && !oversized;
         bool http = state != ProviderResponseState.Cancelled;
         bool refusal = state == ProviderResponseState.Refusal;
         bool incomplete = state == ProviderResponseState.Incomplete;
@@ -354,6 +377,7 @@ public sealed class ProviderContractTests
             RawResponseAvailability = raw ? ProviderAvailabilityState.Available : ProviderAvailabilityState.Unavailable,
             RawResponsePayload = raw ? Ref("raw-response-1") : null,
             RawResponseBytes = raw ? 128 : null,
+            OverflowObservedAtLeastBytes = oversized ? 1_048_577 : null,
             HttpStatusAvailability = http ? ProviderAvailabilityState.Available : ProviderAvailabilityState.Unavailable,
             HttpStatus = http ? 200 : null,
             RefusalAvailability = refusal ? ProviderAvailabilityState.Available : ProviderAvailabilityState.Unavailable,

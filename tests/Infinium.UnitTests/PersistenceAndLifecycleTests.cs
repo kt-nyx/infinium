@@ -52,8 +52,8 @@ public sealed class PersistenceAndLifecycleTests
         using SqliteDataReader reader = command.ExecuteReader();
         Assert.IsTrue(reader.Read());
         Assert.AreEqual(1L, reader.GetInt64(0));
-        Assert.AreEqual(29L, reader.GetInt64(1));
-        Assert.AreEqual(52L, reader.GetInt64(2));
+        Assert.AreEqual(31L, reader.GetInt64(1));
+        Assert.AreEqual(56L, reader.GetInt64(2));
         reader.Close();
         command.CommandText = "SELECT sql FROM sqlite_schema WHERE type='trigger' AND name='provider_usage_operation_ceiling_guard';";
         string usageCeilingSql = (string)command.ExecuteScalar()!;
@@ -486,6 +486,242 @@ public sealed class PersistenceAndLifecycleTests
             """;
         SqliteException wedged = Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
         StringAssert.Contains(wedged.Message, "delete-pending provider profile cannot reactivate");
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    public void Schema6CredentialIntentPendingToTerminalIsAnAppendOnlyVersionedEventChain()
+    {
+        using TemporaryStore temporary = new();
+        using AuthoritativeStore store = temporary.Open();
+        SeedProviderAuthorityBlock(temporary.Root);
+        using SqliteConnection connection = OpenRaw(temporary.Root);
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText =
+            """
+            INSERT INTO provider_credential_intents VALUES(
+              'intent-disable-chain-pending','profile-restore','generation-restore','disable','pending',
+              'active-verified','disabled','active-verified','unavailable','account-restore','billing-restore','cap-restore',
+              'not-required','not-requested','2026-08-10T00:00:03.0000000+00:00');
+            """;
+        Assert.AreEqual(1, command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            INSERT INTO provider_credential_intent_events VALUES(
+              'intent-event-disable-early','intent-root-disable','intent-disable-chain-pending',1,NULL,
+              '2026-08-10T00:00:02.0000000+00:00');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            INSERT INTO provider_credential_intent_events VALUES(
+              'intent-event-disable-v1','intent-root-disable','intent-disable-chain-pending',1,NULL,
+              '2026-08-10T00:00:03.0000000+00:00');
+            INSERT INTO provider_credential_intents VALUES(
+              'intent-disable-chain-completed','profile-restore','generation-restore','disable','completed',
+              'active-verified','disabled','disabled','unavailable','account-restore','billing-restore','cap-restore',
+              'not-required','not-requested','2026-08-10T00:00:04.0000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES(
+              'intent-event-disable-v2','intent-root-disable','intent-disable-chain-completed',2,'intent-event-disable-v1',
+              '2026-08-10T00:00:04.0000000+00:00');
+            """;
+        Assert.AreEqual(3, command.ExecuteNonQuery());
+
+        command.CommandText =
+            """
+            UPDATE provider_credential_intent_events SET event_version=3
+            WHERE intent_event_id='intent-event-disable-v2';
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+
+        command.CommandText =
+            """
+            INSERT INTO provider_credential_intent_events VALUES(
+              'intent-event-disable-rebind','intent-root-other','intent-disable-chain-completed',2,'intent-event-disable-v1',
+              '2026-08-10T00:00:04.0000000+00:00');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+
+        command.CommandText =
+            """
+            INSERT INTO provider_credential_intents VALUES(
+              'intent-disable-chain-late','profile-restore','generation-restore','disable','completed',
+              'active-verified','disabled','disabled','unavailable','account-restore','billing-restore','cap-restore',
+              'not-required','not-requested','2026-08-10T00:00:05.0000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES(
+              'intent-event-disable-v3','intent-root-disable','intent-disable-chain-late',3,'intent-event-disable-v2',
+              '2026-08-10T00:00:05.0000000+00:00');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            DELETE FROM provider_credential_intent_events
+            WHERE intent_event_id='intent-event-disable-v2';
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    public void Schema6ResponseFinalizationRequiresOneUsageRowAndClosedRateCardinality()
+    {
+        using TemporaryStore temporary = new();
+        using AuthoritativeStore store = temporary.Open();
+        using SqliteConnection connection = OpenRaw(temporary.Root);
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText = "PRAGMA foreign_keys=OFF; DROP TRIGGER provider_response_transport_binding_guard;";
+        command.ExecuteNonQuery();
+
+        command.CommandText =
+            """
+            INSERT INTO provider_responses(
+              response_record_id,availability,usage_availability,operation_id,operation_kind,
+              maximum_input_tokens,maximum_output_tokens,maximum_calculated_nano_usd,
+              raw_response_availability,maximum_raw_response_bytes,response_headers_availability,
+              http_status_availability,provider_response_id_availability,client_request_id_availability,
+              provider_request_id_availability,billing_evidence_availability,response_state,
+              refusal_availability,incomplete_availability,error_availability,requested_model,
+              returned_model_availability,requested_service_tier,returned_service_tier_availability,
+              reasoning_context,reasoning_mode,prompt_cache_mode,billing_availability,rate_availability,
+              credit_availability,validation_state,admission_state,created_at)
+            VALUES(
+              'response-cancelled','unavailable','unavailable','operation-cancelled','source-claim-extraction',
+              73728,4096,600000000,'unavailable',1048576,$response_headers_availability,'unavailable','unavailable','unavailable',
+              'unavailable','unavailable','cancelled','unavailable','unavailable','unavailable','gpt-5.6-sol',
+              'unavailable','default','unavailable','current_turn','standard','explicit','unavailable','unavailable',
+              'unavailable','unavailable','unavailable','2026-08-10T00:00:00.0000000+00:00');
+            """;
+        SqliteParameter cancelledHeaders = command.Parameters.AddWithValue(
+            "$response_headers_availability", "unsupported");
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        cancelledHeaders.Value = "unavailable";
+        Assert.AreEqual(1, command.ExecuteNonQuery());
+        command.Parameters.Clear();
+        command.CommandText =
+            """
+            INSERT INTO provider_response_finalizations VALUES(
+              'finalization-cancelled','response-cancelled','usage-cancelled','unavailable','unavailable',
+              '2026-08-10T00:00:01.0000000+00:00');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+
+        command.CommandText =
+            """
+            INSERT INTO provider_usage_entries(
+              usage_entry_id,availability,operation_id,response_record_id,
+              dispatch_count_availability,dispatch_count,input_tokens_availability,output_tokens_availability,
+              total_tokens_availability,reasoning_tokens_availability,cache_read_tokens_availability,
+              cache_write_tokens_availability,priced_tool_calls_availability,calculated_nano_usd_availability,
+              billing_availability,rate_availability,credit_availability,receipt_state,created_at)
+            VALUES(
+              'usage-cancelled','unavailable','operation-cancelled','response-cancelled','available',0,
+              'unavailable','unavailable','unavailable','unavailable','unavailable','unavailable','unavailable',
+              'unavailable','unavailable','unavailable','unavailable','not-dispatched',
+              '2026-08-10T00:00:01.0000000+00:00');
+            """;
+        Assert.AreEqual(1, command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            INSERT INTO provider_rate_limit_facts VALUES(
+              'rate-cancelled','usage-cancelled','request','requests','available',100,99,
+              '2026-08-10T00:00:01.0000000+00:00',NULL);
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            INSERT INTO provider_response_finalizations VALUES(
+              'finalization-cancelled','response-cancelled','usage-cancelled','unavailable','unavailable',
+              '2026-08-10T00:00:02.0000000+00:00');
+            """;
+        Assert.AreEqual(1, command.ExecuteNonQuery());
+
+        command.CommandText =
+            """
+            INSERT INTO provider_responses(
+              response_record_id,availability,usage_availability,authorization_id,operation_id,request_id,
+              provider_attempt_id,dispatch_fence_id,operation_kind,maximum_input_tokens,maximum_output_tokens,
+              maximum_calculated_nano_usd,raw_response_availability,raw_response_payload_id,
+              raw_response_fingerprint,raw_response_bytes,maximum_raw_response_bytes,response_headers_availability,
+              http_status_availability,http_status,provider_response_id_availability,client_request_id_availability,
+              provider_request_id_availability,billing_evidence_availability,response_state,refusal_availability,
+              incomplete_availability,error_availability,requested_model,returned_model_availability,returned_model,
+              requested_service_tier,returned_service_tier_availability,returned_service_tier,reasoning_context,
+              reasoning_mode,prompt_cache_mode,billing_availability,rate_availability,credit_availability,
+              validation_state,admission_state,created_at)
+            VALUES(
+              'response-completed','available','available','authorization-1','operation-completed','request-1',
+              'attempt-1','fence-1','candidate-investigation',73728,4096,600000000,'available','raw-1',
+              'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',128,1048576,'unavailable',
+              'available',200,'unavailable','unavailable','unavailable','unavailable','completed','unavailable',
+              'unavailable','unavailable','gpt-5.6-sol','available','gpt-5.6-sol','default','available','default',
+              'current_turn','standard','explicit','unavailable','available','unavailable','proposed','proposed',
+              '2026-08-10T00:01:00.0000000+00:00');
+            INSERT INTO provider_usage_entries(
+              usage_entry_id,availability,operation_id,provider_attempt_id,request_id,dispatch_fence_id,
+              response_record_id,dispatch_count_availability,dispatch_count,input_tokens_availability,input_tokens,
+              output_tokens_availability,output_tokens,total_tokens_availability,total_tokens,
+              reasoning_tokens_availability,reasoning_tokens,cache_read_tokens_availability,cache_read_tokens,
+              cache_write_tokens_availability,cache_write_tokens,priced_tool_calls_availability,priced_tool_calls,
+              calculated_nano_usd_availability,calculated_nano_usd,billing_availability,rate_availability,
+              credit_availability,receipt_state,created_at)
+            VALUES(
+              'usage-completed','available','operation-completed','attempt-1','request-1','fence-1',
+              'response-completed','available',1,'available',10,'available',5,'available',15,'available',2,
+              'available',0,'available',0,'available',0,'available',100,'unavailable','available','unavailable',
+              'complete','2026-08-10T00:01:01.0000000+00:00');
+            """;
+        Assert.AreEqual(2, command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            INSERT INTO provider_response_finalizations VALUES(
+              'finalization-completed','response-completed','usage-completed','admitted','admitted',
+              '2026-08-10T00:01:02.0000000+00:00');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            INSERT INTO provider_rate_limit_facts VALUES(
+              'rate-completed','usage-completed','request','requests','available',100,99,
+              '2026-08-10T00:01:01.0000000+00:00',NULL);
+            INSERT INTO provider_response_finalizations VALUES(
+              'finalization-completed','response-completed','usage-completed','admitted','admitted',
+              '2026-08-10T00:01:02.0000000+00:00');
+            """;
+        Assert.AreEqual(2, command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            INSERT INTO provider_rate_limit_facts VALUES(
+              'rate-after-finalization','usage-completed','project','requests','available',100,99,
+              '2026-08-10T00:01:03.0000000+00:00',NULL);
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            INSERT INTO provider_usage_entries(
+              usage_entry_id,availability,operation_id,provider_attempt_id,request_id,dispatch_fence_id,
+              response_record_id,dispatch_count_availability,dispatch_count,input_tokens_availability,input_tokens,
+              output_tokens_availability,output_tokens,total_tokens_availability,total_tokens,
+              reasoning_tokens_availability,reasoning_tokens,cache_read_tokens_availability,cache_read_tokens,
+              cache_write_tokens_availability,cache_write_tokens,priced_tool_calls_availability,priced_tool_calls,
+              calculated_nano_usd_availability,calculated_nano_usd,billing_availability,rate_availability,
+              credit_availability,receipt_state,created_at)
+            VALUES(
+              'usage-completed-late','available','operation-completed','attempt-late','request-1','fence-1',
+              'response-completed','available',1,'available',10,'available',5,'available',15,'available',2,
+              'available',0,'available',0,'available',0,'available',100,'unavailable','available','unavailable',
+              'complete','2026-08-10T00:01:03.0000000+00:00');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            DELETE FROM provider_rate_limit_facts WHERE rate_limit_fact_id='rate-completed';
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            DELETE FROM provider_response_finalizations WHERE finalization_id='finalization-completed';
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
     }
 
     [TestMethod]

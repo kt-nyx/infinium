@@ -29,7 +29,7 @@ public sealed class AnalysisStatePersistenceTests
 
     private static readonly string[] ProviderSchema6TablesInCreationOrder =
     [
-        "provider_access_profiles", "provider_generations", "provider_credential_intents",
+        "provider_access_profiles", "provider_generations", "provider_credential_intents", "provider_credential_intent_events",
         "provider_capability_snapshots", "provider_price_snapshots", "provider_price_rules", "evidence_acquisition_runs",
         "provider_effective_scan_configurations_v2", "evidence_acquisition_job_nodes", "evidence_acquisition_attempts",
         "evidence_acquisition_commands", "provider_command_bindings",
@@ -37,6 +37,7 @@ public sealed class AnalysisStatePersistenceTests
         "provider_operation_blocks", "provider_operation_authorizations", "provider_operation_attempts", "provider_requests",
         "provider_reservations", "provider_reservation_scope_items", "provider_dispatch_fences",
         "provider_transport_events", "provider_responses", "provider_usage_entries", "provider_rate_limit_facts",
+        "provider_response_finalizations",
         "provider_settlements", "provider_settlement_adjustments", "provider_semantic_proposals",
         "provider_semantic_validations", "provider_semantic_admissions", "provider_replay_edges",
         "provider_run_output_v2_bindings", "provider_operation_projection",
@@ -136,7 +137,7 @@ public sealed class AnalysisStatePersistenceTests
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'storage_contract_version';"));
         Assert.AreEqual(
-            "f621f5c26aab56901e96c79d976fdea4ab8886bc17545e5da343b7f0c0bd4a1e",
+            "bf685f3d364b336417b357ce99c19f9a4a3a407be119e30a2c19abd2cf7a0d75",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'schema_fingerprint';"));

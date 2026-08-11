@@ -46,6 +46,6 @@ public static class ProtocolConstants
         Major = Major,
         Minor = Minor,
         SchemaFingerprintSha256 = ByteString.CopyFrom(
-            Convert.FromHexString("6c943878fecf9c18633e8258041223ca7a0d3abd28d205ecaf47a84e88216aa2")),
+            Convert.FromHexString("940dbad1dc29882804d9db4a9ae388ddf36acb23b201c6481c95bf327d56ebd7")),
     };
 }

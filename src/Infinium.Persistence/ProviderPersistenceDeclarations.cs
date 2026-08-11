@@ -8,7 +8,7 @@ public static class ProviderPersistenceDeclarations
     public const int SourceSchemaVersion = 5;
     public const string SourceStorageContractVersion = "1.4.0";
     public const string SourceSchemaFingerprint = "e6d27152687e6b0c806da58a716a9ab909817f046fbe3bf11d8846da5e5dc87d";
-    public const string SchemaFingerprint = "f621f5c26aab56901e96c79d976fdea4ab8886bc17545e5da343b7f0c0bd4a1e";
+    public const string SchemaFingerprint = "bf685f3d364b336417b357ce99c19f9a4a3a407be119e30a2c19abd2cf7a0d75";
     public const int ProjectionContractVersion = 1;
 
     public static IReadOnlyList<string> RebuildableProjections { get; } =
@@ -33,6 +33,7 @@ public static class ProviderPersistenceDeclarations
         "provider_price_rules",
         "provider_generations",
         "provider_credential_intents",
+        "provider_credential_intent_events",
         "provider_operation_attempts",
         "provider_requests",
         "provider_reservations",
@@ -40,6 +41,7 @@ public static class ProviderPersistenceDeclarations
         "provider_transport_events",
         "provider_dispatch_fences",
         "provider_responses",
+        "provider_response_finalizations",
         "provider_usage_entries",
         "provider_rate_limit_facts",
         "provider_settlements",

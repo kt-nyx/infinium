@@ -253,6 +253,7 @@ public sealed record ProviderResponseDocument(
     ProviderIdentityReferenceContract? RawResponsePayload,
     long? RawResponseBytes,
     long MaximumRawResponseBytes,
+    long? OverflowObservedAtLeastBytes,
     ProviderIdentityReferenceContract? ResponseHeadersPayload,
     long? ResponseHeadersBytes,
     ProviderAvailabilityState ResponseHeadersAvailability,

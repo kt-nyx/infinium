@@ -259,6 +259,8 @@ public static class ProviderOperationContractInvariants
         if (value.MaximumRawResponseBytes != value.Limits.MaximumRawResponseBytes
             || value.RawResponseBytes is not null && (value.RawResponseBytes <= 0
                 || value.RawResponseBytes > value.MaximumRawResponseBytes)
+            || value.OverflowObservedAtLeastBytes is not null
+                && value.OverflowObservedAtLeastBytes != checked(value.MaximumRawResponseBytes + 1)
             || value.ResponseHeadersBytes is not null && value.ResponseHeadersBytes is <= 0 or > 65_536)
         {
             throw new InvalidOperationException("Provider payload sizes must be positive and use the exact retained operation limit.");
@@ -495,7 +497,7 @@ public static class ProviderOperationContractInvariants
                 value.ClaimProposals.Select(x => new KeyValuePair<OpaqueId, ProposalAdmissionState>(x.ProposalId, x.State)))
             || !ValidAdmissionLinks(value.AdmissionLinks, value.OperationId, value.OwnerKind,
                 value.OwnerId, value.SourceRevisionId, value.ClaimProposals.Select(x => x.ProposalId),
-                value.ValidationIds, value.ApplicationLinkIds))
+                value.ValidationIds, value.ApplicationLinkIds, declaredIdsAreAdmissions: false))
         {
             throw new InvalidOperationException("Source-claim extraction must retain unique passages and explicit proposal states.");
         }
@@ -530,7 +532,7 @@ public static class ProviderOperationContractInvariants
                 value.HypothesisProposals.Select(x => new KeyValuePair<OpaqueId, ProposalAdmissionState>(x.ProposalId, x.State)))
             || !ValidAdmissionLinks(value.AdmissionLinks, value.OperationId, value.OwnerKind,
                 value.OwnerId, value.CandidateId, value.HypothesisProposals.Select(x => x.ProposalId),
-                value.ValidationIds, value.AdmissionLinkIds))
+                value.ValidationIds, value.AdmissionLinkIds, declaredIdsAreAdmissions: true))
         {
             throw new InvalidOperationException("Candidate investigation must retain paired participants/roles and explicit proposal states.");
         }
@@ -703,28 +705,46 @@ public static class ProviderOperationContractInvariants
                 value.Usage.ReasoningTokens, value.Usage.CacheReadTokens, value.Usage.CacheWriteTokens,
                 value.Usage.PricedToolCalls, value.Usage.CalculatedNanoUsd }
                 .All(quantity => quantity.Availability != ProviderAvailabilityState.Available);
+        bool allProviderFactsUnavailable = new[]
+            {
+                value.RawResponseAvailability, value.ResponseHeadersAvailability, value.HttpStatusAvailability,
+                value.ProviderResponseIdAvailability, value.ClientRequestIdAvailability,
+                value.ProviderRequestIdAvailability, value.RefusalAvailability, value.IncompleteAvailability,
+                value.ErrorAvailability, value.ReturnedModelAvailability, value.ReturnedServiceTierAvailability,
+                value.BillingEvidenceAvailability,
+            }.All(availability => availability == ProviderAvailabilityState.Unavailable)
+            && value.BillingEvidencePayload is null && value.RateLimitFacts.Count == 0
+            && value.Usage.BillingAvailability == ProviderAvailabilityState.Unavailable
+            && value.Usage.RateAvailability == ProviderAvailabilityState.Unavailable
+            && value.Usage.CreditAvailability == ProviderAvailabilityState.Unavailable;
+        bool boundedOverflow = value.RawResponseAvailability == ProviderAvailabilityState.Unavailable
+            && value.RawResponsePayload is null && value.RawResponseBytes is null
+            && value.OverflowObservedAtLeastBytes == checked(value.MaximumRawResponseBytes + 1);
+        bool noOverflow = value.OverflowObservedAtLeastBytes is null;
         bool valid = value.State switch
         {
             ProviderResponseState.Completed => transport && raw && http && returnedModel && returnedTier
                 && value.ReturnedModel == "gpt-5.6-sol" && value.ReturnedServiceTier == "default"
-                && semanticFactsAbsent && completeUsage && admitted,
+                && semanticFactsAbsent && noOverflow && completeUsage && admitted,
             ProviderResponseState.Refusal => transport && raw && http && refusal && !incomplete && !error
-                && dispatchedUsage && nonSuccessAdmission,
+                && noOverflow && dispatchedUsage && nonSuccessAdmission,
             ProviderResponseState.Incomplete => transport && raw && http && !refusal && incomplete && !error
-                && dispatchedUsage && nonSuccessAdmission,
+                && noOverflow && dispatchedUsage && nonSuccessAdmission,
             ProviderResponseState.Failed => transport && raw && http && !refusal && !incomplete && error
-                && dispatchedUsage && nonSuccessAdmission,
+                && noOverflow && dispatchedUsage && nonSuccessAdmission,
             ProviderResponseState.Queued or ProviderResponseState.InProgress => transport && raw && http
-                && semanticFactsAbsent && dispatchedUsage && nonSuccessAdmission,
-            ProviderResponseState.Malformed or ProviderResponseState.Oversized => transport && raw && http
+                && semanticFactsAbsent && noOverflow && dispatchedUsage && nonSuccessAdmission,
+            ProviderResponseState.Malformed => transport && raw && http
+                && !refusal && !incomplete && !error && noOverflow && dispatchedUsage && nonSuccessAdmission,
+            ProviderResponseState.Oversized => transport && boundedOverflow && http
                 && !refusal && !incomplete && !error && dispatchedUsage && nonSuccessAdmission,
             ProviderResponseState.Mismatched => transport && raw && http && returnedModel && returnedTier
                 && dispatchedUsage && (value.ReturnedModel != "gpt-5.6-sol"
-                    || value.ReturnedServiceTier != "default") && nonSuccessAdmission,
+                    || value.ReturnedServiceTier != "default") && noOverflow && nonSuccessAdmission,
             ProviderResponseState.Unknown => transport && raw && http && semanticFactsAbsent
-                && dispatchedUsage && nonSuccessAdmission,
+                && noOverflow && dispatchedUsage && nonSuccessAdmission,
             ProviderResponseState.Cancelled => noTransport && !raw && !http && semanticFactsAbsent
-                && cancelledUsage && nonSuccessAdmission,
+                && allProviderFactsUnavailable && noOverflow && cancelledUsage && nonSuccessAdmission,
             _ => false,
         };
         if (!valid)
@@ -780,18 +800,23 @@ public static class ProviderOperationContractInvariants
         OpaqueId rootSubjectId,
         IEnumerable<OpaqueId> proposals,
         IReadOnlyList<OpaqueId> validationIds,
-        IReadOnlyList<OpaqueId> applicationIds)
+        IReadOnlyList<OpaqueId> declaredLinkIds,
+        bool declaredIdsAreAdmissions)
     {
         HashSet<OpaqueId> proposalIds = proposals.ToHashSet();
         return links.Count <= 64
             && Unique(links.Select(x => x.AdmissionId))
-            && links.All(link => !string.IsNullOrWhiteSpace(link.AuthorizationId.Value)
+            && links.All(link => !string.IsNullOrWhiteSpace(link.AdmissionId.Value)
+                && !string.IsNullOrWhiteSpace(link.ResponseRecordId.Value)
+                && !string.IsNullOrWhiteSpace(link.AuthorizationId.Value)
                 && link.OperationId == operationId
                 && link.OwnerKind == ownerKind && link.OwnerId == ownerId
                 && link.RootSubjectId == rootSubjectId
                 && proposalIds.Contains(link.ProposalId)
                 && validationIds.Contains(link.ValidationId)
-                && applicationIds.Contains(link.ApplicationLinkId)
+                && (declaredIdsAreAdmissions
+                    ? declaredLinkIds.Contains(link.AdmissionId)
+                    : declaredLinkIds.Contains(link.ApplicationLinkId))
                 && link.State is ProposalAdmissionState.Admitted or ProposalAdmissionState.Rejected
                     or ProposalAdmissionState.Abstained or ProposalAdmissionState.Unavailable
                     or ProposalAdmissionState.Unsupported or ProposalAdmissionState.Deleted);

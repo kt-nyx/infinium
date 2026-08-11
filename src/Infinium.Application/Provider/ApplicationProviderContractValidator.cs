@@ -234,6 +234,8 @@ public static class ApplicationProviderContractValidator
             || value.MaximumRawResponseBytes != value.Limits.MaximumRawResponseBytes
             || value.RawResponse is not null && (!ValidDigest(value.RawResponse)
                 || value.RawResponse.SizeBytes > value.MaximumRawResponseBytes)
+            || value.HasOverflowObservedAtLeastBytes
+                && value.OverflowObservedAtLeastBytes != checked(value.MaximumRawResponseBytes + 1)
             || value.ResponseHeaders is not null && (!ValidDigest(value.ResponseHeaders)
                 || value.ResponseHeaders.SizeBytes > 65_536)
             || value.BillingEvidence is not null && (!ValidDigest(value.BillingEvidence)
@@ -470,7 +472,8 @@ public static class ApplicationProviderContractValidator
             || value.ValidationIds.Count == 0 || value.ApplicationLinkIds.Count == 0
             || !ValidUniqueIds(value.ValidationIds) || !ValidUniqueIds(value.ApplicationLinkIds)
             || !ValidAdmissionLinks(value.AdmissionLinks, value.OperationId!.Value, value.OwnerKind,
-                value.OwnerId, value.SourceRevisionId, value.ValidationIds, value.ApplicationLinkIds))
+                value.OwnerId, value.SourceRevisionId, value.ValidationIds, value.ApplicationLinkIds,
+                declaredIdsAreAdmissions: false))
         {
             throw new InvalidDataException("Source-claim projection must retain exact acquisition ownership and admission links.");
         }
@@ -486,7 +489,8 @@ public static class ApplicationProviderContractValidator
             || value.ValidationIds.Count == 0 || value.AdmissionLinkIds.Count == 0
             || !ValidUniqueIds(value.ValidationIds) || !ValidUniqueIds(value.AdmissionLinkIds)
             || !ValidAdmissionLinks(value.AdmissionLinks, value.OperationId!.Value, value.OwnerKind,
-                value.OwnerId, value.CandidateId, value.ValidationIds, value.AdmissionLinkIds))
+                value.OwnerId, value.CandidateId, value.ValidationIds, value.AdmissionLinkIds,
+                declaredIdsAreAdmissions: true))
         {
             throw new InvalidDataException("Candidate projection must retain exact analysis ownership and admission links.");
         }
@@ -540,6 +544,22 @@ public static class ApplicationProviderContractValidator
             && new[] { value.InputTokens, value.OutputTokens, value.TotalTokens, value.ReasoningTokens,
                 value.CacheReadTokens, value.CacheWriteTokens, value.PricedToolCalls, value.CalculatedNanoUsd }
                 .All(quantity => quantity.Availability != ProviderAvailabilityState.Available);
+        bool allProviderFactsUnavailable = new[]
+            {
+                value.RawResponseAvailability, value.ResponseHeadersAvailability, value.HttpStatusAvailability,
+                value.ProviderResponseIdAvailability, value.ClientRequestIdAvailability,
+                value.ProviderRequestIdAvailability, value.RefusalAvailability, value.IncompleteAvailability,
+                value.ErrorAvailability, value.ReturnedModelAvailability, value.ReturnedServiceTierAvailability,
+                value.BillingEvidenceAvailability,
+            }.All(availability => availability == ProviderAvailabilityState.Unavailable)
+            && value.RateLimitFacts.Count == 0
+            && value.BillingAvailability == ProviderAvailabilityState.Unavailable
+            && value.RateAvailability == ProviderAvailabilityState.Unavailable
+            && value.CreditAvailability == ProviderAvailabilityState.Unavailable;
+        bool boundedOverflow = !raw && value.RawResponse is null
+            && value.HasOverflowObservedAtLeastBytes
+            && value.OverflowObservedAtLeastBytes == checked(value.MaximumRawResponseBytes + 1);
+        bool noOverflow = !value.HasOverflowObservedAtLeastBytes;
         bool nonSuccess = value.ValidationState is "rejected" or "abstained" or "unavailable" or "unsupported"
             && value.AdmissionState is "rejected" or "abstained" or "unavailable" or "unsupported";
         bool valid = value.ResponseState switch
@@ -547,19 +567,21 @@ public static class ApplicationProviderContractValidator
             "completed" => transport && raw && http && value.ReturnedModelAvailability == ProviderAvailabilityState.Available
                 && value.ReturnedServiceTierAvailability == ProviderAvailabilityState.Available
                 && value.ReturnedModel == "gpt-5.6-sol" && value.ReturnedServiceTier == "default"
-                && semanticFactsAbsent && completedUsage
+                && semanticFactsAbsent && noOverflow && completedUsage
                 && value.ValidationState == "admitted" && value.AdmissionState == "admitted",
-            "refusal" => transport && raw && http && refusal && !incomplete && !error && dispatchedUsage && nonSuccess,
-            "incomplete" => transport && raw && http && !refusal && incomplete && !error && dispatchedUsage && nonSuccess,
-            "failed" => transport && raw && http && !refusal && !incomplete && error && dispatchedUsage && nonSuccess,
-            "queued" or "in-progress" => transport && raw && http && semanticFactsAbsent && dispatchedUsage && nonSuccess,
-            "malformed" or "oversized" => transport && raw && http && !refusal && !incomplete && !error && dispatchedUsage && nonSuccess,
+            "refusal" => transport && raw && http && refusal && !incomplete && !error && noOverflow && dispatchedUsage && nonSuccess,
+            "incomplete" => transport && raw && http && !refusal && incomplete && !error && noOverflow && dispatchedUsage && nonSuccess,
+            "failed" => transport && raw && http && !refusal && !incomplete && error && noOverflow && dispatchedUsage && nonSuccess,
+            "queued" or "in-progress" => transport && raw && http && semanticFactsAbsent && noOverflow && dispatchedUsage && nonSuccess,
+            "malformed" => transport && raw && http && !refusal && !incomplete && !error && noOverflow && dispatchedUsage && nonSuccess,
+            "oversized" => transport && boundedOverflow && http && !refusal && !incomplete && !error && dispatchedUsage && nonSuccess,
             "mismatched" => transport && raw && http && dispatchedUsage
                 && value.ReturnedModelAvailability == ProviderAvailabilityState.Available
                 && value.ReturnedServiceTierAvailability == ProviderAvailabilityState.Available
-                && (value.ReturnedModel != "gpt-5.6-sol" || value.ReturnedServiceTier != "default") && nonSuccess,
-            "unknown" => transport && raw && http && semanticFactsAbsent && dispatchedUsage && nonSuccess,
-            "cancelled" => noTransport && !raw && !http && semanticFactsAbsent && cancelledUsage && nonSuccess,
+                && (value.ReturnedModel != "gpt-5.6-sol" || value.ReturnedServiceTier != "default") && noOverflow && nonSuccess,
+            "unknown" => transport && raw && http && semanticFactsAbsent && noOverflow && dispatchedUsage && nonSuccess,
+            "cancelled" => noTransport && !raw && !http && semanticFactsAbsent && allProviderFactsUnavailable
+                && noOverflow && cancelledUsage && nonSuccess,
             _ => false,
         };
         if (!valid)
@@ -580,7 +602,8 @@ public static class ApplicationProviderContractValidator
         string ownerId,
         string rootSubjectId,
         IEnumerable<string> validationIds,
-        IEnumerable<string> applicationIds)
+        IEnumerable<string> declaredLinkIds,
+        bool declaredIdsAreAdmissions)
     {
         ProviderSemanticAdmissionLink[] items = links.ToArray();
         return items.Length <= 64
@@ -590,7 +613,9 @@ public static class ApplicationProviderContractValidator
                 && link.OwnerKind == ownerKind && link.OwnerId == ownerId
                 && link.RootSubjectId == rootSubjectId
                 && validationIds.Contains(link.ValidationId)
-                && applicationIds.Contains(link.ApplicationLinkId)
+                && (declaredIdsAreAdmissions
+                    ? declaredLinkIds.Contains(link.AdmissionId)
+                    : declaredLinkIds.Contains(link.ApplicationLinkId))
                 && link.State is "admitted" or "rejected" or "abstained" or "unavailable" or "unsupported" or "deleted");
     }
 

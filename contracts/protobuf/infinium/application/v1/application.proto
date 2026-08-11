@@ -195,6 +195,7 @@ message ProviderResponsePayload {
   ProviderAvailabilityState returned_service_tier_availability = 56;
   ProviderAvailabilityState billing_evidence_availability = 57;
   ProviderAvailabilityState usage_availability = 58;
+  optional uint64 overflow_observed_at_least_bytes = 59;
 }
 
 message ProviderRateLimitFact {
