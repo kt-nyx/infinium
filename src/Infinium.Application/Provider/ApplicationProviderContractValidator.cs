@@ -30,6 +30,16 @@ public static class ApplicationProviderContractValidator
         }
     }
 
+    public static void Validate(ListProviderBudgetResponse value)
+    {
+        if (value.ResultCase == ListProviderBudgetResponse.ResultOneofCase.None
+            || value.ResultCase == ListProviderBudgetResponse.ResultOneofCase.Page
+                && value.Page.Items.Count > 100)
+        {
+            throw new InvalidDataException("Provider budget response must select exactly one bounded success or failure result.");
+        }
+    }
+
     public static void Validate(GetProviderReplayRequest value)
     {
         Require(value.OperationId?.Value, "operation_id");
@@ -44,8 +54,10 @@ public static class ApplicationProviderContractValidator
     {
         Require(value.ProfileId?.Value, "profile_id");
         Require(value.GenerationId?.Value, "generation_id");
+        Require(value.CommandId, "command_id");
         if (value.Provider != "openai" || value.Purpose != "responses"
-            || string.IsNullOrWhiteSpace(value.DisplayLabel) || value.DisplayLabel.Length > 128)
+            || string.IsNullOrWhiteSpace(value.DisplayLabel) || value.DisplayLabel.Length > 128
+            || !ValidInstant(value.RequestedAt))
         {
             throw new InvalidDataException("Provider enrollment is outside the closed non-secret profile contract.");
         }
@@ -60,7 +72,10 @@ public static class ApplicationProviderContractValidator
         bool identityGroupPresent = Has(value.AccountIdentityId?.Value) && Has(value.BillingScopeIdentityId?.Value)
             && Has(value.CapabilitySnapshotId?.Value);
         bool intentPresent = !string.IsNullOrWhiteSpace(value.IntentId);
-        if (!Enum.IsDefined(value.LifecycleState) || value.LifecycleState == ProviderProfileLifecycleState.Unspecified
+        if (value.Provider != "openai" || value.Purpose != "responses"
+            || string.IsNullOrWhiteSpace(value.DisplayLabel) || value.DisplayLabel.Length > 128
+            || !ValidInstant(value.RecordedAt)
+            || !Enum.IsDefined(value.LifecycleState) || value.LifecycleState == ProviderProfileLifecycleState.Unspecified
             || !Enum.IsDefined(value.VerificationState) || value.VerificationState == ProviderAvailabilityState.Unspecified)
         {
             throw new InvalidDataException("Provider profile contains an unknown numeric lifecycle or verification state.");
@@ -73,15 +88,15 @@ public static class ApplicationProviderContractValidator
             ProviderProfileLifecycleState.ActiveUnverified => identityGroupPresent && intentPresent
                 && value.VerificationState == ProviderAvailabilityState.Unavailable
                 && value.RecoveryDisposition == "not-required" && value.CleanupDisposition == "not-requested",
-            ProviderProfileLifecycleState.ActiveVerified or ProviderProfileLifecycleState.Replacing =>
+            ProviderProfileLifecycleState.ActiveVerified =>
                 identityGroupPresent && intentPresent && value.VerificationState == ProviderAvailabilityState.Available
                 && value.RecoveryDisposition == "not-required" && value.CleanupDisposition == "not-requested",
-            ProviderProfileLifecycleState.Disabled => identityGroupPresent && intentPresent
+            ProviderProfileLifecycleState.Replacing or ProviderProfileLifecycleState.Disabled => identityGroupPresent && intentPresent
                 && value.VerificationState == ProviderAvailabilityState.Unavailable
                 && value.RecoveryDisposition == "not-required" && value.CleanupDisposition == "not-requested",
             ProviderProfileLifecycleState.DeletePending => identityGroupPresent && intentPresent
                 && value.VerificationState == ProviderAvailabilityState.Unavailable
-                && value.RecoveryDisposition == "not-required" && value.CleanupDisposition == "pending",
+                && value.RecoveryDisposition == "not-required" && value.CleanupDisposition is "pending" or "failed",
             ProviderProfileLifecycleState.Deleted => identityGroupAbsent && !intentPresent
                 && value.VerificationState == ProviderAvailabilityState.Unavailable
                 && value.RecoveryDisposition == "not-required" && value.CleanupDisposition == "confirmed",
@@ -151,6 +166,46 @@ public static class ApplicationProviderContractValidator
         throw new InvalidDataException("No non-blocked provider operation state exists before an accepted local input-bound policy changes this contract.");
     }
 
+    public static void Validate(ProviderResponsePayload value)
+    {
+        Require(value.ResponseRecordId, "response_record_id");
+        if (value.MaximumRawResponseBytes is 0 or > 1_048_576
+            || value.RequestedModel != "gpt-5.6-sol" || value.RequestedServiceTier != "default"
+            || value.ReasoningContext != "current_turn" || value.ReasoningMode != "standard"
+            || value.PromptCacheMode != "explicit"
+            || value.Availability != ProviderAvailabilityState.Unavailable
+            || value.InputBoundProofStatus != InputBoundProofStatus.AuthorityRequired
+            || value.InputBoundPolicyId != "unresolved-openai-responses-framing"
+            || value.InputBoundPolicyVersion != "authority-required"
+            || Has(value.RequestId) || value.DispatchFenceId is not null || value.RawResponse is not null
+            || value.ResponseHeaders is not null || value.HasHttpStatus || Has(value.ProviderResponseId)
+            || Has(value.ClientRequestId) || value.BillingEvidence is not null
+            || Has(value.ProviderRequestId) || value.ProviderRequestIdAvailability != ProviderAvailabilityState.Unavailable
+            || value.ResponseHeadersAvailability != ProviderAvailabilityState.Unavailable
+            || value.ResponseState != "unknown" || Has(value.RefusalCode) || Has(value.IncompleteReason)
+            || Has(value.ErrorCode) || Has(value.ReturnedModel) || Has(value.ReturnedServiceTier)
+            || value.RateLimitFacts.Count != 0 || value.ValidationState != "unavailable"
+            || value.AdmissionState != "unavailable" || !ValidInstant(value.RecordedAt))
+        {
+            throw new InvalidDataException("Provider response payload is unavailable until proof-qualified authorization exists.");
+        }
+        Validate(value.DispatchCount);
+        Validate(value.InputTokens);
+        Validate(value.OutputTokens);
+        Validate(value.TotalTokens);
+        Validate(value.ReasoningTokens);
+        Validate(value.CacheReadTokens);
+        Validate(value.CacheWriteTokens);
+        Validate(value.PricedToolCalls);
+        Validate(value.CalculatedNanoUsd);
+        if (AnyValue(value.DispatchCount, value.InputTokens, value.OutputTokens, value.TotalTokens,
+            value.ReasoningTokens, value.CacheReadTokens, value.CacheWriteTokens,
+            value.PricedToolCalls, value.CalculatedNanoUsd))
+        {
+            throw new InvalidDataException("Unavailable provider response cannot publish usage quantities.");
+        }
+    }
+
     public static void Validate(ProviderReplayPayload value)
     {
         Require(value.OperationId?.Value, "operation_id");
@@ -200,14 +255,21 @@ public static class ApplicationProviderContractValidator
         Require(value.EffectiveConfigurationId, "effective_configuration_id");
         Require(value.ResolvedInputManifestId, "resolved_input_manifest_id");
         Require(value.PromptId, "prompt_id");
+        Require(value.CommandId, "command_id");
         if (value.OwnerKind is not ("analysis-run" or "evidence-acquisition-run")
+            || value.OperationKind == ProviderOperationKind.SourceClaimExtraction && value.OwnerKind != "evidence-acquisition-run"
+            || value.OperationKind is ProviderOperationKind.TransportQualification or ProviderOperationKind.CandidateInvestigation
+                && value.OwnerKind != "analysis-run"
             || value.CanonicalRequestFingerprintSha256.Length != 32
+            || value.RequestFingerprintSha256.Length != 32
             || value.PromptFingerprintSha256.Length != 32
             || value.CanonicalRequestBody.IsEmpty || value.CanonicalRequestBody.Length > 65_536
             || value.SettingsFingerprintSha256.Length != 32 || value.OutputSchemaFingerprintSha256.Length != 32
             || !Enum.IsDefined(value.OperationKind) || value.OperationKind == ProviderOperationKind.Unspecified
-            || value.Limits is null || value.DispatchDeadline is null
-            || value.DispatchDeadline.UnixSeconds <= 0 || value.DispatchDeadline.Nanoseconds is < 0 or > 999_999_999
+            || value.Limits is null || !ValidInstant(value.DispatchDeadline)
+            || !ValidInstant(value.RequestedAt) || !ValidInstant(value.ConfirmedAt)
+            || Compare(value.RequestedAt, value.ConfirmedAt) > 0
+            || Compare(value.ConfirmedAt, value.DispatchDeadline) >= 0
             || value.CoordinatorFencingEpoch == 0
             || !System.Security.Cryptography.SHA256.HashData(value.CanonicalRequestBody.Span)
                 .AsSpan().SequenceEqual(value.CanonicalRequestFingerprintSha256.Span))
@@ -231,6 +293,20 @@ public static class ApplicationProviderContractValidator
     public static void RequireDispatchAdmission(SubmitProviderOperationRequest value)
     {
         Validate(value);
+    }
+
+    public static void Validate(ProviderCommandReceipt value, string expectedCommandId)
+    {
+        Require(value.CommandId, "command_id");
+        Require(value.ReceiptId, "receipt_id");
+        if (value.CommandId != expectedCommandId || value.OperationId is null
+            || !Enum.IsDefined(value.State) || value.State == ProviderCommandState.Unspecified
+            || !ValidInstant(value.RequestedAt) || !ValidInstant(value.ConfirmedAt)
+            || Compare(value.RequestedAt, value.ConfirmedAt) > 0
+            || value.State != ProviderCommandState.BlockedAuthorityRequired)
+        {
+            throw new InvalidDataException("Provider command receipt must bind the exact command and truthful authority block.");
+        }
     }
 
     private static void Validate(OptionalProviderQuantity value)
@@ -278,4 +354,14 @@ public static class ApplicationProviderContractValidator
     private static bool Has(string? value) => !string.IsNullOrWhiteSpace(value);
 
     private static bool AnyValue(params OptionalProviderQuantity[] values) => values.Any(x => x.HasValue);
+
+    private static bool ValidInstant(Infinium.Contracts.Protobuf.Common.V1.Instant? value) =>
+        value is not null && value.UnixSeconds > 0 && value.Nanoseconds is >= 0 and <= 999_999_999;
+
+    private static int Compare(
+        Infinium.Contracts.Protobuf.Common.V1.Instant left,
+        Infinium.Contracts.Protobuf.Common.V1.Instant right) =>
+        left.UnixSeconds != right.UnixSeconds
+            ? left.UnixSeconds.CompareTo(right.UnixSeconds)
+            : left.Nanoseconds.CompareTo(right.Nanoseconds);
 }

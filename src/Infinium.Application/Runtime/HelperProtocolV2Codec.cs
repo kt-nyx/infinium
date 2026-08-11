@@ -9,7 +9,11 @@ namespace Infinium.Application.Runtime;
 
 public static class HelperProtocolV2Codec
 {
-    public static HelperPrivateFrameV2 Decode(ReadOnlySpan<byte> bytes)
+    public static HelperPrivateFrameV2 Decode(
+        ReadOnlySpan<byte> bytes,
+        DateTimeOffset now,
+        string? expectedAssignmentId = null,
+        string? expectedCommandId = null)
     {
         if (bytes.IsEmpty || bytes.Length > HelperProtocolV2Constants.MaximumFrameBytes)
         {
@@ -25,7 +29,7 @@ public static class HelperProtocolV2Codec
             throw new InvalidDataException("Helper v2 frame is malformed.", exception);
         }
         RejectUnknownFields(frame, "$frame");
-        Validate(frame);
+        Validate(frame, now, expectedAssignmentId, expectedCommandId);
         return frame;
     }
 
@@ -43,7 +47,11 @@ public static class HelperProtocolV2Codec
         }
     }
 
-    private static void Validate(HelperPrivateFrameV2 frame)
+    private static void Validate(
+        HelperPrivateFrameV2 frame,
+        DateTimeOffset now,
+        string? expectedAssignmentId,
+        string? expectedCommandId)
     {
         if (frame.Sequence == 0
             || frame.ProtocolFingerprintSha256.Length != 32
@@ -58,32 +66,33 @@ public static class HelperProtocolV2Codec
                 Require(frame.Bootstrap.OperationId?.Value, "bootstrap.operation_id");
                 Require(frame.Bootstrap.AttemptId?.Value, "bootstrap.attempt_id");
                 if (frame.Bootstrap.CoordinatorFencingEpoch == 0 || frame.Bootstrap.OneUseNonceFingerprintSha256.Length != 32
-                    || !ValidInstant(frame.Bootstrap.ExpiresAt))
+                    || !ValidFutureInstant(frame.Bootstrap.ExpiresAt, now))
                 {
                     throw new InvalidDataException("Helper v2 bootstrap is incomplete.");
                 }
                 break;
             case HelperPrivateFrameV2.PayloadOneofCase.Assignment:
-                Validate(frame.Assignment);
+                Validate(frame.Assignment, now);
                 break;
             case HelperPrivateFrameV2.PayloadOneofCase.DispatchRevalidation:
-                Validate(frame.DispatchRevalidation);
+                Validate(frame.DispatchRevalidation, now);
                 break;
             case HelperPrivateFrameV2.PayloadOneofCase.Receipt:
-                Validate(frame.Receipt);
+                Validate(frame.Receipt, expectedAssignmentId, expectedCommandId);
                 break;
             default:
                 throw new InvalidDataException("Helper v2 payload kind must be explicit.");
         }
     }
 
-    private static void Validate(HelperAssignmentV2 value)
+    private static void Validate(HelperAssignmentV2 value, DateTimeOffset now)
     {
         Require(value.OperationId?.Value, "assignment.operation_id");
         Require(value.AttemptId?.Value, "assignment.attempt_id");
         Require(value.AccessProfileId?.Value, "assignment.access_profile_id");
         Require(value.GenerationId?.Value, "assignment.generation_id");
         Require(value.AssignmentId, "assignment.assignment_id");
+        Require(value.CommandId, "assignment.command_id");
         if (!Enum.IsDefined(value.AssignmentKind) || value.AssignmentKind == HelperAssignmentKindV2.Unspecified
             || value.GenerationOrdinal == 0)
         {
@@ -112,7 +121,7 @@ public static class HelperProtocolV2Codec
                 || request.CanonicalRequestBytes.IsEmpty
                 || (uint)request.CanonicalRequestBytes.Length > value.Limits.MaximumRequestBytes
                 || !ValidExactDigest(request.CanonicalRequest, request.CanonicalRequestBytes.Span)
-                || !ValidInstant(request.DispatchDeadline)
+                || !ValidFutureInstant(request.DispatchDeadline, now)
                 || !IsAuthorityRequiredProof(request.InputBoundProof))
             {
                 throw new InvalidDataException("Helper v2 provider request is not a closed bounded and explicitly blocked Responses request.");
@@ -149,7 +158,7 @@ public static class HelperProtocolV2Codec
         }
     }
 
-    private static void Validate(DispatchRevalidationV2 value)
+    private static void Validate(DispatchRevalidationV2 value, DateTimeOffset now)
     {
         Require(value.DispatchId?.Value, "revalidation.dispatch_id");
         Require(value.AttemptId?.Value, "revalidation.attempt_id");
@@ -165,7 +174,7 @@ public static class HelperProtocolV2Codec
             || !Enum.IsDefined(value.OperationKind) || value.OperationKind == ProviderOperationKindV2.Unspecified
             || value.CoordinatorFencingEpoch == 0 || !ValidDigest(value.CanonicalRequest)
             || !ValidDigest(value.Settings) || !ValidDigest(value.OutputSchema)
-            || !ValidInstant(value.DispatchDeadline) || value.Limits is null
+            || !ValidFutureInstant(value.DispatchDeadline, now) || value.Limits is null
             || value.AuthorizedOnce || value.Disposition == DispatchDispositionV2.Authorized
             || !IsAuthorityRequiredProof(value.InputBoundProof))
         {
@@ -174,7 +183,10 @@ public static class HelperProtocolV2Codec
         ValidateLimits(value.OperationKind, value.Limits);
     }
 
-    private static void Validate(HelperReceiptV2 value)
+    private static void Validate(
+        HelperReceiptV2 value,
+        string? expectedAssignmentId,
+        string? expectedCommandId)
     {
         Require(value.OperationId?.Value, "receipt.operation_id");
         Require(value.AttemptId?.Value, "receipt.attempt_id");
@@ -185,6 +197,9 @@ public static class HelperProtocolV2Codec
         }
         bool dispatch = value.AssignmentKind == HelperAssignmentKindV2.ProviderDispatch;
         Require(value.AssignmentId, "receipt.assignment_id");
+        Require(value.CommandId, "receipt.command_id");
+        Require(expectedAssignmentId, "expected_receipt.assignment_id");
+        Require(expectedCommandId, "expected_receipt.command_id");
         ValidateOptionalUInt64(value.InputTokens, "receipt.input_tokens");
         ValidateOptionalUInt64(value.OutputTokens, "receipt.output_tokens");
         ValidateOptionalUInt64(value.ReasoningTokens, "receipt.reasoning_tokens");
@@ -192,12 +207,15 @@ public static class HelperProtocolV2Codec
         ValidateOptionalUInt64(value.CacheWriteTokens, "receipt.cache_write_tokens");
         bool noTransport = value.Outcome is HelperOutcomeV2.Unavailable or HelperOutcomeV2.Cancelled;
         bool hasResponse = value.RawResponse is not null;
-        if (value.OutcomeHasResponse != hasResponse
+        if (value.AssignmentId != expectedAssignmentId || value.CommandId != expectedCommandId
+            || value.OutcomeHasResponse != hasResponse
             || (hasResponse && !ValidDigest(value.RawResponse))
             || (!dispatch && (value.TransportMayHaveStarted || hasResponse
                 || value.InputTokens is not null || value.OutputTokens is not null || value.ReasoningTokens is not null
                 || value.CacheReadTokens is not null || value.CacheWriteTokens is not null
                 || !string.IsNullOrEmpty(value.RequestId) || value.DispatchId is not null || value.InputBoundProof is not null))
+            || (!dispatch && value.Outcome is HelperOutcomeV2.TransportMayHaveStarted
+                or HelperOutcomeV2.Oversized or HelperOutcomeV2.Malformed)
             || (noTransport && (value.TransportMayHaveStarted || hasResponse))
             || !ValidDigest(value.NonSecretReceipt))
         {
@@ -267,6 +285,12 @@ public static class HelperProtocolV2Codec
 
     private static bool ValidInstant(Infinium.Contracts.Protobuf.Common.V1.Instant? value) =>
         value is not null && value.UnixSeconds > 0 && value.Nanoseconds is >= 0 and <= 999_999_999;
+
+    private static bool ValidFutureInstant(
+        Infinium.Contracts.Protobuf.Common.V1.Instant? value,
+        DateTimeOffset now) =>
+        ValidInstant(value)
+        && DateTimeOffset.FromUnixTimeSeconds(value!.UnixSeconds).AddTicks(value.Nanoseconds / 100) > now;
 
     private static void ValidateOptionalUInt64(Infinium.Contracts.Protobuf.Common.V1.OptionalUInt64? value, string field)
     {

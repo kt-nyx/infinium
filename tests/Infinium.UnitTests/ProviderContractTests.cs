@@ -53,6 +53,19 @@ public sealed class ProviderContractTests
             ProviderOperationContractInvariants.Validate(active with { CapabilitySnapshotId = null }));
         Assert.ThrowsExactly<InvalidOperationException>(() =>
             ProviderOperationContractInvariants.Validate(active with { IntentId = null }));
+        ProviderOperationContractInvariants.Validate(active with
+        {
+            LifecycleState = ProviderProfileState.Replacing,
+            VerificationState = ProviderAvailabilityState.Unavailable,
+        });
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
+            ProviderOperationContractInvariants.Validate(active with { LifecycleState = ProviderProfileState.Replacing }));
+        ProviderOperationContractInvariants.Validate(active with
+        {
+            LifecycleState = ProviderProfileState.DeletePending,
+            VerificationState = ProviderAvailabilityState.Unavailable,
+            CleanupDisposition = "failed",
+        });
 
         ProviderAccessProfileDocument deleted = active with
         {
@@ -94,57 +107,23 @@ public sealed class ProviderContractTests
             }
         }
         Assert.ThrowsExactly<InvalidOperationException>(() =>
-            ProviderOperationContractInvariants.Validate(blocked with { AuthorizationId = Id("authorization-1") }));
+            ProviderOperationContractInvariants.Validate(blocked with { OwnerKind = "analysis-run" }));
         Assert.ThrowsExactly<InvalidOperationException>(() =>
             ProviderOperationContractInvariants.Validate(blocked with { Usage = BlockedUsage() with { InputTokens = Q(1) } }));
     }
 
     [TestMethod]
     [TestCategory("Unit")]
-    public void ProviderResponseRepresentsCompleteAndUnavailableFactsWithoutFabrication()
+    public void ProviderResponseIsUnavailableUntilProofQualifiedAuthorizationExists()
     {
         ProviderUsageContract completedUsage = new(Q(1), Q(2), Q(3), Q(5), Q(1), Q(0), Q(0), Q(0), Q(42),
             ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable);
-        ProviderResponseDocument completed = Response(ProviderResponseState.Completed, completedUsage) with
-        {
-            RawResponsePayload = Ref("payload-1"),
-            RawResponseBytes = 100,
-            ResponseHeadersPayload = Ref("headers-1"),
-            ResponseHeadersBytes = 40,
-            ResponseHeadersAvailability = ProviderAvailabilityState.Available,
-            HttpStatus = 200,
-            ProviderResponseId = "response-1",
-            ProviderRequestId = "request-header-1",
-            ProviderRequestIdAvailability = ProviderAvailabilityState.Available,
-            ReturnedModel = "gpt-5.6-sol",
-            ReturnedServiceTier = "default",
-            ValidationState = ProposalAdmissionState.Proposed,
-            AdmissionState = ProposalAdmissionState.Proposed,
-        };
-        ProviderOperationContractInvariants.Validate(completed);
+        ProviderResponseDocument unavailable = Response();
+        ProviderOperationContractInvariants.Validate(unavailable);
         Assert.ThrowsExactly<InvalidOperationException>(() =>
-            ProviderOperationContractInvariants.Validate(completed with { Usage = completedUsage with { TotalTokens = Q(4) } }));
+            ProviderOperationContractInvariants.Validate(unavailable with { State = ProviderResponseState.Completed, Usage = completedUsage }));
         Assert.ThrowsExactly<InvalidOperationException>(() =>
-            ProviderOperationContractInvariants.Validate(completed with { RawResponseBytes = 1_048_577 }));
-
-        ProviderResponseDocument malformed = Response(ProviderResponseState.Malformed,
-            new(Q(1), U(), U(), U(), U(), U(), U(), U(), U(), ProviderAvailabilityState.Unavailable,
-                ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable)) with
-        {
-            ErrorCode = "malformed",
-            ValidationState = ProposalAdmissionState.Unavailable,
-            AdmissionState = ProposalAdmissionState.Unavailable,
-        };
-        ProviderOperationContractInvariants.Validate(malformed);
-
-        ProviderResponseDocument cancelled = Response(ProviderResponseState.Cancelled, BlockedUsage()) with
-        {
-            ValidationState = ProposalAdmissionState.Unavailable,
-            AdmissionState = ProposalAdmissionState.Unavailable,
-        };
-        ProviderOperationContractInvariants.Validate(cancelled);
-        Assert.ThrowsExactly<InvalidOperationException>(() =>
-            ProviderOperationContractInvariants.Validate(cancelled with { ProviderRequestId = "fabricated" }));
+            ProviderOperationContractInvariants.Validate(unavailable with { RequestId = Id("request-1") }));
     }
 
     [TestMethod]
@@ -152,9 +131,9 @@ public sealed class ProviderContractTests
     public void ProviderOutputSurfacesExposeOnlyNotUsedUnavailableOrBlocked()
     {
         ProviderPublicationReferenceContract blocked = new(Id("operation-1"), ProviderOperationKind.SourceClaimExtraction,
-            null, null, null, null, null, null, null, "blocked", false);
+            Id("acquisition-1"), null, null, null, null, null, null, "blocked", false);
         RunOutputV2Document output = new(ContractConstants.RunOutputV2SchemaId, "1", Id("run-1"), Ref("local-1"),
-            Id("config-1"), [blocked], [], [], [], ["input-bound-authority-required"], false, false);
+            Id("config-1"), [blocked], [Id("acquisition-1")], [], [], ["input-bound-authority-required"], false, false);
         ProviderOperationContractInvariants.Validate(output);
         Assert.ThrowsExactly<InvalidOperationException>(() =>
             ProviderOperationContractInvariants.Validate(output with
@@ -177,7 +156,7 @@ public sealed class ProviderContractTests
     {
         SelectAndConfirmProviderOperationCommand command = new(
             Id("command-1"), Id("operation-1"), ProviderOperationKind.SourceClaimExtraction,
-            "analysis-run", Id("run-1"), Id("job-1"), Id("install-1"), Id("context-1"), Id("config-1"),
+            "evidence-acquisition-run", Id("acquisition-1"), Id("job-1"), Id("install-1"), Id("context-1"), Id("config-1"),
             Id("manifest-1"), Id("profile-1"), Id("generation-1"), 0, Id("capability-1"), Fingerprint,
             Fingerprint, 1024, Fingerprint, Id("price-1"), Fingerprint, Fingerprint, Id("prompt-1"),
             Fingerprint, Id("schema-1"), Fingerprint, BlockedProof(),
@@ -205,18 +184,21 @@ public sealed class ProviderContractTests
     }
 
     private static ProviderOperationDocument BlockedOperation() => new(
-        ContractConstants.ProviderOperationSchemaId, "1", Id("operation-1"), Id("run-1"), "analysis-run",
-        ProviderOperationKind.SourceClaimExtraction, Id("job-1"), null, null, Id("profile-1"), Id("generation-1"), 0,
-        Capability(), Price(), null, null, null, BlockedProof(),
-        new(65_536, 73_728, 4_096, 1_048_576, 1, 600_000_000, 120_000), null, null, null,
+        ContractConstants.ProviderOperationSchemaId, "1", Id("operation-1"), Id("acquisition-1"), "evidence-acquisition-run",
+        ProviderOperationKind.SourceClaimExtraction, Id("job-1"), Id("command-1"), Id("install-1"), Id("context-1"),
+        Id("config-1"), Id("manifest-1"), Id("profile-1"), Id("generation-1"), 0,
+        Capability(), Price(), Id("prompt-1"), Fingerprint, Id("schema-1"), Fingerprint, Fingerprint,
+        Ref("request-payload-1"), 1024, Fingerprint, BlockedProof(),
+        new(65_536, 73_728, 4_096, 1_048_576, 1, 600_000_000, 120_000),
         ProviderOperationState.InputBoundBlocked, "not-started", "not-available", BlockedUsage(), "not-started",
-        "not-available", Now);
+        "not-available", Now, Now, UtcTimestamp.Parse("2026-08-10T00:02:00.0000000+00:00"), 1, Now);
 
-    private static ProviderResponseDocument Response(ProviderResponseState state, ProviderUsageContract usage) => new(
-        ContractConstants.ProviderResponseSchemaId, "1", Id("response-1"), Id("operation-1"), Id("request-1"),
-        Id("fence-1"), null, null, 1_048_576, null, null, ProviderAvailabilityState.Unavailable, null, null, null,
-        ProviderAvailabilityState.Unavailable, state, null, null, null, "gpt-5.6-sol", null, "default", null,
-        "current_turn", "standard", "explicit", usage, [], ProposalAdmissionState.Unavailable,
+    private static ProviderResponseDocument Response() => new(
+        ContractConstants.ProviderResponseSchemaId, "1", Id("response-1"), Id("operation-1"), null,
+        null, BlockedProof(), ProviderAvailabilityState.Unavailable, null, null, 1_048_576, null, null,
+        ProviderAvailabilityState.Unavailable, null, null, null, null, ProviderAvailabilityState.Unavailable,
+        ProviderResponseState.Unknown, null, null, null, "gpt-5.6-sol", null, "default", null,
+        "current_turn", "standard", "explicit", BlockedUsage(), [], null, ProposalAdmissionState.Unavailable,
         ProposalAdmissionState.Unavailable, Now);
 
     private static ProviderUsageContract BlockedUsage() => new(Q(0), U(), U(), U(), U(), U(), U(), U(), U(),

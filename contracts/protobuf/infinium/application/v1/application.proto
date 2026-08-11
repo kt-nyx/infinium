@@ -74,6 +74,10 @@ message ProviderProfilePayload {
   string intent_id = 11;
   string recovery_disposition = 12;
   string cleanup_disposition = 13;
+  string provider = 14;
+  string purpose = 15;
+  string display_label = 16;
+  infinium.common.v1.Instant recorded_at = 17;
 }
 
 message GetProviderOperationRequest {
@@ -168,6 +172,12 @@ message ProviderResponsePayload {
   string validation_state = 36;
   string admission_state = 37;
   infinium.common.v1.Instant recorded_at = 38;
+  ProviderAvailabilityState availability = 39;
+  InputBoundProofStatus input_bound_proof_status = 40;
+  string input_bound_policy_id = 41;
+  string input_bound_policy_version = 42;
+  string client_request_id = 43;
+  infinium.common.v1.ContentDigest billing_evidence = 44;
 }
 
 message ProviderRateLimitFact {
@@ -190,9 +200,15 @@ message ListProviderBudgetRequest {
 }
 
 message ListProviderBudgetResponse {
+  oneof result {
+    ProviderBudgetPage page = 1;
+    infinium.common.v1.Failure failure = 2;
+  }
+}
+
+message ProviderBudgetPage {
   repeated ProviderBudgetPayload items = 1;
   PageCursor next = 2;
-  infinium.common.v1.Failure failure = 3;
 }
 
 message ProviderBudgetPayload {
@@ -257,6 +273,8 @@ message SubmitProviderEnrollmentRequest {
   string provider = 3;
   string purpose = 4;
   string display_label = 5;
+  string command_id = 6;
+  infinium.common.v1.Instant requested_at = 7;
 }
 
 message SubmitProviderOperationRequest {
@@ -289,6 +307,10 @@ message SubmitProviderOperationRequest {
   bytes canonical_request_body = 27;
   infinium.common.v1.Instant dispatch_deadline = 28;
   uint64 coordinator_fencing_epoch = 29;
+  string command_id = 30;
+  infinium.common.v1.Instant requested_at = 31;
+  infinium.common.v1.Instant confirmed_at = 32;
+  bytes request_fingerprint_sha256 = 33;
 }
 
 message ProviderOperationLimits {
@@ -376,8 +398,36 @@ message SubmitProviderCommandResponse {
 
 message ProviderCommandReceipt {
   string command_id = 1;
-  string state = 2;
+  ProviderCommandState state = 2;
   infinium.domain.v1.OperationId operation_id = 3;
+  infinium.common.v1.Instant requested_at = 4;
+  infinium.common.v1.Instant confirmed_at = 5;
+  string receipt_id = 6;
+}
+
+enum ProviderCommandState {
+  PROVIDER_COMMAND_STATE_UNSPECIFIED = 0;
+  PROVIDER_COMMAND_STATE_BLOCKED_AUTHORITY_REQUIRED = 1;
+  PROVIDER_COMMAND_STATE_ENROLLMENT_INTENT_RECORDED = 2;
+  PROVIDER_COMMAND_STATE_REJECTED = 3;
+}
+
+message SourceClaimExtractionPayload {
+  string acquisition_run_id = 1;
+  infinium.domain.v1.OperationId operation_id = 2;
+  string owner_kind = 3;
+  string owner_id = 4;
+  string parent_analysis_run_id = 5;
+  string application_scope_id = 6;
+  string cost_attribution_scope_id = 7;
+}
+
+message CandidateInvestigationPayload {
+  infinium.domain.v1.OperationId operation_id = 1;
+  string owner_kind = 2;
+  string owner_id = 3;
+  string analysis_run_id = 4;
+  string candidate_id = 5;
 }
 
 message GetAnalysisOutputRequest {

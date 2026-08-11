@@ -1280,23 +1280,58 @@ public sealed class PersistenceAndLifecycleTests
 
     private static void SeedProviderAuthorityBlock(string productRoot)
     {
+        byte[] canonicalRequest = new byte[1024];
+        string canonicalRequestSha256 = Convert.ToHexStringLower(SHA256.HashData(canonicalRequest));
+        string payloadDirectory = Path.Combine(
+            productRoot,
+            "payloads",
+            canonicalRequestSha256[..2],
+            canonicalRequestSha256[2..4]);
+        Directory.CreateDirectory(payloadDirectory);
+        File.WriteAllBytes(Path.Combine(payloadDirectory, canonicalRequestSha256), canonicalRequest);
         using SqliteConnection connection = OpenRaw(productRoot);
         using SqliteCommand command = connection.CreateCommand();
+        command.Parameters.AddWithValue("$canonicalRequestSha256", canonicalRequestSha256);
         command.CommandText =
             """
             PRAGMA foreign_keys=ON;
             INSERT INTO provider_access_profiles VALUES('profile-restore','openai','responses','Restore','account-restore','billing-restore','2026-08-10T00:00:00Z');
             INSERT INTO provider_generations VALUES('generation-restore','profile-restore',1,0,'2026-08-10T00:00:00Z');
             INSERT INTO provider_capability_snapshots VALUES('cap-restore','openai','gpt-5.6-sol','default','medium','current_turn','standard',0,0,0,'none',0,'disabled','explicit',0,0,272000,'synthetic-v1','aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa','2026-08-10T00:00:00Z');
+            INSERT INTO provider_credential_intents VALUES('intent-enroll-restore','profile-restore','generation-restore','enroll','completed','none','pending-enrollment','not-applicable',NULL,NULL,NULL,'not-required','not-requested','2026-08-10T00:00:00Z');
+            INSERT INTO provider_profile_projection VALUES('profile-restore','generation-restore',0,'pending-enrollment','not-applicable',NULL,NULL,NULL,'intent-enroll-restore','not-required','not-requested',1,'2026-08-10T00:00:00Z');
+            INSERT INTO provider_credential_intents VALUES('intent-activate-restore','profile-restore','generation-restore','enroll','completed','pending-enrollment','active-unverified','unavailable','account-restore','billing-restore','cap-restore','not-required','not-requested','2026-08-10T00:00:01Z');
+            UPDATE provider_profile_projection SET lifecycle_state='active-unverified',verification_state='unavailable',capability_snapshot_id='cap-restore',account_identity_id='account-restore',billing_scope_identity_id='billing-restore',intent_id='intent-activate-restore',projection_version=2,updated_at='2026-08-10T00:00:01Z' WHERE profile_id='profile-restore';
+            INSERT INTO provider_credential_intents VALUES('intent-verify-restore','profile-restore','generation-restore','verify','completed','active-unverified','active-verified','available','account-restore','billing-restore','cap-restore','not-required','not-requested','2026-08-10T00:00:02Z');
+            UPDATE provider_profile_projection SET lifecycle_state='active-verified',verification_state='available',intent_id='intent-verify-restore',projection_version=3,updated_at='2026-08-10T00:00:02Z' WHERE profile_id='profile-restore';
             INSERT INTO provider_price_snapshots VALUES('price-restore','openai','gpt-5.6-sol','USD','default','synthetic-v1','bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb','2026-08-10T00:00:00Z');
             INSERT INTO provider_price_rules VALUES('price-restore','rule-restore','standard-under-272k','ordinary-input','input','none','global',1,1,'synthetic-v1');
             INSERT INTO runs VALUES('run-restore','install-restore','context-restore','config-restore','manifest-restore','created',0,1,1,'2026-08-10T00:00:00Z','2026-08-10T00:00:00Z');
             INSERT INTO job_nodes VALUES('job-restore','run-restore',NULL,'provider','created',0,'2026-08-10T00:00:00Z','2026-08-10T00:00:00Z');
-            INSERT INTO provider_operation_blocks VALUES(
-              'operation-restore','analysis-run','run-restore','job-restore','profile-restore','generation-restore',0,
-              'source-claim-extraction','cap-restore','price-restore','unresolved-openai-responses-framing',
-              'authority-required','authority-required',65536,73728,4096,1048576,1,600000000,120000,
-              'input-bound-blocked','2026-08-10T00:00:00Z');
+            INSERT INTO evidence_acquisition_runs VALUES('acquisition-restore','install-restore','context-restore','config-restore','manifest-restore','run-restore','application-restore','cost-restore','created','2026-08-10T00:00:00Z');
+            INSERT INTO evidence_acquisition_parent_links VALUES('parent-restore','acquisition-restore','run-restore','initiated-by',NULL,'2026-08-10T00:00:00Z');
+            INSERT INTO payloads VALUES('request-payload-restore',$canonicalRequestSha256,1024,'application/json','retained',
+              'payloads/' || substr($canonicalRequestSha256,1,2) || '/' || substr($canonicalRequestSha256,3,2) || '/' || $canonicalRequestSha256,
+              '2026-08-10T00:00:00Z');
+            INSERT INTO provider_operation_blocks(
+              operation_id,owner_kind,owner_id,job_node_id,command_id,requested_at,confirmed_at,
+              installation_snapshot_id,analysis_context_id,effective_configuration_id,resolved_input_manifest_id,
+              profile_id,generation_id,revocation_epoch,operation_kind,capability_snapshot_id,price_snapshot_id,
+              prompt_id,prompt_fingerprint,output_schema_id,output_schema_fingerprint,request_fingerprint,
+              canonical_request_payload_id,canonical_request_fingerprint,canonical_request_bytes,settings_fingerprint,
+              input_bound_policy_id,input_bound_policy_version,input_bound_proof_status,maximum_request_bytes,
+              maximum_input_tokens,maximum_output_tokens,maximum_raw_response_bytes,maximum_dispatch_count,
+              maximum_calculated_nano_usd,deadline_milliseconds,dispatch_deadline_utc,coordinator_fencing_epoch,state,recorded_at)
+            VALUES('operation-restore','evidence-acquisition-run','acquisition-restore','job-restore','command-restore',
+              '2026-08-10T00:00:00Z','2026-08-10T00:00:01Z','install-restore','context-restore','config-restore','manifest-restore',
+              'profile-restore','generation-restore',0,'source-claim-extraction','cap-restore','price-restore','prompt-restore',
+              'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd','schema-restore',
+              'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+              'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff','request-payload-restore',
+              $canonicalRequestSha256,1024,
+              '9999999999999999999999999999999999999999999999999999999999999999',
+              'unresolved-openai-responses-framing','authority-required','authority-required',65536,73728,4096,
+              1048576,1,600000000,120000,'2026-08-10T00:02:00Z',1,'input-bound-blocked','2026-08-10T00:00:01Z');
             INSERT INTO provider_operation_projection VALUES(
               'operation-restore','input-bound-blocked',0,0,0,1,'2026-08-10T00:00:00Z');
             """;

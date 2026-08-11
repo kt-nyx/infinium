@@ -716,3 +716,106 @@ private evidence was invented. No network/DNS/provider, Credential Manager,
 native credential, private fixture, sibling repository, legacy/evaluator
 archive, later-package, current-state, push, amend, or frozen Slice 5 v1 edit
 occurred.
+
+## Fifth-cycle semantic-closure correction — 2026-08-11
+
+Fresh boundary and contract review rejected candidate
+`25f248b8b5ea7bad5670b5d0722dc67fc6f4b3d5`. The findings were recoverable
+WP1 semantic, persistence, application/helper wire, public projection, and
+traceability defects. Accepted authority remains internally consistent. The
+missing repository-local tokenizer/provider-framing proof remains the sole
+owner-controlled exit, so no successful response, authorization, reservation,
+dispatch, or provider graph was synthesized.
+
+### Closed semantic boundary
+
+- Source-claim extraction is owned only by an evidence-acquisition run and
+  retains the exact parent analysis, application, and cost-attribution links.
+  Transport qualification and candidate investigation are analysis-run owned.
+  JSON, domain, application, persistence, fixtures, and tests enforce the
+  same operation-kind/owner matrix.
+- The blocked operation root now retains command identity; request and
+  confirmation times; exact installation, analysis-context, effective-config,
+  resolved-manifest, prompt, output-schema, request, canonical-payload,
+  canonical-byte, settings, deadline, and coordinator-fence bindings. It is
+  insertable only for an exact active-verified profile generation and remains
+  `input-bound-blocked` with no downstream identity.
+- Before accepted input-bound authority, provider response contracts admit
+  only the truthful unavailable/unknown marker. No successful canonical
+  response is constructible. The future persistence seam retains distinct
+  client/provider request identities, total-token and typed scoped/timed rate
+  facts, billing evidence, exact requested/returned model and tier columns,
+  bounded price ratios, reset ordering, and payload digest/size bindings, but
+  its authorization prerequisite remains uninsertable.
+- Application protobuf and validators bind enrollment/operation commands,
+  idempotency identity, request/confirmation/deadline times, request bytes and
+  fingerprints, and typed blocked receipts. Budget responses are an exact
+  success-or-failure union. Profile payloads retain provider, purpose, label,
+  recorded time, and the total lifecycle/verification/identity/recovery/
+  cleanup matrix.
+- Credential intents now bind each intent kind to its exact from/to lifecycle
+  transitions and total identity/verification/recovery/cleanup shape. A failed
+  deletion stays delete-pending and cannot reactivate. Transport event times
+  are ordered, and blocked operations require the exact eligible profile,
+  generation, revocation epoch, capability, account, and billing grouping.
+- Helper v2 validates bootstrap expiry and dispatch deadlines against injected
+  time, separates credential-only from transport-only outcome shapes, binds a
+  receipt to the expected assignment and command, and enforces nested quantity,
+  response-presence, digest, and flag coherence.
+- Run-output and CLI v2 enforce exact not-used/unavailable/blocked quantity
+  availability, unique operation kinds, truthful acquisition identity only for
+  blocked source-claim extraction, and no fabricated live/downstream identity.
+- The deterministic trace generator now emits field-specific accepted
+  authorities, actual producer/consumer symbols, exact semantic table columns,
+  exact protobuf fields (including decomposed aggregate fields), or a
+  path-specific truthful omission. Expected-map regressions cover acquisition
+  ownership, response proof/request/billing evidence, command identity, and
+  public `live` omission. The false `publication.live` to unresolved-hold
+  mapping is removed.
+
+The contracts remain `Proposed`, and WP1 remains `Deferred` solely on the
+owner-supplied proof. This correction does not accept WP1, authorize credential
+or live work, advance `docs/current-state.md`, or unblock WP2.
+
+### Superseding identities and exact blocked receipt root
+
+- Schema-6 fingerprint:
+  `8b1c3a6aa9c90f6f855ca6877f77a8fe8ec7c10848e6e3aab3d02d80834f820c`.
+- Helper-v2 transitive fingerprint:
+  `e847ef992226c6347b73fc0b2bc8fe8c1b88b2ebc6e09f693393835d9c6d1cbc`.
+- Full application protobuf-set fingerprint:
+  `a3f22069eb8385f525b7883cae7782d39100194be3ed539d47679ad9e8de4ecf`.
+- Answer-free example: 13,969 bytes,
+  `e0e5f1584452f108b63209398903e568e14e5eb6dae7d817c386b8b37c36eaec`.
+- Public registry: 8,790 bytes,
+  `80cdb7b3c736668f307d2945fd3334fea57c3456c612d27ff5efa366f92732f9`.
+- Per-field traceability: 359,079 bytes,
+  `c371966f2539099a075cbd3d382cf7c4ee4718e102bee69e8262bb93bd0db59e`.
+- Exact gate `OutputRoot`:
+  `artifacts/m1-slice6/wp1-fifth-semantic-closure-final`.
+
+### Fifth-cycle verification
+
+1. Release build passed with zero warnings and zero errors. Focused semantic,
+   schema, wire, trace, fixture, persistence, migration, adversarial, backup,
+   and restore checks passed.
+2. `Contracts` passed 18/0/0. `StateSurfaces` passed 16/0/0 state tests and
+   4/0/0 migration/adversarial/restore tests at the exact OutputRoot above.
+3. `StateTotality` ran the same 20 green tests, wrote the truthful
+   `blocked-authority-required` receipt with network and credential permission
+   both false, and exited 1 solely because no accepted repository-local
+   tokenizer/provider-framing proof exists.
+4. The Release category matrix passed: Unit 159/0/1; Contract 123/0/0 across
+   its owning assemblies; Integration 70/0/0; Evaluation 75/0/8; Security
+   111/0/3; and Fault 105/0/3. The unfiltered solution passed Unit 167/0/1,
+   Contract 151/0/0, Integration 68/0/0, and Evaluation 53/0/8.
+5. `dotnet format --verify-no-changes`, dependency-manifest check,
+   documentation validation, deterministic trace regeneration, `git diff --check`,
+   current-state immutability, answer isolation, forbidden-field
+   scan, and frozen Slice 5 v1 verification passed.
+
+No proof, gate result, owner acceptance, credential, provider response, or
+private evidence was invented. No network/DNS/provider, Credential Manager,
+native credential, private fixture, sibling repository, legacy/evaluator
+archive, later-package, current-state, push, amend, or frozen Slice 5 v1 edit
+occurred.

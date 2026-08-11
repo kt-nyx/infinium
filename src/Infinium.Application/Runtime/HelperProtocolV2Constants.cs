@@ -12,5 +12,5 @@ public static class HelperProtocolV2Constants
 
     // Canonical SHA-256 of helper v2 and its direct transitive common/identity contracts.
     // It is deliberately independent from the versioned application contract set.
-    public const string SchemaFingerprintSha256 = "6f4fc3dad7aeb297c63224aebac358bb72c9163cba6e30d47520a76dce1b6c27";
+    public const string SchemaFingerprintSha256 = "e847ef992226c6347b73fc0b2bc8fe8c1b88b2ebc6e09f693393835d9c6d1cbc";
 }
