@@ -2421,3 +2421,13 @@ this acceptance. This handoff does not begin WP3. No Credential Manager,
 native credential, DNS/network/provider, private fixture, sibling repository,
 legacy/evaluator archive, protected-root, destructive, external-effect, or
 push operation occurred.
+
+The first documentation-only handoff commit
+`df7231aaac479dd6102d9c797ddf0802ba6b85ae` passed documentation validation,
+`Contracts` 22/0/0, diff, frozen-ledger, traceability-maturity, and all
+substantive `Layer6Review` checks. Its handoff-mode receipt reported zero
+allowed-path, strict-changed-JSON, relative-link, and private/archive failures,
+but failed the legacy exact-text check because the accepted-candidate row used
+the prose label “Slice 6 WP2” rather than the literal package identity
+`M1/S6/WP2`. The row label was corrected without changing the accepted
+candidate, live WP3-only authority, product semantics, or any code.
