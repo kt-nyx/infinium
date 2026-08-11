@@ -2109,3 +2109,10 @@ The acceptance ledger remains frozen at 32,022 bytes/SHA-256
 `a120e78ce0ab3e1f785b8df936e09563cc6dabb04875a808b87dbfba0259e6ce`.
 No current-state, WP2/WP3, fixture, credential, helper execution, provider,
 network, private/archive, amend, push, or frozen Slice 5 v1 action occurred.
+
+### Superseding trace-artifact evidence correction (2026-08-11)
+
+The earlier 56,447-byte statement is superseded: the exact tracked
+`wp1-contract-traceability.v1.json` is 455,519 bytes with the same verified
+SHA-256
+`b9ea10640da0440d7d3614ed201a68ba8231097016959c0b5eeaacce62a9a238`.
