@@ -1885,3 +1885,42 @@ private evidence was invented. No network/DNS/provider, Credential Manager,
 native credential, private fixture, sibling repository, legacy/evaluator
 archive, later-package, current-state, push, amend, or frozen Slice 5 v1 edit
 occurred.
+
+## WP1 convergence acceptance-ledger freeze — 2026-08-11
+
+Product correction candidate
+`be4667d4c4ed36888934daf4f03ec09f7c2a14eb` is the finite convergence input.
+The versioned machine-readable ledger is frozen at
+`docs/plans/milestones/m1/slices/s6/wp1-acceptance-ledger.v1.json`: 32,022
+bytes with SHA-256
+`a120e78ce0ab3e1f785b8df936e09563cc6dabb04875a808b87dbfba0259e6ce`.
+The identity covers the exact tracked UTF-8 bytes including the final LF.
+
+The ledger enumerates 13 package-bounded acceptance items: the nine schemas;
+domain/canonical JSON/protobuf agreement; schema-6/storage-1.5.0 migration and
+declarations; evidence-acquisition ownership; effective configuration v2 and
+additive publication; frozen Slice 5 v1 compatibility; additive helper v2;
+round-trip/invalid-state totality; conservative input-bound proof or exact
+escalation; price and lifecycle shapes; answer-free closed-world fixtures;
+six-seam traceability; and exact commands/evidence. It maps all 11 final
+fifteenth-review findings (`B1` through `B7` and `C1` through `C4`) to accepted
+authority, a concrete counterexample, named regression tests, affected ledger
+items, and closure commit `be4667d4`.
+
+The ledger does not add product semantics. It classifies coordinator
+reservation/final-gate services, simulation, operational settlement,
+concurrency, and fault recovery as WP2; helper process and credential-lifecycle
+execution as WP3; and hypothetical/optional hardening as follow-up or
+non-blocking. A convergence-review must-fix must cite exact accepted WP1
+authority, reproduce a concrete counterexample, name the affected ledger item,
+and explain why the finding is not later-package behavior, optional hardening,
+or an owner decision.
+
+The one-shot focused verification, accumulated non-live floor, receipt
+retention, and fresh read-only convergence review remain pending after this
+documentation-only freeze. The ledger explicitly records that `StateTotality`
+must not be called passing while it exits `blocked-authority-required` for the
+missing accepted repository-local tokenizer/provider-framing proof. This entry
+does not accept WP1, advance contract maturity or `docs/current-state.md`,
+authorize WP2/WP3, or authorize credential, helper execution, network, or
+provider work.
