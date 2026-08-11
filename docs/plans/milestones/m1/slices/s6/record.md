@@ -1440,3 +1440,109 @@ private evidence was invented. No network/DNS/provider, Credential Manager,
 native credential, private fixture, sibling repository, legacy/evaluator
 archive, later-package, current-state, push, amend, or frozen Slice 5 v1 edit
 occurred.
+
+## Twelfth-cycle terminality, projection, timestamp, trace, and overrun correction — 2026-08-11
+
+Fresh review of candidate `c8569e656a1642c6d545529b31b5e227837784c6`
+found seven recoverable WP1 implementation/evidence defects. No finding
+required new authority or expanded the accepted WP1 scope.
+
+### Corrected exact seams
+
+- Cancellation is now an exact terminal, undispatched state. A blocked root
+  requires both confirmation and recording no later than the response; an
+  authorization root requires confirmation no later than the response; any
+  transport event for the operation rejects regardless of event time. With
+  foreign keys enabled, both root families and later authorization, attempt,
+  request, reservation, dispatch-fence, and transport inserts are exercised;
+  every later family is proven to fail at the cancellation terminal.
+- Rate facts now require the exact response and usage rows to exist no later
+  than observation, while finalization continues to require every fact no
+  later than finalization. Response-to-usage, response/usage-to-observation,
+  and observation-to-finalization inversions reject.
+- Profile projection materialization and update now use the globally latest
+  applicable credential event for the exact profile and generation. A newer
+  event on another intent root invalidates a stale projection, and
+  `delete-pending` or `deleted` cannot reactivate.
+- Every mutable operation, profile, and budget projection timestamp has both
+  insert and update canonical-UTC guards. The guards validate calendar date,
+  clock, exact seven-digit fractional seconds, and `+00:00` without SQLite's
+  millisecond rounding; valid `.1239999` and `.9999999` instants succeed while
+  malformed and non-UTC updates reject. Projection version and time advance
+  monotonically on one immutable root.
+- Provider-operation `transport_state`, `receipt_state`, `usage`,
+  `settlement_state`, and `replay_state` now trace to the exact schema-6
+  transport-event, usage-entry, settlement, and replay-edge columns. Contract
+  tests assert the referenced tables and reject false omissions.
+- Authorization and reservation limits remain safety/admission ceilings:
+  request bytes and dispatch count cannot exceed them before dispatch.
+  Provider receipts are post-fact billable evidence and therefore retain
+  observed tokens and calculated cost above those ceilings within the closed
+  absolute schema bounds. Settlement is `overrun` exactly when observed cost
+  exceeds the reservation and is non-overrun at or below it. Domain,
+  application, SQL, codec, and answer-free public-fixture evidence covers
+  below, equal, and above cases.
+
+The nine Slice 6 contracts remain `Proposed`; WP1 remains `Deferred` solely on
+the absent accepted repository-local input-bound tokenizer/provider-framing
+proof. This correction does not accept WP1, authorize native credential or
+live provider work, advance `docs/current-state.md`, or unblock WP2.
+
+### Superseding identities and exact blocked receipt root
+
+- Schema-6 fingerprint:
+  `2bd9931d065a734f4cb740ac8d9c5677999cfcf45ecb24511be484a481edb8b7`.
+- Helper-v2 transitive fingerprint (unchanged):
+  `edd9f428df33a5c8f1b9aa8145799be99afbd5c9c98c9b7572d903865e026ca3`.
+- Full application protobuf-set fingerprint (unchanged):
+  `a6e5c5164f84a65f923f1e837419c494f4cb071c240d35d96359dae529722ed1`.
+- Answer-free example: 15,724 bytes,
+  `163eb23a19d0da367194f9d69867235432aae46b5a451403331f5dcc8441a3b8`.
+- Public registry: 8,790 bytes,
+  `99980278afbc5549bffde0afe3d20ef2a7aa3863fa8740ce16d0aeb64e9e0603`.
+- Per-field traceability: 429,435 bytes,
+  `e7863116dacc7661c7d9b91665dcdee1f7e0aed63e1dd3928e7ce6d2163c1de6`.
+- Exact gate `OutputRoot`:
+  `artifacts/m1-slice6/wp1-twelfth-correction-final`.
+- Receipt SHA-256 identities: `Contracts`
+  `1cc3b2b7ea4e895ca9e6abb59bf6c12e4452b50e05fc4c045f44b51c386baba4`,
+  `StateSurfaces`
+  `fb15f18efa07d65afcdb56d0fd0875a28bf6b992fb93530b3cfe599e4fe67392`,
+  and `StateTotality`
+  `c8866345780f465c238db3e3975c60af35cfbd77741c0fa307273c49e2fbda31`.
+
+### Twelfth-cycle verification
+
+1. Final Release solution build passed with zero warnings and zero errors.
+   Focused persistence/lifecycle/operational checks passed 40/0/0, and focused
+   provider codec/application/trace/public-fixture checks passed 11/0/0. The
+   seven-digit timestamp positives, malformed updates, stale global profile
+   authority, delete-pending terminality, both cancellation roots and every
+   later event family, rate chronology, exact trace tables, and post-fact
+   below/equal/above settlement adversaries all passed.
+2. `Contracts` passed 19/0/0. `StateSurfaces` passed 19/0/0 state checks and
+   14/0/0 migration/relational/adversarial checks. `StateTotality` ran the same
+   33 green checks, wrote `blocked-authority-required` with network and
+   credential permissions false and the superseding schema fingerprint, then
+   exited 1 solely because the accepted repository-local tokenizer/provider-
+   framing proof is absent.
+3. The final Release category matrix passed: Unit 172/0/1; Contract 124/0/0;
+   Integration 70/0/0; Evaluation 75/0/8; Security 111/0/3; and Fault
+   105/0/3. The final unfiltered Release solution passed Unit 180/0/1,
+   Contract 152/0/0, Integration 68/0/0, and Evaluation 53/0/8.
+4. The complete non-live analysis pipeline passed Contracts, Documentation,
+   Candidates, CandidateScale, Cases, Replay, Output, Safety, Traceability,
+   Comprehensive, and All. Its final `All` receipt is 512 bytes with SHA-256
+   `9b995cd4f55592a6ab29888792683ba7f9e414e05f78d817537e8daacab92cd2`.
+   Trace generation and public-fixture resealing were each byte-identical on
+   repeat; unrelated resealer spill was restored before verification.
+   `dotnet format --verify-no-changes`, dependency-manifest check,
+   documentation validation, `git diff --check`, current-state and frozen
+   Slice 5 v1 immutability, protected-path and answer-isolation checks,
+   public-fixture scope, and forbidden secret/live-effect scans passed.
+
+No proof, gate result, owner acceptance, credential, provider response, or
+private evidence was invented. No network/DNS/provider, Credential Manager,
+native credential, private fixture, sibling repository, legacy/evaluator
+archive, later-package, current-state, push, amend, or frozen Slice 5 v1 edit
+occurred.

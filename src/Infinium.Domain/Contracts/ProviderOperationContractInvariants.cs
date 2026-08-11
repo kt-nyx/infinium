@@ -272,7 +272,8 @@ public static class ProviderOperationContractInvariants
         {
             throw new InvalidOperationException("Provider payload sizes must be positive and use the exact retained operation limit.");
         }
-        if (value.RateLimitFacts.Count > 64 || value.RateLimitFacts.Any(x => !ValidRateLimitFact(x))
+        if (value.RateLimitFacts.Count > 64 || value.RateLimitFacts.Any(x => !ValidRateLimitFact(x)
+                || x.ObservedAt.Value < value.RecordedAt.Value)
             || value.RateLimitFacts.GroupBy(x => (x.Scope, x.Dimension)).Any(group => group.Count() != 1)
             || (value.Usage.RateAvailability == ProviderAvailabilityState.Available) != (value.RateLimitFacts.Count != 0)
             || (value.Usage.BillingAvailability == ProviderAvailabilityState.Available)
@@ -280,7 +281,7 @@ public static class ProviderOperationContractInvariants
         {
             throw new InvalidOperationException("Provider rate and billing evidence must be exact, unique, and availability-bound.");
         }
-        ValidateUsageAgainstLimits(value.OperationKind, value.Limits, value.Usage);
+        ValidateObservedUsage(value.OperationKind, value.Limits, value.Usage);
         if (value.Usage.Availability != value.Availability)
         {
             throw new InvalidOperationException("Provider response and usage availability must be identical.");
@@ -652,19 +653,17 @@ public static class ProviderOperationContractInvariants
         }
     }
 
-    private static void ValidateUsageAgainstLimits(
+    private static void ValidateObservedUsage(
         ProviderOperationKind kind,
         ProviderFiniteLimitsContract limits,
         ProviderUsageContract usage)
     {
+        // Limits remain pre-dispatch admission ceilings. Provider receipts are
+        // post-fact accounting evidence and must retain overruns truthfully.
         Validate(kind, limits);
-        if (usage.DispatchCount.Value > limits.MaximumDispatchCount
-            || usage.InputTokens.Value > limits.MaximumInputTokens
-            || usage.OutputTokens.Value > limits.MaximumOutputTokens
-            || usage.ReasoningTokens.Value > limits.MaximumOutputTokens
-            || usage.CalculatedNanoUsd.Value > limits.MaximumCalculatedNanoUsd)
+        if (usage.DispatchCount.Value > limits.MaximumDispatchCount)
         {
-            throw new InvalidOperationException("Provider response usage exceeds its retained operation-specific limits.");
+            throw new InvalidOperationException("Provider response usage exceeds its authorized dispatch count.");
         }
         if (usage.TotalTokens.Availability == ProviderAvailabilityState.Available
             && (usage.InputTokens.Availability != ProviderAvailabilityState.Available

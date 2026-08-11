@@ -268,6 +268,13 @@ public sealed class OperationalContractTests
             Settlement = SettlementState.Overrun,
         };
         OperationalContractInvariants.Validate(overrun, reservation);
+
+        UsageLedgerEntryContract exactReservation = valid with
+        {
+            ProviderUsage = reservation.WorstCaseUsage,
+            CalculatedCost = reservation.WorstCaseCalculatedCost,
+        };
+        OperationalContractInvariants.Validate(exactReservation, reservation);
     }
 
     [TestMethod]

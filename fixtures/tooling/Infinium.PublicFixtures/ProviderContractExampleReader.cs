@@ -49,11 +49,23 @@ public static class ProviderContractExampleReader
         }
 
         HashSet<string> expectedRoot = new(
-            ["package_identity", "package_version", "partition", "status", "answer_free", "examples"],
+            ["package_identity", "package_version", "partition", "status", "answer_free", "post_fact_usage_examples", "examples"],
             StringComparer.Ordinal);
         if (!root.EnumerateObject().Select(x => x.Name).ToHashSet(StringComparer.Ordinal).SetEquals(expectedRoot))
         {
             throw new InvalidDataException("Provider example authority has an unrecognized root field.");
+        }
+
+        JsonElement[] usageExamples = root.GetProperty("post_fact_usage_examples").EnumerateArray().ToArray();
+        if (usageExamples.Length != 3
+            || usageExamples.Select(x => x.GetProperty("case").GetString()).ToArray() is not ["below", "equal", "above"]
+            || usageExamples.Any(x => !x.EnumerateObject().Select(property => property.Name).ToHashSet(StringComparer.Ordinal)
+                .SetEquals(["case", "authorized_input_tokens", "observed_input_tokens", "reserved_nano_usd", "observed_nano_usd", "settlement_state"]))
+            || !ValidUsageExample(usageExamples[0], expectedComparison: -1, expectedSettlement: "settled")
+            || !ValidUsageExample(usageExamples[1], expectedComparison: 0, expectedSettlement: "settled")
+            || !ValidUsageExample(usageExamples[2], expectedComparison: 1, expectedSettlement: "overrun"))
+        {
+            throw new InvalidDataException("Provider examples must retain exact answer-free below/equal/above post-fact usage settlement vectors.");
         }
 
         JsonElement examples = root.GetProperty("examples");
@@ -78,6 +90,18 @@ public static class ProviderContractExampleReader
         }
 
         return SchemaNames.Length;
+    }
+
+    private static bool ValidUsageExample(JsonElement value, int expectedComparison, string expectedSettlement)
+    {
+        long authorizedInput = value.GetProperty("authorized_input_tokens").GetInt64();
+        long observedInput = value.GetProperty("observed_input_tokens").GetInt64();
+        long reservedCost = value.GetProperty("reserved_nano_usd").GetInt64();
+        long observedCost = value.GetProperty("observed_nano_usd").GetInt64();
+        return authorizedInput > 0 && observedInput >= 0 && reservedCost > 0 && observedCost >= 0
+            && Math.Sign(observedInput.CompareTo(authorizedInput)) == expectedComparison
+            && Math.Sign(observedCost.CompareTo(reservedCost)) == expectedComparison
+            && value.GetProperty("settlement_state").GetString() == expectedSettlement;
     }
 
     private static void RequireString(JsonElement root, string property, string expected)

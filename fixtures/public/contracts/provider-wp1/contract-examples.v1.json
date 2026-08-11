@@ -4,6 +4,11 @@
   "partition": "development",
   "status": "Proposed",
   "answer_free": true,
+  "post_fact_usage_examples": [
+    { "case": "below", "authorized_input_tokens": 10, "observed_input_tokens": 9, "reserved_nano_usd": 100, "observed_nano_usd": 90, "settlement_state": "settled" },
+    { "case": "equal", "authorized_input_tokens": 10, "observed_input_tokens": 10, "reserved_nano_usd": 100, "observed_nano_usd": 100, "settlement_state": "settled" },
+    { "case": "above", "authorized_input_tokens": 10, "observed_input_tokens": 11, "reserved_nano_usd": 100, "observed_nano_usd": 101, "settlement_state": "overrun" }
+  ],
   "examples": {
     "provider-access-profile.v1.schema.json": {
       "schema_id": "infinium.provider.access-profile/v1",

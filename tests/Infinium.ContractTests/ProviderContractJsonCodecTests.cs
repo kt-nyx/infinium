@@ -222,6 +222,24 @@ public sealed class ProviderContractJsonCodecTests
         }
         Assert.ThrowsExactly<NotSupportedException>(() => ProviderContractJsonCodecs.DeserializeResponse(bytes));
 
+        JsonObject exactLimitUsage = response.DeepClone().AsObject();
+        exactLimitUsage["limits"]!["maximum_input_tokens"] = 32;
+        exactLimitUsage["limits"]!["maximum_output_tokens"] = 16;
+        exactLimitUsage["limits"]!["maximum_calculated_nano_usd"] = 42;
+        Assert.ThrowsExactly<NotSupportedException>(() => ProviderContractJsonCodecs.DeserializeResponse(
+            System.Text.Encoding.UTF8.GetBytes(exactLimitUsage.ToJsonString())));
+        JsonObject observedOverrun = exactLimitUsage.DeepClone().AsObject();
+        observedOverrun["limits"]!["maximum_input_tokens"] = 16;
+        observedOverrun["limits"]!["maximum_output_tokens"] = 8;
+        observedOverrun["limits"]!["maximum_calculated_nano_usd"] = 40;
+        byte[] observedOverrunBytes = System.Text.Encoding.UTF8.GetBytes(observedOverrun.ToJsonString());
+        using (JsonDocument document = JsonDocument.Parse(observedOverrunBytes))
+        {
+            Infinium.Application.Evaluation.ActiveJsonSchemaValidator.Validate(
+                document.RootElement, "provider-response.v1.schema.json");
+        }
+        Assert.ThrowsExactly<NotSupportedException>(() => ProviderContractJsonCodecs.DeserializeResponse(observedOverrunBytes));
+
         JsonObject oversized = response.DeepClone().AsObject();
         oversized["state"] = "oversized";
         oversized["raw_response_availability"] = "unavailable";
@@ -1226,6 +1244,45 @@ public sealed class ProviderContractJsonCodecTests
         cancelledResponse.ProviderResponseId = "fabricated-provider-response";
         Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(cancelledResponse));
 
+        ProviderResponsePayload retainedOverrun = unavailableResponse.Clone();
+        retainedOverrun.AuthorizationId = "authorization-overrun";
+        retainedOverrun.RequestId = "request-overrun";
+        retainedOverrun.DispatchFenceId = new DispatchId { Value = "fence-overrun" };
+        retainedOverrun.InputBoundProofStatus = InputBoundProofStatus.Proved;
+        retainedOverrun.InputBoundPolicyId = "accepted-policy";
+        retainedOverrun.InputBoundPolicyVersion = "1";
+        retainedOverrun.Availability = AppProviderAvailabilityState.Available;
+        retainedOverrun.UsageAvailability = AppProviderAvailabilityState.Available;
+        retainedOverrun.RawResponseAvailability = AppProviderAvailabilityState.Available;
+        retainedOverrun.RawResponse = new Infinium.Contracts.Protobuf.Common.V1.ContentDigest
+        {
+            Algorithm = Infinium.Contracts.Protobuf.Common.V1.DigestAlgorithm.Sha256,
+            Value = ByteString.CopyFrom(new byte[32]),
+            SizeBytes = 512,
+        };
+        retainedOverrun.HttpStatusAvailability = AppProviderAvailabilityState.Available;
+        retainedOverrun.HttpStatus = 200;
+        retainedOverrun.ReturnedModelAvailability = AppProviderAvailabilityState.Available;
+        retainedOverrun.ReturnedModel = "gpt-5.6-sol";
+        retainedOverrun.ReturnedServiceTierAvailability = AppProviderAvailabilityState.Available;
+        retainedOverrun.ReturnedServiceTier = "default";
+        retainedOverrun.ResponseState = "completed";
+        retainedOverrun.ValidationState = "admitted";
+        retainedOverrun.AdmissionState = "admitted";
+        retainedOverrun.DispatchCount = AvailableApplicationQuantity(1);
+        retainedOverrun.InputTokens = AvailableApplicationQuantity(32);
+        retainedOverrun.OutputTokens = AvailableApplicationQuantity(16);
+        retainedOverrun.TotalTokens = AvailableApplicationQuantity(48);
+        retainedOverrun.ReasoningTokens = AvailableApplicationQuantity(4);
+        retainedOverrun.CacheReadTokens = AvailableApplicationQuantity(0);
+        retainedOverrun.CacheWriteTokens = AvailableApplicationQuantity(0);
+        retainedOverrun.PricedToolCalls = AvailableApplicationQuantity(0);
+        retainedOverrun.CalculatedNanoUsd = AvailableApplicationQuantity(42);
+        retainedOverrun.Limits.MaximumInputTokens = 16;
+        retainedOverrun.Limits.MaximumOutputTokens = 8;
+        retainedOverrun.Limits.MaximumCalculatedNanoUsd = 40;
+        Assert.ThrowsExactly<NotSupportedException>(() => ApplicationProviderContractValidator.Validate(retainedOverrun));
+
         ApplicationProviderContractValidator.Validate(replay);
         replay.NetworkPermitted = true;
         Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(replay));
@@ -1285,6 +1342,11 @@ public sealed class ProviderContractJsonCodecTests
         AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "job_node_id", "provider_operation_blocks.job_node_id", "ADR-0016");
         AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "owner_id", "provider_operation_blocks.owner_id", "ADR-0016");
         AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "request_fingerprint", "provider_operation_blocks.request_fingerprint", "ADR-0025");
+        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "transport_state", "provider_transport_events.event_kind", "ADR-0023");
+        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "receipt_state", "provider_usage_entries.receipt_state", "ADR-0023");
+        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "usage", "provider_usage_entries.total_tokens", "ADR-0023");
+        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "settlement_state", "provider_settlements.state", "ADR-0023");
+        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "replay_state", "provider_replay_edges.replay_state", "ADR-0023");
         AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "$defs.inputBoundProof.status", "provider_operation_blocks.input_bound_proof_status", "ADR-0025");
         AssertTraceMapping(contracts, "provider-response.v1.schema.json", "raw_response_payload",
             "provider_responses.raw_response_payload_id", "provider_responses.raw_response_fingerprint");
@@ -1569,6 +1631,8 @@ public sealed class ProviderContractJsonCodecTests
     private static ProviderQuantityContract U() => new(DomainProviderAvailabilityState.Unavailable, null);
     private static OptionalProviderQuantity UnavailableApplicationQuantity() =>
         new() { Availability = AppProviderAvailabilityState.Unavailable };
+    private static OptionalProviderQuantity AvailableApplicationQuantity(ulong value) =>
+        new() { Availability = AppProviderAvailabilityState.Available, Value = value };
     private static ProviderInputBoundProofContract BlockedProof() => new(
         ProviderOperationContractInvariants.LocalInputBoundPolicyId,
         ProviderOperationContractInvariants.LocalInputBoundPolicyVersion,

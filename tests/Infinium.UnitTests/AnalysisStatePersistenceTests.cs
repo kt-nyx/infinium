@@ -137,7 +137,7 @@ public sealed class AnalysisStatePersistenceTests
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'storage_contract_version';"));
         Assert.AreEqual(
-            "6d8d14eecc90f875a6c97a4814d57c6435cd39f00724bf4cf0217d790dbae6bf",
+            "2bd9931d065a734f4cb740ac8d9c5677999cfcf45ecb24511be484a481edb8b7",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'schema_fingerprint';"));

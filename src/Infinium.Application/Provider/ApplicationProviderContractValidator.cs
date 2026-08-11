@@ -270,20 +270,22 @@ public static class ApplicationProviderContractValidator
             || value.ReasoningTokens.HasValue && (!value.OutputTokens.HasValue
                 || value.ReasoningTokens.Value > value.OutputTokens.Value)
             || value.DispatchCount.HasValue && value.DispatchCount.Value > value.Limits.MaximumDispatchCount
-            || value.InputTokens.HasValue && value.InputTokens.Value > value.Limits.MaximumInputTokens
-            || value.OutputTokens.HasValue && value.OutputTokens.Value > value.Limits.MaximumOutputTokens
-            || value.ReasoningTokens.HasValue && value.ReasoningTokens.Value > value.Limits.MaximumOutputTokens
-            || value.CalculatedNanoUsd.HasValue && value.CalculatedNanoUsd.Value > (ulong)value.Limits.MaximumCalculatedNanoUsd
+            || value.InputTokens.HasValue && value.InputTokens.Value > 73_728
+            || value.OutputTokens.HasValue && value.OutputTokens.Value > 4_096
+            || value.TotalTokens.HasValue && value.TotalTokens.Value > 77_824
+            || value.ReasoningTokens.HasValue && value.ReasoningTokens.Value > 4_096
+            || value.CalculatedNanoUsd.HasValue && value.CalculatedNanoUsd.Value > 600_000_000
             || value.CacheReadTokens.HasValue && value.CacheReadTokens.Value != 0
             || value.CacheWriteTokens.HasValue && value.CacheWriteTokens.Value != 0
             || value.PricedToolCalls.HasValue && value.PricedToolCalls.Value != 0
             || value.CreditAvailability == ProviderAvailabilityState.Available)
         {
-            throw new InvalidDataException("Provider usage must match response availability, exact totals, and retained limits.");
+            throw new InvalidDataException("Provider usage must match response availability, exact totals, the authorized dispatch count, and absolute retained bounds.");
         }
         if (value.RateLimitFacts.Count > 64
             || value.RateLimitFacts.GroupBy(x => (x.Scope, x.Dimension)).Any(x => x.Count() != 1)
-            || value.RateLimitFacts.Any(x => !ValidRateLimitFact(x))
+            || value.RateLimitFacts.Any(x => !ValidRateLimitFact(x)
+                || Compare(x.ObservedAt, value.RecordedAt) < 0)
             || (value.RateAvailability == ProviderAvailabilityState.Available) != (value.RateLimitFacts.Count != 0)
             || (value.BillingAvailability == ProviderAvailabilityState.Available)
                 != (value.BillingEvidenceAvailability == ProviderAvailabilityState.Available))

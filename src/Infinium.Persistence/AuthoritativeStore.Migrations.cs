@@ -346,20 +346,41 @@ public sealed partial class AuthoritativeStore
         foreach ((string table, string column, bool optional) in SchemaV6CanonicalTimestampColumns)
         {
             string prefix = optional ? $"NEW.{column} IS NOT NULL AND " : string.Empty;
+            string valid = $"""
+                  length(NEW.{column}) = 33
+                  AND NEW.{column} GLOB '????-??-??T??:??:??.???????+00:00'
+                  AND substr(NEW.{column},21,7) NOT GLOB '*[^0-9]*'
+                  AND date(substr(NEW.{column},1,10),'+0 days') = substr(NEW.{column},1,10)
+                  AND strftime('%H:%M:%S',substr(NEW.{column},1,19)) = substr(NEW.{column},12,8)
+                """;
             Execute(
                 $"""
                 CREATE TRIGGER {table}_{column}_canonical_utc_insert
                 BEFORE INSERT ON {table}
-                WHEN {prefix}NOT (
-                  length(NEW.{column}) = 33
-                  AND NEW.{column} GLOB '????-??-??T??:??:??.???????+00:00'
-                  AND julianday(NEW.{column}) IS NOT NULL
-                  AND substr(NEW.{column},1,23) = strftime('%Y-%m-%dT%H:%M:%f',NEW.{column}))
+                WHEN {prefix}({valid}) IS NOT TRUE
                 BEGIN SELECT RAISE(ABORT, 'non-canonical UTC authority timestamp'); END;
                 """,
                 transaction);
+            if (SchemaV6MutableProjectionTables.Contains(table))
+            {
+                Execute(
+                    $"""
+                    CREATE TRIGGER {table}_{column}_canonical_utc_update
+                    BEFORE UPDATE OF {column} ON {table}
+                    WHEN {prefix}({valid}) IS NOT TRUE
+                    BEGIN SELECT RAISE(ABORT, 'non-canonical UTC authority timestamp'); END;
+                    """,
+                    transaction);
+            }
         }
     }
+
+    private static readonly HashSet<string> SchemaV6MutableProjectionTables =
+    [
+        "provider_operation_projection",
+        "provider_profile_projection",
+        "provider_budget_projection",
+    ];
 
     private static readonly (string Table, string Column, bool Optional)[] SchemaV6CanonicalTimestampColumns =
     [
@@ -411,6 +432,9 @@ public sealed partial class AuthoritativeStore
     [
         .. SchemaV6CanonicalTimestampColumns.Select(item =>
             $"trigger:{item.Table}_{item.Column}_canonical_utc_insert"),
+        .. SchemaV6CanonicalTimestampColumns
+            .Where(item => SchemaV6MutableProjectionTables.Contains(item.Table))
+            .Select(item => $"trigger:{item.Table}_{item.Column}_canonical_utc_update"),
         "trigger:provider_usage_response_totality_guard",
         "index:idx_attempts_run",
         "index:idx_attempts_one_live_per_run",
@@ -674,16 +698,26 @@ public sealed partial class AuthoritativeStore
         "trigger:provider_block_eligibility_guard",
         "trigger:provider_block_owner_job_guard",
         "trigger:provider_budget_projection_authority_guard",
+        "trigger:provider_budget_projection_monotonic_update_guard",
         "trigger:provider_credential_intent_time_order_guard",
         "trigger:provider_credential_intent_event_chain_guard",
         "trigger:provider_dispatch_deadline_guard",
         "trigger:provider_profile_projection_exact_root_insert_guard",
         "trigger:provider_profile_projection_monotonic_update_guard",
+        "trigger:provider_operation_projection_monotonic_update_guard",
         "trigger:provider_profile_transition_order_guard",
         "trigger:provider_cancelled_response_operation_root_guard",
+        "trigger:provider_cancelled_response_blocks_authorization_guard",
+        "trigger:provider_cancelled_response_blocks_attempt_guard",
+        "trigger:provider_cancelled_response_blocks_request_guard",
+        "trigger:provider_cancelled_response_blocks_reservation_guard",
+        "trigger:provider_cancelled_response_blocks_fence_guard",
+        "trigger:provider_cancelled_response_blocks_transport_guard",
+        "trigger:provider_request_authorization_ceiling_guard",
         "trigger:provider_response_transport_binding_guard",
         "trigger:provider_response_finalization_totality_guard",
         "trigger:provider_rate_limit_fact_totality_guard",
+        "trigger:provider_settlement_usage_classification_guard",
         "trigger:provider_replay_configuration_guard",
         "trigger:provider_run_output_configuration_guard",
         "trigger:provider_semantic_admission_application_guard",
@@ -2187,11 +2221,17 @@ public sealed partial class AuthoritativeStore
             FOREIGN KEY(canonical_request_payload_id,canonical_request_fingerprint,canonical_request_bytes)
               REFERENCES payloads(payload_id,content_sha256,byte_length) ON DELETE RESTRICT,
             CHECK(length(requested_at) = 33 AND requested_at GLOB '????-??-??T??:??:??.???????+00:00'
-              AND julianday(requested_at) IS NOT NULL AND substr(requested_at,1,23) = strftime('%Y-%m-%dT%H:%M:%f',requested_at)),
+              AND substr(requested_at,21,7) NOT GLOB '*[^0-9]*'
+              AND date(substr(requested_at,1,10),'+0 days') = substr(requested_at,1,10)
+              AND strftime('%H:%M:%S',substr(requested_at,1,19)) = substr(requested_at,12,8)),
             CHECK(length(confirmed_at) = 33 AND confirmed_at GLOB '????-??-??T??:??:??.???????+00:00'
-              AND julianday(confirmed_at) IS NOT NULL AND substr(confirmed_at,1,23) = strftime('%Y-%m-%dT%H:%M:%f',confirmed_at)),
+              AND substr(confirmed_at,21,7) NOT GLOB '*[^0-9]*'
+              AND date(substr(confirmed_at,1,10),'+0 days') = substr(confirmed_at,1,10)
+              AND strftime('%H:%M:%S',substr(confirmed_at,1,19)) = substr(confirmed_at,12,8)),
             CHECK(length(dispatch_deadline_utc) = 33 AND dispatch_deadline_utc GLOB '????-??-??T??:??:??.???????+00:00'
-              AND julianday(dispatch_deadline_utc) IS NOT NULL AND substr(dispatch_deadline_utc,1,23) = strftime('%Y-%m-%dT%H:%M:%f',dispatch_deadline_utc)),
+              AND substr(dispatch_deadline_utc,21,7) NOT GLOB '*[^0-9]*'
+              AND date(substr(dispatch_deadline_utc,1,10),'+0 days') = substr(dispatch_deadline_utc,1,10)
+              AND strftime('%H:%M:%S',substr(dispatch_deadline_utc,1,19)) = substr(dispatch_deadline_utc,12,8)),
             CHECK(requested_at <= confirmed_at AND confirmed_at < dispatch_deadline_utc),
             CHECK((julianday(dispatch_deadline_utc) - julianday(confirmed_at)) * 86400000.0 <= deadline_milliseconds),
             CHECK((julianday(dispatch_deadline_utc) - julianday(requested_at)) * 86400000.0 <= deadline_milliseconds),
@@ -2265,11 +2305,17 @@ public sealed partial class AuthoritativeStore
               REFERENCES provider_effective_scan_configurations_v2(configuration_id,profile_id,generation_id) ON DELETE RESTRICT,
             CHECK(request_fingerprint = canonical_request_fingerprint),
             CHECK(length(requested_at) = 33 AND requested_at GLOB '????-??-??T??:??:??.???????+00:00'
-              AND julianday(requested_at) IS NOT NULL AND substr(requested_at,1,23) = strftime('%Y-%m-%dT%H:%M:%f',requested_at)),
+              AND substr(requested_at,21,7) NOT GLOB '*[^0-9]*'
+              AND date(substr(requested_at,1,10),'+0 days') = substr(requested_at,1,10)
+              AND strftime('%H:%M:%S',substr(requested_at,1,19)) = substr(requested_at,12,8)),
             CHECK(length(confirmed_at) = 33 AND confirmed_at GLOB '????-??-??T??:??:??.???????+00:00'
-              AND julianday(confirmed_at) IS NOT NULL AND substr(confirmed_at,1,23) = strftime('%Y-%m-%dT%H:%M:%f',confirmed_at)),
+              AND substr(confirmed_at,21,7) NOT GLOB '*[^0-9]*'
+              AND date(substr(confirmed_at,1,10),'+0 days') = substr(confirmed_at,1,10)
+              AND strftime('%H:%M:%S',substr(confirmed_at,1,19)) = substr(confirmed_at,12,8)),
             CHECK(length(dispatch_deadline_utc) = 33 AND dispatch_deadline_utc GLOB '????-??-??T??:??:??.???????+00:00'
-              AND julianday(dispatch_deadline_utc) IS NOT NULL AND substr(dispatch_deadline_utc,1,23) = strftime('%Y-%m-%dT%H:%M:%f',dispatch_deadline_utc)),
+              AND substr(dispatch_deadline_utc,21,7) NOT GLOB '*[^0-9]*'
+              AND date(substr(dispatch_deadline_utc,1,10),'+0 days') = substr(dispatch_deadline_utc,1,10)
+              AND strftime('%H:%M:%S',substr(dispatch_deadline_utc,1,19)) = substr(dispatch_deadline_utc,12,8)),
             CHECK(requested_at <= confirmed_at AND confirmed_at < dispatch_deadline_utc),
             CHECK((julianday(dispatch_deadline_utc) - julianday(confirmed_at)) * 86400000.0 <= deadline_milliseconds),
             CHECK((owner_kind = 'analysis-run' AND owner_id = analysis_run_id
@@ -2424,6 +2470,15 @@ public sealed partial class AuthoritativeStore
             CHECK(payload_fingerprint = canonical_request_fingerprint)
         ) STRICT;
         CREATE UNIQUE INDEX idx_provider_request_fingerprint ON provider_requests(request_fingerprint);
+        CREATE TRIGGER provider_request_authorization_ceiling_guard
+        BEFORE INSERT ON provider_requests
+        BEGIN
+          SELECT CASE WHEN NOT EXISTS(
+            SELECT 1 FROM provider_operation_authorizations a
+            WHERE a.operation_id = NEW.operation_id
+              AND NEW.payload_bytes <= a.maximum_request_bytes)
+            THEN RAISE(ABORT, 'provider request exceeds exact pre-dispatch authorization byte ceiling') END;
+        END;
         CREATE TABLE provider_reservations(
             reservation_id TEXT PRIMARY KEY,
             operation_id TEXT NOT NULL REFERENCES provider_operation_authorizations(operation_id) ON DELETE RESTRICT,
@@ -2473,7 +2528,9 @@ public sealed partial class AuthoritativeStore
             FOREIGN KEY(operation_id,coordinator_fencing_epoch)
               REFERENCES provider_operation_authorizations(operation_id,coordinator_fencing_epoch) ON DELETE RESTRICT,
             CHECK(length(evaluated_at) = 33 AND evaluated_at GLOB '????-??-??T??:??:??.???????+00:00'
-              AND julianday(evaluated_at) IS NOT NULL AND substr(evaluated_at,1,23) = strftime('%Y-%m-%dT%H:%M:%f',evaluated_at))
+              AND substr(evaluated_at,21,7) NOT GLOB '*[^0-9]*'
+              AND date(substr(evaluated_at,1,10),'+0 days') = substr(evaluated_at,1,10)
+              AND strftime('%H:%M:%S',substr(evaluated_at,1,19)) = substr(evaluated_at,12,8))
         ) STRICT;
         CREATE TRIGGER provider_dispatch_deadline_guard
         BEFORE INSERT ON provider_dispatch_fences
@@ -2643,7 +2700,9 @@ public sealed partial class AuthoritativeStore
             CHECK((returned_model_availability = 'available') = (returned_model IS NOT NULL)),
             CHECK((returned_service_tier_availability = 'available') = (returned_service_tier IS NOT NULL)),
             CHECK(length(created_at) = 33 AND created_at GLOB '????-??-??T??:??:??.???????+00:00'
-              AND julianday(created_at) IS NOT NULL AND substr(created_at,1,23) = strftime('%Y-%m-%dT%H:%M:%f',created_at)),
+              AND substr(created_at,21,7) NOT GLOB '*[^0-9]*'
+              AND date(substr(created_at,1,10),'+0 days') = substr(created_at,1,10)
+              AND strftime('%H:%M:%S',substr(created_at,1,19)) = substr(created_at,12,8)),
             CHECK((response_state = 'completed' AND availability = 'available' AND usage_availability = 'available'
                 AND authorization_id IS NOT NULL AND request_id IS NOT NULL AND provider_attempt_id IS NOT NULL AND dispatch_fence_id IS NOT NULL
                 AND refusal_code IS NULL AND incomplete_reason IS NULL AND error_code IS NULL
@@ -2728,6 +2787,7 @@ public sealed partial class AuthoritativeStore
               AND b.maximum_output_tokens = NEW.maximum_output_tokens
               AND b.maximum_raw_response_bytes = NEW.maximum_raw_response_bytes
               AND b.maximum_calculated_nano_usd = NEW.maximum_calculated_nano_usd
+              AND b.confirmed_at <= NEW.created_at AND b.recorded_at <= NEW.created_at
             UNION ALL
             SELECT 1 FROM provider_operation_authorizations a WHERE a.operation_id = NEW.operation_id
               AND a.owner_kind = NEW.owner_kind AND a.owner_id = NEW.owner_id
@@ -2735,13 +2795,44 @@ public sealed partial class AuthoritativeStore
               AND a.maximum_input_tokens = NEW.maximum_input_tokens
               AND a.maximum_output_tokens = NEW.maximum_output_tokens
               AND a.maximum_raw_response_bytes = NEW.maximum_raw_response_bytes
-              AND a.maximum_calculated_nano_usd = NEW.maximum_calculated_nano_usd)
+              AND a.maximum_calculated_nano_usd = NEW.maximum_calculated_nano_usd
+              AND a.confirmed_at <= NEW.created_at)
             THEN RAISE(ABORT, 'cancelled provider response requires exact durable operation owner root') END;
           SELECT CASE WHEN EXISTS(
             SELECT 1 FROM provider_transport_events e
-            WHERE e.operation_id = NEW.operation_id AND e.occurred_at <= NEW.created_at)
+            WHERE e.operation_id = NEW.operation_id)
             THEN RAISE(ABORT, 'cancelled provider response requires an undispatched operation with no transport event') END;
         END;
+        CREATE TRIGGER provider_cancelled_response_blocks_authorization_guard
+        BEFORE INSERT ON provider_operation_authorizations
+        WHEN EXISTS(SELECT 1 FROM provider_responses r
+          WHERE r.operation_id = NEW.operation_id AND r.response_state = 'cancelled')
+        BEGIN SELECT RAISE(ABORT, 'cancelled provider operation is terminal before authorization'); END;
+        CREATE TRIGGER provider_cancelled_response_blocks_attempt_guard
+        BEFORE INSERT ON provider_operation_attempts
+        WHEN EXISTS(SELECT 1 FROM provider_responses r
+          WHERE r.operation_id = NEW.operation_id AND r.response_state = 'cancelled')
+        BEGIN SELECT RAISE(ABORT, 'cancelled provider operation is terminal before attempt'); END;
+        CREATE TRIGGER provider_cancelled_response_blocks_request_guard
+        BEFORE INSERT ON provider_requests
+        WHEN EXISTS(SELECT 1 FROM provider_responses r
+          WHERE r.operation_id = NEW.operation_id AND r.response_state = 'cancelled')
+        BEGIN SELECT RAISE(ABORT, 'cancelled provider operation is terminal before request'); END;
+        CREATE TRIGGER provider_cancelled_response_blocks_reservation_guard
+        BEFORE INSERT ON provider_reservations
+        WHEN EXISTS(SELECT 1 FROM provider_responses r
+          WHERE r.operation_id = NEW.operation_id AND r.response_state = 'cancelled')
+        BEGIN SELECT RAISE(ABORT, 'cancelled provider operation is terminal before reservation'); END;
+        CREATE TRIGGER provider_cancelled_response_blocks_fence_guard
+        BEFORE INSERT ON provider_dispatch_fences
+        WHEN EXISTS(SELECT 1 FROM provider_responses r
+          WHERE r.operation_id = NEW.operation_id AND r.response_state = 'cancelled')
+        BEGIN SELECT RAISE(ABORT, 'cancelled provider operation is terminal before dispatch fence'); END;
+        CREATE TRIGGER provider_cancelled_response_blocks_transport_guard
+        BEFORE INSERT ON provider_transport_events
+        WHEN EXISTS(SELECT 1 FROM provider_responses r
+          WHERE r.operation_id = NEW.operation_id AND r.response_state = 'cancelled')
+        BEGIN SELECT RAISE(ABORT, 'cancelled provider operation is terminal before transport'); END;
         CREATE TABLE provider_usage_entries(
             usage_entry_id TEXT PRIMARY KEY,
             availability TEXT NOT NULL CHECK(availability IN ('available','unavailable')),
@@ -2831,17 +2922,9 @@ public sealed partial class AuthoritativeStore
           SELECT CASE WHEN EXISTS(
             SELECT 1 FROM provider_operation_authorizations a
             WHERE a.operation_id = NEW.operation_id
-              AND ((NEW.dispatch_count IS NOT NULL AND NEW.dispatch_count > a.maximum_dispatch_count)
-                OR (NEW.input_tokens IS NOT NULL AND NEW.input_tokens > a.maximum_input_tokens)
-                OR (NEW.output_tokens IS NOT NULL AND NEW.output_tokens > a.maximum_output_tokens)
-                OR (NEW.reasoning_tokens IS NOT NULL AND NEW.reasoning_tokens > a.maximum_output_tokens)
-                OR (NEW.calculated_nano_usd IS NOT NULL AND NEW.calculated_nano_usd > a.maximum_calculated_nano_usd)
-                OR (a.operation_kind = 'transport-qualification'
-                  AND ((NEW.input_tokens IS NOT NULL AND NEW.input_tokens > 20480)
-                    OR (NEW.output_tokens IS NOT NULL AND NEW.output_tokens > 256)
-                    OR (NEW.reasoning_tokens IS NOT NULL AND NEW.reasoning_tokens > 256)
-                    OR (NEW.calculated_nano_usd IS NOT NULL AND NEW.calculated_nano_usd > 140000000)))))
-            THEN RAISE(ABORT, 'provider usage exceeds exact operation authorization ceiling') END;
+              AND NEW.dispatch_count IS NOT NULL
+              AND NEW.dispatch_count > a.maximum_dispatch_count)
+            THEN RAISE(ABORT, 'provider observed usage exceeds exact authorized dispatch count') END;
         END;
         CREATE TABLE provider_rate_limit_facts(
             rate_limit_fact_id TEXT PRIMARY KEY,
@@ -2855,9 +2938,13 @@ public sealed partial class AuthoritativeStore
             resets_at TEXT,
             UNIQUE(usage_entry_id,scope,dimension),
             CHECK(length(observed_at) = 33 AND observed_at GLOB '????-??-??T??:??:??.???????+00:00'
-              AND julianday(observed_at) IS NOT NULL AND substr(observed_at,1,23) = strftime('%Y-%m-%dT%H:%M:%f',observed_at)),
+              AND substr(observed_at,21,7) NOT GLOB '*[^0-9]*'
+              AND date(substr(observed_at,1,10),'+0 days') = substr(observed_at,1,10)
+              AND strftime('%H:%M:%S',substr(observed_at,1,19)) = substr(observed_at,12,8)),
             CHECK(resets_at IS NULL OR (length(resets_at) = 33 AND resets_at GLOB '????-??-??T??:??:??.???????+00:00'
-              AND julianday(resets_at) IS NOT NULL AND substr(resets_at,1,23) = strftime('%Y-%m-%dT%H:%M:%f',resets_at)
+              AND substr(resets_at,21,7) NOT GLOB '*[^0-9]*'
+              AND date(substr(resets_at,1,10),'+0 days') = substr(resets_at,1,10)
+              AND strftime('%H:%M:%S',substr(resets_at,1,19)) = substr(resets_at,12,8)
               AND resets_at >= observed_at)),
             CHECK((availability = 'available' AND limit_value IS NOT NULL AND remaining_value IS NOT NULL
                 AND remaining_value <= limit_value)
@@ -2868,7 +2955,9 @@ public sealed partial class AuthoritativeStore
         BEGIN
           SELECT CASE WHEN NOT EXISTS(
             SELECT 1 FROM provider_usage_entries u
-            WHERE u.usage_entry_id = NEW.usage_entry_id AND u.rate_availability = 'available')
+            JOIN provider_responses r ON r.response_record_id = u.response_record_id
+            WHERE u.usage_entry_id = NEW.usage_entry_id AND u.rate_availability = 'available'
+              AND r.created_at <= NEW.observed_at AND u.created_at <= NEW.observed_at)
             THEN RAISE(ABORT, 'provider rate fact requires available rate evidence') END;
           SELECT CASE WHEN EXISTS(
             SELECT 1 FROM provider_response_finalizations f
@@ -2885,7 +2974,9 @@ public sealed partial class AuthoritativeStore
             FOREIGN KEY(response_record_id,usage_entry_id)
               REFERENCES provider_usage_entries(response_record_id,usage_entry_id) ON DELETE RESTRICT,
             CHECK(length(finalized_at) = 33 AND finalized_at GLOB '????-??-??T??:??:??.???????+00:00'
-              AND julianday(finalized_at) IS NOT NULL AND substr(finalized_at,1,23) = strftime('%Y-%m-%dT%H:%M:%f',finalized_at))
+              AND substr(finalized_at,21,7) NOT GLOB '*[^0-9]*'
+              AND date(substr(finalized_at,1,10),'+0 days') = substr(finalized_at,1,10)
+              AND strftime('%H:%M:%S',substr(finalized_at,1,19)) = substr(finalized_at,12,8))
         ) STRICT;
         CREATE TRIGGER provider_response_finalization_totality_guard
         BEFORE INSERT ON provider_response_finalizations
@@ -2932,6 +3023,26 @@ public sealed partial class AuthoritativeStore
             CHECK((state = 'unresolved-hold' AND released_nano_usd = 0 AND retained_hold_nano_usd > 0)
               OR (state <> 'unresolved-hold' AND usage_entry_id IS NOT NULL))
         ) STRICT;
+        CREATE TRIGGER provider_settlement_usage_classification_guard
+        BEFORE INSERT ON provider_settlements
+        WHEN NEW.usage_entry_id IS NOT NULL
+        BEGIN
+          SELECT CASE WHEN NOT EXISTS(
+            SELECT 1 FROM provider_reservations reservation
+            JOIN provider_usage_entries usage
+              ON usage.operation_id = NEW.operation_id
+             AND usage.provider_attempt_id = NEW.provider_attempt_id
+             AND usage.request_id = NEW.request_id
+             AND usage.usage_entry_id = NEW.usage_entry_id
+            WHERE reservation.reservation_id = NEW.reservation_id
+              AND reservation.operation_id = NEW.operation_id
+              AND reservation.provider_attempt_id = NEW.provider_attempt_id
+              AND reservation.request_id = NEW.request_id
+              AND usage.calculated_nano_usd_availability = 'available'
+              AND ((usage.calculated_nano_usd > reservation.maximum_nano_usd AND NEW.state = 'overrun')
+                OR (usage.calculated_nano_usd <= reservation.maximum_nano_usd AND NEW.state <> 'overrun')))
+            THEN RAISE(ABORT, 'provider settlement must classify observed usage against the exact reservation') END;
+        END;
         CREATE TABLE provider_settlement_adjustments(
             adjustment_id TEXT PRIMARY KEY,
             settlement_id TEXT NOT NULL REFERENCES provider_settlements(settlement_id) ON DELETE RESTRICT,
@@ -3157,6 +3268,12 @@ public sealed partial class AuthoritativeStore
             projection_version INTEGER NOT NULL CHECK(projection_version > 0),
             updated_at TEXT NOT NULL
         ) STRICT;
+        CREATE TRIGGER provider_operation_projection_monotonic_update_guard
+        BEFORE UPDATE ON provider_operation_projection
+        WHEN NEW.operation_id <> OLD.operation_id
+          OR NEW.projection_version <= OLD.projection_version
+          OR NEW.updated_at <= OLD.updated_at
+        BEGIN SELECT RAISE(ABORT, 'provider operation projection must advance monotonically on one exact root'); END;
         CREATE TABLE provider_profile_projection(
             profile_id TEXT PRIMARY KEY CHECK(length(trim(profile_id)) > 0) REFERENCES provider_access_profiles(profile_id) ON DELETE CASCADE,
             generation_id TEXT NOT NULL CHECK(length(trim(generation_id)) > 0),
@@ -3240,7 +3357,14 @@ public sealed partial class AuthoritativeStore
                           AND prior_event.event_version = 1)))
                   AND NOT EXISTS(SELECT 1 FROM provider_credential_intent_events later_event
                     WHERE later_event.intent_root_id = current_event.intent_root_id
-                      AND later_event.event_version > current_event.event_version)))
+                      AND later_event.event_version > current_event.event_version)
+                  AND NOT EXISTS(
+                    SELECT 1 FROM provider_credential_intent_events newer_event
+                    JOIN provider_credential_intents newer_intent ON newer_intent.intent_id = newer_event.intent_id
+                    WHERE newer_intent.profile_id = i.profile_id
+                      AND newer_intent.generation_id = i.generation_id
+                      AND newer_event.created_at <= NEW.updated_at
+                      AND newer_event.created_at > current_event.created_at)))
             THEN RAISE(ABORT, 'provider profile projection intent root mismatch') END;
           SELECT CASE WHEN NEW.lifecycle_state = 'deleted' AND NOT EXISTS(
             SELECT 1 FROM provider_credential_intents terminal_intent
@@ -3272,7 +3396,14 @@ public sealed partial class AuthoritativeStore
               AND terminal_event.created_at <= NEW.updated_at
               AND NOT EXISTS(SELECT 1 FROM provider_credential_intent_events later_event
                 WHERE later_event.intent_root_id = terminal_event.intent_root_id
-                  AND later_event.event_version > terminal_event.event_version))
+                  AND later_event.event_version > terminal_event.event_version)
+              AND NOT EXISTS(
+                SELECT 1 FROM provider_credential_intent_events newer_event
+                JOIN provider_credential_intents newer_intent ON newer_intent.intent_id = newer_event.intent_id
+                WHERE newer_intent.profile_id = terminal_intent.profile_id
+                  AND newer_intent.generation_id = terminal_intent.generation_id
+                  AND newer_event.created_at <= NEW.updated_at
+                  AND newer_event.created_at > terminal_event.created_at))
             THEN RAISE(ABORT, 'deleted provider profile projection requires exact completed delete event chain') END;
           SELECT CASE WHEN NEW.account_identity_id IS NOT NULL AND NOT EXISTS(
             SELECT 1 FROM provider_access_profiles a WHERE a.profile_id = NEW.profile_id
@@ -3286,6 +3417,8 @@ public sealed partial class AuthoritativeStore
           SELECT CASE WHEN NEW.profile_id <> OLD.profile_id
               OR NEW.projection_version <= OLD.projection_version
               OR NEW.updated_at <= OLD.updated_at
+              OR (OLD.lifecycle_state = 'delete-pending' AND NEW.lifecycle_state NOT IN ('delete-pending','deleted'))
+              OR (OLD.lifecycle_state = 'deleted' AND NEW.lifecycle_state <> 'deleted')
             THEN RAISE(ABORT, 'provider profile projection must advance monotonically on one exact root') END;
           SELECT CASE WHEN NOT EXISTS(
             SELECT 1 FROM provider_generations g
@@ -3318,7 +3451,14 @@ public sealed partial class AuthoritativeStore
                           AND prior_event.event_version = 1)))
                   AND NOT EXISTS(SELECT 1 FROM provider_credential_intent_events later_event
                     WHERE later_event.intent_root_id = current_event.intent_root_id
-                      AND later_event.event_version > current_event.event_version)))
+                      AND later_event.event_version > current_event.event_version)
+                  AND NOT EXISTS(
+                    SELECT 1 FROM provider_credential_intent_events newer_event
+                    JOIN provider_credential_intents newer_intent ON newer_intent.intent_id = newer_event.intent_id
+                    WHERE newer_intent.profile_id = i.profile_id
+                      AND newer_intent.generation_id = i.generation_id
+                      AND newer_event.created_at <= NEW.updated_at
+                      AND newer_event.created_at > current_event.created_at)))
             THEN RAISE(ABORT, 'provider profile projection intent root mismatch') END;
           SELECT CASE WHEN NEW.lifecycle_state = 'deleted' AND NOT EXISTS(
             SELECT 1 FROM provider_credential_intents terminal_intent
@@ -3350,7 +3490,14 @@ public sealed partial class AuthoritativeStore
               AND terminal_event.created_at <= NEW.updated_at
               AND NOT EXISTS(SELECT 1 FROM provider_credential_intent_events later_event
                 WHERE later_event.intent_root_id = terminal_event.intent_root_id
-                  AND later_event.event_version > terminal_event.event_version))
+                  AND later_event.event_version > terminal_event.event_version)
+              AND NOT EXISTS(
+                SELECT 1 FROM provider_credential_intent_events newer_event
+                JOIN provider_credential_intents newer_intent ON newer_intent.intent_id = newer_event.intent_id
+                WHERE newer_intent.profile_id = terminal_intent.profile_id
+                  AND newer_intent.generation_id = terminal_intent.generation_id
+                  AND newer_event.created_at <= NEW.updated_at
+                  AND newer_event.created_at > terminal_event.created_at))
             THEN RAISE(ABORT, 'deleted provider profile projection requires exact completed delete event chain') END;
           SELECT CASE WHEN NEW.account_identity_id IS NOT NULL AND NOT EXISTS(
             SELECT 1 FROM provider_access_profiles a WHERE a.profile_id = NEW.profile_id
@@ -3412,6 +3559,12 @@ public sealed partial class AuthoritativeStore
             PRIMARY KEY(scope_kind,scope_id),
             CHECK(reserved_nano_usd = 0 AND settled_nano_usd = 0 AND unresolved_nano_usd = 0)
         ) STRICT;
+        CREATE TRIGGER provider_budget_projection_monotonic_update_guard
+        BEFORE UPDATE ON provider_budget_projection
+        WHEN NEW.scope_kind <> OLD.scope_kind OR NEW.scope_id <> OLD.scope_id
+          OR NEW.projection_version <= OLD.projection_version
+          OR NEW.updated_at <= OLD.updated_at
+        BEGIN SELECT RAISE(ABORT, 'provider budget projection must advance monotonically on one exact root'); END;
         CREATE TRIGGER provider_budget_projection_authority_guard
         BEFORE INSERT ON provider_budget_projection
         BEGIN

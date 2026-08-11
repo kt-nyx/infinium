@@ -175,6 +175,23 @@ function Get-Persistence([string] $Schema, [string] $Path) {
                     'generation_id' { 'provider_operation_blocks.generation_id' }
                     'revocation_epoch' { 'provider_operation_blocks.revocation_epoch' }
                     'state' { 'provider_operation_blocks.state' }
+                    'transport_state' { 'provider_transport_events.event_kind' }
+                    'receipt_state' { 'provider_usage_entries.receipt_state' }
+                    'usage' { @(
+                        'provider_usage_entries.availability',
+                        'provider_usage_entries.dispatch_count_availability','provider_usage_entries.dispatch_count',
+                        'provider_usage_entries.input_tokens_availability','provider_usage_entries.input_tokens',
+                        'provider_usage_entries.output_tokens_availability','provider_usage_entries.output_tokens',
+                        'provider_usage_entries.total_tokens_availability','provider_usage_entries.total_tokens',
+                        'provider_usage_entries.reasoning_tokens_availability','provider_usage_entries.reasoning_tokens',
+                        'provider_usage_entries.cache_read_tokens_availability','provider_usage_entries.cache_read_tokens',
+                        'provider_usage_entries.cache_write_tokens_availability','provider_usage_entries.cache_write_tokens',
+                        'provider_usage_entries.priced_tool_calls_availability','provider_usage_entries.priced_tool_calls',
+                        'provider_usage_entries.calculated_nano_usd_availability','provider_usage_entries.calculated_nano_usd',
+                        'provider_usage_entries.billing_availability','provider_usage_entries.rate_availability',
+                        'provider_usage_entries.credit_availability') }
+                    'settlement_state' { 'provider_settlements.state' }
+                    'replay_state' { 'provider_replay_edges.replay_state' }
                     'recorded_at' { 'provider_operation_blocks.recorded_at' }
                     default { $null }
                 }

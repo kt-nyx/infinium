@@ -58,8 +58,8 @@ public sealed class PersistenceAndLifecycleTests
         command.CommandText = "SELECT sql FROM sqlite_schema WHERE type='trigger' AND name='provider_usage_operation_ceiling_guard';";
         string usageCeilingSql = (string)command.ExecuteScalar()!;
         StringAssert.Contains(usageCeilingSql, "NEW.dispatch_count > a.maximum_dispatch_count");
-        StringAssert.Contains(usageCeilingSql, "NEW.reasoning_tokens > a.maximum_output_tokens");
-        StringAssert.Contains(usageCeilingSql, "NEW.reasoning_tokens > 256");
+        Assert.IsFalse(usageCeilingSql.Contains("NEW.input_tokens > a.maximum_input_tokens", StringComparison.Ordinal));
+        Assert.IsFalse(usageCeilingSql.Contains("NEW.calculated_nano_usd > a.maximum_calculated_nano_usd", StringComparison.Ordinal));
         command.CommandText = "SELECT sql FROM sqlite_schema WHERE type='table' AND name='provider_usage_entries';";
         StringAssert.Contains((string)command.ExecuteScalar()!, "reasoning_tokens <= output_tokens");
         command.CommandText = "SELECT sql FROM sqlite_schema WHERE type='table' AND name='provider_semantic_validations';";
@@ -79,7 +79,8 @@ public sealed class PersistenceAndLifecycleTests
         StringAssert.Contains(cancellationRootSql, "provider_operation_blocks b");
         StringAssert.Contains(cancellationRootSql, "provider_operation_authorizations a");
         StringAssert.Contains(cancellationRootSql, "provider_transport_events e");
-        StringAssert.Contains(cancellationRootSql, "e.operation_id = NEW.operation_id AND e.occurred_at <= NEW.created_at");
+        StringAssert.Contains(cancellationRootSql, "WHERE e.operation_id = NEW.operation_id");
+        Assert.IsFalse(cancellationRootSql.Contains("e.occurred_at <= NEW.created_at", StringComparison.Ordinal));
         command.CommandText = "SELECT sql FROM sqlite_schema WHERE type='trigger' AND name='provider_response_transport_binding_guard';";
         string responseAuthoritySql = (string)command.ExecuteScalar()!;
         StringAssert.Contains(responseAuthoritySql, "a.authorization_id = NEW.authorization_id");
@@ -702,7 +703,7 @@ public sealed class PersistenceAndLifecycleTests
               $maximum_input_tokens,4096,600000000,'unavailable',1048576,$response_headers_availability,'unavailable','unavailable','unavailable',
               'unavailable','unavailable','cancelled','unavailable','unavailable','unavailable','gpt-5.6-sol',
               'unavailable','default','unavailable','current_turn','standard','explicit','unavailable','unavailable',
-              0,'unavailable','unavailable','unavailable','2026-08-10T00:00:00.0000000+00:00');
+              0,'unavailable','unavailable','unavailable','2026-08-10T00:00:01.0000000+00:00');
             """;
         SqliteParameter operationId = command.Parameters.AddWithValue("$operation_id", "operation-missing");
         SqliteParameter ownerId = command.Parameters.AddWithValue("$owner_id", "acquisition-restore");
@@ -718,6 +719,12 @@ public sealed class PersistenceAndLifecycleTests
         maximumInputTokens.Value = 73727;
         Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
         maximumInputTokens.Value = 73728;
+        string cancelledSql = command.CommandText;
+        command.CommandText = cancelledSql
+            .Replace("response-cancelled", "response-cancelled-before-root", StringComparison.Ordinal)
+            .Replace("00:00:01.0000000", "00:00:00.5000000", StringComparison.Ordinal);
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        command.CommandText = cancelledSql;
         Assert.AreEqual(1, command.ExecuteNonQuery());
         command.Parameters.Clear();
         command.CommandText =
@@ -794,36 +801,18 @@ public sealed class PersistenceAndLifecycleTests
             """;
         Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
 
-        command.CommandText =
-            """
-            PRAGMA foreign_keys=OFF;
-            INSERT INTO provider_transport_events VALUES(
-              'transport-cancel-adversary','operation-restore','attempt-cancel-adversary','request-cancel-adversary',
-              'fence-cancel-adversary','not-started',1,'2026-08-10T00:00:03.5000000+00:00');
-            """;
-        Assert.AreEqual(1, command.ExecuteNonQuery());
-        command.CommandText = "PRAGMA foreign_keys=ON;";
-        command.ExecuteNonQuery();
-        command.CommandText =
-            """
-            INSERT INTO provider_responses(
-              response_record_id,availability,usage_availability,operation_id,owner_kind,owner_id,operation_kind,
-              maximum_input_tokens,maximum_output_tokens,maximum_calculated_nano_usd,
-              raw_response_availability,maximum_raw_response_bytes,response_headers_availability,
-              http_status_availability,provider_response_id_availability,client_request_id_availability,
-              provider_request_id_availability,billing_evidence_availability,response_state,
-              refusal_availability,incomplete_availability,error_availability,requested_model,
-              returned_model_availability,requested_service_tier,returned_service_tier_availability,
-              reasoning_context,reasoning_mode,prompt_cache_mode,billing_availability,rate_availability,
-              expected_rate_limit_fact_count,credit_availability,validation_state,admission_state,created_at)
-            VALUES(
-              'response-cancelled-after-transport','unavailable','unavailable','operation-restore','evidence-acquisition-run','acquisition-restore','source-claim-extraction',
-              73728,4096,600000000,'unavailable',1048576,'unavailable','unavailable','unavailable','unavailable',
-              'unavailable','unavailable','cancelled','unavailable','unavailable','unavailable','gpt-5.6-sol',
-              'unavailable','default','unavailable','current_turn','standard','explicit','unavailable','unavailable',
-              0,'unavailable','unavailable','unavailable','2026-08-10T00:00:04.0000000+00:00');
-            """;
-        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        foreach (string lateEventSql in new[]
+                 {
+                     "INSERT INTO provider_operation_attempts(operation_id,created_at) VALUES('operation-restore','2026-08-10T00:00:05.0000000+00:00');",
+                     "INSERT INTO provider_requests(operation_id,created_at) VALUES('operation-restore','2026-08-10T00:00:05.0000000+00:00');",
+                     "INSERT INTO provider_reservations(operation_id,expires_at,created_at) VALUES('operation-restore','2026-08-10T00:01:05.0000000+00:00','2026-08-10T00:00:05.0000000+00:00');",
+                     "INSERT INTO provider_dispatch_fences(operation_id,evaluated_at) VALUES('operation-restore','2026-08-10T00:00:05.0000000+00:00');",
+                     "INSERT INTO provider_transport_events(operation_id,occurred_at) VALUES('operation-restore','2026-08-10T00:00:05.0000000+00:00');",
+                 })
+        {
+            command.CommandText = lateEventSql;
+            AssertCancelledTerminal(command);
+        }
         command.CommandText = "PRAGMA foreign_keys=OFF; DROP TRIGGER provider_response_transport_binding_guard;";
         command.ExecuteNonQuery();
 
@@ -868,6 +857,20 @@ public sealed class PersistenceAndLifecycleTests
             INSERT INTO provider_response_finalizations VALUES(
               'finalization-completed','response-completed','usage-completed','admitted','admitted',
               '2026-08-10T00:00:59.0000000+00:00');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            INSERT INTO provider_rate_limit_facts VALUES(
+              'rate-before-response','usage-completed','request','requests','available',100,99,
+              '2026-08-10T00:00:59.0000000+00:00',NULL);
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            INSERT INTO provider_rate_limit_facts VALUES(
+              'rate-before-usage','usage-completed','request','requests','available',100,99,
+              '2026-08-10T00:01:00.5000000+00:00',NULL);
             """;
         Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
         command.CommandText =
@@ -998,6 +1001,22 @@ public sealed class PersistenceAndLifecycleTests
               0,'unavailable','unavailable','unavailable','2026-08-10T00:01:05.0000000+00:00');
             """;
         Assert.AreEqual(1, command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            INSERT INTO provider_operation_authorizations(
+              operation_id,requested_at,confirmed_at,dispatch_deadline_utc)
+            VALUES(
+              'operation-completed','2026-08-10T00:01:06.0000000+00:00',
+              '2026-08-10T00:01:06.0000000+00:00','2026-08-10T00:02:06.0000000+00:00');
+            """;
+        AssertCancelledTerminal(command);
+        command.CommandText =
+            """
+            INSERT INTO provider_operation_attempts VALUES(
+              'attempt-after-authorized-cancellation','operation-completed',1,'proposed',1,
+              '2026-08-10T00:01:06.0000000+00:00');
+            """;
+        AssertCancelledTerminal(command);
         command.CommandText = "PRAGMA foreign_keys=OFF;";
         command.ExecuteNonQuery();
         command.CommandText =
@@ -1163,6 +1182,154 @@ public sealed class PersistenceAndLifecycleTests
         command.CommandText =
             """
             DELETE FROM provider_response_finalizations WHERE finalization_id='finalization-completed';
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
+    public void Schema6SettlementRetainsObservedUsageBelowEqualAndAboveReservation()
+    {
+        AssertSqlSettlement(9, 90, "settled", succeeds: true);
+        AssertSqlSettlement(10, 100, "settled", succeeds: true);
+        AssertSqlSettlement(11, 101, "overrun", succeeds: true);
+        AssertSqlSettlement(11, 101, "settled", succeeds: false);
+        AssertSqlSettlement(10, 100, "overrun", succeeds: false);
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
+    public void Schema6ProjectionTimesAreCanonicalSevenDigitUtcAndAdvanceMonotonically()
+    {
+        using TemporaryStore temporary = new();
+        using AuthoritativeStore store = temporary.Open();
+        SeedProviderAuthorityBlock(temporary.Root);
+        using SqliteConnection connection = OpenRaw(temporary.Root);
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText =
+            """
+            PRAGMA foreign_keys=ON;
+            UPDATE provider_operation_projection
+            SET projection_version=2,updated_at='2026-08-10T00:00:00.1239999+00:00'
+            WHERE operation_id='operation-restore';
+            UPDATE provider_operation_projection
+            SET projection_version=3,updated_at='2026-08-10T00:00:00.9999999+00:00'
+            WHERE operation_id='operation-restore';
+            UPDATE provider_profile_projection
+            SET projection_version=4,updated_at='2026-08-10T00:00:02.9999999+00:00'
+            WHERE profile_id='profile-restore';
+            """;
+        Assert.AreEqual(3, command.ExecuteNonQuery());
+
+        command.CommandText =
+            """
+            UPDATE provider_operation_projection
+            SET projection_version=4,updated_at='2026-08-10T00:00:00.9999998+00:00'
+            WHERE operation_id='operation-restore';
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            UPDATE provider_operation_projection
+            SET projection_version=4,updated_at='2026-08-10T00:00:01.000000A+00:00'
+            WHERE operation_id='operation-restore';
+            """;
+        SqliteException malformed = Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        StringAssert.Contains(malformed.Message, "non-canonical UTC authority timestamp");
+
+        command.CommandText =
+            """
+            DROP TRIGGER provider_budget_projection_authority_guard;
+            INSERT INTO provider_budget_projection VALUES(
+              'operation','operation-restore',0,0,0,1,'2026-08-10T00:00:00.9999999+00:00');
+            UPDATE provider_budget_projection
+            SET projection_version=2,updated_at='2026-08-10T00:00:01.0000000+00:00'
+            WHERE scope_kind='operation' AND scope_id='operation-restore';
+            """;
+        Assert.AreEqual(2, command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            UPDATE provider_budget_projection
+            SET projection_version=2,updated_at='2026-08-10T00:00:02.0000000+00:00'
+            WHERE scope_kind='operation' AND scope_id='operation-restore';
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            UPDATE provider_profile_projection
+            SET projection_version=5,updated_at='2026-08-10T00:00:03.0000000Z'
+            WHERE profile_id='profile-restore';
+            """;
+        malformed = Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        StringAssert.Contains(malformed.Message, "non-canonical UTC authority timestamp");
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
+    public void Schema6ProfileProjectionRejectsStaleGlobalCredentialEvent()
+    {
+        using TemporaryStore temporary = new();
+        using AuthoritativeStore store = temporary.Open();
+        SeedProviderAuthorityBlock(temporary.Root);
+        using SqliteConnection connection = OpenRaw(temporary.Root);
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText =
+            """
+            PRAGMA foreign_keys=ON;
+            INSERT INTO provider_credential_intents VALUES(
+              'intent-disable-latest','profile-restore','generation-restore','disable','pending',
+              'active-verified','disabled','active-verified','unavailable','account-restore','billing-restore','cap-restore',
+              'not-required','not-requested','2026-08-10T00:00:03.0000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES(
+              'event-disable-latest-v1','root-disable-latest','intent-disable-latest',1,NULL,
+              '2026-08-10T00:00:03.0000000+00:00');
+            """;
+        Assert.AreEqual(2, command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            UPDATE provider_profile_projection
+            SET projection_version=4,updated_at='2026-08-10T00:00:04.0000000+00:00'
+            WHERE profile_id='profile-restore';
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
+    public void Schema6ProfileProjectionCannotReactivateAfterDeletePending()
+    {
+        using TemporaryStore temporary = new();
+        using AuthoritativeStore store = temporary.Open();
+        SeedProviderAuthorityBlock(temporary.Root);
+        using SqliteConnection connection = OpenRaw(temporary.Root);
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText =
+            """
+            PRAGMA foreign_keys=ON;
+            INSERT INTO provider_credential_intents VALUES(
+              'intent-delete-terminal','profile-restore','generation-restore','delete','pending',
+              'active-verified','delete-pending','active-verified','unavailable','account-restore','billing-restore','cap-restore',
+              'not-required','pending','2026-08-10T00:00:03.0000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES(
+              'event-delete-terminal-v1','root-delete-terminal','intent-delete-terminal',1,NULL,
+              '2026-08-10T00:00:03.0000000+00:00');
+            UPDATE provider_profile_projection
+            SET lifecycle_state='delete-pending',verification_state='unavailable',intent_id='intent-delete-terminal',
+              cleanup_disposition='pending',projection_version=4,updated_at='2026-08-10T00:00:03.0000000+00:00'
+            WHERE profile_id='profile-restore';
+            """;
+        Assert.AreEqual(3, command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            UPDATE provider_profile_projection
+            SET lifecycle_state='active-verified',verification_state='available',intent_id='intent-verify-restore',
+              cleanup_disposition='not-requested',projection_version=5,updated_at='2026-08-10T00:00:04.0000000+00:00'
+            WHERE profile_id='profile-restore';
             """;
         Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
     }
@@ -2426,6 +2593,120 @@ public sealed class PersistenceAndLifecycleTests
             """;
         command.ExecuteNonQuery();
     }
+
+    private static void AssertSqlSettlement(long inputTokens, long calculatedNanoUsd, string state, bool succeeds)
+    {
+        using TemporaryStore temporary = new();
+        using AuthoritativeStore store = temporary.Open();
+        SeedProviderAuthorityBlock(temporary.Root);
+        using SqliteConnection connection = OpenRaw(temporary.Root);
+        using SqliteCommand command = connection.CreateCommand();
+        command.Parameters.AddWithValue("$input_tokens", inputTokens);
+        command.Parameters.AddWithValue("$total_tokens", inputTokens + 5);
+        command.Parameters.AddWithValue("$calculated_nano_usd", calculatedNanoUsd);
+        command.Parameters.AddWithValue("$settlement_state", state);
+        command.CommandText =
+            """
+            PRAGMA foreign_keys=ON;
+            DROP TRIGGER provider_authority_release_required;
+            INSERT INTO provider_operation_authorizations(
+              authorization_id,operation_id,owner_kind,owner_id,evidence_acquisition_run_id,job_node_id,command_id,requested_at,
+              profile_id,generation_id,revocation_epoch,operation_kind,installation_snapshot_id,analysis_context_id,
+              effective_configuration_id,resolved_input_manifest_id,prompt_id,prompt_fingerprint,output_schema_id,
+              output_schema_fingerprint,request_fingerprint,canonical_request_fingerprint,capability_snapshot_id,
+              price_snapshot_id,settings_fingerprint,input_bound_policy_id,input_bound_policy_version,input_bound_proof_status,
+              coordinator_fencing_epoch,maximum_request_bytes,maximum_input_tokens,maximum_output_tokens,
+              maximum_raw_response_bytes,maximum_dispatch_count,maximum_calculated_nano_usd,deadline_milliseconds,
+              dispatch_deadline_utc,confirmed_at)
+            SELECT 'authorization-settlement',operation_id,owner_kind,owner_id,owner_id,job_node_id,command_id,requested_at,
+              profile_id,generation_id,revocation_epoch,operation_kind,installation_snapshot_id,analysis_context_id,
+              effective_configuration_id,resolved_input_manifest_id,prompt_id,prompt_fingerprint,output_schema_id,
+              output_schema_fingerprint,request_fingerprint,canonical_request_fingerprint,capability_snapshot_id,
+              price_snapshot_id,settings_fingerprint,'accepted-test-policy','1','proved',coordinator_fencing_epoch,
+              maximum_request_bytes,10,5,maximum_raw_response_bytes,maximum_dispatch_count,100,deadline_milliseconds,
+              dispatch_deadline_utc,confirmed_at
+            FROM provider_operation_blocks WHERE operation_id='operation-restore';
+            INSERT INTO provider_operation_attempts VALUES(
+              'attempt-settlement','operation-restore',1,'proposed',1,'2026-08-10T00:00:02.0000000+00:00');
+            INSERT INTO provider_requests(
+              request_id,client_request_id,operation_id,provider_attempt_id,request_fingerprint,
+              canonical_request_fingerprint,settings_fingerprint,output_schema_fingerprint,input_bound_policy_id,
+              input_bound_policy_version,input_bound_proof_status,payload_id,payload_fingerprint,payload_bytes,created_at)
+            SELECT 'request-settlement','client-request-settlement',operation_id,'attempt-settlement',request_fingerprint,
+              canonical_request_fingerprint,settings_fingerprint,output_schema_fingerprint,input_bound_policy_id,
+              input_bound_policy_version,input_bound_proof_status,'request-payload-restore',request_fingerprint,1024,
+              '2026-08-10T00:00:03.0000000+00:00'
+            FROM provider_operation_authorizations WHERE authorization_id='authorization-settlement';
+            INSERT INTO provider_reservations VALUES(
+              'reservation-settlement','operation-restore','attempt-settlement','request-settlement','{}',100,
+              '2026-08-10T00:01:30.0000000+00:00','2026-08-10T00:00:04.0000000+00:00');
+            INSERT INTO provider_dispatch_fences VALUES(
+              'fence-settlement','authorization-settlement','operation-restore','reservation-settlement','request-settlement',
+              'attempt-settlement',1,'profile-restore','generation-restore',0,1,'synthetic admitted fence',
+              '2026-08-10T00:00:05.0000000+00:00');
+            INSERT INTO provider_transport_events VALUES(
+              'transport-settlement-1','operation-restore','attempt-settlement','request-settlement','fence-settlement',
+              'not-started',1,'2026-08-10T00:00:06.0000000+00:00');
+            INSERT INTO provider_transport_events VALUES(
+              'transport-settlement-2','operation-restore','attempt-settlement','request-settlement','fence-settlement',
+              'started',2,'2026-08-10T00:00:07.0000000+00:00');
+            INSERT INTO provider_transport_events VALUES(
+              'transport-settlement-3','operation-restore','attempt-settlement','request-settlement','fence-settlement',
+              'response-staged',3,'2026-08-10T00:00:08.0000000+00:00');
+            INSERT INTO provider_responses(
+              response_record_id,availability,usage_availability,authorization_id,operation_id,owner_kind,owner_id,
+              request_id,provider_attempt_id,dispatch_fence_id,operation_kind,maximum_input_tokens,maximum_output_tokens,
+              maximum_calculated_nano_usd,raw_response_availability,raw_response_payload_id,raw_response_fingerprint,
+              raw_response_bytes,maximum_raw_response_bytes,response_headers_availability,http_status_availability,
+              http_status,provider_response_id_availability,client_request_id,client_request_id_availability,
+              provider_request_id_availability,billing_evidence_availability,response_state,refusal_availability,
+              incomplete_availability,error_availability,requested_model,returned_model,returned_model_availability,
+              requested_service_tier,returned_service_tier,returned_service_tier_availability,reasoning_context,
+              reasoning_mode,prompt_cache_mode,billing_availability,rate_availability,expected_rate_limit_fact_count,
+              credit_availability,validation_state,admission_state,created_at)
+            SELECT 'response-settlement','available','available','authorization-settlement',operation_id,owner_kind,owner_id,
+              'request-settlement','attempt-settlement','fence-settlement',operation_kind,maximum_input_tokens,
+              maximum_output_tokens,maximum_calculated_nano_usd,'available','request-payload-restore',request_fingerprint,
+              1024,maximum_raw_response_bytes,'unavailable','available',200,'unavailable','client-request-settlement',
+              'available','unavailable','unavailable','completed','unavailable','unavailable','unavailable','gpt-5.6-sol',
+              'gpt-5.6-sol','available','default','default','available','current_turn','standard','explicit','unavailable',
+              'unavailable',0,'unavailable','proposed','proposed','2026-08-10T00:00:09.0000000+00:00'
+            FROM provider_operation_authorizations WHERE authorization_id='authorization-settlement';
+            INSERT INTO provider_usage_entries(
+              usage_entry_id,availability,operation_id,provider_attempt_id,request_id,dispatch_fence_id,response_record_id,
+              dispatch_count_availability,dispatch_count,input_tokens_availability,input_tokens,output_tokens_availability,
+              output_tokens,total_tokens_availability,total_tokens,reasoning_tokens_availability,reasoning_tokens,
+              cache_read_tokens_availability,cache_read_tokens,cache_write_tokens_availability,cache_write_tokens,
+              priced_tool_calls_availability,priced_tool_calls,calculated_nano_usd_availability,calculated_nano_usd,
+              billing_availability,rate_availability,credit_availability,receipt_state,created_at)
+            VALUES('usage-settlement','available','operation-restore','attempt-settlement','request-settlement','fence-settlement',
+              'response-settlement','available',1,'available',$input_tokens,'available',5,'available',$total_tokens,
+              'available',2,'available',0,'available',0,'available',0,'available',$calculated_nano_usd,
+              'unavailable','unavailable','unavailable','complete','2026-08-10T00:00:10.0000000+00:00');
+            """;
+        Assert.AreEqual(10, command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            INSERT INTO provider_settlements VALUES(
+              'settlement-observed','operation-restore','attempt-settlement','request-settlement','reservation-settlement',
+              'usage-settlement','fence-settlement',$settlement_state,100,0,'2026-08-10T00:00:11.0000000+00:00');
+            """;
+        if (succeeds)
+        {
+            Assert.AreEqual(1, command.ExecuteNonQuery());
+        }
+        else
+        {
+            Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        }
+    }
+
+    private static void AssertCancelledTerminal(SqliteCommand command)
+    {
+        SqliteException exception = Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        StringAssert.Contains(exception.Message, "cancelled provider operation is terminal");
+    }
+
     private static SqliteConnection OpenRaw(string productRoot)
     {
         SqliteRuntimeIdentity.InitializeNativeProvider();
