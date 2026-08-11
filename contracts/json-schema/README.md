@@ -47,17 +47,16 @@ network.
 `common.v1.schema.json` contains shared closed definitions and is not itself an
 instance contract.
 
-The Slice 6 v2 configuration and output contracts are additive provider-active
+The nine Slice 6 contracts are `Implementation-active` after WP1 acceptance.
+The v2 configuration and output contracts are additive provider-active
 supplements. They bind the exact frozen local v1 artifact by identity or
 fingerprint and do not reinterpret or replace the Slice 5 v1 bytes. All nine
-Slice 6 contracts are closed at every declared object boundary and contain no
+contracts are closed at every declared object boundary and contain no
 credential target, secret byte, authorization-header, or raw-header field.
-The provider execution and operation contracts carry an explicit versioned
-local input-bound proof. Until accepted authority supplies the missing provider
-framing/tokenizer rule, that proof is `authority-required`, dispatch admission
-is `blocked-authority-required`, and no schema may represent invented canonical
-byte counts or proved token bounds. This blocks live execution without changing
-or reinterpreting frozen Slice 5 v1 bytes.
+Provider execution and operation carry the accepted versioned local input-bound
+policy `openai-responses-o200k-byte-envelope/v1`. This maturity transition does
+not authorize provider dispatch, credentials, or later-package execution and
+does not change or reinterpret frozen Slice 5 v1 bytes.
 
 The candidate stage delivered-input and expansion contracts contain only snapshot-bound
 Bethesda/documentation stage facts and deterministic construction parameters. Candidate lanes,

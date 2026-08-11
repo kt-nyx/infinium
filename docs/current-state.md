@@ -3,7 +3,7 @@
 Status: Accepted
 Disposition: Current execution authority
 
-Last reviewed: 2026-08-10
+Last reviewed: 2026-08-11
 Owner: Project owner
 
 This is the only document that states the live milestone, slice, work-package,
@@ -17,11 +17,12 @@ review history.
 |---|---|
 | Milestone | `M1` - active |
 | Active slice | `M1/S6` - owner-accepted; implementation-active |
-| Current authorized work | `M1/S6/WP1` only: contracts, codecs, migration, finite-bound policy, answer-free examples, public authority updates, focused verification, review, correction, and re-review under the accepted Slice 6 plan |
+| Current authorized work | `M1/S6/WP2` only: capability and price snapshots, atomic budget/reservation/final-gate contracts and services, settlement, projections, replay, and deterministic non-network simulation under the accepted Slice 6 plan |
 | Accepted Slice 5 candidate | Final cleanup implementation `5514919b8f742d00e59752fa7125da487a390926`, following public-fixture consolidation and protocol `/4` retirement |
+| Accepted Slice 6 WP1 candidate | `61b90314d8273749849f590b303814008fa2fdfa`; nine Slice 6 contracts are `Implementation-active` and the accepted local input-bound policy is `openai-responses-o200k-byte-envelope/v1` |
 | Accepted Slice 6 plan | Explicit stateless/cache-off ADR-0025 conformance closure; no separate ADR; eleven packages with distinct native/live authorization gates |
-| Next eligible action | Implement and independently accept `M1/S6/WP1` from the exact accepted plan; create the Slice 6 implementation record before product edits |
-| Later work | The orchestrator may advance WP1-WP3 and WP5-WP8 only through accepted prerequisite/package gates while updating this handoff. WP4 and WP9-WP11 always require their exact fresh owner authorization; no Credential Manager or provider request is authorized now |
+| Next eligible action | Implement and independently accept `M1/S6/WP2` from the exact accepted plan; remain non-live and credential-free |
+| Later work | The orchestrator may advance WP2-WP3 and WP5-WP8 only through accepted prerequisite/package gates while updating this handoff. WP4 and WP9-WP11 always require their exact fresh owner authorization; no Credential Manager or provider request is authorized now |
 | Execution policy | [Repository execution policy](execution-policy.md) |
 | Milestone plan | [M1 backend semantic proof](plans/milestones/m1/plan.md) |
 | Slice entry | [Slice 6 current summary and navigation](plans/milestones/m1/slices/s6/README.md) |
@@ -34,7 +35,10 @@ plan and accepted explicit `reasoning.context: "current_turn"`, standard
 reasoning mode, and explicit prompt-cache mode with no cache breakpoint/key as
 ADR-0025 conformance closure. No separate ADR is required.
 
-This handoff opens only `M1/S6/WP1`. Plan acceptance permits automatic
+WP1 is accepted at exact candidate
+`61b90314d8273749849f590b303814008fa2fdfa`. Its nine Slice 6 contracts are
+`Implementation-active`, while Slice 5 v1 remains `Slice-frozen`. This handoff
+opens only `M1/S6/WP2`. Plan acceptance permits automatic
 progression among the named non-live packages only after each prerequisite
 package is independently accepted and this file is advanced to the exact next
 package. It does not authorize the WP4 disposable native Credential Manager

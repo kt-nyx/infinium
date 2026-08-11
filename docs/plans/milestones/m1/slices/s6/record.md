@@ -2116,3 +2116,66 @@ The earlier 56,447-byte statement is superseded: the exact tracked
 `wp1-contract-traceability.v1.json` is 455,519 bytes with the same verified
 SHA-256
 `b9ea10640da0440d7d3614ed201a68ba8231097016959c0b5eeaacce62a9a238`.
+
+## WP1 final acceptance and WP2 handoff — 2026-08-11
+
+M1/S6/WP1 is accepted at exact final candidate
+`61b90314d8273749849f590b303814008fa2fdfa`. The final fresh, read-only
+targeted reviewer `/root/wp1_policy_pin_closure_review` returned `ACCEPT`
+after verifying the persisted input-bound policy pin, its direct SQL and
+traceability regressions, and the bounded closure evidence. This is the final
+WP1 judgment; it does not reopen product semantics or authorize later-package
+effects.
+
+The finite acceptance ledger remains frozen at
+`docs/plans/milestones/m1/slices/s6/wp1-acceptance-ledger.v1.json`, 32,022
+bytes with SHA-256
+`a120e78ce0ab3e1f785b8df936e09563cc6dabb04875a808b87dbfba0259e6ce`.
+All 13 ledger items are satisfied. The accepted repository-local input-bound
+policy is `openai-responses-o200k-byte-envelope/v1`; the final persistence
+correction admits only that exact policy ID/version at both authorization and
+request boundaries and rejects arbitrary asserted policies.
+
+Final retained evidence is:
+
+1. Focused Release checks passed: provider/finite/lifecycle 20/0/0;
+   provider/helper/output contracts 22/0/0; schema-6/persistence/backup-restore
+   18/0/0; direct SQL policy pin 1/0/0; and semantic traceability 1/0/0.
+2. `Contracts` passed 22/0/0. `StateSurfaces` and `StateTotality` each passed
+   27/0/0 state checks and 18/0/0 persistence/relational/adversarial checks.
+   The final 1,597-byte `StateTotality` receipt has SHA-256
+   `9067dfe26c8f0a2141867550f22c062842555196d5ae683d30450ad28957ea30`
+   and truthfully records network and credential permissions as false.
+3. The Release category floor passed Unit 184/0/1, Contract 127/0/0,
+   Integration 70/0/0, Evaluation 75/0/8, Security 111/0/3, and Fault
+   105/0/3. The unfiltered solution passed Unit 192/0/1, Contract 155/0/0,
+   Integration 68/0/0, and Evaluation 53/0/8. The complete non-live analysis
+   pipeline passed through `All`; its final 764-byte receipt has SHA-256
+   `4d63a9463b11780da5f9e292953b1a41f9dc6385b854476905d0764e7b609713`.
+4. Candidate-bound `Layer6Review` passed against baseline
+   `6ac66e7d79c63a231bbbf22209015a894cd4bd6d` and candidate
+   `61b90314d8273749849f590b303814008fa2fdfa`. Its 1,655-byte receipt has
+   SHA-256
+   `ab134ad60954d4fac3fd1ca4951e94418756207710c27e7c3a59eaadf703cadd`,
+   with zero allowed-path, strict-JSON, relative-link, or private/archive
+   failures.
+5. Frozen Slice 5 v1 bytes and semantics, helper-v1 independent decoding,
+   deterministic generation, closed-world public authority, migration,
+   backup/restore, projections, replay, forbidden-field scans, and protected
+   boundary checks passed. No expected semantic answer or product-authored
+   truth entered the public examples.
+
+After acceptance, the nine Slice 6 contracts advance together from `Proposed`
+to `Implementation-active`, as required by Slice 6 plan section 12. Their
+generated field-to-seam traceability inventory is now maturity-accurate and
+maturity-neutral in omission explanations: 444,790 bytes with SHA-256
+`e90bdc0647a56bcbbbbf7760b683d2121cf4adceef79f03b454995f944724d1d`.
+This metadata transition changes no schema, protobuf, persistence, fixture, or
+product behavior. Slice 5 v1 contracts remain `Slice-frozen`.
+
+`docs/current-state.md` now authorizes only M1/S6/WP2. Automatic non-live
+progression remains limited by the accepted plan and independent package
+acceptance. WP4 and WP9-WP11 retain their exact fresh owner gates. No network,
+DNS, provider, Credential Manager, native credential, private fixture, sibling
+repository, legacy/evaluator archive, helper execution, WP2 implementation,
+amend, or push action occurred during WP1 acceptance and handoff.

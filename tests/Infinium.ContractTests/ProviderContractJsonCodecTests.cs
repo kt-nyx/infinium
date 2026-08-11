@@ -1628,7 +1628,7 @@ public sealed class ProviderContractJsonCodecTests
     {
         using JsonDocument inventory = JsonDocument.Parse(File.ReadAllBytes(TestRepository.PathFromRoot(
             "docs", "plans", "milestones", "m1", "slices", "s6", "wp1-contract-traceability.v1.json")));
-        Assert.AreEqual("Proposed", inventory.RootElement.GetProperty("maturity").GetString());
+        Assert.AreEqual("Implementation-active", inventory.RootElement.GetProperty("maturity").GetString());
         JsonElement[] contracts = inventory.RootElement.GetProperty("contracts").EnumerateArray().ToArray();
         Assert.AreEqual(9, contracts.Length);
         CollectionAssert.AreEquivalent(
@@ -1824,8 +1824,8 @@ public sealed class ProviderContractJsonCodecTests
             AssertTraceMapping(contracts, schema, path,
                 $"provider_operation_authorizations.input_bound_policy_{suffix}",
                 $"provider_requests.input_bound_policy_{suffix}");
-            AssertTraceOmission(contracts, schema, path, "output", path, "dispatch-blocked");
-            AssertTraceOmission(contracts, schema, path, "replay", path, "dispatch-blocked");
+            AssertTraceOmission(contracts, schema, path, "output", path, "current closed contract");
+            AssertTraceOmission(contracts, schema, path, "replay", path, "current closed contract");
         }
     }
 

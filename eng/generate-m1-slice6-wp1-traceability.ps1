@@ -475,7 +475,7 @@ function Get-Projection([string] $Schema, [string] $Path, [bool] $Replay) {
             }
             return [ordered]@{ omission_reason = $reason }
         }
-        return [ordered]@{ omission_reason = "$Path has no semantically equivalent $(if($Replay){'network-free replay'}else{'public application output'}) field while WP1 remains Proposed and dispatch-blocked." }
+        return [ordered]@{ omission_reason = "$Path has no semantically equivalent $(if($Replay){'network-free replay'}else{'public application output'}) field in the current closed contract." }
     }
     return [ordered]@{ file='contracts/protobuf/infinium/application/v1/application.proto'; message=$message; field=$field }
 }
@@ -500,8 +500,8 @@ foreach ($schemaName in $schemaNames) {
 }
 $result = [ordered]@{
     traceability_schema_version = 2
-    maturity = 'Proposed'
-    authority_boundary = 'M1/S6/WP1 blocked-only pre-proof contract closure'
+    maturity = 'Implementation-active'
+    authority_boundary = 'M1/S6/WP1 accepted contract closure; later-package execution remains separately gated'
     contracts = $contracts
 }
 $json = ($result | ConvertTo-Json -Depth 32) -replace "`r`n", "`n"
