@@ -55,8 +55,7 @@ enum HelperOutcomeV2 {
 enum InputBoundProofStatusV2 {
   INPUT_BOUND_PROOF_STATUS_V2_UNSPECIFIED = 0;
   INPUT_BOUND_PROOF_STATUS_V2_AUTHORITY_REQUIRED = 1;
-  reserved 2;
-  reserved "INPUT_BOUND_PROOF_STATUS_V2_PROVED";
+  INPUT_BOUND_PROOF_STATUS_V2_PROVED = 2;
 }
 
 // Private-handle-only Slice 6 protocol. Decoders reject unknown fields at
@@ -77,16 +76,31 @@ message HelperPrivateFrameV2 {
 }
 
 message HelperBootstrapV2 {
-  infinium.domain.v1.OperationId operation_id = 1;
-  infinium.domain.v1.AttemptId attempt_id = 2;
+  reserved 1, 2;
+  reserved "operation_id", "attempt_id";
   uint64 coordinator_fencing_epoch = 3;
   infinium.common.v1.Instant expires_at = 4;
   bytes one_use_nonce_fingerprint_sha256 = 5;
+  string command_id = 6;
+  oneof subject {
+    CredentialSubjectV2 credential = 10;
+    ProviderDispatchSubjectV2 provider_dispatch = 11;
+  }
+}
+
+message CredentialSubjectV2 {
+  infinium.domain.v1.ProviderAccessProfileId access_profile_id = 1;
+  infinium.domain.v1.CredentialGenerationId generation_id = 2;
+}
+
+message ProviderDispatchSubjectV2 {
+  infinium.domain.v1.OperationId operation_id = 1;
+  infinium.domain.v1.AttemptId attempt_id = 2;
 }
 
 message HelperAssignmentV2 {
-  infinium.domain.v1.OperationId operation_id = 1;
-  infinium.domain.v1.AttemptId attempt_id = 2;
+  reserved 1, 2;
+  reserved "operation_id", "attempt_id";
   infinium.domain.v1.ProviderAccessProfileId access_profile_id = 3;
   infinium.domain.v1.CredentialGenerationId generation_id = 4;
   uint64 generation_ordinal = 5;
@@ -97,6 +111,10 @@ message HelperAssignmentV2 {
   ProviderOperationKindV2 operation_kind = 10;
   string assignment_id = 11;
   string command_id = 12;
+  oneof subject {
+    CredentialSubjectV2 credential = 13;
+    ProviderDispatchSubjectV2 provider_dispatch = 14;
+  }
   reserved 90 to 99;
   reserved "credential_target", "provider_secret", "secret_bytes",
       "host", "url", "fallback_profile_id";
@@ -113,6 +131,8 @@ message ProviderRequestV2 {
   ProviderEndpointV2 endpoint_identity = 8;
   InputBoundProofV2 input_bound_proof = 9;
   string request_id = 10;
+  infinium.common.v1.Instant confirmed_at = 11;
+  bytes request_fingerprint_sha256 = 12;
 }
 
 message InputBoundProofV2 {
@@ -157,11 +177,13 @@ message DispatchRevalidationV2 {
   InputBoundProofV2 input_bound_proof = 19;
   infinium.common.v1.Instant dispatch_deadline = 20;
   HelperLimitsV2 limits = 21;
+  infinium.common.v1.Instant evaluated_at = 22;
+  string request_id = 23;
 }
 
 message HelperReceiptV2 {
-  infinium.domain.v1.OperationId operation_id = 1;
-  infinium.domain.v1.AttemptId attempt_id = 2;
+  reserved 1, 2;
+  reserved "operation_id", "attempt_id";
   HelperOutcomeV2 outcome = 3;
   bool transport_may_have_started = 4;
   infinium.common.v1.OptionalUInt64 input_tokens = 5;
@@ -178,6 +200,10 @@ message HelperReceiptV2 {
   InputBoundProofV2 input_bound_proof = 16;
   bool outcome_has_response = 17;
   string command_id = 18;
+  oneof subject {
+    CredentialSubjectV2 credential = 19;
+    ProviderDispatchSubjectV2 provider_dispatch = 20;
+  }
   reserved 90 to 99;
   reserved "credential_target", "provider_secret", "secret_bytes",
       "authorization_header";

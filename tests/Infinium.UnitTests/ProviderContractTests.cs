@@ -140,6 +140,20 @@ public sealed class ProviderContractTests
             {
                 ProviderOperations = [blocked with { AuthorizationId = Id("authorization-1") }],
             }));
+        OpaqueId authorizationId = Id("authorization-1");
+        Assert.ThrowsExactly<NotSupportedException>(() =>
+            ProviderOperationContractInvariants.Validate(output with
+            {
+                ProviderOperations = [blocked with
+                {
+                    Availability = "live",
+                    Live = true,
+                    AuthorizationId = authorizationId,
+                    LiveAuthorizationId = authorizationId,
+                    AcceptedInputBoundPolicyId = "future-accepted-policy",
+                    AcceptedInputBoundPolicyVersion = "future-accepted-version",
+                }],
+            }));
 
         ProviderQuantityContract absent = U();
         CliSummaryV2Document cli = new(ContractConstants.CliSummaryV2SchemaId, "1", Id("run-1"), Fingerprint,
@@ -148,25 +162,61 @@ public sealed class ProviderContractTests
         ProviderOperationContractInvariants.Validate(cli);
         Assert.ThrowsExactly<InvalidOperationException>(() =>
             ProviderOperationContractInvariants.Validate(cli with { DispatchCount = Q(0) }));
+        Assert.ThrowsExactly<NotSupportedException>(() => ProviderOperationContractInvariants.Validate(cli with
+        {
+            ProviderState = "live",
+            AcceptedInputBoundPolicyId = "future-accepted-policy",
+            AcceptedInputBoundPolicyVersion = "future-accepted-version",
+            LiveAuthorizationId = authorizationId,
+        }));
     }
 
     [TestMethod]
     [TestCategory("Unit")]
     public void ProviderApplicationConfirmationRetainsEveryExactBindingButCannotConfirm()
     {
+        byte[] canonicalRequest = [1, 2, 3];
+        Sha256Fingerprint requestFingerprint = new(Convert.ToHexStringLower(
+            System.Security.Cryptography.SHA256.HashData(canonicalRequest)));
         SelectAndConfirmProviderOperationCommand command = new(
             Id("command-1"), Id("operation-1"), ProviderOperationKind.SourceClaimExtraction,
             "evidence-acquisition-run", Id("acquisition-1"), Id("job-1"), Id("install-1"), Id("context-1"), Id("config-1"),
-            Id("manifest-1"), Id("profile-1"), Id("generation-1"), 0, Id("capability-1"), Fingerprint,
-            Fingerprint, 1024, Fingerprint, Id("price-1"), Fingerprint, Fingerprint, Id("prompt-1"),
+            Id("manifest-1"), Id("profile-1"), Id("generation-1"), 0, Id("capability-1"), requestFingerprint,
+            requestFingerprint, canonicalRequest, canonicalRequest.Length, Fingerprint, Id("price-1"), Fingerprint, Fingerprint, Id("prompt-1"),
             Fingerprint, Id("schema-1"), Fingerprint, BlockedProof(),
             new(65_536, 73_728, 4_096, 1_048_576, 1, 600_000_000, 120_000),
-            UtcTimestamp.Parse("2026-08-10T00:02:00.0000000+00:00"), 1, Now);
+            UtcTimestamp.Parse("2026-08-10T00:02:00.0000000+00:00"), 1, Now, Now);
         Assert.ThrowsExactly<NotSupportedException>(() => ProviderApplicationContractInvariants.Validate(command));
         Assert.ThrowsExactly<InvalidOperationException>(() =>
             ProviderApplicationContractInvariants.Validate(command with { CanonicalRequestBytes = 65_537 }));
         Assert.ThrowsExactly<InvalidOperationException>(() =>
             ProviderApplicationContractInvariants.Validate(command with { CoordinatorFencingEpoch = 0 }));
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
+            ProviderApplicationContractInvariants.Validate(command with { RequestFingerprint = Fingerprint }));
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
+            ProviderApplicationContractInvariants.Validate(command with
+            {
+                DispatchDeadline = UtcTimestamp.Parse("2026-08-10T00:02:00.0010000+00:00"),
+            }));
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    public void ProviderSemanticCandidatesRequireExactOwnersAndAdmissionEvidence()
+    {
+        HypothesisProposalContract admitted = new(
+            Id("proposal-1"), Id("candidate-1"), "synthetic hypothesis", [Id("evidence-1")], [], [],
+            ProposalAdmissionState.Admitted, "synthetic admission");
+        CandidateInvestigationDocument candidate = new(
+            ContractConstants.CandidateInvestigationSchemaId, "1", Id("operation-1"), "analysis-run", Id("run-1"),
+            Id("run-1"), Id("candidate-1"), [Id("participant-1")], ["subject"], [Id("path-1")],
+            Id("closure-1"), [Id("evidence-1")], [admitted], [], [], [Id("validation-1")], [Id("admission-1")]);
+        ProviderOperationContractInvariants.Validate(candidate);
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
+            ProviderOperationContractInvariants.Validate(candidate with { OwnerId = Id("run-other") }));
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
+            ProviderOperationContractInvariants.Validate(candidate with { ValidationIds = [] }));
+        Assert.ThrowsExactly<ArgumentException>(() => Id(" "));
     }
 
     [TestMethod]
@@ -194,7 +244,7 @@ public sealed class ProviderContractTests
         "not-available", Now, Now, UtcTimestamp.Parse("2026-08-10T00:02:00.0000000+00:00"), 1, Now);
 
     private static ProviderResponseDocument Response() => new(
-        ContractConstants.ProviderResponseSchemaId, "1", Id("response-1"), Id("operation-1"), null,
+        ContractConstants.ProviderResponseSchemaId, "1", Id("response-1"), Id("operation-1"), null, null,
         null, BlockedProof(), ProviderAvailabilityState.Unavailable, null, null, 1_048_576, null, null,
         ProviderAvailabilityState.Unavailable, null, null, null, null, ProviderAvailabilityState.Unavailable,
         ProviderResponseState.Unknown, null, null, null, "gpt-5.6-sol", null, "default", null,

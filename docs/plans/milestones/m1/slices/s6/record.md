@@ -819,3 +819,121 @@ private evidence was invented. No network/DNS/provider, Credential Manager,
 native credential, private fixture, sibling repository, legacy/evaluator
 archive, later-package, current-state, push, amend, or frozen Slice 5 v1 edit
 occurred.
+
+## Sixth-cycle relational-semantic closure correction — 2026-08-11
+
+Fresh contract and boundary review rejected candidate
+`856454c47abd1e10c0461e3141200a6772ef70ec`. The findings were recoverable
+WP1 relational, semantic, wire, output-shape, and traceability defects. The
+accepted authority remains internally consistent. No repository-local
+tokenizer/provider-framing proof was supplied or accepted, so the sole
+owner-controlled exit remains unchanged and no successful provider graph was
+constructed.
+
+### Closed relational and semantic boundary
+
+- Application, domain, helper, JSON, protobuf, retained payload metadata, and
+  schema-6 persistence now bind `request_fingerprint` to the SHA-256 identity
+  of the exact canonical request bytes. Fingerprint substitution is rejected
+  at every constructible seam.
+- Requested, confirmed, evaluated, and dispatch-deadline instants retain their
+  exact seam values. Both the qualification and semantic ceilings bound the
+  elapsed deadline, and injected-time expiry, rollback, and overrun cases fail
+  closed.
+- Operation roots now bind the exact owner kind, owner id, job, command,
+  analysis/acquisition parent, snapshot, context, configuration, manifest,
+  application, and cost roots. Source-claim acquisition ownership and
+  analysis-run qualification/candidate ownership cannot cross-bind.
+- Access-profile projection inserts and updates require an exact profile,
+  generation, revocation epoch, intent, lifecycle, verification, account,
+  billing, capability, recovery, and cleanup root. Projection version/time and
+  credential-intent time advance monotonically; cross-generation,
+  cross-profile, empty-identity, and intent-state/target substitutions are
+  rejected.
+- Helper bootstrap, credential assignment, and credential receipt shapes no
+  longer invent provider operation/attempt identities. Credential
+  profile/generation subjects and provider operation/attempt subjects are
+  discriminated and receipts bind the exact assignment, command, subject, and
+  outcome. Application receipts similarly discriminate enrollment from the
+  authority-blocked operation request. Budget pages validate every cursor,
+  item, scope, amount relation, and typed failure result.
+- Authority-blocked operation and response projections retain exact owner/job
+  bindings and exact quantity availability: dispatch count is available zero,
+  while token, price, billing, rate, and credit facts are unavailable. No
+  unavailable value is persisted as fabricated live evidence.
+- The future response contract and schema-6 tables represent only a
+  proof-qualified available response: exact authorization/request/fence,
+  bounded raw response and header payload metadata, HTTP status, client and
+  provider request identities, requested/returned model and tier, usage,
+  billing/rate/credit availability, and rate-limit facts are retained.
+  Transport-only failures remain transport events. This future shape is
+  deliberately unconstructible in current domain/application factories and
+  validators until an accepted input-bound policy exists.
+- Source-claim and candidate semantic projections validate exact nonblank
+  owners/runs and require validation plus application/admission links before
+  admitted content can surface. The application projection messages reject
+  missing or cross-bound admission evidence.
+- Transport event and credential lifecycle ordering are durable. Qualification
+  usage is constrained by its operation-specific dispatch, input, output,
+  reasoning, raw-response, and cost ceilings rather than the wider semantic
+  maxima.
+- Run-output and CLI v2 now retain the required future live publication shape
+  with explicit accepted-policy and exact authorization bindings, while all
+  current non-live shapes reject those bindings and every fabricated
+  downstream identity. Current runtime validation rejects even a structurally
+  proof-qualified future live shape because no accepted policy exists.
+- The deterministic per-field trace maps owner/command authority to ADR-0016,
+  acquisition roots to ADR-0002 plus ADR-0016, request/proof/response facts to
+  ADR-0025, and price/budget facts to ADR-0023. Actual blocked-root,
+  acquisition-link, admission, request, response, usage, and rate-limit
+  columns replace false unavailable-persistence claims.
+
+The nine Slice 6 contracts remain `Proposed`; WP1 remains `Deferred` solely on
+the missing accepted repository-local input-bound proof. This correction does
+not accept WP1, authorize native credential or live provider work, advance
+`docs/current-state.md`, or unblock WP2.
+
+### Superseding identities and exact blocked receipt root
+
+- Schema-6 fingerprint:
+  `0e1c6156548a7cc3144a1e41e6951c5289592ee8f8fea9b15e600872c363bd03`.
+- Helper-v2 transitive fingerprint:
+  `402d9dfc0b57c888883919d03159247897e6fbf2eb543fb9f6d7ff2bec2f2157`.
+- Full application protobuf-set fingerprint:
+  `e5455a55be58ca3349085d082e9cede8c9d19fba0a7262a1d32e720f86fa3898`.
+- Answer-free example: 14,088 bytes,
+  `61b11d3c1ce342533c9a68f74193939c17370af3aaae8aa95d4e758e1b591467`.
+- Public registry: 8,790 bytes,
+  `a38beefc4d9b6bb38f724913a4096bdf956de5e7519a5b07fc6ef3e79a16f01f`.
+- Per-field traceability: 378,717 bytes,
+  `4b6bf11377272e6289fd4caa4700dc25a2d7717dbcb2c25866edaf7832be98f2`.
+- Exact gate `OutputRoot`:
+  `artifacts/m1-slice6/wp1-sixth-relational-semantic-final`.
+
+### Sixth-cycle verification
+
+1. Release solution build passed with zero warnings and zero errors. Focused
+   provider, semantic, helper, application, trace, fixture, migration,
+   relational-adversarial, backup, and restore checks passed: Unit 14/0/0 and
+   Contract 11/0/0.
+2. `Contracts` passed 19/0/0 contract and 17/0/0 unit checks.
+   `StateSurfaces` passed 5/0/0 migration/relational checks.
+   `StateTotality` ran the same 17/0/0 state and 5/0/0 relational checks,
+   wrote `blocked-authority-required` with network and credential permissions
+   false and the superseding schema fingerprint above, then exited 1 solely
+   because the accepted repository-local tokenizer/provider-framing proof is
+   absent.
+3. The final Release category matrix passed: Unit 161/0/1; Contract 124/0/0;
+   Integration 70/0/0; Evaluation 75/0/8; Security 111/0/3; and Fault
+   105/0/3. The final unfiltered Release projects passed Unit 169/0/1,
+   Contract 152/0/0, Integration 68/0/0, and Evaluation 53/0/8.
+4. Deterministic trace regeneration, `dotnet format --verify-no-changes`,
+   dependency-manifest check, documentation validation, `git diff --check`,
+   current-state and frozen Slice 5 v1 immutability, protected-path and
+   answer-isolation checks, and forbidden secret/live-effect scans passed.
+
+No proof, gate result, owner acceptance, credential, provider response, or
+private evidence was invented. No network/DNS/provider, Credential Manager,
+native credential, private fixture, sibling repository, legacy/evaluator
+archive, later-package, current-state, push, amend, or frozen Slice 5 v1 edit
+occurred.

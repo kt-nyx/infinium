@@ -173,8 +173,8 @@
       "partition": "development",
       "package_path": "fixtures/public/contracts/provider-wp1",
       "authority_file": "fixtures/public/contracts/provider-wp1/contract-examples.v1.json",
-      "authority_bytes": 13969,
-      "authority_sha256": "e0e5f1584452f108b63209398903e568e14e5eb6dae7d817c386b8b37c36eaec",
+      "authority_bytes": 14088,
+      "authority_sha256": "61b11d3c1ce342533c9a68f74193939c17370af3aaae8aa95d4e758e1b591467",
       "authority_status": "Proposed"
     }
   ]

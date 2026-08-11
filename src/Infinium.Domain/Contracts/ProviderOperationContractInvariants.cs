@@ -196,6 +196,10 @@ public static class ProviderOperationContractInvariants
             || value.CanonicalRequestPayload.Fingerprint != value.RequestFingerprint
             || value.RequestedAt.Value > value.ConfirmedAt.Value
             || value.ConfirmedAt.Value >= value.DispatchDeadline.Value
+            || value.DispatchDeadline.Value - value.ConfirmedAt.Value
+                > TimeSpan.FromMilliseconds(value.Limits.DeadlineMilliseconds)
+            || value.DispatchDeadline.Value - value.RequestedAt.Value
+                > TimeSpan.FromMilliseconds(value.Limits.DeadlineMilliseconds)
             || value.RecordedAt.Value == default
             || value.CoordinatorFencingEpoch <= 0
             || value.TransportState is not ("not-started" or "may-have-started" or "started" or "completed" or "failed-known" or "ambiguous")
@@ -240,7 +244,7 @@ public static class ProviderOperationContractInvariants
             || value.RecordedAt.Value == default
             || value.Availability != ProviderAvailabilityState.Unavailable
             || value.State != ProviderResponseState.Unknown
-            || value.RequestId is not null || value.DispatchFenceId is not null
+            || value.AuthorizationId is not null || value.RequestId is not null || value.DispatchFenceId is not null
             || value.RawResponsePayload is not null || value.RawResponseBytes is not null
             || value.ResponseHeadersPayload is not null || value.ResponseHeadersBytes is not null
             || value.ResponseHeadersAvailability != ProviderAvailabilityState.Unavailable
@@ -269,7 +273,13 @@ public static class ProviderOperationContractInvariants
         Validate(value.PriceSnapshot);
         ValidateBlockedInputBoundProof(value.InputBoundProof);
         if (string.IsNullOrWhiteSpace(value.OperationId.Value)
+            || value.OwnerKind is not ("analysis-run" or "evidence-acquisition-run")
             || string.IsNullOrWhiteSpace(value.OwnerId.Value)
+            || string.IsNullOrWhiteSpace(value.JobNodeId.Value)
+            || string.IsNullOrWhiteSpace(value.CommandId.Value)
+            || value.OperationKind == ProviderOperationKind.SourceClaimExtraction && value.OwnerKind != "evidence-acquisition-run"
+            || value.OperationKind is ProviderOperationKind.TransportQualification or ProviderOperationKind.CandidateInvestigation
+                && value.OwnerKind != "analysis-run"
             || string.IsNullOrWhiteSpace(value.InstallationSnapshotId.Value)
             || string.IsNullOrWhiteSpace(value.AnalysisContextId.Value)
             || string.IsNullOrWhiteSpace(value.EffectiveConfigurationId.Value)
@@ -306,7 +316,7 @@ public static class ProviderOperationContractInvariants
             || !Unique(value.ProviderOperations.Where(x => x.OperationKind is not null).Select(x => x.OperationKind))
             || !Unique(value.EvidenceAcquisitionRunIds) || !Unique(value.CapabilityDriftIds)
             || !Unique(value.PriceDriftIds) || !BoundedUniqueText(value.ProviderGaps)
-            || value.ProviderOperations.Any(x => x.Availability is not ("not-used" or "unavailable" or "blocked")))
+            || value.ProviderOperations.Any(x => x.Availability is not ("not-used" or "unavailable" or "blocked" or "live")))
         {
             throw new InvalidOperationException("Run output v2 cannot embed raw provider transport or secrets.");
         }
@@ -314,20 +324,33 @@ public static class ProviderOperationContractInvariants
         {
             bool none = publication.Availability is "not-used" or "unavailable";
             bool blocked = publication.Availability == "blocked";
+            bool live = publication.Availability == "live";
             bool sourceClaim = publication.OperationKind == ProviderOperationKind.SourceClaimExtraction;
             if (none != (publication.OperationId is null)
                 || (none && (publication.Live || publication.OperationKind is not null || publication.AcquisitionRunId is not null
                     || publication.AuthorizationId is not null || publication.ResponseId is not null
                     || publication.AdmissionId is not null || publication.UsageEntryId is not null
                     || publication.SettlementId is not null || publication.ReplayEdgeId is not null))
-                || publication.Live
+                || (publication.Live != live)
                 || (blocked && sourceClaim != (publication.AcquisitionRunId is not null))
                 || (blocked && (publication.OperationKind is null || publication.AuthorizationId is not null
                     || publication.ResponseId is not null || publication.AdmissionId is not null
                     || publication.UsageEntryId is not null || publication.SettlementId is not null
-                    || publication.ReplayEdgeId is not null)))
+                    || publication.ReplayEdgeId is not null
+                    || publication.AcceptedInputBoundPolicyId is not null
+                    || publication.AcceptedInputBoundPolicyVersion is not null
+                    || publication.LiveAuthorizationId is not null))
+                || (live && (publication.OperationId is null || publication.OperationKind is null
+                    || publication.AuthorizationId is null || publication.LiveAuthorizationId is null
+                    || publication.AuthorizationId != publication.LiveAuthorizationId
+                    || string.IsNullOrWhiteSpace(publication.AcceptedInputBoundPolicyId)
+                    || string.IsNullOrWhiteSpace(publication.AcceptedInputBoundPolicyVersion))))
             {
                 throw new InvalidOperationException("Run-output provider publication contradicts its availability or operation kind.");
+            }
+            if (live)
+            {
+                throw new NotSupportedException("Live run-output publication is modeled but unreachable until an accepted input-bound policy and exact live authorization exist.");
             }
         }
     }
@@ -339,13 +362,29 @@ public static class ProviderOperationContractInvariants
         if (string.IsNullOrWhiteSpace(value.RunId.Value)
             || value.LocalCliSummaryV1Fingerprint.Value.Length != 64
             || value.ContainsRawTransport || value.ContainsSecret
-            || value.ProviderState is not ("not-used" or "unavailable" or "blocked")
+            || value.ProviderState is not ("not-used" or "unavailable" or "blocked" or "live")
             || value.ReplayState is not ("not-available" or "retained-response" or "audit-only")
             || !BoundedUniqueText(value.Gaps)
             || new[] { value.DispatchCount, value.InputTokens, value.OutputTokens, value.ReasoningTokens,
                 value.CacheReadTokens, value.CacheWriteTokens, value.CalculatedNanoUsd, value.ReservedNanoUsd }.Any(x => !ValidQuantity(x)))
         {
             throw new InvalidOperationException("CLI summary v2 contains an invalid provider projection.");
+        }
+        if (value.ProviderState == "live")
+        {
+            if (string.IsNullOrWhiteSpace(value.AcceptedInputBoundPolicyId)
+                || string.IsNullOrWhiteSpace(value.AcceptedInputBoundPolicyVersion)
+                || value.LiveAuthorizationId is null
+                || string.IsNullOrWhiteSpace(value.LiveAuthorizationId.Value))
+            {
+                throw new InvalidOperationException("Live CLI summary shape requires an accepted proof policy and exact live authorization binding.");
+            }
+            throw new NotSupportedException("Live CLI summary is modeled but unreachable while WP1 input-bound authority is deferred.");
+        }
+        if (value.AcceptedInputBoundPolicyId is not null || value.AcceptedInputBoundPolicyVersion is not null
+            || value.LiveAuthorizationId is not null)
+        {
+            throw new InvalidOperationException("Non-live CLI summaries cannot carry live authorization or accepted-proof bindings.");
         }
         ProviderAvailabilityState expectedAvailability = value.ProviderState switch
         {
@@ -397,6 +436,8 @@ public static class ProviderOperationContractInvariants
         ArgumentNullException.ThrowIfNull(value);
         RequireHeader(value.SchemaId, value.SchemaVersion, ContractConstants.CandidateInvestigationSchemaId);
         if (string.IsNullOrWhiteSpace(value.OperationId.Value)
+            || string.IsNullOrWhiteSpace(value.OwnerId.Value)
+            || string.IsNullOrWhiteSpace(value.AnalysisRunId.Value)
             || string.IsNullOrWhiteSpace(value.CandidateId.Value)
             || string.IsNullOrWhiteSpace(value.DependencyClosureId.Value)
             || value.ParticipantIds.Count is 0 or > 32 || value.ParticipantIds.Count != value.ParticipantRoles.Count
@@ -409,7 +450,9 @@ public static class ProviderOperationContractInvariants
                 || !Unique(x.SupportingEvidenceIds) || !Unique(x.ContradictingEvidenceIds)
                 || x.SupportingEvidenceIds.Intersect(x.ContradictingEvidenceIds).Any()
                 || x.SupportingEvidenceIds.Concat(x.ContradictingEvidenceIds).Any(id => !value.EvidenceIds.Contains(id))
-                || !BoundedUniqueText(x.MissingInformation))
+                || !BoundedUniqueText(x.MissingInformation)
+                || (x.State == ProposalAdmissionState.Admitted
+                    && (value.ValidationIds.Count == 0 || value.AdmissionLinkIds.Count == 0)))
             || !Unique(value.CausalPathIds) || !Unique(value.EvidenceIds)
             || !BoundedUniqueText(value.Abstentions) || !BoundedUniqueText(value.Gaps)
             || !Unique(value.ValidationIds) || !Unique(value.AdmissionLinkIds))

@@ -34,9 +34,31 @@ public static class ApplicationProviderContractValidator
     {
         if (value.ResultCase == ListProviderBudgetResponse.ResultOneofCase.None
             || value.ResultCase == ListProviderBudgetResponse.ResultOneofCase.Page
-                && value.Page.Items.Count > 100)
+                && (value.Page.Items.Count > 100 || value.Page.Next?.OpaqueValue.Length > 512))
         {
             throw new InvalidDataException("Provider budget response must select exactly one bounded success or failure result.");
+        }
+        if (value.ResultCase == ListProviderBudgetResponse.ResultOneofCase.Failure)
+        {
+            if (!Enum.IsDefined(value.Failure.Code)
+                || value.Failure.Code == Infinium.Contracts.Protobuf.Common.V1.FailureCode.Unspecified
+                || value.Failure.Detail.Length > 1024)
+            {
+                throw new InvalidDataException("Provider budget failure must use a typed bounded failure result.");
+            }
+            return;
+        }
+        foreach (ProviderBudgetPayload item in value.Page.Items)
+        {
+            if (item.ScopeKind is not ("operation" or "evidence-acquisition-run" or "analysis-run"
+                or "provider-profile" or "provider-account" or "global")
+                || string.IsNullOrWhiteSpace(item.ScopeId) || item.ScopeId.Length > 128
+                || item.SettledNanoUsd > item.ReservedNanoUsd
+                || item.UnresolvedNanoUsd > item.ReservedNanoUsd
+                || item.SettledNanoUsd > item.ReservedNanoUsd - item.UnresolvedNanoUsd)
+            {
+                throw new InvalidDataException("Provider budget item contradicts its exact scope or finite amounts.");
+            }
         }
     }
 
@@ -154,8 +176,18 @@ public static class ApplicationProviderContractValidator
             if (value.InputBoundPolicyId != "unresolved-openai-responses-framing"
                 || value.InputBoundPolicyVersion != "authority-required"
                 || value.State != ProviderOperationLifecycleState.InputBoundBlocked || anyDownstream
-                || AnyValue(value.DispatchCount, value.InputTokens, value.OutputTokens, value.TotalTokens, value.ReasoningTokens,
+                || value.OwnerKind is not ("analysis-run" or "evidence-acquisition-run")
+                || value.OperationKind == ProviderOperationKind.SourceClaimExtraction && value.OwnerKind != "evidence-acquisition-run"
+                || value.OperationKind is ProviderOperationKind.TransportQualification or ProviderOperationKind.CandidateInvestigation
+                    && value.OwnerKind != "analysis-run"
+                || string.IsNullOrWhiteSpace(value.OwnerId) || string.IsNullOrWhiteSpace(value.JobNodeId)
+                || AnyValue(value.InputTokens, value.OutputTokens, value.TotalTokens, value.ReasoningTokens,
                     value.CacheReadTokens, value.CacheWriteTokens, value.CalculatedNanoUsd, value.ReservedNanoUsd)
+                || value.DispatchCount.Availability != ProviderAvailabilityState.Available
+                || !value.DispatchCount.HasValue || value.DispatchCount.Value != 0
+                || new[] { value.InputTokens, value.OutputTokens, value.TotalTokens, value.ReasoningTokens,
+                    value.CacheReadTokens, value.CacheWriteTokens, value.CalculatedNanoUsd, value.ReservedNanoUsd }
+                    .Any(quantity => quantity.Availability != ProviderAvailabilityState.Unavailable)
                 || value.SettlementState != ProviderSettlementState.NotStarted
                 || value.ReplayState != ProviderReplayState.NotAvailable || value.UnresolvedHold)
             {
@@ -177,9 +209,12 @@ public static class ApplicationProviderContractValidator
             || value.InputBoundProofStatus != InputBoundProofStatus.AuthorityRequired
             || value.InputBoundPolicyId != "unresolved-openai-responses-framing"
             || value.InputBoundPolicyVersion != "authority-required"
-            || Has(value.RequestId) || value.DispatchFenceId is not null || value.RawResponse is not null
+            || Has(value.AuthorizationId) || Has(value.RequestId) || value.DispatchFenceId is not null || value.RawResponse is not null
             || value.ResponseHeaders is not null || value.HasHttpStatus || Has(value.ProviderResponseId)
             || Has(value.ClientRequestId) || value.BillingEvidence is not null
+            || value.BillingAvailability != ProviderAvailabilityState.Unavailable
+            || value.RateAvailability != ProviderAvailabilityState.Unavailable
+            || value.CreditAvailability != ProviderAvailabilityState.Unavailable
             || Has(value.ProviderRequestId) || value.ProviderRequestIdAvailability != ProviderAvailabilityState.Unavailable
             || value.ResponseHeadersAvailability != ProviderAvailabilityState.Unavailable
             || value.ResponseState != "unknown" || Has(value.RefusalCode) || Has(value.IncompleteReason)
@@ -198,11 +233,16 @@ public static class ApplicationProviderContractValidator
         Validate(value.CacheWriteTokens);
         Validate(value.PricedToolCalls);
         Validate(value.CalculatedNanoUsd);
-        if (AnyValue(value.DispatchCount, value.InputTokens, value.OutputTokens, value.TotalTokens,
-            value.ReasoningTokens, value.CacheReadTokens, value.CacheWriteTokens,
-            value.PricedToolCalls, value.CalculatedNanoUsd))
+        if (value.DispatchCount.Availability != ProviderAvailabilityState.Available
+            || !value.DispatchCount.HasValue || value.DispatchCount.Value != 0
+            || AnyValue(value.InputTokens, value.OutputTokens, value.TotalTokens,
+                value.ReasoningTokens, value.CacheReadTokens, value.CacheWriteTokens,
+                value.PricedToolCalls, value.CalculatedNanoUsd)
+            || new[] { value.InputTokens, value.OutputTokens, value.TotalTokens, value.ReasoningTokens,
+                value.CacheReadTokens, value.CacheWriteTokens, value.PricedToolCalls, value.CalculatedNanoUsd }
+                .Any(quantity => quantity.Availability != ProviderAvailabilityState.Unavailable))
         {
-            throw new InvalidDataException("Unavailable provider response cannot publish usage quantities.");
+            throw new InvalidDataException("Unavailable provider response must publish exact zero dispatch and no usage quantities.");
         }
     }
 
@@ -270,7 +310,10 @@ public static class ApplicationProviderContractValidator
             || !ValidInstant(value.RequestedAt) || !ValidInstant(value.ConfirmedAt)
             || Compare(value.RequestedAt, value.ConfirmedAt) > 0
             || Compare(value.ConfirmedAt, value.DispatchDeadline) >= 0
+            || ElapsedMilliseconds(value.ConfirmedAt, value.DispatchDeadline) > value.Limits.DeadlineMilliseconds
+            || ElapsedMilliseconds(value.RequestedAt, value.DispatchDeadline) > value.Limits.DeadlineMilliseconds
             || value.CoordinatorFencingEpoch == 0
+            || !value.RequestFingerprintSha256.Span.SequenceEqual(value.CanonicalRequestFingerprintSha256.Span)
             || !System.Security.Cryptography.SHA256.HashData(value.CanonicalRequestBody.Span)
                 .AsSpan().SequenceEqual(value.CanonicalRequestFingerprintSha256.Span))
         {
@@ -295,17 +338,77 @@ public static class ApplicationProviderContractValidator
         Validate(value);
     }
 
-    public static void Validate(ProviderCommandReceipt value, string expectedCommandId)
+    public static void Validate(
+        ProviderCommandReceipt value,
+        string expectedCommandId,
+        string? expectedOperationId = null,
+        ReadOnlySpan<byte> expectedRequestFingerprint = default,
+        string? expectedProfileId = null,
+        string? expectedGenerationId = null)
     {
         Require(value.CommandId, "command_id");
         Require(value.ReceiptId, "receipt_id");
-        if (value.CommandId != expectedCommandId || value.OperationId is null
+        bool enrollment = value.State == ProviderCommandState.EnrollmentIntentRecorded;
+        bool blockedOperation = value.State == ProviderCommandState.BlockedAuthorityRequired;
+        if (value.CommandId != expectedCommandId
             || !Enum.IsDefined(value.State) || value.State == ProviderCommandState.Unspecified
             || !ValidInstant(value.RequestedAt) || !ValidInstant(value.ConfirmedAt)
             || Compare(value.RequestedAt, value.ConfirmedAt) > 0
-            || value.State != ProviderCommandState.BlockedAuthorityRequired)
+            || enrollment != (value.SubjectCase == ProviderCommandReceipt.SubjectOneofCase.Enrollment)
+            || blockedOperation != (value.SubjectCase == ProviderCommandReceipt.SubjectOneofCase.Operation)
+            || (!enrollment && !blockedOperation))
         {
-            throw new InvalidDataException("Provider command receipt must bind the exact command and truthful authority block.");
+            throw new InvalidDataException("Provider command receipt kind, outcome, and subject are contradictory.");
+        }
+        if (enrollment)
+        {
+            Require(expectedProfileId, "expected_profile_id");
+            Require(expectedGenerationId, "expected_generation_id");
+            if (value.Enrollment.ProfileId?.Value != expectedProfileId
+                || value.Enrollment.GenerationId?.Value != expectedGenerationId)
+            {
+                throw new InvalidDataException("Enrollment receipt must bind the exact profile generation.");
+            }
+        }
+        else
+        {
+            Require(expectedOperationId, "expected_operation_id");
+            if (expectedRequestFingerprint.Length != 32
+                || value.Operation.OperationId?.Value != expectedOperationId
+                || !value.Operation.RequestFingerprintSha256.Span.SequenceEqual(expectedRequestFingerprint))
+            {
+                throw new InvalidDataException("Blocked operation receipt must bind the exact operation request identity.");
+            }
+        }
+    }
+
+    public static void Validate(SourceClaimExtractionPayload value)
+    {
+        Require(value.AcquisitionRunId, "acquisition_run_id");
+        Require(value.OperationId?.Value, "operation_id");
+        Require(value.OwnerId, "owner_id");
+        Require(value.ParentAnalysisRunId, "parent_analysis_run_id");
+        Require(value.ApplicationScopeId, "application_scope_id");
+        Require(value.CostAttributionScopeId, "cost_attribution_scope_id");
+        if (value.OwnerKind != "evidence-acquisition-run" || value.OwnerId != value.AcquisitionRunId
+            || value.ValidationIds.Count == 0 || value.ApplicationLinkIds.Count == 0
+            || !ValidUniqueIds(value.ValidationIds) || !ValidUniqueIds(value.ApplicationLinkIds))
+        {
+            throw new InvalidDataException("Source-claim projection must retain exact acquisition ownership and admission links.");
+        }
+    }
+
+    public static void Validate(CandidateInvestigationPayload value)
+    {
+        Require(value.OperationId?.Value, "operation_id");
+        Require(value.OwnerId, "owner_id");
+        Require(value.AnalysisRunId, "analysis_run_id");
+        Require(value.CandidateId, "candidate_id");
+        if (value.OwnerKind != "analysis-run" || value.OwnerId != value.AnalysisRunId
+            || value.ValidationIds.Count == 0 || value.AdmissionLinkIds.Count == 0
+            || !ValidUniqueIds(value.ValidationIds) || !ValidUniqueIds(value.AdmissionLinkIds))
+        {
+            throw new InvalidDataException("Candidate projection must retain exact analysis ownership and admission links.");
         }
     }
 
@@ -364,4 +467,20 @@ public static class ApplicationProviderContractValidator
         left.UnixSeconds != right.UnixSeconds
             ? left.UnixSeconds.CompareTo(right.UnixSeconds)
             : left.Nanoseconds.CompareTo(right.Nanoseconds);
+
+    private static ulong ElapsedMilliseconds(
+        Infinium.Contracts.Protobuf.Common.V1.Instant start,
+        Infinium.Contracts.Protobuf.Common.V1.Instant end)
+    {
+        long totalNanos = checked((end.UnixSeconds - start.UnixSeconds) * 1_000_000_000L
+            + end.Nanoseconds - start.Nanoseconds);
+        if (totalNanos <= 0)
+        {
+            throw new InvalidDataException("Dispatch deadline must follow its retained confirmation instant.");
+        }
+        return checked((ulong)((totalNanos + 999_999L) / 1_000_000L));
+    }
+
+    private static bool ValidUniqueIds(IEnumerable<string> values) =>
+        values.All(Has) && values.Distinct(StringComparer.Ordinal).Count() == values.Count();
 }

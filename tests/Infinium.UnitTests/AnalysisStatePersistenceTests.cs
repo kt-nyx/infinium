@@ -133,7 +133,7 @@ public sealed class AnalysisStatePersistenceTests
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'storage_contract_version';"));
         Assert.AreEqual(
-            "8b1c3a6aa9c90f6f855ca6877f77a8fe8ec7c10848e6e3aab3d02d80834f820c",
+            "0e1c6156548a7cc3144a1e41e6951c5289592ee8f8fea9b15e600872c363bd03",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'schema_fingerprint';"));
@@ -314,7 +314,7 @@ public sealed class AnalysisStatePersistenceTests
             INSERT INTO provider_access_profiles VALUES('profile-a','openai','responses','A','account-a','billing-a','2026-08-10T00:00:00Z');
             INSERT INTO provider_generations VALUES('generation-a','profile-a',1,0,'2026-08-10T00:00:00Z');
             INSERT INTO provider_capability_snapshots VALUES('cap-a','openai','gpt-5.6-sol','default','medium','current_turn','standard',0,0,0,'none',0,'disabled','explicit',0,0,272000,'synthetic-v1','bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb','2026-08-10T00:00:00Z');
-            INSERT INTO provider_credential_intents VALUES('intent-enroll-a','profile-a','generation-a','enroll','completed','none','pending-enrollment','not-applicable',NULL,NULL,NULL,'not-required','not-requested','2026-08-10T00:00:00Z');
+            INSERT INTO provider_credential_intents VALUES('intent-enroll-a','profile-a','generation-a','enroll','pending','none','pending-enrollment','not-applicable',NULL,NULL,NULL,'not-required','not-requested','2026-08-10T00:00:00Z');
             INSERT INTO provider_profile_projection VALUES('profile-a','generation-a',0,'pending-enrollment','not-applicable',NULL,NULL,NULL,'intent-enroll-a','not-required','not-requested',1,'2026-08-10T00:00:00Z');
             INSERT INTO provider_credential_intents VALUES('intent-activate-a','profile-a','generation-a','enroll','completed','pending-enrollment','active-unverified','unavailable','account-a','billing-a','cap-a','not-required','not-requested','2026-08-10T00:00:01Z');
             UPDATE provider_profile_projection SET lifecycle_state='active-unverified',verification_state='unavailable',capability_snapshot_id='cap-a',account_identity_id='account-a',billing_scope_identity_id='billing-a',intent_id='intent-activate-a',projection_version=2,updated_at='2026-08-10T00:00:01Z' WHERE profile_id='profile-a';
@@ -324,6 +324,7 @@ public sealed class AnalysisStatePersistenceTests
             INSERT INTO provider_price_rules VALUES('price-a','rule-a','standard-under-272k','ordinary-input','input','none','global',1,1,'synthetic-v1');
             INSERT INTO runs VALUES('run-a','install-a','context-a','config-a','manifest-a','created',0,1,1,'2026-08-10T00:00:00Z','2026-08-10T00:00:00Z');
             INSERT INTO job_nodes VALUES('job-a','run-a',NULL,'provider','created',0,'2026-08-10T00:00:00Z','2026-08-10T00:00:00Z');
+            INSERT INTO durable_commands VALUES('command-a','provider','run-a',0,'recorded','created',NULL,'2026-08-10T00:00:00Z',NULL,NULL);
             INSERT INTO evidence_acquisition_runs VALUES('acquisition-a','install-a','context-a','config-a','manifest-a','run-a','application-a','cost-a','created','2026-08-10T00:00:00Z');
             INSERT INTO evidence_acquisition_parent_links VALUES('parent-a','acquisition-a','run-a','initiated-by',NULL,'2026-08-10T00:00:00Z');
             INSERT INTO payloads VALUES('request-payload-a','aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',1024,'application/json','retained','provider/request-a.json','2026-08-10T00:00:00Z');
@@ -341,7 +342,7 @@ public sealed class AnalysisStatePersistenceTests
               'profile-a','generation-a',0,'source-claim-extraction','cap-a','price-a','prompt-a',
               'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd','schema-a',
               'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-              'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff','request-payload-a',
+              'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa','request-payload-a',
               'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',1024,
               '9999999999999999999999999999999999999999999999999999999999999999',
               'unresolved-openai-responses-framing','authority-required','authority-required',65536,73728,4096,

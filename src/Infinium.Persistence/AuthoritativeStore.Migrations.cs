@@ -588,8 +588,14 @@ public sealed partial class AuthoritativeStore
         "trigger:provider_block_eligibility_guard",
         "trigger:provider_block_owner_job_guard",
         "trigger:provider_budget_projection_authority_guard",
+        "trigger:provider_credential_intent_time_order_guard",
+        "trigger:provider_dispatch_deadline_guard",
+        "trigger:provider_profile_projection_exact_root_insert_guard",
+        "trigger:provider_profile_projection_monotonic_update_guard",
         "trigger:provider_profile_transition_order_guard",
+        "trigger:provider_response_transport_binding_guard",
         "trigger:provider_transport_event_order_guard",
+        "trigger:provider_usage_operation_ceiling_guard",
         "trigger:provider_delete_pending_never_reactivates_guard",
         "trigger:provider_access_profiles_append_only_delete",
         "trigger:provider_access_profiles_append_only_update",
@@ -1715,10 +1721,10 @@ public sealed partial class AuthoritativeStore
         """
         CREATE UNIQUE INDEX idx_payload_identity_size ON payloads(payload_id,content_sha256,byte_length);
         CREATE TABLE provider_access_profiles(
-            profile_id TEXT PRIMARY KEY,
+            profile_id TEXT PRIMARY KEY CHECK(length(trim(profile_id)) > 0),
             provider TEXT NOT NULL CHECK(provider = 'openai'),
             purpose TEXT NOT NULL CHECK(purpose = 'responses'),
-            display_label TEXT NOT NULL,
+            display_label TEXT NOT NULL CHECK(length(trim(display_label)) > 0),
             account_identity_id TEXT,
             billing_scope_identity_id TEXT,
             created_at TEXT NOT NULL,
@@ -1726,7 +1732,7 @@ public sealed partial class AuthoritativeStore
               OR (account_identity_id IS NOT NULL AND billing_scope_identity_id IS NOT NULL))
         ) STRICT;
         CREATE TABLE provider_generations(
-            generation_id TEXT PRIMARY KEY,
+            generation_id TEXT PRIMARY KEY CHECK(length(trim(generation_id)) > 0),
             profile_id TEXT NOT NULL REFERENCES provider_access_profiles(profile_id) ON DELETE RESTRICT,
             generation_ordinal INTEGER NOT NULL CHECK(generation_ordinal > 0),
             revocation_epoch INTEGER NOT NULL CHECK(revocation_epoch >= 0),
@@ -1735,7 +1741,7 @@ public sealed partial class AuthoritativeStore
             UNIQUE(profile_id,generation_id)
         ) STRICT;
         CREATE TABLE provider_credential_intents(
-            intent_id TEXT PRIMARY KEY,
+            intent_id TEXT PRIMARY KEY CHECK(length(trim(intent_id)) > 0),
             profile_id TEXT NOT NULL REFERENCES provider_access_profiles(profile_id) ON DELETE RESTRICT,
             generation_id TEXT NOT NULL,
             intent_kind TEXT NOT NULL CHECK(intent_kind IN ('enroll','replace','verify','disable','delete','recover')),
@@ -1754,6 +1760,8 @@ public sealed partial class AuthoritativeStore
             recovery_disposition TEXT NOT NULL CHECK(recovery_disposition IN ('not-required','required','unavailable')),
             cleanup_disposition TEXT NOT NULL CHECK(cleanup_disposition IN ('not-requested','pending','confirmed','failed')),
             created_at TEXT NOT NULL,
+            UNIQUE(intent_id,profile_id,generation_id,account_identity_id,billing_scope_identity_id,
+              capability_snapshot_id,to_lifecycle_state,verification_state,recovery_disposition,cleanup_disposition),
             FOREIGN KEY(profile_id,generation_id)
               REFERENCES provider_generations(profile_id,generation_id) ON DELETE RESTRICT,
             FOREIGN KEY(capability_snapshot_id)
@@ -1792,7 +1800,11 @@ public sealed partial class AuthoritativeStore
                 AND recovery_disposition = 'required' AND cleanup_disposition IN ('not-requested','failed'))),
             CHECK(intent_kind <> 'delete' OR intent_state <> 'failed'
               OR (from_lifecycle_state = 'delete-pending' AND to_lifecycle_state = 'delete-pending'
-                AND cleanup_disposition = 'failed'))
+                AND cleanup_disposition = 'failed')),
+            CHECK((intent_state = 'pending' AND to_lifecycle_state IN ('pending-enrollment','replacing','delete-pending'))
+              OR (intent_state = 'completed' AND to_lifecycle_state IN ('active-unverified','active-verified','disabled','deleted'))
+              OR (intent_state IN ('failed','unavailable') AND to_lifecycle_state IN ('secure-store-unavailable','recovery-required','delete-pending'))
+              OR (intent_state = 'cancelled' AND from_lifecycle_state = to_lifecycle_state))
         ) STRICT;
         CREATE TABLE provider_capability_snapshots(
             capability_snapshot_id TEXT PRIMARY KEY,
@@ -1840,8 +1852,8 @@ public sealed partial class AuthoritativeStore
             PRIMARY KEY(price_snapshot_id,rule_id)
         ) STRICT;
         CREATE TABLE evidence_acquisition_runs(
-            acquisition_run_id TEXT PRIMARY KEY,
-            installation_snapshot_id TEXT,
+            acquisition_run_id TEXT PRIMARY KEY CHECK(length(trim(acquisition_run_id)) > 0),
+            installation_snapshot_id TEXT NOT NULL,
             analysis_context_id TEXT NOT NULL,
             effective_configuration_id TEXT NOT NULL,
             resolved_input_manifest_id TEXT NOT NULL,
@@ -1849,7 +1861,11 @@ public sealed partial class AuthoritativeStore
             application_scope_id TEXT NOT NULL,
             cost_attribution_scope_id TEXT NOT NULL,
             lifecycle_state TEXT NOT NULL,
-            created_at TEXT NOT NULL
+            created_at TEXT NOT NULL,
+            UNIQUE(acquisition_run_id,parent_analysis_run_id),
+            UNIQUE(acquisition_run_id,parent_analysis_run_id,application_scope_id,cost_attribution_scope_id),
+            UNIQUE(acquisition_run_id,parent_analysis_run_id,installation_snapshot_id,analysis_context_id,
+              effective_configuration_id,resolved_input_manifest_id,application_scope_id,cost_attribution_scope_id)
         ) STRICT;
         CREATE TABLE evidence_acquisition_parent_links(
             parent_link_id TEXT PRIMARY KEY,
@@ -1857,21 +1873,27 @@ public sealed partial class AuthoritativeStore
             analysis_run_id TEXT NOT NULL REFERENCES runs(run_id) ON DELETE RESTRICT,
             relation TEXT NOT NULL CHECK(relation IN ('initiated-by','attached','detached')),
             dispatch_sequence_cutoff INTEGER,
-            created_at TEXT NOT NULL
+            created_at TEXT NOT NULL,
+            FOREIGN KEY(acquisition_run_id,analysis_run_id)
+              REFERENCES evidence_acquisition_runs(acquisition_run_id,parent_analysis_run_id) ON DELETE RESTRICT
         ) STRICT;
         CREATE TABLE evidence_acquisition_application_links(
             application_link_id TEXT PRIMARY KEY,
             acquisition_run_id TEXT NOT NULL REFERENCES evidence_acquisition_runs(acquisition_run_id) ON DELETE RESTRICT,
             analysis_run_id TEXT NOT NULL REFERENCES runs(run_id) ON DELETE RESTRICT,
+            application_scope_id TEXT NOT NULL,
+            cost_attribution_scope_id TEXT NOT NULL,
             admitted_artifact_id TEXT NOT NULL,
-            created_at TEXT NOT NULL
+            created_at TEXT NOT NULL,
+            FOREIGN KEY(acquisition_run_id,analysis_run_id,application_scope_id,cost_attribution_scope_id)
+              REFERENCES evidence_acquisition_runs(acquisition_run_id,parent_analysis_run_id,application_scope_id,cost_attribution_scope_id) ON DELETE RESTRICT
         ) STRICT;
         CREATE TABLE provider_operation_blocks(
             operation_id TEXT PRIMARY KEY,
             owner_kind TEXT NOT NULL CHECK(owner_kind IN ('analysis-run','evidence-acquisition-run')),
             owner_id TEXT NOT NULL,
             job_node_id TEXT NOT NULL REFERENCES job_nodes(job_node_id) ON DELETE RESTRICT,
-            command_id TEXT NOT NULL UNIQUE,
+            command_id TEXT NOT NULL UNIQUE REFERENCES durable_commands(command_id) ON DELETE RESTRICT,
             requested_at TEXT NOT NULL,
             confirmed_at TEXT NOT NULL,
             installation_snapshot_id TEXT NOT NULL,
@@ -1913,6 +1935,9 @@ public sealed partial class AuthoritativeStore
             FOREIGN KEY(canonical_request_payload_id,canonical_request_fingerprint,canonical_request_bytes)
               REFERENCES payloads(payload_id,content_sha256,byte_length) ON DELETE RESTRICT,
             CHECK(requested_at <= confirmed_at AND confirmed_at < dispatch_deadline_utc),
+            CHECK((julianday(dispatch_deadline_utc) - julianday(confirmed_at)) * 86400000.0 <= deadline_milliseconds),
+            CHECK((julianday(dispatch_deadline_utc) - julianday(requested_at)) * 86400000.0 <= deadline_milliseconds),
+            CHECK(request_fingerprint = canonical_request_fingerprint),
             CHECK(canonical_request_bytes <= maximum_request_bytes),
             CHECK((operation_kind = 'source-claim-extraction' AND owner_kind = 'evidence-acquisition-run')
               OR (operation_kind IN ('transport-qualification','candidate-investigation') AND owner_kind = 'analysis-run')),
@@ -1950,9 +1975,9 @@ public sealed partial class AuthoritativeStore
             capability_snapshot_id TEXT NOT NULL REFERENCES provider_capability_snapshots(capability_snapshot_id) ON DELETE RESTRICT,
             price_snapshot_id TEXT NOT NULL REFERENCES provider_price_snapshots(price_snapshot_id) ON DELETE RESTRICT,
             settings_fingerprint TEXT NOT NULL,
-            input_bound_policy_id TEXT NOT NULL CHECK(input_bound_policy_id = 'unresolved-openai-responses-framing'),
-            input_bound_policy_version TEXT NOT NULL CHECK(input_bound_policy_version = 'authority-required'),
-            input_bound_proof_status TEXT NOT NULL CHECK(input_bound_proof_status = 'authority-required'),
+            input_bound_policy_id TEXT NOT NULL CHECK(length(trim(input_bound_policy_id)) > 0),
+            input_bound_policy_version TEXT NOT NULL CHECK(length(trim(input_bound_policy_version)) > 0),
+            input_bound_proof_status TEXT NOT NULL CHECK(input_bound_proof_status = 'proved'),
             coordinator_fencing_epoch INTEGER NOT NULL CHECK(coordinator_fencing_epoch > 0),
             maximum_request_bytes INTEGER NOT NULL CHECK(maximum_request_bytes > 0),
             maximum_input_tokens INTEGER NOT NULL CHECK(maximum_input_tokens > 0),
@@ -1971,6 +1996,9 @@ public sealed partial class AuthoritativeStore
             UNIQUE(authorization_id,operation_id,profile_id,generation_id,revocation_epoch),
             FOREIGN KEY(profile_id,generation_id)
               REFERENCES provider_generations(profile_id,generation_id) ON DELETE RESTRICT,
+            CHECK(request_fingerprint = canonical_request_fingerprint),
+            CHECK(confirmed_at < dispatch_deadline_utc),
+            CHECK((julianday(dispatch_deadline_utc) - julianday(confirmed_at)) * 86400000.0 <= deadline_milliseconds),
             CHECK((owner_kind = 'analysis-run' AND owner_id = analysis_run_id
                 AND analysis_run_id IS NOT NULL AND evidence_acquisition_run_id IS NULL)
               OR (owner_kind = 'evidence-acquisition-run' AND owner_id = evidence_acquisition_run_id
@@ -1989,12 +2017,22 @@ public sealed partial class AuthoritativeStore
         BEGIN
           SELECT CASE
             WHEN NEW.owner_kind = 'analysis-run' AND NOT EXISTS(
-              SELECT 1 FROM job_nodes WHERE job_node_id = NEW.job_node_id AND run_id = NEW.owner_id)
+              SELECT 1 FROM runs r JOIN job_nodes j ON j.run_id = r.run_id
+              WHERE r.run_id = NEW.owner_id AND j.job_node_id = NEW.job_node_id
+                AND r.installation_snapshot_id = NEW.installation_snapshot_id
+                AND r.analysis_context_id = NEW.analysis_context_id
+                AND r.effective_scan_configuration_id = NEW.effective_configuration_id
+                AND r.resolved_input_manifest_id = NEW.resolved_input_manifest_id)
               THEN RAISE(ABORT, 'analysis-run provider block job node owner mismatch')
             WHEN NEW.owner_kind = 'evidence-acquisition-run' AND NOT EXISTS(
-              SELECT 1 FROM evidence_acquisition_parent_links p
-              JOIN job_nodes j ON j.run_id = p.analysis_run_id
-              WHERE p.acquisition_run_id = NEW.owner_id AND j.job_node_id = NEW.job_node_id)
+              SELECT 1 FROM evidence_acquisition_runs a
+              JOIN runs r ON r.run_id = a.parent_analysis_run_id
+              JOIN job_nodes j ON j.run_id = r.run_id
+              WHERE a.acquisition_run_id = NEW.owner_id AND j.job_node_id = NEW.job_node_id
+                AND a.installation_snapshot_id = NEW.installation_snapshot_id
+                AND a.analysis_context_id = NEW.analysis_context_id
+                AND a.effective_configuration_id = NEW.effective_configuration_id
+                AND a.resolved_input_manifest_id = NEW.resolved_input_manifest_id)
               THEN RAISE(ABORT, 'evidence-acquisition provider block job node owner mismatch')
           END;
         END;
@@ -2004,11 +2042,23 @@ public sealed partial class AuthoritativeStore
           SELECT CASE WHEN NOT EXISTS(
             SELECT 1 FROM provider_profile_projection p
             JOIN provider_access_profiles a ON a.profile_id = p.profile_id
+            JOIN provider_generations g ON g.profile_id = p.profile_id AND g.generation_id = p.generation_id
+            JOIN provider_credential_intents i ON i.intent_id = p.intent_id
             WHERE p.profile_id = NEW.profile_id AND p.generation_id = NEW.generation_id
               AND p.revocation_epoch = NEW.revocation_epoch
               AND p.capability_snapshot_id = NEW.capability_snapshot_id
               AND p.lifecycle_state = 'active-verified' AND p.verification_state = 'available'
-              AND p.account_identity_id IS NOT NULL AND p.billing_scope_identity_id IS NOT NULL)
+              AND p.account_identity_id IS NOT NULL AND p.billing_scope_identity_id IS NOT NULL
+              AND a.account_identity_id = p.account_identity_id
+              AND a.billing_scope_identity_id = p.billing_scope_identity_id
+              AND g.revocation_epoch = p.revocation_epoch
+              AND i.profile_id = p.profile_id AND i.generation_id = p.generation_id
+              AND i.capability_snapshot_id = p.capability_snapshot_id
+              AND i.account_identity_id = p.account_identity_id
+              AND i.billing_scope_identity_id = p.billing_scope_identity_id
+              AND i.to_lifecycle_state = p.lifecycle_state
+              AND i.verification_state = p.verification_state
+              AND i.intent_state = 'completed')
             THEN RAISE(ABORT, 'provider block requires exact eligible verified profile generation') END;
         END;
         CREATE TRIGGER provider_authority_release_required
@@ -2021,12 +2071,22 @@ public sealed partial class AuthoritativeStore
         BEGIN
           SELECT CASE
             WHEN NEW.owner_kind = 'analysis-run' AND NOT EXISTS(
-              SELECT 1 FROM job_nodes WHERE job_node_id = NEW.job_node_id AND run_id = NEW.analysis_run_id)
+              SELECT 1 FROM runs r JOIN job_nodes j ON j.run_id = r.run_id
+              WHERE r.run_id = NEW.analysis_run_id AND j.job_node_id = NEW.job_node_id
+                AND r.installation_snapshot_id = NEW.installation_snapshot_id
+                AND r.analysis_context_id = NEW.analysis_context_id
+                AND r.effective_scan_configuration_id = NEW.effective_configuration_id
+                AND r.resolved_input_manifest_id = NEW.resolved_input_manifest_id)
               THEN RAISE(ABORT, 'analysis-run authorization job node owner mismatch')
             WHEN NEW.owner_kind = 'evidence-acquisition-run' AND NOT EXISTS(
-              SELECT 1 FROM evidence_acquisition_parent_links p
-              JOIN job_nodes j ON j.run_id = p.analysis_run_id
-              WHERE p.acquisition_run_id = NEW.evidence_acquisition_run_id AND j.job_node_id = NEW.job_node_id)
+              SELECT 1 FROM evidence_acquisition_runs a
+              JOIN runs r ON r.run_id = a.parent_analysis_run_id
+              JOIN job_nodes j ON j.run_id = r.run_id
+              WHERE a.acquisition_run_id = NEW.evidence_acquisition_run_id AND j.job_node_id = NEW.job_node_id
+                AND a.installation_snapshot_id = NEW.installation_snapshot_id
+                AND a.analysis_context_id = NEW.analysis_context_id
+                AND a.effective_configuration_id = NEW.effective_configuration_id
+                AND a.resolved_input_manifest_id = NEW.resolved_input_manifest_id)
               THEN RAISE(ABORT, 'evidence-acquisition authorization job node owner mismatch')
           END;
         END;
@@ -2051,9 +2111,9 @@ public sealed partial class AuthoritativeStore
             canonical_request_fingerprint TEXT NOT NULL,
             settings_fingerprint TEXT NOT NULL,
             output_schema_fingerprint TEXT NOT NULL,
-            input_bound_policy_id TEXT NOT NULL CHECK(input_bound_policy_id = 'unresolved-openai-responses-framing'),
-            input_bound_policy_version TEXT NOT NULL CHECK(input_bound_policy_version = 'authority-required'),
-            input_bound_proof_status TEXT NOT NULL CHECK(input_bound_proof_status = 'authority-required'),
+            input_bound_policy_id TEXT NOT NULL CHECK(length(trim(input_bound_policy_id)) > 0),
+            input_bound_policy_version TEXT NOT NULL CHECK(length(trim(input_bound_policy_version)) > 0),
+            input_bound_proof_status TEXT NOT NULL CHECK(input_bound_proof_status = 'proved'),
             payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
             payload_fingerprint TEXT NOT NULL CHECK(length(payload_fingerprint) = 64),
             payload_bytes INTEGER NOT NULL CHECK(payload_bytes > 0),
@@ -2069,7 +2129,9 @@ public sealed partial class AuthoritativeStore
             FOREIGN KEY(operation_id,request_fingerprint,canonical_request_fingerprint,settings_fingerprint,output_schema_fingerprint,
               input_bound_policy_id,input_bound_policy_version,input_bound_proof_status)
               REFERENCES provider_operation_authorizations(operation_id,request_fingerprint,canonical_request_fingerprint,settings_fingerprint,output_schema_fingerprint,
-                input_bound_policy_id,input_bound_policy_version,input_bound_proof_status) ON DELETE RESTRICT
+                input_bound_policy_id,input_bound_policy_version,input_bound_proof_status) ON DELETE RESTRICT,
+            CHECK(request_fingerprint = canonical_request_fingerprint),
+            CHECK(payload_fingerprint = canonical_request_fingerprint)
         ) STRICT;
         CREATE UNIQUE INDEX idx_provider_request_fingerprint ON provider_requests(request_fingerprint);
         CREATE TABLE provider_reservations(
@@ -2121,6 +2183,17 @@ public sealed partial class AuthoritativeStore
             FOREIGN KEY(operation_id,coordinator_fencing_epoch)
               REFERENCES provider_operation_authorizations(operation_id,coordinator_fencing_epoch) ON DELETE RESTRICT
         ) STRICT;
+        CREATE TRIGGER provider_dispatch_deadline_guard
+        BEFORE INSERT ON provider_dispatch_fences
+        BEGIN
+          SELECT CASE WHEN NOT EXISTS(
+            SELECT 1 FROM provider_operation_authorizations a
+            WHERE a.operation_id = NEW.operation_id
+              AND NEW.evaluated_at >= a.confirmed_at
+              AND NEW.evaluated_at < a.dispatch_deadline_utc
+              AND (julianday(a.dispatch_deadline_utc) - julianday(NEW.evaluated_at)) * 86400000.0 <= a.deadline_milliseconds)
+            THEN RAISE(ABORT, 'provider dispatch fence deadline mismatch') END;
+        END;
         CREATE TABLE provider_transport_events(
             transport_event_id TEXT PRIMARY KEY,
             operation_id TEXT NOT NULL,
@@ -2171,15 +2244,15 @@ public sealed partial class AuthoritativeStore
             request_id TEXT NOT NULL,
             provider_attempt_id TEXT NOT NULL,
             dispatch_fence_id TEXT NOT NULL,
-            raw_response_payload_id TEXT REFERENCES payloads(payload_id) ON DELETE RESTRICT,
-            raw_response_fingerprint TEXT,
-            raw_response_bytes INTEGER CHECK(raw_response_bytes > 0 AND raw_response_bytes <= 1048576),
+            raw_response_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+            raw_response_fingerprint TEXT NOT NULL CHECK(length(raw_response_fingerprint) = 64),
+            raw_response_bytes INTEGER NOT NULL CHECK(raw_response_bytes > 0 AND raw_response_bytes <= 1048576),
             maximum_raw_response_bytes INTEGER NOT NULL CHECK(maximum_raw_response_bytes > 0 AND maximum_raw_response_bytes <= 1048576),
             response_headers_payload_id TEXT REFERENCES payloads(payload_id) ON DELETE RESTRICT,
             response_headers_fingerprint TEXT,
             response_headers_bytes INTEGER CHECK(response_headers_bytes > 0 AND response_headers_bytes <= 65536),
             response_headers_availability TEXT NOT NULL CHECK(response_headers_availability IN ('available','unavailable')),
-            http_status INTEGER CHECK(http_status BETWEEN 100 AND 599),
+            http_status INTEGER NOT NULL CHECK(http_status BETWEEN 100 AND 599),
             provider_response_id TEXT,
             client_request_id TEXT NOT NULL,
             provider_request_id TEXT,
@@ -2187,7 +2260,7 @@ public sealed partial class AuthoritativeStore
             billing_evidence_fingerprint TEXT,
             billing_evidence_bytes INTEGER CHECK(billing_evidence_bytes > 0 AND billing_evidence_bytes <= 65536),
             provider_request_id_availability TEXT NOT NULL CHECK(provider_request_id_availability IN ('available','unavailable')),
-            response_state TEXT NOT NULL CHECK(response_state IN ('completed','refusal','incomplete','failed','queued','in-progress','cancelled','malformed','oversized','mismatched','unknown')),
+            response_state TEXT NOT NULL CHECK(response_state IN ('completed','refusal','incomplete','failed','queued','in-progress','malformed','oversized','mismatched','unknown')),
             refusal_code TEXT,
             incomplete_reason TEXT,
             error_code TEXT,
@@ -2198,6 +2271,9 @@ public sealed partial class AuthoritativeStore
             reasoning_context TEXT NOT NULL CHECK(reasoning_context = 'current_turn'),
             reasoning_mode TEXT NOT NULL CHECK(reasoning_mode = 'standard'),
             prompt_cache_mode TEXT NOT NULL CHECK(prompt_cache_mode = 'explicit'),
+            billing_availability TEXT NOT NULL CHECK(billing_availability IN ('available','unavailable','unsupported','not-applicable')),
+            rate_availability TEXT NOT NULL CHECK(rate_availability IN ('available','unavailable','unsupported','not-applicable')),
+            credit_availability TEXT NOT NULL CHECK(credit_availability IN ('available','unavailable','unsupported','not-applicable')),
             validation_state TEXT NOT NULL CHECK(validation_state IN ('proposed','admitted','rejected','abstained','unavailable','unsupported','deleted')),
             admission_state TEXT NOT NULL CHECK(admission_state IN ('proposed','admitted','rejected','abstained','unavailable','unsupported','deleted')),
             created_at TEXT NOT NULL,
@@ -2218,9 +2294,7 @@ public sealed partial class AuthoritativeStore
               REFERENCES payloads(payload_id,content_sha256,byte_length) ON DELETE RESTRICT,
             FOREIGN KEY(request_id,client_request_id)
               REFERENCES provider_requests(request_id,client_request_id) ON DELETE RESTRICT,
-            CHECK((raw_response_payload_id IS NULL AND raw_response_fingerprint IS NULL AND raw_response_bytes IS NULL)
-              OR (raw_response_payload_id IS NOT NULL AND raw_response_fingerprint IS NOT NULL
-                AND length(raw_response_fingerprint) = 64 AND raw_response_bytes <= maximum_raw_response_bytes)),
+            CHECK(raw_response_bytes <= maximum_raw_response_bytes),
             CHECK((response_headers_availability = 'unavailable' AND response_headers_payload_id IS NULL
                 AND response_headers_fingerprint IS NULL AND response_headers_bytes IS NULL)
               OR (response_headers_availability = 'available' AND response_headers_payload_id IS NOT NULL
@@ -2231,12 +2305,6 @@ public sealed partial class AuthoritativeStore
             CHECK((billing_evidence_payload_id IS NULL AND billing_evidence_fingerprint IS NULL AND billing_evidence_bytes IS NULL)
               OR (billing_evidence_payload_id IS NOT NULL AND billing_evidence_fingerprint IS NOT NULL
                 AND length(billing_evidence_fingerprint) = 64 AND billing_evidence_bytes IS NOT NULL)),
-            CHECK((response_state = 'cancelled' AND raw_response_payload_id IS NULL AND response_headers_payload_id IS NULL
-                AND http_status IS NULL AND provider_response_id IS NULL AND provider_request_id IS NULL
-                AND returned_model IS NULL AND returned_service_tier IS NULL AND refusal_code IS NULL
-                AND incomplete_reason IS NULL AND error_code IS NULL
-                AND validation_state = 'unavailable' AND admission_state = 'unavailable')
-              OR response_state <> 'cancelled'),
             CHECK((response_state = 'completed' AND refusal_code IS NULL AND incomplete_reason IS NULL AND error_code IS NULL
                 AND raw_response_payload_id IS NOT NULL AND http_status IS NOT NULL
                 AND returned_model = 'gpt-5.6-sol' AND returned_service_tier = 'default'
@@ -2246,8 +2314,18 @@ public sealed partial class AuthoritativeStore
               OR (response_state IN ('failed','mismatched') AND refusal_code IS NULL AND incomplete_reason IS NULL AND error_code IS NOT NULL)
               OR (response_state IN ('queued','in-progress','malformed','oversized','unknown')
                 AND refusal_code IS NULL AND incomplete_reason IS NULL)
-              OR response_state = 'cancelled')
+              )
         ) STRICT;
+        CREATE TRIGGER provider_response_transport_binding_guard
+        BEFORE INSERT ON provider_responses
+        BEGIN
+          SELECT CASE WHEN NOT EXISTS(
+            SELECT 1 FROM provider_transport_events e
+            WHERE e.operation_id = NEW.operation_id AND e.provider_attempt_id = NEW.provider_attempt_id
+              AND e.request_id = NEW.request_id AND e.dispatch_fence_id = NEW.dispatch_fence_id
+              AND e.event_kind = 'response-staged' AND e.occurred_at <= NEW.created_at)
+            THEN RAISE(ABORT, 'provider response requires exact staged transport event') END;
+        END;
         CREATE TABLE provider_usage_entries(
             usage_entry_id TEXT PRIMARY KEY,
             operation_id TEXT NOT NULL,
@@ -2292,8 +2370,27 @@ public sealed partial class AuthoritativeStore
             CHECK((priced_tool_calls_availability = 'available') = (priced_tool_calls IS NOT NULL)),
             CHECK((calculated_nano_usd_availability = 'available') = (calculated_nano_usd IS NOT NULL)),
             CHECK(total_tokens IS NULL OR (input_tokens IS NOT NULL AND output_tokens IS NOT NULL
-              AND total_tokens = input_tokens + output_tokens))
+              AND total_tokens = input_tokens + output_tokens)),
+            CHECK(reasoning_tokens IS NULL OR (output_tokens IS NOT NULL AND reasoning_tokens <= output_tokens))
         ) STRICT;
+        CREATE TRIGGER provider_usage_operation_ceiling_guard
+        BEFORE INSERT ON provider_usage_entries
+        BEGIN
+          SELECT CASE WHEN EXISTS(
+            SELECT 1 FROM provider_operation_authorizations a
+            WHERE a.operation_id = NEW.operation_id
+              AND ((NEW.dispatch_count IS NOT NULL AND NEW.dispatch_count > a.maximum_dispatch_count)
+                OR (NEW.input_tokens IS NOT NULL AND NEW.input_tokens > a.maximum_input_tokens)
+                OR (NEW.output_tokens IS NOT NULL AND NEW.output_tokens > a.maximum_output_tokens)
+                OR (NEW.reasoning_tokens IS NOT NULL AND NEW.reasoning_tokens > a.maximum_output_tokens)
+                OR (NEW.calculated_nano_usd IS NOT NULL AND NEW.calculated_nano_usd > a.maximum_calculated_nano_usd)
+                OR (a.operation_kind = 'transport-qualification'
+                  AND ((NEW.input_tokens IS NOT NULL AND NEW.input_tokens > 20480)
+                    OR (NEW.output_tokens IS NOT NULL AND NEW.output_tokens > 256)
+                    OR (NEW.reasoning_tokens IS NOT NULL AND NEW.reasoning_tokens > 256)
+                    OR (NEW.calculated_nano_usd IS NOT NULL AND NEW.calculated_nano_usd > 140000000)))))
+            THEN RAISE(ABORT, 'provider usage exceeds exact operation authorization ceiling') END;
+        END;
         CREATE TABLE provider_rate_limit_facts(
             rate_limit_fact_id TEXT PRIMARY KEY,
             usage_entry_id TEXT NOT NULL REFERENCES provider_usage_entries(usage_entry_id) ON DELETE RESTRICT,
@@ -2389,8 +2486,8 @@ public sealed partial class AuthoritativeStore
             updated_at TEXT NOT NULL
         ) STRICT;
         CREATE TABLE provider_profile_projection(
-            profile_id TEXT PRIMARY KEY REFERENCES provider_access_profiles(profile_id) ON DELETE CASCADE,
-            generation_id TEXT NOT NULL,
+            profile_id TEXT PRIMARY KEY CHECK(length(trim(profile_id)) > 0) REFERENCES provider_access_profiles(profile_id) ON DELETE CASCADE,
+            generation_id TEXT NOT NULL CHECK(length(trim(generation_id)) > 0),
             revocation_epoch INTEGER NOT NULL CHECK(revocation_epoch >= 0),
             lifecycle_state TEXT NOT NULL CHECK(lifecycle_state IN (
               'pending-enrollment','active-unverified','active-verified','replacing','disabled',
@@ -2437,6 +2534,61 @@ public sealed partial class AuthoritativeStore
               OR (lifecycle_state = 'recovery-required' AND verification_state = 'unavailable'
                 AND recovery_disposition = 'required' AND cleanup_disposition IN ('not-requested','failed')))
         ) STRICT;
+        CREATE TRIGGER provider_profile_projection_exact_root_insert_guard
+        BEFORE INSERT ON provider_profile_projection
+        BEGIN
+          SELECT CASE WHEN NOT EXISTS(
+            SELECT 1 FROM provider_generations g
+            WHERE g.profile_id = NEW.profile_id AND g.generation_id = NEW.generation_id
+              AND g.revocation_epoch = NEW.revocation_epoch)
+            THEN RAISE(ABORT, 'provider profile projection generation root mismatch') END;
+          SELECT CASE WHEN NEW.intent_id IS NOT NULL AND NOT EXISTS(
+            SELECT 1 FROM provider_credential_intents i
+            WHERE i.intent_id = NEW.intent_id AND i.profile_id = NEW.profile_id
+              AND i.generation_id = NEW.generation_id
+              AND i.to_lifecycle_state = NEW.lifecycle_state
+              AND i.verification_state = NEW.verification_state
+              AND i.recovery_disposition = NEW.recovery_disposition
+              AND i.cleanup_disposition = NEW.cleanup_disposition
+              AND i.account_identity_id IS NEW.account_identity_id
+              AND i.billing_scope_identity_id IS NEW.billing_scope_identity_id
+              AND i.capability_snapshot_id IS NEW.capability_snapshot_id)
+            THEN RAISE(ABORT, 'provider profile projection intent root mismatch') END;
+          SELECT CASE WHEN NEW.account_identity_id IS NOT NULL AND NOT EXISTS(
+            SELECT 1 FROM provider_access_profiles a WHERE a.profile_id = NEW.profile_id
+              AND a.account_identity_id = NEW.account_identity_id
+              AND a.billing_scope_identity_id = NEW.billing_scope_identity_id)
+            THEN RAISE(ABORT, 'provider profile projection account root mismatch') END;
+        END;
+        CREATE TRIGGER provider_profile_projection_monotonic_update_guard
+        BEFORE UPDATE ON provider_profile_projection
+        BEGIN
+          SELECT CASE WHEN NEW.profile_id <> OLD.profile_id
+              OR NEW.projection_version <= OLD.projection_version
+              OR NEW.updated_at <= OLD.updated_at
+            THEN RAISE(ABORT, 'provider profile projection must advance monotonically on one exact root') END;
+          SELECT CASE WHEN NOT EXISTS(
+            SELECT 1 FROM provider_generations g
+            WHERE g.profile_id = NEW.profile_id AND g.generation_id = NEW.generation_id
+              AND g.revocation_epoch = NEW.revocation_epoch)
+            THEN RAISE(ABORT, 'provider profile projection generation root mismatch') END;
+          SELECT CASE WHEN NEW.intent_id IS NOT NULL AND NOT EXISTS(
+            SELECT 1 FROM provider_credential_intents i
+            WHERE i.intent_id = NEW.intent_id AND i.profile_id = NEW.profile_id
+              AND i.generation_id = NEW.generation_id AND i.to_lifecycle_state = NEW.lifecycle_state
+              AND i.verification_state = NEW.verification_state
+              AND i.recovery_disposition = NEW.recovery_disposition
+              AND i.cleanup_disposition = NEW.cleanup_disposition
+              AND i.account_identity_id IS NEW.account_identity_id
+              AND i.billing_scope_identity_id IS NEW.billing_scope_identity_id
+              AND i.capability_snapshot_id IS NEW.capability_snapshot_id)
+            THEN RAISE(ABORT, 'provider profile projection intent root mismatch') END;
+          SELECT CASE WHEN NEW.account_identity_id IS NOT NULL AND NOT EXISTS(
+            SELECT 1 FROM provider_access_profiles a WHERE a.profile_id = NEW.profile_id
+              AND a.account_identity_id = NEW.account_identity_id
+              AND a.billing_scope_identity_id = NEW.billing_scope_identity_id)
+            THEN RAISE(ABORT, 'provider profile projection account root mismatch') END;
+        END;
         CREATE UNIQUE INDEX idx_provider_active_generation ON provider_profile_projection(generation_id)
           WHERE lifecycle_state IN ('active-unverified','active-verified','replacing');
         CREATE TRIGGER provider_profile_transition_order_guard
@@ -2448,6 +2600,14 @@ public sealed partial class AuthoritativeStore
             WHERE p.profile_id = NEW.profile_id AND p.generation_id = NEW.generation_id
               AND p.lifecycle_state = NEW.from_lifecycle_state)
             THEN RAISE(ABORT, 'provider profile transition predecessor mismatch') END;
+        END;
+        CREATE TRIGGER provider_credential_intent_time_order_guard
+        BEFORE INSERT ON provider_credential_intents
+        WHEN EXISTS(SELECT 1 FROM provider_credential_intents i WHERE i.profile_id = NEW.profile_id)
+        BEGIN
+          SELECT CASE WHEN NEW.created_at <= (
+            SELECT max(i.created_at) FROM provider_credential_intents i WHERE i.profile_id = NEW.profile_id)
+            THEN RAISE(ABORT, 'provider credential lifecycle time regression') END;
         END;
         CREATE TRIGGER provider_delete_pending_never_reactivates_guard
         BEFORE INSERT ON provider_credential_intents

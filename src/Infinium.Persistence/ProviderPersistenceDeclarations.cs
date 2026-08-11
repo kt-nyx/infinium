@@ -8,7 +8,7 @@ public static class ProviderPersistenceDeclarations
     public const int SourceSchemaVersion = 5;
     public const string SourceStorageContractVersion = "1.4.0";
     public const string SourceSchemaFingerprint = "e6d27152687e6b0c806da58a716a9ab909817f046fbe3bf11d8846da5e5dc87d";
-    public const string SchemaFingerprint = "8b1c3a6aa9c90f6f855ca6877f77a8fe8ec7c10848e6e3aab3d02d80834f820c";
+    public const string SchemaFingerprint = "0e1c6156548a7cc3144a1e41e6951c5289592ee8f8fea9b15e600872c363bd03";
     public const int ProjectionContractVersion = 1;
 
     public static IReadOnlyList<string> RebuildableProjections { get; } =

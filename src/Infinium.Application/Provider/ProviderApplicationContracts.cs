@@ -28,6 +28,7 @@ public sealed record SelectAndConfirmProviderOperationCommand(
     OpaqueId CapabilitySnapshotId,
     Sha256Fingerprint RequestFingerprint,
     Sha256Fingerprint CanonicalRequestFingerprint,
+    ReadOnlyMemory<byte> CanonicalRequest,
     long CanonicalRequestBytes,
     Sha256Fingerprint CapabilityFingerprint,
     OpaqueId PriceSnapshotId,
@@ -41,6 +42,7 @@ public sealed record SelectAndConfirmProviderOperationCommand(
     ProviderFiniteLimitsContract Limits,
     UtcTimestamp DispatchDeadline,
     long CoordinatorFencingEpoch,
+    UtcTimestamp RequestedAt,
     UtcTimestamp ConfirmedAt);
 
 public sealed record ProviderProfileQuery(
@@ -105,7 +107,16 @@ public static class ProviderApplicationContractInvariants
         if (command.OwnerKind is not ("analysis-run" or "evidence-acquisition-run")
             || command.RevocationEpoch < 0 || command.CoordinatorFencingEpoch <= 0
             || command.CanonicalRequestBytes <= 0 || command.CanonicalRequestBytes > command.Limits.MaximumRequestBytes
-            || command.DispatchDeadline.Value <= command.ConfirmedAt.Value)
+            || command.CanonicalRequest.Length != command.CanonicalRequestBytes
+            || command.RequestFingerprint != command.CanonicalRequestFingerprint
+            || !System.Security.Cryptography.SHA256.HashData(command.CanonicalRequest.Span)
+                .AsSpan().SequenceEqual(Convert.FromHexString(command.RequestFingerprint.Value))
+            || command.RequestedAt.Value > command.ConfirmedAt.Value
+            || command.DispatchDeadline.Value <= command.ConfirmedAt.Value
+            || command.DispatchDeadline.Value - command.ConfirmedAt.Value
+                > TimeSpan.FromMilliseconds(command.Limits.DeadlineMilliseconds)
+            || command.DispatchDeadline.Value - command.RequestedAt.Value
+                > TimeSpan.FromMilliseconds(command.Limits.DeadlineMilliseconds))
         {
             throw new InvalidOperationException("Provider confirmation must retain exact owner, snapshot, configuration, proof, deadline, and fencing bindings.");
         }

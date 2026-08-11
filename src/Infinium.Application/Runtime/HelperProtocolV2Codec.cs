@@ -13,7 +13,11 @@ public static class HelperProtocolV2Codec
         ReadOnlySpan<byte> bytes,
         DateTimeOffset now,
         string? expectedAssignmentId = null,
-        string? expectedCommandId = null)
+        string? expectedCommandId = null,
+        string? expectedOperationId = null,
+        string? expectedAttemptId = null,
+        string? expectedProfileId = null,
+        string? expectedGenerationId = null)
     {
         if (bytes.IsEmpty || bytes.Length > HelperProtocolV2Constants.MaximumFrameBytes)
         {
@@ -29,7 +33,8 @@ public static class HelperProtocolV2Codec
             throw new InvalidDataException("Helper v2 frame is malformed.", exception);
         }
         RejectUnknownFields(frame, "$frame");
-        Validate(frame, now, expectedAssignmentId, expectedCommandId);
+        Validate(frame, now, expectedAssignmentId, expectedCommandId, expectedOperationId,
+            expectedAttemptId, expectedProfileId, expectedGenerationId);
         return frame;
     }
 
@@ -51,7 +56,11 @@ public static class HelperProtocolV2Codec
         HelperPrivateFrameV2 frame,
         DateTimeOffset now,
         string? expectedAssignmentId,
-        string? expectedCommandId)
+        string? expectedCommandId,
+        string? expectedOperationId,
+        string? expectedAttemptId,
+        string? expectedProfileId,
+        string? expectedGenerationId)
     {
         if (frame.Sequence == 0
             || frame.ProtocolFingerprintSha256.Length != 32
@@ -63,8 +72,9 @@ public static class HelperProtocolV2Codec
         switch (frame.PayloadCase)
         {
             case HelperPrivateFrameV2.PayloadOneofCase.Bootstrap:
-                Require(frame.Bootstrap.OperationId?.Value, "bootstrap.operation_id");
-                Require(frame.Bootstrap.AttemptId?.Value, "bootstrap.attempt_id");
+                Require(frame.Bootstrap.CommandId, "bootstrap.command_id");
+                ValidateSubject(frame.Bootstrap.SubjectCase, frame.Bootstrap.Credential,
+                    frame.Bootstrap.ProviderDispatch, "bootstrap");
                 if (frame.Bootstrap.CoordinatorFencingEpoch == 0 || frame.Bootstrap.OneUseNonceFingerprintSha256.Length != 32
                     || !ValidFutureInstant(frame.Bootstrap.ExpiresAt, now))
                 {
@@ -78,7 +88,8 @@ public static class HelperProtocolV2Codec
                 Validate(frame.DispatchRevalidation, now);
                 break;
             case HelperPrivateFrameV2.PayloadOneofCase.Receipt:
-                Validate(frame.Receipt, expectedAssignmentId, expectedCommandId);
+                Validate(frame.Receipt, expectedAssignmentId, expectedCommandId, expectedOperationId,
+                    expectedAttemptId, expectedProfileId, expectedGenerationId);
                 break;
             default:
                 throw new InvalidDataException("Helper v2 payload kind must be explicit.");
@@ -87,8 +98,6 @@ public static class HelperProtocolV2Codec
 
     private static void Validate(HelperAssignmentV2 value, DateTimeOffset now)
     {
-        Require(value.OperationId?.Value, "assignment.operation_id");
-        Require(value.AttemptId?.Value, "assignment.attempt_id");
         Require(value.AccessProfileId?.Value, "assignment.access_profile_id");
         Require(value.GenerationId?.Value, "assignment.generation_id");
         Require(value.AssignmentId, "assignment.assignment_id");
@@ -99,6 +108,17 @@ public static class HelperProtocolV2Codec
             throw new InvalidDataException("Helper v2 assignment uses an unknown numeric state or incomplete binding.");
         }
         bool dispatch = value.AssignmentKind == HelperAssignmentKindV2.ProviderDispatch;
+        if (dispatch != (value.SubjectCase == HelperAssignmentV2.SubjectOneofCase.ProviderDispatch)
+            || !dispatch != (value.SubjectCase == HelperAssignmentV2.SubjectOneofCase.Credential))
+        {
+            throw new InvalidDataException("Helper assignment subject must match its credential or provider-dispatch kind.");
+        }
+        ValidateSubject(value.SubjectCase, value.Credential, value.ProviderDispatch, "assignment");
+        if (!dispatch && (value.Credential!.AccessProfileId?.Value != value.AccessProfileId?.Value
+            || value.Credential.GenerationId?.Value != value.GenerationId?.Value))
+        {
+            throw new InvalidDataException("Credential assignment subject must bind the exact profile generation.");
+        }
         if (dispatch != (value.ProviderRequest is not null))
         {
             throw new InvalidDataException("Only a provider-dispatch assignment may carry a provider request.");
@@ -121,7 +141,11 @@ public static class HelperProtocolV2Codec
                 || request.CanonicalRequestBytes.IsEmpty
                 || (uint)request.CanonicalRequestBytes.Length > value.Limits.MaximumRequestBytes
                 || !ValidExactDigest(request.CanonicalRequest, request.CanonicalRequestBytes.Span)
+                || request.RequestFingerprintSha256.Length != 32
+                || !request.RequestFingerprintSha256.Span.SequenceEqual(request.CanonicalRequest.Value.Span)
+                || !ValidInstant(request.ConfirmedAt)
                 || !ValidFutureInstant(request.DispatchDeadline, now)
+                || ElapsedMilliseconds(request.ConfirmedAt, request.DispatchDeadline) > value.Limits.MaximumDuration.Value
                 || !IsAuthorityRequiredProof(request.InputBoundProof))
             {
                 throw new InvalidDataException("Helper v2 provider request is not a closed bounded and explicitly blocked Responses request.");
@@ -174,32 +198,55 @@ public static class HelperProtocolV2Codec
             || !Enum.IsDefined(value.OperationKind) || value.OperationKind == ProviderOperationKindV2.Unspecified
             || value.CoordinatorFencingEpoch == 0 || !ValidDigest(value.CanonicalRequest)
             || !ValidDigest(value.Settings) || !ValidDigest(value.OutputSchema)
-            || !ValidFutureInstant(value.DispatchDeadline, now) || value.Limits is null
+            || !ValidFutureInstant(value.DispatchDeadline, now) || !ValidInstant(value.EvaluatedAt)
+            || string.IsNullOrWhiteSpace(value.RequestId) || value.Limits is null
             || value.AuthorizedOnce || value.Disposition == DispatchDispositionV2.Authorized
             || !IsAuthorityRequiredProof(value.InputBoundProof))
         {
             throw new InvalidDataException("Helper v2 final revalidation is incomplete or internally contradictory.");
         }
         ValidateLimits(value.OperationKind, value.Limits);
+        if (ElapsedMilliseconds(value.EvaluatedAt, value.DispatchDeadline) > value.Limits.MaximumDuration.Value)
+        {
+            throw new InvalidDataException("Helper final revalidation deadline exceeds the operation-specific duration ceiling.");
+        }
     }
 
     private static void Validate(
         HelperReceiptV2 value,
         string? expectedAssignmentId,
-        string? expectedCommandId)
+        string? expectedCommandId,
+        string? expectedOperationId,
+        string? expectedAttemptId,
+        string? expectedProfileId,
+        string? expectedGenerationId)
     {
-        Require(value.OperationId?.Value, "receipt.operation_id");
-        Require(value.AttemptId?.Value, "receipt.attempt_id");
         if (!Enum.IsDefined(value.Outcome) || value.Outcome == HelperOutcomeV2.Unspecified
             || !Enum.IsDefined(value.AssignmentKind) || value.AssignmentKind == HelperAssignmentKindV2.Unspecified)
         {
             throw new InvalidDataException("Helper v2 receipt outcome is unknown.");
         }
         bool dispatch = value.AssignmentKind == HelperAssignmentKindV2.ProviderDispatch;
+        if (dispatch != (value.SubjectCase == HelperReceiptV2.SubjectOneofCase.ProviderDispatch)
+            || !dispatch != (value.SubjectCase == HelperReceiptV2.SubjectOneofCase.Credential))
+        {
+            throw new InvalidDataException("Helper receipt subject must match its exact assignment kind.");
+        }
+        ValidateSubject(value.SubjectCase, value.Credential, value.ProviderDispatch, "receipt");
         Require(value.AssignmentId, "receipt.assignment_id");
         Require(value.CommandId, "receipt.command_id");
         Require(expectedAssignmentId, "expected_receipt.assignment_id");
         Require(expectedCommandId, "expected_receipt.command_id");
+        if (dispatch)
+        {
+            Require(expectedOperationId, "expected_receipt.operation_id");
+            Require(expectedAttemptId, "expected_receipt.attempt_id");
+        }
+        else
+        {
+            Require(expectedProfileId, "expected_receipt.profile_id");
+            Require(expectedGenerationId, "expected_receipt.generation_id");
+        }
         ValidateOptionalUInt64(value.InputTokens, "receipt.input_tokens");
         ValidateOptionalUInt64(value.OutputTokens, "receipt.output_tokens");
         ValidateOptionalUInt64(value.ReasoningTokens, "receipt.reasoning_tokens");
@@ -208,6 +255,10 @@ public static class HelperProtocolV2Codec
         bool noTransport = value.Outcome is HelperOutcomeV2.Unavailable or HelperOutcomeV2.Cancelled;
         bool hasResponse = value.RawResponse is not null;
         if (value.AssignmentId != expectedAssignmentId || value.CommandId != expectedCommandId
+            || (dispatch && (value.ProviderDispatch!.OperationId.Value != expectedOperationId
+                || value.ProviderDispatch.AttemptId.Value != expectedAttemptId))
+            || (!dispatch && (value.Credential!.AccessProfileId.Value != expectedProfileId
+                || value.Credential.GenerationId.Value != expectedGenerationId))
             || value.OutcomeHasResponse != hasResponse
             || (hasResponse && !ValidDigest(value.RawResponse))
             || (!dispatch && (value.TransportMayHaveStarted || hasResponse
@@ -238,6 +289,28 @@ public static class HelperProtocolV2Codec
         && proof.PolicyId == "unresolved-openai-responses-framing"
         && proof.PolicyVersion == "authority-required"
         && proof.Status == InputBoundProofStatusV2.AuthorityRequired;
+
+    private static void ValidateSubject<T>(
+        T subjectCase,
+        CredentialSubjectV2? credential,
+        ProviderDispatchSubjectV2? providerDispatch,
+        string path) where T : struct, Enum
+    {
+        if (credential is not null)
+        {
+            Require(credential.AccessProfileId?.Value, path + ".credential.access_profile_id");
+            Require(credential.GenerationId?.Value, path + ".credential.generation_id");
+        }
+        else if (providerDispatch is not null)
+        {
+            Require(providerDispatch.OperationId?.Value, path + ".provider_dispatch.operation_id");
+            Require(providerDispatch.AttemptId?.Value, path + ".provider_dispatch.attempt_id");
+        }
+        else
+        {
+            throw new InvalidDataException(path + " subject must be explicit.");
+        }
+    }
 
     private static void RejectUnknownFields(IMessage message, string path)
     {
@@ -291,6 +364,20 @@ public static class HelperProtocolV2Codec
         DateTimeOffset now) =>
         ValidInstant(value)
         && DateTimeOffset.FromUnixTimeSeconds(value!.UnixSeconds).AddTicks(value.Nanoseconds / 100) > now;
+
+    private static ulong ElapsedMilliseconds(
+        Infinium.Contracts.Protobuf.Common.V1.Instant start,
+        Infinium.Contracts.Protobuf.Common.V1.Instant end)
+    {
+        long seconds = checked(end.UnixSeconds - start.UnixSeconds);
+        long nanos = checked((long)end.Nanoseconds - start.Nanoseconds);
+        long totalNanos = checked(seconds * 1_000_000_000L + nanos);
+        if (totalNanos <= 0)
+        {
+            throw new InvalidDataException("Dispatch deadline must follow its confirmed or evaluated instant.");
+        }
+        return checked((ulong)((totalNanos + 999_999L) / 1_000_000L));
+    }
 
     private static void ValidateOptionalUInt64(Infinium.Contracts.Protobuf.Common.V1.OptionalUInt64? value, string field)
     {

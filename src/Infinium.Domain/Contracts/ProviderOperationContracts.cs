@@ -51,7 +51,6 @@ public enum ProviderResponseState
     Failed,
     Queued,
     InProgress,
-    Cancelled,
     Malformed,
     Oversized,
     Mismatched,
@@ -82,6 +81,7 @@ public enum ProviderInputBoundProofState
 {
     Unspecified,
     AuthorityRequired,
+    Proved,
 }
 
 public sealed record ProviderInputBoundProofContract(
@@ -240,6 +240,7 @@ public sealed record ProviderResponseDocument(
     string SchemaVersion,
     OpaqueId ResponseRecordId,
     OpaqueId OperationId,
+    OpaqueId? AuthorizationId,
     OpaqueId? RequestId,
     OpaqueId? DispatchFenceId,
     ProviderInputBoundProofContract InputBoundProof,
@@ -334,7 +335,10 @@ public sealed record ProviderExecutionInputDocument(
     string SchemaId,
     string SchemaVersion,
     OpaqueId OperationId,
+    string OwnerKind,
     OpaqueId OwnerId,
+    OpaqueId JobNodeId,
+    OpaqueId CommandId,
     OpaqueId InstallationSnapshotId,
     OpaqueId AnalysisContextId,
     OpaqueId EffectiveConfigurationId,
@@ -389,7 +393,10 @@ public sealed record ProviderPublicationReferenceContract(
     OpaqueId? SettlementId,
     OpaqueId? ReplayEdgeId,
     string Availability,
-    bool Live);
+    bool Live,
+    string? AcceptedInputBoundPolicyId = null,
+    string? AcceptedInputBoundPolicyVersion = null,
+    OpaqueId? LiveAuthorizationId = null);
 
 public sealed record RunOutputV2Document(
     string SchemaId,
@@ -423,4 +430,7 @@ public sealed record CliSummaryV2Document(
     string ReplayState,
     IReadOnlyList<string> Gaps,
     bool ContainsRawTransport,
-    bool ContainsSecret);
+    bool ContainsSecret,
+    string? AcceptedInputBoundPolicyId = null,
+    string? AcceptedInputBoundPolicyVersion = null,
+    OpaqueId? LiveAuthorizationId = null);

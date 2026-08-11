@@ -19,6 +19,8 @@ using V1Frame = Infinium.Contracts.Protobuf.Helper.V1.HelperPrivateFrame;
 using V2Assignment = Infinium.Contracts.Protobuf.Helper.V2.HelperAssignmentV2;
 using V2AssignmentKind = Infinium.Contracts.Protobuf.Helper.V2.HelperAssignmentKindV2;
 using V2Bootstrap = Infinium.Contracts.Protobuf.Helper.V2.HelperBootstrapV2;
+using V2CredentialSubject = Infinium.Contracts.Protobuf.Helper.V2.CredentialSubjectV2;
+using V2DispatchSubject = Infinium.Contracts.Protobuf.Helper.V2.ProviderDispatchSubjectV2;
 using V2Disposition = Infinium.Contracts.Protobuf.Helper.V2.DispatchDispositionV2;
 using V2Frame = Infinium.Contracts.Protobuf.Helper.V2.HelperPrivateFrameV2;
 using V2InputBoundProof = Infinium.Contracts.Protobuf.Helper.V2.InputBoundProofV2;
@@ -73,7 +75,7 @@ public sealed class ProviderContractJsonCodecTests
             ProviderContractJsonCodecs.DeserializeOperation);
         AssertCanonical(
             new ProviderResponseDocument(
-                ContractConstants.ProviderResponseSchemaId, "1", Id("response-1"), Id("operation-1"), null,
+                ContractConstants.ProviderResponseSchemaId, "1", Id("response-1"), Id("operation-1"), null, null,
                 null, BlockedProof(), DomainProviderAvailabilityState.Unavailable, null, null, 1_048_576, null, null,
                 DomainProviderAvailabilityState.Unavailable, null, null, null, null,
                 DomainProviderAvailabilityState.Unavailable, ProviderResponseState.Unknown,
@@ -101,7 +103,8 @@ public sealed class ProviderContractJsonCodecTests
             ProviderContractJsonCodecs.DeserializeCandidateInvestigation);
         AssertCanonical(
             new ProviderExecutionInputDocument(
-                ContractConstants.ProviderExecutionInputSchemaId, "1", Id("operation-1"), Id("run-1"), Id("snapshot-1"),
+                ContractConstants.ProviderExecutionInputSchemaId, "1", Id("operation-1"), "evidence-acquisition-run",
+                Id("run-1"), Id("job-1"), Id("command-1"), Id("snapshot-1"),
                 Id("context-1"), Id("config-2"), Id("manifest-1"), Id("profile-1"), Id("generation-1"),
                 Capability(), Price(), Limits, Id("prompt-1"), Fingerprint, Id("schema-1"),
                 Fingerprint, DomainProviderOperationKind.SourceClaimExtraction, Fingerprint, BlockedProof(), "blocked-authority-required"),
@@ -145,6 +148,50 @@ public sealed class ProviderContractJsonCodecTests
             Assert.ThrowsExactly<InvalidDataException>(() => ProviderContractJsonCodecs.DeserializeResponse(
                 System.Text.Encoding.UTF8.GetBytes(response.ToJsonString())), state);
         }
+    }
+
+    [TestMethod]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Contract")]
+    public void ProviderFutureResponseShapeIsProofQualifiedButCurrentRuntimeRejectsIt()
+    {
+        JsonObject response = JsonNode.Parse(File.ReadAllText(TestRepository.PathFromRoot(
+            "fixtures", "public", "contracts", "provider-wp1", "contract-examples.v1.json")))!
+            ["examples"]!["provider-response.v1.schema.json"]!.DeepClone().AsObject();
+        response["authorization_id"] = "authorization-1";
+        response["request_id"] = "request-1";
+        response["dispatch_fence_id"] = "fence-1";
+        response["input_bound_proof"] = new JsonObject
+        {
+            ["policy_id"] = "future-accepted-policy",
+            ["policy_version"] = "future-accepted-version",
+            ["status"] = "proved",
+        };
+        response["availability"] = "available";
+        response["raw_response_payload"] = IdentityReference("raw-response-1");
+        response["raw_response_bytes"] = 512;
+        response["response_headers_payload"] = IdentityReference("response-headers-1");
+        response["response_headers_bytes"] = 128;
+        response["response_headers_availability"] = "available";
+        response["http_status"] = 200;
+        response["provider_response_id"] = "provider-response-1";
+        response["client_request_id"] = "client-request-1";
+        response["provider_request_id"] = "provider-request-1";
+        response["provider_request_id_availability"] = "available";
+        response["state"] = "completed";
+        response["returned_model"] = "gpt-5.6-sol";
+        response["returned_service_tier"] = "default";
+        response["validation_state"] = "proposed";
+        response["admission_state"] = "proposed";
+        response["usage"]!["dispatch_count"]!["value"] = 1;
+
+        byte[] bytes = System.Text.Encoding.UTF8.GetBytes(response.ToJsonString());
+        using (JsonDocument document = JsonDocument.Parse(bytes))
+        {
+            Infinium.Application.Evaluation.ActiveJsonSchemaValidator.Validate(
+                document.RootElement, "provider-response.v1.schema.json");
+        }
+        Assert.ThrowsExactly<InvalidOperationException>(() => ProviderContractJsonCodecs.DeserializeResponse(bytes));
     }
 
     [TestMethod]
@@ -215,6 +262,19 @@ public sealed class ProviderContractJsonCodecTests
         output["provider_operations"]![0]!["operation_kind"] = "transport-qualification";
         Assert.ThrowsExactly<InvalidDataException>(() => ProviderContractJsonCodecs.DeserializeRunOutputV2(
             System.Text.Encoding.UTF8.GetBytes(output.ToJsonString())));
+        output = examples["run-output.v2.schema.json"]!.DeepClone().AsObject();
+        output["provider_operations"]![0]!["response_id"] = "response-invented";
+        Assert.ThrowsExactly<InvalidDataException>(() => ProviderContractJsonCodecs.DeserializeRunOutputV2(
+            System.Text.Encoding.UTF8.GetBytes(output.ToJsonString())));
+        output = examples["run-output.v2.schema.json"]!.DeepClone().AsObject();
+        output["provider_operations"]![0]!["accepted_input_bound_policy_version"] = "invented";
+        Assert.ThrowsExactly<InvalidDataException>(() => ProviderContractJsonCodecs.DeserializeRunOutputV2(
+            System.Text.Encoding.UTF8.GetBytes(output.ToJsonString())));
+
+        JsonObject cli = examples["cli-summary.v2.schema.json"]!.DeepClone().AsObject();
+        cli["accepted_input_bound_policy_version"] = "invented";
+        Assert.ThrowsExactly<InvalidDataException>(() => ProviderContractJsonCodecs.DeserializeCliSummaryV2(
+            System.Text.Encoding.UTF8.GetBytes(cli.ToJsonString())));
     }
 
     [TestMethod]
@@ -266,8 +326,7 @@ public sealed class ProviderContractJsonCodecTests
             ProtocolFingerprintSha256 = ByteString.CopyFrom(Convert.FromHexString(HelperProtocolV2Constants.SchemaFingerprintSha256)),
             Receipt = new V2Receipt
             {
-                OperationId = new OperationId { Value = "operation-1" },
-                AttemptId = new AttemptId { Value = "attempt-1" },
+                ProviderDispatch = DispatchSubject(),
                 Outcome = (V2Outcome)999,
                 AssignmentKind = V2AssignmentKind.ProviderDispatch,
             },
@@ -283,8 +342,7 @@ public sealed class ProviderContractJsonCodecTests
             ProtocolFingerprintSha256 = ByteString.CopyFrom(Convert.FromHexString(HelperProtocolV2Constants.SchemaFingerprintSha256)),
             Assignment = new V2Assignment
             {
-                OperationId = new OperationId { Value = "operation-1" },
-                AttemptId = new AttemptId { Value = "attempt-1" },
+                Credential = CredentialSubject(),
                 AccessProfileId = new ProviderAccessProfileId { Value = "profile-1" },
                 GenerationId = new CredentialGenerationId { Value = "generation-1" },
                 GenerationOrdinal = 1,
@@ -304,8 +362,7 @@ public sealed class ProviderContractJsonCodecTests
             ProtocolFingerprintSha256 = ByteString.CopyFrom(Convert.FromHexString(HelperProtocolV2Constants.SchemaFingerprintSha256)),
             Assignment = new V2Assignment
             {
-                OperationId = new OperationId { Value = "credential-operation" },
-                AttemptId = new AttemptId { Value = "credential-attempt" },
+                Credential = CredentialSubject(),
                 AccessProfileId = new ProviderAccessProfileId { Value = "profile-1" },
                 GenerationId = new CredentialGenerationId { Value = "generation-1" },
                 GenerationOrdinal = 1,
@@ -318,6 +375,7 @@ public sealed class ProviderContractJsonCodecTests
         byte[] requestBytes = [1, 2, 3];
         V2Frame blockedDispatch = credentialAssignment.Clone();
         blockedDispatch.Assignment.AssignmentKind = V2AssignmentKind.ProviderDispatch;
+        blockedDispatch.Assignment.ProviderDispatch = DispatchSubject();
         blockedDispatch.Assignment.OperationKind = V2OperationKind.SourceClaimExtraction;
         blockedDispatch.Assignment.Limits = HelperLimits();
         blockedDispatch.Assignment.ProviderRequest = new V2ProviderRequest
@@ -326,10 +384,12 @@ public sealed class ProviderContractJsonCodecTests
             RequestId = "request-1",
             CanonicalRequestBytes = ByteString.CopyFrom(requestBytes),
             CanonicalRequest = Digest(requestBytes),
+            RequestFingerprintSha256 = ByteString.CopyFrom(SHA256.HashData(requestBytes)),
             CapabilitySnapshotId = new CapabilitySnapshotId { Value = "capability-1" },
             PriceSnapshotId = new PriceSnapshotId { Value = "price-1" },
             ReservationGroupId = new ReservationGroupId { Value = "reservation-1" },
             DispatchDeadline = FutureInstant(),
+            ConfirmedAt = ToInstant(HelperNow),
             EndpointIdentity = Infinium.Contracts.Protobuf.Helper.V2.ProviderEndpointV2.OpenaiResponses,
             InputBoundProof = new V2InputBoundProof
             {
@@ -339,6 +399,9 @@ public sealed class ProviderContractJsonCodecTests
             },
         };
         Assert.ThrowsExactly<NotSupportedException>(() => HelperProtocolV2Codec.Decode(blockedDispatch.ToByteArray(), HelperNow));
+        V2Frame dispatchDeadlineOverflow = blockedDispatch.Clone();
+        dispatchDeadlineOverflow.Assignment.ProviderRequest.DispatchDeadline = ToInstant(HelperNow.AddSeconds(121));
+        Assert.ThrowsExactly<InvalidDataException>(() => HelperProtocolV2Codec.Decode(dispatchDeadlineOverflow.ToByteArray(), HelperNow));
         blockedDispatch.Assignment.ProviderRequest.CanonicalRequest.Value = ByteString.CopyFrom(new byte[32]);
         Assert.ThrowsExactly<InvalidDataException>(() => HelperProtocolV2Codec.Decode(blockedDispatch.ToByteArray(), HelperNow));
         V2Frame credentialReceipt = new()
@@ -347,8 +410,7 @@ public sealed class ProviderContractJsonCodecTests
             ProtocolFingerprintSha256 = ByteString.CopyFrom(Convert.FromHexString(HelperProtocolV2Constants.SchemaFingerprintSha256)),
             Receipt = new V2Receipt
             {
-                OperationId = new OperationId { Value = "credential-operation" },
-                AttemptId = new AttemptId { Value = "credential-attempt" },
+                Credential = CredentialSubject(),
                 AssignmentKind = V2AssignmentKind.Enroll,
                 AssignmentId = "assignment-credential",
                 CommandId = "command-credential",
@@ -357,11 +419,14 @@ public sealed class ProviderContractJsonCodecTests
             },
         };
         Assert.IsNull(HelperProtocolV2Codec.Decode(
-            credentialReceipt.ToByteArray(), HelperNow, "assignment-credential", "command-credential").Receipt.RawResponse);
+            credentialReceipt.ToByteArray(), HelperNow, "assignment-credential", "command-credential",
+            expectedProfileId: "profile-1", expectedGenerationId: "generation-1").Receipt.RawResponse);
         Assert.ThrowsExactly<InvalidDataException>(() => HelperProtocolV2Codec.Decode(
-            credentialReceipt.ToByteArray(), HelperNow, "assignment-other", "command-credential"));
+            credentialReceipt.ToByteArray(), HelperNow, "assignment-other", "command-credential",
+            expectedProfileId: "profile-1", expectedGenerationId: "generation-1"));
         Assert.ThrowsExactly<InvalidDataException>(() => HelperProtocolV2Codec.Decode(
-            credentialReceipt.ToByteArray(), HelperNow, "assignment-credential", "command-other"));
+            credentialReceipt.ToByteArray(), HelperNow, "assignment-credential", "command-other",
+            expectedProfileId: "profile-1", expectedGenerationId: "generation-1"));
         foreach (V2Outcome credentialOutcome in new[]
                  {
                      V2Outcome.Completed,
@@ -372,7 +437,8 @@ public sealed class ProviderContractJsonCodecTests
         {
             credentialReceipt.Receipt.Outcome = credentialOutcome;
             _ = HelperProtocolV2Codec.Decode(
-                credentialReceipt.ToByteArray(), HelperNow, "assignment-credential", "command-credential");
+                credentialReceipt.ToByteArray(), HelperNow, "assignment-credential", "command-credential",
+                expectedProfileId: "profile-1", expectedGenerationId: "generation-1");
         }
         foreach (V2Outcome transportOnlyOutcome in new[]
                  {
@@ -383,8 +449,38 @@ public sealed class ProviderContractJsonCodecTests
         {
             credentialReceipt.Receipt.Outcome = transportOnlyOutcome;
             Assert.ThrowsExactly<InvalidDataException>(() => HelperProtocolV2Codec.Decode(
-                credentialReceipt.ToByteArray(), HelperNow, "assignment-credential", "command-credential"));
+                credentialReceipt.ToByteArray(), HelperNow, "assignment-credential", "command-credential",
+                expectedProfileId: "profile-1", expectedGenerationId: "generation-1"));
         }
+        V2Frame blockedReceipt = new()
+        {
+            Sequence = 14,
+            ProtocolFingerprintSha256 = ByteString.CopyFrom(Convert.FromHexString(HelperProtocolV2Constants.SchemaFingerprintSha256)),
+            Receipt = new V2Receipt
+            {
+                ProviderDispatch = DispatchSubject(),
+                AssignmentKind = V2AssignmentKind.ProviderDispatch,
+                AssignmentId = "assignment-dispatch",
+                CommandId = "command-dispatch",
+                Outcome = V2Outcome.Unavailable,
+                RequestId = "request-1",
+                DispatchId = new DispatchId { Value = "dispatch-1" },
+                InputBoundProof = new V2InputBoundProof
+                {
+                    PolicyId = "unresolved-openai-responses-framing",
+                    PolicyVersion = "authority-required",
+                    Status = V2InputBoundProofStatus.AuthorityRequired,
+                },
+                NonSecretReceipt = Digest(),
+            },
+        };
+        Assert.ThrowsExactly<NotSupportedException>(() => HelperProtocolV2Codec.Decode(
+            blockedReceipt.ToByteArray(), HelperNow, "assignment-dispatch", "command-dispatch",
+            expectedOperationId: "operation-1", expectedAttemptId: "attempt-1"));
+        blockedReceipt.Receipt.ProviderDispatch.AttemptId.Value = "attempt-other";
+        Assert.ThrowsExactly<InvalidDataException>(() => HelperProtocolV2Codec.Decode(
+            blockedReceipt.ToByteArray(), HelperNow, "assignment-dispatch", "command-dispatch",
+            expectedOperationId: "operation-1", expectedAttemptId: "attempt-1"));
     }
 
     [TestMethod]
@@ -424,9 +520,14 @@ public sealed class ProviderContractJsonCodecTests
                 },
                 DispatchDeadline = FutureInstant(),
                 Limits = HelperLimits(),
+                EvaluatedAt = ToInstant(HelperNow),
+                RequestId = "request-1",
             },
         };
         Assert.AreEqual("account-1", HelperProtocolV2Codec.Decode(frame.ToByteArray(), HelperNow).DispatchRevalidation.AccountIdentityId.Value);
+        V2Frame revalidationDeadlineOverflow = frame.Clone();
+        revalidationDeadlineOverflow.DispatchRevalidation.DispatchDeadline = ToInstant(HelperNow.AddSeconds(121));
+        Assert.ThrowsExactly<InvalidDataException>(() => HelperProtocolV2Codec.Decode(revalidationDeadlineOverflow.ToByteArray(), HelperNow));
         frame.DispatchRevalidation.PriceSnapshotId = null;
         Assert.ThrowsExactly<InvalidDataException>(() => HelperProtocolV2Codec.Decode(frame.ToByteArray(), HelperNow));
 
@@ -480,11 +581,17 @@ public sealed class ProviderContractJsonCodecTests
             CommandId = "command-1",
             RequestedAt = ToInstant(HelperNow),
             ConfirmedAt = ToInstant(HelperNow.AddSeconds(1)),
-            RequestFingerprintSha256 = ByteString.CopyFrom(new byte[32]),
+            RequestFingerprintSha256 = ByteString.CopyFrom(SHA256.HashData(replayBytes)),
         };
         SubmitProviderOperationRequest submitRoundTrip = SubmitProviderOperationRequest.Parser.ParseFrom(submit.ToByteArray());
         Assert.ThrowsExactly<NotSupportedException>(() => ApplicationProviderContractValidator.Validate(submitRoundTrip));
         Assert.ThrowsExactly<NotSupportedException>(() => ApplicationProviderContractValidator.RequireDispatchAdmission(submitRoundTrip));
+        SubmitProviderOperationRequest fingerprintMismatch = submit.Clone();
+        fingerprintMismatch.RequestFingerprintSha256 = ByteString.CopyFrom(new byte[32]);
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(fingerprintMismatch));
+        SubmitProviderOperationRequest elapsedDeadline = submit.Clone();
+        elapsedDeadline.DispatchDeadline = ToInstant(HelperNow.AddSeconds(121));
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(elapsedDeadline));
         submitRoundTrip.OperationKind = (Infinium.Contracts.Protobuf.Application.V1.ProviderOperationKind)999;
         Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(submitRoundTrip));
 
@@ -494,6 +601,26 @@ public sealed class ProviderContractJsonCodecTests
         query.RequestedPageSize = 1;
         query.After = new PageCursor { OpaqueValue = ByteString.CopyFrom(new byte[513]) };
         Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(query));
+        ListProviderBudgetResponse budget = new()
+        {
+            Page = new ProviderBudgetPage
+            {
+                Items =
+                {
+                    new ProviderBudgetPayload
+                    {
+                        ScopeKind = "provider-profile",
+                        ScopeId = "profile-1",
+                        ReservedNanoUsd = 10,
+                        SettledNanoUsd = 5,
+                        UnresolvedNanoUsd = 5,
+                    },
+                },
+            },
+        };
+        ApplicationProviderContractValidator.Validate(budget);
+        budget.Page.Items[0].SettledNanoUsd = 6;
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(budget));
 
         SubmitProviderEnrollmentRequest enrollment = new()
         {
@@ -566,6 +693,9 @@ public sealed class ProviderContractJsonCodecTests
             CapabilitySnapshotId = new CapabilitySnapshotId { Value = "capability-1" },
             PriceSnapshotId = new PriceSnapshotId { Value = "price-1" },
             OperationKind = Infinium.Contracts.Protobuf.Application.V1.ProviderOperationKind.SourceClaimExtraction,
+            OwnerKind = "evidence-acquisition-run",
+            OwnerId = "acquisition-1",
+            JobNodeId = "job-1",
             State = ProviderOperationLifecycleState.InputBoundBlocked,
             SettlementState = ProviderSettlementState.NotStarted,
             ReplayState = ProviderReplayState.NotAvailable,
@@ -576,7 +706,7 @@ public sealed class ProviderContractJsonCodecTests
             OutputTokens = UnavailableApplicationQuantity(),
             TotalTokens = UnavailableApplicationQuantity(),
             CalculatedNanoUsd = UnavailableApplicationQuantity(),
-            DispatchCount = UnavailableApplicationQuantity(),
+            DispatchCount = new OptionalProviderQuantity { Availability = AppProviderAvailabilityState.Available, Value = 0 },
             ReasoningTokens = UnavailableApplicationQuantity(),
             CacheReadTokens = UnavailableApplicationQuantity(),
             CacheWriteTokens = UnavailableApplicationQuantity(),
@@ -588,6 +718,119 @@ public sealed class ProviderContractJsonCodecTests
         reserved.SettlementState = ProviderSettlementState.NotStarted;
         reserved.OperationKind = (Infinium.Contracts.Protobuf.Application.V1.ProviderOperationKind)999;
         Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(reserved));
+
+        ProviderCommandReceipt enrollmentReceipt = new()
+        {
+            CommandId = "enrollment-command-1",
+            ReceiptId = "receipt-1",
+            State = ProviderCommandState.EnrollmentIntentRecorded,
+            RequestedAt = ToInstant(HelperNow),
+            ConfirmedAt = ToInstant(HelperNow.AddSeconds(1)),
+            Enrollment = new ProviderEnrollmentReceiptSubject
+            {
+                ProfileId = new ProviderAccessProfileId { Value = "profile-1" },
+                GenerationId = new CredentialGenerationId { Value = "generation-1" },
+            },
+        };
+        ApplicationProviderContractValidator.Validate(
+            enrollmentReceipt, "enrollment-command-1", expectedProfileId: "profile-1", expectedGenerationId: "generation-1");
+        enrollmentReceipt.Enrollment.GenerationId.Value = "generation-other";
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(
+            enrollmentReceipt, "enrollment-command-1", expectedProfileId: "profile-1", expectedGenerationId: "generation-1"));
+        byte[] exactRequestFingerprint = SHA256.HashData(replayBytes);
+        ProviderCommandReceipt blockedOperationReceipt = new()
+        {
+            CommandId = "command-1",
+            ReceiptId = "receipt-2",
+            State = ProviderCommandState.BlockedAuthorityRequired,
+            RequestedAt = ToInstant(HelperNow),
+            ConfirmedAt = ToInstant(HelperNow.AddSeconds(1)),
+            Operation = new ProviderOperationReceiptSubject
+            {
+                OperationId = new OperationId { Value = "operation-1" },
+                RequestFingerprintSha256 = ByteString.CopyFrom(exactRequestFingerprint),
+            },
+        };
+        ApplicationProviderContractValidator.Validate(
+            blockedOperationReceipt, "command-1", "operation-1", exactRequestFingerprint);
+        blockedOperationReceipt.Operation.RequestFingerprintSha256 = ByteString.CopyFrom(new byte[32]);
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(
+            blockedOperationReceipt, "command-1", "operation-1", exactRequestFingerprint));
+
+        SourceClaimExtractionPayload sourceClaim = new()
+        {
+            AcquisitionRunId = "acquisition-1",
+            OperationId = new OperationId { Value = "operation-1" },
+            OwnerKind = "evidence-acquisition-run",
+            OwnerId = "acquisition-1",
+            ParentAnalysisRunId = "run-1",
+            ApplicationScopeId = "application-1",
+            CostAttributionScopeId = "cost-1",
+            ValidationIds = { "validation-1" },
+            ApplicationLinkIds = { "application-link-1" },
+        };
+        ApplicationProviderContractValidator.Validate(sourceClaim);
+        sourceClaim.OwnerId = "acquisition-other";
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(sourceClaim));
+        sourceClaim.OwnerId = "acquisition-1";
+        sourceClaim.ApplicationLinkIds.Clear();
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(sourceClaim));
+
+        CandidateInvestigationPayload candidate = new()
+        {
+            OperationId = new OperationId { Value = "operation-2" },
+            OwnerKind = "analysis-run",
+            OwnerId = "run-1",
+            AnalysisRunId = "run-1",
+            CandidateId = "candidate-1",
+            ValidationIds = { "validation-1" },
+            AdmissionLinkIds = { "admission-1" },
+        };
+        ApplicationProviderContractValidator.Validate(candidate);
+        candidate.AnalysisRunId = " ";
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(candidate));
+        candidate.AnalysisRunId = "run-1";
+        candidate.AdmissionLinkIds.Clear();
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(candidate));
+
+        ProviderResponsePayload unavailableResponse = new()
+        {
+            ResponseRecordId = "response-1",
+            MaximumRawResponseBytes = 1_048_576,
+            ResponseHeadersAvailability = AppProviderAvailabilityState.Unavailable,
+            ProviderRequestIdAvailability = AppProviderAvailabilityState.Unavailable,
+            ResponseState = "unknown",
+            RequestedModel = "gpt-5.6-sol",
+            RequestedServiceTier = "default",
+            ReasoningContext = "current_turn",
+            ReasoningMode = "standard",
+            PromptCacheMode = "explicit",
+            DispatchCount = new OptionalProviderQuantity { Availability = AppProviderAvailabilityState.Available, Value = 0 },
+            InputTokens = UnavailableApplicationQuantity(),
+            OutputTokens = UnavailableApplicationQuantity(),
+            TotalTokens = UnavailableApplicationQuantity(),
+            ReasoningTokens = UnavailableApplicationQuantity(),
+            CacheReadTokens = UnavailableApplicationQuantity(),
+            CacheWriteTokens = UnavailableApplicationQuantity(),
+            PricedToolCalls = UnavailableApplicationQuantity(),
+            CalculatedNanoUsd = UnavailableApplicationQuantity(),
+            BillingAvailability = AppProviderAvailabilityState.Unavailable,
+            RateAvailability = AppProviderAvailabilityState.Unavailable,
+            CreditAvailability = AppProviderAvailabilityState.Unavailable,
+            ValidationState = "unavailable",
+            AdmissionState = "unavailable",
+            RecordedAt = ToInstant(HelperNow),
+            Availability = AppProviderAvailabilityState.Unavailable,
+            InputBoundProofStatus = InputBoundProofStatus.AuthorityRequired,
+            InputBoundPolicyId = "unresolved-openai-responses-framing",
+            InputBoundPolicyVersion = "authority-required",
+        };
+        ApplicationProviderContractValidator.Validate(unavailableResponse);
+        unavailableResponse.DispatchCount = UnavailableApplicationQuantity();
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(unavailableResponse));
+        unavailableResponse.DispatchCount = new OptionalProviderQuantity { Availability = AppProviderAvailabilityState.Available, Value = 0 };
+        unavailableResponse.BillingAvailability = AppProviderAvailabilityState.Available;
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(unavailableResponse));
 
         ApplicationProviderContractValidator.Validate(replay);
         replay.NetworkPermitted = true;
@@ -645,8 +888,9 @@ public sealed class ProviderContractJsonCodecTests
         AssertTraceMapping(contracts, "provider-access-profile.v1.schema.json", "generation_id", "provider_generations.generation_id", "ADR-0020");
         AssertTraceMapping(contracts, "provider-access-profile.v1.schema.json", "account_identity_id", "provider_profile_projection.account_identity_id", "ADR-0020");
         AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "operation_id", "provider_operation_blocks.operation_id", "ADR-0023");
-        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "job_node_id", "provider_operation_blocks.job_node_id");
-        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "owner_id", "provider_operation_blocks.owner_id");
+        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "job_node_id", "provider_operation_blocks.job_node_id", "ADR-0016");
+        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "owner_id", "provider_operation_blocks.owner_id", "ADR-0016");
+        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "request_fingerprint", "provider_operation_blocks.request_fingerprint", "ADR-0025");
         AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "$defs.inputBoundProof.status", "provider_operation_blocks.input_bound_proof_status", "ADR-0025");
         AssertTraceMapping(contracts, "provider-response.v1.schema.json", "raw_response_payload",
             "provider_responses.raw_response_payload_id", "provider_responses.raw_response_fingerprint");
@@ -658,19 +902,27 @@ public sealed class ProviderContractJsonCodecTests
         AssertTraceMapping(contracts, "provider-response.v1.schema.json", "$defs.rateLimitFact.scope", "provider_rate_limit_facts.scope", "ADR-0025");
         AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "$defs.capabilitySnapshot.model", "provider_capability_snapshots.model", "ADR-0020");
         AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "$defs.priceSnapshot.model", "provider_price_snapshots.model", "ADR-0020");
-        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "$defs.priceRule.rule_id", "provider_price_rules.rule_id", "ADR-0020");
-        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "command_id", "provider_operation_blocks.command_id", "ADR-0025");
+        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "$defs.priceRule.rule_id", "provider_price_rules.rule_id", "ADR-0023");
+        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "command_id", "provider_operation_blocks.command_id", "ADR-0016");
         AssertTraceOmission(contracts, "provider-operation.v1.schema.json", "command_id", "output", "command_id");
         AssertTraceMapping(contracts, "source-claim-extraction.v1.schema.json", "acquisition_run_id",
-            "evidence_acquisition_runs.acquisition_run_id", "ADR-0023");
+            "evidence_acquisition_runs.acquisition_run_id", "ADR-0002");
         AssertTraceMapping(contracts, "source-claim-extraction.v1.schema.json", "owner_id",
-            "evidence_acquisition_runs.acquisition_run_id", "ADR-0023");
+            "evidence_acquisition_runs.acquisition_run_id", "ADR-0016");
         AssertTraceMapping(contracts, "source-claim-extraction.v1.schema.json", "parent_analysis_run_id",
-            "evidence_acquisition_runs.parent_analysis_run_id", "ADR-0023");
+            "evidence_acquisition_runs.parent_analysis_run_id", "ADR-0002");
         AssertTraceMapping(contracts, "source-claim-extraction.v1.schema.json", "application_scope_id",
-            "evidence_acquisition_runs.application_scope_id", "ADR-0023");
+            "evidence_acquisition_runs.application_scope_id", "ADR-0002");
         AssertTraceMapping(contracts, "source-claim-extraction.v1.schema.json", "cost_attribution_scope_id",
-            "evidence_acquisition_runs.cost_attribution_scope_id", "ADR-0023");
+            "evidence_acquisition_runs.cost_attribution_scope_id", "ADR-0002");
+        AssertTraceMapping(contracts, "source-claim-extraction.v1.schema.json", "owner_kind",
+            "provider_operation_blocks.owner_kind", "ADR-0016");
+        AssertTraceMapping(contracts, "source-claim-extraction.v1.schema.json", "application_link_ids",
+            "evidence_acquisition_application_links.application_link_id", "ADR-0016");
+        AssertTraceMapping(contracts, "candidate-investigation.v1.schema.json", "owner_kind",
+            "provider_operation_blocks.owner_kind", "ADR-0016");
+        AssertTraceMapping(contracts, "candidate-investigation.v1.schema.json", "admission_link_ids",
+            "provider_semantic_admissions.admission_id", "ADR-0013");
         AssertTraceProjection(contracts, "source-claim-extraction.v1.schema.json", "owner_kind",
             "output", "SourceClaimExtractionPayload", "owner_kind");
         AssertTraceMapping(contracts, "provider-response.v1.schema.json", "input_bound_proof",
@@ -949,12 +1201,24 @@ public sealed class ProviderContractJsonCodecTests
         ProtocolFingerprintSha256 = ByteString.CopyFrom(Convert.FromHexString(HelperProtocolV2Constants.SchemaFingerprintSha256)),
         Bootstrap = new V2Bootstrap
         {
-            OperationId = new OperationId { Value = "operation-1" },
-            AttemptId = new AttemptId { Value = "attempt-1" },
+            ProviderDispatch = DispatchSubject(),
+            CommandId = "command-1",
             CoordinatorFencingEpoch = 1,
             ExpiresAt = FutureInstant(),
             OneUseNonceFingerprintSha256 = ByteString.CopyFrom(new byte[32]),
         },
+    };
+
+    private static V2CredentialSubject CredentialSubject() => new()
+    {
+        AccessProfileId = new ProviderAccessProfileId { Value = "profile-1" },
+        GenerationId = new CredentialGenerationId { Value = "generation-1" },
+    };
+
+    private static V2DispatchSubject DispatchSubject() => new()
+    {
+        OperationId = new OperationId { Value = "operation-1" },
+        AttemptId = new AttemptId { Value = "attempt-1" },
     };
 
     private static ContentDigest Digest() => new()
@@ -1001,5 +1265,11 @@ public sealed class ProviderContractJsonCodecTests
     {
         UnixSeconds = value.ToUnixTimeSeconds(),
         Nanoseconds = 0,
+    };
+
+    private static JsonObject IdentityReference(string identity) => new()
+    {
+        ["identity"] = identity,
+        ["fingerprint"] = new string('a', 64),
     };
 }

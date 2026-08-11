@@ -54,6 +54,14 @@ public sealed class PersistenceAndLifecycleTests
         Assert.AreEqual(1L, reader.GetInt64(0));
         Assert.AreEqual(25L, reader.GetInt64(1));
         Assert.AreEqual(44L, reader.GetInt64(2));
+        reader.Close();
+        command.CommandText = "SELECT sql FROM sqlite_schema WHERE type='trigger' AND name='provider_usage_operation_ceiling_guard';";
+        string usageCeilingSql = (string)command.ExecuteScalar()!;
+        StringAssert.Contains(usageCeilingSql, "NEW.dispatch_count > a.maximum_dispatch_count");
+        StringAssert.Contains(usageCeilingSql, "NEW.reasoning_tokens > a.maximum_output_tokens");
+        StringAssert.Contains(usageCeilingSql, "NEW.reasoning_tokens > 256");
+        command.CommandText = "SELECT sql FROM sqlite_schema WHERE type='table' AND name='provider_usage_entries';";
+        StringAssert.Contains((string)command.ExecuteScalar()!, "reasoning_tokens <= output_tokens");
     }
 
     [TestMethod]
@@ -132,6 +140,97 @@ public sealed class PersistenceAndLifecycleTests
                 Directory.Delete(targetParent, recursive: true);
             }
         }
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
+    public void Schema6ProviderRelationalRootsRejectCrossBindingFingerprintAndTimeRegression()
+    {
+        using TemporaryStore temporary = new();
+        using AuthoritativeStore store = temporary.Open();
+        SeedProviderAuthorityBlock(temporary.Root);
+        using SqliteConnection connection = OpenRaw(temporary.Root);
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText =
+            """
+            INSERT INTO durable_commands VALUES('command-owner-mismatch','provider','run-restore',0,'recorded','created',NULL,'2026-08-10T00:00:03Z',NULL,NULL);
+            INSERT INTO durable_commands VALUES('command-fingerprint-mismatch','provider','run-restore',0,'recorded','created',NULL,'2026-08-10T00:00:04Z',NULL,NULL);
+            INSERT INTO durable_commands VALUES('command-deadline-mismatch','provider','run-restore',0,'recorded','created',NULL,'2026-08-10T00:00:05Z',NULL,NULL);
+            """;
+        command.ExecuteNonQuery();
+
+        string insertFromValid =
+            """
+            INSERT INTO provider_operation_blocks
+            SELECT $operationId,owner_kind,$ownerId,job_node_id,$commandId,requested_at,confirmed_at,
+              installation_snapshot_id,analysis_context_id,effective_configuration_id,resolved_input_manifest_id,
+              profile_id,generation_id,revocation_epoch,operation_kind,capability_snapshot_id,price_snapshot_id,
+              prompt_id,prompt_fingerprint,output_schema_id,output_schema_fingerprint,$requestFingerprint,
+              canonical_request_payload_id,canonical_request_fingerprint,canonical_request_bytes,settings_fingerprint,
+              input_bound_policy_id,input_bound_policy_version,input_bound_proof_status,maximum_request_bytes,
+              maximum_input_tokens,maximum_output_tokens,maximum_raw_response_bytes,maximum_dispatch_count,
+              maximum_calculated_nano_usd,deadline_milliseconds,$dispatchDeadline,coordinator_fencing_epoch,state,recorded_at
+            FROM provider_operation_blocks WHERE operation_id='operation-restore';
+            """;
+        command.CommandText = insertFromValid;
+        command.Parameters.AddWithValue("$operationId", "operation-owner-mismatch");
+        command.Parameters.AddWithValue("$ownerId", "acquisition-other");
+        command.Parameters.AddWithValue("$commandId", "command-owner-mismatch");
+        command.Parameters.AddWithValue("$requestFingerprint", Convert.ToHexStringLower(SHA256.HashData(new byte[1024])));
+        command.Parameters.AddWithValue("$dispatchDeadline", "2026-08-10T00:02:00Z");
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+
+        command.Parameters["$operationId"].Value = "operation-fingerprint-mismatch";
+        command.Parameters["$ownerId"].Value = "acquisition-restore";
+        command.Parameters["$commandId"].Value = "command-fingerprint-mismatch";
+        command.Parameters["$requestFingerprint"].Value = new string('f', 64);
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+
+        command.Parameters["$operationId"].Value = "operation-deadline-mismatch";
+        command.Parameters["$commandId"].Value = "command-deadline-mismatch";
+        command.Parameters["$requestFingerprint"].Value = Convert.ToHexStringLower(SHA256.HashData(new byte[1024]));
+        command.Parameters["$dispatchDeadline"].Value = "2026-08-10T00:02:01Z";
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+
+        command.CommandText =
+            """
+            UPDATE provider_profile_projection
+            SET projection_version=projection_version,updated_at='2026-08-10T00:00:03Z'
+            WHERE profile_id='profile-restore';
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+
+        command.CommandText =
+            """
+            INSERT INTO provider_generations VALUES(
+              'generation-other','profile-restore',2,0,'2026-08-10T00:00:03Z');
+            UPDATE provider_profile_projection
+            SET generation_id='generation-other',projection_version=4,updated_at='2026-08-10T00:00:03Z'
+            WHERE profile_id='profile-restore';
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+
+        command.CommandText =
+            """
+            INSERT INTO provider_access_profiles VALUES(
+              'profile-other','openai','responses','Other','account-other','billing-other','2026-08-10T00:00:03Z');
+            INSERT INTO provider_generations VALUES(
+              'generation-cross-profile','profile-other',1,0,'2026-08-10T00:00:03Z');
+            UPDATE provider_profile_projection
+            SET generation_id='generation-cross-profile',projection_version=4,updated_at='2026-08-10T00:00:03Z'
+            WHERE profile_id='profile-restore';
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+
+        command.CommandText =
+            """
+            INSERT INTO provider_credential_intents VALUES(
+              'intent-time-regression','profile-restore','generation-restore','verify','completed',
+              'active-unverified','active-verified','available','account-restore','billing-restore','cap-restore',
+              'not-required','not-requested','2026-08-10T00:00:01Z');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
     }
     [TestMethod]
     [TestCategory("Unit")]
@@ -1298,7 +1397,7 @@ public sealed class PersistenceAndLifecycleTests
             INSERT INTO provider_access_profiles VALUES('profile-restore','openai','responses','Restore','account-restore','billing-restore','2026-08-10T00:00:00Z');
             INSERT INTO provider_generations VALUES('generation-restore','profile-restore',1,0,'2026-08-10T00:00:00Z');
             INSERT INTO provider_capability_snapshots VALUES('cap-restore','openai','gpt-5.6-sol','default','medium','current_turn','standard',0,0,0,'none',0,'disabled','explicit',0,0,272000,'synthetic-v1','aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa','2026-08-10T00:00:00Z');
-            INSERT INTO provider_credential_intents VALUES('intent-enroll-restore','profile-restore','generation-restore','enroll','completed','none','pending-enrollment','not-applicable',NULL,NULL,NULL,'not-required','not-requested','2026-08-10T00:00:00Z');
+            INSERT INTO provider_credential_intents VALUES('intent-enroll-restore','profile-restore','generation-restore','enroll','pending','none','pending-enrollment','not-applicable',NULL,NULL,NULL,'not-required','not-requested','2026-08-10T00:00:00Z');
             INSERT INTO provider_profile_projection VALUES('profile-restore','generation-restore',0,'pending-enrollment','not-applicable',NULL,NULL,NULL,'intent-enroll-restore','not-required','not-requested',1,'2026-08-10T00:00:00Z');
             INSERT INTO provider_credential_intents VALUES('intent-activate-restore','profile-restore','generation-restore','enroll','completed','pending-enrollment','active-unverified','unavailable','account-restore','billing-restore','cap-restore','not-required','not-requested','2026-08-10T00:00:01Z');
             UPDATE provider_profile_projection SET lifecycle_state='active-unverified',verification_state='unavailable',capability_snapshot_id='cap-restore',account_identity_id='account-restore',billing_scope_identity_id='billing-restore',intent_id='intent-activate-restore',projection_version=2,updated_at='2026-08-10T00:00:01Z' WHERE profile_id='profile-restore';
@@ -1308,6 +1407,7 @@ public sealed class PersistenceAndLifecycleTests
             INSERT INTO provider_price_rules VALUES('price-restore','rule-restore','standard-under-272k','ordinary-input','input','none','global',1,1,'synthetic-v1');
             INSERT INTO runs VALUES('run-restore','install-restore','context-restore','config-restore','manifest-restore','created',0,1,1,'2026-08-10T00:00:00Z','2026-08-10T00:00:00Z');
             INSERT INTO job_nodes VALUES('job-restore','run-restore',NULL,'provider','created',0,'2026-08-10T00:00:00Z','2026-08-10T00:00:00Z');
+            INSERT INTO durable_commands VALUES('command-restore','provider','run-restore',0,'recorded','created',NULL,'2026-08-10T00:00:00Z',NULL,NULL);
             INSERT INTO evidence_acquisition_runs VALUES('acquisition-restore','install-restore','context-restore','config-restore','manifest-restore','run-restore','application-restore','cost-restore','created','2026-08-10T00:00:00Z');
             INSERT INTO evidence_acquisition_parent_links VALUES('parent-restore','acquisition-restore','run-restore','initiated-by',NULL,'2026-08-10T00:00:00Z');
             INSERT INTO payloads VALUES('request-payload-restore',$canonicalRequestSha256,1024,'application/json','retained',
@@ -1327,7 +1427,7 @@ public sealed class PersistenceAndLifecycleTests
               'profile-restore','generation-restore',0,'source-claim-extraction','cap-restore','price-restore','prompt-restore',
               'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd','schema-restore',
               'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-              'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff','request-payload-restore',
+              $canonicalRequestSha256,'request-payload-restore',
               $canonicalRequestSha256,1024,
               '9999999999999999999999999999999999999999999999999999999999999999',
               'unresolved-openai-responses-framing','authority-required','authority-required',65536,73728,4096,

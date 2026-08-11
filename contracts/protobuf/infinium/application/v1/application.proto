@@ -178,6 +178,7 @@ message ProviderResponsePayload {
   string input_bound_policy_version = 42;
   string client_request_id = 43;
   infinium.common.v1.ContentDigest billing_evidence = 44;
+  string authorization_id = 45;
 }
 
 message ProviderRateLimitFact {
@@ -388,8 +389,7 @@ enum ProviderReplayState {
 enum InputBoundProofStatus {
   INPUT_BOUND_PROOF_STATUS_UNSPECIFIED = 0;
   INPUT_BOUND_PROOF_STATUS_AUTHORITY_REQUIRED = 1;
-  reserved 2;
-  reserved "INPUT_BOUND_PROOF_STATUS_PROVED";
+  INPUT_BOUND_PROOF_STATUS_PROVED = 2;
 }
 
 message SubmitProviderCommandResponse {
@@ -399,10 +399,25 @@ message SubmitProviderCommandResponse {
 message ProviderCommandReceipt {
   string command_id = 1;
   ProviderCommandState state = 2;
-  infinium.domain.v1.OperationId operation_id = 3;
+  reserved 3;
+  reserved "operation_id";
   infinium.common.v1.Instant requested_at = 4;
   infinium.common.v1.Instant confirmed_at = 5;
   string receipt_id = 6;
+  oneof subject {
+    ProviderEnrollmentReceiptSubject enrollment = 10;
+    ProviderOperationReceiptSubject operation = 11;
+  }
+}
+
+message ProviderEnrollmentReceiptSubject {
+  infinium.domain.v1.ProviderAccessProfileId profile_id = 1;
+  infinium.domain.v1.CredentialGenerationId generation_id = 2;
+}
+
+message ProviderOperationReceiptSubject {
+  infinium.domain.v1.OperationId operation_id = 1;
+  bytes request_fingerprint_sha256 = 2;
 }
 
 enum ProviderCommandState {
@@ -420,6 +435,8 @@ message SourceClaimExtractionPayload {
   string parent_analysis_run_id = 5;
   string application_scope_id = 6;
   string cost_attribution_scope_id = 7;
+  repeated string validation_ids = 8;
+  repeated string application_link_ids = 9;
 }
 
 message CandidateInvestigationPayload {
@@ -428,6 +445,8 @@ message CandidateInvestigationPayload {
   string owner_id = 3;
   string analysis_run_id = 4;
   string candidate_id = 5;
+  repeated string validation_ids = 6;
+  repeated string admission_link_ids = 7;
 }
 
 message GetAnalysisOutputRequest {
