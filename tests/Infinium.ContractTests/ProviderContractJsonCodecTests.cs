@@ -1342,11 +1342,16 @@ public sealed class ProviderContractJsonCodecTests
         AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "job_node_id", "provider_operation_blocks.job_node_id", "ADR-0016");
         AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "owner_id", "provider_operation_blocks.owner_id", "ADR-0016");
         AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "request_fingerprint", "provider_operation_blocks.request_fingerprint", "ADR-0025");
-        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "transport_state", "provider_transport_events.event_kind", "ADR-0023");
-        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "receipt_state", "provider_usage_entries.receipt_state", "ADR-0023");
-        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "usage", "provider_usage_entries.total_tokens", "ADR-0023");
-        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "settlement_state", "provider_settlements.state", "ADR-0023");
-        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "replay_state", "provider_replay_edges.replay_state", "ADR-0023");
+        AssertTraceOmission(contracts, "provider-operation.v1.schema.json", "transport_state", "persistence", "provider_operation_blocks.state");
+        AssertTraceOmission(contracts, "provider-operation.v1.schema.json", "receipt_state", "persistence", "provider_operation_blocks.state");
+        AssertTraceOmission(contracts, "provider-operation.v1.schema.json", "usage", "persistence", "provider_operation_blocks.state");
+        AssertTraceOmission(contracts, "provider-operation.v1.schema.json", "settlement_state", "persistence", "provider_operation_blocks.state");
+        AssertTraceOmission(contracts, "provider-operation.v1.schema.json", "replay_state", "persistence", "provider_operation_blocks.state");
+        AssertTraceDerivation(contracts, "transport_state", "input-bound-blocked -> not-started");
+        AssertTraceDerivation(contracts, "receipt_state", "input-bound-blocked -> not-available");
+        AssertTraceDerivation(contracts, "usage", "input-bound-blocked -> exact blockedUsage unavailable vector with available zero dispatch_count");
+        AssertTraceDerivation(contracts, "settlement_state", "input-bound-blocked -> not-started");
+        AssertTraceDerivation(contracts, "replay_state", "input-bound-blocked -> not-available");
         AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "$defs.inputBoundProof.status", "provider_operation_blocks.input_bound_proof_status", "ADR-0025");
         AssertTraceMapping(contracts, "provider-response.v1.schema.json", "raw_response_payload",
             "provider_responses.raw_response_payload_id", "provider_responses.raw_response_fingerprint");
@@ -1567,6 +1572,16 @@ public sealed class ProviderContractJsonCodecTests
         {
             Assert.IsFalse(reason.Contains(forbiddenText, StringComparison.Ordinal), $"{schema}:{path}:{seam}:{forbiddenText}");
         }
+    }
+
+    private static void AssertTraceDerivation(JsonElement[] contracts, string path, string translation)
+    {
+        JsonElement persistence = contracts.Single(x => x.GetProperty("schema").GetString() == "provider-operation.v1.schema.json")
+            .GetProperty("field_mappings").EnumerateArray()
+            .Single(x => x.GetProperty("path").GetString() == path)
+            .GetProperty("persistence");
+        Assert.AreEqual("provider_operation_blocks.state", persistence.GetProperty("derived_from").GetString(), path);
+        Assert.AreEqual(translation, persistence.GetProperty("translation").GetString(), path);
     }
 
     private static void AssertTraceMapping(JsonElement[] contracts, string schema, string path, string tableColumn, string? secondOrAuthority = null)

@@ -1276,7 +1276,9 @@
             "symbol": "TransportState"
           },
           "persistence": {
-            "table_column": "provider_transport_events.event_kind"
+            "derived_from": "provider_operation_blocks.state",
+            "translation": "input-bound-blocked -> not-started",
+            "not_persisted_reason": "transport_state is exactly derived as not-started from provider_operation_blocks.state=input-bound-blocked; provider_transport_events.event_kind is a distinct future runtime event vocabulary, not a semantically identical transport_state column."
           },
           "output": {
             "omission_reason": "transport_state has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
@@ -1302,7 +1304,9 @@
             "symbol": "ReceiptState"
           },
           "persistence": {
-            "table_column": "provider_usage_entries.receipt_state"
+            "derived_from": "provider_operation_blocks.state",
+            "translation": "input-bound-blocked -> not-available",
+            "not_persisted_reason": "receipt_state is exactly derived as not-available from provider_operation_blocks.state=input-bound-blocked; provider_usage_entries.receipt_state is a distinct future response-receipt vocabulary, not the blocked operation receipt_state."
           },
           "output": {
             "omission_reason": "receipt_state has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
@@ -1328,30 +1332,9 @@
             "symbol": "Usage"
           },
           "persistence": {
-            "table_columns": [
-              "provider_usage_entries.availability",
-              "provider_usage_entries.dispatch_count_availability",
-              "provider_usage_entries.dispatch_count",
-              "provider_usage_entries.input_tokens_availability",
-              "provider_usage_entries.input_tokens",
-              "provider_usage_entries.output_tokens_availability",
-              "provider_usage_entries.output_tokens",
-              "provider_usage_entries.total_tokens_availability",
-              "provider_usage_entries.total_tokens",
-              "provider_usage_entries.reasoning_tokens_availability",
-              "provider_usage_entries.reasoning_tokens",
-              "provider_usage_entries.cache_read_tokens_availability",
-              "provider_usage_entries.cache_read_tokens",
-              "provider_usage_entries.cache_write_tokens_availability",
-              "provider_usage_entries.cache_write_tokens",
-              "provider_usage_entries.priced_tool_calls_availability",
-              "provider_usage_entries.priced_tool_calls",
-              "provider_usage_entries.calculated_nano_usd_availability",
-              "provider_usage_entries.calculated_nano_usd",
-              "provider_usage_entries.billing_availability",
-              "provider_usage_entries.rate_availability",
-              "provider_usage_entries.credit_availability"
-            ]
+            "derived_from": "provider_operation_blocks.state",
+            "translation": "input-bound-blocked -> exact blockedUsage unavailable vector with available zero dispatch_count",
+            "not_persisted_reason": "usage is exactly derived as the provider-operation blockedUsage vector from provider_operation_blocks.state=input-bound-blocked; provider_usage_entries is distinct future response usage history and no row may exist for the blocked operation."
           },
           "output": {
             "file": "contracts/protobuf/infinium/application/v1/application.proto",
@@ -1388,7 +1371,9 @@
             "symbol": "SettlementState"
           },
           "persistence": {
-            "table_column": "provider_settlements.state"
+            "derived_from": "provider_operation_blocks.state",
+            "translation": "input-bound-blocked -> not-started",
+            "not_persisted_reason": "settlement_state is exactly derived as not-started from provider_operation_blocks.state=input-bound-blocked; provider_settlements.state is distinct future settlement history and no row may exist for the blocked operation."
           },
           "output": {
             "file": "contracts/protobuf/infinium/application/v1/application.proto",
@@ -1416,7 +1401,9 @@
             "symbol": "ReplayState"
           },
           "persistence": {
-            "table_column": "provider_replay_edges.replay_state"
+            "derived_from": "provider_operation_blocks.state",
+            "translation": "input-bound-blocked -> not-available",
+            "not_persisted_reason": "replay_state is exactly derived as not-available from provider_operation_blocks.state=input-bound-blocked; provider_replay_edges.replay_state is distinct future replay history and no row may exist for the blocked operation."
           },
           "output": {
             "file": "contracts/protobuf/infinium/application/v1/application.proto",

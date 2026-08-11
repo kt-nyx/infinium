@@ -104,6 +104,36 @@ function Get-DeclaredFields([object] $Node, [string] $Prefix, [System.Collection
 }
 
 function Get-Persistence([string] $Schema, [string] $Path) {
+    if ($Schema -eq 'provider-operation.v1.schema.json') {
+        $blockedTranslations = @{
+            transport_state = 'input-bound-blocked -> not-started'
+            receipt_state = 'input-bound-blocked -> not-available'
+            usage = 'input-bound-blocked -> exact blockedUsage unavailable vector with available zero dispatch_count'
+            settlement_state = 'input-bound-blocked -> not-started'
+            replay_state = 'input-bound-blocked -> not-available'
+        }
+        if ($blockedTranslations.ContainsKey($Path)) {
+            $runtimeSeam = switch ($Path) {
+                'transport_state' { 'provider_transport_events.event_kind is a distinct future runtime event vocabulary, not a semantically identical transport_state column' }
+                'receipt_state' { 'provider_usage_entries.receipt_state is a distinct future response-receipt vocabulary, not the blocked operation receipt_state' }
+                'usage' { 'provider_usage_entries is distinct future response usage history and no row may exist for the blocked operation' }
+                'settlement_state' { 'provider_settlements.state is distinct future settlement history and no row may exist for the blocked operation' }
+                'replay_state' { 'provider_replay_edges.replay_state is distinct future replay history and no row may exist for the blocked operation' }
+            }
+            $derivedValue = switch ($Path) {
+                'transport_state' { 'not-started' }
+                'receipt_state' { 'not-available' }
+                'usage' { 'the provider-operation blockedUsage vector' }
+                'settlement_state' { 'not-started' }
+                'replay_state' { 'not-available' }
+            }
+            return [ordered]@{
+                derived_from = 'provider_operation_blocks.state'
+                translation = $blockedTranslations[$Path]
+                not_persisted_reason = "$Path is exactly derived as $derivedValue from provider_operation_blocks.state=input-bound-blocked; $runtimeSeam."
+            }
+        }
+    }
     $leaf = $Path.Split('.')[-1]
     $column = $null
     switch ($Schema) {

@@ -1546,3 +1546,112 @@ private evidence was invented. No network/DNS/provider, Credential Manager,
 native credential, private fixture, sibling repository, legacy/evaluator
 archive, later-package, current-state, push, amend, or frozen Slice 5 v1 edit
 occurred.
+
+## Thirteenth-cycle timestamp, credential order, reservation vector, response terminality, and trace correction — 2026-08-11
+
+Fresh review of candidate `c67be4a99df0fcd1635790dc8b6984f528a76588`
+found five combined recoverable WP1 implementation/evidence defects. No finding
+required new authority or expanded the accepted WP1 scope.
+
+### Corrected exact seams
+
+- Every schema-6 authoritative timestamp guard now proves exact .NET `O`
+  representability without relying on SQLite date rounding: year `0001` through
+  `9999`, calendar-valid month/day with Gregorian leap years, hour `00` through
+  `23`, minute/second `00` through `59`, exactly seven fractional digits, and
+  the literal UTC suffix `+00:00`. Insert and mutable-projection update
+  adversaries reject year zero, invalid month/day, non-leap February 29,
+  April 31, hour 24, minute/second 60, and non-UTC offsets while accepting
+  valid year-one, leap-century, and seven-digit UTC values.
+- Credential intent/event/projection succession is profile- and generation-wide
+  durable order. A new intent advances beyond the exact latest prior intent,
+  event, and projection time; an event equals its own intent time and advances
+  the profile-wide event sequence; the projection binds the latest applicable
+  event. Equal-time, rollback, stale-authority, wrong-root, and stranded-
+  successor attempts reject across roots. Terminal cancellation can materialize
+  a pending delete root and does not wedge the next legal successor.
+- A provider operation has exactly one response terminal. With foreign keys
+  enabled, duplicate cancellation/response, usage, and finalization history
+  reject for the same operation/root.
+- Reservations persist an exact typed vector for dispatch, input, output,
+  reasoning, cache-read, cache-write, priced-tool calls, and nano-USD cost.
+  The canonical reservation JSON and every scope item bind exactly to that
+  operation reservation; pre-dispatch reservation ceilings remain enforced.
+  Post-fact usage retains every observed dimension within its closed absolute
+  bounds, and settlement is `overrun` if and only if any observed dimension
+  exceeds its reserved component. Mixed below/equal/above adversaries cover
+  every component independently, including dispatch, while released and
+  retained amounts must exactly partition the reservation under the settlement
+  policy.
+- Provider usage receipt state now has the closed vocabulary `not-dispatched`,
+  `complete`, `partial`, `failed-known`, `ambiguous`, and `unavailable`, with
+  exact response-state translations. Provider-operation transport, receipt,
+  usage, settlement, and replay fields are truthfully traced as projections
+  derived from the persisted operation-block state, with explicit translations
+  and path-specific non-persistence reasons; they no longer claim false direct
+  equivalence to runtime history-table columns. Contract tests assert every
+  legal translation and reject illegal or false mappings.
+
+The nine Slice 6 contracts remain `Proposed`; WP1 remains `Deferred` solely on
+the absent accepted repository-local input-bound tokenizer/provider-framing
+proof. This correction does not accept WP1, authorize native credential or
+live provider work, advance `docs/current-state.md`, or unblock WP2.
+
+### Superseding identities and exact blocked receipt root
+
+- Schema-6 fingerprint:
+  `6667a2aa5be306dda20da7d09e18910507e3de09db2cc8ad9f1c0627f5ca56d0`.
+- Helper-v2 transitive fingerprint (unchanged):
+  `edd9f428df33a5c8f1b9aa8145799be99afbd5c9c98c9b7572d903865e026ca3`.
+- Full application protobuf-set fingerprint (unchanged):
+  `a6e5c5164f84a65f923f1e837419c494f4cb071c240d35d96359dae529722ed1`.
+- Answer-free example (unchanged): 15,724 bytes,
+  `163eb23a19d0da367194f9d69867235432aae46b5a451403331f5dcc8441a3b8`.
+- Public registry (unchanged): 8,790 bytes,
+  `99980278afbc5549bffde0afe3d20ef2a7aa3863fa8740ce16d0aeb64e9e0603`.
+- Per-field traceability: 429,836 bytes,
+  `b1e98f429eec0371ccb9541c4e534ab40a2f004046a7ece04f69ef3fa51138b0`.
+- Exact gate `OutputRoot`:
+  `artifacts/m1-slice6/wp1-thirteenth-correction-final`.
+- Receipt SHA-256 identities: `Contracts`
+  `9179d667671e4fc4dfda94db1431ca7f1aff9c4c413eb35e7192985ea94fa2a0`,
+  `StateSurfaces`
+  `25919d76e9f42c8d353ccfbb9d0d92e66f7390d708152c7eb657aea4b86da53b`,
+  and `StateTotality`
+  `98852125105711fccfb8ed986960fd99826546f462428973730612d376562499`.
+
+### Thirteenth-cycle verification
+
+1. Final Release solution build passed with zero warnings and zero errors.
+   Focused persistence/lifecycle and analysis-state checks passed 33/0/0;
+   focused provider codec and trace checks passed 9/0/0. The exact timestamp,
+   credential order/delete, response terminality, every reservation-vector
+   dimension, amount partition, receipt translation, and trace adversaries all
+   passed.
+2. `Contracts` passed 19/0/0. `StateSurfaces` passed 19/0/0 state checks and
+   15/0/0 migration/relational/adversarial checks. `StateTotality` ran the same
+   34 green checks, wrote `blocked-authority-required` with network and
+   credential permissions false and the superseding schema fingerprint, then
+   exited 1 solely because the accepted repository-local tokenizer/provider-
+   framing proof is absent.
+3. The final Release category matrix passed: Unit 173/0/1; Contract 124/0/0;
+   Integration 70/0/0; Evaluation 75/0/8; Security 111/0/3; and Fault
+   105/0/3. The final unfiltered Release solution passed Unit 181/0/1,
+   Contract 152/0/0, Integration 68/0/0, and Evaluation 53/0/8.
+4. The complete non-live analysis pipeline passed Contracts, Documentation,
+   Candidates, CandidateScale, Cases, Replay, Output, Safety, Traceability,
+   Comprehensive, and All. Its final `All` receipt is 764 bytes with SHA-256
+   `ac618c8fe13619ca731302cf43d1d6a99c7dc7ed1104dfb080e5ae687860b0f7`.
+   Trace generation was byte-identical on repeat; the intended answer-free
+   provider fixture and registry did not change and required no reseal.
+   `dotnet format --verify-no-changes`, dependency-manifest check,
+   documentation validation, strict changed-JSON parsing, `git diff --check`,
+   current-state and frozen Slice 5 v1 immutability, protected-path and answer-
+   isolation checks, public-fixture scope, and forbidden secret/live-effect
+   scans passed.
+
+No proof, gate result, owner acceptance, credential, provider response, or
+private evidence was invented. No network/DNS/provider, Credential Manager,
+native credential, private fixture, sibling repository, legacy/evaluator
+archive, later-package, current-state, push, amend, or frozen Slice 5 v1 edit
+occurred.

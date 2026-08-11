@@ -55,13 +55,44 @@ public sealed class PersistenceAndLifecycleTests
         Assert.AreEqual(31L, reader.GetInt64(1));
         Assert.AreEqual(56L, reader.GetInt64(2));
         reader.Close();
-        command.CommandText = "SELECT sql FROM sqlite_schema WHERE type='trigger' AND name='provider_usage_operation_ceiling_guard';";
-        string usageCeilingSql = (string)command.ExecuteScalar()!;
-        StringAssert.Contains(usageCeilingSql, "NEW.dispatch_count > a.maximum_dispatch_count");
-        Assert.IsFalse(usageCeilingSql.Contains("NEW.input_tokens > a.maximum_input_tokens", StringComparison.Ordinal));
-        Assert.IsFalse(usageCeilingSql.Contains("NEW.calculated_nano_usd > a.maximum_calculated_nano_usd", StringComparison.Ordinal));
+        command.CommandText = "SELECT COUNT(*) FROM sqlite_schema WHERE type='trigger' AND name='provider_usage_operation_ceiling_guard';";
+        Assert.AreEqual(0L, (long)command.ExecuteScalar()!);
         command.CommandText = "SELECT sql FROM sqlite_schema WHERE type='table' AND name='provider_usage_entries';";
-        StringAssert.Contains((string)command.ExecuteScalar()!, "reasoning_tokens <= output_tokens");
+        string usageTableSql = (string)command.ExecuteScalar()!;
+        StringAssert.Contains(usageTableSql, "reasoning_tokens <= output_tokens");
+        StringAssert.Contains(usageTableSql, "dispatch_count BETWEEN 0 AND 1024");
+        foreach (string receiptState in new[] { "not-dispatched", "complete", "partial", "failed-known", "ambiguous", "unavailable" })
+        {
+            StringAssert.Contains(usageTableSql, $"'{receiptState}'");
+        }
+        command.CommandText = "SELECT sql FROM sqlite_schema WHERE type='trigger' AND name='provider_usage_response_totality_guard';";
+        string receiptTranslationSql = (string)command.ExecuteScalar()!;
+        foreach (string responseState in new[]
+                 {
+                     "completed", "refusal", "incomplete", "failed", "queued", "in-progress", "malformed",
+                     "oversized", "mismatched", "unknown", "cancelled",
+                 })
+        {
+            StringAssert.Contains(receiptTranslationSql, $"'{responseState}'", responseState);
+        }
+        StringAssert.Contains(receiptTranslationSql, "r.response_state = 'completed' AND NEW.receipt_state = 'complete'");
+        StringAssert.Contains(receiptTranslationSql, "r.response_state IN ('refusal','incomplete') AND NEW.receipt_state = 'partial'");
+        StringAssert.Contains(receiptTranslationSql, "r.response_state = 'failed' AND NEW.receipt_state = 'failed-known'");
+        StringAssert.Contains(receiptTranslationSql, "r.response_state IN ('queued','in-progress','mismatched','unknown') AND NEW.receipt_state = 'ambiguous'");
+        StringAssert.Contains(receiptTranslationSql, "r.response_state IN ('malformed','oversized') AND NEW.receipt_state = 'unavailable'");
+        StringAssert.Contains(receiptTranslationSql, "r.response_state = 'cancelled' AND NEW.receipt_state = 'not-dispatched'");
+        command.CommandText = "SELECT sql FROM sqlite_schema WHERE type='table' AND name='provider_reservations';";
+        string reservationSql = (string)command.ExecuteScalar()!;
+        foreach (string dimension in new[]
+                 {
+                     "reserved_dispatch_count", "reserved_input_tokens", "reserved_output_tokens",
+                     "reserved_reasoning_tokens", "reserved_cache_read_tokens", "reserved_cache_write_tokens",
+                     "reserved_priced_tool_calls", "maximum_nano_usd",
+                 })
+        {
+            StringAssert.Contains(reservationSql, dimension);
+        }
+        StringAssert.Contains(reservationSql, "usage_json = json_object");
         command.CommandText = "SELECT sql FROM sqlite_schema WHERE type='table' AND name='provider_semantic_validations';";
         string validationSql = (string)command.ExecuteScalar()!;
         StringAssert.Contains(validationSql,
@@ -764,6 +795,13 @@ public sealed class PersistenceAndLifecycleTests
               '2026-08-10T00:00:02.0000000+00:00');
             """;
         Assert.AreEqual(1, command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            INSERT INTO provider_response_finalizations VALUES(
+              'finalization-cancelled-duplicate','response-cancelled','usage-cancelled','unavailable','unavailable',
+              '2026-08-10T00:00:02.5000000+00:00');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
 
         command.CommandText =
             """
@@ -784,7 +822,7 @@ public sealed class PersistenceAndLifecycleTests
               'unavailable','default','unavailable','current_turn','standard','explicit','unavailable','unavailable',
               0,'unavailable','unavailable','unavailable','2026-08-10T00:00:03.0000000+00:00');
             """;
-        Assert.AreEqual(1, command.ExecuteNonQuery());
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
         command.CommandText =
             """
             INSERT INTO provider_usage_entries(
@@ -1000,23 +1038,7 @@ public sealed class PersistenceAndLifecycleTests
               'unavailable','default','unavailable','current_turn','standard','explicit','unavailable','unavailable',
               0,'unavailable','unavailable','unavailable','2026-08-10T00:01:05.0000000+00:00');
             """;
-        Assert.AreEqual(1, command.ExecuteNonQuery());
-        command.CommandText =
-            """
-            INSERT INTO provider_operation_authorizations(
-              operation_id,requested_at,confirmed_at,dispatch_deadline_utc)
-            VALUES(
-              'operation-completed','2026-08-10T00:01:06.0000000+00:00',
-              '2026-08-10T00:01:06.0000000+00:00','2026-08-10T00:02:06.0000000+00:00');
-            """;
-        AssertCancelledTerminal(command);
-        command.CommandText =
-            """
-            INSERT INTO provider_operation_attempts VALUES(
-              'attempt-after-authorized-cancellation','operation-completed',1,'proposed',1,
-              '2026-08-10T00:01:06.0000000+00:00');
-            """;
-        AssertCancelledTerminal(command);
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
         command.CommandText = "PRAGMA foreign_keys=OFF;";
         command.ExecuteNonQuery();
         command.CommandText =
@@ -1191,11 +1213,19 @@ public sealed class PersistenceAndLifecycleTests
     [TestProperty("Category", "Unit")]
     public void Schema6SettlementRetainsObservedUsageBelowEqualAndAboveReservation()
     {
-        AssertSqlSettlement(9, 90, "settled", succeeds: true);
-        AssertSqlSettlement(10, 100, "settled", succeeds: true);
-        AssertSqlSettlement(11, 101, "overrun", succeeds: true);
-        AssertSqlSettlement(11, 101, "settled", succeeds: false);
-        AssertSqlSettlement(10, 100, "overrun", succeeds: false);
+        AssertSqlSettlement(1, 9, 4, 1, 0, 0, 0, 90, "settled", succeeds: true);
+        AssertSqlSettlement(1, 10, 5, 2, 0, 0, 0, 100, "settled", succeeds: true);
+        AssertSqlSettlement(2, 10, 5, 2, 0, 0, 0, 100, "overrun", succeeds: true);
+        AssertSqlSettlement(1, 11, 5, 2, 0, 0, 0, 100, "overrun", succeeds: true);
+        AssertSqlSettlement(1, 10, 6, 2, 0, 0, 0, 100, "overrun", succeeds: true);
+        AssertSqlSettlement(1, 10, 5, 3, 0, 0, 0, 100, "overrun", succeeds: true);
+        AssertSqlSettlement(1, 10, 5, 2, 1, 0, 0, 100, "overrun", succeeds: true);
+        AssertSqlSettlement(1, 10, 5, 2, 0, 1, 0, 100, "overrun", succeeds: true);
+        AssertSqlSettlement(1, 10, 5, 2, 0, 0, 1, 100, "overrun", succeeds: true);
+        AssertSqlSettlement(1, 10, 5, 2, 0, 0, 0, 101, "overrun", succeeds: true);
+        AssertSqlSettlement(2, 10, 5, 2, 0, 0, 0, 100, "settled", succeeds: false);
+        AssertSqlSettlement(1, 11, 5, 2, 0, 0, 0, 100, "settled", succeeds: false);
+        AssertSqlSettlement(1, 10, 5, 2, 0, 0, 0, 100, "overrun", succeeds: false);
     }
 
     [TestMethod]
@@ -1238,6 +1268,23 @@ public sealed class PersistenceAndLifecycleTests
             """;
         SqliteException malformed = Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
         StringAssert.Contains(malformed.Message, "non-canonical UTC authority timestamp");
+        foreach (string invalidUpdate in new[]
+                 {
+                     "0000-01-01T00:00:00.0000000+00:00",
+                     "2026-08-10T24:00:00.0000000+00:00",
+                 })
+        {
+            command.CommandText =
+                """
+                UPDATE provider_operation_projection
+                SET projection_version=4,updated_at=$invalid
+                WHERE operation_id='operation-restore';
+                """;
+            command.Parameters.Clear();
+            command.Parameters.AddWithValue("$invalid", invalidUpdate);
+            malformed = Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+            StringAssert.Contains(malformed.Message, "non-canonical UTC authority timestamp");
+        }
 
         command.CommandText =
             """
@@ -1296,6 +1343,110 @@ public sealed class PersistenceAndLifecycleTests
             """;
         Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
 
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
+    public void Schema6CredentialSequenceAdvancesProfileEventProjectionAndCancelledDeleteRoot()
+    {
+        using TemporaryStore temporary = new();
+        using AuthoritativeStore store = temporary.Open();
+        SeedProviderAuthorityBlock(temporary.Root);
+        using SqliteConnection connection = OpenRaw(temporary.Root);
+        using SqliteCommand command = connection.CreateCommand();
+
+        foreach (string createdAt in new[]
+                 {
+                     "2026-08-10T00:00:02.0000000+00:00",
+                     "2026-08-10T00:00:01.9999999+00:00",
+                 })
+        {
+            command.CommandText =
+                $"""
+                INSERT INTO provider_credential_intents VALUES(
+                  'intent-equal-or-rollback-{createdAt[19]}','profile-restore','generation-restore','disable','pending',
+                  'active-verified','disabled','active-verified','unavailable','account-restore','billing-restore','cap-restore',
+                  'not-required','not-requested','{createdAt}');
+                """;
+            SqliteException rejected = Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+            StringAssert.Contains(rejected.Message, "provider credential lifecycle time regression");
+        }
+
+        command.CommandText =
+            """
+            INSERT INTO provider_credential_intents VALUES(
+              'intent-disable-sequence-pending','profile-restore','generation-restore','disable','pending',
+              'active-verified','disabled','active-verified','unavailable','account-restore','billing-restore','cap-restore',
+              'not-required','not-requested','2026-08-10T00:00:03.0000000+00:00');
+            """;
+        Assert.AreEqual(1, command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            INSERT INTO provider_credential_intent_events VALUES(
+              'event-disable-sequence-wrong-time','root-disable-sequence','intent-disable-sequence-pending',1,NULL,
+              '2026-08-10T00:00:03.0000001+00:00');
+            """;
+        SqliteException wrongTime = Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        StringAssert.Contains(wrongTime.Message, "event time must equal");
+        command.CommandText =
+            """
+            INSERT INTO provider_credential_intent_events VALUES(
+              'event-disable-sequence-v1','root-disable-sequence','intent-disable-sequence-pending',1,NULL,
+              '2026-08-10T00:00:03.0000000+00:00');
+            INSERT INTO provider_credential_intents VALUES(
+              'intent-disable-sequence-complete','profile-restore','generation-restore','disable','completed',
+              'active-verified','disabled','disabled','unavailable','account-restore','billing-restore','cap-restore',
+              'not-required','not-requested','2026-08-10T00:00:03.5000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES(
+              'event-disable-sequence-v2','root-disable-sequence','intent-disable-sequence-complete',2,
+              'event-disable-sequence-v1','2026-08-10T00:00:03.5000000+00:00');
+            """;
+        Assert.AreEqual(3, command.ExecuteNonQuery());
+
+        command.CommandText =
+            """
+            INSERT INTO provider_credential_intents VALUES(
+              'intent-delete-before-projection','profile-restore','generation-restore','delete','pending',
+              'disabled','delete-pending','disabled','unavailable','account-restore','billing-restore','cap-restore',
+              'not-required','pending','2026-08-10T00:00:04.0000000+00:00');
+            """;
+        SqliteException staleProjection = Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        StringAssert.Contains(staleProjection.Message, "exact latest durable event");
+
+        command.CommandText =
+            """
+            UPDATE provider_profile_projection
+            SET lifecycle_state='disabled',verification_state='unavailable',intent_id='intent-disable-sequence-complete',
+              projection_version=4,updated_at='2026-08-10T00:00:03.5000000+00:00'
+            WHERE profile_id='profile-restore';
+            INSERT INTO provider_credential_intents VALUES(
+              'intent-delete-cancel-pending','profile-restore','generation-restore','delete','pending',
+              'disabled','delete-pending','disabled','unavailable','account-restore','billing-restore','cap-restore',
+              'not-required','pending','2026-08-10T00:00:04.0000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES(
+              'event-delete-cancel-v1','root-delete-cancel','intent-delete-cancel-pending',1,NULL,
+              '2026-08-10T00:00:04.0000000+00:00');
+            INSERT INTO provider_credential_intents VALUES(
+              'intent-delete-cancelled','profile-restore','generation-restore','delete','cancelled',
+              'disabled','delete-pending','disabled','unavailable','account-restore','billing-restore','cap-restore',
+              'not-required','not-requested','2026-08-10T00:00:04.5000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES(
+              'event-delete-cancel-v2','root-delete-cancel','intent-delete-cancelled',2,
+              'event-delete-cancel-v1','2026-08-10T00:00:04.5000000+00:00');
+            UPDATE provider_profile_projection
+            SET intent_id='intent-delete-cancelled',projection_version=5,
+              updated_at='2026-08-10T00:00:04.5000000+00:00'
+            WHERE profile_id='profile-restore';
+            INSERT INTO provider_credential_intents VALUES(
+              'intent-delete-after-cancel','profile-restore','generation-restore','delete','pending',
+              'disabled','delete-pending','disabled','unavailable','account-restore','billing-restore','cap-restore',
+              'not-required','pending','2026-08-10T00:00:05.0000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES(
+              'event-delete-after-cancel-v1','root-delete-after-cancel','intent-delete-after-cancel',1,NULL,
+              '2026-08-10T00:00:05.0000000+00:00');
+            """;
+        Assert.AreEqual(8, command.ExecuteNonQuery());
     }
 
     [TestMethod]
@@ -1365,6 +1516,12 @@ public sealed class PersistenceAndLifecycleTests
             foreach (string invalid in new[]
                      {
                          "2026-99-99T99:99:99.0000000+00:00",
+                         "0000-01-01T00:00:00.0000000+00:00",
+                         "2026-02-29T00:00:00.0000000+00:00",
+                         "2026-04-31T00:00:00.0000000+00:00",
+                         "2026-08-10T24:00:00.0000000+00:00",
+                         "2026-08-10T23:60:00.0000000+00:00",
+                         "2026-08-10T23:59:60.0000000+00:00",
                          "2026-08-10T00:00:00.0000000Z",
                      })
             {
@@ -1375,6 +1532,13 @@ public sealed class PersistenceAndLifecycleTests
                 StringAssert.Contains(rejected.Message, "non-canonical UTC authority timestamp", $"{table}.{column}");
             }
         }
+
+        command.CommandText =
+            "INSERT INTO provider_access_profiles VALUES('profile-min-year','openai','responses','Minimum year',NULL,NULL,'0001-01-01T00:00:00.0000000+00:00');";
+        Assert.AreEqual(1, command.ExecuteNonQuery());
+        command.CommandText =
+            "INSERT INTO provider_access_profiles VALUES('profile-leap-year','openai','responses','Leap year',NULL,NULL,'2000-02-29T23:59:59.9999999+00:00');";
+        Assert.AreEqual(1, command.ExecuteNonQuery());
     }
 
     [TestMethod]
@@ -2594,15 +2758,31 @@ public sealed class PersistenceAndLifecycleTests
         command.ExecuteNonQuery();
     }
 
-    private static void AssertSqlSettlement(long inputTokens, long calculatedNanoUsd, string state, bool succeeds)
+    private static void AssertSqlSettlement(
+        long dispatchCount,
+        long inputTokens,
+        long outputTokens,
+        long reasoningTokens,
+        long cacheReadTokens,
+        long cacheWriteTokens,
+        long pricedToolCalls,
+        long calculatedNanoUsd,
+        string state,
+        bool succeeds)
     {
         using TemporaryStore temporary = new();
         using AuthoritativeStore store = temporary.Open();
         SeedProviderAuthorityBlock(temporary.Root);
         using SqliteConnection connection = OpenRaw(temporary.Root);
         using SqliteCommand command = connection.CreateCommand();
+        command.Parameters.AddWithValue("$dispatch_count", dispatchCount);
         command.Parameters.AddWithValue("$input_tokens", inputTokens);
-        command.Parameters.AddWithValue("$total_tokens", inputTokens + 5);
+        command.Parameters.AddWithValue("$output_tokens", outputTokens);
+        command.Parameters.AddWithValue("$total_tokens", inputTokens + outputTokens);
+        command.Parameters.AddWithValue("$reasoning_tokens", reasoningTokens);
+        command.Parameters.AddWithValue("$cache_read_tokens", cacheReadTokens);
+        command.Parameters.AddWithValue("$cache_write_tokens", cacheWriteTokens);
+        command.Parameters.AddWithValue("$priced_tool_calls", pricedToolCalls);
         command.Parameters.AddWithValue("$calculated_nano_usd", calculatedNanoUsd);
         command.Parameters.AddWithValue("$settlement_state", state);
         command.CommandText =
@@ -2623,7 +2803,7 @@ public sealed class PersistenceAndLifecycleTests
               effective_configuration_id,resolved_input_manifest_id,prompt_id,prompt_fingerprint,output_schema_id,
               output_schema_fingerprint,request_fingerprint,canonical_request_fingerprint,capability_snapshot_id,
               price_snapshot_id,settings_fingerprint,'accepted-test-policy','1','proved',coordinator_fencing_epoch,
-              maximum_request_bytes,10,5,maximum_raw_response_bytes,maximum_dispatch_count,100,deadline_milliseconds,
+              maximum_request_bytes,20,10,maximum_raw_response_bytes,maximum_dispatch_count,200,deadline_milliseconds,
               dispatch_deadline_utc,confirmed_at
             FROM provider_operation_blocks WHERE operation_id='operation-restore';
             INSERT INTO provider_operation_attempts VALUES(
@@ -2638,8 +2818,13 @@ public sealed class PersistenceAndLifecycleTests
               '2026-08-10T00:00:03.0000000+00:00'
             FROM provider_operation_authorizations WHERE authorization_id='authorization-settlement';
             INSERT INTO provider_reservations VALUES(
-              'reservation-settlement','operation-restore','attempt-settlement','request-settlement','{}',100,
+              'reservation-settlement','operation-restore','attempt-settlement','request-settlement',
+              '{"dispatch_count":1,"input_tokens":10,"output_tokens":5,"reasoning_tokens":2,"cache_read_tokens":0,"cache_write_tokens":0,"priced_tool_calls":0,"calculated_nano_usd":100}',
+              1,10,5,2,0,0,0,100,
               '2026-08-10T00:01:30.0000000+00:00','2026-08-10T00:00:04.0000000+00:00');
+            INSERT INTO provider_reservation_scope_items VALUES(
+              'scope-settlement','reservation-settlement','operation','operation-restore',
+              '{"dispatch_count":1,"input_tokens":10,"output_tokens":5,"reasoning_tokens":2,"cache_read_tokens":0,"cache_write_tokens":0,"priced_tool_calls":0,"calculated_nano_usd":100}',100);
             INSERT INTO provider_dispatch_fences VALUES(
               'fence-settlement','authorization-settlement','operation-restore','reservation-settlement','request-settlement',
               'attempt-settlement',1,'profile-restore','generation-restore',0,1,'synthetic admitted fence',
@@ -2680,11 +2865,19 @@ public sealed class PersistenceAndLifecycleTests
               priced_tool_calls_availability,priced_tool_calls,calculated_nano_usd_availability,calculated_nano_usd,
               billing_availability,rate_availability,credit_availability,receipt_state,created_at)
             VALUES('usage-settlement','available','operation-restore','attempt-settlement','request-settlement','fence-settlement',
-              'response-settlement','available',1,'available',$input_tokens,'available',5,'available',$total_tokens,
-              'available',2,'available',0,'available',0,'available',0,'available',$calculated_nano_usd,
+              'response-settlement','available',$dispatch_count,'available',$input_tokens,'available',$output_tokens,'available',$total_tokens,
+              'available',$reasoning_tokens,'available',$cache_read_tokens,'available',$cache_write_tokens,
+              'available',$priced_tool_calls,'available',$calculated_nano_usd,
               'unavailable','unavailable','unavailable','complete','2026-08-10T00:00:10.0000000+00:00');
             """;
-        Assert.AreEqual(10, command.ExecuteNonQuery());
+        Assert.AreEqual(11, command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            INSERT INTO provider_reservation_scope_items VALUES(
+              'scope-settlement-mismatch','reservation-settlement','global','global','{}',100);
+            """;
+        SqliteException scopeMismatch = Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        StringAssert.Contains(scopeMismatch.Message, "exact operation reservation vector");
         command.CommandText =
             """
             INSERT INTO provider_settlements VALUES(
@@ -2693,6 +2886,14 @@ public sealed class PersistenceAndLifecycleTests
             """;
         if (succeeds)
         {
+            string validSettlement = command.CommandText;
+            command.CommandText = validSettlement.Replace(
+                ",$settlement_state,100,0,",
+                ",$settlement_state,99,0,",
+                StringComparison.Ordinal);
+            SqliteException amountMismatch = Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+            StringAssert.Contains(amountMismatch.Message, "exactly partition the reservation");
+            command.CommandText = validSettlement;
             Assert.AreEqual(1, command.ExecuteNonQuery());
         }
         else
