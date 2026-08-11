@@ -2044,3 +2044,68 @@ read-only convergence review, and `docs/current-state.md` remains unchanged.
 No Credential Manager, native credential, provider request, private fixture,
 sibling repository, legacy/evaluator archive, WP2/WP3 implementation,
 current-state advance, amend, push, or frozen Slice 5 v1 edit occurred.
+
+## Owner-authorized WP1 persisted input-bound policy pin — 2026-08-11
+
+Bounded correction commit
+`6ad7b128e2c7547e1fd40ecb8e6835c85a31dd50` closes the final convergence
+finding without changing provider behavior or later-package implementation.
+Schema-6 `provider_operation_authorizations` and `provider_requests` now admit
+proved input bounds only for exact policy ID
+`openai-responses-o200k-byte-envelope` and version `v1`. Direct SQL regression
+evidence rejects `attacker-policy/v999` independently at both persistence
+boundaries and admits the exact approved pair. Existing valid test rows were
+mechanically updated to the accepted identity.
+
+The traceability generator and inventory now map the accepted policy ID and
+version published by run-output v2 and CLI-summary v2 to both authorization
+and request persistence. Their output seam records that the canonical JSON
+supplement publishes the fields without an equivalent application-protobuf
+field; their replay seam records that publication metadata is not a
+`ProviderReplayPayload` identity. The focused semantic trace regression
+proves those mappings and rejects the former stale dispatch-blocked omission.
+Repeated generation was byte-identical at 56,447 bytes with SHA-256
+`b9ea10640da0440d7d3614ed201a68ba8231097016959c0b5eeaacce62a9a238`.
+The resulting exact schema-6 fingerprint is
+`56dc6efd92fff75fe21f344abafa3b88b99a8e92d2d1b2517f706d63af4599a3`;
+schema upgrade, backup, restore, projection, and declaration checks passed.
+
+### Bounded verification
+
+1. Locked restore and the Release solution build passed with zero warnings or
+   errors. Focused provider/finite/lifecycle tests passed 20/0/0;
+   provider/helper/output contract tests passed 22/0/0; and focused
+   schema-6/persistence/backup-restore tests passed 18/0/0. The new direct SQL
+   policy-pin and semantic trace tests each passed 1/0/0.
+2. `Contracts` passed 22/0/0. `StateSurfaces` and `StateTotality` each passed
+   27/0/0 state checks and 18/0/0 persistence/relational/adversarial checks.
+   Their receipts are respectively 2,895 bytes/SHA-256
+   `eef1c5ed82a8011826fcb5f607af3dcbba6452a60d718ff93060a3792beda4cb`,
+   1,597 bytes/SHA-256
+   `640e061dc2a2573a8d9f07e8e15c6b1f258c88ad4485da5b8a2ca5b65608a9a9`,
+   and 1,597 bytes/SHA-256
+   `9067dfe26c8f0a2141867550f22c062842555196d5ae683d30450ad28957ea30`.
+3. The Release category floor passed: Unit 184/0/1; Contract 127/0/0;
+   Integration 70/0/0; Evaluation 75/0/8; Security 111/0/3; and Fault
+   105/0/3. The unfiltered solution passed Unit 192/0/1, Contract 155/0/0,
+   Integration 68/0/0, and Evaluation 53/0/8.
+4. The full non-live analysis pipeline passed Contracts, Documentation,
+   Candidates, CandidateScale, Cases, Replay, Output, Safety, Traceability,
+   Comprehensive, and All. The final `All` receipt is 764 bytes with SHA-256
+   `4d63a9463b11780da5f9e292953b1a41f9dc6385b854476905d0764e7b609713`.
+   Format verification, dependency-manifest check, documentation validation,
+   strict changed-JSON parsing, `git diff --check`, frozen acceptance-ledger
+   identity, current-state immutability, frozen Slice 5 v1 compatibility, and
+   protected/private/archive/secret/live-effect absence checks passed.
+5. `Layer6Review` passed against baseline
+   `6ac66e7d79c63a231bbbf22209015a894cd4bd6d` and exact implementation
+   candidate `6ad7b128e2c7547e1fd40ecb8e6835c85a31dd50`. Its 1,622-byte receipt has
+   SHA-256
+   `f61e5dd07bb31c44780e3f7e7ee5a291ec9273ed322b41042a8116633fdd113a`,
+   with zero allowed-path, strict-JSON, relative-link, or private/archive
+   failures. Network and credential permissions remained false.
+
+The acceptance ledger remains frozen at 32,022 bytes/SHA-256
+`a120e78ce0ab3e1f785b8df936e09563cc6dabb04875a808b87dbfba0259e6ce`.
+No current-state, WP2/WP3, fixture, credential, helper execution, provider,
+network, private/archive, amend, push, or frozen Slice 5 v1 action occurred.
