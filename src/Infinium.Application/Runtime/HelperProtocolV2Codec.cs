@@ -29,7 +29,14 @@ public static class HelperProtocolV2Codec
         Infinium.Contracts.Protobuf.Common.V1.ContentDigest? expectedSettings = null,
         Infinium.Contracts.Protobuf.Common.V1.ContentDigest? expectedOutputSchema = null,
         string? expectedEffectiveConfigurationId = null,
-        Infinium.Contracts.Protobuf.Common.V1.ContentDigest? expectedNonSecretReceipt = null)
+        Infinium.Contracts.Protobuf.Common.V1.ContentDigest? expectedNonSecretReceipt = null,
+        ulong? expectedRevocationEpoch = null,
+        string? expectedAccountIdentityId = null,
+        string? expectedBillingScopeIdentityId = null,
+        string? expectedReservationGroupId = null,
+        ProviderOperationKindV2? expectedOperationKind = null,
+        HelperLimitsV2? expectedLimits = null,
+        Infinium.Contracts.Protobuf.Common.V1.Instant? expectedDispatchDeadline = null)
     {
         if (bytes.IsEmpty || bytes.Length > HelperProtocolV2Constants.MaximumFrameBytes)
         {
@@ -50,7 +57,9 @@ public static class HelperProtocolV2Codec
             expectedDispatchId, expectedRequestFingerprintSha256, expectedInputBoundPolicyId,
             expectedInputBoundPolicyVersion, expectedCoordinatorFencingEpoch, expectedCapabilitySnapshotId,
             expectedPriceSnapshotId, expectedSettings, expectedOutputSchema, expectedEffectiveConfigurationId,
-            expectedNonSecretReceipt);
+            expectedNonSecretReceipt, expectedRevocationEpoch, expectedAccountIdentityId,
+            expectedBillingScopeIdentityId, expectedReservationGroupId, expectedOperationKind,
+            expectedLimits, expectedDispatchDeadline);
         return frame;
     }
 
@@ -88,7 +97,14 @@ public static class HelperProtocolV2Codec
         Infinium.Contracts.Protobuf.Common.V1.ContentDigest? expectedSettings,
         Infinium.Contracts.Protobuf.Common.V1.ContentDigest? expectedOutputSchema,
         string? expectedEffectiveConfigurationId,
-        Infinium.Contracts.Protobuf.Common.V1.ContentDigest? expectedNonSecretReceipt)
+        Infinium.Contracts.Protobuf.Common.V1.ContentDigest? expectedNonSecretReceipt,
+        ulong? expectedRevocationEpoch,
+        string? expectedAccountIdentityId,
+        string? expectedBillingScopeIdentityId,
+        string? expectedReservationGroupId,
+        ProviderOperationKindV2? expectedOperationKind,
+        HelperLimitsV2? expectedLimits,
+        Infinium.Contracts.Protobuf.Common.V1.Instant? expectedDispatchDeadline)
     {
         if (frame.Sequence == 0
             || frame.ProtocolFingerprintSha256.Length != 32
@@ -108,12 +124,36 @@ public static class HelperProtocolV2Codec
                 {
                     throw new InvalidDataException("Helper v2 bootstrap is incomplete.");
                 }
+                ValidateExpectedSubject(frame.Bootstrap.SubjectCase, frame.Bootstrap.Credential,
+                    frame.Bootstrap.ProviderDispatch, expectedProfileId, expectedGenerationId,
+                    expectedOperationId, expectedAttemptId, "bootstrap");
+                Require(expectedCommandId, "expected_bootstrap.command_id");
+                if (frame.Bootstrap.CommandId != expectedCommandId
+                    || expectedCoordinatorFencingEpoch is null or 0
+                    || frame.Bootstrap.CoordinatorFencingEpoch != expectedCoordinatorFencingEpoch)
+                {
+                    throw new InvalidDataException("Bootstrap must bind the expected command, subject, and fencing epoch.");
+                }
                 break;
             case HelperPrivateFrameV2.PayloadOneofCase.Assignment:
-                Validate(frame.Assignment, now);
+                Validate(frame.Assignment, now, expectedAssignmentId, expectedCommandId,
+                    expectedOperationId, expectedAttemptId, expectedProfileId, expectedGenerationId,
+                    expectedRequestId, expectedDispatchId, expectedRequestFingerprintSha256,
+                    expectedInputBoundPolicyId, expectedInputBoundPolicyVersion, expectedRevocationEpoch,
+                    expectedAccountIdentityId, expectedBillingScopeIdentityId, expectedReservationGroupId,
+                    expectedOperationKind, expectedLimits, expectedDispatchDeadline,
+                    expectedCapabilitySnapshotId, expectedPriceSnapshotId, expectedSettings,
+                    expectedOutputSchema, expectedEffectiveConfigurationId);
                 break;
             case HelperPrivateFrameV2.PayloadOneofCase.DispatchRevalidation:
-                Validate(frame.DispatchRevalidation, now);
+                Validate(frame.DispatchRevalidation, now, expectedOperationId, expectedAttemptId,
+                    expectedProfileId, expectedGenerationId, expectedRequestId, expectedDispatchId,
+                    expectedRequestFingerprintSha256, expectedInputBoundPolicyId,
+                    expectedInputBoundPolicyVersion, expectedCoordinatorFencingEpoch,
+                    expectedRevocationEpoch, expectedAccountIdentityId, expectedBillingScopeIdentityId,
+                    expectedReservationGroupId, expectedOperationKind, expectedLimits,
+                    expectedDispatchDeadline, expectedCapabilitySnapshotId, expectedPriceSnapshotId,
+                    expectedSettings, expectedOutputSchema, expectedEffectiveConfigurationId);
                 break;
             case HelperPrivateFrameV2.PayloadOneofCase.Receipt:
                 Validate(frame.Receipt, expectedAssignmentId, expectedCommandId, expectedOperationId,
@@ -121,19 +161,50 @@ public static class HelperProtocolV2Codec
                     expectedDispatchId, expectedRequestFingerprintSha256, expectedInputBoundPolicyId,
                     expectedInputBoundPolicyVersion, expectedCoordinatorFencingEpoch, expectedCapabilitySnapshotId,
                     expectedPriceSnapshotId, expectedSettings, expectedOutputSchema,
-                    expectedEffectiveConfigurationId, expectedNonSecretReceipt);
+                    expectedEffectiveConfigurationId, expectedNonSecretReceipt, expectedRevocationEpoch,
+                    expectedAccountIdentityId, expectedBillingScopeIdentityId, expectedReservationGroupId,
+                    expectedOperationKind, expectedLimits, expectedDispatchDeadline);
                 break;
             default:
                 throw new InvalidDataException("Helper v2 payload kind must be explicit.");
         }
     }
 
-    private static void Validate(HelperAssignmentV2 value, DateTimeOffset now)
+    private static void Validate(
+        HelperAssignmentV2 value,
+        DateTimeOffset now,
+        string? expectedAssignmentId,
+        string? expectedCommandId,
+        string? expectedOperationId,
+        string? expectedAttemptId,
+        string? expectedProfileId,
+        string? expectedGenerationId,
+        string? expectedRequestId,
+        string? expectedDispatchId,
+        byte[]? expectedRequestFingerprintSha256,
+        string? expectedInputBoundPolicyId,
+        string? expectedInputBoundPolicyVersion,
+        ulong? expectedRevocationEpoch,
+        string? expectedAccountIdentityId,
+        string? expectedBillingScopeIdentityId,
+        string? expectedReservationGroupId,
+        ProviderOperationKindV2? expectedOperationKind,
+        HelperLimitsV2? expectedLimits,
+        Infinium.Contracts.Protobuf.Common.V1.Instant? expectedDispatchDeadline,
+        string? expectedCapabilitySnapshotId,
+        string? expectedPriceSnapshotId,
+        Infinium.Contracts.Protobuf.Common.V1.ContentDigest? expectedSettings,
+        Infinium.Contracts.Protobuf.Common.V1.ContentDigest? expectedOutputSchema,
+        string? expectedEffectiveConfigurationId)
     {
         Require(value.AccessProfileId?.Value, "assignment.access_profile_id");
         Require(value.GenerationId?.Value, "assignment.generation_id");
         Require(value.AssignmentId, "assignment.assignment_id");
         Require(value.CommandId, "assignment.command_id");
+        Require(expectedAssignmentId, "expected_assignment.assignment_id");
+        Require(expectedCommandId, "expected_assignment.command_id");
+        Require(expectedProfileId, "expected_assignment.profile_id");
+        Require(expectedGenerationId, "expected_assignment.generation_id");
         if (!Enum.IsDefined(value.AssignmentKind) || value.AssignmentKind == HelperAssignmentKindV2.Unspecified
             || value.GenerationOrdinal == 0)
         {
@@ -146,6 +217,12 @@ public static class HelperProtocolV2Codec
             throw new InvalidDataException("Helper assignment subject must match its credential or provider-dispatch kind.");
         }
         ValidateSubject(value.SubjectCase, value.Credential, value.ProviderDispatch, "assignment");
+        if (value.AssignmentId != expectedAssignmentId || value.CommandId != expectedCommandId
+            || value.AccessProfileId?.Value != expectedProfileId || value.GenerationId?.Value != expectedGenerationId
+            || expectedRevocationEpoch is null || value.RevocationEpoch != expectedRevocationEpoch)
+        {
+            throw new InvalidDataException("Helper assignment must bind the expected command, profile generation, and revocation epoch.");
+        }
         if (!dispatch && (value.Credential!.AccessProfileId?.Value != value.AccessProfileId?.Value
             || value.Credential.GenerationId?.Value != value.GenerationId?.Value))
         {
@@ -157,8 +234,21 @@ public static class HelperProtocolV2Codec
         }
         if (dispatch)
         {
+            Require(expectedOperationId, "expected_assignment.operation_id");
+            Require(expectedAttemptId, "expected_assignment.attempt_id");
+            Require(expectedRequestId, "expected_assignment.request_id");
+            Require(expectedDispatchId, "expected_assignment.dispatch_id");
+            Require(expectedAccountIdentityId, "expected_assignment.account_identity_id");
+            Require(expectedBillingScopeIdentityId, "expected_assignment.billing_scope_identity_id");
+            Require(expectedReservationGroupId, "expected_assignment.reservation_group_id");
+            Require(expectedCapabilitySnapshotId, "expected_assignment.capability_snapshot_id");
+            Require(expectedPriceSnapshotId, "expected_assignment.price_snapshot_id");
+            Require(expectedEffectiveConfigurationId, "expected_assignment.effective_configuration_id");
             if (!Enum.IsDefined(value.OperationKind) || value.OperationKind == ProviderOperationKindV2.Unspecified
-                || value.Limits is null)
+                || value.Limits is null || expectedOperationKind is null or ProviderOperationKindV2.Unspecified
+                || expectedLimits is null || expectedDispatchDeadline is null
+                || expectedRequestFingerprintSha256 is null || expectedRequestFingerprintSha256.Length != 32
+                || !ValidDigest(expectedSettings) || !ValidDigest(expectedOutputSchema))
             {
                 throw new InvalidDataException("Provider dispatch assignment is missing its operation kind or limits.");
             }
@@ -182,10 +272,31 @@ public static class HelperProtocolV2Codec
             {
                 throw new InvalidDataException("Helper v2 provider request is not a closed bounded and explicitly blocked Responses request.");
             }
+            if (value.ProviderDispatch!.OperationId.Value != expectedOperationId
+                || value.ProviderDispatch.AttemptId.Value != expectedAttemptId
+                || request.RequestId != expectedRequestId || request.DispatchId!.Value != expectedDispatchId
+                || !request.RequestFingerprintSha256.Span.SequenceEqual(expectedRequestFingerprintSha256)
+                || request.InputBoundProof.PolicyId != expectedInputBoundPolicyId
+                || request.InputBoundProof.PolicyVersion != expectedInputBoundPolicyVersion
+                || request.ReservationGroupId!.Value != expectedReservationGroupId
+                || request.CapabilitySnapshotId!.Value != expectedCapabilitySnapshotId
+                || request.PriceSnapshotId!.Value != expectedPriceSnapshotId
+                || value.OperationKind != expectedOperationKind || !SameLimits(value.Limits, expectedLimits)
+                || !SameInstant(request.DispatchDeadline, expectedDispatchDeadline)
+                || value.AccountIdentityId?.Value != expectedAccountIdentityId
+                || value.BillingScopeIdentityId?.Value != expectedBillingScopeIdentityId
+                || value.EffectiveConfigurationId != expectedEffectiveConfigurationId
+                || !SameDigest(value.Settings, expectedSettings) || !SameDigest(value.OutputSchema, expectedOutputSchema))
+            {
+                throw new InvalidDataException("Provider assignment cross-rebound an expected authority, request, reservation, limit, or configuration identity.");
+            }
             throw new NotSupportedException("Helper provider dispatch assignment is blocked pending accepted local tokenizer/framing authority.");
         }
         else if (value.ProviderRequest is not null || value.Limits is not null
-            || value.OperationKind != ProviderOperationKindV2.Unspecified)
+            || value.OperationKind != ProviderOperationKindV2.Unspecified
+            || value.AccountIdentityId is not null || value.BillingScopeIdentityId is not null
+            || !string.IsNullOrEmpty(value.EffectiveConfigurationId) || value.Settings is not null
+            || value.OutputSchema is not null)
         {
             throw new InvalidDataException("Credential-only assignments cannot fabricate provider dispatch fields.");
         }
@@ -214,7 +325,31 @@ public static class HelperProtocolV2Codec
         }
     }
 
-    private static void Validate(DispatchRevalidationV2 value, DateTimeOffset now)
+    private static void Validate(
+        DispatchRevalidationV2 value,
+        DateTimeOffset now,
+        string? expectedOperationId,
+        string? expectedAttemptId,
+        string? expectedProfileId,
+        string? expectedGenerationId,
+        string? expectedRequestId,
+        string? expectedDispatchId,
+        byte[]? expectedRequestFingerprintSha256,
+        string? expectedInputBoundPolicyId,
+        string? expectedInputBoundPolicyVersion,
+        ulong? expectedCoordinatorFencingEpoch,
+        ulong? expectedRevocationEpoch,
+        string? expectedAccountIdentityId,
+        string? expectedBillingScopeIdentityId,
+        string? expectedReservationGroupId,
+        ProviderOperationKindV2? expectedOperationKind,
+        HelperLimitsV2? expectedLimits,
+        Infinium.Contracts.Protobuf.Common.V1.Instant? expectedDispatchDeadline,
+        string? expectedCapabilitySnapshotId,
+        string? expectedPriceSnapshotId,
+        Infinium.Contracts.Protobuf.Common.V1.ContentDigest? expectedSettings,
+        Infinium.Contracts.Protobuf.Common.V1.ContentDigest? expectedOutputSchema,
+        string? expectedEffectiveConfigurationId)
     {
         Require(value.DispatchId?.Value, "revalidation.dispatch_id");
         Require(value.AttemptId?.Value, "revalidation.attempt_id");
@@ -226,6 +361,19 @@ public static class HelperProtocolV2Codec
         Require(value.EffectiveConfigurationId, "revalidation.effective_configuration_id");
         Require(value.CapabilitySnapshotId?.Value, "revalidation.capability_snapshot_id");
         Require(value.PriceSnapshotId?.Value, "revalidation.price_snapshot_id");
+        Require(value.OperationId?.Value, "revalidation.operation_id");
+        Require(expectedOperationId, "expected_revalidation.operation_id");
+        Require(expectedAttemptId, "expected_revalidation.attempt_id");
+        Require(expectedProfileId, "expected_revalidation.profile_id");
+        Require(expectedGenerationId, "expected_revalidation.generation_id");
+        Require(expectedRequestId, "expected_revalidation.request_id");
+        Require(expectedDispatchId, "expected_revalidation.dispatch_id");
+        Require(expectedAccountIdentityId, "expected_revalidation.account_identity_id");
+        Require(expectedBillingScopeIdentityId, "expected_revalidation.billing_scope_identity_id");
+        Require(expectedReservationGroupId, "expected_revalidation.reservation_group_id");
+        Require(expectedCapabilitySnapshotId, "expected_revalidation.capability_snapshot_id");
+        Require(expectedPriceSnapshotId, "expected_revalidation.price_snapshot_id");
+        Require(expectedEffectiveConfigurationId, "expected_revalidation.effective_configuration_id");
         if (!Enum.IsDefined(value.Disposition) || value.Disposition == DispatchDispositionV2.Unspecified
             || !Enum.IsDefined(value.OperationKind) || value.OperationKind == ProviderOperationKindV2.Unspecified
             || value.CoordinatorFencingEpoch == 0 || !ValidDigest(value.CanonicalRequest)
@@ -233,7 +381,12 @@ public static class HelperProtocolV2Codec
             || !ValidFutureInstant(value.DispatchDeadline, now) || !ValidInstant(value.EvaluatedAt)
             || string.IsNullOrWhiteSpace(value.RequestId) || value.Limits is null
             || value.AuthorizedOnce || value.Disposition == DispatchDispositionV2.Authorized
-            || !IsAuthorityRequiredProof(value.InputBoundProof))
+            || !IsAuthorityRequiredProof(value.InputBoundProof)
+            || expectedRequestFingerprintSha256 is null || expectedRequestFingerprintSha256.Length != 32
+            || expectedCoordinatorFencingEpoch is null or 0 || expectedRevocationEpoch is null
+            || expectedOperationKind is null or ProviderOperationKindV2.Unspecified
+            || expectedLimits is null || expectedDispatchDeadline is null
+            || !ValidDigest(expectedSettings) || !ValidDigest(expectedOutputSchema))
         {
             throw new InvalidDataException("Helper v2 final revalidation is incomplete or internally contradictory.");
         }
@@ -241,6 +394,26 @@ public static class HelperProtocolV2Codec
         if (ElapsedMilliseconds(value.EvaluatedAt, value.DispatchDeadline) > value.Limits.MaximumDuration.Value)
         {
             throw new InvalidDataException("Helper final revalidation deadline exceeds the operation-specific duration ceiling.");
+        }
+        if (value.OperationId!.Value != expectedOperationId || value.AttemptId!.Value != expectedAttemptId
+            || value.AccessProfileId!.Value != expectedProfileId || value.GenerationId!.Value != expectedGenerationId
+            || value.RequestId != expectedRequestId || value.DispatchId!.Value != expectedDispatchId
+            || !value.RequestFingerprintSha256.Span.SequenceEqual(expectedRequestFingerprintSha256)
+            || value.CoordinatorFencingEpoch != expectedCoordinatorFencingEpoch
+            || value.RevocationEpoch != expectedRevocationEpoch
+            || value.AccountIdentityId!.Value != expectedAccountIdentityId
+            || value.BillingScopeIdentityId!.Value != expectedBillingScopeIdentityId
+            || value.ReservationGroupId!.Value != expectedReservationGroupId
+            || value.OperationKind != expectedOperationKind || !SameLimits(value.Limits, expectedLimits)
+            || !SameInstant(value.DispatchDeadline, expectedDispatchDeadline)
+            || value.CapabilitySnapshotId!.Value != expectedCapabilitySnapshotId
+            || value.PriceSnapshotId!.Value != expectedPriceSnapshotId
+            || !SameDigest(value.Settings, expectedSettings) || !SameDigest(value.OutputSchema, expectedOutputSchema)
+            || value.EffectiveConfigurationId != expectedEffectiveConfigurationId
+            || value.InputBoundProof.PolicyId != expectedInputBoundPolicyId
+            || value.InputBoundProof.PolicyVersion != expectedInputBoundPolicyVersion)
+        {
+            throw new InvalidDataException("Final revalidation cross-rebound an expected authorization or request identity.");
         }
     }
 
@@ -263,7 +436,14 @@ public static class HelperProtocolV2Codec
         Infinium.Contracts.Protobuf.Common.V1.ContentDigest? expectedSettings,
         Infinium.Contracts.Protobuf.Common.V1.ContentDigest? expectedOutputSchema,
         string? expectedEffectiveConfigurationId,
-        Infinium.Contracts.Protobuf.Common.V1.ContentDigest? expectedNonSecretReceipt)
+        Infinium.Contracts.Protobuf.Common.V1.ContentDigest? expectedNonSecretReceipt,
+        ulong? expectedRevocationEpoch,
+        string? expectedAccountIdentityId,
+        string? expectedBillingScopeIdentityId,
+        string? expectedReservationGroupId,
+        ProviderOperationKindV2? expectedOperationKind,
+        HelperLimitsV2? expectedLimits,
+        Infinium.Contracts.Protobuf.Common.V1.Instant? expectedDispatchDeadline)
     {
         if (!Enum.IsDefined(value.Outcome) || value.Outcome == HelperOutcomeV2.Unspecified
             || !Enum.IsDefined(value.AssignmentKind) || value.AssignmentKind == HelperAssignmentKindV2.Unspecified)
@@ -292,8 +472,13 @@ public static class HelperProtocolV2Codec
             Require(expectedCapabilitySnapshotId, "expected_receipt.capability_snapshot_id");
             Require(expectedPriceSnapshotId, "expected_receipt.price_snapshot_id");
             Require(expectedEffectiveConfigurationId, "expected_receipt.effective_configuration_id");
+            Require(expectedAccountIdentityId, "expected_receipt.account_identity_id");
+            Require(expectedBillingScopeIdentityId, "expected_receipt.billing_scope_identity_id");
+            Require(expectedReservationGroupId, "expected_receipt.reservation_group_id");
             if (expectedRequestFingerprintSha256 is null || expectedRequestFingerprintSha256.Length != 32
                 || expectedCoordinatorFencingEpoch is null or 0
+                || expectedRevocationEpoch is null || expectedOperationKind is null or ProviderOperationKindV2.Unspecified
+                || expectedLimits is null || expectedDispatchDeadline is null
                 || !ValidDigest(expectedSettings) || !ValidDigest(expectedOutputSchema)
                 || !ValidDigest(expectedNonSecretReceipt))
             {
@@ -310,6 +495,9 @@ public static class HelperProtocolV2Codec
         ValidateOptionalUInt64(value.ReasoningTokens, "receipt.reasoning_tokens");
         ValidateOptionalUInt64(value.CacheReadTokens, "receipt.cache_read_tokens");
         ValidateOptionalUInt64(value.CacheWriteTokens, "receipt.cache_write_tokens");
+        ValidateOptionalUInt64(value.TotalTokens, "receipt.total_tokens");
+        ValidateOptionalUInt64(value.PricedToolCalls, "receipt.priced_tool_calls");
+        ValidateOptionalUInt64(value.CalculatedNanoUsd, "receipt.calculated_nano_usd");
         bool noTransport = value.Outcome is HelperOutcomeV2.Unavailable or HelperOutcomeV2.Cancelled;
         bool hasResponse = value.RawResponse is not null;
         if (value.AssignmentId != expectedAssignmentId || value.CommandId != expectedCommandId
@@ -322,11 +510,15 @@ public static class HelperProtocolV2Codec
             || (!dispatch && (value.TransportMayHaveStarted || hasResponse
                 || value.InputTokens is not null || value.OutputTokens is not null || value.ReasoningTokens is not null
                 || value.CacheReadTokens is not null || value.CacheWriteTokens is not null
+                || value.TotalTokens is not null || value.PricedToolCalls is not null || value.CalculatedNanoUsd is not null
                 || !string.IsNullOrEmpty(value.RequestId) || value.DispatchId is not null || value.InputBoundProof is not null
                 || !value.RequestFingerprintSha256.IsEmpty || value.CoordinatorFencingEpoch != 0
                 || value.CapabilitySnapshotId is not null || value.PriceSnapshotId is not null
                 || value.Settings is not null || value.OutputSchema is not null
-                || !string.IsNullOrEmpty(value.EffectiveConfigurationId)))
+                || !string.IsNullOrEmpty(value.EffectiveConfigurationId) || value.RevocationEpoch != 0
+                || value.AccountIdentityId is not null || value.BillingScopeIdentityId is not null
+                || value.ReservationGroupId is not null || value.OperationKind != ProviderOperationKindV2.Unspecified
+                || value.Limits is not null || value.DispatchDeadline is not null))
             || (!dispatch && value.Outcome is HelperOutcomeV2.TransportMayHaveStarted
                 or HelperOutcomeV2.Oversized or HelperOutcomeV2.Malformed)
             || (noTransport && (value.TransportMayHaveStarted || hasResponse))
@@ -341,6 +533,9 @@ public static class HelperProtocolV2Codec
             Require(value.EffectiveConfigurationId, "receipt.effective_configuration_id");
             Require(value.CapabilitySnapshotId?.Value, "receipt.capability_snapshot_id");
             Require(value.PriceSnapshotId?.Value, "receipt.price_snapshot_id");
+            Require(value.AccountIdentityId?.Value, "receipt.account_identity_id");
+            Require(value.BillingScopeIdentityId?.Value, "receipt.billing_scope_identity_id");
+            Require(value.ReservationGroupId?.Value, "receipt.reservation_group_id");
             if (value.RequestId != expectedRequestId || value.DispatchId?.Value != expectedDispatchId
                 || value.RequestFingerprintSha256.Length != 32
                 || !value.RequestFingerprintSha256.Span.SequenceEqual(expectedRequestFingerprintSha256)
@@ -348,6 +543,12 @@ public static class HelperProtocolV2Codec
                 || value.CapabilitySnapshotId?.Value != expectedCapabilitySnapshotId
                 || value.PriceSnapshotId?.Value != expectedPriceSnapshotId
                 || value.EffectiveConfigurationId != expectedEffectiveConfigurationId
+                || value.RevocationEpoch != expectedRevocationEpoch
+                || value.AccountIdentityId?.Value != expectedAccountIdentityId
+                || value.BillingScopeIdentityId?.Value != expectedBillingScopeIdentityId
+                || value.ReservationGroupId?.Value != expectedReservationGroupId
+                || value.OperationKind != expectedOperationKind || !SameLimits(value.Limits, expectedLimits)
+                || !SameInstant(value.DispatchDeadline, expectedDispatchDeadline)
                 || !SameDigest(value.Settings, expectedSettings)
                 || !SameDigest(value.OutputSchema, expectedOutputSchema)
                 || !SameDigest(value.NonSecretReceipt, expectedNonSecretReceipt)
@@ -357,9 +558,101 @@ public static class HelperProtocolV2Codec
             {
                 throw new InvalidDataException("Provider receipt must retain the exact assignment, command, operation, attempt, request, dispatch fence, request fingerprint, proof, receipt, and fencing binding.");
             }
+            ValidateReceiptUsage(value, expectedLimits!);
             throw new NotSupportedException("Provider dispatch receipts are unreachable until accepted local input-bound authority changes the helper contract.");
         }
     }
+
+    private static void ValidateReceiptUsage(HelperReceiptV2 value, HelperLimitsV2 limits)
+    {
+        bool hasUsage = value.InputTokens is not null || value.OutputTokens is not null
+            || value.TotalTokens is not null || value.ReasoningTokens is not null
+            || value.CacheReadTokens is not null || value.CacheWriteTokens is not null
+            || value.PricedToolCalls is not null || value.CalculatedNanoUsd is not null;
+        if (!value.OutcomeHasResponse && hasUsage)
+        {
+            throw new InvalidDataException("A receipt without a response cannot fabricate provider usage.");
+        }
+        if (value.Outcome == HelperOutcomeV2.Completed
+            && (!value.OutcomeHasResponse || value.RawResponse is null
+                || new[] { value.InputTokens, value.OutputTokens, value.TotalTokens, value.ReasoningTokens,
+                    value.CacheReadTokens, value.CacheWriteTokens, value.PricedToolCalls, value.CalculatedNanoUsd }
+                    .Any(quantity => !IsAvailable(quantity))))
+        {
+            throw new InvalidDataException("A completed provider receipt requires bounded raw response and complete typed usage.");
+        }
+        if (value.RawResponse is not null && (!ValidDigest(value.RawResponse)
+                || value.RawResponse.SizeBytes > limits.MaximumResponseBytes)
+            || IsAvailable(value.InputTokens) && value.InputTokens!.Value > limits.MaximumInputTokens
+            || IsAvailable(value.OutputTokens) && value.OutputTokens!.Value > limits.MaximumOutputTokens
+            || IsAvailable(value.ReasoningTokens)
+                && (!IsAvailable(value.OutputTokens) || value.ReasoningTokens!.Value > value.OutputTokens!.Value)
+            || IsAvailable(value.TotalTokens)
+                && (!IsAvailable(value.InputTokens) || !IsAvailable(value.OutputTokens)
+                    || value.TotalTokens!.Value != checked(value.InputTokens!.Value + value.OutputTokens!.Value))
+            || IsAvailable(value.CacheReadTokens) && value.CacheReadTokens!.Value != 0
+            || IsAvailable(value.CacheWriteTokens) && value.CacheWriteTokens!.Value != 0
+            || IsAvailable(value.PricedToolCalls) && value.PricedToolCalls!.Value != 0
+            || IsAvailable(value.CalculatedNanoUsd)
+                && value.CalculatedNanoUsd!.Value > (ulong)limits.MaximumCalculatedNanoUsd)
+        {
+            throw new InvalidDataException("Provider receipt usage, cache, tool, cost, or raw-response facts exceed exact assignment limits.");
+        }
+    }
+
+    private static void ValidateExpectedSubject<T>(
+        T subjectCase,
+        CredentialSubjectV2? credential,
+        ProviderDispatchSubjectV2? providerDispatch,
+        string? expectedProfileId,
+        string? expectedGenerationId,
+        string? expectedOperationId,
+        string? expectedAttemptId,
+        string path) where T : struct, Enum
+    {
+        if (credential is not null)
+        {
+            Require(expectedProfileId, $"expected_{path}.profile_id");
+            Require(expectedGenerationId, $"expected_{path}.generation_id");
+            if (credential.AccessProfileId?.Value != expectedProfileId
+                || credential.GenerationId?.Value != expectedGenerationId)
+            {
+                throw new InvalidDataException($"{path} credential subject cross-rebound its expected profile generation.");
+            }
+        }
+        else if (providerDispatch is not null)
+        {
+            Require(expectedOperationId, $"expected_{path}.operation_id");
+            Require(expectedAttemptId, $"expected_{path}.attempt_id");
+            if (providerDispatch.OperationId?.Value != expectedOperationId
+                || providerDispatch.AttemptId?.Value != expectedAttemptId)
+            {
+                throw new InvalidDataException($"{path} dispatch subject cross-rebound its expected operation attempt.");
+            }
+        }
+        else
+        {
+            throw new InvalidDataException($"{path} subject is absent.");
+        }
+    }
+
+    private static bool SameLimits(HelperLimitsV2? value, HelperLimitsV2? expected) =>
+        value is not null && expected is not null
+        && value.MaximumFrameBytes == expected.MaximumFrameBytes
+        && value.MaximumRequestBytes == expected.MaximumRequestBytes
+        && value.MaximumResponseBytes == expected.MaximumResponseBytes
+        && value.MaximumStagedOutputBytes == expected.MaximumStagedOutputBytes
+        && value.MaximumInputTokens == expected.MaximumInputTokens
+        && value.MaximumOutputTokens == expected.MaximumOutputTokens
+        && value.MaximumCalculatedNanoUsd == expected.MaximumCalculatedNanoUsd
+        && value.MaximumDuration?.Value == expected.MaximumDuration?.Value
+        && value.MaximumDispatchCount == expected.MaximumDispatchCount;
+
+    private static bool SameInstant(
+        Infinium.Contracts.Protobuf.Common.V1.Instant? value,
+        Infinium.Contracts.Protobuf.Common.V1.Instant? expected) =>
+        value is not null && expected is not null
+        && value.UnixSeconds == expected.UnixSeconds && value.Nanoseconds == expected.Nanoseconds;
 
     private static bool IsAuthorityRequiredProof(InputBoundProofV2? proof) =>
         proof is not null
@@ -477,6 +770,9 @@ public static class HelperProtocolV2Codec
             throw new InvalidDataException(field + " availability contradicts its value.");
         }
     }
+
+    private static bool IsAvailable(Infinium.Contracts.Protobuf.Common.V1.OptionalUInt64? value) =>
+        value?.Availability == Infinium.Contracts.Protobuf.Common.V1.AvailabilityState.Available;
 
     private static void Require(string? value, string name)
     {

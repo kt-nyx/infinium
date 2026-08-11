@@ -43,7 +43,7 @@ public sealed class ProviderContractJsonCodecTests
     private static readonly ProviderFiniteLimitsContract Limits = new(
         65_536, 73_728, 4_096, 1_048_576, 1, 600_000_000, 120_000);
     private static readonly ProviderUsageContract Usage = new(
-        Q(1), Q(32), Q(16), Q(48), Q(4), Q(0), Q(0), Q(0), Q(42),
+        DomainProviderAvailabilityState.Available, Q(1), Q(32), Q(16), Q(48), Q(4), Q(0), Q(0), Q(0), Q(42),
         DomainProviderAvailabilityState.Unavailable,
         DomainProviderAvailabilityState.Unavailable,
         DomainProviderAvailabilityState.Unavailable);
@@ -125,7 +125,7 @@ public sealed class ProviderContractJsonCodecTests
         AssertCanonical(
             new EffectiveScanConfigurationV2Document(
                 ContractConstants.EffectiveScanConfigurationV2SchemaId, "1", Id("config-2"), Id("config-1"), Fingerprint,
-                Id("profile-1"), Id("generation-1"), "gpt-5.6-sol", "medium", "current_turn", "standard",
+                "asserted-retained-v1-identity", Id("profile-1"), Id("generation-1"), "gpt-5.6-sol", "medium", "current_turn", "standard",
                 false, "default", false, false, "none", 0, "disabled", "explicit", false, false, Limits,
                 ["hosted-search", "nexus", "loot"]),
             ProviderContractJsonCodecs.Serialize,
@@ -202,6 +202,15 @@ public sealed class ProviderContractJsonCodecTests
         response["validation_state"] = "admitted";
         response["admission_state"] = "admitted";
         response["usage"]!["dispatch_count"]!["value"] = 1;
+        response["usage"]!["availability"] = "available";
+        response["usage"]!["input_tokens"] = new JsonObject { ["availability"] = "available", ["value"] = 32 };
+        response["usage"]!["output_tokens"] = new JsonObject { ["availability"] = "available", ["value"] = 16 };
+        response["usage"]!["total_tokens"] = new JsonObject { ["availability"] = "available", ["value"] = 48 };
+        response["usage"]!["reasoning_tokens"] = new JsonObject { ["availability"] = "available", ["value"] = 4 };
+        response["usage"]!["cache_read_tokens"] = new JsonObject { ["availability"] = "available", ["value"] = 0 };
+        response["usage"]!["cache_write_tokens"] = new JsonObject { ["availability"] = "available", ["value"] = 0 };
+        response["usage"]!["priced_tool_calls"] = new JsonObject { ["availability"] = "available", ["value"] = 0 };
+        response["usage"]!["calculated_nano_usd"] = new JsonObject { ["availability"] = "available", ["value"] = 42 };
 
         byte[] bytes = System.Text.Encoding.UTF8.GetBytes(response.ToJsonString());
         using (JsonDocument document = JsonDocument.Parse(bytes))
@@ -293,6 +302,14 @@ public sealed class ProviderContractJsonCodecTests
         cli["accepted_input_bound_policy_version"] = "invented";
         Assert.ThrowsExactly<InvalidDataException>(() => ProviderContractJsonCodecs.DeserializeCliSummaryV2(
             System.Text.Encoding.UTF8.GetBytes(cli.ToJsonString())));
+
+        JsonObject configuration = examples["effective-scan-configuration.v2.schema.json"]!.DeepClone().AsObject();
+        configuration.Remove("local_configuration_v1_provenance");
+        Assert.ThrowsExactly<InvalidDataException>(() => ProviderContractJsonCodecs.DeserializeEffectiveConfigurationV2(
+            System.Text.Encoding.UTF8.GetBytes(configuration.ToJsonString())));
+        configuration["local_configuration_v1_provenance"] = "content-validated-by-fingerprint-length";
+        Assert.ThrowsExactly<InvalidDataException>(() => ProviderContractJsonCodecs.DeserializeEffectiveConfigurationV2(
+            System.Text.Encoding.UTF8.GetBytes(configuration.ToJsonString())));
     }
 
     [TestMethod]
@@ -313,7 +330,16 @@ public sealed class ProviderContractJsonCodecTests
         V1Frame v1Frame = new() { Sequence = 7 };
         Assert.AreEqual(7UL, HelperProtocolV2Codec.DecodeV1(v1Frame.ToByteArray()).Sequence);
         V2Frame v2Frame = ValidV2BootstrapFrame();
-        Assert.AreEqual(8UL, HelperProtocolV2Codec.Decode(v2Frame.ToByteArray(), HelperNow).Sequence);
+        Assert.AreEqual(8UL, DecodeBootstrap(v2Frame).Sequence);
+        V2Frame reboundBootstrap = v2Frame.Clone();
+        reboundBootstrap.Bootstrap.CommandId = "command-other";
+        Assert.ThrowsExactly<InvalidDataException>(() => DecodeBootstrap(reboundBootstrap));
+        reboundBootstrap = v2Frame.Clone();
+        reboundBootstrap.Bootstrap.ProviderDispatch.OperationId.Value = "operation-other";
+        Assert.ThrowsExactly<InvalidDataException>(() => DecodeBootstrap(reboundBootstrap));
+        reboundBootstrap = v2Frame.Clone();
+        reboundBootstrap.Bootstrap.CoordinatorFencingEpoch = 2;
+        Assert.ThrowsExactly<InvalidDataException>(() => DecodeBootstrap(reboundBootstrap));
         Assert.AreNotEqual(HelperProtocolV2Constants.SchemaFingerprintSha256, ProtobufContractSetFingerprint());
     }
 
@@ -389,13 +415,20 @@ public sealed class ProviderContractJsonCodecTests
                 CommandId = "command-credential",
             },
         };
-        Assert.AreEqual(V2AssignmentKind.Enroll, HelperProtocolV2Codec.Decode(credentialAssignment.ToByteArray(), HelperNow).Assignment.AssignmentKind);
+        Assert.AreEqual(V2AssignmentKind.Enroll, HelperProtocolV2Codec.Decode(
+            credentialAssignment.ToByteArray(), HelperNow, "assignment-credential", "command-credential",
+            expectedProfileId: "profile-1", expectedGenerationId: "generation-1", expectedRevocationEpoch: 0).Assignment.AssignmentKind);
         byte[] requestBytes = [1, 2, 3];
         V2Frame blockedDispatch = credentialAssignment.Clone();
         blockedDispatch.Assignment.AssignmentKind = V2AssignmentKind.ProviderDispatch;
         blockedDispatch.Assignment.ProviderDispatch = DispatchSubject();
         blockedDispatch.Assignment.OperationKind = V2OperationKind.SourceClaimExtraction;
         blockedDispatch.Assignment.Limits = HelperLimits();
+        blockedDispatch.Assignment.AccountIdentityId = new ProviderAccountIdentityId { Value = "account-1" };
+        blockedDispatch.Assignment.BillingScopeIdentityId = new BillingScopeIdentityId { Value = "billing-1" };
+        blockedDispatch.Assignment.EffectiveConfigurationId = "config-v2-1";
+        blockedDispatch.Assignment.Settings = Digest();
+        blockedDispatch.Assignment.OutputSchema = Digest();
         blockedDispatch.Assignment.ProviderRequest = new V2ProviderRequest
         {
             DispatchId = new DispatchId { Value = "dispatch-1" },
@@ -416,12 +449,18 @@ public sealed class ProviderContractJsonCodecTests
                 Status = V2InputBoundProofStatus.AuthorityRequired,
             },
         };
-        Assert.ThrowsExactly<NotSupportedException>(() => HelperProtocolV2Codec.Decode(blockedDispatch.ToByteArray(), HelperNow));
+        Assert.ThrowsExactly<NotSupportedException>(() => DecodeBlockedAssignment(blockedDispatch, requestBytes));
         V2Frame dispatchDeadlineOverflow = blockedDispatch.Clone();
         dispatchDeadlineOverflow.Assignment.ProviderRequest.DispatchDeadline = ToInstant(HelperNow.AddSeconds(121));
-        Assert.ThrowsExactly<InvalidDataException>(() => HelperProtocolV2Codec.Decode(dispatchDeadlineOverflow.ToByteArray(), HelperNow));
+        Assert.ThrowsExactly<InvalidDataException>(() => DecodeBlockedAssignment(dispatchDeadlineOverflow, requestBytes));
+        V2Frame assignmentAccountRebind = blockedDispatch.Clone();
+        assignmentAccountRebind.Assignment.AccountIdentityId.Value = "account-other";
+        Assert.ThrowsExactly<InvalidDataException>(() => DecodeBlockedAssignment(assignmentAccountRebind, requestBytes));
+        V2Frame assignmentLimitOverflow = blockedDispatch.Clone();
+        assignmentLimitOverflow.Assignment.Limits.MaximumInputTokens++;
+        Assert.ThrowsExactly<InvalidDataException>(() => DecodeBlockedAssignment(assignmentLimitOverflow, requestBytes));
         blockedDispatch.Assignment.ProviderRequest.CanonicalRequest.Value = ByteString.CopyFrom(new byte[32]);
-        Assert.ThrowsExactly<InvalidDataException>(() => HelperProtocolV2Codec.Decode(blockedDispatch.ToByteArray(), HelperNow));
+        Assert.ThrowsExactly<InvalidDataException>(() => DecodeBlockedAssignment(blockedDispatch, requestBytes));
         V2Frame credentialReceipt = new()
         {
             Sequence = 13,
@@ -490,6 +529,13 @@ public sealed class ProviderContractJsonCodecTests
                 Settings = Digest(),
                 OutputSchema = Digest(),
                 EffectiveConfigurationId = "config-v2-1",
+                RevocationEpoch = 0,
+                AccountIdentityId = new ProviderAccountIdentityId { Value = "account-1" },
+                BillingScopeIdentityId = new BillingScopeIdentityId { Value = "billing-1" },
+                ReservationGroupId = new ReservationGroupId { Value = "reservation-1" },
+                OperationKind = V2OperationKind.SourceClaimExtraction,
+                Limits = HelperLimits(),
+                DispatchDeadline = FutureInstant(),
                 InputBoundProof = new V2InputBoundProof
                 {
                     PolicyId = "unresolved-openai-responses-framing",
@@ -508,7 +554,11 @@ public sealed class ProviderContractJsonCodecTests
             expectedInputBoundPolicyVersion: "authority-required", expectedCoordinatorFencingEpoch: 1,
             expectedCapabilitySnapshotId: "capability-1", expectedPriceSnapshotId: "price-1",
             expectedSettings: Digest(), expectedOutputSchema: Digest(),
-            expectedEffectiveConfigurationId: "config-v2-1", expectedNonSecretReceipt: Digest()));
+            expectedEffectiveConfigurationId: "config-v2-1", expectedNonSecretReceipt: Digest(),
+            expectedRevocationEpoch: 0, expectedAccountIdentityId: "account-1",
+            expectedBillingScopeIdentityId: "billing-1", expectedReservationGroupId: "reservation-1",
+            expectedOperationKind: V2OperationKind.SourceClaimExtraction, expectedLimits: HelperLimits(),
+            expectedDispatchDeadline: FutureInstant()));
 
         void AssertReceiptRebindRejected(Action<V2Receipt> mutate)
         {
@@ -523,7 +573,11 @@ public sealed class ProviderContractJsonCodecTests
                 expectedInputBoundPolicyVersion: "authority-required", expectedCoordinatorFencingEpoch: 1,
                 expectedCapabilitySnapshotId: "capability-1", expectedPriceSnapshotId: "price-1",
                 expectedSettings: Digest(), expectedOutputSchema: Digest(),
-                expectedEffectiveConfigurationId: "config-v2-1", expectedNonSecretReceipt: Digest()));
+                expectedEffectiveConfigurationId: "config-v2-1", expectedNonSecretReceipt: Digest(),
+                expectedRevocationEpoch: 0, expectedAccountIdentityId: "account-1",
+                expectedBillingScopeIdentityId: "billing-1", expectedReservationGroupId: "reservation-1",
+                expectedOperationKind: V2OperationKind.SourceClaimExtraction, expectedLimits: HelperLimits(),
+                expectedDispatchDeadline: FutureInstant()));
         }
         AssertReceiptRebindRejected(x => x.AssignmentId = "assignment-other");
         AssertReceiptRebindRejected(x => x.CommandId = "command-other");
@@ -541,6 +595,13 @@ public sealed class ProviderContractJsonCodecTests
         AssertReceiptRebindRejected(x => x.OutputSchema = Digest([2]));
         AssertReceiptRebindRejected(x => x.EffectiveConfigurationId = "config-v2-other");
         AssertReceiptRebindRejected(x => x.NonSecretReceipt = Digest([2]));
+        AssertReceiptRebindRejected(x => x.RevocationEpoch = 1);
+        AssertReceiptRebindRejected(x => x.AccountIdentityId.Value = "account-other");
+        AssertReceiptRebindRejected(x => x.BillingScopeIdentityId.Value = "billing-other");
+        AssertReceiptRebindRejected(x => x.ReservationGroupId.Value = "reservation-other");
+        AssertReceiptRebindRejected(x => x.OperationKind = V2OperationKind.CandidateInvestigation);
+        AssertReceiptRebindRejected(x => x.Limits.MaximumInputTokens++);
+        AssertReceiptRebindRejected(x => x.DispatchDeadline = ToInstant(HelperNow.AddSeconds(119)));
     }
 
     [TestMethod]
@@ -582,14 +643,22 @@ public sealed class ProviderContractJsonCodecTests
                 Limits = HelperLimits(),
                 EvaluatedAt = ToInstant(HelperNow),
                 RequestId = "request-1",
+                OperationId = new OperationId { Value = "operation-1" },
+                RequestFingerprintSha256 = ByteString.CopyFrom(new byte[32]),
             },
         };
-        Assert.AreEqual("account-1", HelperProtocolV2Codec.Decode(frame.ToByteArray(), HelperNow).DispatchRevalidation.AccountIdentityId.Value);
+        Assert.AreEqual("account-1", DecodeRevalidation(frame).DispatchRevalidation.AccountIdentityId.Value);
         V2Frame revalidationDeadlineOverflow = frame.Clone();
         revalidationDeadlineOverflow.DispatchRevalidation.DispatchDeadline = ToInstant(HelperNow.AddSeconds(121));
-        Assert.ThrowsExactly<InvalidDataException>(() => HelperProtocolV2Codec.Decode(revalidationDeadlineOverflow.ToByteArray(), HelperNow));
+        Assert.ThrowsExactly<InvalidDataException>(() => DecodeRevalidation(revalidationDeadlineOverflow));
+        V2Frame revalidationOperationRebind = frame.Clone();
+        revalidationOperationRebind.DispatchRevalidation.OperationId.Value = "operation-other";
+        Assert.ThrowsExactly<InvalidDataException>(() => DecodeRevalidation(revalidationOperationRebind));
+        V2Frame revalidationLimitOverflow = frame.Clone();
+        revalidationLimitOverflow.DispatchRevalidation.Limits.MaximumResponseBytes++;
+        Assert.ThrowsExactly<InvalidDataException>(() => DecodeRevalidation(revalidationLimitOverflow));
         frame.DispatchRevalidation.PriceSnapshotId = null;
-        Assert.ThrowsExactly<InvalidDataException>(() => HelperProtocolV2Codec.Decode(frame.ToByteArray(), HelperNow));
+        Assert.ThrowsExactly<InvalidDataException>(() => DecodeRevalidation(frame));
 
         ListProviderBudgetRequest query = new() { ScopeKind = "global", ScopeId = "global", RequestedPageSize = 100 };
         Assert.IsTrue(query.CalculateSize() < ProtocolConstants.MaximumMessageBytes);
@@ -837,6 +906,7 @@ public sealed class ProviderContractJsonCodecTests
                 new ProviderSemanticAdmissionLink
                 {
                     AdmissionId = "admission-1",
+                    AuthorizationId = "authorization-1",
                     ProposalId = "proposal-1",
                     OperationId = new OperationId { Value = "operation-1" },
                     ResponseRecordId = "response-1",
@@ -870,6 +940,7 @@ public sealed class ProviderContractJsonCodecTests
                 new ProviderSemanticAdmissionLink
                 {
                     AdmissionId = "admission-1",
+                    AuthorizationId = "authorization-2",
                     ProposalId = "proposal-2",
                     OperationId = new OperationId { Value = "operation-2" },
                     ResponseRecordId = "response-2",
@@ -929,6 +1000,7 @@ public sealed class ProviderContractJsonCodecTests
             AdmissionState = "unavailable",
             RecordedAt = ToInstant(HelperNow),
             Availability = AppProviderAvailabilityState.Unavailable,
+            UsageAvailability = AppProviderAvailabilityState.Unavailable,
             InputBoundProofStatus = InputBoundProofStatus.AuthorityRequired,
             InputBoundPolicyId = "unresolved-openai-responses-framing",
             InputBoundPolicyVersion = "authority-required",
@@ -1007,6 +1079,9 @@ public sealed class ProviderContractJsonCodecTests
         AssertTraceMapping(contracts, "provider-response.v1.schema.json", "provider_request_id", "provider_responses.provider_request_id", "ADR-0025");
         AssertTraceMapping(contracts, "provider-response.v1.schema.json", "maximum_raw_response_bytes", "provider_responses.maximum_raw_response_bytes", "ADR-0025");
         AssertTraceMapping(contracts, "provider-response.v1.schema.json", "usage", "provider_usage_entries.total_tokens", "ADR-0025");
+        AssertTraceMapping(contracts, "provider-response.v1.schema.json", "usage", "provider_usage_entries.availability", "ADR-0025");
+        AssertTraceMapping(contracts, "provider-response.v1.schema.json", "limits", "provider_operation_authorizations.maximum_request_bytes",
+            "provider_operation_authorizations.deadline_milliseconds");
         AssertTraceMapping(contracts, "provider-response.v1.schema.json", "$defs.rateLimitFact.scope", "provider_rate_limit_facts.scope", "ADR-0025");
         AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "$defs.capabilitySnapshot.model", "provider_capability_snapshots.model", "ADR-0020");
         AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "$defs.priceSnapshot.model", "provider_price_snapshots.model", "ADR-0020");
@@ -1036,6 +1111,12 @@ public sealed class ProviderContractJsonCodecTests
             "provider_semantic_proposals.root_subject_id", "ADR-0013");
         AssertTraceMapping(contracts, "source-claim-extraction.v1.schema.json", "admission_links",
             "provider_semantic_admissions.operation_id", "provider_semantic_admissions.application_link_id");
+        AssertTraceMapping(contracts, "source-claim-extraction.v1.schema.json", "$defs.admissionLink.authorization_id",
+            "provider_semantic_proposals.authorization_id", "ADR-0013");
+        AssertTraceMapping(contracts, "source-claim-extraction.v1.schema.json", "$defs.admissionLink.validation_id",
+            "provider_semantic_admissions.validation_id", "ADR-0013");
+        AssertTraceProjection(contracts, "source-claim-extraction.v1.schema.json", "$defs.admissionLink.authorization_id",
+            "output", "ProviderSemanticAdmissionLink", "authorization_id");
         AssertTraceProjection(contracts, "source-claim-extraction.v1.schema.json", "source_revision_id",
             "output", "SourceClaimExtractionPayload", "source_revision_id");
         AssertTraceProjection(contracts, "source-claim-extraction.v1.schema.json", "admission_links",
@@ -1062,6 +1143,8 @@ public sealed class ProviderContractJsonCodecTests
             "output", "ProviderResponsePayload", "client_request_id");
         AssertTraceMapping(contracts, "effective-scan-configuration.v2.schema.json", "local_configuration_v1_fingerprint",
             "provider_effective_scan_configurations_v2.local_configuration_v1_fingerprint", "ADR-0025");
+        AssertTraceMapping(contracts, "effective-scan-configuration.v2.schema.json", "local_configuration_v1_provenance",
+            "provider_effective_scan_configurations_v2.local_configuration_v1_provenance", "ADR-0025");
         AssertTraceMapping(contracts, "effective-scan-configuration.v2.schema.json", "access_profile_id",
             "provider_effective_scan_configurations_v2.profile_id", "ADR-0025");
         AssertTraceMapping(contracts, "run-output.v2.schema.json", "effective_configuration_v2_id",
@@ -1262,7 +1345,7 @@ public sealed class ProviderContractJsonCodecTests
             "input", "none", "global", "USD", 1, 1, "synthetic-v1")]);
     private static ProviderQuantityContract Q(long value) => new(DomainProviderAvailabilityState.Available, value);
     private static ProviderUsageContract CancelledUsage() => new(
-        Q(0), U(), U(), U(), U(), U(), U(), U(), U(),
+        DomainProviderAvailabilityState.Unavailable, Q(0), U(), U(), U(), U(), U(), U(), U(), U(),
         DomainProviderAvailabilityState.Unavailable,
         DomainProviderAvailabilityState.Unavailable,
         DomainProviderAvailabilityState.Unavailable);
@@ -1341,6 +1424,39 @@ public sealed class ProviderContractJsonCodecTests
             OneUseNonceFingerprintSha256 = ByteString.CopyFrom(new byte[32]),
         },
     };
+
+    private static V2Frame DecodeBootstrap(V2Frame frame) => HelperProtocolV2Codec.Decode(
+        frame.ToByteArray(), HelperNow, expectedCommandId: "command-1",
+        expectedOperationId: "operation-1", expectedAttemptId: "attempt-1",
+        expectedCoordinatorFencingEpoch: 1);
+
+    private static V2Frame DecodeBlockedAssignment(V2Frame frame, byte[] requestBytes) => HelperProtocolV2Codec.Decode(
+        frame.ToByteArray(), HelperNow, "assignment-credential", "command-credential",
+        expectedOperationId: "operation-1", expectedAttemptId: "attempt-1",
+        expectedProfileId: "profile-1", expectedGenerationId: "generation-1",
+        expectedRequestId: "request-1", expectedDispatchId: "dispatch-1",
+        expectedRequestFingerprintSha256: SHA256.HashData(requestBytes),
+        expectedInputBoundPolicyId: "unresolved-openai-responses-framing",
+        expectedInputBoundPolicyVersion: "authority-required", expectedRevocationEpoch: 0,
+        expectedAccountIdentityId: "account-1", expectedBillingScopeIdentityId: "billing-1",
+        expectedReservationGroupId: "reservation-1", expectedOperationKind: V2OperationKind.SourceClaimExtraction,
+        expectedLimits: HelperLimits(), expectedDispatchDeadline: FutureInstant(),
+        expectedCapabilitySnapshotId: "capability-1", expectedPriceSnapshotId: "price-1",
+        expectedSettings: Digest(), expectedOutputSchema: Digest(), expectedEffectiveConfigurationId: "config-v2-1");
+
+    private static V2Frame DecodeRevalidation(V2Frame frame) => HelperProtocolV2Codec.Decode(
+        frame.ToByteArray(), HelperNow, expectedOperationId: "operation-1", expectedAttemptId: "attempt-1",
+        expectedProfileId: "profile-1", expectedGenerationId: "generation-1",
+        expectedRequestId: "request-1", expectedDispatchId: "dispatch-1",
+        expectedRequestFingerprintSha256: new byte[32],
+        expectedInputBoundPolicyId: "unresolved-openai-responses-framing",
+        expectedInputBoundPolicyVersion: "authority-required", expectedCoordinatorFencingEpoch: 1,
+        expectedCapabilitySnapshotId: "capability-1", expectedPriceSnapshotId: "price-1",
+        expectedSettings: Digest(), expectedOutputSchema: Digest(), expectedEffectiveConfigurationId: "configuration-1",
+        expectedRevocationEpoch: 0, expectedAccountIdentityId: "account-1",
+        expectedBillingScopeIdentityId: "billing-1", expectedReservationGroupId: "reservation-1",
+        expectedOperationKind: V2OperationKind.SourceClaimExtraction, expectedLimits: HelperLimits(),
+        expectedDispatchDeadline: FutureInstant());
 
     private static V2CredentialSubject CredentialSubject() => new()
     {

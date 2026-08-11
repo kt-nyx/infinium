@@ -136,7 +136,7 @@ public sealed class AnalysisStatePersistenceTests
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'storage_contract_version';"));
         Assert.AreEqual(
-            "4c7c92ee4f711339c236f64a413948c2654b629624cb04305068dcf65c38d75c",
+            "f621f5c26aab56901e96c79d976fdea4ab8886bc17545e5da343b7f0c0bd4a1e",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'schema_fingerprint';"));
@@ -314,27 +314,27 @@ public sealed class AnalysisStatePersistenceTests
         using SqliteCommand command = connection.CreateCommand();
         command.CommandText =
             """
-            INSERT INTO provider_access_profiles VALUES('profile-a','openai','responses','A','account-a','billing-a','2026-08-10T00:00:00Z');
-            INSERT INTO provider_generations VALUES('generation-a','profile-a',1,0,'2026-08-10T00:00:00Z');
-            INSERT INTO provider_capability_snapshots VALUES('cap-a','openai','gpt-5.6-sol','default','medium','current_turn','standard',0,0,0,'none',0,'disabled','explicit',0,0,272000,'synthetic-v1','bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb','2026-08-10T00:00:00Z');
-            INSERT INTO provider_credential_intents VALUES('intent-enroll-a','profile-a','generation-a','enroll','pending','none','pending-enrollment','none','not-applicable',NULL,NULL,NULL,'not-required','not-requested','2026-08-10T00:00:00Z');
-            INSERT INTO provider_profile_projection VALUES('profile-a','generation-a',0,'pending-enrollment','not-applicable',NULL,NULL,NULL,'intent-enroll-a','not-required','not-requested',1,'2026-08-10T00:00:00Z');
-            INSERT INTO provider_credential_intents VALUES('intent-activate-a','profile-a','generation-a','enroll','completed','pending-enrollment','active-unverified','active-unverified','unavailable','account-a','billing-a','cap-a','not-required','not-requested','2026-08-10T00:00:01Z');
-            UPDATE provider_profile_projection SET lifecycle_state='active-unverified',verification_state='unavailable',capability_snapshot_id='cap-a',account_identity_id='account-a',billing_scope_identity_id='billing-a',intent_id='intent-activate-a',projection_version=2,updated_at='2026-08-10T00:00:01Z' WHERE profile_id='profile-a';
-            INSERT INTO provider_credential_intents VALUES('intent-verify-a','profile-a','generation-a','verify','completed','active-unverified','active-verified','active-verified','available','account-a','billing-a','cap-a','not-required','not-requested','2026-08-10T00:00:02Z');
-            UPDATE provider_profile_projection SET lifecycle_state='active-verified',verification_state='available',intent_id='intent-verify-a',projection_version=3,updated_at='2026-08-10T00:00:02Z' WHERE profile_id='profile-a';
-            INSERT INTO provider_price_snapshots VALUES('price-a','openai','gpt-5.6-sol','USD','default','synthetic-v1','cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc','2026-08-10T00:00:00Z');
+            INSERT INTO provider_access_profiles VALUES('profile-a','openai','responses','A','account-a','billing-a','2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO provider_generations VALUES('generation-a','profile-a',1,0,'2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO provider_capability_snapshots VALUES('cap-a','openai','gpt-5.6-sol','default','medium','current_turn','standard',0,0,0,'none',0,'disabled','explicit',0,0,272000,'synthetic-v1','bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb','2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO provider_credential_intents VALUES('intent-enroll-a','profile-a','generation-a','enroll','pending','none','pending-enrollment','none','not-applicable',NULL,NULL,NULL,'not-required','not-requested','2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO provider_profile_projection VALUES('profile-a','generation-a',0,'pending-enrollment','not-applicable',NULL,NULL,NULL,'intent-enroll-a','not-required','not-requested',1,'2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO provider_credential_intents VALUES('intent-activate-a','profile-a','generation-a','enroll','completed','pending-enrollment','active-unverified','active-unverified','unavailable','account-a','billing-a','cap-a','not-required','not-requested','2026-08-10T00:00:01.0000000+00:00');
+            UPDATE provider_profile_projection SET lifecycle_state='active-unverified',verification_state='unavailable',capability_snapshot_id='cap-a',account_identity_id='account-a',billing_scope_identity_id='billing-a',intent_id='intent-activate-a',projection_version=2,updated_at='2026-08-10T00:00:01.0000000+00:00' WHERE profile_id='profile-a';
+            INSERT INTO provider_credential_intents VALUES('intent-verify-a','profile-a','generation-a','verify','completed','active-unverified','active-verified','active-verified','available','account-a','billing-a','cap-a','not-required','not-requested','2026-08-10T00:00:02.0000000+00:00');
+            UPDATE provider_profile_projection SET lifecycle_state='active-verified',verification_state='available',intent_id='intent-verify-a',projection_version=3,updated_at='2026-08-10T00:00:02.0000000+00:00' WHERE profile_id='profile-a';
+            INSERT INTO provider_price_snapshots VALUES('price-a','openai','gpt-5.6-sol','USD','default','synthetic-v1','cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc','2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO provider_price_rules VALUES('price-a','rule-a','standard-under-272k','ordinary-input','input','none','global',1,1,'synthetic-v1');
-            INSERT INTO runs VALUES('run-a','install-a','context-a','config-a','manifest-a','created',0,1,1,'2026-08-10T00:00:00Z','2026-08-10T00:00:00Z');
-            INSERT INTO job_nodes VALUES('job-a','run-a',NULL,'provider','created',0,'2026-08-10T00:00:00Z','2026-08-10T00:00:00Z');
-            INSERT INTO durable_commands VALUES('command-a','provider','run-a',0,'recorded','created',NULL,'2026-08-10T00:00:00Z',NULL,NULL);
-            INSERT INTO evidence_acquisition_runs VALUES('acquisition-a','install-a','context-a','config-a','manifest-a','run-a','application-a','cost-a','created','2026-08-10T00:00:00Z');
-            INSERT INTO evidence_acquisition_job_nodes VALUES('acquisition-job-a','acquisition-a','provider','created','2026-08-10T00:00:00Z');
+            INSERT INTO runs VALUES('run-a','install-a','context-a','config-a','manifest-a','created',0,1,1,'2026-08-10T00:00:00.0000000+00:00','2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO job_nodes VALUES('job-a','run-a',NULL,'provider','created',0,'2026-08-10T00:00:00.0000000+00:00','2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO durable_commands VALUES('command-a','provider','run-a',0,'recorded','created',NULL,'2026-08-10T00:00:00.0000000+00:00',NULL,NULL);
+            INSERT INTO evidence_acquisition_runs VALUES('acquisition-a','install-a','context-a','config-a','manifest-a','run-a','application-a','cost-a','created','2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO evidence_acquisition_job_nodes VALUES('acquisition-job-a','acquisition-a','provider','created','2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO evidence_acquisition_commands VALUES('acquisition-command-a','acquisition-a','provider-operation','2026-08-10T00:00:00.0000000+00:00','recorded');
             INSERT INTO provider_command_bindings VALUES('acquisition-command-a','evidence-acquisition-run','acquisition-a','2026-08-10T00:00:00.0000000+00:00');
-            INSERT INTO provider_effective_scan_configurations_v2 VALUES('config-v2-a','config-a','abababababababababababababababababababababababababababababababab','profile-a','generation-a','gpt-5.6-sol','medium','current_turn','standard',0,'default',0,0,'none',0,'disabled','explicit',0,0,65536,73728,4096,1048576,1,600000000,120000,'["hosted-search","nexus","loot"]','2026-08-10T00:00:00Z');
-            INSERT INTO evidence_acquisition_parent_links VALUES('parent-a','acquisition-a','run-a','initiated-by',NULL,'2026-08-10T00:00:00Z');
-            INSERT INTO payloads VALUES('request-payload-a','aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',1024,'application/json','retained','provider/request-a.json','2026-08-10T00:00:00Z');
+            INSERT INTO provider_effective_scan_configurations_v2 VALUES('config-v2-a','config-a','abababababababababababababababababababababababababababababababab','asserted-retained-v1-identity','profile-a','generation-a','gpt-5.6-sol','medium','current_turn','standard',0,'default',0,0,'none',0,'disabled','explicit',0,0,65536,73728,4096,1048576,1,600000000,120000,'["hosted-search","nexus","loot"]','2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO evidence_acquisition_parent_links VALUES('parent-a','acquisition-a','run-a','initiated-by',NULL,'2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO payloads VALUES('request-payload-a','aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',1024,'application/json','retained','provider/request-a.json','2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO provider_operation_blocks(
               operation_id,owner_kind,owner_id,job_node_id,command_id,requested_at,confirmed_at,
               installation_snapshot_id,analysis_context_id,effective_configuration_id,resolved_input_manifest_id,
@@ -353,8 +353,8 @@ public sealed class AnalysisStatePersistenceTests
               'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',1024,
               '9999999999999999999999999999999999999999999999999999999999999999',
               'unresolved-openai-responses-framing','authority-required','authority-required',65536,73728,4096,
-              1048576,1,600000000,120000,'2026-08-10T00:02:00.0000000+00:00',1,'input-bound-blocked','2026-08-10T00:00:01Z');
-            INSERT INTO provider_operation_projection VALUES('operation-a','input-bound-blocked',0,0,0,1,'2026-08-10T00:00:00Z');
+              1048576,1,600000000,120000,'2026-08-10T00:02:00.0000000+00:00',1,'input-bound-blocked','2026-08-10T00:00:01.0000000+00:00');
+            INSERT INTO provider_operation_projection VALUES('operation-a','input-bound-blocked',0,0,0,1,'2026-08-10T00:00:00.0000000+00:00');
             """;
         command.ExecuteNonQuery();
         Assert.AreEqual(1L, ScalarInt64(connection, "SELECT COUNT(*) FROM provider_operation_blocks;"));
@@ -389,7 +389,7 @@ public sealed class AnalysisStatePersistenceTests
 
         (string Table, string Sql)[] bypasses =
         [
-            ("provider_operation_attempts", "INSERT INTO provider_operation_attempts VALUES('attempt-bypass','operation-a',1,'proposed',1,'2026-08-10T00:00:00Z');"),
+            ("provider_operation_attempts", "INSERT INTO provider_operation_attempts VALUES('attempt-bypass','operation-a',1,'proposed',1,'2026-08-10T00:00:00.0000000+00:00');"),
             ("provider_requests", """
                 INSERT INTO provider_requests(
                   request_id,operation_id,provider_attempt_id,request_fingerprint,canonical_request_fingerprint,
@@ -401,12 +401,12 @@ public sealed class AnalysisStatePersistenceTests
                   '3333333333333333333333333333333333333333333333333333333333333333',
                   '4444444444444444444444444444444444444444444444444444444444444444',
                   'unresolved-openai-responses-framing','authority-required','authority-required','payload-bypass',
-                  '5555555555555555555555555555555555555555555555555555555555555555',1,'2026-08-10T00:00:00Z');
+                  '5555555555555555555555555555555555555555555555555555555555555555',1,'2026-08-10T00:00:00.0000000+00:00');
                 """),
-            ("provider_reservations", "INSERT INTO provider_reservations VALUES('reservation-bypass','operation-a','attempt-bypass','request-bypass','{}',1,'2026-08-10T00:02:00Z','2026-08-10T00:00:00Z');"),
+            ("provider_reservations", "INSERT INTO provider_reservations VALUES('reservation-bypass','operation-a','attempt-bypass','request-bypass','{}',1,'2026-08-10T00:02:00.0000000+00:00','2026-08-10T00:00:00.0000000+00:00');"),
             ("provider_reservation_scope_items", "INSERT INTO provider_reservation_scope_items VALUES('scope-bypass','reservation-bypass','operation','operation-a','{}',0);"),
-            ("provider_dispatch_fences", "INSERT INTO provider_dispatch_fences VALUES('fence-bypass','auth-bypass','operation-a','reservation-bypass','request-bypass','attempt-bypass',1,'profile-a','generation-a',0,1,'synthetic bypass','2026-08-10T00:00:00Z');"),
-            ("provider_transport_events", "INSERT INTO provider_transport_events VALUES('transport-bypass','operation-a','attempt-bypass','request-bypass','fence-bypass','not-started',1,'2026-08-10T00:00:00Z');"),
+            ("provider_dispatch_fences", "INSERT INTO provider_dispatch_fences VALUES('fence-bypass','auth-bypass','operation-a','reservation-bypass','request-bypass','attempt-bypass',1,'profile-a','generation-a',0,1,'synthetic bypass','2026-08-10T00:00:00.0000000+00:00');"),
+            ("provider_transport_events", "INSERT INTO provider_transport_events VALUES('transport-bypass','operation-a','attempt-bypass','request-bypass','fence-bypass','not-started',1,'2026-08-10T00:00:00.0000000+00:00');"),
             ("provider_responses", """
                 INSERT INTO provider_responses(
                   response_record_id,operation_id,request_id,provider_attempt_id,dispatch_fence_id,
@@ -415,7 +415,7 @@ public sealed class AnalysisStatePersistenceTests
                   prompt_cache_mode,validation_state,admission_state,created_at)
                 VALUES('response-bypass','operation-a','request-bypass','attempt-bypass','fence-bypass',1048576,
                   'unavailable','unavailable','cancelled','gpt-5.6-sol','default','current_turn','standard','explicit',
-                  'unavailable','unavailable','2026-08-10T00:00:00Z');
+                  'unavailable','unavailable','2026-08-10T00:00:00.0000000+00:00');
                 """),
             ("provider_usage_entries", """
                 INSERT INTO provider_usage_entries(
@@ -426,16 +426,16 @@ public sealed class AnalysisStatePersistenceTests
                   billing_availability,rate_availability,credit_availability,receipt_state,created_at)
                 VALUES('usage-bypass','operation-a','attempt-bypass','request-bypass','fence-bypass','response-bypass',
                   'available',0,'unavailable','unavailable','unavailable','unavailable','unavailable','unavailable',
-                  'unavailable','unavailable','unavailable','unavailable','unavailable','cancelled','2026-08-10T00:00:00Z');
+                  'unavailable','unavailable','unavailable','unavailable','unavailable','cancelled','2026-08-10T00:00:00.0000000+00:00');
                 """),
-            ("provider_rate_limit_facts", "INSERT INTO provider_rate_limit_facts VALUES('rate-bypass','usage-bypass','request','requests','unavailable',NULL,NULL,'2026-08-10T00:00:00Z',NULL);"),
-            ("provider_settlements", "INSERT INTO provider_settlements VALUES('settlement-bypass','operation-a','attempt-bypass','request-bypass','reservation-bypass',NULL,'fence-bypass','unresolved-hold',0,1,'2026-08-10T00:00:00Z');"),
-            ("provider_settlement_adjustments", "INSERT INTO provider_settlement_adjustments VALUES('adjustment-bypass','settlement-bypass',0,'owner','synthetic bypass','2026-08-10T00:00:00Z');"),
-            ("provider_semantic_proposals", "INSERT INTO provider_semantic_proposals VALUES('proposal-bypass','operation-a','attempt-bypass','request-bypass','response-bypass','fence-bypass','gap','payload-bypass','2026-08-10T00:00:00Z');"),
-            ("provider_semantic_admissions", "INSERT INTO provider_semantic_admissions VALUES('admission-bypass','proposal-bypass','admitted','host-policy','synthetic bypass',NULL,'2026-08-10T00:00:00Z');"),
-            ("provider_replay_edges", "INSERT INTO provider_replay_edges VALUES('replay-bypass','operation-a',NULL,NULL,NULL,NULL,'unavailable',NULL,'2026-08-10T00:00:00Z');"),
-            ("provider_operation_projection", "INSERT INTO provider_operation_projection VALUES('operation-bypass','input-bound-blocked',0,0,0,1,'2026-08-10T00:00:00Z');"),
-            ("provider_budget_projection", "INSERT INTO provider_budget_projection VALUES('operation','operation-a',0,0,0,1,'2026-08-10T00:00:00Z');"),
+            ("provider_rate_limit_facts", "INSERT INTO provider_rate_limit_facts VALUES('rate-bypass','usage-bypass','request','requests','unavailable',NULL,NULL,'2026-08-10T00:00:00.0000000+00:00',NULL);"),
+            ("provider_settlements", "INSERT INTO provider_settlements VALUES('settlement-bypass','operation-a','attempt-bypass','request-bypass','reservation-bypass',NULL,'fence-bypass','unresolved-hold',0,1,'2026-08-10T00:00:00.0000000+00:00');"),
+            ("provider_settlement_adjustments", "INSERT INTO provider_settlement_adjustments VALUES('adjustment-bypass','settlement-bypass',0,'owner','synthetic bypass','2026-08-10T00:00:00.0000000+00:00');"),
+            ("provider_semantic_proposals", "INSERT INTO provider_semantic_proposals VALUES('proposal-bypass','operation-a','attempt-bypass','request-bypass','response-bypass','fence-bypass','gap','payload-bypass','2026-08-10T00:00:00.0000000+00:00');"),
+            ("provider_semantic_admissions", "INSERT INTO provider_semantic_admissions VALUES('admission-bypass','proposal-bypass','admitted','host-policy','synthetic bypass',NULL,'2026-08-10T00:00:00.0000000+00:00');"),
+            ("provider_replay_edges", "INSERT INTO provider_replay_edges VALUES('replay-bypass','operation-a',NULL,NULL,NULL,NULL,'unavailable',NULL,'2026-08-10T00:00:00.0000000+00:00');"),
+            ("provider_operation_projection", "INSERT INTO provider_operation_projection VALUES('operation-bypass','input-bound-blocked',0,0,0,1,'2026-08-10T00:00:00.0000000+00:00');"),
+            ("provider_budget_projection", "INSERT INTO provider_budget_projection VALUES('operation','operation-a',0,0,0,1,'2026-08-10T00:00:00.0000000+00:00');"),
         ];
         foreach ((string table, string sql) in bypasses)
         {

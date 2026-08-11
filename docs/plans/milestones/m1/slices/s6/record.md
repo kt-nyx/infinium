@@ -1029,3 +1029,116 @@ private evidence was invented. No network/DNS/provider, Credential Manager,
 native credential, private fixture, sibling repository, legacy/evaluator
 archive, later-package, current-state, push, amend, or frozen Slice 5 v1 edit
 occurred.
+
+## Eighth-cycle response-state totality closure — 2026-08-11
+
+Fresh boundary and contract review rejected candidate
+`8c2d8a7df01f016aeb372adc7731e45a98e353a8`. The findings were recoverable
+WP1 contract-totality defects, not authority conflicts.
+
+### Corrected totality and authority seams
+
+- Closed one exact future response matrix across JSON, domain, application,
+  and schema-6 SQL for completed, refusal, incomplete, failed, queued,
+  in-progress, cancelled, malformed, oversized, mismatched, and unknown
+  outcomes. Every optional fact has typed availability; response and usage
+  availability agree; completed responses require complete exact usage;
+  cancelled responses retain zero dispatch without transport identity; and
+  structurally valid proved shapes reach the current maturity rejection only
+  after totality validation.
+- Bound raw-response, header, billing-evidence, and protobuf digest metadata to
+  exact payload identity, SHA-256, byte length, operation kind, and retained
+  seven-dimensional limits. Usage enforces input plus output equals total,
+  reasoning does not exceed output, cache/tool quantities are zero, operation
+  ceilings hold, and billing, rate, reset, and unavailable credit facts retain
+  exact evidence semantics.
+- Bound every helper-v2 bootstrap, credential-assignment, provider-assignment,
+  revalidation, provider-receipt, and credential-receipt frame to its expected
+  identity tuple. Provider receipts additionally retain profile/generation,
+  revocation, account/billing scope, reservation, operation kind, limits,
+  deadline, request/dispatch/fencing/proof, capability/price/settings/schema/
+  configuration, exact usage/cost, and receipt digest. Cross-frame rebinds and
+  all retained limit overflows are executable rejections.
+- Enforced credential intent kind/from/to matrices for every terminal state,
+  including cancellation. Failed, unavailable, and cancelled outcomes now
+  project their exact truthful lifecycle; cancelled deletion does not wedge a
+  retry, while completed or failed deletion does. Secure-store-unavailable and
+  recovery-required terminal outcomes materialize in the rebuildable profile
+  projection.
+- Added canonical, calendar-valid UTC guards for every schema-6 authority time
+  in configuration, credential, acquisition, command, block, authorization,
+  request, reservation, transport, response, usage, rate, settlement,
+  semantic, replay, run-output, and projection families. Representative
+  malformed and non-UTC values are rejected across those families, and actual
+  terminal outcomes remain monotonic.
+- Bound semantic proposals and admission links to exact authorization,
+  operation kind, owner, completed validated admitted response, available
+  usage, source-revision or candidate root, and application edge. Refusal,
+  malformed, wrong-root, and cross-owner proposal paths are rejected;
+  abstention and gap proposals retain the same exact root authority.
+- Regenerated per-field traceability from actual nested
+  `$defs.admissionLink.*`, response-limit, usage-availability, semantic
+  authority, SQL, and application mappings, eliminating inferred mechanical
+  symbols. The retained local configuration-v1 fingerprint is now explicitly
+  classified as `asserted-retained-v1-identity`; no content-validation claim
+  is inferred from its length.
+
+The nine Slice 6 contracts remain `Proposed`; WP1 remains `Deferred` solely on
+the absent accepted repository-local input-bound tokenizer/provider-framing
+proof. This correction does not accept WP1, authorize native credential or
+live provider work, advance `docs/current-state.md`, or unblock WP2.
+
+### Superseding identities and exact blocked receipt root
+
+- Schema-6 fingerprint:
+  `f621f5c26aab56901e96c79d976fdea4ab8886bc17545e5da343b7f0c0bd4a1e`.
+- Helper-v2 transitive fingerprint:
+  `d923b8e8f6f1fe1142fe9ffd3047c6df1dae81e68400efc0bd53bb25ee493579`.
+- Full application protobuf-set fingerprint:
+  `6c943878fecf9c18633e8258041223ca7a0d3abd28d205ecaf47a84e88216aa2`.
+- Answer-free example: 15,103 bytes,
+  `b61134710d37b6b301bc1ee70d3c51979869242247a3cece56b3099093d2537d`.
+- Public registry: 8,790 bytes,
+  `f1dcd3e4ecb9ee5001a0f68fb9736e816d5cf5f3c5759676ec8532e0bdf8ec3d`.
+- Per-field traceability: 418,611 bytes,
+  `a82291b3ab9c54355103f9150f01d0f9af4ba2c805cdc30d21d262c493d37e8f`.
+- Exact gate `OutputRoot`:
+  `artifacts/m1-slice6/wp1-eighth-totality-closure-final`.
+- Receipt SHA-256 identities: `Contracts`
+  `3c4f32c0504888e2268b02eeeba14c96f93632ee80a7b586147bff3a2148bf28`,
+  `StateSurfaces`
+  `33c2329371523d9a9f57a0346d675a401765879d5594445f7f033777355d1290`,
+  and `StateTotality`
+  `46d8065c154239b2b175c5ccf7e54ff6945f26c6f5dc67f965305213295fbab0`.
+
+### Eighth-cycle verification
+
+1. Release solution build passed with zero warnings and zero errors. Focused
+   provider response, application, helper, semantic, credential, timestamp,
+   trace, and persistence adversarial checks passed: Unit 19/0/0, Contract
+   19/0/0, and schema-6/persistence 8/0/0. The specific illegal-cancelled-
+   transition, malformed/non-UTC-time, response/usage-coupling, non-success-
+   semantic-admission, helper cross-frame/overflow, nested-trace, and asserted-
+   provenance checks all passed.
+2. `Contracts` passed 19/0/0. `StateSurfaces` passed 19/0/0 state checks and
+   8/0/0 migration/relational/adversarial checks. `StateTotality` ran the same
+   27 green checks, wrote `blocked-authority-required` with network and
+   credential permissions false and the superseding schema fingerprint, then
+   exited 1 solely because the accepted repository-local tokenizer/provider-
+   framing proof is absent.
+3. The final Release category matrix passed: Unit 166/0/1; Contract 124/0/0;
+   Integration 70/0/0; Evaluation 75/0/8; Security 111/0/3; and Fault
+   105/0/3. The final unfiltered Release projects passed Unit 174/0/1,
+   Contract 152/0/0, Integration 68/0/0, and Evaluation 53/0/8.
+4. Deterministic trace regeneration, `dotnet format --verify-no-changes`,
+   dependency-manifest check, documentation validation, `git diff --check`,
+   current-state and frozen Slice 5 v1 immutability, protected-path and
+   answer-isolation checks, public-fixture scope, and forbidden secret/live-
+   effect scans passed. No dependency change required a new restore; the
+   Release build and tests used the retained locked restore basis.
+
+No proof, gate result, owner acceptance, credential, provider response, or
+private evidence was invented. No network/DNS/provider, Credential Manager,
+native credential, private fixture, sibling repository, legacy/evaluator
+archive, later-package, current-state, push, amend, or frozen Slice 5 v1 edit
+occurred.

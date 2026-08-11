@@ -213,7 +213,8 @@ public static class ApplicationProviderContractValidator
             value.ErrorAvailability, value.ReturnedModelAvailability,
             value.ReturnedServiceTierAvailability, value.BillingEvidenceAvailability,
         ];
-        if (factAvailabilities.Any(x => !Enum.IsDefined(x) || x == ProviderAvailabilityState.Unspecified))
+        if (factAvailabilities.Any(x => !Enum.IsDefined(x) || x == ProviderAvailabilityState.Unspecified)
+            || !Enum.IsDefined(value.UsageAvailability) || value.UsageAvailability == ProviderAvailabilityState.Unspecified)
         {
             throw new InvalidDataException("Every optional provider response fact requires typed availability.");
         }
@@ -230,6 +231,13 @@ public static class ApplicationProviderContractValidator
         RequireAvailability(value.ReturnedServiceTierAvailability, Has(value.ReturnedServiceTier));
         RequireAvailability(value.BillingEvidenceAvailability, value.BillingEvidence);
         if (value.MaximumRawResponseBytes is 0 or > 1_048_576
+            || value.MaximumRawResponseBytes != value.Limits.MaximumRawResponseBytes
+            || value.RawResponse is not null && (!ValidDigest(value.RawResponse)
+                || value.RawResponse.SizeBytes > value.MaximumRawResponseBytes)
+            || value.ResponseHeaders is not null && (!ValidDigest(value.ResponseHeaders)
+                || value.ResponseHeaders.SizeBytes > 65_536)
+            || value.BillingEvidence is not null && (!ValidDigest(value.BillingEvidence)
+                || value.BillingEvidence.SizeBytes > 65_536)
             || value.RequestedModel != "gpt-5.6-sol" || value.RequestedServiceTier != "default"
             || value.ReasoningContext != "current_turn" || value.ReasoningMode != "standard"
             || value.PromptCacheMode != "explicit"
@@ -246,6 +254,23 @@ public static class ApplicationProviderContractValidator
         Validate(value.CacheWriteTokens);
         Validate(value.PricedToolCalls);
         Validate(value.CalculatedNanoUsd);
+        if (value.UsageAvailability != value.Availability
+            || value.TotalTokens.HasValue && (!value.InputTokens.HasValue || !value.OutputTokens.HasValue
+                || value.TotalTokens.Value != checked(value.InputTokens.Value + value.OutputTokens.Value))
+            || value.ReasoningTokens.HasValue && (!value.OutputTokens.HasValue
+                || value.ReasoningTokens.Value > value.OutputTokens.Value)
+            || value.DispatchCount.HasValue && value.DispatchCount.Value > value.Limits.MaximumDispatchCount
+            || value.InputTokens.HasValue && value.InputTokens.Value > value.Limits.MaximumInputTokens
+            || value.OutputTokens.HasValue && value.OutputTokens.Value > value.Limits.MaximumOutputTokens
+            || value.ReasoningTokens.HasValue && value.ReasoningTokens.Value > value.Limits.MaximumOutputTokens
+            || value.CalculatedNanoUsd.HasValue && value.CalculatedNanoUsd.Value > (ulong)value.Limits.MaximumCalculatedNanoUsd
+            || value.CacheReadTokens.HasValue && value.CacheReadTokens.Value != 0
+            || value.CacheWriteTokens.HasValue && value.CacheWriteTokens.Value != 0
+            || value.PricedToolCalls.HasValue && value.PricedToolCalls.Value != 0
+            || value.CreditAvailability == ProviderAvailabilityState.Available)
+        {
+            throw new InvalidDataException("Provider usage must match response availability, exact totals, and retained limits.");
+        }
         if (value.RateLimitFacts.Count > 64
             || value.RateLimitFacts.GroupBy(x => (x.Scope, x.Dimension)).Any(x => x.Count() != 1)
             || value.RateLimitFacts.Any(x => !ValidRateLimitFact(x))
@@ -264,6 +289,7 @@ public static class ApplicationProviderContractValidator
             || value.BillingAvailability != ProviderAvailabilityState.Unavailable
             || value.RateAvailability != ProviderAvailabilityState.Unavailable
             || value.CreditAvailability != ProviderAvailabilityState.Unavailable
+            || value.UsageAvailability != ProviderAvailabilityState.Unavailable
             || value.ResponseState != "unknown" || value.RateLimitFacts.Count != 0
             || value.ValidationState != "unavailable" || value.AdmissionState != "unavailable"
             || value.DispatchCount.Availability != ProviderAvailabilityState.Available
@@ -283,8 +309,11 @@ public static class ApplicationProviderContractValidator
         }
         if (value.InputBoundProofStatus != InputBoundProofStatus.Proved
             || !Has(value.InputBoundPolicyId) || !Has(value.InputBoundPolicyVersion)
-            || value.Availability != ProviderAvailabilityState.Available
-            || !Has(value.AuthorizationId) || !Has(value.RequestId) || value.DispatchFenceId is null)
+            || (value.ResponseState == "cancelled"
+                ? value.Availability != ProviderAvailabilityState.Unavailable
+                    || Has(value.AuthorizationId) || Has(value.RequestId) || value.DispatchFenceId is not null
+                : value.Availability != ProviderAvailabilityState.Available
+                    || !Has(value.AuthorizationId) || !Has(value.RequestId) || value.DispatchFenceId is null))
         {
             throw new InvalidDataException("Future provider response requires exact proof and transport identities.");
         }
@@ -494,24 +523,43 @@ public static class ApplicationProviderContractValidator
         bool refusal = value.RefusalAvailability == ProviderAvailabilityState.Available;
         bool incomplete = value.IncompleteAvailability == ProviderAvailabilityState.Available;
         bool error = value.ErrorAvailability == ProviderAvailabilityState.Available;
+        bool transport = Has(value.AuthorizationId) && Has(value.RequestId) && value.DispatchFenceId is not null;
+        bool noTransport = !Has(value.AuthorizationId) && !Has(value.RequestId) && value.DispatchFenceId is null;
+        bool semanticFactsAbsent = !refusal && !incomplete && !error;
+        bool completedUsage = value.UsageAvailability == ProviderAvailabilityState.Available
+            && new[] { value.DispatchCount, value.InputTokens, value.OutputTokens, value.TotalTokens,
+                value.ReasoningTokens, value.CacheReadTokens, value.CacheWriteTokens,
+                value.PricedToolCalls, value.CalculatedNanoUsd }
+                .All(quantity => quantity.Availability == ProviderAvailabilityState.Available)
+            && value.DispatchCount.Value == 1 && value.CacheReadTokens.Value == 0
+            && value.CacheWriteTokens.Value == 0 && value.PricedToolCalls.Value == 0;
+        bool dispatchedUsage = value.UsageAvailability == ProviderAvailabilityState.Available
+            && value.DispatchCount is { Availability: ProviderAvailabilityState.Available, HasValue: true, Value: 1 };
+        bool cancelledUsage = value.UsageAvailability == ProviderAvailabilityState.Unavailable
+            && value.DispatchCount is { Availability: ProviderAvailabilityState.Available, HasValue: true, Value: 0 }
+            && new[] { value.InputTokens, value.OutputTokens, value.TotalTokens, value.ReasoningTokens,
+                value.CacheReadTokens, value.CacheWriteTokens, value.PricedToolCalls, value.CalculatedNanoUsd }
+                .All(quantity => quantity.Availability != ProviderAvailabilityState.Available);
         bool nonSuccess = value.ValidationState is "rejected" or "abstained" or "unavailable" or "unsupported"
             && value.AdmissionState is "rejected" or "abstained" or "unavailable" or "unsupported";
         bool valid = value.ResponseState switch
         {
-            "completed" => raw && http && value.ReturnedModelAvailability == ProviderAvailabilityState.Available
+            "completed" => transport && raw && http && value.ReturnedModelAvailability == ProviderAvailabilityState.Available
                 && value.ReturnedServiceTierAvailability == ProviderAvailabilityState.Available
                 && value.ReturnedModel == "gpt-5.6-sol" && value.ReturnedServiceTier == "default"
-                && !refusal && !incomplete && !error
+                && semanticFactsAbsent && completedUsage
                 && value.ValidationState == "admitted" && value.AdmissionState == "admitted",
-            "refusal" => raw && http && refusal && !incomplete && !error && nonSuccess,
-            "incomplete" => raw && http && !refusal && incomplete && !error && nonSuccess,
-            "failed" => !refusal && !incomplete && error && nonSuccess,
-            "queued" or "in-progress" => raw && http && !refusal && !incomplete && !error && nonSuccess,
-            "malformed" or "oversized" => raw && !refusal && !incomplete && nonSuccess,
-            "mismatched" => raw && (value.ReturnedModel != "gpt-5.6-sol" || value.ReturnedServiceTier != "default") && nonSuccess,
-            "unknown" => nonSuccess,
-            "cancelled" => !raw && !http && !refusal && !incomplete && !error
-                && value.DispatchCount.HasValue && value.DispatchCount.Value == 0 && nonSuccess,
+            "refusal" => transport && raw && http && refusal && !incomplete && !error && dispatchedUsage && nonSuccess,
+            "incomplete" => transport && raw && http && !refusal && incomplete && !error && dispatchedUsage && nonSuccess,
+            "failed" => transport && raw && http && !refusal && !incomplete && error && dispatchedUsage && nonSuccess,
+            "queued" or "in-progress" => transport && raw && http && semanticFactsAbsent && dispatchedUsage && nonSuccess,
+            "malformed" or "oversized" => transport && raw && http && !refusal && !incomplete && !error && dispatchedUsage && nonSuccess,
+            "mismatched" => transport && raw && http && dispatchedUsage
+                && value.ReturnedModelAvailability == ProviderAvailabilityState.Available
+                && value.ReturnedServiceTierAvailability == ProviderAvailabilityState.Available
+                && (value.ReturnedModel != "gpt-5.6-sol" || value.ReturnedServiceTier != "default") && nonSuccess,
+            "unknown" => transport && raw && http && semanticFactsAbsent && dispatchedUsage && nonSuccess,
+            "cancelled" => noTransport && !raw && !http && semanticFactsAbsent && cancelledUsage && nonSuccess,
             _ => false,
         };
         if (!valid)
@@ -519,6 +567,11 @@ public static class ApplicationProviderContractValidator
             throw new InvalidDataException("Provider response state contradicts typed facts and admission state.");
         }
     }
+
+    private static bool ValidDigest(Infinium.Contracts.Protobuf.Common.V1.ContentDigest value) =>
+        value.Algorithm == Infinium.Contracts.Protobuf.Common.V1.DigestAlgorithm.Sha256
+        && value.Value.Length == 32
+        && value.SizeBytes > 0;
 
     private static bool ValidAdmissionLinks(
         IEnumerable<ProviderSemanticAdmissionLink> links,
@@ -532,7 +585,7 @@ public static class ApplicationProviderContractValidator
         ProviderSemanticAdmissionLink[] items = links.ToArray();
         return items.Length <= 64
             && items.Select(x => x.AdmissionId).Distinct(StringComparer.Ordinal).Count() == items.Length
-            && items.All(link => Has(link.AdmissionId) && Has(link.ProposalId)
+            && items.All(link => Has(link.AdmissionId) && Has(link.ProposalId) && Has(link.AuthorizationId)
                 && link.OperationId?.Value == operationId && Has(link.ResponseRecordId)
                 && link.OwnerKind == ownerKind && link.OwnerId == ownerId
                 && link.RootSubjectId == rootSubjectId

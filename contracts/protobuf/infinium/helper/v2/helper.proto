@@ -115,6 +115,11 @@ message HelperAssignmentV2 {
     CredentialSubjectV2 credential = 13;
     ProviderDispatchSubjectV2 provider_dispatch = 14;
   }
+  infinium.domain.v1.ProviderAccountIdentityId account_identity_id = 15;
+  infinium.domain.v1.BillingScopeIdentityId billing_scope_identity_id = 16;
+  string effective_configuration_id = 17;
+  infinium.common.v1.ContentDigest settings = 18;
+  infinium.common.v1.ContentDigest output_schema = 19;
   reserved 90 to 99;
   reserved "credential_target", "provider_secret", "secret_bytes",
       "host", "url", "fallback_profile_id";
@@ -179,6 +184,8 @@ message DispatchRevalidationV2 {
   HelperLimitsV2 limits = 21;
   infinium.common.v1.Instant evaluated_at = 22;
   string request_id = 23;
+  infinium.domain.v1.OperationId operation_id = 24;
+  bytes request_fingerprint_sha256 = 25;
 }
 
 message HelperReceiptV2 {
@@ -211,6 +218,16 @@ message HelperReceiptV2 {
   infinium.common.v1.ContentDigest settings = 25;
   infinium.common.v1.ContentDigest output_schema = 26;
   string effective_configuration_id = 27;
+  uint64 revocation_epoch = 28;
+  infinium.domain.v1.ProviderAccountIdentityId account_identity_id = 29;
+  infinium.domain.v1.BillingScopeIdentityId billing_scope_identity_id = 30;
+  infinium.domain.v1.ReservationGroupId reservation_group_id = 31;
+  ProviderOperationKindV2 operation_kind = 32;
+  HelperLimitsV2 limits = 33;
+  infinium.common.v1.Instant dispatch_deadline = 34;
+  infinium.common.v1.OptionalUInt64 total_tokens = 35;
+  infinium.common.v1.OptionalUInt64 priced_tool_calls = 36;
+  infinium.common.v1.OptionalUInt64 calculated_nano_usd = 37;
   reserved 90 to 99;
   reserved "credential_target", "provider_secret", "secret_bytes",
       "authorization_header";

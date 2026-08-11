@@ -200,6 +200,22 @@ function Get-Persistence([string] $Schema, [string] $Path) {
             }
             elseif ($Path -eq 'usage') {
                 $column = @(
+                    'provider_usage_entries.availability',
+                    'provider_usage_entries.dispatch_count_availability','provider_usage_entries.dispatch_count',
+                    'provider_usage_entries.input_tokens_availability','provider_usage_entries.input_tokens',
+                    'provider_usage_entries.output_tokens_availability','provider_usage_entries.output_tokens',
+                    'provider_usage_entries.total_tokens_availability','provider_usage_entries.total_tokens',
+                    'provider_usage_entries.reasoning_tokens_availability','provider_usage_entries.reasoning_tokens',
+                    'provider_usage_entries.cache_read_tokens_availability','provider_usage_entries.cache_read_tokens',
+                    'provider_usage_entries.cache_write_tokens_availability','provider_usage_entries.cache_write_tokens',
+                    'provider_usage_entries.priced_tool_calls_availability','provider_usage_entries.priced_tool_calls',
+                    'provider_usage_entries.calculated_nano_usd_availability','provider_usage_entries.calculated_nano_usd',
+                    'provider_usage_entries.billing_availability','provider_usage_entries.rate_availability',
+                    'provider_usage_entries.credit_availability')
+            }
+            elseif ($Path -like '`$defs.*' -and $leaf -eq 'usage') {
+                $column = @(
+                    'provider_usage_entries.availability',
                     'provider_usage_entries.dispatch_count_availability','provider_usage_entries.dispatch_count',
                     'provider_usage_entries.input_tokens_availability','provider_usage_entries.input_tokens',
                     'provider_usage_entries.output_tokens_availability','provider_usage_entries.output_tokens',
@@ -229,6 +245,15 @@ function Get-Persistence([string] $Schema, [string] $Path) {
                 elseif ($leaf -eq 'availability') { $column = "provider_usage_entries.${quantity}_availability" }
                 elseif ($leaf -eq 'value') { $column = "provider_usage_entries.$quantity" }
             }
+            elseif ($Path -like '`$defs.*Usage.*') {
+                $segments = $Path.Split('.')
+                $quantity = if ($leaf -in @('availability','value')) { $segments[$segments.Length - 2] } else { $leaf }
+                if ($leaf -eq 'availability' -and $quantity -eq 'dispatchedUsage') { $column = 'provider_usage_entries.availability' }
+                elseif ($quantity -in @('billing_availability','rate_availability','credit_availability')) {
+                    $column = "provider_usage_entries.$quantity"
+                }
+                else { $column = @("provider_usage_entries.${quantity}_availability", "provider_usage_entries.$quantity") }
+            }
             elseif ($Path -like '`$defs.rateLimitFact.*') {
                 $column = switch ($leaf) { 'limit' {'provider_rate_limit_facts.limit_value'} 'remaining' {'provider_rate_limit_facts.remaining_value'} default {"provider_rate_limit_facts.$leaf"} }
             }
@@ -240,15 +265,23 @@ function Get-Persistence([string] $Schema, [string] $Path) {
                     'billing_evidence_payload' { @('provider_responses.billing_evidence_payload_id','provider_responses.billing_evidence_fingerprint') }
                     'state' { 'provider_responses.response_state' }
                     'operation_kind' { 'provider_responses.operation_kind' }
-                    'limits' { @('provider_responses.maximum_input_tokens','provider_responses.maximum_output_tokens','provider_responses.maximum_raw_response_bytes','provider_responses.maximum_calculated_nano_usd') }
+                    'limits' { @('provider_operation_authorizations.maximum_request_bytes','provider_responses.maximum_input_tokens','provider_responses.maximum_output_tokens','provider_responses.maximum_raw_response_bytes','provider_operation_authorizations.maximum_dispatch_count','provider_responses.maximum_calculated_nano_usd','provider_operation_authorizations.deadline_milliseconds') }
                     'recorded_at' { 'provider_responses.created_at' }
-                    { $_ -in @('schema_id','schema_version','availability') } { $null }
+                    'availability' { 'provider_responses.availability' }
+                    { $_ -in @('schema_id','schema_version') } { $null }
                     default { "provider_responses.$leaf" }
                 }
             }
         }
         'source-claim-extraction.v1.schema.json' {
-            $column = switch ($leaf) {
+            if ($Path -like '`$defs.admissionLink.*') {
+                $column = switch ($leaf) {
+                    'authorization_id' { 'provider_semantic_proposals.authorization_id' }
+                    'proposal_id' { @('provider_semantic_proposals.proposal_id','provider_semantic_admissions.proposal_id') }
+                    default { "provider_semantic_admissions.$leaf" }
+                }
+            }
+            else { $column = switch ($leaf) {
                 'acquisition_run_id' { 'evidence_acquisition_runs.acquisition_run_id' }
                 'owner_kind' { 'provider_operation_blocks.owner_kind' }
                 'owner_id' { @('evidence_acquisition_runs.acquisition_run_id','provider_operation_blocks.owner_id') }
@@ -261,7 +294,7 @@ function Get-Persistence([string] $Schema, [string] $Path) {
                 'validation_ids' { 'provider_semantic_validations.validation_id' }
                 'admission_links' { @('provider_semantic_admissions.admission_id','provider_semantic_admissions.proposal_id','provider_semantic_admissions.operation_id','provider_semantic_admissions.response_record_id','provider_semantic_admissions.owner_kind','provider_semantic_admissions.owner_id','provider_semantic_admissions.root_subject_id','provider_semantic_admissions.validation_id','provider_semantic_admissions.application_link_id','provider_semantic_admissions.state') }
                 default { $null }
-            }
+            } }
         }
         'candidate-investigation.v1.schema.json' {
             $column = switch ($leaf) {
@@ -326,7 +359,10 @@ function Get-Projection([string] $Schema, [string] $Path, [bool] $Replay) {
                 return [ordered]@{ file='contracts/protobuf/infinium/application/v1/application.proto'; message='ProviderResponsePayload'; fields=@('input_bound_proof_status','input_bound_policy_id','input_bound_policy_version') }
             }
             elseif ($Path -eq 'usage') {
-                return [ordered]@{ file='contracts/protobuf/infinium/application/v1/application.proto'; message='ProviderResponsePayload'; fields=@('dispatch_count','input_tokens','output_tokens','total_tokens','reasoning_tokens','cache_read_tokens','cache_write_tokens','priced_tool_calls','calculated_nano_usd','billing_availability','rate_availability','credit_availability') }
+                return [ordered]@{ file='contracts/protobuf/infinium/application/v1/application.proto'; message='ProviderResponsePayload'; fields=@('usage_availability','dispatch_count','input_tokens','output_tokens','total_tokens','reasoning_tokens','cache_read_tokens','cache_write_tokens','priced_tool_calls','calculated_nano_usd','billing_availability','rate_availability','credit_availability') }
+            }
+            elseif ($Path -like '`$defs.*' -and $leaf -eq 'usage') {
+                return [ordered]@{ file='contracts/protobuf/infinium/application/v1/application.proto'; message='ProviderResponsePayload'; fields=@('usage_availability','dispatch_count','input_tokens','output_tokens','total_tokens','reasoning_tokens','cache_read_tokens','cache_write_tokens','priced_tool_calls','calculated_nano_usd','billing_availability','rate_availability','credit_availability') }
             }
             elseif ($Path -like '`$defs.inputBoundProof.*') {
                 $proofMap=@{ policy_id='input_bound_policy_id'; policy_version='input_bound_policy_version'; status='input_bound_proof_status' }
@@ -342,6 +378,10 @@ function Get-Projection([string] $Schema, [string] $Path, [bool] $Replay) {
             elseif ($Path -like 'usage.*') {
                 $quantity=$Path.Split('.')[1]
                 $message='ProviderResponsePayload'; $field=$quantity
+            }
+            elseif ($Path -like '`$defs.*Usage.*') {
+                $quantity = $Path.Split('.')[-2]
+                $message='ProviderResponsePayload'; $field=$(if($leaf -eq 'availability' -and $quantity -eq 'dispatchedUsage'){'usage_availability'}elseif($leaf -in @('availability','value')){$quantity}else{$leaf})
             }
             else {
                 $responseMap=@{
@@ -367,7 +407,8 @@ function Get-Projection([string] $Schema, [string] $Path, [bool] $Replay) {
         }
         elseif ($Schema -eq 'source-claim-extraction.v1.schema.json') {
             $map=@{ acquisition_run_id='acquisition_run_id'; operation_id='operation_id'; owner_kind='owner_kind'; owner_id='owner_id'; parent_analysis_run_id='parent_analysis_run_id'; application_scope_id='application_scope_id'; cost_attribution_scope_id='cost_attribution_scope_id'; source_revision_id='source_revision_id'; validation_ids='validation_ids'; application_link_ids='application_link_ids'; admission_links='admission_links' }
-            if($map.ContainsKey($Path)){ $message='SourceClaimExtractionPayload'; $field=$map[$Path] }
+            if ($Path -like '`$defs.admissionLink.*') { $message='ProviderSemanticAdmissionLink'; $field=$leaf }
+            elseif($map.ContainsKey($Path)){ $message='SourceClaimExtractionPayload'; $field=$map[$Path] }
         }
         elseif ($Schema -eq 'candidate-investigation.v1.schema.json') {
             $map=@{ operation_id='operation_id'; owner_kind='owner_kind'; owner_id='owner_id'; analysis_run_id='analysis_run_id'; candidate_id='candidate_id'; validation_ids='validation_ids'; admission_link_ids='admission_link_ids'; admission_links='admission_links' }

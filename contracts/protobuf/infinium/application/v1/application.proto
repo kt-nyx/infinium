@@ -194,6 +194,7 @@ message ProviderResponsePayload {
   ProviderAvailabilityState returned_model_availability = 55;
   ProviderAvailabilityState returned_service_tier_availability = 56;
   ProviderAvailabilityState billing_evidence_availability = 57;
+  ProviderAvailabilityState usage_availability = 58;
 }
 
 message ProviderRateLimitFact {
@@ -478,6 +479,7 @@ message ProviderSemanticAdmissionLink {
   string validation_id = 8;
   string application_link_id = 9;
   string state = 10;
+  string authorization_id = 11;
 }
 
 message GetAnalysisOutputRequest {

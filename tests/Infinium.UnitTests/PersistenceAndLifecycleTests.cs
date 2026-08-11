@@ -166,25 +166,25 @@ public sealed class PersistenceAndLifecycleTests
         using SqliteCommand command = connection.CreateCommand();
         command.CommandText =
             """
-            INSERT INTO durable_commands VALUES('command-owner-mismatch','provider','run-restore',0,'recorded','created',NULL,'2026-08-10T00:00:03Z',NULL,NULL);
-            INSERT INTO durable_commands VALUES('command-fingerprint-mismatch','provider','run-restore',0,'recorded','created',NULL,'2026-08-10T00:00:04Z',NULL,NULL);
-            INSERT INTO durable_commands VALUES('command-deadline-mismatch','provider','run-restore',0,'recorded','created',NULL,'2026-08-10T00:00:05Z',NULL,NULL);
+            INSERT INTO durable_commands VALUES('command-owner-mismatch','provider','run-restore',0,'recorded','created',NULL,'2026-08-10T00:00:03.0000000+00:00',NULL,NULL);
+            INSERT INTO durable_commands VALUES('command-fingerprint-mismatch','provider','run-restore',0,'recorded','created',NULL,'2026-08-10T00:00:04.0000000+00:00',NULL,NULL);
+            INSERT INTO durable_commands VALUES('command-deadline-mismatch','provider','run-restore',0,'recorded','created',NULL,'2026-08-10T00:00:05.0000000+00:00',NULL,NULL);
             INSERT INTO evidence_acquisition_commands VALUES('command-owner-mismatch','acquisition-restore','provider-operation','2026-08-10T00:00:00.0000000+00:00','recorded');
             INSERT INTO evidence_acquisition_commands VALUES('command-fingerprint-mismatch','acquisition-restore','provider-operation','2026-08-10T00:00:00.0000000+00:00','recorded');
             INSERT INTO evidence_acquisition_commands VALUES('command-deadline-mismatch','acquisition-restore','provider-operation','2026-08-10T00:00:00.0000000+00:00','recorded');
             INSERT INTO evidence_acquisition_commands VALUES('command-request-time-mismatch','acquisition-restore','provider-operation','2026-08-10T00:00:03.0000000+00:00','recorded');
             INSERT INTO evidence_acquisition_commands VALUES('command-config-mismatch','acquisition-restore','provider-operation','2026-08-10T00:00:00.0000000+00:00','recorded');
-            INSERT INTO evidence_acquisition_commands VALUES('command-malformed-instant','acquisition-restore','provider-operation','2026-99-99T99:99:99.0000000+00:00','recorded');
+            INSERT INTO evidence_acquisition_commands VALUES('command-malformed-instant','acquisition-restore','provider-operation','2026-08-10T00:00:00.0000000+00:00','recorded');
             INSERT INTO provider_command_bindings VALUES('command-owner-mismatch','evidence-acquisition-run','acquisition-restore','2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO provider_command_bindings VALUES('command-fingerprint-mismatch','evidence-acquisition-run','acquisition-restore','2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO provider_command_bindings VALUES('command-deadline-mismatch','evidence-acquisition-run','acquisition-restore','2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO provider_command_bindings VALUES('command-request-time-mismatch','evidence-acquisition-run','acquisition-restore','2026-08-10T00:00:03.0000000+00:00');
             INSERT INTO provider_command_bindings VALUES('command-config-mismatch','evidence-acquisition-run','acquisition-restore','2026-08-10T00:00:00.0000000+00:00');
-            INSERT INTO provider_command_bindings VALUES('command-malformed-instant','evidence-acquisition-run','acquisition-restore','2026-99-99T99:99:99.0000000+00:00');
-            INSERT INTO provider_generations VALUES('generation-config-other','profile-restore',2,0,'2026-08-10T00:00:03Z');
+            INSERT INTO provider_command_bindings VALUES('command-malformed-instant','evidence-acquisition-run','acquisition-restore','2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO provider_generations VALUES('generation-config-other','profile-restore',2,0,'2026-08-10T00:00:03.0000000+00:00');
             INSERT INTO provider_effective_scan_configurations_v2
             SELECT 'config-v2-other-generation',local_configuration_v1_id,local_configuration_v1_fingerprint,
-              profile_id,'generation-config-other',model,reasoning_effort,reasoning_context,reasoning_mode,store,service_tier,
+              local_configuration_v1_provenance,profile_id,'generation-config-other',model,reasoning_effort,reasoning_context,reasoning_mode,store,service_tier,
               background,stream,tool_choice,tool_count,truncation,prompt_cache_mode,has_prompt_cache_key,
               has_prompt_cache_breakpoint,maximum_request_bytes,maximum_input_tokens,maximum_output_tokens,
               maximum_raw_response_bytes,maximum_dispatch_count,maximum_calculated_nano_usd,deadline_milliseconds,
@@ -247,7 +247,7 @@ public sealed class PersistenceAndLifecycleTests
         command.CommandText =
             """
             UPDATE provider_profile_projection
-            SET projection_version=projection_version,updated_at='2026-08-10T00:00:03Z'
+            SET projection_version=projection_version,updated_at='2026-08-10T00:00:03.0000000+00:00'
             WHERE profile_id='profile-restore';
             """;
         Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
@@ -255,9 +255,9 @@ public sealed class PersistenceAndLifecycleTests
         command.CommandText =
             """
             INSERT INTO provider_generations VALUES(
-              'generation-other','profile-restore',2,0,'2026-08-10T00:00:03Z');
+              'generation-other','profile-restore',2,0,'2026-08-10T00:00:03.0000000+00:00');
             UPDATE provider_profile_projection
-            SET generation_id='generation-other',projection_version=4,updated_at='2026-08-10T00:00:03Z'
+            SET generation_id='generation-other',projection_version=4,updated_at='2026-08-10T00:00:03.0000000+00:00'
             WHERE profile_id='profile-restore';
             """;
         Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
@@ -265,11 +265,11 @@ public sealed class PersistenceAndLifecycleTests
         command.CommandText =
             """
             INSERT INTO provider_access_profiles VALUES(
-              'profile-other','openai','responses','Other','account-other','billing-other','2026-08-10T00:00:03Z');
+              'profile-other','openai','responses','Other','account-other','billing-other','2026-08-10T00:00:03.0000000+00:00');
             INSERT INTO provider_generations VALUES(
-              'generation-cross-profile','profile-other',1,0,'2026-08-10T00:00:03Z');
+              'generation-cross-profile','profile-other',1,0,'2026-08-10T00:00:03.0000000+00:00');
             UPDATE provider_profile_projection
-            SET generation_id='generation-cross-profile',projection_version=4,updated_at='2026-08-10T00:00:03Z'
+            SET generation_id='generation-cross-profile',projection_version=4,updated_at='2026-08-10T00:00:03.0000000+00:00'
             WHERE profile_id='profile-restore';
             """;
         Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
@@ -279,7 +279,7 @@ public sealed class PersistenceAndLifecycleTests
             INSERT INTO provider_credential_intents VALUES(
               'intent-time-regression','profile-restore','generation-restore','verify','completed',
               'active-unverified','active-verified','active-verified','available','account-restore','billing-restore','cap-restore',
-              'not-required','not-requested','2026-08-10T00:00:01Z');
+              'not-required','not-requested','2026-08-10T00:00:01.0000000+00:00');
             """;
         Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
     }
@@ -296,63 +296,63 @@ public sealed class PersistenceAndLifecycleTests
         using SqliteCommand command = connection.CreateCommand();
         command.CommandText =
             """
-            INSERT INTO provider_access_profiles VALUES('profile-enroll-cancel','openai','responses','Enroll cancellation',NULL,NULL,'2026-08-10T00:00:00Z');
-            INSERT INTO provider_generations VALUES('generation-enroll-cancel','profile-enroll-cancel',1,0,'2026-08-10T00:00:00Z');
+            INSERT INTO provider_access_profiles VALUES('profile-enroll-cancel','openai','responses','Enroll cancellation',NULL,NULL,'2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO provider_generations VALUES('generation-enroll-cancel','profile-enroll-cancel',1,0,'2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO provider_credential_intents VALUES(
               'intent-enroll-cancel','profile-enroll-cancel','generation-enroll-cancel','enroll','cancelled',
-              'none','pending-enrollment','none','not-applicable',NULL,NULL,NULL,'not-required','not-requested','2026-08-10T00:00:01Z');
+              'none','pending-enrollment','none','not-applicable',NULL,NULL,NULL,'not-required','not-requested','2026-08-10T00:00:01.0000000+00:00');
 
-            INSERT INTO provider_access_profiles VALUES('profile-verify-cancel','openai','responses','Verify cancellation','account-verify','billing-verify','2026-08-10T00:00:00Z');
-            INSERT INTO provider_generations VALUES('generation-verify-cancel','profile-verify-cancel',1,0,'2026-08-10T00:00:00Z');
+            INSERT INTO provider_access_profiles VALUES('profile-verify-cancel','openai','responses','Verify cancellation','account-verify','billing-verify','2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO provider_generations VALUES('generation-verify-cancel','profile-verify-cancel',1,0,'2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO provider_credential_intents VALUES(
               'intent-verify-enroll-pending','profile-verify-cancel','generation-verify-cancel','enroll','pending',
-              'none','pending-enrollment','none','not-applicable',NULL,NULL,NULL,'not-required','not-requested','2026-08-10T00:00:01Z');
+              'none','pending-enrollment','none','not-applicable',NULL,NULL,NULL,'not-required','not-requested','2026-08-10T00:00:01.0000000+00:00');
             INSERT INTO provider_profile_projection VALUES(
               'profile-verify-cancel','generation-verify-cancel',0,'pending-enrollment','not-applicable',NULL,NULL,NULL,
-              'intent-verify-enroll-pending','not-required','not-requested',1,'2026-08-10T00:00:01Z');
+              'intent-verify-enroll-pending','not-required','not-requested',1,'2026-08-10T00:00:01.0000000+00:00');
             INSERT INTO provider_credential_intents VALUES(
               'intent-verify-enroll-complete','profile-verify-cancel','generation-verify-cancel','enroll','completed',
               'pending-enrollment','active-unverified','active-unverified','unavailable','account-verify','billing-verify','cap-restore',
-              'not-required','not-requested','2026-08-10T00:00:02Z');
+              'not-required','not-requested','2026-08-10T00:00:02.0000000+00:00');
             UPDATE provider_profile_projection SET lifecycle_state='active-unverified',verification_state='unavailable',
               capability_snapshot_id='cap-restore',account_identity_id='account-verify',billing_scope_identity_id='billing-verify',
-              intent_id='intent-verify-enroll-complete',projection_version=2,updated_at='2026-08-10T00:00:02Z'
+              intent_id='intent-verify-enroll-complete',projection_version=2,updated_at='2026-08-10T00:00:02.0000000+00:00'
               WHERE profile_id='profile-verify-cancel';
             INSERT INTO provider_credential_intents VALUES(
               'intent-verify-cancel','profile-verify-cancel','generation-verify-cancel','verify','cancelled',
-              'active-unverified','active-verified','active-unverified','available','account-verify','billing-verify','cap-restore',
-              'not-required','not-requested','2026-08-10T00:00:03Z');
+              'active-unverified','active-verified','active-unverified','unavailable','account-verify','billing-verify','cap-restore',
+              'not-required','not-requested','2026-08-10T00:00:03.0000000+00:00');
 
-            INSERT INTO provider_access_profiles VALUES('profile-recover-cancel','openai','responses','Recover cancellation','account-recover','billing-recover','2026-08-10T00:00:00Z');
-            INSERT INTO provider_generations VALUES('generation-recover-cancel','profile-recover-cancel',1,0,'2026-08-10T00:00:00Z');
+            INSERT INTO provider_access_profiles VALUES('profile-recover-cancel','openai','responses','Recover cancellation','account-recover','billing-recover','2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO provider_generations VALUES('generation-recover-cancel','profile-recover-cancel',1,0,'2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO provider_credential_intents VALUES(
               'intent-recover-enroll-pending','profile-recover-cancel','generation-recover-cancel','enroll','pending',
-              'none','pending-enrollment','none','not-applicable',NULL,NULL,NULL,'not-required','not-requested','2026-08-10T00:00:01Z');
+              'none','pending-enrollment','none','not-applicable',NULL,NULL,NULL,'not-required','not-requested','2026-08-10T00:00:01.0000000+00:00');
             INSERT INTO provider_profile_projection VALUES(
               'profile-recover-cancel','generation-recover-cancel',0,'pending-enrollment','not-applicable',NULL,NULL,NULL,
-              'intent-recover-enroll-pending','not-required','not-requested',1,'2026-08-10T00:00:01Z');
+              'intent-recover-enroll-pending','not-required','not-requested',1,'2026-08-10T00:00:01.0000000+00:00');
             INSERT INTO provider_credential_intents VALUES(
               'intent-recover-required','profile-recover-cancel','generation-recover-cancel','enroll','completed',
               'pending-enrollment','recovery-required','recovery-required','unavailable','account-recover','billing-recover','cap-restore',
-              'required','not-requested','2026-08-10T00:00:02Z');
+              'required','not-requested','2026-08-10T00:00:02.0000000+00:00');
             UPDATE provider_profile_projection SET lifecycle_state='recovery-required',verification_state='unavailable',
               capability_snapshot_id='cap-restore',account_identity_id='account-recover',billing_scope_identity_id='billing-recover',
-              intent_id='intent-recover-required',recovery_disposition='required',projection_version=2,updated_at='2026-08-10T00:00:02Z'
+              intent_id='intent-recover-required',recovery_disposition='required',projection_version=2,updated_at='2026-08-10T00:00:02.0000000+00:00'
               WHERE profile_id='profile-recover-cancel';
             INSERT INTO provider_credential_intents VALUES(
               'intent-recover-cancel','profile-recover-cancel','generation-recover-cancel','recover','cancelled',
               'recovery-required','active-unverified','recovery-required','unavailable','account-recover','billing-recover','cap-restore',
-              'not-required','not-requested','2026-08-10T00:00:03Z');
+              'required','not-requested','2026-08-10T00:00:03.0000000+00:00');
 
-            INSERT INTO provider_generations VALUES('generation-replacement','profile-restore',2,0,'2026-08-10T00:00:03Z');
+            INSERT INTO provider_generations VALUES('generation-replacement','profile-restore',2,0,'2026-08-10T00:00:03.0000000+00:00');
             INSERT INTO provider_credential_intents VALUES(
               'intent-replace-cancel','profile-restore','generation-replacement','replace','cancelled',
-              'active-verified','replacing','active-verified','unavailable','account-restore','billing-restore','cap-restore',
-              'not-required','not-requested','2026-08-10T00:00:03Z');
+              'active-verified','replacing','active-verified','available','account-restore','billing-restore','cap-restore',
+              'not-required','not-requested','2026-08-10T00:00:03.0000000+00:00');
             INSERT INTO provider_credential_intents VALUES(
               'intent-disable-cancel','profile-restore','generation-restore','disable','cancelled',
-              'active-verified','disabled','active-verified','unavailable','account-restore','billing-restore','cap-restore',
-              'not-required','not-requested','2026-08-10T00:00:04Z');
+              'active-verified','disabled','active-verified','available','account-restore','billing-restore','cap-restore',
+              'not-required','not-requested','2026-08-10T00:00:04.0000000+00:00');
             """;
         command.ExecuteNonQuery();
 
@@ -365,12 +365,37 @@ public sealed class PersistenceAndLifecycleTests
         command.CommandText =
             """
             INSERT INTO provider_credential_intents VALUES(
+              'intent-illegal-cancelled-transition','profile-restore','generation-restore','delete','cancelled',
+              'active-verified','disabled','active-verified','available','account-restore','billing-restore','cap-restore',
+              'not-required','not-requested','2026-08-10T00:00:10.0000000+00:00');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            INSERT INTO provider_credential_intents VALUES(
+              'intent-arbitrary-failed-outcome','profile-restore','generation-replacement','replace','failed',
+              'active-verified','replacing','recovery-required','unavailable','account-restore','billing-restore','cap-restore',
+              'required','not-requested','2026-08-10T00:00:10.0000000+00:00');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            INSERT INTO provider_credential_intents VALUES(
+              'intent-arbitrary-unavailable-outcome','profile-verify-cancel','generation-verify-cancel','verify','unavailable',
+              'active-unverified','active-verified','active-verified','available','account-verify','billing-verify','cap-restore',
+              'not-required','not-requested','2026-08-10T00:00:10.0000000+00:00');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+
+        command.CommandText =
+            """
+            INSERT INTO provider_credential_intents VALUES(
               'intent-replace-complete','profile-restore','generation-replacement','replace','completed',
               'active-verified','active-verified','active-verified','available','account-restore','billing-restore','cap-restore',
-              'not-required','not-requested','2026-08-10T00:00:05Z');
+              'not-required','not-requested','2026-08-10T00:00:05.0000000+00:00');
             UPDATE provider_profile_projection SET generation_id='generation-replacement',lifecycle_state='active-verified',
               verification_state='available',intent_id='intent-replace-complete',projection_version=4,
-              updated_at='2026-08-10T00:00:05Z' WHERE profile_id='profile-restore';
+              updated_at='2026-08-10T00:00:05.0000000+00:00' WHERE profile_id='profile-restore';
             INSERT INTO evidence_acquisition_commands VALUES(
               'command-old-generation-after-replace','acquisition-restore','provider-operation','2026-08-10T00:00:00.0000000+00:00','recorded');
             INSERT INTO provider_command_bindings VALUES(
@@ -395,6 +420,117 @@ public sealed class PersistenceAndLifecycleTests
             """;
         Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
     }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
+    public void Schema6CancelledDeletePermitsRetryFailedDeleteWedgesAndUnavailableOutcomesMaterialize()
+    {
+        using TemporaryStore temporary = new();
+        using AuthoritativeStore store = temporary.Open();
+        SeedProviderAuthorityBlock(temporary.Root);
+        using SqliteConnection connection = OpenRaw(temporary.Root);
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText =
+            """
+            INSERT INTO provider_credential_intents VALUES(
+              'intent-delete-cancelled','profile-restore','generation-restore','delete','cancelled',
+              'active-verified','delete-pending','active-verified','available','account-restore','billing-restore','cap-restore',
+              'not-required','not-requested','2026-08-10T00:00:03.0000000+00:00');
+            INSERT INTO provider_credential_intents VALUES(
+              'intent-delete-retry','profile-restore','generation-restore','delete','pending',
+              'active-verified','delete-pending','active-verified','unavailable','account-restore','billing-restore','cap-restore',
+              'not-required','pending','2026-08-10T00:00:04.0000000+00:00');
+            UPDATE provider_profile_projection SET lifecycle_state='delete-pending',verification_state='unavailable',
+              intent_id='intent-delete-retry',cleanup_disposition='pending',projection_version=4,
+              updated_at='2026-08-10T00:00:04.0000000+00:00' WHERE profile_id='profile-restore';
+            INSERT INTO provider_credential_intents VALUES(
+              'intent-delete-failed','profile-restore','generation-restore','delete','failed',
+              'delete-pending','delete-pending','delete-pending','unavailable','account-restore','billing-restore','cap-restore',
+              'not-required','failed','2026-08-10T00:00:05.0000000+00:00');
+            UPDATE provider_profile_projection SET intent_id='intent-delete-failed',cleanup_disposition='failed',
+              projection_version=5,updated_at='2026-08-10T00:00:05.0000000+00:00' WHERE profile_id='profile-restore';
+
+            INSERT INTO provider_access_profiles VALUES(
+              'profile-unavailable','openai','responses','Unavailable projection','account-unavailable','billing-unavailable',
+              '2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO provider_generations VALUES(
+              'generation-unavailable','profile-unavailable',1,0,'2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO provider_credential_intents VALUES(
+              'intent-recovery-materialized','profile-unavailable','generation-unavailable','enroll','unavailable',
+              'none','pending-enrollment','recovery-required','unavailable','account-unavailable','billing-unavailable','cap-restore',
+              'required','not-requested','2026-08-10T00:00:01.0000000+00:00');
+            INSERT INTO provider_profile_projection VALUES(
+              'profile-unavailable','generation-unavailable',0,'recovery-required','unavailable','cap-restore',
+              'account-unavailable','billing-unavailable','intent-recovery-materialized','required','not-requested',1,
+              '2026-08-10T00:00:01.0000000+00:00');
+            INSERT INTO provider_credential_intents VALUES(
+              'intent-secure-store-materialized','profile-unavailable','generation-unavailable','recover','unavailable',
+              'recovery-required','active-unverified','secure-store-unavailable','unavailable','account-unavailable','billing-unavailable','cap-restore',
+              'unavailable','not-requested','2026-08-10T00:00:02.0000000+00:00');
+            UPDATE provider_profile_projection SET lifecycle_state='secure-store-unavailable',
+              intent_id='intent-secure-store-materialized',recovery_disposition='unavailable',projection_version=2,
+              updated_at='2026-08-10T00:00:02.0000000+00:00' WHERE profile_id='profile-unavailable';
+            """;
+        command.ExecuteNonQuery();
+        command.CommandText =
+            "SELECT lifecycle_state FROM provider_profile_projection WHERE profile_id='profile-unavailable';";
+        Assert.AreEqual("secure-store-unavailable", (string)command.ExecuteScalar()!);
+
+        command.CommandText =
+            """
+            INSERT INTO provider_credential_intents VALUES(
+              'intent-reactivate-after-delete-failure','profile-restore','generation-restore','recover','pending',
+              'delete-pending','active-verified','delete-pending','available','account-restore','billing-restore','cap-restore',
+              'not-required','not-requested','2026-08-10T00:00:06.0000000+00:00');
+            """;
+        SqliteException wedged = Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        StringAssert.Contains(wedged.Message, "delete-pending provider profile cannot reactivate");
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
+    public void Schema6EveryAuthorityTimestampFamilyRejectsMalformedAndNonCanonicalUtcText()
+    {
+        using TemporaryStore temporary = new();
+        using AuthoritativeStore store = temporary.Open();
+        using SqliteConnection connection = OpenRaw(temporary.Root);
+        using SqliteCommand command = connection.CreateCommand();
+        (string Table, string Column)[] timestamps =
+        [
+            ("provider_access_profiles", "created_at"),
+            ("provider_effective_scan_configurations_v2", "created_at"),
+            ("evidence_acquisition_runs", "created_at"),
+            ("evidence_acquisition_commands", "requested_at"),
+            ("provider_operation_authorizations", "confirmed_at"),
+            ("provider_transport_events", "occurred_at"),
+            ("provider_responses", "created_at"),
+            ("provider_usage_entries", "created_at"),
+            ("provider_rate_limit_facts", "observed_at"),
+            ("provider_rate_limit_facts", "resets_at"),
+            ("provider_settlements", "created_at"),
+            ("provider_semantic_proposals", "created_at"),
+            ("provider_replay_edges", "created_at"),
+            ("provider_profile_projection", "updated_at"),
+        ];
+        foreach ((string table, string column) in timestamps)
+        {
+            foreach (string invalid in new[]
+                     {
+                         "2026-99-99T99:99:99.0000000+00:00",
+                         "2026-08-10T00:00:00.0000000Z",
+                     })
+            {
+                command.CommandText = $"INSERT INTO {table}({column}) VALUES($invalid);";
+                command.Parameters.Clear();
+                command.Parameters.AddWithValue("$invalid", invalid);
+                SqliteException rejected = Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery(), $"{table}.{column}");
+                StringAssert.Contains(rejected.Message, "non-canonical UTC authority timestamp", $"{table}.{column}");
+            }
+        }
+    }
+
     [TestMethod]
     [TestCategory("Unit")]
     [TestProperty("Category", "Unit")]
@@ -1557,29 +1693,29 @@ public sealed class PersistenceAndLifecycleTests
         command.CommandText =
             """
             PRAGMA foreign_keys=ON;
-            INSERT INTO provider_access_profiles VALUES('profile-restore','openai','responses','Restore','account-restore','billing-restore','2026-08-10T00:00:00Z');
-            INSERT INTO provider_generations VALUES('generation-restore','profile-restore',1,0,'2026-08-10T00:00:00Z');
-            INSERT INTO provider_capability_snapshots VALUES('cap-restore','openai','gpt-5.6-sol','default','medium','current_turn','standard',0,0,0,'none',0,'disabled','explicit',0,0,272000,'synthetic-v1','aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa','2026-08-10T00:00:00Z');
-            INSERT INTO provider_credential_intents VALUES('intent-enroll-restore','profile-restore','generation-restore','enroll','pending','none','pending-enrollment','none','not-applicable',NULL,NULL,NULL,'not-required','not-requested','2026-08-10T00:00:00Z');
-            INSERT INTO provider_profile_projection VALUES('profile-restore','generation-restore',0,'pending-enrollment','not-applicable',NULL,NULL,NULL,'intent-enroll-restore','not-required','not-requested',1,'2026-08-10T00:00:00Z');
-            INSERT INTO provider_credential_intents VALUES('intent-activate-restore','profile-restore','generation-restore','enroll','completed','pending-enrollment','active-unverified','active-unverified','unavailable','account-restore','billing-restore','cap-restore','not-required','not-requested','2026-08-10T00:00:01Z');
-            UPDATE provider_profile_projection SET lifecycle_state='active-unverified',verification_state='unavailable',capability_snapshot_id='cap-restore',account_identity_id='account-restore',billing_scope_identity_id='billing-restore',intent_id='intent-activate-restore',projection_version=2,updated_at='2026-08-10T00:00:01Z' WHERE profile_id='profile-restore';
-            INSERT INTO provider_credential_intents VALUES('intent-verify-restore','profile-restore','generation-restore','verify','completed','active-unverified','active-verified','active-verified','available','account-restore','billing-restore','cap-restore','not-required','not-requested','2026-08-10T00:00:02Z');
-            UPDATE provider_profile_projection SET lifecycle_state='active-verified',verification_state='available',intent_id='intent-verify-restore',projection_version=3,updated_at='2026-08-10T00:00:02Z' WHERE profile_id='profile-restore';
-            INSERT INTO provider_price_snapshots VALUES('price-restore','openai','gpt-5.6-sol','USD','default','synthetic-v1','bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb','2026-08-10T00:00:00Z');
+            INSERT INTO provider_access_profiles VALUES('profile-restore','openai','responses','Restore','account-restore','billing-restore','2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO provider_generations VALUES('generation-restore','profile-restore',1,0,'2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO provider_capability_snapshots VALUES('cap-restore','openai','gpt-5.6-sol','default','medium','current_turn','standard',0,0,0,'none',0,'disabled','explicit',0,0,272000,'synthetic-v1','aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa','2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO provider_credential_intents VALUES('intent-enroll-restore','profile-restore','generation-restore','enroll','pending','none','pending-enrollment','none','not-applicable',NULL,NULL,NULL,'not-required','not-requested','2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO provider_profile_projection VALUES('profile-restore','generation-restore',0,'pending-enrollment','not-applicable',NULL,NULL,NULL,'intent-enroll-restore','not-required','not-requested',1,'2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO provider_credential_intents VALUES('intent-activate-restore','profile-restore','generation-restore','enroll','completed','pending-enrollment','active-unverified','active-unverified','unavailable','account-restore','billing-restore','cap-restore','not-required','not-requested','2026-08-10T00:00:01.0000000+00:00');
+            UPDATE provider_profile_projection SET lifecycle_state='active-unverified',verification_state='unavailable',capability_snapshot_id='cap-restore',account_identity_id='account-restore',billing_scope_identity_id='billing-restore',intent_id='intent-activate-restore',projection_version=2,updated_at='2026-08-10T00:00:01.0000000+00:00' WHERE profile_id='profile-restore';
+            INSERT INTO provider_credential_intents VALUES('intent-verify-restore','profile-restore','generation-restore','verify','completed','active-unverified','active-verified','active-verified','available','account-restore','billing-restore','cap-restore','not-required','not-requested','2026-08-10T00:00:02.0000000+00:00');
+            UPDATE provider_profile_projection SET lifecycle_state='active-verified',verification_state='available',intent_id='intent-verify-restore',projection_version=3,updated_at='2026-08-10T00:00:02.0000000+00:00' WHERE profile_id='profile-restore';
+            INSERT INTO provider_price_snapshots VALUES('price-restore','openai','gpt-5.6-sol','USD','default','synthetic-v1','bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb','2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO provider_price_rules VALUES('price-restore','rule-restore','standard-under-272k','ordinary-input','input','none','global',1,1,'synthetic-v1');
-            INSERT INTO runs VALUES('run-restore','install-restore','context-restore','config-restore','manifest-restore','created',0,1,1,'2026-08-10T00:00:00Z','2026-08-10T00:00:00Z');
-            INSERT INTO job_nodes VALUES('job-restore','run-restore',NULL,'provider','created',0,'2026-08-10T00:00:00Z','2026-08-10T00:00:00Z');
-            INSERT INTO durable_commands VALUES('command-restore','provider','run-restore',0,'recorded','created',NULL,'2026-08-10T00:00:00Z',NULL,NULL);
-            INSERT INTO evidence_acquisition_runs VALUES('acquisition-restore','install-restore','context-restore','config-restore','manifest-restore','run-restore','application-restore','cost-restore','created','2026-08-10T00:00:00Z');
-            INSERT INTO evidence_acquisition_job_nodes VALUES('acquisition-job-restore','acquisition-restore','provider','created','2026-08-10T00:00:00Z');
+            INSERT INTO runs VALUES('run-restore','install-restore','context-restore','config-restore','manifest-restore','created',0,1,1,'2026-08-10T00:00:00.0000000+00:00','2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO job_nodes VALUES('job-restore','run-restore',NULL,'provider','created',0,'2026-08-10T00:00:00.0000000+00:00','2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO durable_commands VALUES('command-restore','provider','run-restore',0,'recorded','created',NULL,'2026-08-10T00:00:00.0000000+00:00',NULL,NULL);
+            INSERT INTO evidence_acquisition_runs VALUES('acquisition-restore','install-restore','context-restore','config-restore','manifest-restore','run-restore','application-restore','cost-restore','created','2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO evidence_acquisition_job_nodes VALUES('acquisition-job-restore','acquisition-restore','provider','created','2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO evidence_acquisition_commands VALUES('acquisition-command-restore','acquisition-restore','provider-operation','2026-08-10T00:00:00.0000000+00:00','recorded');
             INSERT INTO provider_command_bindings VALUES('acquisition-command-restore','evidence-acquisition-run','acquisition-restore','2026-08-10T00:00:00.0000000+00:00');
-            INSERT INTO provider_effective_scan_configurations_v2 VALUES('config-v2-restore','config-restore','abababababababababababababababababababababababababababababababab','profile-restore','generation-restore','gpt-5.6-sol','medium','current_turn','standard',0,'default',0,0,'none',0,'disabled','explicit',0,0,65536,73728,4096,1048576,1,600000000,120000,'["hosted-search","nexus","loot"]','2026-08-10T00:00:00Z');
-            INSERT INTO evidence_acquisition_parent_links VALUES('parent-restore','acquisition-restore','run-restore','initiated-by',NULL,'2026-08-10T00:00:00Z');
+            INSERT INTO provider_effective_scan_configurations_v2 VALUES('config-v2-restore','config-restore','abababababababababababababababababababababababababababababababab','asserted-retained-v1-identity','profile-restore','generation-restore','gpt-5.6-sol','medium','current_turn','standard',0,'default',0,0,'none',0,'disabled','explicit',0,0,65536,73728,4096,1048576,1,600000000,120000,'["hosted-search","nexus","loot"]','2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO evidence_acquisition_parent_links VALUES('parent-restore','acquisition-restore','run-restore','initiated-by',NULL,'2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO payloads VALUES('request-payload-restore',$canonicalRequestSha256,1024,'application/json','retained',
               'payloads/' || substr($canonicalRequestSha256,1,2) || '/' || substr($canonicalRequestSha256,3,2) || '/' || $canonicalRequestSha256,
-              '2026-08-10T00:00:00Z');
+              '2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO provider_operation_blocks(
               operation_id,owner_kind,owner_id,job_node_id,command_id,requested_at,confirmed_at,
               installation_snapshot_id,analysis_context_id,effective_configuration_id,resolved_input_manifest_id,
@@ -1598,9 +1734,9 @@ public sealed class PersistenceAndLifecycleTests
               $canonicalRequestSha256,1024,
               '9999999999999999999999999999999999999999999999999999999999999999',
               'unresolved-openai-responses-framing','authority-required','authority-required',65536,73728,4096,
-              1048576,1,600000000,120000,'2026-08-10T00:02:00.0000000+00:00',1,'input-bound-blocked','2026-08-10T00:00:01Z');
+              1048576,1,600000000,120000,'2026-08-10T00:02:00.0000000+00:00',1,'input-bound-blocked','2026-08-10T00:00:01.0000000+00:00');
             INSERT INTO provider_operation_projection VALUES(
-              'operation-restore','input-bound-blocked',0,0,0,1,'2026-08-10T00:00:00Z');
+              'operation-restore','input-bound-blocked',0,0,0,1,'2026-08-10T00:00:00.0000000+00:00');
             """;
         command.ExecuteNonQuery();
     }

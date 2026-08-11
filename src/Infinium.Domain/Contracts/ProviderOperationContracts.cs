@@ -154,6 +154,7 @@ public sealed record ProviderQuantityContract(
     long? Value);
 
 public sealed record ProviderUsageContract(
+    ProviderAvailabilityState Availability,
     ProviderQuantityContract DispatchCount,
     ProviderQuantityContract InputTokens,
     ProviderQuantityContract OutputTokens,
@@ -290,6 +291,7 @@ public sealed record ProviderResponseDocument(
 public sealed record ProviderSemanticAdmissionLinkContract(
     OpaqueId AdmissionId,
     OpaqueId ProposalId,
+    OpaqueId AuthorizationId,
     OpaqueId OperationId,
     OpaqueId ResponseRecordId,
     string OwnerKind,
@@ -390,6 +392,7 @@ public sealed record EffectiveScanConfigurationV2Document(
     OpaqueId ConfigurationId,
     OpaqueId LocalConfigurationV1Id,
     Sha256Fingerprint LocalConfigurationV1Fingerprint,
+    string LocalConfigurationV1Provenance,
     OpaqueId AccessProfileId,
     OpaqueId GenerationId,
     string Model,

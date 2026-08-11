@@ -116,7 +116,7 @@ public sealed class ProviderContractTests
     [TestCategory("Unit")]
     public void ProviderResponseIsUnavailableUntilProofQualifiedAuthorizationExists()
     {
-        ProviderUsageContract completedUsage = new(Q(1), Q(2), Q(3), Q(5), Q(1), Q(0), Q(0), Q(0), Q(42),
+        ProviderUsageContract completedUsage = new(ProviderAvailabilityState.Available, Q(1), Q(2), Q(3), Q(5), Q(1), Q(0), Q(0), Q(0), Q(42),
             ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable);
         ProviderResponseDocument unavailable = Response();
         ProviderOperationContractInvariants.Validate(unavailable);
@@ -151,6 +151,36 @@ public sealed class ProviderContractTests
             Assert.ThrowsExactly<InvalidOperationException>(
                 () => ProviderOperationContractInvariants.Validate(contradictory), state.ToString());
         }
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    public void ProviderFutureResponseRejectsAvailabilityUsageAndLimitContradictionsBeforeMaturityGate()
+    {
+        ProviderResponseDocument completed = FutureResponse(ProviderResponseState.Completed);
+        Assert.ThrowsExactly<InvalidOperationException>(() => ProviderOperationContractInvariants.Validate(
+            completed with { Usage = completed.Usage with { Availability = ProviderAvailabilityState.Unavailable } }));
+        Assert.ThrowsExactly<InvalidOperationException>(() => ProviderOperationContractInvariants.Validate(
+            completed with { Usage = completed.Usage with { TotalTokens = Q(49) } }));
+        Assert.ThrowsExactly<InvalidOperationException>(() => ProviderOperationContractInvariants.Validate(
+            completed with { Usage = completed.Usage with { ReasoningTokens = Q(17) } }));
+        Assert.ThrowsExactly<InvalidOperationException>(() => ProviderOperationContractInvariants.Validate(
+            completed with { MaximumRawResponseBytes = completed.Limits.MaximumRawResponseBytes - 1 }));
+        Assert.ThrowsExactly<InvalidOperationException>(() => ProviderOperationContractInvariants.Validate(
+            FutureResponse(ProviderResponseState.Refusal) with
+            {
+                Usage = FutureResponse(ProviderResponseState.Refusal).Usage with
+                {
+                    Availability = ProviderAvailabilityState.Unavailable,
+                },
+            }));
+        ProviderResponseDocument malformed = FutureResponse(ProviderResponseState.Malformed);
+        Assert.ThrowsExactly<InvalidOperationException>(() => ProviderOperationContractInvariants.Validate(
+            malformed with
+            {
+                ErrorAvailability = ProviderAvailabilityState.Available,
+                ErrorCode = "unexpected-error-fact",
+            }));
     }
 
     [TestMethod]
@@ -238,13 +268,23 @@ public sealed class ProviderContractTests
             ContractConstants.CandidateInvestigationSchemaId, "1", Id("operation-1"), "analysis-run", Id("run-1"),
             Id("run-1"), Id("candidate-1"), [Id("participant-1")], ["subject"], [Id("path-1")],
             Id("closure-1"), [Id("evidence-1")], [admitted], [], [], [Id("validation-1")], [Id("application-1")],
-            [new(Id("admission-1"), Id("proposal-1"), Id("operation-1"), Id("response-1"), "analysis-run",
+            [new(Id("admission-1"), Id("proposal-1"), Id("authorization-1"), Id("operation-1"), Id("response-1"), "analysis-run",
                 Id("run-1"), Id("candidate-1"), Id("validation-1"), Id("application-1"), ProposalAdmissionState.Admitted)]);
         ProviderOperationContractInvariants.Validate(candidate);
         Assert.ThrowsExactly<InvalidOperationException>(() =>
             ProviderOperationContractInvariants.Validate(candidate with { OwnerId = Id("run-other") }));
         Assert.ThrowsExactly<InvalidOperationException>(() =>
             ProviderOperationContractInvariants.Validate(candidate with { ValidationIds = [] }));
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
+            ProviderOperationContractInvariants.Validate(candidate with
+            {
+                HypothesisProposals = [admitted with { State = ProposalAdmissionState.Rejected }],
+            }));
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
+            ProviderOperationContractInvariants.Validate(candidate with
+            {
+                AdmissionLinks = [candidate.AdmissionLinks[0] with { State = ProposalAdmissionState.Rejected }],
+            }));
         Assert.ThrowsExactly<ArgumentException>(() => Id(" "));
     }
 
@@ -296,11 +336,8 @@ public sealed class ProviderContractTests
     private static ProviderResponseDocument FutureResponse(ProviderResponseState state)
     {
         bool completed = state == ProviderResponseState.Completed;
-        bool raw = state is ProviderResponseState.Completed or ProviderResponseState.Refusal or ProviderResponseState.Incomplete
-            or ProviderResponseState.Queued or ProviderResponseState.InProgress or ProviderResponseState.Malformed
-            or ProviderResponseState.Oversized or ProviderResponseState.Mismatched;
-        bool http = state is ProviderResponseState.Completed or ProviderResponseState.Refusal
-            or ProviderResponseState.Incomplete or ProviderResponseState.Queued or ProviderResponseState.InProgress;
+        bool raw = state != ProviderResponseState.Cancelled;
+        bool http = state != ProviderResponseState.Cancelled;
         bool refusal = state == ProviderResponseState.Refusal;
         bool incomplete = state == ProviderResponseState.Incomplete;
         bool error = state == ProviderResponseState.Failed;
@@ -308,11 +345,11 @@ public sealed class ProviderContractTests
         bool cancelled = state == ProviderResponseState.Cancelled;
         return Response() with
         {
-            AuthorizationId = Id("authorization-1"),
-            RequestId = Id("request-1"),
-            DispatchFenceId = Id("fence-1"),
+            AuthorizationId = cancelled ? null : Id("authorization-1"),
+            RequestId = cancelled ? null : Id("request-1"),
+            DispatchFenceId = cancelled ? null : Id("fence-1"),
             InputBoundProof = new ProviderInputBoundProofContract("accepted-policy", "1", ProviderInputBoundProofState.Proved),
-            Availability = ProviderAvailabilityState.Available,
+            Availability = cancelled ? ProviderAvailabilityState.Unavailable : ProviderAvailabilityState.Available,
             State = state,
             RawResponseAvailability = raw ? ProviderAvailabilityState.Available : ProviderAvailabilityState.Unavailable,
             RawResponsePayload = raw ? Ref("raw-response-1") : null,
@@ -332,17 +369,17 @@ public sealed class ProviderContractTests
                 ? ProviderAvailabilityState.Available : ProviderAvailabilityState.Unavailable,
             ReturnedServiceTier = completed || mismatched ? "default" : null,
             Usage = completed
-                ? new ProviderUsageContract(Q(1), Q(2), Q(3), Q(5), Q(1), Q(0), Q(0), Q(0), Q(42),
+                ? new ProviderUsageContract(ProviderAvailabilityState.Available, Q(1), Q(2), Q(3), Q(5), Q(1), Q(0), Q(0), Q(0), Q(42),
                     ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable)
                 : cancelled ? BlockedUsage()
-                : new ProviderUsageContract(Q(1), U(), U(), U(), U(), U(), U(), U(), U(),
+                : new ProviderUsageContract(ProviderAvailabilityState.Available, Q(1), U(), U(), U(), U(), U(), U(), U(), U(),
                     ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable),
             ValidationState = completed ? ProposalAdmissionState.Admitted : ProposalAdmissionState.Rejected,
             AdmissionState = completed ? ProposalAdmissionState.Admitted : ProposalAdmissionState.Rejected,
         };
     }
 
-    private static ProviderUsageContract BlockedUsage() => new(Q(0), U(), U(), U(), U(), U(), U(), U(), U(),
+    private static ProviderUsageContract BlockedUsage() => new(ProviderAvailabilityState.Unavailable, Q(0), U(), U(), U(), U(), U(), U(), U(), U(),
         ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable);
     private static ProviderQuantityContract Q(long value) => new(ProviderAvailabilityState.Available, value);
     private static ProviderQuantityContract U() => new(ProviderAvailabilityState.Unavailable, null);

@@ -2135,6 +2135,32 @@
           }
         },
         {
+          "path": "$defs.blockedUsage.availability",
+          "authorities": [
+            "OPS-001",
+            "OPS-002",
+            "ADR-0016",
+            "ADR-0023"
+          ],
+          "producer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+            "symbol": "Availability"
+          },
+          "consumer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+            "symbol": "Availability"
+          },
+          "persistence": {
+            "not_persisted_reason": "$defs.blockedUsage.availability is retained or derived at the provider-operation.v1.schema.json contract boundary; no semantically identical schema-6 column exists while provider dispatch is authority-blocked."
+          },
+          "output": {
+            "omission_reason": "$defs.blockedUsage.availability has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+          },
+          "replay": {
+            "omission_reason": "$defs.blockedUsage.availability has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
+          }
+        },
+        {
           "path": "$defs.blockedUsage.dispatch_count",
           "authorities": [
             "OPS-001",
@@ -2496,6 +2522,32 @@
           },
           "replay": {
             "omission_reason": "$defs.blockedUsage.credit_availability has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
+          }
+        },
+        {
+          "path": "$defs.usage.availability",
+          "authorities": [
+            "OPS-001",
+            "OPS-002",
+            "ADR-0016",
+            "ADR-0023"
+          ],
+          "producer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+            "symbol": "Availability"
+          },
+          "consumer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+            "symbol": "Availability"
+          },
+          "persistence": {
+            "not_persisted_reason": "$defs.usage.availability is retained or derived at the provider-operation.v1.schema.json contract boundary; no semantically identical schema-6 column exists while provider dispatch is authority-blocked."
+          },
+          "output": {
+            "omission_reason": "$defs.usage.availability has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+          },
+          "replay": {
+            "omission_reason": "$defs.usage.availability has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
           }
         },
         {
@@ -4090,10 +4142,13 @@
           },
           "persistence": {
             "table_columns": [
+              "provider_operation_authorizations.maximum_request_bytes",
               "provider_responses.maximum_input_tokens",
               "provider_responses.maximum_output_tokens",
               "provider_responses.maximum_raw_response_bytes",
-              "provider_responses.maximum_calculated_nano_usd"
+              "provider_operation_authorizations.maximum_dispatch_count",
+              "provider_responses.maximum_calculated_nano_usd",
+              "provider_operation_authorizations.deadline_milliseconds"
             ]
           },
           "output": {
@@ -4156,7 +4211,7 @@
             "symbol": "Availability"
           },
           "persistence": {
-            "not_persisted_reason": "availability is retained or derived at the provider-response.v1.schema.json contract boundary; no semantically identical schema-6 column exists while provider dispatch is authority-blocked."
+            "table_column": "provider_responses.availability"
           },
           "output": {
             "file": "contracts/protobuf/infinium/application/v1/application.proto",
@@ -4281,6 +4336,33 @@
           }
         },
         {
+          "path": "response_headers_availability",
+          "authorities": [
+            "OPS-002",
+            "ADR-0023",
+            "ADR-0025"
+          ],
+          "producer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+            "symbol": "ResponseHeadersAvailability"
+          },
+          "consumer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+            "symbol": "ResponseHeadersAvailability"
+          },
+          "persistence": {
+            "table_column": "provider_responses.response_headers_availability"
+          },
+          "output": {
+            "file": "contracts/protobuf/infinium/application/v1/application.proto",
+            "message": "ProviderResponsePayload",
+            "field": "response_headers_availability"
+          },
+          "replay": {
+            "omission_reason": "response_headers_availability has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
+          }
+        },
+        {
           "path": "response_headers_payload",
           "authorities": [
             "OPS-002",
@@ -4337,33 +4419,6 @@
           },
           "replay": {
             "omission_reason": "response_headers_bytes has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
-          }
-        },
-        {
-          "path": "response_headers_availability",
-          "authorities": [
-            "OPS-002",
-            "ADR-0023",
-            "ADR-0025"
-          ],
-          "producer": {
-            "file": "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
-            "symbol": "ResponseHeadersAvailability"
-          },
-          "consumer": {
-            "file": "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
-            "symbol": "ResponseHeadersAvailability"
-          },
-          "persistence": {
-            "table_column": "provider_responses.response_headers_availability"
-          },
-          "output": {
-            "file": "contracts/protobuf/infinium/application/v1/application.proto",
-            "message": "ProviderResponsePayload",
-            "field": "response_headers_availability"
-          },
-          "replay": {
-            "omission_reason": "response_headers_availability has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
           }
         },
         {
@@ -4529,6 +4584,34 @@
           }
         },
         {
+          "path": "provider_request_id_availability",
+          "authorities": [
+            "OPS-002",
+            "ADR-0015",
+            "ADR-0023",
+            "ADR-0025"
+          ],
+          "producer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+            "symbol": "ProviderRequestIdAvailability"
+          },
+          "consumer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+            "symbol": "ProviderRequestIdAvailability"
+          },
+          "persistence": {
+            "table_column": "provider_responses.provider_request_id_availability"
+          },
+          "output": {
+            "file": "contracts/protobuf/infinium/application/v1/application.proto",
+            "message": "ProviderResponsePayload",
+            "field": "provider_request_id_availability"
+          },
+          "replay": {
+            "omission_reason": "provider_request_id_availability has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
+          }
+        },
+        {
           "path": "provider_request_id",
           "authorities": [
             "OPS-002",
@@ -4611,34 +4694,6 @@
           },
           "replay": {
             "omission_reason": "billing_evidence_payload has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
-          }
-        },
-        {
-          "path": "provider_request_id_availability",
-          "authorities": [
-            "OPS-002",
-            "ADR-0015",
-            "ADR-0023",
-            "ADR-0025"
-          ],
-          "producer": {
-            "file": "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
-            "symbol": "ProviderRequestIdAvailability"
-          },
-          "consumer": {
-            "file": "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
-            "symbol": "ProviderRequestIdAvailability"
-          },
-          "persistence": {
-            "table_column": "provider_responses.provider_request_id_availability"
-          },
-          "output": {
-            "file": "contracts/protobuf/infinium/application/v1/application.proto",
-            "message": "ProviderResponsePayload",
-            "field": "provider_request_id_availability"
-          },
-          "replay": {
-            "omission_reason": "provider_request_id_availability has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
           }
         },
         {
@@ -5091,6 +5146,7 @@
           },
           "persistence": {
             "table_columns": [
+              "provider_usage_entries.availability",
               "provider_usage_entries.dispatch_count_availability",
               "provider_usage_entries.dispatch_count",
               "provider_usage_entries.input_tokens_availability",
@@ -5118,6 +5174,7 @@
             "file": "contracts/protobuf/infinium/application/v1/application.proto",
             "message": "ProviderResponsePayload",
             "fields": [
+              "usage_availability",
               "dispatch_count",
               "input_tokens",
               "output_tokens",
@@ -5332,6 +5389,196 @@
           },
           "replay": {
             "omission_reason": "$defs.provedInputBoundProof.status has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
+          }
+        },
+        {
+          "path": "$defs.dispatchedNonSuccess.availability",
+          "authorities": [
+            "OPS-002",
+            "ADR-0023",
+            "ADR-0025"
+          ],
+          "producer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+            "symbol": "Availability"
+          },
+          "consumer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+            "symbol": "Availability"
+          },
+          "persistence": {
+            "table_column": "provider_responses.availability"
+          },
+          "output": {
+            "omission_reason": "$defs.dispatchedNonSuccess.availability has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+          },
+          "replay": {
+            "omission_reason": "$defs.dispatchedNonSuccess.availability has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
+          }
+        },
+        {
+          "path": "$defs.dispatchedNonSuccess.raw_response_availability",
+          "authorities": [
+            "OPS-002",
+            "ADR-0023",
+            "ADR-0025"
+          ],
+          "producer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+            "symbol": "RawResponseAvailability"
+          },
+          "consumer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+            "symbol": "RawResponseAvailability"
+          },
+          "persistence": {
+            "table_column": "provider_responses.raw_response_availability"
+          },
+          "output": {
+            "omission_reason": "$defs.dispatchedNonSuccess.raw_response_availability has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+          },
+          "replay": {
+            "omission_reason": "$defs.dispatchedNonSuccess.raw_response_availability has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
+          }
+        },
+        {
+          "path": "$defs.dispatchedNonSuccess.http_status_availability",
+          "authorities": [
+            "OPS-002",
+            "ADR-0023",
+            "ADR-0025"
+          ],
+          "producer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+            "symbol": "HttpStatusAvailability"
+          },
+          "consumer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+            "symbol": "HttpStatusAvailability"
+          },
+          "persistence": {
+            "table_column": "provider_responses.http_status_availability"
+          },
+          "output": {
+            "omission_reason": "$defs.dispatchedNonSuccess.http_status_availability has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+          },
+          "replay": {
+            "omission_reason": "$defs.dispatchedNonSuccess.http_status_availability has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
+          }
+        },
+        {
+          "path": "$defs.dispatchedNonSuccess.usage",
+          "authorities": [
+            "AI-004",
+            "AI-005",
+            "ADR-0023",
+            "ADR-0025"
+          ],
+          "producer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+            "symbol": "Usage"
+          },
+          "consumer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+            "symbol": "Usage"
+          },
+          "persistence": {
+            "table_columns": [
+              "provider_usage_entries.availability",
+              "provider_usage_entries.dispatch_count_availability",
+              "provider_usage_entries.dispatch_count",
+              "provider_usage_entries.input_tokens_availability",
+              "provider_usage_entries.input_tokens",
+              "provider_usage_entries.output_tokens_availability",
+              "provider_usage_entries.output_tokens",
+              "provider_usage_entries.total_tokens_availability",
+              "provider_usage_entries.total_tokens",
+              "provider_usage_entries.reasoning_tokens_availability",
+              "provider_usage_entries.reasoning_tokens",
+              "provider_usage_entries.cache_read_tokens_availability",
+              "provider_usage_entries.cache_read_tokens",
+              "provider_usage_entries.cache_write_tokens_availability",
+              "provider_usage_entries.cache_write_tokens",
+              "provider_usage_entries.priced_tool_calls_availability",
+              "provider_usage_entries.priced_tool_calls",
+              "provider_usage_entries.calculated_nano_usd_availability",
+              "provider_usage_entries.calculated_nano_usd",
+              "provider_usage_entries.billing_availability",
+              "provider_usage_entries.rate_availability",
+              "provider_usage_entries.credit_availability"
+            ]
+          },
+          "output": {
+            "file": "contracts/protobuf/infinium/application/v1/application.proto",
+            "message": "ProviderResponsePayload",
+            "fields": [
+              "usage_availability",
+              "dispatch_count",
+              "input_tokens",
+              "output_tokens",
+              "total_tokens",
+              "reasoning_tokens",
+              "cache_read_tokens",
+              "cache_write_tokens",
+              "priced_tool_calls",
+              "calculated_nano_usd",
+              "billing_availability",
+              "rate_availability",
+              "credit_availability"
+            ]
+          },
+          "replay": {
+            "omission_reason": "$defs.dispatchedNonSuccess.usage has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
+          }
+        },
+        {
+          "path": "$defs.dispatchedNonSuccess.validation_state",
+          "authorities": [
+            "OPS-002",
+            "ADR-0023",
+            "ADR-0025"
+          ],
+          "producer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+            "symbol": "ValidationState"
+          },
+          "consumer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+            "symbol": "ValidationState"
+          },
+          "persistence": {
+            "table_column": "provider_responses.validation_state"
+          },
+          "output": {
+            "omission_reason": "$defs.dispatchedNonSuccess.validation_state has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+          },
+          "replay": {
+            "omission_reason": "$defs.dispatchedNonSuccess.validation_state has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
+          }
+        },
+        {
+          "path": "$defs.dispatchedNonSuccess.admission_state",
+          "authorities": [
+            "OPS-002",
+            "ADR-0023",
+            "ADR-0025"
+          ],
+          "producer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+            "symbol": "AdmissionState"
+          },
+          "consumer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+            "symbol": "AdmissionState"
+          },
+          "persistence": {
+            "table_column": "provider_responses.admission_state"
+          },
+          "output": {
+            "omission_reason": "$defs.dispatchedNonSuccess.admission_state has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+          },
+          "replay": {
+            "omission_reason": "$defs.dispatchedNonSuccess.admission_state has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
           }
         },
         {
@@ -6267,10 +6514,12 @@
             "symbol": "AdmissionId"
           },
           "persistence": {
-            "not_persisted_reason": "$defs.admissionLink.admission_id is retained or derived at the source-claim-extraction.v1.schema.json contract boundary; no semantically identical schema-6 column exists while provider dispatch is authority-blocked."
+            "table_column": "provider_semantic_admissions.admission_id"
           },
           "output": {
-            "omission_reason": "$defs.admissionLink.admission_id has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+            "file": "contracts/protobuf/infinium/application/v1/application.proto",
+            "message": "ProviderSemanticAdmissionLink",
+            "field": "admission_id"
           },
           "replay": {
             "omission_reason": "$defs.admissionLink.admission_id has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
@@ -6294,13 +6543,47 @@
             "symbol": "ProposalId"
           },
           "persistence": {
-            "not_persisted_reason": "$defs.admissionLink.proposal_id is retained or derived at the source-claim-extraction.v1.schema.json contract boundary; no semantically identical schema-6 column exists while provider dispatch is authority-blocked."
+            "table_columns": [
+              "provider_semantic_proposals.proposal_id",
+              "provider_semantic_admissions.proposal_id"
+            ]
           },
           "output": {
-            "omission_reason": "$defs.admissionLink.proposal_id has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+            "file": "contracts/protobuf/infinium/application/v1/application.proto",
+            "message": "ProviderSemanticAdmissionLink",
+            "field": "proposal_id"
           },
           "replay": {
             "omission_reason": "$defs.admissionLink.proposal_id has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
+          }
+        },
+        {
+          "path": "$defs.admissionLink.authorization_id",
+          "authorities": [
+            "EVID-001",
+            "EVID-004",
+            "EVID-007",
+            "ADR-0001",
+            "ADR-0013"
+          ],
+          "producer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+            "symbol": "AuthorizationId"
+          },
+          "consumer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+            "symbol": "AuthorizationId"
+          },
+          "persistence": {
+            "table_column": "provider_semantic_proposals.authorization_id"
+          },
+          "output": {
+            "file": "contracts/protobuf/infinium/application/v1/application.proto",
+            "message": "ProviderSemanticAdmissionLink",
+            "field": "authorization_id"
+          },
+          "replay": {
+            "omission_reason": "$defs.admissionLink.authorization_id has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
           }
         },
         {
@@ -6321,13 +6604,12 @@
             "symbol": "OperationId"
           },
           "persistence": {
-            "table_columns": [
-              "provider_operation_blocks.operation_id",
-              "provider_semantic_proposals.operation_id"
-            ]
+            "table_column": "provider_semantic_admissions.operation_id"
           },
           "output": {
-            "omission_reason": "$defs.admissionLink.operation_id has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+            "file": "contracts/protobuf/infinium/application/v1/application.proto",
+            "message": "ProviderSemanticAdmissionLink",
+            "field": "operation_id"
           },
           "replay": {
             "omission_reason": "$defs.admissionLink.operation_id has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
@@ -6351,10 +6633,12 @@
             "symbol": "ResponseRecordId"
           },
           "persistence": {
-            "not_persisted_reason": "$defs.admissionLink.response_record_id is retained or derived at the source-claim-extraction.v1.schema.json contract boundary; no semantically identical schema-6 column exists while provider dispatch is authority-blocked."
+            "table_column": "provider_semantic_admissions.response_record_id"
           },
           "output": {
-            "omission_reason": "$defs.admissionLink.response_record_id has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+            "file": "contracts/protobuf/infinium/application/v1/application.proto",
+            "message": "ProviderSemanticAdmissionLink",
+            "field": "response_record_id"
           },
           "replay": {
             "omission_reason": "$defs.admissionLink.response_record_id has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
@@ -6378,10 +6662,12 @@
             "symbol": "OwnerKind"
           },
           "persistence": {
-            "table_column": "provider_operation_blocks.owner_kind"
+            "table_column": "provider_semantic_admissions.owner_kind"
           },
           "output": {
-            "omission_reason": "$defs.admissionLink.owner_kind has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+            "file": "contracts/protobuf/infinium/application/v1/application.proto",
+            "message": "ProviderSemanticAdmissionLink",
+            "field": "owner_kind"
           },
           "replay": {
             "omission_reason": "$defs.admissionLink.owner_kind has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
@@ -6405,13 +6691,12 @@
             "symbol": "OwnerId"
           },
           "persistence": {
-            "table_columns": [
-              "evidence_acquisition_runs.acquisition_run_id",
-              "provider_operation_blocks.owner_id"
-            ]
+            "table_column": "provider_semantic_admissions.owner_id"
           },
           "output": {
-            "omission_reason": "$defs.admissionLink.owner_id has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+            "file": "contracts/protobuf/infinium/application/v1/application.proto",
+            "message": "ProviderSemanticAdmissionLink",
+            "field": "owner_id"
           },
           "replay": {
             "omission_reason": "$defs.admissionLink.owner_id has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
@@ -6435,10 +6720,12 @@
             "symbol": "RootSubjectId"
           },
           "persistence": {
-            "not_persisted_reason": "$defs.admissionLink.root_subject_id is retained or derived at the source-claim-extraction.v1.schema.json contract boundary; no semantically identical schema-6 column exists while provider dispatch is authority-blocked."
+            "table_column": "provider_semantic_admissions.root_subject_id"
           },
           "output": {
-            "omission_reason": "$defs.admissionLink.root_subject_id has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+            "file": "contracts/protobuf/infinium/application/v1/application.proto",
+            "message": "ProviderSemanticAdmissionLink",
+            "field": "root_subject_id"
           },
           "replay": {
             "omission_reason": "$defs.admissionLink.root_subject_id has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
@@ -6462,10 +6749,12 @@
             "symbol": "ValidationId"
           },
           "persistence": {
-            "not_persisted_reason": "$defs.admissionLink.validation_id is retained or derived at the source-claim-extraction.v1.schema.json contract boundary; no semantically identical schema-6 column exists while provider dispatch is authority-blocked."
+            "table_column": "provider_semantic_admissions.validation_id"
           },
           "output": {
-            "omission_reason": "$defs.admissionLink.validation_id has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+            "file": "contracts/protobuf/infinium/application/v1/application.proto",
+            "message": "ProviderSemanticAdmissionLink",
+            "field": "validation_id"
           },
           "replay": {
             "omission_reason": "$defs.admissionLink.validation_id has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
@@ -6489,10 +6778,12 @@
             "symbol": "ApplicationLinkId"
           },
           "persistence": {
-            "not_persisted_reason": "$defs.admissionLink.application_link_id is retained or derived at the source-claim-extraction.v1.schema.json contract boundary; no semantically identical schema-6 column exists while provider dispatch is authority-blocked."
+            "table_column": "provider_semantic_admissions.application_link_id"
           },
           "output": {
-            "omission_reason": "$defs.admissionLink.application_link_id has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+            "file": "contracts/protobuf/infinium/application/v1/application.proto",
+            "message": "ProviderSemanticAdmissionLink",
+            "field": "application_link_id"
           },
           "replay": {
             "omission_reason": "$defs.admissionLink.application_link_id has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
@@ -6516,10 +6807,12 @@
             "symbol": "State"
           },
           "persistence": {
-            "not_persisted_reason": "$defs.admissionLink.state is retained or derived at the source-claim-extraction.v1.schema.json contract boundary; no semantically identical schema-6 column exists while provider dispatch is authority-blocked."
+            "table_column": "provider_semantic_admissions.state"
           },
           "output": {
-            "omission_reason": "$defs.admissionLink.state has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+            "file": "contracts/protobuf/infinium/application/v1/application.proto",
+            "message": "ProviderSemanticAdmissionLink",
+            "field": "state"
           },
           "replay": {
             "omission_reason": "$defs.admissionLink.state has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
@@ -8051,6 +8344,32 @@
           },
           "replay": {
             "omission_reason": "local_configuration_v1_fingerprint has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
+          }
+        },
+        {
+          "path": "local_configuration_v1_provenance",
+          "authorities": [
+            "SCAN-003",
+            "SCAN-004",
+            "ADR-0002",
+            "ADR-0025"
+          ],
+          "producer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+            "symbol": "LocalConfigurationV1Provenance"
+          },
+          "consumer": {
+            "file": "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+            "symbol": "LocalConfigurationV1Provenance"
+          },
+          "persistence": {
+            "table_column": "provider_effective_scan_configurations_v2.local_configuration_v1_provenance"
+          },
+          "output": {
+            "omission_reason": "local_configuration_v1_provenance has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+          },
+          "replay": {
+            "omission_reason": "local_configuration_v1_provenance has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
           }
         },
         {

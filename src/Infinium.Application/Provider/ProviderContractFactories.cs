@@ -24,6 +24,7 @@ public static class ProviderContractFactories
             configurationId,
             localConfigurationV1Id,
             Fingerprint(canonicalLocalConfigurationV1),
+            "asserted-retained-v1-identity",
             accessProfileId,
             generationId,
             "gpt-5.6-sol",

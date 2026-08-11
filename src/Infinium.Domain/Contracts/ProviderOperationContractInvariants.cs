@@ -80,6 +80,7 @@ public static class ProviderOperationContractInvariants
         if (string.IsNullOrWhiteSpace(value.ConfigurationId.Value)
             || string.IsNullOrWhiteSpace(value.LocalConfigurationV1Id.Value)
             || value.LocalConfigurationV1Fingerprint.Value.Length != 64
+            || value.LocalConfigurationV1Provenance != "asserted-retained-v1-identity"
             || string.IsNullOrWhiteSpace(value.AccessProfileId.Value)
             || string.IsNullOrWhiteSpace(value.GenerationId.Value)
             || value.Model != "gpt-5.6-sol" || value.ReasoningEffort != "medium"
@@ -255,9 +256,12 @@ public static class ProviderOperationContractInvariants
         ValidateAvailability(value.ReturnedModelAvailability, value.ReturnedModel);
         ValidateAvailability(value.ReturnedServiceTierAvailability, value.ReturnedServiceTier);
         ValidateAvailability(value.BillingEvidenceAvailability, value.BillingEvidencePayload);
-        if (value.RawResponseBytes is not null && value.RawResponseBytes > value.MaximumRawResponseBytes)
+        if (value.MaximumRawResponseBytes != value.Limits.MaximumRawResponseBytes
+            || value.RawResponseBytes is not null && (value.RawResponseBytes <= 0
+                || value.RawResponseBytes > value.MaximumRawResponseBytes)
+            || value.ResponseHeadersBytes is not null && value.ResponseHeadersBytes is <= 0 or > 65_536)
         {
-            throw new InvalidOperationException("Raw provider response exceeds the retained operation limit.");
+            throw new InvalidOperationException("Provider payload sizes must be positive and use the exact retained operation limit.");
         }
         if (value.RateLimitFacts.Count > 64 || value.RateLimitFacts.Any(x => !ValidRateLimitFact(x))
             || value.RateLimitFacts.GroupBy(x => (x.Scope, x.Dimension)).Any(group => group.Count() != 1)
@@ -268,6 +272,10 @@ public static class ProviderOperationContractInvariants
             throw new InvalidOperationException("Provider rate and billing evidence must be exact, unique, and availability-bound.");
         }
         ValidateUsageAgainstLimits(value.OperationKind, value.Limits, value.Usage);
+        if (value.Usage.Availability != value.Availability)
+        {
+            throw new InvalidOperationException("Provider response and usage availability must be identical.");
+        }
         bool blockedUsage = value.Usage.DispatchCount is { Availability: ProviderAvailabilityState.Available, Value: 0 }
             && new[] { value.Usage.InputTokens, value.Usage.OutputTokens, value.Usage.TotalTokens, value.Usage.ReasoningTokens,
                 value.Usage.CacheReadTokens, value.Usage.CacheWriteTokens, value.Usage.PricedToolCalls,
@@ -306,11 +314,14 @@ public static class ProviderOperationContractInvariants
             }
             return;
         }
+        bool cancelled = value.State == ProviderResponseState.Cancelled;
         if (value.InputBoundProof.Status != ProviderInputBoundProofState.Proved
             || string.IsNullOrWhiteSpace(value.InputBoundProof.PolicyId)
             || string.IsNullOrWhiteSpace(value.InputBoundProof.PolicyVersion)
-            || value.AuthorizationId is null || value.RequestId is null || value.DispatchFenceId is null
-            || value.Availability != ProviderAvailabilityState.Available)
+            || (!cancelled && (value.AuthorizationId is null || value.RequestId is null || value.DispatchFenceId is null
+                || value.Availability != ProviderAvailabilityState.Available))
+            || (cancelled && (value.AuthorizationId is not null || value.RequestId is not null || value.DispatchFenceId is not null
+                || value.Availability != ProviderAvailabilityState.Unavailable)))
         {
             throw new InvalidOperationException("A future provider response requires a proved policy and exact authorization/request/fence binding.");
         }
@@ -480,6 +491,8 @@ public static class ProviderOperationContractInvariants
             || !BoundedUniqueText(value.Abstentions) || !BoundedUniqueText(value.Gaps)
             || !Unique(value.ContradictionEvidenceIds) || !Unique(value.ValidationIds)
             || !Unique(value.ApplicationLinkIds)
+            || !AdmissionStatesMatch(value.AdmissionLinks,
+                value.ClaimProposals.Select(x => new KeyValuePair<OpaqueId, ProposalAdmissionState>(x.ProposalId, x.State)))
             || !ValidAdmissionLinks(value.AdmissionLinks, value.OperationId, value.OwnerKind,
                 value.OwnerId, value.SourceRevisionId, value.ClaimProposals.Select(x => x.ProposalId),
                 value.ValidationIds, value.ApplicationLinkIds))
@@ -513,6 +526,8 @@ public static class ProviderOperationContractInvariants
             || !Unique(value.CausalPathIds) || !Unique(value.EvidenceIds)
             || !BoundedUniqueText(value.Abstentions) || !BoundedUniqueText(value.Gaps)
             || !Unique(value.ValidationIds) || !Unique(value.AdmissionLinkIds)
+            || !AdmissionStatesMatch(value.AdmissionLinks,
+                value.HypothesisProposals.Select(x => new KeyValuePair<OpaqueId, ProposalAdmissionState>(x.ProposalId, x.State)))
             || !ValidAdmissionLinks(value.AdmissionLinks, value.OperationId, value.OwnerKind,
                 value.OwnerId, value.CandidateId, value.HypothesisProposals.Select(x => x.ProposalId),
                 value.ValidationIds, value.AdmissionLinkIds))
@@ -524,6 +539,7 @@ public static class ProviderOperationContractInvariants
     private static void Validate(ProviderUsageContract value)
     {
         ArgumentNullException.ThrowIfNull(value);
+        RequireExplicit(value.Availability, nameof(value.Availability));
         ProviderQuantityContract[] quantities = [value.DispatchCount, value.InputTokens, value.OutputTokens, value.TotalTokens, value.ReasoningTokens,
             value.CacheReadTokens, value.CacheWriteTokens, value.PricedToolCalls, value.CalculatedNanoUsd];
         if (quantities.Any(x => !ValidQuantity(x))
@@ -538,6 +554,10 @@ public static class ProviderOperationContractInvariants
         RequireExplicit(value.BillingAvailability, nameof(value.BillingAvailability));
         RequireExplicit(value.RateAvailability, nameof(value.RateAvailability));
         RequireExplicit(value.CreditAvailability, nameof(value.CreditAvailability));
+        if (value.CreditAvailability == ProviderAvailabilityState.Available)
+        {
+            throw new InvalidOperationException("Provider credit remains unavailable until separately evidenced authority exists.");
+        }
     }
 
     private static bool ValidQuantity(ProviderQuantityContract value) =>
@@ -637,6 +657,16 @@ public static class ProviderOperationContractInvariants
         {
             throw new InvalidOperationException("Provider response usage exceeds its retained operation-specific limits.");
         }
+        if (usage.TotalTokens.Availability == ProviderAvailabilityState.Available
+            && (usage.InputTokens.Availability != ProviderAvailabilityState.Available
+                || usage.OutputTokens.Availability != ProviderAvailabilityState.Available
+                || usage.TotalTokens.Value != checked(usage.InputTokens.Value + usage.OutputTokens.Value))
+            || usage.ReasoningTokens.Availability == ProviderAvailabilityState.Available
+                && (usage.OutputTokens.Availability != ProviderAvailabilityState.Available
+                    || usage.ReasoningTokens.Value > usage.OutputTokens.Value))
+        {
+            throw new InvalidOperationException("Provider usage totals and reasoning tokens must be exact and internally bounded.");
+        }
     }
 
     private static void ValidateFutureResponseState(ProviderResponseDocument value)
@@ -656,23 +686,45 @@ public static class ProviderOperationContractInvariants
             && value.AdmissionState is ProposalAdmissionState.Rejected
                 or ProposalAdmissionState.Abstained or ProposalAdmissionState.Unavailable
                 or ProposalAdmissionState.Unsupported;
+        bool transport = value.AuthorizationId is not null && value.RequestId is not null && value.DispatchFenceId is not null;
+        bool noTransport = value.AuthorizationId is null && value.RequestId is null && value.DispatchFenceId is null;
+        bool semanticFactsAbsent = !refusal && !incomplete && !error;
+        bool completeUsage = value.Usage.Availability == ProviderAvailabilityState.Available
+            && new[] { value.Usage.DispatchCount, value.Usage.InputTokens, value.Usage.OutputTokens,
+                value.Usage.TotalTokens, value.Usage.ReasoningTokens, value.Usage.CacheReadTokens,
+                value.Usage.CacheWriteTokens, value.Usage.PricedToolCalls, value.Usage.CalculatedNanoUsd }
+                .All(quantity => quantity.Availability == ProviderAvailabilityState.Available)
+            && value.Usage.DispatchCount.Value == 1;
+        bool dispatchedUsage = value.Usage.Availability == ProviderAvailabilityState.Available
+            && value.Usage.DispatchCount is { Availability: ProviderAvailabilityState.Available, Value: 1 };
+        bool cancelledUsage = value.Usage.Availability == ProviderAvailabilityState.Unavailable
+            && value.Usage.DispatchCount is { Availability: ProviderAvailabilityState.Available, Value: 0 }
+            && new[] { value.Usage.InputTokens, value.Usage.OutputTokens, value.Usage.TotalTokens,
+                value.Usage.ReasoningTokens, value.Usage.CacheReadTokens, value.Usage.CacheWriteTokens,
+                value.Usage.PricedToolCalls, value.Usage.CalculatedNanoUsd }
+                .All(quantity => quantity.Availability != ProviderAvailabilityState.Available);
         bool valid = value.State switch
         {
-            ProviderResponseState.Completed => raw && http && returnedModel && returnedTier
+            ProviderResponseState.Completed => transport && raw && http && returnedModel && returnedTier
                 && value.ReturnedModel == "gpt-5.6-sol" && value.ReturnedServiceTier == "default"
-                && !refusal && !incomplete && !error && admitted,
-            ProviderResponseState.Refusal => raw && http && refusal && !incomplete && !error && nonSuccessAdmission,
-            ProviderResponseState.Incomplete => raw && http && !refusal && incomplete && !error && nonSuccessAdmission,
-            ProviderResponseState.Failed => !refusal && !incomplete && error && nonSuccessAdmission,
-            ProviderResponseState.Queued or ProviderResponseState.InProgress => raw && http
-                && !refusal && !incomplete && !error && nonSuccessAdmission,
-            ProviderResponseState.Malformed or ProviderResponseState.Oversized => raw
-                && !refusal && !incomplete && nonSuccessAdmission,
-            ProviderResponseState.Mismatched => raw && (!returnedModel || value.ReturnedModel != "gpt-5.6-sol"
-                || !returnedTier || value.ReturnedServiceTier != "default") && nonSuccessAdmission,
-            ProviderResponseState.Unknown => nonSuccessAdmission,
-            ProviderResponseState.Cancelled => !raw && !http && !refusal && !incomplete && !error
-                && value.Usage.DispatchCount.Value == 0 && nonSuccessAdmission,
+                && semanticFactsAbsent && completeUsage && admitted,
+            ProviderResponseState.Refusal => transport && raw && http && refusal && !incomplete && !error
+                && dispatchedUsage && nonSuccessAdmission,
+            ProviderResponseState.Incomplete => transport && raw && http && !refusal && incomplete && !error
+                && dispatchedUsage && nonSuccessAdmission,
+            ProviderResponseState.Failed => transport && raw && http && !refusal && !incomplete && error
+                && dispatchedUsage && nonSuccessAdmission,
+            ProviderResponseState.Queued or ProviderResponseState.InProgress => transport && raw && http
+                && semanticFactsAbsent && dispatchedUsage && nonSuccessAdmission,
+            ProviderResponseState.Malformed or ProviderResponseState.Oversized => transport && raw && http
+                && !refusal && !incomplete && !error && dispatchedUsage && nonSuccessAdmission,
+            ProviderResponseState.Mismatched => transport && raw && http && returnedModel && returnedTier
+                && dispatchedUsage && (value.ReturnedModel != "gpt-5.6-sol"
+                    || value.ReturnedServiceTier != "default") && nonSuccessAdmission,
+            ProviderResponseState.Unknown => transport && raw && http && semanticFactsAbsent
+                && dispatchedUsage && nonSuccessAdmission,
+            ProviderResponseState.Cancelled => noTransport && !raw && !http && semanticFactsAbsent
+                && cancelledUsage && nonSuccessAdmission,
             _ => false,
         };
         if (!valid)
@@ -733,7 +785,8 @@ public static class ProviderOperationContractInvariants
         HashSet<OpaqueId> proposalIds = proposals.ToHashSet();
         return links.Count <= 64
             && Unique(links.Select(x => x.AdmissionId))
-            && links.All(link => link.OperationId == operationId
+            && links.All(link => !string.IsNullOrWhiteSpace(link.AuthorizationId.Value)
+                && link.OperationId == operationId
                 && link.OwnerKind == ownerKind && link.OwnerId == ownerId
                 && link.RootSubjectId == rootSubjectId
                 && proposalIds.Contains(link.ProposalId)
@@ -742,6 +795,17 @@ public static class ProviderOperationContractInvariants
                 && link.State is ProposalAdmissionState.Admitted or ProposalAdmissionState.Rejected
                     or ProposalAdmissionState.Abstained or ProposalAdmissionState.Unavailable
                     or ProposalAdmissionState.Unsupported or ProposalAdmissionState.Deleted);
+    }
+
+    private static bool AdmissionStatesMatch(
+        IReadOnlyList<ProviderSemanticAdmissionLinkContract> links,
+        IEnumerable<KeyValuePair<OpaqueId, ProposalAdmissionState>> proposals)
+    {
+        Dictionary<OpaqueId, ProposalAdmissionState> states = proposals.ToDictionary();
+        return links.All(link => states.TryGetValue(link.ProposalId, out ProposalAdmissionState state)
+                && state == link.State)
+            && states.All(proposal => proposal.Value != ProposalAdmissionState.Admitted
+                || links.Count(link => link.ProposalId == proposal.Key && link.State == ProposalAdmissionState.Admitted) == 1);
     }
 
     private static bool BoundedUniqueText(IReadOnlyList<string> values) =>
