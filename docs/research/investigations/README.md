@@ -95,6 +95,7 @@ proposed disposition enabled by the report.
 | [RESEARCH-0052](RESEARCH-0052-evaluator-private-fixture-repository-and-agent-access.md) | Completed; recommendation accepted | ADR-0026 accepts a separate private Git history plus purpose-bound fresh-context delegated agent access and sanitized disclosure |
 | [RESEARCH-0053](RESEARCH-0053-mutagen-slice4-fixture-conformance.md) | Completed; Option A implemented | The owner selected fixture correction and independent resealing. Public Bethesda fixture version `1.0.1` and immutable private successors correct the noncanonical RACE/REFR structures, retained Mutagen `0.54.2` conformance passes, and ADR-0009 remains unchanged |
 | [RESEARCH-0054](RESEARCH-0054-slice6-openai-profile-and-implementation-readiness-refresh.md) | Completed; recommendation accepted | Slice 6 remains viable; the owner accepted explicit stateless reasoning and cache-off fields as ADR-0025 conformance closure with no separate ADR, plus provider-capable configuration v2, evidence-acquisition ownership, closed provider contracts, deterministic gates, and three separately authorized requests |
+| [RESEARCH-0055](RESEARCH-0055-slice6-local-input-bound-policy.md) | Completed; owner policy accepted | WP1 pins offline Microsoft o200k packages and the conservative `openai-responses-o200k-byte-envelope/v1` byte-plus-structural-margin proof; provider token-count, credentials, and network remain unauthorized |
 
 Supporting artifact:
 

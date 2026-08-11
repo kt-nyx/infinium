@@ -211,13 +211,12 @@ public static class ApplicationProviderContractValidator
             return;
         }
         if (value.InputBoundProofStatus != InputBoundProofStatus.Proved
-            || !Has(value.InputBoundPolicyId) || !Has(value.InputBoundPolicyVersion))
+            || value.InputBoundPolicyId != OpenAiResponsesInputBoundPolicy.PolicyId
+            || value.InputBoundPolicyVersion != OpenAiResponsesInputBoundPolicy.PolicyVersion)
         {
             throw new InvalidDataException("A future provider operation requires one explicit proved input-bound policy identity.");
         }
         ValidateFutureOperationShape(value);
-        throw new NotSupportedException(
-            "Proof-qualified provider operations are structurally modeled but unreachable until accepted input-bound authority changes the current runtime maturity gate.");
     }
 
     public static void Validate(ProviderResponsePayload value)
@@ -341,7 +340,8 @@ public static class ApplicationProviderContractValidator
             return;
         }
         if (value.InputBoundProofStatus != InputBoundProofStatus.Proved
-            || !Has(value.InputBoundPolicyId) || !Has(value.InputBoundPolicyVersion)
+            || value.InputBoundPolicyId != OpenAiResponsesInputBoundPolicy.PolicyId
+            || value.InputBoundPolicyVersion != OpenAiResponsesInputBoundPolicy.PolicyVersion
             || (value.ResponseState == "cancelled"
                 ? value.Availability != ProviderAvailabilityState.Unavailable
                     || !Has(value.AuthorizationId) || !Has(value.AttemptId?.Value) || !Has(value.RequestId)
@@ -353,7 +353,6 @@ public static class ApplicationProviderContractValidator
             throw new InvalidDataException("Future provider response requires exact proof and transport identities.");
         }
         ValidateFutureResponseShape(value);
-        throw new NotSupportedException("Proof-qualified provider responses are modeled but unavailable before accepted input-bound authority changes runtime maturity.");
     }
 
     public static void Validate(ProviderReplayPayload value)
@@ -436,13 +435,35 @@ public static class ApplicationProviderContractValidator
         {
             throw new InvalidDataException("Canonical request bytes exceed the operation's retained request limit.");
         }
-        if (value.InputBoundProofStatus != InputBoundProofStatus.AuthorityRequired
-            || value.InputBoundPolicyId != "unresolved-openai-responses-framing"
-            || value.InputBoundPolicyVersion != "authority-required")
+        if (value.InputBoundProofStatus != InputBoundProofStatus.Proved
+            || value.InputBoundPolicyId != OpenAiResponsesInputBoundPolicy.PolicyId
+            || value.InputBoundPolicyVersion != OpenAiResponsesInputBoundPolicy.PolicyVersion)
         {
-            throw new InvalidDataException("Provider submit must retain the exact unresolved input-bound proof status.");
+            throw new InvalidDataException("Provider submit must retain the exact accepted local input-bound proof identity.");
         }
-        throw new NotSupportedException("Provider operation confirmation is blocked pending accepted local tokenizer/framing authority.");
+        ProviderInputBoundEvidence evidence = OpenAiResponsesInputBoundPolicy.Prove(
+            value.OperationKind switch
+            {
+                ProviderOperationKind.TransportQualification => Domain.Contracts.ProviderOperationKind.TransportQualification,
+                ProviderOperationKind.SourceClaimExtraction => Domain.Contracts.ProviderOperationKind.SourceClaimExtraction,
+                ProviderOperationKind.CandidateInvestigation => Domain.Contracts.ProviderOperationKind.CandidateInvestigation,
+                _ => throw new InvalidDataException("Provider submit operation kind is unknown."),
+            },
+            value.CanonicalRequestBody.Memory,
+            new Domain.Contracts.ProviderFiniteLimitsContract(
+                checked((long)value.Limits.MaximumRequestBytes),
+                checked((long)value.Limits.MaximumInputTokens),
+                checked((long)value.Limits.MaximumOutputTokens),
+                checked((long)value.Limits.MaximumRawResponseBytes),
+                checked((long)value.Limits.MaximumDispatchCount),
+                value.Limits.MaximumCalculatedNanoUsd,
+                checked((long)value.Limits.DeadlineMilliseconds)));
+        if (!evidence.CanonicalRequestFingerprint.Value.Equals(
+            Convert.ToHexStringLower(value.CanonicalRequestFingerprintSha256.Span),
+            StringComparison.Ordinal))
+        {
+            throw new InvalidDataException("Provider submit input-bound evidence does not match the canonical request fingerprint.");
+        }
     }
 
     public static void RequireDispatchAdmission(SubmitProviderOperationRequest value)

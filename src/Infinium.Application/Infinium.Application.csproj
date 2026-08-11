@@ -11,6 +11,9 @@
     <PackageReference Include="Grpc.Core.Api" />
     <PackageReference Include="Grpc.Net.Client" />
     <PackageReference Include="Grpc.Tools" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.ML.Tokenizers" />
+    <PackageReference Include="Microsoft.ML.Tokenizers.Data.O200kBase" />
+    <PackageReference Include="Microsoft.Bcl.Memory" />
   </ItemGroup>
   <ItemGroup>
     <Protobuf Include="..\..\contracts\protobuf\infinium\**\*.proto"

@@ -137,18 +137,30 @@ function Assert-NoDuplicateJsonProperties([System.Text.Json.JsonElement] $Elemen
 
 function Test-Wp1AllowedPath([string] $Path) {
     $exact = @(
+        'Directory.Packages.props',
         'contracts/json-schema/README.md',
         'contracts/protobuf/README.md',
         'contracts/repository/public-fixture-registry.v1.schema.json',
+        'dependencies/README.md',
+        'dependencies/dependency-curation.json',
+        'dependencies/dependency-manifest.json',
         'docs/evaluation/repository-evaluation-authority.v1.json',
         'docs/plans/milestones/m1/slices/s6/README.md',
         'docs/plans/milestones/m1/slices/s6/record.md',
         'docs/plans/milestones/m1/slices/s6/wp1-contract-traceability.v1.json',
         'docs/plans/milestones/m1/slices/s6/wp1-acceptance-ledger.v1.json',
+        'docs/research/investigations/README.md',
+        'docs/research/investigations/RESEARCH-0055-slice6-local-input-bound-policy.md',
+        'docs/research/source-registry.md',
         'eng/generate-m1-slice6-wp1-traceability.ps1',
         'eng/verify-m1-slice6.ps1',
         'fixtures/public/public-fixture-registry.v1.json',
-        'fixtures/tooling/reseal-public-fixtures.mjs'
+        'fixtures/tooling/reseal-public-fixtures.mjs',
+        'src/Infinium.Cli/packages.lock.json',
+        'src/Infinium.Coordinator/packages.lock.json',
+        'src/Infinium.Worker/packages.lock.json',
+        'tests/Infinium.EvaluationTests/packages.lock.json',
+        'tests/Infinium.IntegrationTests/packages.lock.json'
     )
     if ($exact -ccontains $Path) {
         return $true
@@ -504,7 +516,7 @@ function Invoke-StateSurfaceGate([bool] $RequireAcceptedInputProof) {
     Assert-Slice5V1Unchanged
     Invoke-DotnetTest `
         'tests/Infinium.UnitTests/Infinium.UnitTests.csproj' `
-        'FullyQualifiedName~ProviderContract|FullyQualifiedName~ProviderFiniteBound|FullyQualifiedName~OperationalContract'
+        'FullyQualifiedName~ProviderContract|FullyQualifiedName~ProviderFiniteBound|FullyQualifiedName~ProviderInputBound|FullyQualifiedName~OperationalContract'
     Invoke-DotnetTest `
         'tests/Infinium.UnitTests/Infinium.UnitTests.csproj' `
         'FullyQualifiedName~Schema6|FullyQualifiedName~ProviderPersistence|FullyQualifiedName~BackupRestore'
@@ -538,7 +550,7 @@ function Invoke-StateSurfaceGate([bool] $RequireAcceptedInputProof) {
     $destinationSchemaFingerprint = $schemaFingerprintMatch.Groups['value'].Value
 
     $gateName = if ($RequireAcceptedInputProof) { 'StateTotality' } else { 'StateSurfaces' }
-    $gateStatus = if ($RequireAcceptedInputProof) { 'blocked-authority-required' } else { 'passed' }
+    $gateStatus = 'passed'
     Write-Receipt $gateName ([ordered]@{
         migration_id = 'M1-S6-0006'
         source_schema = 5
@@ -549,15 +561,21 @@ function Invoke-StateSurfaceGate([bool] $RequireAcceptedInputProof) {
         append_only_provider_history_table_count = 25
         rebuildable_projection_count = 3
         traceability_contract_count = $traceability.contracts.Count
-        local_input_bound_proof = 'authority-required-no-accepted-local-tokenizer-or-framing-grammar'
-        provider_dispatch_admission = 'fail-closed'
+        local_input_bound_proof = 'proved-openai-responses-o200k-byte-envelope/v1'
+        input_bound_policy_id = 'openai-responses-o200k-byte-envelope'
+        input_bound_policy_version = 'v1'
+        tokenizer_encoding = 'o200k_base'
+        tokenizer_package = 'Microsoft.ML.Tokenizers/2.0.0'
+        tokenizer_package_content_hash = '+b8lT4cLLO/sBR2hjvE/qG6qrZG15h7/PBvnIrzTh4xDaAxdHUY6449rC+1pHzQUsBiCHZVbj+VMn+xS0sL7TA=='
+        vocabulary_package = 'Microsoft.ML.Tokenizers.Data.O200kBase/2.0.0'
+        vocabulary_package_content_hash = '19G0KWrRnUZmc8vGdPNuBJqTruhAjzPLRY2nn6a/HiBXbEnE/Lx9L223jGlDzg1oAcCggo/8GlWw3ZLVuS76Ow=='
+        qualification_structural_allowance_tokens = 4096
+        semantic_structural_allowance_tokens = 8192
+        provider_dispatch_admission = 'contract-shape-enabled-no-wp2-coordinator-or-wp3-helper-execution'
         transport_qualification_request_byte_ceiling = 16384
         semantic_request_byte_ceiling = 65536
         maximum_dispatch_count = 1
     }) $gateStatus
-    if ($RequireAcceptedInputProof) {
-        throw 'WP1 StateTotality is blocked: no accepted repository-local tokenizer/framing proof exists.'
-    }
 }
 
 Push-Location $repoRoot

@@ -12,10 +12,13 @@ public sealed class ProviderContractTests
     {
         ProviderInputBoundProofContract blocked = BlockedProof();
         ProviderOperationContractInvariants.ValidateBlockedInputBoundProof(blocked);
-        Assert.ThrowsExactly<NotSupportedException>(() =>
-            ProviderOperationContractInvariants.RequireLocalInputBoundProof(1));
-        Assert.ThrowsExactly<NotSupportedException>(() =>
+        ProviderOperationContractInvariants.RequireLocalInputBoundProof(1);
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
             ProviderOperationContractInvariants.RequireDispatchableInputBoundProof(blocked));
+        ProviderOperationContractInvariants.RequireDispatchableInputBoundProof(new(
+            ProviderOperationContractInvariants.LocalInputBoundPolicyId,
+            ProviderOperationContractInvariants.LocalInputBoundPolicyVersion,
+            ProviderInputBoundProofState.Proved));
         Assert.ThrowsExactly<InvalidOperationException>(() =>
             ProviderOperationContractInvariants.ValidateBlockedInputBoundProof(blocked with { PolicyVersion = "proved" }));
     }
@@ -122,8 +125,7 @@ public sealed class ProviderContractTests
         foreach (ProviderOperationState state in states)
         {
             ProviderOperationDocument future = FutureOperation(state);
-            Assert.ThrowsExactly<NotSupportedException>(
-                () => ProviderOperationContractInvariants.Validate(future), state.ToString());
+            ProviderOperationContractInvariants.Validate(future);
             ProviderOperationDocument contradictory = state is ProviderOperationState.Settled or ProviderOperationState.UnresolvedHold
                 ? future with { AuthorizationId = null }
                 : future with { SettlementId = Id("premature-settlement") };
@@ -165,7 +167,7 @@ public sealed class ProviderContractTests
         foreach (ProviderResponseState state in states)
         {
             ProviderResponseDocument future = FutureResponse(state);
-            Assert.ThrowsExactly<NotSupportedException>(() => ProviderOperationContractInvariants.Validate(future), state.ToString());
+            ProviderOperationContractInvariants.Validate(future);
             ProviderResponseDocument contradictory = future with
             {
                 ValidationState = state == ProviderResponseState.Completed
@@ -274,9 +276,11 @@ public sealed class ProviderContractTests
 
     [TestMethod]
     [TestCategory("Unit")]
-    public void ProviderApplicationConfirmationRetainsEveryExactBindingButCannotConfirm()
+    public void ProviderApplicationConfirmationRequiresExactLocalInputBoundEvidence()
     {
-        byte[] canonicalRequest = [1, 2, 3];
+        byte[] canonicalRequest = """
+            {"model":"gpt-5.6-sol","reasoning":{"effort":"medium","context":"current_turn","mode":"standard"},"text":{"format":{"type":"json_schema","name":"source_claim_extraction","strict":true,"schema":{"type":"object","additionalProperties":false}}},"store":false,"service_tier":"default","background":false,"stream":false,"tool_choice":"none","tools":[],"truncation":"disabled","max_output_tokens":4096,"prompt_cache_options":{"mode":"explicit"},"instructions":"closed instruction","input":"closed input"}
+            """u8.ToArray();
         Sha256Fingerprint requestFingerprint = new(Convert.ToHexStringLower(
             System.Security.Cryptography.SHA256.HashData(canonicalRequest)));
         SelectAndConfirmProviderOperationCommand command = new(
@@ -284,10 +288,13 @@ public sealed class ProviderContractTests
             "evidence-acquisition-run", Id("acquisition-1"), Id("job-1"), Id("install-1"), Id("context-1"), Id("config-1"),
             Id("manifest-1"), Id("profile-1"), Id("generation-1"), 0, Id("capability-1"), requestFingerprint,
             requestFingerprint, canonicalRequest, canonicalRequest.Length, Fingerprint, Id("price-1"), Fingerprint, Fingerprint, Id("prompt-1"),
-            Fingerprint, Id("schema-1"), Fingerprint, BlockedProof(),
+            Fingerprint, Id("schema-1"), Fingerprint, new(
+                OpenAiResponsesInputBoundPolicy.PolicyId,
+                OpenAiResponsesInputBoundPolicy.PolicyVersion,
+                ProviderInputBoundProofState.Proved),
             new(65_536, 73_728, 4_096, 1_048_576, 1, 600_000_000, 120_000),
             UtcTimestamp.Parse("2026-08-10T00:02:00.0000000+00:00"), 1, Now, Now);
-        Assert.ThrowsExactly<NotSupportedException>(() => ProviderApplicationContractInvariants.Validate(command));
+        ProviderApplicationContractInvariants.Validate(command);
         Assert.ThrowsExactly<InvalidOperationException>(() =>
             ProviderApplicationContractInvariants.Validate(command with { CanonicalRequestBytes = 65_537 }));
         Assert.ThrowsExactly<InvalidOperationException>(() =>
@@ -385,7 +392,7 @@ public sealed class ProviderContractTests
     {
         ProviderOperationDocument operation = BlockedOperation() with
         {
-            InputBoundProof = new ProviderInputBoundProofContract("accepted-policy", "1", ProviderInputBoundProofState.Proved),
+            InputBoundProof = new ProviderInputBoundProofContract(ProviderOperationContractInvariants.LocalInputBoundPolicyId, ProviderOperationContractInvariants.LocalInputBoundPolicyVersion, ProviderInputBoundProofState.Proved),
             State = state,
         };
         int stage = state switch
@@ -470,7 +477,7 @@ public sealed class ProviderContractTests
             RequestId = Id("request-1"),
             ReservationId = Id("reservation-1"),
             DispatchFenceId = cancelled ? null : Id("fence-1"),
-            InputBoundProof = new ProviderInputBoundProofContract("accepted-policy", "1", ProviderInputBoundProofState.Proved),
+            InputBoundProof = new ProviderInputBoundProofContract(ProviderOperationContractInvariants.LocalInputBoundPolicyId, ProviderOperationContractInvariants.LocalInputBoundPolicyVersion, ProviderInputBoundProofState.Proved),
             Availability = cancelled ? ProviderAvailabilityState.Unavailable : ProviderAvailabilityState.Available,
             State = state,
             RawResponseAvailability = raw ? ProviderAvailabilityState.Available : ProviderAvailabilityState.Unavailable,
@@ -510,8 +517,8 @@ public sealed class ProviderContractTests
     private static ProviderQuantityContract Q(long value) => new(ProviderAvailabilityState.Available, value);
     private static ProviderQuantityContract U() => new(ProviderAvailabilityState.Unavailable, null);
     private static ProviderInputBoundProofContract BlockedProof() => new(
-        ProviderOperationContractInvariants.LocalInputBoundPolicyId,
-        ProviderOperationContractInvariants.LocalInputBoundPolicyVersion,
+        ProviderOperationContractInvariants.UnresolvedInputBoundPolicyId,
+        ProviderOperationContractInvariants.UnresolvedInputBoundPolicyVersion,
         ProviderInputBoundProofState.AuthorityRequired);
     private static ProviderCapabilitySnapshotContract Capability() => new(Id("capability-1"), Fingerprint, "openai",
         "gpt-5.6-sol", "default", "medium", "current_turn", "standard", false, false, false, "none", 0,

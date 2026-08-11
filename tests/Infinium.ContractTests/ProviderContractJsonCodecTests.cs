@@ -127,8 +127,8 @@ public sealed class ProviderContractJsonCodecTests
                 },
                 ReplayState = ProviderReplayState.NotAvailable,
                 InputBoundProofStatus = InputBoundProofStatus.Proved,
-                InputBoundPolicyId = "accepted-policy",
-                InputBoundPolicyVersion = "1",
+                InputBoundPolicyId = OpenAiResponsesInputBoundPolicy.PolicyId,
+                InputBoundPolicyVersion = OpenAiResponsesInputBoundPolicy.PolicyVersion,
                 InputTokens = observed ? AvailableApplicationQuantity(2) : UnavailableApplicationQuantity(),
                 OutputTokens = observed ? AvailableApplicationQuantity(1) : UnavailableApplicationQuantity(),
                 TotalTokens = observed ? AvailableApplicationQuantity(3) : UnavailableApplicationQuantity(),
@@ -187,8 +187,7 @@ public sealed class ProviderContractJsonCodecTests
                 operation.Retained = Vector(0, 0, 0, 0, 0);
             }
 
-            Assert.ThrowsExactly<NotSupportedException>(
-                () => ApplicationProviderContractValidator.Validate(operation), state.ToString());
+            ApplicationProviderContractValidator.Validate(operation);
             ProviderOperationPayload contradictory = operation.Clone();
             if (identityStage == 10)
             {
@@ -220,9 +219,9 @@ public sealed class ProviderContractJsonCodecTests
             EffectiveConfigurationV2Id = "config-1",
             CommandId = "command-1",
             RequestedAt = ToInstant(HelperNow),
-            InputBoundProofStatus = InputBoundProofStatus.Proved,
-            InputBoundPolicyId = "accepted-policy",
-            InputBoundPolicyVersion = "1",
+            InputBoundProofStatus = InputBoundProofStatus.AuthorityRequired,
+            InputBoundPolicyId = "unresolved-openai-responses-framing",
+            InputBoundPolicyVersion = "authority-required",
             InputTokens = AvailableApplicationQuantity(2),
             OutputTokens = AvailableApplicationQuantity(1),
             TotalTokens = AvailableApplicationQuantity(3),
@@ -371,8 +370,8 @@ public sealed class ProviderContractJsonCodecTests
         response["dispatch_fence_id"] = "fence-1";
         response["input_bound_proof"] = new JsonObject
         {
-            ["policy_id"] = "future-accepted-policy",
-            ["policy_version"] = "future-accepted-version",
+            ["policy_id"] = OpenAiResponsesInputBoundPolicy.PolicyId,
+            ["policy_version"] = OpenAiResponsesInputBoundPolicy.PolicyVersion,
             ["status"] = "proved",
         };
         response["availability"] = "available";
@@ -415,14 +414,14 @@ public sealed class ProviderContractJsonCodecTests
             Infinium.Application.Evaluation.ActiveJsonSchemaValidator.Validate(
                 document.RootElement, "provider-response.v1.schema.json");
         }
-        Assert.ThrowsExactly<NotSupportedException>(() => ProviderContractJsonCodecs.DeserializeResponse(bytes));
+        _ = ProviderContractJsonCodecs.DeserializeResponse(bytes);
 
         JsonObject exactLimitUsage = response.DeepClone().AsObject();
         exactLimitUsage["limits"]!["maximum_input_tokens"] = 32;
         exactLimitUsage["limits"]!["maximum_output_tokens"] = 16;
         exactLimitUsage["limits"]!["maximum_calculated_nano_usd"] = 42;
-        Assert.ThrowsExactly<NotSupportedException>(() => ProviderContractJsonCodecs.DeserializeResponse(
-            System.Text.Encoding.UTF8.GetBytes(exactLimitUsage.ToJsonString())));
+        _ = ProviderContractJsonCodecs.DeserializeResponse(
+            System.Text.Encoding.UTF8.GetBytes(exactLimitUsage.ToJsonString()));
         JsonObject observedOverrun = exactLimitUsage.DeepClone().AsObject();
         observedOverrun["limits"]!["maximum_input_tokens"] = 16;
         observedOverrun["limits"]!["maximum_output_tokens"] = 8;
@@ -435,7 +434,7 @@ public sealed class ProviderContractJsonCodecTests
             Infinium.Application.Evaluation.ActiveJsonSchemaValidator.Validate(
                 document.RootElement, "provider-response.v1.schema.json");
         }
-        Assert.ThrowsExactly<NotSupportedException>(() => ProviderContractJsonCodecs.DeserializeResponse(observedOverrunBytes));
+        _ = ProviderContractJsonCodecs.DeserializeResponse(observedOverrunBytes);
 
         JsonObject oversized = response.DeepClone().AsObject();
         oversized["state"] = "oversized";
@@ -590,8 +589,8 @@ public sealed class ProviderContractJsonCodecTests
             JsonObject futureOperation = examples["provider-operation.v1.schema.json"]!.DeepClone().AsObject();
             futureOperation["input_bound_proof"] = new JsonObject
             {
-                ["policy_id"] = "accepted-test-policy",
-                ["policy_version"] = "1",
+                ["policy_id"] = OpenAiResponsesInputBoundPolicy.PolicyId,
+                ["policy_version"] = OpenAiResponsesInputBoundPolicy.PolicyVersion,
                 ["status"] = "proved",
             };
             futureOperation["state"] = lifecycleState;
@@ -633,8 +632,8 @@ public sealed class ProviderContractJsonCodecTests
                 Infinium.Application.Evaluation.ActiveJsonSchemaValidator.Validate(
                     future.RootElement, "provider-operation.v1.schema.json");
             }
-            Assert.ThrowsExactly<NotSupportedException>(() => ProviderContractJsonCodecs.DeserializeOperation(
-                System.Text.Encoding.UTF8.GetBytes(futureOperation.ToJsonString())), lifecycleState);
+            _ = ProviderContractJsonCodecs.DeserializeOperation(
+                System.Text.Encoding.UTF8.GetBytes(futureOperation.ToJsonString()));
 
             JsonObject contradictory = futureOperation.DeepClone().AsObject();
             if (identityStage == 10)
@@ -1197,7 +1196,9 @@ public sealed class ProviderContractJsonCodecTests
 
         ListProviderBudgetRequest query = new() { ScopeKind = "global", ScopeId = "global", RequestedPageSize = 100 };
         Assert.IsTrue(query.CalculateSize() < ProtocolConstants.MaximumMessageBytes);
-        byte[] replayBytes = [4, 5, 6];
+        byte[] replayBytes = """
+            {"model":"gpt-5.6-sol","reasoning":{"effort":"medium","context":"current_turn","mode":"standard"},"text":{"format":{"type":"json_schema","name":"source_claim_extraction","strict":true,"schema":{"type":"object","additionalProperties":false}}},"store":false,"service_tier":"default","background":false,"stream":false,"tool_choice":"none","tools":[],"truncation":"disabled","max_output_tokens":4096,"prompt_cache_options":{"mode":"explicit"},"instructions":"closed instruction","input":"closed input"}
+            """u8.ToArray();
         ProviderReplayPayload replay = new()
         {
             OperationId = new OperationId { Value = "operation-1" },
@@ -1231,9 +1232,9 @@ public sealed class ProviderContractJsonCodecTests
             OwnerId = "acquisition-1",
             JobNodeId = "job-1",
             EffectiveConfigurationV2Id = "config-v2-1",
-            InputBoundProofStatus = InputBoundProofStatus.AuthorityRequired,
-            InputBoundPolicyId = "unresolved-openai-responses-framing",
-            InputBoundPolicyVersion = "authority-required",
+            InputBoundProofStatus = InputBoundProofStatus.Proved,
+            InputBoundPolicyId = OpenAiResponsesInputBoundPolicy.PolicyId,
+            InputBoundPolicyVersion = OpenAiResponsesInputBoundPolicy.PolicyVersion,
             InstallationSnapshotId = "install-1",
             AnalysisContextId = "context-1",
             ResolvedInputManifestId = "manifest-1",
@@ -1248,8 +1249,8 @@ public sealed class ProviderContractJsonCodecTests
             RequestFingerprintSha256 = ByteString.CopyFrom(SHA256.HashData(replayBytes)),
         };
         SubmitProviderOperationRequest submitRoundTrip = SubmitProviderOperationRequest.Parser.ParseFrom(submit.ToByteArray());
-        Assert.ThrowsExactly<NotSupportedException>(() => ApplicationProviderContractValidator.Validate(submitRoundTrip));
-        Assert.ThrowsExactly<NotSupportedException>(() => ApplicationProviderContractValidator.RequireDispatchAdmission(submitRoundTrip));
+        ApplicationProviderContractValidator.Validate(submitRoundTrip);
+        ApplicationProviderContractValidator.RequireDispatchAdmission(submitRoundTrip);
         SubmitProviderOperationRequest fingerprintMismatch = submit.Clone();
         fingerprintMismatch.RequestFingerprintSha256 = ByteString.CopyFrom(new byte[32]);
         Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(fingerprintMismatch));
@@ -1556,13 +1557,13 @@ public sealed class ProviderContractJsonCodecTests
         ProviderResponsePayload cancelledResponse = unavailableResponse.Clone();
         cancelledResponse.ResponseState = "cancelled";
         cancelledResponse.InputBoundProofStatus = InputBoundProofStatus.Proved;
-        cancelledResponse.InputBoundPolicyId = "accepted-policy";
-        cancelledResponse.InputBoundPolicyVersion = "1";
+        cancelledResponse.InputBoundPolicyId = OpenAiResponsesInputBoundPolicy.PolicyId;
+        cancelledResponse.InputBoundPolicyVersion = OpenAiResponsesInputBoundPolicy.PolicyVersion;
         cancelledResponse.AuthorizationId = "authorization-cancelled";
         cancelledResponse.AttemptId = new AttemptId { Value = "attempt-cancelled" };
         cancelledResponse.RequestId = "request-cancelled";
         cancelledResponse.ReservationId = new ReservationGroupId { Value = "reservation-cancelled" };
-        Assert.ThrowsExactly<NotSupportedException>(() => ApplicationProviderContractValidator.Validate(cancelledResponse));
+        ApplicationProviderContractValidator.Validate(cancelledResponse);
         cancelledResponse.ResponseHeadersAvailability = AppProviderAvailabilityState.Unsupported;
         Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(cancelledResponse));
         cancelledResponse.ResponseHeadersAvailability = AppProviderAvailabilityState.Unavailable;
@@ -1577,8 +1578,8 @@ public sealed class ProviderContractJsonCodecTests
         retainedOverrun.ReservationId = new ReservationGroupId { Value = "reservation-overrun" };
         retainedOverrun.DispatchFenceId = new DispatchId { Value = "fence-overrun" };
         retainedOverrun.InputBoundProofStatus = InputBoundProofStatus.Proved;
-        retainedOverrun.InputBoundPolicyId = "accepted-policy";
-        retainedOverrun.InputBoundPolicyVersion = "1";
+        retainedOverrun.InputBoundPolicyId = OpenAiResponsesInputBoundPolicy.PolicyId;
+        retainedOverrun.InputBoundPolicyVersion = OpenAiResponsesInputBoundPolicy.PolicyVersion;
         retainedOverrun.Availability = AppProviderAvailabilityState.Available;
         retainedOverrun.UsageAvailability = AppProviderAvailabilityState.Available;
         retainedOverrun.RawResponseAvailability = AppProviderAvailabilityState.Available;
@@ -1610,7 +1611,7 @@ public sealed class ProviderContractJsonCodecTests
         retainedOverrun.Limits.MaximumInputTokens = 16;
         retainedOverrun.Limits.MaximumOutputTokens = 8;
         retainedOverrun.Limits.MaximumCalculatedNanoUsd = 40;
-        Assert.ThrowsExactly<NotSupportedException>(() => ApplicationProviderContractValidator.Validate(retainedOverrun));
+        ApplicationProviderContractValidator.Validate(retainedOverrun);
 
         ApplicationProviderContractValidator.Validate(replay);
         replay.NetworkPermitted = true;
@@ -1998,8 +1999,8 @@ public sealed class ProviderContractJsonCodecTests
     private static OptionalProviderQuantity AvailableApplicationQuantity(ulong value) =>
         new() { Availability = AppProviderAvailabilityState.Available, Value = value };
     private static ProviderInputBoundProofContract BlockedProof() => new(
-        ProviderOperationContractInvariants.LocalInputBoundPolicyId,
-        ProviderOperationContractInvariants.LocalInputBoundPolicyVersion,
+        ProviderOperationContractInvariants.UnresolvedInputBoundPolicyId,
+        ProviderOperationContractInvariants.UnresolvedInputBoundPolicyVersion,
         ProviderInputBoundProofState.AuthorityRequired);
     private static OpaqueId Id(string value) => new(value);
     private delegate T Deserialize<T>(ReadOnlySpan<byte> bytes);

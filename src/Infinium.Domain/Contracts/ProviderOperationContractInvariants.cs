@@ -4,9 +4,11 @@ public static class ProviderOperationContractInvariants
 {
     public const long MaximumCanonicalRequestBytes = 65_536;
     public const long MaximumLocallyAdmittedInputTokens = 73_728;
-    public const string LocalInputBoundProofStatus = "authority-required";
-    public const string LocalInputBoundPolicyId = "unresolved-openai-responses-framing";
-    public const string LocalInputBoundPolicyVersion = "authority-required";
+    public const string LocalInputBoundProofStatus = "proved";
+    public const string LocalInputBoundPolicyId = "openai-responses-o200k-byte-envelope";
+    public const string LocalInputBoundPolicyVersion = "v1";
+    public const string UnresolvedInputBoundPolicyId = "unresolved-openai-responses-framing";
+    public const string UnresolvedInputBoundPolicyVersion = "authority-required";
 
     public static void RequireLocalInputBoundProof(long canonicalRequestBytes)
     {
@@ -14,15 +16,17 @@ public static class ProviderOperationContractInvariants
         {
             throw new ArgumentOutOfRangeException(nameof(canonicalRequestBytes));
         }
-        throw new NotSupportedException(
-            "WP1 has no accepted repository-local tokenizer or framing grammar from which to prove the framing-inclusive input-token bound.");
+        if (checked(canonicalRequestBytes + 8_192) > MaximumLocallyAdmittedInputTokens)
+        {
+            throw new InvalidOperationException("Canonical UTF-8 bytes plus the accepted semantic structural allowance exceed the Slice 6 ceiling.");
+        }
     }
 
     public static void ValidateBlockedInputBoundProof(ProviderInputBoundProofContract proof)
     {
         ArgumentNullException.ThrowIfNull(proof);
-        if (proof.PolicyId != LocalInputBoundPolicyId
-            || proof.PolicyVersion != LocalInputBoundPolicyVersion
+        if (proof.PolicyId != UnresolvedInputBoundPolicyId
+            || proof.PolicyVersion != UnresolvedInputBoundPolicyVersion
             || proof.Status != ProviderInputBoundProofState.AuthorityRequired)
         {
             throw new InvalidOperationException("The unresolved WP1 input-bound proof must remain explicitly authority-required with no fabricated byte or token bound.");
@@ -31,9 +35,13 @@ public static class ProviderOperationContractInvariants
 
     public static void RequireDispatchableInputBoundProof(ProviderInputBoundProofContract proof)
     {
-        ValidateBlockedInputBoundProof(proof);
-        throw new NotSupportedException(
-            "Provider dispatch is blocked because no accepted repository-local tokenizer/framing proof exists.");
+        ArgumentNullException.ThrowIfNull(proof);
+        if (proof.Status != ProviderInputBoundProofState.Proved
+            || proof.PolicyId != LocalInputBoundPolicyId
+            || proof.PolicyVersion != LocalInputBoundPolicyVersion)
+        {
+            throw new InvalidOperationException("Provider dispatch requires the exact accepted local input-bound policy identity.");
+        }
     }
 
     public static long CalculateComponentNanoUsd(long tokens, ProviderPriceRuleContract rule)
@@ -211,15 +219,8 @@ public static class ProviderOperationContractInvariants
             ValidateOperationStateShape(value);
             return;
         }
-        if (value.InputBoundProof.Status != ProviderInputBoundProofState.Proved
-            || string.IsNullOrWhiteSpace(value.InputBoundProof.PolicyId)
-            || string.IsNullOrWhiteSpace(value.InputBoundProof.PolicyVersion))
-        {
-            throw new InvalidOperationException("A future provider operation requires one explicit proved input-bound policy identity.");
-        }
+        RequireDispatchableInputBoundProof(value.InputBoundProof);
         ValidateOperationStateShape(value);
-        throw new NotSupportedException(
-            "Proof-qualified provider operations are structurally modeled but unreachable until accepted input-bound authority changes the current runtime maturity gate.");
     }
 
     public static void ValidateTransition(ProviderOperationState from, ProviderOperationState to)
@@ -336,8 +337,8 @@ public static class ProviderOperationContractInvariants
         }
         bool cancelled = value.State == ProviderResponseState.Cancelled;
         if (value.InputBoundProof.Status != ProviderInputBoundProofState.Proved
-            || string.IsNullOrWhiteSpace(value.InputBoundProof.PolicyId)
-            || string.IsNullOrWhiteSpace(value.InputBoundProof.PolicyVersion)
+            || value.InputBoundProof.PolicyId != LocalInputBoundPolicyId
+            || value.InputBoundProof.PolicyVersion != LocalInputBoundPolicyVersion
             || (!cancelled && (value.AuthorizationId is null || value.AttemptId is null || value.RequestId is null
                 || value.ReservationId is null || value.DispatchFenceId is null
                 || value.Availability != ProviderAvailabilityState.Available))
@@ -348,7 +349,6 @@ public static class ProviderOperationContractInvariants
             throw new InvalidOperationException("A future provider response requires a proved policy and exact authorization/request/fence binding.");
         }
         ValidateFutureResponseState(value);
-        throw new NotSupportedException("Proof-qualified provider responses are structurally modeled but unreachable until accepted input-bound authority changes the current runtime maturity gate.");
     }
 
     public static void Validate(ProviderExecutionInputDocument value)
@@ -358,7 +358,14 @@ public static class ProviderOperationContractInvariants
         Validate(value.OperationKind, value.Limits);
         Validate(value.CapabilitySnapshot);
         Validate(value.PriceSnapshot);
-        ValidateBlockedInputBoundProof(value.InputBoundProof);
+        if (value.InputBoundProof.Status == ProviderInputBoundProofState.AuthorityRequired)
+        {
+            ValidateBlockedInputBoundProof(value.InputBoundProof);
+        }
+        else
+        {
+            RequireDispatchableInputBoundProof(value.InputBoundProof);
+        }
         if (string.IsNullOrWhiteSpace(value.OperationId.Value)
             || value.OwnerKind is not ("analysis-run" or "evidence-acquisition-run")
             || string.IsNullOrWhiteSpace(value.OwnerId.Value)
@@ -378,9 +385,10 @@ public static class ProviderOperationContractInvariants
             || string.IsNullOrWhiteSpace(value.OutputSchemaId.Value)
             || value.OutputSchemaFingerprint.Value.Length != 64
             || value.CanonicalRequestFingerprint.Value.Length != 64
-            || value.DispatchAdmission != "blocked-authority-required")
+            || value.DispatchAdmission != (value.InputBoundProof.Status == ProviderInputBoundProofState.Proved
+                ? "admitted-local-input-bound" : "blocked-authority-required"))
         {
-            throw new InvalidOperationException("Provider execution input must retain the authority-required dispatch block.");
+            throw new InvalidOperationException("Provider execution input must retain the exact local input-bound admission state.");
         }
     }
 

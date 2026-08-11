@@ -175,6 +175,16 @@
         "resolved": "2.23.0",
         "contentHash": "nWArUZTdU7iqZLycLKWe0TDms48KKGE6pONH2terYNa8REXiqixrMOkf1sk5DHGMaUTqONU2YkS4SAXBhLStgw=="
       },
+      "Microsoft.Bcl.AsyncInterfaces": {
+        "type": "Transitive",
+        "resolved": "9.0.4",
+        "contentHash": "9VGI5kxIvrNG2mqLQZnUR6y/3fcnygD8eNpHR+CqfbnIXvea6nehnYknDKQTxZVPMpzpNca+7DxLBmpdB3q0Bw=="
+      },
+      "Microsoft.Bcl.HashCode": {
+        "type": "Transitive",
+        "resolved": "6.0.0",
+        "contentHash": "GI4jcoi6eC9ZhNOQylIBaWOQjyGaR8T6N3tC1u8p3EXfndLCVNNWa+Zp+ocjvvS3kNBN09Zma2HXL0ezO0dRfw=="
+      },
       "Microsoft.CodeCoverage": {
         "type": "Transitive",
         "resolved": "18.8.1",
@@ -504,7 +514,10 @@
           "Infinium.Bethesda": "[1.0.0, )",
           "Infinium.Domain": "[1.0.0, )",
           "Infinium.Mo2": "[1.0.0, )",
-          "Infinium.Persistence": "[1.0.0, )"
+          "Infinium.Persistence": "[1.0.0, )",
+          "Microsoft.Bcl.Memory": "[9.0.14, )",
+          "Microsoft.ML.Tokenizers": "[2.0.0, )",
+          "Microsoft.ML.Tokenizers.Data.O200kBase": "[2.0.0, )"
         }
       },
       "infinium.bethesda": {
@@ -592,6 +605,12 @@
         "resolved": "2.80.0",
         "contentHash": "NS1AxwVZnrdbBoMf5L5ruGjBjoLBej9avhqxWNsgfu2GU6FhpxEVJOwLJsdljlDCjvquJiAH2zf/WodIWMvf2w=="
       },
+      "Microsoft.Bcl.Memory": {
+        "type": "CentralTransitive",
+        "requested": "[9.0.14, )",
+        "resolved": "9.0.14",
+        "contentHash": "laQCcjTM2FnbyznkAu9hwBuQh3z2/OtJKwjGkJOUevylFpFXZIUVq/+MU2jM0HQm1n5wsjjwtLIDOiWJ6Nai3A=="
+      },
       "Microsoft.Data.Sqlite.Core": {
         "type": "CentralTransitive",
         "requested": "[10.0.10, )",
@@ -599,6 +618,28 @@
         "contentHash": "TPCs0ldm7AWqcKmp6f/Xr+14sat7hx4rHfRlS4RgCURBH2thEWbAKEyX7cCWr63zVJVOJIJZTg2cBiUXa8ys6g==",
         "dependencies": {
           "SQLitePCLRaw.core": "2.1.11"
+        }
+      },
+      "Microsoft.ML.Tokenizers": {
+        "type": "CentralTransitive",
+        "requested": "[2.0.0, )",
+        "resolved": "2.0.0",
+        "contentHash": "+b8lT4cLLO/sBR2hjvE/qG6qrZG15h7/PBvnIrzTh4xDaAxdHUY6449rC+1pHzQUsBiCHZVbj+VMn+xS0sL7TA==",
+        "dependencies": {
+          "Google.Protobuf": "3.30.2"
+        }
+      },
+      "Microsoft.ML.Tokenizers.Data.O200kBase": {
+        "type": "CentralTransitive",
+        "requested": "[2.0.0, )",
+        "resolved": "2.0.0",
+        "contentHash": "19G0KWrRnUZmc8vGdPNuBJqTruhAjzPLRY2nn6a/HiBXbEnE/Lx9L223jGlDzg1oAcCggo/8GlWw3ZLVuS76Ow==",
+        "dependencies": {
+          "Google.Protobuf": "3.30.2",
+          "Microsoft.Bcl.AsyncInterfaces": "9.0.4",
+          "Microsoft.Bcl.HashCode": "6.0.0",
+          "Microsoft.Bcl.Memory": "9.0.4",
+          "Microsoft.ML.Tokenizers": "2.0.0"
         }
       },
       "Mutagen.Bethesda.Skyrim": {

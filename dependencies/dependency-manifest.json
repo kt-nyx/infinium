@@ -34,7 +34,7 @@
       "tests/Infinium.EvaluationTests/packages.lock.json"
     ],
     "emptyProjectLocks": "Project-local locks without external package dependencies",
-    "resolvedPackageCount": 70
+    "resolvedPackageCount": 75
   },
   "directPackages": [
     {
@@ -83,12 +83,39 @@
       "use": "build-time protobuf code generation"
     },
     {
+      "id": "Microsoft.Bcl.Memory",
+      "version": "9.0.14",
+      "license": "MIT",
+      "repository": "https://github.com/dotnet/runtime",
+      "repositoryCommit": "19c07820cb72aafc554c3bc8fe3c54010f5123f0",
+      "nupkgSha512": "riVlQ/ZKS7NT5fpT8oXgg10LRk9CVALRxz6bdXmvHBVOyYBzuo54cxlsoqZJgx7fbUWYAFOEufrEZZDF63r2tg==",
+      "use": "production runtime"
+    },
+    {
       "id": "Microsoft.Data.Sqlite.Core",
       "version": "10.0.10",
       "license": "MIT",
       "repository": "https://github.com/dotnet/dotnet",
       "repositoryCommit": "f7d90799ce4ef09a0bb257852a57248d2a8fb8dd",
       "nupkgSha512": "cjobd7/jlmmCygJCJWstwyDth4xO2UgGgNddkbcWrCcBP6X+UzgAxQx8YADlAEasEK9dvEjjyk64hcbtZbwssQ==",
+      "use": "production runtime"
+    },
+    {
+      "id": "Microsoft.ML.Tokenizers",
+      "version": "2.0.0",
+      "license": "MIT",
+      "repository": "https://github.com/dotnet/machinelearning",
+      "repositoryCommit": "efefa92f4486a43047c5b47618885a71bf7f0967",
+      "nupkgSha512": "yeYLmXdFz1mcStgBlCpM+N/zrLhWTC2SN3iX/QZUF7GuS29Frqns3FjoOlBUqgJ8zvPOFWEJrm39ETKamkoVXA==",
+      "use": "production runtime"
+    },
+    {
+      "id": "Microsoft.ML.Tokenizers.Data.O200kBase",
+      "version": "2.0.0",
+      "license": "MIT",
+      "repository": "https://github.com/dotnet/machinelearning",
+      "repositoryCommit": "efefa92f4486a43047c5b47618885a71bf7f0967",
+      "nupkgSha512": "riFmuV/E+WZ1r/G6XtRkgvLZgfoBobwFiRbNnS4dt400kOPWzKgB/DFTC2uEmSAmqpOdLzy+YzLV5NL2ysbyRQ==",
       "use": "production runtime"
     },
     {
@@ -254,6 +281,21 @@
       "license": "MIT"
     },
     {
+      "id": "Microsoft.Bcl.AsyncInterfaces",
+      "version": "9.0.4",
+      "license": "MIT"
+    },
+    {
+      "id": "Microsoft.Bcl.HashCode",
+      "version": "6.0.0",
+      "license": "MIT"
+    },
+    {
+      "id": "Microsoft.Bcl.Memory",
+      "version": "9.0.14",
+      "license": "MIT"
+    },
+    {
       "id": "Microsoft.CodeCoverage",
       "version": "18.8.1",
       "license": "MIT"
@@ -326,6 +368,16 @@
     {
       "id": "Microsoft.Extensions.Primitives",
       "version": "8.0.0",
+      "license": "MIT"
+    },
+    {
+      "id": "Microsoft.ML.Tokenizers.Data.O200kBase",
+      "version": "2.0.0",
+      "license": "MIT"
+    },
+    {
+      "id": "Microsoft.ML.Tokenizers",
+      "version": "2.0.0",
       "license": "MIT"
     },
     {
@@ -534,6 +586,21 @@
         "Microsoft.TestPlatform.ObjectModel/18.8.1",
         "Microsoft.TestPlatform.TestHost/18.8.1"
       ]
+    },
+    {
+      "repository": "https://github.com/dotnet/machinelearning",
+      "commit": "efefa92f4486a43047c5b47618885a71bf7f0967",
+      "packages": [
+        "Microsoft.ML.Tokenizers/2.0.0",
+        "Microsoft.ML.Tokenizers.Data.O200kBase/2.0.0"
+      ]
+    },
+    {
+      "repository": "https://github.com/dotnet/runtime",
+      "commit": "19c07820cb72aafc554c3bc8fe3c54010f5123f0",
+      "packages": [
+        "Microsoft.Bcl.Memory/9.0.14"
+      ]
     }
   ],
   "individuallyVerifiedProvenance": [
@@ -601,6 +668,16 @@
       "package": "Microsoft.ApplicationInsights/2.23.0",
       "repository": "https://github.com/Microsoft/ApplicationInsights-dotnet",
       "commit": "2faa7e8b157a431daa2e71785d68abd5fa817b53"
+    },
+    {
+      "package": "Microsoft.Bcl.AsyncInterfaces/9.0.4",
+      "repository": "https://github.com/dotnet/runtime",
+      "commit": "f57e6dc747158ab7ade4e62a75a6750d16b771e8"
+    },
+    {
+      "package": "Microsoft.Bcl.HashCode/6.0.0",
+      "repository": "https://github.com/dotnet/maintenance-packages",
+      "commit": "d0c2a5a83211e271826172a6b0510c25a52dbd53"
     },
     {
       "package": "Microsoft.Data.Sqlite.Core/10.0.10",

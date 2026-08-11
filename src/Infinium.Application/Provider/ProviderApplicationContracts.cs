@@ -103,7 +103,7 @@ public static class ProviderApplicationContractInvariants
     {
         ArgumentNullException.ThrowIfNull(command);
         ProviderOperationContractInvariants.Validate(command.OperationKind, command.Limits);
-        ProviderOperationContractInvariants.ValidateBlockedInputBoundProof(command.InputBoundProof);
+        OpenAiResponsesInputBoundPolicy.ValidateProofIdentity(command.InputBoundProof);
         if (command.OwnerKind is not ("analysis-run" or "evidence-acquisition-run")
             || command.RevocationEpoch < 0 || command.CoordinatorFencingEpoch <= 0
             || command.CanonicalRequestBytes <= 0 || command.CanonicalRequestBytes > command.Limits.MaximumRequestBytes
@@ -120,6 +120,14 @@ public static class ProviderApplicationContractInvariants
         {
             throw new InvalidOperationException("Provider confirmation must retain exact owner, snapshot, configuration, proof, deadline, and fencing bindings.");
         }
-        throw new NotSupportedException("Provider confirmation is blocked until an accepted local input-bound policy exists.");
+        ProviderInputBoundEvidence evidence = OpenAiResponsesInputBoundPolicy.Prove(
+            command.OperationKind,
+            command.CanonicalRequest,
+            command.Limits);
+        if (evidence.Proof != command.InputBoundProof
+            || evidence.CanonicalRequestFingerprint != command.CanonicalRequestFingerprint)
+        {
+            throw new InvalidOperationException("Provider confirmation input-bound evidence does not match the exact canonical request.");
+        }
     }
 }

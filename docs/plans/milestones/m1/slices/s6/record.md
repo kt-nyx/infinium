@@ -1954,3 +1954,93 @@ repository, legacy/evaluator archive, current-state, WP2/WP3, or push action
 occurred. `StateTotality` remains blocked independently by the repository-local
 tokenizer/provider-framing authority gap; this verification correction does
 not represent that gate as passing or accept WP1.
+
+## Owner-authorized WP1 local input-bound closure — 2026-08-11
+
+The project owner selected the conservative repository-local alternative
+already accepted by Slice 6 section 5 and ADR-0023. The selected versioned
+policy is `openai-responses-o200k-byte-envelope/v1`; it pins model
+`gpt-5.6-sol` to encoding `o200k_base` without mutable model lookup. This
+entry records implementation evidence only. The nine Slice 6 contracts remain
+`Proposed`, WP1 remains `Deferred` pending the separately commissioned final
+read-only convergence review, and `docs/current-state.md` remains unchanged.
+
+### Exact offline proof and closed input shape
+
+- The policy hashes and retains exact canonical UTF-8 bytes, exact ordinary
+  o200k token IDs and count, and a little-endian token-ID fingerprint. The
+  strict closed request contains the accepted profile, inline output schema,
+  instruction, and input. Unknown fields, tools, files, images, multi-turn
+  input, previous-response state, and malformed UTF-8 reject locally. No
+  provider token-count preflight is used.
+- For canonical byte count `B`, exact local token count `T`, structural
+  allowance `A`, and admitted upper bound `U`, the proved invariant is
+  `T <= B` and `U = B + A`. Qualification uses `A = 4,096` with
+  `B <= 16,384` and `U <= 20,480`; both semantic operations use `A = 8,192`
+  with `B <= 65,536` and `U <= 73,728`. Boundary and one-over cases pass for
+  all three operations.
+- The frozen qualification golden is 502 canonical bytes and 120 o200k
+  tokens. Its request SHA-256 is
+  `26d04987ee43cb1ff581ccb32de900419515c4c8f99019e135cc0c44a2740a57`;
+  its token-ID SHA-256 is
+  `7af38412f5fb1630d984e59a252e6b5fba06f38ca94e800a6838cec05048cd52`.
+- Provider operation/response/execution-input schemas, domain invariants, and
+  application validation admit only the exact proved policy identity. This is
+  a WP1 representable contract shape, not WP2 coordinator dispatch or WP3
+  helper-process execution.
+
+### Pinned dependency and research evidence
+
+- `Microsoft.ML.Tokenizers/2.0.0` is locked at content hash
+  `+b8lT4cLLO/sBR2hjvE/qG6qrZG15h7/PBvnIrzTh4xDaAxdHUY6449rC+1pHzQUsBiCHZVbj+VMn+xS0sL7TA==`.
+  `Microsoft.ML.Tokenizers.Data.O200kBase/2.0.0` is locked at content hash
+  `19G0KWrRnUZmc8vGdPNuBJqTruhAjzPLRY2nn6a/HiBXbEnE/Lx9L223jGlDzg1oAcCggo/8GlWw3ZLVuS76Ow==`.
+  The embedded `o200k_base.tiktoken.deflate` resource makes tokenizer
+  construction offline after locked restore.
+- The data package's vulnerable declared `Microsoft.Bcl.Memory/9.0.4`
+  dependency is overridden by the exact audited patched 9.x release
+  `Microsoft.Bcl.Memory/9.0.14`, rather than disabling NuGet audit. All three
+  packages are MIT and have exact source commits in dependency curation.
+- RESEARCH-0055 retains primary Microsoft, NuGet, OpenAI, and security-advisory
+  sources; exact-versus-conservative scope; the owner decision; and the
+  conclusion that the accepted plan/ADR alternative needs no amendment.
+  Public research and NuGet/source retrieval were the only authorized network
+  activity. No provider endpoint or credential was used.
+
+### Verification and retained receipts
+
+1. Locked restore and the final Release solution build passed with zero audit
+   warnings, compiler warnings, or errors. Focused domain/finite/lifecycle
+   checks passed 20/0/0, input-bound policy checks 7/0/0, provider/helper/output
+   codec checks 21/0/0, and schema-6/persistence/backup-restore checks 17/0/0.
+2. `Contracts` passed 21/0/0. `StateSurfaces` and `StateTotality` each passed
+   27/0/0 state checks and 17/0/0 persistence/relational/adversarial checks.
+   `StateTotality` now truthfully records `passed` only because the exact
+   policy proof is available; its receipt retains network and credential
+   permissions as false and says dispatch is contract-shape only.
+3. The final Release category matrix passed: Unit 183/0/1; Contract 126/0/0;
+   Integration 70/0/0; Evaluation 75/0/8; Security 111/0/3; and Fault
+   105/0/3. The unfiltered solution passed Unit 191/0/1, Contract 154/0/0,
+   Integration 68/0/0, and Evaluation 53/0/8.
+4. The complete non-live analysis pipeline passed Contracts, Documentation,
+   Candidates, CandidateScale, Cases, Replay, Output, Safety, Traceability,
+   Comprehensive, and All. The exact evidence root is
+   `artifacts/m1-slice6/wp1-input-bound-final`. Receipt SHA-256 identities are
+   `Contracts`
+   `d68410bf451e7b3d612c6cf103e83616c7762866bcfded64787f2906f9ba4b3c`,
+   `StateSurfaces`
+   `482de2a237cee9bee70b04a8ef06a4a4af3e1d890bfc9bf81c2bb8250f4664c1`,
+   `StateTotality`
+   `480ec6300c47ed0a04256309b9300af36258763a50f813300a4eb940a057730b`.
+   The final analysis `All` receipt is retained below the same evidence root;
+   its documentation digest necessarily precedes this append-only record.
+5. Format verification, dependency-manifest check, documentation validation,
+   changed-JSON parsing, diff checks, fixed-policy/package/hash/license/source
+   drift tests, embedded-resource construction, frozen Slice 5 v1 byte and
+   semantic compatibility, frozen acceptance-ledger bytes, current-state
+   immutability, protected/private/archive absence, and forbidden secret/live-
+   effect scans passed.
+
+No Credential Manager, native credential, provider request, private fixture,
+sibling repository, legacy/evaluator archive, WP2/WP3 implementation,
+current-state advance, amend, push, or frozen Slice 5 v1 edit occurred.

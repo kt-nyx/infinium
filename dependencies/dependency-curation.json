@@ -56,6 +56,21 @@
         "Microsoft.TestPlatform.ObjectModel/18.8.1",
         "Microsoft.TestPlatform.TestHost/18.8.1"
       ]
+    },
+    {
+      "repository": "https://github.com/dotnet/machinelearning",
+      "commit": "efefa92f4486a43047c5b47618885a71bf7f0967",
+      "packages": [
+        "Microsoft.ML.Tokenizers/2.0.0",
+        "Microsoft.ML.Tokenizers.Data.O200kBase/2.0.0"
+      ]
+    },
+    {
+      "repository": "https://github.com/dotnet/runtime",
+      "commit": "19c07820cb72aafc554c3bc8fe3c54010f5123f0",
+      "packages": [
+        "Microsoft.Bcl.Memory/9.0.14"
+      ]
     }
   ]
 }
