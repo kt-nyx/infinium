@@ -1344,3 +1344,99 @@ private evidence was invented. No network/DNS/provider, Credential Manager,
 native credential, private fixture, sibling repository, legacy/evaluator
 archive, later-package, current-state, push, amend, or frozen Slice 5 v1 edit
 occurred.
+
+## Eleventh-cycle binding, deletion, cancellation, and chronology correction — 2026-08-11
+
+Fresh review rejected candidate `5c834b2804cdea9ceff46987f250b83ea590c070`.
+The five findings were recoverable WP1 implementation/evidence defects, not
+authority conflicts.
+
+### Corrected exact seams
+
+- Helper-v2 assignment decoding now requires the caller's exact positive
+  credential generation ordinal in addition to the existing profile,
+  generation, revocation, assignment-kind, and subject bindings. Omitting or
+  rebinding the redundant ordinal fails before credential work or the
+  deliberately blocked provider-dispatch path can proceed.
+- A redacted `deleted` provider-profile projection now requires an exact
+  completed delete intent from `delete-pending` to `deleted` and its same-root
+  immutable version-one pending plus version-two terminal event chain. Direct
+  materialization rejects; the exact chain succeeds while retaining no
+  profile account, capability, or intent identifier.
+- Cancelled responses now work with SQLite foreign keys enabled against either
+  an exact durable blocked-operation root or an exact authorization root. The
+  inert authorization-only limit foreign keys were replaced by explicit owner,
+  operation-kind, and finite-limit equality. Missing roots, substituted owners
+  or limits, and every prior transport event reject, proving the cancellation
+  is undispatched rather than inferring that fact from null transport fields.
+- Provider usage creation must be at or after its exact response creation;
+  finalization continues to require both response and usage at or before
+  finalization. Executable inversion checks cover every edge.
+- Semantic proposals require source revision, candidate, application link,
+  and evidence-acquisition owner roots to exist by proposal creation. Source,
+  candidate, and both application-link inversions reject; exact earlier roots
+  succeed. Proposal-to-validation and validation-to-admission chronology
+  remains enforced.
+- The traceability inventory was audited and regenerated twice with identical
+  bytes. No contract field moved or gained a false seam.
+
+The nine Slice 6 contracts remain `Proposed`; WP1 remains `Deferred` solely on
+the absent accepted repository-local input-bound tokenizer/provider-framing
+proof. This correction does not accept WP1, authorize native credential or
+live provider work, advance `docs/current-state.md`, or unblock WP2.
+
+### Superseding identities and exact blocked receipt root
+
+- Schema-6 fingerprint:
+  `6d8d14eecc90f875a6c97a4814d57c6435cd39f00724bf4cf0217d790dbae6bf`.
+- Helper-v2 transitive fingerprint (unchanged):
+  `edd9f428df33a5c8f1b9aa8145799be99afbd5c9c98c9b7572d903865e026ca3`.
+- Full application protobuf-set fingerprint (unchanged):
+  `a6e5c5164f84a65f923f1e837419c494f4cb071c240d35d96359dae529722ed1`.
+- Answer-free example: 15,186 bytes,
+  `1d0a5c52ec05a8c85689ad8868f79644130825686aa2ac6bafef345ede707f96`.
+- Public registry: 8,790 bytes,
+  `5714f9e0829a3cef3e6b5eb7eacc75f10016dea167523d88c17f4e83c01e230a`.
+- Per-field traceability: 986,918 bytes,
+  `a93d1e7d2af1329b727fd587e219a7340356c37fe00ff8c38700852c303c10be`.
+- Exact gate `OutputRoot`: `artifacts/m1-slice6/wp1-eleventh`.
+- Receipt SHA-256 identities: `Contracts`
+  `9179d667671e4fc4dfda94db1431ca7f1aff9c4c413eb35e7192985ea94fa2a0`,
+  `StateSurfaces`
+  `7045e527bfb22d550f44c267733569bcba91d6877db1e15ba1c26bc4d87d871e`,
+  and `StateTotality`
+  `fad7861fe39b719cddaf10cfe7cb69995f6495a9bb41e8e347ae2c4027b06434`.
+
+### Eleventh-cycle verification
+
+1. Final Release solution build passed with zero warnings and zero errors.
+   Focused provider contracts passed 19/0/0, helper/provider/run-output
+   contracts passed 19/0/0, and schema-6/persistence/backup/restore checks
+   passed 10/0/0. The generation-ordinal, delete-chain, foreign-key-on blocked
+   and authorized cancellation-root, owner/limit/transport substitution,
+   response/usage, source/candidate/application-root, validation, and admission
+   adversaries all passed.
+2. `Contracts` passed 19/0/0. `StateSurfaces` passed 19/0/0 state checks and
+   10/0/0 migration/relational/adversarial checks. `StateTotality` ran the
+   same 29 green checks, wrote `blocked-authority-required` with network and
+   credential permissions false and the superseding schema fingerprint, then
+   exited 1 solely because the accepted repository-local tokenizer/provider-
+   framing proof is absent.
+3. The final Release category matrix passed: Unit 168/0/1; Contract 124/0/0;
+   Integration 70/0/0; Evaluation 75/0/8; Security 111/0/3; and Fault
+   105/0/3. The final unfiltered Release solution passed Unit 176/0/1,
+   Contract 152/0/0, Integration 68/0/0, and Evaluation 53/0/8.
+4. The complete non-live analysis pipeline passed Contracts, Documentation,
+   Candidates, CandidateScale, Cases, Replay, Output, Safety, Traceability,
+   Comprehensive, and All. Deterministic trace regeneration was byte-
+   identical. `dotnet format --verify-no-changes`, dependency-manifest check,
+   documentation validation, `git diff --check`, current-state and frozen
+   Slice 5 v1 immutability, protected-path and answer-isolation checks, public-
+   fixture scope, and forbidden secret/live-effect scans passed. No dependency
+   change required a restore.
+
+No proof, gate result, owner acceptance, credential, provider response, or
+private evidence was invented. No network/DNS/provider, Credential Manager,
+native credential, private fixture, sibling repository, legacy/evaluator
+archive, later-package, current-state, push, amend, or frozen Slice 5 v1 edit
+occurred.

@@ -18,6 +18,7 @@ public static class HelperProtocolV2Codec
         string? expectedAttemptId = null,
         string? expectedProfileId = null,
         string? expectedGenerationId = null,
+        ulong? expectedGenerationOrdinal = null,
         string? expectedRequestId = null,
         string? expectedDispatchId = null,
         byte[]? expectedRequestFingerprintSha256 = null,
@@ -60,7 +61,8 @@ public static class HelperProtocolV2Codec
         }
         RejectUnknownFields(frame, "$frame");
         Validate(frame, now, expectedAssignmentId, expectedCommandId, expectedOperationId,
-            expectedAttemptId, expectedProfileId, expectedGenerationId, expectedRequestId,
+            expectedAttemptId, expectedProfileId, expectedGenerationId, expectedGenerationOrdinal,
+            expectedRequestId,
             expectedDispatchId, expectedRequestFingerprintSha256, expectedInputBoundPolicyId,
             expectedInputBoundPolicyVersion, expectedCoordinatorFencingEpoch, expectedCapabilitySnapshotId,
             expectedPriceSnapshotId, expectedSettings, expectedOutputSchema, expectedEffectiveConfigurationId,
@@ -95,6 +97,7 @@ public static class HelperProtocolV2Codec
         string? expectedAttemptId,
         string? expectedProfileId,
         string? expectedGenerationId,
+        ulong? expectedGenerationOrdinal,
         string? expectedRequestId,
         string? expectedDispatchId,
         byte[]? expectedRequestFingerprintSha256,
@@ -167,6 +170,7 @@ public static class HelperProtocolV2Codec
             case HelperPrivateFrameV2.PayloadOneofCase.Assignment:
                 Validate(frame.Assignment, now, expectedAssignmentId, expectedCommandId,
                     expectedOperationId, expectedAttemptId, expectedProfileId, expectedGenerationId,
+                    expectedGenerationOrdinal,
                     expectedRequestId, expectedDispatchId, expectedRequestFingerprintSha256,
                     expectedInputBoundPolicyId, expectedInputBoundPolicyVersion, expectedRevocationEpoch,
                     expectedAccountIdentityId, expectedBillingScopeIdentityId, expectedReservationGroupId,
@@ -213,6 +217,7 @@ public static class HelperProtocolV2Codec
         string? expectedAttemptId,
         string? expectedProfileId,
         string? expectedGenerationId,
+        ulong? expectedGenerationOrdinal,
         string? expectedRequestId,
         string? expectedDispatchId,
         byte[]? expectedRequestFingerprintSha256,
@@ -243,7 +248,8 @@ public static class HelperProtocolV2Codec
         if (!Enum.IsDefined(value.AssignmentKind) || value.AssignmentKind == HelperAssignmentKindV2.Unspecified
             || expectedAssignmentKind is null or HelperAssignmentKindV2.Unspecified
             || value.AssignmentKind != expectedAssignmentKind
-            || value.GenerationOrdinal == 0)
+            || expectedGenerationOrdinal is null or 0
+            || value.GenerationOrdinal != expectedGenerationOrdinal)
         {
             throw new InvalidDataException("Helper v2 assignment uses an unknown numeric state or incomplete binding.");
         }

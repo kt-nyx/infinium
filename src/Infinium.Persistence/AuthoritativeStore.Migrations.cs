@@ -2601,10 +2601,6 @@ public sealed partial class AuthoritativeStore
               REFERENCES provider_operation_authorizations(authorization_id,operation_id) ON DELETE RESTRICT,
             FOREIGN KEY(authorization_id,operation_id,owner_kind,owner_id)
               REFERENCES provider_operation_authorizations(authorization_id,operation_id,owner_kind,owner_id) ON DELETE RESTRICT,
-            FOREIGN KEY(operation_id,maximum_raw_response_bytes)
-              REFERENCES provider_operation_authorizations(operation_id,maximum_raw_response_bytes) ON DELETE RESTRICT,
-            FOREIGN KEY(operation_id,operation_kind,maximum_input_tokens,maximum_output_tokens,maximum_raw_response_bytes,maximum_calculated_nano_usd)
-              REFERENCES provider_operation_authorizations(operation_id,operation_kind,maximum_input_tokens,maximum_output_tokens,maximum_raw_response_bytes,maximum_calculated_nano_usd) ON DELETE RESTRICT,
             FOREIGN KEY(raw_response_payload_id,raw_response_fingerprint,raw_response_bytes)
               REFERENCES payloads(payload_id,content_sha256,byte_length) ON DELETE RESTRICT,
             FOREIGN KEY(response_headers_payload_id,response_headers_fingerprint,response_headers_bytes)
@@ -2703,6 +2699,16 @@ public sealed partial class AuthoritativeStore
         WHEN NEW.response_state <> 'cancelled'
         BEGIN
           SELECT CASE WHEN NOT EXISTS(
+            SELECT 1 FROM provider_operation_authorizations a
+            WHERE a.authorization_id = NEW.authorization_id AND a.operation_id = NEW.operation_id
+              AND a.owner_kind = NEW.owner_kind AND a.owner_id = NEW.owner_id
+              AND a.operation_kind = NEW.operation_kind
+              AND a.maximum_input_tokens = NEW.maximum_input_tokens
+              AND a.maximum_output_tokens = NEW.maximum_output_tokens
+              AND a.maximum_raw_response_bytes = NEW.maximum_raw_response_bytes
+              AND a.maximum_calculated_nano_usd = NEW.maximum_calculated_nano_usd)
+            THEN RAISE(ABORT, 'provider response requires exact authorization owner and finite limits') END;
+          SELECT CASE WHEN NOT EXISTS(
             SELECT 1 FROM provider_transport_events e
             WHERE e.operation_id = NEW.operation_id AND e.provider_attempt_id = NEW.provider_attempt_id
               AND e.request_id = NEW.request_id AND e.dispatch_fence_id = NEW.dispatch_fence_id
@@ -2717,10 +2723,24 @@ public sealed partial class AuthoritativeStore
           SELECT CASE WHEN NOT EXISTS(
             SELECT 1 FROM provider_operation_blocks b WHERE b.operation_id = NEW.operation_id
               AND b.owner_kind = NEW.owner_kind AND b.owner_id = NEW.owner_id
+              AND b.operation_kind = NEW.operation_kind
+              AND b.maximum_input_tokens = NEW.maximum_input_tokens
+              AND b.maximum_output_tokens = NEW.maximum_output_tokens
+              AND b.maximum_raw_response_bytes = NEW.maximum_raw_response_bytes
+              AND b.maximum_calculated_nano_usd = NEW.maximum_calculated_nano_usd
             UNION ALL
             SELECT 1 FROM provider_operation_authorizations a WHERE a.operation_id = NEW.operation_id
-              AND a.owner_kind = NEW.owner_kind AND a.owner_id = NEW.owner_id)
+              AND a.owner_kind = NEW.owner_kind AND a.owner_id = NEW.owner_id
+              AND a.operation_kind = NEW.operation_kind
+              AND a.maximum_input_tokens = NEW.maximum_input_tokens
+              AND a.maximum_output_tokens = NEW.maximum_output_tokens
+              AND a.maximum_raw_response_bytes = NEW.maximum_raw_response_bytes
+              AND a.maximum_calculated_nano_usd = NEW.maximum_calculated_nano_usd)
             THEN RAISE(ABORT, 'cancelled provider response requires exact durable operation owner root') END;
+          SELECT CASE WHEN EXISTS(
+            SELECT 1 FROM provider_transport_events e
+            WHERE e.operation_id = NEW.operation_id AND e.occurred_at <= NEW.created_at)
+            THEN RAISE(ABORT, 'cancelled provider response requires an undispatched operation with no transport event') END;
         END;
         CREATE TABLE provider_usage_entries(
             usage_entry_id TEXT PRIMARY KEY,
@@ -2779,6 +2799,7 @@ public sealed partial class AuthoritativeStore
             WHERE r.response_record_id = NEW.response_record_id
               AND r.operation_id = NEW.operation_id AND r.provider_attempt_id IS NEW.provider_attempt_id
               AND r.request_id IS NEW.request_id AND r.dispatch_fence_id IS NEW.dispatch_fence_id
+              AND r.created_at <= NEW.created_at
               AND r.availability = NEW.availability AND r.usage_availability = NEW.availability
               AND r.billing_availability = NEW.billing_availability
               AND r.rate_availability = NEW.rate_availability
@@ -2992,9 +3013,13 @@ public sealed partial class AuthoritativeStore
                 WHERE a.authorization_id = NEW.authorization_id AND a.operation_id = NEW.operation_id
                   AND a.operation_kind = 'source-claim-extraction'
                   AND a.evidence_acquisition_run_id = NEW.owner_id)
-              OR NOT EXISTS(SELECT 1 FROM documentation_revisions d WHERE d.documentation_revision_id = NEW.root_subject_id)
+              OR NOT EXISTS(SELECT 1 FROM documentation_revisions d
+                WHERE d.documentation_revision_id = NEW.root_subject_id AND d.created_at <= NEW.created_at)
               OR NOT EXISTS(SELECT 1 FROM evidence_acquisition_application_links link
-                WHERE link.application_link_id = NEW.application_link_id AND link.acquisition_run_id = NEW.owner_id))
+                WHERE link.application_link_id = NEW.application_link_id AND link.acquisition_run_id = NEW.owner_id
+                  AND link.created_at <= NEW.created_at)
+              OR NOT EXISTS(SELECT 1 FROM evidence_acquisition_runs acquisition
+                WHERE acquisition.acquisition_run_id = NEW.owner_id AND acquisition.created_at <= NEW.created_at))
               THEN RAISE(ABORT, 'source-claim, abstention, and gap proposals must bind exact acquisition, source revision, and application roots')
             WHEN NEW.owner_kind = 'analysis-run' AND (
               NEW.proposal_kind NOT IN ('candidate-hypothesis','abstention','gap')
@@ -3002,9 +3027,11 @@ public sealed partial class AuthoritativeStore
                 WHERE a.authorization_id = NEW.authorization_id AND a.operation_id = NEW.operation_id
                   AND a.operation_kind = 'candidate-investigation' AND a.analysis_run_id = NEW.owner_id)
               OR NOT EXISTS(SELECT 1 FROM analysis_candidates c
-                WHERE c.candidate_id = NEW.root_subject_id AND c.run_id = NEW.owner_id)
+                WHERE c.candidate_id = NEW.root_subject_id AND c.run_id = NEW.owner_id
+                  AND c.created_at <= NEW.created_at)
               OR NOT EXISTS(SELECT 1 FROM evidence_application_links link
-                WHERE link.evidence_application_link_id = NEW.application_link_id AND link.run_id = NEW.owner_id))
+                WHERE link.evidence_application_link_id = NEW.application_link_id AND link.run_id = NEW.owner_id
+                  AND link.created_at <= NEW.created_at))
               THEN RAISE(ABORT, 'candidate, abstention, and gap proposals must bind exact analysis, candidate, and application roots')
           END;
         END;
@@ -3215,6 +3242,38 @@ public sealed partial class AuthoritativeStore
                     WHERE later_event.intent_root_id = current_event.intent_root_id
                       AND later_event.event_version > current_event.event_version)))
             THEN RAISE(ABORT, 'provider profile projection intent root mismatch') END;
+          SELECT CASE WHEN NEW.lifecycle_state = 'deleted' AND NOT EXISTS(
+            SELECT 1 FROM provider_credential_intents terminal_intent
+            JOIN provider_credential_intent_events terminal_event
+              ON terminal_event.intent_id = terminal_intent.intent_id
+             AND terminal_event.event_version = 2
+            JOIN provider_credential_intent_events pending_event
+              ON pending_event.intent_event_id = terminal_event.prior_intent_event_id
+             AND pending_event.intent_root_id = terminal_event.intent_root_id
+             AND pending_event.event_version = 1
+            JOIN provider_credential_intents pending_intent
+              ON pending_intent.intent_id = pending_event.intent_id
+            WHERE terminal_intent.profile_id = NEW.profile_id
+              AND terminal_intent.generation_id = NEW.generation_id
+              AND terminal_intent.intent_kind = 'delete'
+              AND terminal_intent.intent_state = 'completed'
+              AND terminal_intent.from_lifecycle_state = 'delete-pending'
+              AND terminal_intent.to_lifecycle_state = 'deleted'
+              AND terminal_intent.outcome_lifecycle_state = 'deleted'
+              AND terminal_intent.verification_state = NEW.verification_state
+              AND terminal_intent.recovery_disposition = NEW.recovery_disposition
+              AND terminal_intent.cleanup_disposition = NEW.cleanup_disposition
+              AND terminal_intent.account_identity_id IS NULL
+              AND terminal_intent.billing_scope_identity_id IS NULL
+              AND terminal_intent.capability_snapshot_id IS NULL
+              AND pending_intent.profile_id = terminal_intent.profile_id
+              AND pending_intent.generation_id = terminal_intent.generation_id
+              AND pending_intent.intent_kind = terminal_intent.intent_kind
+              AND terminal_event.created_at <= NEW.updated_at
+              AND NOT EXISTS(SELECT 1 FROM provider_credential_intent_events later_event
+                WHERE later_event.intent_root_id = terminal_event.intent_root_id
+                  AND later_event.event_version > terminal_event.event_version))
+            THEN RAISE(ABORT, 'deleted provider profile projection requires exact completed delete event chain') END;
           SELECT CASE WHEN NEW.account_identity_id IS NOT NULL AND NOT EXISTS(
             SELECT 1 FROM provider_access_profiles a WHERE a.profile_id = NEW.profile_id
               AND a.account_identity_id = NEW.account_identity_id
@@ -3261,6 +3320,38 @@ public sealed partial class AuthoritativeStore
                     WHERE later_event.intent_root_id = current_event.intent_root_id
                       AND later_event.event_version > current_event.event_version)))
             THEN RAISE(ABORT, 'provider profile projection intent root mismatch') END;
+          SELECT CASE WHEN NEW.lifecycle_state = 'deleted' AND NOT EXISTS(
+            SELECT 1 FROM provider_credential_intents terminal_intent
+            JOIN provider_credential_intent_events terminal_event
+              ON terminal_event.intent_id = terminal_intent.intent_id
+             AND terminal_event.event_version = 2
+            JOIN provider_credential_intent_events pending_event
+              ON pending_event.intent_event_id = terminal_event.prior_intent_event_id
+             AND pending_event.intent_root_id = terminal_event.intent_root_id
+             AND pending_event.event_version = 1
+            JOIN provider_credential_intents pending_intent
+              ON pending_intent.intent_id = pending_event.intent_id
+            WHERE terminal_intent.profile_id = NEW.profile_id
+              AND terminal_intent.generation_id = NEW.generation_id
+              AND terminal_intent.intent_kind = 'delete'
+              AND terminal_intent.intent_state = 'completed'
+              AND terminal_intent.from_lifecycle_state = 'delete-pending'
+              AND terminal_intent.to_lifecycle_state = 'deleted'
+              AND terminal_intent.outcome_lifecycle_state = 'deleted'
+              AND terminal_intent.verification_state = NEW.verification_state
+              AND terminal_intent.recovery_disposition = NEW.recovery_disposition
+              AND terminal_intent.cleanup_disposition = NEW.cleanup_disposition
+              AND terminal_intent.account_identity_id IS NULL
+              AND terminal_intent.billing_scope_identity_id IS NULL
+              AND terminal_intent.capability_snapshot_id IS NULL
+              AND pending_intent.profile_id = terminal_intent.profile_id
+              AND pending_intent.generation_id = terminal_intent.generation_id
+              AND pending_intent.intent_kind = terminal_intent.intent_kind
+              AND terminal_event.created_at <= NEW.updated_at
+              AND NOT EXISTS(SELECT 1 FROM provider_credential_intent_events later_event
+                WHERE later_event.intent_root_id = terminal_event.intent_root_id
+                  AND later_event.event_version > terminal_event.event_version))
+            THEN RAISE(ABORT, 'deleted provider profile projection requires exact completed delete event chain') END;
           SELECT CASE WHEN NEW.account_identity_id IS NOT NULL AND NOT EXISTS(
             SELECT 1 FROM provider_access_profiles a WHERE a.profile_id = NEW.profile_id
               AND a.account_identity_id = NEW.account_identity_id

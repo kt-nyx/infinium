@@ -512,22 +512,31 @@ public sealed class ProviderContractJsonCodecTests
         };
         Assert.AreEqual(V2AssignmentKind.Enroll, HelperProtocolV2Codec.Decode(
             credentialAssignment.ToByteArray(), HelperNow, "assignment-credential", "command-credential",
-            expectedProfileId: "profile-1", expectedGenerationId: "generation-1", expectedRevocationEpoch: 0,
+            expectedProfileId: "profile-1", expectedGenerationId: "generation-1", expectedGenerationOrdinal: 1,
+            expectedRevocationEpoch: 0,
             expectedPayloadCase: V2Frame.PayloadOneofCase.Assignment, expectedSequence: 12,
             expectedAssignmentKind: V2AssignmentKind.Enroll).Assignment.AssignmentKind);
         Assert.ThrowsExactly<InvalidDataException>(() => HelperProtocolV2Codec.Decode(
             credentialAssignment.ToByteArray(), HelperNow, "assignment-credential", "command-credential",
-            expectedProfileId: "profile-1", expectedGenerationId: "generation-1", expectedRevocationEpoch: 0,
+            expectedProfileId: "profile-1", expectedGenerationId: "generation-1", expectedGenerationOrdinal: 2,
+            expectedRevocationEpoch: 0, expectedPayloadCase: V2Frame.PayloadOneofCase.Assignment,
+            expectedSequence: 12, expectedAssignmentKind: V2AssignmentKind.Enroll));
+        Assert.ThrowsExactly<InvalidDataException>(() => HelperProtocolV2Codec.Decode(
+            credentialAssignment.ToByteArray(), HelperNow, "assignment-credential", "command-credential",
+            expectedProfileId: "profile-1", expectedGenerationId: "generation-1", expectedGenerationOrdinal: 1,
+            expectedRevocationEpoch: 0,
             expectedPayloadCase: V2Frame.PayloadOneofCase.Receipt, expectedSequence: 12,
             expectedAssignmentKind: V2AssignmentKind.Enroll));
         Assert.ThrowsExactly<InvalidDataException>(() => HelperProtocolV2Codec.Decode(
             credentialAssignment.ToByteArray(), HelperNow, "assignment-credential", "command-credential",
-            expectedProfileId: "profile-1", expectedGenerationId: "generation-1", expectedRevocationEpoch: 0,
+            expectedProfileId: "profile-1", expectedGenerationId: "generation-1", expectedGenerationOrdinal: 1,
+            expectedRevocationEpoch: 0,
             expectedPayloadCase: V2Frame.PayloadOneofCase.Assignment, expectedSequence: 13,
             expectedAssignmentKind: V2AssignmentKind.Enroll));
         Assert.ThrowsExactly<InvalidDataException>(() => HelperProtocolV2Codec.Decode(
             credentialAssignment.ToByteArray(), HelperNow, "assignment-credential", "command-credential",
-            expectedProfileId: "profile-1", expectedGenerationId: "generation-1", expectedRevocationEpoch: 0,
+            expectedProfileId: "profile-1", expectedGenerationId: "generation-1", expectedGenerationOrdinal: 1,
+            expectedRevocationEpoch: 0,
             expectedPayloadCase: V2Frame.PayloadOneofCase.Assignment, expectedSequence: 12,
             expectedAssignmentKind: V2AssignmentKind.Verify));
         byte[] requestBytes = [1, 2, 3];
@@ -1644,6 +1653,7 @@ public sealed class ProviderContractJsonCodecTests
         frame.ToByteArray(), HelperNow, "assignment-credential", "command-credential",
         expectedOperationId: "operation-1", expectedAttemptId: "attempt-1",
         expectedProfileId: "profile-1", expectedGenerationId: "generation-1",
+        expectedGenerationOrdinal: 1,
         expectedRequestId: "request-1", expectedDispatchId: "dispatch-1",
         expectedRequestFingerprintSha256: SHA256.HashData(requestBytes),
         expectedInputBoundPolicyId: "unresolved-openai-responses-framing",
