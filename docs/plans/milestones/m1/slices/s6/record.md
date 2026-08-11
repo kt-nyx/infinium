@@ -1924,3 +1924,33 @@ missing accepted repository-local tokenizer/provider-framing proof. This entry
 does not accept WP1, advance contract maturity or `docs/current-state.md`,
 authorize WP2/WP3, or authorize credential, helper execution, network, or
 provider work.
+
+## WP1 Layer 6 verification-only correction — 2026-08-11
+
+Owner-authorized verification correction commit
+`23d60e01a4aefa5f5b6292b1fe48e8ff8908df19` adds the inert
+`Layer6Review` interface required by section 10 and ledger item `WP1-L13`.
+It changes no product contract, codec, fixture, current-state authority, or
+later-package behavior. A focused verifier-interface regression passed 1/0/0,
+and the unchanged `Contracts` gate passed 21/0/0 after the addition.
+
+The exact Windows PowerShell command ran with baseline
+`be4667d4c4ed36888934daf4f03ec09f7c2a14eb`, candidate
+`23d60e01a4aefa5f5b6292b1fe48e8ff8908df19`, and `OutputRoot`
+`artifacts/m1-slice6/wp1-layer6-convergence`. `Layer6Review` passed and wrote a
+1,653-byte receipt with SHA-256
+`97cf9b82dd18042cd734cb9413f50e1b0115fc53093705352550403b0677ea19`.
+The candidate-bound range contained four allowed paths, no protected or
+private/archive path, one strictly valid changed JSON file, and no broken
+relative link. The retained changed-path, changed-JSON, relative-link,
+status/claim, unsupported/gap, and private/archive-absence reports are named
+and SHA-256-bound by the receipt. Its 254 status/claim occurrences and 73
+unsupported/gap occurrences are review inventories, not automatic semantic
+acceptance; the gate reported no substantive content failure.
+
+The receipt records network and credential permissions as false. No network,
+provider, Credential Manager, native credential, private fixture, sibling
+repository, legacy/evaluator archive, current-state, WP2/WP3, or push action
+occurred. `StateTotality` remains blocked independently by the repository-local
+tokenizer/provider-framing authority gap; this verification correction does
+not represent that gate as passing or accept WP1.
