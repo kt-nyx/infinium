@@ -70,11 +70,23 @@
       "schema_version": "1",
       "response_record_id": "response-1",
       "operation_id": "operation-1",
+      "operation_kind": "source-claim-extraction",
+      "limits": { "maximum_request_bytes": 65536, "maximum_input_tokens": 73728, "maximum_output_tokens": 4096, "maximum_raw_response_bytes": 1048576, "maximum_dispatch_count": 1, "maximum_calculated_nano_usd": 600000000, "deadline_milliseconds": 120000 },
       "input_bound_proof": { "policy_id": "unresolved-openai-responses-framing", "policy_version": "authority-required", "status": "authority-required" },
       "availability": "unavailable",
+      "raw_response_availability": "unavailable",
       "maximum_raw_response_bytes": 1048576,
       "response_headers_availability": "unavailable",
+      "http_status_availability": "unavailable",
+      "provider_response_id_availability": "unavailable",
+      "client_request_id_availability": "unavailable",
       "provider_request_id_availability": "unavailable",
+      "refusal_availability": "unavailable",
+      "incomplete_availability": "unavailable",
+      "error_availability": "unavailable",
+      "returned_model_availability": "unavailable",
+      "returned_service_tier_availability": "unavailable",
+      "billing_evidence_availability": "unavailable",
       "state": "unknown",
       "requested_model": "gpt-5.6-sol",
       "requested_service_tier": "default",
@@ -105,7 +117,8 @@
       "abstentions": ["No semantic truth is supplied"],
       "gaps": ["Host validation pending"],
       "validation_ids": [],
-      "application_link_ids": []
+      "application_link_ids": [],
+      "admission_links": []
     },
     "candidate-investigation.v1.schema.json": {
       "schema_id": "infinium.llm.candidate-investigation/v1",
@@ -124,7 +137,8 @@
       "abstentions": ["No semantic truth is supplied"],
       "gaps": ["Evidence absent"],
       "validation_ids": [],
-      "admission_link_ids": []
+      "admission_link_ids": [],
+      "admission_links": []
     },
     "provider-execution-input.v1.schema.json": {
       "schema_id": "infinium.provider.execution-input/v1",

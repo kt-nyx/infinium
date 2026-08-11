@@ -55,6 +55,7 @@ public enum ProviderResponseState
     Oversized,
     Mismatched,
     Unknown,
+    Cancelled,
 }
 
 public enum ProviderOperationKind
@@ -243,8 +244,11 @@ public sealed record ProviderResponseDocument(
     OpaqueId? AuthorizationId,
     OpaqueId? RequestId,
     OpaqueId? DispatchFenceId,
+    ProviderOperationKind OperationKind,
+    ProviderFiniteLimitsContract Limits,
     ProviderInputBoundProofContract InputBoundProof,
     ProviderAvailabilityState Availability,
+    ProviderAvailabilityState RawResponseAvailability,
     ProviderIdentityReferenceContract? RawResponsePayload,
     long? RawResponseBytes,
     long MaximumRawResponseBytes,
@@ -252,27 +256,48 @@ public sealed record ProviderResponseDocument(
     long? ResponseHeadersBytes,
     ProviderAvailabilityState ResponseHeadersAvailability,
     int? HttpStatus,
+    ProviderAvailabilityState HttpStatusAvailability,
     string? ProviderResponseId,
+    ProviderAvailabilityState ProviderResponseIdAvailability,
     string? ClientRequestId,
+    ProviderAvailabilityState ClientRequestIdAvailability,
     string? ProviderRequestId,
     ProviderAvailabilityState ProviderRequestIdAvailability,
     ProviderResponseState State,
     string? RefusalCode,
+    ProviderAvailabilityState RefusalAvailability,
     string? IncompleteReason,
+    ProviderAvailabilityState IncompleteAvailability,
     string? ErrorCode,
+    ProviderAvailabilityState ErrorAvailability,
     string RequestedModel,
     string? ReturnedModel,
+    ProviderAvailabilityState ReturnedModelAvailability,
     string RequestedServiceTier,
     string? ReturnedServiceTier,
+    ProviderAvailabilityState ReturnedServiceTierAvailability,
     string ReasoningContext,
     string ReasoningMode,
     string PromptCacheMode,
     ProviderUsageContract Usage,
     IReadOnlyList<ProviderRateLimitFactContract> RateLimitFacts,
     ProviderIdentityReferenceContract? BillingEvidencePayload,
+    ProviderAvailabilityState BillingEvidenceAvailability,
     ProposalAdmissionState ValidationState,
     ProposalAdmissionState AdmissionState,
     UtcTimestamp RecordedAt);
+
+public sealed record ProviderSemanticAdmissionLinkContract(
+    OpaqueId AdmissionId,
+    OpaqueId ProposalId,
+    OpaqueId OperationId,
+    OpaqueId ResponseRecordId,
+    string OwnerKind,
+    OpaqueId OwnerId,
+    OpaqueId RootSubjectId,
+    OpaqueId ValidationId,
+    OpaqueId ApplicationLinkId,
+    ProposalAdmissionState State);
 
 public sealed record CitationProposalContract(
     OpaqueId ProposalId,
@@ -300,7 +325,8 @@ public sealed record SourceClaimExtractionDocument(
     IReadOnlyList<string> Abstentions,
     IReadOnlyList<string> Gaps,
     IReadOnlyList<OpaqueId> ValidationIds,
-    IReadOnlyList<OpaqueId> ApplicationLinkIds);
+    IReadOnlyList<OpaqueId> ApplicationLinkIds,
+    IReadOnlyList<ProviderSemanticAdmissionLinkContract> AdmissionLinks);
 
 public sealed record HypothesisProposalContract(
     OpaqueId ProposalId,
@@ -329,7 +355,8 @@ public sealed record CandidateInvestigationDocument(
     IReadOnlyList<string> Abstentions,
     IReadOnlyList<string> Gaps,
     IReadOnlyList<OpaqueId> ValidationIds,
-    IReadOnlyList<OpaqueId> AdmissionLinkIds);
+    IReadOnlyList<OpaqueId> AdmissionLinkIds,
+    IReadOnlyList<ProviderSemanticAdmissionLinkContract> AdmissionLinks);
 
 public sealed record ProviderExecutionInputDocument(
     string SchemaId,

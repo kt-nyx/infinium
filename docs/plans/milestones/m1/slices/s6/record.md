@@ -937,3 +937,95 @@ private evidence was invented. No network/DNS/provider, Credential Manager,
 native credential, private fixture, sibling repository, legacy/evaluator
 archive, later-package, current-state, push, amend, or frozen Slice 5 v1 edit
 occurred.
+
+## Seventh-cycle configuration-response totality correction — 2026-08-11
+
+Fresh boundary and contract review rejected candidate
+`744043fa35bd9464d21b9c949ce2fca97173d329`. The findings were recoverable
+WP1 implementation defects, not authority conflicts.
+
+### Corrected contract and persistence seams
+
+- Added exact durable effective-configuration v2 persistence for the frozen
+  local v1 identity/fingerprint, access profile, credential generation,
+  provider settings, finite limits, and not-used boundaries. Provider blocks
+  now bind that exact configuration/profile/generation tuple; replay and
+  run-output persistence retain the same configuration-v2 identity.
+- Split durable provider command binding by exact owner. Analysis operations
+  retain their analysis-run durable command and request time; evidence
+  acquisition owns its own job node, attempt, durable command, parent analysis
+  edge, snapshot/context/config/manifest tuple, application scope, and cost
+  attribution. Future authorization retains the same command and request time.
+- Closed credential intent outcome semantics. Cancelled enroll, replace,
+  verify, disable, and recover intents retain the truthful predecessor outcome
+  without advancing the projection. A replacement binds a fresh successor
+  generation, activates that generation through the completed intent, and
+  makes the predecessor generation ineligible.
+- Helper-v2 provider receipts now discriminate credential receipts and retain
+  exact assignment, command, operation, attempt, request, dispatch fence,
+  request fingerprint, fencing epoch, capability and price snapshot, settings
+  and output-schema digests, effective configuration, input-bound policy, and
+  non-secret receipt digest. Each possible rebind is an executable rejection.
+- Restored `Cancelled` to the provider response state set and modeled every
+  optional provider response fact with typed availability. Completed, refusal,
+  incomplete, failed, queued, in-progress, malformed, oversized, mismatched,
+  unknown, and cancelled matrices validate structurally across domain,
+  application, JSON, and SQL; a structurally valid proved response reaches the
+  current maturity rejection only after validation. Cancellation can truthfully
+  retain zero dispatch and no transport. Operation-specific request, usage,
+  response, and cost ceilings plus rate/reset and billing-evidence coupling
+  remain enforced.
+- Semantic proposal, validation, admission, candidate/acquisition root, and
+  application-edge identities are now one exact relational chain. Source and
+  candidate application projections expose those exact links, and the
+  traceability contract maps the actual protobuf and schema-6 columns.
+- Canonical UTC shape and `julianday(...) IS NOT NULL` checks precede elapsed
+  time comparisons. Canonical-shaped invalid instants and a 121-second overrun
+  are rejected adversarially.
+
+The nine Slice 6 contracts remain `Proposed`; WP1 remains `Deferred` solely on
+the absent accepted repository-local input-bound tokenizer/provider-framing
+proof. This correction does not accept WP1, authorize native credential or
+live provider work, advance `docs/current-state.md`, or unblock WP2.
+
+### Superseding identities and exact blocked receipt root
+
+- Schema-6 fingerprint:
+  `4c7c92ee4f711339c236f64a413948c2654b629624cb04305068dcf65c38d75c`.
+- Helper-v2 transitive fingerprint:
+  `709acdb44d4046d2fd68408c31e2e18c203cca552a6e3cb1589f3644d47a69b8`.
+- Full application protobuf-set fingerprint:
+  `5e0b8a9899b4a721cf56b8da74199c4f7205d44b33761f8bd2efed0a89a50041`.
+- Answer-free example: 14,967 bytes,
+  `2a4278abc18c460e90a3a283341b2111fd1a94e0207f3427b7aab509a3654386`.
+- Public registry: 8,790 bytes,
+  `3b3b4bd700a5d108b9957b3c7292d8f782753a6c91c0f74794c3bb4c5c071f49`.
+- Per-field traceability: 406,911 bytes,
+  `107c70567a94e186d997de6c45ef5be332fde2c4af04b80673739c5467cd665a`.
+- Exact gate `OutputRoot`:
+  `artifacts/m1-slice6/wp1-seventh-config-response-final`.
+
+### Seventh-cycle verification
+
+1. Release solution build passed with zero warnings and zero errors. Full Unit
+   passed 171/0/1 and full Contract passed 152/0/0.
+2. `Contracts` passed 19/0/0. `StateSurfaces` passed 18/0/0 state checks and
+   6/0/0 migration/relational/adversarial/restore checks. `StateTotality` ran
+   the same 24 green checks, wrote `blocked-authority-required` with network
+   and credential permissions false and the superseding schema fingerprint,
+   then exited 1 solely because the accepted repository-local
+   tokenizer/provider-framing proof is absent.
+3. The final Release category matrix passed: Unit 163/0/1; Contract 124/0/0;
+   Integration 70/0/0; Evaluation 75/0/8; Security 111/0/3; and Fault
+   105/0/3. The final unfiltered Release solution passed Unit 171/0/1,
+   Contract 152/0/0, Integration 68/0/0, and Evaluation 53/0/8.
+4. Deterministic trace regeneration, `dotnet format --verify-no-changes`,
+   dependency-manifest check, documentation validation, `git diff --check`,
+   current-state and frozen Slice 5 v1 immutability, protected-path and
+   answer-isolation checks, and forbidden secret/live-effect scans passed.
+
+No proof, gate result, owner acceptance, credential, provider response, or
+private evidence was invented. No network/DNS/provider, Credential Manager,
+native credential, private fixture, sibling repository, legacy/evaluator
+archive, later-package, current-state, push, amend, or frozen Slice 5 v1 edit
+occurred.

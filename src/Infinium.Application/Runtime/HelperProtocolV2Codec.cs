@@ -17,7 +17,19 @@ public static class HelperProtocolV2Codec
         string? expectedOperationId = null,
         string? expectedAttemptId = null,
         string? expectedProfileId = null,
-        string? expectedGenerationId = null)
+        string? expectedGenerationId = null,
+        string? expectedRequestId = null,
+        string? expectedDispatchId = null,
+        byte[]? expectedRequestFingerprintSha256 = null,
+        string? expectedInputBoundPolicyId = null,
+        string? expectedInputBoundPolicyVersion = null,
+        ulong? expectedCoordinatorFencingEpoch = null,
+        string? expectedCapabilitySnapshotId = null,
+        string? expectedPriceSnapshotId = null,
+        Infinium.Contracts.Protobuf.Common.V1.ContentDigest? expectedSettings = null,
+        Infinium.Contracts.Protobuf.Common.V1.ContentDigest? expectedOutputSchema = null,
+        string? expectedEffectiveConfigurationId = null,
+        Infinium.Contracts.Protobuf.Common.V1.ContentDigest? expectedNonSecretReceipt = null)
     {
         if (bytes.IsEmpty || bytes.Length > HelperProtocolV2Constants.MaximumFrameBytes)
         {
@@ -34,7 +46,11 @@ public static class HelperProtocolV2Codec
         }
         RejectUnknownFields(frame, "$frame");
         Validate(frame, now, expectedAssignmentId, expectedCommandId, expectedOperationId,
-            expectedAttemptId, expectedProfileId, expectedGenerationId);
+            expectedAttemptId, expectedProfileId, expectedGenerationId, expectedRequestId,
+            expectedDispatchId, expectedRequestFingerprintSha256, expectedInputBoundPolicyId,
+            expectedInputBoundPolicyVersion, expectedCoordinatorFencingEpoch, expectedCapabilitySnapshotId,
+            expectedPriceSnapshotId, expectedSettings, expectedOutputSchema, expectedEffectiveConfigurationId,
+            expectedNonSecretReceipt);
         return frame;
     }
 
@@ -60,7 +76,19 @@ public static class HelperProtocolV2Codec
         string? expectedOperationId,
         string? expectedAttemptId,
         string? expectedProfileId,
-        string? expectedGenerationId)
+        string? expectedGenerationId,
+        string? expectedRequestId,
+        string? expectedDispatchId,
+        byte[]? expectedRequestFingerprintSha256,
+        string? expectedInputBoundPolicyId,
+        string? expectedInputBoundPolicyVersion,
+        ulong? expectedCoordinatorFencingEpoch,
+        string? expectedCapabilitySnapshotId,
+        string? expectedPriceSnapshotId,
+        Infinium.Contracts.Protobuf.Common.V1.ContentDigest? expectedSettings,
+        Infinium.Contracts.Protobuf.Common.V1.ContentDigest? expectedOutputSchema,
+        string? expectedEffectiveConfigurationId,
+        Infinium.Contracts.Protobuf.Common.V1.ContentDigest? expectedNonSecretReceipt)
     {
         if (frame.Sequence == 0
             || frame.ProtocolFingerprintSha256.Length != 32
@@ -89,7 +117,11 @@ public static class HelperProtocolV2Codec
                 break;
             case HelperPrivateFrameV2.PayloadOneofCase.Receipt:
                 Validate(frame.Receipt, expectedAssignmentId, expectedCommandId, expectedOperationId,
-                    expectedAttemptId, expectedProfileId, expectedGenerationId);
+                    expectedAttemptId, expectedProfileId, expectedGenerationId, expectedRequestId,
+                    expectedDispatchId, expectedRequestFingerprintSha256, expectedInputBoundPolicyId,
+                    expectedInputBoundPolicyVersion, expectedCoordinatorFencingEpoch, expectedCapabilitySnapshotId,
+                    expectedPriceSnapshotId, expectedSettings, expectedOutputSchema,
+                    expectedEffectiveConfigurationId, expectedNonSecretReceipt);
                 break;
             default:
                 throw new InvalidDataException("Helper v2 payload kind must be explicit.");
@@ -219,7 +251,19 @@ public static class HelperProtocolV2Codec
         string? expectedOperationId,
         string? expectedAttemptId,
         string? expectedProfileId,
-        string? expectedGenerationId)
+        string? expectedGenerationId,
+        string? expectedRequestId,
+        string? expectedDispatchId,
+        byte[]? expectedRequestFingerprintSha256,
+        string? expectedInputBoundPolicyId,
+        string? expectedInputBoundPolicyVersion,
+        ulong? expectedCoordinatorFencingEpoch,
+        string? expectedCapabilitySnapshotId,
+        string? expectedPriceSnapshotId,
+        Infinium.Contracts.Protobuf.Common.V1.ContentDigest? expectedSettings,
+        Infinium.Contracts.Protobuf.Common.V1.ContentDigest? expectedOutputSchema,
+        string? expectedEffectiveConfigurationId,
+        Infinium.Contracts.Protobuf.Common.V1.ContentDigest? expectedNonSecretReceipt)
     {
         if (!Enum.IsDefined(value.Outcome) || value.Outcome == HelperOutcomeV2.Unspecified
             || !Enum.IsDefined(value.AssignmentKind) || value.AssignmentKind == HelperAssignmentKindV2.Unspecified)
@@ -241,6 +285,20 @@ public static class HelperProtocolV2Codec
         {
             Require(expectedOperationId, "expected_receipt.operation_id");
             Require(expectedAttemptId, "expected_receipt.attempt_id");
+            Require(expectedRequestId, "expected_receipt.request_id");
+            Require(expectedDispatchId, "expected_receipt.dispatch_id");
+            Require(expectedInputBoundPolicyId, "expected_receipt.input_bound_policy_id");
+            Require(expectedInputBoundPolicyVersion, "expected_receipt.input_bound_policy_version");
+            Require(expectedCapabilitySnapshotId, "expected_receipt.capability_snapshot_id");
+            Require(expectedPriceSnapshotId, "expected_receipt.price_snapshot_id");
+            Require(expectedEffectiveConfigurationId, "expected_receipt.effective_configuration_id");
+            if (expectedRequestFingerprintSha256 is null || expectedRequestFingerprintSha256.Length != 32
+                || expectedCoordinatorFencingEpoch is null or 0
+                || !ValidDigest(expectedSettings) || !ValidDigest(expectedOutputSchema)
+                || !ValidDigest(expectedNonSecretReceipt))
+            {
+                throw new InvalidDataException("Expected provider receipt fingerprint and fencing epoch are required.");
+            }
         }
         else
         {
@@ -264,7 +322,11 @@ public static class HelperProtocolV2Codec
             || (!dispatch && (value.TransportMayHaveStarted || hasResponse
                 || value.InputTokens is not null || value.OutputTokens is not null || value.ReasoningTokens is not null
                 || value.CacheReadTokens is not null || value.CacheWriteTokens is not null
-                || !string.IsNullOrEmpty(value.RequestId) || value.DispatchId is not null || value.InputBoundProof is not null))
+                || !string.IsNullOrEmpty(value.RequestId) || value.DispatchId is not null || value.InputBoundProof is not null
+                || !value.RequestFingerprintSha256.IsEmpty || value.CoordinatorFencingEpoch != 0
+                || value.CapabilitySnapshotId is not null || value.PriceSnapshotId is not null
+                || value.Settings is not null || value.OutputSchema is not null
+                || !string.IsNullOrEmpty(value.EffectiveConfigurationId)))
             || (!dispatch && value.Outcome is HelperOutcomeV2.TransportMayHaveStarted
                 or HelperOutcomeV2.Oversized or HelperOutcomeV2.Malformed)
             || (noTransport && (value.TransportMayHaveStarted || hasResponse))
@@ -276,9 +338,24 @@ public static class HelperProtocolV2Codec
         {
             Require(value.RequestId, "receipt.request_id");
             Require(value.DispatchId?.Value, "receipt.dispatch_id");
-            if (!IsAuthorityRequiredProof(value.InputBoundProof))
+            Require(value.EffectiveConfigurationId, "receipt.effective_configuration_id");
+            Require(value.CapabilitySnapshotId?.Value, "receipt.capability_snapshot_id");
+            Require(value.PriceSnapshotId?.Value, "receipt.price_snapshot_id");
+            if (value.RequestId != expectedRequestId || value.DispatchId?.Value != expectedDispatchId
+                || value.RequestFingerprintSha256.Length != 32
+                || !value.RequestFingerprintSha256.Span.SequenceEqual(expectedRequestFingerprintSha256)
+                || value.CoordinatorFencingEpoch != expectedCoordinatorFencingEpoch
+                || value.CapabilitySnapshotId?.Value != expectedCapabilitySnapshotId
+                || value.PriceSnapshotId?.Value != expectedPriceSnapshotId
+                || value.EffectiveConfigurationId != expectedEffectiveConfigurationId
+                || !SameDigest(value.Settings, expectedSettings)
+                || !SameDigest(value.OutputSchema, expectedOutputSchema)
+                || !SameDigest(value.NonSecretReceipt, expectedNonSecretReceipt)
+                || value.InputBoundProof?.PolicyId != expectedInputBoundPolicyId
+                || value.InputBoundProof?.PolicyVersion != expectedInputBoundPolicyVersion
+                || !IsAuthorityRequiredProof(value.InputBoundProof))
             {
-                throw new InvalidDataException("Provider receipt must retain the exact blocked assignment, request, fence, and proof binding.");
+                throw new InvalidDataException("Provider receipt must retain the exact assignment, command, operation, attempt, request, dispatch fence, request fingerprint, proof, receipt, and fencing binding.");
             }
             throw new NotSupportedException("Provider dispatch receipts are unreachable until accepted local input-bound authority changes the helper contract.");
         }
@@ -355,6 +432,14 @@ public static class HelperProtocolV2Codec
         ValidDigest(value)
         && value!.SizeBytes == (ulong)bytes.Length
         && value.Value.Span.SequenceEqual(SHA256.HashData(bytes));
+
+    private static bool SameDigest(
+        Infinium.Contracts.Protobuf.Common.V1.ContentDigest? value,
+        Infinium.Contracts.Protobuf.Common.V1.ContentDigest? expected) =>
+        ValidDigest(value) && ValidDigest(expected)
+        && value!.Algorithm == expected!.Algorithm
+        && value.SizeBytes == expected.SizeBytes
+        && value.Value.Span.SequenceEqual(expected.Value.Span);
 
     private static bool ValidInstant(Infinium.Contracts.Protobuf.Common.V1.Instant? value) =>
         value is not null && value.UnixSeconds > 0 && value.Nanoseconds is >= 0 and <= 999_999_999;

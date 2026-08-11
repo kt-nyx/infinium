@@ -225,12 +225,49 @@ public static class ProviderOperationContractInvariants
     {
         ArgumentNullException.ThrowIfNull(value);
         RequireHeader(value.SchemaId, value.SchemaVersion, ContractConstants.ProviderResponseSchemaId);
-        ValidateBlockedInputBoundProof(value.InputBoundProof);
+        Validate(value.OperationKind, value.Limits);
         RequireExplicit(value.Availability, nameof(value.Availability));
         RequireExplicit(value.State, nameof(value.State));
         RequireExplicit(value.ValidationState, nameof(value.ValidationState));
         RequireExplicit(value.AdmissionState, nameof(value.AdmissionState));
+        ProviderAvailabilityState[] factAvailabilities =
+        [
+            value.RawResponseAvailability, value.ResponseHeadersAvailability, value.HttpStatusAvailability,
+            value.ProviderResponseIdAvailability, value.ClientRequestIdAvailability,
+            value.ProviderRequestIdAvailability, value.RefusalAvailability, value.IncompleteAvailability,
+            value.ErrorAvailability, value.ReturnedModelAvailability, value.ReturnedServiceTierAvailability,
+            value.BillingEvidenceAvailability,
+        ];
+        foreach (ProviderAvailabilityState availability in factAvailabilities)
+        {
+            RequireExplicit(availability, "provider response fact availability");
+        }
         Validate(value.Usage);
+        ValidateAvailability(value.RawResponseAvailability, value.RawResponsePayload, value.RawResponseBytes);
+        ValidateAvailability(value.ResponseHeadersAvailability, value.ResponseHeadersPayload, value.ResponseHeadersBytes);
+        ValidateAvailability(value.HttpStatusAvailability, value.HttpStatus);
+        ValidateAvailability(value.ProviderResponseIdAvailability, value.ProviderResponseId);
+        ValidateAvailability(value.ClientRequestIdAvailability, value.ClientRequestId);
+        ValidateAvailability(value.ProviderRequestIdAvailability, value.ProviderRequestId);
+        ValidateAvailability(value.RefusalAvailability, value.RefusalCode);
+        ValidateAvailability(value.IncompleteAvailability, value.IncompleteReason);
+        ValidateAvailability(value.ErrorAvailability, value.ErrorCode);
+        ValidateAvailability(value.ReturnedModelAvailability, value.ReturnedModel);
+        ValidateAvailability(value.ReturnedServiceTierAvailability, value.ReturnedServiceTier);
+        ValidateAvailability(value.BillingEvidenceAvailability, value.BillingEvidencePayload);
+        if (value.RawResponseBytes is not null && value.RawResponseBytes > value.MaximumRawResponseBytes)
+        {
+            throw new InvalidOperationException("Raw provider response exceeds the retained operation limit.");
+        }
+        if (value.RateLimitFacts.Count > 64 || value.RateLimitFacts.Any(x => !ValidRateLimitFact(x))
+            || value.RateLimitFacts.GroupBy(x => (x.Scope, x.Dimension)).Any(group => group.Count() != 1)
+            || (value.Usage.RateAvailability == ProviderAvailabilityState.Available) != (value.RateLimitFacts.Count != 0)
+            || (value.Usage.BillingAvailability == ProviderAvailabilityState.Available)
+                != (value.BillingEvidenceAvailability == ProviderAvailabilityState.Available))
+        {
+            throw new InvalidOperationException("Provider rate and billing evidence must be exact, unique, and availability-bound.");
+        }
+        ValidateUsageAgainstLimits(value.OperationKind, value.Limits, value.Usage);
         bool blockedUsage = value.Usage.DispatchCount is { Availability: ProviderAvailabilityState.Available, Value: 0 }
             && new[] { value.Usage.InputTokens, value.Usage.OutputTokens, value.Usage.TotalTokens, value.Usage.ReasoningTokens,
                 value.Usage.CacheReadTokens, value.Usage.CacheWriteTokens, value.Usage.PricedToolCalls,
@@ -242,26 +279,43 @@ public static class ProviderOperationContractInvariants
             || string.IsNullOrWhiteSpace(value.OperationId.Value)
             || value.MaximumRawResponseBytes <= 0 || value.MaximumRawResponseBytes > 1_048_576
             || value.RecordedAt.Value == default
-            || value.Availability != ProviderAvailabilityState.Unavailable
-            || value.State != ProviderResponseState.Unknown
-            || value.AuthorizationId is not null || value.RequestId is not null || value.DispatchFenceId is not null
-            || value.RawResponsePayload is not null || value.RawResponseBytes is not null
-            || value.ResponseHeadersPayload is not null || value.ResponseHeadersBytes is not null
-            || value.ResponseHeadersAvailability != ProviderAvailabilityState.Unavailable
-            || value.HttpStatus is not null || value.ProviderResponseId is not null || value.ClientRequestId is not null
-            || value.ProviderRequestId is not null
-            || value.ProviderRequestIdAvailability != ProviderAvailabilityState.Unavailable
-            || value.RefusalCode is not null || value.IncompleteReason is not null || value.ErrorCode is not null
-            || value.ReturnedModel is not null || value.ReturnedServiceTier is not null
-            || !blockedUsage || value.RateLimitFacts.Count != 0 || value.BillingEvidencePayload is not null
-            || value.ValidationState != ProposalAdmissionState.Unavailable
-            || value.AdmissionState != ProposalAdmissionState.Unavailable
             || value.RequestedModel != "gpt-5.6-sol" || value.RequestedServiceTier != "default"
             || value.ReasoningContext != "current_turn" || value.ReasoningMode != "standard"
             || value.PromptCacheMode != "explicit")
         {
-            throw new InvalidOperationException("Before input-bound authority, provider response may retain only a truthful unavailable marker with no transport evidence.");
+            throw new InvalidOperationException("Provider response identity and requested profile are invalid.");
         }
+        if (value.InputBoundProof.Status == ProviderInputBoundProofState.AuthorityRequired)
+        {
+            ValidateBlockedInputBoundProof(value.InputBoundProof);
+            if (value.Availability != ProviderAvailabilityState.Unavailable
+            || value.State != ProviderResponseState.Unknown
+            || value.AuthorizationId is not null || value.RequestId is not null || value.DispatchFenceId is not null
+            || value.RawResponsePayload is not null || value.RawResponseBytes is not null
+            || value.ResponseHeadersPayload is not null || value.ResponseHeadersBytes is not null
+            || factAvailabilities.Any(x => x != ProviderAvailabilityState.Unavailable)
+            || value.HttpStatus is not null || value.ProviderResponseId is not null || value.ClientRequestId is not null
+            || value.ProviderRequestId is not null
+            || value.RefusalCode is not null || value.IncompleteReason is not null || value.ErrorCode is not null
+            || value.ReturnedModel is not null || value.ReturnedServiceTier is not null
+            || !blockedUsage || value.RateLimitFacts.Count != 0 || value.BillingEvidencePayload is not null
+                || value.ValidationState != ProposalAdmissionState.Unavailable
+                || value.AdmissionState != ProposalAdmissionState.Unavailable)
+            {
+                throw new InvalidOperationException("Before input-bound authority, provider response may retain only a truthful unavailable marker with no transport evidence.");
+            }
+            return;
+        }
+        if (value.InputBoundProof.Status != ProviderInputBoundProofState.Proved
+            || string.IsNullOrWhiteSpace(value.InputBoundProof.PolicyId)
+            || string.IsNullOrWhiteSpace(value.InputBoundProof.PolicyVersion)
+            || value.AuthorizationId is null || value.RequestId is null || value.DispatchFenceId is null
+            || value.Availability != ProviderAvailabilityState.Available)
+        {
+            throw new InvalidOperationException("A future provider response requires a proved policy and exact authorization/request/fence binding.");
+        }
+        ValidateFutureResponseState(value);
+        throw new NotSupportedException("Proof-qualified provider responses are structurally modeled but unreachable until accepted input-bound authority changes the current runtime maturity gate.");
     }
 
     public static void Validate(ProviderExecutionInputDocument value)
@@ -425,7 +479,10 @@ public static class ProviderOperationContractInvariants
                     && (value.ValidationIds.Count == 0 || value.ApplicationLinkIds.Count == 0)))
             || !BoundedUniqueText(value.Abstentions) || !BoundedUniqueText(value.Gaps)
             || !Unique(value.ContradictionEvidenceIds) || !Unique(value.ValidationIds)
-            || !Unique(value.ApplicationLinkIds))
+            || !Unique(value.ApplicationLinkIds)
+            || !ValidAdmissionLinks(value.AdmissionLinks, value.OperationId, value.OwnerKind,
+                value.OwnerId, value.SourceRevisionId, value.ClaimProposals.Select(x => x.ProposalId),
+                value.ValidationIds, value.ApplicationLinkIds))
         {
             throw new InvalidOperationException("Source-claim extraction must retain unique passages and explicit proposal states.");
         }
@@ -455,7 +512,10 @@ public static class ProviderOperationContractInvariants
                     && (value.ValidationIds.Count == 0 || value.AdmissionLinkIds.Count == 0)))
             || !Unique(value.CausalPathIds) || !Unique(value.EvidenceIds)
             || !BoundedUniqueText(value.Abstentions) || !BoundedUniqueText(value.Gaps)
-            || !Unique(value.ValidationIds) || !Unique(value.AdmissionLinkIds))
+            || !Unique(value.ValidationIds) || !Unique(value.AdmissionLinkIds)
+            || !ValidAdmissionLinks(value.AdmissionLinks, value.OperationId, value.OwnerKind,
+                value.OwnerId, value.CandidateId, value.HypothesisProposals.Select(x => x.ProposalId),
+                value.ValidationIds, value.AdmissionLinkIds))
         {
             throw new InvalidOperationException("Candidate investigation must retain paired participants/roles and explicit proposal states.");
         }
@@ -544,6 +604,83 @@ public static class ProviderOperationContractInvariants
                 && (value.ResetsAt is null || value.ResetsAt.Value >= value.ObservedAt.Value)
             : value.Limit is null && value.Remaining is null && value.ResetsAt is null);
 
+    private static void ValidateAvailability<T>(ProviderAvailabilityState availability, T? value)
+    {
+        bool hasValue = value is not null;
+        if ((availability == ProviderAvailabilityState.Available) != hasValue)
+        {
+            throw new InvalidOperationException("Provider fact availability contradicts presence.");
+        }
+    }
+
+    private static void ValidateAvailability<T1, T2>(ProviderAvailabilityState availability, T1? first, T2? second)
+    {
+        bool both = first is not null && second is not null;
+        if ((availability == ProviderAvailabilityState.Available) != both
+            || (first is null) != (second is null))
+        {
+            throw new InvalidOperationException("Provider payload availability contradicts its identity/size pair.");
+        }
+    }
+
+    private static void ValidateUsageAgainstLimits(
+        ProviderOperationKind kind,
+        ProviderFiniteLimitsContract limits,
+        ProviderUsageContract usage)
+    {
+        Validate(kind, limits);
+        if (usage.DispatchCount.Value > limits.MaximumDispatchCount
+            || usage.InputTokens.Value > limits.MaximumInputTokens
+            || usage.OutputTokens.Value > limits.MaximumOutputTokens
+            || usage.ReasoningTokens.Value > limits.MaximumOutputTokens
+            || usage.CalculatedNanoUsd.Value > limits.MaximumCalculatedNanoUsd)
+        {
+            throw new InvalidOperationException("Provider response usage exceeds its retained operation-specific limits.");
+        }
+    }
+
+    private static void ValidateFutureResponseState(ProviderResponseDocument value)
+    {
+        bool raw = value.RawResponseAvailability == ProviderAvailabilityState.Available;
+        bool http = value.HttpStatusAvailability == ProviderAvailabilityState.Available;
+        bool returnedModel = value.ReturnedModelAvailability == ProviderAvailabilityState.Available;
+        bool returnedTier = value.ReturnedServiceTierAvailability == ProviderAvailabilityState.Available;
+        bool refusal = value.RefusalAvailability == ProviderAvailabilityState.Available;
+        bool incomplete = value.IncompleteAvailability == ProviderAvailabilityState.Available;
+        bool error = value.ErrorAvailability == ProviderAvailabilityState.Available;
+        bool admitted = value.ValidationState == ProposalAdmissionState.Admitted
+            && value.AdmissionState == ProposalAdmissionState.Admitted;
+        bool nonSuccessAdmission = value.ValidationState is ProposalAdmissionState.Rejected
+                or ProposalAdmissionState.Abstained or ProposalAdmissionState.Unavailable
+                or ProposalAdmissionState.Unsupported
+            && value.AdmissionState is ProposalAdmissionState.Rejected
+                or ProposalAdmissionState.Abstained or ProposalAdmissionState.Unavailable
+                or ProposalAdmissionState.Unsupported;
+        bool valid = value.State switch
+        {
+            ProviderResponseState.Completed => raw && http && returnedModel && returnedTier
+                && value.ReturnedModel == "gpt-5.6-sol" && value.ReturnedServiceTier == "default"
+                && !refusal && !incomplete && !error && admitted,
+            ProviderResponseState.Refusal => raw && http && refusal && !incomplete && !error && nonSuccessAdmission,
+            ProviderResponseState.Incomplete => raw && http && !refusal && incomplete && !error && nonSuccessAdmission,
+            ProviderResponseState.Failed => !refusal && !incomplete && error && nonSuccessAdmission,
+            ProviderResponseState.Queued or ProviderResponseState.InProgress => raw && http
+                && !refusal && !incomplete && !error && nonSuccessAdmission,
+            ProviderResponseState.Malformed or ProviderResponseState.Oversized => raw
+                && !refusal && !incomplete && nonSuccessAdmission,
+            ProviderResponseState.Mismatched => raw && (!returnedModel || value.ReturnedModel != "gpt-5.6-sol"
+                || !returnedTier || value.ReturnedServiceTier != "default") && nonSuccessAdmission,
+            ProviderResponseState.Unknown => nonSuccessAdmission,
+            ProviderResponseState.Cancelled => !raw && !http && !refusal && !incomplete && !error
+                && value.Usage.DispatchCount.Value == 0 && nonSuccessAdmission,
+            _ => false,
+        };
+        if (!valid)
+        {
+            throw new InvalidOperationException("Provider response state contradicts its typed facts, usage, validation, or admission outcome.");
+        }
+    }
+
     private static void RequireClosedPriceRule(ProviderPriceRuleContract rule)
     {
         if (string.IsNullOrWhiteSpace(rule.RuleId.Value)
@@ -582,6 +719,30 @@ public static class ProviderOperationContractInvariants
 
     private static bool ValidIds(IEnumerable<OpaqueId> values) =>
         values.All(value => !string.IsNullOrWhiteSpace(value.Value));
+
+    private static bool ValidAdmissionLinks(
+        IReadOnlyList<ProviderSemanticAdmissionLinkContract> links,
+        OpaqueId operationId,
+        string ownerKind,
+        OpaqueId ownerId,
+        OpaqueId rootSubjectId,
+        IEnumerable<OpaqueId> proposals,
+        IReadOnlyList<OpaqueId> validationIds,
+        IReadOnlyList<OpaqueId> applicationIds)
+    {
+        HashSet<OpaqueId> proposalIds = proposals.ToHashSet();
+        return links.Count <= 64
+            && Unique(links.Select(x => x.AdmissionId))
+            && links.All(link => link.OperationId == operationId
+                && link.OwnerKind == ownerKind && link.OwnerId == ownerId
+                && link.RootSubjectId == rootSubjectId
+                && proposalIds.Contains(link.ProposalId)
+                && validationIds.Contains(link.ValidationId)
+                && applicationIds.Contains(link.ApplicationLinkId)
+                && link.State is ProposalAdmissionState.Admitted or ProposalAdmissionState.Rejected
+                    or ProposalAdmissionState.Abstained or ProposalAdmissionState.Unavailable
+                    or ProposalAdmissionState.Unsupported or ProposalAdmissionState.Deleted);
+    }
 
     private static bool BoundedUniqueText(IReadOnlyList<string> values) =>
         values.Count <= 64 && values.All(x => !string.IsNullOrWhiteSpace(x))

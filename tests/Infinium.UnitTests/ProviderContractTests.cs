@@ -128,6 +128,33 @@ public sealed class ProviderContractTests
 
     [TestMethod]
     [TestCategory("Unit")]
+    public void ProofQualifiedFutureResponseStateMatrixIsTotalBeforeMaturityRejection()
+    {
+        ProviderResponseState[] states =
+        [
+            ProviderResponseState.Completed, ProviderResponseState.Refusal, ProviderResponseState.Incomplete,
+            ProviderResponseState.Failed, ProviderResponseState.Queued, ProviderResponseState.InProgress,
+            ProviderResponseState.Malformed, ProviderResponseState.Oversized, ProviderResponseState.Mismatched,
+            ProviderResponseState.Unknown, ProviderResponseState.Cancelled,
+        ];
+        foreach (ProviderResponseState state in states)
+        {
+            ProviderResponseDocument future = FutureResponse(state);
+            Assert.ThrowsExactly<NotSupportedException>(() => ProviderOperationContractInvariants.Validate(future), state.ToString());
+            ProviderResponseDocument contradictory = future with
+            {
+                ValidationState = state == ProviderResponseState.Completed
+                    ? ProposalAdmissionState.Rejected : ProposalAdmissionState.Admitted,
+                AdmissionState = state == ProviderResponseState.Completed
+                    ? ProposalAdmissionState.Rejected : ProposalAdmissionState.Admitted,
+            };
+            Assert.ThrowsExactly<InvalidOperationException>(
+                () => ProviderOperationContractInvariants.Validate(contradictory), state.ToString());
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
     public void ProviderOutputSurfacesExposeOnlyNotUsedUnavailableOrBlocked()
     {
         ProviderPublicationReferenceContract blocked = new(Id("operation-1"), ProviderOperationKind.SourceClaimExtraction,
@@ -210,7 +237,9 @@ public sealed class ProviderContractTests
         CandidateInvestigationDocument candidate = new(
             ContractConstants.CandidateInvestigationSchemaId, "1", Id("operation-1"), "analysis-run", Id("run-1"),
             Id("run-1"), Id("candidate-1"), [Id("participant-1")], ["subject"], [Id("path-1")],
-            Id("closure-1"), [Id("evidence-1")], [admitted], [], [], [Id("validation-1")], [Id("admission-1")]);
+            Id("closure-1"), [Id("evidence-1")], [admitted], [], [], [Id("validation-1")], [Id("application-1")],
+            [new(Id("admission-1"), Id("proposal-1"), Id("operation-1"), Id("response-1"), "analysis-run",
+                Id("run-1"), Id("candidate-1"), Id("validation-1"), Id("application-1"), ProposalAdmissionState.Admitted)]);
         ProviderOperationContractInvariants.Validate(candidate);
         Assert.ThrowsExactly<InvalidOperationException>(() =>
             ProviderOperationContractInvariants.Validate(candidate with { OwnerId = Id("run-other") }));
@@ -244,12 +273,74 @@ public sealed class ProviderContractTests
         "not-available", Now, Now, UtcTimestamp.Parse("2026-08-10T00:02:00.0000000+00:00"), 1, Now);
 
     private static ProviderResponseDocument Response() => new(
-        ContractConstants.ProviderResponseSchemaId, "1", Id("response-1"), Id("operation-1"), null, null,
-        null, BlockedProof(), ProviderAvailabilityState.Unavailable, null, null, 1_048_576, null, null,
-        ProviderAvailabilityState.Unavailable, null, null, null, null, ProviderAvailabilityState.Unavailable,
-        ProviderResponseState.Unknown, null, null, null, "gpt-5.6-sol", null, "default", null,
-        "current_turn", "standard", "explicit", BlockedUsage(), [], null, ProposalAdmissionState.Unavailable,
-        ProposalAdmissionState.Unavailable, Now);
+        SchemaId: ContractConstants.ProviderResponseSchemaId, SchemaVersion: "1", ResponseRecordId: Id("response-1"),
+        OperationId: Id("operation-1"), AuthorizationId: null, RequestId: null, DispatchFenceId: null,
+        OperationKind: ProviderOperationKind.SourceClaimExtraction,
+        Limits: new(65_536, 73_728, 4_096, 1_048_576, 1, 600_000_000, 120_000), InputBoundProof: BlockedProof(),
+        Availability: ProviderAvailabilityState.Unavailable, RawResponseAvailability: ProviderAvailabilityState.Unavailable,
+        RawResponsePayload: null, RawResponseBytes: null, MaximumRawResponseBytes: 1_048_576,
+        ResponseHeadersPayload: null, ResponseHeadersBytes: null, ResponseHeadersAvailability: ProviderAvailabilityState.Unavailable,
+        HttpStatus: null, HttpStatusAvailability: ProviderAvailabilityState.Unavailable,
+        ProviderResponseId: null, ProviderResponseIdAvailability: ProviderAvailabilityState.Unavailable,
+        ClientRequestId: null, ClientRequestIdAvailability: ProviderAvailabilityState.Unavailable,
+        ProviderRequestId: null, ProviderRequestIdAvailability: ProviderAvailabilityState.Unavailable,
+        State: ProviderResponseState.Unknown, RefusalCode: null, RefusalAvailability: ProviderAvailabilityState.Unavailable,
+        IncompleteReason: null, IncompleteAvailability: ProviderAvailabilityState.Unavailable,
+        ErrorCode: null, ErrorAvailability: ProviderAvailabilityState.Unavailable,
+        RequestedModel: "gpt-5.6-sol", ReturnedModel: null, ReturnedModelAvailability: ProviderAvailabilityState.Unavailable,
+        RequestedServiceTier: "default", ReturnedServiceTier: null, ReturnedServiceTierAvailability: ProviderAvailabilityState.Unavailable,
+        ReasoningContext: "current_turn", ReasoningMode: "standard", PromptCacheMode: "explicit", Usage: BlockedUsage(),
+        RateLimitFacts: [], BillingEvidencePayload: null, BillingEvidenceAvailability: ProviderAvailabilityState.Unavailable,
+        ValidationState: ProposalAdmissionState.Unavailable, AdmissionState: ProposalAdmissionState.Unavailable, RecordedAt: Now);
+
+    private static ProviderResponseDocument FutureResponse(ProviderResponseState state)
+    {
+        bool completed = state == ProviderResponseState.Completed;
+        bool raw = state is ProviderResponseState.Completed or ProviderResponseState.Refusal or ProviderResponseState.Incomplete
+            or ProviderResponseState.Queued or ProviderResponseState.InProgress or ProviderResponseState.Malformed
+            or ProviderResponseState.Oversized or ProviderResponseState.Mismatched;
+        bool http = state is ProviderResponseState.Completed or ProviderResponseState.Refusal
+            or ProviderResponseState.Incomplete or ProviderResponseState.Queued or ProviderResponseState.InProgress;
+        bool refusal = state == ProviderResponseState.Refusal;
+        bool incomplete = state == ProviderResponseState.Incomplete;
+        bool error = state == ProviderResponseState.Failed;
+        bool mismatched = state == ProviderResponseState.Mismatched;
+        bool cancelled = state == ProviderResponseState.Cancelled;
+        return Response() with
+        {
+            AuthorizationId = Id("authorization-1"),
+            RequestId = Id("request-1"),
+            DispatchFenceId = Id("fence-1"),
+            InputBoundProof = new ProviderInputBoundProofContract("accepted-policy", "1", ProviderInputBoundProofState.Proved),
+            Availability = ProviderAvailabilityState.Available,
+            State = state,
+            RawResponseAvailability = raw ? ProviderAvailabilityState.Available : ProviderAvailabilityState.Unavailable,
+            RawResponsePayload = raw ? Ref("raw-response-1") : null,
+            RawResponseBytes = raw ? 128 : null,
+            HttpStatusAvailability = http ? ProviderAvailabilityState.Available : ProviderAvailabilityState.Unavailable,
+            HttpStatus = http ? 200 : null,
+            RefusalAvailability = refusal ? ProviderAvailabilityState.Available : ProviderAvailabilityState.Unavailable,
+            RefusalCode = refusal ? "policy-refusal" : null,
+            IncompleteAvailability = incomplete ? ProviderAvailabilityState.Available : ProviderAvailabilityState.Unavailable,
+            IncompleteReason = incomplete ? "maximum-output" : null,
+            ErrorAvailability = error ? ProviderAvailabilityState.Available : ProviderAvailabilityState.Unavailable,
+            ErrorCode = error ? "provider-error" : null,
+            ReturnedModelAvailability = completed || mismatched
+                ? ProviderAvailabilityState.Available : ProviderAvailabilityState.Unavailable,
+            ReturnedModel = completed ? "gpt-5.6-sol" : mismatched ? "mismatched-model" : null,
+            ReturnedServiceTierAvailability = completed || mismatched
+                ? ProviderAvailabilityState.Available : ProviderAvailabilityState.Unavailable,
+            ReturnedServiceTier = completed || mismatched ? "default" : null,
+            Usage = completed
+                ? new ProviderUsageContract(Q(1), Q(2), Q(3), Q(5), Q(1), Q(0), Q(0), Q(0), Q(42),
+                    ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable)
+                : cancelled ? BlockedUsage()
+                : new ProviderUsageContract(Q(1), U(), U(), U(), U(), U(), U(), U(), U(),
+                    ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable),
+            ValidationState = completed ? ProposalAdmissionState.Admitted : ProposalAdmissionState.Rejected,
+            AdmissionState = completed ? ProposalAdmissionState.Admitted : ProposalAdmissionState.Rejected,
+        };
+    }
 
     private static ProviderUsageContract BlockedUsage() => new(Q(0), U(), U(), U(), U(), U(), U(), U(), U(),
         ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable);

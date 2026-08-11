@@ -204,6 +204,13 @@ message HelperReceiptV2 {
     CredentialSubjectV2 credential = 19;
     ProviderDispatchSubjectV2 provider_dispatch = 20;
   }
+  bytes request_fingerprint_sha256 = 21;
+  uint64 coordinator_fencing_epoch = 22;
+  infinium.domain.v1.CapabilitySnapshotId capability_snapshot_id = 23;
+  infinium.domain.v1.PriceSnapshotId price_snapshot_id = 24;
+  infinium.common.v1.ContentDigest settings = 25;
+  infinium.common.v1.ContentDigest output_schema = 26;
+  string effective_configuration_id = 27;
   reserved 90 to 99;
   reserved "credential_target", "provider_secret", "secret_bytes",
       "authorization_header";

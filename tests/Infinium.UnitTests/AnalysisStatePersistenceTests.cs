@@ -31,12 +31,15 @@ public sealed class AnalysisStatePersistenceTests
     [
         "provider_access_profiles", "provider_generations", "provider_credential_intents",
         "provider_capability_snapshots", "provider_price_snapshots", "provider_price_rules", "evidence_acquisition_runs",
+        "provider_effective_scan_configurations_v2", "evidence_acquisition_job_nodes", "evidence_acquisition_attempts",
+        "evidence_acquisition_commands", "provider_command_bindings",
         "evidence_acquisition_parent_links", "evidence_acquisition_application_links",
         "provider_operation_blocks", "provider_operation_authorizations", "provider_operation_attempts", "provider_requests",
         "provider_reservations", "provider_reservation_scope_items", "provider_dispatch_fences",
         "provider_transport_events", "provider_responses", "provider_usage_entries", "provider_rate_limit_facts",
         "provider_settlements", "provider_settlement_adjustments", "provider_semantic_proposals",
-        "provider_semantic_admissions", "provider_replay_edges", "provider_operation_projection",
+        "provider_semantic_validations", "provider_semantic_admissions", "provider_replay_edges",
+        "provider_run_output_v2_bindings", "provider_operation_projection",
         "provider_profile_projection", "provider_budget_projection",
     ];
 
@@ -133,7 +136,7 @@ public sealed class AnalysisStatePersistenceTests
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'storage_contract_version';"));
         Assert.AreEqual(
-            "0e1c6156548a7cc3144a1e41e6951c5289592ee8f8fea9b15e600872c363bd03",
+            "4c7c92ee4f711339c236f64a413948c2654b629624cb04305068dcf65c38d75c",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'schema_fingerprint';"));
@@ -314,11 +317,11 @@ public sealed class AnalysisStatePersistenceTests
             INSERT INTO provider_access_profiles VALUES('profile-a','openai','responses','A','account-a','billing-a','2026-08-10T00:00:00Z');
             INSERT INTO provider_generations VALUES('generation-a','profile-a',1,0,'2026-08-10T00:00:00Z');
             INSERT INTO provider_capability_snapshots VALUES('cap-a','openai','gpt-5.6-sol','default','medium','current_turn','standard',0,0,0,'none',0,'disabled','explicit',0,0,272000,'synthetic-v1','bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb','2026-08-10T00:00:00Z');
-            INSERT INTO provider_credential_intents VALUES('intent-enroll-a','profile-a','generation-a','enroll','pending','none','pending-enrollment','not-applicable',NULL,NULL,NULL,'not-required','not-requested','2026-08-10T00:00:00Z');
+            INSERT INTO provider_credential_intents VALUES('intent-enroll-a','profile-a','generation-a','enroll','pending','none','pending-enrollment','none','not-applicable',NULL,NULL,NULL,'not-required','not-requested','2026-08-10T00:00:00Z');
             INSERT INTO provider_profile_projection VALUES('profile-a','generation-a',0,'pending-enrollment','not-applicable',NULL,NULL,NULL,'intent-enroll-a','not-required','not-requested',1,'2026-08-10T00:00:00Z');
-            INSERT INTO provider_credential_intents VALUES('intent-activate-a','profile-a','generation-a','enroll','completed','pending-enrollment','active-unverified','unavailable','account-a','billing-a','cap-a','not-required','not-requested','2026-08-10T00:00:01Z');
+            INSERT INTO provider_credential_intents VALUES('intent-activate-a','profile-a','generation-a','enroll','completed','pending-enrollment','active-unverified','active-unverified','unavailable','account-a','billing-a','cap-a','not-required','not-requested','2026-08-10T00:00:01Z');
             UPDATE provider_profile_projection SET lifecycle_state='active-unverified',verification_state='unavailable',capability_snapshot_id='cap-a',account_identity_id='account-a',billing_scope_identity_id='billing-a',intent_id='intent-activate-a',projection_version=2,updated_at='2026-08-10T00:00:01Z' WHERE profile_id='profile-a';
-            INSERT INTO provider_credential_intents VALUES('intent-verify-a','profile-a','generation-a','verify','completed','active-unverified','active-verified','available','account-a','billing-a','cap-a','not-required','not-requested','2026-08-10T00:00:02Z');
+            INSERT INTO provider_credential_intents VALUES('intent-verify-a','profile-a','generation-a','verify','completed','active-unverified','active-verified','active-verified','available','account-a','billing-a','cap-a','not-required','not-requested','2026-08-10T00:00:02Z');
             UPDATE provider_profile_projection SET lifecycle_state='active-verified',verification_state='available',intent_id='intent-verify-a',projection_version=3,updated_at='2026-08-10T00:00:02Z' WHERE profile_id='profile-a';
             INSERT INTO provider_price_snapshots VALUES('price-a','openai','gpt-5.6-sol','USD','default','synthetic-v1','cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc','2026-08-10T00:00:00Z');
             INSERT INTO provider_price_rules VALUES('price-a','rule-a','standard-under-272k','ordinary-input','input','none','global',1,1,'synthetic-v1');
@@ -326,6 +329,10 @@ public sealed class AnalysisStatePersistenceTests
             INSERT INTO job_nodes VALUES('job-a','run-a',NULL,'provider','created',0,'2026-08-10T00:00:00Z','2026-08-10T00:00:00Z');
             INSERT INTO durable_commands VALUES('command-a','provider','run-a',0,'recorded','created',NULL,'2026-08-10T00:00:00Z',NULL,NULL);
             INSERT INTO evidence_acquisition_runs VALUES('acquisition-a','install-a','context-a','config-a','manifest-a','run-a','application-a','cost-a','created','2026-08-10T00:00:00Z');
+            INSERT INTO evidence_acquisition_job_nodes VALUES('acquisition-job-a','acquisition-a','provider','created','2026-08-10T00:00:00Z');
+            INSERT INTO evidence_acquisition_commands VALUES('acquisition-command-a','acquisition-a','provider-operation','2026-08-10T00:00:00.0000000+00:00','recorded');
+            INSERT INTO provider_command_bindings VALUES('acquisition-command-a','evidence-acquisition-run','acquisition-a','2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO provider_effective_scan_configurations_v2 VALUES('config-v2-a','config-a','abababababababababababababababababababababababababababababababab','profile-a','generation-a','gpt-5.6-sol','medium','current_turn','standard',0,'default',0,0,'none',0,'disabled','explicit',0,0,65536,73728,4096,1048576,1,600000000,120000,'["hosted-search","nexus","loot"]','2026-08-10T00:00:00Z');
             INSERT INTO evidence_acquisition_parent_links VALUES('parent-a','acquisition-a','run-a','initiated-by',NULL,'2026-08-10T00:00:00Z');
             INSERT INTO payloads VALUES('request-payload-a','aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',1024,'application/json','retained','provider/request-a.json','2026-08-10T00:00:00Z');
             INSERT INTO provider_operation_blocks(
@@ -337,8 +344,8 @@ public sealed class AnalysisStatePersistenceTests
               input_bound_policy_id,input_bound_policy_version,input_bound_proof_status,maximum_request_bytes,
               maximum_input_tokens,maximum_output_tokens,maximum_raw_response_bytes,maximum_dispatch_count,
               maximum_calculated_nano_usd,deadline_milliseconds,dispatch_deadline_utc,coordinator_fencing_epoch,state,recorded_at)
-            VALUES('operation-a','evidence-acquisition-run','acquisition-a','job-a','command-a',
-              '2026-08-10T00:00:00Z','2026-08-10T00:00:01Z','install-a','context-a','config-a','manifest-a',
+            VALUES('operation-a','evidence-acquisition-run','acquisition-a','acquisition-job-a','acquisition-command-a',
+              '2026-08-10T00:00:00.0000000+00:00','2026-08-10T00:00:01.0000000+00:00','install-a','context-a','config-v2-a','manifest-a',
               'profile-a','generation-a',0,'source-claim-extraction','cap-a','price-a','prompt-a',
               'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd','schema-a',
               'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
@@ -346,7 +353,7 @@ public sealed class AnalysisStatePersistenceTests
               'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',1024,
               '9999999999999999999999999999999999999999999999999999999999999999',
               'unresolved-openai-responses-framing','authority-required','authority-required',65536,73728,4096,
-              1048576,1,600000000,120000,'2026-08-10T00:02:00Z',1,'input-bound-blocked','2026-08-10T00:00:01Z');
+              1048576,1,600000000,120000,'2026-08-10T00:02:00.0000000+00:00',1,'input-bound-blocked','2026-08-10T00:00:01Z');
             INSERT INTO provider_operation_projection VALUES('operation-a','input-bound-blocked',0,0,0,1,'2026-08-10T00:00:00Z');
             """;
         command.ExecuteNonQuery();
@@ -360,7 +367,7 @@ public sealed class AnalysisStatePersistenceTests
         command.CommandText =
             """
             INSERT INTO provider_operation_authorizations(
-              authorization_id,operation_id,owner_kind,owner_id,analysis_run_id,job_node_id,profile_id,generation_id,
+              authorization_id,operation_id,owner_kind,owner_id,analysis_run_id,job_node_id,command_id,requested_at,profile_id,generation_id,
               revocation_epoch,operation_kind,installation_snapshot_id,analysis_context_id,effective_configuration_id,
               resolved_input_manifest_id,prompt_id,prompt_fingerprint,output_schema_id,output_schema_fingerprint,
               request_fingerprint,canonical_request_fingerprint,capability_snapshot_id,price_snapshot_id,settings_fingerprint,
@@ -368,15 +375,15 @@ public sealed class AnalysisStatePersistenceTests
               coordinator_fencing_epoch,maximum_request_bytes,maximum_input_tokens,
               maximum_output_tokens,maximum_raw_response_bytes,maximum_dispatch_count,maximum_calculated_nano_usd,
               deadline_milliseconds,dispatch_deadline_utc,confirmed_at)
-            VALUES('auth-fake','operation-a','analysis-run','run-a','run-a','job-a','profile-a','generation-a',0,
-              'source-claim-extraction','install-a','context-a','config-a','manifest-a','prompt-a',
+            VALUES('auth-fake','operation-a','analysis-run','run-a','run-a','job-a','command-a','2026-08-10T00:00:00.0000000+00:00','profile-a','generation-a',0,
+              'source-claim-extraction','install-a','context-a','config-v2-a','manifest-a','prompt-a',
               'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd','schema-a',
               'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
               'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
               'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa','cap-a','price-a',
               '9999999999999999999999999999999999999999999999999999999999999999',
               'invented-policy','invented-version','invented-proof',1,65536,73728,4096,1048576,1,600000000,120000,
-              '2026-08-10T00:02:00Z','2026-08-10T00:00:00Z');
+              '2026-08-10T00:02:00.0000000+00:00','2026-08-10T00:00:00.0000000+00:00');
             """;
         Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
 

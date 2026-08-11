@@ -46,7 +46,7 @@ function Get-Authorities([string] $Schema, [string] $Path) {
             if ($leaf -in @('requested_at','confirmed_at','operation_kind')) { return @('OPS-001','ADR-0016','ADR-0025') }
             if ($Path -like '*capabilitySnapshot*') { return @('AI-004','OPS-001','ADR-0020','ADR-0023') }
             if ($Path -like '*price*' -or $Path -like '*calculated_nano_usd*') { return @('AI-004','AI-005','ADR-0020','ADR-0023') }
-            if ($Path -like '*inputBoundProof*' -or $Path -like '*canonical_request*' -or $leaf -in @('request_fingerprint','dispatch_deadline','coordinator_fencing_epoch')) { return @('AI-004','ADR-0025') }
+            if ($Path -like '*inputBoundProof*' -or $Path -like '*canonical_request*' -or $leaf -in @('request_fingerprint','dispatch_deadline','coordinator_fencing_epoch','effective_configuration_id')) { return @('AI-004','OPS-002','ADR-0002','ADR-0025') }
             return @('OPS-001','OPS-002','ADR-0016','ADR-0023')
         }
         'provider-response.v1.schema.json' {
@@ -239,6 +239,8 @@ function Get-Persistence([string] $Schema, [string] $Path) {
                     'response_headers_payload' { @('provider_responses.response_headers_payload_id','provider_responses.response_headers_fingerprint') }
                     'billing_evidence_payload' { @('provider_responses.billing_evidence_payload_id','provider_responses.billing_evidence_fingerprint') }
                     'state' { 'provider_responses.response_state' }
+                    'operation_kind' { 'provider_responses.operation_kind' }
+                    'limits' { @('provider_responses.maximum_input_tokens','provider_responses.maximum_output_tokens','provider_responses.maximum_raw_response_bytes','provider_responses.maximum_calculated_nano_usd') }
                     'recorded_at' { 'provider_responses.created_at' }
                     { $_ -in @('schema_id','schema_version','availability') } { $null }
                     default { "provider_responses.$leaf" }
@@ -255,6 +257,9 @@ function Get-Persistence([string] $Schema, [string] $Path) {
                 'application_scope_id' { 'evidence_acquisition_runs.application_scope_id' }
                 'cost_attribution_scope_id' { 'evidence_acquisition_runs.cost_attribution_scope_id' }
                 'application_link_ids' { 'evidence_acquisition_application_links.application_link_id' }
+                'source_revision_id' { 'provider_semantic_proposals.root_subject_id' }
+                'validation_ids' { 'provider_semantic_validations.validation_id' }
+                'admission_links' { @('provider_semantic_admissions.admission_id','provider_semantic_admissions.proposal_id','provider_semantic_admissions.operation_id','provider_semantic_admissions.response_record_id','provider_semantic_admissions.owner_kind','provider_semantic_admissions.owner_id','provider_semantic_admissions.root_subject_id','provider_semantic_admissions.validation_id','provider_semantic_admissions.application_link_id','provider_semantic_admissions.state') }
                 default { $null }
             }
         }
@@ -266,6 +271,8 @@ function Get-Persistence([string] $Schema, [string] $Path) {
                 'analysis_run_id' { 'provider_operation_blocks.owner_id' }
                 'candidate_id' { 'analysis_candidates.candidate_id' }
                 'admission_link_ids' { 'provider_semantic_admissions.admission_id' }
+                'validation_ids' { 'provider_semantic_validations.validation_id' }
+                'admission_links' { @('provider_semantic_admissions.admission_id','provider_semantic_admissions.proposal_id','provider_semantic_admissions.operation_id','provider_semantic_admissions.response_record_id','provider_semantic_admissions.owner_kind','provider_semantic_admissions.owner_id','provider_semantic_admissions.root_subject_id','provider_semantic_admissions.validation_id','provider_semantic_admissions.application_link_id','provider_semantic_admissions.state') }
                 default { $null }
             }
         }
@@ -277,9 +284,11 @@ function Get-Persistence([string] $Schema, [string] $Path) {
             else { $column = switch ($leaf) { 'operation_id' {'provider_operation_blocks.operation_id'} 'owner_kind' {'provider_operation_blocks.owner_kind'} 'owner_id' {'provider_operation_blocks.owner_id'} 'job_node_id' {'provider_operation_blocks.job_node_id'} 'command_id' {'provider_operation_blocks.command_id'} 'installation_snapshot_id' {'provider_operation_blocks.installation_snapshot_id'} 'analysis_context_id' {'provider_operation_blocks.analysis_context_id'} 'effective_configuration_id' {'provider_operation_blocks.effective_configuration_id'} 'resolved_input_manifest_id' {'provider_operation_blocks.resolved_input_manifest_id'} 'profile_id' {'provider_operation_blocks.profile_id'} 'generation_id' {'provider_operation_blocks.generation_id'} 'operation_kind' {'provider_operation_blocks.operation_kind'} 'canonical_request_fingerprint' {'provider_operation_blocks.canonical_request_fingerprint'} default {$null} } }
         }
         'effective-scan-configuration.v2.schema.json' {
-            $column = switch ($leaf) { 'access_profile_id' {'provider_operation_blocks.profile_id'} 'generation_id' {'provider_operation_blocks.generation_id'} 'model' {'provider_capability_snapshots.model'} 'service_tier' {'provider_capability_snapshots.service_tier'} 'reasoning_effort' {'provider_capability_snapshots.reasoning_effort'} 'reasoning_context' {'provider_capability_snapshots.reasoning_context'} 'reasoning_mode' {'provider_capability_snapshots.reasoning_mode'} 'store' {'provider_capability_snapshots.store'} 'background' {'provider_capability_snapshots.background'} 'stream' {'provider_capability_snapshots.stream'} 'tool_choice' {'provider_capability_snapshots.tool_choice'} 'tool_count' {'provider_capability_snapshots.tool_count'} 'truncation' {'provider_capability_snapshots.truncation'} 'prompt_cache_mode' {'provider_capability_snapshots.prompt_cache_mode'} 'has_prompt_cache_key' {'provider_capability_snapshots.has_prompt_cache_key'} 'has_prompt_cache_breakpoint' {'provider_capability_snapshots.has_prompt_cache_breakpoint'} default {$null} }
+            if ($Path -eq 'limits') { $column = @('provider_effective_scan_configurations_v2.maximum_request_bytes','provider_effective_scan_configurations_v2.maximum_input_tokens','provider_effective_scan_configurations_v2.maximum_output_tokens','provider_effective_scan_configurations_v2.maximum_raw_response_bytes','provider_effective_scan_configurations_v2.maximum_dispatch_count','provider_effective_scan_configurations_v2.maximum_calculated_nano_usd','provider_effective_scan_configurations_v2.deadline_milliseconds') }
+            elseif ($Path -like 'limits.*') { $column = "provider_effective_scan_configurations_v2.$leaf" }
+            else { $column = switch ($leaf) { { $_ -in @('schema_id','schema_version') } {$null} 'configuration_id' {'provider_effective_scan_configurations_v2.configuration_id'} 'local_configuration_v1_id' {'provider_effective_scan_configurations_v2.local_configuration_v1_id'} 'local_configuration_v1_fingerprint' {'provider_effective_scan_configurations_v2.local_configuration_v1_fingerprint'} 'access_profile_id' {'provider_effective_scan_configurations_v2.profile_id'} 'generation_id' {'provider_effective_scan_configurations_v2.generation_id'} 'not_used_boundaries' {'provider_effective_scan_configurations_v2.not_used_boundaries_json'} default { "provider_effective_scan_configurations_v2.$leaf" } } }
         }
-        'run-output.v2.schema.json' { $column = switch ($leaf) { 'operation_id' {'provider_operation_projection.operation_id'} 'availability' {'provider_operation_projection.state'} default {$null} } }
+        'run-output.v2.schema.json' { $column = switch ($leaf) { 'run_id' {'provider_run_output_v2_bindings.run_id'} 'local_run_output_v1' {@('provider_run_output_v2_bindings.local_run_output_v1_payload_id','provider_run_output_v2_bindings.local_run_output_v1_fingerprint','provider_run_output_v2_bindings.local_run_output_v1_bytes')} 'effective_configuration_v2_id' {'provider_run_output_v2_bindings.effective_configuration_v2_id'} 'operation_id' {'provider_operation_projection.operation_id'} 'availability' {'provider_operation_projection.state'} default {$null} } }
         'cli-summary.v2.schema.json' { $column = switch ($leaf) { 'provider_state' {'provider_operation_projection.state'} 'unresolved_hold' {'provider_operation_projection.unresolved_hold'} default {$null} } }
         default { $column = $null }
     }
@@ -299,7 +308,7 @@ function Get-Projection([string] $Schema, [string] $Path, [bool] $Replay) {
             if ($Path -in $profileFields) { $message='ProviderProfilePayload'; $field=$leaf }
         }
         elseif ($Schema -eq 'provider-operation.v1.schema.json') {
-            $map=@{ operation_id='operation_id'; operation_kind='operation_kind'; profile_id='profile_id'; generation_id='generation_id'; revocation_epoch='revocation_epoch'; owner_id='owner_id'; owner_kind='owner_kind'; job_node_id='job_node_id'; state='state'; settlement_state='settlement_state'; replay_state='replay_state' }
+            $map=@{ operation_id='operation_id'; operation_kind='operation_kind'; profile_id='profile_id'; generation_id='generation_id'; revocation_epoch='revocation_epoch'; owner_id='owner_id'; owner_kind='owner_kind'; job_node_id='job_node_id'; command_id='command_id'; requested_at='requested_at'; effective_configuration_id='effective_configuration_v2_id'; state='state'; settlement_state='settlement_state'; replay_state='replay_state' }
             if($map.ContainsKey($Path)){ $message='ProviderOperationPayload'; $field=$map[$Path] }
             elseif ($Path -eq 'input_bound_proof') {
                 return [ordered]@{ file='contracts/protobuf/infinium/application/v1/application.proto'; message='ProviderOperationPayload'; fields=@('input_bound_proof_status','input_bound_policy_id','input_bound_policy_version') }
@@ -337,6 +346,7 @@ function Get-Projection([string] $Schema, [string] $Path, [bool] $Replay) {
             else {
                 $responseMap=@{
                     response_record_id='response_record_id'; authorization_id='authorization_id'; request_id='request_id'; dispatch_fence_id='dispatch_fence_id';
+                    operation_kind='operation_kind'; limits='limits'; raw_response_availability='raw_response_availability';
                     raw_response_payload='raw_response'; raw_response_bytes='raw_response'; maximum_raw_response_bytes='maximum_raw_response_bytes';
                     response_headers_payload='response_headers'; response_headers_bytes='response_headers'; response_headers_availability='response_headers_availability';
                     http_status='http_status'; provider_response_id='provider_response_id'; provider_request_id='provider_request_id';
@@ -345,17 +355,22 @@ function Get-Projection([string] $Schema, [string] $Path, [bool] $Replay) {
                     requested_service_tier='requested_service_tier'; returned_service_tier='returned_service_tier'; reasoning_context='reasoning_context';
                     reasoning_mode='reasoning_mode'; prompt_cache_mode='prompt_cache_mode'; rate_limit_facts='rate_limit_facts';
                     validation_state='validation_state'; admission_state='admission_state'; recorded_at='recorded_at';
-                    availability='availability'; client_request_id='client_request_id'; billing_evidence_payload='billing_evidence'
+                    availability='availability'; client_request_id='client_request_id'; billing_evidence_payload='billing_evidence';
+                    http_status_availability='http_status_availability'; provider_response_id_availability='provider_response_id_availability';
+                    client_request_id_availability='client_request_id_availability'; refusal_availability='refusal_availability';
+                    incomplete_availability='incomplete_availability'; error_availability='error_availability';
+                    returned_model_availability='returned_model_availability'; returned_service_tier_availability='returned_service_tier_availability';
+                    billing_evidence_availability='billing_evidence_availability'
                 }
                 if($responseMap.ContainsKey($Path)){ $message='ProviderResponsePayload'; $field=$responseMap[$Path] }
             }
         }
         elseif ($Schema -eq 'source-claim-extraction.v1.schema.json') {
-            $map=@{ acquisition_run_id='acquisition_run_id'; operation_id='operation_id'; owner_kind='owner_kind'; owner_id='owner_id'; parent_analysis_run_id='parent_analysis_run_id'; application_scope_id='application_scope_id'; cost_attribution_scope_id='cost_attribution_scope_id' }
+            $map=@{ acquisition_run_id='acquisition_run_id'; operation_id='operation_id'; owner_kind='owner_kind'; owner_id='owner_id'; parent_analysis_run_id='parent_analysis_run_id'; application_scope_id='application_scope_id'; cost_attribution_scope_id='cost_attribution_scope_id'; source_revision_id='source_revision_id'; validation_ids='validation_ids'; application_link_ids='application_link_ids'; admission_links='admission_links' }
             if($map.ContainsKey($Path)){ $message='SourceClaimExtractionPayload'; $field=$map[$Path] }
         }
         elseif ($Schema -eq 'candidate-investigation.v1.schema.json') {
-            $map=@{ operation_id='operation_id'; owner_kind='owner_kind'; owner_id='owner_id'; analysis_run_id='analysis_run_id'; candidate_id='candidate_id' }
+            $map=@{ operation_id='operation_id'; owner_kind='owner_kind'; owner_id='owner_id'; analysis_run_id='analysis_run_id'; candidate_id='candidate_id'; validation_ids='validation_ids'; admission_link_ids='admission_link_ids'; admission_links='admission_links' }
             if($map.ContainsKey($Path)){ $message='CandidateInvestigationPayload'; $field=$map[$Path] }
         }
     }
@@ -366,6 +381,13 @@ function Get-Projection([string] $Schema, [string] $Path, [bool] $Replay) {
         }
         elseif ($Schema -eq 'provider-response.v1.schema.json') {
             $map=@{ response_record_id='retained_response_id'; operation_id='operation_id'; request_id='request_id'; dispatch_fence_id='dispatch_fence_id' }
+            if($map.ContainsKey($leaf)){ $message='ProviderReplayPayload'; $field=$map[$leaf] }
+        }
+        elseif ($Schema -eq 'run-output.v2.schema.json') {
+            if ($leaf -eq 'effective_configuration_v2_id') { $message='ProviderReplayPayload'; $field='effective_configuration_id' }
+        }
+        elseif ($Schema -eq 'effective-scan-configuration.v2.schema.json') {
+            $map=@{ configuration_id='effective_configuration_id'; access_profile_id='profile_id'; generation_id='generation_id' }
             if($map.ContainsKey($leaf)){ $message='ProviderReplayPayload'; $field=$map[$leaf] }
         }
     }

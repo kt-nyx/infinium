@@ -145,6 +145,8 @@ public static class ApplicationProviderContractValidator
         Require(value.GenerationId?.Value, "generation_id");
         Require(value.CapabilitySnapshotId?.Value, "capability_snapshot_id");
         Require(value.PriceSnapshotId?.Value, "price_snapshot_id");
+        Require(value.EffectiveConfigurationV2Id, "effective_configuration_v2_id");
+        Require(value.CommandId, "command_id");
         if (!Enum.IsDefined(value.OperationKind) || value.OperationKind == ProviderOperationKind.Unspecified
             || !Enum.IsDefined(value.State) || value.State == ProviderOperationLifecycleState.Unspecified
             || !Enum.IsDefined(value.SettlementState) || value.SettlementState == ProviderSettlementState.Unspecified
@@ -181,6 +183,7 @@ public static class ApplicationProviderContractValidator
                 || value.OperationKind is ProviderOperationKind.TransportQualification or ProviderOperationKind.CandidateInvestigation
                     && value.OwnerKind != "analysis-run"
                 || string.IsNullOrWhiteSpace(value.OwnerId) || string.IsNullOrWhiteSpace(value.JobNodeId)
+                || !ValidInstant(value.RequestedAt)
                 || AnyValue(value.InputTokens, value.OutputTokens, value.TotalTokens, value.ReasoningTokens,
                     value.CacheReadTokens, value.CacheWriteTokens, value.CalculatedNanoUsd, value.ReservedNanoUsd)
                 || value.DispatchCount.Availability != ProviderAvailabilityState.Available
@@ -201,28 +204,38 @@ public static class ApplicationProviderContractValidator
     public static void Validate(ProviderResponsePayload value)
     {
         Require(value.ResponseRecordId, "response_record_id");
+        Validate(value.OperationKind, value.Limits);
+        ProviderAvailabilityState[] factAvailabilities =
+        [
+            value.RawResponseAvailability, value.ResponseHeadersAvailability, value.HttpStatusAvailability,
+            value.ProviderResponseIdAvailability, value.ClientRequestIdAvailability,
+            value.ProviderRequestIdAvailability, value.RefusalAvailability, value.IncompleteAvailability,
+            value.ErrorAvailability, value.ReturnedModelAvailability,
+            value.ReturnedServiceTierAvailability, value.BillingEvidenceAvailability,
+        ];
+        if (factAvailabilities.Any(x => !Enum.IsDefined(x) || x == ProviderAvailabilityState.Unspecified))
+        {
+            throw new InvalidDataException("Every optional provider response fact requires typed availability.");
+        }
+        RequireAvailability(value.RawResponseAvailability, value.RawResponse);
+        RequireAvailability(value.ResponseHeadersAvailability, value.ResponseHeaders);
+        RequireAvailability(value.HttpStatusAvailability, value.HasHttpStatus);
+        RequireAvailability(value.ProviderResponseIdAvailability, Has(value.ProviderResponseId));
+        RequireAvailability(value.ClientRequestIdAvailability, Has(value.ClientRequestId));
+        RequireAvailability(value.ProviderRequestIdAvailability, Has(value.ProviderRequestId));
+        RequireAvailability(value.RefusalAvailability, Has(value.RefusalCode));
+        RequireAvailability(value.IncompleteAvailability, Has(value.IncompleteReason));
+        RequireAvailability(value.ErrorAvailability, Has(value.ErrorCode));
+        RequireAvailability(value.ReturnedModelAvailability, Has(value.ReturnedModel));
+        RequireAvailability(value.ReturnedServiceTierAvailability, Has(value.ReturnedServiceTier));
+        RequireAvailability(value.BillingEvidenceAvailability, value.BillingEvidence);
         if (value.MaximumRawResponseBytes is 0 or > 1_048_576
             || value.RequestedModel != "gpt-5.6-sol" || value.RequestedServiceTier != "default"
             || value.ReasoningContext != "current_turn" || value.ReasoningMode != "standard"
             || value.PromptCacheMode != "explicit"
-            || value.Availability != ProviderAvailabilityState.Unavailable
-            || value.InputBoundProofStatus != InputBoundProofStatus.AuthorityRequired
-            || value.InputBoundPolicyId != "unresolved-openai-responses-framing"
-            || value.InputBoundPolicyVersion != "authority-required"
-            || Has(value.AuthorizationId) || Has(value.RequestId) || value.DispatchFenceId is not null || value.RawResponse is not null
-            || value.ResponseHeaders is not null || value.HasHttpStatus || Has(value.ProviderResponseId)
-            || Has(value.ClientRequestId) || value.BillingEvidence is not null
-            || value.BillingAvailability != ProviderAvailabilityState.Unavailable
-            || value.RateAvailability != ProviderAvailabilityState.Unavailable
-            || value.CreditAvailability != ProviderAvailabilityState.Unavailable
-            || Has(value.ProviderRequestId) || value.ProviderRequestIdAvailability != ProviderAvailabilityState.Unavailable
-            || value.ResponseHeadersAvailability != ProviderAvailabilityState.Unavailable
-            || value.ResponseState != "unknown" || Has(value.RefusalCode) || Has(value.IncompleteReason)
-            || Has(value.ErrorCode) || Has(value.ReturnedModel) || Has(value.ReturnedServiceTier)
-            || value.RateLimitFacts.Count != 0 || value.ValidationState != "unavailable"
-            || value.AdmissionState != "unavailable" || !ValidInstant(value.RecordedAt))
+            || !ValidInstant(value.RecordedAt))
         {
-            throw new InvalidDataException("Provider response payload is unavailable until proof-qualified authorization exists.");
+            throw new InvalidDataException("Provider response payload requested profile or bound is invalid.");
         }
         Validate(value.DispatchCount);
         Validate(value.InputTokens);
@@ -233,17 +246,50 @@ public static class ApplicationProviderContractValidator
         Validate(value.CacheWriteTokens);
         Validate(value.PricedToolCalls);
         Validate(value.CalculatedNanoUsd);
-        if (value.DispatchCount.Availability != ProviderAvailabilityState.Available
+        if (value.RateLimitFacts.Count > 64
+            || value.RateLimitFacts.GroupBy(x => (x.Scope, x.Dimension)).Any(x => x.Count() != 1)
+            || value.RateLimitFacts.Any(x => !ValidRateLimitFact(x))
+            || (value.RateAvailability == ProviderAvailabilityState.Available) != (value.RateLimitFacts.Count != 0)
+            || (value.BillingAvailability == ProviderAvailabilityState.Available)
+                != (value.BillingEvidenceAvailability == ProviderAvailabilityState.Available))
+        {
+            throw new InvalidDataException("Provider rate and billing evidence is not exact or availability-bound.");
+        }
+        bool blocked = value.InputBoundProofStatus == InputBoundProofStatus.AuthorityRequired;
+        if (blocked && (value.InputBoundPolicyId != "unresolved-openai-responses-framing"
+            || value.InputBoundPolicyVersion != "authority-required"
+            || value.Availability != ProviderAvailabilityState.Unavailable
+            || Has(value.AuthorizationId) || Has(value.RequestId) || value.DispatchFenceId is not null
+            || factAvailabilities.Any(x => x != ProviderAvailabilityState.Unavailable)
+            || value.BillingAvailability != ProviderAvailabilityState.Unavailable
+            || value.RateAvailability != ProviderAvailabilityState.Unavailable
+            || value.CreditAvailability != ProviderAvailabilityState.Unavailable
+            || value.ResponseState != "unknown" || value.RateLimitFacts.Count != 0
+            || value.ValidationState != "unavailable" || value.AdmissionState != "unavailable"
+            || value.DispatchCount.Availability != ProviderAvailabilityState.Available
             || !value.DispatchCount.HasValue || value.DispatchCount.Value != 0
             || AnyValue(value.InputTokens, value.OutputTokens, value.TotalTokens,
                 value.ReasoningTokens, value.CacheReadTokens, value.CacheWriteTokens,
                 value.PricedToolCalls, value.CalculatedNanoUsd)
             || new[] { value.InputTokens, value.OutputTokens, value.TotalTokens, value.ReasoningTokens,
                 value.CacheReadTokens, value.CacheWriteTokens, value.PricedToolCalls, value.CalculatedNanoUsd }
-                .Any(quantity => quantity.Availability != ProviderAvailabilityState.Unavailable))
+                .Any(quantity => quantity.Availability != ProviderAvailabilityState.Unavailable)))
         {
             throw new InvalidDataException("Unavailable provider response must publish exact zero dispatch and no usage quantities.");
         }
+        if (blocked)
+        {
+            return;
+        }
+        if (value.InputBoundProofStatus != InputBoundProofStatus.Proved
+            || !Has(value.InputBoundPolicyId) || !Has(value.InputBoundPolicyVersion)
+            || value.Availability != ProviderAvailabilityState.Available
+            || !Has(value.AuthorizationId) || !Has(value.RequestId) || value.DispatchFenceId is null)
+        {
+            throw new InvalidDataException("Future provider response requires exact proof and transport identities.");
+        }
+        ValidateFutureResponseShape(value);
+        throw new NotSupportedException("Proof-qualified provider responses are modeled but unavailable before accepted input-bound authority changes runtime maturity.");
     }
 
     public static void Validate(ProviderReplayPayload value)
@@ -292,7 +338,7 @@ public static class ApplicationProviderContractValidator
         Require(value.JobNodeId, "job_node_id");
         Require(value.InstallationSnapshotId, "installation_snapshot_id");
         Require(value.AnalysisContextId, "analysis_context_id");
-        Require(value.EffectiveConfigurationId, "effective_configuration_id");
+        Require(value.EffectiveConfigurationV2Id, "effective_configuration_v2_id");
         Require(value.ResolvedInputManifestId, "resolved_input_manifest_id");
         Require(value.PromptId, "prompt_id");
         Require(value.CommandId, "command_id");
@@ -390,9 +436,12 @@ public static class ApplicationProviderContractValidator
         Require(value.ParentAnalysisRunId, "parent_analysis_run_id");
         Require(value.ApplicationScopeId, "application_scope_id");
         Require(value.CostAttributionScopeId, "cost_attribution_scope_id");
+        Require(value.SourceRevisionId, "source_revision_id");
         if (value.OwnerKind != "evidence-acquisition-run" || value.OwnerId != value.AcquisitionRunId
             || value.ValidationIds.Count == 0 || value.ApplicationLinkIds.Count == 0
-            || !ValidUniqueIds(value.ValidationIds) || !ValidUniqueIds(value.ApplicationLinkIds))
+            || !ValidUniqueIds(value.ValidationIds) || !ValidUniqueIds(value.ApplicationLinkIds)
+            || !ValidAdmissionLinks(value.AdmissionLinks, value.OperationId!.Value, value.OwnerKind,
+                value.OwnerId, value.SourceRevisionId, value.ValidationIds, value.ApplicationLinkIds))
         {
             throw new InvalidDataException("Source-claim projection must retain exact acquisition ownership and admission links.");
         }
@@ -406,7 +455,9 @@ public static class ApplicationProviderContractValidator
         Require(value.CandidateId, "candidate_id");
         if (value.OwnerKind != "analysis-run" || value.OwnerId != value.AnalysisRunId
             || value.ValidationIds.Count == 0 || value.AdmissionLinkIds.Count == 0
-            || !ValidUniqueIds(value.ValidationIds) || !ValidUniqueIds(value.AdmissionLinkIds))
+            || !ValidUniqueIds(value.ValidationIds) || !ValidUniqueIds(value.AdmissionLinkIds)
+            || !ValidAdmissionLinks(value.AdmissionLinks, value.OperationId!.Value, value.OwnerKind,
+                value.OwnerId, value.CandidateId, value.ValidationIds, value.AdmissionLinkIds))
         {
             throw new InvalidDataException("Candidate projection must retain exact analysis ownership and admission links.");
         }
@@ -425,8 +476,94 @@ public static class ApplicationProviderContractValidator
         }
     }
 
+    private static void RequireAvailability(ProviderAvailabilityState availability, object? value) =>
+        RequireAvailability(availability, value is not null);
+
+    private static void RequireAvailability(ProviderAvailabilityState availability, bool hasValue)
+    {
+        if ((availability == ProviderAvailabilityState.Available) != hasValue)
+        {
+            throw new InvalidDataException("Provider fact availability contradicts presence.");
+        }
+    }
+
+    private static void ValidateFutureResponseShape(ProviderResponsePayload value)
+    {
+        bool raw = value.RawResponseAvailability == ProviderAvailabilityState.Available;
+        bool http = value.HttpStatusAvailability == ProviderAvailabilityState.Available;
+        bool refusal = value.RefusalAvailability == ProviderAvailabilityState.Available;
+        bool incomplete = value.IncompleteAvailability == ProviderAvailabilityState.Available;
+        bool error = value.ErrorAvailability == ProviderAvailabilityState.Available;
+        bool nonSuccess = value.ValidationState is "rejected" or "abstained" or "unavailable" or "unsupported"
+            && value.AdmissionState is "rejected" or "abstained" or "unavailable" or "unsupported";
+        bool valid = value.ResponseState switch
+        {
+            "completed" => raw && http && value.ReturnedModelAvailability == ProviderAvailabilityState.Available
+                && value.ReturnedServiceTierAvailability == ProviderAvailabilityState.Available
+                && value.ReturnedModel == "gpt-5.6-sol" && value.ReturnedServiceTier == "default"
+                && !refusal && !incomplete && !error
+                && value.ValidationState == "admitted" && value.AdmissionState == "admitted",
+            "refusal" => raw && http && refusal && !incomplete && !error && nonSuccess,
+            "incomplete" => raw && http && !refusal && incomplete && !error && nonSuccess,
+            "failed" => !refusal && !incomplete && error && nonSuccess,
+            "queued" or "in-progress" => raw && http && !refusal && !incomplete && !error && nonSuccess,
+            "malformed" or "oversized" => raw && !refusal && !incomplete && nonSuccess,
+            "mismatched" => raw && (value.ReturnedModel != "gpt-5.6-sol" || value.ReturnedServiceTier != "default") && nonSuccess,
+            "unknown" => nonSuccess,
+            "cancelled" => !raw && !http && !refusal && !incomplete && !error
+                && value.DispatchCount.HasValue && value.DispatchCount.Value == 0 && nonSuccess,
+            _ => false,
+        };
+        if (!valid)
+        {
+            throw new InvalidDataException("Provider response state contradicts typed facts and admission state.");
+        }
+    }
+
+    private static bool ValidAdmissionLinks(
+        IEnumerable<ProviderSemanticAdmissionLink> links,
+        string operationId,
+        string ownerKind,
+        string ownerId,
+        string rootSubjectId,
+        IEnumerable<string> validationIds,
+        IEnumerable<string> applicationIds)
+    {
+        ProviderSemanticAdmissionLink[] items = links.ToArray();
+        return items.Length <= 64
+            && items.Select(x => x.AdmissionId).Distinct(StringComparer.Ordinal).Count() == items.Length
+            && items.All(link => Has(link.AdmissionId) && Has(link.ProposalId)
+                && link.OperationId?.Value == operationId && Has(link.ResponseRecordId)
+                && link.OwnerKind == ownerKind && link.OwnerId == ownerId
+                && link.RootSubjectId == rootSubjectId
+                && validationIds.Contains(link.ValidationId)
+                && applicationIds.Contains(link.ApplicationLinkId)
+                && link.State is "admitted" or "rejected" or "abstained" or "unavailable" or "unsupported" or "deleted");
+    }
+
+    private static bool ValidRateLimitFact(ProviderRateLimitFact value)
+    {
+        if (value.Scope is not ("request" or "project" or "organization" or "model")
+            || value.Dimension is not ("requests" or "input-tokens" or "output-tokens" or "total-tokens")
+            || !Enum.IsDefined(value.Availability) || value.Availability == ProviderAvailabilityState.Unspecified
+            || !ValidInstant(value.ObservedAt))
+        {
+            return false;
+        }
+        if (value.Availability == ProviderAvailabilityState.Available)
+        {
+            return value.HasLimit && value.HasRemaining && value.Remaining <= value.Limit
+                && (value.ResetsAt is null || ValidInstant(value.ResetsAt) && Compare(value.ObservedAt, value.ResetsAt) <= 0);
+        }
+        return !value.HasLimit && !value.HasRemaining && value.ResetsAt is null;
+    }
+
     private static void Validate(ProviderOperationKind kind, ProviderOperationLimits value)
     {
+        if (value is null)
+        {
+            throw new InvalidDataException("Provider operation limits are required.");
+        }
         (ulong request, ulong input, ulong output, ulong response, long cost, ulong deadline) = kind switch
         {
             ProviderOperationKind.TransportQualification => (16_384UL, 20_480UL, 256UL, 262_144UL, 140_000_000L, 60_000UL),

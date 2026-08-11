@@ -75,12 +75,24 @@ public sealed class ProviderContractJsonCodecTests
             ProviderContractJsonCodecs.DeserializeOperation);
         AssertCanonical(
             new ProviderResponseDocument(
-                ContractConstants.ProviderResponseSchemaId, "1", Id("response-1"), Id("operation-1"), null, null,
-                null, BlockedProof(), DomainProviderAvailabilityState.Unavailable, null, null, 1_048_576, null, null,
-                DomainProviderAvailabilityState.Unavailable, null, null, null, null,
-                DomainProviderAvailabilityState.Unavailable, ProviderResponseState.Unknown,
-                null, null, null, "gpt-5.6-sol", null, "default", null, "current_turn",
-                "standard", "explicit", CancelledUsage(), [], null, ProposalAdmissionState.Unavailable, ProposalAdmissionState.Unavailable, RecordedAt),
+                SchemaId: ContractConstants.ProviderResponseSchemaId, SchemaVersion: "1", ResponseRecordId: Id("response-1"),
+                OperationId: Id("operation-1"), AuthorizationId: null, RequestId: null, DispatchFenceId: null,
+                OperationKind: DomainProviderOperationKind.SourceClaimExtraction, Limits: Limits, InputBoundProof: BlockedProof(),
+                Availability: DomainProviderAvailabilityState.Unavailable, RawResponseAvailability: DomainProviderAvailabilityState.Unavailable,
+                RawResponsePayload: null, RawResponseBytes: null, MaximumRawResponseBytes: 1_048_576,
+                ResponseHeadersPayload: null, ResponseHeadersBytes: null, ResponseHeadersAvailability: DomainProviderAvailabilityState.Unavailable,
+                HttpStatus: null, HttpStatusAvailability: DomainProviderAvailabilityState.Unavailable,
+                ProviderResponseId: null, ProviderResponseIdAvailability: DomainProviderAvailabilityState.Unavailable,
+                ClientRequestId: null, ClientRequestIdAvailability: DomainProviderAvailabilityState.Unavailable,
+                ProviderRequestId: null, ProviderRequestIdAvailability: DomainProviderAvailabilityState.Unavailable,
+                State: ProviderResponseState.Unknown, RefusalCode: null, RefusalAvailability: DomainProviderAvailabilityState.Unavailable,
+                IncompleteReason: null, IncompleteAvailability: DomainProviderAvailabilityState.Unavailable,
+                ErrorCode: null, ErrorAvailability: DomainProviderAvailabilityState.Unavailable,
+                RequestedModel: "gpt-5.6-sol", ReturnedModel: null, ReturnedModelAvailability: DomainProviderAvailabilityState.Unavailable,
+                RequestedServiceTier: "default", ReturnedServiceTier: null, ReturnedServiceTierAvailability: DomainProviderAvailabilityState.Unavailable,
+                ReasoningContext: "current_turn", ReasoningMode: "standard", PromptCacheMode: "explicit", Usage: CancelledUsage(),
+                RateLimitFacts: [], BillingEvidencePayload: null, BillingEvidenceAvailability: DomainProviderAvailabilityState.Unavailable,
+                ValidationState: ProposalAdmissionState.Unavailable, AdmissionState: ProposalAdmissionState.Unavailable, RecordedAt: RecordedAt),
             ProviderContractJsonCodecs.Serialize,
             ProviderContractJsonCodecs.DeserializeResponse);
         AssertCanonical(
@@ -89,7 +101,7 @@ public sealed class ProviderContractJsonCodecTests
                 "evidence-acquisition-run", Id("acquisition-1"), Id("run-1"), Id("application-scope-1"), Id("cost-scope-1"),
                 Id("source-1"), [Id("passage-1")], "Synthetic contract-shape example",
                 [new(Id("proposal-1"), Id("passage-1"), "Synthetic proposed claim", [], ProposalAdmissionState.Proposed, "Requires host validation")],
-                [], ["No semantic truth is supplied"], ["Host validation pending"], [], []),
+                [], ["No semantic truth is supplied"], ["Host validation pending"], [], [], []),
             ProviderContractJsonCodecs.Serialize,
             ProviderContractJsonCodecs.DeserializeSourceClaimExtraction);
         AssertCanonical(
@@ -98,7 +110,7 @@ public sealed class ProviderContractJsonCodecTests
                 [Id("participant-1")], ["synthetic-input"], [], Id("closure-1"), [],
                 [new(Id("hypothesis-1"), Id("candidate-1"), "Synthetic untrusted hypothesis", [], [],
                     ["Independent evidence"], ProposalAdmissionState.Proposed, "Requires host validation")],
-                ["No semantic truth is supplied"], ["Evidence absent"], [], []),
+                ["No semantic truth is supplied"], ["Evidence absent"], [], [], []),
             ProviderContractJsonCodecs.Serialize,
             ProviderContractJsonCodecs.DeserializeCandidateInvestigation);
         AssertCanonical(
@@ -168,21 +180,27 @@ public sealed class ProviderContractJsonCodecTests
             ["status"] = "proved",
         };
         response["availability"] = "available";
+        response["raw_response_availability"] = "available";
         response["raw_response_payload"] = IdentityReference("raw-response-1");
         response["raw_response_bytes"] = 512;
         response["response_headers_payload"] = IdentityReference("response-headers-1");
         response["response_headers_bytes"] = 128;
         response["response_headers_availability"] = "available";
+        response["http_status_availability"] = "available";
         response["http_status"] = 200;
         response["provider_response_id"] = "provider-response-1";
+        response["provider_response_id_availability"] = "available";
         response["client_request_id"] = "client-request-1";
+        response["client_request_id_availability"] = "available";
         response["provider_request_id"] = "provider-request-1";
         response["provider_request_id_availability"] = "available";
         response["state"] = "completed";
         response["returned_model"] = "gpt-5.6-sol";
+        response["returned_model_availability"] = "available";
         response["returned_service_tier"] = "default";
-        response["validation_state"] = "proposed";
-        response["admission_state"] = "proposed";
+        response["returned_service_tier_availability"] = "available";
+        response["validation_state"] = "admitted";
+        response["admission_state"] = "admitted";
         response["usage"]!["dispatch_count"]!["value"] = 1;
 
         byte[] bytes = System.Text.Encoding.UTF8.GetBytes(response.ToJsonString());
@@ -191,7 +209,7 @@ public sealed class ProviderContractJsonCodecTests
             Infinium.Application.Evaluation.ActiveJsonSchemaValidator.Validate(
                 document.RootElement, "provider-response.v1.schema.json");
         }
-        Assert.ThrowsExactly<InvalidOperationException>(() => ProviderContractJsonCodecs.DeserializeResponse(bytes));
+        Assert.ThrowsExactly<NotSupportedException>(() => ProviderContractJsonCodecs.DeserializeResponse(bytes));
     }
 
     [TestMethod]
@@ -465,6 +483,13 @@ public sealed class ProviderContractJsonCodecTests
                 Outcome = V2Outcome.Unavailable,
                 RequestId = "request-1",
                 DispatchId = new DispatchId { Value = "dispatch-1" },
+                RequestFingerprintSha256 = ByteString.CopyFrom(new byte[32]),
+                CoordinatorFencingEpoch = 1,
+                CapabilitySnapshotId = new CapabilitySnapshotId { Value = "capability-1" },
+                PriceSnapshotId = new PriceSnapshotId { Value = "price-1" },
+                Settings = Digest(),
+                OutputSchema = Digest(),
+                EffectiveConfigurationId = "config-v2-1",
                 InputBoundProof = new V2InputBoundProof
                 {
                     PolicyId = "unresolved-openai-responses-framing",
@@ -476,11 +501,46 @@ public sealed class ProviderContractJsonCodecTests
         };
         Assert.ThrowsExactly<NotSupportedException>(() => HelperProtocolV2Codec.Decode(
             blockedReceipt.ToByteArray(), HelperNow, "assignment-dispatch", "command-dispatch",
-            expectedOperationId: "operation-1", expectedAttemptId: "attempt-1"));
-        blockedReceipt.Receipt.ProviderDispatch.AttemptId.Value = "attempt-other";
-        Assert.ThrowsExactly<InvalidDataException>(() => HelperProtocolV2Codec.Decode(
-            blockedReceipt.ToByteArray(), HelperNow, "assignment-dispatch", "command-dispatch",
-            expectedOperationId: "operation-1", expectedAttemptId: "attempt-1"));
+            expectedOperationId: "operation-1", expectedAttemptId: "attempt-1",
+            expectedRequestId: "request-1", expectedDispatchId: "dispatch-1",
+            expectedRequestFingerprintSha256: new byte[32],
+            expectedInputBoundPolicyId: "unresolved-openai-responses-framing",
+            expectedInputBoundPolicyVersion: "authority-required", expectedCoordinatorFencingEpoch: 1,
+            expectedCapabilitySnapshotId: "capability-1", expectedPriceSnapshotId: "price-1",
+            expectedSettings: Digest(), expectedOutputSchema: Digest(),
+            expectedEffectiveConfigurationId: "config-v2-1", expectedNonSecretReceipt: Digest()));
+
+        void AssertReceiptRebindRejected(Action<V2Receipt> mutate)
+        {
+            V2Frame rebound = blockedReceipt.Clone();
+            mutate(rebound.Receipt);
+            Assert.ThrowsExactly<InvalidDataException>(() => HelperProtocolV2Codec.Decode(
+                rebound.ToByteArray(), HelperNow, "assignment-dispatch", "command-dispatch",
+                expectedOperationId: "operation-1", expectedAttemptId: "attempt-1",
+                expectedRequestId: "request-1", expectedDispatchId: "dispatch-1",
+                expectedRequestFingerprintSha256: new byte[32],
+                expectedInputBoundPolicyId: "unresolved-openai-responses-framing",
+                expectedInputBoundPolicyVersion: "authority-required", expectedCoordinatorFencingEpoch: 1,
+                expectedCapabilitySnapshotId: "capability-1", expectedPriceSnapshotId: "price-1",
+                expectedSettings: Digest(), expectedOutputSchema: Digest(),
+                expectedEffectiveConfigurationId: "config-v2-1", expectedNonSecretReceipt: Digest()));
+        }
+        AssertReceiptRebindRejected(x => x.AssignmentId = "assignment-other");
+        AssertReceiptRebindRejected(x => x.CommandId = "command-other");
+        AssertReceiptRebindRejected(x => x.ProviderDispatch.OperationId.Value = "operation-other");
+        AssertReceiptRebindRejected(x => x.ProviderDispatch.AttemptId.Value = "attempt-other");
+        AssertReceiptRebindRejected(x => x.RequestId = "request-other");
+        AssertReceiptRebindRejected(x => x.DispatchId.Value = "dispatch-other");
+        AssertReceiptRebindRejected(x => x.RequestFingerprintSha256 = ByteString.CopyFrom(Enumerable.Repeat((byte)1, 32).ToArray()));
+        AssertReceiptRebindRejected(x => x.CoordinatorFencingEpoch = 2);
+        AssertReceiptRebindRejected(x => x.InputBoundProof.PolicyId = "policy-other");
+        AssertReceiptRebindRejected(x => x.InputBoundProof.PolicyVersion = "version-other");
+        AssertReceiptRebindRejected(x => x.CapabilitySnapshotId.Value = "capability-other");
+        AssertReceiptRebindRejected(x => x.PriceSnapshotId.Value = "price-other");
+        AssertReceiptRebindRejected(x => x.Settings = Digest([2]));
+        AssertReceiptRebindRejected(x => x.OutputSchema = Digest([2]));
+        AssertReceiptRebindRejected(x => x.EffectiveConfigurationId = "config-v2-other");
+        AssertReceiptRebindRejected(x => x.NonSecretReceipt = Digest([2]));
     }
 
     [TestMethod]
@@ -566,12 +626,12 @@ public sealed class ProviderContractJsonCodecTests
             OwnerKind = "evidence-acquisition-run",
             OwnerId = "acquisition-1",
             JobNodeId = "job-1",
+            EffectiveConfigurationV2Id = "config-v2-1",
             InputBoundProofStatus = InputBoundProofStatus.AuthorityRequired,
             InputBoundPolicyId = "unresolved-openai-responses-framing",
             InputBoundPolicyVersion = "authority-required",
             InstallationSnapshotId = "install-1",
             AnalysisContextId = "context-1",
-            EffectiveConfigurationId = "config-1",
             ResolvedInputManifestId = "manifest-1",
             PromptId = "prompt-1",
             PromptFingerprintSha256 = ByteString.CopyFrom(new byte[32]),
@@ -696,6 +756,9 @@ public sealed class ProviderContractJsonCodecTests
             OwnerKind = "evidence-acquisition-run",
             OwnerId = "acquisition-1",
             JobNodeId = "job-1",
+            EffectiveConfigurationV2Id = "config-v2-1",
+            CommandId = "command-1",
+            RequestedAt = ToInstant(HelperNow),
             State = ProviderOperationLifecycleState.InputBoundBlocked,
             SettlementState = ProviderSettlementState.NotStarted,
             ReplayState = ProviderReplayState.NotAvailable,
@@ -766,8 +829,25 @@ public sealed class ProviderContractJsonCodecTests
             ParentAnalysisRunId = "run-1",
             ApplicationScopeId = "application-1",
             CostAttributionScopeId = "cost-1",
+            SourceRevisionId = "source-revision-1",
             ValidationIds = { "validation-1" },
             ApplicationLinkIds = { "application-link-1" },
+            AdmissionLinks =
+            {
+                new ProviderSemanticAdmissionLink
+                {
+                    AdmissionId = "admission-1",
+                    ProposalId = "proposal-1",
+                    OperationId = new OperationId { Value = "operation-1" },
+                    ResponseRecordId = "response-1",
+                    OwnerKind = "evidence-acquisition-run",
+                    OwnerId = "acquisition-1",
+                    RootSubjectId = "source-revision-1",
+                    ValidationId = "validation-1",
+                    ApplicationLinkId = "application-link-1",
+                    State = "admitted",
+                },
+            },
         };
         ApplicationProviderContractValidator.Validate(sourceClaim);
         sourceClaim.OwnerId = "acquisition-other";
@@ -785,6 +865,22 @@ public sealed class ProviderContractJsonCodecTests
             CandidateId = "candidate-1",
             ValidationIds = { "validation-1" },
             AdmissionLinkIds = { "admission-1" },
+            AdmissionLinks =
+            {
+                new ProviderSemanticAdmissionLink
+                {
+                    AdmissionId = "admission-1",
+                    ProposalId = "proposal-2",
+                    OperationId = new OperationId { Value = "operation-2" },
+                    ResponseRecordId = "response-2",
+                    OwnerKind = "analysis-run",
+                    OwnerId = "run-1",
+                    RootSubjectId = "candidate-1",
+                    ValidationId = "validation-1",
+                    ApplicationLinkId = "admission-1",
+                    State = "admitted",
+                },
+            },
         };
         ApplicationProviderContractValidator.Validate(candidate);
         candidate.AnalysisRunId = " ";
@@ -796,9 +892,21 @@ public sealed class ProviderContractJsonCodecTests
         ProviderResponsePayload unavailableResponse = new()
         {
             ResponseRecordId = "response-1",
+            OperationKind = Infinium.Contracts.Protobuf.Application.V1.ProviderOperationKind.SourceClaimExtraction,
+            Limits = ApplicationLimits(),
             MaximumRawResponseBytes = 1_048_576,
+            RawResponseAvailability = AppProviderAvailabilityState.Unavailable,
             ResponseHeadersAvailability = AppProviderAvailabilityState.Unavailable,
+            HttpStatusAvailability = AppProviderAvailabilityState.Unavailable,
+            ProviderResponseIdAvailability = AppProviderAvailabilityState.Unavailable,
+            ClientRequestIdAvailability = AppProviderAvailabilityState.Unavailable,
             ProviderRequestIdAvailability = AppProviderAvailabilityState.Unavailable,
+            RefusalAvailability = AppProviderAvailabilityState.Unavailable,
+            IncompleteAvailability = AppProviderAvailabilityState.Unavailable,
+            ErrorAvailability = AppProviderAvailabilityState.Unavailable,
+            ReturnedModelAvailability = AppProviderAvailabilityState.Unavailable,
+            ReturnedServiceTierAvailability = AppProviderAvailabilityState.Unavailable,
+            BillingEvidenceAvailability = AppProviderAvailabilityState.Unavailable,
             ResponseState = "unknown",
             RequestedModel = "gpt-5.6-sol",
             RequestedServiceTier = "default",
@@ -904,7 +1012,12 @@ public sealed class ProviderContractJsonCodecTests
         AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "$defs.priceSnapshot.model", "provider_price_snapshots.model", "ADR-0020");
         AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "$defs.priceRule.rule_id", "provider_price_rules.rule_id", "ADR-0023");
         AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "command_id", "provider_operation_blocks.command_id", "ADR-0016");
-        AssertTraceOmission(contracts, "provider-operation.v1.schema.json", "command_id", "output", "command_id");
+        AssertTraceProjection(contracts, "provider-operation.v1.schema.json", "command_id", "output", "ProviderOperationPayload", "command_id");
+        AssertTraceProjection(contracts, "provider-operation.v1.schema.json", "requested_at", "output", "ProviderOperationPayload", "requested_at");
+        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "effective_configuration_id",
+            "provider_operation_blocks.effective_configuration_id", "ADR-0025");
+        AssertTraceProjection(contracts, "provider-operation.v1.schema.json", "effective_configuration_id",
+            "output", "ProviderOperationPayload", "effective_configuration_v2_id");
         AssertTraceMapping(contracts, "source-claim-extraction.v1.schema.json", "acquisition_run_id",
             "evidence_acquisition_runs.acquisition_run_id", "ADR-0002");
         AssertTraceMapping(contracts, "source-claim-extraction.v1.schema.json", "owner_id",
@@ -919,10 +1032,22 @@ public sealed class ProviderContractJsonCodecTests
             "provider_operation_blocks.owner_kind", "ADR-0016");
         AssertTraceMapping(contracts, "source-claim-extraction.v1.schema.json", "application_link_ids",
             "evidence_acquisition_application_links.application_link_id", "ADR-0016");
+        AssertTraceMapping(contracts, "source-claim-extraction.v1.schema.json", "source_revision_id",
+            "provider_semantic_proposals.root_subject_id", "ADR-0013");
+        AssertTraceMapping(contracts, "source-claim-extraction.v1.schema.json", "admission_links",
+            "provider_semantic_admissions.operation_id", "provider_semantic_admissions.application_link_id");
+        AssertTraceProjection(contracts, "source-claim-extraction.v1.schema.json", "source_revision_id",
+            "output", "SourceClaimExtractionPayload", "source_revision_id");
+        AssertTraceProjection(contracts, "source-claim-extraction.v1.schema.json", "admission_links",
+            "output", "SourceClaimExtractionPayload", "admission_links");
         AssertTraceMapping(contracts, "candidate-investigation.v1.schema.json", "owner_kind",
             "provider_operation_blocks.owner_kind", "ADR-0016");
         AssertTraceMapping(contracts, "candidate-investigation.v1.schema.json", "admission_link_ids",
             "provider_semantic_admissions.admission_id", "ADR-0013");
+        AssertTraceMapping(contracts, "candidate-investigation.v1.schema.json", "admission_links",
+            "provider_semantic_admissions.validation_id", "provider_semantic_admissions.application_link_id");
+        AssertTraceProjection(contracts, "candidate-investigation.v1.schema.json", "admission_links",
+            "output", "CandidateInvestigationPayload", "admission_links");
         AssertTraceProjection(contracts, "source-claim-extraction.v1.schema.json", "owner_kind",
             "output", "SourceClaimExtractionPayload", "owner_kind");
         AssertTraceMapping(contracts, "provider-response.v1.schema.json", "input_bound_proof",
@@ -935,6 +1060,14 @@ public sealed class ProviderContractJsonCodecTests
             "output", "ProviderResponsePayload", "input_bound_proof_status", "input_bound_policy_id", "input_bound_policy_version");
         AssertTraceProjection(contracts, "provider-response.v1.schema.json", "client_request_id",
             "output", "ProviderResponsePayload", "client_request_id");
+        AssertTraceMapping(contracts, "effective-scan-configuration.v2.schema.json", "local_configuration_v1_fingerprint",
+            "provider_effective_scan_configurations_v2.local_configuration_v1_fingerprint", "ADR-0025");
+        AssertTraceMapping(contracts, "effective-scan-configuration.v2.schema.json", "access_profile_id",
+            "provider_effective_scan_configurations_v2.profile_id", "ADR-0025");
+        AssertTraceMapping(contracts, "run-output.v2.schema.json", "effective_configuration_v2_id",
+            "provider_run_output_v2_bindings.effective_configuration_v2_id", "ADR-0019");
+        AssertTraceProjection(contracts, "run-output.v2.schema.json", "effective_configuration_v2_id",
+            "replay", "ProviderReplayPayload", "effective_configuration_id");
         AssertTraceOmission(contracts, "run-output.v2.schema.json", "$defs.publication.live",
             "persistence", "$defs.publication.live", "unresolved_hold");
 

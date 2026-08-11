@@ -131,6 +131,9 @@ message ProviderOperationPayload {
   reserved "canonical_request_bytes", "proved_input_token_bound";
   ProviderResponsePayload response = 38;
   OptionalProviderQuantity total_tokens = 39;
+  string effective_configuration_v2_id = 40;
+  string command_id = 41;
+  infinium.common.v1.Instant requested_at = 42;
 }
 
 message ProviderResponsePayload {
@@ -179,6 +182,18 @@ message ProviderResponsePayload {
   string client_request_id = 43;
   infinium.common.v1.ContentDigest billing_evidence = 44;
   string authorization_id = 45;
+  ProviderOperationKind operation_kind = 46;
+  ProviderOperationLimits limits = 47;
+  ProviderAvailabilityState raw_response_availability = 48;
+  ProviderAvailabilityState http_status_availability = 49;
+  ProviderAvailabilityState provider_response_id_availability = 50;
+  ProviderAvailabilityState client_request_id_availability = 51;
+  ProviderAvailabilityState refusal_availability = 52;
+  ProviderAvailabilityState incomplete_availability = 53;
+  ProviderAvailabilityState error_availability = 54;
+  ProviderAvailabilityState returned_model_availability = 55;
+  ProviderAvailabilityState returned_service_tier_availability = 56;
+  ProviderAvailabilityState billing_evidence_availability = 57;
 }
 
 message ProviderRateLimitFact {
@@ -301,7 +316,7 @@ message SubmitProviderOperationRequest {
   reserved "canonical_request_bytes", "proved_input_token_bound";
   string installation_snapshot_id = 21;
   string analysis_context_id = 22;
-  string effective_configuration_id = 23;
+  string effective_configuration_v2_id = 23;
   string resolved_input_manifest_id = 24;
   string prompt_id = 25;
   bytes prompt_fingerprint_sha256 = 26;
@@ -437,6 +452,8 @@ message SourceClaimExtractionPayload {
   string cost_attribution_scope_id = 7;
   repeated string validation_ids = 8;
   repeated string application_link_ids = 9;
+  string source_revision_id = 10;
+  repeated ProviderSemanticAdmissionLink admission_links = 11;
 }
 
 message CandidateInvestigationPayload {
@@ -447,6 +464,20 @@ message CandidateInvestigationPayload {
   string candidate_id = 5;
   repeated string validation_ids = 6;
   repeated string admission_link_ids = 7;
+  repeated ProviderSemanticAdmissionLink admission_links = 8;
+}
+
+message ProviderSemanticAdmissionLink {
+  string admission_id = 1;
+  string proposal_id = 2;
+  infinium.domain.v1.OperationId operation_id = 3;
+  string response_record_id = 4;
+  string owner_kind = 5;
+  string owner_id = 6;
+  string root_subject_id = 7;
+  string validation_id = 8;
+  string application_link_id = 9;
+  string state = 10;
 }
 
 message GetAnalysisOutputRequest {

@@ -443,14 +443,19 @@ public sealed partial class AuthoritativeStore
         "table:taxonomy_assignments",
         "table:taxonomy_projection_edges",
         "table:evidence_acquisition_application_links",
+        "table:evidence_acquisition_attempts",
+        "table:evidence_acquisition_commands",
+        "table:evidence_acquisition_job_nodes",
         "table:evidence_acquisition_parent_links",
         "table:evidence_acquisition_runs",
         "table:provider_access_profiles",
         "table:provider_budget_projection",
         "table:provider_capability_snapshots",
         "table:provider_credential_intents",
+        "table:provider_command_bindings",
         "table:provider_dispatch_fences",
         "table:provider_generations",
+        "table:provider_effective_scan_configurations_v2",
         "table:provider_operation_attempts",
         "table:provider_operation_authorizations",
         "table:provider_operation_blocks",
@@ -460,12 +465,14 @@ public sealed partial class AuthoritativeStore
         "table:provider_price_snapshots",
         "table:provider_rate_limit_facts",
         "table:provider_replay_edges",
+        "table:provider_run_output_v2_bindings",
         "table:provider_requests",
         "table:provider_reservation_scope_items",
         "table:provider_reservations",
         "table:provider_responses",
         "table:provider_semantic_admissions",
         "table:provider_semantic_proposals",
+        "table:provider_semantic_validations",
         "table:provider_settlement_adjustments",
         "table:provider_settlements",
         "table:provider_transport_events",
@@ -579,10 +586,17 @@ public sealed partial class AuthoritativeStore
         "trigger:snapshot_capture_publications_append_only_update",
         "trigger:evidence_acquisition_application_links_append_only_delete",
         "trigger:evidence_acquisition_application_links_append_only_update",
+        "trigger:evidence_acquisition_attempts_append_only_delete",
+        "trigger:evidence_acquisition_attempts_append_only_update",
+        "trigger:evidence_acquisition_commands_append_only_delete",
+        "trigger:evidence_acquisition_commands_append_only_update",
+        "trigger:evidence_acquisition_job_nodes_append_only_delete",
+        "trigger:evidence_acquisition_job_nodes_append_only_update",
         "trigger:evidence_acquisition_parent_links_append_only_delete",
         "trigger:evidence_acquisition_parent_links_append_only_update",
         "trigger:evidence_acquisition_runs_append_only_delete",
         "trigger:evidence_acquisition_runs_append_only_update",
+        "trigger:provider_command_binding_owner_guard",
         "trigger:authorization_owner_job_guard",
         "trigger:provider_authority_release_required",
         "trigger:provider_block_eligibility_guard",
@@ -594,6 +608,10 @@ public sealed partial class AuthoritativeStore
         "trigger:provider_profile_projection_monotonic_update_guard",
         "trigger:provider_profile_transition_order_guard",
         "trigger:provider_response_transport_binding_guard",
+        "trigger:provider_replay_configuration_guard",
+        "trigger:provider_run_output_configuration_guard",
+        "trigger:provider_semantic_admission_application_guard",
+        "trigger:provider_semantic_proposal_root_guard",
         "trigger:provider_transport_event_order_guard",
         "trigger:provider_usage_operation_ceiling_guard",
         "trigger:provider_delete_pending_never_reactivates_guard",
@@ -601,12 +619,16 @@ public sealed partial class AuthoritativeStore
         "trigger:provider_access_profiles_append_only_update",
         "trigger:provider_capability_snapshots_append_only_delete",
         "trigger:provider_capability_snapshots_append_only_update",
+        "trigger:provider_command_bindings_append_only_delete",
+        "trigger:provider_command_bindings_append_only_update",
         "trigger:provider_credential_intents_append_only_delete",
         "trigger:provider_credential_intents_append_only_update",
         "trigger:provider_dispatch_fences_append_only_delete",
         "trigger:provider_dispatch_fences_append_only_update",
         "trigger:provider_generations_append_only_delete",
         "trigger:provider_generations_append_only_update",
+        "trigger:provider_effective_scan_configurations_v2_append_only_delete",
+        "trigger:provider_effective_scan_configurations_v2_append_only_update",
         "trigger:provider_operation_attempts_append_only_delete",
         "trigger:provider_operation_attempts_append_only_update",
         "trigger:provider_operation_authorizations_append_only_delete",
@@ -621,6 +643,8 @@ public sealed partial class AuthoritativeStore
         "trigger:provider_rate_limit_facts_append_only_update",
         "trigger:provider_replay_edges_append_only_delete",
         "trigger:provider_replay_edges_append_only_update",
+        "trigger:provider_run_output_v2_bindings_append_only_delete",
+        "trigger:provider_run_output_v2_bindings_append_only_update",
         "trigger:provider_requests_append_only_delete",
         "trigger:provider_requests_append_only_update",
         "trigger:provider_reservation_scope_items_append_only_delete",
@@ -633,6 +657,8 @@ public sealed partial class AuthoritativeStore
         "trigger:provider_semantic_admissions_append_only_update",
         "trigger:provider_semantic_proposals_append_only_delete",
         "trigger:provider_semantic_proposals_append_only_update",
+        "trigger:provider_semantic_validations_append_only_delete",
+        "trigger:provider_semantic_validations_append_only_update",
         "trigger:provider_settlement_adjustments_append_only_delete",
         "trigger:provider_settlement_adjustments_append_only_update",
         "trigger:provider_settlements_append_only_delete",
@@ -696,13 +722,18 @@ public sealed partial class AuthoritativeStore
     private static readonly string[] SchemaV6AppendOnlyTables =
     [
         "evidence_acquisition_application_links",
+        "evidence_acquisition_attempts",
+        "evidence_acquisition_commands",
+        "evidence_acquisition_job_nodes",
         "evidence_acquisition_parent_links",
         "evidence_acquisition_runs",
         "provider_access_profiles",
         "provider_capability_snapshots",
+        "provider_command_bindings",
         "provider_credential_intents",
         "provider_dispatch_fences",
         "provider_generations",
+        "provider_effective_scan_configurations_v2",
         "provider_operation_attempts",
         "provider_operation_authorizations",
         "provider_operation_blocks",
@@ -710,12 +741,14 @@ public sealed partial class AuthoritativeStore
         "provider_price_rules",
         "provider_rate_limit_facts",
         "provider_replay_edges",
+        "provider_run_output_v2_bindings",
         "provider_requests",
         "provider_reservation_scope_items",
         "provider_reservations",
         "provider_responses",
         "provider_semantic_admissions",
         "provider_semantic_proposals",
+        "provider_semantic_validations",
         "provider_settlement_adjustments",
         "provider_settlements",
         "provider_transport_events",
@@ -1752,6 +1785,9 @@ public sealed partial class AuthoritativeStore
             to_lifecycle_state TEXT NOT NULL CHECK(to_lifecycle_state IN (
               'pending-enrollment','active-unverified','active-verified','replacing','disabled',
               'delete-pending','deleted','secure-store-unavailable','recovery-required')),
+            outcome_lifecycle_state TEXT NOT NULL CHECK(outcome_lifecycle_state IN (
+              'none','pending-enrollment','active-unverified','active-verified','replacing','disabled',
+              'delete-pending','deleted','secure-store-unavailable','recovery-required')),
             verification_state TEXT NOT NULL CHECK(verification_state IN (
               'available','unavailable','unsupported','not-applicable','not-used')),
             account_identity_id TEXT,
@@ -1766,11 +1802,12 @@ public sealed partial class AuthoritativeStore
               REFERENCES provider_generations(profile_id,generation_id) ON DELETE RESTRICT,
             FOREIGN KEY(capability_snapshot_id)
               REFERENCES provider_capability_snapshots(capability_snapshot_id) ON DELETE RESTRICT,
-            CHECK((intent_kind = 'enroll' AND ((from_lifecycle_state = 'none' AND to_lifecycle_state = 'pending-enrollment')
+            CHECK(intent_state = 'cancelled' OR (intent_kind = 'enroll' AND ((from_lifecycle_state = 'none' AND to_lifecycle_state = 'pending-enrollment')
                 OR (from_lifecycle_state = 'pending-enrollment' AND to_lifecycle_state IN ('active-unverified','secure-store-unavailable','recovery-required'))))
               OR (intent_kind = 'verify' AND from_lifecycle_state = 'active-unverified'
                 AND to_lifecycle_state IN ('active-verified','secure-store-unavailable','recovery-required'))
-              OR (intent_kind = 'replace' AND ((from_lifecycle_state IN ('active-unverified','active-verified') AND to_lifecycle_state = 'replacing')
+              OR (intent_kind = 'replace' AND ((from_lifecycle_state IN ('active-unverified','active-verified')
+                  AND to_lifecycle_state IN ('replacing','active-unverified','active-verified'))
                 OR (from_lifecycle_state = 'replacing' AND to_lifecycle_state IN ('active-unverified','active-verified','secure-store-unavailable','recovery-required'))))
               OR (intent_kind = 'disable' AND from_lifecycle_state IN ('active-unverified','active-verified','replacing') AND to_lifecycle_state = 'disabled')
               OR (intent_kind = 'delete' AND ((from_lifecycle_state IN ('active-unverified','active-verified','disabled','replacing') AND to_lifecycle_state = 'delete-pending')
@@ -1801,10 +1838,13 @@ public sealed partial class AuthoritativeStore
             CHECK(intent_kind <> 'delete' OR intent_state <> 'failed'
               OR (from_lifecycle_state = 'delete-pending' AND to_lifecycle_state = 'delete-pending'
                 AND cleanup_disposition = 'failed')),
-            CHECK((intent_state = 'pending' AND to_lifecycle_state IN ('pending-enrollment','replacing','delete-pending'))
-              OR (intent_state = 'completed' AND to_lifecycle_state IN ('active-unverified','active-verified','disabled','deleted'))
-              OR (intent_state IN ('failed','unavailable') AND to_lifecycle_state IN ('secure-store-unavailable','recovery-required','delete-pending'))
-              OR (intent_state = 'cancelled' AND from_lifecycle_state = to_lifecycle_state))
+            CHECK((intent_state = 'pending' AND outcome_lifecycle_state = from_lifecycle_state)
+              OR (intent_state = 'completed' AND outcome_lifecycle_state = to_lifecycle_state)
+              OR (intent_state IN ('failed','unavailable') AND outcome_lifecycle_state IN ('secure-store-unavailable','recovery-required','delete-pending'))
+              OR (intent_state = 'cancelled' AND outcome_lifecycle_state = from_lifecycle_state)),
+            CHECK(intent_state <> 'cancelled' OR (
+              intent_kind IN ('enroll','replace','verify','disable','delete','recover')
+              AND to_lifecycle_state <> outcome_lifecycle_state))
         ) STRICT;
         CREATE TABLE provider_capability_snapshots(
             capability_snapshot_id TEXT PRIMARY KEY,
@@ -1851,6 +1891,40 @@ public sealed partial class AuthoritativeStore
             revision TEXT NOT NULL CHECK(length(trim(revision)) > 0),
             PRIMARY KEY(price_snapshot_id,rule_id)
         ) STRICT;
+        CREATE TABLE provider_effective_scan_configurations_v2(
+            configuration_id TEXT PRIMARY KEY CHECK(length(trim(configuration_id)) > 0),
+            local_configuration_v1_id TEXT NOT NULL CHECK(length(trim(local_configuration_v1_id)) > 0),
+            local_configuration_v1_fingerprint TEXT NOT NULL CHECK(length(local_configuration_v1_fingerprint) = 64),
+            profile_id TEXT NOT NULL,
+            generation_id TEXT NOT NULL,
+            model TEXT NOT NULL CHECK(model = 'gpt-5.6-sol'),
+            reasoning_effort TEXT NOT NULL CHECK(reasoning_effort = 'medium'),
+            reasoning_context TEXT NOT NULL CHECK(reasoning_context = 'current_turn'),
+            reasoning_mode TEXT NOT NULL CHECK(reasoning_mode = 'standard'),
+            store INTEGER NOT NULL CHECK(store = 0),
+            service_tier TEXT NOT NULL CHECK(service_tier = 'default'),
+            background INTEGER NOT NULL CHECK(background = 0),
+            stream INTEGER NOT NULL CHECK(stream = 0),
+            tool_choice TEXT NOT NULL CHECK(tool_choice = 'none'),
+            tool_count INTEGER NOT NULL CHECK(tool_count = 0),
+            truncation TEXT NOT NULL CHECK(truncation = 'disabled'),
+            prompt_cache_mode TEXT NOT NULL CHECK(prompt_cache_mode = 'explicit'),
+            has_prompt_cache_key INTEGER NOT NULL CHECK(has_prompt_cache_key = 0),
+            has_prompt_cache_breakpoint INTEGER NOT NULL CHECK(has_prompt_cache_breakpoint = 0),
+            maximum_request_bytes INTEGER NOT NULL CHECK(maximum_request_bytes BETWEEN 1 AND 65536),
+            maximum_input_tokens INTEGER NOT NULL CHECK(maximum_input_tokens BETWEEN 1 AND 73728),
+            maximum_output_tokens INTEGER NOT NULL CHECK(maximum_output_tokens BETWEEN 1 AND 4096),
+            maximum_raw_response_bytes INTEGER NOT NULL CHECK(maximum_raw_response_bytes BETWEEN 1 AND 1048576),
+            maximum_dispatch_count INTEGER NOT NULL CHECK(maximum_dispatch_count = 1),
+            maximum_calculated_nano_usd INTEGER NOT NULL CHECK(maximum_calculated_nano_usd BETWEEN 1 AND 600000000),
+            deadline_milliseconds INTEGER NOT NULL CHECK(deadline_milliseconds BETWEEN 1 AND 120000),
+            not_used_boundaries_json TEXT NOT NULL CHECK(json(not_used_boundaries_json) = json('["hosted-search","nexus","loot"]')),
+            created_at TEXT NOT NULL,
+            UNIQUE(configuration_id,profile_id,generation_id),
+            UNIQUE(configuration_id,local_configuration_v1_id,local_configuration_v1_fingerprint),
+            FOREIGN KEY(profile_id,generation_id)
+              REFERENCES provider_generations(profile_id,generation_id) ON DELETE RESTRICT
+        ) STRICT;
         CREATE TABLE evidence_acquisition_runs(
             acquisition_run_id TEXT PRIMARY KEY CHECK(length(trim(acquisition_run_id)) > 0),
             installation_snapshot_id TEXT NOT NULL,
@@ -1867,6 +1941,55 @@ public sealed partial class AuthoritativeStore
             UNIQUE(acquisition_run_id,parent_analysis_run_id,installation_snapshot_id,analysis_context_id,
               effective_configuration_id,resolved_input_manifest_id,application_scope_id,cost_attribution_scope_id)
         ) STRICT;
+        CREATE TABLE evidence_acquisition_job_nodes(
+            acquisition_job_node_id TEXT PRIMARY KEY CHECK(length(trim(acquisition_job_node_id)) > 0),
+            acquisition_run_id TEXT NOT NULL REFERENCES evidence_acquisition_runs(acquisition_run_id) ON DELETE RESTRICT,
+            node_kind TEXT NOT NULL CHECK(length(trim(node_kind)) > 0),
+            lifecycle_state TEXT NOT NULL CHECK(length(trim(lifecycle_state)) > 0),
+            created_at TEXT NOT NULL,
+            UNIQUE(acquisition_run_id,acquisition_job_node_id)
+        ) STRICT;
+        CREATE TABLE evidence_acquisition_attempts(
+            acquisition_attempt_id TEXT PRIMARY KEY CHECK(length(trim(acquisition_attempt_id)) > 0),
+            acquisition_run_id TEXT NOT NULL,
+            acquisition_job_node_id TEXT NOT NULL,
+            attempt_ordinal INTEGER NOT NULL CHECK(attempt_ordinal > 0),
+            coordinator_fencing_epoch INTEGER NOT NULL CHECK(coordinator_fencing_epoch > 0),
+            created_at TEXT NOT NULL,
+            UNIQUE(acquisition_run_id,attempt_ordinal),
+            UNIQUE(acquisition_run_id,acquisition_attempt_id),
+            FOREIGN KEY(acquisition_run_id,acquisition_job_node_id)
+              REFERENCES evidence_acquisition_job_nodes(acquisition_run_id,acquisition_job_node_id) ON DELETE RESTRICT
+        ) STRICT;
+        CREATE TABLE evidence_acquisition_commands(
+            command_id TEXT PRIMARY KEY CHECK(length(trim(command_id)) > 0),
+            acquisition_run_id TEXT NOT NULL REFERENCES evidence_acquisition_runs(acquisition_run_id) ON DELETE RESTRICT,
+            command_kind TEXT NOT NULL CHECK(command_kind = 'provider-operation'),
+            requested_at TEXT NOT NULL,
+            disposition TEXT NOT NULL CHECK(length(trim(disposition)) > 0),
+            UNIQUE(command_id,acquisition_run_id,requested_at)
+        ) STRICT;
+        CREATE TABLE provider_command_bindings(
+            command_id TEXT PRIMARY KEY CHECK(length(trim(command_id)) > 0),
+            owner_kind TEXT NOT NULL CHECK(owner_kind IN ('analysis-run','evidence-acquisition-run')),
+            owner_id TEXT NOT NULL CHECK(length(trim(owner_id)) > 0),
+            requested_at TEXT NOT NULL,
+            UNIQUE(command_id,owner_kind,owner_id,requested_at)
+        ) STRICT;
+        CREATE TRIGGER provider_command_binding_owner_guard
+        BEFORE INSERT ON provider_command_bindings
+        BEGIN
+          SELECT CASE
+            WHEN NEW.owner_kind = 'analysis-run' AND NOT EXISTS(
+              SELECT 1 FROM durable_commands c
+              WHERE c.command_id = NEW.command_id AND c.run_id = NEW.owner_id AND c.created_at = NEW.requested_at)
+              THEN RAISE(ABORT, 'provider command must bind exact analysis-run durable command and request time')
+            WHEN NEW.owner_kind = 'evidence-acquisition-run' AND NOT EXISTS(
+              SELECT 1 FROM evidence_acquisition_commands c
+              WHERE c.command_id = NEW.command_id AND c.acquisition_run_id = NEW.owner_id AND c.requested_at = NEW.requested_at)
+              THEN RAISE(ABORT, 'provider command must bind exact evidence-acquisition durable command and request time')
+          END;
+        END;
         CREATE TABLE evidence_acquisition_parent_links(
             parent_link_id TEXT PRIMARY KEY,
             acquisition_run_id TEXT NOT NULL REFERENCES evidence_acquisition_runs(acquisition_run_id) ON DELETE RESTRICT,
@@ -1892,8 +2015,8 @@ public sealed partial class AuthoritativeStore
             operation_id TEXT PRIMARY KEY,
             owner_kind TEXT NOT NULL CHECK(owner_kind IN ('analysis-run','evidence-acquisition-run')),
             owner_id TEXT NOT NULL,
-            job_node_id TEXT NOT NULL REFERENCES job_nodes(job_node_id) ON DELETE RESTRICT,
-            command_id TEXT NOT NULL UNIQUE REFERENCES durable_commands(command_id) ON DELETE RESTRICT,
+            job_node_id TEXT NOT NULL,
+            command_id TEXT NOT NULL UNIQUE,
             requested_at TEXT NOT NULL,
             confirmed_at TEXT NOT NULL,
             installation_snapshot_id TEXT NOT NULL,
@@ -1932,8 +2055,18 @@ public sealed partial class AuthoritativeStore
             UNIQUE(operation_id,profile_id,generation_id),
             FOREIGN KEY(profile_id,generation_id)
               REFERENCES provider_generations(profile_id,generation_id) ON DELETE RESTRICT,
+            FOREIGN KEY(command_id,owner_kind,owner_id,requested_at)
+              REFERENCES provider_command_bindings(command_id,owner_kind,owner_id,requested_at) ON DELETE RESTRICT,
+            FOREIGN KEY(effective_configuration_id,profile_id,generation_id)
+              REFERENCES provider_effective_scan_configurations_v2(configuration_id,profile_id,generation_id) ON DELETE RESTRICT,
             FOREIGN KEY(canonical_request_payload_id,canonical_request_fingerprint,canonical_request_bytes)
               REFERENCES payloads(payload_id,content_sha256,byte_length) ON DELETE RESTRICT,
+            CHECK(length(requested_at) = 33 AND requested_at GLOB '????-??-??T??:??:??.???????+00:00'
+              AND julianday(requested_at) IS NOT NULL AND substr(requested_at,1,23) = strftime('%Y-%m-%dT%H:%M:%f',requested_at)),
+            CHECK(length(confirmed_at) = 33 AND confirmed_at GLOB '????-??-??T??:??:??.???????+00:00'
+              AND julianday(confirmed_at) IS NOT NULL AND substr(confirmed_at,1,23) = strftime('%Y-%m-%dT%H:%M:%f',confirmed_at)),
+            CHECK(length(dispatch_deadline_utc) = 33 AND dispatch_deadline_utc GLOB '????-??-??T??:??:??.???????+00:00'
+              AND julianday(dispatch_deadline_utc) IS NOT NULL AND substr(dispatch_deadline_utc,1,23) = strftime('%Y-%m-%dT%H:%M:%f',dispatch_deadline_utc)),
             CHECK(requested_at <= confirmed_at AND confirmed_at < dispatch_deadline_utc),
             CHECK((julianday(dispatch_deadline_utc) - julianday(confirmed_at)) * 86400000.0 <= deadline_milliseconds),
             CHECK((julianday(dispatch_deadline_utc) - julianday(requested_at)) * 86400000.0 <= deadline_milliseconds),
@@ -1957,7 +2090,9 @@ public sealed partial class AuthoritativeStore
             owner_id TEXT NOT NULL,
             analysis_run_id TEXT REFERENCES runs(run_id) ON DELETE RESTRICT,
             evidence_acquisition_run_id TEXT REFERENCES evidence_acquisition_runs(acquisition_run_id) ON DELETE RESTRICT,
-            job_node_id TEXT NOT NULL REFERENCES job_nodes(job_node_id) ON DELETE RESTRICT,
+            job_node_id TEXT NOT NULL,
+            command_id TEXT NOT NULL,
+            requested_at TEXT NOT NULL,
             profile_id TEXT NOT NULL REFERENCES provider_access_profiles(profile_id) ON DELETE RESTRICT,
             generation_id TEXT NOT NULL,
             revocation_epoch INTEGER NOT NULL CHECK(revocation_epoch >= 0),
@@ -1993,11 +2128,22 @@ public sealed partial class AuthoritativeStore
               input_bound_policy_id,input_bound_policy_version,input_bound_proof_status),
             UNIQUE(operation_id,coordinator_fencing_epoch),
             UNIQUE(operation_id,maximum_raw_response_bytes),
+            UNIQUE(operation_id,operation_kind,maximum_input_tokens,maximum_output_tokens,maximum_raw_response_bytes,maximum_calculated_nano_usd),
             UNIQUE(authorization_id,operation_id,profile_id,generation_id,revocation_epoch),
             FOREIGN KEY(profile_id,generation_id)
               REFERENCES provider_generations(profile_id,generation_id) ON DELETE RESTRICT,
+            FOREIGN KEY(command_id,owner_kind,owner_id,requested_at)
+              REFERENCES provider_command_bindings(command_id,owner_kind,owner_id,requested_at) ON DELETE RESTRICT,
+            FOREIGN KEY(effective_configuration_id,profile_id,generation_id)
+              REFERENCES provider_effective_scan_configurations_v2(configuration_id,profile_id,generation_id) ON DELETE RESTRICT,
             CHECK(request_fingerprint = canonical_request_fingerprint),
-            CHECK(confirmed_at < dispatch_deadline_utc),
+            CHECK(length(requested_at) = 33 AND requested_at GLOB '????-??-??T??:??:??.???????+00:00'
+              AND julianday(requested_at) IS NOT NULL AND substr(requested_at,1,23) = strftime('%Y-%m-%dT%H:%M:%f',requested_at)),
+            CHECK(length(confirmed_at) = 33 AND confirmed_at GLOB '????-??-??T??:??:??.???????+00:00'
+              AND julianday(confirmed_at) IS NOT NULL AND substr(confirmed_at,1,23) = strftime('%Y-%m-%dT%H:%M:%f',confirmed_at)),
+            CHECK(length(dispatch_deadline_utc) = 33 AND dispatch_deadline_utc GLOB '????-??-??T??:??:??.???????+00:00'
+              AND julianday(dispatch_deadline_utc) IS NOT NULL AND substr(dispatch_deadline_utc,1,23) = strftime('%Y-%m-%dT%H:%M:%f',dispatch_deadline_utc)),
+            CHECK(requested_at <= confirmed_at AND confirmed_at < dispatch_deadline_utc),
             CHECK((julianday(dispatch_deadline_utc) - julianday(confirmed_at)) * 86400000.0 <= deadline_milliseconds),
             CHECK((owner_kind = 'analysis-run' AND owner_id = analysis_run_id
                 AND analysis_run_id IS NOT NULL AND evidence_acquisition_run_id IS NULL)
@@ -2018,20 +2164,23 @@ public sealed partial class AuthoritativeStore
           SELECT CASE
             WHEN NEW.owner_kind = 'analysis-run' AND NOT EXISTS(
               SELECT 1 FROM runs r JOIN job_nodes j ON j.run_id = r.run_id
+              JOIN provider_effective_scan_configurations_v2 configuration
+                ON configuration.configuration_id = NEW.effective_configuration_id
+               AND configuration.local_configuration_v1_id = r.effective_scan_configuration_id
               WHERE r.run_id = NEW.owner_id AND j.job_node_id = NEW.job_node_id
                 AND r.installation_snapshot_id = NEW.installation_snapshot_id
                 AND r.analysis_context_id = NEW.analysis_context_id
-                AND r.effective_scan_configuration_id = NEW.effective_configuration_id
                 AND r.resolved_input_manifest_id = NEW.resolved_input_manifest_id)
               THEN RAISE(ABORT, 'analysis-run provider block job node owner mismatch')
             WHEN NEW.owner_kind = 'evidence-acquisition-run' AND NOT EXISTS(
               SELECT 1 FROM evidence_acquisition_runs a
-              JOIN runs r ON r.run_id = a.parent_analysis_run_id
-              JOIN job_nodes j ON j.run_id = r.run_id
-              WHERE a.acquisition_run_id = NEW.owner_id AND j.job_node_id = NEW.job_node_id
+              JOIN evidence_acquisition_job_nodes j ON j.acquisition_run_id = a.acquisition_run_id
+              JOIN provider_effective_scan_configurations_v2 configuration
+                ON configuration.configuration_id = NEW.effective_configuration_id
+               AND configuration.local_configuration_v1_id = a.effective_configuration_id
+              WHERE a.acquisition_run_id = NEW.owner_id AND j.acquisition_job_node_id = NEW.job_node_id
                 AND a.installation_snapshot_id = NEW.installation_snapshot_id
                 AND a.analysis_context_id = NEW.analysis_context_id
-                AND a.effective_configuration_id = NEW.effective_configuration_id
                 AND a.resolved_input_manifest_id = NEW.resolved_input_manifest_id)
               THEN RAISE(ABORT, 'evidence-acquisition provider block job node owner mismatch')
           END;
@@ -2058,7 +2207,18 @@ public sealed partial class AuthoritativeStore
               AND i.billing_scope_identity_id = p.billing_scope_identity_id
               AND i.to_lifecycle_state = p.lifecycle_state
               AND i.verification_state = p.verification_state
-              AND i.intent_state = 'completed')
+              AND i.intent_state = 'completed'
+              AND NOT EXISTS(
+                SELECT 1 FROM provider_credential_intents replacement
+                JOIN provider_generations replacement_generation
+                  ON replacement_generation.profile_id = replacement.profile_id
+                 AND replacement_generation.generation_id = replacement.generation_id
+                JOIN provider_generations current_generation
+                  ON current_generation.profile_id = p.profile_id
+                 AND current_generation.generation_id = p.generation_id
+                WHERE replacement.profile_id = p.profile_id
+                  AND replacement.intent_kind = 'replace' AND replacement.intent_state = 'pending'
+                  AND replacement_generation.generation_ordinal > current_generation.generation_ordinal))
             THEN RAISE(ABORT, 'provider block requires exact eligible verified profile generation') END;
         END;
         CREATE TRIGGER provider_authority_release_required
@@ -2072,20 +2232,23 @@ public sealed partial class AuthoritativeStore
           SELECT CASE
             WHEN NEW.owner_kind = 'analysis-run' AND NOT EXISTS(
               SELECT 1 FROM runs r JOIN job_nodes j ON j.run_id = r.run_id
+              JOIN provider_effective_scan_configurations_v2 configuration
+                ON configuration.configuration_id = NEW.effective_configuration_id
+               AND configuration.local_configuration_v1_id = r.effective_scan_configuration_id
               WHERE r.run_id = NEW.analysis_run_id AND j.job_node_id = NEW.job_node_id
                 AND r.installation_snapshot_id = NEW.installation_snapshot_id
                 AND r.analysis_context_id = NEW.analysis_context_id
-                AND r.effective_scan_configuration_id = NEW.effective_configuration_id
                 AND r.resolved_input_manifest_id = NEW.resolved_input_manifest_id)
               THEN RAISE(ABORT, 'analysis-run authorization job node owner mismatch')
             WHEN NEW.owner_kind = 'evidence-acquisition-run' AND NOT EXISTS(
               SELECT 1 FROM evidence_acquisition_runs a
-              JOIN runs r ON r.run_id = a.parent_analysis_run_id
-              JOIN job_nodes j ON j.run_id = r.run_id
-              WHERE a.acquisition_run_id = NEW.evidence_acquisition_run_id AND j.job_node_id = NEW.job_node_id
+              JOIN evidence_acquisition_job_nodes j ON j.acquisition_run_id = a.acquisition_run_id
+              JOIN provider_effective_scan_configurations_v2 configuration
+                ON configuration.configuration_id = NEW.effective_configuration_id
+               AND configuration.local_configuration_v1_id = a.effective_configuration_id
+              WHERE a.acquisition_run_id = NEW.evidence_acquisition_run_id AND j.acquisition_job_node_id = NEW.job_node_id
                 AND a.installation_snapshot_id = NEW.installation_snapshot_id
                 AND a.analysis_context_id = NEW.analysis_context_id
-                AND a.effective_configuration_id = NEW.effective_configuration_id
                 AND a.resolved_input_manifest_id = NEW.resolved_input_manifest_id)
               THEN RAISE(ABORT, 'evidence-acquisition authorization job node owner mismatch')
           END;
@@ -2181,7 +2344,9 @@ public sealed partial class AuthoritativeStore
             FOREIGN KEY(authorization_id,operation_id,profile_id,generation_id,revocation_epoch)
               REFERENCES provider_operation_authorizations(authorization_id,operation_id,profile_id,generation_id,revocation_epoch) ON DELETE RESTRICT,
             FOREIGN KEY(operation_id,coordinator_fencing_epoch)
-              REFERENCES provider_operation_authorizations(operation_id,coordinator_fencing_epoch) ON DELETE RESTRICT
+              REFERENCES provider_operation_authorizations(operation_id,coordinator_fencing_epoch) ON DELETE RESTRICT,
+            CHECK(length(evaluated_at) = 33 AND evaluated_at GLOB '????-??-??T??:??:??.???????+00:00'
+              AND julianday(evaluated_at) IS NOT NULL AND substr(evaluated_at,1,23) = strftime('%Y-%m-%dT%H:%M:%f',evaluated_at))
         ) STRICT;
         CREATE TRIGGER provider_dispatch_deadline_guard
         BEFORE INSERT ON provider_dispatch_fences
@@ -2244,30 +2409,44 @@ public sealed partial class AuthoritativeStore
             request_id TEXT NOT NULL,
             provider_attempt_id TEXT NOT NULL,
             dispatch_fence_id TEXT NOT NULL,
-            raw_response_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
-            raw_response_fingerprint TEXT NOT NULL CHECK(length(raw_response_fingerprint) = 64),
-            raw_response_bytes INTEGER NOT NULL CHECK(raw_response_bytes > 0 AND raw_response_bytes <= 1048576),
+            operation_kind TEXT NOT NULL CHECK(operation_kind IN ('transport-qualification','source-claim-extraction','candidate-investigation')),
+            maximum_input_tokens INTEGER NOT NULL CHECK(maximum_input_tokens BETWEEN 1 AND 73728),
+            maximum_output_tokens INTEGER NOT NULL CHECK(maximum_output_tokens BETWEEN 1 AND 4096),
+            maximum_calculated_nano_usd INTEGER NOT NULL CHECK(maximum_calculated_nano_usd BETWEEN 1 AND 600000000),
+            raw_response_availability TEXT NOT NULL CHECK(raw_response_availability IN ('available','unavailable','unsupported','not-applicable')),
+            raw_response_payload_id TEXT REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+            raw_response_fingerprint TEXT CHECK(raw_response_fingerprint IS NULL OR length(raw_response_fingerprint) = 64),
+            raw_response_bytes INTEGER CHECK(raw_response_bytes > 0 AND raw_response_bytes <= 1048576),
             maximum_raw_response_bytes INTEGER NOT NULL CHECK(maximum_raw_response_bytes > 0 AND maximum_raw_response_bytes <= 1048576),
             response_headers_payload_id TEXT REFERENCES payloads(payload_id) ON DELETE RESTRICT,
             response_headers_fingerprint TEXT,
             response_headers_bytes INTEGER CHECK(response_headers_bytes > 0 AND response_headers_bytes <= 65536),
             response_headers_availability TEXT NOT NULL CHECK(response_headers_availability IN ('available','unavailable')),
-            http_status INTEGER NOT NULL CHECK(http_status BETWEEN 100 AND 599),
+            http_status_availability TEXT NOT NULL CHECK(http_status_availability IN ('available','unavailable','unsupported','not-applicable')),
+            http_status INTEGER CHECK(http_status BETWEEN 100 AND 599),
+            provider_response_id_availability TEXT NOT NULL CHECK(provider_response_id_availability IN ('available','unavailable','unsupported','not-applicable')),
             provider_response_id TEXT,
-            client_request_id TEXT NOT NULL,
+            client_request_id_availability TEXT NOT NULL CHECK(client_request_id_availability IN ('available','unavailable','unsupported','not-applicable')),
+            client_request_id TEXT,
             provider_request_id TEXT,
             billing_evidence_payload_id TEXT REFERENCES payloads(payload_id) ON DELETE RESTRICT,
             billing_evidence_fingerprint TEXT,
             billing_evidence_bytes INTEGER CHECK(billing_evidence_bytes > 0 AND billing_evidence_bytes <= 65536),
-            provider_request_id_availability TEXT NOT NULL CHECK(provider_request_id_availability IN ('available','unavailable')),
-            response_state TEXT NOT NULL CHECK(response_state IN ('completed','refusal','incomplete','failed','queued','in-progress','malformed','oversized','mismatched','unknown')),
+            billing_evidence_availability TEXT NOT NULL CHECK(billing_evidence_availability IN ('available','unavailable','unsupported','not-applicable')),
+            provider_request_id_availability TEXT NOT NULL CHECK(provider_request_id_availability IN ('available','unavailable','unsupported','not-applicable')),
+            response_state TEXT NOT NULL CHECK(response_state IN ('completed','refusal','incomplete','failed','queued','in-progress','malformed','oversized','mismatched','unknown','cancelled')),
+            refusal_availability TEXT NOT NULL CHECK(refusal_availability IN ('available','unavailable','unsupported','not-applicable')),
             refusal_code TEXT,
+            incomplete_availability TEXT NOT NULL CHECK(incomplete_availability IN ('available','unavailable','unsupported','not-applicable')),
             incomplete_reason TEXT,
+            error_availability TEXT NOT NULL CHECK(error_availability IN ('available','unavailable','unsupported','not-applicable')),
             error_code TEXT,
             requested_model TEXT NOT NULL CHECK(requested_model = 'gpt-5.6-sol'),
-            returned_model TEXT,
+            returned_model_availability TEXT NOT NULL CHECK(returned_model_availability IN ('available','unavailable','unsupported','not-applicable')),
+            returned_model TEXT CHECK(returned_model IS NULL OR length(trim(returned_model)) > 0),
             requested_service_tier TEXT NOT NULL CHECK(requested_service_tier = 'default'),
-            returned_service_tier TEXT,
+            returned_service_tier_availability TEXT NOT NULL CHECK(returned_service_tier_availability IN ('available','unavailable','unsupported','not-applicable')),
+            returned_service_tier TEXT CHECK(returned_service_tier IS NULL OR length(trim(returned_service_tier)) > 0),
             reasoning_context TEXT NOT NULL CHECK(reasoning_context = 'current_turn'),
             reasoning_mode TEXT NOT NULL CHECK(reasoning_mode = 'standard'),
             prompt_cache_mode TEXT NOT NULL CHECK(prompt_cache_mode = 'explicit'),
@@ -2286,6 +2465,8 @@ public sealed partial class AuthoritativeStore
               REFERENCES provider_dispatch_fences(operation_id,provider_attempt_id,request_id,dispatch_fence_id) ON DELETE RESTRICT,
             FOREIGN KEY(operation_id,maximum_raw_response_bytes)
               REFERENCES provider_operation_authorizations(operation_id,maximum_raw_response_bytes) ON DELETE RESTRICT,
+            FOREIGN KEY(operation_id,operation_kind,maximum_input_tokens,maximum_output_tokens,maximum_raw_response_bytes,maximum_calculated_nano_usd)
+              REFERENCES provider_operation_authorizations(operation_id,operation_kind,maximum_input_tokens,maximum_output_tokens,maximum_raw_response_bytes,maximum_calculated_nano_usd) ON DELETE RESTRICT,
             FOREIGN KEY(raw_response_payload_id,raw_response_fingerprint,raw_response_bytes)
               REFERENCES payloads(payload_id,content_sha256,byte_length) ON DELETE RESTRICT,
             FOREIGN KEY(response_headers_payload_id,response_headers_fingerprint,response_headers_bytes)
@@ -2294,26 +2475,52 @@ public sealed partial class AuthoritativeStore
               REFERENCES payloads(payload_id,content_sha256,byte_length) ON DELETE RESTRICT,
             FOREIGN KEY(request_id,client_request_id)
               REFERENCES provider_requests(request_id,client_request_id) ON DELETE RESTRICT,
-            CHECK(raw_response_bytes <= maximum_raw_response_bytes),
+            CHECK(raw_response_bytes IS NULL OR raw_response_bytes <= maximum_raw_response_bytes),
+            CHECK((raw_response_availability = 'available' AND raw_response_payload_id IS NOT NULL
+                AND raw_response_fingerprint IS NOT NULL AND raw_response_bytes IS NOT NULL)
+              OR (raw_response_availability <> 'available' AND raw_response_payload_id IS NULL
+                AND raw_response_fingerprint IS NULL AND raw_response_bytes IS NULL)),
             CHECK((response_headers_availability = 'unavailable' AND response_headers_payload_id IS NULL
                 AND response_headers_fingerprint IS NULL AND response_headers_bytes IS NULL)
               OR (response_headers_availability = 'available' AND response_headers_payload_id IS NOT NULL
                 AND response_headers_fingerprint IS NOT NULL AND length(response_headers_fingerprint) = 64
                 AND response_headers_bytes IS NOT NULL)),
-            CHECK((provider_request_id_availability = 'unavailable' AND provider_request_id IS NULL)
-              OR (provider_request_id_availability = 'available' AND provider_request_id IS NOT NULL)),
-            CHECK((billing_evidence_payload_id IS NULL AND billing_evidence_fingerprint IS NULL AND billing_evidence_bytes IS NULL)
-              OR (billing_evidence_payload_id IS NOT NULL AND billing_evidence_fingerprint IS NOT NULL
-                AND length(billing_evidence_fingerprint) = 64 AND billing_evidence_bytes IS NOT NULL)),
+            CHECK((provider_request_id_availability = 'available') = (provider_request_id IS NOT NULL)),
+            CHECK((billing_evidence_availability = 'available' AND billing_evidence_payload_id IS NOT NULL
+                AND billing_evidence_fingerprint IS NOT NULL AND length(billing_evidence_fingerprint) = 64
+                AND billing_evidence_bytes IS NOT NULL)
+              OR (billing_evidence_availability <> 'available' AND billing_evidence_payload_id IS NULL
+                AND billing_evidence_fingerprint IS NULL AND billing_evidence_bytes IS NULL)),
+            CHECK((billing_availability = 'available') = (billing_evidence_availability = 'available')),
+            CHECK((http_status_availability = 'available') = (http_status IS NOT NULL)),
+            CHECK((provider_response_id_availability = 'available') = (provider_response_id IS NOT NULL)),
+            CHECK((client_request_id_availability = 'available') = (client_request_id IS NOT NULL)),
+            CHECK((refusal_availability = 'available') = (refusal_code IS NOT NULL)),
+            CHECK((incomplete_availability = 'available') = (incomplete_reason IS NOT NULL)),
+            CHECK((error_availability = 'available') = (error_code IS NOT NULL)),
+            CHECK((returned_model_availability = 'available') = (returned_model IS NOT NULL)),
+            CHECK((returned_service_tier_availability = 'available') = (returned_service_tier IS NOT NULL)),
+            CHECK(length(created_at) = 33 AND created_at GLOB '????-??-??T??:??:??.???????+00:00'
+              AND julianday(created_at) IS NOT NULL AND substr(created_at,1,23) = strftime('%Y-%m-%dT%H:%M:%f',created_at)),
             CHECK((response_state = 'completed' AND refusal_code IS NULL AND incomplete_reason IS NULL AND error_code IS NULL
                 AND raw_response_payload_id IS NOT NULL AND http_status IS NOT NULL
                 AND returned_model = 'gpt-5.6-sol' AND returned_service_tier = 'default'
-                AND validation_state IN ('proposed','admitted','rejected') AND admission_state IN ('proposed','admitted','rejected'))
-              OR (response_state = 'refusal' AND refusal_code IS NOT NULL AND incomplete_reason IS NULL AND error_code IS NULL)
-              OR (response_state = 'incomplete' AND refusal_code IS NULL AND incomplete_reason IS NOT NULL AND error_code IS NULL)
-              OR (response_state IN ('failed','mismatched') AND refusal_code IS NULL AND incomplete_reason IS NULL AND error_code IS NOT NULL)
+                AND validation_state = 'admitted' AND admission_state = 'admitted')
+              OR (response_state = 'refusal' AND refusal_code IS NOT NULL AND incomplete_reason IS NULL AND error_code IS NULL
+                AND validation_state IN ('rejected','abstained','unavailable','unsupported') AND admission_state IN ('rejected','abstained','unavailable','unsupported'))
+              OR (response_state = 'incomplete' AND refusal_code IS NULL AND incomplete_reason IS NOT NULL AND error_code IS NULL
+                AND validation_state IN ('rejected','abstained','unavailable','unsupported') AND admission_state IN ('rejected','abstained','unavailable','unsupported'))
+              OR (response_state = 'failed' AND refusal_code IS NULL AND incomplete_reason IS NULL AND error_code IS NOT NULL
+                AND validation_state IN ('rejected','abstained','unavailable','unsupported') AND admission_state IN ('rejected','abstained','unavailable','unsupported'))
+              OR (response_state = 'mismatched' AND raw_response_payload_id IS NOT NULL
+                AND (returned_model IS NULL OR returned_model <> 'gpt-5.6-sol' OR returned_service_tier IS NULL OR returned_service_tier <> 'default')
+                AND validation_state IN ('rejected','abstained','unavailable','unsupported') AND admission_state IN ('rejected','abstained','unavailable','unsupported'))
+              OR (response_state = 'cancelled' AND raw_response_payload_id IS NULL AND http_status IS NULL
+                AND refusal_code IS NULL AND incomplete_reason IS NULL AND error_code IS NULL
+                AND validation_state IN ('rejected','abstained','unavailable','unsupported') AND admission_state IN ('rejected','abstained','unavailable','unsupported'))
               OR (response_state IN ('queued','in-progress','malformed','oversized','unknown')
-                AND refusal_code IS NULL AND incomplete_reason IS NULL)
+                AND refusal_code IS NULL AND incomplete_reason IS NULL
+                AND validation_state IN ('rejected','abstained','unavailable','unsupported') AND admission_state IN ('rejected','abstained','unavailable','unsupported'))
               )
         ) STRICT;
         CREATE TRIGGER provider_response_transport_binding_guard
@@ -2323,7 +2530,11 @@ public sealed partial class AuthoritativeStore
             SELECT 1 FROM provider_transport_events e
             WHERE e.operation_id = NEW.operation_id AND e.provider_attempt_id = NEW.provider_attempt_id
               AND e.request_id = NEW.request_id AND e.dispatch_fence_id = NEW.dispatch_fence_id
-              AND e.event_kind = 'response-staged' AND e.occurred_at <= NEW.created_at)
+              AND ((NEW.response_state <> 'cancelled' AND e.event_kind = 'response-staged')
+                OR (NEW.response_state = 'cancelled' AND e.event_kind = 'not-started'
+                  AND NOT EXISTS(SELECT 1 FROM provider_transport_events later
+                    WHERE later.provider_attempt_id = e.provider_attempt_id AND later.sequence > e.sequence)))
+              AND e.occurred_at <= NEW.created_at)
             THEN RAISE(ABORT, 'provider response requires exact staged transport event') END;
         END;
         CREATE TABLE provider_usage_entries(
@@ -2402,6 +2613,11 @@ public sealed partial class AuthoritativeStore
             observed_at TEXT NOT NULL,
             resets_at TEXT,
             UNIQUE(usage_entry_id,scope,dimension),
+            CHECK(length(observed_at) = 33 AND observed_at GLOB '????-??-??T??:??:??.???????+00:00'
+              AND julianday(observed_at) IS NOT NULL AND substr(observed_at,1,23) = strftime('%Y-%m-%dT%H:%M:%f',observed_at)),
+            CHECK(resets_at IS NULL OR (length(resets_at) = 33 AND resets_at GLOB '????-??-??T??:??:??.???????+00:00'
+              AND julianday(resets_at) IS NOT NULL AND substr(resets_at,1,23) = strftime('%Y-%m-%dT%H:%M:%f',resets_at)
+              AND resets_at >= observed_at)),
             CHECK((availability = 'available' AND limit_value IS NOT NULL AND remaining_value IS NOT NULL
                 AND remaining_value <= limit_value)
               OR (availability <> 'available' AND limit_value IS NULL AND remaining_value IS NULL AND resets_at IS NULL))
@@ -2443,21 +2659,82 @@ public sealed partial class AuthoritativeStore
             request_id TEXT NOT NULL,
             response_record_id TEXT NOT NULL,
             dispatch_fence_id TEXT NOT NULL,
+            owner_kind TEXT NOT NULL CHECK(owner_kind IN ('analysis-run','evidence-acquisition-run')),
+            owner_id TEXT NOT NULL CHECK(length(trim(owner_id)) > 0),
+            root_subject_id TEXT NOT NULL CHECK(length(trim(root_subject_id)) > 0),
             proposal_kind TEXT NOT NULL CHECK(proposal_kind IN ('source-claim','candidate-hypothesis','abstention','gap')),
             payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
             created_at TEXT NOT NULL,
+            UNIQUE(proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id),
             FOREIGN KEY(operation_id,provider_attempt_id,request_id,dispatch_fence_id,response_record_id)
               REFERENCES provider_responses(operation_id,provider_attempt_id,request_id,dispatch_fence_id,response_record_id) ON DELETE RESTRICT
         ) STRICT;
+        CREATE TABLE provider_semantic_validations(
+            validation_id TEXT PRIMARY KEY CHECK(length(trim(validation_id)) > 0),
+            proposal_id TEXT NOT NULL,
+            operation_id TEXT NOT NULL,
+            response_record_id TEXT NOT NULL,
+            owner_kind TEXT NOT NULL CHECK(owner_kind IN ('analysis-run','evidence-acquisition-run')),
+            owner_id TEXT NOT NULL,
+            root_subject_id TEXT NOT NULL,
+            state TEXT NOT NULL CHECK(state IN ('admitted','rejected','abstained','unavailable','unsupported','deleted')),
+            host_policy_id TEXT NOT NULL CHECK(length(trim(host_policy_id)) > 0),
+            reason TEXT NOT NULL CHECK(length(trim(reason)) > 0),
+            created_at TEXT NOT NULL,
+            UNIQUE(validation_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,state),
+            FOREIGN KEY(proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id)
+              REFERENCES provider_semantic_proposals(proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id) ON DELETE RESTRICT
+        ) STRICT;
+        CREATE TRIGGER provider_semantic_proposal_root_guard
+        BEFORE INSERT ON provider_semantic_proposals
+        BEGIN
+          SELECT CASE
+            WHEN NEW.proposal_kind = 'source-claim' AND (NEW.owner_kind <> 'evidence-acquisition-run'
+              OR NOT EXISTS(SELECT 1 FROM evidence_acquisition_runs a WHERE a.acquisition_run_id = NEW.owner_id)
+              OR NOT EXISTS(SELECT 1 FROM documentation_revisions d WHERE d.documentation_revision_id = NEW.root_subject_id))
+              THEN RAISE(ABORT, 'source-claim proposal must bind exact acquisition and source revision roots')
+            WHEN NEW.proposal_kind = 'candidate-hypothesis' AND (NEW.owner_kind <> 'analysis-run'
+              OR NOT EXISTS(SELECT 1 FROM analysis_candidates c WHERE c.candidate_id = NEW.root_subject_id AND c.run_id = NEW.owner_id))
+              THEN RAISE(ABORT, 'candidate proposal must bind exact analysis and candidate roots')
+          END;
+        END;
         CREATE TABLE provider_semantic_admissions(
             admission_id TEXT PRIMARY KEY,
-            proposal_id TEXT NOT NULL REFERENCES provider_semantic_proposals(proposal_id) ON DELETE RESTRICT,
+            proposal_id TEXT NOT NULL,
+            operation_id TEXT NOT NULL,
+            response_record_id TEXT NOT NULL,
+            owner_kind TEXT NOT NULL CHECK(owner_kind IN ('analysis-run','evidence-acquisition-run')),
+            owner_id TEXT NOT NULL,
+            root_subject_id TEXT NOT NULL,
+            validation_id TEXT NOT NULL,
+            application_link_id TEXT NOT NULL,
             state TEXT NOT NULL CHECK(state IN ('admitted','rejected','abstained','unavailable','unsupported','deleted')),
             host_policy_id TEXT NOT NULL,
             reason TEXT NOT NULL,
             admitted_artifact_id TEXT,
-            created_at TEXT NOT NULL
+            created_at TEXT NOT NULL,
+            UNIQUE(admission_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,validation_id,application_link_id),
+            FOREIGN KEY(validation_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,state)
+              REFERENCES provider_semantic_validations(validation_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,state) ON DELETE RESTRICT
         ) STRICT;
+        CREATE TRIGGER provider_semantic_admission_application_guard
+        BEFORE INSERT ON provider_semantic_admissions
+        BEGIN
+          SELECT CASE
+            WHEN NEW.owner_kind = 'evidence-acquisition-run' AND NOT EXISTS(
+              SELECT 1 FROM evidence_acquisition_application_links link
+              WHERE link.application_link_id = NEW.application_link_id
+                AND link.acquisition_run_id = NEW.owner_id)
+              THEN RAISE(ABORT, 'source-claim admission must bind the exact acquisition application edge')
+            WHEN NEW.owner_kind = 'analysis-run' AND (NOT EXISTS(
+              SELECT 1 FROM analysis_candidates candidate
+              WHERE candidate.candidate_id = NEW.root_subject_id AND candidate.run_id = NEW.owner_id)
+              OR NOT EXISTS(
+                SELECT 1 FROM evidence_application_links link
+                WHERE link.evidence_application_link_id = NEW.application_link_id AND link.run_id = NEW.owner_id))
+              THEN RAISE(ABORT, 'candidate admission must bind the exact candidate root and application edge')
+          END;
+        END;
         CREATE TABLE provider_replay_edges(
             replay_edge_id TEXT PRIMARY KEY,
             operation_id TEXT NOT NULL REFERENCES provider_operation_authorizations(operation_id) ON DELETE RESTRICT,
@@ -2467,15 +2744,53 @@ public sealed partial class AuthoritativeStore
             dispatch_fence_id TEXT,
             replay_state TEXT NOT NULL CHECK(replay_state IN ('retained-response','audit-only','unavailable')),
             dependency_manifest_id TEXT,
+            effective_configuration_id TEXT,
             created_at TEXT NOT NULL,
             FOREIGN KEY(operation_id,provider_attempt_id,request_id,dispatch_fence_id,response_record_id)
               REFERENCES provider_responses(operation_id,provider_attempt_id,request_id,dispatch_fence_id,response_record_id) ON DELETE RESTRICT,
             CHECK((replay_state = 'unavailable' AND provider_attempt_id IS NULL AND request_id IS NULL
-                AND response_record_id IS NULL AND dispatch_fence_id IS NULL AND dependency_manifest_id IS NULL)
+                AND response_record_id IS NULL AND dispatch_fence_id IS NULL AND dependency_manifest_id IS NULL
+                AND effective_configuration_id IS NULL)
               OR (replay_state IN ('retained-response','audit-only') AND provider_attempt_id IS NOT NULL
                 AND request_id IS NOT NULL AND response_record_id IS NOT NULL
-                AND dispatch_fence_id IS NOT NULL AND dependency_manifest_id IS NOT NULL))
+                AND dispatch_fence_id IS NOT NULL AND dependency_manifest_id IS NOT NULL
+                AND effective_configuration_id IS NOT NULL))
         ) STRICT;
+        CREATE TRIGGER provider_replay_configuration_guard
+        BEFORE INSERT ON provider_replay_edges
+        WHEN NEW.replay_state IN ('retained-response','audit-only')
+        BEGIN
+          SELECT CASE WHEN NOT EXISTS(
+            SELECT 1 FROM provider_operation_authorizations a
+            JOIN provider_effective_scan_configurations_v2 configuration
+              ON configuration.configuration_id = a.effective_configuration_id
+             AND configuration.profile_id = a.profile_id AND configuration.generation_id = a.generation_id
+            WHERE a.operation_id = NEW.operation_id
+              AND a.effective_configuration_id = NEW.effective_configuration_id)
+            THEN RAISE(ABORT, 'provider replay must bind the exact persisted effective configuration v2 row') END;
+        END;
+        CREATE TABLE provider_run_output_v2_bindings(
+            run_id TEXT PRIMARY KEY REFERENCES runs(run_id) ON DELETE RESTRICT,
+            effective_configuration_v2_id TEXT NOT NULL REFERENCES provider_effective_scan_configurations_v2(configuration_id) ON DELETE RESTRICT,
+            local_run_output_v1_payload_id TEXT NOT NULL,
+            local_run_output_v1_fingerprint TEXT NOT NULL CHECK(length(local_run_output_v1_fingerprint) = 64),
+            local_run_output_v1_bytes INTEGER NOT NULL CHECK(local_run_output_v1_bytes > 0),
+            created_at TEXT NOT NULL,
+            UNIQUE(run_id,effective_configuration_v2_id),
+            FOREIGN KEY(local_run_output_v1_payload_id,local_run_output_v1_fingerprint,local_run_output_v1_bytes)
+              REFERENCES payloads(payload_id,content_sha256,byte_length) ON DELETE RESTRICT
+        ) STRICT;
+        CREATE TRIGGER provider_run_output_configuration_guard
+        BEFORE INSERT ON provider_run_output_v2_bindings
+        BEGIN
+          SELECT CASE WHEN NOT EXISTS(
+            SELECT 1 FROM runs run
+            JOIN provider_effective_scan_configurations_v2 configuration
+              ON configuration.configuration_id = NEW.effective_configuration_v2_id
+             AND configuration.local_configuration_v1_id = run.effective_scan_configuration_id
+            WHERE run.run_id = NEW.run_id)
+            THEN RAISE(ABORT, 'run-output v2 must bind the exact persisted v1-to-v2 configuration successor') END;
+        END;
         CREATE TABLE provider_operation_projection(
             operation_id TEXT PRIMARY KEY REFERENCES provider_operation_blocks(operation_id) ON DELETE CASCADE,
             state TEXT NOT NULL CHECK(state = 'input-bound-blocked'),
@@ -2546,7 +2861,9 @@ public sealed partial class AuthoritativeStore
             SELECT 1 FROM provider_credential_intents i
             WHERE i.intent_id = NEW.intent_id AND i.profile_id = NEW.profile_id
               AND i.generation_id = NEW.generation_id
-              AND i.to_lifecycle_state = NEW.lifecycle_state
+              AND ((i.intent_state = 'completed' AND i.outcome_lifecycle_state = NEW.lifecycle_state)
+                OR (i.intent_state = 'pending' AND i.to_lifecycle_state = NEW.lifecycle_state
+                  AND NEW.lifecycle_state IN ('pending-enrollment','delete-pending')))
               AND i.verification_state = NEW.verification_state
               AND i.recovery_disposition = NEW.recovery_disposition
               AND i.cleanup_disposition = NEW.cleanup_disposition
@@ -2575,7 +2892,10 @@ public sealed partial class AuthoritativeStore
           SELECT CASE WHEN NEW.intent_id IS NOT NULL AND NOT EXISTS(
             SELECT 1 FROM provider_credential_intents i
             WHERE i.intent_id = NEW.intent_id AND i.profile_id = NEW.profile_id
-              AND i.generation_id = NEW.generation_id AND i.to_lifecycle_state = NEW.lifecycle_state
+              AND i.generation_id = NEW.generation_id
+              AND ((i.intent_state = 'completed' AND i.outcome_lifecycle_state = NEW.lifecycle_state)
+                OR (i.intent_state = 'pending' AND i.to_lifecycle_state = NEW.lifecycle_state
+                  AND NEW.lifecycle_state IN ('pending-enrollment','delete-pending')))
               AND i.verification_state = NEW.verification_state
               AND i.recovery_disposition = NEW.recovery_disposition
               AND i.cleanup_disposition = NEW.cleanup_disposition
@@ -2595,7 +2915,16 @@ public sealed partial class AuthoritativeStore
         BEFORE INSERT ON provider_credential_intents
         WHEN NEW.from_lifecycle_state <> 'none'
         BEGIN
-          SELECT CASE WHEN NOT EXISTS(
+          SELECT CASE WHEN NEW.intent_kind = 'replace' AND NEW.from_lifecycle_state IN ('active-unverified','active-verified')
+            AND NOT EXISTS(
+              SELECT 1 FROM provider_profile_projection p
+              JOIN provider_generations predecessor ON predecessor.profile_id = p.profile_id AND predecessor.generation_id = p.generation_id
+              JOIN provider_generations successor ON successor.profile_id = NEW.profile_id AND successor.generation_id = NEW.generation_id
+              WHERE p.profile_id = NEW.profile_id AND p.lifecycle_state = NEW.from_lifecycle_state
+                AND successor.generation_ordinal = predecessor.generation_ordinal + 1)
+            THEN RAISE(ABORT, 'provider replacement must bind a fresh successor generation to the exact predecessor root') END;
+          SELECT CASE WHEN NOT (NEW.intent_kind = 'replace' AND NEW.from_lifecycle_state IN ('active-unverified','active-verified'))
+            AND NOT EXISTS(
             SELECT 1 FROM provider_profile_projection p
             WHERE p.profile_id = NEW.profile_id AND p.generation_id = NEW.generation_id
               AND p.lifecycle_state = NEW.from_lifecycle_state)
