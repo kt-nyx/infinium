@@ -1,1 +1,1 @@
-{"schema":"infinium.public.atomic-budget-input/v1","case":"eight-scope-reservation","dimensions":{"dispatch_count":1,"input_tokens":10,"output_tokens":5,"reasoning_tokens":2,"cache_read_tokens":0,"cache_write_tokens":0,"priced_tool_calls":0,"nano_usd":100}}
+{"schema":"infinium.public.atomic-budget-input/v1","case":"eight-scope-reservation","dimensions":{"dispatch_count":1,"input_tokens":20,"output_tokens":10,"total_tokens":30,"reasoning_tokens":10,"cache_read_tokens":0,"cache_write_tokens":0,"priced_tool_calls":0,"nano_usd":400000}}

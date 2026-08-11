@@ -22,6 +22,11 @@ public sealed partial class AuthoritativeStore
         }
         foreach (ProviderPriceRuleContract rule in price.Rules)
         {
+            if (rule.Provider != price.Provider || rule.Model != price.Model
+                || rule.ServiceTier != price.ServiceTier || rule.Currency != price.Currency)
+            {
+                throw new InvalidOperationException("Every price rule must retain the exact snapshot provider/model/tier/currency identity.");
+            }
             _ = ProviderOperationContractInvariants.CalculateComponentNanoUsd(0, rule);
         }
 
@@ -60,26 +65,7 @@ public sealed partial class AuthoritativeStore
                     ("$numerator", rule.NumeratorNanoUsd), ("$denominator", rule.DenominatorTokens),
                     ("$revision", rule.Revision));
             }
-            long exactCatalog = ScalarLong(
-                """
-                SELECT
-                  (SELECT COUNT(*) FROM provider_capability_snapshots
-                   WHERE capability_snapshot_id=$capability AND fingerprint=$capability_fingerprint
-                     AND provider='openai' AND model='gpt-5.6-sol' AND service_tier='default'
-                     AND maximum_context_tokens=$context)
-                  + (SELECT COUNT(*) FROM provider_price_snapshots
-                     WHERE price_snapshot_id=$price AND fingerprint=$price_fingerprint
-                       AND provider='openai' AND model='gpt-5.6-sol' AND currency='USD')
-                  + (SELECT COUNT(*) FROM provider_price_rules WHERE price_snapshot_id=$price);
-                """,
-                transaction,
-                ("$capability", capability.Identity.Value), ("$capability_fingerprint", capability.Fingerprint.Value),
-                ("$context", capability.MaximumContextTokens), ("$price", price.Identity.Value),
-                ("$price_fingerprint", price.Fingerprint.Value));
-            if (exactCatalog != checked(2 + price.Rules.Count))
-            {
-                throw new InvalidOperationException("An immutable provider catalog identity cannot be redefined or partially published.");
-            }
+            EnsureExactProviderCatalog(capability, price, transaction);
             transaction.Commit();
         }
     }
@@ -147,6 +133,18 @@ public sealed partial class AuthoritativeStore
     public ProviderReservationAdmissionContract ReserveProviderBudget(
         long coordinatorFencingEpoch,
         ProviderBudgetReservationRequest request)
+        => ReserveProviderBudgetCore(coordinatorFencingEpoch, request, ProviderBudgetFaultPoint.None);
+
+    internal ProviderReservationAdmissionContract ReserveProviderBudgetWithFault(
+        long coordinatorFencingEpoch,
+        ProviderBudgetReservationRequest request,
+        ProviderBudgetFaultPoint faultPoint) =>
+        ReserveProviderBudgetCore(coordinatorFencingEpoch, request, faultPoint);
+
+    private ProviderReservationAdmissionContract ReserveProviderBudgetCore(
+        long coordinatorFencingEpoch,
+        ProviderBudgetReservationRequest request,
+        ProviderBudgetFaultPoint faultPoint)
     {
         ArgumentNullException.ThrowIfNull(request);
         RequirePositive(coordinatorFencingEpoch, nameof(coordinatorFencingEpoch));
@@ -160,6 +158,17 @@ public sealed partial class AuthoritativeStore
         {
             using SqliteTransaction transaction = BeginImmediateTransaction();
             EnsureCurrentCoordinatorEpoch(coordinatorFencingEpoch, transaction);
+            ProviderBudgetVectorContract authoritativeVector = ReadAuthoritativeReservationVector(
+                request.OperationId,
+                request.AttemptId,
+                request.RequestId,
+                coordinatorFencingEpoch,
+                transaction);
+            if (request.Reserved != authoritativeVector)
+            {
+                throw new InvalidOperationException(
+                    "The caller-declared reservation must equal the authoritative worst-case vector derived from the retained request, operation limits, capability, and price catalog.");
+            }
             Dictionary<string, string> expected = ReadExpectedBudgetScopes(
                 request.OperationId,
                 request.AttemptId,
@@ -220,6 +229,11 @@ public sealed partial class AuthoritativeStore
                 ("$cache_write", vector.CacheWriteTokens), ("$tools", vector.PricedToolCalls),
                 ("$nano", vector.NanoUsd), ("$expires", ToText(request.ExpiresAt)),
                 ("$created", ToText(request.CreatedAt)));
+
+            if (faultPoint == ProviderBudgetFaultPoint.AfterReservationRootBeforeScopeEvents)
+            {
+                throw new InvalidOperationException("Injected provider budget fault after reservation root and before scope events.");
+            }
 
             foreach (ProviderBudgetScopeContract scope in request.Scopes)
             {
@@ -366,6 +380,187 @@ public sealed partial class AuthoritativeStore
         }
     }
 
+    public ProviderSimulationPersistenceReceipt PersistProviderSimulation(
+        ProviderSimulationPersistenceRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(request.Usage);
+        ArgumentNullException.ThrowIfNull(request.RateFacts);
+        string responseState = ToResponseState(request.ResponseState);
+        bool undispatched = request.ResponseState == ProviderResponseState.Cancelled;
+        bool oversized = request.ResponseState == ProviderResponseState.Oversized;
+        if (!undispatched && request.ResponseState == ProviderResponseState.Unknown)
+        {
+            throw new InvalidOperationException(
+                "An ambiguous transport start is retained as an unresolved hold without inventing a provider response or usage receipt.");
+        }
+        if (!undispatched && !oversized && (request.RawResponseBytes is null || request.RawResponseBytes.Length == 0))
+        {
+            throw new InvalidOperationException("A staged deterministic provider response requires retained raw response bytes.");
+        }
+
+        lock (gate)
+        {
+            using SqliteTransaction transaction = BeginImmediateTransaction();
+            long exactRoot = ScalarLong(
+                """
+                SELECT COUNT(*) FROM provider_dispatch_fences fence
+                JOIN provider_reservations reservation ON reservation.reservation_id=fence.reservation_id
+                WHERE fence.dispatch_fence_id=$fence AND fence.authorization_id=$authorization
+                  AND fence.operation_id=$operation AND fence.reservation_id=$reservation
+                  AND fence.provider_attempt_id=$attempt AND fence.request_id=$request;
+                """,
+                transaction,
+                ("$fence", request.DispatchFenceId), ("$authorization", request.AuthorizationId),
+                ("$operation", request.OperationId), ("$reservation", request.ReservationId),
+                ("$attempt", request.AttemptId), ("$request", request.RequestId));
+            if (exactRoot != 1)
+            {
+                throw new InvalidOperationException(
+                    "The simulated response must bind exactly to its reservation operation/attempt/request/fence root.");
+            }
+
+            string? payloadId = null;
+            string? payloadFingerprint = null;
+            long? payloadLength = null;
+            if (!undispatched && !oversized)
+            {
+                payloadId = AdmitCoordinatorPayload(
+                    request.RawResponseBytes!, "provider-response", request.ResponseId, request.OccurredAt, transaction);
+                using SqliteCommand payload = connection.CreateCommand();
+                payload.Transaction = transaction;
+                payload.CommandText = "SELECT content_sha256,byte_length FROM payloads WHERE payload_id=$payload;";
+                payload.Parameters.AddWithValue("$payload", payloadId);
+                using SqliteDataReader payloadReader = payload.ExecuteReader();
+                if (!payloadReader.Read())
+                {
+                    throw new InvalidOperationException("The simulated response payload was not retained.");
+                }
+                payloadFingerprint = payloadReader.GetString(0);
+                payloadLength = payloadReader.GetInt64(1);
+            }
+
+            if (!undispatched)
+            {
+                Execute(
+                    """
+                    INSERT INTO provider_transport_events VALUES(
+                      $event,$operation,$attempt,$request,$fence,'response-staged',3,$now);
+                    """,
+                    transaction,
+                    ("$event", request.DispatchFenceId + ":response"), ("$operation", request.OperationId),
+                    ("$attempt", request.AttemptId), ("$request", request.RequestId),
+                    ("$fence", request.DispatchFenceId), ("$now", ToText(request.OccurredAt)));
+            }
+
+            string availability = undispatched ? "unavailable" : "available";
+            string returnedModelAvailability = request.ReturnedModel is null ? "unavailable" : "available";
+            string returnedTierAvailability = request.ReturnedServiceTier is null ? "unavailable" : "available";
+            string validation = request.ResponseState == ProviderResponseState.Completed ? "proposed" : "rejected";
+            string rateAvailability = request.RateFacts.Count == 0 ? "unavailable" : "available";
+            Execute(
+                """
+                INSERT INTO provider_responses(
+                  response_record_id,availability,usage_availability,authorization_id,operation_id,owner_kind,owner_id,
+                  request_id,provider_attempt_id,reservation_id,dispatch_fence_id,operation_kind,maximum_input_tokens,
+                  maximum_output_tokens,maximum_calculated_nano_usd,raw_response_availability,raw_response_payload_id,
+                  raw_response_fingerprint,raw_response_bytes,maximum_raw_response_bytes,overflow_observed_excess_bytes,
+                  response_headers_availability,http_status_availability,http_status,provider_response_id_availability,
+                  client_request_id,client_request_id_availability,provider_request_id_availability,
+                  billing_evidence_availability,response_state,refusal_availability,refusal_code,incomplete_availability,
+                  incomplete_reason,error_availability,error_code,requested_model,returned_model,returned_model_availability,
+                  requested_service_tier,returned_service_tier,returned_service_tier_availability,reasoning_context,
+                  reasoning_mode,prompt_cache_mode,billing_availability,rate_availability,expected_rate_limit_fact_count,
+                  credit_availability,validation_state,admission_state,created_at)
+                SELECT $response,$availability,$availability,$authorization,a.operation_id,a.owner_kind,a.owner_id,
+                  request.request_id,attempt.provider_attempt_id,reservation.reservation_id,$response_fence,a.operation_kind,
+                  a.maximum_input_tokens,a.maximum_output_tokens,a.maximum_calculated_nano_usd,$raw_availability,$payload,
+                  $payload_fingerprint,$payload_bytes,a.maximum_raw_response_bytes,$overflow,'unavailable',$http_availability,
+                  $http,'unavailable',request.client_request_id,$client_availability,'unavailable','unavailable',$state,
+                  $refusal_availability,$refusal,$incomplete_availability,$incomplete,$error_availability,$error,
+                  'gpt-5.6-sol',$returned_model,$returned_model_availability,'default',$returned_tier,
+                  $returned_tier_availability,'current_turn','standard','explicit','unavailable',$rate_availability,$rate_count,
+                  'unavailable',$validation,$validation,$now
+                FROM provider_operation_authorizations a
+                JOIN provider_operation_attempts attempt ON attempt.operation_id=a.operation_id
+                JOIN provider_requests request
+                  ON request.operation_id=a.operation_id AND request.provider_attempt_id=attempt.provider_attempt_id
+                JOIN provider_reservations reservation
+                  ON reservation.operation_id=a.operation_id AND reservation.provider_attempt_id=attempt.provider_attempt_id
+                 AND reservation.request_id=request.request_id
+                WHERE a.authorization_id=$authorization AND a.operation_id=$operation
+                  AND attempt.provider_attempt_id=$attempt AND request.request_id=$request
+                  AND reservation.reservation_id=$reservation;
+                """,
+                transaction,
+                ("$response", request.ResponseId), ("$availability", availability),
+                ("$authorization", request.AuthorizationId), ("$response_fence", undispatched ? null : request.DispatchFenceId),
+                ("$raw_availability", undispatched || oversized ? "unavailable" : "available"),
+                ("$payload", payloadId), ("$payload_fingerprint", payloadFingerprint), ("$payload_bytes", payloadLength),
+                ("$overflow", oversized ? 1 : null), ("$http_availability", undispatched ? "unavailable" : "available"),
+                ("$http", undispatched ? null : request.HttpStatus),
+                ("$client_availability", undispatched ? "unavailable" : "available"), ("$state", responseState),
+                ("$refusal_availability", request.RefusalCode is null ? "unavailable" : "available"),
+                ("$refusal", request.RefusalCode),
+                ("$incomplete_availability", request.IncompleteReason is null ? "unavailable" : "available"),
+                ("$incomplete", request.IncompleteReason),
+                ("$error_availability", request.ErrorCode is null ? "unavailable" : "available"),
+                ("$error", request.ErrorCode), ("$returned_model", request.ReturnedModel),
+                ("$returned_model_availability", undispatched ? "unavailable" : returnedModelAvailability),
+                ("$returned_tier", request.ReturnedServiceTier),
+                ("$returned_tier_availability", undispatched ? "unavailable" : returnedTierAvailability),
+                ("$rate_availability", rateAvailability), ("$rate_count", request.RateFacts.Count),
+                ("$validation", validation), ("$now", ToText(request.OccurredAt)),
+                ("$operation", request.OperationId), ("$attempt", request.AttemptId),
+                ("$request", request.RequestId), ("$reservation", request.ReservationId));
+
+            ProviderBudgetVectorContract actual = undispatched
+                ? ProviderBudgetVectorContract.Zero
+                : ToAvailableBudgetVector(request.Usage);
+            InsertProviderUsage(request, undispatched, rateAvailability, transaction);
+            for (int index = 0; index < request.RateFacts.Count; index++)
+            {
+                ProviderRateLimitFactContract fact = request.RateFacts[index];
+                Execute(
+                    """
+                    INSERT INTO provider_rate_limit_facts VALUES(
+                      $id,$usage,$scope,$dimension,$availability,$limit,$remaining,$observed,$reset);
+                    """,
+                    transaction,
+                    ("$id", request.UsageEntryId + ":rate:" + index.ToString(System.Globalization.CultureInfo.InvariantCulture)),
+                    ("$usage", request.UsageEntryId), ("$scope", fact.Scope), ("$dimension", fact.Dimension),
+                    ("$availability", ToAvailability(fact.Availability)), ("$limit", fact.Limit),
+                    ("$remaining", fact.Remaining), ("$observed", ToText(fact.ObservedAt.Value)),
+                    ("$reset", fact.ResetsAt is null ? null : ToText(fact.ResetsAt.Value)));
+            }
+            Execute(
+                """
+                INSERT INTO provider_response_finalizations VALUES(
+                  $finalization,$response,$usage,$validation,$validation,$now);
+                """,
+                transaction,
+                ("$finalization", request.FinalizationId), ("$response", request.ResponseId),
+                ("$usage", request.UsageEntryId),
+                ("$validation", request.ResponseState == ProviderResponseState.Completed ? "admitted" : "rejected"),
+                ("$now", ToText(request.OccurredAt)));
+            transaction.Commit();
+
+            ProviderBudgetVectorContract reserved = ReadReservationVectorOutsideTransaction(request.ReservationId);
+            ProviderBudgetEventKind kind = undispatched
+                ? ProviderBudgetEventKind.ReleasedUndispatched
+                : !ProviderBudgetVectorContract.FitsWithin(ProviderBudgetVectorContract.Zero, actual, reserved)
+                    ? ProviderBudgetEventKind.SettledOverrun
+                    : request.Usage.ReceiptState switch
+                    {
+                        UsageReceiptState.Complete => ProviderBudgetEventKind.SettledComplete,
+                        UsageReceiptState.FailedKnown => ProviderBudgetEventKind.SettledFailedKnown,
+                        UsageReceiptState.Partial => ProviderBudgetEventKind.RetainedPartial,
+                        _ => ProviderBudgetEventKind.RetainedUnavailable,
+                    };
+            return new(request.ResponseId, request.UsageEntryId, actual, kind);
+        }
+    }
+
     public ProviderBudgetSettlementReceipt SettleProviderBudget(ProviderBudgetSettlementRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -388,6 +583,33 @@ public sealed partial class AuthoritativeStore
                 transaction,
                 ("$reservation", request.ReservationId));
             bool hasStart = transportStarts > 0;
+            string latestCausalTime = ScalarString(
+                """
+                SELECT MAX(causal_time) FROM (
+                  SELECT created_at AS causal_time FROM provider_reservations WHERE reservation_id=$reservation
+                  UNION ALL
+                  SELECT evaluated_at FROM provider_dispatch_fences WHERE reservation_id=$reservation
+                  UNION ALL
+                  SELECT e.occurred_at FROM provider_transport_events e
+                    JOIN provider_dispatch_fences f ON f.dispatch_fence_id=e.dispatch_fence_id
+                    WHERE f.reservation_id=$reservation
+                  UNION ALL
+                  SELECT u.created_at FROM provider_usage_entries u
+                    JOIN provider_reservations r
+                      ON r.operation_id=u.operation_id AND r.provider_attempt_id=u.provider_attempt_id
+                     AND r.request_id=u.request_id
+                    WHERE r.reservation_id=$reservation AND u.usage_entry_id=$usage
+                );
+                """,
+                transaction,
+                ("$reservation", request.ReservationId), ("$usage", request.UsageEntryId));
+            if (request.OccurredAt < DateTimeOffset.Parse(
+                    latestCausalTime,
+                    System.Globalization.CultureInfo.InvariantCulture))
+            {
+                throw new InvalidOperationException(
+                    "Provider settlement cannot be causally backdated before its reservation, fence, transport, or usage evidence.");
+            }
             long prior = ScalarLong(
                 "SELECT COUNT(*) FROM provider_budget_events WHERE reservation_id=$reservation AND event_kind<>'reserved';",
                 transaction,
@@ -404,7 +626,11 @@ public sealed partial class AuthoritativeStore
             bool retry;
             switch (request.Kind)
             {
-                case ProviderBudgetEventKind.ReleasedUndispatched when !hasStart && request.UsageEntryId is null && request.Actual is null:
+                case ProviderBudgetEventKind.ReleasedUndispatched when !hasStart && request.Actual is null:
+                    if (request.UsageEntryId is not null)
+                    {
+                        EnsureUndispatchedUsage(request.ReservationId, request.UsageEntryId, transaction);
+                    }
                     released = reserved;
                     settled = ProviderBudgetVectorContract.Zero;
                     unresolved = ProviderBudgetVectorContract.Zero;
@@ -422,7 +648,7 @@ public sealed partial class AuthoritativeStore
                         || (request.UsageEntryId is not null && request.Actual is not null)):
                     if (request.UsageEntryId is not null)
                     {
-                        EnsureActualUsage(request.UsageEntryId, actual, transaction);
+                        EnsureActualUsage(request.ReservationId, request.UsageEntryId, actual, transaction);
                     }
                     released = ProviderBudgetVectorContract.Zero;
                     settled = ProviderBudgetVectorContract.Zero;
@@ -431,7 +657,7 @@ public sealed partial class AuthoritativeStore
                     break;
                 case ProviderBudgetEventKind.SettledComplete or ProviderBudgetEventKind.SettledFailedKnown
                     when hasStart && request.UsageEntryId is not null && request.Actual is not null:
-                    EnsureActualUsage(request.UsageEntryId, actual, transaction);
+                    EnsureActualUsage(request.ReservationId, request.UsageEntryId, actual, transaction);
                     if (!ProviderBudgetVectorContract.FitsWithin(ProviderBudgetVectorContract.Zero, actual, reserved))
                     {
                         throw new InvalidOperationException("Usage above reservation must be classified as overrun.");
@@ -443,7 +669,7 @@ public sealed partial class AuthoritativeStore
                     break;
                 case ProviderBudgetEventKind.SettledOverrun
                     when hasStart && request.UsageEntryId is not null && request.Actual is not null:
-                    EnsureActualUsage(request.UsageEntryId, actual, transaction);
+                    EnsureActualUsage(request.ReservationId, request.UsageEntryId, actual, transaction);
                     if (ProviderBudgetVectorContract.FitsWithin(ProviderBudgetVectorContract.Zero, actual, reserved))
                     {
                         throw new InvalidOperationException("An overrun settlement must exceed at least one reserved dimension.");
@@ -467,6 +693,37 @@ public sealed partial class AuthoritativeStore
                 ("$settlement", request.SettlementId), ("$reservation", request.ReservationId),
                 ("$kind", ToEventKind(request.Kind)), ("$usage", request.UsageEntryId),
                 ("$now", ToText(request.OccurredAt)));
+
+            if (request.Kind != ProviderBudgetEventKind.ReleasedUndispatched || request.UsageEntryId is not null)
+            {
+                string state = request.Kind switch
+                {
+                    ProviderBudgetEventKind.SettledComplete or ProviderBudgetEventKind.ReleasedUndispatched => "settled",
+                    ProviderBudgetEventKind.SettledFailedKnown => "failed-known",
+                    ProviderBudgetEventKind.SettledOverrun => "overrun",
+                    _ => "unresolved-hold",
+                };
+                Execute(
+                    """
+                    INSERT INTO provider_settlements(
+                      settlement_id,operation_id,provider_attempt_id,request_id,reservation_id,usage_entry_id,
+                      dispatch_fence_id,state,released_nano_usd,retained_hold_nano_usd,created_at)
+                    SELECT $settlement,r.operation_id,r.provider_attempt_id,r.request_id,r.reservation_id,$usage,
+                      CASE WHEN $state='settled' AND $usage IS NOT NULL AND NOT EXISTS(
+                        SELECT 1 FROM provider_transport_events e
+                        JOIN provider_dispatch_fences f ON f.dispatch_fence_id=e.dispatch_fence_id
+                        WHERE f.reservation_id=r.reservation_id) THEN NULL
+                        ELSE (SELECT dispatch_fence_id FROM provider_dispatch_fences f
+                              WHERE f.reservation_id=r.reservation_id) END,
+                      $state,$released,$retained,$now
+                    FROM provider_reservations r WHERE r.reservation_id=$reservation;
+                    """,
+                    transaction,
+                    ("$settlement", request.SettlementId), ("$usage", request.UsageEntryId),
+                    ("$state", state), ("$released", state == "unresolved-hold" ? 0 : reserved.NanoUsd),
+                    ("$retained", state == "unresolved-hold" ? reserved.NanoUsd : 0),
+                    ("$now", ToText(request.OccurredAt)), ("$reservation", request.ReservationId));
+            }
 
             string ownerKind = ScalarString(
                 """
@@ -521,6 +778,118 @@ public sealed partial class AuthoritativeStore
         }
     }
 
+    private void InsertProviderUsage(
+        ProviderSimulationPersistenceRequest request,
+        bool undispatched,
+        string rateAvailability,
+        SqliteTransaction transaction)
+    {
+        ProviderUsageContract usage = request.Usage;
+        if (ToAvailability(usage.RateAvailability) != rateAvailability
+            || usage.BillingAvailability == ProviderAvailabilityState.Available
+            || usage.CreditAvailability == ProviderAvailabilityState.Available)
+        {
+            throw new InvalidOperationException("Simulated usage must retain separate unavailable billing/credit authority and exact rate availability.");
+        }
+        Execute(
+            """
+            INSERT INTO provider_usage_entries(
+              usage_entry_id,receipt_id,availability,operation_id,provider_attempt_id,request_id,dispatch_fence_id,
+              response_record_id,dispatch_count_availability,dispatch_count,input_tokens_availability,input_tokens,
+              output_tokens_availability,output_tokens,total_tokens_availability,total_tokens,
+              reasoning_tokens_availability,reasoning_tokens,cache_read_tokens_availability,cache_read_tokens,
+              cache_write_tokens_availability,cache_write_tokens,priced_tool_calls_availability,priced_tool_calls,
+              calculated_nano_usd_availability,calculated_nano_usd,billing_availability,rate_availability,
+              credit_availability,receipt_state,created_at)
+            VALUES($usage,$receipt,$availability,$operation,$attempt,$request,$fence,$response,
+              $dispatch_availability,$dispatch,$input_availability,$input,$output_availability,$output,
+              $total_availability,$total,$reasoning_availability,$reasoning,$cache_read_availability,$cache_read,
+              $cache_write_availability,$cache_write,$tools_availability,$tools,$nano_availability,$nano,
+              $billing,$rate,$credit,$receipt_state,$now);
+            """,
+            transaction,
+            ("$usage", request.UsageEntryId), ("$receipt", request.ReceiptId),
+            ("$availability", ToAvailability(usage.Availability)), ("$operation", request.OperationId),
+            ("$attempt", request.AttemptId), ("$request", request.RequestId),
+            ("$fence", undispatched ? null : request.DispatchFenceId), ("$response", request.ResponseId),
+            ("$dispatch_availability", ToAvailability(usage.DispatchCount.Availability)),
+            ("$dispatch", usage.DispatchCount.Value),
+            ("$input_availability", ToAvailability(usage.InputTokens.Availability)), ("$input", usage.InputTokens.Value),
+            ("$output_availability", ToAvailability(usage.OutputTokens.Availability)), ("$output", usage.OutputTokens.Value),
+            ("$total_availability", ToAvailability(usage.TotalTokens.Availability)), ("$total", usage.TotalTokens.Value),
+            ("$reasoning_availability", ToAvailability(usage.ReasoningTokens.Availability)),
+            ("$reasoning", usage.ReasoningTokens.Value),
+            ("$cache_read_availability", ToAvailability(usage.CacheReadTokens.Availability)),
+            ("$cache_read", usage.CacheReadTokens.Value),
+            ("$cache_write_availability", ToAvailability(usage.CacheWriteTokens.Availability)),
+            ("$cache_write", usage.CacheWriteTokens.Value),
+            ("$tools_availability", ToAvailability(usage.PricedToolCalls.Availability)),
+            ("$tools", usage.PricedToolCalls.Value),
+            ("$nano_availability", ToAvailability(usage.CalculatedNanoUsd.Availability)),
+            ("$nano", usage.CalculatedNanoUsd.Value), ("$billing", ToAvailability(usage.BillingAvailability)),
+            ("$rate", ToAvailability(usage.RateAvailability)), ("$credit", ToAvailability(usage.CreditAvailability)),
+            ("$receipt_state", ToReceiptState(usage.ReceiptState)), ("$now", ToText(request.OccurredAt)));
+    }
+
+    private ProviderBudgetVectorContract ReadReservationVectorOutsideTransaction(string reservationId) =>
+        ReadReservationVector(reservationId, null);
+
+    private static ProviderBudgetVectorContract ToAvailableBudgetVector(ProviderUsageContract usage)
+    {
+        long Required(ProviderQuantityContract quantity, string name)
+        {
+            if (quantity.Availability != ProviderAvailabilityState.Available || quantity.Value is null)
+            {
+                throw new InvalidOperationException($"Simulated available usage requires an exact {name} value.");
+            }
+            return quantity.Value.Value;
+        }
+        ProviderBudgetVectorContract result = new(
+            Required(usage.DispatchCount, "dispatch"), Required(usage.InputTokens, "input-token"),
+            Required(usage.OutputTokens, "output-token"), Required(usage.TotalTokens, "total-token"),
+            Required(usage.ReasoningTokens, "reasoning-token"), Required(usage.CacheReadTokens, "cache-read-token"),
+            Required(usage.CacheWriteTokens, "cache-write-token"), Required(usage.PricedToolCalls, "priced-tool"),
+            Required(usage.CalculatedNanoUsd, "calculated-cost"));
+        ProviderBudgetVectorContract.Validate(result);
+        return result;
+    }
+
+    private static string ToAvailability(ProviderAvailabilityState value) => value switch
+    {
+        ProviderAvailabilityState.Available => "available",
+        ProviderAvailabilityState.Unavailable => "unavailable",
+        ProviderAvailabilityState.Unsupported => "unsupported",
+        ProviderAvailabilityState.NotApplicable => "not-applicable",
+        _ => throw new InvalidOperationException("Provider availability must be explicit."),
+    };
+
+    private static string ToReceiptState(UsageReceiptState value) => value switch
+    {
+        UsageReceiptState.NotDispatched => "not-dispatched",
+        UsageReceiptState.Complete => "complete",
+        UsageReceiptState.Partial => "partial",
+        UsageReceiptState.FailedKnown => "failed-known",
+        UsageReceiptState.Ambiguous => "ambiguous",
+        UsageReceiptState.Unavailable => "unavailable",
+        _ => throw new InvalidOperationException("Provider usage receipt state must be explicit."),
+    };
+
+    private static string ToResponseState(ProviderResponseState value) => value switch
+    {
+        ProviderResponseState.Completed => "completed",
+        ProviderResponseState.Refusal => "refusal",
+        ProviderResponseState.Incomplete => "incomplete",
+        ProviderResponseState.Failed => "failed",
+        ProviderResponseState.Queued => "queued",
+        ProviderResponseState.InProgress => "in-progress",
+        ProviderResponseState.Malformed => "malformed",
+        ProviderResponseState.Oversized => "oversized",
+        ProviderResponseState.Mismatched => "mismatched",
+        ProviderResponseState.Unknown => "unknown",
+        ProviderResponseState.Cancelled => "cancelled",
+        _ => throw new InvalidOperationException("Provider response state must be explicit."),
+    };
+
     public ProviderBudgetProjectionContract GetProviderBudgetProjection(string scopeKind, string scopeId)
     {
         lock (gate)
@@ -549,6 +918,213 @@ public sealed partial class AuthoritativeStore
             transaction.Commit();
             return results;
         }
+    }
+
+    private void EnsureExactProviderCatalog(
+        ProviderCapabilitySnapshotContract capability,
+        ProviderPriceSnapshotContract price,
+        SqliteTransaction transaction)
+    {
+        long exactCapability = ScalarLong(
+            """
+            SELECT COUNT(*) FROM provider_capability_snapshots
+            WHERE capability_snapshot_id=$id AND provider=$provider AND model=$model
+              AND service_tier=$tier AND reasoning_effort=$effort AND reasoning_context=$context
+              AND reasoning_mode=$mode AND store=$store AND background=$background AND stream=$stream
+              AND tool_choice=$tool_choice AND tool_count=$tool_count AND truncation=$truncation
+              AND prompt_cache_mode=$cache_mode AND has_prompt_cache_key=$cache_key
+              AND has_prompt_cache_breakpoint=$cache_breakpoint AND maximum_context_tokens=$maximum_context
+              AND revision=$revision AND fingerprint=$fingerprint;
+            """,
+            transaction,
+            ("$id", capability.Identity.Value), ("$provider", capability.Provider), ("$model", capability.Model),
+            ("$tier", capability.ServiceTier), ("$effort", capability.ReasoningEffort),
+            ("$context", capability.ReasoningContext), ("$mode", capability.ReasoningMode),
+            ("$store", capability.Store ? 1 : 0), ("$background", capability.Background ? 1 : 0),
+            ("$stream", capability.Stream ? 1 : 0), ("$tool_choice", capability.ToolChoice),
+            ("$tool_count", capability.ToolCount), ("$truncation", capability.Truncation),
+            ("$cache_mode", capability.PromptCacheMode), ("$cache_key", capability.HasPromptCacheKey ? 1 : 0),
+            ("$cache_breakpoint", capability.HasPromptCacheBreakpoint ? 1 : 0),
+            ("$maximum_context", capability.MaximumContextTokens), ("$revision", capability.Revision),
+            ("$fingerprint", capability.Fingerprint.Value));
+        long exactPrice = ScalarLong(
+            """
+            SELECT COUNT(*) FROM provider_price_snapshots
+            WHERE price_snapshot_id=$id AND provider=$provider AND model=$model AND currency=$currency
+              AND service_tier=$tier AND revision=$revision AND fingerprint=$fingerprint;
+            """,
+            transaction,
+            ("$id", price.Identity.Value), ("$provider", price.Provider), ("$model", price.Model),
+            ("$currency", price.Currency), ("$tier", price.ServiceTier), ("$revision", price.Revision),
+            ("$fingerprint", price.Fingerprint.Value));
+        long persistedRuleCount = ScalarLong(
+            "SELECT COUNT(*) FROM provider_price_rules WHERE price_snapshot_id=$price;",
+            transaction,
+            ("$price", price.Identity.Value));
+        bool exactRules = persistedRuleCount == price.Rules.Count;
+        foreach (ProviderPriceRuleContract rule in price.Rules)
+        {
+            long matches = ScalarLong(
+                """
+                SELECT COUNT(*) FROM provider_price_rules
+                WHERE price_snapshot_id=$price AND rule_id=$rule AND context_band=$context
+                  AND cache_class=$cache AND token_class=$token AND tool_class=$tool
+                  AND region=$region AND numerator_nano_usd=$numerator
+                  AND denominator_tokens=$denominator AND revision=$revision;
+                """,
+                transaction,
+                ("$price", price.Identity.Value), ("$rule", rule.RuleId.Value),
+                ("$context", rule.ContextBand), ("$cache", rule.CacheClass), ("$token", rule.TokenClass),
+                ("$tool", rule.ToolClass), ("$region", rule.Region), ("$numerator", rule.NumeratorNanoUsd),
+                ("$denominator", rule.DenominatorTokens), ("$revision", rule.Revision));
+            exactRules &= matches == 1
+                && rule.Provider == price.Provider && rule.Model == price.Model
+                && rule.ServiceTier == price.ServiceTier && rule.Currency == price.Currency;
+        }
+        if (exactCapability != 1 || exactPrice != 1 || !exactRules)
+        {
+            throw new InvalidOperationException(
+                "An immutable provider catalog identity/fingerprint cannot be redefined, partially published, or retain altered semantic content.");
+        }
+    }
+
+    private ProviderBudgetVectorContract ReadAuthoritativeReservationVector(
+        string operationId,
+        string attemptId,
+        string requestId,
+        long epoch,
+        SqliteTransaction transaction)
+    {
+        using SqliteCommand command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText =
+            """
+            SELECT a.operation_kind,a.maximum_dispatch_count,a.maximum_input_tokens,a.maximum_output_tokens,
+                   a.maximum_calculated_nano_usd,a.capability_snapshot_id,a.price_snapshot_id,
+                   a.maximum_request_bytes,request.payload_bytes,request.input_bound_policy_id,
+                   request.input_bound_policy_version,request.input_bound_proof_status,
+                   capability.maximum_context_tokens,capability.reasoning_effort,
+                   capability.reasoning_context,capability.reasoning_mode,capability.store,
+                   capability.background,capability.stream,capability.tool_choice,
+                   capability.tool_count,capability.truncation,capability.prompt_cache_mode,
+                   capability.has_prompt_cache_key,capability.has_prompt_cache_breakpoint
+            FROM provider_operation_authorizations a
+            JOIN provider_operation_attempts attempt
+              ON attempt.operation_id=a.operation_id AND attempt.provider_attempt_id=$attempt
+            JOIN provider_requests request
+              ON request.operation_id=a.operation_id AND request.provider_attempt_id=attempt.provider_attempt_id
+             AND request.request_id=$request
+            JOIN provider_capability_snapshots capability
+              ON capability.capability_snapshot_id=a.capability_snapshot_id
+            JOIN provider_price_snapshots price ON price.price_snapshot_id=a.price_snapshot_id
+            WHERE a.operation_id=$operation AND a.coordinator_fencing_epoch=$epoch
+              AND attempt.coordinator_fencing_epoch=$epoch
+              AND request.request_fingerprint=a.request_fingerprint
+              AND request.canonical_request_fingerprint=a.canonical_request_fingerprint
+              AND request.settings_fingerprint=a.settings_fingerprint
+              AND request.output_schema_fingerprint=a.output_schema_fingerprint
+              AND request.payload_bytes <= a.maximum_request_bytes
+              AND request.input_bound_policy_id=a.input_bound_policy_id
+              AND request.input_bound_policy_version=a.input_bound_policy_version
+              AND request.input_bound_proof_status=a.input_bound_proof_status
+              AND capability.provider=price.provider AND capability.model=price.model
+              AND capability.service_tier=price.service_tier AND price.currency='USD';
+            """;
+        command.Parameters.AddWithValue("$operation", operationId);
+        command.Parameters.AddWithValue("$attempt", attemptId);
+        command.Parameters.AddWithValue("$request", requestId);
+        command.Parameters.AddWithValue("$epoch", epoch);
+        using SqliteDataReader reader = command.ExecuteReader();
+        if (!reader.Read())
+        {
+            throw new InvalidOperationException(
+                "The authoritative reservation vector requires one exact retained request, operation, capability, and price root.");
+        }
+        string operationKind = reader.GetString(0);
+        long dispatch = reader.GetInt64(1);
+        long input = reader.GetInt64(2);
+        long output = reader.GetInt64(3);
+        long authorizedNanoUsd = reader.GetInt64(4);
+        string priceId = reader.GetString(6);
+        long maximumRequestBytes = reader.GetInt64(7);
+        long payloadBytes = reader.GetInt64(8);
+        string policyId = reader.GetString(9);
+        string policyVersion = reader.GetString(10);
+        string proofStatus = reader.GetString(11);
+        long maximumContext = reader.GetInt64(12);
+        string reasoningEffort = reader.GetString(13);
+        string reasoningContext = reader.GetString(14);
+        string reasoningMode = reader.GetString(15);
+        bool storeResponses = reader.GetInt64(16) != 0;
+        bool background = reader.GetInt64(17) != 0;
+        bool stream = reader.GetInt64(18) != 0;
+        string toolChoice = reader.GetString(19);
+        long toolCount = reader.GetInt64(20);
+        string truncation = reader.GetString(21);
+        string promptCacheMode = reader.GetString(22);
+        bool hasPromptCacheKey = reader.GetInt64(23) != 0;
+        bool hasPromptCacheBreakpoint = reader.GetInt64(24) != 0;
+        reader.Close();
+
+        if (operationKind is not ("transport-qualification" or "source-claim-extraction" or "candidate-investigation")
+            || dispatch != 1 || payloadBytes <= 0 || payloadBytes > maximumRequestBytes
+            || policyId != ProviderOperationContractInvariants.LocalInputBoundPolicyId
+            || policyVersion != ProviderOperationContractInvariants.LocalInputBoundPolicyVersion
+            || proofStatus != ProviderOperationContractInvariants.LocalInputBoundProofStatus
+            || reasoningEffort != "medium" || reasoningContext != "current_turn" || reasoningMode != "standard"
+            || storeResponses || background || stream || toolChoice != "none" || toolCount != 0
+            || truncation != "disabled" || promptCacheMode != "explicit"
+            || hasPromptCacheKey || hasPromptCacheBreakpoint
+            || checked(input + output) > maximumContext)
+        {
+            throw new InvalidOperationException("The retained operation cannot produce a qualified finite M1 reservation vector.");
+        }
+
+        ProviderPriceRuleContract inputRule = ReadRetainedPriceRule(priceId, "ordinary-input", "input", transaction);
+        ProviderPriceRuleContract outputRule = ReadRetainedPriceRule(priceId, "none", "output", transaction);
+        long nanoUsd = checked(
+            ProviderOperationContractInvariants.CalculateComponentNanoUsd(input, inputRule)
+            + ProviderOperationContractInvariants.CalculateComponentNanoUsd(output, outputRule));
+        if (nanoUsd > authorizedNanoUsd)
+        {
+            throw new InvalidOperationException("The authoritative catalog-calculated worst-case cost exceeds the retained operation limit.");
+        }
+        return new(dispatch, input, output, checked(input + output), output, 0, 0, 0, nanoUsd);
+    }
+
+    private ProviderPriceRuleContract ReadRetainedPriceRule(
+        string priceId,
+        string cacheClass,
+        string tokenClass,
+        SqliteTransaction transaction)
+    {
+        using SqliteCommand command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText =
+            """
+            SELECT rule.rule_id,snapshot.provider,snapshot.model,snapshot.service_tier,rule.context_band,
+                   rule.cache_class,rule.token_class,rule.tool_class,rule.region,snapshot.currency,
+                   rule.numerator_nano_usd,rule.denominator_tokens,rule.revision
+            FROM provider_price_rules rule
+            JOIN provider_price_snapshots snapshot ON snapshot.price_snapshot_id=rule.price_snapshot_id
+            WHERE rule.price_snapshot_id=$price AND rule.cache_class=$cache AND rule.token_class=$token;
+            """;
+        command.Parameters.AddWithValue("$price", priceId);
+        command.Parameters.AddWithValue("$cache", cacheClass);
+        command.Parameters.AddWithValue("$token", tokenClass);
+        using SqliteDataReader reader = command.ExecuteReader();
+        if (!reader.Read())
+        {
+            throw new InvalidOperationException("The retained price catalog lacks one exact required M1 price rule.");
+        }
+        ProviderPriceRuleContract result = new(new OpaqueId(reader.GetString(0)), reader.GetString(1), reader.GetString(2),
+            reader.GetString(3), reader.GetString(4), reader.GetString(5), reader.GetString(6), reader.GetString(7),
+            reader.GetString(8), reader.GetString(9), reader.GetInt64(10), reader.GetInt64(11), reader.GetString(12));
+        if (reader.Read())
+        {
+            throw new InvalidOperationException("The retained price catalog has an ambiguous M1 price class.");
+        }
+        return result;
     }
 
     private Dictionary<string, string> ReadExpectedBudgetScopes(
@@ -671,7 +1247,7 @@ public sealed partial class AuthoritativeStore
         return ReadVector(reader, 0);
     }
 
-    private ProviderBudgetVectorContract ReadReservationVector(string reservationId, SqliteTransaction transaction)
+    private ProviderBudgetVectorContract ReadReservationVector(string reservationId, SqliteTransaction? transaction)
     {
         using SqliteCommand command = connection.CreateCommand();
         command.Transaction = transaction;
@@ -720,7 +1296,11 @@ public sealed partial class AuthoritativeStore
         return result;
     }
 
-    private void EnsureActualUsage(string usageEntryId, ProviderBudgetVectorContract actual, SqliteTransaction transaction)
+    private void EnsureActualUsage(
+        string reservationId,
+        string usageEntryId,
+        ProviderBudgetVectorContract actual,
+        SqliteTransaction transaction)
     {
         using SqliteCommand command = connection.CreateCommand();
         command.Transaction = transaction;
@@ -728,8 +1308,12 @@ public sealed partial class AuthoritativeStore
             """
             SELECT dispatch_count,input_tokens,output_tokens,total_tokens,reasoning_tokens,
                    cache_read_tokens,cache_write_tokens,priced_tool_calls,calculated_nano_usd
-            FROM provider_usage_entries
-            WHERE usage_entry_id=$usage
+            FROM provider_usage_entries usage
+            JOIN provider_reservations reservation
+              ON reservation.operation_id=usage.operation_id
+             AND reservation.provider_attempt_id=usage.provider_attempt_id
+             AND reservation.request_id=usage.request_id
+            WHERE reservation.reservation_id=$reservation AND usage.usage_entry_id=$usage
               AND dispatch_count_availability='available' AND input_tokens_availability='available'
               AND output_tokens_availability='available' AND total_tokens_availability='available'
               AND reasoning_tokens_availability='available' AND cache_read_tokens_availability='available'
@@ -737,10 +1321,36 @@ public sealed partial class AuthoritativeStore
               AND calculated_nano_usd_availability='available';
             """;
         command.Parameters.AddWithValue("$usage", usageEntryId);
+        command.Parameters.AddWithValue("$reservation", reservationId);
         using SqliteDataReader reader = command.ExecuteReader();
         if (!reader.Read() || ReadVector(reader, 0) != actual)
         {
             throw new InvalidOperationException("Settlement must use the exact one-owned available provider usage entry.");
+        }
+    }
+
+    private void EnsureUndispatchedUsage(
+        string reservationId,
+        string usageEntryId,
+        SqliteTransaction transaction)
+    {
+        long exact = ScalarLong(
+            """
+            SELECT COUNT(*) FROM provider_usage_entries usage
+            JOIN provider_reservations reservation
+              ON reservation.operation_id=usage.operation_id
+             AND reservation.provider_attempt_id=usage.provider_attempt_id
+             AND reservation.request_id=usage.request_id
+            JOIN provider_responses response ON response.response_record_id=usage.response_record_id
+            WHERE reservation.reservation_id=$reservation AND usage.usage_entry_id=$usage
+              AND response.response_state='cancelled' AND usage.availability='unavailable'
+              AND usage.receipt_state='not-dispatched' AND usage.dispatch_count=0;
+            """,
+            transaction,
+            ("$reservation", reservationId), ("$usage", usageEntryId));
+        if (exact != 1)
+        {
+            throw new InvalidOperationException("Known-undispatched settlement requires its exact zero-dispatch usage receipt.");
         }
     }
 

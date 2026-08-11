@@ -1,4 +1,6 @@
+using System.Text.Json;
 using Infinium.Application.Provider;
+using Infinium.Coordinator;
 using Infinium.Domain.Contracts;
 using Infinium.Persistence;
 using Microsoft.Data.Sqlite;
@@ -12,6 +14,7 @@ public sealed class ProviderBudgetIntegrationTests
         DateTimeOffset.Parse("2026-08-10T00:00:00.0000000+00:00", System.Globalization.CultureInfo.InvariantCulture);
     private static readonly string[] OutputGaps =
         ["provider-billing-unavailable", "prepaid-credit-unavailable"];
+    private static readonly JsonSerializerOptions FaultEvidenceJsonOptions = new() { WriteIndented = true };
 
     [TestMethod]
     [TestCategory("Integration")]
@@ -29,6 +32,22 @@ public sealed class ProviderBudgetIntegrationTests
         ProviderDispatchGateReceipt fence = context.Store.AuthorizeProviderDispatch(context.GateRequest);
         Assert.IsTrue(fence.Authorized);
         Assert.AreEqual("exact-final-gate-authorized", fence.DecisionReason);
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    public void ProviderReservationRejectsCallerUnderReservationBeforeAnyDebit()
+    {
+        using BudgetContext context = BudgetContext.Create();
+        ProviderBudgetVectorContract under = context.Vector with
+        {
+            InputTokens = context.Vector.InputTokens - 1,
+            TotalTokens = context.Vector.TotalTokens - 1,
+        };
+        InvalidOperationException error = Assert.ThrowsExactly<InvalidOperationException>(() =>
+            context.Store.ReserveProviderBudget(1, context.Request with { Reserved = under }));
+        StringAssert.Contains(error.Message, "authoritative worst-case vector");
+        Assert.AreEqual((0L, 0L), context.CountLedgerRoots());
     }
 
     [TestMethod]
@@ -116,7 +135,7 @@ public sealed class ProviderBudgetIntegrationTests
     [TestCategory("Integration")]
     public void UsageSettlementCoversCompleteFailedPartialUnavailableAndOverrunWithoutFallbackOrRetry()
     {
-        ProviderBudgetVectorContract expectedUsage = new(1, 8, 4, 12, 1, 0, 0, 0, 80);
+        ProviderBudgetVectorContract expectedUsage = new(1, 8, 4, 12, 1, 0, 0, 0, 52_000);
         foreach (ProviderBudgetEventKind kind in new[]
                  {
                      ProviderBudgetEventKind.SettledComplete,
@@ -164,7 +183,7 @@ public sealed class ProviderBudgetIntegrationTests
 
         using (BudgetContext context = BudgetContext.Create())
         {
-            ProviderBudgetVectorContract overrun = new(1, 11, 5, 16, 2, 0, 0, 0, 101);
+            ProviderBudgetVectorContract overrun = new(1, 21, 5, 26, 2, 0, 0, 0, 255_000);
             _ = context.Store.ReserveProviderBudget(1, context.Request);
             ProviderDispatchGateReceipt fence = context.Store.AuthorizeProviderDispatch(context.GateRequest);
             context.Store.RecordProviderTransportStart(
@@ -177,6 +196,54 @@ public sealed class ProviderBudgetIntegrationTests
             Assert.AreEqual(overrun, receipt.Settled);
             Assert.IsFalse(receipt.RetryPermitted);
         }
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    public void UsageSettlementProductionSimulatorPersistsExactResponseUsageOwnershipAndSettlement()
+    {
+        using BudgetContext context = BudgetContext.Create();
+        _ = context.Store.ReserveProviderBudget(1, context.Request);
+        ProviderDispatchGateReceipt gate = context.Store.AuthorizeProviderDispatch(context.GateRequest);
+        ProviderAccountingCoordinator coordinator = new(context.Store);
+        ProviderBudgetSettlementReceipt settlement = coordinator.SimulatePersistAndSettle(
+            gate, "authorization-settlement", "operation-restore", "reservation-settlement",
+            "attempt-settlement", "request-settlement", "production-simulator",
+            ProviderSimulatorOutcome.Completed,
+            new(65_536, 20, 10, 1_048_576, 1, 400_000, 120_000),
+            BaseTime.AddSeconds(7));
+
+        Assert.AreEqual(ProviderBudgetEventKind.SettledComplete, settlement.Kind);
+        Assert.AreEqual(new ProviderBudgetVectorContract(1, 20, 10, 30, 8, 0, 0, 0, 400_000), settlement.Settled);
+        using SqliteConnection database = new($"Data Source={context.Store.Paths.Database};Mode=ReadOnly;Pooling=False");
+        database.Open();
+        using SqliteCommand command = database.CreateCommand();
+        command.CommandText =
+            """
+            SELECT COUNT(*) FROM provider_responses response
+            JOIN provider_usage_entries usage
+              ON usage.response_record_id=response.response_record_id
+             AND usage.operation_id=response.operation_id
+             AND usage.provider_attempt_id=response.provider_attempt_id
+             AND usage.request_id=response.request_id
+             AND usage.dispatch_fence_id=response.dispatch_fence_id
+            JOIN provider_settlements settlement
+              ON settlement.operation_id=usage.operation_id
+             AND settlement.provider_attempt_id=usage.provider_attempt_id
+             AND settlement.request_id=usage.request_id
+             AND settlement.usage_entry_id=usage.usage_entry_id
+            JOIN provider_budget_settlement_receipts receipt
+              ON receipt.settlement_id=settlement.settlement_id
+             AND receipt.reservation_id=settlement.reservation_id
+            WHERE response.response_record_id='production-simulator:response'
+              AND usage.usage_entry_id='production-simulator:usage'
+              AND settlement.settlement_id='production-simulator:settlement'
+              AND response.operation_id='operation-restore'
+              AND response.provider_attempt_id='attempt-settlement'
+              AND response.request_id='request-settlement'
+              AND response.dispatch_fence_id='fence-settlement';
+            """;
+        Assert.AreEqual(1L, (long)command.ExecuteScalar()!);
     }
 
     [TestMethod]
@@ -221,7 +288,7 @@ public sealed class ProviderBudgetIntegrationTests
 
     [TestMethod]
     [TestCategory("Integration")]
-    public void ProviderCatalogPublicationIsImmutableAndIdempotent()
+    public void ProviderReservationCatalogPublicationIsImmutableAndIdempotent()
     {
         string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp2-Catalog-" + Guid.NewGuid().ToString("N"));
         try
@@ -229,6 +296,17 @@ public sealed class ProviderBudgetIntegrationTests
             using AuthoritativeStore store = new(new StoragePaths(root));
             store.PublishProviderCatalog(M1ProviderCatalog.Capability, M1ProviderCatalog.Price, BaseTime);
             store.PublishProviderCatalog(M1ProviderCatalog.Capability, M1ProviderCatalog.Price, BaseTime.AddSeconds(1));
+            Assert.ThrowsExactly<InvalidOperationException>(() => store.PublishProviderCatalog(
+                M1ProviderCatalog.Capability with { Revision = "altered-same-identity-and-fingerprint" },
+                M1ProviderCatalog.Price,
+                BaseTime.AddSeconds(2)));
+            ProviderPriceRuleContract[] alteredRules = M1ProviderCatalog.Price.Rules
+                .Select((rule, index) => index == 0 ? rule with { NumeratorNanoUsd = rule.NumeratorNanoUsd + 1 } : rule)
+                .ToArray();
+            Assert.ThrowsExactly<InvalidOperationException>(() => store.PublishProviderCatalog(
+                M1ProviderCatalog.Capability,
+                M1ProviderCatalog.Price with { Rules = alteredRules },
+                BaseTime.AddSeconds(3)));
         }
         finally
         {
@@ -236,6 +314,112 @@ public sealed class ProviderBudgetIntegrationTests
             {
                 Directory.Delete(root, recursive: true);
             }
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    public void UsageSettlementRejectsCausalBackdatingAndReplayPreservesEventOrder()
+    {
+        using BudgetContext context = BudgetContext.Create();
+        ProviderBudgetVectorContract expectedActual = new(1, 8, 4, 12, 1, 0, 0, 0, 52_000);
+        _ = context.Store.ReserveProviderBudget(1, context.Request);
+        ProviderDispatchGateReceipt fence = context.Store.AuthorizeProviderDispatch(context.GateRequest);
+        context.Store.RecordProviderTransportStart(
+            "operation-restore", "attempt-settlement", "request-settlement", fence.DispatchFenceId,
+            ambiguous: false, BaseTime.AddSeconds(6));
+        context.SeedActualUsage(expectedActual, failedKnown: false);
+        InvalidOperationException backdated = Assert.ThrowsExactly<InvalidOperationException>(() =>
+            context.Store.SettleProviderBudget(new(
+                "settlement-backdated", "reservation-settlement", ProviderBudgetEventKind.SettledComplete,
+                "usage-settlement", expectedActual, BaseTime.AddSeconds(8))));
+        StringAssert.Contains(backdated.Message, "causally backdated");
+        ProviderBudgetSettlementReceipt accepted = context.Store.SettleProviderBudget(new(
+            "settlement-ordered", "reservation-settlement", ProviderBudgetEventKind.SettledComplete,
+            "usage-settlement", expectedActual, BaseTime.AddSeconds(10)));
+        Assert.AreEqual(expectedActual, accepted.Settled);
+        IReadOnlyList<ProviderBudgetProjectionContract> rebuilt =
+            context.Store.RebuildProviderBudgetProjections(BaseTime.AddSeconds(11));
+        Assert.IsTrue(rebuilt.All(item => item.Settled == expectedActual));
+        Assert.IsTrue(context.BudgetEventsAreCausallyOrdered());
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    public void UsageSettlementBudgetFaultScheduleExercisesRealSqliteBoundariesAndWritesDynamicEvidence()
+    {
+        bool rollback;
+        using (BudgetContext context = BudgetContext.Create())
+        {
+            Assert.ThrowsExactly<InvalidOperationException>(() => context.Store.ReserveProviderBudgetWithFault(
+                1, context.Request, ProviderBudgetFaultPoint.AfterReservationRootBeforeScopeEvents));
+            rollback = context.CountLedgerRoots() == (0L, 0L) && context.CountReservations() == 0;
+        }
+
+        int competingWinners;
+        using (BudgetContext context = BudgetContext.Create())
+        using (AuthoritativeStore contender = new(new StoragePaths(context.Root)))
+        {
+            Exception? first = null;
+            Exception? second = null;
+            using ManualResetEventSlim start = new(false);
+            Task a = Task.Run(() => { start.Wait(); try { context.Store.ReserveProviderBudget(1, context.Request with { ReservationId = "fault-race-a" }); } catch (Exception error) { first = error; } });
+            Task b = Task.Run(() => { start.Wait(); try { contender.ReserveProviderBudget(1, context.Request with { ReservationId = "fault-race-b" }); } catch (Exception error) { second = error; } });
+            start.Set();
+            Task.WaitAll(a, b);
+            competingWinners = new[] { first, second }.Count(error => error is null);
+        }
+
+        bool staleEpoch;
+        using (BudgetContext context = BudgetContext.Create())
+        {
+            _ = context.Store.AcquireCoordinatorAuthorityAfterProcessExclusion(
+                "wp2-fault-new-owner", DateTimeOffset.UtcNow.AddSeconds(1), TimeSpan.FromMinutes(10));
+            staleEpoch = Assert.ThrowsExactly<InvalidOperationException>(() =>
+                context.Store.ReserveProviderBudget(1, context.Request)).Message.Contains("fencing epoch", StringComparison.Ordinal);
+        }
+
+        bool deadline;
+        using (BudgetContext context = BudgetContext.Create())
+        {
+            ProviderBudgetReservationRequest expired = context.Request with
+            {
+                CreatedAt = BaseTime.AddMinutes(3),
+                ExpiresAt = BaseTime.AddMinutes(4),
+            };
+            deadline = Assert.ThrowsExactly<InvalidOperationException>(() =>
+                context.Store.ReserveProviderBudget(1, expired)).Message.Contains("authorized request", StringComparison.Ordinal);
+        }
+
+        bool reconstruction;
+        using (BudgetContext context = BudgetContext.Create())
+        {
+            _ = context.Store.ReserveProviderBudget(1, context.Request);
+            ProviderBudgetProjectionContract rebuilt = context.Store.RebuildProviderBudgetProjections(BaseTime.AddSeconds(12))
+                .Single(item => item.ScopeKind == "operation");
+            reconstruction = rebuilt.Reserved == context.Vector;
+        }
+
+        Assert.IsTrue(rollback);
+        Assert.AreEqual(1, competingWinners);
+        Assert.IsTrue(staleEpoch);
+        Assert.IsTrue(deadline);
+        Assert.IsTrue(reconstruction);
+        string? evidencePath = Environment.GetEnvironmentVariable("INFINIUM_WP2_FAULT_EVIDENCE_PATH");
+        if (!string.IsNullOrWhiteSpace(evidencePath))
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(evidencePath)!);
+            File.WriteAllText(evidencePath, JsonSerializer.Serialize(new
+            {
+                schema = "infinium.wp2.budget-fault-evidence/v1",
+                rollback_after_reservation_root = rollback,
+                competing_commit_winners = competingWinners,
+                stale_epoch_rejected = staleEpoch,
+                deadline_rejected = deadline,
+                projection_reconstructed_from_events = reconstruction,
+                network_operations = 0,
+                credential_operations = 0,
+            }, FaultEvidenceJsonOptions) + Environment.NewLine);
         }
     }
 
@@ -334,7 +518,7 @@ public sealed class ProviderBudgetIntegrationTests
                 CoordinatorAuthority authority = store.AcquireCoordinatorAuthority(
                     "wp2-integration", DateTimeOffset.UtcNow, TimeSpan.FromMinutes(10));
                 Assert.AreEqual(1L, authority.FencingEpoch);
-                ProviderBudgetVectorContract vector = new(1, 10, 5, 15, 2, 0, 0, 0, 100);
+                ProviderBudgetVectorContract vector = new(1, 20, 10, 30, 10, 0, 0, 0, 400_000);
                 string[] kinds = ["request", "operation", "evidence-acquisition-run", "analysis-run",
                     "provider-profile", "provider-account", "billing-scope", "global"];
                 string[] ids = ["request-settlement", "operation-restore", "acquisition-restore", "run-restore",
@@ -387,6 +571,32 @@ public sealed class ProviderBudgetIntegrationTests
             using SqliteDataReader reader = command.ExecuteReader();
             Assert.IsTrue(reader.Read());
             return (reader.GetInt64(0), reader.GetInt64(1));
+        }
+
+        public long CountReservations()
+        {
+            using SqliteConnection database = new($"Data Source={Store.Paths.Database};Mode=ReadOnly;Pooling=False");
+            database.Open();
+            using SqliteCommand command = database.CreateCommand();
+            command.CommandText = "SELECT COUNT(*) FROM provider_reservations;";
+            return (long)command.ExecuteScalar()!;
+        }
+
+        public bool BudgetEventsAreCausallyOrdered()
+        {
+            using SqliteConnection database = new($"Data Source={Store.Paths.Database};Mode=ReadOnly;Pooling=False");
+            database.Open();
+            using SqliteCommand command = database.CreateCommand();
+            command.CommandText =
+                """
+                SELECT COUNT(*) FROM provider_budget_events settled
+                JOIN provider_budget_events reserved
+                  ON reserved.reservation_id=settled.reservation_id
+                 AND reserved.scope_kind=settled.scope_kind AND reserved.scope_id=settled.scope_id
+                 AND reserved.event_kind='reserved'
+                WHERE settled.event_kind<>'reserved' AND settled.occurred_at < reserved.occurred_at;
+                """;
+            return (long)command.ExecuteScalar()! == 0;
         }
 
         public void SeedActualUsage(ProviderBudgetVectorContract actual, bool failedKnown)
@@ -464,7 +674,7 @@ public sealed class ProviderBudgetIntegrationTests
           effective_configuration_id,resolved_input_manifest_id,prompt_id,prompt_fingerprint,output_schema_id,
           output_schema_fingerprint,request_fingerprint,canonical_request_fingerprint,capability_snapshot_id,
           price_snapshot_id,settings_fingerprint,'openai-responses-o200k-byte-envelope','v1','proved',coordinator_fencing_epoch,
-          maximum_request_bytes,20,10,maximum_raw_response_bytes,maximum_dispatch_count,200,deadline_milliseconds,
+          maximum_request_bytes,20,10,maximum_raw_response_bytes,maximum_dispatch_count,400000,deadline_milliseconds,
           dispatch_deadline_utc,confirmed_at
         FROM provider_operation_blocks WHERE operation_id='operation-restore';
         INSERT INTO provider_operation_attempts VALUES(

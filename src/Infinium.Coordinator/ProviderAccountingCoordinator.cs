@@ -1,3 +1,4 @@
+using System.Text;
 using Infinium.Application.Provider;
 using Infinium.Domain.Contracts;
 using Infinium.OpenAI;
@@ -57,4 +58,77 @@ public sealed class ProviderAccountingCoordinator
 
     public ProviderBudgetSettlementReceipt Settle(ProviderBudgetSettlementRequest request) =>
         store.SettleProviderBudget(request);
+
+    public ProviderBudgetSettlementReceipt SimulatePersistAndSettle(
+        ProviderDispatchGateReceipt gate,
+        string authorizationId,
+        string operationId,
+        string reservationId,
+        string attemptId,
+        string requestId,
+        string identityPrefix,
+        ProviderSimulatorOutcome outcome,
+        ProviderFiniteLimitsContract limits,
+        DateTimeOffset now)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(identityPrefix);
+        DeterministicProviderTranscript transcript = Simulate(
+            gate, operationId, attemptId, requestId, outcome, limits, now);
+        ProviderSimulationPersistenceReceipt? persisted = null;
+        if (outcome != ProviderSimulatorOutcome.AmbiguousStart)
+        {
+            persisted = store.PersistProviderSimulation(new(
+                identityPrefix + ":response",
+                identityPrefix + ":usage",
+                identityPrefix + ":receipt",
+                identityPrefix + ":finalization",
+                authorizationId,
+                operationId,
+                reservationId,
+                attemptId,
+                requestId,
+                gate.DispatchFenceId,
+                transcript.ResponseState,
+                transcript.HttpStatus ?? 0,
+                transcript.ReturnedModel,
+                transcript.ReturnedServiceTier,
+                transcript.ErrorCode,
+                transcript.RefusalCode,
+                transcript.IncompleteReason,
+                transcript.Usage,
+                transcript.RateFacts,
+                CreateDeterministicRawResponse(transcript),
+                now));
+        }
+
+        ProviderBudgetEventKind kind = outcome == ProviderSimulatorOutcome.AmbiguousStart
+            ? ProviderBudgetEventKind.RetainedAmbiguous
+            : persisted!.SettlementKind;
+        return store.SettleProviderBudget(new(
+            identityPrefix + ":settlement",
+            reservationId,
+            kind,
+            persisted?.UsageEntryId,
+            kind == ProviderBudgetEventKind.ReleasedUndispatched ? null : persisted?.Actual,
+            now));
+    }
+
+    private static byte[]? CreateDeterministicRawResponse(DeterministicProviderTranscript transcript)
+    {
+        if (!transcript.RawResponseAvailable)
+        {
+            return null;
+        }
+        byte[] prefix = Encoding.UTF8.GetBytes(
+            $"simulated:{transcript.Outcome}:{transcript.ResponseState}:{transcript.HttpStatus}");
+        int length = checked((int)transcript.RawResponseBytes);
+        if (prefix.Length > length)
+        {
+            throw new InvalidOperationException("The deterministic simulator response identity exceeds its retained byte claim.");
+        }
+        byte[] result = new byte[length];
+        prefix.CopyTo(result, 0);
+        Array.Fill(result, (byte)' ', prefix.Length, result.Length - prefix.Length);
+        return result;
+    }
 }

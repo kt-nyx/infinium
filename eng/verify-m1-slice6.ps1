@@ -634,17 +634,41 @@ function Invoke-BudgetFaultGate {
     $integrationFilter = 'FullyQualifiedName~UsageSettlement'
     $evaluationFilter = 'FullyQualifiedName~AtomicBudget|FullyQualifiedName~ProviderAuthority'
     Invoke-DotnetTest 'tests/Infinium.UnitTests/Infinium.UnitTests.csproj' $unitFilter
-    Invoke-DotnetTest 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj' $integrationFilter
+    $faultEvidencePath = Join-Path $resolvedOutputRoot 'budget-fault-dynamic-evidence.json'
+    Remove-Item -LiteralPath $faultEvidencePath -Force -ErrorAction SilentlyContinue
+    $priorFaultEvidencePath = $env:INFINIUM_WP2_FAULT_EVIDENCE_PATH
+    try {
+        $env:INFINIUM_WP2_FAULT_EVIDENCE_PATH = $faultEvidencePath
+        Invoke-DotnetTest 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj' $integrationFilter
+    } finally {
+        $env:INFINIUM_WP2_FAULT_EVIDENCE_PATH = $priorFaultEvidencePath
+    }
     Invoke-DotnetTest 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj' $evaluationFilter
+    if (-not (Test-Path -LiteralPath $faultEvidencePath -PathType Leaf)) {
+        throw 'BudgetFaults requires dynamic evidence emitted by the real SQLite fault schedule.'
+    }
+    $faultEvidence = Get-Content -LiteralPath $faultEvidencePath -Raw | ConvertFrom-Json
+    if (($faultEvidence.schema -ne 'infinium.wp2.budget-fault-evidence/v1') -or
+        ($faultEvidence.rollback_after_reservation_root -ne $true) -or
+        ($faultEvidence.competing_commit_winners -ne 1) -or
+        ($faultEvidence.stale_epoch_rejected -ne $true) -or
+        ($faultEvidence.deadline_rejected -ne $true) -or
+        ($faultEvidence.projection_reconstructed_from_events -ne $true) -or
+        ($faultEvidence.network_operations -ne 0) -or
+        ($faultEvidence.credential_operations -ne 0)) {
+        throw 'BudgetFaults dynamic SQLite evidence does not satisfy the accepted fault schedule.'
+    }
     Write-Receipt 'BudgetFaults' ([ordered]@{
         production_test_filters = @($unitFilter, $integrationFilter, $evaluationFilter)
-        overflow = 'fail-closed'
-        rational_rounding = 'upward'
-        known_undispatched = 'full-release-no-retry'
-        ambiguous_start = 'full-hold-no-retry'
-        partial_debit = 'forbidden'
-        network_operations = 0
-        credential_operations = 0
+        dynamic_evidence_file = [System.IO.Path]::GetFileName($faultEvidencePath)
+        dynamic_evidence_sha256 = (Get-FileHash -LiteralPath $faultEvidencePath -Algorithm SHA256).Hash.ToLowerInvariant()
+        rollback_after_reservation_root = $faultEvidence.rollback_after_reservation_root
+        competing_commit_winners = $faultEvidence.competing_commit_winners
+        stale_epoch_rejected = $faultEvidence.stale_epoch_rejected
+        deadline_rejected = $faultEvidence.deadline_rejected
+        projection_reconstructed_from_events = $faultEvidence.projection_reconstructed_from_events
+        network_operations = $faultEvidence.network_operations
+        credential_operations = $faultEvidence.credential_operations
     })
 }
 

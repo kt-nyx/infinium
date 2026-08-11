@@ -430,6 +430,21 @@
           "Infinium.Application": "[1.0.0, )"
         }
       },
+      "infinium.unittests": {
+        "type": "Project",
+        "dependencies": {
+          "Infinium.Analysis": "[1.0.0, )",
+          "Infinium.Application": "[1.0.0, )",
+          "Infinium.Bethesda": "[1.0.0, )",
+          "Infinium.Domain": "[1.0.0, )",
+          "Infinium.Mo2": "[1.0.0, )",
+          "Infinium.OpenAI": "[1.0.0, )",
+          "Infinium.Persistence": "[1.0.0, )",
+          "MSTest.TestAdapter": "[4.3.2, )",
+          "MSTest.TestFramework": "[4.3.2, )",
+          "Microsoft.NET.Test.Sdk": "[18.8.1, )"
+        }
+      },
       "Google.Protobuf": {
         "type": "CentralTransitive",
         "requested": "[3.31.1, )",

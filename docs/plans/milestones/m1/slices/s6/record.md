@@ -2275,3 +2275,71 @@ SHA-256
 `18f860aa65f5957c8323f400f6be98886e562db866be177faf822405ccc3dd7c`,
 with 52 changed paths and zero allowed-path, strict-JSON, relative-link, or
 private/archive failures. Network and credential permissions remained false.
+
+## WP2 bounded review correction — 2026-08-11
+
+The two fresh read-only WP2 reviews of exact candidate
+`a4050736be99f193bc0592caae326f60fcd04007` identified six accepted WP2
+must-fix findings. This correction remains bounded to those findings and does
+not advance `docs/current-state.md` or begin WP3.
+
+1. Reservation admission now derives one exact authoritative worst-case vector
+   inside the same immediate SQLite transaction from the retained operation
+   kind and limits, exact request fingerprints and local input-bound proof,
+   full cache-off/no-tools M1 capability semantics, and retained ordinary-input
+   and output rational price rules. A caller declaration must equal that vector;
+   under-reservation is rejected before any debit.
+2. The deterministic simulator now has a coordinator production path through
+   transport recording, raw-response staging, response, usage, rate-fact,
+   finalization, settlement, projection, and replay persistence. Response and
+   usage ownership is bound to the exact authorization, reservation operation,
+   attempt, request, and dispatch fence. Ambiguous start still invents no
+   response or usage and retains the complete unresolved hold.
+3. Re-publication of an immutable catalog compares every persisted capability
+   field, price-snapshot field, rule count, and every persisted rule field.
+   Reusing an identity/fingerprint with changed semantic content fails closed.
+4. `BudgetFaults` now obtains its receipt claims from a deterministic test that
+   injects rollback after the reservation root but before scope events, races
+   two real SQLite connections, rejects a stale fencing epoch after takeover,
+   rejects an expired deadline, and reconstructs the projection from retained
+   events. The emitted 308-byte dynamic evidence has SHA-256
+   `cc277bf034b830d1b44fd0b54c93c7aa5afdf8decd43afe1f9050efae1b01cfe`.
+5. Settlement rejects a timestamp earlier than any bound reservation, fence,
+   transport, or usage fact. The regression then accepts the ordered settlement
+   and proves event replay/rebuild preserves the resulting causal order.
+6. All six capability, authority, and atomic-budget DEV/VAL public packages now
+   verify registry authority bytes/hash and manifest input/oracle hashes, load
+   every oracle field, reject a mutated wrong oracle, and drive the relevant
+   non-live catalog/simulator/real-SQLite path from answer-free input. The DEV
+   atomic-budget input now declares the exact derived reservation vector and
+   its manifest and closed-world registry hashes are resealed.
+
+Final correction verification from the live candidate is:
+
+- locked restore and Release build passed with zero warnings or errors; format,
+  dependency-manifest, and diff checks passed;
+- exact WP2 focused commands passed Unit 4/0/0, Integration 12/0/0, and
+  Evaluation 6/0/0;
+- `Budget` passed 4/0/0, 12/0/0, and 6/0/0; its unchanged 1,223-byte receipt has
+  SHA-256 `c1141b9421652511e3bfcbbf674795938e09127a93737da0ddbcf29711dd8935`;
+- `BudgetFaults` passed 3/0/0, 7/0/0, and 4/0/0; its 1,209-byte dynamically
+  evidenced receipt has SHA-256
+  `df8018dbb7616b900057458672e21e37a69db0dbe8330157d01985e258324926`;
+- the accumulated unfiltered floor passed Unit 196/0/1, Contract 155/0/0,
+  Integration 81/0/0, and Evaluation 59/0/8. Category runs passed Unit
+  188/0/1, Contract 127/0/0 across projects, Integration 83/0/0 across
+  projects, Evaluation 81/0/8 across projects, and all Security/Fault checks;
+- schema-6 migration/declaration and backup/restore focused checks passed
+  Unit 3/0/0 and Integration 1/0/0. `Contracts` passed 22/0/0 and
+  `StateSurfaces`/`StateTotality` each passed 27/0/0 plus 18/0/0; and
+- the complete non-live analysis `All` gate passed Contracts, Documentation,
+  Candidates, CandidateScale, Cases, Replay, Output, Safety, Traceability, and
+  Comprehensive. Its 764-byte receipt has SHA-256
+  `746dd3915a752409cc46500b953d21f6a147f4dad39e7ce98f8107967109ffbe`.
+
+Semantic and isolation review found no fallback/retry addition, helper or
+credential execution, DNS/network/provider operation, private-fixture or
+legacy/evaluator archive access, protected-root write, WP3 behavior,
+current-state advancement, or Slice 5 v1 compatibility change. Product output
+did not author an oracle. Final correction acceptance remains reserved to the
+fresh read-only convergence review. No push occurred.

@@ -3045,7 +3045,8 @@ public sealed class PersistenceAndLifecycleTests
             INSERT INTO provider_credential_intent_events VALUES('event-verify-restore-v2','root-verify-restore','intent-verify-restore',2,'event-verify-restore-v1','2026-08-10T00:00:02.0000000+00:00');
             UPDATE provider_profile_projection SET lifecycle_state='active-verified',verification_state='available',intent_id='intent-verify-restore',projection_version=3,updated_at='2026-08-10T00:00:02.0000000+00:00' WHERE profile_id='profile-restore';
             INSERT INTO provider_price_snapshots VALUES('price-restore','openai','gpt-5.6-sol','USD','default','synthetic-v1','bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb','2026-08-10T00:00:00.0000000+00:00');
-            INSERT INTO provider_price_rules VALUES('price-restore','rule-restore','standard-under-272k','ordinary-input','input','none','global',1,1,'synthetic-v1');
+            INSERT INTO provider_price_rules VALUES('price-restore','rule-restore','standard-under-272k','ordinary-input','input','none','global',5000,1,'synthetic-v1');
+            INSERT INTO provider_price_rules VALUES('price-restore','rule-restore-output','standard-under-272k','none','output','none','global',30000,1,'synthetic-v1');
             INSERT INTO runs VALUES('run-restore','install-restore','context-restore','config-restore','manifest-restore','created',0,1,1,'2026-08-10T00:00:00.0000000+00:00','2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO job_nodes VALUES('job-restore','run-restore',NULL,'provider','created',0,'2026-08-10T00:00:00.0000000+00:00','2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO durable_commands VALUES('command-restore','provider','run-restore',0,'recorded','created',NULL,'2026-08-10T00:00:00.0000000+00:00',NULL,NULL);

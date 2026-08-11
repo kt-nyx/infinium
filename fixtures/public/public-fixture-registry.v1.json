@@ -47,7 +47,7 @@
       "package_path": "fixtures/public/platform/provider-budget/budget-dev",
       "authority_file": "fixtures/public/platform/provider-budget/budget-dev/public-manifest.json",
       "authority_bytes": 514,
-      "authority_sha256": "90dd564a7d06e5a7627b28756d42ad5f62db7bbeab71fdf97317a33f228af94e"
+      "authority_sha256": "72c8ca141cb425426460de1b5ab11c2115ba90af8d68bde327c4301143151086"
     },
     {
       "package_identity": "M1-PLAT-BUDGET-VAL-v1",

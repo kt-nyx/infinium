@@ -10,6 +10,6 @@
   "oracle_file": "oracle.json",
   "answer_free_input": true,
   "review_state": "accepted",
-  "input_sha256": "973b711422732bf410d89c2fb5007d9b1bf8840fa19bf3eb80dbf774678702a3",
+  "input_sha256": "8ac4515b9c495998a3e08cb5681838214b2c583a148f1039c0e8d0bea1829584",
   "oracle_sha256": "8983e2db384c1593db42fd2290f51806abc848ae3ba037614486601e476f29e2"
 }

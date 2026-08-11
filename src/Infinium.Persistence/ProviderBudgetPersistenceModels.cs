@@ -50,3 +50,38 @@ public sealed record ProviderBudgetSettlementReceipt(
     ProviderBudgetVectorContract Settled,
     ProviderBudgetVectorContract Unresolved,
     bool RetryPermitted);
+
+internal enum ProviderBudgetFaultPoint
+{
+    None,
+    AfterReservationRootBeforeScopeEvents,
+}
+
+public sealed record ProviderSimulationPersistenceRequest(
+    string ResponseId,
+    string UsageEntryId,
+    string ReceiptId,
+    string FinalizationId,
+    string AuthorizationId,
+    string OperationId,
+    string ReservationId,
+    string AttemptId,
+    string RequestId,
+    string DispatchFenceId,
+    ProviderResponseState ResponseState,
+    int HttpStatus,
+    string? ReturnedModel,
+    string? ReturnedServiceTier,
+    string? ErrorCode,
+    string? RefusalCode,
+    string? IncompleteReason,
+    ProviderUsageContract Usage,
+    IReadOnlyList<ProviderRateLimitFactContract> RateFacts,
+    byte[]? RawResponseBytes,
+    DateTimeOffset OccurredAt);
+
+public sealed record ProviderSimulationPersistenceReceipt(
+    string ResponseId,
+    string UsageEntryId,
+    ProviderBudgetVectorContract Actual,
+    ProviderBudgetEventKind SettlementKind);
