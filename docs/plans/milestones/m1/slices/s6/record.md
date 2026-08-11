@@ -493,3 +493,119 @@ were restored exactly to `edc12fd11ae3803e08bf795048c98ad5ee27c771`
 before verification. No network, provider, Credential Manager/native
 credential, private fixture, sibling private repository, legacy archive,
 evaluator archive, push, amend, or later-package action occurred.
+
+## M1/S6/WP1 third-cycle closure correction — 2026-08-10
+
+This append-only correction supersedes the recovery entry's claims that all
+recoverable findings were closed and that its recorded fingerprints or counts
+were final. Its exact rejected input is
+`0a42aa90f6ca17df0c807d08703516b88e2ea605`. The fresh third-cycle contract
+and boundary final reports both returned `CORRECT` with recoverable findings;
+the implementation below closes those findings without changing the finite-
+bound owner escalation.
+
+It also supersedes the initial entry's statement that the contracts were
+`Implementation-active` pending acceptance. WP1 and its new contracts remain
+`Deferred` / `deferred-owner-authority` until the accepted plan's missing
+tokenizer/framing authority is supplied and WP1 is independently accepted.
+No package-acceptance or Slice-frozen maturity is claimed here.
+
+### Structural proof and persistence closure
+
+- Authority-required proof may retain only `InputBoundBlocked` with truthful
+  pre-proof absence. Confirmation and helper provider-dispatch validation
+  reject it directly. Schema 6 requires a proved policy, positive canonical
+  byte/token bounds within all seven configured limits, and an exact canonical
+  request fingerprint before authorization exists.
+- Attempts, the one request per attempt, the one reservation group per
+  consumptive attempt, authorized dispatch fence, exact request/fence-bound
+  transport event, response, usage, settlement, proposal/admission, replay,
+  and operation projection now form one foreign-key graph rooted in that
+  proof-qualified authorization. Adversarial inserts cover every downstream
+  table and fail before any unproved operation can acquire durable downstream
+  state.
+- Provider responses persist the exact request/fence, retained raw payload and
+  fingerprint, raw byte count, HTTP/provider response identities, requested
+  and returned model/tier, response/reason codes, typed usage JSON,
+  validation/admission disposition, and time. Completed and cancelled usage
+  shapes are structurally coherent; completed `{}` response/usage and
+  cancelled fabricated usage are rejected. Backup/restore rejoins and compares
+  the complete request, reservation, fence, response, usage, settlement,
+  proposal, replay, and projection graph.
+
+### Contract, helper, application, and output closure
+
+- Undefined enum numerics fail closed. Access-profile identity groups are
+  exhaustive all-or-none combinations. Every accepted lifecycle edge and
+  target shape is tested, including rejected-to-settled, response usage
+  coherence, and the exact confirmation/attempt/request/reservation/fence
+  identity progression.
+- Helper provider requests bind canonical bytes to exact digest and size,
+  require a deadline, and carry deadline plus all seven limits through final
+  dispatch revalidation. Credential-only assignments and receipts remain the
+  only helper path accepted while provider dispatch is authority-blocked.
+- Application confirmation/replay now bind installation, analysis context,
+  effective configuration, resolved manifest, prompt, canonical request,
+  settings, output schema, profile/generation, capability/price, deadline,
+  all seven limits, authorization, attempt, request, reservation, fence,
+  usage, settlement, replay, and hold identities. Enrollment, query expansion,
+  pagination, lifecycle, settlement, replay, unknown numeric, and unavailable-
+  identity matrices are executable tests.
+- CLI pending output shows a real retained reservation when one exists.
+  Pre-dispatch failure/blocked output does not fabricate response, usage,
+  settlement, hold, or replay state.
+
+### Per-field traceability correction
+
+`wp1-contract-traceability.v1.json` is now traceability schema v2. Every
+declared contract field is a self-contained object with accepted authority,
+concrete producer and invariant-consumer symbols, exact schema-6
+`table.column` mappings or an explicit non-persistence reason, and an exact
+output/replay protobuf seam or explicit omission. The executable validator
+resolves every schema path, source symbol, table/column, message/field, and
+choice. Explicit regression assertions cover owner job and request identity,
+raw-response payload plus fingerprint, ADR-0020, and the actual capability,
+price-snapshot, and price-rule tables.
+
+### Superseding identities and exact gate root
+
+- Schema-6 fingerprint:
+  `e3a9ce9b9153da808ffb130b08d5bdd4f291c461f80fbe373c539915a16a03d1`.
+- Helper-v2 transitive fingerprint:
+  `d12862dc94288d98190acba4335e0627c002296bffd7ec7f535600ef3191eb6b`.
+- Full application protobuf-set fingerprint:
+  `84ed115896c13d71995eee309ba19b8870f75b8d087b84253ce305235fd7164f`.
+- Answer-free example: 12,817 bytes,
+  `d7a16d2fb36d2bb51fc697d96628159f5969447aef83c1509de0811e417b7bba`.
+- Public registry: 8,815 bytes,
+  `53d288a6b70ba3bc20e791a1ea6f1b0130c3b4f26d315ff02217894c3ada963a`.
+- Per-field traceability: 268,969 bytes,
+  `4076b75b2168151ba20cb4795734583c7b55ea1e93d35ed05ab9c6c2bf876831`.
+- Exact gate `OutputRoot` for every third-cycle gate invocation:
+  `artifacts/m1-slice6/wp1-third-cycle-recovery-final`.
+
+### Third-cycle verification
+
+1. Locked Release build passed with zero warnings and zero errors. Focused
+   provider/application/helper/traceability contract tests passed 8/0/0;
+   focused provider/persistence/migration/adversarial/restore tests passed
+   13/0/0.
+2. `Contracts` passed 18/0/0. `StateSurfaces` passed 17/0/0 state tests and
+   4/0/0 migration/adversarial/restore tests at the exact OutputRoot above.
+3. `StateTotality` ran the same 21 green independent tests, wrote the truthful
+   `blocked-authority-required` receipt, and exited 1 solely because no
+   accepted repository-local tokenizer/provider-framing proof exists. It did
+   not report WP1 accepted and did not authorize dispatch or WP2.
+4. The complete category matrix passed: Unit 160/0/1, Contract 123/0/0,
+   Integration 70/0/0, Evaluation 75/0/8, Security 111/0/3, and Fault
+   105/0/3. The unfiltered Release solution passed Unit 168/0/1, Contract
+   151/0/0, Integration 68/0/0, and Evaluation 53/0/8.
+5. `dotnet format --verify-no-changes`, dependency-manifest check,
+   documentation validation, `git diff --check`, forbidden path/secret scan,
+   current-state immutability, answer isolation, frozen Slice 5 v1 check, and
+   changed-path review passed before the correction commit.
+
+No proof, gate result, owner acceptance, credential, provider response, or
+private evidence was invented. No network/DNS/provider, Credential Manager,
+native credential, private fixture, sibling repository, legacy/evaluator
+archive, later-package, current-state, push, or amend action occurred.

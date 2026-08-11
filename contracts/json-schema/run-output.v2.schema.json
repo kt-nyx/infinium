@@ -7,7 +7,7 @@
     {"properties":{"availability":{"const":"pending"},"live":{"const":false}},"required":["operation_id","operation_kind","authorization_id"],"not":{"anyOf":[{"required":["response_id"]},{"required":["admission_id"]},{"required":["usage_entry_id"]},{"required":["settlement_id"]},{"required":["replay_edge_id"]}]}},
     {"properties":{"availability":{"const":"live"},"live":{"const":true}},"required":["operation_id","operation_kind","authorization_id"],"not":{"anyOf":[{"required":["response_id"]},{"required":["admission_id"]},{"required":["usage_entry_id"]},{"required":["settlement_id"]},{"required":["replay_edge_id"]}]}},
     {"properties":{"availability":{"const":"retained"},"live":{"const":false}},"required":["operation_id","operation_kind","authorization_id","response_id","usage_entry_id","settlement_id","replay_edge_id"]},
-    {"properties":{"availability":{"const":"failed"},"live":{"const":false}},"required":["operation_id","operation_kind","authorization_id","usage_entry_id","settlement_id"],"not":{"required":["admission_id"]}},
+    {"properties":{"availability":{"const":"failed"},"live":{"const":false}},"required":["operation_id","operation_kind"],"not":{"required":["admission_id"]},"oneOf":[{"not":{"anyOf":[{"required":["response_id"]},{"required":["usage_entry_id"]},{"required":["settlement_id"]},{"required":["replay_edge_id"]}]}},{"required":["authorization_id","response_id","usage_entry_id","settlement_id"]}]},
     {"properties":{"availability":{"const":"unresolved"},"live":{"const":false}},"required":["operation_id","operation_kind","authorization_id","settlement_id"],"not":{"required":["admission_id"]}}
   ]}}
 }

@@ -130,19 +130,30 @@ public sealed class ProviderContractTests
     [TestProperty("Category", "Unit")]
     public void ProviderOperationStateTotalityCoversEveryStateAndEveryTransitionPair()
     {
-        ProviderOperationState[] states = [ProviderOperationState.Proposed, ProviderOperationState.Confirmed,
-            ProviderOperationState.Reserved, ProviderOperationState.Assigned, ProviderOperationState.InputBoundBlocked];
-        foreach (ProviderOperationState state in states)
-        {
-            ProviderOperationContractInvariants.Validate(Operation(state));
-        }
+        ProviderOperationState[] states = Enum.GetValues<ProviderOperationState>()
+            .Where(x => x != ProviderOperationState.Unspecified).ToArray();
+        ProviderOperationContractInvariants.Validate(Operation(ProviderOperationState.InputBoundBlocked));
 
         HashSet<(ProviderOperationState, ProviderOperationState)> legal =
         [
             (ProviderOperationState.Proposed, ProviderOperationState.Confirmed),
+            (ProviderOperationState.Proposed, ProviderOperationState.InputBoundBlocked),
             (ProviderOperationState.Confirmed, ProviderOperationState.Reserved),
             (ProviderOperationState.Reserved, ProviderOperationState.Assigned),
-            (ProviderOperationState.Assigned, ProviderOperationState.InputBoundBlocked),
+            (ProviderOperationState.Assigned, ProviderOperationState.FinalGateAuthorized),
+            (ProviderOperationState.FinalGateAuthorized, ProviderOperationState.TransportNotStarted),
+            (ProviderOperationState.FinalGateAuthorized, ProviderOperationState.TransportMayHaveStarted),
+            (ProviderOperationState.TransportNotStarted, ProviderOperationState.TransportMayHaveStarted),
+            (ProviderOperationState.TransportNotStarted, ProviderOperationState.ResponseStaged),
+            (ProviderOperationState.TransportMayHaveStarted, ProviderOperationState.ResponseStaged),
+            (ProviderOperationState.TransportMayHaveStarted, ProviderOperationState.UnresolvedHold),
+            (ProviderOperationState.ResponseStaged, ProviderOperationState.Admitted),
+            (ProviderOperationState.ResponseStaged, ProviderOperationState.Rejected),
+            (ProviderOperationState.ResponseStaged, ProviderOperationState.UnresolvedHold),
+            (ProviderOperationState.Admitted, ProviderOperationState.Settled),
+            (ProviderOperationState.Admitted, ProviderOperationState.UnresolvedHold),
+            (ProviderOperationState.Rejected, ProviderOperationState.Settled),
+            (ProviderOperationState.Rejected, ProviderOperationState.UnresolvedHold),
         ];
         foreach (ProviderOperationState from in states)
         {
@@ -160,7 +171,7 @@ public sealed class ProviderContractTests
             }
         }
 
-        ProviderOperationDocument proposed = Operation(ProviderOperationState.Proposed);
+        ProviderOperationDocument proposed = Operation(ProviderOperationState.InputBoundBlocked);
         Assert.ThrowsExactly<InvalidOperationException>(() => ProviderOperationContractInvariants.Validate(
             proposed with { TransportState = "completed", ReceiptState = "validated", SettlementState = "settled", ReplayState = "retained-response" }));
     }
@@ -269,14 +280,15 @@ public sealed class ProviderContractTests
     {
         foreach (ProviderProfileState state in Enum.GetValues<ProviderProfileState>().Where(x => x != ProviderProfileState.Unspecified))
         {
-            bool active = state is ProviderProfileState.ActiveUnverified or ProviderProfileState.ActiveVerified or ProviderProfileState.Replacing;
+            bool identityBearing = state is ProviderProfileState.ActiveUnverified or ProviderProfileState.ActiveVerified
+                or ProviderProfileState.Replacing or ProviderProfileState.Disabled or ProviderProfileState.DeletePending;
             ProviderAccessProfileDocument profile = new(
                 ContractConstants.ProviderAccessProfileSchemaId, "1", Id("profile"), Id("generation"), 1, 0,
                 "openai", "responses", "Synthetic", state,
                 state == ProviderProfileState.PendingEnrollment ? ProviderAvailabilityState.NotApplicable
                     : state is ProviderProfileState.ActiveVerified or ProviderProfileState.Replacing
                         ? ProviderAvailabilityState.Available : ProviderAvailabilityState.Unavailable,
-                active ? Id("account") : null, active ? Id("billing") : null, active ? Id("capability") : null,
+                identityBearing ? Id("account") : null, identityBearing ? Id("billing") : null, identityBearing ? Id("capability") : null,
                 state == ProviderProfileState.Deleted ? null : Id("intent"),
                 state == ProviderProfileState.RecoveryRequired ? "required"
                     : state == ProviderProfileState.SecureStoreUnavailable ? "unavailable" : "not-required",
@@ -286,7 +298,15 @@ public sealed class ProviderContractTests
             ProviderOperationContractInvariants.Validate(profile);
             Assert.ThrowsExactly<InvalidOperationException>(() => ProviderOperationContractInvariants.Validate(
                 profile with { VerificationState = ProviderAvailabilityState.Unsupported }), state.ToString());
+            Assert.ThrowsExactly<InvalidOperationException>(() => ProviderOperationContractInvariants.Validate(
+                profile with { AccountIdentityId = Id("partial"), BillingScopeIdentityId = null, CapabilitySnapshotId = null }), state.ToString());
         }
+        ProviderAccessProfileDocument undefined = new(
+            ContractConstants.ProviderAccessProfileSchemaId, "1", Id("profile"), Id("generation"), 1, 0,
+            "openai", "responses", "Synthetic", (ProviderProfileState)999, (ProviderAvailabilityState)999,
+            null, null, null, null, "not-required", "not-requested",
+            UtcTimestamp.Parse("2026-08-10T00:00:00.0000000+00:00"));
+        Assert.ThrowsExactly<InvalidOperationException>(() => ProviderOperationContractInvariants.Validate(undefined));
     }
 
     [TestMethod]
@@ -301,6 +321,11 @@ public sealed class ProviderContractTests
         {
             bool cancelled = state == ProviderResponseState.Cancelled;
             bool completed = state == ProviderResponseState.Completed;
+            ProviderUsageContract stateUsage = cancelled
+                ? new(Available(0), Unavailable(), Unavailable(), Unavailable(), Unavailable(), Unavailable(),
+                    Unavailable(), Unavailable(), ProviderAvailabilityState.Unavailable,
+                    ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable)
+                : usage;
             ProviderResponseDocument response = new(
                 ContractConstants.ProviderResponseSchemaId, "1", Id("response"), Id("operation"), Id("request"),
                 cancelled ? null : new(Id("payload"), new(new string('a', 64))), cancelled ? null : 10,
@@ -308,8 +333,8 @@ public sealed class ProviderContractTests
                 state == ProviderResponseState.Refusal ? "refusal" : null,
                 state == ProviderResponseState.Incomplete ? "incomplete" : null,
                 !cancelled && state is not (ProviderResponseState.Completed or ProviderResponseState.Refusal or ProviderResponseState.Incomplete) ? "error" : null,
-                "gpt-5.6-sol", completed ? "gpt-5.6-sol" : null, "default", completed ? "default" : null,
-                "current_turn", "standard", "explicit", usage,
+                "gpt-5.6-sol", cancelled ? null : "gpt-5.6-sol", "default", cancelled ? null : "default",
+                "current_turn", "standard", "explicit", stateUsage,
                 completed ? ProposalAdmissionState.Admitted : cancelled ? ProposalAdmissionState.Unavailable : ProposalAdmissionState.Rejected,
                 completed ? ProposalAdmissionState.Admitted : cancelled ? ProposalAdmissionState.Unavailable : ProposalAdmissionState.Rejected,
                 UtcTimestamp.Parse("2026-08-10T00:00:00.0000000+00:00"));
@@ -321,16 +346,14 @@ public sealed class ProviderContractTests
 
     private static ProviderOperationDocument Operation(ProviderOperationState state)
     {
-        int stage = state switch
-        {
-            ProviderOperationState.Proposed => 0,
-            ProviderOperationState.Confirmed => 1,
-            ProviderOperationState.Reserved => 2,
-            ProviderOperationState.Assigned => 3,
-            ProviderOperationState.InputBoundBlocked => 3,
-            ProviderOperationState.FinalGateAuthorized or ProviderOperationState.TransportNotStarted => 4,
-            _ => 5,
-        };
+        bool confirmed = state is not (ProviderOperationState.Proposed or ProviderOperationState.InputBoundBlocked);
+        bool consumptiveAttempt = state is not (ProviderOperationState.Proposed or ProviderOperationState.InputBoundBlocked
+            or ProviderOperationState.Confirmed);
+        bool fenced = state is not (ProviderOperationState.Proposed or ProviderOperationState.InputBoundBlocked
+            or ProviderOperationState.Confirmed or ProviderOperationState.Reserved or ProviderOperationState.Assigned);
+        bool dispatched = state is ProviderOperationState.TransportMayHaveStarted or ProviderOperationState.ResponseStaged
+            or ProviderOperationState.Admitted or ProviderOperationState.Rejected or ProviderOperationState.Settled
+            or ProviderOperationState.UnresolvedHold;
         string transport = state == ProviderOperationState.Settled ? "completed"
             : state is ProviderOperationState.TransportMayHaveStarted or ProviderOperationState.UnresolvedHold ? "may-have-started"
             : state is ProviderOperationState.ResponseStaged or ProviderOperationState.Admitted or ProviderOperationState.Rejected ? "completed"
@@ -343,26 +366,27 @@ public sealed class ProviderContractTests
         string settlement = state == ProviderOperationState.Settled ? "settled"
             : state == ProviderOperationState.UnresolvedHold ? "unresolved-hold" : "not-started";
         ProviderUsageContract usage = new(
-            Available(stage >= 5 ? 1 : 0), Available(stage >= 5 ? 1 : 0), Available(0), Available(0),
+            Available(dispatched ? 1 : 0), Available(dispatched ? 1 : 0), Available(0), Available(0),
             Available(0), Available(0), Available(0), Available(0), ProviderAvailabilityState.Available,
             ProviderAvailabilityState.Available, ProviderAvailabilityState.Unavailable);
         return new(ContractConstants.ProviderOperationSchemaId, "1", Id("operation"), Id("run"), "analysis-run",
-            ProviderOperationKind.SourceClaimExtraction, Id("job"), stage >= 3 ? Id("attempt") : null,
-            stage >= 1 ? Id("request") : null, Id("profile"), Id("generation"), 0, Capability(), Price(),
-            stage >= 1 ? new(new string('a', 64)) : null, stage >= 1 ? new(new string('b', 64)) : null,
-            stage >= 1 ? new(new string('c', 64)) : null,
+            ProviderOperationKind.SourceClaimExtraction, Id("job"), consumptiveAttempt ? Id("attempt") : null,
+            consumptiveAttempt ? Id("request") : null, Id("profile"), Id("generation"), 0, Capability(), Price(),
+            confirmed ? new(new string('a', 64)) : null, confirmed ? new(new string('b', 64)) : null,
+            confirmed ? new(new string('c', 64)) : null,
             new(ProviderOperationContractInvariants.LocalInputBoundPolicyId,
                 ProviderOperationContractInvariants.LocalInputBoundPolicyVersion,
                 ProviderInputBoundProofState.AuthorityRequired, null, null),
             new(65_536, 73_728, 4_096, 1_048_576, 1, 600_000_000, 120_000),
-            stage >= 1 ? Id("authorization") : null, stage >= 2 ? Id("reservation") : null,
-            stage >= 4 ? Id("fence") : null, state, transport, receipt, usage, settlement,
+            confirmed ? Id("authorization") : null, consumptiveAttempt ? Id("reservation") : null,
+            fenced ? Id("fence") : null, state, transport, receipt, usage, settlement,
             state is ProviderOperationState.Settled or ProviderOperationState.Admitted ? "retained-response"
                 : state == ProviderOperationState.Rejected ? "audit-only" : "not-available",
             UtcTimestamp.Parse("2026-08-10T00:00:00.0000000+00:00"));
     }
 
     private static ProviderQuantityContract Available(long value) => new(ProviderAvailabilityState.Available, value);
+    private static ProviderQuantityContract Unavailable() => new(ProviderAvailabilityState.Unavailable, null);
     private static OpaqueId? Toggle(OpaqueId? value, string replacement) => value is null ? Id(replacement) : null;
     private static Sha256Fingerprint? Toggle(Sha256Fingerprint? value, char replacement) =>
         value is null ? new(new string(replacement, 64)) : null;

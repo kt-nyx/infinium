@@ -99,6 +99,8 @@ public static class ProviderContractFactories
         ProviderQuantityContract absent = new(ProviderAvailabilityState.Unavailable, null);
         bool pending = providerState == "pending";
         bool live = providerState == "live";
+        bool hasReservation = projection.State is ProviderOperationState.Reserved or ProviderOperationState.Assigned
+            or ProviderOperationState.FinalGateAuthorized or ProviderOperationState.TransportNotStarted;
         CliSummaryV2Document result = new(
             ContractConstants.CliSummaryV2SchemaId,
             "1",
@@ -112,7 +114,9 @@ public static class ProviderContractFactories
             pending || live ? absent : Available(0),
             pending || live ? absent : Available(0),
             pending || live ? absent : Available(projection.CalculatedNanoUsd),
-            pending ? absent : Available(projection.ReservedNanoUsd),
+            hasReservation || live || providerState is "completed" or "failed" or "unresolved"
+                ? Available(projection.ReservedNanoUsd)
+                : absent,
             projection.UnresolvedHold,
             projection.ReplayState,
             gaps,

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Reflection;
+using System.Security.Cryptography;
 using Google.Protobuf;
 using Infinium.Contracts.Protobuf.Helper.V1;
 using Infinium.Contracts.Protobuf.Helper.V2;
@@ -107,10 +108,13 @@ public static class HelperProtocolV2Codec
             if (request.EndpointIdentity != ProviderEndpointV2.OpenaiResponses
                 || request.CanonicalRequestBytes.IsEmpty
                 || (uint)request.CanonicalRequestBytes.Length > value.Limits.MaximumRequestBytes
+                || !ValidExactDigest(request.CanonicalRequest, request.CanonicalRequestBytes.Span)
+                || !ValidInstant(request.DispatchDeadline)
                 || !IsAuthorityRequiredProof(request.InputBoundProof))
             {
                 throw new InvalidDataException("Helper v2 provider request is not a closed bounded and explicitly blocked Responses request.");
             }
+            throw new NotSupportedException("Helper provider dispatch assignment is blocked pending accepted local tokenizer/framing authority.");
         }
         else if (value.ProviderRequest is not null || value.Limits is not null
             || value.OperationKind != ProviderOperationKindV2.Unspecified)
@@ -158,11 +162,13 @@ public static class HelperProtocolV2Codec
             || !Enum.IsDefined(value.OperationKind) || value.OperationKind == ProviderOperationKindV2.Unspecified
             || value.CoordinatorFencingEpoch == 0 || !ValidDigest(value.CanonicalRequest)
             || !ValidDigest(value.Settings) || !ValidDigest(value.OutputSchema)
+            || !ValidInstant(value.DispatchDeadline) || value.Limits is null
             || value.AuthorizedOnce || value.Disposition == DispatchDispositionV2.Authorized
             || !IsAuthorityRequiredProof(value.InputBoundProof))
         {
             throw new InvalidDataException("Helper v2 final revalidation is incomplete or internally contradictory.");
         }
+        ValidateLimits(value.OperationKind, value.Limits);
     }
 
     private static void Validate(HelperReceiptV2 value)
@@ -232,6 +238,16 @@ public static class HelperProtocolV2Codec
         && value.Algorithm == Infinium.Contracts.Protobuf.Common.V1.DigestAlgorithm.Sha256
         && value.Value.Length == 32
         && value.SizeBytes > 0;
+
+    private static bool ValidExactDigest(
+        Infinium.Contracts.Protobuf.Common.V1.ContentDigest? value,
+        ReadOnlySpan<byte> bytes) =>
+        ValidDigest(value)
+        && value!.SizeBytes == (ulong)bytes.Length
+        && value.Value.Span.SequenceEqual(SHA256.HashData(bytes));
+
+    private static bool ValidInstant(Infinium.Contracts.Protobuf.Common.V1.Instant? value) =>
+        value is not null && value.UnixSeconds > 0 && value.Nanoseconds is >= 0 and <= 999_999_999;
 
     private static void Require(string? value, string name)
     {

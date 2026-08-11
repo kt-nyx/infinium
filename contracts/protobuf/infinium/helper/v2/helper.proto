@@ -151,6 +151,8 @@ message DispatchRevalidationV2 {
   infinium.common.v1.ContentDigest output_schema = 17;
   ProviderOperationKindV2 operation_kind = 18;
   InputBoundProofV2 input_bound_proof = 19;
+  infinium.common.v1.Instant dispatch_deadline = 20;
+  HelperLimitsV2 limits = 21;
 }
 
 message HelperReceiptV2 {

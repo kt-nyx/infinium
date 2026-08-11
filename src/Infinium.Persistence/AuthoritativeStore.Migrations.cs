@@ -1829,14 +1829,15 @@ public sealed partial class AuthoritativeStore
             output_schema_id TEXT NOT NULL,
             output_schema_fingerprint TEXT NOT NULL,
             request_fingerprint TEXT NOT NULL,
+            canonical_request_fingerprint TEXT NOT NULL,
             capability_snapshot_id TEXT NOT NULL REFERENCES provider_capability_snapshots(capability_snapshot_id) ON DELETE RESTRICT,
             price_snapshot_id TEXT NOT NULL REFERENCES provider_price_snapshots(price_snapshot_id) ON DELETE RESTRICT,
             settings_fingerprint TEXT NOT NULL,
-            input_bound_policy_id TEXT NOT NULL CHECK(input_bound_policy_id = 'unresolved-openai-responses-framing'),
-            input_bound_policy_version TEXT NOT NULL CHECK(input_bound_policy_version = 'authority-required'),
-            input_bound_proof_status TEXT NOT NULL CHECK(input_bound_proof_status = 'authority-required'),
-            canonical_request_bytes INTEGER,
-            proved_input_token_bound INTEGER,
+            input_bound_policy_id TEXT NOT NULL CHECK(length(trim(input_bound_policy_id)) > 0),
+            input_bound_policy_version TEXT NOT NULL CHECK(length(trim(input_bound_policy_version)) > 0),
+            input_bound_proof_status TEXT NOT NULL CHECK(input_bound_proof_status = 'proved'),
+            canonical_request_bytes INTEGER NOT NULL CHECK(canonical_request_bytes > 0),
+            proved_input_token_bound INTEGER NOT NULL CHECK(proved_input_token_bound > 0),
             coordinator_fencing_epoch INTEGER NOT NULL CHECK(coordinator_fencing_epoch > 0),
             maximum_request_bytes INTEGER NOT NULL CHECK(maximum_request_bytes > 0),
             maximum_input_tokens INTEGER NOT NULL CHECK(maximum_input_tokens > 0),
@@ -1847,7 +1848,8 @@ public sealed partial class AuthoritativeStore
             deadline_milliseconds INTEGER NOT NULL CHECK(deadline_milliseconds > 0),
             confirmed_at TEXT NOT NULL,
             UNIQUE(operation_id,profile_id,generation_id),
-            UNIQUE(operation_id,request_fingerprint,settings_fingerprint,output_schema_fingerprint),
+            UNIQUE(operation_id,request_fingerprint,canonical_request_fingerprint,settings_fingerprint,output_schema_fingerprint,
+              input_bound_policy_id,input_bound_policy_version,input_bound_proof_status,canonical_request_bytes,proved_input_token_bound),
             UNIQUE(operation_id,coordinator_fencing_epoch),
             UNIQUE(authorization_id,operation_id,profile_id,generation_id,revocation_epoch),
             FOREIGN KEY(profile_id,generation_id)
@@ -1856,7 +1858,7 @@ public sealed partial class AuthoritativeStore
                 AND analysis_run_id IS NOT NULL AND evidence_acquisition_run_id IS NULL)
               OR (owner_kind = 'evidence-acquisition-run' AND owner_id = evidence_acquisition_run_id
                 AND evidence_acquisition_run_id IS NOT NULL AND analysis_run_id IS NULL)),
-            CHECK(canonical_request_bytes IS NULL AND proved_input_token_bound IS NULL),
+            CHECK(canonical_request_bytes <= maximum_request_bytes AND proved_input_token_bound <= maximum_input_tokens),
             CHECK((operation_kind = 'transport-qualification'
                 AND maximum_request_bytes <= 16384 AND maximum_input_tokens <= 20480
                 AND maximum_output_tokens <= 256 AND maximum_raw_response_bytes <= 262144
@@ -1900,20 +1902,22 @@ public sealed partial class AuthoritativeStore
             canonical_request_fingerprint TEXT NOT NULL,
             settings_fingerprint TEXT NOT NULL,
             output_schema_fingerprint TEXT NOT NULL,
-            input_bound_policy_id TEXT NOT NULL CHECK(input_bound_policy_id = 'unresolved-openai-responses-framing'),
-            input_bound_policy_version TEXT NOT NULL CHECK(input_bound_policy_version = 'authority-required'),
-            input_bound_proof_status TEXT NOT NULL CHECK(input_bound_proof_status = 'authority-required'),
-            canonical_request_bytes INTEGER,
-            proved_input_token_bound INTEGER,
+            input_bound_policy_id TEXT NOT NULL CHECK(length(trim(input_bound_policy_id)) > 0),
+            input_bound_policy_version TEXT NOT NULL CHECK(length(trim(input_bound_policy_version)) > 0),
+            input_bound_proof_status TEXT NOT NULL CHECK(input_bound_proof_status = 'proved'),
+            canonical_request_bytes INTEGER NOT NULL CHECK(canonical_request_bytes > 0),
+            proved_input_token_bound INTEGER NOT NULL CHECK(proved_input_token_bound > 0),
             payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
             created_at TEXT NOT NULL,
             UNIQUE(operation_id,request_fingerprint),
+            UNIQUE(operation_id,provider_attempt_id),
             UNIQUE(operation_id,provider_attempt_id,request_id),
             FOREIGN KEY(operation_id,provider_attempt_id)
               REFERENCES provider_operation_attempts(operation_id,provider_attempt_id) ON DELETE RESTRICT,
-            FOREIGN KEY(operation_id,request_fingerprint,settings_fingerprint,output_schema_fingerprint)
-              REFERENCES provider_operation_authorizations(operation_id,request_fingerprint,settings_fingerprint,output_schema_fingerprint) ON DELETE RESTRICT,
-            CHECK(canonical_request_bytes IS NULL AND proved_input_token_bound IS NULL)
+            FOREIGN KEY(operation_id,request_fingerprint,canonical_request_fingerprint,settings_fingerprint,output_schema_fingerprint,
+              input_bound_policy_id,input_bound_policy_version,input_bound_proof_status,canonical_request_bytes,proved_input_token_bound)
+              REFERENCES provider_operation_authorizations(operation_id,request_fingerprint,canonical_request_fingerprint,settings_fingerprint,output_schema_fingerprint,
+                input_bound_policy_id,input_bound_policy_version,input_bound_proof_status,canonical_request_bytes,proved_input_token_bound) ON DELETE RESTRICT
         ) STRICT;
         CREATE UNIQUE INDEX idx_provider_request_fingerprint ON provider_requests(request_fingerprint);
         CREATE TABLE provider_reservations(
@@ -1925,7 +1929,7 @@ public sealed partial class AuthoritativeStore
             maximum_nano_usd INTEGER NOT NULL CHECK(maximum_nano_usd > 0),
             expires_at TEXT NOT NULL,
             created_at TEXT NOT NULL,
-            UNIQUE(operation_id),
+            UNIQUE(operation_id,provider_attempt_id),
             UNIQUE(operation_id,provider_attempt_id,request_id,reservation_id),
             FOREIGN KEY(operation_id,provider_attempt_id,request_id)
               REFERENCES provider_requests(operation_id,provider_attempt_id,request_id) ON DELETE RESTRICT
@@ -1951,7 +1955,7 @@ public sealed partial class AuthoritativeStore
             profile_id TEXT NOT NULL,
             generation_id TEXT NOT NULL,
             revocation_epoch INTEGER NOT NULL CHECK(revocation_epoch >= 0),
-            authorized INTEGER NOT NULL CHECK(authorized = 0),
+            authorized INTEGER NOT NULL CHECK(authorized = 1),
             decision_reason TEXT NOT NULL,
             evaluated_at TEXT NOT NULL,
             UNIQUE(operation_id,provider_attempt_id,request_id,dispatch_fence_id),
@@ -1966,42 +1970,128 @@ public sealed partial class AuthoritativeStore
         ) STRICT;
         CREATE TABLE provider_transport_events(
             transport_event_id TEXT PRIMARY KEY,
-            provider_attempt_id TEXT NOT NULL REFERENCES provider_operation_attempts(provider_attempt_id) ON DELETE RESTRICT,
+            operation_id TEXT NOT NULL,
+            provider_attempt_id TEXT NOT NULL,
+            request_id TEXT NOT NULL,
+            dispatch_fence_id TEXT NOT NULL,
             event_kind TEXT NOT NULL CHECK(event_kind IN ('not-started','may-have-started','started','response-staged','failed-known','ambiguous')),
             sequence INTEGER NOT NULL CHECK(sequence > 0),
             occurred_at TEXT NOT NULL,
-            UNIQUE(provider_attempt_id,sequence)
+            UNIQUE(provider_attempt_id,sequence),
+            FOREIGN KEY(operation_id,provider_attempt_id,request_id,dispatch_fence_id)
+              REFERENCES provider_dispatch_fences(operation_id,provider_attempt_id,request_id,dispatch_fence_id) ON DELETE RESTRICT
         ) STRICT;
         CREATE TABLE provider_responses(
             response_record_id TEXT PRIMARY KEY,
             operation_id TEXT NOT NULL,
             request_id TEXT NOT NULL,
             provider_attempt_id TEXT NOT NULL,
+            dispatch_fence_id TEXT NOT NULL,
             raw_response_payload_id TEXT REFERENCES payloads(payload_id) ON DELETE RESTRICT,
-            response_fingerprint TEXT NOT NULL,
+            raw_response_fingerprint TEXT,
+            raw_response_bytes INTEGER CHECK(raw_response_bytes > 0 AND raw_response_bytes <= 1048576),
+            http_status INTEGER CHECK(http_status BETWEEN 100 AND 599),
+            provider_response_id TEXT,
             response_state TEXT NOT NULL CHECK(response_state IN ('completed','refusal','incomplete','failed','queued','in-progress','cancelled','malformed','oversized','mismatched','unknown')),
-            response_metadata_json TEXT NOT NULL CHECK(json_valid(response_metadata_json)),
+            refusal_code TEXT,
+            incomplete_reason TEXT,
+            error_code TEXT,
+            requested_model TEXT NOT NULL CHECK(requested_model = 'gpt-5.6-sol'),
+            returned_model TEXT,
+            requested_service_tier TEXT NOT NULL CHECK(requested_service_tier = 'default'),
+            returned_service_tier TEXT,
+            reasoning_context TEXT NOT NULL CHECK(reasoning_context = 'current_turn'),
+            reasoning_mode TEXT NOT NULL CHECK(reasoning_mode = 'standard'),
+            prompt_cache_mode TEXT NOT NULL CHECK(prompt_cache_mode = 'explicit'),
+            usage_json TEXT NOT NULL CHECK(json_valid(usage_json) AND json_type(usage_json) = 'object'
+              AND json_type(usage_json,'$.dispatch_count.availability') = 'text'
+              AND json_type(usage_json,'$.input_tokens.availability') = 'text'
+              AND json_type(usage_json,'$.output_tokens.availability') = 'text'
+              AND json_type(usage_json,'$.reasoning_tokens.availability') = 'text'
+              AND json_type(usage_json,'$.cache_read_tokens.availability') = 'text'
+              AND json_type(usage_json,'$.cache_write_tokens.availability') = 'text'
+              AND json_type(usage_json,'$.priced_tool_calls.availability') = 'text'
+              AND json_type(usage_json,'$.calculated_nano_usd.availability') = 'text'
+              AND json_type(usage_json,'$.billing_availability') = 'text'
+              AND json_type(usage_json,'$.rate_availability') = 'text'
+              AND json_type(usage_json,'$.credit_availability') = 'text'),
+            validation_state TEXT NOT NULL CHECK(validation_state IN ('proposed','admitted','rejected','abstained','unavailable','unsupported','deleted')),
+            admission_state TEXT NOT NULL CHECK(admission_state IN ('proposed','admitted','rejected','abstained','unavailable','unsupported','deleted')),
             created_at TEXT NOT NULL,
             UNIQUE(request_id),
             UNIQUE(operation_id,provider_attempt_id,request_id,response_record_id),
+            UNIQUE(operation_id,provider_attempt_id,request_id,dispatch_fence_id,response_record_id),
             FOREIGN KEY(operation_id,provider_attempt_id,request_id)
               REFERENCES provider_requests(operation_id,provider_attempt_id,request_id) ON DELETE RESTRICT,
-            CHECK((response_state = 'cancelled' AND raw_response_payload_id IS NULL)
-              OR (response_state <> 'cancelled' AND raw_response_payload_id IS NOT NULL))
+            FOREIGN KEY(operation_id,provider_attempt_id,request_id,dispatch_fence_id)
+              REFERENCES provider_dispatch_fences(operation_id,provider_attempt_id,request_id,dispatch_fence_id) ON DELETE RESTRICT,
+            CHECK((response_state = 'cancelled' AND raw_response_payload_id IS NULL AND raw_response_fingerprint IS NULL
+                AND raw_response_bytes IS NULL AND http_status IS NULL AND provider_response_id IS NULL
+                AND returned_model IS NULL AND returned_service_tier IS NULL AND refusal_code IS NULL
+                AND incomplete_reason IS NULL AND error_code IS NULL
+                AND json_extract(usage_json,'$.dispatch_count.availability') = 'available'
+                AND json_extract(usage_json,'$.dispatch_count.value') = 0
+                AND json_extract(usage_json,'$.input_tokens.availability') IN ('unavailable','not-applicable')
+                AND json_extract(usage_json,'$.output_tokens.availability') IN ('unavailable','not-applicable')
+                AND json_extract(usage_json,'$.reasoning_tokens.availability') IN ('unavailable','not-applicable')
+                AND json_extract(usage_json,'$.cache_read_tokens.availability') IN ('unavailable','not-applicable')
+                AND json_extract(usage_json,'$.cache_write_tokens.availability') IN ('unavailable','not-applicable')
+                AND json_extract(usage_json,'$.priced_tool_calls.availability') IN ('unavailable','not-applicable')
+                AND json_extract(usage_json,'$.calculated_nano_usd.availability') IN ('unavailable','not-applicable')
+                AND json_type(usage_json,'$.input_tokens.value') IS NULL
+                AND json_type(usage_json,'$.output_tokens.value') IS NULL
+                AND json_type(usage_json,'$.reasoning_tokens.value') IS NULL
+                AND json_type(usage_json,'$.cache_read_tokens.value') IS NULL
+                AND json_type(usage_json,'$.cache_write_tokens.value') IS NULL
+                AND json_type(usage_json,'$.priced_tool_calls.value') IS NULL
+                AND json_type(usage_json,'$.calculated_nano_usd.value') IS NULL
+                AND json_extract(usage_json,'$.billing_availability') = 'unavailable'
+                AND json_extract(usage_json,'$.rate_availability') = 'unavailable'
+                AND json_extract(usage_json,'$.credit_availability') = 'unavailable'
+                AND validation_state = 'unavailable' AND admission_state = 'unavailable')
+              OR (response_state <> 'cancelled' AND raw_response_payload_id IS NOT NULL
+                AND raw_response_fingerprint IS NOT NULL AND length(raw_response_fingerprint) = 64
+                AND raw_response_bytes IS NOT NULL AND http_status IS NOT NULL
+                AND returned_model = 'gpt-5.6-sol' AND returned_service_tier = 'default'
+                AND json_extract(usage_json,'$.dispatch_count.availability') = 'available'
+                AND json_extract(usage_json,'$.dispatch_count.value') = 1)),
+            CHECK((response_state = 'completed' AND refusal_code IS NULL AND incomplete_reason IS NULL AND error_code IS NULL
+                AND json_extract(usage_json,'$.input_tokens.availability') = 'available'
+                AND json_extract(usage_json,'$.output_tokens.availability') = 'available'
+                AND json_extract(usage_json,'$.reasoning_tokens.availability') = 'available'
+                AND json_extract(usage_json,'$.cache_read_tokens.availability') = 'available'
+                AND json_extract(usage_json,'$.cache_write_tokens.availability') = 'available'
+                AND json_extract(usage_json,'$.priced_tool_calls.availability') = 'available'
+                AND json_extract(usage_json,'$.calculated_nano_usd.availability') = 'available'
+                AND json_type(usage_json,'$.input_tokens.value') = 'integer'
+                AND json_type(usage_json,'$.output_tokens.value') = 'integer'
+                AND json_type(usage_json,'$.reasoning_tokens.value') = 'integer'
+                AND json_type(usage_json,'$.cache_read_tokens.value') = 'integer'
+                AND json_type(usage_json,'$.cache_write_tokens.value') = 'integer'
+                AND json_type(usage_json,'$.priced_tool_calls.value') = 'integer'
+                AND json_type(usage_json,'$.calculated_nano_usd.value') = 'integer'
+                AND validation_state IN ('proposed','admitted','rejected') AND admission_state IN ('proposed','admitted','rejected'))
+              OR (response_state = 'refusal' AND refusal_code IS NOT NULL AND incomplete_reason IS NULL AND error_code IS NULL)
+              OR (response_state = 'incomplete' AND refusal_code IS NULL AND incomplete_reason IS NOT NULL AND error_code IS NULL)
+              OR (response_state IN ('failed','queued','in-progress','malformed','oversized','mismatched','unknown')
+                AND refusal_code IS NULL AND incomplete_reason IS NULL AND error_code IS NOT NULL)
+              OR response_state = 'cancelled')
         ) STRICT;
         CREATE TABLE provider_usage_entries(
             usage_entry_id TEXT PRIMARY KEY,
             operation_id TEXT NOT NULL,
             provider_attempt_id TEXT NOT NULL,
             request_id TEXT NOT NULL,
+            dispatch_fence_id TEXT NOT NULL,
+            response_record_id TEXT NOT NULL,
             usage_json TEXT NOT NULL CHECK(json_valid(usage_json)),
             calculated_nano_usd INTEGER NOT NULL CHECK(calculated_nano_usd >= 0),
             receipt_state TEXT NOT NULL,
             created_at TEXT NOT NULL,
             UNIQUE(provider_attempt_id),
             UNIQUE(operation_id,provider_attempt_id,request_id,usage_entry_id),
-            FOREIGN KEY(operation_id,provider_attempt_id,request_id)
-              REFERENCES provider_requests(operation_id,provider_attempt_id,request_id) ON DELETE RESTRICT
+            FOREIGN KEY(operation_id,provider_attempt_id,request_id,dispatch_fence_id,response_record_id)
+              REFERENCES provider_responses(operation_id,provider_attempt_id,request_id,dispatch_fence_id,response_record_id) ON DELETE RESTRICT
         ) STRICT;
         CREATE TABLE provider_settlements(
             settlement_id TEXT PRIMARY KEY,
@@ -2010,6 +2100,7 @@ public sealed partial class AuthoritativeStore
             request_id TEXT NOT NULL,
             reservation_id TEXT NOT NULL,
             usage_entry_id TEXT NOT NULL,
+            dispatch_fence_id TEXT NOT NULL,
             state TEXT NOT NULL CHECK(state IN ('settled','failed-known','unresolved-hold','overrun')),
             released_nano_usd INTEGER NOT NULL CHECK(released_nano_usd >= 0),
             retained_hold_nano_usd INTEGER NOT NULL CHECK(retained_hold_nano_usd >= 0),
@@ -2018,7 +2109,9 @@ public sealed partial class AuthoritativeStore
             FOREIGN KEY(operation_id,provider_attempt_id,request_id,reservation_id)
               REFERENCES provider_reservations(operation_id,provider_attempt_id,request_id,reservation_id) ON DELETE RESTRICT,
             FOREIGN KEY(operation_id,provider_attempt_id,request_id,usage_entry_id)
-              REFERENCES provider_usage_entries(operation_id,provider_attempt_id,request_id,usage_entry_id) ON DELETE RESTRICT
+              REFERENCES provider_usage_entries(operation_id,provider_attempt_id,request_id,usage_entry_id) ON DELETE RESTRICT,
+            FOREIGN KEY(operation_id,provider_attempt_id,request_id,dispatch_fence_id)
+              REFERENCES provider_dispatch_fences(operation_id,provider_attempt_id,request_id,dispatch_fence_id) ON DELETE RESTRICT
         ) STRICT;
         CREATE TABLE provider_settlement_adjustments(
             adjustment_id TEXT PRIMARY KEY,
@@ -2034,11 +2127,12 @@ public sealed partial class AuthoritativeStore
             provider_attempt_id TEXT NOT NULL,
             request_id TEXT NOT NULL,
             response_record_id TEXT NOT NULL,
+            dispatch_fence_id TEXT NOT NULL,
             proposal_kind TEXT NOT NULL CHECK(proposal_kind IN ('source-claim','candidate-hypothesis','abstention','gap')),
             payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
             created_at TEXT NOT NULL,
-            FOREIGN KEY(operation_id,provider_attempt_id,request_id,response_record_id)
-              REFERENCES provider_responses(operation_id,provider_attempt_id,request_id,response_record_id) ON DELETE RESTRICT
+            FOREIGN KEY(operation_id,provider_attempt_id,request_id,dispatch_fence_id,response_record_id)
+              REFERENCES provider_responses(operation_id,provider_attempt_id,request_id,dispatch_fence_id,response_record_id) ON DELETE RESTRICT
         ) STRICT;
         CREATE TABLE provider_semantic_admissions(
             admission_id TEXT PRIMARY KEY,
@@ -2055,15 +2149,18 @@ public sealed partial class AuthoritativeStore
             provider_attempt_id TEXT NOT NULL,
             request_id TEXT NOT NULL,
             response_record_id TEXT NOT NULL,
+            dispatch_fence_id TEXT NOT NULL,
             replay_state TEXT NOT NULL CHECK(replay_state IN ('retained-response','audit-only','unavailable')),
             dependency_manifest_id TEXT NOT NULL,
             created_at TEXT NOT NULL,
-            FOREIGN KEY(operation_id,provider_attempt_id,request_id,response_record_id)
-              REFERENCES provider_responses(operation_id,provider_attempt_id,request_id,response_record_id) ON DELETE RESTRICT
+            FOREIGN KEY(operation_id,provider_attempt_id,request_id,dispatch_fence_id,response_record_id)
+              REFERENCES provider_responses(operation_id,provider_attempt_id,request_id,dispatch_fence_id,response_record_id) ON DELETE RESTRICT
         ) STRICT;
         CREATE TABLE provider_operation_projection(
             operation_id TEXT PRIMARY KEY REFERENCES provider_operation_authorizations(operation_id) ON DELETE CASCADE,
             provider_attempt_id TEXT NOT NULL REFERENCES provider_operation_attempts(provider_attempt_id) ON DELETE RESTRICT,
+            request_id TEXT NOT NULL,
+            dispatch_fence_id TEXT NOT NULL,
             state TEXT NOT NULL,
             reserved_nano_usd INTEGER NOT NULL CHECK(reserved_nano_usd >= 0),
             calculated_nano_usd INTEGER NOT NULL CHECK(calculated_nano_usd >= 0),
@@ -2073,8 +2170,8 @@ public sealed partial class AuthoritativeStore
             updated_at TEXT NOT NULL,
             CHECK((state IN ('reserved','assigned','final-gate-authorized','transport-not-started','transport-may-have-started','response-staged') AND live_billable_slot = 1)
               OR (state NOT IN ('reserved','assigned','final-gate-authorized','transport-not-started','transport-may-have-started','response-staged') AND live_billable_slot IS NULL)),
-            FOREIGN KEY(operation_id,provider_attempt_id)
-              REFERENCES provider_operation_attempts(operation_id,provider_attempt_id) ON DELETE RESTRICT
+            FOREIGN KEY(operation_id,provider_attempt_id,request_id,dispatch_fence_id)
+              REFERENCES provider_dispatch_fences(operation_id,provider_attempt_id,request_id,dispatch_fence_id) ON DELETE RESTRICT
         ) STRICT;
         CREATE UNIQUE INDEX idx_provider_one_live_attempt ON provider_operation_projection(live_billable_slot)
           WHERE live_billable_slot = 1;

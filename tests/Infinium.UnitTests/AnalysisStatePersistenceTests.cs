@@ -133,7 +133,7 @@ public sealed class AnalysisStatePersistenceTests
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'storage_contract_version';"));
         Assert.AreEqual(
-            "688b702c7720d720d73d7be59816051b28010cd6a6da64f64b26514e894b8be7",
+            "e3a9ce9b9153da808ffb130b08d5bdd4f291c461f80fbe373c539915a16a03d1",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'schema_fingerprint';"));
@@ -312,158 +312,121 @@ public sealed class AnalysisStatePersistenceTests
             """
             INSERT INTO payloads VALUES('payload-a','aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',2,'json','retained','provider/a','2026-08-10T00:00:00Z');
             INSERT INTO provider_access_profiles VALUES('profile-a','openai','responses','A','account-a','billing-a','2026-08-10T00:00:00Z');
-            INSERT INTO provider_access_profiles VALUES('profile-b','openai','responses','B','account-b','billing-b','2026-08-10T00:00:00Z');
             INSERT INTO provider_generations VALUES('generation-a','profile-a',1,0,'2026-08-10T00:00:00Z');
-            INSERT INTO provider_generations VALUES('generation-b','profile-b',1,0,'2026-08-10T00:00:00Z');
             INSERT INTO provider_capability_snapshots VALUES('cap-a','openai','gpt-5.6-sol','default','medium','current_turn','standard',0,0,0,'none',0,'disabled','explicit',0,0,272000,'synthetic-v1','bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb','2026-08-10T00:00:00Z');
             INSERT INTO provider_price_snapshots VALUES('price-a','openai','gpt-5.6-sol','USD','default','synthetic-v1','cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc','2026-08-10T00:00:00Z');
             INSERT INTO provider_price_rules VALUES('price-a','rule-a','standard-under-272k','ordinary-input','input','none','global',1,1,'synthetic-v1');
             INSERT INTO runs VALUES('run-a','install-a','context-a','config-a','manifest-a','created',0,1,1,'2026-08-10T00:00:00Z','2026-08-10T00:00:00Z');
-            INSERT INTO runs VALUES('run-b','install-b','context-b','config-b','manifest-b','created',0,1,1,'2026-08-10T00:00:00Z','2026-08-10T00:00:00Z');
             INSERT INTO job_nodes VALUES('job-a','run-a',NULL,'provider','created',0,'2026-08-10T00:00:00Z','2026-08-10T00:00:00Z');
-            INSERT INTO job_nodes VALUES('job-b','run-b',NULL,'provider','created',0,'2026-08-10T00:00:00Z','2026-08-10T00:00:00Z');
             INSERT INTO provider_operation_authorizations(
               authorization_id,operation_id,owner_kind,owner_id,analysis_run_id,evidence_acquisition_run_id,job_node_id,
               profile_id,generation_id,revocation_epoch,operation_kind,installation_snapshot_id,analysis_context_id,effective_configuration_id,resolved_input_manifest_id,
-              prompt_id,prompt_fingerprint,output_schema_id,output_schema_fingerprint,request_fingerprint,capability_snapshot_id,price_snapshot_id,settings_fingerprint,
-              input_bound_policy_id,input_bound_policy_version,input_bound_proof_status,canonical_request_bytes,proved_input_token_bound,coordinator_fencing_epoch,
-              maximum_request_bytes,maximum_input_tokens,maximum_output_tokens,maximum_raw_response_bytes,maximum_dispatch_count,maximum_calculated_nano_usd,deadline_milliseconds,confirmed_at) VALUES
-              ('auth-a','operation-a','analysis-run','run-a','run-a',NULL,'job-a','profile-a','generation-a',0,'source-claim-extraction','install-a','context-a','config-a','manifest-a','prompt-a','dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd','schema-a','9999999999999999999999999999999999999999999999999999999999999999','6666666666666666666666666666666666666666666666666666666666666666','cap-a','price-a','8888888888888888888888888888888888888888888888888888888888888888','unresolved-openai-responses-framing','authority-required','authority-required',NULL,NULL,1,65536,73728,4096,1048576,1,600000000,120000,'2026-08-10T00:00:00Z'),
-              ('auth-b','operation-b','analysis-run','run-b','run-b',NULL,'job-b','profile-b','generation-b',0,'candidate-investigation','install-b','context-b','config-b','manifest-b','prompt-b','2222222222222222222222222222222222222222222222222222222222222222','schema-b','ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddde','aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab','cap-a','price-a','cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccd','unresolved-openai-responses-framing','authority-required','authority-required',NULL,NULL,1,65536,73728,4096,1048576,1,600000000,120000,'2026-08-10T00:00:00Z');
+              prompt_id,prompt_fingerprint,output_schema_id,output_schema_fingerprint,request_fingerprint,canonical_request_fingerprint,
+              capability_snapshot_id,price_snapshot_id,settings_fingerprint,input_bound_policy_id,input_bound_policy_version,input_bound_proof_status,
+              canonical_request_bytes,proved_input_token_bound,coordinator_fencing_epoch,maximum_request_bytes,maximum_input_tokens,maximum_output_tokens,
+              maximum_raw_response_bytes,maximum_dispatch_count,maximum_calculated_nano_usd,deadline_milliseconds,confirmed_at)
+            VALUES('auth-a','operation-a','analysis-run','run-a','run-a',NULL,'job-a','profile-a','generation-a',0,
+              'source-claim-extraction','install-a','context-a','config-a','manifest-a','prompt-a',
+              'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd','schema-a',
+              '9999999999999999999999999999999999999999999999999999999999999999',
+              '6666666666666666666666666666666666666666666666666666666666666666',
+              '7777777777777777777777777777777777777777777777777777777777777777','cap-a','price-a',
+              '8888888888888888888888888888888888888888888888888888888888888888',
+              'test-only-structural-proof','1','proved',65536,73728,1,65536,73728,4096,1048576,1,600000000,120000,'2026-08-10T00:00:00Z');
             INSERT INTO provider_operation_attempts VALUES('attempt-a','operation-a',1,'proposed',1,'2026-08-10T00:00:00Z');
-            INSERT INTO provider_operation_attempts VALUES('attempt-a2','operation-a',2,'proposed',1,'2026-08-10T00:00:00Z');
-            INSERT INTO provider_operation_attempts VALUES('attempt-b','operation-b',1,'proposed',1,'2026-08-10T00:00:00Z');
-            INSERT INTO provider_requests(request_id,operation_id,provider_attempt_id,request_fingerprint,canonical_request_fingerprint,settings_fingerprint,output_schema_fingerprint,input_bound_policy_id,input_bound_policy_version,input_bound_proof_status,canonical_request_bytes,proved_input_token_bound,payload_id,created_at) VALUES
-              ('request-a','operation-a','attempt-a','6666666666666666666666666666666666666666666666666666666666666666','7777777777777777777777777777777777777777777777777777777777777777','8888888888888888888888888888888888888888888888888888888888888888','9999999999999999999999999999999999999999999999999999999999999999','unresolved-openai-responses-framing','authority-required','authority-required',NULL,NULL,'payload-a','2026-08-10T00:00:00Z'),
-              ('request-b','operation-b','attempt-b','aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab','bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbc','cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccd','ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddde','unresolved-openai-responses-framing','authority-required','authority-required',NULL,NULL,'payload-a','2026-08-10T00:00:00Z');
+            INSERT INTO provider_requests(request_id,operation_id,provider_attempt_id,request_fingerprint,canonical_request_fingerprint,settings_fingerprint,
+              output_schema_fingerprint,input_bound_policy_id,input_bound_policy_version,input_bound_proof_status,canonical_request_bytes,
+              proved_input_token_bound,payload_id,created_at)
+            VALUES('request-a','operation-a','attempt-a','6666666666666666666666666666666666666666666666666666666666666666',
+              '7777777777777777777777777777777777777777777777777777777777777777',
+              '8888888888888888888888888888888888888888888888888888888888888888',
+              '9999999999999999999999999999999999999999999999999999999999999999',
+              'test-only-structural-proof','1','proved',65536,73728,'payload-a','2026-08-10T00:00:00Z');
             INSERT INTO provider_reservations VALUES('reservation-a','operation-a','attempt-a','request-a','{}',600000000,'2026-08-10T00:01:00Z','2026-08-10T00:00:00Z');
-            INSERT INTO provider_reservations VALUES('reservation-b','operation-b','attempt-b','request-b','{}',600000000,'2026-08-10T00:01:00Z','2026-08-10T00:00:00Z');
-            INSERT INTO provider_responses VALUES('response-a','operation-a','request-a','attempt-a','payload-a','eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee','completed','{}','2026-08-10T00:00:00Z');
-            INSERT INTO provider_responses VALUES('response-b','operation-b','request-b','attempt-b','payload-a','ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff','completed','{}','2026-08-10T00:00:00Z');
-            INSERT INTO provider_usage_entries VALUES('usage-a','operation-a','attempt-a','request-a','{}',1,'validated','2026-08-10T00:00:00Z');
-            INSERT INTO provider_usage_entries VALUES('usage-b','operation-b','attempt-b','request-b','{}',1,'validated','2026-08-10T00:00:00Z');
+            INSERT INTO provider_dispatch_fences VALUES('fence-a','auth-a','operation-a','reservation-a','request-a','attempt-a',1,'profile-a','generation-a',0,1,'proved and authorized','2026-08-10T00:00:00Z');
+            INSERT INTO provider_transport_events VALUES('transport-a','operation-a','attempt-a','request-a','fence-a','response-staged',1,'2026-08-10T00:00:00Z');
+            INSERT INTO provider_responses(response_record_id,operation_id,request_id,provider_attempt_id,dispatch_fence_id,
+              raw_response_payload_id,raw_response_fingerprint,raw_response_bytes,http_status,provider_response_id,response_state,
+              refusal_code,incomplete_reason,error_code,requested_model,returned_model,requested_service_tier,returned_service_tier,
+              reasoning_context,reasoning_mode,prompt_cache_mode,usage_json,validation_state,admission_state,created_at)
+            VALUES('response-a','operation-a','request-a','attempt-a','fence-a','payload-a',
+              'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',2,200,'provider-response-a','completed',
+              NULL,NULL,NULL,'gpt-5.6-sol','gpt-5.6-sol','default','default','current_turn','standard','explicit',
+              '{"dispatch_count":{"availability":"available","value":1},"input_tokens":{"availability":"available","value":1},"output_tokens":{"availability":"available","value":0},"reasoning_tokens":{"availability":"available","value":0},"cache_read_tokens":{"availability":"available","value":0},"cache_write_tokens":{"availability":"available","value":0},"priced_tool_calls":{"availability":"available","value":0},"calculated_nano_usd":{"availability":"available","value":1},"billing_availability":"available","rate_availability":"available","credit_availability":"unavailable"}',
+              'admitted','admitted','2026-08-10T00:00:00Z');
+            INSERT INTO provider_usage_entries VALUES('usage-a','operation-a','attempt-a','request-a','fence-a','response-a','{}',1,'validated','2026-08-10T00:00:00Z');
+            INSERT INTO provider_settlements VALUES('settlement-a','operation-a','attempt-a','request-a','reservation-a','usage-a','fence-a','settled',600000000,0,'2026-08-10T00:00:00Z');
+            INSERT INTO provider_semantic_proposals VALUES('proposal-a','operation-a','attempt-a','request-a','response-a','fence-a','source-claim','payload-a','2026-08-10T00:00:00Z');
+            INSERT INTO provider_semantic_admissions VALUES('admission-a','proposal-a','rejected','host-policy','synthetic','artifact-a','2026-08-10T00:00:00Z');
+            INSERT INTO provider_replay_edges VALUES('replay-a','operation-a','attempt-a','request-a','response-a','fence-a','retained-response','manifest-a','2026-08-10T00:00:00Z');
+            INSERT INTO provider_operation_projection VALUES('operation-a','attempt-a','request-a','fence-a','settled',600000000,1,0,NULL,1,'2026-08-10T00:00:00Z');
             """;
         seed.ExecuteNonQuery();
 
         using SqliteCommand invalid = connection.CreateCommand();
-        invalid.CommandText =
-            """
-            INSERT INTO provider_credential_intents VALUES('intent-cross','profile-a','generation-b','verify','pending','active-unverified','active-verified','available',NULL,'not-required','pending','2026-08-10T00:00:00Z');
-            """;
-        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
-        invalid.CommandText =
-            """
-            INSERT INTO provider_operation_authorizations
-            SELECT 'auth-owner-cross','operation-owner-cross',owner_kind,'run-b',analysis_run_id,evidence_acquisition_run_id,job_node_id,
-              profile_id,generation_id,revocation_epoch,operation_kind,installation_snapshot_id,analysis_context_id,effective_configuration_id,resolved_input_manifest_id,
-              prompt_id,prompt_fingerprint,output_schema_id,output_schema_fingerprint,'abababababababababababababababababababababababababababababababab',capability_snapshot_id,price_snapshot_id,settings_fingerprint,
-              input_bound_policy_id,input_bound_policy_version,input_bound_proof_status,canonical_request_bytes,proved_input_token_bound,coordinator_fencing_epoch,
-              maximum_request_bytes,maximum_input_tokens,maximum_output_tokens,maximum_raw_response_bytes,maximum_dispatch_count,maximum_calculated_nano_usd,deadline_milliseconds,confirmed_at
-            FROM provider_operation_authorizations WHERE authorization_id='auth-a';
-            """;
-        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
-        invalid.CommandText =
-            """
-            INSERT INTO provider_operation_authorizations
-            SELECT 'auth-job-cross','operation-job-cross',owner_kind,owner_id,analysis_run_id,evidence_acquisition_run_id,'job-b',
-              profile_id,generation_id,revocation_epoch,operation_kind,installation_snapshot_id,analysis_context_id,effective_configuration_id,resolved_input_manifest_id,
-              prompt_id,prompt_fingerprint,output_schema_id,output_schema_fingerprint,'acacacacacacacacacacacacacacacacacacacacacacacacacacacacacacacac',capability_snapshot_id,price_snapshot_id,settings_fingerprint,
-              input_bound_policy_id,input_bound_policy_version,input_bound_proof_status,canonical_request_bytes,proved_input_token_bound,2,
-              maximum_request_bytes,maximum_input_tokens,maximum_output_tokens,maximum_raw_response_bytes,maximum_dispatch_count,maximum_calculated_nano_usd,deadline_milliseconds,confirmed_at
-            FROM provider_operation_authorizations WHERE authorization_id='auth-a';
-            """;
-        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
-        invalid.CommandText =
-            """
-            INSERT INTO provider_credential_intents VALUES('intent-capability-cross','profile-a','generation-a','verify','pending','active-unverified','active-verified','available','cap-missing','not-required','pending','2026-08-10T00:00:00Z');
-            """;
-        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
-        invalid.CommandText =
-            """
-            INSERT INTO provider_capability_snapshots VALUES('cap-invalid','other-provider','gpt-5.6-sol','default','medium','current_turn','standard',0,0,0,'none',0,'disabled','explicit',0,0,272000,'synthetic-v1','2121212121212121212121212121212121212121212121212121212121212121','2026-08-10T00:00:00Z');
-            """;
-        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
-        invalid.CommandText =
-            """
-            INSERT INTO provider_requests(request_id,operation_id,provider_attempt_id,request_fingerprint,canonical_request_fingerprint,settings_fingerprint,output_schema_fingerprint,input_bound_policy_id,input_bound_policy_version,input_bound_proof_status,canonical_request_bytes,proved_input_token_bound,payload_id,created_at)
-            VALUES('request-binding-cross','operation-a','attempt-a2','adadadadadadadadadadadadadadadadadadadadadadadadadadadadadadadad','1313131313131313131313131313131313131313131313131313131313131313','8888888888888888888888888888888888888888888888888888888888888888','9999999999999999999999999999999999999999999999999999999999999999','unresolved-openai-responses-framing','authority-required','authority-required',NULL,NULL,'payload-a','2026-08-10T00:00:00Z');
-            """;
-        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
-        invalid.CommandText =
-            """
-            INSERT INTO provider_price_snapshots VALUES('price-invalid','openai','foreign-model','USD','default','synthetic-v1','2323232323232323232323232323232323232323232323232323232323232323','2026-08-10T00:00:00Z');
-            """;
-        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
-        invalid.CommandText =
-            """
-            INSERT INTO provider_dispatch_fences VALUES('fence-revocation-cross','auth-a','operation-a','reservation-a','request-a','attempt-a',1,'profile-a','generation-a',1,0,'synthetic','2026-08-10T00:00:00Z');
-            """;
-        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
-        invalid.CommandText =
-            """
-            INSERT INTO provider_price_rules VALUES('price-a','rule-invalid','unbounded-context','ordinary-input','input','none','global',1,1,'synthetic-v1');
-            """;
-        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
-        invalid.CommandText =
-            """
-            INSERT INTO provider_semantic_proposals VALUES('proposal-cross','operation-b','attempt-b','request-b','response-a','source-claim','payload-a','2026-08-10T00:00:00Z');
-            """;
-        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
-        invalid.CommandText =
-            """
-            INSERT INTO provider_requests(request_id,operation_id,provider_attempt_id,request_fingerprint,canonical_request_fingerprint,settings_fingerprint,output_schema_fingerprint,input_bound_policy_id,input_bound_policy_version,input_bound_proof_status,canonical_request_bytes,proved_input_token_bound,payload_id,created_at) VALUES('request-cross','operation-a','attempt-b','6666666666666666666666666666666666666666666666666666666666666666','1313131313131313131313131313131313131313131313131313131313131313','8888888888888888888888888888888888888888888888888888888888888888','9999999999999999999999999999999999999999999999999999999999999999','unresolved-openai-responses-framing','authority-required','authority-required',NULL,NULL,'payload-a','2026-08-10T00:00:00Z');
-            """;
-        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
-        invalid.CommandText =
-            """
-            INSERT INTO provider_reservations VALUES('reservation-cross','operation-a','attempt-b','request-a','{}',1,'2026-08-10T00:01:00Z','2026-08-10T00:00:00Z');
-            """;
-        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
-        invalid.CommandText =
-            """
-            INSERT INTO provider_dispatch_fences VALUES('fence-cross','auth-a','operation-a','reservation-a','request-a','attempt-b',1,'profile-a','generation-a',0,0,'synthetic','2026-08-10T00:00:00Z');
-            """;
-        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
-        invalid.CommandText =
-            """
-            INSERT INTO provider_responses VALUES('response-cross','operation-b','request-a','attempt-b','payload-a','2020202020202020202020202020202020202020202020202020202020202020','completed','{}','2026-08-10T00:00:00Z');
-            """;
-        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
-        invalid.CommandText =
-            """
-            INSERT INTO provider_usage_entries VALUES('usage-cross','operation-b','attempt-a2','request-b','{}',1,'validated','2026-08-10T00:00:00Z');
-            """;
-        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
-        invalid.CommandText =
-            """
-            INSERT INTO provider_settlements VALUES('settlement-cross','operation-a','attempt-a','request-a','reservation-a','usage-b','settled',0,0,'2026-08-10T00:00:00Z');
-            """;
-        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
-        invalid.CommandText =
-            """
-            INSERT INTO provider_replay_edges VALUES('replay-cross','operation-b','attempt-b','request-b','response-a','retained-response','manifest-a','2026-08-10T00:00:00Z');
-            """;
-        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
-        invalid.CommandText =
-            """
-            INSERT INTO provider_operation_projection VALUES('operation-a','attempt-b','settled',0,0,0,NULL,1,'2026-08-10T00:00:00Z');
-            """;
-        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
-
-        invalid.CommandText =
-            """
-            INSERT INTO provider_profile_projection VALUES('profile-a','generation-a',0,'active-unverified','unavailable','cap-missing',1,'2026-08-10T00:00:00Z');
-            """;
-        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
-
-        invalid.CommandText =
-            """
-            INSERT INTO provider_operation_projection VALUES('operation-a','attempt-a','reserved',1,0,0,1,1,'2026-08-10T00:00:00Z');
-            """;
+        invalid.CommandText = "INSERT INTO provider_operation_authorizations SELECT * FROM provider_operation_authorizations WHERE 0;";
         invalid.ExecuteNonQuery();
+
+        string noProofAuthorization =
+            """
+            INSERT INTO provider_operation_authorizations(
+              authorization_id,operation_id,owner_kind,owner_id,analysis_run_id,job_node_id,profile_id,generation_id,revocation_epoch,
+              operation_kind,installation_snapshot_id,analysis_context_id,effective_configuration_id,resolved_input_manifest_id,prompt_id,prompt_fingerprint,
+              output_schema_id,output_schema_fingerprint,request_fingerprint,canonical_request_fingerprint,capability_snapshot_id,price_snapshot_id,
+              settings_fingerprint,input_bound_policy_id,input_bound_policy_version,input_bound_proof_status,canonical_request_bytes,proved_input_token_bound,
+              coordinator_fencing_epoch,maximum_request_bytes,maximum_input_tokens,maximum_output_tokens,maximum_raw_response_bytes,maximum_dispatch_count,
+              maximum_calculated_nano_usd,deadline_milliseconds,confirmed_at)
+            VALUES('auth-blocked','operation-blocked','analysis-run','run-a','run-a','job-a','profile-a','generation-a',0,'source-claim-extraction',
+              'install-a','context-a','config-a','manifest-a','prompt-a','dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd',
+              'schema-a','9999999999999999999999999999999999999999999999999999999999999999',
+              'abababababababababababababababababababababababababababababababab','acacacacacacacacacacacacacacacacacacacacacacacacacacacacacacac',
+              'cap-a','price-a','8888888888888888888888888888888888888888888888888888888888888888',
+              'unresolved-openai-responses-framing','authority-required','authority-required',NULL,NULL,1,65536,73728,4096,1048576,1,600000000,120000,'2026-08-10T00:00:00Z');
+            """;
+        invalid.CommandText = noProofAuthorization;
+        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
+
+        Dictionary<string, string> forbiddenDownstream = new(StringComparer.Ordinal)
+        {
+            ["attempt"] = "INSERT INTO provider_operation_attempts VALUES('attempt-blocked','operation-blocked',1,'proposed',1,'2026-08-10T00:00:00Z');",
+            ["request"] = "INSERT INTO provider_requests VALUES('request-blocked','operation-blocked','attempt-blocked','a','b','c','d','p','v','proved',1,1,'payload-a','2026-08-10T00:00:00Z');",
+            ["reservation"] = "INSERT INTO provider_reservations VALUES('reservation-blocked','operation-blocked','attempt-blocked','request-blocked','{}',1,'2026-08-10T00:01:00Z','2026-08-10T00:00:00Z');",
+            ["fence"] = "INSERT INTO provider_dispatch_fences VALUES('fence-blocked','auth-blocked','operation-blocked','reservation-blocked','request-blocked','attempt-blocked',1,'profile-a','generation-a',0,1,'blocked','2026-08-10T00:00:00Z');",
+            ["transport"] = "INSERT INTO provider_transport_events VALUES('transport-blocked','operation-blocked','attempt-blocked','request-blocked','fence-blocked','started',1,'2026-08-10T00:00:00Z');",
+            ["response"] = "INSERT INTO provider_responses(response_record_id,operation_id,request_id,provider_attempt_id,dispatch_fence_id,response_state,requested_model,requested_service_tier,reasoning_context,reasoning_mode,prompt_cache_mode,usage_json,validation_state,admission_state,created_at) VALUES('response-blocked','operation-blocked','request-blocked','attempt-blocked','fence-blocked','cancelled','gpt-5.6-sol','default','current_turn','standard','explicit','{\"dispatch_count\":{\"availability\":\"available\",\"value\":0},\"billing_availability\":\"unavailable\",\"rate_availability\":\"unavailable\",\"credit_availability\":\"unavailable\"}','unavailable','unavailable','2026-08-10T00:00:00Z');",
+            ["usage"] = "INSERT INTO provider_usage_entries VALUES('usage-blocked','operation-blocked','attempt-blocked','request-blocked','fence-blocked','response-blocked','{}',0,'unavailable','2026-08-10T00:00:00Z');",
+            ["settlement"] = "INSERT INTO provider_settlements VALUES('settlement-blocked','operation-blocked','attempt-blocked','request-blocked','reservation-blocked','usage-blocked','fence-blocked','unresolved-hold',0,1,'2026-08-10T00:00:00Z');",
+            ["proposal"] = "INSERT INTO provider_semantic_proposals VALUES('proposal-blocked','operation-blocked','attempt-blocked','request-blocked','response-blocked','fence-blocked','gap','payload-a','2026-08-10T00:00:00Z');",
+            ["admission"] = "INSERT INTO provider_semantic_admissions VALUES('admission-blocked','proposal-blocked','rejected','host','blocked',NULL,'2026-08-10T00:00:00Z');",
+            ["replay"] = "INSERT INTO provider_replay_edges VALUES('replay-blocked','operation-blocked','attempt-blocked','request-blocked','response-blocked','fence-blocked','unavailable','manifest-a','2026-08-10T00:00:00Z');",
+            ["projection"] = "INSERT INTO provider_operation_projection VALUES('operation-blocked','attempt-blocked','request-blocked','fence-blocked','reserved',1,0,0,1,1,'2026-08-10T00:00:00Z');",
+        };
+        foreach ((string name, string sql) in forbiddenDownstream)
+        {
+            invalid.CommandText = sql;
+            Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery(), name);
+        }
+
         invalid.CommandText =
             """
-            INSERT INTO provider_operation_projection VALUES('operation-b','attempt-b','reserved',1,0,0,1,1,'2026-08-10T00:00:00Z');
+            INSERT INTO provider_responses(response_record_id,operation_id,request_id,provider_attempt_id,dispatch_fence_id,
+              raw_response_payload_id,raw_response_fingerprint,raw_response_bytes,http_status,response_state,requested_model,returned_model,
+              requested_service_tier,returned_service_tier,reasoning_context,reasoning_mode,prompt_cache_mode,usage_json,validation_state,admission_state,created_at)
+            VALUES('response-empty','operation-a','request-a','attempt-a','fence-a','payload-a',
+              'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',2,200,'completed','gpt-5.6-sol','gpt-5.6-sol',
+              'default','default','current_turn','standard','explicit','{}','admitted','admitted','2026-08-10T00:00:00Z');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
+
+        invalid.CommandText =
+            """
+            INSERT INTO provider_requests(request_id,operation_id,provider_attempt_id,request_fingerprint,canonical_request_fingerprint,
+              settings_fingerprint,output_schema_fingerprint,input_bound_policy_id,input_bound_policy_version,input_bound_proof_status,
+              canonical_request_bytes,proved_input_token_bound,payload_id,created_at)
+            VALUES('request-second','operation-a','attempt-a','eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+              '7777777777777777777777777777777777777777777777777777777777777777',
+              '8888888888888888888888888888888888888888888888888888888888888888',
+              '9999999999999999999999999999999999999999999999999999999999999999','test-only-structural-proof','1','proved',65536,73728,'payload-a','2026-08-10T00:00:00Z');
             """;
         Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
     }

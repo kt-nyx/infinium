@@ -91,6 +91,34 @@ message ProviderOperationPayload {
   ProviderSettlementState settlement_state = 7;
   ProviderReplayState replay_state = 8;
   repeated string gaps = 9;
+  infinium.domain.v1.ProviderAccessProfileId profile_id = 10;
+  infinium.domain.v1.CredentialGenerationId generation_id = 11;
+  uint64 revocation_epoch = 12;
+  string owner_kind = 13;
+  string owner_id = 14;
+  string job_node_id = 15;
+  string authorization_id = 16;
+  infinium.domain.v1.AttemptId attempt_id = 17;
+  string request_id = 18;
+  infinium.domain.v1.ReservationGroupId reservation_id = 19;
+  infinium.domain.v1.DispatchId dispatch_fence_id = 20;
+  string response_record_id = 21;
+  string usage_entry_id = 22;
+  string settlement_id = 23;
+  string replay_edge_id = 24;
+  infinium.domain.v1.CapabilitySnapshotId capability_snapshot_id = 25;
+  infinium.domain.v1.PriceSnapshotId price_snapshot_id = 26;
+  OptionalProviderQuantity dispatch_count = 27;
+  OptionalProviderQuantity reasoning_tokens = 28;
+  OptionalProviderQuantity cache_read_tokens = 29;
+  OptionalProviderQuantity cache_write_tokens = 30;
+  OptionalProviderQuantity reserved_nano_usd = 31;
+  bool unresolved_hold = 32;
+  InputBoundProofStatus input_bound_proof_status = 33;
+  string input_bound_policy_id = 34;
+  string input_bound_policy_version = 35;
+  optional uint64 canonical_request_bytes = 36;
+  optional uint64 proved_input_token_bound = 37;
 }
 
 message OptionalProviderQuantity { ProviderAvailabilityState availability = 1; optional uint64 value = 2; }
@@ -131,6 +159,34 @@ message ProviderReplayPayload {
   ProviderReplayState replay_state = 3;
   string dependency_manifest_id = 4;
   bool network_permitted = 5;
+  string installation_snapshot_id = 6;
+  string analysis_context_id = 7;
+  string effective_configuration_id = 8;
+  string resolved_input_manifest_id = 9;
+  string prompt_id = 10;
+  bytes prompt_fingerprint_sha256 = 11;
+  string output_schema_id = 12;
+  bytes output_schema_fingerprint_sha256 = 13;
+  bytes canonical_request_bytes = 14;
+  bytes canonical_request_fingerprint_sha256 = 15;
+  bytes settings_fingerprint_sha256 = 16;
+  infinium.domain.v1.ProviderAccessProfileId profile_id = 17;
+  infinium.domain.v1.CredentialGenerationId generation_id = 18;
+  uint64 revocation_epoch = 19;
+  infinium.domain.v1.CapabilitySnapshotId capability_snapshot_id = 20;
+  infinium.domain.v1.PriceSnapshotId price_snapshot_id = 21;
+  ProviderOperationLimits limits = 22;
+  infinium.common.v1.Instant dispatch_deadline = 23;
+  string authorization_id = 24;
+  infinium.domain.v1.AttemptId attempt_id = 25;
+  string request_id = 26;
+  infinium.domain.v1.ReservationGroupId reservation_id = 27;
+  infinium.domain.v1.DispatchId dispatch_fence_id = 28;
+  string usage_entry_id = 29;
+  string settlement_id = 30;
+  string replay_edge_id = 31;
+  int64 retained_hold_nano_usd = 32;
+  ProviderOperationKind operation_kind = 33;
 }
 
 message SubmitProviderEnrollmentRequest {
@@ -162,6 +218,15 @@ message SubmitProviderOperationRequest {
   string input_bound_policy_version = 18;
   optional uint64 canonical_request_bytes = 19;
   optional uint64 proved_input_token_bound = 20;
+  string installation_snapshot_id = 21;
+  string analysis_context_id = 22;
+  string effective_configuration_id = 23;
+  string resolved_input_manifest_id = 24;
+  string prompt_id = 25;
+  bytes prompt_fingerprint_sha256 = 26;
+  bytes canonical_request_body = 27;
+  infinium.common.v1.Instant dispatch_deadline = 28;
+  uint64 coordinator_fencing_epoch = 29;
 }
 
 message ProviderOperationLimits {
