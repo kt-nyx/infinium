@@ -1,0 +1,1 @@
+{"schema":"infinium.public.provider-capability-oracle/v1","expected_provider":"openai","expected_model":"gpt-5.6-sol","expected_service_tier":"default","expected_context_tokens":272000,"expected_network_used":false,"expected_credentials_used":false}

@@ -5,6 +5,7 @@
     <ProjectReference Include="..\..\src\Infinium.Application\Infinium.Application.csproj" />
     <ProjectReference Include="..\..\src\Infinium.Coordinator\Infinium.Coordinator.csproj" />
     <ProjectReference Include="..\..\src\Infinium.Persistence\Infinium.Persistence.csproj" />
+    <ProjectReference Include="..\Infinium.UnitTests\Infinium.UnitTests.csproj" />
   </ItemGroup>
   <Target Name="CopyManagedWorkerRuntime" AfterTargets="Build">
     <ItemGroup>

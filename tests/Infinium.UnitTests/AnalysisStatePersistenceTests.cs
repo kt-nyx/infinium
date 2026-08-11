@@ -42,7 +42,8 @@ public sealed class AnalysisStatePersistenceTests
         "provider_settlements", "provider_settlement_adjustments", "provider_semantic_proposals",
         "provider_semantic_validations", "provider_semantic_admissions", "provider_replay_edges",
         "provider_run_output_v2_bindings", "provider_operation_projection",
-        "provider_profile_projection", "provider_budget_projection",
+        "provider_profile_projection", "provider_budget_limits", "provider_budget_events",
+        "provider_usage_rollup_references", "provider_budget_settlement_receipts", "provider_budget_projection",
     ];
 
     private static readonly string[] AnalysisTables =
@@ -138,7 +139,7 @@ public sealed class AnalysisStatePersistenceTests
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'storage_contract_version';"));
         Assert.AreEqual(
-            "56dc6efd92fff75fe21f344abafa3b88b99a8e92d2d1b2517f706d63af4599a3",
+            ProviderPersistenceDeclarations.SchemaFingerprint,
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'schema_fingerprint';"));
@@ -220,6 +221,7 @@ public sealed class AnalysisStatePersistenceTests
 
                 DROP INDEX idx_payload_identity_size;
                 DELETE FROM migration_history WHERE migration_id = 'M1-S6-0006';
+                DELETE FROM store_metadata WHERE key = 'wp2_schema_extension_id';
                 UPDATE store_metadata SET value = '5' WHERE key = 'schema_version';
                 UPDATE store_metadata SET value = '1.4.0'
                     WHERE key = 'storage_contract_version';
@@ -373,7 +375,7 @@ public sealed class AnalysisStatePersistenceTests
 
         command.CommandText = "INSERT INTO provider_operation_authorizations(authorization_id) VALUES('auth-bypass');";
         SqliteException blocked = Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
-        StringAssert.Contains(blocked.Message, "accepted local input-bound policy required");
+        StringAssert.Contains(blocked.Message, "NOT NULL constraint failed");
 
         command.CommandText =
             """
@@ -396,7 +398,8 @@ public sealed class AnalysisStatePersistenceTests
               'invented-policy','invented-version','invented-proof',1,65536,73728,4096,1048576,1,600000000,120000,
               '2026-08-10T00:02:00.0000000+00:00','2026-08-10T00:00:00.0000000+00:00');
             """;
-        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        blocked = Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        StringAssert.Contains(blocked.Message, "exact accepted repository-local input-bound proof");
 
         (string Table, string Sql)[] bypasses =
         [

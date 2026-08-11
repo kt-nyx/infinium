@@ -1,0 +1,1 @@
+{"schema":"infinium.public.atomic-budget-oracle/v1","expected_scope_count":8,"expected_atomic_commit":true,"expected_partial_debit":false,"expected_projection_rebuild_equal":true}

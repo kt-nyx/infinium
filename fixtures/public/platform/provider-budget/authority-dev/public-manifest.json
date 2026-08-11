@@ -1,0 +1,15 @@
+{
+  "schema_id": "infinium.evaluation.provider-budget-public-manifest/v1",
+  "fixture_id": "M1-PLAT-PROVIDER-AUTHORITY-DEV-v1",
+  "fixture_version": "1.0.0",
+  "partition": "development",
+  "evaluation_ids": [
+    "EVAL-0077"
+  ],
+  "input_file": "input.json",
+  "oracle_file": "oracle.json",
+  "answer_free_input": true,
+  "review_state": "accepted",
+  "input_sha256": "2a28db9903a008acde612edf4b1ecfd6bc2185fdc7480f9143d77ccd2392c2bb",
+  "oracle_sha256": "f490222cbdaf47ead8bd6dfaae83c576d7133779a3227df7e6d3c05e3b46edf8"
+}

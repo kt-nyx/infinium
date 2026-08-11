@@ -1,0 +1,1 @@
+{"schema":"infinium.public.atomic-budget-oracle/v1","expected_winners":1,"expected_overflow":"fail-closed","expected_partial_debit":false,"expected_network_used":false,"expected_credentials_used":false}

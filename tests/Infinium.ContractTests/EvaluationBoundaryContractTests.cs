@@ -103,7 +103,7 @@ public sealed class EvaluationBoundaryContractTests
         JsonElement[] entries = registry.RootElement.GetProperty("packages")
             .EnumerateArray()
             .ToArray();
-        Assert.AreEqual(19, entries.Length);
+        Assert.AreEqual(registry.RootElement.GetProperty("package_count").GetInt32(), entries.Length);
 
         Dictionary<string, FixtureRegistryEntry> actual = entries.ToDictionary(
             item => item.GetProperty("package_identity").GetString()!,

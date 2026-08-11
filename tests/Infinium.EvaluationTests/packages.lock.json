@@ -410,6 +410,12 @@
           "Infinium.Domain": "[1.0.0, )"
         }
       },
+      "infinium.openai": {
+        "type": "Project",
+        "dependencies": {
+          "Infinium.Domain": "[1.0.0, )"
+        }
+      },
       "infinium.persistence": {
         "type": "Project",
         "dependencies": {

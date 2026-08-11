@@ -536,6 +536,7 @@
           "Infinium.Bethesda": "[1.0.0, )",
           "Infinium.Domain": "[1.0.0, )",
           "Infinium.Mo2": "[1.0.0, )",
+          "Infinium.OpenAI": "[1.0.0, )",
           "Infinium.Persistence": "[1.0.0, )",
           "Infinium.Worker": "[1.0.0, )"
         }
@@ -549,12 +550,33 @@
           "Infinium.Domain": "[1.0.0, )"
         }
       },
+      "infinium.openai": {
+        "type": "Project",
+        "dependencies": {
+          "Infinium.Domain": "[1.0.0, )"
+        }
+      },
       "infinium.persistence": {
         "type": "Project",
         "dependencies": {
           "Infinium.Domain": "[1.0.0, )",
           "Microsoft.Data.Sqlite.Core": "[10.0.10, )",
           "SQLitePCLRaw.bundle_e_sqlite3": "[3.0.5, )"
+        }
+      },
+      "infinium.unittests": {
+        "type": "Project",
+        "dependencies": {
+          "Infinium.Analysis": "[1.0.0, )",
+          "Infinium.Application": "[1.0.0, )",
+          "Infinium.Bethesda": "[1.0.0, )",
+          "Infinium.Domain": "[1.0.0, )",
+          "Infinium.Mo2": "[1.0.0, )",
+          "Infinium.OpenAI": "[1.0.0, )",
+          "Infinium.Persistence": "[1.0.0, )",
+          "MSTest.TestAdapter": "[4.3.2, )",
+          "MSTest.TestFramework": "[4.3.2, )",
+          "Microsoft.NET.Test.Sdk": "[18.8.1, )"
         }
       },
       "infinium.worker": {

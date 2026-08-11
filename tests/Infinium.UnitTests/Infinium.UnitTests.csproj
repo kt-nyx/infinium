@@ -6,5 +6,6 @@
     <ProjectReference Include="..\..\src\Infinium.Domain\Infinium.Domain.csproj" />
     <ProjectReference Include="..\..\src\Infinium.Mo2\Infinium.Mo2.csproj" />
     <ProjectReference Include="..\..\src\Infinium.Persistence\Infinium.Persistence.csproj" />
+    <ProjectReference Include="..\..\src\Infinium.OpenAI\Infinium.OpenAI.csproj" />
   </ItemGroup>
 </Project>

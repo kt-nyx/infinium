@@ -1,9 +1,63 @@
 {
-  "schema_identity": "infinium.repository.public-fixture-registry/1.1.0",
-  "registry_version": "1.1.0",
+  "schema_identity": "infinium.repository.public-fixture-registry/1.2.0",
+  "registry_version": "1.2.0",
   "status": "current",
-  "package_count": 19,
+  "package_count": 25,
   "packages": [
+    {
+      "package_identity": "M1-PLAT-PROVIDER-CAPABILITY-DEV-v1",
+      "package_version": "1.0.0",
+      "partition": "development",
+      "package_path": "fixtures/public/platform/provider-budget/capability-dev",
+      "authority_file": "fixtures/public/platform/provider-budget/capability-dev/public-manifest.json",
+      "authority_bytes": 527,
+      "authority_sha256": "4d38e18530b6950f81b03832c8c7402f4f9b31d56b7fb96a91cecd55dcac62e9"
+    },
+    {
+      "package_identity": "M1-PLAT-PROVIDER-CAPABILITY-VAL-v1",
+      "package_version": "1.0.0",
+      "partition": "validation",
+      "package_path": "fixtures/public/platform/provider-budget/capability-val",
+      "authority_file": "fixtures/public/platform/provider-budget/capability-val/public-manifest.json",
+      "authority_bytes": 526,
+      "authority_sha256": "3fa9f56a2ad1f815638ed7f4ce198b499cc072604e2a29b3bf5e418d6d33389c"
+    },
+    {
+      "package_identity": "M1-PLAT-PROVIDER-AUTHORITY-DEV-v1",
+      "package_version": "1.0.0",
+      "partition": "development",
+      "package_path": "fixtures/public/platform/provider-budget/authority-dev",
+      "authority_file": "fixtures/public/platform/provider-budget/authority-dev/public-manifest.json",
+      "authority_bytes": 526,
+      "authority_sha256": "7270e5e88730c58f758c2ddc72b0114a240dedc92eee9357d4ee6247df186685"
+    },
+    {
+      "package_identity": "M1-PLAT-PROVIDER-AUTHORITY-VAL-v1",
+      "package_version": "1.0.0",
+      "partition": "validation",
+      "package_path": "fixtures/public/platform/provider-budget/authority-val",
+      "authority_file": "fixtures/public/platform/provider-budget/authority-val/public-manifest.json",
+      "authority_bytes": 525,
+      "authority_sha256": "438cfa9b0644a9e0d88c0856e9b098318245439ea1566903c2a36fbd103e0320"
+    },
+    {
+      "package_identity": "M1-PLAT-BUDGET-DEV-v1",
+      "package_version": "1.0.0",
+      "partition": "development",
+      "package_path": "fixtures/public/platform/provider-budget/budget-dev",
+      "authority_file": "fixtures/public/platform/provider-budget/budget-dev/public-manifest.json",
+      "authority_bytes": 514,
+      "authority_sha256": "90dd564a7d06e5a7627b28756d42ad5f62db7bbeab71fdf97317a33f228af94e"
+    },
+    {
+      "package_identity": "M1-PLAT-BUDGET-VAL-v1",
+      "package_version": "1.0.0",
+      "partition": "validation",
+      "package_path": "fixtures/public/platform/provider-budget/budget-val",
+      "authority_file": "fixtures/public/platform/provider-budget/budget-val/public-manifest.json",
+      "authority_bytes": 513,
+      "authority_sha256": "9522b6b31b177a3756f6d101d2aba94739740db06f16f7989a018377fd2d5fa8"
+    },
     {
       "package_identity": "PLATFORM-ANALYSIS-RUNTIME-DEV-v1",
       "package_version": "1.1.0",

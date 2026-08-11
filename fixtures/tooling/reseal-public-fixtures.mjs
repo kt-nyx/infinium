@@ -8,6 +8,15 @@ import process from "node:process";
 // identity or independently pinned semantic truth does not match.
 
 const repositoryRoot = process.cwd();
+const providerBudgetOnly = process.argv.includes("--provider-budget-only");
+const providerBudgetFixtures = [
+  ["capability-dev", "M1-PLAT-PROVIDER-CAPABILITY-DEV-v1", "development"],
+  ["capability-val", "M1-PLAT-PROVIDER-CAPABILITY-VAL-v1", "validation"],
+  ["authority-dev", "M1-PLAT-PROVIDER-AUTHORITY-DEV-v1", "development"],
+  ["authority-val", "M1-PLAT-PROVIDER-AUTHORITY-VAL-v1", "validation"],
+  ["budget-dev", "M1-PLAT-BUDGET-DEV-v1", "development"],
+  ["budget-val", "M1-PLAT-BUDGET-VAL-v1", "validation"],
+];
 const fixtures = [
   {
     relativeRoot: "fixtures/public/platform/analysis-runtime-substrate",
@@ -89,6 +98,11 @@ const semanticTruthProperties = [
   "expected_failures", "expected_coverage_and_gaps", "expected_collection_states",
   "expected_taxonomy_assignments", "forbidden_claims", "known_limits",
 ];
+
+if (providerBudgetOnly) {
+  await resealProviderBudgetFixtures();
+  process.exit(0);
+}
 
 for (const fixture of fixtures) {
   const fixtureRoot = path.join(repositoryRoot, fixture.relativeRoot);
@@ -184,6 +198,42 @@ for (const fixture of candidateFixtures) {
 
 await resealCrossStageFixture();
 await resealProviderContractExamples();
+
+async function resealProviderBudgetFixtures() {
+  const registryPath = path.join(repositoryRoot, "fixtures/public/public-fixture-registry.v1.json");
+  const registry = await readJson(registryPath);
+  if (registry.registry_version !== "1.2.0" || registry.package_count !== 25
+      || registry.packages.length !== 25) {
+    throw new Error("Provider-budget reseal requires the exact closed registry 1.2.0/25 authority.");
+  }
+  for (const [directory, fixtureId, partition] of providerBudgetFixtures) {
+    const fixtureRoot = path.join(repositoryRoot, "fixtures/public/platform/provider-budget", directory);
+    const manifestPath = path.join(fixtureRoot, "public-manifest.json");
+    const manifest = await readJson(manifestPath);
+    if (manifest.fixture_id !== fixtureId || manifest.fixture_version !== "1.0.0"
+        || manifest.partition !== partition || manifest.answer_free_input !== true
+        || manifest.review_state !== "accepted") {
+      throw new Error(`${fixtureId} is not the exact accepted 1.0.0 package; no downgrade or migration is permitted.`);
+    }
+    const input = await readJson(path.join(fixtureRoot, "input.json"));
+    const inputText = JSON.stringify(input).toLowerCase();
+    if (inputText.includes('"expected') || inputText.includes('"oracle')) {
+      throw new Error(`${fixtureId} product input contains expected truth.`);
+    }
+    manifest.input_sha256 = await fileSha256(path.join(fixtureRoot, "input.json"));
+    manifest.oracle_sha256 = await fileSha256(path.join(fixtureRoot, "oracle.json"));
+    await writeJson(manifestPath, manifest);
+    const authorityBytes = await readFile(manifestPath);
+    const entry = registry.packages.find((item) => item.package_identity === fixtureId);
+    if (!entry || entry.package_version !== "1.0.0" || entry.partition !== partition) {
+      throw new Error(`${fixtureId} closed registry entry is missing or inconsistent.`);
+    }
+    entry.authority_bytes = authorityBytes.length;
+    entry.authority_sha256 = sha256(authorityBytes);
+    process.stdout.write(`${fixtureId}/1.0.0 input=${manifest.input_sha256} oracle=${manifest.oracle_sha256}\n`);
+  }
+  await writeJson(registryPath, registry);
+}
 
 async function resealProviderContractExamples() {
   const authorityRelative = "fixtures/public/contracts/provider-wp1/contract-examples.v1.json";

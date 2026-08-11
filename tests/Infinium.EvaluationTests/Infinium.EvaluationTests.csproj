@@ -5,6 +5,7 @@
     <ProjectReference Include="..\..\src\Infinium.Bethesda\Infinium.Bethesda.csproj" />
     <ProjectReference Include="..\..\src\Infinium.Mo2\Infinium.Mo2.csproj" />
     <ProjectReference Include="..\..\src\Infinium.Persistence\Infinium.Persistence.csproj" />
+    <ProjectReference Include="..\..\src\Infinium.OpenAI\Infinium.OpenAI.csproj" />
     <ProjectReference Include="..\..\fixtures\tooling\Infinium.PublicFixtures\Infinium.PublicFixtures.csproj" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,1 @@
+{"schema":"infinium.public.provider-capability-input/v1","case":"explicit-unavailable-facts","provider":"openai","model":"gpt-5.6-sol","requested_facts":["spend","billing","credit","rate"]}

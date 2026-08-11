@@ -21,8 +21,8 @@ public static class ApplicationProviderContractValidator
 
     public static void Validate(ListProviderBudgetRequest value)
     {
-        if (value.ScopeKind is not ("operation" or "evidence-acquisition-run" or "analysis-run"
-            or "provider-profile" or "provider-account" or "global")
+        if (value.ScopeKind is not ("request" or "operation" or "evidence-acquisition-run" or "analysis-run"
+            or "provider-profile" or "provider-account" or "billing-scope" or "global")
             || string.IsNullOrWhiteSpace(value.ScopeId) || value.ScopeId.Length > 128
             || value.RequestedPageSize is 0 or > 100 || value.After?.OpaqueValue.Length > 512)
         {
@@ -50,15 +50,25 @@ public static class ApplicationProviderContractValidator
         }
         foreach (ProviderBudgetPayload item in value.Page.Items)
         {
-            if (item.ScopeKind is not ("operation" or "evidence-acquisition-run" or "analysis-run"
-                or "provider-profile" or "provider-account" or "global")
+            if (item.ScopeKind is not ("request" or "operation" or "evidence-acquisition-run" or "analysis-run"
+                or "provider-profile" or "provider-account" or "billing-scope" or "global")
                 || string.IsNullOrWhiteSpace(item.ScopeId) || item.ScopeId.Length > 128
-                || item.SettledNanoUsd > item.ReservedNanoUsd
-                || item.UnresolvedNanoUsd > item.ReservedNanoUsd
-                || item.SettledNanoUsd > item.ReservedNanoUsd - item.UnresolvedNanoUsd)
+                || !AmountsFit(item.ReservedNanoUsd, item.SettledNanoUsd, item.UnresolvedNanoUsd))
             {
                 throw new InvalidDataException("Provider budget item contradicts its exact scope or finite amounts.");
             }
+        }
+    }
+
+    private static bool AmountsFit(ulong reserved, ulong settled, ulong unresolved)
+    {
+        try
+        {
+            return checked(settled + unresolved) <= reserved;
+        }
+        catch (OverflowException)
+        {
+            return false;
         }
     }
 

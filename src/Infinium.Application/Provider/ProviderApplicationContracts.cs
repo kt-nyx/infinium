@@ -83,7 +83,7 @@ public static class ProviderApplicationContractInvariants
     public static void Validate(ProviderBudgetQuery query)
     {
         ArgumentNullException.ThrowIfNull(query);
-        if (query.ScopeKind is not ("operation" or "evidence-acquisition-run" or "analysis-run" or "provider-profile" or "provider-account" or "global")
+        if (query.ScopeKind is not ("request" or "operation" or "evidence-acquisition-run" or "analysis-run" or "provider-profile" or "provider-account" or "billing-scope" or "global")
             || query.MaximumItems is <= 0 or > MaximumBudgetQueryItems)
         {
             throw new InvalidOperationException("Provider budget queries must use a closed scope and finite page bound.");

@@ -5,10 +5,12 @@ public static class ProviderPersistenceDeclarations
     public const int SchemaVersion = 6;
     public const string StorageContractVersion = "1.5.0";
     public const string MigrationId = "M1-S6-0006";
+    public const string Wp2ExtensionMigrationId = "M1-S6-WP2-0006A";
+    public const string Wp2ExtensionSourceSchemaFingerprint = "56dc6efd92fff75fe21f344abafa3b88b99a8e92d2d1b2517f706d63af4599a3";
     public const int SourceSchemaVersion = 5;
     public const string SourceStorageContractVersion = "1.4.0";
     public const string SourceSchemaFingerprint = "e6d27152687e6b0c806da58a716a9ab909817f046fbe3bf11d8846da5e5dc87d";
-    public const string SchemaFingerprint = "56dc6efd92fff75fe21f344abafa3b88b99a8e92d2d1b2517f706d63af4599a3";
+    public const string SchemaFingerprint = "240a06fe2a9fa3d79db63985fbda329c8e83822534b93cbfb539062a109cad9e";
     public const int ProjectionContractVersion = 1;
 
     public static IReadOnlyList<string> RebuildableProjections { get; } =
@@ -47,6 +49,10 @@ public static class ProviderPersistenceDeclarations
         "provider_rate_limit_facts",
         "provider_settlements",
         "provider_settlement_adjustments",
+        "provider_budget_limits",
+        "provider_budget_events",
+        "provider_usage_rollup_references",
+        "provider_budget_settlement_receipts",
         "provider_semantic_proposals",
         "provider_semantic_admissions",
         "provider_semantic_validations",

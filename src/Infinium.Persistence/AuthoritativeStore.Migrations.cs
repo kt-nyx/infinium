@@ -159,6 +159,10 @@ public sealed partial class AuthoritativeStore
                 Execute(SchemaV6, transaction);
                 CreateAppendOnlyTriggers(SchemaV6AppendOnlyTables, transaction);
                 CreateSchemaV6CanonicalTimestampTriggers(transaction);
+                Execute(Wp2AuthorizationModeExtension, transaction);
+                Execute(Wp2Schema6Extension, transaction);
+                CreateAppendOnlyTriggers(Wp2Schema6ExtensionAppendOnlyTables, transaction);
+                CreateCanonicalTimestampTriggers(Wp2Schema6ExtensionCanonicalTimestampColumns, transaction, replaceExisting: true);
                 string schemaFingerprint = ComputeSchemaFingerprint(connection, transaction);
                 Execute(
                     """
@@ -167,6 +171,8 @@ public sealed partial class AuthoritativeStore
                     WHERE key = 'storage_contract_version';
                     UPDATE store_metadata SET value = $schema_fingerprint
                     WHERE key = 'schema_fingerprint';
+                    INSERT INTO store_metadata(key,value)
+                    VALUES ('wp2_schema_extension_id','M1-S6-WP2-0006A');
                     INSERT INTO migration_history(
                         migration_id, from_version, to_version, applied_at, sqlite_source_id)
                     VALUES ('M1-S6-0006', 5, 6, $now, $sqlite_source);
@@ -178,7 +184,58 @@ public sealed partial class AuthoritativeStore
                     ("$now", ToText(DateTimeOffset.UtcNow)));
                 transaction.Commit();
             }
+
+            if (current == 6)
+            {
+                ApplyWp2Schema6ExtensionIfRequired();
+            }
         }
+    }
+
+    private void ApplyWp2Schema6ExtensionIfRequired()
+    {
+        const string acceptedWp1Fingerprint =
+            "56dc6efd92fff75fe21f344abafa3b88b99a8e92d2d1b2517f706d63af4599a3";
+        string actualFingerprint = ComputeSchemaFingerprint(connection);
+        if (actualFingerprint != acceptedWp1Fingerprint)
+        {
+            return;
+        }
+
+        using (SqliteCommand state = connection.CreateCommand())
+        {
+            state.CommandText =
+                """
+                SELECT
+                  (SELECT COUNT(*) FROM provider_operation_authorizations)
+                  + (SELECT COUNT(*) FROM provider_reservations)
+                  + (SELECT COUNT(*) FROM provider_budget_projection);
+                """;
+            if (Convert.ToInt64(state.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 0)
+            {
+                throw new InvalidOperationException(
+                    "The accepted WP1 schema-6 store contains provider execution state and cannot receive the bounded WP2 same-version extension automatically.");
+            }
+        }
+
+        using SqliteTransaction transaction = BeginTransaction();
+        Execute(Wp2AuthorizationModeExtension, transaction);
+        Execute(Wp2Schema6Extension, transaction);
+        CreateAppendOnlyTriggers(Wp2Schema6ExtensionAppendOnlyTables, transaction);
+        CreateCanonicalTimestampTriggers(Wp2Schema6ExtensionCanonicalTimestampColumns, transaction, replaceExisting: true);
+        string schemaFingerprint = ComputeSchemaFingerprint(connection, transaction);
+        Execute(
+            """
+            UPDATE store_metadata SET value = $schema_fingerprint
+            WHERE key = 'schema_fingerprint';
+            INSERT INTO store_metadata(key,value)
+            VALUES ('wp2_schema_extension_id','M1-S6-WP2-0006A');
+            """,
+            transaction,
+            ("$schema_fingerprint", schemaFingerprint),
+            ("$sqlite_source", BindingIdentity.SourceId),
+            ("$now", ToText(DateTimeOffset.UtcNow)));
+        transaction.Commit();
     }
 
     private void ValidateSchema5MigrationSource()
@@ -343,8 +400,22 @@ public sealed partial class AuthoritativeStore
 
     private void CreateSchemaV6CanonicalTimestampTriggers(SqliteTransaction transaction)
     {
-        foreach ((string table, string column, bool optional) in SchemaV6CanonicalTimestampColumns)
+        CreateCanonicalTimestampTriggers(SchemaV6CanonicalTimestampColumns, transaction);
+    }
+
+    private void CreateCanonicalTimestampTriggers(
+        IReadOnlyList<(string Table, string Column, bool Optional)> columns,
+        SqliteTransaction transaction,
+        bool replaceExisting = false)
+    {
+        foreach ((string table, string column, bool optional) in columns)
         {
+            if (replaceExisting)
+            {
+                Execute(
+                    $"DROP TRIGGER IF EXISTS {table}_{column}_canonical_utc_insert; DROP TRIGGER IF EXISTS {table}_{column}_canonical_utc_update;",
+                    transaction);
+            }
             string prefix = optional ? $"NEW.{column} IS NOT NULL AND " : string.Empty;
             string valid = $"""
                   length(NEW.{column}) = 33
@@ -445,9 +516,29 @@ public sealed partial class AuthoritativeStore
         ("provider_budget_projection", "updated_at", false),
     ];
 
+    private static readonly string[] Wp2Schema6ExtensionAppendOnlyTables =
+    [
+        "provider_reservation_scope_items",
+        "provider_budget_limits",
+        "provider_budget_events",
+        "provider_usage_rollup_references",
+        "provider_budget_settlement_receipts",
+    ];
+
+    private static readonly (string Table, string Column, bool Optional)[] Wp2Schema6ExtensionCanonicalTimestampColumns =
+    [
+        ("provider_budget_limits", "created_at", false),
+        ("provider_budget_events", "occurred_at", false),
+        ("provider_usage_rollup_references", "created_at", false),
+        ("provider_budget_settlement_receipts", "created_at", false),
+        ("provider_budget_projection", "updated_at", false),
+    ];
+
     private static readonly HashSet<string> RequiredSchemaObjects =
     [
         .. SchemaV6CanonicalTimestampColumns.Select(item =>
+            $"trigger:{item.Table}_{item.Column}_canonical_utc_insert"),
+        .. Wp2Schema6ExtensionCanonicalTimestampColumns.Select(item =>
             $"trigger:{item.Table}_{item.Column}_canonical_utc_insert"),
         .. SchemaV6CanonicalTimestampColumns
             .Where(item => SchemaV6MutableProjectionTables.Contains(item.Table))
@@ -486,6 +577,7 @@ public sealed partial class AuthoritativeStore
         "index:idx_payload_identity_size",
         "index:idx_provider_request_fingerprint",
         "index:idx_provider_reservation_scope",
+        "index:idx_provider_budget_events_scope",
         "table:analysis_candidates",
         "table:analysis_coverage",
         "table:analysis_coverage_failure_links",
@@ -561,6 +653,10 @@ public sealed partial class AuthoritativeStore
         "table:evidence_acquisition_runs",
         "table:provider_access_profiles",
         "table:provider_budget_projection",
+        "table:provider_budget_limits",
+        "table:provider_budget_events",
+        "table:provider_usage_rollup_references",
+        "table:provider_budget_settlement_receipts",
         "table:provider_capability_snapshots",
         "table:provider_credential_intents",
         "table:provider_credential_intent_events",
@@ -716,7 +812,6 @@ public sealed partial class AuthoritativeStore
         "trigger:provider_authority_release_required",
         "trigger:provider_block_eligibility_guard",
         "trigger:provider_block_owner_job_guard",
-        "trigger:provider_budget_projection_authority_guard",
         "trigger:provider_budget_projection_monotonic_update_guard",
         "trigger:provider_credential_intent_time_order_guard",
         "trigger:provider_credential_intent_event_chain_guard",
@@ -809,6 +904,14 @@ public sealed partial class AuthoritativeStore
         "trigger:provider_transport_events_append_only_update",
         "trigger:provider_usage_entries_append_only_delete",
         "trigger:provider_usage_entries_append_only_update",
+        "trigger:provider_budget_limits_append_only_delete",
+        "trigger:provider_budget_limits_append_only_update",
+        "trigger:provider_budget_events_append_only_delete",
+        "trigger:provider_budget_events_append_only_update",
+        "trigger:provider_usage_rollup_references_append_only_delete",
+        "trigger:provider_usage_rollup_references_append_only_update",
+        "trigger:provider_budget_settlement_receipts_append_only_delete",
+        "trigger:provider_budget_settlement_receipts_append_only_update",
     ];
 
     private static readonly string[] SchemaV4AppendOnlyTables =
@@ -1893,6 +1996,131 @@ public sealed partial class AuthoritativeStore
         CREATE INDEX idx_reconciliation_successor ON reconciliation_assessments(
             subject_kind, successor_occurrence_id);
         CREATE INDEX idx_lineage_successor ON lineage_events(subject_kind, successor_logical_id);
+        """;
+
+    private const string Wp2AuthorizationModeExtension =
+        """
+        ALTER TABLE provider_operation_authorizations ADD COLUMN execution_mode TEXT NOT NULL
+          DEFAULT 'simulated-nonnetwork' CHECK(execution_mode IN ('simulated-nonnetwork','provider-live'));
+        """;
+
+    private const string Wp2Schema6Extension =
+        """
+        DROP TRIGGER provider_authority_release_required;
+        CREATE TRIGGER provider_authority_release_required
+        BEFORE INSERT ON provider_operation_authorizations
+        WHEN NEW.input_bound_policy_id <> 'openai-responses-o200k-byte-envelope'
+          OR NEW.input_bound_policy_version <> 'v1' OR NEW.input_bound_proof_status <> 'proved'
+        BEGIN SELECT RAISE(ABORT, 'provider dispatch requires the exact accepted repository-local input-bound proof'); END;
+
+        DROP TRIGGER provider_reservation_scope_items_append_only_update;
+        DROP TRIGGER provider_reservation_scope_items_append_only_delete;
+        DROP TRIGGER provider_reservation_scope_vector_guard;
+        DROP INDEX idx_provider_reservation_scope;
+        DROP TABLE provider_reservation_scope_items;
+        CREATE TABLE provider_reservation_scope_items(
+            reservation_scope_item_id TEXT PRIMARY KEY,
+            reservation_id TEXT NOT NULL REFERENCES provider_reservations(reservation_id) ON DELETE RESTRICT,
+            scope_kind TEXT NOT NULL CHECK(scope_kind IN ('request','operation','evidence-acquisition-run','analysis-run','provider-profile','provider-account','billing-scope','global')),
+            scope_id TEXT NOT NULL,
+            usage_json TEXT NOT NULL CHECK(json_valid(usage_json)),
+            nano_usd INTEGER NOT NULL CHECK(nano_usd >= 0),
+            UNIQUE(reservation_id,scope_kind,scope_id)
+        ) STRICT;
+        CREATE INDEX idx_provider_reservation_scope ON provider_reservation_scope_items(scope_kind,scope_id);
+        CREATE TRIGGER provider_reservation_scope_vector_guard
+        BEFORE INSERT ON provider_reservation_scope_items
+        BEGIN
+          SELECT CASE WHEN NOT EXISTS(
+            SELECT 1 FROM provider_reservations reservation
+            WHERE reservation.reservation_id = NEW.reservation_id
+              AND reservation.usage_json = NEW.usage_json
+              AND reservation.maximum_nano_usd = NEW.nano_usd)
+            THEN RAISE(ABORT, 'provider reservation scope must retain the exact operation reservation vector') END;
+        END;
+
+        DROP TRIGGER provider_budget_projection_authority_guard;
+        DROP TRIGGER provider_budget_projection_monotonic_update_guard;
+        DROP TRIGGER provider_budget_projection_updated_at_canonical_utc_update;
+        DROP TRIGGER provider_budget_projection_updated_at_canonical_utc_insert;
+        DROP TABLE provider_budget_projection;
+
+        CREATE TABLE provider_budget_limits(
+            scope_kind TEXT NOT NULL CHECK(scope_kind IN ('request','operation','evidence-acquisition-run','analysis-run','provider-profile','provider-account','billing-scope','global')),
+            scope_id TEXT NOT NULL CHECK(length(trim(scope_id)) > 0),
+            dispatch_count INTEGER NOT NULL CHECK(dispatch_count >= 0), input_tokens INTEGER NOT NULL CHECK(input_tokens >= 0),
+            output_tokens INTEGER NOT NULL CHECK(output_tokens >= 0), total_tokens INTEGER NOT NULL CHECK(total_tokens = input_tokens + output_tokens),
+            reasoning_tokens INTEGER NOT NULL CHECK(reasoning_tokens BETWEEN 0 AND output_tokens), cache_read_tokens INTEGER NOT NULL CHECK(cache_read_tokens >= 0),
+            cache_write_tokens INTEGER NOT NULL CHECK(cache_write_tokens >= 0), priced_tool_calls INTEGER NOT NULL CHECK(priced_tool_calls >= 0),
+            nano_usd INTEGER NOT NULL CHECK(nano_usd >= 0), authority_kind TEXT NOT NULL CHECK(authority_kind = 'local-hard-limit'), created_at TEXT NOT NULL,
+            PRIMARY KEY(scope_kind,scope_id)
+        ) STRICT;
+        CREATE TABLE provider_budget_events(
+            budget_event_id TEXT PRIMARY KEY CHECK(length(trim(budget_event_id)) > 0),
+            reservation_id TEXT NOT NULL REFERENCES provider_reservations(reservation_id) ON DELETE RESTRICT,
+            usage_entry_id TEXT REFERENCES provider_usage_entries(usage_entry_id) ON DELETE RESTRICT,
+            scope_kind TEXT NOT NULL, scope_id TEXT NOT NULL,
+            event_kind TEXT NOT NULL CHECK(event_kind IN ('reserved','released-undispatched','settled-complete','settled-failed-known','retained-ambiguous','retained-partial','retained-unavailable','settled-overrun','adjustment')),
+            dispatch_count INTEGER NOT NULL CHECK(dispatch_count >= 0), input_tokens INTEGER NOT NULL CHECK(input_tokens >= 0),
+            output_tokens INTEGER NOT NULL CHECK(output_tokens >= 0), total_tokens INTEGER NOT NULL CHECK(total_tokens = input_tokens + output_tokens),
+            reasoning_tokens INTEGER NOT NULL CHECK(reasoning_tokens BETWEEN 0 AND output_tokens), cache_read_tokens INTEGER NOT NULL CHECK(cache_read_tokens >= 0),
+            cache_write_tokens INTEGER NOT NULL CHECK(cache_write_tokens >= 0), priced_tool_calls INTEGER NOT NULL CHECK(priced_tool_calls >= 0),
+            nano_usd INTEGER NOT NULL CHECK(nano_usd >= 0), sequence INTEGER NOT NULL CHECK(sequence > 0), occurred_at TEXT NOT NULL,
+            UNIQUE(reservation_id,scope_kind,scope_id,sequence),
+            FOREIGN KEY(reservation_id,scope_kind,scope_id) REFERENCES provider_reservation_scope_items(reservation_id,scope_kind,scope_id) ON DELETE RESTRICT,
+            CHECK((event_kind IN ('settled-complete','settled-failed-known','settled-overrun') AND usage_entry_id IS NOT NULL)
+              OR (event_kind IN ('reserved','released-undispatched','retained-ambiguous') AND usage_entry_id IS NULL)
+              OR event_kind IN ('retained-partial','retained-unavailable','adjustment'))
+        ) STRICT;
+        CREATE INDEX idx_provider_budget_events_scope ON provider_budget_events(scope_kind,scope_id,sequence);
+        CREATE TABLE provider_usage_rollup_references(
+            usage_entry_id TEXT NOT NULL REFERENCES provider_usage_entries(usage_entry_id) ON DELETE RESTRICT,
+            scope_kind TEXT NOT NULL CHECK(scope_kind IN ('request','operation','evidence-acquisition-run','analysis-run','provider-profile','provider-account','billing-scope','global')),
+            scope_id TEXT NOT NULL CHECK(length(trim(scope_id)) > 0),
+            attribution_kind TEXT NOT NULL CHECK(attribution_kind IN ('owner','attached-pre-cutoff','non-owning-rollup')),
+            dispatch_sequence_cutoff INTEGER CHECK(dispatch_sequence_cutoff > 0), created_at TEXT NOT NULL,
+            PRIMARY KEY(usage_entry_id,scope_kind,scope_id),
+            CHECK((attribution_kind = 'attached-pre-cutoff') = (dispatch_sequence_cutoff IS NOT NULL))
+        ) STRICT;
+        CREATE TABLE provider_budget_settlement_receipts(
+            settlement_id TEXT PRIMARY KEY CHECK(length(trim(settlement_id)) > 0),
+            reservation_id TEXT NOT NULL UNIQUE REFERENCES provider_reservations(reservation_id) ON DELETE RESTRICT,
+            event_kind TEXT NOT NULL CHECK(event_kind IN ('released-undispatched','settled-complete','settled-failed-known','retained-ambiguous','retained-partial','retained-unavailable','settled-overrun')),
+            usage_entry_id TEXT REFERENCES provider_usage_entries(usage_entry_id) ON DELETE RESTRICT,
+            retry_permitted INTEGER NOT NULL CHECK(retry_permitted = 0),
+            created_at TEXT NOT NULL,
+            CHECK((event_kind IN ('settled-complete','settled-failed-known','settled-overrun') AND usage_entry_id IS NOT NULL)
+              OR event_kind IN ('released-undispatched','retained-ambiguous','retained-partial','retained-unavailable'))
+        ) STRICT;
+        CREATE TABLE provider_budget_projection(
+            scope_kind TEXT NOT NULL,
+            scope_id TEXT NOT NULL,
+            reserved_dispatch_count INTEGER NOT NULL CHECK(reserved_dispatch_count >= 0), reserved_input_tokens INTEGER NOT NULL CHECK(reserved_input_tokens >= 0),
+            reserved_output_tokens INTEGER NOT NULL CHECK(reserved_output_tokens >= 0), reserved_total_tokens INTEGER NOT NULL CHECK(reserved_total_tokens = reserved_input_tokens + reserved_output_tokens),
+            reserved_reasoning_tokens INTEGER NOT NULL CHECK(reserved_reasoning_tokens BETWEEN 0 AND reserved_output_tokens), reserved_cache_read_tokens INTEGER NOT NULL CHECK(reserved_cache_read_tokens >= 0),
+            reserved_cache_write_tokens INTEGER NOT NULL CHECK(reserved_cache_write_tokens >= 0), reserved_priced_tool_calls INTEGER NOT NULL CHECK(reserved_priced_tool_calls >= 0),
+            reserved_nano_usd INTEGER NOT NULL CHECK(reserved_nano_usd >= 0),
+            settled_dispatch_count INTEGER NOT NULL CHECK(settled_dispatch_count >= 0), settled_input_tokens INTEGER NOT NULL CHECK(settled_input_tokens >= 0),
+            settled_output_tokens INTEGER NOT NULL CHECK(settled_output_tokens >= 0), settled_total_tokens INTEGER NOT NULL CHECK(settled_total_tokens = settled_input_tokens + settled_output_tokens),
+            settled_reasoning_tokens INTEGER NOT NULL CHECK(settled_reasoning_tokens BETWEEN 0 AND settled_output_tokens), settled_cache_read_tokens INTEGER NOT NULL CHECK(settled_cache_read_tokens >= 0),
+            settled_cache_write_tokens INTEGER NOT NULL CHECK(settled_cache_write_tokens >= 0), settled_priced_tool_calls INTEGER NOT NULL CHECK(settled_priced_tool_calls >= 0),
+            settled_nano_usd INTEGER NOT NULL CHECK(settled_nano_usd >= 0),
+            unresolved_dispatch_count INTEGER NOT NULL CHECK(unresolved_dispatch_count >= 0), unresolved_input_tokens INTEGER NOT NULL CHECK(unresolved_input_tokens >= 0),
+            unresolved_output_tokens INTEGER NOT NULL CHECK(unresolved_output_tokens >= 0), unresolved_total_tokens INTEGER NOT NULL CHECK(unresolved_total_tokens = unresolved_input_tokens + unresolved_output_tokens),
+            unresolved_reasoning_tokens INTEGER NOT NULL CHECK(unresolved_reasoning_tokens BETWEEN 0 AND unresolved_output_tokens), unresolved_cache_read_tokens INTEGER NOT NULL CHECK(unresolved_cache_read_tokens >= 0),
+            unresolved_cache_write_tokens INTEGER NOT NULL CHECK(unresolved_cache_write_tokens >= 0), unresolved_priced_tool_calls INTEGER NOT NULL CHECK(unresolved_priced_tool_calls >= 0),
+            unresolved_nano_usd INTEGER NOT NULL CHECK(unresolved_nano_usd >= 0),
+            projection_version INTEGER NOT NULL CHECK(projection_version > 0),
+            updated_at TEXT NOT NULL,
+            PRIMARY KEY(scope_kind,scope_id),
+            FOREIGN KEY(scope_kind,scope_id) REFERENCES provider_budget_limits(scope_kind,scope_id) ON DELETE RESTRICT
+        ) STRICT;
+        CREATE TRIGGER provider_budget_projection_monotonic_update_guard
+        BEFORE UPDATE ON provider_budget_projection
+        WHEN NEW.scope_kind <> OLD.scope_kind OR NEW.scope_id <> OLD.scope_id
+          OR NEW.projection_version <= OLD.projection_version
+          OR NEW.updated_at <= OLD.updated_at
+        BEGIN SELECT RAISE(ABORT, 'provider budget projection must advance monotonically on one exact root'); END;
         """;
 
     private const string SchemaV6 =

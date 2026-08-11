@@ -2179,3 +2179,91 @@ acceptance. WP4 and WP9-WP11 retain their exact fresh owner gates. No network,
 DNS, provider, Credential Manager, native credential, private fixture, sibling
 repository, legacy/evaluator archive, helper execution, WP2 implementation,
 amend, or push action occurred during WP1 acceptance and handoff.
+
+## WP2 implementation start — 2026-08-11
+
+WP2 implementation began from exact clean handoff commit
+`01af949dc42c842eea6a922ef2fadba90039b3ec` on `codex/m1-s6`. Preflight
+confirmed that `docs/current-state.md` authorizes M1/S6/WP2 only and that the
+accepted WP1 candidate and its nine Implementation-active contracts are the
+sole product-contract prerequisite.
+
+The bounded implementation authority is Slice 6 plan section 13 together with
+accepted ADR-0016, ADR-0020, ADR-0023, ADR-0025 and the EVAL-0076, EVAL-0077,
+and EVAL-0081 synchronous non-live substrate. This package will implement the
+real SQLite atomic multi-scope reservation, final-gate, settlement, projection,
+replay, output, deterministic in-process simulator, public fixture/oracle, and
+WP2 verifier surfaces. It will not resolve credentials, execute the helper,
+perform DNS/network/provider work, access private or archived material,
+implement WP3 behavior, advance current state, or push.
+
+## WP2 implementation candidate — 2026-08-11
+
+The bounded WP2 vertical is implemented from the clean WP1 handoff without
+changing `docs/current-state.md` or the nine Implementation-active JSON and
+protobuf contracts. The candidate adds the exact immutable M1 capability and
+five-class rational price catalog, checked upward nano-USD arithmetic, a pure
+in-process deterministic provider matrix, and coordinator-owned SQLite
+services for eight-scope atomic vector reservation, immediate final fencing,
+transport certainty, one-owned settlement, unresolved holds, rollups,
+projection rebuild, replay, backup/restore, and non-live human/JSON output.
+
+The existing schema-6/storage-1.5.0 store receives the bounded additive
+`M1-S6-WP2-0006A` extension only from the exact accepted WP1 schema
+fingerprint. A direct detached-binary proof created a schema-6 database with
+the exact `01af949dc42c842eea6a922ef2fadba90039b3ec` handoff binary and opened it
+with the WP2 binary; the extension marker was `1`, all four WP2 tables were
+present, and the resulting declared fingerprint was
+`240a06fe2a9fa3d79db63985fbda329c8e83822534b93cbfb539062a109cad9e`.
+Fresh and extended stores converge on that identity. Non-empty or unknown
+same-version stores fail closed rather than being silently rewritten.
+
+Six answer-free, independently expected public packages are registered as
+separate development and validation variants for provider capability,
+authority, and atomic budget. The bounded resealer validates answer-free
+inputs and independently hashes the oracle, manifest, and registry. Product
+output never authors expected truth; the registry is closed-world and now has
+25 packages.
+
+Final implementation evidence is:
+
+1. Locked restore used the repository-local offline feed only. Release build
+   and format verification passed with zero warnings or errors.
+2. The exact WP2 focused commands passed Unit 4/0/0, Integration 7/0/0, and
+   Evaluation 3/0/0. `Budget` passed with nested 4/0/0, 7/0/0, and 3/0/0;
+   its 1,223-byte receipt has SHA-256
+   `c1141b9421652511e3bfcbbf674795938e09127a93737da0ddbcf29711dd8935`.
+   `BudgetFaults` passed with nested 3/0/0, 4/0/0, and 2/0/0; its 1,006-byte
+   receipt has SHA-256
+   `14321814005ad2cffbb0fb484540a8c4cff1758fb0a17c46ce2e2e83399b3a88`.
+   Both receipts declare zero network and zero credential operations.
+3. The real multi-connection SQLite contention test commits exactly one
+   complete eight-scope reservation and no partial debit. Focused tests cover
+   admission-time owner/profile/attempt/deadline revalidation, final fencing,
+   clock and prior-start rejection, known-undispatched full release,
+   ambiguous full hold, complete, failed-known, partial, unavailable, and
+   overrun settlement, no retry/fallback, immutable one-owner rollup plus
+   attached dispatch cutoff, projection equality, and populated backup/restore.
+4. Retained replay and non-live human/JSON rendering append no debit and grant
+   no new dispatch. Output states simulated non-network execution, unavailable
+   billing/credit gaps, and false network/credential use.
+5. The accumulated Release floor passed Unit 196/0/1, Contract 155/0/0,
+   Integration 77/0/0, and Evaluation 56/0/8. Category runs passed Unit
+   188/0/1, Contract 118/0/0, Integration 77/0/0, Evaluation 56/0/8, plus all
+   cross-project Security and Fault category checks. `Contracts` passed
+   22/0/0; `StateSurfaces` and `StateTotality` each passed 27/0/0 state checks
+   and 18/0/0 persistence checks. Their receipts have SHA-256
+   `5796ea323ec6533f6fa921bc7a6150179eb47b7fe493543ce86e459c93a397a4`,
+   `660ca2f9c428bbe0f0916f31c1e0592f141156a5ac0cd1563f9f6e3b1bb8f2ec`,
+   and `7f7fc8264429786a61911abe7fbda46522cd418d75d6c688fd364cd95cef5729`.
+6. The complete non-live analysis pipeline passed Contracts, Documentation,
+   Candidates, CandidateScale, Cases, Replay, Output, Safety, Traceability,
+   Comprehensive, and All. The 764-byte `All` receipt has SHA-256
+   `e235c37c1b31eef7fcf9d5e6bc8e1b148c9b6bcb1a80e30c19daae9c6e910303`.
+
+Semantic diff review found no fallback provider/mode, helper or credential
+execution, DNS/network path, product-authored oracle, private/archive access,
+protected-root write, WP3 implementation, current-state advancement, or Slice
+5 v1 byte/semantic change. Final package acceptance remains reserved to a
+fresh read-only reviewer; this entry records an implementation candidate, not
+self-acceptance. No push occurred.

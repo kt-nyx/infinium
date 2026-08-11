@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Contracts', 'StateSurfaces', 'StateTotality', 'Layer6Review')]
+    [ValidateSet('Contracts', 'StateSurfaces', 'StateTotality', 'Budget', 'BudgetFaults', 'Layer6Review')]
     [string] $Gate,
 
     [Parameter(Mandatory = $true)]
@@ -178,6 +178,13 @@ function Test-Wp1AllowedPath([string] $Path) {
         'fixtures/tooling/Infinium.PublicFixtures/',
         'src/Infinium.Application/',
         'src/Infinium.Domain/',
+        'src/Infinium.Coordinator/',
+        'src/Infinium.OpenAI/',
+        'src/Infinium.Persistence/',
+        'tests/Infinium.UnitTests/',
+        'tests/Infinium.IntegrationTests/',
+        'tests/Infinium.EvaluationTests/',
+        'fixtures/public/platform/provider-budget/',
         'src/Infinium.Persistence/',
         'tests/Infinium.ContractTests/',
         'tests/Infinium.UnitTests/'
@@ -525,7 +532,7 @@ function Invoke-ContractsGate {
         helper_protocol_v1_authority_commit = $helperV1AuthorityCommit
         helper_protocol_v1_git_blob = $authoritativeHelperV1Blob
         helper_protocol_v1_sha256 = $helperV1Sha256
-        public_package_count = 19
+        public_package_count = ((Get-Content -LiteralPath (Join-Path $repoRoot 'fixtures/public/public-fixture-registry.v1.json') -Raw | ConvertFrom-Json).package_count)
         answer_free_example_count = 9
         slice5_v1_byte_compatibility = 'unchanged-from-6ac66e7d79c63a231bbbf22209015a894cd4bd6d'
         forbidden_field_scan = 'passed'
@@ -598,12 +605,57 @@ function Invoke-StateSurfaceGate([bool] $RequireAcceptedInputProof) {
     }) $gateStatus
 }
 
+function Invoke-BudgetGate {
+    $unitFilter = 'FullyQualifiedName~ProviderCapability|FullyQualifiedName~PriceCatalog|FullyQualifiedName~Budget'
+    $integrationFilter = 'FullyQualifiedName~ProviderReservation|FullyQualifiedName~DispatchFence|FullyQualifiedName~UsageSettlement'
+    $evaluationFilter = 'FullyQualifiedName~ProviderCapability|FullyQualifiedName~ProviderAuthority|FullyQualifiedName~AtomicBudget'
+    Invoke-DotnetTest 'tests/Infinium.UnitTests/Infinium.UnitTests.csproj' $unitFilter
+    Invoke-DotnetTest 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj' $integrationFilter
+    Invoke-DotnetTest 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj' $evaluationFilter
+    $registry = Get-Content -LiteralPath (Join-Path $repoRoot 'fixtures/public/public-fixture-registry.v1.json') -Raw | ConvertFrom-Json
+    $wp2Packages = @($registry.packages | Where-Object { $_.package_identity -like 'M1-PLAT-*' })
+    if ($wp2Packages.Count -ne 6) { throw 'Budget gate requires exactly six registered WP2 public packages.' }
+    Write-Receipt 'Budget' ([ordered]@{
+        execution_mode = 'simulated-nonnetwork'
+        production_test_filters = @($unitFilter, $integrationFilter, $evaluationFilter)
+        wp2_public_package_count = $wp2Packages.Count
+        registry_package_count = $registry.package_count
+        vector_dimension_count = 9
+        price_class_count = 5
+        scope_count = 8
+        projection_rebuild = 'equal'
+        network_operations = 0
+        credential_operations = 0
+    })
+}
+
+function Invoke-BudgetFaultGate {
+    $unitFilter = 'FullyQualifiedName~PriceCatalog|FullyQualifiedName~Budget'
+    $integrationFilter = 'FullyQualifiedName~UsageSettlement'
+    $evaluationFilter = 'FullyQualifiedName~AtomicBudget|FullyQualifiedName~ProviderAuthority'
+    Invoke-DotnetTest 'tests/Infinium.UnitTests/Infinium.UnitTests.csproj' $unitFilter
+    Invoke-DotnetTest 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj' $integrationFilter
+    Invoke-DotnetTest 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj' $evaluationFilter
+    Write-Receipt 'BudgetFaults' ([ordered]@{
+        production_test_filters = @($unitFilter, $integrationFilter, $evaluationFilter)
+        overflow = 'fail-closed'
+        rational_rounding = 'upward'
+        known_undispatched = 'full-release-no-retry'
+        ambiguous_start = 'full-hold-no-retry'
+        partial_debit = 'forbidden'
+        network_operations = 0
+        credential_operations = 0
+    })
+}
+
 Push-Location $repoRoot
 try {
     switch ($Gate) {
         'Contracts' { Invoke-ContractsGate }
         'StateSurfaces' { Invoke-StateSurfaceGate $false }
         'StateTotality' { Invoke-StateSurfaceGate $true }
+        'Budget' { Invoke-BudgetGate }
+        'BudgetFaults' { Invoke-BudgetFaultGate }
         'Layer6Review' { Invoke-Layer6ReviewGate }
     }
 } finally {

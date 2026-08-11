@@ -52,10 +52,15 @@ public static class ProviderOperationContractInvariants
             throw new InvalidOperationException("Price components require finite non-negative quantities and a positive denominator.");
         }
         RequireClosedPriceRule(rule);
-        long product = checked(tokens * rule.NumeratorNanoUsd);
-        long quotient = product / rule.DenominatorTokens;
-        long remainder = product % rule.DenominatorTokens;
-        return checked(quotient + (remainder == 0 ? 0 : 1));
+        Int128 product = checked((Int128)tokens * rule.NumeratorNanoUsd);
+        Int128 quotient = product / rule.DenominatorTokens;
+        Int128 remainder = product % rule.DenominatorTokens;
+        Int128 rounded = checked(quotient + (remainder == 0 ? 0 : 1));
+        if (rounded > long.MaxValue)
+        {
+            throw new OverflowException("The exact rational nano-USD component exceeds signed 64-bit authority.");
+        }
+        return (long)rounded;
     }
 
     public static void Validate(ProviderOperationKind kind, ProviderFiniteLimitsContract value)

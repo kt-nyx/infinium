@@ -52,8 +52,8 @@ public sealed class PersistenceAndLifecycleTests
         using SqliteDataReader reader = command.ExecuteReader();
         Assert.IsTrue(reader.Read());
         Assert.AreEqual(1L, reader.GetInt64(0));
-        Assert.AreEqual(32L, reader.GetInt64(1));
-        Assert.AreEqual(58L, reader.GetInt64(2));
+        Assert.AreEqual(36L, reader.GetInt64(1));
+        Assert.AreEqual(66L, reader.GetInt64(2));
         reader.Close();
         command.CommandText = "SELECT COUNT(*) FROM sqlite_schema WHERE type='trigger' AND name='provider_usage_operation_ceiling_guard';";
         Assert.AreEqual(0L, (long)command.ExecuteScalar()!);
@@ -1553,14 +1553,20 @@ public sealed class PersistenceAndLifecycleTests
 
         command.CommandText =
             """
-            DROP TRIGGER provider_budget_projection_authority_guard;
+            INSERT INTO provider_budget_limits VALUES(
+              'operation','operation-restore',0,0,0,0,0,0,0,0,0,
+              'local-hard-limit','2026-08-10T00:00:00.9999998+00:00');
             INSERT INTO provider_budget_projection VALUES(
-              'operation','operation-restore',0,0,0,1,'2026-08-10T00:00:00.9999999+00:00');
+              'operation','operation-restore',
+              0,0,0,0,0,0,0,0,0,
+              0,0,0,0,0,0,0,0,0,
+              0,0,0,0,0,0,0,0,0,
+              1,'2026-08-10T00:00:00.9999999+00:00');
             UPDATE provider_budget_projection
             SET projection_version=2,updated_at='2026-08-10T00:00:01.0000000+00:00'
             WHERE scope_kind='operation' AND scope_id='operation-restore';
             """;
-        Assert.AreEqual(2, command.ExecuteNonQuery());
+        Assert.AreEqual(3, command.ExecuteNonQuery());
         command.CommandText =
             """
             UPDATE provider_budget_projection
@@ -3004,7 +3010,7 @@ public sealed class PersistenceAndLifecycleTests
         JsonNode.Parse(value)?.AsObject()
         ?? throw new InvalidOperationException("The test backup manifest is missing.");
 
-    private static void SeedProviderAuthorityBlock(string productRoot)
+    public static void SeedProviderAuthorityBlock(string productRoot, string lifecycleState = "created")
     {
         byte[] canonicalRequest = new byte[1024];
         string canonicalRequestSha256 = Convert.ToHexStringLower(SHA256.HashData(canonicalRequest));
@@ -3018,6 +3024,7 @@ public sealed class PersistenceAndLifecycleTests
         using SqliteConnection connection = OpenRaw(productRoot);
         using SqliteCommand command = connection.CreateCommand();
         command.Parameters.AddWithValue("$canonicalRequestSha256", canonicalRequestSha256);
+        command.Parameters.AddWithValue("$providerLifecycleState", lifecycleState);
         command.CommandText =
             """
             PRAGMA foreign_keys=ON;
@@ -3042,8 +3049,8 @@ public sealed class PersistenceAndLifecycleTests
             INSERT INTO runs VALUES('run-restore','install-restore','context-restore','config-restore','manifest-restore','created',0,1,1,'2026-08-10T00:00:00.0000000+00:00','2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO job_nodes VALUES('job-restore','run-restore',NULL,'provider','created',0,'2026-08-10T00:00:00.0000000+00:00','2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO durable_commands VALUES('command-restore','provider','run-restore',0,'recorded','created',NULL,'2026-08-10T00:00:00.0000000+00:00',NULL,NULL);
-            INSERT INTO evidence_acquisition_runs VALUES('acquisition-restore','install-restore','context-restore','config-restore','manifest-restore','run-restore','application-restore','cost-restore','created','2026-08-10T00:00:00.0000000+00:00');
-            INSERT INTO evidence_acquisition_job_nodes VALUES('acquisition-job-restore','acquisition-restore','provider','created','2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO evidence_acquisition_runs VALUES('acquisition-restore','install-restore','context-restore','config-restore','manifest-restore','run-restore','application-restore','cost-restore',$providerLifecycleState,'2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO evidence_acquisition_job_nodes VALUES('acquisition-job-restore','acquisition-restore','provider',$providerLifecycleState,'2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO evidence_acquisition_commands VALUES('acquisition-command-restore','acquisition-restore','provider-operation','2026-08-10T00:00:00.0000000+00:00','recorded');
             INSERT INTO provider_command_bindings VALUES('acquisition-command-restore','evidence-acquisition-run','acquisition-restore','2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO provider_effective_scan_configurations_v2 VALUES('config-v2-restore','config-restore','abababababababababababababababababababababababababababababababab','asserted-retained-v1-identity','profile-restore','generation-restore','gpt-5.6-sol','medium','current_turn','standard',0,'default',0,0,'none',0,'disabled','explicit',0,0,65536,73728,4096,1048576,1,600000000,120000,'["hosted-search","nexus","loot"]','2026-08-10T00:00:00.0000000+00:00');

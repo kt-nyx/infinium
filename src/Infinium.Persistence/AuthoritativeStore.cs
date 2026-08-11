@@ -373,6 +373,12 @@ public sealed partial class AuthoritativeStore : IDisposable
         return connection.BeginTransaction();
     }
 
+    private SqliteTransaction BeginImmediateTransaction()
+    {
+        sqliteVfs.VerifyAllGuards();
+        return connection.BeginTransaction(deferred: false);
+    }
+
     private long ScalarLong(
         string sql,
         SqliteTransaction? transaction,

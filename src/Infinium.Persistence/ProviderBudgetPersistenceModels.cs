@@ -1,0 +1,52 @@
+using Infinium.Domain.Contracts;
+
+namespace Infinium.Persistence;
+
+public sealed record ProviderBudgetReservationRequest(
+    string ReservationId,
+    string OperationId,
+    string AttemptId,
+    string RequestId,
+    ProviderBudgetVectorContract Reserved,
+    IReadOnlyList<ProviderBudgetScopeContract> Scopes,
+    DateTimeOffset ExpiresAt,
+    DateTimeOffset CreatedAt);
+
+public sealed record ProviderDispatchGateRequest(
+    string DispatchFenceId,
+    string AuthorizationId,
+    string OperationId,
+    string ReservationId,
+    string AttemptId,
+    string RequestId,
+    string ProfileId,
+    string GenerationId,
+    long RevocationEpoch,
+    long CoordinatorFencingEpoch,
+    DateTimeOffset EvaluatedAt);
+
+public sealed record ProviderBudgetSettlementRequest(
+    string SettlementId,
+    string ReservationId,
+    ProviderBudgetEventKind Kind,
+    string? UsageEntryId,
+    ProviderBudgetVectorContract? Actual,
+    DateTimeOffset OccurredAt);
+
+public sealed record ProviderDispatchGateReceipt(
+    string DispatchFenceId,
+    string ReservationId,
+    long CoordinatorFencingEpoch,
+    DateTimeOffset EffectiveGateTime,
+    DateTimeOffset Deadline,
+    bool Authorized,
+    string DecisionReason);
+
+public sealed record ProviderBudgetSettlementReceipt(
+    string SettlementId,
+    string ReservationId,
+    ProviderBudgetEventKind Kind,
+    ProviderBudgetVectorContract Released,
+    ProviderBudgetVectorContract Settled,
+    ProviderBudgetVectorContract Unresolved,
+    bool RetryPermitted);
