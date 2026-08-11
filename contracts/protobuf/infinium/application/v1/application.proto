@@ -68,6 +68,12 @@ message ProviderProfilePayload {
   infinium.domain.v1.CapabilitySnapshotId capability_snapshot_id = 5;
   uint64 revocation_epoch = 6;
   repeated string gaps = 7;
+  uint64 generation_ordinal = 8;
+  infinium.domain.v1.ProviderAccountIdentityId account_identity_id = 9;
+  infinium.domain.v1.BillingScopeIdentityId billing_scope_identity_id = 10;
+  string intent_id = 11;
+  string recovery_disposition = 12;
+  string cleanup_disposition = 13;
 }
 
 message GetProviderOperationRequest {
@@ -117,8 +123,61 @@ message ProviderOperationPayload {
   InputBoundProofStatus input_bound_proof_status = 33;
   string input_bound_policy_id = 34;
   string input_bound_policy_version = 35;
-  optional uint64 canonical_request_bytes = 36;
-  optional uint64 proved_input_token_bound = 37;
+  reserved 36, 37;
+  reserved "canonical_request_bytes", "proved_input_token_bound";
+  ProviderResponsePayload response = 38;
+  OptionalProviderQuantity total_tokens = 39;
+}
+
+message ProviderResponsePayload {
+  string response_record_id = 1;
+  string request_id = 2;
+  infinium.domain.v1.DispatchId dispatch_fence_id = 3;
+  infinium.common.v1.ContentDigest raw_response = 4;
+  uint64 maximum_raw_response_bytes = 5;
+  infinium.common.v1.ContentDigest response_headers = 6;
+  ProviderAvailabilityState response_headers_availability = 7;
+  optional uint32 http_status = 8;
+  string provider_response_id = 9;
+  string provider_request_id = 10;
+  ProviderAvailabilityState provider_request_id_availability = 11;
+  string response_state = 12;
+  string refusal_code = 13;
+  string incomplete_reason = 14;
+  string error_code = 15;
+  string requested_model = 16;
+  string returned_model = 17;
+  string requested_service_tier = 18;
+  string returned_service_tier = 19;
+  string reasoning_context = 20;
+  string reasoning_mode = 21;
+  string prompt_cache_mode = 22;
+  OptionalProviderQuantity dispatch_count = 23;
+  OptionalProviderQuantity input_tokens = 24;
+  OptionalProviderQuantity output_tokens = 25;
+  OptionalProviderQuantity total_tokens = 26;
+  OptionalProviderQuantity reasoning_tokens = 27;
+  OptionalProviderQuantity cache_read_tokens = 28;
+  OptionalProviderQuantity cache_write_tokens = 29;
+  OptionalProviderQuantity priced_tool_calls = 30;
+  OptionalProviderQuantity calculated_nano_usd = 31;
+  ProviderAvailabilityState billing_availability = 32;
+  ProviderAvailabilityState rate_availability = 33;
+  ProviderAvailabilityState credit_availability = 34;
+  repeated ProviderRateLimitFact rate_limit_facts = 35;
+  string validation_state = 36;
+  string admission_state = 37;
+  infinium.common.v1.Instant recorded_at = 38;
+}
+
+message ProviderRateLimitFact {
+  string scope = 1;
+  string dimension = 2;
+  ProviderAvailabilityState availability = 3;
+  optional uint64 limit = 4;
+  optional uint64 remaining = 5;
+  infinium.common.v1.Instant observed_at = 6;
+  infinium.common.v1.Instant resets_at = 7;
 }
 
 message OptionalProviderQuantity { ProviderAvailabilityState availability = 1; optional uint64 value = 2; }
@@ -187,6 +246,9 @@ message ProviderReplayPayload {
   string replay_edge_id = 31;
   int64 retained_hold_nano_usd = 32;
   ProviderOperationKind operation_kind = 33;
+  InputBoundProofStatus input_bound_proof_status = 34;
+  string input_bound_policy_id = 35;
+  string input_bound_policy_version = 36;
 }
 
 message SubmitProviderEnrollmentRequest {
@@ -216,8 +278,8 @@ message SubmitProviderOperationRequest {
   InputBoundProofStatus input_bound_proof_status = 16;
   string input_bound_policy_id = 17;
   string input_bound_policy_version = 18;
-  optional uint64 canonical_request_bytes = 19;
-  optional uint64 proved_input_token_bound = 20;
+  reserved 19, 20;
+  reserved "canonical_request_bytes", "proved_input_token_bound";
   string installation_snapshot_id = 21;
   string analysis_context_id = 22;
   string effective_configuration_id = 23;
@@ -304,7 +366,8 @@ enum ProviderReplayState {
 enum InputBoundProofStatus {
   INPUT_BOUND_PROOF_STATUS_UNSPECIFIED = 0;
   INPUT_BOUND_PROOF_STATUS_AUTHORITY_REQUIRED = 1;
-  INPUT_BOUND_PROOF_STATUS_PROVED = 2;
+  reserved 2;
+  reserved "INPUT_BOUND_PROOF_STATUS_PROVED";
 }
 
 message SubmitProviderCommandResponse {

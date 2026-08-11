@@ -165,7 +165,10 @@ function Invoke-StateSurfaceGate([bool] $RequireAcceptedInputProof) {
 
     $migrationPath = Join-Path $repoRoot 'src/Infinium.Persistence/AuthoritativeStore.Migrations.cs'
     foreach ($required in @('M1-S6-0006', 'SchemaV6', 'provider_operation_projection', 'provider_budget_projection',
-        'provider_price_rules', 'live_billable_slot', 'maximum_request_bytes', 'installation_snapshot_id')) {
+        'provider_operation_blocks', 'provider_price_rules', 'provider_rate_limit_facts',
+        'provider_authority_release_required', 'provider_budget_projection_authority_guard',
+        'idx_payload_identity_size', 'maximum_request_bytes',
+        'maximum_raw_response_bytes', 'installation_snapshot_id')) {
         if (-not (Select-String -LiteralPath $migrationPath -SimpleMatch $required -Quiet)) {
             throw "Schema-6 persistence declaration is missing $required."
         }
@@ -175,6 +178,18 @@ function Invoke-StateSurfaceGate([bool] $RequireAcceptedInputProof) {
     if ($traceability.contracts.Count -ne 9) {
         throw 'WP1 traceability inventory does not cover exactly nine contracts.'
     }
+    if ($traceability.maturity -ne 'Proposed') {
+        throw 'WP1 traceability must remain Proposed until WP1 is accepted.'
+    }
+    $declarationsPath = Join-Path $repoRoot 'src/Infinium.Persistence/ProviderPersistenceDeclarations.cs'
+    $declarations = Get-Content -LiteralPath $declarationsPath -Raw
+    $schemaFingerprintMatch = [regex]::Match(
+        $declarations,
+        'public const string SchemaFingerprint = "(?<value>[0-9a-f]{64})";')
+    if (-not $schemaFingerprintMatch.Success) {
+        throw 'Current schema-6 fingerprint declaration cannot be derived.'
+    }
+    $destinationSchemaFingerprint = $schemaFingerprintMatch.Groups['value'].Value
 
     $gateName = if ($RequireAcceptedInputProof) { 'StateTotality' } else { 'StateSurfaces' }
     $gateStatus = if ($RequireAcceptedInputProof) { 'blocked-authority-required' } else { 'passed' }
@@ -184,8 +199,8 @@ function Invoke-StateSurfaceGate([bool] $RequireAcceptedInputProof) {
         destination_schema = 6
         storage_contract = '1.5.0'
         source_schema_fingerprint = 'e6d27152687e6b0c806da58a716a9ab909817f046fbe3bf11d8846da5e5dc87d'
-        destination_schema_fingerprint = '688b702c7720d720d73d7be59816051b28010cd6a6da64f64b26514e894b8be7'
-        append_only_provider_history_table_count = 23
+        destination_schema_fingerprint = $destinationSchemaFingerprint
+        append_only_provider_history_table_count = 25
         rebuildable_projection_count = 3
         traceability_contract_count = $traceability.contracts.Count
         local_input_bound_proof = 'authority-required-no-accepted-local-tokenizer-or-framing-grammar'

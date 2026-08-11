@@ -40,9 +40,9 @@ public sealed class ProviderContractJsonCodecTests
     private static readonly ProviderFiniteLimitsContract Limits = new(
         65_536, 73_728, 4_096, 1_048_576, 1, 600_000_000, 120_000);
     private static readonly ProviderUsageContract Usage = new(
-        Q(1), Q(32), Q(16), Q(4), Q(0), Q(0), Q(0), Q(42),
-        DomainProviderAvailabilityState.Available,
-        DomainProviderAvailabilityState.Available,
+        Q(1), Q(32), Q(16), Q(48), Q(4), Q(0), Q(0), Q(0), Q(42),
+        DomainProviderAvailabilityState.Unavailable,
+        DomainProviderAvailabilityState.Unavailable,
         DomainProviderAvailabilityState.Unavailable);
 
     [TestMethod]
@@ -70,9 +70,11 @@ public sealed class ProviderContractJsonCodecTests
         AssertCanonical(
             new ProviderResponseDocument(
                 ContractConstants.ProviderResponseSchemaId, "1", Id("response-1"), Id("operation-1"), Id("request-1"),
-                Ref("payload-1"), 512, 200, "provider-response-1", ProviderResponseState.Completed,
+                Id("fence-1"), Ref("payload-1"), 512, 1_048_576, Ref("headers-1"), 128,
+                DomainProviderAvailabilityState.Available, 200, "provider-response-1", "provider-request-1",
+                DomainProviderAvailabilityState.Available, ProviderResponseState.Completed,
                 null, null, null, "gpt-5.6-sol", "gpt-5.6-sol", "default", "default", "current_turn",
-                "standard", "explicit", Usage, ProposalAdmissionState.Admitted, ProposalAdmissionState.Admitted, RecordedAt),
+                "standard", "explicit", Usage, [], ProposalAdmissionState.Admitted, ProposalAdmissionState.Admitted, RecordedAt),
             ProviderContractJsonCodecs.Serialize,
             ProviderContractJsonCodecs.DeserializeResponse);
         AssertCanonical(
@@ -111,15 +113,15 @@ public sealed class ProviderContractJsonCodecTests
         AssertCanonical(
             new RunOutputV2Document(
                 ContractConstants.RunOutputV2SchemaId, "1", Id("run-1"), Ref("run-output-v1"), Id("config-2"),
-                [new(Id("operation-1"), DomainProviderOperationKind.SourceClaimExtraction, Id("acquisition-1"), Id("authorization-1"), Id("response-1"),
-                    Id("admission-1"), Id("usage-1"), Id("settlement-1"), Id("replay-1"), "retained", false)],
+                [new(Id("operation-1"), DomainProviderOperationKind.SourceClaimExtraction, Id("acquisition-1"), null, null,
+                    null, null, null, null, "blocked", false)],
                 [Id("acquisition-1")], [], [], ["Synthetic gap"], false, false),
             ProviderContractJsonCodecs.Serialize,
             ProviderContractJsonCodecs.DeserializeRunOutputV2);
         AssertCanonical(
             new CliSummaryV2Document(
-                ContractConstants.CliSummaryV2SchemaId, "1", Id("run-1"), Fingerprint, "completed", Q(1), Q(32), Q(16), Q(4),
-                Q(0), Q(0), Q(42), Q(100), false, "retained-response", ["Synthetic gap"], false, false),
+                ContractConstants.CliSummaryV2SchemaId, "1", Id("run-1"), Fingerprint, "blocked", U(), U(), U(), U(),
+                U(), U(), U(), U(), false, "not-available", ["Synthetic gap"], false, false),
             ProviderContractJsonCodecs.Serialize,
             ProviderContractJsonCodecs.DeserializeCliSummaryV2);
     }
@@ -132,17 +134,20 @@ public sealed class ProviderContractJsonCodecTests
         AssertCanonical(
             new ProviderResponseDocument(
                 ContractConstants.ProviderResponseSchemaId, "1", Id("response-failed"), Id("operation-failed"), Id("request-failed"),
-                Ref("payload-failed"), 768, 429, "provider-response-failed", ProviderResponseState.Failed,
+                Id("fence-failed"), Ref("payload-failed"), 768, 1_048_576, Ref("headers-failed"), 128,
+                DomainProviderAvailabilityState.Available, 429, "provider-response-failed", "provider-request-failed",
+                DomainProviderAvailabilityState.Available, ProviderResponseState.Failed,
                 null, null, "rate-limit", "gpt-5.6-sol", "gpt-5.6-sol", "default", "default", "current_turn",
-                "standard", "explicit", Usage, ProposalAdmissionState.Rejected, ProposalAdmissionState.Rejected, RecordedAt),
+                "standard", "explicit", Usage, [], ProposalAdmissionState.Rejected, ProposalAdmissionState.Rejected, RecordedAt),
             ProviderContractJsonCodecs.Serialize,
             ProviderContractJsonCodecs.DeserializeResponse);
         AssertCanonical(
             new ProviderResponseDocument(
                 ContractConstants.ProviderResponseSchemaId, "1", Id("response-cancelled"), Id("operation-cancelled"), Id("request-cancelled"),
-                null, null, null, null, ProviderResponseState.Cancelled,
+                Id("fence-cancelled"), null, null, 1_048_576, null, null, DomainProviderAvailabilityState.Unavailable,
+                null, null, null, DomainProviderAvailabilityState.Unavailable, ProviderResponseState.Cancelled,
                 null, null, null, "gpt-5.6-sol", null, "default", null, "current_turn",
-                "standard", "explicit", CancelledUsage(), ProposalAdmissionState.Unavailable, ProposalAdmissionState.Unavailable, RecordedAt),
+                "standard", "explicit", CancelledUsage(), [], ProposalAdmissionState.Unavailable, ProposalAdmissionState.Unavailable, RecordedAt),
             ProviderContractJsonCodecs.Serialize,
             ProviderContractJsonCodecs.DeserializeResponse);
     }
@@ -193,7 +198,7 @@ public sealed class ProviderContractJsonCodecTests
             System.Text.Encoding.UTF8.GetBytes(operation.ToJsonString())));
 
         JsonObject response = examples["provider-response.v1.schema.json"]!.DeepClone().AsObject();
-        response.Remove("returned_model");
+        response["state"] = "completed";
         Assert.ThrowsExactly<InvalidDataException>(() => ProviderContractJsonCodecs.DeserializeResponse(
             System.Text.Encoding.UTF8.GetBytes(response.ToJsonString())));
 
@@ -271,6 +276,7 @@ public sealed class ProviderContractJsonCodecTests
                 AccessProfileId = new ProviderAccessProfileId { Value = "profile-1" },
                 GenerationId = new CredentialGenerationId { Value = "generation-1" },
                 GenerationOrdinal = 1,
+                AssignmentId = "assignment-invalid",
                 AssignmentKind = V2AssignmentKind.Enroll,
                 OperationKind = V2OperationKind.SourceClaimExtraction,
                 Limits = new V2Limits(),
@@ -291,6 +297,7 @@ public sealed class ProviderContractJsonCodecTests
                 GenerationId = new CredentialGenerationId { Value = "generation-1" },
                 GenerationOrdinal = 1,
                 AssignmentKind = V2AssignmentKind.Enroll,
+                AssignmentId = "assignment-credential",
             },
         };
         Assert.AreEqual(V2AssignmentKind.Enroll, HelperProtocolV2Codec.Decode(credentialAssignment.ToByteArray()).Assignment.AssignmentKind);
@@ -302,6 +309,7 @@ public sealed class ProviderContractJsonCodecTests
         blockedDispatch.Assignment.ProviderRequest = new V2ProviderRequest
         {
             DispatchId = new DispatchId { Value = "dispatch-1" },
+            RequestId = "request-1",
             CanonicalRequestBytes = ByteString.CopyFrom(requestBytes),
             CanonicalRequest = Digest(requestBytes),
             CapabilitySnapshotId = new CapabilitySnapshotId { Value = "capability-1" },
@@ -328,6 +336,7 @@ public sealed class ProviderContractJsonCodecTests
                 OperationId = new OperationId { Value = "credential-operation" },
                 AttemptId = new AttemptId { Value = "credential-attempt" },
                 AssignmentKind = V2AssignmentKind.Enroll,
+                AssignmentId = "assignment-credential",
                 Outcome = V2Outcome.Completed,
                 NonSecretReceipt = Digest(),
             },
@@ -384,38 +393,17 @@ public sealed class ProviderContractJsonCodecTests
         ProviderReplayPayload replay = new()
         {
             OperationId = new OperationId { Value = "operation-1" },
-            RetainedResponseId = "response-1",
-            ReplayState = ProviderReplayState.RetainedResponse,
-            DependencyManifestId = "manifest-1",
+            ReplayState = ProviderReplayState.NotAvailable,
             NetworkPermitted = false,
-            InstallationSnapshotId = "install-1",
-            AnalysisContextId = "context-1",
-            EffectiveConfigurationId = "config-1",
-            ResolvedInputManifestId = "manifest-1",
-            PromptId = "prompt-1",
-            PromptFingerprintSha256 = ByteString.CopyFrom(new byte[32]),
-            OutputSchemaId = "schema-1",
-            OutputSchemaFingerprintSha256 = ByteString.CopyFrom(new byte[32]),
-            CanonicalRequestBytes = ByteString.CopyFrom(replayBytes),
-            CanonicalRequestFingerprintSha256 = ByteString.CopyFrom(SHA256.HashData(replayBytes)),
-            SettingsFingerprintSha256 = ByteString.CopyFrom(new byte[32]),
-            ProfileId = new ProviderAccessProfileId { Value = "profile-1" },
-            GenerationId = new CredentialGenerationId { Value = "generation-1" },
-            CapabilitySnapshotId = new CapabilitySnapshotId { Value = "capability-1" },
-            PriceSnapshotId = new PriceSnapshotId { Value = "price-1" },
-            Limits = ApplicationLimits(),
-            DispatchDeadline = new Instant { UnixSeconds = 1 },
-            AuthorizationId = "authorization-1",
-            AttemptId = new AttemptId { Value = "attempt-1" },
-            RequestId = "request-1",
-            ReservationId = new ReservationGroupId { Value = "reservation-1" },
-            DispatchFenceId = new DispatchId { Value = "fence-1" },
-            UsageEntryId = "usage-1",
-            SettlementId = "settlement-1",
-            ReplayEdgeId = "replay-1",
-            OperationKind = Infinium.Contracts.Protobuf.Application.V1.ProviderOperationKind.SourceClaimExtraction,
+            InputBoundProofStatus = InputBoundProofStatus.AuthorityRequired,
+            InputBoundPolicyId = "unresolved-openai-responses-framing",
+            InputBoundPolicyVersion = "authority-required",
         };
         Assert.IsFalse(ProviderReplayPayload.Parser.ParseFrom(replay.ToByteArray()).NetworkPermitted);
+        GetProviderReplayRequest replayQuery = new() { OperationId = new OperationId { Value = "operation-1" } };
+        ApplicationProviderContractValidator.Validate(replayQuery);
+        replayQuery.RetainedResponseId = " ";
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(replayQuery));
 
         SubmitProviderOperationRequest submit = new()
         {
@@ -478,9 +466,31 @@ public sealed class ProviderContractJsonCodecTests
             GenerationId = new CredentialGenerationId { Value = "generation-1" },
             LifecycleState = AppProviderProfileLifecycleState.ActiveVerified,
             VerificationState = AppProviderAvailabilityState.Available,
+            GenerationOrdinal = 1,
+            AccountIdentityId = new ProviderAccountIdentityId { Value = "account-1" },
+            BillingScopeIdentityId = new BillingScopeIdentityId { Value = "billing-1" },
+            CapabilitySnapshotId = new CapabilitySnapshotId { Value = "capability-1" },
+            IntentId = "intent-1",
+            RecoveryDisposition = "not-required",
+            CleanupDisposition = "not-requested",
         };
         ApplicationProviderContractValidator.Validate(profile);
         profile.VerificationState = (AppProviderAvailabilityState)999;
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(profile));
+        profile.LifecycleState = AppProviderProfileLifecycleState.PendingEnrollment;
+        profile.VerificationState = AppProviderAvailabilityState.NotApplicable;
+        profile.AccountIdentityId = null;
+        profile.BillingScopeIdentityId = null;
+        profile.CapabilitySnapshotId = null;
+        ApplicationProviderContractValidator.Validate(profile);
+        profile.IntentId = string.Empty;
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(profile));
+        profile.LifecycleState = AppProviderProfileLifecycleState.SecureStoreUnavailable;
+        profile.VerificationState = AppProviderAvailabilityState.Unavailable;
+        profile.RecoveryDisposition = "unavailable";
+        profile.CleanupDisposition = "failed";
+        profile.IntentId = "intent-1";
+        profile.AccountIdentityId = new ProviderAccountIdentityId { Value = "account-1" };
         Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(profile));
 
         ProviderOperationPayload reserved = new()
@@ -491,27 +501,21 @@ public sealed class ProviderContractJsonCodecTests
             CapabilitySnapshotId = new CapabilitySnapshotId { Value = "capability-1" },
             PriceSnapshotId = new PriceSnapshotId { Value = "price-1" },
             OperationKind = Infinium.Contracts.Protobuf.Application.V1.ProviderOperationKind.SourceClaimExtraction,
-            State = ProviderOperationLifecycleState.Reserved,
+            State = ProviderOperationLifecycleState.InputBoundBlocked,
             SettlementState = ProviderSettlementState.NotStarted,
             ReplayState = ProviderReplayState.NotAvailable,
-            InputBoundProofStatus = InputBoundProofStatus.Proved,
-            CanonicalRequestBytes = 3,
-            ProvedInputTokenBound = 3,
-            OwnerKind = "analysis-run",
-            OwnerId = "run-1",
-            JobNodeId = "job-1",
-            AuthorizationId = "authorization-1",
-            AttemptId = new AttemptId { Value = "attempt-1" },
-            RequestId = "request-1",
-            ReservationId = new ReservationGroupId { Value = "reservation-1" },
+            InputBoundProofStatus = InputBoundProofStatus.AuthorityRequired,
+            InputBoundPolicyId = "unresolved-openai-responses-framing",
+            InputBoundPolicyVersion = "authority-required",
             InputTokens = UnavailableApplicationQuantity(),
             OutputTokens = UnavailableApplicationQuantity(),
+            TotalTokens = UnavailableApplicationQuantity(),
             CalculatedNanoUsd = UnavailableApplicationQuantity(),
             DispatchCount = UnavailableApplicationQuantity(),
             ReasoningTokens = UnavailableApplicationQuantity(),
             CacheReadTokens = UnavailableApplicationQuantity(),
             CacheWriteTokens = UnavailableApplicationQuantity(),
-            ReservedNanoUsd = new OptionalProviderQuantity { Availability = AppProviderAvailabilityState.Available, Value = 5 },
+            ReservedNanoUsd = UnavailableApplicationQuantity(),
         };
         ApplicationProviderContractValidator.Validate(reserved);
         reserved.SettlementState = ProviderSettlementState.Settled;
@@ -524,7 +528,7 @@ public sealed class ProviderContractJsonCodecTests
         replay.NetworkPermitted = true;
         Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(replay));
         replay.NetworkPermitted = false;
-        replay.ReplayState = ProviderReplayState.NotAvailable;
+        replay.ReplayState = ProviderReplayState.RetainedResponse;
         Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(replay));
     }
 
@@ -535,6 +539,7 @@ public sealed class ProviderContractJsonCodecTests
     {
         using JsonDocument inventory = JsonDocument.Parse(File.ReadAllBytes(TestRepository.PathFromRoot(
             "docs", "plans", "milestones", "m1", "slices", "s6", "wp1-contract-traceability.v1.json")));
+        Assert.AreEqual("Proposed", inventory.RootElement.GetProperty("maturity").GetString());
         JsonElement[] contracts = inventory.RootElement.GetProperty("contracts").EnumerateArray().ToArray();
         Assert.AreEqual(9, contracts.Length);
         CollectionAssert.AreEquivalent(
@@ -566,16 +571,53 @@ public sealed class ProviderContractJsonCodecTests
                 ResolvePersistence(mapping.GetProperty("persistence"), migration, schemaName, path);
                 ResolveProjection(mapping.GetProperty("output"), schemaName, path, "output");
                 ResolveProjection(mapping.GetProperty("replay"), schemaName, path, "replay");
+                AssertPathSpecificOmission(mapping.GetProperty("persistence"), path, "not_persisted_reason");
+                AssertPathSpecificOmission(mapping.GetProperty("output"), path, "omission_reason");
+                AssertPathSpecificOmission(mapping.GetProperty("replay"), path, "omission_reason");
             }
         }
 
-        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "job_node_id", "provider_operation_authorizations.job_node_id");
-        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "request_id", "provider_requests.request_id");
+        AssertTraceMapping(contracts, "provider-access-profile.v1.schema.json", "generation_id", "provider_generations.generation_id", "ADR-0020");
+        AssertTraceMapping(contracts, "provider-access-profile.v1.schema.json", "account_identity_id", "provider_profile_projection.account_identity_id", "ADR-0020");
+        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "operation_id", "provider_operation_blocks.operation_id", "ADR-0023");
+        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "job_node_id", "provider_operation_blocks.job_node_id");
+        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "owner_id", "provider_operation_blocks.owner_id");
+        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "$defs.inputBoundProof.status", "provider_operation_blocks.input_bound_proof_status", "ADR-0025");
         AssertTraceMapping(contracts, "provider-response.v1.schema.json", "raw_response_payload",
             "provider_responses.raw_response_payload_id", "provider_responses.raw_response_fingerprint");
+        AssertTraceMapping(contracts, "provider-response.v1.schema.json", "response_headers_payload",
+            "provider_responses.response_headers_payload_id", "provider_responses.response_headers_fingerprint");
+        AssertTraceMapping(contracts, "provider-response.v1.schema.json", "provider_request_id", "provider_responses.provider_request_id", "ADR-0025");
+        AssertTraceMapping(contracts, "provider-response.v1.schema.json", "maximum_raw_response_bytes", "provider_responses.maximum_raw_response_bytes", "ADR-0025");
+        AssertTraceMapping(contracts, "provider-response.v1.schema.json", "usage", "provider_usage_entries.total_tokens", "ADR-0025");
+        AssertTraceMapping(contracts, "provider-response.v1.schema.json", "$defs.rateLimitFact.scope", "provider_rate_limit_facts.scope", "ADR-0025");
         AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "$defs.capabilitySnapshot.model", "provider_capability_snapshots.model", "ADR-0020");
         AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "$defs.priceSnapshot.model", "provider_price_snapshots.model", "ADR-0020");
         AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "$defs.priceRule.rule_id", "provider_price_rules.rule_id", "ADR-0020");
+
+        foreach (JsonElement mapping in contracts.SelectMany(x => x.GetProperty("field_mappings").EnumerateArray()))
+        {
+            string path = mapping.GetProperty("path").GetString()!;
+            if (!path.EndsWith("_id", StringComparison.Ordinal)
+                || path == "operation_id" || path.EndsWith(".operation_id", StringComparison.Ordinal))
+            {
+                continue;
+            }
+            JsonElement persistence = mapping.GetProperty("persistence");
+            string[] columns = persistence.TryGetProperty("table_columns", out JsonElement many)
+                ? many.EnumerateArray().Select(x => x.GetString()!).ToArray()
+                : persistence.TryGetProperty("table_column", out JsonElement one) ? [one.GetString()!] : [];
+            CollectionAssert.DoesNotContain(columns, "provider_operation_blocks.operation_id", path);
+            CollectionAssert.DoesNotContain(columns, "provider_operation_projection.operation_id", path);
+        }
+    }
+
+    private static void AssertPathSpecificOmission(JsonElement seam, string path, string property)
+    {
+        if (seam.TryGetProperty(property, out JsonElement reason))
+        {
+            StringAssert.Contains(reason.GetString(), path, $"{path}:{property}");
+        }
     }
 
     private static void ResolveSourceSymbol(JsonElement seam, string schema, string path, string kind)
@@ -686,7 +728,7 @@ public sealed class ProviderContractJsonCodecTests
             "input", "none", "global", "USD", 1, 1, "synthetic-v1")]);
     private static ProviderQuantityContract Q(long value) => new(DomainProviderAvailabilityState.Available, value);
     private static ProviderUsageContract CancelledUsage() => new(
-        Q(0), U(), U(), U(), U(), U(), U(), U(),
+        Q(0), U(), U(), U(), U(), U(), U(), U(), U(),
         DomainProviderAvailabilityState.Unavailable,
         DomainProviderAvailabilityState.Unavailable,
         DomainProviderAvailabilityState.Unavailable);
@@ -696,7 +738,7 @@ public sealed class ProviderContractJsonCodecTests
     private static ProviderInputBoundProofContract BlockedProof() => new(
         ProviderOperationContractInvariants.LocalInputBoundPolicyId,
         ProviderOperationContractInvariants.LocalInputBoundPolicyVersion,
-        ProviderInputBoundProofState.AuthorityRequired, null, null);
+        ProviderInputBoundProofState.AuthorityRequired);
     private static OpaqueId Id(string value) => new(value);
     private delegate T Deserialize<T>(ReadOnlySpan<byte> bytes);
 
@@ -761,6 +803,7 @@ public sealed class ProviderContractJsonCodecTests
             OperationId = new OperationId { Value = "operation-1" },
             AttemptId = new AttemptId { Value = "attempt-1" },
             CoordinatorFencingEpoch = 1,
+            ExpiresAt = new Instant { UnixSeconds = 1 },
             OneUseNonceFingerprintSha256 = ByteString.CopyFrom(new byte[32]),
         },
     };

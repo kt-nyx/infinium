@@ -57,7 +57,8 @@ public static class HelperProtocolV2Codec
             case HelperPrivateFrameV2.PayloadOneofCase.Bootstrap:
                 Require(frame.Bootstrap.OperationId?.Value, "bootstrap.operation_id");
                 Require(frame.Bootstrap.AttemptId?.Value, "bootstrap.attempt_id");
-                if (frame.Bootstrap.CoordinatorFencingEpoch == 0 || frame.Bootstrap.OneUseNonceFingerprintSha256.Length != 32)
+                if (frame.Bootstrap.CoordinatorFencingEpoch == 0 || frame.Bootstrap.OneUseNonceFingerprintSha256.Length != 32
+                    || !ValidInstant(frame.Bootstrap.ExpiresAt))
                 {
                     throw new InvalidDataException("Helper v2 bootstrap is incomplete.");
                 }
@@ -82,6 +83,7 @@ public static class HelperProtocolV2Codec
         Require(value.AttemptId?.Value, "assignment.attempt_id");
         Require(value.AccessProfileId?.Value, "assignment.access_profile_id");
         Require(value.GenerationId?.Value, "assignment.generation_id");
+        Require(value.AssignmentId, "assignment.assignment_id");
         if (!Enum.IsDefined(value.AssignmentKind) || value.AssignmentKind == HelperAssignmentKindV2.Unspecified
             || value.GenerationOrdinal == 0)
         {
@@ -105,6 +107,7 @@ public static class HelperProtocolV2Codec
             Require(request.CapabilitySnapshotId?.Value, "provider_request.capability_snapshot_id");
             Require(request.PriceSnapshotId?.Value, "provider_request.price_snapshot_id");
             Require(request.ReservationGroupId?.Value, "provider_request.reservation_group_id");
+            Require(request.RequestId, "provider_request.request_id");
             if (request.EndpointIdentity != ProviderEndpointV2.OpenaiResponses
                 || request.CanonicalRequestBytes.IsEmpty
                 || (uint)request.CanonicalRequestBytes.Length > value.Limits.MaximumRequestBytes
@@ -181,16 +184,34 @@ public static class HelperProtocolV2Codec
             throw new InvalidDataException("Helper v2 receipt outcome is unknown.");
         }
         bool dispatch = value.AssignmentKind == HelperAssignmentKindV2.ProviderDispatch;
-        bool completed = value.Outcome == HelperOutcomeV2.Completed;
+        Require(value.AssignmentId, "receipt.assignment_id");
+        ValidateOptionalUInt64(value.InputTokens, "receipt.input_tokens");
+        ValidateOptionalUInt64(value.OutputTokens, "receipt.output_tokens");
+        ValidateOptionalUInt64(value.ReasoningTokens, "receipt.reasoning_tokens");
+        ValidateOptionalUInt64(value.CacheReadTokens, "receipt.cache_read_tokens");
+        ValidateOptionalUInt64(value.CacheWriteTokens, "receipt.cache_write_tokens");
         bool noTransport = value.Outcome is HelperOutcomeV2.Unavailable or HelperOutcomeV2.Cancelled;
-        if ((dispatch && completed && (!value.TransportMayHaveStarted || !ValidDigest(value.RawResponse)))
-            || (!dispatch && (value.TransportMayHaveStarted || value.RawResponse is not null
+        bool hasResponse = value.RawResponse is not null;
+        if (value.OutcomeHasResponse != hasResponse
+            || (hasResponse && !ValidDigest(value.RawResponse))
+            || (!dispatch && (value.TransportMayHaveStarted || hasResponse
                 || value.InputTokens is not null || value.OutputTokens is not null || value.ReasoningTokens is not null
-                || value.CacheReadTokens is not null || value.CacheWriteTokens is not null))
-            || (noTransport && (value.TransportMayHaveStarted || value.RawResponse is not null))
+                || value.CacheReadTokens is not null || value.CacheWriteTokens is not null
+                || !string.IsNullOrEmpty(value.RequestId) || value.DispatchId is not null || value.InputBoundProof is not null))
+            || (noTransport && (value.TransportMayHaveStarted || hasResponse))
             || !ValidDigest(value.NonSecretReceipt))
         {
             throw new InvalidDataException("Helper v2 receipt outcome contradicts transport or response evidence.");
+        }
+        if (dispatch)
+        {
+            Require(value.RequestId, "receipt.request_id");
+            Require(value.DispatchId?.Value, "receipt.dispatch_id");
+            if (!IsAuthorityRequiredProof(value.InputBoundProof))
+            {
+                throw new InvalidDataException("Provider receipt must retain the exact blocked assignment, request, fence, and proof binding.");
+            }
+            throw new NotSupportedException("Provider dispatch receipts are unreachable until accepted local input-bound authority changes the helper contract.");
         }
     }
 
@@ -198,9 +219,7 @@ public static class HelperProtocolV2Codec
         proof is not null
         && proof.PolicyId == "unresolved-openai-responses-framing"
         && proof.PolicyVersion == "authority-required"
-        && proof.Status == InputBoundProofStatusV2.AuthorityRequired
-        && !proof.HasCanonicalRequestBytes
-        && !proof.HasProvedInputTokenBound;
+        && proof.Status == InputBoundProofStatusV2.AuthorityRequired;
 
     private static void RejectUnknownFields(IMessage message, string path)
     {
@@ -248,6 +267,20 @@ public static class HelperProtocolV2Codec
 
     private static bool ValidInstant(Infinium.Contracts.Protobuf.Common.V1.Instant? value) =>
         value is not null && value.UnixSeconds > 0 && value.Nanoseconds is >= 0 and <= 999_999_999;
+
+    private static void ValidateOptionalUInt64(Infinium.Contracts.Protobuf.Common.V1.OptionalUInt64? value, string field)
+    {
+        if (value is null)
+        {
+            return;
+        }
+        if (!Enum.IsDefined(value.Availability)
+            || value.Availability == Infinium.Contracts.Protobuf.Common.V1.AvailabilityState.Unspecified
+            || (value.Availability != Infinium.Contracts.Protobuf.Common.V1.AvailabilityState.Available && value.Value != 0))
+        {
+            throw new InvalidDataException(field + " availability contradicts its value.");
+        }
+    }
 
     private static void Require(string? value, string name)
     {

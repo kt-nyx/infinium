@@ -33,7 +33,11 @@ public static class ApplicationProviderContractValidator
     public static void Validate(GetProviderReplayRequest value)
     {
         Require(value.OperationId?.Value, "operation_id");
-        Require(value.RetainedResponseId, "retained_response_id");
+        if (value.RetainedResponseId.Length > 128
+            || (value.RetainedResponseId.Length > 0 && !Has(value.RetainedResponseId)))
+        {
+            throw new InvalidDataException("Replay lookup response identity must be absent or a bounded retained identity.");
+        }
     }
 
     public static void Validate(SubmitProviderEnrollmentRequest value)
@@ -50,10 +54,50 @@ public static class ApplicationProviderContractValidator
     public static void Validate(ProviderProfilePayload value)
     {
         Require(value.ProfileId?.Value, "profile_id");
+        Require(value.GenerationId?.Value, "generation_id");
+        bool identityGroupAbsent = value.AccountIdentityId is null && value.BillingScopeIdentityId is null
+            && value.CapabilitySnapshotId is null;
+        bool identityGroupPresent = Has(value.AccountIdentityId?.Value) && Has(value.BillingScopeIdentityId?.Value)
+            && Has(value.CapabilitySnapshotId?.Value);
+        bool intentPresent = !string.IsNullOrWhiteSpace(value.IntentId);
         if (!Enum.IsDefined(value.LifecycleState) || value.LifecycleState == ProviderProfileLifecycleState.Unspecified
             || !Enum.IsDefined(value.VerificationState) || value.VerificationState == ProviderAvailabilityState.Unspecified)
         {
             throw new InvalidDataException("Provider profile contains an unknown numeric lifecycle or verification state.");
+        }
+        bool validShape = value.LifecycleState switch
+        {
+            ProviderProfileLifecycleState.PendingEnrollment => identityGroupAbsent && intentPresent
+                && value.VerificationState == ProviderAvailabilityState.NotApplicable
+                && value.RecoveryDisposition == "not-required" && value.CleanupDisposition == "not-requested",
+            ProviderProfileLifecycleState.ActiveUnverified => identityGroupPresent && intentPresent
+                && value.VerificationState == ProviderAvailabilityState.Unavailable
+                && value.RecoveryDisposition == "not-required" && value.CleanupDisposition == "not-requested",
+            ProviderProfileLifecycleState.ActiveVerified or ProviderProfileLifecycleState.Replacing =>
+                identityGroupPresent && intentPresent && value.VerificationState == ProviderAvailabilityState.Available
+                && value.RecoveryDisposition == "not-required" && value.CleanupDisposition == "not-requested",
+            ProviderProfileLifecycleState.Disabled => identityGroupPresent && intentPresent
+                && value.VerificationState == ProviderAvailabilityState.Unavailable
+                && value.RecoveryDisposition == "not-required" && value.CleanupDisposition == "not-requested",
+            ProviderProfileLifecycleState.DeletePending => identityGroupPresent && intentPresent
+                && value.VerificationState == ProviderAvailabilityState.Unavailable
+                && value.RecoveryDisposition == "not-required" && value.CleanupDisposition == "pending",
+            ProviderProfileLifecycleState.Deleted => identityGroupAbsent && !intentPresent
+                && value.VerificationState == ProviderAvailabilityState.Unavailable
+                && value.RecoveryDisposition == "not-required" && value.CleanupDisposition == "confirmed",
+            ProviderProfileLifecycleState.SecureStoreUnavailable => (identityGroupAbsent || identityGroupPresent)
+                && intentPresent && value.VerificationState == ProviderAvailabilityState.Unavailable
+                && value.RecoveryDisposition == "unavailable"
+                && value.CleanupDisposition is "not-requested" or "failed",
+            ProviderProfileLifecycleState.RecoveryRequired => (identityGroupAbsent || identityGroupPresent)
+                && intentPresent && value.VerificationState == ProviderAvailabilityState.Unavailable
+                && value.RecoveryDisposition == "required"
+                && value.CleanupDisposition is "not-requested" or "failed",
+            _ => false,
+        };
+        if (value.GenerationId is null || value.GenerationOrdinal == 0 || !validShape)
+        {
+            throw new InvalidDataException("Provider profile lifecycle requires an exact generation/account/billing/capability/intent identity shape.");
         }
     }
 
@@ -73,6 +117,7 @@ public static class ApplicationProviderContractValidator
         }
         Validate(value.InputTokens);
         Validate(value.OutputTokens);
+        Validate(value.TotalTokens);
         Validate(value.CalculatedNanoUsd);
         Validate(value.DispatchCount);
         Validate(value.ReasoningTokens);
@@ -88,14 +133,13 @@ public static class ApplicationProviderContractValidator
         bool blocked = value.InputBoundProofStatus == InputBoundProofStatus.AuthorityRequired;
         bool anyDownstream = Has(value.AuthorizationId) || value.AttemptId is not null || Has(value.RequestId)
             || value.ReservationId is not null || value.DispatchFenceId is not null || Has(value.ResponseRecordId)
-            || Has(value.UsageEntryId) || Has(value.SettlementId) || Has(value.ReplayEdgeId);
+            || value.Response is not null || Has(value.UsageEntryId) || Has(value.SettlementId) || Has(value.ReplayEdgeId);
         if (blocked)
         {
             if (value.InputBoundPolicyId != "unresolved-openai-responses-framing"
                 || value.InputBoundPolicyVersion != "authority-required"
-                || value.HasCanonicalRequestBytes || value.HasProvedInputTokenBound
                 || value.State != ProviderOperationLifecycleState.InputBoundBlocked || anyDownstream
-                || AnyValue(value.DispatchCount, value.InputTokens, value.OutputTokens, value.ReasoningTokens,
+                || AnyValue(value.DispatchCount, value.InputTokens, value.OutputTokens, value.TotalTokens, value.ReasoningTokens,
                     value.CacheReadTokens, value.CacheWriteTokens, value.CalculatedNanoUsd, value.ReservedNanoUsd)
                 || value.SettlementState != ProviderSettlementState.NotStarted
                 || value.ReplayState != ProviderReplayState.NotAvailable || value.UnresolvedHold)
@@ -104,19 +148,7 @@ public static class ApplicationProviderContractValidator
             }
             return;
         }
-
-        if (!value.HasCanonicalRequestBytes || !value.HasProvedInputTokenBound
-            || value.CanonicalRequestBytes == 0 || value.ProvedInputTokenBound == 0)
-        {
-            throw new InvalidDataException("A non-blocked provider operation requires an explicit proved request bound.");
-        }
-        Require(value.OwnerId, "owner_id");
-        Require(value.JobNodeId, "job_node_id");
-        if (value.OwnerKind is not ("analysis-run" or "evidence-acquisition-run"))
-        {
-            throw new InvalidDataException("Provider operation owner kind is unknown.");
-        }
-        ValidateOperationShape(value);
+        throw new InvalidDataException("No non-blocked provider operation state exists before an accepted local input-bound policy changes this contract.");
     }
 
     public static void Validate(ProviderReplayPayload value)
@@ -139,17 +171,18 @@ public static class ApplicationProviderContractValidator
             || Has(value.RequestId) || value.ReservationId is not null || value.DispatchFenceId is not null
             || Has(value.UsageEntryId) || Has(value.SettlementId) || Has(value.ReplayEdgeId)
             || value.RetainedHoldNanoUsd != 0 || value.OperationKind != ProviderOperationKind.Unspecified;
+        bool blockedProof = value.InputBoundProofStatus == InputBoundProofStatus.AuthorityRequired
+            && value.InputBoundPolicyId == "unresolved-openai-responses-framing"
+            && value.InputBoundPolicyVersion == "authority-required";
         if (unavailable)
         {
-            if (anyBinding)
+            if (anyBinding || !blockedProof)
             {
-                throw new InvalidDataException("Unavailable replay cannot fabricate retained response or dependency bindings.");
+                throw new InvalidDataException("Unavailable replay must retain only the authority-required proof and cannot fabricate response or dependency bindings.");
             }
             return;
         }
-        Require(value.RetainedResponseId, "retained_response_id");
-        Require(value.DependencyManifestId, "dependency_manifest_id");
-        RequireReplayBindings(value);
+        throw new InvalidDataException("Retained provider replay is unreachable before accepted input-bound authority enables dispatch.");
     }
 
     public static void Validate(SubmitProviderOperationRequest value)
@@ -188,8 +221,7 @@ public static class ApplicationProviderContractValidator
         }
         if (value.InputBoundProofStatus != InputBoundProofStatus.AuthorityRequired
             || value.InputBoundPolicyId != "unresolved-openai-responses-framing"
-            || value.InputBoundPolicyVersion != "authority-required"
-            || value.HasCanonicalRequestBytes || value.HasProvedInputTokenBound)
+            || value.InputBoundPolicyVersion != "authority-required")
         {
             throw new InvalidDataException("Provider submit must retain the exact unresolved input-bound proof status.");
         }
@@ -203,6 +235,10 @@ public static class ApplicationProviderContractValidator
 
     private static void Validate(OptionalProviderQuantity value)
     {
+        if (value is null)
+        {
+            throw new InvalidDataException("Provider quantity availability is required.");
+        }
         if (!Enum.IsDefined(value.Availability) || value.Availability == ProviderAvailabilityState.Unspecified
             || (value.Availability == ProviderAvailabilityState.Available) != value.HasValue)
         {
@@ -242,84 +278,4 @@ public static class ApplicationProviderContractValidator
     private static bool Has(string? value) => !string.IsNullOrWhiteSpace(value);
 
     private static bool AnyValue(params OptionalProviderQuantity[] values) => values.Any(x => x.HasValue);
-
-    private static void ValidateOperationShape(ProviderOperationPayload value)
-    {
-        bool authorization = Has(value.AuthorizationId);
-        bool attempt = value.AttemptId is not null;
-        bool request = Has(value.RequestId);
-        bool reservation = value.ReservationId is not null;
-        bool fence = value.DispatchFenceId is not null;
-        bool response = Has(value.ResponseRecordId);
-        bool usage = Has(value.UsageEntryId);
-        bool settlement = Has(value.SettlementId);
-        bool replay = Has(value.ReplayEdgeId);
-        bool reserved = value.ReservedNanoUsd is { HasValue: true, Value: > 0 };
-        bool coherentUnresolvedDependencies = (!response && !usage && !replay)
-            || (response && !usage && !replay) || (response && usage && replay);
-        bool valid = value.State switch
-        {
-            ProviderOperationLifecycleState.Proposed => !authorization && !attempt && !request && !reservation
-                && !fence && !response && !usage && !settlement && !replay,
-            ProviderOperationLifecycleState.Confirmed => authorization && !attempt && !request && !reservation
-                && !fence && !response && !usage && !settlement && !replay,
-            ProviderOperationLifecycleState.Reserved or ProviderOperationLifecycleState.Assigned =>
-                authorization && attempt && request && reservation && !fence && !response && !usage && !settlement && !replay
-                && reserved,
-            ProviderOperationLifecycleState.FinalGateAuthorized or ProviderOperationLifecycleState.TransportNotStarted =>
-                authorization && attempt && request && reservation && fence && !response && !usage && !settlement && !replay && reserved,
-            ProviderOperationLifecycleState.TransportMayHaveStarted => authorization && attempt && request && reservation
-                && fence && !response && !usage && !settlement && !replay && reserved && value.DispatchCount.Value == 1,
-            ProviderOperationLifecycleState.ResponseStaged => authorization && attempt && request && reservation
-                && fence && response && !usage && !settlement && !replay && reserved && value.DispatchCount.Value == 1,
-            ProviderOperationLifecycleState.Admitted or ProviderOperationLifecycleState.Rejected =>
-                authorization && attempt && request && reservation && fence && response && usage && !settlement && replay && reserved,
-            ProviderOperationLifecycleState.Settled => authorization && attempt && request && reservation && fence
-                && response && usage && settlement && replay && reserved && !value.UnresolvedHold
-                && value.SettlementState is ProviderSettlementState.Settled or ProviderSettlementState.FailedKnown or ProviderSettlementState.Overrun,
-            ProviderOperationLifecycleState.UnresolvedHold => authorization && attempt && request && reservation && fence
-                && settlement && reserved && coherentUnresolvedDependencies && value.UnresolvedHold
-                && value.SettlementState == ProviderSettlementState.UnresolvedHold,
-            _ => false,
-        };
-        bool preSettlement = value.State is not (ProviderOperationLifecycleState.Settled or ProviderOperationLifecycleState.UnresolvedHold);
-        if (!valid || (preSettlement && value.SettlementState != ProviderSettlementState.NotStarted)
-            || (value.ReplayState == ProviderReplayState.NotAvailable) != !replay)
-        {
-            throw new InvalidDataException("Provider operation lifecycle, reservation, usage, settlement, and replay identities contradict one another.");
-        }
-    }
-
-    private static void RequireReplayBindings(ProviderReplayPayload value)
-    {
-        Require(value.InstallationSnapshotId, "installation_snapshot_id");
-        Require(value.AnalysisContextId, "analysis_context_id");
-        Require(value.EffectiveConfigurationId, "effective_configuration_id");
-        Require(value.ResolvedInputManifestId, "resolved_input_manifest_id");
-        Require(value.PromptId, "prompt_id");
-        Require(value.OutputSchemaId, "output_schema_id");
-        Require(value.AuthorizationId, "authorization_id");
-        Require(value.RequestId, "request_id");
-        Require(value.UsageEntryId, "usage_entry_id");
-        Require(value.SettlementId, "settlement_id");
-        Require(value.ReplayEdgeId, "replay_edge_id");
-        if (value.ProfileId is null || value.GenerationId is null || value.CapabilitySnapshotId is null
-            || value.PriceSnapshotId is null || value.AttemptId is null || value.ReservationId is null
-            || value.DispatchFenceId is null || value.Limits is null || value.DispatchDeadline is null
-            || value.PromptFingerprintSha256.Length != 32 || value.OutputSchemaFingerprintSha256.Length != 32
-            || value.CanonicalRequestBytes.IsEmpty || value.CanonicalRequestBytes.Length > 65_536
-            || value.CanonicalRequestFingerprintSha256.Length != 32 || value.SettingsFingerprintSha256.Length != 32
-            || !Enum.IsDefined(value.OperationKind) || value.OperationKind == ProviderOperationKind.Unspecified
-            || !System.Security.Cryptography.SHA256.HashData(value.CanonicalRequestBytes.Span)
-                .AsSpan().SequenceEqual(value.CanonicalRequestFingerprintSha256.Span)
-            || value.RetainedHoldNanoUsd < 0)
-        {
-            throw new InvalidDataException("Provider replay is missing an exact immutable request, reservation, fence, usage, settlement, or provenance binding.");
-        }
-        Validate(value.OperationKind, value.Limits);
-        if ((ulong)value.CanonicalRequestBytes.Length > value.Limits.MaximumRequestBytes)
-        {
-            throw new InvalidDataException("Replay request bytes exceed the exact retained request limit.");
-        }
-    }
 }

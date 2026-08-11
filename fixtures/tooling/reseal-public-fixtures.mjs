@@ -199,7 +199,7 @@ async function resealProviderContractExamples() {
   ];
   if (authority.package_identity !== "infinium.public-fixtures.provider-contracts.wp1.answer-free"
       || authority.package_version !== "1.0.0" || authority.partition !== "development"
-      || authority.status !== "implementation-active-answer-free" || authority.answer_free !== true
+      || authority.status !== "Proposed" || authority.answer_free !== true
       || JSON.stringify(Object.keys(authority.examples).sort()) !== JSON.stringify(schemaNames.sort())) {
     throw new Error("Provider WP1 contract-example authority is incomplete or not answer-free.");
   }

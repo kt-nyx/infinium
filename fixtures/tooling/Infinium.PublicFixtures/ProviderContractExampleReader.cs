@@ -42,7 +42,7 @@ public static class ProviderContractExampleReader
         RequireString(root, "package_identity", PackageIdentity);
         RequireString(root, "package_version", "1.0.0");
         RequireString(root, "partition", "development");
-        RequireString(root, "status", "implementation-active-answer-free");
+        RequireString(root, "status", "Proposed");
         if (!root.GetProperty("answer_free").GetBoolean())
         {
             throw new InvalidDataException("Provider examples must remain explicitly answer-free.");

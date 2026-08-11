@@ -82,15 +82,12 @@ public enum ProviderInputBoundProofState
 {
     Unspecified,
     AuthorityRequired,
-    Proved,
 }
 
 public sealed record ProviderInputBoundProofContract(
     string PolicyId,
     string PolicyVersion,
-    ProviderInputBoundProofState Status,
-    long? CanonicalRequestBytes,
-    long? ProvedInputTokenBound);
+    ProviderInputBoundProofState Status);
 
 public sealed record ProviderIdentityReferenceContract(
     OpaqueId Identity,
@@ -159,6 +156,7 @@ public sealed record ProviderUsageContract(
     ProviderQuantityContract DispatchCount,
     ProviderQuantityContract InputTokens,
     ProviderQuantityContract OutputTokens,
+    ProviderQuantityContract TotalTokens,
     ProviderQuantityContract ReasoningTokens,
     ProviderQuantityContract CacheReadTokens,
     ProviderQuantityContract CacheWriteTokens,
@@ -167,6 +165,15 @@ public sealed record ProviderUsageContract(
     ProviderAvailabilityState BillingAvailability,
     ProviderAvailabilityState RateAvailability,
     ProviderAvailabilityState CreditAvailability);
+
+public sealed record ProviderRateLimitFactContract(
+    string Scope,
+    string Dimension,
+    ProviderAvailabilityState Availability,
+    long? Limit,
+    long? Remaining,
+    UtcTimestamp ObservedAt,
+    UtcTimestamp? ResetsAt);
 
 public sealed record ProviderAccessProfileDocument(
     string SchemaId,
@@ -225,10 +232,17 @@ public sealed record ProviderResponseDocument(
     OpaqueId ResponseRecordId,
     OpaqueId OperationId,
     OpaqueId RequestId,
+    OpaqueId DispatchFenceId,
     ProviderIdentityReferenceContract? RawResponsePayload,
     long? RawResponseBytes,
+    long MaximumRawResponseBytes,
+    ProviderIdentityReferenceContract? ResponseHeadersPayload,
+    long? ResponseHeadersBytes,
+    ProviderAvailabilityState ResponseHeadersAvailability,
     int? HttpStatus,
     string? ProviderResponseId,
+    string? ProviderRequestId,
+    ProviderAvailabilityState ProviderRequestIdAvailability,
     ProviderResponseState State,
     string? RefusalCode,
     string? IncompleteReason,
@@ -241,6 +255,7 @@ public sealed record ProviderResponseDocument(
     string ReasoningMode,
     string PromptCacheMode,
     ProviderUsageContract Usage,
+    IReadOnlyList<ProviderRateLimitFactContract> RateLimitFacts,
     ProposalAdmissionState ValidationState,
     ProposalAdmissionState AdmissionState,
     UtcTimestamp RecordedAt);

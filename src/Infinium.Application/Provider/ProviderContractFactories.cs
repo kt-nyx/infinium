@@ -95,28 +95,20 @@ public static class ProviderContractFactories
             throw new ArgumentException("The frozen local CLI-summary v1 bytes are required.", nameof(canonicalLocalCliSummaryV1));
         }
 
-        string providerState = ProviderState(projection);
+        if (projection.State != ProviderOperationState.InputBoundBlocked || projection.ReservedNanoUsd != 0
+            || projection.CalculatedNanoUsd != 0 || projection.UnresolvedHold || projection.ReplayState != "not-available")
+        {
+            throw new InvalidOperationException("Only the truthful pre-proof blocked provider projection is currently reachable.");
+        }
+        const string providerState = "blocked";
         ProviderQuantityContract absent = new(ProviderAvailabilityState.Unavailable, null);
-        bool pending = providerState == "pending";
-        bool live = providerState == "live";
-        bool hasReservation = projection.State is ProviderOperationState.Reserved or ProviderOperationState.Assigned
-            or ProviderOperationState.FinalGateAuthorized or ProviderOperationState.TransportNotStarted;
         CliSummaryV2Document result = new(
             ContractConstants.CliSummaryV2SchemaId,
             "1",
             runId,
             Fingerprint(canonicalLocalCliSummaryV1),
             providerState,
-            pending ? absent : Available(dispatchCount),
-            pending || live ? absent : Available(inputTokens),
-            pending || live ? absent : Available(outputTokens),
-            pending || live ? absent : Available(reasoningTokens),
-            pending || live ? absent : Available(0),
-            pending || live ? absent : Available(0),
-            pending || live ? absent : Available(projection.CalculatedNanoUsd),
-            hasReservation || live || providerState is "completed" or "failed" or "unresolved"
-                ? Available(projection.ReservedNanoUsd)
-                : absent,
+            absent, absent, absent, absent, absent, absent, absent, absent,
             projection.UnresolvedHold,
             projection.ReplayState,
             gaps,
@@ -148,18 +140,4 @@ public static class ProviderContractFactories
     private static Sha256Fingerprint Fingerprint(ReadOnlySpan<byte> value) =>
         new(Convert.ToHexStringLower(SHA256.HashData(value)));
 
-    private static ProviderQuantityContract Available(long value) =>
-        new(ProviderAvailabilityState.Available, value);
-
-    private static string ProviderState(ProviderOperationSummaryProjection value) => value.State switch
-    {
-        ProviderOperationState.UnresolvedHold => "unresolved",
-        ProviderOperationState.Proposed or ProviderOperationState.Confirmed or ProviderOperationState.Reserved
-            or ProviderOperationState.Assigned or ProviderOperationState.InputBoundBlocked or ProviderOperationState.FinalGateAuthorized
-            or ProviderOperationState.TransportNotStarted => "pending",
-        ProviderOperationState.TransportMayHaveStarted or ProviderOperationState.ResponseStaged => "live",
-        ProviderOperationState.Admitted or ProviderOperationState.Settled => "completed",
-        ProviderOperationState.Rejected => "failed",
-        _ => throw new InvalidOperationException("Provider operation state cannot be projected to a CLI provider state."),
-    };
 }

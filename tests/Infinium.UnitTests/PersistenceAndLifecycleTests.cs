@@ -52,20 +52,20 @@ public sealed class PersistenceAndLifecycleTests
         using SqliteDataReader reader = command.ExecuteReader();
         Assert.IsTrue(reader.Read());
         Assert.AreEqual(1L, reader.GetInt64(0));
-        Assert.AreEqual(23L, reader.GetInt64(1));
-        Assert.AreEqual(40L, reader.GetInt64(2));
+        Assert.AreEqual(25L, reader.GetInt64(1));
+        Assert.AreEqual(44L, reader.GetInt64(2));
     }
 
     [TestMethod]
     [TestCategory("Unit")]
     [TestProperty("Category", "Unit")]
-    public void Schema6ProviderPersistenceBackupRestoreRoundTripRetainsMigrationAndProjectionContract()
+    public void Schema6ProviderPersistenceBackupRestoreRetainsOnlyBlockedAuthorityState()
     {
         using TemporaryStore source = new();
         BackupArtifact backup;
         using (AuthoritativeStore store = source.Open())
         {
-            SeedProviderReplayAuthorization(source.Root);
+            SeedProviderAuthorityBlock(source.Root);
             backup = store.CreateBackup("Schema6Provider", DateTimeOffset.UtcNow);
         }
 
@@ -85,74 +85,45 @@ public sealed class PersistenceAndLifecycleTests
             using SqliteCommand command = connection.CreateCommand();
             command.CommandText =
                 """
-                SELECT COUNT(*)
-                FROM migration_history
-                WHERE migration_id='M1-S6-0006' AND from_version=5 AND to_version=6;
+                SELECT b.profile_id,b.generation_id,b.operation_kind,b.capability_snapshot_id,b.price_snapshot_id,
+                       b.input_bound_policy_id,b.input_bound_policy_version,b.input_bound_proof_status,
+                       b.maximum_request_bytes,b.maximum_input_tokens,b.maximum_output_tokens,
+                       b.maximum_raw_response_bytes,b.maximum_dispatch_count,b.maximum_calculated_nano_usd,
+                       b.deadline_milliseconds,b.state,p.state,p.reserved_nano_usd,p.calculated_nano_usd,p.unresolved_hold
+                FROM provider_operation_blocks b
+                JOIN provider_operation_projection p ON p.operation_id=b.operation_id
+                WHERE b.operation_id='operation-restore';
                 """;
-            Assert.AreEqual(1L, (long)command.ExecuteScalar()!);
-            command.CommandText =
-                """
-                SELECT a.profile_id,a.generation_id,a.operation_kind,a.installation_snapshot_id,a.analysis_context_id,
-                       a.effective_configuration_id,a.resolved_input_manifest_id,a.prompt_id,a.output_schema_id,
-                       a.request_fingerprint,a.canonical_request_fingerprint,a.capability_snapshot_id,a.price_snapshot_id,
-                       a.settings_fingerprint,a.input_bound_policy_id,a.input_bound_policy_version,a.input_bound_proof_status,
-                       a.canonical_request_bytes,a.proved_input_token_bound,a.maximum_request_bytes,a.maximum_input_tokens,
-                       a.maximum_output_tokens,a.maximum_raw_response_bytes,a.maximum_dispatch_count,a.maximum_calculated_nano_usd,
-                       a.deadline_milliseconds,r.provider_attempt_id,r.request_id,r.payload_id,v.reservation_id,f.dispatch_fence_id,
-                       f.authorized,t.transport_event_id,p.response_record_id,p.raw_response_payload_id,p.raw_response_fingerprint,
-                       p.raw_response_bytes,p.http_status,p.provider_response_id,p.requested_model,p.returned_model,
-                       p.requested_service_tier,p.returned_service_tier,p.reasoning_context,p.reasoning_mode,p.prompt_cache_mode,
-                       u.usage_entry_id,s.settlement_id,q.proposal_id,e.replay_edge_id,o.state
-                FROM provider_operation_authorizations a
-                JOIN provider_requests r ON r.operation_id=a.operation_id
-                JOIN provider_reservations v ON v.operation_id=r.operation_id AND v.provider_attempt_id=r.provider_attempt_id AND v.request_id=r.request_id
-                JOIN provider_dispatch_fences f ON f.operation_id=r.operation_id AND f.provider_attempt_id=r.provider_attempt_id AND f.request_id=r.request_id
-                JOIN provider_transport_events t ON t.operation_id=f.operation_id AND t.provider_attempt_id=f.provider_attempt_id AND t.request_id=f.request_id AND t.dispatch_fence_id=f.dispatch_fence_id
-                JOIN provider_responses p ON p.operation_id=f.operation_id AND p.provider_attempt_id=f.provider_attempt_id AND p.request_id=f.request_id AND p.dispatch_fence_id=f.dispatch_fence_id
-                JOIN provider_usage_entries u ON u.response_record_id=p.response_record_id
-                JOIN provider_settlements s ON s.usage_entry_id=u.usage_entry_id AND s.dispatch_fence_id=f.dispatch_fence_id
-                JOIN provider_semantic_proposals q ON q.response_record_id=p.response_record_id AND q.dispatch_fence_id=f.dispatch_fence_id
-                JOIN provider_replay_edges e ON e.response_record_id=p.response_record_id AND e.dispatch_fence_id=f.dispatch_fence_id
-                JOIN provider_operation_projection o ON o.operation_id=a.operation_id AND o.dispatch_fence_id=f.dispatch_fence_id
-                WHERE a.operation_id='operation-restore';
-                """;
-            using SqliteDataReader replay = command.ExecuteReader();
-            Assert.IsTrue(replay.Read());
-            string[] expected =
-            [
-                "profile-restore", "generation-restore", "source-claim-extraction", "install-restore", "context-restore",
-                "config-restore", "manifest-restore", "prompt-restore", "schema-restore", new('e', 64), new('1', 64),
-                "cap-restore", "price-restore", new('f', 64), "test-only-structural-proof", "1", "proved",
-            ];
-            for (int index = 0; index < expected.Length; index++)
+            using SqliteDataReader blocked = command.ExecuteReader();
+            Assert.IsTrue(blocked.Read());
+            string[] textExpected = ["profile-restore", "generation-restore", "source-claim-extraction", "cap-restore",
+                "price-restore", "unresolved-openai-responses-framing", "authority-required", "authority-required"];
+            for (int index = 0; index < textExpected.Length; index++)
             {
-                Assert.AreEqual(expected[index], replay.GetString(index));
+                Assert.AreEqual(textExpected[index], blocked.GetString(index));
             }
-            long[] numbers = [65_536, 73_728, 65_536, 73_728, 4_096, 1_048_576, 1, 600_000_000, 120_000];
-            for (int index = 0; index < numbers.Length; index++)
+            long[] numericExpected = [65_536, 73_728, 4_096, 1_048_576, 1, 600_000_000, 120_000];
+            for (int index = 0; index < numericExpected.Length; index++)
             {
-                Assert.AreEqual(numbers[index], replay.GetInt64(17 + index));
+                Assert.AreEqual(numericExpected[index], blocked.GetInt64(8 + index));
             }
-            string[] graph = ["attempt-restore", "request-restore", "payload-restore", "reservation-restore", "fence-restore"];
-            for (int index = 0; index < graph.Length; index++)
+            Assert.AreEqual("input-bound-blocked", blocked.GetString(15));
+            Assert.AreEqual("input-bound-blocked", blocked.GetString(16));
+            Assert.AreEqual(0L, blocked.GetInt64(17));
+            Assert.AreEqual(0L, blocked.GetInt64(18));
+            Assert.AreEqual(0L, blocked.GetInt64(19));
+            Assert.IsFalse(blocked.Read());
+            blocked.Close();
+
+            string[] downstream = ["provider_operation_authorizations", "provider_operation_attempts", "provider_requests",
+                "provider_reservations", "provider_dispatch_fences", "provider_transport_events", "provider_responses",
+                "provider_usage_entries", "provider_rate_limit_facts", "provider_settlements", "provider_semantic_proposals",
+                "provider_semantic_admissions", "provider_replay_edges"];
+            foreach (string table in downstream)
             {
-                Assert.AreEqual(graph[index], replay.GetString(26 + index));
+                command.CommandText = $"SELECT COUNT(*) FROM {table};";
+                Assert.AreEqual(0L, (long)command.ExecuteScalar()!, table);
             }
-            Assert.AreEqual(1L, replay.GetInt64(31));
-            string[] retained = ["transport-restore", "response-restore", "payload-restore", "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"];
-            for (int index = 0; index < retained.Length; index++)
-            {
-                Assert.AreEqual(retained[index], replay.GetString(32 + index));
-            }
-            Assert.AreEqual(2L, replay.GetInt64(36));
-            Assert.AreEqual(200L, replay.GetInt64(37));
-            string[] responseAndGraph = ["provider-response-restore", "gpt-5.6-sol", "gpt-5.6-sol", "default", "default",
-                "current_turn", "standard", "explicit", "usage-restore", "settlement-restore", "proposal-restore", "replay-restore", "settled"];
-            for (int index = 0; index < responseAndGraph.Length; index++)
-            {
-                Assert.AreEqual(responseAndGraph[index], replay.GetString(38 + index));
-            }
-            Assert.IsFalse(replay.Read());
         }
         finally
         {
@@ -162,7 +133,6 @@ public sealed class PersistenceAndLifecycleTests
             }
         }
     }
-
     [TestMethod]
     [TestCategory("Unit")]
     [TestProperty("Category", "Unit")]
@@ -1308,20 +1278,8 @@ public sealed class PersistenceAndLifecycleTests
         JsonNode.Parse(value)?.AsObject()
         ?? throw new InvalidOperationException("The test backup manifest is missing.");
 
-    private static void ExecuteRaw(string productRoot, string sql)
+    private static void SeedProviderAuthorityBlock(string productRoot)
     {
-        using SqliteConnection connection = OpenRaw(productRoot);
-        using SqliteCommand command = connection.CreateCommand();
-        command.CommandText = sql;
-        command.ExecuteNonQuery();
-    }
-
-    private static void SeedProviderReplayAuthorization(string productRoot)
-    {
-        const string payloadSha = "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a";
-        string payloadPath = Path.Combine(productRoot, "payloads", payloadSha[..2], payloadSha[2..4], payloadSha);
-        Directory.CreateDirectory(Path.GetDirectoryName(payloadPath)!);
-        File.WriteAllBytes(payloadPath, "{}"u8.ToArray());
         using SqliteConnection connection = OpenRaw(productRoot);
         using SqliteCommand command = connection.CreateCommand();
         command.CommandText =
@@ -1334,37 +1292,16 @@ public sealed class PersistenceAndLifecycleTests
             INSERT INTO provider_price_rules VALUES('price-restore','rule-restore','standard-under-272k','ordinary-input','input','none','global',1,1,'synthetic-v1');
             INSERT INTO runs VALUES('run-restore','install-restore','context-restore','config-restore','manifest-restore','created',0,1,1,'2026-08-10T00:00:00Z','2026-08-10T00:00:00Z');
             INSERT INTO job_nodes VALUES('job-restore','run-restore',NULL,'provider','created',0,'2026-08-10T00:00:00Z','2026-08-10T00:00:00Z');
-            INSERT INTO payloads VALUES('payload-restore','44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a',2,'json','retained','payloads/44/13/44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a','2026-08-10T00:00:00Z');
-            INSERT INTO provider_operation_authorizations(
-              authorization_id,operation_id,owner_kind,owner_id,analysis_run_id,evidence_acquisition_run_id,job_node_id,
-              profile_id,generation_id,revocation_epoch,operation_kind,installation_snapshot_id,analysis_context_id,effective_configuration_id,resolved_input_manifest_id,
-              prompt_id,prompt_fingerprint,output_schema_id,output_schema_fingerprint,request_fingerprint,canonical_request_fingerprint,capability_snapshot_id,price_snapshot_id,settings_fingerprint,
-              input_bound_policy_id,input_bound_policy_version,input_bound_proof_status,canonical_request_bytes,proved_input_token_bound,coordinator_fencing_epoch,
-              maximum_request_bytes,maximum_input_tokens,maximum_output_tokens,maximum_raw_response_bytes,maximum_dispatch_count,maximum_calculated_nano_usd,deadline_milliseconds,confirmed_at) VALUES
-              ('auth-restore','operation-restore','analysis-run','run-restore','run-restore',NULL,'job-restore','profile-restore','generation-restore',0,'source-claim-extraction','install-restore','context-restore','config-restore','manifest-restore','prompt-restore','cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc','schema-restore','dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd','eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee','1111111111111111111111111111111111111111111111111111111111111111','cap-restore','price-restore','ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff','test-only-structural-proof','1','proved',65536,73728,1,65536,73728,4096,1048576,1,600000000,120000,'2026-08-10T00:00:00Z');
-            INSERT INTO provider_operation_attempts VALUES('attempt-restore','operation-restore',1,'proposed',1,'2026-08-10T00:00:00Z');
-            INSERT INTO provider_requests VALUES('request-restore','operation-restore','attempt-restore','eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee','1111111111111111111111111111111111111111111111111111111111111111','ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff','dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd','test-only-structural-proof','1','proved',65536,73728,'payload-restore','2026-08-10T00:00:00Z');
-            INSERT INTO provider_reservations VALUES('reservation-restore','operation-restore','attempt-restore','request-restore','{}',600000000,'2026-08-10T00:01:00Z','2026-08-10T00:00:00Z');
-            INSERT INTO provider_dispatch_fences VALUES('fence-restore','auth-restore','operation-restore','reservation-restore','request-restore','attempt-restore',1,'profile-restore','generation-restore',0,1,'proved','2026-08-10T00:00:00Z');
-            INSERT INTO provider_transport_events VALUES('transport-restore','operation-restore','attempt-restore','request-restore','fence-restore','response-staged',1,'2026-08-10T00:00:00Z');
-            INSERT INTO provider_responses(response_record_id,operation_id,request_id,provider_attempt_id,dispatch_fence_id,raw_response_payload_id,
-              raw_response_fingerprint,raw_response_bytes,http_status,provider_response_id,response_state,requested_model,returned_model,
-              requested_service_tier,returned_service_tier,reasoning_context,reasoning_mode,prompt_cache_mode,usage_json,validation_state,admission_state,created_at)
-            VALUES('response-restore','operation-restore','request-restore','attempt-restore','fence-restore','payload-restore',
-              '44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a',2,200,'provider-response-restore','completed',
-              'gpt-5.6-sol','gpt-5.6-sol','default','default','current_turn','standard','explicit',
-              '{"dispatch_count":{"availability":"available","value":1},"input_tokens":{"availability":"available","value":1},"output_tokens":{"availability":"available","value":0},"reasoning_tokens":{"availability":"available","value":0},"cache_read_tokens":{"availability":"available","value":0},"cache_write_tokens":{"availability":"available","value":0},"priced_tool_calls":{"availability":"available","value":0},"calculated_nano_usd":{"availability":"available","value":1},"billing_availability":"available","rate_availability":"available","credit_availability":"unavailable"}',
-              'rejected','rejected','2026-08-10T00:00:00Z');
-            INSERT INTO provider_usage_entries VALUES('usage-restore','operation-restore','attempt-restore','request-restore','fence-restore','response-restore','{}',1,'validated','2026-08-10T00:00:00Z');
-            INSERT INTO provider_settlements VALUES('settlement-restore','operation-restore','attempt-restore','request-restore','reservation-restore','usage-restore','fence-restore','settled',600000000,0,'2026-08-10T00:00:00Z');
-            INSERT INTO provider_semantic_proposals VALUES('proposal-restore','operation-restore','attempt-restore','request-restore','response-restore','fence-restore','source-claim','payload-restore','2026-08-10T00:00:00Z');
-            INSERT INTO provider_semantic_admissions VALUES('admission-restore','proposal-restore','rejected','host-policy','synthetic',NULL,'2026-08-10T00:00:00Z');
-            INSERT INTO provider_replay_edges VALUES('replay-restore','operation-restore','attempt-restore','request-restore','response-restore','fence-restore','retained-response','manifest-restore','2026-08-10T00:00:00Z');
-            INSERT INTO provider_operation_projection VALUES('operation-restore','attempt-restore','request-restore','fence-restore','settled',600000000,1,0,NULL,1,'2026-08-10T00:00:00Z');
+            INSERT INTO provider_operation_blocks VALUES(
+              'operation-restore','analysis-run','run-restore','job-restore','profile-restore','generation-restore',0,
+              'source-claim-extraction','cap-restore','price-restore','unresolved-openai-responses-framing',
+              'authority-required','authority-required',65536,73728,4096,1048576,1,600000000,120000,
+              'input-bound-blocked','2026-08-10T00:00:00Z');
+            INSERT INTO provider_operation_projection VALUES(
+              'operation-restore','input-bound-blocked',0,0,0,1,'2026-08-10T00:00:00Z');
             """;
         command.ExecuteNonQuery();
     }
-
     private static SqliteConnection OpenRaw(string productRoot)
     {
         SqliteRuntimeIdentity.InitializeNativeProvider();
@@ -1378,6 +1315,14 @@ public sealed class PersistenceAndLifecycleTests
             }.ToString());
         connection.Open();
         return connection;
+    }
+
+    private static void ExecuteRaw(string productRoot, string sql)
+    {
+        using SqliteConnection connection = OpenRaw(productRoot);
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText = sql;
+        command.ExecuteNonQuery();
     }
 
     private static RunRecord Transition(

@@ -14,13 +14,33 @@ public sealed record BeginProviderEnrollmentIntentCommand(
 public sealed record SelectAndConfirmProviderOperationCommand(
     OpaqueId CommandId,
     OpaqueId OperationId,
+    ProviderOperationKind OperationKind,
+    string OwnerKind,
+    OpaqueId OwnerId,
+    OpaqueId JobNodeId,
+    OpaqueId InstallationSnapshotId,
+    OpaqueId AnalysisContextId,
+    OpaqueId EffectiveConfigurationId,
+    OpaqueId ResolvedInputManifestId,
     OpaqueId ProfileId,
     OpaqueId GenerationId,
     long RevocationEpoch,
+    OpaqueId CapabilitySnapshotId,
     Sha256Fingerprint RequestFingerprint,
+    Sha256Fingerprint CanonicalRequestFingerprint,
+    long CanonicalRequestBytes,
     Sha256Fingerprint CapabilityFingerprint,
+    OpaqueId PriceSnapshotId,
     Sha256Fingerprint PriceFingerprint,
+    Sha256Fingerprint SettingsFingerprint,
+    OpaqueId PromptId,
+    Sha256Fingerprint PromptFingerprint,
+    OpaqueId OutputSchemaId,
+    Sha256Fingerprint OutputSchemaFingerprint,
+    ProviderInputBoundProofContract InputBoundProof,
     ProviderFiniteLimitsContract Limits,
+    UtcTimestamp DispatchDeadline,
+    long CoordinatorFencingEpoch,
     UtcTimestamp ConfirmedAt);
 
 public sealed record ProviderProfileQuery(
@@ -40,7 +60,7 @@ public sealed record ProviderBudgetQuery(
 
 public sealed record ProviderReplayQuery(
     OpaqueId OperationId,
-    OpaqueId RetainedResponseId,
+    OpaqueId? RetainedResponseId,
     bool NetworkPermitted);
 
 public sealed record ProviderOperationSummaryProjection(
@@ -75,5 +95,20 @@ public static class ProviderApplicationContractInvariants
         {
             throw new InvalidOperationException("Retained-response replay never permits a provider request.");
         }
+    }
+
+    public static void Validate(SelectAndConfirmProviderOperationCommand command)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        ProviderOperationContractInvariants.Validate(command.OperationKind, command.Limits);
+        ProviderOperationContractInvariants.ValidateBlockedInputBoundProof(command.InputBoundProof);
+        if (command.OwnerKind is not ("analysis-run" or "evidence-acquisition-run")
+            || command.RevocationEpoch < 0 || command.CoordinatorFencingEpoch <= 0
+            || command.CanonicalRequestBytes <= 0 || command.CanonicalRequestBytes > command.Limits.MaximumRequestBytes
+            || command.DispatchDeadline.Value <= command.ConfirmedAt.Value)
+        {
+            throw new InvalidOperationException("Provider confirmation must retain exact owner, snapshot, configuration, proof, deadline, and fencing bindings.");
+        }
+        throw new NotSupportedException("Provider confirmation is blocked until an accepted local input-bound policy exists.");
     }
 }
