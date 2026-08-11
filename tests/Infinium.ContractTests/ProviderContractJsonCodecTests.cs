@@ -1804,6 +1804,31 @@ public sealed class ProviderContractJsonCodecTests
         }
     }
 
+    [TestMethod]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Contract")]
+    public void PublishedProvedInputBoundPolicyTraceResolvesPersistedIdentityAndExactProjectionSeams()
+    {
+        using JsonDocument inventory = JsonDocument.Parse(File.ReadAllBytes(TestRepository.PathFromRoot(
+            "docs", "plans", "milestones", "m1", "slices", "s6", "wp1-contract-traceability.v1.json")));
+        JsonElement[] contracts = inventory.RootElement.GetProperty("contracts").EnumerateArray().ToArray();
+        foreach ((string schema, string path) in new[]
+                 {
+                     ("run-output.v2.schema.json", "$defs.publication.accepted_input_bound_policy_id"),
+                     ("run-output.v2.schema.json", "$defs.publication.accepted_input_bound_policy_version"),
+                     ("cli-summary.v2.schema.json", "accepted_input_bound_policy_id"),
+                     ("cli-summary.v2.schema.json", "accepted_input_bound_policy_version"),
+                 })
+        {
+            string suffix = path.EndsWith("_id", StringComparison.Ordinal) ? "id" : "version";
+            AssertTraceMapping(contracts, schema, path,
+                $"provider_operation_authorizations.input_bound_policy_{suffix}",
+                $"provider_requests.input_bound_policy_{suffix}");
+            AssertTraceOmission(contracts, schema, path, "output", path, "dispatch-blocked");
+            AssertTraceOmission(contracts, schema, path, "replay", path, "dispatch-blocked");
+        }
+    }
+
     private static void AssertPathSpecificOmission(JsonElement seam, string path, string property)
     {
         if (seam.TryGetProperty(property, out JsonElement reason))

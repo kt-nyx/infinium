@@ -217,6 +217,87 @@ public sealed class PersistenceAndLifecycleTests
     [TestMethod]
     [TestCategory("Unit")]
     [TestProperty("Category", "Unit")]
+    public void Schema6ProvedInputBoundPolicyIsPinnedAtAuthorizationAndRequestPersistenceBoundaries()
+    {
+        using TemporaryStore temporary = new();
+        using AuthoritativeStore store = temporary.Open();
+        SeedProviderAuthorityBlock(temporary.Root);
+        using SqliteConnection connection = OpenRaw(temporary.Root);
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText = "DROP TRIGGER provider_authority_release_required;";
+        command.ExecuteNonQuery();
+
+        const string insertAuthorization =
+            """
+            INSERT INTO provider_operation_authorizations(
+              authorization_id,operation_id,owner_kind,owner_id,evidence_acquisition_run_id,job_node_id,command_id,
+              requested_at,profile_id,generation_id,revocation_epoch,operation_kind,installation_snapshot_id,
+              analysis_context_id,effective_configuration_id,resolved_input_manifest_id,prompt_id,prompt_fingerprint,
+              output_schema_id,output_schema_fingerprint,request_fingerprint,canonical_request_fingerprint,
+              capability_snapshot_id,price_snapshot_id,settings_fingerprint,input_bound_policy_id,
+              input_bound_policy_version,input_bound_proof_status,coordinator_fencing_epoch,maximum_request_bytes,
+              maximum_input_tokens,maximum_output_tokens,maximum_raw_response_bytes,maximum_dispatch_count,
+              maximum_calculated_nano_usd,deadline_milliseconds,dispatch_deadline_utc,confirmed_at)
+            SELECT $authorizationId,operation_id,owner_kind,owner_id,owner_id,job_node_id,command_id,requested_at,
+              profile_id,generation_id,revocation_epoch,operation_kind,installation_snapshot_id,analysis_context_id,
+              effective_configuration_id,resolved_input_manifest_id,prompt_id,prompt_fingerprint,output_schema_id,
+              output_schema_fingerprint,request_fingerprint,canonical_request_fingerprint,capability_snapshot_id,
+              price_snapshot_id,settings_fingerprint,$policyId,$policyVersion,'proved',coordinator_fencing_epoch,
+              maximum_request_bytes,maximum_input_tokens,maximum_output_tokens,maximum_raw_response_bytes,
+              maximum_dispatch_count,maximum_calculated_nano_usd,deadline_milliseconds,dispatch_deadline_utc,confirmed_at
+            FROM provider_operation_blocks WHERE operation_id='operation-restore';
+            """;
+        command.CommandText = insertAuthorization;
+        command.Parameters.AddWithValue("$authorizationId", "authorization-drift");
+        command.Parameters.AddWithValue("$policyId", "attacker-policy");
+        command.Parameters.AddWithValue("$policyVersion", "v999");
+        SqliteException rejectedAuthorization = Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        StringAssert.Contains(rejectedAuthorization.Message,
+            "input_bound_policy_id = 'openai-responses-o200k-byte-envelope'");
+
+        command.Parameters["$authorizationId"].Value = "authorization-approved";
+        command.Parameters["$policyId"].Value = "openai-responses-o200k-byte-envelope";
+        command.Parameters["$policyVersion"].Value = "v1";
+        Assert.AreEqual(1, command.ExecuteNonQuery());
+        command.Parameters.Clear();
+        command.CommandText =
+            """
+            INSERT INTO provider_operation_attempts VALUES(
+              'attempt-approved','operation-restore',1,'proposed',1,'2026-08-10T00:00:02.0000000+00:00');
+            """;
+        Assert.AreEqual(1, command.ExecuteNonQuery());
+
+        const string insertRequest =
+            """
+            INSERT INTO provider_requests(
+              request_id,client_request_id,operation_id,provider_attempt_id,request_fingerprint,
+              canonical_request_fingerprint,settings_fingerprint,output_schema_fingerprint,input_bound_policy_id,
+              input_bound_policy_version,input_bound_proof_status,payload_id,payload_fingerprint,payload_bytes,created_at)
+            SELECT $requestId,$clientRequestId,operation_id,'attempt-approved',request_fingerprint,
+              canonical_request_fingerprint,settings_fingerprint,output_schema_fingerprint,$policyId,$policyVersion,
+              input_bound_proof_status,'request-payload-restore',request_fingerprint,1024,
+              '2026-08-10T00:00:03.0000000+00:00'
+            FROM provider_operation_authorizations WHERE authorization_id='authorization-approved';
+            """;
+        command.CommandText = insertRequest;
+        command.Parameters.AddWithValue("$requestId", "request-drift");
+        command.Parameters.AddWithValue("$clientRequestId", "client-request-drift");
+        command.Parameters.AddWithValue("$policyId", "attacker-policy");
+        command.Parameters.AddWithValue("$policyVersion", "v999");
+        SqliteException rejectedRequest = Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        StringAssert.Contains(rejectedRequest.Message,
+            "input_bound_policy_id = 'openai-responses-o200k-byte-envelope'");
+
+        command.Parameters["$requestId"].Value = "request-approved";
+        command.Parameters["$clientRequestId"].Value = "client-request-approved";
+        command.Parameters["$policyId"].Value = "openai-responses-o200k-byte-envelope";
+        command.Parameters["$policyVersion"].Value = "v1";
+        Assert.AreEqual(1, command.ExecuteNonQuery());
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
     public void Schema6ProviderRelationalRootsRejectCrossBindingFingerprintAndTimeRegression()
     {
         using TemporaryStore temporary = new();
@@ -1055,7 +1136,7 @@ public sealed class PersistenceAndLifecycleTests
               'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',
               'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',
               'capability-1','price-1','dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd',
-              'accepted-test-policy','1','proved',1,65536,73728,4096,1048576,1,600000000,120000,
+              'openai-responses-o200k-byte-envelope','v1','proved',1,65536,73728,4096,1048576,1,600000000,120000,
               '2026-08-10T00:02:00.0000000+00:00','2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO analysis_candidates VALUES(
               'candidate-future','decision-future','run-1','mandatory-evidence','present','closure-1','payload-1',
@@ -1143,7 +1224,7 @@ public sealed class PersistenceAndLifecycleTests
               'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
               'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
               'capability-1','price-1','dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd',
-              'accepted-test-policy','1','proved',1,65536,73728,4096,1048576,1,600000000,120000,
+              'openai-responses-o200k-byte-envelope','v1','proved',1,65536,73728,4096,1048576,1,600000000,120000,
               '2026-08-10T00:02:00.0000000+00:00','2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO provider_responses(
               response_record_id,availability,usage_availability,authorization_id,operation_id,owner_kind,owner_id,request_id,
@@ -1317,7 +1398,7 @@ public sealed class PersistenceAndLifecycleTests
               profile_id,generation_id,revocation_epoch,operation_kind,installation_snapshot_id,analysis_context_id,
               effective_configuration_id,resolved_input_manifest_id,prompt_id,prompt_fingerprint,output_schema_id,
               output_schema_fingerprint,request_fingerprint,canonical_request_fingerprint,capability_snapshot_id,
-              price_snapshot_id,settings_fingerprint,'accepted-test-policy','1','proved',coordinator_fencing_epoch,
+              price_snapshot_id,settings_fingerprint,'openai-responses-o200k-byte-envelope','v1','proved',coordinator_fencing_epoch,
               maximum_request_bytes,20,10,maximum_raw_response_bytes,maximum_dispatch_count,200,deadline_milliseconds,
               dispatch_deadline_utc,confirmed_at
             FROM provider_operation_blocks WHERE operation_id='operation-restore';
@@ -1794,7 +1875,7 @@ public sealed class PersistenceAndLifecycleTests
                   profile_id,generation_id,revocation_epoch,operation_kind,installation_snapshot_id,analysis_context_id,
                   effective_configuration_id,resolved_input_manifest_id,prompt_id,prompt_fingerprint,output_schema_id,
                   output_schema_fingerprint,request_fingerprint,canonical_request_fingerprint,capability_snapshot_id,
-                  price_snapshot_id,settings_fingerprint,'accepted-test-policy','1','proved',coordinator_fencing_epoch,
+                  price_snapshot_id,settings_fingerprint,'openai-responses-o200k-byte-envelope','v1','proved',coordinator_fencing_epoch,
                   maximum_request_bytes,maximum_input_tokens,maximum_output_tokens,maximum_raw_response_bytes,
                   maximum_dispatch_count,maximum_calculated_nano_usd,1,$deadline,$confirmed
                 FROM provider_operation_blocks WHERE operation_id='operation-restore';
@@ -3039,7 +3120,7 @@ public sealed class PersistenceAndLifecycleTests
               profile_id,generation_id,revocation_epoch,operation_kind,installation_snapshot_id,analysis_context_id,
               effective_configuration_id,resolved_input_manifest_id,prompt_id,prompt_fingerprint,output_schema_id,
               output_schema_fingerprint,request_fingerprint,canonical_request_fingerprint,capability_snapshot_id,
-              price_snapshot_id,settings_fingerprint,'accepted-test-policy','1','proved',coordinator_fencing_epoch,
+              price_snapshot_id,settings_fingerprint,'openai-responses-o200k-byte-envelope','v1','proved',coordinator_fencing_epoch,
               maximum_request_bytes,20,10,maximum_raw_response_bytes,maximum_dispatch_count,200,deadline_milliseconds,
               dispatch_deadline_utc,confirmed_at
             FROM provider_operation_blocks WHERE operation_id='operation-restore';

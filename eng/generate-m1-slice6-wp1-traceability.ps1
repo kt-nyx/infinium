@@ -353,8 +353,8 @@ function Get-Persistence([string] $Schema, [string] $Path) {
             elseif ($Path -like 'limits.*') { $column = "provider_effective_scan_configurations_v2.$leaf" }
             else { $column = switch ($leaf) { { $_ -in @('schema_id','schema_version') } {$null} 'configuration_id' {'provider_effective_scan_configurations_v2.configuration_id'} 'local_configuration_v1_id' {'provider_effective_scan_configurations_v2.local_configuration_v1_id'} 'local_configuration_v1_fingerprint' {'provider_effective_scan_configurations_v2.local_configuration_v1_fingerprint'} 'access_profile_id' {'provider_effective_scan_configurations_v2.profile_id'} 'generation_id' {'provider_effective_scan_configurations_v2.generation_id'} 'not_used_boundaries' {'provider_effective_scan_configurations_v2.not_used_boundaries_json'} default { "provider_effective_scan_configurations_v2.$leaf" } } }
         }
-        'run-output.v2.schema.json' { $column = switch ($leaf) { 'run_id' {'provider_run_output_v2_bindings.run_id'} 'local_run_output_v1' {@('provider_run_output_v2_bindings.local_run_output_v1_payload_id','provider_run_output_v2_bindings.local_run_output_v1_fingerprint','provider_run_output_v2_bindings.local_run_output_v1_bytes')} 'effective_configuration_v2_id' {'provider_run_output_v2_bindings.effective_configuration_v2_id'} 'operation_id' {'provider_operation_projection.operation_id'} 'availability' {'provider_operation_projection.state'} default {$null} } }
-        'cli-summary.v2.schema.json' { $column = switch ($leaf) { 'provider_state' {'provider_operation_projection.state'} 'unresolved_hold' {'provider_operation_projection.unresolved_hold'} default {$null} } }
+        'run-output.v2.schema.json' { $column = switch ($leaf) { 'run_id' {'provider_run_output_v2_bindings.run_id'} 'local_run_output_v1' {@('provider_run_output_v2_bindings.local_run_output_v1_payload_id','provider_run_output_v2_bindings.local_run_output_v1_fingerprint','provider_run_output_v2_bindings.local_run_output_v1_bytes')} 'effective_configuration_v2_id' {'provider_run_output_v2_bindings.effective_configuration_v2_id'} 'operation_id' {'provider_operation_projection.operation_id'} 'availability' {'provider_operation_projection.state'} 'accepted_input_bound_policy_id' {@('provider_operation_authorizations.input_bound_policy_id','provider_requests.input_bound_policy_id')} 'accepted_input_bound_policy_version' {@('provider_operation_authorizations.input_bound_policy_version','provider_requests.input_bound_policy_version')} default {$null} } }
+        'cli-summary.v2.schema.json' { $column = switch ($leaf) { 'provider_state' {'provider_operation_projection.state'} 'unresolved_hold' {'provider_operation_projection.unresolved_hold'} 'accepted_input_bound_policy_id' {@('provider_operation_authorizations.input_bound_policy_id','provider_requests.input_bound_policy_id')} 'accepted_input_bound_policy_version' {@('provider_operation_authorizations.input_bound_policy_version','provider_requests.input_bound_policy_version')} default {$null} } }
         default { $column = $null }
     }
     if ($null -eq $column) { return [ordered]@{ not_persisted_reason = "$Path is retained or derived at the $Schema contract boundary; no semantically identical schema-6 column exists while provider dispatch is authority-blocked." } }
@@ -466,7 +466,17 @@ function Get-Projection([string] $Schema, [string] $Path, [bool] $Replay) {
             if($map.ContainsKey($leaf)){ $message='ProviderReplayPayload'; $field=$map[$leaf] }
         }
     }
-    if ($null -eq $message) { return [ordered]@{ omission_reason = "$Path has no semantically equivalent $(if($Replay){'network-free replay'}else{'public application output'}) field while WP1 remains Proposed and dispatch-blocked." } }
+    if ($null -eq $message) {
+        if (($Schema -in @('run-output.v2.schema.json','cli-summary.v2.schema.json')) -and ($leaf -in @('accepted_input_bound_policy_id','accepted_input_bound_policy_version'))) {
+            $reason = if ($Replay) {
+                "$Path is accepted-policy publication metadata and is not a replay identity in the accepted ProviderReplayPayload contract."
+            } else {
+                "$Path is published by the canonical $Schema JSON supplement; no semantically equivalent application protobuf field is defined."
+            }
+            return [ordered]@{ omission_reason = $reason }
+        }
+        return [ordered]@{ omission_reason = "$Path has no semantically equivalent $(if($Replay){'network-free replay'}else{'public application output'}) field while WP1 remains Proposed and dispatch-blocked." }
+    }
     return [ordered]@{ file='contracts/protobuf/infinium/application/v1/application.proto'; message=$message; field=$field }
 }
 

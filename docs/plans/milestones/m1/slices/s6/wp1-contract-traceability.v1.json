@@ -10437,13 +10437,16 @@
             "symbol": "AcceptedInputBoundPolicyId"
           },
           "persistence": {
-            "not_persisted_reason": "$defs.publication.accepted_input_bound_policy_id is retained or derived at the run-output.v2.schema.json contract boundary; no semantically identical schema-6 column exists while provider dispatch is authority-blocked."
+            "table_columns": [
+              "provider_operation_authorizations.input_bound_policy_id",
+              "provider_requests.input_bound_policy_id"
+            ]
           },
           "output": {
-            "omission_reason": "$defs.publication.accepted_input_bound_policy_id has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+            "omission_reason": "$defs.publication.accepted_input_bound_policy_id is published by the canonical run-output.v2.schema.json JSON supplement; no semantically equivalent application protobuf field is defined."
           },
           "replay": {
-            "omission_reason": "$defs.publication.accepted_input_bound_policy_id has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
+            "omission_reason": "$defs.publication.accepted_input_bound_policy_id is accepted-policy publication metadata and is not a replay identity in the accepted ProviderReplayPayload contract."
           }
         },
         {
@@ -10462,13 +10465,16 @@
             "symbol": "AcceptedInputBoundPolicyVersion"
           },
           "persistence": {
-            "not_persisted_reason": "$defs.publication.accepted_input_bound_policy_version is retained or derived at the run-output.v2.schema.json contract boundary; no semantically identical schema-6 column exists while provider dispatch is authority-blocked."
+            "table_columns": [
+              "provider_operation_authorizations.input_bound_policy_version",
+              "provider_requests.input_bound_policy_version"
+            ]
           },
           "output": {
-            "omission_reason": "$defs.publication.accepted_input_bound_policy_version has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+            "omission_reason": "$defs.publication.accepted_input_bound_policy_version is published by the canonical run-output.v2.schema.json JSON supplement; no semantically equivalent application protobuf field is defined."
           },
           "replay": {
-            "omission_reason": "$defs.publication.accepted_input_bound_policy_version has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
+            "omission_reason": "$defs.publication.accepted_input_bound_policy_version is accepted-policy publication metadata and is not a replay identity in the accepted ProviderReplayPayload contract."
           }
         },
         {
@@ -10967,13 +10973,16 @@
             "symbol": "AcceptedInputBoundPolicyId"
           },
           "persistence": {
-            "not_persisted_reason": "accepted_input_bound_policy_id is retained or derived at the cli-summary.v2.schema.json contract boundary; no semantically identical schema-6 column exists while provider dispatch is authority-blocked."
+            "table_columns": [
+              "provider_operation_authorizations.input_bound_policy_id",
+              "provider_requests.input_bound_policy_id"
+            ]
           },
           "output": {
-            "omission_reason": "accepted_input_bound_policy_id has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+            "omission_reason": "accepted_input_bound_policy_id is published by the canonical cli-summary.v2.schema.json JSON supplement; no semantically equivalent application protobuf field is defined."
           },
           "replay": {
-            "omission_reason": "accepted_input_bound_policy_id has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
+            "omission_reason": "accepted_input_bound_policy_id is accepted-policy publication metadata and is not a replay identity in the accepted ProviderReplayPayload contract."
           }
         },
         {
@@ -10992,13 +11001,16 @@
             "symbol": "AcceptedInputBoundPolicyVersion"
           },
           "persistence": {
-            "not_persisted_reason": "accepted_input_bound_policy_version is retained or derived at the cli-summary.v2.schema.json contract boundary; no semantically identical schema-6 column exists while provider dispatch is authority-blocked."
+            "table_columns": [
+              "provider_operation_authorizations.input_bound_policy_version",
+              "provider_requests.input_bound_policy_version"
+            ]
           },
           "output": {
-            "omission_reason": "accepted_input_bound_policy_version has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+            "omission_reason": "accepted_input_bound_policy_version is published by the canonical cli-summary.v2.schema.json JSON supplement; no semantically equivalent application protobuf field is defined."
           },
           "replay": {
-            "omission_reason": "accepted_input_bound_policy_version has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
+            "omission_reason": "accepted_input_bound_policy_version is accepted-policy publication metadata and is not a replay identity in the accepted ProviderReplayPayload contract."
           }
         },
         {
