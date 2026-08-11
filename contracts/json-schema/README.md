@@ -134,3 +134,10 @@ reject duplicate object properties recursively, and hash and parse the same
 captured bytes. Every `date-time` value uses the canonical .NET round-trip
 representation with a zero UTC offset, for example
 `1970-01-01T00:00:00.0000000+00:00`.
+
+Slice 6 provider-operation and response documents use conditional lifecycle
+shapes: identities appear only once their producer state is reachable, usage
+quantities distinguish an available zero from an unavailable value, and
+capability/price snapshots contain their closed typed contents rather than an
+unreachable definition or opaque JSON blob. Operation kind selects the exact
+seven-dimensional qualification or semantic ceiling.

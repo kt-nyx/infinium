@@ -105,8 +105,26 @@ function Invoke-ContractsGate {
         $sha256.Dispose()
     }
     $constantPath = Join-Path $repoRoot 'src/Infinium.Application/Runtime/HelperProtocolV2Constants.cs'
-    if (-not (Select-String -LiteralPath $constantPath -SimpleMatch $protocolFingerprint -Quiet)) {
+    $helperBytes = [System.IO.MemoryStream]::new()
+    foreach ($relative in @('infinium/common/v1/common.proto', 'infinium/domain/v1/identities.proto', 'infinium/helper/v2/helper.proto')) {
+        $pathBytes = [System.Text.Encoding]::UTF8.GetBytes($relative + "`n")
+        $helperBytes.Write($pathBytes, 0, $pathBytes.Length)
+        $protoBytes = [System.IO.File]::ReadAllBytes((Join-Path $protobufRoot $relative))
+        $helperBytes.Write($protoBytes, 0, $protoBytes.Length)
+    }
+    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $helperFingerprint = [BitConverter]::ToString(
+            $sha256.ComputeHash($helperBytes.ToArray())).Replace('-', '').ToLowerInvariant()
+    } finally {
+        $sha256.Dispose()
+    }
+    if (-not (Select-String -LiteralPath $constantPath -SimpleMatch $helperFingerprint -Quiet)) {
         throw 'Helper protocol v2 fingerprint constant is stale.'
+    }
+    $applicationConstantPath = Join-Path $repoRoot 'src/Infinium.Application/Runtime/ProtocolConstants.cs'
+    if (-not (Select-String -LiteralPath $applicationConstantPath -SimpleMatch $protocolFingerprint -Quiet)) {
+        throw 'Application protocol fingerprint constant is stale.'
     }
     if (-not (Test-Path -LiteralPath (Join-Path $repoRoot 'contracts/protobuf/infinium/helper/v1/helper.proto'))) {
         throw 'Helper protocol v1 decodability authority is missing.'
@@ -126,7 +144,8 @@ function Invoke-ContractsGate {
     Write-Receipt 'Contracts' ([ordered]@{
         schemas = $schemaEvidence
         schema_count = $schemaEvidence.Count
-        helper_protocol_v2_sha256 = $protocolFingerprint
+        helper_protocol_v2_sha256 = $helperFingerprint
+        application_protocol_set_sha256 = $protocolFingerprint
         helper_protocol_v1_retained = $true
         public_package_count = 19
         answer_free_example_count = 9
@@ -145,7 +164,8 @@ function Invoke-StateTotalityGate {
         'FullyQualifiedName~Schema6|FullyQualifiedName~ProviderPersistence|FullyQualifiedName~BackupRestore'
 
     $migrationPath = Join-Path $repoRoot 'src/Infinium.Persistence/AuthoritativeStore.Migrations.cs'
-    foreach ($required in @('M1-S6-0006', 'SchemaV6', 'provider_operation_projection', 'provider_budget_projection')) {
+    foreach ($required in @('M1-S6-0006', 'SchemaV6', 'provider_operation_projection', 'provider_budget_projection',
+        'provider_price_rules', 'live_billable_slot', 'maximum_request_bytes', 'installation_snapshot_id')) {
         if (-not (Select-String -LiteralPath $migrationPath -SimpleMatch $required -Quiet)) {
             throw "Schema-6 persistence declaration is missing $required."
         }
@@ -162,14 +182,14 @@ function Invoke-StateTotalityGate {
         destination_schema = 6
         storage_contract = '1.5.0'
         source_schema_fingerprint = 'e6d27152687e6b0c806da58a716a9ab909817f046fbe3bf11d8846da5e5dc87d'
-        destination_schema_fingerprint = 'c820c0935dc4e5ff4c68dd70b40be6a6e232661357db89e2cb4b454850382124'
-        append_only_provider_history_table_count = 22
+        destination_schema_fingerprint = '9cc35e3709a9a7fb4bdc0470e4ee488441648cb9b43055d0319f22af878464f4'
+        append_only_provider_history_table_count = 23
         rebuildable_projection_count = 3
         traceability_contract_count = $traceability.contracts.Count
-        conservative_request_byte_ceiling = 65536
-        conservative_structural_token_margin = 4096
-        conservative_maximum_bound = 69632
-        admitted_input_token_ceiling = 73728
+        local_input_bound_proof = 'authority-required-no-accepted-local-tokenizer-or-framing-grammar'
+        provider_dispatch_admission = 'fail-closed'
+        transport_qualification_request_byte_ceiling = 16384
+        semantic_request_byte_ceiling = 65536
         maximum_dispatch_count = 1
     })
 }

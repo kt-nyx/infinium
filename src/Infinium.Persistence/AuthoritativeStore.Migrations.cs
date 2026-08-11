@@ -455,6 +455,7 @@ public sealed partial class AuthoritativeStore
         "table:provider_operation_authorizations",
         "table:provider_operation_projection",
         "table:provider_profile_projection",
+        "table:provider_price_rules",
         "table:provider_price_snapshots",
         "table:provider_replay_edges",
         "table:provider_requests",
@@ -594,6 +595,8 @@ public sealed partial class AuthoritativeStore
         "trigger:provider_operation_attempts_append_only_update",
         "trigger:provider_operation_authorizations_append_only_delete",
         "trigger:provider_operation_authorizations_append_only_update",
+        "trigger:provider_price_rules_append_only_delete",
+        "trigger:provider_price_rules_append_only_update",
         "trigger:provider_price_snapshots_append_only_delete",
         "trigger:provider_price_snapshots_append_only_update",
         "trigger:provider_replay_edges_append_only_delete",
@@ -683,6 +686,7 @@ public sealed partial class AuthoritativeStore
         "provider_operation_attempts",
         "provider_operation_authorizations",
         "provider_price_snapshots",
+        "provider_price_rules",
         "provider_replay_edges",
         "provider_requests",
         "provider_reservation_scope_items",
@@ -1714,7 +1718,7 @@ public sealed partial class AuthoritativeStore
         CREATE TABLE provider_credential_intents(
             intent_id TEXT PRIMARY KEY,
             profile_id TEXT NOT NULL REFERENCES provider_access_profiles(profile_id) ON DELETE RESTRICT,
-            generation_id TEXT NOT NULL REFERENCES provider_generations(generation_id) ON DELETE RESTRICT,
+            generation_id TEXT NOT NULL,
             intent_kind TEXT NOT NULL CHECK(intent_kind IN ('enroll','replace','verify','disable','delete','recover')),
             intent_state TEXT NOT NULL CHECK(intent_state IN ('pending','completed','failed','cancelled','unavailable')),
             from_lifecycle_state TEXT NOT NULL CHECK(from_lifecycle_state IN (
@@ -1728,25 +1732,54 @@ public sealed partial class AuthoritativeStore
             capability_snapshot_id TEXT,
             recovery_disposition TEXT NOT NULL,
             cleanup_disposition TEXT NOT NULL,
-            created_at TEXT NOT NULL
+            created_at TEXT NOT NULL,
+            FOREIGN KEY(profile_id,generation_id)
+              REFERENCES provider_generations(profile_id,generation_id) ON DELETE RESTRICT
         ) STRICT;
         CREATE TABLE provider_capability_snapshots(
             capability_snapshot_id TEXT PRIMARY KEY,
-            provider TEXT NOT NULL,
-            model TEXT NOT NULL,
-            service_tier TEXT NOT NULL,
-            profile_json TEXT NOT NULL CHECK(json_valid(profile_json)),
+            provider TEXT NOT NULL CHECK(provider = 'openai'),
+            model TEXT NOT NULL CHECK(model = 'gpt-5.6-sol'),
+            service_tier TEXT NOT NULL CHECK(service_tier = 'default'),
+            reasoning_effort TEXT NOT NULL CHECK(reasoning_effort = 'medium'),
+            reasoning_context TEXT NOT NULL CHECK(reasoning_context = 'current_turn'),
+            reasoning_mode TEXT NOT NULL CHECK(reasoning_mode = 'standard'),
+            store INTEGER NOT NULL CHECK(store = 0),
+            background INTEGER NOT NULL CHECK(background = 0),
+            stream INTEGER NOT NULL CHECK(stream = 0),
+            tool_choice TEXT NOT NULL CHECK(tool_choice = 'none'),
+            tool_count INTEGER NOT NULL CHECK(tool_count = 0),
+            truncation TEXT NOT NULL CHECK(truncation = 'disabled'),
+            prompt_cache_mode TEXT NOT NULL CHECK(prompt_cache_mode = 'explicit'),
+            has_prompt_cache_key INTEGER NOT NULL CHECK(has_prompt_cache_key = 0),
+            has_prompt_cache_breakpoint INTEGER NOT NULL CHECK(has_prompt_cache_breakpoint = 0),
+            maximum_context_tokens INTEGER NOT NULL CHECK(maximum_context_tokens > 0),
+            revision TEXT NOT NULL CHECK(length(trim(revision)) > 0),
             fingerprint TEXT NOT NULL UNIQUE,
             created_at TEXT NOT NULL
         ) STRICT;
         CREATE TABLE provider_price_snapshots(
             price_snapshot_id TEXT PRIMARY KEY,
-            provider TEXT NOT NULL,
-            model TEXT NOT NULL,
+            provider TEXT NOT NULL CHECK(provider = 'openai'),
+            model TEXT NOT NULL CHECK(model = 'gpt-5.6-sol'),
             currency TEXT NOT NULL CHECK(currency = 'USD'),
-            rules_json TEXT NOT NULL CHECK(json_valid(rules_json)),
+            service_tier TEXT NOT NULL CHECK(service_tier = 'default'),
+            revision TEXT NOT NULL CHECK(length(trim(revision)) > 0),
             fingerprint TEXT NOT NULL UNIQUE,
             created_at TEXT NOT NULL
+        ) STRICT;
+        CREATE TABLE provider_price_rules(
+            price_snapshot_id TEXT NOT NULL REFERENCES provider_price_snapshots(price_snapshot_id) ON DELETE RESTRICT,
+            rule_id TEXT NOT NULL,
+            context_band TEXT NOT NULL CHECK(context_band = 'standard-under-272k'),
+            cache_class TEXT NOT NULL CHECK(cache_class IN ('ordinary-input','cache-write','cache-read','none')),
+            token_class TEXT NOT NULL CHECK(token_class IN ('input','output','reasoning')),
+            tool_class TEXT NOT NULL CHECK(tool_class = 'none'),
+            region TEXT NOT NULL CHECK(region = 'global'),
+            numerator_nano_usd INTEGER NOT NULL CHECK(numerator_nano_usd >= 0),
+            denominator_tokens INTEGER NOT NULL CHECK(denominator_tokens > 0),
+            revision TEXT NOT NULL CHECK(length(trim(revision)) > 0),
+            PRIMARY KEY(price_snapshot_id,rule_id)
         ) STRICT;
         CREATE TABLE evidence_acquisition_runs(
             acquisition_run_id TEXT PRIMARY KEY,
@@ -1778,13 +1811,40 @@ public sealed partial class AuthoritativeStore
             owner_kind TEXT NOT NULL CHECK(owner_kind IN ('analysis-run','evidence-acquisition-run')),
             owner_id TEXT NOT NULL,
             profile_id TEXT NOT NULL REFERENCES provider_access_profiles(profile_id) ON DELETE RESTRICT,
-            generation_id TEXT NOT NULL REFERENCES provider_generations(generation_id) ON DELETE RESTRICT,
+            generation_id TEXT NOT NULL,
             revocation_epoch INTEGER NOT NULL CHECK(revocation_epoch >= 0),
+            operation_kind TEXT NOT NULL CHECK(operation_kind IN ('transport-qualification','source-claim-extraction','candidate-investigation')),
+            installation_snapshot_id TEXT NOT NULL,
+            analysis_context_id TEXT NOT NULL,
+            effective_configuration_id TEXT NOT NULL,
+            resolved_input_manifest_id TEXT NOT NULL,
+            prompt_id TEXT NOT NULL,
+            prompt_fingerprint TEXT NOT NULL,
+            output_schema_id TEXT NOT NULL,
+            output_schema_fingerprint TEXT NOT NULL,
             request_fingerprint TEXT NOT NULL,
             capability_snapshot_id TEXT NOT NULL REFERENCES provider_capability_snapshots(capability_snapshot_id) ON DELETE RESTRICT,
             price_snapshot_id TEXT NOT NULL REFERENCES provider_price_snapshots(price_snapshot_id) ON DELETE RESTRICT,
-            limits_json TEXT NOT NULL CHECK(json_valid(limits_json)),
-            confirmed_at TEXT NOT NULL
+            settings_fingerprint TEXT NOT NULL,
+            maximum_request_bytes INTEGER NOT NULL CHECK(maximum_request_bytes > 0),
+            maximum_input_tokens INTEGER NOT NULL CHECK(maximum_input_tokens > 0),
+            maximum_output_tokens INTEGER NOT NULL CHECK(maximum_output_tokens > 0),
+            maximum_raw_response_bytes INTEGER NOT NULL CHECK(maximum_raw_response_bytes > 0),
+            maximum_dispatch_count INTEGER NOT NULL CHECK(maximum_dispatch_count = 1),
+            maximum_calculated_nano_usd INTEGER NOT NULL CHECK(maximum_calculated_nano_usd > 0),
+            deadline_milliseconds INTEGER NOT NULL CHECK(deadline_milliseconds > 0),
+            confirmed_at TEXT NOT NULL,
+            UNIQUE(operation_id,profile_id,generation_id),
+            FOREIGN KEY(profile_id,generation_id)
+              REFERENCES provider_generations(profile_id,generation_id) ON DELETE RESTRICT,
+            CHECK((operation_kind = 'transport-qualification'
+                AND maximum_request_bytes <= 16384 AND maximum_input_tokens <= 20480
+                AND maximum_output_tokens <= 256 AND maximum_raw_response_bytes <= 262144
+                AND maximum_calculated_nano_usd <= 140000000 AND deadline_milliseconds <= 60000)
+              OR (operation_kind IN ('source-claim-extraction','candidate-investigation')
+                AND maximum_request_bytes <= 65536 AND maximum_input_tokens <= 73728
+                AND maximum_output_tokens <= 4096 AND maximum_raw_response_bytes <= 1048576
+                AND maximum_calculated_nano_usd <= 600000000 AND deadline_milliseconds <= 120000))
         ) STRICT;
         CREATE TABLE provider_operation_attempts(
             provider_attempt_id TEXT PRIMARY KEY,
@@ -1793,30 +1853,38 @@ public sealed partial class AuthoritativeStore
             initial_state TEXT NOT NULL CHECK(initial_state = 'proposed'),
             coordinator_fencing_epoch INTEGER NOT NULL CHECK(coordinator_fencing_epoch > 0),
             created_at TEXT NOT NULL,
-            UNIQUE(operation_id,attempt_ordinal)
+            UNIQUE(operation_id,attempt_ordinal),
+            UNIQUE(operation_id,provider_attempt_id)
         ) STRICT;
         CREATE TABLE provider_requests(
             request_id TEXT PRIMARY KEY,
             operation_id TEXT NOT NULL REFERENCES provider_operation_authorizations(operation_id) ON DELETE RESTRICT,
-            provider_attempt_id TEXT NOT NULL REFERENCES provider_operation_attempts(provider_attempt_id) ON DELETE RESTRICT,
+            provider_attempt_id TEXT NOT NULL,
             request_fingerprint TEXT NOT NULL,
+            canonical_request_fingerprint TEXT NOT NULL,
             settings_fingerprint TEXT NOT NULL,
             output_schema_fingerprint TEXT NOT NULL,
             payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
             created_at TEXT NOT NULL,
-            UNIQUE(operation_id,request_fingerprint)
+            UNIQUE(operation_id,request_fingerprint),
+            UNIQUE(operation_id,provider_attempt_id,request_id),
+            FOREIGN KEY(operation_id,provider_attempt_id)
+              REFERENCES provider_operation_attempts(operation_id,provider_attempt_id) ON DELETE RESTRICT
         ) STRICT;
         CREATE UNIQUE INDEX idx_provider_request_fingerprint ON provider_requests(request_fingerprint);
         CREATE TABLE provider_reservations(
             reservation_id TEXT PRIMARY KEY,
             operation_id TEXT NOT NULL REFERENCES provider_operation_authorizations(operation_id) ON DELETE RESTRICT,
-            provider_attempt_id TEXT NOT NULL REFERENCES provider_operation_attempts(provider_attempt_id) ON DELETE RESTRICT,
-            request_id TEXT NOT NULL REFERENCES provider_requests(request_id) ON DELETE RESTRICT,
+            provider_attempt_id TEXT NOT NULL,
+            request_id TEXT NOT NULL,
             usage_json TEXT NOT NULL CHECK(json_valid(usage_json)),
             maximum_nano_usd INTEGER NOT NULL CHECK(maximum_nano_usd > 0),
             expires_at TEXT NOT NULL,
             created_at TEXT NOT NULL,
-            UNIQUE(operation_id)
+            UNIQUE(operation_id),
+            UNIQUE(operation_id,provider_attempt_id,request_id,reservation_id),
+            FOREIGN KEY(operation_id,provider_attempt_id,request_id)
+              REFERENCES provider_requests(operation_id,provider_attempt_id,request_id) ON DELETE RESTRICT
         ) STRICT;
         CREATE TABLE provider_reservation_scope_items(
             reservation_scope_item_id TEXT PRIMARY KEY,
@@ -1830,14 +1898,22 @@ public sealed partial class AuthoritativeStore
         CREATE INDEX idx_provider_reservation_scope ON provider_reservation_scope_items(scope_kind,scope_id);
         CREATE TABLE provider_dispatch_fences(
             dispatch_fence_id TEXT PRIMARY KEY,
-            reservation_id TEXT NOT NULL REFERENCES provider_reservations(reservation_id) ON DELETE RESTRICT,
-            provider_attempt_id TEXT NOT NULL REFERENCES provider_operation_attempts(provider_attempt_id) ON DELETE RESTRICT,
+            operation_id TEXT NOT NULL,
+            reservation_id TEXT NOT NULL,
+            request_id TEXT NOT NULL,
+            provider_attempt_id TEXT NOT NULL,
             coordinator_fencing_epoch INTEGER NOT NULL CHECK(coordinator_fencing_epoch > 0),
-            generation_id TEXT NOT NULL REFERENCES provider_generations(generation_id) ON DELETE RESTRICT,
+            profile_id TEXT NOT NULL,
+            generation_id TEXT NOT NULL,
             revocation_epoch INTEGER NOT NULL CHECK(revocation_epoch >= 0),
             authorized INTEGER NOT NULL CHECK(authorized IN (0,1)),
             decision_reason TEXT NOT NULL,
-            evaluated_at TEXT NOT NULL
+            evaluated_at TEXT NOT NULL,
+            UNIQUE(operation_id,provider_attempt_id,request_id,dispatch_fence_id),
+            FOREIGN KEY(operation_id,provider_attempt_id,request_id,reservation_id)
+              REFERENCES provider_reservations(operation_id,provider_attempt_id,request_id,reservation_id) ON DELETE RESTRICT,
+            FOREIGN KEY(operation_id,profile_id,generation_id)
+              REFERENCES provider_operation_authorizations(operation_id,profile_id,generation_id) ON DELETE RESTRICT
         ) STRICT;
         CREATE TABLE provider_transport_events(
             transport_event_id TEXT PRIMARY KEY,
@@ -1849,34 +1925,49 @@ public sealed partial class AuthoritativeStore
         ) STRICT;
         CREATE TABLE provider_responses(
             response_record_id TEXT PRIMARY KEY,
-            request_id TEXT NOT NULL REFERENCES provider_requests(request_id) ON DELETE RESTRICT,
-            provider_attempt_id TEXT NOT NULL REFERENCES provider_operation_attempts(provider_attempt_id) ON DELETE RESTRICT,
+            operation_id TEXT NOT NULL,
+            request_id TEXT NOT NULL,
+            provider_attempt_id TEXT NOT NULL,
             raw_response_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
             response_fingerprint TEXT NOT NULL,
             response_state TEXT NOT NULL,
             response_metadata_json TEXT NOT NULL CHECK(json_valid(response_metadata_json)),
             created_at TEXT NOT NULL,
-            UNIQUE(request_id)
+            UNIQUE(request_id),
+            UNIQUE(operation_id,provider_attempt_id,request_id,response_record_id),
+            FOREIGN KEY(operation_id,provider_attempt_id,request_id)
+              REFERENCES provider_requests(operation_id,provider_attempt_id,request_id) ON DELETE RESTRICT
         ) STRICT;
         CREATE TABLE provider_usage_entries(
             usage_entry_id TEXT PRIMARY KEY,
-            provider_attempt_id TEXT NOT NULL REFERENCES provider_operation_attempts(provider_attempt_id) ON DELETE RESTRICT,
-            request_id TEXT NOT NULL REFERENCES provider_requests(request_id) ON DELETE RESTRICT,
+            operation_id TEXT NOT NULL,
+            provider_attempt_id TEXT NOT NULL,
+            request_id TEXT NOT NULL,
             usage_json TEXT NOT NULL CHECK(json_valid(usage_json)),
             calculated_nano_usd INTEGER NOT NULL CHECK(calculated_nano_usd >= 0),
             receipt_state TEXT NOT NULL,
             created_at TEXT NOT NULL,
-            UNIQUE(provider_attempt_id)
+            UNIQUE(provider_attempt_id),
+            UNIQUE(operation_id,provider_attempt_id,request_id,usage_entry_id),
+            FOREIGN KEY(operation_id,provider_attempt_id,request_id)
+              REFERENCES provider_requests(operation_id,provider_attempt_id,request_id) ON DELETE RESTRICT
         ) STRICT;
         CREATE TABLE provider_settlements(
             settlement_id TEXT PRIMARY KEY,
-            reservation_id TEXT NOT NULL REFERENCES provider_reservations(reservation_id) ON DELETE RESTRICT,
-            usage_entry_id TEXT REFERENCES provider_usage_entries(usage_entry_id) ON DELETE RESTRICT,
+            operation_id TEXT NOT NULL,
+            provider_attempt_id TEXT NOT NULL,
+            request_id TEXT NOT NULL,
+            reservation_id TEXT NOT NULL,
+            usage_entry_id TEXT NOT NULL,
             state TEXT NOT NULL CHECK(state IN ('settled','failed-known','unresolved-hold','overrun')),
             released_nano_usd INTEGER NOT NULL CHECK(released_nano_usd >= 0),
             retained_hold_nano_usd INTEGER NOT NULL CHECK(retained_hold_nano_usd >= 0),
             created_at TEXT NOT NULL,
-            UNIQUE(reservation_id)
+            UNIQUE(reservation_id),
+            FOREIGN KEY(operation_id,provider_attempt_id,request_id,reservation_id)
+              REFERENCES provider_reservations(operation_id,provider_attempt_id,request_id,reservation_id) ON DELETE RESTRICT,
+            FOREIGN KEY(operation_id,provider_attempt_id,request_id,usage_entry_id)
+              REFERENCES provider_usage_entries(operation_id,provider_attempt_id,request_id,usage_entry_id) ON DELETE RESTRICT
         ) STRICT;
         CREATE TABLE provider_settlement_adjustments(
             adjustment_id TEXT PRIMARY KEY,
@@ -1905,10 +1996,14 @@ public sealed partial class AuthoritativeStore
         CREATE TABLE provider_replay_edges(
             replay_edge_id TEXT PRIMARY KEY,
             operation_id TEXT NOT NULL REFERENCES provider_operation_authorizations(operation_id) ON DELETE RESTRICT,
-            response_record_id TEXT NOT NULL REFERENCES provider_responses(response_record_id) ON DELETE RESTRICT,
+            provider_attempt_id TEXT NOT NULL,
+            request_id TEXT NOT NULL,
+            response_record_id TEXT NOT NULL,
             replay_state TEXT NOT NULL CHECK(replay_state IN ('retained-response','audit-only','unavailable')),
             dependency_manifest_id TEXT NOT NULL,
-            created_at TEXT NOT NULL
+            created_at TEXT NOT NULL,
+            FOREIGN KEY(operation_id,provider_attempt_id,request_id,response_record_id)
+              REFERENCES provider_responses(operation_id,provider_attempt_id,request_id,response_record_id) ON DELETE RESTRICT
         ) STRICT;
         CREATE TABLE provider_operation_projection(
             operation_id TEXT PRIMARY KEY REFERENCES provider_operation_authorizations(operation_id) ON DELETE CASCADE,
@@ -1917,11 +2012,16 @@ public sealed partial class AuthoritativeStore
             reserved_nano_usd INTEGER NOT NULL CHECK(reserved_nano_usd >= 0),
             calculated_nano_usd INTEGER NOT NULL CHECK(calculated_nano_usd >= 0),
             unresolved_hold INTEGER NOT NULL CHECK(unresolved_hold IN (0,1)),
+            live_billable_slot INTEGER CHECK(live_billable_slot IS NULL OR live_billable_slot = 1),
             projection_version INTEGER NOT NULL CHECK(projection_version > 0),
-            updated_at TEXT NOT NULL
+            updated_at TEXT NOT NULL,
+            CHECK((state IN ('reserved','assigned','final-gate-authorized','transport-not-started','transport-may-have-started','response-staged') AND live_billable_slot = 1)
+              OR (state NOT IN ('reserved','assigned','final-gate-authorized','transport-not-started','transport-may-have-started','response-staged') AND live_billable_slot IS NULL)),
+            FOREIGN KEY(operation_id,provider_attempt_id)
+              REFERENCES provider_operation_attempts(operation_id,provider_attempt_id) ON DELETE RESTRICT
         ) STRICT;
-        CREATE UNIQUE INDEX idx_provider_one_live_attempt ON provider_operation_projection(provider_attempt_id)
-          WHERE state IN ('reserved','assigned','final-gate-authorized','transport-not-started','transport-may-have-started','response-staged');
+        CREATE UNIQUE INDEX idx_provider_one_live_attempt ON provider_operation_projection(live_billable_slot)
+          WHERE live_billable_slot = 1;
         CREATE TABLE provider_profile_projection(
             profile_id TEXT PRIMARY KEY REFERENCES provider_access_profiles(profile_id) ON DELETE CASCADE,
             generation_id TEXT NOT NULL,

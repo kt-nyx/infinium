@@ -177,3 +177,10 @@ DACLs, current-user/elevation checks, remote rejection, finite transport
 buffers/rate limits, process supervision, private-handle inheritance, staging
 authorization, and coordinator-side admission remain runtime obligations for
 later slices.
+
+The additive application v1 surface is at protocol 1.2.0 and exposes bounded,
+non-secret provider profile, operation, budget, replay, and command shapes.
+Helper v2 has a separate fingerprint over only its helper/common/identity
+transitive closure; its fail-closed decoder rejects unknown nested fields,
+unknown enum numerics, and contradictory assignment, revalidation, or receipt
+states. Helper v1 remains independently parsed under its own frame identity.

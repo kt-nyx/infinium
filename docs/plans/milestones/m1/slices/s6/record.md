@@ -1,6 +1,6 @@
 # M1 Slice 6 implementation record
 
-Status: In progress
+Status: Deferred
 
 Disposition: Append-only implementation evidence
 
@@ -204,3 +204,184 @@ Last reviewed: 2026-08-10
   must-fix finding remains. Candidate acceptance and advancement to WP2 remain
   orchestrator/independent-review actions; this record does not change
   `docs/current-state.md`.
+
+## M1/S6/WP1 correction-pass entry — 2026-08-10
+
+### Rejection and corrected authority boundary
+
+- Independent contract and repository-boundary review rejected candidate
+  `e9ed1bcaf9cc50c5cf07376009a8371e41247b5e`. The preceding closure statement
+  is retained as historical evidence, but is superseded: unresolved WP1
+  must-fix findings did remain at that candidate.
+- The correction pass began on branch `codex/m1-s6` at that exact rejected
+  commit with a clean worktree. `docs/current-state.md` still authorizes WP1
+  only; no WP2 or later-package authority was inferred.
+- Both final reviewer reports and the accepted Slice 6 Section 12 authority
+  were re-opened before product edits. The pass is bounded to the rejected
+  contract, codec, migration, helper/application wire, traceability, fixture,
+  verification, and documentation seams.
+- The earlier claim that a fixed 4,096-token framing margin was proved is
+  withdrawn. Repository-local accepted authority and dependencies are being
+  checked for an exact tokenizer or a genuinely derivable framing-inclusive
+  grammar. No network, provider preflight, private fixture, credential store,
+  legacy archive, or evaluator archive will be used to manufacture that proof.
+  If the local evidence cannot support it, only that finite-input-bound path
+  will be reported as the plan-defined owner/authority escalation.
+
+### Correction implementation and evidence
+
+- Operation documents now carry an explicit operation kind, nullable
+  state-reachable identities, conditional JSON branches, availability-aware
+  quantities, and typed reachable capability and price snapshot contents.
+  Exhaustive evidence validates every non-unspecified operation state and all
+  ordered state pairs against the closed transition graph, plus adversarial
+  semantic proposal and public-output cross-state substitutions.
+- Transport qualification and both semantic operation kinds are bound across
+  domain, JSON, helper, persistence, and tests to their exact accepted
+  seven-dimensional ceilings. This does not cure the separate framing-inclusive
+  input-token proof gap.
+- Schema 6 now persists the exact installation, analysis-context, effective-
+  configuration, resolved-manifest, prompt, output-schema, request/settings,
+  profile/generation, capability, price, and seven-dimensional limit bindings.
+  Capability fields and price rules are typed relational data. Composite
+  foreign keys reject cross-profile generation and cross-operation attempt,
+  request, reservation, fence, response, usage, settlement, replay, and
+  projection substitutions. A partial unique index on the constant
+  `live_billable_slot=1` enforces one global live billable attempt; distinct
+  live attempts are tested adversarially. Backup/restore retains exact replay
+  field values.
+- The application protobuf contract advanced additively to 1.2.0 with bounded
+  non-secret provider profile, operation, budget, replay, and command shapes.
+  CLI and run-output supplements distinguish not-used, unavailable, pending,
+  live, completed, failed, and unresolved states without fabricated usage or
+  downstream identities. Slice 5 v1 byte surfaces remain unchanged.
+- Helper v2 final revalidation now binds provider account, billing scope,
+  effective configuration, capability snapshot, price snapshot, settings,
+  output schema, operation kind, request, reservation, generation, revocation,
+  attempt, dispatch, and fence epoch. Its independent transitive fingerprint is
+  `a7f338ec8c8f4a60cd6314ae84f2f0442ed7a29750d16ac7b7b8339b6a8c1af2`;
+  the separately versioned full application contract-set fingerprint is
+  `cac374c5d50a12701789bf9ea8ee62cd0a0096167de7d31b5fc5fb8cab5cba6d`.
+  Independent v1/v2 frame parsing and fail-closed top-level/nested unknown,
+  numeric enum, limit, assignment, final-revalidation, and outcome evidence is
+  executable.
+- Traceability now uses accepted requirement and ADR identities only, includes
+  ADR-0020, explicitly assigns every declared/reachable field to a semantic
+  seam, and validates field coverage, accepted IDs, source/output paths, and
+  exact migration tables. RESEARCH-0054 is treated as evidence rather than
+  direct product authority.
+- Corrected schema-6 fingerprint:
+  `21a46b9a08db42504a0f3edcb523fb94118e3753385f894008d0671282b33d4a`.
+  Corrected answer-free example authority: 12,914 bytes, SHA-256
+  `aee234a164321203abcb7623b193b6f268df420102801912e01b754fdf7580eb`.
+  Corrected 19-package public registry: 8,815 bytes, SHA-256
+  `f1ee0275a1b01f162871645f9c1f6e8f787311e1dc9cc3f13bb2d8bc2e1af069`.
+  Corrected traceability inventory: 20,142 bytes, SHA-256
+  `7d5a62d8a2606c5cf6124ca4dc2c4ff8c6467ba0eec4b8e91161e1a1ed7dda9c`.
+
+### Correction verification
+
+1. `dotnet restore Infinium.sln --locked-mode` remained the locked restore
+   basis from the WP1 candidate; no dependency was added.
+2. `dotnet build Infinium.sln -c Release --no-restore` — passed with zero
+   warnings and zero errors.
+3. The combined focused unit filters for provider contracts, finite limits,
+   operational contracts, schema 6, provider persistence, and backup/restore —
+   18 passed, 0 failed, 0 skipped.
+4. The focused provider/helper/run-output contract filter — 16 passed, 0
+   failed, 0 skipped.
+5. `eng/verify-m1-slice6.ps1 -Gate Contracts` — passed, including 16 focused
+   contract tests, independent helper/application fingerprints, forbidden-field
+   scan, registry closure, and frozen Slice 5 v1 diff.
+6. `eng/verify-m1-slice6.ps1 -Gate StateTotality` — passed, including 14
+   domain/transition tests and 4 migration/persistence/restore tests. Its
+   receipt declares local input-bound proof `authority-required` and provider
+   dispatch admission `fail-closed`; it makes no framing-margin claim.
+7. `dotnet test Infinium.sln -c Release --no-build --nologo` — Unit 165/0/1,
+   Contract 149/0/0, Integration 68/0/0, Evaluation 53/0/8. The skips are the
+   existing environment/private-runtime-dependent cases; no private material
+   was accessed.
+8. `dotnet format Infinium.sln --verify-no-changes --no-restore`,
+   `eng/validate-documentation.ps1`, and
+   `eng/update-dependency-manifest.ps1 -Check` — passed after the mechanical
+   dependency-manifest reseal.
+9. `git diff --check`, frozen Slice 5 v1/current-state diff, rejected-margin and
+   invented-ID scan, forbidden secret-field scan, semantic/diff review, and
+   repository-boundary review — passed. No current-state, later-WP, private,
+   archive, credential, provider, DNS, or public-network boundary was touched.
+
+### Remaining authority escalation
+
+- Repository-local accepted authority and locked dependencies contain no exact
+  provider tokenizer and no complete provider-framing grammar from which the
+  required framing-inclusive input-token bound can be proved. Inventing another
+  margin would repeat the rejected defect. The product therefore exposes no
+  successful local input-bound proof and fails provider dispatch admission
+  closed at that boundary.
+- This one path requires the plan-defined owner/authority decision: supply and
+  accept an exact local tokenizer/framing policy or revise the accepted bound
+  contract. All independent WP1 corrections above are complete and coherent;
+  this record remains `Deferred` and does not advance `docs/current-state.md`.
+
+## M1/S6/WP1 final correction reseal — 2026-08-10
+
+### Superseding evidence
+
+- Final semantic re-review strengthened the executable state-totality proof to
+  enumerate every supported operation state, every ordered transition pair,
+  every bounded transport/receipt/settlement/replay combination, and every
+  state-reachable identity inversion. It also exercises zero and one-above
+  boundaries for every qualification-limit dimension and one-above boundaries
+  for both semantic operation kinds.
+- Final relational review added distinct adversarial inserts for cross-graph
+  request, reservation, dispatch fence, response, usage, settlement, replay,
+  and operation-projection ownership, in addition to the cross-profile
+  generation and two-distinct-live-attempt cases. Invalid typed capability
+  and price snapshot contents and price-rule dimensions are rejected by the
+  persisted schema, not merely by application validation.
+- Restore evidence now compares every retained replay binding individually:
+  profile/generation/revocation, operation kind, installation/context/effective
+  configuration/resolved manifest, prompt and output-schema identities and
+  fingerprints, canonical request, capability and price snapshot identities,
+  settings, and all seven authorization limits.
+- Those persisted snapshot checks legitimately resealed the schema-6
+  fingerprint to
+  `9cc35e3709a9a7fb4bdc0470e4ee488441648cb9b43055d0319f22af878464f4`.
+  The earlier `21a46b9a...` value in this append-only record is superseded.
+  The final traceability/example/registry bytes and hashes remain exactly the
+  values recorded in the correction section above.
+
+### Final rerun evidence
+
+1. `dotnet restore Infinium.sln --locked-mode` — all projects up to date.
+2. `dotnet format Infinium.sln --no-restore`, followed by
+   `dotnet format Infinium.sln --verify-no-changes --no-restore` — passed.
+3. `dotnet build Infinium.sln -c Release --no-restore` — passed with zero
+   warnings and zero errors.
+4. `eng/verify-m1-slice6.ps1 -Gate Contracts` — passed: 17/0/0 focused
+   contract tests, nine schemas, nine answer-free examples, 19 public fixture
+   packages, independent helper/application fingerprints, frozen Slice 5 v1
+   bytes, and forbidden-field closure.
+5. `eng/verify-m1-slice6.ps1 -Gate StateTotality` — passed: 15/0/0 exhaustive
+   domain/transition/limit tests and 4/0/0 migration, relational ownership,
+   singleton-live-attempt, backup, and restore tests. Its receipt retains the
+   exact fail-closed finite-bound escalation and grants neither network nor
+   credential access.
+6. `dotnet test Infinium.sln -c Release --no-build --nologo` — Unit 166/0/1,
+   Contract 150/0/0, Integration 68/0/0, Evaluation 53/0/8. The unchanged
+   skips remain environment/private-runtime dependent; no private material was
+   accessed.
+7. `eng/validate-documentation.ps1`,
+   `eng/update-dependency-manifest.ps1 -Check`, `git diff --check`, strict
+   secret/forbidden-ID/rejected-margin scans, frozen Slice 5/current-state
+   diff, and changed-path review — passed.
+
+### Final finding disposition
+
+- Routine correction: the first run after persisted snapshot hardening failed
+  only its now-stale schema fingerprint assertion; declaration, test, gate,
+  and this append-only evidence were resealed to the observed fingerprint and
+  all checks reran green.
+- Owner/authority escalation remains limited to the framing-inclusive local
+  input-token proof described above. No other must-fix, follow-up, safety,
+  isolation, or owner-decision finding remains in WP1.

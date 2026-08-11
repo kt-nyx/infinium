@@ -4,21 +4,16 @@ public static class ProviderOperationContractInvariants
 {
     public const long MaximumCanonicalRequestBytes = 65_536;
     public const long MaximumLocallyAdmittedInputTokens = 73_728;
-    // One token per canonical UTF-8 byte is the deliberately pessimistic base.
-    // The fixed 4,096-token allowance covers the provider-owned structured
-    // response envelope without relying on a tokenizer or a network call.
-    public const long StructuralTokenMargin = 4_096;
+    public const string LocalInputBoundProofStatus = "authority-required";
 
-    public static long ConservativeUtf8TokenUpperBound(long canonicalRequestBytes)
+    public static void RequireLocalInputBoundProof(long canonicalRequestBytes)
     {
         if (canonicalRequestBytes <= 0 || canonicalRequestBytes > MaximumCanonicalRequestBytes)
         {
             throw new ArgumentOutOfRangeException(nameof(canonicalRequestBytes));
         }
-
-        // Every UTF-8 token consumes at least one request byte. The fixed margin
-        // covers provider framing without depending on a provider preflight.
-        return checked(canonicalRequestBytes + StructuralTokenMargin);
+        throw new NotSupportedException(
+            "WP1 has no accepted repository-local tokenizer or framing grammar from which to prove the framing-inclusive input-token bound.");
     }
 
     public static long CalculateComponentNanoUsd(long tokens, ProviderPriceRuleContract rule)
@@ -35,22 +30,25 @@ public static class ProviderOperationContractInvariants
         return checked(quotient + (remainder == 0 ? 0 : 1));
     }
 
-    public static void Validate(ProviderFiniteLimitsContract value)
+    public static void Validate(ProviderOperationKind kind, ProviderFiniteLimitsContract value)
     {
         ArgumentNullException.ThrowIfNull(value);
-        if (value.MaximumRequestBytes is <= 0 or > MaximumCanonicalRequestBytes
-            || value.MaximumInputTokens is <= 0 or > MaximumLocallyAdmittedInputTokens
-            || value.MaximumOutputTokens is <= 0 or > 4_096
-            || value.MaximumRawResponseBytes is <= 0 or > 1_048_576
+        ProviderFiniteLimitsContract ceiling = kind switch
+        {
+            ProviderOperationKind.TransportQualification => new(16_384, 20_480, 256, 262_144, 1, 140_000_000, 60_000),
+            ProviderOperationKind.SourceClaimExtraction or ProviderOperationKind.CandidateInvestigation =>
+                new(65_536, 73_728, 4_096, 1_048_576, 1, 600_000_000, 120_000),
+            _ => throw new InvalidOperationException("Provider operation kind must be explicit."),
+        };
+        if (value.MaximumRequestBytes is <= 0 || value.MaximumRequestBytes > ceiling.MaximumRequestBytes
+            || value.MaximumInputTokens is <= 0 || value.MaximumInputTokens > ceiling.MaximumInputTokens
+            || value.MaximumOutputTokens is <= 0 || value.MaximumOutputTokens > ceiling.MaximumOutputTokens
+            || value.MaximumRawResponseBytes is <= 0 || value.MaximumRawResponseBytes > ceiling.MaximumRawResponseBytes
             || value.MaximumDispatchCount != 1
-            || value.MaximumCalculatedNanoUsd is <= 0 or > 600_000_000
-            || value.DeadlineMilliseconds is <= 0 or > 120_000)
+            || value.MaximumCalculatedNanoUsd is <= 0 || value.MaximumCalculatedNanoUsd > ceiling.MaximumCalculatedNanoUsd
+            || value.DeadlineMilliseconds is <= 0 || value.DeadlineMilliseconds > ceiling.DeadlineMilliseconds)
         {
-            throw new InvalidOperationException("Provider limits must be finite, positive, and within the accepted M1 ceilings.");
-        }
-        if (ConservativeUtf8TokenUpperBound(value.MaximumRequestBytes) > value.MaximumInputTokens)
-        {
-            throw new InvalidOperationException("The local input-token reservation does not cover the conservative UTF-8 bound.");
+            throw new InvalidOperationException($"Provider limits exceed the accepted seven-dimensional {kind} ceiling.");
         }
     }
 
@@ -58,7 +56,7 @@ public static class ProviderOperationContractInvariants
     {
         ArgumentNullException.ThrowIfNull(value);
         RequireHeader(value.SchemaId, value.SchemaVersion, ContractConstants.EffectiveScanConfigurationV2SchemaId);
-        Validate(value.Limits);
+        Validate(ProviderOperationKind.SourceClaimExtraction, value.Limits);
         if (value.Model != "gpt-5.6-sol" || value.ReasoningEffort != "medium"
             || value.ReasoningContext != "current_turn" || value.ReasoningMode != "standard"
             || value.Store || value.ServiceTier != "default" || value.Background || value.Stream
@@ -95,8 +93,10 @@ public static class ProviderOperationContractInvariants
     {
         ArgumentNullException.ThrowIfNull(value);
         RequireHeader(value.SchemaId, value.SchemaVersion, ContractConstants.ProviderOperationSchemaId);
-        Validate(value.Limits);
+        Validate(value.OperationKind, value.Limits);
         Validate(value.Usage);
+        Validate(value.CapabilitySnapshot);
+        Validate(value.PriceSnapshot);
         RequireExplicit(value.State, nameof(value.State));
         if (value.RevocationEpoch < 0
             || value.OwnerKind is not ("analysis-run" or "evidence-acquisition-run")
@@ -106,6 +106,33 @@ public static class ProviderOperationContractInvariants
             || value.ReplayState is not ("not-available" or "retained-response" or "audit-only"))
         {
             throw new InvalidOperationException("Provider operation contains an unsupported owner or terminal projection state.");
+        }
+        ValidateOperationStateShape(value);
+    }
+
+    public static void ValidateTransition(ProviderOperationState from, ProviderOperationState to)
+    {
+        bool legal = (from, to) switch
+        {
+            (ProviderOperationState.Proposed, ProviderOperationState.Confirmed) => true,
+            (ProviderOperationState.Confirmed, ProviderOperationState.Reserved) => true,
+            (ProviderOperationState.Reserved, ProviderOperationState.Assigned) => true,
+            (ProviderOperationState.Assigned, ProviderOperationState.FinalGateAuthorized) => true,
+            (ProviderOperationState.FinalGateAuthorized, ProviderOperationState.TransportNotStarted) => true,
+            (ProviderOperationState.TransportNotStarted, ProviderOperationState.TransportMayHaveStarted) => true,
+            (ProviderOperationState.TransportNotStarted, ProviderOperationState.Rejected) => true,
+            (ProviderOperationState.TransportMayHaveStarted, ProviderOperationState.ResponseStaged) => true,
+            (ProviderOperationState.TransportMayHaveStarted, ProviderOperationState.UnresolvedHold) => true,
+            (ProviderOperationState.ResponseStaged, ProviderOperationState.Admitted) => true,
+            (ProviderOperationState.ResponseStaged, ProviderOperationState.Rejected) => true,
+            (ProviderOperationState.Admitted, ProviderOperationState.Settled) => true,
+            (ProviderOperationState.Rejected, ProviderOperationState.Settled) => true,
+            (ProviderOperationState.UnresolvedHold, ProviderOperationState.Settled) => true,
+            _ => false,
+        };
+        if (!legal)
+        {
+            throw new InvalidOperationException($"Provider operation transition {from}->{to} is not in the closed lifecycle graph.");
         }
     }
 
@@ -117,7 +144,12 @@ public static class ProviderOperationContractInvariants
         RequireExplicit(value.ValidationState, nameof(value.ValidationState));
         RequireExplicit(value.AdmissionState, nameof(value.AdmissionState));
         Validate(value.Usage);
-        if (value.RawResponseBytes is <= 0 or > 1_048_576 || value.HttpStatus is < 100 or > 599
+        bool completed = value.State is ProviderResponseState.Completed or ProviderResponseState.Refusal or ProviderResponseState.Incomplete;
+        if ((completed && (value.RawResponsePayload is null || value.RawResponseBytes is null or <= 0 or > 1_048_576
+                || value.HttpStatus is null or < 100 or > 599 || string.IsNullOrWhiteSpace(value.ReturnedModel)
+                || string.IsNullOrWhiteSpace(value.ReturnedServiceTier)))
+            || (!completed && (value.RawResponsePayload is not null || value.RawResponseBytes is not null || value.HttpStatus is not null
+                || value.ProviderResponseId is not null || value.ReturnedModel is not null || value.ReturnedServiceTier is not null))
             || value.RequestedModel != "gpt-5.6-sol" || value.RequestedServiceTier != "default"
             || value.ReasoningContext != "current_turn" || value.ReasoningMode != "standard"
             || value.PromptCacheMode != "explicit")
@@ -130,11 +162,9 @@ public static class ProviderOperationContractInvariants
     {
         ArgumentNullException.ThrowIfNull(value);
         RequireHeader(value.SchemaId, value.SchemaVersion, ContractConstants.ProviderExecutionInputSchemaId);
-        Validate(value.Limits);
-        if (value.OperationKind is not ("transport-qualification" or "source-claim-extraction" or "candidate-investigation"))
-        {
-            throw new InvalidOperationException("Provider execution input operation kind is unsupported.");
-        }
+        Validate(value.OperationKind, value.Limits);
+        Validate(value.CapabilitySnapshot);
+        Validate(value.PriceSnapshot);
     }
 
     public static void Validate(RunOutputV2Document value)
@@ -145,9 +175,24 @@ public static class ProviderOperationContractInvariants
             || !Unique(value.ProviderOperations.Select(x => x.OperationId))
             || !Unique(value.EvidenceAcquisitionRunIds) || !Unique(value.CapabilityDriftIds)
             || !Unique(value.PriceDriftIds) || !BoundedUniqueText(value.ProviderGaps)
-            || value.ProviderOperations.Any(x => x.Availability is not ("not-used" or "unavailable" or "live" or "retained" or "failed" or "unresolved")))
+            || value.ProviderOperations.Any(x => x.Availability is not ("not-used" or "unavailable" or "pending" or "live" or "retained" or "failed" or "unresolved")))
         {
             throw new InvalidOperationException("Run output v2 cannot embed raw provider transport or secrets.");
+        }
+        foreach (ProviderPublicationReferenceContract publication in value.ProviderOperations)
+        {
+            bool none = publication.Availability is "not-used" or "unavailable";
+            bool qualification = publication.OperationKind == ProviderOperationKind.TransportQualification;
+            if (none != (publication.OperationId is null)
+                || (none && (publication.Live || publication.OperationKind is not null || publication.AcquisitionRunId is not null
+                    || publication.AuthorizationId is not null || publication.ResponseId is not null
+                    || publication.AdmissionId is not null || publication.UsageEntryId is not null
+                    || publication.SettlementId is not null || publication.ReplayEdgeId is not null))
+                || (publication.Live != (publication.Availability == "live"))
+                || (qualification && (publication.AcquisitionRunId is not null || publication.AdmissionId is not null)))
+            {
+                throw new InvalidOperationException("Run-output provider publication contradicts its availability or operation kind.");
+            }
         }
     }
 
@@ -155,14 +200,22 @@ public static class ProviderOperationContractInvariants
     {
         ArgumentNullException.ThrowIfNull(value);
         RequireHeader(value.SchemaId, value.SchemaVersion, ContractConstants.CliSummaryV2SchemaId);
-        if (value.ContainsRawTransport || value.ContainsSecret || value.DispatchCount > 3
-            || value.ProviderState is not ("not-used" or "unavailable" or "live" or "failed" or "unresolved")
+        if (value.ContainsRawTransport || value.ContainsSecret
+            || value.ProviderState is not ("not-used" or "unavailable" or "pending" or "live" or "completed" or "failed" or "unresolved")
             || value.ReplayState is not ("not-available" or "retained-response" or "audit-only")
             || !BoundedUniqueText(value.Gaps)
             || new[] { value.DispatchCount, value.InputTokens, value.OutputTokens, value.ReasoningTokens,
-                value.CacheReadTokens, value.CacheWriteTokens, value.CalculatedNanoUsd, value.ReservedNanoUsd }.Any(x => x < 0))
+                value.CacheReadTokens, value.CacheWriteTokens, value.CalculatedNanoUsd, value.ReservedNanoUsd }.Any(x => !ValidQuantity(x)))
         {
             throw new InvalidOperationException("CLI summary v2 contains an invalid provider projection.");
+        }
+        bool noProvider = value.ProviderState is "not-used" or "unavailable";
+        if (noProvider && (value.DispatchCount.Value is not null || value.InputTokens.Value is not null
+            || value.OutputTokens.Value is not null || value.ReasoningTokens.Value is not null
+            || value.CalculatedNanoUsd.Value is not null || value.ReservedNanoUsd.Value is not null
+            || value.UnresolvedHold || value.ReplayState != "not-available"))
+        {
+            throw new InvalidOperationException("Not-used and unavailable CLI projections cannot publish fabricated usage, hold, or replay values.");
         }
     }
 
@@ -174,7 +227,9 @@ public static class ProviderOperationContractInvariants
             || value.ClaimProposals.Count > 64 || !Unique(value.ClaimProposals.Select(x => x.ProposalId))
             || value.ClaimProposals.Any(x => x.State == ProposalAdmissionState.Unspecified
                 || string.IsNullOrWhiteSpace(x.Claim) || string.IsNullOrWhiteSpace(x.Reason)
-                || !Unique(x.ConditionIds))
+                || !value.PassageIds.Contains(x.PassageId) || !Unique(x.ConditionIds)
+                || (x.State == ProposalAdmissionState.Admitted
+                    && (value.ValidationIds.Count == 0 || value.ApplicationLinkIds.Count == 0)))
             || !BoundedUniqueText(value.Abstentions) || !BoundedUniqueText(value.Gaps)
             || !Unique(value.ContradictionEvidenceIds) || !Unique(value.ValidationIds)
             || !Unique(value.ApplicationLinkIds))
@@ -192,7 +247,10 @@ public static class ProviderOperationContractInvariants
             || value.HypothesisProposals.Count > 64 || !Unique(value.HypothesisProposals.Select(x => x.ProposalId))
             || value.HypothesisProposals.Any(x => x.State == ProposalAdmissionState.Unspecified
                 || string.IsNullOrWhiteSpace(x.Hypothesis) || string.IsNullOrWhiteSpace(x.Reason)
+                || x.CandidateId != value.CandidateId
                 || !Unique(x.SupportingEvidenceIds) || !Unique(x.ContradictingEvidenceIds)
+                || x.SupportingEvidenceIds.Intersect(x.ContradictingEvidenceIds).Any()
+                || x.SupportingEvidenceIds.Concat(x.ContradictingEvidenceIds).Any(id => !value.EvidenceIds.Contains(id))
                 || !BoundedUniqueText(x.MissingInformation))
             || !Unique(value.CausalPathIds) || !Unique(value.EvidenceIds)
             || !BoundedUniqueText(value.Abstentions) || !BoundedUniqueText(value.Gaps)
@@ -205,17 +263,110 @@ public static class ProviderOperationContractInvariants
     private static void Validate(ProviderUsageContract value)
     {
         ArgumentNullException.ThrowIfNull(value);
-        if (new[] { value.DispatchCount, value.InputTokens, value.OutputTokens, value.ReasoningTokens,
-                value.CacheReadTokens, value.CacheWriteTokens, value.PricedToolCalls, value.CalculatedNanoUsd }.Any(x => x < 0)
-            || value.DispatchCount > 1 || value.InputTokens > 73_728 || value.OutputTokens > 4_096
-            || value.ReasoningTokens > 4_096 || value.CalculatedNanoUsd > 600_000_000
-            || value.CacheReadTokens != 0 || value.CacheWriteTokens != 0 || value.PricedToolCalls != 0)
+        ProviderQuantityContract[] quantities = [value.DispatchCount, value.InputTokens, value.OutputTokens, value.ReasoningTokens,
+            value.CacheReadTokens, value.CacheWriteTokens, value.PricedToolCalls, value.CalculatedNanoUsd];
+        if (quantities.Any(x => !ValidQuantity(x))
+            || value.DispatchCount.Value > 1 || value.InputTokens.Value > 73_728 || value.OutputTokens.Value > 4_096
+            || value.ReasoningTokens.Value > 4_096 || value.CalculatedNanoUsd.Value > 600_000_000
+            || value.CacheReadTokens.Value is not (null or 0) || value.CacheWriteTokens.Value is not (null or 0)
+            || value.PricedToolCalls.Value is not (null or 0))
         {
             throw new InvalidOperationException("The M1 cache-off/tool-free usage vector is invalid.");
         }
         RequireExplicit(value.BillingAvailability, nameof(value.BillingAvailability));
         RequireExplicit(value.RateAvailability, nameof(value.RateAvailability));
         RequireExplicit(value.CreditAvailability, nameof(value.CreditAvailability));
+    }
+
+    private static bool ValidQuantity(ProviderQuantityContract value) =>
+        value.Availability != ProviderAvailabilityState.Unspecified
+        && (value.Availability == ProviderAvailabilityState.Available
+            ? value.Value is >= 0
+            : value.Value is null);
+
+    private static void Validate(ProviderCapabilitySnapshotContract value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        if (value.Provider != "openai" || value.Model != "gpt-5.6-sol" || value.ServiceTier != "default"
+            || value.ReasoningEffort != "medium" || value.ReasoningContext != "current_turn"
+            || value.ReasoningMode != "standard" || value.Store || value.Background || value.Stream
+            || value.ToolChoice != "none" || value.ToolCount != 0 || value.Truncation != "disabled"
+            || value.PromptCacheMode != "explicit" || value.HasPromptCacheKey || value.HasPromptCacheBreakpoint
+            || value.MaximumContextTokens <= 0 || string.IsNullOrWhiteSpace(value.Revision))
+        {
+            throw new InvalidOperationException("Capability snapshot is not the closed provider-active M1 profile.");
+        }
+    }
+
+    private static void Validate(ProviderPriceSnapshotContract value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        if (value.Provider != "openai" || value.Model != "gpt-5.6-sol" || value.ServiceTier != "default"
+            || value.Currency != "USD" || string.IsNullOrWhiteSpace(value.Revision)
+            || value.Rules.Count is 0 or > 8 || !Unique(value.Rules.Select(x => x.RuleId)))
+        {
+            throw new InvalidOperationException("Price snapshot is not a closed finite M1 snapshot.");
+        }
+        foreach (ProviderPriceRuleContract rule in value.Rules)
+        {
+            RequireClosedPriceRule(rule);
+        }
+    }
+
+    private static void ValidateOperationStateShape(ProviderOperationDocument value)
+    {
+        int stage = value.State switch
+        {
+            ProviderOperationState.Proposed => 0,
+            ProviderOperationState.Confirmed => 1,
+            ProviderOperationState.Reserved => 2,
+            ProviderOperationState.Assigned => 3,
+            ProviderOperationState.FinalGateAuthorized or ProviderOperationState.TransportNotStarted => 4,
+            _ => 5,
+        };
+        bool idsMatch = (stage >= 1) == (value.AuthorizationId is not null)
+            && (stage >= 1) == (value.RequestId is not null)
+            && (stage >= 1) == (value.SettingsFingerprint is not null)
+            && (stage >= 1) == (value.OutputSchemaFingerprint is not null)
+            && (stage >= 1) == (value.RequestFingerprint is not null)
+            && (stage >= 2) == (value.ReservationId is not null)
+            && (stage >= 3) == (value.AttemptId is not null)
+            && (stage >= 4) == (value.DispatchFenceId is not null);
+        bool early = stage < 5;
+        bool positiveEarlyUsage = new[]
+        {
+            value.Usage.DispatchCount, value.Usage.InputTokens, value.Usage.OutputTokens,
+            value.Usage.ReasoningTokens, value.Usage.CacheReadTokens, value.Usage.CacheWriteTokens,
+            value.Usage.PricedToolCalls, value.Usage.CalculatedNanoUsd,
+        }.Any(quantity => quantity.Value > 0);
+        bool terminalShape = value.State switch
+        {
+            ProviderOperationState.TransportMayHaveStarted => value.TransportState == "may-have-started"
+                && value.ReceiptState is "not-available" or "unresolved"
+                && value.SettlementState == "not-started" && value.ReplayState == "not-available",
+            ProviderOperationState.ResponseStaged => value.TransportState == "completed"
+                && value.ReceiptState == "staged" && value.SettlementState == "not-started"
+                && value.ReplayState == "not-available",
+            ProviderOperationState.Admitted => value.TransportState == "completed"
+                && value.ReceiptState == "validated" && value.SettlementState == "not-started"
+                && value.ReplayState == "retained-response",
+            ProviderOperationState.Rejected => value.TransportState is "completed" or "failed-known"
+                && value.ReceiptState == "rejected" && value.SettlementState == "not-started"
+                && value.ReplayState is "retained-response" or "audit-only",
+            ProviderOperationState.Settled => value.TransportState == "completed"
+                && value.ReceiptState == "validated" && value.SettlementState == "settled"
+                && value.ReplayState is "retained-response" or "audit-only",
+            ProviderOperationState.UnresolvedHold => value.TransportState is "may-have-started" or "ambiguous"
+                && value.ReceiptState == "unresolved" && value.SettlementState == "unresolved-hold"
+                && value.ReplayState is "not-available" or "audit-only",
+            _ => true,
+        };
+        if (!idsMatch || (early && (value.TransportState != "not-started" || value.ReceiptState != "not-available"
+                || value.SettlementState != "not-started" || value.ReplayState != "not-available"
+                || positiveEarlyUsage)) || !terminalShape)
+        {
+            throw new InvalidOperationException("Provider operation state contradicts its reachable identities or terminal projections.");
+        }
     }
 
     private static void RequireClosedPriceRule(ProviderPriceRuleContract rule)

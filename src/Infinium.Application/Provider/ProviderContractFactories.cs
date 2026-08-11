@@ -101,14 +101,14 @@ public static class ProviderContractFactories
             runId,
             Fingerprint(canonicalLocalCliSummaryV1),
             ProviderState(projection),
-            dispatchCount,
-            inputTokens,
-            outputTokens,
-            reasoningTokens,
-            0,
-            0,
-            projection.CalculatedNanoUsd,
-            projection.ReservedNanoUsd,
+            Available(dispatchCount),
+            Available(inputTokens),
+            Available(outputTokens),
+            Available(reasoningTokens),
+            Available(0),
+            Available(0),
+            Available(projection.CalculatedNanoUsd),
+            Available(projection.ReservedNanoUsd),
             projection.UnresolvedHold,
             projection.ReplayState,
             gaps,
@@ -118,13 +118,40 @@ public static class ProviderContractFactories
         return result;
     }
 
+    public static CliSummaryV2Document CreateProviderNotUsedCliSummaryV2Supplement(
+        OpaqueId runId,
+        ReadOnlySpan<byte> canonicalLocalCliSummaryV1,
+        bool unavailable,
+        IReadOnlyList<string> gaps)
+    {
+        ProviderAvailabilityState availability = unavailable
+            ? ProviderAvailabilityState.Unavailable
+            : ProviderAvailabilityState.NotUsed;
+        ProviderQuantityContract absent = new(availability, null);
+        CliSummaryV2Document result = new(
+            ContractConstants.CliSummaryV2SchemaId, "1", runId,
+            Fingerprint(canonicalLocalCliSummaryV1), unavailable ? "unavailable" : "not-used",
+            absent, absent, absent, absent, absent, absent, absent, absent,
+            false, "not-available", gaps, false, false);
+        ProviderOperationContractInvariants.Validate(result);
+        return result;
+    }
+
     private static Sha256Fingerprint Fingerprint(ReadOnlySpan<byte> value) =>
         new(Convert.ToHexStringLower(SHA256.HashData(value)));
+
+    private static ProviderQuantityContract Available(long value) =>
+        new(ProviderAvailabilityState.Available, value);
 
     private static string ProviderState(ProviderOperationSummaryProjection value) => value.State switch
     {
         ProviderOperationState.UnresolvedHold => "unresolved",
+        ProviderOperationState.Proposed or ProviderOperationState.Confirmed or ProviderOperationState.Reserved
+            or ProviderOperationState.Assigned or ProviderOperationState.FinalGateAuthorized
+            or ProviderOperationState.TransportNotStarted => "pending",
+        ProviderOperationState.TransportMayHaveStarted or ProviderOperationState.ResponseStaged => "live",
+        ProviderOperationState.Admitted or ProviderOperationState.Settled => "completed",
         ProviderOperationState.Rejected => "failed",
-        _ => "live",
+        _ => throw new InvalidOperationException("Provider operation state cannot be projected to a CLI provider state."),
     };
 }

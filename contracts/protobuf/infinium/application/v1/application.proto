@@ -37,6 +37,128 @@ service ApplicationService {
       returns (GetAnalysisReplayResponse);
   rpc GetAnalysisOutput(GetAnalysisOutputRequest)
       returns (GetAnalysisOutputResponse);
+  rpc GetProviderProfile(GetProviderProfileRequest)
+      returns (GetProviderProfileResponse);
+  rpc GetProviderOperation(GetProviderOperationRequest)
+      returns (GetProviderOperationResponse);
+  rpc ListProviderBudget(ListProviderBudgetRequest)
+      returns (ListProviderBudgetResponse);
+  rpc GetProviderReplay(GetProviderReplayRequest)
+      returns (GetProviderReplayResponse);
+  rpc SubmitProviderEnrollment(SubmitProviderEnrollmentRequest)
+      returns (SubmitProviderCommandResponse);
+  rpc SubmitProviderOperation(SubmitProviderOperationRequest)
+      returns (SubmitProviderCommandResponse);
+}
+
+message GetProviderProfileRequest {
+  infinium.domain.v1.ProviderAccessProfileId profile_id = 1;
+  bool include_historical_generations = 2;
+}
+
+message GetProviderProfileResponse {
+  oneof result { ProviderProfilePayload profile = 1; infinium.common.v1.Failure failure = 2; }
+}
+
+message ProviderProfilePayload {
+  infinium.domain.v1.ProviderAccessProfileId profile_id = 1;
+  infinium.domain.v1.CredentialGenerationId generation_id = 2;
+  string lifecycle_state = 3;
+  string verification_state = 4;
+  infinium.domain.v1.CapabilitySnapshotId capability_snapshot_id = 5;
+  uint64 revocation_epoch = 6;
+  repeated string gaps = 7;
+}
+
+message GetProviderOperationRequest {
+  infinium.domain.v1.OperationId operation_id = 1;
+  bool include_usage = 2;
+  bool include_settlement = 3;
+  bool include_replay = 4;
+}
+
+message GetProviderOperationResponse {
+  oneof result { ProviderOperationPayload operation = 1; infinium.common.v1.Failure failure = 2; }
+}
+
+message ProviderOperationPayload {
+  infinium.domain.v1.OperationId operation_id = 1;
+  string operation_kind = 2;
+  string state = 3;
+  OptionalProviderQuantity input_tokens = 4;
+  OptionalProviderQuantity output_tokens = 5;
+  OptionalProviderQuantity calculated_nano_usd = 6;
+  string settlement_state = 7;
+  string replay_state = 8;
+  repeated string gaps = 9;
+}
+
+message OptionalProviderQuantity { string availability = 1; optional uint64 value = 2; }
+
+message ListProviderBudgetRequest {
+  string scope_kind = 1;
+  string scope_id = 2;
+  uint32 requested_page_size = 3;
+  PageCursor after = 4;
+}
+
+message ListProviderBudgetResponse {
+  repeated ProviderBudgetPayload items = 1;
+  PageCursor next = 2;
+  infinium.common.v1.Failure failure = 3;
+}
+
+message ProviderBudgetPayload {
+  string scope_kind = 1;
+  string scope_id = 2;
+  uint64 reserved_nano_usd = 3;
+  uint64 settled_nano_usd = 4;
+  uint64 unresolved_nano_usd = 5;
+}
+
+message GetProviderReplayRequest {
+  infinium.domain.v1.OperationId operation_id = 1;
+  string retained_response_id = 2;
+}
+
+message GetProviderReplayResponse {
+  oneof result { ProviderReplayPayload replay = 1; infinium.common.v1.Failure failure = 2; }
+}
+
+message ProviderReplayPayload {
+  infinium.domain.v1.OperationId operation_id = 1;
+  string retained_response_id = 2;
+  string replay_state = 3;
+  string dependency_manifest_id = 4;
+  bool network_permitted = 5;
+}
+
+message SubmitProviderEnrollmentRequest {
+  infinium.domain.v1.ProviderAccessProfileId profile_id = 1;
+  infinium.domain.v1.CredentialGenerationId generation_id = 2;
+  string provider = 3;
+  string purpose = 4;
+  string display_label = 5;
+}
+
+message SubmitProviderOperationRequest {
+  infinium.domain.v1.OperationId operation_id = 1;
+  infinium.domain.v1.ProviderAccessProfileId profile_id = 2;
+  infinium.domain.v1.CredentialGenerationId generation_id = 3;
+  string operation_kind = 4;
+  bytes canonical_request_fingerprint_sha256 = 5;
+  infinium.domain.v1.CapabilitySnapshotId capability_snapshot_id = 6;
+  infinium.domain.v1.PriceSnapshotId price_snapshot_id = 7;
+}
+
+message SubmitProviderCommandResponse {
+  oneof result { ProviderCommandReceipt receipt = 1; infinium.common.v1.Failure failure = 2; }
+}
+
+message ProviderCommandReceipt {
+  string command_id = 1;
+  string state = 2;
+  infinium.domain.v1.OperationId operation_id = 3;
 }
 
 message GetAnalysisOutputRequest {

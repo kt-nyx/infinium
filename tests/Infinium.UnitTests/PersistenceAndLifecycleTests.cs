@@ -52,8 +52,8 @@ public sealed class PersistenceAndLifecycleTests
         using SqliteDataReader reader = command.ExecuteReader();
         Assert.IsTrue(reader.Read());
         Assert.AreEqual(1L, reader.GetInt64(0));
-        Assert.AreEqual(22L, reader.GetInt64(1));
-        Assert.AreEqual(38L, reader.GetInt64(2));
+        Assert.AreEqual(23L, reader.GetInt64(1));
+        Assert.AreEqual(40L, reader.GetInt64(2));
     }
 
     [TestMethod]
@@ -65,6 +65,7 @@ public sealed class PersistenceAndLifecycleTests
         BackupArtifact backup;
         using (AuthoritativeStore store = source.Open())
         {
+            SeedProviderReplayAuthorization(source.Root);
             backup = store.CreateBackup("Schema6Provider", DateTimeOffset.UtcNow);
         }
 
@@ -89,6 +90,38 @@ public sealed class PersistenceAndLifecycleTests
                 WHERE migration_id='M1-S6-0006' AND from_version=5 AND to_version=6;
                 """;
             Assert.AreEqual(1L, (long)command.ExecuteScalar()!);
+            command.CommandText =
+                """
+                SELECT profile_id,generation_id,revocation_epoch,operation_kind,
+                       installation_snapshot_id,analysis_context_id,effective_configuration_id,
+                       resolved_input_manifest_id,prompt_id,prompt_fingerprint,output_schema_id,
+                       output_schema_fingerprint,request_fingerprint,capability_snapshot_id,
+                       price_snapshot_id,settings_fingerprint,maximum_request_bytes,
+                       maximum_input_tokens,maximum_output_tokens,maximum_raw_response_bytes,
+                       maximum_dispatch_count,maximum_calculated_nano_usd,deadline_milliseconds
+                FROM provider_operation_authorizations WHERE operation_id='operation-restore';
+                """;
+            using SqliteDataReader replay = command.ExecuteReader();
+            Assert.IsTrue(replay.Read());
+            string[] expectedText =
+            [
+                "profile-restore", "generation-restore", "source-claim-extraction", "install-restore",
+                "context-restore", "config-restore", "manifest-restore", "prompt-restore",
+                new('c', 64), "schema-restore", new('d', 64), new('e', 64), "cap-restore",
+                "price-restore", new('f', 64),
+            ];
+            int[] textColumns = [0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+            for (int index = 0; index < textColumns.Length; index++)
+            {
+                Assert.AreEqual(expectedText[index], replay.GetString(textColumns[index]));
+            }
+            long[] expectedNumbers = [0, 65_536, 73_728, 4_096, 1_048_576, 1, 600_000_000, 120_000];
+            int[] numberColumns = [2, 16, 17, 18, 19, 20, 21, 22];
+            for (int index = 0; index < numberColumns.Length; index++)
+            {
+                Assert.AreEqual(expectedNumbers[index], replay.GetInt64(numberColumns[index]));
+            }
+            Assert.IsFalse(replay.Read());
         }
         finally
         {
@@ -1249,6 +1282,24 @@ public sealed class PersistenceAndLifecycleTests
         using SqliteConnection connection = OpenRaw(productRoot);
         using SqliteCommand command = connection.CreateCommand();
         command.CommandText = sql;
+        command.ExecuteNonQuery();
+    }
+
+    private static void SeedProviderReplayAuthorization(string productRoot)
+    {
+        using SqliteConnection connection = OpenRaw(productRoot);
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText =
+            """
+            PRAGMA foreign_keys=ON;
+            INSERT INTO provider_access_profiles VALUES('profile-restore','openai','responses','Restore','account-restore','billing-restore','2026-08-10T00:00:00Z');
+            INSERT INTO provider_generations VALUES('generation-restore','profile-restore',1,0,'2026-08-10T00:00:00Z');
+            INSERT INTO provider_capability_snapshots VALUES('cap-restore','openai','gpt-5.6-sol','default','medium','current_turn','standard',0,0,0,'none',0,'disabled','explicit',0,0,272000,'synthetic-v1','aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa','2026-08-10T00:00:00Z');
+            INSERT INTO provider_price_snapshots VALUES('price-restore','openai','gpt-5.6-sol','USD','default','synthetic-v1','bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb','2026-08-10T00:00:00Z');
+            INSERT INTO provider_price_rules VALUES('price-restore','rule-restore','standard-under-272k','ordinary-input','input','none','global',1,1,'synthetic-v1');
+            INSERT INTO provider_operation_authorizations VALUES
+              ('auth-restore','operation-restore','analysis-run','run-restore','profile-restore','generation-restore',0,'source-claim-extraction','install-restore','context-restore','config-restore','manifest-restore','prompt-restore','cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc','schema-restore','dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd','eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee','cap-restore','price-restore','ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',65536,73728,4096,1048576,1,600000000,120000,'2026-08-10T00:00:00Z');
+            """;
         command.ExecuteNonQuery();
     }
 

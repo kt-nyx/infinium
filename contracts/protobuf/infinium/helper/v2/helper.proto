@@ -23,6 +23,13 @@ enum ProviderEndpointV2 {
   PROVIDER_ENDPOINT_V2_OPENAI_RESPONSES = 1;
 }
 
+enum ProviderOperationKindV2 {
+  PROVIDER_OPERATION_KIND_V2_UNSPECIFIED = 0;
+  PROVIDER_OPERATION_KIND_V2_TRANSPORT_QUALIFICATION = 1;
+  PROVIDER_OPERATION_KIND_V2_SOURCE_CLAIM_EXTRACTION = 2;
+  PROVIDER_OPERATION_KIND_V2_CANDIDATE_INVESTIGATION = 3;
+}
+
 enum DispatchDispositionV2 {
   DISPATCH_DISPOSITION_V2_UNSPECIFIED = 0;
   DISPATCH_DISPOSITION_V2_AUTHORIZED = 1;
@@ -80,6 +87,7 @@ message HelperAssignmentV2 {
   HelperAssignmentKindV2 assignment_kind = 7;
   ProviderRequestV2 provider_request = 8;
   HelperLimitsV2 limits = 9;
+  ProviderOperationKindV2 operation_kind = 10;
   reserved 90 to 99;
   reserved "credential_target", "provider_secret", "secret_bytes",
       "host", "url", "fallback_profile_id";
@@ -119,6 +127,14 @@ message DispatchRevalidationV2 {
   infinium.common.v1.ContentDigest canonical_request = 8;
   bool authorized_once = 9;
   DispatchDispositionV2 disposition = 10;
+  infinium.domain.v1.ProviderAccountIdentityId account_identity_id = 11;
+  infinium.domain.v1.BillingScopeIdentityId billing_scope_identity_id = 12;
+  string effective_configuration_id = 13;
+  infinium.domain.v1.CapabilitySnapshotId capability_snapshot_id = 14;
+  infinium.domain.v1.PriceSnapshotId price_snapshot_id = 15;
+  infinium.common.v1.ContentDigest settings = 16;
+  infinium.common.v1.ContentDigest output_schema = 17;
+  ProviderOperationKindV2 operation_kind = 18;
 }
 
 message HelperReceiptV2 {

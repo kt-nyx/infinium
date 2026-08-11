@@ -11,28 +11,56 @@ public sealed class ProviderContractTests
     [TestMethod]
     [TestCategory("Unit")]
     [TestProperty("Category", "Unit")]
-    public void ProviderFiniteBoundProvesBothAcceptedOperationCeilingsLocally()
+    public void ProviderFiniteLimitsBindAllSevenDimensionsPerOperationKindAndUnprovedInputAdmissionFailsClosed()
     {
         ProviderFiniteLimitsContract qualification = new(
             16_384, 20_480, 256, 262_144, 1, 140_000_000, 60_000);
         ProviderFiniteLimitsContract semantic = new(
             65_536, 73_728, 4_096, 1_048_576, 1, 600_000_000, 120_000);
 
-        ProviderOperationContractInvariants.Validate(qualification);
-        ProviderOperationContractInvariants.Validate(semantic);
-        Assert.AreEqual(
-            20_480L,
-            ProviderOperationContractInvariants.ConservativeUtf8TokenUpperBound(16_384));
-        Assert.AreEqual(
-            69_632L,
-            ProviderOperationContractInvariants.ConservativeUtf8TokenUpperBound(65_536));
-        Assert.ThrowsExactly<InvalidOperationException>(() =>
-            ProviderOperationContractInvariants.Validate(qualification with
-            {
-                MaximumInputTokens = 20_479,
-            }));
-        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
-            ProviderOperationContractInvariants.ConservativeUtf8TokenUpperBound(65_537));
+        ProviderOperationContractInvariants.Validate(ProviderOperationKind.TransportQualification, qualification);
+        ProviderOperationContractInvariants.Validate(ProviderOperationKind.SourceClaimExtraction, semantic);
+        ProviderOperationContractInvariants.Validate(ProviderOperationKind.CandidateInvestigation, semantic);
+        foreach (ProviderFiniteLimitsContract invalid in new[]
+        {
+            qualification with { MaximumRequestBytes = 0 },
+            qualification with { MaximumRequestBytes = 16_385 },
+            qualification with { MaximumInputTokens = 0 },
+            qualification with { MaximumInputTokens = 20_481 },
+            qualification with { MaximumOutputTokens = 0 },
+            qualification with { MaximumOutputTokens = 257 },
+            qualification with { MaximumRawResponseBytes = 0 },
+            qualification with { MaximumRawResponseBytes = 262_145 },
+            qualification with { MaximumDispatchCount = 0 },
+            qualification with { MaximumDispatchCount = 2 },
+            qualification with { MaximumCalculatedNanoUsd = 0 },
+            qualification with { MaximumCalculatedNanoUsd = 140_000_001 },
+            qualification with { DeadlineMilliseconds = 0 },
+            qualification with { DeadlineMilliseconds = 60_001 },
+        })
+        {
+            Assert.ThrowsExactly<InvalidOperationException>(() =>
+                ProviderOperationContractInvariants.Validate(ProviderOperationKind.TransportQualification, invalid));
+        }
+        foreach (ProviderFiniteLimitsContract invalid in new[]
+        {
+            semantic with { MaximumRequestBytes = 65_537 },
+            semantic with { MaximumInputTokens = 73_729 },
+            semantic with { MaximumOutputTokens = 4_097 },
+            semantic with { MaximumRawResponseBytes = 1_048_577 },
+            semantic with { MaximumDispatchCount = 2 },
+            semantic with { MaximumCalculatedNanoUsd = 600_000_001 },
+            semantic with { DeadlineMilliseconds = 120_001 },
+        })
+        {
+            Assert.ThrowsExactly<InvalidOperationException>(() =>
+                ProviderOperationContractInvariants.Validate(ProviderOperationKind.SourceClaimExtraction, invalid));
+            Assert.ThrowsExactly<InvalidOperationException>(() =>
+                ProviderOperationContractInvariants.Validate(ProviderOperationKind.CandidateInvestigation, invalid));
+        }
+        Assert.ThrowsExactly<NotSupportedException>(() => ProviderOperationContractInvariants.RequireLocalInputBoundProof(1));
+        Assert.ThrowsExactly<NotSupportedException>(() => ProviderOperationContractInvariants.RequireLocalInputBoundProof(65_536));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => ProviderOperationContractInvariants.RequireLocalInputBoundProof(65_537));
     }
 
     [TestMethod]
@@ -84,6 +112,8 @@ public sealed class ProviderContractTests
             "retained-response", []);
         CliSummaryV2Document summary = ProviderContractFactories.CreateCliSummaryV2Supplement(
             Id("run-1"), localCliSummaryV1, projection, 1, 32, 16, 4, []);
+        CliSummaryV2Document notUsed = ProviderContractFactories.CreateProviderNotUsedCliSummaryV2Supplement(
+            Id("run-1"), localCliSummaryV1, unavailable: false, []);
 
         Assert.AreEqual(Hash(localConfigurationV1), configuration.LocalConfigurationV1Fingerprint.Value);
         Assert.AreEqual(Hash(localRunOutputV1), output.LocalRunOutputV1.Fingerprint.Value);
@@ -91,7 +121,232 @@ public sealed class ProviderContractTests
         CollectionAssert.AreEqual(new byte[] { 1, 2, 3 }, localConfigurationV1);
         CollectionAssert.AreEqual(new byte[] { 4, 5, 6 }, localRunOutputV1);
         CollectionAssert.AreEqual(new byte[] { 7, 8, 9 }, localCliSummaryV1);
+        Assert.AreEqual("not-used", notUsed.ProviderState);
+        Assert.IsNull(notUsed.DispatchCount.Value);
     }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
+    public void ProviderOperationStateTotalityCoversEveryStateAndEveryTransitionPair()
+    {
+        ProviderOperationState[] states = Enum.GetValues<ProviderOperationState>()
+            .Where(x => x != ProviderOperationState.Unspecified).ToArray();
+        foreach (ProviderOperationState state in states)
+        {
+            ProviderOperationContractInvariants.Validate(Operation(state));
+        }
+
+        HashSet<(ProviderOperationState, ProviderOperationState)> legal =
+        [
+            (ProviderOperationState.Proposed, ProviderOperationState.Confirmed),
+            (ProviderOperationState.Confirmed, ProviderOperationState.Reserved),
+            (ProviderOperationState.Reserved, ProviderOperationState.Assigned),
+            (ProviderOperationState.Assigned, ProviderOperationState.FinalGateAuthorized),
+            (ProviderOperationState.FinalGateAuthorized, ProviderOperationState.TransportNotStarted),
+            (ProviderOperationState.TransportNotStarted, ProviderOperationState.TransportMayHaveStarted),
+            (ProviderOperationState.TransportNotStarted, ProviderOperationState.Rejected),
+            (ProviderOperationState.TransportMayHaveStarted, ProviderOperationState.ResponseStaged),
+            (ProviderOperationState.TransportMayHaveStarted, ProviderOperationState.UnresolvedHold),
+            (ProviderOperationState.ResponseStaged, ProviderOperationState.Admitted),
+            (ProviderOperationState.ResponseStaged, ProviderOperationState.Rejected),
+            (ProviderOperationState.Admitted, ProviderOperationState.Settled),
+            (ProviderOperationState.Rejected, ProviderOperationState.Settled),
+            (ProviderOperationState.UnresolvedHold, ProviderOperationState.Settled),
+        ];
+        foreach (ProviderOperationState from in states)
+        {
+            foreach (ProviderOperationState to in states)
+            {
+                if (legal.Contains((from, to)))
+                {
+                    ProviderOperationContractInvariants.ValidateTransition(from, to);
+                }
+                else
+                {
+                    Assert.ThrowsExactly<InvalidOperationException>(() =>
+                        ProviderOperationContractInvariants.ValidateTransition(from, to), $"{from}->{to}");
+                }
+            }
+        }
+
+        ProviderOperationDocument proposed = Operation(ProviderOperationState.Proposed);
+        Assert.ThrowsExactly<InvalidOperationException>(() => ProviderOperationContractInvariants.Validate(
+            proposed with { TransportState = "completed", ReceiptState = "validated", SettlementState = "settled", ReplayState = "retained-response" }));
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
+    public void ProviderOperationStateShapeMatrixExhaustivelyRejectsIllegalIdentitiesAndProjections()
+    {
+        ProviderOperationState[] states = Enum.GetValues<ProviderOperationState>()
+            .Where(x => x != ProviderOperationState.Unspecified).ToArray();
+        string[] transports = ["not-started", "may-have-started", "started", "completed", "failed-known", "ambiguous"];
+        string[] receipts = ["not-available", "staged", "validated", "rejected", "unresolved"];
+        string[] settlements = ["not-started", "settled", "unresolved-hold", "failed-known", "overrun"];
+        string[] replays = ["not-available", "retained-response", "audit-only"];
+
+        foreach (ProviderOperationState state in states)
+        {
+            ProviderOperationDocument valid = Operation(state);
+            ProviderOperationDocument[] identityContradictions =
+            [
+                valid with { AttemptId = Toggle(valid.AttemptId, "attempt-contradiction") },
+                valid with { RequestId = Toggle(valid.RequestId, "request-contradiction") },
+                valid with { SettingsFingerprint = Toggle(valid.SettingsFingerprint, 'd') },
+                valid with { OutputSchemaFingerprint = Toggle(valid.OutputSchemaFingerprint, 'e') },
+                valid with { RequestFingerprint = Toggle(valid.RequestFingerprint, 'f') },
+                valid with { AuthorizationId = Toggle(valid.AuthorizationId, "authorization-contradiction") },
+                valid with { ReservationId = Toggle(valid.ReservationId, "reservation-contradiction") },
+                valid with { DispatchFenceId = Toggle(valid.DispatchFenceId, "fence-contradiction") },
+            ];
+            foreach (ProviderOperationDocument contradiction in identityContradictions)
+            {
+                Assert.ThrowsExactly<InvalidOperationException>(() =>
+                    ProviderOperationContractInvariants.Validate(contradiction), state.ToString());
+            }
+
+            foreach (string transport in transports)
+            {
+                foreach (string receipt in receipts)
+                {
+                    foreach (string settlement in settlements)
+                    {
+                        foreach (string replay in replays)
+                        {
+                            ProviderOperationDocument candidate = valid with
+                            {
+                                TransportState = transport,
+                                ReceiptState = receipt,
+                                SettlementState = settlement,
+                                ReplayState = replay,
+                            };
+                            bool expected = LegalProjection(state, transport, receipt, settlement, replay);
+                            try
+                            {
+                                ProviderOperationContractInvariants.Validate(candidate);
+                                Assert.IsTrue(expected, $"Unexpected legal projection: {state}/{transport}/{receipt}/{settlement}/{replay}");
+                            }
+                            catch (InvalidOperationException)
+                            {
+                                Assert.IsFalse(expected, $"Unexpected rejected projection: {state}/{transport}/{receipt}/{settlement}/{replay}");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Assert.ThrowsExactly<InvalidOperationException>(() => ProviderOperationContractInvariants.Validate(
+            Operation(ProviderOperationState.Proposed) with { State = (ProviderOperationState)999 }));
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
+    public void ProviderSemanticAndOutputCrossStateSubstitutionsFailClosed()
+    {
+        SourceClaimExtractionDocument source = new(
+            ContractConstants.SourceClaimExtractionSchemaId, "1", Id("acq"), Id("op"), Id("source"), [Id("passage")],
+            "synthetic", [new(Id("proposal"), Id("foreign"), "claim", [], ProposalAdmissionState.Proposed, "reason")],
+            [], [], [], [], []);
+        Assert.ThrowsExactly<InvalidOperationException>(() => ProviderOperationContractInvariants.Validate(source));
+
+        CandidateInvestigationDocument candidate = new(
+            ContractConstants.CandidateInvestigationSchemaId, "1", Id("op"), Id("candidate"), [Id("participant")], ["role"], [],
+            Id("closure"), [Id("evidence")], [new(Id("proposal"), Id("foreign"), "hypothesis", [Id("evidence")],
+                [Id("evidence")], [], ProposalAdmissionState.Proposed, "reason")], [], [], [], []);
+        Assert.ThrowsExactly<InvalidOperationException>(() => ProviderOperationContractInvariants.Validate(candidate));
+
+        ProviderQuantityContract absent = new(ProviderAvailabilityState.NotUsed, null);
+        CliSummaryV2Document cli = new(ContractConstants.CliSummaryV2SchemaId, "1", Id("run"),
+            new Sha256Fingerprint(new string('a', 64)), "not-used", absent, absent, absent, absent, absent, absent,
+            absent, absent, false, "not-available", [], false, false);
+        ProviderOperationContractInvariants.Validate(cli);
+        Assert.ThrowsExactly<InvalidOperationException>(() => ProviderOperationContractInvariants.Validate(
+            cli with { DispatchCount = new(ProviderAvailabilityState.Available, 1) }));
+        ProviderPublicationReferenceContract invalid = new(null, null, null, null, null, null, null, null, null, "not-used", true);
+        RunOutputV2Document output = new(ContractConstants.RunOutputV2SchemaId, "1", Id("run"),
+            new(Id("v1"), new(new string('a', 64))), Id("config"), [invalid], [], [], [], [], false, false);
+        Assert.ThrowsExactly<InvalidOperationException>(() => ProviderOperationContractInvariants.Validate(output));
+    }
+
+    private static ProviderOperationDocument Operation(ProviderOperationState state)
+    {
+        int stage = state switch
+        {
+            ProviderOperationState.Proposed => 0,
+            ProviderOperationState.Confirmed => 1,
+            ProviderOperationState.Reserved => 2,
+            ProviderOperationState.Assigned => 3,
+            ProviderOperationState.FinalGateAuthorized or ProviderOperationState.TransportNotStarted => 4,
+            _ => 5,
+        };
+        string transport = state == ProviderOperationState.Settled ? "completed"
+            : state is ProviderOperationState.TransportMayHaveStarted or ProviderOperationState.UnresolvedHold ? "may-have-started"
+            : state is ProviderOperationState.ResponseStaged or ProviderOperationState.Admitted or ProviderOperationState.Rejected ? "completed"
+            : "not-started";
+        string receipt = state == ProviderOperationState.Settled ? "validated"
+            : state == ProviderOperationState.ResponseStaged ? "staged"
+            : state == ProviderOperationState.Admitted ? "validated"
+            : state == ProviderOperationState.Rejected ? "rejected"
+            : state == ProviderOperationState.UnresolvedHold ? "unresolved" : "not-available";
+        string settlement = state == ProviderOperationState.Settled ? "settled"
+            : state == ProviderOperationState.UnresolvedHold ? "unresolved-hold" : "not-started";
+        ProviderUsageContract usage = new(
+            Available(stage >= 5 ? 1 : 0), Available(stage >= 5 ? 1 : 0), Available(0), Available(0),
+            Available(0), Available(0), Available(0), Available(0), ProviderAvailabilityState.Available,
+            ProviderAvailabilityState.Available, ProviderAvailabilityState.Unavailable);
+        return new(ContractConstants.ProviderOperationSchemaId, "1", Id("operation"), Id("run"), "analysis-run",
+            ProviderOperationKind.SourceClaimExtraction, Id("job"), stage >= 3 ? Id("attempt") : null,
+            stage >= 1 ? Id("request") : null, Id("profile"), Id("generation"), 0, Capability(), Price(),
+            stage >= 1 ? new(new string('a', 64)) : null, stage >= 1 ? new(new string('b', 64)) : null,
+            stage >= 1 ? new(new string('c', 64)) : null,
+            new(65_536, 73_728, 4_096, 1_048_576, 1, 600_000_000, 120_000),
+            stage >= 1 ? Id("authorization") : null, stage >= 2 ? Id("reservation") : null,
+            stage >= 4 ? Id("fence") : null, state, transport, receipt, usage, settlement,
+            state is ProviderOperationState.Settled or ProviderOperationState.Admitted ? "retained-response"
+                : state == ProviderOperationState.Rejected ? "audit-only" : "not-available",
+            UtcTimestamp.Parse("2026-08-10T00:00:00.0000000+00:00"));
+    }
+
+    private static ProviderQuantityContract Available(long value) => new(ProviderAvailabilityState.Available, value);
+    private static OpaqueId? Toggle(OpaqueId? value, string replacement) => value is null ? Id(replacement) : null;
+    private static Sha256Fingerprint? Toggle(Sha256Fingerprint? value, char replacement) =>
+        value is null ? new(new string(replacement, 64)) : null;
+
+    private static bool LegalProjection(
+        ProviderOperationState state,
+        string transport,
+        string receipt,
+        string settlement,
+        string replay) => state switch
+        {
+            ProviderOperationState.Proposed or ProviderOperationState.Confirmed or ProviderOperationState.Reserved
+                or ProviderOperationState.Assigned or ProviderOperationState.FinalGateAuthorized
+                or ProviderOperationState.TransportNotStarted => transport == "not-started"
+                    && receipt == "not-available" && settlement == "not-started" && replay == "not-available",
+            ProviderOperationState.TransportMayHaveStarted => transport == "may-have-started"
+                && receipt is "not-available" or "unresolved" && settlement == "not-started" && replay == "not-available",
+            ProviderOperationState.ResponseStaged => transport == "completed" && receipt == "staged"
+                && settlement == "not-started" && replay == "not-available",
+            ProviderOperationState.Admitted => transport == "completed" && receipt == "validated"
+                && settlement == "not-started" && replay == "retained-response",
+            ProviderOperationState.Rejected => transport is "completed" or "failed-known" && receipt == "rejected"
+                && settlement == "not-started" && replay is "retained-response" or "audit-only",
+            ProviderOperationState.Settled => transport == "completed" && receipt == "validated"
+                && settlement == "settled" && replay is "retained-response" or "audit-only",
+            ProviderOperationState.UnresolvedHold => transport is "may-have-started" or "ambiguous" && receipt == "unresolved"
+                && settlement == "unresolved-hold" && replay is "not-available" or "audit-only",
+            _ => false,
+        };
+    private static ProviderCapabilitySnapshotContract Capability() => new(Id("capability"), new(new string('a', 64)),
+        "openai", "gpt-5.6-sol", "default", "medium", "current_turn", "standard", false, false, false,
+        "none", 0, "disabled", "explicit", false, false, 272_000, "synthetic-v1");
+    private static ProviderPriceSnapshotContract Price() => new(Id("price"), new(new string('a', 64)), "openai",
+        "gpt-5.6-sol", "default", "USD", "synthetic-v1", [new(Id("rule"), "openai", "gpt-5.6-sol",
+            "default", "standard-under-272k", "ordinary-input", "input", "none", "global", "USD", 1, 1, "synthetic-v1")]);
 
     private static OpaqueId Id(string value) => new(value);
     private static string Hash(byte[] value) => Convert.ToHexStringLower(SHA256.HashData(value));

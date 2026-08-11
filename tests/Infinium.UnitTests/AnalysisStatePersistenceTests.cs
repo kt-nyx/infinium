@@ -30,7 +30,7 @@ public sealed class AnalysisStatePersistenceTests
     private static readonly string[] ProviderSchema6TablesInCreationOrder =
     [
         "provider_access_profiles", "provider_generations", "provider_credential_intents",
-        "provider_capability_snapshots", "provider_price_snapshots", "evidence_acquisition_runs",
+        "provider_capability_snapshots", "provider_price_snapshots", "provider_price_rules", "evidence_acquisition_runs",
         "evidence_acquisition_parent_links", "evidence_acquisition_application_links",
         "provider_operation_authorizations", "provider_operation_attempts", "provider_requests",
         "provider_reservations", "provider_reservation_scope_items", "provider_dispatch_fences",
@@ -133,7 +133,7 @@ public sealed class AnalysisStatePersistenceTests
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'storage_contract_version';"));
         Assert.AreEqual(
-            "c820c0935dc4e5ff4c68dd70b40be6a6e232661357db89e2cb4b454850382124",
+            "9cc35e3709a9a7fb4bdc0470e4ee488441648cb9b43055d0319f22af878464f4",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'schema_fingerprint';"));
@@ -297,6 +297,117 @@ public sealed class AnalysisStatePersistenceTests
         command.CommandText =
             "DELETE FROM documentation_revisions WHERE documentation_revision_id = 'revision-valid';";
         Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
+    public void Schema6ProviderOwnershipAndSingletonLiveAttemptRejectCrossGraphSubstitution()
+    {
+        using TemporaryStore temporary = new();
+        using AuthoritativeStore store = temporary.Open();
+        using SqliteConnection connection = temporary.OpenRaw();
+        using SqliteCommand seed = connection.CreateCommand();
+        seed.CommandText =
+            """
+            INSERT INTO payloads VALUES('payload-a','aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',2,'json','retained','provider/a','2026-08-10T00:00:00Z');
+            INSERT INTO provider_access_profiles VALUES('profile-a','openai','responses','A','account-a','billing-a','2026-08-10T00:00:00Z');
+            INSERT INTO provider_access_profiles VALUES('profile-b','openai','responses','B','account-b','billing-b','2026-08-10T00:00:00Z');
+            INSERT INTO provider_generations VALUES('generation-a','profile-a',1,0,'2026-08-10T00:00:00Z');
+            INSERT INTO provider_generations VALUES('generation-b','profile-b',1,0,'2026-08-10T00:00:00Z');
+            INSERT INTO provider_capability_snapshots VALUES('cap-a','openai','gpt-5.6-sol','default','medium','current_turn','standard',0,0,0,'none',0,'disabled','explicit',0,0,272000,'synthetic-v1','bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb','2026-08-10T00:00:00Z');
+            INSERT INTO provider_price_snapshots VALUES('price-a','openai','gpt-5.6-sol','USD','default','synthetic-v1','cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc','2026-08-10T00:00:00Z');
+            INSERT INTO provider_price_rules VALUES('price-a','rule-a','standard-under-272k','ordinary-input','input','none','global',1,1,'synthetic-v1');
+            INSERT INTO provider_operation_authorizations VALUES
+              ('auth-a','operation-a','analysis-run','run-a','profile-a','generation-a',0,'source-claim-extraction','install-a','context-a','config-a','manifest-a','prompt-a','dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd','schema-a','eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee','ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff','cap-a','price-a','1111111111111111111111111111111111111111111111111111111111111111',65536,73728,4096,1048576,1,600000000,120000,'2026-08-10T00:00:00Z'),
+              ('auth-b','operation-b','analysis-run','run-b','profile-b','generation-b',0,'candidate-investigation','install-b','context-b','config-b','manifest-b','prompt-b','2222222222222222222222222222222222222222222222222222222222222222','schema-b','3333333333333333333333333333333333333333333333333333333333333333','4444444444444444444444444444444444444444444444444444444444444444','cap-a','price-a','5555555555555555555555555555555555555555555555555555555555555555',65536,73728,4096,1048576,1,600000000,120000,'2026-08-10T00:00:00Z');
+            INSERT INTO provider_operation_attempts VALUES('attempt-a','operation-a',1,'proposed',1,'2026-08-10T00:00:00Z');
+            INSERT INTO provider_operation_attempts VALUES('attempt-a2','operation-a',2,'proposed',1,'2026-08-10T00:00:00Z');
+            INSERT INTO provider_operation_attempts VALUES('attempt-b','operation-b',1,'proposed',1,'2026-08-10T00:00:00Z');
+            INSERT INTO provider_requests VALUES('request-a','operation-a','attempt-a','6666666666666666666666666666666666666666666666666666666666666666','7777777777777777777777777777777777777777777777777777777777777777','8888888888888888888888888888888888888888888888888888888888888888','9999999999999999999999999999999999999999999999999999999999999999','payload-a','2026-08-10T00:00:00Z');
+            INSERT INTO provider_requests VALUES('request-a2','operation-a','attempt-a2','1616161616161616161616161616161616161616161616161616161616161616','1717171717171717171717171717171717171717171717171717171717171717','1818181818181818181818181818181818181818181818181818181818181818','1919191919191919191919191919191919191919191919191919191919191919','payload-a','2026-08-10T00:00:00Z');
+            INSERT INTO provider_requests VALUES('request-b','operation-b','attempt-b','aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab','bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbc','cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccd','ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddde','payload-a','2026-08-10T00:00:00Z');
+            INSERT INTO provider_reservations VALUES('reservation-a','operation-a','attempt-a','request-a','{}',600000000,'2026-08-10T00:01:00Z','2026-08-10T00:00:00Z');
+            INSERT INTO provider_reservations VALUES('reservation-b','operation-b','attempt-b','request-b','{}',600000000,'2026-08-10T00:01:00Z','2026-08-10T00:00:00Z');
+            INSERT INTO provider_responses VALUES('response-a','operation-a','request-a','attempt-a','payload-a','eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee','completed','{}','2026-08-10T00:00:00Z');
+            INSERT INTO provider_responses VALUES('response-b','operation-b','request-b','attempt-b','payload-a','ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff','completed','{}','2026-08-10T00:00:00Z');
+            INSERT INTO provider_usage_entries VALUES('usage-a','operation-a','attempt-a','request-a','{}',1,'validated','2026-08-10T00:00:00Z');
+            INSERT INTO provider_usage_entries VALUES('usage-b','operation-b','attempt-b','request-b','{}',1,'validated','2026-08-10T00:00:00Z');
+            """;
+        seed.ExecuteNonQuery();
+
+        using SqliteCommand invalid = connection.CreateCommand();
+        invalid.CommandText =
+            """
+            INSERT INTO provider_credential_intents VALUES('intent-cross','profile-a','generation-b','verify','pending','active-unverified','active-verified','available',NULL,'not-required','pending','2026-08-10T00:00:00Z');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
+        invalid.CommandText =
+            """
+            INSERT INTO provider_capability_snapshots VALUES('cap-invalid','other-provider','gpt-5.6-sol','default','medium','current_turn','standard',0,0,0,'none',0,'disabled','explicit',0,0,272000,'synthetic-v1','2121212121212121212121212121212121212121212121212121212121212121','2026-08-10T00:00:00Z');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
+        invalid.CommandText =
+            """
+            INSERT INTO provider_price_snapshots VALUES('price-invalid','openai','foreign-model','USD','default','synthetic-v1','2323232323232323232323232323232323232323232323232323232323232323','2026-08-10T00:00:00Z');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
+        invalid.CommandText =
+            """
+            INSERT INTO provider_price_rules VALUES('price-a','rule-invalid','unbounded-context','ordinary-input','input','none','global',1,1,'synthetic-v1');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
+        invalid.CommandText =
+            """
+            INSERT INTO provider_requests VALUES('request-cross','operation-a','attempt-b','1212121212121212121212121212121212121212121212121212121212121212','1313131313131313131313131313131313131313131313131313131313131313','1414141414141414141414141414141414141414141414141414141414141414','1515151515151515151515151515151515151515151515151515151515151515','payload-a','2026-08-10T00:00:00Z');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
+        invalid.CommandText =
+            """
+            INSERT INTO provider_reservations VALUES('reservation-cross','operation-a','attempt-b','request-a','{}',1,'2026-08-10T00:01:00Z','2026-08-10T00:00:00Z');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
+        invalid.CommandText =
+            """
+            INSERT INTO provider_dispatch_fences VALUES('fence-cross','operation-a','reservation-a','request-a','attempt-b',1,'profile-a','generation-a',0,1,'synthetic','2026-08-10T00:00:00Z');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
+        invalid.CommandText =
+            """
+            INSERT INTO provider_responses VALUES('response-cross','operation-b','request-a2','attempt-b','payload-a','2020202020202020202020202020202020202020202020202020202020202020','completed','{}','2026-08-10T00:00:00Z');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
+        invalid.CommandText =
+            """
+            INSERT INTO provider_usage_entries VALUES('usage-cross','operation-b','attempt-a2','request-b','{}',1,'validated','2026-08-10T00:00:00Z');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
+        invalid.CommandText =
+            """
+            INSERT INTO provider_settlements VALUES('settlement-cross','operation-a','attempt-a','request-a','reservation-a','usage-b','settled',0,0,'2026-08-10T00:00:00Z');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
+        invalid.CommandText =
+            """
+            INSERT INTO provider_replay_edges VALUES('replay-cross','operation-b','attempt-b','request-b','response-a','retained-response','manifest-a','2026-08-10T00:00:00Z');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
+        invalid.CommandText =
+            """
+            INSERT INTO provider_operation_projection VALUES('operation-a','attempt-b','settled',0,0,0,NULL,1,'2026-08-10T00:00:00Z');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
+
+        invalid.CommandText =
+            """
+            INSERT INTO provider_operation_projection VALUES('operation-a','attempt-a','reserved',1,0,0,1,1,'2026-08-10T00:00:00Z');
+            """;
+        invalid.ExecuteNonQuery();
+        invalid.CommandText =
+            """
+            INSERT INTO provider_operation_projection VALUES('operation-b','attempt-b','reserved',1,0,0,1,1,'2026-08-10T00:00:00Z');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => invalid.ExecuteNonQuery());
     }
 
     private static string[] SchemaNames(
