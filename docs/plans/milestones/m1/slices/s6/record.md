@@ -2352,3 +2352,72 @@ SHA-256
 with 14 changed paths and zero allowed-path, strict-changed-JSON,
 relative-link, or private/archive failures. Network and credential permissions
 remained false.
+
+## WP2 final acceptance and WP3 handoff — 2026-08-11
+
+M1/S6/WP2 is independently accepted at exact clean candidate
+`ed27ed04897103d93a60e6200971ca12d04f2e11`. The implementation lineage is the
+initial product commit `90d616daa91768ef2f87c15bc9d8a4e28a31f420`, its retained
+candidate-evidence commit `a4050736be99f193bc0592caae326f60fcd04007`, the bounded
+correction product commit `50ce6d7fc6336d47e195e73c6d5bc074ee9c7b9b`, and the final
+candidate-evidence commit `ed27ed04897103d93a60e6200971ca12d04f2e11`.
+
+Two fresh read-only reviewers accepted that exact final candidate. Reviewer
+`/root/wp2_final_transaction_review` verified closure of all five bounded
+transaction findings, including authoritative reservation derivation,
+production simulator ownership, immutable catalog publication, dynamic fault
+evidence, and causal settlement/replay ordering. Reviewer
+`/root/wp2_final_boundary_review` independently verified all six DEV/VAL
+package registry, manifest, input, and oracle identities; consumption of every
+oracle field by the production catalog, simulator, and real SQLite paths;
+rejection of a fully resealed wrong oracle; deterministic 19-file resealing;
+and the WP2/WP3/effect boundary. Both returned `ACCEPT` with no must-fix,
+authority, safety, or isolation finding.
+
+The accepted retained verification is:
+
+1. Locked restore and the Release build passed with zero warnings or errors.
+   The exact WP2 focused Unit, Integration, and Evaluation commands passed
+   4/0/0, 12/0/0, and 6/0/0.
+2. `Budget` passed its nested 4/0/0, 12/0/0, and 6/0/0 checks. Its 1,223-byte
+   receipt has SHA-256
+   `c1141b9421652511e3bfcbbf674795938e09127a93737da0ddbcf29711dd8935`.
+   `BudgetFaults` passed 3/0/0, 7/0/0, and 4/0/0. Its 1,209-byte receipt has
+   SHA-256
+   `df8018dbb7616b900057458672e21e37a69db0dbe8330157d01985e258324926`
+   and binds the 308-byte dynamic fault evidence with SHA-256
+   `cc277bf034b830d1b44fd0b54c93c7aa5afdf8decd43afe1f9050efae1b01cfe`.
+3. The accumulated unfiltered Release floor passed Unit 196/0/1, Contract
+   155/0/0, Integration 81/0/0, and Evaluation 59/0/8. Category runs passed
+   Unit 188/0/1, Contract 127/0/0 across projects, Integration 83/0/0 across
+   projects, Evaluation 81/0/8 across projects, and all Security/Fault checks.
+   The complete non-live analysis `All` receipt is 764 bytes with SHA-256
+   `746dd3915a752409cc46500b953d21f6a147f4dad39e7ce98f8107967109ffbe`.
+4. Schema-6/storage-1.5.0 migration/declaration and backup/restore checks passed;
+   the final transaction reviewer independently observed 18 migration/state
+   checks and 2 WP2 backup/restore checks passing. `Contracts` passed 22/0/0,
+   while `StateSurfaces` and `StateTotality` each passed 27/0/0 state checks
+   and 18/0/0 persistence checks. Their retained receipt SHA-256 identities are
+   `5796ea323ec6533f6fa921bc7a6150179eb47b7fe493543ce86e459c93a397a4`,
+   `660ca2f9c428bbe0f0916f31c1e0592f141156a5ac0cd1563f9f6e3b1bb8f2ec`,
+   and `7f7fc8264429786a61911abe7fbda46522cd418d75d6c688fd364cd95cef5729`.
+5. Candidate-bound `Layer6Review` passed from correction baseline
+   `a4050736be99f193bc0592caae326f60fcd04007` through exact accepted candidate
+   `ed27ed04897103d93a60e6200971ca12d04f2e11`. Its 1,686-byte receipt has
+   SHA-256
+   `e4aebd533066737c118ff63b657ee6f0470c62eceee333b18a9e52e5c470e158`,
+   with 14 changed paths and zero allowed-path, strict-changed-JSON,
+   relative-link, or private/archive failures.
+
+The frozen WP1 acceptance ledger remains 32,022 bytes with SHA-256
+`a120e78ce0ab3e1f785b8df936e09563cc6dabb04875a808b87dbfba0259e6ce`.
+The nine WP1 contracts remain `Implementation-active`; their 444,790-byte
+traceability inventory remains SHA-256
+`e90bdc0647a56bcbbbbf7760b683d2121cf4adceef79f03b454995f944724d1d`.
+Slice 5 v1 remains byte- and semantically frozen.
+
+`docs/current-state.md` now authorizes only M1/S6/WP3, which is unblocked by
+this acceptance. This handoff does not begin WP3. No Credential Manager,
+native credential, DNS/network/provider, private fixture, sibling repository,
+legacy/evaluator archive, protected-root, destructive, external-effect, or
+push operation occurred.

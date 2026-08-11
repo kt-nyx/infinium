@@ -18,8 +18,10 @@ Live authorization remains stated only in
 The project owner accepted the plan and its explicit stateless/cache-off
 ADR-0025 conformance closure on 2026-08-10; no separate ADR is required. WP1
 is accepted at exact candidate
-`61b90314d8273749849f590b303814008fa2fdfa`, its nine contracts are
-`Implementation-active`, and the live handoff now authorizes WP2 only.
+`61b90314d8273749849f590b303814008fa2fdfa`, WP2 is independently accepted at
+exact candidate `ed27ed04897103d93a60e6200971ca12d04f2e11`, and the nine Slice
+6 contracts remain `Implementation-active`. The live handoff now authorizes
+WP3 only.
 [Current project state](../../../../../current-state.md) authorizes only the
 exact active package and governs automatic non-live progression. Disposable
 native qualification, production-profile enrollment/verification, and each of
