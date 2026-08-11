@@ -17,6 +17,7 @@ public sealed class ProviderLayer6VerifierContractTests
             "'Layer6Review'",
             "[string] $BaselineCommit",
             "[string] $CandidateCommit",
+            "[switch] $HandoffCloseout",
             "merge-base --is-ancestor",
             "layer6-changed-paths.json",
             "layer6-relative-links.json",
@@ -36,6 +37,8 @@ public sealed class ProviderLayer6VerifierContractTests
 
         StringAssert.Contains(script, "Test-Wp1AllowedPath");
         StringAssert.Contains(script, "Test-Wp1ProtectedPath");
+        StringAssert.Contains(script, "isHandoffCurrentState");
+        StringAssert.Contains(script, "HandoffCloseout current state must record accepted WP1");
         StringAssert.Contains(script, "JsonDocumentOptions");
         StringAssert.Contains(script, "Assert-NoDuplicateJsonProperties");
     }

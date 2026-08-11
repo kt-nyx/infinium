@@ -9,7 +9,9 @@ param(
 
     [string] $BaselineCommit,
 
-    [string] $CandidateCommit
+    [string] $CandidateCommit,
+
+    [switch] $HandoffCloseout
 )
 
 if ($Gate -eq 'Layer6Review' -and $PSVersionTable.PSEdition -ne 'Core') {
@@ -23,6 +25,9 @@ if ($Gate -eq 'Layer6Review' -and $PSVersionTable.PSEdition -ne 'Core') {
         '-BaselineCommit', $BaselineCommit,
         '-CandidateCommit', $CandidateCommit
     )
+    if ($HandoffCloseout) {
+        $arguments += '-HandoffCloseout'
+    }
     & $pwsh.Source @arguments
     exit $LASTEXITCODE
 }
@@ -228,8 +233,10 @@ function Invoke-Layer6ReviewGate {
         $status = $parts[0]
         $paths = if ($status.StartsWith('R', [System.StringComparison]::Ordinal)) { @($parts[1], $parts[2]) } else { @($parts[1]) }
         foreach ($path in $paths) {
-            $isProtected = Test-Wp1ProtectedPath $path
-            $isAllowed = Test-Wp1AllowedPath $path
+            $isHandoffCurrentState = $HandoffCloseout -and
+                $path -ceq 'docs/current-state.md'
+            $isProtected = (Test-Wp1ProtectedPath $path) -and -not $isHandoffCurrentState
+            $isAllowed = (Test-Wp1AllowedPath $path) -or $isHandoffCurrentState
             $privateOrArchive = $path -match '(?i)(^|/)(private|legacy|archive)(/|$)' -or
                 $path -match '(?i)independent-slice3-evaluator' -or
                 $path -match '(?i)^docs/evaluation/fixtures/'
@@ -385,6 +392,18 @@ function Invoke-Layer6ReviewGate {
     foreach ($failure in $linkFailures) {
         $failures.Add("Changed Markdown has broken relative link: $($failure.source): $($failure.target)")
     }
+    if ($HandoffCloseout) {
+        $currentState = @($changedPaths | Where-Object { $_.path -ceq 'docs/current-state.md' })
+        if ($currentState.Count -ne 1 -or -not $currentState[0].candidate_blob) {
+            $failures.Add('HandoffCloseout requires exactly one changed candidate docs/current-state.md.')
+        } else {
+            $currentStateText = Get-CandidateText $candidateHash 'docs/current-state.md'
+            if (-not $currentStateText.Contains('M1/S6/WP2', [System.StringComparison]::Ordinal) -or
+                -not $currentStateText.Contains('Accepted Slice 6 WP1 candidate', [System.StringComparison]::Ordinal)) {
+                $failures.Add('HandoffCloseout current state must record accepted WP1 and authorize M1/S6/WP2.')
+            }
+        }
+    }
 
     $status = if ($failures.Count -eq 0) { 'passed' } else { 'failed' }
     Write-Receipt 'Layer6Review' ([ordered]@{
@@ -393,6 +412,7 @@ function Invoke-Layer6ReviewGate {
         candidate_input = $CandidateCommit
         candidate_commit = $candidateHash
         candidate_bound = $true
+        handoff_closeout = [bool]$HandoffCloseout
         changed_path_count = $changedPaths.Count
         allowed_path_failure_count = $pathFailures.Count
         strict_changed_json_failure_count = $jsonFailures.Count
