@@ -137,7 +137,7 @@ public sealed class AnalysisStatePersistenceTests
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'storage_contract_version';"));
         Assert.AreEqual(
-            "bf685f3d364b336417b357ce99c19f9a4a3a407be119e30a2c19abd2cf7a0d75",
+            "cc357cf1ada0e95eea63ea4d386142c2760bc7c46f1ebaa94135ebe6638547b8",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'schema_fingerprint';"));
@@ -319,10 +319,17 @@ public sealed class AnalysisStatePersistenceTests
             INSERT INTO provider_generations VALUES('generation-a','profile-a',1,0,'2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO provider_capability_snapshots VALUES('cap-a','openai','gpt-5.6-sol','default','medium','current_turn','standard',0,0,0,'none',0,'disabled','explicit',0,0,272000,'synthetic-v1','bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb','2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO provider_credential_intents VALUES('intent-enroll-a','profile-a','generation-a','enroll','pending','none','pending-enrollment','none','not-applicable',NULL,NULL,NULL,'not-required','not-requested','2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-enroll-a-v1','root-enroll-a','intent-enroll-a',1,NULL,'2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO provider_profile_projection VALUES('profile-a','generation-a',0,'pending-enrollment','not-applicable',NULL,NULL,NULL,'intent-enroll-a','not-required','not-requested',1,'2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO provider_credential_intents VALUES('intent-activate-a-pending','profile-a','generation-a','enroll','pending','pending-enrollment','active-unverified','pending-enrollment','unavailable','account-a','billing-a','cap-a','not-required','not-requested','2026-08-10T00:00:00.5000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-activate-a-v1','root-activate-a','intent-activate-a-pending',1,NULL,'2026-08-10T00:00:00.5000000+00:00');
             INSERT INTO provider_credential_intents VALUES('intent-activate-a','profile-a','generation-a','enroll','completed','pending-enrollment','active-unverified','active-unverified','unavailable','account-a','billing-a','cap-a','not-required','not-requested','2026-08-10T00:00:01.0000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-activate-a-v2','root-activate-a','intent-activate-a',2,'event-activate-a-v1','2026-08-10T00:00:01.0000000+00:00');
             UPDATE provider_profile_projection SET lifecycle_state='active-unverified',verification_state='unavailable',capability_snapshot_id='cap-a',account_identity_id='account-a',billing_scope_identity_id='billing-a',intent_id='intent-activate-a',projection_version=2,updated_at='2026-08-10T00:00:01.0000000+00:00' WHERE profile_id='profile-a';
+            INSERT INTO provider_credential_intents VALUES('intent-verify-a-pending','profile-a','generation-a','verify','pending','active-unverified','active-verified','active-unverified','available','account-a','billing-a','cap-a','not-required','not-requested','2026-08-10T00:00:01.5000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-verify-a-v1','root-verify-a','intent-verify-a-pending',1,NULL,'2026-08-10T00:00:01.5000000+00:00');
             INSERT INTO provider_credential_intents VALUES('intent-verify-a','profile-a','generation-a','verify','completed','active-unverified','active-verified','active-verified','available','account-a','billing-a','cap-a','not-required','not-requested','2026-08-10T00:00:02.0000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-verify-a-v2','root-verify-a','intent-verify-a',2,'event-verify-a-v1','2026-08-10T00:00:02.0000000+00:00');
             UPDATE provider_profile_projection SET lifecycle_state='active-verified',verification_state='available',intent_id='intent-verify-a',projection_version=3,updated_at='2026-08-10T00:00:02.0000000+00:00' WHERE profile_id='profile-a';
             INSERT INTO provider_price_snapshots VALUES('price-a','openai','gpt-5.6-sol','USD','default','synthetic-v1','cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc','2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO provider_price_rules VALUES('price-a','rule-a','standard-under-272k','ordinary-input','input','none','global',1,1,'synthetic-v1');

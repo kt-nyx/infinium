@@ -121,7 +121,7 @@ function Get-Persistence([string] $Schema, [string] $Path) {
                 'lifecycle_state' { 'provider_profile_projection.lifecycle_state' }
                 'verification_state' { 'provider_profile_projection.verification_state' }
                 'capability_snapshot_id' { 'provider_profile_projection.capability_snapshot_id' }
-                'intent_id' { 'provider_profile_projection.intent_id' }
+                'intent_id' { @('provider_profile_projection.intent_id','provider_credential_intent_events.intent_id','provider_credential_intent_events.intent_root_id','provider_credential_intent_events.event_version','provider_credential_intent_events.prior_intent_event_id') }
                 'recovery_disposition' { 'provider_credential_intents.recovery_disposition' }
                 'cleanup_disposition' { 'provider_credential_intents.cleanup_disposition' }
                 'recorded_at' { 'provider_profile_projection.updated_at' }
@@ -146,7 +146,7 @@ function Get-Persistence([string] $Schema, [string] $Path) {
                 if ($leaf -in $priceRuleColumns) { $column = "provider_price_rules.$leaf" }
             }
             elseif ($Path -like '`$defs.inputBoundProof.*') { $column = "provider_operation_blocks.input_bound_$($leaf -replace '^policy_','policy_' -replace '^status$','proof_status')" }
-            elseif ($Path -like '`$defs.finiteLimits.*') { $column = "provider_operation_blocks.$leaf" }
+            elseif ($Path -like '`$defs.finiteLimits.*' -or $Path -like '`$defs.semanticLimits.*' -or $Path -like '`$defs.qualificationLimits.*') { $column = "provider_operation_blocks.$leaf" }
             else {
                 $column = switch ($leaf) {
                     'operation_id' { 'provider_operation_blocks.operation_id' }
@@ -229,7 +229,8 @@ function Get-Persistence([string] $Schema, [string] $Path) {
                     'provider_usage_entries.credit_availability')
             }
             elseif ($Path -eq 'rate_limit_facts') {
-                $column = @('provider_rate_limit_facts.scope','provider_rate_limit_facts.dimension',
+                $column = @('provider_responses.expected_rate_limit_fact_count',
+                    'provider_rate_limit_facts.scope','provider_rate_limit_facts.dimension',
                     'provider_rate_limit_facts.availability','provider_rate_limit_facts.limit_value',
                     'provider_rate_limit_facts.remaining_value','provider_rate_limit_facts.observed_at',
                     'provider_rate_limit_facts.resets_at')
@@ -268,6 +269,8 @@ function Get-Persistence([string] $Schema, [string] $Path) {
                     'limits' { @('provider_operation_authorizations.maximum_request_bytes','provider_responses.maximum_input_tokens','provider_responses.maximum_output_tokens','provider_responses.maximum_raw_response_bytes','provider_operation_authorizations.maximum_dispatch_count','provider_responses.maximum_calculated_nano_usd','provider_operation_authorizations.deadline_milliseconds') }
                     'recorded_at' { 'provider_responses.created_at' }
                     'availability' { 'provider_responses.availability' }
+                    'validation_state' { 'provider_response_finalizations.validation_state' }
+                    'admission_state' { 'provider_response_finalizations.admission_state' }
                     { $_ -in @('schema_id','schema_version') } { $null }
                     default { "provider_responses.$leaf" }
                 }
@@ -386,8 +389,10 @@ function Get-Projection([string] $Schema, [string] $Path, [bool] $Replay) {
             else {
                 $responseMap=@{
                     response_record_id='response_record_id'; authorization_id='authorization_id'; request_id='request_id'; dispatch_fence_id='dispatch_fence_id';
+                    owner_kind='owner_kind'; owner_id='owner_id';
                     operation_kind='operation_kind'; limits='limits'; raw_response_availability='raw_response_availability';
                     raw_response_payload='raw_response'; raw_response_bytes='raw_response'; maximum_raw_response_bytes='maximum_raw_response_bytes';
+                    overflow_observed_excess_bytes='overflow_observed_excess_bytes';
                     response_headers_payload='response_headers'; response_headers_bytes='response_headers'; response_headers_availability='response_headers_availability';
                     http_status='http_status'; provider_response_id='provider_response_id'; provider_request_id='provider_request_id';
                     provider_request_id_availability='provider_request_id_availability'; state='response_state'; refusal_code='refusal_code';

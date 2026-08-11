@@ -226,6 +226,13 @@ public static class ProviderOperationContractInvariants
     {
         ArgumentNullException.ThrowIfNull(value);
         RequireHeader(value.SchemaId, value.SchemaVersion, ContractConstants.ProviderResponseSchemaId);
+        if (value.OwnerKind is not ("analysis-run" or "evidence-acquisition-run")
+            || value.OperationKind == ProviderOperationKind.SourceClaimExtraction && value.OwnerKind != "evidence-acquisition-run"
+            || value.OperationKind is ProviderOperationKind.TransportQualification or ProviderOperationKind.CandidateInvestigation
+                && value.OwnerKind != "analysis-run")
+        {
+            throw new InvalidOperationException("Provider response must bind one exact durable operation owner kind.");
+        }
         Validate(value.OperationKind, value.Limits);
         RequireExplicit(value.Availability, nameof(value.Availability));
         RequireExplicit(value.State, nameof(value.State));
@@ -259,8 +266,8 @@ public static class ProviderOperationContractInvariants
         if (value.MaximumRawResponseBytes != value.Limits.MaximumRawResponseBytes
             || value.RawResponseBytes is not null && (value.RawResponseBytes <= 0
                 || value.RawResponseBytes > value.MaximumRawResponseBytes)
-            || value.OverflowObservedAtLeastBytes is not null
-                && value.OverflowObservedAtLeastBytes != checked(value.MaximumRawResponseBytes + 1)
+            || value.OverflowObservedExcessBytes is not null
+                && value.OverflowObservedExcessBytes != 1
             || value.ResponseHeadersBytes is not null && value.ResponseHeadersBytes is <= 0 or > 65_536)
         {
             throw new InvalidOperationException("Provider payload sizes must be positive and use the exact retained operation limit.");
@@ -719,8 +726,8 @@ public static class ProviderOperationContractInvariants
             && value.Usage.CreditAvailability == ProviderAvailabilityState.Unavailable;
         bool boundedOverflow = value.RawResponseAvailability == ProviderAvailabilityState.Unavailable
             && value.RawResponsePayload is null && value.RawResponseBytes is null
-            && value.OverflowObservedAtLeastBytes == checked(value.MaximumRawResponseBytes + 1);
-        bool noOverflow = value.OverflowObservedAtLeastBytes is null;
+            && value.OverflowObservedExcessBytes == 1;
+        bool noOverflow = value.OverflowObservedExcessBytes is null;
         bool valid = value.State switch
         {
             ProviderResponseState.Completed => transport && raw && http && returnedModel && returnedTier

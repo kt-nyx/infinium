@@ -307,13 +307,20 @@ public sealed class PersistenceAndLifecycleTests
             INSERT INTO provider_credential_intents VALUES(
               'intent-verify-enroll-pending','profile-verify-cancel','generation-verify-cancel','enroll','pending',
               'none','pending-enrollment','none','not-applicable',NULL,NULL,NULL,'not-required','not-requested','2026-08-10T00:00:01.0000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-verify-enroll-v1','root-verify-enroll','intent-verify-enroll-pending',1,NULL,'2026-08-10T00:00:01.0000000+00:00');
             INSERT INTO provider_profile_projection VALUES(
               'profile-verify-cancel','generation-verify-cancel',0,'pending-enrollment','not-applicable',NULL,NULL,NULL,
               'intent-verify-enroll-pending','not-required','not-requested',1,'2026-08-10T00:00:01.0000000+00:00');
             INSERT INTO provider_credential_intents VALUES(
+              'intent-verify-enroll-transition','profile-verify-cancel','generation-verify-cancel','enroll','pending',
+              'pending-enrollment','active-unverified','pending-enrollment','unavailable','account-verify','billing-verify','cap-restore',
+              'not-required','not-requested','2026-08-10T00:00:01.5000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-verify-activate-v1','root-verify-activate','intent-verify-enroll-transition',1,NULL,'2026-08-10T00:00:01.5000000+00:00');
+            INSERT INTO provider_credential_intents VALUES(
               'intent-verify-enroll-complete','profile-verify-cancel','generation-verify-cancel','enroll','completed',
               'pending-enrollment','active-unverified','active-unverified','unavailable','account-verify','billing-verify','cap-restore',
               'not-required','not-requested','2026-08-10T00:00:02.0000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-verify-activate-v2','root-verify-activate','intent-verify-enroll-complete',2,'event-verify-activate-v1','2026-08-10T00:00:02.0000000+00:00');
             UPDATE provider_profile_projection SET lifecycle_state='active-unverified',verification_state='unavailable',
               capability_snapshot_id='cap-restore',account_identity_id='account-verify',billing_scope_identity_id='billing-verify',
               intent_id='intent-verify-enroll-complete',projection_version=2,updated_at='2026-08-10T00:00:02.0000000+00:00'
@@ -328,13 +335,20 @@ public sealed class PersistenceAndLifecycleTests
             INSERT INTO provider_credential_intents VALUES(
               'intent-recover-enroll-pending','profile-recover-cancel','generation-recover-cancel','enroll','pending',
               'none','pending-enrollment','none','not-applicable',NULL,NULL,NULL,'not-required','not-requested','2026-08-10T00:00:01.0000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-recover-enroll-v1','root-recover-enroll','intent-recover-enroll-pending',1,NULL,'2026-08-10T00:00:01.0000000+00:00');
             INSERT INTO provider_profile_projection VALUES(
               'profile-recover-cancel','generation-recover-cancel',0,'pending-enrollment','not-applicable',NULL,NULL,NULL,
               'intent-recover-enroll-pending','not-required','not-requested',1,'2026-08-10T00:00:01.0000000+00:00');
             INSERT INTO provider_credential_intents VALUES(
+              'intent-recover-transition-pending','profile-recover-cancel','generation-recover-cancel','enroll','pending',
+              'pending-enrollment','recovery-required','pending-enrollment','unavailable','account-recover','billing-recover','cap-restore',
+              'required','not-requested','2026-08-10T00:00:01.5000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-recover-transition-v1','root-recover-transition','intent-recover-transition-pending',1,NULL,'2026-08-10T00:00:01.5000000+00:00');
+            INSERT INTO provider_credential_intents VALUES(
               'intent-recover-required','profile-recover-cancel','generation-recover-cancel','enroll','completed',
               'pending-enrollment','recovery-required','recovery-required','unavailable','account-recover','billing-recover','cap-restore',
               'required','not-requested','2026-08-10T00:00:02.0000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-recover-transition-v2','root-recover-transition','intent-recover-required',2,'event-recover-transition-v1','2026-08-10T00:00:02.0000000+00:00');
             UPDATE provider_profile_projection SET lifecycle_state='recovery-required',verification_state='unavailable',
               capability_snapshot_id='cap-restore',account_identity_id='account-recover',billing_scope_identity_id='billing-recover',
               intent_id='intent-recover-required',recovery_disposition='required',projection_version=2,updated_at='2026-08-10T00:00:02.0000000+00:00'
@@ -390,9 +404,15 @@ public sealed class PersistenceAndLifecycleTests
         command.CommandText =
             """
             INSERT INTO provider_credential_intents VALUES(
+              'intent-replace-complete-pending','profile-restore','generation-replacement','replace','pending',
+              'active-verified','active-verified','active-verified','available','account-restore','billing-restore','cap-restore',
+              'not-required','not-requested','2026-08-10T00:00:04.5000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-replace-complete-v1','root-replace-complete','intent-replace-complete-pending',1,NULL,'2026-08-10T00:00:04.5000000+00:00');
+            INSERT INTO provider_credential_intents VALUES(
               'intent-replace-complete','profile-restore','generation-replacement','replace','completed',
               'active-verified','active-verified','active-verified','available','account-restore','billing-restore','cap-restore',
               'not-required','not-requested','2026-08-10T00:00:05.0000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-replace-complete-v2','root-replace-complete','intent-replace-complete',2,'event-replace-complete-v1','2026-08-10T00:00:05.0000000+00:00');
             UPDATE provider_profile_projection SET generation_id='generation-replacement',lifecycle_state='active-verified',
               verification_state='available',intent_id='intent-replace-complete',projection_version=4,
               updated_at='2026-08-10T00:00:05.0000000+00:00' WHERE profile_id='profile-restore';
@@ -441,13 +461,20 @@ public sealed class PersistenceAndLifecycleTests
               'intent-delete-retry','profile-restore','generation-restore','delete','pending',
               'active-verified','delete-pending','active-verified','unavailable','account-restore','billing-restore','cap-restore',
               'not-required','pending','2026-08-10T00:00:04.0000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-delete-retry-v1','root-delete-retry','intent-delete-retry',1,NULL,'2026-08-10T00:00:04.0000000+00:00');
             UPDATE provider_profile_projection SET lifecycle_state='delete-pending',verification_state='unavailable',
               intent_id='intent-delete-retry',cleanup_disposition='pending',projection_version=4,
               updated_at='2026-08-10T00:00:04.0000000+00:00' WHERE profile_id='profile-restore';
             INSERT INTO provider_credential_intents VALUES(
+              'intent-delete-failed-pending','profile-restore','generation-restore','delete','pending',
+              'delete-pending','delete-pending','delete-pending','unavailable','account-restore','billing-restore','cap-restore',
+              'not-required','failed','2026-08-10T00:00:04.5000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-delete-failed-v1','root-delete-failed','intent-delete-failed-pending',1,NULL,'2026-08-10T00:00:04.5000000+00:00');
+            INSERT INTO provider_credential_intents VALUES(
               'intent-delete-failed','profile-restore','generation-restore','delete','failed',
               'delete-pending','delete-pending','delete-pending','unavailable','account-restore','billing-restore','cap-restore',
               'not-required','failed','2026-08-10T00:00:05.0000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-delete-failed-v2','root-delete-failed','intent-delete-failed',2,'event-delete-failed-v1','2026-08-10T00:00:05.0000000+00:00');
             UPDATE provider_profile_projection SET intent_id='intent-delete-failed',cleanup_disposition='failed',
               projection_version=5,updated_at='2026-08-10T00:00:05.0000000+00:00' WHERE profile_id='profile-restore';
 
@@ -457,17 +484,29 @@ public sealed class PersistenceAndLifecycleTests
             INSERT INTO provider_generations VALUES(
               'generation-unavailable','profile-unavailable',1,0,'2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO provider_credential_intents VALUES(
+              'intent-recovery-materialized-pending','profile-unavailable','generation-unavailable','enroll','pending',
+              'none','pending-enrollment','none','not-applicable',NULL,NULL,NULL,
+              'not-required','not-requested','2026-08-10T00:00:00.5000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-recovery-materialized-v1','root-recovery-materialized','intent-recovery-materialized-pending',1,NULL,'2026-08-10T00:00:00.5000000+00:00');
+            INSERT INTO provider_credential_intents VALUES(
               'intent-recovery-materialized','profile-unavailable','generation-unavailable','enroll','unavailable',
               'none','pending-enrollment','recovery-required','unavailable','account-unavailable','billing-unavailable','cap-restore',
               'required','not-requested','2026-08-10T00:00:01.0000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-recovery-materialized-v2','root-recovery-materialized','intent-recovery-materialized',2,'event-recovery-materialized-v1','2026-08-10T00:00:01.0000000+00:00');
             INSERT INTO provider_profile_projection VALUES(
               'profile-unavailable','generation-unavailable',0,'recovery-required','unavailable','cap-restore',
               'account-unavailable','billing-unavailable','intent-recovery-materialized','required','not-requested',1,
               '2026-08-10T00:00:01.0000000+00:00');
             INSERT INTO provider_credential_intents VALUES(
+              'intent-secure-store-materialized-pending','profile-unavailable','generation-unavailable','recover','pending',
+              'recovery-required','active-unverified','recovery-required','unavailable','account-unavailable','billing-unavailable','cap-restore',
+              'not-required','not-requested','2026-08-10T00:00:01.5000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-secure-store-materialized-v1','root-secure-store-materialized','intent-secure-store-materialized-pending',1,NULL,'2026-08-10T00:00:01.5000000+00:00');
+            INSERT INTO provider_credential_intents VALUES(
               'intent-secure-store-materialized','profile-unavailable','generation-unavailable','recover','unavailable',
               'recovery-required','active-unverified','secure-store-unavailable','unavailable','account-unavailable','billing-unavailable','cap-restore',
               'unavailable','not-requested','2026-08-10T00:00:02.0000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-secure-store-materialized-v2','root-secure-store-materialized','intent-secure-store-materialized',2,'event-secure-store-materialized-v1','2026-08-10T00:00:02.0000000+00:00');
             UPDATE provider_profile_projection SET lifecycle_state='secure-store-unavailable',
               intent_id='intent-secure-store-materialized',recovery_disposition='unavailable',projection_version=2,
               updated_at='2026-08-10T00:00:02.0000000+00:00' WHERE profile_id='profile-unavailable';
@@ -529,6 +568,25 @@ public sealed class PersistenceAndLifecycleTests
 
         command.CommandText =
             """
+            UPDATE provider_profile_projection SET lifecycle_state='disabled',verification_state='unavailable',
+              intent_id='intent-disable-chain-completed',projection_version=4,
+              updated_at='2026-08-10T00:00:04.0000000+00:00' WHERE profile_id='profile-restore';
+            """;
+        Assert.AreEqual(1, command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            INSERT INTO provider_credential_intents VALUES(
+              'intent-recover-no-event','profile-restore','generation-restore','recover','completed',
+              'disabled','active-unverified','active-unverified','unavailable','account-restore','billing-restore','cap-restore',
+              'not-required','not-requested','2026-08-10T00:00:06.0000000+00:00');
+            UPDATE provider_profile_projection SET lifecycle_state='active-unverified',verification_state='unavailable',
+              intent_id='intent-recover-no-event',projection_version=5,
+              updated_at='2026-08-10T00:00:06.0000000+00:00' WHERE profile_id='profile-restore';
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+
+        command.CommandText =
+            """
             UPDATE provider_credential_intent_events SET event_version=3
             WHERE intent_event_id='intent-event-disable-v2';
             """;
@@ -567,6 +625,7 @@ public sealed class PersistenceAndLifecycleTests
     {
         using TemporaryStore temporary = new();
         using AuthoritativeStore store = temporary.Open();
+        SeedProviderAuthorityBlock(temporary.Root);
         using SqliteConnection connection = OpenRaw(temporary.Root);
         using SqliteCommand command = connection.CreateCommand();
         command.CommandText = "PRAGMA foreign_keys=OFF; DROP TRIGGER provider_response_transport_binding_guard;";
@@ -575,7 +634,7 @@ public sealed class PersistenceAndLifecycleTests
         command.CommandText =
             """
             INSERT INTO provider_responses(
-              response_record_id,availability,usage_availability,operation_id,operation_kind,
+              response_record_id,availability,usage_availability,operation_id,owner_kind,owner_id,operation_kind,
               maximum_input_tokens,maximum_output_tokens,maximum_calculated_nano_usd,
               raw_response_availability,maximum_raw_response_bytes,response_headers_availability,
               http_status_availability,provider_response_id_availability,client_request_id_availability,
@@ -583,18 +642,24 @@ public sealed class PersistenceAndLifecycleTests
               refusal_availability,incomplete_availability,error_availability,requested_model,
               returned_model_availability,requested_service_tier,returned_service_tier_availability,
               reasoning_context,reasoning_mode,prompt_cache_mode,billing_availability,rate_availability,
-              credit_availability,validation_state,admission_state,created_at)
+              expected_rate_limit_fact_count,credit_availability,validation_state,admission_state,created_at)
             VALUES(
-              'response-cancelled','unavailable','unavailable','operation-cancelled','source-claim-extraction',
+              'response-cancelled','unavailable','unavailable',$operation_id,'evidence-acquisition-run',$owner_id,'source-claim-extraction',
               73728,4096,600000000,'unavailable',1048576,$response_headers_availability,'unavailable','unavailable','unavailable',
               'unavailable','unavailable','cancelled','unavailable','unavailable','unavailable','gpt-5.6-sol',
               'unavailable','default','unavailable','current_turn','standard','explicit','unavailable','unavailable',
-              'unavailable','unavailable','unavailable','2026-08-10T00:00:00.0000000+00:00');
+              0,'unavailable','unavailable','unavailable','2026-08-10T00:00:00.0000000+00:00');
             """;
+        SqliteParameter operationId = command.Parameters.AddWithValue("$operation_id", "operation-missing");
+        SqliteParameter ownerId = command.Parameters.AddWithValue("$owner_id", "acquisition-restore");
         SqliteParameter cancelledHeaders = command.Parameters.AddWithValue(
             "$response_headers_availability", "unsupported");
         Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        operationId.Value = "operation-restore";
         cancelledHeaders.Value = "unavailable";
+        ownerId.Value = "acquisition-substitution";
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        ownerId.Value = "acquisition-restore";
         Assert.AreEqual(1, command.ExecuteNonQuery());
         command.Parameters.Clear();
         command.CommandText =
@@ -614,7 +679,7 @@ public sealed class PersistenceAndLifecycleTests
               cache_write_tokens_availability,priced_tool_calls_availability,calculated_nano_usd_availability,
               billing_availability,rate_availability,credit_availability,receipt_state,created_at)
             VALUES(
-              'usage-cancelled','unavailable','operation-cancelled','response-cancelled','available',0,
+              'usage-cancelled','unavailable','operation-restore','response-cancelled','available',0,
               'unavailable','unavailable','unavailable','unavailable','unavailable','unavailable','unavailable',
               'unavailable','unavailable','unavailable','unavailable','not-dispatched',
               '2026-08-10T00:00:01.0000000+00:00');
@@ -638,7 +703,7 @@ public sealed class PersistenceAndLifecycleTests
         command.CommandText =
             """
             INSERT INTO provider_responses(
-              response_record_id,availability,usage_availability,authorization_id,operation_id,request_id,
+              response_record_id,availability,usage_availability,authorization_id,operation_id,owner_kind,owner_id,request_id,
               provider_attempt_id,dispatch_fence_id,operation_kind,maximum_input_tokens,maximum_output_tokens,
               maximum_calculated_nano_usd,raw_response_availability,raw_response_payload_id,
               raw_response_fingerprint,raw_response_bytes,maximum_raw_response_bytes,response_headers_availability,
@@ -646,15 +711,15 @@ public sealed class PersistenceAndLifecycleTests
               provider_request_id_availability,billing_evidence_availability,response_state,refusal_availability,
               incomplete_availability,error_availability,requested_model,returned_model_availability,returned_model,
               requested_service_tier,returned_service_tier_availability,returned_service_tier,reasoning_context,
-              reasoning_mode,prompt_cache_mode,billing_availability,rate_availability,credit_availability,
-              validation_state,admission_state,created_at)
+              reasoning_mode,prompt_cache_mode,billing_availability,rate_availability,expected_rate_limit_fact_count,
+              credit_availability,validation_state,admission_state,created_at)
             VALUES(
-              'response-completed','available','available','authorization-1','operation-completed','request-1',
+              'response-completed','available','available','authorization-1','operation-completed','analysis-run','run-1','request-1',
               'attempt-1','fence-1','candidate-investigation',73728,4096,600000000,'available','raw-1',
               'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',128,1048576,'unavailable',
               'available',200,'unavailable','unavailable','unavailable','unavailable','completed','unavailable',
               'unavailable','unavailable','gpt-5.6-sol','available','gpt-5.6-sol','default','available','default',
-              'current_turn','standard','explicit','unavailable','available','unavailable','proposed','proposed',
+              'current_turn','standard','explicit','unavailable','available',2,'unavailable','proposed','proposed',
               '2026-08-10T00:01:00.0000000+00:00');
             INSERT INTO provider_usage_entries(
               usage_entry_id,availability,operation_id,provider_attempt_id,request_id,dispatch_fence_id,
@@ -675,7 +740,7 @@ public sealed class PersistenceAndLifecycleTests
             """
             INSERT INTO provider_response_finalizations VALUES(
               'finalization-completed','response-completed','usage-completed','admitted','admitted',
-              '2026-08-10T00:01:02.0000000+00:00');
+              '2026-08-10T00:00:59.0000000+00:00');
             """;
         Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
         command.CommandText =
@@ -683,11 +748,32 @@ public sealed class PersistenceAndLifecycleTests
             INSERT INTO provider_rate_limit_facts VALUES(
               'rate-completed','usage-completed','request','requests','available',100,99,
               '2026-08-10T00:01:01.0000000+00:00',NULL);
+            """;
+        Assert.AreEqual(1, command.ExecuteNonQuery());
+        command.CommandText =
+            """
             INSERT INTO provider_response_finalizations VALUES(
               'finalization-completed','response-completed','usage-completed','admitted','admitted',
               '2026-08-10T00:01:02.0000000+00:00');
             """;
-        Assert.AreEqual(2, command.ExecuteNonQuery());
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            INSERT INTO provider_rate_limit_facts VALUES(
+              'rate-completed-second','usage-completed','project','input-tokens','available',1000,900,
+              '2026-08-10T00:01:03.0000000+00:00',NULL);
+            INSERT INTO provider_response_finalizations VALUES(
+              'finalization-completed','response-completed','usage-completed','admitted','admitted',
+              '2026-08-10T00:01:02.0000000+00:00');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            INSERT INTO provider_response_finalizations VALUES(
+              'finalization-completed','response-completed','usage-completed','admitted','admitted',
+              '2026-08-10T00:01:04.0000000+00:00');
+            """;
+        Assert.AreEqual(1, command.ExecuteNonQuery());
         command.CommandText =
             """
             INSERT INTO provider_rate_limit_facts VALUES(
@@ -717,6 +803,52 @@ public sealed class PersistenceAndLifecycleTests
             DELETE FROM provider_rate_limit_facts WHERE rate_limit_fact_id='rate-completed';
             """;
         Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            DROP TRIGGER provider_semantic_proposal_root_guard;
+            DROP TRIGGER provider_semantic_admission_application_guard;
+            INSERT INTO provider_semantic_proposals(
+              proposal_id,authorization_id,operation_id,provider_attempt_id,request_id,response_record_id,
+              dispatch_fence_id,owner_kind,owner_id,root_subject_id,application_link_id,proposal_kind,payload_id,created_at)
+            VALUES('proposal-chronology','authorization-1','operation-completed','attempt-1','request-1','response-completed',
+              'fence-1','analysis-run','run-1','candidate-1','application-1','candidate-hypothesis','payload-1',
+              '2026-08-10T00:01:03.0000000+00:00');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            INSERT INTO provider_semantic_proposals(
+              proposal_id,authorization_id,operation_id,provider_attempt_id,request_id,response_record_id,
+              dispatch_fence_id,owner_kind,owner_id,root_subject_id,application_link_id,proposal_kind,payload_id,created_at)
+            VALUES('proposal-chronology','authorization-1','operation-completed','attempt-1','request-1','response-completed',
+              'fence-1','analysis-run','run-1','candidate-1','application-1','candidate-hypothesis','payload-1',
+              '2026-08-10T00:01:05.0000000+00:00');
+            """;
+        Assert.AreEqual(1, command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            INSERT INTO provider_semantic_validations(
+              validation_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,
+              state,host_policy_id,reason,created_at)
+            VALUES('validation-chronology','proposal-chronology','operation-completed','response-completed',
+              'analysis-run','run-1','candidate-1','admitted','policy-1','synthetic',
+              '2026-08-10T00:01:04.0000000+00:00');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        command.CommandText = command.CommandText.Replace("00:01:04", "00:01:06", StringComparison.Ordinal);
+        Assert.AreEqual(1, command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            INSERT INTO provider_semantic_admissions(
+              admission_id,proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id,
+              validation_id,application_link_id,state,host_policy_id,reason,admitted_artifact_id,created_at)
+            VALUES('admission-chronology','proposal-chronology','operation-completed','response-completed',
+              'analysis-run','run-1','candidate-1','validation-chronology','application-1','admitted',
+              'policy-1','synthetic',NULL,'2026-08-10T00:01:05.0000000+00:00');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        command.CommandText = command.CommandText.Replace("00:01:05", "00:01:07", StringComparison.Ordinal);
+        Assert.AreEqual(1, command.ExecuteNonQuery());
         command.CommandText =
             """
             DELETE FROM provider_response_finalizations WHERE finalization_id='finalization-completed';
@@ -1933,10 +2065,17 @@ public sealed class PersistenceAndLifecycleTests
             INSERT INTO provider_generations VALUES('generation-restore','profile-restore',1,0,'2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO provider_capability_snapshots VALUES('cap-restore','openai','gpt-5.6-sol','default','medium','current_turn','standard',0,0,0,'none',0,'disabled','explicit',0,0,272000,'synthetic-v1','aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa','2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO provider_credential_intents VALUES('intent-enroll-restore','profile-restore','generation-restore','enroll','pending','none','pending-enrollment','none','not-applicable',NULL,NULL,NULL,'not-required','not-requested','2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-enroll-restore-v1','root-enroll-restore','intent-enroll-restore',1,NULL,'2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO provider_profile_projection VALUES('profile-restore','generation-restore',0,'pending-enrollment','not-applicable',NULL,NULL,NULL,'intent-enroll-restore','not-required','not-requested',1,'2026-08-10T00:00:00.0000000+00:00');
+            INSERT INTO provider_credential_intents VALUES('intent-activate-restore-pending','profile-restore','generation-restore','enroll','pending','pending-enrollment','active-unverified','pending-enrollment','unavailable','account-restore','billing-restore','cap-restore','not-required','not-requested','2026-08-10T00:00:00.5000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-activate-restore-v1','root-activate-restore','intent-activate-restore-pending',1,NULL,'2026-08-10T00:00:00.5000000+00:00');
             INSERT INTO provider_credential_intents VALUES('intent-activate-restore','profile-restore','generation-restore','enroll','completed','pending-enrollment','active-unverified','active-unverified','unavailable','account-restore','billing-restore','cap-restore','not-required','not-requested','2026-08-10T00:00:01.0000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-activate-restore-v2','root-activate-restore','intent-activate-restore',2,'event-activate-restore-v1','2026-08-10T00:00:01.0000000+00:00');
             UPDATE provider_profile_projection SET lifecycle_state='active-unverified',verification_state='unavailable',capability_snapshot_id='cap-restore',account_identity_id='account-restore',billing_scope_identity_id='billing-restore',intent_id='intent-activate-restore',projection_version=2,updated_at='2026-08-10T00:00:01.0000000+00:00' WHERE profile_id='profile-restore';
+            INSERT INTO provider_credential_intents VALUES('intent-verify-restore-pending','profile-restore','generation-restore','verify','pending','active-unverified','active-verified','active-unverified','available','account-restore','billing-restore','cap-restore','not-required','not-requested','2026-08-10T00:00:01.5000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-verify-restore-v1','root-verify-restore','intent-verify-restore-pending',1,NULL,'2026-08-10T00:00:01.5000000+00:00');
             INSERT INTO provider_credential_intents VALUES('intent-verify-restore','profile-restore','generation-restore','verify','completed','active-unverified','active-verified','active-verified','available','account-restore','billing-restore','cap-restore','not-required','not-requested','2026-08-10T00:00:02.0000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-verify-restore-v2','root-verify-restore','intent-verify-restore',2,'event-verify-restore-v1','2026-08-10T00:00:02.0000000+00:00');
             UPDATE provider_profile_projection SET lifecycle_state='active-verified',verification_state='available',intent_id='intent-verify-restore',projection_version=3,updated_at='2026-08-10T00:00:02.0000000+00:00' WHERE profile_id='profile-restore';
             INSERT INTO provider_price_snapshots VALUES('price-restore','openai','gpt-5.6-sol','USD','default','synthetic-v1','bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb','2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO provider_price_rules VALUES('price-restore','rule-restore','standard-under-272k','ordinary-input','input','none','global',1,1,'synthetic-v1');

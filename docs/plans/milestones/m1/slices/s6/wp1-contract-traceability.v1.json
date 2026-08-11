@@ -396,7 +396,13 @@
                                                                       "symbol":  "IntentId"
                                                                   },
                                                      "persistence":  {
-                                                                         "table_column":  "provider_profile_projection.intent_id"
+                                                                         "table_columns":  [
+                                                                                               "provider_profile_projection.intent_id",
+                                                                                               "provider_credential_intent_events.intent_id",
+                                                                                               "provider_credential_intent_events.intent_root_id",
+                                                                                               "provider_credential_intent_events.event_version",
+                                                                                               "provider_credential_intent_events.prior_intent_event_id"
+                                                                                           ]
                                                                      },
                                                      "output":  {
                                                                     "file":  "contracts/protobuf/infinium/application/v1/application.proto",
@@ -1853,6 +1859,202 @@
                                                                      },
                                                      "output":  {
                                                                     "omission_reason":  "$defs.finiteLimits.deadline_milliseconds has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+                                                                },
+                                                     "replay":  {
+                                                                    "file":  "contracts/protobuf/infinium/application/v1/application.proto",
+                                                                    "message":  "ProviderReplayPayload",
+                                                                    "field":  "limits"
+                                                                }
+                                                 },
+                                                 {
+                                                     "path":  "$defs.semanticLimits.maximum_request_bytes",
+                                                     "authorities":  [
+                                                                         "OPS-001",
+                                                                         "OPS-002",
+                                                                         "ADR-0016",
+                                                                         "ADR-0023"
+                                                                     ],
+                                                     "producer":  {
+                                                                      "file":  "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+                                                                      "symbol":  "MaximumRequestBytes"
+                                                                  },
+                                                     "consumer":  {
+                                                                      "file":  "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+                                                                      "symbol":  "MaximumRequestBytes"
+                                                                  },
+                                                     "persistence":  {
+                                                                         "table_column":  "provider_operation_blocks.maximum_request_bytes"
+                                                                     },
+                                                     "output":  {
+                                                                    "omission_reason":  "$defs.semanticLimits.maximum_request_bytes has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+                                                                },
+                                                     "replay":  {
+                                                                    "file":  "contracts/protobuf/infinium/application/v1/application.proto",
+                                                                    "message":  "ProviderReplayPayload",
+                                                                    "field":  "limits"
+                                                                }
+                                                 },
+                                                 {
+                                                     "path":  "$defs.semanticLimits.maximum_input_tokens",
+                                                     "authorities":  [
+                                                                         "OPS-001",
+                                                                         "OPS-002",
+                                                                         "ADR-0016",
+                                                                         "ADR-0023"
+                                                                     ],
+                                                     "producer":  {
+                                                                      "file":  "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+                                                                      "symbol":  "MaximumInputTokens"
+                                                                  },
+                                                     "consumer":  {
+                                                                      "file":  "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+                                                                      "symbol":  "MaximumInputTokens"
+                                                                  },
+                                                     "persistence":  {
+                                                                         "table_column":  "provider_operation_blocks.maximum_input_tokens"
+                                                                     },
+                                                     "output":  {
+                                                                    "omission_reason":  "$defs.semanticLimits.maximum_input_tokens has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+                                                                },
+                                                     "replay":  {
+                                                                    "file":  "contracts/protobuf/infinium/application/v1/application.proto",
+                                                                    "message":  "ProviderReplayPayload",
+                                                                    "field":  "limits"
+                                                                }
+                                                 },
+                                                 {
+                                                     "path":  "$defs.semanticLimits.maximum_output_tokens",
+                                                     "authorities":  [
+                                                                         "OPS-001",
+                                                                         "OPS-002",
+                                                                         "ADR-0016",
+                                                                         "ADR-0023"
+                                                                     ],
+                                                     "producer":  {
+                                                                      "file":  "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+                                                                      "symbol":  "MaximumOutputTokens"
+                                                                  },
+                                                     "consumer":  {
+                                                                      "file":  "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+                                                                      "symbol":  "MaximumOutputTokens"
+                                                                  },
+                                                     "persistence":  {
+                                                                         "table_column":  "provider_operation_blocks.maximum_output_tokens"
+                                                                     },
+                                                     "output":  {
+                                                                    "omission_reason":  "$defs.semanticLimits.maximum_output_tokens has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+                                                                },
+                                                     "replay":  {
+                                                                    "file":  "contracts/protobuf/infinium/application/v1/application.proto",
+                                                                    "message":  "ProviderReplayPayload",
+                                                                    "field":  "limits"
+                                                                }
+                                                 },
+                                                 {
+                                                     "path":  "$defs.semanticLimits.maximum_raw_response_bytes",
+                                                     "authorities":  [
+                                                                         "OPS-001",
+                                                                         "OPS-002",
+                                                                         "ADR-0016",
+                                                                         "ADR-0023"
+                                                                     ],
+                                                     "producer":  {
+                                                                      "file":  "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+                                                                      "symbol":  "MaximumRawResponseBytes"
+                                                                  },
+                                                     "consumer":  {
+                                                                      "file":  "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+                                                                      "symbol":  "MaximumRawResponseBytes"
+                                                                  },
+                                                     "persistence":  {
+                                                                         "table_column":  "provider_operation_blocks.maximum_raw_response_bytes"
+                                                                     },
+                                                     "output":  {
+                                                                    "omission_reason":  "$defs.semanticLimits.maximum_raw_response_bytes has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+                                                                },
+                                                     "replay":  {
+                                                                    "file":  "contracts/protobuf/infinium/application/v1/application.proto",
+                                                                    "message":  "ProviderReplayPayload",
+                                                                    "field":  "limits"
+                                                                }
+                                                 },
+                                                 {
+                                                     "path":  "$defs.semanticLimits.maximum_dispatch_count",
+                                                     "authorities":  [
+                                                                         "OPS-001",
+                                                                         "OPS-002",
+                                                                         "ADR-0016",
+                                                                         "ADR-0023"
+                                                                     ],
+                                                     "producer":  {
+                                                                      "file":  "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+                                                                      "symbol":  "MaximumDispatchCount"
+                                                                  },
+                                                     "consumer":  {
+                                                                      "file":  "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+                                                                      "symbol":  "MaximumDispatchCount"
+                                                                  },
+                                                     "persistence":  {
+                                                                         "table_column":  "provider_operation_blocks.maximum_dispatch_count"
+                                                                     },
+                                                     "output":  {
+                                                                    "omission_reason":  "$defs.semanticLimits.maximum_dispatch_count has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+                                                                },
+                                                     "replay":  {
+                                                                    "file":  "contracts/protobuf/infinium/application/v1/application.proto",
+                                                                    "message":  "ProviderReplayPayload",
+                                                                    "field":  "limits"
+                                                                }
+                                                 },
+                                                 {
+                                                     "path":  "$defs.semanticLimits.maximum_calculated_nano_usd",
+                                                     "authorities":  [
+                                                                         "AI-004",
+                                                                         "AI-005",
+                                                                         "ADR-0020",
+                                                                         "ADR-0023"
+                                                                     ],
+                                                     "producer":  {
+                                                                      "file":  "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+                                                                      "symbol":  "MaximumCalculatedNanoUsd"
+                                                                  },
+                                                     "consumer":  {
+                                                                      "file":  "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+                                                                      "symbol":  "MaximumCalculatedNanoUsd"
+                                                                  },
+                                                     "persistence":  {
+                                                                         "table_column":  "provider_operation_blocks.maximum_calculated_nano_usd"
+                                                                     },
+                                                     "output":  {
+                                                                    "omission_reason":  "$defs.semanticLimits.maximum_calculated_nano_usd has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+                                                                },
+                                                     "replay":  {
+                                                                    "file":  "contracts/protobuf/infinium/application/v1/application.proto",
+                                                                    "message":  "ProviderReplayPayload",
+                                                                    "field":  "limits"
+                                                                }
+                                                 },
+                                                 {
+                                                     "path":  "$defs.semanticLimits.deadline_milliseconds",
+                                                     "authorities":  [
+                                                                         "OPS-001",
+                                                                         "OPS-002",
+                                                                         "ADR-0016",
+                                                                         "ADR-0023"
+                                                                     ],
+                                                     "producer":  {
+                                                                      "file":  "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+                                                                      "symbol":  "DeadlineMilliseconds"
+                                                                  },
+                                                     "consumer":  {
+                                                                      "file":  "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+                                                                      "symbol":  "DeadlineMilliseconds"
+                                                                  },
+                                                     "persistence":  {
+                                                                         "table_column":  "provider_operation_blocks.deadline_milliseconds"
+                                                                     },
+                                                     "output":  {
+                                                                    "omission_reason":  "$defs.semanticLimits.deadline_milliseconds has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
                                                                 },
                                                      "replay":  {
                                                                     "file":  "contracts/protobuf/infinium/application/v1/application.proto",
@@ -3818,6 +4020,60 @@
                                                                 }
                                                  },
                                                  {
+                                                     "path":  "owner_kind",
+                                                     "authorities":  [
+                                                                         "OPS-002",
+                                                                         "ADR-0023",
+                                                                         "ADR-0025"
+                                                                     ],
+                                                     "producer":  {
+                                                                      "file":  "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+                                                                      "symbol":  "OwnerKind"
+                                                                  },
+                                                     "consumer":  {
+                                                                      "file":  "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+                                                                      "symbol":  "OwnerKind"
+                                                                  },
+                                                     "persistence":  {
+                                                                         "table_column":  "provider_responses.owner_kind"
+                                                                     },
+                                                     "output":  {
+                                                                    "file":  "contracts/protobuf/infinium/application/v1/application.proto",
+                                                                    "message":  "ProviderResponsePayload",
+                                                                    "field":  "owner_kind"
+                                                                },
+                                                     "replay":  {
+                                                                    "omission_reason":  "owner_kind has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
+                                                                }
+                                                 },
+                                                 {
+                                                     "path":  "owner_id",
+                                                     "authorities":  [
+                                                                         "OPS-002",
+                                                                         "ADR-0023",
+                                                                         "ADR-0025"
+                                                                     ],
+                                                     "producer":  {
+                                                                      "file":  "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
+                                                                      "symbol":  "OwnerId"
+                                                                  },
+                                                     "consumer":  {
+                                                                      "file":  "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
+                                                                      "symbol":  "OwnerId"
+                                                                  },
+                                                     "persistence":  {
+                                                                         "table_column":  "provider_responses.owner_id"
+                                                                     },
+                                                     "output":  {
+                                                                    "file":  "contracts/protobuf/infinium/application/v1/application.proto",
+                                                                    "message":  "ProviderResponsePayload",
+                                                                    "field":  "owner_id"
+                                                                },
+                                                     "replay":  {
+                                                                    "omission_reason":  "owner_id has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
+                                                                }
+                                                 },
+                                                 {
                                                      "path":  "authorization_id",
                                                      "authorities":  [
                                                                          "OPS-002",
@@ -4140,7 +4396,7 @@
                                                                 }
                                                  },
                                                  {
-                                                     "path":  "overflow_observed_at_least_bytes",
+                                                     "path":  "overflow_observed_excess_bytes",
                                                      "authorities":  [
                                                                          "OPS-002",
                                                                          "ADR-0023",
@@ -4148,20 +4404,22 @@
                                                                      ],
                                                      "producer":  {
                                                                       "file":  "src/Infinium.Domain/Contracts/ProviderOperationContracts.cs",
-                                                                      "symbol":  "OverflowObservedAtLeastBytes"
+                                                                      "symbol":  "OverflowObservedExcessBytes"
                                                                   },
                                                      "consumer":  {
                                                                       "file":  "src/Infinium.Domain/Contracts/ProviderOperationContractInvariants.cs",
-                                                                      "symbol":  "OverflowObservedAtLeastBytes"
+                                                                      "symbol":  "OverflowObservedExcessBytes"
                                                                   },
                                                      "persistence":  {
-                                                                         "table_column":  "provider_responses.overflow_observed_at_least_bytes"
+                                                                         "table_column":  "provider_responses.overflow_observed_excess_bytes"
                                                                      },
                                                      "output":  {
-                                                                    "omission_reason":  "overflow_observed_at_least_bytes has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
+                                                                    "file":  "contracts/protobuf/infinium/application/v1/application.proto",
+                                                                    "message":  "ProviderResponsePayload",
+                                                                    "field":  "overflow_observed_excess_bytes"
                                                                 },
                                                      "replay":  {
-                                                                    "omission_reason":  "overflow_observed_at_least_bytes has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
+                                                                    "omission_reason":  "overflow_observed_excess_bytes has no semantically equivalent network-free replay field while WP1 remains Proposed and dispatch-blocked."
                                                                 }
                                                  },
                                                  {
@@ -5040,6 +5298,7 @@
                                                                   },
                                                      "persistence":  {
                                                                          "table_columns":  [
+                                                                                               "provider_responses.expected_rate_limit_fact_count",
                                                                                                "provider_rate_limit_facts.scope",
                                                                                                "provider_rate_limit_facts.dimension",
                                                                                                "provider_rate_limit_facts.availability",
@@ -5074,7 +5333,7 @@
                                                                       "symbol":  "ValidationState"
                                                                   },
                                                      "persistence":  {
-                                                                         "table_column":  "provider_responses.validation_state"
+                                                                         "table_column":  "provider_response_finalizations.validation_state"
                                                                      },
                                                      "output":  {
                                                                     "file":  "contracts/protobuf/infinium/application/v1/application.proto",
@@ -5101,7 +5360,7 @@
                                                                       "symbol":  "AdmissionState"
                                                                   },
                                                      "persistence":  {
-                                                                         "table_column":  "provider_responses.admission_state"
+                                                                         "table_column":  "provider_response_finalizations.admission_state"
                                                                      },
                                                      "output":  {
                                                                     "file":  "contracts/protobuf/infinium/application/v1/application.proto",
@@ -5376,7 +5635,7 @@
                                                                       "symbol":  "ValidationState"
                                                                   },
                                                      "persistence":  {
-                                                                         "table_column":  "provider_responses.validation_state"
+                                                                         "table_column":  "provider_response_finalizations.validation_state"
                                                                      },
                                                      "output":  {
                                                                     "omission_reason":  "$defs.dispatchedNonSuccess.validation_state has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
@@ -5401,7 +5660,7 @@
                                                                       "symbol":  "AdmissionState"
                                                                   },
                                                      "persistence":  {
-                                                                         "table_column":  "provider_responses.admission_state"
+                                                                         "table_column":  "provider_response_finalizations.admission_state"
                                                                      },
                                                      "output":  {
                                                                     "omission_reason":  "$defs.dispatchedNonSuccess.admission_state has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
@@ -5566,7 +5825,7 @@
                                                                       "symbol":  "ValidationState"
                                                                   },
                                                      "persistence":  {
-                                                                         "table_column":  "provider_responses.validation_state"
+                                                                         "table_column":  "provider_response_finalizations.validation_state"
                                                                      },
                                                      "output":  {
                                                                     "omission_reason":  "$defs.dispatchedOversized.validation_state has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."
@@ -5591,7 +5850,7 @@
                                                                       "symbol":  "AdmissionState"
                                                                   },
                                                      "persistence":  {
-                                                                         "table_column":  "provider_responses.admission_state"
+                                                                         "table_column":  "provider_response_finalizations.admission_state"
                                                                      },
                                                      "output":  {
                                                                     "omission_reason":  "$defs.dispatchedOversized.admission_state has no semantically equivalent public application output field while WP1 remains Proposed and dispatch-blocked."

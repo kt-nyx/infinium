@@ -1243,3 +1243,104 @@ private evidence was invented. No network/DNS/provider, Credential Manager,
 native credential, private fixture, sibling repository, legacy/evaluator
 archive, later-package, current-state, push, amend, or frozen Slice 5 v1 edit
 occurred.
+
+## Tenth-cycle caller, root, chronology, and finalization correction — 2026-08-11
+
+Fresh contract and boundary review rejected candidate
+`e22583cf72d7f13be1376461a5fb98aaafb7214e`. The findings were recoverable
+WP1 implementation and evidence defects, not authority conflicts.
+
+### Corrected caller and durable-root boundaries
+
+- Helper-v2 decoding now requires the coordinator caller to provide the exact
+  expected payload case and nonzero sequence for every frame. Cross-kind,
+  replayed, and out-of-order frames fail before payload interpretation.
+  Assignment and receipt decoding also requires the exact expected assignment
+  kind, and every credential or provider receipt digest must equal the exact
+  coordinator-expected non-secret digest.
+- Provider responses now bind `owner_kind` and `owner_id` across JSON, domain,
+  application protobuf, validation, SQL, fixtures, and traceability. Cancelled
+  responses retain null transport identities but require an exact existing
+  durable blocked-operation or authorization tuple. Missing operations,
+  substituted owners, and operation-kind/owner-kind substitutions fail closed.
+- Available rate facts now retain an exact expected cardinality. Finalization
+  requires exactly that count and requires every fact observation time to be
+  no later than finalization; missing, excess, late, future-observed, and
+  post-finalization facts are rejected.
+- Durable chronology now orders response finalization before semantic
+  proposal, proposal before validation, and validation before admission.
+  Independent backdating adversaries reject every inverted edge.
+- Provider-response JSON selects qualification limits if and only if the
+  operation is transport qualification and semantic limits otherwise. An
+  oversized response now records the exact structural fact of one excess byte
+  beyond its separately bound raw-response maximum; it never retains an
+  over-limit body or an unbounded absolute observation.
+- Profile projection materialization now requires the exact current credential
+  intent event. Pending projections require the root version-one event with no
+  predecessor; completed, failed, and unavailable projections require the
+  terminal version-two event with its exact same-root version-one predecessor
+  and no later event. Direct projection bypass without that chain is rejected.
+- Per-field traceability now maps response validation and admission state to
+  immutable `provider_response_finalizations`, not proposed response columns,
+  and carries the new owner, intent-event, and exact overflow fields.
+
+The nine Slice 6 contracts remain `Proposed`; WP1 remains `Deferred` solely on
+the absent accepted repository-local input-bound tokenizer/provider-framing
+proof. This correction does not accept WP1, authorize native credential or
+live provider work, advance `docs/current-state.md`, or unblock WP2.
+
+### Superseding identities and exact blocked receipt root
+
+- Schema-6 fingerprint:
+  `cc357cf1ada0e95eea63ea4d386142c2760bc7c46f1ebaa94135ebe6638547b8`.
+- Helper-v2 transitive fingerprint:
+  `edd9f428df33a5c8f1b9aa8145799be99afbd5c9c98c9b7572d903865e026ca3`.
+- Full application protobuf-set fingerprint:
+  `a6e5c5164f84a65f923f1e837419c494f4cb071c240d35d96359dae529722ed1`.
+- Answer-free example: 15,186 bytes,
+  `1d0a5c52ec05a8c85689ad8868f79644130825686aa2ac6bafef345ede707f96`.
+- Public registry: 8,790 bytes,
+  `5714f9e0829a3cef3e6b5eb7eacc75f10016dea167523d88c17f4e83c01e230a`.
+- Per-field traceability: 986,918 bytes,
+  `a93d1e7d2af1329b727fd587e219a7340356c37fe00ff8c38700852c303c10be`.
+- Exact gate `OutputRoot`: `artifacts/m1-slice6/wp1-tenth-final`.
+- Receipt SHA-256 identities: `Contracts`
+  `9179d667671e4fc4dfda94db1431ca7f1aff9c4c413eb35e7192985ea94fa2a0`,
+  `StateSurfaces`
+  `501739ff8d91b453cb933f4f616f82e47b3ff41ce9b5565e72a9fc6ccef8b665`,
+  and `StateTotality`
+  `5c4f22eafc526e8d90079d3b11b93061c5ba85559af8d5536ecc50ecc982ede6`.
+
+### Tenth-cycle verification
+
+1. Final Release solution build passed with zero warnings and zero errors.
+   Focused provider/helper/run-output and contract checks passed 19/0/0;
+   schema-6/persistence/backup/restore checks passed 10/0/0. The exact
+   caller-frame, assignment-kind, receipt-digest, cancelled-root, rate-count,
+   chronology, operation-kind-limit, credential-event, and finalization-trace
+   adversaries all passed.
+2. `Contracts` passed 19/0/0. `StateSurfaces` passed 19/0/0 state checks and
+   10/0/0 migration/relational/adversarial checks. `StateTotality` ran the
+   same 29 green checks, wrote `blocked-authority-required` with network and
+   credential permissions false and the superseding schema fingerprint, then
+   exited 1 solely because the accepted repository-local tokenizer/provider-
+   framing proof is absent.
+3. The final Release category matrix passed: Unit 168/0/1; Contract 124/0/0;
+   Integration 70/0/0; Evaluation 75/0/8; Security 111/0/3; and Fault
+   105/0/3. The final unfiltered Release solution passed Unit 176/0/1,
+   Contract 152/0/0, Integration 68/0/0, and Evaluation 53/0/8.
+4. The complete non-live analysis pipeline passed all contracts,
+   documentation, candidates, candidate-scale, cases, replay, output, safety,
+   traceability, and comprehensive gates. Repeated trace regeneration was
+   byte-identical. `dotnet format --verify-no-changes`, dependency-manifest
+   check, documentation validation, `git diff --check`, current-state and
+   frozen Slice 5 v1 immutability, protected-path and answer-isolation checks,
+   public-fixture scope, and forbidden secret/live-effect scans passed. No
+   dependency change required a new restore; the Release build and tests used
+   the retained locked restore basis.
+
+No proof, gate result, owner acceptance, credential, provider response, or
+private evidence was invented. No network/DNS/provider, Credential Manager,
+native credential, private fixture, sibling repository, legacy/evaluator
+archive, later-package, current-state, push, amend, or frozen Slice 5 v1 edit
+occurred.

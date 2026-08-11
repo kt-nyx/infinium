@@ -680,12 +680,16 @@ public sealed partial class AuthoritativeStore
         "trigger:provider_profile_projection_exact_root_insert_guard",
         "trigger:provider_profile_projection_monotonic_update_guard",
         "trigger:provider_profile_transition_order_guard",
+        "trigger:provider_cancelled_response_operation_root_guard",
         "trigger:provider_response_transport_binding_guard",
         "trigger:provider_response_finalization_totality_guard",
         "trigger:provider_rate_limit_fact_totality_guard",
         "trigger:provider_replay_configuration_guard",
         "trigger:provider_run_output_configuration_guard",
         "trigger:provider_semantic_admission_application_guard",
+        "trigger:provider_semantic_admission_chronology_guard",
+        "trigger:provider_semantic_proposal_chronology_guard",
+        "trigger:provider_semantic_validation_chronology_guard",
         "trigger:provider_semantic_proposal_root_guard",
         "trigger:provider_transport_event_order_guard",
         "trigger:provider_usage_operation_ceiling_guard",
@@ -2250,6 +2254,7 @@ public sealed partial class AuthoritativeStore
             UNIQUE(operation_id,coordinator_fencing_epoch),
             UNIQUE(operation_id,maximum_raw_response_bytes),
             UNIQUE(authorization_id,operation_id),
+            UNIQUE(authorization_id,operation_id,owner_kind,owner_id),
             UNIQUE(operation_id,operation_kind,maximum_input_tokens,maximum_output_tokens,maximum_raw_response_bytes,maximum_calculated_nano_usd),
             UNIQUE(authorization_id,operation_id,profile_id,generation_id,revocation_epoch),
             FOREIGN KEY(profile_id,generation_id)
@@ -2531,6 +2536,8 @@ public sealed partial class AuthoritativeStore
             usage_availability TEXT NOT NULL CHECK(usage_availability IN ('available','unavailable')),
             authorization_id TEXT,
             operation_id TEXT NOT NULL,
+            owner_kind TEXT NOT NULL CHECK(owner_kind IN ('analysis-run','evidence-acquisition-run')),
+            owner_id TEXT NOT NULL CHECK(length(trim(owner_id)) > 0),
             request_id TEXT,
             provider_attempt_id TEXT,
             dispatch_fence_id TEXT,
@@ -2543,7 +2550,7 @@ public sealed partial class AuthoritativeStore
             raw_response_fingerprint TEXT CHECK(raw_response_fingerprint IS NULL OR length(raw_response_fingerprint) = 64),
             raw_response_bytes INTEGER CHECK(raw_response_bytes > 0 AND raw_response_bytes <= 1048576),
             maximum_raw_response_bytes INTEGER NOT NULL CHECK(maximum_raw_response_bytes > 0 AND maximum_raw_response_bytes <= 1048576),
-            overflow_observed_at_least_bytes INTEGER CHECK(overflow_observed_at_least_bytes BETWEEN 2 AND 1048577),
+            overflow_observed_excess_bytes INTEGER CHECK(overflow_observed_excess_bytes = 1),
             response_headers_payload_id TEXT REFERENCES payloads(payload_id) ON DELETE RESTRICT,
             response_headers_fingerprint TEXT,
             response_headers_bytes INTEGER CHECK(response_headers_bytes > 0 AND response_headers_bytes <= 65536),
@@ -2578,6 +2585,7 @@ public sealed partial class AuthoritativeStore
             prompt_cache_mode TEXT NOT NULL CHECK(prompt_cache_mode = 'explicit'),
             billing_availability TEXT NOT NULL CHECK(billing_availability IN ('available','unavailable','unsupported','not-applicable')),
             rate_availability TEXT NOT NULL CHECK(rate_availability IN ('available','unavailable','unsupported','not-applicable')),
+            expected_rate_limit_fact_count INTEGER NOT NULL CHECK(expected_rate_limit_fact_count BETWEEN 0 AND 64),
             credit_availability TEXT NOT NULL CHECK(credit_availability IN ('available','unavailable','unsupported','not-applicable')),
             validation_state TEXT NOT NULL CHECK(validation_state IN ('proposed','admitted','rejected','abstained','unavailable','unsupported','deleted')),
             admission_state TEXT NOT NULL CHECK(admission_state IN ('proposed','admitted','rejected','abstained','unavailable','unsupported','deleted')),
@@ -2591,6 +2599,8 @@ public sealed partial class AuthoritativeStore
               REFERENCES provider_dispatch_fences(operation_id,provider_attempt_id,request_id,dispatch_fence_id) ON DELETE RESTRICT,
             FOREIGN KEY(authorization_id,operation_id)
               REFERENCES provider_operation_authorizations(authorization_id,operation_id) ON DELETE RESTRICT,
+            FOREIGN KEY(authorization_id,operation_id,owner_kind,owner_id)
+              REFERENCES provider_operation_authorizations(authorization_id,operation_id,owner_kind,owner_id) ON DELETE RESTRICT,
             FOREIGN KEY(operation_id,maximum_raw_response_bytes)
               REFERENCES provider_operation_authorizations(operation_id,maximum_raw_response_bytes) ON DELETE RESTRICT,
             FOREIGN KEY(operation_id,operation_kind,maximum_input_tokens,maximum_output_tokens,maximum_raw_response_bytes,maximum_calculated_nano_usd)
@@ -2606,8 +2616,8 @@ public sealed partial class AuthoritativeStore
             CHECK(raw_response_bytes IS NULL OR raw_response_bytes <= maximum_raw_response_bytes),
             CHECK((response_state = 'oversized' AND raw_response_availability = 'unavailable'
                 AND raw_response_payload_id IS NULL AND raw_response_fingerprint IS NULL AND raw_response_bytes IS NULL
-                AND overflow_observed_at_least_bytes = maximum_raw_response_bytes + 1)
-              OR (response_state <> 'oversized' AND overflow_observed_at_least_bytes IS NULL)),
+                AND overflow_observed_excess_bytes = 1)
+              OR (response_state <> 'oversized' AND overflow_observed_excess_bytes IS NULL)),
             CHECK((raw_response_availability = 'available' AND raw_response_payload_id IS NOT NULL
                 AND raw_response_fingerprint IS NOT NULL AND raw_response_bytes IS NOT NULL)
               OR (raw_response_availability <> 'available' AND raw_response_payload_id IS NULL
@@ -2625,6 +2635,8 @@ public sealed partial class AuthoritativeStore
                 AND billing_evidence_fingerprint IS NULL AND billing_evidence_bytes IS NULL)),
             CHECK((billing_availability = 'available') = (billing_evidence_availability = 'available')),
             CHECK(availability = usage_availability),
+            CHECK((rate_availability = 'available' AND expected_rate_limit_fact_count > 0)
+              OR (rate_availability <> 'available' AND expected_rate_limit_fact_count = 0)),
             CHECK(credit_availability <> 'available'),
             CHECK((http_status_availability = 'available') = (http_status IS NOT NULL)),
             CHECK((provider_response_id_availability = 'available') = (provider_response_id IS NOT NULL)),
@@ -2697,6 +2709,18 @@ public sealed partial class AuthoritativeStore
                AND e.event_kind = 'response-staged'
               AND e.occurred_at <= NEW.created_at)
             THEN RAISE(ABORT, 'provider response requires exact staged transport event') END;
+        END;
+        CREATE TRIGGER provider_cancelled_response_operation_root_guard
+        BEFORE INSERT ON provider_responses
+        WHEN NEW.response_state = 'cancelled'
+        BEGIN
+          SELECT CASE WHEN NOT EXISTS(
+            SELECT 1 FROM provider_operation_blocks b WHERE b.operation_id = NEW.operation_id
+              AND b.owner_kind = NEW.owner_kind AND b.owner_id = NEW.owner_id
+            UNION ALL
+            SELECT 1 FROM provider_operation_authorizations a WHERE a.operation_id = NEW.operation_id
+              AND a.owner_kind = NEW.owner_kind AND a.owner_id = NEW.owner_id)
+            THEN RAISE(ABORT, 'cancelled provider response requires exact durable operation owner root') END;
         END;
         CREATE TABLE provider_usage_entries(
             usage_entry_id TEXT PRIMARY KEY,
@@ -2850,10 +2874,13 @@ public sealed partial class AuthoritativeStore
             JOIN provider_usage_entries u ON u.response_record_id = r.response_record_id
             WHERE r.response_record_id = NEW.response_record_id AND u.usage_entry_id = NEW.usage_entry_id
               AND r.created_at <= NEW.finalized_at AND u.created_at <= NEW.finalized_at
-              AND ((u.rate_availability = 'available' AND EXISTS(
-                    SELECT 1 FROM provider_rate_limit_facts fact WHERE fact.usage_entry_id = u.usage_entry_id))
+              AND ((u.rate_availability = 'available' AND r.expected_rate_limit_fact_count = (
+                    SELECT COUNT(*) FROM provider_rate_limit_facts fact
+                    WHERE fact.usage_entry_id = u.usage_entry_id AND fact.observed_at <= NEW.finalized_at))
                 OR (u.rate_availability <> 'available' AND NOT EXISTS(
                     SELECT 1 FROM provider_rate_limit_facts fact WHERE fact.usage_entry_id = u.usage_entry_id)))
+              AND NOT EXISTS(SELECT 1 FROM provider_rate_limit_facts fact
+                WHERE fact.usage_entry_id = u.usage_entry_id AND fact.observed_at > NEW.finalized_at)
               AND ((r.response_state = 'completed' AND NEW.validation_state = 'admitted'
                     AND NEW.admission_state = 'admitted')
                 OR (r.response_state <> 'completed' AND NEW.validation_state = r.validation_state
@@ -2929,6 +2956,19 @@ public sealed partial class AuthoritativeStore
             FOREIGN KEY(proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id)
               REFERENCES provider_semantic_proposals(proposal_id,operation_id,response_record_id,owner_kind,owner_id,root_subject_id) ON DELETE RESTRICT
         ) STRICT;
+        CREATE TRIGGER provider_semantic_validation_chronology_guard
+        BEFORE INSERT ON provider_semantic_validations
+        BEGIN
+          SELECT CASE WHEN NOT EXISTS(
+            SELECT 1 FROM provider_semantic_proposals proposal
+            WHERE proposal.proposal_id = NEW.proposal_id
+              AND proposal.operation_id = NEW.operation_id
+              AND proposal.response_record_id = NEW.response_record_id
+              AND proposal.owner_kind = NEW.owner_kind AND proposal.owner_id = NEW.owner_id
+              AND proposal.root_subject_id = NEW.root_subject_id
+              AND proposal.created_at <= NEW.created_at)
+            THEN RAISE(ABORT, 'semantic validation cannot predate its exact proposal root') END;
+        END;
         CREATE TRIGGER provider_semantic_proposal_root_guard
         BEFORE INSERT ON provider_semantic_proposals
         BEGIN
@@ -2942,6 +2982,7 @@ public sealed partial class AuthoritativeStore
               JOIN provider_response_finalizations f ON f.response_record_id = r.response_record_id
                 AND f.usage_entry_id = u.usage_entry_id
                 AND f.validation_state = 'admitted' AND f.admission_state = 'admitted'
+                AND f.finalized_at <= NEW.created_at
               WHERE a.authorization_id = NEW.authorization_id AND a.operation_id = NEW.operation_id
                 AND a.owner_kind = NEW.owner_kind AND a.owner_id = NEW.owner_id)
               THEN RAISE(ABORT, 'semantic proposal requires exact completed validated admitted response authority and usage')
@@ -2966,6 +3007,14 @@ public sealed partial class AuthoritativeStore
                 WHERE link.evidence_application_link_id = NEW.application_link_id AND link.run_id = NEW.owner_id))
               THEN RAISE(ABORT, 'candidate, abstention, and gap proposals must bind exact analysis, candidate, and application roots')
           END;
+        END;
+        CREATE TRIGGER provider_semantic_proposal_chronology_guard
+        BEFORE INSERT ON provider_semantic_proposals
+        BEGIN
+          SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM provider_response_finalizations finalization
+            WHERE finalization.response_record_id = NEW.response_record_id
+              AND finalization.finalized_at <= NEW.created_at)
+            THEN RAISE(ABORT, 'semantic proposal cannot predate its exact response finalization') END;
         END;
         CREATE TABLE provider_semantic_admissions(
             admission_id TEXT PRIMARY KEY,
@@ -3007,6 +3056,14 @@ public sealed partial class AuthoritativeStore
                 WHERE link.evidence_application_link_id = NEW.application_link_id AND link.run_id = NEW.owner_id))
               THEN RAISE(ABORT, 'candidate admission must bind the exact candidate root and application edge')
           END;
+        END;
+        CREATE TRIGGER provider_semantic_admission_chronology_guard
+        BEFORE INSERT ON provider_semantic_admissions
+        BEGIN
+          SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM provider_semantic_validations validation
+            WHERE validation.validation_id = NEW.validation_id
+              AND validation.created_at <= NEW.created_at)
+            THEN RAISE(ABORT, 'semantic admission cannot predate its exact validation root') END;
         END;
         CREATE TABLE provider_replay_edges(
             replay_edge_id TEXT PRIMARY KEY,
@@ -3142,7 +3199,21 @@ public sealed partial class AuthoritativeStore
               AND i.cleanup_disposition = NEW.cleanup_disposition
               AND i.account_identity_id IS NEW.account_identity_id
               AND i.billing_scope_identity_id IS NEW.billing_scope_identity_id
-              AND i.capability_snapshot_id IS NEW.capability_snapshot_id)
+              AND i.capability_snapshot_id IS NEW.capability_snapshot_id
+              AND EXISTS(SELECT 1 FROM provider_credential_intent_events current_event
+                WHERE current_event.intent_id = i.intent_id
+                  AND current_event.created_at <= NEW.updated_at
+                  AND ((i.intent_state = 'pending' AND current_event.event_version = 1
+                    AND current_event.prior_intent_event_id IS NULL)
+                    OR (i.intent_state IN ('completed','failed','unavailable')
+                      AND current_event.event_version = 2
+                      AND EXISTS(SELECT 1 FROM provider_credential_intent_events prior_event
+                        WHERE prior_event.intent_event_id = current_event.prior_intent_event_id
+                          AND prior_event.intent_root_id = current_event.intent_root_id
+                          AND prior_event.event_version = 1)))
+                  AND NOT EXISTS(SELECT 1 FROM provider_credential_intent_events later_event
+                    WHERE later_event.intent_root_id = current_event.intent_root_id
+                      AND later_event.event_version > current_event.event_version)))
             THEN RAISE(ABORT, 'provider profile projection intent root mismatch') END;
           SELECT CASE WHEN NEW.account_identity_id IS NOT NULL AND NOT EXISTS(
             SELECT 1 FROM provider_access_profiles a WHERE a.profile_id = NEW.profile_id
@@ -3174,7 +3245,21 @@ public sealed partial class AuthoritativeStore
               AND i.cleanup_disposition = NEW.cleanup_disposition
               AND i.account_identity_id IS NEW.account_identity_id
               AND i.billing_scope_identity_id IS NEW.billing_scope_identity_id
-              AND i.capability_snapshot_id IS NEW.capability_snapshot_id)
+              AND i.capability_snapshot_id IS NEW.capability_snapshot_id
+              AND EXISTS(SELECT 1 FROM provider_credential_intent_events current_event
+                WHERE current_event.intent_id = i.intent_id
+                  AND current_event.created_at <= NEW.updated_at
+                  AND ((i.intent_state = 'pending' AND current_event.event_version = 1
+                    AND current_event.prior_intent_event_id IS NULL)
+                    OR (i.intent_state IN ('completed','failed','unavailable')
+                      AND current_event.event_version = 2
+                      AND EXISTS(SELECT 1 FROM provider_credential_intent_events prior_event
+                        WHERE prior_event.intent_event_id = current_event.prior_intent_event_id
+                          AND prior_event.intent_root_id = current_event.intent_root_id
+                          AND prior_event.event_version = 1)))
+                  AND NOT EXISTS(SELECT 1 FROM provider_credential_intent_events later_event
+                    WHERE later_event.intent_root_id = current_event.intent_root_id
+                      AND later_event.event_version > current_event.event_version)))
             THEN RAISE(ABORT, 'provider profile projection intent root mismatch') END;
           SELECT CASE WHEN NEW.account_identity_id IS NOT NULL AND NOT EXISTS(
             SELECT 1 FROM provider_access_profiles a WHERE a.profile_id = NEW.profile_id

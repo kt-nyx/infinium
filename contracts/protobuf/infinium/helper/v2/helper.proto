@@ -228,7 +228,9 @@ message HelperReceiptV2 {
   infinium.common.v1.OptionalUInt64 total_tokens = 35;
   infinium.common.v1.OptionalUInt64 priced_tool_calls = 36;
   infinium.common.v1.OptionalUInt64 calculated_nano_usd = 37;
-  optional uint64 overflow_observed_at_least_bytes = 38;
+  // Exact observation: the first byte beyond the configured retained-response
+  // ceiling was observed. A value other than one is structurally invalid.
+  optional uint64 overflow_observed_excess_bytes = 38;
   reserved 90 to 99;
   reserved "credential_target", "provider_secret", "secret_bytes",
       "authorization_header";

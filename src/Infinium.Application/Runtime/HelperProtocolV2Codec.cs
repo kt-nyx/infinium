@@ -39,7 +39,10 @@ public static class HelperProtocolV2Codec
         Infinium.Contracts.Protobuf.Common.V1.Instant? expectedDispatchDeadline = null,
         ulong expectedMaximumFrameBytes = HelperProtocolV2Constants.MaximumFrameBytes,
         byte[]? expectedOneUseNonceFingerprintSha256 = null,
-        Infinium.Contracts.Protobuf.Common.V1.Instant? expectedBootstrapExpiresAt = null)
+        Infinium.Contracts.Protobuf.Common.V1.Instant? expectedBootstrapExpiresAt = null,
+        HelperPrivateFrameV2.PayloadOneofCase? expectedPayloadCase = null,
+        ulong? expectedSequence = null,
+        HelperAssignmentKindV2? expectedAssignmentKind = null)
     {
         if (expectedMaximumFrameBytes is 0 or > HelperProtocolV2Constants.MaximumFrameBytes
             || bytes.IsEmpty || (ulong)bytes.Length > expectedMaximumFrameBytes)
@@ -64,7 +67,8 @@ public static class HelperProtocolV2Codec
             expectedNonSecretReceipt, expectedRevocationEpoch, expectedAccountIdentityId,
             expectedBillingScopeIdentityId, expectedReservationGroupId, expectedOperationKind,
             expectedLimits, expectedDispatchDeadline, expectedMaximumFrameBytes,
-            expectedOneUseNonceFingerprintSha256, expectedBootstrapExpiresAt);
+            expectedOneUseNonceFingerprintSha256, expectedBootstrapExpiresAt,
+            expectedPayloadCase, expectedSequence, expectedAssignmentKind);
         return frame;
     }
 
@@ -112,9 +116,16 @@ public static class HelperProtocolV2Codec
         Infinium.Contracts.Protobuf.Common.V1.Instant? expectedDispatchDeadline,
         ulong expectedMaximumFrameBytes,
         byte[]? expectedOneUseNonceFingerprintSha256,
-        Infinium.Contracts.Protobuf.Common.V1.Instant? expectedBootstrapExpiresAt)
+        Infinium.Contracts.Protobuf.Common.V1.Instant? expectedBootstrapExpiresAt,
+        HelperPrivateFrameV2.PayloadOneofCase? expectedPayloadCase,
+        ulong? expectedSequence,
+        HelperAssignmentKindV2? expectedAssignmentKind)
     {
-        if (frame.Sequence == 0
+        if (expectedPayloadCase is null or HelperPrivateFrameV2.PayloadOneofCase.None
+            || expectedSequence is null or 0
+            || frame.PayloadCase != expectedPayloadCase
+            || frame.Sequence != expectedSequence
+            || frame.Sequence == 0
             || frame.ProtocolFingerprintSha256.Length != 32
             || !frame.ProtocolFingerprintSha256.Span.SequenceEqual(
                 Convert.FromHexString(HelperProtocolV2Constants.SchemaFingerprintSha256)))
@@ -161,7 +172,7 @@ public static class HelperProtocolV2Codec
                     expectedAccountIdentityId, expectedBillingScopeIdentityId, expectedReservationGroupId,
                     expectedOperationKind, expectedLimits, expectedDispatchDeadline,
                     expectedCapabilitySnapshotId, expectedPriceSnapshotId, expectedSettings,
-                    expectedOutputSchema, expectedEffectiveConfigurationId);
+                    expectedOutputSchema, expectedEffectiveConfigurationId, expectedAssignmentKind);
                 break;
             case HelperPrivateFrameV2.PayloadOneofCase.DispatchRevalidation:
                 Validate(frame.DispatchRevalidation, now, expectedOperationId, expectedAttemptId,
@@ -181,7 +192,8 @@ public static class HelperProtocolV2Codec
                     expectedPriceSnapshotId, expectedSettings, expectedOutputSchema,
                     expectedEffectiveConfigurationId, expectedNonSecretReceipt, expectedRevocationEpoch,
                     expectedAccountIdentityId, expectedBillingScopeIdentityId, expectedReservationGroupId,
-                    expectedOperationKind, expectedLimits, expectedDispatchDeadline);
+                    expectedOperationKind, expectedLimits, expectedDispatchDeadline,
+                    expectedAssignmentKind);
                 break;
             default:
                 throw new InvalidDataException("Helper v2 payload kind must be explicit.");
@@ -217,7 +229,8 @@ public static class HelperProtocolV2Codec
         string? expectedPriceSnapshotId,
         Infinium.Contracts.Protobuf.Common.V1.ContentDigest? expectedSettings,
         Infinium.Contracts.Protobuf.Common.V1.ContentDigest? expectedOutputSchema,
-        string? expectedEffectiveConfigurationId)
+        string? expectedEffectiveConfigurationId,
+        HelperAssignmentKindV2? expectedAssignmentKind)
     {
         Require(value.AccessProfileId?.Value, "assignment.access_profile_id");
         Require(value.GenerationId?.Value, "assignment.generation_id");
@@ -228,6 +241,8 @@ public static class HelperProtocolV2Codec
         Require(expectedProfileId, "expected_assignment.profile_id");
         Require(expectedGenerationId, "expected_assignment.generation_id");
         if (!Enum.IsDefined(value.AssignmentKind) || value.AssignmentKind == HelperAssignmentKindV2.Unspecified
+            || expectedAssignmentKind is null or HelperAssignmentKindV2.Unspecified
+            || value.AssignmentKind != expectedAssignmentKind
             || value.GenerationOrdinal == 0)
         {
             throw new InvalidDataException("Helper v2 assignment uses an unknown numeric state or incomplete binding.");
@@ -468,10 +483,13 @@ public static class HelperProtocolV2Codec
         string? expectedReservationGroupId,
         ProviderOperationKindV2? expectedOperationKind,
         HelperLimitsV2? expectedLimits,
-        Infinium.Contracts.Protobuf.Common.V1.Instant? expectedDispatchDeadline)
+        Infinium.Contracts.Protobuf.Common.V1.Instant? expectedDispatchDeadline,
+        HelperAssignmentKindV2? expectedAssignmentKind)
     {
         if (!Enum.IsDefined(value.Outcome) || value.Outcome == HelperOutcomeV2.Unspecified
-            || !Enum.IsDefined(value.AssignmentKind) || value.AssignmentKind == HelperAssignmentKindV2.Unspecified)
+            || !Enum.IsDefined(value.AssignmentKind) || value.AssignmentKind == HelperAssignmentKindV2.Unspecified
+            || expectedAssignmentKind is null or HelperAssignmentKindV2.Unspecified
+            || value.AssignmentKind != expectedAssignmentKind)
         {
             throw new InvalidDataException("Helper v2 receipt outcome is unknown.");
         }
@@ -486,6 +504,10 @@ public static class HelperProtocolV2Codec
         Require(value.CommandId, "receipt.command_id");
         Require(expectedAssignmentId, "expected_receipt.assignment_id");
         Require(expectedCommandId, "expected_receipt.command_id");
+        if (!ValidDigest(expectedNonSecretReceipt))
+        {
+            throw new InvalidDataException("Expected credential or provider receipt digest is required.");
+        }
         if (dispatch)
         {
             Require(expectedOperationId, "expected_receipt.operation_id");
@@ -548,7 +570,8 @@ public static class HelperProtocolV2Codec
             || (!dispatch && value.Outcome is HelperOutcomeV2.TransportMayHaveStarted
                 or HelperOutcomeV2.Oversized or HelperOutcomeV2.Malformed)
             || (noTransport && (value.TransportMayHaveStarted || hasResponse))
-            || !ValidDigest(value.NonSecretReceipt))
+            || !ValidDigest(value.NonSecretReceipt)
+            || !SameDigest(value.NonSecretReceipt, expectedNonSecretReceipt))
         {
             throw new InvalidDataException("Helper v2 receipt outcome contradicts transport or response evidence.");
         }
@@ -577,7 +600,6 @@ public static class HelperProtocolV2Codec
                 || !SameInstant(value.DispatchDeadline, expectedDispatchDeadline)
                 || !SameDigest(value.Settings, expectedSettings)
                 || !SameDigest(value.OutputSchema, expectedOutputSchema)
-                || !SameDigest(value.NonSecretReceipt, expectedNonSecretReceipt)
                 || value.InputBoundProof?.PolicyId != expectedInputBoundPolicyId
                 || value.InputBoundProof?.PolicyVersion != expectedInputBoundPolicyVersion
                 || !IsAuthorityRequiredProof(value.InputBoundProof))
@@ -598,9 +620,9 @@ public static class HelperProtocolV2Codec
         bool oversized = value.Outcome == HelperOutcomeV2.Oversized;
         if ((!value.OutcomeHasResponse && hasUsage && !oversized)
             || oversized && (value.OutcomeHasResponse || value.RawResponse is not null
-                || !value.HasOverflowObservedAtLeastBytes
-                || value.OverflowObservedAtLeastBytes != checked(limits.MaximumResponseBytes + 1))
-            || !oversized && value.HasOverflowObservedAtLeastBytes)
+                || !value.HasOverflowObservedExcessBytes
+                || value.OverflowObservedExcessBytes != 1)
+            || !oversized && value.HasOverflowObservedExcessBytes)
         {
             throw new InvalidDataException("A receipt without a response cannot fabricate provider usage.");
         }

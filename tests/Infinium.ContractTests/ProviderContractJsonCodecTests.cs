@@ -76,11 +76,12 @@ public sealed class ProviderContractJsonCodecTests
         AssertCanonical(
             new ProviderResponseDocument(
                 SchemaId: ContractConstants.ProviderResponseSchemaId, SchemaVersion: "1", ResponseRecordId: Id("response-1"),
-                OperationId: Id("operation-1"), AuthorizationId: null, RequestId: null, DispatchFenceId: null,
+                OperationId: Id("operation-1"), OwnerKind: "evidence-acquisition-run", OwnerId: Id("acquisition-1"),
+                AuthorizationId: null, RequestId: null, DispatchFenceId: null,
                 OperationKind: DomainProviderOperationKind.SourceClaimExtraction, Limits: Limits, InputBoundProof: BlockedProof(),
                 Availability: DomainProviderAvailabilityState.Unavailable, RawResponseAvailability: DomainProviderAvailabilityState.Unavailable,
                 RawResponsePayload: null, RawResponseBytes: null, MaximumRawResponseBytes: 1_048_576,
-                OverflowObservedAtLeastBytes: null,
+                OverflowObservedExcessBytes: null,
                 ResponseHeadersPayload: null, ResponseHeadersBytes: null, ResponseHeadersAvailability: DomainProviderAvailabilityState.Unavailable,
                 HttpStatus: null, HttpStatusAvailability: DomainProviderAvailabilityState.Unavailable,
                 ProviderResponseId: null, ProviderResponseIdAvailability: DomainProviderAvailabilityState.Unavailable,
@@ -220,6 +221,59 @@ public sealed class ProviderContractJsonCodecTests
                 document.RootElement, "provider-response.v1.schema.json");
         }
         Assert.ThrowsExactly<NotSupportedException>(() => ProviderContractJsonCodecs.DeserializeResponse(bytes));
+
+        JsonObject oversized = response.DeepClone().AsObject();
+        oversized["state"] = "oversized";
+        oversized["raw_response_availability"] = "unavailable";
+        oversized.Remove("raw_response_payload");
+        oversized.Remove("raw_response_bytes");
+        oversized["overflow_observed_excess_bytes"] = 1;
+        oversized["validation_state"] = "rejected";
+        oversized["admission_state"] = "rejected";
+        byte[] oversizedBytes = System.Text.Encoding.UTF8.GetBytes(oversized.ToJsonString());
+        using (JsonDocument document = JsonDocument.Parse(oversizedBytes))
+        {
+            Infinium.Application.Evaluation.ActiveJsonSchemaValidator.Validate(
+                document.RootElement, "provider-response.v1.schema.json");
+        }
+        oversized["overflow_observed_excess_bytes"] = 2;
+        Assert.ThrowsExactly<InvalidDataException>(() =>
+        {
+            using JsonDocument document = JsonDocument.Parse(oversized.ToJsonString());
+            Infinium.Application.Evaluation.ActiveJsonSchemaValidator.Validate(
+                document.RootElement, "provider-response.v1.schema.json");
+        });
+
+        JsonObject wrongQualification = response.DeepClone().AsObject();
+        wrongQualification["operation_kind"] = "transport-qualification";
+        Assert.ThrowsExactly<InvalidDataException>(() =>
+        {
+            using JsonDocument document = JsonDocument.Parse(wrongQualification.ToJsonString());
+            Infinium.Application.Evaluation.ActiveJsonSchemaValidator.Validate(
+                document.RootElement, "provider-response.v1.schema.json");
+        });
+        JsonObject qualificationLimits = wrongQualification["limits"]!.AsObject();
+        wrongQualification["owner_kind"] = "analysis-run";
+        qualificationLimits["maximum_request_bytes"] = 16_384;
+        qualificationLimits["maximum_input_tokens"] = 20_480;
+        qualificationLimits["maximum_output_tokens"] = 256;
+        qualificationLimits["maximum_raw_response_bytes"] = 262_144;
+        qualificationLimits["maximum_calculated_nano_usd"] = 140_000_000;
+        qualificationLimits["deadline_milliseconds"] = 60_000;
+        wrongQualification["maximum_raw_response_bytes"] = 262_144;
+        using (JsonDocument document = JsonDocument.Parse(wrongQualification.ToJsonString()))
+        {
+            Infinium.Application.Evaluation.ActiveJsonSchemaValidator.Validate(
+                document.RootElement, "provider-response.v1.schema.json");
+        }
+        JsonObject wrongSemanticOwner = response.DeepClone().AsObject();
+        wrongSemanticOwner["owner_kind"] = "analysis-run";
+        Assert.ThrowsExactly<InvalidDataException>(() =>
+        {
+            using JsonDocument document = JsonDocument.Parse(wrongSemanticOwner.ToJsonString());
+            Infinium.Application.Evaluation.ActiveJsonSchemaValidator.Validate(
+                document.RootElement, "provider-response.v1.schema.json");
+        });
     }
 
     [TestMethod]
@@ -458,7 +512,24 @@ public sealed class ProviderContractJsonCodecTests
         };
         Assert.AreEqual(V2AssignmentKind.Enroll, HelperProtocolV2Codec.Decode(
             credentialAssignment.ToByteArray(), HelperNow, "assignment-credential", "command-credential",
-            expectedProfileId: "profile-1", expectedGenerationId: "generation-1", expectedRevocationEpoch: 0).Assignment.AssignmentKind);
+            expectedProfileId: "profile-1", expectedGenerationId: "generation-1", expectedRevocationEpoch: 0,
+            expectedPayloadCase: V2Frame.PayloadOneofCase.Assignment, expectedSequence: 12,
+            expectedAssignmentKind: V2AssignmentKind.Enroll).Assignment.AssignmentKind);
+        Assert.ThrowsExactly<InvalidDataException>(() => HelperProtocolV2Codec.Decode(
+            credentialAssignment.ToByteArray(), HelperNow, "assignment-credential", "command-credential",
+            expectedProfileId: "profile-1", expectedGenerationId: "generation-1", expectedRevocationEpoch: 0,
+            expectedPayloadCase: V2Frame.PayloadOneofCase.Receipt, expectedSequence: 12,
+            expectedAssignmentKind: V2AssignmentKind.Enroll));
+        Assert.ThrowsExactly<InvalidDataException>(() => HelperProtocolV2Codec.Decode(
+            credentialAssignment.ToByteArray(), HelperNow, "assignment-credential", "command-credential",
+            expectedProfileId: "profile-1", expectedGenerationId: "generation-1", expectedRevocationEpoch: 0,
+            expectedPayloadCase: V2Frame.PayloadOneofCase.Assignment, expectedSequence: 13,
+            expectedAssignmentKind: V2AssignmentKind.Enroll));
+        Assert.ThrowsExactly<InvalidDataException>(() => HelperProtocolV2Codec.Decode(
+            credentialAssignment.ToByteArray(), HelperNow, "assignment-credential", "command-credential",
+            expectedProfileId: "profile-1", expectedGenerationId: "generation-1", expectedRevocationEpoch: 0,
+            expectedPayloadCase: V2Frame.PayloadOneofCase.Assignment, expectedSequence: 12,
+            expectedAssignmentKind: V2AssignmentKind.Verify));
         byte[] requestBytes = [1, 2, 3];
         V2Frame blockedDispatch = credentialAssignment.Clone();
         blockedDispatch.Assignment.AssignmentKind = V2AssignmentKind.ProviderDispatch;
@@ -518,7 +589,16 @@ public sealed class ProviderContractJsonCodecTests
         };
         Assert.IsNull(HelperProtocolV2Codec.Decode(
             credentialReceipt.ToByteArray(), HelperNow, "assignment-credential", "command-credential",
-            expectedProfileId: "profile-1", expectedGenerationId: "generation-1").Receipt.RawResponse);
+            expectedProfileId: "profile-1", expectedGenerationId: "generation-1", expectedNonSecretReceipt: Digest(),
+            expectedPayloadCase: V2Frame.PayloadOneofCase.Receipt, expectedSequence: 13,
+            expectedAssignmentKind: V2AssignmentKind.Enroll).Receipt.RawResponse);
+        V2Frame credentialReceiptDigestRebind = credentialReceipt.Clone();
+        credentialReceiptDigestRebind.Receipt.NonSecretReceipt = Digest([2]);
+        Assert.ThrowsExactly<InvalidDataException>(() => HelperProtocolV2Codec.Decode(
+            credentialReceiptDigestRebind.ToByteArray(), HelperNow, "assignment-credential", "command-credential",
+            expectedProfileId: "profile-1", expectedGenerationId: "generation-1", expectedNonSecretReceipt: Digest(),
+            expectedPayloadCase: V2Frame.PayloadOneofCase.Receipt, expectedSequence: 13,
+            expectedAssignmentKind: V2AssignmentKind.Enroll));
         Assert.ThrowsExactly<InvalidDataException>(() => HelperProtocolV2Codec.Decode(
             credentialReceipt.ToByteArray(), HelperNow, "assignment-other", "command-credential",
             expectedProfileId: "profile-1", expectedGenerationId: "generation-1"));
@@ -536,7 +616,9 @@ public sealed class ProviderContractJsonCodecTests
             credentialReceipt.Receipt.Outcome = credentialOutcome;
             _ = HelperProtocolV2Codec.Decode(
                 credentialReceipt.ToByteArray(), HelperNow, "assignment-credential", "command-credential",
-                expectedProfileId: "profile-1", expectedGenerationId: "generation-1");
+                expectedProfileId: "profile-1", expectedGenerationId: "generation-1", expectedNonSecretReceipt: Digest(),
+                expectedPayloadCase: V2Frame.PayloadOneofCase.Receipt, expectedSequence: 13,
+                expectedAssignmentKind: V2AssignmentKind.Enroll);
         }
         foreach (V2Outcome transportOnlyOutcome in new[]
                  {
@@ -599,7 +681,8 @@ public sealed class ProviderContractJsonCodecTests
             expectedRevocationEpoch: 0, expectedAccountIdentityId: "account-1",
             expectedBillingScopeIdentityId: "billing-1", expectedReservationGroupId: "reservation-1",
             expectedOperationKind: V2OperationKind.SourceClaimExtraction, expectedLimits: HelperLimits(),
-            expectedDispatchDeadline: FutureInstant()));
+            expectedDispatchDeadline: FutureInstant(), expectedPayloadCase: V2Frame.PayloadOneofCase.Receipt,
+            expectedSequence: 14, expectedAssignmentKind: V2AssignmentKind.ProviderDispatch));
 
         void AssertReceiptRebindRejected(Action<V2Receipt> mutate)
         {
@@ -618,7 +701,8 @@ public sealed class ProviderContractJsonCodecTests
                 expectedRevocationEpoch: 0, expectedAccountIdentityId: "account-1",
                 expectedBillingScopeIdentityId: "billing-1", expectedReservationGroupId: "reservation-1",
                 expectedOperationKind: V2OperationKind.SourceClaimExtraction, expectedLimits: HelperLimits(),
-                expectedDispatchDeadline: FutureInstant()));
+                expectedDispatchDeadline: FutureInstant(), expectedPayloadCase: V2Frame.PayloadOneofCase.Receipt,
+                expectedSequence: 14, expectedAssignmentKind: V2AssignmentKind.ProviderDispatch));
         }
         AssertReceiptRebindRejected(x => x.AssignmentId = "assignment-other");
         AssertReceiptRebindRejected(x => x.CommandId = "command-other");
@@ -659,7 +743,8 @@ public sealed class ProviderContractJsonCodecTests
             expectedRevocationEpoch: 0, expectedAccountIdentityId: "account-1",
             expectedBillingScopeIdentityId: "billing-1", expectedReservationGroupId: "reservation-1",
             expectedOperationKind: V2OperationKind.SourceClaimExtraction, expectedLimits: HelperLimits(),
-            expectedDispatchDeadline: FutureInstant()));
+            expectedDispatchDeadline: FutureInstant(), expectedPayloadCase: V2Frame.PayloadOneofCase.Receipt,
+            expectedSequence: 14, expectedAssignmentKind: V2AssignmentKind.ProviderDispatch));
         ambiguous.Receipt.TransportMayHaveStarted = true;
         Assert.ThrowsExactly<NotSupportedException>(() => HelperProtocolV2Codec.Decode(
             ambiguous.ToByteArray(), HelperNow, "assignment-dispatch", "command-dispatch",
@@ -674,16 +759,17 @@ public sealed class ProviderContractJsonCodecTests
             expectedRevocationEpoch: 0, expectedAccountIdentityId: "account-1",
             expectedBillingScopeIdentityId: "billing-1", expectedReservationGroupId: "reservation-1",
             expectedOperationKind: V2OperationKind.SourceClaimExtraction, expectedLimits: HelperLimits(),
-            expectedDispatchDeadline: FutureInstant()));
+            expectedDispatchDeadline: FutureInstant(), expectedPayloadCase: V2Frame.PayloadOneofCase.Receipt,
+            expectedSequence: 14, expectedAssignmentKind: V2AssignmentKind.ProviderDispatch));
         V2Frame nonAmbiguousFlag = blockedReceipt.Clone();
         nonAmbiguousFlag.Receipt.TransportMayHaveStarted = true;
         Assert.ThrowsExactly<InvalidDataException>(() => DecodeProviderReceipt(nonAmbiguousFlag));
 
         V2Frame oversized = blockedReceipt.Clone();
         oversized.Receipt.Outcome = V2Outcome.Oversized;
-        oversized.Receipt.OverflowObservedAtLeastBytes = oversized.Receipt.Limits.MaximumResponseBytes + 1;
+        oversized.Receipt.OverflowObservedExcessBytes = 1;
         Assert.ThrowsExactly<NotSupportedException>(() => DecodeProviderReceipt(oversized));
-        oversized.Receipt.OverflowObservedAtLeastBytes++;
+        oversized.Receipt.OverflowObservedExcessBytes++;
         Assert.ThrowsExactly<InvalidDataException>(() => DecodeProviderReceipt(oversized));
 
         V2Frame stagedOverflow = blockedReceipt.Clone();
@@ -1067,6 +1153,8 @@ public sealed class ProviderContractJsonCodecTests
         ProviderResponsePayload unavailableResponse = new()
         {
             ResponseRecordId = "response-1",
+            OwnerKind = "evidence-acquisition-run",
+            OwnerId = "acquisition-1",
             OperationKind = Infinium.Contracts.Protobuf.Application.V1.ProviderOperationKind.SourceClaimExtraction,
             Limits = ApplicationLimits(),
             MaximumRawResponseBytes = 1_048_576,
@@ -1195,8 +1283,11 @@ public sealed class ProviderContractJsonCodecTests
             "provider_responses.response_headers_payload_id", "provider_responses.response_headers_fingerprint");
         AssertTraceMapping(contracts, "provider-response.v1.schema.json", "provider_request_id", "provider_responses.provider_request_id", "ADR-0025");
         AssertTraceMapping(contracts, "provider-response.v1.schema.json", "maximum_raw_response_bytes", "provider_responses.maximum_raw_response_bytes", "ADR-0025");
+        AssertTraceMapping(contracts, "provider-response.v1.schema.json", "validation_state", "provider_response_finalizations.validation_state", "ADR-0025");
+        AssertTraceMapping(contracts, "provider-response.v1.schema.json", "admission_state", "provider_response_finalizations.admission_state", "ADR-0025");
         AssertTraceMapping(contracts, "provider-response.v1.schema.json", "usage", "provider_usage_entries.total_tokens", "ADR-0025");
         AssertTraceMapping(contracts, "provider-response.v1.schema.json", "usage", "provider_usage_entries.availability", "ADR-0025");
+        AssertTraceMapping(contracts, "provider-response.v1.schema.json", "rate_limit_facts", "provider_responses.expected_rate_limit_fact_count", "ADR-0025");
         AssertTraceMapping(contracts, "provider-response.v1.schema.json", "limits", "provider_operation_authorizations.maximum_request_bytes",
             "provider_operation_authorizations.deadline_milliseconds");
         AssertTraceMapping(contracts, "provider-response.v1.schema.json", "$defs.rateLimitFact.scope", "provider_rate_limit_facts.scope", "ADR-0025");
@@ -1546,7 +1637,8 @@ public sealed class ProviderContractJsonCodecTests
         frame.ToByteArray(), HelperNow, expectedCommandId: "command-1",
         expectedOperationId: "operation-1", expectedAttemptId: "attempt-1",
         expectedCoordinatorFencingEpoch: 1, expectedOneUseNonceFingerprintSha256: new byte[32],
-        expectedBootstrapExpiresAt: FutureInstant());
+        expectedBootstrapExpiresAt: FutureInstant(), expectedPayloadCase: V2Frame.PayloadOneofCase.Bootstrap,
+        expectedSequence: 8);
 
     private static V2Frame DecodeBlockedAssignment(V2Frame frame, byte[] requestBytes) => HelperProtocolV2Codec.Decode(
         frame.ToByteArray(), HelperNow, "assignment-credential", "command-credential",
@@ -1560,7 +1652,9 @@ public sealed class ProviderContractJsonCodecTests
         expectedReservationGroupId: "reservation-1", expectedOperationKind: V2OperationKind.SourceClaimExtraction,
         expectedLimits: HelperLimits(), expectedDispatchDeadline: FutureInstant(),
         expectedCapabilitySnapshotId: "capability-1", expectedPriceSnapshotId: "price-1",
-        expectedSettings: Digest(), expectedOutputSchema: Digest(), expectedEffectiveConfigurationId: "config-v2-1");
+        expectedSettings: Digest(), expectedOutputSchema: Digest(), expectedEffectiveConfigurationId: "config-v2-1",
+        expectedPayloadCase: V2Frame.PayloadOneofCase.Assignment, expectedSequence: frame.Sequence,
+        expectedAssignmentKind: V2AssignmentKind.ProviderDispatch);
 
     private static V2Frame DecodeRevalidation(V2Frame frame) => HelperProtocolV2Codec.Decode(
         frame.ToByteArray(), HelperNow, expectedOperationId: "operation-1", expectedAttemptId: "attempt-1",
@@ -1574,7 +1668,8 @@ public sealed class ProviderContractJsonCodecTests
         expectedRevocationEpoch: 0, expectedAccountIdentityId: "account-1",
         expectedBillingScopeIdentityId: "billing-1", expectedReservationGroupId: "reservation-1",
         expectedOperationKind: V2OperationKind.SourceClaimExtraction, expectedLimits: HelperLimits(),
-        expectedDispatchDeadline: FutureInstant());
+        expectedDispatchDeadline: FutureInstant(), expectedPayloadCase: V2Frame.PayloadOneofCase.DispatchRevalidation,
+        expectedSequence: frame.Sequence);
 
     private static V2Frame DecodeProviderReceipt(V2Frame frame, V2Limits? limits = null) => HelperProtocolV2Codec.Decode(
         frame.ToByteArray(), HelperNow, "assignment-dispatch", "command-dispatch",
@@ -1589,7 +1684,8 @@ public sealed class ProviderContractJsonCodecTests
         expectedRevocationEpoch: 0, expectedAccountIdentityId: "account-1",
         expectedBillingScopeIdentityId: "billing-1", expectedReservationGroupId: "reservation-1",
         expectedOperationKind: V2OperationKind.SourceClaimExtraction, expectedLimits: limits ?? HelperLimits(),
-        expectedDispatchDeadline: FutureInstant());
+        expectedDispatchDeadline: FutureInstant(), expectedPayloadCase: V2Frame.PayloadOneofCase.Receipt,
+        expectedSequence: frame.Sequence, expectedAssignmentKind: V2AssignmentKind.ProviderDispatch);
 
     private static V2CredentialSubject CredentialSubject() => new()
     {

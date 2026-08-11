@@ -70,6 +70,8 @@
       "schema_version": "1",
       "response_record_id": "response-1",
       "operation_id": "operation-1",
+      "owner_kind": "evidence-acquisition-run",
+      "owner_id": "acquisition-1",
       "operation_kind": "source-claim-extraction",
       "limits": { "maximum_request_bytes": 65536, "maximum_input_tokens": 73728, "maximum_output_tokens": 4096, "maximum_raw_response_bytes": 1048576, "maximum_dispatch_count": 1, "maximum_calculated_nano_usd": 600000000, "deadline_milliseconds": 120000 },
       "input_bound_proof": { "policy_id": "unresolved-openai-responses-framing", "policy_version": "authority-required", "status": "authority-required" },

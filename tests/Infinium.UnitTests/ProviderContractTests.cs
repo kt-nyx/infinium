@@ -192,7 +192,7 @@ public sealed class ProviderContractTests
             }));
         ProviderResponseDocument oversized = FutureResponse(ProviderResponseState.Oversized);
         Assert.ThrowsExactly<InvalidOperationException>(() => ProviderOperationContractInvariants.Validate(
-            oversized with { OverflowObservedAtLeastBytes = oversized.MaximumRawResponseBytes + 2 }));
+            oversized with { OverflowObservedExcessBytes = 2 }));
         Assert.ThrowsExactly<InvalidOperationException>(() => ProviderOperationContractInvariants.Validate(
             oversized with
             {
@@ -335,12 +335,13 @@ public sealed class ProviderContractTests
 
     private static ProviderResponseDocument Response() => new(
         SchemaId: ContractConstants.ProviderResponseSchemaId, SchemaVersion: "1", ResponseRecordId: Id("response-1"),
-        OperationId: Id("operation-1"), AuthorizationId: null, RequestId: null, DispatchFenceId: null,
+        OperationId: Id("operation-1"), OwnerKind: "evidence-acquisition-run", OwnerId: Id("acquisition-1"),
+        AuthorizationId: null, RequestId: null, DispatchFenceId: null,
         OperationKind: ProviderOperationKind.SourceClaimExtraction,
         Limits: new(65_536, 73_728, 4_096, 1_048_576, 1, 600_000_000, 120_000), InputBoundProof: BlockedProof(),
         Availability: ProviderAvailabilityState.Unavailable, RawResponseAvailability: ProviderAvailabilityState.Unavailable,
         RawResponsePayload: null, RawResponseBytes: null, MaximumRawResponseBytes: 1_048_576,
-        OverflowObservedAtLeastBytes: null,
+        OverflowObservedExcessBytes: null,
         ResponseHeadersPayload: null, ResponseHeadersBytes: null, ResponseHeadersAvailability: ProviderAvailabilityState.Unavailable,
         HttpStatus: null, HttpStatusAvailability: ProviderAvailabilityState.Unavailable,
         ProviderResponseId: null, ProviderResponseIdAvailability: ProviderAvailabilityState.Unavailable,
@@ -377,7 +378,7 @@ public sealed class ProviderContractTests
             RawResponseAvailability = raw ? ProviderAvailabilityState.Available : ProviderAvailabilityState.Unavailable,
             RawResponsePayload = raw ? Ref("raw-response-1") : null,
             RawResponseBytes = raw ? 128 : null,
-            OverflowObservedAtLeastBytes = oversized ? 1_048_577 : null,
+            OverflowObservedExcessBytes = oversized ? 1 : null,
             HttpStatusAvailability = http ? ProviderAvailabilityState.Available : ProviderAvailabilityState.Unavailable,
             HttpStatus = http ? 200 : null,
             RefusalAvailability = refusal ? ProviderAvailabilityState.Available : ProviderAvailabilityState.Unavailable,

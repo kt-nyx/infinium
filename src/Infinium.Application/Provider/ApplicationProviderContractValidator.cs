@@ -204,6 +204,14 @@ public static class ApplicationProviderContractValidator
     public static void Validate(ProviderResponsePayload value)
     {
         Require(value.ResponseRecordId, "response_record_id");
+        Require(value.OwnerId, "owner_id");
+        if (value.OwnerKind is not ("analysis-run" or "evidence-acquisition-run")
+            || value.OperationKind == ProviderOperationKind.SourceClaimExtraction && value.OwnerKind != "evidence-acquisition-run"
+            || value.OperationKind is ProviderOperationKind.TransportQualification or ProviderOperationKind.CandidateInvestigation
+                && value.OwnerKind != "analysis-run")
+        {
+            throw new InvalidDataException("Provider response must bind one exact durable operation owner kind.");
+        }
         Validate(value.OperationKind, value.Limits);
         ProviderAvailabilityState[] factAvailabilities =
         [
@@ -234,8 +242,8 @@ public static class ApplicationProviderContractValidator
             || value.MaximumRawResponseBytes != value.Limits.MaximumRawResponseBytes
             || value.RawResponse is not null && (!ValidDigest(value.RawResponse)
                 || value.RawResponse.SizeBytes > value.MaximumRawResponseBytes)
-            || value.HasOverflowObservedAtLeastBytes
-                && value.OverflowObservedAtLeastBytes != checked(value.MaximumRawResponseBytes + 1)
+            || value.HasOverflowObservedExcessBytes
+                && value.OverflowObservedExcessBytes != 1
             || value.ResponseHeaders is not null && (!ValidDigest(value.ResponseHeaders)
                 || value.ResponseHeaders.SizeBytes > 65_536)
             || value.BillingEvidence is not null && (!ValidDigest(value.BillingEvidence)
@@ -557,9 +565,9 @@ public static class ApplicationProviderContractValidator
             && value.RateAvailability == ProviderAvailabilityState.Unavailable
             && value.CreditAvailability == ProviderAvailabilityState.Unavailable;
         bool boundedOverflow = !raw && value.RawResponse is null
-            && value.HasOverflowObservedAtLeastBytes
-            && value.OverflowObservedAtLeastBytes == checked(value.MaximumRawResponseBytes + 1);
-        bool noOverflow = !value.HasOverflowObservedAtLeastBytes;
+            && value.HasOverflowObservedExcessBytes
+            && value.OverflowObservedExcessBytes == 1;
+        bool noOverflow = !value.HasOverflowObservedExcessBytes;
         bool nonSuccess = value.ValidationState is "rejected" or "abstained" or "unavailable" or "unsupported"
             && value.AdmissionState is "rejected" or "abstained" or "unavailable" or "unsupported";
         bool valid = value.ResponseState switch
