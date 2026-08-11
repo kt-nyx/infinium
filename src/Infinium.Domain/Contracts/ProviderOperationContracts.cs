@@ -31,6 +31,7 @@ public enum ProviderOperationState
     Confirmed,
     Reserved,
     Assigned,
+    InputBoundBlocked,
     FinalGateAuthorized,
     TransportNotStarted,
     TransportMayHaveStarted,
@@ -76,6 +77,20 @@ public enum ProposalAdmissionState
     Unsupported,
     Deleted,
 }
+
+public enum ProviderInputBoundProofState
+{
+    Unspecified,
+    AuthorityRequired,
+    Proved,
+}
+
+public sealed record ProviderInputBoundProofContract(
+    string PolicyId,
+    string PolicyVersion,
+    ProviderInputBoundProofState Status,
+    long? CanonicalRequestBytes,
+    long? ProvedInputTokenBound);
 
 public sealed record ProviderIdentityReferenceContract(
     OpaqueId Identity,
@@ -165,10 +180,10 @@ public sealed record ProviderAccessProfileDocument(
     string DisplayLabel,
     ProviderProfileState LifecycleState,
     ProviderAvailabilityState VerificationState,
-    OpaqueId AccountIdentityId,
-    OpaqueId BillingScopeIdentityId,
-    OpaqueId CapabilitySnapshotId,
-    OpaqueId IntentId,
+    OpaqueId? AccountIdentityId,
+    OpaqueId? BillingScopeIdentityId,
+    OpaqueId? CapabilitySnapshotId,
+    OpaqueId? IntentId,
     string RecoveryDisposition,
     string CleanupDisposition,
     UtcTimestamp RecordedAt);
@@ -191,6 +206,7 @@ public sealed record ProviderOperationDocument(
     Sha256Fingerprint? SettingsFingerprint,
     Sha256Fingerprint? OutputSchemaFingerprint,
     Sha256Fingerprint? RequestFingerprint,
+    ProviderInputBoundProofContract InputBoundProof,
     ProviderFiniteLimitsContract Limits,
     OpaqueId? AuthorizationId,
     OpaqueId? ReservationId,
@@ -297,7 +313,9 @@ public sealed record ProviderExecutionInputDocument(
     OpaqueId OutputSchemaId,
     Sha256Fingerprint OutputSchemaFingerprint,
     ProviderOperationKind OperationKind,
-    Sha256Fingerprint CanonicalRequestFingerprint);
+    Sha256Fingerprint CanonicalRequestFingerprint,
+    ProviderInputBoundProofContract InputBoundProof,
+    string DispatchAdmission);
 
 public sealed record EffectiveScanConfigurationV2Document(
     string SchemaId,

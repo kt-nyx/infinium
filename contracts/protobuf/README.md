@@ -167,6 +167,11 @@ ordinal repository-relative path.
 - Provider dispatch requires a second, immediate
   `DispatchRevalidationRequest`/`Response`; a prior reservation or assignment
   is not transport authority.
+- Provider dispatch assignment and revalidation also carry the versioned local
+  input-bound proof. The current proof state is `AUTHORITY_REQUIRED`: helper
+  validation accepts only the corresponding rejected disposition and never
+  fabricates canonical byte counts or token bounds. Credential-only assignments
+  and receipts omit all provider-dispatch-only fields.
 - Raw display/detail/status strings are inert bounded text. They cannot be
   interpreted as instructions or privileged primitives.
 - No schema contains `google.protobuf.Any`, `Struct`, a generic object lookup,
@@ -179,8 +184,12 @@ authorization, and coordinator-side admission remain runtime obligations for
 later slices.
 
 The additive application v1 surface is at protocol 1.2.0 and exposes bounded,
-non-secret provider profile, operation, budget, replay, and command shapes.
+non-secret provider profile, operation, budget, replay, and command shapes. Its
+full contract-set fingerprint is
+`676a0c655ca5f7a7ec70de386892b4142e11b73825b5289fdc465ecd0853f937`.
 Helper v2 has a separate fingerprint over only its helper/common/identity
 transitive closure; its fail-closed decoder rejects unknown nested fields,
 unknown enum numerics, and contradictory assignment, revalidation, or receipt
-states. Helper v1 remains independently parsed under its own frame identity.
+states. That helper-v2 transitive fingerprint is
+`d0cf1a594ceeaf5ec32c3b40bf9f39ccc19bfb1b41aeb0a65c66ab3db2cf41d1`.
+Helper v1 remains independently parsed under its own frame identity.

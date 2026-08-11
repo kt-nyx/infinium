@@ -63,8 +63,8 @@ message GetProviderProfileResponse {
 message ProviderProfilePayload {
   infinium.domain.v1.ProviderAccessProfileId profile_id = 1;
   infinium.domain.v1.CredentialGenerationId generation_id = 2;
-  string lifecycle_state = 3;
-  string verification_state = 4;
+  ProviderProfileLifecycleState lifecycle_state = 3;
+  ProviderAvailabilityState verification_state = 4;
   infinium.domain.v1.CapabilitySnapshotId capability_snapshot_id = 5;
   uint64 revocation_epoch = 6;
   repeated string gaps = 7;
@@ -83,17 +83,17 @@ message GetProviderOperationResponse {
 
 message ProviderOperationPayload {
   infinium.domain.v1.OperationId operation_id = 1;
-  string operation_kind = 2;
-  string state = 3;
+  ProviderOperationKind operation_kind = 2;
+  ProviderOperationLifecycleState state = 3;
   OptionalProviderQuantity input_tokens = 4;
   OptionalProviderQuantity output_tokens = 5;
   OptionalProviderQuantity calculated_nano_usd = 6;
-  string settlement_state = 7;
-  string replay_state = 8;
+  ProviderSettlementState settlement_state = 7;
+  ProviderReplayState replay_state = 8;
   repeated string gaps = 9;
 }
 
-message OptionalProviderQuantity { string availability = 1; optional uint64 value = 2; }
+message OptionalProviderQuantity { ProviderAvailabilityState availability = 1; optional uint64 value = 2; }
 
 message ListProviderBudgetRequest {
   string scope_kind = 1;
@@ -128,7 +128,7 @@ message GetProviderReplayResponse {
 message ProviderReplayPayload {
   infinium.domain.v1.OperationId operation_id = 1;
   string retained_response_id = 2;
-  string replay_state = 3;
+  ProviderReplayState replay_state = 3;
   string dependency_manifest_id = 4;
   bool network_permitted = 5;
 }
@@ -145,10 +145,101 @@ message SubmitProviderOperationRequest {
   infinium.domain.v1.OperationId operation_id = 1;
   infinium.domain.v1.ProviderAccessProfileId profile_id = 2;
   infinium.domain.v1.CredentialGenerationId generation_id = 3;
-  string operation_kind = 4;
+  ProviderOperationKind operation_kind = 4;
   bytes canonical_request_fingerprint_sha256 = 5;
   infinium.domain.v1.CapabilitySnapshotId capability_snapshot_id = 6;
   infinium.domain.v1.PriceSnapshotId price_snapshot_id = 7;
+  uint64 revocation_epoch = 8;
+  bytes settings_fingerprint_sha256 = 9;
+  string output_schema_id = 10;
+  bytes output_schema_fingerprint_sha256 = 11;
+  ProviderOperationLimits limits = 12;
+  string owner_kind = 13;
+  string owner_id = 14;
+  string job_node_id = 15;
+  InputBoundProofStatus input_bound_proof_status = 16;
+  string input_bound_policy_id = 17;
+  string input_bound_policy_version = 18;
+  optional uint64 canonical_request_bytes = 19;
+  optional uint64 proved_input_token_bound = 20;
+}
+
+message ProviderOperationLimits {
+  uint64 maximum_request_bytes = 1;
+  uint64 maximum_input_tokens = 2;
+  uint64 maximum_output_tokens = 3;
+  uint64 maximum_raw_response_bytes = 4;
+  uint64 maximum_dispatch_count = 5;
+  int64 maximum_calculated_nano_usd = 6;
+  uint64 deadline_milliseconds = 7;
+}
+
+enum ProviderProfileLifecycleState {
+  PROVIDER_PROFILE_LIFECYCLE_STATE_UNSPECIFIED = 0;
+  PROVIDER_PROFILE_LIFECYCLE_STATE_PENDING_ENROLLMENT = 1;
+  PROVIDER_PROFILE_LIFECYCLE_STATE_ACTIVE_UNVERIFIED = 2;
+  PROVIDER_PROFILE_LIFECYCLE_STATE_ACTIVE_VERIFIED = 3;
+  PROVIDER_PROFILE_LIFECYCLE_STATE_REPLACING = 4;
+  PROVIDER_PROFILE_LIFECYCLE_STATE_DISABLED = 5;
+  PROVIDER_PROFILE_LIFECYCLE_STATE_DELETE_PENDING = 6;
+  PROVIDER_PROFILE_LIFECYCLE_STATE_DELETED = 7;
+  PROVIDER_PROFILE_LIFECYCLE_STATE_SECURE_STORE_UNAVAILABLE = 8;
+  PROVIDER_PROFILE_LIFECYCLE_STATE_RECOVERY_REQUIRED = 9;
+}
+
+enum ProviderAvailabilityState {
+  PROVIDER_AVAILABILITY_STATE_UNSPECIFIED = 0;
+  PROVIDER_AVAILABILITY_STATE_AVAILABLE = 1;
+  PROVIDER_AVAILABILITY_STATE_UNAVAILABLE = 2;
+  PROVIDER_AVAILABILITY_STATE_UNSUPPORTED = 3;
+  PROVIDER_AVAILABILITY_STATE_NOT_APPLICABLE = 4;
+  PROVIDER_AVAILABILITY_STATE_NOT_USED = 5;
+}
+
+enum ProviderOperationKind {
+  PROVIDER_OPERATION_KIND_UNSPECIFIED = 0;
+  PROVIDER_OPERATION_KIND_TRANSPORT_QUALIFICATION = 1;
+  PROVIDER_OPERATION_KIND_SOURCE_CLAIM_EXTRACTION = 2;
+  PROVIDER_OPERATION_KIND_CANDIDATE_INVESTIGATION = 3;
+}
+
+enum ProviderOperationLifecycleState {
+  PROVIDER_OPERATION_LIFECYCLE_STATE_UNSPECIFIED = 0;
+  PROVIDER_OPERATION_LIFECYCLE_STATE_PROPOSED = 1;
+  PROVIDER_OPERATION_LIFECYCLE_STATE_CONFIRMED = 2;
+  PROVIDER_OPERATION_LIFECYCLE_STATE_RESERVED = 3;
+  PROVIDER_OPERATION_LIFECYCLE_STATE_ASSIGNED = 4;
+  PROVIDER_OPERATION_LIFECYCLE_STATE_INPUT_BOUND_BLOCKED = 5;
+  PROVIDER_OPERATION_LIFECYCLE_STATE_FINAL_GATE_AUTHORIZED = 6;
+  PROVIDER_OPERATION_LIFECYCLE_STATE_TRANSPORT_NOT_STARTED = 7;
+  PROVIDER_OPERATION_LIFECYCLE_STATE_TRANSPORT_MAY_HAVE_STARTED = 8;
+  PROVIDER_OPERATION_LIFECYCLE_STATE_RESPONSE_STAGED = 9;
+  PROVIDER_OPERATION_LIFECYCLE_STATE_ADMITTED = 10;
+  PROVIDER_OPERATION_LIFECYCLE_STATE_REJECTED = 11;
+  PROVIDER_OPERATION_LIFECYCLE_STATE_SETTLED = 12;
+  PROVIDER_OPERATION_LIFECYCLE_STATE_UNRESOLVED_HOLD = 13;
+}
+
+enum ProviderSettlementState {
+  PROVIDER_SETTLEMENT_STATE_UNSPECIFIED = 0;
+  PROVIDER_SETTLEMENT_STATE_NOT_STARTED = 1;
+  PROVIDER_SETTLEMENT_STATE_SETTLED = 2;
+  PROVIDER_SETTLEMENT_STATE_UNRESOLVED_HOLD = 3;
+  PROVIDER_SETTLEMENT_STATE_FAILED_KNOWN = 4;
+  PROVIDER_SETTLEMENT_STATE_OVERRUN = 5;
+}
+
+enum ProviderReplayState {
+  PROVIDER_REPLAY_STATE_UNSPECIFIED = 0;
+  PROVIDER_REPLAY_STATE_NOT_AVAILABLE = 1;
+  PROVIDER_REPLAY_STATE_RETAINED_RESPONSE = 2;
+  PROVIDER_REPLAY_STATE_AUDIT_ONLY = 3;
+}
+
+enum InputBoundProofStatus {
+  INPUT_BOUND_PROOF_STATUS_UNSPECIFIED = 0;
+  INPUT_BOUND_PROOF_STATUS_AUTHORITY_REQUIRED = 1;
+  INPUT_BOUND_PROOF_STATUS_PROVED = 2;
 }
 
 message SubmitProviderCommandResponse {

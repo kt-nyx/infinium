@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Contracts', 'StateTotality')]
+    [ValidateSet('Contracts', 'StateSurfaces', 'StateTotality')]
     [string] $Gate,
 
     [Parameter(Mandatory = $true)]
@@ -52,10 +52,10 @@ function Assert-Slice5V1Unchanged {
     }
 }
 
-function Write-Receipt([string] $Name, [System.Collections.IDictionary] $Evidence) {
+function Write-Receipt([string] $Name, [System.Collections.IDictionary] $Evidence, [string] $Status = 'passed') {
     $receipt = [ordered]@{
         gate = $Name
-        status = 'passed'
+        status = $Status
         network_permitted = $false
         credential_access_permitted = $false
         evidence = $Evidence
@@ -154,7 +154,7 @@ function Invoke-ContractsGate {
     })
 }
 
-function Invoke-StateTotalityGate {
+function Invoke-StateSurfaceGate([bool] $RequireAcceptedInputProof) {
     Assert-Slice5V1Unchanged
     Invoke-DotnetTest `
         'tests/Infinium.UnitTests/Infinium.UnitTests.csproj' `
@@ -176,13 +176,15 @@ function Invoke-StateTotalityGate {
         throw 'WP1 traceability inventory does not cover exactly nine contracts.'
     }
 
-    Write-Receipt 'StateTotality' ([ordered]@{
+    $gateName = if ($RequireAcceptedInputProof) { 'StateTotality' } else { 'StateSurfaces' }
+    $gateStatus = if ($RequireAcceptedInputProof) { 'blocked-authority-required' } else { 'passed' }
+    Write-Receipt $gateName ([ordered]@{
         migration_id = 'M1-S6-0006'
         source_schema = 5
         destination_schema = 6
         storage_contract = '1.5.0'
         source_schema_fingerprint = 'e6d27152687e6b0c806da58a716a9ab909817f046fbe3bf11d8846da5e5dc87d'
-        destination_schema_fingerprint = '9cc35e3709a9a7fb4bdc0470e4ee488441648cb9b43055d0319f22af878464f4'
+        destination_schema_fingerprint = '688b702c7720d720d73d7be59816051b28010cd6a6da64f64b26514e894b8be7'
         append_only_provider_history_table_count = 23
         rebuildable_projection_count = 3
         traceability_contract_count = $traceability.contracts.Count
@@ -191,14 +193,18 @@ function Invoke-StateTotalityGate {
         transport_qualification_request_byte_ceiling = 16384
         semantic_request_byte_ceiling = 65536
         maximum_dispatch_count = 1
-    })
+    }) $gateStatus
+    if ($RequireAcceptedInputProof) {
+        throw 'WP1 StateTotality is blocked: no accepted repository-local tokenizer/framing proof exists.'
+    }
 }
 
 Push-Location $repoRoot
 try {
     switch ($Gate) {
         'Contracts' { Invoke-ContractsGate }
-        'StateTotality' { Invoke-StateTotalityGate }
+        'StateSurfaces' { Invoke-StateSurfaceGate $false }
+        'StateTotality' { Invoke-StateSurfaceGate $true }
     }
 } finally {
     Pop-Location

@@ -385,3 +385,111 @@ Last reviewed: 2026-08-10
 - Owner/authority escalation remains limited to the framing-inclusive local
   input-token proof described above. No other must-fix, follow-up, safety,
   isolation, or owner-decision finding remains in WP1.
+
+## M1/S6/WP1 recovery correction — 2026-08-10
+
+This entry supersedes every earlier WP1 assertion that `StateTotality` passed
+or that the finite input-bound exit criterion was satisfied. The rejected
+correction input was
+`edc12fd11ae3803e08bf795048c98ad5ee27c771`. Fresh correction-contract and
+correction-boundary reviews both returned `CORRECT` with recoverable findings;
+all of those findings were corrected together before this evidence was
+retained.
+
+### Recovered contract and execution closure
+
+- Access-profile lifecycle, verification, recovery, and cleanup are now a
+  discriminated total matrix. Account, billing, capability, and intent IDs are
+  present only in states where they truthfully exist.
+- Every non-cancelled provider response retains the exact bounded raw payload
+  identity, byte count, and HTTP status required by ADR-0025 and schema-6
+  persistence. Completed, refusal, incomplete, failed/error, validation, and
+  admission states are coherent; cancelled records preserve explicit absence.
+  Canonical completed, failed, and cancelled round trips are executable tests.
+- Current provider-operation transitions are total only through
+  `InputBoundBlocked`. Future downstream state shapes remain exhaustively
+  validated, including the rejected billable settlement shape, without making
+  an unreachable dispatch transition legal under the unresolved proof.
+- Helper v2 discriminates credential-only assignments and receipts from
+  provider dispatch. Credential work omits provider request, operation kind,
+  limits, and raw response; dispatch assignments and final revalidation retain
+  the authority-required proof and reject authorization.
+- Application protobuf enums fail closed. Submit binds revocation epoch,
+  settings and output-schema fingerprints, all seven finite limits, owner and
+  job identities, and the proof policy/status. Query bounds, replay network
+  prohibition, unknown enum numerics, full decoder round trip, and dispatch
+  refusal are executable evidence.
+- Schema 6 now binds authorization to the actual analysis or evidence-
+  acquisition owner and job node, request/settings/schema fingerprints,
+  capability and price snapshots/rules, proof policy/status, coordinator fence
+  epoch, revocation epoch, attempt/request/response, and semantic proposal.
+  Foreign keys, checks, triggers, adversarial inserts, migration, and backup/
+  restore assertions enforce those joins rather than relying on application
+  convention.
+- CLI and run-output matrices no longer fabricate available-zero usage, cache,
+  hold, response, settlement, or replay identities for pending, blocked,
+  failed, unresolved, or provider-not-used states.
+- Traceability explicitly assigns every declared field exactly once to a
+  semantic group, includes ADR-0020, names capability/price/rule persistence,
+  and executes joins to actual producer and invariant contract types, exact
+  schema-6 tables, output anchors, and replay declarations.
+
+### Structural finite-bound stop
+
+No accepted repository-local tokenizer and provider-framing grammar proves the
+required finite bound. No tokenizer or framing rule was invented. The exact
+versioned state `unresolved-openai-responses-framing` / `authority-required` is
+carried through execution input, operation confirmation, authorization,
+request, reservation boundary, application Submit, helper assignment, helper
+final revalidation, and gate evidence. Dispatch admission throws/fails closed,
+the durable fence cannot be authorized, and no canonical byte count or proved
+token bound can be fabricated.
+
+`Contracts` and the independent non-live `StateSurfaces` gate pass.
+`StateTotality` writes a `blocked-authority-required` receipt and exits `1`.
+It does not report `passed`, exit successfully, or authorize WP1 acceptance.
+Accordingly `docs/current-state.md` remains unchanged, WP2 is not authorized,
+and this record remains `Deferred` pending the plan-defined owner/authority
+decision for the missing proof.
+
+### Final identities
+
+- Schema-6 fingerprint:
+  `688b702c7720d720d73d7be59816051b28010cd6a6da64f64b26514e894b8be7`.
+- Helper-v2 transitive fingerprint:
+  `d0cf1a594ceeaf5ec32c3b40bf9f39ccc19bfb1b41aeb0a65c66ab3db2cf41d1`.
+- Full application protobuf-set fingerprint:
+  `676a0c655ca5f7a7ec70de386892b4142e11b73825b5289fdc465ecd0853f937`.
+- Answer-free example: 13,267 bytes,
+  `b36268eda84fd25ca183dbdb03c0b7844261d685cda4c2141c6ff7ebb6001f88`.
+- Public registry: 8,815 bytes,
+  `18ce8f1cac93d037c014efe77eb9e537a76959c10e7b44ef068f147bc59f0081`.
+- Field traceability: 22,024 bytes,
+  `d109ebcf1f6415ccd8fa68c0158684e2298bda0f3e8744253f585b31ed5254ff`.
+
+### Final verification
+
+1. Locked restore and Release build passed with zero warnings and zero errors.
+2. Focused provider/persistence/application unit filters passed 21/0/0; the
+   focused provider/helper/traceability contract surface passed 18/0/0.
+3. `Contracts` passed 18/0/0 and retained nine schemas, nine answer-free
+   examples, 19 registered public packages, exact independent protocol
+   fingerprints, forbidden-field closure, and frozen Slice 5 v1 bytes.
+4. `StateSurfaces` passed 17/0/0 state tests and 4/0/0 adversarial migration,
+   ownership, backup, and restore tests. `StateTotality` ran the same green
+   independent surface evidence, then correctly exited 1 with the blocked
+   receipt described above.
+5. The complete category matrix passed: Unit 160/0/1, Contract 123/0/0,
+   Integration 70/0/0, Evaluation 75/0/8, Security 111/0/3, and Fault
+   105/0/3. The unfiltered solution passed Unit 168/0/1, Contract 151/0/0,
+   Integration 68/0/0, and Evaluation 53/0/8.
+6. `dotnet format --verify-no-changes`, dependency-manifest check,
+   documentation validation, diff check, strict secret/path/isolation review,
+   current-state immutability, and the explicit frozen Slice 5 v1 diff passed.
+
+The answer-free resealer was used only to reseal the WP1 example and public
+registry. Its incidental modifications to unrelated frozen public packages
+were restored exactly to `edc12fd11ae3803e08bf795048c98ad5ee27c771`
+before verification. No network, provider, Credential Manager/native
+credential, private fixture, sibling private repository, legacy archive,
+evaluator archive, push, amend, or later-package action occurred.

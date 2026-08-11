@@ -82,8 +82,7 @@ public static class HelperProtocolV2Codec
         Require(value.AccessProfileId?.Value, "assignment.access_profile_id");
         Require(value.GenerationId?.Value, "assignment.generation_id");
         if (!Enum.IsDefined(value.AssignmentKind) || value.AssignmentKind == HelperAssignmentKindV2.Unspecified
-            || !Enum.IsDefined(value.OperationKind) || value.OperationKind == ProviderOperationKindV2.Unspecified
-            || value.GenerationOrdinal == 0 || value.Limits is null)
+            || value.GenerationOrdinal == 0)
         {
             throw new InvalidDataException("Helper v2 assignment uses an unknown numeric state or incomplete binding.");
         }
@@ -92,9 +91,14 @@ public static class HelperProtocolV2Codec
         {
             throw new InvalidDataException("Only a provider-dispatch assignment may carry a provider request.");
         }
-        ValidateLimits(value.OperationKind, value.Limits);
         if (dispatch)
         {
+            if (!Enum.IsDefined(value.OperationKind) || value.OperationKind == ProviderOperationKindV2.Unspecified
+                || value.Limits is null)
+            {
+                throw new InvalidDataException("Provider dispatch assignment is missing its operation kind or limits.");
+            }
+            ValidateLimits(value.OperationKind, value.Limits);
             ProviderRequestV2 request = value.ProviderRequest!;
             Require(request.DispatchId?.Value, "provider_request.dispatch_id");
             Require(request.CapabilitySnapshotId?.Value, "provider_request.capability_snapshot_id");
@@ -102,10 +106,16 @@ public static class HelperProtocolV2Codec
             Require(request.ReservationGroupId?.Value, "provider_request.reservation_group_id");
             if (request.EndpointIdentity != ProviderEndpointV2.OpenaiResponses
                 || request.CanonicalRequestBytes.IsEmpty
-                || (uint)request.CanonicalRequestBytes.Length > value.Limits.MaximumRequestBytes)
+                || (uint)request.CanonicalRequestBytes.Length > value.Limits.MaximumRequestBytes
+                || !IsAuthorityRequiredProof(request.InputBoundProof))
             {
-                throw new InvalidDataException("Helper v2 provider request is not a closed bounded Responses request.");
+                throw new InvalidDataException("Helper v2 provider request is not a closed bounded and explicitly blocked Responses request.");
             }
+        }
+        else if (value.ProviderRequest is not null || value.Limits is not null
+            || value.OperationKind != ProviderOperationKindV2.Unspecified)
+        {
+            throw new InvalidDataException("Credential-only assignments cannot fabricate provider dispatch fields.");
         }
     }
 
@@ -148,7 +158,8 @@ public static class HelperProtocolV2Codec
             || !Enum.IsDefined(value.OperationKind) || value.OperationKind == ProviderOperationKindV2.Unspecified
             || value.CoordinatorFencingEpoch == 0 || !ValidDigest(value.CanonicalRequest)
             || !ValidDigest(value.Settings) || !ValidDigest(value.OutputSchema)
-            || value.AuthorizedOnce != (value.Disposition == DispatchDispositionV2.Authorized))
+            || value.AuthorizedOnce || value.Disposition == DispatchDispositionV2.Authorized
+            || !IsAuthorityRequiredProof(value.InputBoundProof))
         {
             throw new InvalidDataException("Helper v2 final revalidation is incomplete or internally contradictory.");
         }
@@ -158,19 +169,32 @@ public static class HelperProtocolV2Codec
     {
         Require(value.OperationId?.Value, "receipt.operation_id");
         Require(value.AttemptId?.Value, "receipt.attempt_id");
-        if (!Enum.IsDefined(value.Outcome) || value.Outcome == HelperOutcomeV2.Unspecified)
+        if (!Enum.IsDefined(value.Outcome) || value.Outcome == HelperOutcomeV2.Unspecified
+            || !Enum.IsDefined(value.AssignmentKind) || value.AssignmentKind == HelperAssignmentKindV2.Unspecified)
         {
             throw new InvalidDataException("Helper v2 receipt outcome is unknown.");
         }
+        bool dispatch = value.AssignmentKind == HelperAssignmentKindV2.ProviderDispatch;
         bool completed = value.Outcome == HelperOutcomeV2.Completed;
         bool noTransport = value.Outcome is HelperOutcomeV2.Unavailable or HelperOutcomeV2.Cancelled;
-        if ((completed && (!value.TransportMayHaveStarted || !ValidDigest(value.RawResponse)))
+        if ((dispatch && completed && (!value.TransportMayHaveStarted || !ValidDigest(value.RawResponse)))
+            || (!dispatch && (value.TransportMayHaveStarted || value.RawResponse is not null
+                || value.InputTokens is not null || value.OutputTokens is not null || value.ReasoningTokens is not null
+                || value.CacheReadTokens is not null || value.CacheWriteTokens is not null))
             || (noTransport && (value.TransportMayHaveStarted || value.RawResponse is not null))
             || !ValidDigest(value.NonSecretReceipt))
         {
             throw new InvalidDataException("Helper v2 receipt outcome contradicts transport or response evidence.");
         }
     }
+
+    private static bool IsAuthorityRequiredProof(InputBoundProofV2? proof) =>
+        proof is not null
+        && proof.PolicyId == "unresolved-openai-responses-framing"
+        && proof.PolicyVersion == "authority-required"
+        && proof.Status == InputBoundProofStatusV2.AuthorityRequired
+        && !proof.HasCanonicalRequestBytes
+        && !proof.HasProvedInputTokenBound;
 
     private static void RejectUnknownFields(IMessage message, string path)
     {

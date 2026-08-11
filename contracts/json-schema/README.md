@@ -52,6 +52,12 @@ supplements. They bind the exact frozen local v1 artifact by identity or
 fingerprint and do not reinterpret or replace the Slice 5 v1 bytes. All nine
 Slice 6 contracts are closed at every declared object boundary and contain no
 credential target, secret byte, authorization-header, or raw-header field.
+The provider execution and operation contracts carry an explicit versioned
+local input-bound proof. Until accepted authority supplies the missing provider
+framing/tokenizer rule, that proof is `authority-required`, dispatch admission
+is `blocked-authority-required`, and no schema may represent invented canonical
+byte counts or proved token bounds. This blocks live execution without changing
+or reinterpreting frozen Slice 5 v1 bytes.
 
 The candidate stage delivered-input and expansion contracts contain only snapshot-bound
 Bethesda/documentation stage facts and deterministic construction parameters. Candidate lanes,

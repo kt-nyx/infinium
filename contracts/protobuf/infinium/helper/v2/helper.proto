@@ -52,6 +52,12 @@ enum HelperOutcomeV2 {
   HELPER_OUTCOME_V2_MALFORMED = 7;
 }
 
+enum InputBoundProofStatusV2 {
+  INPUT_BOUND_PROOF_STATUS_V2_UNSPECIFIED = 0;
+  INPUT_BOUND_PROOF_STATUS_V2_AUTHORITY_REQUIRED = 1;
+  INPUT_BOUND_PROOF_STATUS_V2_PROVED = 2;
+}
+
 // Private-handle-only Slice 6 protocol. Decoders reject unknown fields at
 // every privileged boundary. v1 remains a separately generated/decodable
 // contract and is never reinterpreted as this identity.
@@ -102,6 +108,15 @@ message ProviderRequestV2 {
   infinium.domain.v1.ReservationGroupId reservation_group_id = 6;
   infinium.common.v1.Instant dispatch_deadline = 7;
   ProviderEndpointV2 endpoint_identity = 8;
+  InputBoundProofV2 input_bound_proof = 9;
+}
+
+message InputBoundProofV2 {
+  string policy_id = 1;
+  string policy_version = 2;
+  InputBoundProofStatusV2 status = 3;
+  optional uint64 canonical_request_bytes = 4;
+  optional uint64 proved_input_token_bound = 5;
 }
 
 message HelperLimitsV2 {
@@ -135,6 +150,7 @@ message DispatchRevalidationV2 {
   infinium.common.v1.ContentDigest settings = 16;
   infinium.common.v1.ContentDigest output_schema = 17;
   ProviderOperationKindV2 operation_kind = 18;
+  InputBoundProofV2 input_bound_proof = 19;
 }
 
 message HelperReceiptV2 {
@@ -149,6 +165,7 @@ message HelperReceiptV2 {
   infinium.common.v1.OptionalUInt64 cache_write_tokens = 9;
   infinium.common.v1.ContentDigest raw_response = 10;
   infinium.common.v1.ContentDigest non_secret_receipt = 11;
+  HelperAssignmentKindV2 assignment_kind = 12;
   reserved 90 to 99;
   reserved "credential_target", "provider_secret", "secret_bytes",
       "authorization_header";

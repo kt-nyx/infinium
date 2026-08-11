@@ -95,20 +95,24 @@ public static class ProviderContractFactories
             throw new ArgumentException("The frozen local CLI-summary v1 bytes are required.", nameof(canonicalLocalCliSummaryV1));
         }
 
+        string providerState = ProviderState(projection);
+        ProviderQuantityContract absent = new(ProviderAvailabilityState.Unavailable, null);
+        bool pending = providerState == "pending";
+        bool live = providerState == "live";
         CliSummaryV2Document result = new(
             ContractConstants.CliSummaryV2SchemaId,
             "1",
             runId,
             Fingerprint(canonicalLocalCliSummaryV1),
-            ProviderState(projection),
-            Available(dispatchCount),
-            Available(inputTokens),
-            Available(outputTokens),
-            Available(reasoningTokens),
-            Available(0),
-            Available(0),
-            Available(projection.CalculatedNanoUsd),
-            Available(projection.ReservedNanoUsd),
+            providerState,
+            pending ? absent : Available(dispatchCount),
+            pending || live ? absent : Available(inputTokens),
+            pending || live ? absent : Available(outputTokens),
+            pending || live ? absent : Available(reasoningTokens),
+            pending || live ? absent : Available(0),
+            pending || live ? absent : Available(0),
+            pending || live ? absent : Available(projection.CalculatedNanoUsd),
+            pending ? absent : Available(projection.ReservedNanoUsd),
             projection.UnresolvedHold,
             projection.ReplayState,
             gaps,
@@ -147,7 +151,7 @@ public static class ProviderContractFactories
     {
         ProviderOperationState.UnresolvedHold => "unresolved",
         ProviderOperationState.Proposed or ProviderOperationState.Confirmed or ProviderOperationState.Reserved
-            or ProviderOperationState.Assigned or ProviderOperationState.FinalGateAuthorized
+            or ProviderOperationState.Assigned or ProviderOperationState.InputBoundBlocked or ProviderOperationState.FinalGateAuthorized
             or ProviderOperationState.TransportNotStarted => "pending",
         ProviderOperationState.TransportMayHaveStarted or ProviderOperationState.ResponseStaged => "live",
         ProviderOperationState.Admitted or ProviderOperationState.Settled => "completed",

@@ -5,6 +5,8 @@ public static class ProviderOperationContractInvariants
     public const long MaximumCanonicalRequestBytes = 65_536;
     public const long MaximumLocallyAdmittedInputTokens = 73_728;
     public const string LocalInputBoundProofStatus = "authority-required";
+    public const string LocalInputBoundPolicyId = "unresolved-openai-responses-framing";
+    public const string LocalInputBoundPolicyVersion = "authority-required";
 
     public static void RequireLocalInputBoundProof(long canonicalRequestBytes)
     {
@@ -14,6 +16,26 @@ public static class ProviderOperationContractInvariants
         }
         throw new NotSupportedException(
             "WP1 has no accepted repository-local tokenizer or framing grammar from which to prove the framing-inclusive input-token bound.");
+    }
+
+    public static void ValidateBlockedInputBoundProof(ProviderInputBoundProofContract proof)
+    {
+        ArgumentNullException.ThrowIfNull(proof);
+        if (proof.PolicyId != LocalInputBoundPolicyId
+            || proof.PolicyVersion != LocalInputBoundPolicyVersion
+            || proof.Status != ProviderInputBoundProofState.AuthorityRequired
+            || proof.CanonicalRequestBytes is not null
+            || proof.ProvedInputTokenBound is not null)
+        {
+            throw new InvalidOperationException("The unresolved WP1 input-bound proof must remain explicitly authority-required with no fabricated byte or token bound.");
+        }
+    }
+
+    public static void RequireDispatchableInputBoundProof(ProviderInputBoundProofContract proof)
+    {
+        ValidateBlockedInputBoundProof(proof);
+        throw new NotSupportedException(
+            "Provider dispatch is blocked because no accepted repository-local tokenizer/framing proof exists.");
     }
 
     public static long CalculateComponentNanoUsd(long tokens, ProviderPriceRuleContract rule)
@@ -87,6 +109,41 @@ public static class ProviderOperationContractInvariants
         {
             throw new InvalidOperationException("Provider access-profile metadata is not a closed non-secret M1 state.");
         }
+        bool idsAbsent = value.AccountIdentityId is null && value.BillingScopeIdentityId is null
+            && value.CapabilitySnapshotId is null;
+        bool idsPresent = value.AccountIdentityId is not null && value.BillingScopeIdentityId is not null
+            && value.CapabilitySnapshotId is not null;
+        bool validShape = value.LifecycleState switch
+        {
+            ProviderProfileState.PendingEnrollment => idsAbsent && value.IntentId is not null
+                && value.VerificationState == ProviderAvailabilityState.NotApplicable
+                && value.RecoveryDisposition == "not-required" && value.CleanupDisposition == "not-requested",
+            ProviderProfileState.ActiveUnverified => idsPresent && value.IntentId is not null
+                && value.VerificationState == ProviderAvailabilityState.Unavailable
+                && value.RecoveryDisposition == "not-required" && value.CleanupDisposition == "not-requested",
+            ProviderProfileState.ActiveVerified or ProviderProfileState.Replacing => idsPresent && value.IntentId is not null
+                && value.VerificationState == ProviderAvailabilityState.Available
+                && value.RecoveryDisposition == "not-required" && value.CleanupDisposition == "not-requested",
+            ProviderProfileState.Disabled => value.VerificationState == ProviderAvailabilityState.Unavailable
+                && value.RecoveryDisposition == "not-required" && value.CleanupDisposition == "not-requested",
+            ProviderProfileState.DeletePending => value.IntentId is not null
+                && value.VerificationState == ProviderAvailabilityState.Unavailable
+                && value.CleanupDisposition == "pending",
+            ProviderProfileState.Deleted => idsAbsent && value.IntentId is null
+                && value.VerificationState == ProviderAvailabilityState.Unavailable
+                && value.RecoveryDisposition == "not-required" && value.CleanupDisposition == "confirmed",
+            ProviderProfileState.SecureStoreUnavailable => value.IntentId is not null
+                && value.VerificationState == ProviderAvailabilityState.Unavailable
+                && value.RecoveryDisposition == "unavailable",
+            ProviderProfileState.RecoveryRequired => value.IntentId is not null
+                && value.VerificationState == ProviderAvailabilityState.Unavailable
+                && value.RecoveryDisposition == "required",
+            _ => false,
+        };
+        if (!validShape)
+        {
+            throw new InvalidOperationException("Provider access-profile identities contradict lifecycle, verification, recovery, or cleanup state.");
+        }
     }
 
     public static void Validate(ProviderOperationDocument value)
@@ -97,7 +154,15 @@ public static class ProviderOperationContractInvariants
         Validate(value.Usage);
         Validate(value.CapabilitySnapshot);
         Validate(value.PriceSnapshot);
+        ValidateBlockedInputBoundProof(value.InputBoundProof);
         RequireExplicit(value.State, nameof(value.State));
+        if (value.State is ProviderOperationState.FinalGateAuthorized or ProviderOperationState.TransportNotStarted
+            or ProviderOperationState.TransportMayHaveStarted or ProviderOperationState.ResponseStaged
+            or ProviderOperationState.Admitted or ProviderOperationState.Rejected or ProviderOperationState.Settled
+            or ProviderOperationState.UnresolvedHold)
+        {
+            throw new InvalidOperationException("Provider operation cannot cross the final dispatch gate while the input-bound proof remains authority-required.");
+        }
         if (value.RevocationEpoch < 0
             || value.OwnerKind is not ("analysis-run" or "evidence-acquisition-run")
             || value.TransportState is not ("not-started" or "may-have-started" or "started" or "completed" or "failed-known" or "ambiguous")
@@ -117,17 +182,7 @@ public static class ProviderOperationContractInvariants
             (ProviderOperationState.Proposed, ProviderOperationState.Confirmed) => true,
             (ProviderOperationState.Confirmed, ProviderOperationState.Reserved) => true,
             (ProviderOperationState.Reserved, ProviderOperationState.Assigned) => true,
-            (ProviderOperationState.Assigned, ProviderOperationState.FinalGateAuthorized) => true,
-            (ProviderOperationState.FinalGateAuthorized, ProviderOperationState.TransportNotStarted) => true,
-            (ProviderOperationState.TransportNotStarted, ProviderOperationState.TransportMayHaveStarted) => true,
-            (ProviderOperationState.TransportNotStarted, ProviderOperationState.Rejected) => true,
-            (ProviderOperationState.TransportMayHaveStarted, ProviderOperationState.ResponseStaged) => true,
-            (ProviderOperationState.TransportMayHaveStarted, ProviderOperationState.UnresolvedHold) => true,
-            (ProviderOperationState.ResponseStaged, ProviderOperationState.Admitted) => true,
-            (ProviderOperationState.ResponseStaged, ProviderOperationState.Rejected) => true,
-            (ProviderOperationState.Admitted, ProviderOperationState.Settled) => true,
-            (ProviderOperationState.Rejected, ProviderOperationState.Settled) => true,
-            (ProviderOperationState.UnresolvedHold, ProviderOperationState.Settled) => true,
+            (ProviderOperationState.Assigned, ProviderOperationState.InputBoundBlocked) => true,
             _ => false,
         };
         if (!legal)
@@ -144,12 +199,30 @@ public static class ProviderOperationContractInvariants
         RequireExplicit(value.ValidationState, nameof(value.ValidationState));
         RequireExplicit(value.AdmissionState, nameof(value.AdmissionState));
         Validate(value.Usage);
-        bool completed = value.State is ProviderResponseState.Completed or ProviderResponseState.Refusal or ProviderResponseState.Incomplete;
-        if ((completed && (value.RawResponsePayload is null || value.RawResponseBytes is null or <= 0 or > 1_048_576
-                || value.HttpStatus is null or < 100 or > 599 || string.IsNullOrWhiteSpace(value.ReturnedModel)
-                || string.IsNullOrWhiteSpace(value.ReturnedServiceTier)))
-            || (!completed && (value.RawResponsePayload is not null || value.RawResponseBytes is not null || value.HttpStatus is not null
+        bool noResponse = value.State == ProviderResponseState.Cancelled;
+        bool hasRetainedResponse = value.RawResponsePayload is not null && value.RawResponseBytes is > 0 and <= 1_048_576
+            && value.HttpStatus is >= 100 and <= 599;
+        bool completed = value.State == ProviderResponseState.Completed;
+        bool failedSemantic = value.State is ProviderResponseState.Refusal or ProviderResponseState.Incomplete
+            or ProviderResponseState.Failed or ProviderResponseState.Queued or ProviderResponseState.InProgress
+            or ProviderResponseState.Malformed or ProviderResponseState.Oversized or ProviderResponseState.Mismatched
+            or ProviderResponseState.Unknown;
+        bool semanticStatesCoherent = completed
+            ? value.ValidationState is ProposalAdmissionState.Proposed or ProposalAdmissionState.Admitted or ProposalAdmissionState.Rejected
+                && value.AdmissionState is ProposalAdmissionState.Proposed or ProposalAdmissionState.Admitted or ProposalAdmissionState.Rejected
+            : noResponse
+                ? value.ValidationState == ProposalAdmissionState.Unavailable && value.AdmissionState == ProposalAdmissionState.Unavailable
+                : value.ValidationState is ProposalAdmissionState.Rejected or ProposalAdmissionState.Abstained or ProposalAdmissionState.Unavailable
+                    && value.AdmissionState is ProposalAdmissionState.Rejected or ProposalAdmissionState.Abstained or ProposalAdmissionState.Unavailable;
+        if ((noResponse && (value.RawResponsePayload is not null || value.RawResponseBytes is not null || value.HttpStatus is not null
                 || value.ProviderResponseId is not null || value.ReturnedModel is not null || value.ReturnedServiceTier is not null))
+            || (!noResponse && !hasRetainedResponse)
+            || (completed && (string.IsNullOrWhiteSpace(value.ReturnedModel) || string.IsNullOrWhiteSpace(value.ReturnedServiceTier)))
+            || (value.State == ProviderResponseState.Refusal && string.IsNullOrWhiteSpace(value.RefusalCode))
+            || (value.State == ProviderResponseState.Incomplete && string.IsNullOrWhiteSpace(value.IncompleteReason))
+            || (failedSemantic && value.State is not (ProviderResponseState.Refusal or ProviderResponseState.Incomplete)
+                && string.IsNullOrWhiteSpace(value.ErrorCode))
+            || !semanticStatesCoherent
             || value.RequestedModel != "gpt-5.6-sol" || value.RequestedServiceTier != "default"
             || value.ReasoningContext != "current_turn" || value.ReasoningMode != "standard"
             || value.PromptCacheMode != "explicit")
@@ -165,6 +238,17 @@ public static class ProviderOperationContractInvariants
         Validate(value.OperationKind, value.Limits);
         Validate(value.CapabilitySnapshot);
         Validate(value.PriceSnapshot);
+        ValidateBlockedInputBoundProof(value.InputBoundProof);
+        if (value.DispatchAdmission != "blocked-authority-required")
+        {
+            throw new InvalidOperationException("Provider execution input must retain the authority-required dispatch block.");
+        }
+    }
+
+    public static void RequireDispatchAdmission(ProviderExecutionInputDocument value)
+    {
+        Validate(value);
+        RequireDispatchableInputBoundProof(value.InputBoundProof);
     }
 
     public static void Validate(RunOutputV2Document value)
@@ -183,13 +267,25 @@ public static class ProviderOperationContractInvariants
         {
             bool none = publication.Availability is "not-used" or "unavailable";
             bool qualification = publication.OperationKind == ProviderOperationKind.TransportQualification;
+            bool pendingOrLive = publication.Availability is "pending" or "live";
+            bool retained = publication.Availability == "retained";
+            bool failed = publication.Availability == "failed";
+            bool unresolved = publication.Availability == "unresolved";
             if (none != (publication.OperationId is null)
                 || (none && (publication.Live || publication.OperationKind is not null || publication.AcquisitionRunId is not null
                     || publication.AuthorizationId is not null || publication.ResponseId is not null
                     || publication.AdmissionId is not null || publication.UsageEntryId is not null
                     || publication.SettlementId is not null || publication.ReplayEdgeId is not null))
                 || (publication.Live != (publication.Availability == "live"))
-                || (qualification && (publication.AcquisitionRunId is not null || publication.AdmissionId is not null)))
+                || (qualification && (publication.AcquisitionRunId is not null || publication.AdmissionId is not null))
+                || (pendingOrLive && (publication.ResponseId is not null || publication.AdmissionId is not null
+                    || publication.UsageEntryId is not null || publication.SettlementId is not null || publication.ReplayEdgeId is not null))
+                || (retained && (publication.ResponseId is null || publication.UsageEntryId is null
+                    || publication.SettlementId is null || publication.ReplayEdgeId is null))
+                || (retained && !qualification && publication.AdmissionId is null)
+                || (failed && (publication.UsageEntryId is null || publication.SettlementId is null
+                    || publication.AdmissionId is not null))
+                || (unresolved && (publication.SettlementId is null || publication.AdmissionId is not null)))
             {
                 throw new InvalidOperationException("Run-output provider publication contradicts its availability or operation kind.");
             }
@@ -209,11 +305,25 @@ public static class ProviderOperationContractInvariants
         {
             throw new InvalidOperationException("CLI summary v2 contains an invalid provider projection.");
         }
-        bool noProvider = value.ProviderState is "not-used" or "unavailable";
-        if (noProvider && (value.DispatchCount.Value is not null || value.InputTokens.Value is not null
+        bool noProvider = value.ProviderState is "not-used" or "unavailable" or "pending";
+        bool anyValue = new[] { value.DispatchCount, value.InputTokens, value.OutputTokens, value.ReasoningTokens,
+            value.CacheReadTokens, value.CacheWriteTokens, value.CalculatedNanoUsd, value.ReservedNanoUsd }
+            .Any(quantity => quantity.Value is not null);
+        bool liveShape = value.ProviderState == "live" && value.DispatchCount.Value == 1
+            && value.ReservedNanoUsd.Value is > 0 && value.ReplayState == "not-available" && !value.UnresolvedHold;
+        bool completedShape = value.ProviderState == "completed" && value.DispatchCount.Value == 1
+            && value.ReplayState is "retained-response" or "audit-only" && !value.UnresolvedHold;
+        bool failedShape = value.ProviderState == "failed" && value.DispatchCount.Value is 0 or 1
+            && value.ReplayState is "not-available" or "audit-only" or "retained-response" && !value.UnresolvedHold;
+        bool unresolvedShape = value.ProviderState == "unresolved" && value.DispatchCount.Value == 1
+            && value.UnresolvedHold && value.ReplayState is "not-available" or "audit-only";
+        if ((noProvider && (anyValue
             || value.OutputTokens.Value is not null || value.ReasoningTokens.Value is not null
-            || value.CalculatedNanoUsd.Value is not null || value.ReservedNanoUsd.Value is not null
             || value.UnresolvedHold || value.ReplayState != "not-available"))
+            || (value.ProviderState == "live" && !liveShape)
+            || (value.ProviderState == "completed" && !completedShape)
+            || (value.ProviderState == "failed" && !failedShape)
+            || (value.ProviderState == "unresolved" && !unresolvedShape))
         {
             throw new InvalidOperationException("Not-used and unavailable CLI projections cannot publish fabricated usage, hold, or replay values.");
         }
@@ -313,7 +423,7 @@ public static class ProviderOperationContractInvariants
         }
     }
 
-    private static void ValidateOperationStateShape(ProviderOperationDocument value)
+    public static void ValidateOperationStateShape(ProviderOperationDocument value)
     {
         int stage = value.State switch
         {
@@ -321,6 +431,7 @@ public static class ProviderOperationContractInvariants
             ProviderOperationState.Confirmed => 1,
             ProviderOperationState.Reserved => 2,
             ProviderOperationState.Assigned => 3,
+            ProviderOperationState.InputBoundBlocked => 3,
             ProviderOperationState.FinalGateAuthorized or ProviderOperationState.TransportNotStarted => 4,
             _ => 5,
         };
@@ -353,14 +464,19 @@ public static class ProviderOperationContractInvariants
             ProviderOperationState.Rejected => value.TransportState is "completed" or "failed-known"
                 && value.ReceiptState == "rejected" && value.SettlementState == "not-started"
                 && value.ReplayState is "retained-response" or "audit-only",
-            ProviderOperationState.Settled => value.TransportState == "completed"
-                && value.ReceiptState == "validated" && value.SettlementState == "settled"
+            ProviderOperationState.Settled => value.TransportState is "completed" or "failed-known"
+                && value.ReceiptState is "validated" or "rejected" && value.SettlementState == "settled"
                 && value.ReplayState is "retained-response" or "audit-only",
             ProviderOperationState.UnresolvedHold => value.TransportState is "may-have-started" or "ambiguous"
                 && value.ReceiptState == "unresolved" && value.SettlementState == "unresolved-hold"
                 && value.ReplayState is "not-available" or "audit-only",
             _ => true,
         };
+        if (value.State == ProviderOperationState.InputBoundBlocked)
+        {
+            terminalShape = value.TransportState == "not-started" && value.ReceiptState == "not-available"
+                && value.SettlementState == "not-started" && value.ReplayState == "not-available";
+        }
         if (!idsMatch || (early && (value.TransportState != "not-started" || value.ReceiptState != "not-available"
                 || value.SettlementState != "not-started" || value.ReplayState != "not-available"
                 || positiveEarlyUsage)) || !terminalShape)

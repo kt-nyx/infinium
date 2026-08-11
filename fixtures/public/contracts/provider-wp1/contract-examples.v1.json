@@ -22,7 +22,7 @@
       "capability_snapshot_id": "capability-1",
       "intent_id": "intent-1",
       "recovery_disposition": "not-required",
-      "cleanup_disposition": "confirmed",
+      "cleanup_disposition": "not-requested",
       "recorded_at": "2026-08-10T00:00:00.0000000+00:00"
     },
     "provider-operation.v1.schema.json": {
@@ -43,16 +43,16 @@
       "settings_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       "output_schema_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       "request_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "input_bound_proof": { "policy_id": "unresolved-openai-responses-framing", "policy_version": "authority-required", "status": "authority-required" },
       "limits": { "maximum_request_bytes": 65536, "maximum_input_tokens": 73728, "maximum_output_tokens": 4096, "maximum_raw_response_bytes": 1048576, "maximum_dispatch_count": 1, "maximum_calculated_nano_usd": 600000000, "deadline_milliseconds": 120000 },
       "authorization_id": "authorization-1",
       "reservation_id": "reservation-1",
-      "dispatch_fence_id": "fence-1",
-      "state": "settled",
-      "transport_state": "completed",
-      "receipt_state": "validated",
-      "usage": { "dispatch_count": {"availability":"available","value":1}, "input_tokens": {"availability":"available","value":32}, "output_tokens": {"availability":"available","value":16}, "reasoning_tokens": {"availability":"available","value":4}, "cache_read_tokens": {"availability":"available","value":0}, "cache_write_tokens": {"availability":"available","value":0}, "priced_tool_calls": {"availability":"available","value":0}, "calculated_nano_usd": {"availability":"available","value":42}, "billing_availability": "available", "rate_availability": "available", "credit_availability": "unavailable" },
-      "settlement_state": "settled",
-      "replay_state": "retained-response",
+      "state": "input-bound-blocked",
+      "transport_state": "not-started",
+      "receipt_state": "not-available",
+      "usage": { "dispatch_count": {"availability":"available","value":0}, "input_tokens": {"availability":"available","value":0}, "output_tokens": {"availability":"available","value":0}, "reasoning_tokens": {"availability":"available","value":0}, "cache_read_tokens": {"availability":"available","value":0}, "cache_write_tokens": {"availability":"available","value":0}, "priced_tool_calls": {"availability":"available","value":0}, "calculated_nano_usd": {"availability":"available","value":0}, "billing_availability": "unavailable", "rate_availability": "unavailable", "credit_availability": "unavailable" },
+      "settlement_state": "not-started",
+      "replay_state": "not-available",
       "recorded_at": "2026-08-10T00:00:00.0000000+00:00"
     },
     "provider-response.v1.schema.json": {
@@ -128,7 +128,9 @@
       "output_schema_id": "schema-1",
       "output_schema_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       "operation_kind": "source-claim-extraction",
-      "canonical_request_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      "canonical_request_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "input_bound_proof": { "policy_id": "unresolved-openai-responses-framing", "policy_version": "authority-required", "status": "authority-required" },
+      "dispatch_admission": "blocked-authority-required"
     },
     "effective-scan-configuration.v2.schema.json": {
       "schema_id": "infinium.scan.effective-configuration/v2",

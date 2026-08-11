@@ -581,6 +581,7 @@ public sealed partial class AuthoritativeStore
         "trigger:evidence_acquisition_parent_links_append_only_update",
         "trigger:evidence_acquisition_runs_append_only_delete",
         "trigger:evidence_acquisition_runs_append_only_update",
+        "trigger:authorization_owner_job_guard",
         "trigger:provider_access_profiles_append_only_delete",
         "trigger:provider_access_profiles_append_only_update",
         "trigger:provider_capability_snapshots_append_only_delete",
@@ -1702,8 +1703,8 @@ public sealed partial class AuthoritativeStore
             provider TEXT NOT NULL CHECK(provider = 'openai'),
             purpose TEXT NOT NULL CHECK(purpose = 'responses'),
             display_label TEXT NOT NULL,
-            account_identity_id TEXT NOT NULL,
-            billing_scope_identity_id TEXT NOT NULL,
+            account_identity_id TEXT,
+            billing_scope_identity_id TEXT,
             created_at TEXT NOT NULL
         ) STRICT;
         CREATE TABLE provider_generations(
@@ -1734,7 +1735,9 @@ public sealed partial class AuthoritativeStore
             cleanup_disposition TEXT NOT NULL,
             created_at TEXT NOT NULL,
             FOREIGN KEY(profile_id,generation_id)
-              REFERENCES provider_generations(profile_id,generation_id) ON DELETE RESTRICT
+              REFERENCES provider_generations(profile_id,generation_id) ON DELETE RESTRICT,
+            FOREIGN KEY(capability_snapshot_id)
+              REFERENCES provider_capability_snapshots(capability_snapshot_id) ON DELETE RESTRICT
         ) STRICT;
         CREATE TABLE provider_capability_snapshots(
             capability_snapshot_id TEXT PRIMARY KEY,
@@ -1810,6 +1813,9 @@ public sealed partial class AuthoritativeStore
             operation_id TEXT NOT NULL UNIQUE,
             owner_kind TEXT NOT NULL CHECK(owner_kind IN ('analysis-run','evidence-acquisition-run')),
             owner_id TEXT NOT NULL,
+            analysis_run_id TEXT REFERENCES runs(run_id) ON DELETE RESTRICT,
+            evidence_acquisition_run_id TEXT REFERENCES evidence_acquisition_runs(acquisition_run_id) ON DELETE RESTRICT,
+            job_node_id TEXT NOT NULL REFERENCES job_nodes(job_node_id) ON DELETE RESTRICT,
             profile_id TEXT NOT NULL REFERENCES provider_access_profiles(profile_id) ON DELETE RESTRICT,
             generation_id TEXT NOT NULL,
             revocation_epoch INTEGER NOT NULL CHECK(revocation_epoch >= 0),
@@ -1826,6 +1832,12 @@ public sealed partial class AuthoritativeStore
             capability_snapshot_id TEXT NOT NULL REFERENCES provider_capability_snapshots(capability_snapshot_id) ON DELETE RESTRICT,
             price_snapshot_id TEXT NOT NULL REFERENCES provider_price_snapshots(price_snapshot_id) ON DELETE RESTRICT,
             settings_fingerprint TEXT NOT NULL,
+            input_bound_policy_id TEXT NOT NULL CHECK(input_bound_policy_id = 'unresolved-openai-responses-framing'),
+            input_bound_policy_version TEXT NOT NULL CHECK(input_bound_policy_version = 'authority-required'),
+            input_bound_proof_status TEXT NOT NULL CHECK(input_bound_proof_status = 'authority-required'),
+            canonical_request_bytes INTEGER,
+            proved_input_token_bound INTEGER,
+            coordinator_fencing_epoch INTEGER NOT NULL CHECK(coordinator_fencing_epoch > 0),
             maximum_request_bytes INTEGER NOT NULL CHECK(maximum_request_bytes > 0),
             maximum_input_tokens INTEGER NOT NULL CHECK(maximum_input_tokens > 0),
             maximum_output_tokens INTEGER NOT NULL CHECK(maximum_output_tokens > 0),
@@ -1835,8 +1847,16 @@ public sealed partial class AuthoritativeStore
             deadline_milliseconds INTEGER NOT NULL CHECK(deadline_milliseconds > 0),
             confirmed_at TEXT NOT NULL,
             UNIQUE(operation_id,profile_id,generation_id),
+            UNIQUE(operation_id,request_fingerprint,settings_fingerprint,output_schema_fingerprint),
+            UNIQUE(operation_id,coordinator_fencing_epoch),
+            UNIQUE(authorization_id,operation_id,profile_id,generation_id,revocation_epoch),
             FOREIGN KEY(profile_id,generation_id)
               REFERENCES provider_generations(profile_id,generation_id) ON DELETE RESTRICT,
+            CHECK((owner_kind = 'analysis-run' AND owner_id = analysis_run_id
+                AND analysis_run_id IS NOT NULL AND evidence_acquisition_run_id IS NULL)
+              OR (owner_kind = 'evidence-acquisition-run' AND owner_id = evidence_acquisition_run_id
+                AND evidence_acquisition_run_id IS NOT NULL AND analysis_run_id IS NULL)),
+            CHECK(canonical_request_bytes IS NULL AND proved_input_token_bound IS NULL),
             CHECK((operation_kind = 'transport-qualification'
                 AND maximum_request_bytes <= 16384 AND maximum_input_tokens <= 20480
                 AND maximum_output_tokens <= 256 AND maximum_raw_response_bytes <= 262144
@@ -1846,6 +1866,20 @@ public sealed partial class AuthoritativeStore
                 AND maximum_output_tokens <= 4096 AND maximum_raw_response_bytes <= 1048576
                 AND maximum_calculated_nano_usd <= 600000000 AND deadline_milliseconds <= 120000))
         ) STRICT;
+        CREATE TRIGGER authorization_owner_job_guard
+        BEFORE INSERT ON provider_operation_authorizations
+        BEGIN
+          SELECT CASE
+            WHEN NEW.owner_kind = 'analysis-run' AND NOT EXISTS(
+              SELECT 1 FROM job_nodes WHERE job_node_id = NEW.job_node_id AND run_id = NEW.analysis_run_id)
+              THEN RAISE(ABORT, 'analysis-run authorization job node owner mismatch')
+            WHEN NEW.owner_kind = 'evidence-acquisition-run' AND NOT EXISTS(
+              SELECT 1 FROM evidence_acquisition_parent_links p
+              JOIN job_nodes j ON j.run_id = p.analysis_run_id
+              WHERE p.acquisition_run_id = NEW.evidence_acquisition_run_id AND j.job_node_id = NEW.job_node_id)
+              THEN RAISE(ABORT, 'evidence-acquisition authorization job node owner mismatch')
+          END;
+        END;
         CREATE TABLE provider_operation_attempts(
             provider_attempt_id TEXT PRIMARY KEY,
             operation_id TEXT NOT NULL REFERENCES provider_operation_authorizations(operation_id) ON DELETE RESTRICT,
@@ -1854,7 +1888,9 @@ public sealed partial class AuthoritativeStore
             coordinator_fencing_epoch INTEGER NOT NULL CHECK(coordinator_fencing_epoch > 0),
             created_at TEXT NOT NULL,
             UNIQUE(operation_id,attempt_ordinal),
-            UNIQUE(operation_id,provider_attempt_id)
+            UNIQUE(operation_id,provider_attempt_id),
+            FOREIGN KEY(operation_id,coordinator_fencing_epoch)
+              REFERENCES provider_operation_authorizations(operation_id,coordinator_fencing_epoch) ON DELETE RESTRICT
         ) STRICT;
         CREATE TABLE provider_requests(
             request_id TEXT PRIMARY KEY,
@@ -1864,12 +1900,20 @@ public sealed partial class AuthoritativeStore
             canonical_request_fingerprint TEXT NOT NULL,
             settings_fingerprint TEXT NOT NULL,
             output_schema_fingerprint TEXT NOT NULL,
+            input_bound_policy_id TEXT NOT NULL CHECK(input_bound_policy_id = 'unresolved-openai-responses-framing'),
+            input_bound_policy_version TEXT NOT NULL CHECK(input_bound_policy_version = 'authority-required'),
+            input_bound_proof_status TEXT NOT NULL CHECK(input_bound_proof_status = 'authority-required'),
+            canonical_request_bytes INTEGER,
+            proved_input_token_bound INTEGER,
             payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
             created_at TEXT NOT NULL,
             UNIQUE(operation_id,request_fingerprint),
             UNIQUE(operation_id,provider_attempt_id,request_id),
             FOREIGN KEY(operation_id,provider_attempt_id)
-              REFERENCES provider_operation_attempts(operation_id,provider_attempt_id) ON DELETE RESTRICT
+              REFERENCES provider_operation_attempts(operation_id,provider_attempt_id) ON DELETE RESTRICT,
+            FOREIGN KEY(operation_id,request_fingerprint,settings_fingerprint,output_schema_fingerprint)
+              REFERENCES provider_operation_authorizations(operation_id,request_fingerprint,settings_fingerprint,output_schema_fingerprint) ON DELETE RESTRICT,
+            CHECK(canonical_request_bytes IS NULL AND proved_input_token_bound IS NULL)
         ) STRICT;
         CREATE UNIQUE INDEX idx_provider_request_fingerprint ON provider_requests(request_fingerprint);
         CREATE TABLE provider_reservations(
@@ -1898,6 +1942,7 @@ public sealed partial class AuthoritativeStore
         CREATE INDEX idx_provider_reservation_scope ON provider_reservation_scope_items(scope_kind,scope_id);
         CREATE TABLE provider_dispatch_fences(
             dispatch_fence_id TEXT PRIMARY KEY,
+            authorization_id TEXT NOT NULL,
             operation_id TEXT NOT NULL,
             reservation_id TEXT NOT NULL,
             request_id TEXT NOT NULL,
@@ -1906,14 +1951,18 @@ public sealed partial class AuthoritativeStore
             profile_id TEXT NOT NULL,
             generation_id TEXT NOT NULL,
             revocation_epoch INTEGER NOT NULL CHECK(revocation_epoch >= 0),
-            authorized INTEGER NOT NULL CHECK(authorized IN (0,1)),
+            authorized INTEGER NOT NULL CHECK(authorized = 0),
             decision_reason TEXT NOT NULL,
             evaluated_at TEXT NOT NULL,
             UNIQUE(operation_id,provider_attempt_id,request_id,dispatch_fence_id),
             FOREIGN KEY(operation_id,provider_attempt_id,request_id,reservation_id)
               REFERENCES provider_reservations(operation_id,provider_attempt_id,request_id,reservation_id) ON DELETE RESTRICT,
             FOREIGN KEY(operation_id,profile_id,generation_id)
-              REFERENCES provider_operation_authorizations(operation_id,profile_id,generation_id) ON DELETE RESTRICT
+              REFERENCES provider_operation_authorizations(operation_id,profile_id,generation_id) ON DELETE RESTRICT,
+            FOREIGN KEY(authorization_id,operation_id,profile_id,generation_id,revocation_epoch)
+              REFERENCES provider_operation_authorizations(authorization_id,operation_id,profile_id,generation_id,revocation_epoch) ON DELETE RESTRICT,
+            FOREIGN KEY(operation_id,coordinator_fencing_epoch)
+              REFERENCES provider_operation_authorizations(operation_id,coordinator_fencing_epoch) ON DELETE RESTRICT
         ) STRICT;
         CREATE TABLE provider_transport_events(
             transport_event_id TEXT PRIMARY KEY,
@@ -1928,15 +1977,17 @@ public sealed partial class AuthoritativeStore
             operation_id TEXT NOT NULL,
             request_id TEXT NOT NULL,
             provider_attempt_id TEXT NOT NULL,
-            raw_response_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+            raw_response_payload_id TEXT REFERENCES payloads(payload_id) ON DELETE RESTRICT,
             response_fingerprint TEXT NOT NULL,
-            response_state TEXT NOT NULL,
+            response_state TEXT NOT NULL CHECK(response_state IN ('completed','refusal','incomplete','failed','queued','in-progress','cancelled','malformed','oversized','mismatched','unknown')),
             response_metadata_json TEXT NOT NULL CHECK(json_valid(response_metadata_json)),
             created_at TEXT NOT NULL,
             UNIQUE(request_id),
             UNIQUE(operation_id,provider_attempt_id,request_id,response_record_id),
             FOREIGN KEY(operation_id,provider_attempt_id,request_id)
-              REFERENCES provider_requests(operation_id,provider_attempt_id,request_id) ON DELETE RESTRICT
+              REFERENCES provider_requests(operation_id,provider_attempt_id,request_id) ON DELETE RESTRICT,
+            CHECK((response_state = 'cancelled' AND raw_response_payload_id IS NULL)
+              OR (response_state <> 'cancelled' AND raw_response_payload_id IS NOT NULL))
         ) STRICT;
         CREATE TABLE provider_usage_entries(
             usage_entry_id TEXT PRIMARY KEY,
@@ -1979,10 +2030,15 @@ public sealed partial class AuthoritativeStore
         ) STRICT;
         CREATE TABLE provider_semantic_proposals(
             proposal_id TEXT PRIMARY KEY,
-            operation_id TEXT NOT NULL REFERENCES provider_operation_authorizations(operation_id) ON DELETE RESTRICT,
+            operation_id TEXT NOT NULL,
+            provider_attempt_id TEXT NOT NULL,
+            request_id TEXT NOT NULL,
+            response_record_id TEXT NOT NULL,
             proposal_kind TEXT NOT NULL CHECK(proposal_kind IN ('source-claim','candidate-hypothesis','abstention','gap')),
             payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
-            created_at TEXT NOT NULL
+            created_at TEXT NOT NULL,
+            FOREIGN KEY(operation_id,provider_attempt_id,request_id,response_record_id)
+              REFERENCES provider_responses(operation_id,provider_attempt_id,request_id,response_record_id) ON DELETE RESTRICT
         ) STRICT;
         CREATE TABLE provider_semantic_admissions(
             admission_id TEXT PRIMARY KEY,
@@ -2035,7 +2091,9 @@ public sealed partial class AuthoritativeStore
             projection_version INTEGER NOT NULL CHECK(projection_version > 0),
             updated_at TEXT NOT NULL,
             FOREIGN KEY(profile_id,generation_id)
-              REFERENCES provider_generations(profile_id,generation_id) ON DELETE RESTRICT
+              REFERENCES provider_generations(profile_id,generation_id) ON DELETE RESTRICT,
+            FOREIGN KEY(capability_snapshot_id)
+              REFERENCES provider_capability_snapshots(capability_snapshot_id) ON DELETE RESTRICT
         ) STRICT;
         CREATE UNIQUE INDEX idx_provider_active_generation ON provider_profile_projection(generation_id)
           WHERE lifecycle_state IN ('active-unverified','active-verified','replacing');
