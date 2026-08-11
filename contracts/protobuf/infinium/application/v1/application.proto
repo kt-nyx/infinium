@@ -141,6 +141,8 @@ message ProviderOperationPayload {
   ProviderAccountingVector released = 47;
   ProviderAccountingVector retained = 48;
   UsageReceiptState usage_receipt_state = 49;
+  string transport_state = 50;
+  string receipt_state = 51;
 }
 
 message ProviderAccountingVector {
@@ -218,6 +220,8 @@ message ProviderResponsePayload {
   string owner_kind = 60;
   string owner_id = 61;
   UsageReceiptState usage_receipt_state = 62;
+  infinium.domain.v1.AttemptId attempt_id = 63;
+  infinium.domain.v1.ReservationGroupId reservation_id = 64;
 }
 
 message ProviderRateLimitFact {

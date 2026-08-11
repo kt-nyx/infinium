@@ -164,12 +164,7 @@ public static class ProviderOperationContractInvariants
         Validate(value.Usage);
         Validate(value.CapabilitySnapshot);
         Validate(value.PriceSnapshot);
-        ValidateBlockedInputBoundProof(value.InputBoundProof);
         RequireExplicit(value.State, nameof(value.State));
-        if (value.State != ProviderOperationState.InputBoundBlocked)
-        {
-            throw new InvalidOperationException("An authority-required input-bound proof may retain only the truthful pre-proof blocked operation state.");
-        }
         if (string.IsNullOrWhiteSpace(value.OperationId.Value)
             || string.IsNullOrWhiteSpace(value.OwnerId.Value)
             || string.IsNullOrWhiteSpace(value.JobNodeId.Value)
@@ -197,10 +192,10 @@ public static class ProviderOperationContractInvariants
             || value.CanonicalRequestPayload.Fingerprint != value.RequestFingerprint
             || value.RequestedAt.Value > value.ConfirmedAt.Value
             || value.ConfirmedAt.Value >= value.DispatchDeadline.Value
-            || value.DispatchDeadline.Value - value.ConfirmedAt.Value
-                > TimeSpan.FromMilliseconds(value.Limits.DeadlineMilliseconds)
-            || value.DispatchDeadline.Value - value.RequestedAt.Value
-                > TimeSpan.FromMilliseconds(value.Limits.DeadlineMilliseconds)
+            || checked(value.DispatchDeadline.Value.Ticks - value.ConfirmedAt.Value.Ticks)
+                > checked(value.Limits.DeadlineMilliseconds * TimeSpan.TicksPerMillisecond)
+            || checked(value.DispatchDeadline.Value.Ticks - value.RequestedAt.Value.Ticks)
+                > checked(value.Limits.DeadlineMilliseconds * TimeSpan.TicksPerMillisecond)
             || value.RecordedAt.Value == default
             || value.CoordinatorFencingEpoch <= 0
             || value.TransportState is not ("not-started" or "may-have-started" or "started" or "completed" or "failed-known" or "ambiguous")
@@ -210,7 +205,21 @@ public static class ProviderOperationContractInvariants
         {
             throw new InvalidOperationException("Provider operation contains an unsupported owner or terminal projection state.");
         }
+        if (value.InputBoundProof.Status == ProviderInputBoundProofState.AuthorityRequired)
+        {
+            ValidateBlockedInputBoundProof(value.InputBoundProof);
+            ValidateOperationStateShape(value);
+            return;
+        }
+        if (value.InputBoundProof.Status != ProviderInputBoundProofState.Proved
+            || string.IsNullOrWhiteSpace(value.InputBoundProof.PolicyId)
+            || string.IsNullOrWhiteSpace(value.InputBoundProof.PolicyVersion))
+        {
+            throw new InvalidOperationException("A future provider operation requires one explicit proved input-bound policy identity.");
+        }
         ValidateOperationStateShape(value);
+        throw new NotSupportedException(
+            "Proof-qualified provider operations are structurally modeled but unreachable until accepted input-bound authority changes the current runtime maturity gate.");
     }
 
     public static void ValidateTransition(ProviderOperationState from, ProviderOperationState to)
@@ -308,7 +317,8 @@ public static class ProviderOperationContractInvariants
             ValidateBlockedInputBoundProof(value.InputBoundProof);
             if (value.Availability != ProviderAvailabilityState.Unavailable
             || value.State != ProviderResponseState.Unknown
-            || value.AuthorizationId is not null || value.RequestId is not null || value.DispatchFenceId is not null
+            || value.AuthorizationId is not null || value.AttemptId is not null || value.RequestId is not null
+            || value.ReservationId is not null || value.DispatchFenceId is not null
             || value.RawResponsePayload is not null || value.RawResponseBytes is not null
             || value.ResponseHeadersPayload is not null || value.ResponseHeadersBytes is not null
             || factAvailabilities.Any(x => x != ProviderAvailabilityState.Unavailable)
@@ -328,9 +338,11 @@ public static class ProviderOperationContractInvariants
         if (value.InputBoundProof.Status != ProviderInputBoundProofState.Proved
             || string.IsNullOrWhiteSpace(value.InputBoundProof.PolicyId)
             || string.IsNullOrWhiteSpace(value.InputBoundProof.PolicyVersion)
-            || (!cancelled && (value.AuthorizationId is null || value.RequestId is null || value.DispatchFenceId is null
+            || (!cancelled && (value.AuthorizationId is null || value.AttemptId is null || value.RequestId is null
+                || value.ReservationId is null || value.DispatchFenceId is null
                 || value.Availability != ProviderAvailabilityState.Available))
-            || (cancelled && (value.AuthorizationId is not null || value.RequestId is not null || value.DispatchFenceId is not null
+            || (cancelled && (value.AuthorizationId is null || value.AttemptId is null || value.RequestId is null
+                || value.ReservationId is null || value.DispatchFenceId is not null
                 || value.Availability != ProviderAvailabilityState.Unavailable)))
         {
             throw new InvalidOperationException("A future provider response requires a proved policy and exact authorization/request/fence binding.");
@@ -643,16 +655,110 @@ public static class ProviderOperationContractInvariants
             && value.Usage.BillingAvailability == ProviderAvailabilityState.Unavailable
             && value.Usage.RateAvailability == ProviderAvailabilityState.Unavailable
             && value.Usage.CreditAvailability == ProviderAvailabilityState.Unavailable;
-        if (value.State != ProviderOperationState.InputBoundBlocked || !blockedUsage
-            || value.TransportState != "not-started" || value.ReceiptState != "not-available"
-            || value.SettlementState != "not-started" || value.ReplayState != "not-available"
-            || value.AuthorizationId is not null || value.AttemptId is not null || value.RequestId is not null
-            || value.ReservationId is not null || value.DispatchFenceId is not null
-            || value.TransportEventId is not null || value.ReceiptId is not null || value.ResponseId is not null
-            || value.UsageEntryId is not null || value.SettlementId is not null || value.ReplayEdgeId is not null)
+        if (value.InputBoundProof.Status == ProviderInputBoundProofState.AuthorityRequired)
+        {
+            if (value.State != ProviderOperationState.InputBoundBlocked || !blockedUsage
+                || value.TransportState != "not-started" || value.ReceiptState != "not-available"
+                || value.SettlementState != "not-started" || value.ReplayState != "not-available"
+                || !ExactOperationIdentityStage(value, 0) || value.ReplayEdgeId is not null)
+            {
+                throw new InvalidOperationException("Provider operation state contradicts its reachable identities or terminal projections.");
+            }
+            return;
+        }
+
+        int identityStage;
+        bool validProjection;
+        switch (value.State)
+        {
+            case ProviderOperationState.Proposed:
+                identityStage = 0;
+                validProjection = value.TransportState == "not-started" && value.ReceiptState == "not-available"
+                    && blockedUsage && value.SettlementState == "not-started";
+                break;
+            case ProviderOperationState.Confirmed:
+                identityStage = 1;
+                validProjection = value.TransportState == "not-started" && value.ReceiptState == "not-available"
+                    && blockedUsage && value.SettlementState == "not-started";
+                break;
+            case ProviderOperationState.Reserved:
+            case ProviderOperationState.Assigned:
+                identityStage = 4;
+                validProjection = value.TransportState == "not-started" && value.ReceiptState == "not-available"
+                    && blockedUsage && value.SettlementState == "not-started";
+                break;
+            case ProviderOperationState.FinalGateAuthorized:
+                identityStage = 5;
+                validProjection = value.TransportState == "not-started" && value.ReceiptState == "not-available"
+                    && blockedUsage && value.SettlementState == "not-started";
+                break;
+            case ProviderOperationState.TransportNotStarted:
+                identityStage = 6;
+                validProjection = value.TransportState == "not-started" && value.ReceiptState == "not-available"
+                    && blockedUsage && value.SettlementState == "not-started";
+                break;
+            case ProviderOperationState.TransportMayHaveStarted:
+                identityStage = 6;
+                validProjection = value.TransportState == "may-have-started" && value.ReceiptState == "not-available"
+                    && blockedUsage && value.SettlementState == "not-started";
+                break;
+            case ProviderOperationState.ResponseStaged:
+                identityStage = 9;
+                validProjection = value.TransportState == "completed" && value.ReceiptState == "staged"
+                    && !blockedUsage && value.SettlementState == "not-started";
+                break;
+            case ProviderOperationState.Admitted:
+                identityStage = 9;
+                validProjection = value.TransportState == "completed" && value.ReceiptState == "validated"
+                    && !blockedUsage && value.SettlementState == "not-started";
+                break;
+            case ProviderOperationState.Rejected:
+                identityStage = 9;
+                validProjection = value.TransportState is "completed" or "failed-known" or "ambiguous"
+                    && value.ReceiptState == "rejected" && !blockedUsage && value.SettlementState == "not-started";
+                break;
+            case ProviderOperationState.Settled:
+                identityStage = 10;
+                validProjection = value.TransportState is "completed" or "failed-known"
+                    && value.ReceiptState is "validated" or "rejected" && !blockedUsage
+                    && value.SettlementState is "settled" or "failed-known" or "overrun";
+                break;
+            case ProviderOperationState.UnresolvedHold:
+                identityStage = 10;
+                validProjection = value.TransportState is "may-have-started" or "started" or "ambiguous"
+                    && value.ReceiptState == "unresolved" && !blockedUsage
+                    && value.SettlementState == "unresolved-hold";
+                break;
+            default:
+                throw new InvalidOperationException("Provider operation state is not part of the closed lifecycle matrix.");
+        }
+        bool replayProjection = identityStage < 9
+            ? value.ReplayState == "not-available" && value.ReplayEdgeId is null
+            : value.ReplayState == "not-available"
+                ? value.ReplayEdgeId is null
+                : value.ReplayState is "retained-response" or "audit-only" && value.ReplayEdgeId is not null;
+        if (!validProjection || !ExactOperationIdentityStage(value, identityStage) || !replayProjection)
         {
             throw new InvalidOperationException("Provider operation state contradicts its reachable identities or terminal projections.");
         }
+    }
+
+    private static bool ExactOperationIdentityStage(ProviderOperationDocument value, int stage)
+    {
+        bool[] present =
+        [
+            value.AuthorizationId is not null,
+            value.AttemptId is not null,
+            value.RequestId is not null,
+            value.ReservationId is not null,
+            value.DispatchFenceId is not null,
+            value.TransportEventId is not null,
+            value.ReceiptId is not null,
+            value.ResponseId is not null,
+            value.UsageEntryId is not null,
+            value.SettlementId is not null,
+        ];
+        return present.Take(stage).All(x => x) && present.Skip(stage).All(x => !x);
     }
 
     private static bool ValidRateLimitFact(ProviderRateLimitFactContract value) =>
@@ -720,8 +826,10 @@ public static class ProviderOperationContractInvariants
             && value.AdmissionState is ProposalAdmissionState.Rejected
                 or ProposalAdmissionState.Abstained or ProposalAdmissionState.Unavailable
                 or ProposalAdmissionState.Unsupported;
-        bool transport = value.AuthorizationId is not null && value.RequestId is not null && value.DispatchFenceId is not null;
-        bool noTransport = value.AuthorizationId is null && value.RequestId is null && value.DispatchFenceId is null;
+        bool transport = value.AuthorizationId is not null && value.AttemptId is not null
+            && value.RequestId is not null && value.ReservationId is not null && value.DispatchFenceId is not null;
+        bool reservedUndispatched = value.AuthorizationId is not null && value.AttemptId is not null
+            && value.RequestId is not null && value.ReservationId is not null && value.DispatchFenceId is null;
         bool semanticFactsAbsent = !refusal && !incomplete && !error;
         bool completeUsage = value.Usage.Availability == ProviderAvailabilityState.Available
             && new[] { value.Usage.DispatchCount, value.Usage.InputTokens, value.Usage.OutputTokens,
@@ -787,7 +895,7 @@ public static class ProviderOperationContractInvariants
                 && value.Usage.ReceiptState == UsageReceiptState.Complete && nonSuccessAdmission,
             ProviderResponseState.Unknown => transport && raw && http && semanticFactsAbsent
                 && noOverflow && dispatchedUsage && value.Usage.ReceiptState == UsageReceiptState.Ambiguous && nonSuccessAdmission,
-            ProviderResponseState.Cancelled => noTransport && !raw && !http && semanticFactsAbsent
+            ProviderResponseState.Cancelled => reservedUndispatched && !raw && !http && semanticFactsAbsent
                 && allProviderFactsUnavailable && noOverflow && cancelledUsage
                 && value.Usage.ReceiptState == UsageReceiptState.NotDispatched && nonSuccessAdmission,
             _ => false,

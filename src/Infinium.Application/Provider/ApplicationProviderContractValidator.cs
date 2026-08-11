@@ -163,6 +163,11 @@ public static class ApplicationProviderContractValidator
         Validate(value.CacheReadTokens);
         Validate(value.CacheWriteTokens);
         Validate(value.ReservedNanoUsd);
+        ValidateOperationQuantities(value);
+        if (value.Reserved is not null) { Validate(value.Reserved); }
+        if (value.Observed is not null) { Validate(value.Observed); }
+        if (value.Released is not null) { Validate(value.Released); }
+        if (value.Retained is not null) { Validate(value.Retained); }
 
         if (!Enum.IsDefined(value.InputBoundProofStatus)
             || value.InputBoundProofStatus == InputBoundProofStatus.Unspecified)
@@ -175,17 +180,21 @@ public static class ApplicationProviderContractValidator
             || value.Response is not null || Has(value.UsageEntryId) || Has(value.SettlementId) || Has(value.ReplayEdgeId)
             || Has(value.TransportEventId) || Has(value.ReceiptId) || value.Reserved is not null
             || value.Observed is not null || value.Released is not null || value.Retained is not null;
+        if (value.OwnerKind is not ("analysis-run" or "evidence-acquisition-run")
+            || value.OperationKind == ProviderOperationKind.SourceClaimExtraction && value.OwnerKind != "evidence-acquisition-run"
+            || value.OperationKind is ProviderOperationKind.TransportQualification or ProviderOperationKind.CandidateInvestigation
+                && value.OwnerKind != "analysis-run"
+            || string.IsNullOrWhiteSpace(value.OwnerId) || string.IsNullOrWhiteSpace(value.JobNodeId)
+            || !ValidInstant(value.RequestedAt))
+        {
+            throw new InvalidDataException("Provider operation requires an exact durable owner and requested time.");
+        }
         if (blocked)
         {
             if (value.InputBoundPolicyId != "unresolved-openai-responses-framing"
                 || value.InputBoundPolicyVersion != "authority-required"
                 || value.State != ProviderOperationLifecycleState.InputBoundBlocked || anyDownstream
-                || value.OwnerKind is not ("analysis-run" or "evidence-acquisition-run")
-                || value.OperationKind == ProviderOperationKind.SourceClaimExtraction && value.OwnerKind != "evidence-acquisition-run"
-                || value.OperationKind is ProviderOperationKind.TransportQualification or ProviderOperationKind.CandidateInvestigation
-                    && value.OwnerKind != "analysis-run"
-                || string.IsNullOrWhiteSpace(value.OwnerId) || string.IsNullOrWhiteSpace(value.JobNodeId)
-                || !ValidInstant(value.RequestedAt)
+                || value.TransportState != "not-started" || value.ReceiptState != "not-available"
                 || AnyValue(value.InputTokens, value.OutputTokens, value.TotalTokens, value.ReasoningTokens,
                     value.CacheReadTokens, value.CacheWriteTokens, value.CalculatedNanoUsd, value.ReservedNanoUsd)
                 || value.DispatchCount.Availability != ProviderAvailabilityState.Available
@@ -201,7 +210,14 @@ public static class ApplicationProviderContractValidator
             }
             return;
         }
-        throw new InvalidDataException("No non-blocked provider operation state exists before an accepted local input-bound policy changes this contract.");
+        if (value.InputBoundProofStatus != InputBoundProofStatus.Proved
+            || !Has(value.InputBoundPolicyId) || !Has(value.InputBoundPolicyVersion))
+        {
+            throw new InvalidDataException("A future provider operation requires one explicit proved input-bound policy identity.");
+        }
+        ValidateFutureOperationShape(value);
+        throw new NotSupportedException(
+            "Proof-qualified provider operations are structurally modeled but unreachable until accepted input-bound authority changes the current runtime maturity gate.");
     }
 
     public static void Validate(ProviderResponsePayload value)
@@ -273,18 +289,18 @@ public static class ApplicationProviderContractValidator
                 || value.TotalTokens.Value != checked(value.InputTokens.Value + value.OutputTokens.Value))
             || value.ReasoningTokens.HasValue && (!value.OutputTokens.HasValue
                 || value.ReasoningTokens.Value > value.OutputTokens.Value)
-            || value.DispatchCount.HasValue && value.DispatchCount.Value > value.Limits.MaximumDispatchCount
-            || value.InputTokens.HasValue && value.InputTokens.Value > 73_728
-            || value.OutputTokens.HasValue && value.OutputTokens.Value > 4_096
-            || value.TotalTokens.HasValue && value.TotalTokens.Value > 77_824
-            || value.ReasoningTokens.HasValue && value.ReasoningTokens.Value > 4_096
-            || value.CalculatedNanoUsd.HasValue && value.CalculatedNanoUsd.Value > 600_000_000
-            || value.CacheReadTokens.HasValue && value.CacheReadTokens.Value != 0
-            || value.CacheWriteTokens.HasValue && value.CacheWriteTokens.Value != 0
-            || value.PricedToolCalls.HasValue && value.PricedToolCalls.Value != 0
+            || value.DispatchCount.HasValue && value.DispatchCount.Value > 2
+            || value.InputTokens.HasValue && value.InputTokens.Value > 147_456
+            || value.OutputTokens.HasValue && value.OutputTokens.Value > 8_192
+            || value.TotalTokens.HasValue && value.TotalTokens.Value > 155_648
+            || value.ReasoningTokens.HasValue && value.ReasoningTokens.Value > 8_192
+            || value.CalculatedNanoUsd.HasValue && value.CalculatedNanoUsd.Value > 1_200_000_000
+            || value.CacheReadTokens.HasValue && value.CacheReadTokens.Value > 147_456
+            || value.CacheWriteTokens.HasValue && value.CacheWriteTokens.Value > 147_456
+            || value.PricedToolCalls.HasValue && value.PricedToolCalls.Value > 64
             || value.CreditAvailability == ProviderAvailabilityState.Available)
         {
-            throw new InvalidDataException("Provider usage must match response availability, exact totals, the authorized dispatch count, and absolute retained bounds.");
+            throw new InvalidDataException("Provider usage must match response availability, exact totals, and absolute retained-evidence bounds.");
         }
         if (value.RateLimitFacts.Count > 64
             || value.RateLimitFacts.GroupBy(x => (x.Scope, x.Dimension)).Any(x => x.Count() != 1)
@@ -300,7 +316,8 @@ public static class ApplicationProviderContractValidator
         if (blocked && (value.InputBoundPolicyId != "unresolved-openai-responses-framing"
             || value.InputBoundPolicyVersion != "authority-required"
             || value.Availability != ProviderAvailabilityState.Unavailable
-            || Has(value.AuthorizationId) || Has(value.RequestId) || value.DispatchFenceId is not null
+            || Has(value.AuthorizationId) || value.AttemptId is not null || Has(value.RequestId)
+            || value.ReservationId is not null || value.DispatchFenceId is not null
             || factAvailabilities.Any(x => x != ProviderAvailabilityState.Unavailable)
             || value.BillingAvailability != ProviderAvailabilityState.Unavailable
             || value.RateAvailability != ProviderAvailabilityState.Unavailable
@@ -327,9 +344,11 @@ public static class ApplicationProviderContractValidator
             || !Has(value.InputBoundPolicyId) || !Has(value.InputBoundPolicyVersion)
             || (value.ResponseState == "cancelled"
                 ? value.Availability != ProviderAvailabilityState.Unavailable
-                    || Has(value.AuthorizationId) || Has(value.RequestId) || value.DispatchFenceId is not null
+                    || !Has(value.AuthorizationId) || !Has(value.AttemptId?.Value) || !Has(value.RequestId)
+                    || !Has(value.ReservationId?.Value) || value.DispatchFenceId is not null
                 : value.Availability != ProviderAvailabilityState.Available
-                    || !Has(value.AuthorizationId) || !Has(value.RequestId) || value.DispatchFenceId is null))
+                    || !Has(value.AuthorizationId) || !Has(value.AttemptId?.Value) || !Has(value.RequestId)
+                    || !Has(value.ReservationId?.Value) || value.DispatchFenceId is null))
         {
             throw new InvalidDataException("Future provider response requires exact proof and transport identities.");
         }
@@ -401,8 +420,10 @@ public static class ApplicationProviderContractValidator
             || !ValidInstant(value.RequestedAt) || !ValidInstant(value.ConfirmedAt)
             || Compare(value.RequestedAt, value.ConfirmedAt) > 0
             || Compare(value.ConfirmedAt, value.DispatchDeadline) >= 0
-            || ElapsedMilliseconds(value.ConfirmedAt, value.DispatchDeadline) > value.Limits.DeadlineMilliseconds
-            || ElapsedMilliseconds(value.RequestedAt, value.DispatchDeadline) > value.Limits.DeadlineMilliseconds
+            || ElapsedHundredNanoseconds(value.ConfirmedAt, value.DispatchDeadline)
+                > checked(value.Limits.DeadlineMilliseconds * 10_000UL)
+            || ElapsedHundredNanoseconds(value.RequestedAt, value.DispatchDeadline)
+                > checked(value.Limits.DeadlineMilliseconds * 10_000UL)
             || value.CoordinatorFencingEpoch == 0
             || !value.RequestFingerprintSha256.Span.SequenceEqual(value.CanonicalRequestFingerprintSha256.Span)
             || !System.Security.Cryptography.SHA256.HashData(value.CanonicalRequestBody.Span)
@@ -523,6 +544,161 @@ public static class ApplicationProviderContractValidator
         }
     }
 
+    private static void Validate(ProviderAccountingVector value)
+    {
+        OptionalProviderQuantity[] quantities =
+        [
+            value.DispatchCount, value.InputTokens, value.OutputTokens, value.TotalTokens, value.ReasoningTokens,
+            value.CacheReadTokens, value.CacheWriteTokens, value.PricedToolCalls, value.CalculatedNanoUsd,
+        ];
+        foreach (OptionalProviderQuantity quantity in quantities)
+        {
+            Validate(quantity);
+        }
+        if (value.DispatchCount.Value > 2 || value.InputTokens.Value > 147_456 || value.OutputTokens.Value > 8_192
+            || value.TotalTokens.Value > 155_648 || value.ReasoningTokens.Value > 8_192
+            || value.CacheReadTokens.Value > 147_456 || value.CacheWriteTokens.Value > 147_456
+            || value.PricedToolCalls.Value > 64 || value.CalculatedNanoUsd.Value > 1_200_000_000
+            || value.TotalTokens.Availability == ProviderAvailabilityState.Available
+                && (value.InputTokens.Availability != ProviderAvailabilityState.Available
+                    || value.OutputTokens.Availability != ProviderAvailabilityState.Available
+                    || value.TotalTokens.Value != checked(value.InputTokens.Value + value.OutputTokens.Value))
+            || value.ReasoningTokens.Availability == ProviderAvailabilityState.Available
+                && (value.OutputTokens.Availability != ProviderAvailabilityState.Available
+                    || value.ReasoningTokens.Value > value.OutputTokens.Value))
+        {
+            throw new InvalidDataException("Provider accounting vector exceeds its closed post-fact bounds or is internally inconsistent.");
+        }
+    }
+
+    private static void ValidateOperationQuantities(ProviderOperationPayload value)
+    {
+        if (value.DispatchCount.Value > 2 || value.InputTokens.Value > 147_456 || value.OutputTokens.Value > 8_192
+            || value.TotalTokens.Value > 155_648 || value.ReasoningTokens.Value > 8_192
+            || value.CacheReadTokens.Value > 147_456 || value.CacheWriteTokens.Value > 147_456
+            || value.CalculatedNanoUsd.Value > 1_200_000_000 || value.ReservedNanoUsd.Value > 600_000_000
+            || value.TotalTokens.Availability == ProviderAvailabilityState.Available
+                && (value.InputTokens.Availability != ProviderAvailabilityState.Available
+                    || value.OutputTokens.Availability != ProviderAvailabilityState.Available
+                    || value.TotalTokens.Value != checked(value.InputTokens.Value + value.OutputTokens.Value))
+            || value.ReasoningTokens.Availability == ProviderAvailabilityState.Available
+                && (value.OutputTokens.Availability != ProviderAvailabilityState.Available
+                    || value.ReasoningTokens.Value > value.OutputTokens.Value))
+        {
+            throw new InvalidDataException("Provider operation quantities exceed their closed assignment or post-fact bounds.");
+        }
+    }
+
+    private static void ValidateFutureOperationShape(ProviderOperationPayload value)
+    {
+        bool blockedUsage = value.DispatchCount is
+        { Availability: ProviderAvailabilityState.Available, HasValue: true, Value: 0 }
+            && new[] { value.InputTokens, value.OutputTokens, value.TotalTokens, value.ReasoningTokens,
+                value.CacheReadTokens, value.CacheWriteTokens, value.CalculatedNanoUsd }
+                .All(quantity => quantity.Availability == ProviderAvailabilityState.Unavailable && !quantity.HasValue)
+            && value.UsageReceiptState == UsageReceiptState.NotDispatched;
+        int identityStage;
+        bool validProjection;
+        switch (value.State)
+        {
+            case ProviderOperationLifecycleState.Proposed:
+                identityStage = 0;
+                validProjection = value.TransportState == "not-started" && value.ReceiptState == "not-available"
+                    && blockedUsage && value.SettlementState == ProviderSettlementState.NotStarted;
+                break;
+            case ProviderOperationLifecycleState.Confirmed:
+                identityStage = 1;
+                validProjection = value.TransportState == "not-started" && value.ReceiptState == "not-available"
+                    && blockedUsage && value.SettlementState == ProviderSettlementState.NotStarted;
+                break;
+            case ProviderOperationLifecycleState.Reserved:
+            case ProviderOperationLifecycleState.Assigned:
+                identityStage = 4;
+                validProjection = value.TransportState == "not-started" && value.ReceiptState == "not-available"
+                    && blockedUsage && value.SettlementState == ProviderSettlementState.NotStarted;
+                break;
+            case ProviderOperationLifecycleState.FinalGateAuthorized:
+                identityStage = 5;
+                validProjection = value.TransportState == "not-started" && value.ReceiptState == "not-available"
+                    && blockedUsage && value.SettlementState == ProviderSettlementState.NotStarted;
+                break;
+            case ProviderOperationLifecycleState.TransportNotStarted:
+                identityStage = 6;
+                validProjection = value.TransportState == "not-started" && value.ReceiptState == "not-available"
+                    && blockedUsage && value.SettlementState == ProviderSettlementState.NotStarted;
+                break;
+            case ProviderOperationLifecycleState.TransportMayHaveStarted:
+                identityStage = 6;
+                validProjection = value.TransportState == "may-have-started" && value.ReceiptState == "not-available"
+                    && blockedUsage && value.SettlementState == ProviderSettlementState.NotStarted;
+                break;
+            case ProviderOperationLifecycleState.ResponseStaged:
+                identityStage = 9;
+                validProjection = value.TransportState == "completed" && value.ReceiptState == "staged"
+                    && !blockedUsage && value.SettlementState == ProviderSettlementState.NotStarted;
+                break;
+            case ProviderOperationLifecycleState.Admitted:
+                identityStage = 9;
+                validProjection = value.TransportState == "completed" && value.ReceiptState == "validated"
+                    && !blockedUsage && value.SettlementState == ProviderSettlementState.NotStarted;
+                break;
+            case ProviderOperationLifecycleState.Rejected:
+                identityStage = 9;
+                validProjection = value.TransportState is "completed" or "failed-known" or "ambiguous"
+                    && value.ReceiptState == "rejected" && !blockedUsage
+                    && value.SettlementState == ProviderSettlementState.NotStarted;
+                break;
+            case ProviderOperationLifecycleState.Settled:
+                identityStage = 10;
+                validProjection = value.TransportState is "completed" or "failed-known"
+                    && value.ReceiptState is "validated" or "rejected" && !blockedUsage
+                    && value.SettlementState is ProviderSettlementState.Settled
+                        or ProviderSettlementState.FailedKnown or ProviderSettlementState.Overrun;
+                break;
+            case ProviderOperationLifecycleState.UnresolvedHold:
+                identityStage = 10;
+                validProjection = value.TransportState is "may-have-started" or "started" or "ambiguous"
+                    && value.ReceiptState == "unresolved" && !blockedUsage
+                    && value.SettlementState == ProviderSettlementState.UnresolvedHold;
+                break;
+            default:
+                throw new InvalidDataException("Provider operation state is not part of the closed lifecycle matrix.");
+        }
+
+        bool replayProjection = identityStage < 9
+            ? value.ReplayState == ProviderReplayState.NotAvailable && !Has(value.ReplayEdgeId)
+            : value.ReplayState == ProviderReplayState.NotAvailable
+                ? !Has(value.ReplayEdgeId)
+                : value.ReplayState is ProviderReplayState.RetainedResponse or ProviderReplayState.AuditOnly
+                    && Has(value.ReplayEdgeId);
+        bool exactVectors = identityStage < 4 ? value.Reserved is null : value.Reserved is not null;
+        exactVectors &= identityStage < 9
+            ? value.Observed is null && value.Response is null
+            : value.Observed is not null && value.Response is not null;
+        exactVectors &= identityStage < 10
+            ? value.Released is null && value.Retained is null
+            : value.Released is not null && value.Retained is not null;
+        if (!validProjection || !ExactOperationIdentityStage(value, identityStage) || !replayProjection
+            || !exactVectors || value.UnresolvedHold != (value.State == ProviderOperationLifecycleState.UnresolvedHold))
+        {
+            throw new InvalidDataException("Provider operation state contradicts its reachable identities, accounting, or terminal projections.");
+        }
+    }
+
+    private static bool ExactOperationIdentityStage(ProviderOperationPayload value, int stage)
+    {
+        bool[] present =
+        [
+            Has(value.AuthorizationId), value.AttemptId is not null, Has(value.RequestId), value.ReservationId is not null,
+            value.DispatchFenceId is not null, Has(value.TransportEventId), Has(value.ReceiptId),
+            Has(value.ResponseRecordId), Has(value.UsageEntryId), Has(value.SettlementId),
+        ];
+        bool validTypedIdentities = (value.AttemptId is null || Has(value.AttemptId.Value))
+            && (value.ReservationId is null || Has(value.ReservationId.Value))
+            && (value.DispatchFenceId is null || Has(value.DispatchFenceId.Value));
+        return validTypedIdentities && present.Take(stage).All(x => x) && present.Skip(stage).All(x => !x);
+    }
+
     private static void RequireAvailability(ProviderAvailabilityState availability, object? value) =>
         RequireAvailability(availability, value is not null);
 
@@ -541,8 +717,10 @@ public static class ApplicationProviderContractValidator
         bool refusal = value.RefusalAvailability == ProviderAvailabilityState.Available;
         bool incomplete = value.IncompleteAvailability == ProviderAvailabilityState.Available;
         bool error = value.ErrorAvailability == ProviderAvailabilityState.Available;
-        bool transport = Has(value.AuthorizationId) && Has(value.RequestId) && value.DispatchFenceId is not null;
-        bool noTransport = !Has(value.AuthorizationId) && !Has(value.RequestId) && value.DispatchFenceId is null;
+        bool transport = Has(value.AuthorizationId) && Has(value.AttemptId?.Value) && Has(value.RequestId)
+            && Has(value.ReservationId?.Value) && value.DispatchFenceId is not null;
+        bool reservedUndispatched = Has(value.AuthorizationId) && Has(value.AttemptId?.Value) && Has(value.RequestId)
+            && Has(value.ReservationId?.Value) && value.DispatchFenceId is null;
         bool semanticFactsAbsent = !refusal && !incomplete && !error;
         bool completedUsage = value.UsageAvailability == ProviderAvailabilityState.Available
             && new[] { value.DispatchCount, value.InputTokens, value.OutputTokens, value.TotalTokens,
@@ -609,7 +787,7 @@ public static class ApplicationProviderContractValidator
                 && value.UsageReceiptState == UsageReceiptState.Complete && nonSuccess,
             "unknown" => transport && raw && http && semanticFactsAbsent && noOverflow && dispatchedUsage
                 && value.UsageReceiptState == UsageReceiptState.Ambiguous && nonSuccess,
-            "cancelled" => noTransport && !raw && !http && semanticFactsAbsent && allProviderFactsUnavailable
+            "cancelled" => reservedUndispatched && !raw && !http && semanticFactsAbsent && allProviderFactsUnavailable
                 && noOverflow && cancelledUsage && value.UsageReceiptState == UsageReceiptState.NotDispatched && nonSuccess,
             _ => false,
         };
@@ -703,7 +881,8 @@ public static class ApplicationProviderContractValidator
     private static bool AnyValue(params OptionalProviderQuantity[] values) => values.Any(x => x.HasValue);
 
     private static bool ValidInstant(Infinium.Contracts.Protobuf.Common.V1.Instant? value) =>
-        value is not null && value.UnixSeconds > 0 && value.Nanoseconds is >= 0 and <= 999_999_999;
+        value is not null && value.UnixSeconds > 0 && value.Nanoseconds is >= 0 and <= 999_999_999
+        && value.Nanoseconds % 100 == 0;
 
     private static int Compare(
         Infinium.Contracts.Protobuf.Common.V1.Instant left,
@@ -712,7 +891,7 @@ public static class ApplicationProviderContractValidator
             ? left.UnixSeconds.CompareTo(right.UnixSeconds)
             : left.Nanoseconds.CompareTo(right.Nanoseconds);
 
-    private static ulong ElapsedMilliseconds(
+    private static ulong ElapsedHundredNanoseconds(
         Infinium.Contracts.Protobuf.Common.V1.Instant start,
         Infinium.Contracts.Protobuf.Common.V1.Instant end)
     {
@@ -722,7 +901,11 @@ public static class ApplicationProviderContractValidator
         {
             throw new InvalidDataException("Dispatch deadline must follow its retained confirmation instant.");
         }
-        return checked((ulong)((totalNanos + 999_999L) / 1_000_000L));
+        if (totalNanos % 100 != 0)
+        {
+            throw new InvalidDataException("Provider authority instants must use exact 100-nanosecond precision.");
+        }
+        return checked((ulong)(totalNanos / 100));
     }
 
     private static bool ValidUniqueIds(IEnumerable<string> values) =>

@@ -114,6 +114,30 @@ public sealed class ProviderContractTests
 
     [TestMethod]
     [TestCategory("Unit")]
+    public void ProofQualifiedFutureOperationLifecycleMatrixRejectsEveryIdentityAndProjectionAdversaryBeforeMaturity()
+    {
+        ProviderOperationState[] states = Enum.GetValues<ProviderOperationState>()
+            .Where(state => state is not ProviderOperationState.Unspecified and not ProviderOperationState.InputBoundBlocked)
+            .ToArray();
+        foreach (ProviderOperationState state in states)
+        {
+            ProviderOperationDocument future = FutureOperation(state);
+            Assert.ThrowsExactly<NotSupportedException>(
+                () => ProviderOperationContractInvariants.Validate(future), state.ToString());
+            ProviderOperationDocument contradictory = state is ProviderOperationState.Settled or ProviderOperationState.UnresolvedHold
+                ? future with { AuthorizationId = null }
+                : future with { SettlementId = Id("premature-settlement") };
+            Assert.ThrowsExactly<InvalidOperationException>(
+                () => ProviderOperationContractInvariants.Validate(contradictory), state.ToString());
+        }
+
+        ProviderOperationDocument bounded = FutureOperation(ProviderOperationState.Admitted);
+        Assert.ThrowsExactly<InvalidOperationException>(() => ProviderOperationContractInvariants.Validate(
+            bounded with { Usage = bounded.Usage with { InputTokens = Q(147_457), TotalTokens = Q(147_460) } }));
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
     public void ProviderResponseIsUnavailableUntilProofQualifiedAuthorizationExists()
     {
         ProviderUsageContract completedUsage = new(ProviderAvailabilityState.Available, Q(1), Q(2), Q(3), Q(5), Q(1), Q(0), Q(0), Q(0), Q(42),
@@ -337,7 +361,7 @@ public sealed class ProviderContractTests
     private static ProviderResponseDocument Response() => new(
         SchemaId: ContractConstants.ProviderResponseSchemaId, SchemaVersion: "1", ResponseRecordId: Id("response-1"),
         OperationId: Id("operation-1"), OwnerKind: "evidence-acquisition-run", OwnerId: Id("acquisition-1"),
-        AuthorizationId: null, RequestId: null, DispatchFenceId: null,
+        AuthorizationId: null, AttemptId: null, RequestId: null, ReservationId: null, DispatchFenceId: null,
         OperationKind: ProviderOperationKind.SourceClaimExtraction,
         Limits: new(65_536, 73_728, 4_096, 1_048_576, 1, 600_000_000, 120_000), InputBoundProof: BlockedProof(),
         Availability: ProviderAvailabilityState.Unavailable, RawResponseAvailability: ProviderAvailabilityState.Unavailable,
@@ -356,6 +380,65 @@ public sealed class ProviderContractTests
         ReasoningContext: "current_turn", ReasoningMode: "standard", PromptCacheMode: "explicit", Usage: BlockedUsage(),
         RateLimitFacts: [], BillingEvidencePayload: null, BillingEvidenceAvailability: ProviderAvailabilityState.Unavailable,
         ValidationState: ProposalAdmissionState.Unavailable, AdmissionState: ProposalAdmissionState.Unavailable, RecordedAt: Now);
+
+    private static ProviderOperationDocument FutureOperation(ProviderOperationState state)
+    {
+        ProviderOperationDocument operation = BlockedOperation() with
+        {
+            InputBoundProof = new ProviderInputBoundProofContract("accepted-policy", "1", ProviderInputBoundProofState.Proved),
+            State = state,
+        };
+        int stage = state switch
+        {
+            ProviderOperationState.Proposed => 0,
+            ProviderOperationState.Confirmed => 1,
+            ProviderOperationState.Reserved or ProviderOperationState.Assigned => 4,
+            ProviderOperationState.FinalGateAuthorized => 5,
+            ProviderOperationState.TransportNotStarted or ProviderOperationState.TransportMayHaveStarted => 6,
+            ProviderOperationState.ResponseStaged or ProviderOperationState.Admitted or ProviderOperationState.Rejected => 9,
+            ProviderOperationState.Settled or ProviderOperationState.UnresolvedHold => 10,
+            _ => throw new InvalidOperationException(),
+        };
+        ProviderUsageContract observed = new(ProviderAvailabilityState.Available, Q(1), Q(2), Q(3), Q(5), Q(1), Q(0), Q(0), Q(0), Q(42),
+            ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable,
+            ProviderAvailabilityState.Unavailable, UsageReceiptState.Complete);
+        return operation with
+        {
+            AuthorizationId = stage >= 1 ? Id("authorization-1") : null,
+            AttemptId = stage >= 2 ? Id("attempt-1") : null,
+            RequestId = stage >= 3 ? Id("request-1") : null,
+            ReservationId = stage >= 4 ? Id("reservation-1") : null,
+            DispatchFenceId = stage >= 5 ? Id("fence-1") : null,
+            TransportEventId = stage >= 6 ? Id("transport-1") : null,
+            ReceiptId = stage >= 7 ? Id("receipt-1") : null,
+            ResponseId = stage >= 8 ? Id("response-1") : null,
+            UsageEntryId = stage >= 9 ? Id("usage-1") : null,
+            SettlementId = stage >= 10 ? Id("settlement-1") : null,
+            TransportState = state switch
+            {
+                ProviderOperationState.TransportMayHaveStarted => "may-have-started",
+                ProviderOperationState.Rejected or ProviderOperationState.Settled => "failed-known",
+                ProviderOperationState.UnresolvedHold => "ambiguous",
+                ProviderOperationState.ResponseStaged or ProviderOperationState.Admitted => "completed",
+                _ => "not-started",
+            },
+            ReceiptState = state switch
+            {
+                ProviderOperationState.ResponseStaged => "staged",
+                ProviderOperationState.Admitted => "validated",
+                ProviderOperationState.Rejected or ProviderOperationState.Settled => "rejected",
+                ProviderOperationState.UnresolvedHold => "unresolved",
+                _ => "not-available",
+            },
+            Usage = stage >= 9 ? observed : BlockedUsage(),
+            SettlementState = state switch
+            {
+                ProviderOperationState.Settled => "overrun",
+                ProviderOperationState.UnresolvedHold => "unresolved-hold",
+                _ => "not-started",
+            },
+        };
+    }
 
     private static ProviderResponseDocument FutureResponse(ProviderResponseState state)
     {
@@ -382,8 +465,10 @@ public sealed class ProviderContractTests
         bool completeReceipt = receiptState == UsageReceiptState.Complete;
         return Response() with
         {
-            AuthorizationId = cancelled ? null : Id("authorization-1"),
-            RequestId = cancelled ? null : Id("request-1"),
+            AuthorizationId = Id("authorization-1"),
+            AttemptId = Id("attempt-1"),
+            RequestId = Id("request-1"),
+            ReservationId = Id("reservation-1"),
             DispatchFenceId = cancelled ? null : Id("fence-1"),
             InputBoundProof = new ProviderInputBoundProofContract("accepted-policy", "1", ProviderInputBoundProofState.Proved),
             Availability = cancelled ? ProviderAvailabilityState.Unavailable : ProviderAvailabilityState.Available,

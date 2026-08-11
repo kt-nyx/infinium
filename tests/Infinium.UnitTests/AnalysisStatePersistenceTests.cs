@@ -30,6 +30,7 @@ public sealed class AnalysisStatePersistenceTests
     private static readonly string[] ProviderSchema6TablesInCreationOrder =
     [
         "provider_access_profiles", "provider_generations", "provider_credential_intents", "provider_credential_intent_events",
+        "provider_credential_terminal_root_consumptions",
         "provider_capability_snapshots", "provider_price_snapshots", "provider_price_rules", "evidence_acquisition_runs",
         "provider_effective_scan_configurations_v2", "evidence_acquisition_job_nodes", "evidence_acquisition_attempts",
         "evidence_acquisition_commands", "provider_command_bindings",
@@ -137,7 +138,7 @@ public sealed class AnalysisStatePersistenceTests
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'storage_contract_version';"));
         Assert.AreEqual(
-            "bc209224a7c1810ea23006005850f1bcfaca221995fd6b058fafea8ff1f1d6c4",
+            "d336cc69536cda92de7c49db0ee8b92a7787c8e5325cd8f65fa139d1711a692c",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'schema_fingerprint';"));

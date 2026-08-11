@@ -126,9 +126,21 @@ function Invoke-ContractsGate {
     if (-not (Select-String -LiteralPath $applicationConstantPath -SimpleMatch $protocolFingerprint -Quiet)) {
         throw 'Application protocol fingerprint constant is stale.'
     }
-    if (-not (Test-Path -LiteralPath (Join-Path $repoRoot 'contracts/protobuf/infinium/helper/v1/helper.proto'))) {
+    $helperV1Relative = 'contracts/protobuf/infinium/helper/v1/helper.proto'
+    $helperV1Path = Join-Path $repoRoot $helperV1Relative
+    $helperV1AuthorityCommit = '6ac66e7d79c63a231bbbf22209015a894cd4bd6d'
+    if (-not (Test-Path -LiteralPath $helperV1Path -PathType Leaf)) {
         throw 'Helper protocol v1 decodability authority is missing.'
     }
+    $authoritativeHelperV1Blob = (& git -C $repoRoot rev-parse "$helperV1AuthorityCommit`:$helperV1Relative").Trim()
+    if ($LASTEXITCODE -ne 0 -or $authoritativeHelperV1Blob -notmatch '^[0-9a-f]{40,64}$') {
+        throw 'Accepted pre-S6 helper-v1 Git authority cannot be derived.'
+    }
+    $currentHelperV1Blob = (& git -C $repoRoot hash-object -- $helperV1Path).Trim()
+    if ($LASTEXITCODE -ne 0 -or $currentHelperV1Blob -cne $authoritativeHelperV1Blob) {
+        throw 'Helper protocol v1 differs byte-for-byte from the accepted pre-S6 authority.'
+    }
+    $helperV1Sha256 = (Get-FileHash -LiteralPath $helperV1Path -Algorithm SHA256).Hash.ToLowerInvariant()
 
     $forbiddenPattern = '"(credential_target|provider_secret|authorization_header|secret_bytes|raw_headers)"\s*:'
     foreach ($schemaName in $schemaNames) {
@@ -147,6 +159,9 @@ function Invoke-ContractsGate {
         helper_protocol_v2_sha256 = $helperFingerprint
         application_protocol_set_sha256 = $protocolFingerprint
         helper_protocol_v1_retained = $true
+        helper_protocol_v1_authority_commit = $helperV1AuthorityCommit
+        helper_protocol_v1_git_blob = $authoritativeHelperV1Blob
+        helper_protocol_v1_sha256 = $helperV1Sha256
         public_package_count = 19
         answer_free_example_count = 9
         slice5_v1_byte_compatibility = 'unchanged-from-6ac66e7d79c63a231bbbf22209015a894cd4bd6d'

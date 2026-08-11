@@ -310,7 +310,8 @@ public static class HelperProtocolV2Codec
                 || !request.RequestFingerprintSha256.Span.SequenceEqual(request.CanonicalRequest.Value.Span)
                 || !ValidInstant(request.ConfirmedAt)
                 || !ValidFutureInstant(request.DispatchDeadline, now)
-                || ElapsedMilliseconds(request.ConfirmedAt, request.DispatchDeadline) > value.Limits.MaximumDuration.Value
+                || ElapsedHundredNanoseconds(request.ConfirmedAt, request.DispatchDeadline)
+                    > checked(value.Limits.MaximumDuration.Value * 10_000UL)
                 || !IsAuthorityRequiredProof(request.InputBoundProof))
             {
                 throw new InvalidDataException("Helper v2 provider request is not a closed bounded and explicitly blocked Responses request.");
@@ -434,7 +435,8 @@ public static class HelperProtocolV2Codec
             throw new InvalidDataException("Helper v2 final revalidation is incomplete or internally contradictory.");
         }
         ValidateLimits(value.OperationKind, value.Limits);
-        if (ElapsedMilliseconds(value.EvaluatedAt, value.DispatchDeadline) > value.Limits.MaximumDuration.Value)
+        if (ElapsedHundredNanoseconds(value.EvaluatedAt, value.DispatchDeadline)
+            > checked(value.Limits.MaximumDuration.Value * 10_000UL))
         {
             throw new InvalidDataException("Helper final revalidation deadline exceeds the operation-specific duration ceiling.");
         }
@@ -640,23 +642,27 @@ public static class HelperProtocolV2Codec
         {
             throw new InvalidDataException("A completed provider receipt requires bounded raw response and complete typed usage.");
         }
+        // Assignment limits are pre-dispatch authority. Receipts are post-fact
+        // evidence and must retain bounded overruns instead of erasing them.
         if (value.RawResponse is not null && (!ValidDigest(value.RawResponse)
                 || value.RawResponse.SizeBytes > limits.MaximumResponseBytes
                 || value.RawResponse.SizeBytes > limits.MaximumStagedOutputBytes)
-            || IsAvailable(value.InputTokens) && value.InputTokens!.Value > limits.MaximumInputTokens
-            || IsAvailable(value.OutputTokens) && value.OutputTokens!.Value > limits.MaximumOutputTokens
+            || IsAvailable(value.InputTokens) && value.InputTokens!.Value > 147_456
+            || IsAvailable(value.OutputTokens) && value.OutputTokens!.Value > 8_192
             || IsAvailable(value.ReasoningTokens)
-                && (!IsAvailable(value.OutputTokens) || value.ReasoningTokens!.Value > value.OutputTokens!.Value)
+                && (!IsAvailable(value.OutputTokens) || value.ReasoningTokens!.Value > value.OutputTokens!.Value
+                    || value.ReasoningTokens.Value > 8_192)
             || IsAvailable(value.TotalTokens)
                 && (!IsAvailable(value.InputTokens) || !IsAvailable(value.OutputTokens)
-                    || value.TotalTokens!.Value != checked(value.InputTokens!.Value + value.OutputTokens!.Value))
-            || IsAvailable(value.CacheReadTokens) && value.CacheReadTokens!.Value != 0
-            || IsAvailable(value.CacheWriteTokens) && value.CacheWriteTokens!.Value != 0
-            || IsAvailable(value.PricedToolCalls) && value.PricedToolCalls!.Value != 0
+                    || value.TotalTokens!.Value != checked(value.InputTokens!.Value + value.OutputTokens!.Value)
+                    || value.TotalTokens.Value > 155_648)
+            || IsAvailable(value.CacheReadTokens) && value.CacheReadTokens!.Value > 147_456
+            || IsAvailable(value.CacheWriteTokens) && value.CacheWriteTokens!.Value > 147_456
+            || IsAvailable(value.PricedToolCalls) && value.PricedToolCalls!.Value > 64
             || IsAvailable(value.CalculatedNanoUsd)
-                && value.CalculatedNanoUsd!.Value > (ulong)limits.MaximumCalculatedNanoUsd)
+                && value.CalculatedNanoUsd!.Value > 1_200_000_000)
         {
-            throw new InvalidDataException("Provider receipt usage, cache, tool, cost, or raw-response facts exceed exact assignment limits.");
+            throw new InvalidDataException("Provider receipt usage, cache, tool, cost, or raw-response facts exceed absolute retained-evidence bounds.");
         }
     }
 
@@ -795,7 +801,8 @@ public static class HelperProtocolV2Codec
         && value.Value.Span.SequenceEqual(expected.Value.Span);
 
     private static bool ValidInstant(Infinium.Contracts.Protobuf.Common.V1.Instant? value) =>
-        value is not null && value.UnixSeconds > 0 && value.Nanoseconds is >= 0 and <= 999_999_999;
+        value is not null && value.UnixSeconds > 0 && value.Nanoseconds is >= 0 and <= 999_999_999
+        && value.Nanoseconds % 100 == 0;
 
     private static bool ValidFutureInstant(
         Infinium.Contracts.Protobuf.Common.V1.Instant? value,
@@ -803,7 +810,7 @@ public static class HelperProtocolV2Codec
         ValidInstant(value)
         && DateTimeOffset.FromUnixTimeSeconds(value!.UnixSeconds).AddTicks(value.Nanoseconds / 100) > now;
 
-    private static ulong ElapsedMilliseconds(
+    private static ulong ElapsedHundredNanoseconds(
         Infinium.Contracts.Protobuf.Common.V1.Instant start,
         Infinium.Contracts.Protobuf.Common.V1.Instant end)
     {
@@ -814,7 +821,11 @@ public static class HelperProtocolV2Codec
         {
             throw new InvalidDataException("Dispatch deadline must follow its confirmed or evaluated instant.");
         }
-        return checked((ulong)((totalNanos + 999_999L) / 1_000_000L));
+        if (totalNanos % 100 != 0)
+        {
+            throw new InvalidDataException("Helper authority instants must use exact 100-nanosecond precision.");
+        }
+        return checked((ulong)(totalNanos / 100));
     }
 
     private static void ValidateOptionalUInt64(Infinium.Contracts.Protobuf.Common.V1.OptionalUInt64? value, string field)

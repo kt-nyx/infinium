@@ -104,36 +104,6 @@ function Get-DeclaredFields([object] $Node, [string] $Prefix, [System.Collection
 }
 
 function Get-Persistence([string] $Schema, [string] $Path) {
-    if ($Schema -eq 'provider-operation.v1.schema.json') {
-        $blockedTranslations = @{
-            transport_state = 'input-bound-blocked -> not-started'
-            receipt_state = 'input-bound-blocked -> not-available'
-            usage = 'input-bound-blocked -> exact blockedUsage unavailable vector with available zero dispatch_count'
-            settlement_state = 'input-bound-blocked -> not-started'
-            replay_state = 'input-bound-blocked -> not-available'
-        }
-        if ($blockedTranslations.ContainsKey($Path)) {
-            $runtimeSeam = switch ($Path) {
-                'transport_state' { 'provider_transport_events.event_kind is a distinct future runtime event vocabulary, not a semantically identical transport_state column' }
-                'receipt_state' { 'provider_usage_entries.receipt_state is a distinct future response-receipt vocabulary, not the blocked operation receipt_state' }
-                'usage' { 'provider_usage_entries is distinct future response usage history and no row may exist for the blocked operation' }
-                'settlement_state' { 'provider_settlements.state is distinct future settlement history and no row may exist for the blocked operation' }
-                'replay_state' { 'provider_replay_edges.replay_state is distinct future replay history and no row may exist for the blocked operation' }
-            }
-            $derivedValue = switch ($Path) {
-                'transport_state' { 'not-started' }
-                'receipt_state' { 'not-available' }
-                'usage' { 'the provider-operation blockedUsage vector' }
-                'settlement_state' { 'not-started' }
-                'replay_state' { 'not-available' }
-            }
-            return [ordered]@{
-                derived_from = 'provider_operation_blocks.state'
-                translation = $blockedTranslations[$Path]
-                not_persisted_reason = "$Path is exactly derived as $derivedValue from provider_operation_blocks.state=input-bound-blocked; $runtimeSeam."
-            }
-        }
-    }
     $leaf = $Path.Split('.')[-1]
     $column = $null
     switch ($Schema) {
@@ -204,9 +174,9 @@ function Get-Persistence([string] $Schema, [string] $Path) {
                     'profile_id' { 'provider_operation_blocks.profile_id' }
                     'generation_id' { 'provider_operation_blocks.generation_id' }
                     'revocation_epoch' { 'provider_operation_blocks.revocation_epoch' }
-                    'state' { 'provider_operation_blocks.state' }
+                    'state' { @('provider_operation_blocks.state','provider_operation_projection.state') }
                     'transport_state' { 'provider_transport_events.event_kind' }
-                    'receipt_state' { 'provider_usage_entries.receipt_state' }
+                    'receipt_state' { @('provider_usage_entries.receipt_state','provider_response_finalizations.validation_state') }
                     'usage' { @(
                         'provider_usage_entries.availability',
                         'provider_usage_entries.dispatch_count_availability','provider_usage_entries.dispatch_count',
@@ -222,6 +192,17 @@ function Get-Persistence([string] $Schema, [string] $Path) {
                         'provider_usage_entries.credit_availability') }
                     'settlement_state' { 'provider_settlements.state' }
                     'replay_state' { 'provider_replay_edges.replay_state' }
+                    'authorization_id' { 'provider_operation_authorizations.authorization_id' }
+                    'attempt_id' { 'provider_operation_attempts.provider_attempt_id' }
+                    'request_id' { 'provider_requests.request_id' }
+                    'reservation_id' { 'provider_reservations.reservation_id' }
+                    'dispatch_fence_id' { 'provider_dispatch_fences.dispatch_fence_id' }
+                    'transport_event_id' { 'provider_transport_events.transport_event_id' }
+                    'receipt_id' { 'provider_usage_entries.receipt_id' }
+                    'response_id' { 'provider_responses.response_record_id' }
+                    'usage_entry_id' { 'provider_usage_entries.usage_entry_id' }
+                    'settlement_id' { 'provider_settlements.settlement_id' }
+                    'replay_edge_id' { 'provider_replay_edges.replay_edge_id' }
                     'recorded_at' { 'provider_operation_blocks.recorded_at' }
                     default { $null }
                 }
@@ -308,6 +289,7 @@ function Get-Persistence([string] $Schema, [string] $Path) {
             else {
                 $column = switch ($leaf) {
                     'authorization_id' { 'provider_operation_authorizations.authorization_id' }
+                    'attempt_id' { 'provider_responses.provider_attempt_id' }
                     'raw_response_payload' { @('provider_responses.raw_response_payload_id','provider_responses.raw_response_fingerprint') }
                     'response_headers_payload' { @('provider_responses.response_headers_payload_id','provider_responses.response_headers_fingerprint') }
                     'billing_evidence_payload' { @('provider_responses.billing_evidence_payload_id','provider_responses.billing_evidence_fingerprint') }
@@ -391,7 +373,7 @@ function Get-Projection([string] $Schema, [string] $Path, [bool] $Replay) {
             if ($Path -in $profileFields) { $message='ProviderProfilePayload'; $field=$leaf }
         }
         elseif ($Schema -eq 'provider-operation.v1.schema.json') {
-            $map=@{ operation_id='operation_id'; operation_kind='operation_kind'; profile_id='profile_id'; generation_id='generation_id'; revocation_epoch='revocation_epoch'; owner_id='owner_id'; owner_kind='owner_kind'; job_node_id='job_node_id'; command_id='command_id'; requested_at='requested_at'; effective_configuration_id='effective_configuration_v2_id'; state='state'; settlement_state='settlement_state'; replay_state='replay_state' }
+            $map=@{ operation_id='operation_id'; operation_kind='operation_kind'; profile_id='profile_id'; generation_id='generation_id'; revocation_epoch='revocation_epoch'; owner_id='owner_id'; owner_kind='owner_kind'; job_node_id='job_node_id'; command_id='command_id'; requested_at='requested_at'; effective_configuration_id='effective_configuration_v2_id'; state='state'; transport_state='transport_state'; receipt_state='receipt_state'; settlement_state='settlement_state'; replay_state='replay_state'; authorization_id='authorization_id'; attempt_id='attempt_id'; request_id='request_id'; reservation_id='reservation_id'; dispatch_fence_id='dispatch_fence_id'; transport_event_id='transport_event_id'; receipt_id='receipt_id'; response_id='response_record_id'; usage_entry_id='usage_entry_id'; settlement_id='settlement_id'; replay_edge_id='replay_edge_id' }
             if($map.ContainsKey($Path)){ $message='ProviderOperationPayload'; $field=$map[$Path] }
             elseif ($Path -eq 'input_bound_proof') {
                 return [ordered]@{ file='contracts/protobuf/infinium/application/v1/application.proto'; message='ProviderOperationPayload'; fields=@('input_bound_proof_status','input_bound_policy_id','input_bound_policy_version') }

@@ -1766,3 +1766,122 @@ private evidence was invented. No network/DNS/provider, Credential Manager,
 native credential, private fixture, sibling repository, legacy/evaluator
 archive, later-package, current-state, push, amend, or frozen Slice 5 v1 edit
 occurred.
+
+## Fifteenth-cycle frozen-v1 and terminal-reservation closure — 2026-08-11
+
+Fresh bounded correction of candidate
+`6d76c4800e8978bda35ccbaf8317854be8911acc` closed the combined WP1 findings
+without expanding authority. The nine Slice 6 contracts remain `Proposed` and
+WP1 remains `Deferred` solely because the accepted repository-local
+tokenizer/provider-framing proof is absent. This correction does not accept
+WP1, authorize native credential or live provider work, advance
+`docs/current-state.md`, or unblock WP2.
+
+### Corrected exact seams
+
+- Helper protocol v1 was restored byte-for-byte from accepted handoff commit
+  `6ac66e7d79c63a231bbbf22209015a894cd4bd6d` and Slice 5 candidate
+  `5514919b8f742d00e59752fa7125da487a390926`. Its Git blob is
+  `0467a178d47fcb25318078788de6c0d75c155c38` and its SHA-256 is
+  `77e5b0717140551a4c64c5d87a486930581a9df23484f65a419f0a224b170acf`.
+  Frozen descriptor field/name/number and decode-semantics tests now protect
+  the exact v1 contract. The Contracts gate derives the accepted Git identity
+  and verifies current bytes instead of accepting mere file existence or a
+  self-authored constant. New receipt vocabulary remains confined to helper
+  v2 and current application/domain contracts.
+- `provider-operation.v1` now validates every future lifecycle state against
+  an exhaustive identity stage and transport/receipt/usage/settlement/replay
+  projection: proposed has no downstream identity; confirmed has the exact
+  authorization; reserved/assigned add attempt, request, and reservation;
+  final-gate-authorized adds the fence; both transport states add an exact
+  transport event; response states add receipt, response, and usage; terminal
+  states add settlement. Every state rejects a premature or later identity
+  adversary before the current maturity gate. JSON, domain, application proto,
+  application validation, SQL, output, and traceability use the same seams,
+  including explicit `transport_state`, `receipt_state`, and durable
+  `receipt_id`. Post-fact quantities remain within the closed doubled absolute
+  safety bounds.
+- Provider receipt overruns are retained end-to-end across helper v2,
+  application, domain, schema-6 SQL, and output for dispatch, input, output,
+  total, reasoning, cache-read, cache-write, priced-tool, and calculated
+  nano-USD. Pre-dispatch assignment remains the only authorization. Policy-
+  violating factual usage rejects admitted semantic finalization, supports
+  rejected finalization, and remains reachable by exact overrun settlement.
+- Terminal credential-intent insertion now atomically consumes one exact
+  pending intent root through
+  `provider_credential_terminal_root_consumptions`. A second terminal row for
+  the same pending root rejects before either terminal event can be inserted;
+  completed, failed, cancelled, and unavailable outcomes retain one exact
+  append-only event chain.
+- Cancellation after an exact authorization/attempt/request/reservation but
+  before any fence or transport is now a first-class known-undispatched root.
+  Its unavailable `not-dispatched` receipt settles with no fence and releases
+  every component and the full nano-USD reservation. A mismatched reservation,
+  partial release, retained hold, or unresolved-hold classification rejects,
+  so no reservation is stranded.
+- Schema-6 post-fact checks now match the domain's doubled absolute bounds in
+  every usage dimension. Future authorization deadline checks bind both the
+  requested and confirmed times to the exact deadline by integer 100-
+  nanosecond arithmetic; no floating SQLite time conversion remains.
+- Per-field traceability now resolves every operation lifecycle identity to
+  its exact schema-6 table/column and application protobuf field. Receipt
+  identity is durable as `provider_usage_entries.receipt_id`; receipt state is
+  explicitly traced across usage receipt and semantic finalization seams. The
+  earlier blocked-state-derived omissions no longer conceal future lifecycle
+  persistence or output fields.
+
+### Superseding identities and exact blocked receipt roots
+
+- Schema-6 fingerprint:
+  `d336cc69536cda92de7c49db0ee8b92a7787c8e5325cd8f65fa139d1711a692c`.
+- Helper-v2 transitive fingerprint:
+  `2eac265ef75cc827bd5a8596120f5ba4c1912dde2219ad98eb11e2984cb043c0`.
+- Full application protobuf-set fingerprint:
+  `7a01cceb4af05754daca6c63b9496645b3ddccb97566d0c5c7dd5e2cbef8520b`.
+- Answer-free provider example remained 15,792 bytes,
+  `58bece21c77bf6670d7a68a12293f2eebc43e3c83eb0eae55f9b571bd70dcc4e`.
+- Public registry remained 8,790 bytes,
+  `4eca400e38013927762bd939090bc8450b884666e1f17e274430b3ab9b4b0ad1`.
+- Per-field traceability is 455,653 bytes,
+  `006e917f85b1ed22c3a4e9ad50f2017ee1ab97c03d7777c5983954fb1b29237c`.
+- Exact WP1 gate `OutputRoot`:
+  `artifacts/m1-slice6/wp1-fifteenth-correction-final`.
+- Receipt SHA-256 identities: `Contracts`
+  `1346a1debd64113430394c087182d03258e40ab32db2e756f75ff4d6392d3cb7`,
+  `StateSurfaces`
+  `c09a12c3d46cea818a20d457a94931dc06cf0e9f7db6a59548c9c589a55e165e`,
+  and `StateTotality`
+  `903d83f6b2519e74dae4b60199dfbac95153c60abe31feffd6eb48009e5bccde`.
+
+### Fifteenth-cycle verification
+
+1. Final Release solution build passed with zero warnings and zero errors.
+   Focused lifecycle/identity/cancellation/atomic-settlement checks passed
+   before the complete matrix.
+2. `Contracts` passed 20/0/0. `StateSurfaces` passed 20/0/0 state checks and
+   17/0/0 migration/relational/adversarial checks. `StateTotality` ran the same
+   37 green checks, wrote `blocked-authority-required` with network and
+   credential permissions false and the superseding schema fingerprint, then
+   exited 1 solely because the accepted repository-local tokenizer/provider-
+   framing proof is absent.
+3. The final Release category matrix passed: Unit 176/0/1; Contract 125/0/0;
+   Integration 70/0/0; Evaluation 75/0/8; Security 111/0/3; and Fault
+   105/0/3. The final unfiltered Release solution passed Unit 184/0/1,
+   Contract 153/0/0, Integration 68/0/0, and Evaluation 53/0/8.
+4. The complete non-live analysis pipeline passed Contracts, Documentation,
+   Candidates, CandidateScale, Cases, Replay, Output, Safety, Traceability,
+   Comprehensive, and All. Its final `All` receipt is 512 bytes with SHA-256
+   `801781880fe70c769b74068f6613b86dc4e0f912c255e12e39dcb58817bd187b`.
+   Trace generation and the intended provider fixture/registry reseal were
+   each byte-identical on repeat; unrelated resealer spill was restored before
+   closeout. `dotnet format --verify-no-changes`, dependency-manifest check,
+   documentation validation, strict parsing of every changed JSON file,
+   `git diff --check`, exact 100-nanosecond SQL scan, current-state and frozen
+   Slice 5 v1 immutability, protected/private/archive/live-path absence, and
+   forbidden secret/live-effect scans passed.
+
+No proof, gate result, owner acceptance, credential, provider response, or
+private evidence was invented. No network/DNS/provider, Credential Manager,
+native credential, private fixture, sibling repository, legacy/evaluator
+archive, later-package, current-state, push, amend, or frozen Slice 5 v1 edit
+occurred.

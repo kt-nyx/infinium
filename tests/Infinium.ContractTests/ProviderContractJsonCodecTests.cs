@@ -13,6 +13,7 @@ using Infinium.Domain.Contracts;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AppProviderAvailabilityState = Infinium.Contracts.Protobuf.Application.V1.ProviderAvailabilityState;
 using AppProviderProfileLifecycleState = Infinium.Contracts.Protobuf.Application.V1.ProviderProfileLifecycleState;
+using AppUsageReceiptState = Infinium.Contracts.Protobuf.Application.V1.UsageReceiptState;
 using DomainProviderAvailabilityState = Infinium.Domain.Contracts.ProviderAvailabilityState;
 using DomainProviderOperationKind = Infinium.Domain.Contracts.ProviderOperationKind;
 using V1Frame = Infinium.Contracts.Protobuf.Helper.V1.HelperPrivateFrame;
@@ -37,6 +38,18 @@ namespace Infinium.Tests;
 [TestClass]
 public sealed class ProviderContractJsonCodecTests
 {
+    private static readonly string[] FrozenHelperV1UsageDescriptor =
+    [
+        "input_tokens=1", "output_tokens=2", "reasoning_tokens=3", "priced_tool_calls=4",
+        "provider_dispatch_count=5", "receipt_state=6",
+    ];
+    private static readonly string[] FrozenHelperV1ReceiptStates =
+    [
+        "USAGE_RECEIPT_STATE_UNSPECIFIED=0", "USAGE_RECEIPT_STATE_NOT_DISPATCHED=1",
+        "USAGE_RECEIPT_STATE_COMPLETE=2", "USAGE_RECEIPT_STATE_PARTIAL=3",
+        "USAGE_RECEIPT_STATE_UNAVAILABLE=4", "USAGE_RECEIPT_STATE_UNRESOLVED=5",
+        "USAGE_RECEIPT_STATE_UNKNOWN=6", "USAGE_RECEIPT_STATE_UNSUPPORTED=7",
+    ];
     private static readonly Sha256Fingerprint Fingerprint = new(new string('a', 64));
     private static readonly UtcTimestamp RecordedAt = UtcTimestamp.Parse("2026-08-10T00:00:00.0000000+00:00");
     private static readonly DateTimeOffset HelperNow = DateTimeOffset.Parse("2026-08-10T00:00:00+00:00", System.Globalization.CultureInfo.InvariantCulture);
@@ -48,6 +61,184 @@ public sealed class ProviderContractJsonCodecTests
         DomainProviderAvailabilityState.Unavailable,
         DomainProviderAvailabilityState.Unavailable,
         Infinium.Domain.Contracts.UsageReceiptState.Complete);
+
+    [TestMethod]
+    [TestCategory("Contract")]
+    [TestProperty("Category", "Contract")]
+    public void ApplicationProviderOperationLifecycleMatrixRejectsEveryIdentityAndProjectionAdversaryBeforeMaturity()
+    {
+        ProviderAccountingVector Vector(ulong dispatch, ulong input, ulong output, ulong reasoning, ulong cost) => new()
+        {
+            DispatchCount = AvailableApplicationQuantity(dispatch),
+            InputTokens = AvailableApplicationQuantity(input),
+            OutputTokens = AvailableApplicationQuantity(output),
+            TotalTokens = AvailableApplicationQuantity(checked(input + output)),
+            ReasoningTokens = AvailableApplicationQuantity(reasoning),
+            CacheReadTokens = AvailableApplicationQuantity(0),
+            CacheWriteTokens = AvailableApplicationQuantity(0),
+            PricedToolCalls = AvailableApplicationQuantity(0),
+            CalculatedNanoUsd = AvailableApplicationQuantity(cost),
+        };
+
+        ProviderOperationLifecycleState[] states =
+        [
+            ProviderOperationLifecycleState.Proposed, ProviderOperationLifecycleState.Confirmed,
+            ProviderOperationLifecycleState.Reserved, ProviderOperationLifecycleState.Assigned,
+            ProviderOperationLifecycleState.FinalGateAuthorized, ProviderOperationLifecycleState.TransportNotStarted,
+            ProviderOperationLifecycleState.TransportMayHaveStarted, ProviderOperationLifecycleState.ResponseStaged,
+            ProviderOperationLifecycleState.Admitted, ProviderOperationLifecycleState.Rejected,
+            ProviderOperationLifecycleState.Settled, ProviderOperationLifecycleState.UnresolvedHold,
+        ];
+        foreach (ProviderOperationLifecycleState state in states)
+        {
+            int identityStage = state switch
+            {
+                ProviderOperationLifecycleState.Proposed => 0,
+                ProviderOperationLifecycleState.Confirmed => 1,
+                ProviderOperationLifecycleState.Reserved or ProviderOperationLifecycleState.Assigned => 4,
+                ProviderOperationLifecycleState.FinalGateAuthorized => 5,
+                ProviderOperationLifecycleState.TransportNotStarted or ProviderOperationLifecycleState.TransportMayHaveStarted => 6,
+                ProviderOperationLifecycleState.ResponseStaged or ProviderOperationLifecycleState.Admitted
+                    or ProviderOperationLifecycleState.Rejected => 9,
+                ProviderOperationLifecycleState.Settled or ProviderOperationLifecycleState.UnresolvedHold => 10,
+                _ => throw new InvalidOperationException(),
+            };
+            bool observed = identityStage >= 9;
+            ProviderOperationPayload operation = new()
+            {
+                OperationId = new OperationId { Value = "operation-1" },
+                ProfileId = new ProviderAccessProfileId { Value = "profile-1" },
+                GenerationId = new CredentialGenerationId { Value = "generation-1" },
+                CapabilitySnapshotId = new CapabilitySnapshotId { Value = "capability-1" },
+                PriceSnapshotId = new PriceSnapshotId { Value = "price-1" },
+                OperationKind = Infinium.Contracts.Protobuf.Application.V1.ProviderOperationKind.SourceClaimExtraction,
+                OwnerKind = "evidence-acquisition-run",
+                OwnerId = "acquisition-1",
+                JobNodeId = "job-1",
+                EffectiveConfigurationV2Id = "config-v2-1",
+                CommandId = "command-1",
+                RequestedAt = ToInstant(HelperNow),
+                State = state,
+                SettlementState = state switch
+                {
+                    ProviderOperationLifecycleState.Settled => ProviderSettlementState.Overrun,
+                    ProviderOperationLifecycleState.UnresolvedHold => ProviderSettlementState.UnresolvedHold,
+                    _ => ProviderSettlementState.NotStarted,
+                },
+                ReplayState = ProviderReplayState.NotAvailable,
+                InputBoundProofStatus = InputBoundProofStatus.Proved,
+                InputBoundPolicyId = "accepted-policy",
+                InputBoundPolicyVersion = "1",
+                InputTokens = observed ? AvailableApplicationQuantity(2) : UnavailableApplicationQuantity(),
+                OutputTokens = observed ? AvailableApplicationQuantity(1) : UnavailableApplicationQuantity(),
+                TotalTokens = observed ? AvailableApplicationQuantity(3) : UnavailableApplicationQuantity(),
+                CalculatedNanoUsd = observed ? AvailableApplicationQuantity(42) : UnavailableApplicationQuantity(),
+                DispatchCount = observed
+                    ? AvailableApplicationQuantity(1)
+                    : AvailableApplicationQuantity(0),
+                ReasoningTokens = observed ? AvailableApplicationQuantity(1) : UnavailableApplicationQuantity(),
+                CacheReadTokens = observed ? AvailableApplicationQuantity(0) : UnavailableApplicationQuantity(),
+                CacheWriteTokens = observed ? AvailableApplicationQuantity(0) : UnavailableApplicationQuantity(),
+                ReservedNanoUsd = identityStage >= 4 ? AvailableApplicationQuantity(100) : UnavailableApplicationQuantity(),
+                UsageReceiptState = observed ? AppUsageReceiptState.Complete : AppUsageReceiptState.NotDispatched,
+                TransportState = state switch
+                {
+                    ProviderOperationLifecycleState.TransportMayHaveStarted => "may-have-started",
+                    ProviderOperationLifecycleState.Rejected or ProviderOperationLifecycleState.Settled => "failed-known",
+                    ProviderOperationLifecycleState.UnresolvedHold => "ambiguous",
+                    ProviderOperationLifecycleState.ResponseStaged or ProviderOperationLifecycleState.Admitted => "completed",
+                    _ => "not-started",
+                },
+                ReceiptState = state switch
+                {
+                    ProviderOperationLifecycleState.ResponseStaged => "staged",
+                    ProviderOperationLifecycleState.Admitted => "validated",
+                    ProviderOperationLifecycleState.Rejected or ProviderOperationLifecycleState.Settled => "rejected",
+                    ProviderOperationLifecycleState.UnresolvedHold => "unresolved",
+                    _ => "not-available",
+                },
+                UnresolvedHold = state == ProviderOperationLifecycleState.UnresolvedHold,
+            };
+            if (identityStage >= 1) { operation.AuthorizationId = "authorization-1"; }
+            if (identityStage >= 2) { operation.AttemptId = new AttemptId { Value = "attempt-1" }; }
+            if (identityStage >= 3) { operation.RequestId = "request-1"; }
+            if (identityStage >= 4)
+            {
+                operation.ReservationId = new ReservationGroupId { Value = "reservation-1" };
+                operation.Reserved = Vector(1, 10, 5, 2, 100);
+            }
+            if (identityStage >= 5) { operation.DispatchFenceId = new DispatchId { Value = "fence-1" }; }
+            if (identityStage >= 6) { operation.TransportEventId = "transport-1"; }
+            if (identityStage >= 7) { operation.ReceiptId = "receipt-1"; }
+            if (identityStage >= 8)
+            {
+                operation.ResponseRecordId = "response-1";
+                operation.Response = new ProviderResponsePayload { ResponseRecordId = "response-1" };
+            }
+            if (identityStage >= 9)
+            {
+                operation.UsageEntryId = "usage-1";
+                operation.Observed = Vector(1, 2, 1, 1, 42);
+            }
+            if (identityStage >= 10)
+            {
+                operation.SettlementId = "settlement-1";
+                operation.Released = Vector(1, 10, 5, 2, 100);
+                operation.Retained = Vector(0, 0, 0, 0, 0);
+            }
+
+            Assert.ThrowsExactly<NotSupportedException>(
+                () => ApplicationProviderContractValidator.Validate(operation), state.ToString());
+            ProviderOperationPayload contradictory = operation.Clone();
+            if (identityStage == 10)
+            {
+                contradictory.AuthorizationId = string.Empty;
+            }
+            else
+            {
+                contradictory.SettlementId = "premature-settlement";
+            }
+            Assert.ThrowsExactly<InvalidDataException>(
+                () => ApplicationProviderContractValidator.Validate(contradictory), state.ToString());
+        }
+
+        ProviderAccountingVector overflow = Vector(1, 147_457, 1, 1, 42);
+        ProviderOperationPayload bounded = new()
+        {
+            OperationId = new OperationId { Value = "operation-overflow" },
+            ProfileId = new ProviderAccessProfileId { Value = "profile-1" },
+            GenerationId = new CredentialGenerationId { Value = "generation-1" },
+            CapabilitySnapshotId = new CapabilitySnapshotId { Value = "capability-1" },
+            PriceSnapshotId = new PriceSnapshotId { Value = "price-1" },
+            OperationKind = Infinium.Contracts.Protobuf.Application.V1.ProviderOperationKind.SourceClaimExtraction,
+            State = ProviderOperationLifecycleState.Admitted,
+            SettlementState = ProviderSettlementState.NotStarted,
+            ReplayState = ProviderReplayState.NotAvailable,
+            OwnerKind = "evidence-acquisition-run",
+            OwnerId = "acquisition-1",
+            JobNodeId = "job-1",
+            EffectiveConfigurationV2Id = "config-1",
+            CommandId = "command-1",
+            RequestedAt = ToInstant(HelperNow),
+            InputBoundProofStatus = InputBoundProofStatus.Proved,
+            InputBoundPolicyId = "accepted-policy",
+            InputBoundPolicyVersion = "1",
+            InputTokens = AvailableApplicationQuantity(2),
+            OutputTokens = AvailableApplicationQuantity(1),
+            TotalTokens = AvailableApplicationQuantity(3),
+            CalculatedNanoUsd = AvailableApplicationQuantity(42),
+            DispatchCount = AvailableApplicationQuantity(1),
+            ReasoningTokens = AvailableApplicationQuantity(1),
+            CacheReadTokens = AvailableApplicationQuantity(0),
+            CacheWriteTokens = AvailableApplicationQuantity(0),
+            ReservedNanoUsd = AvailableApplicationQuantity(100),
+            UsageReceiptState = AppUsageReceiptState.Complete,
+            TransportState = "completed",
+            ReceiptState = "validated",
+            Observed = overflow,
+        };
+        Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(bounded));
+    }
 
     [TestMethod]
     [TestCategory("Contract")]
@@ -78,7 +269,7 @@ public sealed class ProviderContractJsonCodecTests
             new ProviderResponseDocument(
                 SchemaId: ContractConstants.ProviderResponseSchemaId, SchemaVersion: "1", ResponseRecordId: Id("response-1"),
                 OperationId: Id("operation-1"), OwnerKind: "evidence-acquisition-run", OwnerId: Id("acquisition-1"),
-                AuthorizationId: null, RequestId: null, DispatchFenceId: null,
+                AuthorizationId: null, AttemptId: null, RequestId: null, ReservationId: null, DispatchFenceId: null,
                 OperationKind: DomainProviderOperationKind.SourceClaimExtraction, Limits: Limits, InputBoundProof: BlockedProof(),
                 Availability: DomainProviderAvailabilityState.Unavailable, RawResponseAvailability: DomainProviderAvailabilityState.Unavailable,
                 RawResponsePayload: null, RawResponseBytes: null, MaximumRawResponseBytes: 1_048_576,
@@ -174,7 +365,9 @@ public sealed class ProviderContractJsonCodecTests
             "fixtures", "public", "contracts", "provider-wp1", "contract-examples.v1.json")))!
             ["examples"]!["provider-response.v1.schema.json"]!.DeepClone().AsObject();
         response["authorization_id"] = "authorization-1";
+        response["attempt_id"] = "attempt-1";
         response["request_id"] = "request-1";
+        response["reservation_id"] = "reservation-1";
         response["dispatch_fence_id"] = "fence-1";
         response["input_bound_proof"] = new JsonObject
         {
@@ -371,42 +564,94 @@ public sealed class ProviderContractJsonCodecTests
                 extra.RootElement, "provider-operation.v1.schema.json");
         });
 
-        JsonObject futureOperation = examples["provider-operation.v1.schema.json"]!.DeepClone().AsObject();
-        futureOperation["input_bound_proof"] = new JsonObject
+        string[] lifecycleStates =
+        [
+            "proposed", "confirmed", "reserved", "assigned", "final-gate-authorized", "transport-not-started",
+            "transport-may-have-started", "response-staged", "admitted", "rejected", "settled", "unresolved-hold",
+        ];
+        string[] lifecycleIdentities =
+        [
+            "authorization_id", "attempt_id", "request_id", "reservation_id", "dispatch_fence_id",
+            "transport_event_id", "receipt_id", "response_id", "usage_entry_id", "settlement_id",
+        ];
+        foreach (string lifecycleState in lifecycleStates)
         {
-            ["policy_id"] = "accepted-test-policy",
-            ["policy_version"] = "1",
-            ["status"] = "proved",
-        };
-        futureOperation["state"] = "settled";
-        futureOperation["transport_state"] = "completed";
-        futureOperation["receipt_state"] = "validated";
-        futureOperation["settlement_state"] = "overrun";
-        futureOperation["replay_state"] = "retained-response";
-        foreach (string identity in new[]
-                 {
-                     "authorization_id", "attempt_id", "request_id", "reservation_id", "dispatch_fence_id",
-                     "transport_event_id", "receipt_id", "response_id", "usage_entry_id", "settlement_id", "replay_edge_id",
-                 })
-        {
-            futureOperation[identity] = identity + "-synthetic";
+            int identityStage = lifecycleState switch
+            {
+                "proposed" => 0,
+                "confirmed" => 1,
+                "reserved" or "assigned" => 4,
+                "final-gate-authorized" => 5,
+                "transport-not-started" or "transport-may-have-started" => 6,
+                "response-staged" or "admitted" or "rejected" => 9,
+                "settled" or "unresolved-hold" => 10,
+                _ => throw new InvalidOperationException(),
+            };
+            JsonObject futureOperation = examples["provider-operation.v1.schema.json"]!.DeepClone().AsObject();
+            futureOperation["input_bound_proof"] = new JsonObject
+            {
+                ["policy_id"] = "accepted-test-policy",
+                ["policy_version"] = "1",
+                ["status"] = "proved",
+            };
+            futureOperation["state"] = lifecycleState;
+            futureOperation["transport_state"] = lifecycleState switch
+            {
+                "transport-may-have-started" => "may-have-started",
+                "rejected" or "settled" => "failed-known",
+                "unresolved-hold" => "ambiguous",
+                "response-staged" or "admitted" => "completed",
+                _ => "not-started",
+            };
+            futureOperation["receipt_state"] = lifecycleState switch
+            {
+                "response-staged" => "staged",
+                "admitted" => "validated",
+                "rejected" or "settled" => "rejected",
+                "unresolved-hold" => "unresolved",
+                _ => "not-available",
+            };
+            futureOperation["settlement_state"] = lifecycleState switch
+            {
+                "settled" => "overrun",
+                "unresolved-hold" => "unresolved-hold",
+                _ => "not-started",
+            };
+            futureOperation["replay_state"] = "not-available";
+            for (int identityIndex = 0; identityIndex < identityStage; identityIndex++)
+            {
+                string identity = lifecycleIdentities[identityIndex];
+                futureOperation[identity] = identity + "-synthetic";
+            }
+            if (identityStage >= 9)
+            {
+                futureOperation["usage"] = JsonNode.Parse(
+                    """{"availability":"available","receipt_state":"complete","dispatch_count":{"availability":"available","value":1},"input_tokens":{"availability":"available","value":2},"output_tokens":{"availability":"available","value":1},"total_tokens":{"availability":"available","value":3},"reasoning_tokens":{"availability":"available","value":1},"cache_read_tokens":{"availability":"available","value":0},"cache_write_tokens":{"availability":"available","value":0},"priced_tool_calls":{"availability":"available","value":0},"calculated_nano_usd":{"availability":"available","value":1},"billing_availability":"unavailable","rate_availability":"unavailable","credit_availability":"unavailable"}""");
+            }
+            using (JsonDocument future = JsonDocument.Parse(futureOperation.ToJsonString()))
+            {
+                Infinium.Application.Evaluation.ActiveJsonSchemaValidator.Validate(
+                    future.RootElement, "provider-operation.v1.schema.json");
+            }
+            Assert.ThrowsExactly<NotSupportedException>(() => ProviderContractJsonCodecs.DeserializeOperation(
+                System.Text.Encoding.UTF8.GetBytes(futureOperation.ToJsonString())), lifecycleState);
+
+            JsonObject contradictory = futureOperation.DeepClone().AsObject();
+            if (identityStage == 10)
+            {
+                contradictory.Remove("authorization_id");
+            }
+            else
+            {
+                contradictory["settlement_id"] = "premature-settlement";
+            }
+            Assert.ThrowsExactly<InvalidDataException>(() =>
+            {
+                using JsonDocument invalidLifecycle = JsonDocument.Parse(contradictory.ToJsonString());
+                Infinium.Application.Evaluation.ActiveJsonSchemaValidator.Validate(
+                    invalidLifecycle.RootElement, "provider-operation.v1.schema.json");
+            }, lifecycleState);
         }
-        futureOperation["usage"] = JsonNode.Parse(
-            """{"availability":"available","receipt_state":"complete","dispatch_count":{"availability":"available","value":1},"input_tokens":{"availability":"available","value":2},"output_tokens":{"availability":"available","value":1},"total_tokens":{"availability":"available","value":3},"reasoning_tokens":{"availability":"available","value":1},"cache_read_tokens":{"availability":"available","value":0},"cache_write_tokens":{"availability":"available","value":0},"priced_tool_calls":{"availability":"available","value":0},"calculated_nano_usd":{"availability":"available","value":1},"billing_availability":"unavailable","rate_availability":"unavailable","credit_availability":"unavailable"}""");
-        using (JsonDocument future = JsonDocument.Parse(futureOperation.ToJsonString()))
-        {
-            Infinium.Application.Evaluation.ActiveJsonSchemaValidator.Validate(
-                future.RootElement, "provider-operation.v1.schema.json");
-        }
-        Assert.ThrowsExactly<InvalidOperationException>(() => ProviderContractJsonCodecs.DeserializeOperation(
-            System.Text.Encoding.UTF8.GetBytes(futureOperation.ToJsonString())));
-        futureOperation.Remove("reservation_id");
-        Assert.ThrowsExactly<InvalidDataException>(() =>
-        {
-            using JsonDocument missingIdentity = JsonDocument.Parse(futureOperation.ToJsonString());
-            Infinium.Application.Evaluation.ActiveJsonSchemaValidator.Validate(
-                missingIdentity.RootElement, "provider-operation.v1.schema.json");
-        });
 
         JsonObject response = examples["provider-response.v1.schema.json"]!.DeepClone().AsObject();
         response["state"] = "completed";
@@ -462,12 +707,29 @@ public sealed class ProviderContractJsonCodecTests
         string v2 = TestRepository.PathFromRoot("contracts", "protobuf", "infinium", "helper", "v2", "helper.proto");
         string v1 = TestRepository.PathFromRoot("contracts", "protobuf", "infinium", "helper", "v1", "helper.proto");
         Assert.IsTrue(File.Exists(v1));
+        Assert.AreEqual(
+            "77e5b0717140551a4c64c5d87a486930581a9df23484f65a419f0a224b170acf",
+            Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(v1))),
+            "helper v1 bytes are frozen at the accepted pre-S6 authority");
         Assert.AreEqual(HelperProtocolV2Constants.SchemaFingerprintSha256, HelperV2TransitiveFingerprint());
         Assert.AreEqual(
             ProtobufContractSetFingerprint(),
             Convert.ToHexStringLower(Infinium.Application.Runtime.ProtocolConstants.Version.SchemaFingerprintSha256.Span));
         StringAssert.Contains(File.ReadAllText(v1), "package infinium.helper.v1;");
         StringAssert.Contains(File.ReadAllText(v2), "package infinium.helper.v2;");
+
+        Google.Protobuf.Reflection.FileDescriptor v1Descriptor = V1Frame.Descriptor.File;
+        Assert.AreEqual("infinium/helper/v1/helper.proto", v1Descriptor.Name);
+        Google.Protobuf.Reflection.MessageDescriptor v1Usage = v1Descriptor.MessageTypes.Single(x => x.Name == "ProviderUsage");
+        CollectionAssert.AreEqual(
+            FrozenHelperV1UsageDescriptor,
+            v1Usage.Fields.InDeclarationOrder().Select(field => $"{field.Name}={field.FieldNumber}").ToArray(),
+            "helper v1 usage descriptor must not acquire Slice 6 receipt fields");
+        Google.Protobuf.Reflection.EnumDescriptor v1ReceiptState = v1Descriptor.EnumTypes.Single(x => x.Name == "UsageReceiptState");
+        CollectionAssert.AreEqual(
+            FrozenHelperV1ReceiptStates,
+            v1ReceiptState.Values.Select(value => $"{value.Name}={value.Number}").ToArray(),
+            "helper v1 receipt enum numbers and meanings are frozen");
 
         V1Frame v1Frame = new() { Sequence = 7 };
         Assert.AreEqual(7UL, HelperProtocolV2Codec.DecodeV1(v1Frame.ToByteArray()).Sequence);
@@ -857,6 +1119,21 @@ public sealed class ProviderContractJsonCodecTests
         stagedOverflow.Receipt.PricedToolCalls = Available(0);
         stagedOverflow.Receipt.CalculatedNanoUsd = Available(100);
         Assert.ThrowsExactly<InvalidDataException>(() => DecodeProviderReceipt(stagedOverflow, stagedLimits));
+
+        V2Frame retainedPolicyOverrun = stagedOverflow.Clone();
+        retainedPolicyOverrun.Receipt.RawResponse = Digest(new byte[128]);
+        retainedPolicyOverrun.Receipt.InputTokens = Available(stagedLimits.MaximumInputTokens + 1);
+        retainedPolicyOverrun.Receipt.OutputTokens = Available(5);
+        retainedPolicyOverrun.Receipt.TotalTokens = Available(stagedLimits.MaximumInputTokens + 6);
+        retainedPolicyOverrun.Receipt.ReasoningTokens = Available(2);
+        retainedPolicyOverrun.Receipt.CacheReadTokens = Available(1);
+        retainedPolicyOverrun.Receipt.CacheWriteTokens = Available(1);
+        retainedPolicyOverrun.Receipt.PricedToolCalls = Available(1);
+        retainedPolicyOverrun.Receipt.CalculatedNanoUsd = Available((ulong)stagedLimits.MaximumCalculatedNanoUsd + 1);
+        Assert.ThrowsExactly<NotSupportedException>(() => DecodeProviderReceipt(retainedPolicyOverrun, stagedLimits));
+        retainedPolicyOverrun.Receipt.InputTokens = Available(147_457);
+        retainedPolicyOverrun.Receipt.TotalTokens = Available(147_462);
+        Assert.ThrowsExactly<InvalidDataException>(() => DecodeProviderReceipt(retainedPolicyOverrun, stagedLimits));
     }
 
     [TestMethod]
@@ -1102,6 +1379,8 @@ public sealed class ProviderContractJsonCodecTests
             CacheWriteTokens = UnavailableApplicationQuantity(),
             ReservedNanoUsd = UnavailableApplicationQuantity(),
             UsageReceiptState = Infinium.Contracts.Protobuf.Application.V1.UsageReceiptState.NotDispatched,
+            TransportState = "not-started",
+            ReceiptState = "not-available",
         };
         ApplicationProviderContractValidator.Validate(reserved);
         reserved.SettlementState = ProviderSettlementState.Settled;
@@ -1279,6 +1558,10 @@ public sealed class ProviderContractJsonCodecTests
         cancelledResponse.InputBoundProofStatus = InputBoundProofStatus.Proved;
         cancelledResponse.InputBoundPolicyId = "accepted-policy";
         cancelledResponse.InputBoundPolicyVersion = "1";
+        cancelledResponse.AuthorizationId = "authorization-cancelled";
+        cancelledResponse.AttemptId = new AttemptId { Value = "attempt-cancelled" };
+        cancelledResponse.RequestId = "request-cancelled";
+        cancelledResponse.ReservationId = new ReservationGroupId { Value = "reservation-cancelled" };
         Assert.ThrowsExactly<NotSupportedException>(() => ApplicationProviderContractValidator.Validate(cancelledResponse));
         cancelledResponse.ResponseHeadersAvailability = AppProviderAvailabilityState.Unsupported;
         Assert.ThrowsExactly<InvalidDataException>(() => ApplicationProviderContractValidator.Validate(cancelledResponse));
@@ -1289,7 +1572,9 @@ public sealed class ProviderContractJsonCodecTests
 
         ProviderResponsePayload retainedOverrun = unavailableResponse.Clone();
         retainedOverrun.AuthorizationId = "authorization-overrun";
+        retainedOverrun.AttemptId = new AttemptId { Value = "attempt-overrun" };
         retainedOverrun.RequestId = "request-overrun";
+        retainedOverrun.ReservationId = new ReservationGroupId { Value = "reservation-overrun" };
         retainedOverrun.DispatchFenceId = new DispatchId { Value = "fence-overrun" };
         retainedOverrun.InputBoundProofStatus = InputBoundProofStatus.Proved;
         retainedOverrun.InputBoundPolicyId = "accepted-policy";
@@ -1386,16 +1671,35 @@ public sealed class ProviderContractJsonCodecTests
         AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "job_node_id", "provider_operation_blocks.job_node_id", "ADR-0016");
         AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "owner_id", "provider_operation_blocks.owner_id", "ADR-0016");
         AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "request_fingerprint", "provider_operation_blocks.request_fingerprint", "ADR-0025");
-        AssertTraceOmission(contracts, "provider-operation.v1.schema.json", "transport_state", "persistence", "provider_operation_blocks.state");
-        AssertTraceOmission(contracts, "provider-operation.v1.schema.json", "receipt_state", "persistence", "provider_operation_blocks.state");
-        AssertTraceOmission(contracts, "provider-operation.v1.schema.json", "usage", "persistence", "provider_operation_blocks.state");
-        AssertTraceOmission(contracts, "provider-operation.v1.schema.json", "settlement_state", "persistence", "provider_operation_blocks.state");
-        AssertTraceOmission(contracts, "provider-operation.v1.schema.json", "replay_state", "persistence", "provider_operation_blocks.state");
-        AssertTraceDerivation(contracts, "transport_state", "input-bound-blocked -> not-started");
-        AssertTraceDerivation(contracts, "receipt_state", "input-bound-blocked -> not-available");
-        AssertTraceDerivation(contracts, "usage", "input-bound-blocked -> exact blockedUsage unavailable vector with available zero dispatch_count");
-        AssertTraceDerivation(contracts, "settlement_state", "input-bound-blocked -> not-started");
-        AssertTraceDerivation(contracts, "replay_state", "input-bound-blocked -> not-available");
+        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "transport_state", "provider_transport_events.event_kind");
+        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "receipt_state", "provider_usage_entries.receipt_state",
+            "provider_response_finalizations.validation_state");
+        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "usage", "provider_usage_entries.total_tokens");
+        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "settlement_state", "provider_settlements.state");
+        AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "replay_state", "provider_replay_edges.replay_state");
+        foreach ((string path, string column, string field) in new[]
+                 {
+                     ("authorization_id", "provider_operation_authorizations.authorization_id", "authorization_id"),
+                     ("attempt_id", "provider_operation_attempts.provider_attempt_id", "attempt_id"),
+                     ("request_id", "provider_requests.request_id", "request_id"),
+                     ("reservation_id", "provider_reservations.reservation_id", "reservation_id"),
+                     ("dispatch_fence_id", "provider_dispatch_fences.dispatch_fence_id", "dispatch_fence_id"),
+                     ("transport_event_id", "provider_transport_events.transport_event_id", "transport_event_id"),
+                     ("receipt_id", "provider_usage_entries.receipt_id", "receipt_id"),
+                     ("response_id", "provider_responses.response_record_id", "response_record_id"),
+                     ("usage_entry_id", "provider_usage_entries.usage_entry_id", "usage_entry_id"),
+                     ("settlement_id", "provider_settlements.settlement_id", "settlement_id"),
+                     ("replay_edge_id", "provider_replay_edges.replay_edge_id", "replay_edge_id"),
+                 })
+        {
+            AssertTraceMapping(contracts, "provider-operation.v1.schema.json", path, column);
+            AssertTraceProjection(contracts, "provider-operation.v1.schema.json", path,
+                "output", "ProviderOperationPayload", field);
+        }
+        AssertTraceProjection(contracts, "provider-operation.v1.schema.json", "transport_state",
+            "output", "ProviderOperationPayload", "transport_state");
+        AssertTraceProjection(contracts, "provider-operation.v1.schema.json", "receipt_state",
+            "output", "ProviderOperationPayload", "receipt_state");
         AssertTraceMapping(contracts, "provider-operation.v1.schema.json", "$defs.inputBoundProof.status", "provider_operation_blocks.input_bound_proof_status", "ADR-0025");
         AssertTraceMapping(contracts, "provider-response.v1.schema.json", "raw_response_payload",
             "provider_responses.raw_response_payload_id", "provider_responses.raw_response_fingerprint");

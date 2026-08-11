@@ -52,15 +52,21 @@ public sealed class PersistenceAndLifecycleTests
         using SqliteDataReader reader = command.ExecuteReader();
         Assert.IsTrue(reader.Read());
         Assert.AreEqual(1L, reader.GetInt64(0));
-        Assert.AreEqual(31L, reader.GetInt64(1));
-        Assert.AreEqual(56L, reader.GetInt64(2));
+        Assert.AreEqual(32L, reader.GetInt64(1));
+        Assert.AreEqual(58L, reader.GetInt64(2));
         reader.Close();
         command.CommandText = "SELECT COUNT(*) FROM sqlite_schema WHERE type='trigger' AND name='provider_usage_operation_ceiling_guard';";
         Assert.AreEqual(0L, (long)command.ExecuteScalar()!);
         command.CommandText = "SELECT sql FROM sqlite_schema WHERE type='table' AND name='provider_usage_entries';";
         string usageTableSql = (string)command.ExecuteScalar()!;
         StringAssert.Contains(usageTableSql, "reasoning_tokens <= output_tokens");
-        StringAssert.Contains(usageTableSql, "dispatch_count BETWEEN 0 AND 1024");
+        StringAssert.Contains(usageTableSql, "dispatch_count BETWEEN 0 AND 2");
+        StringAssert.Contains(usageTableSql, "input_tokens BETWEEN 0 AND 147456");
+        StringAssert.Contains(usageTableSql, "output_tokens BETWEEN 0 AND 8192");
+        StringAssert.Contains(usageTableSql, "total_tokens BETWEEN 0 AND 155648");
+        StringAssert.Contains(usageTableSql, "priced_tool_calls BETWEEN 0 AND 64");
+        StringAssert.Contains(usageTableSql, "calculated_nano_usd BETWEEN 0 AND 1200000000");
+        StringAssert.Contains(usageTableSql, "receipt_id TEXT NOT NULL UNIQUE");
         foreach (string receiptState in new[] { "not-dispatched", "complete", "partial", "failed-known", "ambiguous", "unavailable" })
         {
             StringAssert.Contains(usageTableSql, $"'{receiptState}'");
@@ -107,8 +113,10 @@ public sealed class PersistenceAndLifecycleTests
         StringAssert.Contains(admissionGuardSql, "candidate.candidate_id = NEW.root_subject_id AND candidate.run_id = NEW.owner_id");
         command.CommandText = "SELECT sql FROM sqlite_schema WHERE type='trigger' AND name='provider_cancelled_response_operation_root_guard';";
         string cancellationRootSql = (string)command.ExecuteScalar()!;
-        StringAssert.Contains(cancellationRootSql, "provider_operation_blocks b");
         StringAssert.Contains(cancellationRootSql, "provider_operation_authorizations a");
+        StringAssert.Contains(cancellationRootSql, "provider_operation_attempts attempt");
+        StringAssert.Contains(cancellationRootSql, "provider_requests request");
+        StringAssert.Contains(cancellationRootSql, "provider_reservations reservation");
         StringAssert.Contains(cancellationRootSql, "provider_transport_events e");
         StringAssert.Contains(cancellationRootSql, "WHERE e.operation_id = NEW.operation_id");
         Assert.IsFalse(cancellationRootSql.Contains("e.occurred_at <= NEW.created_at", StringComparison.Ordinal));
@@ -694,15 +702,31 @@ public sealed class PersistenceAndLifecycleTests
             INSERT INTO provider_credential_intent_events VALUES(
               'intent-event-disable-v1','intent-root-disable','intent-disable-chain-pending',1,NULL,
               '2026-08-10T00:00:03.0000000+00:00');
+            """;
+        Assert.AreEqual(1, command.ExecuteNonQuery());
+        command.CommandText =
+            """
             INSERT INTO provider_credential_intents VALUES(
               'intent-disable-chain-completed','profile-restore','generation-restore','disable','completed',
               'active-verified','disabled','disabled','unavailable','account-restore','billing-restore','cap-restore',
               'not-required','not-requested','2026-08-10T00:00:04.0000000+00:00');
+            """;
+        Assert.AreEqual(1, command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            INSERT INTO provider_credential_intents VALUES(
+              'intent-disable-chain-failed-too','profile-restore','generation-restore','disable','failed',
+              'active-verified','disabled','active-verified','unavailable','account-restore','billing-restore','cap-restore',
+              'not-required','not-requested','2026-08-10T00:00:04.1000000+00:00');
+            """;
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        command.CommandText =
+            """
             INSERT INTO provider_credential_intent_events VALUES(
               'intent-event-disable-v2','intent-root-disable','intent-disable-chain-completed',2,'intent-event-disable-v1',
               '2026-08-10T00:00:04.0000000+00:00');
             """;
-        Assert.AreEqual(3, command.ExecuteNonQuery());
+        Assert.AreEqual(1, command.ExecuteNonQuery());
 
         command.CommandText =
             """
@@ -766,13 +790,14 @@ public sealed class PersistenceAndLifecycleTests
         SeedProviderAuthorityBlock(temporary.Root);
         using SqliteConnection connection = OpenRaw(temporary.Root);
         using SqliteCommand command = connection.CreateCommand();
-        command.CommandText = "PRAGMA foreign_keys=ON;";
+        command.CommandText = "PRAGMA foreign_keys=OFF; DROP TRIGGER provider_cancelled_response_operation_root_guard;";
         command.ExecuteNonQuery();
 
         command.CommandText =
             """
             INSERT INTO provider_responses(
-              response_record_id,availability,usage_availability,operation_id,owner_kind,owner_id,operation_kind,
+              response_record_id,availability,usage_availability,authorization_id,operation_id,owner_kind,owner_id,
+              request_id,provider_attempt_id,reservation_id,operation_kind,
               maximum_input_tokens,maximum_output_tokens,maximum_calculated_nano_usd,
               raw_response_availability,maximum_raw_response_bytes,response_headers_availability,
               http_status_availability,provider_response_id_availability,client_request_id_availability,
@@ -782,32 +807,17 @@ public sealed class PersistenceAndLifecycleTests
               reasoning_context,reasoning_mode,prompt_cache_mode,billing_availability,rate_availability,
               expected_rate_limit_fact_count,credit_availability,validation_state,admission_state,created_at)
             VALUES(
-              'response-cancelled','unavailable','unavailable',$operation_id,'evidence-acquisition-run',$owner_id,'source-claim-extraction',
+              'response-cancelled','unavailable','unavailable','authorization-cancelled',$operation_id,'evidence-acquisition-run',$owner_id,
+              'request-cancelled','attempt-cancelled','reservation-cancelled','source-claim-extraction',
               $maximum_input_tokens,4096,600000000,'unavailable',1048576,$response_headers_availability,'unavailable','unavailable','unavailable',
               'unavailable','unavailable','cancelled','unavailable','unavailable','unavailable','gpt-5.6-sol',
               'unavailable','default','unavailable','current_turn','standard','explicit','unavailable','unavailable',
               0,'unavailable','unavailable','unavailable','2026-08-10T00:00:01.0000000+00:00');
             """;
-        SqliteParameter operationId = command.Parameters.AddWithValue("$operation_id", "operation-missing");
-        SqliteParameter ownerId = command.Parameters.AddWithValue("$owner_id", "acquisition-restore");
-        SqliteParameter cancelledHeaders = command.Parameters.AddWithValue(
-            "$response_headers_availability", "unsupported");
-        SqliteParameter maximumInputTokens = command.Parameters.AddWithValue("$maximum_input_tokens", 73728);
-        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
-        operationId.Value = "operation-restore";
-        cancelledHeaders.Value = "unavailable";
-        ownerId.Value = "acquisition-substitution";
-        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
-        ownerId.Value = "acquisition-restore";
-        maximumInputTokens.Value = 73727;
-        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
-        maximumInputTokens.Value = 73728;
-        string cancelledSql = command.CommandText;
-        command.CommandText = cancelledSql
-            .Replace("response-cancelled", "response-cancelled-before-root", StringComparison.Ordinal)
-            .Replace("00:00:01.0000000", "00:00:00.5000000", StringComparison.Ordinal);
-        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
-        command.CommandText = cancelledSql;
+        command.Parameters.AddWithValue("$operation_id", "operation-restore");
+        command.Parameters.AddWithValue("$owner_id", "acquisition-restore");
+        command.Parameters.AddWithValue("$response_headers_availability", "unavailable");
+        command.Parameters.AddWithValue("$maximum_input_tokens", 73728);
         Assert.AreEqual(1, command.ExecuteNonQuery());
         command.Parameters.Clear();
         command.CommandText =
@@ -821,13 +831,13 @@ public sealed class PersistenceAndLifecycleTests
         command.CommandText =
             """
             INSERT INTO provider_usage_entries(
-              usage_entry_id,availability,operation_id,response_record_id,
+              usage_entry_id,receipt_id,availability,operation_id,provider_attempt_id,request_id,response_record_id,
               dispatch_count_availability,dispatch_count,input_tokens_availability,output_tokens_availability,
               total_tokens_availability,reasoning_tokens_availability,cache_read_tokens_availability,
               cache_write_tokens_availability,priced_tool_calls_availability,calculated_nano_usd_availability,
               billing_availability,rate_availability,credit_availability,receipt_state,created_at)
             VALUES(
-              'usage-cancelled','unavailable','operation-restore','response-cancelled','available',0,
+              'usage-cancelled','receipt-cancelled','unavailable','operation-restore','attempt-cancelled','request-cancelled','response-cancelled','available',0,
               'unavailable','unavailable','unavailable','unavailable','unavailable','unavailable','unavailable',
               'unavailable','unavailable','unavailable','unavailable','not-dispatched',
               '2026-08-10T00:00:01.0000000+00:00');
@@ -878,13 +888,13 @@ public sealed class PersistenceAndLifecycleTests
         command.CommandText =
             """
             INSERT INTO provider_usage_entries(
-              usage_entry_id,availability,operation_id,response_record_id,
+              usage_entry_id,receipt_id,availability,operation_id,response_record_id,
               dispatch_count_availability,dispatch_count,input_tokens_availability,output_tokens_availability,
               total_tokens_availability,reasoning_tokens_availability,cache_read_tokens_availability,
               cache_write_tokens_availability,priced_tool_calls_availability,calculated_nano_usd_availability,
               billing_availability,rate_availability,credit_availability,receipt_state,created_at)
             VALUES(
-              'usage-cancelled-inversion','unavailable','operation-restore','response-cancelled-inversion','available',0,
+              'usage-cancelled-inversion','receipt-cancelled-inversion','unavailable','operation-restore','response-cancelled-inversion','available',0,
               'unavailable','unavailable','unavailable','unavailable','unavailable','unavailable','unavailable',
               'unavailable','unavailable','unavailable','unavailable','not-dispatched',
               '2026-08-10T00:00:02.0000000+00:00');
@@ -910,7 +920,7 @@ public sealed class PersistenceAndLifecycleTests
             """
             INSERT INTO provider_responses(
               response_record_id,availability,usage_availability,authorization_id,operation_id,owner_kind,owner_id,request_id,
-              provider_attempt_id,dispatch_fence_id,operation_kind,maximum_input_tokens,maximum_output_tokens,
+              provider_attempt_id,reservation_id,dispatch_fence_id,operation_kind,maximum_input_tokens,maximum_output_tokens,
               maximum_calculated_nano_usd,raw_response_availability,raw_response_payload_id,
               raw_response_fingerprint,raw_response_bytes,maximum_raw_response_bytes,response_headers_availability,
               http_status_availability,http_status,provider_response_id_availability,client_request_id_availability,
@@ -921,14 +931,14 @@ public sealed class PersistenceAndLifecycleTests
               credit_availability,validation_state,admission_state,created_at)
             VALUES(
               'response-completed','available','available','authorization-1','operation-completed','analysis-run','run-1','request-1',
-              'attempt-1','fence-1','candidate-investigation',73728,4096,600000000,'available','raw-1',
+              'attempt-1','reservation-1','fence-1','candidate-investigation',73728,4096,600000000,'available','raw-1',
               'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',128,1048576,'unavailable',
               'available',200,'unavailable','unavailable','unavailable','unavailable','completed','unavailable',
               'unavailable','unavailable','gpt-5.6-sol','available','gpt-5.6-sol','default','available','default',
               'current_turn','standard','explicit','unavailable','available',2,'unavailable','proposed','proposed',
               '2026-08-10T00:01:00.0000000+00:00');
             INSERT INTO provider_usage_entries(
-              usage_entry_id,availability,operation_id,provider_attempt_id,request_id,dispatch_fence_id,
+              usage_entry_id,receipt_id,availability,operation_id,provider_attempt_id,request_id,dispatch_fence_id,
               response_record_id,dispatch_count_availability,dispatch_count,input_tokens_availability,input_tokens,
               output_tokens_availability,output_tokens,total_tokens_availability,total_tokens,
               reasoning_tokens_availability,reasoning_tokens,cache_read_tokens_availability,cache_read_tokens,
@@ -936,7 +946,7 @@ public sealed class PersistenceAndLifecycleTests
               calculated_nano_usd_availability,calculated_nano_usd,billing_availability,rate_availability,
               credit_availability,receipt_state,created_at)
             VALUES(
-              'usage-completed','available','operation-completed','attempt-1','request-1','fence-1',
+              'usage-completed','receipt-completed','available','operation-completed','attempt-1','request-1','fence-1',
               'response-completed','available',1,'available',10,'available',5,'available',15,'available',2,
               'available',0,'available',0,'available',0,'available',100,'unavailable','available','unavailable',
               'complete','2026-08-10T00:01:01.0000000+00:00');
@@ -1004,7 +1014,7 @@ public sealed class PersistenceAndLifecycleTests
         command.CommandText =
             """
             INSERT INTO provider_usage_entries(
-              usage_entry_id,availability,operation_id,provider_attempt_id,request_id,dispatch_fence_id,
+              usage_entry_id,receipt_id,availability,operation_id,provider_attempt_id,request_id,dispatch_fence_id,
               response_record_id,dispatch_count_availability,dispatch_count,input_tokens_availability,input_tokens,
               output_tokens_availability,output_tokens,total_tokens_availability,total_tokens,
               reasoning_tokens_availability,reasoning_tokens,cache_read_tokens_availability,cache_read_tokens,
@@ -1012,7 +1022,7 @@ public sealed class PersistenceAndLifecycleTests
               calculated_nano_usd_availability,calculated_nano_usd,billing_availability,rate_availability,
               credit_availability,receipt_state,created_at)
             VALUES(
-              'usage-completed-late','available','operation-completed','attempt-late','request-1','fence-1',
+              'usage-completed-late','receipt-completed-late','available','operation-completed','attempt-late','request-1','fence-1',
               'response-completed','available',1,'available',10,'available',5,'available',15,'available',2,
               'available',0,'available',0,'available',0,'available',100,'unavailable','available','unavailable',
               'complete','2026-08-10T00:01:03.0000000+00:00');
@@ -1137,7 +1147,7 @@ public sealed class PersistenceAndLifecycleTests
               '2026-08-10T00:02:00.0000000+00:00','2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO provider_responses(
               response_record_id,availability,usage_availability,authorization_id,operation_id,owner_kind,owner_id,request_id,
-              provider_attempt_id,dispatch_fence_id,operation_kind,maximum_input_tokens,maximum_output_tokens,
+              provider_attempt_id,reservation_id,dispatch_fence_id,operation_kind,maximum_input_tokens,maximum_output_tokens,
               maximum_calculated_nano_usd,raw_response_availability,raw_response_payload_id,
               raw_response_fingerprint,raw_response_bytes,maximum_raw_response_bytes,response_headers_availability,
               http_status_availability,http_status,provider_response_id_availability,client_request_id_availability,
@@ -1148,21 +1158,21 @@ public sealed class PersistenceAndLifecycleTests
               credit_availability,validation_state,admission_state,created_at)
             VALUES(
               'response-source','available','available','authorization-source','operation-source','evidence-acquisition-run',
-              'acquisition-restore','request-source','attempt-source','fence-source','source-claim-extraction',73728,4096,
+              'acquisition-restore','request-source','attempt-source','reservation-source','fence-source','source-claim-extraction',73728,4096,
               600000000,'available','raw-source','ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
               128,1048576,'unavailable','available',200,'unavailable','unavailable','unavailable','unavailable','completed',
               'unavailable','unavailable','unavailable','gpt-5.6-sol','available','gpt-5.6-sol','default','available','default',
               'current_turn','standard','explicit','unavailable','unavailable',0,'unavailable','proposed','proposed',
               '2026-08-10T00:01:10.0000000+00:00');
             INSERT INTO provider_usage_entries(
-              usage_entry_id,availability,operation_id,provider_attempt_id,request_id,dispatch_fence_id,response_record_id,
+              usage_entry_id,receipt_id,availability,operation_id,provider_attempt_id,request_id,dispatch_fence_id,response_record_id,
               dispatch_count_availability,dispatch_count,input_tokens_availability,input_tokens,output_tokens_availability,
               output_tokens,total_tokens_availability,total_tokens,reasoning_tokens_availability,reasoning_tokens,
               cache_read_tokens_availability,cache_read_tokens,cache_write_tokens_availability,cache_write_tokens,
               priced_tool_calls_availability,priced_tool_calls,calculated_nano_usd_availability,calculated_nano_usd,
               billing_availability,rate_availability,credit_availability,receipt_state,created_at)
             VALUES(
-              'usage-source','available','operation-source','attempt-source','request-source','fence-source','response-source',
+              'usage-source','receipt-source','available','operation-source','attempt-source','request-source','fence-source','response-source',
               'available',1,'available',10,'available',5,'available',15,'available',2,'available',0,'available',0,
               'available',0,'available',100,'unavailable','unavailable','unavailable','complete',
               '2026-08-10T00:01:11.0000000+00:00');
@@ -1278,6 +1288,128 @@ public sealed class PersistenceAndLifecycleTests
         AssertSqlSettlement(2, 10, 5, 2, 0, 0, 0, 100, "settled", succeeds: false);
         AssertSqlSettlement(1, 11, 5, 2, 0, 0, 0, 100, "settled", succeeds: false);
         AssertSqlSettlement(1, 10, 5, 2, 0, 0, 0, 100, "overrun", succeeds: false);
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
+    public void Schema6CancelledReservedUndispatchedOperationReleasesItsExactReservation()
+    {
+        using TemporaryStore temporary = new();
+        using AuthoritativeStore store = temporary.Open();
+        SeedProviderAuthorityBlock(temporary.Root);
+        using SqliteConnection connection = OpenRaw(temporary.Root);
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText =
+            """
+            PRAGMA foreign_keys=ON;
+            DROP TRIGGER provider_authority_release_required;
+            INSERT INTO provider_operation_authorizations(
+              authorization_id,operation_id,owner_kind,owner_id,evidence_acquisition_run_id,job_node_id,command_id,requested_at,
+              profile_id,generation_id,revocation_epoch,operation_kind,installation_snapshot_id,analysis_context_id,
+              effective_configuration_id,resolved_input_manifest_id,prompt_id,prompt_fingerprint,output_schema_id,
+              output_schema_fingerprint,request_fingerprint,canonical_request_fingerprint,capability_snapshot_id,
+              price_snapshot_id,settings_fingerprint,input_bound_policy_id,input_bound_policy_version,input_bound_proof_status,
+              coordinator_fencing_epoch,maximum_request_bytes,maximum_input_tokens,maximum_output_tokens,
+              maximum_raw_response_bytes,maximum_dispatch_count,maximum_calculated_nano_usd,deadline_milliseconds,
+              dispatch_deadline_utc,confirmed_at)
+            SELECT 'authorization-cancelled-reserved',operation_id,owner_kind,owner_id,owner_id,job_node_id,command_id,requested_at,
+              profile_id,generation_id,revocation_epoch,operation_kind,installation_snapshot_id,analysis_context_id,
+              effective_configuration_id,resolved_input_manifest_id,prompt_id,prompt_fingerprint,output_schema_id,
+              output_schema_fingerprint,request_fingerprint,canonical_request_fingerprint,capability_snapshot_id,
+              price_snapshot_id,settings_fingerprint,'accepted-test-policy','1','proved',coordinator_fencing_epoch,
+              maximum_request_bytes,20,10,maximum_raw_response_bytes,maximum_dispatch_count,200,deadline_milliseconds,
+              dispatch_deadline_utc,confirmed_at
+            FROM provider_operation_blocks WHERE operation_id='operation-restore';
+            INSERT INTO provider_operation_attempts VALUES(
+              'attempt-cancelled-reserved','operation-restore',1,'proposed',1,'2026-08-10T00:00:02.0000000+00:00');
+            INSERT INTO provider_requests(
+              request_id,client_request_id,operation_id,provider_attempt_id,request_fingerprint,
+              canonical_request_fingerprint,settings_fingerprint,output_schema_fingerprint,input_bound_policy_id,
+              input_bound_policy_version,input_bound_proof_status,payload_id,payload_fingerprint,payload_bytes,created_at)
+            SELECT 'request-cancelled-reserved','client-request-cancelled-reserved',operation_id,
+              'attempt-cancelled-reserved',request_fingerprint,canonical_request_fingerprint,settings_fingerprint,
+              output_schema_fingerprint,input_bound_policy_id,input_bound_policy_version,input_bound_proof_status,
+              'request-payload-restore',request_fingerprint,1024,'2026-08-10T00:00:03.0000000+00:00'
+            FROM provider_operation_authorizations WHERE authorization_id='authorization-cancelled-reserved';
+            INSERT INTO provider_reservations VALUES(
+              'reservation-cancelled-reserved','operation-restore','attempt-cancelled-reserved','request-cancelled-reserved',
+              '{"dispatch_count":1,"input_tokens":10,"output_tokens":5,"total_tokens":15,"reasoning_tokens":2,"cache_read_tokens":0,"cache_write_tokens":0,"priced_tool_calls":0,"calculated_nano_usd":100}',
+              1,10,5,2,0,0,0,100,'2026-08-10T00:01:30.0000000+00:00','2026-08-10T00:00:04.0000000+00:00');
+            INSERT INTO provider_reservation_scope_items VALUES(
+              'scope-cancelled-reserved','reservation-cancelled-reserved','operation','operation-restore',
+              '{"dispatch_count":1,"input_tokens":10,"output_tokens":5,"total_tokens":15,"reasoning_tokens":2,"cache_read_tokens":0,"cache_write_tokens":0,"priced_tool_calls":0,"calculated_nano_usd":100}',100);
+            INSERT INTO provider_responses(
+              response_record_id,availability,usage_availability,authorization_id,operation_id,owner_kind,owner_id,
+              request_id,provider_attempt_id,reservation_id,operation_kind,maximum_input_tokens,maximum_output_tokens,
+              maximum_calculated_nano_usd,raw_response_availability,maximum_raw_response_bytes,response_headers_availability,
+              http_status_availability,provider_response_id_availability,client_request_id_availability,
+              provider_request_id_availability,billing_evidence_availability,response_state,refusal_availability,
+              incomplete_availability,error_availability,requested_model,returned_model_availability,requested_service_tier,
+              returned_service_tier_availability,reasoning_context,reasoning_mode,prompt_cache_mode,billing_availability,
+              rate_availability,expected_rate_limit_fact_count,credit_availability,validation_state,admission_state,created_at)
+            SELECT 'response-cancelled-reserved','unavailable','unavailable','authorization-cancelled-reserved',operation_id,
+              owner_kind,owner_id,'request-cancelled-reserved','attempt-cancelled-reserved','reservation-cancelled-reserved',
+              operation_kind,maximum_input_tokens,maximum_output_tokens,maximum_calculated_nano_usd,'unavailable',
+              maximum_raw_response_bytes,'unavailable','unavailable','unavailable','unavailable','unavailable','unavailable',
+              'cancelled','unavailable','unavailable','unavailable','gpt-5.6-sol','unavailable','default','unavailable',
+              'current_turn','standard','explicit','unavailable','unavailable',0,'unavailable','unavailable','unavailable',
+              '2026-08-10T00:00:05.0000000+00:00'
+            FROM provider_operation_authorizations WHERE authorization_id='authorization-cancelled-reserved';
+            INSERT INTO provider_usage_entries(
+              usage_entry_id,receipt_id,availability,operation_id,provider_attempt_id,request_id,response_record_id,
+              dispatch_count_availability,dispatch_count,input_tokens_availability,output_tokens_availability,
+              total_tokens_availability,reasoning_tokens_availability,cache_read_tokens_availability,
+              cache_write_tokens_availability,priced_tool_calls_availability,calculated_nano_usd_availability,
+              billing_availability,rate_availability,credit_availability,receipt_state,created_at)
+            VALUES('usage-cancelled-reserved','receipt-cancelled-reserved','unavailable','operation-restore','attempt-cancelled-reserved',
+              'request-cancelled-reserved','response-cancelled-reserved','available',0,'unavailable','unavailable',
+              'unavailable','unavailable','unavailable','unavailable','unavailable','unavailable','unavailable',
+              'unavailable','unavailable','not-dispatched','2026-08-10T00:00:06.0000000+00:00');
+            INSERT INTO provider_response_finalizations VALUES(
+              'finalization-cancelled-reserved','response-cancelled-reserved','usage-cancelled-reserved','unavailable',
+              'unavailable','2026-08-10T00:00:07.0000000+00:00');
+            """;
+        command.ExecuteNonQuery();
+
+        const string validSettlement =
+            """
+            INSERT INTO provider_settlements VALUES(
+              'settlement-cancelled-reserved','operation-restore','attempt-cancelled-reserved',
+              'request-cancelled-reserved','reservation-cancelled-reserved','usage-cancelled-reserved',NULL,
+              'settled',100,0,'2026-08-10T00:00:08.0000000+00:00');
+            """;
+        command.CommandText = validSettlement.Replace("'settled',100,0", "'settled',99,1", StringComparison.Ordinal);
+        SqliteException strandedHold = Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+        StringAssert.Contains(strandedHold.Message, "exactly partition the reservation");
+
+        command.CommandText = validSettlement.Replace(
+            "'reservation-cancelled-reserved','usage-cancelled-reserved'",
+            "'reservation-mismatched','usage-cancelled-reserved'",
+            StringComparison.Ordinal);
+        Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+
+        command.CommandText = validSettlement;
+        Assert.AreEqual(1, command.ExecuteNonQuery());
+        command.CommandText =
+            """
+            SELECT count(*) FROM provider_settlement_vector_partitions
+            WHERE settlement_id='settlement-cancelled-reserved'
+              AND state='settled'
+              AND released_dispatch_count=reserved_dispatch_count
+              AND released_input_tokens=reserved_input_tokens
+              AND released_output_tokens=reserved_output_tokens
+              AND released_total_tokens=reserved_total_tokens
+              AND released_reasoning_tokens=reserved_reasoning_tokens
+              AND released_cache_read_tokens=reserved_cache_read_tokens
+              AND released_cache_write_tokens=reserved_cache_write_tokens
+              AND released_priced_tool_calls=reserved_priced_tool_calls
+              AND released_nano_usd=reserved_nano_usd
+              AND retained_dispatch_count=0 AND retained_input_tokens=0 AND retained_output_tokens=0
+              AND retained_total_tokens=0 AND retained_reasoning_tokens=0 AND retained_cache_read_tokens=0
+              AND retained_cache_write_tokens=0 AND retained_priced_tool_calls=0 AND retained_hold_nano_usd=0;
+            """;
+        Assert.AreEqual(1L, (long)command.ExecuteScalar()!);
     }
 
     [TestMethod]
@@ -1634,8 +1766,8 @@ public sealed class PersistenceAndLifecycleTests
         [
             ("2026-08-10T00:00:00.0000000+00:00", "2026-08-10T00:00:00.0010000+00:00", true),
             ("2026-08-10T00:00:00.0000000+00:00", "2026-08-10T00:00:00.0010001+00:00", false),
-            ("2026-08-10T00:00:00.9999000+00:00", "2026-08-10T00:00:01.0009000+00:00", true),
-            ("2026-08-10T23:59:59.9999000+00:00", "2026-08-11T00:00:00.0009000+00:00", true),
+            ("2026-08-10T00:00:00.9999000+00:00", "2026-08-10T00:00:01.0009000+00:00", false),
+            ("2026-08-10T23:59:59.9999000+00:00", "2026-08-11T00:00:00.0009000+00:00", false),
         ];
         foreach ((string confirmed, string deadline, bool accepted) in cases)
         {
@@ -2945,7 +3077,7 @@ public sealed class PersistenceAndLifecycleTests
               'response-staged',3,'2026-08-10T00:00:08.0000000+00:00');
             INSERT INTO provider_responses(
               response_record_id,availability,usage_availability,authorization_id,operation_id,owner_kind,owner_id,
-              request_id,provider_attempt_id,dispatch_fence_id,operation_kind,maximum_input_tokens,maximum_output_tokens,
+              request_id,provider_attempt_id,reservation_id,dispatch_fence_id,operation_kind,maximum_input_tokens,maximum_output_tokens,
               maximum_calculated_nano_usd,raw_response_availability,raw_response_payload_id,raw_response_fingerprint,
               raw_response_bytes,maximum_raw_response_bytes,response_headers_availability,http_status_availability,
               http_status,provider_response_id_availability,client_request_id,client_request_id_availability,
@@ -2955,7 +3087,7 @@ public sealed class PersistenceAndLifecycleTests
               reasoning_mode,prompt_cache_mode,billing_availability,rate_availability,expected_rate_limit_fact_count,
               credit_availability,validation_state,admission_state,created_at)
             SELECT 'response-settlement','available','available','authorization-settlement',operation_id,owner_kind,owner_id,
-              'request-settlement','attempt-settlement','fence-settlement',operation_kind,maximum_input_tokens,
+              'request-settlement','attempt-settlement','reservation-settlement','fence-settlement',operation_kind,maximum_input_tokens,
               maximum_output_tokens,maximum_calculated_nano_usd,'available','request-payload-restore',request_fingerprint,
               1024,maximum_raw_response_bytes,'unavailable','available',200,'unavailable','client-request-settlement',
               'available','unavailable','unavailable','completed','unavailable','unavailable','unavailable','gpt-5.6-sol',
@@ -2963,13 +3095,13 @@ public sealed class PersistenceAndLifecycleTests
               'unavailable',0,'unavailable','proposed','proposed','2026-08-10T00:00:09.0000000+00:00'
             FROM provider_operation_authorizations WHERE authorization_id='authorization-settlement';
             INSERT INTO provider_usage_entries(
-              usage_entry_id,availability,operation_id,provider_attempt_id,request_id,dispatch_fence_id,response_record_id,
+              usage_entry_id,receipt_id,availability,operation_id,provider_attempt_id,request_id,dispatch_fence_id,response_record_id,
               dispatch_count_availability,dispatch_count,input_tokens_availability,input_tokens,output_tokens_availability,
               output_tokens,total_tokens_availability,total_tokens,reasoning_tokens_availability,reasoning_tokens,
               cache_read_tokens_availability,cache_read_tokens,cache_write_tokens_availability,cache_write_tokens,
               priced_tool_calls_availability,priced_tool_calls,calculated_nano_usd_availability,calculated_nano_usd,
               billing_availability,rate_availability,credit_availability,receipt_state,created_at)
-            VALUES('usage-settlement','available','operation-restore','attempt-settlement','request-settlement','fence-settlement',
+            VALUES('usage-settlement','receipt-settlement','available','operation-restore','attempt-settlement','request-settlement','fence-settlement',
               'response-settlement','available',$dispatch_count,'available',$input_tokens,'available',$output_tokens,'available',$total_tokens,
               'available',$reasoning_tokens,'available',$cache_read_tokens,'available',$cache_write_tokens,
               'available',$priced_tool_calls,'available',$calculated_nano_usd,
