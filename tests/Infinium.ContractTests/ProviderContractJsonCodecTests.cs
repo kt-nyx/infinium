@@ -46,7 +46,8 @@ public sealed class ProviderContractJsonCodecTests
         DomainProviderAvailabilityState.Available, Q(1), Q(32), Q(16), Q(48), Q(4), Q(0), Q(0), Q(0), Q(42),
         DomainProviderAvailabilityState.Unavailable,
         DomainProviderAvailabilityState.Unavailable,
-        DomainProviderAvailabilityState.Unavailable);
+        DomainProviderAvailabilityState.Unavailable,
+        Infinium.Domain.Contracts.UsageReceiptState.Complete);
 
     [TestMethod]
     [TestCategory("Contract")]
@@ -205,6 +206,7 @@ public sealed class ProviderContractJsonCodecTests
         response["admission_state"] = "admitted";
         response["usage"]!["dispatch_count"]!["value"] = 1;
         response["usage"]!["availability"] = "available";
+        response["usage"]!["receipt_state"] = "complete";
         response["usage"]!["input_tokens"] = new JsonObject { ["availability"] = "available", ["value"] = 32 };
         response["usage"]!["output_tokens"] = new JsonObject { ["availability"] = "available", ["value"] = 16 };
         response["usage"]!["total_tokens"] = new JsonObject { ["availability"] = "available", ["value"] = 48 };
@@ -232,6 +234,8 @@ public sealed class ProviderContractJsonCodecTests
         observedOverrun["limits"]!["maximum_input_tokens"] = 16;
         observedOverrun["limits"]!["maximum_output_tokens"] = 8;
         observedOverrun["limits"]!["maximum_calculated_nano_usd"] = 40;
+        observedOverrun["validation_state"] = "rejected";
+        observedOverrun["admission_state"] = "rejected";
         byte[] observedOverrunBytes = System.Text.Encoding.UTF8.GetBytes(observedOverrun.ToJsonString());
         using (JsonDocument document = JsonDocument.Parse(observedOverrunBytes))
         {
@@ -365,6 +369,43 @@ public sealed class ProviderContractJsonCodecTests
             using JsonDocument extra = JsonDocument.Parse(operation.ToJsonString());
             Infinium.Application.Evaluation.ActiveJsonSchemaValidator.Validate(
                 extra.RootElement, "provider-operation.v1.schema.json");
+        });
+
+        JsonObject futureOperation = examples["provider-operation.v1.schema.json"]!.DeepClone().AsObject();
+        futureOperation["input_bound_proof"] = new JsonObject
+        {
+            ["policy_id"] = "accepted-test-policy",
+            ["policy_version"] = "1",
+            ["status"] = "proved",
+        };
+        futureOperation["state"] = "settled";
+        futureOperation["transport_state"] = "completed";
+        futureOperation["receipt_state"] = "validated";
+        futureOperation["settlement_state"] = "overrun";
+        futureOperation["replay_state"] = "retained-response";
+        foreach (string identity in new[]
+                 {
+                     "authorization_id", "attempt_id", "request_id", "reservation_id", "dispatch_fence_id",
+                     "transport_event_id", "receipt_id", "response_id", "usage_entry_id", "settlement_id", "replay_edge_id",
+                 })
+        {
+            futureOperation[identity] = identity + "-synthetic";
+        }
+        futureOperation["usage"] = JsonNode.Parse(
+            """{"availability":"available","receipt_state":"complete","dispatch_count":{"availability":"available","value":1},"input_tokens":{"availability":"available","value":2},"output_tokens":{"availability":"available","value":1},"total_tokens":{"availability":"available","value":3},"reasoning_tokens":{"availability":"available","value":1},"cache_read_tokens":{"availability":"available","value":0},"cache_write_tokens":{"availability":"available","value":0},"priced_tool_calls":{"availability":"available","value":0},"calculated_nano_usd":{"availability":"available","value":1},"billing_availability":"unavailable","rate_availability":"unavailable","credit_availability":"unavailable"}""");
+        using (JsonDocument future = JsonDocument.Parse(futureOperation.ToJsonString()))
+        {
+            Infinium.Application.Evaluation.ActiveJsonSchemaValidator.Validate(
+                future.RootElement, "provider-operation.v1.schema.json");
+        }
+        Assert.ThrowsExactly<InvalidOperationException>(() => ProviderContractJsonCodecs.DeserializeOperation(
+            System.Text.Encoding.UTF8.GetBytes(futureOperation.ToJsonString())));
+        futureOperation.Remove("reservation_id");
+        Assert.ThrowsExactly<InvalidDataException>(() =>
+        {
+            using JsonDocument missingIdentity = JsonDocument.Parse(futureOperation.ToJsonString());
+            Infinium.Application.Evaluation.ActiveJsonSchemaValidator.Validate(
+                missingIdentity.RootElement, "provider-operation.v1.schema.json");
         });
 
         JsonObject response = examples["provider-response.v1.schema.json"]!.DeepClone().AsObject();
@@ -1060,6 +1101,7 @@ public sealed class ProviderContractJsonCodecTests
             CacheReadTokens = UnavailableApplicationQuantity(),
             CacheWriteTokens = UnavailableApplicationQuantity(),
             ReservedNanoUsd = UnavailableApplicationQuantity(),
+            UsageReceiptState = Infinium.Contracts.Protobuf.Application.V1.UsageReceiptState.NotDispatched,
         };
         ApplicationProviderContractValidator.Validate(reserved);
         reserved.SettlementState = ProviderSettlementState.Settled;
@@ -1220,6 +1262,7 @@ public sealed class ProviderContractJsonCodecTests
             RecordedAt = ToInstant(HelperNow),
             Availability = AppProviderAvailabilityState.Unavailable,
             UsageAvailability = AppProviderAvailabilityState.Unavailable,
+            UsageReceiptState = Infinium.Contracts.Protobuf.Application.V1.UsageReceiptState.NotDispatched,
             InputBoundProofStatus = InputBoundProofStatus.AuthorityRequired,
             InputBoundPolicyId = "unresolved-openai-responses-framing",
             InputBoundPolicyVersion = "authority-required",
@@ -1267,8 +1310,9 @@ public sealed class ProviderContractJsonCodecTests
         retainedOverrun.ReturnedServiceTierAvailability = AppProviderAvailabilityState.Available;
         retainedOverrun.ReturnedServiceTier = "default";
         retainedOverrun.ResponseState = "completed";
-        retainedOverrun.ValidationState = "admitted";
-        retainedOverrun.AdmissionState = "admitted";
+        retainedOverrun.ValidationState = "rejected";
+        retainedOverrun.AdmissionState = "rejected";
+        retainedOverrun.UsageReceiptState = Infinium.Contracts.Protobuf.Application.V1.UsageReceiptState.Complete;
         retainedOverrun.DispatchCount = AvailableApplicationQuantity(1);
         retainedOverrun.InputTokens = AvailableApplicationQuantity(32);
         retainedOverrun.OutputTokens = AvailableApplicationQuantity(16);
@@ -1642,7 +1686,8 @@ public sealed class ProviderContractJsonCodecTests
         DomainProviderAvailabilityState.Unavailable, Q(0), U(), U(), U(), U(), U(), U(), U(), U(),
         DomainProviderAvailabilityState.Unavailable,
         DomainProviderAvailabilityState.Unavailable,
-        DomainProviderAvailabilityState.Unavailable);
+        DomainProviderAvailabilityState.Unavailable,
+        Infinium.Domain.Contracts.UsageReceiptState.NotDispatched);
     private static ProviderQuantityContract U() => new(DomainProviderAvailabilityState.Unavailable, null);
     private static OptionalProviderQuantity UnavailableApplicationQuantity() =>
         new() { Availability = AppProviderAvailabilityState.Unavailable };

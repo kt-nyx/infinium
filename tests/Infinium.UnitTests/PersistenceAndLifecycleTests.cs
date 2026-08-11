@@ -75,11 +75,11 @@ public sealed class PersistenceAndLifecycleTests
         {
             StringAssert.Contains(receiptTranslationSql, $"'{responseState}'", responseState);
         }
-        StringAssert.Contains(receiptTranslationSql, "r.response_state = 'completed' AND NEW.receipt_state = 'complete'");
-        StringAssert.Contains(receiptTranslationSql, "r.response_state IN ('refusal','incomplete') AND NEW.receipt_state = 'partial'");
+        StringAssert.Contains(receiptTranslationSql, "r.response_state IN ('completed','refusal','malformed','mismatched') AND NEW.receipt_state = 'complete'");
+        StringAssert.Contains(receiptTranslationSql, "r.response_state IN ('incomplete','queued','in-progress') AND NEW.receipt_state = 'partial'");
         StringAssert.Contains(receiptTranslationSql, "r.response_state = 'failed' AND NEW.receipt_state = 'failed-known'");
-        StringAssert.Contains(receiptTranslationSql, "r.response_state IN ('queued','in-progress','mismatched','unknown') AND NEW.receipt_state = 'ambiguous'");
-        StringAssert.Contains(receiptTranslationSql, "r.response_state IN ('malformed','oversized') AND NEW.receipt_state = 'unavailable'");
+        StringAssert.Contains(receiptTranslationSql, "r.response_state = 'unknown' AND NEW.receipt_state = 'ambiguous'");
+        StringAssert.Contains(receiptTranslationSql, "r.response_state = 'oversized' AND NEW.receipt_state IN ('complete','partial')");
         StringAssert.Contains(receiptTranslationSql, "r.response_state = 'cancelled' AND NEW.receipt_state = 'not-dispatched'");
         command.CommandText = "SELECT sql FROM sqlite_schema WHERE type='table' AND name='provider_reservations';";
         string reservationSql = (string)command.ExecuteScalar()!;
@@ -216,6 +216,23 @@ public sealed class PersistenceAndLifecycleTests
         SeedProviderAuthorityBlock(temporary.Root);
         using SqliteConnection connection = OpenRaw(temporary.Root);
         using SqliteCommand command = connection.CreateCommand();
+        foreach ((string state, string outcome, string verification, string recovery) in new[]
+                 {
+                     ("completed", "disabled", "unavailable", "not-required"),
+                     ("failed", "active-verified", "available", "not-required"),
+                     ("cancelled", "active-verified", "available", "not-required"),
+                     ("unavailable", "secure-store-unavailable", "unavailable", "unavailable"),
+                 })
+        {
+            command.CommandText = $"""
+                INSERT INTO provider_credential_intents VALUES(
+                  'orphan-disable-{state}','profile-restore','generation-restore','disable','{state}',
+                  'active-verified','disabled','{outcome}','{verification}','account-restore','billing-restore','cap-restore',
+                  '{recovery}','not-requested','2026-08-10T00:00:02.5000000+00:00');
+                """;
+            SqliteException orphan = Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery(), state);
+            StringAssert.Contains(orphan.Message, "requires one exact open pending v1 root", state);
+        }
         command.CommandText =
             """
             INSERT INTO durable_commands VALUES('command-owner-mismatch','provider','run-restore',0,'recorded','created',NULL,'2026-08-10T00:00:03.0000000+00:00',NULL,NULL);
@@ -351,8 +368,13 @@ public sealed class PersistenceAndLifecycleTests
             INSERT INTO provider_access_profiles VALUES('profile-enroll-cancel','openai','responses','Enroll cancellation',NULL,NULL,'2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO provider_generations VALUES('generation-enroll-cancel','profile-enroll-cancel',1,0,'2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO provider_credential_intents VALUES(
+              'intent-enroll-cancel-pending','profile-enroll-cancel','generation-enroll-cancel','enroll','pending',
+              'none','pending-enrollment','none','not-applicable',NULL,NULL,NULL,'not-required','not-requested','2026-08-10T00:00:00.5000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-enroll-cancel-v1','root-enroll-cancel','intent-enroll-cancel-pending',1,NULL,'2026-08-10T00:00:00.5000000+00:00');
+            INSERT INTO provider_credential_intents VALUES(
               'intent-enroll-cancel','profile-enroll-cancel','generation-enroll-cancel','enroll','cancelled',
               'none','pending-enrollment','none','not-applicable',NULL,NULL,NULL,'not-required','not-requested','2026-08-10T00:00:01.0000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-enroll-cancel-v2','root-enroll-cancel','intent-enroll-cancel',2,'event-enroll-cancel-v1','2026-08-10T00:00:01.0000000+00:00');
 
             INSERT INTO provider_access_profiles VALUES('profile-verify-cancel','openai','responses','Verify cancellation','account-verify','billing-verify','2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO provider_generations VALUES('generation-verify-cancel','profile-verify-cancel',1,0,'2026-08-10T00:00:00.0000000+00:00');
@@ -378,9 +400,15 @@ public sealed class PersistenceAndLifecycleTests
               intent_id='intent-verify-enroll-complete',projection_version=2,updated_at='2026-08-10T00:00:02.0000000+00:00'
               WHERE profile_id='profile-verify-cancel';
             INSERT INTO provider_credential_intents VALUES(
+              'intent-verify-cancel-pending','profile-verify-cancel','generation-verify-cancel','verify','pending',
+              'active-unverified','active-verified','active-unverified','available','account-verify','billing-verify','cap-restore',
+              'not-required','not-requested','2026-08-10T00:00:02.5000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-verify-cancel-v1','root-verify-cancel','intent-verify-cancel-pending',1,NULL,'2026-08-10T00:00:02.5000000+00:00');
+            INSERT INTO provider_credential_intents VALUES(
               'intent-verify-cancel','profile-verify-cancel','generation-verify-cancel','verify','cancelled',
               'active-unverified','active-verified','active-unverified','unavailable','account-verify','billing-verify','cap-restore',
               'not-required','not-requested','2026-08-10T00:00:03.0000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-verify-cancel-v2','root-verify-cancel','intent-verify-cancel',2,'event-verify-cancel-v1','2026-08-10T00:00:03.0000000+00:00');
 
             INSERT INTO provider_access_profiles VALUES('profile-recover-cancel','openai','responses','Recover cancellation','account-recover','billing-recover','2026-08-10T00:00:00.0000000+00:00');
             INSERT INTO provider_generations VALUES('generation-recover-cancel','profile-recover-cancel',1,0,'2026-08-10T00:00:00.0000000+00:00');
@@ -406,19 +434,37 @@ public sealed class PersistenceAndLifecycleTests
               intent_id='intent-recover-required',recovery_disposition='required',projection_version=2,updated_at='2026-08-10T00:00:02.0000000+00:00'
               WHERE profile_id='profile-recover-cancel';
             INSERT INTO provider_credential_intents VALUES(
+              'intent-recover-cancel-pending','profile-recover-cancel','generation-recover-cancel','recover','pending',
+              'recovery-required','active-unverified','recovery-required','unavailable','account-recover','billing-recover','cap-restore',
+              'not-required','not-requested','2026-08-10T00:00:02.5000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-recover-cancel-v1','root-recover-cancel','intent-recover-cancel-pending',1,NULL,'2026-08-10T00:00:02.5000000+00:00');
+            INSERT INTO provider_credential_intents VALUES(
               'intent-recover-cancel','profile-recover-cancel','generation-recover-cancel','recover','cancelled',
               'recovery-required','active-unverified','recovery-required','unavailable','account-recover','billing-recover','cap-restore',
               'required','not-requested','2026-08-10T00:00:03.0000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-recover-cancel-v2','root-recover-cancel','intent-recover-cancel',2,'event-recover-cancel-v1','2026-08-10T00:00:03.0000000+00:00');
 
             INSERT INTO provider_generations VALUES('generation-replacement','profile-restore',2,0,'2026-08-10T00:00:03.0000000+00:00');
             INSERT INTO provider_credential_intents VALUES(
+              'intent-replace-cancel-pending','profile-restore','generation-replacement','replace','pending',
+              'active-verified','replacing','active-verified','unavailable','account-restore','billing-restore','cap-restore',
+              'not-required','not-requested','2026-08-10T00:00:03.1000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-replace-cancel-v1','root-replace-cancel','intent-replace-cancel-pending',1,NULL,'2026-08-10T00:00:03.1000000+00:00');
+            INSERT INTO provider_credential_intents VALUES(
               'intent-replace-cancel','profile-restore','generation-replacement','replace','cancelled',
               'active-verified','replacing','active-verified','available','account-restore','billing-restore','cap-restore',
-              'not-required','not-requested','2026-08-10T00:00:03.0000000+00:00');
+              'not-required','not-requested','2026-08-10T00:00:03.2000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-replace-cancel-v2','root-replace-cancel','intent-replace-cancel',2,'event-replace-cancel-v1','2026-08-10T00:00:03.2000000+00:00');
+            INSERT INTO provider_credential_intents VALUES(
+              'intent-disable-cancel-pending','profile-restore','generation-restore','disable','pending',
+              'active-verified','disabled','active-verified','unavailable','account-restore','billing-restore','cap-restore',
+              'not-required','not-requested','2026-08-10T00:00:04.0000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-disable-cancel-v1','root-disable-cancel','intent-disable-cancel-pending',1,NULL,'2026-08-10T00:00:04.0000000+00:00');
             INSERT INTO provider_credential_intents VALUES(
               'intent-disable-cancel','profile-restore','generation-restore','disable','cancelled',
               'active-verified','disabled','active-verified','available','account-restore','billing-restore','cap-restore',
-              'not-required','not-requested','2026-08-10T00:00:04.0000000+00:00');
+              'not-required','not-requested','2026-08-10T00:00:04.1000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-disable-cancel-v2','root-disable-cancel','intent-disable-cancel',2,'event-disable-cancel-v1','2026-08-10T00:00:04.1000000+00:00');
             """;
         command.ExecuteNonQuery();
 
@@ -506,9 +552,15 @@ public sealed class PersistenceAndLifecycleTests
         command.CommandText =
             """
             INSERT INTO provider_credential_intents VALUES(
+              'intent-delete-cancel-pending','profile-restore','generation-restore','delete','pending',
+              'active-verified','delete-pending','active-verified','unavailable','account-restore','billing-restore','cap-restore',
+              'not-required','pending','2026-08-10T00:00:02.5000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-delete-cancel-v1','root-delete-cancel','intent-delete-cancel-pending',1,NULL,'2026-08-10T00:00:02.5000000+00:00');
+            INSERT INTO provider_credential_intents VALUES(
               'intent-delete-cancelled','profile-restore','generation-restore','delete','cancelled',
               'active-verified','delete-pending','active-verified','available','account-restore','billing-restore','cap-restore',
               'not-required','not-requested','2026-08-10T00:00:03.0000000+00:00');
+            INSERT INTO provider_credential_intent_events VALUES('event-delete-cancel-v2','root-delete-cancel','intent-delete-cancelled',2,'event-delete-cancel-v1','2026-08-10T00:00:03.0000000+00:00');
             INSERT INTO provider_credential_intents VALUES(
               'intent-delete-retry','profile-restore','generation-restore','delete','pending',
               'active-verified','delete-pending','active-verified','unavailable','account-restore','billing-restore','cap-restore',
@@ -1412,7 +1464,7 @@ public sealed class PersistenceAndLifecycleTests
               'not-required','pending','2026-08-10T00:00:04.0000000+00:00');
             """;
         SqliteException staleProjection = Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
-        StringAssert.Contains(staleProjection.Message, "exact latest durable event");
+        StringAssert.Contains(staleProjection.Message, "predecessor mismatch");
 
         command.CommandText =
             """
@@ -1564,13 +1616,66 @@ public sealed class PersistenceAndLifecycleTests
             """
             SELECT
               (SELECT COUNT(*) FROM pragma_table_list
-               WHERE schema='main' AND name NOT LIKE 'sqlite_%' AND strict=0),
+               WHERE schema='main' AND type='table' AND name NOT LIKE 'sqlite_%' AND strict=0),
               (SELECT foreign_keys FROM pragma_foreign_keys);
             """;
         using SqliteDataReader reader = command.ExecuteReader();
         Assert.IsTrue(reader.Read());
         Assert.AreEqual(0L, reader.GetInt64(0));
         Assert.AreEqual(1L, reader.GetInt64(1));
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestProperty("Category", "Unit")]
+    public void Schema6AuthorizationDeadlinesUseExactHundredNanosecondArithmeticAcrossBoundaries()
+    {
+        (string Confirmed, string Deadline, bool Accepted)[] cases =
+        [
+            ("2026-08-10T00:00:00.0000000+00:00", "2026-08-10T00:00:00.0010000+00:00", true),
+            ("2026-08-10T00:00:00.0000000+00:00", "2026-08-10T00:00:00.0010001+00:00", false),
+            ("2026-08-10T00:00:00.9999000+00:00", "2026-08-10T00:00:01.0009000+00:00", true),
+            ("2026-08-10T23:59:59.9999000+00:00", "2026-08-11T00:00:00.0009000+00:00", true),
+        ];
+        foreach ((string confirmed, string deadline, bool accepted) in cases)
+        {
+            using TemporaryStore temporary = new();
+            using AuthoritativeStore store = temporary.Open();
+            SeedProviderAuthorityBlock(temporary.Root);
+            using SqliteConnection connection = OpenRaw(temporary.Root);
+            using SqliteCommand command = connection.CreateCommand();
+            command.Parameters.AddWithValue("$confirmed", confirmed);
+            command.Parameters.AddWithValue("$deadline", deadline);
+            command.CommandText =
+                """
+                DROP TRIGGER provider_authority_release_required;
+                INSERT INTO provider_operation_authorizations(
+                  authorization_id,operation_id,owner_kind,owner_id,evidence_acquisition_run_id,job_node_id,command_id,requested_at,
+                  profile_id,generation_id,revocation_epoch,operation_kind,installation_snapshot_id,analysis_context_id,
+                  effective_configuration_id,resolved_input_manifest_id,prompt_id,prompt_fingerprint,output_schema_id,
+                  output_schema_fingerprint,request_fingerprint,canonical_request_fingerprint,capability_snapshot_id,
+                  price_snapshot_id,settings_fingerprint,input_bound_policy_id,input_bound_policy_version,input_bound_proof_status,
+                  coordinator_fencing_epoch,maximum_request_bytes,maximum_input_tokens,maximum_output_tokens,
+                  maximum_raw_response_bytes,maximum_dispatch_count,maximum_calculated_nano_usd,deadline_milliseconds,
+                  dispatch_deadline_utc,confirmed_at)
+                SELECT 'authorization-deadline',operation_id,owner_kind,owner_id,owner_id,job_node_id,command_id,requested_at,
+                  profile_id,generation_id,revocation_epoch,operation_kind,installation_snapshot_id,analysis_context_id,
+                  effective_configuration_id,resolved_input_manifest_id,prompt_id,prompt_fingerprint,output_schema_id,
+                  output_schema_fingerprint,request_fingerprint,canonical_request_fingerprint,capability_snapshot_id,
+                  price_snapshot_id,settings_fingerprint,'accepted-test-policy','1','proved',coordinator_fencing_epoch,
+                  maximum_request_bytes,maximum_input_tokens,maximum_output_tokens,maximum_raw_response_bytes,
+                  maximum_dispatch_count,maximum_calculated_nano_usd,1,$deadline,$confirmed
+                FROM provider_operation_blocks WHERE operation_id='operation-restore';
+                """;
+            if (accepted)
+            {
+                Assert.AreEqual(1, command.ExecuteNonQuery(), $"{confirmed}->{deadline}");
+            }
+            else
+            {
+                Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery(), $"{confirmed}->{deadline}");
+            }
+        }
     }
 
     [TestMethod]
@@ -2819,12 +2924,12 @@ public sealed class PersistenceAndLifecycleTests
             FROM provider_operation_authorizations WHERE authorization_id='authorization-settlement';
             INSERT INTO provider_reservations VALUES(
               'reservation-settlement','operation-restore','attempt-settlement','request-settlement',
-              '{"dispatch_count":1,"input_tokens":10,"output_tokens":5,"reasoning_tokens":2,"cache_read_tokens":0,"cache_write_tokens":0,"priced_tool_calls":0,"calculated_nano_usd":100}',
+              '{"dispatch_count":1,"input_tokens":10,"output_tokens":5,"total_tokens":15,"reasoning_tokens":2,"cache_read_tokens":0,"cache_write_tokens":0,"priced_tool_calls":0,"calculated_nano_usd":100}',
               1,10,5,2,0,0,0,100,
               '2026-08-10T00:01:30.0000000+00:00','2026-08-10T00:00:04.0000000+00:00');
             INSERT INTO provider_reservation_scope_items VALUES(
               'scope-settlement','reservation-settlement','operation','operation-restore',
-              '{"dispatch_count":1,"input_tokens":10,"output_tokens":5,"reasoning_tokens":2,"cache_read_tokens":0,"cache_write_tokens":0,"priced_tool_calls":0,"calculated_nano_usd":100}',100);
+              '{"dispatch_count":1,"input_tokens":10,"output_tokens":5,"total_tokens":15,"reasoning_tokens":2,"cache_read_tokens":0,"cache_write_tokens":0,"priced_tool_calls":0,"calculated_nano_usd":100}',100);
             INSERT INTO provider_dispatch_fences VALUES(
               'fence-settlement','authorization-settlement','operation-restore','reservation-settlement','request-settlement',
               'attempt-settlement',1,'profile-restore','generation-restore',0,1,'synthetic admitted fence',
@@ -2871,6 +2976,21 @@ public sealed class PersistenceAndLifecycleTests
               'unavailable','unavailable','unavailable','complete','2026-08-10T00:00:10.0000000+00:00');
             """;
         Assert.AreEqual(11, command.ExecuteNonQuery());
+        bool policyViolation = dispatchCount > 1 || cacheReadTokens > 0 || cacheWriteTokens > 0 || pricedToolCalls > 0;
+        if (succeeds && policyViolation)
+        {
+            command.CommandText =
+                """
+                INSERT INTO provider_response_finalizations VALUES(
+                  'finalization-settlement','response-settlement','usage-settlement','admitted','admitted',
+                  '2026-08-10T00:00:10.5000000+00:00');
+                """;
+            SqliteException admittedOverrun = Assert.ThrowsExactly<SqliteException>(() => command.ExecuteNonQuery());
+            StringAssert.Contains(admittedOverrun.Message, "exact rate/admission state");
+            command.CommandText = command.CommandText
+                .Replace("'admitted','admitted'", "'rejected','rejected'", StringComparison.Ordinal);
+            Assert.AreEqual(1, command.ExecuteNonQuery());
+        }
         command.CommandText =
             """
             INSERT INTO provider_reservation_scope_items VALUES(
@@ -2895,6 +3015,21 @@ public sealed class PersistenceAndLifecycleTests
             StringAssert.Contains(amountMismatch.Message, "exactly partition the reservation");
             command.CommandText = validSettlement;
             Assert.AreEqual(1, command.ExecuteNonQuery());
+            command.CommandText =
+                """
+                SELECT count(*) FROM provider_settlement_vector_partitions
+                WHERE settlement_id='settlement-observed'
+                  AND reserved_dispatch_count = released_dispatch_count + retained_dispatch_count
+                  AND reserved_input_tokens = released_input_tokens + retained_input_tokens
+                  AND reserved_output_tokens = released_output_tokens + retained_output_tokens
+                  AND reserved_total_tokens = released_total_tokens + retained_total_tokens
+                  AND reserved_reasoning_tokens = released_reasoning_tokens + retained_reasoning_tokens
+                  AND reserved_cache_read_tokens = released_cache_read_tokens + retained_cache_read_tokens
+                  AND reserved_cache_write_tokens = released_cache_write_tokens + retained_cache_write_tokens
+                  AND reserved_priced_tool_calls = released_priced_tool_calls + retained_priced_tool_calls
+                  AND reserved_nano_usd = released_nano_usd + retained_hold_nano_usd;
+                """;
+            Assert.AreEqual(1L, (long)command.ExecuteScalar()!);
         }
         else
         {

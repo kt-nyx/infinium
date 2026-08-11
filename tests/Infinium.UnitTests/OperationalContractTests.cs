@@ -405,7 +405,7 @@ public sealed class OperationalContractTests
             Id("configuration-1"),
             Id("capability-1"),
             Id("price-1"),
-            new ProviderUsageQuantitiesContract(1, 100, 50, 25, 0),
+            new ProviderUsageQuantitiesContract(1, 100, 50, 150, 25, 0, 0, 0),
             new CalculatedCostContract(100),
             [
                 new BudgetLimitScopeContract(BudgetLimitScopeKind.Request, Id("request-1")),
@@ -453,7 +453,7 @@ public sealed class OperationalContractTests
             reservation.AttemptId,
             reservation.RequestIdentity,
             reservation.EffectiveScanConfigurationId,
-            new ProviderUsageQuantitiesContract(1, 90, 45, 20, 0),
+            new ProviderUsageQuantitiesContract(1, 90, 45, 135, 20, 0, 0, 0),
             UsageReceiptState.Complete,
             new CalculatedCostContract(90),
             new ProviderBillingFactContract(OperationalFactAvailability.Unavailable, null),

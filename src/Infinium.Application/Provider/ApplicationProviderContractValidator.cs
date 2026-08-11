@@ -172,7 +172,9 @@ public static class ApplicationProviderContractValidator
         bool blocked = value.InputBoundProofStatus == InputBoundProofStatus.AuthorityRequired;
         bool anyDownstream = Has(value.AuthorizationId) || value.AttemptId is not null || Has(value.RequestId)
             || value.ReservationId is not null || value.DispatchFenceId is not null || Has(value.ResponseRecordId)
-            || value.Response is not null || Has(value.UsageEntryId) || Has(value.SettlementId) || Has(value.ReplayEdgeId);
+            || value.Response is not null || Has(value.UsageEntryId) || Has(value.SettlementId) || Has(value.ReplayEdgeId)
+            || Has(value.TransportEventId) || Has(value.ReceiptId) || value.Reserved is not null
+            || value.Observed is not null || value.Released is not null || value.Retained is not null;
         if (blocked)
         {
             if (value.InputBoundPolicyId != "unresolved-openai-responses-framing"
@@ -188,6 +190,7 @@ public static class ApplicationProviderContractValidator
                     value.CacheReadTokens, value.CacheWriteTokens, value.CalculatedNanoUsd, value.ReservedNanoUsd)
                 || value.DispatchCount.Availability != ProviderAvailabilityState.Available
                 || !value.DispatchCount.HasValue || value.DispatchCount.Value != 0
+                || value.UsageReceiptState != UsageReceiptState.NotDispatched
                 || new[] { value.InputTokens, value.OutputTokens, value.TotalTokens, value.ReasoningTokens,
                     value.CacheReadTokens, value.CacheWriteTokens, value.CalculatedNanoUsd, value.ReservedNanoUsd }
                     .Any(quantity => quantity.Availability != ProviderAvailabilityState.Unavailable)
@@ -222,7 +225,8 @@ public static class ApplicationProviderContractValidator
             value.ReturnedServiceTierAvailability, value.BillingEvidenceAvailability,
         ];
         if (factAvailabilities.Any(x => !Enum.IsDefined(x) || x == ProviderAvailabilityState.Unspecified)
-            || !Enum.IsDefined(value.UsageAvailability) || value.UsageAvailability == ProviderAvailabilityState.Unspecified)
+            || !Enum.IsDefined(value.UsageAvailability) || value.UsageAvailability == ProviderAvailabilityState.Unspecified
+            || !Enum.IsDefined(value.UsageReceiptState) || value.UsageReceiptState == UsageReceiptState.Unspecified)
         {
             throw new InvalidDataException("Every optional provider response fact requires typed availability.");
         }
@@ -545,10 +549,9 @@ public static class ApplicationProviderContractValidator
                 value.ReasoningTokens, value.CacheReadTokens, value.CacheWriteTokens,
                 value.PricedToolCalls, value.CalculatedNanoUsd }
                 .All(quantity => quantity.Availability == ProviderAvailabilityState.Available)
-            && value.DispatchCount.Value == 1 && value.CacheReadTokens.Value == 0
-            && value.CacheWriteTokens.Value == 0 && value.PricedToolCalls.Value == 0;
+            && value.DispatchCount.Value >= 1 && value.UsageReceiptState == UsageReceiptState.Complete;
         bool dispatchedUsage = value.UsageAvailability == ProviderAvailabilityState.Available
-            && value.DispatchCount is { Availability: ProviderAvailabilityState.Available, HasValue: true, Value: 1 };
+            && value.DispatchCount is { Availability: ProviderAvailabilityState.Available, HasValue: true, Value: >= 1 };
         bool cancelledUsage = value.UsageAvailability == ProviderAvailabilityState.Unavailable
             && value.DispatchCount is { Availability: ProviderAvailabilityState.Available, HasValue: true, Value: 0 }
             && new[] { value.InputTokens, value.OutputTokens, value.TotalTokens, value.ReasoningTokens,
@@ -572,26 +575,42 @@ public static class ApplicationProviderContractValidator
         bool noOverflow = !value.HasOverflowObservedExcessBytes;
         bool nonSuccess = value.ValidationState is "rejected" or "abstained" or "unavailable" or "unsupported"
             && value.AdmissionState is "rejected" or "abstained" or "unavailable" or "unsupported";
+        bool policyCompliant = value.DispatchCount.Value <= value.Limits.MaximumDispatchCount
+            && value.InputTokens.Value <= value.Limits.MaximumInputTokens
+            && value.OutputTokens.Value <= value.Limits.MaximumOutputTokens
+            && value.CacheReadTokens.Value == 0 && value.CacheWriteTokens.Value == 0
+            && value.PricedToolCalls.Value == 0
+            && value.CalculatedNanoUsd.Value <= (ulong)value.Limits.MaximumCalculatedNanoUsd;
         bool valid = value.ResponseState switch
         {
             "completed" => transport && raw && http && value.ReturnedModelAvailability == ProviderAvailabilityState.Available
                 && value.ReturnedServiceTierAvailability == ProviderAvailabilityState.Available
                 && value.ReturnedModel == "gpt-5.6-sol" && value.ReturnedServiceTier == "default"
                 && semanticFactsAbsent && noOverflow && completedUsage
-                && value.ValidationState == "admitted" && value.AdmissionState == "admitted",
-            "refusal" => transport && raw && http && refusal && !incomplete && !error && noOverflow && dispatchedUsage && nonSuccess,
-            "incomplete" => transport && raw && http && !refusal && incomplete && !error && noOverflow && dispatchedUsage && nonSuccess,
-            "failed" => transport && raw && http && !refusal && !incomplete && error && noOverflow && dispatchedUsage && nonSuccess,
-            "queued" or "in-progress" => transport && raw && http && semanticFactsAbsent && noOverflow && dispatchedUsage && nonSuccess,
-            "malformed" => transport && raw && http && !refusal && !incomplete && !error && noOverflow && dispatchedUsage && nonSuccess,
-            "oversized" => transport && boundedOverflow && http && !refusal && !incomplete && !error && dispatchedUsage && nonSuccess,
+                && (policyCompliant
+                    ? value.ValidationState == "admitted" && value.AdmissionState == "admitted"
+                    : nonSuccess),
+            "refusal" => transport && raw && http && refusal && !incomplete && !error && noOverflow
+                && dispatchedUsage && value.UsageReceiptState == UsageReceiptState.Complete && nonSuccess,
+            "incomplete" => transport && raw && http && !refusal && incomplete && !error && noOverflow
+                && dispatchedUsage && value.UsageReceiptState == UsageReceiptState.Partial && nonSuccess,
+            "failed" => transport && raw && http && !refusal && !incomplete && error && noOverflow
+                && dispatchedUsage && value.UsageReceiptState == UsageReceiptState.FailedKnown && nonSuccess,
+            "queued" or "in-progress" => transport && raw && http && semanticFactsAbsent && noOverflow
+                && dispatchedUsage && value.UsageReceiptState == UsageReceiptState.Partial && nonSuccess,
+            "malformed" => transport && raw && http && !refusal && !incomplete && !error && noOverflow
+                && dispatchedUsage && value.UsageReceiptState == UsageReceiptState.Complete && nonSuccess,
+            "oversized" => transport && boundedOverflow && http && !refusal && !incomplete && !error
+                && dispatchedUsage && value.UsageReceiptState is UsageReceiptState.Complete or UsageReceiptState.Partial && nonSuccess,
             "mismatched" => transport && raw && http && dispatchedUsage
                 && value.ReturnedModelAvailability == ProviderAvailabilityState.Available
                 && value.ReturnedServiceTierAvailability == ProviderAvailabilityState.Available
-                && (value.ReturnedModel != "gpt-5.6-sol" || value.ReturnedServiceTier != "default") && noOverflow && nonSuccess,
-            "unknown" => transport && raw && http && semanticFactsAbsent && noOverflow && dispatchedUsage && nonSuccess,
+                && (value.ReturnedModel != "gpt-5.6-sol" || value.ReturnedServiceTier != "default") && noOverflow
+                && value.UsageReceiptState == UsageReceiptState.Complete && nonSuccess,
+            "unknown" => transport && raw && http && semanticFactsAbsent && noOverflow && dispatchedUsage
+                && value.UsageReceiptState == UsageReceiptState.Ambiguous && nonSuccess,
             "cancelled" => noTransport && !raw && !http && semanticFactsAbsent && allProviderFactsUnavailable
-                && noOverflow && cancelledUsage && nonSuccess,
+                && noOverflow && cancelledUsage && value.UsageReceiptState == UsageReceiptState.NotDispatched && nonSuccess,
             _ => false,
         };
         if (!valid)

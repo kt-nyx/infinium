@@ -550,16 +550,24 @@ public static class ProviderOperationContractInvariants
     {
         ArgumentNullException.ThrowIfNull(value);
         RequireExplicit(value.Availability, nameof(value.Availability));
+        RequireExplicit(value.ReceiptState, nameof(value.ReceiptState));
         ProviderQuantityContract[] quantities = [value.DispatchCount, value.InputTokens, value.OutputTokens, value.TotalTokens, value.ReasoningTokens,
             value.CacheReadTokens, value.CacheWriteTokens, value.PricedToolCalls, value.CalculatedNanoUsd];
         if (quantities.Any(x => !ValidQuantity(x))
-            || value.DispatchCount.Value > 1 || value.InputTokens.Value > 73_728 || value.OutputTokens.Value > 4_096
-            || value.TotalTokens.Value > 77_824
-            || value.ReasoningTokens.Value > 4_096 || value.CalculatedNanoUsd.Value > 600_000_000
-            || value.CacheReadTokens.Value is not (null or 0) || value.CacheWriteTokens.Value is not (null or 0)
-            || value.PricedToolCalls.Value is not (null or 0))
+            || value.DispatchCount.Value > 2 || value.InputTokens.Value > 147_456 || value.OutputTokens.Value > 8_192
+            || value.TotalTokens.Value > 155_648
+            || value.ReasoningTokens.Value > 8_192 || value.CalculatedNanoUsd.Value > 1_200_000_000
+            || value.CacheReadTokens.Value > 147_456 || value.CacheWriteTokens.Value > 147_456
+            || value.PricedToolCalls.Value > 64
+            || value.TotalTokens.Availability == ProviderAvailabilityState.Available
+                && (value.InputTokens.Availability != ProviderAvailabilityState.Available
+                    || value.OutputTokens.Availability != ProviderAvailabilityState.Available
+                    || value.TotalTokens.Value != checked(value.InputTokens.Value + value.OutputTokens.Value))
+            || value.ReasoningTokens.Availability == ProviderAvailabilityState.Available
+                && (value.OutputTokens.Availability != ProviderAvailabilityState.Available
+                    || value.ReasoningTokens.Value > value.OutputTokens.Value))
         {
-            throw new InvalidOperationException("The M1 cache-off/tool-free usage vector is invalid.");
+            throw new InvalidOperationException("The retained provider usage vector exceeds its closed post-fact bounds or is internally inconsistent.");
         }
         RequireExplicit(value.BillingAvailability, nameof(value.BillingAvailability));
         RequireExplicit(value.RateAvailability, nameof(value.RateAvailability));
@@ -567,6 +575,24 @@ public static class ProviderOperationContractInvariants
         if (value.CreditAvailability == ProviderAvailabilityState.Available)
         {
             throw new InvalidOperationException("Provider credit remains unavailable until separately evidenced authority exists.");
+        }
+        bool allQuantitiesAvailable = quantities.All(x => x.Availability == ProviderAvailabilityState.Available);
+        bool noQuantitiesExceptZeroDispatch = value.DispatchCount is { Availability: ProviderAvailabilityState.Available, Value: 0 }
+            && quantities.Skip(1).All(x => x.Availability != ProviderAvailabilityState.Available);
+        bool validReceipt = value.ReceiptState switch
+        {
+            UsageReceiptState.NotDispatched => value.Availability == ProviderAvailabilityState.Unavailable
+                && noQuantitiesExceptZeroDispatch,
+            UsageReceiptState.Complete => value.Availability == ProviderAvailabilityState.Available
+                && value.DispatchCount.Value is >= 1 && allQuantitiesAvailable,
+            UsageReceiptState.Partial or UsageReceiptState.FailedKnown or UsageReceiptState.Ambiguous =>
+                value.DispatchCount is { Availability: ProviderAvailabilityState.Available, Value: >= 1 },
+            UsageReceiptState.Unavailable => value.Availability == ProviderAvailabilityState.Unavailable,
+            _ => false,
+        };
+        if (!validReceipt)
+        {
+            throw new InvalidOperationException("Provider usage receipt state contradicts the retained availability vector.");
         }
     }
 
@@ -619,7 +645,11 @@ public static class ProviderOperationContractInvariants
             && value.Usage.CreditAvailability == ProviderAvailabilityState.Unavailable;
         if (value.State != ProviderOperationState.InputBoundBlocked || !blockedUsage
             || value.TransportState != "not-started" || value.ReceiptState != "not-available"
-            || value.SettlementState != "not-started" || value.ReplayState != "not-available")
+            || value.SettlementState != "not-started" || value.ReplayState != "not-available"
+            || value.AuthorizationId is not null || value.AttemptId is not null || value.RequestId is not null
+            || value.ReservationId is not null || value.DispatchFenceId is not null
+            || value.TransportEventId is not null || value.ReceiptId is not null || value.ResponseId is not null
+            || value.UsageEntryId is not null || value.SettlementId is not null || value.ReplayEdgeId is not null)
         {
             throw new InvalidOperationException("Provider operation state contradicts its reachable identities or terminal projections.");
         }
@@ -661,10 +691,6 @@ public static class ProviderOperationContractInvariants
         // Limits remain pre-dispatch admission ceilings. Provider receipts are
         // post-fact accounting evidence and must retain overruns truthfully.
         Validate(kind, limits);
-        if (usage.DispatchCount.Value > limits.MaximumDispatchCount)
-        {
-            throw new InvalidOperationException("Provider response usage exceeds its authorized dispatch count.");
-        }
         if (usage.TotalTokens.Availability == ProviderAvailabilityState.Available
             && (usage.InputTokens.Availability != ProviderAvailabilityState.Available
                 || usage.OutputTokens.Availability != ProviderAvailabilityState.Available
@@ -702,15 +728,23 @@ public static class ProviderOperationContractInvariants
                 value.Usage.TotalTokens, value.Usage.ReasoningTokens, value.Usage.CacheReadTokens,
                 value.Usage.CacheWriteTokens, value.Usage.PricedToolCalls, value.Usage.CalculatedNanoUsd }
                 .All(quantity => quantity.Availability == ProviderAvailabilityState.Available)
-            && value.Usage.DispatchCount.Value == 1;
+            && value.Usage.DispatchCount.Value >= 1
+            && value.Usage.ReceiptState == UsageReceiptState.Complete;
         bool dispatchedUsage = value.Usage.Availability == ProviderAvailabilityState.Available
-            && value.Usage.DispatchCount is { Availability: ProviderAvailabilityState.Available, Value: 1 };
+            && value.Usage.DispatchCount is { Availability: ProviderAvailabilityState.Available, Value: >= 1 };
         bool cancelledUsage = value.Usage.Availability == ProviderAvailabilityState.Unavailable
             && value.Usage.DispatchCount is { Availability: ProviderAvailabilityState.Available, Value: 0 }
             && new[] { value.Usage.InputTokens, value.Usage.OutputTokens, value.Usage.TotalTokens,
                 value.Usage.ReasoningTokens, value.Usage.CacheReadTokens, value.Usage.CacheWriteTokens,
                 value.Usage.PricedToolCalls, value.Usage.CalculatedNanoUsd }
                 .All(quantity => quantity.Availability != ProviderAvailabilityState.Available);
+        bool policyCompliant = value.Usage.DispatchCount.Value <= value.Limits.MaximumDispatchCount
+            && value.Usage.InputTokens.Value <= value.Limits.MaximumInputTokens
+            && value.Usage.OutputTokens.Value <= value.Limits.MaximumOutputTokens
+            && value.Usage.CacheReadTokens.Value is null or 0
+            && value.Usage.CacheWriteTokens.Value is null or 0
+            && value.Usage.PricedToolCalls.Value is null or 0
+            && value.Usage.CalculatedNanoUsd.Value <= value.Limits.MaximumCalculatedNanoUsd;
         bool allProviderFactsUnavailable = new[]
             {
                 value.RawResponseAvailability, value.ResponseHeadersAvailability, value.HttpStatusAvailability,
@@ -731,26 +765,31 @@ public static class ProviderOperationContractInvariants
         {
             ProviderResponseState.Completed => transport && raw && http && returnedModel && returnedTier
                 && value.ReturnedModel == "gpt-5.6-sol" && value.ReturnedServiceTier == "default"
-                && semanticFactsAbsent && noOverflow && completeUsage && admitted,
+                && semanticFactsAbsent && noOverflow && completeUsage
+                && (policyCompliant ? admitted : nonSuccessAdmission),
             ProviderResponseState.Refusal => transport && raw && http && refusal && !incomplete && !error
-                && noOverflow && dispatchedUsage && nonSuccessAdmission,
+                && noOverflow && dispatchedUsage && value.Usage.ReceiptState == UsageReceiptState.Complete && nonSuccessAdmission,
             ProviderResponseState.Incomplete => transport && raw && http && !refusal && incomplete && !error
-                && noOverflow && dispatchedUsage && nonSuccessAdmission,
+                && noOverflow && dispatchedUsage && value.Usage.ReceiptState == UsageReceiptState.Partial && nonSuccessAdmission,
             ProviderResponseState.Failed => transport && raw && http && !refusal && !incomplete && error
-                && noOverflow && dispatchedUsage && nonSuccessAdmission,
+                && noOverflow && dispatchedUsage && value.Usage.ReceiptState == UsageReceiptState.FailedKnown && nonSuccessAdmission,
             ProviderResponseState.Queued or ProviderResponseState.InProgress => transport && raw && http
-                && semanticFactsAbsent && noOverflow && dispatchedUsage && nonSuccessAdmission,
+                && semanticFactsAbsent && noOverflow && dispatchedUsage && value.Usage.ReceiptState == UsageReceiptState.Partial && nonSuccessAdmission,
             ProviderResponseState.Malformed => transport && raw && http
-                && !refusal && !incomplete && !error && noOverflow && dispatchedUsage && nonSuccessAdmission,
+                && !refusal && !incomplete && !error && noOverflow && dispatchedUsage
+                && value.Usage.ReceiptState == UsageReceiptState.Complete && nonSuccessAdmission,
             ProviderResponseState.Oversized => transport && boundedOverflow && http
-                && !refusal && !incomplete && !error && dispatchedUsage && nonSuccessAdmission,
+                && !refusal && !incomplete && !error && dispatchedUsage
+                && value.Usage.ReceiptState is UsageReceiptState.Complete or UsageReceiptState.Partial && nonSuccessAdmission,
             ProviderResponseState.Mismatched => transport && raw && http && returnedModel && returnedTier
                 && dispatchedUsage && (value.ReturnedModel != "gpt-5.6-sol"
-                    || value.ReturnedServiceTier != "default") && noOverflow && nonSuccessAdmission,
+                    || value.ReturnedServiceTier != "default") && noOverflow
+                && value.Usage.ReceiptState == UsageReceiptState.Complete && nonSuccessAdmission,
             ProviderResponseState.Unknown => transport && raw && http && semanticFactsAbsent
-                && noOverflow && dispatchedUsage && nonSuccessAdmission,
+                && noOverflow && dispatchedUsage && value.Usage.ReceiptState == UsageReceiptState.Ambiguous && nonSuccessAdmission,
             ProviderResponseState.Cancelled => noTransport && !raw && !http && semanticFactsAbsent
-                && allProviderFactsUnavailable && noOverflow && cancelledUsage && nonSuccessAdmission,
+                && allProviderFactsUnavailable && noOverflow && cancelledUsage
+                && value.Usage.ReceiptState == UsageReceiptState.NotDispatched && nonSuccessAdmission,
             _ => false,
         };
         if (!valid)

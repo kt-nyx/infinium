@@ -166,7 +166,8 @@ public sealed record ProviderUsageContract(
     ProviderQuantityContract CalculatedNanoUsd,
     ProviderAvailabilityState BillingAvailability,
     ProviderAvailabilityState RateAvailability,
-    ProviderAvailabilityState CreditAvailability);
+    ProviderAvailabilityState CreditAvailability,
+    UsageReceiptState ReceiptState);
 
 public sealed record ProviderRateLimitFactContract(
     string Scope,
@@ -235,7 +236,18 @@ public sealed record ProviderOperationDocument(
     UtcTimestamp ConfirmedAt,
     UtcTimestamp DispatchDeadline,
     long CoordinatorFencingEpoch,
-    UtcTimestamp RecordedAt);
+    UtcTimestamp RecordedAt,
+    OpaqueId? AuthorizationId = null,
+    OpaqueId? AttemptId = null,
+    OpaqueId? RequestId = null,
+    OpaqueId? ReservationId = null,
+    OpaqueId? DispatchFenceId = null,
+    OpaqueId? TransportEventId = null,
+    OpaqueId? ReceiptId = null,
+    OpaqueId? ResponseId = null,
+    OpaqueId? UsageEntryId = null,
+    OpaqueId? SettlementId = null,
+    OpaqueId? ReplayEdgeId = null);
 
 public sealed record ProviderResponseDocument(
     string SchemaId,

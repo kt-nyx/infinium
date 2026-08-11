@@ -137,7 +137,7 @@ public sealed class AnalysisStatePersistenceTests
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'storage_contract_version';"));
         Assert.AreEqual(
-            "6667a2aa5be306dda20da7d09e18910507e3de09db2cc8ad9f1c0627f5ca56d0",
+            "bc209224a7c1810ea23006005850f1bcfaca221995fd6b058fafea8ff1f1d6c4",
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'schema_fingerprint';"));
@@ -209,6 +209,8 @@ public sealed class AnalysisStatePersistenceTests
         using (SqliteCommand command = connection.CreateCommand())
         {
             command.CommandText =
+                "DROP VIEW provider_settlement_vector_partitions;" +
+                Environment.NewLine +
                 string.Join(
                     Environment.NewLine,
                     ProviderSchema6TablesInCreationOrder.Reverse().Select(table => $"DROP TABLE {table};"))
@@ -411,7 +413,7 @@ public sealed class AnalysisStatePersistenceTests
                   'unresolved-openai-responses-framing','authority-required','authority-required','payload-bypass',
                   '5555555555555555555555555555555555555555555555555555555555555555',1,'2026-08-10T00:00:00.0000000+00:00');
                 """),
-            ("provider_reservations", "INSERT INTO provider_reservations VALUES('reservation-bypass','operation-a','attempt-bypass','request-bypass','{\"dispatch_count\":1,\"input_tokens\":1,\"output_tokens\":1,\"reasoning_tokens\":0,\"cache_read_tokens\":0,\"cache_write_tokens\":0,\"priced_tool_calls\":0,\"calculated_nano_usd\":1}',1,1,1,0,0,0,0,1,'2026-08-10T00:02:00.0000000+00:00','2026-08-10T00:00:00.0000000+00:00');"),
+            ("provider_reservations", "INSERT INTO provider_reservations VALUES('reservation-bypass','operation-a','attempt-bypass','request-bypass','{\"dispatch_count\":1,\"input_tokens\":1,\"output_tokens\":1,\"total_tokens\":2,\"reasoning_tokens\":0,\"cache_read_tokens\":0,\"cache_write_tokens\":0,\"priced_tool_calls\":0,\"calculated_nano_usd\":1}',1,1,1,0,0,0,0,1,'2026-08-10T00:02:00.0000000+00:00','2026-08-10T00:00:00.0000000+00:00');"),
             ("provider_reservation_scope_items", "INSERT INTO provider_reservation_scope_items VALUES('scope-bypass','reservation-bypass','operation','operation-a','{}',0);"),
             ("provider_dispatch_fences", "INSERT INTO provider_dispatch_fences VALUES('fence-bypass','auth-bypass','operation-a','reservation-bypass','request-bypass','attempt-bypass',1,'profile-a','generation-a',0,1,'synthetic bypass','2026-08-10T00:00:00.0000000+00:00');"),
             ("provider_transport_events", "INSERT INTO provider_transport_events VALUES('transport-bypass','operation-a','attempt-bypass','request-bypass','fence-bypass','not-started',1,'2026-08-10T00:00:00.0000000+00:00');"),

@@ -117,7 +117,8 @@ public sealed class ProviderContractTests
     public void ProviderResponseIsUnavailableUntilProofQualifiedAuthorizationExists()
     {
         ProviderUsageContract completedUsage = new(ProviderAvailabilityState.Available, Q(1), Q(2), Q(3), Q(5), Q(1), Q(0), Q(0), Q(0), Q(42),
-            ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable);
+            ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable,
+            UsageReceiptState.Complete);
         ProviderResponseDocument unavailable = Response();
         ProviderOperationContractInvariants.Validate(unavailable);
         Assert.ThrowsExactly<InvalidOperationException>(() =>
@@ -367,6 +368,18 @@ public sealed class ProviderContractTests
         bool error = state == ProviderResponseState.Failed;
         bool mismatched = state == ProviderResponseState.Mismatched;
         bool cancelled = state == ProviderResponseState.Cancelled;
+        UsageReceiptState receiptState = state switch
+        {
+            ProviderResponseState.Completed or ProviderResponseState.Refusal
+                or ProviderResponseState.Malformed or ProviderResponseState.Mismatched => UsageReceiptState.Complete,
+            ProviderResponseState.Incomplete or ProviderResponseState.Queued
+                or ProviderResponseState.InProgress or ProviderResponseState.Oversized => UsageReceiptState.Partial,
+            ProviderResponseState.Failed => UsageReceiptState.FailedKnown,
+            ProviderResponseState.Unknown => UsageReceiptState.Ambiguous,
+            ProviderResponseState.Cancelled => UsageReceiptState.NotDispatched,
+            _ => UsageReceiptState.Unavailable,
+        };
+        bool completeReceipt = receiptState == UsageReceiptState.Complete;
         return Response() with
         {
             AuthorizationId = cancelled ? null : Id("authorization-1"),
@@ -393,19 +406,22 @@ public sealed class ProviderContractTests
             ReturnedServiceTierAvailability = completed || mismatched
                 ? ProviderAvailabilityState.Available : ProviderAvailabilityState.Unavailable,
             ReturnedServiceTier = completed || mismatched ? "default" : null,
-            Usage = completed
+            Usage = completeReceipt
                 ? new ProviderUsageContract(ProviderAvailabilityState.Available, Q(1), Q(2), Q(3), Q(5), Q(1), Q(0), Q(0), Q(0), Q(42),
-                    ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable)
+                    ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable,
+                    UsageReceiptState.Complete)
                 : cancelled ? BlockedUsage()
                 : new ProviderUsageContract(ProviderAvailabilityState.Available, Q(1), U(), U(), U(), U(), U(), U(), U(), U(),
-                    ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable),
+                    ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable,
+                    receiptState),
             ValidationState = completed ? ProposalAdmissionState.Admitted : ProposalAdmissionState.Rejected,
             AdmissionState = completed ? ProposalAdmissionState.Admitted : ProposalAdmissionState.Rejected,
         };
     }
 
     private static ProviderUsageContract BlockedUsage() => new(ProviderAvailabilityState.Unavailable, Q(0), U(), U(), U(), U(), U(), U(), U(), U(),
-        ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable);
+        ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable,
+        UsageReceiptState.NotDispatched);
     private static ProviderQuantityContract Q(long value) => new(ProviderAvailabilityState.Available, value);
     private static ProviderQuantityContract U() => new(ProviderAvailabilityState.Unavailable, null);
     private static ProviderInputBoundProofContract BlockedProof() => new(

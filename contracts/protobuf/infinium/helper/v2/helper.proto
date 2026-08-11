@@ -231,7 +231,19 @@ message HelperReceiptV2 {
   // Exact observation: the first byte beyond the configured retained-response
   // ceiling was observed. A value other than one is structurally invalid.
   optional uint64 overflow_observed_excess_bytes = 38;
+  infinium.common.v1.OptionalUInt64 dispatch_count = 39;
+  UsageReceiptStateV2 usage_receipt_state = 40;
   reserved 90 to 99;
   reserved "credential_target", "provider_secret", "secret_bytes",
       "authorization_header";
+}
+
+enum UsageReceiptStateV2 {
+  USAGE_RECEIPT_STATE_V2_UNSPECIFIED = 0;
+  USAGE_RECEIPT_STATE_V2_NOT_DISPATCHED = 1;
+  USAGE_RECEIPT_STATE_V2_COMPLETE = 2;
+  USAGE_RECEIPT_STATE_V2_PARTIAL = 3;
+  USAGE_RECEIPT_STATE_V2_FAILED_KNOWN = 4;
+  USAGE_RECEIPT_STATE_V2_AMBIGUOUS = 5;
+  USAGE_RECEIPT_STATE_V2_UNAVAILABLE = 6;
 }

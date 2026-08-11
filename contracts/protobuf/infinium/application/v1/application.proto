@@ -134,6 +134,25 @@ message ProviderOperationPayload {
   string effective_configuration_v2_id = 40;
   string command_id = 41;
   infinium.common.v1.Instant requested_at = 42;
+  string transport_event_id = 43;
+  string receipt_id = 44;
+  ProviderAccountingVector reserved = 45;
+  ProviderAccountingVector observed = 46;
+  ProviderAccountingVector released = 47;
+  ProviderAccountingVector retained = 48;
+  UsageReceiptState usage_receipt_state = 49;
+}
+
+message ProviderAccountingVector {
+  OptionalProviderQuantity dispatch_count = 1;
+  OptionalProviderQuantity input_tokens = 2;
+  OptionalProviderQuantity output_tokens = 3;
+  OptionalProviderQuantity total_tokens = 4;
+  OptionalProviderQuantity reasoning_tokens = 5;
+  OptionalProviderQuantity cache_read_tokens = 6;
+  OptionalProviderQuantity cache_write_tokens = 7;
+  OptionalProviderQuantity priced_tool_calls = 8;
+  OptionalProviderQuantity calculated_nano_usd = 9;
 }
 
 message ProviderResponsePayload {
@@ -198,6 +217,7 @@ message ProviderResponsePayload {
   optional uint64 overflow_observed_excess_bytes = 59;
   string owner_kind = 60;
   string owner_id = 61;
+  UsageReceiptState usage_receipt_state = 62;
 }
 
 message ProviderRateLimitFact {
@@ -403,6 +423,16 @@ enum ProviderReplayState {
   PROVIDER_REPLAY_STATE_NOT_AVAILABLE = 1;
   PROVIDER_REPLAY_STATE_RETAINED_RESPONSE = 2;
   PROVIDER_REPLAY_STATE_AUDIT_ONLY = 3;
+}
+
+enum UsageReceiptState {
+  USAGE_RECEIPT_STATE_UNSPECIFIED = 0;
+  USAGE_RECEIPT_STATE_NOT_DISPATCHED = 1;
+  USAGE_RECEIPT_STATE_COMPLETE = 2;
+  USAGE_RECEIPT_STATE_PARTIAL = 3;
+  USAGE_RECEIPT_STATE_FAILED_KNOWN = 4;
+  USAGE_RECEIPT_STATE_AMBIGUOUS = 5;
+  USAGE_RECEIPT_STATE_UNAVAILABLE = 6;
 }
 
 enum InputBoundProofStatus {

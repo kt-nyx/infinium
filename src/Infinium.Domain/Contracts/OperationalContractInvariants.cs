@@ -315,7 +315,10 @@ public static class OperationalContractInvariants
         bool hasUsage = entry.ProviderUsage.DispatchCount != 0
             || entry.ProviderUsage.InputTokens != 0
             || entry.ProviderUsage.OutputTokens != 0
+            || entry.ProviderUsage.TotalTokens != 0
             || entry.ProviderUsage.ReasoningTokens != 0
+            || entry.ProviderUsage.CacheReadTokens != 0
+            || entry.ProviderUsage.CacheWriteTokens != 0
             || entry.ProviderUsage.PricedToolCalls != 0;
         if (entry.UsageReceiptState == UsageReceiptState.NotDispatched && hasUsage)
         {
@@ -323,6 +326,7 @@ public static class OperationalContractInvariants
         }
 
         if (entry.UsageReceiptState is UsageReceiptState.Complete or UsageReceiptState.Partial
+                or UsageReceiptState.FailedKnown or UsageReceiptState.Ambiguous
             && entry.ProviderUsage.DispatchCount == 0)
         {
             throw new InvalidOperationException("A provider usage receipt must identify a dispatch.");
@@ -350,7 +354,10 @@ public static class OperationalContractInvariants
             entry.ProviderUsage.DispatchCount > reservation.WorstCaseUsage.DispatchCount
             || entry.ProviderUsage.InputTokens > reservation.WorstCaseUsage.InputTokens
             || entry.ProviderUsage.OutputTokens > reservation.WorstCaseUsage.OutputTokens
+            || entry.ProviderUsage.TotalTokens > reservation.WorstCaseUsage.TotalTokens
             || entry.ProviderUsage.ReasoningTokens > reservation.WorstCaseUsage.ReasoningTokens
+            || entry.ProviderUsage.CacheReadTokens > reservation.WorstCaseUsage.CacheReadTokens
+            || entry.ProviderUsage.CacheWriteTokens > reservation.WorstCaseUsage.CacheWriteTokens
             || entry.ProviderUsage.PricedToolCalls > reservation.WorstCaseUsage.PricedToolCalls
             || entry.CalculatedCost.NanoUsd > reservation.WorstCaseCalculatedCost.NanoUsd;
 
@@ -482,8 +489,16 @@ public static class OperationalContractInvariants
         RequireNonNegative(usage.DispatchCount, nameof(usage.DispatchCount));
         RequireNonNegative(usage.InputTokens, nameof(usage.InputTokens));
         RequireNonNegative(usage.OutputTokens, nameof(usage.OutputTokens));
+        RequireNonNegative(usage.TotalTokens, nameof(usage.TotalTokens));
         RequireNonNegative(usage.ReasoningTokens, nameof(usage.ReasoningTokens));
+        RequireNonNegative(usage.CacheReadTokens, nameof(usage.CacheReadTokens));
+        RequireNonNegative(usage.CacheWriteTokens, nameof(usage.CacheWriteTokens));
         RequireNonNegative(usage.PricedToolCalls, nameof(usage.PricedToolCalls));
+        if (usage.TotalTokens != checked(usage.InputTokens + usage.OutputTokens)
+            || usage.ReasoningTokens > usage.OutputTokens)
+        {
+            throw new InvalidOperationException("Provider usage totals and reasoning quantities are internally inconsistent.");
+        }
         if (requireDispatch && usage.DispatchCount == 0)
         {
             throw new InvalidOperationException("A provider reservation must reserve at least one dispatch.");

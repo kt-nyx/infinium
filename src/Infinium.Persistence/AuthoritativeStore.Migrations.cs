@@ -589,6 +589,7 @@ public sealed partial class AuthoritativeStore
         "table:provider_settlements",
         "table:provider_transport_events",
         "table:provider_usage_entries",
+        "view:provider_settlement_vector_partitions",
         "trigger:analysis_candidates_append_only_delete",
         "trigger:analysis_candidates_append_only_update",
         "trigger:analysis_coverage_append_only_delete",
@@ -717,6 +718,7 @@ public sealed partial class AuthoritativeStore
         "trigger:provider_budget_projection_monotonic_update_guard",
         "trigger:provider_credential_intent_time_order_guard",
         "trigger:provider_credential_intent_event_chain_guard",
+        "trigger:provider_credential_terminal_requires_pending_root",
         "trigger:provider_dispatch_deadline_guard",
         "trigger:provider_profile_projection_exact_root_insert_guard",
         "trigger:provider_profile_projection_monotonic_update_guard",
@@ -1997,6 +1999,27 @@ public sealed partial class AuthoritativeStore
             CHECK((event_version = 1 AND prior_intent_event_id IS NULL)
               OR (event_version > 1 AND prior_intent_event_id IS NOT NULL))
         ) STRICT;
+        CREATE TRIGGER provider_credential_terminal_requires_pending_root
+        BEFORE INSERT ON provider_credential_intents
+        WHEN NEW.intent_state IN ('completed','failed','cancelled','unavailable')
+        BEGIN
+          SELECT CASE WHEN (SELECT count(*)
+            FROM provider_credential_intents pending
+            JOIN provider_credential_intent_events pending_event
+              ON pending_event.intent_id = pending.intent_id
+            WHERE pending.profile_id = NEW.profile_id
+              AND pending.generation_id = NEW.generation_id
+              AND pending.intent_kind = NEW.intent_kind
+              AND pending.from_lifecycle_state = NEW.from_lifecycle_state
+              AND pending.to_lifecycle_state = NEW.to_lifecycle_state
+              AND pending.intent_state = 'pending'
+              AND pending_event.event_version = 1
+              AND NOT EXISTS(
+                SELECT 1 FROM provider_credential_intent_events terminal_event
+                WHERE terminal_event.intent_root_id = pending_event.intent_root_id
+                  AND terminal_event.event_version > pending_event.event_version)) <> 1
+            THEN RAISE(ABORT, 'provider credential terminal intent requires one exact open pending v1 root') END;
+        END;
         CREATE TRIGGER provider_credential_intent_event_chain_guard
         BEFORE INSERT ON provider_credential_intent_events
         BEGIN
@@ -2265,8 +2288,14 @@ public sealed partial class AuthoritativeStore
               AND date(substr(dispatch_deadline_utc,1,10),'+0 days') = substr(dispatch_deadline_utc,1,10)
               AND strftime('%H:%M:%S',substr(dispatch_deadline_utc,1,19)) = substr(dispatch_deadline_utc,12,8)),
             CHECK(requested_at <= confirmed_at AND confirmed_at < dispatch_deadline_utc),
-            CHECK((julianday(dispatch_deadline_utc) - julianday(confirmed_at)) * 86400000.0 <= deadline_milliseconds),
-            CHECK((julianday(dispatch_deadline_utc) - julianday(requested_at)) * 86400000.0 <= deadline_milliseconds),
+            CHECK(((CAST(strftime('%s', substr(dispatch_deadline_utc,1,19) || 'Z') AS INTEGER)
+                     - CAST(strftime('%s', substr(confirmed_at,1,19) || 'Z') AS INTEGER)) * 10000000
+                    + CAST(substr(dispatch_deadline_utc,21,7) AS INTEGER)
+                    - CAST(substr(confirmed_at,21,7) AS INTEGER)) <= deadline_milliseconds * 10000),
+            CHECK(((CAST(strftime('%s', substr(dispatch_deadline_utc,1,19) || 'Z') AS INTEGER)
+                     - CAST(strftime('%s', substr(requested_at,1,19) || 'Z') AS INTEGER)) * 10000000
+                    + CAST(substr(dispatch_deadline_utc,21,7) AS INTEGER)
+                    - CAST(substr(requested_at,21,7) AS INTEGER)) <= deadline_milliseconds * 10000),
             CHECK(request_fingerprint = canonical_request_fingerprint),
             CHECK(canonical_request_bytes <= maximum_request_bytes),
             CHECK((operation_kind = 'source-claim-extraction' AND owner_kind = 'evidence-acquisition-run')
@@ -2349,7 +2378,10 @@ public sealed partial class AuthoritativeStore
               AND date(substr(dispatch_deadline_utc,1,10),'+0 days') = substr(dispatch_deadline_utc,1,10)
               AND strftime('%H:%M:%S',substr(dispatch_deadline_utc,1,19)) = substr(dispatch_deadline_utc,12,8)),
             CHECK(requested_at <= confirmed_at AND confirmed_at < dispatch_deadline_utc),
-            CHECK((julianday(dispatch_deadline_utc) - julianday(confirmed_at)) * 86400000.0 <= deadline_milliseconds),
+            CHECK(((CAST(strftime('%s', substr(dispatch_deadline_utc,1,19) || 'Z') AS INTEGER)
+                     - CAST(strftime('%s', substr(confirmed_at,1,19) || 'Z') AS INTEGER)) * 10000000
+                    + CAST(substr(dispatch_deadline_utc,21,7) AS INTEGER)
+                    - CAST(substr(confirmed_at,21,7) AS INTEGER)) <= deadline_milliseconds * 10000),
             CHECK((owner_kind = 'analysis-run' AND owner_id = analysis_run_id
                 AND analysis_run_id IS NOT NULL AND evidence_acquisition_run_id IS NULL)
               OR (owner_kind = 'evidence-acquisition-run' AND owner_id = evidence_acquisition_run_id
@@ -2535,6 +2567,7 @@ public sealed partial class AuthoritativeStore
               'dispatch_count',reserved_dispatch_count,
               'input_tokens',reserved_input_tokens,
               'output_tokens',reserved_output_tokens,
+              'total_tokens',reserved_input_tokens + reserved_output_tokens,
               'reasoning_tokens',reserved_reasoning_tokens,
               'cache_read_tokens',reserved_cache_read_tokens,
               'cache_write_tokens',reserved_cache_write_tokens,
@@ -2610,7 +2643,10 @@ public sealed partial class AuthoritativeStore
             WHERE a.operation_id = NEW.operation_id
               AND NEW.evaluated_at >= a.confirmed_at
               AND NEW.evaluated_at < a.dispatch_deadline_utc
-              AND (julianday(a.dispatch_deadline_utc) - julianday(NEW.evaluated_at)) * 86400000.0 <= a.deadline_milliseconds)
+              AND ((CAST(strftime('%s', substr(a.dispatch_deadline_utc,1,19) || 'Z') AS INTEGER)
+                     - CAST(strftime('%s', substr(NEW.evaluated_at,1,19) || 'Z') AS INTEGER)) * 10000000
+                    + CAST(substr(a.dispatch_deadline_utc,21,7) AS INTEGER)
+                    - CAST(substr(NEW.evaluated_at,21,7) AS INTEGER)) <= a.deadline_milliseconds * 10000)
             THEN RAISE(ABORT, 'provider dispatch fence deadline mismatch') END;
         END;
         CREATE TABLE provider_transport_events(
@@ -2986,11 +3022,11 @@ public sealed partial class AuthoritativeStore
                 AND NEW.cache_write_tokens_availability = 'available'
                 AND NEW.priced_tool_calls_availability = 'available'
                 AND NEW.calculated_nano_usd_availability = 'available'))
-              AND ((r.response_state = 'completed' AND NEW.receipt_state = 'complete')
-                OR (r.response_state IN ('refusal','incomplete') AND NEW.receipt_state = 'partial')
+              AND ((r.response_state IN ('completed','refusal','malformed','mismatched') AND NEW.receipt_state = 'complete')
+                OR (r.response_state IN ('incomplete','queued','in-progress') AND NEW.receipt_state = 'partial')
                 OR (r.response_state = 'failed' AND NEW.receipt_state = 'failed-known')
-                OR (r.response_state IN ('queued','in-progress','mismatched','unknown') AND NEW.receipt_state = 'ambiguous')
-                OR (r.response_state IN ('malformed','oversized') AND NEW.receipt_state = 'unavailable')
+                OR (r.response_state = 'unknown' AND NEW.receipt_state = 'ambiguous')
+                OR (r.response_state = 'oversized' AND NEW.receipt_state IN ('complete','partial'))
                 OR (r.response_state = 'cancelled' AND NEW.receipt_state = 'not-dispatched')))
             THEN RAISE(ABORT, 'provider usage must exactly match response availability and completed-state matrix') END;
         END;
@@ -3061,8 +3097,22 @@ public sealed partial class AuthoritativeStore
                     SELECT 1 FROM provider_rate_limit_facts fact WHERE fact.usage_entry_id = u.usage_entry_id)))
               AND NOT EXISTS(SELECT 1 FROM provider_rate_limit_facts fact
                 WHERE fact.usage_entry_id = u.usage_entry_id AND fact.observed_at > NEW.finalized_at)
-              AND ((r.response_state = 'completed' AND NEW.validation_state = 'admitted'
-                    AND NEW.admission_state = 'admitted')
+              AND ((r.response_state = 'completed' AND (
+                    (u.dispatch_count = 1
+                      AND u.input_tokens <= r.maximum_input_tokens
+                      AND u.output_tokens <= r.maximum_output_tokens
+                      AND u.cache_read_tokens = 0 AND u.cache_write_tokens = 0
+                      AND u.priced_tool_calls = 0
+                      AND u.calculated_nano_usd <= r.maximum_calculated_nano_usd
+                      AND NEW.validation_state = 'admitted' AND NEW.admission_state = 'admitted')
+                    OR ((u.dispatch_count > 1
+                      OR u.input_tokens > r.maximum_input_tokens
+                      OR u.output_tokens > r.maximum_output_tokens
+                      OR u.cache_read_tokens > 0 OR u.cache_write_tokens > 0
+                      OR u.priced_tool_calls > 0
+                      OR u.calculated_nano_usd > r.maximum_calculated_nano_usd)
+                      AND NEW.validation_state IN ('rejected','abstained','unavailable','unsupported')
+                      AND NEW.admission_state IN ('rejected','abstained','unavailable','unsupported'))))
                 OR (r.response_state <> 'completed' AND NEW.validation_state = r.validation_state
                     AND NEW.admission_state = r.admission_state
                     AND NEW.validation_state IN ('rejected','abstained','unavailable','unsupported')
@@ -3110,6 +3160,7 @@ public sealed partial class AuthoritativeStore
               AND usage.dispatch_count_availability = 'available'
               AND usage.input_tokens_availability = 'available'
               AND usage.output_tokens_availability = 'available'
+              AND usage.total_tokens_availability = 'available'
               AND usage.reasoning_tokens_availability = 'available'
               AND usage.cache_read_tokens_availability = 'available'
               AND usage.cache_write_tokens_availability = 'available'
@@ -3117,6 +3168,7 @@ public sealed partial class AuthoritativeStore
               AND (((usage.dispatch_count > reservation.reserved_dispatch_count
                     OR usage.input_tokens > reservation.reserved_input_tokens
                     OR usage.output_tokens > reservation.reserved_output_tokens
+                    OR usage.total_tokens > reservation.reserved_input_tokens + reservation.reserved_output_tokens
                     OR usage.reasoning_tokens > reservation.reserved_reasoning_tokens
                     OR usage.cache_read_tokens > reservation.reserved_cache_read_tokens
                     OR usage.cache_write_tokens > reservation.reserved_cache_write_tokens
@@ -3126,6 +3178,7 @@ public sealed partial class AuthoritativeStore
                 OR ((usage.dispatch_count <= reservation.reserved_dispatch_count
                     AND usage.input_tokens <= reservation.reserved_input_tokens
                     AND usage.output_tokens <= reservation.reserved_output_tokens
+                    AND usage.total_tokens <= reservation.reserved_input_tokens + reservation.reserved_output_tokens
                     AND usage.reasoning_tokens <= reservation.reserved_reasoning_tokens
                     AND usage.cache_read_tokens <= reservation.reserved_cache_read_tokens
                     AND usage.cache_write_tokens <= reservation.reserved_cache_write_tokens
@@ -3151,6 +3204,32 @@ public sealed partial class AuthoritativeStore
                     AND NEW.retained_hold_nano_usd = 0)))
             THEN RAISE(ABORT, 'provider settlement release and hold must exactly partition the reservation') END;
         END;
+        CREATE VIEW provider_settlement_vector_partitions AS
+        SELECT s.settlement_id,s.reservation_id,s.state,
+          r.reserved_dispatch_count,r.reserved_input_tokens,r.reserved_output_tokens,
+          r.reserved_input_tokens + r.reserved_output_tokens AS reserved_total_tokens,
+          r.reserved_reasoning_tokens,r.reserved_cache_read_tokens,r.reserved_cache_write_tokens,
+          r.reserved_priced_tool_calls,r.maximum_nano_usd AS reserved_nano_usd,
+          CASE WHEN s.state = 'unresolved-hold' THEN 0 ELSE r.reserved_dispatch_count END AS released_dispatch_count,
+          CASE WHEN s.state = 'unresolved-hold' THEN 0 ELSE r.reserved_input_tokens END AS released_input_tokens,
+          CASE WHEN s.state = 'unresolved-hold' THEN 0 ELSE r.reserved_output_tokens END AS released_output_tokens,
+          CASE WHEN s.state = 'unresolved-hold' THEN 0 ELSE r.reserved_input_tokens + r.reserved_output_tokens END AS released_total_tokens,
+          CASE WHEN s.state = 'unresolved-hold' THEN 0 ELSE r.reserved_reasoning_tokens END AS released_reasoning_tokens,
+          CASE WHEN s.state = 'unresolved-hold' THEN 0 ELSE r.reserved_cache_read_tokens END AS released_cache_read_tokens,
+          CASE WHEN s.state = 'unresolved-hold' THEN 0 ELSE r.reserved_cache_write_tokens END AS released_cache_write_tokens,
+          CASE WHEN s.state = 'unresolved-hold' THEN 0 ELSE r.reserved_priced_tool_calls END AS released_priced_tool_calls,
+          s.released_nano_usd,
+          CASE WHEN s.state = 'unresolved-hold' THEN r.reserved_dispatch_count ELSE 0 END AS retained_dispatch_count,
+          CASE WHEN s.state = 'unresolved-hold' THEN r.reserved_input_tokens ELSE 0 END AS retained_input_tokens,
+          CASE WHEN s.state = 'unresolved-hold' THEN r.reserved_output_tokens ELSE 0 END AS retained_output_tokens,
+          CASE WHEN s.state = 'unresolved-hold' THEN r.reserved_input_tokens + r.reserved_output_tokens ELSE 0 END AS retained_total_tokens,
+          CASE WHEN s.state = 'unresolved-hold' THEN r.reserved_reasoning_tokens ELSE 0 END AS retained_reasoning_tokens,
+          CASE WHEN s.state = 'unresolved-hold' THEN r.reserved_cache_read_tokens ELSE 0 END AS retained_cache_read_tokens,
+          CASE WHEN s.state = 'unresolved-hold' THEN r.reserved_cache_write_tokens ELSE 0 END AS retained_cache_write_tokens,
+          CASE WHEN s.state = 'unresolved-hold' THEN r.reserved_priced_tool_calls ELSE 0 END AS retained_priced_tool_calls,
+          s.retained_hold_nano_usd
+        FROM provider_settlements s
+        JOIN provider_reservations r ON r.reservation_id = s.reservation_id;
         CREATE TABLE provider_settlement_adjustments(
             adjustment_id TEXT PRIMARY KEY,
             settlement_id TEXT NOT NULL REFERENCES provider_settlements(settlement_id) ON DELETE RESTRICT,
@@ -3673,6 +3752,16 @@ public sealed partial class AuthoritativeStore
                   JOIN provider_credential_intents later_intent ON later_intent.intent_id = later_event.intent_id
                   WHERE later_intent.profile_id = NEW.profile_id
                     AND later_event.created_at > pending_event.created_at)))
+            AND NOT EXISTS(
+              SELECT 1 FROM provider_credential_intent_events terminal_event
+              JOIN provider_credential_intents terminal_intent ON terminal_intent.intent_id = terminal_event.intent_id
+              WHERE terminal_intent.profile_id = NEW.profile_id
+                AND terminal_intent.intent_state IN ('completed','failed','cancelled','unavailable')
+                AND NOT EXISTS(
+                  SELECT 1 FROM provider_credential_intent_events later_event
+                  JOIN provider_credential_intents later_intent ON later_intent.intent_id = later_event.intent_id
+                  WHERE later_intent.profile_id = NEW.profile_id
+                    AND later_event.created_at > terminal_event.created_at))
             THEN RAISE(ABORT, 'provider credential successor requires projection of the exact latest durable event') END;
         END;
         CREATE TRIGGER provider_delete_pending_never_reactivates_guard

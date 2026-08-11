@@ -129,8 +129,9 @@ public enum UsageReceiptState
     NotDispatched,
     Complete,
     Partial,
+    FailedKnown,
+    Ambiguous,
     Unavailable,
-    Unresolved,
 }
 
 public enum StagedArtifactKind
@@ -292,7 +293,10 @@ public sealed record ProviderUsageQuantitiesContract(
     long DispatchCount,
     long InputTokens,
     long OutputTokens,
+    long TotalTokens,
     long ReasoningTokens,
+    long CacheReadTokens,
+    long CacheWriteTokens,
     long PricedToolCalls);
 
 public sealed record CalculatedCostContract(long NanoUsd);
