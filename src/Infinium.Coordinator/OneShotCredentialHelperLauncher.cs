@@ -4,6 +4,7 @@ using System.IO.Pipes;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Infinium.Application.Runtime;
 using Infinium.Contracts.Protobuf.Helper.V2;
 using Microsoft.Win32.SafeHandles;
@@ -71,6 +72,29 @@ public sealed class OneShotCredentialHelperLauncher
         CancellationToken cancellationToken = default) => await ExecuteCoreAsync(
             bootstrap, assignment, null, timeout, authoritativeNow,
             inheritanceSentinel, containmentProbe: true, cancellationToken).ConfigureAwait(false);
+
+    internal void ArmExactDeleteFailure(string profileId, string generationId)
+    {
+        static bool Valid(string value) => value.Length is > 0 and <= 120
+            && value.All(ch => char.IsAsciiLetterOrDigit(ch) || ch is '-' or '_');
+        if (!Valid(profileId) || !Valid(generationId))
+        {
+            throw new InvalidDataException("The injected exact synthetic credential slot is invalid.");
+        }
+        string path = Path.Combine(secureStoreRoot, "synthetic-secure-store.v1.json");
+        JsonObject state = File.Exists(path)
+            ? JsonNode.Parse(File.ReadAllText(path))?.AsObject()
+                ?? throw new InvalidDataException("The fake secure store is malformed.")
+            : new JsonObject();
+        JsonArray failures = state["DeleteFailures"] as JsonArray ?? [];
+        state["DeleteFailures"] = failures;
+        string exactSlot = $"WP3-REAL-CHILD-TARGET-CANARY/{profileId}/{generationId}";
+        if (!failures.Any(node => node?.GetValue<string>() == exactSlot))
+        {
+            failures.Add(exactSlot);
+        }
+        File.WriteAllText(path, state.ToJsonString());
+    }
 
     private async Task<HelperProcessReceipt> ExecuteCoreAsync(
         HelperPrivateFrameV2 bootstrap,

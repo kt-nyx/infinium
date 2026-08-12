@@ -535,12 +535,12 @@ public sealed class PersistenceAndLifecycleTests
 
             INSERT INTO provider_generations VALUES('generation-replacement','profile-restore',2,0,'2026-08-10T00:00:03.0000000+00:00');
             INSERT INTO provider_credential_intents VALUES(
-              'intent-replace-cancel-pending','profile-restore','generation-replacement','replace','pending',
+              'intent-replace-cancel-pending','profile-restore','generation-restore','replace','pending',
               'active-verified','replacing','active-verified','unavailable','account-restore','billing-restore','cap-restore',
               'not-required','not-requested','2026-08-10T00:00:03.1000000+00:00');
             INSERT INTO provider_credential_intent_events VALUES('event-replace-cancel-v1','root-replace-cancel','intent-replace-cancel-pending',1,NULL,'2026-08-10T00:00:03.1000000+00:00');
             INSERT INTO provider_credential_intents VALUES(
-              'intent-replace-cancel','profile-restore','generation-replacement','replace','cancelled',
+              'intent-replace-cancel','profile-restore','generation-restore','replace','cancelled',
               'active-verified','replacing','active-verified','available','account-restore','billing-restore','cap-restore',
               'not-required','not-requested','2026-08-10T00:00:03.2000000+00:00');
             INSERT INTO provider_credential_intent_events VALUES('event-replace-cancel-v2','root-replace-cancel','intent-replace-cancel',2,'event-replace-cancel-v1','2026-08-10T00:00:03.2000000+00:00');

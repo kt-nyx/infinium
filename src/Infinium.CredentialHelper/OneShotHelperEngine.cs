@@ -98,8 +98,7 @@ public sealed class OneShotHelperEngine
                     }
                     secret = Encoding.UTF8.GetBytes("WP3-REAL-CHILD-SECRET-CANARY/" + assignment.AssignmentId);
                     store.WriteExact(slot, secret);
-                    outcome = store.VerifyExact(slot) && store.DeleteExact(bootstrapSlot)
-                        && !store.VerifyExact(bootstrapSlot)
+                    outcome = store.VerifyExact(slot) && DeleteOrConfirmAbsent(bootstrapSlot)
                         ? HelperOutcomeV2.Completed
                         : HelperOutcomeV2.FailedKnown;
                     break;
@@ -113,9 +112,14 @@ public sealed class OneShotHelperEngine
                     }
                     else
                     {
-                        secret = Encoding.UTF8.GetBytes("WP3-REAL-CHILD-SECRET-CANARY/" + assignment.AssignmentId);
-                        store.WriteExact(slot, secret);
-                        outcome = store.VerifyExact(slot) ? HelperOutcomeV2.Completed : HelperOutcomeV2.FailedKnown;
+                        if (!store.VerifyExact(slot))
+                        {
+                            secret = Encoding.UTF8.GetBytes("WP3-REAL-CHILD-SECRET-CANARY/" + assignment.AssignmentId);
+                            store.WriteExact(slot, secret);
+                        }
+                        outcome = store.VerifyExact(slot) && DeleteOrConfirmAbsent(bootstrapSlot)
+                            ? HelperOutcomeV2.Completed
+                            : HelperOutcomeV2.FailedKnown;
                     }
                     break;
                 case HelperAssignmentKindV2.Disable:
@@ -178,6 +182,15 @@ public sealed class OneShotHelperEngine
             receipt.DispatchCount = Available(1);
         }
         return (receipt, stagedResponse);
+    }
+
+    private bool DeleteOrConfirmAbsent(SyntheticCredentialSlot slot)
+    {
+        if (!store.VerifyExact(slot))
+        {
+            return true;
+        }
+        return store.DeleteExact(slot) && !store.VerifyExact(slot);
     }
 
     private static async Task WriteStagedResponseAsync(

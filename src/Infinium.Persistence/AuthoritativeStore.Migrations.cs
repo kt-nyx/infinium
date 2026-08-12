@@ -176,6 +176,9 @@ public sealed partial class AuthoritativeStore
                     INSERT INTO store_metadata(key,value)
                     VALUES ('wp3_schema_extension_id','M1-S6-WP3-0006B')
                     ON CONFLICT(key) DO UPDATE SET value=excluded.value;
+                    INSERT INTO store_metadata(key,value)
+                    VALUES ('wp3_schema_correction_id','M1-S6-WP3-0006C')
+                    ON CONFLICT(key) DO UPDATE SET value=excluded.value;
                     INSERT INTO migration_history(
                         migration_id, from_version, to_version, applied_at, sqlite_source_id)
                     VALUES ('M1-S6-0006', 5, 6, $now, $sqlite_source);
@@ -246,20 +249,26 @@ public sealed partial class AuthoritativeStore
     {
         const string acceptedWp2Fingerprint =
             "240a06fe2a9fa3d79db63985fbda329c8e83822534b93cbfb539062a109cad9e";
+        const string rejectedWp3Fingerprint =
+            "554129523ac64ce52ee4d24e90644dbaa167c0d98602f1c2d0f25ad271ec0581";
         string actualFingerprint = ComputeSchemaFingerprint(connection);
         if (actualFingerprint == ProviderPersistenceDeclarations.SchemaFingerprint)
         {
             using SqliteCommand declared = connection.CreateCommand();
             declared.CommandText =
-                "SELECT COUNT(*) FROM store_metadata WHERE key='wp3_schema_extension_id' AND value='M1-S6-WP3-0006B';";
-            if (Convert.ToInt64(declared.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
+                """
+                SELECT COUNT(*) FROM store_metadata
+                WHERE (key='wp3_schema_extension_id' AND value='M1-S6-WP3-0006B')
+                   OR (key='wp3_schema_correction_id' AND value='M1-S6-WP3-0006C');
+                """;
+            if (Convert.ToInt64(declared.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 2)
             {
                 throw new InvalidOperationException(
                     "The current WP3 schema fingerprint is missing its exact same-version extension declaration.");
             }
             return;
         }
-        if (actualFingerprint != acceptedWp2Fingerprint)
+        if (actualFingerprint is not (acceptedWp2Fingerprint or rejectedWp3Fingerprint))
         {
             throw new InvalidOperationException(
                 "Schema 6 does not match the exact accepted WP2 storage contract or current WP3 same-version extension.");
@@ -273,10 +282,12 @@ public sealed partial class AuthoritativeStore
                 WHERE (key='schema_version' AND value='6')
                    OR (key='storage_contract_version' AND value='1.5.0')
                    OR (key='schema_fingerprint' AND value=$fingerprint)
-                   OR (key='wp2_schema_extension_id' AND value='M1-S6-WP2-0006A');
+                   OR (key='wp2_schema_extension_id' AND value='M1-S6-WP2-0006A')
+                   OR (key='wp3_schema_extension_id' AND value='M1-S6-WP3-0006B');
                 """;
-            metadata.Parameters.AddWithValue("$fingerprint", acceptedWp2Fingerprint);
-            if (Convert.ToInt64(metadata.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 4)
+            metadata.Parameters.AddWithValue("$fingerprint", actualFingerprint);
+            long expectedMetadataCount = actualFingerprint == acceptedWp2Fingerprint ? 4 : 5;
+            if (Convert.ToInt64(metadata.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != expectedMetadataCount)
             {
                 throw new InvalidOperationException(
                     "The accepted WP2 schema lacks its exact schema-6/storage-1.5.0 extension provenance.");
@@ -314,8 +325,8 @@ public sealed partial class AuthoritativeStore
                 transaction);
             foreach ((string name, string sql) in intentTriggers)
             {
-                Execute(name == "provider_profile_transition_order_guard"
-                    ? ExtractSchemaStatement(SchemaV6, "CREATE TRIGGER provider_profile_transition_order_guard")
+                Execute(name is "provider_profile_transition_order_guard" or "provider_delete_pending_never_reactivates_guard"
+                    ? ExtractSchemaStatement(SchemaV6, $"CREATE TRIGGER {name}")
                     : sql,
                     transaction);
             }
@@ -338,7 +349,10 @@ public sealed partial class AuthoritativeStore
             Execute(
                 """
                 UPDATE store_metadata SET value=$fingerprint WHERE key='schema_fingerprint';
-                INSERT INTO store_metadata(key,value) VALUES('wp3_schema_extension_id','M1-S6-WP3-0006B');
+                INSERT INTO store_metadata(key,value) VALUES('wp3_schema_extension_id','M1-S6-WP3-0006B')
+                  ON CONFLICT(key) DO UPDATE SET value=excluded.value;
+                INSERT INTO store_metadata(key,value) VALUES('wp3_schema_correction_id','M1-S6-WP3-0006C')
+                  ON CONFLICT(key) DO UPDATE SET value=excluded.value;
                 """,
                 transaction,
                 ("$fingerprint", upgradedFingerprint));
@@ -2322,7 +2336,8 @@ public sealed partial class AuthoritativeStore
                     'pending-enrollment','active-unverified','active-verified','replacing','disabled','secure-store-unavailable','recovery-required')
                   AND to_lifecycle_state = 'recovery-required')
                 OR (from_lifecycle_state IN ('secure-store-unavailable','recovery-required')
-                  AND to_lifecycle_state IN ('active-unverified','active-verified','disabled','delete-pending','recovery-required','secure-store-unavailable'))))),
+                  AND to_lifecycle_state IN ('active-unverified','active-verified','disabled','delete-pending','recovery-required','secure-store-unavailable'))
+                OR (from_lifecycle_state = 'delete-pending' AND to_lifecycle_state = 'active-unverified')))),
             CHECK(((CASE WHEN intent_state IN ('pending','completed') THEN to_lifecycle_state ELSE outcome_lifecycle_state END) IN ('none','pending-enrollment','deleted')
                 AND account_identity_id IS NULL AND billing_scope_identity_id IS NULL AND capability_snapshot_id IS NULL)
               OR ((CASE WHEN intent_state IN ('pending','completed') THEN to_lifecycle_state ELSE outcome_lifecycle_state END) IN ('active-unverified','active-verified','replacing','disabled','delete-pending')
@@ -4025,7 +4040,23 @@ public sealed partial class AuthoritativeStore
           SELECT CASE WHEN NEW.profile_id <> OLD.profile_id
               OR NEW.projection_version <= OLD.projection_version
               OR NEW.updated_at <= OLD.updated_at
-              OR (OLD.lifecycle_state = 'delete-pending' AND NEW.lifecycle_state NOT IN ('delete-pending','deleted'))
+              OR (OLD.lifecycle_state = 'delete-pending' AND NEW.lifecycle_state NOT IN ('delete-pending','deleted')
+                AND NOT (NEW.lifecycle_state='active-unverified'
+                  AND EXISTS(
+                    SELECT 1 FROM provider_credential_intents recovery
+                    JOIN provider_generations predecessor
+                      ON predecessor.profile_id=OLD.profile_id AND predecessor.generation_id=OLD.generation_id
+                    JOIN provider_generations successor
+                      ON successor.profile_id=NEW.profile_id AND successor.generation_id=NEW.generation_id
+                    WHERE recovery.intent_id=NEW.intent_id
+                      AND recovery.profile_id=NEW.profile_id
+                      AND recovery.generation_id=NEW.generation_id
+                      AND recovery.intent_kind='recover'
+                      AND recovery.intent_state='completed'
+                      AND recovery.from_lifecycle_state='delete-pending'
+                      AND recovery.to_lifecycle_state='active-unverified'
+                      AND recovery.outcome_lifecycle_state='active-unverified'
+                      AND successor.generation_ordinal=predecessor.generation_ordinal+1)))
               OR (OLD.lifecycle_state = 'deleted' AND NEW.lifecycle_state <> 'deleted')
             THEN RAISE(ABORT, 'provider profile projection must advance monotonically on one exact root') END;
           SELECT CASE WHEN NOT EXISTS(
@@ -4127,10 +4158,20 @@ public sealed partial class AuthoritativeStore
             AND NOT EXISTS(
               SELECT 1 FROM provider_profile_projection p
               JOIN provider_generations predecessor ON predecessor.profile_id = p.profile_id AND predecessor.generation_id = p.generation_id
-              JOIN provider_generations successor ON successor.profile_id = NEW.profile_id AND successor.generation_id = NEW.generation_id
+              JOIN provider_generations successor ON successor.profile_id = NEW.profile_id
+                AND successor.generation_ordinal = predecessor.generation_ordinal + 1
               WHERE p.profile_id = NEW.profile_id AND p.lifecycle_state = NEW.from_lifecycle_state
-                AND successor.generation_ordinal = predecessor.generation_ordinal + 1)
+                AND ((NEW.to_lifecycle_state = 'replacing' AND NEW.generation_id = predecessor.generation_id)
+                  OR (NEW.to_lifecycle_state <> 'replacing' AND NEW.generation_id = successor.generation_id)))
             THEN RAISE(ABORT, 'provider replacement must bind a fresh successor generation to the exact predecessor root') END;
+          SELECT CASE WHEN NEW.intent_kind = 'replace' AND NEW.from_lifecycle_state = 'replacing'
+              AND NOT EXISTS(
+                SELECT 1 FROM provider_profile_projection p
+                JOIN provider_generations predecessor ON predecessor.profile_id=p.profile_id AND predecessor.generation_id=p.generation_id
+                JOIN provider_generations successor ON successor.profile_id=NEW.profile_id AND successor.generation_id=NEW.generation_id
+                WHERE p.profile_id=NEW.profile_id AND p.lifecycle_state='replacing'
+                  AND successor.generation_ordinal=predecessor.generation_ordinal+1)
+            THEN RAISE(ABORT, 'provider replacement completion must bind the exact successor to its ineligible predecessor') END;
           SELECT CASE WHEN NEW.intent_kind = 'recover' AND NEW.from_lifecycle_state IN ('secure-store-unavailable','recovery-required')
               AND NEW.generation_id <> (SELECT p.generation_id FROM provider_profile_projection p WHERE p.profile_id = NEW.profile_id)
               AND NOT EXISTS(
@@ -4140,9 +4181,26 @@ public sealed partial class AuthoritativeStore
                 WHERE p.profile_id = NEW.profile_id AND p.lifecycle_state = NEW.from_lifecycle_state
                   AND successor.generation_ordinal = predecessor.generation_ordinal + 1)
             THEN RAISE(ABORT, 'provider recovery re-entry must bind a fresh successor generation to the exact restored root') END;
+          SELECT CASE WHEN NEW.intent_kind = 'recover' AND NEW.from_lifecycle_state = 'delete-pending'
+              AND NOT EXISTS(
+                SELECT 1 FROM provider_profile_projection p
+                JOIN provider_generations predecessor ON predecessor.profile_id=p.profile_id AND predecessor.generation_id=p.generation_id
+                JOIN provider_generations successor ON successor.profile_id=NEW.profile_id AND successor.generation_id=NEW.generation_id
+                WHERE p.profile_id=NEW.profile_id AND p.lifecycle_state='delete-pending'
+                  AND p.cleanup_disposition IN ('pending','failed')
+                  AND successor.generation_ordinal=predecessor.generation_ordinal+1
+                  AND EXISTS(
+                    SELECT 1 FROM provider_credential_intents replacement
+                    WHERE replacement.profile_id=p.profile_id AND replacement.generation_id=p.generation_id
+                      AND replacement.intent_kind='replace' AND replacement.intent_state='completed'
+                      AND replacement.to_lifecycle_state='replacing'
+                      AND replacement.outcome_lifecycle_state='replacing'))
+            THEN RAISE(ABORT, 'provider replacement cleanup recovery must bind the exact successor to its delete-pending predecessor') END;
           SELECT CASE WHEN NOT (NEW.intent_kind = 'replace' AND NEW.from_lifecycle_state IN ('active-unverified','active-verified'))
+              AND NOT (NEW.intent_kind = 'replace' AND NEW.from_lifecycle_state = 'replacing')
               AND NOT (NEW.intent_kind = 'recover' AND NEW.from_lifecycle_state IN ('secure-store-unavailable','recovery-required')
                 AND NEW.generation_id <> (SELECT p.generation_id FROM provider_profile_projection p WHERE p.profile_id = NEW.profile_id))
+              AND NOT (NEW.intent_kind = 'recover' AND NEW.from_lifecycle_state = 'delete-pending')
               AND NOT EXISTS(
             SELECT 1 FROM provider_profile_projection p
             WHERE p.profile_id = NEW.profile_id AND p.generation_id = NEW.generation_id
@@ -4221,12 +4279,49 @@ public sealed partial class AuthoritativeStore
                       AND terminal_event.event_version > pending_event.event_version
                       AND terminal_intent.intent_state = 'cancelled')))
               OR (prior.intent_state IN ('completed','failed','unavailable')
-                AND prior.outcome_lifecycle_state = 'delete-pending')))
+                AND prior.outcome_lifecycle_state = 'delete-pending'))
+            AND NOT EXISTS(
+              SELECT 1 FROM provider_credential_intents cleanup_recovery
+              JOIN provider_credential_intent_events cleanup_event
+                ON cleanup_event.intent_id=cleanup_recovery.intent_id
+              JOIN provider_generations predecessor
+                ON predecessor.profile_id=prior.profile_id AND predecessor.generation_id=prior.generation_id
+              JOIN provider_generations successor
+                ON successor.profile_id=cleanup_recovery.profile_id AND successor.generation_id=cleanup_recovery.generation_id
+              WHERE cleanup_recovery.profile_id=prior.profile_id
+                AND cleanup_recovery.intent_kind='recover'
+                AND cleanup_recovery.intent_state='completed'
+                AND cleanup_recovery.from_lifecycle_state='delete-pending'
+                AND cleanup_recovery.to_lifecycle_state='active-unverified'
+                AND cleanup_recovery.outcome_lifecycle_state='active-unverified'
+                AND successor.generation_ordinal=predecessor.generation_ordinal+1
+                AND cleanup_event.created_at > prior.created_at))
         BEGIN
           SELECT CASE WHEN NOT (
               (NEW.intent_kind = 'delete'
                 AND NEW.from_lifecycle_state = 'delete-pending'
                 AND NEW.to_lifecycle_state IN ('delete-pending','deleted'))
+              OR (NEW.intent_kind = 'recover'
+                AND NEW.from_lifecycle_state = 'delete-pending'
+                AND NEW.to_lifecycle_state = 'active-unverified'
+                AND EXISTS(
+                  SELECT 1 FROM provider_profile_projection projection
+                  JOIN provider_generations predecessor
+                    ON predecessor.profile_id=projection.profile_id AND predecessor.generation_id=projection.generation_id
+                  JOIN provider_generations successor
+                    ON successor.profile_id=NEW.profile_id AND successor.generation_id=NEW.generation_id
+                  WHERE projection.profile_id=NEW.profile_id
+                    AND projection.lifecycle_state='delete-pending'
+                    AND projection.cleanup_disposition IN ('pending','failed')
+                    AND successor.generation_ordinal=predecessor.generation_ordinal+1
+                    AND EXISTS(
+                      SELECT 1 FROM provider_credential_intents replacement
+                      WHERE replacement.profile_id=projection.profile_id
+                        AND replacement.generation_id=projection.generation_id
+                        AND replacement.intent_kind='replace'
+                        AND replacement.intent_state='completed'
+                        AND replacement.to_lifecycle_state='replacing'
+                        AND replacement.outcome_lifecycle_state='replacing')))
               OR (NEW.intent_kind = 'delete' AND NEW.intent_state = 'cancelled' AND EXISTS(
                 SELECT 1 FROM provider_credential_intents pending
                 WHERE pending.profile_id = NEW.profile_id

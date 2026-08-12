@@ -96,7 +96,7 @@ public sealed partial class AuthoritativeStore
             request.CapabilitySnapshotId,
             request.AccountIdentityId,
             request.BillingScopeIdentityId,
-            request.SecureStoreUnavailable);
+            request.SecureStoreUnavailable || request.Failed && request.IntentKind == "delete");
         string terminalKind = request.Cancelled ? "cancelled"
             : request.SecureStoreUnavailable ? "unavailable"
             : request.Failed ? "failed"
@@ -172,6 +172,50 @@ public sealed partial class AuthoritativeStore
         lock (gate)
         {
             return GetCredentialProfileCore(profileId, null);
+        }
+    }
+
+    internal bool IsCredentialReplacementCleanupRecovery(
+        string profileId,
+        string predecessorGenerationId,
+        string successorGenerationId)
+    {
+        ValidateCredentialIdentity(profileId, nameof(profileId));
+        ValidateCredentialIdentity(predecessorGenerationId, nameof(predecessorGenerationId));
+        ValidateCredentialIdentity(successorGenerationId, nameof(successorGenerationId));
+        lock (gate)
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText =
+                """
+                SELECT COUNT(*)
+                FROM provider_profile_projection projection
+                JOIN provider_generations predecessor
+                  ON predecessor.profile_id=projection.profile_id
+                 AND predecessor.generation_id=projection.generation_id
+                JOIN provider_generations successor
+                  ON successor.profile_id=projection.profile_id
+                 AND successor.generation_id=$successor
+                 AND successor.generation_ordinal=predecessor.generation_ordinal+1
+                WHERE projection.profile_id=$profile
+                  AND projection.generation_id=$predecessor
+                  AND projection.lifecycle_state='delete-pending'
+                  AND projection.cleanup_disposition IN ('pending','failed')
+                  AND EXISTS(
+                    SELECT 1 FROM provider_credential_intents replacement
+                    JOIN provider_credential_intent_events replacement_event
+                      ON replacement_event.intent_id=replacement.intent_id
+                    WHERE replacement.profile_id=projection.profile_id
+                      AND replacement.generation_id=projection.generation_id
+                      AND replacement.intent_kind='replace'
+                      AND replacement.intent_state='completed'
+                      AND replacement.to_lifecycle_state='replacing'
+                      AND replacement.outcome_lifecycle_state='replacing');
+                """;
+            command.Parameters.AddWithValue("$profile", profileId);
+            command.Parameters.AddWithValue("$predecessor", predecessorGenerationId);
+            command.Parameters.AddWithValue("$successor", successorGenerationId);
+            return Convert.ToInt64(command.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) == 1;
         }
     }
 

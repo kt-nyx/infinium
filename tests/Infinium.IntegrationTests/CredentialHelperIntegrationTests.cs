@@ -199,7 +199,7 @@ public sealed class CredentialHelperIntegrationTests
         Assert.AreEqual("active-verified", verified.LifecycleState);
 
         store.AddCredentialGeneration("profile-life", "generation-2", 2, verified.RevocationEpoch, BaseTime.AddSeconds(6));
-        CredentialProfileProjection replacing = Transition(store, "replace-1", "profile-life", "generation-2",
+        CredentialProfileProjection replacing = Transition(store, "replace-1", "profile-life", "generation-1",
             "replace", "active-verified", "replacing", BaseTime.AddSeconds(7));
         Assert.AreEqual("replacing", replacing.LifecycleState);
         CredentialProfileProjection replacement = Transition(store, "replace-2", "profile-life", "generation-2",

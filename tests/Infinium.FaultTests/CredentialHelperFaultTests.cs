@@ -1,7 +1,9 @@
+using Infinium.Application.Provider;
 using Infinium.Application.Runtime;
 using Infinium.Contracts.Protobuf.Helper.V2;
 using Infinium.Coordinator;
 using Infinium.CredentialHelper;
+using Infinium.Persistence;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Infinium.Tests;
@@ -10,6 +12,8 @@ namespace Infinium.Tests;
 public sealed class CredentialHelperFaultTests
 {
     private static readonly DateTimeOffset BaseTime = new(2026, 8, 11, 12, 0, 0, TimeSpan.Zero);
+    private static readonly string[] ExpectedRecoveredReplacementSlots =
+        ["WP3-REAL-CHILD-TARGET-CANARY/profile-replace-fault/generation-2"];
     [TestMethod]
     public async Task HelperUnavailableStoreReturnsTypedTerminalWithoutNativeFallback()
     {
@@ -51,6 +55,114 @@ public sealed class CredentialHelperFaultTests
         Assert.IsFalse(receipt.Receipt.TransportMayHaveStarted);
         Assert.IsFalse(receipt.RetryAttempted);
         Assert.IsTrue(receipt.ProcessTreeTerminated);
+    }
+
+    [TestMethod]
+    public async Task CredentialReplacementDeleteFaultRetainsExactCleanupAcrossRestartAndBackupUntilConfirmed()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp3-ReplacementCleanup-" + Guid.NewGuid().ToString("N"));
+        string productRoot = Path.Combine(root, "product");
+        string fakeStoreRoot = Path.Combine(root, "fake-secure-store");
+        string helper = Path.Combine(AppContext.BaseDirectory, "CredentialHelper", "Infinium.CredentialHelper.exe");
+        OneShotCredentialHelperLauncher launcher = new(
+            helper,
+            Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(helper))),
+            fakeStoreRoot);
+        BackupArtifact backup;
+        using (AuthoritativeStore state = new(new StoragePaths(productRoot)))
+        {
+            state.PublishProviderCatalog(M1ProviderCatalog.Capability, M1ProviderCatalog.Price, BaseTime);
+            _ = state.BeginCredentialEnrollment(
+                "profile-replace-fault", "generation-1", "Replacement fault", BaseTime.AddSeconds(1),
+                "account-1", "billing-1");
+            CredentialHelperCoordinator coordinator = new(state, launcher);
+            _ = await ExecuteLifecycle(
+                coordinator, "enroll", HelperAssignmentKindV2.Enroll,
+                "generation-1", "generation-1", 1, 71, BaseTime.AddSeconds(2));
+            _ = await ExecuteLifecycle(
+                coordinator, "verify", HelperAssignmentKindV2.Verify,
+                "generation-1", "generation-1", 1, 72, BaseTime.AddSeconds(4));
+            state.AddCredentialGeneration(
+                "profile-replace-fault", "generation-2", 2, 0, BaseTime.AddSeconds(6));
+            launcher.ArmExactDeleteFailure("profile-replace-fault", "generation-1");
+
+            (CoordinatedHelperReceipt failedHelper, CredentialProfileProjection pending) = await ExecuteLifecycle(
+                coordinator, "replace-fault", HelperAssignmentKindV2.Replace,
+                "generation-1", "generation-2", 2, 73, BaseTime.AddSeconds(7));
+            Assert.AreEqual(HelperOutcomeV2.Unavailable, failedHelper.Process.Receipt.Outcome);
+            Assert.AreEqual("delete-pending", pending.LifecycleState);
+            Assert.AreEqual("generation-1", pending.GenerationId);
+            Assert.AreEqual("failed", pending.CleanupDisposition);
+
+            await Assert.ThrowsExactlyAsync<InvalidDataException>(() => ExecuteLifecycle(
+                coordinator, "premature-recovery", HelperAssignmentKindV2.Recover,
+                "generation-2", "generation-2", 2, 74, BaseTime.AddSeconds(9)));
+            Assert.AreEqual("delete-pending", state.GetCredentialProfile("profile-replace-fault").LifecycleState);
+            backup = state.CreateBackup("CredentialReplacementCleanup", BaseTime.AddSeconds(11));
+        }
+
+        using (AuthoritativeStore restarted = new(new StoragePaths(productRoot)))
+        {
+            CredentialProfileProjection persisted = restarted.GetCredentialProfile("profile-replace-fault");
+            Assert.AreEqual("delete-pending", persisted.LifecycleState);
+            Assert.AreEqual("generation-1", persisted.GenerationId);
+            Assert.AreEqual("failed", persisted.CleanupDisposition);
+        }
+
+        StoragePaths restoredPaths = new(Path.Combine(root, "restored-product"));
+        AuthoritativeStore.RestoreBackup(backup, restoredPaths);
+        using AuthoritativeStore restored = new(restoredPaths);
+        CredentialProfileProjection restoredPending = restored.GetCredentialProfile("profile-replace-fault");
+        Assert.AreEqual("delete-pending", restoredPending.LifecycleState);
+        Assert.AreEqual("generation-1", restoredPending.GenerationId);
+        Assert.AreEqual("failed", restoredPending.CleanupDisposition);
+
+        CredentialHelperCoordinator recoveryCoordinator = new(restored, launcher);
+        (CoordinatedHelperReceipt recoveredHelper, CredentialProfileProjection recovered) = await ExecuteLifecycle(
+            recoveryCoordinator, "cleanup-recovery", HelperAssignmentKindV2.Recover,
+            "generation-1", "generation-2", 2, 75, BaseTime.AddSeconds(13));
+        Assert.AreEqual(HelperOutcomeV2.Completed, recoveredHelper.Process.Receipt.Outcome);
+        Assert.AreEqual("active-unverified", recovered.LifecycleState);
+        Assert.AreEqual("generation-2", recovered.GenerationId);
+        Assert.AreEqual("not-requested", recovered.CleanupDisposition);
+        (_, CredentialProfileProjection verified) = await ExecuteLifecycle(
+            recoveryCoordinator, "verify-recovered", HelperAssignmentKindV2.Verify,
+            "generation-2", "generation-2", 2, 76, BaseTime.AddSeconds(15));
+        Assert.AreEqual("active-verified", verified.LifecycleState);
+
+        using System.Text.Json.JsonDocument secureStore = System.Text.Json.JsonDocument.Parse(
+            File.ReadAllText(Path.Combine(fakeStoreRoot, "synthetic-secure-store.v1.json")));
+        string[] slots = secureStore.RootElement.GetProperty("Values").EnumerateObject()
+            .Select(property => property.Name).ToArray();
+        CollectionAssert.AreEqual(
+            ExpectedRecoveredReplacementSlots,
+            slots);
+    }
+
+    private static async Task<(CoordinatedHelperReceipt Helper, CredentialProfileProjection Projection)> ExecuteLifecycle(
+        CredentialHelperCoordinator coordinator,
+        string identity,
+        HelperAssignmentKindV2 kind,
+        string bootstrapGeneration,
+        string assignmentGeneration,
+        ulong generationOrdinal,
+        byte nonce,
+        DateTimeOffset now)
+    {
+        HelperPrivateFrameV2 bootstrap = HelperTestFrames.Bootstrap(nonceSeed: nonce);
+        bootstrap.Bootstrap.Credential.AccessProfileId.Value = "profile-replace-fault";
+        bootstrap.Bootstrap.Credential.GenerationId.Value = bootstrapGeneration;
+        HelperPrivateFrameV2 assignment = HelperTestFrames.Assignment(kind);
+        assignment.Assignment.AccessProfileId.Value = "profile-replace-fault";
+        assignment.Assignment.GenerationId.Value = assignmentGeneration;
+        assignment.Assignment.GenerationOrdinal = generationOrdinal;
+        assignment.Assignment.Credential.AccessProfileId.Value = "profile-replace-fault";
+        assignment.Assignment.Credential.GenerationId.Value = assignmentGeneration;
+        assignment.Assignment.AssignmentId = identity + "-assignment";
+        assignment.Assignment.CommandId = identity + "-command";
+        bootstrap.Bootstrap.CommandId = assignment.Assignment.CommandId;
+        return await coordinator.ExecuteCredentialTransitionAsync(
+            identity + "-attempt", bootstrap, assignment, now);
     }
 
     private static async Task<MemoryStream> CredentialRequestAsync(HelperAssignmentKindV2 kind)

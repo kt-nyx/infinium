@@ -119,6 +119,10 @@ public sealed class CredentialHelperCoordinator
         bool restoredGeneration = current.LifecycleState == "recovery-required"
             && current.IntentId?.StartsWith("restore-recovery-", StringComparison.Ordinal) == true;
         bool changesGeneration = generationId != current.GenerationId;
+        bool replacementCleanupRecovery = work.AssignmentKind == HelperAssignmentKindV2.Recover
+            && current.LifecycleState == "delete-pending"
+            && changesGeneration
+            && store.IsCredentialReplacementCleanupRecovery(profileId, current.GenerationId, generationId);
         bool validFreshGeneration = changesGeneration
             && bootstrap.Bootstrap.Credential?.AccessProfileId?.Value == profileId
             && bootstrapGenerationId == current.GenerationId
@@ -126,7 +130,8 @@ public sealed class CredentialHelperCoordinator
             && (work.AssignmentKind == HelperAssignmentKindV2.Replace
                     && current.LifecycleState is "active-unverified" or "active-verified"
                 || work.AssignmentKind == HelperAssignmentKindV2.Recover
-                    && current.LifecycleState is "secure-store-unavailable" or "recovery-required");
+                    && current.LifecycleState is "secure-store-unavailable" or "recovery-required"
+                || replacementCleanupRecovery);
         bool validCurrentGeneration = !changesGeneration
             && bootstrapGenerationId == generationId
             && work.GenerationOrdinal == checked((ulong)current.GenerationOrdinal);
@@ -145,7 +150,7 @@ public sealed class CredentialHelperCoordinator
             current = store.ApplyCredentialTransition(new(
                 attemptId + "-replacement-ineligible",
                 profileId,
-                generationId,
+                current.GenerationId,
                 "replace",
                 current.LifecycleState,
                 "replacing",
@@ -156,9 +161,43 @@ public sealed class CredentialHelperCoordinator
                 now,
                 now.AddTicks(1)));
         }
-        CoordinatedHelperReceipt helper = await ExecuteStageAndAdmitAsync(
-            attemptId, bootstrap, assignment, null, now.AddTicks(2), cancellationToken).ConfigureAwait(false);
+        CoordinatedHelperReceipt helper;
+        try
+        {
+            helper = await ExecuteStageAndAdmitAsync(
+                attemptId, bootstrap, assignment, null, now.AddTicks(2), cancellationToken).ConfigureAwait(false);
+        }
+        catch when (work.AssignmentKind == HelperAssignmentKindV2.Replace)
+        {
+            _ = PersistReplacementCleanupFailure(
+                attemptId, current, now, accountIdentityId, billingScopeIdentityId, unavailable: false);
+            throw;
+        }
         HelperOutcomeV2 outcome = helper.Process.Receipt.Outcome;
+        if (work.AssignmentKind == HelperAssignmentKindV2.Replace && outcome != HelperOutcomeV2.Completed)
+        {
+            return (helper, PersistReplacementCleanupFailure(
+                attemptId, current, now, accountIdentityId, billingScopeIdentityId,
+                unavailable: outcome == HelperOutcomeV2.Unavailable));
+        }
+        if (replacementCleanupRecovery && outcome != HelperOutcomeV2.Completed)
+        {
+            return (helper, store.ApplyCredentialTransition(new(
+                attemptId + "-predecessor-cleanup-retry-failed",
+                profileId,
+                current.GenerationId,
+                "delete",
+                "delete-pending",
+                "delete-pending",
+                "delete-pending",
+                current.CapabilitySnapshotId,
+                current.AccountIdentityId,
+                current.BillingScopeIdentityId,
+                now.AddTicks(3),
+                now.AddTicks(4),
+                SecureStoreUnavailable: outcome == HelperOutcomeV2.Unavailable,
+                Failed: outcome != HelperOutcomeV2.Unavailable)));
+        }
         (string intentKind, string completedState, bool incrementRevocation) = CredentialTransition(
             work.AssignmentKind, current.LifecycleState);
         bool deleted = completedState == "deleted";
@@ -191,6 +230,44 @@ public sealed class CredentialHelperCoordinator
             };
         }
         return (helper, store.ApplyCredentialTransition(transition));
+    }
+
+    private CredentialProfileProjection PersistReplacementCleanupFailure(
+        string attemptId,
+        CredentialProfileProjection predecessor,
+        DateTimeOffset now,
+        string? accountIdentityId,
+        string? billingScopeIdentityId,
+        bool unavailable)
+    {
+        CredentialProfileProjection pendingCleanup = store.ApplyCredentialTransition(new(
+            attemptId + "-predecessor-cleanup-pending",
+            predecessor.ProfileId,
+            predecessor.GenerationId,
+            "delete",
+            predecessor.LifecycleState,
+            "delete-pending",
+            "delete-pending",
+            predecessor.CapabilitySnapshotId ?? M1ProviderCatalog.Capability.Identity.Value,
+            predecessor.AccountIdentityId ?? accountIdentityId,
+            predecessor.BillingScopeIdentityId ?? billingScopeIdentityId,
+            now.AddTicks(3),
+            now.AddTicks(4)));
+        return store.ApplyCredentialTransition(new(
+            attemptId + "-predecessor-cleanup-failed",
+            predecessor.ProfileId,
+            pendingCleanup.GenerationId,
+            "delete",
+            "delete-pending",
+            "delete-pending",
+            "delete-pending",
+            pendingCleanup.CapabilitySnapshotId,
+            pendingCleanup.AccountIdentityId,
+            pendingCleanup.BillingScopeIdentityId,
+            now.AddTicks(5),
+            now.AddTicks(6),
+            SecureStoreUnavailable: unavailable,
+            Failed: !unavailable));
     }
 
     public async Task<(CoordinatedHelperReceipt Helper, ProviderSimulationPersistenceReceipt Persisted,
@@ -447,6 +524,8 @@ public sealed class CredentialHelperCoordinator
             HelperAssignmentKindV2.Delete when currentState == "delete-pending" => ("delete", "deleted", false),
             HelperAssignmentKindV2.Recover when currentState == "pending-enrollment" => ("enroll", "active-unverified", false),
             HelperAssignmentKindV2.Recover when currentState is "secure-store-unavailable" or "recovery-required"
+                => ("recover", "active-unverified", false),
+            HelperAssignmentKindV2.Recover when currentState == "delete-pending"
                 => ("recover", "active-unverified", false),
             _ => throw new InvalidOperationException("The helper receipt cannot drive a lifecycle transition from the current authoritative state."),
         };

@@ -144,7 +144,20 @@ public sealed class CapabilityBoundFakeSecureStore : ISyntheticSecureStore, IDis
     {
         Validate(slot);
         bool removed = false;
-        Mutate(state => removed = state.Values.Remove(Key(slot)));
+        bool fail = false;
+        Mutate(state =>
+        {
+            string key = Key(slot);
+            fail = state.DeleteFailures.Remove(key);
+            if (!fail)
+            {
+                removed = state.Values.Remove(key);
+            }
+        });
+        if (fail)
+        {
+            throw new IOException("Injected exact predecessor deletion failure.");
+        }
         return removed;
     }
 
@@ -207,5 +220,6 @@ public sealed class CapabilityBoundFakeSecureStore : ISyntheticSecureStore, IDis
     {
         public SortedDictionary<string, string> Values { get; init; } = new(StringComparer.Ordinal);
         public SortedSet<string> ConsumedNonces { get; init; } = new(StringComparer.Ordinal);
+        public SortedSet<string> DeleteFailures { get; init; } = new(StringComparer.Ordinal);
     }
 }
