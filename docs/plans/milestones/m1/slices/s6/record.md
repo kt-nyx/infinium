@@ -3460,3 +3460,68 @@ Manager or WP4 native namespace, private fixture/evaluator, archive, provider
 SDK, protected external effect, WP6/Slice 7 work, current-state advancement,
 or push occurred. This correction evidence does not self-accept WP5; the exact
 candidate remains for fresh independent bounded convergence review.
+
+## WP5 final provider convergence correction — 2026-08-12
+
+Fresh bounded provider/security re-review of candidate `e9f06a4` identified
+three additional must-fix counterexamples within the accepted WP5 adapter
+boundary. Product correction commit
+`7dc9d727562fe3fdb1bea011098279b0ab567ee9` closes them without changing the
+WP5 execution boundary:
+
+1. response admission now accepts only the exact closed `message` containing
+   one `output_text` content part. A valid text part accompanied by a function,
+   tool, web-search, additional output item, or additional content part is
+   typed malformed and never admitted; a refusal remains typed non-success;
+2. provider response headers are no longer retained as arbitrary strings.
+   Known request identifiers are retained only as bounded SHA-256 identities;
+   known rate and processing headers are uniquely parsed as bounded,
+   non-negative integers; secret-echo, malformed, duplicate, negative,
+   oversized, and unknown headers are discarded; and
+3. request serialization now validates and canonicalizes the exact supported
+   strict JSON-schema subset before transport. Unsupported vocabulary,
+   unclosed objects, unresolved local references, invalid bounds, and
+   unconstrained schemas fail before send. A regression proves the unsupported-
+   schema counterexample produces zero transport sends, and semantically
+   equivalent property orders produce identical canonical bytes.
+
+The exact clean product candidate passed the correction-focused gates:
+
+1. exact `Adapter`: Unit 18/0/0, Integration 8/0/0, Security 4/0/0,
+   Fault 3/0/0, and Evaluation 2/0/0. The 1,410-byte receipt has SHA-256
+   `77fabc506adc87aa14e75c5c255921f45bab714955bbda1cff749eecc0c24888`;
+2. exact `OfflineSafetyReplay`: Integration 3/0/0, Security 4/0/0,
+   Fault 3/0/0, and Evaluation 2/0/0. The 848-byte receipt has SHA-256
+   `58874b8b5c4abe16784a7ef9f45001006210caabf111ea4ce90f52d86a473869`;
+3. the shared 238-byte dynamically measured network spy has SHA-256
+   `d2eeac57768b66d0714e31d255c88b6715c9f2031d00fecaa71591755590bcd6`
+   and records zero public DNS, provider, redirect-follow, retry, proxy-
+   fallback, and replay-network operations; and
+4. candidate-bound `Layer6Review` passed from exact baseline
+   `e9f06a49f4c68236b61b2769c39ddb2903c9be8d` through exact candidate
+   `7dc9d727562fe3fdb1bea011098279b0ab567ee9`: six changed paths and zero
+   allowed-path, strict-JSON, relative-link, private/archive, status-claim,
+   unsupported-gap, or other findings. Its 1,353-byte receipt has SHA-256
+   `55edcaf5d4306ca21dea1621f1f73fa5a6b4df5e9848f5ae57129e0d1b9d18fc`.
+
+The accumulated clean-candidate floor then passed once:
+
+1. solution category Unit 217/0/1, Contract 127/0/0, Integration 99/0/0,
+   Evaluation 83/0/8, Security 126/0/3, and Fault 108/0/3;
+2. final unfiltered Unit 230/0/1, Contract 155/0/0, Integration 109/0/0,
+   Evaluation 63/0/8, Security 7/0/0, and Fault 7/0/0; and
+3. format verification, dependency-manifest freshness, documentation
+   validation (166 metadata files, 168 Markdown link sources, 17 JSON files),
+   zero changed strict-JSON files, and diff hygiene.
+
+After the final verification, the accepted exact-root process-cleanup
+procedure resolved
+`Z:\Development\Large Projects\Skyrim\infinium`, matched zero repository-owned
+`dotnet` or `testhost` processes, and verified zero survivors. No process was
+terminated by name alone.
+
+No API key, public DNS/provider endpoint, live/billable request, Credential
+Manager or WP4 native namespace, private fixture/evaluator, archive, provider
+SDK, protected external effect, WP6/Slice 7 work, current-state advancement,
+or push occurred. This correction evidence does not self-accept WP5; the exact
+candidate remains for fresh independent bounded convergence review.
