@@ -2514,3 +2514,31 @@ private-fixture, sibling/archive/legacy, destructive, or push operation occurred
 The external-effect count is zero. Native credential integration remains WP4;
 live provider behavior and later-package orchestration remain intentionally
 unimplemented. `docs/current-state.md` is unchanged for independent WP3 review.
+
+### WP3 lifecycle-oracle evidence correction — 2026-08-11
+
+Final evidence review found that the public lifecycle evaluation read its
+terminal-state, generation, and revocation oracle fields without deriving all
+three from product state in that same test. Product integration evidence already
+covered the lifecycle, but the evaluation was strengthened so the independent
+oracle now compares directly with the product-produced
+pending-enrollment/activation/verification/replacement/disable/delete path.
+The integration lifecycle also now explicitly exercises disable before
+revocation and deletion. This test-only correction is exact commit
+`708050b0550afbb49d64d8bcc3eb3b701fefd771`; it changes no product, contract,
+fixture, or authority file.
+
+The exact WP3 focused filters reran clean at Unit 10/0/0, Integration 3/0/0,
+Security 3/0/0, Fault 3/0/0, and Evaluation 2/0/0. The superseding 1,317-byte
+`CredentialSynthetic` receipt has SHA-256
+`6a6aee5d9f30aaa76443130767bca88051e8316c9b97cc41e348b8936ccf9fcd`
+and binds the rebuilt exact helper binary SHA-256
+`5579259ec363457f484aa5da317bf402ae860fe72093cff836f757a3cf748b3e`.
+Candidate-bound `Layer6Review` passed from
+`da922d764a51c99cc622364a26e95a2fd59cd444` through the exact corrected
+candidate `708050b0550afbb49d64d8bcc3eb3b701fefd771`. Its 1,686-byte receipt has
+SHA-256 `07a1c9b6a1f93208cafd5ce9078b446d679ae1c8349094ec9d29487f399214cc`,
+with the same 45 changed paths and zero findings. All previously retained
+full-floor and analysis evidence remains applicable because the correction
+only strengthens two already passing tests. External-effect counts remain zero,
+and `docs/current-state.md` remains unchanged.
