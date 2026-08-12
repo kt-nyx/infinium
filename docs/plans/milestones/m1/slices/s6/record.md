@@ -2447,3 +2447,70 @@ zero-network evidence. Native Credential Manager operations, credential or
 target enumeration/reveal, real secrets, DNS/network/provider calls, private
 fixtures, sibling/archive/legacy material, protected roots, WP4 or later
 behavior, current-state advancement, and push remain prohibited.
+
+## WP3 product candidate — 2026-08-11
+
+The focused M1/S6/WP3 product candidate is exact commit
+`c5c95a8c95fc0ab720142bb541b5f4b9c3d91c1c`. It implements the accepted
+non-live one-shot credential-helper vertical: strict canonical private helper-v2
+framing and session order, the exact repository-built child process over two
+inherited anonymous-pipe handles, the narrow deterministic fake secure-store
+seam, closed credential lifecycle persistence, stage-before-admit coordinator
+ownership, synthetic provider dispatch without network access, and independently
+expected answer-free DEV/VAL packages.
+
+Semantic review found and corrected one substantive pre-commit defect: the first
+process-boundary implementation structurally validated frames but did not retain
+every bootstrap/assignment/final-revalidation binding. The final candidate
+cross-binds the command, subject, operation/attempt, profile/generation,
+revocation epoch, coordinator fence, request fingerprint, accepted input-bound
+proof, deadline, configuration digests, and all seven limit dimensions. The
+coordinator independently applies the existing semantic receipt codec before
+staging or admission. Regression mutations cover stale generation, revocation,
+deadline, fence, budget, request fingerprint, and bootstrap attempt identity.
+Two stale scaffold assertions and one over-broad WP2 package wildcard were also
+corrected without changing product semantics.
+
+Retained verification is:
+
+1. Locked restore and the Release build passed with zero warnings or errors.
+   The exact WP3 focused filters passed Unit 10/0/0, Integration 3/0/0,
+   Security 3/0/0, Fault 3/0/0, and CredentialSynthetic Evaluation 2/0/0.
+2. `CredentialSynthetic` passed. Its 1,317-byte receipt has SHA-256
+   `e965469c1b945f1a9164add5a4a209c7707586870bde3345de86474e7dd6c84f`.
+   It binds two registered WP3 packages, registry count 27, helper binary
+   SHA-256 `8b57646b140d8bfb251bb49d15702ab4a9d0168aac72c4031f89eb9128dbca2d`,
+   helper protocol SHA-256
+   `2eac265ef75cc827bd5a8596120f5ba4c1912dde2219ad98eb11e2984cb043c0`,
+   two inherited private handles, zero standard protocol handles, listeners,
+   retries, or process survivors, successful stage-before-admit and
+   coordinator-only admission, and zero canary matches, native credential
+   operations, or network operations.
+3. The accumulated unfiltered Release floor passed Contract 155/0/0, Unit
+   200/0/1, Integration 84/0/0, Evaluation 61/0/8, Security 3/0/0, and Fault
+   3/0/0. The one Unit skip is the platform-dependent symbolic-link test; the
+   eight Evaluation skips are the pre-existing explicitly private/platform
+   cases. The complete non-live analysis `All` gate passed; its 512-byte receipt
+   has SHA-256
+   `480d16e7acd77c565e91e781fb88add3e7086c5987755754d130efcdb1fca9e5`.
+4. Accumulated `Contracts`, `StateSurfaces`, `StateTotality`, `Budget`, and
+   `BudgetFaults` gates passed. Formatting, dependency-manifest freshness,
+   documentation validation (166 metadata files, 168 Markdown link sources,
+   15 JSON files), diff checks, strict JSON loading, migration/backup/restore,
+   and lifecycle restart/recovery checks passed.
+5. Candidate-bound `Layer6Review` passed from exact WP3 baseline
+   `da922d764a51c99cc622364a26e95a2fd59cd444` through exact product candidate
+   `c5c95a8c95fc0ab720142bb541b5f4b9c3d91c1c`. Its 1,653-byte receipt has
+   SHA-256
+   `04b3e6a6e11741d71ebddfcedc869c3a30bb58e012e96ac4f14ff1e3ecfaac3b`,
+   with 45 changed paths and zero allowed-path, strict-changed-JSON,
+   relative-link, private/archive, or other findings.
+
+The credential-helper process was exercised as a real child executable, not
+only through in-process codec/store tests. No native Credential Manager API was
+called or enumerated; no API key or other real secret was requested, inspected,
+stored, or logged; and no DNS, network, provider, token, billable, protected-root,
+private-fixture, sibling/archive/legacy, destructive, or push operation occurred.
+The external-effect count is zero. Native credential integration remains WP4;
+live provider behavior and later-package orchestration remain intentionally
+unimplemented. `docs/current-state.md` is unchanged for independent WP3 review.
