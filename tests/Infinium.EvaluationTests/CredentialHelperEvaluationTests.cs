@@ -73,12 +73,9 @@ public sealed class CredentialHelperEvaluationTests
         latest = (await ExecuteTransition(
             coordinator, "disable", HelperAssignmentKindV2.Disable, "generation-2", 5,
             "active-verified", "disabled", now.AddSeconds(11))).Helper;
-        latest = (await ExecuteTransition(
-            coordinator, "delete-pending", HelperAssignmentKindV2.Delete, "generation-2", 6,
-            "disabled", "delete-pending", now.AddSeconds(13), incrementRevocation: true)).Helper;
         (latest, CredentialProfileProjection terminal) = await ExecuteTransition(
-            coordinator, "delete", HelperAssignmentKindV2.Delete, "generation-2", 7,
-            "delete-pending", "deleted", now.AddSeconds(15));
+            coordinator, "delete", HelperAssignmentKindV2.Delete, "generation-2", 6,
+            "disabled", "deleted", now.AddSeconds(13), incrementRevocation: true);
 
         Dictionary<string, object> actual = new(StringComparer.Ordinal)
         {

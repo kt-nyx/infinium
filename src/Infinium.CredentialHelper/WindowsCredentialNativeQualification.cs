@@ -4,12 +4,14 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Infinium.Application.Runtime;
 using Microsoft.Win32.SafeHandles;
 
 namespace Infinium.CredentialHelper;
 
 internal static class WindowsCredentialNativeQualification
 {
+    private static readonly bool ConsumedV1Authority = true;
     private static readonly JsonSerializerOptions IndentedJson = new() { WriteIndented = true };
     public const string AcceptedManifestSha256 =
         "0c911c6c10340d4a8b6a3f98aa2c2bffa3f1f4290793d3583a460cecf89bcbd3";
@@ -18,6 +20,10 @@ internal static class WindowsCredentialNativeQualification
 
     public static int Run(string manifestPath, string evidencePath)
     {
+        if (ConsumedV1Authority)
+        {
+            throw new InvalidOperationException("The consumed WP4 v1 native qualification is terminally disabled.");
+        }
         ArgumentException.ThrowIfNullOrWhiteSpace(manifestPath);
         ArgumentException.ThrowIfNullOrWhiteSpace(evidencePath);
         manifestPath = Path.GetFullPath(manifestPath);
@@ -51,16 +57,19 @@ internal static class WindowsCredentialNativeQualification
         NativeQualificationManifest manifest = ReadManifest(root);
         Directory.CreateDirectory(Path.GetDirectoryName(evidencePath)!);
         string backupPath = Path.Combine(Path.GetDirectoryName(evidencePath)!, "native-backup-metadata.json");
-        string secretCanary = NativeSecretCanary.Create();
-        byte[] secretBytes = Encoding.ASCII.GetBytes(secretCanary);
+        FiniteNativeDeadline deadline = FiniteNativeDeadline.Start(TimeSpan.FromSeconds(1_800));
+        byte[] secretBytes = [];
         List<NativeScenarioEvidence> scenarios = [];
-        WindowsCredentialManagerStore store = new();
+        List<NativeCanarySurface> canarySurfaces = [];
+        NativeNamespaceReuseGuard reuseGuard = new();
+        WindowsCredentialManagerStore store = new(reuseGuard, deadline);
         Stopwatch duration = Stopwatch.StartNew();
         bool completed = false;
         try
         {
+            deadline.DemandRemaining("preflight");
             PreflightAllTargets(store, manifest.Targets);
-            RunInteractiveSubmit(store, Target(manifest, "interactive-primary"), secretBytes, scenarios);
+            secretBytes = RunInteractiveSubmit(store, Target(manifest, "interactive-primary"), scenarios);
             RunInteractiveCancel(store, Target(manifest, "interactive-cancel"), scenarios);
             RunSizeBoundaries(store, Target(manifest, "size-valid"),
                 Target(manifest, "size-oversize"), scenarios);
@@ -69,11 +78,11 @@ internal static class WindowsCredentialNativeQualification
                 Target(manifest, "replacement-new"), secretBytes, scenarios);
             RunRevokeDelete(store, Target(manifest, "revoke-delete"), secretBytes, scenarios);
             RunCrashRestart(store, Target(manifest, "crash-restart"), manifestPath,
-                Path.GetDirectoryName(evidencePath)!, scenarios);
+                Path.GetDirectoryName(evidencePath)!, scenarios, canarySurfaces);
             RunBackupRestore(store, Target(manifest, "backup-old"), Target(manifest, "backup-new"),
                 secretBytes, backupPath, scenarios);
             RunFakeDispatch(store, Target(manifest, "fake-dispatch"), secretBytes, scenarios);
-            RunCleanupAmbiguity(store, Target(manifest, "unavailable-store"),
+            RunCleanupAmbiguityControlFlowProof(Target(manifest, "unavailable-store"),
                 Target(manifest, "crash-restart"), scenarios);
 
             List<TargetAbsenceEvidence> absence = [];
@@ -89,6 +98,10 @@ internal static class WindowsCredentialNativeQualification
 
             duration.Stop();
             (int listeners, int networkOperations) = NativeNetworkMeasurement.MeasureCurrentProcessTcp();
+            canarySurfaces.Add(NativeCanarySurface.FromFile("backup metadata", backupPath));
+            NativeCanaryEvidence canaryEvidence = NativeCanaryScanner.Scan(
+                secretBytes, RawTargetCanaries(manifest.Targets), canarySurfaces);
+            NativeCallTraceValidator.Validate(store.CallTrace);
             NativeQualificationEvidence evidence = new(
                 "infinium.m1-s6.wp4.credential-native-evidence/v1",
                 "passed",
@@ -96,6 +109,7 @@ internal static class WindowsCredentialNativeQualification
                 manifestSha256,
                 Environment.ProcessId,
                 store.CallCounts,
+                store.CallTrace,
                 scenarios,
                 absence,
                 new(
@@ -110,10 +124,8 @@ internal static class WindowsCredentialNativeQualification
                     true,
                     true,
                     Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(backupPath)))),
-                new(
-                    0,
-                    0,
-                    ["native evidence", "backup metadata", "captured stdout", "captured stderr", "process launch", "receipts"]),
+                canaryEvidence,
+                deadline.Snapshot(),
                 listeners,
                 networkOperations,
                 0,
@@ -125,14 +137,21 @@ internal static class WindowsCredentialNativeQualification
                 DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ",
                     System.Globalization.CultureInfo.InvariantCulture));
             WriteEvidence(evidencePath, evidence);
-            ScanRetainedEvidence(evidencePath, backupPath, secretCanary, manifest.Targets);
+            NativeCanaryEvidence retainedEvidenceScan = NativeCanaryScanner.Scan(
+                secretBytes,
+                RawTargetCanaries(manifest.Targets),
+                [NativeCanarySurface.FromFile("native evidence", evidencePath), .. canarySurfaces]);
+            if (retainedEvidenceScan.SecretMatches != 0 || retainedEvidenceScan.RawTargetMatches != 0)
+            {
+                throw new InvalidOperationException("A native canary leaked into a scanned retained surface.");
+            }
             completed = true;
             return 0;
         }
         finally
         {
             CryptographicOperations.ZeroMemory(secretBytes);
-            if (!completed)
+            if (!completed && !reuseGuard.IsBlocked)
             {
                 foreach (NativeTarget target in manifest.Targets.Where(store.WasWrittenByThisRun))
                 {
@@ -145,6 +164,10 @@ internal static class WindowsCredentialNativeQualification
 
     public static int RunCrashProbe(string manifestPath, string alias, string countEvidencePath)
     {
+        if (ConsumedV1Authority)
+        {
+            throw new InvalidOperationException("The consumed WP4 v1 native crash probe is terminally disabled.");
+        }
         byte[] bytes = File.ReadAllBytes(Path.GetFullPath(manifestPath));
         if (Convert.ToHexStringLower(SHA256.HashData(bytes)) != AcceptedManifestSha256)
         {
@@ -157,6 +180,7 @@ internal static class WindowsCredentialNativeQualification
         try
         {
             WindowsCredentialManagerStore store = new();
+            store.BeginScenario("helper-and-coordinator-crash-restart");
             store.WriteExact(target, secret);
             byte[] read = store.ReadExact(target);
             try
@@ -165,7 +189,7 @@ internal static class WindowsCredentialNativeQualification
             }
             finally { CryptographicOperations.ZeroMemory(read); }
             File.WriteAllText(Path.GetFullPath(countEvidencePath),
-                "{\"credWriteW\":1,\"credReadW\":1,\"credDeleteW\":0,\"credFree\":1}\n",
+                JsonSerializer.Serialize(new { trace = store.CallTrace }, IndentedJson) + "\n",
                 new UTF8Encoding(false));
             Environment.Exit(69);
             return 69;
@@ -200,22 +224,32 @@ internal static class WindowsCredentialNativeQualification
         }
     }
 
-    private static void RunInteractiveSubmit(
+    private static byte[] RunInteractiveSubmit(
         WindowsCredentialManagerStore store,
         NativeTarget target,
-        byte[] secret,
         List<NativeScenarioEvidence> evidence)
     {
-        byte[] entered = NativeMaskedEntryDialog.Capture(secret, cancel: false);
+        store.BeginScenario("interactive-entry-submit");
+        NativeEntryCapture entered = NativeMaskedEntryDialog.Capture(TimeSpan.FromMinutes(5));
+        if (entered.TerminalState != NativeEntryTerminalState.Submitted || entered.Secret.Length == 0)
+        {
+            entered.Dispose();
+            throw new InvalidOperationException("Native entry submit did not produce a non-empty credential.");
+        }
         try
         {
-            store.WriteExact(target, entered);
+            store.WriteExact(target, entered.Secret);
             byte[] read = store.ReadExact(target);
-            try { RequireEqual(entered, read, "Native interactive entry did not round-trip exactly."); }
+            try { RequireEqual(entered.Secret, read, "Native interactive entry did not round-trip exactly."); }
             finally { CryptographicOperations.ZeroMemory(read); }
         }
-        finally { CryptographicOperations.ZeroMemory(entered); }
+        catch
+        {
+            entered.Dispose();
+            throw;
+        }
         evidence.Add(new("interactive-entry-submit", [target.TargetFingerprintSha256], "completed", true, true));
+        return entered.DetachSecret();
     }
 
     private static void RunInteractiveCancel(
@@ -223,8 +257,9 @@ internal static class WindowsCredentialNativeQualification
         NativeTarget target,
         List<NativeScenarioEvidence> evidence)
     {
-        byte[] entered = NativeMaskedEntryDialog.Capture([], cancel: true);
-        if (entered.Length != 0 || store.Exists(target))
+        store.BeginScenario("interactive-entry-cancel");
+        using NativeEntryCapture entered = NativeMaskedEntryDialog.Capture(TimeSpan.FromMinutes(5));
+        if (entered.TerminalState != NativeEntryTerminalState.Cancelled || entered.Secret.Length != 0 || store.Exists(target))
         {
             throw new InvalidOperationException("Native entry cancellation retained or wrote a credential.");
         }
@@ -237,6 +272,7 @@ internal static class WindowsCredentialNativeQualification
         NativeTarget oversized,
         List<NativeScenarioEvidence> evidence)
     {
+        store.BeginScenario("credential-size-boundaries");
         byte[] maximum = RandomNumberGenerator.GetBytes(WindowsCredentialManagerStore.MaximumBlobBytes);
         byte[] over = RandomNumberGenerator.GetBytes(WindowsCredentialManagerStore.MaximumBlobBytes + 1);
         try
@@ -267,6 +303,7 @@ internal static class WindowsCredentialNativeQualification
         NativeTarget target,
         List<NativeScenarioEvidence> evidence)
     {
+        store.BeginScenario("secure-store-unavailable");
         store.SetFault(WindowsCredentialFault.UnavailableBeforeNativeCall);
         try
         {
@@ -287,6 +324,7 @@ internal static class WindowsCredentialNativeQualification
         byte[] secret,
         List<NativeScenarioEvidence> evidence)
     {
+        store.BeginScenario("replacement");
         store.WriteExact(oldTarget, secret);
         byte[] oldRead = store.ReadExact(oldTarget);
         CryptographicOperations.ZeroMemory(oldRead);
@@ -313,6 +351,7 @@ internal static class WindowsCredentialNativeQualification
         byte[] secret,
         List<NativeScenarioEvidence> evidence)
     {
+        store.BeginScenario("revoke-delete");
         store.WriteExact(target, secret);
         byte[] read = store.ReadExact(target);
         CryptographicOperations.ZeroMemory(read);
@@ -328,11 +367,13 @@ internal static class WindowsCredentialNativeQualification
         NativeTarget target,
         string manifestPath,
         string outputDirectory,
-        List<NativeScenarioEvidence> evidence)
+        List<NativeScenarioEvidence> evidence,
+        List<NativeCanarySurface> canarySurfaces)
     {
+        store.BeginScenario("helper-and-coordinator-crash-restart");
         string childCountsPath = Path.Combine(outputDirectory, "native-crash-call-counts.json");
-        ProcessStartInfo start = new(Environment.ProcessPath!,
-            $"--credential-native-crash-probe --manifest \"{manifestPath}\" --target-alias {target.Alias} --count-evidence \"{childCountsPath}\"")
+        string arguments = $"--credential-native-crash-probe --manifest \"{manifestPath}\" --target-alias {target.Alias} --count-evidence \"{childCountsPath}\"";
+        ProcessStartInfo start = new(Environment.ProcessPath!, arguments)
         {
             UseShellExecute = false,
             CreateNoWindow = true,
@@ -341,6 +382,8 @@ internal static class WindowsCredentialNativeQualification
         };
         start.Environment.Clear();
         start.Environment["DOTNET_EnableDiagnostics"] = "0";
+        canarySurfaces.Add(NativeCanarySurface.FromText("crash probe process launch", arguments));
+        canarySurfaces.Add(NativeCanarySurface.FromText("crash probe environment", "DOTNET_EnableDiagnostics=0"));
         using Process child = Process.Start(start)
             ?? throw new InvalidOperationException("Native crash probe could not start.");
         child.WaitForExit(30_000);
@@ -352,15 +395,15 @@ internal static class WindowsCredentialNativeQualification
         using (JsonDocument counts = JsonDocument.Parse(File.ReadAllBytes(childCountsPath)))
         {
             JsonElement countRoot = counts.RootElement;
-            store.AddExternalCounts(
-                countRoot.GetProperty("credWriteW").GetInt32(),
-                countRoot.GetProperty("credReadW").GetInt32(),
-                countRoot.GetProperty("credDeleteW").GetInt32(),
-                countRoot.GetProperty("credFree").GetInt32());
+            store.AddExternalTrace(countRoot.GetProperty("trace").Deserialize<List<NativeCallTraceEntry>>()
+                ?? throw new InvalidDataException("Crash probe call trace is absent."));
             store.MarkExternalWrite(target);
         }
         string stdout = child.StandardOutput.ReadToEnd();
         string stderr = child.StandardError.ReadToEnd();
+        canarySurfaces.Add(NativeCanarySurface.FromText("crash probe stdout", stdout));
+        canarySurfaces.Add(NativeCanarySurface.FromText("crash probe stderr", stderr));
+        canarySurfaces.Add(NativeCanarySurface.FromFile("crash probe call evidence", childCountsPath));
         if (stdout.Contains("Infinium:", StringComparison.Ordinal)
             || stderr.Contains("Infinium:", StringComparison.Ordinal))
         {
@@ -384,6 +427,7 @@ internal static class WindowsCredentialNativeQualification
         string backupPath,
         List<NativeScenarioEvidence> evidence)
     {
+        store.BeginScenario("backup-restore-reauthentication");
         store.WriteExact(oldTarget, secret);
         byte[] oldRead = store.ReadExact(oldTarget);
         CryptographicOperations.ZeroMemory(oldRead);
@@ -429,6 +473,7 @@ internal static class WindowsCredentialNativeQualification
         byte[] secret,
         List<NativeScenarioEvidence> evidence)
     {
+        store.BeginScenario("fake-provider-dispatch");
         store.WriteExact(target, secret);
         byte[] dispatchSecret = store.ReadExact(target);
         try
@@ -446,25 +491,34 @@ internal static class WindowsCredentialNativeQualification
             "completed-stage-before-admit", true, true));
     }
 
-    private static void RunCleanupAmbiguity(
-        WindowsCredentialManagerStore store,
+    private static void RunCleanupAmbiguityControlFlowProof(
         NativeTarget unavailable,
         NativeTarget crash,
         List<NativeScenarioEvidence> evidence)
     {
-        store.SetFault(WindowsCredentialFault.CleanupAmbiguousBeforeNativeCall);
+        NativeNamespaceReuseGuard proof = new();
+        proof.Block("injected-control-flow-proof");
         bool blocked = false;
-        try { _ = store.DeleteAndProveAbsent(unavailable); }
-        catch (IOException) { blocked = true; }
-        finally { store.SetFault(WindowsCredentialFault.None); }
-        if (!blocked) { throw new InvalidOperationException("Ambiguous cleanup did not block target reuse."); }
+        try { proof.DemandNativeCallAllowed(); }
+        catch (NativeNamespaceBlockedException) { blocked = true; }
+        if (!blocked || !proof.IsBlocked)
+        {
+            throw new InvalidOperationException("Ambiguous cleanup control-flow proof did not terminally block calls.");
+        }
         evidence.Add(new("cleanup-failure-and-ambiguity",
             [unavailable.TargetFingerprintSha256, crash.TargetFingerprintSha256],
-            "namespace-reuse-blocked", true, true));
+            "non-native-control-flow-proof:namespace-reuse-blocked", true, true));
     }
 
     private static NativeTarget Target(NativeQualificationManifest manifest, string alias) =>
         manifest.Targets.Single(item => item.Alias == alias);
+
+    private static NativeRawTargetCanary[] RawTargetCanaries(
+        IEnumerable<NativeTarget> targets) => targets.SelectMany(target => new[]
+        {
+            new NativeRawTargetCanary("utf-8", Encoding.UTF8.GetBytes(target.RawTarget)),
+            new NativeRawTargetCanary("utf-16le", Encoding.Unicode.GetBytes(target.RawTarget)),
+        }).ToArray();
 
     private static void RequireEqual(ReadOnlySpan<byte> expected, ReadOnlySpan<byte> actual, string message)
     {
@@ -480,25 +534,6 @@ internal static class WindowsCredentialNativeQualification
         stream.Flush(flushToDisk: true);
     }
 
-    private static void ScanRetainedEvidence(
-        string evidencePath,
-        string backupPath,
-        string secretCanary,
-        IEnumerable<NativeTarget> targets)
-    {
-        string combined = File.ReadAllText(evidencePath) + File.ReadAllText(backupPath);
-        if (combined.Contains(secretCanary, StringComparison.Ordinal))
-        {
-            throw new InvalidOperationException("Native secret canary leaked into retained evidence.");
-        }
-        foreach (NativeTarget target in targets)
-        {
-            if (combined.Contains(target.RawTarget, StringComparison.Ordinal))
-            {
-                throw new InvalidOperationException("Raw Credential Manager target leaked into retained evidence.");
-            }
-        }
-    }
 }
 
 internal sealed record NativeTarget(
@@ -512,9 +547,9 @@ internal sealed record NativeTarget(
 
 internal sealed record NativeQualificationManifest(IReadOnlyList<NativeTarget> Targets);
 
-internal enum WindowsCredentialFault { None, UnavailableBeforeNativeCall, CleanupAmbiguousBeforeNativeCall }
+internal enum WindowsCredentialFault { None, UnavailableBeforeNativeCall }
 
-internal sealed class WindowsCredentialManagerStore
+internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDisposable
 {
     public const int MaximumBlobBytes = 2_560;
     private const uint CredentialTypeGeneric = 1;
@@ -525,12 +560,153 @@ internal sealed class WindowsCredentialManagerStore
     private int readCount;
     private int deleteCount;
     private int freeCount;
+    private long sequence;
+    private long allocationSequence;
+    private string scenario = "preflight";
+    private readonly NativeNamespaceReuseGuard reuseGuard;
+    private readonly FiniteNativeDeadline deadline;
+    private readonly List<NativeCallTraceEntry> callTrace = [];
+    private readonly Dictionary<SyntheticCredentialSlot, NativeTarget> manifestTargets = [];
+    private readonly HashSet<string> consumedNonces = new(StringComparer.Ordinal);
     private readonly HashSet<string> writtenTargetFingerprints = new(StringComparer.Ordinal);
+    private string? deleteFailureGenerationId;
+
+    public WindowsCredentialManagerStore()
+        : this(new NativeNamespaceReuseGuard(), FiniteNativeDeadline.Start(TimeSpan.FromMinutes(30))) { }
+
+    internal WindowsCredentialManagerStore(NativeNamespaceReuseGuard reuseGuard, FiniteNativeDeadline deadline)
+    {
+        this.reuseGuard = reuseGuard;
+        this.deadline = deadline;
+    }
+
+    public static WindowsCredentialManagerStore FromAcceptedManifest(
+        string manifestPath,
+        string expectedSha256,
+        string expectedManifestId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(expectedSha256);
+        ArgumentException.ThrowIfNullOrWhiteSpace(expectedManifestId);
+        byte[] bytes = File.ReadAllBytes(Path.GetFullPath(manifestPath));
+        string actualSha256 = Convert.ToHexStringLower(SHA256.HashData(bytes));
+        if (expectedSha256.Length != 64
+            || !expectedSha256.All(char.IsAsciiHexDigit)
+            || !string.Equals(actualSha256, expectedSha256, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidDataException("The native store manifest is not the exact accepted artifact.");
+        }
+        using JsonDocument document = JsonDocument.Parse(bytes);
+        JsonElement manifestRoot = document.RootElement;
+        if (!string.Equals(
+            manifestRoot.GetProperty("manifest_id").GetString(),
+            expectedManifestId,
+            StringComparison.Ordinal)
+            || manifestRoot.GetProperty("schema_identity").GetString()
+                != "infinium.repository.wp4-credential-native-authorization/1.1.0"
+            || manifestRoot.GetProperty("status").GetString() != "ready-for-owner-acceptance"
+            || manifestRoot.GetProperty("effect_authority").GetString()
+                != "none-until-owner-accepts-exact-manifest-bytes")
+        {
+            throw new InvalidDataException("The native store manifest identity or prepared state does not match its accepted v2 binding.");
+        }
+        WindowsCredentialManagerStore store = new();
+        foreach (JsonElement item in manifestRoot.GetProperty("disposable_namespace")
+            .GetProperty("targets").EnumerateArray())
+        {
+            NativeTarget target = new(
+                item.GetProperty("alias").GetString()!,
+                item.GetProperty("access_profile_id").GetString()!,
+                item.GetProperty("generation_id").GetString()!,
+                item.GetProperty("target_fingerprint_sha256").GetString()!);
+            Validate(target);
+            if (!store.manifestTargets.TryAdd(new(target.AccessProfileId, target.GenerationId), target))
+            {
+                throw new InvalidDataException("The accepted manifest repeats a native credential slot.");
+            }
+        }
+        return store;
+    }
 
     public NativeCallCounts CallCounts => new(writeCount, readCount, deleteCount, freeCount,
         checked(writeCount + readCount + deleteCount + freeCount));
+    internal bool NamespaceReuseBlocked => reuseGuard.IsBlocked;
+    internal string? NamespaceReuseBlockReason => reuseGuard.Reason;
+    public IReadOnlyList<NativeCallTraceEntry> CallTrace => callTrace;
+    internal IReadOnlyList<NativeRawTargetCanary> RawTargetCanaries => manifestTargets.Values
+        .SelectMany(target => new[]
+        {
+            new NativeRawTargetCanary("utf-8", Encoding.UTF8.GetBytes(target.RawTarget)),
+            new NativeRawTargetCanary("utf-16le", Encoding.Unicode.GetBytes(target.RawTarget)),
+        })
+        .ToArray();
+
+    public void BeginScenario(string value)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(value);
+        scenario = value;
+    }
+
+    void ISyntheticSecureStore.WriteExact(SyntheticCredentialSlot slot, ReadOnlySpan<byte> secret) =>
+        WriteExact(Resolve(slot), secret);
+
+    bool ISyntheticSecureStore.VerifyExact(SyntheticCredentialSlot slot) => Exists(Resolve(slot));
+
+    byte[] ISyntheticSecureStore.ReadExact(SyntheticCredentialSlot slot) => ReadExact(Resolve(slot));
+
+    bool ISyntheticSecureStore.DeleteExact(SyntheticCredentialSlot slot)
+    {
+        if (string.Equals(slot.GenerationId, deleteFailureGenerationId, StringComparison.Ordinal))
+        {
+            deleteFailureGenerationId = null;
+            throw new IOException("Injected exact predecessor deletion failure before the native call.");
+        }
+        NativeTarget target = Resolve(slot);
+        if (!Exists(target)) { return false; }
+        return DeleteAndProveAbsent(target);
+    }
+
+    bool ISyntheticSecureStore.ConsumeOneUseNonce(ReadOnlySpan<byte> nonceFingerprint)
+    {
+        if (nonceFingerprint.Length != 32)
+        {
+            throw new InvalidDataException("The one-use nonce fingerprint is not SHA-256 sized.");
+        }
+        return consumedNonces.Add(Convert.ToHexStringLower(nonceFingerprint));
+    }
+
+    private NativeTarget Resolve(SyntheticCredentialSlot slot) =>
+        manifestTargets.TryGetValue(slot, out NativeTarget? target)
+            ? target
+            : throw new InvalidDataException("The helper requested a credential slot absent from the accepted manifest.");
+
+    public void Dispose() => consumedNonces.Clear();
 
     public void SetFault(WindowsCredentialFault value) => fault = value;
+
+    internal void ConfigureQualificationPhase(
+        Infinium.Contracts.Protobuf.Helper.V2.HelperAssignmentV2 assignment)
+    {
+        ArgumentNullException.ThrowIfNull(assignment);
+        CredentialNativeQualificationPhaseV2 phase = CredentialNativeQualificationPhasesV2.Parse(
+            assignment.AssignmentId,
+            assignment.AssignmentKind);
+        fault = phase.UnavailableBeforeNativeCall
+            ? WindowsCredentialFault.UnavailableBeforeNativeCall
+            : WindowsCredentialFault.None;
+        deleteFailureGenerationId = null;
+        if (phase.FailExactPredecessorDeleteBeforeNativeCall)
+        {
+            string successor = assignment.Credential?.GenerationId?.Value
+                ?? throw new InvalidDataException("Replacement interruption requires a successor generation.");
+            deleteFailureGenerationId = manifestTargets.Keys
+                .Where(slot => slot.ProfileId == assignment.AccessProfileId?.Value
+                    && slot.GenerationId != successor)
+                .Select(slot => slot.GenerationId)
+                .SingleOrDefault()
+                ?? throw new InvalidDataException("Replacement interruption requires one exact predecessor target.");
+        }
+        BeginScenario(assignment.AssignmentId);
+    }
 
     public bool WasWrittenByThisRun(NativeTarget target) =>
         writtenTargetFingerprints.Contains(target.TargetFingerprintSha256);
@@ -541,25 +717,51 @@ internal sealed class WindowsCredentialManagerStore
         writtenTargetFingerprints.Add(target.TargetFingerprintSha256);
     }
 
-    public void AddExternalCounts(int writes, int reads, int deletes, int frees)
+    public void AddExternalTrace(IReadOnlyList<NativeCallTraceEntry> external)
     {
-        if (writes < 0 || reads < 0 || deletes < 0 || frees < 0)
+        NativeCallTraceValidator.Validate(external);
+        Dictionary<long, long> allocations = [];
+        foreach (NativeCallTraceEntry item in external)
         {
-            throw new ArgumentOutOfRangeException(nameof(writes));
+            long? allocationId = item.AllocationId;
+            long? pairedAllocationId = item.PairedAllocationId;
+            if (allocationId is not null)
+            {
+                long next = ++allocationSequence;
+                allocations.Add(allocationId.Value, next);
+                allocationId = next;
+            }
+            if (pairedAllocationId is not null) { pairedAllocationId = allocations[pairedAllocationId.Value]; }
+            callTrace.Add(item with
+            {
+                Sequence = ++sequence,
+                AllocationId = allocationId,
+                PairedAllocationId = pairedAllocationId,
+            });
+            switch (item.Operation)
+            {
+                case "CredWriteW": writeCount++; break;
+                case "CredReadW": readCount++; break;
+                case "CredDeleteW": deleteCount++; break;
+                case "CredFree": freeCount++; break;
+            }
         }
-        writeCount = checked(writeCount + writes);
-        readCount = checked(readCount + reads);
-        deleteCount = checked(deleteCount + deletes);
-        freeCount = checked(freeCount + frees);
     }
 
     public void WriteExact(NativeTarget target, ReadOnlySpan<byte> secret)
     {
         Validate(target);
+        DemandNativeCallAllowed();
         RequireAvailable(cleanup: false);
         if (secret.IsEmpty || secret.Length > MaximumBlobBytes)
         {
             throw new InvalidDataException("The native generic credential is empty or exceeds 2,560 bytes.");
+        }
+        if (Exists(target))
+        {
+            reuseGuard.Block("preflight-collision");
+            throw new InvalidOperationException(
+                "The exact disposable native target already exists; no overwrite or later native call is permitted.");
         }
         byte[] copy = secret.ToArray();
         try
@@ -580,8 +782,10 @@ internal sealed class WindowsCredentialManagerStore
                     writeCount++;
                     if (!CredWriteW(ref credential, 0))
                     {
+                        Record("CredWriteW", target, "win32-error:" + Marshal.GetLastWin32Error());
                         throw NativeFailure("CredWriteW");
                     }
+                    Record("CredWriteW", target, "success");
                     writtenTargetFingerprints.Add(target.TargetFingerprintSha256);
                 }
             }
@@ -592,13 +796,17 @@ internal sealed class WindowsCredentialManagerStore
     public byte[] ReadExact(NativeTarget target)
     {
         Validate(target);
+        DemandNativeCallAllowed();
         RequireAvailable(cleanup: false);
         readCount++;
         if (!CredReadW(target.RawTarget, CredentialTypeGeneric, 0, out SafeCredentialHandle? handle))
         {
+            Record("CredReadW", target, "win32-error:" + Marshal.GetLastWin32Error());
             throw NativeFailure("CredReadW");
         }
-        freeCount++;
+        long allocationId = ++allocationSequence;
+        Record("CredReadW", target, "success", allocationId: allocationId);
+        handle.Attach(allocationId, target.TargetFingerprintSha256, scenario, RecordFree);
         using (handle)
         {
             NativeCredential credential = Marshal.PtrToStructure<NativeCredential>(handle.DangerousGetHandle());
@@ -607,7 +815,11 @@ internal sealed class WindowsCredentialManagerStore
                 throw new InvalidDataException("The exact native credential record is malformed or oversized.");
             }
             byte[] result = new byte[credential.CredentialBlobSize];
-            if (result.Length > 0) { Marshal.Copy(credential.CredentialBlob, result, 0, result.Length); }
+            if (result.Length > 0)
+            {
+                try { Marshal.Copy(credential.CredentialBlob, result, 0, result.Length); }
+                finally { ZeroNativeBlob(credential); }
+            }
             return result;
         }
     }
@@ -615,15 +827,20 @@ internal sealed class WindowsCredentialManagerStore
     public bool Exists(NativeTarget target)
     {
         Validate(target);
+        DemandNativeCallAllowed();
         RequireAvailable(cleanup: false);
         readCount++;
         if (CredReadW(target.RawTarget, CredentialTypeGeneric, 0, out SafeCredentialHandle? handle))
         {
-            freeCount++;
+            long allocationId = ++allocationSequence;
+            Record("CredReadW", target, "success", allocationId: allocationId);
+            handle.Attach(allocationId, target.TargetFingerprintSha256, scenario, RecordFree);
+            ZeroNativeBlob(Marshal.PtrToStructure<NativeCredential>(handle.DangerousGetHandle()));
             handle.Dispose();
             return true;
         }
         int error = Marshal.GetLastWin32Error();
+        Record("CredReadW", target, error == ErrorNotFound ? "ERROR_NOT_FOUND" : "win32-error:" + error);
         if (error == ErrorNotFound) { return false; }
         throw new Win32Exception(error, "Exact-target CredReadW failed.");
     }
@@ -631,25 +848,55 @@ internal sealed class WindowsCredentialManagerStore
     public bool DeleteAndProveAbsent(NativeTarget target)
     {
         Validate(target);
-        RequireAvailable(cleanup: true);
-        deleteCount++;
-        if (!CredDeleteW(target.RawTarget, CredentialTypeGeneric, 0))
+        DemandNativeCallAllowed();
+        try
         {
-            int error = Marshal.GetLastWin32Error();
-            if (error != ErrorNotFound) { throw new Win32Exception(error, "Exact-target CredDeleteW failed."); }
+            RequireAvailable(cleanup: true);
+            deleteCount++;
+            if (!CredDeleteW(target.RawTarget, CredentialTypeGeneric, 0))
+            {
+                int error = Marshal.GetLastWin32Error();
+                Record("CredDeleteW", target, error == ErrorNotFound ? "ERROR_NOT_FOUND" : "win32-error:" + error);
+                if (error != ErrorNotFound) { throw new Win32Exception(error, "Exact-target CredDeleteW failed."); }
+            }
+            else { Record("CredDeleteW", target, "success"); }
+            return !Exists(target);
         }
-        return !Exists(target);
+        catch (Exception exception) when (exception is IOException or Win32Exception)
+        {
+            reuseGuard.Block("cleanup-outcome-ambiguous-or-failed");
+            throw;
+        }
     }
 
     private void RequireAvailable(bool cleanup)
     {
-        if (fault == WindowsCredentialFault.UnavailableBeforeNativeCall
-            || cleanup && fault == WindowsCredentialFault.CleanupAmbiguousBeforeNativeCall)
+        if (fault == WindowsCredentialFault.UnavailableBeforeNativeCall)
         {
-            throw new IOException(cleanup
-                ? "Injected ambiguous exact-target cleanup before a native call."
-                : "Injected unavailable native credential store before a native call.");
+            throw new IOException("Injected unavailable native credential store before a native call.");
         }
+    }
+
+    private void DemandNativeCallAllowed()
+    {
+        reuseGuard.DemandNativeCallAllowed();
+        deadline.DemandRemaining(scenario);
+    }
+
+    private void Record(
+        string operation,
+        NativeTarget target,
+        string result,
+        long? allocationId = null,
+        long? pairedAllocationId = null) =>
+        callTrace.Add(new(++sequence, operation, target.TargetFingerprintSha256, scenario,
+            result, allocationId, pairedAllocationId));
+
+    private void RecordFree(long allocationId, string targetFingerprint, string allocationScenario)
+    {
+        freeCount++;
+        callTrace.Add(new(++sequence, "CredFree", targetFingerprint, allocationScenario,
+            "released", null, allocationId));
     }
 
     private static void Validate(NativeTarget target)
@@ -671,6 +918,14 @@ internal sealed class WindowsCredentialManagerStore
     private static Win32Exception NativeFailure(string operation) =>
         new(Marshal.GetLastWin32Error(), $"Exact-target {operation} failed.");
 
+    private static unsafe void ZeroNativeBlob(NativeCredential credential)
+    {
+        if (credential.CredentialBlob != 0 && credential.CredentialBlobSize > 0)
+        {
+            new Span<byte>((void*)credential.CredentialBlob, checked((int)credential.CredentialBlobSize)).Clear();
+        }
+    }
+
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     private struct NativeCredential
     {
@@ -690,8 +945,24 @@ internal sealed class WindowsCredentialManagerStore
 
     private sealed class SafeCredentialHandle : SafeHandleZeroOrMinusOneIsInvalid
     {
+        private long allocationId;
+        private string targetFingerprint = "unattached";
+        private string scenario = "unattached";
+        private Action<long, string, string>? released;
         private SafeCredentialHandle() : base(true) { }
-        protected override bool ReleaseHandle() { CredFree(handle); return true; }
+        internal void Attach(long id, string target, string scenarioValue, Action<long, string, string> callback)
+        {
+            allocationId = id;
+            targetFingerprint = target;
+            scenario = scenarioValue;
+            released = callback;
+        }
+        protected override bool ReleaseHandle()
+        {
+            CredFree(handle);
+            released?.Invoke(allocationId, targetFingerprint, scenario);
+            return true;
+        }
     }
 
     [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true, ExactSpelling = true)]
@@ -711,6 +982,173 @@ internal sealed class WindowsCredentialManagerStore
     private static extern void CredFree(nint buffer);
 }
 
+internal sealed class NativeNamespaceBlockedException(string reason)
+    : InvalidOperationException($"The disposable native namespace is terminally blocked: {reason}");
+
+internal sealed class NativeNamespaceReuseGuard
+{
+    private string? reason;
+    public bool IsBlocked => reason is not null;
+    public string? Reason => reason;
+
+    public void Block(string value)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(value);
+        reason ??= value;
+    }
+
+    public void DemandNativeCallAllowed()
+    {
+        if (reason is not null) { throw new NativeNamespaceBlockedException(reason); }
+    }
+}
+
+internal sealed class FiniteNativeDeadline
+{
+    private readonly long limitMilliseconds;
+    private readonly Func<long> elapsedMilliseconds;
+    private int checks;
+
+    private FiniteNativeDeadline(long limitMilliseconds, Func<long> elapsedMilliseconds)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(limitMilliseconds);
+        this.limitMilliseconds = limitMilliseconds;
+        this.elapsedMilliseconds = elapsedMilliseconds;
+    }
+
+    public static FiniteNativeDeadline Start(TimeSpan limit)
+    {
+        Stopwatch stopwatch = Stopwatch.StartNew();
+        return new(checked((long)limit.TotalMilliseconds), () => stopwatch.ElapsedMilliseconds);
+    }
+
+    internal static FiniteNativeDeadline ForTest(long limitMilliseconds, Func<long> elapsedMilliseconds) =>
+        new(limitMilliseconds, elapsedMilliseconds);
+
+    public void DemandRemaining(string operation)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(operation);
+        checks++;
+        if (elapsedMilliseconds() >= limitMilliseconds)
+        {
+            throw new TimeoutException($"The native qualification deadline elapsed before {operation}.");
+        }
+    }
+
+    public NativeDeadlineEvidence Snapshot()
+    {
+        long elapsed = elapsedMilliseconds();
+        return new(limitMilliseconds, elapsed, checks, elapsed < limitMilliseconds);
+    }
+}
+
+internal static class NativeCallTraceValidator
+{
+    private static readonly HashSet<string> Allowed =
+        ["CredWriteW", "CredReadW", "CredDeleteW", "CredFree"];
+
+    public static void Validate(IReadOnlyList<NativeCallTraceEntry> trace)
+    {
+        Dictionary<long, NativeCallTraceEntry> allocations = [];
+        HashSet<long> freed = [];
+        for (int index = 0; index < trace.Count; index++)
+        {
+            NativeCallTraceEntry item = trace[index];
+            if (item.Sequence != index + 1 || !Allowed.Contains(item.Operation)
+                || item.TargetFingerprintSha256.Length != 64
+                || string.IsNullOrWhiteSpace(item.Scenario)
+                || string.IsNullOrWhiteSpace(item.Result))
+            {
+                throw new InvalidDataException("The canonical native-call trace is malformed or unordered.");
+            }
+            if (item.Operation == "CredReadW" && item.Result == "success")
+            {
+                if (item.AllocationId is null || item.PairedAllocationId is not null
+                    || !allocations.TryAdd(item.AllocationId.Value, item))
+                {
+                    throw new InvalidDataException("A successful CredReadW lacks a unique allocation identity.");
+                }
+            }
+            else if (item.Operation == "CredFree")
+            {
+                if (item.AllocationId is not null || item.PairedAllocationId is null
+                    || !allocations.TryGetValue(item.PairedAllocationId.Value, out NativeCallTraceEntry? read)
+                    || read.TargetFingerprintSha256 != item.TargetFingerprintSha256
+                    || read.Scenario != item.Scenario
+                    || !freed.Add(item.PairedAllocationId.Value))
+                {
+                    throw new InvalidDataException("CredFree is not paired exactly once with its successful read allocation.");
+                }
+            }
+            else if (item.AllocationId is not null || item.PairedAllocationId is not null)
+            {
+                throw new InvalidDataException("Only successful reads and their CredFree release may name allocations.");
+            }
+        }
+        if (allocations.Keys.Any(id => !freed.Contains(id)))
+        {
+            throw new InvalidDataException("A successful CredReadW allocation was not released exactly once.");
+        }
+    }
+}
+
+internal sealed record NativeCanarySurface(string Name, string Kind, byte[] Bytes)
+{
+    internal static NativeCanarySurface FromText(string name, string value) =>
+        new(name, "captured-text", Encoding.UTF8.GetBytes(value));
+
+    internal static NativeCanarySurface FromFile(string name, string path) =>
+        new(name, "retained-file", File.ReadAllBytes(path));
+}
+
+internal sealed record NativeRawTargetCanary(string Encoding, byte[] Bytes);
+
+internal static class NativeCanaryScanner
+{
+    public static NativeCanaryEvidence Scan(
+        ReadOnlySpan<byte> secretCanary,
+        IEnumerable<NativeRawTargetCanary> rawTargetCanaries,
+        IReadOnlyList<NativeCanarySurface> surfaces)
+    {
+        NativeRawTargetCanary[] targets = rawTargetCanaries
+            .Select(value => new NativeRawTargetCanary(value.Encoding, value.Bytes.ToArray()))
+            .ToArray();
+        string[] encodings = targets.Select(value => value.Encoding)
+            .Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
+        if (!encodings.SequenceEqual(["utf-16le", "utf-8"], StringComparer.Ordinal))
+        {
+            throw new InvalidDataException("Raw-target canaries must cover exact UTF-8 and UTF-16LE encodings.");
+        }
+        List<NativeCanarySurfaceEvidence> inventory = [];
+        int secretMatches = 0;
+        int targetMatches = 0;
+        foreach (NativeCanarySurface surface in surfaces)
+        {
+            int surfaceSecretMatches = secretCanary.IsEmpty ? 0 : Count(surface.Bytes, secretCanary);
+            int surfaceTargetMatches = targets.Sum(target => Count(surface.Bytes, target.Bytes));
+            secretMatches += surfaceSecretMatches;
+            targetMatches += surfaceTargetMatches;
+            inventory.Add(new(surface.Name, surface.Kind, surface.Bytes.LongLength,
+                surfaceSecretMatches, surfaceTargetMatches));
+        }
+        return new(secretMatches, targetMatches, ["utf-8", "utf-16le"], inventory);
+    }
+
+    private static int Count(ReadOnlySpan<byte> haystack, ReadOnlySpan<byte> needle)
+    {
+        int count = 0;
+        int offset = 0;
+        while (offset <= haystack.Length - needle.Length)
+        {
+            int match = haystack[offset..].IndexOf(needle);
+            if (match < 0) { break; }
+            count++;
+            offset += match + Math.Max(needle.Length, 1);
+        }
+        return count;
+    }
+}
+
 internal static class NativeMaskedEntryDialog
 {
     private const uint WsOverlapped = 0x00000000;
@@ -721,29 +1159,43 @@ internal static class NativeMaskedEntryDialog
     private const uint WsBorder = 0x00800000;
     private const uint EsPassword = 0x0020;
     private const int GwlStyle = -16;
+    private const int GwlWndProc = -4;
     private const uint WmClose = 0x0010;
+    private const uint WmCut = 0x0300;
+    private const uint WmCopy = 0x0301;
+    private const uint WmPaste = 0x0302;
+    private const uint PmRemove = 0x0001;
+    private const int VkReturn = 0x0D;
+    private const int VkEscape = 0x1B;
 
-    internal static byte[] Capture(ReadOnlySpan<byte> value, bool cancel)
+    internal static NativeEntryCapture Capture(TimeSpan deadline)
     {
         if (!OperatingSystem.IsWindows())
         {
             throw new PlatformNotSupportedException("Native masked credential entry requires Windows.");
         }
-        byte[] source = value.ToArray();
         byte[] result = [];
         Exception? failure = null;
+        NativeEntryTerminalState terminal = NativeEntryTerminalState.Failed;
+        NativeEntryStateMachine state = new();
+        uint nativeThreadId = 0;
+        nint activeWindow = 0;
         Thread thread = new(() =>
         {
-            char[] chars = new char[source.Length + 1];
-            for (int index = 0; index < source.Length; index++) { chars[index] = (char)source[index]; }
-            char[] captured = new char[chars.Length + 1];
+            char[] captured = new char[WindowsCredentialManagerStore.MaximumBlobBytes + 1];
+            nint window = 0;
+            nint edit = 0;
+            NativeWindowProcedure? editProcedure = null;
+            nint originalEditProcedure = 0;
             try
             {
-                nint window = CreateWindowExW(0, "STATIC", "Infinium disposable credential qualification",
+                nativeThreadId = GetCurrentThreadId();
+                window = CreateWindowExW(0, "STATIC", "Infinium disposable credential qualification",
                     WsOverlapped | WsCaption | WsSysMenu | WsVisible, 100, 100, 520, 130,
                     0, 0, 0, 0);
                 if (window == 0) { throw new Win32Exception(Marshal.GetLastWin32Error(), "Native entry window creation failed."); }
-                nint edit = CreateWindowExW(0, "EDIT", null,
+                Interlocked.Exchange(ref activeWindow, window);
+                edit = CreateWindowExW(0, "EDIT", null,
                     WsChild | WsVisible | WsBorder | EsPassword, 20, 30, 470, 28,
                     window, 0, 0, 0);
                 if (edit == 0) { throw new Win32Exception(Marshal.GetLastWin32Error(), "Native masked entry control creation failed."); }
@@ -751,38 +1203,111 @@ internal static class NativeMaskedEntryDialog
                 {
                     throw new InvalidOperationException("Native credential entry control is not masked.");
                 }
-                if (!cancel)
+                state.Activate(GetWindowTextLengthW(edit));
+                editProcedure = (handle, message, wParam, lParam) =>
                 {
-                    unsafe
+                    if (message is WmCut or WmCopy or WmPaste)
                     {
-                        fixed (char* pointer = chars)
-                        {
-                            _ = SendMessageW(edit, 0x000C, 0, (nint)pointer);
-                        }
+                        state.RecordClipboardMessageBlocked();
+                        return 0;
                     }
-                    int length = GetWindowTextW(edit, captured, captured.Length);
-                    result = new byte[length];
-                    _ = Encoding.ASCII.GetBytes(captured.AsSpan(0, length), result);
+                    return CallWindowProcW(originalEditProcedure, handle, message, wParam, lParam);
+                };
+                originalEditProcedure = SetWindowLongPtrW(
+                    edit,
+                    GwlWndProc,
+                    Marshal.GetFunctionPointerForDelegate(editProcedure));
+                if (originalEditProcedure == 0)
+                {
+                    throw new Win32Exception(Marshal.GetLastWin32Error(), "Native entry clipboard boundary could not be installed.");
                 }
-                _ = SendMessageW(window, WmClose, 0, 0);
-                _ = DestroyWindow(window);
+                state.RecordClipboardMessageBlocked();
+                _ = SetFocus(edit);
+                Stopwatch timer = Stopwatch.StartNew();
+                while (timer.Elapsed < deadline)
+                {
+                    while (PeekMessageW(out NativeMessage message, 0, 0, 0, PmRemove))
+                    {
+                        _ = TranslateMessage(in message);
+                        _ = DispatchMessageW(in message);
+                    }
+                    if (!IsWindow(window))
+                    {
+                        terminal = NativeEntryTerminalState.Cancelled;
+                        state.Cancel();
+                        break;
+                    }
+                    if ((GetAsyncKeyState(VkEscape) & 1) != 0 && GetFocus() == edit)
+                    {
+                        terminal = NativeEntryTerminalState.Cancelled;
+                        state.Cancel();
+                        break;
+                    }
+                    if ((GetAsyncKeyState(VkReturn) & 1) != 0 && GetFocus() == edit)
+                    {
+                        int length = GetWindowTextW(edit, captured, captured.Length);
+                        if (captured.AsSpan(0, length).ContainsAnyExceptInRange((char)0x20, (char)0x7e))
+                        {
+                            throw new InvalidDataException("Native credential entry must use printable ASCII bytes.");
+                        }
+                        result = new byte[length];
+                        int encoded = Encoding.ASCII.GetBytes(captured.AsSpan(0, length), result);
+                        if (encoded != length || result.Length == 0)
+                        {
+                            throw new InvalidDataException("Native credential entry must be non-empty ASCII bytes.");
+                        }
+                        terminal = NativeEntryTerminalState.Submitted;
+                        state.Submit(result);
+                        break;
+                    }
+                    Thread.Sleep(10);
+                }
+                if (terminal == NativeEntryTerminalState.Failed)
+                {
+                    terminal = NativeEntryTerminalState.TimedOut;
+                    state.Timeout();
+                }
             }
-            catch (Exception exception) { failure = exception; }
+            catch (Exception exception)
+            {
+                failure = exception;
+                terminal = NativeEntryTerminalState.Failed;
+                state.FailFromAnyState();
+            }
             finally
             {
-                Array.Clear(chars);
                 Array.Clear(captured);
+                bool textCleared = edit == 0 || SetWindowTextW(edit, string.Empty)
+                    && GetWindowTextLengthW(edit) == 0;
+                if (edit != 0 && originalEditProcedure != 0)
+                {
+                    _ = SetWindowLongPtrW(edit, GwlWndProc, originalEditProcedure);
+                }
+                bool editDestroyed = edit == 0 || DestroyWindow(edit) || !IsWindow(edit);
+                bool windowDestroyed = window == 0 || DestroyWindow(window) || !IsWindow(window);
+                Interlocked.Exchange(ref activeWindow, 0);
+                state.CompleteUiThreadCleanup(
+                    editDestroyed && windowDestroyed,
+                    buffersWereCleared: textCleared);
+                GC.KeepAlive(editProcedure);
             }
         });
         thread.SetApartmentState(ApartmentState.STA);
         thread.Start();
-        if (!thread.Join(TimeSpan.FromSeconds(10)))
+        if (!thread.Join(deadline + TimeSpan.FromSeconds(5)))
         {
-            throw new TimeoutException("Native masked entry did not terminate within its finite deadline.");
+            nint window = Interlocked.CompareExchange(ref activeWindow, 0, 0);
+            _ = window != 0
+                ? PostMessageW(window, WmClose, 0, 0)
+                : PostThreadMessageW(nativeThreadId, WmClose, 0, 0);
+            if (!thread.Join(TimeSpan.FromSeconds(5)))
+            {
+                throw new TimeoutException("Native masked entry UI thread did not terminate after bounded close.");
+            }
         }
-        CryptographicOperations.ZeroMemory(source);
+        state.RecordThreadJoined();
         if (failure is not null) { throw failure; }
-        return result;
+        return new(result, terminal, state.Evidence);
     }
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
@@ -791,18 +1316,250 @@ internal static class NativeMaskedEntryDialog
         int x, int y, int width, int height, nint parent, nint menu, nint instance, nint parameter);
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern int GetWindowTextW(nint window, [Out] char[] text, int maximum);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern int GetWindowTextLengthW(nint window);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetWindowTextW(nint window, string text);
+    [DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW", SetLastError = true)]
+    private static extern nint SetWindowLongPtrW(nint window, int index, nint value);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern nint CallWindowProcW(
+        nint previous, nint window, uint message, nuint wParam, nint lParam);
+    [DllImport("kernel32.dll")]
+    private static extern uint GetCurrentThreadId();
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern nint GetWindowLongPtrW(nint window, int index);
     [DllImport("user32.dll")]
-    private static extern nint SendMessageW(nint window, uint message, nint wParam, nint lParam);
-    [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool DestroyWindow(nint window);
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool IsWindow(nint window);
+    [DllImport("user32.dll")]
+    private static extern nint SetFocus(nint window);
+    [DllImport("user32.dll")]
+    private static extern nint GetFocus();
+    [DllImport("user32.dll")]
+    private static extern short GetAsyncKeyState(int virtualKey);
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool PeekMessageW(out NativeMessage message, nint window, uint minimum, uint maximum, uint remove);
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool TranslateMessage(in NativeMessage message);
+    [DllImport("user32.dll")]
+    private static extern nint DispatchMessageW(in NativeMessage message);
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool PostThreadMessageW(uint threadId, uint message, nint wParam, nint lParam);
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool PostMessageW(nint window, uint message, nint wParam, nint lParam);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct NativeMessage
+    {
+        internal nint Window;
+        internal uint Message;
+        internal nuint WParam;
+        internal nint LParam;
+        internal uint Time;
+        internal int X;
+        internal int Y;
+        internal uint Private;
+    }
+
+    private delegate nint NativeWindowProcedure(
+        nint window, uint message, nuint wParam, nint lParam);
 }
 
-internal static class NativeSecretCanary
+internal enum NativeEntryTerminalState { Submitted, Cancelled, TimedOut, Failed }
+
+internal sealed class NativeEntryCapture(
+    byte[] secret,
+    NativeEntryTerminalState terminalState,
+    NativeEntryCleanupEvidence evidence) : IDisposable
 {
-    internal static string Create() => "WP4-NATIVE-SECRET-CANARY-" + Convert.ToHexStringLower(RandomNumberGenerator.GetBytes(24));
+    private byte[] secret = secret;
+    public byte[] Secret => secret;
+    public NativeEntryTerminalState TerminalState { get; } = terminalState;
+    public NativeEntryCleanupEvidence Evidence { get; } = evidence;
+
+    public byte[] DetachSecret()
+    {
+        byte[] value = secret;
+        secret = [];
+        return value;
+    }
+
+    public void Dispose()
+    {
+        CryptographicOperations.ZeroMemory(secret);
+        secret = [];
+    }
+}
+
+internal sealed class NativeEntryStateMachine
+{
+    private bool active;
+    private bool terminal;
+    private bool windowDestroyed;
+    private bool buffersCleared;
+    private bool threadJoined;
+    private bool clipboardMessagesBlocked;
+    public bool InitialBlank { get; private set; }
+
+    public NativeEntryCleanupEvidence Evidence => new(
+        InitialBlank, terminal, windowDestroyed, buffersCleared, threadJoined,
+        clipboardMessagesBlocked);
+
+    public void Activate(int initialCharacterCount)
+    {
+        if (active || terminal || initialCharacterCount != 0)
+        {
+            throw new InvalidOperationException("Native entry must activate exactly once with a blank control.");
+        }
+        InitialBlank = true;
+        active = true;
+    }
+
+    public void Submit(ReadOnlySpan<byte> secret)
+    {
+        if (!active || terminal || secret.IsEmpty) { throw new InvalidOperationException("Invalid native entry submission state."); }
+        terminal = true;
+    }
+
+    public void Cancel() => SetTerminal();
+    public void Timeout() => SetTerminal();
+    public void Fail() => SetTerminal();
+
+    public void FailFromAnyState()
+    {
+        if (terminal) { return; }
+        active = true;
+        terminal = true;
+    }
+
+    public void RecordClipboardMessageBlocked()
+    {
+        if (!active || terminal) { throw new InvalidOperationException("Clipboard blocking must occur during active entry."); }
+        clipboardMessagesBlocked = true;
+    }
+
+    private void SetTerminal()
+    {
+        if (!active || terminal) { throw new InvalidOperationException("Invalid native entry terminal transition."); }
+        terminal = true;
+    }
+
+    public void CompleteUiThreadCleanup(bool windowWasDestroyed, bool buffersWereCleared)
+    {
+        if (!terminal) { throw new InvalidOperationException("UI cleanup cannot precede a terminal transition."); }
+        windowDestroyed = windowWasDestroyed;
+        buffersCleared = buffersWereCleared;
+    }
+
+    public void RecordThreadJoined()
+    {
+        if (!windowDestroyed || !buffersCleared) { throw new InvalidOperationException("UI thread joined before terminal cleanup completed."); }
+        threadJoined = true;
+    }
+}
+
+internal sealed class NativeManualSecretSource(TimeSpan? entryDeadline = null) : IHelperSecretSource
+{
+    private readonly TimeSpan deadline = entryDeadline ?? TimeSpan.FromMinutes(5);
+
+    public byte[] Capture(Infinium.Contracts.Protobuf.Helper.V2.HelperAssignmentV2 assignment)
+    {
+        ArgumentNullException.ThrowIfNull(assignment);
+        using NativeEntryCapture capture = NativeMaskedEntryDialog.Capture(deadline);
+        return capture.TerminalState switch
+        {
+            NativeEntryTerminalState.Submitted when capture.Secret.Length > 0 => capture.DetachSecret(),
+            NativeEntryTerminalState.Cancelled => throw new OperationCanceledException("Native credential entry was cancelled."),
+            NativeEntryTerminalState.TimedOut => throw new TimeoutException("Native credential entry reached its finite deadline."),
+            _ => throw new InvalidOperationException("Native credential entry did not reach a valid terminal state."),
+        };
+    }
+}
+
+internal sealed class NativeQualificationSecretSource(TimeSpan? entryDeadline = null)
+    : IHelperSecretSource, IDisposable
+{
+    private byte[] privateOracle = [];
+    internal NativeEntryCleanupEvidence? EntryEvidence { get; private set; }
+    internal CredentialNativeQualificationPhaseV2? LastPhase { get; private set; }
+
+    public byte[] Capture(Infinium.Contracts.Protobuf.Helper.V2.HelperAssignmentV2 assignment)
+    {
+        ArgumentNullException.ThrowIfNull(assignment);
+        CredentialNativeQualificationPhaseV2 phase = CredentialNativeQualificationPhasesV2.Parse(
+            assignment.AssignmentId,
+            assignment.AssignmentKind);
+        LastPhase = phase;
+        if (phase.SecretMode == CredentialNativeQualificationSecretModeV2.Manual)
+        {
+            using NativeEntryCapture capture = NativeMaskedEntryDialog.Capture(entryDeadline ?? TimeSpan.FromMinutes(5));
+            EntryEvidence = capture.Evidence;
+            if (capture.TerminalState == NativeEntryTerminalState.Cancelled)
+            {
+                if (!phase.ManualEntryMustCancel)
+                {
+                    throw new InvalidOperationException("This native qualification phase requires a submitted value, not cancel.");
+                }
+                throw new OperationCanceledException("Native credential entry was cancelled.");
+            }
+            if (phase.ManualEntryMustCancel)
+            {
+                throw new InvalidOperationException("This native qualification phase requires operator cancellation.");
+            }
+            if (capture.TerminalState != NativeEntryTerminalState.Submitted || capture.Secret.Length == 0)
+            {
+                throw new InvalidOperationException("Native qualification entry did not produce a valid terminal submission.");
+            }
+            byte[] value = capture.DetachSecret();
+            ReplaceOracle(value);
+            return value;
+        }
+        int length = phase.SecretMode switch
+        {
+            CredentialNativeQualificationSecretModeV2.GeneratedMaximum =>
+                WindowsCredentialManagerStore.MaximumBlobBytes,
+            CredentialNativeQualificationSecretModeV2.GeneratedOversize =>
+                WindowsCredentialManagerStore.MaximumBlobBytes + 1,
+            CredentialNativeQualificationSecretModeV2.Generated48 => 48,
+            _ => throw new InvalidDataException("This native qualification phase cannot capture a secret."),
+        };
+        byte[] generated = RandomNumberGenerator.GetBytes(length);
+        ReplaceOracle(generated);
+        return generated;
+    }
+
+    internal NativeCanaryEvidence ScanAndClear(
+        IReadOnlyList<NativeCanarySurface> surfaces,
+        IReadOnlyList<NativeRawTargetCanary> rawTargets)
+    {
+        try { return NativeCanaryScanner.Scan(privateOracle, rawTargets, surfaces); }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(privateOracle);
+            privateOracle = [];
+        }
+    }
+
+    public void Dispose()
+    {
+        CryptographicOperations.ZeroMemory(privateOracle);
+        privateOracle = [];
+    }
+
+    private void ReplaceOracle(ReadOnlySpan<byte> value)
+    {
+        CryptographicOperations.ZeroMemory(privateOracle);
+        privateOracle = value.ToArray();
+    }
 }
 
 internal static class NativeNetworkMeasurement
@@ -856,6 +1613,15 @@ internal sealed record NativeCallCounts(
     int CredFree,
     int Total);
 
+internal sealed record NativeCallTraceEntry(
+    long Sequence,
+    string Operation,
+    string TargetFingerprintSha256,
+    string Scenario,
+    string Result,
+    long? AllocationId,
+    long? PairedAllocationId);
+
 internal sealed record NativeScenarioEvidence(
     string Id,
     IReadOnlyList<string> TargetFingerprints,
@@ -867,8 +1633,29 @@ internal sealed record TargetAbsenceEvidence(string Alias, string TargetFingerpr
 internal sealed record NativeEntryEvidence(string Owner, bool Masked, bool NonEchoing, string SecretRetention, string CancelResult);
 internal sealed record NativeBackupEvidence(
     string RestoredState, string Reactivation, bool SecretAbsent, bool TargetAbsent, string BackupSha256);
+internal sealed record NativeCanarySurfaceEvidence(
+    string Name,
+    string Kind,
+    long ByteCount,
+    int SecretMatches,
+    int RawTargetMatches);
 internal sealed record NativeCanaryEvidence(
-    int SecretMatches, int RawTargetMatches, IReadOnlyList<string> ScannedSurfaces);
+    int SecretMatches,
+    int RawTargetMatches,
+    IReadOnlyList<string> RawTargetEncodings,
+    IReadOnlyList<NativeCanarySurfaceEvidence> ScannedSurfaces);
+internal sealed record NativeDeadlineEvidence(
+    long LimitMilliseconds,
+    long ElapsedMilliseconds,
+    int Checks,
+    bool CompletedWithinLimit);
+internal sealed record NativeEntryCleanupEvidence(
+    bool InitialBlank,
+    bool Terminal,
+    bool WindowDestroyed,
+    bool BuffersCleared,
+    bool ThreadJoined,
+    bool ClipboardMessagesBlocked);
 
 internal sealed record NativeQualificationEvidence(
     string Schema,
@@ -877,11 +1664,13 @@ internal sealed record NativeQualificationEvidence(
     string ManifestSha256,
     int ProcessId,
     NativeCallCounts NativeCalls,
+    IReadOnlyList<NativeCallTraceEntry> NativeCallTrace,
     IReadOnlyList<NativeScenarioEvidence> Scenarios,
     IReadOnlyList<TargetAbsenceEvidence> TargetAbsence,
     NativeEntryEvidence Entry,
     NativeBackupEvidence BackupRestore,
     NativeCanaryEvidence Canaries,
+    NativeDeadlineEvidence Deadline,
     int ListenerCount,
     int NetworkOperations,
     int DnsOperations,

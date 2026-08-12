@@ -7,15 +7,52 @@ using Infinium.Contracts.Protobuf.Helper.V2;
 
 namespace Infinium.CredentialHelper;
 
+public interface IHelperSecretSource
+{
+    public byte[] Capture(HelperAssignmentV2 assignment);
+}
+
+internal sealed class DeterministicHelperSecretSource : IHelperSecretSource
+{
+    internal static DeterministicHelperSecretSource Instance { get; } = new();
+
+    public byte[] Capture(HelperAssignmentV2 assignment)
+    {
+        if (assignment.AssignmentId.StartsWith("wp4-v2/", StringComparison.Ordinal))
+        {
+            CredentialNativeQualificationPhaseV2 phase = CredentialNativeQualificationPhasesV2.Parse(
+                assignment.AssignmentId, assignment.AssignmentKind);
+            if (phase.ScenarioId == "interactive-entry-cancel")
+            {
+                throw new OperationCanceledException("Injected qualification cancel before secret creation.");
+            }
+            return phase.SecretMode switch
+            {
+                CredentialNativeQualificationSecretModeV2.GeneratedMaximum =>
+                    new byte[DeterministicFakeSecureStore.MaximumSecretBytes],
+                CredentialNativeQualificationSecretModeV2.GeneratedOversize =>
+                    new byte[DeterministicFakeSecureStore.MaximumSecretBytes + 1],
+                _ => Encoding.UTF8.GetBytes("WP3-REAL-CHILD-SECRET-CANARY/" + assignment.AssignmentId),
+            };
+        }
+        return Encoding.UTF8.GetBytes("WP3-REAL-CHILD-SECRET-CANARY/" + assignment.AssignmentId);
+    }
+}
+
 public sealed class OneShotHelperEngine
 {
     private readonly ISyntheticSecureStore store;
     private readonly TimeProvider timeProvider;
+    private readonly IHelperSecretSource secretSource;
 
-    public OneShotHelperEngine(ISyntheticSecureStore store, TimeProvider? timeProvider = null)
+    public OneShotHelperEngine(
+        ISyntheticSecureStore store,
+        TimeProvider? timeProvider = null,
+        IHelperSecretSource? secretSource = null)
     {
         this.store = store ?? throw new ArgumentNullException(nameof(store));
         this.timeProvider = timeProvider ?? TimeProvider.System;
+        this.secretSource = secretSource ?? DeterministicHelperSecretSource.Instance;
     }
 
     public async Task RunAsync(Stream request, Stream response, CancellationToken cancellationToken)
@@ -84,23 +121,44 @@ public sealed class OneShotHelperEngine
         byte[]? secret = null;
         try
         {
+            CredentialNativeQualificationPhaseV2? qualificationPhase =
+                assignment.AssignmentId.StartsWith("wp4-v2/", StringComparison.Ordinal)
+                    ? CredentialNativeQualificationPhasesV2.Parse(
+                        assignment.AssignmentId,
+                        assignment.AssignmentKind)
+                    : null;
+            if (store is WindowsCredentialManagerStore nativeQualificationStore)
+            {
+                nativeQualificationStore.ConfigureQualificationPhase(assignment);
+            }
+            if (qualificationPhase?.UnavailableBeforeNativeCall == true)
+            {
+                throw new IOException("Injected qualification store unavailability before any store operation.");
+            }
             switch (assignment.AssignmentKind)
             {
                 case HelperAssignmentKindV2.Enroll:
-                    secret = Encoding.UTF8.GetBytes("WP3-REAL-CHILD-SECRET-CANARY/" + assignment.AssignmentId);
-                    store.WriteExact(slot, secret);
-                    outcome = store.VerifyExact(slot) ? HelperOutcomeV2.Completed : HelperOutcomeV2.FailedKnown;
+                    secret = secretSource.Capture(assignment);
+                    outcome = WriteAndVerify(slot, secret)
+                        ? HelperOutcomeV2.Completed
+                        : HelperOutcomeV2.FailedKnown;
                     break;
                 case HelperAssignmentKindV2.Replace:
                     if (bootstrapSlot == slot)
                     {
                         throw new InvalidDataException("Replacement requires an exact predecessor and fresh successor generation.");
                     }
-                    secret = Encoding.UTF8.GetBytes("WP3-REAL-CHILD-SECRET-CANARY/" + assignment.AssignmentId);
-                    store.WriteExact(slot, secret);
-                    outcome = store.VerifyExact(slot) && DeleteOrConfirmAbsent(bootstrapSlot)
-                        ? HelperOutcomeV2.Completed
-                        : HelperOutcomeV2.FailedKnown;
+                    secret = secretSource.Capture(assignment);
+                    bool successorVerified = WriteAndVerify(slot, secret);
+                    if (successorVerified
+                        && assignment.AssignmentId.Contains("replacement-interrupted", StringComparison.Ordinal)
+                        && store is not WindowsCredentialManagerStore)
+                    {
+                        throw new IOException("Injected qualification predecessor cleanup interruption after successor half-commit.");
+                    }
+                    outcome = successorVerified && DeleteOrConfirmAbsent(bootstrapSlot)
+                            ? HelperOutcomeV2.Completed
+                            : HelperOutcomeV2.FailedKnown;
                     break;
                 case HelperAssignmentKindV2.Verify:
                     outcome = store.VerifyExact(slot) ? HelperOutcomeV2.Completed : HelperOutcomeV2.FailedKnown;
@@ -114,8 +172,12 @@ public sealed class OneShotHelperEngine
                     {
                         if (!store.VerifyExact(slot))
                         {
-                            secret = Encoding.UTF8.GetBytes("WP3-REAL-CHILD-SECRET-CANARY/" + assignment.AssignmentId);
-                            store.WriteExact(slot, secret);
+                            secret = secretSource.Capture(assignment);
+                            if (!WriteAndVerify(slot, secret))
+                            {
+                                outcome = HelperOutcomeV2.FailedKnown;
+                                break;
+                            }
                         }
                         outcome = store.VerifyExact(slot) && DeleteOrConfirmAbsent(bootstrapSlot)
                             ? HelperOutcomeV2.Completed
@@ -127,7 +189,9 @@ public sealed class OneShotHelperEngine
                     break;
                 case HelperAssignmentKindV2.Delete:
                     _ = store.DeleteExact(slot);
-                    outcome = !store.VerifyExact(slot) ? HelperOutcomeV2.Completed : HelperOutcomeV2.FailedKnown;
+                    outcome = !store.VerifyExact(slot)
+                        ? HelperOutcomeV2.Completed
+                        : HelperOutcomeV2.FailedKnown;
                     break;
                 case HelperAssignmentKindV2.ProviderDispatch:
                     secret = store.ReadExact(slot);
@@ -144,13 +208,28 @@ public sealed class OneShotHelperEngine
         {
             outcome = HelperOutcomeV2.Unavailable;
         }
+        catch (System.ComponentModel.Win32Exception) when (
+            store is WindowsCredentialManagerStore { NamespaceReuseBlocked: true })
+        {
+            outcome = HelperOutcomeV2.Unavailable;
+        }
         catch (InvalidDataException)
         {
-            outcome = HelperOutcomeV2.Oversized;
+            // Oversized is a provider-response receipt state. Credential
+            // enrollment rejects an inadmissible secret as a known failure;
+            // qualification evidence independently proves the exact
+            // pre-CredWriteW size boundary.
+            outcome = assignment.AssignmentKind == HelperAssignmentKindV2.ProviderDispatch
+                ? HelperOutcomeV2.Oversized
+                : HelperOutcomeV2.FailedKnown;
         }
         catch (KeyNotFoundException)
         {
             outcome = HelperOutcomeV2.FailedKnown;
+        }
+        catch (OperationCanceledException)
+        {
+            outcome = HelperOutcomeV2.Cancelled;
         }
         finally
         {
@@ -190,7 +269,16 @@ public sealed class OneShotHelperEngine
         {
             return true;
         }
-        return store.DeleteExact(slot) && !store.VerifyExact(slot);
+        _ = store.DeleteExact(slot);
+        return !store.VerifyExact(slot);
+    }
+
+    private bool WriteAndVerify(SyntheticCredentialSlot slot, ReadOnlySpan<byte> secret)
+    {
+        store.WriteExact(slot, secret);
+        byte[] retained = store.ReadExact(slot);
+        try { return CryptographicOperations.FixedTimeEquals(secret, retained); }
+        finally { CryptographicOperations.ZeroMemory(retained); }
     }
 
     private static async Task WriteStagedResponseAsync(

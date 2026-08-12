@@ -18,8 +18,41 @@ internal enum ProviderDispatchFaultPoint
     AfterDurableMayHaveStartedBeforeHelper,
 }
 
+internal enum CredentialLifecycleFaultPoint
+{
+    None,
+    AfterDeletePendingBeforeHelper,
+    AfterHelperBeforeProjection,
+}
+
+internal sealed class CredentialLifecycleInterruptionException(
+    CoordinatedHelperReceipt helper,
+    CredentialProfileProjection durableProjection)
+    : IOException("Injected crash after helper completion and before lifecycle projection publication.")
+{
+    internal CoordinatedHelperReceipt Helper { get; } = helper;
+    internal CredentialProfileProjection DurableProjection { get; } = durableProjection;
+}
+
+internal sealed record AuthoritativeDispatchQualificationReceipt(
+    CoordinatedHelperReceipt Helper,
+    ProviderSimulationPersistenceReceipt Persisted,
+    ProviderBudgetSettlementReceipt Settlement,
+    ProviderDispatchGateReceipt FinalGate);
+
 public sealed class CredentialHelperCoordinator
 {
+    internal Task<HelperProcessReceipt> ExecuteNativeQualificationPreflightAsync(
+        HelperPrivateFrameV2 bootstrap,
+        HelperPrivateFrameV2 assignment,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default) => launcher.ExecuteAsync(
+            bootstrap,
+            assignment,
+            null,
+            launcher.OperationTimeout,
+            now,
+            cancellationToken);
     private readonly AuthoritativeStore store;
     private readonly OneShotCredentialHelperLauncher launcher;
 
@@ -38,7 +71,7 @@ public sealed class CredentialHelperCoordinator
         CancellationToken cancellationToken = default)
     {
         HelperProcessReceipt process = await launcher.ExecuteAsync(
-            bootstrap, assignment, finalRevalidation, TimeSpan.FromSeconds(30), now, cancellationToken)
+            bootstrap, assignment, finalRevalidation, launcher.OperationTimeout, now, cancellationToken)
             .ConfigureAwait(false);
         ulong sequence = finalRevalidation is null ? 3UL : 4UL;
         HelperPrivateFrameV2 terminal = new()
@@ -101,7 +134,28 @@ public sealed class CredentialHelperCoordinator
             HelperPrivateFrameV2 bootstrap,
             HelperPrivateFrameV2 assignment,
             DateTimeOffset now,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default) => await ExecuteCredentialTransitionCoreAsync(
+                attemptId, bootstrap, assignment, now, CredentialLifecycleFaultPoint.None, cancellationToken)
+                .ConfigureAwait(false);
+
+    internal async Task<(CoordinatedHelperReceipt Helper, CredentialProfileProjection Projection)>
+        ExecuteCredentialTransitionWithFaultAsync(
+            string attemptId,
+            HelperPrivateFrameV2 bootstrap,
+            HelperPrivateFrameV2 assignment,
+            DateTimeOffset now,
+            CredentialLifecycleFaultPoint faultPoint,
+            CancellationToken cancellationToken = default) => await ExecuteCredentialTransitionCoreAsync(
+                attemptId, bootstrap, assignment, now, faultPoint, cancellationToken).ConfigureAwait(false);
+
+    private async Task<(CoordinatedHelperReceipt Helper, CredentialProfileProjection Projection)>
+        ExecuteCredentialTransitionCoreAsync(
+            string attemptId,
+            HelperPrivateFrameV2 bootstrap,
+            HelperPrivateFrameV2 assignment,
+            DateTimeOffset now,
+            CredentialLifecycleFaultPoint faultPoint,
+            CancellationToken cancellationToken)
     {
         if (assignment.Assignment.AssignmentKind == HelperAssignmentKindV2.ProviderDispatch)
         {
@@ -161,6 +215,31 @@ public sealed class CredentialHelperCoordinator
                 now,
                 now.AddTicks(1)));
         }
+        bool absenceOnlyCleanup = work.AssignmentKind == HelperAssignmentKindV2.Delete
+            && current.LifecycleState is "pending-enrollment" or "secure-store-unavailable" or "recovery-required";
+        if (work.AssignmentKind == HelperAssignmentKindV2.Delete
+            && !absenceOnlyCleanup
+            && current.LifecycleState != "delete-pending")
+        {
+            current = store.ApplyCredentialTransition(new(
+                attemptId + "-delete-pending",
+                profileId,
+                generationId,
+                "delete",
+                current.LifecycleState,
+                "delete-pending",
+                "delete-pending",
+                current.CapabilitySnapshotId ?? M1ProviderCatalog.Capability.Identity.Value,
+                current.AccountIdentityId ?? accountIdentityId,
+                current.BillingScopeIdentityId ?? billingScopeIdentityId,
+                now,
+                now.AddTicks(1),
+                IncrementRevocationEpoch: true));
+            if (faultPoint == CredentialLifecycleFaultPoint.AfterDeletePendingBeforeHelper)
+            {
+                throw new IOException("Injected crash after durable delete-pending revocation and before helper deletion.");
+            }
+        }
         CoordinatedHelperReceipt helper;
         try
         {
@@ -173,7 +252,24 @@ public sealed class CredentialHelperCoordinator
                 attemptId, current, now, accountIdentityId, billingScopeIdentityId, unavailable: false);
             throw;
         }
+        catch when (work.AssignmentKind == HelperAssignmentKindV2.Delete && !absenceOnlyCleanup)
+        {
+            _ = PersistDeleteFailure(attemptId, current, now, unavailable: false);
+            throw;
+        }
         HelperOutcomeV2 outcome = helper.Process.Receipt.Outcome;
+        if (faultPoint == CredentialLifecycleFaultPoint.AfterHelperBeforeProjection)
+        {
+            throw new CredentialLifecycleInterruptionException(helper, current);
+        }
+        if (absenceOnlyCleanup)
+        {
+            // A cancelled, rejected, or unavailable enrollment has no active
+            // generation to revoke. The helper still performs exact-target
+            // deletion/absence verification, while the durable lifecycle
+            // remains the truthful pre-activation state.
+            return (helper, current);
+        }
         if (work.AssignmentKind == HelperAssignmentKindV2.Replace && outcome != HelperOutcomeV2.Completed)
         {
             return (helper, PersistReplacementCleanupFailure(
@@ -198,6 +294,14 @@ public sealed class CredentialHelperCoordinator
                 SecureStoreUnavailable: outcome == HelperOutcomeV2.Unavailable,
                 Failed: outcome != HelperOutcomeV2.Unavailable)));
         }
+        if (work.AssignmentKind == HelperAssignmentKindV2.Enroll
+            && outcome is HelperOutcomeV2.Cancelled or HelperOutcomeV2.Oversized or HelperOutcomeV2.FailedKnown)
+        {
+            // The helper receipt is durably staged, but an enrollment that
+            // never produced an admissible secure-store value leaves the
+            // existing pending projection unchanged.
+            return (helper, current);
+        }
         (string intentKind, string completedState, bool incrementRevocation) = CredentialTransition(
             work.AssignmentKind, current.LifecycleState);
         bool deleted = completedState == "deleted";
@@ -217,20 +321,52 @@ public sealed class CredentialHelperCoordinator
             IncrementRevocationEpoch: incrementRevocation);
         if (outcome != HelperOutcomeV2.Completed)
         {
-            transition = transition with
-            {
-                TerminalState = outcome == HelperOutcomeV2.Unavailable
-                    ? "secure-store-unavailable"
-                    : "recovery-required",
-                ToState = outcome == HelperOutcomeV2.Unavailable
-                    ? "secure-store-unavailable"
-                    : "recovery-required",
-                SecureStoreUnavailable = outcome == HelperOutcomeV2.Unavailable,
-                Failed = outcome != HelperOutcomeV2.Unavailable,
-            };
+            transition = work.AssignmentKind == HelperAssignmentKindV2.Delete
+                ? transition with
+                {
+                    TerminalState = "delete-pending",
+                    ToState = "delete-pending",
+                    CapabilitySnapshotId = current.CapabilitySnapshotId,
+                    AccountIdentityId = current.AccountIdentityId,
+                    BillingScopeIdentityId = current.BillingScopeIdentityId,
+                    SecureStoreUnavailable = outcome == HelperOutcomeV2.Unavailable,
+                    Failed = outcome != HelperOutcomeV2.Unavailable,
+                }
+                : transition with
+                {
+                    TerminalState = outcome == HelperOutcomeV2.Unavailable
+                        ? "secure-store-unavailable"
+                        : current.LifecycleState,
+                    ToState = outcome == HelperOutcomeV2.Unavailable
+                        ? "secure-store-unavailable"
+                        : current.LifecycleState,
+                    SecureStoreUnavailable = outcome == HelperOutcomeV2.Unavailable,
+                    Failed = outcome is not (HelperOutcomeV2.Unavailable or HelperOutcomeV2.Cancelled),
+                    Cancelled = outcome == HelperOutcomeV2.Cancelled,
+                };
         }
         return (helper, store.ApplyCredentialTransition(transition));
     }
+
+    private CredentialProfileProjection PersistDeleteFailure(
+        string attemptId,
+        CredentialProfileProjection pending,
+        DateTimeOffset now,
+        bool unavailable) => store.ApplyCredentialTransition(new(
+            attemptId + "-delete-failed",
+            pending.ProfileId,
+            pending.GenerationId,
+            "delete",
+            "delete-pending",
+            "delete-pending",
+            "delete-pending",
+            pending.CapabilitySnapshotId,
+            pending.AccountIdentityId,
+            pending.BillingScopeIdentityId,
+            now.AddTicks(3),
+            now.AddTicks(4),
+            SecureStoreUnavailable: unavailable,
+            Failed: !unavailable));
 
     private CredentialProfileProjection PersistReplacementCleanupFailure(
         string attemptId,
@@ -276,9 +412,21 @@ public sealed class CredentialHelperCoordinator
         HelperPrivateFrameV2 bootstrap,
         HelperPrivateFrameV2 assignment,
         DateTimeOffset now,
-        CancellationToken cancellationToken = default) => await ExecuteAuthoritativeDispatchCoreAsync(
+        CancellationToken cancellationToken = default)
+    {
+        AuthoritativeDispatchQualificationReceipt result = await ExecuteAuthoritativeDispatchCoreAsync(
             attemptId, bootstrap, assignment, now, ProviderDispatchFaultPoint.None, cancellationToken)
             .ConfigureAwait(false);
+        return (result.Helper, result.Persisted, result.Settlement);
+    }
+
+    internal Task<AuthoritativeDispatchQualificationReceipt> ExecuteAuthoritativeDispatchForQualificationAsync(
+        string attemptId,
+        HelperPrivateFrameV2 bootstrap,
+        HelperPrivateFrameV2 assignment,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default) => ExecuteAuthoritativeDispatchCoreAsync(
+            attemptId, bootstrap, assignment, now, ProviderDispatchFaultPoint.None, cancellationToken);
 
     internal async Task<(CoordinatedHelperReceipt Helper, ProviderSimulationPersistenceReceipt Persisted,
         ProviderBudgetSettlementReceipt Settlement)> ExecuteAuthoritativeDispatchWithFaultAsync(
@@ -287,11 +435,14 @@ public sealed class CredentialHelperCoordinator
         HelperPrivateFrameV2 assignment,
         DateTimeOffset now,
         ProviderDispatchFaultPoint faultPoint,
-        CancellationToken cancellationToken = default) => await ExecuteAuthoritativeDispatchCoreAsync(
+        CancellationToken cancellationToken = default)
+    {
+        AuthoritativeDispatchQualificationReceipt result = await ExecuteAuthoritativeDispatchCoreAsync(
             attemptId, bootstrap, assignment, now, faultPoint, cancellationToken).ConfigureAwait(false);
+        return (result.Helper, result.Persisted, result.Settlement);
+    }
 
-    private async Task<(CoordinatedHelperReceipt Helper, ProviderSimulationPersistenceReceipt Persisted,
-        ProviderBudgetSettlementReceipt Settlement)> ExecuteAuthoritativeDispatchCoreAsync(
+    private async Task<AuthoritativeDispatchQualificationReceipt> ExecuteAuthoritativeDispatchCoreAsync(
         string attemptId,
         HelperPrivateFrameV2 bootstrap,
         HelperPrivateFrameV2 assignment,
@@ -423,7 +574,7 @@ public sealed class CredentialHelperCoordinator
             persisted.UsageEntryId,
             persisted.Actual,
             now.AddTicks(3)));
-        return (helper, persisted, settlement);
+        return new(helper, persisted, settlement, finalGate);
     }
 
     private static HelperPrivateFrameV2 CreateAuthoritativeRevalidation(

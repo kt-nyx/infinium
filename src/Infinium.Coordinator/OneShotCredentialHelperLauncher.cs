@@ -24,24 +24,61 @@ public sealed record HelperProcessReceipt(
     int NativeCredentialOperationCount,
     int ProcessTreeSurvivorCount,
     bool ProcessTreeTerminated,
-    bool RetryAttempted);
+    bool RetryAttempted,
+    byte[]? NativeCallTraceBytes = null,
+    byte[]? NativeEntryCleanupBytes = null,
+    byte[]? NativeCanaryEvidenceBytes = null,
+    bool ContainmentProbeExecuted = false,
+    bool ExcludedHandleAccessible = false,
+    int ActiveProcessCountBeforeJobClose = 0,
+    bool NativeNamespaceReuseBlocked = false,
+    string? NativeNamespaceReuseBlockReason = null);
 
 public sealed class OneShotCredentialHelperLauncher
 {
     private readonly string helperBinary;
     private readonly string expectedBinarySha256;
     private readonly string secureStoreRoot;
+    private readonly string? nativeQualificationManifestPath;
+    private readonly string? nativeQualificationManifestSha256;
+    private readonly string? nativeQualificationManifestId;
+
+    internal TimeSpan OperationTimeout => nativeQualificationManifestPath is null
+        ? TimeSpan.FromSeconds(30)
+        : CredentialNativeQualificationSupervisor.PrimaryPhaseTimeout;
 
     public OneShotCredentialHelperLauncher(
         string helperBinary,
         string expectedBinarySha256,
         string secureStoreRoot)
+        : this(
+            helperBinary,
+            expectedBinarySha256,
+            secureStoreRoot,
+            nativeQualificationManifestPath: null,
+            nativeQualificationManifestSha256: null,
+            nativeQualificationManifestId: null)
+    {
+    }
+
+    private OneShotCredentialHelperLauncher(
+        string helperBinary,
+        string expectedBinarySha256,
+        string secureStoreRoot,
+        string? nativeQualificationManifestPath,
+        string? nativeQualificationManifestSha256,
+        string? nativeQualificationManifestId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(helperBinary);
         ArgumentException.ThrowIfNullOrWhiteSpace(expectedBinarySha256);
         ArgumentException.ThrowIfNullOrWhiteSpace(secureStoreRoot);
         this.helperBinary = Path.GetFullPath(helperBinary);
         this.secureStoreRoot = Path.GetFullPath(secureStoreRoot);
+        this.nativeQualificationManifestPath = nativeQualificationManifestPath is null
+            ? null
+            : Path.GetFullPath(nativeQualificationManifestPath);
+        this.nativeQualificationManifestSha256 = nativeQualificationManifestSha256;
+        this.nativeQualificationManifestId = nativeQualificationManifestId;
         this.expectedBinarySha256 = expectedBinarySha256.ToLowerInvariant();
         if (!Path.IsPathFullyQualified(this.helperBinary) || !File.Exists(this.helperBinary)
             || !string.Equals(Path.GetFileName(this.helperBinary), "Infinium.CredentialHelper.exe", StringComparison.Ordinal)
@@ -53,15 +90,87 @@ public sealed class OneShotCredentialHelperLauncher
         Directory.CreateDirectory(this.secureStoreRoot);
     }
 
+    internal static OneShotCredentialHelperLauncher CreateNativeQualification(
+        string helperBinary,
+        string expectedBinarySha256,
+        string acceptedManifestPath,
+        string acceptedManifestSha256,
+        string acceptedManifestId)
+    {
+        string manifest = Path.GetFullPath(acceptedManifestPath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(acceptedManifestSha256);
+        ArgumentException.ThrowIfNullOrWhiteSpace(acceptedManifestId);
+        string normalizedSha256 = acceptedManifestSha256.ToLowerInvariant();
+        if (!File.Exists(manifest))
+        {
+            throw new FileNotFoundException("The exact accepted native qualification manifest is required.", manifest);
+        }
+        if (normalizedSha256.Length != 64
+            || !normalizedSha256.All(char.IsAsciiHexDigit)
+            || !string.Equals(HashFile(manifest), normalizedSha256, StringComparison.Ordinal))
+        {
+            throw new InvalidDataException("The native qualification manifest does not match its exact accepted SHA-256.");
+        }
+        using JsonDocument document = JsonDocument.Parse(File.ReadAllBytes(manifest));
+        if (!string.Equals(
+            document.RootElement.GetProperty("manifest_id").GetString(),
+            acceptedManifestId,
+            StringComparison.Ordinal))
+        {
+            throw new InvalidDataException("The native qualification manifest does not match its exact accepted identity.");
+        }
+        return new(
+            helperBinary,
+            expectedBinarySha256,
+            Path.GetDirectoryName(manifest)
+                ?? throw new InvalidDataException("The native qualification manifest has no parent directory."),
+            manifest,
+            normalizedSha256,
+            acceptedManifestId);
+    }
+
     public async Task<HelperProcessReceipt> ExecuteAsync(
         HelperPrivateFrameV2 bootstrap,
         HelperPrivateFrameV2 assignment,
         HelperPrivateFrameV2? finalRevalidation,
         TimeSpan timeout,
         DateTimeOffset? authoritativeNow = null,
-        CancellationToken cancellationToken = default) => await ExecuteCoreAsync(
-            bootstrap, assignment, finalRevalidation, timeout, authoritativeNow,
-            inheritanceSentinel: 0, containmentProbe: false, cancellationToken).ConfigureAwait(false);
+        CancellationToken cancellationToken = default)
+    {
+        nint sentinel = 0;
+        try
+        {
+            bool native = nativeQualificationManifestPath is not null;
+            if (native)
+            {
+                SECURITY_ATTRIBUTES attributes = new()
+                {
+                    Length = Marshal.SizeOf<SECURITY_ATTRIBUTES>(),
+                    InheritHandle = true,
+                };
+                sentinel = CreateEventW(ref attributes, manualReset: true, initialState: false, null);
+                if (sentinel == 0)
+                {
+                    throw new System.ComponentModel.Win32Exception(
+                        Marshal.GetLastWin32Error(),
+                        "The native qualification inheritance sentinel could not be created.");
+                }
+            }
+            return await ExecuteCoreAsync(
+                bootstrap, assignment, finalRevalidation, timeout, authoritativeNow,
+                sentinel, containmentProbe: native, cancellationToken,
+                nativeManifestPath: nativeQualificationManifestPath,
+                nativeManifestSha256: nativeQualificationManifestSha256,
+                nativeManifestId: nativeQualificationManifestId).ConfigureAwait(false);
+        }
+        finally
+        {
+            if (sentinel != 0)
+            {
+                _ = CloseHandle(sentinel);
+            }
+        }
+    }
 
     internal async Task<HelperProcessReceipt> ExecuteContainmentProbeAsync(
         HelperPrivateFrameV2 bootstrap,
@@ -72,6 +181,32 @@ public sealed class OneShotCredentialHelperLauncher
         CancellationToken cancellationToken = default) => await ExecuteCoreAsync(
             bootstrap, assignment, null, timeout, authoritativeNow,
             inheritanceSentinel, containmentProbe: true, cancellationToken).ConfigureAwait(false);
+
+    internal async Task<HelperProcessReceipt> ExecuteNativeContainmentProbeAsync(
+        HelperPrivateFrameV2 bootstrap,
+        HelperPrivateFrameV2 assignment,
+        HelperPrivateFrameV2? finalRevalidation,
+        DateTimeOffset authoritativeNow,
+        nint inheritanceSentinel,
+        CancellationToken cancellationToken = default)
+    {
+        if (nativeQualificationManifestPath is null)
+        {
+            throw new InvalidOperationException("A native qualification containment probe requires exact accepted manifest authority.");
+        }
+        return await ExecuteCoreAsync(
+            bootstrap,
+            assignment,
+            finalRevalidation,
+            OperationTimeout,
+            authoritativeNow,
+            inheritanceSentinel,
+            containmentProbe: true,
+            cancellationToken,
+            nativeQualificationManifestPath,
+            nativeQualificationManifestSha256,
+            nativeQualificationManifestId).ConfigureAwait(false);
+    }
 
     internal void ArmExactDeleteFailure(string profileId, string generationId)
     {
@@ -104,9 +239,15 @@ public sealed class OneShotCredentialHelperLauncher
         DateTimeOffset? authoritativeNow,
         nint inheritanceSentinel,
         bool containmentProbe,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? nativeManifestPath = null,
+        string? nativeManifestSha256 = null,
+        string? nativeManifestId = null)
     {
-        if (timeout <= TimeSpan.Zero || timeout > TimeSpan.FromMinutes(2))
+        TimeSpan maximumTimeout = nativeManifestPath is null
+            ? TimeSpan.FromMinutes(2)
+            : CredentialNativeQualificationSupervisor.PrimaryPhaseTimeout;
+        if (timeout <= TimeSpan.Zero || timeout > maximumTimeout)
         {
             throw new ArgumentOutOfRangeException(nameof(timeout));
         }
@@ -120,17 +261,29 @@ public sealed class OneShotCredentialHelperLauncher
 
         using AnonymousPipeServerStream request = new(PipeDirection.Out, HandleInheritability.Inheritable, 64 * 1024);
         using AnonymousPipeServerStream response = new(PipeDirection.In, HandleInheritability.Inheritable, 64 * 1024);
-        using SafeFileHandle storeHandle = OpenDirectoryCapability(secureStoreRoot);
         nint requestHandle = request.ClientSafePipeHandle.DangerousGetHandle();
         nint responseHandle = response.ClientSafePipeHandle.DangerousGetHandle();
-        nint directoryHandle = storeHandle.DangerousGetHandle();
-        string[] arguments =
-        [
-            "--request-handle", requestHandle.ToString(System.Globalization.CultureInfo.InvariantCulture),
-            "--response-handle", responseHandle.ToString(System.Globalization.CultureInfo.InvariantCulture),
-            "--store-handle", directoryHandle.ToString(System.Globalization.CultureInfo.InvariantCulture),
-            "--authority-now-unix-ms", now.ToUnixTimeMilliseconds().ToString(System.Globalization.CultureInfo.InvariantCulture),
-        ];
+        using SafeFileHandle? storeHandle = nativeManifestPath is null
+            ? OpenDirectoryCapability(secureStoreRoot)
+            : null;
+        nint directoryHandle = storeHandle?.DangerousGetHandle() ?? 0;
+        string[] arguments = nativeManifestPath is null
+            ? [
+                "--request-handle", requestHandle.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                "--response-handle", responseHandle.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                "--store-handle", directoryHandle.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                "--authority-now-unix-ms", now.ToUnixTimeMilliseconds().ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ]
+            : [
+                "--credential-native-request-handle", requestHandle.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                "--response-handle", responseHandle.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                "--manifest", nativeManifestPath,
+                "--manifest-sha256", nativeManifestSha256
+                    ?? throw new InvalidOperationException("Native qualification requires the exact accepted manifest SHA-256."),
+                "--manifest-id", nativeManifestId
+                    ?? throw new InvalidOperationException("Native qualification requires the exact accepted manifest identity."),
+                "--authority-now-unix-ms", now.ToUnixTimeMilliseconds().ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ];
         if (containmentProbe)
         {
             arguments =
@@ -153,7 +306,9 @@ public sealed class OneShotCredentialHelperLauncher
                 arguments,
                 Path.GetDirectoryName(helperBinary)!,
                 environment,
-                [requestHandle, responseHandle, directoryHandle]);
+                nativeManifestPath is null
+                    ? [requestHandle, responseHandle, directoryHandle]
+                    : [requestHandle, responseHandle]);
         int processId = contained.Process.Id;
         request.DisposeLocalCopyOfClientHandle();
         response.DisposeLocalCopyOfClientHandle();
@@ -175,7 +330,12 @@ public sealed class OneShotCredentialHelperLauncher
             HelperRuntimeMetrics metrics = await ReadMetricsAsync(response, bounded.Token).ConfigureAwait(false);
             request.Close();
             await contained.Process.WaitForExitAsync(bounded.Token).ConfigureAwait(false);
-            if (contained.ExitCode != 0 || terminal.PayloadCase != HelperPrivateFrameV2.PayloadOneofCase.Receipt)
+            bool expectedContainedCrash = nativeManifestPath is not null
+                && assignment.Assignment.AssignmentId ==
+                    "wp4-v2/helper-and-coordinator-crash-restart/half-commit"
+                && contained.ExitCode == 69;
+            if ((!expectedContainedCrash && contained.ExitCode != 0)
+                || terminal.PayloadCase != HelperPrivateFrameV2.PayloadOneofCase.Receipt)
             {
                 throw new InvalidOperationException("The one-shot helper failed without an admissible terminal receipt.");
             }
@@ -196,7 +356,7 @@ public sealed class OneShotCredentialHelperLauncher
                 launchHash,
                 terminal.Receipt,
                 stagedResponse,
-                3,
+                nativeManifestPath is null ? 3 : 2,
                 0,
                 metrics.ListenerCount,
                 metrics.NetworkOperationCount,
@@ -204,7 +364,15 @@ public sealed class OneShotCredentialHelperLauncher
                 survivors,
                 survivors == 0 && (!containmentProbe || activeBeforeContainmentClose >= 1)
                     && !metrics.ExcludedHandleAccessible,
-                false);
+                false,
+                metrics.NativeCallTraceBytes,
+                metrics.NativeEntryCleanupBytes,
+                metrics.NativeCanaryEvidenceBytes,
+                containmentProbe,
+                metrics.ExcludedHandleAccessible,
+                activeBeforeContainmentClose,
+                metrics.NamespaceReuseBlocked,
+                metrics.NamespaceReuseBlockReason);
         }
         catch
         {
@@ -237,7 +405,23 @@ public sealed class OneShotCredentialHelperLauncher
             root.GetProperty("descendant_pid").GetInt32(),
             root.GetProperty("listener_count").GetInt32(),
             root.GetProperty("network_operation_count").GetInt32(),
-            root.GetProperty("native_credential_operation_count").GetInt32());
+            root.GetProperty("native_credential_operation_count").GetInt32(),
+            root.TryGetProperty("native_call_trace", out JsonElement trace)
+                ? JsonSerializer.SerializeToUtf8Bytes(trace)
+                : null,
+            root.TryGetProperty("entry_cleanup", out JsonElement entryCleanup)
+                && entryCleanup.ValueKind != JsonValueKind.Null
+                ? JsonSerializer.SerializeToUtf8Bytes(entryCleanup)
+                : null,
+            root.TryGetProperty("canaries", out JsonElement canaries)
+                ? JsonSerializer.SerializeToUtf8Bytes(canaries)
+                : null,
+            root.TryGetProperty("namespace_reuse_blocked", out JsonElement blocked)
+                && blocked.GetBoolean(),
+            root.TryGetProperty("namespace_reuse_block_reason", out JsonElement blockReason)
+                && blockReason.ValueKind == JsonValueKind.String
+                ? blockReason.GetString()
+                : null);
     }
 
     private static async Task<byte[]> ReadStagedResponseAsync(
@@ -321,7 +505,12 @@ public sealed class OneShotCredentialHelperLauncher
         int DescendantPid,
         int ListenerCount,
         int NetworkOperationCount,
-        int NativeCredentialOperationCount);
+        int NativeCredentialOperationCount,
+        byte[]? NativeCallTraceBytes,
+        byte[]? NativeEntryCleanupBytes,
+        byte[]? NativeCanaryEvidenceBytes,
+        bool NamespaceReuseBlocked,
+        string? NamespaceReuseBlockReason);
 
     private const uint GENERIC_READ = 0x80000000;
     private const uint GENERIC_WRITE = 0x40000000;
@@ -330,6 +519,25 @@ public sealed class OneShotCredentialHelperLauncher
     private const uint OPEN_EXISTING = 3;
     private const uint FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000;
     private const uint FILE_FLAG_BACKUP_SEMANTICS = 0x02000000;
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct SECURITY_ATTRIBUTES
+    {
+        public int Length;
+        public nint SecurityDescriptor;
+        [MarshalAs(UnmanagedType.Bool)] public bool InheritHandle;
+    }
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern nint CreateEventW(
+        ref SECURITY_ATTRIBUTES attributes,
+        [MarshalAs(UnmanagedType.Bool)] bool manualReset,
+        [MarshalAs(UnmanagedType.Bool)] bool initialState,
+        string? name);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool CloseHandle(nint handle);
 
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern SafeFileHandle CreateFileW(

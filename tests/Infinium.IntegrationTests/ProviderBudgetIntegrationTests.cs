@@ -40,6 +40,44 @@ public sealed class ProviderBudgetIntegrationTests
 
     [TestMethod]
     [TestCategory("Integration")]
+    public async Task CredentialDeleteRevocationRejectsOldEpochFinalGateBeforeHelperRuns()
+    {
+        using BudgetContext context = BudgetContext.Create();
+        _ = context.Store.ReserveProviderBudget(1, context.Request);
+        string helper = Path.Combine(AppContext.BaseDirectory, "CredentialHelper", "Infinium.CredentialHelper.exe");
+        OneShotCredentialHelperLauncher launcher = new(
+            helper,
+            Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(helper))),
+            Path.Combine(Path.GetTempPath(), "Infinium-Wp4-DeleteFenceStore-" + Guid.NewGuid().ToString("N")));
+        CredentialHelperCoordinator coordinator = new(context.Store, launcher);
+        HelperPrivateFrameV2 bootstrap = HelperTestFrames.Bootstrap(nonceSeed: 70);
+        bootstrap.Bootstrap.Credential.AccessProfileId.Value = "profile-restore";
+        bootstrap.Bootstrap.Credential.GenerationId.Value = "generation-restore";
+        HelperPrivateFrameV2 assignment = HelperTestFrames.Assignment(HelperAssignmentKindV2.Delete);
+        assignment.Assignment.AccessProfileId.Value = "profile-restore";
+        assignment.Assignment.GenerationId.Value = "generation-restore";
+        assignment.Assignment.GenerationOrdinal = 1;
+        assignment.Assignment.Credential.AccessProfileId.Value = "profile-restore";
+        assignment.Assignment.Credential.GenerationId.Value = "generation-restore";
+
+        await Assert.ThrowsExactlyAsync<IOException>(() => coordinator.ExecuteCredentialTransitionWithFaultAsync(
+            "delete-before-helper-attempt",
+            bootstrap,
+            assignment,
+            BaseTime.AddSeconds(4),
+            CredentialLifecycleFaultPoint.AfterDeletePendingBeforeHelper));
+
+        CredentialProfileProjection pending = context.Store.GetCredentialProfile("profile-restore");
+        Assert.AreEqual("delete-pending", pending.LifecycleState);
+        Assert.AreEqual(1, pending.RevocationEpoch);
+        InvalidOperationException rejected = Assert.ThrowsExactly<InvalidOperationException>(() =>
+            context.Store.AuthorizeProviderDispatch(context.GateRequest));
+        StringAssert.Contains(rejected.Message, "final dispatch gate rejected");
+        Assert.AreEqual(0, context.CountLedgerRoots().Fences);
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
     public async Task CredentialDispatchCoordinatorDerivesFinalGateAndAdoptsHelperResponseThroughWp2Path()
     {
         using BudgetContext context = BudgetContext.Create();

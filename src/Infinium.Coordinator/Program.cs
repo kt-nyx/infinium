@@ -19,6 +19,22 @@ using Microsoft.Extensions.Logging;
 
 #pragma warning disable CA1416 // The executable rejects non-Windows hosts before setup.
 
+if (args is ["--credential-native-qualification-v2", "--manifest", string nativeManifest,
+    "--output-root", string nativeOutputRoot])
+{
+    try
+    {
+        return await CredentialNativeQualificationRunner.RunAsync(nativeManifest, nativeOutputRoot)
+            .ConfigureAwait(false);
+    }
+    catch (Exception exception) when (exception is IOException or InvalidDataException
+        or InvalidOperationException or OperationCanceledException)
+    {
+        Console.Error.WriteLine($"WP4 v2 coordinator supervisor failed with typed non-secret error: {exception.GetType().Name}");
+        return 68;
+    }
+}
+
 if (!OperatingSystem.IsWindows())
 {
     Console.Error.WriteLine("Infinium Coordinator currently requires Windows.");

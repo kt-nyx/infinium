@@ -50,6 +50,9 @@ $resolvedOutputRoot = if ([System.IO.Path]::IsPathRooted($OutputRoot)) {
 } else {
     [System.IO.Path]::GetFullPath((Join-Path $repoRoot $OutputRoot))
 }
+$outputRootExistedBeforeInvocation = Test-Path -LiteralPath $resolvedOutputRoot
+$outputRootHadEntriesBeforeInvocation = $outputRootExistedBeforeInvocation -and
+    $null -ne (Get-ChildItem -LiteralPath $resolvedOutputRoot -Force | Select-Object -First 1)
 New-Item -ItemType Directory -Force -Path $resolvedOutputRoot | Out-Null
 
 $schemaNames = @(
@@ -192,6 +195,7 @@ function Test-Wp1AllowedPath([string] $Path) {
         'contracts/protobuf/README.md',
         'contracts/repository/public-fixture-registry.v1.schema.json',
         'contracts/repository/wp4-credential-native-authorization.v1.schema.json',
+        'contracts/repository/wp4-credential-native-authorization.v2.schema.json',
         'dependencies/README.md',
         'dependencies/dependency-curation.json',
         'dependencies/dependency-manifest.json',
@@ -201,12 +205,14 @@ function Test-Wp1AllowedPath([string] $Path) {
         'docs/plans/milestones/m1/slices/s6/wp1-contract-traceability.v1.json',
         'docs/plans/milestones/m1/slices/s6/wp1-acceptance-ledger.v1.json',
         'docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v1.json',
+        'docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v2.json',
         'docs/research/investigations/README.md',
         'docs/research/investigations/RESEARCH-0055-slice6-local-input-bound-policy.md',
         'docs/research/source-registry.md',
         'eng/generate-m1-slice6-wp1-traceability.ps1',
         'eng/update-dependency-manifest.ps1',
         'eng/validate-m1-slice6-wp4-authorization.ps1',
+        'eng/validate-m1-slice6-wp4-authorization-v2.ps1',
         'eng/verify-m1-slice6.ps1',
         'eng/verify-m1-slice6-wp3-upgrade.ps1',
         'fixtures/public/public-fixture-registry.v1.json',
@@ -800,7 +806,8 @@ function Invoke-CredentialSyntheticGate {
     })
 }
 
-function Invoke-CredentialNativeGate {
+function Invoke-ConsumedCredentialNativeV1Gate {
+    throw 'CredentialNative v1 is consumed and terminal; its retained implementation is historical evidence only.'
     if ([string]::IsNullOrWhiteSpace($AuthorizationManifest)) {
         throw 'CredentialNative requires -AuthorizationManifest bound to exact owner acceptance.'
     }
@@ -921,6 +928,452 @@ function Invoke-CredentialNativeGate {
         billable_operations = [int64]$evidence.billableOperations
         retry_attempted = [bool]$evidence.retryAttempted
         cleanup_uncertainty = 'injected-visible-and-namespace-reuse-blocked; actual-final-cleanup-confirmed-absent'
+    }) 'passed' $true
+}
+
+function Invoke-CredentialNativeGate {
+    if ([string]::IsNullOrWhiteSpace($AuthorizationManifest)) {
+        throw 'CredentialNative requires the exact owner-accepted v2 manifest.'
+    }
+    $manifestPath = if ([IO.Path]::IsPathRooted($AuthorizationManifest)) {
+        [IO.Path]::GetFullPath($AuthorizationManifest)
+    } else { [IO.Path]::GetFullPath((Join-Path $repoRoot $AuthorizationManifest)) }
+    $expectedManifestPath = [IO.Path]::GetFullPath((Join-Path $repoRoot `
+        'docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v2.json'))
+    if (-not [string]::Equals($manifestPath, $expectedManifestPath, [StringComparison]::OrdinalIgnoreCase)) {
+        throw 'CredentialNative v1 is consumed and terminal; only the exact tracked v2 artifact can be considered.'
+    }
+    $manifestBytes = [IO.File]::ReadAllBytes($manifestPath)
+    $manifestSha = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($manifestBytes)).ToLowerInvariant()
+    $manifest = [Text.Encoding]::UTF8.GetString($manifestBytes) | ConvertFrom-Json -Depth 100 -DateKind String
+    if ($manifest.manifest_id -ne 'infinium.m1-s6.wp4.credential-native-authorization/16b3fe25-cf97-4d59-9561-b1c735fa7c8d' -or
+        $manifest.status -ne 'ready-for-owner-acceptance' -or
+        $manifest.effect_authority -ne 'none-until-owner-accepts-exact-manifest-bytes' -or
+        $manifest.candidate_binding.accepted_wp3_candidate_commit -ne 'b32939e8b7491a5c47453f912d25dd98c090f103' -or
+        $manifest.candidate_binding.authorization_handoff_commit -ne 'fa38419b2c539524bbed01b7994f99ace491c293') {
+        throw 'CredentialNative v2 identity, status, or candidate binding is not executable.'
+    }
+    $closeReady = [string]$manifest.candidate_binding.close_ready_implementation_commit
+    if ($closeReady -eq ('0' * 40)) { throw 'CredentialNative v2 close-ready binding is still a draft placeholder.' }
+    $expires = [DateTimeOffset]::ParseExact([string]$manifest.expires_at_utc,
+        'yyyy-MM-ddTHH:mm:ss.fffffffZ', [Globalization.CultureInfo]::InvariantCulture,
+        [Globalization.DateTimeStyles]::AssumeUniversal)
+    if ([DateTimeOffset]::UtcNow -ge $expires) { throw 'CredentialNative v2 owner authority has expired.' }
+
+    $head = (& git rev-parse HEAD).Trim()
+    if ((& git branch --show-current).Trim() -ne 'codex/m1-s6') { throw 'CredentialNative requires branch codex/m1-s6.' }
+    foreach ($ancestor in @('b32939e8b7491a5c47453f912d25dd98c090f103',
+            'fa38419b2c539524bbed01b7994f99ace491c293', $closeReady)) {
+        & git merge-base --is-ancestor $ancestor $head
+        if ($LASTEXITCODE -ne 0) { throw "CredentialNative candidate does not descend from $ancestor." }
+    }
+    if (-not [string]::IsNullOrWhiteSpace((& git status --porcelain))) {
+        throw 'CredentialNative requires a clean committed implementation candidate.'
+    }
+    $allowedPostBindingPaths = @(
+        'docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v2.json',
+        'docs/plans/milestones/m1/slices/s6/record.md'
+    )
+    $postBindingPaths = @(& git diff --name-only --diff-filter=ACMRTUXB "$closeReady..$head")
+    if ($LASTEXITCODE -ne 0 -or @($postBindingPaths | Where-Object {
+            ([string]$_).Replace('\','/') -notin $allowedPostBindingPaths
+        }).Count -ne 0) {
+        throw 'CredentialNative exact owner binding refuses source, gate, test, or binary-producing drift after the close-ready commit.'
+    }
+    $record = Get-Content -LiteralPath (Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/record.md') -Raw
+    $canonicalAcceptance = "WP4_V2_OWNER_ACCEPTANCE manifest_id=$($manifest.manifest_id) sha256=$manifestSha close_ready_commit=$closeReady expires_at_utc=$($manifest.expires_at_utc)"
+    $acceptanceLineCount = @($record -split "`r?`n" | Where-Object {
+        [string]::Equals($_, $canonicalAcceptance, [StringComparison]::Ordinal)
+    }).Count
+    if ($acceptanceLineCount -ne 1) {
+        throw 'CredentialNative requires exactly one canonical exact-byte v2 owner-acceptance line in the append-only record.'
+    }
+    if ($record.Contains("WP4_V2_NATIVE_EXECUTED manifest_id=$($manifest.manifest_id)", [StringComparison]::Ordinal) -or
+        $record.Contains('infinium.m1-s6.wp4.credential-native-evidence/v2', [StringComparison]::Ordinal)) {
+        throw 'CredentialNative v2 is terminal because the append-only record already identifies a native execution.'
+    }
+    if ($outputRootHadEntriesBeforeInvocation) {
+        throw 'CredentialNative v2 requires a fresh empty output root and never recovers or reuses evidence.'
+    }
+
+    & (Join-Path $repoRoot 'eng/validate-m1-slice6-wp4-authorization-v2.ps1') -ManifestPath $manifestPath
+    if ($LASTEXITCODE -ne 0) { throw 'CredentialNative v2 semantic authorization validation failed.' }
+    & dotnet build Infinium.sln -c Release --no-restore --nologo
+    if ($LASTEXITCODE -ne 0) { throw 'CredentialNative v2 exact candidate Release build failed.' }
+    foreach ($filter in @('FullyQualifiedName~CredentialNativeAuthorization', 'FullyQualifiedName~CredentialHelper',
+            'FullyQualifiedName~CredentialNativeQualificationSupervisor')) {
+        Invoke-DotnetTest 'tests/Infinium.UnitTests/Infinium.UnitTests.csproj' $filter
+        Invoke-DotnetTest 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj' $filter
+    }
+
+    $coordinatorPath = Join-Path $repoRoot 'src/Infinium.Coordinator/bin/Release/net10.0/Infinium.Coordinator.exe'
+    if (-not (Test-Path -LiteralPath $coordinatorPath -PathType Leaf)) {
+        throw 'CredentialNative exact Release coordinator binary is absent.'
+    }
+    if ([DateTimeOffset]::UtcNow -ge $expires) {
+        throw 'CredentialNative v2 owner authority expired during pre-effect verification; no authority was consumed.'
+    }
+    $lockRoot = Join-Path $repoRoot 'artifacts/m1-slice6/wp4-native-authority-locks'
+    [IO.Directory]::CreateDirectory($lockRoot) | Out-Null
+    $manifestIdentitySha = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData(
+        [Text.Encoding]::UTF8.GetBytes([string]$manifest.manifest_id))).ToLowerInvariant()
+    $authorityLockPath = Join-Path $lockRoot ($manifestIdentitySha + '.json')
+    $lockBytes = [Text.UTF8Encoding]::new($false).GetBytes((ConvertTo-CanonicalJsonValue ([ordered]@{
+        manifest_id = $manifest.manifest_id; manifest_sha256 = $manifestSha
+        close_ready_commit = $closeReady; execution_head_commit = $head
+        created_at_utc = [DateTimeOffset]::UtcNow.ToString('O', [Globalization.CultureInfo]::InvariantCulture)
+        disposition = 'consumed-before-native-launch-never-delete-or-reuse'
+    })) + "`n")
+    try {
+        $lockStream = [IO.File]::Open($authorityLockPath, [IO.FileMode]::CreateNew,
+            [IO.FileAccess]::Write, [IO.FileShare]::Read)
+        try { $lockStream.Write($lockBytes, 0, $lockBytes.Length); $lockStream.Flush($true) }
+        finally { $lockStream.Dispose() }
+    } catch [IO.IOException] {
+        throw 'CredentialNative v2 one-shot authority was already consumed; no second invocation is allowed.'
+    }
+
+    $stdoutPath = Join-Path $resolvedOutputRoot 'coordinator-stdout.txt'
+    $stderrPath = Join-Path $resolvedOutputRoot 'coordinator-stderr.txt'
+    $startInfo = [Diagnostics.ProcessStartInfo]::new()
+    $startInfo.FileName = $coordinatorPath
+    $startInfo.UseShellExecute = $false; $startInfo.CreateNoWindow = $true
+    $startInfo.RedirectStandardOutput = $true; $startInfo.RedirectStandardError = $true
+    foreach ($argument in @('--credential-native-qualification-v2', '--manifest', $manifestPath,
+            '--output-root', $resolvedOutputRoot)) { [void]$startInfo.ArgumentList.Add($argument) }
+    $process = [Diagnostics.Process]::new(); $process.StartInfo = $startInfo
+    if (-not $process.Start()) { throw 'CredentialNative v2 coordinator supervisor did not start.' }
+    $stdoutTask = $process.StandardOutput.ReadToEndAsync(); $stderrTask = $process.StandardError.ReadToEndAsync()
+    if (-not $process.WaitForExit(1800000)) {
+        try { $process.Kill($true) } catch { }
+        throw 'CredentialNative v2 exceeded 1,800 seconds; authority is consumed.'
+    }
+    [IO.File]::WriteAllText($stdoutPath, $stdoutTask.GetAwaiter().GetResult(), [Text.UTF8Encoding]::new($false))
+    [IO.File]::WriteAllText($stderrPath, $stderrTask.GetAwaiter().GetResult(), [Text.UTF8Encoding]::new($false))
+    $processExitCode = $process.ExitCode
+    $process.Dispose()
+    if ($processExitCode -ne 0) {
+        throw "CredentialNative v2 coordinator supervisor failed with exit code $processExitCode; authority is consumed."
+    }
+
+    $evidencePath = Join-Path $resolvedOutputRoot 'credential-native-evidence.v2.json'
+    $backupPath = Join-Path $resolvedOutputRoot 'native-backup-metadata.v2.json'
+    $summaryPath = Join-Path $resolvedOutputRoot 'credential-native-summary.txt'
+    foreach ($requiredPath in @($evidencePath, $backupPath, $summaryPath)) {
+        if (-not (Test-Path -LiteralPath $requiredPath -PathType Leaf)) {
+            throw "CredentialNative v2 supervisor omitted '$([IO.Path]::GetFileName($requiredPath))'."
+        }
+    }
+    $evidenceBytes = [IO.File]::ReadAllBytes($evidencePath)
+    $evidence = [Text.Encoding]::UTF8.GetString($evidenceBytes) | ConvertFrom-Json -Depth 100 -DateKind String
+    $expectedScenarioIds = @('interactive-entry-submit', 'interactive-entry-cancel', 'credential-size-boundaries',
+        'secure-store-unavailable', 'replacement', 'revoke-delete', 'helper-and-coordinator-crash-restart',
+        'backup-restore-reauthentication', 'fake-provider-dispatch')
+    $expectedAliases = @('interactive-primary', 'interactive-cancel', 'size-valid', 'size-oversize',
+        'unavailable-store', 'replacement-old', 'replacement-new', 'revoke-delete', 'crash-restart',
+        'backup-old', 'backup-new', 'fake-dispatch')
+    $targetByAlias = @{}
+    foreach ($target in @($manifest.disposable_namespace.targets)) { $targetByAlias[[string]$target.alias] = $target }
+    $absence = @($evidence.target_absence)
+    foreach ($item in $absence) {
+        $declaredTarget = @($manifest.disposable_namespace.targets | Where-Object { $_.alias -eq $item.alias })
+        if ($declaredTarget.Count -ne 1 -or
+            $declaredTarget[0].target_fingerprint_sha256 -ne $item.target_fingerprint_sha256) {
+            throw "CredentialNative v2 absence evidence is not bound to declared alias '$($item.alias)'."
+        }
+    }
+    $trace = @($evidence.native_call_trace)
+    $counts = $evidence.native_call_counts
+    $maxima = $manifest.operation_limits.native_call_maxima
+    $traceOperations = @($trace.operation)
+    $derivedWrite = @($traceOperations | Where-Object { $_ -eq 'CredWriteW' }).Count
+    $derivedRead = @($traceOperations | Where-Object { $_ -eq 'CredReadW' }).Count
+    $derivedDelete = @($traceOperations | Where-Object { $_ -eq 'CredDeleteW' }).Count
+    $derivedFree = @($traceOperations | Where-Object { $_ -eq 'CredFree' }).Count
+    $tracePairingValid = $true
+    $successfulReads = @($trace | Where-Object { $_.operation -eq 'CredReadW' -and $_.result -eq 'success' })
+    foreach ($read in $successfulReads) {
+        $paired = @($trace | Where-Object {
+            $_.operation -eq 'CredFree' -and $_.paired_allocation_id -eq $read.allocation_id -and
+            [int64]$_.sequence -gt [int64]$read.sequence
+        })
+        if ($null -eq $read.allocation_id -or $paired.Count -ne 1) { $tracePairingValid = $false }
+    }
+    $phases = @($evidence.scenarios | ForEach-Object { @($_.phases) })
+    $phaseIdentityValid = $true
+    foreach ($scenario in @($evidence.scenarios)) {
+        foreach ($phase in @($scenario.phases)) {
+            $expectedAssignmentId = "wp4-v2/$([string]$scenario.scenario_id)/$([string]$phase.phase_id)"
+            if ([string]$phase.assignment_id -ne $expectedAssignmentId) {
+                $phaseIdentityValid = $false
+            }
+        }
+    }
+    $phaseOracle = @'
+scenario|phase|outcome|kind|lifecycle|primary_alias|allowed_aliases|call_rule
+interactive-entry-submit|preflight|FailedKnown|Verify|*|interactive-primary|interactive-primary|preflight
+interactive-entry-submit|submit|Completed|Enroll|active-unverified|interactive-primary|interactive-primary|enroll
+interactive-entry-submit|cleanup|Completed|Delete|deleted|interactive-primary|interactive-primary|cleanup-present
+interactive-entry-cancel|preflight|FailedKnown|Verify|*|interactive-cancel|interactive-cancel|preflight
+interactive-entry-cancel|cancel|Cancelled|Enroll|pending-enrollment|interactive-cancel|interactive-cancel|no-native
+interactive-entry-cancel|cleanup|Completed|Delete|pending-enrollment|interactive-cancel|interactive-cancel|cleanup-absent
+credential-size-boundaries|preflight-maximum|FailedKnown|Verify|*|size-valid|size-valid|preflight
+credential-size-boundaries|preflight-oversize|FailedKnown|Verify|*|size-oversize|size-oversize|preflight
+credential-size-boundaries|maximum|Completed|Enroll|active-unverified|size-valid|size-valid|enroll
+credential-size-boundaries|oversize|FailedKnown|Enroll|pending-enrollment|size-oversize|size-oversize|no-native
+credential-size-boundaries|cleanup-maximum|Completed|Delete|deleted|size-valid|size-valid|cleanup-present
+credential-size-boundaries|cleanup-oversize|Completed|Delete|pending-enrollment|size-oversize|size-oversize|cleanup-absent
+secure-store-unavailable|preflight|FailedKnown|Verify|*|unavailable-store|unavailable-store|preflight
+secure-store-unavailable|unavailable|Unavailable|Enroll|secure-store-unavailable|unavailable-store|unavailable-store|no-native
+secure-store-unavailable|cleanup|Completed|Delete|secure-store-unavailable|unavailable-store|unavailable-store|cleanup-absent
+replacement|preflight-predecessor|FailedKnown|Verify|*|replacement-old|replacement-old|preflight
+replacement|preflight-successor|FailedKnown|Verify|*|replacement-new|replacement-new|preflight
+replacement|predecessor-active|Completed|Enroll|active-unverified|replacement-old|replacement-old|enroll
+replacement|replacement-interrupted|Unavailable|Replace|delete-pending|replacement-new|replacement-new,replacement-old|replacement-interrupt
+replacement|replacement-recovered|Completed|Recover|active-unverified|replacement-new|replacement-new,replacement-old|recover-existing
+replacement|cleanup-predecessor|Completed|Delete|*|replacement-old|replacement-old|cleanup-absent
+replacement|cleanup-successor|Completed|Delete|deleted|replacement-new|replacement-new|cleanup-present
+revoke-delete|preflight|FailedKnown|Verify|*|revoke-delete|revoke-delete|preflight
+revoke-delete|active|Completed|Enroll|active-unverified|revoke-delete|revoke-delete|enroll
+revoke-delete|verify|Completed|Verify|active-verified|revoke-delete|revoke-delete|verify
+revoke-delete|deleted-after-revocation|Completed|Delete|deleted|revoke-delete|revoke-delete|cleanup-present
+helper-and-coordinator-crash-restart|preflight|FailedKnown|Verify|*|crash-restart|crash-restart|preflight
+helper-and-coordinator-crash-restart|half-commit|Completed|Enroll|pending-enrollment|crash-restart|crash-restart|enroll
+helper-and-coordinator-crash-restart|restart-recovery|Completed|Recover|active-unverified|crash-restart|crash-restart|verify
+helper-and-coordinator-crash-restart|cleanup|Completed|Delete|deleted|crash-restart|crash-restart|cleanup-present
+backup-restore-reauthentication|preflight-old|FailedKnown|Verify|*|backup-old|backup-old|preflight
+backup-restore-reauthentication|preflight-new|FailedKnown|Verify|*|backup-new|backup-new|preflight
+backup-restore-reauthentication|backup-active|Completed|Enroll|active-unverified|backup-old|backup-old|enroll
+backup-restore-reauthentication|restored-new-generation|Completed|Recover|active-unverified|backup-new|backup-new,backup-old|recover-reentry
+backup-restore-reauthentication|cleanup-restored-predecessor|Completed|Delete|*|backup-old|backup-old|cleanup-absent
+backup-restore-reauthentication|cleanup-successor|Completed|Delete|deleted|backup-new|backup-new|cleanup-present
+fake-provider-dispatch|preflight|FailedKnown|Verify|*|fake-dispatch|fake-dispatch|preflight
+fake-provider-dispatch|enroll|Completed|Enroll|active-unverified|fake-dispatch|fake-dispatch|enroll
+fake-provider-dispatch|verify|Completed|Verify|active-verified|fake-dispatch|fake-dispatch|verify
+fake-provider-dispatch|final-gate-dispatch-stage-admit-settle|Completed|ProviderDispatch|*|fake-dispatch|fake-dispatch|dispatch
+fake-provider-dispatch|cleanup|Completed|Delete|deleted|fake-dispatch|fake-dispatch|cleanup-present
+'@ | ConvertFrom-Csv -Delimiter '|'
+    $phaseOracleByAssignment = @{}
+    $phaseOracleValid = $phaseOracle.Count -eq 41
+    foreach ($expected in $phaseOracle) {
+        $assignmentId = "wp4-v2/$($expected.scenario)/$($expected.phase)"
+        $phaseOracleByAssignment[$assignmentId] = $expected
+        $actual = @($phases | Where-Object { [string]$_.assignment_id -eq $assignmentId })
+        if ($actual.Count -ne 1) { $phaseOracleValid = $false; continue }
+        $actual = $actual[0]
+        $primary = $targetByAlias[[string]$expected.primary_alias]
+        if ($null -eq $primary -or [string]$actual.outcome -ne [string]$expected.outcome -or
+            [string]$actual.assignment_kind -ne [string]$expected.kind -or
+            [string]$actual.profile_id -ne [string]$primary.access_profile_id -or
+            [string]$actual.generation_id -ne [string]$primary.generation_id -or
+            ([string]$expected.lifecycle -ne '*' -and
+                [string]$actual.lifecycle.lifecycle_state -ne [string]$expected.lifecycle)) {
+            $phaseOracleValid = $false
+        }
+        $allowedFingerprints = @(([string]$expected.allowed_aliases).Split(',') | ForEach-Object {
+            [string]$targetByAlias[$_].target_fingerprint_sha256
+        })
+        $phaseTrace = @($trace | Where-Object { [string]$_.scenario -eq $assignmentId })
+        if (@($phaseTrace | Where-Object { [string]$_.target_fingerprint_sha256 -notin $allowedFingerprints }).Count -ne 0) {
+            $phaseOracleValid = $false
+        }
+        $phaseWrites = @($phaseTrace | Where-Object { $_.operation -eq 'CredWriteW' }).Count
+        $phaseReads = @($phaseTrace | Where-Object { $_.operation -eq 'CredReadW' }).Count
+        $phaseDeletes = @($phaseTrace | Where-Object { $_.operation -eq 'CredDeleteW' }).Count
+        $phaseFrees = @($phaseTrace | Where-Object { $_.operation -eq 'CredFree' }).Count
+        $lastPhaseCall = $phaseTrace | Select-Object -Last 1
+        switch ([string]$expected.call_rule) {
+            'preflight' {
+                if ($phaseTrace.Count -ne 1 -or $phaseReads -ne 1 -or
+                    [string]$lastPhaseCall.result -ne 'ERROR_NOT_FOUND') { $phaseOracleValid = $false }
+            }
+            'no-native' { if ($phaseTrace.Count -ne 0) { $phaseOracleValid = $false } }
+            'enroll' {
+                if ($phaseWrites -ne 1 -or $phaseDeletes -ne 0 -or $phaseReads -ne 2 -or $phaseFrees -ne 1) {
+                    $phaseOracleValid = $false
+                }
+            }
+            'verify' {
+                if ($phaseWrites -ne 0 -or $phaseDeletes -ne 0 -or $phaseReads -ne 1 -or $phaseFrees -ne 1) {
+                    $phaseOracleValid = $false
+                }
+            }
+            'replacement-interrupt' {
+                if ($phaseWrites -ne 1 -or $phaseDeletes -ne 0 -or $phaseReads -ne 3 -or $phaseFrees -ne 2) {
+                    $phaseOracleValid = $false
+                }
+            }
+            'recover-existing' {
+                if ($phaseWrites -ne 0 -or $phaseDeletes -ne 1 -or $phaseReads -ne 6 -or $phaseFrees -ne 4) {
+                    $phaseOracleValid = $false
+                }
+            }
+            'recover-reentry' {
+                if ($phaseWrites -ne 1 -or $phaseDeletes -ne 1 -or $phaseReads -ne 8 -or $phaseFrees -ne 4) {
+                    $phaseOracleValid = $false
+                }
+            }
+            'dispatch' {
+                if ($phaseWrites -ne 0 -or $phaseDeletes -ne 0 -or $phaseReads -ne 1 -or $phaseFrees -ne 1) {
+                    $phaseOracleValid = $false
+                }
+            }
+            'cleanup-present' {
+                if ($phaseWrites -ne 0 -or $phaseDeletes -ne 1 -or $phaseReads -ne 3 -or $phaseFrees -ne 1 -or
+                    [string]$lastPhaseCall.operation -ne 'CredReadW' -or
+                    [string]$lastPhaseCall.result -ne 'ERROR_NOT_FOUND') { $phaseOracleValid = $false }
+            }
+            'cleanup-absent' {
+                if ($phaseWrites -ne 0 -or $phaseDeletes -ne 0 -or $phaseReads -ne 2 -or $phaseFrees -ne 0 -or
+                    [string]$lastPhaseCall.operation -ne 'CredReadW' -or
+                    [string]$lastPhaseCall.result -ne 'ERROR_NOT_FOUND') { $phaseOracleValid = $false }
+            }
+            default { $phaseOracleValid = $false }
+        }
+    }
+    if (@($trace | Where-Object { -not $phaseOracleByAssignment.ContainsKey([string]$_.scenario) }).Count -ne 0) {
+        $phaseOracleValid = $false
+    }
+    $manualPhases = @($phases | Where-Object { $_.phase_id -in @('submit','cancel','restored-new-generation') })
+    $dispatchPhases = @($phases | Where-Object { $_.phase_id -eq 'final-gate-dispatch-stage-admit-settle' })
+    $cleanupPhases = @($phases | Where-Object {
+        ([string]$_.phase_id).StartsWith('cleanup', [StringComparison]::Ordinal) -or
+        $_.phase_id -eq 'deleted-after-revocation'
+    })
+    $phaseSemanticsValid = $phases.Count -eq 41 -and
+        $phaseIdentityValid -and
+        $phaseOracleValid -and
+        @($phases.assignment_id | Sort-Object -Unique).Count -eq 41 -and
+        @($phases | Where-Object {
+            [int64]$_.process.inherited_private_handle_count -ne 2 -or
+            [int64]$_.process.standard_protocol_handle_count -ne 0 -or
+            [int64]$_.process.listener_count -ne 0 -or [int64]$_.process.network_operation_count -ne 0 -or
+            [int64]$_.process.process_tree_survivor_count -ne 0 -or
+            -not [bool]$_.process.process_tree_terminated -or [bool]$_.process.retry_attempted
+            -or -not [bool]$_.process.containment_probe_executed
+            -or [bool]$_.process.excluded_handle_accessible
+            -or [int64]$_.process.active_process_count_before_job_close -lt 1
+        }).Count -eq 0 -and
+        $manualPhases.Count -eq 3 -and
+        @($manualPhases | Where-Object {
+            $null -eq $_.entry_cleanup -or -not [bool]$_.entry_cleanup.initial_blank -or
+            -not [bool]$_.entry_cleanup.terminal -or -not [bool]$_.entry_cleanup.window_destroyed -or
+            -not [bool]$_.entry_cleanup.buffers_cleared -or -not [bool]$_.entry_cleanup.thread_joined -or
+            -not [bool]$_.entry_cleanup.clipboard_messages_blocked
+        }).Count -eq 0 -and
+        $dispatchPhases.Count -eq 1 -and [bool]$dispatchPhases[0].dispatch.authorized -and
+        -not [string]::IsNullOrWhiteSpace([string]$dispatchPhases[0].dispatch.dispatch_fence_id) -and
+        -not [string]::IsNullOrWhiteSpace([string]$dispatchPhases[0].dispatch.reservation_id) -and
+        -not [string]::IsNullOrWhiteSpace([string]$dispatchPhases[0].dispatch.response_id) -and
+        -not [string]::IsNullOrWhiteSpace([string]$dispatchPhases[0].dispatch.usage_entry_id) -and
+        [int64]$dispatchPhases[0].dispatch.coordinator_fencing_epoch -gt 0 -and
+        [DateTimeOffset]::Parse([string]$dispatchPhases[0].dispatch.deadline,
+            [Globalization.CultureInfo]::InvariantCulture) -gt
+            [DateTimeOffset]::Parse([string]$dispatchPhases[0].dispatch.effective_gate_time,
+                [Globalization.CultureInfo]::InvariantCulture) -and
+        [string]$dispatchPhases[0].dispatch.decision_reason -eq 'exact-final-gate-authorized' -and
+        [string]$dispatchPhases[0].dispatch.reservation_state -eq 'reserved-authoritative' -and
+        [string]$dispatchPhases[0].dispatch.transport_state -eq 'may-have-started-durable' -and
+        [string]$dispatchPhases[0].dispatch.settlement_state -eq 'SettledComplete' -and
+        [bool]$dispatchPhases[0].staging.staged_before_admission -and
+        [bool]$dispatchPhases[0].staging.coordinator_only_admission -and
+        $cleanupPhases.Count -eq 12 -and
+        @($cleanupPhases | Where-Object { [string]$_.outcome -ne 'Completed' }).Count -eq 0 -and
+        [bool]$evidence.stale_gate.rejected -and [bool]$evidence.stale_gate.no_fence_created -and
+        [int64]$evidence.stale_gate.current_revocation_epoch -gt [int64]$evidence.stale_gate.authorized_revocation_epoch -and
+        @($phases | Where-Object { $_.phase_id -eq 'half-commit' -and [int64]$_.process.exit_code -ne 69 }).Count -eq 0
+    $expectedRetainedSurfaces = @('final credential-native evidence JSON', 'final human summary',
+        'CredentialNative gate stdout', 'CredentialNative gate stderr')
+    $retainedSurfaces = @($evidence.canaries.retained_surface_inventory)
+    $retainedSurfaceInventoryValid = $retainedSurfaces.Count -eq 4 -and
+        ((@($retainedSurfaces.name) -join '|') -eq ($expectedRetainedSurfaces -join '|')) -and
+        @($retainedSurfaces | Where-Object {
+            [string]$_.secret_canary_proof -ne 'structurally-absent' -or
+            [string]::IsNullOrWhiteSpace([string]$_.basis)
+        }).Count -eq 0 -and
+        [string]$retainedSurfaces[0].raw_target_canary_proof -eq 'structurally-absent' -and
+        [string]$retainedSurfaces[1].raw_target_canary_proof -eq 'byte-scanned-utf8-and-utf16le' -and
+        [int64]$retainedSurfaces[1].byte_count -gt 0 -and
+        [string]$retainedSurfaces[2].raw_target_canary_proof -eq 'structurally-absent' -and
+        [string]$retainedSurfaces[3].raw_target_canary_proof -eq 'structurally-absent'
+    if ($evidence.schema -ne 'infinium.m1-s6.wp4.credential-native-evidence/v2' -or
+        $evidence.status -ne 'passed' -or $evidence.manifest_sha256 -ne $manifestSha -or
+        ((@($evidence.scenarios.scenario_id) | Sort-Object) -join '|') -ne (($expectedScenarioIds | Sort-Object) -join '|') -or
+        ($absence.alias -join '|') -ne ($expectedAliases -join '|') -or -not $phaseSemanticsValid -or
+        @($absence.target_fingerprint_sha256 | Sort-Object -Unique).Count -ne 12 -or
+        @($absence | Where-Object { $_.result -ne 'ERROR_NOT_FOUND' }).Count -ne 0 -or
+        $trace.Count -eq 0 -or @($trace.sequence) -join '|' -ne ((1..$trace.Count) -join '|') -or
+        @($traceOperations | Where-Object { $_ -notin @('CredWriteW', 'CredReadW', 'CredDeleteW', 'CredFree') }).Count -ne 0 -or
+        @($trace | Where-Object {
+            $traceItem = $_
+            $traceItem.process_role -ne 'credential-helper' -or [int64]$traceItem.process_id -le 0 -or
+            [int64]$traceItem.local_sequence -le 0 -or
+            @($expectedScenarioIds | Where-Object {
+                ([string]$traceItem.scenario).StartsWith("wp4-v2/$_/", [StringComparison]::Ordinal)
+            }).Count -eq 0
+        }).Count -ne 0 -or
+        -not $tracePairingValid -or
+        [int64]$counts.cred_write_w -ne $derivedWrite -or [int64]$counts.cred_read_w -ne $derivedRead -or
+        [int64]$counts.cred_delete_w -ne $derivedDelete -or [int64]$counts.cred_free -ne $derivedFree -or
+        [int64]$counts.total -ne $trace.Count -or
+        $derivedWrite -ne [int64]$maxima.CredWriteW -or $derivedRead -ne [int64]$maxima.CredReadW -or
+        $derivedDelete -ne [int64]$maxima.CredDeleteW -or $derivedFree -ne [int64]$maxima.CredFree -or
+        $trace.Count -ne [int64]$maxima.total -or
+        [int64]$evidence.deadline.primary_phase_seconds -ne 1650 -or
+        [int64]$evidence.deadline.cleanup_reserve_seconds -ne 120 -or
+        [int64]$evidence.deadline.evidence_reserve_seconds -ne 30 -or
+        [int64]$evidence.deadline.outer_wall_clock_seconds -ne 1800 -or
+        [bool]$evidence.cleanup_ambiguous -or [bool]$evidence.namespace_blocked -or
+        [int64]$evidence.network_operations -ne 0 -or [int64]$evidence.dns_operations -ne 0 -or
+        [int64]$evidence.provider_operations -ne 0 -or [int64]$evidence.billable_operations -ne 0 -or
+        [int64]$evidence.process_tree_survivors -ne 0 -or [bool]$evidence.retry_attempted -or
+        [int64]$evidence.canaries.secret_matches -ne 0 -or [int64]$evidence.canaries.raw_target_matches -ne 0 -or
+        ((@($evidence.canaries.raw_target_encodings) | Sort-Object) -join '|') -ne 'utf-16le|utf-8' -or
+        @($evidence.canaries.scanned_surfaces).Count -eq 0 -or -not $retainedSurfaceInventoryValid) {
+        throw 'CredentialNative v2 evidence does not satisfy the finite owner-accepted oracle.'
+    }
+    $backup = Get-Content -LiteralPath $backupPath -Raw | ConvertFrom-Json -Depth 32 -DateKind String
+    if ($backup.schema -ne 'infinium.m1-s6.wp4.credential-native-backup-evidence/v2' -or
+        $backup.status -ne 'passed' -or $backup.restored_state -ne 'recovery-required' -or
+        -not [bool]$backup.same_generation_rejected -or [string]::IsNullOrWhiteSpace($backup.new_generation_id) -or
+        -not [bool]$backup.secret_absent -or -not [bool]$backup.raw_target_absent -or
+        [string]::IsNullOrWhiteSpace($backup.backup_sha256)) {
+        throw 'CredentialNative v2 backup/restore evidence is incomplete or non-conforming.'
+    }
+    $postGateSurfacePaths = @($evidencePath, $backupPath, $summaryPath, $stdoutPath, $stderrPath)
+    $postGateRawTargetMatches = 0
+    foreach ($surfacePath in $postGateSurfacePaths) {
+        $surfaceHex = [Convert]::ToHexString([IO.File]::ReadAllBytes($surfacePath))
+        foreach ($target in @($manifest.disposable_namespace.targets)) {
+            $rawTarget = "Infinium:$([string]$target.access_profile_id):$([string]$target.generation_id)"
+            foreach ($encoding in @([Text.Encoding]::UTF8, [Text.Encoding]::Unicode)) {
+                $needleHex = [Convert]::ToHexString($encoding.GetBytes($rawTarget))
+                if ($surfaceHex.Contains($needleHex, [StringComparison]::OrdinalIgnoreCase)) {
+                    $postGateRawTargetMatches++
+                }
+            }
+        }
+    }
+    if ($postGateRawTargetMatches -ne 0) {
+        throw 'CredentialNative v2 final evidence, summary, or coordinator output retained a raw target.'
+    }
+    Write-Receipt 'CredentialNative' ([ordered]@{
+        execution_mode = 'owner-authorized-disposable-windows-credential-manager-v2'
+        manifest_id = $manifest.manifest_id; manifest_bytes = $manifestBytes.Length; manifest_sha256 = $manifestSha
+        close_ready_implementation_commit = $closeReady; execution_head_commit = $head
+        accepted_wp3_candidate_commit = $manifest.candidate_binding.accepted_wp3_candidate_commit
+        coordinator_binary_sha256 = (Get-FileHash -LiteralPath $coordinatorPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        evidence_file = [IO.Path]::GetFileName($evidencePath); evidence_bytes = $evidenceBytes.Length
+        evidence_sha256 = (Get-FileHash -LiteralPath $evidencePath -Algorithm SHA256).Hash.ToLowerInvariant()
+        backup_metadata_sha256 = (Get-FileHash -LiteralPath $backupPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        target_count = 12; scenario_count = 9; evidence_recovery_only = $false; native_execution_reused = $false
+        cleanup_absence_proof_count = 12; canary_secret_matches = 0; canary_raw_target_matches = 0
+        post_gate_scanned_surfaces = @($postGateSurfacePaths | ForEach-Object { [IO.Path]::GetFileName($_) })
+        post_gate_raw_target_matches = $postGateRawTargetMatches
+        post_gate_secret_disposition = 'structurally-absent-coordinator-and-gate-never-receive-helper-owned-secret'
+        network_operations = 0; dns_operations = 0; provider_operations = 0; billable_operations = 0
+        cleanup_uncertainty = 'none; native run did not inject ambiguity; terminal ambiguity proof passed before effect'
+        one_shot_authority_lock_sha256 = (Get-FileHash -LiteralPath $authorityLockPath -Algorithm SHA256).Hash.ToLowerInvariant()
     }) 'passed' $true
 }
 

@@ -2,7 +2,7 @@
 
 Status: Accepted
 
-Last reviewed: 2026-08-10
+Last reviewed: 2026-08-12
 Owner: Project owner
 
 ## Purpose and scope
@@ -52,6 +52,69 @@ to do next.
 A reviewer returns the classified findings and an overall `ACCEPT`,
 `CORRECT`, or `ESCALATE` judgment. `CORRECT` is the normal result for
 repairable defects and authorizes another correction/re-review cycle.
+
+## Test-process cleanup and verification
+
+After a local verification run completes, is cancelled, or times out, wait for
+its ordinary shutdown and then prove that it did not leave a repository-owned
+`dotnet` or `testhost` process behind. Run test commands with absolute project
+paths so process ownership remains attributable to this exact working tree.
+Before cleanup, confirm that no other active verification or interactive
+repository process in the same working tree owns a matched process.
+
+On Windows, the following procedure targets only processes whose command line
+contains the resolved repository root. It snapshots exact process IDs,
+revalidates each process against the same root immediately before termination,
+and verifies zero matching survivors:
+
+```powershell
+$gitRoot = @(& git rev-parse --show-toplevel)
+if ($LASTEXITCODE -ne 0 -or $gitRoot.Count -ne 1) {
+    throw 'The exact repository root could not be resolved.'
+}
+$repositoryRoot = (Resolve-Path -LiteralPath $gitRoot[0]).Path.TrimEnd('\')
+$repositoryNeedle = $repositoryRoot + '\'
+$ownedNames = @('dotnet.exe', 'testhost.exe', 'testhost.x86.exe')
+
+function Get-RepositoryOwnedTestProcess {
+    @(Get-CimInstance -ClassName Win32_Process | Where-Object {
+        $_.Name -in $ownedNames -and
+        -not [string]::IsNullOrWhiteSpace($_.CommandLine) -and
+        $_.CommandLine.IndexOf(
+            $repositoryNeedle,
+            [System.StringComparison]::OrdinalIgnoreCase) -ge 0
+    })
+}
+
+$owned = @(Get-RepositoryOwnedTestProcess)
+$owned | Select-Object ProcessId, ParentProcessId, Name
+
+foreach ($snapshot in $owned) {
+    $current = Get-CimInstance -ClassName Win32_Process -Filter "ProcessId = $($snapshot.ProcessId)"
+    if ($null -ne $current -and
+        $current.Name -in $ownedNames -and
+        -not [string]::IsNullOrWhiteSpace($current.CommandLine) -and
+        $current.CommandLine.IndexOf(
+            $repositoryNeedle,
+            [System.StringComparison]::OrdinalIgnoreCase) -ge 0) {
+        Stop-Process -Id $current.ProcessId -Force
+    }
+}
+
+$remaining = @(Get-RepositoryOwnedTestProcess)
+if ($remaining.Count -ne 0) {
+    throw "Repository-owned dotnet/testhost cleanup is incomplete: $($remaining.ProcessId -join ',')."
+}
+"Repository-owned dotnet/testhost processes remaining: 0"
+```
+
+Never terminate by process name alone, use a broad workspace or user-profile
+match, or kill a shared SDK/compiler process whose command line is not bound to
+the exact repository root. If command-line inspection is unavailable or the
+root match is ambiguous, report cleanup as unverified; do not broaden the
+predicate. Retain the resolved root, matched process IDs and names, and the
+zero-survivor result with the verification receipt. Do not retain full command
+lines when they could contain credentials or other sensitive arguments.
 
 ## Escalation conditions
 

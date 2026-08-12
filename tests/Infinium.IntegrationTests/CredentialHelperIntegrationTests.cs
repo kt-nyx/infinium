@@ -181,6 +181,148 @@ public sealed class CredentialHelperIntegrationTests
     }
 
     [TestMethod]
+    [TestCategory("Integration")]
+    public async Task CredentialDeletePersistsRevocationBeforeHelperAndCompletesAfterRestart()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp4-DeleteRestart-" + Guid.NewGuid().ToString("N"));
+        string productRoot = Path.Combine(root, "product");
+        string fakeStoreRoot = Path.Combine(root, "fake-secure-store");
+        string helper = Path.Combine(AppContext.BaseDirectory, "CredentialHelper", "Infinium.CredentialHelper.exe");
+        OneShotCredentialHelperLauncher launcher = new(
+            helper,
+            Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(helper))),
+            fakeStoreRoot);
+
+        using (AuthoritativeStore store = new(new StoragePaths(productRoot)))
+        {
+            store.PublishProviderCatalog(M1ProviderCatalog.Capability, M1ProviderCatalog.Price, BaseTime);
+            _ = store.BeginCredentialEnrollment(
+                "profile-delete", "generation-delete", "Delete restart", BaseTime.AddSeconds(1),
+                "account-1", "billing-1");
+            CredentialHelperCoordinator coordinator = new(store, launcher);
+            (_, CredentialProfileProjection enrolled) = await coordinator.ExecuteCredentialTransitionAsync(
+                "delete-enroll-attempt",
+                CredentialBootstrap("profile-delete", "generation-delete", 83),
+                CredentialAssignment(
+                    "profile-delete", "generation-delete", HelperAssignmentKindV2.Enroll, "delete-enroll"),
+                BaseTime.AddSeconds(2));
+            Assert.AreEqual("active-unverified", enrolled.LifecycleState);
+            (_, CredentialProfileProjection verified) = await coordinator.ExecuteCredentialTransitionAsync(
+                "delete-verify-attempt",
+                CredentialBootstrap("profile-delete", "generation-delete", 84),
+                CredentialAssignment(
+                    "profile-delete", "generation-delete", HelperAssignmentKindV2.Verify, "delete-verify"),
+                BaseTime.AddSeconds(4));
+            Assert.AreEqual("active-verified", verified.LifecycleState);
+
+            await Assert.ThrowsExactlyAsync<IOException>(() => coordinator.ExecuteCredentialTransitionWithFaultAsync(
+                "delete-crash-attempt",
+                CredentialBootstrap("profile-delete", "generation-delete", 85),
+                CredentialAssignment(
+                    "profile-delete", "generation-delete", HelperAssignmentKindV2.Delete, "delete-crash"),
+                BaseTime.AddSeconds(6),
+                CredentialLifecycleFaultPoint.AfterDeletePendingBeforeHelper));
+            CredentialProfileProjection pending = store.GetCredentialProfile("profile-delete");
+            Assert.AreEqual("delete-pending", pending.LifecycleState);
+            Assert.AreEqual("pending", pending.CleanupDisposition);
+            Assert.AreEqual(1, pending.RevocationEpoch);
+        }
+
+        using AuthoritativeStore restarted = new(new StoragePaths(productRoot));
+        CredentialProfileProjection restartedPending = restarted.GetCredentialProfile("profile-delete");
+        Assert.AreEqual("delete-pending", restartedPending.LifecycleState);
+        Assert.AreEqual(1, restartedPending.RevocationEpoch);
+        CredentialHelperCoordinator recovery = new(restarted, launcher);
+
+        HelperPrivateFrameV2 malformedDelete = CredentialAssignment(
+            "profile-delete", "generation-delete", HelperAssignmentKindV2.Delete, "delete-malformed");
+        malformedDelete.Sequence = 9;
+        await Assert.ThrowsExactlyAsync<InvalidDataException>(() => recovery.ExecuteCredentialTransitionAsync(
+            "delete-malformed-attempt",
+            CredentialBootstrap("profile-delete", "generation-delete", 86),
+            malformedDelete,
+            BaseTime.AddSeconds(8)));
+        CredentialProfileProjection failed = restarted.GetCredentialProfile("profile-delete");
+        Assert.AreEqual("delete-pending", failed.LifecycleState);
+        Assert.AreEqual("failed", failed.CleanupDisposition);
+        Assert.AreEqual(1, failed.RevocationEpoch);
+
+        launcher.ArmExactDeleteFailure("profile-delete", "generation-delete");
+        (CoordinatedHelperReceipt unavailableReceipt, CredentialProfileProjection unavailable) =
+            await recovery.ExecuteCredentialTransitionAsync(
+                "delete-unavailable-attempt",
+                CredentialBootstrap("profile-delete", "generation-delete", 87),
+                CredentialAssignment(
+                    "profile-delete", "generation-delete", HelperAssignmentKindV2.Delete, "delete-unavailable"),
+                BaseTime.AddSeconds(10));
+        Assert.AreEqual(HelperOutcomeV2.Unavailable, unavailableReceipt.Process.Receipt.Outcome);
+        Assert.AreEqual("delete-pending", unavailable.LifecycleState);
+        Assert.AreEqual("failed", unavailable.CleanupDisposition);
+        Assert.AreEqual(1, unavailable.RevocationEpoch);
+
+        (CoordinatedHelperReceipt helperReceipt, CredentialProfileProjection deleted) =
+            await recovery.ExecuteCredentialTransitionAsync(
+                "delete-restart-attempt",
+                CredentialBootstrap("profile-delete", "generation-delete", 88),
+                CredentialAssignment(
+                    "profile-delete", "generation-delete", HelperAssignmentKindV2.Delete, "delete-restart"),
+                BaseTime.AddSeconds(12));
+        Assert.AreEqual(HelperOutcomeV2.Completed, helperReceipt.Process.Receipt.Outcome);
+        Assert.AreEqual("deleted", deleted.LifecycleState);
+        Assert.AreEqual("confirmed", deleted.CleanupDisposition);
+        Assert.AreEqual(1, deleted.RevocationEpoch);
+
+        using System.Text.Json.JsonDocument secureStore = System.Text.Json.JsonDocument.Parse(
+            File.ReadAllText(Path.Combine(fakeStoreRoot, "synthetic-secure-store.v1.json")));
+        Assert.AreEqual(0, secureStore.RootElement.GetProperty("Values").EnumerateObject().Count());
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    public async Task CredentialDeleteCommitsDeletedOnlyAfterConfirmedAbsenceInSameCall()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp4-DeleteComplete-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        using AuthoritativeStore store = new(new StoragePaths(Path.Combine(root, "product")));
+        store.PublishProviderCatalog(M1ProviderCatalog.Capability, M1ProviderCatalog.Price, BaseTime);
+        _ = store.BeginCredentialEnrollment(
+            "profile-delete-complete", "generation-delete-complete", "Delete complete", BaseTime.AddSeconds(1),
+            "account-1", "billing-1");
+        string helper = Path.Combine(AppContext.BaseDirectory, "CredentialHelper", "Infinium.CredentialHelper.exe");
+        CredentialHelperCoordinator coordinator = new(store, Launcher(helper));
+        _ = await coordinator.ExecuteCredentialTransitionAsync(
+            "delete-complete-enroll-attempt",
+            CredentialBootstrap("profile-delete-complete", "generation-delete-complete", 89),
+            CredentialAssignment(
+                "profile-delete-complete", "generation-delete-complete",
+                HelperAssignmentKindV2.Enroll, "delete-complete-enroll"),
+            BaseTime.AddSeconds(2));
+        _ = await coordinator.ExecuteCredentialTransitionAsync(
+            "delete-complete-verify-attempt",
+            CredentialBootstrap("profile-delete-complete", "generation-delete-complete", 90),
+            CredentialAssignment(
+                "profile-delete-complete", "generation-delete-complete",
+                HelperAssignmentKindV2.Verify, "delete-complete-verify"),
+            BaseTime.AddSeconds(4));
+
+        (CoordinatedHelperReceipt receipt, CredentialProfileProjection deleted) =
+            await coordinator.ExecuteCredentialTransitionAsync(
+                "delete-complete-attempt",
+                CredentialBootstrap("profile-delete-complete", "generation-delete-complete", 91),
+                CredentialAssignment(
+                    "profile-delete-complete", "generation-delete-complete",
+                    HelperAssignmentKindV2.Delete, "delete-complete"),
+                BaseTime.AddSeconds(6));
+        Assert.AreEqual(HelperOutcomeV2.Completed, receipt.Process.Receipt.Outcome);
+        Assert.AreEqual("deleted", deleted.LifecycleState);
+        Assert.AreEqual("confirmed", deleted.CleanupDisposition);
+        Assert.AreEqual(1, deleted.RevocationEpoch);
+        Assert.IsNull(deleted.AccountIdentityId);
+        Assert.IsNull(deleted.BillingScopeIdentityId);
+        Assert.IsNull(deleted.CapabilitySnapshotId);
+    }
+
+    [TestMethod]
     public void CredentialIntentLifecyclePersistsReplacementRevocationRecoveryAndBackupReauthentication()
     {
         string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp3-Credential-" + Guid.NewGuid().ToString("N"));
