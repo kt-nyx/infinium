@@ -834,9 +834,10 @@ function Invoke-CredentialNativeGate {
     if (-not [string]::IsNullOrWhiteSpace((& git status --porcelain))) {
         throw 'CredentialNative requires a clean committed implementation candidate.'
     }
+    $implementationCandidate = (& git rev-parse "$head`^").Trim()
     $record = Get-Content -LiteralPath (Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/record.md') -Raw
     if ((-not $record.Contains($expectedManifestSha, [StringComparison]::Ordinal)) -or
-        (-not $record.Contains($head, [StringComparison]::Ordinal))) {
+        (-not $record.Contains($implementationCandidate, [StringComparison]::Ordinal))) {
         throw 'CredentialNative requires the exact owner acceptance and committed implementation candidate in the append-only record.'
     }
 
@@ -884,7 +885,8 @@ function Invoke-CredentialNativeGate {
         manifest_id = $manifest.manifest_id
         manifest_bytes = $manifestBytes.Length
         manifest_sha256 = $manifestSha
-        implementation_candidate_commit = $head
+        implementation_candidate_commit = $implementationCandidate
+        execution_head_commit = $head
         accepted_wp3_candidate_commit = $manifest.candidate_binding.accepted_wp3_candidate_commit
         helper_binary_sha256 = (Get-FileHash -LiteralPath $helperPath -Algorithm SHA256).Hash.ToLowerInvariant()
         evidence_file = [IO.Path]::GetFileName($evidencePath)
