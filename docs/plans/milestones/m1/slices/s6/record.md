@@ -3099,3 +3099,46 @@ the helper whenever the immutable evidence is already present. This commit is
 the exact implementation candidate for the receipt recovery and subsequent
 non-native verification. It grants no new native authority and does not permit
 a second Credential Manager execution.
+
+The receipt-only recovery command then passed without launching the helper or
+performing any additional native call. Its canonical 1,490-byte
+`credentialnative.json` has SHA-256
+`9d5b79a14c06f225805eb92155cf2bf3f02744ead82b12cb30604e4479d27667`.
+It records `credential_access_permitted: true` solely for the completed
+owner-authorized qualification, `evidence_recovery_only: true`,
+`native_execution_reused: false`, the exact 80-call breakdown, 12 cleanup
+absence proofs, and zero network, DNS, provider, or billable operations. The
+rebuilt exact Release helper is 162,816 bytes with SHA-256
+`adec8a0b7f5c260535345628473e1a928aa13e3a201ede7ac2cdf332d92b5984`.
+
+The post-qualification non-native verification floor passed:
+
+1. Locked restore and Release build completed with zero warnings and zero
+   errors. Focused native/helper Unit tests passed 8/0/0 and Security passed
+   4/0/0.
+2. Accumulated gates passed: Contracts 22/0/0; StateSurfaces and
+   StateTotality each passed 27/0/0 plus persistence 18/0/0; Budget passed
+   Unit 5/0/0, Integration 12/0/0, Evaluation 6/0/0; BudgetFaults passed
+   Unit 4/0/0, Integration 7/0/0, Evaluation 4/0/0; CredentialSynthetic
+   passed Unit 14/0/0, Integration 6/0/0, Security 4/0/0, Fault 4/0/0, and
+   Evaluation 2/0/0. Every retained gate receipt reports passed.
+3. The category floor passed Unit 191/0/1; Contract 127/0/0; Integration
+   84/0/0; Evaluation 81/0/8; Security 114/0/3; and Fault 105/0/3. The
+   unfiltered solution passed Unit 204/0/1, Contract 155/0/0, Integration
+   87/0/0, Evaluation 61/0/8, Security 4/0/0, and Fault 4/0/0.
+4. The complete non-live analysis pipeline reached terminal `result: passed`.
+   Its 764-byte `all.json` has SHA-256
+   `30f6b6ed0757e32641dee4afe26cf2084c932deedc2a5f662f4b5617b5049cac`.
+   The outer observation window expired while the original process remained
+   active; that same original process completed normally and was not rerun.
+5. Format verification, dependency-manifest freshness, documentation
+   validation (166 metadata files, 168 Markdown link sources, 16 JSON files),
+   authorization structural/semantic validation, diff hygiene, accepted-WP3
+   ancestry, unchanged current-state, frozen Slice 5 v1 bytes, and the
+   private/archive/later-package path boundary all passed.
+
+This is the candidate for the required fresh read-only Windows credential and
+security review. No further Credential Manager operation is authorized under
+the consumed manifest. WP4 is not accepted by this implementation record
+alone, and `docs/current-state.md` remains unchanged pending that independent
+review.
