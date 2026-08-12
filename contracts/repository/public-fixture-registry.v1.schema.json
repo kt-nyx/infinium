@@ -8,11 +8,11 @@
     "schema_identity": { "const": "infinium.repository.public-fixture-registry/1.2.0" },
     "registry_version": { "const": "1.2.0" },
     "status": { "const": "current" },
-    "package_count": { "const": 27 },
+    "package_count": { "const": 29 },
     "packages": {
       "type": "array",
-      "minItems": 27,
-      "maxItems": 27,
+      "minItems": 29,
+      "maxItems": 29,
       "uniqueItems": true,
       "items": { "$ref": "#/$defs/package" }
     }
