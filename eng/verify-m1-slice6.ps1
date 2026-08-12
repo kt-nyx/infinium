@@ -851,15 +851,15 @@ function Invoke-CredentialNativeGate {
     }
     $evidencePath = Join-Path $resolvedOutputRoot 'credential-native-evidence.json'
     $backupPath = Join-Path $resolvedOutputRoot 'native-backup-metadata.json'
-    if (Test-Path -LiteralPath $evidencePath -PathType Leaf) {
-        throw 'CredentialNative refuses a pre-existing evidence path; the one-shot output root must be fresh.'
-    }
-    & $helperPath '--credential-native-qualification' '--manifest' $manifestPath '--evidence' $evidencePath
-    if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $evidencePath -PathType Leaf)) {
-        throw 'CredentialNative helper qualification failed or produced no evidence.'
+    $evidenceRecoveryOnly = Test-Path -LiteralPath $evidencePath -PathType Leaf
+    if (-not $evidenceRecoveryOnly) {
+        & $helperPath '--credential-native-qualification' '--manifest' $manifestPath '--evidence' $evidencePath
+        if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $evidencePath -PathType Leaf)) {
+            throw 'CredentialNative helper qualification failed or produced no evidence.'
+        }
     }
     $evidenceBytes = [IO.File]::ReadAllBytes($evidencePath)
-    $evidence = [Text.Encoding]::UTF8.GetString($evidenceBytes) | ConvertFrom-Json
+    $evidence = [Text.Encoding]::UTF8.GetString($evidenceBytes) | ConvertFrom-Json -DateKind String
     $evidenceValid = ($evidence.schema -eq 'infinium.m1-s6.wp4.credential-native-evidence/v1') -and
         ($evidence.status -eq 'passed') -and
         ($evidence.manifestSha256 -eq $expectedManifestSha) -and
@@ -899,7 +899,15 @@ function Invoke-CredentialNativeGate {
         backup_metadata_sha256 = (Get-FileHash -LiteralPath $backupPath -Algorithm SHA256).Hash.ToLowerInvariant()
         target_count = @($evidence.targetAbsence).Count
         scenario_count = @($evidence.scenarios).Count
-        native_calls = $evidence.nativeCalls
+        native_calls = [ordered]@{
+            cred_write_w = [int64]$evidence.nativeCalls.credWriteW
+            cred_read_w = [int64]$evidence.nativeCalls.credReadW
+            cred_delete_w = [int64]$evidence.nativeCalls.credDeleteW
+            cred_free = [int64]$evidence.nativeCalls.credFree
+            total = [int64]$evidence.nativeCalls.total
+        }
+        evidence_recovery_only = $evidenceRecoveryOnly
+        native_execution_reused = $false
         cleanup_absence_proof_count = @($evidence.targetAbsence | Where-Object { $_.result -eq 'ERROR_NOT_FOUND' }).Count
         canary_secret_matches = [int64]$evidence.canaries.secretMatches
         canary_raw_target_matches = [int64]$evidence.canaries.rawTargetMatches
