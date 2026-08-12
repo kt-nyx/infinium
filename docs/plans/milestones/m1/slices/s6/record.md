@@ -2603,3 +2603,96 @@ No native Credential Manager API, credential enumeration, API key, real
 secret, DNS/network/provider call, private fixture, sibling/archive/legacy
 material, protected root, WP4/WP5 behavior, current-state advancement,
 destructive operation, external effect, or push occurred.
+
+## WP3 final bounded convergence correction — 2026-08-11
+
+The exact clean rejected base was
+`1e05b97c84635b75023ecea430bfe2d76478b08b`. The superseding product/test
+candidate is exact commit `7130ddc1d5b163adc05d9b0d06d5066341cfcfa9`.
+This entry is append-only and supersedes the retained WP3 receipt identities
+above without rewriting them.
+
+The correction closes only the eight exact residual WP3 findings. Restore
+recovery now refuses reactivation of the restored generation and requires the
+exact next generation and ordinal. Replacement durably makes the predecessor
+ineligible before dispatch, writes and verifies the successor fake-store slot,
+then deletes and verifies absence of the exact predecessor slot while retaining
+failure/recovery visibility. The real child receives actual synthetic secret
+and target canary bytes, and the product-artifact scan plus leak mutation covers
+database, staging, output/replay, diagnostics, logs, and crash artifacts.
+Provider dispatch durably records the may-have-started boundary before helper
+launch; the exact post-boundary crash retains the full multi-scope hold without
+retry, and successful response receipts carry the matching ambiguity evidence.
+
+Both public DEV and VAL packages now consume and validate their input schema
+and every case field, with schema/case mutations rejected. CredentialSynthetic
+receipts use deterministic ordinal-key, invariant-value, UTF-8-without-BOM,
+LF-terminated serialization rather than host `pwsh` formatting. A bounded
+same-version extension `M1-S6-WP3-0006B` upgrades only exact accepted-WP2
+schema-6/storage-1.5.0 fingerprint
+`240a06fe2a9fa3d79db63985fbda329c8e83822534b93cbfb539062a109cad9e`
+to current fingerprint
+`554129523ac64ce52ee4d24e90644dbaa167c0d98602f1c2d0f25ad271ec0581`;
+unknown same-version stores fail closed. The regression creates a database with
+the exact accepted WP2 binary/schema at
+`ed27ed04897103d93a60e6200971ca12d04f2e11`, proves fresh/upgraded convergence,
+backup/restore, and refusal. Stage-before-admit and coordinator-only-admission
+evidence is emitted only after an actual coordinator execution and is derived
+from observed staging values.
+
+Retained verification is:
+
+1. Locked Release build passed with zero warnings or errors. Exact WP3 focused
+   filters passed Unit 11/0/0, Integration 6/0/0, Security 4/0/0, Fault 3/0/0,
+   and Evaluation 2/0/0.
+2. The canonical `CredentialSynthetic` receipt was reproduced byte-identically
+   in two exact Windows PowerShell invocations. It is 1,371 bytes with SHA-256
+   `0d3207fc9dfbff9ce21660768796602f92124964f980c5e905ecbb76fbd3654d`.
+   It binds the 490-byte dynamic evidence with SHA-256
+   `55e4336080a2c328bf41b4f7a64d1c8be50c70f4a66e6bdf1a2f32660544d46b`,
+   helper binary SHA-256
+   `66220b745c8edcd4669e20c88cd43654223716fc32f882d59b7deaa12a816a7b`,
+   three inherited private handles, zero standard protocol handles, listeners,
+   retries, survivors, native operations, network operations, or canary
+   matches, plus observed stage-before-admit, coordinator-only admission, and a
+   passing canary leak mutation.
+3. The exact accepted-WP2 upgrade receipt is 501 bytes with SHA-256
+   `ec41ae3a769c1e43b5e4ead7bbfecdf27f8182c9d88a62cc87843b7a2cad9159`.
+   It binds the source/final fingerprints above, fresh/upgraded convergence,
+   backup/restore convergence, unknown-same-version refusal, and zero native or
+   network operations.
+4. The accumulated unfiltered Release floor passed Contract 155/0/0, Unit
+   201/0/1, Integration 87/0/0, Evaluation 61/0/8, Security 4/0/0, and Fault
+   3/0/0. Category runs passed Unit 188/0/1, Contract 127/0/0 across projects,
+   Integration 84/0/0 across projects, Security 111/0/3 across projects, Fault
+   105/0/3 across projects, and Evaluation 81/0/8 across projects. The skips
+   remain the pre-existing platform/private cases; no private fixture was
+   accessed.
+5. Accumulated `Contracts` passed 22/0/0; `StateSurfaces` and `StateTotality`
+   each passed 27/0/0 state tests and 18/0/0 persistence tests, with
+   `StateTotality` completing as passed rather than stopping at input-bound
+   authority. `Budget` passed 5/0/0 Unit, 12/0/0 Integration, and 6/0/0
+   Evaluation; `BudgetFaults` passed 4/0/0 Unit, 7/0/0 Integration, and 4/0/0
+   Evaluation. The complete non-live analysis `All` receipt is 764 bytes with
+   SHA-256
+   `1a790a2c1bcfe78e6c059e4b3016bab3d835f215544010ac3abb7aeff4bdc953`.
+   Formatting, dependency-manifest freshness, documentation validation (166
+   metadata files, 168 Markdown link sources, 15 JSON files), strict contract
+   traceability, and diff hygiene passed.
+6. The first candidate-bound Layer6 invocation truthfully rejected the newly
+   required `eng/verify-m1-slice6-wp3-upgrade.ps1` because the verifier's own
+   exact-path allowlist did not yet contain it. The candidate adds only that
+   verifier path to the allowlist. Final `Layer6Review` passed from exact
+   rejected base `1e05b97c84635b75023ecea430bfe2d76478b08b` through exact
+   product candidate `7130ddc1d5b163adc05d9b0d06d5066341cfcfa9`. Its 1,319-byte
+   receipt has SHA-256
+   `e233e9797758528ce589c726a1d09ce681b9770b6c80b0561cabc193947dbb17`,
+   with 14 changed paths and zero allowed-path, strict-changed-JSON,
+   relative-link, private/archive, status-claim, or unsupported-gap findings.
+
+Self semantic review against the eight bounded findings found each mapped to a
+concrete regression and no remaining counterexample within that closure list.
+No native Credential Manager API, credential enumeration, API key, real
+secret, DNS/network/provider call, private fixture, sibling/archive/legacy
+material, protected root, WP4/WP5 behavior, current-state advancement,
+destructive operation, external effect, or push occurred.
