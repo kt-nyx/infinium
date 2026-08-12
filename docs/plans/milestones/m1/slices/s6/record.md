@@ -3202,3 +3202,56 @@ correction can proceed without native effects, but any requalification requires
 a fresh owner-accepted manifest; a superseding owner decision may instead
 explicitly narrow or waive the unmet evidence semantics. `docs/current-state.md`
 remains unchanged and WP4 remains closed.
+
+## WP4 v2 non-native close-ready correction — 2026-08-12
+
+Owner-directed correction work after the rejected v1 qualification produced
+implementation commit `990d04e79368c696721c4154317864142a6c05f5`. The commit
+does not invoke Credential Manager and does not authorize a native effect. It
+closes the bounded review findings with a coordinator-supervised v2
+qualification path, exact lifecycle and final-gate semantics, terminal
+collision and cleanup-ambiguity handling, finite process and UI deadlines,
+canonical call/free pairing, exact-target absence evidence, UTF-8 and UTF-16LE
+canary coverage, and a closed 41-phase oracle. The consumed v1 namespace stays
+terminal and non-reusable.
+
+Fresh read-only reviewer `/root/wp4_final_close_ready_review` returned
+`ACCEPT` on the complete dirty implementation immediately before the product
+commit. Its safe reproduction passed the Release build with 0 warnings and 0
+errors, authorization tests 12/12, helper/supervisor integration 16/16, the v2
+draft validator, and diff hygiene. The reviewer found no remaining bounded
+Slice 6 section 15, ADR-0020, or EVAL-0089 must-fix. It performed no native,
+network, provider, private-fixture, archive, or repository write operation.
+
+The final non-native verification floor against the same product bytes passed:
+
+1. category Unit 200/0/1, Contract 127/0/0, Integration 89/0/0,
+   Evaluation 81/0/8, Security 123/0/3, and Fault 105/0/3;
+2. unfiltered Unit 213/0/1, Contract 155/0/0, Integration 99/0/0,
+   Evaluation 61/0/8, Security 4/0/0, and Fault 4/0/0;
+3. the complete analysis `All` pipeline, whose 764-byte terminal receipt has
+   SHA-256
+   `837d1b9d3ee1e5f9c8fe8dc6a0d4447ca82a4dc410651f5e659015bb801b3dc6`;
+4. format verification, dependency-manifest freshness, documentation
+   validation (166 metadata files, 168 Markdown link sources, 17 JSON files),
+   diff hygiene, and structural/semantic v2 authorization validation; and
+5. the new accepted repository-wide test-process cleanup procedure. Both the
+   post-floor and post-analysis exact-root checks found zero repository-owned
+   `dotnet` or `testhost` survivors.
+
+The exact ready-for-acceptance proposal is
+`infinium.m1-s6.wp4.credential-native-authorization/16b3fe25-cf97-4d59-9561-b1c735fa7c8d`,
+17,518 bytes, SHA-256
+`bb21f806da30b3def1e9938f72d13e7a37c45a1dc92f1a38428e054bbf9bad3d`,
+bound to close-ready implementation commit
+`990d04e79368c696721c4154317864142a6c05f5`, accepted WP3 candidate
+`b32939e8b7491a5c47453f912d25dd98c090f103`, and handoff
+`fa38419b2c539524bbed01b7994f99ace491c293`. It expires at
+`2026-08-14T19:07:15.1036287Z`. Its 972-byte validation receipt has SHA-256
+`f21789368ac0d238e6fb1b5f946a8df2bff2ec3455ee08201ba3fa096619d2bf`
+and truthfully records `execution_authorized: false`, zero Credential Manager
+operations, zero network operations, and zero provider operations.
+
+No `WP4_V2_OWNER_ACCEPTANCE` line is recorded here: only the owner may accept
+these exact bytes. `CredentialNative` was not executed. Current-state remains
+unchanged, WP4 remains closed, and WP5 has not begun.
