@@ -2860,3 +2860,93 @@ billable operation, token count, private fixture, sibling repository,
 legacy/evaluator archive, protected root, native WP4 effect, WP5 product work,
 current-state advancement, destructive external effect, or push occurred.
 External-effect count remains zero.
+
+## WP3 final acceptance and WP5 handoff — 2026-08-12
+
+M1/S6/WP3 is independently accepted at exact clean candidate
+`b32939e8b7491a5c47453f912d25dd98c090f103`. The implementation lineage is
+the initial product commit `c5c95a8`, lifecycle-oracle product commit
+`708050b`, lifecycle evidence commit `f9b0e15`, bounded final-review product
+commit `0a63a72`, evidence commit `1e05b97`, convergence product commit
+`7130ddc`, evidence commit `2acd24c`, replacement-cleanup product commit
+`e85d391`, evidence commit `a9803c8`, final SDK/barrier product commit
+`c3f0f73d07169cd3df725e22a825e49d16f60578`, and final reviewed evidence
+commit `b32939e8b7491a5c47453f912d25dd98c090f103`.
+
+The review history is closed without discarding its corrections. Reviewer
+`/root/wp3_protocol_process_review` returned `CORRECT` on the initial
+candidate, and `/root/wp3_final_process_review` later returned `ACCEPT` for
+the corrected strict protocol, process, and final-gate closure. Reviewers
+`/root/wp3_lifecycle_security_review` and
+`/root/wp3_persistence_boundary_review` returned the initial lifecycle and
+boundary corrections. `/root/wp3_final_lifecycle_review` and
+`/root/wp3_final_boundary_review` required the final bounded convergence
+correction. `/root/wp3_acceptance_review` then identified only the durable
+replacement predecessor-delete half-commit. After that correction,
+`/root/wp3_replacement_final_review` accepted replacement cleanup and required
+only the mandatory Integration-floor timing-race correction. Terminal reviewer
+`/root/wp3_sdk_barrier_review` returned `ACCEPT` on exact candidate
+`b32939e8b7491a5c47453f912d25dd98c090f103`, independently confirming the
+owner-authorized exact SDK policy and the separate synchronization-barrier
+correction. No must-fix, authority, safety, or isolation finding remains for
+WP3.
+
+The accepted retained verification under exact .NET SDK `10.0.303` is:
+
+1. Locked restore and the Release solution build passed with zero warnings or
+   errors. The owner-authorized baseline remains exactly `10.0.303` with
+   `rollForward: disable`, `allowPrerelease: false`, `net10.0`, C# `14.0`,
+   x64, dependencies, and runtime architecture unchanged. Build-policy tests
+   passed 8/0/0 in the terminal independent review. This toolchain maintenance
+   is separate from the integration synchronization barrier and is not claimed
+   to fix the timing race.
+2. The exact formerly failing integration regression passed 10 consecutive
+   executions during correction and 3/3 in terminal independent review. It
+   proves the synthetic worker is held at the test-owned barrier, the run is
+   exactly `Running`, the real cancellation is accepted and idempotently
+   replayed, the intermediate state is exactly `Cancelling`, and the resumed
+   product path reaches exactly `Cancelled`; `Completed` is not accepted. The
+   full Integration project passed 87/0/0 and the common Integration category
+   passed 84/0/0.
+3. Exact WP3 focused verification passed Unit 11/0/0, Integration 6/0/0,
+   Security 4/0/0, Fault 4/0/0, and Evaluation 2/0/0 through
+   `CredentialSynthetic`. Its canonical 1,371-byte receipt has SHA-256
+   `178a5d22111f671eef38a39b8410e0f5e8c8e3ec6901d569870cebcd4e53b04a`
+   and records zero native credential operations, network operations, retries,
+   canary matches, listeners, process survivors, or standard protocol handles.
+   The accepted-WP2 and rejected-WP3 bounded upgrades, fresh convergence,
+   backup/restore, unknown-same-version refusal, and crash/recovery checks
+   passed.
+4. The complete common floor passed Unit 188/0/1, Contract 127/0/0 across
+   projects, Integration 84/0/0 across projects, Evaluation 81/0/8 across
+   projects, Security 111/0/3 across projects, and Fault 105/0/3 across
+   projects. The unfiltered solution passed Unit 201/0/1, Contract 155/0/0,
+   Integration 87/0/0, Evaluation 61/0/8, Security 4/0/0, and Fault 4/0/0.
+   Expected skips remain the existing platform/private cases; no private
+   fixture was accessed.
+5. Formatting, dependency-manifest freshness, documentation validation (166
+   metadata files, 168 Markdown link sources, 15 JSON files), diff hygiene,
+   migration/backup/recovery evidence, and the candidate-bound Layer 6 checks
+   passed. Terminal independent Layer 6 ran from baseline
+   `a9803c872c2a9ef5534bbba6ed1ef517591a9f76` through exact candidate
+   `b32939e8b7491a5c47453f912d25dd98c090f103`; its receipt has SHA-256
+   `522884b3ea7a9388ad5c93d033bcb143802169240bb769230e157ded5ed1aedc`,
+   with seven changed paths and zero allowed-path, strict-changed-JSON,
+   relative-link, private/archive, or other findings.
+
+The frozen WP1 acceptance ledger remains 32,022 bytes with SHA-256
+`a120e78ce0ab3e1f785b8df936e09563cc6dabb04875a808b87dbfba0259e6ce`.
+The nine WP1 contracts remain `Implementation-active`; their 444,790-byte
+traceability inventory remains SHA-256
+`e90bdc0647a56bcbbbbf7760b683d2121cf4adceef79f03b454995f944724d1d`.
+Accepted WP2 remains `ed27ed04897103d93a60e6200971ca12d04f2e11`, and Slice 5
+v1 remains byte- and semantically frozen.
+
+`docs/current-state.md` now authorizes only M1/S6/WP5, which is unblocked by
+this acceptance; WP5 is not begun by this handoff. WP4 remains closed pending
+a separate owner-authorized native Credential Manager manifest. Live/provider
+qualification and requests remain later separately authorized work. No native
+Credential Manager API, real credential, API key, DNS/network/provider or
+billable operation, private fixture, sibling repository, legacy/evaluator
+archive, protected root, destructive external effect, later-package product
+work, or push occurred. External-effect count remains zero.
