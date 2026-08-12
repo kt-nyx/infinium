@@ -1,8 +1,10 @@
 using System.Security.Cryptography;
 using System.Text.Json;
+using Infinium.Application.Provider;
 using Infinium.Application.Runtime;
 using Infinium.Contracts.Protobuf.Helper.V2;
 using Infinium.CredentialHelper;
+using Infinium.Persistence;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Infinium.Tests;
@@ -32,9 +34,26 @@ public sealed class CredentialHelperEvaluationTests
         await engine.RunAsync(request, response, CancellationToken.None);
         HelperPrivateFrameV2 receipt = HelperPrivateProtocolV2.Decode(response.ToArray(), 3);
         Assert.AreEqual(HelperOutcomeV2.Completed, receipt.Receipt.Outcome);
-        Assert.AreEqual("deleted", oracle.GetProperty("expected_terminal_state").GetString());
-        Assert.AreEqual(2, oracle.GetProperty("expected_generation_ordinal").GetInt32());
-        Assert.AreEqual(1, oracle.GetProperty("expected_revocation_epoch").GetInt32());
+        string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp3-Eval-" + Guid.NewGuid().ToString("N"));
+        using AuthoritativeStore state = new(new StoragePaths(root));
+        DateTimeOffset now = new(2026, 8, 11, 12, 0, 0, TimeSpan.Zero);
+        state.PublishProviderCatalog(M1ProviderCatalog.Capability, M1ProviderCatalog.Price, now);
+        CredentialProfileProjection pending = state.BeginCredentialEnrollment(
+            "profile-eval", "generation-1", "Synthetic", now.AddSeconds(1), "account-1", "billing-1");
+        Assert.AreEqual("pending-enrollment", pending.LifecycleState);
+        _ = Transition(state, "activate", "generation-1", "enroll", "pending-enrollment", "active-unverified", now.AddSeconds(2));
+        _ = Transition(state, "verify-1", "generation-1", "verify", "active-unverified", "active-verified", now.AddSeconds(4));
+        state.AddCredentialGeneration("profile-eval", "generation-2", 2, 0, now.AddSeconds(6));
+        _ = Transition(state, "replace-1", "generation-2", "replace", "active-verified", "replacing", now.AddSeconds(7));
+        _ = Transition(state, "replace-2", "generation-2", "replace", "replacing", "active-unverified", now.AddSeconds(9));
+        _ = Transition(state, "verify-2", "generation-2", "verify", "active-unverified", "active-verified", now.AddSeconds(11));
+        _ = Transition(state, "disable", "generation-2", "disable", "active-verified", "disabled", now.AddSeconds(13));
+        _ = Transition(state, "delete-pending", "generation-2", "delete", "disabled", "delete-pending", now.AddSeconds(15), true);
+        CredentialProfileProjection terminal = Transition(
+            state, "delete", "generation-2", "delete", "delete-pending", "deleted", now.AddSeconds(17));
+        Assert.AreEqual(oracle.GetProperty("expected_terminal_state").GetString(), terminal.LifecycleState);
+        Assert.AreEqual(oracle.GetProperty("expected_generation_ordinal").GetInt32(), terminal.GenerationOrdinal);
+        Assert.AreEqual(oracle.GetProperty("expected_revocation_epoch").GetInt32(), terminal.RevocationEpoch);
         Assert.AreEqual(2, oracle.GetProperty("expected_private_handle_count").GetInt32());
         Assert.AreEqual(0, oracle.GetProperty("expected_standard_protocol_handle_count").GetInt32());
         Assert.IsTrue(oracle.GetProperty("expected_stage_before_admit").GetBoolean());
@@ -108,6 +127,24 @@ public sealed class CredentialHelperEvaluationTests
 
     private static string Hash(string path) =>
         Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))).ToLowerInvariant();
+
+    private static CredentialProfileProjection Transition(
+        AuthoritativeStore store,
+        string root,
+        string generation,
+        string kind,
+        string from,
+        string to,
+        DateTimeOffset pendingAt,
+        bool incrementRevocation = false)
+    {
+        bool deleted = to == "deleted";
+        return store.ApplyCredentialTransition(new(
+            root, "profile-eval", generation, kind, from, to, to,
+            deleted ? null : M1ProviderCatalog.Capability.Identity.Value,
+            deleted ? null : "account-1", deleted ? null : "billing-1",
+            pendingAt, pendingAt.AddSeconds(1), IncrementRevocationEpoch: incrementRevocation));
+    }
 
     private sealed record Fixture(JsonDocument Manifest, JsonDocument Input, JsonDocument Oracle);
 }

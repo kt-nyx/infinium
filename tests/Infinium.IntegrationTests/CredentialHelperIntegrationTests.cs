@@ -86,14 +86,17 @@ public sealed class CredentialHelperIntegrationTests
         CredentialProfileProjection replacement = Transition(store, "replace-2", "profile-life", "generation-2",
             "replace", "replacing", "active-unverified", BaseTime.AddSeconds(9));
         Assert.AreEqual("generation-2", replacement.GenerationId);
-        _ = Transition(store, "verify-2", "profile-life", "generation-2",
+        CredentialProfileProjection secondVerified = Transition(store, "verify-2", "profile-life", "generation-2",
             "verify", "active-unverified", "active-verified", BaseTime.AddSeconds(11));
+        CredentialProfileProjection disabled = Transition(store, "disable-1", "profile-life", "generation-2",
+            "disable", secondVerified.LifecycleState, "disabled", BaseTime.AddSeconds(13));
+        Assert.AreEqual("disabled", disabled.LifecycleState);
 
         CredentialProfileProjection deletePending = Transition(store, "delete-1", "profile-life", "generation-2",
-            "delete", "active-verified", "delete-pending", BaseTime.AddSeconds(13), incrementRevocation: true);
+            "delete", "disabled", "delete-pending", BaseTime.AddSeconds(15), incrementRevocation: true);
         Assert.AreEqual(1, deletePending.RevocationEpoch);
         CredentialProfileProjection deleted = Transition(store, "delete-2", "profile-life", "generation-2",
-            "delete", "delete-pending", "deleted", BaseTime.AddSeconds(15));
+            "delete", "delete-pending", "deleted", BaseTime.AddSeconds(17));
         Assert.AreEqual("deleted", deleted.LifecycleState);
         Assert.IsNull(deleted.AccountIdentityId);
 
