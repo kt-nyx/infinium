@@ -3255,3 +3255,27 @@ operations, zero network operations, and zero provider operations.
 No `WP4_V2_OWNER_ACCEPTANCE` line is recorded here: only the owner may accept
 these exact bytes. `CredentialNative` was not executed. Current-state remains
 unchanged, WP4 remains closed, and WP5 has not begun.
+
+The first candidate-bound Layer 6 run truthfully rejected the newly
+owner-requested `docs/execution-policy.md` process-cleanup procedure because
+the ordinary WP4 allowlist protects that repository-wide policy. Bounded
+verifier-maintenance commit `49c26c21ca95c23e602175f75b17e014eeeac61f`
+adds an opt-in `OwnerTestProcessCleanup` review mode. The mode permits only the
+exact policy path and requires the exact-root CIM ownership predicate,
+PID-revalidated termination, zero-survivor result, and explicit prohibition on
+name-only process kills. Ordinary Layer 6 and handoff behavior remain
+unchanged. Release build 0/0 and the focused verifier contract regression 1/0/0
+passed.
+
+That bounded correction supersedes only the preceding v2 binding identity.
+The final ready-for-owner-acceptance manifest retains the same manifest ID and
+is 17,518 bytes, SHA-256
+`749eecbcc0fceba459406ea075d87216d5560455c0ecc94c918dc1dd24593437`,
+bound to close-ready implementation commit
+`49c26c21ca95c23e602175f75b17e014eeeac61f`, prepared at
+`2026-08-12T19:10:25.2339061Z`, and expiring at
+`2026-08-14T19:10:25.2339061Z`. Its 972-byte superseding validation receipt
+has SHA-256
+`ebed6ce2d9782192040c7ebd6b75fa039a39e59353e081d9424d18e039e28c15`.
+Execution remains unauthorized with zero native, network, and provider
+operations. No owner-acceptance line has been appended.
