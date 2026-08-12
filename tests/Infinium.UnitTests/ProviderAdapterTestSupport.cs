@@ -11,7 +11,7 @@ public sealed class ProviderLoopbackServer : IAsyncDisposable
     private readonly byte[] responseBody;
     private readonly int statusCode;
     private readonly TimeSpan delay;
-    private readonly IReadOnlyDictionary<string, string> responseHeaders;
+    private readonly IReadOnlyList<KeyValuePair<string, string>> responseHeaders;
     private readonly CancellationTokenSource lifetime = new();
     private readonly Task worker;
 
@@ -19,11 +19,16 @@ public sealed class ProviderLoopbackServer : IAsyncDisposable
         byte[] responseBody,
         int statusCode = 200,
         IReadOnlyDictionary<string, string>? responseHeaders = null,
-        TimeSpan? delay = null)
+        TimeSpan? delay = null,
+        IReadOnlyList<KeyValuePair<string, string>>? additionalResponseHeaders = null)
     {
         this.responseBody = responseBody;
         this.statusCode = statusCode;
-        this.responseHeaders = responseHeaders ?? new Dictionary<string, string>();
+        this.responseHeaders =
+        [
+            .. responseHeaders?.ToArray() ?? Array.Empty<KeyValuePair<string, string>>(),
+            .. additionalResponseHeaders ?? Array.Empty<KeyValuePair<string, string>>(),
+        ];
         this.delay = delay ?? TimeSpan.Zero;
         listener = new(IPAddress.Loopback, 0);
         listener.Start(1);

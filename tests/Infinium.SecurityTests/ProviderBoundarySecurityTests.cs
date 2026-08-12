@@ -35,7 +35,8 @@ public sealed class ProviderBoundarySecurityTests
         Assert.IsFalse(Encoding.UTF8.GetString(server.RequestBody).Contains(canary, StringComparison.Ordinal));
         Assert.IsFalse(Encoding.UTF8.GetString(result.RawResponseBytes!).Contains(canary, StringComparison.Ordinal));
         Assert.IsFalse(Encoding.UTF8.GetString(result.ToSecretFreeDiagnosticBytes()).Contains(canary, StringComparison.Ordinal));
-        Assert.IsFalse(result.RateHeaders.Any(header => header.Value.Contains(canary, StringComparison.Ordinal)));
+        Assert.IsFalse(result.RateHeaders.Any(header => header.Name.Contains(canary, StringComparison.Ordinal)));
+        Assert.IsFalse(result.ProviderRequestId?.Contains(canary, StringComparison.Ordinal) ?? false);
     }
 
     [TestMethod]

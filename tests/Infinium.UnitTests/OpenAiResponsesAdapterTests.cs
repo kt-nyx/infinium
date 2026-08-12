@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Infinium.Domain.Contracts;
 using Infinium.OpenAI;
 
@@ -104,6 +105,35 @@ public sealed class OpenAiResponsesAdapterTests
     }
 
     [TestMethod]
+    public void StrictOutputAdmissionRejectsEveryExtraOutputOrContentTypeAndKeepsRefusalTyped()
+    {
+        byte[] toolAlongsideText = WithOutput("""
+            [{"type":"message","content":[{"type":"output_text","text":"{\"ok\":true}"}]},
+             {"type":"function_call","name":"forbidden","arguments":"{}"}]
+            """);
+        byte[] toolContentAlongsideText = WithOutput("""
+            [{"type":"message","content":[{"type":"output_text","text":"{\"ok\":true}"},
+             {"type":"web_search_call","query":"forbidden"}]}]
+            """);
+        byte[] refusal = WithOutput("""
+            [{"type":"message","content":[{"type":"refusal","refusal":"policy_refusal"}]}]
+            """);
+
+        foreach (byte[] raw in new[] { toolAlongsideText, toolContentAlongsideText })
+        {
+            OpenAiResponsesResult result = OpenAiResponsesResponseCodec.Replay(
+                raw, 200, "c", "r", requestedOutputSchema: ProviderAdapterTestData.OutputSchemaBytes);
+            Assert.AreEqual(ProviderResponseState.Malformed, result.State);
+            Assert.IsFalse(result.Admitted);
+        }
+        OpenAiResponsesResult refused = OpenAiResponsesResponseCodec.Replay(
+            refusal, 200, "c", "r", requestedOutputSchema: ProviderAdapterTestData.OutputSchemaBytes);
+        Assert.AreEqual(ProviderResponseState.Refusal, refused.State);
+        Assert.AreEqual("policy_refusal", refused.RefusalCode);
+        Assert.IsFalse(refused.Admitted);
+    }
+
+    [TestMethod]
     public void StrictOutputAdmissionResolvesLocalReferencesAndRejectsUnsupportedKeywordsClosed()
     {
         byte[] referencedSchema = Encoding.UTF8.GetBytes("""
@@ -124,6 +154,37 @@ public sealed class OpenAiResponsesAdapterTests
     }
 
     [TestMethod]
+    public void SerializerRejectsUnsupportedOrNonClosedSchemaBeforeCanonicalRequestExists()
+    {
+        using JsonDocument unsupported = JsonDocument.Parse("""
+            {"type":"object","additionalProperties":false,"required":["ok"],"properties":{"ok":{"type":"boolean","futureKeyword":true}}}
+            """);
+        using JsonDocument open = JsonDocument.Parse("""
+            {"type":"object","additionalProperties":true,"required":["ok"],"properties":{"ok":{"type":"boolean"}}}
+            """);
+        foreach (JsonDocument schema in new[] { unsupported, open })
+        {
+            Assert.ThrowsExactly<InvalidOperationException>(() => OpenAiResponsesCanonicalSerializer.Serialize(new(
+                ProviderOperationKind.TransportQualification, "bounded", "bounded", schema.RootElement.Clone(), 256)));
+        }
+    }
+
+    [TestMethod]
+    public void SerializerCanonicalizesSupportedSchemaObjectOrdering()
+    {
+        using JsonDocument first = JsonDocument.Parse("""
+            {"type":"object","additionalProperties":false,"required":["ok"],"properties":{"ok":{"type":"boolean"}}}
+            """);
+        using JsonDocument reordered = JsonDocument.Parse("""
+            {"properties":{"ok":{"type":"boolean"}},"required":["ok"],"additionalProperties":false,"type":"object"}
+            """);
+        byte[] Serialize(JsonElement schema) => OpenAiResponsesCanonicalSerializer.Serialize(new(
+            ProviderOperationKind.TransportQualification, "bounded", "bounded", schema.Clone(), 256));
+
+        CollectionAssert.AreEqual(Serialize(first.RootElement), Serialize(reordered.RootElement));
+    }
+
+    [TestMethod]
     public void ResponseCodecIsTotalForEveryJsonRootNestedShapeAndHugeNumber()
     {
         string[] values =
@@ -139,5 +200,12 @@ public sealed class OpenAiResponsesAdapterTests
             Assert.IsFalse(result.Admitted, value);
             Assert.AreNotEqual(ProviderResponseState.Completed, result.State, value);
         }
+    }
+
+    private static byte[] WithOutput(string output)
+    {
+        JsonObject response = JsonNode.Parse(ProviderAdapterTestData.CompletedResponse())!.AsObject();
+        response["output"] = JsonNode.Parse(output);
+        return JsonSerializer.SerializeToUtf8Bytes(response);
     }
 }

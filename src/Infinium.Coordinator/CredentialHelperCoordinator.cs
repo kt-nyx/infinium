@@ -684,7 +684,7 @@ public sealed class CredentialHelperCoordinator
         IReadOnlyList<OpenAiRateHeader> headers,
         DateTimeOffset observedAt)
     {
-        Dictionary<string, string> values = headers.ToDictionary(item => item.Name, item => item.Value, StringComparer.Ordinal);
+        Dictionary<string, long> values = headers.ToDictionary(item => item.Name, item => item.Value, StringComparer.Ordinal);
         List<ProviderRateLimitFactContract> result = [];
         foreach ((string suffix, string dimension) in new[]
         {
@@ -694,12 +694,8 @@ public sealed class CredentialHelperCoordinator
             ("tokens", "total-tokens"),
         })
         {
-            if (values.TryGetValue("x-ratelimit-limit-" + suffix, out string? limitText)
-                && values.TryGetValue("x-ratelimit-remaining-" + suffix, out string? remainingText)
-                && long.TryParse(limitText, System.Globalization.NumberStyles.None,
-                    System.Globalization.CultureInfo.InvariantCulture, out long limit)
-                && long.TryParse(remainingText, System.Globalization.NumberStyles.None,
-                    System.Globalization.CultureInfo.InvariantCulture, out long remaining)
+            if (values.TryGetValue("x-ratelimit-limit-" + suffix, out long limit)
+                && values.TryGetValue("x-ratelimit-remaining-" + suffix, out long remaining)
                 && limit >= 0 && remaining >= 0)
             {
                 result.Add(new("model", dimension, ProviderAvailabilityState.Available,
