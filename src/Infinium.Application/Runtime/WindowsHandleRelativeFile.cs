@@ -52,6 +52,26 @@ public static class WindowsHandleRelativeFile
         return new FileStream(file, FileAccess.Write, bufferSize: 4096, isAsync: false);
     }
 
+    public static FileStream OpenOrCreateReadWrite(nint directoryHandle, string relativeName)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            throw new PlatformNotSupportedException("Handle-relative secure-store access currently requires Windows.");
+        }
+        if (directoryHandle is 0 or -1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(directoryHandle));
+        }
+        ValidateLeafName(relativeName);
+        SafeFileHandle file = OpenRelative(
+            directoryHandle,
+            relativeName,
+            GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
+            FILE_SHARE_READ,
+            FILE_OPEN_IF);
+        return new FileStream(file, FileAccess.ReadWrite, bufferSize: 4096, isAsync: false);
+    }
+
     private static SafeFileHandle OpenRelative(
         nint directoryHandle,
         string relativeName,
@@ -153,6 +173,7 @@ public static class WindowsHandleRelativeFile
     private const uint FILE_ATTRIBUTE_NORMAL = 0x00000080;
     private const uint FILE_OPEN = 1;
     private const uint FILE_CREATE = 2;
+    private const uint FILE_OPEN_IF = 3;
     private const uint FILE_SYNCHRONOUS_IO_NONALERT = 0x00000020;
     private const uint FILE_NON_DIRECTORY_FILE = 0x00000040;
     private const uint OBJ_CASE_INSENSITIVE = 0x00000040;

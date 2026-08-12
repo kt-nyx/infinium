@@ -1,5 +1,9 @@
+using System.Security.Cryptography;
 using System.Text.Json;
+using Google.Protobuf;
 using Infinium.Application.Provider;
+using Infinium.Application.Runtime;
+using Infinium.Contracts.Protobuf.Helper.V2;
 using Infinium.Coordinator;
 using Infinium.Domain.Contracts;
 using Infinium.Persistence;
@@ -32,6 +36,95 @@ public sealed class ProviderBudgetIntegrationTests
         ProviderDispatchGateReceipt fence = context.Store.AuthorizeProviderDispatch(context.GateRequest);
         Assert.IsTrue(fence.Authorized);
         Assert.AreEqual("exact-final-gate-authorized", fence.DecisionReason);
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    public async Task CredentialDispatchCoordinatorDerivesFinalGateAndAdoptsHelperResponseThroughWp2Path()
+    {
+        using BudgetContext context = BudgetContext.Create();
+        _ = context.Store.ReserveProviderBudget(1, context.Request);
+        string helper = Path.Combine(AppContext.BaseDirectory, "CredentialHelper", "Infinium.CredentialHelper.exe");
+        OneShotCredentialHelperLauncher launcher = new(
+            helper,
+            Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(helper))),
+            Path.Combine(Path.GetTempPath(), "Infinium-Wp3-DispatchStore-" + Guid.NewGuid().ToString("N")));
+
+        HelperPrivateFrameV2 enrollmentBootstrap = HelperTestFrames.Bootstrap(nonceSeed: 71);
+        enrollmentBootstrap.Bootstrap.Credential.AccessProfileId.Value = "profile-restore";
+        enrollmentBootstrap.Bootstrap.Credential.GenerationId.Value = "generation-restore";
+        HelperPrivateFrameV2 enrollment = HelperTestFrames.Assignment();
+        SetCredential(enrollment.Assignment, "profile-restore", "generation-restore");
+        Assert.AreEqual(HelperOutcomeV2.Completed, (await launcher.ExecuteAsync(
+            enrollmentBootstrap, enrollment, null, TimeSpan.FromSeconds(20), BaseTime.AddSeconds(5))).Receipt.Outcome);
+
+        HelperPrivateFrameV2 bootstrap = HelperTestFrames.DispatchBootstrap(72);
+        bootstrap.Bootstrap.CoordinatorFencingEpoch = 1;
+        bootstrap.Bootstrap.ProviderDispatch.OperationId.Value = "operation-restore";
+        bootstrap.Bootstrap.ProviderDispatch.AttemptId.Value = "attempt-settlement";
+        HelperPrivateFrameV2 assignment = HelperTestFrames.DispatchAssignment();
+        assignment.Assignment.ProviderDispatch.OperationId.Value = "operation-restore";
+        assignment.Assignment.ProviderDispatch.AttemptId.Value = "attempt-settlement";
+        assignment.Assignment.AccessProfileId.Value = "profile-restore";
+        assignment.Assignment.GenerationId.Value = "generation-restore";
+        assignment.Assignment.ProviderRequest.ReservationGroupId.Value = "reservation-settlement";
+        assignment.Assignment.ProviderRequest.RequestId = "request-settlement";
+        assignment.Assignment.GenerationOrdinal = 1;
+        assignment.Assignment.AccountIdentityId.Value = "account-restore";
+        assignment.Assignment.BillingScopeIdentityId.Value = "billing-restore";
+        assignment.Assignment.OperationKind = ProviderOperationKindV2.SourceClaimExtraction;
+        assignment.Assignment.EffectiveConfigurationId = "config-v2-restore";
+        assignment.Assignment.ProviderRequest.CapabilitySnapshotId.Value = "cap-restore";
+        assignment.Assignment.ProviderRequest.PriceSnapshotId.Value = "price-restore";
+        byte[] requestBytes = new byte[1024];
+        ByteString requestDigest = ByteString.CopyFrom(SHA256.HashData(requestBytes));
+        assignment.Assignment.ProviderRequest.CanonicalRequestBytes = ByteString.CopyFrom(requestBytes);
+        assignment.Assignment.ProviderRequest.CanonicalRequest.Value = requestDigest;
+        assignment.Assignment.ProviderRequest.CanonicalRequest.SizeBytes = 1024;
+        assignment.Assignment.ProviderRequest.RequestFingerprintSha256 = requestDigest;
+        assignment.Assignment.ProviderRequest.InputBoundProof.PolicyId = "openai-responses-o200k-byte-envelope";
+        assignment.Assignment.ProviderRequest.InputBoundProof.PolicyVersion = "v1";
+        assignment.Assignment.ProviderRequest.ConfirmedAt = Instant(BaseTime.AddSeconds(1));
+        assignment.Assignment.ProviderRequest.DispatchDeadline = Instant(BaseTime.AddMinutes(2));
+        assignment.Assignment.Settings.Value = ByteString.CopyFrom(Convert.FromHexString(new string('9', 64)));
+        assignment.Assignment.OutputSchema.Value = ByteString.CopyFrom(Convert.FromHexString(new string('e', 64)));
+        assignment.Assignment.Limits.MaximumRequestBytes = 65_536;
+        assignment.Assignment.Limits.MaximumInputTokens = 20;
+        assignment.Assignment.Limits.MaximumOutputTokens = 10;
+        assignment.Assignment.Limits.MaximumResponseBytes = 1_048_576;
+        assignment.Assignment.Limits.MaximumStagedOutputBytes = 1_048_576;
+        assignment.Assignment.Limits.MaximumCalculatedNanoUsd = 400_000;
+        assignment.Assignment.Limits.MaximumDuration.Value = 120_000;
+
+        CredentialHelperCoordinator coordinator = new(context.Store, launcher);
+        HelperPrivateFrameV2 stale = assignment.Clone();
+        stale.Assignment.GenerationId.Value = "fabricated-generation";
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() =>
+            coordinator.ExecuteAuthoritativeDispatchAsync(
+                "attempt-fabricated", bootstrap, stale, BaseTime.AddSeconds(5)));
+
+        (CoordinatedHelperReceipt helperResult,
+            ProviderSimulationPersistenceReceipt persisted,
+            ProviderBudgetSettlementReceipt settlement) = await coordinator.ExecuteAuthoritativeDispatchAsync(
+            "attempt-settlement", bootstrap, assignment, BaseTime.AddSeconds(5));
+        Assert.IsGreaterThan(0, helperResult.Process.StagedResponseBytes.Length);
+        Assert.IsNotNull(helperResult.Staging.ResponseRelativePath);
+        Assert.AreEqual("assignment-1:response", persisted.ResponseId);
+        Assert.AreEqual(ProviderBudgetEventKind.SettledComplete, settlement.Kind);
+
+        static void SetCredential(HelperAssignmentV2 value, string profile, string generation)
+        {
+            value.AccessProfileId.Value = profile;
+            value.GenerationId.Value = generation;
+            value.Credential.AccessProfileId.Value = profile;
+            value.Credential.GenerationId.Value = generation;
+        }
+
+        static Infinium.Contracts.Protobuf.Common.V1.Instant Instant(DateTimeOffset value) => new()
+        {
+            UnixSeconds = value.ToUnixTimeSeconds(),
+            Nanoseconds = checked((int)((value.Ticks % TimeSpan.TicksPerSecond) * 100)),
+        };
     }
 
     [TestMethod]

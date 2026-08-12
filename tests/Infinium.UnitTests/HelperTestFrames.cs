@@ -9,7 +9,8 @@ namespace Infinium.Tests;
 
 public static class HelperTestFrames
 {
-    public static HelperPrivateFrameV2 Bootstrap(ulong sequence = 1) => new()
+    private static readonly long AuthorityEpoch = new DateTimeOffset(2026, 8, 11, 12, 0, 0, TimeSpan.Zero).ToUnixTimeSeconds();
+    public static HelperPrivateFrameV2 Bootstrap(ulong sequence = 1, byte nonceSeed = 0) => new()
     {
         Sequence = sequence,
         ProtocolFingerprintSha256 = Fingerprint(),
@@ -17,7 +18,7 @@ public static class HelperTestFrames
         {
             CoordinatorFencingEpoch = 7,
             ExpiresAt = InstantAt(60),
-            OneUseNonceFingerprintSha256 = ByteString.CopyFrom(new byte[32]),
+            OneUseNonceFingerprintSha256 = ByteString.CopyFrom(Enumerable.Repeat(nonceSeed, 32).ToArray()),
             CommandId = "command-1",
             Credential = new CredentialSubjectV2
             {
@@ -53,7 +54,7 @@ public static class HelperTestFrames
             },
         };
 
-    public static HelperPrivateFrameV2 DispatchBootstrap() => new()
+    public static HelperPrivateFrameV2 DispatchBootstrap(byte nonceSeed = 0) => new()
     {
         Sequence = 1,
         ProtocolFingerprintSha256 = Fingerprint(),
@@ -61,7 +62,7 @@ public static class HelperTestFrames
         {
             CoordinatorFencingEpoch = 7,
             ExpiresAt = InstantAt(60),
-            OneUseNonceFingerprintSha256 = ByteString.CopyFrom(new byte[32]),
+            OneUseNonceFingerprintSha256 = ByteString.CopyFrom(Enumerable.Repeat(nonceSeed, 32).ToArray()),
             CommandId = "command-1",
             ProviderDispatch = new ProviderDispatchSubjectV2
             {
@@ -158,7 +159,7 @@ public static class HelperTestFrames
         },
     };
 
-    public static Instant InstantAt(long seconds) => new() { UnixSeconds = seconds, Nanoseconds = 0 };
+    public static Instant InstantAt(long seconds) => new() { UnixSeconds = AuthorityEpoch + seconds, Nanoseconds = 0 };
     public static ByteString Fingerprint() =>
         ByteString.CopyFrom(Convert.FromHexString(HelperProtocolV2Constants.SchemaFingerprintSha256));
 

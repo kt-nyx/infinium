@@ -289,6 +289,8 @@ public sealed partial class AuthoritativeStore
 
             target.PublishFrom(staging, expectedFiles);
             published = true;
+            using AuthoritativeStore restored = new(new StoragePaths(target.ProductRoot));
+            _ = restored.MarkRestoredCredentialsRecoveryRequired(DateTimeOffset.UtcNow);
         }
         finally
         {

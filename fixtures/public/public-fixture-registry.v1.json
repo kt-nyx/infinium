@@ -65,7 +65,7 @@
       "package_path": "fixtures/public/platform/credential-helper/lifecycle-dev",
       "authority_file": "fixtures/public/platform/credential-helper/lifecycle-dev/public-manifest.json",
       "authority_bytes": 558,
-      "authority_sha256": "a6db7cd5953eda6e33c18c414a04919af5fee0394843c2303c7e288b027842be"
+      "authority_sha256": "72fe293417237fb27325e4839caacdc450fdd26cd99f84e445de294b1de4d166"
     },
     {
       "package_identity": "M1-PLAT-CREDENTIAL-HELPER-VAL-v1",

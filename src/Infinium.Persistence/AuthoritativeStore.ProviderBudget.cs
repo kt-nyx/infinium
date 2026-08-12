@@ -355,6 +355,81 @@ public sealed partial class AuthoritativeStore
         }
     }
 
+    public ProviderDispatchAuthoritySnapshot ReadCurrentProviderDispatchRequest(
+        string dispatchFenceId,
+        string operationId,
+        string reservationId,
+        string attemptId,
+        string requestId,
+        DateTimeOffset evaluatedAt)
+    {
+        lock (gate)
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText =
+                """
+                SELECT a.authorization_id,a.profile_id,a.generation_id,a.revocation_epoch,a.coordinator_fencing_epoch,
+                       profile.account_identity_id,profile.billing_scope_identity_id,generation.generation_ordinal,
+                       a.operation_kind,a.effective_configuration_id,a.capability_snapshot_id,a.price_snapshot_id,
+                       request.request_fingerprint,request.canonical_request_fingerprint,request.payload_bytes,
+                       request.settings_fingerprint,request.output_schema_fingerprint,request.input_bound_policy_id,
+                       request.input_bound_policy_version,request.input_bound_proof_status,a.maximum_request_bytes,
+                       a.maximum_input_tokens,a.maximum_output_tokens,a.maximum_raw_response_bytes,
+                       a.maximum_dispatch_count,a.maximum_calculated_nano_usd,a.deadline_milliseconds,
+                       a.dispatch_deadline_utc,a.confirmed_at
+                FROM provider_operation_authorizations a
+                JOIN provider_reservations r ON r.operation_id=a.operation_id
+                JOIN provider_requests request
+                  ON request.operation_id=a.operation_id AND request.provider_attempt_id=r.provider_attempt_id
+                 AND request.request_id=r.request_id
+                JOIN provider_profile_projection profile
+                  ON profile.profile_id=a.profile_id AND profile.generation_id=a.generation_id
+                 AND profile.revocation_epoch=a.revocation_epoch
+                JOIN provider_generations generation
+                  ON generation.profile_id=a.profile_id AND generation.generation_id=a.generation_id
+                WHERE a.operation_id=$operation AND r.reservation_id=$reservation
+                  AND r.provider_attempt_id=$attempt AND r.request_id=$request;
+                """;
+            command.Parameters.AddWithValue("$operation", operationId);
+            command.Parameters.AddWithValue("$reservation", reservationId);
+            command.Parameters.AddWithValue("$attempt", attemptId);
+            command.Parameters.AddWithValue("$request", requestId);
+            using SqliteDataReader reader = command.ExecuteReader();
+            if (!reader.Read())
+            {
+                throw new InvalidOperationException("The authoritative provider dispatch root is absent.");
+            }
+            ProviderDispatchGateRequest request = new(
+                dispatchFenceId,
+                reader.GetString(0),
+                operationId,
+                reservationId,
+                attemptId,
+                requestId,
+                reader.GetString(1),
+                reader.GetString(2),
+                reader.GetInt64(3),
+                reader.GetInt64(4),
+                evaluatedAt);
+            ProviderDispatchAuthoritySnapshot result = new(
+                request,
+                reader.GetString(5), reader.GetString(6), reader.GetInt64(7), reader.GetString(8),
+                reader.GetString(9), reader.GetString(10), reader.GetString(11), reader.GetString(12),
+                reader.GetString(13), reader.GetInt64(14), reader.GetString(15), reader.GetString(16),
+                reader.GetString(17), reader.GetString(18), reader.GetString(19), reader.GetInt64(20),
+                reader.GetInt64(21), reader.GetInt64(22), reader.GetInt64(23), reader.GetInt64(24),
+                reader.GetInt64(25), reader.GetInt64(26),
+                DateTimeOffset.Parse(reader.GetString(27), System.Globalization.CultureInfo.InvariantCulture),
+                DateTimeOffset.Parse(reader.GetString(28), System.Globalization.CultureInfo.InvariantCulture));
+            if (reader.Read())
+            {
+                throw new InvalidOperationException("The authoritative provider dispatch root is ambiguous.");
+            }
+            reader.Close();
+            return result;
+        }
+    }
+
     public void RecordProviderTransportStart(
         string operationId,
         string attemptId,

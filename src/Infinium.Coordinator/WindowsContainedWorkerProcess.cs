@@ -10,6 +10,62 @@ namespace Infinium.Coordinator;
 
 internal sealed class WindowsContainedWorkerProcess : IDisposable
 {
+    internal sealed class PrivateHelperProcess : IDisposable
+    {
+        private nint job;
+        private nint thread;
+        private nint processHandle;
+        private bool resumed;
+
+        internal PrivateHelperProcess(Process process, nint processHandle, nint thread, nint job)
+        {
+            Process = process;
+            this.processHandle = processHandle;
+            this.thread = thread;
+            this.job = job;
+        }
+
+        internal Process Process { get; }
+        internal int ActiveProcessCount => QueryActiveProcessCount(job);
+        internal void CloseJob()
+        {
+            CloseIfValid(job);
+            job = 0;
+        }
+        internal int ExitCode
+        {
+            get
+            {
+                if (!GetExitCodeProcess(processHandle, out uint exitCode))
+                {
+                    throw new Win32Exception(Marshal.GetLastWin32Error(), "The helper exit code could not be measured.");
+                }
+                return checked((int)exitCode);
+            }
+        }
+
+        internal void Resume()
+        {
+            if (resumed || ResumeThread(thread) == uint.MaxValue)
+            {
+                throw new Win32Exception(Marshal.GetLastWin32Error(), "The contained helper could not be resumed.");
+            }
+            resumed = true;
+            CloseHandle(thread);
+            thread = 0;
+        }
+
+        public void Dispose()
+        {
+            CloseIfValid(thread);
+            thread = 0;
+            CloseJob();
+            CloseIfValid(processHandle);
+            processHandle = 0;
+            Process.Dispose();
+        }
+    }
+
     private readonly nint jobHandle;
     private readonly nint stagingDirectoryHandle;
     private nint primaryThreadHandle;
@@ -332,6 +388,119 @@ internal sealed class WindowsContainedWorkerProcess : IDisposable
         }
     }
 
+    internal static PrivateHelperProcess CreatePrivateHelper(
+        string executable,
+        IReadOnlyList<string> arguments,
+        string workingDirectory,
+        IReadOnlyDictionary<string, string> environment,
+        IReadOnlyList<nint> inheritedHandles)
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            throw new PlatformNotSupportedException("Contained helper launch requires Windows.");
+        }
+        if (inheritedHandles.Count is 0 or > 4 || inheritedHandles.Any(handle => handle is 0 or -1))
+        {
+            throw new ArgumentOutOfRangeException(nameof(inheritedHandles));
+        }
+
+        nint attributeList = 0;
+        nint inheritedHandleList = 0;
+        nint jobHandleList = 0;
+        nint environmentBlock = 0;
+        nint processHandle = 0;
+        nint threadHandle = 0;
+        nint jobHandle = 0;
+        Dictionary<nint, uint> originalFlags = [];
+        try
+        {
+            jobHandle = CreateConfiguredJob();
+            foreach (nint handle in inheritedHandles)
+            {
+                if (!GetHandleInformation(handle, out uint flags)
+                    || !SetHandleInformation(handle, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT))
+                {
+                    throw new Win32Exception(Marshal.GetLastWin32Error(), "A declared helper handle is invalid.");
+                }
+                originalFlags.Add(handle, flags);
+            }
+
+            nuint attributeListSize = 0;
+            _ = InitializeProcThreadAttributeList(0, 2, 0, ref attributeListSize);
+            attributeList = Marshal.AllocHGlobal(checked((int)attributeListSize));
+            if (!InitializeProcThreadAttributeList(attributeList, 2, 0, ref attributeListSize))
+            {
+                throw new Win32Exception(Marshal.GetLastWin32Error(), "The helper attribute list could not be initialized.");
+            }
+            inheritedHandleList = Marshal.AllocHGlobal(checked(inheritedHandles.Count * nint.Size));
+            for (int index = 0; index < inheritedHandles.Count; index++)
+            {
+                Marshal.WriteIntPtr(inheritedHandleList, checked(index * nint.Size), inheritedHandles[index]);
+            }
+            if (!UpdateProcThreadAttribute(attributeList, 0, PROC_THREAD_ATTRIBUTE_HANDLE_LIST,
+                    inheritedHandleList, checked((nuint)(inheritedHandles.Count * nint.Size)), 0, 0))
+            {
+                throw new Win32Exception(Marshal.GetLastWin32Error(), "The helper private handle list could not be populated.");
+            }
+            jobHandleList = Marshal.AllocHGlobal(nint.Size);
+            Marshal.WriteIntPtr(jobHandleList, jobHandle);
+            if (!UpdateProcThreadAttribute(attributeList, 0, PROC_THREAD_ATTRIBUTE_JOB_LIST,
+                    jobHandleList, checked((nuint)nint.Size), 0, 0))
+            {
+                throw new Win32Exception(Marshal.GetLastWin32Error(), "The helper Job Object could not be attached.");
+            }
+
+            STARTUPINFOEX startup = new()
+            {
+                StartupInfo = new STARTUPINFO { Size = Marshal.SizeOf<STARTUPINFOEX>() },
+                AttributeList = attributeList,
+            };
+            environmentBlock = BuildEnvironmentBlock(environment);
+            string commandLine = string.Join(" ", new[] { executable }.Concat(arguments).Select(QuoteWindowsArgument));
+            if (!CreateProcessW(executable, new StringBuilder(commandLine), 0, 0, inheritHandles: true,
+                    CREATE_SUSPENDED | CREATE_NO_WINDOW | CREATE_UNICODE_ENVIRONMENT | EXTENDED_STARTUPINFO_PRESENT,
+                    environmentBlock, workingDirectory, ref startup, out PROCESS_INFORMATION processInformation))
+            {
+                throw new Win32Exception(Marshal.GetLastWin32Error(), "The exact contained helper could not be created.");
+            }
+            processHandle = processInformation.Process;
+            threadHandle = processInformation.Thread;
+            Process process = Process.GetProcessById(checked((int)processInformation.ProcessId));
+            PrivateHelperProcess result = new(process, processHandle, threadHandle, jobHandle);
+            processHandle = 0;
+            threadHandle = 0;
+            jobHandle = 0;
+            return result;
+        }
+        finally
+        {
+            if (attributeList != 0)
+            {
+                DeleteProcThreadAttributeList(attributeList);
+                Marshal.FreeHGlobal(attributeList);
+            }
+            if (inheritedHandleList != 0)
+            {
+                Marshal.FreeHGlobal(inheritedHandleList);
+            }
+            if (jobHandleList != 0)
+            {
+                Marshal.FreeHGlobal(jobHandleList);
+            }
+            if (environmentBlock != 0)
+            {
+                Marshal.FreeHGlobal(environmentBlock);
+            }
+            CloseIfValid(processHandle);
+            CloseIfValid(threadHandle);
+            CloseIfValid(jobHandle);
+            foreach ((nint handle, uint flags) in originalFlags)
+            {
+                _ = SetHandleInformation(handle, HANDLE_FLAG_INHERIT, flags & HANDLE_FLAG_INHERIT);
+            }
+        }
+    }
+
     public void Resume()
     {
         if (resumed || primaryThreadHandle == 0)
@@ -418,7 +587,7 @@ internal sealed class WindowsContainedWorkerProcess : IDisposable
             | JOB_OBJECT_LIMIT_ACTIVE_PROCESS
             | JOB_OBJECT_LIMIT_PROCESS_MEMORY
             | JOB_OBJECT_LIMIT_JOB_MEMORY;
-        information.BasicLimitInformation.ActiveProcessLimit = 1;
+        information.BasicLimitInformation.ActiveProcessLimit = 4;
         information.ProcessMemoryLimit = 256u * 1024u * 1024u;
         information.JobMemoryLimit = 256u * 1024u * 1024u;
         int size = Marshal.SizeOf<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>();
@@ -502,6 +671,17 @@ internal sealed class WindowsContainedWorkerProcess : IDisposable
         {
             CloseHandle(handle);
         }
+    }
+
+    private static int QueryActiveProcessCount(nint job)
+    {
+        JOBOBJECT_BASIC_ACCOUNTING_INFORMATION information = new();
+        int size = Marshal.SizeOf<JOBOBJECT_BASIC_ACCOUNTING_INFORMATION>();
+        if (!QueryInformationJobObject(job, 1, ref information, checked((uint)size), out _))
+        {
+            throw new Win32Exception(Marshal.GetLastWin32Error(), "The helper Job Object could not be measured.");
+        }
+        return checked((int)information.ActiveProcesses);
     }
 
     private const uint DUPLICATE_SAME_ACCESS = 0x00000002;
@@ -601,6 +781,19 @@ internal sealed class WindowsContainedWorkerProcess : IDisposable
         public nuint PeakJobMemoryUsed;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    private struct JOBOBJECT_BASIC_ACCOUNTING_INFORMATION
+    {
+        public long TotalUserTime;
+        public long TotalKernelTime;
+        public long ThisPeriodTotalUserTime;
+        public long ThisPeriodTotalKernelTime;
+        public uint TotalPageFaultCount;
+        public uint TotalProcesses;
+        public uint ActiveProcesses;
+        public uint TotalTerminatedProcesses;
+    }
+
     [DllImport("kernel32.dll")]
     private static extern nint GetCurrentProcess();
 
@@ -679,11 +872,24 @@ internal sealed class WindowsContainedWorkerProcess : IDisposable
         uint informationLength);
 
     [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool QueryInformationJobObject(
+        nint job,
+        int informationClass,
+        ref JOBOBJECT_BASIC_ACCOUNTING_INFORMATION information,
+        uint informationLength,
+        out uint returnLength);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
     private static extern uint ResumeThread(nint thread);
 
     [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool TerminateProcess(nint process, uint exitCode);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetExitCodeProcess(nint process, out uint exitCode);
 
     [DllImport("kernel32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]

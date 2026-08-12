@@ -42,6 +42,34 @@ public sealed record ProviderDispatchGateReceipt(
     bool Authorized,
     string DecisionReason);
 
+public sealed record ProviderDispatchAuthoritySnapshot(
+    ProviderDispatchGateRequest Gate,
+    string AccountIdentityId,
+    string BillingScopeIdentityId,
+    long GenerationOrdinal,
+    string OperationKind,
+    string EffectiveConfigurationId,
+    string CapabilitySnapshotId,
+    string PriceSnapshotId,
+    string RequestFingerprintSha256,
+    string CanonicalRequestFingerprintSha256,
+    long CanonicalRequestBytes,
+    string SettingsFingerprintSha256,
+    string OutputSchemaFingerprintSha256,
+    string InputBoundPolicyId,
+    string InputBoundPolicyVersion,
+    string InputBoundProofStatus,
+    long MaximumRequestBytes,
+    long MaximumInputTokens,
+    long MaximumOutputTokens,
+    long MaximumRawResponseBytes,
+    long MaximumDispatchCount,
+    long MaximumCalculatedNanoUsd,
+    long DeadlineMilliseconds,
+    DateTimeOffset DispatchDeadline,
+    DateTimeOffset ConfirmedAt);
+
+
 public sealed record ProviderBudgetSettlementReceipt(
     string SettlementId,
     string ReservationId,

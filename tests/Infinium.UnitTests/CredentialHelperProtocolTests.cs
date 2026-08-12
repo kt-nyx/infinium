@@ -1,4 +1,6 @@
 using System.Buffers.Binary;
+using Google.Protobuf;
+using Google.Protobuf.Reflection;
 using Infinium.Application.Runtime;
 using Infinium.Contracts.Protobuf.Helper.V2;
 using Infinium.CredentialHelper;
@@ -54,6 +56,58 @@ public sealed class CredentialHelperProtocolTests
         BinaryPrimitives.WriteUInt32LittleEndian(oversized, HelperPrivateProtocolV2.MaximumMessageBytes + 1U);
         Assert.ThrowsExactly<InvalidDataException>(() => HelperPrivateProtocolV2.Decode(oversized, 1));
         Assert.ThrowsExactly<InvalidDataException>(() => HelperPrivateProtocolV2.Decode([1, 0, 0], 1));
+    }
+
+    [TestMethod]
+    public void HelperPrivateProtocolRejectsWrongWireTypeForEveryKnownFieldRecursively()
+    {
+        HashSet<MessageDescriptor> visited = [];
+        Queue<MessageDescriptor> pending = new([HelperPrivateFrameV2.Descriptor]);
+        int tested = 0;
+        while (pending.TryDequeue(out MessageDescriptor? descriptor))
+        {
+            if (!visited.Add(descriptor))
+            {
+                continue;
+            }
+            foreach (FieldDescriptor field in descriptor.Fields.InFieldNumberOrder())
+            {
+                WireFormat.WireType expected = Expected(field.FieldType);
+                WireFormat.WireType wrong = expected == WireFormat.WireType.Varint
+                    ? WireFormat.WireType.LengthDelimited
+                    : WireFormat.WireType.Varint;
+                using MemoryStream bytes = new();
+                using (CodedOutputStream output = new(bytes, leaveOpen: true))
+                {
+                    output.WriteTag(field.FieldNumber, wrong);
+                    if (wrong == WireFormat.WireType.LengthDelimited)
+                    {
+                        output.WriteBytes(ByteString.Empty);
+                    }
+                    else
+                    {
+                        output.WriteUInt64(0);
+                    }
+                }
+                Assert.ThrowsExactly<InvalidDataException>(() =>
+                    HelperPrivateProtocolV2.ValidateCanonicalPayloadForTesting(bytes.ToArray(), descriptor),
+                    $"{descriptor.FullName}.{field.Name}");
+                tested++;
+                if (field.FieldType == FieldType.Message)
+                {
+                    pending.Enqueue(field.MessageType);
+                }
+            }
+        }
+        Assert.IsGreaterThanOrEqualTo(100, tested);
+
+        static WireFormat.WireType Expected(FieldType type) => type switch
+        {
+            FieldType.Double or FieldType.Fixed64 or FieldType.SFixed64 => WireFormat.WireType.Fixed64,
+            FieldType.Float or FieldType.Fixed32 or FieldType.SFixed32 => WireFormat.WireType.Fixed32,
+            FieldType.String or FieldType.Bytes or FieldType.Message => WireFormat.WireType.LengthDelimited,
+            _ => WireFormat.WireType.Varint,
+        };
     }
 
     [TestMethod]

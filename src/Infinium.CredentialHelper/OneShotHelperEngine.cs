@@ -10,9 +10,13 @@ namespace Infinium.CredentialHelper;
 public sealed class OneShotHelperEngine
 {
     private readonly ISyntheticSecureStore store;
+    private readonly TimeProvider timeProvider;
 
-    public OneShotHelperEngine(ISyntheticSecureStore store) =>
+    public OneShotHelperEngine(ISyntheticSecureStore store, TimeProvider? timeProvider = null)
+    {
         this.store = store ?? throw new ArgumentNullException(nameof(store));
+        this.timeProvider = timeProvider ?? TimeProvider.System;
+    }
 
     public async Task RunAsync(Stream request, Stream response, CancellationToken cancellationToken)
     {
@@ -23,6 +27,14 @@ public sealed class OneShotHelperEngine
         session.Admit(assignmentFrame);
         HelperAssignmentV2 assignment = assignmentFrame.Assignment;
         HelperExecutionSemanticsV2.ValidateBootstrapAndAssignment(bootstrap.Bootstrap, assignment);
+        DateTimeOffset authoritativeNow = timeProvider.GetUtcNow();
+        DateTimeOffset expiresAt = DateTimeOffset.FromUnixTimeSeconds(bootstrap.Bootstrap.ExpiresAt.UnixSeconds)
+            .AddTicks(bootstrap.Bootstrap.ExpiresAt.Nanoseconds / 100);
+        if (expiresAt <= authoritativeNow
+            || !store.ConsumeOneUseNonce(bootstrap.Bootstrap.OneUseNonceFingerprintSha256.Span))
+        {
+            throw new InvalidDataException("The helper bootstrap is expired or its launch nonce was already consumed.");
+        }
 
         DispatchRevalidationV2? revalidation = null;
         if (assignment.AssignmentKind == HelperAssignmentKindV2.ProviderDispatch)
@@ -33,13 +45,14 @@ public sealed class OneShotHelperEngine
         }
 
         HelperReceiptV2 receipt;
+        byte[] stagedResponse = [];
         try
         {
             if (revalidation is not null)
             {
                 HelperExecutionSemanticsV2.ValidateFinalRevalidation(bootstrap.Bootstrap, assignment, revalidation);
             }
-            receipt = Execute(assignment, revalidation);
+            (receipt, stagedResponse) = Execute(assignment, revalidation);
         }
         catch (InvalidDataException)
         {
@@ -49,6 +62,7 @@ public sealed class OneShotHelperEngine
         HelperPrivateFrameV2 terminal = HelperFrameFactory.Create(terminalSequence, receipt);
         session.Admit(terminal);
         await HelperPrivateProtocolV2.WriteAsync(response, terminal, cancellationToken);
+        await WriteStagedResponseAsync(response, stagedResponse, cancellationToken);
     }
 
     private static HelperReceiptV2 CreateRejectedReceipt(
@@ -56,7 +70,9 @@ public sealed class OneShotHelperEngine
         DispatchRevalidationV2? revalidation) => CreateReceipt(
             assignment, revalidation, HelperOutcomeV2.FailedKnown, hasResponse: false);
 
-    private HelperReceiptV2 Execute(HelperAssignmentV2 assignment, DispatchRevalidationV2? revalidation)
+    private (HelperReceiptV2 Receipt, byte[] StagedResponse) Execute(
+        HelperAssignmentV2 assignment,
+        DispatchRevalidationV2? revalidation)
     {
         SyntheticCredentialSlot slot = new(assignment.AccessProfileId.Value, assignment.GenerationId.Value);
         HelperOutcomeV2 outcome;
@@ -115,10 +131,16 @@ public sealed class OneShotHelperEngine
         }
 
         HelperReceiptV2 receipt = CreateReceipt(assignment, revalidation, outcome, hasResponse);
+        byte[] stagedResponse = [];
         if (hasResponse)
         {
-            byte[] syntheticResponse = Encoding.UTF8.GetBytes("synthetic-provider-response/" + assignment.AssignmentId);
-            receipt.RawResponse = Digest(syntheticResponse);
+            stagedResponse = Encoding.UTF8.GetBytes("synthetic-provider-response/" + assignment.AssignmentId);
+            if ((ulong)stagedResponse.Length > assignment.Limits.MaximumResponseBytes
+                || (ulong)stagedResponse.Length > assignment.Limits.MaximumStagedOutputBytes)
+            {
+                throw new InvalidDataException("The deterministic response exceeds its retained response/staging bound.");
+            }
+            receipt.RawResponse = Digest(stagedResponse);
             receipt.InputTokens = Available(0);
             receipt.OutputTokens = Available(0);
             receipt.TotalTokens = Available(0);
@@ -129,7 +151,21 @@ public sealed class OneShotHelperEngine
             receipt.CalculatedNanoUsd = Available(0);
             receipt.DispatchCount = Available(1);
         }
-        return receipt;
+        return (receipt, stagedResponse);
+    }
+
+    private static async Task WriteStagedResponseAsync(
+        Stream response,
+        byte[] stagedResponse,
+        CancellationToken cancellationToken)
+    {
+        byte[] prefix = BitConverter.GetBytes(checked((uint)stagedResponse.Length));
+        await response.WriteAsync(prefix, cancellationToken).ConfigureAwait(false);
+        if (stagedResponse.Length > 0)
+        {
+            await response.WriteAsync(stagedResponse, cancellationToken).ConfigureAwait(false);
+        }
+        await response.FlushAsync(cancellationToken).ConfigureAwait(false);
     }
 
     private static HelperReceiptV2 CreateReceipt(

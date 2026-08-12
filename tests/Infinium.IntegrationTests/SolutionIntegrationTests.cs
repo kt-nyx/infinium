@@ -128,7 +128,7 @@ public sealed class SolutionIntegrationTests
 
         ProcessResult helper = Run("Infinium.CredentialHelper", []);
         Assert.AreEqual(64, helper.ExitCode);
-        StringAssert.Contains(helper.Error, "exactly two inherited private anonymous-pipe handles");
+        StringAssert.Contains(helper.Error, "two private pipes, one secure-store capability, and authoritative time");
     }
 
     [TestMethod]

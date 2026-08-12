@@ -2185,8 +2185,11 @@ public sealed partial class AuthoritativeStore
               OR (intent_kind = 'disable' AND from_lifecycle_state IN ('active-unverified','active-verified','replacing') AND to_lifecycle_state = 'disabled')
               OR (intent_kind = 'delete' AND ((from_lifecycle_state IN ('active-unverified','active-verified','disabled','replacing') AND to_lifecycle_state = 'delete-pending')
                 OR (from_lifecycle_state = 'delete-pending' AND to_lifecycle_state IN ('delete-pending','deleted'))))
-              OR (intent_kind = 'recover' AND from_lifecycle_state IN ('secure-store-unavailable','recovery-required')
-                AND to_lifecycle_state IN ('active-unverified','active-verified','disabled','delete-pending','recovery-required','secure-store-unavailable'))),
+              OR (intent_kind = 'recover' AND ((from_lifecycle_state IN (
+                    'pending-enrollment','active-unverified','active-verified','replacing','disabled','secure-store-unavailable','recovery-required')
+                  AND to_lifecycle_state = 'recovery-required')
+                OR (from_lifecycle_state IN ('secure-store-unavailable','recovery-required')
+                  AND to_lifecycle_state IN ('active-unverified','active-verified','disabled','delete-pending','recovery-required','secure-store-unavailable'))))),
             CHECK(((CASE WHEN intent_state IN ('pending','completed') THEN to_lifecycle_state ELSE outcome_lifecycle_state END) IN ('none','pending-enrollment','deleted')
                 AND account_identity_id IS NULL AND billing_scope_identity_id IS NULL AND capability_snapshot_id IS NULL)
               OR ((CASE WHEN intent_state IN ('pending','completed') THEN to_lifecycle_state ELSE outcome_lifecycle_state END) IN ('active-unverified','active-verified','replacing','disabled','delete-pending')

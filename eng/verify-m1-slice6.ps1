@@ -704,24 +704,48 @@ function Invoke-CredentialSyntheticGate {
     if ($packages.Count -ne 2) { throw 'CredentialSynthetic requires exactly two registered WP3 DEV/VAL packages.' }
     $helperPath = Join-Path $repoRoot 'src/Infinium.CredentialHelper/bin/Release/net10.0/Infinium.CredentialHelper.exe'
     if (-not (Test-Path -LiteralPath $helperPath -PathType Leaf)) { throw 'CredentialSynthetic exact helper binary is absent.' }
+    $dynamicPath = Join-Path $repoRoot 'artifacts/m1-slice6/wp3/credential-synthetic-dynamic.json'
+    if (-not (Test-Path -LiteralPath $dynamicPath -PathType Leaf)) { throw 'CredentialSynthetic dynamic process evidence is absent.' }
+    $dynamicBytes = [IO.File]::ReadAllBytes($dynamicPath)
+    $dynamic = [Text.Encoding]::UTF8.GetString($dynamicBytes) | ConvertFrom-Json
+    $actualHelperSha = (Get-FileHash -LiteralPath $helperPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    if ($dynamic.helper_binary_sha256 -ne $actualHelperSha) { throw 'CredentialSynthetic dynamic evidence is not bound to the exact helper binary.' }
+    foreach ($zeroField in @('standard_protocol_handle_count','listener_count','retry_count','native_credential_operations','network_operations','process_tree_survivors')) {
+        if ([int64]$dynamic.$zeroField -ne 0) { throw "CredentialSynthetic dynamic evidence reports non-zero $zeroField." }
+    }
+    if ([int64]$dynamic.inherited_private_handle_count -ne 3 -or -not $dynamic.stage_before_admit -or -not $dynamic.coordinator_only_admission) {
+        throw 'CredentialSynthetic dynamic evidence does not prove the closed private-handle/staging path.'
+    }
+    $scanRoots = @(
+        (Join-Path $repoRoot 'artifacts/m1-slice6/wp3'),
+        (Join-Path $repoRoot 'fixtures/public/platform/credential-helper'),
+        (Join-Path $repoRoot 'src/Infinium.CredentialHelper/bin/Release/net10.0'),
+        (Join-Path $repoRoot 'src/Infinium.Coordinator/bin/Release/net10.0'))
+    $secretCanaryMatches = @(Get-ChildItem -LiteralPath $scanRoots -File -Recurse -ErrorAction SilentlyContinue |
+        Select-String -SimpleMatch 'WP3-SECRET-CANARY-DO-NOT-RETAIN' -List -ErrorAction SilentlyContinue).Count
+    $targetCanaryMatches = @(Get-ChildItem -LiteralPath $scanRoots -File -Recurse -ErrorAction SilentlyContinue |
+        Select-String -SimpleMatch 'credential_target' -List -ErrorAction SilentlyContinue).Count
+    if ($secretCanaryMatches -ne 0 -or $targetCanaryMatches -ne 0) { throw 'CredentialSynthetic measured canary scan found forbidden retained material.' }
     Write-Receipt 'CredentialSynthetic' ([ordered]@{
         execution_mode = 'synthetic-fake-secure-store-nonnetwork'
         production_test_filters = @($unitFilter, $integrationFilter, $securityFilter, $faultFilter, $evaluationFilter)
         wp3_public_package_count = $packages.Count
         registry_package_count = $registry.package_count
-        helper_binary_sha256 = (Get-FileHash -LiteralPath $helperPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        helper_binary_sha256 = $actualHelperSha
         helper_protocol_sha256 = '2eac265ef75cc827bd5a8596120f5ba4c1912dde2219ad98eb11e2984cb043c0'
-        inherited_private_handle_count = 2
-        standard_protocol_handle_count = 0
-        listener_count = 0
-        retry_count = 0
-        native_credential_operations = 0
-        network_operations = 0
-        secret_canary_matches = 0
-        target_canary_matches = 0
-        stage_before_admit = $true
-        coordinator_only_admission = $true
-        process_tree_survivors = 0
+        dynamic_evidence_bytes = $dynamicBytes.Length
+        dynamic_evidence_sha256 = (Get-FileHash -LiteralPath $dynamicPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        inherited_private_handle_count = [int64]$dynamic.inherited_private_handle_count
+        standard_protocol_handle_count = [int64]$dynamic.standard_protocol_handle_count
+        listener_count = [int64]$dynamic.listener_count
+        retry_count = [int64]$dynamic.retry_count
+        native_credential_operations = [int64]$dynamic.native_credential_operations
+        network_operations = [int64]$dynamic.network_operations
+        secret_canary_matches = $secretCanaryMatches
+        target_canary_matches = $targetCanaryMatches
+        stage_before_admit = [bool]$dynamic.stage_before_admit
+        coordinator_only_admission = [bool]$dynamic.coordinator_only_admission
+        process_tree_survivors = [int64]$dynamic.process_tree_survivors
     })
 }
 

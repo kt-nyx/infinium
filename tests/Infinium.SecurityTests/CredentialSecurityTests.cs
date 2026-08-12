@@ -11,7 +11,7 @@ namespace Infinium.Tests;
 public sealed class CredentialSecurityTests
 {
     private static readonly string[] ExpectedSecureStoreMethods =
-        ["DeleteExact", "ReadExact", "VerifyExact", "WriteExact"];
+        ["ConsumeOneUseNonce", "DeleteExact", "ReadExact", "VerifyExact", "WriteExact"];
 
     [TestMethod]
     public async Task SecretCanaryNeverCrossesHelperPrivateProtocolReceiptOrDiagnostics()
@@ -19,7 +19,8 @@ public sealed class CredentialSecurityTests
         byte[] canary = Encoding.UTF8.GetBytes("WP3-SECRET-CANARY-DO-NOT-RETAIN");
         using DeterministicFakeSecureStore store = new();
         store.WriteExact(new("profile-1", "generation-1"), canary);
-        OneShotHelperEngine engine = new(store);
+        OneShotHelperEngine engine = new(store, new FrozenTimeProvider(
+            new DateTimeOffset(2026, 8, 11, 12, 0, 0, TimeSpan.Zero)));
         using MemoryStream request = new();
         await HelperPrivateProtocolV2.WriteAsync(request, HelperTestFrames.Bootstrap(), CancellationToken.None);
         await HelperPrivateProtocolV2.WriteAsync(
@@ -29,7 +30,8 @@ public sealed class CredentialSecurityTests
         await engine.RunAsync(request, response, CancellationToken.None);
         byte[] bytes = response.ToArray();
         Assert.IsFalse(bytes.AsSpan().IndexOf(canary) >= 0);
-        HelperPrivateFrameV2 terminal = HelperPrivateProtocolV2.Decode(bytes, 3);
+        int frameLength = checked(4 + (int)System.Buffers.Binary.BinaryPrimitives.ReadUInt32LittleEndian(bytes));
+        HelperPrivateFrameV2 terminal = HelperPrivateProtocolV2.Decode(bytes.AsSpan(0, frameLength), 3);
         Assert.AreEqual(HelperOutcomeV2.Completed, terminal.Receipt.Outcome);
         Assert.IsFalse(terminal.ToString().Contains("CANARY", StringComparison.Ordinal));
     }
@@ -44,7 +46,8 @@ public sealed class CredentialSecurityTests
             || name.Contains("Reveal", StringComparison.OrdinalIgnoreCase)));
         Assert.AreEqual(0, DeterministicFakeSecureStore.NativeOperationCount);
         Assert.AreEqual(0, DeterministicFakeSecureStore.EnumerationCount);
-        Assert.ThrowsExactly<ArgumentException>(() => new OneShotCredentialHelperLauncher("cmd.exe"));
+        Assert.ThrowsExactly<ArgumentException>(() => new OneShotCredentialHelperLauncher(
+            "cmd.exe", new string('0', 64), Path.GetTempPath()));
     }
 
     [TestMethod]
@@ -58,5 +61,30 @@ public sealed class CredentialSecurityTests
         System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(frame, checked((uint)hostileNested.Length));
         hostileNested.CopyTo(frame, 4);
         Assert.ThrowsExactly<InvalidDataException>(() => HelperPrivateProtocolV2.Decode(frame, 2));
+    }
+
+    [TestMethod]
+    public void CredentialHelperRejectsSameNameBinarySubstitutionByPinnedFingerprint()
+    {
+        string helper = TestRepository.PathFromRoot(
+            "src", "Infinium.CredentialHelper", "bin", "Release", "net10.0", "Infinium.CredentialHelper.exe");
+        string expected = Convert.ToHexStringLower(
+            System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(helper)));
+        string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp3-Substitute-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        string substitute = Path.Combine(root, "Infinium.CredentialHelper.exe");
+        File.Copy(helper, substitute);
+        using (FileStream stream = File.OpenWrite(substitute))
+        {
+            stream.Position = stream.Length;
+            stream.WriteByte(0);
+        }
+        Assert.ThrowsExactly<ArgumentException>(() => new OneShotCredentialHelperLauncher(
+            substitute, expected, Path.Combine(root, "store")));
+    }
+
+    private sealed class FrozenTimeProvider(DateTimeOffset now) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => now;
     }
 }

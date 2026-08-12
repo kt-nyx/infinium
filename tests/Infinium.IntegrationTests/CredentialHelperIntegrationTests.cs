@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Infinium.Application.Provider;
 using Infinium.Contracts.Protobuf.Helper.V2;
 using Infinium.Coordinator;
@@ -10,18 +11,19 @@ namespace Infinium.Tests;
 public sealed class CredentialHelperIntegrationTests
 {
     private static readonly DateTimeOffset BaseTime = new(2026, 8, 11, 12, 0, 0, TimeSpan.Zero);
+    private static readonly System.Text.Json.JsonSerializerOptions EvidenceJsonOptions = new() { WriteIndented = true };
 
     [TestMethod]
     public async Task HelperPrivateHandleLaunchesExactRepositoryBinaryWithoutStandardProtocolOrRetry()
     {
         string helper = Path.Combine(AppContext.BaseDirectory, "CredentialHelper", "Infinium.CredentialHelper.exe");
         Assert.IsTrue(File.Exists(helper), helper);
-        OneShotCredentialHelperLauncher launcher = new(helper);
+        OneShotCredentialHelperLauncher launcher = Launcher(helper);
         HelperProcessReceipt result = await launcher.ExecuteAsync(
-            HelperTestFrames.Bootstrap(), HelperTestFrames.Assignment(), null, TimeSpan.FromSeconds(20));
+            HelperTestFrames.Bootstrap(), HelperTestFrames.Assignment(), null, TimeSpan.FromSeconds(20), BaseTime);
         Assert.AreEqual(0, result.ExitCode);
         Assert.AreEqual(HelperOutcomeV2.Completed, result.Receipt.Outcome);
-        Assert.AreEqual(2, result.InheritedPrivateHandleCount);
+        Assert.AreEqual(3, result.InheritedPrivateHandleCount);
         Assert.AreEqual(0, result.StandardProtocolHandleCount);
         Assert.AreEqual(0, result.ListenerCount);
         Assert.AreEqual(0, result.NetworkOperationCount);
@@ -29,13 +31,26 @@ public sealed class CredentialHelperIntegrationTests
         Assert.IsTrue(result.ProcessTreeTerminated);
         Assert.IsFalse(result.RetryAttempted);
         Assert.AreEqual(64, result.BinarySha256.Length);
+        WriteDynamicEvidence(new
+        {
+            helper_binary_sha256 = result.BinarySha256,
+            inherited_private_handle_count = result.InheritedPrivateHandleCount,
+            standard_protocol_handle_count = result.StandardProtocolHandleCount,
+            listener_count = result.ListenerCount,
+            retry_count = result.RetryAttempted ? 1 : 0,
+            native_credential_operations = result.NativeCredentialOperationCount,
+            network_operations = result.NetworkOperationCount,
+            process_tree_survivors = result.ProcessTreeSurvivorCount,
+            stage_before_admit = true,
+            coordinator_only_admission = true,
+        });
 
         string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp3-Staging-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         using AuthoritativeStore store = new(new StoragePaths(Path.Combine(root, "product")));
         CredentialHelperCoordinator coordinator = new(store, launcher);
         CoordinatedHelperReceipt coordinated = await coordinator.ExecuteStageAndAdmitAsync(
-            "helper-attempt-1", HelperTestFrames.Bootstrap(), HelperTestFrames.Assignment(), null, BaseTime);
+            "helper-attempt-1", HelperTestFrames.Bootstrap(nonceSeed: 1), HelperTestFrames.Assignment(), null, BaseTime);
         Assert.IsTrue(coordinated.Staging.StagedBeforeAdmission);
         Assert.IsTrue(coordinated.Staging.CoordinatorOnlyAdmission);
         Assert.IsTrue(File.Exists(Path.Combine(store.Paths.Staging, coordinated.Staging.RelativePath)));
@@ -45,20 +60,93 @@ public sealed class CredentialHelperIntegrationTests
     public async Task CredentialDispatchRequiresFinalGenerationRevocationDeadlineAndBudgetRevalidation()
     {
         string helper = Path.Combine(AppContext.BaseDirectory, "CredentialHelper", "Infinium.CredentialHelper.exe");
-        OneShotCredentialHelperLauncher launcher = new(helper);
+        OneShotCredentialHelperLauncher launcher = Launcher(helper);
+        HelperProcessReceipt enrollment = await launcher.ExecuteAsync(
+            HelperTestFrames.Bootstrap(nonceSeed: 2), HelperTestFrames.Assignment(), null,
+            TimeSpan.FromSeconds(20), BaseTime);
+        Assert.AreEqual(HelperOutcomeV2.Completed, enrollment.Receipt.Outcome);
+        HelperProcessReceipt verification = await launcher.ExecuteAsync(
+            HelperTestFrames.Bootstrap(nonceSeed: 3), HelperTestFrames.Assignment(HelperAssignmentKindV2.Verify), null,
+            TimeSpan.FromSeconds(20), BaseTime);
+        Assert.AreEqual(HelperOutcomeV2.Completed, verification.Receipt.Outcome,
+            "The capability-bound fake store must persist across separate one-shot helper launches.");
+
         HelperProcessReceipt result = await launcher.ExecuteAsync(
-            HelperTestFrames.DispatchBootstrap(), HelperTestFrames.DispatchAssignment(),
-            HelperTestFrames.Revalidation(), TimeSpan.FromSeconds(20));
-        Assert.AreEqual(HelperOutcomeV2.FailedKnown, result.Receipt.Outcome);
+            HelperTestFrames.DispatchBootstrap(4), HelperTestFrames.DispatchAssignment(),
+            HelperTestFrames.Revalidation(), TimeSpan.FromSeconds(20), BaseTime);
+        Assert.AreEqual(HelperOutcomeV2.Completed, result.Receipt.Outcome);
+        Assert.IsGreaterThan(0, result.StagedResponseBytes.Length);
         Assert.IsFalse(result.Receipt.TransportMayHaveStarted);
         Assert.IsFalse(result.RetryAttempted);
 
         HelperPrivateFrameV2 stale = HelperTestFrames.Revalidation();
         stale.DispatchRevalidation.RevocationEpoch = 1;
         HelperProcessReceipt rejected = await launcher.ExecuteAsync(
-            HelperTestFrames.DispatchBootstrap(), HelperTestFrames.DispatchAssignment(), stale, TimeSpan.FromSeconds(20));
+            HelperTestFrames.DispatchBootstrap(5), HelperTestFrames.DispatchAssignment(), stale, TimeSpan.FromSeconds(20), BaseTime);
         Assert.AreEqual(HelperOutcomeV2.FailedKnown, rejected.Receipt.Outcome);
         Assert.IsFalse(rejected.Receipt.TransportMayHaveStarted);
+
+        await Assert.ThrowsExactlyAsync<EndOfStreamException>(() => launcher.ExecuteAsync(
+            HelperTestFrames.Bootstrap(nonceSeed: 2), HelperTestFrames.Assignment(), null,
+            TimeSpan.FromSeconds(20), BaseTime));
+        await Assert.ThrowsExactlyAsync<EndOfStreamException>(() => launcher.ExecuteAsync(
+            HelperTestFrames.Bootstrap(nonceSeed: 6), HelperTestFrames.Assignment(), null,
+            TimeSpan.FromSeconds(20), BaseTime.AddMinutes(2)));
+    }
+
+    [TestMethod]
+    public async Task HelperPrivateHandleListExcludesUnrelatedInheritableHandleAndJobKillsDescendant()
+    {
+        string helper = Path.Combine(AppContext.BaseDirectory, "CredentialHelper", "Infinium.CredentialHelper.exe");
+        OneShotCredentialHelperLauncher launcher = Launcher(helper);
+        SECURITY_ATTRIBUTES attributes = new()
+        {
+            Length = Marshal.SizeOf<SECURITY_ATTRIBUTES>(),
+            InheritHandle = true,
+        };
+        nint sentinel = CreateEventW(ref attributes, manualReset: true, initialState: false, null);
+        Assert.AreNotEqual(0, sentinel);
+        try
+        {
+            HelperProcessReceipt receipt = await launcher.ExecuteContainmentProbeAsync(
+                HelperTestFrames.Bootstrap(nonceSeed: 44), HelperTestFrames.Assignment(),
+                TimeSpan.FromSeconds(20), BaseTime, sentinel);
+            Assert.IsTrue(receipt.ProcessTreeTerminated);
+            Assert.AreEqual(0, receipt.ProcessTreeSurvivorCount);
+            Assert.AreEqual(3, receipt.InheritedPrivateHandleCount);
+        }
+        finally
+        {
+            _ = CloseHandle(sentinel);
+        }
+    }
+
+    [TestMethod]
+    public async Task CredentialIntentRecoversWhenHelperStoreCommitPrecedesMetadataCommit()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp3-HalfCommit-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        using AuthoritativeStore store = new(new StoragePaths(Path.Combine(root, "product")));
+        store.PublishProviderCatalog(M1ProviderCatalog.Capability, M1ProviderCatalog.Price, BaseTime);
+        _ = store.BeginCredentialEnrollment(
+            "profile-half", "generation-half", "Half commit", BaseTime.AddSeconds(1), "account-1", "billing-1");
+        string helper = Path.Combine(AppContext.BaseDirectory, "CredentialHelper", "Infinium.CredentialHelper.exe");
+        OneShotCredentialHelperLauncher launcher = Launcher(helper);
+        CredentialHelperCoordinator coordinator = new(store, launcher);
+        HelperPrivateFrameV2 bootstrap = CredentialBootstrap("profile-half", "generation-half", 81);
+        HelperPrivateFrameV2 enrollment = CredentialAssignment(
+            "profile-half", "generation-half", HelperAssignmentKindV2.Enroll, "half-enroll");
+        HelperProcessReceipt halfCommitted = await launcher.ExecuteAsync(
+            bootstrap, enrollment, null, TimeSpan.FromSeconds(20), BaseTime.AddSeconds(2));
+        Assert.AreEqual(HelperOutcomeV2.Completed, halfCommitted.Receipt.Outcome);
+        Assert.AreEqual("pending-enrollment", store.GetCredentialProfile("profile-half").LifecycleState);
+
+        HelperPrivateFrameV2 recoveryBootstrap = CredentialBootstrap("profile-half", "generation-half", 82);
+        HelperPrivateFrameV2 recovery = CredentialAssignment(
+            "profile-half", "generation-half", HelperAssignmentKindV2.Recover, "half-recover");
+        (_, CredentialProfileProjection projection) = await coordinator.ExecuteCredentialTransitionAsync(
+            "half-recover-attempt", recoveryBootstrap, recovery, BaseTime.AddSeconds(4));
+        Assert.AreEqual("active-unverified", projection.LifecycleState);
     }
 
     [TestMethod]
@@ -117,7 +205,7 @@ public sealed class CredentialHelperIntegrationTests
         AuthoritativeStore.RestoreBackup(backup, restoredPaths);
         using AuthoritativeStore restored = new(new StoragePaths(restoreRoot));
         Assert.AreEqual("deleted", restored.GetCredentialProfile("profile-life").LifecycleState);
-        Assert.AreEqual("active-unverified", restored.GetCredentialProfile("profile-recover").LifecycleState);
+        Assert.AreEqual("recovery-required", restored.GetCredentialProfile("profile-recover").LifecycleState);
         // Secrets are never in the backup; restored metadata must be reauthenticated.
         string manifest = File.ReadAllText(backup.ManifestPath);
         Assert.IsFalse(manifest.Contains("synthetic-canary", StringComparison.Ordinal));
@@ -134,4 +222,56 @@ public sealed class CredentialHelperIntegrationTests
             noMetadata ? null : "account-1", noMetadata ? null : "billing-1",
             pendingAt, pendingAt.AddSeconds(1), IncrementRevocationEpoch: incrementRevocation));
     }
+
+    private static OneShotCredentialHelperLauncher Launcher(string helper) => new(
+        helper,
+        Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(helper))),
+        Path.Combine(Path.GetTempPath(), "Infinium-Wp3-FakeStore-" + Guid.NewGuid().ToString("N")));
+
+    private static void WriteDynamicEvidence(object value)
+    {
+        string path = Path.Combine(TestRepository.Root, "artifacts", "m1-slice6", "wp3", "credential-synthetic-dynamic.json");
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllText(path, System.Text.Json.JsonSerializer.Serialize(value, EvidenceJsonOptions));
+    }
+
+    private static HelperPrivateFrameV2 CredentialBootstrap(string profile, string generation, byte nonce)
+    {
+        HelperPrivateFrameV2 frame = HelperTestFrames.Bootstrap(nonceSeed: nonce);
+        frame.Bootstrap.Credential.AccessProfileId.Value = profile;
+        frame.Bootstrap.Credential.GenerationId.Value = generation;
+        return frame;
+    }
+
+    private static HelperPrivateFrameV2 CredentialAssignment(
+        string profile, string generation, HelperAssignmentKindV2 kind, string identity)
+    {
+        HelperPrivateFrameV2 frame = HelperTestFrames.Assignment(kind);
+        frame.Assignment.AccessProfileId.Value = profile;
+        frame.Assignment.GenerationId.Value = generation;
+        frame.Assignment.Credential.AccessProfileId.Value = profile;
+        frame.Assignment.Credential.GenerationId.Value = generation;
+        frame.Assignment.AssignmentId = identity;
+        frame.Assignment.CommandId = "command-1";
+        return frame;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct SECURITY_ATTRIBUTES
+    {
+        public int Length;
+        public nint SecurityDescriptor;
+        [MarshalAs(UnmanagedType.Bool)] public bool InheritHandle;
+    }
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern nint CreateEventW(
+        ref SECURITY_ATTRIBUTES attributes,
+        [MarshalAs(UnmanagedType.Bool)] bool manualReset,
+        [MarshalAs(UnmanagedType.Bool)] bool initialState,
+        string? name);
+
+    [DllImport("kernel32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool CloseHandle(nint handle);
 }

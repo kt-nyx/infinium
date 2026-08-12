@@ -4,6 +4,29 @@ namespace Infinium.Persistence;
 
 public sealed partial class AuthoritativeStore
 {
+    public (string? AccountIdentityId, string? BillingScopeIdentityId) ReadCredentialIdentityBinding(string profileId)
+    {
+        ValidateCredentialIdentity(profileId, nameof(profileId));
+        lock (gate)
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText = "SELECT account_identity_id,billing_scope_identity_id FROM provider_access_profiles WHERE profile_id=$profile;";
+            command.Parameters.AddWithValue("$profile", profileId);
+            using SqliteDataReader reader = command.ExecuteReader();
+            if (!reader.Read())
+            {
+                throw new InvalidOperationException("The authoritative credential profile is absent.");
+            }
+            string? account = reader.IsDBNull(0) ? null : reader.GetString(0);
+            string? billing = reader.IsDBNull(1) ? null : reader.GetString(1);
+            if (reader.Read())
+            {
+                throw new InvalidOperationException("The authoritative credential profile is ambiguous.");
+            }
+            return (account, billing);
+        }
+    }
+
     public CredentialProfileProjection BeginCredentialEnrollment(
         string profileId,
         string generationId,
@@ -168,6 +191,47 @@ public sealed partial class AuthoritativeStore
             transaction.Commit();
             return profiles.Select(GetCredentialProfile).ToArray();
         }
+    }
+
+    public IReadOnlyList<CredentialProfileProjection> MarkRestoredCredentialsRecoveryRequired(DateTimeOffset now)
+    {
+        List<CredentialProfileProjection> current;
+        lock (gate)
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText =
+                "SELECT profile_id FROM provider_profile_projection WHERE lifecycle_state NOT IN ('deleted','delete-pending') ORDER BY profile_id;";
+            List<string> profileIds = [];
+            {
+                using SqliteDataReader reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    profileIds.Add(reader.GetString(0));
+                }
+            }
+            current = profileIds.Select(GetCredentialProfile).ToList();
+        }
+        List<CredentialProfileProjection> recovered = [];
+        int sequence = 0;
+        foreach (CredentialProfileProjection profile in current)
+        {
+            DateTimeOffset transitionAt = now.AddTicks(++sequence);
+            recovered.Add(ApplyCredentialTransition(new(
+                $"restore-recovery-{profile.ProfileId}-{profile.GenerationId}-{transitionAt.UtcTicks}",
+                profile.ProfileId,
+                profile.GenerationId,
+                "recover",
+                profile.LifecycleState,
+                "recovery-required",
+                "recovery-required",
+                profile.CapabilitySnapshotId,
+                profile.AccountIdentityId,
+                profile.BillingScopeIdentityId,
+                transitionAt,
+                transitionAt.AddTicks(1),
+                IncrementRevocationEpoch: true)));
+        }
+        return recovered;
     }
 
     private CredentialProfileProjection GetCredentialProfileCore(string profileId, SqliteTransaction? transaction)

@@ -165,12 +165,14 @@ public static class HelperPrivateProtocolV2
             }
 
             WireFormat.WireType wire = WireFormat.GetTagWireType(tag);
+            WireFormat.WireType expectedWire = ExpectedWireType(field);
+            if (wire != expectedWire)
+            {
+                throw new InvalidDataException(
+                    $"Helper field {fieldNumber} used wire type {wire}; {expectedWire} is required.");
+            }
             if (field.FieldType == FieldType.Message)
             {
-                if (wire != WireFormat.WireType.LengthDelimited)
-                {
-                    throw new InvalidDataException("A helper submessage used the wrong wire type.");
-                }
                 ByteString nestedValue = input.ReadBytes();
                 byte[] nested = nestedValue.ToByteArray();
                 RejectUnknownDuplicateAndNonCanonical(nested, field.MessageType);
@@ -181,6 +183,19 @@ public static class HelperPrivateProtocolV2
             }
         }
     }
+
+    internal static void ValidateCanonicalPayloadForTesting(byte[] payload, MessageDescriptor descriptor) =>
+        RejectUnknownDuplicateAndNonCanonical(payload, descriptor);
+
+    private static WireFormat.WireType ExpectedWireType(FieldDescriptor field) => field.FieldType switch
+    {
+        FieldType.Double or FieldType.Fixed64 or FieldType.SFixed64 => WireFormat.WireType.Fixed64,
+        FieldType.Float or FieldType.Fixed32 or FieldType.SFixed32 => WireFormat.WireType.Fixed32,
+        FieldType.String or FieldType.Bytes or FieldType.Message => WireFormat.WireType.LengthDelimited,
+        FieldType.Bool or FieldType.Enum or FieldType.Int32 or FieldType.Int64 or FieldType.UInt32
+            or FieldType.UInt64 or FieldType.SInt32 or FieldType.SInt64 => WireFormat.WireType.Varint,
+        _ => throw new InvalidDataException($"Unsupported helper protobuf field type {field.FieldType}."),
+    };
 
     private static void SkipKnownValue(CodedInputStream input, WireFormat.WireType wire)
     {
