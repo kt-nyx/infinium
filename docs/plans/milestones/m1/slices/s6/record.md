@@ -3046,3 +3046,12 @@ that pre-effect argument forwarding by omitting empty optional parameters. It
 is the superseding exact implementation candidate for the still-unused owner
 authority; manifest bytes, limits, native code, targets, and scenarios remain
 unchanged.
+
+The second exact command attempt likewise exited before helper launch or any
+target access: generic JSON conversion coerced the seven-digit UTC expiry into
+a locale value before the gate's exact parser. Credential Manager operation
+count remained zero and no native evidence file was created. Product commit
+`d1622337aa7e5cc3f12c29a435624230f39751b9` preserves manifest timestamps as
+strings before exact parsing and is the superseding implementation candidate.
+The pre-existing fresh output directory contains no evidence or target data;
+all accepted manifest bytes, limits, native code, and effects remain unused.
