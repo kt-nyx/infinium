@@ -1,7 +1,7 @@
 {
   "schema": "infinium.dependency-license-provenance/v1",
   "revision": "dependency-manifest/1",
-  "reviewedOn": "2026-08-10",
+  "reviewedOn": "2026-08-12",
   "scope": "NuGet packages and .NET toolchain used by the current Infinium solution",
   "projectLicensePosture": {
     "family": "GNU General Public License version 3 family",
@@ -11,9 +11,9 @@
   },
   "toolchain": {
     "id": "Microsoft .NET SDK",
-    "version": "10.0.302",
-    "commit": "35b593bebfcba58f8e78298cef14c2761f5d86c6",
-    "hostRuntimeVersion": "10.0.10",
+    "version": "10.0.303",
+    "commit": "e730f1db756d11c93f246830ba7b94ee6fcf4b94",
+    "hostRuntimeVersion": "10.0.11",
     "runtimeIdentifier": "win-x64",
     "source": "https://github.com/dotnet/sdk",
     "license": "MIT"

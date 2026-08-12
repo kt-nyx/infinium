@@ -170,6 +170,7 @@ function Assert-NoDuplicateJsonProperties([System.Text.Json.JsonElement] $Elemen
 function Test-Wp1AllowedPath([string] $Path) {
     $exact = @(
         'Directory.Packages.props',
+        'global.json',
         'Infinium.sln',
         'contracts/json-schema/README.md',
         'contracts/protobuf/README.md',
@@ -186,6 +187,7 @@ function Test-Wp1AllowedPath([string] $Path) {
         'docs/research/investigations/RESEARCH-0055-slice6-local-input-bound-policy.md',
         'docs/research/source-registry.md',
         'eng/generate-m1-slice6-wp1-traceability.ps1',
+        'eng/update-dependency-manifest.ps1',
         'eng/verify-m1-slice6.ps1',
         'eng/verify-m1-slice6-wp3-upgrade.ps1',
         'fixtures/public/public-fixture-registry.v1.json',

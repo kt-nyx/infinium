@@ -188,7 +188,7 @@ foreach ($identity in ($resolved.Keys | Sort-Object)) {
 }
 
 $manifest.revision = 'dependency-manifest/1'
-$manifest.reviewedOn = '2026-08-10'
+$manifest.reviewedOn = '2026-08-12'
 $manifest.scope = 'NuGet packages and .NET toolchain used by the current Infinium solution'
 $manifest.lockIdentity.resolvedPackageCount = $resolvedEntries.Count
 $manifest.lockIdentity.productionGraph = 'src/Infinium.Persistence/packages.lock.json'

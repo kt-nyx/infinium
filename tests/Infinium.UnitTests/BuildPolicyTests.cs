@@ -16,7 +16,7 @@ public sealed class BuildPolicyTests
         using JsonDocument document = TestRepository.ReadJson("global.json");
         JsonElement sdk = document.RootElement.GetProperty("sdk");
 
-        Assert.AreEqual("10.0.302", sdk.GetProperty("version").GetString());
+        Assert.AreEqual("10.0.303", sdk.GetProperty("version").GetString());
         Assert.AreEqual("disable", sdk.GetProperty("rollForward").GetString());
         Assert.IsFalse(sdk.GetProperty("allowPrerelease").GetBoolean());
     }

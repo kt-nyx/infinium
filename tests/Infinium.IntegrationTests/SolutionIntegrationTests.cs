@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO.Pipes;
+using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Text.Json;
@@ -15,6 +16,7 @@ using Infinium.Contracts.Protobuf.Worker.V1;
 using Infinium.Coordinator;
 using Infinium.Persistence;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.Win32.SafeHandles;
 
 namespace Infinium.Tests;
 
@@ -205,6 +207,12 @@ public sealed class SolutionIntegrationTests
             Assert.AreEqual(4, competingCoordinator.ExitCode);
             StringAssert.Contains(competingCoordinator.Error, "already owns");
 
+            HashSet<int> existingCoordinatorChildren =
+                CaptureDirectChildProcessIds(coordinatorProcessId);
+            Task<SuspendedWorkerBarrier> workerBarrier = SuspendNewWorkerAsync(
+                coordinatorProcessId,
+                existingCoordinatorChildren,
+                TimeSpan.FromSeconds(10));
             ProcessResult cancellable = Run(
                 "Infinium.Cli",
                 [
@@ -221,49 +229,67 @@ public sealed class SolutionIntegrationTests
             using JsonDocument cancellableJson = JsonDocument.Parse(cancellable.Output);
             string cancellableRunId =
                 cancellableJson.RootElement.GetProperty("runId").GetString()!;
-            ProcessResult crossKindReplay = Run(
-                "Infinium.Cli",
-                [
-                    "--root", root,
-                    "cancel", cancellableRunId,
-                    "--command-id", "start-cancellable-command",
-                    "--json",
-                ]);
-            Assert.AreNotEqual(0, crossKindReplay.ExitCode);
-            StringAssert.Contains(
-                crossKindReplay.Error,
-                "already bound to different command inputs");
+            using (await workerBarrier.ConfigureAwait(false))
+            {
+                await WaitForRunStateAsync(
+                    root,
+                    cancellableRunId,
+                    LifecycleState.Running,
+                    TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+
+                ProcessResult crossKindReplay = Run(
+                    "Infinium.Cli",
+                    [
+                        "--root", root,
+                        "cancel", cancellableRunId,
+                        "--command-id", "start-cancellable-command",
+                        "--json",
+                    ]);
+                Assert.AreNotEqual(0, crossKindReplay.ExitCode);
+                StringAssert.Contains(
+                    crossKindReplay.Error,
+                    "already bound to different command inputs");
+
+                ProcessResult cancel = Run(
+                    "Infinium.Cli",
+                    [
+                        "--root", root,
+                        "cancel", cancellableRunId,
+                        "--command-id", "cancel-cancellable-command",
+                        "--json",
+                    ]);
+                Assert.AreEqual(0, cancel.ExitCode, cancel.Error);
+                ProcessResult cancellingInspect = Run(
+                    "Infinium.Cli",
+                    ["--root", root, "inspect", cancellableRunId, "--json"]);
+                using JsonDocument cancellingJson = JsonDocument.Parse(cancellingInspect.Output);
+                Assert.AreEqual(
+                    "Cancelling",
+                    cancellingJson.RootElement
+                        .GetProperty("lifecycle")
+                        .GetProperty("state")
+                        .GetString());
+
+                ProcessResult replayedCancel = Run(
+                    "Infinium.Cli",
+                    [
+                        "--root", root,
+                        "cancel", cancellableRunId,
+                        "--command-id", "cancel-cancellable-command",
+                        "--json",
+                    ]);
+                Assert.AreEqual(0, replayedCancel.ExitCode, replayedCancel.Error);
+                using JsonDocument replayedCancelJson = JsonDocument.Parse(replayedCancel.Output);
+                Assert.AreEqual(
+                    "AlreadyAccepted",
+                    replayedCancelJson.RootElement.GetProperty("disposition").GetString());
+            }
 
             await WaitForRunStateAsync(
                 root,
                 cancellableRunId,
-                LifecycleState.Running,
+                LifecycleState.Cancelled,
                 TimeSpan.FromSeconds(5)).ConfigureAwait(false);
-
-            ProcessResult cancel = Run(
-                "Infinium.Cli",
-                [
-                    "--root", root,
-                    "cancel", cancellableRunId,
-                    "--command-id", "cancel-cancellable-command",
-                    "--json",
-                ]);
-            Assert.AreEqual(0, cancel.ExitCode, cancel.Error);
-            ProcessResult cancellingInspect = Run(
-                "Infinium.Cli",
-                ["--root", root, "inspect", cancellableRunId, "--json"]);
-            using (JsonDocument cancellingJson = JsonDocument.Parse(cancellingInspect.Output))
-            {
-                string? state = cancellingJson.RootElement
-                    .GetProperty("lifecycle")
-                    .GetProperty("state")
-                    .GetString();
-                Assert.IsTrue(
-                    state is "Cancelling" or "Cancelled",
-                    $"Cancellation returned unexpected state '{state}'.");
-            }
-
-            await Task.Delay(2_500).ConfigureAwait(false);
             ProcessResult cancelledInspect = Run(
                 "Infinium.Cli",
                 ["--root", root, "inspect", cancellableRunId, "--json"]);
@@ -274,20 +300,6 @@ public sealed class SolutionIntegrationTests
                     .GetProperty("lifecycle")
                     .GetProperty("state")
                     .GetString());
-            ProcessResult replayedCancel = Run(
-                "Infinium.Cli",
-                [
-                    "--root", root,
-                    "cancel", cancellableRunId,
-                    "--command-id", "cancel-cancellable-command",
-                    "--json",
-                ]);
-            Assert.AreEqual(0, replayedCancel.ExitCode, replayedCancel.Error);
-            using JsonDocument replayedCancelJson = JsonDocument.Parse(replayedCancel.Output);
-            Assert.AreEqual(
-                "AlreadyAccepted",
-                replayedCancelJson.RootElement.GetProperty("disposition").GetString());
-
             await AssertIpcRoleVersionNonceAndBoundariesAsync(root).ConfigureAwait(false);
         }
         finally
@@ -674,6 +686,184 @@ public sealed class SolutionIntegrationTests
 
         Assert.Fail($"Run '{runId}' did not reach {expected} within {timeout}.");
     }
+
+    private static async Task<SuspendedWorkerBarrier> SuspendNewWorkerAsync(
+        int coordinatorProcessId,
+        HashSet<int> excludedProcessIds,
+        TimeSpan timeout)
+    {
+        DateTimeOffset deadline = DateTimeOffset.UtcNow.Add(timeout);
+        while (DateTimeOffset.UtcNow < deadline)
+        {
+            foreach (int processId in CaptureDirectChildProcessIds(coordinatorProcessId))
+            {
+                if (excludedProcessIds.Contains(processId))
+                {
+                    continue;
+                }
+
+                Process? process = null;
+                try
+                {
+                    process = Process.GetProcessById(processId);
+                    if (process.HasExited)
+                    {
+                        process.Dispose();
+                        continue;
+                    }
+
+                    int status = NtSuspendProcess(process.Handle);
+                    if (status != 0)
+                    {
+                        process.Dispose();
+                        throw new InvalidOperationException(
+                            $"The synthetic worker barrier could not suspend process {processId}; NTSTATUS=0x{status:X8}.");
+                    }
+
+                    return new SuspendedWorkerBarrier(process);
+                }
+                catch (ArgumentException)
+                {
+                    process?.Dispose();
+                    // The short-lived child exited between snapshot and handle acquisition.
+                }
+                catch (InvalidOperationException) when (process is null || process.HasExited)
+                {
+                    process?.Dispose();
+                    // The short-lived child exited between snapshot and suspension.
+                }
+            }
+
+            await Task.Delay(10).ConfigureAwait(false);
+        }
+
+        throw new TimeoutException(
+            $"No new worker child of coordinator {coordinatorProcessId} reached the synthetic suspension barrier within {timeout}.");
+    }
+
+    private static HashSet<int> CaptureDirectChildProcessIds(int parentProcessId)
+    {
+        using SafeFileHandle snapshot = CreateToolhelp32Snapshot(Th32csSnapProcess, 0);
+        if (snapshot.IsInvalid)
+        {
+            throw new System.ComponentModel.Win32Exception(
+                Marshal.GetLastWin32Error(),
+                "The synthetic worker process snapshot could not be created.");
+        }
+
+        HashSet<int> processIds = [];
+        ProcessEntry32 entry = new()
+        {
+            Size = checked((uint)Marshal.SizeOf<ProcessEntry32>()),
+        };
+        if (!Process32FirstW(snapshot, ref entry))
+        {
+            int error = Marshal.GetLastWin32Error();
+            if (error != ErrorNoMoreFiles)
+            {
+                throw new System.ComponentModel.Win32Exception(
+                    error,
+                    "The synthetic worker process snapshot could not be enumerated.");
+            }
+
+            return processIds;
+        }
+
+        do
+        {
+            if (entry.ParentProcessId == checked((uint)parentProcessId))
+            {
+                processIds.Add(checked((int)entry.ProcessId));
+            }
+
+            entry.Size = checked((uint)Marshal.SizeOf<ProcessEntry32>());
+        }
+        while (Process32NextW(snapshot, ref entry));
+
+        int finalError = Marshal.GetLastWin32Error();
+        if (finalError != ErrorNoMoreFiles)
+        {
+            throw new System.ComponentModel.Win32Exception(
+                finalError,
+                "The synthetic worker process snapshot ended unexpectedly.");
+        }
+
+        return processIds;
+    }
+
+    private sealed class SuspendedWorkerBarrier(Process process) : IDisposable
+    {
+        private Process? process = process;
+
+        public void Dispose()
+        {
+            Process? retained = Interlocked.Exchange(ref process, null);
+            if (retained is null)
+            {
+                return;
+            }
+
+            try
+            {
+                if (!retained.HasExited)
+                {
+                    int status = NtResumeProcess(retained.Handle);
+                    if (status != 0)
+                    {
+                        throw new InvalidOperationException(
+                            $"The synthetic worker barrier could not resume process {retained.Id}; NTSTATUS=0x{status:X8}.");
+                    }
+                }
+            }
+            finally
+            {
+                retained.Dispose();
+            }
+        }
+    }
+
+    private const uint Th32csSnapProcess = 0x00000002;
+    private const int ErrorNoMoreFiles = 18;
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    private struct ProcessEntry32
+    {
+        public uint Size;
+        public uint Usage;
+        public uint ProcessId;
+        public nint DefaultHeapId;
+        public uint ModuleId;
+        public uint Threads;
+        public uint ParentProcessId;
+        public int PriorityClassBase;
+        public uint Flags;
+
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
+        public string ExecutableFile;
+    }
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern SafeFileHandle CreateToolhelp32Snapshot(
+        uint flags,
+        uint processId);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool Process32FirstW(
+        SafeFileHandle snapshot,
+        ref ProcessEntry32 entry);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool Process32NextW(
+        SafeFileHandle snapshot,
+        ref ProcessEntry32 entry);
+
+    [DllImport("ntdll.dll")]
+    private static extern int NtSuspendProcess(nint processHandle);
+
+    [DllImport("ntdll.dll")]
+    private static extern int NtResumeProcess(nint processHandle);
 
     private static ApplicationHandshakeRequest ApplicationHandshake(RuntimeDescriptor descriptor)
     {
