@@ -817,7 +817,7 @@ function Invoke-CredentialNativeGate {
     if ($manifestSha -ne $expectedManifestSha) {
         throw 'CredentialNative manifest bytes differ from exact owner acceptance.'
     }
-    $manifest = [Text.Encoding]::UTF8.GetString($manifestBytes) | ConvertFrom-Json
+    $manifest = [Text.Encoding]::UTF8.GetString($manifestBytes) | ConvertFrom-Json -DateKind String
     $manifestBindingValid = ($manifest.manifest_id -eq 'infinium.m1-s6.wp4.credential-native-authorization/56789943-8096-45fa-8ac9-03da40a1c000') -and
         ($manifest.candidate_binding.accepted_wp3_candidate_commit -eq 'b32939e8b7491a5c47453f912d25dd98c090f103') -and
         ($manifest.candidate_binding.authorization_handoff_commit -eq 'fa38419b2c539524bbed01b7994f99ace491c293')
