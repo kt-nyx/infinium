@@ -4,6 +4,18 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using Infinium.CredentialHelper;
 
+if (args is ["--credential-native-qualification", "--manifest", string manifestPath,
+    "--evidence", string evidencePath])
+{
+    return WindowsCredentialNativeQualification.Run(manifestPath, evidencePath);
+}
+
+if (args is ["--credential-native-crash-probe", "--manifest", string crashManifestPath,
+    "--target-alias", string targetAlias, "--count-evidence", string countEvidencePath])
+{
+    return WindowsCredentialNativeQualification.RunCrashProbe(crashManifestPath, targetAlias, countEvidencePath);
+}
+
 if (args is ["--containment-descendant"])
 {
     await Task.Delay(TimeSpan.FromSeconds(30));

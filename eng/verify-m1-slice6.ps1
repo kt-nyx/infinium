@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Contracts', 'StateSurfaces', 'StateTotality', 'Budget', 'BudgetFaults', 'CredentialSynthetic', 'Layer6Review')]
+    [ValidateSet('Contracts', 'StateSurfaces', 'StateTotality', 'Budget', 'BudgetFaults', 'CredentialSynthetic', 'CredentialNative', 'Layer6Review')]
     [string] $Gate,
 
     [Parameter(Mandatory = $true)]
@@ -11,10 +11,12 @@ param(
 
     [string] $CandidateCommit,
 
+    [string] $AuthorizationManifest,
+
     [switch] $HandoffCloseout
 )
 
-if ($Gate -eq 'Layer6Review' -and $PSVersionTable.PSEdition -ne 'Core') {
+if ($Gate -in @('Layer6Review', 'CredentialNative') -and $PSVersionTable.PSEdition -ne 'Core') {
     $pwsh = Get-Command pwsh.exe -ErrorAction Stop
     $arguments = @(
         '-NoProfile',
@@ -27,6 +29,9 @@ if ($Gate -eq 'Layer6Review' -and $PSVersionTable.PSEdition -ne 'Core') {
     )
     if ($HandoffCloseout) {
         $arguments += '-HandoffCloseout'
+    }
+    if (-not [string]::IsNullOrWhiteSpace($AuthorizationManifest)) {
+        $arguments += @('-AuthorizationManifest', $AuthorizationManifest)
     }
     & $pwsh.Source @arguments
     exit $LASTEXITCODE
@@ -76,13 +81,20 @@ function Assert-Slice5V1Unchanged {
     }
 }
 
-function Write-Receipt([string] $Name, [System.Collections.IDictionary] $Evidence, [string] $Status = 'passed') {
+function Write-Receipt(
+    [string] $Name,
+    [System.Collections.IDictionary] $Evidence,
+    [string] $Status = 'passed',
+    [bool] $CredentialAccessPermitted = $false) {
     $receipt = [ordered]@{
         gate = $Name
         status = $Status
         network_permitted = $false
         credential_access_permitted = $false
         evidence = $Evidence
+    }
+    if ($CredentialAccessPermitted) {
+        $receipt.credential_access_permitted = $true
     }
     $json = ConvertTo-CanonicalJsonValue $receipt
     [System.IO.File]::WriteAllText(
@@ -781,6 +793,120 @@ function Invoke-CredentialSyntheticGate {
     })
 }
 
+function Invoke-CredentialNativeGate {
+    if ([string]::IsNullOrWhiteSpace($AuthorizationManifest)) {
+        throw 'CredentialNative requires -AuthorizationManifest bound to exact owner acceptance.'
+    }
+    $manifestPath = if ([System.IO.Path]::IsPathRooted($AuthorizationManifest)) {
+        [System.IO.Path]::GetFullPath($AuthorizationManifest)
+    } else {
+        [System.IO.Path]::GetFullPath((Join-Path $repoRoot $AuthorizationManifest))
+    }
+    $expectedManifestPath = [System.IO.Path]::GetFullPath((Join-Path $repoRoot `
+        'docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v1.json'))
+    if (-not [string]::Equals($manifestPath, $expectedManifestPath, [StringComparison]::OrdinalIgnoreCase)) {
+        throw 'CredentialNative refuses any manifest path other than the exact tracked owner-accepted WP4 artifact.'
+    }
+    $manifestBytes = [IO.File]::ReadAllBytes($manifestPath)
+    $manifestSha = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($manifestBytes)).ToLowerInvariant()
+    $expectedManifestSha = '0c911c6c10340d4a8b6a3f98aa2c2bffa3f1f4290793d3583a460cecf89bcbd3'
+    if ($manifestSha -ne $expectedManifestSha) {
+        throw 'CredentialNative manifest bytes differ from exact owner acceptance.'
+    }
+    $manifest = [Text.Encoding]::UTF8.GetString($manifestBytes) | ConvertFrom-Json
+    $manifestBindingValid = ($manifest.manifest_id -eq 'infinium.m1-s6.wp4.credential-native-authorization/56789943-8096-45fa-8ac9-03da40a1c000') -and
+        ($manifest.candidate_binding.accepted_wp3_candidate_commit -eq 'b32939e8b7491a5c47453f912d25dd98c090f103') -and
+        ($manifest.candidate_binding.authorization_handoff_commit -eq 'fa38419b2c539524bbed01b7994f99ace491c293')
+    if (-not $manifestBindingValid) {
+        throw 'CredentialNative manifest identity or candidate binding differs from owner acceptance.'
+    }
+    $expires = [DateTimeOffset]::ParseExact(
+        [string]$manifest.expires_at_utc,
+        'yyyy-MM-ddTHH:mm:ss.fffffffZ',
+        [Globalization.CultureInfo]::InvariantCulture,
+        [Globalization.DateTimeStyles]::AssumeUniversal)
+    if ([DateTimeOffset]::UtcNow -ge $expires) { throw 'CredentialNative owner authority has expired.' }
+
+    $head = (& git rev-parse HEAD).Trim()
+    if ((& git branch --show-current).Trim() -ne 'codex/m1-s6') { throw 'CredentialNative requires branch codex/m1-s6.' }
+    & git merge-base --is-ancestor 'b32939e8b7491a5c47453f912d25dd98c090f103' $head
+    if ($LASTEXITCODE -ne 0) { throw 'CredentialNative candidate does not descend from accepted WP3.' }
+    if (-not [string]::IsNullOrWhiteSpace((& git status --porcelain))) {
+        throw 'CredentialNative requires a clean committed implementation candidate.'
+    }
+    $record = Get-Content -LiteralPath (Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/record.md') -Raw
+    if ((-not $record.Contains($expectedManifestSha, [StringComparison]::Ordinal)) -or
+        (-not $record.Contains($head, [StringComparison]::Ordinal))) {
+        throw 'CredentialNative requires the exact owner acceptance and committed implementation candidate in the append-only record.'
+    }
+
+    $helperPath = Join-Path $repoRoot 'src/Infinium.CredentialHelper/bin/Release/net10.0/Infinium.CredentialHelper.exe'
+    if (-not (Test-Path -LiteralPath $helperPath -PathType Leaf)) {
+        throw 'CredentialNative exact Release helper binary is absent.'
+    }
+    $evidencePath = Join-Path $resolvedOutputRoot 'credential-native-evidence.json'
+    $backupPath = Join-Path $resolvedOutputRoot 'native-backup-metadata.json'
+    if (Test-Path -LiteralPath $evidencePath -PathType Leaf) {
+        throw 'CredentialNative refuses a pre-existing evidence path; the one-shot output root must be fresh.'
+    }
+    & $helperPath '--credential-native-qualification' '--manifest' $manifestPath '--evidence' $evidencePath
+    if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $evidencePath -PathType Leaf)) {
+        throw 'CredentialNative helper qualification failed or produced no evidence.'
+    }
+    $evidenceBytes = [IO.File]::ReadAllBytes($evidencePath)
+    $evidence = [Text.Encoding]::UTF8.GetString($evidenceBytes) | ConvertFrom-Json
+    $evidenceValid = ($evidence.schema -eq 'infinium.m1-s6.wp4.credential-native-evidence/v1') -and
+        ($evidence.status -eq 'passed') -and
+        ($evidence.manifestSha256 -eq $expectedManifestSha) -and
+        (@($evidence.scenarios).Count -eq 10) -and
+        (@($evidence.targetAbsence).Count -eq 12) -and
+        (@($evidence.targetAbsence | Where-Object { $_.result -ne 'ERROR_NOT_FOUND' }).Count -eq 0) -and
+        ([int64]$evidence.nativeCalls.credWriteW -le [int64]$manifest.operation_limits.native_call_maxima.CredWriteW) -and
+        ([int64]$evidence.nativeCalls.credReadW -le [int64]$manifest.operation_limits.native_call_maxima.CredReadW) -and
+        ([int64]$evidence.nativeCalls.credDeleteW -le [int64]$manifest.operation_limits.native_call_maxima.CredDeleteW) -and
+        ([int64]$evidence.nativeCalls.credFree -le [int64]$manifest.operation_limits.native_call_maxima.CredFree) -and
+        ([int64]$evidence.nativeCalls.total -le [int64]$manifest.operation_limits.native_call_maxima.total) -and
+        ([int64]$evidence.listenerCount -eq 0) -and
+        ([int64]$evidence.networkOperations -eq 0) -and
+        ([int64]$evidence.dnsOperations -eq 0) -and
+        ([int64]$evidence.providerOperations -eq 0) -and
+        ([int64]$evidence.billableOperations -eq 0) -and
+        (-not [bool]$evidence.retryAttempted) -and
+        ([bool]$evidence.fakeProviderOnly) -and
+        ([int64]$evidence.canaries.secretMatches -eq 0) -and
+        ([int64]$evidence.canaries.rawTargetMatches -eq 0) -and
+        (Test-Path -LiteralPath $backupPath -PathType Leaf)
+    if (-not $evidenceValid) {
+        throw 'CredentialNative evidence does not satisfy the exact owner-accepted finite oracle.'
+    }
+    Write-Receipt 'CredentialNative' ([ordered]@{
+        execution_mode = 'owner-authorized-disposable-windows-credential-manager'
+        manifest_id = $manifest.manifest_id
+        manifest_bytes = $manifestBytes.Length
+        manifest_sha256 = $manifestSha
+        implementation_candidate_commit = $head
+        accepted_wp3_candidate_commit = $manifest.candidate_binding.accepted_wp3_candidate_commit
+        helper_binary_sha256 = (Get-FileHash -LiteralPath $helperPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        evidence_file = [IO.Path]::GetFileName($evidencePath)
+        evidence_bytes = $evidenceBytes.Length
+        evidence_sha256 = (Get-FileHash -LiteralPath $evidencePath -Algorithm SHA256).Hash.ToLowerInvariant()
+        backup_metadata_sha256 = (Get-FileHash -LiteralPath $backupPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        target_count = @($evidence.targetAbsence).Count
+        scenario_count = @($evidence.scenarios).Count
+        native_calls = $evidence.nativeCalls
+        cleanup_absence_proof_count = @($evidence.targetAbsence | Where-Object { $_.result -eq 'ERROR_NOT_FOUND' }).Count
+        canary_secret_matches = [int64]$evidence.canaries.secretMatches
+        canary_raw_target_matches = [int64]$evidence.canaries.rawTargetMatches
+        listener_count = [int64]$evidence.listenerCount
+        network_operations = [int64]$evidence.networkOperations
+        dns_operations = [int64]$evidence.dnsOperations
+        provider_operations = [int64]$evidence.providerOperations
+        billable_operations = [int64]$evidence.billableOperations
+        retry_attempted = [bool]$evidence.retryAttempted
+        cleanup_uncertainty = 'injected-visible-and-namespace-reuse-blocked; actual-final-cleanup-confirmed-absent'
+    }) 'passed' $true
+}
+
 Push-Location $repoRoot
 try {
     switch ($Gate) {
@@ -790,6 +916,7 @@ try {
         'Budget' { Invoke-BudgetGate }
         'BudgetFaults' { Invoke-BudgetFaultGate }
         'CredentialSynthetic' { Invoke-CredentialSyntheticGate }
+        'CredentialNative' { Invoke-CredentialNativeGate }
         'Layer6Review' { Invoke-Layer6ReviewGate }
     }
 } finally {

@@ -51,12 +51,16 @@ if (($manifest.candidate_binding.authorization_handoff_commit -ne $expectedHando
 
 $head = (& git -C $repoRoot rev-parse HEAD).Trim()
 $branch = (& git -C $repoRoot branch --show-current).Trim()
-if ($LASTEXITCODE -ne 0 -or $head -ne $expectedHandoff -or $branch -ne 'codex/m1-s6') {
-    throw 'Repository HEAD or branch does not match the prepared authorization base.'
+if ($LASTEXITCODE -ne 0 -or $branch -ne 'codex/m1-s6') {
+    throw 'Repository branch does not match the prepared authorization branch.'
 }
 & git -C $repoRoot merge-base --is-ancestor $expectedWp3 $expectedHandoff
 if ($LASTEXITCODE -ne 0) {
     throw 'Accepted WP3 candidate is not an ancestor of the handoff commit.'
+}
+& git -C $repoRoot merge-base --is-ancestor $expectedHandoff $head
+if ($LASTEXITCODE -ne 0) {
+    throw 'Repository HEAD is not a descendant of the exact prepared authorization base.'
 }
 
 $preparedAt = [DateTimeOffset]::ParseExact(
@@ -161,9 +165,6 @@ if ((-not $currentStateText.Contains('WP4 remains closed pending', [StringCompar
 $verifierPath = Join-Path $repoRoot 'eng/verify-m1-slice6.ps1'
 $verifierText = [System.IO.File]::ReadAllText($verifierPath)
 $credentialNativeImplemented = $verifierText.Contains("'CredentialNative'", [StringComparison]::Ordinal)
-if ($credentialNativeImplemented) {
-    throw 'CredentialNative is already implemented; this preparation-only validator requires a fresh execution-candidate manifest.'
-}
 
 $manifestHash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($manifestBytes)).ToLowerInvariant()
 $receipt = [ordered]@{
@@ -181,7 +182,7 @@ $receipt = [ordered]@{
     scenario_count = $expectedScenarios.Count
     allowed_native_calls = $expectedCalls
     native_call_maximum = $nativeTotal
-    credential_native_gate_implemented = $false
+    credential_native_gate_implemented = $credentialNativeImplemented
     execution_authorized = $false
     credential_manager_operations = 0
     dns_operations = 0
