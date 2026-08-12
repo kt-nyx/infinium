@@ -2696,3 +2696,90 @@ No native Credential Manager API, credential enumeration, API key, real
 secret, DNS/network/provider call, private fixture, sibling/archive/legacy
 material, protected root, WP4/WP5 behavior, current-state advancement,
 destructive operation, external effect, or push occurred.
+
+## WP3 replacement-cleanup half-commit correction — 2026-08-11
+
+The exact clean rejected base was
+`2acd24c42a98d046a1a3d3f359806982ba84fb90`. The bounded product and test
+correction is exact commit
+`e85d391851010152d5d4db92f3cdddecc2de04c6`. It closes only the confirmed
+replacement half-commit finding against predecessor product candidate
+`7130ddc1d5b163adc05d9b0d06d5066341cfcfa9`.
+
+Replacement now keeps the exact predecessor generation as its durable
+`replacing` root while the helper writes and verifies the successor and then
+deletes the predecessor. If exact predecessor deletion is unavailable, fails,
+or the helper crashes after successor commit, the coordinator records the
+predecessor as non-active `delete-pending` with failed cleanup. The successor
+remains ineligible. A later `Recover` is admitted only when it binds that exact
+predecessor, its exact next-generation successor, and the next ordinal; the
+helper must confirm the exact predecessor slot is absent, deleting it if still
+present, before the coordinator may activate the successor. Ordinary
+delete-pending state remains non-reactivatable. No enumeration or arbitrary
+target authority was added.
+
+The exact fake-store regression injects `DeleteExact` failure on the
+predecessor after successor write/verify. It proves typed failure, durable
+predecessor identity, `delete-pending`/`failed` cleanup, rejection of a
+successor-only recovery attempt, restart and backup/restore retention, later
+exact cleanup success, old-slot absence, successor-only store state, successor
+activation, and subsequent verification. Bounded same-version correction
+`M1-S6-WP3-0006C` upgrades both exact accepted-WP2 fingerprint
+`240a06fe2a9fa3d79db63985fbda329c8e83822534b93cbfb539062a109cad9e`
+and exact rejected-WP3 fingerprint
+`554129523ac64ce52ee4d24e90644dbaa167c0d98602f1c2d0f25ad271ec0581`
+to current fingerprint
+`85c0ed0d1ee466c9a62d33c2a5ce6da8f28b2fc788603deffaa364683d5966fd`.
+Fresh, upgraded, and restored stores converge; unknown same-version stores
+still fail closed.
+
+Retained verification is:
+
+1. Release build passed with zero warnings or errors. Exact focused filters
+   passed Unit 11/0/0, Integration 6/0/0, Security 4/0/0, Fault 4/0/0, and
+   Evaluation 2/0/0. The exact injected predecessor-delete regression passed
+   1/0/0. The full Contract project passed 155/0/0 after the cleanup-recovery
+   query was kept internal to persistence and exposed only to Coordinator by
+   friend-assembly authority.
+2. `CredentialSynthetic` passed its nested 11/0/0, 6/0/0, 4/0/0, 4/0/0,
+   and 2/0/0 checks. Its 1,371-byte canonical receipt has SHA-256
+   `b961ef5e43fc3054f24f2a98213c8c9a7238d0c346152d1b94d2986abef199d3`
+   and binds 490-byte dynamic evidence with SHA-256
+   `e5fe9918a7fe486a2e57ae0105ad2b6e7392ff535bac2e15e7fad6571f9cdf78`.
+   It records three inherited private handles and zero standard handles,
+   listeners, retries, process survivors, canary matches, native credential
+   operations, or network operations.
+3. The 747-byte accepted-WP2/rejected-WP3 upgrade receipt has SHA-256
+   `7814ef14dddb95e3ac2c11440d4cc9759ad41ce700c4c519e37838b928f29ada`.
+   It proves both bounded source upgrades, fresh convergence, backup/restore,
+   unknown-same-version refusal, and zero native/network operations.
+4. Accumulated `Contracts` passed 22/0/0. `StateSurfaces` and `StateTotality`
+   each passed 27/0/0 state plus 18/0/0 persistence checks. `Budget` passed
+   5/0/0 Unit, 12/0/0 Integration, and 6/0/0 Evaluation; `BudgetFaults`
+   passed 4/0/0 Unit, 7/0/0 Integration, and 4/0/0 Evaluation. The complete
+   non-live analysis `All` gate passed; its current 764-byte receipt has
+   SHA-256 `85ddbc03dfb60d2d67241ff3375a314e936c907786a98a1f4c9801e1d6c3536d`.
+5. Direct unfiltered projects passed Unit 201/0/1, Contract 155/0/0,
+   Evaluation 61/0/8, Security 4/0/0, and Fault 4/0/0. Integration passed
+   86 tests and failed only the pre-existing timing-sensitive
+   `CliCoordinatorWorkerNamedPipeFlowCompletesAndInspectsImmutableBindings`:
+   its cancellable synthetic run completed before the cancellation command,
+   so the test observed the truthful `Completed -> Cancelling` rejection on
+   both the full run and exact rerun. The affected WP3 Integration filter and
+   complete non-live `All` gate passed; the bounded correction makes no claim
+   that the full Integration project was green.
+6. Documentation validation passed 166 metadata files, 168 Markdown link
+   sources, and 15 JSON files. Format, dependency-manifest, and diff checks
+   passed.
+7. Candidate-bound `Layer6Review` passed from exact rejected base
+   `2acd24c42a98d046a1a3d3f359806982ba84fb90` through exact candidate
+   `e85d391851010152d5d4db92f3cdddecc2de04c6`. Its 1,286-byte receipt has
+   SHA-256 `c57cc1d27ed800c8e6bb15bcf5fcd556ecf70ffe86f0de2cc22ea4ba484f6e9a`,
+   with 12 changed paths and zero allowed-path, strict-changed-JSON,
+   relative-link, private/archive, status-claim, or unsupported-gap findings.
+
+No native Credential Manager API, credential enumeration, API key, real
+secret, DNS/network/provider call, token-count/billable operation, private
+fixture, sibling/archive/legacy material, protected root, WP4/WP5 product
+work, current-state advancement, destructive external effect, or push
+occurred. External-effect count remains zero.
