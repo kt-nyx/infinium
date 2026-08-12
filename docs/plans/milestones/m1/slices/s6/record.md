@@ -3142,3 +3142,15 @@ security review. No further Credential Manager operation is authorized under
 the consumed manifest. WP4 is not accepted by this implementation record
 alone, and `docs/current-state.md` remains unchanged pending that independent
 review.
+
+The first candidate-bound Layer 6 run truthfully rejected three newly added
+WP4 authorization paths because its historical exact-path allowlist did not
+yet include the WP4 manifest schema, accepted manifest, or manifest validator.
+All JSON, link, private/archive, and protected-path checks were otherwise
+clean; this was a verifier-maintenance failure, not a native qualification or
+product failure. Product commit
+`1b2439df3050783c7df1a3acda767033ee486edf` adds only those three exact WP4
+paths to the existing allowlist. It does not broaden any prefix, protected
+root, private/archive access, native authority, or effect. The focused Layer 6
+contract regression passed 1/0/0. This commit plus the append-only evidence is
+the superseding exact review candidate.
