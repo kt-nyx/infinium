@@ -2542,3 +2542,64 @@ with the same 45 changed paths and zero findings. All previously retained
 full-floor and analysis evidence remains applicable because the correction
 only strengthens two already passing tests. External-effect counts remain zero,
 and `docs/current-state.md` remains unchanged.
+
+## WP3 bounded final-review correction — 2026-08-11
+
+The exact clean rejected base for this bounded correction was
+`f9b0e154e8e03dbd70181a42ffd9166122537758`. The corrected product/test
+candidate is exact commit `0a63a72b87c7b7c7c51230b1ed23fdacb3bb4eb6`. This entry supersedes the
+stale lifecycle-correction receipt identities above; it does not rewrite the
+append-only earlier evidence.
+
+The correction closes only the ten exact final-review findings. It adds
+recursive expected-wire-type enforcement and exhaustive descriptor-driven
+mutations; an exact fingerprinted repository-helper launch through an explicit
+Windows inherited-handle list and Job Object; persistent capability-bound fake
+secure storage with one-use nonce replay protection and authoritative expiry;
+coordinator-owned lifecycle transitions and a full authoritative WP2 final-gate
+snapshot; retained helper response staging and production persistence,
+settlement, output, and replay adoption; restore-to-recovery-required metadata;
+and process-, network-, native-, canary-, staging-, and survivor measurements.
+The public DEV/VAL packages now execute real subprocess lifecycle and fault
+paths, consume every input/oracle field, and reject every per-field wrong oracle.
+
+Retained verification is:
+
+1. Locked restore and the Release build passed with zero warnings or errors.
+   The exact WP3 focused gate passed Unit 11/0/0, Integration 6/0/0,
+   Security 4/0/0, Fault 3/0/0, and Evaluation 2/0/0.
+2. The superseding `CredentialSynthetic` receipt is 1,453 bytes with SHA-256
+   `f5f2b78e6d4b76826e89426b3d486d108ace1748de0467c4f5244c40f53f6cb9`.
+   It hash-binds the 391-byte dynamic evidence with SHA-256
+   `aa93bc12ec7439a02c0084384213f87c73bcdb37e26c2fcb614506a43bbe1cae`
+   and measured helper SHA-256
+   `f5cbf0e9349bef5804e8ca1dca734916416a6c055dcd8fa3afa7bca7ce985222`,
+   three inherited private handles, and zero standard handles, listeners,
+   native credential operations, network operations, canary matches, retries,
+   or process-tree survivors. Staging preceded coordinator-only admission.
+3. Accumulated unfiltered Release checks passed Unit 201/0/1, Contract
+   155/0/0, Integration 87/0/0, Evaluation 61/0/8, Security 4/0/0, and
+   Fault 3/0/0. The skips remain the platform-dependent symbolic-link test and
+   the eight explicitly private/platform evaluation cases, none of which was
+   accessed. Category runs and the migration/backup/crash/recovery regressions
+   also passed.
+4. Accumulated `Contracts`, `StateSurfaces`, `StateTotality`, `Budget`, and
+   `BudgetFaults` gates passed. The complete non-live analysis `All` receipt is
+   764 bytes with SHA-256
+   `bef66b268bbb7f51596a3195eb12f8a850424a7b086bbf201aaaad633a670ff5`.
+   Format verification, dependency-manifest freshness, documentation
+   validation (166 metadata files, 168 Markdown link sources, 15 JSON files),
+   strict changed-JSON parsing, diff checks, frozen Slice 5 v1/WP1 ledger and
+   traceability immutability, current-state immutability, and protected/private/
+   archive isolation passed.
+5. Candidate-bound `Layer6Review` passed from exact rejected base
+   `f9b0e154e8e03dbd70181a42ffd9166122537758` through exact corrected product
+   candidate `0a63a72b87c7b7c7c51230b1ed23fdacb3bb4eb6`. Its 1,683-byte receipt has
+   SHA-256 `b52bf014ce09f0bfccee88c2a698f8fa4a905e116dcc9a1fca1aadc169e0dd91`,
+   with 28 changed paths and zero allowed-path, strict-changed-JSON,
+   relative-link, private/archive, or other failures.
+
+No native Credential Manager API, credential enumeration, API key, real
+secret, DNS/network/provider call, private fixture, sibling/archive/legacy
+material, protected root, WP4/WP5 behavior, current-state advancement,
+destructive operation, external effect, or push occurred.
