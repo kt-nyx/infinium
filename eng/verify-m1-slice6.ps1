@@ -13,7 +13,9 @@ param(
 
     [string] $AuthorizationManifest,
 
-    [switch] $HandoffCloseout
+    [switch] $HandoffCloseout,
+
+    [switch] $OwnerTestProcessCleanup
 )
 
 if ($Gate -in @('Layer6Review', 'CredentialNative') -and $PSVersionTable.PSEdition -ne 'Core') {
@@ -33,6 +35,9 @@ if ($Gate -in @('Layer6Review', 'CredentialNative') -and $PSVersionTable.PSEditi
     }
     if ($HandoffCloseout) {
         $arguments += '-HandoffCloseout'
+    }
+    if ($OwnerTestProcessCleanup) {
+        $arguments += '-OwnerTestProcessCleanup'
     }
     if (-not [string]::IsNullOrWhiteSpace($AuthorizationManifest)) {
         $arguments += @('-AuthorizationManifest', $AuthorizationManifest)
@@ -305,8 +310,14 @@ function Invoke-Layer6ReviewGate {
         foreach ($path in $paths) {
             $isHandoffCurrentState = $HandoffCloseout -and
                 $path -ceq 'docs/current-state.md'
-            $isProtected = (Test-Wp1ProtectedPath $path) -and -not $isHandoffCurrentState
-            $isAllowed = (Test-Wp1AllowedPath $path) -or $isHandoffCurrentState
+            $isOwnerTestProcessCleanupPolicy = $OwnerTestProcessCleanup -and
+                $path -ceq 'docs/execution-policy.md'
+            $isProtected = (Test-Wp1ProtectedPath $path) -and
+                -not $isHandoffCurrentState -and
+                -not $isOwnerTestProcessCleanupPolicy
+            $isAllowed = (Test-Wp1AllowedPath $path) -or
+                $isHandoffCurrentState -or
+                $isOwnerTestProcessCleanupPolicy
             $privateOrArchive = $path -match '(?i)(^|/)(private|legacy|archive)(/|$)' -or
                 $path -match '(?i)independent-slice3-evaluator' -or
                 $path -match '(?i)^docs/evaluation/fixtures/'
@@ -474,6 +485,25 @@ function Invoke-Layer6ReviewGate {
             }
         }
     }
+    if ($OwnerTestProcessCleanup) {
+        $executionPolicy = @($changedPaths | Where-Object { $_.path -ceq 'docs/execution-policy.md' })
+        if ($executionPolicy.Count -ne 1 -or -not $executionPolicy[0].candidate_blob) {
+            $failures.Add('OwnerTestProcessCleanup requires exactly one changed candidate docs/execution-policy.md.')
+        } else {
+            $executionPolicyText = Get-CandidateText $candidateHash 'docs/execution-policy.md'
+            $requiredCleanupPolicy = @(
+                '## Test-process cleanup and verification',
+                'Get-CimInstance -ClassName Win32_Process',
+                'Stop-Process -Id $current.ProcessId -Force',
+                'Repository-owned dotnet/testhost processes remaining: 0',
+                'Never terminate by process name alone')
+            foreach ($required in $requiredCleanupPolicy) {
+                if (-not $executionPolicyText.Contains($required, [System.StringComparison]::Ordinal)) {
+                    $failures.Add("OwnerTestProcessCleanup policy is missing the required exact-root safeguard: $required")
+                }
+            }
+        }
+    }
 
     $status = if ($failures.Count -eq 0) { 'passed' } else { 'failed' }
     Write-Receipt 'Layer6Review' ([ordered]@{
@@ -483,6 +513,7 @@ function Invoke-Layer6ReviewGate {
         candidate_commit = $candidateHash
         candidate_bound = $true
         handoff_closeout = [bool]$HandoffCloseout
+        owner_test_process_cleanup = [bool]$OwnerTestProcessCleanup
         changed_path_count = $changedPaths.Count
         allowed_path_failure_count = $pathFailures.Count
         strict_changed_json_failure_count = $jsonFailures.Count
