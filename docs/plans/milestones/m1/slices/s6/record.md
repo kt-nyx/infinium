@@ -3377,3 +3377,86 @@ Manager or WP4 native namespace, private fixture/evaluator, archive/legacy
 material, provider SDK, protected external effect, WP6/Slice 7 work, current-
 state advancement, or push occurred. WP5 still requires a fresh independent
 bounded review; this evidence does not self-accept the package.
+
+## WP5 bounded convergence correction — 2026-08-12
+
+Fresh provider/security and persistence/replay review of candidate `c559e9d`
+returned `CORRECT`. The bounded correction is commits
+`299ef56049340ba0c9e4057150918014e9fe1208`,
+`97e97010bc666646c176f32bffec57d9cd9b20cc`,
+`59c4777c853663846e95bb10dd34a3472c580738`, and mechanical formatting
+commit `f9764e78a919e0d021c6a39163dcc94328cd050d`. The exact resulting clean
+candidate is `f9764e78a919e0d021c6a39163dcc94328cd050d`.
+
+The correction closes the reproduced findings without WP6 behavior:
+
+1. response admission validates the only output-text value against the exact
+   request schema, fails closed on unsupported schema vocabulary, resolves
+   local references, and maps invalid JSON, schema-invalid output, every JSON
+   root/nested shape, and hostile numeric overflow to typed non-success;
+2. qualification and semantic output ceilings are exactly 256 and 4,096,
+   `HttpClient.Timeout` is deliberately infinite so the immutable per-operation
+   cancellation deadline owns 60/120 seconds, and redirect, retry, proxy, tool,
+   and second-send policy remains disabled;
+3. provider-authored cancelled or future responses retain their known HTTP/raw
+   receipt, usage state, replay edge, and query result, while local cancellation
+   and response-less transport ambiguity remain separate; helper launches now
+   explicitly select `production` or `synthetic-qualification` transport and
+   fail closed when neither is selected;
+4. dispatched responses create actual `provider_replay_edges`; operation query
+   reads persisted replay state; oversized null-raw receipts query and replay
+   as typed oversized results; terminal publication writes the real
+   `provider_run_output_v2_bindings` row and produces validated live run-output
+   v2 and CLI v2 projections with response, usage, replay, authorization,
+   dispatch, and reservation bindings;
+5. schema-6 same-version correction `M1-S6-WP5-0006E` upgrades the exact prior
+   WP5 fingerprint, preserves backup/restore provenance, and distinguishes
+   undispatched local cancellation from retained provider cancellation; and
+6. both public offline packages now carry complete authoring, partition,
+   provenance, answer-isolation, replay-dependency, limitation, and pending-
+   review metadata. Their input includes the exact output schema; tests compare
+   every oracle field to an observation; recursive answer-bearing mutations are
+   rejected; the resealer owns the WP5 path and exact 29-package registry; and
+   network evidence is generated from measured loopback, redirect, retry,
+   replay, DNS-rejection, provider-address, and proxy-policy observations.
+
+The clean-candidate verification passed:
+
+1. locked restore and final Release build with zero warnings and zero errors;
+2. solution category Unit 214/0/1, Contract 127/0/0, Integration 97/0/0,
+   Evaluation 83/0/8, Security 126/0/3, and Fault 108/0/3;
+3. final unfiltered Unit 227/0/1, Contract 155/0/0, Integration 107/0/0,
+   Evaluation 63/0/8, Security 7/0/0, and Fault 7/0/0;
+4. exact `Adapter` Unit 15/0/0, Integration 6/0/0, Security 4/0/0,
+   Fault 3/0/0, and Evaluation 2/0/0. Its 1,410-byte receipt has SHA-256
+   `e185e6538363dee62c82ef17a7b861d21ca51a6097e76454d32c8b94a6b9260f`;
+5. exact `OfflineSafetyReplay` Integration 3/0/0, Security 4/0/0,
+   Fault 3/0/0, and Evaluation 2/0/0. Its 848-byte receipt has SHA-256
+   `58874b8b5c4abe16784a7ef9f45001006210caabf111ea4ce90f52d86a473869`;
+   the shared 238-byte measured network spy has SHA-256
+   `d2eeac57768b66d0714e31d255c88b6715c9f2031d00fecaa71591755590bcd6`
+   and records zero public DNS, provider, redirect-follow, retry, proxy-
+   fallback, and replay-network operations;
+6. format verification, dependency-manifest freshness, documentation
+   validation (166 metadata files, 168 Markdown link sources, 17 JSON files),
+   five changed strict-JSON parses, and diff hygiene; and
+7. candidate-bound `Layer6Review` from exact correction baseline
+   `7119bc40c45e1efc95e647b59db383895ef0de91` through exact candidate
+   `f9764e78a919e0d021c6a39163dcc94328cd050d`: 26 changed paths and zero
+   allowed-path, strict-JSON, relative-link, private/archive, or other findings.
+   Its 1,321-byte receipt has SHA-256
+   `adbc7db58c09d771c6954d84f44adba0083028b383bfcc6d9cad68a00162fc88`.
+
+One intentionally short verification wrapper timed out while the Integration
+category was still active. The accepted exact-root cleanup procedure matched
+and PID-revalidated its repository-owned `dotnet` and `testhost` children,
+terminated only those two processes, and verified zero survivors before the
+complete rerun. After all final verification, the same procedure resolved
+`Z:\Development\Large Projects\Skyrim\infinium`, matched zero processes, and
+again verified zero repository-owned `dotnet`/`testhost` survivors.
+
+No API key, public DNS/provider endpoint, live/billable request, Credential
+Manager or WP4 native namespace, private fixture/evaluator, archive, provider
+SDK, protected external effect, WP6/Slice 7 work, current-state advancement,
+or push occurred. This correction evidence does not self-accept WP5; the exact
+candidate remains for fresh independent bounded convergence review.
