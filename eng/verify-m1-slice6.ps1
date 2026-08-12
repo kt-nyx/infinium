@@ -23,10 +23,14 @@ if ($Gate -in @('Layer6Review', 'CredentialNative') -and $PSVersionTable.PSEditi
         '-ExecutionPolicy', 'Bypass',
         '-File', $PSCommandPath,
         '-Gate', $Gate,
-        '-OutputRoot', $OutputRoot,
-        '-BaselineCommit', $BaselineCommit,
-        '-CandidateCommit', $CandidateCommit
+        '-OutputRoot', $OutputRoot
     )
+    if (-not [string]::IsNullOrWhiteSpace($BaselineCommit)) {
+        $arguments += @('-BaselineCommit', $BaselineCommit)
+    }
+    if (-not [string]::IsNullOrWhiteSpace($CandidateCommit)) {
+        $arguments += @('-CandidateCommit', $CandidateCommit)
+    }
     if ($HandoffCloseout) {
         $arguments += '-HandoffCloseout'
     }
