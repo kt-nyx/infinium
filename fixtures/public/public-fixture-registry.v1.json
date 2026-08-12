@@ -64,8 +64,8 @@
       "partition": "development",
       "package_path": "fixtures/public/platform/provider-offline/offline-dev",
       "authority_file": "fixtures/public/platform/provider-offline/offline-dev/public-manifest.json",
-      "authority_bytes": 618,
-      "authority_sha256": "880398d9f4b8ac20bd2a2b8404a7611a9c77ca8994d646c7b1433cdba2e2d572"
+      "authority_bytes": 1850,
+      "authority_sha256": "5f51514309b78ed5d7138ef6e20f5c1a14c3f5517728e6ce05de64059b0903e0"
     },
     {
       "package_identity": "M1-PLAT-OFFLINE-VAL-v1",
@@ -73,8 +73,8 @@
       "partition": "validation",
       "package_path": "fixtures/public/platform/provider-offline/offline-val",
       "authority_file": "fixtures/public/platform/provider-offline/offline-val/public-manifest.json",
-      "authority_bytes": 617,
-      "authority_sha256": "fb7860df80c480555b73667146b2815c6d02be1f056783785d2f5c35b4986386"
+      "authority_bytes": 1851,
+      "authority_sha256": "15a2b91a3f41560e62cbac42bd9e3af956366a3b3f94336f98ec89e9addbd1ac"
     },
     {
       "package_identity": "M1-PLAT-CREDENTIAL-HELPER-DEV-v1",

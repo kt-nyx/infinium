@@ -448,10 +448,6 @@ public static class ProviderOperationContractInvariants
             {
                 throw new InvalidOperationException("Run-output provider publication contradicts its availability or operation kind.");
             }
-            if (live)
-            {
-                throw new NotSupportedException("Live run-output publication is modeled but unreachable until an accepted input-bound policy and exact live authorization exist.");
-            }
         }
     }
 
@@ -479,7 +475,11 @@ public static class ProviderOperationContractInvariants
             {
                 throw new InvalidOperationException("Live CLI summary shape requires an accepted proof policy and exact live authorization binding.");
             }
-            throw new NotSupportedException("Live CLI summary is modeled but unreachable while WP1 input-bound authority is deferred.");
+            if (value.ReplayState is not ("retained-response" or "audit-only"))
+            {
+                throw new InvalidOperationException("A live CLI summary requires an exact persisted replay classification.");
+            }
+            return;
         }
         if (value.AcceptedInputBoundPolicyId is not null || value.AcceptedInputBoundPolicyVersion is not null
             || value.LiveAuthorizationId is not null)

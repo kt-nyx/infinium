@@ -15,7 +15,33 @@
   "input_file": "input.json",
   "oracle_file": "oracle.json",
   "answer_free_input": true,
-  "review_state": "accepted",
-  "input_sha256": "659ecab4bb541795929809b5ecfc4803df1957e400bac0f0ffe54e968127a65f",
+  "purpose": "Offline deterministic qualification of the WP5 Responses adapter and strict output admission.",
+  "classification": "public-synthetic-platform-behavior",
+  "partition_history": [
+    "authored-development",
+    "retained-development"
+  ],
+  "construction_provenance": {
+    "method": "authority-derived-hand-authored-synthetic-case",
+    "authority": "accepted M1 Slice 6 plan Section 16 and RESEARCH-0054 snapshot",
+    "product_output_used_to_author_truth": false
+  },
+  "ground_truth_method": "closed contract and deterministic loopback observation",
+  "preregistration": "oracle fields fixed before the corrected product tests consume the package",
+  "reviewer_provenance": "fresh WP5 persistence/replay review identified correction requirements; final independent review pending",
+  "answer_isolation": "input recursively excludes oracle and expected-answer fields; oracle is read only after execution observation",
+  "replay_dependencies": [
+    "recorded RESEARCH-0054 snapshot",
+    "exact request schema",
+    "literal loopback transport"
+  ],
+  "known_limitations": [
+    "no public DNS",
+    "no provider endpoint",
+    "no credential operation",
+    "no billable request"
+  ],
+  "review_state": "correction-pending-independent-review",
+  "input_sha256": "643a5ecb5abd5ead2fc1b4fc5495fe313703b6ea0b0329e4a483fc2eb05aca80",
   "oracle_sha256": "eb4046d3b011f815f20c4434f45a0b0dd8b2a8f87edf93cf8617914ef1eb284a"
 }

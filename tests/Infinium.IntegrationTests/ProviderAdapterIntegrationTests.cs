@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using Google.Protobuf;
@@ -72,7 +73,7 @@ public sealed class ProviderAdapterIntegrationTests
             ProviderAdapterTestData.Limits(), "client-replay-1", CancellationToken.None);
         OpenAiResponsesResult replay = OpenAiResponsesResponseCodec.Replay(
             live.RawResponseBytes!, live.HttpStatus!.Value, live.ClientRequestId!, live.ProviderRequestId,
-            live.RateHeaders);
+            live.RateHeaders, live.RequestedOutputSchemaBytes!);
 
         Assert.AreEqual(live.State, replay.State);
         Assert.AreEqual(live.Admitted, replay.Admitted);
@@ -144,6 +145,35 @@ public sealed class ProviderAdapterIntegrationTests
         File.WriteAllBytes(Path.Combine(evidenceRoot, "canonical-request.json"), request);
         File.WriteAllBytes(Path.Combine(evidenceRoot, "retained-response.json"), result.RawResponseBytes!);
         File.WriteAllBytes(Path.Combine(evidenceRoot, "secret-free-diagnostic.json"), result.ToSecretFreeDiagnosticBytes());
+        OpenAiResponsesResult retainedReplay = OpenAiResponsesResponseCodec.Replay(
+            result.RawResponseBytes!, result.HttpStatus!.Value, result.ClientRequestId!, result.ProviderRequestId,
+            result.RateHeaders, result.RequestedOutputSchemaBytes!);
+        int requestsBeforeRetryProbe = server.RequestCount;
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => adapter.SendOnceAsync(
+            request, "sk-second-send-rejected"u8.ToArray(), ProviderAdapterTestData.Limits(), "second", CancellationToken.None));
+        int retryCount = server.RequestCount - requestsBeforeRetryProbe;
+        int rejectedDnsNames = 0;
+        try { using OpenAiResponsesAdapter _ = OpenAiResponsesAdapter.CreateDeterministicLoopback(new("http://localhost/v1/responses")); }
+        catch (InvalidOperationException) { rejectedDnsNames++; }
+        await using ProviderLoopbackServer redirectServer = new("{}"u8.ToArray(), 302);
+        using OpenAiResponsesAdapter redirectAdapter = OpenAiResponsesAdapter.CreateDeterministicLoopback(redirectServer.Endpoint);
+        _ = await redirectAdapter.SendOnceAsync(request, "sk-redirect-probe"u8.ToArray(),
+            ProviderAdapterTestData.Limits(), "redirect-probe", CancellationToken.None);
+        int redirectFollowCount = Math.Max(0, redirectServer.RequestCount - 1);
+        int providerOperations = IPAddress.IsLoopback(IPAddress.Parse(server.Endpoint.Host)) ? 0 : server.RequestCount;
+        object networkSpy = new
+        {
+            schema = "infinium.m1-s6.wp5.network-spy/v1",
+            literal_loopback_requests = server.RequestCount + redirectServer.RequestCount,
+            provider_operations = providerOperations,
+            public_dns_operations = 0,
+            rejected_dns_names = rejectedDnsNames,
+            redirect_follow_count = redirectFollowCount,
+            retry_count = retryCount,
+            proxy_fallback_count = OpenAiResponsesAdapter.ProxyFallbackEnabled ? 1 : 0,
+            replay_send_count = retainedReplay.SendCount,
+        };
+        File.WriteAllBytes(Path.Combine(evidenceRoot, "network-spy.json"), JsonSerializer.SerializeToUtf8Bytes(networkSpy));
         File.WriteAllBytes(Path.Combine(evidenceRoot, "response-state-matrix.json"), JsonSerializer.SerializeToUtf8Bytes(new
         {
             schema = "infinium.m1-s6.wp5.response-state-matrix/v1",
@@ -151,13 +181,13 @@ public sealed class ProviderAdapterIntegrationTests
             terminal_rejected = RejectedStates,
             nonterminal_rejected = NonterminalStates,
             ambiguous_no_retry = AmbiguousStates,
-            redirect_count = 0,
-            retry_count = 0,
-            proxy_fallback_count = 0,
+            redirect_count = redirectFollowCount,
+            retry_count = retryCount,
+            proxy_fallback_count = OpenAiResponsesAdapter.ProxyFallbackEnabled ? 1 : 0,
             dns_count = 0,
-            provider_count = 0,
-            loopback_send_count = result.SendCount,
-            replay_send_count = 0,
+            provider_count = providerOperations,
+            loopback_send_count = server.RequestCount,
+            replay_send_count = retainedReplay.SendCount,
         }));
         Assert.IsTrue(result.Admitted);
     }

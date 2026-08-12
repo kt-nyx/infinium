@@ -137,15 +137,21 @@ if (args is ["--containment-descendant"])
     return 0;
 }
 
-bool containmentProbe = args.Length == 12;
-if (args.Length is not (8 or 12) || args[0] != "--request-handle" || args[2] != "--response-handle"
-    || args[4] != "--store-handle" || args[6] != "--authority-now-unix-ms"
-    || string.IsNullOrWhiteSpace(args[1]) || string.IsNullOrWhiteSpace(args[3])
-    || !nint.TryParse(args[5], out nint storeHandle) || storeHandle is 0 or -1
-    || !long.TryParse(args[7], System.Globalization.NumberStyles.None,
+bool providerTransportSelected = args.Length >= 10 && args[^2] == "--provider-transport"
+    && args[^1] is "production" or "synthetic-qualification";
+bool productionProviderTransport = providerTransportSelected && args[^1] == "production";
+bool syntheticQualificationTransport = providerTransportSelected && args[^1] == "synthetic-qualification";
+string[] helperArgs = providerTransportSelected ? args[..^2] : args;
+bool containmentProbe = helperArgs.Length == 12;
+if (!providerTransportSelected || helperArgs.Length is not (8 or 12)
+    || helperArgs[0] != "--request-handle" || helperArgs[2] != "--response-handle"
+    || helperArgs[4] != "--store-handle" || helperArgs[6] != "--authority-now-unix-ms"
+    || string.IsNullOrWhiteSpace(helperArgs[1]) || string.IsNullOrWhiteSpace(helperArgs[3])
+    || !nint.TryParse(helperArgs[5], out nint storeHandle) || storeHandle is 0 or -1
+    || !long.TryParse(helperArgs[7], System.Globalization.NumberStyles.None,
         System.Globalization.CultureInfo.InvariantCulture, out long authorityNowUnixMs)
-    || containmentProbe && (args[8] != "--excluded-handle-probe"
-        || !nint.TryParse(args[9], out _) || args[10] != "--spawn-containment-probe" || args[11] != "1"))
+    || containmentProbe && (helperArgs[8] != "--excluded-handle-probe"
+        || !nint.TryParse(helperArgs[9], out _) || helperArgs[10] != "--spawn-containment-probe" || helperArgs[11] != "1"))
 {
     Console.Error.WriteLine("The one-shot helper requires two private pipes, one secure-store capability, and authoritative time.");
     return 64;
@@ -154,7 +160,7 @@ if (args.Length is not (8 or 12) || args[0] != "--request-handle" || args[2] != 
 try
 {
     bool excludedHandleAccessible = containmentProbe && GetHandleInformation(
-        nint.Parse(args[9], System.Globalization.CultureInfo.InvariantCulture), out _);
+        nint.Parse(helperArgs[9], System.Globalization.CultureInfo.InvariantCulture), out _);
     Process? descendant = null;
     if (containmentProbe)
     {
@@ -167,12 +173,17 @@ try
         descendant = Process.Start(descendantStart)
             ?? throw new InvalidOperationException("The containment descendant probe could not start.");
     }
-    using AnonymousPipeClientStream request = new(PipeDirection.In, args[1]);
-    using AnonymousPipeClientStream response = new(PipeDirection.Out, args[3]);
+    using AnonymousPipeClientStream request = new(PipeDirection.In, helperArgs[1]);
+    using AnonymousPipeClientStream response = new(PipeDirection.Out, helperArgs[3]);
     using CapabilityBoundFakeSecureStore store = new(storeHandle);
+    using Infinium.OpenAI.OpenAiResponsesAdapter? providerTransport = productionProviderTransport
+        ? Infinium.OpenAI.OpenAiResponsesAdapter.CreateProduction()
+        : null;
     OneShotHelperEngine engine = new(
         store,
-        new FixedUtcTimeProvider(DateTimeOffset.FromUnixTimeMilliseconds(authorityNowUnixMs)));
+        new FixedUtcTimeProvider(DateTimeOffset.FromUnixTimeMilliseconds(authorityNowUnixMs)),
+        providerTransport: providerTransport,
+        allowSyntheticProviderDispatch: syntheticQualificationTransport);
     using CancellationTokenSource deadline = new(TimeSpan.FromSeconds(30));
     await engine.RunAsync(request, response, deadline.Token);
     (int listenerCount, int networkOperationCount) = NetworkMeasurement.MeasureCurrentProcessTcp();

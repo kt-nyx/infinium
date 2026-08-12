@@ -41,6 +41,7 @@ public static class OpenAiStagedResponseEnvelope
             refusal_code = result.RefusalCode,
             incomplete_reason = result.IncompleteReason,
             error_code = result.ErrorCode,
+            requested_output_schema = result.RequestedOutputSchemaBytes,
             usage = result.Usage,
             headers = result.RateHeaders.Select(item => new { name = item.Name, value = item.Value }).ToArray(),
         });
@@ -100,8 +101,13 @@ public static class OpenAiStagedResponseEnvelope
         IReadOnlyList<OpenAiRateHeader> rateHeaders = RateHeaders(headerReceipt);
         if (!raw.IsEmpty)
         {
+            using JsonDocument retained = JsonDocument.Parse(headerReceipt.ToArray());
+            byte[] retainedSchema = retained.RootElement.TryGetProperty("requested_output_schema", out JsonElement schemaValue)
+                && schemaValue.ValueKind == JsonValueKind.String
+                ? schemaValue.GetBytesFromBase64()
+                : [];
             return OpenAiResponsesResponseCodec.Replay(
-                raw, status, clientRequestId, ProviderRequestId(headerReceipt), rateHeaders);
+                raw, status, clientRequestId, ProviderRequestId(headerReceipt), rateHeaders, retainedSchema);
         }
         using JsonDocument document = JsonDocument.Parse(headerReceipt.ToArray());
         JsonElement root = document.RootElement;
@@ -112,10 +118,14 @@ public static class OpenAiStagedResponseEnvelope
         }
         ProviderUsageContract usage = root.GetProperty("usage").Deserialize<ProviderUsageContract>()
             ?? throw new InvalidDataException("The oversized response usage receipt is absent.");
-        return new(state, true, false, status, null, String(root, "provider_response_id"), clientRequestId,
+        return new OpenAiResponsesResult(state, true, false, status, null, String(root, "provider_response_id"), clientRequestId,
             String(root, "provider_request_id"), String(root, "returned_model"), String(root, "returned_service_tier"),
             String(root, "refusal_code"), String(root, "incomplete_reason"), String(root, "error_code"), usage,
-            rateHeaders, false, "oversized", false, 0);
+            rateHeaders, false, "oversized", false, 0)
+        {
+            RequestedOutputSchemaBytes = root.TryGetProperty("requested_output_schema", out JsonElement schema)
+                && schema.ValueKind == JsonValueKind.String ? schema.GetBytesFromBase64() : [],
+        };
     }
 
     private static string? String(JsonElement value, string name) =>
@@ -145,6 +155,8 @@ public sealed record OpenAiResponsesResult(
     bool NetworkUsed,
     int SendCount)
 {
+    public byte[]? RequestedOutputSchemaBytes { get; init; }
+
     public byte[] ToSecretFreeDiagnosticBytes() => JsonSerializer.SerializeToUtf8Bytes(new
     {
         state = State.ToString(),
@@ -198,9 +210,10 @@ public static class OpenAiResponsesCanonicalSerializer
             ProviderOperationKind.CandidateInvestigation => "candidate_investigation",
             _ => throw new InvalidOperationException("The Responses operation is not part of the closed M1 profile."),
         };
+        long maximumOutputTokens = request.OperationKind == ProviderOperationKind.TransportQualification ? 256 : 4_096;
         if (string.IsNullOrWhiteSpace(request.Instructions) || string.IsNullOrWhiteSpace(request.UntrustedInput)
             || request.Instructions.Length > 8_192 || request.UntrustedInput.Length > 48_000
-            || request.MaximumOutputTokens <= 0 || request.MaximumOutputTokens > 4_096
+            || request.MaximumOutputTokens <= 0 || request.MaximumOutputTokens > maximumOutputTokens
             || request.OutputSchema.ValueKind != JsonValueKind.Object)
         {
             throw new InvalidOperationException("The Responses request exceeds its closed context or output bounds.");
@@ -278,14 +291,28 @@ public static class OpenAiResponsesCanonicalSerializer
         JsonElement reasoning = root.GetProperty("reasoning");
         JsonElement cache = root.GetProperty("prompt_cache_options");
         JsonElement format = root.GetProperty("text").GetProperty("format");
+        long operationCeiling = format.GetProperty("name").GetString() switch
+        {
+            "transport_qualification" => 256,
+            "source_claim_extraction" or "candidate_investigation" => 4_096,
+            _ => 0,
+        };
         if (reasoning.GetProperty("effort").GetString() != "medium"
             || reasoning.GetProperty("context").GetString() != "current_turn"
             || reasoning.GetProperty("mode").GetString() != "standard"
             || cache.EnumerateObject().Count() != 1 || cache.GetProperty("mode").GetString() != "explicit"
-            || format.GetProperty("type").GetString() != "json_schema" || !format.GetProperty("strict").GetBoolean())
+            || format.GetProperty("type").GetString() != "json_schema" || !format.GetProperty("strict").GetBoolean()
+            || maximumOutputTokens <= 0 || maximumOutputTokens > operationCeiling)
         {
             throw new InvalidDataException("Stateless reasoning, cache-off, and strict output controls must be explicit.");
         }
+    }
+
+    public static byte[] OutputSchemaBytes(ReadOnlySpan<byte> requestBytes)
+    {
+        using JsonDocument document = JsonDocument.Parse(requestBytes.ToArray());
+        return Encoding.UTF8.GetBytes(document.RootElement.GetProperty("text").GetProperty("format")
+            .GetProperty("schema").GetRawText());
     }
 
     private static void WriteMessage(Utf8JsonWriter writer, string role, string text)
@@ -335,12 +362,18 @@ public sealed class OpenAiResponsesAdapter : IOpenAiResponsesTransport, IDisposa
     private readonly Uri endpoint;
     private readonly bool ownsClient;
     private int consumed;
+    public bool UsesPerOperationDeadlineOnly => client.Timeout == Timeout.InfiniteTimeSpan;
+    public static bool ProxyFallbackEnabled => false;
+    public static bool RedirectsEnabled => false;
+    public static bool RetriesEnabled => false;
+    public static bool ProviderToolsEnabled => false;
 
     private OpenAiResponsesAdapter(HttpClient client, Uri endpoint, bool ownsClient)
     {
         this.client = client;
         this.endpoint = endpoint;
         this.ownsClient = ownsClient;
+        client.Timeout = Timeout.InfiniteTimeSpan;
     }
 
     public static OpenAiResponsesAdapter CreateProduction()
@@ -423,11 +456,13 @@ public sealed class OpenAiResponsesAdapter : IOpenAiResponsesTransport, IDisposa
             if (raw is null)
             {
                 return Failure(ProviderResponseState.Oversized, (int)response.StatusCode, true, "response_too_large",
-                    rateHeaders, clientRequestId, Header(response, "x-request-id"), sendCount: 1);
+                    rateHeaders, clientRequestId, Header(response, "x-request-id"), sendCount: 1) with
+                { RequestedOutputSchemaBytes = OpenAiResponsesCanonicalSerializer.OutputSchemaBytes(canonicalRequest.Span) };
             }
 
             return OpenAiResponsesResponseCodec.Parse(raw, (int)response.StatusCode, clientRequestId,
-                Header(response, "x-request-id"), rateHeaders);
+                Header(response, "x-request-id"), rateHeaders,
+                OpenAiResponsesCanonicalSerializer.OutputSchemaBytes(canonicalRequest.Span));
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
@@ -450,7 +485,7 @@ public sealed class OpenAiResponsesAdapter : IOpenAiResponsesTransport, IDisposa
     private OpenAiResponsesResult Failure(ProviderResponseState state, int? status, bool started, string error,
         IReadOnlyList<OpenAiRateHeader> headers, string clientRequestId, string? providerRequestId, int sendCount) =>
         new(state, started, false, status, null, null, clientRequestId, providerRequestId, null, null, null, null,
-            error, state == ProviderResponseState.Oversized
+            state == ProviderResponseState.Oversized ? null : error, state == ProviderResponseState.Oversized
                 ? DispatchedUnknownUsage(UsageReceiptState.Partial, headers.Any(IsRateHeader))
                 : UnavailableUsage(started ? UsageReceiptState.Ambiguous : UsageReceiptState.NotDispatched), headers,
             false, error, endpoint != ProductionEndpoint || started, sendCount);
@@ -533,8 +568,9 @@ public static class OpenAiResponsesResponseCodec
         int httpStatus,
         string clientRequestId,
         string? providerRequestId,
-        IReadOnlyList<OpenAiRateHeader>? retainedRateHeaders = null) =>
-        Parse(retainedRawResponse, httpStatus, clientRequestId, providerRequestId, retainedRateHeaders ?? []) with
+        IReadOnlyList<OpenAiRateHeader>? retainedRateHeaders = null,
+        ReadOnlyMemory<byte> requestedOutputSchema = default) =>
+        Parse(retainedRawResponse, httpStatus, clientRequestId, providerRequestId, retainedRateHeaders ?? [], requestedOutputSchema) with
         { NetworkUsed = false, SendCount = 0, TransportMayHaveStarted = false };
 
     public static OpenAiResponsesResult Parse(
@@ -542,7 +578,8 @@ public static class OpenAiResponsesResponseCodec
         int httpStatus,
         string clientRequestId,
         string? providerRequestId,
-        IReadOnlyList<OpenAiRateHeader> rateHeaders)
+        IReadOnlyList<OpenAiRateHeader> rateHeaders,
+        ReadOnlyMemory<byte> requestedOutputSchema = default)
     {
         byte[] retained = raw.ToArray();
         try
@@ -581,7 +618,7 @@ public static class OpenAiResponsesResponseCodec
                 && Available(usage.ReasoningTokens) && Available(usage.CacheReadTokens)
                 && Available(usage.CacheWriteTokens) && Available(usage.PricedToolCalls)
                 && usage.CacheReadTokens.Value == 0 && usage.CacheWriteTokens.Value == 0;
-            bool structuredOutput = completed && HasOutputText(root);
+            bool structuredOutput = completed && StrictOutputMatches(root, requestedOutputSchema.Span);
             bool admitted = completed && exactProfile && usageComplete && structuredOutput && refusal is null
                 && incomplete is null && error is null;
             string reason = admitted ? "admitted"
@@ -598,16 +635,19 @@ public static class OpenAiResponsesResponseCodec
                 state = ProviderResponseState.Malformed;
             }
 
-            return new(state, true, false, httpStatus, retained, id, clientRequestId, providerRequestId, model, tier,
-                refusal, incomplete, error, usage, rateHeaders, admitted, reason, true, 1);
+            return new OpenAiResponsesResult(state, true, false, httpStatus, retained, id, clientRequestId, providerRequestId, model, tier,
+                refusal, incomplete, error, usage, rateHeaders, admitted, reason, true, 1)
+            { RequestedOutputSchemaBytes = requestedOutputSchema.ToArray() };
         }
-        catch (JsonException)
+        catch (Exception exception) when (exception is JsonException or InvalidOperationException
+            or OverflowException or FormatException)
         {
-            return new(ProviderResponseState.Malformed, true, false, httpStatus, retained, null, clientRequestId,
+            return new OpenAiResponsesResult(ProviderResponseState.Malformed, true, false, httpStatus, retained, null, clientRequestId,
                 providerRequestId, null, null, null, null, "malformed_json",
                 OpenAiResponsesAdapter.DispatchedUnknownUsage(
                     UsageReceiptState.Partial, rateHeaders.Any(OpenAiResponsesAdapter.IsRateHeader)), rateHeaders,
-                false, "malformed", true, 1);
+                false, "malformed", true, 1)
+            { RequestedOutputSchemaBytes = requestedOutputSchema.ToArray() };
         }
     }
 
@@ -637,6 +677,8 @@ public static class OpenAiResponsesResponseCodec
             : new(ProviderAvailabilityState.Unavailable, null);
         bool complete = input.HasValue && output.HasValue && total.HasValue && reasoning.HasValue
             && cached.HasValue && cacheWrite.HasValue && total == input + output;
+        complete = complete && input <= 147_456 && output <= 8_192 && total <= 155_648
+            && reasoning <= output && cached <= 147_456 && cacheWrite <= 147_456;
         long? calculatedNanoUsd = complete
             ? checked(checked(input!.Value * 5_000L) + checked(output!.Value * 30_000L))
             : null;
@@ -683,28 +725,46 @@ public static class OpenAiResponsesResponseCodec
         return null;
     }
 
-    private static bool HasOutputText(JsonElement root)
+    private static bool StrictOutputMatches(JsonElement root, ReadOnlySpan<byte> schemaBytes)
     {
+        if (schemaBytes.IsEmpty)
+        {
+            return false;
+        }
         if (!root.TryGetProperty("output", out JsonElement output) || output.ValueKind != JsonValueKind.Array)
         {
             return false;
         }
 
+        string? outputText = null;
         foreach (JsonElement item in output.EnumerateArray())
         {
             if (item.TryGetProperty("content", out JsonElement content) && content.ValueKind == JsonValueKind.Array)
             {
                 foreach (JsonElement part in content.EnumerateArray())
                 {
-                    if (String(part, "type") == "output_text" && !string.IsNullOrWhiteSpace(String(part, "text")))
+                    if (String(part, "type") == "output_text")
                     {
-                        return true;
+                        if (outputText is not null || String(part, "text") is not string text)
+                        {
+                            return false;
+                        }
+                        outputText = text;
                     }
                 }
             }
         }
-
-        return false;
+        if (outputText is null)
+        {
+            return false;
+        }
+        try
+        {
+            using JsonDocument value = JsonDocument.Parse(outputText);
+            using JsonDocument schema = JsonDocument.Parse(schemaBytes.ToArray());
+            return ClosedJsonSchemaValidator.Validate(value.RootElement, schema.RootElement);
+        }
+        catch (JsonException) { return false; }
     }
 
     private static bool Available(ProviderQuantityContract value) =>
@@ -716,4 +776,234 @@ public static class OpenAiResponsesResponseCodec
         value.ValueKind == JsonValueKind.Object && value.TryGetProperty(name, out JsonElement property)
             && property.ValueKind == JsonValueKind.Number && property.TryGetInt64(out long result) && result >= 0
             ? result : null;
+}
+
+internal static class ClosedJsonSchemaValidator
+{
+    private static readonly HashSet<string> SupportedKeywords = new(StringComparer.Ordinal)
+    {
+        "$schema", "$id", "$defs", "title", "description",
+        "$ref", "type", "const", "enum", "oneOf", "anyOf", "allOf",
+        "required", "properties", "additionalProperties", "items",
+        "minItems", "maxItems", "minLength", "maxLength", "minimum", "maximum",
+    };
+
+    internal static bool Validate(JsonElement value, JsonElement schema) =>
+        Validate(value, schema, schema, depth: 0);
+
+    private static bool Validate(JsonElement value, JsonElement schema, JsonElement root, int depth)
+    {
+        if (schema.ValueKind != JsonValueKind.Object || depth > 64
+            || schema.EnumerateObject().Any(property => !SupportedKeywords.Contains(property.Name)))
+        {
+            return false;
+        }
+        if (schema.TryGetProperty("required", out JsonElement requiredSchema)
+            && (requiredSchema.ValueKind != JsonValueKind.Array
+                || requiredSchema.EnumerateArray().Any(item => item.ValueKind != JsonValueKind.String)
+                || requiredSchema.EnumerateArray().Select(item => item.GetString()).Distinct(StringComparer.Ordinal).Count()
+                    != requiredSchema.GetArrayLength()))
+        {
+            return false;
+        }
+        if (schema.TryGetProperty("properties", out JsonElement propertiesSchema)
+            && propertiesSchema.ValueKind != JsonValueKind.Object)
+        {
+            return false;
+        }
+        if (schema.TryGetProperty("additionalProperties", out JsonElement additionalSchema)
+            && additionalSchema.ValueKind is not (JsonValueKind.True or JsonValueKind.False or JsonValueKind.Object))
+        {
+            return false;
+        }
+        if (schema.TryGetProperty("items", out JsonElement itemsSchema) && itemsSchema.ValueKind != JsonValueKind.Object)
+        {
+            return false;
+        }
+
+        if (schema.TryGetProperty("$ref", out JsonElement reference))
+        {
+            return reference.ValueKind == JsonValueKind.String
+                && ResolveLocalReference(root, reference.GetString()!, out JsonElement target)
+                && Validate(value, target, root, depth + 1);
+        }
+
+        if (schema.TryGetProperty("oneOf", out JsonElement oneOf)
+            && (oneOf.ValueKind != JsonValueKind.Array
+                || oneOf.EnumerateArray().Count(candidate => Validate(value, candidate, root, depth + 1)) != 1))
+        {
+            return false;
+        }
+        if (schema.TryGetProperty("anyOf", out JsonElement anyOf)
+            && (anyOf.ValueKind != JsonValueKind.Array
+                || !anyOf.EnumerateArray().Any(candidate => Validate(value, candidate, root, depth + 1))))
+        {
+            return false;
+        }
+        if (schema.TryGetProperty("allOf", out JsonElement allOf)
+            && (allOf.ValueKind != JsonValueKind.Array
+                || !allOf.EnumerateArray().All(candidate => Validate(value, candidate, root, depth + 1))))
+        {
+            return false;
+        }
+
+        if (schema.TryGetProperty("const", out JsonElement constant) && !JsonElement.DeepEquals(value, constant))
+        {
+            return false;
+        }
+
+        if (schema.TryGetProperty("enum", out JsonElement choices)
+            && (choices.ValueKind != JsonValueKind.Array || !choices.EnumerateArray().Any(item => JsonElement.DeepEquals(item, value))))
+        {
+            return false;
+        }
+
+        if (schema.TryGetProperty("type", out JsonElement type) && !MatchesDeclaredType(value, type))
+        {
+            return false;
+        }
+
+        if (value.ValueKind == JsonValueKind.Object)
+        {
+            HashSet<string> required = schema.TryGetProperty("required", out JsonElement requiredValue)
+                && requiredValue.ValueKind == JsonValueKind.Array
+                ? requiredValue.EnumerateArray().Where(x => x.ValueKind == JsonValueKind.String).Select(x => x.GetString()!).ToHashSet(StringComparer.Ordinal)
+                : [];
+            if (required.Any(name => !value.TryGetProperty(name, out _)))
+            {
+                return false;
+            }
+
+            JsonElement properties = schema.TryGetProperty("properties", out JsonElement propertyValue)
+                && propertyValue.ValueKind == JsonValueKind.Object ? propertyValue : default;
+            bool additional = !schema.TryGetProperty("additionalProperties", out JsonElement additionalValue)
+                || additionalValue.ValueKind != JsonValueKind.False;
+            foreach (JsonProperty property in value.EnumerateObject())
+            {
+                if (properties.ValueKind == JsonValueKind.Object && properties.TryGetProperty(property.Name, out JsonElement child))
+                {
+                    if (!Validate(property.Value, child, root, depth + 1))
+                    {
+                        return false;
+                    }
+                }
+                else if (schema.TryGetProperty("additionalProperties", out additionalValue)
+                    && additionalValue.ValueKind == JsonValueKind.Object)
+                {
+                    if (!Validate(property.Value, additionalValue, root, depth + 1))
+                    {
+                        return false;
+                    }
+                }
+                else if (!additional)
+                {
+                    return false;
+                }
+            }
+        }
+        if (value.ValueKind == JsonValueKind.Array)
+        {
+            int length = value.GetArrayLength();
+            if (!WithinIntegerBound(schema, "minItems", length, lowerBound: true)
+                || !WithinIntegerBound(schema, "maxItems", length, lowerBound: false))
+            {
+                return false;
+            }
+            if (schema.TryGetProperty("items", out JsonElement items))
+            {
+                foreach (JsonElement item in value.EnumerateArray())
+                {
+                    if (!Validate(item, items, root, depth + 1))
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+        if (value.ValueKind == JsonValueKind.String)
+        {
+            int length = value.GetString()!.EnumerateRunes().Count();
+            if (!WithinIntegerBound(schema, "minLength", length, lowerBound: true)
+                || !WithinIntegerBound(schema, "maxLength", length, lowerBound: false))
+            {
+                return false;
+            }
+        }
+        if (value.ValueKind == JsonValueKind.Number)
+        {
+            if (!WithinNumberBound(schema, "minimum", value, lowerBound: true)
+                || !WithinNumberBound(schema, "maximum", value, lowerBound: false))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static bool ResolveLocalReference(JsonElement root, string reference, out JsonElement target)
+    {
+        target = root;
+        if (reference == "#")
+        {
+            return true;
+        }
+        if (!reference.StartsWith("#/", StringComparison.Ordinal))
+        {
+            return false;
+        }
+        foreach (string rawSegment in reference[2..].Split('/'))
+        {
+            string segment = rawSegment.Replace("~1", "/", StringComparison.Ordinal)
+                .Replace("~0", "~", StringComparison.Ordinal);
+            if (target.ValueKind != JsonValueKind.Object || !target.TryGetProperty(segment, out target))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static bool MatchesDeclaredType(JsonElement value, JsonElement type)
+    {
+        if (type.ValueKind == JsonValueKind.String)
+        {
+            return MatchesType(value, type.GetString()!);
+        }
+        return type.ValueKind == JsonValueKind.Array && type.GetArrayLength() > 0
+            && type.EnumerateArray().All(item => item.ValueKind == JsonValueKind.String)
+            && type.EnumerateArray().Any(item => MatchesType(value, item.GetString()!));
+    }
+
+    private static bool WithinIntegerBound(JsonElement schema, string name, int actual, bool lowerBound)
+    {
+        if (!schema.TryGetProperty(name, out JsonElement bound))
+        {
+            return true;
+        }
+        return bound.ValueKind == JsonValueKind.Number && bound.TryGetInt32(out int expected)
+            && expected >= 0 && (lowerBound ? actual >= expected : actual <= expected);
+    }
+
+    private static bool WithinNumberBound(JsonElement schema, string name, JsonElement actual, bool lowerBound)
+    {
+        if (!schema.TryGetProperty(name, out JsonElement bound))
+        {
+            return true;
+        }
+        return bound.ValueKind == JsonValueKind.Number && bound.TryGetDecimal(out decimal expected)
+            && actual.TryGetDecimal(out decimal number)
+            && (lowerBound ? number >= expected : number <= expected);
+    }
+
+    private static bool MatchesType(JsonElement value, string type) => type switch
+    {
+        "object" => value.ValueKind == JsonValueKind.Object,
+        "array" => value.ValueKind == JsonValueKind.Array,
+        "string" => value.ValueKind == JsonValueKind.String,
+        "boolean" => value.ValueKind is JsonValueKind.True or JsonValueKind.False,
+        "integer" => value.ValueKind == JsonValueKind.Number && value.TryGetInt64(out _),
+        "number" => value.ValueKind == JsonValueKind.Number,
+        "null" => value.ValueKind == JsonValueKind.Null,
+        _ => false,
+    };
 }

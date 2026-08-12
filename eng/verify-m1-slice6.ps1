@@ -879,7 +879,8 @@ function Invoke-AdapterGate {
     $responsePath = Join-Path $resolvedOutputRoot 'retained-response.json'
     $diagnosticPath = Join-Path $resolvedOutputRoot 'secret-free-diagnostic.json'
     $matrixPath = Join-Path $resolvedOutputRoot 'response-state-matrix.json'
-    foreach ($requiredPath in @($requestPath, $responsePath, $diagnosticPath, $matrixPath)) {
+    $networkSpyPath = Join-Path $resolvedOutputRoot 'network-spy.json'
+    foreach ($requiredPath in @($requestPath, $responsePath, $diagnosticPath, $matrixPath, $networkSpyPath)) {
         if (-not (Test-Path -LiteralPath $requiredPath -PathType Leaf)) {
             throw "Adapter did not retain required evidence: $requiredPath."
         }
@@ -890,6 +891,7 @@ function Invoke-AdapterGate {
         }
     }
     $matrix = Get-Content -LiteralPath $matrixPath -Raw | ConvertFrom-Json
+    $networkSpy = Get-Content -LiteralPath $networkSpyPath -Raw | ConvertFrom-Json
     if ($matrix.redirect_count -ne 0 -or $matrix.retry_count -ne 0 -or $matrix.proxy_fallback_count -ne 0 -or
         $matrix.dns_count -ne 0 -or $matrix.provider_count -ne 0 -or $matrix.loopback_send_count -ne 1 -or
         $matrix.replay_send_count -ne 0) {
@@ -905,13 +907,14 @@ function Invoke-AdapterGate {
         retained_response_sha256 = (Get-FileHash -LiteralPath $responsePath -Algorithm SHA256).Hash.ToLowerInvariant()
         diagnostic_sha256 = (Get-FileHash -LiteralPath $diagnosticPath -Algorithm SHA256).Hash.ToLowerInvariant()
         response_state_matrix_sha256 = (Get-FileHash -LiteralPath $matrixPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        network_spy_sha256 = (Get-FileHash -LiteralPath $networkSpyPath -Algorithm SHA256).Hash.ToLowerInvariant()
         loopback_send_count = [int64]$matrix.loopback_send_count
         replay_send_count = [int64]$matrix.replay_send_count
         redirect_count = [int64]$matrix.redirect_count
         retry_count = [int64]$matrix.retry_count
         proxy_fallback_count = [int64]$matrix.proxy_fallback_count
-        public_dns_operations = [int64]$matrix.dns_count
-        provider_operations = [int64]$matrix.provider_count
+        public_dns_operations = [int64]$networkSpy.public_dns_operations
+        provider_operations = [int64]$networkSpy.provider_operations
         credential_manager_operations = 0
         secret_canary_matches = 0
     })
@@ -922,23 +925,35 @@ function Invoke-OfflineSafetyReplayGate {
     $securityFilter = 'FullyQualifiedName~ProviderBoundary|FullyQualifiedName~PromptInjection|FullyQualifiedName~SecretCanary'
     $faultFilter = 'FullyQualifiedName~ProviderTransport|FullyQualifiedName~AmbiguousDispatch'
     $evaluationFilter = 'FullyQualifiedName~ProviderOffline'
-    Invoke-DotnetTest 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj' $integrationFilter
+    $priorEvidenceRoot = [Environment]::GetEnvironmentVariable('INFINIUM_WP5_EVIDENCE_ROOT')
+    try {
+        [Environment]::SetEnvironmentVariable('INFINIUM_WP5_EVIDENCE_ROOT', $resolvedOutputRoot)
+        Invoke-DotnetTest 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj' $integrationFilter
+    } finally {
+        [Environment]::SetEnvironmentVariable('INFINIUM_WP5_EVIDENCE_ROOT', $priorEvidenceRoot)
+    }
     Invoke-DotnetTest 'tests/Infinium.SecurityTests/Infinium.SecurityTests.csproj' $securityFilter
     Invoke-DotnetTest 'tests/Infinium.FaultTests/Infinium.FaultTests.csproj' $faultFilter
     Invoke-DotnetTest 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj' $evaluationFilter
     $public = Get-Wp5PublicPackages
+    $networkSpyPath = Join-Path $resolvedOutputRoot 'network-spy.json'
+    if (-not (Test-Path -LiteralPath $networkSpyPath -PathType Leaf)) {
+        throw 'OfflineSafetyReplay requires the dynamically measured WP5 network-spy artifact.'
+    }
+    $networkSpy = Get-Content -LiteralPath $networkSpyPath -Raw | ConvertFrom-Json
     Write-Receipt 'OfflineSafetyReplay' ([ordered]@{
         execution_mode = 'offline-and-retained-response-only'
         production_test_filters = @($integrationFilter, $securityFilter, $faultFilter, $evaluationFilter)
         wp5_public_package_count = $public.packages.Count
         registry_package_count = $public.registry.package_count
-        public_dns_operations = 0
-        provider_operations = 0
+        network_spy_sha256 = (Get-FileHash -LiteralPath $networkSpyPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        public_dns_operations = [int64]$networkSpy.public_dns_operations
+        provider_operations = [int64]$networkSpy.provider_operations
         credential_manager_operations = 0
-        replay_network_operations = 0
-        redirect_count = 0
-        retry_count = 0
-        proxy_fallback_count = 0
+        replay_network_operations = [int64]$networkSpy.replay_send_count
+        redirect_count = [int64]$networkSpy.redirect_follow_count
+        retry_count = [int64]$networkSpy.retry_count
+        proxy_fallback_count = [int64]$networkSpy.proxy_fallback_count
         secret_canary_matches = 0
     })
 }

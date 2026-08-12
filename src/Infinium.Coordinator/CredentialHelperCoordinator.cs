@@ -604,8 +604,10 @@ public sealed class CredentialHelperCoordinator
             work.AssignmentId + ":settlement",
             reservationId,
             persisted.SettlementKind,
-            persisted.SettlementKind == ProviderBudgetEventKind.RetainedUnavailable ? null : persisted.UsageEntryId,
-            persisted.SettlementKind == ProviderBudgetEventKind.RetainedUnavailable ? null : persisted.Actual,
+            persisted.SettlementKind is ProviderBudgetEventKind.RetainedUnavailable or ProviderBudgetEventKind.RetainedPartial
+                ? null : persisted.UsageEntryId,
+            persisted.SettlementKind is ProviderBudgetEventKind.RetainedUnavailable or ProviderBudgetEventKind.RetainedPartial
+                ? null : persisted.Actual,
             now.AddTicks(3)));
         return new(helper, persisted, settlement, finalGate);
     }

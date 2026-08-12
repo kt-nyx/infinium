@@ -42,6 +42,7 @@ public sealed class OneShotCredentialHelperLauncher
     private readonly string? nativeQualificationManifestPath;
     private readonly string? nativeQualificationManifestSha256;
     private readonly string? nativeQualificationManifestId;
+    private readonly bool productionProviderTransport;
 
     internal TimeSpan OperationTimeout => nativeQualificationManifestPath is null
         ? TimeSpan.FromSeconds(30)
@@ -57,7 +58,8 @@ public sealed class OneShotCredentialHelperLauncher
             secureStoreRoot,
             nativeQualificationManifestPath: null,
             nativeQualificationManifestSha256: null,
-            nativeQualificationManifestId: null)
+            nativeQualificationManifestId: null,
+            productionProviderTransport: false)
     {
     }
 
@@ -67,7 +69,8 @@ public sealed class OneShotCredentialHelperLauncher
         string secureStoreRoot,
         string? nativeQualificationManifestPath,
         string? nativeQualificationManifestSha256,
-        string? nativeQualificationManifestId)
+        string? nativeQualificationManifestId,
+        bool productionProviderTransport)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(helperBinary);
         ArgumentException.ThrowIfNullOrWhiteSpace(expectedBinarySha256);
@@ -79,6 +82,7 @@ public sealed class OneShotCredentialHelperLauncher
             : Path.GetFullPath(nativeQualificationManifestPath);
         this.nativeQualificationManifestSha256 = nativeQualificationManifestSha256;
         this.nativeQualificationManifestId = nativeQualificationManifestId;
+        this.productionProviderTransport = productionProviderTransport;
         this.expectedBinarySha256 = expectedBinarySha256.ToLowerInvariant();
         if (!Path.IsPathFullyQualified(this.helperBinary) || !File.Exists(this.helperBinary)
             || !string.Equals(Path.GetFileName(this.helperBinary), "Infinium.CredentialHelper.exe", StringComparison.Ordinal)
@@ -89,6 +93,18 @@ public sealed class OneShotCredentialHelperLauncher
         }
         Directory.CreateDirectory(this.secureStoreRoot);
     }
+
+    public static OneShotCredentialHelperLauncher CreateProductionProvider(
+        string helperBinary,
+        string expectedBinarySha256,
+        string secureStoreRoot) => new(
+            helperBinary,
+            expectedBinarySha256,
+            secureStoreRoot,
+            nativeQualificationManifestPath: null,
+            nativeQualificationManifestSha256: null,
+            nativeQualificationManifestId: null,
+            productionProviderTransport: true);
 
     internal static OneShotCredentialHelperLauncher CreateNativeQualification(
         string helperBinary,
@@ -126,7 +142,8 @@ public sealed class OneShotCredentialHelperLauncher
                 ?? throw new InvalidDataException("The native qualification manifest has no parent directory."),
             manifest,
             normalizedSha256,
-            acceptedManifestId);
+            acceptedManifestId,
+            productionProviderTransport: false);
     }
 
     public async Task<HelperProcessReceipt> ExecuteAsync(
@@ -293,6 +310,15 @@ public sealed class OneShotCredentialHelperLauncher
                 inheritanceSentinel.ToString(System.Globalization.CultureInfo.InvariantCulture),
                 "--spawn-containment-probe",
                 "1",
+            ];
+        }
+        if (nativeManifestPath is null)
+        {
+            arguments =
+            [
+                .. arguments,
+                "--provider-transport",
+                productionProviderTransport ? "production" : "synthetic-qualification",
             ];
         }
         Dictionary<string, string> environment = new(StringComparer.OrdinalIgnoreCase)

@@ -130,5 +130,18 @@ public sealed record ProviderOperationReadModel(
     string ClientRequestId,
     string? ProviderRequestId,
     string? ProviderResponseId,
-    byte[] RawResponseBytes,
-    byte[]? ResponseHeadersBytes);
+    byte[]? RawResponseBytes,
+    byte[]? ResponseHeadersBytes,
+    string ReplayEdgeId,
+    string AuthorizationId,
+    string OperationKind,
+    string EffectiveConfigurationId,
+    string UsageEntryId,
+    string? SettlementId);
+
+public sealed record ProviderRunOutputV2BindingReceipt(
+    string RunId,
+    string EffectiveConfigurationV2Id,
+    string LocalRunOutputV1PayloadId,
+    string LocalRunOutputV1Fingerprint,
+    long LocalRunOutputV1Bytes);

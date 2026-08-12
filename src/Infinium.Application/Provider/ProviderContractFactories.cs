@@ -138,6 +138,27 @@ public static class ProviderContractFactories
         return result;
     }
 
+    public static CliSummaryV2Document CreateTerminalCliSummaryV2Supplement(
+        OpaqueId runId,
+        ReadOnlySpan<byte> canonicalLocalCliSummaryV1,
+        ProviderOperationSummaryProjection projection,
+        ProviderUsageContract usage,
+        OpaqueId liveAuthorizationId,
+        IReadOnlyList<string> gaps)
+    {
+        ArgumentNullException.ThrowIfNull(projection);
+        ArgumentNullException.ThrowIfNull(usage);
+        ProviderQuantityContract reserved = new(ProviderAvailabilityState.Available, projection.ReservedNanoUsd);
+        CliSummaryV2Document result = new(
+            ContractConstants.CliSummaryV2SchemaId, "1", runId, Fingerprint(canonicalLocalCliSummaryV1), "live",
+            usage.DispatchCount, usage.InputTokens, usage.OutputTokens, usage.ReasoningTokens,
+            usage.CacheReadTokens, usage.CacheWriteTokens, usage.CalculatedNanoUsd, reserved,
+            projection.UnresolvedHold, projection.ReplayState, gaps, false, false,
+            "openai-responses-o200k-byte-envelope", "v1", liveAuthorizationId);
+        ProviderOperationContractInvariants.Validate(result);
+        return result;
+    }
+
     private static Sha256Fingerprint Fingerprint(ReadOnlySpan<byte> value) =>
         new(Convert.ToHexStringLower(SHA256.HashData(value)));
 

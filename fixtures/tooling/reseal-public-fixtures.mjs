@@ -9,6 +9,7 @@ import process from "node:process";
 
 const repositoryRoot = process.cwd();
 const providerBudgetOnly = process.argv.includes("--provider-budget-only");
+const providerOfflineOnly = process.argv.includes("--provider-offline-only");
 const providerBudgetFixtures = [
   ["capability-dev", "M1-PLAT-PROVIDER-CAPABILITY-DEV-v1", "development"],
   ["capability-val", "M1-PLAT-PROVIDER-CAPABILITY-VAL-v1", "validation"],
@@ -98,6 +99,11 @@ const semanticTruthProperties = [
   "expected_failures", "expected_coverage_and_gaps", "expected_collection_states",
   "expected_taxonomy_assignments", "forbidden_claims", "known_limits",
 ];
+
+if (providerOfflineOnly) {
+  await resealProviderOfflineFixtures();
+  process.exit(0);
+}
 
 if (providerBudgetOnly) {
   await resealProviderBudgetFixtures();
@@ -202,9 +208,9 @@ await resealProviderContractExamples();
 async function resealProviderBudgetFixtures() {
   const registryPath = path.join(repositoryRoot, "fixtures/public/public-fixture-registry.v1.json");
   const registry = await readJson(registryPath);
-  if (registry.registry_version !== "1.2.0" || registry.package_count !== 25
-      || registry.packages.length !== 25) {
-    throw new Error("Provider-budget reseal requires the exact closed registry 1.2.0/25 authority.");
+  if (registry.registry_version !== "1.2.0" || registry.package_count !== 29
+      || registry.packages.length !== 29) {
+    throw new Error("Provider-budget reseal requires the exact closed registry 1.2.0/29 authority.");
   }
   for (const [directory, fixtureId, partition] of providerBudgetFixtures) {
     const fixtureRoot = path.join(repositoryRoot, "fixtures/public/platform/provider-budget", directory);
@@ -231,6 +237,53 @@ async function resealProviderBudgetFixtures() {
     entry.authority_bytes = authorityBytes.length;
     entry.authority_sha256 = sha256(authorityBytes);
     process.stdout.write(`${fixtureId}/1.0.0 input=${manifest.input_sha256} oracle=${manifest.oracle_sha256}\n`);
+  }
+  await writeJson(registryPath, registry);
+}
+
+async function resealProviderOfflineFixtures() {
+  const registryPath = path.join(repositoryRoot, "fixtures/public/public-fixture-registry.v1.json");
+  const registry = await readJson(registryPath);
+  if (registry.registry_version !== "1.2.0" || registry.package_count !== 29
+      || registry.packages.length !== 29) {
+    throw new Error("Provider-offline reseal requires the exact closed registry 1.2.0/29 authority.");
+  }
+  for (const [directory, fixtureId, partition] of [
+    ["offline-dev", "M1-PLAT-OFFLINE-DEV-v1", "development"],
+    ["offline-val", "M1-PLAT-OFFLINE-VAL-v1", "validation"],
+  ]) {
+    const fixtureRoot = path.join(repositoryRoot, "fixtures/public/platform/provider-offline", directory);
+    const manifestPath = path.join(fixtureRoot, "public-manifest.json");
+    const manifest = await readJson(manifestPath);
+    const required = ["purpose", "classification", "partition_history", "construction_provenance",
+      "ground_truth_method", "preregistration", "reviewer_provenance", "answer_isolation",
+      "replay_dependencies", "known_limitations"];
+    if (manifest.fixture_id !== fixtureId || manifest.fixture_version !== "1.0.0"
+        || manifest.partition !== partition || manifest.answer_free_input !== true
+        || required.some((name) => manifest[name] === undefined)
+        || manifest.construction_provenance.product_output_used_to_author_truth !== false) {
+      throw new Error(`${fixtureId} lacks its exact independent public authoring metadata.`);
+    }
+    const input = await readJson(path.join(fixtureRoot, "input.json"));
+    const forbidden = new Set(["expected", "expected_answer", "expected_label", "oracle", "answer_key"]);
+    const scan = (value) => {
+      if (Array.isArray(value)) return value.every(scan);
+      if (value !== null && typeof value === "object") {
+        return Object.entries(value).every(([name, child]) => !forbidden.has(name.toLowerCase()) && scan(child));
+      }
+      return true;
+    };
+    if (!scan(input)) throw new Error(`${fixtureId} product input contains answer-bearing material.`);
+    manifest.input_sha256 = await fileSha256(path.join(fixtureRoot, "input.json"));
+    manifest.oracle_sha256 = await fileSha256(path.join(fixtureRoot, "oracle.json"));
+    await writeJson(manifestPath, manifest);
+    const authorityBytes = await readFile(manifestPath);
+    const entry = registry.packages.find((item) => item.package_identity === fixtureId);
+    if (!entry || entry.package_version !== "1.0.0" || entry.partition !== partition) {
+      throw new Error(`${fixtureId} closed registry entry is missing or inconsistent.`);
+    }
+    entry.authority_bytes = authorityBytes.length;
+    entry.authority_sha256 = sha256(authorityBytes);
   }
   await writeJson(registryPath, registry);
 }

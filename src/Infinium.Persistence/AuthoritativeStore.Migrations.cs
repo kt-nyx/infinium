@@ -182,6 +182,9 @@ public sealed partial class AuthoritativeStore
                     INSERT INTO store_metadata(key,value)
                     VALUES ('wp5_schema_extension_id','M1-S6-WP5-0006D')
                     ON CONFLICT(key) DO UPDATE SET value=excluded.value;
+                    INSERT INTO store_metadata(key,value)
+                    VALUES ('wp5_schema_correction_id','M1-S6-WP5-0006E')
+                    ON CONFLICT(key) DO UPDATE SET value=excluded.value;
                     INSERT INTO migration_history(
                         migration_id, from_version, to_version, applied_at, sqlite_source_id)
                     VALUES ('M1-S6-0006', 5, 6, $now, $sqlite_source);
@@ -199,6 +202,7 @@ public sealed partial class AuthoritativeStore
                 ApplyWp2Schema6ExtensionIfRequired();
                 ApplyWp3Schema6ExtensionIfRequired();
                 ApplyWp5Schema6ExtensionIfRequired();
+                ApplyWp5Schema6CorrectionIfRequired();
             }
         }
     }
@@ -372,7 +376,8 @@ public sealed partial class AuthoritativeStore
     private void ApplyWp5Schema6ExtensionIfRequired()
     {
         string actualFingerprint = ComputeSchemaFingerprint(connection);
-        if (actualFingerprint == ProviderPersistenceDeclarations.SchemaFingerprint)
+        if (actualFingerprint is ProviderPersistenceDeclarations.SchemaFingerprint
+            or ProviderPersistenceDeclarations.Wp5CorrectionSourceSchemaFingerprint)
         {
             using SqliteCommand declared = connection.CreateCommand();
             declared.CommandText =
@@ -395,7 +400,7 @@ public sealed partial class AuthoritativeStore
         Execute("DROP TRIGGER provider_usage_response_totality_guard;", transaction);
         Execute(ExtractSchemaStatement(SchemaV6, "CREATE TRIGGER provider_usage_response_totality_guard"), transaction);
         string upgradedFingerprint = ComputeSchemaFingerprint(connection, transaction);
-        if (upgradedFingerprint != ProviderPersistenceDeclarations.SchemaFingerprint)
+        if (upgradedFingerprint != ProviderPersistenceDeclarations.Wp5CorrectionSourceSchemaFingerprint)
         {
             throw new InvalidOperationException(
                 $"The bounded WP5 same-version extension did not converge on the declared fingerprint ({upgradedFingerprint}).");
@@ -409,6 +414,64 @@ public sealed partial class AuthoritativeStore
             transaction,
             ("$fingerprint", upgradedFingerprint));
         transaction.Commit();
+    }
+
+    private void ApplyWp5Schema6CorrectionIfRequired()
+    {
+        string actualFingerprint = ComputeSchemaFingerprint(connection);
+        if (actualFingerprint == ProviderPersistenceDeclarations.SchemaFingerprint)
+        {
+            using SqliteCommand declared = connection.CreateCommand();
+            declared.CommandText =
+                "SELECT COUNT(*) FROM store_metadata WHERE key='wp5_schema_correction_id' AND value='M1-S6-WP5-0006E';";
+            if (Convert.ToInt64(declared.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
+            {
+                throw new InvalidOperationException("The current WP5 correction fingerprint lacks its exact provenance.");
+            }
+            return;
+        }
+        if (actualFingerprint != ProviderPersistenceDeclarations.Wp5CorrectionSourceSchemaFingerprint)
+        {
+            throw new InvalidOperationException("Schema 6 does not match the exact WP5 correction source.");
+        }
+
+        List<string> triggerNames = [];
+        using (SqliteCommand triggers = connection.CreateCommand())
+        {
+            triggers.CommandText = "SELECT name FROM sqlite_schema WHERE type='trigger' AND tbl_name='provider_responses' ORDER BY name;";
+            using SqliteDataReader reader = triggers.ExecuteReader();
+            while (reader.Read()) { triggerNames.Add(reader.GetString(0)); }
+        }
+        Execute("PRAGMA foreign_keys=OFF; PRAGMA legacy_alter_table=ON;", null);
+        try
+        {
+            using SqliteTransaction transaction = BeginTransaction();
+            Execute("ALTER TABLE provider_responses RENAME TO provider_responses_wp5;", transaction);
+            Execute(ExtractSchemaStatement(SchemaV6, "CREATE TABLE provider_responses("), transaction);
+            Execute("INSERT INTO provider_responses SELECT * FROM provider_responses_wp5; DROP TABLE provider_responses_wp5;", transaction);
+            foreach (string triggerName in triggerNames)
+            {
+                Execute(ExtractSchemaStatement(SchemaV6, $"CREATE TRIGGER {triggerName}"), transaction);
+            }
+            string upgradedFingerprint = ComputeSchemaFingerprint(connection, transaction);
+            if (upgradedFingerprint != ProviderPersistenceDeclarations.SchemaFingerprint)
+            {
+                throw new InvalidOperationException($"The bounded WP5 correction did not converge on its declared fingerprint ({upgradedFingerprint}).");
+            }
+            Execute(
+                """
+                UPDATE store_metadata SET value=$fingerprint WHERE key='schema_fingerprint';
+                INSERT INTO store_metadata(key,value) VALUES('wp5_schema_correction_id','M1-S6-WP5-0006E')
+                  ON CONFLICT(key) DO UPDATE SET value=excluded.value;
+                """,
+                transaction,
+                ("$fingerprint", upgradedFingerprint));
+            transaction.Commit();
+        }
+        finally
+        {
+            Execute("PRAGMA legacy_alter_table=OFF; PRAGMA foreign_keys=ON;", null);
+        }
     }
 
     private static string ExtractSchemaStatement(string schema, string marker)
@@ -3325,6 +3388,13 @@ public sealed partial class AuthoritativeStore
                 AND billing_availability = 'unavailable' AND rate_availability = 'unavailable' AND credit_availability = 'unavailable'
                 AND refusal_code IS NULL AND incomplete_reason IS NULL AND error_code IS NULL
                 AND validation_state IN ('rejected','abstained','unavailable','unsupported') AND admission_state IN ('rejected','abstained','unavailable','unsupported'))
+              OR (response_state = 'cancelled' AND availability = 'available' AND usage_availability = 'available'
+                AND authorization_id IS NOT NULL AND request_id IS NOT NULL AND provider_attempt_id IS NOT NULL
+                AND reservation_id IS NOT NULL AND dispatch_fence_id IS NOT NULL
+                AND raw_response_payload_id IS NOT NULL AND http_status IS NOT NULL
+                AND refusal_code IS NULL AND incomplete_reason IS NULL AND error_code IS NULL
+                AND validation_state IN ('rejected','abstained','unavailable','unsupported')
+                AND admission_state IN ('rejected','abstained','unavailable','unsupported'))
               OR (response_state IN ('queued','in-progress','malformed','oversized','unknown')
                 AND availability = 'available' AND usage_availability = 'available' AND authorization_id IS NOT NULL
                 AND request_id IS NOT NULL AND provider_attempt_id IS NOT NULL AND reservation_id IS NOT NULL AND dispatch_fence_id IS NOT NULL
@@ -3336,7 +3406,7 @@ public sealed partial class AuthoritativeStore
         ) STRICT;
         CREATE TRIGGER provider_response_transport_binding_guard
         BEFORE INSERT ON provider_responses
-        WHEN NEW.response_state <> 'cancelled'
+        WHEN NEW.response_state <> 'cancelled' OR NEW.availability = 'available'
         BEGIN
           SELECT CASE WHEN NOT EXISTS(
             SELECT 1 FROM provider_operation_authorizations a
@@ -3358,7 +3428,7 @@ public sealed partial class AuthoritativeStore
         END;
         CREATE TRIGGER provider_cancelled_response_operation_root_guard
         BEFORE INSERT ON provider_responses
-        WHEN NEW.response_state = 'cancelled'
+        WHEN NEW.response_state = 'cancelled' AND NEW.availability = 'unavailable'
         BEGIN
           SELECT CASE WHEN NOT EXISTS(
             SELECT 1 FROM provider_operation_authorizations a
@@ -3387,32 +3457,32 @@ public sealed partial class AuthoritativeStore
         CREATE TRIGGER provider_cancelled_response_blocks_authorization_guard
         BEFORE INSERT ON provider_operation_authorizations
         WHEN EXISTS(SELECT 1 FROM provider_responses r
-          WHERE r.operation_id = NEW.operation_id AND r.response_state = 'cancelled')
+          WHERE r.operation_id = NEW.operation_id AND r.response_state = 'cancelled' AND r.availability = 'unavailable')
         BEGIN SELECT RAISE(ABORT, 'cancelled provider operation is terminal before authorization'); END;
         CREATE TRIGGER provider_cancelled_response_blocks_attempt_guard
         BEFORE INSERT ON provider_operation_attempts
         WHEN EXISTS(SELECT 1 FROM provider_responses r
-          WHERE r.operation_id = NEW.operation_id AND r.response_state = 'cancelled')
+          WHERE r.operation_id = NEW.operation_id AND r.response_state = 'cancelled' AND r.availability = 'unavailable')
         BEGIN SELECT RAISE(ABORT, 'cancelled provider operation is terminal before attempt'); END;
         CREATE TRIGGER provider_cancelled_response_blocks_request_guard
         BEFORE INSERT ON provider_requests
         WHEN EXISTS(SELECT 1 FROM provider_responses r
-          WHERE r.operation_id = NEW.operation_id AND r.response_state = 'cancelled')
+          WHERE r.operation_id = NEW.operation_id AND r.response_state = 'cancelled' AND r.availability = 'unavailable')
         BEGIN SELECT RAISE(ABORT, 'cancelled provider operation is terminal before request'); END;
         CREATE TRIGGER provider_cancelled_response_blocks_reservation_guard
         BEFORE INSERT ON provider_reservations
         WHEN EXISTS(SELECT 1 FROM provider_responses r
-          WHERE r.operation_id = NEW.operation_id AND r.response_state = 'cancelled')
+          WHERE r.operation_id = NEW.operation_id AND r.response_state = 'cancelled' AND r.availability = 'unavailable')
         BEGIN SELECT RAISE(ABORT, 'cancelled provider operation is terminal before reservation'); END;
         CREATE TRIGGER provider_cancelled_response_blocks_fence_guard
         BEFORE INSERT ON provider_dispatch_fences
         WHEN EXISTS(SELECT 1 FROM provider_responses r
-          WHERE r.operation_id = NEW.operation_id AND r.response_state = 'cancelled')
+          WHERE r.operation_id = NEW.operation_id AND r.response_state = 'cancelled' AND r.availability = 'unavailable')
         BEGIN SELECT RAISE(ABORT, 'cancelled provider operation is terminal before dispatch fence'); END;
         CREATE TRIGGER provider_cancelled_response_blocks_transport_guard
         BEFORE INSERT ON provider_transport_events
         WHEN EXISTS(SELECT 1 FROM provider_responses r
-          WHERE r.operation_id = NEW.operation_id AND r.response_state = 'cancelled')
+          WHERE r.operation_id = NEW.operation_id AND r.response_state = 'cancelled' AND r.availability = 'unavailable')
         BEGIN SELECT RAISE(ABORT, 'cancelled provider operation is terminal before transport'); END;
         CREATE TABLE provider_usage_entries(
             usage_entry_id TEXT PRIMARY KEY,
@@ -3478,7 +3548,7 @@ public sealed partial class AuthoritativeStore
               AND r.billing_availability = NEW.billing_availability
               AND r.rate_availability = NEW.rate_availability
               AND r.credit_availability = NEW.credit_availability
-              AND ((r.response_state = 'cancelled' AND NEW.availability = 'unavailable'
+              AND ((r.response_state = 'cancelled' AND r.availability = 'unavailable' AND NEW.availability = 'unavailable'
                   AND NEW.provider_attempt_id IS NOT NULL AND NEW.request_id IS NOT NULL AND NEW.dispatch_fence_id IS NULL
                   AND NEW.dispatch_count_availability = 'available' AND NEW.dispatch_count = 0
                   AND NEW.input_tokens_availability = 'unavailable' AND NEW.output_tokens_availability = 'unavailable'
@@ -3486,7 +3556,7 @@ public sealed partial class AuthoritativeStore
                   AND NEW.cache_read_tokens_availability = 'unavailable' AND NEW.cache_write_tokens_availability = 'unavailable'
                   AND NEW.priced_tool_calls_availability = 'unavailable'
                   AND NEW.calculated_nano_usd_availability = 'unavailable')
-                OR (r.response_state <> 'cancelled' AND NEW.availability = 'available'
+                OR ((r.response_state <> 'cancelled' OR r.availability = 'available') AND NEW.availability = 'available'
                   AND NEW.provider_attempt_id IS NOT NULL AND NEW.request_id IS NOT NULL AND NEW.dispatch_fence_id IS NOT NULL
                   AND NEW.dispatch_count_availability = 'available' AND NEW.dispatch_count >= 1))
               AND (r.response_state <> 'completed' OR (
@@ -3503,7 +3573,9 @@ public sealed partial class AuthoritativeStore
                 OR (r.response_state = 'failed' AND NEW.receipt_state = 'failed-known')
                 OR (r.response_state = 'unknown' AND NEW.receipt_state = 'ambiguous')
                 OR (r.response_state = 'oversized' AND NEW.receipt_state IN ('complete','partial'))
-                OR (r.response_state = 'cancelled' AND NEW.receipt_state = 'not-dispatched')))
+                OR (r.response_state = 'cancelled' AND r.availability = 'unavailable' AND NEW.receipt_state = 'not-dispatched')
+                OR (r.response_state = 'cancelled' AND r.availability = 'available'
+                  AND NEW.receipt_state IN ('complete','partial','failed-known'))))
             THEN RAISE(ABORT, 'provider usage must exactly match response availability and completed-state matrix') END;
         END;
         CREATE TABLE provider_rate_limit_facts(

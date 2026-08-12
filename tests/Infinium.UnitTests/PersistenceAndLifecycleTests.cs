@@ -87,7 +87,12 @@ public sealed class PersistenceAndLifecycleTests
         StringAssert.Contains(receiptTranslationSql, "r.response_state = 'failed' AND NEW.receipt_state = 'failed-known'");
         StringAssert.Contains(receiptTranslationSql, "r.response_state = 'unknown' AND NEW.receipt_state = 'ambiguous'");
         StringAssert.Contains(receiptTranslationSql, "r.response_state = 'oversized' AND NEW.receipt_state IN ('complete','partial')");
-        StringAssert.Contains(receiptTranslationSql, "r.response_state = 'cancelled' AND NEW.receipt_state = 'not-dispatched'");
+        StringAssert.Contains(receiptTranslationSql,
+            "r.response_state = 'cancelled' AND r.availability = 'unavailable' AND NEW.receipt_state = 'not-dispatched'");
+        StringAssert.Contains(receiptTranslationSql,
+            "r.response_state = 'cancelled' AND r.availability = 'available'");
+        StringAssert.Contains(receiptTranslationSql,
+            "NEW.receipt_state IN ('complete','partial','failed-known')");
         command.CommandText = "SELECT sql FROM sqlite_schema WHERE type='table' AND name='provider_reservations';";
         string reservationSql = (string)command.ExecuteScalar()!;
         foreach (string dimension in new[]

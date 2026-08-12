@@ -15,7 +15,33 @@
   "input_file": "input.json",
   "oracle_file": "oracle.json",
   "answer_free_input": true,
-  "review_state": "accepted",
-  "input_sha256": "393f454f65bd35e7bda4152eb04685c1e845bdafaff3b05b9364d6d6da8c3fbf",
+  "purpose": "Offline adversarial validation of WP5 typed non-success, drift rejection, and replay safety.",
+  "classification": "public-synthetic-platform-behavior",
+  "partition_history": [
+    "authored-validation",
+    "retained-validation"
+  ],
+  "construction_provenance": {
+    "method": "authority-derived-hand-authored-adversarial-case",
+    "authority": "accepted M1 Slice 6 plan Section 16 and RESEARCH-0054 snapshot",
+    "product_output_used_to_author_truth": false
+  },
+  "ground_truth_method": "closed response-state matrix and deliberate public mutations",
+  "preregistration": "oracle fields fixed before the corrected product tests consume the package",
+  "reviewer_provenance": "fresh WP5 persistence/replay review identified correction requirements; final independent review pending",
+  "answer_isolation": "input recursively excludes oracle and expected-answer fields; oracle is read only after execution observation",
+  "replay_dependencies": [
+    "recorded RESEARCH-0054 snapshot",
+    "exact request schema",
+    "retained response bytes"
+  ],
+  "known_limitations": [
+    "no public DNS",
+    "no provider endpoint",
+    "no credential operation",
+    "no billable request"
+  ],
+  "review_state": "correction-pending-independent-review",
+  "input_sha256": "69f87e2aa8191be9113bc8b79a0cc0872a3e3d4798caadf0f17b35dc04037a98",
   "oracle_sha256": "53c369944e05242ed4e8978fc8466aff0ddfb7a72d7ffd488a7d7aa8623efe74"
 }

@@ -47,17 +47,20 @@ public sealed class OneShotHelperEngine
     private readonly TimeProvider timeProvider;
     private readonly IHelperSecretSource secretSource;
     private readonly IOpenAiResponsesTransport? providerTransport;
+    private readonly bool allowSyntheticProviderDispatch;
 
     public OneShotHelperEngine(
         ISyntheticSecureStore store,
         TimeProvider? timeProvider = null,
         IHelperSecretSource? secretSource = null,
-        IOpenAiResponsesTransport? providerTransport = null)
+        IOpenAiResponsesTransport? providerTransport = null,
+        bool allowSyntheticProviderDispatch = false)
     {
         this.store = store ?? throw new ArgumentNullException(nameof(store));
         this.timeProvider = timeProvider ?? TimeProvider.System;
         this.secretSource = secretSource ?? DeterministicHelperSecretSource.Instance;
         this.providerTransport = providerTransport;
+        this.allowSyntheticProviderDispatch = allowSyntheticProviderDispatch;
     }
 
     public async Task RunAsync(Stream request, Stream response, CancellationToken cancellationToken)
@@ -205,8 +208,11 @@ public sealed class OneShotHelperEngine
                     secret = store.ReadExact(slot);
                     if (providerTransport is null)
                     {
-                        // WP3/WP4 qualification retains its explicit deterministic fake.
-                        // WP5 injects the closed loopback/production transport branch.
+                        if (!allowSyntheticProviderDispatch)
+                        {
+                            throw new InvalidOperationException(
+                                "Provider dispatch requires an explicitly selected production or synthetic-qualification transport mode.");
+                        }
                         hasResponse = true;
                         outcome = HelperOutcomeV2.Completed;
                     }
@@ -224,8 +230,11 @@ public sealed class OneShotHelperEngine
                             ProviderResponseState.Completed when adapterResult.Admitted => HelperOutcomeV2.Completed,
                             ProviderResponseState.Malformed => HelperOutcomeV2.Malformed,
                             ProviderResponseState.Oversized => HelperOutcomeV2.Oversized,
-                            ProviderResponseState.Unknown when adapterResult.TransportMayHaveStarted => HelperOutcomeV2.TransportMayHaveStarted,
-                            ProviderResponseState.Cancelled => HelperOutcomeV2.Cancelled,
+                            // A provider-authored cancelled/future status has a retained HTTP receipt and is
+                            // a known response. Only an exception before a response receipt is transport ambiguity.
+                            ProviderResponseState.Unknown when adapterResult.RawResponseBytes is null
+                                && adapterResult.TransportMayHaveStarted => HelperOutcomeV2.TransportMayHaveStarted,
+                            ProviderResponseState.Cancelled or ProviderResponseState.Unknown => HelperOutcomeV2.FailedKnown,
                             _ => HelperOutcomeV2.FailedKnown,
                         };
                     }

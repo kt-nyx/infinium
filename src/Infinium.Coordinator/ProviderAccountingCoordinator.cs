@@ -6,6 +6,11 @@ using Infinium.Persistence;
 
 namespace Infinium.Coordinator;
 
+public sealed record ProviderTerminalPublicationArtifacts(
+    ProviderRunOutputV2BindingReceipt Binding,
+    RunOutputV2Document RunOutputV2,
+    CliSummaryV2Document CliSummaryV2);
+
 public sealed class ProviderAccountingCoordinator
 {
     private readonly AuthoritativeStore store;
@@ -79,11 +84,46 @@ public sealed class ProviderAccountingCoordinator
         }
         if (operation.ResponseHeadersBytes is null)
         {
-            return OpenAiResponsesResponseCodec.Replay(operation.RawResponseBytes, operation.HttpStatus,
+            return OpenAiResponsesResponseCodec.Replay(operation.RawResponseBytes ?? [], operation.HttpStatus,
                 operation.ClientRequestId, operation.ProviderRequestId);
         }
         return OpenAiStagedResponseEnvelope.Replay(
-            operation.RawResponseBytes, operation.ResponseHeadersBytes, operation.ClientRequestId);
+            operation.RawResponseBytes ?? [], operation.ResponseHeadersBytes, operation.ClientRequestId);
+    }
+
+    public ProviderTerminalPublicationArtifacts PublishTerminalV2(
+        OpaqueId runId,
+        OpaqueId localRunOutputV1Id,
+        byte[] canonicalLocalRunOutputV1,
+        byte[] canonicalLocalCliSummaryV1,
+        OpaqueId operationId,
+        DateTimeOffset createdAt)
+    {
+        ProviderOperationReadModel operation = store.ReadProviderOperation(operationId.Value);
+        ProviderRunOutputV2BindingReceipt binding = store.BindProviderRunOutputV2(
+            runId.Value, operation.EffectiveConfigurationId, canonicalLocalRunOutputV1, createdAt);
+        ProviderOperationKind operationKind = operation.OperationKind switch
+        {
+            "transport-qualification" => ProviderOperationKind.TransportQualification,
+            "source-claim-extraction" => ProviderOperationKind.SourceClaimExtraction,
+            "candidate-investigation" => ProviderOperationKind.CandidateInvestigation,
+            _ => throw new InvalidDataException("The persisted provider operation kind is outside the closed WP5 profile."),
+        };
+        ProviderPublicationReferenceContract publication = new(
+            operationId, operationKind, null, new(operation.AuthorizationId), new(operation.ResponseId), null,
+            new(operation.UsageEntryId), operation.SettlementId is null ? null : new(operation.SettlementId),
+            new(operation.ReplayEdgeId), "live", true,
+            OpenAiResponsesCanonicalSerializer.InputBoundPolicyId,
+            OpenAiResponsesCanonicalSerializer.InputBoundPolicyVersion,
+            new(operation.AuthorizationId));
+        RunOutputV2Document runOutput = ProviderContractFactories.CreateRunOutputV2Supplement(
+            runId, localRunOutputV1Id, canonicalLocalRunOutputV1, new(operation.EffectiveConfigurationId),
+            [publication], [], [], [], []);
+        OpenAiResponsesResult replay = Replay(new(operationId, new(operation.ResponseId), false));
+        ProviderOperationSummaryProjection projection = QueryOperation(new(operationId, true, true, true));
+        CliSummaryV2Document cli = ProviderContractFactories.CreateTerminalCliSummaryV2Supplement(
+            runId, canonicalLocalCliSummaryV1, projection, replay.Usage, new(operation.AuthorizationId), []);
+        return new(binding, runOutput, cli);
     }
 
     public ProviderBudgetSettlementReceipt SimulatePersistAndSettle(
@@ -135,8 +175,10 @@ public sealed class ProviderAccountingCoordinator
             identityPrefix + ":settlement",
             reservationId,
             kind,
-            persisted?.UsageEntryId,
-            kind == ProviderBudgetEventKind.ReleasedUndispatched ? null : persisted?.Actual,
+            kind is ProviderBudgetEventKind.ReleasedUndispatched or ProviderBudgetEventKind.RetainedPartial
+                or ProviderBudgetEventKind.RetainedUnavailable ? null : persisted?.UsageEntryId,
+            kind is ProviderBudgetEventKind.ReleasedUndispatched or ProviderBudgetEventKind.RetainedPartial
+                or ProviderBudgetEventKind.RetainedUnavailable ? null : persisted?.Actual,
             now));
     }
 

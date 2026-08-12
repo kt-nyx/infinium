@@ -462,9 +462,10 @@ public sealed partial class AuthoritativeStore
         ArgumentNullException.ThrowIfNull(request.Usage);
         ArgumentNullException.ThrowIfNull(request.RateFacts);
         string responseState = ToResponseState(request.ResponseState);
-        bool undispatched = request.ResponseState == ProviderResponseState.Cancelled;
+        bool undispatched = request.ResponseState == ProviderResponseState.Cancelled
+            && request.RawResponseBytes is null;
         bool oversized = request.ResponseState == ProviderResponseState.Oversized;
-        if (!undispatched && request.ResponseState == ProviderResponseState.Unknown)
+        if (request.ResponseState == ProviderResponseState.Unknown && request.RawResponseBytes is null)
         {
             throw new InvalidOperationException(
                 "An ambiguous transport start is retained as an unresolved hold without inventing a provider response or usage receipt.");
@@ -632,6 +633,7 @@ public sealed partial class AuthoritativeStore
 
             ProviderBudgetVectorContract actual = undispatched
                 || request.Usage.Availability != ProviderAvailabilityState.Available
+                || request.Usage.ReceiptState != UsageReceiptState.Complete
                 ? ProviderBudgetVectorContract.Zero
                 : ToAvailableBudgetVector(request.Usage);
             InsertProviderUsage(request, undispatched, rateAvailability, transaction);
@@ -660,6 +662,24 @@ public sealed partial class AuthoritativeStore
                 ("$usage", request.UsageEntryId),
                 ("$validation", admitted ? "admitted" : "rejected"),
                 ("$now", ToText(request.OccurredAt)));
+            if (!undispatched)
+            {
+                Execute(
+                    """
+                    INSERT INTO provider_replay_edges(
+                      replay_edge_id,operation_id,provider_attempt_id,request_id,response_record_id,
+                      dispatch_fence_id,replay_state,dependency_manifest_id,effective_configuration_id,created_at)
+                    SELECT $edge,a.operation_id,$attempt,$request,$response,$fence,'retained-response',
+                      a.resolved_input_manifest_id,a.effective_configuration_id,$now
+                    FROM provider_operation_authorizations a
+                    WHERE a.authorization_id=$authorization AND a.operation_id=$operation;
+                    """,
+                    transaction,
+                    ("$edge", request.ResponseId + ":replay"), ("$attempt", request.AttemptId),
+                    ("$request", request.RequestId), ("$response", request.ResponseId),
+                    ("$fence", request.DispatchFenceId), ("$now", ToText(request.OccurredAt)),
+                    ("$authorization", request.AuthorizationId), ("$operation", request.OperationId));
+            }
             transaction.Commit();
 
             ProviderBudgetVectorContract reserved = ReadReservationVectorOutsideTransaction(request.ReservationId);
@@ -897,6 +917,41 @@ public sealed partial class AuthoritativeStore
         }
     }
 
+    public ProviderRunOutputV2BindingReceipt BindProviderRunOutputV2(
+        string runId,
+        string effectiveConfigurationV2Id,
+        byte[] localRunOutputV1Bytes,
+        DateTimeOffset createdAt)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(runId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(effectiveConfigurationV2Id);
+        ArgumentNullException.ThrowIfNull(localRunOutputV1Bytes);
+        if (localRunOutputV1Bytes.Length == 0)
+        {
+            throw new InvalidOperationException("A run-output v2 binding requires the exact non-empty local v1 bytes.");
+        }
+        lock (gate)
+        {
+            using SqliteTransaction transaction = BeginImmediateTransaction();
+            string payloadId = AdmitCoordinatorPayload(
+                localRunOutputV1Bytes, "local-run-output-v1", runId + ":run-output-v1", createdAt, transaction);
+            string fingerprint = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(localRunOutputV1Bytes));
+            Execute(
+                """
+                INSERT INTO provider_run_output_v2_bindings(
+                  run_id,effective_configuration_v2_id,local_run_output_v1_payload_id,
+                  local_run_output_v1_fingerprint,local_run_output_v1_bytes,created_at)
+                VALUES($run,$configuration,$payload,$fingerprint,$bytes,$now);
+                """,
+                transaction,
+                ("$run", runId), ("$configuration", effectiveConfigurationV2Id), ("$payload", payloadId),
+                ("$fingerprint", fingerprint), ("$bytes", localRunOutputV1Bytes.LongLength),
+                ("$now", ToText(createdAt)));
+            transaction.Commit();
+            return new(runId, effectiveConfigurationV2Id, payloadId, fingerprint, localRunOutputV1Bytes.LongLength);
+        }
+    }
+
     public ProviderOperationReadModel ReadProviderOperation(string operationId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(operationId);
@@ -908,7 +963,9 @@ public sealed partial class AuthoritativeStore
                 SELECT r.response_record_id,r.http_status,r.client_request_id,r.provider_request_id,
                   r.provider_response_id,r.raw_response_payload_id,r.response_headers_payload_id,
                   reservation.maximum_nano_usd,usage.calculated_nano_usd,
-                  finalization.admission_state,event.event_kind
+                  finalization.admission_state,event.event_kind,replay.replay_state,replay.replay_edge_id,
+                  r.authorization_id,r.operation_kind,replay.effective_configuration_id,usage.usage_entry_id,
+                  settlement.settlement_id
                 FROM provider_responses r
                 JOIN provider_reservations reservation ON reservation.operation_id=r.operation_id
                   AND reservation.provider_attempt_id=r.provider_attempt_id AND reservation.request_id=r.request_id
@@ -916,6 +973,8 @@ public sealed partial class AuthoritativeStore
                 JOIN provider_response_finalizations finalization ON finalization.response_record_id=r.response_record_id
                 JOIN provider_budget_events event ON event.reservation_id=reservation.reservation_id
                   AND event.event_kind<>'reserved'
+                JOIN provider_replay_edges replay ON replay.response_record_id=r.response_record_id
+                LEFT JOIN provider_settlements settlement ON settlement.usage_entry_id=usage.usage_entry_id
                 WHERE r.operation_id=$operation;
                 """;
             command.Parameters.AddWithValue("$operation", operationId);
@@ -924,12 +983,19 @@ public sealed partial class AuthoritativeStore
             string clientRequestId;
             string? providerRequestId;
             string? providerResponseId;
-            string rawPayloadId;
+            string? rawPayloadId;
             string? headersPayloadId;
             long reservedNanoUsd;
             long calculatedNanoUsd;
             string admissionState;
             string eventKind;
+            string replayState;
+            string replayEdgeId;
+            string authorizationId;
+            string operationKind;
+            string effectiveConfigurationId;
+            string usageEntryId;
+            string? settlementId;
             using (SqliteDataReader reader = command.ExecuteReader())
             {
                 if (!reader.Read())
@@ -941,26 +1007,38 @@ public sealed partial class AuthoritativeStore
                 clientRequestId = reader.GetString(2);
                 providerRequestId = reader.IsDBNull(3) ? null : reader.GetString(3);
                 providerResponseId = reader.IsDBNull(4) ? null : reader.GetString(4);
-                rawPayloadId = reader.GetString(5);
+                rawPayloadId = reader.IsDBNull(5) ? null : reader.GetString(5);
                 headersPayloadId = reader.IsDBNull(6) ? null : reader.GetString(6);
                 reservedNanoUsd = reader.GetInt64(7);
                 calculatedNanoUsd = reader.IsDBNull(8) ? 0 : reader.GetInt64(8);
                 admissionState = reader.GetString(9);
                 eventKind = reader.GetString(10);
+                replayState = reader.GetString(11);
+                replayEdgeId = reader.GetString(12);
+                authorizationId = reader.GetString(13);
+                operationKind = reader.GetString(14);
+                effectiveConfigurationId = reader.GetString(15);
+                usageEntryId = reader.GetString(16);
+                settlementId = reader.IsDBNull(17) ? null : reader.GetString(17);
             }
             bool unresolved = eventKind.StartsWith("retained-", StringComparison.Ordinal);
             ProviderOperationState state = unresolved ? ProviderOperationState.UnresolvedHold
                 : admissionState == "admitted" ? ProviderOperationState.Settled : ProviderOperationState.Rejected;
             return new(
                 operationId, state, reservedNanoUsd, calculatedNanoUsd, unresolved,
-                "retained-response", responseId, httpStatus, clientRequestId,
+                replayState, responseId, httpStatus, clientRequestId,
                 providerRequestId, providerResponseId, ReadRetainedPayloadBytes(rawPayloadId),
-                headersPayloadId is null ? null : ReadRetainedPayloadBytes(headersPayloadId));
+                headersPayloadId is null ? null : ReadRetainedPayloadBytes(headersPayloadId), replayEdgeId,
+                authorizationId, operationKind, effectiveConfigurationId, usageEntryId, settlementId);
         }
     }
 
-    private byte[] ReadRetainedPayloadBytes(string payloadId)
+    private byte[]? ReadRetainedPayloadBytes(string? payloadId)
     {
+        if (payloadId is null)
+        {
+            return null;
+        }
         using SqliteCommand command = connection.CreateCommand();
         command.CommandText =
             "SELECT object_relative_path FROM payloads WHERE payload_id=$payload AND retention_state='retained';";

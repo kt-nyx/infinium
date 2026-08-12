@@ -392,6 +392,13 @@ public sealed class ProviderBudgetIntegrationTests
         Assert.AreEqual(ProviderResponseState.Malformed, replay.State);
         Assert.IsFalse(replay.NetworkUsed);
         Assert.AreEqual(0, replay.SendCount);
+        ProviderTerminalPublicationArtifacts publication = coordinator.PublishTerminalV2(
+            new("run-restore"), new("local-run-output-v1"), "local-output-v1"u8.ToArray(),
+            "local-cli-v1"u8.ToArray(), new("operation-restore"), BaseTime.AddSeconds(11));
+        Assert.AreEqual("production-simulator:response:replay",
+            publication.RunOutputV2.ProviderOperations.Single().ReplayEdgeId?.Value);
+        Assert.AreEqual("live", publication.CliSummaryV2.ProviderState);
+        Assert.AreEqual("retained-response", publication.CliSummaryV2.ReplayState);
         using SqliteConnection database = new($"Data Source={context.Store.Paths.Database};Mode=ReadOnly;Pooling=False");
         database.Open();
         using SqliteCommand command = database.CreateCommand();
@@ -412,6 +419,10 @@ public sealed class ProviderBudgetIntegrationTests
             JOIN provider_budget_settlement_receipts receipt
               ON receipt.settlement_id=settlement.settlement_id
              AND receipt.reservation_id=settlement.reservation_id
+            JOIN provider_replay_edges replay
+              ON replay.response_record_id=response.response_record_id
+             AND replay.operation_id=response.operation_id
+             AND replay.replay_state='retained-response'
             WHERE response.response_record_id='production-simulator:response'
               AND usage.usage_entry_id='production-simulator:usage'
               AND settlement.settlement_id='production-simulator:settlement'
@@ -421,6 +432,83 @@ public sealed class ProviderBudgetIntegrationTests
               AND response.dispatch_fence_id='fence-settlement';
             """;
         Assert.AreEqual(1L, (long)command.ExecuteScalar()!);
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    public void OversizedNullRawPayloadQueriesAndReplaysAsTypedOversizedReceipt()
+    {
+        using BudgetContext context = BudgetContext.Create();
+        _ = context.Store.ReserveProviderBudget(1, context.Request);
+        ProviderDispatchGateReceipt gate = context.Store.AuthorizeProviderDispatch(context.GateRequest);
+        context.Store.RecordProviderTransportStart("operation-restore", "attempt-settlement", "request-settlement",
+            gate.DispatchFenceId, ambiguous: false, BaseTime.AddSeconds(6));
+        ProviderQuantityContract absent = new(ProviderAvailabilityState.Unavailable, null);
+        ProviderUsageContract partial = new(ProviderAvailabilityState.Available,
+            new(ProviderAvailabilityState.Available, 1), absent, absent, absent, absent, absent, absent, absent, absent,
+            ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable,
+            ProviderAvailabilityState.Unavailable, UsageReceiptState.Partial);
+        OpenAiResponsesResult oversized = new(
+            ProviderResponseState.Oversized, true, false, 200, null, null, "client-request-settlement", "provider-request",
+            null, null, null, null, null, partial, [], false, "oversized", false, 0)
+        { RequestedOutputSchemaBytes = ProviderAdapterTestData.OutputSchemaBytes };
+        byte[] envelope = OpenAiStagedResponseEnvelope.Create(oversized);
+        Assert.IsTrue(OpenAiStagedResponseEnvelope.TryRead(envelope, out byte[] raw, out byte[] headers));
+        Assert.IsEmpty(raw);
+        ProviderSimulationPersistenceReceipt persisted = context.Store.PersistProviderSimulation(new(
+            "oversized:response", "oversized:usage", "oversized:receipt", "oversized:finalization",
+            "authorization-settlement", "operation-restore", "reservation-settlement", "attempt-settlement",
+            "request-settlement", gate.DispatchFenceId, ProviderResponseState.Oversized, 200, null, null,
+            null, null, null, partial, [], null, BaseTime.AddSeconds(7), headers,
+            ProviderRequestId: "provider-request", Admitted: false));
+        _ = context.Store.SettleProviderBudget(new("oversized:settlement", "reservation-settlement",
+            persisted.SettlementKind, null, null, BaseTime.AddSeconds(8)));
+        ProviderAccountingCoordinator coordinator = new(context.Store);
+        ProviderOperationSummaryProjection projection = coordinator.QueryOperation(new(
+            new("operation-restore"), true, true, true));
+        Assert.AreEqual("retained-response", projection.ReplayState);
+        OpenAiResponsesResult replay = coordinator.Replay(new(new("operation-restore"), new("oversized:response"), false));
+        Assert.AreEqual(ProviderResponseState.Oversized, replay.State);
+        Assert.IsNull(replay.RawResponseBytes);
+        Assert.IsFalse(replay.NetworkUsed);
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    public void ProviderAuthoredCancelledStatusIsRetainedAndReplayedUnlikeLocalCancellation()
+    {
+        using BudgetContext context = BudgetContext.Create();
+        _ = context.Store.ReserveProviderBudget(1, context.Request);
+        ProviderDispatchGateReceipt gate = context.Store.AuthorizeProviderDispatch(context.GateRequest);
+        context.Store.RecordProviderTransportStart("operation-restore", "attempt-settlement", "request-settlement",
+            gate.DispatchFenceId, ambiguous: false, BaseTime.AddSeconds(6));
+        byte[] raw = "{\"id\":\"provider-cancelled\",\"status\":\"cancelled\",\"model\":\"gpt-5.6-sol\",\"service_tier\":\"default\"}"u8.ToArray();
+        OpenAiResponsesResult parsed = OpenAiResponsesResponseCodec.Parse(
+            raw, 200, "client-request-settlement", "provider-request", [], ProviderAdapterTestData.OutputSchemaBytes);
+        Assert.AreEqual(ProviderResponseState.Cancelled, parsed.State);
+        ProviderSimulationPersistenceReceipt persisted = context.Store.PersistProviderSimulation(new(
+            "cancelled:response", "cancelled:usage", "cancelled:receipt", "cancelled:finalization",
+            "authorization-settlement", "operation-restore", "reservation-settlement", "attempt-settlement",
+            "request-settlement", gate.DispatchFenceId, parsed.State, 200, parsed.ReturnedModel,
+            parsed.ReturnedServiceTier, parsed.ErrorCode, null, null, parsed.Usage, [], raw,
+            BaseTime.AddSeconds(7), ProviderResponseId: parsed.ProviderResponseId,
+            ProviderRequestId: parsed.ProviderRequestId, Admitted: false));
+        _ = context.Store.SettleProviderBudget(new("cancelled:settlement", "reservation-settlement",
+            persisted.SettlementKind, null, null, BaseTime.AddSeconds(8)));
+        ProviderAccountingCoordinator coordinator = new(context.Store);
+        OpenAiResponsesResult replay = coordinator.Replay(new(new("operation-restore"), new("cancelled:response"), false));
+        Assert.AreEqual(ProviderResponseState.Cancelled, replay.State);
+        CollectionAssert.AreEqual(raw, replay.RawResponseBytes!);
+        Assert.IsFalse(replay.NetworkUsed);
+        Assert.AreEqual(0, replay.SendCount);
+
+        using CancellationTokenSource locallyCancelled = new();
+        locallyCancelled.Cancel();
+        using OpenAiResponsesAdapter adapter = OpenAiResponsesAdapter.CreateDeterministicLoopback(
+            new("http://127.0.0.1:1/v1/responses"));
+        Assert.ThrowsAsync<OperationCanceledException>(() => adapter.SendOnceAsync(
+            ProviderAdapterTestData.CanonicalRequest(), "sk-local-cancel"u8.ToArray(), ProviderAdapterTestData.Limits(),
+            "local-cancel", locallyCancelled.Token)).GetAwaiter().GetResult();
     }
 
     [TestMethod]
