@@ -4,6 +4,8 @@ using Google.Protobuf;
 using Infinium.Application.Runtime;
 using Infinium.Contracts.Protobuf.Common.V1;
 using Infinium.Contracts.Protobuf.Helper.V2;
+using Infinium.Domain.Contracts;
+using Infinium.OpenAI;
 
 namespace Infinium.CredentialHelper;
 
@@ -44,15 +46,18 @@ public sealed class OneShotHelperEngine
     private readonly ISyntheticSecureStore store;
     private readonly TimeProvider timeProvider;
     private readonly IHelperSecretSource secretSource;
+    private readonly IOpenAiResponsesTransport? providerTransport;
 
     public OneShotHelperEngine(
         ISyntheticSecureStore store,
         TimeProvider? timeProvider = null,
-        IHelperSecretSource? secretSource = null)
+        IHelperSecretSource? secretSource = null,
+        IOpenAiResponsesTransport? providerTransport = null)
     {
         this.store = store ?? throw new ArgumentNullException(nameof(store));
         this.timeProvider = timeProvider ?? TimeProvider.System;
         this.secretSource = secretSource ?? DeterministicHelperSecretSource.Instance;
+        this.providerTransport = providerTransport;
     }
 
     public async Task RunAsync(Stream request, Stream response, CancellationToken cancellationToken)
@@ -89,7 +94,8 @@ public sealed class OneShotHelperEngine
             {
                 HelperExecutionSemanticsV2.ValidateFinalRevalidation(bootstrap.Bootstrap, assignment, revalidation);
             }
-            (receipt, stagedResponse) = Execute(bootstrap.Bootstrap, assignment, revalidation);
+            (receipt, stagedResponse) = await ExecuteAsync(
+                bootstrap.Bootstrap, assignment, revalidation, cancellationToken).ConfigureAwait(false);
         }
         catch (InvalidDataException)
         {
@@ -107,10 +113,11 @@ public sealed class OneShotHelperEngine
         DispatchRevalidationV2? revalidation) => CreateReceipt(
             assignment, revalidation, HelperOutcomeV2.FailedKnown, hasResponse: false);
 
-    private (HelperReceiptV2 Receipt, byte[] StagedResponse) Execute(
+    private async Task<(HelperReceiptV2 Receipt, byte[] StagedResponse)> ExecuteAsync(
         HelperBootstrapV2 bootstrap,
         HelperAssignmentV2 assignment,
-        DispatchRevalidationV2? revalidation)
+        DispatchRevalidationV2? revalidation,
+        CancellationToken cancellationToken)
     {
         SyntheticCredentialSlot slot = new(assignment.AccessProfileId.Value, assignment.GenerationId.Value);
         SyntheticCredentialSlot bootstrapSlot = new(
@@ -119,6 +126,7 @@ public sealed class OneShotHelperEngine
         HelperOutcomeV2 outcome;
         bool hasResponse = false;
         byte[]? secret = null;
+        OpenAiResponsesResult? adapterResult = null;
         try
         {
             CredentialNativeQualificationPhaseV2? qualificationPhase =
@@ -195,10 +203,32 @@ public sealed class OneShotHelperEngine
                     break;
                 case HelperAssignmentKindV2.ProviderDispatch:
                     secret = store.ReadExact(slot);
-                    // WP3 qualifies the boundary only. The deterministic response
-                    // is represented by a non-secret digest and never reaches a network.
-                    hasResponse = true;
-                    outcome = HelperOutcomeV2.Completed;
+                    if (providerTransport is null)
+                    {
+                        // WP3/WP4 qualification retains its explicit deterministic fake.
+                        // WP5 injects the closed loopback/production transport branch.
+                        hasResponse = true;
+                        outcome = HelperOutcomeV2.Completed;
+                    }
+                    else
+                    {
+                        adapterResult = await providerTransport.SendOnceAsync(
+                            assignment.ProviderRequest.CanonicalRequestBytes.Memory,
+                            secret,
+                            Limits(assignment.Limits),
+                            assignment.ProviderRequest.RequestId,
+                            cancellationToken).ConfigureAwait(false);
+                        hasResponse = adapterResult.RawResponseBytes is not null;
+                        outcome = adapterResult.State switch
+                        {
+                            ProviderResponseState.Completed when adapterResult.Admitted => HelperOutcomeV2.Completed,
+                            ProviderResponseState.Malformed => HelperOutcomeV2.Malformed,
+                            ProviderResponseState.Oversized => HelperOutcomeV2.Oversized,
+                            ProviderResponseState.Unknown when adapterResult.TransportMayHaveStarted => HelperOutcomeV2.TransportMayHaveStarted,
+                            ProviderResponseState.Cancelled => HelperOutcomeV2.Cancelled,
+                            _ => HelperOutcomeV2.FailedKnown,
+                        };
+                    }
                     break;
                 default:
                     throw new InvalidDataException("The helper assignment kind is unsupported.");
@@ -241,24 +271,52 @@ public sealed class OneShotHelperEngine
 
         HelperReceiptV2 receipt = CreateReceipt(assignment, revalidation, outcome, hasResponse);
         byte[] stagedResponse = [];
-        if (hasResponse)
+        bool stageOversizedReceipt = adapterResult?.State == ProviderResponseState.Oversized;
+        if (hasResponse || stageOversizedReceipt)
         {
-            stagedResponse = Encoding.UTF8.GetBytes("synthetic-provider-response/" + assignment.AssignmentId);
-            if ((ulong)stagedResponse.Length > assignment.Limits.MaximumResponseBytes
+            stagedResponse = adapterResult is null
+                ? Encoding.UTF8.GetBytes("synthetic-provider-response/" + assignment.AssignmentId)
+                : OpenAiStagedResponseEnvelope.Create(adapterResult);
+            ulong rawResponseLength = checked((ulong)(adapterResult?.RawResponseBytes?.Length ?? stagedResponse.Length));
+            if (rawResponseLength > assignment.Limits.MaximumResponseBytes
+                && !stageOversizedReceipt
                 || (ulong)stagedResponse.Length > assignment.Limits.MaximumStagedOutputBytes)
             {
                 throw new InvalidDataException("The deterministic response exceeds its retained response/staging bound.");
             }
-            receipt.RawResponse = Digest(stagedResponse);
-            receipt.InputTokens = Available(0);
-            receipt.OutputTokens = Available(0);
-            receipt.TotalTokens = Available(0);
-            receipt.ReasoningTokens = Available(0);
-            receipt.CacheReadTokens = Available(0);
-            receipt.CacheWriteTokens = Available(0);
-            receipt.PricedToolCalls = Available(0);
-            receipt.CalculatedNanoUsd = Available(0);
-            receipt.DispatchCount = Available(1);
+            if (hasResponse)
+            {
+                receipt.RawResponse = Digest(adapterResult?.RawResponseBytes ?? stagedResponse);
+            }
+            else
+            {
+                receipt.OverflowObservedExcessBytes = 1;
+            }
+            if (adapterResult is null)
+            {
+                receipt.InputTokens = Available(0);
+                receipt.OutputTokens = Available(0);
+                receipt.TotalTokens = Available(0);
+                receipt.ReasoningTokens = Available(0);
+                receipt.CacheReadTokens = Available(0);
+                receipt.CacheWriteTokens = Available(0);
+                receipt.PricedToolCalls = Available(0);
+                receipt.CalculatedNanoUsd = Available(0);
+                receipt.DispatchCount = Available(1);
+            }
+            else
+            {
+                receipt.InputTokens = Quantity(adapterResult.Usage.InputTokens);
+                receipt.OutputTokens = Quantity(adapterResult.Usage.OutputTokens);
+                receipt.TotalTokens = Quantity(adapterResult.Usage.TotalTokens);
+                receipt.ReasoningTokens = Quantity(adapterResult.Usage.ReasoningTokens);
+                receipt.CacheReadTokens = Quantity(adapterResult.Usage.CacheReadTokens);
+                receipt.CacheWriteTokens = Quantity(adapterResult.Usage.CacheWriteTokens);
+                receipt.PricedToolCalls = Quantity(adapterResult.Usage.PricedToolCalls);
+                receipt.CalculatedNanoUsd = Quantity(adapterResult.Usage.CalculatedNanoUsd);
+                receipt.DispatchCount = Quantity(adapterResult.Usage.DispatchCount);
+                receipt.UsageReceiptState = UsageState(adapterResult.Usage.ReceiptState);
+            }
         }
         return (receipt, stagedResponse);
     }
@@ -358,6 +416,28 @@ public sealed class OneShotHelperEngine
     {
         Availability = AvailabilityState.Available,
         Value = value,
+    };
+
+    private static ProviderFiniteLimitsContract Limits(HelperLimitsV2 value) => new(
+        checked((long)value.MaximumRequestBytes), checked((long)value.MaximumInputTokens),
+        checked((long)value.MaximumOutputTokens), checked((long)value.MaximumResponseBytes),
+        checked((long)value.MaximumDispatchCount), value.MaximumCalculatedNanoUsd,
+        checked((long)value.MaximumDuration.Value));
+
+    private static OptionalUInt64 Quantity(ProviderQuantityContract value) => new()
+    {
+        Availability = (AvailabilityState)(int)value.Availability,
+        Value = checked((ulong)(value.Value ?? 0)),
+    };
+
+    private static UsageReceiptStateV2 UsageState(UsageReceiptState value) => value switch
+    {
+        UsageReceiptState.NotDispatched => UsageReceiptStateV2.NotDispatched,
+        UsageReceiptState.Complete => UsageReceiptStateV2.Complete,
+        UsageReceiptState.Partial => UsageReceiptStateV2.Partial,
+        UsageReceiptState.FailedKnown => UsageReceiptStateV2.FailedKnown,
+        UsageReceiptState.Ambiguous => UsageReceiptStateV2.Ambiguous,
+        _ => UsageReceiptStateV2.Unavailable,
     };
 }
 

@@ -2,7 +2,7 @@
   "schema_identity": "infinium.repository.public-fixture-registry/1.2.0",
   "registry_version": "1.2.0",
   "status": "current",
-  "package_count": 27,
+  "package_count": 29,
   "packages": [
     {
       "package_identity": "M1-PLAT-PROVIDER-CAPABILITY-DEV-v1",
@@ -57,6 +57,24 @@
       "authority_file": "fixtures/public/platform/provider-budget/budget-val/public-manifest.json",
       "authority_bytes": 513,
       "authority_sha256": "9522b6b31b177a3756f6d101d2aba94739740db06f16f7989a018377fd2d5fa8"
+    },
+    {
+      "package_identity": "M1-PLAT-OFFLINE-DEV-v1",
+      "package_version": "1.0.0",
+      "partition": "development",
+      "package_path": "fixtures/public/platform/provider-offline/offline-dev",
+      "authority_file": "fixtures/public/platform/provider-offline/offline-dev/public-manifest.json",
+      "authority_bytes": 618,
+      "authority_sha256": "880398d9f4b8ac20bd2a2b8404a7611a9c77ca8994d646c7b1433cdba2e2d572"
+    },
+    {
+      "package_identity": "M1-PLAT-OFFLINE-VAL-v1",
+      "package_version": "1.0.0",
+      "partition": "validation",
+      "package_path": "fixtures/public/platform/provider-offline/offline-val",
+      "authority_file": "fixtures/public/platform/provider-offline/offline-val/public-manifest.json",
+      "authority_bytes": 617,
+      "authority_sha256": "fb7860df80c480555b73667146b2815c6d02be1f056783785d2f5c35b4986386"
     },
     {
       "package_identity": "M1-PLAT-CREDENTIAL-HELPER-DEV-v1",

@@ -3288,3 +3288,36 @@ failures, zero strict-JSON failures, zero relative-link failures, no
 private/archive access, `network_permitted: false`, and
 `credential_access_permitted: false`. The 1,356-byte receipt has SHA-256
 `b73da87e61265bb5a0e372ded1b7c08deba65929103a0ddd3fb9fc8ce110d016`.
+
+## WP5 exact Responses adapter implementation start — 2026-08-12
+
+`M1/S6/WP5` began from exact clean accepted base
+`fea07e666006d3fde9c8fbd879fff53976690929` on `codex/m1-s6`, after reading
+the accepted Slice 6 Section 16 authority, the accepted milestone and
+continuation-verification plans, the applicable ADRs, the frozen Slice 5
+handoff, current implementation/evidence, and recorded RESEARCH-0054. No
+source refresh, live request, API key, public DNS, provider endpoint,
+Credential Manager operation, private fixture, archive, or later-package
+authority entered the work.
+
+The bounded WP5 vertical implements the exact stateless/cache-off Responses
+request serializer, strict response and usage admission, a one-shot BCL HTTP
+transport, literal-loopback-only deterministic qualification, private-helper
+consumption of the exact canonical bytes, retained raw response and allowlisted
+header receipts, persistence of provider/client/request identities, additive
+application query and network-disabled replay, two closed-world public
+`M1-PLAT-OFFLINE-v1` development/validation packages, and the `Adapter` and
+`OfflineSafetyReplay` verifier gates. Redirect, retry, proxy fallback,
+arbitrary URL/header, tools, token-count endpoint, SDK, and provider transport
+remain absent. The existing WP4 v2 proposal is explicitly stale and has no
+effect authority after this product-candidate change.
+
+Development verification reached a zero-warning release build and passed the
+exact focused filters: Unit 11/0/0, Integration 6/0/0, Security 4/0/0, Fault
+3/0/0, and Evaluation 2/0/0. Both WP5 verifier gates passed with two registered
+offline packages, one deterministic literal-loopback send, zero replay sends,
+zero redirects/retries/proxy fallbacks/public-DNS/provider/native-credential
+operations, and zero secret-canary matches. Final common-floor,
+candidate-bound Layer 6, process-cleanup, and independent-review evidence will
+be appended against the exact committed candidate; this entry does not accept
+WP5 or advance current state.

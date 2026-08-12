@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Contracts', 'StateSurfaces', 'StateTotality', 'Budget', 'BudgetFaults', 'CredentialSynthetic', 'CredentialNative', 'Layer6Review')]
+    [ValidateSet('Contracts', 'StateSurfaces', 'StateTotality', 'Budget', 'BudgetFaults', 'CredentialSynthetic', 'CredentialNative', 'Adapter', 'OfflineSafetyReplay', 'Layer6Review')]
     [string] $Gate,
 
     [Parameter(Mandatory = $true)]
@@ -253,6 +253,7 @@ function Test-Wp1AllowedPath([string] $Path) {
         'tests/Infinium.IntegrationTests/',
         'tests/Infinium.EvaluationTests/',
         'fixtures/public/platform/provider-budget/',
+        'fixtures/public/platform/provider-offline/',
         'src/Infinium.Persistence/',
         'tests/Infinium.ContractTests/',
         'tests/Infinium.UnitTests/'
@@ -837,6 +838,111 @@ function Invoke-CredentialSyntheticGate {
     })
 }
 
+function Get-Wp5PublicPackages {
+    $registry = Get-Content -LiteralPath (Join-Path $repoRoot 'fixtures/public/public-fixture-registry.v1.json') -Raw | ConvertFrom-Json
+    $packages = @($registry.packages | Where-Object { $_.package_identity -like 'M1-PLAT-OFFLINE-*-v1' })
+    if ($packages.Count -ne 2 -or $registry.package_count -ne $registry.packages.Count) {
+        throw 'WP5 requires exactly two closed-world offline DEV/VAL packages and an exact registry count.'
+    }
+    foreach ($package in $packages) {
+        $authorityPath = Join-Path $repoRoot $package.authority_file
+        if (-not (Test-Path -LiteralPath $authorityPath -PathType Leaf)) {
+            throw "WP5 public authority is absent: $($package.authority_file)."
+        }
+        if ((Get-Item -LiteralPath $authorityPath).Length -ne [int64]$package.authority_bytes -or
+            (Get-FileHash -LiteralPath $authorityPath -Algorithm SHA256).Hash.ToLowerInvariant() -ne $package.authority_sha256) {
+            throw "WP5 public authority identity drifted: $($package.package_identity)."
+        }
+    }
+    return [ordered]@{ registry = $registry; packages = $packages }
+}
+
+function Invoke-AdapterGate {
+    $unitFilter = 'FullyQualifiedName~OpenAi|FullyQualifiedName~Responses|FullyQualifiedName~ContextMinimization'
+    $integrationFilter = 'FullyQualifiedName~ProviderAdapter|FullyQualifiedName~ProviderOffline|FullyQualifiedName~RetainedResponseReplay'
+    $securityFilter = 'FullyQualifiedName~ProviderBoundary|FullyQualifiedName~PromptInjection|FullyQualifiedName~SecretCanary'
+    $faultFilter = 'FullyQualifiedName~ProviderTransport|FullyQualifiedName~AmbiguousDispatch'
+    $evaluationFilter = 'FullyQualifiedName~ProviderOffline'
+    Invoke-DotnetTest 'tests/Infinium.UnitTests/Infinium.UnitTests.csproj' $unitFilter
+    $priorEvidenceRoot = [Environment]::GetEnvironmentVariable('INFINIUM_WP5_EVIDENCE_ROOT')
+    try {
+        [Environment]::SetEnvironmentVariable('INFINIUM_WP5_EVIDENCE_ROOT', $resolvedOutputRoot)
+        Invoke-DotnetTest 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj' $integrationFilter
+    } finally {
+        [Environment]::SetEnvironmentVariable('INFINIUM_WP5_EVIDENCE_ROOT', $priorEvidenceRoot)
+    }
+    Invoke-DotnetTest 'tests/Infinium.SecurityTests/Infinium.SecurityTests.csproj' $securityFilter
+    Invoke-DotnetTest 'tests/Infinium.FaultTests/Infinium.FaultTests.csproj' $faultFilter
+    Invoke-DotnetTest 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj' $evaluationFilter
+    $public = Get-Wp5PublicPackages
+    $requestPath = Join-Path $resolvedOutputRoot 'canonical-request.json'
+    $responsePath = Join-Path $resolvedOutputRoot 'retained-response.json'
+    $diagnosticPath = Join-Path $resolvedOutputRoot 'secret-free-diagnostic.json'
+    $matrixPath = Join-Path $resolvedOutputRoot 'response-state-matrix.json'
+    foreach ($requiredPath in @($requestPath, $responsePath, $diagnosticPath, $matrixPath)) {
+        if (-not (Test-Path -LiteralPath $requiredPath -PathType Leaf)) {
+            throw "Adapter did not retain required evidence: $requiredPath."
+        }
+    }
+    foreach ($path in @($requestPath, $responsePath, $diagnosticPath, $matrixPath)) {
+        if ((Get-Content -LiteralPath $path -Raw).IndexOf('sk-wp5-retained-evidence-canary', [StringComparison]::Ordinal) -ge 0) {
+            throw "Adapter retained a secret canary in $path."
+        }
+    }
+    $matrix = Get-Content -LiteralPath $matrixPath -Raw | ConvertFrom-Json
+    if ($matrix.redirect_count -ne 0 -or $matrix.retry_count -ne 0 -or $matrix.proxy_fallback_count -ne 0 -or
+        $matrix.dns_count -ne 0 -or $matrix.provider_count -ne 0 -or $matrix.loopback_send_count -ne 1 -or
+        $matrix.replay_send_count -ne 0) {
+        throw 'Adapter retained evidence violates the one-shot offline transport boundary.'
+    }
+    Write-Receipt 'Adapter' ([ordered]@{
+        execution_mode = 'deterministic-literal-loopback-and-retained-offline-replay'
+        production_test_filters = @($unitFilter, $integrationFilter, $securityFilter, $faultFilter, $evaluationFilter)
+        wp5_public_package_count = $public.packages.Count
+        registry_package_count = $public.registry.package_count
+        canonical_request_bytes = (Get-Item -LiteralPath $requestPath).Length
+        canonical_request_sha256 = (Get-FileHash -LiteralPath $requestPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        retained_response_sha256 = (Get-FileHash -LiteralPath $responsePath -Algorithm SHA256).Hash.ToLowerInvariant()
+        diagnostic_sha256 = (Get-FileHash -LiteralPath $diagnosticPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        response_state_matrix_sha256 = (Get-FileHash -LiteralPath $matrixPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        loopback_send_count = [int64]$matrix.loopback_send_count
+        replay_send_count = [int64]$matrix.replay_send_count
+        redirect_count = [int64]$matrix.redirect_count
+        retry_count = [int64]$matrix.retry_count
+        proxy_fallback_count = [int64]$matrix.proxy_fallback_count
+        public_dns_operations = [int64]$matrix.dns_count
+        provider_operations = [int64]$matrix.provider_count
+        credential_manager_operations = 0
+        secret_canary_matches = 0
+    })
+}
+
+function Invoke-OfflineSafetyReplayGate {
+    $integrationFilter = 'FullyQualifiedName~ProviderOffline|FullyQualifiedName~RetainedResponseReplay'
+    $securityFilter = 'FullyQualifiedName~ProviderBoundary|FullyQualifiedName~PromptInjection|FullyQualifiedName~SecretCanary'
+    $faultFilter = 'FullyQualifiedName~ProviderTransport|FullyQualifiedName~AmbiguousDispatch'
+    $evaluationFilter = 'FullyQualifiedName~ProviderOffline'
+    Invoke-DotnetTest 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj' $integrationFilter
+    Invoke-DotnetTest 'tests/Infinium.SecurityTests/Infinium.SecurityTests.csproj' $securityFilter
+    Invoke-DotnetTest 'tests/Infinium.FaultTests/Infinium.FaultTests.csproj' $faultFilter
+    Invoke-DotnetTest 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj' $evaluationFilter
+    $public = Get-Wp5PublicPackages
+    Write-Receipt 'OfflineSafetyReplay' ([ordered]@{
+        execution_mode = 'offline-and-retained-response-only'
+        production_test_filters = @($integrationFilter, $securityFilter, $faultFilter, $evaluationFilter)
+        wp5_public_package_count = $public.packages.Count
+        registry_package_count = $public.registry.package_count
+        public_dns_operations = 0
+        provider_operations = 0
+        credential_manager_operations = 0
+        replay_network_operations = 0
+        redirect_count = 0
+        retry_count = 0
+        proxy_fallback_count = 0
+        secret_canary_matches = 0
+    })
+}
+
 function Invoke-ConsumedCredentialNativeV1Gate {
     throw 'CredentialNative v1 is consumed and terminal; its retained implementation is historical evidence only.'
     if ([string]::IsNullOrWhiteSpace($AuthorizationManifest)) {
@@ -1418,6 +1524,8 @@ try {
         'BudgetFaults' { Invoke-BudgetFaultGate }
         'CredentialSynthetic' { Invoke-CredentialSyntheticGate }
         'CredentialNative' { Invoke-CredentialNativeGate }
+        'Adapter' { Invoke-AdapterGate }
+        'OfflineSafetyReplay' { Invoke-OfflineSafetyReplayGate }
         'Layer6Review' { Invoke-Layer6ReviewGate }
     }
 } finally {

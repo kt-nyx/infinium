@@ -4,6 +4,7 @@ using Infinium.Application.Runtime;
 using Infinium.Contracts.Protobuf.Common.V1;
 using Infinium.Contracts.Protobuf.Helper.V2;
 using Infinium.Domain.Contracts;
+using Infinium.OpenAI;
 using Infinium.Persistence;
 
 namespace Infinium.Coordinator;
@@ -115,11 +116,20 @@ public sealed class CredentialHelperCoordinator
             expectedAssignmentKind: work.AssignmentKind);
         byte[] canonical = HelperPrivateProtocolV2.Encode(terminal);
         // Persistence sees only already validated, bounded, canonical non-secret bytes.
+        byte[] stagedRawResponse = process.StagedResponseBytes;
+        if (OpenAiStagedResponseEnvelope.TryRead(process.StagedResponseBytes, out byte[] envelopeRaw, out _))
+        {
+            stagedRawResponse = envelopeRaw;
+        }
+        bool exactOversizedReceipt = process.Receipt.Outcome == HelperOutcomeV2.Oversized
+            && process.Receipt.RawResponse is null && process.Receipt.HasOverflowObservedExcessBytes
+            && process.Receipt.OverflowObservedExcessBytes == 1 && stagedRawResponse.Length == 0;
         if (process.StagedResponseBytes.Length > 0
+            && !exactOversizedReceipt
             && (process.Receipt.RawResponse is null
-                || process.Receipt.RawResponse.SizeBytes != (ulong)process.StagedResponseBytes.Length
+                || process.Receipt.RawResponse.SizeBytes != (ulong)stagedRawResponse.Length
                 || !process.Receipt.RawResponse.Value.Span.SequenceEqual(
-                    System.Security.Cryptography.SHA256.HashData(process.StagedResponseBytes))))
+                    System.Security.Cryptography.SHA256.HashData(stagedRawResponse))))
         {
             throw new InvalidDataException("The helper staged response does not match its validated manifest digest.");
         }
@@ -532,7 +542,8 @@ public sealed class CredentialHelperCoordinator
                 now.AddTicks(2)));
             throw;
         }
-        if (helper.Process.Receipt.Outcome != HelperOutcomeV2.Completed
+        if (helper.Process.Receipt.Outcome is not (HelperOutcomeV2.Completed
+                or HelperOutcomeV2.FailedKnown or HelperOutcomeV2.Malformed or HelperOutcomeV2.Oversized)
             || helper.Process.StagedResponseBytes.Length == 0
             || !helper.Process.Receipt.TransportMayHaveStarted)
         {
@@ -545,6 +556,24 @@ public sealed class CredentialHelperCoordinator
                 now.AddTicks(2)));
             throw new InvalidOperationException("The authorized helper dispatch did not produce one admissible staged response.");
         }
+        OpenAiResponsesResult adapterResult;
+        byte[] rawResponse;
+        byte[]? headerReceipt = null;
+        if (OpenAiStagedResponseEnvelope.TryRead(
+            helper.Process.StagedResponseBytes, out byte[] decodedRaw, out byte[] decodedHeaders))
+        {
+            rawResponse = decodedRaw;
+            headerReceipt = decodedHeaders;
+            adapterResult = OpenAiStagedResponseEnvelope.Replay(rawResponse, headerReceipt, request.RequestId);
+        }
+        else
+        {
+            rawResponse = helper.Process.StagedResponseBytes;
+            adapterResult = new(
+                ProviderResponseState.Completed, false, false, 200, rawResponse, null, request.RequestId, null,
+                "gpt-5.6-sol", "default", null, null, null, CreateUsage(helper.Process.Receipt), [], true,
+                "wp3-wp4-deterministic-fake", false, 0);
+        }
         ProviderSimulationPersistenceReceipt persisted = store.PersistProviderSimulation(new(
             work.AssignmentId + ":response",
             work.AssignmentId + ":usage",
@@ -556,23 +585,27 @@ public sealed class CredentialHelperCoordinator
             providerAttemptId,
             request.RequestId,
             fenceId,
-            ProviderResponseState.Completed,
-            200,
-            "gpt-5.6-sol",
-            "default",
-            null,
-            null,
-            null,
-            CreateUsage(helper.Process.Receipt),
-            [],
-            helper.Process.StagedResponseBytes,
-            now.AddTicks(2)));
+            adapterResult.State,
+            adapterResult.HttpStatus ?? 0,
+            adapterResult.ReturnedModel,
+            adapterResult.ReturnedServiceTier,
+            adapterResult.ErrorCode,
+            adapterResult.RefusalCode,
+            adapterResult.IncompleteReason,
+            NormalizeUsageRateAvailability(adapterResult.Usage, CreateRateFacts(adapterResult.RateHeaders, now.AddTicks(2))),
+            CreateRateFacts(adapterResult.RateHeaders, now.AddTicks(2)),
+            rawResponse.Length == 0 ? null : rawResponse,
+            now.AddTicks(2),
+            headerReceipt,
+            adapterResult.ProviderResponseId,
+            adapterResult.ProviderRequestId,
+            adapterResult.Admitted));
         ProviderBudgetSettlementReceipt settlement = store.SettleProviderBudget(new(
             work.AssignmentId + ":settlement",
             reservationId,
             persisted.SettlementKind,
-            persisted.UsageEntryId,
-            persisted.Actual,
+            persisted.SettlementKind == ProviderBudgetEventKind.RetainedUnavailable ? null : persisted.UsageEntryId,
+            persisted.SettlementKind == ProviderBudgetEventKind.RetainedUnavailable ? null : persisted.Actual,
             now.AddTicks(3)));
         return new(helper, persisted, settlement, finalGate);
     }
@@ -624,15 +657,64 @@ public sealed class CredentialHelperCoordinator
     {
         static ProviderQuantityContract Quantity(OptionalUInt64? value) => value is null
             ? new(ProviderAvailabilityState.Unavailable, null)
-            : new((ProviderAvailabilityState)(int)value.Availability, checked((long)value.Value));
+            : new((ProviderAvailabilityState)(int)value.Availability,
+                value.Availability == AvailabilityState.Available ? checked((long)value.Value) : null);
+        ProviderAvailabilityState availability = receipt.UsageReceiptState == UsageReceiptStateV2.Complete
+            ? ProviderAvailabilityState.Available : ProviderAvailabilityState.Unavailable;
         return new(
-            ProviderAvailabilityState.Available,
+            availability,
             Quantity(receipt.DispatchCount), Quantity(receipt.InputTokens), Quantity(receipt.OutputTokens),
             Quantity(receipt.TotalTokens), Quantity(receipt.ReasoningTokens), Quantity(receipt.CacheReadTokens),
             Quantity(receipt.CacheWriteTokens), Quantity(receipt.PricedToolCalls), Quantity(receipt.CalculatedNanoUsd),
             ProviderAvailabilityState.Unavailable, ProviderAvailabilityState.Unavailable,
-            ProviderAvailabilityState.Unavailable, UsageReceiptState.Complete);
+            ProviderAvailabilityState.Unavailable, receipt.UsageReceiptState switch
+            {
+                UsageReceiptStateV2.Complete => UsageReceiptState.Complete,
+                UsageReceiptStateV2.Partial => UsageReceiptState.Partial,
+                UsageReceiptStateV2.FailedKnown => UsageReceiptState.FailedKnown,
+                UsageReceiptStateV2.Ambiguous => UsageReceiptState.Ambiguous,
+                UsageReceiptStateV2.NotDispatched => UsageReceiptState.NotDispatched,
+                _ => UsageReceiptState.Unavailable,
+            });
     }
+
+    private static List<ProviderRateLimitFactContract> CreateRateFacts(
+        IReadOnlyList<OpenAiRateHeader> headers,
+        DateTimeOffset observedAt)
+    {
+        Dictionary<string, string> values = headers.ToDictionary(item => item.Name, item => item.Value, StringComparer.Ordinal);
+        List<ProviderRateLimitFactContract> result = [];
+        foreach ((string suffix, string dimension) in new[]
+        {
+            ("requests", "requests"),
+            ("input-tokens", "input-tokens"),
+            ("output-tokens", "output-tokens"),
+            ("tokens", "total-tokens"),
+        })
+        {
+            if (values.TryGetValue("x-ratelimit-limit-" + suffix, out string? limitText)
+                && values.TryGetValue("x-ratelimit-remaining-" + suffix, out string? remainingText)
+                && long.TryParse(limitText, System.Globalization.NumberStyles.None,
+                    System.Globalization.CultureInfo.InvariantCulture, out long limit)
+                && long.TryParse(remainingText, System.Globalization.NumberStyles.None,
+                    System.Globalization.CultureInfo.InvariantCulture, out long remaining)
+                && limit >= 0 && remaining >= 0)
+            {
+                result.Add(new("model", dimension, ProviderAvailabilityState.Available,
+                    limit, remaining, new UtcTimestamp(observedAt), null));
+            }
+        }
+        return result;
+    }
+
+    private static ProviderUsageContract NormalizeUsageRateAvailability(
+        ProviderUsageContract usage,
+        List<ProviderRateLimitFactContract> rateFacts) => usage with
+        {
+            RateAvailability = rateFacts.Count == 0
+                ? ProviderAvailabilityState.Unavailable
+                : ProviderAvailabilityState.Available,
+        };
 
     private static Infinium.Contracts.Protobuf.Common.V1.Instant Instant(DateTimeOffset now) => new()
     {

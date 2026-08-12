@@ -1,0 +1,21 @@
+{
+  "schema_id": "infinium.evaluation.provider-offline-public-manifest/v1",
+  "fixture_id": "M1-PLAT-OFFLINE-VAL-v1",
+  "fixture_version": "1.0.0",
+  "partition": "validation",
+  "evaluation_ids": [
+    "EVAL-0033",
+    "EVAL-0034",
+    "EVAL-0035",
+    "EVAL-0064",
+    "EVAL-0076",
+    "EVAL-0077",
+    "EVAL-0089"
+  ],
+  "input_file": "input.json",
+  "oracle_file": "oracle.json",
+  "answer_free_input": true,
+  "review_state": "accepted",
+  "input_sha256": "393f454f65bd35e7bda4152eb04685c1e845bdafaff3b05b9364d6d6da8c3fbf",
+  "oracle_sha256": "53c369944e05242ed4e8978fc8466aff0ddfb7a72d7ffd488a7d7aa8623efe74"
+}

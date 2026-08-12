@@ -6,6 +6,7 @@ using Infinium.Application.Runtime;
 using Infinium.Contracts.Protobuf.Helper.V2;
 using Infinium.Coordinator;
 using Infinium.Domain.Contracts;
+using Infinium.OpenAI;
 using Infinium.Persistence;
 using Microsoft.Data.Sqlite;
 
@@ -381,6 +382,16 @@ public sealed class ProviderBudgetIntegrationTests
 
         Assert.AreEqual(ProviderBudgetEventKind.SettledComplete, settlement.Kind);
         Assert.AreEqual(new ProviderBudgetVectorContract(1, 20, 10, 30, 8, 0, 0, 0, 400_000), settlement.Settled);
+        ProviderOperationSummaryProjection projection = coordinator.QueryOperation(new(
+            new OpaqueId("operation-restore"), IncludeUsage: true, IncludeSettlement: true, IncludeReplay: true));
+        Assert.AreEqual(ProviderOperationState.Settled, projection.State);
+        Assert.AreEqual(400_000, projection.CalculatedNanoUsd);
+        Assert.AreEqual("retained-response", projection.ReplayState);
+        OpenAiResponsesResult replay = coordinator.Replay(new(
+            new OpaqueId("operation-restore"), new OpaqueId("production-simulator:response"), NetworkPermitted: false));
+        Assert.AreEqual(ProviderResponseState.Malformed, replay.State);
+        Assert.IsFalse(replay.NetworkUsed);
+        Assert.AreEqual(0, replay.SendCount);
         using SqliteConnection database = new($"Data Source={context.Store.Paths.Database};Mode=ReadOnly;Pooling=False");
         database.Open();
         using SqliteCommand command = database.CreateCommand();

@@ -544,7 +544,8 @@
       "infinium.credentialhelper": {
         "type": "Project",
         "dependencies": {
-          "Infinium.Application": "[1.0.0, )"
+          "Infinium.Application": "[1.0.0, )",
+          "Infinium.OpenAI": "[1.0.0, )"
         }
       },
       "infinium.domain": {

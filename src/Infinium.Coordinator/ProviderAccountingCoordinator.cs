@@ -59,6 +59,33 @@ public sealed class ProviderAccountingCoordinator
     public ProviderBudgetSettlementReceipt Settle(ProviderBudgetSettlementRequest request) =>
         store.SettleProviderBudget(request);
 
+    public ProviderOperationSummaryProjection QueryOperation(ProviderOperationQuery query)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+        ProviderOperationReadModel operation = store.ReadProviderOperation(query.OperationId.Value);
+        return new(new OpaqueId(operation.OperationId), operation.State, "openai", "gpt-5.6-sol",
+            operation.ReservedNanoUsd, operation.CalculatedNanoUsd, operation.UnresolvedHold,
+            query.IncludeReplay ? operation.ReplayState : "not-available", []);
+    }
+
+    public OpenAiResponsesResult Replay(ProviderReplayQuery query)
+    {
+        ProviderApplicationContractInvariants.Validate(query);
+        ProviderOperationReadModel operation = store.ReadProviderOperation(query.OperationId.Value);
+        if (query.RetainedResponseId is not null
+            && query.RetainedResponseId.Value != operation.ResponseId)
+        {
+            throw new InvalidOperationException("The replay query cross-bound a different retained response.");
+        }
+        if (operation.ResponseHeadersBytes is null)
+        {
+            return OpenAiResponsesResponseCodec.Replay(operation.RawResponseBytes, operation.HttpStatus,
+                operation.ClientRequestId, operation.ProviderRequestId);
+        }
+        return OpenAiStagedResponseEnvelope.Replay(
+            operation.RawResponseBytes, operation.ResponseHeadersBytes, operation.ClientRequestId);
+    }
+
     public ProviderBudgetSettlementReceipt SimulatePersistAndSettle(
         ProviderDispatchGateReceipt gate,
         string authorizationId,

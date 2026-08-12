@@ -898,7 +898,8 @@ public static class ProviderOperationContractInvariants
                 && semanticFactsAbsent && noOverflow && dispatchedUsage && value.Usage.ReceiptState == UsageReceiptState.Partial && nonSuccessAdmission,
             ProviderResponseState.Malformed => transport && raw && http
                 && !refusal && !incomplete && !error && noOverflow && dispatchedUsage
-                && value.Usage.ReceiptState == UsageReceiptState.Complete && nonSuccessAdmission,
+                && value.Usage.ReceiptState is UsageReceiptState.Complete or UsageReceiptState.Partial
+                && nonSuccessAdmission,
             ProviderResponseState.Oversized => transport && boundedOverflow && http
                 && !refusal && !incomplete && !error && dispatchedUsage
                 && value.Usage.ReceiptState is UsageReceiptState.Complete or UsageReceiptState.Partial && nonSuccessAdmission,

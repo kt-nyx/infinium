@@ -3450,8 +3450,9 @@ public sealed partial class AuthoritativeStore
                 AND NEW.cache_write_tokens_availability = 'available'
                 AND NEW.priced_tool_calls_availability = 'available'
                 AND NEW.calculated_nano_usd_availability = 'available'))
-              AND ((r.response_state IN ('completed','refusal','malformed','mismatched') AND NEW.receipt_state = 'complete')
+              AND ((r.response_state IN ('completed','refusal','mismatched') AND NEW.receipt_state = 'complete')
                 OR (r.response_state IN ('incomplete','queued','in-progress') AND NEW.receipt_state = 'partial')
+                OR (r.response_state = 'malformed' AND NEW.receipt_state IN ('complete','partial'))
                 OR (r.response_state = 'failed' AND NEW.receipt_state = 'failed-known')
                 OR (r.response_state = 'unknown' AND NEW.receipt_state = 'ambiguous')
                 OR (r.response_state = 'oversized' AND NEW.receipt_state IN ('complete','partial'))

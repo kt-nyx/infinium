@@ -106,10 +106,29 @@ public sealed record ProviderSimulationPersistenceRequest(
     ProviderUsageContract Usage,
     IReadOnlyList<ProviderRateLimitFactContract> RateFacts,
     byte[]? RawResponseBytes,
-    DateTimeOffset OccurredAt);
+    DateTimeOffset OccurredAt,
+    byte[]? ResponseHeadersBytes = null,
+    string? ProviderResponseId = null,
+    string? ProviderRequestId = null,
+    bool? Admitted = null);
 
 public sealed record ProviderSimulationPersistenceReceipt(
     string ResponseId,
     string UsageEntryId,
     ProviderBudgetVectorContract Actual,
     ProviderBudgetEventKind SettlementKind);
+
+public sealed record ProviderOperationReadModel(
+    string OperationId,
+    ProviderOperationState State,
+    long ReservedNanoUsd,
+    long CalculatedNanoUsd,
+    bool UnresolvedHold,
+    string ReplayState,
+    string ResponseId,
+    int HttpStatus,
+    string ClientRequestId,
+    string? ProviderRequestId,
+    string? ProviderResponseId,
+    byte[] RawResponseBytes,
+    byte[]? ResponseHeadersBytes);

@@ -515,6 +515,31 @@ public sealed partial class AuthoritativeStore
                 payloadLength = payloadReader.GetInt64(1);
             }
 
+            string? headersPayloadId = null;
+            string? headersFingerprint = null;
+            long? headersLength = null;
+            if (request.ResponseHeadersBytes is { Length: > 0 })
+            {
+                if (request.ResponseHeadersBytes.Length > 65_536)
+                {
+                    throw new InvalidOperationException("The allowlisted provider response-header receipt is oversized.");
+                }
+                headersPayloadId = AdmitCoordinatorPayload(
+                    request.ResponseHeadersBytes, "provider-response-headers", request.ResponseId + ":headers",
+                    request.OccurredAt, transaction);
+                using SqliteCommand headersPayload = connection.CreateCommand();
+                headersPayload.Transaction = transaction;
+                headersPayload.CommandText = "SELECT content_sha256,byte_length FROM payloads WHERE payload_id=$payload;";
+                headersPayload.Parameters.AddWithValue("$payload", headersPayloadId);
+                using SqliteDataReader headersReader = headersPayload.ExecuteReader();
+                if (!headersReader.Read())
+                {
+                    throw new InvalidOperationException("The provider response-header receipt was not retained.");
+                }
+                headersFingerprint = headersReader.GetString(0);
+                headersLength = headersReader.GetInt64(1);
+            }
+
             if (!undispatched)
             {
                 Execute(
@@ -529,9 +554,14 @@ public sealed partial class AuthoritativeStore
             }
 
             string availability = undispatched ? "unavailable" : "available";
+            string usageAvailability = request.Usage.Availability == ProviderAvailabilityState.Available
+                ? "available" : "unavailable";
             string returnedModelAvailability = request.ReturnedModel is null ? "unavailable" : "available";
             string returnedTierAvailability = request.ReturnedServiceTier is null ? "unavailable" : "available";
-            string validation = request.ResponseState == ProviderResponseState.Completed ? "proposed" : "rejected";
+            bool admitted = request.Admitted ?? request.ResponseState == ProviderResponseState.Completed;
+            string validation = request.ResponseState == ProviderResponseState.Completed
+                ? "proposed"
+                : "rejected";
             string rateAvailability = request.RateFacts.Count == 0 ? "unavailable" : "available";
             Execute(
                 """
@@ -540,18 +570,21 @@ public sealed partial class AuthoritativeStore
                   request_id,provider_attempt_id,reservation_id,dispatch_fence_id,operation_kind,maximum_input_tokens,
                   maximum_output_tokens,maximum_calculated_nano_usd,raw_response_availability,raw_response_payload_id,
                   raw_response_fingerprint,raw_response_bytes,maximum_raw_response_bytes,overflow_observed_excess_bytes,
-                  response_headers_availability,http_status_availability,http_status,provider_response_id_availability,
-                  client_request_id,client_request_id_availability,provider_request_id_availability,
+                  response_headers_payload_id,response_headers_fingerprint,response_headers_bytes,response_headers_availability,
+                  http_status_availability,http_status,provider_response_id_availability,provider_response_id,
+                  client_request_id,client_request_id_availability,provider_request_id_availability,provider_request_id,
                   billing_evidence_availability,response_state,refusal_availability,refusal_code,incomplete_availability,
                   incomplete_reason,error_availability,error_code,requested_model,returned_model,returned_model_availability,
                   requested_service_tier,returned_service_tier,returned_service_tier_availability,reasoning_context,
                   reasoning_mode,prompt_cache_mode,billing_availability,rate_availability,expected_rate_limit_fact_count,
                   credit_availability,validation_state,admission_state,created_at)
-                SELECT $response,$availability,$availability,$authorization,a.operation_id,a.owner_kind,a.owner_id,
+                SELECT $response,$availability,$usage_availability,$authorization,a.operation_id,a.owner_kind,a.owner_id,
                   request.request_id,attempt.provider_attempt_id,reservation.reservation_id,$response_fence,a.operation_kind,
                   a.maximum_input_tokens,a.maximum_output_tokens,a.maximum_calculated_nano_usd,$raw_availability,$payload,
-                  $payload_fingerprint,$payload_bytes,a.maximum_raw_response_bytes,$overflow,'unavailable',$http_availability,
-                  $http,'unavailable',request.client_request_id,$client_availability,'unavailable','unavailable',$state,
+                  $payload_fingerprint,$payload_bytes,a.maximum_raw_response_bytes,$overflow,$headers_payload,
+                  $headers_fingerprint,$headers_bytes,$headers_availability,$http_availability,$http,
+                  $provider_response_availability,$provider_response,request.client_request_id,$client_availability,
+                  $provider_request_availability,$provider_request,'unavailable',$state,
                   $refusal_availability,$refusal,$incomplete_availability,$incomplete,$error_availability,$error,
                   'gpt-5.6-sol',$returned_model,$returned_model_availability,'default',$returned_tier,
                   $returned_tier_availability,'current_turn','standard','explicit','unavailable',$rate_availability,$rate_count,
@@ -569,12 +602,20 @@ public sealed partial class AuthoritativeStore
                 """,
                 transaction,
                 ("$response", request.ResponseId), ("$availability", availability),
+                ("$usage_availability", usageAvailability),
                 ("$authorization", request.AuthorizationId), ("$response_fence", undispatched ? null : request.DispatchFenceId),
                 ("$raw_availability", undispatched || oversized ? "unavailable" : "available"),
                 ("$payload", payloadId), ("$payload_fingerprint", payloadFingerprint), ("$payload_bytes", payloadLength),
                 ("$overflow", oversized ? 1 : null), ("$http_availability", undispatched ? "unavailable" : "available"),
                 ("$http", undispatched ? null : request.HttpStatus),
+                ("$headers_payload", headersPayloadId), ("$headers_fingerprint", headersFingerprint),
+                ("$headers_bytes", headersLength),
+                ("$headers_availability", headersPayloadId is null ? "unavailable" : "available"),
+                ("$provider_response_availability", request.ProviderResponseId is null ? "unavailable" : "available"),
+                ("$provider_response", request.ProviderResponseId),
                 ("$client_availability", undispatched ? "unavailable" : "available"), ("$state", responseState),
+                ("$provider_request_availability", request.ProviderRequestId is null ? "unavailable" : "available"),
+                ("$provider_request", request.ProviderRequestId),
                 ("$refusal_availability", request.RefusalCode is null ? "unavailable" : "available"),
                 ("$refusal", request.RefusalCode),
                 ("$incomplete_availability", request.IncompleteReason is null ? "unavailable" : "available"),
@@ -590,6 +631,7 @@ public sealed partial class AuthoritativeStore
                 ("$request", request.RequestId), ("$reservation", request.ReservationId));
 
             ProviderBudgetVectorContract actual = undispatched
+                || request.Usage.Availability != ProviderAvailabilityState.Available
                 ? ProviderBudgetVectorContract.Zero
                 : ToAvailableBudgetVector(request.Usage);
             InsertProviderUsage(request, undispatched, rateAvailability, transaction);
@@ -616,13 +658,15 @@ public sealed partial class AuthoritativeStore
                 transaction,
                 ("$finalization", request.FinalizationId), ("$response", request.ResponseId),
                 ("$usage", request.UsageEntryId),
-                ("$validation", request.ResponseState == ProviderResponseState.Completed ? "admitted" : "rejected"),
+                ("$validation", admitted ? "admitted" : "rejected"),
                 ("$now", ToText(request.OccurredAt)));
             transaction.Commit();
 
             ProviderBudgetVectorContract reserved = ReadReservationVectorOutsideTransaction(request.ReservationId);
             ProviderBudgetEventKind kind = undispatched
                 ? ProviderBudgetEventKind.ReleasedUndispatched
+                : request.Usage.Availability != ProviderAvailabilityState.Available
+                    ? ProviderBudgetEventKind.RetainedUnavailable
                 : !ProviderBudgetVectorContract.FitsWithin(ProviderBudgetVectorContract.Zero, actual, reserved)
                     ? ProviderBudgetEventKind.SettledOverrun
                     : request.Usage.ReceiptState switch
@@ -851,6 +895,90 @@ public sealed partial class AuthoritativeStore
             transaction.Commit();
             return new(request.SettlementId, request.ReservationId, request.Kind, released, settled, unresolved, retry);
         }
+    }
+
+    public ProviderOperationReadModel ReadProviderOperation(string operationId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(operationId);
+        lock (gate)
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText =
+                """
+                SELECT r.response_record_id,r.http_status,r.client_request_id,r.provider_request_id,
+                  r.provider_response_id,r.raw_response_payload_id,r.response_headers_payload_id,
+                  reservation.maximum_nano_usd,usage.calculated_nano_usd,
+                  finalization.admission_state,event.event_kind
+                FROM provider_responses r
+                JOIN provider_reservations reservation ON reservation.operation_id=r.operation_id
+                  AND reservation.provider_attempt_id=r.provider_attempt_id AND reservation.request_id=r.request_id
+                JOIN provider_usage_entries usage ON usage.response_record_id=r.response_record_id
+                JOIN provider_response_finalizations finalization ON finalization.response_record_id=r.response_record_id
+                JOIN provider_budget_events event ON event.reservation_id=reservation.reservation_id
+                  AND event.event_kind<>'reserved'
+                WHERE r.operation_id=$operation;
+                """;
+            command.Parameters.AddWithValue("$operation", operationId);
+            string responseId;
+            int httpStatus;
+            string clientRequestId;
+            string? providerRequestId;
+            string? providerResponseId;
+            string rawPayloadId;
+            string? headersPayloadId;
+            long reservedNanoUsd;
+            long calculatedNanoUsd;
+            string admissionState;
+            string eventKind;
+            using (SqliteDataReader reader = command.ExecuteReader())
+            {
+                if (!reader.Read())
+                {
+                    throw new KeyNotFoundException($"Provider operation '{operationId}' does not have a retained terminal response.");
+                }
+                responseId = reader.GetString(0);
+                httpStatus = reader.GetInt32(1);
+                clientRequestId = reader.GetString(2);
+                providerRequestId = reader.IsDBNull(3) ? null : reader.GetString(3);
+                providerResponseId = reader.IsDBNull(4) ? null : reader.GetString(4);
+                rawPayloadId = reader.GetString(5);
+                headersPayloadId = reader.IsDBNull(6) ? null : reader.GetString(6);
+                reservedNanoUsd = reader.GetInt64(7);
+                calculatedNanoUsd = reader.IsDBNull(8) ? 0 : reader.GetInt64(8);
+                admissionState = reader.GetString(9);
+                eventKind = reader.GetString(10);
+            }
+            bool unresolved = eventKind.StartsWith("retained-", StringComparison.Ordinal);
+            ProviderOperationState state = unresolved ? ProviderOperationState.UnresolvedHold
+                : admissionState == "admitted" ? ProviderOperationState.Settled : ProviderOperationState.Rejected;
+            return new(
+                operationId, state, reservedNanoUsd, calculatedNanoUsd, unresolved,
+                "retained-response", responseId, httpStatus, clientRequestId,
+                providerRequestId, providerResponseId, ReadRetainedPayloadBytes(rawPayloadId),
+                headersPayloadId is null ? null : ReadRetainedPayloadBytes(headersPayloadId));
+        }
+    }
+
+    private byte[] ReadRetainedPayloadBytes(string payloadId)
+    {
+        using SqliteCommand command = connection.CreateCommand();
+        command.CommandText =
+            "SELECT object_relative_path FROM payloads WHERE payload_id=$payload AND retention_state='retained';";
+        command.Parameters.AddWithValue("$payload", payloadId);
+        string? path = command.ExecuteScalar() as string;
+        if (path is null || !path.StartsWith("payloads/", StringComparison.Ordinal))
+        {
+            throw new InvalidDataException("A retained provider payload has no valid content-addressed path.");
+        }
+        string relative = path["payloads/".Length..].Replace('/', Path.DirectorySeparatorChar);
+        using FileStream stream = Paths.OpenReadFile(ProductWriteClass.Payload, relative);
+        if (stream.Length > 1_048_576)
+        {
+            throw new InvalidDataException("A retained provider payload exceeds its replay bound.");
+        }
+        using MemoryStream bytes = new(checked((int)stream.Length));
+        stream.CopyTo(bytes);
+        return bytes.ToArray();
     }
 
     private void InsertProviderUsage(
