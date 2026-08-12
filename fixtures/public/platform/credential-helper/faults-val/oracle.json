@@ -1,0 +1,1 @@
+{"schema":"infinium.public.credential-helper-oracle/v1","expected_rejections":13,"expected_transport_starts":0,"expected_retries":0,"expected_secret_canary_matches":0,"expected_target_canary_matches":0,"expected_process_tree_survivors":0,"expected_restore_state":"recovery-required","expected_native_operations":0,"expected_network_operations":0}

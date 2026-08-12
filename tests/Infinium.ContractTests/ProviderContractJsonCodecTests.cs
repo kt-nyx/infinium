@@ -860,17 +860,17 @@ public sealed class ProviderContractJsonCodecTests
             expectedPayloadCase: V2Frame.PayloadOneofCase.Assignment, expectedSequence: 12,
             expectedAssignmentKind: V2AssignmentKind.Verify));
         byte[] requestBytes = [1, 2, 3];
-        V2Frame blockedDispatch = credentialAssignment.Clone();
-        blockedDispatch.Assignment.AssignmentKind = V2AssignmentKind.ProviderDispatch;
-        blockedDispatch.Assignment.ProviderDispatch = DispatchSubject();
-        blockedDispatch.Assignment.OperationKind = V2OperationKind.SourceClaimExtraction;
-        blockedDispatch.Assignment.Limits = HelperLimits();
-        blockedDispatch.Assignment.AccountIdentityId = new ProviderAccountIdentityId { Value = "account-1" };
-        blockedDispatch.Assignment.BillingScopeIdentityId = new BillingScopeIdentityId { Value = "billing-1" };
-        blockedDispatch.Assignment.EffectiveConfigurationId = "config-v2-1";
-        blockedDispatch.Assignment.Settings = Digest();
-        blockedDispatch.Assignment.OutputSchema = Digest();
-        blockedDispatch.Assignment.ProviderRequest = new V2ProviderRequest
+        V2Frame acceptedDispatch = credentialAssignment.Clone();
+        acceptedDispatch.Assignment.AssignmentKind = V2AssignmentKind.ProviderDispatch;
+        acceptedDispatch.Assignment.ProviderDispatch = DispatchSubject();
+        acceptedDispatch.Assignment.OperationKind = V2OperationKind.SourceClaimExtraction;
+        acceptedDispatch.Assignment.Limits = HelperLimits();
+        acceptedDispatch.Assignment.AccountIdentityId = new ProviderAccountIdentityId { Value = "account-1" };
+        acceptedDispatch.Assignment.BillingScopeIdentityId = new BillingScopeIdentityId { Value = "billing-1" };
+        acceptedDispatch.Assignment.EffectiveConfigurationId = "config-v2-1";
+        acceptedDispatch.Assignment.Settings = Digest();
+        acceptedDispatch.Assignment.OutputSchema = Digest();
+        acceptedDispatch.Assignment.ProviderRequest = new V2ProviderRequest
         {
             DispatchId = new DispatchId { Value = "dispatch-1" },
             RequestId = "request-1",
@@ -885,23 +885,23 @@ public sealed class ProviderContractJsonCodecTests
             EndpointIdentity = Infinium.Contracts.Protobuf.Helper.V2.ProviderEndpointV2.OpenaiResponses,
             InputBoundProof = new V2InputBoundProof
             {
-                PolicyId = "unresolved-openai-responses-framing",
-                PolicyVersion = "authority-required",
-                Status = V2InputBoundProofStatus.AuthorityRequired,
+                PolicyId = "openai-responses-o200k-byte-envelope",
+                PolicyVersion = "v1",
+                Status = V2InputBoundProofStatus.Proved,
             },
         };
-        Assert.ThrowsExactly<NotSupportedException>(() => DecodeBlockedAssignment(blockedDispatch, requestBytes));
-        V2Frame dispatchDeadlineOverflow = blockedDispatch.Clone();
+        Assert.AreEqual(V2AssignmentKind.ProviderDispatch, DecodeAcceptedAssignment(acceptedDispatch, requestBytes).Assignment.AssignmentKind);
+        V2Frame dispatchDeadlineOverflow = acceptedDispatch.Clone();
         dispatchDeadlineOverflow.Assignment.ProviderRequest.DispatchDeadline = ToInstant(HelperNow.AddSeconds(121));
-        Assert.ThrowsExactly<InvalidDataException>(() => DecodeBlockedAssignment(dispatchDeadlineOverflow, requestBytes));
-        V2Frame assignmentAccountRebind = blockedDispatch.Clone();
+        Assert.ThrowsExactly<InvalidDataException>(() => DecodeAcceptedAssignment(dispatchDeadlineOverflow, requestBytes));
+        V2Frame assignmentAccountRebind = acceptedDispatch.Clone();
         assignmentAccountRebind.Assignment.AccountIdentityId.Value = "account-other";
-        Assert.ThrowsExactly<InvalidDataException>(() => DecodeBlockedAssignment(assignmentAccountRebind, requestBytes));
-        V2Frame assignmentLimitOverflow = blockedDispatch.Clone();
+        Assert.ThrowsExactly<InvalidDataException>(() => DecodeAcceptedAssignment(assignmentAccountRebind, requestBytes));
+        V2Frame assignmentLimitOverflow = acceptedDispatch.Clone();
         assignmentLimitOverflow.Assignment.Limits.MaximumInputTokens++;
-        Assert.ThrowsExactly<InvalidDataException>(() => DecodeBlockedAssignment(assignmentLimitOverflow, requestBytes));
-        blockedDispatch.Assignment.ProviderRequest.CanonicalRequest.Value = ByteString.CopyFrom(new byte[32]);
-        Assert.ThrowsExactly<InvalidDataException>(() => DecodeBlockedAssignment(blockedDispatch, requestBytes));
+        Assert.ThrowsExactly<InvalidDataException>(() => DecodeAcceptedAssignment(assignmentLimitOverflow, requestBytes));
+        acceptedDispatch.Assignment.ProviderRequest.CanonicalRequest.Value = ByteString.CopyFrom(new byte[32]);
+        Assert.ThrowsExactly<InvalidDataException>(() => DecodeAcceptedAssignment(acceptedDispatch, requestBytes));
         V2Frame credentialReceipt = new()
         {
             Sequence = 13,
@@ -961,7 +961,7 @@ public sealed class ProviderContractJsonCodecTests
                 credentialReceipt.ToByteArray(), HelperNow, "assignment-credential", "command-credential",
                 expectedProfileId: "profile-1", expectedGenerationId: "generation-1"));
         }
-        V2Frame blockedReceipt = new()
+        V2Frame acceptedReceipt = new()
         {
             Sequence = 14,
             ProtocolFingerprintSha256 = ByteString.CopyFrom(Convert.FromHexString(HelperProtocolV2Constants.SchemaFingerprintSha256)),
@@ -990,20 +990,20 @@ public sealed class ProviderContractJsonCodecTests
                 DispatchDeadline = FutureInstant(),
                 InputBoundProof = new V2InputBoundProof
                 {
-                    PolicyId = "unresolved-openai-responses-framing",
-                    PolicyVersion = "authority-required",
-                    Status = V2InputBoundProofStatus.AuthorityRequired,
+                    PolicyId = "openai-responses-o200k-byte-envelope",
+                    PolicyVersion = "v1",
+                    Status = V2InputBoundProofStatus.Proved,
                 },
                 NonSecretReceipt = Digest(),
             },
         };
-        Assert.ThrowsExactly<NotSupportedException>(() => HelperProtocolV2Codec.Decode(
-            blockedReceipt.ToByteArray(), HelperNow, "assignment-dispatch", "command-dispatch",
+        Assert.AreEqual(V2Outcome.Unavailable, HelperProtocolV2Codec.Decode(
+            acceptedReceipt.ToByteArray(), HelperNow, "assignment-dispatch", "command-dispatch",
             expectedOperationId: "operation-1", expectedAttemptId: "attempt-1",
             expectedRequestId: "request-1", expectedDispatchId: "dispatch-1",
             expectedRequestFingerprintSha256: new byte[32],
-            expectedInputBoundPolicyId: "unresolved-openai-responses-framing",
-            expectedInputBoundPolicyVersion: "authority-required", expectedCoordinatorFencingEpoch: 1,
+            expectedInputBoundPolicyId: "openai-responses-o200k-byte-envelope",
+            expectedInputBoundPolicyVersion: "v1", expectedCoordinatorFencingEpoch: 1,
             expectedCapabilitySnapshotId: "capability-1", expectedPriceSnapshotId: "price-1",
             expectedSettings: Digest(), expectedOutputSchema: Digest(),
             expectedEffectiveConfigurationId: "config-v2-1", expectedNonSecretReceipt: Digest(),
@@ -1011,19 +1011,19 @@ public sealed class ProviderContractJsonCodecTests
             expectedBillingScopeIdentityId: "billing-1", expectedReservationGroupId: "reservation-1",
             expectedOperationKind: V2OperationKind.SourceClaimExtraction, expectedLimits: HelperLimits(),
             expectedDispatchDeadline: FutureInstant(), expectedPayloadCase: V2Frame.PayloadOneofCase.Receipt,
-            expectedSequence: 14, expectedAssignmentKind: V2AssignmentKind.ProviderDispatch));
+            expectedSequence: 14, expectedAssignmentKind: V2AssignmentKind.ProviderDispatch).Receipt.Outcome);
 
         void AssertReceiptRebindRejected(Action<V2Receipt> mutate)
         {
-            V2Frame rebound = blockedReceipt.Clone();
+            V2Frame rebound = acceptedReceipt.Clone();
             mutate(rebound.Receipt);
             Assert.ThrowsExactly<InvalidDataException>(() => HelperProtocolV2Codec.Decode(
                 rebound.ToByteArray(), HelperNow, "assignment-dispatch", "command-dispatch",
                 expectedOperationId: "operation-1", expectedAttemptId: "attempt-1",
                 expectedRequestId: "request-1", expectedDispatchId: "dispatch-1",
                 expectedRequestFingerprintSha256: new byte[32],
-                expectedInputBoundPolicyId: "unresolved-openai-responses-framing",
-                expectedInputBoundPolicyVersion: "authority-required", expectedCoordinatorFencingEpoch: 1,
+                expectedInputBoundPolicyId: "openai-responses-o200k-byte-envelope",
+                expectedInputBoundPolicyVersion: "v1", expectedCoordinatorFencingEpoch: 1,
                 expectedCapabilitySnapshotId: "capability-1", expectedPriceSnapshotId: "price-1",
                 expectedSettings: Digest(), expectedOutputSchema: Digest(),
                 expectedEffectiveConfigurationId: "config-v2-1", expectedNonSecretReceipt: Digest(),
@@ -1057,15 +1057,15 @@ public sealed class ProviderContractJsonCodecTests
         AssertReceiptRebindRejected(x => x.Limits.MaximumInputTokens++);
         AssertReceiptRebindRejected(x => x.DispatchDeadline = ToInstant(HelperNow.AddSeconds(119)));
 
-        V2Frame ambiguous = blockedReceipt.Clone();
+        V2Frame ambiguous = acceptedReceipt.Clone();
         ambiguous.Receipt.Outcome = V2Outcome.TransportMayHaveStarted;
         Assert.ThrowsExactly<InvalidDataException>(() => HelperProtocolV2Codec.Decode(
             ambiguous.ToByteArray(), HelperNow, "assignment-dispatch", "command-dispatch",
             expectedOperationId: "operation-1", expectedAttemptId: "attempt-1",
             expectedRequestId: "request-1", expectedDispatchId: "dispatch-1",
             expectedRequestFingerprintSha256: new byte[32],
-            expectedInputBoundPolicyId: "unresolved-openai-responses-framing",
-            expectedInputBoundPolicyVersion: "authority-required", expectedCoordinatorFencingEpoch: 1,
+            expectedInputBoundPolicyId: "openai-responses-o200k-byte-envelope",
+            expectedInputBoundPolicyVersion: "v1", expectedCoordinatorFencingEpoch: 1,
             expectedCapabilitySnapshotId: "capability-1", expectedPriceSnapshotId: "price-1",
             expectedSettings: Digest(), expectedOutputSchema: Digest(),
             expectedEffectiveConfigurationId: "config-v2-1", expectedNonSecretReceipt: Digest(),
@@ -1075,13 +1075,13 @@ public sealed class ProviderContractJsonCodecTests
             expectedDispatchDeadline: FutureInstant(), expectedPayloadCase: V2Frame.PayloadOneofCase.Receipt,
             expectedSequence: 14, expectedAssignmentKind: V2AssignmentKind.ProviderDispatch));
         ambiguous.Receipt.TransportMayHaveStarted = true;
-        Assert.ThrowsExactly<NotSupportedException>(() => HelperProtocolV2Codec.Decode(
+        Assert.AreEqual(V2Outcome.TransportMayHaveStarted, HelperProtocolV2Codec.Decode(
             ambiguous.ToByteArray(), HelperNow, "assignment-dispatch", "command-dispatch",
             expectedOperationId: "operation-1", expectedAttemptId: "attempt-1",
             expectedRequestId: "request-1", expectedDispatchId: "dispatch-1",
             expectedRequestFingerprintSha256: new byte[32],
-            expectedInputBoundPolicyId: "unresolved-openai-responses-framing",
-            expectedInputBoundPolicyVersion: "authority-required", expectedCoordinatorFencingEpoch: 1,
+            expectedInputBoundPolicyId: "openai-responses-o200k-byte-envelope",
+            expectedInputBoundPolicyVersion: "v1", expectedCoordinatorFencingEpoch: 1,
             expectedCapabilitySnapshotId: "capability-1", expectedPriceSnapshotId: "price-1",
             expectedSettings: Digest(), expectedOutputSchema: Digest(),
             expectedEffectiveConfigurationId: "config-v2-1", expectedNonSecretReceipt: Digest(),
@@ -1089,19 +1089,19 @@ public sealed class ProviderContractJsonCodecTests
             expectedBillingScopeIdentityId: "billing-1", expectedReservationGroupId: "reservation-1",
             expectedOperationKind: V2OperationKind.SourceClaimExtraction, expectedLimits: HelperLimits(),
             expectedDispatchDeadline: FutureInstant(), expectedPayloadCase: V2Frame.PayloadOneofCase.Receipt,
-            expectedSequence: 14, expectedAssignmentKind: V2AssignmentKind.ProviderDispatch));
-        V2Frame nonAmbiguousFlag = blockedReceipt.Clone();
+            expectedSequence: 14, expectedAssignmentKind: V2AssignmentKind.ProviderDispatch).Receipt.Outcome);
+        V2Frame nonAmbiguousFlag = acceptedReceipt.Clone();
         nonAmbiguousFlag.Receipt.TransportMayHaveStarted = true;
         Assert.ThrowsExactly<InvalidDataException>(() => DecodeProviderReceipt(nonAmbiguousFlag));
 
-        V2Frame oversized = blockedReceipt.Clone();
+        V2Frame oversized = acceptedReceipt.Clone();
         oversized.Receipt.Outcome = V2Outcome.Oversized;
         oversized.Receipt.OverflowObservedExcessBytes = 1;
-        Assert.ThrowsExactly<NotSupportedException>(() => DecodeProviderReceipt(oversized));
+        Assert.AreEqual(V2Outcome.Oversized, DecodeProviderReceipt(oversized).Receipt.Outcome);
         oversized.Receipt.OverflowObservedExcessBytes++;
         Assert.ThrowsExactly<InvalidDataException>(() => DecodeProviderReceipt(oversized));
 
-        V2Frame stagedOverflow = blockedReceipt.Clone();
+        V2Frame stagedOverflow = acceptedReceipt.Clone();
         V2Limits stagedLimits = HelperLimits();
         stagedLimits.MaximumResponseBytes = 1024;
         stagedLimits.MaximumStagedOutputBytes = 128;
@@ -1129,7 +1129,7 @@ public sealed class ProviderContractJsonCodecTests
         retainedPolicyOverrun.Receipt.CacheWriteTokens = Available(1);
         retainedPolicyOverrun.Receipt.PricedToolCalls = Available(1);
         retainedPolicyOverrun.Receipt.CalculatedNanoUsd = Available((ulong)stagedLimits.MaximumCalculatedNanoUsd + 1);
-        Assert.ThrowsExactly<NotSupportedException>(() => DecodeProviderReceipt(retainedPolicyOverrun, stagedLimits));
+        Assert.AreEqual(V2Outcome.Completed, DecodeProviderReceipt(retainedPolicyOverrun, stagedLimits).Receipt.Outcome);
         retainedPolicyOverrun.Receipt.InputTokens = Available(147_457);
         retainedPolicyOverrun.Receipt.TotalTokens = Available(147_462);
         Assert.ThrowsExactly<InvalidDataException>(() => DecodeProviderReceipt(retainedPolicyOverrun, stagedLimits));
@@ -1154,8 +1154,8 @@ public sealed class ProviderContractJsonCodecTests
                 RevocationEpoch = 0,
                 ReservationGroupId = new ReservationGroupId { Value = "reservation-1" },
                 CanonicalRequest = Digest(),
-                AuthorizedOnce = false,
-                Disposition = V2Disposition.Rejected,
+                AuthorizedOnce = true,
+                Disposition = V2Disposition.Authorized,
                 AccountIdentityId = new ProviderAccountIdentityId { Value = "account-1" },
                 BillingScopeIdentityId = new BillingScopeIdentityId { Value = "billing-1" },
                 EffectiveConfigurationId = "configuration-1",
@@ -1166,9 +1166,9 @@ public sealed class ProviderContractJsonCodecTests
                 OperationKind = V2OperationKind.SourceClaimExtraction,
                 InputBoundProof = new V2InputBoundProof
                 {
-                    PolicyId = "unresolved-openai-responses-framing",
-                    PolicyVersion = "authority-required",
-                    Status = V2InputBoundProofStatus.AuthorityRequired,
+                    PolicyId = "openai-responses-o200k-byte-envelope",
+                    PolicyVersion = "v1",
+                    Status = V2InputBoundProofStatus.Proved,
                 },
                 DispatchDeadline = FutureInstant(),
                 Limits = HelperLimits(),
@@ -2103,15 +2103,15 @@ public sealed class ProviderContractJsonCodecTests
         expectedBootstrapExpiresAt: FutureInstant(), expectedPayloadCase: V2Frame.PayloadOneofCase.Bootstrap,
         expectedSequence: 8);
 
-    private static V2Frame DecodeBlockedAssignment(V2Frame frame, byte[] requestBytes) => HelperProtocolV2Codec.Decode(
+    private static V2Frame DecodeAcceptedAssignment(V2Frame frame, byte[] requestBytes) => HelperProtocolV2Codec.Decode(
         frame.ToByteArray(), HelperNow, "assignment-credential", "command-credential",
         expectedOperationId: "operation-1", expectedAttemptId: "attempt-1",
         expectedProfileId: "profile-1", expectedGenerationId: "generation-1",
         expectedGenerationOrdinal: 1,
         expectedRequestId: "request-1", expectedDispatchId: "dispatch-1",
         expectedRequestFingerprintSha256: SHA256.HashData(requestBytes),
-        expectedInputBoundPolicyId: "unresolved-openai-responses-framing",
-        expectedInputBoundPolicyVersion: "authority-required", expectedRevocationEpoch: 0,
+        expectedInputBoundPolicyId: "openai-responses-o200k-byte-envelope",
+        expectedInputBoundPolicyVersion: "v1", expectedRevocationEpoch: 0,
         expectedAccountIdentityId: "account-1", expectedBillingScopeIdentityId: "billing-1",
         expectedReservationGroupId: "reservation-1", expectedOperationKind: V2OperationKind.SourceClaimExtraction,
         expectedLimits: HelperLimits(), expectedDispatchDeadline: FutureInstant(),
@@ -2125,8 +2125,8 @@ public sealed class ProviderContractJsonCodecTests
         expectedProfileId: "profile-1", expectedGenerationId: "generation-1",
         expectedRequestId: "request-1", expectedDispatchId: "dispatch-1",
         expectedRequestFingerprintSha256: new byte[32],
-        expectedInputBoundPolicyId: "unresolved-openai-responses-framing",
-        expectedInputBoundPolicyVersion: "authority-required", expectedCoordinatorFencingEpoch: 1,
+        expectedInputBoundPolicyId: "openai-responses-o200k-byte-envelope",
+        expectedInputBoundPolicyVersion: "v1", expectedCoordinatorFencingEpoch: 1,
         expectedCapabilitySnapshotId: "capability-1", expectedPriceSnapshotId: "price-1",
         expectedSettings: Digest(), expectedOutputSchema: Digest(), expectedEffectiveConfigurationId: "configuration-1",
         expectedRevocationEpoch: 0, expectedAccountIdentityId: "account-1",
@@ -2140,8 +2140,8 @@ public sealed class ProviderContractJsonCodecTests
         expectedOperationId: "operation-1", expectedAttemptId: "attempt-1",
         expectedRequestId: "request-1", expectedDispatchId: "dispatch-1",
         expectedRequestFingerprintSha256: new byte[32],
-        expectedInputBoundPolicyId: "unresolved-openai-responses-framing",
-        expectedInputBoundPolicyVersion: "authority-required", expectedCoordinatorFencingEpoch: 1,
+        expectedInputBoundPolicyId: "openai-responses-o200k-byte-envelope",
+        expectedInputBoundPolicyVersion: "v1", expectedCoordinatorFencingEpoch: 1,
         expectedCapabilitySnapshotId: "capability-1", expectedPriceSnapshotId: "price-1",
         expectedSettings: Digest(), expectedOutputSchema: Digest(),
         expectedEffectiveConfigurationId: "config-v2-1", expectedNonSecretReceipt: Digest(),

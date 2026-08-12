@@ -10,6 +10,8 @@
     <ProjectReference Include="..\Infinium.Mo2\Infinium.Mo2.csproj" />
     <ProjectReference Include="..\Infinium.OpenAI\Infinium.OpenAI.csproj" />
     <ProjectReference Include="..\Infinium.Worker\Infinium.Worker.csproj" />
+    <ProjectReference Include="..\Infinium.CredentialHelper\Infinium.CredentialHelper.csproj"
+                      ReferenceOutputAssembly="false" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Grpc.AspNetCore" />
@@ -21,5 +23,13 @@
     </ItemGroup>
     <Copy SourceFiles="@(ManagedWorkerRuntimeFile)"
           DestinationFiles="@(ManagedWorkerRuntimeFile->'$(OutDir)%(RecursiveDir)%(Filename)%(Extension)')" />
+  </Target>
+  <Target Name="CopyCredentialHelperRuntime" AfterTargets="Build">
+    <ItemGroup>
+      <CredentialHelperRuntimeFile Include="..\Infinium.CredentialHelper\bin\$(Configuration)\$(TargetFramework)\**\*"
+                                   Exclude="..\Infinium.CredentialHelper\bin\$(Configuration)\$(TargetFramework)\*.pdb" />
+    </ItemGroup>
+    <Copy SourceFiles="@(CredentialHelperRuntimeFile)"
+          DestinationFiles="@(CredentialHelperRuntimeFile->'$(OutDir)CredentialHelper\%(RecursiveDir)%(Filename)%(Extension)')" />
   </Target>
 </Project>

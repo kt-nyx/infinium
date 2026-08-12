@@ -6,6 +6,8 @@
     <ProjectReference Include="..\..\src\Infinium.Mo2\Infinium.Mo2.csproj" />
     <ProjectReference Include="..\..\src\Infinium.Persistence\Infinium.Persistence.csproj" />
     <ProjectReference Include="..\..\src\Infinium.OpenAI\Infinium.OpenAI.csproj" />
+    <ProjectReference Include="..\..\src\Infinium.Coordinator\Infinium.Coordinator.csproj" />
+    <ProjectReference Include="..\..\src\Infinium.CredentialHelper\Infinium.CredentialHelper.csproj" />
     <ProjectReference Include="..\..\fixtures\tooling\Infinium.PublicFixtures\Infinium.PublicFixtures.csproj" />
     <ProjectReference Include="..\Infinium.UnitTests\Infinium.UnitTests.csproj" />
   </ItemGroup>

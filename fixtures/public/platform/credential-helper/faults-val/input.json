@@ -1,0 +1,1 @@
+{"schema":"infinium.public.credential-helper-input/v1","case":"strict-protocol-and-recovery-faults","faults":["recursive-unknown","duplicate-singular","conflicting-oneof","out-of-order","stale-sequence","oversized-frame","oversized-secret","store-unavailable","stale-generation","stale-revocation","deadline-expired","helper-crash","backup-restore"]}

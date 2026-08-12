@@ -2710,7 +2710,7 @@ public sealed partial class AuthoritativeStore
               AND p.account_identity_id IS NOT NULL AND p.billing_scope_identity_id IS NOT NULL
               AND a.account_identity_id = p.account_identity_id
               AND a.billing_scope_identity_id = p.billing_scope_identity_id
-              AND g.revocation_epoch = p.revocation_epoch
+              AND g.revocation_epoch <= p.revocation_epoch
               AND i.profile_id = p.profile_id AND i.generation_id = p.generation_id
               AND i.capability_snapshot_id = p.capability_snapshot_id
               AND i.account_identity_id = p.account_identity_id
@@ -3803,7 +3803,7 @@ public sealed partial class AuthoritativeStore
           SELECT CASE WHEN NOT EXISTS(
             SELECT 1 FROM provider_generations g
             WHERE g.profile_id = NEW.profile_id AND g.generation_id = NEW.generation_id
-              AND g.revocation_epoch = NEW.revocation_epoch)
+              AND g.revocation_epoch <= NEW.revocation_epoch)
             THEN RAISE(ABORT, 'provider profile projection generation root mismatch') END;
           SELECT CASE WHEN NEW.intent_id IS NOT NULL AND NOT EXISTS(
             SELECT 1 FROM provider_credential_intents i
@@ -3895,7 +3895,7 @@ public sealed partial class AuthoritativeStore
           SELECT CASE WHEN NOT EXISTS(
             SELECT 1 FROM provider_generations g
             WHERE g.profile_id = NEW.profile_id AND g.generation_id = NEW.generation_id
-              AND g.revocation_epoch = NEW.revocation_epoch)
+              AND g.revocation_epoch <= NEW.revocation_epoch)
             THEN RAISE(ABORT, 'provider profile projection generation root mismatch') END;
           SELECT CASE WHEN NEW.intent_id IS NOT NULL AND NOT EXISTS(
             SELECT 1 FROM provider_credential_intents i

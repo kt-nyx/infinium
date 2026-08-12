@@ -2,7 +2,7 @@
   "schema_identity": "infinium.repository.public-fixture-registry/1.2.0",
   "registry_version": "1.2.0",
   "status": "current",
-  "package_count": 25,
+  "package_count": 27,
   "packages": [
     {
       "package_identity": "M1-PLAT-PROVIDER-CAPABILITY-DEV-v1",
@@ -57,6 +57,24 @@
       "authority_file": "fixtures/public/platform/provider-budget/budget-val/public-manifest.json",
       "authority_bytes": 513,
       "authority_sha256": "9522b6b31b177a3756f6d101d2aba94739740db06f16f7989a018377fd2d5fa8"
+    },
+    {
+      "package_identity": "M1-PLAT-CREDENTIAL-HELPER-DEV-v1",
+      "package_version": "1.0.0",
+      "partition": "development",
+      "package_path": "fixtures/public/platform/credential-helper/lifecycle-dev",
+      "authority_file": "fixtures/public/platform/credential-helper/lifecycle-dev/public-manifest.json",
+      "authority_bytes": 558,
+      "authority_sha256": "a6db7cd5953eda6e33c18c414a04919af5fee0394843c2303c7e288b027842be"
+    },
+    {
+      "package_identity": "M1-PLAT-CREDENTIAL-HELPER-VAL-v1",
+      "package_version": "1.0.0",
+      "partition": "validation",
+      "package_path": "fixtures/public/platform/credential-helper/faults-val",
+      "authority_file": "fixtures/public/platform/credential-helper/faults-val/public-manifest.json",
+      "authority_bytes": 557,
+      "authority_sha256": "131aa129f269a25aee8ff6e9995143565aaf2d2da4f8e714713c7b4f0cf817df"
     },
     {
       "package_identity": "PLATFORM-ANALYSIS-RUNTIME-DEV-v1",

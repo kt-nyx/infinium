@@ -33,7 +33,7 @@ public sealed class SolutionIntegrationTests
             .Order(StringComparer.Ordinal)
             .ToArray();
 
-        Assert.HasCount(15, projectFiles);
+        Assert.HasCount(17, projectFiles);
         foreach (string projectFile in projectFiles)
         {
             StringAssert.Contains(solution, $"\"{projectFile}\"");
@@ -127,8 +127,8 @@ public sealed class SolutionIntegrationTests
         StringAssert.Contains(worker.Error, "coordinator-launched only");
 
         ProcessResult helper = Run("Infinium.CredentialHelper", []);
-        Assert.AreEqual(1, helper.ExitCode);
-        StringAssert.Contains(helper.Error, "inactive scaffold");
+        Assert.AreEqual(64, helper.ExitCode);
+        StringAssert.Contains(helper.Error, "exactly two inherited private anonymous-pipe handles");
     }
 
     [TestMethod]

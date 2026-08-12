@@ -2431,3 +2431,19 @@ but failed the legacy exact-text check because the accepted-candidate row used
 the prose label “Slice 6 WP2” rather than the literal package identity
 `M1/S6/WP2`. The row label was corrected without changing the accepted
 candidate, live WP3-only authority, product semantics, or any code.
+
+## WP3 implementation start — 2026-08-11
+
+M1/S6/WP3 implementation begins from exact clean handoff
+`da922d764a51c99cc622364a26e95a2fd59cd444` on branch `codex/m1-s6`, with
+accepted WP2 candidate `ed27ed04897103d93a60e6200971ca12d04f2e11` in its
+ancestry and `docs/current-state.md` authorizing WP3 only.
+
+This package is bounded to the accepted one-shot helper process boundary and
+synthetic credential lifecycle. All credential-store behavior uses the exact
+narrow fake secure-store seam, all provider behavior uses the deterministic
+non-network simulator, and the implementation will retain zero-native and
+zero-network evidence. Native Credential Manager operations, credential or
+target enumeration/reveal, real secrets, DNS/network/provider calls, private
+fixtures, sibling/archive/legacy material, protected roots, WP4 or later
+behavior, current-state advancement, and push remain prohibited.

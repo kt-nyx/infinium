@@ -1,0 +1,13 @@
+{
+  "schema_id": "infinium.evaluation.credential-helper-public-manifest/v1",
+  "fixture_id": "M1-PLAT-CREDENTIAL-HELPER-DEV-v1",
+  "fixture_version": "1.0.0",
+  "partition": "development",
+  "evaluation_ids": ["EVAL-0034", "EVAL-0077", "EVAL-0088", "EVAL-0089"],
+  "input_file": "input.json",
+  "oracle_file": "oracle.json",
+  "answer_free_input": true,
+  "review_state": "accepted",
+  "input_sha256": "9ff13d598272c770f5dbfa5c3c06d7399f4253a0d1ffd73d7d93527d45d9d03c",
+  "oracle_sha256": "d8f9b37265a6ab4facf263c1ab3376d44b38e2d3fa372ca2a8360cbab9d55f07"
+}

@@ -1,0 +1,1 @@
+{"schema":"infinium.public.credential-helper-input/v1","case":"synthetic-lifecycle-and-private-process","operations":["pending-enrollment","activation","verification","replacement","disable","delete"],"transport":"inherited-anonymous-pipe","secure_store":"deterministic-fake","provider":"deterministic-nonnetwork-simulator"}

@@ -312,9 +312,9 @@ public static class HelperProtocolV2Codec
                 || !ValidFutureInstant(request.DispatchDeadline, now)
                 || ElapsedHundredNanoseconds(request.ConfirmedAt, request.DispatchDeadline)
                     > checked(value.Limits.MaximumDuration.Value * 10_000UL)
-                || !IsAuthorityRequiredProof(request.InputBoundProof))
+                || !IsAcceptedInputProof(request.InputBoundProof))
             {
-                throw new InvalidDataException("Helper v2 provider request is not a closed bounded and explicitly blocked Responses request.");
+                throw new InvalidDataException("Helper v2 provider request is not a closed, bounded Responses request with an accepted input-bound proof.");
             }
             if (value.ProviderDispatch!.OperationId.Value != expectedOperationId
                 || value.ProviderDispatch.AttemptId.Value != expectedAttemptId
@@ -334,7 +334,6 @@ public static class HelperProtocolV2Codec
             {
                 throw new InvalidDataException("Provider assignment cross-rebound an expected authority, request, reservation, limit, or configuration identity.");
             }
-            throw new NotSupportedException("Helper provider dispatch assignment is blocked pending accepted local tokenizer/framing authority.");
         }
         else if (value.ProviderRequest is not null || value.Limits is not null
             || value.OperationKind != ProviderOperationKindV2.Unspecified
@@ -424,8 +423,8 @@ public static class HelperProtocolV2Codec
             || !ValidDigest(value.Settings) || !ValidDigest(value.OutputSchema)
             || !ValidFutureInstant(value.DispatchDeadline, now) || !ValidInstant(value.EvaluatedAt)
             || string.IsNullOrWhiteSpace(value.RequestId) || value.Limits is null
-            || value.AuthorizedOnce || value.Disposition == DispatchDispositionV2.Authorized
-            || !IsAuthorityRequiredProof(value.InputBoundProof)
+            || !value.AuthorizedOnce || value.Disposition != DispatchDispositionV2.Authorized
+            || !IsAcceptedInputProof(value.InputBoundProof)
             || expectedRequestFingerprintSha256 is null || expectedRequestFingerprintSha256.Length != 32
             || expectedCoordinatorFencingEpoch is null or 0 || expectedRevocationEpoch is null
             || expectedOperationKind is null or ProviderOperationKindV2.Unspecified
@@ -610,12 +609,11 @@ public static class HelperProtocolV2Codec
                 || !SameDigest(value.OutputSchema, expectedOutputSchema)
                 || value.InputBoundProof?.PolicyId != expectedInputBoundPolicyId
                 || value.InputBoundProof?.PolicyVersion != expectedInputBoundPolicyVersion
-                || !IsAuthorityRequiredProof(value.InputBoundProof))
+                || !IsAcceptedInputProof(value.InputBoundProof))
             {
                 throw new InvalidDataException("Provider receipt must retain the exact assignment, command, operation, attempt, request, dispatch fence, request fingerprint, proof, receipt, and fencing binding.");
             }
             ValidateReceiptUsage(value, expectedLimits!);
-            throw new NotSupportedException("Provider dispatch receipts are unreachable until accepted local input-bound authority changes the helper contract.");
         }
     }
 
@@ -720,11 +718,11 @@ public static class HelperProtocolV2Codec
         value is not null && expected is not null
         && value.UnixSeconds == expected.UnixSeconds && value.Nanoseconds == expected.Nanoseconds;
 
-    private static bool IsAuthorityRequiredProof(InputBoundProofV2? proof) =>
+    private static bool IsAcceptedInputProof(InputBoundProofV2? proof) =>
         proof is not null
-        && proof.PolicyId == "unresolved-openai-responses-framing"
-        && proof.PolicyVersion == "authority-required"
-        && proof.Status == InputBoundProofStatusV2.AuthorityRequired;
+        && proof.PolicyId == "openai-responses-o200k-byte-envelope"
+        && proof.PolicyVersion == "v1"
+        && proof.Status == InputBoundProofStatusV2.Proved;
 
     private static void ValidateSubject<T>(
         T subjectCase,

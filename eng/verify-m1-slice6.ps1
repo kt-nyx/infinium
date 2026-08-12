@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Contracts', 'StateSurfaces', 'StateTotality', 'Budget', 'BudgetFaults', 'Layer6Review')]
+    [ValidateSet('Contracts', 'StateSurfaces', 'StateTotality', 'Budget', 'BudgetFaults', 'CredentialSynthetic', 'Layer6Review')]
     [string] $Gate,
 
     [Parameter(Mandatory = $true)]
@@ -143,6 +143,7 @@ function Assert-NoDuplicateJsonProperties([System.Text.Json.JsonElement] $Elemen
 function Test-Wp1AllowedPath([string] $Path) {
     $exact = @(
         'Directory.Packages.props',
+        'Infinium.sln',
         'contracts/json-schema/README.md',
         'contracts/protobuf/README.md',
         'contracts/repository/public-fixture-registry.v1.schema.json',
@@ -164,6 +165,9 @@ function Test-Wp1AllowedPath([string] $Path) {
         'src/Infinium.Cli/packages.lock.json',
         'src/Infinium.Coordinator/packages.lock.json',
         'src/Infinium.Worker/packages.lock.json',
+        'src/Infinium.CredentialHelper/packages.lock.json',
+        'tests/Infinium.SecurityTests/packages.lock.json',
+        'tests/Infinium.FaultTests/packages.lock.json',
         'tests/Infinium.EvaluationTests/packages.lock.json',
         'tests/Infinium.IntegrationTests/packages.lock.json'
     )
@@ -181,6 +185,10 @@ function Test-Wp1AllowedPath([string] $Path) {
         'src/Infinium.Coordinator/',
         'src/Infinium.OpenAI/',
         'src/Infinium.Persistence/',
+        'src/Infinium.CredentialHelper/',
+        'tests/Infinium.SecurityTests/',
+        'tests/Infinium.FaultTests/',
+        'fixtures/public/platform/credential-helper/',
         'tests/Infinium.UnitTests/',
         'tests/Infinium.IntegrationTests/',
         'tests/Infinium.EvaluationTests/',
@@ -613,7 +621,15 @@ function Invoke-BudgetGate {
     Invoke-DotnetTest 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj' $integrationFilter
     Invoke-DotnetTest 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj' $evaluationFilter
     $registry = Get-Content -LiteralPath (Join-Path $repoRoot 'fixtures/public/public-fixture-registry.v1.json') -Raw | ConvertFrom-Json
-    $wp2Packages = @($registry.packages | Where-Object { $_.package_identity -like 'M1-PLAT-*' })
+    $wp2Identities = @(
+        'M1-PLAT-PROVIDER-CAPABILITY-DEV-v1',
+        'M1-PLAT-PROVIDER-CAPABILITY-VAL-v1',
+        'M1-PLAT-PROVIDER-AUTHORITY-DEV-v1',
+        'M1-PLAT-PROVIDER-AUTHORITY-VAL-v1',
+        'M1-PLAT-BUDGET-DEV-v1',
+        'M1-PLAT-BUDGET-VAL-v1'
+    )
+    $wp2Packages = @($registry.packages | Where-Object { $wp2Identities -ccontains $_.package_identity })
     if ($wp2Packages.Count -ne 6) { throw 'Budget gate requires exactly six registered WP2 public packages.' }
     Write-Receipt 'Budget' ([ordered]@{
         execution_mode = 'simulated-nonnetwork'
@@ -672,6 +688,43 @@ function Invoke-BudgetFaultGate {
     })
 }
 
+function Invoke-CredentialSyntheticGate {
+    $unitFilter = 'FullyQualifiedName~Credential|FullyQualifiedName~Helper'
+    $integrationFilter = 'FullyQualifiedName~CredentialIntent|FullyQualifiedName~HelperPrivateHandle|FullyQualifiedName~CredentialDispatch'
+    $securityFilter = 'FullyQualifiedName~Credential|FullyQualifiedName~SecretCanary|FullyQualifiedName~HelperAuthority'
+    $faultFilter = 'FullyQualifiedName~Helper|FullyQualifiedName~Credential'
+    $evaluationFilter = 'FullyQualifiedName~CredentialSynthetic'
+    Invoke-DotnetTest 'tests/Infinium.UnitTests/Infinium.UnitTests.csproj' $unitFilter
+    Invoke-DotnetTest 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj' $integrationFilter
+    Invoke-DotnetTest 'tests/Infinium.SecurityTests/Infinium.SecurityTests.csproj' $securityFilter
+    Invoke-DotnetTest 'tests/Infinium.FaultTests/Infinium.FaultTests.csproj' $faultFilter
+    Invoke-DotnetTest 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj' $evaluationFilter
+    $registry = Get-Content -LiteralPath (Join-Path $repoRoot 'fixtures/public/public-fixture-registry.v1.json') -Raw | ConvertFrom-Json
+    $packages = @($registry.packages | Where-Object { $_.package_identity -like 'M1-PLAT-CREDENTIAL-HELPER-*' })
+    if ($packages.Count -ne 2) { throw 'CredentialSynthetic requires exactly two registered WP3 DEV/VAL packages.' }
+    $helperPath = Join-Path $repoRoot 'src/Infinium.CredentialHelper/bin/Release/net10.0/Infinium.CredentialHelper.exe'
+    if (-not (Test-Path -LiteralPath $helperPath -PathType Leaf)) { throw 'CredentialSynthetic exact helper binary is absent.' }
+    Write-Receipt 'CredentialSynthetic' ([ordered]@{
+        execution_mode = 'synthetic-fake-secure-store-nonnetwork'
+        production_test_filters = @($unitFilter, $integrationFilter, $securityFilter, $faultFilter, $evaluationFilter)
+        wp3_public_package_count = $packages.Count
+        registry_package_count = $registry.package_count
+        helper_binary_sha256 = (Get-FileHash -LiteralPath $helperPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        helper_protocol_sha256 = '2eac265ef75cc827bd5a8596120f5ba4c1912dde2219ad98eb11e2984cb043c0'
+        inherited_private_handle_count = 2
+        standard_protocol_handle_count = 0
+        listener_count = 0
+        retry_count = 0
+        native_credential_operations = 0
+        network_operations = 0
+        secret_canary_matches = 0
+        target_canary_matches = 0
+        stage_before_admit = $true
+        coordinator_only_admission = $true
+        process_tree_survivors = 0
+    })
+}
+
 Push-Location $repoRoot
 try {
     switch ($Gate) {
@@ -680,6 +733,7 @@ try {
         'StateTotality' { Invoke-StateSurfaceGate $true }
         'Budget' { Invoke-BudgetGate }
         'BudgetFaults' { Invoke-BudgetFaultGate }
+        'CredentialSynthetic' { Invoke-CredentialSyntheticGate }
         'Layer6Review' { Invoke-Layer6ReviewGate }
     }
 } finally {

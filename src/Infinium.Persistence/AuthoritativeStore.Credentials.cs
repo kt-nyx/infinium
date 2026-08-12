@@ -1,0 +1,265 @@
+using Microsoft.Data.Sqlite;
+
+namespace Infinium.Persistence;
+
+public sealed partial class AuthoritativeStore
+{
+    public CredentialProfileProjection BeginCredentialEnrollment(
+        string profileId,
+        string generationId,
+        string displayLabel,
+        DateTimeOffset now,
+        string? accountIdentityId = null,
+        string? billingScopeIdentityId = null)
+    {
+        ValidateCredentialIdentity(profileId, nameof(profileId));
+        ValidateCredentialIdentity(generationId, nameof(generationId));
+        ArgumentException.ThrowIfNullOrWhiteSpace(displayLabel);
+        if (displayLabel.Length > 120)
+        {
+            throw new ArgumentException("The credential display label exceeds its closed bound.", nameof(displayLabel));
+        }
+
+        string root = $"enroll-{profileId}-{generationId}";
+        lock (gate)
+        {
+            using SqliteTransaction transaction = BeginImmediateTransaction();
+            Execute("INSERT INTO provider_access_profiles VALUES($profile,'openai','responses',$label,$account,$billing,$now);",
+                transaction, ("$profile", profileId), ("$label", displayLabel),
+                ("$account", accountIdentityId), ("$billing", billingScopeIdentityId), ("$now", ToText(now)));
+            Execute("INSERT INTO provider_generations VALUES($generation,$profile,1,0,$now);",
+                transaction, ("$generation", generationId), ("$profile", profileId), ("$now", ToText(now)));
+            InsertCredentialIntent(transaction, root + ":pending", profileId, generationId, "enroll", "pending",
+                "none", "pending-enrollment", "none", null, null, null, now);
+            Execute("INSERT INTO provider_credential_intent_events VALUES($event,$root,$intent,1,NULL,$now);",
+                transaction, ("$event", root + ":event:1"), ("$root", root),
+                ("$intent", root + ":pending"), ("$now", ToText(now)));
+            Execute(
+                "INSERT INTO provider_profile_projection VALUES($profile,$generation,0,'pending-enrollment','not-applicable',NULL,NULL,NULL,$intent,'not-required','not-requested',1,$now);",
+                transaction, ("$profile", profileId), ("$generation", generationId),
+                ("$intent", root + ":pending"), ("$now", ToText(now)));
+            transaction.Commit();
+        }
+        return GetCredentialProfile(profileId);
+    }
+
+    public void AddCredentialGeneration(
+        string profileId,
+        string generationId,
+        long generationOrdinal,
+        long revocationEpoch,
+        DateTimeOffset now)
+    {
+        ValidateCredentialIdentity(profileId, nameof(profileId));
+        ValidateCredentialIdentity(generationId, nameof(generationId));
+        RequirePositive(generationOrdinal, nameof(generationOrdinal));
+        ArgumentOutOfRangeException.ThrowIfNegative(revocationEpoch);
+        lock (gate)
+        {
+            using SqliteTransaction transaction = BeginImmediateTransaction();
+            Execute("INSERT INTO provider_generations VALUES($generation,$profile,$ordinal,$epoch,$now);", transaction,
+                ("$generation", generationId), ("$profile", profileId), ("$ordinal", generationOrdinal),
+                ("$epoch", revocationEpoch), ("$now", ToText(now)));
+            transaction.Commit();
+        }
+    }
+
+    public CredentialProfileProjection ApplyCredentialTransition(CredentialTransitionRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ValidateCredentialIdentity(request.RootId, nameof(request.RootId));
+        CredentialStateFields fields = CredentialStateFields.For(
+            request.TerminalState,
+            request.CapabilitySnapshotId,
+            request.AccountIdentityId,
+            request.BillingScopeIdentityId,
+            request.SecureStoreUnavailable);
+        string terminalKind = request.Cancelled ? "cancelled"
+            : request.SecureStoreUnavailable ? "unavailable"
+            : request.Failed ? "failed"
+            : "completed";
+        string terminalOutcome = request.Cancelled ? request.FromState
+            : request.Failed && request.IntentKind == "delete" ? "delete-pending"
+            : request.TerminalState;
+        bool keepPending = request.IntentKind == "delete"
+            && request.FromState != "delete-pending"
+            && request.ToState == "delete-pending"
+            && !request.Cancelled
+            && !request.Failed
+            && !request.SecureStoreUnavailable;
+
+        lock (gate)
+        {
+            using SqliteTransaction transaction = BeginImmediateTransaction();
+            CredentialProfileProjection current = GetCredentialProfileCore(request.ProfileId, transaction);
+            if (current.LifecycleState != request.FromState)
+            {
+                throw new InvalidOperationException("The credential transition predecessor is stale.");
+            }
+            InsertCredentialIntent(transaction, request.RootId + ":pending", request.ProfileId, request.GenerationId,
+                request.IntentKind, "pending", request.FromState, request.ToState, request.FromState,
+                fields.CapabilitySnapshotId, fields.AccountIdentityId, fields.BillingScopeIdentityId, request.PendingAt,
+                fields.VerificationState, fields.RecoveryDisposition, fields.CleanupDisposition);
+            Execute("INSERT INTO provider_credential_intent_events VALUES($event,$root,$intent,1,NULL,$now);", transaction,
+                ("$event", request.RootId + ":event:1"), ("$root", request.RootId),
+                ("$intent", request.RootId + ":pending"), ("$now", ToText(request.PendingAt)));
+
+            if (!keepPending)
+            {
+                InsertCredentialIntent(transaction, request.RootId + ":terminal", request.ProfileId, request.GenerationId,
+                    request.IntentKind, terminalKind, request.FromState, request.ToState, terminalOutcome,
+                    fields.CapabilitySnapshotId, fields.AccountIdentityId, fields.BillingScopeIdentityId, request.TerminalAt,
+                    fields.VerificationState, fields.RecoveryDisposition, fields.CleanupDisposition);
+                Execute("INSERT INTO provider_credential_intent_events VALUES($event,$root,$intent,2,$prior,$now);", transaction,
+                    ("$event", request.RootId + ":event:2"), ("$root", request.RootId),
+                    ("$intent", request.RootId + ":terminal"), ("$prior", request.RootId + ":event:1"),
+                    ("$now", ToText(request.TerminalAt)));
+            }
+
+            long revocationEpoch = request.IncrementRevocationEpoch
+                ? checked(current.RevocationEpoch + 1)
+                : current.RevocationEpoch;
+            Execute(
+                """
+                UPDATE provider_profile_projection SET
+                  generation_id=$generation,revocation_epoch=$epoch,lifecycle_state=$state,
+                  verification_state=$verification,capability_snapshot_id=$capability,
+                  account_identity_id=$account,billing_scope_identity_id=$billing,intent_id=$intent,
+                  recovery_disposition=$recovery,cleanup_disposition=$cleanup,
+                  projection_version=projection_version+1,updated_at=$now
+                WHERE profile_id=$profile;
+                """,
+                transaction,
+                ("$generation", request.GenerationId), ("$epoch", revocationEpoch), ("$state", terminalOutcome),
+                ("$verification", fields.VerificationState), ("$capability", fields.CapabilitySnapshotId),
+                ("$account", fields.AccountIdentityId), ("$billing", fields.BillingScopeIdentityId),
+                ("$intent", terminalOutcome == "deleted" ? null
+                    : request.RootId + (keepPending ? ":pending" : ":terminal")),
+                ("$recovery", fields.RecoveryDisposition),
+                ("$cleanup", fields.CleanupDisposition), ("$now", ToText(request.TerminalAt)),
+                ("$profile", request.ProfileId));
+            transaction.Commit();
+        }
+        return GetCredentialProfile(request.ProfileId);
+    }
+
+    public CredentialProfileProjection GetCredentialProfile(string profileId)
+    {
+        ValidateCredentialIdentity(profileId, nameof(profileId));
+        lock (gate)
+        {
+            return GetCredentialProfileCore(profileId, null);
+        }
+    }
+
+    public IReadOnlyList<CredentialProfileProjection> RebuildCredentialProfileProjections(DateTimeOffset now)
+    {
+        lock (gate)
+        {
+            using SqliteTransaction transaction = BeginImmediateTransaction();
+            List<string> profiles = ReadStrings(
+                "SELECT profile_id FROM provider_access_profiles ORDER BY profile_id;", transaction);
+            foreach (string profile in profiles)
+            {
+                // Every mutable row is checked against the latest immutable event root
+                // by schema triggers; a no-op read/rewrite is intentionally avoided.
+                _ = GetCredentialProfileCore(profile, transaction);
+            }
+            transaction.Commit();
+            return profiles.Select(GetCredentialProfile).ToArray();
+        }
+    }
+
+    private CredentialProfileProjection GetCredentialProfileCore(string profileId, SqliteTransaction? transaction)
+    {
+        using SqliteCommand command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText =
+            """
+            SELECT p.profile_id,p.generation_id,g.generation_ordinal,p.revocation_epoch,
+                   p.lifecycle_state,p.verification_state,p.capability_snapshot_id,
+                   p.account_identity_id,p.billing_scope_identity_id,p.intent_id,
+                   p.recovery_disposition,p.cleanup_disposition,p.projection_version,p.updated_at
+            FROM provider_profile_projection p
+            JOIN provider_generations g ON g.profile_id=p.profile_id AND g.generation_id=p.generation_id
+            WHERE p.profile_id=$profile;
+            """;
+        command.Parameters.AddWithValue("$profile", profileId);
+        using SqliteDataReader reader = command.ExecuteReader();
+        if (!reader.Read())
+        {
+            throw new KeyNotFoundException("The credential profile projection is absent.");
+        }
+        return new(
+            reader.GetString(0), reader.GetString(1), reader.GetInt64(2), reader.GetInt64(3), reader.GetString(4),
+            reader.GetString(5), reader.IsDBNull(6) ? null : reader.GetString(6),
+            reader.IsDBNull(7) ? null : reader.GetString(7), reader.IsDBNull(8) ? null : reader.GetString(8),
+            reader.IsDBNull(9) ? null : reader.GetString(9), reader.GetString(10), reader.GetString(11),
+            reader.GetInt64(12), DateTimeOffset.Parse(reader.GetString(13), System.Globalization.CultureInfo.InvariantCulture));
+    }
+
+    private void InsertCredentialIntent(
+        SqliteTransaction transaction, string intentId, string profileId, string generationId,
+        string kind, string state, string from, string to, string outcome,
+        string? capability, string? account, string? billing, DateTimeOffset now,
+        string? verification = null, string? recovery = null, string? cleanup = null)
+    {
+        CredentialStateFields fields = verification is null
+            ? CredentialStateFields.For(to, capability, account, billing, false)
+            : new(verification, recovery!, cleanup!, capability, account, billing);
+        Execute(
+            """
+            INSERT INTO provider_credential_intents VALUES(
+              $intent,$profile,$generation,$kind,$state,$from,$to,$outcome,$verification,
+              $account,$billing,$capability,$recovery,$cleanup,$now);
+            """,
+            transaction, ("$intent", intentId), ("$profile", profileId), ("$generation", generationId),
+            ("$kind", kind), ("$state", state), ("$from", from), ("$to", to), ("$outcome", outcome),
+            ("$verification", fields.VerificationState), ("$account", fields.AccountIdentityId),
+            ("$billing", fields.BillingScopeIdentityId), ("$capability", fields.CapabilitySnapshotId),
+            ("$recovery", fields.RecoveryDisposition), ("$cleanup", fields.CleanupDisposition),
+            ("$now", ToText(now)));
+    }
+
+    private List<string> ReadStrings(string sql, SqliteTransaction transaction)
+    {
+        using SqliteCommand command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = sql;
+        using SqliteDataReader reader = command.ExecuteReader();
+        List<string> values = [];
+        while (reader.Read())
+        {
+            values.Add(reader.GetString(0));
+        }
+        return values;
+    }
+
+    private static void ValidateCredentialIdentity(string value, string name)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(value, name);
+        if (value.Length > 120 || value.Any(ch => !char.IsAsciiLetterOrDigit(ch) && ch is not '-' and not '_'))
+        {
+            throw new ArgumentException("Credential identities use 1-120 closed ASCII token characters.", name);
+        }
+    }
+
+    private sealed record CredentialStateFields(
+        string VerificationState, string RecoveryDisposition, string CleanupDisposition,
+        string? CapabilitySnapshotId, string? AccountIdentityId, string? BillingScopeIdentityId)
+    {
+        public static CredentialStateFields For(
+            string state, string? capability, string? account, string? billing, bool unavailable) => state switch
+            {
+                "pending-enrollment" => new("not-applicable", "not-required", "not-requested", null, null, null),
+                "active-verified" => new("available", "not-required", "not-requested", capability, account, billing),
+                "active-unverified" or "replacing" or "disabled" =>
+                    new("unavailable", "not-required", "not-requested", capability, account, billing),
+                "delete-pending" => new("unavailable", "not-required", unavailable ? "failed" : "pending", capability, account, billing),
+                "deleted" => new("unavailable", "not-required", "confirmed", null, null, null),
+                "secure-store-unavailable" => new("unavailable", "unavailable", "not-requested", capability, account, billing),
+                "recovery-required" => new("unavailable", "required", "not-requested", capability, account, billing),
+                _ => throw new ArgumentException("The credential lifecycle state is outside the accepted closed set.", nameof(state)),
+            };
+    }
+}

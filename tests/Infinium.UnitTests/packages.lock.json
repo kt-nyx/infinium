@@ -401,6 +401,12 @@
           "Mutagen.Bethesda.Skyrim": "[0.54.2, )"
         }
       },
+      "infinium.credentialhelper": {
+        "type": "Project",
+        "dependencies": {
+          "Infinium.Application": "[1.0.0, )"
+        }
+      },
       "infinium.domain": {
         "type": "Project"
       },
