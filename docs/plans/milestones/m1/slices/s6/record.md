@@ -3279,3 +3279,12 @@ has SHA-256
 `ebed6ce2d9782192040c7ebd6b75fa039a39e59353e081d9424d18e039e28c15`.
 Execution remains unauthorized with zero native, network, and provider
 operations. No owner-acceptance line has been appended.
+
+Candidate-bound Layer 6 then passed from exact baseline
+`2cf4c6f15b9a8f28e94b7791f062b6f0c7b52c7e` through binding candidate
+`0f6c1672ddf39318bc323f18c8388092f2024778` in the explicit
+owner-authorized test-process-cleanup mode: 21 changed paths, zero allowed-path
+failures, zero strict-JSON failures, zero relative-link failures, no
+private/archive access, `network_permitted: false`, and
+`credential_access_permitted: false`. The 1,356-byte receipt has SHA-256
+`b73da87e61265bb5a0e372ded1b7c08deba65929103a0ddd3fb9fc8ce110d016`.
