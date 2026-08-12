@@ -3055,3 +3055,47 @@ count remained zero and no native evidence file was created. Product commit
 strings before exact parsing and is the superseding implementation candidate.
 The pre-existing fresh output directory contains no evidence or target data;
 all accepted manifest bytes, limits, native code, and effects remain unused.
+
+## WP4 owner-authorized native qualification execution — 2026-08-12
+
+The third exact `CredentialNative` command reached the reviewed Release helper
+and completed the one authorized disposable Windows Credential Manager
+qualification. The helper finished at `2026-08-12T16:24:10.3899329Z` in 249
+milliseconds and wrote the immutable 6,699-byte
+`credential-native-evidence.json`, SHA-256
+`164386a2843851c77ce96b8c0fe373bfbe2eaf046f4f646945ecbfa0e48db786`.
+It is bound to manifest
+`infinium.m1-s6.wp4.credential-native-authorization/56789943-8096-45fa-8ac9-03da40a1c000`
+and exact accepted manifest SHA-256
+`0c911c6c10340d4a8b6a3f98aa2c2bffa3f1f4290793d3583a460cecf89bcbd3`.
+
+The retained evidence reports all ten finite scenarios with their accepted
+terminal outcomes, nine `CredWriteW`, 43 exact-target `CredReadW`, 18
+exact-target `CredDeleteW`, ten `CredFree`, and 80 total native calls, all
+within the manifest maxima. Every one of the 12 derived target fingerprints
+has a final `ERROR_NOT_FOUND` absence result. The helper-owned entry was a
+masked non-echoing Windows control; cancellation wrote no credential. The
+backup/restore path retained only 225 bytes of non-secret metadata, SHA-256
+`d3e7f0fc9e3054902e4d9649f835ab50637054af57384580fa2c8fffd82fa121`,
+and required a new generation from `recovery-required`. The 60-byte crash
+call-count evidence has SHA-256
+`f43550a463f3c96c645c8b00694640486fdebaf8e3b910c432fe0e65eded3672`.
+Canary scans found zero secret or raw-target matches. Listener, network, DNS,
+provider, and billable operation counts were all zero; retry was false and
+the only dispatch was the deterministic fake provider.
+
+After the helper had completed cleanup and written the passing evidence, the
+outer verifier failed while serializing the already-produced `nativeCalls`
+PowerShell object into the repository receipt. This was a post-effect evidence
+formatting defect, not a qualification or cleanup failure. No target was
+reused and the native helper must not execute again under this manifest.
+
+Product commit `570b52c8d63931fa5a213fa98eea614a0e578c0c` adds the
+bounded receipt-only recovery path. It accepts only the existing evidence at
+the exact output path, revalidates the full finite oracle and manifest binding,
+converts native-call counts to canonical scalar fields, records
+`evidence_recovery_only: true` and `native_execution_reused: false`, and skips
+the helper whenever the immutable evidence is already present. This commit is
+the exact implementation candidate for the receipt recovery and subsequent
+non-native verification. It grants no new native authority and does not permit
+a second Credential Manager execution.
