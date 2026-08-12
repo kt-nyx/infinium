@@ -81,7 +81,8 @@ public sealed class PersistenceAndLifecycleTests
         {
             StringAssert.Contains(receiptTranslationSql, $"'{responseState}'", responseState);
         }
-        StringAssert.Contains(receiptTranslationSql, "r.response_state IN ('completed','refusal','malformed','mismatched') AND NEW.receipt_state = 'complete'");
+        StringAssert.Contains(receiptTranslationSql, "r.response_state IN ('completed','refusal','mismatched') AND NEW.receipt_state = 'complete'");
+        StringAssert.Contains(receiptTranslationSql, "r.response_state = 'malformed' AND NEW.receipt_state IN ('complete','partial')");
         StringAssert.Contains(receiptTranslationSql, "r.response_state IN ('incomplete','queued','in-progress') AND NEW.receipt_state = 'partial'");
         StringAssert.Contains(receiptTranslationSql, "r.response_state = 'failed' AND NEW.receipt_state = 'failed-known'");
         StringAssert.Contains(receiptTranslationSql, "r.response_state = 'unknown' AND NEW.receipt_state = 'ambiguous'");

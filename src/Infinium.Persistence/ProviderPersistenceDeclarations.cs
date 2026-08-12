@@ -11,10 +11,12 @@ public static class ProviderPersistenceDeclarations
     public const string Wp3ExtensionSourceSchemaFingerprint = "240a06fe2a9fa3d79db63985fbda329c8e83822534b93cbfb539062a109cad9e";
     public const string Wp3CorrectionMigrationId = "M1-S6-WP3-0006C";
     public const string Wp3CorrectionSourceSchemaFingerprint = "554129523ac64ce52ee4d24e90644dbaa167c0d98602f1c2d0f25ad271ec0581";
+    public const string Wp5ExtensionMigrationId = "M1-S6-WP5-0006D";
+    public const string Wp5ExtensionSourceSchemaFingerprint = "85c0ed0d1ee466c9a62d33c2a5ce6da8f28b2fc788603deffaa364683d5966fd";
     public const int SourceSchemaVersion = 5;
     public const string SourceStorageContractVersion = "1.4.0";
     public const string SourceSchemaFingerprint = "e6d27152687e6b0c806da58a716a9ab909817f046fbe3bf11d8846da5e5dc87d";
-    public const string SchemaFingerprint = "85c0ed0d1ee466c9a62d33c2a5ce6da8f28b2fc788603deffaa364683d5966fd";
+    public const string SchemaFingerprint = "a312f695cc1ed6f77c89c2471a6c7dc6949035000d3c0db18261237bf1c6e107";
     public const int ProjectionContractVersion = 1;
 
     public static IReadOnlyList<string> RebuildableProjections { get; } =

@@ -179,6 +179,9 @@ public sealed partial class AuthoritativeStore
                     INSERT INTO store_metadata(key,value)
                     VALUES ('wp3_schema_correction_id','M1-S6-WP3-0006C')
                     ON CONFLICT(key) DO UPDATE SET value=excluded.value;
+                    INSERT INTO store_metadata(key,value)
+                    VALUES ('wp5_schema_extension_id','M1-S6-WP5-0006D')
+                    ON CONFLICT(key) DO UPDATE SET value=excluded.value;
                     INSERT INTO migration_history(
                         migration_id, from_version, to_version, applied_at, sqlite_source_id)
                     VALUES ('M1-S6-0006', 5, 6, $now, $sqlite_source);
@@ -195,6 +198,7 @@ public sealed partial class AuthoritativeStore
             {
                 ApplyWp2Schema6ExtensionIfRequired();
                 ApplyWp3Schema6ExtensionIfRequired();
+                ApplyWp5Schema6ExtensionIfRequired();
             }
         }
     }
@@ -252,7 +256,8 @@ public sealed partial class AuthoritativeStore
         const string rejectedWp3Fingerprint =
             "554129523ac64ce52ee4d24e90644dbaa167c0d98602f1c2d0f25ad271ec0581";
         string actualFingerprint = ComputeSchemaFingerprint(connection);
-        if (actualFingerprint == ProviderPersistenceDeclarations.SchemaFingerprint)
+        if (actualFingerprint is ProviderPersistenceDeclarations.SchemaFingerprint
+            or ProviderPersistenceDeclarations.Wp5ExtensionSourceSchemaFingerprint)
         {
             using SqliteCommand declared = connection.CreateCommand();
             declared.CommandText =
@@ -341,7 +346,7 @@ public sealed partial class AuthoritativeStore
                 Execute(ExtractSchemaStatement(SchemaV6, $"CREATE TRIGGER {triggerName}"), transaction);
             }
             string upgradedFingerprint = ComputeSchemaFingerprint(connection, transaction);
-            if (upgradedFingerprint != ProviderPersistenceDeclarations.SchemaFingerprint)
+            if (upgradedFingerprint != ProviderPersistenceDeclarations.Wp5ExtensionSourceSchemaFingerprint)
             {
                 throw new InvalidOperationException(
                     $"The bounded WP3 same-version extension did not converge on the declared fingerprint ({upgradedFingerprint}).");
@@ -362,6 +367,48 @@ public sealed partial class AuthoritativeStore
         {
             Execute("PRAGMA legacy_alter_table=OFF; PRAGMA foreign_keys=ON;", null);
         }
+    }
+
+    private void ApplyWp5Schema6ExtensionIfRequired()
+    {
+        string actualFingerprint = ComputeSchemaFingerprint(connection);
+        if (actualFingerprint == ProviderPersistenceDeclarations.SchemaFingerprint)
+        {
+            using SqliteCommand declared = connection.CreateCommand();
+            declared.CommandText =
+                "SELECT COUNT(*) FROM store_metadata WHERE key='wp5_schema_extension_id' AND value='M1-S6-WP5-0006D';";
+            if (Convert.ToInt64(declared.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
+            {
+                throw new InvalidOperationException(
+                    "The current WP5 schema fingerprint is missing its exact same-version extension declaration.");
+            }
+            return;
+        }
+
+        if (actualFingerprint != ProviderPersistenceDeclarations.Wp5ExtensionSourceSchemaFingerprint)
+        {
+            throw new InvalidOperationException(
+                "Schema 6 does not match the exact accepted WP3 storage contract or current WP5 same-version extension.");
+        }
+
+        using SqliteTransaction transaction = BeginTransaction();
+        Execute("DROP TRIGGER provider_usage_response_totality_guard;", transaction);
+        Execute(ExtractSchemaStatement(SchemaV6, "CREATE TRIGGER provider_usage_response_totality_guard"), transaction);
+        string upgradedFingerprint = ComputeSchemaFingerprint(connection, transaction);
+        if (upgradedFingerprint != ProviderPersistenceDeclarations.SchemaFingerprint)
+        {
+            throw new InvalidOperationException(
+                $"The bounded WP5 same-version extension did not converge on the declared fingerprint ({upgradedFingerprint}).");
+        }
+        Execute(
+            """
+            UPDATE store_metadata SET value=$fingerprint WHERE key='schema_fingerprint';
+            INSERT INTO store_metadata(key,value) VALUES('wp5_schema_extension_id','M1-S6-WP5-0006D')
+              ON CONFLICT(key) DO UPDATE SET value=excluded.value;
+            """,
+            transaction,
+            ("$fingerprint", upgradedFingerprint));
+        transaction.Commit();
     }
 
     private static string ExtractSchemaStatement(string schema, string marker)

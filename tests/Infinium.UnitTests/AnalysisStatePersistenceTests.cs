@@ -144,6 +144,11 @@ public sealed class AnalysisStatePersistenceTests
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'schema_fingerprint';"));
         Assert.AreEqual(
+            ProviderPersistenceDeclarations.Wp5ExtensionMigrationId,
+            ScalarText(
+                connection,
+                "SELECT value FROM store_metadata WHERE key = 'wp5_schema_extension_id';"));
+        Assert.AreEqual(
             "4|5",
             ScalarText(
                 connection,
