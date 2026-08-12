@@ -12,6 +12,12 @@ public sealed record CoordinatedHelperReceipt(
     HelperProcessReceipt Process,
     HelperStagingReceipt Staging);
 
+internal enum ProviderDispatchFaultPoint
+{
+    None,
+    AfterDurableMayHaveStartedBeforeHelper,
+}
+
 public sealed class CredentialHelperCoordinator
 {
     private readonly AuthoritativeStore store;
@@ -108,15 +114,50 @@ public sealed class CredentialHelperCoordinator
             ?? throw new InvalidDataException("Credential generation identity is required.");
         CredentialProfileProjection current = store.GetCredentialProfile(profileId);
         (string? accountIdentityId, string? billingScopeIdentityId) = store.ReadCredentialIdentityBinding(profileId);
-        if (work.Credential?.AccessProfileId?.Value != profileId
+        string bootstrapGenerationId = bootstrap.Bootstrap.Credential?.GenerationId?.Value
+            ?? throw new InvalidDataException("Credential bootstrap generation identity is required.");
+        bool restoredGeneration = current.LifecycleState == "recovery-required"
+            && current.IntentId?.StartsWith("restore-recovery-", StringComparison.Ordinal) == true;
+        bool changesGeneration = generationId != current.GenerationId;
+        bool validFreshGeneration = changesGeneration
+            && bootstrap.Bootstrap.Credential?.AccessProfileId?.Value == profileId
+            && bootstrapGenerationId == current.GenerationId
+            && work.GenerationOrdinal == checked((ulong)(current.GenerationOrdinal + 1))
+            && (work.AssignmentKind == HelperAssignmentKindV2.Replace
+                    && current.LifecycleState is "active-unverified" or "active-verified"
+                || work.AssignmentKind == HelperAssignmentKindV2.Recover
+                    && current.LifecycleState is "secure-store-unavailable" or "recovery-required");
+        bool validCurrentGeneration = !changesGeneration
+            && bootstrapGenerationId == generationId
+            && work.GenerationOrdinal == checked((ulong)current.GenerationOrdinal);
+        if ((!validFreshGeneration && !validCurrentGeneration)
+            || work.Credential?.AccessProfileId?.Value != profileId
             || work.Credential?.GenerationId?.Value != generationId
             || bootstrap.Bootstrap.Credential?.AccessProfileId?.Value != profileId
-            || bootstrap.Bootstrap.Credential?.GenerationId?.Value != generationId)
+            || work.AssignmentKind == HelperAssignmentKindV2.Replace && !changesGeneration
+            || work.AssignmentKind == HelperAssignmentKindV2.Recover
+                && restoredGeneration && !changesGeneration)
         {
             throw new InvalidDataException("The helper credential subject is not the authoritative lifecycle subject.");
         }
+        if (work.AssignmentKind == HelperAssignmentKindV2.Replace)
+        {
+            current = store.ApplyCredentialTransition(new(
+                attemptId + "-replacement-ineligible",
+                profileId,
+                generationId,
+                "replace",
+                current.LifecycleState,
+                "replacing",
+                "replacing",
+                current.CapabilitySnapshotId ?? M1ProviderCatalog.Capability.Identity.Value,
+                current.AccountIdentityId ?? accountIdentityId,
+                current.BillingScopeIdentityId ?? billingScopeIdentityId,
+                now,
+                now.AddTicks(1)));
+        }
         CoordinatedHelperReceipt helper = await ExecuteStageAndAdmitAsync(
-            attemptId, bootstrap, assignment, null, now, cancellationToken).ConfigureAwait(false);
+            attemptId, bootstrap, assignment, null, now.AddTicks(2), cancellationToken).ConfigureAwait(false);
         HelperOutcomeV2 outcome = helper.Process.Receipt.Outcome;
         (string intentKind, string completedState, bool incrementRevocation) = CredentialTransition(
             work.AssignmentKind, current.LifecycleState);
@@ -132,8 +173,8 @@ public sealed class CredentialHelperCoordinator
             deleted ? null : current.CapabilitySnapshotId ?? M1ProviderCatalog.Capability.Identity.Value,
             deleted ? null : current.AccountIdentityId ?? accountIdentityId,
             deleted ? null : current.BillingScopeIdentityId ?? billingScopeIdentityId,
-            now,
-            now.AddTicks(1),
+            now.AddTicks(3),
+            now.AddTicks(4),
             IncrementRevocationEpoch: incrementRevocation);
         if (outcome != HelperOutcomeV2.Completed)
         {
@@ -158,7 +199,28 @@ public sealed class CredentialHelperCoordinator
         HelperPrivateFrameV2 bootstrap,
         HelperPrivateFrameV2 assignment,
         DateTimeOffset now,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) => await ExecuteAuthoritativeDispatchCoreAsync(
+            attemptId, bootstrap, assignment, now, ProviderDispatchFaultPoint.None, cancellationToken)
+            .ConfigureAwait(false);
+
+    internal async Task<(CoordinatedHelperReceipt Helper, ProviderSimulationPersistenceReceipt Persisted,
+        ProviderBudgetSettlementReceipt Settlement)> ExecuteAuthoritativeDispatchWithFaultAsync(
+        string attemptId,
+        HelperPrivateFrameV2 bootstrap,
+        HelperPrivateFrameV2 assignment,
+        DateTimeOffset now,
+        ProviderDispatchFaultPoint faultPoint,
+        CancellationToken cancellationToken = default) => await ExecuteAuthoritativeDispatchCoreAsync(
+            attemptId, bootstrap, assignment, now, faultPoint, cancellationToken).ConfigureAwait(false);
+
+    private async Task<(CoordinatedHelperReceipt Helper, ProviderSimulationPersistenceReceipt Persisted,
+        ProviderBudgetSettlementReceipt Settlement)> ExecuteAuthoritativeDispatchCoreAsync(
+        string attemptId,
+        HelperPrivateFrameV2 bootstrap,
+        HelperPrivateFrameV2 assignment,
+        DateTimeOffset now,
+        ProviderDispatchFaultPoint faultPoint,
+        CancellationToken cancellationToken)
     {
         HelperAssignmentV2 work = assignment.Assignment;
         ProviderRequestV2 request = work.ProviderRequest
@@ -205,14 +267,56 @@ public sealed class CredentialHelperCoordinator
         }
         ProviderDispatchGateReceipt finalGate = new ProviderAccountingCoordinator(store).FinalGate(gate);
         HelperPrivateFrameV2 final = CreateAuthoritativeRevalidation(assignment, authority, finalGate);
-        CoordinatedHelperReceipt helper = await ExecuteStageAndAdmitAsync(
-            attemptId, bootstrap, assignment, final, now, cancellationToken).ConfigureAwait(false);
-        if (helper.Process.Receipt.Outcome != HelperOutcomeV2.Completed
-            || helper.Process.StagedResponseBytes.Length == 0)
+        store.RecordProviderTransportStart(
+            operationId, providerAttemptId, request.RequestId, fenceId, ambiguous: true, now);
+        try
         {
+            if (faultPoint == ProviderDispatchFaultPoint.AfterDurableMayHaveStartedBeforeHelper)
+            {
+                throw new IOException("Injected crash after the durable may-have-started boundary.");
+            }
+        }
+        catch
+        {
+            _ = store.SettleProviderBudget(new(
+                work.AssignmentId + ":ambiguous-settlement",
+                reservationId,
+                ProviderBudgetEventKind.RetainedAmbiguous,
+                null,
+                null,
+                now.AddTicks(1)));
+            throw;
+        }
+        CoordinatedHelperReceipt helper;
+        try
+        {
+            helper = await ExecuteStageAndAdmitAsync(
+                attemptId, bootstrap, assignment, final, now.AddTicks(1), cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            _ = store.SettleProviderBudget(new(
+                work.AssignmentId + ":ambiguous-settlement",
+                reservationId,
+                ProviderBudgetEventKind.RetainedAmbiguous,
+                null,
+                null,
+                now.AddTicks(2)));
+            throw;
+        }
+        if (helper.Process.Receipt.Outcome != HelperOutcomeV2.Completed
+            || helper.Process.StagedResponseBytes.Length == 0
+            || !helper.Process.Receipt.TransportMayHaveStarted)
+        {
+            _ = store.SettleProviderBudget(new(
+                work.AssignmentId + ":ambiguous-settlement",
+                reservationId,
+                ProviderBudgetEventKind.RetainedAmbiguous,
+                null,
+                null,
+                now.AddTicks(2)));
             throw new InvalidOperationException("The authorized helper dispatch did not produce one admissible staged response.");
         }
-        store.RecordProviderTransportStart(operationId, providerAttemptId, request.RequestId, fenceId, false, now);
         ProviderSimulationPersistenceReceipt persisted = store.PersistProviderSimulation(new(
             work.AssignmentId + ":response",
             work.AssignmentId + ":usage",
@@ -234,14 +338,14 @@ public sealed class CredentialHelperCoordinator
             CreateUsage(helper.Process.Receipt),
             [],
             helper.Process.StagedResponseBytes,
-            now));
+            now.AddTicks(2)));
         ProviderBudgetSettlementReceipt settlement = store.SettleProviderBudget(new(
             work.AssignmentId + ":settlement",
             reservationId,
             persisted.SettlementKind,
             persisted.UsageEntryId,
             persisted.Actual,
-            now));
+            now.AddTicks(3)));
         return (helper, persisted, settlement);
     }
 
@@ -337,7 +441,7 @@ public sealed class CredentialHelperCoordinator
         {
             HelperAssignmentKindV2.Enroll when currentState == "pending-enrollment" => ("enroll", "active-unverified", false),
             HelperAssignmentKindV2.Verify when currentState == "active-unverified" => ("verify", "active-verified", false),
-            HelperAssignmentKindV2.Replace when currentState == "active-verified" => ("replace", "active-unverified", false),
+            HelperAssignmentKindV2.Replace when currentState == "replacing" => ("replace", "active-unverified", false),
             HelperAssignmentKindV2.Disable when currentState is "active-unverified" or "active-verified" => ("disable", "disabled", false),
             HelperAssignmentKindV2.Delete when currentState != "delete-pending" => ("delete", "delete-pending", true),
             HelperAssignmentKindV2.Delete when currentState == "delete-pending" => ("delete", "deleted", false),

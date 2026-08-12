@@ -560,7 +560,8 @@ public static class HelperProtocolV2Codec
             || (!dispatch && (value.Credential!.AccessProfileId.Value != expectedProfileId
                 || value.Credential.GenerationId.Value != expectedGenerationId))
             || value.OutcomeHasResponse != hasResponse
-            || value.TransportMayHaveStarted != (value.Outcome == HelperOutcomeV2.TransportMayHaveStarted)
+            || value.TransportMayHaveStarted != (value.Outcome == HelperOutcomeV2.TransportMayHaveStarted
+                || dispatch && hasResponse)
             || (hasResponse && !ValidDigest(value.RawResponse))
             || (!dispatch && (value.TransportMayHaveStarted || hasResponse
                 || value.InputTokens is not null || value.OutputTokens is not null || value.ReasoningTokens is not null

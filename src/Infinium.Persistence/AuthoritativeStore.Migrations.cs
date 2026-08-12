@@ -173,6 +173,9 @@ public sealed partial class AuthoritativeStore
                     WHERE key = 'schema_fingerprint';
                     INSERT INTO store_metadata(key,value)
                     VALUES ('wp2_schema_extension_id','M1-S6-WP2-0006A');
+                    INSERT INTO store_metadata(key,value)
+                    VALUES ('wp3_schema_extension_id','M1-S6-WP3-0006B')
+                    ON CONFLICT(key) DO UPDATE SET value=excluded.value;
                     INSERT INTO migration_history(
                         migration_id, from_version, to_version, applied_at, sqlite_source_id)
                     VALUES ('M1-S6-0006', 5, 6, $now, $sqlite_source);
@@ -188,6 +191,7 @@ public sealed partial class AuthoritativeStore
             if (current == 6)
             {
                 ApplyWp2Schema6ExtensionIfRequired();
+                ApplyWp3Schema6ExtensionIfRequired();
             }
         }
     }
@@ -236,6 +240,135 @@ public sealed partial class AuthoritativeStore
             ("$sqlite_source", BindingIdentity.SourceId),
             ("$now", ToText(DateTimeOffset.UtcNow)));
         transaction.Commit();
+    }
+
+    private void ApplyWp3Schema6ExtensionIfRequired()
+    {
+        const string acceptedWp2Fingerprint =
+            "240a06fe2a9fa3d79db63985fbda329c8e83822534b93cbfb539062a109cad9e";
+        string actualFingerprint = ComputeSchemaFingerprint(connection);
+        if (actualFingerprint == ProviderPersistenceDeclarations.SchemaFingerprint)
+        {
+            using SqliteCommand declared = connection.CreateCommand();
+            declared.CommandText =
+                "SELECT COUNT(*) FROM store_metadata WHERE key='wp3_schema_extension_id' AND value='M1-S6-WP3-0006B';";
+            if (Convert.ToInt64(declared.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
+            {
+                throw new InvalidOperationException(
+                    "The current WP3 schema fingerprint is missing its exact same-version extension declaration.");
+            }
+            return;
+        }
+        if (actualFingerprint != acceptedWp2Fingerprint)
+        {
+            throw new InvalidOperationException(
+                "Schema 6 does not match the exact accepted WP2 storage contract or current WP3 same-version extension.");
+        }
+
+        using (SqliteCommand metadata = connection.CreateCommand())
+        {
+            metadata.CommandText =
+                """
+                SELECT COUNT(*) FROM store_metadata
+                WHERE (key='schema_version' AND value='6')
+                   OR (key='storage_contract_version' AND value='1.5.0')
+                   OR (key='schema_fingerprint' AND value=$fingerprint)
+                   OR (key='wp2_schema_extension_id' AND value='M1-S6-WP2-0006A');
+                """;
+            metadata.Parameters.AddWithValue("$fingerprint", acceptedWp2Fingerprint);
+            if (Convert.ToInt64(metadata.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 4)
+            {
+                throw new InvalidOperationException(
+                    "The accepted WP2 schema lacks its exact schema-6/storage-1.5.0 extension provenance.");
+            }
+        }
+
+        List<(string Name, string Sql)> intentTriggers = [];
+        using (SqliteCommand triggers = connection.CreateCommand())
+        {
+            triggers.CommandText =
+                "SELECT name,sql FROM sqlite_schema WHERE type='trigger' AND tbl_name='provider_credential_intents' ORDER BY name;";
+            using SqliteDataReader reader = triggers.ExecuteReader();
+            while (reader.Read())
+            {
+                intentTriggers.Add((reader.GetString(0), reader.GetString(1)));
+            }
+        }
+        if (intentTriggers.Count == 0)
+        {
+            throw new InvalidOperationException("The accepted WP2 credential-intent trigger set is absent.");
+        }
+
+        Execute("PRAGMA foreign_keys=OFF; PRAGMA legacy_alter_table=ON;", null);
+        try
+        {
+            using SqliteTransaction transaction = BeginTransaction();
+            Execute("ALTER TABLE provider_credential_intents RENAME TO provider_credential_intents_wp2;", transaction);
+            Execute(ExtractSchemaStatement(SchemaV6, "CREATE TABLE " + "provider_credential_intents("), transaction);
+            Execute(
+                """
+                INSERT INTO provider_credential_intents
+                SELECT * FROM provider_credential_intents_wp2;
+                DROP TABLE provider_credential_intents_wp2;
+                """,
+                transaction);
+            foreach ((string name, string sql) in intentTriggers)
+            {
+                Execute(name == "provider_profile_transition_order_guard"
+                    ? ExtractSchemaStatement(SchemaV6, "CREATE TRIGGER provider_profile_transition_order_guard")
+                    : sql,
+                    transaction);
+            }
+            foreach (string triggerName in new[]
+                     {
+                         "provider_profile_projection_exact_root_insert_guard",
+                         "provider_profile_projection_monotonic_update_guard",
+                         "provider_block_eligibility_guard",
+                     })
+            {
+                Execute($"DROP TRIGGER {triggerName};", transaction);
+                Execute(ExtractSchemaStatement(SchemaV6, $"CREATE TRIGGER {triggerName}"), transaction);
+            }
+            string upgradedFingerprint = ComputeSchemaFingerprint(connection, transaction);
+            if (upgradedFingerprint != ProviderPersistenceDeclarations.SchemaFingerprint)
+            {
+                throw new InvalidOperationException(
+                    $"The bounded WP3 same-version extension did not converge on the declared fingerprint ({upgradedFingerprint}).");
+            }
+            Execute(
+                """
+                UPDATE store_metadata SET value=$fingerprint WHERE key='schema_fingerprint';
+                INSERT INTO store_metadata(key,value) VALUES('wp3_schema_extension_id','M1-S6-WP3-0006B');
+                """,
+                transaction,
+                ("$fingerprint", upgradedFingerprint));
+            transaction.Commit();
+        }
+        finally
+        {
+            Execute("PRAGMA legacy_alter_table=OFF; PRAGMA foreign_keys=ON;", null);
+        }
+    }
+
+    private static string ExtractSchemaStatement(string schema, string marker)
+    {
+        int start = schema.IndexOf(marker, StringComparison.Ordinal);
+        if (start < 0)
+        {
+            throw new InvalidOperationException($"Schema statement marker '{marker}' is absent.");
+        }
+        int end = schema.IndexOf("\nEND;", start, StringComparison.Ordinal);
+        int strictEnd = schema.IndexOf(") STRICT;", start, StringComparison.Ordinal);
+        if (marker.StartsWith("CREATE TABLE", StringComparison.Ordinal)
+            && strictEnd >= 0 && (end < 0 || strictEnd < end))
+        {
+            return schema[start..(strictEnd + ") STRICT;".Length)];
+        }
+        if (end < 0)
+        {
+            throw new InvalidOperationException($"Schema trigger marker '{marker}' has no terminal END.");
+        }
+        return schema[start..(end + "\nEND;".Length)];
     }
 
     private void ValidateSchema5MigrationSource()
@@ -3984,6 +4117,12 @@ public sealed partial class AuthoritativeStore
         BEFORE INSERT ON provider_credential_intents
         WHEN NEW.from_lifecycle_state <> 'none'
         BEGIN
+          SELECT CASE WHEN NEW.intent_kind = 'recover' AND NEW.from_lifecycle_state = 'recovery-required'
+              AND NEW.to_lifecycle_state <> 'recovery-required'
+              AND EXISTS(SELECT 1 FROM provider_profile_projection p
+                WHERE p.profile_id = NEW.profile_id AND p.generation_id = NEW.generation_id
+                  AND p.intent_id LIKE 'restore-recovery-%')
+            THEN RAISE(ABORT, 'restored credential recovery cannot reactivate the restored generation') END;
           SELECT CASE WHEN NEW.intent_kind = 'replace' AND NEW.from_lifecycle_state IN ('active-unverified','active-verified')
             AND NOT EXISTS(
               SELECT 1 FROM provider_profile_projection p
@@ -3992,8 +4131,19 @@ public sealed partial class AuthoritativeStore
               WHERE p.profile_id = NEW.profile_id AND p.lifecycle_state = NEW.from_lifecycle_state
                 AND successor.generation_ordinal = predecessor.generation_ordinal + 1)
             THEN RAISE(ABORT, 'provider replacement must bind a fresh successor generation to the exact predecessor root') END;
+          SELECT CASE WHEN NEW.intent_kind = 'recover' AND NEW.from_lifecycle_state IN ('secure-store-unavailable','recovery-required')
+              AND NEW.generation_id <> (SELECT p.generation_id FROM provider_profile_projection p WHERE p.profile_id = NEW.profile_id)
+              AND NOT EXISTS(
+                SELECT 1 FROM provider_profile_projection p
+                JOIN provider_generations predecessor ON predecessor.profile_id = p.profile_id AND predecessor.generation_id = p.generation_id
+                JOIN provider_generations successor ON successor.profile_id = NEW.profile_id AND successor.generation_id = NEW.generation_id
+                WHERE p.profile_id = NEW.profile_id AND p.lifecycle_state = NEW.from_lifecycle_state
+                  AND successor.generation_ordinal = predecessor.generation_ordinal + 1)
+            THEN RAISE(ABORT, 'provider recovery re-entry must bind a fresh successor generation to the exact restored root') END;
           SELECT CASE WHEN NOT (NEW.intent_kind = 'replace' AND NEW.from_lifecycle_state IN ('active-unverified','active-verified'))
-            AND NOT EXISTS(
+              AND NOT (NEW.intent_kind = 'recover' AND NEW.from_lifecycle_state IN ('secure-store-unavailable','recovery-required')
+                AND NEW.generation_id <> (SELECT p.generation_id FROM provider_profile_projection p WHERE p.profile_id = NEW.profile_id))
+              AND NOT EXISTS(
             SELECT 1 FROM provider_profile_projection p
             WHERE p.profile_id = NEW.profile_id AND p.generation_id = NEW.generation_id
               AND p.lifecycle_state = NEW.from_lifecycle_state)

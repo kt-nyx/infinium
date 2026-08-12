@@ -84,11 +84,38 @@ function Write-Receipt([string] $Name, [System.Collections.IDictionary] $Evidenc
         credential_access_permitted = $false
         evidence = $Evidence
     }
-    $json = $receipt | ConvertTo-Json -Depth 16
+    $json = ConvertTo-CanonicalJsonValue $receipt
     [System.IO.File]::WriteAllText(
         (Join-Path $resolvedOutputRoot ($Name.ToLowerInvariant() + '.json')),
-        $json + [Environment]::NewLine,
+        $json + "`n",
         [System.Text.UTF8Encoding]::new($false))
+}
+
+function ConvertTo-CanonicalJsonValue([object] $Value) {
+    if ($null -eq $Value) { return 'null' }
+    if ($Value -is [string]) {
+        $escaped = $Value.Replace('\', '\\').Replace('"', '\"')
+        $escaped = $escaped.Replace("`b", '\b').Replace("`f", '\f').Replace("`n", '\n')
+        $escaped = $escaped.Replace("`r", '\r').Replace("`t", '\t')
+        return '"' + $escaped + '"'
+    }
+    if ($Value -is [bool]) { return $(if ($Value) { 'true' } else { 'false' }) }
+    if ($Value -is [System.Collections.IDictionary]) {
+        [string[]] $keys = @($Value.Keys | ForEach-Object { [string] $_ })
+        [Array]::Sort($keys, [StringComparer]::Ordinal)
+        $members = foreach ($key in $keys) {
+            (ConvertTo-CanonicalJsonValue $key) + ':' + (ConvertTo-CanonicalJsonValue $Value[$key])
+        }
+        return '{' + ($members -join ',') + '}'
+    }
+    if ($Value -is [System.Collections.IEnumerable]) {
+        $items = foreach ($item in $Value) { ConvertTo-CanonicalJsonValue $item }
+        return '[' + ($items -join ',') + ']'
+    }
+    if ($Value -is [System.IFormattable]) {
+        return $Value.ToString($null, [Globalization.CultureInfo]::InvariantCulture)
+    }
+    throw "Canonical receipt serialization does not support type $($Value.GetType().FullName)."
 }
 
 function Write-JsonReport([string] $Name, [object] $Value) {
@@ -160,6 +187,7 @@ function Test-Wp1AllowedPath([string] $Path) {
         'docs/research/source-registry.md',
         'eng/generate-m1-slice6-wp1-traceability.ps1',
         'eng/verify-m1-slice6.ps1',
+        'eng/verify-m1-slice6-wp3-upgrade.ps1',
         'fixtures/public/public-fixture-registry.v1.json',
         'fixtures/tooling/reseal-public-fixtures.mjs',
         'src/Infinium.Cli/packages.lock.json',
@@ -699,6 +727,11 @@ function Invoke-CredentialSyntheticGate {
     Invoke-DotnetTest 'tests/Infinium.SecurityTests/Infinium.SecurityTests.csproj' $securityFilter
     Invoke-DotnetTest 'tests/Infinium.FaultTests/Infinium.FaultTests.csproj' $faultFilter
     Invoke-DotnetTest 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj' $evaluationFilter
+    $upgradeEvidencePath = Join-Path $resolvedOutputRoot 'accepted-wp2-upgrade.json'
+    & (Join-Path $repoRoot 'eng/verify-m1-slice6-wp3-upgrade.ps1') -OutputPath $upgradeEvidencePath
+    if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $upgradeEvidencePath -PathType Leaf)) {
+        throw 'CredentialSynthetic exact accepted-WP2 same-version upgrade regression failed.'
+    }
     $registry = Get-Content -LiteralPath (Join-Path $repoRoot 'fixtures/public/public-fixture-registry.v1.json') -Raw | ConvertFrom-Json
     $packages = @($registry.packages | Where-Object { $_.package_identity -like 'M1-PLAT-CREDENTIAL-HELPER-*' })
     if ($packages.Count -ne 2) { throw 'CredentialSynthetic requires exactly two registered WP3 DEV/VAL packages.' }
@@ -716,16 +749,11 @@ function Invoke-CredentialSyntheticGate {
     if ([int64]$dynamic.inherited_private_handle_count -ne 3 -or -not $dynamic.stage_before_admit -or -not $dynamic.coordinator_only_admission) {
         throw 'CredentialSynthetic dynamic evidence does not prove the closed private-handle/staging path.'
     }
-    $scanRoots = @(
-        (Join-Path $repoRoot 'artifacts/m1-slice6/wp3'),
-        (Join-Path $repoRoot 'fixtures/public/platform/credential-helper'),
-        (Join-Path $repoRoot 'src/Infinium.CredentialHelper/bin/Release/net10.0'),
-        (Join-Path $repoRoot 'src/Infinium.Coordinator/bin/Release/net10.0'))
-    $secretCanaryMatches = @(Get-ChildItem -LiteralPath $scanRoots -File -Recurse -ErrorAction SilentlyContinue |
-        Select-String -SimpleMatch 'WP3-SECRET-CANARY-DO-NOT-RETAIN' -List -ErrorAction SilentlyContinue).Count
-    $targetCanaryMatches = @(Get-ChildItem -LiteralPath $scanRoots -File -Recurse -ErrorAction SilentlyContinue |
-        Select-String -SimpleMatch 'credential_target' -List -ErrorAction SilentlyContinue).Count
-    if ($secretCanaryMatches -ne 0 -or $targetCanaryMatches -ne 0) { throw 'CredentialSynthetic measured canary scan found forbidden retained material.' }
+    $secretCanaryMatches = [int64]$dynamic.secret_canary_matches
+    $targetCanaryMatches = [int64]$dynamic.target_canary_matches
+    if ($secretCanaryMatches -ne 0 -or $targetCanaryMatches -ne 0 -or -not [bool]$dynamic.canary_mutation_rejected) {
+        throw 'CredentialSynthetic real-child product-artifact canary scan or its leak mutation failed.'
+    }
     Write-Receipt 'CredentialSynthetic' ([ordered]@{
         execution_mode = 'synthetic-fake-secure-store-nonnetwork'
         production_test_filters = @($unitFilter, $integrationFilter, $securityFilter, $faultFilter, $evaluationFilter)
@@ -733,6 +761,7 @@ function Invoke-CredentialSyntheticGate {
         registry_package_count = $registry.package_count
         helper_binary_sha256 = $actualHelperSha
         helper_protocol_sha256 = '2eac265ef75cc827bd5a8596120f5ba4c1912dde2219ad98eb11e2984cb043c0'
+        accepted_wp2_upgrade_sha256 = (Get-FileHash -LiteralPath $upgradeEvidencePath -Algorithm SHA256).Hash.ToLowerInvariant()
         dynamic_evidence_bytes = $dynamicBytes.Length
         dynamic_evidence_sha256 = (Get-FileHash -LiteralPath $dynamicPath -Algorithm SHA256).Hash.ToLowerInvariant()
         inherited_private_handle_count = [int64]$dynamic.inherited_private_handle_count
@@ -743,6 +772,7 @@ function Invoke-CredentialSyntheticGate {
         network_operations = [int64]$dynamic.network_operations
         secret_canary_matches = $secretCanaryMatches
         target_canary_matches = $targetCanaryMatches
+        canary_mutation_rejected = [bool]$dynamic.canary_mutation_rejected
         stage_before_admit = [bool]$dynamic.stage_before_admit
         coordinator_only_admission = [bool]$dynamic.coordinator_only_admission
         process_tree_survivors = [int64]$dynamic.process_tree_survivors

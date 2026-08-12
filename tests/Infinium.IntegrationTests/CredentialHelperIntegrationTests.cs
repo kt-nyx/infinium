@@ -18,7 +18,11 @@ public sealed class CredentialHelperIntegrationTests
     {
         string helper = Path.Combine(AppContext.BaseDirectory, "CredentialHelper", "Infinium.CredentialHelper.exe");
         Assert.IsTrue(File.Exists(helper), helper);
-        OneShotCredentialHelperLauncher launcher = Launcher(helper);
+        string secureStoreRoot = Path.Combine(Path.GetTempPath(), "Infinium-Wp3-RealChildStore-" + Guid.NewGuid().ToString("N"));
+        OneShotCredentialHelperLauncher launcher = new(
+            helper,
+            Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(helper))),
+            secureStoreRoot);
         HelperProcessReceipt result = await launcher.ExecuteAsync(
             HelperTestFrames.Bootstrap(), HelperTestFrames.Assignment(), null, TimeSpan.FromSeconds(20), BaseTime);
         Assert.AreEqual(0, result.ExitCode);
@@ -31,20 +35,6 @@ public sealed class CredentialHelperIntegrationTests
         Assert.IsTrue(result.ProcessTreeTerminated);
         Assert.IsFalse(result.RetryAttempted);
         Assert.AreEqual(64, result.BinarySha256.Length);
-        WriteDynamicEvidence(new
-        {
-            helper_binary_sha256 = result.BinarySha256,
-            inherited_private_handle_count = result.InheritedPrivateHandleCount,
-            standard_protocol_handle_count = result.StandardProtocolHandleCount,
-            listener_count = result.ListenerCount,
-            retry_count = result.RetryAttempted ? 1 : 0,
-            native_credential_operations = result.NativeCredentialOperationCount,
-            network_operations = result.NetworkOperationCount,
-            process_tree_survivors = result.ProcessTreeSurvivorCount,
-            stage_before_admit = true,
-            coordinator_only_admission = true,
-        });
-
         string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp3-Staging-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         using AuthoritativeStore store = new(new StoragePaths(Path.Combine(root, "product")));
@@ -54,6 +44,47 @@ public sealed class CredentialHelperIntegrationTests
         Assert.IsTrue(coordinated.Staging.StagedBeforeAdmission);
         Assert.IsTrue(coordinated.Staging.CoordinatorOnlyAdmission);
         Assert.IsTrue(File.Exists(Path.Combine(store.Paths.Staging, coordinated.Staging.RelativePath)));
+        byte[] secretCanary = "WP3-REAL-CHILD-SECRET-CANARY"u8.ToArray();
+        byte[] targetCanary = "WP3-REAL-CHILD-TARGET-CANARY"u8.ToArray();
+        byte[] secureStoreBytes = File.ReadAllBytes(Path.Combine(secureStoreRoot, "synthetic-secure-store.v1.json"));
+        Assert.IsGreaterThanOrEqualTo(0, secureStoreBytes.AsSpan().IndexOf(targetCanary));
+        using (System.Text.Json.JsonDocument secureStoreDocument = System.Text.Json.JsonDocument.Parse(secureStoreBytes))
+        {
+            byte[] realChildSecret = Convert.FromBase64String(
+                secureStoreDocument.RootElement.GetProperty("Values").EnumerateObject().Single().Value.GetString()!);
+            Assert.IsGreaterThanOrEqualTo(0, realChildSecret.AsSpan().IndexOf(secretCanary));
+            System.Security.Cryptography.CryptographicOperations.ZeroMemory(realChildSecret);
+        }
+        string productRoot = Path.Combine(root, "product");
+        string stagingRoot = store.Paths.Staging;
+        store.Dispose();
+        (int secretCanaryMatches, int targetCanaryMatches) = ScanCanaries(
+            productRoot, secretCanary, targetCanary);
+        string mutation = Path.Combine(stagingRoot, "canary-leak-mutation.bin");
+        File.WriteAllBytes(mutation, [.. secretCanary, .. targetCanary]);
+        (int mutatedSecretMatches, int mutatedTargetMatches) = ScanCanaries(
+            productRoot, secretCanary, targetCanary);
+        File.Delete(mutation);
+        bool canaryMutationRejected = mutatedSecretMatches > 0 && mutatedTargetMatches > 0;
+        Assert.AreEqual(0, secretCanaryMatches);
+        Assert.AreEqual(0, targetCanaryMatches);
+        Assert.IsTrue(canaryMutationRejected);
+        WriteDynamicEvidence(new
+        {
+            helper_binary_sha256 = coordinated.Process.BinarySha256,
+            inherited_private_handle_count = coordinated.Process.InheritedPrivateHandleCount,
+            standard_protocol_handle_count = coordinated.Process.StandardProtocolHandleCount,
+            listener_count = coordinated.Process.ListenerCount,
+            retry_count = coordinated.Process.RetryAttempted ? 1 : 0,
+            native_credential_operations = coordinated.Process.NativeCredentialOperationCount,
+            network_operations = coordinated.Process.NetworkOperationCount,
+            process_tree_survivors = coordinated.Process.ProcessTreeSurvivorCount,
+            stage_before_admit = coordinated.Staging.StagedBeforeAdmission,
+            coordinator_only_admission = coordinated.Staging.CoordinatorOnlyAdmission,
+            secret_canary_matches = secretCanaryMatches,
+            target_canary_matches = targetCanaryMatches,
+            canary_mutation_rejected = canaryMutationRejected,
+        });
     }
 
     [TestMethod]
@@ -76,7 +107,7 @@ public sealed class CredentialHelperIntegrationTests
             HelperTestFrames.Revalidation(), TimeSpan.FromSeconds(20), BaseTime);
         Assert.AreEqual(HelperOutcomeV2.Completed, result.Receipt.Outcome);
         Assert.IsGreaterThan(0, result.StagedResponseBytes.Length);
-        Assert.IsFalse(result.Receipt.TransportMayHaveStarted);
+        Assert.IsTrue(result.Receipt.TransportMayHaveStarted);
         Assert.IsFalse(result.RetryAttempted);
 
         HelperPrivateFrameV2 stale = HelperTestFrames.Revalidation();
@@ -205,7 +236,20 @@ public sealed class CredentialHelperIntegrationTests
         AuthoritativeStore.RestoreBackup(backup, restoredPaths);
         using AuthoritativeStore restored = new(new StoragePaths(restoreRoot));
         Assert.AreEqual("deleted", restored.GetCredentialProfile("profile-life").LifecycleState);
-        Assert.AreEqual("recovery-required", restored.GetCredentialProfile("profile-recover").LifecycleState);
+        CredentialProfileProjection recoveryRequired = restored.GetCredentialProfile("profile-recover");
+        Assert.AreEqual("recovery-required", recoveryRequired.LifecycleState);
+        DateTimeOffset restoredNow = recoveryRequired.UpdatedAt.AddSeconds(1);
+        Assert.ThrowsExactly<Microsoft.Data.Sqlite.SqliteException>(() => Transition(
+            restored, "restore-same-generation-rejected", "profile-recover", "generation-r1",
+            "recover", "recovery-required", "active-unverified", restoredNow));
+        restored.AddCredentialGeneration(
+            "profile-recover", "generation-r2", recoveryRequired.GenerationOrdinal + 1,
+            recoveryRequired.RevocationEpoch, restoredNow.AddSeconds(2));
+        CredentialProfileProjection reentered = Transition(
+            restored, "restore-fresh-reentry", "profile-recover", "generation-r2",
+            "recover", "recovery-required", "active-unverified", restoredNow.AddSeconds(4));
+        Assert.AreEqual("generation-r2", reentered.GenerationId);
+        Assert.IsGreaterThan(recoveryRequired.GenerationOrdinal, reentered.GenerationOrdinal);
         // Secrets are never in the backup; restored metadata must be reauthenticated.
         string manifest = File.ReadAllText(backup.ManifestPath);
         Assert.IsFalse(manifest.Contains("synthetic-canary", StringComparison.Ordinal));
@@ -233,6 +277,22 @@ public sealed class CredentialHelperIntegrationTests
         string path = Path.Combine(TestRepository.Root, "artifacts", "m1-slice6", "wp3", "credential-synthetic-dynamic.json");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllText(path, System.Text.Json.JsonSerializer.Serialize(value, EvidenceJsonOptions));
+    }
+
+    private static (int Secret, int Target) ScanCanaries(
+        string root,
+        ReadOnlySpan<byte> secret,
+        ReadOnlySpan<byte> target)
+    {
+        int secretMatches = 0;
+        int targetMatches = 0;
+        foreach (string path in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories))
+        {
+            byte[] bytes = File.ReadAllBytes(path);
+            secretMatches += bytes.AsSpan().IndexOf(secret) >= 0 ? 1 : 0;
+            targetMatches += bytes.AsSpan().IndexOf(target) >= 0 ? 1 : 0;
+        }
+        return (secretMatches, targetMatches);
     }
 
     private static HelperPrivateFrameV2 CredentialBootstrap(string profile, string generation, byte nonce)

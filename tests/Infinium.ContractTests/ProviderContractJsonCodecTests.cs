@@ -1108,6 +1108,7 @@ public sealed class ProviderContractJsonCodecTests
         stagedOverflow.Receipt.Limits = stagedLimits.Clone();
         stagedOverflow.Receipt.Outcome = V2Outcome.Completed;
         stagedOverflow.Receipt.OutcomeHasResponse = true;
+        stagedOverflow.Receipt.TransportMayHaveStarted = true;
         stagedOverflow.Receipt.RawResponse = Digest(new byte[129]);
         stagedOverflow.Receipt.InputTokens = Available(10);
         stagedOverflow.Receipt.OutputTokens = Available(5);

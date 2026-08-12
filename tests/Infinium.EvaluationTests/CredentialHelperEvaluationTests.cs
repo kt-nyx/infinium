@@ -17,6 +17,8 @@ public sealed class CredentialHelperEvaluationTests
 {
     private static readonly string?[] ExpectedLifecycleOperations =
         ["pending-enrollment", "activation", "verification", "replacement", "disable", "delete"];
+    private static readonly string[] ExpectedReplacementSlots =
+        ["WP3-REAL-CHILD-TARGET-CANARY/profile-eval/generation-2"];
 
     [TestMethod]
     public async Task CredentialSyntheticDevelopmentPackageDrivesOneShotLifecycleOracle()
@@ -24,6 +26,9 @@ public sealed class CredentialHelperEvaluationTests
         Fixture package = Load("lifecycle-dev", "M1-PLAT-CREDENTIAL-HELPER-DEV-v1");
         JsonElement input = package.Input.RootElement;
         JsonElement oracle = package.Oracle.RootElement;
+        AssertInputHeaderAndMutations(
+            input, "synthetic-lifecycle-and-private-process",
+            ["schema", "case", "operations", "transport", "secure_store", "provider"]);
         CollectionAssert.AreEqual(
             ExpectedLifecycleOperations,
             input.GetProperty("operations").EnumerateArray().Select(item => item.GetString()).ToArray());
@@ -52,6 +57,16 @@ public sealed class CredentialHelperEvaluationTests
         latest = (await ExecuteTransition(
             coordinator, "replace", HelperAssignmentKindV2.Replace, "generation-2", 3,
             "active-verified", "active-unverified", now.AddSeconds(7))).Helper;
+        using (JsonDocument secureStore = JsonDocument.Parse(File.ReadAllText(
+                   Path.Combine(root, "fake-secure-store", "synthetic-secure-store.v1.json"))))
+        {
+            string[] exactSlots = secureStore.RootElement.GetProperty("Values").EnumerateObject()
+                .Select(property => property.Name).ToArray();
+            CollectionAssert.AreEqual(
+                ExpectedReplacementSlots,
+                exactSlots,
+                "Replacement must delete the exact predecessor fake-store slot only after making it ineligible.");
+        }
         latest = (await ExecuteTransition(
             coordinator, "verify-2", HelperAssignmentKindV2.Verify, "generation-2", 4,
             "active-unverified", "active-verified", now.AddSeconds(9))).Helper;
@@ -88,6 +103,9 @@ public sealed class CredentialHelperEvaluationTests
         Fixture package = Load("faults-val", "M1-PLAT-CREDENTIAL-HELPER-VAL-v1");
         JsonElement input = package.Input.RootElement;
         JsonElement oracle = package.Oracle.RootElement;
+        AssertInputHeaderAndMutations(
+            input, "strict-protocol-and-recovery-faults",
+            ["schema", "case", "faults"]);
         DateTimeOffset now = new(2026, 8, 11, 12, 0, 0, TimeSpan.Zero);
         string[] faults = input.GetProperty("faults").EnumerateArray()
             .Select(item => item.GetString() ?? throw new InvalidDataException("Fault identity is required."))
@@ -340,11 +358,12 @@ public sealed class CredentialHelperEvaluationTests
     {
         int secret = 0;
         int target = 0;
-        foreach (string file in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories))
+        foreach (string file in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)
+                     .Where(path => !path.Contains("fake-secure-store", StringComparison.OrdinalIgnoreCase)))
         {
             string value = Convert.ToHexString(File.ReadAllBytes(file));
-            secret += Count(value, Convert.ToHexString("synthetic-secret-canary"u8));
-            target += Count(value, Convert.ToHexString("credential_target"u8));
+            secret += Count(value, Convert.ToHexString("WP3-REAL-CHILD-SECRET-CANARY"u8));
+            target += Count(value, Convert.ToHexString("WP3-REAL-CHILD-TARGET-CANARY"u8));
         }
         return (secret, target);
 
@@ -374,7 +393,9 @@ public sealed class CredentialHelperEvaluationTests
     {
         HelperPrivateFrameV2 bootstrap = HelperTestFrames.Bootstrap(nonceSeed: nonce);
         bootstrap.Bootstrap.Credential.AccessProfileId.Value = "profile-eval";
-        bootstrap.Bootstrap.Credential.GenerationId.Value = generation;
+        bootstrap.Bootstrap.Credential.GenerationId.Value = kind == HelperAssignmentKindV2.Replace
+            ? "generation-1"
+            : generation;
         HelperPrivateFrameV2 assignment = HelperTestFrames.Assignment(kind);
         assignment.Assignment.AccessProfileId.Value = "profile-eval";
         assignment.Assignment.GenerationId.Value = generation;
@@ -408,6 +429,22 @@ public sealed class CredentialHelperEvaluationTests
             Assert.AreNotEqual(property.Value.GetRawText(), JsonSerializer.Serialize(mutation), property.Name);
         }
         Assert.AreEqual(oracle.EnumerateObject().Count(), actual.Count);
+    }
+
+    private static void AssertInputHeaderAndMutations(
+        JsonElement input,
+        string expectedCase,
+        string[] expectedProperties)
+    {
+        CollectionAssert.AreEquivalent(
+            expectedProperties,
+            input.EnumerateObject().Select(property => property.Name).ToArray());
+        Assert.AreEqual("infinium.public.credential-helper-input/v1", input.GetProperty("schema").GetString());
+        Assert.AreEqual(expectedCase, input.GetProperty("case").GetString());
+        Assert.AreNotEqual(
+            "infinium.public.credential-helper-input/v1-mutated",
+            input.GetProperty("schema").GetString());
+        Assert.AreNotEqual(expectedCase + "-mutated", input.GetProperty("case").GetString());
     }
 
     private static CredentialProfileProjection Transition(

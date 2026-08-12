@@ -79,10 +79,13 @@ public static class HelperExecutionSemanticsV2
 
     private static void ValidateCredentialBootstrap(HelperBootstrapV2 bootstrap, HelperAssignmentV2 assignment)
     {
+        bool freshGenerationOperation = assignment.AssignmentKind is HelperAssignmentKindV2.Replace
+            or HelperAssignmentKindV2.Recover;
         if (bootstrap.SubjectCase != HelperBootstrapV2.SubjectOneofCase.Credential
             || assignment.SubjectCase != HelperAssignmentV2.SubjectOneofCase.Credential
             || bootstrap.Credential.AccessProfileId?.Value != assignment.AccessProfileId?.Value
-            || bootstrap.Credential.GenerationId?.Value != assignment.GenerationId?.Value
+            || (!freshGenerationOperation
+                && bootstrap.Credential.GenerationId?.Value != assignment.GenerationId?.Value)
             || assignment.Credential.AccessProfileId?.Value != assignment.AccessProfileId?.Value
             || assignment.Credential.GenerationId?.Value != assignment.GenerationId?.Value
             || assignment.ProviderRequest is not null || assignment.Limits is not null

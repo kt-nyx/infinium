@@ -104,6 +104,7 @@ public sealed class DeterministicFakeSecureStore : ISyntheticSecureStore, IDispo
 public sealed class CapabilityBoundFakeSecureStore : ISyntheticSecureStore, IDisposable
 {
     private const string StoreLeaf = "synthetic-secure-store.v1.json";
+    internal const string TargetCanaryPrefix = "WP3-REAL-CHILD-TARGET-CANARY";
     private readonly nint directoryHandle;
 
     public CapabilityBoundFakeSecureStore(nint directoryHandle) =>
@@ -189,7 +190,8 @@ public sealed class CapabilityBoundFakeSecureStore : ISyntheticSecureStore, IDis
             ?? throw new InvalidDataException("The capability-bound fake secure store is malformed.");
     }
 
-    private static string Key(SyntheticCredentialSlot slot) => $"{slot.ProfileId}/{slot.GenerationId}";
+    private static string Key(SyntheticCredentialSlot slot) =>
+        $"{TargetCanaryPrefix}/{slot.ProfileId}/{slot.GenerationId}";
 
     private static void Validate(SyntheticCredentialSlot slot)
     {

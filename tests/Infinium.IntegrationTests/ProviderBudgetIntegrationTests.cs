@@ -103,6 +103,30 @@ public sealed class ProviderBudgetIntegrationTests
             coordinator.ExecuteAuthoritativeDispatchAsync(
                 "attempt-fabricated", bootstrap, stale, BaseTime.AddSeconds(5)));
 
+        using (BudgetContext crashContext = BudgetContext.Create())
+        {
+            _ = crashContext.Store.ReserveProviderBudget(1, crashContext.Request);
+            CredentialHelperCoordinator crashCoordinator = new(crashContext.Store, launcher);
+            HelperPrivateFrameV2 crashBootstrap = HelperTestFrames.DispatchBootstrap(73);
+            crashBootstrap.Bootstrap.CoordinatorFencingEpoch = 1;
+            crashBootstrap.Bootstrap.ProviderDispatch.OperationId.Value = "operation-restore";
+            crashBootstrap.Bootstrap.ProviderDispatch.AttemptId.Value = "attempt-settlement";
+            await Assert.ThrowsExactlyAsync<IOException>(() =>
+                crashCoordinator.ExecuteAuthoritativeDispatchWithFaultAsync(
+                    "attempt-crash-window",
+                    crashBootstrap,
+                    assignment.Clone(),
+                    BaseTime.AddSeconds(5),
+                    ProviderDispatchFaultPoint.AfterDurableMayHaveStartedBeforeHelper));
+            foreach (ProviderBudgetScopeContract scope in crashContext.Scopes)
+            {
+                ProviderBudgetProjectionContract projection = crashContext.Store.GetProviderBudgetProjection(
+                    scope.ScopeKind, scope.ScopeId.Value);
+                Assert.AreEqual(crashContext.Vector, projection.Unresolved);
+                Assert.AreEqual(ProviderBudgetVectorContract.Zero, projection.Reserved);
+            }
+        }
+
         (CoordinatedHelperReceipt helperResult,
             ProviderSimulationPersistenceReceipt persisted,
             ProviderBudgetSettlementReceipt settlement) = await coordinator.ExecuteAuthoritativeDispatchAsync(
@@ -111,6 +135,17 @@ public sealed class ProviderBudgetIntegrationTests
         Assert.IsNotNull(helperResult.Staging.ResponseRelativePath);
         Assert.AreEqual("assignment-1:response", persisted.ResponseId);
         Assert.AreEqual(ProviderBudgetEventKind.SettledComplete, settlement.Kind);
+        byte[] secretCanary = "WP3-REAL-CHILD-SECRET-CANARY"u8.ToArray();
+        byte[] targetCanary = "WP3-REAL-CHILD-TARGET-CANARY"u8.ToArray();
+        context.Store.Dispose();
+        Assert.IsFalse(Directory.EnumerateFiles(context.Root, "*", SearchOption.AllDirectories)
+            .Select(File.ReadAllBytes)
+            .Any(bytes => bytes.AsSpan().IndexOf(secretCanary) >= 0
+                || bytes.AsSpan().IndexOf(targetCanary) >= 0),
+            "Real-child canaries must not enter the authoritative database, staging, output, or replay roots.");
+        Assert.IsFalse(helperResult.Process.Receipt.ToString().Contains(
+            "WP3-REAL-CHILD", StringComparison.Ordinal),
+            "Real-child canaries must not enter helper diagnostics.");
 
         static void SetCredential(HelperAssignmentV2 value, string profile, string generation)
         {

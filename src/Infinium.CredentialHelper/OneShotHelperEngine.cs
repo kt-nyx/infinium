@@ -52,7 +52,7 @@ public sealed class OneShotHelperEngine
             {
                 HelperExecutionSemanticsV2.ValidateFinalRevalidation(bootstrap.Bootstrap, assignment, revalidation);
             }
-            (receipt, stagedResponse) = Execute(assignment, revalidation);
+            (receipt, stagedResponse) = Execute(bootstrap.Bootstrap, assignment, revalidation);
         }
         catch (InvalidDataException)
         {
@@ -71,10 +71,14 @@ public sealed class OneShotHelperEngine
             assignment, revalidation, HelperOutcomeV2.FailedKnown, hasResponse: false);
 
     private (HelperReceiptV2 Receipt, byte[] StagedResponse) Execute(
+        HelperBootstrapV2 bootstrap,
         HelperAssignmentV2 assignment,
         DispatchRevalidationV2? revalidation)
     {
         SyntheticCredentialSlot slot = new(assignment.AccessProfileId.Value, assignment.GenerationId.Value);
+        SyntheticCredentialSlot bootstrapSlot = new(
+            bootstrap.Credential?.AccessProfileId?.Value ?? assignment.AccessProfileId.Value,
+            bootstrap.Credential?.GenerationId?.Value ?? assignment.GenerationId.Value);
         HelperOutcomeV2 outcome;
         bool hasResponse = false;
         byte[]? secret = null;
@@ -83,14 +87,36 @@ public sealed class OneShotHelperEngine
             switch (assignment.AssignmentKind)
             {
                 case HelperAssignmentKindV2.Enroll:
-                case HelperAssignmentKindV2.Replace:
-                    secret = SHA256.HashData(Encoding.UTF8.GetBytes("synthetic-canary/" + assignment.AssignmentId));
+                    secret = Encoding.UTF8.GetBytes("WP3-REAL-CHILD-SECRET-CANARY/" + assignment.AssignmentId);
                     store.WriteExact(slot, secret);
                     outcome = store.VerifyExact(slot) ? HelperOutcomeV2.Completed : HelperOutcomeV2.FailedKnown;
                     break;
+                case HelperAssignmentKindV2.Replace:
+                    if (bootstrapSlot == slot)
+                    {
+                        throw new InvalidDataException("Replacement requires an exact predecessor and fresh successor generation.");
+                    }
+                    secret = Encoding.UTF8.GetBytes("WP3-REAL-CHILD-SECRET-CANARY/" + assignment.AssignmentId);
+                    store.WriteExact(slot, secret);
+                    outcome = store.VerifyExact(slot) && store.DeleteExact(bootstrapSlot)
+                        && !store.VerifyExact(bootstrapSlot)
+                        ? HelperOutcomeV2.Completed
+                        : HelperOutcomeV2.FailedKnown;
+                    break;
                 case HelperAssignmentKindV2.Verify:
-                case HelperAssignmentKindV2.Recover:
                     outcome = store.VerifyExact(slot) ? HelperOutcomeV2.Completed : HelperOutcomeV2.FailedKnown;
+                    break;
+                case HelperAssignmentKindV2.Recover:
+                    if (bootstrapSlot == slot)
+                    {
+                        outcome = store.VerifyExact(slot) ? HelperOutcomeV2.Completed : HelperOutcomeV2.FailedKnown;
+                    }
+                    else
+                    {
+                        secret = Encoding.UTF8.GetBytes("WP3-REAL-CHILD-SECRET-CANARY/" + assignment.AssignmentId);
+                        store.WriteExact(slot, secret);
+                        outcome = store.VerifyExact(slot) ? HelperOutcomeV2.Completed : HelperOutcomeV2.FailedKnown;
+                    }
                     break;
                 case HelperAssignmentKindV2.Disable:
                     outcome = HelperOutcomeV2.Completed;
@@ -177,7 +203,8 @@ public sealed class OneShotHelperEngine
         HelperReceiptV2 receipt = new()
         {
             Outcome = outcome,
-            TransportMayHaveStarted = false,
+            TransportMayHaveStarted = assignment.AssignmentKind == HelperAssignmentKindV2.ProviderDispatch
+                && (hasResponse || outcome == HelperOutcomeV2.TransportMayHaveStarted),
             AssignmentKind = assignment.AssignmentKind,
             AssignmentId = assignment.AssignmentId,
             RequestId = assignment.ProviderRequest?.RequestId ?? string.Empty,
