@@ -3027,3 +3027,12 @@ next effect is the exact accepted `CredentialNative` command against this
 recorded implementation candidate and a fresh output root. Any failure after a
 native write follows the manifest's cleanup, reuse-blocking, and fresh-owner-
 authority rules. Current state remains unchanged.
+
+The bounded pre-effect gate-binding correction is exact product commit
+`2086d7a99af56660dba80fa695a06771314db0fa`. It supersedes only
+`729461df6c9f7095394a9214cffe299ce9fd70db` as the implementation candidate:
+the gate now distinguishes its record-only execution HEAD from the immediately
+preceding product commit and requires that product identity in this record.
+No native implementation, manifest byte, target, limit, or test semantic
+changed. `2086d7a99af56660dba80fa695a06771314db0fa` is the exact implementation
+candidate authorized for the one-shot native execution below.
