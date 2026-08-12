@@ -2950,3 +2950,33 @@ Credential Manager API, real credential, API key, DNS/network/provider or
 billable operation, private fixture, sibling repository, legacy/evaluator
 archive, protected root, destructive external effect, later-package product
 work, or push occurred. External-effect count remains zero.
+
+## WP4 native qualification owner authorization — 2026-08-12
+
+The project owner explicitly accepted exact manifest
+`infinium.m1-s6.wp4.credential-native-authorization/56789943-8096-45fa-8ac9-03da40a1c000`,
+16,754 bytes with SHA-256
+`0c911c6c10340d4a8b6a3f98aa2c2bffa3f1f4290793d3583a460cecf89bcbd3`,
+bound to accepted WP3 candidate
+`b32939e8b7491a5c47453f912d25dd98c090f103`, acceptance/handoff commit
+`fa38419b2c539524bbed01b7994f99ace491c293`, branch `codex/m1-s6`, and expiry
+`2026-08-14T14:28:16.7520295Z`.
+
+The accepted authority is limited to the manifest's 12 one-shot disposable
+exact-target derivations and 10 finite qualification scenarios. It permits only
+`CredWriteW`, exact-target `CredReadW`, exact-target `CredDeleteW`, and paired
+`CredFree`; helper-owned masked non-echoing entry/cancel; one deterministic
+fake-provider dispatch; bounded fault, backup/restore, canary, and cleanup
+proof; and a fresh independent Windows credential/security review. It permits
+zero DNS, network, provider, billable, enumeration, fallback, production/shared
+credential, private-fixture, archive, protected-root, WP5/later-package, or
+push operations. Cleanup is required on every terminal path. Any ambiguous or
+failed cleanup blocks the exact target and entire namespace from reuse and
+requires fresh owner authority before another native mutation.
+
+This entry records authority only. At the moment it was appended, the accepted
+manifest's validator reported `execution_authorized: false`, the repository
+still had no `CredentialNative` gate, and Credential Manager operation count
+remained zero. The exact committed WP4 implementation candidate must be added
+to this append-only record before the authorized native gate may execute.
+`docs/current-state.md` remains unchanged and does not yet accept WP4.
