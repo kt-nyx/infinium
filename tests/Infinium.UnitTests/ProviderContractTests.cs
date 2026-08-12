@@ -244,18 +244,23 @@ public sealed class ProviderContractTests
                 ProviderOperations = [blocked with { AuthorizationId = Id("authorization-1") }],
             }));
         OpaqueId authorizationId = Id("authorization-1");
-        Assert.ThrowsExactly<NotSupportedException>(() =>
+        ProviderPublicationReferenceContract live = blocked with
+        {
+            Availability = "live",
+            Live = true,
+            AuthorizationId = authorizationId,
+            ResponseId = Id("response-1"),
+            UsageEntryId = Id("usage-1"),
+            ReplayEdgeId = Id("replay-1"),
+            LiveAuthorizationId = authorizationId,
+            AcceptedInputBoundPolicyId = "openai-responses-o200k-byte-envelope",
+            AcceptedInputBoundPolicyVersion = "v1",
+        };
+        ProviderOperationContractInvariants.Validate(output with { ProviderOperations = [live] });
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
             ProviderOperationContractInvariants.Validate(output with
             {
-                ProviderOperations = [blocked with
-                {
-                    Availability = "live",
-                    Live = true,
-                    AuthorizationId = authorizationId,
-                    LiveAuthorizationId = authorizationId,
-                    AcceptedInputBoundPolicyId = "future-accepted-policy",
-                    AcceptedInputBoundPolicyVersion = "future-accepted-version",
-                }],
+                ProviderOperations = [live with { ReplayEdgeId = null }],
             }));
 
         ProviderQuantityContract absent = U();
@@ -265,11 +270,22 @@ public sealed class ProviderContractTests
         ProviderOperationContractInvariants.Validate(cli);
         Assert.ThrowsExactly<InvalidOperationException>(() =>
             ProviderOperationContractInvariants.Validate(cli with { DispatchCount = Q(0) }));
-        Assert.ThrowsExactly<NotSupportedException>(() => ProviderOperationContractInvariants.Validate(cli with
+        ProviderOperationContractInvariants.Validate(cli with
         {
             ProviderState = "live",
-            AcceptedInputBoundPolicyId = "future-accepted-policy",
-            AcceptedInputBoundPolicyVersion = "future-accepted-version",
+            DispatchCount = Q(1),
+            ReservedNanoUsd = Q(10),
+            ReplayState = "retained-response",
+            AcceptedInputBoundPolicyId = "openai-responses-o200k-byte-envelope",
+            AcceptedInputBoundPolicyVersion = "v1",
+            LiveAuthorizationId = authorizationId,
+        });
+        Assert.ThrowsExactly<InvalidOperationException>(() => ProviderOperationContractInvariants.Validate(cli with
+        {
+            ProviderState = "live",
+            ReplayState = "retained-response",
+            AcceptedInputBoundPolicyId = "openai-responses-o200k-byte-envelope",
+            AcceptedInputBoundPolicyVersion = "v1",
             LiveAuthorizationId = authorizationId,
         }));
     }

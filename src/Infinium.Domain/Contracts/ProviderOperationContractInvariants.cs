@@ -443,6 +443,8 @@ public static class ProviderOperationContractInvariants
                 || (live && (publication.OperationId is null || publication.OperationKind is null
                     || publication.AuthorizationId is null || publication.LiveAuthorizationId is null
                     || publication.AuthorizationId != publication.LiveAuthorizationId
+                    || publication.ResponseId is null || publication.UsageEntryId is null
+                    || publication.ReplayEdgeId is null
                     || string.IsNullOrWhiteSpace(publication.AcceptedInputBoundPolicyId)
                     || string.IsNullOrWhiteSpace(publication.AcceptedInputBoundPolicyVersion))))
             {
@@ -478,6 +480,13 @@ public static class ProviderOperationContractInvariants
             if (value.ReplayState is not ("retained-response" or "audit-only"))
             {
                 throw new InvalidOperationException("A live CLI summary requires an exact persisted replay classification.");
+            }
+            if (value.DispatchCount.Availability != ProviderAvailabilityState.Available
+                || value.DispatchCount.Value is null or < 1
+                || value.ReservedNanoUsd.Availability != ProviderAvailabilityState.Available
+                || value.ReservedNanoUsd.Value is null)
+            {
+                throw new InvalidOperationException("A live CLI summary requires observed dispatch and reservation quantities.");
             }
             return;
         }
