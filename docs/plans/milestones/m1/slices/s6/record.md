@@ -2980,3 +2980,50 @@ still had no `CredentialNative` gate, and Credential Manager operation count
 remained zero. The exact committed WP4 implementation candidate must be added
 to this append-only record before the authorized native gate may execute.
 `docs/current-state.md` remains unchanged and does not yet accept WP4.
+
+## WP4 committed pre-native implementation candidate — 2026-08-12
+
+The exact committed implementation candidate authorized for the one-shot
+native qualification is
+`729461df6c9f7095394a9214cffe299ce9fd70db`. It is a clean descendant of
+handoff `fa38419b2c539524bbed01b7994f99ace491c293` and accepted WP3 candidate
+`b32939e8b7491a5c47453f912d25dd98c090f103`. The owner-accepted manifest is
+unchanged at 16,754 bytes and SHA-256
+`0c911c6c10340d4a8b6a3f98aa2c2bffa3f1f4290793d3583a460cecf89bcbd3`.
+
+This candidate adds only the explicit `CredentialNative` gate, the helper-only
+exact Windows generic-credential wrapper, its finite qualification runner,
+and non-live authority/interop regressions. Ordinary helper execution remains
+on the capability-bound fake secure store. The reviewed native wrapper imports
+only `CredWriteW`, `CredReadW`, `CredDeleteW`, and `CredFree`; it exposes no
+enumeration or arbitrary-target API above its assembly. Its Release helper
+binary SHA-256 is
+`f57eca103d1fa78cbf03a3ead0780196912533b95fadecb9ae141253beb01cff`.
+
+Pre-native evidence remained effect-free:
+
+1. Release build passed with zero warnings/errors; native manifest/interop/
+   fail-before-call tests passed 3/0/0.
+2. The accumulated credential/helper Unit and Security filters passed 14/0/0
+   and 4/0/0.
+3. `CredentialSynthetic` passed Unit 14/0/0, Integration 6/0/0, Security
+   4/0/0, Fault 4/0/0, and Evaluation 2/0/0, including exact migration and
+   recovery evidence. Its 1,371-byte receipt has SHA-256
+   `9df374901f93e753dddb85cd81e4dabed2735b882ec09744684dfbc8dd6e49df`
+   and still reports zero native credential and network operations.
+4. The unfiltered solution passed Unit 204/0/1, Integration 87/0/0,
+   Evaluation 61/0/8, Security 4/0/0, and Fault 4/0/0. Its first Contract run
+   had one stale verifier-source assertion expecting every gate receipt to
+   contain a literal false credential permission. The bounded correction kept
+   false as the default and changes it to true only for the explicit native
+   gate; the exact contract regression then passed 1/0/0. No product or native
+   behavior failed.
+5. Formatting, documentation validation (166 metadata files, 168 Markdown
+   link sources, 16 JSON files), JSON Schema/semantic manifest validation, and
+   diff hygiene passed.
+
+No Credential Manager call has occurred at this checkpoint. The only eligible
+next effect is the exact accepted `CredentialNative` command against this
+recorded implementation candidate and a fresh output root. Any failure after a
+native write follows the manifest's cleanup, reuse-blocking, and fresh-owner-
+authority rules. Current state remains unchanged.
