@@ -3154,3 +3154,51 @@ paths to the existing allowlist. It does not broaden any prefix, protected
 root, private/archive access, native authority, or effect. The focused Layer 6
 contract regression passed 1/0/0. This commit plus the append-only evidence is
 the superseding exact review candidate.
+
+## WP4 fresh Windows credential/security review — CORRECT — 2026-08-12
+
+Fresh read-only reviewer `/root/wp4_windows_security_review` inspected exact
+candidate `018e859e4195e28e3b793c53bd37bb178e527969`, the owner-accepted
+manifest, implementation, immutable native evidence, receipt, and candidate-
+bound Layer 6 result. The reviewer performed no Credential Manager, network,
+provider, private-fixture, archive, or repository write operation and returned
+`CORRECT`, not `ACCEPT`.
+
+The reviewer confirmed that the narrow native boundary is sound: the wrapper
+imports only `CredWriteW`, exact-target `CredReadW`, exact-target
+`CredDeleteW`, and `CredFree`; uses Unicode generic local-machine credentials;
+derives and validates exact targets; frees successful read allocations; and
+rejects 2,561-byte values before a native call. The immutable evidence confirms
+all 12 exact targets ended `ERROR_NOT_FOUND`, with zero measured network, DNS,
+provider, or billable operations and no evidenced secret exposure.
+
+Six accepted-manifest requirements remain must-fix before WP4 acceptance:
+
+1. replacement, revocation/delete, crash/restart, and fake-dispatch records are
+   result labels rather than exercised lifecycle, generation, revocation,
+   durable-intent, final-gate, and staging semantics;
+2. the injected cleanup-ambiguity scenario records namespace reuse as blocked
+   but the same run then performs final native cleanup, contrary to the
+   manifest's fail-and-require-fresh-authority rule;
+3. the canary receipt claims six scanned surfaces while the implementation
+   actually scans only native evidence and backup metadata (stdout/stderr only
+   receive a raw-target literal check);
+4. the helper programmatically writes the canary into the masked entry control,
+   contrary to exact `prepopulate: false` authority;
+5. entry timeout/exception paths do not prove destruction of the window/thread
+   and mutable buffers, and the outer gate does not enforce the 1,800-second
+   wall-clock bound; and
+6. the required canonical per-call/free-pairing trace and process-tree,
+   inherited-handle, UI-ownership, memory-clearing, crash-containment, and
+   no-survivor evidence are absent.
+
+The first five are accepted-authority defects; the reviewer separately noted
+that pinning the receipt-recovery path to the immutable evidence SHA would be
+useful hardening. The current native evidence remains valuable proof of exact
+interop and final absence, but it is insufficient for WP4 acceptance under the
+manifest as written. The consumed namespace is terminal and must not be used
+again. No further native mutation is authorized. A bounded implementation
+correction can proceed without native effects, but any requalification requires
+a fresh owner-accepted manifest; a superseding owner decision may instead
+explicitly narrow or waive the unmet evidence semantics. `docs/current-state.md`
+remains unchanged and WP4 remains closed.
