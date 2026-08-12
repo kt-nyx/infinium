@@ -447,7 +447,7 @@ public sealed partial class AuthoritativeStore
         {
             using SqliteTransaction transaction = BeginTransaction();
             Execute("ALTER TABLE provider_responses RENAME TO provider_responses_wp5;", transaction);
-            Execute(ExtractSchemaStatement(SchemaV6, "CREATE TABLE provider_responses("), transaction);
+            Execute(ExtractSchemaStatement(SchemaV6, "CREATE TABLE " + "provider_responses("), transaction);
             Execute("INSERT INTO provider_responses SELECT * FROM provider_responses_wp5; DROP TABLE provider_responses_wp5;", transaction);
             foreach (string triggerName in triggerNames)
             {
