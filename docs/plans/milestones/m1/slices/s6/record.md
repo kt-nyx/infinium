@@ -3321,3 +3321,59 @@ operations, and zero secret-canary matches. Final common-floor,
 candidate-bound Layer 6, process-cleanup, and independent-review evidence will
 be appended against the exact committed candidate; this entry does not accept
 WP5 or advance current state.
+
+## WP5 committed candidate and verification evidence — 2026-08-12
+
+The initial WP5 product commit is
+`b9de75046f65c620a8dbc921c869f17ab96e6bba`. The accumulated non-live floor
+then found two bounded WP5 declaration defects that the focused filters had not
+exercised:
+
+1. the response-totality trigger change had not advanced the schema-6
+   fingerprint, declared its same-version WP5 extension, or taught
+   backup/restore to upgrade the accepted WP3 fingerprint; correction commit
+   `37b14b6` records `M1-S6-WP5-0006D`, performs only the exact trigger
+   replacement, and closes all five reproductions; and
+2. the closed-world public-fixture registry contained the two new WP5 packages
+   but its repository schema still required 27 entries; correction commit
+   `c559e9d` advances the exact count and array bounds to 29 and closes the
+   contract reproduction.
+
+The resulting exact clean product candidate is
+`c559e9ddf9e77e018653e774eb4e22c58acf8bee`. Its final verification passed:
+
+1. locked restore and Release build, with 0 warnings and 0 errors;
+2. category Unit 210/0/1, Contract 127/0/0, Integration 95/0/0,
+   Evaluation 83/0/8, Security 126/0/3, and Fault 108/0/3;
+3. unfiltered Unit 223/0/1, Contract 155/0/0, Integration 105/0/0,
+   Evaluation 63/0/8, Security 7/0/0, and Fault 7/0/0, for 560 passes and
+   nine expected platform/private skips;
+4. the exact accepted format-verification command, dependency-manifest
+   freshness, documentation validation (166 metadata files, 168 Markdown link
+   sources, 17 JSON files), and `git diff --check`;
+5. `Adapter`, with Unit 11/0/0, Integration 6/0/0, Security 4/0/0,
+   Fault 3/0/0, and Evaluation 2/0/0; its 1,322-byte receipt has SHA-256
+   `880c6739b83e07e6d246c728e2537081f7d0a5078f755be4c38d4dd0a5873419`;
+6. `OfflineSafetyReplay`, with Integration 3/0/0, Security 4/0/0,
+   Fault 3/0/0, and Evaluation 2/0/0; its 760-byte receipt has SHA-256
+   `c089384f4259d2053a70b5f75bf06eeb609463158ae427eb1e0530fe5a8e6174`;
+   both focused receipts retain zero public-DNS, provider, Credential Manager,
+   retry, redirect, proxy-fallback, replay-network, and secret-canary events;
+   and
+7. candidate-bound `Layer6Review` from exact accepted base
+   `fea07e666006d3fde9c8fbd879fff53976690929`: 37 changed paths and zero
+   allowed-path, strict-changed-JSON, relative-link, private/archive, or other
+   findings. Its 1,324-byte receipt has SHA-256
+   `db85a0f29377651c314c65f6c77b270143d7ab255d98600a83be23b24ef67834`.
+
+After the final local verification, the accepted exact-root Windows process
+procedure resolved
+`Z:\Development\Large Projects\Skyrim\infinium`, matched zero repository-owned
+`dotnet`/`testhost` processes, and verified zero survivors. No name-only or
+broad process termination occurred.
+
+No API key, public DNS/provider endpoint, billable/live request, Credential
+Manager or WP4 native namespace, private fixture/evaluator, archive/legacy
+material, provider SDK, protected external effect, WP6/Slice 7 work, current-
+state advancement, or push occurred. WP5 still requires a fresh independent
+bounded review; this evidence does not self-accept the package.
