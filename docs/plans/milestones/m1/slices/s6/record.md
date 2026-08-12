@@ -3036,3 +3036,13 @@ preceding product commit and requires that product identity in this record.
 No native implementation, manifest byte, target, limit, or test semantic
 changed. `2086d7a99af56660dba80fa695a06771314db0fa` is the exact implementation
 candidate authorized for the one-shot native execution below.
+
+The first exact command attempt exited before the helper launched because the
+Windows-PowerShell-to-pwsh handoff supplied empty Layer 6 parameters to the
+native gate. No output root, Credential Manager call, target access, process,
+dialog, or other external effect occurred, so the one-shot namespace remains
+unused. Product commit `e5aba52052b97c86982c186cfa942f8ffceae5b7` corrects only
+that pre-effect argument forwarding by omitting empty optional parameters. It
+is the superseding exact implementation candidate for the still-unused owner
+authority; manifest bytes, limits, native code, targets, and scenarios remain
+unchanged.
