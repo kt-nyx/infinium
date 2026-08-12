@@ -2783,3 +2783,80 @@ secret, DNS/network/provider call, token-count/billable operation, private
 fixture, sibling/archive/legacy material, protected root, WP4/WP5 product
 work, current-state advancement, destructive external effect, or push
 occurred. External-effect count remains zero.
+
+## WP3 integration-floor barrier and SDK 10.0.303 maintenance — 2026-08-12
+
+The exact clean correction base was
+`a9803c872c2a9ef5534bbba6ed1ef517591a9f76`. The bounded committed candidate
+is exact commit `c3f0f73d07169cd3df725e22a825e49d16f60578`. This entry is
+append-only and supersedes only the failed common-Integration-floor
+disposition in the immediately preceding WP3 evidence. It does not alter the
+accepted WP3 product semantics or advance the current handoff.
+
+Two separate corrections are retained:
+
+1. The pre-existing
+   `CliCoordinatorWorkerNamedPipeFlowCompletesAndInspectsImmutableBindings`
+   fixture no longer assumes its worker's two-second delay will outlast three
+   separately launched CLI processes. The test harness snapshots the
+   coordinator's existing direct children, suspends the newly launched
+   synthetic worker at a test-owned cancellable barrier, proves the run is
+   `Running`, proves the cross-kind durable-command rejection, submits and
+   proves acceptance of the real cancellation command, proves its idempotent
+   replay, and requires the intermediate state to be exactly `Cancelling`.
+   It then resumes the same worker and requires the existing product path to
+   reach exactly `Cancelled`. The assertion was not weakened to admit
+   `Completed`, and no product lifecycle, worker, coordinator, CLI, or
+   persistence behavior changed.
+2. The owner separately authorized active toolchain maintenance from exact
+   .NET SDK `10.0.302` to exact SDK `10.0.303`. `global.json` retains
+   `rollForward: disable` and `allowPrerelease: false`; `net10.0`, C# `14.0`,
+   x64, dependency versions, and runtime architecture are unchanged. The only
+   current active-SDK consumers changed are `global.json`, the exact
+   `BuildPolicyTests` assertion, and the generated dependency manifest plus
+   its freshness generator. Historical implementation records and research
+   that truthfully identify their earlier `10.0.302` execution were not
+   rewritten. The selected SDK is `10.0.303`, commit
+   `e730f1db756d11c93f246830ba7b94ee6fcf4b94`; the host runtime is `10.0.11`
+   on `win-x64`.
+
+Retained verification under the exact `10.0.303` pin is:
+
+1. Locked restore passed. The Release solution build passed with zero
+   warnings or errors. The exact SDK/target build-policy filter passed 2/0/0,
+   and dependency-manifest freshness passed.
+2. The exact formerly failing integration regression passed ten consecutive
+   executions, 10/0/0. The full Integration project then passed 87/0/0. The
+   common Integration category passed 84/0/0 across projects: Contract 1,
+   Integration 82, and Evaluation 1.
+3. Exact WP3 focused verification passed Unit 11/0/0, Integration 6/0/0,
+   Security 4/0/0, and Fault 4/0/0. `CredentialSynthetic` passed those nested
+   counts plus Evaluation 2/0/0 and the accepted-WP2/rejected-WP3 migration,
+   fresh convergence, backup/restore, unknown-same-version refusal, and
+   crash/recovery checks. Its 1,371-byte receipt has SHA-256
+   `178a5d22111f671eef38a39b8410e0f5e8c8e3ec6901d569870cebcd4e53b04a`;
+   it reports zero native credential operations, network operations, retries,
+   canary matches, listeners, process survivors, or standard protocol handles.
+4. The complete common category floor passed: Unit 188/0/1; Contract 127/0/0
+   across projects; Integration 84/0/0 across projects; Evaluation 81/0/8
+   across projects; Security 111/0/3 across projects; and Fault 105/0/3 across
+   projects. The unfiltered solution passed Unit 201/0/1, Contract 155/0/0,
+   Integration 87/0/0, Evaluation 61/0/8, Security 4/0/0, and Fault 4/0/0.
+   Skips remain the existing platform/private cases; no private fixture was
+   accessed.
+5. Formatting, dependency freshness, documentation validation (166 metadata
+   files, 168 Markdown link sources, 15 JSON files), and diff hygiene passed.
+   `Layer6Review` passed from exact baseline
+   `a9803c872c2a9ef5534bbba6ed1ef517591a9f76` through exact candidate
+   `c3f0f73d07169cd3df725e22a825e49d16f60578`. Its 1,318-byte receipt has
+   SHA-256 `ae14db3e7a1d45d66d28b0efb0fd32c21ec9459b2c7e71516fbdf162e310fe31`,
+   with six changed paths and zero allowed-path, strict-changed-JSON,
+   relative-link, private/archive, or other failures. The exact Layer 6
+   allowlist was extended only for `global.json` and the existing dependency
+   manifest generator required by the separately authorized SDK maintenance.
+
+No Credential Manager API, real credential, API key, DNS/network/provider or
+billable operation, token count, private fixture, sibling repository,
+legacy/evaluator archive, protected root, native WP4 effect, WP5 product work,
+current-state advancement, destructive external effect, or push occurred.
+External-effect count remains zero.
