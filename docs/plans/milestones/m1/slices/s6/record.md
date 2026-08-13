@@ -4949,3 +4949,44 @@ containment, cleanup/canary rules, zero-network/provider boundary, and absent
 output/lock/owner/native markers. Standing owner approval authorizes exactly
 this one-shot manifest through its finite expiry and limits.
 WP4_V2_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-authorization/e0cb0693-f482-433d-a3d4-3ee40ce7e2db sha256=3fbb8b53245064f90ecbe43ed4df4f87bb82b5c3bce431925d08df6c9bf7e78a close_ready_commit=cca593d90aec352f64ab964aa8ff1a9e46a4372b expires_at_utc=2026-08-15T17:41:42.4797649Z
+
+## WP4 corrected replacement qualification terminal result — 2026-08-13
+
+The exact authorized command ran once from execution commit
+`8c5b25ebe5ddd7c2e8557697e44fb4539380e3e0` and consumed the `e0cb0693`
+one-shot authority. The owner observed that the corrected dialog became visible
+only briefly and then closed without usable interaction. This is not evidence
+of an owner Submit or Cancel action and is not classified as one.
+
+The coordinator retained terminal artifact
+`artifacts/m1-slice6/wp4-native-e0cb0693/credential-native-primary-failure.v2.json`,
+53,834 bytes, SHA-256
+`76c4f2dcc646b6b5db3a9cd8ee214d48208b53fa63b3a5fe51920ee876e8d9a9`.
+It records `failed-primary-cleanup-confirmed`, typed outer failure
+`InvalidDataException`, `cleanup_confirmed=true`, `cleanup_ambiguous=false`,
+`namespace_blocked=false`, and `later_native_calls=0`. The staged submit
+receipt is `FailedKnown` at SHA-256
+`f04776c6b1f846053c8dd6ac19bd8fcf4a516f83c10ab49a7006a581ae437c34`;
+the certain cleanup receipt is `Completed` at SHA-256
+`41b1ae529e78f8c71a8761fe459b6fdedad9818e0c0afe5918d0261223728d8c`.
+
+The retained native trace is W0/R14/D0/F0/T14. Every call was an authorized
+exact-target `CredReadW` returning `ERROR_NOT_FOUND`: 12 collision preflights
+and two terminal cleanup/absence reads for the interactive-primary target. No
+credential was written, no secret was accepted, no target existed to delete
+or free, all canary matches are zero, network/provider effects are zero, all
+phase process trees terminated, and repository-owned process survivors are
+zero. Cleanup is therefore certain and this namespace is absent, but the
+identity and namespace remain consumed and permanently non-reusable.
+
+The one-shot lock is
+`artifacts/m1-slice6/wp4-native-authority-locks/d81a99ae21e06d974a3166caf1cb528a105f433585b22cd2bbb18a3b611475d9.json`,
+443 bytes, SHA-256
+`b0045e4771f10b8cae03585e70002b15d2ad0ef8196ca2840c46435e8d229fcc`.
+The execution failed after roughly three seconds in the manual-entry phase,
+which is compatible with the finite UI-readiness deadline. The exact rejected
+readiness or action fact is not proven: although the helper staged a typed
+`FailedKnown` receipt, the outer artifact's `failed_manual_phase` is null. That
+lost-detail path is a bounded non-native correction requirement; this record
+does not infer a more specific trigger from timing alone.
+WP4_V2_NATIVE_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-authorization/e0cb0693-f482-433d-a3d4-3ee40ce7e2db sha256=3fbb8b53245064f90ecbe43ed4df4f87bb82b5c3bce431925d08df6c9bf7e78a execution_head_commit=8c5b25ebe5ddd7c2e8557697e44fb4539380e3e0 status=failed-primary-cleanup-confirmed native_calls=14 namespace_blocked=false later_native_calls=0 evidence_sha256=76c4f2dcc646b6b5db3a9cd8ee214d48208b53fa63b3a5fe51920ee876e8d9a9
