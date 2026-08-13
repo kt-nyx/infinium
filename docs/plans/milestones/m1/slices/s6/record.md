@@ -5192,3 +5192,53 @@ WM_CUT remain blocked. The automatic UI readiness proof remains a short finite
 response interval begin. Any eventual qualification uses disposable dummy text,
 never a real credential.
 WP4_V2_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-authorization/16df3175-42ef-4a87-83ee-58766a0b15f1 sha256=6e0d5212747405a4f54e0ad18808a5ac8eaab5f147cf7c3204917c41660eee13 close_ready_commit=5ab82ffb76148691fec5dfa8975ef4ae5b51f419 expires_at_utc=2026-08-15T19:45:00.0000000Z
+
+## WP4 `16df3175` terminal native qualification evidence — 2026-08-13
+
+The exact one-shot qualification ran from execution commit
+`b5bbe2f4d39884742800a7a6e6b84e615b33c0b5` and terminated with coordinator
+exit code 68. The authority was consumed before launch and is permanently
+non-reusable. The owner directly observed and completed two dialogs: first the
+Submit dialog with disposable dummy text, then the Cancel dialog. No third
+restore-reauthentication dialog appeared. This corrects the transient live
+status inference that the attempt had ended after only the first dialog.
+
+Retained evidence confirms both observed interactions independently. The
+Submit phase completed with exact UI ownership, interactive desktop, visible
+and actionable window, masked edit, foreground and focus, instruction
+fingerprint, action-time readiness, `editkey` Submit action, terminal cleanup,
+and staged receipt SHA-256
+`c1516f43270483de3b9c3f2282c290eeb410d5cc49ef2fe062939aba5071e587`.
+Its admitted trace is `CredReadW(ERROR_NOT_FOUND)`, `CredWriteW(success)`,
+`CredReadW(success)`, `CredFree(released)`. The Cancel phase completed with the
+same ownership/readiness class, exact `cancelbutton` Cancel action, no native
+credential operation, terminal cleanup, and staged receipt SHA-256
+`33411b3eead9c166b0067b641bced2dbae375a66b4579666d20d67f77cc5e001`.
+
+The primary failure occurred after both manual phases. The non-interactive
+maximum-size helper receipt was staged and its authoritative lifecycle reached
+`active-unverified`, but that phase was rejected before supervisor evidence
+admission. Cleanup then proved exact absence for the three queued targets:
+interactive Submit, interactive Cancel, and maximum-size. Their target
+fingerprints are retained in the terminal artifact. The exact rejected-phase
+validation reason and its raw native trace were not retained, so the artifact's
+aggregate W1/R22/D2/F3/T28 counts cover admitted phases only and must not be
+reported as the complete execution call count. The maximum-size cleanup's
+successful read/free/delete followed by two `ERROR_NOT_FOUND` reads proves that
+target had existed and was removed. The exact total calls for the rejected
+phase therefore remain unobserved.
+
+The terminal artifact truthfully reports `failed-primary-cleanup-confirmed`,
+exact-target cleanup and absence for those three queued targets, no later native
+calls, whole-namespace absence not confirmed, namespace blocked, and
+`consumed-never-reuse`. It has 83,960 bytes and SHA-256
+`f9d4e1a882f37b9d9c666bac2bb7cb517ea6367839b2b0e775e70ae52f3099ec`.
+The immutable one-shot authority lock has 443 bytes and SHA-256
+`f932541f83c87a36a1842b232dbcaa933a23e9ce5213275611cef57e44bdf9f3`.
+All admitted canary surfaces report zero secret and raw-target matches, all
+admitted helper process trees report zero survivors, and no DNS, network,
+provider, billable, private-fixture, archive, later-package, or push operation
+was performed. WP4 qualification is not accepted; any correction and future
+attempt require a fresh manifest, namespace, targets, exact-byte review, and
+owner authority.
+WP4_V2_NATIVE_FAILURE manifest_id=infinium.m1-s6.wp4.credential-native-authorization/16df3175-42ef-4a87-83ee-58766a0b15f1 execution_head_commit=b5bbe2f4d39884742800a7a6e6b84e615b33c0b5 evidence_sha256=f9d4e1a882f37b9d9c666bac2bb7cb517ea6367839b2b0e775e70ae52f3099ec authority_lock_sha256=f932541f83c87a36a1842b232dbcaa933a23e9ce5213275611cef57e44bdf9f3 status=failed-primary-cleanup-confirmed cleanup_scope=three-queued-exact-targets whole_namespace_absence=false namespace_disposition=consumed-never-reuse native_calls=admitted-phases-W1-R22-D2-F3-T28-plus-rejected-phase-unobserved later_native_calls=0
