@@ -4531,3 +4531,23 @@ and its status remains `draft-close-ready-binding-pending`. Safe validation
 reports `execution_authorized: false` with zero Credential Manager, network,
 and provider operations. Release build passed with zero warnings/errors,
 focused authorization tests passed 12/12, and documentation/diff checks passed.
+
+The exact consumer-binding candidate is
+`bd5954f968f71131b883d09092ab9f492c893bb7`. Candidate-bound Layer 6 from
+`81849efda3780df23eac7f0695372177cea12f37` passed across six changed paths,
+with zero allowlist, strict-JSON, relative-link, or private/archive findings;
+credential and network permission remained false. Exact-root cleanup found
+zero repository-owned `dotnet` or `testhost` survivors.
+
+The preparation identity `6255a2d0-4a88-42ea-814f-0da2bbb7f445`, its
+namespace, targets, expiry, proposed command, and owner statement are now
+superseded, non-executable, and non-reusable. The second final executable
+proposal is
+`infinium.m1-s6.wp4.credential-native-authorization/ec90627a-ac6c-402b-8a0e-7e896738413e`,
+17,727 bytes, SHA-256
+`593defff40fbc3ff873ea549ae5b86783dd03cfd238a613fcc745e79f0d46100`,
+bound to consumer candidate `bd5954f968f71131b883d09092ab9f492c893bb7`
+and expiring at `2026-08-15T15:07:56.7181237Z`. Structural and semantic
+validation reports `validated-ready-for-owner-acceptance` but
+`execution_authorized: false`; no canonical owner native-effect acceptance
+line exists and `CredentialNative` was not run.
