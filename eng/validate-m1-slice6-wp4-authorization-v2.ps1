@@ -31,18 +31,18 @@ if (-not (Test-Json -LiteralPath $resolvedManifest -SchemaFile $schema -ErrorAct
 $bytes = [IO.File]::ReadAllBytes($resolvedManifest)
 $text = [Text.Encoding]::UTF8.GetString($bytes)
 $manifest = $text | ConvertFrom-Json -Depth 100 -DateKind String
-$expectedManifestId = 'infinium.m1-s6.wp4.credential-native-authorization/a1976c78-a49b-4581-9a8c-9b6172484e0b'
+$expectedManifestId = 'infinium.m1-s6.wp4.credential-native-authorization/16df3175-42ef-4a87-83ee-58766a0b15f1'
 $expectedWp3 = 'b32939e8b7491a5c47453f912d25dd98c090f103'
 $expectedWp7Product = '59367a7479a7395b173b974bf720543aab2404d4'
 $expectedWp7Evidence = '51251c0e0eb98d67dbc9b295b9ff084ebca33890'
 $expectedHandoff = '5df6b621a6ea0031066b2afbfbe204799854910e'
-$expectedOldManifest = '3fbb8b53245064f90ecbe43ed4df4f87bb82b5c3bce431925d08df6c9bf7e78a'
-$expectedOldEvidence = '76c4f2dcc646b6b5db3a9cd8ee214d48208b53fa63b3a5fe51920ee876e8d9a9'
-$expectedOldLock = 'b0045e4771f10b8cae03585e70002b15d2ad0ef8196ca2840c46435e8d229fcc'
+$expectedOldManifest = '484d385a44c7988fd3311ce05014f53e70d2ef012cb20ba7b2eb625b78f91601'
+$expectedOldEvidence = '8be23f88abac3ae68308d105b6c0548c546832350d67e9539e89160b6322cce7'
+$expectedOldLock = '0c0a55699a94df116ebd4793bc5dbb310c35c0d57b4864b3b6334f5c52a29ad2'
 $historicalManifestBlob = (& git -C $repoRoot rev-parse `
-    '342c69cef433d82ce177a0e0c4d6b793d249e11f:docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v2.json').Trim()
-if ($LASTEXITCODE -ne 0 -or $historicalManifestBlob -ne 'e771bdf1c6f2c16461af6693e7405026a97f6c8d') {
-    throw 'The consumed e0cb0693 manifest history differs from its terminal exact-byte authority.'
+    '2dc94bb74b78c226e5e92cc04fcef83ea7265604:docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v2.json').Trim()
+if ($LASTEXITCODE -ne 0 -or $historicalManifestBlob -ne '34bc2efc5a2a32fbb6a4cb85e5eea19573c0b992') {
+    throw 'The consumed a1976c78 manifest history differs from its terminal exact-byte authority.'
 }
 if ($manifest.schema_identity -ne 'infinium.repository.wp4-credential-native-authorization/1.2.0' -or
     $manifest.manifest_id -ne $expectedManifestId -or
@@ -56,8 +56,8 @@ if ($manifest.schema_identity -ne 'infinium.repository.wp4-credential-native-aut
 if ($manifest.supersedes.manifest_sha256 -ne $expectedOldManifest -or
     $manifest.supersedes.native_evidence_sha256 -ne $expectedOldEvidence -or
     $manifest.supersedes.authority_lock_sha256 -ne $expectedOldLock -or
-    $manifest.supersedes.namespace_disposition -ne 'terminal-confirmed-absent-never-reusable') {
-    throw 'WP4 v2 manifest does not preserve the exact consumed-v1 terminal evidence.'
+    $manifest.supersedes.namespace_disposition -ne 'terminal-pre-operation-store-state-unobserved-never-reusable') {
+    throw 'WP4 v2 manifest does not preserve the exact consumed predecessor terminal evidence.'
 }
 
 $head = (& git -C $repoRoot rev-parse HEAD).Trim()
@@ -132,6 +132,12 @@ if ([bool]$manifest.entry_boundary.prepopulate -or [bool]$manifest.entry_boundar
         'no secret is supplied in arguments, environment, file, stdin, IPC, or programmatic window message',
         [StringComparison]::Ordinal) -or
     -not ([string]$manifest.entry_boundary.readiness_oracle).Contains('current input-desktop object', [StringComparison]::Ordinal) -or
+    -not ([string]$manifest.entry_boundary.readiness_oracle).Contains('short finite 10-second automatic pre-entry readiness window', [StringComparison]::Ordinal) -or
+    -not ([string]$manifest.entry_boundary.readiness_oracle).Contains('separate finite five-minute human response interval', [StringComparison]::Ordinal) -or
+    -not ([string]$manifest.entry_boundary.control).Contains('Settings -> Add/Replace -> WPF-parented helper modal', [StringComparison]::Ordinal) -or
+    -not ([string]$manifest.entry_boundary.operator_action).Contains('clipboard paste is deliberately blocked only in the qualification harness', [StringComparison]::Ordinal) -or
+    -not ([string]$manifest.entry_boundary.operator_action).Contains('paste-capable WPF-parented helper-owned masked modal', [StringComparison]::Ordinal) -or
+    -not ([string]$manifest.entry_boundary.operator_action).Contains('React/WebView provides only the gesture and non-secret status', [StringComparison]::Ordinal) -or
     -not ([string]$manifest.entry_boundary.readiness_oracle).Contains('first terminal action', [StringComparison]::Ordinal) -or
     -not ([string]$manifest.entry_boundary.action_routing).Contains('first terminal action only', [StringComparison]::Ordinal) -or
     -not ([string]$manifest.entry_boundary.action_routing).Contains('never poll global key state', [StringComparison]::Ordinal)) {
@@ -200,7 +206,7 @@ foreach ($scenario in $manifest.required_scenarios) {
     }
 }
 
-$expectedCommand = 'powershell -NoProfile -ExecutionPolicy Bypass -File eng/verify-m1-slice6.ps1 -Gate CredentialNative -AuthorizationManifest docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v2.json -OutputRoot artifacts/m1-slice6/wp4-native-a1976c78'
+$expectedCommand = 'powershell -NoProfile -ExecutionPolicy Bypass -File eng/verify-m1-slice6.ps1 -Gate CredentialNative -AuthorizationManifest docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v2.json -OutputRoot artifacts/m1-slice6/wp4-native-16df3175'
 if ($manifest.execution_command -ne $expectedCommand -or
     -not ([string]$manifest.acceptance_binding.recording).Contains(
         'WP4_V2_OWNER_ACCEPTANCE manifest_id=<manifest_id> sha256=<manifest_sha256> close_ready_commit=<close_ready_implementation_commit> expires_at_utc=<expires_at_utc>',

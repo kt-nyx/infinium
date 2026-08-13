@@ -642,13 +642,13 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
     private const uint CredentialPersistLocalMachine = 2;
     private const int ErrorNotFound = 1168;
     private const string ExpectedSupersededManifestId =
-        "infinium.m1-s6.wp4.credential-native-authorization/e0cb0693-f482-433d-a3d4-3ee40ce7e2db";
+        "infinium.m1-s6.wp4.credential-native-authorization/a1976c78-a49b-4581-9a8c-9b6172484e0b";
     private const string ExpectedSupersededManifestSha256 =
-        "3fbb8b53245064f90ecbe43ed4df4f87bb82b5c3bce431925d08df6c9bf7e78a";
+        "484d385a44c7988fd3311ce05014f53e70d2ef012cb20ba7b2eb625b78f91601";
     private const string ExpectedSupersededEvidenceSha256 =
-        "76c4f2dcc646b6b5db3a9cd8ee214d48208b53fa63b3a5fe51920ee876e8d9a9";
+        "8be23f88abac3ae68308d105b6c0548c546832350d67e9539e89160b6322cce7";
     private const string ExpectedSupersededAuthorityLockSha256 =
-        "b0045e4771f10b8cae03585e70002b15d2ad0ef8196ca2840c46435e8d229fcc";
+        "0c0a55699a94df116ebd4793bc5dbb310c35c0d57b4864b3b6334f5c52a29ad2";
     private WindowsCredentialFault fault;
     private int writeCount;
     private int readCount;
@@ -713,7 +713,7 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
                 || supersedes.GetProperty("authority_lock_sha256").GetString()
                     != ExpectedSupersededAuthorityLockSha256
                 || supersedes.GetProperty("namespace_disposition").GetString()
-                    != "terminal-confirmed-absent-never-reusable")
+                    != "terminal-pre-operation-store-state-unobserved-never-reusable")
             {
                 throw new InvalidDataException("The native store manifest predecessor authority is not exact.");
             }

@@ -78,7 +78,7 @@ public sealed class CredentialNativeAuthorizationTests
         Assert.AreEqual("infinium.repository.wp4-credential-native-authorization/1.2.0",
             manifest.GetProperty("schema_identity").GetString());
         Assert.AreEqual(
-            "infinium.m1-s6.wp4.credential-native-authorization/a1976c78-a49b-4581-9a8c-9b6172484e0b",
+            "infinium.m1-s6.wp4.credential-native-authorization/16df3175-42ef-4a87-83ee-58766a0b15f1",
             manifest.GetProperty("manifest_id").GetString());
         Assert.AreEqual("none-until-owner-accepts-exact-manifest-bytes",
             manifest.GetProperty("effect_authority").GetString());
@@ -101,6 +101,22 @@ public sealed class CredentialNativeAuthorizationTests
         Assert.IsFalse(entry.GetProperty("echo").GetBoolean());
         Assert.IsFalse(entry.GetProperty("clipboard_return").GetBoolean());
         Assert.IsTrue(entry.GetProperty("control").GetString()!.Contains("begins empty", StringComparison.Ordinal));
+        Assert.IsTrue(entry.GetProperty("control").GetString()!.Contains(
+            "M1 qualification-only", StringComparison.Ordinal));
+        Assert.IsTrue(entry.GetProperty("control").GetString()!.Contains(
+            "Settings -> Add/Replace -> WPF-parented helper modal", StringComparison.Ordinal));
+        Assert.IsTrue(entry.GetProperty("operator_action").GetString()!.Contains(
+            "manually types", StringComparison.Ordinal));
+        Assert.IsTrue(entry.GetProperty("operator_action").GetString()!.Contains(
+            "clipboard paste is deliberately blocked only in the qualification harness", StringComparison.Ordinal));
+        Assert.IsTrue(entry.GetProperty("operator_action").GetString()!.Contains(
+            "paste-capable WPF-parented helper-owned masked modal", StringComparison.Ordinal));
+        Assert.IsTrue(entry.GetProperty("operator_action").GetString()!.Contains(
+            "React/WebView provides only the gesture and non-secret status", StringComparison.Ordinal));
+        Assert.IsTrue(entry.GetProperty("readiness_oracle").GetString()!.Contains(
+            "short finite 10-second automatic pre-entry readiness window", StringComparison.Ordinal));
+        Assert.IsTrue(entry.GetProperty("readiness_oracle").GetString()!.Contains(
+            "separate finite five-minute human response interval", StringComparison.Ordinal));
 
         JsonElement components = manifest.GetProperty("qualification_components");
         Assert.IsFalse(components.GetProperty("native_success_run")
@@ -199,7 +215,7 @@ public sealed class CredentialNativeAuthorizationTests
 
         Assert.IsTrue(activeGate.Contains("wp4-credential-native-authorization.v2.json", StringComparison.Ordinal));
         Assert.IsTrue(activeGate.Contains(
-            "infinium.m1-s6.wp4.credential-native-authorization/a1976c78-a49b-4581-9a8c-9b6172484e0b",
+            "infinium.m1-s6.wp4.credential-native-authorization/16df3175-42ef-4a87-83ee-58766a0b15f1",
             StringComparison.Ordinal));
         Assert.IsTrue(activeGate.Contains("--credential-native-qualification-v2", StringComparison.Ordinal));
         Assert.IsTrue(activeGate.Contains("FileMode]::CreateNew", StringComparison.Ordinal));
