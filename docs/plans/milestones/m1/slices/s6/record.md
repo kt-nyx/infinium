@@ -4935,3 +4935,9 @@ The draft is structurally and semantically valid with no effect authority.
 It binds the new UI readiness/action oracle and Job Object containment proof,
 and remains close-ready-binding pending. Credential Manager, DNS, network,
 provider, and billable operation counts remain zero for this preparation.
+
+The final manifest now binds exact close-ready consumer commit
+`cca593d90aec352f64ab964aa8ff1a9e46a4372b` and is marked
+`ready-for-owner-acceptance`. Only the final manifest and this append-only
+record changed after that binding. No owner marker is recorded yet and no
+native effect has occurred.
