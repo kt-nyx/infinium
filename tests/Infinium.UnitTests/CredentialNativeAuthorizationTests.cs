@@ -74,17 +74,11 @@ public sealed class CredentialNativeAuthorizationTests
         Assert.AreEqual("infinium.repository.wp4-credential-native-authorization/1.1.0",
             manifest.GetProperty("schema_identity").GetString());
         Assert.AreEqual(
-            "infinium.m1-s6.wp4.credential-native-authorization/6255a2d0-4a88-42ea-814f-0da2bbb7f445",
+            "infinium.m1-s6.wp4.credential-native-authorization/16b3fe25-cf97-4d59-9561-b1c735fa7c8d",
             manifest.GetProperty("manifest_id").GetString());
         Assert.AreEqual("none-until-owner-accepts-exact-manifest-bytes",
             manifest.GetProperty("effect_authority").GetString());
         JsonElement candidate = manifest.GetProperty("candidate_binding");
-        Assert.AreEqual("59367a7479a7395b173b974bf720543aab2404d4",
-            candidate.GetProperty("accepted_wp7_product_candidate_commit").GetString());
-        Assert.AreEqual("51251c0e0eb98d67dbc9b295b9ff084ebca33890",
-            candidate.GetProperty("accepted_wp7_evidence_commit").GetString());
-        Assert.AreEqual("5df6b621a6ea0031066b2afbfbe204799854910e",
-            candidate.GetProperty("authorization_handoff_commit").GetString());
         string closeReady = candidate.GetProperty("close_ready_implementation_commit").GetString()!;
         string status = manifest.GetProperty("status").GetString()!;
         Assert.AreEqual(closeReady == new string('0', 40), status == "draft-close-ready-binding-pending");

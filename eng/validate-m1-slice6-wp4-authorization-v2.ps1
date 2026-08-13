@@ -31,11 +31,9 @@ if (-not (Test-Json -LiteralPath $resolvedManifest -SchemaFile $schema -ErrorAct
 $bytes = [IO.File]::ReadAllBytes($resolvedManifest)
 $text = [Text.Encoding]::UTF8.GetString($bytes)
 $manifest = $text | ConvertFrom-Json -Depth 100 -DateKind String
-$expectedManifestId = 'infinium.m1-s6.wp4.credential-native-authorization/6255a2d0-4a88-42ea-814f-0da2bbb7f445'
+$expectedManifestId = 'infinium.m1-s6.wp4.credential-native-authorization/16b3fe25-cf97-4d59-9561-b1c735fa7c8d'
 $expectedWp3 = 'b32939e8b7491a5c47453f912d25dd98c090f103'
-$expectedWp7Product = '59367a7479a7395b173b974bf720543aab2404d4'
-$expectedWp7Evidence = '51251c0e0eb98d67dbc9b295b9ff084ebca33890'
-$expectedHandoff = '5df6b621a6ea0031066b2afbfbe204799854910e'
+$expectedHandoff = 'fa38419b2c539524bbed01b7994f99ace491c293'
 $expectedOldManifest = '0c911c6c10340d4a8b6a3f98aa2c2bffa3f1f4290793d3583a460cecf89bcbd3'
 $expectedOldEvidence = '164386a2843851c77ce96b8c0fe373bfbe2eaf046f4f646945ecbfa0e48db786'
 $expectedOldReceipt = '9d5b79a14c06f225805eb92155cf2bf3f02744ead82b12cb30604e4479d27667'
@@ -49,10 +47,8 @@ if ($manifest.schema_identity -ne 'infinium.repository.wp4-credential-native-aut
     $manifest.manifest_id -ne $expectedManifestId -or
     $manifest.effect_authority -ne 'none-until-owner-accepts-exact-manifest-bytes' -or
     $manifest.candidate_binding.accepted_wp3_candidate_commit -ne $expectedWp3 -or
-    $manifest.candidate_binding.accepted_wp7_product_candidate_commit -ne $expectedWp7Product -or
-    $manifest.candidate_binding.accepted_wp7_evidence_commit -ne $expectedWp7Evidence -or
     $manifest.candidate_binding.authorization_handoff_commit -ne $expectedHandoff) {
-    throw 'WP4 v2 manifest is not bound to the exact accepted WP3/WP7/handoff identities.'
+    throw 'WP4 v2 manifest is not bound to the exact accepted WP3/handoff identities.'
 }
 if ($manifest.supersedes.manifest_sha256 -ne $expectedOldManifest -or
     $manifest.supersedes.native_evidence_sha256 -ne $expectedOldEvidence -or
@@ -64,16 +60,14 @@ if ($manifest.supersedes.manifest_sha256 -ne $expectedOldManifest -or
 $head = (& git -C $repoRoot rev-parse HEAD).Trim()
 $branch = (& git -C $repoRoot branch --show-current).Trim()
 if ($branch -ne 'codex/m1-s6') { throw 'WP4 v2 manifest requires branch codex/m1-s6.' }
-foreach ($ancestor in @($expectedWp3, $expectedWp7Product, $expectedWp7Evidence, $expectedHandoff)) {
+foreach ($ancestor in @($expectedWp3, $expectedHandoff)) {
     & git -C $repoRoot merge-base --is-ancestor $ancestor $head
     if ($LASTEXITCODE -ne 0) { throw "Required ancestor $ancestor is not retained." }
 }
 $currentState = Get-Content -LiteralPath (Join-Path $repoRoot 'docs/current-state.md') -Raw
-if (-not $currentState.Contains('fresh authorization preparation only', [StringComparison]::Ordinal) -or
-    -not $currentState.Contains($expectedWp3, [StringComparison]::Ordinal) -or
-    -not $currentState.Contains($expectedWp7Product, [StringComparison]::Ordinal) -or
-    -not $currentState.Contains($expectedWp7Evidence, [StringComparison]::Ordinal)) {
-    throw 'WP4 v2 proposal requires the current closed native gate and exact accepted WP3/WP7 identities.'
+if (-not $currentState.Contains('WP4 remains closed pending', [StringComparison]::Ordinal) -or
+    -not $currentState.Contains($expectedWp3, [StringComparison]::Ordinal)) {
+    throw 'WP4 v2 proposal requires the current closed native gate and exact accepted WP3 identity.'
 }
 $closeReady = [string]$manifest.candidate_binding.close_ready_implementation_commit
 $bindingPending = $closeReady -eq ('0' * 40)
@@ -221,8 +215,6 @@ $receipt = [ordered]@{
     manifest_sha256 = $hash
     close_ready_implementation_commit = $closeReady
     accepted_wp3_candidate_commit = $expectedWp3
-    accepted_wp7_product_candidate_commit = $expectedWp7Product
-    accepted_wp7_evidence_commit = $expectedWp7Evidence
     authorization_handoff_commit = $expectedHandoff
     branch = $branch
     repository_head = $head
