@@ -1,0 +1,22 @@
+{
+  "schema_id": "infinium.evaluation.source-claim-oracle-provenance/v1",
+  "schema_version": "1",
+  "package_id": "S6-CLAIM-VAL-v1",
+  "partition": "validation",
+  "authored_at_utc": "2026-08-13T00:52:59.2135062Z",
+  "author_role": "fresh-answer-isolated-wp6-oracle-author",
+  "method": "hand-derived from accepted authority and answer-free public synthetic inputs before product comparison",
+  "product_output_used": false,
+  "product_implementation_used": false,
+  "private_or_held_out_material_used": false,
+  "input_identities": {
+    "execution-input.v1.json": "ca9012b7689895c3d156ff6dd1efe601ad03c8742ee1e846a930543a05091cde",
+    "context-manifest.v1.json": "68e15c0a4248ed1c598d53015e14ec0e1f7737158619e9d5909260dce85a33ee",
+    "retained-transcripts.v1.json": "82e2e67f2f5686e68253df38556b7de0faa33641361768a74eaa4c0d9bae9fa9"
+  },
+  "partition_history": [
+    {"state": "authored-validation", "reason": "public validation expectations independently derived before comparison"},
+    {"state": "frozen-validation", "reason": "oracle identity fixed before product observation"}
+  ],
+  "replacement_rule": "If this oracle drives a product, prompt, schema, or oracle correction, replace it with a materially independent oracle before another validation comparison."
+}

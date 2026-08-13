@@ -1,0 +1,112 @@
+{
+  "schema_id": "infinium.evaluation.source-claim-oracle/v1",
+  "schema_version": "1",
+  "package_id": "S6-CLAIM-DEV-v1",
+  "partition": "development",
+  "authority": [
+    "docs/plans/milestones/m1/slices/s6/plan.md#17-m1s6wp6--source-claim-acquisition-and-deterministic-admission",
+    "docs/architecture/decisions/ADR-0001-evidence-authority-boundary.md",
+    "docs/architecture/decisions/ADR-0002-snapshot-context-binding.md",
+    "docs/architecture/decisions/ADR-0013-openai-first-llm-capability-boundary.md"
+  ],
+  "expected_identity": {
+    "acquisition_run_id": "acquisition-claim-dev-1",
+    "operation_id": "operation-claim-dev-1",
+    "owner_kind": "evidence-acquisition-run",
+    "owner_id": "acquisition-claim-dev-1",
+    "parent_analysis_run_id": "analysis-claim-dev-1",
+    "application_scope_id": "application-scope-claim-dev-1",
+    "cost_attribution_scope_id": "cost-scope-claim-dev-1",
+    "source_revision_id": "guide-revision-r7",
+    "prompt_id": "infinium.m1-s6.source-claim-prompt/v1",
+    "prompt_fingerprint": "d2915f449e72d43cf697d522f2c6a1b44653dd519daba02968c1bfe3cf66ab84",
+    "passage_ids": ["passage-alder", "passage-birch", "passage-cedar"]
+  },
+  "scenarios": [
+    {
+      "transcript_id": "dev-01",
+      "expected_result": "accepted",
+      "expected_proposal_states": {"dev-p01": "accepted"},
+      "admitted_proposal_ids": ["dev-p01"],
+      "rejected_proposal_ids": [],
+      "contradiction_evidence_ids": [],
+      "expected_abstention_count": 0,
+      "expected_gap_count": 0,
+      "expected_application_link_count": 1,
+      "provider_used": true,
+      "replay_state": "retained-response",
+      "audit_only": false,
+      "forbidden_authority_detected": false
+    },
+    {
+      "transcript_id": "dev-02",
+      "expected_result": "rejected-unsupported",
+      "expected_proposal_states": {"dev-p02": "rejected"},
+      "admitted_proposal_ids": [],
+      "rejected_proposal_ids": ["dev-p02"],
+      "contradiction_evidence_ids": [],
+      "expected_abstention_count": 0,
+      "expected_gap_count": 1,
+      "expected_application_link_count": 0,
+      "provider_used": true,
+      "replay_state": "retained-response",
+      "audit_only": false,
+      "forbidden_authority_detected": false
+    },
+    {
+      "transcript_id": "dev-03",
+      "expected_result": "accepted-conditional",
+      "expected_proposal_states": {"dev-p03": "accepted"},
+      "admitted_proposal_ids": ["dev-p03"],
+      "rejected_proposal_ids": [],
+      "contradiction_evidence_ids": [],
+      "expected_abstention_count": 0,
+      "expected_gap_count": 0,
+      "expected_application_link_count": 1,
+      "provider_used": true,
+      "replay_state": "retained-response",
+      "audit_only": false,
+      "forbidden_authority_detected": false
+    },
+    {
+      "transcript_id": "dev-04",
+      "expected_result": "not-used",
+      "expected_proposal_states": {},
+      "admitted_proposal_ids": [],
+      "rejected_proposal_ids": [],
+      "contradiction_evidence_ids": [],
+      "expected_abstention_count": 0,
+      "expected_gap_count": 1,
+      "expected_application_link_count": 0,
+      "provider_used": false,
+      "replay_state": "not-applicable",
+      "audit_only": false,
+      "forbidden_authority_detected": false
+    }
+  ],
+  "aggregate_expectations": {
+    "accepted_proposal_count": 2,
+    "rejected_proposal_count": 1,
+    "application_link_count": 2,
+    "provider_operation_count": 3,
+    "no_model_scenario_count": 1,
+    "network_send_count": 0,
+    "credential_operation_count": 0
+  },
+  "frozen_boundaries": {
+    "model_output_is_untrusted_proposal": true,
+    "host_validation_required_before_application": true,
+    "source_and_passage_identity_must_match": true,
+    "evidence_acquisition_owns_claims_calls_and_cost": true,
+    "slice5_v1_contracts_and_semantics_unchanged": true,
+    "provider_publication_is_additive_v2_only": true,
+    "product_output_cannot_author_expected_truth": true
+  },
+  "forbidden_claims": [
+    "model output is a local observation",
+    "model output grants source or operation authority",
+    "unsupported Birch support is admitted",
+    "the no-model path performed a provider operation",
+    "public synthetic evidence is a private held-out verdict"
+  ]
+}

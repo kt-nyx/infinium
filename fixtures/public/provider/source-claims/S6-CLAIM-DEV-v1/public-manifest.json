@@ -1,0 +1,12 @@
+{
+  "schema_identity": "infinium.public-fixture.source-claim/1.0.0",
+  "package_identity": "S6-CLAIM-DEV-v1",
+  "package_version": "1.0.0",
+  "partition": "development",
+  "status": "oracle-frozen-pre-comparison",
+  "product_input_files": ["execution-input.v1.json", "context-manifest.v1.json", "retained-transcripts.v1.json"],
+  "oracle_file": "oracle.v1.json",
+  "oracle_provenance_file": "oracle-provenance.v1.json",
+  "answer_free": true,
+  "network_required": false
+}
