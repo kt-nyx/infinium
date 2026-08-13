@@ -33,7 +33,7 @@ public sealed class CandidateLlmTransparencyProviderProvenanceEvaluationTests
             current = current.Parent;
         }
         string directory = Path.Combine(current!.FullName, "fixtures", "public", "provider",
-            "candidate-investigations", "S6-CANDIDATE-VAL-v2");
+            "candidate-investigations", "S6-CANDIDATE-VAL-v3");
         CandidateInvestigationExecutionInput input = JsonSerializer.Deserialize<CandidateInvestigationExecutionInput>(
             File.ReadAllBytes(Path.Combine(directory, "execution-input.v1.json")), SourceClaimContextMinimizer.JsonOptions)!;
         using JsonDocument document = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(directory, "retained-transcripts.v1.json")));

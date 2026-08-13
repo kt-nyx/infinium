@@ -69,6 +69,7 @@ $schemaNames = @(
     'candidate-investigation-execution-input.v1.schema.json',
     'candidate-investigation-context.v1.schema.json',
     'candidate-investigation-retained-transcripts.v1.schema.json',
+    'candidate-investigation-oracle.v1.schema.json',
     'provider-execution-input.v1.schema.json',
     'effective-scan-configuration.v2.schema.json',
     'run-output.v2.schema.json',
@@ -1032,7 +1033,7 @@ function Invoke-SourceClaimSemanticsGate {
 }
 
 function Get-CandidateInvestigationPackageEvidence {
-    $packages = @('S6-CANDIDATE-DEV-v2', 'S6-CANDIDATE-VAL-v2')
+    $packages = @('S6-CANDIDATE-DEV-v2', 'S6-CANDIDATE-VAL-v3')
     $results = @()
     foreach ($package in $packages) {
         $directory = Join-Path $repoRoot "fixtures/public/provider/candidate-investigations/$package"
@@ -1050,10 +1051,20 @@ function Get-CandidateInvestigationPackageEvidence {
         $provenance = Get-Content -LiteralPath $provenancePath -Raw | ConvertFrom-Json -Depth 64
         $input = Get-Content -LiteralPath $inputPath -Raw | ConvertFrom-Json -Depth 64
         $transcripts = Get-Content -LiteralPath $transcriptPath -Raw | ConvertFrom-Json -Depth 64
-        $recursiveIsolation = [string]$provenance.coverage_audit.recursive_answer_isolation
+        $coverageAuditProperty = $provenance.PSObject.Properties['coverage_audit']
+        $recursiveIsolation = if ($null -eq $coverageAuditProperty) { '' } else {
+            [string]$coverageAuditProperty.Value.recursive_answer_isolation
+        }
+        $collisionAuditProperty = $provenance.PSObject.Properties['collision_audit']
+        $collisionAudit = if ($null -eq $collisionAuditProperty) { $null } else { $collisionAuditProperty.Value }
+        $independentCollisionAudit = $null -ne $collisionAudit -and
+            [int64]$collisionAudit.prior_hypothesis_collisions -eq 0 -and
+            [int64]$collisionAudit.prior_response_fingerprint_collisions -eq 0 -and
+            [int64]$collisionAudit.opaque_identifier_collisions -eq 0
         if ($manifest.status -ne 'oracle-frozen-pre-comparison' -or
             -not [bool]$manifest.answer_free_product_inputs -or
-            $recursiveIsolation -notin @('PASS', 'delegated to corrected product-independent fixture validation before comparison') -or
+            ($recursiveIsolation -notin @('PASS', 'delegated to corrected product-independent fixture validation before comparison') -and
+                -not $independentCollisionAudit) -or
             -not [bool]$manifest.oracle_frozen_before_product_comparison -or
             [bool]$manifest.network_required -or [int64]$manifest.provider_request_count -ne 0 -or
             [int64]$manifest.credential_operation_count -ne 0 -or
@@ -1065,7 +1076,8 @@ function Get-CandidateInvestigationPackageEvidence {
             throw "Candidate package $package is not frozen, answer-isolated, closed, and offline."
         }
         foreach ($identity in @($manifest.file_identities)) {
-            $path = Join-Path $directory ([string]$identity.path)
+            $identityPath = [string]$identity.path
+            $path = if ($identityPath.Contains('/')) { Join-Path $repoRoot $identityPath } else { Join-Path $directory $identityPath }
             if ((Get-Item -LiteralPath $path).Length -ne [int64]$identity.bytes -or
                 (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() -ne [string]$identity.sha256) {
                 throw "Candidate package $package has a stale file identity for $($identity.path)."
@@ -1095,17 +1107,17 @@ function Invoke-CandidateSemanticsGate {
     Invoke-DotnetTest 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj' 'FullyQualifiedName~CandidateAdmission|FullyQualifiedName~ProviderReplay'
     Invoke-DotnetTest 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj' 'FullyQualifiedName~CandidateLlmTransparency|FullyQualifiedName~ProviderProvenance'
     $packages = @(Get-CandidateInvestigationPackageEvidence)
-    if ($packages.Count -ne 2 -or ($packages.scenario_count | Measure-Object -Sum).Sum -ne 22 -or
-        ($packages.proposal_count | Measure-Object -Sum).Sum -ne 14 -or
+    if ($packages.Count -ne 2 -or ($packages.scenario_count | Measure-Object -Sum).Sum -ne 23 -or
+        ($packages.proposal_count | Measure-Object -Sum).Sum -ne 15 -or
         ($packages.admitted_proposal_count | Measure-Object -Sum).Sum -ne 4 -or
-        ($packages.rejected_proposal_count | Measure-Object -Sum).Sum -ne 10) {
-        throw 'CandidateSemantics requires exactly twenty-two scenarios, fourteen proposals, four admissions, and ten retained rejections.'
+        ($packages.rejected_proposal_count | Measure-Object -Sum).Sum -ne 11) {
+        throw 'CandidateSemantics requires exactly twenty-three scenarios, fifteen proposals, four admissions, and eleven retained rejections.'
     }
     Write-Receipt 'CandidateSemantics' ([ordered]@{
         prompt_id = 'infinium.m1-s6.candidate-investigation-prompt/v1'
         prompt_fingerprint = '026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e'
         packages = $packages
-        scenario_count = 22; proposal_count = 14; admitted_proposal_count = 4; rejected_proposal_count = 10
+        scenario_count = 23; proposal_count = 15; admitted_proposal_count = 4; rejected_proposal_count = 11
         positive_and_matched_negative_share_operation = $true
         forbidden_authority = 'finding-case-grouping-threshold-taxonomy-readiness-reliability-not-granted'
         network_send_count = 0; credential_operation_count = 0; source_refresh_count = 0

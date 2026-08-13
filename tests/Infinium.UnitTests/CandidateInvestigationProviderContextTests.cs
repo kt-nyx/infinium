@@ -12,10 +12,10 @@ public sealed class CandidateInvestigationProviderContextTests
     public void CandidateInvestigationRetainsPositiveMatchedNegativeAndBoundedFailureStates()
     {
         CandidateInvestigationResult development = Execute("S6-CANDIDATE-DEV-v2");
-        CandidateInvestigationResult validation = Execute("S6-CANDIDATE-VAL-v2");
+        CandidateInvestigationResult validation = Execute("S6-CANDIDATE-VAL-v3");
 
         Assert.AreEqual(8, development.Scenarios.Count);
-        Assert.AreEqual(14, validation.Scenarios.Count);
+        Assert.AreEqual(15, validation.Scenarios.Count);
         foreach (string disposition in new[] { "accepted", "rejected-matched-negative", "accepted-conditional",
                      "rejected-unsupported", "rejected-contradiction-abstained", "rejected-explicit-abstention",
                      "not-used", "unavailable-provider" })

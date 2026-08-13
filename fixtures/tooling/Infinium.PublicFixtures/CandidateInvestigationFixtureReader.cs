@@ -12,15 +12,141 @@ public sealed record CandidateInvestigationFixturePackage(
     string Partition,
     CandidateInvestigationExecutionInput ExecutionInput,
     IReadOnlyList<CandidateInvestigationRetainedTranscript> Transcripts,
-    JsonDocument Oracle,
+    CandidateInvestigationOracle? Oracle,
+    JsonDocument? LegacyOracle,
     JsonDocument Provenance) : IDisposable
 {
     public void Dispose()
     {
-        Oracle.Dispose();
+        LegacyOracle?.Dispose();
         Provenance.Dispose();
     }
 }
+
+public sealed record CandidateInvestigationOracle(
+    string SchemaId,
+    string PackageId,
+    string Partition,
+    CandidateInvestigationOracleIdentity ExpectedIdentity,
+    string ExpectedContextManifestSha256,
+    IReadOnlyList<CandidateInvestigationOracleScenario> Scenarios,
+    CandidateInvestigationOracleAggregate AggregateExpectations,
+    CandidateInvestigationOracleBoundaries FrozenBoundaries,
+    IReadOnlyList<string> ForbiddenClaims);
+
+public sealed record CandidateInvestigationOracleIdentity(
+    string OperationId,
+    string HostAuthorizationId,
+    string AnalysisRunId,
+    string PromptId,
+    string PromptFingerprint);
+
+public sealed record CandidateInvestigationOracleScenario(
+    string TranscriptId,
+    string TranscriptState,
+    string ResponseRecordId,
+    string ResponseFingerprint,
+    bool ModelUsed,
+    bool ProviderUsed,
+    bool AuditOnly,
+    bool ForbiddenAuthorityDetected,
+    string Disposition,
+    string ReplayState,
+    string ContextId,
+    string HypothesisId,
+    IReadOnlyList<string> RawIntermediateIds,
+    string CanonicalInvestigationSha256,
+    IReadOnlyList<string> AbstentionKinds,
+    IReadOnlyList<string> GapKinds,
+    IReadOnlyList<string> AuditReasons,
+    CandidateInvestigationOracleDocument Investigation,
+    IReadOnlyList<CandidateInvestigationOracleSourceLink> SourceAcquisitionLinks);
+
+public sealed record CandidateInvestigationOracleDocument(
+    string SchemaId,
+    string SchemaVersion,
+    string OperationId,
+    string OwnerKind,
+    string OwnerId,
+    string AnalysisRunId,
+    string CandidateId,
+    IReadOnlyList<string> ParticipantIds,
+    IReadOnlyList<string> ParticipantRoles,
+    IReadOnlyList<string> CausalPathIds,
+    string DependencyClosureId,
+    IReadOnlyList<string> EvidenceIds,
+    IReadOnlyList<CandidateInvestigationOracleProposal> HypothesisProposals,
+    IReadOnlyList<string> Abstentions,
+    IReadOnlyList<string> Gaps,
+    IReadOnlyList<string> ValidationIds,
+    IReadOnlyList<string> AdmissionLinkIds,
+    IReadOnlyList<CandidateInvestigationOracleAdmissionLink> AdmissionLinks);
+
+public sealed record CandidateInvestigationOracleProposal(
+    string ProposalId,
+    string CandidateId,
+    string Hypothesis,
+    IReadOnlyList<string> SupportingEvidenceIds,
+    IReadOnlyList<string> ContradictingEvidenceIds,
+    IReadOnlyList<string> MissingInformation,
+    string State,
+    string Reason);
+
+public sealed record CandidateInvestigationOracleAdmissionLink(
+    string AdmissionId,
+    string ProposalId,
+    string AuthorizationId,
+    string OperationId,
+    string ResponseRecordId,
+    string OwnerKind,
+    string OwnerId,
+    string RootSubjectId,
+    string ValidationId,
+    string ApplicationLinkId,
+    string State);
+
+public sealed record CandidateInvestigationOracleSourceLink(
+    string EvidenceId,
+    string EvidenceApplicationLinkId,
+    string SourceAcquisitionId,
+    string SourceAdmissionId,
+    string SourceApplicationLinkId,
+    string SourceRevisionId,
+    string PassageId,
+    string Relationship,
+    string Availability,
+    string ContentSha256);
+
+public sealed record CandidateInvestigationOracleAggregate(
+    int ScenarioCount,
+    int ProposalCount,
+    int AdmittedProposalCount,
+    int RejectedProposalCount,
+    int AdmissionLinkCount,
+    int ModelUsedScenarioCount,
+    int NoModelScenarioCount,
+    int UnavailableProviderScenarioCount,
+    int DistinctOperationIdCount,
+    bool PositiveAndMatchedNegativeShareOperation,
+    int RetainedResponseScenarioCount,
+    int AuditOnlyScenarioCount,
+    int FailedIdentityDriftScenarioCount,
+    int ForbiddenAuthorityScenarioCount,
+    int NetworkSendCount,
+    int CredentialOperationCount,
+    int SourceRefreshCount,
+    IReadOnlyList<string> ScenarioTranscriptIds,
+    IReadOnlyList<string> ScenarioCanonicalInvestigationSha256);
+
+public sealed record CandidateInvestigationOracleBoundaries(
+    bool OracleFrozenBeforeProductComparison,
+    bool AnswerIsolated,
+    string Partition,
+    bool ProductOutputUsed,
+    bool ProductImplementationUsed,
+    bool PriorOracleBytesInspected,
+    bool PriorValidationBytesPreserved,
+    IReadOnlyList<string> ReplacementHistory);
 
 public static class CandidateInvestigationFixtureReader
 {
@@ -55,7 +181,9 @@ public static class CandidateInvestigationFixtureReader
         JsonElement root = manifest.RootElement;
         string packageId = root.GetProperty("package_identity").GetString()!;
         string partition = root.GetProperty("partition").GetString()!;
-        if (root.GetProperty("schema_identity").GetString() != "infinium.public-fixture.candidate-investigation/1.0.0"
+        string? manifestSchema = root.GetProperty("schema_identity").GetString();
+        if (manifestSchema is not ("infinium.public-fixture.candidate-investigation/1.0.0"
+                or "infinium.evaluation.candidate-investigation-public-manifest/1.0.0")
             || packageId != Path.GetFileName(fullDirectory) || root.GetProperty("fixture_id").GetString() != packageId
             || root.GetProperty("package_version").GetString() != "2.0.0"
             || root.GetProperty("fixture_version").GetString() != "2.0.0"
@@ -72,15 +200,34 @@ public static class CandidateInvestigationFixtureReader
             throw new InvalidDataException("Candidate-investigation fixture manifest is not frozen and answer-isolated.");
         }
         JsonElement[] identities = root.GetProperty("file_identities").EnumerateArray().ToArray();
-        string[] expectedIdentityPaths = ExactFiles.Where(x => x != "public-manifest.json").ToArray();
-        if (!identities.Select(x => x.GetProperty("path").GetString()).SequenceEqual(expectedIdentityPaths, StringComparer.Ordinal))
+        string[] expectedIdentityPaths = manifestSchema == "infinium.evaluation.candidate-investigation-public-manifest/1.0.0"
+            ?
+            [
+                $"fixtures/public/provider/candidate-investigations/{packageId}/execution-input.v1.json",
+                $"fixtures/public/provider/candidate-investigations/{packageId}/context-manifest.v1.json",
+                $"fixtures/public/provider/candidate-investigations/{packageId}/retained-transcripts.v1.json",
+                $"fixtures/public/provider/candidate-investigations/{packageId}/oracle.v1.json",
+                $"fixtures/public/provider/candidate-investigations/{packageId}/oracle-provenance.v1.json",
+                "contracts/json-schema/candidate-investigation-oracle.v1.schema.json",
+            ]
+            : ExactFiles.Where(x => x != "public-manifest.json").ToArray();
+        if (!identities.Select(x => x.GetProperty("path").GetString())
+            .SequenceEqual(expectedIdentityPaths, StringComparer.Ordinal))
         {
             throw new InvalidDataException("Candidate-investigation manifest file identity closure is not exact.");
         }
         foreach (JsonElement identity in identities)
         {
-            string name = identity.GetProperty("path").GetString()!;
-            string path = Path.Combine(fullDirectory, name);
+            string identityPath = identity.GetProperty("path").GetString()!;
+            string name = Path.GetFileName(identityPath);
+            string path = identityPath.Contains('/')
+                ? Path.Combine(FindRepositoryRoot(fullDirectory), identityPath.Replace('/', Path.DirectorySeparatorChar))
+                : Path.Combine(fullDirectory, name);
+            if (name != "candidate-investigation-oracle.v1.schema.json"
+                && Path.GetDirectoryName(Path.GetFullPath(path)) != fullDirectory)
+            {
+                throw new InvalidDataException("Candidate-investigation manifest identity escaped its package directory.");
+            }
             if (new FileInfo(path).Length != identity.GetProperty("bytes").GetInt64()
                 || Sha256(path) != identity.GetProperty("sha256").GetString())
             {
@@ -113,11 +260,24 @@ public static class CandidateInvestigationFixtureReader
             {
                 throw new InvalidDataException("Candidate-investigation package or minimized context identity is invalid.");
             }
-            JsonDocument oracle = ReadJson(Path.Combine(fullDirectory, "oracle.v1.json"));
+            JsonDocument oracleDocument = ReadJson(Path.Combine(fullDirectory, "oracle.v1.json"));
             JsonDocument provenance = ReadJson(Path.Combine(fullDirectory, "oracle-provenance.v1.json"));
-            ValidateOracleAndProvenance(fullDirectory, packageId, partition, input, transcripts, oracle, provenance);
+            CandidateInvestigationOracle? oracle = null;
+            if (oracleDocument.RootElement.TryGetProperty("expected_context_manifest_sha256", out _))
+            {
+                ActiveJsonSchemaValidator.Validate(oracleDocument.RootElement,
+                    "candidate-investigation-oracle.v1.schema.json");
+                oracle = Deserialize<CandidateInvestigationOracle>(oracleDocument.RootElement);
+            }
+            ValidateOracleAndProvenance(fullDirectory, packageId, partition, input, transcripts,
+                oracleDocument, oracle, provenance);
             ValidateRegistry(fullDirectory, packageId, partition);
-            return new(fullDirectory, packageId, partition, input, transcripts, oracle, provenance);
+            JsonDocument? legacyOracle = oracle is null ? oracleDocument : null;
+            if (oracle is not null)
+            {
+                oracleDocument.Dispose();
+            }
+            return new(fullDirectory, packageId, partition, input, transcripts, oracle, legacyOracle, provenance);
         }
         finally
         {
@@ -132,9 +292,10 @@ public static class CandidateInvestigationFixtureReader
 
     private static void ValidateOracleAndProvenance(
         string directory, string packageId, string partition, CandidateInvestigationExecutionInput input,
-        IReadOnlyList<CandidateInvestigationRetainedTranscript> transcripts, JsonDocument oracle, JsonDocument provenance)
+        IReadOnlyList<CandidateInvestigationRetainedTranscript> transcripts, JsonDocument oracleDocument,
+        CandidateInvestigationOracle? oracle, JsonDocument provenance)
     {
-        JsonElement expected = oracle.RootElement;
+        JsonElement expected = oracleDocument.RootElement;
         JsonElement identity = expected.GetProperty("expected_identity");
         JsonElement proof = provenance.RootElement;
         if (expected.GetProperty("schema_id").GetString() != "infinium.evaluation.candidate-investigation-oracle/v1"
@@ -151,6 +312,12 @@ public static class CandidateInvestigationFixtureReader
             || proof.GetProperty("private_or_held_out_material_used").GetBoolean())
         {
             throw new InvalidDataException("Candidate-investigation oracle/provenance closure is invalid.");
+        }
+        if (oracle is not null
+            && (oracle.PackageId != packageId || oracle.Partition != partition
+                || oracle.ExpectedContextManifestSha256 != Sha256(Path.Combine(directory, "context-manifest.v1.json"))))
+        {
+            throw new InvalidDataException("Candidate-investigation typed oracle identity is invalid.");
         }
         JsonElement hashes = proof.GetProperty("input_identities");
         foreach (string name in ProductInputs)
@@ -243,7 +410,221 @@ public static class CandidateInvestigationOracleVerifier
 {
     public static void Verify(CandidateInvestigationFixturePackage package, CandidateInvestigationResult actual)
     {
-        JsonElement expected = package.Oracle.RootElement;
+        ArgumentNullException.ThrowIfNull(package);
+        ArgumentNullException.ThrowIfNull(actual);
+        if (package.Oracle is not null)
+        {
+            VerifyTyped(package, package.Oracle, actual);
+            return;
+        }
+        VerifyLegacy(package.LegacyOracle
+            ?? throw new InvalidDataException("Candidate-investigation package has no oracle."), actual);
+    }
+
+    private static void VerifyTyped(
+        CandidateInvestigationFixturePackage package,
+        CandidateInvestigationOracle expected,
+        CandidateInvestigationResult actual)
+    {
+        CandidateInvestigationOracleIdentity identity = expected.ExpectedIdentity;
+        CandidateInvestigationExecutionInput input = package.ExecutionInput;
+        if (expected.SchemaId != "infinium.evaluation.candidate-investigation-oracle/v1"
+            || expected.PackageId != package.PackageId
+            || expected.Partition != package.Partition
+            || actual.NetworkUsed || actual.CredentialUsed || actual.SourceRefreshUsed
+            || actual.PromptId != identity.PromptId
+            || actual.PromptFingerprint != identity.PromptFingerprint
+            || actual.ContextManifestSha256 != expected.ExpectedContextManifestSha256
+            || input.OperationId != identity.OperationId
+            || input.HostAuthorizationId != identity.HostAuthorizationId
+            || input.AnalysisRunId != identity.AnalysisRunId
+            || input.PromptId != identity.PromptId
+            || input.PromptFingerprint != identity.PromptFingerprint
+            || !actual.Scenarios.Select(x => x.TranscriptId)
+                .SequenceEqual(expected.Scenarios.Select(x => x.TranscriptId), StringComparer.Ordinal))
+        {
+            throw new InvalidDataException("Candidate-investigation result violates frozen root identity or no-effect expectations.");
+        }
+
+        for (int index = 0; index < expected.Scenarios.Count; index++)
+        {
+            CandidateInvestigationOracleScenario projected = Project(actual.Scenarios[index]);
+            if (!StructuralEquals(projected, expected.Scenarios[index]))
+            {
+                throw new InvalidDataException(
+                    "Candidate-investigation result disagrees with frozen scenario " + projected.TranscriptId + ".");
+            }
+        }
+
+        CandidateInvestigationOracleAggregate aggregate = ProjectAggregate(actual);
+        if (!StructuralEquals(aggregate, expected.AggregateExpectations))
+        {
+            throw new InvalidDataException("Candidate-investigation aggregate disagrees with the frozen oracle.");
+        }
+        VerifyTypedFrozenBoundaries(expected.FrozenBoundaries, actual);
+        VerifyTypedForbiddenClaims(expected.ForbiddenClaims, actual);
+    }
+
+    private static CandidateInvestigationOracleScenario Project(CandidateInvestigationScenarioResult scenario) => new(
+        scenario.TranscriptId,
+        scenario.TranscriptState,
+        scenario.ResponseRecordId,
+        scenario.ResponseFingerprint,
+        scenario.ModelUsed,
+        scenario.ProviderUsed,
+        scenario.AuditOnly,
+        scenario.ForbiddenAuthorityDetected,
+        scenario.Disposition,
+        scenario.ReplayState,
+        scenario.ContextId,
+        scenario.HypothesisId,
+        scenario.RawIntermediateIds,
+        scenario.CanonicalInvestigationSha256,
+        scenario.AbstentionKinds,
+        scenario.GapKinds,
+        scenario.AuditReasons,
+        Project(scenario.Investigation),
+        scenario.SourceAcquisitionLinks.Select(link => new CandidateInvestigationOracleSourceLink(
+            link.EvidenceId,
+            link.EvidenceApplicationLinkId,
+            link.SourceAcquisitionId,
+            link.SourceAdmissionId,
+            link.SourceApplicationLinkId,
+            link.SourceRevisionId,
+            link.PassageId,
+            link.Relationship,
+            link.Availability,
+            link.ContentSha256)).ToArray());
+
+    private static CandidateInvestigationOracleDocument Project(CandidateInvestigationDocument document) => new(
+        document.SchemaId,
+        document.SchemaVersion,
+        document.OperationId.Value,
+        document.OwnerKind,
+        document.OwnerId.Value,
+        document.AnalysisRunId.Value,
+        document.CandidateId.Value,
+        document.ParticipantIds.Select(x => x.Value).ToArray(),
+        document.ParticipantRoles,
+        document.CausalPathIds.Select(x => x.Value).ToArray(),
+        document.DependencyClosureId.Value,
+        document.EvidenceIds.Select(x => x.Value).ToArray(),
+        document.HypothesisProposals.Select(proposal => new CandidateInvestigationOracleProposal(
+            proposal.ProposalId.Value,
+            proposal.CandidateId.Value,
+            proposal.Hypothesis,
+            proposal.SupportingEvidenceIds.Select(x => x.Value).ToArray(),
+            proposal.ContradictingEvidenceIds.Select(x => x.Value).ToArray(),
+            proposal.MissingInformation,
+            State(proposal.State),
+            proposal.Reason)).ToArray(),
+        document.Abstentions,
+        document.Gaps,
+        document.ValidationIds.Select(x => x.Value).ToArray(),
+        document.AdmissionLinkIds.Select(x => x.Value).ToArray(),
+        document.AdmissionLinks.Select(link => new CandidateInvestigationOracleAdmissionLink(
+            link.AdmissionId.Value,
+            link.ProposalId.Value,
+            link.AuthorizationId.Value,
+            link.OperationId.Value,
+            link.ResponseRecordId.Value,
+            link.OwnerKind,
+            link.OwnerId.Value,
+            link.RootSubjectId.Value,
+            link.ValidationId.Value,
+            link.ApplicationLinkId.Value,
+            State(link.State))).ToArray());
+
+    private static CandidateInvestigationOracleAggregate ProjectAggregate(CandidateInvestigationResult actual) => new(
+        actual.Scenarios.Count,
+        actual.Scenarios.Sum(x => x.Investigation.HypothesisProposals.Count),
+        actual.Scenarios.Sum(x => x.Investigation.HypothesisProposals.Count(p => p.State == ProposalAdmissionState.Admitted)),
+        actual.Scenarios.Sum(x => x.Investigation.HypothesisProposals.Count(p => p.State != ProposalAdmissionState.Admitted)),
+        actual.Scenarios.Sum(x => x.Investigation.AdmissionLinks.Count),
+        actual.Scenarios.Count(x => x.ModelUsed),
+        actual.Scenarios.Count(x => !x.ModelUsed),
+        actual.Scenarios.Count(x => x.Disposition == "unavailable-provider"),
+        actual.Scenarios.Select(x => x.Investigation.OperationId.Value).Distinct(StringComparer.Ordinal).Count(),
+        PositiveAndMatchedNegativeShareOperation(actual),
+        actual.Scenarios.Count(x => x.ReplayState == "retained-response"),
+        actual.Scenarios.Count(x => x.AuditOnly),
+        actual.Scenarios.Count(x => x.ReplayState == "failed-identity-drift"),
+        actual.Scenarios.Count(x => x.ForbiddenAuthorityDetected),
+        actual.NetworkUsed ? 1 : 0,
+        actual.CredentialUsed ? 1 : 0,
+        actual.SourceRefreshUsed ? 1 : 0,
+        actual.Scenarios.Select(x => x.TranscriptId).ToArray(),
+        actual.Scenarios.Select(x => x.CanonicalInvestigationSha256).ToArray());
+
+    private static void VerifyTypedFrozenBoundaries(
+        CandidateInvestigationOracleBoundaries boundaries,
+        CandidateInvestigationResult actual)
+    {
+        string[] exactReplacementHistory =
+        [
+            "S6-CANDIDATE-VAL-v2 retained as rejected development evidence after exact semantic reuse was independently detected",
+            "S6-CANDIDATE-VAL-v3 is the materially independent validation replacement",
+        ];
+        if (!boundaries.OracleFrozenBeforeProductComparison
+            || !boundaries.AnswerIsolated
+            || boundaries.Partition != "validation"
+            || boundaries.ProductOutputUsed
+            || boundaries.ProductImplementationUsed
+            || boundaries.PriorOracleBytesInspected
+            || !boundaries.PriorValidationBytesPreserved
+            || !boundaries.ReplacementHistory.SequenceEqual(exactReplacementHistory, StringComparer.Ordinal)
+            || actual.NetworkUsed || actual.CredentialUsed || actual.SourceRefreshUsed
+            || actual.Scenarios.Any(scenario => scenario.Investigation.HypothesisProposals.Any(proposal =>
+                proposal.State == ProposalAdmissionState.Admitted && proposal.SupportingEvidenceIds.Count == 0))
+            || actual.Scenarios.Where(scenario => scenario.Disposition == "rejected-matched-negative")
+                .SelectMany(scenario => scenario.Investigation.HypothesisProposals)
+                .Any(proposal => proposal.State == ProposalAdmissionState.Admitted)
+            || actual.Scenarios.Where(scenario => scenario.Disposition == "accepted-conditional")
+                .SelectMany(scenario => scenario.Investigation.HypothesisProposals)
+                .Any(proposal => proposal.MissingInformation.Count == 0)
+            || actual.Scenarios.Any(scenario => scenario.SourceAcquisitionLinks.Any(link =>
+                link.SourceAcquisitionId == link.SourceAdmissionId
+                || link.SourceAcquisitionId == link.SourceApplicationLinkId
+                || link.SourceAdmissionId == link.SourceApplicationLinkId
+                || link.EvidenceApplicationLinkId == link.SourceApplicationLinkId))
+            || actual.Scenarios.Any(scenario => scenario.ProviderUsed != scenario.ModelUsed))
+        {
+            throw new InvalidDataException("Candidate-investigation result violates a frozen semantic or no-effect boundary.");
+        }
+    }
+
+    private static void VerifyTypedForbiddenClaims(
+        IReadOnlyList<string> claims,
+        CandidateInvestigationResult actual)
+    {
+        string[] exactClaims =
+        [
+            "finding authority",
+            "case or grouping authority",
+            "taxonomy authority",
+            "readiness or reliability",
+            "private or held-out evaluation",
+            "network or provider execution",
+            "credential or native execution",
+        ];
+        if (!claims.SequenceEqual(exactClaims, StringComparer.Ordinal)
+            || actual.NetworkUsed || actual.CredentialUsed || actual.SourceRefreshUsed)
+        {
+            throw new InvalidDataException("Candidate-investigation result does not execute every frozen forbidden-claim boundary.");
+        }
+    }
+
+    private static bool StructuralEquals<T>(T left, T right) =>
+        JsonElement.DeepEquals(
+            JsonSerializer.SerializeToElement(left, SourceClaimContextMinimizer.JsonOptions),
+            JsonSerializer.SerializeToElement(right, SourceClaimContextMinimizer.JsonOptions));
+
+    private static string State(ProposalAdmissionState state) =>
+        JsonNamingPolicy.KebabCaseLower.ConvertName(state.ToString());
+
+    private static void VerifyLegacy(JsonDocument oracleDocument, CandidateInvestigationResult actual)
+    {
+        JsonElement expected = oracleDocument.RootElement;
         JsonElement[] scenarios = expected.GetProperty("scenarios").EnumerateArray().ToArray();
         if (actual.NetworkUsed || actual.CredentialUsed || actual.SourceRefreshUsed
             || actual.PromptId != expected.GetProperty("expected_identity").GetProperty("prompt_id").GetString()

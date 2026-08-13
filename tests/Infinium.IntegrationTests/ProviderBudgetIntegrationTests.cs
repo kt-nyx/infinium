@@ -1294,7 +1294,7 @@ public sealed class ProviderBudgetIntegrationTests
                 terminalPublication.Scenario.Disposition);
         }
         (CandidateInvestigationExecutionInput validationFixture, CandidateInvestigationRetainedTranscript[] validationTranscripts) =
-            CandidateAdmissionProviderReplayIntegrationTests.Load("S6-CANDIDATE-VAL-v2");
+            CandidateAdmissionProviderReplayIntegrationTests.Load("S6-CANDIDATE-VAL-v3");
         CandidateInvestigationRetainedTranscript driftTranscript = validationTranscripts.Single(item => item.ResponseState == "drift") with
         {
             OperationId = "candidate-operation",

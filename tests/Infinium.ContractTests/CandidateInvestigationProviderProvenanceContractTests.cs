@@ -15,7 +15,7 @@ public sealed class CandidateInvestigationProviderProvenanceContractTests
     [TestCategory("Contract")]
     public void CandidateInvestigationAnswerFreeInputsValidateAndMinimizeExactly()
     {
-        foreach (string package in new[] { "S6-CANDIDATE-DEV-v2", "S6-CANDIDATE-VAL-v2" })
+        foreach (string package in new[] { "S6-CANDIDATE-DEV-v2", "S6-CANDIDATE-VAL-v3" })
         {
             string directory = PackageDirectory(package);
             Validate(Path.Combine(directory, "execution-input.v1.json"), "candidate-investigation-execution-input.v1.schema.json");
@@ -59,7 +59,7 @@ public sealed class CandidateInvestigationProviderProvenanceContractTests
     [TestCategory("Contract")]
     public void CandidateInvestigationOutputStrictCodecRoundTripsEveryTerminalState()
     {
-        foreach (string package in new[] { "S6-CANDIDATE-DEV-v2", "S6-CANDIDATE-VAL-v2" })
+        foreach (string package in new[] { "S6-CANDIDATE-DEV-v2", "S6-CANDIDATE-VAL-v3" })
         {
             (CandidateInvestigationExecutionInput input, CandidateInvestigationRetainedTranscript[] transcripts) = Load(package);
             foreach (CandidateInvestigationScenarioResult scenario in CandidateInvestigationEngine.Execute(input, transcripts).Scenarios)
@@ -75,7 +75,7 @@ public sealed class CandidateInvestigationProviderProvenanceContractTests
     [TestCategory("Contract")]
     public void CandidateInvestigationFrozenOracleComparesBothPartitionsExactly()
     {
-        foreach (string package in new[] { "S6-CANDIDATE-DEV-v2", "S6-CANDIDATE-VAL-v2" })
+        foreach (string package in new[] { "S6-CANDIDATE-DEV-v2", "S6-CANDIDATE-VAL-v3" })
         {
             using CandidateInvestigationFixturePackage fixture = CandidateInvestigationFixtureReader.Read(PackageDirectory(package));
             CandidateInvestigationResult actual = CandidateInvestigationEngine.Execute(fixture.ExecutionInput, fixture.Transcripts);
@@ -153,6 +153,189 @@ public sealed class CandidateInvestigationProviderProvenanceContractTests
         Assert.ThrowsExactly<InvalidDataException>(() =>
             CandidateInvestigationOracleVerifier.Verify(fixture, missingInformationMutation));
     }
+
+    [TestMethod]
+    [TestCategory("Contract")]
+    public void CandidateTypedValidationOracleRejectsEveryMaterialFieldFamily()
+    {
+        using CandidateInvestigationFixturePackage fixture =
+            CandidateInvestigationFixtureReader.Read(PackageDirectory("S6-CANDIDATE-VAL-v3"));
+        CandidateInvestigationResult baseline = CandidateInvestigationEngine.Execute(fixture.ExecutionInput, fixture.Transcripts);
+        CandidateInvestigationScenarioResult scenario = baseline.Scenarios[0];
+        CandidateInvestigationDocument document = scenario.Investigation;
+        HypothesisProposalContract proposal = document.HypothesisProposals.Single();
+        ProviderSemanticAdmissionLinkContract link = document.AdmissionLinks.Single();
+        CandidateSourceAcquisitionLink source = scenario.SourceAcquisitionLinks.Single();
+
+        CandidateInvestigationScenarioResult[] mutations =
+        [
+            scenario with { TranscriptState = "drift" },
+            scenario with { ResponseRecordId = "rr-mutated" },
+            scenario with { ResponseFingerprint = new string('0', 64) },
+            scenario with { ModelUsed = false },
+            scenario with { ProviderUsed = false },
+            scenario with { AuditOnly = true },
+            scenario with { ForbiddenAuthorityDetected = true },
+            scenario with { Disposition = "rejected" },
+            scenario with { ReplayState = "audit-only" },
+            scenario with { ContextId = "cx-mutated" },
+            scenario with { HypothesisId = "hy-mutated" },
+            scenario with { RawIntermediateIds = [.. scenario.RawIntermediateIds, "raw-mutated"] },
+            scenario with { CanonicalInvestigationSha256 = new string('0', 64) },
+            scenario with { AbstentionKinds = ["mutated"] },
+            scenario with { GapKinds = ["mutated"] },
+            scenario with { AuditReasons = ["mutated"] },
+            scenario with { Investigation = document with { SchemaId = "mutated" } },
+            scenario with { Investigation = document with { SchemaVersion = "mutated" } },
+            scenario with { Investigation = document with { OperationId = new("op-mutated") } },
+            scenario with { Investigation = document with { OwnerKind = "mutated" } },
+            scenario with { Investigation = document with { OwnerId = new("owner-mutated") } },
+            scenario with { Investigation = document with { AnalysisRunId = new("run-mutated") } },
+            scenario with { Investigation = document with { CandidateId = new("cd-mutated") } },
+            scenario with { Investigation = document with { ParticipantIds = [new("pt-mutated")] } },
+            scenario with { Investigation = document with { ParticipantRoles = ["mutated"] } },
+            scenario with { Investigation = document with { CausalPathIds = [new("cp-mutated")] } },
+            scenario with { Investigation = document with { DependencyClosureId = new("dc-mutated") } },
+            scenario with { Investigation = document with { EvidenceIds = [new("ev-mutated")] } },
+            scenario with { Investigation = document with { HypothesisProposals = [] } },
+            scenario with { Investigation = document with { Abstentions = ["mutated"] } },
+            scenario with { Investigation = document with { Gaps = ["mutated"] } },
+            scenario with { Investigation = document with { ValidationIds = [new("validation-mutated")] } },
+            scenario with { Investigation = document with { AdmissionLinkIds = [new("admission-mutated")] } },
+            scenario with { Investigation = document with { AdmissionLinks = [] } },
+            scenario with { Investigation = document with { HypothesisProposals = [proposal with { CandidateId = new("cd-mutated") }] } },
+            scenario with { Investigation = document with { HypothesisProposals = [proposal with { Hypothesis = "mutated" }] } },
+            scenario with { Investigation = document with { HypothesisProposals = [proposal with { SupportingEvidenceIds = [] }] } },
+            scenario with { Investigation = document with { HypothesisProposals = [proposal with { ContradictingEvidenceIds = [new("ev-mutated")] }] } },
+            scenario with { Investigation = document with { HypothesisProposals = [proposal with { MissingInformation = ["mutated"] }] } },
+            scenario with { Investigation = document with { HypothesisProposals = [proposal with { State = ProposalAdmissionState.Rejected }] } },
+            scenario with { Investigation = document with { HypothesisProposals = [proposal with { Reason = "mutated" }] } },
+            scenario with { Investigation = document with { AdmissionLinks = [link with { AdmissionId = new("admission-mutated") }] } },
+            scenario with { Investigation = document with { AdmissionLinks = [link with { AuthorizationId = new("auth-mutated") }] } },
+            scenario with { Investigation = document with { AdmissionLinks = [link with { RootSubjectId = new("cd-mutated") }] } },
+            scenario with { Investigation = document with { AdmissionLinks = [link with { ValidationId = new("validation-mutated") }] } },
+            scenario with { Investigation = document with { AdmissionLinks = [link with { ApplicationLinkId = new("ea-mutated") }] } },
+            scenario with { SourceAcquisitionLinks = [source with { EvidenceId = "ev-mutated" }] },
+            scenario with { SourceAcquisitionLinks = [source with { EvidenceApplicationLinkId = "ea-mutated" }] },
+            scenario with { SourceAcquisitionLinks = [source with { SourceAcquisitionId = "aq-mutated" }] },
+            scenario with { SourceAcquisitionLinks = [source with { SourceAdmissionId = "sa-mutated" }] },
+            scenario with { SourceAcquisitionLinks = [source with { SourceApplicationLinkId = "sl-mutated" }] },
+            scenario with { SourceAcquisitionLinks = [source with { SourceRevisionId = "sr-mutated" }] },
+            scenario with { SourceAcquisitionLinks = [source with { PassageId = "ps-mutated" }] },
+            scenario with { SourceAcquisitionLinks = [source with { Relationship = "neutral" }] },
+            scenario with { SourceAcquisitionLinks = [source with { Availability = "deleted" }] },
+            scenario with { SourceAcquisitionLinks = [source with { ContentSha256 = new string('0', 64) }] },
+        ];
+        foreach (CandidateInvestigationScenarioResult mutation in mutations)
+        {
+            AssertRejected(fixture, baseline, scenario.TranscriptId, mutation);
+        }
+
+        Assert.ThrowsExactly<InvalidDataException>(() => CandidateInvestigationOracleVerifier.Verify(
+            fixture, baseline with { ContextManifestSha256 = new string('0', 64) }));
+        Assert.ThrowsExactly<InvalidDataException>(() => CandidateInvestigationOracleVerifier.Verify(
+            fixture, baseline with { PromptId = "prompt-mutated" }));
+        Assert.ThrowsExactly<InvalidDataException>(() => CandidateInvestigationOracleVerifier.Verify(
+            fixture, baseline with { PromptFingerprint = new string('0', 64) }));
+        Assert.ThrowsExactly<InvalidDataException>(() => CandidateInvestigationOracleVerifier.Verify(
+            fixture, baseline with { Scenarios = baseline.Scenarios.Reverse().ToArray() }));
+        Assert.ThrowsExactly<InvalidDataException>(() => CandidateInvestigationOracleVerifier.Verify(
+            fixture, baseline with { Scenarios = baseline.Scenarios.Take(baseline.Scenarios.Count - 1).ToArray() }));
+        Assert.ThrowsExactly<InvalidDataException>(() => CandidateInvestigationOracleVerifier.Verify(
+            fixture, baseline with { NetworkUsed = true }));
+        Assert.ThrowsExactly<InvalidDataException>(() => CandidateInvestigationOracleVerifier.Verify(
+            fixture, baseline with { CredentialUsed = true }));
+        Assert.ThrowsExactly<InvalidDataException>(() => CandidateInvestigationOracleVerifier.Verify(
+            fixture, baseline with { SourceRefreshUsed = true }));
+
+        CandidateInvestigationOracle oracle = fixture.Oracle!;
+        CandidateInvestigationOracleIdentity identity = oracle.ExpectedIdentity;
+        foreach (CandidateInvestigationOracle mutation in new[]
+                 {
+                     oracle with { SchemaId = "mutated" },
+                     oracle with { PackageId = "mutated" },
+                     oracle with { Partition = "development" },
+                     oracle with { ExpectedIdentity = identity with { OperationId = "op-mutated" } },
+                     oracle with { ExpectedIdentity = identity with { HostAuthorizationId = "auth-mutated" } },
+                     oracle with { ExpectedIdentity = identity with { AnalysisRunId = "run-mutated" } },
+                     oracle with { ExpectedIdentity = identity with { PromptId = "prompt-mutated" } },
+                     oracle with { ExpectedIdentity = identity with { PromptFingerprint = new string('0', 64) } },
+                     oracle with { ExpectedContextManifestSha256 = new string('0', 64) },
+                     oracle with { Scenarios = oracle.Scenarios.Reverse().ToArray() },
+                 })
+        {
+            AssertOracleRejected(fixture, baseline, mutation);
+        }
+
+        CandidateInvestigationOracleAggregate aggregate = oracle.AggregateExpectations;
+        foreach (CandidateInvestigationOracleAggregate mutation in new[]
+                 {
+                     aggregate with { ScenarioCount = 99 },
+                     aggregate with { ProposalCount = 99 },
+                     aggregate with { AdmittedProposalCount = 99 },
+                     aggregate with { RejectedProposalCount = 99 },
+                     aggregate with { AdmissionLinkCount = 99 },
+                     aggregate with { ModelUsedScenarioCount = 99 },
+                     aggregate with { NoModelScenarioCount = 99 },
+                     aggregate with { UnavailableProviderScenarioCount = 99 },
+                     aggregate with { DistinctOperationIdCount = 99 },
+                     aggregate with { PositiveAndMatchedNegativeShareOperation = false },
+                     aggregate with { RetainedResponseScenarioCount = 99 },
+                     aggregate with { AuditOnlyScenarioCount = 99 },
+                     aggregate with { FailedIdentityDriftScenarioCount = 99 },
+                     aggregate with { ForbiddenAuthorityScenarioCount = 99 },
+                     aggregate with { NetworkSendCount = 1 },
+                     aggregate with { CredentialOperationCount = 1 },
+                     aggregate with { SourceRefreshCount = 1 },
+                     aggregate with { ScenarioTranscriptIds = aggregate.ScenarioTranscriptIds.Reverse().ToArray() },
+                     aggregate with
+                     {
+                         ScenarioCanonicalInvestigationSha256 =
+                             aggregate.ScenarioCanonicalInvestigationSha256.Reverse().ToArray(),
+                     },
+                 })
+        {
+            AssertOracleRejected(fixture, baseline, oracle with { AggregateExpectations = mutation });
+        }
+
+        CandidateInvestigationOracleBoundaries boundaries = oracle.FrozenBoundaries;
+        foreach (CandidateInvestigationOracleBoundaries mutation in new[]
+                 {
+                     boundaries with { OracleFrozenBeforeProductComparison = false },
+                     boundaries with { AnswerIsolated = false },
+                     boundaries with { Partition = "development" },
+                     boundaries with { ProductOutputUsed = true },
+                     boundaries with { ProductImplementationUsed = true },
+                     boundaries with { PriorOracleBytesInspected = true },
+                     boundaries with { PriorValidationBytesPreserved = false },
+                     boundaries with { ReplacementHistory = [] },
+                     boundaries with { ReplacementHistory = ["mutated"] },
+                 })
+        {
+            AssertOracleRejected(fixture, baseline, oracle with { FrozenBoundaries = mutation });
+        }
+        AssertOracleRejected(fixture, baseline, oracle with { ForbiddenClaims = [] });
+    }
+
+    private static void AssertRejected(
+        CandidateInvestigationFixturePackage fixture,
+        CandidateInvestigationResult baseline,
+        string transcriptId,
+        CandidateInvestigationScenarioResult mutation)
+    {
+        CandidateInvestigationResult actual = baseline with
+        {
+            Scenarios = baseline.Scenarios.Select(item => item.TranscriptId == transcriptId ? mutation : item).ToArray(),
+        };
+        Assert.ThrowsExactly<InvalidDataException>(() => CandidateInvestigationOracleVerifier.Verify(fixture, actual));
+    }
+
+    private static void AssertOracleRejected(
+        CandidateInvestigationFixturePackage fixture,
+        CandidateInvestigationResult baseline,
+        CandidateInvestigationOracle oracle) =>
+        Assert.ThrowsExactly<InvalidDataException>(() => CandidateInvestigationOracleVerifier.Verify(
+            fixture with { Oracle = oracle }, baseline));
 
     private static void Validate(string path, string schema)
     {

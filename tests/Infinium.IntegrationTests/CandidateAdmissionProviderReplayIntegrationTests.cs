@@ -11,7 +11,7 @@ public sealed class CandidateAdmissionProviderReplayIntegrationTests
     [TestCategory("Integration")]
     public void CandidateAdmissionExecutesBothPartitionsWithoutTransportOrSourceRefresh()
     {
-        foreach (string package in new[] { "S6-CANDIDATE-DEV-v2", "S6-CANDIDATE-VAL-v2" })
+        foreach (string package in new[] { "S6-CANDIDATE-DEV-v2", "S6-CANDIDATE-VAL-v3" })
         {
             (CandidateInvestigationExecutionInput input, CandidateInvestigationRetainedTranscript[] transcripts) = Load(package);
             CandidateInvestigationResult result = CandidateInvestigationCoordinator.ExecuteRetained(input, transcripts);
@@ -33,7 +33,7 @@ public sealed class CandidateAdmissionProviderReplayIntegrationTests
         Assert.AreEqual(first.CanonicalInvestigationSha256, second.CanonicalInvestigationSha256);
         Assert.AreEqual("retained-response", second.ReplayState);
         (CandidateInvestigationExecutionInput validationInput, CandidateInvestigationRetainedTranscript[] validationTranscripts) =
-            Load("S6-CANDIDATE-VAL-v2");
+            Load("S6-CANDIDATE-VAL-v3");
         CandidateInvestigationRetainedTranscript driftTranscript = validationTranscripts.Single(item => item.ResponseState == "drift");
         CandidateInvestigationScenarioResult drift = CandidateInvestigationCoordinator.ReplayRetained(validationInput, driftTranscript);
         Assert.AreEqual("failed-identity-drift", drift.ReplayState);
