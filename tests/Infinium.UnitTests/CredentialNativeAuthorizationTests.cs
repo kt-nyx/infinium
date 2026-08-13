@@ -21,6 +21,7 @@ public sealed class CredentialNativeAuthorizationTests
     ];
     private static readonly string[] ExpectedCanarySurfaceNames = ["stdout", "receipt"];
     private static readonly string[] ExpectedRawTargetEncodings = ["utf-8", "utf-16le"];
+    private static readonly string[] RecoveryAllowedCalls = ["CredReadW", "CredDeleteW", "CredFree"];
 
     [TestMethod]
     [TestCategory("Unit")]
@@ -183,6 +184,33 @@ public sealed class CredentialNativeAuthorizationTests
             StringComparison.Ordinal));
         Assert.IsFalse(ordinaryBranch.Contains(
             "allowSyntheticProviderDispatch: true", StringComparison.Ordinal));
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    public void NativeRecoveryIsCleanupOnlyAndCannotReachWriteUiOrProvider()
+    {
+        string root = Path.GetFullPath("../../../../../", AppContext.BaseDirectory);
+        string manifest = File.ReadAllText(Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
+            "wp4-credential-native-recovery.v1.json"));
+        using JsonDocument document = JsonDocument.Parse(manifest);
+        JsonElement native = document.RootElement.GetProperty("native_boundary");
+        CollectionAssert.AreEqual(RecoveryAllowedCalls,
+            native.GetProperty("allowed_calls").EnumerateArray().Select(item => item.GetString()).ToArray());
+        Assert.IsTrue(native.GetProperty("forbidden").EnumerateArray().Any(item => item.GetString() == "CredWriteW"));
+        Assert.AreEqual("none", native.GetProperty("ui").GetString());
+        Assert.AreEqual("none", native.GetProperty("provider").GetString());
+        Assert.AreEqual(12, document.RootElement.GetProperty("disposable_namespace").GetProperty("targets").GetArrayLength());
+
+        string program = File.ReadAllText(Path.Combine(root, "src", "Infinium.CredentialHelper", "Program.cs"));
+        int recovery = program.IndexOf("--credential-native-recovery", StringComparison.Ordinal);
+        int qualification = program.IndexOf("--credential-native-request-handle", StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, recovery);
+        Assert.IsGreaterThan(recovery, qualification);
+        string recoveryBranch = program[recovery..qualification];
+        Assert.IsFalse(recoveryBranch.Contains("NativeQualificationSecretSource", StringComparison.Ordinal));
+        Assert.IsFalse(recoveryBranch.Contains("OpenAiResponsesAdapter", StringComparison.Ordinal));
     }
 
     private static int CountOccurrences(string value, string token)

@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Contracts', 'StateSurfaces', 'StateTotality', 'Budget', 'BudgetFaults', 'CredentialSynthetic', 'CredentialNative', 'Adapter', 'OfflineSafetyReplay', 'SourceClaimSemantics', 'CandidateSemantics', 'ProvenanceReplay', 'Layer6Review')]
+    [ValidateSet('Contracts', 'StateSurfaces', 'StateTotality', 'Budget', 'BudgetFaults', 'CredentialSynthetic', 'CredentialNative', 'CredentialNativeRecovery', 'Adapter', 'OfflineSafetyReplay', 'SourceClaimSemantics', 'CandidateSemantics', 'ProvenanceReplay', 'Layer6Review')]
     [string] $Gate,
 
     [Parameter(Mandatory = $true)]
@@ -18,7 +18,7 @@ param(
     [switch] $OwnerTestProcessCleanup
 )
 
-if ($Gate -in @('Layer6Review', 'CredentialNative', 'CandidateSemantics', 'ProvenanceReplay') -and $PSVersionTable.PSEdition -ne 'Core') {
+if ($Gate -in @('Layer6Review', 'CredentialNative', 'CredentialNativeRecovery', 'CandidateSemantics', 'ProvenanceReplay') -and $PSVersionTable.PSEdition -ne 'Core') {
     $pwsh = Get-Command pwsh.exe -ErrorAction Stop
     $arguments = @(
         '-NoProfile',
@@ -205,6 +205,7 @@ function Test-Wp1AllowedPath([string] $Path) {
         'contracts/repository/public-fixture-registry.v1.schema.json',
         'contracts/repository/wp4-credential-native-authorization.v1.schema.json',
         'contracts/repository/wp4-credential-native-authorization.v2.schema.json',
+        'contracts/repository/wp4-credential-native-recovery.v1.schema.json',
         'dependencies/README.md',
         'dependencies/dependency-curation.json',
         'dependencies/dependency-manifest.json',
@@ -216,6 +217,7 @@ function Test-Wp1AllowedPath([string] $Path) {
         'docs/plans/milestones/m1/slices/s6/wp1-acceptance-ledger.v1.json',
         'docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v1.json',
         'docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v2.json',
+        'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.v1.json',
         'docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.post-wp7.json',
         'docs/research/investigations/README.md',
         'docs/research/investigations/RESEARCH-0055-slice6-local-input-bound-policy.md',
@@ -225,6 +227,7 @@ function Test-Wp1AllowedPath([string] $Path) {
         'eng/update-dependency-manifest.ps1',
         'eng/validate-m1-slice6-wp4-authorization.ps1',
         'eng/validate-m1-slice6-wp4-authorization-v2.ps1',
+        'eng/validate-m1-slice6-wp4-recovery.ps1',
         'eng/verify-m1-slice6.ps1',
         'eng/verify-m1-slice6-wp3-upgrade.ps1',
         'fixtures/public/public-fixture-registry.v1.json',
@@ -1719,6 +1722,36 @@ fake-provider-dispatch|cleanup|Completed|Delete|deleted|fake-dispatch|fake-dispa
     }) 'passed' $true
 }
 
+function Invoke-CredentialNativeRecoveryGate {
+    if ([string]::IsNullOrWhiteSpace($AuthorizationManifest)) { throw 'CredentialNativeRecovery requires exact authority.' }
+    $expected=[IO.Path]::GetFullPath((Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.v1.json'))
+    $path=[IO.Path]::GetFullPath((Join-Path $repoRoot $AuthorizationManifest))
+    if(-not[string]::Equals($path,$expected,[StringComparison]::OrdinalIgnoreCase)){throw 'Recovery refuses any other manifest path.'}
+    $bytes=[IO.File]::ReadAllBytes($path);$sha=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant();$m=[Text.Encoding]::UTF8.GetString($bytes)|ConvertFrom-Json -Depth 100 -DateKind String
+    if($m.manifest_id-ne'infinium.m1-s6.wp4.credential-native-recovery/d01bfda6-51d3-4c68-baff-a3b25abc6391'-or$m.status-ne'ready-for-owner-acceptance'){throw 'Recovery identity is not executable.'}
+    $close=[string]$m.binding.close_ready_recovery_commit;$head=(&git rev-parse HEAD).Trim()
+    if(-not[string]::IsNullOrWhiteSpace((&git status --porcelain))){throw 'Recovery requires clean committed state.'}
+    foreach($ancestor in @('fd6bd645f041502333d92b5e95c69bf8c69f2c83',$close)){&git merge-base --is-ancestor $ancestor $head;if($LASTEXITCODE-ne0){throw 'Recovery ancestry failed.'}}
+    $allowed=@('docs/plans/milestones/m1/slices/s6/wp4-credential-native-recovery.v1.json','docs/plans/milestones/m1/slices/s6/record.md')
+    if(@(&git diff --name-only "$close..$head"|?{$_ -notin $allowed}).Count-ne0){throw 'Recovery post-binding drift refused.'}
+    $record=Get-Content (Join-Path $repoRoot 'docs/plans/milestones/m1/slices/s6/record.md') -Raw
+    $marker="WP4_RECOVERY_OWNER_ACCEPTANCE manifest_id=$($m.manifest_id) sha256=$sha close_ready_commit=$close expires_at_utc=$($m.expires_at_utc)"
+    if(@($record-split"`r?`n"|?{$_-ceq$marker}).Count-ne1){throw 'Recovery owner marker missing.'}
+    if($record.Contains("WP4_RECOVERY_EXECUTED manifest_id=$($m.manifest_id)",[StringComparison]::Ordinal)){throw 'Recovery already consumed.'}
+    if([DateTimeOffset]::UtcNow-ge[DateTimeOffset]::Parse([string]$m.expires_at_utc)){throw 'Recovery expired.'}
+    & (Join-Path $repoRoot 'eng/validate-m1-slice6-wp4-recovery.ps1') -ManifestPath $path;if($LASTEXITCODE-ne0){throw 'Recovery validation failed.'}
+    & dotnet build Infinium.sln -c Release --no-restore --nologo;if($LASTEXITCODE-ne0){throw 'Recovery build failed.'}
+    $lockRoot=Join-Path $repoRoot 'artifacts/m1-slice6/wp4-native-recovery-locks';[IO.Directory]::CreateDirectory($lockRoot)|Out-Null
+    $lock=Join-Path $lockRoot (([Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes([string]$m.manifest_id))).ToLowerInvariant())+'.json')
+    $stream=[IO.File]::Open($lock,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None);try{$data=[Text.Encoding]::UTF8.GetBytes("{`"manifest_id`":`"$($m.manifest_id)`",`"manifest_sha256`":`"$sha`",`"disposition`":`"consumed-never-reuse`"}`n");$stream.Write($data)}finally{$stream.Dispose()}
+    $helper=Join-Path $repoRoot 'src/Infinium.CredentialHelper/bin/Release/net10.0/Infinium.CredentialHelper.exe';$evidence=Join-Path $resolvedOutputRoot 'credential-native-recovery-evidence.v1.json'
+    $psi=[Diagnostics.ProcessStartInfo]::new($helper);$psi.UseShellExecute=$false;$psi.CreateNoWindow=$true;$psi.Environment.Clear();foreach($a in @('--credential-native-recovery','--manifest',$path,'--manifest-sha256',$sha,'--manifest-id',[string]$m.manifest_id,'--evidence',$evidence)){$psi.ArgumentList.Add($a)}
+    $p=[Diagnostics.Process]::Start($psi);if(-not$p.WaitForExit(120000)){$p.Kill($true);throw 'Recovery deadline exceeded; namespace remains blocked.'};if($p.ExitCode-ne0){throw "Recovery helper failed $($p.ExitCode); namespace remains blocked."}
+    $ev=Get-Content $evidence -Raw|ConvertFrom-Json -Depth 100
+    if($ev.status-ne'passed'-or@($ev.target_absence).Count-ne12-or@($ev.target_absence|?{$_.result-ne'ERROR_NOT_FOUND'}).Count-ne0-or$ev.native_call_counts.write-ne0-or$ev.network_operations-ne0-or$ev.provider_operations-ne0){throw 'Recovery evidence failed exact oracle.'}
+    Write-Receipt 'CredentialNativeRecovery' ([ordered]@{manifest_id=$m.manifest_id;manifest_sha256=$sha;target_absence_count=12;native_call_counts=$ev.native_call_counts;network_operations=0;provider_operations=0;namespace_disposition='cleanup-confirmed-absent-never-reuse'}) 'passed' $true
+}
+
 Push-Location $repoRoot
 try {
     switch ($Gate) {
@@ -1729,6 +1762,7 @@ try {
         'BudgetFaults' { Invoke-BudgetFaultGate }
         'CredentialSynthetic' { Invoke-CredentialSyntheticGate }
         'CredentialNative' { Invoke-CredentialNativeGate }
+        'CredentialNativeRecovery' { Invoke-CredentialNativeRecoveryGate }
         'Adapter' { Invoke-AdapterGate }
         'OfflineSafetyReplay' { Invoke-OfflineSafetyReplayGate }
         'SourceClaimSemantics' { Invoke-SourceClaimSemanticsGate }

@@ -4680,3 +4680,21 @@ would require fresh owner authority specifically for known exact-target
 cleanup; ordinary requalification authority cannot reinterpret or bypass this
 cleanup uncertainty.
 WP4_V2_NATIVE_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-authorization/cedc4c47-0c58-490e-8d14-5159362aadf3 sha256=6a2c1f39137de8e40d9e9574ba963d39c8bbdb7c880663a363cc69e65145c952 execution_head_commit=685fb6fc4c5648af52d04236cd14986601e022a5 status=failed-cleanup-uncertain exit_code=68 namespace_blocked=true later_native_calls=0
+
+## WP4 exact-target cleanup-only recovery preparation — 2026-08-13
+
+Standing owner approval authorizes the smallest recovery path only: a fresh
+one-shot recovery identity bound to failure record
+`fd6bd645f041502333d92b5e95c69bf8c69f2c83` and consumed lock SHA-256
+`05bf7fc259bf90d367c20f9ba23af3d1525aa2514ee6e1888304cbaf44b364c4`.
+It permits only exact-target `CredReadW`, `CredDeleteW`, and paired `CredFree`
+for the 12 known `cedc4c47` targets. `CredWriteW`, enumeration, arbitrary or
+prefix targets, UI/secret entry, provider/fake dispatch, DNS/network, fallback,
+and requalification are prohibited.
+
+Recovery identity is
+`infinium.m1-s6.wp4.credential-native-recovery/d01bfda6-51d3-4c68-baff-a3b25abc6391`,
+with new output/lock roots and expiry `2026-08-14T15:53:46.6213575Z`.
+The draft is non-executable pending exact close-ready commit binding. Release
+build passed with zero warnings/errors and focused cleanup-only authorization
+tests passed 14/14. No native operation occurred during preparation.

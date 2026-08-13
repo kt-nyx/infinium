@@ -536,6 +536,92 @@ internal static class WindowsCredentialNativeQualification
 
 }
 
+internal static class WindowsCredentialNativeRecovery
+{
+    private static readonly JsonSerializerOptions EvidenceJson = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+        WriteIndented = true,
+    };
+
+    internal static int Run(string manifestPath, string expectedSha256, string expectedManifestId, string evidencePath)
+    {
+        byte[] manifestBytes = File.ReadAllBytes(Path.GetFullPath(manifestPath));
+        string actualSha = Convert.ToHexStringLower(SHA256.HashData(manifestBytes));
+        if (!string.Equals(actualSha, expectedSha256, StringComparison.Ordinal))
+        {
+            throw new InvalidDataException("Recovery manifest bytes differ from exact authority.");
+        }
+        using JsonDocument document = JsonDocument.Parse(manifestBytes);
+        JsonElement root = document.RootElement;
+        if (root.GetProperty("schema_identity").GetString() != "infinium.repository.wp4-credential-native-recovery/1.0.0"
+            || root.GetProperty("manifest_id").GetString() != expectedManifestId
+            || root.GetProperty("status").GetString() != "ready-for-owner-acceptance")
+        {
+            throw new InvalidDataException("Recovery manifest identity is invalid.");
+        }
+        string[] allowed = root.GetProperty("native_boundary").GetProperty("allowed_calls")
+            .EnumerateArray().Select(item => item.GetString()!).ToArray();
+        if (!allowed.SequenceEqual(["CredReadW", "CredDeleteW", "CredFree"], StringComparer.Ordinal))
+        {
+            throw new InvalidDataException("Recovery native boundary is not exact.");
+        }
+        using WindowsCredentialManagerStore store = WindowsCredentialManagerStore.FromRecoveryManifest(root);
+        List<object> absence = [];
+        try
+        {
+            foreach (NativeTarget target in store.ManifestTargets)
+            {
+                store.BeginScenario("cleanup-only-recovery");
+                if (store.Exists(target) && !store.DeleteAndProveAbsent(target))
+                {
+                    throw new InvalidOperationException("Exact target remained present after bounded recovery cleanup.");
+                }
+                absence.Add(new { alias = target.Alias, target_fingerprint_sha256 = target.TargetFingerprintSha256, result = "ERROR_NOT_FOUND" });
+            }
+            WriteEvidence(evidencePath, new
+            {
+                schema = "infinium.m1-s6.wp4.credential-native-recovery-evidence/v1",
+                status = "passed",
+                manifest_id = expectedManifestId,
+                manifest_sha256 = actualSha,
+                target_absence = absence,
+                native_call_counts = store.CallCounts,
+                native_call_trace = store.CallTrace,
+                namespace_blocked = false,
+                network_operations = 0,
+                dns_operations = 0,
+                provider_operations = 0,
+                billable_operations = 0,
+            });
+            return 0;
+        }
+        catch
+        {
+            WriteEvidence(evidencePath, new
+            {
+                schema = "infinium.m1-s6.wp4.credential-native-recovery-evidence/v1",
+                status = "failed-cleanup-ambiguous",
+                manifest_id = expectedManifestId,
+                manifest_sha256 = actualSha,
+                target_absence = absence,
+                native_call_counts = store.CallCounts,
+                native_call_trace = store.CallTrace,
+                namespace_blocked = true,
+                later_native_calls = 0,
+            });
+            throw;
+        }
+    }
+
+    private static void WriteEvidence(string path, object value)
+    {
+        string full = Path.GetFullPath(path);
+        Directory.CreateDirectory(Path.GetDirectoryName(full)!);
+        File.WriteAllText(full, JsonSerializer.Serialize(value, EvidenceJson) + "\n", new UTF8Encoding(false));
+    }
+}
+
 internal sealed record NativeTarget(
     string Alias,
     string AccessProfileId,
@@ -626,6 +712,32 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
         }
         return store;
     }
+
+    internal static WindowsCredentialManagerStore FromRecoveryManifest(JsonElement manifestRoot)
+    {
+        WindowsCredentialManagerStore store = new();
+        foreach (JsonElement item in manifestRoot.GetProperty("disposable_namespace").GetProperty("targets").EnumerateArray())
+        {
+            NativeTarget target = new(
+                item.GetProperty("alias").GetString()!,
+                item.GetProperty("access_profile_id").GetString()!,
+                item.GetProperty("generation_id").GetString()!,
+                item.GetProperty("target_fingerprint_sha256").GetString()!);
+            Validate(target);
+            if (!store.manifestTargets.TryAdd(new(target.AccessProfileId, target.GenerationId), target))
+            {
+                throw new InvalidDataException("The recovery manifest repeats a native credential slot.");
+            }
+        }
+        if (store.manifestTargets.Count != 12)
+        {
+            throw new InvalidDataException("Recovery requires exactly 12 known targets.");
+        }
+        return store;
+    }
+
+    internal IReadOnlyList<NativeTarget> ManifestTargets => manifestTargets.Values
+        .OrderBy(item => item.Alias, StringComparer.Ordinal).ToArray();
 
     public NativeCallCounts CallCounts => new(writeCount, readCount, deleteCount, freeCount,
         checked(writeCount + readCount + deleteCount + freeCount));

@@ -4,6 +4,22 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using Infinium.CredentialHelper;
 
+if (args is ["--credential-native-recovery", "--manifest", string recoveryManifest,
+    "--manifest-sha256", string recoverySha, "--manifest-id", string recoveryId,
+    "--evidence", string recoveryEvidence])
+{
+    try
+    {
+        return WindowsCredentialNativeRecovery.Run(recoveryManifest, recoverySha, recoveryId, recoveryEvidence);
+    }
+    catch (Exception exception) when (exception is IOException or InvalidDataException
+        or InvalidOperationException or System.ComponentModel.Win32Exception)
+    {
+        Console.Error.WriteLine($"Native recovery terminated with typed non-secret failure: {exception.GetType().Name}");
+        return 70;
+    }
+}
+
 if (args is ["--credential-native-qualification", "--manifest", string manifestPath,
     "--evidence", string evidencePath])
 {
