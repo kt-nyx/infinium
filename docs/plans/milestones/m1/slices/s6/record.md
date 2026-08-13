@@ -5044,3 +5044,5 @@ Submit/Cancel input from an owned close request, which fails typed rather than
 being represented by those counters. This is a documentation-only precision
 correction; the close-ready implementation binding and effect boundary are
 unchanged.
+
+WP4_V2_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-authorization/a1976c78-a49b-4581-9a8c-9b6172484e0b sha256=484d385a44c7988fd3311ce05014f53e70d2ef012cb20ba7b2eb625b78f91601 close_ready_commit=a0a467a64566877aa647a238372f78f2673b4956 expires_at_utc=2026-08-15T18:24:20.5325020Z
