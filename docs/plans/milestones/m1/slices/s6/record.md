@@ -4567,3 +4567,12 @@ The Release build again passed with zero warnings/errors, focused native-
 authorization tests passed 13/13, and helper/supervisor integration tests
 passed 16/16. These checks used fake/non-native seams only. Credential Manager,
 DNS, network, provider, billable, and API-key operation counts remained zero.
+
+Because that compatibility correction changed executable helper bytes, the
+intermediate `ec90627a-ac6c-402b-8a0e-7e896738413e` manifest, namespace,
+targets, expiry, and command are stale and permanently non-reusable. Consumer
+plumbing is rebound in draft form to fresh identity
+`infinium.m1-s6.wp4.credential-native-authorization/ecc56ea0-6ba7-4664-9cf1-8763bc3a26af`,
+with a fresh namespace and all 12 newly derived target fingerprints. Its
+close-ready commit is intentionally all zeroes and it remains non-executable
+until this exact compatibility-corrected consumer state is committed.

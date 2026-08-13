@@ -40,7 +40,9 @@ freshly authorized, executed, independently accepted, and the handoff advances.
 [The post-WP7 WP4 preparation manifest](wp4-credential-native-authorization.post-wp7.json)
 has no effect authority and is now superseded/non-executable after authorizing
 only the bounded non-native consumer-binding correction. The exact executable
-proposal is [WP4 v2](wp4-credential-native-authorization.v2.json); it remains
+proposal is [WP4 v2](wp4-credential-native-authorization.v2.json); after a
+review-found non-native compatibility correction, it has a further fresh
+identity/namespace and remains
 closed until fresh review and explicit owner native-effect acceptance of its
 exact bytes.
 [Current project state](../../../../../current-state.md) authorizes only the
