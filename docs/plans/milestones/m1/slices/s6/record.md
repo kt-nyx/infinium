@@ -3651,3 +3651,41 @@ Manager or WP4 native namespace, private fixture/evaluator, archive, provider
 SDK, protected external effect, WP6/Slice 7 work, current-state advancement,
 or push occurred. This evidence does not self-accept WP5; the candidate remains
 for fresh bounded review.
+
+## WP5 independent acceptance and WP6 handoff — 2026-08-12
+
+Fresh independent reviewers `/root/wp5_provider_security_review` and
+`/root/wp5_persistence_replay_review` each returned `ACCEPT` against exact
+product candidate `fd3c80d91dd247e65b5130309a9b5bb19dd1381f` and exact
+append-only evidence commit
+`11e60445b6d5f1d3efc5b607f080dd986afb4ed4`. The provider/security review
+accepted exact request/response/secret/header/transport safety; the
+persistence/replay review accepted producer/consumer/persistence/output/replay
+and retained-evidence behavior. Neither reviewer introduced later-package
+semantics or performed an external effect.
+
+The accepted evidence includes exact `Adapter` Unit 18/0/0, Integration
+11/0/0, Security 16/0/0, Fault 3/0/0, and Evaluation 2/0/0; exact
+`OfflineSafetyReplay` Integration 3/0/0, Security 16/0/0, Fault 3/0/0, and
+Evaluation 2/0/0; 1,410-byte Adapter receipt SHA-256
+`efe746d5d1e22896dd238fe8c52ea39af11a7cfabcf602ac5712277882fab07e`;
+848-byte OfflineSafetyReplay receipt SHA-256
+`58874b8b5c4abe16784a7ef9f45001006210caabf111ea4ce90f52d86a473869`;
+238-byte network-spy SHA-256
+`d2eeac57768b66d0714e31d255c88b6715c9f2031d00fecaa71591755590bcd6`;
+and the 1,353-byte candidate-bound Layer 6 receipt from baseline
+`214544c996f9f33fc14c7fab573167f72c702de3` through candidate
+`fd3c80d91dd247e65b5130309a9b5bb19dd1381f`, SHA-256
+`2f38a9d5ff16ae1f627ab252798b27912d2ccb17e58f324b6c71642974d5e1c0`.
+The retained network receipt records zero public DNS/provider, redirect-follow,
+retry, proxy-fallback, and replay-network operations; exact-root process
+cleanup recorded zero repository-owned `dotnet`/`testhost` survivors.
+
+WP5 is therefore accepted. The docs-only handoff advances current execution
+authority to `M1/S6/WP6` only: public source-claim acquisition and
+deterministic admission using retained provider transcripts. WP4 remains
+closed, and its prior disposable Credential Manager authorization is stale and
+non-authoritative for a new native effect. Credential Manager, API key,
+network/provider request, source refresh, private or held-out fixtures,
+archive/legacy access, protected external effect, WP7 or later-package work,
+and push remain prohibited. This handoff contains no WP6 product code.

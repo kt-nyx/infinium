@@ -21,10 +21,12 @@ is accepted at exact candidate
 `61b90314d8273749849f590b303814008fa2fdfa`, WP2 is independently accepted at
 exact candidate `ed27ed04897103d93a60e6200971ca12d04f2e11`, and WP3 is
 independently accepted at exact candidate
-`b32939e8b7491a5c47453f912d25dd98c090f103`. The nine Slice 6 contracts
-remain `Implementation-active`. The live handoff now authorizes WP5 only;
-WP4 remains closed pending its separate owner-authorized native Credential
-Manager manifest.
+`b32939e8b7491a5c47453f912d25dd98c090f103`. WP5 is independently accepted
+at exact product candidate `fd3c80d91dd247e65b5130309a9b5bb19dd1381f`
+with evidence commit `11e60445b6d5f1d3efc5b607f080dd986afb4ed4`.
+The nine Slice 6 contracts remain `Implementation-active`. The live handoff
+now authorizes WP6 only; WP4 remains closed and its prior native authorization
+is stale/non-authoritative for any new effect.
 [Current project state](../../../../../current-state.md) authorizes only the
 exact active package and governs automatic non-live progression. Disposable
 native qualification, production-profile enrollment/verification, and each of

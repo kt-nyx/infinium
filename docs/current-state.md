@@ -17,13 +17,14 @@ review history.
 |---|---|
 | Milestone | `M1` - active |
 | Active slice | `M1/S6` - owner-accepted; implementation-active |
-| Current authorized work | `M1/S6/WP5` only: the exact stateless/cache-off Responses adapter, deterministic loopback/offline behavior, and transport-safety vertical under the accepted Slice 6 plan |
+| Current authorized work | `M1/S6/WP6` only: source-claim acquisition and deterministic admission over public inputs and retained provider transcripts under the accepted Slice 6 plan |
 | Accepted Slice 5 candidate | Final cleanup implementation `5514919b8f742d00e59752fa7125da487a390926`, following public-fixture consolidation and protocol `/4` retirement |
 | Accepted Slice 6 WP1 candidate | `61b90314d8273749849f590b303814008fa2fdfa`; nine Slice 6 contracts are `Implementation-active` and the accepted local input-bound policy is `openai-responses-o200k-byte-envelope/v1` |
 | Accepted `M1/S6/WP2` candidate | `ed27ed04897103d93a60e6200971ca12d04f2e11`; capability, price, atomic reservation/final-gate, settlement, projection, replay, simulator, and public fixture/oracle evidence are independently accepted |
 | Accepted `M1/S6/WP3` candidate | `b32939e8b7491a5c47453f912d25dd98c090f103`; one-shot helper process isolation, strict protocol, synthetic credential lifecycle, recovery, staging/admission, exact SDK `10.0.303`, and the integration synchronization barrier are independently accepted |
+| Accepted `M1/S6/WP5` candidate | `fd3c80d91dd247e65b5130309a9b5bb19dd1381f`, with append-only evidence `11e60445b6d5f1d3efc5b607f080dd986afb4ed4`; exact Responses serialization/codec/transport, deterministic loopback/offline replay, bounded secret-safe receipts, persistence/output/replay, and public WP5 evidence are independently accepted |
 | Accepted Slice 6 plan | Explicit stateless/cache-off ADR-0025 conformance closure; no separate ADR; eleven packages with distinct native/live authorization gates |
-| Next eligible action | Implement and independently accept `M1/S6/WP5` from the exact accepted plan using deterministic loopback/offline fixtures only; WP4 remains closed pending a separate owner-authorized native Credential Manager manifest, and provider effects remain prohibited |
+| Next eligible action | Implement and independently accept `M1/S6/WP6` from the exact accepted plan using public inputs and deterministic retained provider transcripts only; WP4 remains closed, and Credential Manager, API key, network, provider, source-refresh, private-fixture, and later-package effects remain prohibited |
 | Later work | The orchestrator may advance WP2-WP3 and WP5-WP8 only through accepted prerequisite/package gates while updating this handoff. WP4 and WP9-WP11 always require their exact fresh owner authorization; no Credential Manager or provider request is authorized now |
 | Execution policy | [Repository execution policy](execution-policy.md) |
 | Milestone plan | [M1 backend semantic proof](plans/milestones/m1/plan.md) |
@@ -41,10 +42,12 @@ WP1 is accepted at exact candidate
 `61b90314d8273749849f590b303814008fa2fdfa`, WP2 is independently accepted
 at exact candidate `ed27ed04897103d93a60e6200971ca12d04f2e11`, and WP3 is
 independently accepted at exact candidate
-`b32939e8b7491a5c47453f912d25dd98c090f103`. The nine Slice 6 contracts
+`b32939e8b7491a5c47453f912d25dd98c090f103`. WP5 is independently accepted
+at exact candidate `fd3c80d91dd247e65b5130309a9b5bb19dd1381f`, with append-only
+evidence `11e60445b6d5f1d3efc5b607f080dd986afb4ed4`. The nine Slice 6 contracts
 remain `Implementation-active`, while Slice 5 v1 remains `Slice-frozen`.
-This handoff opens only `M1/S6/WP5`; WP4 remains closed pending its separate
-owner-authorized native Credential Manager manifest. Plan acceptance permits
+This handoff opens only `M1/S6/WP6`; WP4 remains closed and its prior
+authorization is stale/non-authoritative for any new native effect. Plan acceptance permits
 automatic progression among the named non-live packages only after each
 prerequisite package is independently accepted and this file is advanced to
 the exact next package. It does not authorize the WP4 disposable native
