@@ -4270,3 +4270,77 @@ operation, source refresh, private/evaluator/archive access, protected effect,
 WP8 work, current-state advance, or push occurred. This corrected candidate
 still awaits fresh independent semantic acceptance review and does not
 self-accept WP7.
+
+## WP7 durable availability and pre-append payload correction — 2026-08-13
+
+This append-only entry supersedes the preceding terminal candidate with exact
+correction commit
+`5c3ba09bd509ec8a6434ce70f9a3a6bbb5683be6`. It preserves the original real
+product identity `f3296bb806d05e728d06b847ad086b0c6cf2da8b`, the accepted WP7 handoff
+`c588ef2b588b851a9948d3ed3d2b43205ebf500a`, and every frozen DEV/VAL v1/v2
+oracle byte.
+
+Candidate evidence availability is no longer trusted from the retained caller
+input. Authoritative persistence derives it from the exact durable Slice 5
+evidence revision and retained evidence-payload fingerprint together with any
+exact run/revision/passage deletion receipt. An `audit-only` deletion receipt
+derives `deleted`; an `unavailable` deletion receipt derives `unavailable`;
+ambiguous deletion effects reject; and, without a receipt, the explicit durable
+`admitted`, `deleted`, or `unavailable` evidence state is authoritative. Real
+durable deleted and unavailable evidence cases now prove rejected retention,
+JSON/human transparency publication, typed readback, database-owned replay,
+backup/restore, and absence of an invented admitted semantic row. False
+deleted, false unavailable, and false available mutations reject.
+
+`PersistCandidateInvestigation` now strict-parses and closes the retained input
+and transcript before opening the append transaction. It binds the execution
+schema, package, operation, authorization, owner/run, application/cost scopes,
+prompt identity and fingerprint, exact context/evidence closure, transcript
+envelope, response identity/state, proposal identities and content, raw
+abstention/gap content, host-derived proposal states/reasons/application links,
+and terminal disposition/replay state. The prompt is also checked against the
+durable provider authorization. Direct persistence mutations of authorization,
+scope, prompt, transcript identity, proposal hypothesis/state, gap content,
+terminal disposition, and evidence closed sets all reject before append and
+leave zero `candidate_investigation_outcomes` rows.
+
+The exact focused Release regression passed, including the durable candidate
+integration and the accepted WP7 filters. `CandidateSemantics` passed Unit
+6/0/0, Contract 7/0/0, Integration 4/0/0, and Evaluation 1/0/0; its 1,775-byte
+receipt has SHA-256
+`dfa916e827c5157c9eb509ad7df651d94c8ef4773f2aa3fd2d677bb2839f1658`.
+`ProvenanceReplay` passed Contract 7/0/0, Integration 4/0/0, and Evaluation
+1/0/0; its 1,668-byte receipt has SHA-256
+`32a7bd59b1fe102a077caf2d07e819a1d2cda116bd7e059b0b7e9816b458982a`.
+The previously recorded `Contracts`, `StateSurfaces`, and `StateTotality` gates
+also remained green in this bounded correction cycle.
+
+The exact final non-live floor used .NET SDK `10.0.303`. Locked restore and the
+fresh Release build passed with zero warnings/errors. Category floors passed
+Unit 225/0/1, Contract 131/0/0, Integration 108/0/0, Evaluation 64/0/8,
+Security 15/0/0, and Fault 3/0/0. The unfiltered solution passed Unit 238/0/1,
+Contract 168/0/0, Integration 120/0/0, Evaluation 66/0/8, Security 19/0/0,
+and Fault 7/0/0. Format, dependency-manifest, documentation, deterministic
+trace regeneration, and diff checks passed. The analysis `All` gate passed
+Contracts, Documentation, Candidates, CandidateScale, Cases, Replay, Output,
+Safety, Comprehensive, and Traceability; its 764-byte receipt has SHA-256
+`27636dbb6753eece1c2ce162d2367c1e892a180849cde10c83d07cc348717db9`.
+
+Candidate-bound `Layer6Review` passed from exact handoff
+`c588ef2b588b851a9948d3ed3d2b43205ebf500a` through exact candidate
+`5c3ba09bd509ec8a6434ce70f9a3a6bbb5683be6`: 54 changed paths and zero
+allowed-path, protected/private/archive, strict-JSON, or relative-link
+failures. Its 1,358-byte receipt has SHA-256
+`e7309e71e82a85114736d9f034c8006bc47f0a1ce3b9bd6b3dca5e46629b54f7`.
+The retained status/claim and unsupported/gap inventories remain review inputs,
+not an acceptance judgment.
+
+One combined verification wrapper exceeded its local 120-second command
+window after starting the analysis gates. The accepted exact-root cleanup
+procedure revalidated and terminated only its three repository-owned
+`dotnet`/`testhost` survivors, then proved zero remaining. The split exact gate
+rerun passed, and final cleanup again matched zero survivors. No API key, DNS,
+network/provider request, Credential Manager operation, source refresh,
+private/evaluator/archive access, protected effect, WP8 work, current-state
+advance, or push occurred. This candidate awaits fresh independent semantic
+acceptance review and does not self-accept WP7.
