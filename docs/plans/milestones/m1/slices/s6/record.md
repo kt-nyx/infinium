@@ -4813,3 +4813,9 @@ and expiry `2026-08-14T16:27:12.1021393Z`. Effect-free validation reports
 `ready`, `execution_authorized: false`, and zero native, network, and provider
 operations. Fresh independent pre-effect acceptance and the canonical
 standing-owner recovery marker remain mandatory before the one cleanup run.
+
+Documentation correction: the final executable regression source contains 27
+rejected evidence mutations and nine rejected manifest-authority mutations.
+The earlier 19/eight counts described an intermediate test revision and
+undercount the exact frozen suite. This correction changes no manifest,
+validator, gate, authority identity, native boundary, or execution status.
