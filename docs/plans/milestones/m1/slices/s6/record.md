@@ -4186,3 +4186,87 @@ source/Nexus/search refresh, private/evaluator/archive access, protected
 external effect, WP8 behavior, current-state advancement, or push occurred.
 This is a close-ready WP7 candidate awaiting fresh independent review; it does
 not self-accept WP7 or authorize WP8.
+
+## WP7 terminal persistence-authority correction candidate — 2026-08-13
+
+This append-only entry supersedes two incorrect identities in the preceding
+close-ready entry without rewriting that historical text. The real original
+WP7 product commit is
+`f3296bb806d05e728d06b847ad086b0c6cf2da8b`, not the non-existent expanded
+identity recorded above. The active schema-6 fingerprint after the bounded
+terminal correction is
+`938bd18d7af76470bc70058cf5c31aa5257e220c075991aa1797f99a6fba94d7`,
+not the preceding pre-correction fingerprint. Same-version migration
+`M1-S6-WP7-0006H` and its exact WP6 source fingerprint remain unchanged.
+
+The terminal correction is exact commit
+`fe391e6ef42894f03ec6e44f524d6202ff3e4436`. Authoritative persistence now
+rejects an empty, partial, extra, or duplicate candidate-evidence provenance
+binding before opening a transaction and requires exact closed-set equality
+with every evidence identity retained by the investigation document. It also
+requires the retained input, result, and binding values to agree exactly.
+Direct persistence-bypass mutations prove that all four invalid sets leave
+zero candidate outcome rows.
+
+Candidate outcomes now retain their exact hypothesis identity. Before any
+outcome or semantic proposal is written, persistence binds the exact Slice 5
+candidate, hypothesis, and decision rows to one shared retained payload and
+checks the durable candidate/run/hypothesis IDs, hypothesis text,
+participants/roles, causal path, dependency closure and its edges, and
+supporting/contradicting evidence closure. Integration evidence seeds that
+context through the real Slice 5 `CandidateAnalysisPhase`; cross-candidate,
+cross-hypothesis, hypothesis-text, participant-role, causal-path, and
+dependency-closure drift all reject. Candidate validation and admission ID
+lists are exact closed sets of their actual admission links, so phantom IDs
+also reject.
+
+The authoritative WP1 trace generator and regenerated inventory now map the
+candidate investigation contract to typed candidate-outcome and semantic rows
+plus the exact retained result payload. Candidate replay is explicitly bound
+to `candidate_investigation_outcomes.result_payload_id` through
+`DurableCandidateInvestigationCoordinator.ReplayRetained`; a semantic
+regression prevents the former authority-blocked/no-replay prose from
+returning while structural self-consistency remains green.
+
+Final focused gates passed after the correction: `CandidateSemantics` Unit
+6/0/0, Contract 7/0/0, Integration 4/0/0, Evaluation 1/0/0; and
+`ProvenanceReplay` Contract 7/0/0, Integration 4/0/0, Evaluation 1/0/0. Their
+1,775-byte and 1,668-byte receipts retain SHA-256 values
+`dfa916e827c5157c9eb509ad7df651d94c8ef4773f2aa3fd2d677bb2839f1658`
+and
+`32a7bd59b1fe102a077caf2d07e819a1d2cda116bd7e059b0b7e9816b458982a`.
+`Contracts`, `StateSurfaces`, and `StateTotality` passed; their receipt
+SHA-256 values are respectively
+`678885f285882894df6f3b8672a6a5ac8cd2660dd16df220e70391239e633a41`,
+`c86fe2d20c30bd38443041d315cb4efe231b91fe227568208708c2c0df723eb9`,
+and `7a05a7f0cbee4067e9ee0cefafd8cba8984fd00c4b24e1a74f7c6d7a046c9454`.
+
+The exact final non-live floor used .NET SDK `10.0.303`. Locked restore and
+the fresh Release build passed with zero warnings/errors. Category floors
+passed Unit 225/0/1, Contract 131/0/0, Integration 108/0/0, Evaluation
+64/0/8, Security 15/0/0, and Fault 3/0/0. The unfiltered solution passed Unit
+238/0/1, Contract 168/0/0, Integration 120/0/0, Evaluation 66/0/8, Security
+19/0/0, and Fault 7/0/0. The complete analysis `All` gate passed Contracts,
+Documentation, Candidates, CandidateScale, Cases, Replay, Output, Safety,
+Comprehensive, and Traceability; its 512-byte receipt has SHA-256
+`212551a2a08dc3b7fead398ceca82b50778d07b46ea4be9e7d4277337d764402`.
+Format, dependency-manifest, documentation, deterministic trace regeneration,
+and diff checks also passed.
+
+Candidate-bound `Layer6Review` passed from exact WP7 handoff
+`c588ef2b588b851a9948d3ed3d2b43205ebf500a` through exact terminal candidate
+`fe391e6ef42894f03ec6e44f524d6202ff3e4436`: 54 changed paths and zero
+allowed-path, protected/private/archive, strict-JSON, or relative-link
+failures. Its 1,358-byte receipt has SHA-256
+`9164be2866174fede5e52a776b0394414ca1add3b0fed3119090fcdfc3eaa72a`.
+The status/claim and unsupported/gap inventories remain review inputs, not an
+acceptance judgment.
+
+Exact-root cleanup repeatedly resolved
+`Z:\Development\Large Projects\Skyrim\infinium`, matched no repository-owned
+`dotnet` or `testhost` survivor after the final runs, and verified zero
+remaining. No API key, DNS, network/provider request, Credential Manager
+operation, source refresh, private/evaluator/archive access, protected effect,
+WP8 work, current-state advance, or push occurred. This corrected candidate
+still awaits fresh independent semantic acceptance review and does not
+self-accept WP7.
