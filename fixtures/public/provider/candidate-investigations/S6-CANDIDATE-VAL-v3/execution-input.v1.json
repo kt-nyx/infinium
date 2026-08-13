@@ -1,0 +1,124 @@
+{
+  "schema_id": "infinium.llm.candidate-investigation-execution-input/v1",
+  "schema_version": "1",
+  "package_id": "S6-CANDIDATE-VAL-v3",
+  "operation_id": "op-q7m4",
+  "host_authorization_id": "auth-r8n5",
+  "owner_kind": "analysis-run",
+  "owner_id": "run-s9p6",
+  "analysis_run_id": "run-s9p6",
+  "application_scope_id": "scope-t1q7",
+  "cost_attribution_scope_id": "cost-u2r8",
+  "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+  "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+  "contexts": [
+    {
+      "context_id": "cx-a7k2", "candidate_id": "cd-b8m3", "hypothesis_id": "hy-c9n4",
+      "hypothesis": "Unit Lumen may alter the ordering established by Unit Nacre when both transform the same record batch.",
+      "participant_ids": ["pt-d1p5", "pt-e2q6"], "participant_roles": ["upstream", "downstream"],
+      "causal_path_ids": ["cp-f3r7", "cp-g4s8"], "dependency_closure_id": "dc-h5t9",
+      "evidence": [{"evidence_id":"ev-j6u1","evidence_application_link_id":"ea-k7v2","source_acquisition_id":"aq-m8w3","source_admission_id":"sa-n9x4","source_application_link_id":"sl-p1y5","source_revision_id":"sr-q2z6","passage_id":"ps-r3a7","relationship":"supporting","availability":"available","content_sha256":"9d4b9bea0d5dab3f83bd1f8b1eb157c3a12075d047677c482f2a92b08e0e9954"}]
+    },
+    {
+      "context_id": "cx-b4d8", "candidate_id": "cd-c5f9", "hypothesis_id": "hy-d6g1",
+      "hypothesis": "Unit Parchment may alter Unit Quartz when they process separate immutable channels.",
+      "participant_ids": ["pt-e7h2", "pt-f8j3"], "participant_roles": ["left-channel", "right-channel"],
+      "causal_path_ids": ["cp-g9k4"], "dependency_closure_id": "dc-h1m5",
+      "evidence": [{"evidence_id":"ev-j2n6","evidence_application_link_id":"ea-k3p7","source_acquisition_id":"aq-m4q8","source_admission_id":"sa-n5r9","source_application_link_id":"sl-p6s1","source_revision_id":"sr-q7t2","passage_id":"ps-r8u3","relationship":"neutral","availability":"available","content_sha256":"d5f8bedfeb48770cb8d5fde7953d74e92c15bc5a34bf8dce8b3b6b139fe5596c"}]
+    },
+    {
+      "context_id": "cx-c6h1", "candidate_id": "cd-d7j2", "hypothesis_id": "hy-e8k3",
+      "hypothesis": "Unit Rill may interact with Unit Sable during staged reconciliation.",
+      "participant_ids": ["pt-f9m4", "pt-g1n5"], "participant_roles": ["producer", "reconciler"],
+      "causal_path_ids": ["cp-h2p6"], "dependency_closure_id": "dc-j3q7",
+      "evidence": [{"evidence_id":"ev-k4r8","evidence_application_link_id":"ea-m5s9","source_acquisition_id":"aq-n6t1","source_admission_id":"sa-p7u2","source_application_link_id":"sl-q8v3","source_revision_id":"sr-r9w4","passage_id":"ps-s1x5","relationship":"neutral","availability":"available","content_sha256":"3ea475e4dcf4ea336f440f5106ca875000e2e4b4461dd53d6638a44c4f0e5917"}]
+    },
+    {
+      "context_id": "cx-d8m3", "candidate_id": "cd-e9n4", "hypothesis_id": "hy-f1p5",
+      "hypothesis": "Unit Tern may change Unit Umber during batch convergence.",
+      "participant_ids": ["pt-g2q6", "pt-h3r7"], "participant_roles": ["batch-source", "converger"],
+      "causal_path_ids": ["cp-j4s8"], "dependency_closure_id": "dc-k5t9",
+      "evidence": [{"evidence_id":"ev-m6u1","evidence_application_link_id":"ea-n7v2","source_acquisition_id":"aq-p8w3","source_admission_id":"sa-q9x4","source_application_link_id":"sl-r1y5","source_revision_id":"sr-s2z6","passage_id":"ps-t3a7","relationship":"neutral","availability":"available","content_sha256":"09437d42366fa3416a20845bc6f8dd776d463138156e0e453afa2189bdd8039a"}]
+    },
+    {
+      "context_id": "cx-e1q5", "candidate_id": "cd-f2r6", "hypothesis_id": "hy-g3s7",
+      "hypothesis": "Unit Vale may perturb Unit Wren while a shared cursor advances.",
+      "participant_ids": ["pt-h4t8", "pt-j5u9"], "participant_roles": ["cursor-owner", "observer"],
+      "causal_path_ids": ["cp-k6v1"], "dependency_closure_id": "dc-m7w2",
+      "evidence": [{"evidence_id":"ev-n8x3","evidence_application_link_id":"ea-p9y4","source_acquisition_id":"aq-q1z5","source_admission_id":"sa-r2a6","source_application_link_id":"sl-s3b7","source_revision_id":"sr-t4c8","passage_id":"ps-u5d9","relationship":"neutral","availability":"available","content_sha256":"09cd84e50b84cb56074aa7ffe0e1dd1fab41e2fe6d7d279dc3179f357cee45ea"}]
+    },
+    {
+      "context_id": "cx-f3u7", "candidate_id": "cd-g4v8", "hypothesis_id": "hy-h5w9",
+      "hypothesis": "Unit Xylem may delay Unit Yonder during checkpoint handoff.",
+      "participant_ids": ["pt-j6x1", "pt-k7y2"], "participant_roles": ["checkpoint-writer", "checkpoint-reader"],
+      "causal_path_ids": ["cp-m8z3"], "dependency_closure_id": "dc-n9a4",
+      "evidence": [{"evidence_id":"ev-p1b5","evidence_application_link_id":"ea-q2c6","source_acquisition_id":"aq-r3d7","source_admission_id":"sa-s4e8","source_application_link_id":"sl-t5f9","source_revision_id":"sr-u6g1","passage_id":"ps-v7h2","relationship":"neutral","availability":"available","content_sha256":"671f5c91a75f29fdbe9be78c516130acd573e8d3438d0dafa4c75ead1af3440e"}]
+    },
+    {
+      "context_id": "cx-g5y9", "candidate_id": "cd-h6z1", "hypothesis_id": "hy-j7a2",
+      "hypothesis": "Unit Zephyr may suppress Unit Alloy when a retired observation is the only retained basis.",
+      "participant_ids": ["pt-k8b3", "pt-m9c4"], "participant_roles": ["suppressor", "target"],
+      "causal_path_ids": ["cp-n1d5"], "dependency_closure_id": "dc-p2e6",
+      "evidence": [{"evidence_id":"ev-q3f7","evidence_application_link_id":"ea-r4g8","source_acquisition_id":"aq-s5h9","source_admission_id":"sa-t6j1","source_application_link_id":"sl-u7k2","source_revision_id":"sr-v8m3","passage_id":"ps-w9n4","relationship":"supporting","availability":"deleted","content_sha256":"7688cf92674c3a0117ef3f2fd44054eda33d8c86c7a2623c8b74b1432045aca8"}]
+    },
+    {
+      "context_id": "cx-h7c2", "candidate_id": "cd-j8d3", "hypothesis_id": "hy-k9e4",
+      "hypothesis": "Unit Bramble may redirect Unit Cinder after a retained response boundary changes.",
+      "participant_ids": ["pt-m1f5", "pt-n2g6"], "participant_roles": ["redirector", "receiver"],
+      "causal_path_ids": ["cp-p3h7"], "dependency_closure_id": "dc-q4j8",
+      "evidence": [{"evidence_id":"ev-r5k9","evidence_application_link_id":"ea-s6m1","source_acquisition_id":"aq-t7n2","source_admission_id":"sa-u8p3","source_application_link_id":"sl-v9q4","source_revision_id":"sr-w1r5","passage_id":"ps-x2s6","relationship":"neutral","availability":"available","content_sha256":"8b88c12bd47ebf64941d4256a953173643e2359b4f4fddf60ef8462bab00de9b"}]
+    },
+    {
+      "context_id": "cx-j9g4", "candidate_id": "cd-k1h5", "hypothesis_id": "hy-m2j6",
+      "hypothesis": "Unit Dovetail may reorder Unit Ember only while the lunar scheduling flag is active.",
+      "participant_ids": ["pt-n3k7", "pt-p4m8"], "participant_roles": ["scheduler", "scheduled-unit"],
+      "causal_path_ids": ["cp-q5n9", "cp-r6p1"], "dependency_closure_id": "dc-s7q2",
+      "evidence": [{"evidence_id":"ev-t8r3","evidence_application_link_id":"ea-u9s4","source_acquisition_id":"aq-v1t5","source_admission_id":"sa-w2u6","source_application_link_id":"sl-x3v7","source_revision_id":"sr-y4w8","passage_id":"ps-z5x9","relationship":"supporting","availability":"available","content_sha256":"00573ba8b94ddaea183763fb6ae64cdf070f947cd364f46553ebdcc89e908038"}]
+    },
+    {
+      "context_id": "cx-k2m6", "candidate_id": "cd-m3n7", "hypothesis_id": "hy-n4p8",
+      "hypothesis": "Unit Fallow may shadow Unit Gimbal across unrelated cache partitions.",
+      "participant_ids": ["pt-p5q9", "pt-q6r1"], "participant_roles": ["cache-writer", "cache-reader"],
+      "causal_path_ids": ["cp-r7s2"], "dependency_closure_id": "dc-s8t3",
+      "evidence": [{"evidence_id":"ev-u9v4","evidence_application_link_id":"ea-v1w5","source_acquisition_id":"aq-w2x6","source_admission_id":"sa-x3y7","source_application_link_id":"sl-y4z8","source_revision_id":"sr-z5a9","passage_id":"ps-a6b1","relationship":"neutral","availability":"available","content_sha256":"b8155ed342365be98253a95cd7d7ef93aad3af3575ec520e202c1172cfb21da3"}]
+    },
+    {
+      "context_id": "cx-m4q8", "candidate_id": "cd-n5r9", "hypothesis_id": "hy-p6s1",
+      "hypothesis": "Unit Harbor may accelerate Unit Indigo although one retained observation reports the opposite ordering.",
+      "participant_ids": ["pt-q7t2", "pt-r8u3"], "participant_roles": ["accelerator", "observed-unit"],
+      "causal_path_ids": ["cp-s9v4"], "dependency_closure_id": "dc-t1w5",
+      "evidence": [
+        {"evidence_id":"ev-v2x6","evidence_application_link_id":"ea-w3y7","source_acquisition_id":"aq-x4z8","source_admission_id":"sa-y5a9","source_application_link_id":"sl-z6b1","source_revision_id":"sr-a7c2","passage_id":"ps-b8d3","relationship":"supporting","availability":"available","content_sha256":"d37125198c545b31f636b02ad7cf5a1ce05e35cc63b0c37499d011616bad6079"},
+        {"evidence_id":"ev-w4e8","evidence_application_link_id":"ea-x5f9","source_acquisition_id":"aq-y6g1","source_admission_id":"sa-z7h2","source_application_link_id":"sl-a8j3","source_revision_id":"sr-b9k4","passage_id":"ps-c1m5","relationship":"contradicting","availability":"available","content_sha256":"a2a3922392d39a4249445d5d12348ac08a867ea5760ad03340aa3ce1889a4e76"}
+      ]
+    },
+    {
+      "context_id": "cx-n6u1", "candidate_id": "cd-p7v2", "hypothesis_id": "hy-q8w3",
+      "hypothesis": "Unit Juncture may influence Unit Kestrel, but the bounded observations do not establish a direction.",
+      "participant_ids": ["pt-r9x4", "pt-s1y5"], "participant_roles": ["junction", "consumer"],
+      "causal_path_ids": ["cp-t2z6"], "dependency_closure_id": "dc-u3a7",
+      "evidence": [{"evidence_id":"ev-x4b8","evidence_application_link_id":"ea-y5c9","source_acquisition_id":"aq-z6d1","source_admission_id":"sa-a7e2","source_application_link_id":"sl-b8f3","source_revision_id":"sr-c9g4","passage_id":"ps-d1h5","relationship":"neutral","availability":"available","content_sha256":"435dfe03473489cba8c0f41ae6d3d2c11169fc7d08a7772925696f2f4eabbab8"}]
+    },
+    {
+      "context_id": "cx-p8y3", "candidate_id": "cd-q9z4", "hypothesis_id": "hy-r1a5",
+      "hypothesis": "Unit Meridian may delay Unit Nimbus during an optional verification pass.",
+      "participant_ids": ["pt-s2b6", "pt-t3c7"], "participant_roles": ["verifier", "verified-unit"],
+      "causal_path_ids": ["cp-u4d8"], "dependency_closure_id": "dc-v5e9",
+      "evidence": [{"evidence_id":"ev-y6f1","evidence_application_link_id":"ea-z7g2","source_acquisition_id":"aq-a8h3","source_admission_id":"sa-b9j4","source_application_link_id":"sl-c1k5","source_revision_id":"sr-d2m6","passage_id":"ps-e3n7","relationship":"neutral","availability":"available","content_sha256":"a40b1f3a05352872f7e0fac090e1e6c3a315d9227d4de115b73ee97a82e321c0"}]
+    },
+    {
+      "context_id": "cx-q1c5", "candidate_id": "cd-r2d6", "hypothesis_id": "hy-s3e7",
+      "hypothesis": "Unit Opal may interleave Unit Plume when an optional provider capability is present.",
+      "participant_ids": ["pt-t4f8", "pt-u5g9"], "participant_roles": ["interleaver", "stream"],
+      "causal_path_ids": ["cp-v6h1"], "dependency_closure_id": "dc-w7j2",
+      "evidence": [{"evidence_id":"ev-z8k3","evidence_application_link_id":"ea-a9m4","source_acquisition_id":"aq-b1n5","source_admission_id":"sa-c2p6","source_application_link_id":"sl-d3q7","source_revision_id":"sr-e4r8","passage_id":"ps-f5s9","relationship":"neutral","availability":"available","content_sha256":"7873aef8ced031500b4f88817c7405439fde9491aa908649ca54cc79b88f2e8b"}]
+    },
+    {
+      "context_id": "cx-r3g7", "candidate_id": "cd-s4h8", "hypothesis_id": "hy-t5j9",
+      "hypothesis": "Unit Quill may synchronize Unit Ripple using an observation whose durable body is unavailable.",
+      "participant_ids": ["pt-u6k1", "pt-v7m2"], "participant_roles": ["synchronizer", "replica"],
+      "causal_path_ids": ["cp-w8n3"], "dependency_closure_id": "dc-x9p4",
+      "evidence": [{"evidence_id":"ev-a1q5","evidence_application_link_id":"ea-b2r6","source_acquisition_id":"aq-c3s7","source_admission_id":"sa-d4t8","source_application_link_id":"sl-e5u9","source_revision_id":"sr-f6v1","passage_id":"ps-g7w2","relationship":"supporting","availability":"unavailable","content_sha256":"a82cac076f5b01b4b0f9c9151d2d02b0ba095bb64ad439b51afcc0e9bea28fcd"}]
+    }
+  ]
+}
