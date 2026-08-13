@@ -4511,3 +4511,23 @@ the historical exact path list. Receipt SHA-256 is
 Both preparer and reviewer classify this as the expected tooling/authority gap,
 not a manifest semantic defect; the verifier was not weakened under the
 documentation-only handoff.
+
+## WP4 post-WP7 bounded non-native consumer-binding authorization — 2026-08-13
+
+The owner accepted preparation manifest
+`infinium.m1-s6.wp4.credential-native-authorization/6255a2d0-4a88-42ea-814f-0da2bbb7f445`,
+SHA-256
+`a2551d378f371c8512d8883cca1f698674ab8642792b6f827617991eaa70f051`,
+only to authorize the bounded non-native schema, semantic validator, test,
+`CredentialNative` fail-closed gate, one-shot identity lock, and Layer 6 path-
+authority correction described by those exact bytes. This authorization does
+not accept an executable manifest and does not authorize a native credential
+effect.
+
+The binding draft uses new eventual-execution identity
+`infinium.m1-s6.wp4.credential-native-authorization/ec90627a-ac6c-402b-8a0e-7e896738413e`
+and a new disposable namespace, while its close-ready commit remains all zeroes
+and its status remains `draft-close-ready-binding-pending`. Safe validation
+reports `execution_authorized: false` with zero Credential Manager, network,
+and provider operations. Release build passed with zero warnings/errors,
+focused authorization tests passed 12/12, and documentation/diff checks passed.
