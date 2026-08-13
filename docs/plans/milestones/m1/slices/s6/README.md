@@ -3,7 +3,7 @@
 Status: Accepted
 Disposition: Active slice navigation; live authority remains in current state
 
-Last reviewed: 2026-08-12
+Last reviewed: 2026-08-13
 
 Live authorization remains stated only in
 [current project state](../../../../../current-state.md).
@@ -27,10 +27,16 @@ with evidence commit `11e60445b6d5f1d3efc5b607f080dd986afb4ed4`.
 WP6 is independently accepted at exact product candidate
 `ee0b6d31f1c1826c2af7634766155397e916c3e1`, with append-only evidence
 `2b277338390f7dac37b5a5436bbe2cd81dedc871` and answer-isolated oracle
-`37aa2b4e2fc084307ba5211f21bbeeb7a93efab0`. The nine Slice 6 contracts
-remain `Implementation-active`. The live handoff now authorizes WP7 only;
-WP4 remains closed and its prior native authorization is stale/non-authoritative
-for any new effect, while WP8 and later packages are not authorized.
+`37aa2b4e2fc084307ba5211f21bbeeb7a93efab0`. WP7 is independently accepted
+at exact product candidate `59367a7479a7395b173b974bf720543aab2404d4`,
+with append-only evidence `51251c0e0eb98d67dbc9b295b9ff084ebca33890`
+and answer-isolated VAL-v3 oracle freeze
+`e9b032366552aa67649636655ed07a3bb50bb3b1`. The nine Slice 6 contracts
+remain `Implementation-active`. The live handoff now authorizes only fresh
+WP4 authorization-manifest preparation and review; its prior native
+authorization is stale/non-authoritative and no `CredentialNative` or
+Credential Manager operation is authorized. WP8 remains blocked until WP4 is
+freshly authorized, executed, independently accepted, and the handoff advances.
 [Current project state](../../../../../current-state.md) authorizes only the
 exact active package and governs automatic non-live progression. Disposable
 native qualification, production-profile enrollment/verification, and each of

@@ -4432,3 +4432,23 @@ proved zero repository-owned `dotnet`, `testhost`, or `vstest.console` survivor.
 No API key, DNS, network/provider request, Credential Manager operation, source
 refresh, private/evaluator/archive access, protected effect, WP8 work,
 current-state advance, or push occurred in the implementation candidate.
+
+## WP7 independent acceptance and bounded WP4 preparation handoff — 2026-08-13
+
+The owner accepts WP7 at exact product candidate
+`59367a7479a7395b173b974bf720543aab2404d4`, exact append-only acceptance
+evidence `51251c0e0eb98d67dbc9b295b9ff084ebca33890`, and exact independent
+answer-isolated VAL-v3 oracle freeze
+`e9b032366552aa67649636655ed07a3bb50bb3b1`. The acceptance incorporates the
+fresh terminal `/root/wp7_final_candidate_review` `ACCEPT` judgment and the
+carried independent oracle-review `ACCEPT` described immediately above.
+
+WP7 now satisfies the deterministic prerequisite of WP8. WP8 is nevertheless
+blocked because accepted plan section 19 also requires accepted WP4 native
+qualification. The only newly authorized work is documentation-only preparation
+and owner review of a fresh exact WP4 non-secret authorization manifest. Every
+prior WP4 manifest, owner acceptance, target derivation, and execution authority
+is stale and may not be reused. This handoff does not authorize
+`CredentialNative`, Credential Manager access, target creation/reuse, native
+helper execution, network/provider/source-refresh activity, private material,
+WP8 implementation, any later package, or push.
