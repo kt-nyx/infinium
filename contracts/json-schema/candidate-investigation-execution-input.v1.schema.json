@@ -39,9 +39,10 @@
     },
     "evidence": {
       "type": "object", "additionalProperties": false,
-      "required": ["evidence_id", "source_acquisition_id", "source_admission_id", "source_application_link_id", "source_revision_id", "passage_id", "relationship", "availability", "content_sha256"],
+      "required": ["evidence_id", "evidence_application_link_id", "source_acquisition_id", "source_admission_id", "source_application_link_id", "source_revision_id", "passage_id", "relationship", "availability", "content_sha256"],
       "properties": {
         "evidence_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
+        "evidence_application_link_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
         "source_acquisition_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
         "source_admission_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },
         "source_application_link_id": { "$ref": "common.v1.schema.json#/$defs/identifier" },

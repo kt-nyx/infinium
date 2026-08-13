@@ -54,6 +54,23 @@ foreach ($package in $packages) {
     }
 }
 
+foreach ($package in $packages) {
+    $target = Join-Path $root $package.Target
+    $path = Join-Path $target 'execution-input.v1.json'
+    $inputDocument = Get-Content -LiteralPath $path -Raw | ConvertFrom-Json
+    foreach ($context in $inputDocument.contexts) {
+        foreach ($evidenceItem in $context.evidence) {
+            $opaqueSuffix = ([string]$evidenceItem.evidence_id).Substring('evidence-'.Length)
+            $evidenceItem | Add-Member -NotePropertyName evidence_application_link_id `
+                -NotePropertyValue "evidence-application-$opaqueSuffix"
+        }
+    }
+    [System.IO.File]::WriteAllText(
+        $path,
+        ($inputDocument | ConvertTo-Json -Depth 64) + "`n",
+        [System.Text.UTF8Encoding]::new($false))
+}
+
 $devRoot = Join-Path $root 'S6-CANDIDATE-DEV-v2'
 $valRoot = Join-Path $root 'S6-CANDIDATE-VAL-v2'
 $branchMap = [ordered]@{
