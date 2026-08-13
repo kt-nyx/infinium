@@ -1,0 +1,23 @@
+{
+  "schema_id":"infinium.evaluation.candidate-investigation-oracle-provenance/v1","schema_version":"1","package_id":"S6-CANDIDATE-VAL-v2","partition":"validation","authored_at_utc":"2026-08-13T00:00:00.0000000Z","author_role":"fresh-answer-isolated-wp7-validation-replacement-oracle-author",
+  "method":"independent projection of accepted WP7 candidate admission, rejection, abstention, deletion, drift, replay, and authority boundaries from new opaque answer-free retained inputs before product comparison",
+  "input_commit":"f3f53a6685f7b7369567250458e746bdc9d260af","replaces_registry_authority_for":"S6-CANDIDATE-VAL-v1","replaced_package_bytes_modified":false,
+  "product_output_used":false,"product_implementation_used":false,"actual_comparison_used":false,"prior_or_rejected_oracle_used":false,"private_or_held_out_material_used":false,"network_or_provider_operation_used":false,"credential_operation_used":false,"source_refresh_used":false,
+  "input_identities":{
+    "execution-input.v1.json":{"bytes":31917,"sha256":"89ce17be81cbea87405de86a8971557e260a6d19e8f4b34f1147ae2b78d35108"},
+    "context-manifest.v1.json":{"bytes":2472,"sha256":"93a12e92bbf72138defdb4e0299f534d90bace2377610fd5d669014bf765d848"},
+    "retained-transcripts.v1.json":{"bytes":27292,"sha256":"ad183825ec0b7c7c018ebe2d9ac8b6f09b733da0b950a65a20e453b10776ba4b"}
+  },
+  "contract_identities":{
+    "candidate-investigation-execution-input.v1.schema.json":{"bytes":3955,"sha256":"ed93555566eb2aff178799d5c36a1e185c58834b3b098df91f6acacc14aad83d"},
+    "candidate-investigation-context.v1.schema.json":{"bytes":1383,"sha256":"48e186b67891af58b8daf53ce5d0c8bd425702a69ad9401fac4eeaeee581ac17"},
+    "candidate-investigation-retained-transcripts.v1.schema.json":{"bytes":3234,"sha256":"036de9ce8d8569d52510053faef00ea101afc21a5097d90f93336e15fe1d1c89"}
+  },
+  "coverage_audit":{"context_count":14,"transcript_count":14,"evidence_count":15,"referential_closure":"PASS","opaque_identity_sequence":["v01","v02","v03","v04","v05","v06","v07","v08","v09","v10","v11","v12","v13","v14"],"required_state_coverage":"PASS","source_and_evidence_application_links_distinct":"PASS","recursive_answer_isolation":"PASS"},
+  "partition_history":[
+    {"state":"prior-validation-v1-retained-as-development-evidence","reason":"prior validation influenced correction and cannot remain current validation authority"},
+    {"state":"new-opaque-validation-v2-inputs","reason":"materially independent answer-free scenario and identity set"},
+    {"state":"frozen-validation-v2","reason":"expected values fixed before any product comparison"}
+  ],
+  "replacement_rule":"VAL-v2 is the current materially independent validation replacement. VAL-v1 bytes remain untouched and cannot substitute for this validation result."
+}
