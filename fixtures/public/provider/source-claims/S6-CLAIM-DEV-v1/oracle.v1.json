@@ -82,13 +82,28 @@
       "replay_state": "not-applicable",
       "audit_only": false,
       "forbidden_authority_detected": false
+    },
+    {
+      "transcript_id": "dev-05",
+      "expected_result": "empty-abstained",
+      "expected_proposal_states": {},
+      "admitted_proposal_ids": [],
+      "rejected_proposal_ids": [],
+      "contradiction_evidence_ids": [],
+      "expected_abstention_count": 1,
+      "expected_gap_count": 1,
+      "expected_application_link_count": 0,
+      "provider_used": true,
+      "replay_state": "retained-response",
+      "audit_only": false,
+      "forbidden_authority_detected": false
     }
   ],
   "aggregate_expectations": {
     "accepted_proposal_count": 2,
     "rejected_proposal_count": 1,
     "application_link_count": 2,
-    "provider_operation_count": 3,
+    "provider_operation_count": 4,
     "no_model_scenario_count": 1,
     "network_send_count": 0,
     "credential_operation_count": 0
