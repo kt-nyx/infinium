@@ -218,6 +218,7 @@ function Test-Wp1AllowedPath([string] $Path) {
         'docs/research/investigations/README.md',
         'docs/research/investigations/RESEARCH-0055-slice6-local-input-bound-policy.md',
         'docs/research/source-registry.md',
+        'contracts/repository/public-fixture-registry.v1.schema.json',
         'eng/generate-m1-slice6-wp1-traceability.ps1',
         'eng/update-dependency-manifest.ps1',
         'eng/validate-m1-slice6-wp4-authorization.ps1',
@@ -226,6 +227,7 @@ function Test-Wp1AllowedPath([string] $Path) {
         'eng/verify-m1-slice6-wp3-upgrade.ps1',
         'fixtures/public/public-fixture-registry.v1.json',
         'fixtures/tooling/reseal-public-fixtures.mjs',
+        'fixtures/tooling/prepare-wp7-answer-free-inputs.ps1',
         'src/Infinium.Cli/packages.lock.json',
         'src/Infinium.Coordinator/packages.lock.json',
         'src/Infinium.Worker/packages.lock.json',
@@ -259,6 +261,7 @@ function Test-Wp1AllowedPath([string] $Path) {
         'fixtures/public/platform/provider-budget/',
         'fixtures/public/platform/provider-offline/',
         'fixtures/public/provider/source-claims/',
+        'fixtures/public/provider/candidate-investigations/',
         'src/Infinium.Persistence/',
         'tests/Infinium.ContractTests/',
         'tests/Infinium.UnitTests/'
@@ -471,7 +474,7 @@ function Invoke-Layer6ReviewGate {
 
     $failures = [System.Collections.Generic.List[string]]::new()
     foreach ($failure in $pathFailures) {
-        $failures.Add("Changed path is outside WP1 authority or protected: $($failure.path)")
+        $failures.Add("Changed path is outside Slice 6 authority or protected: $($failure.path)")
     }
     foreach ($failure in $jsonFailures) {
         $failures.Add("Changed JSON is invalid: $($failure.path): $($failure.error)")
