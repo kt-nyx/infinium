@@ -4652,3 +4652,4 @@ namespace/output-root dispositions, safe verification, both Layer 6 receipts,
 and zero-process cleanup conform. No effect occurred. WP4 remains closed until
 the exact replacement manifest receives explicit owner native-effect
 acceptance.
+WP4_V2_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-authorization/cedc4c47-0c58-490e-8d14-5159362aadf3 sha256=6a2c1f39137de8e40d9e9574ba963d39c8bbdb7c880663a363cc69e65145c952 close_ready_commit=478fe41660a0de91b87e602452e267fa50961393 expires_at_utc=2026-08-15T15:36:55.1098222Z
