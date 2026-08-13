@@ -19,10 +19,12 @@ public static class ProviderPersistenceDeclarations
     public const string Wp6CorrectionSourceSchemaFingerprint = "4a9591b76c17bdac790010c9cef292875d59fcad0aa81054b91d69a699c7372e";
     public const string Wp6ActiveContractCorrectionMigrationId = "M1-S6-WP6-0006G";
     public const string Wp6ActiveContractCorrectionSourceSchemaFingerprint = "a9c58c7e3f374b77a623b751547353a356b2132f24f353ca2356a4268f13b51d";
+    public const string Wp7ExtensionMigrationId = "M1-S6-WP7-0006H";
+    public const string Wp7ExtensionSourceSchemaFingerprint = "0c831ead2dc177f3d4367b8fef12b0bbad2d17aa7d83203b6e2caf6c8b978ef5";
     public const int SourceSchemaVersion = 5;
     public const string SourceStorageContractVersion = "1.4.0";
     public const string SourceSchemaFingerprint = "e6d27152687e6b0c806da58a716a9ab909817f046fbe3bf11d8846da5e5dc87d";
-    public const string SchemaFingerprint = "0c831ead2dc177f3d4367b8fef12b0bbad2d17aa7d83203b6e2caf6c8b978ef5";
+    public const string SchemaFingerprint = "8195fc34887e202b823bd1a7c6757bde6dd78f2df6648e589d64f46a3effbcbf";
     public const int ProjectionContractVersion = 1;
 
     public static IReadOnlyList<string> RebuildableProjections { get; } =
@@ -68,6 +70,7 @@ public static class ProviderPersistenceDeclarations
         "provider_semantic_proposals",
         "provider_semantic_admissions",
         "provider_semantic_validations",
+        "candidate_investigation_outcomes",
         "analysis_candidates",
         "analysis_hypotheses",
         "evidence_application_links",

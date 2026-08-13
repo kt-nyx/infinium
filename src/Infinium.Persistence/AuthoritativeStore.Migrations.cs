@@ -191,6 +191,9 @@ public sealed partial class AuthoritativeStore
                     INSERT INTO store_metadata(key,value)
                     VALUES ('wp6_active_contract_correction_id','M1-S6-WP6-0006G')
                     ON CONFLICT(key) DO UPDATE SET value=excluded.value;
+                    INSERT INTO store_metadata(key,value)
+                    VALUES ('wp7_schema_extension_id','M1-S6-WP7-0006H')
+                    ON CONFLICT(key) DO UPDATE SET value=excluded.value;
                     INSERT INTO migration_history(
                         migration_id, from_version, to_version, applied_at, sqlite_source_id)
                     VALUES ('M1-S6-0006', 5, 6, $now, $sqlite_source);
@@ -211,6 +214,7 @@ public sealed partial class AuthoritativeStore
                 ApplyWp5Schema6CorrectionIfRequired();
                 ApplyWp6Schema6CorrectionIfRequired();
                 ApplyWp6ActiveContractCorrectionIfRequired();
+                ApplyWp7Schema6ExtensionIfRequired();
             }
         }
     }
@@ -269,6 +273,7 @@ public sealed partial class AuthoritativeStore
             "554129523ac64ce52ee4d24e90644dbaa167c0d98602f1c2d0f25ad271ec0581";
         string actualFingerprint = ComputeSchemaFingerprint(connection);
         if (actualFingerprint is ProviderPersistenceDeclarations.SchemaFingerprint
+            or ProviderPersistenceDeclarations.Wp7ExtensionSourceSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp6ActiveContractCorrectionSourceSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp6CorrectionSourceSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp5ExtensionSourceSchemaFingerprint)
@@ -387,6 +392,7 @@ public sealed partial class AuthoritativeStore
     {
         string actualFingerprint = ComputeSchemaFingerprint(connection);
         if (actualFingerprint is ProviderPersistenceDeclarations.SchemaFingerprint
+            or ProviderPersistenceDeclarations.Wp7ExtensionSourceSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp6ActiveContractCorrectionSourceSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp6CorrectionSourceSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp5CorrectionSourceSchemaFingerprint)
@@ -432,6 +438,7 @@ public sealed partial class AuthoritativeStore
     {
         string actualFingerprint = ComputeSchemaFingerprint(connection);
         if (actualFingerprint is ProviderPersistenceDeclarations.SchemaFingerprint
+            or ProviderPersistenceDeclarations.Wp7ExtensionSourceSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp6ActiveContractCorrectionSourceSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp6CorrectionSourceSchemaFingerprint)
         {
@@ -492,6 +499,7 @@ public sealed partial class AuthoritativeStore
     {
         string actualFingerprint = ComputeSchemaFingerprint(connection);
         if (actualFingerprint is ProviderPersistenceDeclarations.SchemaFingerprint
+            or ProviderPersistenceDeclarations.Wp7ExtensionSourceSchemaFingerprint
             or ProviderPersistenceDeclarations.Wp6ActiveContractCorrectionSourceSchemaFingerprint)
         {
             using SqliteCommand declared = connection.CreateCommand();
@@ -539,7 +547,8 @@ public sealed partial class AuthoritativeStore
     private void ApplyWp6ActiveContractCorrectionIfRequired()
     {
         string actualFingerprint = ComputeSchemaFingerprint(connection);
-        if (actualFingerprint == ProviderPersistenceDeclarations.SchemaFingerprint)
+        if (actualFingerprint is ProviderPersistenceDeclarations.SchemaFingerprint
+            or ProviderPersistenceDeclarations.Wp7ExtensionSourceSchemaFingerprint)
         {
             using SqliteCommand declared = connection.CreateCommand();
             declared.CommandText =
@@ -621,6 +630,48 @@ public sealed partial class AuthoritativeStore
             """
             UPDATE store_metadata SET value=$fingerprint WHERE key='schema_fingerprint';
             INSERT INTO store_metadata(key,value) VALUES('wp6_active_contract_correction_id','M1-S6-WP6-0006G')
+              ON CONFLICT(key) DO UPDATE SET value=excluded.value;
+            """,
+            transaction,
+            ("$fingerprint", upgradedFingerprint));
+        transaction.Commit();
+    }
+
+    private void ApplyWp7Schema6ExtensionIfRequired()
+    {
+        string actualFingerprint = ComputeSchemaFingerprint(connection);
+        if (actualFingerprint == ProviderPersistenceDeclarations.SchemaFingerprint)
+        {
+            using SqliteCommand declared = connection.CreateCommand();
+            declared.CommandText =
+                "SELECT COUNT(*) FROM store_metadata WHERE key='wp7_schema_extension_id' AND value='M1-S6-WP7-0006H';";
+            if (Convert.ToInt64(declared.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
+            {
+                throw new InvalidOperationException("The current WP7 schema fingerprint lacks its exact provenance.");
+            }
+            return;
+        }
+        if (actualFingerprint != ProviderPersistenceDeclarations.Wp7ExtensionSourceSchemaFingerprint)
+        {
+            throw new InvalidOperationException("Schema 6 does not match the exact WP7 extension source.");
+        }
+
+        using SqliteTransaction transaction = BeginTransaction();
+        Execute(ExtractSchemaStatement(SchemaV6, "CREATE TABLE candidate_investigation_outcomes"), transaction);
+        Execute(ExtractSchemaStatement(SchemaV6, "CREATE TRIGGER candidate_investigation_outcome_candidate_guard"), transaction);
+        Execute(ExtractSchemaStatement(SchemaV6, "CREATE TRIGGER candidate_investigation_outcome_response_guard"), transaction);
+        CreateAppendOnlyTriggers(["candidate_investigation_outcomes"], transaction);
+        CreateCanonicalTimestampTriggers([("candidate_investigation_outcomes", "created_at", false)], transaction);
+        string upgradedFingerprint = ComputeSchemaFingerprint(connection, transaction);
+        if (upgradedFingerprint != ProviderPersistenceDeclarations.SchemaFingerprint)
+        {
+            throw new InvalidOperationException(
+                $"The bounded WP7 same-version extension did not converge on its declared fingerprint ({upgradedFingerprint}).");
+        }
+        Execute(
+            """
+            UPDATE store_metadata SET value=$fingerprint WHERE key='schema_fingerprint';
+            INSERT INTO store_metadata(key,value) VALUES('wp7_schema_extension_id','M1-S6-WP7-0006H')
               ON CONFLICT(key) DO UPDATE SET value=excluded.value;
             """,
             transaction,
@@ -920,6 +971,7 @@ public sealed partial class AuthoritativeStore
         ("provider_semantic_proposals", "created_at", false),
         ("provider_semantic_validations", "created_at", false),
         ("provider_semantic_admissions", "created_at", false),
+        ("candidate_investigation_outcomes", "created_at", false),
         ("provider_replay_edges", "created_at", false),
         ("provider_run_output_v2_bindings", "created_at", false),
         ("provider_operation_projection", "updated_at", false),
@@ -1095,6 +1147,7 @@ public sealed partial class AuthoritativeStore
         "table:provider_semantic_admissions",
         "table:provider_semantic_proposals",
         "table:provider_semantic_validations",
+        "table:candidate_investigation_outcomes",
         "table:provider_settlement_adjustments",
         "table:provider_settlements",
         "table:provider_transport_events",
@@ -1257,6 +1310,8 @@ public sealed partial class AuthoritativeStore
         "trigger:provider_semantic_proposal_chronology_guard",
         "trigger:provider_semantic_validation_chronology_guard",
         "trigger:provider_semantic_proposal_root_guard",
+        "trigger:candidate_investigation_outcome_candidate_guard",
+        "trigger:candidate_investigation_outcome_response_guard",
         "trigger:provider_transport_event_order_guard",
         "trigger:provider_delete_pending_never_reactivates_guard",
         "trigger:provider_access_profiles_append_only_delete",
@@ -1309,6 +1364,8 @@ public sealed partial class AuthoritativeStore
         "trigger:provider_semantic_proposals_append_only_update",
         "trigger:provider_semantic_validations_append_only_delete",
         "trigger:provider_semantic_validations_append_only_update",
+        "trigger:candidate_investigation_outcomes_append_only_delete",
+        "trigger:candidate_investigation_outcomes_append_only_update",
         "trigger:provider_settlement_adjustments_append_only_delete",
         "trigger:provider_settlement_adjustments_append_only_update",
         "trigger:provider_settlements_append_only_delete",
@@ -1408,6 +1465,7 @@ public sealed partial class AuthoritativeStore
         "provider_responses",
         "provider_response_finalizations",
         "provider_semantic_admissions",
+        "candidate_investigation_outcomes",
         "provider_semantic_proposals",
         "provider_semantic_validations",
         "provider_settlement_adjustments",
@@ -4113,6 +4171,58 @@ public sealed partial class AuthoritativeStore
             WHERE validation.validation_id = NEW.validation_id
               AND validation.created_at <= NEW.created_at)
             THEN RAISE(ABORT, 'semantic admission cannot predate its exact validation root') END;
+        END;
+        CREATE TABLE candidate_investigation_outcomes(
+            outcome_id TEXT PRIMARY KEY CHECK(length(trim(outcome_id)) > 0),
+            authorization_id TEXT NOT NULL,
+            operation_id TEXT NOT NULL,
+            owner_id TEXT NOT NULL REFERENCES runs(run_id) ON DELETE RESTRICT,
+            candidate_id TEXT NOT NULL REFERENCES analysis_candidates(candidate_id) ON DELETE RESTRICT,
+            context_id TEXT NOT NULL CHECK(length(trim(context_id)) > 0),
+            transcript_id TEXT NOT NULL UNIQUE CHECK(length(trim(transcript_id)) > 0),
+            response_record_id TEXT REFERENCES provider_responses(response_record_id) ON DELETE RESTRICT,
+            response_fingerprint TEXT NOT NULL CHECK(length(response_fingerprint) = 64),
+            transcript_state TEXT NOT NULL CHECK(transcript_state IN (
+              'completed','malformed','refusal','incomplete','drift','not-used','unavailable')),
+            disposition TEXT NOT NULL CHECK(length(trim(disposition)) > 0),
+            replay_state TEXT NOT NULL CHECK(replay_state IN (
+              'retained-response','audit-only','failed-identity-drift','not-applicable','unavailable')),
+            input_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+            transcript_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+            result_payload_id TEXT NOT NULL REFERENCES payloads(payload_id) ON DELETE RESTRICT,
+            created_at TEXT NOT NULL,
+            UNIQUE(operation_id,context_id),
+            FOREIGN KEY(authorization_id,operation_id)
+              REFERENCES provider_operation_authorizations(authorization_id,operation_id) ON DELETE RESTRICT,
+            CHECK((transcript_state IN ('not-used','unavailable') AND response_record_id IS NULL)
+              OR (transcript_state NOT IN ('not-used','unavailable') AND response_record_id IS NOT NULL))
+        ) STRICT;
+        CREATE TRIGGER candidate_investigation_outcome_candidate_guard
+        BEFORE INSERT ON candidate_investigation_outcomes
+        BEGIN
+          SELECT CASE WHEN NOT EXISTS(
+            SELECT 1 FROM analysis_candidates candidate
+            JOIN provider_operation_authorizations authorization
+              ON authorization.authorization_id=NEW.authorization_id
+             AND authorization.operation_id=NEW.operation_id
+             AND authorization.owner_kind='analysis-run' AND authorization.owner_id=NEW.owner_id
+             AND authorization.operation_kind='candidate-investigation'
+            WHERE candidate.candidate_id=NEW.candidate_id AND candidate.run_id=NEW.owner_id)
+            THEN RAISE(ABORT, 'candidate outcome must bind its exact analysis candidate root') END;
+        END;
+        CREATE TRIGGER candidate_investigation_outcome_response_guard
+        BEFORE INSERT ON candidate_investigation_outcomes
+        WHEN NEW.response_record_id IS NOT NULL
+        BEGIN
+          SELECT CASE WHEN NOT EXISTS(
+            SELECT 1 FROM provider_responses response
+            WHERE response.response_record_id=NEW.response_record_id
+              AND response.authorization_id=NEW.authorization_id
+              AND response.operation_id=NEW.operation_id
+              AND response.owner_kind='analysis-run' AND response.owner_id=NEW.owner_id
+              AND response.operation_kind='candidate-investigation'
+              AND response.raw_response_fingerprint=NEW.response_fingerprint)
+            THEN RAISE(ABORT, 'candidate outcome must bind the exact retained provider response bytes') END;
         END;
         CREATE TABLE provider_replay_edges(
             replay_edge_id TEXT PRIMARY KEY,

@@ -40,7 +40,7 @@ public sealed class AnalysisStatePersistenceTests
         "provider_transport_events", "provider_responses", "provider_usage_entries", "provider_rate_limit_facts",
         "provider_response_finalizations",
         "provider_settlements", "provider_settlement_adjustments", "provider_semantic_proposals",
-        "provider_semantic_validations", "provider_semantic_admissions", "provider_replay_edges",
+        "provider_semantic_validations", "provider_semantic_admissions", "candidate_investigation_outcomes", "provider_replay_edges",
         "provider_run_output_v2_bindings", "provider_operation_projection",
         "provider_profile_projection", "provider_budget_limits", "provider_budget_events",
         "provider_usage_rollup_references", "provider_budget_settlement_receipts", "provider_budget_projection",
@@ -158,6 +158,11 @@ public sealed class AnalysisStatePersistenceTests
             ScalarText(
                 connection,
                 "SELECT value FROM store_metadata WHERE key = 'wp6_active_contract_correction_id';"));
+        Assert.AreEqual(
+            ProviderPersistenceDeclarations.Wp7ExtensionMigrationId,
+            ScalarText(
+                connection,
+                "SELECT value FROM store_metadata WHERE key = 'wp7_schema_extension_id';"));
         Assert.AreEqual(
             "4|5",
             ScalarText(

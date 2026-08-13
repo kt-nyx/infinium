@@ -33,7 +33,13 @@ public static class CandidateInvestigationFixtureReader
     private static readonly string[] ProductInputs =
         ["execution-input.v1.json", "context-manifest.v1.json", "retained-transcripts.v1.json"];
     private static readonly string[] ForbiddenAnswerTokens =
-        ["expected_", "oracle", "ground_truth", "matched_negative", "correct_answer"];
+        ["expected", "oracle", "groundtruth", "matchednegative", "correctanswer"];
+    private static readonly string[] ForbiddenIdentifierDispositions =
+    [
+        "positive", "negative", "matchednegative", "positivecontrol", "conditional", "unsupported",
+        "contradiction", "abstention", "hostile", "malformed", "refusal", "incomplete", "deleted",
+        "drift", "nomodel", "unavailableprovider",
+    ];
 
     public static CandidateInvestigationFixturePackage Read(string directory)
     {
@@ -51,12 +57,11 @@ public static class CandidateInvestigationFixtureReader
         string partition = root.GetProperty("partition").GetString()!;
         if (root.GetProperty("schema_identity").GetString() != "infinium.public-fixture.candidate-investigation/1.0.0"
             || packageId != Path.GetFileName(fullDirectory) || root.GetProperty("fixture_id").GetString() != packageId
-            || root.GetProperty("package_version").GetString() != "1.0.0"
-            || root.GetProperty("fixture_version").GetString() != "1.0.0"
+            || root.GetProperty("package_version").GetString() != "2.0.0"
+            || root.GetProperty("fixture_version").GetString() != "2.0.0"
             || partition is not ("development" or "validation")
             || root.GetProperty("status").GetString() != "oracle-frozen-pre-comparison"
             || !root.GetProperty("answer_free_product_inputs").GetBoolean()
-            || root.GetProperty("recursive_answer_isolation").GetString() != "PASS"
             || !root.GetProperty("oracle_frozen_before_product_comparison").GetBoolean()
             || root.GetProperty("network_required").GetBoolean()
             || root.GetProperty("provider_request_count").GetInt32() != 0
@@ -123,6 +128,8 @@ public static class CandidateInvestigationFixtureReader
         }
     }
 
+    public static void AssertAnswerFreeProductInput(JsonElement element) => AssertAnswerFree(element, null);
+
     private static void ValidateOracleAndProvenance(
         string directory, string packageId, string partition, CandidateInvestigationExecutionInput input,
         IReadOnlyList<CandidateInvestigationRetainedTranscript> transcripts, JsonDocument oracle, JsonDocument provenance)
@@ -179,7 +186,7 @@ public static class CandidateInvestigationFixtureReader
             case JsonValueKind.Object:
                 foreach (JsonProperty property in element.EnumerateObject())
                 {
-                    if (ForbiddenAnswerTokens.Any(token => property.Name.Contains(token, StringComparison.OrdinalIgnoreCase)))
+                    if (ContainsForbiddenAnswerToken(property.Name))
                     {
                         throw new InvalidDataException("Candidate product input contains an answer-authority field.");
                     }
@@ -194,13 +201,29 @@ public static class CandidateInvestigationFixtureReader
                 break;
             case JsonValueKind.String:
                 string value = element.GetString()!;
-                if (ForbiddenAnswerTokens.Any(token => value.Contains(token, StringComparison.OrdinalIgnoreCase)))
+                if (ContainsForbiddenAnswerToken(value)
+                    || IsIdentifierProperty(propertyName)
+                    && ForbiddenIdentifierDispositions.Any(token => Normalize(value).Contains(token, StringComparison.Ordinal)))
                 {
                     throw new InvalidDataException("Candidate product input contains answer-authority data.");
                 }
                 break;
         }
     }
+
+    private static bool IsIdentifierProperty(string? propertyName) => propertyName is not null
+        && (propertyName.EndsWith("_id", StringComparison.Ordinal)
+            || propertyName.EndsWith("_ids", StringComparison.Ordinal)
+            || propertyName is "package_identity" or "fixture_id" or "package_id");
+
+    private static bool ContainsForbiddenAnswerToken(string value)
+    {
+        string normalized = Normalize(value);
+        return ForbiddenAnswerTokens.Any(token => normalized.Contains(token, StringComparison.Ordinal));
+    }
+
+    private static string Normalize(string value) => new(value.Where(char.IsLetterOrDigit)
+        .Select(char.ToLowerInvariant).ToArray());
 
     private static JsonDocument ReadJson(string path) => BoundedJsonDocumentReader.Read(path, MaximumBytes, 48).Document;
     private static T Deserialize<T>(JsonElement element) => JsonSerializer.Deserialize<T>(element, SourceClaimContextMinimizer.JsonOptions)!;
@@ -234,6 +257,8 @@ public static class CandidateInvestigationOracleVerifier
             CandidateInvestigationScenarioResult result = actual.Scenarios.Single(
                 x => x.TranscriptId == oracle.GetProperty("transcript_id").GetString());
             string[] expectedProposalIds = Strings(oracle, "expected_proposal_ids");
+            Dictionary<string, string> expectedStates = oracle.GetProperty("expected_proposal_states")
+                .EnumerateObject().ToDictionary(item => item.Name, item => item.Value.GetString()!, StringComparer.Ordinal);
             string[] admitted = result.Investigation.HypothesisProposals
                 .Where(x => x.State == ProposalAdmissionState.Admitted).Select(x => x.ProposalId.Value).ToArray();
             string[] rejected = result.Investigation.HypothesisProposals
@@ -241,12 +266,31 @@ public static class CandidateInvestigationOracleVerifier
             if (result.ContextId != oracle.GetProperty("context_id").GetString()
                 || result.Investigation.CandidateId.Value != oracle.GetProperty("candidate_id").GetString()
                 || result.HypothesisId != oracle.GetProperty("hypothesis_id").GetString()
+                || result.ResponseRecordId != oracle.GetProperty("expected_response_record_id").GetString()
+                || result.ResponseFingerprint != oracle.GetProperty("expected_response_fingerprint").GetString()
+                || result.ModelUsed != oracle.GetProperty("expected_model_used").GetBoolean()
+                || result.ProviderUsed != oracle.GetProperty("provider_used").GetBoolean()
+                || result.AuditOnly != oracle.GetProperty("audit_only").GetBoolean()
+                || result.ForbiddenAuthorityDetected != oracle.GetProperty("forbidden_authority_detected").GetBoolean()
                 || result.TranscriptState != oracle.GetProperty("expected_response_state").GetString()
                 || result.Disposition != oracle.GetProperty("expected_result").GetString()
                 || result.ReplayState != oracle.GetProperty("replay_state").GetString()
                 || !result.Investigation.HypothesisProposals.Select(x => x.ProposalId.Value).SequenceEqual(expectedProposalIds)
                 || !admitted.SequenceEqual(Strings(oracle, "admitted_proposal_ids"))
                 || !rejected.SequenceEqual(Strings(oracle, "rejected_proposal_ids"))
+                || !result.Investigation.HypothesisProposals.ToDictionary(
+                        proposal => proposal.ProposalId.Value,
+                        proposal => proposal.State == ProposalAdmissionState.Admitted ? "admitted" : "rejected",
+                        StringComparer.Ordinal)
+                    .OrderBy(item => item.Key, StringComparer.Ordinal)
+                    .SequenceEqual(expectedStates.OrderBy(item => item.Key, StringComparer.Ordinal))
+                || !result.Investigation.HypothesisProposals.SelectMany(x => x.SupportingEvidenceIds)
+                    .Select(x => x.Value).SequenceEqual(Strings(oracle, "expected_supporting_evidence_ids"))
+                || !result.Investigation.HypothesisProposals.SelectMany(x => x.ContradictingEvidenceIds)
+                    .Select(x => x.Value).SequenceEqual(Strings(oracle, "expected_contradicting_evidence_ids"))
+                || oracle.TryGetProperty("expected_missing_information", out _)
+                    && !result.Investigation.HypothesisProposals.SelectMany(x => x.MissingInformation)
+                        .SequenceEqual(Strings(oracle, "expected_missing_information"))
                 || !result.Investigation.Abstentions.SequenceEqual(Strings(oracle, "expected_abstentions"))
                 || !result.Investigation.Gaps.SequenceEqual(Strings(oracle, "expected_gaps"))
                 || result.Investigation.AdmissionLinks.Count(x => x.State == ProposalAdmissionState.Admitted)
@@ -256,19 +300,100 @@ public static class CandidateInvestigationOracleVerifier
                 || !result.SourceAcquisitionLinks.Select(x => x.SourceAdmissionId)
                     .SequenceEqual(Strings(oracle, "expected_source_admission_ids"))
                 || !result.SourceAcquisitionLinks.Select(x => x.SourceApplicationLinkId)
-                    .SequenceEqual(Strings(oracle, "expected_source_application_link_ids")))
+                    .SequenceEqual(Strings(oracle, "expected_source_application_link_ids"))
+                || !result.SourceAcquisitionLinks.Select(x => x.EvidenceApplicationLinkId)
+                    .SequenceEqual(Strings(oracle, "expected_evidence_application_link_ids"))
+                || oracle.TryGetProperty("condition_must_not_be_broadened", out JsonElement condition)
+                    && condition.GetBoolean()
+                    && (result.Disposition != "accepted-conditional"
+                        || result.Investigation.HypothesisProposals.All(x => x.MissingInformation.Count == 0)))
             {
                 throw new InvalidDataException("Candidate-investigation result disagrees with frozen scenario " + result.TranscriptId + ".");
             }
         }
         JsonElement aggregate = expected.GetProperty("aggregate_expectations");
-        if (actual.Scenarios.Sum(x => x.Investigation.HypothesisProposals.Count) != aggregate.GetProperty("proposal_count").GetInt32()
+        if (actual.Scenarios.Count != aggregate.GetProperty("scenario_count").GetInt32()
+            || actual.Scenarios.Sum(x => x.Investigation.HypothesisProposals.Count) != aggregate.GetProperty("proposal_count").GetInt32()
             || actual.Scenarios.Sum(x => x.Investigation.HypothesisProposals.Count(p => p.State == ProposalAdmissionState.Admitted))
                 != aggregate.GetProperty("admitted_proposal_count").GetInt32()
             || actual.Scenarios.Sum(x => x.Investigation.HypothesisProposals.Count(p => p.State != ProposalAdmissionState.Admitted))
-                != aggregate.GetProperty("rejected_proposal_count").GetInt32())
+                != aggregate.GetProperty("rejected_proposal_count").GetInt32()
+            || actual.Scenarios.Sum(x => x.Investigation.AdmissionLinks.Count(link => link.State == ProposalAdmissionState.Admitted))
+                != aggregate.GetProperty("admission_link_count").GetInt32()
+            || actual.Scenarios.Count(x => x.ModelUsed) != aggregate.GetProperty("model_used_scenario_count").GetInt32()
+            || actual.Scenarios.Count(x => !x.ModelUsed && x.Disposition == "not-used")
+                != aggregate.GetProperty("no_model_scenario_count").GetInt32()
+            || actual.Scenarios.Count(x => x.Disposition == "unavailable-provider")
+                != aggregate.GetProperty("unavailable_provider_scenario_count").GetInt32()
+            || actual.Scenarios.Select(x => x.Investigation.OperationId.Value).Distinct(StringComparer.Ordinal).Count()
+                != aggregate.GetProperty("distinct_operation_id_count").GetInt32()
+            || aggregate.GetProperty("positive_and_matched_negative_share_operation").GetBoolean()
+                != PositiveAndMatchedNegativeShareOperation(actual)
+            || actual.Scenarios.Count(x => x.ReplayState == "retained-response")
+                != aggregate.GetProperty("retained_response_scenario_count").GetInt32()
+            || actual.Scenarios.Count(x => x.AuditOnly) != aggregate.GetProperty("audit_only_scenario_count").GetInt32()
+            || actual.Scenarios.Count(x => x.ReplayState == "failed-identity-drift")
+                != aggregate.GetProperty("failed_identity_drift_scenario_count").GetInt32()
+            || aggregate.TryGetProperty("forbidden_authority_scenario_count", out JsonElement forbiddenCount)
+                && actual.Scenarios.Count(x => x.ForbiddenAuthorityDetected) != forbiddenCount.GetInt32()
+            || aggregate.GetProperty("network_send_count").GetInt32() != 0 || actual.NetworkUsed
+            || aggregate.GetProperty("credential_operation_count").GetInt32() != 0 || actual.CredentialUsed
+            || aggregate.GetProperty("source_refresh_count").GetInt32() != 0 || actual.SourceRefreshUsed)
         {
             throw new InvalidDataException("Candidate-investigation aggregate disagrees with the frozen oracle.");
+        }
+        VerifyFrozenBoundaries(expected.GetProperty("frozen_boundaries"), actual);
+        VerifyForbiddenClaims(expected.GetProperty("forbidden_claims"), actual);
+    }
+
+    private static bool PositiveAndMatchedNegativeShareOperation(CandidateInvestigationResult actual)
+    {
+        CandidateInvestigationScenarioResult? positive = actual.Scenarios.SingleOrDefault(x => x.Disposition == "accepted");
+        CandidateInvestigationScenarioResult? negative = actual.Scenarios.SingleOrDefault(x => x.Disposition == "rejected-matched-negative");
+        return positive is not null && negative is not null
+            && positive.Investigation.OperationId == negative.Investigation.OperationId;
+    }
+
+    private static void VerifyFrozenBoundaries(JsonElement boundaries, CandidateInvestigationResult actual)
+    {
+        if (boundaries.EnumerateObject().Any(item => item.Value.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
+            || boundaries.EnumerateObject().Any(item => item.Name.EndsWith("_inspected", StringComparison.Ordinal)
+                ? item.Value.GetBoolean() : !item.Value.GetBoolean())
+            || actual.NetworkUsed || actual.CredentialUsed || actual.SourceRefreshUsed
+            || actual.Scenarios.Any(scenario => scenario.Investigation.HypothesisProposals.Any(proposal =>
+                proposal.State == ProposalAdmissionState.Admitted && proposal.SupportingEvidenceIds.Count == 0))
+            || actual.Scenarios.Where(scenario => scenario.Disposition == "rejected-matched-negative")
+                .SelectMany(scenario => scenario.Investigation.HypothesisProposals)
+                .Any(proposal => proposal.State == ProposalAdmissionState.Admitted)
+            || actual.Scenarios.Where(scenario => scenario.Disposition == "accepted-conditional")
+                .SelectMany(scenario => scenario.Investigation.HypothesisProposals)
+                .Any(proposal => proposal.MissingInformation.Count == 0)
+            || actual.Scenarios.Any(scenario => scenario.SourceAcquisitionLinks.Any(link =>
+                link.SourceAcquisitionId == link.SourceAdmissionId
+                || link.SourceAcquisitionId == link.SourceApplicationLinkId
+                || link.SourceAdmissionId == link.SourceApplicationLinkId
+                || link.EvidenceApplicationLinkId == link.SourceApplicationLinkId))
+            || actual.Scenarios.Any(scenario => scenario.ProviderUsed != scenario.ModelUsed))
+        {
+            throw new InvalidDataException("Candidate-investigation result violates a frozen semantic or no-effect boundary.");
+        }
+    }
+
+    private static void VerifyForbiddenClaims(JsonElement claims, CandidateInvestigationResult actual)
+    {
+        string[] values = claims.EnumerateArray().Select(item => item.GetString()!).ToArray();
+        if (values.Length == 0 || values.Any(string.IsNullOrWhiteSpace)
+            || values.Any(value => !value.Contains("authority", StringComparison.OrdinalIgnoreCase)
+                && !value.Contains("admitted", StringComparison.OrdinalIgnoreCase)
+                && !value.Contains("replay", StringComparison.OrdinalIgnoreCase)
+                && !value.Contains("provider", StringComparison.OrdinalIgnoreCase)
+                && !value.Contains("evidence", StringComparison.OrdinalIgnoreCase)
+                && !value.Contains("output", StringComparison.OrdinalIgnoreCase)
+                && !value.Contains("passing", StringComparison.OrdinalIgnoreCase)
+                && !value.Contains("condition", StringComparison.OrdinalIgnoreCase))
+            || actual.NetworkUsed || actual.CredentialUsed || actual.SourceRefreshUsed)
+        {
+            throw new InvalidDataException("Candidate-investigation result does not execute every frozen forbidden-claim boundary.");
         }
     }
 

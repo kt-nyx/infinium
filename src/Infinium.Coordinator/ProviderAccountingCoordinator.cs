@@ -135,12 +135,18 @@ public sealed class ProviderAccountingCoordinator
             }
             IReadOnlyList<ProviderSemanticAdmissionReadModel> admissions =
                 store.ReadCandidateInvestigationAdmissionsForOperation(operation.OwnerId, operation.OperationId);
-            if (admissions.Count == 0 || admissions.Any(x => x.ResponseRecordId != operation.ResponseId))
+            IReadOnlyList<CandidateInvestigationOutcomeIdentityReadModel> outcomes =
+                store.ReadCandidateInvestigationOutcomesForOperation(operation.OwnerId, operation.OperationId);
+            if (outcomes.Count == 0 || outcomes.Any(x => x.ResponseRecordId != operation.ResponseId)
+                || admissions.Any(x => x.ResponseRecordId != operation.ResponseId))
             {
-                throw new InvalidDataException("Candidate publication requires exact retained semantic admissions.");
+                throw new InvalidDataException("Candidate publication requires exact retained terminal outcomes and any semantic admissions.");
             }
-            admissionId = new(admissions.OrderByDescending(x => x.State == "admitted")
-                .ThenBy(x => x.AdmissionId, StringComparer.Ordinal).First().AdmissionId);
+            if (admissions.Count > 0)
+            {
+                admissionId = new(admissions.OrderByDescending(x => x.State == "admitted")
+                    .ThenBy(x => x.AdmissionId, StringComparer.Ordinal).First().AdmissionId);
+            }
         }
         ProviderRunOutputV2BindingReceipt binding = store.BindProviderRunOutputV2(
             runId.Value, operation.EffectiveConfigurationId, canonicalLocalRunOutputV1, createdAt);
@@ -158,6 +164,34 @@ public sealed class ProviderAccountingCoordinator
         ProviderOperationSummaryProjection projection = QueryOperation(new(operationId, true, true, true));
         CliSummaryV2Document cli = ProviderContractFactories.CreateTerminalCliSummaryV2Supplement(
             runId, canonicalLocalCliSummaryV1, projection, replay.Usage, new(operation.AuthorizationId), []);
+        return new(binding, runOutput, cli);
+    }
+
+    public ProviderTerminalPublicationArtifacts PublishCandidateNoResponseV2(
+        OpaqueId runId,
+        OpaqueId localRunOutputV1Id,
+        byte[] canonicalLocalRunOutputV1,
+        byte[] canonicalLocalCliSummaryV1,
+        OpaqueId operationId,
+        DateTimeOffset createdAt)
+    {
+        CandidateInvestigationNoResponsePublicationReadModel outcome =
+            store.ReadCandidateInvestigationNoResponsePublication(runId.Value, operationId.Value);
+        bool unavailable = outcome.TranscriptState == "unavailable";
+        if (!unavailable && outcome.TranscriptState != "not-used")
+        {
+            throw new InvalidDataException("Candidate no-response publication requires a not-used or unavailable terminal outcome.");
+        }
+        ProviderRunOutputV2BindingReceipt binding = store.BindProviderRunOutputV2(
+            runId.Value, outcome.EffectiveConfigurationId, canonicalLocalRunOutputV1, createdAt);
+        ProviderPublicationReferenceContract publication = new(
+            null, null, null, null, null, null, null, null, null,
+            unavailable ? "unavailable" : "not-used", false);
+        RunOutputV2Document runOutput = ProviderContractFactories.CreateRunOutputV2Supplement(
+            runId, localRunOutputV1Id, canonicalLocalRunOutputV1, new(outcome.EffectiveConfigurationId),
+            [publication], [], [], [], [outcome.Disposition]);
+        CliSummaryV2Document cli = ProviderContractFactories.CreateProviderNotUsedCliSummaryV2Supplement(
+            runId, canonicalLocalCliSummaryV1, unavailable, [outcome.Disposition]);
         return new(binding, runOutput, cli);
     }
 

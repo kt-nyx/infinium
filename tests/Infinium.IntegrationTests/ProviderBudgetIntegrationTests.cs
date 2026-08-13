@@ -636,7 +636,7 @@ public sealed class ProviderBudgetIntegrationTests
                       'candidate-import-closure','fixture-extractor','none','none','request-payload-restore','request-payload-restore',
                       '2026-08-10T00:00:01.0000000+00:00');
                     INSERT INTO documentation_passages VALUES('candidate-passage','candidate-doc-revision',0,1,
-                      'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd',NULL,'unavailable',
+                      '1111111111111111111111111111111111111111111111111111111111111111',NULL,'unavailable',
                       '2026-08-10T00:00:01.0000000+00:00');
                     INSERT INTO evidence_revisions VALUES('candidate-evidence','candidate-passage','candidate-import','fixture-evidence','1.0.0',
                       'documentation-claim','known-issue','test-result','applicable','observed','admitted','request-payload-restore',NULL,
@@ -644,7 +644,7 @@ public sealed class ProviderBudgetIntegrationTests
                     INSERT INTO documentation_application_bindings VALUES('candidate-binding','run-restore','install-restore','context-restore',
                       'manifest-restore','candidate-subject','installed-entity','candidate-closure',
                       '2026-08-10T00:00:01.0000000+00:00');
-                    INSERT INTO evidence_application_links VALUES('source-application-dev-positive','candidate-evidence','run-restore',
+                    INSERT INTO evidence_application_links VALUES('evidence-application-d01','candidate-evidence','run-restore',
                       'candidate-binding','context-restore','candidate-subject','installed-entity','candidate-closure','applicable',
                       'request-payload-restore','2026-08-10T00:00:01.0000000+00:00');
                     INSERT INTO candidate_decisions VALUES('candidate-decision','run-restore','candidate-population','candidate-relationship',
@@ -655,6 +655,48 @@ public sealed class ProviderBudgetIntegrationTests
                     """;
                 Assert.AreEqual(12, seed.ExecuteNonQuery());
             }
+            context.Store.RegisterSourceClaimAcquisition(new(
+                "acquisition-restore", "install-restore", "context-restore", "config-restore", "manifest-restore",
+                "run-restore", "application-restore", "cost-restore", "candidate-source-job", "candidate-source-command",
+                "candidate-source-parent", "candidate-doc-revision", BaseTime.AddSeconds(6)));
+            (SourceClaimExecutionInput sourceFixture, SourceClaimRetainedTranscript[] sourceTranscripts) =
+                SourceClaimAdmissionIntegrationTests.Load("S6-CLAIM-DEV-v1");
+            SourceClaimPassageInput sourcePassage = sourceFixture.Passages[0] with
+            {
+                PassageId = "candidate-passage",
+                SourceRevisionId = "candidate-doc-revision",
+            };
+            SourceClaimExecutionInput sourceInput = sourceFixture with
+            {
+                AcquisitionRunId = "acquisition-restore",
+                OperationId = "operation-restore",
+                HostAuthorizationId = "authorization-settlement",
+                OwnerId = "acquisition-restore",
+                ParentAnalysisRunId = "run-restore",
+                ApplicationScopeId = "application-restore",
+                CostAttributionScopeId = "cost-restore",
+                SourceRevisionId = "candidate-doc-revision",
+                Passages = [sourcePassage],
+            };
+            SourceClaimRetainedTranscript sourceTranscript = sourceTranscripts[0] with
+            {
+                TranscriptId = "candidate-source-transcript",
+                OperationId = "operation-restore",
+                ResponseRecordId = "candidate-seed:response",
+                SourceRevisionId = "candidate-doc-revision",
+                Proposals = [sourceTranscripts[0].Proposals[0] with
+                {
+                    ProposalId = "candidate-source-proposal",
+                    PassageId = "candidate-passage",
+                }],
+            };
+            SourceClaimAdmissionPublication sourceAdmission = new SourceClaimAcquisitionCoordinator(context.Store)
+                .AdmitRetainedTranscript(sourceInput, sourceTranscript, "authorization-settlement", "attempt-settlement",
+                    "request-settlement", gate.DispatchFenceId, BaseTime.AddSeconds(8));
+            Assert.AreEqual(1, sourceAdmission.Persistence.AdmissionCount);
+            _ = context.Store.ConsumeAdmittedSourceClaim(new(
+                "source-application-d01", "acquisition-restore", "admission-candidate-source-proposal", "run-restore",
+                "application-restore", "cost-restore", BaseTime.AddSeconds(9)));
             CloneRow(database, "provider_operation_blocks", "operation_id='operation-restore'", new Dictionary<string, object?>()
             {
                 ["operation_id"] = "candidate-operation",
@@ -840,18 +882,39 @@ public sealed class ProviderBudgetIntegrationTests
             });
         }
 
+        string retainedResponseFingerprint;
+        using (SqliteConnection responseDatabase = new($"Data Source={context.Store.Paths.Database};Mode=ReadOnly;Pooling=False"))
+        {
+            responseDatabase.Open();
+            using SqliteCommand responseIdentity = responseDatabase.CreateCommand();
+            responseIdentity.CommandText =
+                "SELECT raw_response_fingerprint FROM provider_responses WHERE response_record_id='candidate-response';";
+            retainedResponseFingerprint = (string)responseIdentity.ExecuteScalar()!;
+        }
         (CandidateInvestigationExecutionInput fixtureInput, CandidateInvestigationRetainedTranscript[] fixtureTranscripts) =
-            CandidateAdmissionProviderReplayIntegrationTests.Load("S6-CANDIDATE-DEV-v1");
+            CandidateAdmissionProviderReplayIntegrationTests.Load("S6-CANDIDATE-DEV-v2");
         CandidateInvestigationContextInput fixtureContext = fixtureInput.Contexts[0];
+        CandidateEvidenceInput durableEvidence = fixtureContext.Evidence[0] with
+        {
+            EvidenceId = "candidate-evidence",
+            EvidenceApplicationLinkId = "evidence-application-d01",
+            SourceAcquisitionId = "acquisition-restore",
+            SourceAdmissionId = "admission-candidate-source-proposal",
+            SourceApplicationLinkId = "source-application-d01",
+            SourceRevisionId = "candidate-doc-revision",
+            PassageId = "candidate-passage",
+        };
         CandidateInvestigationExecutionInput input = fixtureInput with
         {
             OperationId = "candidate-operation",
             HostAuthorizationId = "candidate-authorization",
             OwnerId = "run-restore",
             AnalysisRunId = "run-restore",
+            ApplicationScopeId = "application-restore",
+            CostAttributionScopeId = "cost-restore",
             Contexts =
             [
-                fixtureContext with { CandidateId = "candidate-persist" },
+                fixtureContext with { CandidateId = "candidate-persist", Evidence = [durableEvidence] },
                 fixtureInput.Contexts[1],
             ],
         };
@@ -859,27 +922,183 @@ public sealed class ProviderBudgetIntegrationTests
         {
             OperationId = "candidate-operation",
             ResponseRecordId = "candidate-response",
-            Proposals = [fixtureTranscripts[0].Proposals[0] with { CandidateId = "candidate-persist" }],
+            ResponseFingerprint = retainedResponseFingerprint,
+            Proposals = [fixtureTranscripts[0].Proposals[0] with
+            {
+                CandidateId = "candidate-persist",
+                SupportingEvidenceIds = ["candidate-evidence"],
+            }],
         };
         DurableCandidateInvestigationCoordinator coordinator = new(context.Store);
+        foreach (CandidateInvestigationExecutionInput invalid in new[]
+                 {
+                     input with { Contexts = [fixtureContext with { CandidateId = "candidate-persist", Evidence =
+                         [durableEvidence with { SourceAdmissionId = "invented-admission" }] }, fixtureInput.Contexts[1]] },
+                     input with { Contexts = [fixtureContext with { CandidateId = "candidate-persist", Evidence =
+                         [durableEvidence with { EvidenceApplicationLinkId = "invented-application" }] }, fixtureInput.Contexts[1]] },
+                     input with { ApplicationScopeId = "cross-scope" },
+                 })
+        {
+            Assert.ThrowsExactly<InvalidDataException>(() => coordinator.AdmitRetainedTranscript(
+                invalid, transcript, "candidate-authorization", "candidate-attempt", "candidate-request",
+                "candidate-fence", BaseTime.AddSeconds(21)));
+        }
         CandidateInvestigationAdmissionPublication publication = coordinator.AdmitRetainedTranscript(
             input, transcript, "candidate-authorization", "candidate-attempt", "candidate-request",
             "candidate-fence", BaseTime.AddSeconds(21));
         Assert.AreEqual(1, publication.Persistence.ProposalCount);
         Assert.AreEqual("admitted", context.Store.ReadCandidateInvestigationAdmissions("run-restore", "candidate-persist").Single().State);
-        Assert.AreEqual("proposal-dev-positive", context.Store.ReadCandidateInvestigation(
-            "run-restore", "candidate-persist", "admission-proposal-dev-positive").HypothesisProposals.Single().ProposalId.Value);
+        Assert.AreEqual("proposal-d01", context.Store.ReadCandidateInvestigation(
+            "run-restore", "candidate-persist", "admission-proposal-d01").HypothesisProposals.Single().ProposalId.Value);
+        CandidateInvestigationOutcomeReadModel retained = context.Store.ReadCandidateInvestigationOutcome(
+            "run-restore", "candidate-operation", fixtureContext.ContextId);
+        Assert.AreEqual("outcome-transcript-d01", retained.OutcomeId);
+        Assert.AreEqual(publication.Scenario.CanonicalInvestigationSha256,
+            new DurableCandidateInvestigationCoordinator(context.Store).ReplayRetained(
+                "run-restore", "candidate-operation", fixtureContext.ContextId).CanonicalInvestigationSha256);
+        foreach ((string State, string Suffix) terminalCase in new[]
+                 {
+                     ("not-used", "d07"),
+                     ("unavailable", "d08"),
+                 })
+        {
+            string terminalOperation = "candidate-terminal-" + terminalCase.Suffix;
+            string terminalAuthorization = terminalOperation + "-authorization";
+            string terminalJob = terminalOperation + "-job";
+            string terminalCommand = terminalOperation + "-command";
+            using (SqliteConnection terminalDatabase = new($"Data Source={context.Store.Paths.Database};Pooling=False"))
+            {
+                terminalDatabase.Open();
+                using (SqliteCommand roots = terminalDatabase.CreateCommand())
+                {
+                    roots.CommandText =
+                        """
+                        INSERT INTO job_nodes VALUES($job,'run-restore',NULL,'provider','created',0,
+                          '2026-08-10T00:00:00.0000000+00:00','2026-08-10T00:00:00.0000000+00:00');
+                        INSERT INTO durable_commands VALUES($command,'provider','run-restore',1,'recorded','created',NULL,
+                          '2026-08-10T00:00:00.0000000+00:00',NULL,NULL);
+                        INSERT INTO provider_command_bindings VALUES($command,'analysis-run','run-restore',
+                          '2026-08-10T00:00:00.0000000+00:00');
+                        """;
+                    roots.Parameters.AddWithValue("$job", terminalJob);
+                    roots.Parameters.AddWithValue("$command", terminalCommand);
+                    Assert.AreEqual(3, roots.ExecuteNonQuery());
+                }
+                CloneRow(terminalDatabase, "provider_operation_blocks", "operation_id='candidate-operation'", new Dictionary<string, object?>()
+                {
+                    ["operation_id"] = terminalOperation,
+                    ["job_node_id"] = terminalJob,
+                    ["command_id"] = terminalCommand,
+                });
+                CloneRow(terminalDatabase, "provider_operation_authorizations", "authorization_id='candidate-authorization'", new Dictionary<string, object?>()
+                {
+                    ["authorization_id"] = terminalAuthorization,
+                    ["operation_id"] = terminalOperation,
+                    ["job_node_id"] = terminalJob,
+                    ["command_id"] = terminalCommand,
+                });
+            }
+            CandidateInvestigationRetainedTranscript terminalTranscript = fixtureTranscripts.Single(item =>
+                item.ResponseState == terminalCase.State) with
+            { OperationId = terminalOperation };
+            CandidateInvestigationContextInput terminalContext = fixtureInput.Contexts.Single(item =>
+                item.ContextId == terminalTranscript.ContextId) with
+            {
+                CandidateId = "candidate-persist",
+                Evidence = [durableEvidence],
+            };
+            CandidateInvestigationExecutionInput terminalInput = fixtureInput with
+            {
+                OperationId = terminalOperation,
+                HostAuthorizationId = terminalAuthorization,
+                OwnerId = "run-restore",
+                AnalysisRunId = "run-restore",
+                ApplicationScopeId = "application-restore",
+                CostAttributionScopeId = "cost-restore",
+                Contexts = [terminalContext, fixtureInput.Contexts[0]],
+            };
+            CandidateInvestigationAdmissionPublication terminalPublication = coordinator.AdmitRetainedTranscript(
+                terminalInput, terminalTranscript, terminalAuthorization, "unused-attempt", "unused-request",
+                "unused-fence", BaseTime.AddSeconds(21));
+            Assert.AreEqual(0, terminalPublication.Persistence.ProposalCount);
+            Assert.IsEmpty(context.Store.ReadCandidateInvestigationAdmissionsForOperation(
+                "run-restore", terminalOperation));
+            Assert.AreEqual(terminalPublication.Scenario.Disposition,
+                coordinator.ReplayRetained("run-restore", terminalOperation, terminalContext.ContextId).Disposition);
+            StringAssert.Contains(System.Text.Encoding.UTF8.GetString(terminalPublication.JsonTransparency),
+                terminalPublication.Scenario.Disposition);
+        }
+        (CandidateInvestigationExecutionInput validationFixture, CandidateInvestigationRetainedTranscript[] validationTranscripts) =
+            CandidateAdmissionProviderReplayIntegrationTests.Load("S6-CANDIDATE-VAL-v2");
+        CandidateInvestigationRetainedTranscript driftTranscript = validationTranscripts.Single(item => item.ResponseState == "drift") with
+        {
+            OperationId = "candidate-operation",
+            ResponseRecordId = "candidate-response",
+            ResponseFingerprint = retainedResponseFingerprint,
+        };
+        CandidateInvestigationContextInput driftContext = validationFixture.Contexts.Single(item =>
+            item.ContextId == driftTranscript.ContextId) with
+        {
+            CandidateId = "candidate-persist",
+            Evidence = [durableEvidence],
+        };
+        CandidateInvestigationExecutionInput driftInput = validationFixture with
+        {
+            OperationId = "candidate-operation",
+            HostAuthorizationId = "candidate-authorization",
+            OwnerId = "run-restore",
+            AnalysisRunId = "run-restore",
+            ApplicationScopeId = "application-restore",
+            CostAttributionScopeId = "cost-restore",
+            Contexts = [driftContext, validationFixture.Contexts[0]],
+        };
+        CandidateInvestigationAdmissionPublication driftPublication = coordinator.AdmitRetainedTranscript(
+            driftInput, driftTranscript, "candidate-authorization", "candidate-attempt", "candidate-request",
+            "candidate-fence", BaseTime.AddSeconds(21));
+        Assert.AreEqual("rejected-identity-drift", driftPublication.Scenario.Disposition);
+        Assert.AreEqual("rejected-identity-drift", coordinator.ReplayRetained(
+            "run-restore", "candidate-operation", driftContext.ContextId).Disposition);
         StringAssert.Contains(System.Text.Encoding.UTF8.GetString(publication.JsonTransparency), "source_acquisition_links");
         StringAssert.Contains(publication.HumanTransparency, "no finding, case, taxonomy");
+
+        BackupArtifact noResponseBackup = context.Store.CreateBackup(
+            "Wp7CandidateNoResponsePublication", BaseTime.AddSeconds(22));
+        string noResponseRoot = Path.Combine(Path.GetTempPath(), "Infinium-Wp7-NoResponse-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            using (StoragePaths target = new(noResponseRoot))
+            {
+                AuthoritativeStore.RestoreBackup(noResponseBackup, target);
+            }
+            using StoragePaths noResponsePaths = new(noResponseRoot);
+            using AuthoritativeStore noResponseStore = new(noResponsePaths);
+            ProviderTerminalPublicationArtifacts noResponseTerminal = new ProviderAccountingCoordinator(noResponseStore)
+                .PublishCandidateNoResponseV2(
+                    new("run-restore"), new("local-run-output-v1"), "candidate-local-output-v1"u8.ToArray(),
+                    "candidate-local-cli-v1"u8.ToArray(), new("candidate-terminal-d07"), BaseTime.AddSeconds(23));
+            ProviderPublicationReferenceContract noResponseReference = noResponseTerminal.RunOutputV2.ProviderOperations.Single();
+            Assert.AreEqual("not-used", noResponseReference.Availability);
+            Assert.IsNull(noResponseReference.OperationId);
+            Assert.IsNull(noResponseReference.AdmissionId);
+            Assert.AreEqual("not-used", noResponseTerminal.CliSummaryV2.ProviderState);
+        }
+        finally
+        {
+            if (Directory.Exists(noResponseRoot))
+            {
+                DeleteDirectoryWithRetry(noResponseRoot);
+            }
+        }
+
         ProviderTerminalPublicationArtifacts terminal = accounting.PublishTerminalV2(
             new("run-restore"), new("local-run-output-v1"), "candidate-local-output-v1"u8.ToArray(),
-            "candidate-local-cli-v1"u8.ToArray(), new("candidate-operation"), BaseTime.AddSeconds(22));
+            "candidate-local-cli-v1"u8.ToArray(), new("candidate-operation"), BaseTime.AddSeconds(24));
         Assert.AreEqual(ProviderOperationKind.CandidateInvestigation,
             terminal.RunOutputV2.ProviderOperations.Single().OperationKind);
-        Assert.AreEqual("admission-proposal-dev-positive",
+        Assert.AreEqual("admission-proposal-d01",
             terminal.RunOutputV2.ProviderOperations.Single().AdmissionId?.Value);
 
-        BackupArtifact backup = context.Store.CreateBackup("Wp7CandidateInvestigation", BaseTime.AddSeconds(23));
+        BackupArtifact backup = context.Store.CreateBackup("Wp7CandidateInvestigation", BaseTime.AddSeconds(25));
         string restoredRoot = Path.Combine(Path.GetTempPath(), "Infinium-Wp7-Restore-" + Guid.NewGuid().ToString("N"));
         try
         {
@@ -890,9 +1109,19 @@ public sealed class ProviderBudgetIntegrationTests
             using StoragePaths restoredPaths = new(restoredRoot);
             using AuthoritativeStore restored = new(restoredPaths);
             Assert.AreEqual(1, restored.ReadCandidateInvestigationAdmissions("run-restore", "candidate-persist").Count);
-            Assert.AreEqual("proposal-dev-positive", restored.ReadCandidateInvestigation(
-                "run-restore", "candidate-persist", "admission-proposal-dev-positive").HypothesisProposals.Single().ProposalId.Value);
-            _ = restored.RebuildProviderBudgetProjections(BaseTime.AddSeconds(24));
+            Assert.AreEqual("proposal-d01", restored.ReadCandidateInvestigation(
+                "run-restore", "candidate-persist", "admission-proposal-d01").HypothesisProposals.Single().ProposalId.Value);
+            Assert.AreEqual("accepted", restored.ReadCandidateInvestigationOutcome(
+                "run-restore", "candidate-operation", fixtureContext.ContextId).Disposition);
+            Assert.AreEqual("not-used", restored.ReadCandidateInvestigationOutcome(
+                "run-restore", "candidate-terminal-d07", "context-d07").Disposition);
+            Assert.AreEqual("unavailable-provider", restored.ReadCandidateInvestigationOutcome(
+                "run-restore", "candidate-terminal-d08", "context-d08").Disposition);
+            Assert.AreEqual("rejected-identity-drift", restored.ReadCandidateInvestigationOutcome(
+                "run-restore", "candidate-operation", driftContext.ContextId).Disposition);
+            Assert.AreEqual("not-used", new DurableCandidateInvestigationCoordinator(restored).ReplayRetained(
+                "run-restore", "candidate-terminal-d07", "context-d07").Disposition);
+            _ = restored.RebuildProviderBudgetProjections(BaseTime.AddSeconds(26));
         }
         finally
         {

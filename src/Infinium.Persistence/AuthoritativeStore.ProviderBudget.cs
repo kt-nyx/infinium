@@ -1045,9 +1045,17 @@ public sealed partial class AuthoritativeStore
         }
         using SqliteCommand command = connection.CreateCommand();
         command.CommandText =
-            "SELECT object_relative_path FROM payloads WHERE payload_id=$payload AND retention_state='retained';";
+            "SELECT object_relative_path,content_sha256,byte_length FROM payloads WHERE payload_id=$payload AND retention_state='retained';";
         command.Parameters.AddWithValue("$payload", payloadId);
-        string? path = command.ExecuteScalar() as string;
+        using SqliteDataReader reader = command.ExecuteReader();
+        if (!reader.Read())
+        {
+            throw new InvalidDataException("A retained provider payload has no authoritative identity.");
+        }
+        string path = reader.GetString(0);
+        string expectedSha256 = reader.GetString(1);
+        long expectedLength = reader.GetInt64(2);
+        reader.Close();
         if (path is null || !path.StartsWith("payloads/", StringComparison.Ordinal))
         {
             throw new InvalidDataException("A retained provider payload has no valid content-addressed path.");
@@ -1060,7 +1068,13 @@ public sealed partial class AuthoritativeStore
         }
         using MemoryStream bytes = new(checked((int)stream.Length));
         stream.CopyTo(bytes);
-        return bytes.ToArray();
+        byte[] result = bytes.ToArray();
+        if (result.LongLength != expectedLength
+            || Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(result)) != expectedSha256)
+        {
+            throw new InvalidDataException("A retained provider payload does not match its authoritative hash and length.");
+        }
+        return result;
     }
 
     private void InsertProviderUsage(

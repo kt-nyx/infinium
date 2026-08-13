@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Infinium.Application.Provider;
+using Infinium.Domain.Contracts;
 
 namespace Infinium.Tests;
 
@@ -10,25 +11,22 @@ public sealed class CandidateInvestigationProviderContextTests
     [TestCategory("Unit")]
     public void CandidateInvestigationRetainsPositiveMatchedNegativeAndBoundedFailureStates()
     {
-        CandidateInvestigationResult development = Execute("S6-CANDIDATE-DEV-v1");
-        CandidateInvestigationResult validation = Execute("S6-CANDIDATE-VAL-v1");
+        CandidateInvestigationResult development = Execute("S6-CANDIDATE-DEV-v2");
+        CandidateInvestigationResult validation = Execute("S6-CANDIDATE-VAL-v2");
 
         Assert.AreEqual(8, development.Scenarios.Count);
-        Assert.AreEqual(7, validation.Scenarios.Count);
-        Assert.AreEqual("accepted", Scenario(development, "positive").Disposition);
-        Assert.AreEqual("rejected-matched-negative", Scenario(development, "matched-negative").Disposition);
-        Assert.AreEqual("accepted-conditional", Scenario(development, "conditional").Disposition);
-        Assert.AreEqual("rejected-unsupported", Scenario(development, "unsupported").Disposition);
-        Assert.AreEqual("rejected-contradiction-abstained", Scenario(development, "contradiction").Disposition);
-        Assert.AreEqual("rejected-explicit-abstention", Scenario(development, "abstention").Disposition);
-        Assert.AreEqual("not-used", Scenario(development, "no-model").Disposition);
-        Assert.AreEqual("unavailable-provider", Scenario(development, "unavailable-provider").Disposition);
-        Assert.AreEqual("rejected-hostile-authority", Scenario(validation, "hostile").Disposition);
-        Assert.AreEqual("rejected-malformed", Scenario(validation, "malformed").Disposition);
-        Assert.AreEqual("rejected-refusal", Scenario(validation, "refusal").Disposition);
-        Assert.AreEqual("rejected-incomplete", Scenario(validation, "incomplete").Disposition);
-        Assert.AreEqual("rejected-deleted-audit-only", Scenario(validation, "deleted").Disposition);
-        Assert.AreEqual("rejected-identity-drift", Scenario(validation, "drift").Disposition);
+        Assert.AreEqual(14, validation.Scenarios.Count);
+        foreach (string disposition in new[] { "accepted", "rejected-matched-negative", "accepted-conditional",
+                     "rejected-unsupported", "rejected-contradiction-abstained", "rejected-explicit-abstention",
+                     "not-used", "unavailable-provider" })
+        {
+            Assert.AreEqual(disposition, Scenario(development, disposition).Disposition);
+        }
+        foreach (string disposition in new[] { "rejected-hostile-authority", "rejected-malformed", "rejected-refusal",
+                     "rejected-incomplete", "rejected-deleted-audit-only", "rejected-identity-drift" })
+        {
+            Assert.AreEqual(disposition, Scenario(validation, disposition).Disposition);
+        }
         Assert.IsFalse(development.NetworkUsed || development.CredentialUsed || development.SourceRefreshUsed);
         Assert.IsFalse(validation.NetworkUsed || validation.CredentialUsed || validation.SourceRefreshUsed);
     }
@@ -37,11 +35,11 @@ public sealed class CandidateInvestigationProviderContextTests
     [TestCategory("Unit")]
     public void ProviderContextRejectsCrossCandidateAndInventedEvidence()
     {
-        (CandidateInvestigationExecutionInput input, CandidateInvestigationRetainedTranscript[] transcripts) = Load("S6-CANDIDATE-DEV-v1");
-        CandidateInvestigationRetainedTranscript positive = transcripts.Single(x => x.ContextId == "context-dev-positive");
+        (CandidateInvestigationExecutionInput input, CandidateInvestigationRetainedTranscript[] transcripts) = Load("S6-CANDIDATE-DEV-v2");
+        CandidateInvestigationRetainedTranscript positive = transcripts[0];
         CandidateInvestigationTranscriptProposal proposal = positive.Proposals.Single();
         CandidateInvestigationResult crossCandidate = CandidateInvestigationEngine.Execute(input,
-            [positive with { Proposals = [proposal with { CandidateId = "candidate-dev-matched-negative" }] }]);
+            [positive with { Proposals = [proposal with { CandidateId = input.Contexts[1].CandidateId }] }]);
         Assert.AreEqual("rejected", crossCandidate.Scenarios.Single().Disposition);
         CandidateInvestigationResult inventedEvidence = CandidateInvestigationEngine.Execute(input,
             [positive with { Proposals = [proposal with { SupportingEvidenceIds = ["evidence-invented"] }] }]);
@@ -53,24 +51,60 @@ public sealed class CandidateInvestigationProviderContextTests
     [TestCategory("Unit")]
     public void MatchedNegativeDispositionDoesNotDependOnFixtureIdentity()
     {
-        (CandidateInvestigationExecutionInput input, CandidateInvestigationRetainedTranscript[] transcripts) = Load("S6-CANDIDATE-DEV-v1");
-        CandidateInvestigationRetainedTranscript transcript = transcripts.Single(x => x.ContextId == "context-dev-matched-negative")
+        (CandidateInvestigationExecutionInput input, CandidateInvestigationRetainedTranscript[] transcripts) = Load("S6-CANDIDATE-DEV-v2");
+        CandidateInvestigationResult baseline = CandidateInvestigationEngine.Execute(input, transcripts);
+        string contextId = baseline.Scenarios.Single(x => x.Disposition == "rejected-matched-negative").ContextId;
+        CandidateInvestigationRetainedTranscript transcript = transcripts.Single(x => x.ContextId == contextId)
             with
         { ContextId = "renamed-context" };
-        CandidateInvestigationContextInput context = input.Contexts.Single(x => x.ContextId == "context-dev-matched-negative")
+        CandidateInvestigationContextInput context = input.Contexts.Single(x => x.ContextId == contextId)
             with
         { ContextId = "renamed-context" };
         CandidateInvestigationExecutionInput renamed = input with
         {
-            Contexts = input.Contexts.Select(x => x.ContextId == "context-dev-matched-negative" ? context : x).ToArray(),
+            Contexts = input.Contexts.Select(x => x.ContextId == contextId ? context : x).ToArray(),
         };
 
         Assert.AreEqual("rejected-matched-negative",
             CandidateInvestigationEngine.Execute(renamed, [transcript]).Scenarios.Single().Disposition);
     }
 
-    private static CandidateInvestigationScenarioResult Scenario(CandidateInvestigationResult result, string suffix) =>
-        result.Scenarios.Single(x => x.ContextId.EndsWith(suffix, StringComparison.Ordinal));
+    [TestMethod]
+    [TestCategory("Unit")]
+    public void HostValidatesEvidenceRelationshipsAndRequiresKnownContradictionClosure()
+    {
+        (CandidateInvestigationExecutionInput input, CandidateInvestigationRetainedTranscript[] transcripts) =
+            Load("S6-CANDIDATE-DEV-v2");
+        CandidateInvestigationContextInput context = input.Contexts.Single(item =>
+            item.Evidence.Any(evidence => evidence.Relationship == "contradicting"));
+        CandidateInvestigationRetainedTranscript transcript = transcripts.Single(item => item.ContextId == context.ContextId);
+        CandidateInvestigationTranscriptProposal proposal = transcript.Proposals.Single();
+        string contradictionId = context.Evidence.Single(item => item.Relationship == "contradicting").EvidenceId;
+        string supportingId = context.Evidence.Single(item => item.Relationship == "supporting").EvidenceId;
+
+        CandidateInvestigationScenarioResult wrongRelationship = CandidateInvestigationEngine.Execute(input,
+            [transcript with { Proposals = [proposal with
+            {
+                SupportingEvidenceIds = [supportingId, contradictionId],
+                ContradictingEvidenceIds = [],
+                State = "proposed",
+            }] }]).Scenarios.Single();
+        Assert.AreEqual(ProposalAdmissionState.Rejected,
+            wrongRelationship.Investigation.HypothesisProposals.Single().State);
+
+        CandidateInvestigationScenarioResult omitted = CandidateInvestigationEngine.Execute(input,
+            [transcript with { Proposals = [proposal with
+            {
+                SupportingEvidenceIds = [supportingId],
+                ContradictingEvidenceIds = [],
+                State = "proposed",
+            }] }]).Scenarios.Single();
+        Assert.AreEqual(ProposalAdmissionState.Abstained, omitted.Investigation.HypothesisProposals.Single().State);
+        Assert.AreEqual("known-contradiction-omitted", omitted.Investigation.HypothesisProposals.Single().Reason);
+    }
+
+    private static CandidateInvestigationScenarioResult Scenario(CandidateInvestigationResult result, string disposition) =>
+        result.Scenarios.Single(x => x.Disposition == disposition);
 
     private static CandidateInvestigationResult Execute(string package)
     {

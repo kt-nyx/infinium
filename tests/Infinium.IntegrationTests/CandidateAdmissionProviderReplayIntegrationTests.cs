@@ -11,7 +11,7 @@ public sealed class CandidateAdmissionProviderReplayIntegrationTests
     [TestCategory("Integration")]
     public void CandidateAdmissionExecutesBothPartitionsWithoutTransportOrSourceRefresh()
     {
-        foreach (string package in new[] { "S6-CANDIDATE-DEV-v1", "S6-CANDIDATE-VAL-v1" })
+        foreach (string package in new[] { "S6-CANDIDATE-DEV-v2", "S6-CANDIDATE-VAL-v2" })
         {
             (CandidateInvestigationExecutionInput input, CandidateInvestigationRetainedTranscript[] transcripts) = Load(package);
             CandidateInvestigationResult result = CandidateInvestigationCoordinator.ExecuteRetained(input, transcripts);
@@ -26,14 +26,17 @@ public sealed class CandidateAdmissionProviderReplayIntegrationTests
     [TestCategory("Integration")]
     public void ProviderReplayIsByteStableAndIdentityDriftFailsAuditOnlyWithoutSend()
     {
-        (CandidateInvestigationExecutionInput input, CandidateInvestigationRetainedTranscript[] transcripts) = Load("S6-CANDIDATE-DEV-v1");
+        (CandidateInvestigationExecutionInput input, CandidateInvestigationRetainedTranscript[] transcripts) = Load("S6-CANDIDATE-DEV-v2");
         CandidateInvestigationRetainedTranscript transcript = transcripts[0];
-        CandidateInvestigationScenarioResult first = CandidateInvestigationCoordinator.ReplayRetained(input, transcript, transcript.ResponseFingerprint);
-        CandidateInvestigationScenarioResult second = CandidateInvestigationCoordinator.ReplayRetained(input, transcript, transcript.ResponseFingerprint);
+        CandidateInvestigationScenarioResult first = CandidateInvestigationCoordinator.ReplayRetained(input, transcript);
+        CandidateInvestigationScenarioResult second = CandidateInvestigationCoordinator.ReplayRetained(input, transcript);
         Assert.AreEqual(first.CanonicalInvestigationSha256, second.CanonicalInvestigationSha256);
         Assert.AreEqual("retained-response", second.ReplayState);
-        CandidateInvestigationScenarioResult drift = CandidateInvestigationCoordinator.ReplayRetained(input, transcript, new string('0', 64));
-        Assert.AreEqual("audit-only", drift.ReplayState);
+        (CandidateInvestigationExecutionInput validationInput, CandidateInvestigationRetainedTranscript[] validationTranscripts) =
+            Load("S6-CANDIDATE-VAL-v2");
+        CandidateInvestigationRetainedTranscript driftTranscript = validationTranscripts.Single(item => item.ResponseState == "drift");
+        CandidateInvestigationScenarioResult drift = CandidateInvestigationCoordinator.ReplayRetained(validationInput, driftTranscript);
+        Assert.AreEqual("failed-identity-drift", drift.ReplayState);
         Assert.AreEqual("rejected-identity-drift", drift.Disposition);
     }
 
@@ -41,8 +44,8 @@ public sealed class CandidateAdmissionProviderReplayIntegrationTests
     [TestCategory("Integration")]
     public void CandidateAdmissionNoModelCannotFabricateProviderUse()
     {
-        (CandidateInvestigationExecutionInput input, CandidateInvestigationRetainedTranscript[] transcripts) = Load("S6-CANDIDATE-DEV-v1");
-        CandidateInvestigationRetainedTranscript noModel = transcripts.Single(x => x.ContextId == "context-dev-no-model");
+        (CandidateInvestigationExecutionInput input, CandidateInvestigationRetainedTranscript[] transcripts) = Load("S6-CANDIDATE-DEV-v2");
+        CandidateInvestigationRetainedTranscript noModel = transcripts.Single(x => x.ResponseState == "not-used");
         CandidateInvestigationResult result = CandidateInvestigationCoordinator.NoModel(input, noModel);
         Assert.AreEqual("not-used", result.Scenarios.Single().Disposition);
         Assert.AreEqual(0, result.Scenarios.Single().Investigation.HypothesisProposals.Count);

@@ -15,6 +15,7 @@ public static class CandidateInvestigationPromptV1
 
 public sealed record CandidateEvidenceInput(
     string EvidenceId,
+    string EvidenceApplicationLinkId,
     string SourceAcquisitionId,
     string SourceAdmissionId,
     string SourceApplicationLinkId,
@@ -78,6 +79,7 @@ public sealed record CandidateInvestigationRetainedTranscript(
 
 public sealed record CandidateSourceAcquisitionLink(
     string EvidenceId,
+    string EvidenceApplicationLinkId,
     string SourceAcquisitionId,
     string SourceAdmissionId,
     string SourceApplicationLinkId,
@@ -90,6 +92,12 @@ public sealed record CandidateSourceAcquisitionLink(
 public sealed record CandidateInvestigationScenarioResult(
     string TranscriptId,
     string TranscriptState,
+    string ResponseRecordId,
+    string ResponseFingerprint,
+    bool ModelUsed,
+    bool ProviderUsed,
+    bool AuditOnly,
+    bool ForbiddenAuthorityDetected,
     string Disposition,
     string ReplayState,
     string ContextId,
@@ -158,6 +166,7 @@ public static class CandidateInvestigationContextMinimizer
                 || item.Availability is not ("available" or "deleted" or "unavailable")
                 || item.ContentSha256.Length != 64 || !item.ContentSha256.All(Uri.IsHexDigit)
                 || string.IsNullOrWhiteSpace(item.EvidenceId)
+                || string.IsNullOrWhiteSpace(item.EvidenceApplicationLinkId)
                 || string.IsNullOrWhiteSpace(item.SourceAcquisitionId)
                 || string.IsNullOrWhiteSpace(item.SourceAdmissionId)
                 || string.IsNullOrWhiteSpace(item.SourceApplicationLinkId)
@@ -193,20 +202,6 @@ public static class CandidateInvestigationEngine
         byte[] manifest = CandidateInvestigationContextMinimizer.CreateManifest(input);
         return new(CandidateInvestigationPromptV1.Id, CandidateInvestigationPromptV1.Fingerprint,
             Convert.ToHexStringLower(SHA256.HashData(manifest)), scenarios, false, false, false);
-    }
-
-    public static CandidateInvestigationScenarioResult Replay(
-        CandidateInvestigationExecutionInput input,
-        CandidateInvestigationRetainedTranscript transcript,
-        string retainedResponseFingerprint)
-    {
-        CandidateInvestigationContextMinimizer.ValidateInput(input);
-        ValidateEnvelope(input, transcript);
-        if (transcript.ResponseFingerprint != retainedResponseFingerprint)
-        {
-            return Failure(input, transcript, "retained-response-fingerprint-drift", "rejected-identity-drift", "audit-only");
-        }
-        return Admit(input, transcript);
     }
 
     private static CandidateInvestigationScenarioResult Admit(
@@ -255,8 +250,8 @@ public static class CandidateInvestigationEngine
             OpaqueId[] retainedContradictingEvidence = proposal.ContradictingEvidenceIds
                 .Where(evidence.ContainsKey).Select(x => new OpaqueId(x)).ToArray();
             string applicationLinkId = proposal.SupportingEvidenceIds.Concat(proposal.ContradictingEvidenceIds)
-                .Where(evidence.ContainsKey).Select(id => evidence[id].SourceApplicationLinkId).FirstOrDefault()
-                ?? context.Evidence[0].SourceApplicationLinkId;
+                .Where(evidence.ContainsKey).Select(id => evidence[id].EvidenceApplicationLinkId).FirstOrDefault()
+                ?? context.Evidence[0].EvidenceApplicationLinkId;
             proposals.Add(new(new(proposal.ProposalId), new(context.CandidateId), proposal.Hypothesis,
                 retainedSupportingEvidence, retainedContradictingEvidence,
                 proposal.MissingInformation, state, reason));
@@ -274,6 +269,9 @@ public static class CandidateInvestigationEngine
                 ? transcript.Proposals.Any(x => x.State == "proposed")
                     ? "rejected-matched-negative" : "rejected-unsupported"
             : proposals.Any(x => x.State == ProposalAdmissionState.Unavailable) ? "rejected-unavailable"
+            : proposals.Any(x => x.State == ProposalAdmissionState.Rejected)
+                && transcript.Proposals.Any(x => x.State == "proposed" && x.SupportingEvidenceIds.Count == 0)
+                ? "rejected-matched-negative"
             : proposals.All(x => x.State == ProposalAdmissionState.Admitted)
                 ? proposals.Any(x => x.MissingInformation.Count > 0) ? "accepted-conditional" : "accepted"
                 : "rejected";
@@ -283,11 +281,7 @@ public static class CandidateInvestigationEngine
         string[] gapKinds = proposals.Any(x => x.State == ProposalAdmissionState.Deleted) ? ["deleted-evidence"]
             : proposals.Any(x => x.State == ProposalAdmissionState.Unsupported) ? ["unsupported-hypothesis"]
             : proposals.Any(x => x.State == ProposalAdmissionState.Unavailable) ? ["evidence-unavailable"] : [];
-        CandidateInvestigationRetainedTranscript normalizedTranscript = proposals.Any(x => x.State == ProposalAdmissionState.Deleted)
-            && transcript.Gaps.Count == 0
-            ? transcript with { Gaps = ["Required evidence was deleted."] }
-            : transcript;
-        return Build(input, context, normalizedTranscript, proposals, validationIds, links, disposition, replayState,
+        return Build(input, context, transcript, proposals, validationIds, links, disposition, replayState,
             abstentionKinds, gapKinds, audit, admissionIds);
     }
 
@@ -317,6 +311,12 @@ public static class CandidateInvestigationEngine
         }
         CandidateEvidenceInput[] referenced = proposal.SupportingEvidenceIds.Concat(proposal.ContradictingEvidenceIds)
             .Select(id => evidence[id]).ToArray();
+        if (proposal.SupportingEvidenceIds.Any(id => evidence[id].Relationship != "supporting")
+            || proposal.ContradictingEvidenceIds.Any(id => evidence[id].Relationship != "contradicting"))
+        {
+            reason = "evidence-relationship-mismatch";
+            return ProposalAdmissionState.Rejected;
+        }
         if (referenced.Any(x => x.Availability == "deleted"))
         {
             reason = "referenced-evidence-deleted";
@@ -343,10 +343,18 @@ public static class CandidateInvestigationEngine
             return ProposalAdmissionState.Rejected;
         }
         if (proposal.SupportingEvidenceIds.Count == 0
-            || proposal.SupportingEvidenceIds.Any(id => evidence[id].Relationship != "supporting"))
+            )
         {
             reason = "supporting-evidence-absent";
-            return ProposalAdmissionState.Unsupported;
+            return ProposalAdmissionState.Rejected;
+        }
+        string[] knownContradictions = evidence.Values
+            .Where(item => item.Relationship == "contradicting" && item.Availability == "available")
+            .Select(item => item.EvidenceId).ToArray();
+        if (knownContradictions.Except(proposal.ContradictingEvidenceIds, StringComparer.Ordinal).Any())
+        {
+            reason = "known-contradiction-omitted";
+            return ProposalAdmissionState.Abstained;
         }
         reason = "exact-candidate-hypothesis-evidence-links-admitted";
         return ProposalAdmissionState.Admitted;
@@ -402,10 +410,14 @@ public static class CandidateInvestigationEngine
         ProviderOperationContractInvariants.Validate(document);
         byte[] canonical = ProviderContractJsonCodecs.Serialize(document);
         CandidateSourceAcquisitionLink[] sourceLinks = context.Evidence.Select(item => new CandidateSourceAcquisitionLink(
-            item.EvidenceId, item.SourceAcquisitionId, item.SourceAdmissionId, item.SourceApplicationLinkId,
+            item.EvidenceId, item.EvidenceApplicationLinkId, item.SourceAcquisitionId, item.SourceAdmissionId, item.SourceApplicationLinkId,
             item.SourceRevisionId, item.PassageId, item.Relationship, item.Availability, item.ContentSha256)).ToArray();
         string[] rawIds = [transcript.TranscriptId, transcript.ResponseRecordId, .. transcript.Proposals.Select(x => x.ProposalId)];
-        return new(transcript.TranscriptId, transcript.ResponseState, disposition, replayState, context.ContextId,
+        return new(transcript.TranscriptId, transcript.ResponseState, transcript.ResponseRecordId,
+            transcript.ResponseFingerprint, transcript.ModelUsed, transcript.ModelUsed,
+            replayState == "audit-only", auditReasons.Contains("model-proposed-forbidden-authority", StringComparer.Ordinal)
+                || auditReasons.Any(reason => reason.Contains("model-proposed-forbidden-authority", StringComparison.Ordinal)),
+            disposition, replayState, context.ContextId,
             context.HypothesisId, document, sourceLinks, rawIds,
             Convert.ToHexStringLower(SHA256.HashData(canonical)), abstentionKinds, gapKinds, auditReasons);
     }

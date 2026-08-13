@@ -355,7 +355,8 @@ public partial class AuthoritativeStore
         ProviderOperationContractInvariants.Validate(request.Document);
         CandidateInvestigationDocument document = request.Document;
         if (document.AdmissionLinks.Any(link => link.AuthorizationId.Value != request.AuthorizationId
-                || link.ResponseRecordId.Value != request.ResponseRecordId))
+                || link.ResponseRecordId.Value != request.ResponseRecordId)
+            || request.ResponseRecordId is null && document.HypothesisProposals.Count != 0)
         {
             throw new InvalidDataException("Candidate investigation requires exact authorization and response identities.");
         }
@@ -368,38 +369,67 @@ public partial class AuthoritativeStore
                 authority.CommandText =
                     """
                     SELECT 1 FROM provider_operation_authorizations authorization
-                    JOIN provider_responses response
-                      ON response.authorization_id=authorization.authorization_id
-                     AND response.operation_id=authorization.operation_id
                     JOIN analysis_candidates candidate
                       ON candidate.candidate_id=$candidate AND candidate.run_id=authorization.owner_id
                     WHERE authorization.authorization_id=$authorization
                       AND authorization.operation_id=$operation
                       AND authorization.owner_kind='analysis-run' AND authorization.owner_id=$owner
                       AND authorization.operation_kind='candidate-investigation'
-                      AND response.response_record_id=$response
-                      AND response.provider_attempt_id=$attempt AND response.request_id=$request
-                      AND response.dispatch_fence_id=$fence;
+                      AND ($response IS NULL OR EXISTS(
+                        SELECT 1 FROM provider_responses response
+                        WHERE response.authorization_id=authorization.authorization_id
+                          AND response.operation_id=authorization.operation_id
+                          AND response.response_record_id=$response
+                          AND response.provider_attempt_id=$attempt AND response.request_id=$request
+                          AND response.dispatch_fence_id=$fence));
                     """;
                 authority.Parameters.AddWithValue("$candidate", document.CandidateId.Value);
                 authority.Parameters.AddWithValue("$authorization", request.AuthorizationId);
                 authority.Parameters.AddWithValue("$operation", document.OperationId.Value);
                 authority.Parameters.AddWithValue("$owner", document.OwnerId.Value);
-                authority.Parameters.AddWithValue("$response", request.ResponseRecordId);
-                authority.Parameters.AddWithValue("$attempt", request.ProviderAttemptId);
-                authority.Parameters.AddWithValue("$request", request.RequestId);
-                authority.Parameters.AddWithValue("$fence", request.DispatchFenceId);
+                authority.Parameters.AddWithValue("$response", (object?)request.ResponseRecordId ?? DBNull.Value);
+                authority.Parameters.AddWithValue("$attempt", (object?)request.ProviderAttemptId ?? DBNull.Value);
+                authority.Parameters.AddWithValue("$request", (object?)request.RequestId ?? DBNull.Value);
+                authority.Parameters.AddWithValue("$fence", (object?)request.DispatchFenceId ?? DBNull.Value);
                 if (authority.ExecuteScalar() is null)
                 {
                     throw new InvalidDataException("Candidate persistence requires exact retained analysis, authorization, response, and candidate authority.");
                 }
             }
+            foreach (CandidateEvidenceProvenanceBinding binding in request.EvidenceBindings)
+            {
+                ValidateCandidateEvidenceBinding(request, binding, transaction);
+            }
+            string inputPayloadId = AdmitCoordinatorPayload(
+                request.InputPayload, "candidate-investigation-input", request.OutcomeId, request.OccurredAt, transaction);
+            string transcriptPayloadId = AdmitCoordinatorPayload(
+                request.TranscriptPayload, "candidate-investigation-transcript", request.OutcomeId, request.OccurredAt, transaction);
+            byte[] documentPayload = JsonSerializer.SerializeToUtf8Bytes(document);
+            if (!documentPayload.AsSpan().SequenceEqual(request.ResultPayload))
+            {
+                throw new InvalidDataException("Candidate outcome payload is not the exact canonical retained investigation document.");
+            }
+            string resultPayloadId = AdmitCoordinatorPayload(
+                request.ResultPayload, "candidate-investigation-outcome", request.OutcomeId, request.OccurredAt, transaction);
+            Execute(
+                """
+                INSERT INTO candidate_investigation_outcomes VALUES(
+                  $outcome,$authorization,$operation,$owner,$candidate,$context,$transcript,$response,$fingerprint,
+                  $transcript_state,$disposition,$replay_state,$input_payload,$transcript_payload,$result_payload,$now);
+                """,
+                transaction,
+                ("$outcome", request.OutcomeId), ("$authorization", request.AuthorizationId),
+                ("$operation", document.OperationId.Value), ("$owner", document.OwnerId.Value),
+                ("$candidate", document.CandidateId.Value), ("$context", request.ContextId),
+                ("$transcript", request.TranscriptId), ("$response", request.ResponseRecordId),
+                ("$fingerprint", request.ResponseFingerprint), ("$transcript_state", request.TranscriptState),
+                ("$disposition", request.Disposition), ("$replay_state", request.ReplayState),
+                ("$input_payload", inputPayloadId), ("$transcript_payload", transcriptPayloadId),
+                ("$result_payload", resultPayloadId), ("$now", ToText(request.OccurredAt)));
             foreach (ProviderSemanticAdmissionLinkContract link in document.AdmissionLinks)
             {
                 HypothesisProposalContract proposal = document.HypothesisProposals.Single(x => x.ProposalId == link.ProposalId);
-                byte[] payload = JsonSerializer.SerializeToUtf8Bytes(document);
-                string payloadId = AdmitCoordinatorPayload(
-                    payload, "candidate-investigation", proposal.ProposalId.Value, request.OccurredAt, transaction);
+                string payloadId = resultPayloadId;
                 string kind = proposal.State is ProposalAdmissionState.Abstained ? "abstention"
                     : proposal.State is ProposalAdmissionState.Unsupported or ProposalAdmissionState.Unavailable
                         or ProposalAdmissionState.Deleted ? "gap" : "candidate-hypothesis";
@@ -433,7 +463,75 @@ public partial class AuthoritativeStore
             transaction.Commit();
             return new(document.AnalysisRunId.Value, document.OperationId.Value, document.CandidateId.Value,
                 document.HypothesisProposals.Count, document.AdmissionLinks.Count,
-                document.AdmissionLinkIds.Select(x => x.Value).ToArray());
+                document.AdmissionLinkIds.Select(x => x.Value).ToArray(), request.OutcomeId);
+        }
+    }
+
+    private void ValidateCandidateEvidenceBinding(
+        CandidateInvestigationPersistenceRequest request,
+        CandidateEvidenceProvenanceBinding binding,
+        SqliteTransaction transaction)
+    {
+        using SqliteCommand source = connection.CreateCommand();
+        source.Transaction = transaction;
+        source.CommandText =
+            """
+            SELECT proposal.payload_id FROM evidence_acquisition_application_links application
+            JOIN evidence_acquisition_runs acquisition ON acquisition.acquisition_run_id=application.acquisition_run_id
+            JOIN provider_semantic_admissions admission
+              ON admission.admission_id=application.admission_id
+             AND admission.owner_kind='evidence-acquisition-run'
+             AND admission.owner_id=application.acquisition_run_id
+             AND admission.admitted_artifact_id=application.admitted_artifact_id
+             AND admission.state='admitted'
+            JOIN provider_semantic_proposals proposal ON proposal.proposal_id=admission.proposal_id
+             AND proposal.payload_id=application.admitted_artifact_id
+            WHERE application.application_link_id=$source_application
+              AND application.acquisition_run_id=$acquisition AND application.admission_id=$admission
+              AND application.analysis_run_id=$run AND application.application_scope_id=$scope
+              AND application.cost_attribution_scope_id=$cost
+              AND acquisition.parent_analysis_run_id=$run;
+            """;
+        source.Parameters.AddWithValue("$source_application", binding.SourceApplicationLinkId);
+        source.Parameters.AddWithValue("$acquisition", binding.SourceAcquisitionId);
+        source.Parameters.AddWithValue("$admission", binding.SourceAdmissionId);
+        source.Parameters.AddWithValue("$run", request.Document.AnalysisRunId.Value);
+        source.Parameters.AddWithValue("$scope", request.ApplicationScopeId);
+        source.Parameters.AddWithValue("$cost", request.CostAttributionScopeId);
+        string sourcePayloadId = source.ExecuteScalar() as string
+            ?? throw new InvalidDataException("Candidate evidence does not bind one exact admitted WP6 source-acquisition chain.");
+        byte[] sourceBytes = ReadRetainedPayloadBytes(sourcePayloadId)
+            ?? throw new InvalidDataException("Candidate evidence source-acquisition payload is unavailable.");
+        SourceClaimExtractionDocument sourceDocument = JsonSerializer.Deserialize<SourceClaimExtractionDocument>(sourceBytes)
+            ?? throw new InvalidDataException("Candidate evidence source-acquisition payload is invalid.");
+        if (sourceDocument.SourceRevisionId.Value != binding.SourceRevisionId
+            || !sourceDocument.PassageIds.Any(passage => passage.Value == binding.PassageId))
+        {
+            throw new InvalidDataException("Candidate evidence revision or passage does not match its admitted WP6 artifact.");
+        }
+
+        using SqliteCommand evidence = connection.CreateCommand();
+        evidence.Transaction = transaction;
+        evidence.CommandText =
+            """
+            SELECT COUNT(*) FROM evidence_application_links application
+            JOIN evidence_revisions revision ON revision.evidence_revision_id=application.evidence_revision_id
+            JOIN documentation_passages passage ON passage.documentation_passage_id=revision.documentation_passage_id
+            WHERE application.evidence_application_link_id=$evidence_application
+              AND application.evidence_revision_id=$evidence AND application.run_id=$run
+              AND passage.documentation_passage_id=$passage
+              AND passage.documentation_revision_id=$revision
+              AND passage.passage_sha256=$fingerprint AND revision.evidence_state='admitted';
+            """;
+        evidence.Parameters.AddWithValue("$evidence_application", binding.EvidenceApplicationLinkId);
+        evidence.Parameters.AddWithValue("$evidence", binding.EvidenceId);
+        evidence.Parameters.AddWithValue("$run", request.Document.AnalysisRunId.Value);
+        evidence.Parameters.AddWithValue("$passage", binding.PassageId);
+        evidence.Parameters.AddWithValue("$revision", binding.SourceRevisionId);
+        evidence.Parameters.AddWithValue("$fingerprint", binding.ContentSha256);
+        if (Convert.ToInt64(evidence.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
+        {
+            throw new InvalidDataException("Candidate evidence does not bind its exact Slice 5 application and retained evidence payload.");
         }
     }
 
@@ -536,6 +634,115 @@ public partial class AuthoritativeStore
             return document;
         }
     }
+
+    public CandidateInvestigationOutcomeReadModel ReadCandidateInvestigationOutcome(
+        string analysisRunId,
+        string operationId,
+        string contextId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(analysisRunId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(operationId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(contextId);
+        lock (gate)
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText =
+                """
+                SELECT outcome_id,candidate_id,transcript_id,response_record_id,response_fingerprint,
+                  transcript_state,disposition,replay_state,input_payload_id,transcript_payload_id,result_payload_id
+                FROM candidate_investigation_outcomes
+                WHERE owner_id=$owner AND operation_id=$operation AND context_id=$context;
+                """;
+            command.Parameters.AddWithValue("$owner", analysisRunId);
+            command.Parameters.AddWithValue("$operation", operationId);
+            command.Parameters.AddWithValue("$context", contextId);
+            using SqliteDataReader reader = command.ExecuteReader();
+            if (!reader.Read())
+            {
+                throw new KeyNotFoundException("The exact retained candidate-investigation outcome does not exist.");
+            }
+            string inputPayloadId = reader.GetString(8);
+            string transcriptPayloadId = reader.GetString(9);
+            string resultPayloadId = reader.GetString(10);
+            string outcomeId = reader.GetString(0);
+            string candidateId = reader.GetString(1);
+            string transcriptId = reader.GetString(2);
+            string? responseRecordId = reader.IsDBNull(3) ? null : reader.GetString(3);
+            string responseFingerprint = reader.GetString(4);
+            string transcriptState = reader.GetString(5);
+            string disposition = reader.GetString(6);
+            string replayState = reader.GetString(7);
+            reader.Close();
+            return new(outcomeId, analysisRunId, operationId, candidateId, contextId,
+                transcriptId, responseRecordId, responseFingerprint, transcriptState, disposition, replayState, inputPayloadId, transcriptPayloadId,
+                resultPayloadId, ReadRetainedPayloadBytes(inputPayloadId)!, ReadRetainedPayloadBytes(transcriptPayloadId)!,
+                ReadRetainedPayloadBytes(resultPayloadId)!);
+        }
+    }
+
+    public IReadOnlyList<CandidateInvestigationOutcomeIdentityReadModel> ReadCandidateInvestigationOutcomesForOperation(
+        string analysisRunId,
+        string operationId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(analysisRunId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(operationId);
+        lock (gate)
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText =
+                """
+                SELECT outcome_id,context_id,response_record_id,transcript_state,disposition,replay_state,result_payload_id
+                FROM candidate_investigation_outcomes
+                WHERE owner_id=$owner AND operation_id=$operation ORDER BY context_id;
+                """;
+            command.Parameters.AddWithValue("$owner", analysisRunId);
+            command.Parameters.AddWithValue("$operation", operationId);
+            using SqliteDataReader reader = command.ExecuteReader();
+            List<CandidateInvestigationOutcomeIdentityReadModel> results = [];
+            while (reader.Read())
+            {
+                results.Add(new(reader.GetString(0), reader.GetString(1), reader.IsDBNull(2) ? null : reader.GetString(2),
+                    reader.GetString(3), reader.GetString(4), reader.GetString(5), reader.GetString(6)));
+            }
+            return results;
+        }
+    }
+
+    public CandidateInvestigationNoResponsePublicationReadModel ReadCandidateInvestigationNoResponsePublication(
+        string analysisRunId,
+        string operationId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(analysisRunId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(operationId);
+        lock (gate)
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText =
+                """
+                SELECT outcome.disposition,outcome.transcript_state,authorization.effective_configuration_id
+                FROM candidate_investigation_outcomes outcome
+                JOIN provider_operation_authorizations authorization
+                  ON authorization.authorization_id=outcome.authorization_id
+                 AND authorization.operation_id=outcome.operation_id
+                WHERE outcome.owner_id=$owner AND outcome.operation_id=$operation
+                  AND outcome.response_record_id IS NULL;
+                """;
+            command.Parameters.AddWithValue("$owner", analysisRunId);
+            command.Parameters.AddWithValue("$operation", operationId);
+            using SqliteDataReader reader = command.ExecuteReader();
+            if (!reader.Read())
+            {
+                throw new KeyNotFoundException("The exact no-response candidate outcome does not exist.");
+            }
+            CandidateInvestigationNoResponsePublicationReadModel result =
+                new(reader.GetString(0), reader.GetString(1), reader.GetString(2));
+            if (reader.Read())
+            {
+                throw new InvalidDataException("No-response candidate publication must bind one exact terminal outcome.");
+            }
+            return result;
+        }
+    }
 }
 
 public sealed record ProviderSemanticAdmissionReadModel(
@@ -552,12 +759,35 @@ public sealed record ProviderSemanticAdmissionReadModel(
 
 public sealed record CandidateInvestigationPersistenceRequest(
     CandidateInvestigationDocument Document,
+    string OutcomeId,
+    string ContextId,
+    string TranscriptId,
+    string ResponseFingerprint,
+    string TranscriptState,
+    string Disposition,
+    string ReplayState,
+    string ApplicationScopeId,
+    string CostAttributionScopeId,
+    IReadOnlyList<CandidateEvidenceProvenanceBinding> EvidenceBindings,
+    byte[] InputPayload,
+    byte[] TranscriptPayload,
+    byte[] ResultPayload,
     string AuthorizationId,
-    string ResponseRecordId,
-    string ProviderAttemptId,
-    string RequestId,
-    string DispatchFenceId,
+    string? ResponseRecordId,
+    string? ProviderAttemptId,
+    string? RequestId,
+    string? DispatchFenceId,
     DateTimeOffset OccurredAt);
+
+public sealed record CandidateEvidenceProvenanceBinding(
+    string EvidenceId,
+    string EvidenceApplicationLinkId,
+    string SourceAcquisitionId,
+    string SourceAdmissionId,
+    string SourceApplicationLinkId,
+    string SourceRevisionId,
+    string PassageId,
+    string ContentSha256);
 
 public sealed record CandidateInvestigationPersistenceReceipt(
     string AnalysisRunId,
@@ -565,4 +795,38 @@ public sealed record CandidateInvestigationPersistenceReceipt(
     string CandidateId,
     int ProposalCount,
     int AdmissionCount,
-    IReadOnlyList<string> AdmissionIds);
+    IReadOnlyList<string> AdmissionIds,
+    string OutcomeId);
+
+public sealed record CandidateInvestigationOutcomeReadModel(
+    string OutcomeId,
+    string AnalysisRunId,
+    string OperationId,
+    string CandidateId,
+    string ContextId,
+    string TranscriptId,
+    string? ResponseRecordId,
+    string ResponseFingerprint,
+    string TranscriptState,
+    string Disposition,
+    string ReplayState,
+    string InputPayloadId,
+    string TranscriptPayloadId,
+    string ResultPayloadId,
+    byte[] InputPayload,
+    byte[] TranscriptPayload,
+    byte[] ResultPayload);
+
+public sealed record CandidateInvestigationOutcomeIdentityReadModel(
+    string OutcomeId,
+    string ContextId,
+    string? ResponseRecordId,
+    string TranscriptState,
+    string Disposition,
+    string ReplayState,
+    string ResultPayloadId);
+
+public sealed record CandidateInvestigationNoResponsePublicationReadModel(
+    string Disposition,
+    string TranscriptState,
+    string EffectiveConfigurationId);

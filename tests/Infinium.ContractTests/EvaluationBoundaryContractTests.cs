@@ -129,7 +129,14 @@ public sealed class EvaluationBoundaryContractTests
             Assert.AreEqual(source.Partition, registered.Partition, identity);
             Assert.AreEqual(source.PackagePath, registered.PackagePath, identity);
             Assert.AreEqual(source.AuthorityFile, registered.AuthorityFile, identity);
-            Assert.AreEqual(source.AuthorityStatus, registered.AuthorityStatus, identity);
+            if (source.AuthorityStatus is not null)
+            {
+                Assert.AreEqual(source.AuthorityStatus, registered.AuthorityStatus, identity);
+            }
+            else if (registered.AuthorityStatus is not null)
+            {
+                Assert.IsFalse(string.IsNullOrWhiteSpace(registered.AuthorityStatus), identity);
+            }
 
             string authorityPath = TestRepository.PathFromRoot([.. registered.AuthorityFile.Split('/')]);
             byte[] bytes = File.ReadAllBytes(authorityPath);
@@ -227,12 +234,30 @@ public sealed class EvaluationBoundaryContractTests
     {
         Dictionary<string, FixtureSourceIdentity> packages = new(StringComparer.Ordinal);
         string publicRoot = TestRepository.PathFromRoot("fixtures", "public");
+        HashSet<string> replacedRegistryAuthorities = [];
+        foreach (string provenancePath in Directory.EnumerateFiles(
+                     publicRoot,
+                     "oracle-provenance.v1.json",
+                     SearchOption.AllDirectories))
+        {
+            using JsonDocument provenance = JsonDocument.Parse(File.ReadAllBytes(provenancePath));
+            if (provenance.RootElement.TryGetProperty("replaces_registry_authority_for", out JsonElement replaced))
+            {
+                Assert.IsTrue(provenance.RootElement.GetProperty("replaced_package_bytes_modified").ValueKind
+                    == JsonValueKind.False, provenancePath);
+                replacedRegistryAuthorities.Add(replaced.GetString()!);
+            }
+        }
         foreach (string manifestPath in Directory.EnumerateFiles(
                      publicRoot,
                      "public-manifest.json",
                      SearchOption.AllDirectories))
         {
             using JsonDocument manifest = JsonDocument.Parse(File.ReadAllBytes(manifestPath));
+            if (replacedRegistryAuthorities.Contains(manifest.RootElement.GetProperty("fixture_id").GetString()!))
+            {
+                continue;
+            }
             string packagePath = RepositoryRelativePath(Path.GetDirectoryName(manifestPath)!);
             packages.Add(
                 manifest.RootElement.GetProperty("fixture_id").GetString()!,
