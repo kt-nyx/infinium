@@ -3525,3 +3525,70 @@ Manager or WP4 native namespace, private fixture/evaluator, archive, provider
 SDK, protected external effect, WP6/Slice 7 work, current-state advancement,
 or push occurred. This correction evidence does not self-accept WP5; the exact
 candidate remains for fresh independent bounded convergence review.
+
+## WP5 response-secret and receipt-semantics correction — 2026-08-12
+
+The next bounded provider/security review identified three exact WP5 receipt
+counterexamples. Product correction commit
+`19c9b01a5ea1de978cb6959f0b424db4798d12bb` closes them:
+
+1. while the one-shot secret bytes still exist, the adapter scans the bounded
+   response body plus response/content header values for the complete raw,
+   JSON-escaped, standard Base64, and upper- or lower-hex percent-encoded
+   secret. A complete match clears owned raw and derived scan buffers, retains
+   no raw/header/request-id envelope, returns typed `security_secret_echo`,
+   forbids retry, and becomes helper `TransportMayHaveStarted` with ambiguous
+   usage and zero staged bytes. The coordinator's existing ambiguous path
+   consequently retains the reservation in full unresolved hold. A strict
+   prefix-only mutation proves arbitrary partial substrings are not treated as
+   a complete-secret match;
+2. `provider_request_id` now retains the exact provider value only for one
+   1–128-byte ASCII identifier using the closed alphanumeric/period/underscore/
+   colon/hyphen grammar. Hostile, duplicate, secret-echo, oversized, and former
+   `sha256:` fingerprint-shaped values are unavailable; staging and replay
+   apply the same sanitizer and never reinterpret a fingerprint as an exact
+   provider identifier; and
+3. rate facts remain typed finite values, but every remaining/limit pair with
+   remaining greater than limit is removed before staging. The coordinator
+   independently requires remaining not to exceed limit before creating a
+   domain fact, so contradictory pairs cannot reach SQLite or projection
+   state.
+
+The exact committed candidate passed:
+
+1. exact `Adapter`: Unit 18/0/0, Integration 11/0/0, Security 10/0/0,
+   Fault 3/0/0, and Evaluation 2/0/0. Its 1,410-byte receipt has SHA-256
+   `efe746d5d1e22896dd238fe8c52ea39af11a7cfabcf602ac5712277882fab07e`;
+2. exact `OfflineSafetyReplay`: Integration 3/0/0, Security 10/0/0,
+   Fault 3/0/0, and Evaluation 2/0/0. Its 848-byte receipt has SHA-256
+   `58874b8b5c4abe16784a7ef9f45001006210caabf111ea4ce90f52d86a473869`;
+3. impacted full Unit 230/0/1, Integration 112/0/0, Security 13/0/0,
+   and Fault 7/0/0;
+4. Release build with zero warnings and zero errors; format verification,
+   dependency-manifest freshness, documentation validation (166 metadata
+   files, 168 Markdown link sources, 17 JSON files), diff hygiene, and an
+   explicit scan proving zero new secret-canary matches in the retained gate
+   artifacts; and
+5. candidate-bound `Layer6Review` from exact baseline
+   `78a08b1d42f836adcf66ee8fd0f38144309a5eb6` through exact candidate
+   `19c9b01a5ea1de978cb6959f0b424db4798d12bb`: five changed paths and zero
+   allowed-path, strict-JSON, relative-link, private/archive, status-claim,
+   unsupported-gap, or other findings. Its 1,353-byte receipt has SHA-256
+   `23b025624a19f1f3c8023af1c35f8b90cbe5797795aefe599eeb81b50cd45185`.
+
+The shared 238-byte dynamically measured network spy remains SHA-256
+`d2eeac57768b66d0714e31d255c88b6715c9f2031d00fecaa71591755590bcd6`
+and records zero public DNS, provider, redirect-follow, retry, proxy-fallback,
+and replay-network operations. One first lower-hex percent-encoding mutation
+incorrectly lowercased the unencoded secret characters too; that test-authoring
+error failed truthfully, was corrected to lowercase only percent hex digits,
+and the full four-representation matrix then passed.
+
+After final verification, the accepted exact-root cleanup procedure matched
+zero repository-owned `dotnet` or `testhost` processes and verified zero
+survivors. No process was terminated by name alone. No API key, public DNS/
+provider endpoint, live/billable request, Credential Manager or WP4 native
+namespace, private fixture/evaluator, archive, provider SDK, protected external
+effect, WP6/Slice 7 work, current-state advancement, or push occurred. This
+evidence does not self-accept WP5; the candidate remains for fresh bounded
+review.
