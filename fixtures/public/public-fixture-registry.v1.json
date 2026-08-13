@@ -30,8 +30,8 @@
       "partition": "development",
       "package_path": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-DEV-v2",
       "authority_file": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-DEV-v2/public-manifest.json",
-      "authority_bytes": 1704,
-      "authority_sha256": "e35b19d6c759c3f40ac541fa2dc0910273fe9720fc3da84e7e77fe5ccf3233f2",
+      "authority_bytes": 1740,
+      "authority_sha256": "87a1a6013c01809121732fbf5e9e908e2985344cd5c17bd742bab005c42c08a5",
       "authority_status": "oracle-frozen-pre-comparison-mechanical-development-rebind"
     },
     {
