@@ -4847,3 +4847,4 @@ Effect-free validation using the same absolute manifest path shape supplied by
 the gate reports `ready`, `execution_authorized: false`, and zero native,
 network, and provider operations. Fresh independent pre-effect acceptance and
 the canonical owner marker remain mandatory before its sole cleanup run.
+WP4_RECOVERY_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-recovery/89baee92-14d6-4f2b-a970-0fe6be15c54c sha256=4bae55bd88b4487d995f0528f2bd40589f06f34b0677bb8133b25927a775d540 close_ready_commit=fe6772e0944d533b3645fbc65f63c6d4fd900d3b expires_at_utc=2026-08-14T16:37:12.0906842Z
