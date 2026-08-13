@@ -4046,3 +4046,30 @@ later package remain unauthorized. This acceptance handoff performs no WP7
 product work and authorizes no Credential Manager, API key, DNS, network,
 provider, source-refresh, private-fixture, archive, or other protected external
 effect. No push occurred.
+
+## WP7 deterministic candidate-investigation start checkpoint — 2026-08-12
+
+The sole writer started WP7 from clean exact handoff
+`c588ef2b588b851a9948d3ed3d2b43205ebf500a` on branch `codex/m1-s6`.
+The accepted WP6 product, append-only evidence, and answer-isolated oracle
+commits are present in its ancestry. The worktree was clean, the repository
+remained pinned to exact .NET SDK `10.0.303`, and current-state authorized only
+WP7 under accepted Slice 6 plan section 18.
+
+This package is bounded to deterministic retained-transcript candidate
+investigation, candidate/hypothesis/evidence/contradiction and source-
+acquisition provenance, host validation/admission, authoritative persistence,
+readback, backup/restore, rebuild, additive output/CLI/replay, and fresh public
+fixtures/oracles/mutations. Allowed changes are limited to the owning Slice 6
+contracts, codecs, prompts, product implementation, persistence, public
+fixture tooling and packages, focused tests and verification gates, and this
+append-only record. A separate answer-isolated author owns expected values and
+freezes them before any product-output comparison.
+
+No API key, DNS, network/provider request, token-count endpoint, Credential
+Manager operation, source/Nexus/search refresh, private/evaluator/archive
+access, protected external effect, WP8 or later-package work, current-state
+advance, or push is authorized. Retained transcript replay must perform no
+send. Ordinary defects return to bounded correction and re-review; only an
+authority, safety/isolation, or unavailable protected dependency conflict is
+an escalation.

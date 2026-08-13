@@ -1,0 +1,275 @@
+{
+  "schema_id": "infinium.llm.candidate-investigation-execution-input/v1",
+  "schema_version": "1",
+  "package_id": "S6-CANDIDATE-DEV-v1",
+  "operation_id": "operation-candidate-dev-1",
+  "host_authorization_id": "authorization-candidate-dev-1",
+  "owner_kind": "analysis-run",
+  "owner_id": "analysis-run-candidate-dev-1",
+  "analysis_run_id": "analysis-run-candidate-dev-1",
+  "application_scope_id": "application-scope-candidate-dev-1",
+  "cost_attribution_scope_id": "cost-scope-candidate-dev-1",
+  "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+  "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+  "contexts": [
+    {
+      "context_id": "context-dev-positive",
+      "candidate_id": "candidate-dev-positive",
+      "hypothesis_id": "hypothesis-dev-positive",
+      "hypothesis": "Feature Alder and Feature Birch may conflict because both modify the same setting.",
+      "participant_ids": [
+        "participant-dev-positive-a",
+        "participant-dev-positive-b"
+      ],
+      "participant_roles": [
+        "subject",
+        "counterpart"
+      ],
+      "causal_path_ids": [
+        "causal-path-dev-positive"
+      ],
+      "dependency_closure_id": "dependency-dev-positive",
+      "evidence": [
+        {
+          "evidence_id": "evidence-dev-positive",
+          "source_acquisition_id": "acquisition-dev-positive",
+          "source_admission_id": "admission-dev-positive",
+          "source_application_link_id": "source-application-dev-positive",
+          "source_revision_id": "source-revision-dev-positive",
+          "passage_id": "passage-dev-positive",
+          "relationship": "supporting",
+          "availability": "available",
+          "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+        }
+      ]
+    },
+    {
+      "context_id": "context-dev-matched-negative",
+      "candidate_id": "candidate-dev-matched-negative",
+      "hypothesis_id": "hypothesis-dev-matched-negative",
+      "hypothesis": "Feature Cedar and Feature Elm may conflict even though they modify different settings.",
+      "participant_ids": [
+        "participant-dev-matched-negative-a",
+        "participant-dev-matched-negative-b"
+      ],
+      "participant_roles": [
+        "subject",
+        "counterpart"
+      ],
+      "causal_path_ids": [
+        "causal-path-dev-matched-negative"
+      ],
+      "dependency_closure_id": "dependency-dev-matched-negative",
+      "evidence": [
+        {
+          "evidence_id": "evidence-dev-matched-negative",
+          "source_acquisition_id": "acquisition-dev-matched-negative",
+          "source_admission_id": "admission-dev-matched-negative",
+          "source_application_link_id": "source-application-dev-matched-negative",
+          "source_revision_id": "source-revision-dev-matched-negative",
+          "passage_id": "passage-dev-matched-negative",
+          "relationship": "neutral",
+          "availability": "available",
+          "content_sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+        }
+      ]
+    },
+    {
+      "context_id": "context-dev-conditional",
+      "candidate_id": "candidate-dev-conditional",
+      "hypothesis_id": "hypothesis-dev-conditional",
+      "hypothesis": "Feature Fir and Feature Grove may conflict only when mode Copper is enabled.",
+      "participant_ids": [
+        "participant-dev-conditional-a",
+        "participant-dev-conditional-b"
+      ],
+      "participant_roles": [
+        "subject",
+        "counterpart"
+      ],
+      "causal_path_ids": [
+        "causal-path-dev-conditional"
+      ],
+      "dependency_closure_id": "dependency-dev-conditional",
+      "evidence": [
+        {
+          "evidence_id": "evidence-dev-conditional",
+          "source_acquisition_id": "acquisition-dev-conditional",
+          "source_admission_id": "admission-dev-conditional",
+          "source_application_link_id": "source-application-dev-conditional",
+          "source_revision_id": "source-revision-dev-conditional",
+          "passage_id": "passage-dev-conditional",
+          "relationship": "supporting",
+          "availability": "available",
+          "content_sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+        }
+      ]
+    },
+    {
+      "context_id": "context-dev-unsupported",
+      "candidate_id": "candidate-dev-unsupported",
+      "hypothesis_id": "hypothesis-dev-unsupported",
+      "hypothesis": "Feature Hazel and Feature Iris may conflict without supporting retained evidence.",
+      "participant_ids": [
+        "participant-dev-unsupported-a",
+        "participant-dev-unsupported-b"
+      ],
+      "participant_roles": [
+        "subject",
+        "counterpart"
+      ],
+      "causal_path_ids": [
+        "causal-path-dev-unsupported"
+      ],
+      "dependency_closure_id": "dependency-dev-unsupported",
+      "evidence": [
+        {
+          "evidence_id": "evidence-dev-unsupported",
+          "source_acquisition_id": "acquisition-dev-unsupported",
+          "source_admission_id": "admission-dev-unsupported",
+          "source_application_link_id": "source-application-dev-unsupported",
+          "source_revision_id": "source-revision-dev-unsupported",
+          "passage_id": "passage-dev-unsupported",
+          "relationship": "neutral",
+          "availability": "available",
+          "content_sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        }
+      ]
+    },
+    {
+      "context_id": "context-dev-contradiction",
+      "candidate_id": "candidate-dev-contradiction",
+      "hypothesis_id": "hypothesis-dev-contradiction",
+      "hypothesis": "Feature Juniper and Feature Kelp may conflict, but retained evidence disagrees.",
+      "participant_ids": [
+        "participant-dev-contradiction-a",
+        "participant-dev-contradiction-b"
+      ],
+      "participant_roles": [
+        "subject",
+        "counterpart"
+      ],
+      "causal_path_ids": [
+        "causal-path-dev-contradiction"
+      ],
+      "dependency_closure_id": "dependency-dev-contradiction",
+      "evidence": [
+        {
+          "evidence_id": "evidence-dev-contradiction",
+          "source_acquisition_id": "acquisition-dev-contradiction",
+          "source_admission_id": "admission-dev-contradiction",
+          "source_application_link_id": "source-application-dev-contradiction",
+          "source_revision_id": "source-revision-dev-contradiction",
+          "passage_id": "passage-dev-contradiction",
+          "relationship": "supporting",
+          "availability": "available",
+          "content_sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        {
+          "evidence_id": "evidence-dev-contradiction-opposed",
+          "source_acquisition_id": "acquisition-dev-contradiction-opposed",
+          "source_admission_id": "admission-dev-contradiction-opposed",
+          "source_application_link_id": "source-application-dev-contradiction-opposed",
+          "source_revision_id": "source-revision-dev-contradiction-opposed",
+          "passage_id": "passage-dev-contradiction-opposed",
+          "relationship": "contradicting",
+          "availability": "available",
+          "content_sha256": "5656565656565656565656565656565656565656565656565656565656565656"
+        }
+      ]
+    },
+    {
+      "context_id": "context-dev-abstention",
+      "candidate_id": "candidate-dev-abstention",
+      "hypothesis_id": "hypothesis-dev-abstention",
+      "hypothesis": "Feature Larch and Feature Moss may interact, but the available evidence is inconclusive.",
+      "participant_ids": [
+        "participant-dev-abstention-a",
+        "participant-dev-abstention-b"
+      ],
+      "participant_roles": [
+        "subject",
+        "counterpart"
+      ],
+      "causal_path_ids": [
+        "causal-path-dev-abstention"
+      ],
+      "dependency_closure_id": "dependency-dev-abstention",
+      "evidence": [
+        {
+          "evidence_id": "evidence-dev-abstention",
+          "source_acquisition_id": "acquisition-dev-abstention",
+          "source_admission_id": "admission-dev-abstention",
+          "source_application_link_id": "source-application-dev-abstention",
+          "source_revision_id": "source-revision-dev-abstention",
+          "passage_id": "passage-dev-abstention",
+          "relationship": "neutral",
+          "availability": "available",
+          "content_sha256": "6666666666666666666666666666666666666666666666666666666666666666"
+        }
+      ]
+    },
+    {
+      "context_id": "context-dev-no-model",
+      "candidate_id": "candidate-dev-no-model",
+      "hypothesis_id": "hypothesis-dev-no-model",
+      "hypothesis": "Feature Nettle and Feature Oak are retained for local-only analysis.",
+      "participant_ids": [
+        "participant-dev-no-model-a",
+        "participant-dev-no-model-b"
+      ],
+      "participant_roles": [
+        "subject",
+        "counterpart"
+      ],
+      "causal_path_ids": [
+        "causal-path-dev-no-model"
+      ],
+      "dependency_closure_id": "dependency-dev-no-model",
+      "evidence": [
+        {
+          "evidence_id": "evidence-dev-no-model",
+          "source_acquisition_id": "acquisition-dev-no-model",
+          "source_admission_id": "admission-dev-no-model",
+          "source_application_link_id": "source-application-dev-no-model",
+          "source_revision_id": "source-revision-dev-no-model",
+          "passage_id": "passage-dev-no-model",
+          "relationship": "neutral",
+          "availability": "available",
+          "content_sha256": "7777777777777777777777777777777777777777777777777777777777777777"
+        }
+      ]
+    },
+    {
+      "context_id": "context-dev-unavailable-provider",
+      "candidate_id": "candidate-dev-unavailable-provider",
+      "hypothesis_id": "hypothesis-dev-unavailable-provider",
+      "hypothesis": "Feature Pine and Feature Quartz require an unavailable provider capability.",
+      "participant_ids": [
+        "participant-dev-unavailable-provider-a",
+        "participant-dev-unavailable-provider-b"
+      ],
+      "participant_roles": [
+        "subject",
+        "counterpart"
+      ],
+      "causal_path_ids": [
+        "causal-path-dev-unavailable-provider"
+      ],
+      "dependency_closure_id": "dependency-dev-unavailable-provider",
+      "evidence": [
+        {
+          "evidence_id": "evidence-dev-unavailable-provider",
+          "source_acquisition_id": "acquisition-dev-unavailable-provider",
+          "source_admission_id": "admission-dev-unavailable-provider",
+          "source_application_link_id": "source-application-dev-unavailable-provider",
+          "source_revision_id": "source-revision-dev-unavailable-provider",
+          "passage_id": "passage-dev-unavailable-provider",
+          "relationship": "neutral",
+          "availability": "available",
+          "content_sha256": "8888888888888888888888888888888888888888888888888888888888888888"
+        }
+      ]
+    }
+  ]
+}

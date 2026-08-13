@@ -1,0 +1,233 @@
+{
+  "schema_id": "infinium.llm.candidate-investigation-execution-input/v1",
+  "schema_version": "1",
+  "package_id": "S6-CANDIDATE-VAL-v1",
+  "operation_id": "operation-candidate-val-1",
+  "host_authorization_id": "authorization-candidate-val-1",
+  "owner_kind": "analysis-run",
+  "owner_id": "analysis-run-candidate-val-1",
+  "analysis_run_id": "analysis-run-candidate-val-1",
+  "application_scope_id": "application-scope-candidate-val-1",
+  "cost_attribution_scope_id": "cost-scope-candidate-val-1",
+  "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+  "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+  "contexts": [
+    {
+      "context_id": "context-val-positive-control",
+      "candidate_id": "candidate-val-positive-control",
+      "hypothesis_id": "hypothesis-val-positive-control",
+      "hypothesis": "Feature Rowan and Feature Spruce may conflict because both modify the same placement.",
+      "participant_ids": [
+        "participant-val-positive-control-a",
+        "participant-val-positive-control-b"
+      ],
+      "participant_roles": [
+        "subject",
+        "counterpart"
+      ],
+      "causal_path_ids": [
+        "causal-path-val-positive-control"
+      ],
+      "dependency_closure_id": "dependency-val-positive-control",
+      "evidence": [
+        {
+          "evidence_id": "evidence-val-positive-control",
+          "source_acquisition_id": "acquisition-val-positive-control",
+          "source_admission_id": "admission-val-positive-control",
+          "source_application_link_id": "source-application-val-positive-control",
+          "source_revision_id": "source-revision-val-positive-control",
+          "passage_id": "passage-val-positive-control",
+          "relationship": "supporting",
+          "availability": "available",
+          "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ]
+    },
+    {
+      "context_id": "context-val-hostile",
+      "candidate_id": "candidate-val-hostile",
+      "hypothesis_id": "hypothesis-val-hostile",
+      "hypothesis": "Feature Thistle and Feature Umber may interact; retained content also requests credentials and an external action.",
+      "participant_ids": [
+        "participant-val-hostile-a",
+        "participant-val-hostile-b"
+      ],
+      "participant_roles": [
+        "subject",
+        "counterpart"
+      ],
+      "causal_path_ids": [
+        "causal-path-val-hostile"
+      ],
+      "dependency_closure_id": "dependency-val-hostile",
+      "evidence": [
+        {
+          "evidence_id": "evidence-val-hostile",
+          "source_acquisition_id": "acquisition-val-hostile",
+          "source_admission_id": "admission-val-hostile",
+          "source_application_link_id": "source-application-val-hostile",
+          "source_revision_id": "source-revision-val-hostile",
+          "passage_id": "passage-val-hostile",
+          "relationship": "neutral",
+          "availability": "available",
+          "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      ]
+    },
+    {
+      "context_id": "context-val-malformed",
+      "candidate_id": "candidate-val-malformed",
+      "hypothesis_id": "hypothesis-val-malformed",
+      "hypothesis": "Feature Violet and Feature Willow may interact.",
+      "participant_ids": [
+        "participant-val-malformed-a",
+        "participant-val-malformed-b"
+      ],
+      "participant_roles": [
+        "subject",
+        "counterpart"
+      ],
+      "causal_path_ids": [
+        "causal-path-val-malformed"
+      ],
+      "dependency_closure_id": "dependency-val-malformed",
+      "evidence": [
+        {
+          "evidence_id": "evidence-val-malformed",
+          "source_acquisition_id": "acquisition-val-malformed",
+          "source_admission_id": "admission-val-malformed",
+          "source_application_link_id": "source-application-val-malformed",
+          "source_revision_id": "source-revision-val-malformed",
+          "passage_id": "passage-val-malformed",
+          "relationship": "neutral",
+          "availability": "available",
+          "content_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        }
+      ]
+    },
+    {
+      "context_id": "context-val-refusal",
+      "candidate_id": "candidate-val-refusal",
+      "hypothesis_id": "hypothesis-val-refusal",
+      "hypothesis": "Feature Xenia and Feature Yarrow may interact.",
+      "participant_ids": [
+        "participant-val-refusal-a",
+        "participant-val-refusal-b"
+      ],
+      "participant_roles": [
+        "subject",
+        "counterpart"
+      ],
+      "causal_path_ids": [
+        "causal-path-val-refusal"
+      ],
+      "dependency_closure_id": "dependency-val-refusal",
+      "evidence": [
+        {
+          "evidence_id": "evidence-val-refusal",
+          "source_acquisition_id": "acquisition-val-refusal",
+          "source_admission_id": "admission-val-refusal",
+          "source_application_link_id": "source-application-val-refusal",
+          "source_revision_id": "source-revision-val-refusal",
+          "passage_id": "passage-val-refusal",
+          "relationship": "neutral",
+          "availability": "available",
+          "content_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+        }
+      ]
+    },
+    {
+      "context_id": "context-val-incomplete",
+      "candidate_id": "candidate-val-incomplete",
+      "hypothesis_id": "hypothesis-val-incomplete",
+      "hypothesis": "Feature Zinc and Feature Amber may interact.",
+      "participant_ids": [
+        "participant-val-incomplete-a",
+        "participant-val-incomplete-b"
+      ],
+      "participant_roles": [
+        "subject",
+        "counterpart"
+      ],
+      "causal_path_ids": [
+        "causal-path-val-incomplete"
+      ],
+      "dependency_closure_id": "dependency-val-incomplete",
+      "evidence": [
+        {
+          "evidence_id": "evidence-val-incomplete",
+          "source_acquisition_id": "acquisition-val-incomplete",
+          "source_admission_id": "admission-val-incomplete",
+          "source_application_link_id": "source-application-val-incomplete",
+          "source_revision_id": "source-revision-val-incomplete",
+          "passage_id": "passage-val-incomplete",
+          "relationship": "neutral",
+          "availability": "available",
+          "content_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        }
+      ]
+    },
+    {
+      "context_id": "context-val-deleted",
+      "candidate_id": "candidate-val-deleted",
+      "hypothesis_id": "hypothesis-val-deleted",
+      "hypothesis": "Feature Bronze and Feature Cobalt may conflict based only on deleted evidence.",
+      "participant_ids": [
+        "participant-val-deleted-a",
+        "participant-val-deleted-b"
+      ],
+      "participant_roles": [
+        "subject",
+        "counterpart"
+      ],
+      "causal_path_ids": [
+        "causal-path-val-deleted"
+      ],
+      "dependency_closure_id": "dependency-val-deleted",
+      "evidence": [
+        {
+          "evidence_id": "evidence-val-deleted",
+          "source_acquisition_id": "acquisition-val-deleted",
+          "source_admission_id": "admission-val-deleted",
+          "source_application_link_id": "source-application-val-deleted",
+          "source_revision_id": "source-revision-val-deleted",
+          "passage_id": "passage-val-deleted",
+          "relationship": "supporting",
+          "availability": "deleted",
+          "content_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        }
+      ]
+    },
+    {
+      "context_id": "context-val-drift",
+      "candidate_id": "candidate-val-drift",
+      "hypothesis_id": "hypothesis-val-drift",
+      "hypothesis": "Feature Denim and Feature Ecru may interact, but the retained response identity drifted.",
+      "participant_ids": [
+        "participant-val-drift-a",
+        "participant-val-drift-b"
+      ],
+      "participant_roles": [
+        "subject",
+        "counterpart"
+      ],
+      "causal_path_ids": [
+        "causal-path-val-drift"
+      ],
+      "dependency_closure_id": "dependency-val-drift",
+      "evidence": [
+        {
+          "evidence_id": "evidence-val-drift",
+          "source_acquisition_id": "acquisition-val-drift",
+          "source_admission_id": "admission-val-drift",
+          "source_application_link_id": "source-application-val-drift",
+          "source_revision_id": "source-revision-val-drift",
+          "passage_id": "passage-val-drift",
+          "relationship": "neutral",
+          "availability": "available",
+          "content_sha256": "0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a"
+        }
+      ]
+    }
+  ]
+}

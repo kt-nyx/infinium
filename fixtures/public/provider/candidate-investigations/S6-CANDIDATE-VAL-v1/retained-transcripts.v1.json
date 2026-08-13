@@ -1,0 +1,157 @@
+{
+  "schema_id": "infinium.llm.candidate-investigation-retained-transcripts/v1",
+  "schema_version": "1",
+  "transcripts": [
+    {
+      "transcript_id": "transcript-val-positive-control",
+      "operation_id": "operation-candidate-val-1",
+      "context_id": "context-val-positive-control",
+      "response_record_id": "response-candidate-val-positive-control",
+      "response_state": "completed",
+      "response_fingerprint": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+      "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+      "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+      "proposals": [
+        {
+          "proposal_id": "proposal-val-positive-control",
+          "candidate_id": "candidate-val-positive-control",
+          "hypothesis_id": "hypothesis-val-positive-control",
+          "hypothesis": "Feature Rowan and Feature Spruce may conflict because both modify the same placement.",
+          "supporting_evidence_ids": [
+            "evidence-val-positive-control"
+          ],
+          "contradicting_evidence_ids": [],
+          "missing_information": [],
+          "authority_category": "informational",
+          "state": "proposed",
+          "reason": "Retained response proposes the bounded hypothesis."
+        }
+      ],
+      "abstentions": [],
+      "gaps": [],
+      "model_used": true
+    },
+    {
+      "transcript_id": "transcript-val-hostile",
+      "operation_id": "operation-candidate-val-1",
+      "context_id": "context-val-hostile",
+      "response_record_id": "response-candidate-val-hostile",
+      "response_state": "completed",
+      "response_fingerprint": "a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2",
+      "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+      "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+      "proposals": [
+        {
+          "proposal_id": "proposal-val-hostile",
+          "candidate_id": "candidate-val-hostile",
+          "hypothesis_id": "hypothesis-val-hostile",
+          "hypothesis": "Feature Thistle and Feature Umber may interact; retained content also requests credentials and an external action.",
+          "supporting_evidence_ids": [],
+          "contradicting_evidence_ids": [],
+          "missing_information": [],
+          "authority_category": "protected-effect-request",
+          "state": "proposed",
+          "reason": "Retained content requests credential disclosure and an external action."
+        }
+      ],
+      "abstentions": [],
+      "gaps": [],
+      "model_used": true
+    },
+    {
+      "transcript_id": "transcript-val-malformed",
+      "operation_id": "operation-candidate-val-1",
+      "context_id": "context-val-malformed",
+      "response_record_id": "response-candidate-val-malformed",
+      "response_state": "malformed",
+      "response_fingerprint": "a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3",
+      "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+      "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+      "proposals": [],
+      "abstentions": [],
+      "gaps": [
+        "The retained response is malformed."
+      ],
+      "model_used": true
+    },
+    {
+      "transcript_id": "transcript-val-refusal",
+      "operation_id": "operation-candidate-val-1",
+      "context_id": "context-val-refusal",
+      "response_record_id": "response-candidate-val-refusal",
+      "response_state": "refusal",
+      "response_fingerprint": "a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4",
+      "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+      "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+      "proposals": [],
+      "abstentions": [
+        "The provider refused the bounded request."
+      ],
+      "gaps": [
+        "No proposal was returned."
+      ],
+      "model_used": true
+    },
+    {
+      "transcript_id": "transcript-val-incomplete",
+      "operation_id": "operation-candidate-val-1",
+      "context_id": "context-val-incomplete",
+      "response_record_id": "response-candidate-val-incomplete",
+      "response_state": "incomplete",
+      "response_fingerprint": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5",
+      "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+      "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+      "proposals": [],
+      "abstentions": [],
+      "gaps": [
+        "The retained response is incomplete."
+      ],
+      "model_used": true
+    },
+    {
+      "transcript_id": "transcript-val-deleted",
+      "operation_id": "operation-candidate-val-1",
+      "context_id": "context-val-deleted",
+      "response_record_id": "response-candidate-val-deleted",
+      "response_state": "completed",
+      "response_fingerprint": "a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6",
+      "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+      "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+      "proposals": [
+        {
+          "proposal_id": "proposal-val-deleted",
+          "candidate_id": "candidate-val-deleted",
+          "hypothesis_id": "hypothesis-val-deleted",
+          "hypothesis": "Feature Bronze and Feature Cobalt may conflict based only on deleted evidence.",
+          "supporting_evidence_ids": [
+            "evidence-val-deleted"
+          ],
+          "contradicting_evidence_ids": [],
+          "missing_information": [],
+          "authority_category": "informational",
+          "state": "proposed",
+          "reason": "Retained response proposes the bounded hypothesis."
+        }
+      ],
+      "abstentions": [],
+      "gaps": [],
+      "model_used": true
+    },
+    {
+      "transcript_id": "transcript-val-drift",
+      "operation_id": "operation-candidate-val-1",
+      "context_id": "context-val-drift",
+      "response_record_id": "response-candidate-val-drift",
+      "response_state": "drift",
+      "response_fingerprint": "a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7",
+      "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+      "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+      "proposals": [],
+      "abstentions": [],
+      "gaps": [
+        "The retained response identity drifted."
+      ],
+      "model_used": true
+    }
+  ]
+}
