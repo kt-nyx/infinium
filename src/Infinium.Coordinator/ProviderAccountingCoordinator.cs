@@ -127,6 +127,21 @@ public sealed class ProviderAccountingCoordinator
             admissionId = new(admissions.OrderByDescending(x => x.State == "admitted")
                 .ThenBy(x => x.AdmissionId, StringComparer.Ordinal).First().AdmissionId);
         }
+        else if (operationKind == ProviderOperationKind.CandidateInvestigation)
+        {
+            if (operation.OwnerKind != "analysis-run")
+            {
+                throw new InvalidDataException("Candidate publication requires analysis-run ownership.");
+            }
+            IReadOnlyList<ProviderSemanticAdmissionReadModel> admissions =
+                store.ReadCandidateInvestigationAdmissionsForOperation(operation.OwnerId, operation.OperationId);
+            if (admissions.Count == 0 || admissions.Any(x => x.ResponseRecordId != operation.ResponseId))
+            {
+                throw new InvalidDataException("Candidate publication requires exact retained semantic admissions.");
+            }
+            admissionId = new(admissions.OrderByDescending(x => x.State == "admitted")
+                .ThenBy(x => x.AdmissionId, StringComparer.Ordinal).First().AdmissionId);
+        }
         ProviderRunOutputV2BindingReceipt binding = store.BindProviderRunOutputV2(
             runId.Value, operation.EffectiveConfigurationId, canonicalLocalRunOutputV1, createdAt);
         ProviderPublicationReferenceContract publication = new(

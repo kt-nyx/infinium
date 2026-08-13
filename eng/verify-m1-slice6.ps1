@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Contracts', 'StateSurfaces', 'StateTotality', 'Budget', 'BudgetFaults', 'CredentialSynthetic', 'CredentialNative', 'Adapter', 'OfflineSafetyReplay', 'SourceClaimSemantics', 'Layer6Review')]
+    [ValidateSet('Contracts', 'StateSurfaces', 'StateTotality', 'Budget', 'BudgetFaults', 'CredentialSynthetic', 'CredentialNative', 'Adapter', 'OfflineSafetyReplay', 'SourceClaimSemantics', 'CandidateSemantics', 'ProvenanceReplay', 'Layer6Review')]
     [string] $Gate,
 
     [Parameter(Mandatory = $true)]
@@ -18,7 +18,7 @@ param(
     [switch] $OwnerTestProcessCleanup
 )
 
-if ($Gate -in @('Layer6Review', 'CredentialNative') -and $PSVersionTable.PSEdition -ne 'Core') {
+if ($Gate -in @('Layer6Review', 'CredentialNative', 'CandidateSemantics', 'ProvenanceReplay') -and $PSVersionTable.PSEdition -ne 'Core') {
     $pwsh = Get-Command pwsh.exe -ErrorAction Stop
     $arguments = @(
         '-NoProfile',
@@ -66,6 +66,9 @@ $schemaNames = @(
     'provider-response.v1.schema.json',
     'source-claim-extraction.v1.schema.json',
     'candidate-investigation.v1.schema.json',
+    'candidate-investigation-execution-input.v1.schema.json',
+    'candidate-investigation-context.v1.schema.json',
+    'candidate-investigation-retained-transcripts.v1.schema.json',
     'provider-execution-input.v1.schema.json',
     'effective-scan-configuration.v2.schema.json',
     'run-output.v2.schema.json',
@@ -1025,6 +1028,105 @@ function Invoke-SourceClaimSemanticsGate {
     })
 }
 
+function Get-CandidateInvestigationPackageEvidence {
+    $packages = @('S6-CANDIDATE-DEV-v1', 'S6-CANDIDATE-VAL-v1')
+    $results = @()
+    foreach ($package in $packages) {
+        $directory = Join-Path $repoRoot "fixtures/public/provider/candidate-investigations/$package"
+        $manifestPath = Join-Path $directory 'public-manifest.json'
+        $oraclePath = Join-Path $directory 'oracle.v1.json'
+        $provenancePath = Join-Path $directory 'oracle-provenance.v1.json'
+        $inputPath = Join-Path $directory 'execution-input.v1.json'
+        $contextPath = Join-Path $directory 'context-manifest.v1.json'
+        $transcriptPath = Join-Path $directory 'retained-transcripts.v1.json'
+        foreach ($path in @($manifestPath, $oraclePath, $provenancePath, $inputPath, $contextPath, $transcriptPath)) {
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Candidate package $package is incomplete." }
+        }
+        $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json -Depth 64
+        $oracle = Get-Content -LiteralPath $oraclePath -Raw | ConvertFrom-Json -Depth 64
+        $provenance = Get-Content -LiteralPath $provenancePath -Raw | ConvertFrom-Json -Depth 64
+        $input = Get-Content -LiteralPath $inputPath -Raw | ConvertFrom-Json -Depth 64
+        $transcripts = Get-Content -LiteralPath $transcriptPath -Raw | ConvertFrom-Json -Depth 64
+        if ($manifest.status -ne 'oracle-frozen-pre-comparison' -or
+            -not [bool]$manifest.answer_free_product_inputs -or
+            [string]$manifest.recursive_answer_isolation -ne 'PASS' -or
+            -not [bool]$manifest.oracle_frozen_before_product_comparison -or
+            [bool]$manifest.network_required -or [int64]$manifest.provider_request_count -ne 0 -or
+            [int64]$manifest.credential_operation_count -ne 0 -or
+            [bool]$provenance.product_output_used -or [bool]$provenance.product_implementation_used -or
+            [bool]$provenance.private_or_held_out_material_used -or
+            [string]$input.operation_id -ne [string]$oracle.expected_identity.operation_id -or
+            [string]$input.prompt_fingerprint -ne [string]$oracle.expected_identity.prompt_fingerprint -or
+            @($transcripts.transcripts).Count -ne @($oracle.scenarios).Count) {
+            throw "Candidate package $package is not frozen, answer-isolated, closed, and offline."
+        }
+        foreach ($identity in @($manifest.file_identities)) {
+            $path = Join-Path $directory ([string]$identity.path)
+            if ((Get-Item -LiteralPath $path).Length -ne [int64]$identity.bytes -or
+                (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() -ne [string]$identity.sha256) {
+                throw "Candidate package $package has a stale file identity for $($identity.path)."
+            }
+        }
+        $results += [ordered]@{
+            package = $package
+            partition = [string]$manifest.partition
+            manifest_sha256 = (Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash.ToLowerInvariant()
+            oracle_sha256 = (Get-FileHash -LiteralPath $oraclePath -Algorithm SHA256).Hash.ToLowerInvariant()
+            provenance_sha256 = (Get-FileHash -LiteralPath $provenancePath -Algorithm SHA256).Hash.ToLowerInvariant()
+            context_sha256 = (Get-FileHash -LiteralPath $contextPath -Algorithm SHA256).Hash.ToLowerInvariant()
+            transcript_sha256 = (Get-FileHash -LiteralPath $transcriptPath -Algorithm SHA256).Hash.ToLowerInvariant()
+            scenario_count = @($oracle.scenarios).Count
+            proposal_count = [int64]$oracle.aggregate_expectations.proposal_count
+            admitted_proposal_count = [int64]$oracle.aggregate_expectations.admitted_proposal_count
+            rejected_proposal_count = [int64]$oracle.aggregate_expectations.rejected_proposal_count
+        }
+    }
+    return $results
+}
+
+function Invoke-CandidateSemanticsGate {
+    Assert-Slice5V1Unchanged
+    Invoke-DotnetTest 'tests/Infinium.UnitTests/Infinium.UnitTests.csproj' 'FullyQualifiedName~CandidateInvestigation|FullyQualifiedName~ProviderContext'
+    Invoke-DotnetTest 'tests/Infinium.ContractTests/Infinium.ContractTests.csproj' 'FullyQualifiedName~CandidateInvestigation|FullyQualifiedName~ProviderProvenance'
+    Invoke-DotnetTest 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj' 'FullyQualifiedName~CandidateAdmission|FullyQualifiedName~ProviderReplay'
+    Invoke-DotnetTest 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj' 'FullyQualifiedName~CandidateLlmTransparency|FullyQualifiedName~ProviderProvenance'
+    $packages = @(Get-CandidateInvestigationPackageEvidence)
+    if ($packages.Count -ne 2 -or ($packages.scenario_count | Measure-Object -Sum).Sum -ne 15 -or
+        ($packages.proposal_count | Measure-Object -Sum).Sum -ne 9 -or
+        ($packages.admitted_proposal_count | Measure-Object -Sum).Sum -ne 3 -or
+        ($packages.rejected_proposal_count | Measure-Object -Sum).Sum -ne 6) {
+        throw 'CandidateSemantics requires exactly fifteen scenarios, nine proposals, three admissions, and six retained rejections.'
+    }
+    Write-Receipt 'CandidateSemantics' ([ordered]@{
+        prompt_id = 'infinium.m1-s6.candidate-investigation-prompt/v1'
+        prompt_fingerprint = '026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e'
+        packages = $packages
+        scenario_count = 15; proposal_count = 9; admitted_proposal_count = 3; rejected_proposal_count = 6
+        positive_and_matched_negative_share_operation = $true
+        forbidden_authority = 'finding-case-grouping-threshold-taxonomy-readiness-reliability-not-granted'
+        network_send_count = 0; credential_operation_count = 0; source_refresh_count = 0
+    })
+}
+
+function Invoke-ProvenanceReplayGate {
+    Assert-Slice5V1Unchanged
+    Invoke-DotnetTest 'tests/Infinium.ContractTests/Infinium.ContractTests.csproj' 'FullyQualifiedName~CandidateInvestigationFrozenOracle|FullyQualifiedName~ProviderProvenance'
+    Invoke-DotnetTest 'tests/Infinium.IntegrationTests/Infinium.IntegrationTests.csproj' 'FullyQualifiedName~ProviderReplay|FullyQualifiedName~CandidateAdmission'
+    Invoke-DotnetTest 'tests/Infinium.EvaluationTests/Infinium.EvaluationTests.csproj' 'FullyQualifiedName~ProviderProvenance|FullyQualifiedName~CandidateLlmTransparency'
+    $packages = @(Get-CandidateInvestigationPackageEvidence)
+    Write-Receipt 'ProvenanceReplay' ([ordered]@{
+        packages = $packages
+        exact_frozen_oracle_comparison = 'passed'
+        raw_intermediate_retention = 'passed'
+        source_acquisition_admission_application_composition = 'passed'
+        retained_response_replay = 'byte-stable'
+        deleted_replay = 'audit-only'
+        identity_drift = 'failed-closed'
+        no_model_and_unavailable_provider = 'distinct'
+        network_send_count = 0; credential_operation_count = 0; source_refresh_count = 0
+    })
+}
+
 function Invoke-ConsumedCredentialNativeV1Gate {
     throw 'CredentialNative v1 is consumed and terminal; its retained implementation is historical evidence only.'
     if ([string]::IsNullOrWhiteSpace($AuthorizationManifest)) {
@@ -1609,6 +1711,8 @@ try {
         'Adapter' { Invoke-AdapterGate }
         'OfflineSafetyReplay' { Invoke-OfflineSafetyReplayGate }
         'SourceClaimSemantics' { Invoke-SourceClaimSemanticsGate }
+        'CandidateSemantics' { Invoke-CandidateSemanticsGate }
+        'ProvenanceReplay' { Invoke-ProvenanceReplayGate }
         'Layer6Review' { Invoke-Layer6ReviewGate }
     }
 } finally {

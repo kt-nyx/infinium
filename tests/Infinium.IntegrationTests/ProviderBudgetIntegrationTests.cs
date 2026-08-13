@@ -594,6 +594,317 @@ public sealed class ProviderBudgetIntegrationTests
 
     [TestMethod]
     [TestCategory("Integration")]
+    public void CandidateAdmissionPersistsReadsBackBacksUpAndRebuildsWithoutSending()
+    {
+        using BudgetContext context = BudgetContext.Create();
+        _ = context.Store.ReserveProviderBudget(1, context.Request);
+        ProviderDispatchGateReceipt gate = context.Store.AuthorizeProviderDispatch(context.GateRequest);
+        ProviderAccountingCoordinator accounting = new(context.Store);
+        _ = accounting.SimulatePersistAndSettle(
+            gate, "authorization-settlement", "operation-restore", "reservation-settlement",
+            "attempt-settlement", "request-settlement", "candidate-seed",
+            ProviderSimulatorOutcome.Completed, new(65_536, 20, 10, 1_048_576, 1, 400_000, 120_000),
+            BaseTime.AddSeconds(7));
+
+        byte[] candidateRequestBytes = Enumerable.Repeat((byte)0x5a, 1024).ToArray();
+        string candidateRequestSha256 = Convert.ToHexStringLower(SHA256.HashData(candidateRequestBytes));
+        string candidatePayloadDirectory = Path.Combine(context.Root, "payloads", candidateRequestSha256[..2], candidateRequestSha256[2..4]);
+        Directory.CreateDirectory(candidatePayloadDirectory);
+        File.WriteAllBytes(Path.Combine(candidatePayloadDirectory, candidateRequestSha256), candidateRequestBytes);
+
+        using (SqliteConnection database = new($"Data Source={context.Store.Paths.Database};Pooling=False"))
+        {
+            database.Open();
+            using (SqliteCommand seed = database.CreateCommand())
+            {
+                seed.Parameters.AddWithValue("$candidate_request_sha", candidateRequestSha256);
+                seed.CommandText =
+                    """
+                    INSERT INTO payloads VALUES('candidate-request-payload',$candidate_request_sha,1024,'application/json','retained',
+                      'payloads/' || substr($candidate_request_sha,1,2) || '/' || substr($candidate_request_sha,3,2) || '/' || $candidate_request_sha,
+                      '2026-08-10T00:00:01.0000000+00:00');
+                    INSERT INTO job_nodes VALUES('candidate-job','run-restore',NULL,'provider','created',0,
+                      '2026-08-10T00:00:00.0000000+00:00','2026-08-10T00:00:00.0000000+00:00');
+                    INSERT INTO durable_commands VALUES('candidate-command','provider','run-restore',1,'recorded','created',NULL,
+                      '2026-08-10T00:00:00.0000000+00:00',NULL,NULL);
+                    INSERT INTO provider_command_bindings VALUES('candidate-command','analysis-run','run-restore',
+                      '2026-08-10T00:00:00.0000000+00:00');
+                    INSERT INTO documentation_revisions VALUES('candidate-doc-revision','candidate-doc','fixture','1',NULL,NULL,
+                      'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc',0,
+                      'unavailable','unavailable','unavailable','2026-08-10T00:00:01.0000000+00:00');
+                    INSERT INTO documentation_imports VALUES('candidate-import','run-restore','candidate-doc-revision','clean-import',NULL,
+                      'candidate-import-closure','fixture-extractor','none','none','request-payload-restore','request-payload-restore',
+                      '2026-08-10T00:00:01.0000000+00:00');
+                    INSERT INTO documentation_passages VALUES('candidate-passage','candidate-doc-revision',0,1,
+                      'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd',NULL,'unavailable',
+                      '2026-08-10T00:00:01.0000000+00:00');
+                    INSERT INTO evidence_revisions VALUES('candidate-evidence','candidate-passage','candidate-import','fixture-evidence','1.0.0',
+                      'documentation-claim','known-issue','test-result','applicable','observed','admitted','request-payload-restore',NULL,
+                      '2026-08-10T00:00:01.0000000+00:00');
+                    INSERT INTO documentation_application_bindings VALUES('candidate-binding','run-restore','install-restore','context-restore',
+                      'manifest-restore','candidate-subject','installed-entity','candidate-closure',
+                      '2026-08-10T00:00:01.0000000+00:00');
+                    INSERT INTO evidence_application_links VALUES('source-application-dev-positive','candidate-evidence','run-restore',
+                      'candidate-binding','context-restore','candidate-subject','installed-entity','candidate-closure','applicable',
+                      'request-payload-restore','2026-08-10T00:00:01.0000000+00:00');
+                    INSERT INTO candidate_decisions VALUES('candidate-decision','run-restore','candidate-population','candidate-relationship',
+                      'candidate-admitted','mandatory-evidence','candidate-policy','request-payload-restore',
+                      '2026-08-10T00:00:01.0000000+00:00');
+                    INSERT INTO analysis_candidates VALUES('candidate-persist','candidate-decision','run-restore','mandatory-evidence','present',
+                      'candidate-closure','request-payload-restore','2026-08-10T00:00:01.0000000+00:00');
+                    """;
+                Assert.AreEqual(12, seed.ExecuteNonQuery());
+            }
+            CloneRow(database, "provider_operation_blocks", "operation_id='operation-restore'", new Dictionary<string, object?>()
+            {
+                ["operation_id"] = "candidate-operation",
+                ["owner_kind"] = "analysis-run",
+                ["owner_id"] = "run-restore",
+                ["job_node_id"] = "candidate-job",
+                ["command_id"] = "candidate-command",
+                ["operation_kind"] = "candidate-investigation",
+                ["request_fingerprint"] = candidateRequestSha256,
+                ["canonical_request_payload_id"] = "candidate-request-payload",
+                ["canonical_request_fingerprint"] = candidateRequestSha256,
+            });
+            CloneRow(database, "provider_operation_authorizations", "authorization_id='authorization-settlement'", new Dictionary<string, object?>()
+            {
+                ["authorization_id"] = "candidate-authorization",
+                ["operation_id"] = "candidate-operation",
+                ["owner_kind"] = "analysis-run",
+                ["owner_id"] = "run-restore",
+                ["analysis_run_id"] = "run-restore",
+                ["evidence_acquisition_run_id"] = null,
+                ["job_node_id"] = "candidate-job",
+                ["command_id"] = "candidate-command",
+                ["operation_kind"] = "candidate-investigation",
+                ["request_fingerprint"] = candidateRequestSha256,
+                ["canonical_request_fingerprint"] = candidateRequestSha256,
+            });
+            CloneRow(database, "provider_operation_attempts", "provider_attempt_id='attempt-settlement'", new Dictionary<string, object?>()
+            {
+                ["provider_attempt_id"] = "candidate-attempt",
+                ["operation_id"] = "candidate-operation",
+            });
+            CloneRow(database, "provider_requests", "request_id='request-settlement'", new Dictionary<string, object?>()
+            {
+                ["request_id"] = "candidate-request",
+                ["client_request_id"] = "candidate-client-request",
+                ["operation_id"] = "candidate-operation",
+                ["provider_attempt_id"] = "candidate-attempt",
+                ["request_fingerprint"] = candidateRequestSha256,
+                ["canonical_request_fingerprint"] = candidateRequestSha256,
+                ["payload_id"] = "candidate-request-payload",
+                ["payload_fingerprint"] = candidateRequestSha256,
+            });
+            CloneRow(database, "provider_reservations", "reservation_id='reservation-settlement'", new Dictionary<string, object?>()
+            {
+                ["reservation_id"] = "candidate-reservation",
+                ["operation_id"] = "candidate-operation",
+                ["provider_attempt_id"] = "candidate-attempt",
+                ["request_id"] = "candidate-request",
+            });
+            using (SqliteCommand scopeItems = database.CreateCommand())
+            {
+                scopeItems.CommandText =
+                    """
+                    INSERT INTO provider_reservation_scope_items
+                    SELECT 'candidate-' || reservation_scope_item_id,'candidate-reservation',scope_kind,scope_id,
+                      usage_json,nano_usd
+                    FROM provider_reservation_scope_items WHERE reservation_id='reservation-settlement';
+                    """;
+                Assert.IsGreaterThanOrEqualTo(1, scopeItems.ExecuteNonQuery());
+            }
+            CloneRow(database, "provider_dispatch_fences", "dispatch_fence_id='fence-settlement'", new Dictionary<string, object?>()
+            {
+                ["dispatch_fence_id"] = "candidate-fence",
+                ["authorization_id"] = "candidate-authorization",
+                ["operation_id"] = "candidate-operation",
+                ["reservation_id"] = "candidate-reservation",
+                ["provider_attempt_id"] = "candidate-attempt",
+                ["request_id"] = "candidate-request",
+            });
+            using (SqliteCommand transport = database.CreateCommand())
+            {
+                transport.CommandText =
+                    """
+                    INSERT INTO provider_transport_events
+                    SELECT 'candidate-' || transport_event_id,'candidate-operation','candidate-attempt','candidate-request',
+                      'candidate-fence',event_kind,sequence,occurred_at
+                    FROM provider_transport_events WHERE operation_id='operation-restore';
+                    """;
+                Assert.IsGreaterThanOrEqualTo(1, transport.ExecuteNonQuery());
+            }
+            CloneRow(database, "provider_responses", "response_record_id='candidate-seed:response'", new Dictionary<string, object?>()
+            {
+                ["response_record_id"] = "candidate-response",
+                ["authorization_id"] = "candidate-authorization",
+                ["operation_id"] = "candidate-operation",
+                ["owner_kind"] = "analysis-run",
+                ["owner_id"] = "run-restore",
+                ["request_id"] = "candidate-request",
+                ["provider_attempt_id"] = "candidate-attempt",
+                ["reservation_id"] = "candidate-reservation",
+                ["dispatch_fence_id"] = "candidate-fence",
+                ["operation_kind"] = "candidate-investigation",
+                ["client_request_id"] = "candidate-client-request",
+            });
+            CloneRow(database, "provider_usage_entries", "usage_entry_id='candidate-seed:usage'", new Dictionary<string, object?>()
+            {
+                ["usage_entry_id"] = "candidate-usage",
+                ["receipt_id"] = "candidate-receipt",
+                ["operation_id"] = "candidate-operation",
+                ["provider_attempt_id"] = "candidate-attempt",
+                ["request_id"] = "candidate-request",
+                ["dispatch_fence_id"] = "candidate-fence",
+                ["response_record_id"] = "candidate-response",
+            });
+            using (SqliteCommand rateFacts = database.CreateCommand())
+            {
+                rateFacts.CommandText =
+                    """
+                    INSERT INTO provider_rate_limit_facts
+                    SELECT 'candidate-' || rate_limit_fact_id,'candidate-usage',scope,dimension,availability,
+                      limit_value,remaining_value,observed_at,resets_at
+                    FROM provider_rate_limit_facts WHERE usage_entry_id='candidate-seed:usage';
+                    """;
+                Assert.AreEqual(1, rateFacts.ExecuteNonQuery());
+            }
+            using (SqliteCommand diagnostic = database.CreateCommand())
+            {
+                diagnostic.CommandText =
+                    """
+                    SELECT COUNT(*)
+                    FROM provider_responses r JOIN provider_usage_entries u ON u.response_record_id=r.response_record_id
+                    WHERE r.response_record_id='candidate-response' AND u.usage_entry_id='candidate-usage'
+                      AND r.response_state='completed' AND u.dispatch_count=1
+                      AND u.input_tokens <= r.maximum_input_tokens AND u.output_tokens <= r.maximum_output_tokens
+                      AND u.cache_read_tokens=0 AND u.cache_write_tokens=0 AND u.priced_tool_calls=0
+                      AND u.calculated_nano_usd <= r.maximum_calculated_nano_usd
+                      AND ((u.rate_availability='available' AND r.expected_rate_limit_fact_count=(
+                        SELECT COUNT(*) FROM provider_rate_limit_facts fact WHERE fact.usage_entry_id=u.usage_entry_id))
+                        OR (u.rate_availability<>'available' AND NOT EXISTS(
+                          SELECT 1 FROM provider_rate_limit_facts fact WHERE fact.usage_entry_id=u.usage_entry_id)));
+                    """;
+                Assert.AreEqual(1L, (long)diagnostic.ExecuteScalar()!);
+            }
+            using (SqliteCommand finalization = database.CreateCommand())
+            {
+                finalization.CommandText =
+                    """
+                    INSERT INTO provider_response_finalizations(
+                      finalization_id,response_record_id,usage_entry_id,validation_state,admission_state,finalized_at)
+                    VALUES(
+                      'candidate-finalization','candidate-response','candidate-usage','admitted','admitted',
+                      '2026-08-10T00:00:20.0000000+00:00');
+                    """;
+                Assert.AreEqual(1, finalization.ExecuteNonQuery());
+            }
+            CloneRow(database, "provider_replay_edges", "replay_edge_id='candidate-seed:response:replay'", new Dictionary<string, object?>()
+            {
+                ["replay_edge_id"] = "candidate-response:replay",
+                ["operation_id"] = "candidate-operation",
+                ["provider_attempt_id"] = "candidate-attempt",
+                ["request_id"] = "candidate-request",
+                ["response_record_id"] = "candidate-response",
+                ["dispatch_fence_id"] = "candidate-fence",
+            });
+            CloneRow(database, "provider_settlements", "settlement_id='candidate-seed:settlement'", new Dictionary<string, object?>()
+            {
+                ["settlement_id"] = "candidate-settlement",
+                ["operation_id"] = "candidate-operation",
+                ["provider_attempt_id"] = "candidate-attempt",
+                ["request_id"] = "candidate-request",
+                ["reservation_id"] = "candidate-reservation",
+                ["usage_entry_id"] = "candidate-usage",
+                ["dispatch_fence_id"] = "candidate-fence",
+            });
+            using (SqliteCommand budgetEvents = database.CreateCommand())
+            {
+                budgetEvents.CommandText =
+                    """
+                    INSERT INTO provider_budget_events
+                    SELECT 'candidate-' || budget_event_id,'candidate-reservation',
+                      CASE WHEN usage_entry_id IS NULL THEN NULL ELSE 'candidate-usage' END,
+                      scope_kind,scope_id,event_kind,dispatch_count,input_tokens,output_tokens,total_tokens,
+                      reasoning_tokens,cache_read_tokens,cache_write_tokens,priced_tool_calls,nano_usd,sequence,occurred_at
+                    FROM provider_budget_events WHERE reservation_id='reservation-settlement';
+                    """;
+                Assert.IsGreaterThanOrEqualTo(2, budgetEvents.ExecuteNonQuery());
+            }
+            CloneRow(database, "provider_budget_settlement_receipts", "settlement_id='candidate-seed:settlement'", new Dictionary<string, object?>()
+            {
+                ["settlement_id"] = "candidate-settlement",
+                ["reservation_id"] = "candidate-reservation",
+                ["usage_entry_id"] = "candidate-usage",
+            });
+        }
+
+        (CandidateInvestigationExecutionInput fixtureInput, CandidateInvestigationRetainedTranscript[] fixtureTranscripts) =
+            CandidateAdmissionProviderReplayIntegrationTests.Load("S6-CANDIDATE-DEV-v1");
+        CandidateInvestigationContextInput fixtureContext = fixtureInput.Contexts[0];
+        CandidateInvestigationExecutionInput input = fixtureInput with
+        {
+            OperationId = "candidate-operation",
+            HostAuthorizationId = "candidate-authorization",
+            OwnerId = "run-restore",
+            AnalysisRunId = "run-restore",
+            Contexts =
+            [
+                fixtureContext with { CandidateId = "candidate-persist" },
+                fixtureInput.Contexts[1],
+            ],
+        };
+        CandidateInvestigationRetainedTranscript transcript = fixtureTranscripts[0] with
+        {
+            OperationId = "candidate-operation",
+            ResponseRecordId = "candidate-response",
+            Proposals = [fixtureTranscripts[0].Proposals[0] with { CandidateId = "candidate-persist" }],
+        };
+        DurableCandidateInvestigationCoordinator coordinator = new(context.Store);
+        CandidateInvestigationAdmissionPublication publication = coordinator.AdmitRetainedTranscript(
+            input, transcript, "candidate-authorization", "candidate-attempt", "candidate-request",
+            "candidate-fence", BaseTime.AddSeconds(21));
+        Assert.AreEqual(1, publication.Persistence.ProposalCount);
+        Assert.AreEqual("admitted", context.Store.ReadCandidateInvestigationAdmissions("run-restore", "candidate-persist").Single().State);
+        Assert.AreEqual("proposal-dev-positive", context.Store.ReadCandidateInvestigation(
+            "run-restore", "candidate-persist", "admission-proposal-dev-positive").HypothesisProposals.Single().ProposalId.Value);
+        StringAssert.Contains(System.Text.Encoding.UTF8.GetString(publication.JsonTransparency), "source_acquisition_links");
+        StringAssert.Contains(publication.HumanTransparency, "no finding, case, taxonomy");
+        ProviderTerminalPublicationArtifacts terminal = accounting.PublishTerminalV2(
+            new("run-restore"), new("local-run-output-v1"), "candidate-local-output-v1"u8.ToArray(),
+            "candidate-local-cli-v1"u8.ToArray(), new("candidate-operation"), BaseTime.AddSeconds(22));
+        Assert.AreEqual(ProviderOperationKind.CandidateInvestigation,
+            terminal.RunOutputV2.ProviderOperations.Single().OperationKind);
+        Assert.AreEqual("admission-proposal-dev-positive",
+            terminal.RunOutputV2.ProviderOperations.Single().AdmissionId?.Value);
+
+        BackupArtifact backup = context.Store.CreateBackup("Wp7CandidateInvestigation", BaseTime.AddSeconds(23));
+        string restoredRoot = Path.Combine(Path.GetTempPath(), "Infinium-Wp7-Restore-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            using (StoragePaths target = new(restoredRoot))
+            {
+                AuthoritativeStore.RestoreBackup(backup, target);
+            }
+            using StoragePaths restoredPaths = new(restoredRoot);
+            using AuthoritativeStore restored = new(restoredPaths);
+            Assert.AreEqual(1, restored.ReadCandidateInvestigationAdmissions("run-restore", "candidate-persist").Count);
+            Assert.AreEqual("proposal-dev-positive", restored.ReadCandidateInvestigation(
+                "run-restore", "candidate-persist", "admission-proposal-dev-positive").HypothesisProposals.Single().ProposalId.Value);
+            _ = restored.RebuildProviderBudgetProjections(BaseTime.AddSeconds(24));
+        }
+        finally
+        {
+            if (Directory.Exists(restoredRoot))
+            {
+                DeleteDirectoryWithRetry(restoredRoot);
+            }
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
     public void OversizedNullRawPayloadQueriesAndReplaysAsTypedOversizedReceipt()
     {
         using BudgetContext context = BudgetContext.Create();
@@ -1079,6 +1390,41 @@ public sealed class ProviderBudgetIntegrationTests
                 """;
             Assert.AreEqual(3, command.ExecuteNonQuery());
         }
+    }
+
+    private static void CloneRow(
+        SqliteConnection connection, string table, string where, IReadOnlyDictionary<string, object?> replacements)
+    {
+        Assert.AreEqual(1, CloneRows(connection, table, where, replacements));
+    }
+
+    private static int CloneRows(
+        SqliteConnection connection, string table, string where, IReadOnlyDictionary<string, object?> replacements)
+    {
+        List<string> columns = [];
+        using (SqliteCommand schema = connection.CreateCommand())
+        {
+            schema.CommandText = $"PRAGMA table_info(\"{table}\");";
+            using SqliteDataReader reader = schema.ExecuteReader();
+            while (reader.Read())
+            {
+                columns.Add(reader.GetString(1));
+            }
+        }
+        using SqliteCommand clone = connection.CreateCommand();
+        string[] expressions = columns.Select((column, index) =>
+        {
+            if (!replacements.TryGetValue(column, out object? value))
+            {
+                return $"\"{column}\"";
+            }
+            string parameter = "$replacement" + index;
+            clone.Parameters.AddWithValue(parameter, value ?? DBNull.Value);
+            return parameter;
+        }).ToArray();
+        clone.CommandText = $"INSERT INTO \"{table}\" ({string.Join(',', columns.Select(x => $"\"{x}\""))}) "
+            + $"SELECT {string.Join(',', expressions)} FROM \"{table}\" WHERE {where};";
+        return clone.ExecuteNonQuery();
     }
 
     private const string AuthorizationSql =

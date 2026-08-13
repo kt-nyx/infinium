@@ -68,6 +68,9 @@ public static class ProviderPersistenceDeclarations
         "provider_semantic_proposals",
         "provider_semantic_admissions",
         "provider_semantic_validations",
+        "analysis_candidates",
+        "analysis_hypotheses",
+        "evidence_application_links",
         "provider_run_output_v2_bindings",
         "provider_replay_edges",
     ];

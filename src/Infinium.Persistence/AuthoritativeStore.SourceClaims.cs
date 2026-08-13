@@ -347,6 +347,195 @@ public partial class AuthoritativeStore
         ProposalAdmissionState.Deleted => "deleted",
         _ => throw new InvalidDataException("Source-claim persistence requires an explicit terminal admission state."),
     };
+
+    public CandidateInvestigationPersistenceReceipt PersistCandidateInvestigation(
+        CandidateInvestigationPersistenceRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ProviderOperationContractInvariants.Validate(request.Document);
+        CandidateInvestigationDocument document = request.Document;
+        if (document.AdmissionLinks.Any(link => link.AuthorizationId.Value != request.AuthorizationId
+                || link.ResponseRecordId.Value != request.ResponseRecordId))
+        {
+            throw new InvalidDataException("Candidate investigation requires exact authorization and response identities.");
+        }
+        lock (gate)
+        {
+            using SqliteTransaction transaction = BeginImmediateTransaction();
+            using (SqliteCommand authority = connection.CreateCommand())
+            {
+                authority.Transaction = transaction;
+                authority.CommandText =
+                    """
+                    SELECT 1 FROM provider_operation_authorizations authorization
+                    JOIN provider_responses response
+                      ON response.authorization_id=authorization.authorization_id
+                     AND response.operation_id=authorization.operation_id
+                    JOIN analysis_candidates candidate
+                      ON candidate.candidate_id=$candidate AND candidate.run_id=authorization.owner_id
+                    WHERE authorization.authorization_id=$authorization
+                      AND authorization.operation_id=$operation
+                      AND authorization.owner_kind='analysis-run' AND authorization.owner_id=$owner
+                      AND authorization.operation_kind='candidate-investigation'
+                      AND response.response_record_id=$response
+                      AND response.provider_attempt_id=$attempt AND response.request_id=$request
+                      AND response.dispatch_fence_id=$fence;
+                    """;
+                authority.Parameters.AddWithValue("$candidate", document.CandidateId.Value);
+                authority.Parameters.AddWithValue("$authorization", request.AuthorizationId);
+                authority.Parameters.AddWithValue("$operation", document.OperationId.Value);
+                authority.Parameters.AddWithValue("$owner", document.OwnerId.Value);
+                authority.Parameters.AddWithValue("$response", request.ResponseRecordId);
+                authority.Parameters.AddWithValue("$attempt", request.ProviderAttemptId);
+                authority.Parameters.AddWithValue("$request", request.RequestId);
+                authority.Parameters.AddWithValue("$fence", request.DispatchFenceId);
+                if (authority.ExecuteScalar() is null)
+                {
+                    throw new InvalidDataException("Candidate persistence requires exact retained analysis, authorization, response, and candidate authority.");
+                }
+            }
+            foreach (ProviderSemanticAdmissionLinkContract link in document.AdmissionLinks)
+            {
+                HypothesisProposalContract proposal = document.HypothesisProposals.Single(x => x.ProposalId == link.ProposalId);
+                byte[] payload = JsonSerializer.SerializeToUtf8Bytes(document);
+                string payloadId = AdmitCoordinatorPayload(
+                    payload, "candidate-investigation", proposal.ProposalId.Value, request.OccurredAt, transaction);
+                string kind = proposal.State is ProposalAdmissionState.Abstained ? "abstention"
+                    : proposal.State is ProposalAdmissionState.Unsupported or ProposalAdmissionState.Unavailable
+                        or ProposalAdmissionState.Deleted ? "gap" : "candidate-hypothesis";
+                Execute(
+                    """
+                    INSERT INTO provider_semantic_proposals(
+                      proposal_id,authorization_id,operation_id,provider_attempt_id,request_id,response_record_id,
+                      dispatch_fence_id,owner_kind,owner_id,root_subject_id,semantic_link_id,proposal_kind,
+                      payload_id,created_at)
+                    VALUES($proposal,$authorization,$operation,$attempt,$request,$response,$fence,'analysis-run',
+                      $owner,$candidate,$application,$kind,$payload,$now);
+                    INSERT INTO provider_semantic_validations VALUES(
+                      $validation,$proposal,$operation,$response,'analysis-run',$owner,$candidate,$state,
+                      'infinium.host.candidate-investigation-admission/v1',$reason,$now);
+                    INSERT INTO provider_semantic_admissions VALUES(
+                      $admission,$proposal,$operation,$response,'analysis-run',$owner,$candidate,$validation,$application,
+                      $state,'infinium.host.candidate-investigation-admission/v1',$reason,$artifact,$now);
+                    """,
+                    transaction,
+                    ("$proposal", proposal.ProposalId.Value), ("$authorization", request.AuthorizationId),
+                    ("$operation", document.OperationId.Value), ("$attempt", request.ProviderAttemptId),
+                    ("$request", request.RequestId), ("$response", request.ResponseRecordId),
+                    ("$fence", request.DispatchFenceId), ("$owner", document.OwnerId.Value),
+                    ("$candidate", document.CandidateId.Value), ("$application", link.ApplicationLinkId.Value),
+                    ("$kind", kind), ("$payload", payloadId), ("$validation", link.ValidationId.Value),
+                    ("$state", ToAdmissionState(proposal.State)), ("$reason", proposal.Reason),
+                    ("$admission", link.AdmissionId.Value),
+                    ("$artifact", proposal.State == ProposalAdmissionState.Admitted ? payloadId : null),
+                    ("$now", ToText(request.OccurredAt)));
+            }
+            transaction.Commit();
+            return new(document.AnalysisRunId.Value, document.OperationId.Value, document.CandidateId.Value,
+                document.HypothesisProposals.Count, document.AdmissionLinks.Count,
+                document.AdmissionLinkIds.Select(x => x.Value).ToArray());
+        }
+    }
+
+    public IReadOnlyList<ProviderSemanticAdmissionReadModel> ReadCandidateInvestigationAdmissions(
+        string analysisRunId,
+        string candidateId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(analysisRunId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(candidateId);
+        lock (gate)
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText =
+                """
+                SELECT admission.admission_id,admission.proposal_id,admission.operation_id,
+                  admission.response_record_id,admission.root_subject_id,admission.validation_id,
+                  admission.semantic_link_id,admission.state,admission.reason,proposal.payload_id
+                FROM provider_semantic_admissions admission
+                JOIN provider_semantic_proposals proposal ON proposal.proposal_id=admission.proposal_id
+                WHERE admission.owner_kind='analysis-run' AND admission.owner_id=$owner
+                  AND admission.root_subject_id=$candidate
+                ORDER BY admission.admission_id;
+                """;
+            command.Parameters.AddWithValue("$owner", analysisRunId);
+            command.Parameters.AddWithValue("$candidate", candidateId);
+            using SqliteDataReader reader = command.ExecuteReader();
+            List<ProviderSemanticAdmissionReadModel> results = [];
+            while (reader.Read())
+            {
+                results.Add(new(reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3),
+                    reader.GetString(4), reader.GetString(5), reader.GetString(6), reader.GetString(7),
+                    reader.GetString(8), reader.GetString(9)));
+            }
+            return results;
+        }
+    }
+
+    public IReadOnlyList<ProviderSemanticAdmissionReadModel> ReadCandidateInvestigationAdmissionsForOperation(
+        string analysisRunId,
+        string operationId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(analysisRunId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(operationId);
+        lock (gate)
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText =
+                """
+                SELECT admission.admission_id,admission.proposal_id,admission.operation_id,
+                  admission.response_record_id,admission.root_subject_id,admission.validation_id,
+                  admission.semantic_link_id,admission.state,admission.reason,proposal.payload_id
+                FROM provider_semantic_admissions admission
+                JOIN provider_semantic_proposals proposal ON proposal.proposal_id=admission.proposal_id
+                WHERE admission.owner_kind='analysis-run' AND admission.owner_id=$owner
+                  AND admission.operation_id=$operation
+                ORDER BY admission.admission_id;
+                """;
+            command.Parameters.AddWithValue("$owner", analysisRunId);
+            command.Parameters.AddWithValue("$operation", operationId);
+            using SqliteDataReader reader = command.ExecuteReader();
+            List<ProviderSemanticAdmissionReadModel> results = [];
+            while (reader.Read())
+            {
+                results.Add(new(reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3),
+                    reader.GetString(4), reader.GetString(5), reader.GetString(6), reader.GetString(7),
+                    reader.GetString(8), reader.GetString(9)));
+            }
+            return results;
+        }
+    }
+
+    public CandidateInvestigationDocument ReadCandidateInvestigation(
+        string analysisRunId,
+        string candidateId,
+        string admissionId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(analysisRunId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(candidateId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(admissionId);
+        lock (gate)
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText =
+                """
+                SELECT proposal.payload_id FROM provider_semantic_admissions admission
+                JOIN provider_semantic_proposals proposal ON proposal.proposal_id=admission.proposal_id
+                WHERE admission.admission_id=$admission AND admission.owner_kind='analysis-run'
+                  AND admission.owner_id=$owner AND admission.root_subject_id=$candidate;
+                """;
+            command.Parameters.AddWithValue("$admission", admissionId);
+            command.Parameters.AddWithValue("$owner", analysisRunId);
+            command.Parameters.AddWithValue("$candidate", candidateId);
+            string payloadId = command.ExecuteScalar() as string
+                ?? throw new KeyNotFoundException("The exact retained candidate investigation does not exist.");
+            byte[] bytes = ReadRetainedPayloadBytes(payloadId)
+                ?? throw new InvalidDataException("The retained candidate-investigation payload is unavailable.");
+            CandidateInvestigationDocument document = JsonSerializer.Deserialize<CandidateInvestigationDocument>(bytes)
+                ?? throw new InvalidDataException("The retained candidate-investigation payload is invalid.");
+            ProviderOperationContractInvariants.Validate(document);
+            return document;
+        }
+    }
 }
 
 public sealed record ProviderSemanticAdmissionReadModel(
@@ -360,3 +549,20 @@ public sealed record ProviderSemanticAdmissionReadModel(
     string State,
     string Reason,
     string PayloadId);
+
+public sealed record CandidateInvestigationPersistenceRequest(
+    CandidateInvestigationDocument Document,
+    string AuthorizationId,
+    string ResponseRecordId,
+    string ProviderAttemptId,
+    string RequestId,
+    string DispatchFenceId,
+    DateTimeOffset OccurredAt);
+
+public sealed record CandidateInvestigationPersistenceReceipt(
+    string AnalysisRunId,
+    string OperationId,
+    string CandidateId,
+    int ProposalCount,
+    int AdmissionCount,
+    IReadOnlyList<string> AdmissionIds);
