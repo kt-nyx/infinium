@@ -4633,3 +4633,13 @@ zeroes and its status remains `draft-close-ready-binding-pending`; therefore it
 has no effect authority. This draft commit includes all schema, validator,
 test, gate identity, old-authority disposition, and executable consumer bytes
 so that only the final manifest and append-only record may change afterward.
+
+The exact replacement close-ready consumer candidate is
+`478fe41660a0de91b87e602452e267fa50961393`. The final replacement manifest
+is 19,182 bytes with SHA-256
+`6a2c1f39137de8e40d9e9574ba963d39c8bbdb7c880663a363cc69e65145c952`,
+bound to that candidate and the accepted WP3/WP7/handoff ancestors. Semantic
+validation reports `validated-ready-for-owner-acceptance` but
+`execution_authorized: false`, with zero credential, network, and provider
+operations. No owner marker exists for this identity and no native operation
+was run.
