@@ -4488,3 +4488,26 @@ passed. The prepared manifest is 15,208 bytes with SHA-256
 `a2551d378f371c8512d8883cca1f698674ab8642792b6f827617991eaa70f051`.
 Its independent review and candidate-bound Layer 6 results are recorded only
 after the exact documentation candidate is committed.
+
+Fresh read-only reviewer `/root/wp4_manifest_review` returned `ACCEPT` for the
+exact preparation-only candidate
+`4d5a711e5075d50aff49ca37b614605157cbe76f`. The reviewer independently
+matched the ID, SHA-256, expiry, all 12 recomputed fingerprints, absence of
+namespace/profile reuse, native/entry/provider/limit/scenario/backup/canary/
+cleanup/review boundaries, stale-manifest closure, zero effect markers,
+documentation/diff hygiene, and zero repository-owned .NET survivors. The
+reviewer confirms that acceptance can authorize only the bounded non-native
+consumer-binding step; a second exact executable manifest, fresh review, and
+explicit native-effect acceptance remain required.
+
+Candidate-bound Layer 6 from
+`5df6b621a6ea0031066b2afbfbe204799854910e` to
+`4d5a711e5075d50aff49ca37b614605157cbe76f` correctly retained
+`credential_access_permitted: false` and `network_permitted: false`, with zero
+strict-JSON, relative-link, or private/archive failures. It returned one
+allowlist finding because the new preparation-manifest filename is absent from
+the historical exact path list. Receipt SHA-256 is
+`9bf0ad5cfaab12330f77b6a1965079377fe372f24f803a9a5313ad4455cdeb59`.
+Both preparer and reviewer classify this as the expected tooling/authority gap,
+not a manifest semantic defect; the verifier was not weakened under the
+documentation-only handoff.
