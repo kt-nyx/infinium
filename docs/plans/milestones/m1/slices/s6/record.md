@@ -4576,3 +4576,12 @@ plumbing is rebound in draft form to fresh identity
 with a fresh namespace and all 12 newly derived target fingerprints. Its
 close-ready commit is intentionally all zeroes and it remains non-executable
 until this exact compatibility-corrected consumer state is committed.
+
+The corrected consumer-binding candidate is
+`9c61f5af1ac7bbb14dae2737ca2220848a063697`. The final exact executable
+proposal is 19,210 bytes with SHA-256
+`703475a8d5fa9cf911c0d5a2b4f2576d3070bc551ff281070f38ba2cebe39d0b`,
+bound to that commit and expiring at `2026-08-15T15:18:47.8649525Z`.
+Semantic validation reports `validated-ready-for-owner-acceptance` and
+`execution_authorized: false`, with zero credential, network, and provider
+operations. No canonical owner native-effect acceptance line exists.
