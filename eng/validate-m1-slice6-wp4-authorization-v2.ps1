@@ -31,19 +31,18 @@ if (-not (Test-Json -LiteralPath $resolvedManifest -SchemaFile $schema -ErrorAct
 $bytes = [IO.File]::ReadAllBytes($resolvedManifest)
 $text = [Text.Encoding]::UTF8.GetString($bytes)
 $manifest = $text | ConvertFrom-Json -Depth 100 -DateKind String
-$expectedManifestId = 'infinium.m1-s6.wp4.credential-native-authorization/cedc4c47-0c58-490e-8d14-5159362aadf3'
+$expectedManifestId = 'infinium.m1-s6.wp4.credential-native-authorization/e0cb0693-f482-433d-a3d4-3ee40ce7e2db'
 $expectedWp3 = 'b32939e8b7491a5c47453f912d25dd98c090f103'
 $expectedWp7Product = '59367a7479a7395b173b974bf720543aab2404d4'
 $expectedWp7Evidence = '51251c0e0eb98d67dbc9b295b9ff084ebca33890'
 $expectedHandoff = '5df6b621a6ea0031066b2afbfbe204799854910e'
-$expectedOldManifest = '0c911c6c10340d4a8b6a3f98aa2c2bffa3f1f4290793d3583a460cecf89bcbd3'
-$expectedOldEvidence = '164386a2843851c77ce96b8c0fe373bfbe2eaf046f4f646945ecbfa0e48db786'
-$expectedOldReceipt = '9d5b79a14c06f225805eb92155cf2bf3f02744ead82b12cb30604e4479d27667'
-$consumedManifestPath = Join-Path $repoRoot `
-    'docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v1.json'
-$actualOldManifest = (Get-FileHash -LiteralPath $consumedManifestPath -Algorithm SHA256).Hash.ToLowerInvariant()
-if ($actualOldManifest -ne $expectedOldManifest) {
-    throw 'The consumed v1 manifest bytes changed; v2 cannot reinterpret or reuse that terminal authority.'
+$expectedOldManifest = '6a2c1f39137de8e40d9e9574ba963d39c8bbdb7c880663a363cc69e65145c952'
+$expectedOldEvidence = '86321fa61c51a5ac8e0067906abe609a8cf1c2f100e421615b891dc7427f55be'
+$expectedOldReceipt = 'c86a9bf3b9e8d7acdf19697e8dea6c26a0e2ae2c9cfdb6b904b5fc1412d848b1'
+$historicalManifestBlob = (& git -C $repoRoot rev-parse `
+    '1bc2a29be65411f2e2228365017e16bbaa747baa:docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v2.json').Trim()
+if ($LASTEXITCODE -ne 0 -or $historicalManifestBlob -ne '518c2c1e065d2a1917c406b5f6cc4a10c540baec') {
+    throw 'The consumed cedc4c47 manifest history differs from its terminal exact-byte authority.'
 }
 if ($manifest.schema_identity -ne 'infinium.repository.wp4-credential-native-authorization/1.1.0' -or
     $manifest.manifest_id -ne $expectedManifestId -or
@@ -131,7 +130,11 @@ if ([bool]$manifest.entry_boundary.prepopulate -or [bool]$manifest.entry_boundar
     -not ([string]$manifest.entry_boundary.operator_action).Contains('manually types', [StringComparison]::Ordinal) -or
     -not ([string]$manifest.entry_boundary.operator_action).Contains(
         'no secret is supplied in arguments, environment, file, stdin, IPC, or programmatic window message',
-        [StringComparison]::Ordinal)) {
+        [StringComparison]::Ordinal) -or
+    -not ([string]$manifest.entry_boundary.readiness_oracle).Contains('current input-desktop object', [StringComparison]::Ordinal) -or
+    -not ([string]$manifest.entry_boundary.readiness_oracle).Contains('first terminal action', [StringComparison]::Ordinal) -or
+    -not ([string]$manifest.entry_boundary.action_routing).Contains('first terminal action only', [StringComparison]::Ordinal) -or
+    -not ([string]$manifest.entry_boundary.action_routing).Contains('never poll global key state', [StringComparison]::Ordinal)) {
     throw 'WP4 v2 does not require genuine blank non-echoing operator entry.'
 }
 if ([bool]$manifest.qualification_components.native_success_run.inject_cleanup_ambiguity -or
@@ -197,7 +200,7 @@ foreach ($scenario in $manifest.required_scenarios) {
     }
 }
 
-$expectedCommand = 'powershell -NoProfile -ExecutionPolicy Bypass -File eng/verify-m1-slice6.ps1 -Gate CredentialNative -AuthorizationManifest docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v2.json -OutputRoot artifacts/m1-slice6/wp4-native-cedc4c47'
+$expectedCommand = 'powershell -NoProfile -ExecutionPolicy Bypass -File eng/verify-m1-slice6.ps1 -Gate CredentialNative -AuthorizationManifest docs/plans/milestones/m1/slices/s6/wp4-credential-native-authorization.v2.json -OutputRoot artifacts/m1-slice6/wp4-native-e0cb0693'
 if ($manifest.execution_command -ne $expectedCommand -or
     -not ([string]$manifest.acceptance_binding.recording).Contains(
         'WP4_V2_OWNER_ACCEPTANCE manifest_id=<manifest_id> sha256=<manifest_sha256> close_ready_commit=<close_ready_implementation_commit> expires_at_utc=<expires_at_utc>',

@@ -1296,7 +1296,7 @@ function Invoke-CredentialNativeGate {
     $manifestBytes = [IO.File]::ReadAllBytes($manifestPath)
     $manifestSha = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($manifestBytes)).ToLowerInvariant()
     $manifest = [Text.Encoding]::UTF8.GetString($manifestBytes) | ConvertFrom-Json -Depth 100 -DateKind String
-    if ($manifest.manifest_id -ne 'infinium.m1-s6.wp4.credential-native-authorization/cedc4c47-0c58-490e-8d14-5159362aadf3' -or
+    if ($manifest.manifest_id -ne 'infinium.m1-s6.wp4.credential-native-authorization/e0cb0693-f482-433d-a3d4-3ee40ce7e2db' -or
         $manifest.status -ne 'ready-for-owner-acceptance' -or
         $manifest.effect_authority -ne 'none-until-owner-accepts-exact-manifest-bytes' -or
         $manifest.candidate_binding.accepted_wp3_candidate_commit -ne 'b32939e8b7491a5c47453f912d25dd98c090f103' -or

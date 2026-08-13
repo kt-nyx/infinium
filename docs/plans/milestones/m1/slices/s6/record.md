@@ -4917,3 +4917,21 @@ and failed manual-phase readiness evidence rather than collapsing all detail
 behind a generic wrapper. All correction verification remains fake-store and
 non-native; no Credential Manager or provider operation is authorized by this
 record entry.
+
+## WP4 corrected replacement qualification authority draft — 2026-08-13
+
+The corrected consumer binding reserves fresh one-shot identity
+`infinium.m1-s6.wp4.credential-native-authorization/e0cb0693-f482-433d-a3d4-3ee40ce7e2db`,
+fresh namespace `m1-s6-wp4-native-e0cb0693-f482-433d-a3d4-3ee40ce7e2db`,
+12 newly derived exact targets, and fresh output root
+`artifacts/m1-slice6/wp4-native-e0cb0693`. It supersedes the consumed
+`cedc4c47` authority whose namespace is conclusively absent and permanently
+non-reusable under recovery evidence SHA-256
+`86321fa61c51a5ac8e0067906abe609a8cf1c2f100e421615b891dc7427f55be`
+and reconstructed gate receipt SHA-256
+`c86a9bf3b9e8d7acdf19697e8dea6c26a0e2ae2c9cfdb6b904b5fc1412d848b1`.
+
+The draft is structurally and semantically valid with no effect authority.
+It binds the new UI readiness/action oracle and Job Object containment proof,
+and remains close-ready-binding pending. Credential Manager, DNS, network,
+provider, and billable operation counts remain zero for this preparation.
