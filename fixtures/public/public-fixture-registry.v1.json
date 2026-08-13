@@ -1,9 +1,27 @@
 {
-  "schema_identity": "infinium.repository.public-fixture-registry/1.3.0",
-  "registry_version": "1.3.0",
+  "schema_identity": "infinium.repository.public-fixture-registry/1.4.0",
+  "registry_version": "1.4.0",
   "status": "current",
-  "package_count": 31,
+  "package_count": 33,
   "packages": [
+    {
+      "package_identity": "S6-CANDIDATE-DEV-v1",
+      "package_version": "1.0.0",
+      "partition": "development",
+      "package_path": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-DEV-v1",
+      "authority_file": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-DEV-v1/public-manifest.json",
+      "authority_bytes": 1695,
+      "authority_sha256": "a084a9f89113945e658069f5a1813973a95808a2f5dba5166ccfd9ec07232f44"
+    },
+    {
+      "package_identity": "S6-CANDIDATE-VAL-v1",
+      "package_version": "1.0.0",
+      "partition": "validation",
+      "package_path": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-VAL-v1",
+      "authority_file": "fixtures/public/provider/candidate-investigations/S6-CANDIDATE-VAL-v1/public-manifest.json",
+      "authority_bytes": 1691,
+      "authority_sha256": "a21205193d9caacfd068f2fbd0fa21956a3f9da93e6ff3fac48ac74c649d5981"
+    },
     {
       "package_identity": "S6-CLAIM-DEV-v1",
       "package_version": "1.0.0",

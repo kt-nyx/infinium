@@ -1,0 +1,52 @@
+{
+  "schema_id": "infinium.evaluation.candidate-investigation-oracle-provenance/v1",
+  "schema_version": "1",
+  "package_id": "S6-CANDIDATE-DEV-v1",
+  "partition": "development",
+  "authored_at_utc": "2026-08-13T03:46:59.0806829Z",
+  "author_role": "fresh-answer-isolated-wp7-oracle-author",
+  "method": "hand-derived from accepted public authority and answer-free deterministic inputs and retained transcripts before product comparison",
+  "input_commit": "b4e03e3251b0e11c225ac3cd5320b3678602e5fc",
+  "accepted_handoff_commit": "c588ef2b588b851a9948d3ed3d2b43205ebf500a",
+  "product_output_used": false,
+  "product_implementation_used": false,
+  "writer_expected_results_used": false,
+  "private_or_held_out_material_used": false,
+  "input_identities": {
+    "execution-input.v1.json": {"bytes":10998,"sha256":"6d76cc1a1087810bb9d09cf6980c2b418234dffdd7d8ffe12d7701fd5e2148e3"},
+    "context-manifest.v1.json": {"bytes":2135,"sha256":"7228d909a0700588d23797a282d76bd517dc6c1a45ea54b68eaaf8cd058af58e"},
+    "retained-transcripts.v1.json": {"bytes":9592,"sha256":"3220393206488dc9bed36308301163db5fb95df6e3069f474c50ca620089ccea"}
+  },
+  "schema_identities": [
+    {"path":"contracts/json-schema/candidate-investigation-execution-input.v1.schema.json","sha256":"028df3b70ade02b99c39100e6a845b0e94581264bf471e65e9de8e3354c637c9"},
+    {"path":"contracts/json-schema/candidate-investigation-context.v1.schema.json","sha256":"48e186b67891af58b8daf53ce5d0c8bd425702a69ad9401fac4eeaeee581ac17"},
+    {"path":"contracts/json-schema/candidate-investigation-retained-transcripts.v1.schema.json","sha256":"036de9ce8d8569d52510053faef00ea101afc21a5097d90f93336e15fe1d1c89"},
+    {"path":"contracts/json-schema/candidate-investigation.v1.schema.json","sha256":"74861d5d0230fca68da30686abdafc08429c6fe6866da96a77b49e7f09d0ca4c"}
+  ],
+  "authority_identities": [
+    {"path":"docs/plans/milestones/m1/slices/s6/plan.md","bytes":74466,"sha256":"5dee7d5464f9a3cd68692a9027d02e689d4a0f851c9726f8ed32f307776b49da"},
+    {"path":"docs/product/requirements.md","bytes":67140,"sha256":"c24aa68f78067d089d8b7aaa7153c8fe7217b9dcb0ad7743ab2655927183ab57"},
+    {"path":"docs/evaluation/m1-continuation-verification-profile.md","bytes":15585,"sha256":"bad5904920d2e69a973925bc3edf128ace2c7dd499e63d42c08a9c67e772b2b5"},
+    {"path":"docs/evaluation/specifications/m1-semantic-and-ground-truth.md","bytes":63658,"sha256":"e39bcb9ec1379c8b82ef8d5519eeff7fcb2ee4ce6c52ba41470b87b03f40ab4d"},
+    {"path":"docs/evaluation/specifications/semantic-fixture-catalog.md","bytes":67003,"sha256":"c0d2e1e6affd02618dd522865d30cb813f9a402856ceee1105b63fa1362228eb"},
+    {"path":"docs/evaluation/fixture-guidelines.md","bytes":8745,"sha256":"0fc582d22a96a62177982c1008c7fcab82117192457890b14d54f8e81097e1c6"},
+    {"path":"docs/evaluation/anti-overfitting-rules.md","bytes":7611,"sha256":"ab9416a11e7b523f558e8b7914e4095bf2befeb82999a2fff409f6e4dce458f0"},
+    {"path":"docs/architecture/decisions/ADR-0001-evidence-authority-boundary.md","bytes":3888,"sha256":"2d1019b812ba825c35e49f583d2165f47ecf98b7568815e786b3c30a76782380"},
+    {"path":"docs/architecture/decisions/ADR-0002-snapshot-context-binding.md","bytes":6146,"sha256":"92444d80805a0996efa3c9b498b8c32bd481a6de02ef5fbd05af2675316f7650"},
+    {"path":"docs/architecture/decisions/ADR-0010-snapshot-fingerprint-and-dependency-invalidation.md","bytes":4608,"sha256":"a9f2d64001159e61c7c368fa964a7a09356d8e7bfd5ab30e7f73d390b1d969f2"},
+    {"path":"docs/architecture/decisions/ADR-0013-openai-first-llm-capability-boundary.md","bytes":5920,"sha256":"b72102792e05b1f897023fe8761eb6c7ab54fb18177eb9e0be40121332247bd0"},
+    {"path":"docs/architecture/decisions/ADR-0015-authoritative-evidence-persistence-and-payload-storage.md","bytes":12722,"sha256":"0d79e42c9153f0113256fcc55550cb0da71ad4c6f7e00913dda2697362be5ffa"}
+  ],
+  "coverage_audit": {
+    "context_count": 8, "transcript_count": 8, "evidence_count": 9, "referential_closure": "PASS",
+    "positive_and_matched_negative_in_one_operation": true,
+    "covered_states": ["positive","matched-negative","conditional","unsupported","contradiction","abstention","no-model","unavailable-provider"],
+    "recursive_answer_isolation": {"files_scanned":3,"forbidden_token_hits":0,"result":"PASS"}
+  },
+  "oracle_identity": {"bytes":14899,"sha256":"2a0076871bceab70c32db234bd81b1b73be56b67c65a32a49b577d84432b47dd"},
+  "partition_history": [
+    {"state":"authored-development","reason":"public development expectations independently derived before product comparison"},
+    {"state":"frozen-development","reason":"oracle and transitive authority identities fixed before product observation"}
+  ],
+  "replacement_rule": "If this oracle drives a product, prompt, schema, or oracle correction, reclassify it as development evidence and author a materially independent replacement before validation comparison."
+}

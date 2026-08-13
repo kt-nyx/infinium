@@ -1,0 +1,28 @@
+{
+  "schema_identity": "infinium.public-fixture.candidate-investigation/1.0.0",
+  "package_identity": "S6-CANDIDATE-DEV-v1",
+  "package_version": "1.0.0",
+  "fixture_id": "S6-CANDIDATE-DEV-v1",
+  "fixture_version": "1.0.0",
+  "evaluation_ids": ["EVAL-0067", "EVAL-0083"],
+  "partition": "development",
+  "partition_history": ["authored-development", "frozen-development"],
+  "status": "oracle-frozen-pre-comparison",
+  "input_commit": "b4e03e3251b0e11c225ac3cd5320b3678602e5fc",
+  "product_input_files": ["execution-input.v1.json", "context-manifest.v1.json", "retained-transcripts.v1.json"],
+  "oracle_file": "oracle.v1.json",
+  "oracle_provenance_file": "oracle-provenance.v1.json",
+  "file_identities": [
+    {"path":"context-manifest.v1.json","role":"product-input","bytes":2135,"sha256":"7228d909a0700588d23797a282d76bd517dc6c1a45ea54b68eaaf8cd058af58e"},
+    {"path":"execution-input.v1.json","role":"product-input","bytes":10998,"sha256":"6d76cc1a1087810bb9d09cf6980c2b418234dffdd7d8ffe12d7701fd5e2148e3"},
+    {"path":"oracle-provenance.v1.json","role":"oracle-provenance","bytes":4880,"sha256":"2e9b78de3ad67a9a8196bc75357bcbd10cd5731f31ead03996b3523b5b53f4bb"},
+    {"path":"oracle.v1.json","role":"oracle","bytes":14899,"sha256":"2a0076871bceab70c32db234bd81b1b73be56b67c65a32a49b577d84432b47dd"},
+    {"path":"retained-transcripts.v1.json","role":"product-input","bytes":9592,"sha256":"3220393206488dc9bed36308301163db5fb95df6e3069f474c50ca620089ccea"}
+  ],
+  "answer_free_product_inputs": true,
+  "recursive_answer_isolation": "PASS",
+  "oracle_frozen_before_product_comparison": true,
+  "network_required": false,
+  "provider_request_count": 0,
+  "credential_operation_count": 0
+}

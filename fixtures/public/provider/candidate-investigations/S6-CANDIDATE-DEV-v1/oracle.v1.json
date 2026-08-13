@@ -1,0 +1,121 @@
+{
+  "schema_id": "infinium.evaluation.candidate-investigation-oracle/v1",
+  "schema_version": "1",
+  "package_id": "S6-CANDIDATE-DEV-v1",
+  "partition": "development",
+  "frozen_at_input_commit": "b4e03e3251b0e11c225ac3cd5320b3678602e5fc",
+  "authority": [
+    "docs/plans/milestones/m1/slices/s6/plan.md#18-m1s6wp7--candidate-investigation-and-retained-provenancereplay",
+    "docs/product/requirements.md#evid-001--typed-evidence-model",
+    "docs/product/requirements.md#evid-002--provenance",
+    "docs/product/requirements.md#evid-004--visible-llm-involvement",
+    "docs/product/requirements.md#evid-007--development-transparency",
+    "docs/product/requirements.md#snap-006--replayability-disclosure",
+    "docs/product/requirements.md#ai-006--llm-reproducibility",
+    "docs/product/requirements.md#ops-002--local-history",
+    "docs/evaluation/specifications/m1-semantic-and-ground-truth.md#12-eval-0067--typed-evidence-and-llm-transparency",
+    "docs/evaluation/specifications/m1-semantic-and-ground-truth.md#13-eval-0083--end-to-end-provenance",
+    "docs/architecture/decisions/ADR-0001-evidence-authority-boundary.md",
+    "docs/architecture/decisions/ADR-0002-snapshot-context-binding.md",
+    "docs/architecture/decisions/ADR-0010-snapshot-fingerprint-and-dependency-invalidation.md",
+    "docs/architecture/decisions/ADR-0013-openai-first-llm-capability-boundary.md",
+    "docs/architecture/decisions/ADR-0015-authoritative-evidence-persistence-and-payload-storage.md"
+  ],
+  "expected_identity": {
+    "execution_schema_id": "infinium.llm.candidate-investigation-execution-input/v1",
+    "context_schema_id": "infinium.llm.candidate-investigation-context/v1",
+    "transcript_schema_id": "infinium.llm.candidate-investigation-retained-transcripts/v1",
+    "output_schema_id": "infinium.llm.candidate-investigation/v1",
+    "schema_version": "1",
+    "operation_id": "operation-candidate-dev-1",
+    "host_authorization_id": "authorization-candidate-dev-1",
+    "owner_kind": "analysis-run",
+    "owner_id": "analysis-run-candidate-dev-1",
+    "analysis_run_id": "analysis-run-candidate-dev-1",
+    "application_scope_id": "application-scope-candidate-dev-1",
+    "cost_attribution_scope_id": "cost-scope-candidate-dev-1",
+    "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+    "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+    "selection_policy": "exact-declared-candidates-and-evidence-in-declared-order/v1"
+  },
+  "scenarios": [
+    {
+      "transcript_id": "transcript-dev-positive", "context_id": "context-dev-positive", "candidate_id": "candidate-dev-positive", "hypothesis_id": "hypothesis-dev-positive",
+      "expected_response_record_id": "response-candidate-dev-positive", "expected_response_state": "completed", "expected_response_fingerprint": "9191919191919191919191919191919191919191919191919191919191919191", "expected_model_used": true,
+      "expected_result": "accepted", "expected_proposal_ids": ["proposal-dev-positive"], "expected_proposal_states": {"proposal-dev-positive":"admitted"}, "admitted_proposal_ids": ["proposal-dev-positive"], "rejected_proposal_ids": [],
+      "expected_supporting_evidence_ids": ["evidence-dev-positive"], "expected_contradicting_evidence_ids": [], "expected_source_acquisition_ids": ["acquisition-dev-positive"], "expected_source_admission_ids": ["admission-dev-positive"], "expected_source_application_link_ids": ["source-application-dev-positive"],
+      "expected_abstentions": [], "expected_gaps": [], "expected_admission_link_count": 1, "provider_used": true, "replay_state": "retained-response", "audit_only": false, "forbidden_authority_detected": false
+    },
+    {
+      "transcript_id": "transcript-dev-matched-negative", "context_id": "context-dev-matched-negative", "candidate_id": "candidate-dev-matched-negative", "hypothesis_id": "hypothesis-dev-matched-negative",
+      "expected_response_record_id": "response-candidate-dev-matched-negative", "expected_response_state": "completed", "expected_response_fingerprint": "9292929292929292929292929292929292929292929292929292929292929292", "expected_model_used": true,
+      "expected_result": "rejected-matched-negative", "expected_proposal_ids": ["proposal-dev-matched-negative"], "expected_proposal_states": {"proposal-dev-matched-negative":"rejected"}, "admitted_proposal_ids": [], "rejected_proposal_ids": ["proposal-dev-matched-negative"],
+      "expected_supporting_evidence_ids": [], "expected_contradicting_evidence_ids": [], "expected_source_acquisition_ids": ["acquisition-dev-matched-negative"], "expected_source_admission_ids": ["admission-dev-matched-negative"], "expected_source_application_link_ids": ["source-application-dev-matched-negative"],
+      "expected_abstentions": [], "expected_gaps": ["Supporting evidence is absent."], "expected_admission_link_count": 0, "provider_used": true, "replay_state": "retained-response", "audit_only": false, "forbidden_authority_detected": false
+    },
+    {
+      "transcript_id": "transcript-dev-conditional", "context_id": "context-dev-conditional", "candidate_id": "candidate-dev-conditional", "hypothesis_id": "hypothesis-dev-conditional",
+      "expected_response_record_id": "response-candidate-dev-conditional", "expected_response_state": "completed", "expected_response_fingerprint": "9393939393939393939393939393939393939393939393939393939393939393", "expected_model_used": true,
+      "expected_result": "accepted-conditional", "expected_proposal_ids": ["proposal-dev-conditional"], "expected_proposal_states": {"proposal-dev-conditional":"admitted"}, "admitted_proposal_ids": ["proposal-dev-conditional"], "rejected_proposal_ids": [],
+      "expected_supporting_evidence_ids": ["evidence-dev-conditional"], "expected_contradicting_evidence_ids": [], "expected_source_acquisition_ids": ["acquisition-dev-conditional"], "expected_source_admission_ids": ["admission-dev-conditional"], "expected_source_application_link_ids": ["source-application-dev-conditional"],
+      "expected_abstentions": [], "expected_gaps": [], "expected_missing_information": ["The condition must be checked at application time."], "condition_must_not_be_broadened": true, "expected_admission_link_count": 1, "provider_used": true, "replay_state": "retained-response", "audit_only": false, "forbidden_authority_detected": false
+    },
+    {
+      "transcript_id": "transcript-dev-unsupported", "context_id": "context-dev-unsupported", "candidate_id": "candidate-dev-unsupported", "hypothesis_id": "hypothesis-dev-unsupported",
+      "expected_response_record_id": "response-candidate-dev-unsupported", "expected_response_state": "completed", "expected_response_fingerprint": "9494949494949494949494949494949494949494949494949494949494949494", "expected_model_used": true,
+      "expected_result": "rejected-unsupported", "expected_proposal_ids": ["proposal-dev-unsupported"], "expected_proposal_states": {"proposal-dev-unsupported":"rejected"}, "admitted_proposal_ids": [], "rejected_proposal_ids": ["proposal-dev-unsupported"],
+      "expected_supporting_evidence_ids": [], "expected_contradicting_evidence_ids": [], "expected_source_acquisition_ids": ["acquisition-dev-unsupported"], "expected_source_admission_ids": ["admission-dev-unsupported"], "expected_source_application_link_ids": ["source-application-dev-unsupported"],
+      "expected_abstentions": [], "expected_gaps": ["Supporting evidence is missing."], "expected_admission_link_count": 0, "provider_used": true, "replay_state": "retained-response", "audit_only": false, "forbidden_authority_detected": false
+    },
+    {
+      "transcript_id": "transcript-dev-contradiction", "context_id": "context-dev-contradiction", "candidate_id": "candidate-dev-contradiction", "hypothesis_id": "hypothesis-dev-contradiction",
+      "expected_response_record_id": "response-candidate-dev-contradiction", "expected_response_state": "completed", "expected_response_fingerprint": "9595959595959595959595959595959595959595959595959595959595959595", "expected_model_used": true,
+      "expected_result": "rejected-contradiction-abstained", "expected_proposal_ids": ["proposal-dev-contradiction"], "expected_proposal_states": {"proposal-dev-contradiction":"rejected"}, "admitted_proposal_ids": [], "rejected_proposal_ids": ["proposal-dev-contradiction"],
+      "expected_supporting_evidence_ids": ["evidence-dev-contradiction"], "expected_contradicting_evidence_ids": ["evidence-dev-contradiction-opposed"], "expected_source_acquisition_ids": ["acquisition-dev-contradiction","acquisition-dev-contradiction-opposed"], "expected_source_admission_ids": ["admission-dev-contradiction","admission-dev-contradiction-opposed"], "expected_source_application_link_ids": ["source-application-dev-contradiction","source-application-dev-contradiction-opposed"],
+      "expected_abstentions": ["The bounded evidence is contradictory."], "expected_gaps": ["A decisive retained source is missing."], "expected_admission_link_count": 0, "provider_used": true, "replay_state": "retained-response", "audit_only": false, "forbidden_authority_detected": false
+    },
+    {
+      "transcript_id": "transcript-dev-abstention", "context_id": "context-dev-abstention", "candidate_id": "candidate-dev-abstention", "hypothesis_id": "hypothesis-dev-abstention",
+      "expected_response_record_id": "response-candidate-dev-abstention", "expected_response_state": "completed", "expected_response_fingerprint": "9696969696969696969696969696969696969696969696969696969696969696", "expected_model_used": true,
+      "expected_result": "rejected-explicit-abstention", "expected_proposal_ids": ["proposal-dev-abstention"], "expected_proposal_states": {"proposal-dev-abstention":"rejected"}, "admitted_proposal_ids": [], "rejected_proposal_ids": ["proposal-dev-abstention"],
+      "expected_supporting_evidence_ids": [], "expected_contradicting_evidence_ids": [], "expected_source_acquisition_ids": ["acquisition-dev-abstention"], "expected_source_admission_ids": ["admission-dev-abstention"], "expected_source_application_link_ids": ["source-application-dev-abstention"],
+      "expected_abstentions": ["No bounded conclusion can be made."], "expected_gaps": ["Decisive evidence is absent."], "expected_admission_link_count": 0, "provider_used": true, "replay_state": "retained-response", "audit_only": false, "forbidden_authority_detected": false
+    },
+    {
+      "transcript_id": "transcript-dev-no-model", "context_id": "context-dev-no-model", "candidate_id": "candidate-dev-no-model", "hypothesis_id": "hypothesis-dev-no-model",
+      "expected_response_record_id": "response-candidate-dev-no-model", "expected_response_state": "not-used", "expected_response_fingerprint": "9797979797979797979797979797979797979797979797979797979797979797", "expected_model_used": false,
+      "expected_result": "not-used", "expected_proposal_ids": [], "expected_proposal_states": {}, "admitted_proposal_ids": [], "rejected_proposal_ids": [],
+      "expected_source_acquisition_ids": ["acquisition-dev-no-model"], "expected_source_admission_ids": ["admission-dev-no-model"], "expected_source_application_link_ids": ["source-application-dev-no-model"],
+      "expected_abstentions": [], "expected_gaps": ["Model investigation was not requested."], "expected_admission_link_count": 0, "provider_used": false, "replay_state": "not-applicable", "audit_only": false, "forbidden_authority_detected": false
+    },
+    {
+      "transcript_id": "transcript-dev-unavailable-provider", "context_id": "context-dev-unavailable-provider", "candidate_id": "candidate-dev-unavailable-provider", "hypothesis_id": "hypothesis-dev-unavailable-provider",
+      "expected_response_record_id": "response-candidate-dev-unavailable-provider", "expected_response_state": "unavailable", "expected_response_fingerprint": "9898989898989898989898989898989898989898989898989898989898989898", "expected_model_used": false,
+      "expected_result": "unavailable-provider", "expected_proposal_ids": [], "expected_proposal_states": {}, "admitted_proposal_ids": [], "rejected_proposal_ids": [],
+      "expected_source_acquisition_ids": ["acquisition-dev-unavailable-provider"], "expected_source_admission_ids": ["admission-dev-unavailable-provider"], "expected_source_application_link_ids": ["source-application-dev-unavailable-provider"],
+      "expected_abstentions": [], "expected_gaps": ["The required provider capability is unavailable."], "expected_admission_link_count": 0, "provider_used": false, "replay_state": "unavailable", "audit_only": false, "forbidden_authority_detected": false
+    }
+  ],
+  "aggregate_expectations": {
+    "scenario_count": 8, "proposal_count": 6, "admitted_proposal_count": 2, "rejected_proposal_count": 4, "admission_link_count": 2,
+    "model_used_scenario_count": 6, "no_model_scenario_count": 1, "unavailable_provider_scenario_count": 1, "distinct_operation_id_count": 1,
+    "positive_and_matched_negative_share_operation": true, "retained_response_scenario_count": 6, "audit_only_scenario_count": 0, "failed_identity_drift_scenario_count": 0,
+    "network_send_count": 0, "credential_operation_count": 0, "source_refresh_count": 0
+  },
+  "frozen_boundaries": {
+    "model_output_is_untrusted_proposal": true, "host_validation_required_before_admission": true, "positive_requires_supporting_evidence": true,
+    "matched_negative_is_not_admitted": true, "conditional_hypothesis_is_not_unconditional_positive": true, "unsupported_and_abstained_proposals_are_retained_rejections": true,
+    "contradicting_evidence_remains_visible": true, "source_acquisition_admission_and_application_links_remain_distinct": true,
+    "candidate_hypothesis_evidence_causal_path_dependency_transcript_response_and_operation_identities_remain_distinct": true,
+    "replay_preserves_disposition_without_network_send": true, "no_model_and_unavailable_provider_are_distinct": true,
+    "no_finding_case_grouping_threshold_taxonomy_or_readiness_authority": true, "no_source_refresh_or_live_operation": true,
+    "no_secret_raw_transport_or_credential_target_in_output": true, "product_output_cannot_author_expected_truth": true,
+    "public_deterministic_evidence_is_not_private_or_held_out": true
+  },
+  "forbidden_claims": [
+    "the matched negative is an admitted hypothesis", "conditional Copper applicability is broadened beyond its condition", "unsupported or abstained output becomes a finding or local fact",
+    "model output grants evidence source operation finding case grouping threshold taxonomy readiness or protected-effect authority", "the no-model path used a provider",
+    "the unavailable-provider path produced a retained provider response", "replay performed a network send", "public synthetic evidence is a private held-out verdict",
+    "passing proves provider reliability readiness or semantic accuracy beyond these exact deterministic cases"
+  ]
+}
