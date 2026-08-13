@@ -215,6 +215,10 @@ if ($manifest.execution_command -ne $expectedCommand -or
 }
 
 $requiredEvidenceText = $manifest.required_evidence -join "`n"
+$expectedPredecessorEvidence = 'exact manifest bytes and SHA-256 plus the superseded 16df3175 terminal manifest, evidence, namespace disposition, and authority-lock identities'
+if ([string]$manifest.required_evidence[0] -cne $expectedPredecessorEvidence) {
+    throw 'WP4 v2 required evidence does not bind the exact consumed 16df3175 terminal lineage.'
+}
 foreach ($phrase in @('ordered allowed-call trace', 'real coordinator lifecycle', 'final-gate receipt',
     'initially blank', 'canary', 'Job Object', 'fresh independent Windows credential/security ACCEPT')) {
     if (-not $requiredEvidenceText.Contains($phrase, [StringComparison]::OrdinalIgnoreCase)) {

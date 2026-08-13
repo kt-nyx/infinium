@@ -117,6 +117,9 @@ public sealed class CredentialNativeAuthorizationTests
             "short finite 10-second automatic pre-entry readiness window", StringComparison.Ordinal));
         Assert.IsTrue(entry.GetProperty("readiness_oracle").GetString()!.Contains(
             "separate finite five-minute human response interval", StringComparison.Ordinal));
+        Assert.AreEqual(
+            "exact manifest bytes and SHA-256 plus the superseded 16df3175 terminal manifest, evidence, namespace disposition, and authority-lock identities",
+            manifest.GetProperty("required_evidence")[0].GetString());
 
         JsonElement components = manifest.GetProperty("qualification_components");
         Assert.IsFalse(components.GetProperty("native_success_run")
