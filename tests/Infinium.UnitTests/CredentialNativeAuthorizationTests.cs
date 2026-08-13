@@ -271,8 +271,11 @@ public sealed class CredentialNativeAuthorizationTests
             ["target_absence"] = absence,
             ["native_call_counts"] = new JsonObject
             {
-                ["cred_write_w"] = 0, ["cred_read_w"] = 13, ["cred_delete_w"] = 1,
-                ["cred_free"] = 1, ["total"] = 15,
+                ["cred_write_w"] = 0,
+                ["cred_read_w"] = 13,
+                ["cred_delete_w"] = 1,
+                ["cred_free"] = 1,
+                ["total"] = 15,
             },
             ["native_call_trace"] = trace,
             ["namespace_blocked"] = false,
@@ -392,15 +395,15 @@ public sealed class CredentialNativeAuthorizationTests
 
     private static JsonObject Trace(long sequence, string operation, string fingerprint, string result,
         long? allocationId, long? pairedAllocationId) => new()
-    {
-        ["sequence"] = sequence,
-        ["operation"] = operation,
-        ["target_fingerprint_sha256"] = fingerprint,
-        ["scenario"] = "cleanup-only-recovery",
-        ["result"] = result,
-        ["allocation_id"] = allocationId,
-        ["paired_allocation_id"] = pairedAllocationId,
-    };
+        {
+            ["sequence"] = sequence,
+            ["operation"] = operation,
+            ["target_fingerprint_sha256"] = fingerprint,
+            ["scenario"] = "cleanup-only-recovery",
+            ["result"] = result,
+            ["allocation_id"] = allocationId,
+            ["paired_allocation_id"] = pairedAllocationId,
+        };
 
     private static void AssertEvidenceValidation(string root, string manifestPath, string sha, string id,
         JsonObject evidence, bool expectedSuccess)
