@@ -4941,3 +4941,11 @@ The final manifest now binds exact close-ready consumer commit
 `ready-for-owner-acceptance`. Only the final manifest and this append-only
 record changed after that binding. No owner marker is recorded yet and no
 native effect has occurred.
+
+Fresh independent pre-effect review accepted exact clean freeze
+`342c69cef433d82ce177a0e0c4d6b793d249e11f`, including both candidate-bound
+Layer 6 scopes, exact target derivation, UI readiness/action routing, Job Object
+containment, cleanup/canary rules, zero-network/provider boundary, and absent
+output/lock/owner/native markers. Standing owner approval authorizes exactly
+this one-shot manifest through its finite expiry and limits.
+WP4_V2_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-authorization/e0cb0693-f482-433d-a3d4-3ee40ce7e2db sha256=3fbb8b53245064f90ecbe43ed4df4f87bb82b5c3bce431925d08df6c9bf7e78a close_ready_commit=cca593d90aec352f64ab964aa8ff1a9e46a4372b expires_at_utc=2026-08-15T17:41:42.4797649Z
