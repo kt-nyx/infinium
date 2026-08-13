@@ -1791,6 +1791,27 @@ public sealed class ProviderContractJsonCodecTests
         AssertTraceOmission(contracts, "run-output.v2.schema.json", "$defs.publication.live",
             "persistence", "$defs.publication.live", "unresolved_hold");
 
+        JsonElement candidateTrace = contracts.Single(x =>
+            x.GetProperty("schema").GetString() == "candidate-investigation.v1.schema.json");
+        foreach (JsonElement mapping in candidateTrace.GetProperty("field_mappings").EnumerateArray())
+        {
+            JsonElement persistence = mapping.GetProperty("persistence");
+            Assert.IsFalse(persistence.TryGetProperty("not_persisted_reason", out _),
+                $"candidate-investigation:{mapping.GetProperty("path").GetString()}:persistence");
+            string[] columns = persistence.TryGetProperty("table_columns", out JsonElement candidateColumns)
+                ? candidateColumns.EnumerateArray().Select(x => x.GetString()!).ToArray()
+                : [persistence.GetProperty("table_column").GetString()!];
+            Assert.IsTrue(columns.Any(column => column == "candidate_investigation_outcomes.result_payload_id"
+                    || column.StartsWith("candidate_investigation_outcomes.", StringComparison.Ordinal)
+                    || column.StartsWith("provider_semantic_", StringComparison.Ordinal)
+                    || column == "provider_operation_authorizations.owner_kind"),
+                $"candidate-investigation:{mapping.GetProperty("path").GetString()}:durable-seam");
+            string replayReason = mapping.GetProperty("replay").GetProperty("omission_reason").GetString()!;
+            StringAssert.Contains(replayReason, "candidate_investigation_outcomes.result_payload_id");
+            StringAssert.Contains(replayReason, "DurableCandidateInvestigationCoordinator.ReplayRetained");
+            Assert.IsFalse(replayReason.Contains("no semantically equivalent network-free replay", StringComparison.Ordinal));
+        }
+
         foreach (JsonElement mapping in contracts.SelectMany(x => x.GetProperty("field_mappings").EnumerateArray()))
         {
             string path = mapping.GetProperty("path").GetString()!;

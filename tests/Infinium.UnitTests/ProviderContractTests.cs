@@ -347,6 +347,16 @@ public sealed class ProviderContractTests
         Assert.ThrowsExactly<InvalidOperationException>(() =>
             ProviderOperationContractInvariants.Validate(candidate with
             {
+                ValidationIds = [Id("validation-1"), Id("validation-phantom")],
+            }));
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
+            ProviderOperationContractInvariants.Validate(candidate with
+            {
+                AdmissionLinkIds = [Id("admission-1"), Id("admission-phantom")],
+            }));
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
+            ProviderOperationContractInvariants.Validate(candidate with
+            {
                 HypothesisProposals = [admitted with { State = ProposalAdmissionState.Rejected }],
             }));
         Assert.ThrowsExactly<InvalidOperationException>(() =>

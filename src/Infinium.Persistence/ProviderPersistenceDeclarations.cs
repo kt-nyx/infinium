@@ -24,7 +24,7 @@ public static class ProviderPersistenceDeclarations
     public const int SourceSchemaVersion = 5;
     public const string SourceStorageContractVersion = "1.4.0";
     public const string SourceSchemaFingerprint = "e6d27152687e6b0c806da58a716a9ab909817f046fbe3bf11d8846da5e5dc87d";
-    public const string SchemaFingerprint = "8195fc34887e202b823bd1a7c6757bde6dd78f2df6648e589d64f46a3effbcbf";
+    public const string SchemaFingerprint = "938bd18d7af76470bc70058cf5c31aa5257e220c075991aa1797f99a6fba94d7";
     public const int ProjectionContractVersion = 1;
 
     public static IReadOnlyList<string> RebuildableProjections { get; } =

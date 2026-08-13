@@ -1,6 +1,8 @@
 using System.Security.Cryptography;
 using System.Text.Json;
 using Google.Protobuf;
+using Infinium.Analysis.Candidates;
+using Infinium.Application.Candidates;
 using Infinium.Application.Provider;
 using Infinium.Application.Runtime;
 using Infinium.Contracts.Protobuf.Helper.V2;
@@ -445,6 +447,7 @@ public sealed class ProviderBudgetIntegrationTests
             "attempt-settlement", "request-settlement", "source-claim-persist",
             ProviderSimulatorOutcome.Completed, new(65_536, 20, 10, 1_048_576, 1, 400_000, 120_000),
             BaseTime.AddSeconds(7));
+
         using (SqliteConnection database = new($"Data Source={context.Store.Paths.Database};Pooling=False"))
         {
             database.Open();
@@ -606,6 +609,46 @@ public sealed class ProviderBudgetIntegrationTests
             ProviderSimulatorOutcome.Completed, new(65_536, 20, 10, 1_048_576, 1, 400_000, 120_000),
             BaseTime.AddSeconds(7));
 
+        RunBinding candidateRunBinding = new(
+            "install-restore", "context-restore", "config-restore", "manifest-restore");
+        using (SqliteConnection runDatabase = new($"Data Source={context.Store.Paths.Database};Pooling=False"))
+        {
+            runDatabase.Open();
+            using SqliteCommand activateRun = runDatabase.CreateCommand();
+            activateRun.CommandText =
+                """
+                UPDATE runs SET lifecycle_state='Running' WHERE run_id='run-restore';
+                INSERT INTO job_nodes VALUES('run-restore-root','run-restore',NULL,'analysis-run-root','Running',0,
+                  '2026-08-10T00:00:00.0000000+00:00','2026-08-10T00:00:00.0000000+00:00');
+                """;
+            Assert.AreEqual(2, activateRun.ExecuteNonQuery());
+        }
+        DateTimeOffset candidateAnalysisNow = DateTimeOffset.UtcNow;
+        AttemptRecord candidateAnalysisAttempt = context.Store.CreateAttempt(
+            "run-restore", context.Authority.FencingEpoch, TimeSpan.FromMinutes(5), candidateAnalysisNow);
+        CausalJoinPopulationMember candidateMember = CandidatePipelineIntegrationTests.Member("wp7") with
+        {
+            SupportingEvidenceIds = [new OpaqueId("candidate-evidence")],
+        };
+        TestCandidatePopulationSource candidateSource = new(
+            new OpaqueId("analyzer-integration"), [candidateMember]);
+        CandidatePipelineRequest candidateAnalysisRequest = new(
+            new("run-restore"), new("candidate-population"), new("candidate-policy"), new("candidate-threshold"),
+            CandidateExecutionLimits.Default,
+            new CandidatePopulationContext(null, new("run-restore"), new("install-restore"),
+                new("context-restore"), new("config-restore")),
+            [candidateSource],
+            CandidatePipelineIntegrationTests.ExecutionInput(candidateSource, "run-restore", "install-restore",
+                "context-restore", "config-restore", "manifest-restore"));
+        CandidateAnalysisPhaseResult candidateAnalysis = CandidateAnalysisPhase.Execute(
+            context.Store, candidateAnalysisRequest, candidateAnalysisAttempt, candidateRunBinding,
+            candidateAnalysisNow);
+        CandidateAnalysisEntryContract hostCandidate = candidateAnalysis.Pipeline.Analysis.Candidates.Single();
+        CandidateHypothesisContract hostHypothesis = candidateAnalysis.Pipeline.Analysis.Hypotheses.Single();
+        CandidateDecisionContract hostDecision = candidateAnalysis.Pipeline.Analysis.Decisions.Single();
+        string hostCandidateId = hostCandidate.CandidateId.Value;
+        string hostHypothesisId = hostHypothesis.HypothesisId.Value;
+
         byte[] candidateRequestBytes = Enumerable.Repeat((byte)0x5a, 1024).ToArray();
         string candidateRequestSha256 = Convert.ToHexStringLower(SHA256.HashData(candidateRequestBytes));
         string candidatePayloadDirectory = Path.Combine(context.Root, "payloads", candidateRequestSha256[..2], candidateRequestSha256[2..4]);
@@ -647,13 +690,8 @@ public sealed class ProviderBudgetIntegrationTests
                     INSERT INTO evidence_application_links VALUES('evidence-application-d01','candidate-evidence','run-restore',
                       'candidate-binding','context-restore','candidate-subject','installed-entity','candidate-closure','applicable',
                       'request-payload-restore','2026-08-10T00:00:01.0000000+00:00');
-                    INSERT INTO candidate_decisions VALUES('candidate-decision','run-restore','candidate-population','candidate-relationship',
-                      'candidate-admitted','mandatory-evidence','candidate-policy','request-payload-restore',
-                      '2026-08-10T00:00:01.0000000+00:00');
-                    INSERT INTO analysis_candidates VALUES('candidate-persist','candidate-decision','run-restore','mandatory-evidence','present',
-                      'candidate-closure','request-payload-restore','2026-08-10T00:00:01.0000000+00:00');
                     """;
-                Assert.AreEqual(12, seed.ExecuteNonQuery());
+                Assert.AreEqual(10, seed.ExecuteNonQuery());
             }
             context.Store.RegisterSourceClaimAcquisition(new(
                 "acquisition-restore", "install-restore", "context-restore", "config-restore", "manifest-restore",
@@ -904,6 +942,17 @@ public sealed class ProviderBudgetIntegrationTests
             SourceRevisionId = "candidate-doc-revision",
             PassageId = "candidate-passage",
         };
+        CandidateInvestigationContextInput durableContext = fixtureContext with
+        {
+            CandidateId = hostCandidateId,
+            HypothesisId = hostHypothesisId,
+            Hypothesis = hostHypothesis.ProposedExplanation,
+            ParticipantIds = hostDecision.Participants.Select(item => item.ParticipantId.Value).ToArray(),
+            ParticipantRoles = hostDecision.Participants.Select(item => item.Role).ToArray(),
+            CausalPathIds = hostDecision.Path.Select(item => item.Value).ToArray(),
+            DependencyClosureId = hostDecision.DependencyClosureId.Value,
+            Evidence = [durableEvidence],
+        };
         CandidateInvestigationExecutionInput input = fixtureInput with
         {
             OperationId = "candidate-operation",
@@ -914,7 +963,7 @@ public sealed class ProviderBudgetIntegrationTests
             CostAttributionScopeId = "cost-restore",
             Contexts =
             [
-                fixtureContext with { CandidateId = "candidate-persist", Evidence = [durableEvidence] },
+                durableContext,
                 fixtureInput.Contexts[1],
             ],
         };
@@ -925,34 +974,72 @@ public sealed class ProviderBudgetIntegrationTests
             ResponseFingerprint = retainedResponseFingerprint,
             Proposals = [fixtureTranscripts[0].Proposals[0] with
             {
-                CandidateId = "candidate-persist",
+                CandidateId = hostCandidateId,
+                HypothesisId = hostHypothesisId,
+                Hypothesis = hostHypothesis.ProposedExplanation,
                 SupportingEvidenceIds = ["candidate-evidence"],
             }],
         };
         DurableCandidateInvestigationCoordinator coordinator = new(context.Store);
+        CandidateInvestigationScenarioResult directScenario =
+            CandidateInvestigationEngine.Execute(input, [transcript]).Scenarios.Single();
+        CandidateEvidenceProvenanceBinding directBinding = CandidateBinding(durableEvidence);
+        CandidateEvidenceInput secondEvidence = durableEvidence with
+        {
+            EvidenceId = "candidate-evidence-second",
+            EvidenceApplicationLinkId = "candidate-evidence-application-second",
+            SourceApplicationLinkId = "candidate-source-application-second",
+            Relationship = "neutral",
+        };
+        CandidateInvestigationExecutionInput partialInput = input with
+        {
+            Contexts = [durableContext with { Evidence = [durableEvidence, secondEvidence] }, fixtureInput.Contexts[1]],
+        };
+        CandidateInvestigationScenarioResult partialScenario =
+            CandidateInvestigationEngine.Execute(partialInput, [transcript]).Scenarios.Single();
+        CandidateEvidenceProvenanceBinding extraBinding = CandidateBinding(secondEvidence);
+        foreach (CandidateInvestigationPersistenceRequest invalidRequest in new[]
+                 {
+                     CandidatePersistenceRequest(directScenario, input, transcript, [], "outcome-direct-empty"),
+                     CandidatePersistenceRequest(partialScenario, partialInput, transcript, [directBinding], "outcome-direct-partial"),
+                     CandidatePersistenceRequest(directScenario, input, transcript, [directBinding, extraBinding], "outcome-direct-extra"),
+                     CandidatePersistenceRequest(directScenario, input, transcript, [directBinding, directBinding], "outcome-direct-duplicate"),
+                 })
+        {
+            Assert.ThrowsExactly<InvalidDataException>(() => context.Store.PersistCandidateInvestigation(invalidRequest));
+        }
+        Assert.AreEqual(0L, CandidatePipelineIntegrationTests.Count(
+            context.Store.Paths.Database, "candidate_investigation_outcomes"));
         foreach (CandidateInvestigationExecutionInput invalid in new[]
                  {
-                     input with { Contexts = [fixtureContext with { CandidateId = "candidate-persist", Evidence =
+                     input with { Contexts = [durableContext with { Evidence =
                          [durableEvidence with { SourceAdmissionId = "invented-admission" }] }, fixtureInput.Contexts[1]] },
-                     input with { Contexts = [fixtureContext with { CandidateId = "candidate-persist", Evidence =
+                     input with { Contexts = [durableContext with { Evidence =
                          [durableEvidence with { EvidenceApplicationLinkId = "invented-application" }] }, fixtureInput.Contexts[1]] },
                      input with { ApplicationScopeId = "cross-scope" },
+                     input with { Contexts = [durableContext with { CandidateId = "cross-candidate" }, fixtureInput.Contexts[1]] },
+                     input with { Contexts = [durableContext with { HypothesisId = "cross-hypothesis" }, fixtureInput.Contexts[1]] },
+                     input with { Contexts = [durableContext with { Hypothesis = durableContext.Hypothesis + " drift" }, fixtureInput.Contexts[1]] },
+                     input with { Contexts = [durableContext with { ParticipantRoles = [.. durableContext.ParticipantRoles.Skip(1), "drift-role"] }, fixtureInput.Contexts[1]] },
+                     input with { Contexts = [durableContext with { CausalPathIds = [.. durableContext.CausalPathIds, "drift-path"] }, fixtureInput.Contexts[1]] },
+                     input with { Contexts = [durableContext with { DependencyClosureId = "drift-closure" }, fixtureInput.Contexts[1]] },
                  })
         {
             Assert.ThrowsExactly<InvalidDataException>(() => coordinator.AdmitRetainedTranscript(
                 invalid, transcript, "candidate-authorization", "candidate-attempt", "candidate-request",
-                "candidate-fence", BaseTime.AddSeconds(21)));
+                "candidate-fence", candidateAnalysisNow.AddSeconds(1)));
         }
         CandidateInvestigationAdmissionPublication publication = coordinator.AdmitRetainedTranscript(
             input, transcript, "candidate-authorization", "candidate-attempt", "candidate-request",
-            "candidate-fence", BaseTime.AddSeconds(21));
+            "candidate-fence", candidateAnalysisNow.AddSeconds(1));
         Assert.AreEqual(1, publication.Persistence.ProposalCount);
-        Assert.AreEqual("admitted", context.Store.ReadCandidateInvestigationAdmissions("run-restore", "candidate-persist").Single().State);
+        Assert.AreEqual("admitted", context.Store.ReadCandidateInvestigationAdmissions("run-restore", hostCandidateId).Single().State);
         Assert.AreEqual("proposal-d01", context.Store.ReadCandidateInvestigation(
-            "run-restore", "candidate-persist", "admission-proposal-d01").HypothesisProposals.Single().ProposalId.Value);
+            "run-restore", hostCandidateId, "admission-proposal-d01").HypothesisProposals.Single().ProposalId.Value);
         CandidateInvestigationOutcomeReadModel retained = context.Store.ReadCandidateInvestigationOutcome(
             "run-restore", "candidate-operation", fixtureContext.ContextId);
         Assert.AreEqual("outcome-transcript-d01", retained.OutcomeId);
+        Assert.AreEqual(hostHypothesisId, retained.HypothesisId);
         Assert.AreEqual(publication.Scenario.CanonicalInvestigationSha256,
             new DurableCandidateInvestigationCoordinator(context.Store).ReplayRetained(
                 "run-restore", "candidate-operation", fixtureContext.ContextId).CanonicalInvestigationSha256);
@@ -1004,7 +1091,13 @@ public sealed class ProviderBudgetIntegrationTests
             CandidateInvestigationContextInput terminalContext = fixtureInput.Contexts.Single(item =>
                 item.ContextId == terminalTranscript.ContextId) with
             {
-                CandidateId = "candidate-persist",
+                CandidateId = hostCandidateId,
+                HypothesisId = hostHypothesisId,
+                Hypothesis = hostHypothesis.ProposedExplanation,
+                ParticipantIds = hostDecision.Participants.Select(item => item.ParticipantId.Value).ToArray(),
+                ParticipantRoles = hostDecision.Participants.Select(item => item.Role).ToArray(),
+                CausalPathIds = hostDecision.Path.Select(item => item.Value).ToArray(),
+                DependencyClosureId = hostDecision.DependencyClosureId.Value,
                 Evidence = [durableEvidence],
             };
             CandidateInvestigationExecutionInput terminalInput = fixtureInput with
@@ -1019,7 +1112,7 @@ public sealed class ProviderBudgetIntegrationTests
             };
             CandidateInvestigationAdmissionPublication terminalPublication = coordinator.AdmitRetainedTranscript(
                 terminalInput, terminalTranscript, terminalAuthorization, "unused-attempt", "unused-request",
-                "unused-fence", BaseTime.AddSeconds(21));
+                "unused-fence", candidateAnalysisNow.AddSeconds(1));
             Assert.AreEqual(0, terminalPublication.Persistence.ProposalCount);
             Assert.IsEmpty(context.Store.ReadCandidateInvestigationAdmissionsForOperation(
                 "run-restore", terminalOperation));
@@ -1039,7 +1132,13 @@ public sealed class ProviderBudgetIntegrationTests
         CandidateInvestigationContextInput driftContext = validationFixture.Contexts.Single(item =>
             item.ContextId == driftTranscript.ContextId) with
         {
-            CandidateId = "candidate-persist",
+            CandidateId = hostCandidateId,
+            HypothesisId = hostHypothesisId,
+            Hypothesis = hostHypothesis.ProposedExplanation,
+            ParticipantIds = hostDecision.Participants.Select(item => item.ParticipantId.Value).ToArray(),
+            ParticipantRoles = hostDecision.Participants.Select(item => item.Role).ToArray(),
+            CausalPathIds = hostDecision.Path.Select(item => item.Value).ToArray(),
+            DependencyClosureId = hostDecision.DependencyClosureId.Value,
             Evidence = [durableEvidence],
         };
         CandidateInvestigationExecutionInput driftInput = validationFixture with
@@ -1054,7 +1153,7 @@ public sealed class ProviderBudgetIntegrationTests
         };
         CandidateInvestigationAdmissionPublication driftPublication = coordinator.AdmitRetainedTranscript(
             driftInput, driftTranscript, "candidate-authorization", "candidate-attempt", "candidate-request",
-            "candidate-fence", BaseTime.AddSeconds(21));
+            "candidate-fence", candidateAnalysisNow.AddSeconds(1));
         Assert.AreEqual("rejected-identity-drift", driftPublication.Scenario.Disposition);
         Assert.AreEqual("rejected-identity-drift", coordinator.ReplayRetained(
             "run-restore", "candidate-operation", driftContext.ContextId).Disposition);
@@ -1062,7 +1161,7 @@ public sealed class ProviderBudgetIntegrationTests
         StringAssert.Contains(publication.HumanTransparency, "no finding, case, taxonomy");
 
         BackupArtifact noResponseBackup = context.Store.CreateBackup(
-            "Wp7CandidateNoResponsePublication", BaseTime.AddSeconds(22));
+            "Wp7CandidateNoResponsePublication", candidateAnalysisNow.AddSeconds(2));
         string noResponseRoot = Path.Combine(Path.GetTempPath(), "Infinium-Wp7-NoResponse-" + Guid.NewGuid().ToString("N"));
         try
         {
@@ -1075,7 +1174,7 @@ public sealed class ProviderBudgetIntegrationTests
             ProviderTerminalPublicationArtifacts noResponseTerminal = new ProviderAccountingCoordinator(noResponseStore)
                 .PublishCandidateNoResponseV2(
                     new("run-restore"), new("local-run-output-v1"), "candidate-local-output-v1"u8.ToArray(),
-                    "candidate-local-cli-v1"u8.ToArray(), new("candidate-terminal-d07"), BaseTime.AddSeconds(23));
+                    "candidate-local-cli-v1"u8.ToArray(), new("candidate-terminal-d07"), candidateAnalysisNow.AddSeconds(3));
             ProviderPublicationReferenceContract noResponseReference = noResponseTerminal.RunOutputV2.ProviderOperations.Single();
             Assert.AreEqual("not-used", noResponseReference.Availability);
             Assert.IsNull(noResponseReference.OperationId);
@@ -1092,13 +1191,13 @@ public sealed class ProviderBudgetIntegrationTests
 
         ProviderTerminalPublicationArtifacts terminal = accounting.PublishTerminalV2(
             new("run-restore"), new("local-run-output-v1"), "candidate-local-output-v1"u8.ToArray(),
-            "candidate-local-cli-v1"u8.ToArray(), new("candidate-operation"), BaseTime.AddSeconds(24));
+            "candidate-local-cli-v1"u8.ToArray(), new("candidate-operation"), candidateAnalysisNow.AddSeconds(4));
         Assert.AreEqual(ProviderOperationKind.CandidateInvestigation,
             terminal.RunOutputV2.ProviderOperations.Single().OperationKind);
         Assert.AreEqual("admission-proposal-d01",
             terminal.RunOutputV2.ProviderOperations.Single().AdmissionId?.Value);
 
-        BackupArtifact backup = context.Store.CreateBackup("Wp7CandidateInvestigation", BaseTime.AddSeconds(25));
+        BackupArtifact backup = context.Store.CreateBackup("Wp7CandidateInvestigation", candidateAnalysisNow.AddSeconds(5));
         string restoredRoot = Path.Combine(Path.GetTempPath(), "Infinium-Wp7-Restore-" + Guid.NewGuid().ToString("N"));
         try
         {
@@ -1108,9 +1207,9 @@ public sealed class ProviderBudgetIntegrationTests
             }
             using StoragePaths restoredPaths = new(restoredRoot);
             using AuthoritativeStore restored = new(restoredPaths);
-            Assert.AreEqual(1, restored.ReadCandidateInvestigationAdmissions("run-restore", "candidate-persist").Count);
+            Assert.AreEqual(1, restored.ReadCandidateInvestigationAdmissions("run-restore", hostCandidateId).Count);
             Assert.AreEqual("proposal-d01", restored.ReadCandidateInvestigation(
-                "run-restore", "candidate-persist", "admission-proposal-d01").HypothesisProposals.Single().ProposalId.Value);
+                "run-restore", hostCandidateId, "admission-proposal-d01").HypothesisProposals.Single().ProposalId.Value);
             Assert.AreEqual("accepted", restored.ReadCandidateInvestigationOutcome(
                 "run-restore", "candidate-operation", fixtureContext.ContextId).Disposition);
             Assert.AreEqual("not-used", restored.ReadCandidateInvestigationOutcome(
@@ -1121,7 +1220,7 @@ public sealed class ProviderBudgetIntegrationTests
                 "run-restore", "candidate-operation", driftContext.ContextId).Disposition);
             Assert.AreEqual("not-used", new DurableCandidateInvestigationCoordinator(restored).ReplayRetained(
                 "run-restore", "candidate-terminal-d07", "context-d07").Disposition);
-            _ = restored.RebuildProviderBudgetProjections(BaseTime.AddSeconds(26));
+            _ = restored.RebuildProviderBudgetProjections(candidateAnalysisNow.AddSeconds(6));
         }
         finally
         {
@@ -1131,6 +1230,27 @@ public sealed class ProviderBudgetIntegrationTests
             }
         }
     }
+
+    private static CandidateEvidenceProvenanceBinding CandidateBinding(CandidateEvidenceInput evidence) => new(
+        evidence.EvidenceId, evidence.EvidenceApplicationLinkId, evidence.SourceAcquisitionId,
+        evidence.SourceAdmissionId, evidence.SourceApplicationLinkId, evidence.SourceRevisionId,
+        evidence.PassageId, evidence.Relationship, evidence.Availability, evidence.ContentSha256);
+
+    private static CandidateInvestigationPersistenceRequest CandidatePersistenceRequest(
+        CandidateInvestigationScenarioResult scenario,
+        CandidateInvestigationExecutionInput input,
+        CandidateInvestigationRetainedTranscript transcript,
+        IReadOnlyList<CandidateEvidenceProvenanceBinding> evidenceBindings,
+        string outcomeId) => new(
+            scenario.Investigation, outcomeId, scenario.ContextId, scenario.HypothesisId, transcript.TranscriptId,
+            transcript.ResponseFingerprint, transcript.ResponseState, scenario.Disposition, scenario.ReplayState,
+            input.ApplicationScopeId, input.CostAttributionScopeId, evidenceBindings,
+            JsonSerializer.SerializeToUtf8Bytes(input, SourceClaimContextMinimizer.JsonOptions),
+            JsonSerializer.SerializeToUtf8Bytes(transcript, SourceClaimContextMinimizer.JsonOptions),
+            JsonSerializer.SerializeToUtf8Bytes(scenario.Investigation),
+            input.HostAuthorizationId, transcript.ModelUsed ? transcript.ResponseRecordId : null,
+            transcript.ModelUsed ? "candidate-attempt" : null, transcript.ModelUsed ? "candidate-request" : null,
+            transcript.ModelUsed ? "candidate-fence" : null, BaseTime.AddSeconds(20));
 
     [TestMethod]
     [TestCategory("Integration")]
@@ -1444,11 +1564,12 @@ public sealed class ProviderBudgetIntegrationTests
 
     private sealed class BudgetContext : IDisposable
     {
-        private BudgetContext(string root, AuthoritativeStore store, ProviderBudgetVectorContract vector,
-            IReadOnlyList<ProviderBudgetScopeContract> scopes)
+        private BudgetContext(string root, AuthoritativeStore store, CoordinatorAuthority authority,
+            ProviderBudgetVectorContract vector, IReadOnlyList<ProviderBudgetScopeContract> scopes)
         {
             Root = root;
             Store = store;
+            Authority = authority;
             Vector = vector;
             Scopes = scopes;
             Request = new("reservation-settlement", "operation-restore", "attempt-settlement", "request-settlement",
@@ -1460,6 +1581,7 @@ public sealed class ProviderBudgetIntegrationTests
 
         public string Root { get; }
         public AuthoritativeStore Store { get; }
+        public CoordinatorAuthority Authority { get; }
         public ProviderBudgetVectorContract Vector { get; }
         public IReadOnlyList<ProviderBudgetScopeContract> Scopes { get; }
         public ProviderBudgetReservationRequest Request { get; }
@@ -1489,7 +1611,7 @@ public sealed class ProviderBudgetIntegrationTests
                 ProviderBudgetScopeContract[] scopes = kinds.Zip(ids,
                     (kind, id) => new ProviderBudgetScopeContract(kind, new OpaqueId(id), vector)).ToArray();
                 store.ConfigureProviderBudgetScopes(1, scopes, BaseTime.AddSeconds(3));
-                return new(root, store, vector, scopes);
+                return new(root, store, authority, vector, scopes);
             }
             catch
             {

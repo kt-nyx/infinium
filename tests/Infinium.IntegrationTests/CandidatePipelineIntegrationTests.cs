@@ -123,22 +123,26 @@ public sealed class CandidatePipelineIntegrationTests
 
     internal static AnalysisExecutionInputContract ExecutionInput(
         ICandidatePopulationSource source,
-        string runId = "run-candidate")
+        string runId = "run-candidate",
+        string installationSnapshotId = "snapshot-candidate",
+        string analysisContextId = "context-candidate",
+        string effectiveConfigurationId = "config-candidate",
+        string resolvedInputManifestId = "manifest-candidate")
     {
-        SemanticAnalysisContextContract context = SemanticContext("context-candidate");
+        SemanticAnalysisContextContract context = SemanticContext(analysisContextId);
         return new(
             ContractConstants.AnalysisExecutionInputSchemaId, new ContractVersion(1, 0, 0), Id("execution-input-" + runId),
-            Id(runId), Reference("snapshot-candidate"), Reference("bethesda-candidate"), [],
+            Id(runId), Reference(installationSnapshotId), Reference("bethesda-candidate"), [],
             [new(source.AnalyzerId, new ContractVersion(1, 0, 0),
                 CandidateAnalysisIdentity.StructuralHash([System.Text.Json.JsonSerializer.Serialize(source.Declaration)]), "retained")],
-            Reference("config-candidate"), Reference("manifest-candidate"), ReplayMode.Clean, null, 0,
+            Reference(effectiveConfigurationId), Reference(resolvedInputManifestId), ReplayMode.Clean, null, 0,
             new(1_000_000, 2_000_000, 100_000, 100_000, 120_000),
             [new("provider", BoundaryUseState.NotUsed, "local-only"),
              new("hosted-search", BoundaryUseState.NotUsed, "local-only"),
              new("nexus", BoundaryUseState.NotUsed, "local-only"),
              new("loot", BoundaryUseState.NotUsed, "local-only")])
         {
-            AnalysisContext = new(context.ContextId, context.SchemaVersion, context.CanonicalFingerprint, "retained"),
+            AnalysisContext = new(Id(analysisContextId), context.SchemaVersion, context.CanonicalFingerprint, "retained"),
         };
     }
 

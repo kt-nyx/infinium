@@ -52,12 +52,14 @@ public sealed class DurableCandidateInvestigationCoordinator(AuthoritativeStore 
         }
         CandidateInvestigationScenarioResult scenario = CandidateInvestigationEngine.Execute(input, [transcript]).Scenarios.Single();
         CandidateInvestigationPersistenceReceipt receipt = store.PersistCandidateInvestigation(new(
-            scenario.Investigation, "outcome-" + transcript.TranscriptId, scenario.ContextId, transcript.TranscriptId,
+            scenario.Investigation, "outcome-" + transcript.TranscriptId, scenario.ContextId, scenario.HypothesisId,
+            transcript.TranscriptId,
             transcript.ResponseFingerprint, transcript.ResponseState, scenario.Disposition, scenario.ReplayState,
             input.ApplicationScopeId, input.CostAttributionScopeId,
             scenario.SourceAcquisitionLinks.Select(link => new CandidateEvidenceProvenanceBinding(
                 link.EvidenceId, link.EvidenceApplicationLinkId, link.SourceAcquisitionId, link.SourceAdmissionId,
-                link.SourceApplicationLinkId, link.SourceRevisionId, link.PassageId, link.ContentSha256)).ToArray(),
+                link.SourceApplicationLinkId, link.SourceRevisionId, link.PassageId, link.Relationship,
+                link.Availability, link.ContentSha256)).ToArray(),
             System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(input, SourceClaimContextMinimizer.JsonOptions),
             System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(transcript, SourceClaimContextMinimizer.JsonOptions),
             System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(scenario.Investigation),

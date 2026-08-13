@@ -331,16 +331,28 @@ function Get-Persistence([string] $Schema, [string] $Path) {
             } }
         }
         'candidate-investigation.v1.schema.json' {
-            $column = switch ($leaf) {
-                'operation_id' { @('provider_operation_blocks.operation_id','provider_semantic_proposals.operation_id') }
-                'owner_kind' { 'provider_operation_blocks.owner_kind' }
-                'owner_id' { 'provider_operation_blocks.owner_id' }
-                'analysis_run_id' { 'provider_operation_blocks.owner_id' }
-                'candidate_id' { 'analysis_candidates.candidate_id' }
-                'admission_link_ids' { 'provider_semantic_admissions.admission_id' }
-                'validation_ids' { 'provider_semantic_validations.validation_id' }
-                'admission_links' { @('provider_semantic_admissions.admission_id','provider_semantic_admissions.proposal_id','provider_semantic_admissions.operation_id','provider_semantic_admissions.response_record_id','provider_semantic_admissions.owner_kind','provider_semantic_admissions.owner_id','provider_semantic_admissions.root_subject_id','provider_semantic_admissions.validation_id','provider_semantic_admissions.semantic_link_id','provider_semantic_admissions.state') }
-                default { $null }
+            if ($Path -like '`$defs.admissionLink.*') {
+                $column = switch ($leaf) {
+                    'authorization_id' { 'provider_semantic_proposals.authorization_id' }
+                    'proposal_id' { @('provider_semantic_proposals.proposal_id','provider_semantic_admissions.proposal_id') }
+                    'application_link_id' { 'provider_semantic_admissions.semantic_link_id' }
+                    'validation_id' { 'provider_semantic_validations.validation_id' }
+                    'admission_id' { 'provider_semantic_admissions.admission_id' }
+                    default { 'candidate_investigation_outcomes.result_payload_id' }
+                }
+            }
+            else {
+                $column = switch ($leaf) {
+                    'operation_id' { @('candidate_investigation_outcomes.operation_id','provider_semantic_proposals.operation_id') }
+                    'owner_kind' { @('provider_operation_blocks.owner_kind','provider_operation_authorizations.owner_kind','candidate_investigation_outcomes.result_payload_id') }
+                    'owner_id' { 'candidate_investigation_outcomes.owner_id' }
+                    'analysis_run_id' { 'candidate_investigation_outcomes.owner_id' }
+                    'candidate_id' { 'candidate_investigation_outcomes.candidate_id' }
+                    'admission_link_ids' { @('provider_semantic_admissions.admission_id','candidate_investigation_outcomes.result_payload_id') }
+                    'validation_ids' { @('provider_semantic_validations.validation_id','candidate_investigation_outcomes.result_payload_id') }
+                    'admission_links' { @('provider_semantic_admissions.admission_id','provider_semantic_admissions.proposal_id','provider_semantic_admissions.operation_id','provider_semantic_admissions.response_record_id','provider_semantic_admissions.owner_kind','provider_semantic_admissions.owner_id','provider_semantic_admissions.root_subject_id','provider_semantic_admissions.validation_id','provider_semantic_admissions.semantic_link_id','provider_semantic_admissions.state','candidate_investigation_outcomes.result_payload_id') }
+                    default { 'candidate_investigation_outcomes.result_payload_id' }
+                }
             }
         }
         'provider-execution-input.v1.schema.json' {
@@ -453,6 +465,9 @@ function Get-Projection([string] $Schema, [string] $Path, [bool] $Replay) {
         }
     }
     else {
+        if ($Schema -eq 'candidate-investigation.v1.schema.json') {
+            return [ordered]@{ omission_reason = "$Path is replayed from candidate_investigation_outcomes.result_payload_id by DurableCandidateInvestigationCoordinator.ReplayRetained; no duplicate public application protobuf field is defined." }
+        }
         if ($Schema -eq 'provider-operation.v1.schema.json') {
             $map=@{ operation_id='operation_id'; operation_kind='operation_kind'; profile_id='profile_id'; generation_id='generation_id'; revocation_epoch='revocation_epoch'; maximum_request_bytes='limits'; maximum_input_tokens='limits'; maximum_output_tokens='limits'; maximum_raw_response_bytes='limits'; maximum_dispatch_count='limits'; maximum_calculated_nano_usd='limits'; deadline_milliseconds='limits' }
             if($map.ContainsKey($leaf)){ $message='ProviderReplayPayload'; $field=$map[$leaf] }

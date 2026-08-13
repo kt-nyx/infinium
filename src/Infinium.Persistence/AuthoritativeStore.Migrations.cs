@@ -295,7 +295,7 @@ public sealed partial class AuthoritativeStore
         if (actualFingerprint is not (acceptedWp2Fingerprint or rejectedWp3Fingerprint))
         {
             throw new InvalidOperationException(
-                "Schema 6 does not match the exact accepted WP2 storage contract or current WP3 same-version extension.");
+                $"Schema 6 does not match the exact accepted WP2 storage contract or current WP3 same-version extension ({actualFingerprint}).");
         }
 
         using (SqliteCommand metadata = connection.CreateCommand())
@@ -4178,6 +4178,7 @@ public sealed partial class AuthoritativeStore
             operation_id TEXT NOT NULL,
             owner_id TEXT NOT NULL REFERENCES runs(run_id) ON DELETE RESTRICT,
             candidate_id TEXT NOT NULL REFERENCES analysis_candidates(candidate_id) ON DELETE RESTRICT,
+            hypothesis_id TEXT NOT NULL REFERENCES analysis_hypotheses(hypothesis_id) ON DELETE RESTRICT,
             context_id TEXT NOT NULL CHECK(length(trim(context_id)) > 0),
             transcript_id TEXT NOT NULL UNIQUE CHECK(length(trim(transcript_id)) > 0),
             response_record_id TEXT REFERENCES provider_responses(response_record_id) ON DELETE RESTRICT,
@@ -4202,13 +4203,17 @@ public sealed partial class AuthoritativeStore
         BEGIN
           SELECT CASE WHEN NOT EXISTS(
             SELECT 1 FROM analysis_candidates candidate
+            JOIN analysis_hypotheses hypothesis
+              ON hypothesis.hypothesis_id=NEW.hypothesis_id
+             AND hypothesis.candidate_id=candidate.candidate_id
+             AND hypothesis.run_id=candidate.run_id
             JOIN provider_operation_authorizations authorization
               ON authorization.authorization_id=NEW.authorization_id
              AND authorization.operation_id=NEW.operation_id
              AND authorization.owner_kind='analysis-run' AND authorization.owner_id=NEW.owner_id
              AND authorization.operation_kind='candidate-investigation'
             WHERE candidate.candidate_id=NEW.candidate_id AND candidate.run_id=NEW.owner_id)
-            THEN RAISE(ABORT, 'candidate outcome must bind its exact analysis candidate root') END;
+            THEN RAISE(ABORT, 'candidate outcome must bind its exact analysis candidate and hypothesis roots') END;
         END;
         CREATE TRIGGER candidate_investigation_outcome_response_guard
         BEFORE INSERT ON candidate_investigation_outcomes

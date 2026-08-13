@@ -354,6 +354,7 @@ public partial class AuthoritativeStore
         ArgumentNullException.ThrowIfNull(request);
         ProviderOperationContractInvariants.Validate(request.Document);
         CandidateInvestigationDocument document = request.Document;
+        CandidateHostContextSnapshot hostContext = ValidateCandidatePersistenceRequest(request);
         if (document.AdmissionLinks.Any(link => link.AuthorizationId.Value != request.AuthorizationId
                 || link.ResponseRecordId.Value != request.ResponseRecordId)
             || request.ResponseRecordId is null && document.HypothesisProposals.Count != 0)
@@ -396,6 +397,7 @@ public partial class AuthoritativeStore
                     throw new InvalidDataException("Candidate persistence requires exact retained analysis, authorization, response, and candidate authority.");
                 }
             }
+            ValidateCandidateHostContext(request, hostContext, transaction);
             foreach (CandidateEvidenceProvenanceBinding binding in request.EvidenceBindings)
             {
                 ValidateCandidateEvidenceBinding(request, binding, transaction);
@@ -414,13 +416,14 @@ public partial class AuthoritativeStore
             Execute(
                 """
                 INSERT INTO candidate_investigation_outcomes VALUES(
-                  $outcome,$authorization,$operation,$owner,$candidate,$context,$transcript,$response,$fingerprint,
+                  $outcome,$authorization,$operation,$owner,$candidate,$hypothesis,$context,$transcript,$response,$fingerprint,
                   $transcript_state,$disposition,$replay_state,$input_payload,$transcript_payload,$result_payload,$now);
                 """,
                 transaction,
                 ("$outcome", request.OutcomeId), ("$authorization", request.AuthorizationId),
                 ("$operation", document.OperationId.Value), ("$owner", document.OwnerId.Value),
-                ("$candidate", document.CandidateId.Value), ("$context", request.ContextId),
+                ("$candidate", document.CandidateId.Value), ("$hypothesis", request.HypothesisId),
+                ("$context", request.ContextId),
                 ("$transcript", request.TranscriptId), ("$response", request.ResponseRecordId),
                 ("$fingerprint", request.ResponseFingerprint), ("$transcript_state", request.TranscriptState),
                 ("$disposition", request.Disposition), ("$replay_state", request.ReplayState),
@@ -466,6 +469,193 @@ public partial class AuthoritativeStore
                 document.AdmissionLinkIds.Select(x => x.Value).ToArray(), request.OutcomeId);
         }
     }
+
+    private static CandidateHostContextSnapshot ValidateCandidatePersistenceRequest(
+        CandidateInvestigationPersistenceRequest request)
+    {
+        CandidateInvestigationDocument document = request.Document;
+        if (request.EvidenceBindings.Count == 0
+            || request.EvidenceBindings.Select(x => x.EvidenceId).Distinct(StringComparer.Ordinal).Count()
+                != request.EvidenceBindings.Count
+            || !document.EvidenceIds.Select(x => x.Value).ToHashSet(StringComparer.Ordinal)
+                .SetEquals(request.EvidenceBindings.Select(x => x.EvidenceId)))
+        {
+            throw new InvalidDataException("Candidate persistence requires one unique exact provenance binding for every retained evidence identity.");
+        }
+        byte[] exactDocument = JsonSerializer.SerializeToUtf8Bytes(document);
+        if (!exactDocument.AsSpan().SequenceEqual(request.ResultPayload))
+        {
+            throw new InvalidDataException("Candidate outcome payload is not the exact canonical retained investigation document.");
+        }
+        using JsonDocument input = JsonDocument.Parse(request.InputPayload, new JsonDocumentOptions
+        {
+            AllowTrailingCommas = false,
+            CommentHandling = JsonCommentHandling.Disallow,
+            MaxDepth = 64,
+        });
+        JsonElement root = input.RootElement;
+        JsonElement[] contexts = root.GetProperty("contexts").EnumerateArray()
+            .Where(x => Text(x, "context_id") == request.ContextId).ToArray();
+        if (contexts.Length != 1
+            || Text(root, "operation_id") != document.OperationId.Value
+            || Text(root, "owner_id") != document.OwnerId.Value
+            || Text(root, "analysis_run_id") != document.AnalysisRunId.Value)
+        {
+            throw new InvalidDataException("Candidate persistence input does not bind one exact retained host context.");
+        }
+        JsonElement context = contexts[0];
+        string[] participantIds = Strings(context, "participant_ids");
+        string[] participantRoles = Strings(context, "participant_roles");
+        string[] causalPathIds = Strings(context, "causal_path_ids");
+        CandidateHostEvidenceSnapshot[] evidence = context.GetProperty("evidence").EnumerateArray()
+            .Select(item => new CandidateHostEvidenceSnapshot(
+                Text(item, "evidence_id"), Text(item, "evidence_application_link_id"),
+                Text(item, "source_acquisition_id"), Text(item, "source_admission_id"),
+                Text(item, "source_application_link_id"), Text(item, "source_revision_id"),
+                Text(item, "passage_id"), Text(item, "relationship"), Text(item, "availability"),
+                Text(item, "content_sha256"))).ToArray();
+        if (Text(context, "candidate_id") != document.CandidateId.Value
+            || Text(context, "hypothesis_id") != request.HypothesisId
+            || !participantIds.SequenceEqual(document.ParticipantIds.Select(x => x.Value), StringComparer.Ordinal)
+            || !participantRoles.SequenceEqual(document.ParticipantRoles, StringComparer.Ordinal)
+            || !causalPathIds.SequenceEqual(document.CausalPathIds.Select(x => x.Value), StringComparer.Ordinal)
+            || Text(context, "dependency_closure_id") != document.DependencyClosureId.Value
+            || !evidence.Select(x => x.EvidenceId).SequenceEqual(document.EvidenceIds.Select(x => x.Value), StringComparer.Ordinal)
+            || evidence.Length != request.EvidenceBindings.Count)
+        {
+            throw new InvalidDataException("Candidate persistence document drifts from its exact retained host context.");
+        }
+        foreach (CandidateEvidenceProvenanceBinding binding in request.EvidenceBindings)
+        {
+            CandidateHostEvidenceSnapshot expected = evidence.Single(x => x.EvidenceId == binding.EvidenceId);
+            if (binding != new CandidateEvidenceProvenanceBinding(
+                    expected.EvidenceId, expected.EvidenceApplicationLinkId, expected.SourceAcquisitionId,
+                    expected.SourceAdmissionId, expected.SourceApplicationLinkId, expected.SourceRevisionId,
+                    expected.PassageId, expected.Relationship, expected.Availability, expected.ContentSha256))
+            {
+                throw new InvalidDataException("Candidate evidence binding drifts from its exact retained input provenance.");
+            }
+        }
+        return new(request.HypothesisId, Text(context, "hypothesis"), participantIds, participantRoles,
+            causalPathIds, Text(context, "dependency_closure_id"), evidence);
+    }
+
+    private void ValidateCandidateHostContext(
+        CandidateInvestigationPersistenceRequest request,
+        CandidateHostContextSnapshot context,
+        SqliteTransaction transaction)
+    {
+        using SqliteCommand identity = connection.CreateCommand();
+        identity.Transaction = transaction;
+        identity.CommandText =
+            """
+            SELECT candidate.candidate_payload_id,hypothesis.hypothesis_payload_id,
+                   candidate.candidate_decision_id,candidate.dependency_closure_id,decision.decision_payload_id
+            FROM analysis_candidates candidate
+            JOIN candidate_decisions decision
+              ON decision.candidate_decision_id=candidate.candidate_decision_id
+             AND decision.run_id=candidate.run_id
+            JOIN analysis_hypotheses hypothesis
+              ON hypothesis.hypothesis_id=$hypothesis AND hypothesis.candidate_id=candidate.candidate_id
+             AND hypothesis.run_id=candidate.run_id
+            WHERE candidate.candidate_id=$candidate AND candidate.run_id=$run;
+            """;
+        identity.Parameters.AddWithValue("$hypothesis", context.HypothesisId);
+        identity.Parameters.AddWithValue("$candidate", request.Document.CandidateId.Value);
+        identity.Parameters.AddWithValue("$run", request.Document.AnalysisRunId.Value);
+        string payloadId;
+        string decisionId;
+        using (SqliteDataReader reader = identity.ExecuteReader())
+        {
+            if (!reader.Read() || reader.GetString(0) != reader.GetString(1)
+                || reader.GetString(0) != reader.GetString(4)
+                || reader.GetString(3) != context.DependencyClosureId)
+            {
+                throw new InvalidDataException("Candidate investigation does not bind one exact durable Slice 5 candidate and hypothesis.");
+            }
+            payloadId = reader.GetString(0);
+            decisionId = reader.GetString(2);
+            if (reader.Read())
+            {
+                throw new InvalidDataException("Candidate investigation host identity is ambiguous.");
+            }
+        }
+        byte[] bytes = ReadRetainedPayloadBytes(payloadId)
+            ?? throw new InvalidDataException("Candidate investigation durable Slice 5 payload is unavailable.");
+        using JsonDocument payload = JsonDocument.Parse(bytes, new JsonDocumentOptions
+        {
+            AllowTrailingCommas = false,
+            CommentHandling = JsonCommentHandling.Disallow,
+            MaxDepth = 64,
+        });
+        JsonElement root = payload.RootElement;
+        JsonElement candidate = ExactObject(root.GetProperty("candidates"), "candidate_id", request.Document.CandidateId.Value);
+        JsonElement hypothesis = ExactObject(root.GetProperty("hypotheses"), "hypothesis_id", context.HypothesisId);
+        JsonElement decision = ExactObject(root.GetProperty("decisions"), "decision_id", decisionId);
+        string[] participantIds = decision.GetProperty("participants").EnumerateArray()
+            .Select(x => Text(x, "participant_id")).ToArray();
+        string[] participantRoles = decision.GetProperty("participants").EnumerateArray()
+            .Select(x => Text(x, "role")).ToArray();
+        string[] supporting = context.Evidence.Where(x => x.Relationship == "supporting").Select(x => x.EvidenceId).ToArray();
+        string[] contradicting = context.Evidence.Where(x => x.Relationship == "contradicting").Select(x => x.EvidenceId).ToArray();
+        string[] dependencyIds = Strings(decision, "dependency_ids");
+        string[] retainedClosure = root.GetProperty("dependency_edges").EnumerateArray()
+            .Where(edge => Text(edge, "from_kind") == "dependency-closure"
+                && Text(edge, "from_id") == context.DependencyClosureId
+                && Text(edge, "to_kind") == "dependency" && Text(edge, "edge_kind") == "depends-on")
+            .Select(edge => Text(edge, "to_id")).ToArray();
+        if (Text(root, "originating_run_id") != request.Document.AnalysisRunId.Value
+            || Text(candidate, "decision_id") != decisionId
+            || Text(candidate, "hypothesis_id") != context.HypothesisId
+            || Text(hypothesis, "candidate_id") != request.Document.CandidateId.Value
+            || Text(hypothesis, "proposed_explanation") != context.Hypothesis
+            || Text(decision, "dependency_closure_id") != context.DependencyClosureId
+            || !participantIds.SequenceEqual(context.ParticipantIds, StringComparer.Ordinal)
+            || !participantRoles.SequenceEqual(context.ParticipantRoles, StringComparer.Ordinal)
+            || !Strings(decision, "path").SequenceEqual(context.CausalPathIds, StringComparer.Ordinal)
+            || !Strings(hypothesis, "supporting_evidence_ids").ToHashSet(StringComparer.Ordinal).SetEquals(supporting)
+            || !Strings(hypothesis, "contradicting_evidence_ids").ToHashSet(StringComparer.Ordinal).SetEquals(contradicting)
+            || !dependencyIds.ToHashSet(StringComparer.Ordinal).SetEquals(retainedClosure))
+        {
+            throw new InvalidDataException("Candidate investigation context drifts from durable Slice 5 candidate semantics.");
+        }
+    }
+
+    private static JsonElement ExactObject(JsonElement array, string identityProperty, string identity)
+    {
+        JsonElement[] matches = array.EnumerateArray().Where(x => Text(x, identityProperty) == identity).ToArray();
+        return matches.Length == 1 ? matches[0]
+            : throw new InvalidDataException("Durable candidate payload does not contain one exact required identity.");
+    }
+
+    private static string Text(JsonElement element, string property) =>
+        element.GetProperty(property).GetString()
+        ?? throw new InvalidDataException("Retained candidate context contains a null identity or semantic value.");
+
+    private static string[] Strings(JsonElement element, string property) =>
+        element.GetProperty(property).EnumerateArray().Select(x => x.GetString()
+            ?? throw new InvalidDataException("Retained candidate context contains a null list value.")).ToArray();
+
+    private sealed record CandidateHostEvidenceSnapshot(
+        string EvidenceId,
+        string EvidenceApplicationLinkId,
+        string SourceAcquisitionId,
+        string SourceAdmissionId,
+        string SourceApplicationLinkId,
+        string SourceRevisionId,
+        string PassageId,
+        string Relationship,
+        string Availability,
+        string ContentSha256);
+
+    private sealed record CandidateHostContextSnapshot(
+        string HypothesisId,
+        string Hypothesis,
+        IReadOnlyList<string> ParticipantIds,
+        IReadOnlyList<string> ParticipantRoles,
+        IReadOnlyList<string> CausalPathIds,
+        string DependencyClosureId,
+        IReadOnlyList<CandidateHostEvidenceSnapshot> Evidence);
 
     private void ValidateCandidateEvidenceBinding(
         CandidateInvestigationPersistenceRequest request,
@@ -648,7 +838,7 @@ public partial class AuthoritativeStore
             using SqliteCommand command = connection.CreateCommand();
             command.CommandText =
                 """
-                SELECT outcome_id,candidate_id,transcript_id,response_record_id,response_fingerprint,
+                SELECT outcome_id,candidate_id,hypothesis_id,transcript_id,response_record_id,response_fingerprint,
                   transcript_state,disposition,replay_state,input_payload_id,transcript_payload_id,result_payload_id
                 FROM candidate_investigation_outcomes
                 WHERE owner_id=$owner AND operation_id=$operation AND context_id=$context;
@@ -661,19 +851,20 @@ public partial class AuthoritativeStore
             {
                 throw new KeyNotFoundException("The exact retained candidate-investigation outcome does not exist.");
             }
-            string inputPayloadId = reader.GetString(8);
-            string transcriptPayloadId = reader.GetString(9);
-            string resultPayloadId = reader.GetString(10);
+            string inputPayloadId = reader.GetString(9);
+            string transcriptPayloadId = reader.GetString(10);
+            string resultPayloadId = reader.GetString(11);
             string outcomeId = reader.GetString(0);
             string candidateId = reader.GetString(1);
-            string transcriptId = reader.GetString(2);
-            string? responseRecordId = reader.IsDBNull(3) ? null : reader.GetString(3);
-            string responseFingerprint = reader.GetString(4);
-            string transcriptState = reader.GetString(5);
-            string disposition = reader.GetString(6);
-            string replayState = reader.GetString(7);
+            string hypothesisId = reader.GetString(2);
+            string transcriptId = reader.GetString(3);
+            string? responseRecordId = reader.IsDBNull(4) ? null : reader.GetString(4);
+            string responseFingerprint = reader.GetString(5);
+            string transcriptState = reader.GetString(6);
+            string disposition = reader.GetString(7);
+            string replayState = reader.GetString(8);
             reader.Close();
-            return new(outcomeId, analysisRunId, operationId, candidateId, contextId,
+            return new(outcomeId, analysisRunId, operationId, candidateId, hypothesisId, contextId,
                 transcriptId, responseRecordId, responseFingerprint, transcriptState, disposition, replayState, inputPayloadId, transcriptPayloadId,
                 resultPayloadId, ReadRetainedPayloadBytes(inputPayloadId)!, ReadRetainedPayloadBytes(transcriptPayloadId)!,
                 ReadRetainedPayloadBytes(resultPayloadId)!);
@@ -761,6 +952,7 @@ public sealed record CandidateInvestigationPersistenceRequest(
     CandidateInvestigationDocument Document,
     string OutcomeId,
     string ContextId,
+    string HypothesisId,
     string TranscriptId,
     string ResponseFingerprint,
     string TranscriptState,
@@ -787,6 +979,8 @@ public sealed record CandidateEvidenceProvenanceBinding(
     string SourceApplicationLinkId,
     string SourceRevisionId,
     string PassageId,
+    string Relationship,
+    string Availability,
     string ContentSha256);
 
 public sealed record CandidateInvestigationPersistenceReceipt(
@@ -803,6 +997,7 @@ public sealed record CandidateInvestigationOutcomeReadModel(
     string AnalysisRunId,
     string OperationId,
     string CandidateId,
+    string HypothesisId,
     string ContextId,
     string TranscriptId,
     string? ResponseRecordId,

@@ -570,6 +570,8 @@ public static class ProviderOperationContractInvariants
             || !Unique(value.CausalPathIds) || !Unique(value.EvidenceIds)
             || !BoundedUniqueText(value.Abstentions) || !BoundedUniqueText(value.Gaps)
             || !Unique(value.ValidationIds) || !Unique(value.AdmissionLinkIds)
+            || !value.ValidationIds.ToHashSet().SetEquals(value.AdmissionLinks.Select(x => x.ValidationId))
+            || !value.AdmissionLinkIds.ToHashSet().SetEquals(value.AdmissionLinks.Select(x => x.AdmissionId))
             || !AdmissionStatesMatch(value.AdmissionLinks,
                 value.HypothesisProposals.Select(x => new KeyValuePair<OpaqueId, ProposalAdmissionState>(x.ProposalId, x.State)))
             || !ValidAdmissionLinks(value.AdmissionLinks, value.OperationId, value.OwnerKind,
