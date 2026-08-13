@@ -3839,3 +3839,11 @@ operation, source/Nexus/search refresh, private/evaluator/archive access,
 protected external effect, WP7 behavior, current-state advancement, or push
 occurred. This is a corrected WP6 candidate awaiting fresh independent
 re-review; it is not self-accepted and does not authorize WP7.
+
+The bounded correction was committed as exact candidate
+`19e36510299aff6590baf1721cf482c04bd6d780`. Candidate-bound
+`Layer6Review` passed from review baseline
+`d88e4f8324d08eeaba162fe3f3806c61cb487ab4` through that candidate:
+27 changed paths, zero allowed-path, strict-JSON, relative-link, or
+private/archive failures. Its 1,358-byte receipt has SHA-256
+`9942558fe4450e393c6c8b989ccdd48a9e8ecf4f4202a717a4e1df37e77f06e0`.
