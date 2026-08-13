@@ -4803,3 +4803,13 @@ of the current candidate. The execution gate separately requires that exact
 ancestor and permits only the final manifest and append-only record to differ
 after it. This avoids any self-referential commit hash while preserving exact
 candidate binding; the post-binding allowlist is not widened.
+
+The exact corrected close-ready recovery commit is
+`2f46b14a3eda7b9e88b59d400c328d85a069f7dc`. Final manifest ID
+`infinium.m1-s6.wp4.credential-native-recovery/6a1e3f05-2189-46f8-8dff-48edb40496dc`
+has SHA-256
+`014d0f66463bd780d031718b88eba36f75efb5829afef78cb11383da24a374c4`
+and expiry `2026-08-14T16:27:12.1021393Z`. Effect-free validation reports
+`ready`, `execution_authorized: false`, and zero native, network, and provider
+operations. Fresh independent pre-effect acceptance and the canonical
+standing-owner recovery marker remain mandatory before the one cleanup run.
