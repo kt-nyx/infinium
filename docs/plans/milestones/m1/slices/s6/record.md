@@ -3847,3 +3847,81 @@ The bounded correction was committed as exact candidate
 27 changed paths, zero allowed-path, strict-JSON, relative-link, or
 private/archive failures. Its 1,358-byte receipt has SHA-256
 `9942558fe4450e393c6c8b989ccdd48a9e8ecf4f4202a717a4e1df37e77f06e0`.
+
+## WP6 D3 application-ownership and final provenance correction — 2026-08-12
+
+The final bounded semantic/oracle re-review found that acquisition registration
+still required a provider proposal/application identity before the retained
+response existed. It also found that the oracle aggregate called mutually
+exclusive model-used harness scenarios provider operations even though each
+package retained one exact operation identity, and that the registry still
+bound the superseded pre-refreeze manifest bytes. These were ordinary WP6
+contract, persistence, and provenance defects under accepted-plan section 17.
+
+The independently authored aggregate-only oracle replacement was frozen before
+corrected product comparison at exact commit
+`d22cfcd7ee8a8035436dd036a5c64d435957d214`. It removes the misleading
+`provider_operation_count`, retains the separately typed
+`model_used_scenario_count`, and proves one distinct operation identity per
+package. DEV manifest/oracle/provenance SHA-256 values are
+`c3b3b1087b184d8c0c4d8c1afc06289b48cf31b71168952b1100c23a4f0597f1`,
+`67ba0efe846e74f7abfe028d457748c195ebccd70798621eac864e69a3619577`,
+and `9e95a0b1c244590df65d2d7395e4d9fb9a422cab6f8b5d6109bce176b2524ace`.
+VAL values are
+`918edde1b818f73cea9bfbd532b66c976cdd43d6a921636cad8ba32c4813f0bb`,
+`742eeb7dda3b07cd683ad407e480d360c86ef61a569f9d06ba34146949e4f19d`,
+and `b439dc22b2fb5adef296e0287e844d86f92e1834095cbbbb0892b8d58582a84b`.
+All answer-free execution, context, and transcript bytes remained unchanged.
+
+The product correction removes all proposal and application identities from
+`RegisterSourceClaimAcquisition`. Retained provider proposals, validations, and
+admissions are now persisted under acquisition ownership after response
+validation without a pre-authored analysis application row. A separate typed
+`ConsumeAdmittedSourceClaim` action creates the later analysis application link
+only for an exact admitted artifact and only at or after its admission time.
+Schema-6 correction `M1-S6-WP6-0006F` migrates exact prior fingerprint
+`4a9591b76c17bdac790010c9cef292875d59fcad0aa81054b91d69a699c7372e`
+to exact fingerprint
+`a9c58c7e3f374b77a623b751547353a356b2132f24f353ca2356a4268f13b51d`;
+the database trigger independently rejects premature, non-admitted, or
+cross-acquisition artifacts.
+
+The production integration regression registers acquisition ownership before
+loading any transcript proposal identity, admits an arbitrary provider-returned
+proposal identifier, persists admitted/unsupported/abstained/deleted states,
+proves zero application rows for registration and semantic persistence, rejects
+each non-admitted state and pre-admission consumption, then creates one exact
+later admitted-artifact link. Typed readback, additive publication,
+backup/restore, and projection rebuild preserve the result. A contract mutation
+changes only execution-input `package_id`, reseals its dependent manifest and
+provenance hashes, and proves the reader rejects disagreement with the manifest
+package identity.
+
+The final exact `SourceClaimSemantics` command passed Unit 4/0/0, Contract
+6/0/0, Integration 4/0/0, and Evaluation 2/0/0. Its current 2,820-byte receipt
+has SHA-256
+`6245314b91738cc4dc8e81cf5ff9e20e695a1dec138b95d392d1663bfb59b6c6`
+and binds the final manifests and all fourteen retained scenario
+classifications. A clean Release rebuild from removed Release outputs passed
+with zero warnings/errors, followed by the unfiltered non-live floor: Unit
+234/0/1, Contract 161/0/0, Integration 116/0/0, Evaluation 65/0/8, Security
+19/0/0, and Fault 7/0/0. `Contracts`, `Documentation`, `Candidates`,
+`CandidateScale`, `Cases`, `Replay`, `Output`, `Safety`, `Comprehensive`, and
+`All` each passed. Format, dependency-manifest, documentation, and diff checks
+passed.
+
+The correction was committed as exact candidate
+`4b1abb2c021e6e30d212d49b24d2c9b3857d9e1a`. Candidate-bound
+`Layer6Review` passed from exact oracle baseline
+`d22cfcd7ee8a8035436dd036a5c64d435957d214` through that candidate: nine
+changed paths and zero allowed-path, strict-JSON, relative-link, or
+private/archive failures. Its 1,320-byte receipt has SHA-256
+`bf97f472ad78e7e065a14f901036368caf39eea48a40308bca58f52bee56f7dd`.
+Exact-root cleanup matched zero repository-owned `dotnet`/`testhost` processes
+and verified zero survivors.
+
+No API key, DNS, network/provider request, token-count call, Credential Manager
+operation, source/Nexus/search refresh, private/evaluator/archive access,
+protected external effect, WP7 behavior, current-state advancement, or push
+occurred. This remains a corrected WP6 candidate awaiting independent
+acceptance; it does not self-accept WP6 or authorize WP7.
