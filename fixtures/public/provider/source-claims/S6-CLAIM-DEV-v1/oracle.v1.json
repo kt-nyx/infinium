@@ -26,7 +26,7 @@
     {
       "transcript_id": "dev-01",
       "expected_result": "accepted",
-      "expected_proposal_states": {"dev-p01": "accepted"},
+      "expected_proposal_states": {"dev-p01": "admitted"},
       "admitted_proposal_ids": ["dev-p01"],
       "rejected_proposal_ids": [],
       "contradiction_evidence_ids": [],
@@ -56,7 +56,7 @@
     {
       "transcript_id": "dev-03",
       "expected_result": "accepted-conditional",
-      "expected_proposal_states": {"dev-p03": "accepted"},
+      "expected_proposal_states": {"dev-p03": "admitted"},
       "admitted_proposal_ids": ["dev-p03"],
       "rejected_proposal_ids": [],
       "contradiction_evidence_ids": [],

@@ -16,6 +16,7 @@
   },
   "partition_history": [
     {"state": "authored-development", "reason": "public development expectations independently derived before comparison"},
+    {"state": "authority-token-correction", "reason": "before product comparison, replaced non-contract wording accepted with exact frozen admission token admitted"},
     {"state": "frozen-development", "reason": "oracle identity fixed before product observation"}
   ],
   "replacement_rule": "If this oracle drives a product, prompt, schema, or oracle correction, replace it with a materially independent oracle before validation comparison."
