@@ -75,10 +75,10 @@ public sealed class CredentialNativeAuthorizationTests
         using JsonDocument document = JsonDocument.Parse(bytes);
         JsonElement manifest = document.RootElement;
 
-        Assert.AreEqual("infinium.repository.wp4-credential-native-authorization/1.1.0",
+        Assert.AreEqual("infinium.repository.wp4-credential-native-authorization/1.2.0",
             manifest.GetProperty("schema_identity").GetString());
         Assert.AreEqual(
-            "infinium.m1-s6.wp4.credential-native-authorization/e0cb0693-f482-433d-a3d4-3ee40ce7e2db",
+            "infinium.m1-s6.wp4.credential-native-authorization/a1976c78-a49b-4581-9a8c-9b6172484e0b",
             manifest.GetProperty("manifest_id").GetString());
         Assert.AreEqual("none-until-owner-accepts-exact-manifest-bytes",
             manifest.GetProperty("effect_authority").GetString());
@@ -144,7 +144,7 @@ public sealed class CredentialNativeAuthorizationTests
 
         Assert.IsTrue(activeGate.Contains("wp4-credential-native-authorization.v2.json", StringComparison.Ordinal));
         Assert.IsTrue(activeGate.Contains(
-            "infinium.m1-s6.wp4.credential-native-authorization/e0cb0693-f482-433d-a3d4-3ee40ce7e2db",
+            "infinium.m1-s6.wp4.credential-native-authorization/a1976c78-a49b-4581-9a8c-9b6172484e0b",
             StringComparison.Ordinal));
         Assert.IsTrue(activeGate.Contains("--credential-native-qualification-v2", StringComparison.Ordinal));
         Assert.IsTrue(activeGate.Contains("FileMode]::CreateNew", StringComparison.Ordinal));
