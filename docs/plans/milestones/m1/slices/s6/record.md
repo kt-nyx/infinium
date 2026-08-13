@@ -4839,3 +4839,11 @@ supersedes the pre-effect-refused authority. It has output root
 `artifacts/m1-slice6/wp4-native-recovery-89baee92`, a new derived one-shot
 lock, and expiry `2026-08-14T16:37:12.0906842Z`. It remains a non-executable
 draft pending exact close-ready binding and a fresh independent review.
+
+The replacement close-ready commit is
+`fe6772e0944d533b3645fbc65f63c6d4fd900d3b`. Exact final manifest SHA-256 is
+`4bae55bd88b4487d995f0528f2bd40589f06f34b0677bb8133b25927a775d540`.
+Effect-free validation using the same absolute manifest path shape supplied by
+the gate reports `ready`, `execution_authorized: false`, and zero native,
+network, and provider operations. Fresh independent pre-effect acceptance and
+the canonical owner marker remain mandatory before its sole cleanup run.
