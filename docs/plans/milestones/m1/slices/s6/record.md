@@ -4848,3 +4848,36 @@ the gate reports `ready`, `execution_authorized: false`, and zero native,
 network, and provider operations. Fresh independent pre-effect acceptance and
 the canonical owner marker remain mandatory before its sole cleanup run.
 WP4_RECOVERY_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-recovery/89baee92-14d6-4f2b-a970-0fe6be15c54c sha256=4bae55bd88b4487d995f0528f2bd40589f06f34b0677bb8133b25927a775d540 close_ready_commit=fe6772e0944d533b3645fbc65f63c6d4fd900d3b expires_at_utc=2026-08-14T16:37:12.0906842Z
+
+The sole cleanup-only `89baee92` recovery completed its native phase and its
+independent semantic evidence validator returned `passed`. Evidence SHA-256
+`86321fa61c51a5ac8e0067906abe609a8cf1c2f100e421615b891dc7427f55be`
+binds the exact manifest ID/SHA, records all 12 exact targets as
+`ERROR_NOT_FOUND`, and contains 12 ordered `CredReadW` terminal-absence calls.
+Counts are `CredWriteW=0`, `CredReadW=12`, `CredDeleteW=0`, `CredFree=0`, total
+12; `namespace_blocked` is false; DNS, network, provider, and billable counts
+are zero. No target was present, so no delete or native allocation/free was
+needed. The consumed one-shot lock SHA-256 is
+`8270b35377562405192ac676fe181bda9ff14226a92723b4e6c7e3a30eba9d99`.
+
+After that conclusive cleanup proof, the outer gate failed only while
+canonicalizing the nested PowerShell `PSCustomObject` call-count object for its
+summary receipt: dynamic `ToString(null, invariant-culture)` overload
+resolution rejected the object. No later native call occurred and no retry is
+permitted. The serializer now canonicalizes `PSCustomObject` properties
+recursively; this correction cannot reinterpret or repeat the consumed native
+operation. Repository-owned process survivors are zero.
+WP4_RECOVERY_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-recovery/89baee92-14d6-4f2b-a970-0fe6be15c54c sha256=4bae55bd88b4487d995f0528f2bd40589f06f34b0677bb8133b25927a775d540 execution_head_commit=360b0321c69544dba833620422b1a703ba7cb45b status=cleanup-confirmed-receipt-generation-failed native_calls=12 namespace_blocked=false later_native_calls=0 evidence_sha256=86321fa61c51a5ac8e0067906abe609a8cf1c2f100e421615b891dc7427f55be
+
+The missing summary receipt was reconstructed once without helper launch or
+native operation. The reconstruction entry point first revalidates immutable
+evidence, verifies exact manifest/evidence/derived-lock hashes and lock
+contents, accepts only the exact `89baee92` production input/output paths, and
+uses create-new semantics. Its executable regression passes a nested
+`PSCustomObject` count object through the full canonical receipt path and
+asserts exact bytes and SHA-256; it also proves no process/helper/native route
+exists. Reconstructed receipt SHA-256 is
+`c86a9bf3b9e8d7acdf19697e8dea6c26a0e2ae2c9cfdb6b904b5fc1412d848b1`,
+explicitly labeled `post-effect-reconstruction-from-immutable-evidence-no-native-retry`
+with disposition `cleanup-confirmed-absent-consumed-never-reuse`. Native calls
+remain 12 and later native calls remain zero.

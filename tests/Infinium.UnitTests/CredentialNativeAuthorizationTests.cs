@@ -223,6 +223,12 @@ public sealed class CredentialNativeAuthorizationTests
             StringComparison.Ordinal));
         Assert.IsTrue(recoveryGate.Contains("Recovery requires branch codex/m1-s6.", StringComparison.Ordinal));
         Assert.IsTrue(recoveryGate.Contains("Recovery requires a fresh absent output root.", StringComparison.Ordinal));
+        string reconstruction = File.ReadAllText(Path.Combine(root, "eng",
+            "reconstruct-m1-slice6-wp4-recovery-receipt.ps1"));
+        Assert.IsFalse(reconstruction.Contains("Infinium.CredentialHelper", StringComparison.Ordinal));
+        Assert.IsFalse(reconstruction.Contains("Process.Start", StringComparison.Ordinal));
+        Assert.IsFalse(reconstruction.Contains("Infinium.CredentialHelper.exe", StringComparison.Ordinal));
+        Assert.IsFalse(reconstruction.Contains("--credential-native-recovery", StringComparison.Ordinal));
     }
 
     [TestMethod]
@@ -286,6 +292,7 @@ public sealed class CredentialNativeAuthorizationTests
         };
 
         AssertEvidenceValidation(root, manifestPath, sha, id, valid, expectedSuccess: true);
+        AssertReceiptReconstruction(root, manifestPath, sha, id, valid);
         Reject(node => node["schema"] = "mutated");
         Reject(node => node["manifest_id"] = "mutated");
         Reject(node => node["manifest_sha256"] = new string('0', 64));
@@ -439,8 +446,64 @@ public sealed class CredentialNativeAuthorizationTests
         finally { Directory.Delete(tempRoot, recursive: true); }
     }
 
+    private static void AssertReceiptReconstruction(string root, string manifestPath, string sha, string id,
+        JsonObject evidence)
+    {
+        string tempRoot = Path.Combine(root, "artifacts", "test-temp", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        string evidencePath = Path.Combine(tempRoot, "evidence.json");
+        string lockPath = Path.Combine(tempRoot, "lock.json");
+        string receiptPath = Path.Combine(tempRoot, "receipt.json");
+        try
+        {
+            File.WriteAllText(evidencePath, evidence.ToJsonString());
+            File.WriteAllText(lockPath, JsonSerializer.Serialize(new
+            {
+                manifest_id = id,
+                manifest_sha256 = sha,
+                disposition = "consumed-never-reuse",
+            }) + "\n");
+            string evidenceSha = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(evidencePath)));
+            string lockSha = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(lockPath)));
+            int exitCode = RunPwsh(root, "eng/reconstruct-m1-slice6-wp4-recovery-receipt.ps1",
+                "-ManifestPath", manifestPath, "-ManifestSha256", sha, "-ManifestId", id,
+                "-EvidencePath", evidencePath, "-EvidenceSha256", evidenceSha,
+                "-AuthorityLockPath", lockPath, "-AuthorityLockSha256", lockSha,
+                "-ReceiptPath", receiptPath, "-TestOnlyPaths", "-ReportFailureOutput");
+            Assert.AreEqual(0, exitCode);
+            string expected = "{\"credential_access_permitted\":true,\"evidence\":{"
+                + $"\"authority_lock_sha256\":\"{lockSha}\",\"billable_operations\":0,"
+                + $"\"dns_operations\":0,\"evidence_sha256\":\"{evidenceSha}\","
+                + $"\"manifest_id\":\"{id}\",\"manifest_sha256\":\"{sha}\","
+                + "\"namespace_disposition\":\"cleanup-confirmed-absent-consumed-never-reuse\","
+                + "\"native_call_counts\":{\"cred_delete_w\":1,\"cred_free\":1,\"cred_read_w\":13,"
+                + "\"cred_write_w\":0,\"total\":15},"
+                + "\"network_operations\":0,\"provider_operations\":0,"
+                + "\"receipt_origin\":\"post-effect-reconstruction-from-immutable-evidence-no-native-retry\","
+                + "\"target_absence_count\":12},\"gate\":\"CredentialNativeRecovery\","
+                + "\"network_permitted\":false,\"status\":\"passed\"}\n";
+            Assert.AreEqual(expected, File.ReadAllText(receiptPath));
+            Assert.AreEqual(Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(expected))),
+                Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(receiptPath))));
+            Assert.AreEqual(1, RunPwsh(root, "eng/reconstruct-m1-slice6-wp4-recovery-receipt.ps1",
+                "-ManifestPath", manifestPath, "-ManifestSha256", sha, "-ManifestId", id,
+                "-EvidencePath", evidencePath, "-EvidenceSha256", evidenceSha,
+                "-AuthorityLockPath", lockPath, "-AuthorityLockSha256", lockSha,
+                "-ReceiptPath", receiptPath, "-TestOnlyPaths"), "CreateNew must refuse receipt overwrite.");
+            File.Delete(receiptPath);
+            Assert.AreEqual(1, RunPwsh(root, "eng/reconstruct-m1-slice6-wp4-recovery-receipt.ps1",
+                "-ManifestPath", manifestPath, "-ManifestSha256", sha, "-ManifestId", id,
+                "-EvidencePath", evidencePath, "-EvidenceSha256", evidenceSha,
+                "-AuthorityLockPath", lockPath, "-AuthorityLockSha256", lockSha,
+                "-ReceiptPath", receiptPath), "Production mode must refuse arbitrary paths.");
+        }
+        finally { Directory.Delete(tempRoot, recursive: true); }
+    }
+
     private static int RunPwsh(string root, params string[] arguments)
     {
+        bool reportFailure = arguments.Length > 0 && arguments[^1] == "-ReportFailureOutput";
+        if (reportFailure) { arguments = arguments[..^1]; }
         ProcessStartInfo start = new("pwsh.exe")
         {
             WorkingDirectory = root,
@@ -460,6 +523,12 @@ public sealed class CredentialNativeAuthorizationTests
             process.Kill(entireProcessTree: true);
             process.WaitForExit();
             Assert.Fail("Recovery validator process exceeded its safe deadline and was terminated.");
+        }
+        string standardOutput = process.StandardOutput.ReadToEnd();
+        string standardError = process.StandardError.ReadToEnd();
+        if (reportFailure && process.ExitCode != 0)
+        {
+            Assert.Fail($"Recovery reconstruction failed. stdout={standardOutput} stderr={standardError}");
         }
         return process.ExitCode;
     }

@@ -128,6 +128,13 @@ function ConvertTo-CanonicalJsonValue([object] $Value) {
         return '"' + $escaped + '"'
     }
     if ($Value -is [bool]) { return $(if ($Value) { 'true' } else { 'false' }) }
+    if ($Value -is [System.Management.Automation.PSCustomObject]) {
+        $properties = [ordered]@{}
+        foreach ($property in $Value.PSObject.Properties) {
+            $properties[$property.Name] = $property.Value
+        }
+        return ConvertTo-CanonicalJsonValue $properties
+    }
     if ($Value -is [System.Collections.IDictionary]) {
         [string[]] $keys = @($Value.Keys | ForEach-Object { [string] $_ })
         [Array]::Sort($keys, [StringComparer]::Ordinal)
@@ -229,6 +236,7 @@ function Test-Wp1AllowedPath([string] $Path) {
         'eng/validate-m1-slice6-wp4-authorization-v2.ps1',
         'eng/validate-m1-slice6-wp4-recovery.ps1',
         'eng/validate-m1-slice6-wp4-recovery-evidence.ps1',
+        'eng/reconstruct-m1-slice6-wp4-recovery-receipt.ps1',
         'eng/verify-m1-slice6.ps1',
         'eng/verify-m1-slice6-wp3-upgrade.ps1',
         'fixtures/public/public-fixture-registry.v1.json',
