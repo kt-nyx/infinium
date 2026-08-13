@@ -3592,3 +3592,62 @@ namespace, private fixture/evaluator, archive, provider SDK, protected external
 effect, WP6/Slice 7 work, current-state advancement, or push occurred. This
 evidence does not self-accept WP5; the candidate remains for fresh bounded
 review.
+
+## WP5 encoded-secret normalization correction — 2026-08-12
+
+The final bounded provider/security counterexample showed that enumerating
+upper- and lower-hex percent spellings did not cover a mixed-case encoding.
+Product correction commit
+`fd3c80d91dd247e65b5130309a9b5bb19dd1381f` replaces spelling enumeration
+with bounded normalization while the secret bytes are still available:
+
+1. percent-encoded candidates are decoded byte by byte with case-insensitive
+   hexadecimal digits, and each secret byte may be literal or encoded. Mixed,
+   upper, lower, and fully encoded forms therefore share one exact comparison;
+2. valid JSON string values and property names are decoded with the total
+   `Utf8JsonReader` string path into zeroed owned buffers before comparison.
+   A separate bounded raw escape matcher covers malformed JSON carrying simple
+   JSON escapes or `\u00xx` bytes; and
+3. the exact standard Base64 value is compared in padded and unpadded form,
+   and the normalized URL-safe alphabet is independently compared in padded
+   and unpadded form. All derived byte buffers are zeroed after the scan.
+
+The regression matrix covers mixed-case percent hex, fully upper and lower
+percent hex, standard Base64 padded and unpadded, URL-safe Base64 padded and
+unpadded with actual `+`/`/` alphabet substitutions, valid mixed JSON escapes,
+malformed JSON escapes, complete raw echo, and the prior prefix-only non-match.
+Every complete representation produces typed `security_secret_echo`, no raw or
+header receipt, no staged envelope, ambiguous full hold, and no retry.
+
+The exact committed candidate passed:
+
+1. exact `Adapter`: Unit 18/0/0, Integration 11/0/0, Security 16/0/0,
+   Fault 3/0/0, and Evaluation 2/0/0. Its 1,410-byte receipt has SHA-256
+   `efe746d5d1e22896dd238fe8c52ea39af11a7cfabcf602ac5712277882fab07e`;
+2. exact `OfflineSafetyReplay`: Integration 3/0/0, Security 16/0/0,
+   Fault 3/0/0, and Evaluation 2/0/0. Its 848-byte receipt has SHA-256
+   `58874b8b5c4abe16784a7ef9f45001006210caabf111ea4ce90f52d86a473869`;
+3. impacted full Unit 230/0/1, Integration 112/0/0, Security 19/0/0,
+   and Fault 7/0/0;
+4. Release build with zero warnings and zero errors; format verification,
+   dependency-manifest freshness, documentation validation (166 metadata
+   files, 168 Markdown link sources, 17 JSON files), diff hygiene, and zero
+   retained gate-artifact matches for the secret-canary set; and
+5. candidate-bound `Layer6Review` from exact baseline
+   `214544c996f9f33fc14c7fab573167f72c702de3` through exact candidate
+   `fd3c80d91dd247e65b5130309a9b5bb19dd1381f`: two changed paths and zero
+   allowed-path, strict-JSON, relative-link, private/archive, status-claim,
+   unsupported-gap, or other findings. Its 1,353-byte receipt has SHA-256
+   `2f38a9d5ff16ae1f627ab252798b27912d2ccb17e58f324b6c71642974d5e1c0`.
+
+The shared 238-byte dynamically measured network spy remains SHA-256
+`d2eeac57768b66d0714e31d255c88b6715c9f2031d00fecaa71591755590bcd6`
+and records zero public DNS, provider, redirect-follow, retry, proxy-fallback,
+and replay-network operations. Exact-root cleanup matched zero repository-owned
+`dotnet` or `testhost` processes and verified zero survivors.
+
+No API key, public DNS/provider endpoint, live/billable request, Credential
+Manager or WP4 native namespace, private fixture/evaluator, archive, provider
+SDK, protected external effect, WP6/Slice 7 work, current-state advancement,
+or push occurred. This evidence does not self-accept WP5; the candidate remains
+for fresh bounded review.
