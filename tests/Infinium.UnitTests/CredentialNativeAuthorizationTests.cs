@@ -874,6 +874,122 @@ public sealed class CredentialNativeAuthorizationTests
     [TestMethod]
     [TestCategory("Unit")]
     [TestCategory("Security")]
+    public void PreReadinessPumpAdmitsActivationButNeverTerminalOrEditContentInput()
+    {
+        nint window = 100;
+        nint edit = 101;
+        nint submit = 102;
+        nint cancel = 103;
+
+        Assert.IsFalse(NativeMaskedEntryDialog.IsPreReadinessTerminalMessage(
+            0x0006, window, 0, 0, window, edit, submit, cancel));
+        Assert.IsTrue(NativeMaskedEntryDialog.IsPreReadinessTerminalMessage(
+            0x0111, window, 1001, submit, window, edit, submit, cancel));
+        Assert.IsTrue(NativeMaskedEntryDialog.IsPreReadinessTerminalMessage(
+            0x0100, edit, 0x0D, 0, window, edit, submit, cancel));
+        Assert.IsTrue(NativeMaskedEntryDialog.IsPreReadinessEditContentMessage(0x0102, edit, edit));
+        Assert.IsTrue(NativeMaskedEntryDialog.IsPreReadinessEditContentMessage(0x0100, edit, edit));
+        Assert.IsFalse(NativeMaskedEntryDialog.IsPreReadinessEditContentMessage(0x000F, window, edit));
+
+        nint instruction = 104;
+        Assert.AreEqual(PreReadinessMessageDisposition.DispatchOne,
+            NativeMaskedEntryDialog.ClassifyPreReadinessMessage(
+                0x0006, window, 0, 0, window, instruction, edit, submit, cancel));
+        Assert.AreEqual(PreReadinessMessageDisposition.IgnoreUnowned,
+            NativeMaskedEntryDialog.ClassifyPreReadinessMessage(
+                0x000F, 999, 0, 0, window, instruction, edit, submit, cancel));
+        Assert.AreEqual(PreReadinessMessageDisposition.RejectEditContent,
+            NativeMaskedEntryDialog.ClassifyPreReadinessMessage(
+                0x0102, edit, (nuint)'x', 0, window, instruction, edit, submit, cancel));
+        Assert.AreEqual(PreReadinessMessageDisposition.RejectTerminal,
+            NativeMaskedEntryDialog.ClassifyPreReadinessMessage(
+                0x0111, window, 1001, submit, window, instruction, edit, submit, cancel));
+
+        PreReadinessMessageDisposition[] queued =
+        [
+            PreReadinessMessageDisposition.DispatchOne,
+            PreReadinessMessageDisposition.RejectEditContent,
+            PreReadinessMessageDisposition.RejectTerminal,
+        ];
+        int processedBeforeRemeasurement = 0;
+        foreach (PreReadinessMessageDisposition _ in queued)
+        {
+            processedBeforeRemeasurement++;
+            break;
+        }
+        Assert.AreEqual(1, processedBeforeRemeasurement,
+            "Readiness must be remeasured after exactly one queued message.");
+
+        NativeEntryStateMachine state = new();
+        state.RecordPreReadinessTerminalMessage();
+        state.RecordPreReadinessIgnoredMessage();
+        state.RecordReadiness(ValidReadiness() with
+        {
+            ReadinessDeadlineMilliseconds = checked((long)NativeMaskedEntryDialog.ReadinessDeadline.TotalMilliseconds),
+        });
+        state.Activate(0);
+        Assert.AreEqual(1, state.Evidence.PreReadinessTerminalMessages);
+        Assert.AreEqual(1, state.Evidence.PreReadinessIgnoredMessages);
+        Assert.IsTrue(state.Evidence.InitialBlank);
+        Assert.AreEqual(TimeSpan.FromSeconds(10), NativeMaskedEntryDialog.ReadinessDeadline);
+        Assert.ThrowsExactly<InvalidOperationException>(() => state.RecordPreReadinessTerminalMessage());
+
+        NativeEntryStateMachine failed = new();
+        failed.RecordPreReadinessTerminalMessages(2, requireActive: false);
+        failed.RecordFailedReadiness(ValidReadiness() with { Foreground = false });
+        failed.FailFromAnyState();
+        failed.CompleteUiThreadCleanup(true, true);
+        failed.RecordThreadJoined();
+        Assert.AreEqual(2, failed.Evidence.PreReadinessTerminalMessages);
+        Assert.IsNull(failed.Evidence.Action);
+        Assert.IsFalse(failed.Evidence.InitialBlank);
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    public void OwnedWindowProcedureRoutesExactButtonCommandsAfterReadinessFirstWins()
+    {
+        nint window = 100;
+        nint submit = 101;
+        nint cancel = 102;
+        NativeEntryWindowCommandRouter router = new();
+
+        Assert.IsFalse(router.Route(0x000F, window, 0, 0, window, submit, cancel));
+        Assert.IsTrue(router.Route(0x0111, window, 1001, submit, window, submit, cancel));
+        Assert.AreEqual(1, router.PreReadinessRejectedCount);
+        Assert.AreEqual(1, router.DrainPreReadinessRejectedCount());
+        Assert.AreEqual(0, router.DrainPreReadinessRejectedCount());
+        Assert.IsFalse(router.TryTake(out _), "A pre-readiness click must never carry into active entry.");
+
+        router.Enable();
+        Assert.IsTrue(router.Route(0x0111, window, 1002, cancel, window, submit, cancel));
+        Assert.IsTrue(router.Route(0x0111, window, 1001, submit, window, submit, cancel));
+        Assert.IsTrue(router.TryTake(out NativeEntryInteraction first));
+        Assert.AreEqual(NativeEntryInteraction.Cancel, first);
+        Assert.IsFalse(router.TryTake(out _));
+
+        Assert.IsFalse(router.Route(0x0111, window + 1, 1001, submit, window, submit, cancel));
+        Assert.IsFalse(router.Route(0x0111, window, 1001, cancel, window, submit, cancel));
+        Assert.IsFalse(router.Route(0x0111, window, 1001 | ((nuint)1 << 16), submit, window, submit, cancel));
+
+        NativeEntryWindowCommandRouter ordered = new();
+        ordered.Enable();
+        Assert.IsTrue(ordered.Route(0x0111, window, 1002, cancel, window, submit, cancel));
+        NativeEntryInteraction? selectedAction = null;
+        NativeEntryActionSource? selectedSource = null;
+        Assert.IsTrue(ordered.TryTake(out NativeEntryInteraction routedBeforeQueued));
+        NativeMaskedEntryDialog.RecordFirstTerminalAction(
+            ref selectedAction, ref selectedSource, routedBeforeQueued, NativeEntryActionSource.CancelButton);
+        NativeMaskedEntryDialog.RecordFirstTerminalAction(
+            ref selectedAction, ref selectedSource, NativeEntryInteraction.Submit, NativeEntryActionSource.EditKey);
+        Assert.AreEqual(NativeEntryInteraction.Cancel, selectedAction,
+            "A sent button command observed during PeekMessage must win over the returned queued edit key.");
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
     public void NativeQualificationDeadlineFailsClosedAtExactFiniteBound()
     {
         long elapsed = 999;

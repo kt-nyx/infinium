@@ -34,7 +34,9 @@ internal sealed record CredentialNativeEntryCleanupEvidence(
     CredentialNativeEntryReadinessEvidence? Readiness,
     CredentialNativeEntryReadinessEvidence? ActionReadiness,
     string? ActionSource,
-    string? Action);
+    string? Action,
+    int PreReadinessTerminalMessages = 0,
+    int PreReadinessIgnoredMessages = 0);
 
 internal sealed record CredentialNativeEntryReadinessEvidence(
     int OwnerProcessId,
@@ -174,7 +176,46 @@ internal sealed record CredentialNativeFailedManualPhaseEvidence(
     int CredWriteW,
     int NativeCallTotal,
     CredentialNativeEntryCleanupEvidence? EntryCleanup,
-    string Disposition);
+    CredentialNativeStagingEvidence Staging,
+    string Disposition,
+    int ReportedNativeOperationCount,
+    int EntryCleanupByteLength,
+    string? EntryCleanupSha256,
+    string EntryCleanupParseResult,
+    int NativeTraceByteLength,
+    string? NativeTraceSha256,
+    string NativeTraceParseResult,
+    int CanaryByteLength,
+    string? CanarySha256,
+    string CanaryParseResult,
+    int ExitCode,
+    int InheritedPrivateHandleCount,
+    int StandardProtocolHandleCount,
+    int ListenerCount,
+    int NetworkOperationCount,
+    int ProcessTreeSurvivorCount,
+    bool ProcessTreeTerminated,
+    bool RetryAttempted,
+    bool ContainmentProbeExecuted,
+    bool ExcludedHandleAccessible,
+    int ActiveProcessCountBeforeJobClose,
+    int TotalContainedProcessCount,
+    bool NamespaceReuseBlocked,
+    string? NamespaceReuseBlockReason,
+    bool TraceCanonical,
+    string ValidationStage,
+    string ValidationReason);
+
+internal enum CredentialNativeManualValidationStage
+{
+    ProcessJobBoundary,
+    NativeTrace,
+    ExactTarget,
+    Canary,
+    ManualUi,
+    Lifecycle,
+    PhaseCapture,
+}
 
 internal sealed record CredentialNativeStaleGateEvidence(
     string ProfileId,
@@ -363,13 +404,24 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
                 assignment,
                 authoritativeNow,
                 bounded.Token).ConfigureAwait(false);
-        CredentialNativeQualificationPhaseEvidence evidence = Capture(
-            phaseId,
-            assignment.Assignment,
-            bootstrap.Bootstrap,
-            helper,
-            projection,
-            dispatch: null);
+        CredentialNativeFailedManualPhaseEvidence? rawManual = ObserveManualPhase(
+            assignment.Assignment, helper);
+        CredentialNativeQualificationPhaseEvidence evidence;
+        try
+        {
+            evidence = Capture(
+                phaseId,
+                assignment.Assignment,
+                bootstrap.Bootstrap,
+                helper,
+                projection,
+                dispatch: null);
+        }
+        catch (Exception exception)
+        {
+            PromoteManualFailure(rawManual, ClassifyValidationFailure(exception));
+            throw;
+        }
         Add(scenarioId, evidence);
         return evidence;
     }
@@ -685,19 +737,35 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
             || !process.ProcessTreeTerminated
             || process.RetryAttempted)
         {
-            throw new InvalidDataException("The qualification helper violated its process, handle, network, or retry boundary.");
+            throw ValidationFailure(
+                CredentialNativeManualValidationStage.ProcessJobBoundary,
+                "process-job-boundary-rejected");
         }
-        IReadOnlyList<CredentialNativeCallTraceEntry> trace = ParseAndValidateTrace(
-            process.NativeCallTraceBytes,
-            process.NativeCredentialOperationCount,
-            requireTrace: expectedInheritedPrivateHandleCount == 2);
+        IReadOnlyList<CredentialNativeCallTraceEntry> trace;
+        try
+        {
+            trace = ParseAndValidateTrace(
+                process.NativeCallTraceBytes,
+                process.NativeCredentialOperationCount,
+                requireTrace: expectedInheritedPrivateHandleCount == 2);
+        }
+        catch (Exception exception) when (exception is InvalidDataException
+            or System.Text.Json.JsonException or NotSupportedException)
+        {
+            throw ValidationFailure(
+                CredentialNativeManualValidationStage.NativeTrace,
+                "native-trace-rejected",
+                exception);
+        }
         string profileId = assignment.AccessProfileId?.Value
             ?? throw new InvalidDataException("Qualification evidence requires an exact profile identity.");
         string generationId = assignment.GenerationId?.Value
             ?? throw new InvalidDataException("Qualification evidence requires an exact generation identity.");
         if (trace.Any(item => item.Scenario != assignment.AssignmentId))
         {
-            throw new InvalidDataException("A native call trace is not bound to its exact assignment phase.");
+            throw ValidationFailure(
+                CredentialNativeManualValidationStage.ExactTarget,
+                "trace-assignment-binding-rejected");
         }
         HashSet<string> allowedFingerprints = [];
         if (targetFingerprints.TryGetValue(profileId + "/" + generationId, out string? expectedFingerprint))
@@ -714,18 +782,46 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
         if (allowedFingerprints.Count > 0
             && trace.Any(item => !allowedFingerprints.Contains(item.TargetFingerprintSha256)))
         {
-            throw new InvalidDataException("A native call trace escaped its exact manifest target.");
+            throw ValidationFailure(
+                CredentialNativeManualValidationStage.ExactTarget,
+                "trace-target-binding-rejected");
         }
-        CredentialNativeCanaryEvidence? canaries = ParseCanaries(
-            process.NativeCanaryEvidenceBytes,
-            requireEvidence: expectedInheritedPrivateHandleCount == 2);
-        CredentialNativeEntryCleanupEvidence? entryCleanup = ParseEntryCleanup(process.NativeEntryCleanupBytes);
+        CredentialNativeCanaryEvidence? canaries;
+        try
+        {
+            canaries = ParseCanaries(
+                process.NativeCanaryEvidenceBytes,
+                requireEvidence: expectedInheritedPrivateHandleCount == 2);
+        }
+        catch (Exception exception) when (exception is InvalidDataException
+            or System.Text.Json.JsonException or NotSupportedException)
+        {
+            throw ValidationFailure(
+                CredentialNativeManualValidationStage.Canary,
+                "canary-evidence-rejected",
+                exception);
+        }
+        CredentialNativeEntryCleanupEvidence? entryCleanup;
+        try
+        {
+            entryCleanup = ParseEntryCleanup(process.NativeEntryCleanupBytes);
+        }
+        catch (Exception exception) when (exception is InvalidDataException
+            or System.Text.Json.JsonException or NotSupportedException)
+        {
+            throw ValidationFailure(
+                CredentialNativeManualValidationStage.ManualUi,
+                "entry-cleanup-json-rejected",
+                exception);
+        }
         bool manualEntry = expectedInheritedPrivateHandleCount == 2
             && RequiresManualEntryEvidence(assignment.AssignmentId, assignment.AssignmentKind);
         bool invalidManualEntry = manualEntry
             && (entryCleanup is null || !entryCleanup.InitialBlank || !entryCleanup.Terminal
                 || !entryCleanup.WindowDestroyed || !entryCleanup.BuffersCleared
                 || !entryCleanup.ThreadJoined || !entryCleanup.ClipboardMessagesBlocked
+                || entryCleanup.PreReadinessTerminalMessages < 0
+                || entryCleanup.PreReadinessIgnoredMessages < 0
                 || entryCleanup.Readiness is not
                 {
                     InteractiveInputDesktop: true,
@@ -814,21 +910,9 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
                 || entryCleanup.Action is not ("submit" or "cancel"));
         if (invalidManualEntry)
         {
-            string disposition = ClassifyManualPhaseFailure(
-                process.Receipt.Outcome,
-                entryCleanup?.InitialBlank,
-                entryCleanup?.Readiness is not null,
-                trace.Count(item => item.Operation == "CredWriteW"),
-                trace.Count);
-            failedManualPhase = new(
-                assignment.AssignmentId,
-                process.Receipt.Outcome,
-                process.ProcessId,
-                trace.Count(item => item.Operation == "CredWriteW"),
-                trace.Count,
-                entryCleanup,
-                disposition);
-            throw new InvalidDataException("A manual native entry phase lacks exact UI cleanup evidence.");
+            throw ValidationFailure(
+                CredentialNativeManualValidationStage.ManualUi,
+                "entry-cleanup-semantic-rejected");
         }
         CredentialNativeProcessEvidence processEvidence = new(
             process.ProcessId,
@@ -916,6 +1000,212 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
             ? "failed-prewrite-ui-readiness"
             : "failed-manual-phase-evidence-validation";
 
+    private static readonly HashSet<string> ManualAssignmentIds = new(
+        [
+            "wp4-v2/interactive-entry-submit/submit",
+            "wp4-v2/interactive-entry-cancel/cancel",
+            "wp4-v2/backup-restore-reauthentication/restored-new-generation",
+        ],
+        StringComparer.Ordinal);
+
+    private static CredentialNativeFailedManualPhaseEvidence? ObserveManualPhase(
+        HelperAssignmentV2 assignment,
+        CoordinatedHelperReceipt helper)
+    {
+        HelperProcessReceipt process = helper.Process;
+        if (!ManualAssignmentIds.Contains(assignment.AssignmentId))
+        {
+            return null;
+        }
+
+        // This is deliberately nonthrowing and is the first operation after a
+        // manual helper result returns. It preserves raw, sanitized facts even
+        // when every later semantic validator rejects the phase.
+        CredentialNativeEntryCleanupEvidence? entryCleanup = null;
+        string entryParse = "absent";
+        if (process.NativeEntryCleanupBytes is not null)
+        {
+            try
+            {
+                entryCleanup = System.Text.Json.JsonSerializer.Deserialize<CredentialNativeEntryCleanupEvidence>(
+                    process.NativeEntryCleanupBytes, TraceJsonOptions);
+                entryParse = entryCleanup is null ? "json-null" : "parsed";
+            }
+            catch (Exception exception)
+            {
+                entryParse = "malformed-" + exception.GetType().Name;
+            }
+        }
+        CredentialNativeCallTraceEntry[] rawTrace = [];
+        string traceParse = "absent";
+        bool traceCanonical = false;
+        if (process.NativeCallTraceBytes is not null)
+        {
+            try
+            {
+                rawTrace = ParseAndValidateTrace(
+                    process.NativeCallTraceBytes,
+                    process.NativeCredentialOperationCount,
+                    requireTrace: true).ToArray();
+                traceCanonical = true;
+                traceParse = "canonical-validated";
+            }
+            catch (Exception exception)
+            {
+                traceParse = "malformed-" + exception.GetType().Name;
+            }
+        }
+        string canaryParse = "absent";
+        if (process.NativeCanaryEvidenceBytes is not null)
+        {
+            try
+            {
+                CredentialNativeCanaryEvidence? parsed =
+                    System.Text.Json.JsonSerializer.Deserialize<CredentialNativeCanaryEvidence>(
+                    process.NativeCanaryEvidenceBytes, TraceJsonOptions);
+                canaryParse = parsed is null ? "json-null" : "parsed";
+            }
+            catch (Exception exception)
+            {
+                canaryParse = "malformed-" + exception.GetType().Name;
+            }
+        }
+        int writes = traceCanonical
+            ? rawTrace.Count(item => item.Operation == "CredWriteW")
+            : -1;
+        int retainedTraceCount = traceCanonical ? rawTrace.Length : -1;
+        return new(
+            assignment.AssignmentId,
+            process.Receipt.Outcome,
+            process.ProcessId,
+            writes,
+            retainedTraceCount,
+            entryCleanup,
+            StagingEvidence(helper.Staging),
+            traceCanonical ? ClassifyManualPhaseFailure(
+                process.Receipt.Outcome,
+                entryCleanup?.InitialBlank,
+                entryCleanup?.Readiness is not null,
+                writes,
+                rawTrace.Length) : "failed-manual-phase-trace-unvalidated",
+            process.NativeCredentialOperationCount,
+            ByteLength(process.NativeEntryCleanupBytes),
+            ByteHash(process.NativeEntryCleanupBytes),
+            entryParse,
+            ByteLength(process.NativeCallTraceBytes),
+            ByteHash(process.NativeCallTraceBytes),
+            traceParse,
+            ByteLength(process.NativeCanaryEvidenceBytes),
+            ByteHash(process.NativeCanaryEvidenceBytes),
+            canaryParse,
+            process.ExitCode,
+            process.InheritedPrivateHandleCount,
+            process.StandardProtocolHandleCount,
+            process.ListenerCount,
+            process.NetworkOperationCount,
+            process.ProcessTreeSurvivorCount,
+            process.ProcessTreeTerminated,
+            process.RetryAttempted,
+            process.ContainmentProbeExecuted,
+            process.ExcludedHandleAccessible,
+            process.ActiveProcessCountBeforeJobClose,
+            process.TotalContainedProcessCount,
+            process.NativeNamespaceReuseBlocked,
+            process.NativeNamespaceReuseBlockReason,
+            traceCanonical,
+            "raw-observation",
+            "pending-validation");
+    }
+
+    private void PromoteManualFailure(
+        CredentialNativeFailedManualPhaseEvidence? raw,
+        (CredentialNativeManualValidationStage Stage, string ReasonCode) failure)
+    {
+        if (raw is null)
+        {
+            return;
+        }
+        failedManualPhase = raw with
+        {
+            ValidationStage = failure.Stage.ToString(),
+            ValidationReason = failure.ReasonCode,
+        };
+    }
+
+    private static (CredentialNativeManualValidationStage Stage, string ReasonCode)
+        ClassifyValidationFailure(Exception exception) =>
+            exception.Data[nameof(CredentialNativeManualValidationStage)] is CredentialNativeManualValidationStage stage
+                && exception.Data["CredentialNativeManualValidationReasonCode"] is string reasonCode
+            ? (stage, reasonCode)
+            : (CredentialNativeManualValidationStage.PhaseCapture,
+                "typed-" + exception.GetType().Name);
+
+    private static int ByteLength(byte[]? value) => value?.Length ?? 0;
+
+    private static InvalidDataException ValidationFailure(
+        CredentialNativeManualValidationStage stage,
+        string reasonCode,
+        Exception? innerException = null)
+    {
+        InvalidDataException failure = new(
+            "A qualification phase failed a typed evidence-validation stage.",
+            innerException);
+        failure.Data[nameof(CredentialNativeManualValidationStage)] = stage;
+        failure.Data["CredentialNativeManualValidationReasonCode"] = reasonCode;
+        return failure;
+    }
+
+    private static string? ByteHash(byte[]? value) => value is null
+        ? null
+        : Convert.ToHexStringLower(SHA256.HashData(value));
+
+    internal void ObserveThenRejectManualPhaseForTest(
+        HelperAssignmentV2 assignment,
+        CoordinatedHelperReceipt helper,
+        CredentialNativeManualValidationStage stage,
+        string reasonCode)
+    {
+        CredentialNativeFailedManualPhaseEvidence? raw = ObserveManualPhase(assignment, helper);
+        PromoteManualFailure(raw, (stage, reasonCode));
+    }
+
+    internal void CaptureManualPhaseForTest(
+        string phaseId,
+        HelperPrivateFrameV2 bootstrap,
+        HelperPrivateFrameV2 assignment,
+        CoordinatedHelperReceipt helper,
+        CredentialProfileProjection? projection = null)
+    {
+        CredentialNativeFailedManualPhaseEvidence? raw = ObserveManualPhase(
+            assignment.Assignment, helper);
+        try
+        {
+            _ = Capture(
+                phaseId,
+                assignment.Assignment,
+                bootstrap.Bootstrap,
+                helper,
+                projection,
+                dispatch: null);
+        }
+        catch (Exception exception)
+        {
+            PromoteManualFailure(raw, ClassifyValidationFailure(exception));
+            throw;
+        }
+    }
+
+    internal CredentialNativeFailedManualPhaseEvidence? FailedManualPhaseForTest => failedManualPhase;
+
+    private static CredentialNativeStagingEvidence StagingEvidence(HelperStagingReceipt staging) => new(
+        staging.AttemptId,
+        staging.ByteLength,
+        staging.Sha256,
+        staging.ResponseByteLength,
+        staging.ResponseSha256,
+        staging.StagedBeforeAdmission,
+        staging.CoordinatorOnlyAdmission);
+
     internal static bool IsActionSourceBindingValid(string? action, string? source) =>
         source switch
         {
@@ -1000,10 +1290,15 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
             }
             return [];
         }
-        CredentialNativeCallTraceEntry[] trace = System.Text.Json.JsonSerializer.Deserialize<CredentialNativeCallTraceEntry[]>(
+        CredentialNativeCallTraceEntry?[] parsed = System.Text.Json.JsonSerializer.Deserialize<CredentialNativeCallTraceEntry?[]>(
             canonicalTraceBytes,
             TraceJsonOptions)
             ?? throw new InvalidDataException("The canonical native call trace is absent.");
+        if (parsed.Any(item => item is null))
+        {
+            throw new InvalidDataException("The canonical native call trace contains a null entry.");
+        }
+        CredentialNativeCallTraceEntry[] trace = parsed.Select(item => item!).ToArray();
         Dictionary<long, CredentialNativeCallTraceEntry> allocations = [];
         HashSet<long> freed = [];
         HashSet<string> allowed = ["CredWriteW", "CredReadW", "CredDeleteW", "CredFree"];

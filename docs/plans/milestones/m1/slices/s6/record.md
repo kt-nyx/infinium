@@ -4990,3 +4990,39 @@ readiness or action fact is not proven: although the helper staged a typed
 lost-detail path is a bounded non-native correction requirement; this record
 does not infer a more specific trigger from timing alone.
 WP4_V2_NATIVE_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-authorization/e0cb0693-f482-433d-a3d4-3ee40ce7e2db sha256=3fbb8b53245064f90ecbe43ed4df4f87bb82b5c3bce431925d08df6c9bf7e78a execution_head_commit=8c5b25ebe5ddd7c2e8557697e44fb4539380e3e0 status=failed-primary-cleanup-confirmed native_calls=14 namespace_blocked=false later_native_calls=0 evidence_sha256=76c4f2dcc646b6b5db3a9cd8ee214d48208b53fa63b3a5fe51920ee876e8d9a9
+
+## WP4 brief-dialog correction — 2026-08-13
+
+Independent post-effect review accepted the `e0cb0693` cleanup and absence
+proof but correctly rejected the qualification. The owner-observed brief
+window exposed two additional implementation defects. The readiness loop did
+not dispatch owned activation, focus, and paint messages before its short
+deadline, so a denied programmatic foreground request could not be repaired by
+the user. In addition, Win32 button `BN_CLICKED` commands are sent
+synchronously to the parent window procedure during dispatch; the old queue
+inspection could not receive those commands, so visible Submit/Cancel buttons
+were not functional through the mouse. Extending a timer alone would not
+correct either defect.
+
+The bounded non-native correction pumps at most one owned, non-content,
+non-terminal message before each readiness remeasurement. Foreign messages,
+edit content, and terminal input are rejected before activation and counted;
+the readiness deadline is a finite 10 seconds. The owned parent window
+procedure now validates exact `WM_COMMAND`, `BN_CLICKED`, parent HWND, and
+button HWND, retains pre-readiness clicks without carrying them forward, and
+uses one shared first-wins action authority with foreground edit-key input.
+Sent button commands observed while `PeekMessage` runs are consumed before the
+returned queued message, preserving actual event order.
+
+The evidence path now takes a nonthrowing sanitized raw observation immediately
+after every manual helper return, before process, trace, target, canary, UI, or
+lifecycle validation. It retains raw artifact lengths and SHA-256 values,
+best-effort parse states, independently canonical trace/count status, exact
+staging/process/Job facts, UI readiness/action facts when parsable, namespace
+block state, and typed fixed validation stage/reason codes. Malformed or
+unvalidated traces never claim W0 or the specialized prewrite disposition.
+Safe mutation tests cover process/containment rejection, malformed/null/order
+trace, exact-target drift, malformed and semantically failed canaries,
+malformed UI evidence, negative pre-readiness counters, and an expected helper
+outcome rejected by a later oracle. No native credential, provider, network,
+or private operation occurred during this correction.

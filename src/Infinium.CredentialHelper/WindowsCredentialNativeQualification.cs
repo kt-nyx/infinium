@@ -1263,6 +1263,7 @@ internal static class NativeCanaryScanner
 
 internal static class NativeMaskedEntryDialog
 {
+    internal static readonly TimeSpan ReadinessDeadline = TimeSpan.FromSeconds(10);
     private const uint WsOverlapped = 0x00000000;
     private const uint WsCaption = 0x00C00000;
     private const uint WsSysMenu = 0x00080000;
@@ -1309,6 +1310,7 @@ internal static class NativeMaskedEntryDialog
         Exception? failure = null;
         NativeEntryTerminalState terminal = NativeEntryTerminalState.Failed;
         NativeEntryStateMachine state = new();
+        NativeEntryWindowCommandRouter commandRouter = new();
         uint nativeThreadId = 0;
         nint activeWindow = 0;
         Thread thread = new(() =>
@@ -1331,8 +1333,15 @@ internal static class NativeMaskedEntryDialog
                 nint module = GetModuleHandleW(null);
                 RequireMatchingWindowClassInstance(module, module);
                 windowClass = $"InfiniumWp4Entry-{Environment.ProcessId}-{nativeThreadId}";
-                windowProcedure = static (handle, message, wParam, lParam) =>
-                    DefWindowProcW(handle, message, wParam, lParam);
+                windowProcedure = (handle, message, wParam, lParam) =>
+                {
+                    if (commandRouter.Route(
+                        message, handle, wParam, lParam, window, submit, cancel))
+                    {
+                        return 0;
+                    }
+                    return DefWindowProcW(handle, message, wParam, lParam);
+                };
                 WindowClassEx windowClassDefinition = new()
                 {
                     Size = checked((uint)Marshal.SizeOf<WindowClassEx>()),
@@ -1404,8 +1413,28 @@ internal static class NativeMaskedEntryDialog
                 Stopwatch readinessTimer = Stopwatch.StartNew();
                 NativeEntryReadinessEvidence? readiness = null;
                 NativeEntryReadinessEvidence? lastReadiness = null;
-                while (readinessTimer.Elapsed < TimeSpan.FromSeconds(3))
+                while (readinessTimer.Elapsed < ReadinessDeadline)
                 {
+                    while (PeekMessageW(out NativeMessage message, 0, 0, 0, PmRemove))
+                    {
+                        PreReadinessMessageDisposition disposition = ClassifyPreReadinessMessage(
+                            message.Message, message.Window, message.WParam, message.LParam,
+                            window, instruction, edit, submit, cancel);
+                        if (disposition == PreReadinessMessageDisposition.RejectTerminal)
+                        {
+                            state.RecordPreReadinessTerminalMessage();
+                            break;
+                        }
+                        if (disposition is PreReadinessMessageDisposition.IgnoreUnowned
+                            or PreReadinessMessageDisposition.RejectEditContent)
+                        {
+                            state.RecordPreReadinessIgnoredMessage();
+                            break;
+                        }
+                        _ = TranslateMessage(in message);
+                        _ = DispatchMessageW(in message);
+                        break;
+                    }
                     _ = SetWindowPos(window, HwndTopmost, 0, 0, 0, 0,
                         SwpNoMove | SwpNoSize | SwpShowWindow);
                     _ = SetWindowPos(window, HwndNotTopmost, 0, 0, 0, 0,
@@ -1440,6 +1469,8 @@ internal static class NativeMaskedEntryDialog
                 }
                 if (readiness is null)
                 {
+                    state.RecordPreReadinessTerminalMessages(
+                        commandRouter.DrainPreReadinessRejectedCount(), requireActive: false);
                     state.RecordFailedReadiness(lastReadiness
                         ?? throw new InvalidDataException("Native entry readiness could not be measured."));
                     throw new InvalidDataException(
@@ -1448,25 +1479,48 @@ internal static class NativeMaskedEntryDialog
                 state.RecordReadiness(readiness);
                 state.Activate(GetWindowTextLengthW(edit));
                 state.RecordClipboardMessageBlocked();
+                state.RecordPreReadinessTerminalMessages(
+                    commandRouter.DrainPreReadinessRejectedCount(), requireActive: true);
+                commandRouter.Enable();
                 Stopwatch timer = Stopwatch.StartNew();
                 while (timer.Elapsed < deadline)
                 {
                     NativeEntryInteraction? requestedAction = null;
                     NativeEntryActionSource? actionSource = null;
+                    if (commandRouter.TryTake(out NativeEntryInteraction routedAction))
+                    {
+                        RecordFirstTerminalAction(
+                            ref requestedAction,
+                            ref actionSource,
+                            routedAction,
+                            routedAction == NativeEntryInteraction.Submit
+                                ? NativeEntryActionSource.SubmitButton
+                                : NativeEntryActionSource.CancelButton);
+                    }
                     while (PeekMessageW(out NativeMessage message, 0, 0, 0, PmRemove))
                     {
-                        if (IsOwnedButtonCommand(
-                            message.Message, message.Window, message.WParam, message.LParam,
-                            window, submit, cancel, out NativeEntryInteraction buttonAction))
+                        if (commandRouter.TryTake(out routedAction))
                         {
-                            if (requestedAction is null)
-                            {
-                                RecordFirstTerminalAction(
-                                    ref requestedAction, ref actionSource, buttonAction,
-                                    buttonAction == NativeEntryInteraction.Submit
+                            RecordFirstTerminalAction(
+                                ref requestedAction,
+                                ref actionSource,
+                                routedAction,
+                                routedAction == NativeEntryInteraction.Submit
                                     ? NativeEntryActionSource.SubmitButton
                                     : NativeEntryActionSource.CancelButton);
-                            }
+                        }
+                        if (ShouldStopMessageDrain(requestedAction))
+                        {
+                            break;
+                        }
+                        if (IsOwnedButtonCommand(
+                            message.Message, message.Window, message.WParam, message.LParam,
+                            window, submit, cancel, out _))
+                        {
+                            _ = commandRouter.Route(
+                                message.Message, message.Window, message.WParam, message.LParam,
+                                window, submit, cancel);
+                            continue;
                         }
                         else if (message.Message == WmKeyDown && message.Window == edit
                             && GetForegroundWindow() == window && GetFocus() == edit)
@@ -1487,6 +1541,16 @@ internal static class NativeMaskedEntryDialog
                         }
                         _ = TranslateMessage(in message);
                         _ = DispatchMessageW(in message);
+                        if (commandRouter.TryTake(out routedAction))
+                        {
+                            RecordFirstTerminalAction(
+                                ref requestedAction,
+                                ref actionSource,
+                                routedAction,
+                                routedAction == NativeEntryInteraction.Submit
+                                    ? NativeEntryActionSource.SubmitButton
+                                    : NativeEntryActionSource.CancelButton);
+                        }
                     }
                     if (!IsWindow(window))
                     {
@@ -1652,6 +1716,53 @@ internal static class NativeMaskedEntryDialog
     internal static bool ShouldStopMessageDrain(NativeEntryInteraction? selectedAction) =>
         selectedAction is not null;
 
+    internal static bool IsPreReadinessTerminalMessage(
+        uint message,
+        nint messageWindow,
+        nuint wParam,
+        nint lParam,
+        nint ownerWindow,
+        nint edit,
+        nint submitButton,
+        nint cancelButton) =>
+        IsOwnedButtonCommand(
+            message, messageWindow, wParam, lParam,
+            ownerWindow, submitButton, cancelButton, out _)
+        || message == WmKeyDown && messageWindow == edit && wParam is VkReturn or VkEscape;
+
+    internal static bool IsPreReadinessEditContentMessage(uint message, nint messageWindow, nint edit) =>
+        messageWindow == edit && message is WmKeyDown or 0x0101 or 0x0102 or 0x0103;
+
+    internal static PreReadinessMessageDisposition ClassifyPreReadinessMessage(
+        uint message,
+        nint messageWindow,
+        nuint wParam,
+        nint lParam,
+        nint ownerWindow,
+        nint instruction,
+        nint edit,
+        nint submitButton,
+        nint cancelButton)
+    {
+        if (IsPreReadinessTerminalMessage(
+            message, messageWindow, wParam, lParam,
+            ownerWindow, edit, submitButton, cancelButton))
+        {
+            return PreReadinessMessageDisposition.RejectTerminal;
+        }
+        if (messageWindow != ownerWindow
+            && messageWindow != instruction
+            && messageWindow != edit
+            && messageWindow != submitButton
+            && messageWindow != cancelButton)
+        {
+            return PreReadinessMessageDisposition.IgnoreUnowned;
+        }
+        return IsPreReadinessEditContentMessage(message, messageWindow, edit)
+            ? PreReadinessMessageDisposition.RejectEditContent
+            : PreReadinessMessageDisposition.DispatchOne;
+    }
+
     private static NativeEntryReadinessEvidence MeasureReadiness(
         nint window,
         nint instruction,
@@ -1706,7 +1817,7 @@ internal static class NativeMaskedEntryDialog
             GetFocus() == cancel,
             GetForegroundWindow() == window,
             GetFocus() == edit,
-            3_000,
+            checked((long)ReadinessDeadline.TotalMilliseconds),
             checked((long)elapsed.TotalMilliseconds));
     }
 
@@ -1893,6 +2004,76 @@ internal static class NativeMaskedEntryDialog
 internal enum NativeEntryTerminalState { Submitted, Cancelled, TimedOut, Failed }
 internal enum NativeEntryInteraction { Submit, Cancel }
 internal enum NativeEntryActionSource { EditKey, SubmitButton, CancelButton }
+internal enum PreReadinessMessageDisposition { DispatchOne, RejectTerminal, RejectEditContent, IgnoreUnowned }
+
+internal sealed class NativeEntryWindowCommandRouter
+{
+    private readonly object gate = new();
+    private bool enabled;
+    private NativeEntryInteraction? selected;
+    internal int PreReadinessRejectedCount { get; private set; }
+
+    internal int DrainPreReadinessRejectedCount()
+    {
+        lock (gate)
+        {
+            int result = PreReadinessRejectedCount;
+            PreReadinessRejectedCount = 0;
+            return result;
+        }
+    }
+
+    internal void Enable()
+    {
+        lock (gate)
+        {
+            enabled = true;
+            selected = null;
+        }
+    }
+
+    internal bool Route(
+        uint message,
+        nint messageWindow,
+        nuint wParam,
+        nint lParam,
+        nint ownerWindow,
+        nint submitButton,
+        nint cancelButton)
+    {
+        if (!NativeMaskedEntryDialog.IsOwnedButtonCommand(
+            message, messageWindow, wParam, lParam,
+            ownerWindow, submitButton, cancelButton, out NativeEntryInteraction interaction))
+        {
+            return false;
+        }
+        lock (gate)
+        {
+            if (!enabled)
+            {
+                PreReadinessRejectedCount = checked(PreReadinessRejectedCount + 1);
+                return true;
+            }
+            selected ??= interaction;
+            return true;
+        }
+    }
+
+    internal bool TryTake(out NativeEntryInteraction interaction)
+    {
+        lock (gate)
+        {
+            if (selected is not NativeEntryInteraction value)
+            {
+                interaction = default;
+                return false;
+            }
+            interaction = value;
+            selected = null;
+            return true;
+        }
+    }
+}
 
 internal sealed class NativeEntryCapture(
     byte[] secret,
@@ -1930,12 +2111,42 @@ internal sealed class NativeEntryStateMachine
     private NativeEntryReadinessEvidence? actionReadiness;
     private NativeEntryActionSource? actionSource;
     private NativeEntryInteraction? action;
+    private int preReadinessTerminalMessages;
+    private int preReadinessIgnoredMessages;
     public bool InitialBlank { get; private set; }
 
     public NativeEntryCleanupEvidence Evidence => new(
         InitialBlank, terminal, windowDestroyed, buffersCleared, threadJoined,
         clipboardMessagesBlocked, readiness, actionReadiness,
-        actionSource?.ToString().ToLowerInvariant(), action?.ToString().ToLowerInvariant());
+        actionSource?.ToString().ToLowerInvariant(), action?.ToString().ToLowerInvariant(),
+        preReadinessTerminalMessages, preReadinessIgnoredMessages);
+
+    public void RecordPreReadinessTerminalMessage()
+    {
+        if (active || terminal)
+        {
+            throw new InvalidOperationException("Pre-readiness terminal input can only be retained before activation.");
+        }
+        preReadinessTerminalMessages = checked(preReadinessTerminalMessages + 1);
+    }
+
+    public void RecordPreReadinessTerminalMessages(int count, bool requireActive)
+    {
+        if (terminal || count < 0 || requireActive != active)
+        {
+            throw new InvalidOperationException("Routed pre-readiness terminal input must be retained at activation.");
+        }
+        preReadinessTerminalMessages = checked(preReadinessTerminalMessages + count);
+    }
+
+    public void RecordPreReadinessIgnoredMessage()
+    {
+        if (active || terminal)
+        {
+            throw new InvalidOperationException("Pre-readiness ignored input can only be retained before activation.");
+        }
+        preReadinessIgnoredMessages = checked(preReadinessIgnoredMessages + 1);
+    }
 
     public void RecordReadiness(NativeEntryReadinessEvidence value)
     {
@@ -2250,7 +2461,9 @@ internal sealed record NativeEntryCleanupEvidence(
     NativeEntryReadinessEvidence? Readiness = null,
     NativeEntryReadinessEvidence? ActionReadiness = null,
     string? ActionSource = null,
-    string? Action = null);
+    string? Action = null,
+    int PreReadinessTerminalMessages = 0,
+    int PreReadinessIgnoredMessages = 0);
 
 internal sealed record NativeEntryReadinessEvidence(
     int OwnerProcessId,
@@ -2329,7 +2542,7 @@ internal sealed record NativeEntryReadinessEvidence(
             false,
             false,
             false,
-            3_000,
+            checked((long)NativeMaskedEntryDialog.ReadinessDeadline.TotalMilliseconds),
             0);
 }
 
