@@ -7,7 +7,11 @@ if ($PSVersionTable.PSEdition -ne 'Core') {
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
-$path = [IO.Path]::GetFullPath((Join-Path $root $ManifestPath))
+$path = if ([IO.Path]::IsPathFullyQualified($ManifestPath)) {
+    [IO.Path]::GetFullPath($ManifestPath)
+} else {
+    [IO.Path]::GetFullPath((Join-Path $root $ManifestPath))
+}
 $schema = Join-Path $root 'contracts/repository/wp4-credential-native-recovery.v1.schema.json'
 if (-not (Test-Json -LiteralPath $path -SchemaFile $schema)) { throw 'Recovery manifest schema failed.' }
 $bytes = [IO.File]::ReadAllBytes($path)

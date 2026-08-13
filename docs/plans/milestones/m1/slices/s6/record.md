@@ -4820,3 +4820,15 @@ The earlier 19/eight counts described an intermediate test revision and
 undercount the exact frozen suite. This correction changes no manifest,
 validator, gate, authority identity, native boundary, or execution status.
 WP4_RECOVERY_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-recovery/6a1e3f05-2189-46f8-8dff-48edb40496dc sha256=014d0f66463bd780d031718b88eba36f75efb5829afef78cb11383da24a374c4 close_ready_commit=2f46b14a3eda7b9e88b59d400c328d85a069f7dc expires_at_utc=2026-08-14T16:27:12.1021393Z
+
+The authorized `6a1e3f05` command refused before build, lock creation, helper
+launch, or any native credential call. The gate supplied the validator an
+absolute manifest path, but the validator incorrectly joined it to the
+repository root and produced a duplicated nonexistent path. The designated
+output root exists but is empty; its derived one-shot lock is absent. Helper,
+Credential Manager, DNS, network, provider, and billable operation counts are
+zero, and no repository-owned process survives. This authority and output are
+retired without retry despite the pre-effect classification. Absolute-path
+handling is corrected with an executable regression before any fresh recovery
+identity is prepared.
+WP4_RECOVERY_EXECUTED manifest_id=infinium.m1-s6.wp4.credential-native-recovery/6a1e3f05-2189-46f8-8dff-48edb40496dc sha256=014d0f66463bd780d031718b88eba36f75efb5829afef78cb11383da24a374c4 execution_head_commit=1bfb59aaec9b4c0ff5b2f8d5119cd5c954331be8 status=failed-pre-effect-validator-path native_calls=0 namespace_blocked=true later_native_calls=0

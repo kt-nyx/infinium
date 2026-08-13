@@ -374,6 +374,8 @@ public sealed class CredentialNativeAuthorizationTests
         string manifestPath = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
             "wp4-credential-native-recovery.v1.json");
         JsonObject valid = JsonNode.Parse(File.ReadAllBytes(manifestPath))!.AsObject();
+        Assert.AreEqual(0, RunPwsh(root, "eng/validate-m1-slice6-wp4-recovery.ps1",
+            "-ManifestPath", manifestPath), "The gate supplies an absolute manifest path.");
         AssertManifestValidation(root, valid, expectedSuccess: true);
         Reject(node => node["binding"]!["failed_manifest_sha256"] = new string('0', 64));
         Reject(node => node["disposable_namespace"]!["namespace_id"] = "mutated");
