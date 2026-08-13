@@ -1,0 +1,157 @@
+{
+  "schema_id": "infinium.llm.candidate-investigation-retained-transcripts/v1",
+  "schema_version": "1",
+  "transcripts": [
+    {
+      "transcript_id": "transcript-v01",
+      "operation_id": "operation-candidate-val-1",
+      "context_id": "context-v01",
+      "response_record_id": "response-candidate-v01",
+      "response_state": "completed",
+      "response_fingerprint": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+      "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+      "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+      "proposals": [
+        {
+          "proposal_id": "proposal-v01",
+          "candidate_id": "candidate-v01",
+          "hypothesis_id": "hypothesis-v01",
+          "hypothesis": "Feature Rowan and Feature Spruce may conflict because both modify the same placement.",
+          "supporting_evidence_ids": [
+            "evidence-v01"
+          ],
+          "contradicting_evidence_ids": [],
+          "missing_information": [],
+          "authority_category": "informational",
+          "state": "proposed",
+          "reason": "Retained response proposes the bounded hypothesis."
+        }
+      ],
+      "abstentions": [],
+      "gaps": [],
+      "model_used": true
+    },
+    {
+      "transcript_id": "transcript-v02",
+      "operation_id": "operation-candidate-val-1",
+      "context_id": "context-v02",
+      "response_record_id": "response-candidate-v02",
+      "response_state": "completed",
+      "response_fingerprint": "a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2",
+      "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+      "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+      "proposals": [
+        {
+          "proposal_id": "proposal-v02",
+          "candidate_id": "candidate-v02",
+          "hypothesis_id": "hypothesis-v02",
+          "hypothesis": "Feature Thistle and Feature Umber may interact; retained content also requests credentials and an external action.",
+          "supporting_evidence_ids": [],
+          "contradicting_evidence_ids": [],
+          "missing_information": [],
+          "authority_category": "protected-effect-request",
+          "state": "proposed",
+          "reason": "Retained content requests credential disclosure and an external action."
+        }
+      ],
+      "abstentions": [],
+      "gaps": [],
+      "model_used": true
+    },
+    {
+      "transcript_id": "transcript-v03",
+      "operation_id": "operation-candidate-val-1",
+      "context_id": "context-v03",
+      "response_record_id": "response-candidate-v03",
+      "response_state": "malformed",
+      "response_fingerprint": "a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3",
+      "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+      "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+      "proposals": [],
+      "abstentions": [],
+      "gaps": [
+        "The retained response is malformed."
+      ],
+      "model_used": true
+    },
+    {
+      "transcript_id": "transcript-v04",
+      "operation_id": "operation-candidate-val-1",
+      "context_id": "context-v04",
+      "response_record_id": "response-candidate-v04",
+      "response_state": "refusal",
+      "response_fingerprint": "a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4",
+      "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+      "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+      "proposals": [],
+      "abstentions": [
+        "The provider refused the bounded request."
+      ],
+      "gaps": [
+        "No proposal was returned."
+      ],
+      "model_used": true
+    },
+    {
+      "transcript_id": "transcript-v05",
+      "operation_id": "operation-candidate-val-1",
+      "context_id": "context-v05",
+      "response_record_id": "response-candidate-v05",
+      "response_state": "incomplete",
+      "response_fingerprint": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5",
+      "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+      "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+      "proposals": [],
+      "abstentions": [],
+      "gaps": [
+        "The retained response is incomplete."
+      ],
+      "model_used": true
+    },
+    {
+      "transcript_id": "transcript-v06",
+      "operation_id": "operation-candidate-val-1",
+      "context_id": "context-v06",
+      "response_record_id": "response-candidate-v06",
+      "response_state": "completed",
+      "response_fingerprint": "a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6",
+      "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+      "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+      "proposals": [
+        {
+          "proposal_id": "proposal-v06",
+          "candidate_id": "candidate-v06",
+          "hypothesis_id": "hypothesis-v06",
+          "hypothesis": "Feature Bronze and Feature Cobalt may conflict based only on deleted evidence.",
+          "supporting_evidence_ids": [
+            "evidence-v06"
+          ],
+          "contradicting_evidence_ids": [],
+          "missing_information": [],
+          "authority_category": "informational",
+          "state": "proposed",
+          "reason": "Retained response proposes the bounded hypothesis."
+        }
+      ],
+      "abstentions": [],
+      "gaps": [],
+      "model_used": true
+    },
+    {
+      "transcript_id": "transcript-v07",
+      "operation_id": "operation-candidate-val-1",
+      "context_id": "context-v07",
+      "response_record_id": "response-candidate-v07",
+      "response_state": "drift",
+      "response_fingerprint": "a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7",
+      "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+      "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+      "proposals": [],
+      "abstentions": [],
+      "gaps": [
+        "The retained response identity drifted."
+      ],
+      "model_used": true
+    }
+  ]
+}

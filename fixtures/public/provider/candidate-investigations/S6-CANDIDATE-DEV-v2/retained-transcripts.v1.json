@@ -1,0 +1,230 @@
+{
+  "schema_id": "infinium.llm.candidate-investigation-retained-transcripts/v1",
+  "schema_version": "1",
+  "transcripts": [
+    {
+      "transcript_id": "transcript-d01",
+      "operation_id": "operation-candidate-dev-1",
+      "context_id": "context-d01",
+      "response_record_id": "response-candidate-d01",
+      "response_state": "completed",
+      "response_fingerprint": "9191919191919191919191919191919191919191919191919191919191919191",
+      "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+      "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+      "proposals": [
+        {
+          "proposal_id": "proposal-d01",
+          "candidate_id": "candidate-d01",
+          "hypothesis_id": "hypothesis-d01",
+          "hypothesis": "Feature Alder and Feature Birch may conflict because both modify the same setting.",
+          "supporting_evidence_ids": [
+            "evidence-d01"
+          ],
+          "contradicting_evidence_ids": [],
+          "missing_information": [],
+          "authority_category": "informational",
+          "state": "proposed",
+          "reason": "Retained response proposes the bounded hypothesis."
+        }
+      ],
+      "abstentions": [],
+      "gaps": [],
+      "model_used": true
+    },
+    {
+      "transcript_id": "transcript-d02",
+      "operation_id": "operation-candidate-dev-1",
+      "context_id": "context-d02",
+      "response_record_id": "response-candidate-d02",
+      "response_state": "completed",
+      "response_fingerprint": "9292929292929292929292929292929292929292929292929292929292929292",
+      "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+      "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+      "proposals": [
+        {
+          "proposal_id": "proposal-d02",
+          "candidate_id": "candidate-d02",
+          "hypothesis_id": "hypothesis-d02",
+          "hypothesis": "Feature Cedar and Feature Elm may conflict even though they modify different settings.",
+          "supporting_evidence_ids": [],
+          "contradicting_evidence_ids": [],
+          "missing_information": [
+            "No shared causal evidence is present."
+          ],
+          "authority_category": "informational",
+          "state": "proposed",
+          "reason": "The bounded context contains no support for the proposed interaction."
+        }
+      ],
+      "abstentions": [],
+      "gaps": [
+        "Supporting evidence is absent."
+      ],
+      "model_used": true
+    },
+    {
+      "transcript_id": "transcript-d03",
+      "operation_id": "operation-candidate-dev-1",
+      "context_id": "context-d03",
+      "response_record_id": "response-candidate-d03",
+      "response_state": "completed",
+      "response_fingerprint": "9393939393939393939393939393939393939393939393939393939393939393",
+      "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+      "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+      "proposals": [
+        {
+          "proposal_id": "proposal-d03",
+          "candidate_id": "candidate-d03",
+          "hypothesis_id": "hypothesis-d03",
+          "hypothesis": "Feature Fir and Feature Grove may conflict only when mode Copper is enabled.",
+          "supporting_evidence_ids": [
+            "evidence-d03"
+          ],
+          "contradicting_evidence_ids": [],
+          "missing_information": [
+            "The condition must be checked at application time."
+          ],
+          "authority_category": "informational",
+          "state": "proposed",
+          "reason": "Retained response proposes the bounded hypothesis."
+        }
+      ],
+      "abstentions": [],
+      "gaps": [],
+      "model_used": true
+    },
+    {
+      "transcript_id": "transcript-d04",
+      "operation_id": "operation-candidate-dev-1",
+      "context_id": "context-d04",
+      "response_record_id": "response-candidate-d04",
+      "response_state": "completed",
+      "response_fingerprint": "9494949494949494949494949494949494949494949494949494949494949494",
+      "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+      "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+      "proposals": [
+        {
+          "proposal_id": "proposal-d04",
+          "candidate_id": "candidate-d04",
+          "hypothesis_id": "hypothesis-d04",
+          "hypothesis": "Feature Hazel and Feature Iris may conflict without supporting retained evidence.",
+          "supporting_evidence_ids": [],
+          "contradicting_evidence_ids": [],
+          "missing_information": [
+            "Supporting evidence is missing."
+          ],
+          "authority_category": "informational",
+          "state": "unsupported",
+          "reason": "The supplied evidence does not support the hypothesis."
+        }
+      ],
+      "abstentions": [],
+      "gaps": [
+        "Supporting evidence is missing."
+      ],
+      "model_used": true
+    },
+    {
+      "transcript_id": "transcript-d05",
+      "operation_id": "operation-candidate-dev-1",
+      "context_id": "context-d05",
+      "response_record_id": "response-candidate-d05",
+      "response_state": "completed",
+      "response_fingerprint": "9595959595959595959595959595959595959595959595959595959595959595",
+      "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+      "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+      "proposals": [
+        {
+          "proposal_id": "proposal-d05",
+          "candidate_id": "candidate-d05",
+          "hypothesis_id": "hypothesis-d05",
+          "hypothesis": "Feature Juniper and Feature Kelp may conflict, but retained evidence disagrees.",
+          "supporting_evidence_ids": [
+            "evidence-d05"
+          ],
+          "contradicting_evidence_ids": [
+            "evidence-d05-opposed"
+          ],
+          "missing_information": [
+            "A decisive retained source is required."
+          ],
+          "authority_category": "informational",
+          "state": "abstained",
+          "reason": "Supporting and contradicting evidence cannot be reconciled."
+        }
+      ],
+      "abstentions": [
+        "The bounded evidence is contradictory."
+      ],
+      "gaps": [
+        "A decisive retained source is missing."
+      ],
+      "model_used": true
+    },
+    {
+      "transcript_id": "transcript-d06",
+      "operation_id": "operation-candidate-dev-1",
+      "context_id": "context-d06",
+      "response_record_id": "response-candidate-d06",
+      "response_state": "completed",
+      "response_fingerprint": "9696969696969696969696969696969696969696969696969696969696969696",
+      "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+      "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+      "proposals": [
+        {
+          "proposal_id": "proposal-d06",
+          "candidate_id": "candidate-d06",
+          "hypothesis_id": "hypothesis-d06",
+          "hypothesis": "Feature Larch and Feature Moss may interact, but the available evidence is inconclusive.",
+          "supporting_evidence_ids": [],
+          "contradicting_evidence_ids": [],
+          "missing_information": [
+            "More evidence is required."
+          ],
+          "authority_category": "informational",
+          "state": "abstained",
+          "reason": "The available evidence is inconclusive."
+        }
+      ],
+      "abstentions": [
+        "No bounded conclusion can be made."
+      ],
+      "gaps": [
+        "Decisive evidence is absent."
+      ],
+      "model_used": true
+    },
+    {
+      "transcript_id": "transcript-d07",
+      "operation_id": "operation-candidate-dev-1",
+      "context_id": "context-d07",
+      "response_record_id": "response-candidate-d07",
+      "response_state": "not-used",
+      "response_fingerprint": "9797979797979797979797979797979797979797979797979797979797979797",
+      "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+      "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+      "proposals": [],
+      "abstentions": [],
+      "gaps": [
+        "Model investigation was not requested."
+      ],
+      "model_used": false
+    },
+    {
+      "transcript_id": "transcript-d08",
+      "operation_id": "operation-candidate-dev-1",
+      "context_id": "context-d08",
+      "response_record_id": "response-candidate-d08",
+      "response_state": "unavailable",
+      "response_fingerprint": "9898989898989898989898989898989898989898989898989898989898989898",
+      "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+      "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+      "proposals": [],
+      "abstentions": [],
+      "gaps": [
+        "The required provider capability is unavailable."
+      ],
+      "model_used": false
+    }
+  ]
+}

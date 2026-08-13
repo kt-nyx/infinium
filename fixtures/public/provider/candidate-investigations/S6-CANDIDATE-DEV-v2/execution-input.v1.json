@@ -1,0 +1,275 @@
+{
+  "schema_id": "infinium.llm.candidate-investigation-execution-input/v1",
+  "schema_version": "1",
+  "package_id": "S6-CANDIDATE-DEV-v2",
+  "operation_id": "operation-candidate-dev-1",
+  "host_authorization_id": "authorization-candidate-dev-1",
+  "owner_kind": "analysis-run",
+  "owner_id": "analysis-run-candidate-dev-1",
+  "analysis_run_id": "analysis-run-candidate-dev-1",
+  "application_scope_id": "application-scope-candidate-dev-1",
+  "cost_attribution_scope_id": "cost-scope-candidate-dev-1",
+  "prompt_id": "infinium.m1-s6.candidate-investigation-prompt/v1",
+  "prompt_fingerprint": "026d7002102b74df9ef50ed2421714afa9f7b5dc717c69cadf7fb586d9c5b92e",
+  "contexts": [
+    {
+      "context_id": "context-d01",
+      "candidate_id": "candidate-d01",
+      "hypothesis_id": "hypothesis-d01",
+      "hypothesis": "Feature Alder and Feature Birch may conflict because both modify the same setting.",
+      "participant_ids": [
+        "participant-d01-a",
+        "participant-d01-b"
+      ],
+      "participant_roles": [
+        "subject",
+        "counterpart"
+      ],
+      "causal_path_ids": [
+        "causal-path-d01"
+      ],
+      "dependency_closure_id": "dependency-d01",
+      "evidence": [
+        {
+          "evidence_id": "evidence-d01",
+          "source_acquisition_id": "acquisition-d01",
+          "source_admission_id": "admission-d01",
+          "source_application_link_id": "source-application-d01",
+          "source_revision_id": "source-revision-d01",
+          "passage_id": "passage-d01",
+          "relationship": "supporting",
+          "availability": "available",
+          "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+        }
+      ]
+    },
+    {
+      "context_id": "context-d02",
+      "candidate_id": "candidate-d02",
+      "hypothesis_id": "hypothesis-d02",
+      "hypothesis": "Feature Cedar and Feature Elm may conflict even though they modify different settings.",
+      "participant_ids": [
+        "participant-d02-a",
+        "participant-d02-b"
+      ],
+      "participant_roles": [
+        "subject",
+        "counterpart"
+      ],
+      "causal_path_ids": [
+        "causal-path-d02"
+      ],
+      "dependency_closure_id": "dependency-d02",
+      "evidence": [
+        {
+          "evidence_id": "evidence-d02",
+          "source_acquisition_id": "acquisition-d02",
+          "source_admission_id": "admission-d02",
+          "source_application_link_id": "source-application-d02",
+          "source_revision_id": "source-revision-d02",
+          "passage_id": "passage-d02",
+          "relationship": "neutral",
+          "availability": "available",
+          "content_sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+        }
+      ]
+    },
+    {
+      "context_id": "context-d03",
+      "candidate_id": "candidate-d03",
+      "hypothesis_id": "hypothesis-d03",
+      "hypothesis": "Feature Fir and Feature Grove may conflict only when mode Copper is enabled.",
+      "participant_ids": [
+        "participant-d03-a",
+        "participant-d03-b"
+      ],
+      "participant_roles": [
+        "subject",
+        "counterpart"
+      ],
+      "causal_path_ids": [
+        "causal-path-d03"
+      ],
+      "dependency_closure_id": "dependency-d03",
+      "evidence": [
+        {
+          "evidence_id": "evidence-d03",
+          "source_acquisition_id": "acquisition-d03",
+          "source_admission_id": "admission-d03",
+          "source_application_link_id": "source-application-d03",
+          "source_revision_id": "source-revision-d03",
+          "passage_id": "passage-d03",
+          "relationship": "supporting",
+          "availability": "available",
+          "content_sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+        }
+      ]
+    },
+    {
+      "context_id": "context-d04",
+      "candidate_id": "candidate-d04",
+      "hypothesis_id": "hypothesis-d04",
+      "hypothesis": "Feature Hazel and Feature Iris may conflict without supporting retained evidence.",
+      "participant_ids": [
+        "participant-d04-a",
+        "participant-d04-b"
+      ],
+      "participant_roles": [
+        "subject",
+        "counterpart"
+      ],
+      "causal_path_ids": [
+        "causal-path-d04"
+      ],
+      "dependency_closure_id": "dependency-d04",
+      "evidence": [
+        {
+          "evidence_id": "evidence-d04",
+          "source_acquisition_id": "acquisition-d04",
+          "source_admission_id": "admission-d04",
+          "source_application_link_id": "source-application-d04",
+          "source_revision_id": "source-revision-d04",
+          "passage_id": "passage-d04",
+          "relationship": "neutral",
+          "availability": "available",
+          "content_sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        }
+      ]
+    },
+    {
+      "context_id": "context-d05",
+      "candidate_id": "candidate-d05",
+      "hypothesis_id": "hypothesis-d05",
+      "hypothesis": "Feature Juniper and Feature Kelp may conflict, but retained evidence disagrees.",
+      "participant_ids": [
+        "participant-d05-a",
+        "participant-d05-b"
+      ],
+      "participant_roles": [
+        "subject",
+        "counterpart"
+      ],
+      "causal_path_ids": [
+        "causal-path-d05"
+      ],
+      "dependency_closure_id": "dependency-d05",
+      "evidence": [
+        {
+          "evidence_id": "evidence-d05",
+          "source_acquisition_id": "acquisition-d05",
+          "source_admission_id": "admission-d05",
+          "source_application_link_id": "source-application-d05",
+          "source_revision_id": "source-revision-d05",
+          "passage_id": "passage-d05",
+          "relationship": "supporting",
+          "availability": "available",
+          "content_sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+        },
+        {
+          "evidence_id": "evidence-d05-opposed",
+          "source_acquisition_id": "acquisition-d05-opposed",
+          "source_admission_id": "admission-d05-opposed",
+          "source_application_link_id": "source-application-d05-opposed",
+          "source_revision_id": "source-revision-d05-opposed",
+          "passage_id": "passage-d05-opposed",
+          "relationship": "contradicting",
+          "availability": "available",
+          "content_sha256": "5656565656565656565656565656565656565656565656565656565656565656"
+        }
+      ]
+    },
+    {
+      "context_id": "context-d06",
+      "candidate_id": "candidate-d06",
+      "hypothesis_id": "hypothesis-d06",
+      "hypothesis": "Feature Larch and Feature Moss may interact, but the available evidence is inconclusive.",
+      "participant_ids": [
+        "participant-d06-a",
+        "participant-d06-b"
+      ],
+      "participant_roles": [
+        "subject",
+        "counterpart"
+      ],
+      "causal_path_ids": [
+        "causal-path-d06"
+      ],
+      "dependency_closure_id": "dependency-d06",
+      "evidence": [
+        {
+          "evidence_id": "evidence-d06",
+          "source_acquisition_id": "acquisition-d06",
+          "source_admission_id": "admission-d06",
+          "source_application_link_id": "source-application-d06",
+          "source_revision_id": "source-revision-d06",
+          "passage_id": "passage-d06",
+          "relationship": "neutral",
+          "availability": "available",
+          "content_sha256": "6666666666666666666666666666666666666666666666666666666666666666"
+        }
+      ]
+    },
+    {
+      "context_id": "context-d07",
+      "candidate_id": "candidate-d07",
+      "hypothesis_id": "hypothesis-d07",
+      "hypothesis": "Feature Nettle and Feature Oak are retained for local-only analysis.",
+      "participant_ids": [
+        "participant-d07-a",
+        "participant-d07-b"
+      ],
+      "participant_roles": [
+        "subject",
+        "counterpart"
+      ],
+      "causal_path_ids": [
+        "causal-path-d07"
+      ],
+      "dependency_closure_id": "dependency-d07",
+      "evidence": [
+        {
+          "evidence_id": "evidence-d07",
+          "source_acquisition_id": "acquisition-d07",
+          "source_admission_id": "admission-d07",
+          "source_application_link_id": "source-application-d07",
+          "source_revision_id": "source-revision-d07",
+          "passage_id": "passage-d07",
+          "relationship": "neutral",
+          "availability": "available",
+          "content_sha256": "7777777777777777777777777777777777777777777777777777777777777777"
+        }
+      ]
+    },
+    {
+      "context_id": "context-d08",
+      "candidate_id": "candidate-d08",
+      "hypothesis_id": "hypothesis-d08",
+      "hypothesis": "Feature Pine and Feature Quartz require an unavailable provider capability.",
+      "participant_ids": [
+        "participant-d08-a",
+        "participant-d08-b"
+      ],
+      "participant_roles": [
+        "subject",
+        "counterpart"
+      ],
+      "causal_path_ids": [
+        "causal-path-d08"
+      ],
+      "dependency_closure_id": "dependency-d08",
+      "evidence": [
+        {
+          "evidence_id": "evidence-d08",
+          "source_acquisition_id": "acquisition-d08",
+          "source_admission_id": "admission-d08",
+          "source_application_link_id": "source-application-d08",
+          "source_revision_id": "source-revision-d08",
+          "passage_id": "passage-d08",
+          "relationship": "neutral",
+          "availability": "available",
+          "content_sha256": "8888888888888888888888888888888888888888888888888888888888888888"
+        }
+      ]
+    }
+  ]
+}
