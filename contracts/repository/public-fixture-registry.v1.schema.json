@@ -5,14 +5,14 @@
   "additionalProperties": false,
   "required": ["schema_identity", "registry_version", "status", "package_count", "packages"],
   "properties": {
-    "schema_identity": { "const": "infinium.repository.public-fixture-registry/1.4.0" },
-    "registry_version": { "const": "1.4.0" },
+    "schema_identity": { "const": "infinium.repository.public-fixture-registry/1.5.0" },
+    "registry_version": { "const": "1.5.0" },
     "status": { "const": "current" },
-    "package_count": { "const": 33 },
+    "package_count": { "const": 34 },
     "packages": {
       "type": "array",
-      "minItems": 33,
-      "maxItems": 33,
+      "minItems": 34,
+      "maxItems": 34,
       "uniqueItems": true,
       "items": { "$ref": "#/$defs/package" }
     }

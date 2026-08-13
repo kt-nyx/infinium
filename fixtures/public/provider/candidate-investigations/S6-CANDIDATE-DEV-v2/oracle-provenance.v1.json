@@ -1,0 +1,22 @@
+{
+  "schema_id":"infinium.evaluation.candidate-investigation-oracle-provenance/v1","schema_version":"1","package_id":"S6-CANDIDATE-DEV-v2","partition":"development","authored_at_utc":"2026-08-13T04:39:27.6640288Z","author_role":"answer-isolated-wp7-mechanical-development-rebind-author",
+  "method":"strict mechanical identity rebind of unchanged S6-CANDIDATE-DEV-v1 semantic expectations to opaque d01-through-d08 answer-free identities before product comparison",
+  "input_commit":"b4219d34d96c329830716347b0b1e78a7e9b8122","source_oracle_commit":"91215663088b7a6c14a1f7581a75c6d853d56f76","source_package_id":"S6-CANDIDATE-DEV-v1","source_oracle_sha256":"2a0076871bceab70c32db234bd81b1b73be56b67c65a32a49b577d84432b47dd",
+  "product_output_used":false,"product_implementation_used":false,"actual_comparison_used":false,"fresh_validation_material_used":false,"private_or_held_out_material_used":false,"semantic_expectations_changed":false,
+  "identity_mapping":[
+    {"source":"positive","opaque":"d01"},{"source":"matched-negative","opaque":"d02"},{"source":"conditional","opaque":"d03"},{"source":"unsupported","opaque":"d04"},{"source":"contradiction","opaque":"d05"},{"source":"abstention","opaque":"d06"},{"source":"no-model","opaque":"d07"},{"source":"unavailable-provider","opaque":"d08"}
+  ],
+  "input_identities":{
+    "execution-input.v1.json":{"bytes":9549,"sha256":"7149aa58a7647e11e126cff50261af77836438ccc01971030fbfeb48a2449a52"},
+    "context-manifest.v1.json":{"bytes":1596,"sha256":"58fe55904639e9f131a24d8d6b9900a97b3ef235124cd880fa3bd05a3686db89"},
+    "retained-transcripts.v1.json":{"bytes":9003,"sha256":"a6d3e314bdf4e4079325b17848be68bbf468a77481fc8c893e9d4a408937df68"}
+  },
+  "coverage_audit":{"context_count":8,"transcript_count":8,"evidence_count":9,"referential_closure":"PASS","opaque_identity_sequence":["d01","d02","d03","d04","d05","d06","d07","d08"],"semantic_expectation_equivalence":"PASS","recursive_answer_isolation":"delegated to corrected product-independent fixture validation before comparison"},
+  "oracle_identity":{"bytes":11779,"sha256":"b50d380ad1bf5916becf81604294cc57873104ca5160270ff11bba0c21fadae3"},
+  "partition_history":[
+    {"state":"source-v1-development-evidence","reason":"v1 retained unchanged after answer-isolation review finding"},
+    {"state":"mechanically-rebound-development-v2","reason":"opaque identity-only rebind; semantic expectations unchanged"},
+    {"state":"frozen-development-v2","reason":"oracle fixed before any product comparison"}
+  ],
+  "replacement_rule":"This mechanically rebound development oracle is development evidence. It cannot substitute for the separately authored materially independent validation-v2 oracle."
+}
