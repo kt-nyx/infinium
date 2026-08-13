@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO.Pipes;
 using System.Runtime.InteropServices;
 using System.Text.Json;
+using Infinium.Application.Runtime;
 using Infinium.CredentialHelper;
 
 if (args is ["--credential-native-recovery", "--manifest", string recoveryManifest,
@@ -39,6 +40,46 @@ if (args is ["--credential-native-crash-probe", "--manifest", string crashManife
     return 66;
 }
 
+if (args is ["--native-failure-envelope-test-probe", "--request-handle", string probeRequestHandle,
+    "--response-handle", string probeResponseHandle,
+    "--assignment-id", string probeAssignmentId, "--target-fingerprint", string probeFingerprint]
+    && probeAssignmentId.Length is > 0 and <= 200
+    && probeFingerprint.Length == 64 && probeFingerprint.All(char.IsAsciiHexDigit))
+{
+    using AnonymousPipeClientStream request = new(PipeDirection.In, probeRequestHandle);
+    using AnonymousPipeClientStream response = new(PipeDirection.Out, probeResponseHandle);
+    ClearHandleInheritance(request.SafePipeHandle.DangerousGetHandle());
+    ClearHandleInheritance(response.SafePipeHandle.DangerousGetHandle());
+    Process descendant = Process.Start(new ProcessStartInfo
+    {
+        FileName = Environment.ProcessPath!,
+        UseShellExecute = false,
+        CreateNoWindow = true,
+        ArgumentList = { "--containment-descendant", "30000" },
+    }) ?? throw new InvalidOperationException("The test containment descendant could not start.");
+    string trace = JsonSerializer.Serialize(new[]
+    {
+        new NativeCallTraceEntry(1, "CredReadW", probeFingerprint, probeAssignmentId,
+            "ERROR_NOT_FOUND", null, null),
+    });
+    NativeCanaryEvidence canaries = new(
+        0, 0, ["utf-8", "utf-16le"],
+        [
+            new("private protocol request", "private-pipe-bytes", 0, 0, 0),
+            new("private protocol partial response", "private-pipe-bytes", 0, 0, 0),
+            new("native call trace", "canonical-trace-bytes", trace.Length, 0, 0),
+            new("process command line", "captured-text", 0, 0, 0),
+            new("process environment names", "captured-text", 0, 0, 0),
+        ]);
+    NativeHelperFailureEnvelope envelope = new(
+        "evidence-collection", "invalid-operation", true,
+        0, 1, 0, 0, 1, true, 0, 0, true, 0, 0, 0,
+        trace, null, JsonSerializer.Serialize(canaries),
+        false, true, descendant.Id, false, null);
+    await NativeHelperFailureProtocol.WriteAsync(response, envelope, CancellationToken.None);
+    return 71;
+}
+
 if (args is ["--credential-native-request-handle", string nativeRequestHandle,
     "--response-handle", string nativeResponseHandle,
     "--manifest", string nativeManifestPath,
@@ -50,59 +91,72 @@ if (args is ["--credential-native-request-handle", string nativeRequestHandle,
 {
     try
     {
-        nint excludedHandleProbe = 0;
-        bool spawnContainmentProbe = false;
-        if (nativeOptions is ["--excluded-handle-probe", string nativeExcluded,
-            "--spawn-containment-probe", "1"]
-            && nint.TryParse(nativeExcluded, System.Globalization.NumberStyles.Integer,
-                System.Globalization.CultureInfo.InvariantCulture, out nint parsedExcluded))
-        {
-            excludedHandleProbe = parsedExcluded;
-            spawnContainmentProbe = true;
-        }
-        else if (nativeOptions.Length != 0)
-        {
-            throw new InvalidDataException("Native qualification helper options are invalid.");
-        }
-        bool excludedHandleAccessible = excludedHandleProbe != 0
-            && GetHandleInformation(excludedHandleProbe, out _);
-        Process? descendant = null;
-        if (spawnContainmentProbe)
-        {
-            descendant = Process.Start(new ProcessStartInfo
-            {
-                FileName = Environment.ProcessPath!,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                ArgumentList = { "--containment-descendant", "30000" },
-            });
-        }
-        using AnonymousPipeClientStream request = new(PipeDirection.In, nativeRequestHandle);
         using AnonymousPipeClientStream response = new(PipeDirection.Out, nativeResponseHandle);
-        using RecordingReadStream recordedRequest = new(request);
-        using RecordingWriteStream recordedResponse = new(response);
-        using WindowsCredentialManagerStore store =
-            WindowsCredentialManagerStore.FromAcceptedManifest(
+        string failureStage = "handle-inheritance";
+        WindowsCredentialManagerStore? store = null;
+        NativeQualificationSecretSource? secretSource = null;
+        RecordingReadStream? recordedRequest = null;
+        RecordingWriteStream? recordedResponse = null;
+        Process? descendant = null;
+        string? canaryEvidenceJson = null;
+        try
+        {
+            ClearHandleInheritance(response.SafePipeHandle.DangerousGetHandle());
+            using AnonymousPipeClientStream request = new(PipeDirection.In, nativeRequestHandle);
+            ClearHandleInheritance(request.SafePipeHandle.DangerousGetHandle());
+            failureStage = "launch-boundary";
+            nint excludedHandleProbe = 0;
+            bool spawnContainmentProbe = false;
+            if (nativeOptions is ["--excluded-handle-probe", string nativeExcluded,
+                "--spawn-containment-probe", "1"]
+                && nint.TryParse(nativeExcluded, System.Globalization.NumberStyles.Integer,
+                    System.Globalization.CultureInfo.InvariantCulture, out nint parsedExcluded))
+            {
+                excludedHandleProbe = parsedExcluded;
+                spawnContainmentProbe = true;
+            }
+            else if (nativeOptions.Length != 0)
+            {
+                throw new InvalidDataException("Native qualification helper options are invalid.");
+            }
+            failureStage = "manifest-validation";
+            bool excludedHandleAccessible = excludedHandleProbe != 0
+                && GetHandleInformation(excludedHandleProbe, out _);
+            store = WindowsCredentialManagerStore.FromAcceptedManifest(
                 nativeManifestPath,
                 nativeManifestSha256,
                 nativeManifestId);
-        using NativeQualificationSecretSource secretSource = new();
-        OneShotHelperEngine engine = new(
-            store,
-            new FixedUtcTimeProvider(DateTimeOffset.FromUnixTimeMilliseconds(nativeAuthorityNowUnixMs)),
-            secretSource,
-            allowSyntheticProviderDispatch: true);
-        using CancellationTokenSource deadline = new(TimeSpan.FromSeconds(1650));
-        await engine.RunAsync(recordedRequest, recordedResponse, deadline.Token);
-        (int listeners, int networkOperations) = NetworkMeasurement.MeasureCurrentProcessTcp();
-        byte[] traceBytes = JsonSerializer.SerializeToUtf8Bytes(store.CallTrace);
-        NativeRawTargetCanary[] rawTargets = store.RawTargetCanaries.ToArray();
-        NativeCanaryEvidence canaries;
-        try
-        {
-            canaries = secretSource.ScanAndClear(
-            [
-                new("private protocol request", "private-pipe-bytes", recordedRequest.CapturedBytes),
+            if (spawnContainmentProbe)
+            {
+                descendant = Process.Start(new ProcessStartInfo
+                {
+                    FileName = Environment.ProcessPath!,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    ArgumentList = { "--containment-descendant", "30000" },
+                });
+            }
+            recordedRequest = new(request);
+            recordedResponse = new(response);
+            secretSource = new();
+            OneShotHelperEngine engine = new(
+                store,
+                new FixedUtcTimeProvider(DateTimeOffset.FromUnixTimeMilliseconds(nativeAuthorityNowUnixMs)),
+                secretSource,
+                allowSyntheticProviderDispatch: true);
+            using CancellationTokenSource deadline = new(TimeSpan.FromSeconds(1650));
+            failureStage = "engine-execution";
+            await engine.RunAsync(recordedRequest, recordedResponse, deadline.Token);
+            failureStage = "evidence-collection";
+            (int listeners, int networkOperations) = NetworkMeasurement.MeasureCurrentProcessTcp();
+            byte[] traceBytes = JsonSerializer.SerializeToUtf8Bytes(store.CallTrace);
+            NativeRawTargetCanary[] rawTargets = store.RawTargetCanaries.ToArray();
+            NativeCanaryEvidence canaries;
+            try
+            {
+                canaries = secretSource.ScanAndClear(
+                [
+                    new("private protocol request", "private-pipe-bytes", recordedRequest.CapturedBytes),
                 new("private protocol response", "private-pipe-bytes", recordedResponse.CapturedBytes),
                 new("native call trace", "canonical-trace-bytes", traceBytes),
                 NativeCanarySurface.FromText("process command line", Environment.CommandLine),
@@ -111,34 +165,126 @@ if (args is ["--credential-native-request-handle", string nativeRequestHandle,
                     string.Join('\n', Environment.GetEnvironmentVariables().Keys.Cast<object>()
                         .Select(value => value.ToString()).Order(StringComparer.Ordinal))),
             ],
-            rawTargets);
+                rawTargets);
+                canaryEvidenceJson = JsonSerializer.Serialize(canaries);
+            }
+            finally
+            {
+                foreach (NativeRawTargetCanary target in rawTargets)
+                {
+                    System.Security.Cryptography.CryptographicOperations.ZeroMemory(target.Bytes);
+                }
+            }
+            byte[] metrics = JsonSerializer.SerializeToUtf8Bytes(new
+            {
+                excluded_handle_accessible = excludedHandleAccessible,
+                descendant_pid = descendant?.Id ?? 0,
+                listener_count = listeners,
+                network_operation_count = networkOperations,
+                native_credential_operation_count = store.CallCounts.Total,
+                native_call_trace = store.CallTrace,
+                entry_cleanup = secretSource.EntryEvidence,
+                canaries,
+                namespace_reuse_blocked = store.NamespaceReuseBlocked,
+                namespace_reuse_block_reason = store.NamespaceReuseBlockReason,
+            });
+            failureStage = "metrics-write";
+            await response.WriteAsync(BitConverter.GetBytes(checked((uint)metrics.Length)), deadline.Token);
+            await response.WriteAsync(metrics, deadline.Token);
+            await response.FlushAsync(deadline.Token);
+            return secretSource.LastPhase is { ScenarioId: "helper-and-coordinator-crash-restart", PhaseId: "half-commit" }
+                ? 69
+                : 0;
+        }
+        catch (Exception exception)
+        {
+            if (canaryEvidenceJson is null && store is not null && secretSource is not null
+                && recordedRequest is not null && recordedResponse is not null)
+            {
+                NativeRawTargetCanary[] failureTargets = store.RawTargetCanaries.ToArray();
+                try
+                {
+                    byte[] failureTrace = JsonSerializer.SerializeToUtf8Bytes(store.CallTrace);
+                    NativeCanaryEvidence failureCanaries = secretSource.ScanAndClear(
+                    [
+                        new("private protocol request", "private-pipe-bytes", recordedRequest.CapturedBytes),
+                        new("private protocol partial response", "private-pipe-bytes", recordedResponse.CapturedBytes),
+                        new("native call trace", "canonical-trace-bytes", failureTrace),
+                        NativeCanarySurface.FromText("process command line", Environment.CommandLine),
+                        NativeCanarySurface.FromText(
+                            "process environment names",
+                            string.Join('\n', Environment.GetEnvironmentVariables().Keys.Cast<object>()
+                                .Select(value => value.ToString()).Order(StringComparer.Ordinal))),
+                    ],
+                    failureTargets);
+                    canaryEvidenceJson = JsonSerializer.Serialize(failureCanaries);
+                }
+                catch (Exception)
+                {
+                    canaryEvidenceJson = null;
+                }
+                finally
+                {
+                    foreach (NativeRawTargetCanary target in failureTargets)
+                    {
+                        System.Security.Cryptography.CryptographicOperations.ZeroMemory(target.Bytes);
+                    }
+                }
+            }
+            NativeCallCounts counts = store?.CallCounts ?? new(0, 0, 0, 0, 0);
+            bool countsKnown = true;
+            bool networkFactsKnown = false;
+            int failureListeners = 0;
+            int failureNetworkOperations = 0;
+            try
+            {
+                (failureListeners, failureNetworkOperations) = NetworkMeasurement.MeasureCurrentProcessTcp();
+                networkFactsKnown = true;
+            }
+            catch (Exception)
+            {
+                networkFactsKnown = false;
+            }
+            NativeHelperFailureEnvelope failure = new(
+                failureStage,
+                NativeFailureReason(failureStage, exception),
+                countsKnown,
+                countsKnown ? counts.CredWriteW : 0,
+                countsKnown ? counts.CredReadW : 0,
+                countsKnown ? counts.CredDeleteW : 0,
+                countsKnown ? counts.CredFree : 0,
+                countsKnown ? counts.Total : 0,
+                networkFactsKnown,
+                networkFactsKnown ? failureListeners : 0,
+                networkFactsKnown ? failureNetworkOperations : 0,
+                true,
+                0,
+                0,
+                0,
+                countsKnown ? JsonSerializer.Serialize(store?.CallTrace ?? []) : null,
+                secretSource?.EntryEvidence is null ? null : JsonSerializer.Serialize(secretSource.EntryEvidence),
+                canaryEvidenceJson,
+                secretSource?.LastPhase?.SecretMode == CredentialNativeQualificationSecretModeV2.Manual,
+                descendant is not null,
+                descendant?.Id ?? 0,
+                store?.NamespaceReuseBlocked ?? false,
+                store?.NamespaceReuseBlockReason);
+            try
+            {
+                await NativeHelperFailureProtocol.WriteAsync(response, failure, CancellationToken.None);
+            }
+            catch (Exception)
+            {
+                // The coordinator will retain a closed-pipe failure when even the bounded failure frame cannot be written.
+            }
+            Console.Error.WriteLine($"Native helper terminated with typed non-secret failure: {exception.GetType().Name}");
+            return 68;
         }
         finally
         {
-            foreach (NativeRawTargetCanary target in rawTargets)
-            {
-                System.Security.Cryptography.CryptographicOperations.ZeroMemory(target.Bytes);
-            }
+            secretSource?.Dispose();
+            store?.Dispose();
         }
-        byte[] metrics = JsonSerializer.SerializeToUtf8Bytes(new
-        {
-            excluded_handle_accessible = excludedHandleAccessible,
-            descendant_pid = descendant?.Id ?? 0,
-            listener_count = listeners,
-            network_operation_count = networkOperations,
-            native_credential_operation_count = store.CallCounts.Total,
-            native_call_trace = store.CallTrace,
-            entry_cleanup = secretSource.EntryEvidence,
-            canaries,
-            namespace_reuse_blocked = store.NamespaceReuseBlocked,
-            namespace_reuse_block_reason = store.NamespaceReuseBlockReason,
-        });
-        await response.WriteAsync(BitConverter.GetBytes(checked((uint)metrics.Length)), deadline.Token);
-        await response.WriteAsync(metrics, deadline.Token);
-        await response.FlushAsync(deadline.Token);
-        return secretSource.LastPhase is { ScenarioId: "helper-and-coordinator-crash-restart", PhaseId: "half-commit" }
-            ? 69
-            : 0;
     }
     catch (Exception exception) when (exception is IOException or InvalidDataException
         or InvalidOperationException or OperationCanceledException or TimeoutException
@@ -245,6 +391,38 @@ catch (Exception exception) when (exception is IOException or InvalidDataExcepti
 [DllImport("kernel32.dll", SetLastError = true)]
 [return: MarshalAs(UnmanagedType.Bool)]
 static extern bool GetHandleInformation(nint handle, out uint flags);
+
+[DllImport("kernel32.dll", SetLastError = true)]
+[return: MarshalAs(UnmanagedType.Bool)]
+static extern bool SetHandleInformation(nint handle, uint mask, uint flags);
+
+static void ClearHandleInheritance(nint handle)
+{
+    const uint HandleFlagInherit = 1;
+    if (!SetHandleInformation(handle, HandleFlagInherit, 0))
+    {
+        throw new System.ComponentModel.Win32Exception(
+            Marshal.GetLastWin32Error(),
+            "A native helper private pipe could not be made non-inheritable.");
+    }
+}
+
+static string NativeFailureReason(string stage, Exception exception) => stage switch
+{
+    "handle-inheritance" => "handle-inheritance-failure",
+    "launch-boundary" => "launch-options-invalid",
+    "manifest-validation" => "manifest-rejected",
+    _ => exception switch
+    {
+        IOException => "io-failure",
+        InvalidDataException => "invalid-data",
+        InvalidOperationException => "invalid-operation",
+        OperationCanceledException => "cancelled",
+        TimeoutException => "timeout",
+        System.ComponentModel.Win32Exception => "win32-failure",
+        _ => "controlled-failure",
+    },
+};
 
 file sealed class FixedUtcTimeProvider(DateTimeOffset value) : TimeProvider
 {

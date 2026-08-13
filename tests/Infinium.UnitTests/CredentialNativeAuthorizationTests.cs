@@ -6,8 +6,8 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Infinium.Application.Runtime;
-using Infinium.CredentialHelper;
 using Infinium.Contracts.Protobuf.Helper.V2;
+using Infinium.CredentialHelper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Infinium.Tests;
@@ -129,6 +129,61 @@ public sealed class CredentialNativeAuthorizationTests
                 + maxima.GetProperty("CredReadW").GetInt32()
                 + maxima.GetProperty("CredDeleteW").GetInt32()
                 + maxima.GetProperty("CredFree").GetInt32());
+    }
+
+    [TestMethod]
+    [TestCategory("Unit")]
+    [TestCategory("Security")]
+    public void NativeStoreParsesTheExactCurrentAuthorizationSchemaAndRejectsTheSupersededSchema()
+    {
+        string root = Path.GetFullPath("../../../../../", AppContext.BaseDirectory);
+        string path = Path.Combine(root, "docs", "plans", "milestones", "m1", "slices", "s6",
+            "wp4-credential-native-authorization.v2.json");
+        byte[] bytes = File.ReadAllBytes(path);
+        using JsonDocument document = JsonDocument.Parse(bytes);
+        string manifestId = document.RootElement.GetProperty("manifest_id").GetString()!;
+        string sha256 = Convert.ToHexStringLower(SHA256.HashData(bytes));
+
+        using (WindowsCredentialManagerStore store = WindowsCredentialManagerStore.FromAcceptedManifest(
+            path, sha256, manifestId))
+        {
+            Assert.HasCount(12, store.ManifestTargets);
+        }
+
+        string temporary = Path.Combine(Path.GetTempPath(), "Infinium-Wp4-Schema-" + Guid.NewGuid().ToString("N") + ".json");
+        try
+        {
+            void Reject(JsonNode rejected)
+            {
+                File.WriteAllText(temporary, rejected.ToJsonString());
+                string rejectedSha256 = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(temporary)));
+                Assert.ThrowsExactly<InvalidDataException>(() => WindowsCredentialManagerStore.FromAcceptedManifest(
+                    temporary, rejectedSha256, manifestId));
+            }
+
+            JsonNode rejected = JsonNode.Parse(bytes) ?? throw new InvalidDataException("The test manifest is malformed.");
+            rejected["schema_identity"] = "infinium.repository.wp4-credential-native-authorization/1.1.0";
+            Reject(rejected);
+
+            rejected = JsonNode.Parse(bytes)!;
+            rejected["supersedes"]!.AsObject().Remove("authority_lock_sha256");
+            Reject(rejected);
+
+            rejected = JsonNode.Parse(bytes)!;
+            rejected["supersedes"]!["authority_lock_sha256"] = new string('0', 64);
+            Reject(rejected);
+
+            rejected = JsonNode.Parse(bytes)!;
+            JsonObject supersedes = rejected["supersedes"]!.AsObject();
+            JsonNode authorityLock = supersedes["authority_lock_sha256"]!.DeepClone();
+            supersedes.Remove("authority_lock_sha256");
+            supersedes["gate_receipt_sha256"] = authorityLock;
+            Reject(rejected);
+        }
+        finally
+        {
+            File.Delete(temporary);
+        }
     }
 
     [TestMethod]

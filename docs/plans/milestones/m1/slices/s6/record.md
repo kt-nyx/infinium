@@ -5107,3 +5107,49 @@ engine execution, or native P/Invoke was reachable. That is a provenance
 conclusion, not a runtime W0 receipt. The identity and namespace remain
 consumed and permanently non-reusable.
 WP4_V2_NATIVE_EVIDENCE_CORRECTION manifest_id=infinium.m1-s6.wp4.credential-native-authorization/a1976c78-a49b-4581-9a8c-9b6172484e0b execution_head_commit=9d02fd7201270225896dce41ac0f95ca05cc4c49 native_calls=unobserved cleanup_scope=empty source_provenance_native_calls=unreachable
+
+## WP4 typed native-failure evidence correction — 2026-08-13
+
+The bounded non-native correction closes the `a1976c78` evidence-loss path
+without retrying its consumed identity or calling Credential Manager. The
+helper now opens the response boundary first, clears inheritance from both
+private pipe handles before any descendant can start, validates the accepted
+schema-1.2 manifest and exact predecessor authority before store construction,
+and emits a bounded canonical `NHF2` failure frame for every controlled stage.
+The frame retains fixed stage/reason codes; known call counts and canonical
+trace when observable; manual UI cleanup/readiness/action facts; exact canary
+surface inventory; measured TCP listener/operation facts; source-proven zero
+DNS, provider, and billable operations; namespace-reuse state; and bounded
+descendant identity. It never retains a raw target, secret, or arbitrary
+exception message.
+
+The coordinator recognizes the failure frame before normal terminal, staging,
+or metrics parsing. It independently validates pre-store known-zero evidence,
+post-store canonical trace/free pairing, manifest call maxima, exact assignment
+and target fingerprints, phase-specific operation/result prefixes, full manual
+UI cleanup/readiness/action semantics, exact canary inventory, zero external
+effects, and the terminal Job Object process/descendant accounting receipt.
+Malformed, truncated, oversized, phase-inconsistent, uncontained, or otherwise
+unverifiable evidence becomes terminal cleanup ambiguity and permanently blocks
+the consumed namespace.
+
+Failure artifacts no longer infer cleanup or absence from scenario admission.
+They distinguish source-proven pre-store effect-free failure with store state
+unobserved, single-target preflight absence, queued exact-target cleanup, and
+unproven ambiguity. Every terminal failure consumes and blocks the namespace;
+no artifact claims whole-namespace absence unless independently proved. Cleanup
+loop failures, including generic exceptions, typed helper failure, and malformed
+helper evidence, are wrapped immediately as typed ambiguity and write the
+blocked/consumed terminal artifact with zero later calls.
+
+Safe tests prove the schema parser mutations, fixed failure-envelope round trip,
+real request/response pipe inheritance clearing with a 30-second descendant,
+bounded immediate failure, canonical maximum W9/R78/D9/F28/T124 evidence below
+the 64-KiB frame limit, phase/canary/network/provider/billable mutations,
+manual UI identity/action binding, truthful primary-failure artifact scopes,
+and end-to-end cleanup-loop artifacts for all three failure families. The fresh
+independent reviewer reproduced the full supervisor suite and cleanup-loop
+regression, accepted the non-native correction for freeze, and confirmed zero
+repository-owned or global .NET/testhost survivors after shutting down build
+servers. No native credential, UI/manual-entry, DNS, network, provider,
+billable, private-fixture, archive, or later-package operation occurred.

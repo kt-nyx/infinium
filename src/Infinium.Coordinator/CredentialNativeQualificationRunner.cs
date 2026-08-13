@@ -91,35 +91,16 @@ internal static class CredentialNativeQualificationRunner
         }
         catch (CredentialNativeCleanupAmbiguityException ambiguity)
         {
-            WriteJson(Path.Combine(outputRoot, "credential-native-cleanup-ambiguity.v2.json"), new
-            {
-                schema = "infinium.m1-s6.wp4.credential-native-cleanup-ambiguity/v2",
-                status = "failed-cleanup-ambiguous",
-                manifest_id = manifestId,
-                manifest_sha256 = manifestSha256,
-                ambiguity.AssignmentId,
-                ambiguity.Reason,
-                namespace_blocked = true,
-                later_native_calls = 0,
-                disposition = "terminal-fresh-owner-authority-required",
-            });
+            WriteJson(
+                Path.Combine(outputRoot, "credential-native-cleanup-ambiguity.v2.json"),
+                BuildCleanupAmbiguityArtifact(manifestId, manifestSha256, ambiguity));
             throw;
         }
         catch (CredentialNativePrimaryFailureException failure)
         {
-            WriteJson(Path.Combine(outputRoot, "credential-native-primary-failure.v2.json"), new
-            {
-                schema = "infinium.m1-s6.wp4.credential-native-primary-failure/v2",
-                status = "failed-primary-cleanup-confirmed",
-                manifest_id = manifestId,
-                manifest_sha256 = manifestSha256,
-                failure_type = failure.FailureType,
-                cleanup_confirmed = true,
-                namespace_blocked = false,
-                later_native_calls = 0,
-                evidence = failure.Evidence,
-                disposition = "terminal-fresh-owner-authority-required",
-            });
+            WriteJson(
+                Path.Combine(outputRoot, "credential-native-primary-failure.v2.json"),
+                BuildPrimaryFailureArtifact(manifestId, manifestSha256, failure));
             throw;
         }
         WriteOutputs(outputRoot, manifestId, manifestSha256, evidence, state);
@@ -132,6 +113,7 @@ internal static class CredentialNativeQualificationRunner
         IReadOnlyDictionary<string, (string ProfileId, string GenerationId)> targetIdentities,
         DateTimeOffset now,
         Exception? primaryFailureForTest = null,
+        Exception? cleanupFailureForTest = null,
         CancellationToken cancellationToken = default)
     {
         Dictionary<string, Target> targets = targetIdentities.ToDictionary(
@@ -139,8 +121,33 @@ internal static class CredentialNativeQualificationRunner
             item => new Target(item.Key, item.Value.ProfileId, item.Value.GenerationId, new('0', 64)),
             StringComparer.Ordinal);
         RunnerState state = new(root, launcher, targets, new Dictionary<string, string>(), now,
-            primaryFailureForTest);
+            primaryFailureForTest, cleanupFailureForTest);
         return await state.RunAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    internal static async Task RunCleanupFailureWithArtifactsForTestAsync(
+        string root,
+        OneShotCredentialHelperLauncher launcher,
+        IReadOnlyDictionary<string, (string ProfileId, string GenerationId)> targetIdentities,
+        DateTimeOffset now,
+        Exception cleanupFailureForTest,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(cleanupFailureForTest);
+        try
+        {
+            _ = await RunWithLauncherForTestAsync(
+                root, launcher, targetIdentities, now,
+                cleanupFailureForTest: cleanupFailureForTest,
+                cancellationToken: cancellationToken).ConfigureAwait(false);
+        }
+        catch (CredentialNativeCleanupAmbiguityException ambiguity)
+        {
+            WriteJson(
+                Path.Combine(root, "credential-native-cleanup-ambiguity.v2.json"),
+                BuildCleanupAmbiguityArtifact("manifest/test", new string('a', 64), ambiguity));
+            throw;
+        }
     }
 
     private static Dictionary<string, Target> ParseTargets(JsonElement root)
@@ -275,6 +282,118 @@ internal static class CredentialNativeQualificationRunner
     internal static string SerializeEvidenceForTest(object value) =>
         JsonSerializer.Serialize(value, EvidenceJson);
 
+    internal static string SerializePrimaryFailureArtifactForTest(
+        string manifestId,
+        string manifestSha256,
+        CredentialNativePrimaryFailureException failure) =>
+        JsonSerializer.Serialize(BuildPrimaryFailureArtifact(manifestId, manifestSha256, failure), EvidenceJson);
+
+    internal static string SerializeCleanupAmbiguityArtifactForTest(
+        string manifestId,
+        string manifestSha256,
+        CredentialNativeCleanupAmbiguityException ambiguity) =>
+        JsonSerializer.Serialize(BuildCleanupAmbiguityArtifact(manifestId, manifestSha256, ambiguity), EvidenceJson);
+
+    private static object BuildCleanupAmbiguityArtifact(
+        string manifestId,
+        string manifestSha256,
+        CredentialNativeCleanupAmbiguityException ambiguity) => new
+        {
+            schema = "infinium.m1-s6.wp4.credential-native-cleanup-ambiguity/v2",
+            status = "failed-cleanup-ambiguous",
+            manifest_id = manifestId,
+            manifest_sha256 = manifestSha256,
+            ambiguity.AssignmentId,
+            ambiguity.Reason,
+            cleanup_confirmed = false,
+            whole_namespace_absence_confirmed = false,
+            namespace_blocked = true,
+            namespace_disposition = "consumed-never-reuse",
+            external_effect_facts = "unknown-or-not-independently-admissible",
+            later_native_calls = 0,
+            disposition = "terminal-fresh-owner-authority-required",
+        };
+
+    private static object BuildPrimaryFailureArtifact(
+        string manifestId,
+        string manifestSha256,
+        CredentialNativePrimaryFailureException failure)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(manifestId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(manifestSha256);
+        ArgumentNullException.ThrowIfNull(failure);
+        if (failure.CleanupDisposition is not (
+            "source-proven-pre-store-known-zero"
+            or "trace-proven-preflight-absence"
+            or "exact-target-cleanup-confirmed"))
+        {
+            throw new InvalidDataException("A primary failure artifact requires one independently proven absence disposition.");
+        }
+        CredentialNativeHelperFailureException? helperFailure =
+            failure.InnerException as CredentialNativeHelperFailureException;
+        bool cleanupConfirmed = failure.CleanupDisposition == "exact-target-cleanup-confirmed";
+        bool singleTargetAbsence = failure.CleanupDisposition == "trace-proven-preflight-absence";
+        string[] provenTargetFingerprints = cleanupConfirmed
+            ? failure.Evidence.Scenarios.SelectMany(item => item.Phases)
+                .Where(item => item.PhaseId.StartsWith("cleanup", StringComparison.Ordinal)
+                    || item.PhaseId == "deleted-after-revocation")
+                .SelectMany(item => item.Process.NativeCallTrace)
+                .Where(item => item.Operation == "CredReadW" && item.Result == "ERROR_NOT_FOUND")
+                .Select(item => item.TargetFingerprintSha256)
+                .Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray()
+            : singleTargetAbsence && helperFailure?.Evidence.NativeCallTraceJson is string traceJson
+                ? JsonSerializer.Deserialize<CredentialNativeCallTraceEntry[]>(traceJson, EvidenceJson)?
+                    .Where(item => item.Operation == "CredReadW" && item.Result == "ERROR_NOT_FOUND")
+                    .Select(item => item.TargetFingerprintSha256)
+                    .Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray() ?? []
+                : [];
+        if (singleTargetAbsence && provenTargetFingerprints.Length != 1
+            || cleanupConfirmed && provenTargetFingerprints.Length == 0)
+        {
+            throw new InvalidDataException("The primary failure absence disposition lacks its exact target proof scope.");
+        }
+        return new
+        {
+            schema = "infinium.m1-s6.wp4.credential-native-primary-failure/v2",
+            status = cleanupConfirmed
+                ? "failed-primary-cleanup-confirmed"
+                : singleTargetAbsence
+                    ? "failed-primary-single-target-absence-confirmed"
+                    : "failed-primary-effect-free-store-state-unobserved",
+            manifest_id = manifestId,
+            manifest_sha256 = manifestSha256,
+            failure_type = failure.FailureType,
+            cleanup_confirmed = cleanupConfirmed,
+            absence_confirmed = cleanupConfirmed || singleTargetAbsence,
+            whole_namespace_absence_confirmed = false,
+            absence_scope = cleanupConfirmed
+                ? "queued-exact-cleanup-targets-only"
+                : singleTargetAbsence
+                    ? "single-preflight-target-only"
+                    : "none-store-state-unobserved",
+            absence_target_fingerprints = provenTargetFingerprints,
+            cleanup_disposition = failure.CleanupDisposition,
+            namespace_blocked = true,
+            namespace_disposition = "consumed-never-reuse",
+            external_effect_facts = helperFailure is null ? null : new
+            {
+                helperFailure.Evidence.NetworkFactsKnown,
+                helperFailure.Evidence.ListenerCount,
+                helperFailure.Evidence.NetworkOperationCount,
+                helperFailure.Evidence.ExternalEffectFactsKnown,
+                helperFailure.Evidence.DnsOperationCount,
+                helperFailure.Evidence.ProviderOperationCount,
+                helperFailure.Evidence.BillableOperationCount,
+                external_zero_basis = "source-proven-helper-has-no-provider-or-dns-transport",
+            },
+            later_native_calls = 0,
+            helper_failure = helperFailure?.Evidence,
+            helper_failure_containment = helperFailure?.Containment,
+            evidence = failure.Evidence,
+            disposition = "terminal-fresh-owner-authority-required",
+        };
+    }
+
     internal static IReadOnlyList<CredentialNativeRetainedSurfaceEvidence> RetainedSurfaceInventory(
         long summaryByteCount)
     {
@@ -347,7 +466,8 @@ internal static class CredentialNativeQualificationRunner
         Dictionary<string, Target> targets,
         IReadOnlyDictionary<string, string> fingerprints,
         DateTimeOffset baseTime,
-        Exception? injectedPrimaryFailure = null)
+        Exception? injectedPrimaryFailure = null,
+        Exception? injectedCleanupFailure = null)
     {
         private readonly string root = Path.GetFullPath(root);
         private readonly OneShotCredentialHelperLauncher launcher = launcher;
@@ -357,6 +477,7 @@ internal static class CredentialNativeQualificationRunner
         private int nonce;
         private int clock;
         private Exception? injectedPrimaryFailure = injectedPrimaryFailure;
+        private Exception? injectedCleanupFailure = injectedCleanupFailure;
         private readonly List<(string Scenario, ScenarioContext Context, Target CleanupTarget)> cleanup = [];
 
         internal IReadOnlyDictionary<string, Target> Targets => targets;
@@ -409,24 +530,30 @@ internal static class CredentialNativeQualificationRunner
             supervisor.BeginCleanup();
             foreach ((string scenario, ScenarioContext context, Target target) in cleanup)
             {
+                string phase = scenario == "revoke-delete"
+                    ? "deleted-after-revocation"
+                    : scenario == "replacement" && target.Alias == "replacement-old"
+                        ? "cleanup-predecessor"
+                        : scenario == "replacement"
+                            ? "cleanup-successor"
+                    : scenario == "backup-restore-reauthentication" && target.Alias == "backup-old"
+                        ? "cleanup-restored-predecessor"
+                        : scenario == "backup-restore-reauthentication"
+                            ? "cleanup-successor"
+                    : scenario == "credential-size-boundaries" && target.Alias == "size-valid"
+                        ? "cleanup-maximum"
+                        : scenario == "credential-size-boundaries"
+                            ? "cleanup-oversize"
+                            : "cleanup";
                 try
                 {
+                    if (injectedCleanupFailure is not null)
+                    {
+                        Exception failure = injectedCleanupFailure;
+                        injectedCleanupFailure = null;
+                        throw failure;
+                    }
                     supervisor.RebindCoordinator(context.Coordinator);
-                    string phase = scenario == "revoke-delete"
-                        ? "deleted-after-revocation"
-                        : scenario == "replacement" && target.Alias == "replacement-old"
-                            ? "cleanup-predecessor"
-                            : scenario == "replacement"
-                                ? "cleanup-successor"
-                        : scenario == "backup-restore-reauthentication" && target.Alias == "backup-old"
-                            ? "cleanup-restored-predecessor"
-                            : scenario == "backup-restore-reauthentication"
-                                ? "cleanup-successor"
-                        : scenario == "credential-size-boundaries" && target.Alias == "size-valid"
-                            ? "cleanup-maximum"
-                            : scenario == "credential-size-boundaries"
-                                ? "cleanup-oversize"
-                                : "cleanup";
                     HelperPrivateFrameV2 cleanupBootstrap = Bootstrap(target, target, NextNonce());
                     HelperPrivateFrameV2 cleanupAssignment = Assignment(
                         scenario, phase, target, target, target.GenerationId is "g002" ? 2UL : 1UL);
@@ -443,16 +570,77 @@ internal static class CredentialNativeQualificationRunner
                             NextTime(), CancellationToken.None).ConfigureAwait(false);
                     }
                 }
-                catch
+                catch (Exception exception)
                 {
-                    supervisor.RecordCleanupAmbiguity(scenario, "cleanup");
-                    throw;
+                    string assignmentId = $"wp4-v2/{scenario}/{phase}";
+                    supervisor.RecordTerminalCleanupAmbiguity(assignmentId, "cleanup-phase-failed");
+                    throw new CredentialNativeCleanupAmbiguityException(
+                        assignmentId,
+                        exception is CredentialNativeHelperEvidenceAmbiguityException
+                            ? "cleanup-helper-evidence-invalid"
+                            : exception is CredentialNativeHelperFailureException
+                                ? "cleanup-helper-failure"
+                                : "cleanup-phase-failed");
                 }
+            }
+            if (primaryFailure is CredentialNativeHelperEvidenceAmbiguityException evidenceAmbiguity)
+            {
+                supervisor.RecordTerminalCleanupAmbiguity(
+                    evidenceAmbiguity.AssignmentId, "helper-failure-evidence-invalid");
+                throw new CredentialNativeCleanupAmbiguityException(
+                    evidenceAmbiguity.AssignmentId,
+                    "helper-failure-evidence-invalid");
+            }
+            if (primaryFailure is CredentialNativeHelperFailureException helperFailure
+                && helperFailure.Evidence.NamespaceReuseBlocked)
+            {
+                supervisor.RecordTerminalCleanupAmbiguity(
+                    helperFailure.AssignmentId, "helper-namespace-reuse-blocked");
+                throw new CredentialNativeCleanupAmbiguityException(
+                    helperFailure.AssignmentId,
+                    "helper-namespace-reuse-blocked");
             }
             if (primaryFailure is not null)
             {
+                string? cleanupDisposition = null;
+                if (primaryFailure is CredentialNativeHelperFailureException boundedFailure)
+                {
+                    if (boundedFailure.Containment is not
+                        { ProcessId: > 0, ProcessTreeTerminated: true, ProcessTreeSurvivorCount: 0 } containment
+                        || containment.TotalContainedProcessCount
+                            < (boundedFailure.Evidence.ContainmentDescendantStarted ? 2 : 1)
+                        || containment.ActiveProcessCountBeforeJobClose < 0)
+                    {
+                        supervisor.RecordTerminalCleanupAmbiguity(
+                            boundedFailure.AssignmentId, "helper-containment-unproven");
+                        throw new CredentialNativeCleanupAmbiguityException(
+                            boundedFailure.AssignmentId,
+                            "helper-containment-unproven");
+                    }
+                    cleanupDisposition = boundedFailure.Evidence.Stage is
+                        "handle-inheritance" or "launch-boundary" or "manifest-validation"
+                        ? "source-proven-pre-store-known-zero"
+                        : boundedFailure.AssignmentId.Split('/')[^1].StartsWith("preflight", StringComparison.Ordinal)
+                            ? "trace-proven-preflight-absence"
+                            : cleanup.Count > 0
+                                ? "exact-target-cleanup-confirmed"
+                                : null;
+                }
+                else if (cleanup.Count > 0)
+                {
+                    cleanupDisposition = "exact-target-cleanup-confirmed";
+                }
+                if (cleanupDisposition is null)
+                {
+                    supervisor.RecordTerminalCleanupAmbiguity(
+                        "qualification-primary-failure", "primary-failure-cleanup-unproven");
+                    throw new CredentialNativeCleanupAmbiguityException(
+                        "unknown",
+                        "primary-failure-cleanup-unproven");
+                }
                 throw new CredentialNativePrimaryFailureException(
                     primaryFailure.GetType().Name,
+                    cleanupDisposition,
                     supervisor.CapturePrimaryFailureAfterCertainCleanup(),
                     primaryFailure);
             }

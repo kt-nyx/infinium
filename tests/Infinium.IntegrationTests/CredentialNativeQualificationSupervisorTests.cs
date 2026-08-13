@@ -1,6 +1,9 @@
+using System.Diagnostics;
+using System.IO.Pipes;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Infinium.Application.Provider;
 using Infinium.Application.Runtime;
 using Infinium.Contracts.Protobuf.Helper.V2;
@@ -279,6 +282,595 @@ public sealed class CredentialNativeQualificationSupervisorTests
 
     [TestMethod]
     [TestCategory("Integration")]
+    [TestCategory("Security")]
+    public async Task NativeManifestParserFailureReturnsKnownZeroEnvelopeWithoutThirtySecondPipeHold()
+    {
+        string repository = Path.GetFullPath("../../../../../", AppContext.BaseDirectory);
+        string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp4-Native-Failure-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        string source = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6",
+            "wp4-credential-native-authorization.v2.json");
+        JsonNode manifest = JsonNode.Parse(File.ReadAllBytes(source))
+            ?? throw new InvalidDataException("The test manifest is malformed.");
+        manifest["schema_identity"] = "infinium.repository.wp4-credential-native-authorization/1.1.0";
+        string path = Path.Combine(root, "manifest.json");
+        File.WriteAllText(path, manifest.ToJsonString());
+        string id = manifest["manifest_id"]!.GetValue<string>();
+        string sha256 = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(path)));
+        string helper = Path.Combine(AppContext.BaseDirectory, "CredentialHelper", "Infinium.CredentialHelper.exe");
+        OneShotCredentialHelperLauncher launcher = OneShotCredentialHelperLauncher.CreateNativeQualification(
+            helper, Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(helper))), path, sha256, id);
+        HelperPrivateFrameV2 bootstrap = HelperTestFrames.Bootstrap(nonceSeed: 91);
+        HelperPrivateFrameV2 assignment = HelperTestFrames.Assignment();
+
+        Stopwatch elapsed = Stopwatch.StartNew();
+        CredentialNativeHelperFailureException failure = await Assert.ThrowsExactlyAsync<CredentialNativeHelperFailureException>(
+            () => launcher.ExecuteAsync(bootstrap, assignment, null, TimeSpan.FromSeconds(5), BaseTime));
+        elapsed.Stop();
+
+        Assert.IsLessThan(TimeSpan.FromSeconds(5), elapsed.Elapsed);
+        Assert.AreEqual("manifest-validation", failure.Evidence.Stage);
+        Assert.AreEqual("manifest-rejected", failure.Evidence.Reason);
+        Assert.IsTrue(failure.Evidence.CallCountsKnown);
+        Assert.AreEqual(0, failure.Evidence.Total);
+        Assert.AreEqual("[]", failure.Evidence.NativeCallTraceJson);
+        Assert.IsNull(failure.Evidence.EntryCleanupJson);
+        Assert.IsNull(failure.Evidence.CanaryEvidenceJson);
+        Assert.IsFalse(failure.Evidence.NamespaceReuseBlocked);
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
+    public async Task RunnerWritesConsumedBlockedArtifactForPreStoreKnownZeroWithoutClaimingAbsence()
+    {
+        string repository = Path.GetFullPath("../../../../../", AppContext.BaseDirectory);
+        string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp4-Native-Runner-Failure-" + Guid.NewGuid().ToString("N"));
+        string output = Path.Combine(root, "output");
+        Directory.CreateDirectory(output);
+        string source = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6",
+            "wp4-credential-native-authorization.v2.json");
+        JsonNode manifest = JsonNode.Parse(File.ReadAllBytes(source))
+            ?? throw new InvalidDataException("The test manifest is malformed.");
+        manifest["schema_identity"] = "infinium.repository.wp4-credential-native-authorization/1.1.0";
+        string path = Path.Combine(root, "manifest.json");
+        File.WriteAllText(path, manifest.ToJsonString());
+
+        await Assert.ThrowsExactlyAsync<CredentialNativePrimaryFailureException>(() =>
+            CredentialNativeQualificationRunner.RunAsync(path, output));
+
+        string artifactPath = Path.Combine(output, "credential-native-primary-failure.v2.json");
+        Assert.IsTrue(File.Exists(artifactPath));
+        using JsonDocument artifact = JsonDocument.Parse(File.ReadAllBytes(artifactPath));
+        Assert.AreEqual("failed-primary-effect-free-store-state-unobserved",
+            artifact.RootElement.GetProperty("status").GetString());
+        Assert.IsFalse(artifact.RootElement.GetProperty("cleanup_confirmed").GetBoolean());
+        Assert.IsFalse(artifact.RootElement.GetProperty("absence_confirmed").GetBoolean());
+        Assert.IsFalse(artifact.RootElement.GetProperty("whole_namespace_absence_confirmed").GetBoolean());
+        Assert.AreEqual("none-store-state-unobserved",
+            artifact.RootElement.GetProperty("absence_scope").GetString());
+        Assert.AreEqual(0, artifact.RootElement.GetProperty("absence_target_fingerprints").GetArrayLength());
+        Assert.IsTrue(artifact.RootElement.GetProperty("namespace_blocked").GetBoolean());
+        Assert.AreEqual("consumed-never-reuse",
+            artifact.RootElement.GetProperty("namespace_disposition").GetString());
+        Assert.AreEqual("source-proven-pre-store-known-zero",
+            artifact.RootElement.GetProperty("cleanup_disposition").GetString());
+        Assert.IsTrue(artifact.RootElement.GetProperty("helper_failure_containment")
+            .GetProperty("process_tree_terminated").GetBoolean());
+        Assert.AreEqual(0, artifact.RootElement.GetProperty("helper_failure_containment")
+            .GetProperty("process_tree_survivor_count").GetInt32());
+    }
+
+    [TestMethod]
+    public void CleanupAmbiguityArtifactAcceptsAssignmentAndUnknownContextsWithoutClaimingCleanup()
+    {
+        foreach ((string context, string reason) in new[]
+        {
+            ("wp4-v2/interactive-entry-submit/cleanup", "cleanup-helper-failure"),
+            ("wp4-v2/interactive-entry-submit/preflight", "helper-failure-evidence-invalid"),
+            ("qualification-primary-failure", "primary-failure-cleanup-unproven"),
+        })
+        {
+            CredentialNativeCleanupAmbiguityException ambiguity = new(context, reason);
+            using JsonDocument artifact = JsonDocument.Parse(
+                CredentialNativeQualificationRunner.SerializeCleanupAmbiguityArtifactForTest(
+                    "manifest/test", new string('a', 64), ambiguity));
+            Assert.AreEqual("failed-cleanup-ambiguous",
+                artifact.RootElement.GetProperty("status").GetString(), context);
+            Assert.AreEqual(context,
+                artifact.RootElement.GetProperty("assignment_id").GetString(), context);
+            Assert.IsFalse(artifact.RootElement.GetProperty("cleanup_confirmed").GetBoolean(), context);
+            Assert.IsFalse(artifact.RootElement.GetProperty("whole_namespace_absence_confirmed").GetBoolean(), context);
+            Assert.IsTrue(artifact.RootElement.GetProperty("namespace_blocked").GetBoolean(), context);
+            Assert.AreEqual("consumed-never-reuse",
+                artifact.RootElement.GetProperty("namespace_disposition").GetString(), context);
+            Assert.AreEqual(0, artifact.RootElement.GetProperty("later_native_calls").GetInt32(), context);
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    public async Task RunnerCleanupLoopEmitsTerminalBlockedArtifactForEveryFailureFamily()
+    {
+        NativeHelperFailureEnvelope boundedEvidence = new(
+            "engine-execution", "invalid-operation", true,
+            0, 0, 0, 0, 0, true, 0, 0, true, 0, 0, 0,
+            "[]", null, null, false, false, 0, false, null);
+        (string Name, Exception Failure, string Reason)[] cases =
+        [
+            ("generic", new InvalidOperationException("synthetic cleanup failure"), "cleanup-phase-failed"),
+            ("helper", new CredentialNativeHelperFailureException(
+                boundedEvidence, "wp4-v2/interactive-entry-submit/cleanup"), "cleanup-helper-failure"),
+            ("ambiguous", new CredentialNativeHelperEvidenceAmbiguityException(
+                "wp4-v2/interactive-entry-submit/cleanup",
+                new InvalidDataException("synthetic malformed envelope")), "cleanup-helper-evidence-invalid"),
+        ];
+
+        foreach ((string name, Exception injected, string expectedReason) in cases)
+        {
+            string root = Path.Combine(
+                Path.GetTempPath(), "Infinium-Wp4-Cleanup-Loop-" + name + "-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(root);
+            await Assert.ThrowsExactlyAsync<CredentialNativeCleanupAmbiguityException>(() =>
+                CredentialNativeQualificationRunner.RunCleanupFailureWithArtifactsForTestAsync(
+                    root,
+                    Launcher(Path.Combine(root, "fake-store")),
+                    AllTargetIdentities(),
+                    BaseTime,
+                    injected));
+
+            string artifactPath = Path.Combine(root, "credential-native-cleanup-ambiguity.v2.json");
+            Assert.IsTrue(File.Exists(artifactPath), name);
+            using JsonDocument artifact = JsonDocument.Parse(File.ReadAllBytes(artifactPath));
+            Assert.AreEqual("failed-cleanup-ambiguous",
+                artifact.RootElement.GetProperty("status").GetString(), name);
+            Assert.AreEqual("wp4-v2/interactive-entry-submit/cleanup",
+                artifact.RootElement.GetProperty("assignment_id").GetString(), name);
+            Assert.AreEqual(expectedReason,
+                artifact.RootElement.GetProperty("reason").GetString(), name);
+            Assert.IsFalse(artifact.RootElement.GetProperty("cleanup_confirmed").GetBoolean(), name);
+            Assert.IsFalse(artifact.RootElement.GetProperty("whole_namespace_absence_confirmed").GetBoolean(), name);
+            Assert.IsTrue(artifact.RootElement.GetProperty("namespace_blocked").GetBoolean(), name);
+            Assert.AreEqual("consumed-never-reuse",
+                artifact.RootElement.GetProperty("namespace_disposition").GetString(), name);
+            Assert.AreEqual(0, artifact.RootElement.GetProperty("later_native_calls").GetInt32(), name);
+            Assert.AreEqual(0, DeterministicFakeSecureStore.NativeOperationCount, name);
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
+    public async Task NativeHelperFailureEnvelopeRoundTripsKnownPostCallEvidenceWithoutRawExceptionText()
+    {
+        string fingerprint = new('a', 64);
+        string trace = JsonSerializer.Serialize(new[]
+        {
+            new CredentialNativeCallTraceEntry(1, "CredWriteW", fingerprint, "synthetic-assignment", "success", null, null),
+            new CredentialNativeCallTraceEntry(2, "CredReadW", fingerprint, "synthetic-assignment", "success", 1, null),
+            new CredentialNativeCallTraceEntry(3, "CredFree", fingerprint, "synthetic-assignment", "released", null, 1),
+            new CredentialNativeCallTraceEntry(4, "CredDeleteW", fingerprint, "synthetic-assignment", "success", null, null),
+            new CredentialNativeCallTraceEntry(5, "CredReadW", fingerprint, "synthetic-assignment", "ERROR_NOT_FOUND", null, null),
+        });
+        string canaries = JsonSerializer.Serialize(new CredentialNativeCanaryEvidence(
+            0, 0, ["utf-8", "utf-16le"],
+            [
+                new("private protocol request", "private-pipe-bytes", 0, 0, 0),
+                new("private protocol partial response", "private-pipe-bytes", 0, 0, 0),
+                new("native call trace", "canonical-trace-bytes", trace.Length, 0, 0),
+                new("process command line", "captured-text", 0, 0, 0),
+                new("process environment names", "captured-text", 0, 0, 0),
+            ]));
+        NativeHelperFailureEnvelope expected = new(
+            "evidence-collection", "win32-failure", true,
+            1, 2, 1, 1, 5,
+            true, 0, 0, true, 0, 0, 0, trace, null, canaries,
+            false, false, 0, false, null);
+        using MemoryStream stream = new();
+        await NativeHelperFailureProtocol.WriteAsync(stream, expected, CancellationToken.None);
+        stream.Position = 0;
+        byte[] magic = new byte[4];
+        await stream.ReadExactlyAsync(magic);
+        Assert.IsTrue(NativeHelperFailureProtocol.IsMagic(magic));
+        NativeHelperFailureEnvelope actual = await NativeHelperFailureProtocol.ReadAfterMagicAsync(
+            stream, CancellationToken.None);
+        Assert.AreEqual(expected, actual);
+        Assert.IsFalse(Encoding.UTF8.GetString(stream.ToArray()).Contains("synthetic exception", StringComparison.Ordinal));
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
+    public async Task NativeFailureProbeClearsRealPipeInheritanceAndRetainsValidatedNonzeroEvidence()
+    {
+        string repository = Path.GetFullPath("../../../../../", AppContext.BaseDirectory);
+        string manifestPath = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6",
+            "wp4-credential-native-authorization.v2.json");
+        using JsonDocument manifest = JsonDocument.Parse(File.ReadAllBytes(manifestPath));
+        JsonElement target = manifest.RootElement.GetProperty("disposable_namespace").GetProperty("targets")[0];
+        string profile = target.GetProperty("access_profile_id").GetString()!;
+        string generation = target.GetProperty("generation_id").GetString()!;
+        string fingerprint = target.GetProperty("target_fingerprint_sha256").GetString()!;
+        const string assignmentId = "wp4-v2/interactive-entry-submit/preflight";
+        string helper = Path.Combine(AppContext.BaseDirectory, "CredentialHelper", "Infinium.CredentialHelper.exe");
+        using AnonymousPipeServerStream request = new(
+            PipeDirection.Out, HandleInheritability.Inheritable, 64 * 1024);
+        using AnonymousPipeServerStream response = new(
+            PipeDirection.In, HandleInheritability.Inheritable, 64 * 1024);
+        ProcessStartInfo start = new(helper)
+        {
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+        start.ArgumentList.Add("--native-failure-envelope-test-probe");
+        start.ArgumentList.Add("--request-handle");
+        start.ArgumentList.Add(request.GetClientHandleAsString());
+        start.ArgumentList.Add("--response-handle");
+        start.ArgumentList.Add(response.GetClientHandleAsString());
+        start.ArgumentList.Add("--assignment-id");
+        start.ArgumentList.Add(assignmentId);
+        start.ArgumentList.Add("--target-fingerprint");
+        start.ArgumentList.Add(fingerprint);
+        using Process process = Process.Start(start)
+            ?? throw new InvalidOperationException("The failure-envelope probe did not start.");
+        request.DisposeLocalCopyOfClientHandle();
+        response.DisposeLocalCopyOfClientHandle();
+        int descendantPid = 0;
+        try
+        {
+            byte[] magic = new byte[4];
+            await response.ReadExactlyAsync(magic);
+            Assert.IsTrue(NativeHelperFailureProtocol.IsMagic(magic));
+            NativeHelperFailureEnvelope envelope = await NativeHelperFailureProtocol.ReadAfterMagicAsync(
+                response, CancellationToken.None);
+            descendantPid = envelope.ContainmentDescendantProcessId;
+            HelperPrivateFrameV2 bootstrapFrame = HelperTestFrames.Bootstrap(nonceSeed: 92);
+            bootstrapFrame.Bootstrap.Credential = new()
+            {
+                AccessProfileId = new() { Value = profile },
+                GenerationId = new() { Value = generation },
+            };
+            HelperPrivateFrameV2 assignmentFrame = HelperTestFrames.Assignment();
+            assignmentFrame.Assignment.AssignmentId = assignmentId;
+            assignmentFrame.Assignment.AssignmentKind = HelperAssignmentKindV2.Verify;
+            assignmentFrame.Assignment.AccessProfileId = new() { Value = profile };
+            assignmentFrame.Assignment.GenerationId = new() { Value = generation };
+            CredentialNativeQualificationSupervisor.ValidateNativeHelperFailureEnvelope(
+                envelope, bootstrapFrame.Bootstrap, assignmentFrame.Assignment, manifestPath, process.Id);
+            Assert.AreEqual(1, envelope.CredReadW);
+            Assert.AreEqual(1, envelope.Total);
+            Assert.IsTrue(envelope.ContainmentDescendantStarted);
+
+            using CancellationTokenSource exitDeadline = new(TimeSpan.FromSeconds(5));
+            await process.WaitForExitAsync(exitDeadline.Token);
+            Assert.AreEqual(71, process.ExitCode);
+            byte[] eof = new byte[1];
+            using CancellationTokenSource eofDeadline = new(TimeSpan.FromSeconds(2));
+            Assert.AreEqual(0, await response.ReadAsync(eof, eofDeadline.Token));
+        }
+        finally
+        {
+            if (descendantPid > 0)
+            {
+                try
+                {
+                    using Process descendant = Process.GetProcessById(descendantPid);
+                    if (!descendant.HasExited)
+                    {
+                        descendant.Kill(entireProcessTree: true);
+                        await descendant.WaitForExitAsync();
+                    }
+                }
+                catch (ArgumentException)
+                {
+                    // The bounded descendant already exited.
+                }
+            }
+        }
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
+    public void NativeFailureOracleOnlyAdmitsExactPreflightAbsenceAndClosedFailureSurfaces()
+    {
+        string repository = Path.GetFullPath("../../../../../", AppContext.BaseDirectory);
+        string manifestPath = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6",
+            "wp4-credential-native-authorization.v2.json");
+        using JsonDocument manifest = JsonDocument.Parse(File.ReadAllBytes(manifestPath));
+        JsonElement target = manifest.RootElement.GetProperty("disposable_namespace").GetProperty("targets")[0];
+        string profile = target.GetProperty("access_profile_id").GetString()!;
+        string generation = target.GetProperty("generation_id").GetString()!;
+        string fingerprint = target.GetProperty("target_fingerprint_sha256").GetString()!;
+        const string assignmentId = "wp4-v2/interactive-entry-submit/preflight";
+        HelperPrivateFrameV2 bootstrap = HelperTestFrames.Bootstrap(nonceSeed: 93);
+        bootstrap.Bootstrap.Credential = new()
+        {
+            AccessProfileId = new() { Value = profile },
+            GenerationId = new() { Value = generation },
+        };
+        HelperPrivateFrameV2 assignment = HelperTestFrames.Assignment();
+        assignment.Assignment.AssignmentId = assignmentId;
+        assignment.Assignment.AssignmentKind = HelperAssignmentKindV2.Verify;
+        assignment.Assignment.AccessProfileId = new() { Value = profile };
+        assignment.Assignment.GenerationId = new() { Value = generation };
+        string trace = JsonSerializer.Serialize(new[]
+        {
+            new CredentialNativeCallTraceEntry(
+                1, "CredReadW", fingerprint, assignmentId, "ERROR_NOT_FOUND", null, null),
+        });
+        CredentialNativeCanaryEvidence canaries = new(
+            0, 0, ["utf-8", "utf-16le"],
+            [
+                new("private protocol request", "private-pipe-bytes", 100, 0, 0),
+                new("private protocol partial response", "private-pipe-bytes", 0, 0, 0),
+                new("native call trace", "canonical-trace-bytes", Encoding.UTF8.GetByteCount(trace), 0, 0),
+                new("process command line", "captured-text", 100, 0, 0),
+                new("process environment names", "captured-text", 100, 0, 0),
+            ]);
+        NativeHelperFailureEnvelope valid = new(
+            "engine-execution", "invalid-operation", true,
+            0, 1, 0, 0, 1, true, 0, 0, true, 0, 0, 0,
+            trace, null, JsonSerializer.Serialize(canaries),
+            false, true, 42, false, null);
+
+        void Accept(NativeHelperFailureEnvelope value) =>
+            CredentialNativeQualificationSupervisor.ValidateNativeHelperFailureEnvelope(
+                value, bootstrap.Bootstrap, assignment.Assignment, manifestPath, Environment.ProcessId);
+        void Reject(NativeHelperFailureEnvelope value) => Assert.ThrowsExactly<InvalidDataException>(() => Accept(value));
+
+        Accept(valid);
+        string writeTrace = JsonSerializer.Serialize(new[]
+        {
+            new CredentialNativeCallTraceEntry(
+                1, "CredWriteW", fingerprint, assignmentId, "success", null, null),
+        });
+        Reject(valid with
+        {
+            CredWriteW = 1,
+            CredReadW = 0,
+            NativeCallTraceJson = writeTrace,
+        });
+        Reject(valid with { ListenerCount = 1 });
+        Reject(valid with { NetworkOperationCount = 1 });
+        Reject(valid with { DnsOperationCount = 1 });
+        Reject(valid with { ProviderOperationCount = 1 });
+        Reject(valid with { BillableOperationCount = 1 });
+        Reject(valid with { ExternalEffectFactsKnown = false });
+        Reject(valid with { NativeCallTraceJson = "[]", CredReadW = 0, Total = 0 });
+        for (int index = 0; index < canaries.ScannedSurfaces.Count; index++)
+        {
+            CredentialNativeCanarySurfaceEvidence[] reduced = canaries.ScannedSurfaces
+                .Where((_, itemIndex) => itemIndex != index)
+                .ToArray();
+            Reject(valid with
+            {
+                CanaryEvidenceJson = JsonSerializer.Serialize(canaries with { ScannedSurfaces = reduced }),
+            });
+        }
+        CredentialNativeCanarySurfaceEvidence[] renamed = canaries.ScannedSurfaces.ToArray();
+        renamed[0] = renamed[0] with { Kind = "unbound-surface" };
+        Reject(valid with
+        {
+            CanaryEvidenceJson = JsonSerializer.Serialize(canaries with { ScannedSurfaces = renamed }),
+        });
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
+    public void NativeFailureOracleBindsFailedManualUiCleanupToExactHelperAndActionState()
+    {
+        const int helperProcessId = 49152;
+        const string assignmentId = "wp4-v2/interactive-entry-submit/submit";
+        string repository = Path.GetFullPath("../../../../../", AppContext.BaseDirectory);
+        string manifestPath = Path.Combine(repository, "docs", "plans", "milestones", "m1", "slices", "s6",
+            "wp4-credential-native-authorization.v2.json");
+        using JsonDocument manifest = JsonDocument.Parse(File.ReadAllBytes(manifestPath));
+        JsonElement target = manifest.RootElement.GetProperty("disposable_namespace").GetProperty("targets")
+            .EnumerateArray().Single(item => item.GetProperty("alias").GetString() == "interactive-primary");
+        string profile = target.GetProperty("access_profile_id").GetString()!;
+        string generation = target.GetProperty("generation_id").GetString()!;
+        HelperPrivateFrameV2 bootstrap = CredentialBootstrap(profile, generation, 94);
+        HelperPrivateFrameV2 assignment = CredentialAssignment(
+            profile, generation, HelperAssignmentKindV2.Enroll, assignmentId);
+        string emptyTrace = "[]";
+        CredentialNativeCanaryEvidence canaries = new(
+            0, 0, ["utf-8", "utf-16le"],
+            [
+                new("private protocol request", "private-pipe-bytes", 100, 0, 0),
+                new("private protocol partial response", "private-pipe-bytes", 0, 0, 0),
+                new("native call trace", "canonical-trace-bytes", 2, 0, 0),
+                new("process command line", "captured-text", 100, 0, 0),
+                new("process environment names", "captured-text", 100, 0, 0),
+            ]);
+        CredentialNativeEntryReadinessEvidence failedReadiness = FailedReadinessCleanup().Readiness! with
+        {
+            OwnerProcessId = helperProcessId,
+        };
+        CredentialNativeEntryCleanupEvidence failedCleanup = new(
+            false, true, true, true, true, true,
+            failedReadiness, null, null, null, 1, 2);
+        NativeHelperFailureEnvelope valid = new(
+            "engine-execution", "invalid-data", true,
+            0, 0, 0, 0, 0, true, 0, 0, true, 0, 0, 0,
+            emptyTrace, JsonSerializer.Serialize(failedCleanup), JsonSerializer.Serialize(canaries),
+            true, true, 42, false, null);
+
+        void Accept(NativeHelperFailureEnvelope value) =>
+            CredentialNativeQualificationSupervisor.ValidateNativeHelperFailureEnvelope(
+                value, bootstrap.Bootstrap, assignment.Assignment, manifestPath, helperProcessId);
+        void Reject(NativeHelperFailureEnvelope value) => Assert.ThrowsExactly<InvalidDataException>(() => Accept(value));
+
+        Accept(valid);
+        Reject(valid with { EntryCleanupJson = JsonSerializer.Serialize(failedCleanup with { InitialBlank = true }) });
+        Reject(valid with { EntryCleanupJson = JsonSerializer.Serialize(failedCleanup with { Terminal = false }) });
+        Reject(valid with
+        {
+            EntryCleanupJson = JsonSerializer.Serialize(failedCleanup with
+            {
+                Readiness = failedReadiness with { OwnerProcessId = helperProcessId + 1 },
+            }),
+        });
+        Reject(valid with
+        {
+            CredDeleteW = 1,
+            Total = 1,
+            NativeCallTraceJson = JsonSerializer.Serialize(new[]
+            {
+                new CredentialNativeCallTraceEntry(
+                    1, "CredDeleteW",
+                    target.GetProperty("target_fingerprint_sha256").GetString()!,
+                    assignmentId, "success", null, null),
+            }),
+        });
+        Reject(valid with
+        {
+            CredWriteW = 1,
+            Total = 1,
+            NativeCallTraceJson = JsonSerializer.Serialize(new[]
+            {
+                new CredentialNativeCallTraceEntry(
+                    1, "CredWriteW",
+                    target.GetProperty("target_fingerprint_sha256").GetString()!,
+                    assignmentId, "success", null, null),
+            }),
+        });
+
+        CredentialNativeEntryReadinessEvidence ready = failedReadiness with
+        {
+            Foreground = true,
+            EditFocused = true,
+            ReadinessElapsedMilliseconds = 10,
+        };
+        CredentialNativeEntryCleanupEvidence admittedAction = failedCleanup with
+        {
+            InitialBlank = true,
+            Readiness = ready,
+            ActionReadiness = ready,
+            Action = "submit",
+            ActionSource = "editkey",
+        };
+        Accept(valid with { EntryCleanupJson = JsonSerializer.Serialize(admittedAction) });
+        Reject(valid with
+        {
+            EntryCleanupJson = JsonSerializer.Serialize(admittedAction with
+            {
+                Action = "cancel",
+                ActionSource = "submitbutton",
+                ActionReadiness = ready with { EditFocused = false, SubmitFocused = true },
+            }),
+        });
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
+    public async Task NativeHelperFailureProtocolRejectsUnknownOversizedAndTruncatedEvidence()
+    {
+        NativeHelperFailureEnvelope knownZero = new(
+            "manifest-validation", "manifest-rejected", true,
+            0, 0, 0, 0, 0, true, 0, 0, true, 0, 0, 0, "[]", null, null,
+            false, false, 0, false, null);
+        using MemoryStream valid = new();
+        await NativeHelperFailureProtocol.WriteAsync(valid, knownZero, CancellationToken.None);
+        byte[] truncatedBytes = valid.ToArray()[..^1];
+        using MemoryStream truncated = new(truncatedBytes);
+        byte[] magic = new byte[4];
+        await truncated.ReadExactlyAsync(magic);
+        await Assert.ThrowsExactlyAsync<EndOfStreamException>(() =>
+            NativeHelperFailureProtocol.ReadAfterMagicAsync(truncated, CancellationToken.None));
+
+        NativeHelperFailureEnvelope unknownWithTrace = knownZero with
+        {
+            Stage = "handle-inheritance",
+            Reason = "handle-inheritance-failure",
+            CallCountsKnown = false,
+        };
+        await Assert.ThrowsExactlyAsync<InvalidDataException>(() =>
+            NativeHelperFailureProtocol.WriteAsync(new MemoryStream(), unknownWithTrace, CancellationToken.None));
+
+        NativeHelperFailureEnvelope oversized = knownZero with
+        {
+            NativeCallTraceJson = "[\"" + new string('x', NativeHelperFailureProtocol.MaximumBytes) + "\"]",
+        };
+        await Assert.ThrowsExactlyAsync<InvalidDataException>(() =>
+            NativeHelperFailureProtocol.WriteAsync(new MemoryStream(), oversized, CancellationToken.None));
+
+        byte[] invalidLength = new byte[8];
+        "NHF2"u8.CopyTo(invalidLength);
+        System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(
+            invalidLength.AsSpan(4), checked((uint)NativeHelperFailureProtocol.MaximumBytes + 1U));
+        using MemoryStream overlongFrame = new(invalidLength);
+        await overlongFrame.ReadExactlyAsync(magic);
+        await Assert.ThrowsExactlyAsync<InvalidDataException>(() =>
+            NativeHelperFailureProtocol.ReadAfterMagicAsync(overlongFrame, CancellationToken.None));
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
+    [TestCategory("Security")]
+    public async Task NativeHelperFailureProtocolRetainsManifestMaximumCanonicalEvidenceWithinFrameBound()
+    {
+        const string assignment = "wp4-v2/interactive-entry-submit/submit";
+        string fingerprint = new('a', 64);
+        List<CredentialNativeCallTraceEntry> trace = [];
+        long sequence = 0;
+        for (int index = 0; index < 9; index++)
+        {
+            trace.Add(new(++sequence, "CredWriteW", fingerprint, assignment, "success", null, null));
+        }
+        for (long allocation = 1; allocation <= 28; allocation++)
+        {
+            trace.Add(new(++sequence, "CredReadW", fingerprint, assignment, "success", allocation, null));
+            trace.Add(new(++sequence, "CredFree", fingerprint, assignment, "released", null, allocation));
+        }
+        for (int index = 0; index < 50; index++)
+        {
+            trace.Add(new(++sequence, "CredReadW", fingerprint, assignment,
+                "ERROR_NOT_FOUND", null, null));
+        }
+        for (int index = 0; index < 9; index++)
+        {
+            trace.Add(new(++sequence, "CredDeleteW", fingerprint, assignment, "success", null, null));
+        }
+        Assert.HasCount(124, trace);
+        string traceJson = JsonSerializer.Serialize(trace);
+        CredentialNativeEntryReadinessEvidence readiness = new(
+            Environment.ProcessId, 1, Process.GetCurrentProcess().SessionId, new string('b', 64),
+            true, true, true, true, true, true, true, true, true,
+            true, true, "submit", Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(
+                "Enter a disposable test value, then click Submit. Never use a real credential."))),
+            true, true, true, true, true, true, true, false,
+            true, true, true, false, true, true, 10_000, 9_999);
+        string entryJson = JsonSerializer.Serialize(new CredentialNativeEntryCleanupEvidence(
+            true, true, true, true, true, true, readiness, readiness,
+            "editkey", "submit", 0, 0));
+        string canaryJson = JsonSerializer.Serialize(new CredentialNativeCanaryEvidence(
+            0, 0, ["utf-8", "utf-16le"],
+            [
+                new("private protocol request", "private-pipe-bytes", 49_152, 0, 0),
+                new("private protocol partial response", "private-pipe-bytes", 49_152, 0, 0),
+                new("native call trace", "canonical-trace-bytes", Encoding.UTF8.GetByteCount(traceJson), 0, 0),
+                new("process command line", "captured-text", 4_096, 0, 0),
+                new("process environment names", "captured-text", 16_384, 0, 0),
+            ]));
+        NativeHelperFailureEnvelope maximum = new(
+            "evidence-collection", "controlled-failure", true,
+            9, 78, 9, 28, 124, true, 0, 0, true, 0, 0, 0,
+            traceJson, entryJson, canaryJson, true, true, 42, false, null);
+
+        using MemoryStream frame = new();
+        await NativeHelperFailureProtocol.WriteAsync(frame, maximum, CancellationToken.None);
+        Assert.IsLessThanOrEqualTo(NativeHelperFailureProtocol.MaximumBytes + 8, frame.Length);
+        frame.Position = 4;
+        NativeHelperFailureEnvelope retained = await NativeHelperFailureProtocol.ReadAfterMagicAsync(
+            frame, CancellationToken.None);
+        Assert.AreEqual(maximum, retained);
+    }
+
+    [TestMethod]
+    [TestCategory("Integration")]
     public async Task FullRunnerExercisesAllClosedPhasesThroughFakeContainedHelpersWithoutNativeEffects()
     {
         string root = Path.Combine(Path.GetTempPath(), "Infinium-Wp4-FullRunner-" + Guid.NewGuid().ToString("N"));
@@ -352,6 +944,7 @@ public sealed class CredentialNativeQualificationSupervisorTests
                     new InvalidDataException("synthetic typed primary failure")));
 
         Assert.AreEqual(nameof(InvalidDataException), failure.FailureType);
+        Assert.AreEqual("exact-target-cleanup-confirmed", failure.CleanupDisposition);
         Assert.IsFalse(failure.Evidence.CleanupAmbiguous);
         Assert.IsFalse(failure.Evidence.NamespaceBlocked);
         CredentialNativeQualificationPhaseEvidence cleanup = failure.Evidence.Scenarios
@@ -359,6 +952,40 @@ public sealed class CredentialNativeQualificationSupervisorTests
             .Phases.Single(item => item.PhaseId == "cleanup");
         Assert.AreEqual(HelperOutcomeV2.Completed, cleanup.Outcome);
         Assert.AreEqual(0, DeterministicFakeSecureStore.NativeOperationCount);
+
+        Assert.ThrowsExactly<InvalidDataException>(() =>
+            CredentialNativeQualificationRunner.SerializePrimaryFailureArtifactForTest(
+                "manifest/test", new string('a', 64), failure));
+        CredentialNativePrimaryFailureException sourceProven = new(
+            failure.FailureType,
+            "source-proven-pre-store-known-zero",
+            failure.Evidence,
+            failure.InnerException!);
+        using (JsonDocument artifact = JsonDocument.Parse(
+            CredentialNativeQualificationRunner.SerializePrimaryFailureArtifactForTest(
+                "manifest/test", new string('a', 64), sourceProven)))
+        {
+            Assert.AreEqual("failed-primary-effect-free-store-state-unobserved",
+                artifact.RootElement.GetProperty("status").GetString());
+            Assert.IsFalse(artifact.RootElement.GetProperty("cleanup_confirmed").GetBoolean());
+            Assert.IsFalse(artifact.RootElement.GetProperty("absence_confirmed").GetBoolean());
+            Assert.IsFalse(artifact.RootElement.GetProperty("whole_namespace_absence_confirmed").GetBoolean());
+            Assert.IsTrue(artifact.RootElement.GetProperty("namespace_blocked").GetBoolean());
+            Assert.AreEqual("none-store-state-unobserved",
+                artifact.RootElement.GetProperty("absence_scope").GetString());
+            Assert.AreEqual("source-proven-pre-store-known-zero",
+                artifact.RootElement.GetProperty("cleanup_disposition").GetString());
+            Assert.IsGreaterThan(0,
+                artifact.RootElement.GetProperty("evidence").GetProperty("scenarios").GetArrayLength());
+        }
+        CredentialNativePrimaryFailureException unproven = new(
+            failure.FailureType,
+            "scenario-admission-is-not-cleanup-proof",
+            failure.Evidence,
+            failure.InnerException!);
+        Assert.ThrowsExactly<InvalidDataException>(() =>
+            CredentialNativeQualificationRunner.SerializePrimaryFailureArtifactForTest(
+                "manifest/test", new string('a', 64), unproven));
     }
 
     [TestMethod]
@@ -590,6 +1217,23 @@ public sealed class CredentialNativeQualificationSupervisorTests
             Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(helper))),
             fakeStoreRoot);
     }
+
+    private static Dictionary<string, (string ProfileId, string GenerationId)> AllTargetIdentities() =>
+        new(StringComparer.Ordinal)
+        {
+            ["interactive-primary"] = ("wp4-interactive-primary", "g001"),
+            ["interactive-cancel"] = ("wp4-interactive-cancel", "g001"),
+            ["size-valid"] = ("wp4-size-valid", "g001"),
+            ["size-oversize"] = ("wp4-size-oversize", "g001"),
+            ["unavailable-store"] = ("wp4-unavailable", "g001"),
+            ["replacement-old"] = ("wp4-replacement", "g001"),
+            ["replacement-new"] = ("wp4-replacement", "g002"),
+            ["revoke-delete"] = ("wp4-revoke-delete", "g001"),
+            ["crash-restart"] = ("wp4-crash-restart", "g001"),
+            ["backup-old"] = ("wp4-backup", "g001"),
+            ["backup-new"] = ("wp4-backup", "g002"),
+            ["fake-dispatch"] = ("wp4-fake-dispatch", "g001"),
+        };
 
     private static CredentialNativeEntryCleanupEvidence FailedReadinessCleanup()
     {

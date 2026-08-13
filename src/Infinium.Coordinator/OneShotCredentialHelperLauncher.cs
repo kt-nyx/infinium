@@ -35,6 +35,33 @@ public sealed record HelperProcessReceipt(
     bool NativeNamespaceReuseBlocked = false,
     string? NativeNamespaceReuseBlockReason = null);
 
+internal sealed class CredentialNativeHelperFailureException(
+    NativeHelperFailureEnvelope evidence,
+    string assignmentId)
+    : Exception("The native helper returned a bounded typed failure envelope.")
+{
+    internal NativeHelperFailureEnvelope Evidence { get; } = evidence;
+    internal string AssignmentId { get; } = assignmentId;
+    internal NativeHelperFailureContainmentEvidence? Containment { get; private set; }
+    internal void AttachContainment(NativeHelperFailureContainmentEvidence value) => Containment = value;
+}
+
+internal sealed class CredentialNativeHelperEvidenceAmbiguityException(string assignmentId, Exception innerException)
+    : Exception("The native helper failure envelope could not be independently validated.", innerException)
+{
+    internal string AssignmentId { get; } = assignmentId;
+    internal NativeHelperFailureContainmentEvidence? Containment { get; private set; }
+    internal void AttachContainment(NativeHelperFailureContainmentEvidence value) => Containment = value;
+}
+
+internal sealed record NativeHelperFailureContainmentEvidence(
+    int ProcessId,
+    int ExitCode,
+    int TotalContainedProcessCount,
+    int ActiveProcessCountBeforeJobClose,
+    int ProcessTreeSurvivorCount,
+    bool ProcessTreeTerminated);
+
 public sealed class OneShotCredentialHelperLauncher
 {
     private readonly string helperBinary;
@@ -378,11 +405,28 @@ public sealed class OneShotCredentialHelperLauncher
             {
                 await HelperPrivateProtocolV2.WriteAsync(request, finalRevalidation, bounded.Token).ConfigureAwait(false);
             }
-            HelperPrivateFrameV2 terminal = await HelperPrivateProtocolV2.ReadAsync(
-                response, finalRevalidation is null ? 3UL : 4UL, bounded.Token).ConfigureAwait(false);
-            byte[] stagedResponse = await ReadStagedResponseAsync(response, assignment.Assignment, bounded.Token)
-                .ConfigureAwait(false);
-            HelperRuntimeMetrics metrics = await ReadMetricsAsync(response, bounded.Token).ConfigureAwait(false);
+            HelperPrivateFrameV2 terminal;
+            byte[] stagedResponse;
+            HelperRuntimeMetrics metrics;
+            try
+            {
+                terminal = await ReadTerminalOrFailureAsync(
+                    response, bootstrap.Bootstrap, assignment.Assignment, nativeManifestPath, processId,
+                    finalRevalidation is null ? 3UL : 4UL, bounded.Token).ConfigureAwait(false);
+                stagedResponse = await ReadStagedResponseAsync(
+                    response, bootstrap.Bootstrap, assignment.Assignment, nativeManifestPath, processId, bounded.Token)
+                    .ConfigureAwait(false);
+                metrics = await ReadMetricsAsync(
+                    response, bootstrap.Bootstrap, assignment.Assignment, nativeManifestPath, processId, bounded.Token)
+                    .ConfigureAwait(false);
+            }
+            catch (Exception exception) when (nativeManifestPath is not null
+                && exception is (EndOfStreamException or InvalidDataException or JsonException
+                    or NotSupportedException or FormatException or OverflowException))
+            {
+                throw new CredentialNativeHelperEvidenceAmbiguityException(
+                    assignment.Assignment.AssignmentId, exception);
+            }
             request.Close();
             await contained.Process.WaitForExitAsync(bounded.Token).ConfigureAwait(false);
             bool expectedContainedCrash = nativeManifestPath is not null
@@ -427,6 +471,46 @@ public sealed class OneShotCredentialHelperLauncher
                 metrics.NamespaceReuseBlocked,
                 metrics.NamespaceReuseBlockReason);
         }
+        catch (Exception failure) when (failure is CredentialNativeHelperFailureException
+            or CredentialNativeHelperEvidenceAmbiguityException)
+        {
+            if (!contained.Process.HasExited)
+            {
+                using CancellationTokenSource helperExit = new(TimeSpan.FromSeconds(5));
+                try
+                {
+                    await contained.Process.WaitForExitAsync(helperExit.Token).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Job termination below remains the bounded terminal authority.
+                }
+            }
+            int measuredExitCode = contained.ExitCode;
+            int exitCode = measuredExitCode == 259 ? -1 : measuredExitCode;
+            int totalContained = contained.TotalProcessCount;
+            (int activeBeforeClose, int survivors) = await contained.TerminateRemainingProcessesAndWaitAsync(
+                TimeSpan.FromSeconds(5), CancellationToken.None).ConfigureAwait(false);
+            contained.CloseJob();
+            bool descendantExpected = failure is CredentialNativeHelperFailureException typed
+                && typed.Evidence.ContainmentDescendantStarted;
+            NativeHelperFailureContainmentEvidence containment = new(
+                processId,
+                exitCode,
+                totalContained,
+                activeBeforeClose,
+                survivors,
+                survivors == 0 && totalContained >= (descendantExpected ? 2 : 1));
+            if (failure is CredentialNativeHelperFailureException helperFailure)
+            {
+                helperFailure.AttachContainment(containment);
+            }
+            else
+            {
+                ((CredentialNativeHelperEvidenceAmbiguityException)failure).AttachContainment(containment);
+            }
+            throw;
+        }
         catch
         {
             if (!contained.Process.HasExited)
@@ -440,10 +524,19 @@ public sealed class OneShotCredentialHelperLauncher
 
     private static async Task<HelperRuntimeMetrics> ReadMetricsAsync(
         Stream response,
+        HelperBootstrapV2 bootstrap,
+        HelperAssignmentV2 assignment,
+        string? nativeManifestPath,
+        int helperProcessId,
         CancellationToken cancellationToken)
     {
         byte[] prefix = new byte[4];
         await response.ReadExactlyAsync(prefix, cancellationToken).ConfigureAwait(false);
+        if (NativeHelperFailureProtocol.IsMagic(prefix))
+        {
+            throw await ReadValidatedNativeFailureAsync(
+                response, bootstrap, assignment, nativeManifestPath, helperProcessId, cancellationToken).ConfigureAwait(false);
+        }
         uint length = BinaryPrimitives.ReadUInt32LittleEndian(prefix);
         if (length is 0 or > 4096)
         {
@@ -479,11 +572,19 @@ public sealed class OneShotCredentialHelperLauncher
 
     private static async Task<byte[]> ReadStagedResponseAsync(
         Stream response,
+        HelperBootstrapV2 bootstrap,
         HelperAssignmentV2 assignment,
+        string? nativeManifestPath,
+        int helperProcessId,
         CancellationToken cancellationToken)
     {
         byte[] prefix = new byte[4];
         await response.ReadExactlyAsync(prefix, cancellationToken).ConfigureAwait(false);
+        if (NativeHelperFailureProtocol.IsMagic(prefix))
+        {
+            throw await ReadValidatedNativeFailureAsync(
+                response, bootstrap, assignment, nativeManifestPath, helperProcessId, cancellationToken).ConfigureAwait(false);
+        }
         uint length = BinaryPrimitives.ReadUInt32LittleEndian(prefix);
         ulong maximum = assignment.Limits?.MaximumStagedOutputBytes ?? 0;
         if (length > maximum || length > HelperPrivateProtocolV2.MaximumStagingBytes)
@@ -496,6 +597,67 @@ public sealed class OneShotCredentialHelperLauncher
             await response.ReadExactlyAsync(bytes, cancellationToken).ConfigureAwait(false);
         }
         return bytes;
+    }
+
+    private static async Task<HelperPrivateFrameV2> ReadTerminalOrFailureAsync(
+        Stream response,
+        HelperBootstrapV2 bootstrap,
+        HelperAssignmentV2 assignment,
+        string? nativeManifestPath,
+        int helperProcessId,
+        ulong expectedSequence,
+        CancellationToken cancellationToken)
+    {
+        byte[] prefix = new byte[4];
+        await response.ReadExactlyAsync(prefix, cancellationToken).ConfigureAwait(false);
+        if (NativeHelperFailureProtocol.IsMagic(prefix))
+        {
+            throw await ReadValidatedNativeFailureAsync(
+                response, bootstrap, assignment, nativeManifestPath, helperProcessId, cancellationToken).ConfigureAwait(false);
+        }
+        return await HelperPrivateProtocolV2.ReadAfterPrefixAsync(
+            response, prefix, expectedSequence, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static Exception ValidateNativeFailure(
+        NativeHelperFailureEnvelope evidence,
+        HelperBootstrapV2 bootstrap,
+        HelperAssignmentV2 assignment,
+        string? nativeManifestPath,
+        int helperProcessId)
+    {
+        try
+        {
+            CredentialNativeQualificationSupervisor.ValidateNativeHelperFailureEnvelope(
+                evidence, bootstrap, assignment, nativeManifestPath, helperProcessId);
+            return new CredentialNativeHelperFailureException(evidence, assignment.AssignmentId);
+        }
+        catch (Exception exception) when (exception is InvalidDataException or JsonException
+            or KeyNotFoundException or FormatException or OverflowException)
+        {
+            return new CredentialNativeHelperEvidenceAmbiguityException(assignment.AssignmentId, exception);
+        }
+    }
+
+    private static async Task<Exception> ReadValidatedNativeFailureAsync(
+        Stream response,
+        HelperBootstrapV2 bootstrap,
+        HelperAssignmentV2 assignment,
+        string? nativeManifestPath,
+        int helperProcessId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            NativeHelperFailureEnvelope evidence = await NativeHelperFailureProtocol.ReadAfterMagicAsync(
+                response, cancellationToken).ConfigureAwait(false);
+            return ValidateNativeFailure(evidence, bootstrap, assignment, nativeManifestPath, helperProcessId);
+        }
+        catch (Exception exception) when (exception is InvalidDataException or EndOfStreamException
+            or JsonException or NotSupportedException or FormatException or OverflowException)
+        {
+            return new CredentialNativeHelperEvidenceAmbiguityException(assignment.AssignmentId, exception);
+        }
     }
 
     private static void ValidateOutboundSequence(

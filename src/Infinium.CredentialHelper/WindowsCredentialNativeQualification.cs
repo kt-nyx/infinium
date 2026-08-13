@@ -641,6 +641,14 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
     private const uint CredentialTypeGeneric = 1;
     private const uint CredentialPersistLocalMachine = 2;
     private const int ErrorNotFound = 1168;
+    private const string ExpectedSupersededManifestId =
+        "infinium.m1-s6.wp4.credential-native-authorization/e0cb0693-f482-433d-a3d4-3ee40ce7e2db";
+    private const string ExpectedSupersededManifestSha256 =
+        "3fbb8b53245064f90ecbe43ed4df4f87bb82b5c3bce431925d08df6c9bf7e78a";
+    private const string ExpectedSupersededEvidenceSha256 =
+        "76c4f2dcc646b6b5db3a9cd8ee214d48208b53fa63b3a5fe51920ee876e8d9a9";
+    private const string ExpectedSupersededAuthorityLockSha256 =
+        "b0045e4771f10b8cae03585e70002b15d2ad0ef8196ca2840c46435e8d229fcc";
     private WindowsCredentialFault fault;
     private int writeCount;
     private int readCount;
@@ -673,44 +681,64 @@ internal sealed class WindowsCredentialManagerStore : ISyntheticSecureStore, IDi
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(expectedSha256);
         ArgumentException.ThrowIfNullOrWhiteSpace(expectedManifestId);
-        byte[] bytes = File.ReadAllBytes(Path.GetFullPath(manifestPath));
-        string actualSha256 = Convert.ToHexStringLower(SHA256.HashData(bytes));
-        if (expectedSha256.Length != 64
-            || !expectedSha256.All(char.IsAsciiHexDigit)
-            || !string.Equals(actualSha256, expectedSha256, StringComparison.OrdinalIgnoreCase))
+        try
         {
-            throw new InvalidDataException("The native store manifest is not the exact accepted artifact.");
-        }
-        using JsonDocument document = JsonDocument.Parse(bytes);
-        JsonElement manifestRoot = document.RootElement;
-        if (!string.Equals(
-            manifestRoot.GetProperty("manifest_id").GetString(),
-            expectedManifestId,
-            StringComparison.Ordinal)
-            || manifestRoot.GetProperty("schema_identity").GetString()
-                != "infinium.repository.wp4-credential-native-authorization/1.1.0"
-            || manifestRoot.GetProperty("status").GetString() != "ready-for-owner-acceptance"
-            || manifestRoot.GetProperty("effect_authority").GetString()
-                != "none-until-owner-accepts-exact-manifest-bytes")
-        {
-            throw new InvalidDataException("The native store manifest identity or prepared state does not match its accepted v2 binding.");
-        }
-        WindowsCredentialManagerStore store = new();
-        foreach (JsonElement item in manifestRoot.GetProperty("disposable_namespace")
-            .GetProperty("targets").EnumerateArray())
-        {
-            NativeTarget target = new(
-                item.GetProperty("alias").GetString()!,
-                item.GetProperty("access_profile_id").GetString()!,
-                item.GetProperty("generation_id").GetString()!,
-                item.GetProperty("target_fingerprint_sha256").GetString()!);
-            Validate(target);
-            if (!store.manifestTargets.TryAdd(new(target.AccessProfileId, target.GenerationId), target))
+            byte[] bytes = File.ReadAllBytes(Path.GetFullPath(manifestPath));
+            string actualSha256 = Convert.ToHexStringLower(SHA256.HashData(bytes));
+            if (expectedSha256.Length != 64
+                || !expectedSha256.All(char.IsAsciiHexDigit)
+                || !string.Equals(actualSha256, expectedSha256, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidDataException("The accepted manifest repeats a native credential slot.");
+                throw new InvalidDataException("The native store manifest is not the exact accepted artifact.");
             }
+            using JsonDocument document = JsonDocument.Parse(bytes);
+            JsonElement manifestRoot = document.RootElement;
+            JsonElement supersedes = manifestRoot.GetProperty("supersedes");
+            if (!string.Equals(
+                manifestRoot.GetProperty("manifest_id").GetString(),
+                expectedManifestId,
+                StringComparison.Ordinal)
+                || manifestRoot.GetProperty("schema_identity").GetString()
+                    != "infinium.repository.wp4-credential-native-authorization/1.2.0"
+                || manifestRoot.GetProperty("status").GetString() != "ready-for-owner-acceptance"
+                || manifestRoot.GetProperty("effect_authority").GetString()
+                    != "none-until-owner-accepts-exact-manifest-bytes")
+            {
+                throw new InvalidDataException("The native store manifest identity or prepared state does not match its accepted v2 binding.");
+            }
+            if (supersedes.TryGetProperty("gate_receipt_sha256", out _)
+                || supersedes.GetProperty("manifest_id").GetString() != ExpectedSupersededManifestId
+                || supersedes.GetProperty("manifest_sha256").GetString() != ExpectedSupersededManifestSha256
+                || supersedes.GetProperty("native_evidence_sha256").GetString() != ExpectedSupersededEvidenceSha256
+                || supersedes.GetProperty("authority_lock_sha256").GetString()
+                    != ExpectedSupersededAuthorityLockSha256
+                || supersedes.GetProperty("namespace_disposition").GetString()
+                    != "terminal-confirmed-absent-never-reusable")
+            {
+                throw new InvalidDataException("The native store manifest predecessor authority is not exact.");
+            }
+            WindowsCredentialManagerStore store = new();
+            foreach (JsonElement item in manifestRoot.GetProperty("disposable_namespace")
+                .GetProperty("targets").EnumerateArray())
+            {
+                NativeTarget target = new(
+                    item.GetProperty("alias").GetString()!,
+                    item.GetProperty("access_profile_id").GetString()!,
+                    item.GetProperty("generation_id").GetString()!,
+                    item.GetProperty("target_fingerprint_sha256").GetString()!);
+                Validate(target);
+                if (!store.manifestTargets.TryAdd(new(target.AccessProfileId, target.GenerationId), target))
+                {
+                    throw new InvalidDataException("The accepted manifest repeats a native credential slot.");
+                }
+            }
+            return store;
         }
-        return store;
+        catch (Exception exception) when (exception is JsonException or KeyNotFoundException
+            or FormatException or OverflowException)
+        {
+            throw new InvalidDataException("The native store manifest structure is invalid.", exception);
+        }
     }
 
     internal static WindowsCredentialManagerStore FromRecoveryManifest(JsonElement manifestRoot)

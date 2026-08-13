@@ -89,14 +89,28 @@ public static class HelperPrivateProtocolV2
         ArgumentNullException.ThrowIfNull(stream);
         byte[] prefix = new byte[PrefixBytes];
         await ReadExactlyAsync(stream, prefix, cancellationToken).ConfigureAwait(false);
-        uint length = BinaryPrimitives.ReadUInt32LittleEndian(prefix);
+        return await ReadAfterPrefixAsync(stream, prefix, expectedSequence, cancellationToken).ConfigureAwait(false);
+    }
+
+    public static async Task<HelperPrivateFrameV2> ReadAfterPrefixAsync(
+        Stream stream,
+        ReadOnlyMemory<byte> prefix,
+        ulong expectedSequence,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(stream);
+        if (prefix.Length != PrefixBytes)
+        {
+            throw new InvalidDataException("The helper frame prefix has the wrong size.");
+        }
+        uint length = BinaryPrimitives.ReadUInt32LittleEndian(prefix.Span);
         if (length is 0 or > MaximumMessageBytes)
         {
             throw new InvalidDataException("The helper message length is outside the closed bound.");
         }
 
         byte[] frame = new byte[checked(PrefixBytes + (int)length)];
-        prefix.CopyTo(frame, 0);
+        prefix.CopyTo(frame.AsMemory());
         await ReadExactlyAsync(stream, frame.AsMemory(PrefixBytes), cancellationToken).ConfigureAwait(false);
         return Decode(frame, expectedSequence);
     }

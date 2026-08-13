@@ -244,6 +244,7 @@ internal sealed class CredentialNativeCleanupAmbiguityException(
 
 internal sealed class CredentialNativePrimaryFailureException(
     string failureType,
+    string cleanupDisposition,
     CredentialNativeQualificationEvidence evidence,
     Exception innerException)
     : InvalidOperationException(
@@ -251,6 +252,7 @@ internal sealed class CredentialNativePrimaryFailureException(
         innerException)
 {
     internal string FailureType { get; } = failureType;
+    internal string CleanupDisposition { get; } = cleanupDisposition;
     internal CredentialNativeQualificationEvidence Evidence { get; } = evidence;
 }
 
@@ -594,6 +596,15 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
     {
         EnsureKnownScenario(scenarioId);
         ArgumentException.ThrowIfNullOrWhiteSpace(phaseId);
+        cleanupAmbiguous = true;
+        namespaceBlocked = true;
+        primaryDeadline.Cancel();
+    }
+
+    internal void RecordTerminalCleanupAmbiguity(string evidenceContext, string reason)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(evidenceContext);
+        ArgumentException.ThrowIfNullOrWhiteSpace(reason);
         cleanupAmbiguous = true;
         namespaceBlocked = true;
         primaryDeadline.Cancel();
@@ -1345,7 +1356,296 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
         return trace;
     }
 
-    private static CredentialNativeCanaryEvidence? ParseCanaries(byte[]? bytes, bool requireEvidence)
+    internal static void ValidateNativeHelperFailureEnvelope(
+        NativeHelperFailureEnvelope evidence,
+        HelperBootstrapV2 bootstrap,
+        HelperAssignmentV2 assignment,
+        string? nativeManifestPath,
+        int helperProcessId)
+    {
+        ArgumentNullException.ThrowIfNull(evidence);
+        ArgumentNullException.ThrowIfNull(bootstrap);
+        ArgumentNullException.ThrowIfNull(assignment);
+        if (nativeManifestPath is null || !File.Exists(nativeManifestPath)
+            || helperProcessId <= 0
+            || string.IsNullOrWhiteSpace(assignment.AssignmentId))
+        {
+            throw new InvalidDataException("A native helper failure requires exact manifest and assignment context.");
+        }
+        if (evidence.Stage is "handle-inheritance" or "launch-boundary" or "manifest-validation")
+        {
+            if (evidence.ContainmentDescendantStarted || evidence.EntryCleanupJson is not null
+                || evidence.CanaryEvidenceJson is not null
+                || evidence.ManualUiAttempted || !evidence.CallCountsKnown || evidence.Total != 0
+                || evidence.CredWriteW != 0 || evidence.CredReadW != 0 || evidence.CredDeleteW != 0
+                || evidence.CredFree != 0 || evidence.NativeCallTraceJson != "[]"
+                || !evidence.NetworkFactsKnown || evidence.ListenerCount != 0
+                || evidence.NetworkOperationCount != 0 || !evidence.ExternalEffectFactsKnown
+                || evidence.DnsOperationCount != 0 || evidence.ProviderOperationCount != 0
+                || evidence.BillableOperationCount != 0)
+            {
+                throw new InvalidDataException("A pre-engine helper failure contains impossible runtime evidence.");
+            }
+            return;
+        }
+        if (!evidence.CallCountsKnown || evidence.NativeCallTraceJson is null
+            || evidence.CanaryEvidenceJson is null || !evidence.NetworkFactsKnown
+            || evidence.ListenerCount != 0 || evidence.NetworkOperationCount != 0
+            || !evidence.ExternalEffectFactsKnown || evidence.DnsOperationCount != 0
+            || evidence.ProviderOperationCount != 0 || evidence.BillableOperationCount != 0)
+        {
+            throw new InvalidDataException("A post-store helper failure lacks independently checkable evidence.");
+        }
+        byte[] traceBytes = System.Text.Encoding.UTF8.GetBytes(evidence.NativeCallTraceJson);
+        IReadOnlyList<CredentialNativeCallTraceEntry> trace = ParseAndValidateTrace(
+            traceBytes, evidence.Total, requireTrace: true);
+        if (trace.Count(item => item.Operation == "CredWriteW") != evidence.CredWriteW
+            || trace.Count(item => item.Operation == "CredReadW") != evidence.CredReadW
+            || trace.Count(item => item.Operation == "CredDeleteW") != evidence.CredDeleteW
+            || trace.Count(item => item.Operation == "CredFree") != evidence.CredFree
+            || trace.Any(item => item.Scenario != assignment.AssignmentId))
+        {
+            throw new InvalidDataException("The native helper failure trace disagrees with its assignment or counts.");
+        }
+        using System.Text.Json.JsonDocument document = System.Text.Json.JsonDocument.Parse(
+            File.ReadAllBytes(nativeManifestPath));
+        System.Text.Json.JsonElement maxima = document.RootElement.GetProperty("operation_limits")
+            .GetProperty("native_call_maxima");
+        if (evidence.CredWriteW > maxima.GetProperty("CredWriteW").GetInt32()
+            || evidence.CredReadW > maxima.GetProperty("CredReadW").GetInt32()
+            || evidence.CredDeleteW > maxima.GetProperty("CredDeleteW").GetInt32()
+            || evidence.CredFree > maxima.GetProperty("CredFree").GetInt32()
+            || evidence.Total > maxima.GetProperty("total").GetInt32())
+        {
+            throw new InvalidDataException("The native helper failure exceeds the accepted manifest operation limits.");
+        }
+        HashSet<string> allowed = [];
+        foreach (System.Text.Json.JsonElement target in document.RootElement.GetProperty("disposable_namespace")
+            .GetProperty("targets").EnumerateArray())
+        {
+            string profile = target.GetProperty("access_profile_id").GetString()!;
+            string generation = target.GetProperty("generation_id").GetString()!;
+            if (profile == assignment.AccessProfileId?.Value && generation == assignment.GenerationId?.Value
+                || profile == bootstrap.Credential?.AccessProfileId?.Value
+                    && generation == bootstrap.Credential?.GenerationId?.Value)
+            {
+                allowed.Add(target.GetProperty("target_fingerprint_sha256").GetString()!);
+            }
+        }
+        if (allowed.Count == 0 || trace.Any(item => !allowed.Contains(item.TargetFingerprintSha256)))
+        {
+            throw new InvalidDataException("The native helper failure trace is outside the exact manifest target context.");
+        }
+        CredentialNativeQualificationPhaseV2 phase = CredentialNativeQualificationPhasesV2.Parse(
+            assignment.AssignmentId, assignment.AssignmentKind);
+        if (phase.PhaseId.StartsWith("preflight", StringComparison.Ordinal)
+            && (trace.Any(item => item.Operation is "CredWriteW" or "CredDeleteW")
+                || !evidence.NamespaceReuseBlocked && (trace.Count != 1
+                    || trace[0].Operation != "CredReadW"
+                    || trace[0].Result != "ERROR_NOT_FOUND"
+                    || trace[0].AllocationId is not null
+                    || trace[0].PairedAllocationId is not null)))
+        {
+            throw new InvalidDataException("A failed preflight contains a mutation or lacks terminal exact absence.");
+        }
+        ValidateFailureTraceForPhase(phase, trace, evidence.NamespaceReuseBlocked);
+        CredentialNativeCanaryEvidence canaries = ParseCanaries(
+            System.Text.Encoding.UTF8.GetBytes(evidence.CanaryEvidenceJson), requireEvidence: true)!;
+        Dictionary<string, string> expectedSurfaces = new(StringComparer.Ordinal)
+        {
+            ["private protocol request"] = "private-pipe-bytes",
+            ["private protocol partial response"] = "private-pipe-bytes",
+            ["native call trace"] = "canonical-trace-bytes",
+            ["process command line"] = "captured-text",
+            ["process environment names"] = "captured-text",
+        };
+        if (canaries.ScannedSurfaces.Count != expectedSurfaces.Count
+            || canaries.ScannedSurfaces.Select(item => item.Name).Distinct(StringComparer.Ordinal).Count()
+                != expectedSurfaces.Count
+            || canaries.ScannedSurfaces.Any(item => !expectedSurfaces.TryGetValue(item.Name, out string? kind)
+                || kind != item.Kind))
+        {
+            throw new InvalidDataException("The native helper failure canary inventory is not exact.");
+        }
+        if (phase.SecretMode == CredentialNativeQualificationSecretModeV2.Manual)
+        {
+            if (evidence.ManualUiAttempted)
+            {
+                CredentialNativeEntryCleanupEvidence entry = evidence.EntryCleanupJson is null
+                    ? throw new InvalidDataException("A manual UI failure lacks cleanup evidence.")
+                    : ParseEntryCleanup(System.Text.Encoding.UTF8.GetBytes(evidence.EntryCleanupJson))!;
+                ValidateFailureManualEntryCleanup(
+                    entry, assignment, helperProcessId, evidence.CredWriteW);
+            }
+            else if (evidence.EntryCleanupJson is not null || evidence.CredWriteW != 0)
+            {
+                throw new InvalidDataException("A pre-UI helper failure contains impossible entry or write evidence.");
+            }
+        }
+        else if (evidence.ManualUiAttempted || evidence.EntryCleanupJson is not null)
+        {
+            throw new InvalidDataException("A non-manual helper failure contains UI evidence.");
+        }
+    }
+
+    private static void ValidateFailureTraceForPhase(
+        CredentialNativeQualificationPhaseV2 phase,
+        IReadOnlyList<CredentialNativeCallTraceEntry> trace,
+        bool namespaceReuseBlocked)
+    {
+        foreach (CredentialNativeCallTraceEntry item in trace)
+        {
+            bool canonicalResult = item.Operation switch
+            {
+                "CredWriteW" => item.Result == "success" || item.Result.StartsWith("win32-error:", StringComparison.Ordinal),
+                "CredReadW" => item.Result is "success" or "ERROR_NOT_FOUND"
+                    || item.Result.StartsWith("win32-error:", StringComparison.Ordinal),
+                "CredDeleteW" => item.Result is "success" or "ERROR_NOT_FOUND"
+                    || item.Result.StartsWith("win32-error:", StringComparison.Ordinal),
+                "CredFree" => item.Result == "released",
+                _ => false,
+            };
+            if (!canonicalResult)
+            {
+                throw new InvalidDataException("The native helper failure trace contains a noncanonical call result.");
+            }
+        }
+        for (int index = 0; index < trace.Count; index++)
+        {
+            CredentialNativeCallTraceEntry item = trace[index];
+            if (item.Operation == "CredReadW" && item.Result == "success"
+                && (index + 1 >= trace.Count || trace[index + 1].Operation != "CredFree"
+                    || trace[index + 1].PairedAllocationId != item.AllocationId))
+            {
+                throw new InvalidDataException("A successful failure-trace read is not released immediately.");
+            }
+            if (item.Result.StartsWith("win32-error:", StringComparison.Ordinal) && index != trace.Count - 1)
+            {
+                throw new InvalidDataException("A native Win32 call failure is not terminal in its phase trace.");
+            }
+        }
+
+        string[] operations = trace.Select(item => item.Operation).ToArray();
+        static bool Prefix(string[] actual, params string[][] admitted) => admitted.Any(expected =>
+            actual.Length <= expected.Length && actual.SequenceEqual(expected.Take(actual.Length), StringComparer.Ordinal));
+        bool admitted = phase.PhaseId.StartsWith("preflight", StringComparison.Ordinal)
+            ? namespaceReuseBlocked
+                ? Prefix(operations, ["CredReadW", "CredFree"])
+                : Prefix(operations, ["CredReadW"])
+            : phase.UnavailableBeforeNativeCall || phase.ManualEntryMustCancel
+                || phase.SecretMode == CredentialNativeQualificationSecretModeV2.GeneratedOversize
+                ? operations.Length == 0
+            : phase.AssignmentKind == HelperAssignmentKindV2.Enroll
+                ? Prefix(operations, ["CredWriteW", "CredReadW", "CredFree"])
+            : phase.AssignmentKind == HelperAssignmentKindV2.Verify
+                || phase.AssignmentKind == HelperAssignmentKindV2.ProviderDispatch
+                ? Prefix(operations, ["CredReadW", "CredFree"])
+            : phase.AssignmentKind == HelperAssignmentKindV2.Replace
+                ? Prefix(operations,
+                    ["CredWriteW", "CredReadW", "CredFree", "CredReadW", "CredFree", "CredDeleteW", "CredReadW"])
+            : phase.AssignmentKind == HelperAssignmentKindV2.Delete
+                ? Prefix(operations,
+                    ["CredDeleteW", "CredReadW", "CredReadW"],
+                    ["CredDeleteW", "CredReadW", "CredFree", "CredReadW"])
+            : phase.AssignmentKind == HelperAssignmentKindV2.Recover
+                ? Prefix(operations,
+                    ["CredReadW", "CredFree", "CredReadW", "CredFree", "CredReadW", "CredFree", "CredDeleteW", "CredReadW"],
+                    ["CredReadW", "CredWriteW", "CredReadW", "CredFree", "CredReadW", "CredFree", "CredReadW", "CredFree", "CredDeleteW", "CredReadW"])
+            : false;
+        if (!admitted)
+        {
+            throw new InvalidDataException("The native helper failure trace is not an admitted prefix for its exact phase.");
+        }
+    }
+
+    private static void ValidateFailureManualEntryCleanup(
+        CredentialNativeEntryCleanupEvidence entry,
+        HelperAssignmentV2 assignment,
+        int helperProcessId,
+        int credWriteCount)
+    {
+        CredentialNativeEntryReadinessEvidence readiness = entry.Readiness
+            ?? throw new InvalidDataException("The native helper manual failure lacks a retained UI readiness attempt.");
+        string expectedMode = assignment.AssignmentId.Contains(
+            "interactive-entry-cancel", StringComparison.Ordinal) ? "cancel" : "submit";
+        string expectedInstruction = expectedMode == "submit"
+            ? "Enter a disposable test value, then click Submit. Never use a real credential."
+            : "Leave the field blank, then click Cancel.";
+        string expectedInstructionFingerprint = Convert.ToHexStringLower(SHA256.HashData(
+            System.Text.Encoding.UTF8.GetBytes(expectedInstruction)));
+        if (!entry.Terminal || !entry.WindowDestroyed || !entry.BuffersCleared
+            || !entry.ThreadJoined || !entry.ClipboardMessagesBlocked
+            || entry.PreReadinessTerminalMessages < 0 || entry.PreReadinessIgnoredMessages < 0
+            || readiness.OwnerProcessId != helperProcessId || readiness.OwnerThreadId == 0
+            || readiness.OwnerSessionId != System.Diagnostics.Process.GetCurrentProcess().SessionId
+            || readiness.DesktopNameSha256.Length != 64
+            || !readiness.DesktopNameSha256.All(char.IsAsciiHexDigit)
+            || readiness.InstructionMode != expectedMode
+            || readiness.InstructionFingerprintSha256 != expectedInstructionFingerprint
+            || readiness.ReadinessDeadlineMilliseconds is < 1 or > 10_000
+            || readiness.ReadinessElapsedMilliseconds < 0
+            || readiness.ReadinessElapsedMilliseconds > readiness.ReadinessDeadlineMilliseconds)
+        {
+            throw new InvalidDataException("The native helper manual failure cleanup identity or deadline is invalid.");
+        }
+
+        bool readinessAdmitted = IsAdmissibleReadiness(readiness, requireEditFocus: true);
+        if (!readinessAdmitted)
+        {
+            if (entry.InitialBlank || credWriteCount != 0 || entry.Action is not null
+                || entry.ActionSource is not null || entry.ActionReadiness is not null)
+            {
+                throw new InvalidDataException("A failed UI readiness attempt contains an admitted action or native write.");
+            }
+            return;
+        }
+        if (!entry.InitialBlank)
+        {
+            throw new InvalidDataException("An admitted native helper UI was not initially blank.");
+        }
+        if (entry.Action is null)
+        {
+            if (entry.ActionSource is not null || entry.ActionReadiness is not null || credWriteCount != 0)
+            {
+                throw new InvalidDataException("A manual timeout contains partial action or write evidence.");
+            }
+            return;
+        }
+        CredentialNativeEntryReadinessEvidence action = entry.ActionReadiness
+            ?? throw new InvalidDataException("A retained manual action lacks action-time readiness.");
+        if (!IsAdmissibleReadiness(action, requireEditFocus: entry.ActionSource == "editkey")
+            || action.OwnerProcessId != readiness.OwnerProcessId
+            || action.OwnerThreadId != readiness.OwnerThreadId
+            || action.OwnerSessionId != readiness.OwnerSessionId
+            || action.DesktopNameSha256 != readiness.DesktopNameSha256
+            || action.InstructionMode != readiness.InstructionMode
+            || action.InstructionFingerprintSha256 != readiness.InstructionFingerprintSha256
+            || action.ReadinessDeadlineMilliseconds is < 1 or > 10_000
+            || action.ReadinessElapsedMilliseconds < 0
+            || action.ReadinessElapsedMilliseconds > action.ReadinessDeadlineMilliseconds
+            || !IsActionSourceBindingValid(entry.Action, entry.ActionSource)
+            || entry.ActionSource == "submitbutton" && !action.SubmitFocused
+            || entry.ActionSource == "cancelbutton" && !action.CancelFocused
+            || entry.ActionSource is not ("editkey" or "submitbutton" or "cancelbutton"))
+        {
+            throw new InvalidDataException("The retained manual action is not bound to the owned actionable UI.");
+        }
+    }
+
+    private static bool IsAdmissibleReadiness(
+        CredentialNativeEntryReadinessEvidence value,
+        bool requireEditFocus) =>
+        value.InteractiveInputDesktop && value.DesktopObjectMatches
+        && value.OwnerProcessMatches && value.OwnerThreadMatches
+        && value.TopLevelWindow && value.WindowVisible && value.WindowEnabled
+        && value.WindowNotCloaked && value.WindowIntersectsActiveMonitor
+        && value.InstructionOwned && value.InstructionVisible
+        && value.EditOwned && value.EditVisible && value.EditEnabled && value.EditMasked
+        && value.SubmitOwned && value.SubmitVisible && value.SubmitEnabled
+        && value.CancelOwned && value.CancelVisible && value.CancelEnabled
+        && value.Foreground && (!requireEditFocus || value.EditFocused);
+
+    internal static CredentialNativeCanaryEvidence? ParseCanaries(byte[]? bytes, bool requireEvidence)
     {
         if (bytes is null)
         {
@@ -1375,7 +1675,7 @@ internal sealed class CredentialNativeQualificationSupervisor : IDisposable
         CredentialNativeQualificationPhasesV2.Parse(assignmentId, assignmentKind).SecretMode
             == CredentialNativeQualificationSecretModeV2.Manual;
 
-    private static CredentialNativeEntryCleanupEvidence? ParseEntryCleanup(byte[]? bytes) => bytes is null
+    internal static CredentialNativeEntryCleanupEvidence? ParseEntryCleanup(byte[]? bytes) => bytes is null
         ? null
         : System.Text.Json.JsonSerializer.Deserialize<CredentialNativeEntryCleanupEvidence>(bytes, TraceJsonOptions)
             ?? throw new InvalidDataException("The native entry cleanup receipt is malformed.");
