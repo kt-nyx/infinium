@@ -4073,3 +4073,116 @@ advance, or push is authorized. Retained transcript replay must perform no
 send. Ordinary defects return to bounded correction and re-review; only an
 authority, safety/isolation, or unavailable protected dependency conflict is
 an escalation.
+
+## WP7 deterministic candidate-investigation close-ready candidate — 2026-08-13
+
+WP7 produced only deterministic retained-transcript candidate-investigation
+behavior under accepted plan section 18. No live provider, native credential,
+network, source-refresh, private-fixture, archive, or later-package operation
+was used. The initially frozen DEV/VAL v1 packages at oracle commit
+`91215663088b7a6c14a1f7581a75c6d853d56f76` were preserved byte-for-byte as
+development evidence after review found semantic answer cues in their stable
+identities. They were not repaired or reused as current validation authority.
+
+The opaque answer-free inputs were frozen before corrected product comparison.
+The mechanical DEV-v2 reseal is exact commit
+`4b5fbad61e3666d3ebc257a3bc366984dd8f3e43`; its oracle, provenance, and
+manifest SHA-256 values are respectively
+`2b8e49e6ac13caaf7df17f0266cd008130e13a6bf71fc5256c5856b426c37527`,
+`f63fe687d1f31de9f9372fd24ec16dc5e78a34eb736b5dda1663977fb4d31ff2`,
+and `87a1a6013c01809121732fbf5e9e908e2985344cd5c17bd742bab005c42c08a5`.
+The materially independent fresh VAL-v2 replacement is exact commit
+`4f2159d989ff504949742caffc0b61dfc9a9b49e`; its oracle, provenance, and
+manifest SHA-256 values are respectively
+`b5338ac412476ffb780c665d3f522e8120df182523d26a06ae445f4af6f1b926`,
+`90bc916ac3099864d17f9ad34efbfda494da334f51ed9a444253e007f903059d`,
+and `08affc2265f390f0a11243e571c765adc06d455a86201bbbb2105f7ed695a045`.
+Both packages passed exact transitive file identity, referential closure,
+answer-isolation, registry, and pre-comparison freeze checks. VAL-v1 remains
+unchanged on disk as non-current development evidence; provenance-declared
+replacement, not deletion or silent reinterpretation, excludes it from the
+current closed-world registry.
+
+Candidate investigation now retains all 22 frozen DEV/VAL scenarios: positive
+and matched-negative in one operation, conditional, unsupported,
+contradiction, explicit abstention, hostile authority, malformed, refusal,
+incomplete, deleted/audit-only, identity drift, no-model, and unavailable
+provider. Host validation checks every model-supplied supporting and
+contradicting evidence identity against the host-owned relationship, rejects a
+relationship mismatch, and fails closed when known available contradiction is
+omitted. Exact proposal state, evidence lists, missing-information condition,
+response/model/provider identity, audit/deletion/drift state, aggregate, and
+no-effect oracle fields are executable and covered by negative mutations.
+
+Evidence provenance keeps the Slice 5 consuming evidence-application identity
+distinct from the WP6 source-acquisition application identity. Before any
+candidate state is admitted, persistence proves the exact durable WP6
+acquisition, semantic admission and retained artifact, analysis/application/
+cost scopes, source revision, passage, and the distinct Slice 5 evidence
+application. Invented or cross-scope acquisition, admission, application,
+revision, passage, artifact, and relationship identities reject atomically.
+
+Same-version append-only migration `M1-S6-WP7-0006H` upgrades exact WP6 source
+fingerprint
+`0c831ead2dc177f3d4367b8fef12b0bbad2d17aa7d83203b6e2caf6c8b978ef5`
+to exact active fingerprint
+`8195fc34887e202b823bd1a7c6757bde6dd78f2df6648e589d64f46a3effbcbf`.
+The authoritative `candidate_investigation_outcomes` surface retains exact
+input, transcript, and result payload identities for every terminal scenario,
+including zero-proposal, no-model, unavailable-provider, and drift outcomes,
+without inventing a semantic proposal, admission, application, response, or
+usage row. Readback verifies payload hashes and lengths. Backup/restore,
+projection rebuild, response-backed publication, no-response `not-used`
+publication, and database-owned retained replay passed. Replay accepts no
+caller-supplied fingerprint; it re-derives identity from authoritative retained
+bytes and fails closed on missing, corrupt, or drifted dependencies.
+
+The core product correction is exact commit
+`f3296bbf145ac0326fd3ec3970e3f61184993bf8`. The bounded Layer 6 path-policy
+correction is exact candidate HEAD
+`623a0de061683ef916ba0a0cf125d93eaa5aa541`; it adds only the accepted WP7
+candidate fixture, registry-schema, and answer-free preparation paths to the
+existing inert review gate and changes no product or oracle meaning.
+
+Final focused Release evidence passed Unit 6/0/0, Contract 7/0/0, Integration
+4/0/0, and Evaluation 1/0/0. `CandidateSemantics` passed with exactly 22
+scenarios, 14 proposals, four admissions, ten retained rejections, one-operation
+positive/matched-negative construction, and zero network, credential, or
+source-refresh effects. Its 1,775-byte receipt has SHA-256
+`dfa916e827c5157c9eb509ad7df651d94c8ef4773f2aa3fd2d677bb2839f1658`.
+`ProvenanceReplay` also passed; its 1,668-byte receipt has SHA-256
+`32a7bd59b1fe102a077caf2d07e819a1d2cda116bd7e059b0b7e9816b458982a`.
+Focused schema/persistence checks passed Unit 4/0/0 and Contract 7/0/0.
+
+The exact full non-live floor used .NET SDK `10.0.303`. Locked restore and a
+clean Release build passed with zero warnings/errors. Category floors passed:
+Unit 225/0/1; Contract-tagged Unit 7, Contract 131, Evaluation 2;
+Integration-tagged Contract 1, Evaluation 1, Integration 108;
+Evaluation-tagged Contract 16, Integration 6, Evaluation 64/0/8;
+Security-tagged Security 15, Unit 49/0/1, Contract 51, Integration 16,
+Evaluation 7/0/2; and Fault-tagged Fault 3, Unit 32, Contract 44, Integration
+20, Evaluation 9/0/3. The unfiltered solution run passed Unit 238/0/1,
+Contract 168/0/0, Integration 120/0/0, Evaluation 66/0/8, Security 19/0/0,
+and Fault 7/0/0. Format, dependency-manifest, documentation, and diff checks
+passed. The repository-wide analysis `All` gate passed Contracts,
+Documentation, Candidates, CandidateScale, Cases, Replay, Output, Safety,
+Comprehensive, and Traceability; its 512-byte receipt SHA-256 is
+`8183a713b165d33d04881871de1a0b22b1b1d7b79ffba85b540d7483c6e6bfab`.
+
+Candidate-bound `Layer6Review` passed from exact accepted WP7 handoff
+`c588ef2b588b851a9948d3ed3d2b43205ebf500a` through candidate
+`623a0de061683ef916ba0a0cf125d93eaa5aa541`: 48 changed paths and zero
+allowed-path, protected/private/archive, strict-JSON, or relative-link
+failures. Its 1,358-byte receipt has SHA-256
+`9bccffa4529a5e9e54ed20d1e10d44da0772a1d0bd796519d5bb7ce75300a998`.
+The retained status/claim and unsupported/gap inventories remain review
+inputs, not acceptance claims.
+
+The exact-root cleanup procedure resolved
+`Z:\Development\Large Projects\Skyrim\infinium`, matched zero repository-owned
+`dotnet`/`testhost` processes, and verified zero survivors. No API key, DNS,
+network/provider request, token-count call, Credential Manager operation,
+source/Nexus/search refresh, private/evaluator/archive access, protected
+external effect, WP8 behavior, current-state advancement, or push occurred.
+This is a close-ready WP7 candidate awaiting fresh independent review; it does
+not self-accept WP7 or authorize WP8.
