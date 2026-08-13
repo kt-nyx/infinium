@@ -3925,3 +3925,90 @@ operation, source/Nexus/search refresh, private/evaluator/archive access,
 protected external effect, WP7 behavior, current-state advancement, or push
 occurred. This remains a corrected WP6 candidate awaiting independent
 acceptance; it does not self-accept WP6 or authorize WP7.
+
+## WP6 active source-claim contract correction — 2026-08-12
+
+The final bounded semantic re-review found that
+`SourceClaimExtraction.application_link_ids` still represented extraction-time
+host validation/admission correlation as if every provider proposal had already
+created a real consuming-analysis application. The later explicit
+`ConsumeAdmittedSourceClaim` action created the actual durable application with
+a different identity. This correction closes only that accepted-plan section
+17 seam; it does not add coordinator behavior, source refresh, WP7 behavior, or
+another external effect.
+
+Fresh answer-isolated oracle author `/root/wp6_acceptance_matrix` renamed only
+the affected expectation fields before corrected product comparison. Exact
+oracle commit `37aa2b4e2fc084307ba5211f21bbeeb7a93efab0` retains identical expected
+truth and all answer-free inputs. DEV manifest/oracle/provenance SHA-256 values
+are respectively
+`7a7b3ea24a218ec1ebb811c96f39a3b7f197938960bcbd9ec15eb2f54b1ff61b`,
+`1e4d7ae9d54fddb1c60928d88c7783d25774076a1bdde0f26803a4cc953f5240`,
+and `b7a85046dda02a85f2b82a4fc4b0c7fe742e399afd07ee49a4b9ccc1003625ca`.
+VAL values are
+`0f95265340873dc4abb083c6f857db9e8786c6e1ba36da385f07c876afe1c13f`,
+`2b23986da7308d312b4df33ed3440d14dcd2aaab85e5367e97c7ade1ed5cc28c`,
+and `ac80c90d0259fb6c7ade2abce9a91378a019d48dfbd87d602663d803bda6978a`.
+
+The source-claim JSON/domain/protobuf contract now publishes typed admission
+correlation identities and no application-link identity. The shared semantic
+persistence column is neutrally named `semantic_link_id`, so frozen Slice 5
+candidate application semantics remain unchanged. The candidate v1 JSON schema
+remains byte-identical at SHA-256
+`74861d5d0230fca68da30686abdafc08429c6fe6866da96a77b49e7f09d0ca4c`;
+its exact regression protobuf vector remains SHA-256
+`1424b7b66b81d37fd77538c922249b371e45897dd9e8f66d4d8dc71d6a58ddf1`.
+The later consumption table now retains the exact `admission_id`, and its typed
+receipt/readback exposes that admission together with the real application
+identity. Rejected, abstained, unsupported, and deleted admissions still create
+zero application rows; only an admitted artifact may be consumed.
+
+Same-version migration `M1-S6-WP6-0006G` upgrades exact prior fingerprint
+`a9c58c7e3f374b77a623b751547353a356b2132f24f353ca2356a4268f13b51d`
+to exact fingerprint
+`0c831ead2dc177f3d4367b8fef12b0bbad2d17aa7d83203b6e2caf6c8b978ef5`.
+In addition to fresh-schema and backup/restore tests, a temporary database was
+created by exact prior candidate `609fc00f78acef7f1610d3dd36be1f5a1b4431d7`
+and opened by the corrected candidate. The first migration probes exposed and
+closed exact admission-guard and canonical-timestamp trigger recreation drift;
+the final probe converged on the declared fingerprint.
+
+Final focused evidence passed: SourceClaimSemantics Unit 4/0/0, Contract
+7/0/0, Integration 4/0/0, and Evaluation 2/0/0; Contracts 23/0/0;
+StateSurfaces Unit 27/0/0 and 18/0/0; and StateTotality Unit 27/0/0 and
+18/0/0. StateTotality completed normally and did not stop at input-bound
+authority. The 2,820-byte SourceClaimSemantics receipt has SHA-256
+`727b7bc45e086813055f195961f52d30f041cdc94420bb3d63a38c28df669fe9`
+and binds the final manifest, oracle, provenance, context, transcript, and all
+fourteen scenario classifications with zero network, credential, source-
+refresh, or private-fixture operations.
+
+A clean Release restore/build passed with zero warnings/errors. The filtered
+floor passed Unit 221/0/1; Contract-tagged Unit 7, Contract 125, Evaluation 2;
+Integration-tagged Contract 1, Evaluation 1, Integration 104; Evaluation-tagged
+Contract 16, Integration 6, Evaluation 63/0/8; Security-tagged Security 15,
+Unit 49/0/1, Contract 51, Integration 16, Evaluation 7/0/2; and Fault-tagged
+Fault 3, Unit 32, Contract 44, Integration 20, Evaluation 9/0/3. The exact
+unfiltered solution command passed Unit 234/0/1, Contract 162/0/0,
+Integration 116/0/0, Evaluation 65/0/8, Security 19/0/0, and Fault 7/0/0.
+Format, dependency-manifest, documentation, and diff checks passed. The
+complete analysis-pipeline `All` gate passed every Contracts, Documentation,
+Candidates, CandidateScale, Cases, Replay, Output, Safety, Comprehensive, and
+Traceability subgate.
+
+The product correction is exact commit
+`ee0b6d31f1c1826c2af7634766155397e916c3e1`. Candidate-bound `Layer6Review`
+passed from exact correction base
+`609fc00f78acef7f1610d3dd36be1f5a1b4431d7` through that candidate: 26
+changed paths and zero allowed-path, strict-JSON, relative-link, or private/
+archive failures. Its 1,287-byte receipt has SHA-256
+`d300c2a3a9d2e4f48aad0b0465966707ea596610773770ecdf761bd7ae9a7f7d`.
+
+Post-verification cleanup shut down the MSBuild and VB/C# compiler servers,
+matched zero exact-repository-owned `dotnet`/`testhost` processes, verified zero
+survivors, and observed zero machine-wide `dotnet`/`testhost` processes. No API
+key, DNS, network/provider request, token-count call, Credential Manager
+operation, source/Nexus/search refresh, private/evaluator/archive access,
+protected external effect, WP7 behavior, current-state advancement, or push
+occurred. This corrected candidate remains awaiting independent acceptance; it
+does not self-accept WP6 or authorize WP7.
