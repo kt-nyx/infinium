@@ -5191,3 +5191,4 @@ WM_CUT remain blocked. The automatic UI readiness proof remains a short finite
 10 seconds; only after that proof succeeds does the separate five-minute human
 response interval begin. Any eventual qualification uses disposable dummy text,
 never a real credential.
+WP4_V2_OWNER_ACCEPTANCE manifest_id=infinium.m1-s6.wp4.credential-native-authorization/16df3175-42ef-4a87-83ee-58766a0b15f1 sha256=6e0d5212747405a4f54e0ad18808a5ac8eaab5f147cf7c3204917c41660eee13 close_ready_commit=5ab82ffb76148691fec5dfa8975ef4ae5b51f419 expires_at_utc=2026-08-15T19:45:00.0000000Z
