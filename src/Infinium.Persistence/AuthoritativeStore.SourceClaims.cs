@@ -376,6 +376,8 @@ public partial class AuthoritativeStore
                       AND authorization.operation_id=$operation
                       AND authorization.owner_kind='analysis-run' AND authorization.owner_id=$owner
                       AND authorization.operation_kind='candidate-investigation'
+                      AND authorization.prompt_id=$prompt
+                      AND authorization.prompt_fingerprint=$prompt_fingerprint
                       AND ($response IS NULL OR EXISTS(
                         SELECT 1 FROM provider_responses response
                         WHERE response.authorization_id=authorization.authorization_id
@@ -388,6 +390,8 @@ public partial class AuthoritativeStore
                 authority.Parameters.AddWithValue("$authorization", request.AuthorizationId);
                 authority.Parameters.AddWithValue("$operation", document.OperationId.Value);
                 authority.Parameters.AddWithValue("$owner", document.OwnerId.Value);
+                authority.Parameters.AddWithValue("$prompt", hostContext.PromptId);
+                authority.Parameters.AddWithValue("$prompt_fingerprint", hostContext.PromptFingerprint);
                 authority.Parameters.AddWithValue("$response", (object?)request.ResponseRecordId ?? DBNull.Value);
                 authority.Parameters.AddWithValue("$attempt", (object?)request.ProviderAttemptId ?? DBNull.Value);
                 authority.Parameters.AddWithValue("$request", (object?)request.RequestId ?? DBNull.Value);
@@ -494,6 +498,7 @@ public partial class AuthoritativeStore
             MaxDepth = 64,
         });
         JsonElement root = input.RootElement;
+        ValidateCandidateInputShape(root);
         JsonElement[] contexts = root.GetProperty("contexts").EnumerateArray()
             .Where(x => Text(x, "context_id") == request.ContextId).ToArray();
         if (contexts.Length != 1
@@ -536,8 +541,318 @@ public partial class AuthoritativeStore
                 throw new InvalidDataException("Candidate evidence binding drifts from its exact retained input provenance.");
             }
         }
+        ValidateCandidateTranscriptPayload(request, root, context);
         return new(request.HypothesisId, Text(context, "hypothesis"), participantIds, participantRoles,
-            causalPathIds, Text(context, "dependency_closure_id"), evidence);
+            causalPathIds, Text(context, "dependency_closure_id"), evidence,
+            Text(root, "prompt_id"), Text(root, "prompt_fingerprint"));
+    }
+
+    private static void ValidateCandidateInputShape(JsonElement input)
+    {
+        string[] exactRootProperties = ["schema_id", "schema_version", "package_id", "operation_id",
+            "host_authorization_id", "owner_kind", "owner_id", "analysis_run_id", "application_scope_id",
+            "cost_attribution_scope_id", "prompt_id", "prompt_fingerprint", "contexts"];
+        JsonElement[] contexts = input.GetProperty("contexts").EnumerateArray().ToArray();
+        if (!HasExactProperties(input, exactRootProperties)
+            || Text(input, "schema_id") != "infinium.llm.candidate-investigation-execution-input/v1"
+            || Text(input, "schema_version") != "1"
+            || Text(input, "owner_kind") != "analysis-run"
+            || Text(input, "owner_id") != Text(input, "analysis_run_id")
+            || Text(input, "prompt_id") != "infinium.m1-s6.candidate-investigation-prompt/v1"
+            || !IsSha256(Text(input, "prompt_fingerprint"))
+            || !Nonempty(Text(input, "package_id")) || !Nonempty(Text(input, "operation_id"))
+            || !Nonempty(Text(input, "host_authorization_id")) || !Nonempty(Text(input, "owner_id"))
+            || !Nonempty(Text(input, "analysis_run_id")) || !Nonempty(Text(input, "application_scope_id"))
+            || !Nonempty(Text(input, "cost_attribution_scope_id"))
+            || contexts.Length is < 2 or > 32
+            || !Unique(StringsBy(contexts, "context_id"))
+            || !Unique(StringsBy(contexts, "candidate_id"))
+            || !Unique(StringsBy(contexts, "hypothesis_id")))
+        {
+            throw new InvalidDataException("Candidate persistence input is not the closed execution-input contract.");
+        }
+        string[] exactContextProperties = ["context_id", "candidate_id", "hypothesis_id", "hypothesis",
+            "participant_ids", "participant_roles", "causal_path_ids", "dependency_closure_id", "evidence"];
+        string[] exactEvidenceProperties = ["evidence_id", "evidence_application_link_id", "source_acquisition_id",
+            "source_admission_id", "source_application_link_id", "source_revision_id", "passage_id", "relationship",
+            "availability", "content_sha256"];
+        JsonElement[] allEvidence = contexts.SelectMany(item => item.GetProperty("evidence").EnumerateArray()).ToArray();
+        if (contexts.Any(item => !HasExactProperties(item, exactContextProperties)
+                || !Nonempty(Text(item, "context_id")) || !Nonempty(Text(item, "candidate_id"))
+                || !Nonempty(Text(item, "hypothesis_id")) || !Nonempty(Text(item, "hypothesis"))
+                || !Nonempty(Text(item, "dependency_closure_id"))
+                || Strings(item, "participant_ids").Length is < 1 or > 32
+                || Strings(item, "participant_ids").Length != Strings(item, "participant_roles").Length
+                || !Unique(Strings(item, "participant_ids"))
+                || Strings(item, "causal_path_ids").Length is < 1 or > 64
+                || !Unique(Strings(item, "causal_path_ids"))
+                || Strings(item, "participant_roles").Any(role => !Nonempty(role))
+                || item.GetProperty("evidence").GetArrayLength() is < 1 or > 64)
+            || !Unique(StringsBy(allEvidence, "evidence_id"))
+            || allEvidence.Any(item => !HasExactProperties(item, exactEvidenceProperties)
+                || exactEvidenceProperties.Take(7).Any(name => !Nonempty(Text(item, name)))
+                || Text(item, "relationship") is not ("supporting" or "contradicting" or "neutral")
+                || Text(item, "availability") is not ("available" or "deleted" or "unavailable")
+                || !IsSha256(Text(item, "content_sha256"))))
+        {
+            throw new InvalidDataException("Candidate persistence input contains an invalid context or evidence contract.");
+        }
+    }
+
+    private static void ValidateCandidateTranscriptPayload(
+        CandidateInvestigationPersistenceRequest request,
+        JsonElement input,
+        JsonElement context)
+    {
+        using JsonDocument transcriptDocument = JsonDocument.Parse(request.TranscriptPayload, new JsonDocumentOptions
+        {
+            AllowTrailingCommas = false,
+            CommentHandling = JsonCommentHandling.Disallow,
+            MaxDepth = 64,
+        });
+        JsonElement transcript = transcriptDocument.RootElement;
+        ValidateCandidateTranscriptShape(transcript);
+        bool modelUsed = Boolean(transcript, "model_used");
+        if (Text(input, "host_authorization_id") != request.AuthorizationId
+            || Text(input, "application_scope_id") != request.ApplicationScopeId
+            || Text(input, "cost_attribution_scope_id") != request.CostAttributionScopeId
+            || Text(input, "owner_kind") != request.Document.OwnerKind
+            || Text(input, "prompt_id") != Text(transcript, "prompt_id")
+            || Text(input, "prompt_fingerprint") != Text(transcript, "prompt_fingerprint")
+            || Text(transcript, "transcript_id") != request.TranscriptId
+            || Text(transcript, "operation_id") != request.Document.OperationId.Value
+            || Text(transcript, "context_id") != request.ContextId
+            || Text(transcript, "response_state") != request.TranscriptState
+            || Text(transcript, "response_fingerprint") != request.ResponseFingerprint
+            || modelUsed != (request.ResponseRecordId is not null)
+            || modelUsed && Text(transcript, "response_record_id") != request.ResponseRecordId)
+        {
+            throw new InvalidDataException("Candidate persistence metadata drifts from its exact retained input or transcript envelope.");
+        }
+
+        JsonElement[] transcriptProposals = transcript.GetProperty("proposals").EnumerateArray().ToArray();
+        if (request.TranscriptState == "completed")
+        {
+            if (transcriptProposals.Length != request.Document.HypothesisProposals.Count)
+            {
+                throw new InvalidDataException("Completed candidate transcript does not bind every retained proposal exactly.");
+            }
+            foreach (HypothesisProposalContract proposal in request.Document.HypothesisProposals)
+            {
+                JsonElement retained = ExactObject(transcript.GetProperty("proposals"), "proposal_id", proposal.ProposalId.Value);
+                (ProposalAdmissionState State, string Reason, string ApplicationLinkId) expectedProposal =
+                    ExpectedCandidateProposal(context, retained);
+                ProviderSemanticAdmissionLinkContract admission = request.Document.AdmissionLinks.Single(x =>
+                    x.ProposalId == proposal.ProposalId);
+                if (Text(retained, "candidate_id") != request.Document.CandidateId.Value
+                    || Text(retained, "hypothesis_id") != request.HypothesisId
+                    || Text(retained, "hypothesis") != proposal.Hypothesis
+                    || !Strings(retained, "supporting_evidence_ids").SequenceEqual(
+                        proposal.SupportingEvidenceIds.Select(x => x.Value), StringComparer.Ordinal)
+                    || !Strings(retained, "contradicting_evidence_ids").SequenceEqual(
+                        proposal.ContradictingEvidenceIds.Select(x => x.Value), StringComparer.Ordinal)
+                    || !Strings(retained, "missing_information").SequenceEqual(proposal.MissingInformation, StringComparer.Ordinal)
+                    || proposal.State != expectedProposal.State || proposal.Reason != expectedProposal.Reason
+                    || admission.ApplicationLinkId.Value != expectedProposal.ApplicationLinkId
+                    || !request.Document.ValidationIds.Contains(new("validation-" + proposal.ProposalId.Value))
+                    || !request.Document.AdmissionLinkIds.Contains(new("admission-" + proposal.ProposalId.Value)))
+                {
+                    throw new InvalidDataException("Candidate proposal content drifts from its exact retained transcript.");
+                }
+            }
+            if (request.Document.HypothesisProposals.Count == 0
+                    && (Strings(transcript, "abstentions").Length == 0 || Strings(transcript, "gaps").Length == 0)
+                || !Strings(transcript, "abstentions").SequenceEqual(request.Document.Abstentions, StringComparer.Ordinal)
+                || !Strings(transcript, "gaps").SequenceEqual(request.Document.Gaps, StringComparer.Ordinal))
+            {
+                throw new InvalidDataException("Candidate abstention or gap content drifts from its exact retained transcript.");
+            }
+        }
+        else if (transcriptProposals.Length != 0 || request.Document.HypothesisProposals.Count != 0
+            || request.Document.AdmissionLinks.Count != 0)
+        {
+            throw new InvalidDataException("Non-completed candidate transcript cannot append semantic proposals or admissions.");
+        }
+        if (request.TranscriptState != "completed")
+        {
+            string reason = request.TranscriptState == "not-used" ? "model-not-used"
+                : request.TranscriptState == "unavailable" ? "provider-unavailable"
+                : "provider-response-" + request.TranscriptState;
+            string[] retainedAbstentions = Strings(transcript, "abstentions");
+            string[] retainedGaps = Strings(transcript, "gaps");
+            string[] expectedAbstentions = retainedAbstentions.Length > 0 ? retainedAbstentions
+                : request.TranscriptState == "refusal" ? [reason] : [];
+            string[] expectedGaps = retainedGaps.Length > 0 ? retainedGaps : [reason];
+            if (!expectedAbstentions.SequenceEqual(request.Document.Abstentions, StringComparer.Ordinal)
+                || !expectedGaps.SequenceEqual(request.Document.Gaps, StringComparer.Ordinal))
+            {
+                throw new InvalidDataException("Candidate terminal abstention or gap content is not derived from its transcript.");
+            }
+        }
+
+        (string Disposition, string ReplayState) expected = ExpectedCandidateOutcome(
+            request.TranscriptState, modelUsed, request.Document, transcriptProposals);
+        if (request.Disposition != expected.Disposition || request.ReplayState != expected.ReplayState
+            || Text(context, "candidate_id") != request.Document.CandidateId.Value)
+        {
+            throw new InvalidDataException("Candidate terminal outcome state does not derive from its retained transcript and document.");
+        }
+    }
+
+    private static void ValidateCandidateTranscriptShape(JsonElement transcript)
+    {
+        string[] exactTranscriptProperties = ["transcript_id", "operation_id", "context_id", "response_record_id",
+            "response_state", "response_fingerprint", "prompt_id", "prompt_fingerprint", "proposals", "abstentions",
+            "gaps", "model_used"];
+        JsonElement[] proposals = transcript.GetProperty("proposals").EnumerateArray().ToArray();
+        string[] exactProposalProperties = ["proposal_id", "candidate_id", "hypothesis_id", "hypothesis",
+            "supporting_evidence_ids", "contradicting_evidence_ids", "missing_information", "authority_category",
+            "state", "reason"];
+        if (!HasExactProperties(transcript, exactTranscriptProperties)
+            || Text(transcript, "prompt_id") != "infinium.m1-s6.candidate-investigation-prompt/v1"
+            || Text(transcript, "response_state") is not ("completed" or "malformed" or "refusal" or "incomplete"
+                or "drift" or "not-used" or "unavailable")
+            || !IsSha256(Text(transcript, "response_fingerprint"))
+            || !IsSha256(Text(transcript, "prompt_fingerprint"))
+            || !Nonempty(Text(transcript, "transcript_id")) || !Nonempty(Text(transcript, "operation_id"))
+            || !Nonempty(Text(transcript, "context_id")) || !Nonempty(Text(transcript, "response_record_id"))
+            || Strings(transcript, "abstentions").Any(value => !Nonempty(value))
+            || Strings(transcript, "gaps").Any(value => !Nonempty(value))
+            || Strings(transcript, "abstentions").Length > 64 || Strings(transcript, "gaps").Length > 64
+            || proposals.Length > 64 || !Unique(StringsBy(proposals, "proposal_id"))
+            || proposals.Any(item => !HasExactProperties(item, exactProposalProperties)
+                || !Nonempty(Text(item, "proposal_id")) || !Nonempty(Text(item, "candidate_id"))
+                || !Nonempty(Text(item, "hypothesis_id")) || !Nonempty(Text(item, "hypothesis"))
+                || !Nonempty(Text(item, "reason"))
+                || Text(item, "authority_category") is not ("informational" or "protected-effect-request")
+                || Text(item, "state") is not ("proposed" or "unsupported" or "abstained" or "unavailable")
+                || Strings(item, "supporting_evidence_ids").Length > 64
+                || Strings(item, "contradicting_evidence_ids").Length > 64
+                || Strings(item, "missing_information").Length > 64
+                || !UniqueAllowEmpty(Strings(item, "supporting_evidence_ids"))
+                || !UniqueAllowEmpty(Strings(item, "contradicting_evidence_ids"))
+                || Strings(item, "missing_information").Any(value => !Nonempty(value))))
+        {
+            throw new InvalidDataException("Candidate persistence transcript is not the closed retained-transcript contract.");
+        }
+    }
+
+    private static (ProposalAdmissionState State, string Reason, string ApplicationLinkId) ExpectedCandidateProposal(
+        JsonElement context,
+        JsonElement proposal)
+    {
+        Dictionary<string, JsonElement> evidence = context.GetProperty("evidence").EnumerateArray()
+            .ToDictionary(item => Text(item, "evidence_id"), StringComparer.Ordinal);
+        string[] supporting = Strings(proposal, "supporting_evidence_ids");
+        string[] contradicting = Strings(proposal, "contradicting_evidence_ids");
+        string[] referencedIds = supporting.Concat(contradicting).ToArray();
+        string applicationLinkId = referencedIds.Where(evidence.ContainsKey)
+            .Select(id => Text(evidence[id], "evidence_application_link_id")).FirstOrDefault()
+            ?? Text(context.GetProperty("evidence")[0], "evidence_application_link_id");
+        if (string.IsNullOrWhiteSpace(Text(proposal, "proposal_id"))
+            || Text(proposal, "candidate_id") != Text(context, "candidate_id")
+            || Text(proposal, "hypothesis_id") != Text(context, "hypothesis_id")
+            || Text(proposal, "hypothesis") != Text(context, "hypothesis")
+            || supporting.Intersect(contradicting, StringComparer.Ordinal).Any()
+            || referencedIds.Any(id => !evidence.ContainsKey(id)))
+        {
+            return (ProposalAdmissionState.Rejected, "candidate-hypothesis-or-evidence-identity-rejected", applicationLinkId);
+        }
+        if (Text(proposal, "authority_category") == "protected-effect-request")
+        {
+            return (ProposalAdmissionState.Rejected, "model-proposed-forbidden-authority", applicationLinkId);
+        }
+        if (Text(proposal, "authority_category") != "informational")
+        {
+            return (ProposalAdmissionState.Rejected, "unknown-authority-category", applicationLinkId);
+        }
+        if (supporting.Any(id => Text(evidence[id], "relationship") != "supporting")
+            || contradicting.Any(id => Text(evidence[id], "relationship") != "contradicting"))
+        {
+            return (ProposalAdmissionState.Rejected, "evidence-relationship-mismatch", applicationLinkId);
+        }
+        JsonElement[] referenced = referencedIds.Select(id => evidence[id]).ToArray();
+        if (referenced.Any(item => Text(item, "availability") == "deleted"))
+        {
+            return (ProposalAdmissionState.Deleted, "referenced-evidence-deleted", applicationLinkId);
+        }
+        if (referenced.Any(item => Text(item, "availability") == "unavailable")
+            || Text(proposal, "state") == "unavailable")
+        {
+            return (ProposalAdmissionState.Unavailable, "referenced-evidence-unavailable", applicationLinkId);
+        }
+        if (Text(proposal, "state") == "unsupported")
+        {
+            return (ProposalAdmissionState.Unsupported, "proposal-declared-unsupported", applicationLinkId);
+        }
+        if (Text(proposal, "state") == "abstained" || contradicting.Length > 0)
+        {
+            return (ProposalAdmissionState.Abstained,
+                contradicting.Length > 0 ? "contradicting-evidence-requires-abstention" : "proposal-declared-abstained",
+                applicationLinkId);
+        }
+        if (Text(proposal, "state") != "proposed")
+        {
+            return (ProposalAdmissionState.Rejected, "unknown-proposal-state", applicationLinkId);
+        }
+        if (supporting.Length == 0)
+        {
+            return (ProposalAdmissionState.Rejected, "supporting-evidence-absent", applicationLinkId);
+        }
+        string[] knownContradictions = evidence.Values
+            .Where(item => Text(item, "relationship") == "contradicting" && Text(item, "availability") == "available")
+            .Select(item => Text(item, "evidence_id")).ToArray();
+        if (knownContradictions.Except(contradicting, StringComparer.Ordinal).Any())
+        {
+            return (ProposalAdmissionState.Abstained, "known-contradiction-omitted", applicationLinkId);
+        }
+        return (ProposalAdmissionState.Admitted, "exact-candidate-hypothesis-evidence-links-admitted", applicationLinkId);
+    }
+
+    private static (string Disposition, string ReplayState) ExpectedCandidateOutcome(
+        string transcriptState,
+        bool modelUsed,
+        CandidateInvestigationDocument document,
+        IReadOnlyList<JsonElement> transcriptProposals)
+    {
+        if (!modelUsed)
+        {
+            return transcriptState == "not-used" ? ("not-used", "not-applicable")
+                : transcriptState == "unavailable" ? ("unavailable-provider", "unavailable")
+                : throw new InvalidDataException("Candidate no-model transcript has an invalid terminal state.");
+        }
+        if (transcriptState != "completed")
+        {
+            return transcriptState == "drift" ? ("rejected-identity-drift", "failed-identity-drift")
+                : transcriptState is "malformed" or "refusal" or "incomplete"
+                    ? ("rejected-" + transcriptState, "retained-response")
+                    : throw new InvalidDataException("Candidate response transcript has an invalid terminal state.");
+        }
+        if (document.HypothesisProposals.Count == 0)
+        {
+            return ("empty-abstained", "retained-response");
+        }
+        string disposition = document.HypothesisProposals.Any(x => x.Reason == "model-proposed-forbidden-authority")
+            ? "rejected-hostile-authority"
+            : document.HypothesisProposals.Any(x => x.State == ProposalAdmissionState.Deleted)
+                ? "rejected-deleted-audit-only"
+            : document.HypothesisProposals.Any(x => x.State == ProposalAdmissionState.Abstained)
+                ? document.HypothesisProposals.Any(x => x.ContradictingEvidenceIds.Count > 0)
+                    ? "rejected-contradiction-abstained" : "rejected-explicit-abstention"
+            : document.HypothesisProposals.Any(x => x.State == ProposalAdmissionState.Unsupported)
+                ? transcriptProposals.Any(x => Text(x, "state") == "proposed")
+                    ? "rejected-matched-negative" : "rejected-unsupported"
+            : document.HypothesisProposals.Any(x => x.State == ProposalAdmissionState.Unavailable) ? "rejected-unavailable"
+            : document.HypothesisProposals.Any(x => x.State == ProposalAdmissionState.Rejected)
+                && transcriptProposals.Any(x => Text(x, "state") == "proposed"
+                    && Strings(x, "supporting_evidence_ids").Length == 0)
+                ? "rejected-matched-negative"
+            : document.HypothesisProposals.All(x => x.State == ProposalAdmissionState.Admitted)
+                ? document.HypothesisProposals.Any(x => x.MissingInformation.Count > 0)
+                    ? "accepted-conditional" : "accepted"
+                : "rejected";
+        return (disposition, document.HypothesisProposals.Any(x => x.State == ProposalAdmissionState.Deleted)
+            ? "audit-only" : "retained-response");
     }
 
     private void ValidateCandidateHostContext(
@@ -636,6 +951,38 @@ public partial class AuthoritativeStore
         element.GetProperty(property).EnumerateArray().Select(x => x.GetString()
             ?? throw new InvalidDataException("Retained candidate context contains a null list value.")).ToArray();
 
+    private static bool Boolean(JsonElement element, string property) =>
+        element.GetProperty(property).ValueKind switch
+        {
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            _ => throw new InvalidDataException("Retained candidate context contains a non-boolean value."),
+        };
+
+    private static bool HasExactProperties(JsonElement element, IReadOnlyCollection<string> names) =>
+        element.ValueKind == JsonValueKind.Object
+        && element.EnumerateObject().Select(item => item.Name).ToHashSet(StringComparer.Ordinal)
+            .SetEquals(names);
+
+    private static string[] StringsBy(IEnumerable<JsonElement> elements, string property) =>
+        elements.Select(item => Text(item, property)).ToArray();
+
+    private static bool Unique(IEnumerable<string> values)
+    {
+        string[] items = values.ToArray();
+        return items.All(Nonempty) && items.Distinct(StringComparer.Ordinal).Count() == items.Length;
+    }
+
+    private static bool UniqueAllowEmpty(IEnumerable<string> values)
+    {
+        string[] items = values.ToArray();
+        return items.All(Nonempty) && items.Distinct(StringComparer.Ordinal).Count() == items.Length;
+    }
+
+    private static bool Nonempty(string value) => !string.IsNullOrWhiteSpace(value);
+
+    private static bool IsSha256(string value) => value.Length == 64 && value.All(Uri.IsHexDigit);
+
     private sealed record CandidateHostEvidenceSnapshot(
         string EvidenceId,
         string EvidenceApplicationLinkId,
@@ -655,7 +1002,9 @@ public partial class AuthoritativeStore
         IReadOnlyList<string> ParticipantRoles,
         IReadOnlyList<string> CausalPathIds,
         string DependencyClosureId,
-        IReadOnlyList<CandidateHostEvidenceSnapshot> Evidence);
+        IReadOnlyList<CandidateHostEvidenceSnapshot> Evidence,
+        string PromptId,
+        string PromptFingerprint);
 
     private void ValidateCandidateEvidenceBinding(
         CandidateInvestigationPersistenceRequest request,
@@ -704,14 +1053,24 @@ public partial class AuthoritativeStore
         evidence.Transaction = transaction;
         evidence.CommandText =
             """
-            SELECT COUNT(*) FROM evidence_application_links application
+            SELECT revision.evidence_state,payload.content_sha256,
+              (SELECT CASE WHEN COUNT(*)=0 THEN ''
+                    WHEN COUNT(DISTINCT deletion.replay_effect)=1 THEN MIN(deletion.replay_effect)
+                    ELSE 'ambiguous' END
+                FROM documentation_deletion_receipts deletion,
+                json_each(deletion.deleted_passage_ids_json) deleted_passage
+                WHERE deletion.run_id=application.run_id
+                  AND deletion.documentation_revision_id=passage.documentation_revision_id
+                  AND deleted_passage.value=passage.documentation_passage_id)
+            FROM evidence_application_links application
             JOIN evidence_revisions revision ON revision.evidence_revision_id=application.evidence_revision_id
             JOIN documentation_passages passage ON passage.documentation_passage_id=revision.documentation_passage_id
+            JOIN payloads payload ON payload.payload_id=revision.evidence_payload_id
             WHERE application.evidence_application_link_id=$evidence_application
               AND application.evidence_revision_id=$evidence AND application.run_id=$run
               AND passage.documentation_passage_id=$passage
               AND passage.documentation_revision_id=$revision
-              AND passage.passage_sha256=$fingerprint AND revision.evidence_state='admitted';
+              AND payload.content_sha256=$fingerprint;
             """;
         evidence.Parameters.AddWithValue("$evidence_application", binding.EvidenceApplicationLinkId);
         evidence.Parameters.AddWithValue("$evidence", binding.EvidenceId);
@@ -719,9 +1078,24 @@ public partial class AuthoritativeStore
         evidence.Parameters.AddWithValue("$passage", binding.PassageId);
         evidence.Parameters.AddWithValue("$revision", binding.SourceRevisionId);
         evidence.Parameters.AddWithValue("$fingerprint", binding.ContentSha256);
-        if (Convert.ToInt64(evidence.ExecuteScalar(), System.Globalization.CultureInfo.InvariantCulture) != 1)
+        using SqliteDataReader evidenceReader = evidence.ExecuteReader();
+        if (!evidenceReader.Read())
         {
             throw new InvalidDataException("Candidate evidence does not bind its exact Slice 5 application and retained evidence payload.");
+        }
+        string evidenceState = evidenceReader.GetString(0);
+        string deletionReplayEffect = evidenceReader.GetString(2);
+        string durableAvailability = deletionReplayEffect == "audit-only" ? "deleted"
+            : deletionReplayEffect == "unavailable" ? "unavailable"
+            : deletionReplayEffect == "ambiguous"
+                ? throw new InvalidDataException("Candidate evidence deletion authority is ambiguous.")
+            : evidenceState == "deleted" ? "deleted"
+            : evidenceState == "unavailable" ? "unavailable"
+            : evidenceState == "admitted" ? "available"
+            : throw new InvalidDataException("Candidate evidence state is not durably available to investigation.");
+        if (evidenceReader.Read() || binding.Availability != durableAvailability)
+        {
+            throw new InvalidDataException("Candidate evidence availability drifts from durable evidence or deletion authority.");
         }
     }
 
