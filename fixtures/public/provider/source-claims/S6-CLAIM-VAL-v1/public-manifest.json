@@ -9,6 +9,13 @@
   "product_input_files": ["execution-input.v1.json", "context-manifest.v1.json", "retained-transcripts.v1.json"],
   "oracle_file": "oracle.v1.json",
   "oracle_provenance_file": "oracle-provenance.v1.json",
+  "file_identities": [
+    {"path":"context-manifest.v1.json","role":"product-input","bytes":510,"sha256":"b422d956a47bc5f75e0cdc28b17a9e85d7ef6e31bdfa9aad18a7a112c9178ec8"},
+    {"path":"execution-input.v1.json","role":"product-input","bytes":1767,"sha256":"77cffbebbc940357e1f8b39a9fd054c50e6c1a25c9e24c7b564f37867b95469c"},
+    {"path":"oracle-provenance.v1.json","role":"oracle-provenance","bytes":1687,"sha256":"7a98b503388f272698ce2f94e5dd05c1338a9e55e44bd02c45c01e71e1334c79"},
+    {"path":"oracle.v1.json","role":"oracle","bytes":13698,"sha256":"f62492b22a700dc7325c90ea47f607411f41e945dcaaa9a6808af4e632dde009"},
+    {"path":"retained-transcripts.v1.json","role":"product-input","bytes":6073,"sha256":"e3ad88078c80cc86f8e2919f543ae54eda577b20c7354bbf857a6260ac368d10"}
+  ],
   "answer_free": true,
   "network_required": false
 }

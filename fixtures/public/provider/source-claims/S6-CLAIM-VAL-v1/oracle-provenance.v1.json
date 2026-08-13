@@ -10,12 +10,14 @@
   "product_implementation_used": false,
   "private_or_held_out_material_used": false,
   "input_identities": {
-    "execution-input.v1.json": "ca9012b7689895c3d156ff6dd1efe601ad03c8742ee1e846a930543a05091cde",
-    "context-manifest.v1.json": "68e15c0a4248ed1c598d53015e14ec0e1f7737158619e9d5909260dce85a33ee",
-    "retained-transcripts.v1.json": "82e2e67f2f5686e68253df38556b7de0faa33641361768a74eaa4c0d9bae9fa9"
+    "execution-input.v1.json": "77cffbebbc940357e1f8b39a9fd054c50e6c1a25c9e24c7b564f37867b95469c",
+    "context-manifest.v1.json": "b422d956a47bc5f75e0cdc28b17a9e85d7ef6e31bdfa9aad18a7a112c9178ec8",
+    "retained-transcripts.v1.json": "e3ad88078c80cc86f8e2919f543ae54eda577b20c7354bbf857a6260ac368d10"
   },
   "partition_history": [
     {"state": "authored-validation", "reason": "public validation expectations independently derived before comparison"},
+    {"state": "authority-abstention-coverage-correction", "reason": "before corrected comparison, added a distinct explicit abstention case without contradiction, refusal, or empty-result semantics"},
+    {"state": "authority-structural-admission-correction", "reason": "before corrected comparison, bound exact host authorization and generic structural claim, condition, authority, and application semantics"},
     {"state": "frozen-validation", "reason": "oracle identity fixed before product observation"}
   ],
   "replacement_rule": "If this oracle drives a product, prompt, schema, or oracle correction, replace it with a materially independent oracle before another validation comparison."

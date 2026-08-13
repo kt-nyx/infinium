@@ -10,14 +10,16 @@
   "product_implementation_used": false,
   "private_or_held_out_material_used": false,
   "input_identities": {
-    "execution-input.v1.json": "78b062e72265b2a16fbe40967ade07290763b6ae9b12d77d2a5923be16157ccc",
-    "context-manifest.v1.json": "1274a1bccdb3b3192abf477f1cae620b01a2ba158360970a5fa108efab9a5fd5",
-    "retained-transcripts.v1.json": "d722a831b3d02ababf605953571926a3cc522814a51aa625b076b5bfee2328fe"
+    "execution-input.v1.json": "c49353836803ae46b6cf87e8c40c26aa7c3fc5bbfccec3589fe3c6419daff6ab",
+    "context-manifest.v1.json": "4cc8b5e17085c8c6eaab578d5a2b198446cf19eda2f446c5cbf96681fd5d44f9",
+    "retained-transcripts.v1.json": "d6a9ddac2bf2c25c3d421ba6a678d7745832450ccd5f7a27802261e37238be68"
   },
   "partition_history": [
     {"state": "authored-development", "reason": "public development expectations independently derived before comparison"},
     {"state": "authority-token-correction", "reason": "before product comparison, replaced non-contract wording accepted with exact frozen admission token admitted"},
     {"state": "authority-coverage-correction", "reason": "before product comparison, added the separately required model-used empty scenario rather than conflating it with no-model"},
+    {"state": "authority-conditional-coverage-correction", "reason": "before corrected comparison, added a distinct exact-condition applicability scenario without broadening it into an unconditional positive"},
+    {"state": "authority-structural-admission-correction", "reason": "before corrected comparison, bound exact host authorization and generic structural claim, condition, authority, and application semantics"},
     {"state": "frozen-development", "reason": "oracle identity fixed before product observation"}
   ],
   "replacement_rule": "If this oracle drives a product, prompt, schema, or oracle correction, replace it with a materially independent oracle before validation comparison."
