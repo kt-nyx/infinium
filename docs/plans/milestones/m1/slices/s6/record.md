@@ -5093,3 +5093,17 @@ visible dialog to the safe-test portion of this command is withdrawn. The
 retained `a1976c78` facts remain: no admitted scenario, no native call, and an
 outer `EndOfStreamException` after the helper response closed without complete
 metrics. Whether a UI was created or shown during that attempt is unknown.
+
+Evidence-semantics correction: the `a1976c78` runtime artifact does not
+measure W0/R0/D0/F0/T0. Its zero-valued aggregate is vacuous because the
+scenario list is empty and helper metrics and trace are absent; similarly,
+`cleanup_confirmed=true` describes an empty cleanup list and is not an
+exact-target absence proof. The execution marker's `native_calls=0` field and
+the preceding chronology statement's unqualified `no native call` wording are
+therefore superseded by `native_calls=unobserved`. Independent source and
+execution-commit control-flow review proves that this particular failure
+occurred at the manifest schema 1.1-versus-1.2 check before store construction,
+engine execution, or native P/Invoke was reachable. That is a provenance
+conclusion, not a runtime W0 receipt. The identity and namespace remain
+consumed and permanently non-reusable.
+WP4_V2_NATIVE_EVIDENCE_CORRECTION manifest_id=infinium.m1-s6.wp4.credential-native-authorization/a1976c78-a49b-4581-9a8c-9b6172484e0b execution_head_commit=9d02fd7201270225896dce41ac0f95ca05cc4c49 native_calls=unobserved cleanup_scope=empty source_provenance_native_calls=unreachable
