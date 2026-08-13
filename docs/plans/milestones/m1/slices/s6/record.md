@@ -5038,3 +5038,9 @@ derived exact targets, output root
 `2026-08-15T18:24:20.5325020Z`. It binds close-ready consumer commit
 `a0a467a64566877aa647a238372f78f2673b4956`. No owner marker or native effect
 is recorded for this replacement authority.
+
+Final manifest wording distinguishes rejected-and-counted pre-readiness
+Submit/Cancel input from an owned close request, which fails typed rather than
+being represented by those counters. This is a documentation-only precision
+correction; the close-ready implementation binding and effect boundary are
+unchanged.
